@@ -1,10 +1,12 @@
 export * as MaestroToolsV2 from "./tools"
 
 import { Effect, Layer } from "effect"
+import { HttpClient } from "effect/unstable/http"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Config } from "@orchestra/core/config"
 import { Database } from "@orchestra/core/database/database"
 import { makeLocationNode } from "@orchestra/core/effect/app-node"
+import { LayerNodePlatform } from "@orchestra/core/effect/app-node-platform"
 import { EventV2 } from "@orchestra/core/event"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { GitCli } from "@orchestra/core/git-cli"
@@ -15,6 +17,7 @@ import { PermissionV2 } from "@orchestra/core/permission"
 import { AppProcess } from "@orchestra/core/process"
 import { ResearchAllowance } from "@orchestra/core/research/allowance"
 import { ResearchRecords } from "@orchestra/core/research/records"
+import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
 import { Ripgrep } from "@orchestra/core/ripgrep"
 import { SessionStore } from "@orchestra/core/session"
 import { SkillV2 } from "@orchestra/core/skill"
@@ -105,9 +108,17 @@ const layer = Layer.effectDiscard(
           processes: yield* AppProcess.Service,
           ripgrep: yield* Ripgrep.RipgrepBinary.Service,
           git,
+          config: services.atlas.config,
+          http: yield* HttpClient.HttpClient,
         }),
       })
       .pipe(Effect.orDie)
+    yield* MaestroResearchTools.warm({
+      config: services.atlas.config,
+      processes: yield* AppProcess.Service,
+      seat: seats.has(ResearchSeatTools.SEAT),
+      worktree: location.project.directory,
+    })
     if (applications.entries().has(MaestroArsenal.names.catalog)) return
     yield* MaestroArsenal.registerScoped({
       ...WorkflowArmV2.hooks({
@@ -169,5 +180,6 @@ export const node = makeLocationNode({
     ReadToolFileSystem.node,
     AppProcess.node,
     Ripgrep.RipgrepBinary.node,
+    LayerNodePlatform.httpClient,
   ],
 })

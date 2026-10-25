@@ -76,6 +76,7 @@ export function migrate(info: typeof ConfigV1.Info.Type) {
     ),
     experimental: policies(info),
     relay: info.relay,
+    research: info.research,
     // Encoded, so a decoded V1 value's undefined keys stay absent as the V2 document schema requires.
     maestro: info.maestro && Schema.encodeSync(ConfigMaestro.Info)(info.maestro),
     providers: providers(info.provider),

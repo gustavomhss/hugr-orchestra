@@ -109,9 +109,8 @@ const registryLayer = Layer.effect(
         projectID: location?.project.id,
         projectDirectory: location?.project.directory === "/" ? location.directory : location?.project.directory,
       }
-      return yield* safety.run(
-        invocation,
-        Effect.gen(function* () {
+      const acquire = safety.acquire
+      const settlement = Effect.gen(function* () {
           const pending = yield* settle(registration.tool, input.call, {
             sessionID: input.sessionID,
             agent: input.agent,
@@ -140,7 +139,10 @@ const registryLayer = Layer.effect(
           return bounded.outputPaths.length > 0
             ? { result, output: projected, outputPaths: bounded.outputPaths }
             : { result, output: projected }
-        }),
+        })
+      return yield* safety.run(
+        invocation,
+        acquire ? acquire(invocation, settlement) : settlement,
         (observation) => events ? Effect.gen(function* () {
           yield* events.publish(SessionEvent.Tool.Progress, {
             timestamp: yield* DateTime.now,

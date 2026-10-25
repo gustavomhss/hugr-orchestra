@@ -9,6 +9,8 @@ import { FSUtil } from "@orchestra/core/fs-util"
 import { Location } from "@orchestra/core/location"
 import type { PermissionV2 } from "@orchestra/core/permission"
 import { ResearchAllowance } from "@orchestra/core/research/allowance"
+import { ResearchRecords } from "@orchestra/core/research/records"
+import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
 import { SessionSchema, SessionStore } from "@orchestra/core/session"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { BackendToolkit } from "@orchestra/core/backend-toolkit"
@@ -17,6 +19,7 @@ import { AllowedDomains } from "@orchestra/core/tool/websearch"
 import { ArsenalNative } from "../../arsenal-native"
 import { Seats, type Seat } from "../../seats"
 import { ResearchDispatchV2 } from "./research"
+import { SourceCaptureV2 } from "./source-capture"
 
 // A write-roots seat's scope is bound by the host at Task dispatch and enforced by ToolSafety, never by the charter. It
 // is stored as reserved rules in the child Session's permission ruleset, so it is durable and no tool permission ever
@@ -119,7 +122,8 @@ export const confine = Effect.fn("WriteRootsV2.confine")(function* (
  * The Location's ToolSafety, over the Arsenal's native one, narrowed to the write roots bound to the calling Session and,
  * for a native seat, confined as `confine` says. The Session's rules are read on every call, so a binding made while it
  * runs applies to its next tool call. A research child's tool call is also charged to its dispatch allowance, and its
- * web search sees only the dispatch's allowed domains (V1 provided both around the child run).
+ * web search sees only the dispatch's allowed domains (V1 provided both around the child run). Its source-acquiring
+ * calls settle acquisition receipts (`SourceCaptureV2`).
  */
 export const safetyNode = {
   ...ArsenalNative.nativeSafetyNode,
@@ -136,6 +140,9 @@ export const safetyNode = {
       // The roster loads lazily (see `seats.ts`); where it cannot load no agent is the research seat.
       const roster = yield* Effect.tryPromise(() => import("../../roster")).pipe(Effect.option)
       const canonical = (id: string): string => (roster._tag === "Some" ? roster.value.canonicalMemberId(id) : id)
+      const records = yield* ResearchRecords.Service
+      // The seat skill tree loads lazily like the roster; where it cannot load, no read is excluded as the seat's method.
+      const skills = yield* Effect.tryPromise(() => import("../../seat-skill-root")).pipe(Effect.option)
       const services = { db: database.db, events, store, canonical, allowances, location }
       const research = (input: ToolSafety.Invocation) =>
         Effect.gen(function* () {
@@ -154,6 +161,11 @@ export const safetyNode = {
       }
       return ToolSafety.Service.of({
         ...safety,
+        acquire: SourceCaptureV2.acquire({
+          ...services,
+          records,
+          skillRoot: skills._tag === "Some" ? skills.value.SeatSkillRoot.roots[ResearchSeatTools.SEAT] : undefined,
+        }),
         before: (input) =>
           Effect.gen(function* () {
             const bound = yield* roots(input.sessionID)
@@ -186,6 +198,7 @@ export const safetyNode = {
     Database.node,
     EventV2.node,
     ResearchAllowance.node,
+    ResearchRecords.node,
   ],
 }
 

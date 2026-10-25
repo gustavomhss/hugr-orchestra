@@ -1,17 +1,13 @@
 import { expect, test } from "bun:test"
-import { randomUUID } from "node:crypto"
 import { Effect, Layer, type Scope } from "effect"
-import { Database } from "@orchestra/core/database/database"
 import { Project } from "@orchestra/core/project"
-import { SessionSchema, SessionStore } from "@orchestra/core/session"
-import { SessionMessage } from "@orchestra/core/session/message"
-import { SessionInputTable } from "@orchestra/core/session/sql"
+import { SessionSchema } from "@orchestra/core/session"
 import { TaskGovernance } from "@orchestra/core/tool/task-governance"
 import { AllowedDomains } from "@orchestra/core/tool/websearch"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { Research } from "@orchestra/schema/research"
 import { ResearchDispatchV2 } from "../src/v2/governance/research"
-import { admit, governanceLayer, researchLayer, session, worktree } from "./fixture/v2-governance"
+import { admit, child, governanceLayer, researchLayer, session, worktree } from "./fixture/v2-governance"
 
 const run = <A, E, R>(layer: (directory: string) => Layer.Layer<R, unknown>, body: (directory: string) => Effect.Effect<A, E, R | Scope.Scope>) =>
   Effect.runPromise(
@@ -25,38 +21,6 @@ const run = <A, E, R>(layer: (directory: string) => Layer.Layer<R, unknown>, bod
 
 const refusal = <R>(effect: Effect.Effect<unknown, { readonly message: string }, R>) =>
   Effect.flip(effect).pipe(Effect.map((error) => error.message))
-
-/** A research child under maestro, bound to the dispatch `callID` unless `bound` is false, with one pending input. */
-const child = Effect.fn("ResearchTest.child")(function* (
-  directory: string,
-  input: { readonly bound?: boolean; readonly effort?: Research.Depth; readonly allowedDomains?: string[]; readonly started?: number } = {},
-) {
-  const parentID = yield* session({ directory, agent: "maestro" })
-  const rules = input.bound === false
-    ? []
-    : ResearchDispatchV2.bind([], { callID: "call_research", effort: input.effort, allowedDomains: input.allowedDomains })
-  const id = yield* session({
-    directory,
-    agent: "jimmy",
-    parentID,
-    permission: rules.map((rule) => ({ permission: rule.action, pattern: rule.resource, action: rule.effect })),
-  })
-  const database = yield* Database.Service
-  yield* database.db.insert(SessionInputTable)
-    .values({
-      id: SessionMessage.ID.make(`msg_${randomUUID().replaceAll("-", "")}`),
-      session_id: id,
-      prompt: { text: "p" },
-      delivery: "steer",
-      admitted_seq: 0,
-      ...(input.started === undefined ? {} : { time_created: input.started }),
-    })
-    .run().pipe(Effect.orDie)
-  const store = yield* SessionStore.Service
-  const info = yield* store.get(id)
-  if (!info) return yield* Effect.die("fixture child missing")
-  return info
-})
 
 const tool = (sessionID: SessionSchema.ID, callID: string) =>
   Effect.gen(function* () {
