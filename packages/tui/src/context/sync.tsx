@@ -15,7 +15,6 @@ import type {
   FormatterStatus,
   SessionStatus,
   ProviderListResponse,
-  ProviderAuthMethod,
   VcsInfo,
   SnapshotFileDiff,
   SessionMessage,
@@ -66,7 +65,6 @@ export const {
       capabilities: {
         experimentalBackgroundSubagents: boolean
       }
-      provider_auth: Record<string, ProviderAuthMethod[]>
       agent: Agent[]
       command: Command[]
       permission: {
@@ -110,7 +108,6 @@ export const {
       capabilities: {
         experimentalBackgroundSubagents: false,
       },
-      provider_auth: {},
       config: {},
       status: "loading",
       agent: [],
@@ -402,6 +399,28 @@ export const {
             sdk.catalog.commands(location).then((x) => setStore("command", reconcile(x))),
             sdk.catalog.lsp(location).then((x) => setStore("lsp", reconcile(x))),
             sdk.catalog.mcp(location).then((x) => setStore("mcp", reconcile(x))),
+            sdk.api.mcp
+              .resources({ location })
+              .then((result) =>
+                setStore(
+                  "mcp_resource",
+                  reconcile(
+                    Object.fromEntries(
+                      result.data.resources.map((resource) => [
+                        `${resource.server}:${resource.uri}`,
+                        {
+                          name: resource.name,
+                          uri: resource.uri,
+                          description: resource.description ?? undefined,
+                          mimeType: resource.mimeType ?? undefined,
+                          client: resource.server,
+                        },
+                      ]),
+                    ),
+                  ),
+                ),
+              )
+              .catch(() => undefined),
             sdk.catalog.status().then((x) => setStore("session_status", reconcile(x))),
             sdk.catalog.vcs(location).then((x) => setStore("vcs", reconcile(x))),
             project.workspace.sync(),

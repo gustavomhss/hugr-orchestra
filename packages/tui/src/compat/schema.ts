@@ -181,7 +181,7 @@ export type ExperimentalWorkspaceAdapterListResponse = Array<{
 export type ProviderAuthMethod = {
   type: "oauth" | "api"
   label: string
-  prompts?: Array<
+  prompts?: ReadonlyArray<
     | {
         type: "text"
         key: string
@@ -193,7 +193,7 @@ export type ProviderAuthMethod = {
         type: "select"
         key: string
         message: string
-        options: Array<{ label: string; value: string; hint?: string }>
+        options: ReadonlyArray<{ label: string; value: string; hint?: string }>
         when?: { key: string; op: "eq" | "neq"; value: string }
       }
   >
