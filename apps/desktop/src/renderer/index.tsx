@@ -33,7 +33,6 @@ import { resetZoom, setPinchZoomEnabled, webviewZoom, zoomIn, zoomOut } from "./
 import { windowFullscreen } from "./window-fullscreen"
 import { createResponseDownloader } from "./response-download"
 import { availableStartupServer, readyWslConnections } from "./wsl/connections"
-import { CometSplash } from "./splash/comet-splash"
 import "./styles.css"
 import { useTheme } from "@orchestra/ui/theme/context"
 
@@ -475,11 +474,8 @@ render(() => {
   })
 
   return (
-    <>
-      <Show when={windowState.latest} fallback={<LoadingSplash />} keyed>
-        {(state) => <DesktopRoot windowState={state} />}
-      </Show>
-      <CometSplash />
-    </>
+    <Show when={windowState.latest} fallback={<LoadingSplash />} keyed>
+      {(state) => <DesktopRoot windowState={state} />}
+    </Show>
   )
 }, root!)
