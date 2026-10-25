@@ -56,15 +56,10 @@ test("a native seat starts only what its own profile allows", () =>
 test("each phase without a V2 host refuses the call with its reason, never skipping the check", () =>
   run((directory) =>
     Effect.gen(function* () {
-      const governed = {
-        sessionID: "s", projectID: "p", memberID: "backend", approvalMessageID: "m", planRevisionID: "r",
-        revisionHash: "h", validationRecordID: "v", validationHash: "h", contextHash: "h", policyHash: "h", taskHash: "h",
-      }
       const cases = [
+        // Without the process Session service a background result has no way back.
         [{ background: true }, "background-unavailable"],
         [{ workflow: { documentID: "doc", planRevisionID: "evt_plan", parameters: {} } }, "workflow-unavailable"],
-        [{ authorizationID: "evt_authorization" }, "authorized-dispatch-unavailable"],
-        [{ governed }, "governed-dispatch-unavailable"],
       ] as const
       for (const [extra, reason] of cases)
         expect(yield* refusal(admit({ directory, caller: "maestro", target: "general", extra }))).toStartWith(`Task denied: ${reason}:`)
@@ -72,8 +67,25 @@ test("each phase without a V2 host refuses the call with its reason, never skipp
         .toStartWith("Task denied: atlas-resume-unavailable:")
       expect(yield* refusal(admit({ directory, caller: "maestro", target: "jimmy" })))
         .toStartWith("Task denied: research-allowance-unavailable:")
+      // An upstream proposal settles only in the foreground.
+      expect(yield* refusal(admit({ directory, caller: "maestro", target: "archie", extra: { background: true } })))
+        .toStartWith("Task denied: upstream-settlement-unavailable:")
       // `background: false` is the foreground Task every runtime has.
       expect(yield* admit({ directory, caller: "maestro", target: "general", extra: { background: false } })).toEqual({})
+    }),
+  ))
+
+test("authorized and governed Tasks run their reservation checks instead of a blanket refusal", () =>
+  run((directory) =>
+    Effect.gen(function* () {
+      expect(yield* refusal(admit({ directory, caller: "maestro", target: "general", extra: { authorizationID: "evt_authorization" } })))
+        .toStartWith("MaestroDispatchRejected: authorization-not-found.")
+      const governed = {
+        sessionID: "s", projectID: "p", memberID: "maestro", approvalMessageID: "m", planRevisionID: "r",
+        revisionHash: "h", validationRecordID: "v", validationHash: "h", contextHash: "h", policyHash: "h", taskHash: "h",
+      }
+      expect(yield* refusal(admit({ directory, caller: "maestro", target: "general", extra: { governed } })))
+        .toBe("Governed Task denied: request-context-mismatch")
     }),
   ))
 

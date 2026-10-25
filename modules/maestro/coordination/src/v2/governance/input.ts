@@ -25,9 +25,9 @@ export const fields = {
       policyHash: Schema.String,
       taskHash: Schema.String,
     }),
-  ).annotate({ description: `Exact approval binding required only for an explicit governed Task. ${UNAVAILABLE}` }),
+  ).annotate({ description: `Exact approval binding required only for an explicit governed Task.` }),
   authorizationID: Schema.optional(Schema.String).annotate({
-    description: `AuthorizationGranted ID for current team dispatch. ${UNAVAILABLE}`,
+    description: "AuthorizationGranted ID for current team dispatch.",
   }),
   writePaths: WriteRootsV2.Param,
   workflow: Schema.optional(
@@ -52,9 +52,17 @@ export const fields = {
     description: `jimmy only: lower-case host names its web search may return for this dispatch. Ignored for other teammates. ${UNAVAILABLE}`,
   }),
   background: Schema.optional(Schema.Boolean).annotate({
-    description: `Return at once while the teammate works; its result arrives as a new message. ${UNAVAILABLE}`,
+    description: "Return at once while the teammate works; its result arrives as a new message.",
   }),
 }
 
-export const Input = Schema.Struct({ task_id: Schema.optional(Schema.String), ...fields })
+// Core's own Task fields the governance reads; core decodes and checks them first.
+export const Input = Schema.Struct({
+  description: Schema.String,
+  prompt: Schema.String,
+  subagent_type: Schema.String,
+  model: Schema.optional(Schema.String),
+  task_id: Schema.optional(Schema.String),
+  ...fields,
+})
 export type Input = typeof Input.Type
