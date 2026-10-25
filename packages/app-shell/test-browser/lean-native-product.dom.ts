@@ -1,6 +1,5 @@
 import { expect, test } from "bun:test"
 import { Orchestra } from "@orchestra/client"
-import { ServerAuth } from "@orchestra/server/auth"
 import type { LeanDashboard } from "@orchestra/schema/lean-dashboard"
 
 // Browser-conditioned leg of lean-native-product.test.ts: the real controller and profile view, over the real
@@ -17,7 +16,7 @@ const base = process.env.LEAN_NATIVE_PRODUCT_URL!
 const directory = process.env.LEAN_NATIVE_PRODUCT_DIR!
 
 test("the Lean profile view shows the saved Go item and switches it off through the route", async () => {
-  const orchestra = Orchestra.make({ baseUrl: base, headers: ServerAuth.headers({ password: process.env.LEAN_NATIVE_PRODUCT_PASSWORD! }) })
+  const orchestra = Orchestra.make({ baseUrl: base, headers: { Authorization: `Basic ${Buffer.from(`orchestra:${process.env.LEAN_NATIVE_PRODUCT_PASSWORD!}`).toString("base64")}` } })
   const transport = createLeanAPI({ directory }, orchestra)
   const patches: LeanDashboard.Update[] = []
   const owned = createRoot((dispose) => ({ dispose, lean: createLeanController((error) => ({ message: String(error), unavailable: false })) }))
