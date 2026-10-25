@@ -114,6 +114,17 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
         typeof config.sessionStatus === "function" ? config.sessionStatus() : (config.sessionStatus ?? {}),
       )
     if (path === "/vcs/diff" && config.vcsDiff) return json(route, config.vcsDiff)
+    if (path === "/api/fs/list" && config.fileList)
+      return json(route, { location: location(config), data: await config.fileList(url.searchParams.get("path") ?? "") })
+    if (path === "/api/fs/read" && config.fileContent) {
+      const file = (await config.fileContent(url.searchParams.get("path") ?? "")) as { content?: string }
+      return route.fulfill({
+        status: 200,
+        contentType: "application/octet-stream",
+        headers: { "access-control-allow-origin": "*" },
+        body: file.content ?? "",
+      })
+    }
     if (path === "/file" && config.fileList)
       return json(route, await config.fileList(url.searchParams.get("path") ?? ""))
     if (path === "/file/content" && config.fileContent)
@@ -215,7 +226,10 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
       const offset = Number(url.searchParams.get("cursor") ?? 0)
       const sessions = config.sessions
         .filter((session) => !directory || session.directory === directory)
-        .filter((session) => parentID !== "null" || session.parentID === undefined)
+        // The app lists root Sessions; it sends no parent filter on the V2 list.
+        .filter((session) =>
+          parentID && parentID !== "null" ? session.parentID === parentID : session.parentID === undefined,
+        )
         .filter((session) => {
           const search = url.searchParams.get("search")?.toLowerCase()
           return (

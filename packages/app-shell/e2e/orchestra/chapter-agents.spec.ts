@@ -13,7 +13,7 @@ for (const scheme of ["dark", "light"] as const) {
     const roster = page.getByRole("list", { name: "Configured agents" })
     await expect(roster.getByRole("listitem")).toHaveCount(5)
     expect(
-      mock.requests.filter((request) => new URL(request.url).pathname === "/agent" && request.directory === directory),
+      mock.requests.filter((request) => new URL(request.url).pathname === "/api/agent" && request.directory === directory),
     ).toHaveLength(1)
     await expect(roster).not.toContainText("secret")
     await expect(page.locator(".orchestra-agents").getByRole("heading", { level: 1 })).toHaveText(
@@ -67,10 +67,10 @@ test("Open Chat opens a blank draft with no agent choice for the same profile an
   expect(mock.requests.filter((request) => !["GET", "HEAD", "OPTIONS"].includes(request.method))).toEqual([])
   expect(
     mock.requests
-      .filter((request) => new URL(request.url).pathname === "/agent")
+      .filter((request) => new URL(request.url).pathname === "/api/agent")
       .every(
         (request) =>
-          new URL(request.url).origin === serverA && new URL(request.url).searchParams.get("directory") === directory,
+          new URL(request.url).origin === serverA && new URL(request.url).searchParams.get("location[directory]") === directory,
       ),
   ).toBe(true)
   await page.reload()
@@ -90,12 +90,12 @@ test("agent and agent file requests target the selected profile", async ({ page 
     "Unlimited steps",
     "Provider not connected",
   ])
-  const targets = mock.requests.filter((request) => new URL(request.url).pathname === "/agent")
+  const targets = mock.requests.filter((request) => new URL(request.url).pathname === "/api/agent")
   expect(targets.length).toBeGreaterThan(0)
   expect(
     targets.every(
       (request) =>
-        new URL(request.url).origin === serverA && new URL(request.url).searchParams.get("directory") === directory,
+        new URL(request.url).origin === serverA && new URL(request.url).searchParams.get("location[directory]") === directory,
     ),
   ).toBe(true)
   const files = mock.requests.filter((request) => new URL(request.url).pathname === "/api/agent/plan/file")
@@ -140,22 +140,22 @@ test("switching profiles during an agent request isolates servers and directorie
   try {
     await openAgents(page, false)
     await expect(page.getByRole("status")).toContainText("Loading agents")
-    await expect.poll(() => requests.some((request) => new URL(request.url).pathname === "/agent")).toBe(true)
+    await expect.poll(() => requests.some((request) => new URL(request.url).pathname === "/api/agent")).toBe(true)
     await page.getByRole("button", { name: "Choose repository profile" }).click()
     await page.getByRole("menuitemradio", { name: "Boreal" }).click()
     await expect(page.getByRole("list", { name: "Configured agents" })).toContainText("boreal-agent")
     pending.release()
     await expect
-      .poll(() => completed.filter((url) => url.startsWith(serverA) && new URL(url).pathname === "/agent").length)
+      .poll(() => completed.filter((url) => url.startsWith(serverA) && new URL(url).pathname === "/api/agent").length)
       .toBeGreaterThanOrEqual(
-        requests.filter((request) => request.url.startsWith(serverA) && new URL(request.url).pathname === "/agent")
+        requests.filter((request) => request.url.startsWith(serverA) && new URL(request.url).pathname === "/api/agent")
           .length,
       )
     await page.evaluate(
       () => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))),
     )
     await expect
-      .poll(() => requests.filter((request) => new URL(request.url).pathname === "/agent").length)
+      .poll(() => requests.filter((request) => new URL(request.url).pathname === "/api/agent").length)
       .toBeGreaterThanOrEqual(2)
     await expect(page.getByRole("list", { name: "Configured agents" })).not.toContainText("Plans repository work")
     await page.getByRole("button", { name: "Choose repository profile" }).click()
@@ -168,13 +168,13 @@ test("switching profiles during an agent request isolates servers and directorie
     expect(
       requests.some(
         (request) =>
-          request.url.startsWith(serverB) && new URL(request.url).searchParams.get("directory") === directory,
+          request.url.startsWith(serverB) && new URL(request.url).searchParams.get("location[directory]") === directory,
       ),
     ).toBe(true)
     expect(
       requests.some(
         (request) =>
-          request.url.startsWith(serverA) && new URL(request.url).searchParams.get("directory") === otherDirectory,
+          request.url.startsWith(serverA) && new URL(request.url).searchParams.get("location[directory]") === otherDirectory,
       ),
     ).toBe(true)
   } finally {
@@ -213,7 +213,7 @@ test("an agent request retains its response state while a later refresh changes 
     await page.goto("/", { waitUntil: "domcontentloaded" })
     await expect
       .poll(() =>
-        mock.requests.some((request) => new URL(request.url).pathname === "/agent" && request.directory === directory),
+        mock.requests.some((request) => new URL(request.url).pathname === "/api/agent" && request.directory === directory),
       )
       .toBe(true)
     response.state = "ready"
@@ -243,7 +243,7 @@ test("current protocol agents retain configured model, steps and permission rule
   await expect(dialog(page).getByLabel("Read", { exact: true }).locator("option:checked")).toHaveText("Inherit (allow)")
 })
 
-test("create agent writes the project agent file and reloads the legacy roster", async ({ page }) => {
+test("create agent writes the project agent file and reloads the roster", async ({ page }) => {
   const mock = await setup(page, { models: true })
   await openAgents(page)
   const opener = page.getByRole("button", { name: "Create agent", exact: true })
@@ -291,7 +291,7 @@ test("create agent writes the project agent file and reloads the legacy roster",
       },
     },
   ])
-  expect(mock.disposed).toEqual([directory])
+  expect(mock.disposed).toEqual([])
   await expect(card(page, "reviewer")).toContainText("Reviews the diff")
   await expect(card(page, "reviewer").locator(".agent-role")).toHaveText("subagent")
 })
@@ -550,18 +550,3 @@ for (const fileApi of [false, "html"] as const) {
     expect(mock.writes).toEqual([])
   })
 }
-
-test("saving while sessions run defers the legacy reload instead of disposing the instance", async ({ page }) => {
-  const mock = await setup(page, { sessionStatus: { ses_busy: { type: "busy" } } })
-  await openAgents(page)
-  await page.getByRole("button", { name: "Create agent", exact: true }).click()
-  await dialog(page).getByLabel("Name").fill("reviewer")
-  await dialog(page).getByLabel("Description").fill("Reviews the diff")
-  await dialog(page).getByRole("button", { name: "Save", exact: true }).click()
-  await expect(dialog(page)).toHaveCount(0)
-  expect(mock.writes).toHaveLength(1)
-  await expect(page.getByRole("status").filter({ hasText: "Saved to" })).toHaveText(
-    "Saved to .orchestra/agent/reviewer.md. Sessions are running in this profile, so the agent list reloads once they finish.",
-  )
-  expect(mock.disposed).toEqual([])
-})
