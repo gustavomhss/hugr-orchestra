@@ -165,19 +165,19 @@ function requireText(value: string, reason: string) {
 }
 
 /** Checks must be nonempty, well formed, unique and sorted by id, as V1 requires them. */
-function requireChecks(value: readonly Check[]) {
-  if (value.length === 0) return Effect.fail({ reason: "empty-checks" })
-  if (value.some((check) => check.id.length === 0 || check.detail.length === 0))
-    return Effect.fail({ reason: "malformed-check" })
+const requireChecks = Effect.fnUntraced(function* (value: readonly Check[]) {
+  const failed = (reason: string, detail?: string) => Effect.fail<{ reason: string; detail?: string }>({ reason, detail })
+  if (value.length === 0) return yield* failed("empty-checks")
+  if (value.some((check) => check.id.length === 0 || check.detail.length === 0)) return yield* failed("malformed-check")
   const checks = value.map((check) => ({ id: check.id, status: check.status, detail: check.detail }))
-  if (new Set(checks.map((check) => check.id)).size !== checks.length) return Effect.fail({ reason: "duplicate-check-id" })
+  if (new Set(checks.map((check) => check.id)).size !== checks.length) return yield* failed("duplicate-check-id")
   if (checks.some((check, index) => index > 0 && checks[index - 1].id.localeCompare(check.id) >= 0))
-    return Effect.fail({
-      reason: "checks-not-deterministic",
-      detail: `List checks sorted by id: ${JSON.stringify(checks.map((check) => check.id).toSorted((a, b) => a.localeCompare(b)))}; this call passed ${JSON.stringify(checks.map((check) => check.id))}.`,
-    })
-  return Effect.succeed(checks)
-}
+    return yield* failed(
+      "checks-not-deterministic",
+      `List checks sorted by id: ${JSON.stringify(checks.map((check) => check.id).toSorted((a, b) => a.localeCompare(b)))}; this call passed ${JSON.stringify(checks.map((check) => check.id))}.`,
+    )
+  return checks
+})
 
 /**
  * The Session that records, bound to its project: the Session's Git root must be the project worktree or one of its
