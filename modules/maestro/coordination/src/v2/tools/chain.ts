@@ -31,6 +31,10 @@ const nextSteps: Record<string, string> = {
   "unit-unavailable": "Use exact unit IDs from maestro_catalog_context.",
 }
 
+// A context's identity is its Session and plan revision, so a changed repository needs a new plan revision.
+export const STALE_CONTEXT_NEXT_STEP =
+  "HEAD, the working tree or the Own source changed since the context was recorded; record a new plan revision (change any field, such as methodVersion), rerun the checks, then record a new context and a new validation."
+
 /** V1's `AtlasContextHeld` refusal, as the tool failure the model reads. */
 export function atlasHeld(reason: string, evidence: readonly string[]) {
   const held = `${reason}: ${evidence.join("; ")}`

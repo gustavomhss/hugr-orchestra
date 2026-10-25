@@ -19,6 +19,7 @@ import { MaestroArsenal } from "@orchestra/core/tool/maestro-arsenal"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { Tools } from "@orchestra/core/tool/tools"
 import { ToolOutputStore } from "@orchestra/core/tool-output-store"
+import { GovernanceBackgroundV2 } from "./governance/background"
 import { MaestroSeats } from "./seats-service"
 import { MaestroAdmissionTools } from "./tools/admission"
 import { MaestroApprovalTools } from "./tools/approval"
@@ -60,7 +61,12 @@ const layer = Layer.effectDiscard(
         ...MaestroAdmissionTools.tools({ db: database.db, events, store, gate }),
         ...MaestroApprovalTools.tools({ db: database.db, events, store, gate }),
         ...MaestroPlanningTools.tools({ services, gate }),
-        ...MaestroReviewTools.tools({ gate }),
+        ...MaestroReviewTools.tools({
+          services,
+          gate,
+          sessions: yield* GovernanceBackgroundV2.Sessions,
+          execution: yield* MaestroReviewTools.Execution,
+        }),
         ...MaestroResultTools.tools({ gate }),
         ...MaestroWorkflowTools.tools({ gate }),
       })
@@ -94,5 +100,7 @@ export const node = makeLocationNode({
     Config.node,
     GitCli.node,
     SkillV2.node,
+    GovernanceBackgroundV2.sessionsNode,
+    MaestroReviewTools.executionNode,
   ],
 })
