@@ -9,7 +9,7 @@ export const HARD_LIMIT_LOC = 750
 
 const SOURCE_EXTENSIONS = new Set(["ts", "tsx", "js", "jsx", "mjs", "cjs"])
 const IGNORED_SEGMENTS = new Set([".git", "node_modules", "dist", "build", "coverage", ".next", ".sst", ".turbo"])
-const EXCLUDED_PREFIXES = ["foundation/atlas/", "modules/atlas/"]
+const EXCLUDED_PREFIXES = ["modules/atlas/"]
 
 export type Finding = {
   file: string
