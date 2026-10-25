@@ -339,7 +339,7 @@ test.describe("smoke: session timeline", () => {
     await navigateToSession(page, fixture.directory, fixture.sourceID, fixture.expected.sourceTitle)
     await expectSessionReady(page)
     await navigateToSession(page, fixture.directory, fixture.targetID, fixture.expected.targetTitle)
-    const expectedPartIDs = fixture.expected.targetPartIDs
+    const expectedPartIDs = targetPartIDs()
     const expectedMessageIDs = fixture.expected.targetMessageIDs
     await expectSessionTimelineReady(page, expectedPartIDs, expectedMessageIDs, errors)
     await expectCanScrollToStart(page, expectedPartIDs, expectedMessageIDs, errors)
@@ -617,6 +617,18 @@ function expectOrderedIDs(expected: string[], actual: string[], label: string) {
   expect(actual.length, `${label} ids should not be empty`).toBeGreaterThan(0)
   const actualSet = new Set(actual)
   expect(actual, `${label} ids`).toEqual(expected.filter((id) => actualSet.has(id)))
+}
+
+// V2 history carries no text/reasoning part ids: the app derives message:type:ordinal, and keeps content order.
+function targetPartIDs() {
+  return fixture.messages[fixture.targetID].flatMap((message) => {
+    const ordinals = { text: 0, reasoning: 0 }
+    return message.parts.map((part) =>
+      part.type === "text" || part.type === "reasoning"
+        ? `${message.info.id}:${part.type}:${ordinals[part.type]++}`
+        : part.id,
+    )
+  })
 }
 
 function unique(values: string[]) {

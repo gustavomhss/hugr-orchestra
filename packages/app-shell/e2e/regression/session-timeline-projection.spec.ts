@@ -1,3 +1,4 @@
+import type { UserMessage } from "@/v2-wire"
 import { expect, test } from "@playwright/test"
 import {
   assistantMessage,
@@ -84,7 +85,6 @@ test.describe("session timeline projection", () => {
         }),
         userText("Continue after the comment", { id: "prt_visible_user" }),
       ],
-      { summary: { diffs: Array.from({ length: 11 }, (_, index) => summaryDiff(index)) } },
     )
     const aborted = assistantMessage(
       [
@@ -128,24 +128,18 @@ test.describe("session timeline projection", () => {
     await expect(page.locator('[data-timeline-row="TurnGap"]')).toBeVisible()
   })
 
-  test("renders inline comments and historical diff summary overflow", async ({ page }) => {
-    const user = userMessage(
-      [
-        userText("The user made the following comment regarding lines 4 through 8 of src/a.ts: Keep this stable", {
-          id: "prt_comment_only",
-          synthetic: true,
-          metadata: {
-            orchestraComment: {
-              path: "src/a.ts",
-              selection: { startLine: 4, startChar: 0, endLine: 8, endChar: 0 },
-              comment: "Keep this stable",
-            },
-          },
-        }),
-        userText("Continue after the comment", { id: "prt_comment_visible" }),
-      ],
-      { summary: { diffs: Array.from({ length: 11 }, (_, index) => summaryDiff(index)) } },
-    )
+  test("renders inline comments", async ({ page }) => {
+    const user = commentUser("prt_comment_only", "prt_comment_visible")
+    await setupTimeline(page, { messages: [user, assistantMessage()] })
+
+    await expect(page.getByText("Keep this stable", { exact: true })).toBeVisible()
+  })
+
+  // V2 records no per-turn diffs (the user message never carries `summary`), so the row cannot render from history.
+  test.fixme("renders historical diff summary overflow", async ({ page }) => {
+    const user = commentUser("prt_diff_comment", "prt_diff_visible", {
+      summary: { diffs: Array.from({ length: 11 }, (_, index) => summaryDiff(index)) },
+    })
     const nextUser = userMessage(undefined, { id: "msg_2000_diff_next_user", created: 1700000010000 })
     const nextAssistant = assistantMessage([], {
       id: "msg_2001_diff_next_assistant",
@@ -158,7 +152,6 @@ test.describe("session timeline projection", () => {
     const scroller = page.locator(".scroll-view__viewport", { has: page.locator("[data-timeline-row]") })
     await scroller.evaluate((element) => (element.scrollTop = 0))
 
-    await expect(page.getByText("Keep this stable", { exact: true })).toBeVisible()
     await expect(page.locator('[data-timeline-row="DiffSummary"]')).toBeVisible()
     await expect(page.getByText(/show all/i)).toBeVisible()
   })
@@ -223,6 +216,26 @@ test.describe("session timeline projection", () => {
     await expect(page.getByText("@explore", { exact: true })).toBeVisible()
   })
 })
+
+function commentUser(commentID: string, visibleID: string, input: { summary?: UserMessage["summary"] } = {}) {
+  return userMessage(
+    [
+      userText("The user made the following comment regarding lines 4 through 8 of src/a.ts: Keep this stable", {
+        id: commentID,
+        synthetic: true,
+        metadata: {
+          orchestraComment: {
+            path: "src/a.ts",
+            selection: { startLine: 4, startChar: 0, endLine: 8, endChar: 0 },
+            comment: "Keep this stable",
+          },
+        },
+      }),
+      userText("Continue after the comment", { id: visibleID }),
+    ],
+    input,
+  )
+}
 
 function editPart(id: string) {
   return toolPart(
