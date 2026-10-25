@@ -2,7 +2,8 @@ import type { Finding, Report, Rule } from "./contract"
 import catalog from "./rules.fixture.json"
 
 // Fixture data in the exact contract shapes (brief §5) for the dev scenario switch and tests; production reads the
-// server's guardrail routes. The rules are generated from script/guards/rules/*.toml; the reports cover every state in §7.
+// server's guardrail routes. The rules are generated from script/guards/rules/*.toml, without the samples of the secret
+// rules, which the guards would block here; the reports cover every state in §7.
 export const rules = catalog as Rule[]
 
 const base = "8f3c2a1d9e0b7c6f5a4e3d2c1b0a9f8e7d6c5b4a"
@@ -42,7 +43,8 @@ const warnings = [
 ]
 
 const blocked = [
-  hit("ts-ignore", "packages/core/src/session/runner.ts", 131, "    // @ts-ignore", "@ts-ignore"),
+  // No excerpt: the suppression comment itself would trip the guards on this file.
+  hit("ts-ignore", "packages/core/src/session/runner.ts", 131, null),
   hit(
     "secret-token",
     "packages/app-shell/src/orchestra/chapters/integrations/providers/very-long-folder-name/credentials.ts",
