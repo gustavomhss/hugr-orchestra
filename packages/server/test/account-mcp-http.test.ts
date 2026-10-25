@@ -22,11 +22,14 @@ import { ServerAuth } from "../src/auth"
 import { IntegrationHandler } from "../src/handlers/integration"
 import { McpHandler } from "../src/handlers/mcp"
 import { ProviderHandler } from "../src/handlers/provider"
+import { LocationMiddleware, type LocationServices } from "../src/location"
 import { authorizationLayer } from "../src/middleware/authorization"
 import { schemaErrorLayer } from "../src/middleware/schema-error"
 
 const api = HttpApi.make("server")
-  .add(IntegrationGroup, McpGroup, ProviderGroup)
+  .add(IntegrationGroup.middleware(LocationMiddleware))
+  .add(McpGroup.middleware(LocationMiddleware))
+  .add(ProviderGroup.middleware(LocationMiddleware))
   .middleware(Authorization)
   .middleware(SchemaErrorMiddleware)
 const auth = ServerAuth.headers({ username: "orchestra", password: "secret" })
@@ -53,6 +56,15 @@ function serve(input: { account?: ClaudeCodeAccount.Interface; mcp?: Partial<Mcp
     const routes = HttpApiBuilder.layer(api).pipe(
       Layer.provide(Layer.mergeAll(IntegrationHandler, McpHandler, ProviderHandler)),
       Layer.provide(Layer.succeedContext(context)),
+      // The production middleware boots a Location's services per request; here it hands every route this fixture's.
+      Layer.provide(
+        Layer.succeed(
+          LocationMiddleware,
+          LocationMiddleware.of((effect) =>
+            effect.pipe(Effect.provide(context as unknown as Context.Context<LocationServices>)),
+          ),
+        ),
+      ),
       Layer.provide(authorizationLayer),
       Layer.provide(schemaErrorLayer),
       Layer.provide(ServerAuth.Config.configLayer({ username: "orchestra", password: Option.some("secret") })),

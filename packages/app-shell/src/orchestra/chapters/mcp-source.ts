@@ -59,7 +59,7 @@ export function createMcpSource(input: {
       const found = await Promise.all(
         running.map((sessionID) =>
           orchestra.sessions.get({ sessionID }).then(
-            (session) => pathKey(session.data.location.directory) === pathKey(input.directory),
+            (session) => pathKey(session.location.directory) === pathKey(input.directory),
             () => false,
           ),
         ),

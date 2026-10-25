@@ -1,4 +1,4 @@
-import type { Orchestra } from "@orchestra/client"
+import type { JsonValue, Orchestra } from "@orchestra/client"
 
 // The Atlas wire types are the generated client's (D4). They are read off the `atlas` group of `@orchestra/client`, so
 // they follow the HttpApi declarations (task A08) whatever schema identifiers those use. Never hand-write these shapes.
@@ -39,4 +39,6 @@ export type AtlasReview = Exclude<AtlasOutput<"review">, { state: "empty" }>
 export type AtlasInterviewQuestion = AtlasReview["interview"]["batch"][number]
 export type AtlasMemoryProposal = AtlasReview["memoryProposals"][number]
 
-type Writable<T> = T extends object ? { -readonly [K in keyof T]: Writable<T[K]> } : T
+// JsonValue is recursive, so mapping into it never ends (TS2589). The views read untyped JSON through atlas-wire's
+// unknown guards, so it is exposed as unknown, as the wire shapes typed it before the generated client.
+type Writable<T> = [JsonValue] extends [T] ? unknown : T extends object ? { -readonly [K in keyof T]: Writable<T[K]> } : T

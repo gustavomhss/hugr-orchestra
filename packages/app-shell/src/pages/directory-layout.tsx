@@ -77,7 +77,7 @@ export function DirectoryDataProvider(
                   {
                     sessionID,
                     artifactID: artifact.id,
-                    revision: String(artifact.revision),
+                    revision: artifact.revision,
                     ...(cursor ? { cursor } : {}),
                   },
                   { signal },
