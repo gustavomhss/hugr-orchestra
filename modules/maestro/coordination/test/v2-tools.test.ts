@@ -252,14 +252,16 @@ test("each tool refuses a caller that is not its owner even where rules would al
     }),
   ))
 
-test("Arsenal governance reads the host's own Session observations instead of refusing for a missing binding", () =>
+// The binding asks the Session read permission before it reads the host's observations, so a denied read proves the
+// governance call reached the binding; without one the Arsenal refuses for the missing binding instead.
+test("Arsenal governance reaches the host's Session observation binding", () =>
   run(
     Effect.gen(function* () {
       yield* setup
       const agents = yield* AgentV2.Service
       yield* agents.transform((draft) =>
         draft.update(AgentV2.ID.make("maestro"), (agent) => {
-          agent.permissions = allow
+          agent.permissions = [...allow, { action: "read", resource: "session:*", effect: "deny" }]
         }),
       )
       const described = yield* call("maestro", MaestroArsenal.names.describe, { name: "governance" })
@@ -268,8 +270,7 @@ test("Arsenal governance reads the host's own Session observations instead of re
         name: "governance",
         arguments: { operation: "status", observations: { complete: false }, prices: [] },
       })
-      expect(JSON.stringify(executed.result)).not.toContain("no observation binding")
-      expect(executed.result).toMatchObject({ type: "text" })
+      expect(executed.result).toEqual({ type: "error", value: "Arsenal governance was not permitted" })
     }),
   ))
 
