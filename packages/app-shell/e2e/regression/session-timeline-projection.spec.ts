@@ -125,7 +125,8 @@ test.describe("session timeline projection", () => {
     await expect(page.getByText("Session compacted", { exact: true })).toBeVisible()
     await expect(page.getByText("Visible provider failure")).toBeVisible()
     await scroller.evaluate((element) => (element.scrollTop = element.scrollHeight))
-    await expect(page.locator('[data-timeline-row="TurnGap"]')).toBeVisible()
+    // V2 records the comment and the compaction as turns of their own, so the gaps between them are rows too.
+    await expect(page.locator('[data-timeline-row="TurnGap"]').last()).toBeVisible()
   })
 
   test("renders inline comments", async ({ page }) => {
