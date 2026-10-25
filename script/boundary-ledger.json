@@ -482,24 +482,6 @@
     },
     {
       "rule": "R5",
-      "file": "packages/app-shell/test-browser/lean-native-product.test-helper.ts",
-      "specifier": "../../../apps/orchestra/src/session/lean-project",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "packages/app-shell/test-browser/lean-native-product.test.ts",
-      "specifier": "../../session-ui/src/components/message-part",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "packages/app-shell/test-browser/lean-native-product.test.ts",
-      "specifier": "../../session-ui/src/context/data",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
       "file": "packages/app-shell/test-browser/lean-tool-preservation.test.ts",
       "specifier": "../../session-ui/src/components/message-part",
       "reason": "D8: relative import across a package root; retargets are deferred"
