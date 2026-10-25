@@ -4,7 +4,6 @@ import {
   baseID,
   connectableIntegration,
   errorMessage,
-  fromV1,
   fromV2,
   matches,
   noteKey,
@@ -93,61 +92,6 @@ describe("fromV2", () => {
       { type: "oauth", label: "ChatGPT Pro/Plus (browser)" },
     ])
     expect(result.catalog.find((item) => item.id === "google")?.methods).toEqual([])
-  })
-})
-
-describe("fromV1", () => {
-  const provider = (id: string, source?: string) => ({
-    id,
-    name: id,
-    source,
-    models: { m: { id: "m", name: "M", limit: { context: 1000 } } },
-  })
-  const result = fromV1({
-    all: [
-      provider("anthropic", "api"),
-      provider("local", "config"),
-      provider("env", "env"),
-      provider("zen", "custom"),
-      provider("keyed", "config"),
-    ],
-    connected: [
-      provider("anthropic", "api"),
-      provider("local", "config"),
-      provider("env", "env"),
-      provider("zen", "custom"),
-      provider("keyed", "config"),
-    ],
-    config: {
-      provider: {
-        local: { npm: "@ai-sdk/openai-compatible", models: { m: {} } },
-        keyed: { name: "Keyed" },
-        gone: { name: "Gone endpoint", npm: "@ai-sdk/openai-compatible", models: { "gone-model": { name: "Gone" } } },
-      },
-      disabled_providers: ["gone", "never-configured"],
-    },
-  })
-  const card = (id: string) => result.cards.find((item) => item.id === id)
-
-  test("maps sources to methods and disconnect paths", () => {
-    expect(card("anthropic")).toMatchObject({ method: "apiKey", disconnect: { type: "auth", custom: false } })
-    expect(card("local")).toMatchObject({ method: "custom", custom: true, disconnect: { type: "auth", custom: true } })
-    expect(card("env")).toMatchObject({ method: "environment", disconnect: { type: "none" } })
-    expect(card("zen")).toMatchObject({ method: "custom", custom: false })
-  })
-
-  test("a provider kept alive by its config entry has nothing to disconnect", () => {
-    expect(card("keyed")).toMatchObject({ method: "config", custom: false, disconnect: { type: "none" } })
-  })
-
-  test("a disabled configured provider stays listed as disconnected and can be enabled", () => {
-    expect(card("gone")).toMatchObject({
-      name: "Gone endpoint",
-      connected: false,
-      disconnect: { type: "enable" },
-      models: [{ id: "gone-model", name: "Gone" }],
-    })
-    expect(card("never-configured")).toBeUndefined()
   })
 })
 

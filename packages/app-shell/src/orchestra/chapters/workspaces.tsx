@@ -1,5 +1,5 @@
 import { For, onCleanup, onMount, Show } from "solid-js"
-import { createStore, produce } from "solid-js/store"
+import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { ServerConnection } from "@/context/server"
 import { useServerSDK } from "@/context/server-sdk"
@@ -34,7 +34,6 @@ export default function Workspaces(props: ChapterPageProps) {
   const [preference, setPreference, , preferenceReady] = persistedWorkspaces(serverSDK().scope)
   const [state, setState] = createStore({
     status: "loading" as "loading" | "ready" | "empty" | "error" | "unavailable",
-    protocol: "v2" as "v2",
     project: undefined as Project | undefined,
     workspaces: [] as ReturnType<typeof repositoryWorkspaces>,
     branches: {} as Record<string, string | undefined>,
@@ -70,13 +69,13 @@ export default function Workspaces(props: ChapterPageProps) {
     // Desktop storage is asynchronous; read the saved choice before marking a card Active.
     await preferenceReady.promise
     const result = await serverSDK()
-      .protocol.then(async (protocol) => {
-        const project = repositoryProject(await listProjects(protocol), props.directory)
-        if (!project) return { protocol, project, directories: undefined }
+      .ready.then(async () => {
+        const project = repositoryProject(await serverSDK().api.project.list(), props.directory)
+        if (!project) return { project, directories: [] }
         const directories = await serverSDK().api.project.directories({
           projectID: project.id,
         })
-        return { protocol, project, directories }
+        return { project, directories }
       })
       .then(
         (value) => ({ value }),
@@ -89,10 +88,10 @@ export default function Workspaces(props: ChapterPageProps) {
     }
     const project = result.value.project
     const workspaces = project ? repositoryWorkspaces(project, result.value.directories) : []
-    setState({ protocol: result.value.protocol, project, workspaces, status: workspaces.length ? "ready" : "empty" })
+    setState({ project, workspaces, status: workspaces.length ? "ready" : "empty" })
     if (!project) return
     remember(project.worktree, workspaces)
-    const branches = await readBranches(result.value.protocol, workspaces)
+    const branches = await readBranches(workspaces)
     if (!current()) return
     setState("branches", branches)
   }
@@ -110,11 +109,7 @@ export default function Workspaces(props: ChapterPageProps) {
       setPreference("active", key, undefined)
   }
 
-  async function listProjects(protocol: "v2") {
-    return serverSDK().api.project.list()
-  }
-
-  async function readBranches(protocol: "v2", workspaces: readonly { directory: string }[]) {
+  async function readBranches(workspaces: readonly { directory: string }[]) {
     const entries = await Promise.all(
       workspaces.map((item) =>
         (serverSDK().orchestra.vcs.get({ location: { directory: item.directory } }).then((result) => result.data.branch)
@@ -161,7 +156,7 @@ export default function Workspaces(props: ChapterPageProps) {
   async function create(label: string, parent: string) {
     const project = state.project
     if (!project) return
-    const target = state.protocol === "v2" ? copyTarget(parent, label) : { directory: "", name: label }
+    const target = copyTarget(parent, label)
     if (!target) {
       setState("error", language.t("orchestra.workspaces.field.invalidDirectory"))
       return
@@ -191,7 +186,6 @@ export default function Workspaces(props: ChapterPageProps) {
     }
     const created = result.directory
     setPreference("names", pathKey(created), label)
-    // V1 records new worktrees as project sandboxes; keep the shared project store in step until it refetches.
     setState({ busy: false, dialog: undefined })
     void load(true)
   }
@@ -216,7 +210,7 @@ export default function Workspaces(props: ChapterPageProps) {
       (error: unknown) => ({ error }),
     )
     if (requests.disposed) return
-    if ("error" in result && state.protocol === "v2" && !force && forceRequired(result.error)) {
+    if ("error" in result && !force && forceRequired(result.error)) {
       setState({ busy: false, dialog: { kind: "force", directory } })
       return
     }
@@ -228,20 +222,8 @@ export default function Workspaces(props: ChapterPageProps) {
       return
     }
     setPreference("names", pathKey(directory), undefined)
-    mirrorSandboxes(project.worktree, (sandboxes) => sandboxes.filter((item) => pathKey(item) !== pathKey(directory)))
     setState({ busy: false, dialog: undefined })
     void load(true)
-  }
-
-  function mirrorSandboxes(root: string, change: (sandboxes: string[]) => string[]) {
-    sync().set(
-      "project",
-      produce((projects) => {
-        const project = projects.find((item) => pathKey(item.worktree) === pathKey(root))
-        if (!project) return
-        project.sandboxes = change(project.sandboxes ?? [])
-      }),
-    )
   }
 
   return (
@@ -352,7 +334,6 @@ export default function Workspaces(props: ChapterPageProps) {
       </div>
       <WorkspacesDialog
         dialog={state.dialog}
-        protocol={state.protocol}
         busy={state.busy}
         error={state.error}
         home={home()}

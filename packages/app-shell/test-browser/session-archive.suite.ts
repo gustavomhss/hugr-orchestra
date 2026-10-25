@@ -69,7 +69,7 @@ beforeAll(async () => {
       const sdk = {
         scope: source,
         directory: "/shared/repo",
-        protocol: Promise.resolve("v2"),
+        ready: Promise.resolve(),
         client: {
           session: {
             update: (input: unknown) => {
@@ -103,7 +103,7 @@ beforeAll(async () => {
         const key = servers[source]
         return {
         scope: `${key}:${missing}`,
-        server: { type: "http", http: { url: key } }, protocolKind: () => "v2",
+        server: { type: "http", http: { url: key } }, isReady: () => true,
         api: { session: { list: async () => {
           if (listFailure) throw new Error("history offline")
           return { data: stores[source].data.session, cursor: {} }

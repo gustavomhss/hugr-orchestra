@@ -1,10 +1,10 @@
 import { describe, expect, test } from "bun:test"
-import type { OpenCodeEvent } from "@/v2-legacy"
-import type { SessionMessageInfo } from "@/v2-legacy"
+import type { ClientEvent } from "@/session-types"
+import type { SessionMessageInfo } from "@/session-types"
 
 import { createV2SessionReducer } from "./server-session-v2-reducer"
 
-const event = (input: object) => input as OpenCodeEvent
+const event = (input: object) => input as ClientEvent
 const base = { created: 1, location: { directory: "/repo" }, durable: { aggregateID: "ses_1", seq: 1, version: 1 } }
 
 describe("v2 session reducer", () => {
@@ -133,7 +133,18 @@ describe("v2 session reducer", () => {
         error: { type: "ProviderError", message: "retry" },
       },
     })
-    apply({ ...base, id: "evt_done", type: "session.execution.succeeded", data: { sessionID: "ses_1" } })
+    apply({
+      ...base,
+      id: "evt_done",
+      type: "session.step.ended",
+      data: {
+        sessionID: "ses_1",
+        assistantMessageID: "msg_assistant",
+        finish: "stop",
+        cost: 0,
+        tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+      },
+    })
 
     expect(messages[0]).toMatchObject({
       type: "assistant",

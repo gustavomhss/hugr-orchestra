@@ -3,7 +3,7 @@
 // The contract is hand-written and the adapter is built from the generated client, so the two can drift apart:
 // a group or method that only one side has, or an input that accepts what the wire rejects. These assertions
 // make that a compile error instead of a runtime surprise. The outputs stay out of the gate on purpose: the
-// contract keeps the app's legacy view of them (mutable envelopes, optional fields), and only the outputs that
+// contract keeps the app's own view of them (mutable envelopes, optional fields), and only the outputs that
 // are wrong about the wire are fixed by hand.
 
 import type { ServerApi } from "@/server-api"

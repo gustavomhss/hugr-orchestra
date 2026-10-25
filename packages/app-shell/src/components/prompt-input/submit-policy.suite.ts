@@ -39,7 +39,7 @@ test("deliberate retry follows its own retained failed barrier and obtains a fre
   void barrier.current.catch(() => {})
   const writes: SubagentModelPolicy[] = []
   const policy = createSubmissionPolicy({
-    key, sessionID: "same-session", protocol: Promise.resolve("v2"),
+    key, sessionID: "same-session",
     current: () => true, initialPolicy: { mode: "inherit" }, failedMessage: "bad receipt",
     admission: { policyWritten: true, failedWrite: { cause: failure, version: 1 } },
     management: {

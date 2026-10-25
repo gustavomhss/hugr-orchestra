@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import type { OpenCodeEvent } from "@/v2-legacy"
-import type { SessionMessageAssistant, SessionMessageInfo, SessionMessageUser } from "@/v2-legacy"
+import type { ClientEvent } from "@/session-types"
+import type { SessionMessageAssistant, SessionMessageInfo, SessionMessageUser } from "@/session-types"
 import type { SessionMessageToolStateCompleted } from "@/v2-wire"
 
 import { confirmedTodos } from "@orchestra/session-ui/confirmed-todos"
@@ -159,7 +159,7 @@ describe("normalizeSessionMessages", () => {
         // The bundled client predates native structured output.
         ...{ structured: state.structured },
       },
-    } satisfies OpenCodeEvent
+    } satisfies ClientEvent
     const result = createV2SessionReducer().reduce(source, event)
     if (!result) throw new Error("Expected a live reduction")
     expect(result.touched).toEqual(["msg_assistant"])
@@ -302,7 +302,7 @@ describe("normalizeSessionMessages", () => {
       "msg_3:file:1",
       "msg_3:agent:0",
     ])
-    // A compaction is its own turn, as V1 recorded it: a divider and the summary as the reply.
+    // A compaction is its own turn: a divider and the summary as the reply.
     expect(result.messages[2]).toMatchObject({ id: "msg_5", role: "user" })
     expect(result.messages[3]).toMatchObject({ id: "msg_5:assistant", role: "assistant", parentID: "msg_5", summary: true })
     expect(result.parts.get("msg_5")).toMatchObject([{ id: "msg_5:compaction", type: "compaction", auto: true }])

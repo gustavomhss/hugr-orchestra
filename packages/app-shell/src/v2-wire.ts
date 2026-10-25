@@ -530,11 +530,6 @@ export type Event =
   | EventMaestroTaskBound
   | EventMaestroTaskWorkflowBound
   | EventMaestroWorkResultDecided
-  | EventMessagePartDelta
-  | EventSessionDiff
-  | EventSessionError
-  | EventInstallationUpdated
-  | EventInstallationUpdateAvailable
   | EventFileEdited
   | EventReferenceUpdated
   | EventPermissionV2Asked
@@ -551,50 +546,14 @@ export type Event =
   | EventQuestionV2Rejected
   | EventRelayHookDecided
   | EventTodoUpdated
-  | EventLspUpdated
-  | EventPermissionAsked
-  | EventPermissionReplied
-  | EventTuiPromptAppend2
-  | EventTuiCommandExecute2
-  | EventTuiToastShow2
-  | EventTuiSessionSelect2
-  | EventMcpToolsChanged
-  | EventMcpStatusChanged
-  | EventMcpBrowserOpenFailed
-  | EventCommandExecuted
-  | EventProjectUpdated
-  | EventSessionStatus
-  | EventSessionIdle
-  | EventQuestionAsked
-  | EventQuestionReplied
-  | EventQuestionRejected
-  | EventSessionCompacted
   | EventVcsBranchUpdated
-  | EventWorkspaceReady
-  | EventWorkspaceFailed
-  | EventWorkspaceStatus
-  | EventWorktreeReady
-  | EventWorktreeFailed
   | EventServerConnected
-  | EventGlobalDisposed
-  | EventServerInstanceDisposed
 
 export type EventCatalogUpdated = {
   id: string
   type: "catalog.updated"
   properties: {
     [key: string]: unknown
-  }
-}
-
-export type EventCommandExecuted = {
-  id: string
-  type: "command.executed"
-  properties: {
-    name: string
-    sessionID: string
-    arguments: string
-    messageID: string
   }
 }
 
@@ -615,30 +574,6 @@ export type EventFileWatcherUpdated = {
   }
 }
 
-export type EventGlobalDisposed = {
-  id: string
-  type: "global.disposed"
-  properties: {
-    [key: string]: unknown
-  }
-}
-
-export type EventInstallationUpdateAvailable = {
-  id: string
-  type: "installation.update-available"
-  properties: {
-    version: string
-  }
-}
-
-export type EventInstallationUpdated = {
-  id: string
-  type: "installation.updated"
-  properties: {
-    version: string
-  }
-}
-
 export type EventIntegrationConnectionUpdated = {
   id: string
   type: "integration.connection.updated"
@@ -650,14 +585,6 @@ export type EventIntegrationConnectionUpdated = {
 export type EventIntegrationUpdated = {
   id: string
   type: "integration.updated"
-  properties: {
-    [key: string]: unknown
-  }
-}
-
-export type EventLspUpdated = {
-  id: string
-  type: "lsp.updated"
   properties: {
     [key: string]: unknown
   }
@@ -1057,43 +984,6 @@ export type EventMaestroWorkResultDecided = {
   }
 }
 
-export type EventMcpBrowserOpenFailed = {
-  id: string
-  type: "mcp.browser.open.failed"
-  properties: {
-    mcpName: string
-    url: string
-  }
-}
-
-export type EventMcpStatusChanged = {
-  id: string
-  type: "mcp.status.changed"
-  properties: {
-    server: string
-  }
-}
-
-export type EventMcpToolsChanged = {
-  id: string
-  type: "mcp.tools.changed"
-  properties: {
-    server: string
-  }
-}
-
-export type EventMessagePartDelta = {
-  id: string
-  type: "message.part.delta"
-  properties: {
-    sessionID: string
-    messageID: string
-    partID: string
-    field: string
-    delta: string
-  }
-}
-
 export type EventMessagePartRemoved = {
   id: string
   type: "message.part.removed"
@@ -1140,35 +1030,6 @@ export type EventModelsDevRefreshed = {
   }
 }
 
-export type EventPermissionAsked = {
-  id: string
-  type: "permission.asked"
-  properties: {
-    id: string
-    sessionID: string
-    permission: string
-    patterns: Array<string>
-    metadata: {
-      [key: string]: unknown
-    }
-    always: Array<string>
-    tool?: {
-      messageID: string
-      callID: string
-    }
-  }
-}
-
-export type EventPermissionReplied = {
-  id: string
-  type: "permission.replied"
-  properties: {
-    sessionID: string
-    requestID: string
-    reply: "once" | "always" | "reject"
-  }
-}
-
 export type EventPermissionV2Asked = {
   id: string
   type: "permission.v2.asked"
@@ -1211,21 +1072,6 @@ export type EventProjectDirectoriesUpdated = {
   }
 }
 
-export type EventProjectUpdated = {
-  id: string
-  type: "project.updated"
-  properties: {
-    id: string
-    worktree: string
-    vcs?: ProjectVcs
-    name?: string
-    icon?: ProjectIcon
-    commands?: ProjectCommands
-    time: ProjectTime
-    sandboxes: Array<string>
-  }
-}
-
 export type EventPtyCreated = {
   id: string
   type: "pty.created"
@@ -1256,39 +1102,6 @@ export type EventPtyUpdated = {
   type: "pty.updated"
   properties: {
     info: Pty
-  }
-}
-
-export type EventQuestionAsked = {
-  id: string
-  type: "question.asked"
-  properties: {
-    id: string
-    sessionID: string
-    /**
-     * Questions to ask
-     */
-    questions: Array<QuestionInfo>
-    tool?: QuestionTool
-  }
-}
-
-export type EventQuestionRejected = {
-  id: string
-  type: "question.rejected"
-  properties: {
-    sessionID: string
-    requestID: string
-  }
-}
-
-export type EventQuestionReplied = {
-  id: string
-  type: "question.replied"
-  properties: {
-    sessionID: string
-    requestID: string
-    answers: Array<QuestionAnswer>
   }
 }
 
@@ -1376,22 +1189,6 @@ export type EventServerConnected = {
   }
 }
 
-export type EventServerInstanceDisposed = {
-  id: string
-  type: "server.instance.disposed"
-  properties: {
-    directory: string
-  }
-}
-
-export type EventSessionCompacted = {
-  id: string
-  type: "session.compacted"
-  properties: {
-    sessionID: string
-  }
-}
-
 export type EventSessionCreated = {
   id: string
   type: "session.created"
@@ -1407,40 +1204,6 @@ export type EventSessionDeleted = {
   properties: {
     sessionID: string
     info: Session
-  }
-}
-
-export type EventSessionDiff = {
-  id: string
-  type: "session.diff"
-  properties: {
-    sessionID: string
-    diff: Array<SnapshotFileDiff>
-  }
-}
-
-export type EventSessionError = {
-  id: string
-  type: "session.error"
-  properties: {
-    sessionID?: string
-    error?:
-      | ProviderAuthError
-      | UnknownError
-      | MessageOutputLengthError
-      | MessageAbortedError
-      | StructuredOutputError
-      | ContextOverflowError
-      | ContentFilterError
-      | ApiError
-  }
-}
-
-export type EventSessionIdle = {
-  id: string
-  type: "session.idle"
-  properties: {
-    sessionID: string
   }
 }
 
@@ -1863,15 +1626,6 @@ export type EventSessionNextToolSuccess = {
   }
 }
 
-export type EventSessionStatus = {
-  id: string
-  type: "session.status"
-  properties: {
-    sessionID: string
-    status: SessionStatus
-  }
-}
-
 export type EventSessionUpdated = {
   id: string
   type: "session.updated"
@@ -1896,106 +1650,10 @@ export type EventTodoUpdated = {
   }
 }
 
-export type EventTuiCommandExecute2 = {
-  id: string
-  type: "tui.command.execute"
-  properties: {
-    command:
-      | "session.list"
-      | "session.new"
-      | "session.interrupt"
-      | "session.compact"
-      | "session.page.up"
-      | "session.page.down"
-      | "session.line.up"
-      | "session.line.down"
-      | "session.half.page.up"
-      | "session.half.page.down"
-      | "session.first"
-      | "session.last"
-      | "prompt.clear"
-      | "prompt.submit"
-      | "agent.cycle"
-      | string
-  }
-}
-
-export type EventTuiPromptAppend2 = {
-  id: string
-  type: "tui.prompt.append"
-  properties: {
-    text: string
-  }
-}
-
-export type EventTuiSessionSelect2 = {
-  id: string
-  type: "tui.session.select"
-  properties: {
-    /**
-     * Session ID to navigate to
-     */
-    sessionID: string
-  }
-}
-
-export type EventTuiToastShow2 = {
-  id: string
-  type: "tui.toast.show"
-  properties: {
-    title?: string
-    message: string
-    variant: "info" | "success" | "warning" | "error"
-    duration?: number
-  }
-}
-
 export type EventVcsBranchUpdated = {
   id: string
   type: "vcs.branch.updated"
   properties: {
-    branch?: string
-  }
-}
-
-export type EventWorkspaceFailed = {
-  id: string
-  type: "workspace.failed"
-  properties: {
-    message: string
-  }
-}
-
-export type EventWorkspaceReady = {
-  id: string
-  type: "workspace.ready"
-  properties: {
-    name: string
-  }
-}
-
-export type EventWorkspaceStatus = {
-  id: string
-  type: "workspace.status"
-  properties: {
-    workspaceID: string
-    status: "connected" | "connecting" | "disconnected" | "error"
-  }
-}
-
-export type EventWorktreeFailed = {
-  id: string
-  type: "worktree.failed"
-  properties: {
-    message: string
-  }
-}
-
-export type EventWorktreeReady = {
-  id: string
-  type: "worktree.ready"
-  properties: {
-    name: string
     branch?: string
   }
 }
@@ -2648,13 +2306,6 @@ export type PermissionV2Source = {
 
 export type PolicyEffect = "allow" | "deny"
 
-export type ProjectCommands = {
-  /**
-   * Startup script to run when creating a new workspace (worktree)
-   */
-  start?: string
-}
-
 export type ProjectCurrent = {
     id: string;
     directory: string;
@@ -2668,19 +2319,6 @@ export type ProjectCurrentInput = {
     }["location"];
 };
 export type ProjectCurrentOutput = ProjectCurrent;
-export type ProjectIcon = {
-  url?: string
-  override?: string
-  color?: string
-}
-
-export type ProjectTime = {
-  created: number
-  updated: number
-  initialized?: number
-}
-
-export type ProjectVcs = "git"
 
 export type Prompt = {
   text: string
@@ -2934,25 +2572,6 @@ export type Pty = {
   exitCode?: number
 }
 
-export type QuestionAnswer = Array<string>
-
-export type QuestionInfo = {
-  /**
-   * Complete question
-   */
-  question: string
-  /**
-   * Very short label (max 30 chars)
-   */
-  header: string
-  /**
-   * Available choices
-   */
-  options: Array<QuestionOption>
-  multiple?: boolean
-  custom?: boolean
-}
-
 export type QuestionOption = {
   /**
    * Display text (1-5 words, concise)
@@ -2962,11 +2581,6 @@ export type QuestionOption = {
    * Explanation of choice
    */
   description: string
-}
-
-export type QuestionTool = {
-  messageID: string
-  callID: string
 }
 
 export type QuestionV2Answer = Array<string>

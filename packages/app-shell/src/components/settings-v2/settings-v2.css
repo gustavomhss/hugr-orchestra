@@ -214,15 +214,6 @@
   padding-top: 16px;
 }
 
-.settings-v2-legacy-panel {
-  height: 100%;
-  overflow: hidden;
-}
-
-.settings-v2-legacy-panel [data-component="dialog"] {
-  display: contents;
-}
-
 /* Providers and Shortcuts render the chapter screens' own list and editor; give them the kit's type. */
 .settings-v2-tab-body.settings-v2-kit {
   display: block;

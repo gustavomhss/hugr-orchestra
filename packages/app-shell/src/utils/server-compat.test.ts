@@ -7,7 +7,7 @@ import { createCompatibleApi } from "./server-compat"
 
 import { rethrow } from "../testing/rejection"
 
-function setup(protocol: "v2" | Promise<"v2">) {
+function setup() {
   const requests: Request[] = []
   const fetcher = Object.assign(
     async (input: string | URL | Request, init?: RequestInit) => {
@@ -42,7 +42,6 @@ function setup(protocol: "v2" | Promise<"v2">) {
   )
   const server = { url: "http://localhost:4096" }
   const api = createCompatibleApi({
-    protocol: typeof protocol === "string" ? Promise.resolve(protocol) : protocol,
     current: createApiForServer({ server, fetch: fetcher }),
     directory: "/repo",
   })
@@ -51,7 +50,7 @@ function setup(protocol: "v2" | Promise<"v2">) {
 
 describe("createCompatibleApi", () => {
   test("sends MCP server and resource catalog calls to the V2 server", async () => {
-    const { api, requests } = setup("v2")
+    const { api, requests } = setup()
 
     await api.mcp.connect({ server: "x", location: { directory: "/repo" } })
     expect((await api.mcp.resource.catalog({ location: { directory: "/repo" } })).data.resources).toEqual([
@@ -64,7 +63,7 @@ describe("createCompatibleApi", () => {
   })
 
   test("resolves the V2 current project from the location route", async () => {
-    const { api, requests } = setup("v2")
+    const { api, requests } = setup()
 
     expect(await api.project.current({ location: { directory: "/repo" } })).toEqual({ id: "prj_1", directory: "/repo" })
     expect(await api.project.current({ location: { directory: "/repo" } })).toEqual({ id: "prj_1", directory: "/repo" })
@@ -75,7 +74,7 @@ describe("createCompatibleApi", () => {
   })
 
   test("sends V2 prompts in the server's canonical body", async () => {
-    const { api, requests } = setup("v2")
+    const { api, requests } = setup()
     const admitted = await api.session.prompt({
       sessionID: "ses_1",
       id: "msg_1",
@@ -111,7 +110,7 @@ describe("createCompatibleApi", () => {
   })
 
   test("switches a V2 Session to the composer's agent and model, then compacts and moves it on V2 routes", async () => {
-    const { api, requests } = setup("v2")
+    const { api, requests } = setup()
     await api.session.prompt({
       sessionID: "ses_1",
       text: "hello",
@@ -137,27 +136,9 @@ describe("createCompatibleApi", () => {
     expect(JSON.parse(sent[5]![1])).toEqual({ location: { directory: "/repo/sub" } })
   })
 
-  test("resolves protocol detection once across implementation methods", async () => {
-    let detections = 0
-    const resolved = Promise.resolve<"v2">("v2")
-    const protocol = new Proxy(resolved, {
-      get(target, property) {
-        if (property !== "then") return Reflect.get(target, property, target)
-        detections++
-        return target.then.bind(target)
-      },
-    })
-    const { api } = setup(protocol)
-
-    await api.session.list()
-    await api.session.list()
-
-    expect(detections).toBe(0)
-  })
-
   /*
   test("keeps V2 session actions on the current API", async () => {
-    const { api, requests } = setup("v2")
+    const { api, requests } = setup()
     await api.session.archive({ sessionID: "ses_1" })
 
     expect(new URL(requests[0]!.url).pathname).toBe("/api/session/ses_1/archive")
@@ -180,7 +161,6 @@ describe("createCompatibleApi", () => {
           )
           const server = { url: "http://localhost:4096" }
           const api = createCompatibleApi({
-            protocol: Promise.resolve("v2"),
             current: createApiForServer({ server, fetch: fetcher }),
             directory: "/repo",
           })

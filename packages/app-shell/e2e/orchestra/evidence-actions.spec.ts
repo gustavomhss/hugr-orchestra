@@ -94,19 +94,30 @@ test("busy state is rechecked after confirmation opens", async ({ page }) => {
   await expect(dialog.getByRole("button", { name: "Run command", exact: true })).toBeEnabled()
   await fixture.send({
     id: "evt_busy",
-    type: "session.execution.started",
-    created: 1700000004000,
+    type: "session.next.step.started",
     location: { directory },
-    data: { sessionID },
+    data: {
+      sessionID,
+      timestamp: 1700000004000,
+      assistantMessageID: "msg_busy",
+      agent: "maestro",
+      model: { id: "model", providerID: "provider" },
+    },
   })
   await expect(dialog).toContainText("This session is working")
   await expect(dialog.getByRole("button", { name: "Run command", exact: true })).toBeDisabled()
   await fixture.send({
     id: "evt_idle",
-    type: "session.execution.succeeded",
-    created: 1700000005000,
+    type: "session.next.step.ended",
     location: { directory },
-    data: { sessionID },
+    data: {
+      sessionID,
+      timestamp: 1700000005000,
+      assistantMessageID: "msg_busy",
+      finish: "stop",
+      cost: 0,
+      tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+    },
   })
   await expect(dialog.getByRole("button", { name: "Run command", exact: true })).toBeEnabled()
   await dialog.getByRole("button", { name: "Cancel", exact: true }).click()

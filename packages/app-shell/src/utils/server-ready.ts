@@ -2,9 +2,7 @@ import type { ServerConnection } from "@/context/server"
 import { retry } from "@orchestra/core/util/retry"
 import { authTokenFromCredentials } from "./server"
 
-export type ServerProtocol = "v2"
-
-export type ServerProtocolOptions = {
+export type ServerReadyOptions = {
   signal?: AbortSignal
   timeoutMs?: number
   probeTimeoutMs?: number
@@ -12,10 +10,10 @@ export type ServerProtocolOptions = {
   retryDelayMs?: number
 }
 
-export class ServerProtocolUnresolvedError extends Error {
+export class ServerNotReadyError extends Error {
   constructor() {
-    super("Unable to detect Orchestra server protocol: neither health endpoint reported ready.")
-    this.name = "ServerProtocolUnresolvedError"
+    super("Orchestra server is not ready: the health endpoint did not report ready.")
+    this.name = "ServerNotReadyError"
   }
 }
 
@@ -46,7 +44,7 @@ async function probe(
       abort.signal.throwIfAborted()
       return fetcher(new URL(path, server.url), { headers: headers(server), signal: abort.signal })
     }).then(async (response) => {
-      if (response.status === 503) throw new ServerProtocolUnresolvedError()
+      if (response.status === 503) throw new ServerNotReadyError()
       if (!response.ok || !response.headers.get("content-type")?.includes("application/json")) return
       const value: unknown = await response.json()
       if (!value || typeof value !== "object") return
@@ -60,8 +58,7 @@ async function probe(
   })
 }
 
-// Retry an unanswered or not-yet-ready endpoint before trying the other API generation. Exhaustion stays unknown;
-// only a ready health response may become the connection's cached protocol.
+// Retry an unanswered or not-yet-ready endpoint. Exhaustion fails; only a ready health response resolves.
 const probeAttempts = 3
 
 function answer(
@@ -98,16 +95,16 @@ function pause(ms: number, signal: AbortSignal) {
   })
 }
 
-export async function detectServerProtocol(
+export async function waitForServer(
   server: ServerConnection.HttpBase,
   fetcher: typeof fetch,
-  options: ServerProtocolOptions = {},
-): Promise<ServerProtocol> {
+  options: ServerReadyOptions = {},
+): Promise<void> {
   options.signal?.throwIfAborted()
   const abort = new AbortController()
   const onAbort = () => abort.abort(options.signal?.reason)
   options.signal?.addEventListener("abort", onAbort, { once: true })
-  const timer = setTimeout(() => abort.abort(new ServerProtocolUnresolvedError()), options.timeoutMs ?? 30_000)
+  const timer = setTimeout(() => abort.abort(new ServerNotReadyError()), options.timeoutMs ?? 30_000)
   const cancelled = Promise.withResolvers<never>()
   const rejectAbort = () => cancelled.reject(abort.signal.reason)
   abort.signal.addEventListener("abort", rejectAbort, { once: true })
@@ -117,15 +114,15 @@ export async function detectServerProtocol(
       abort.signal.throwIfAborted()
       const current = await answer(server, fetcher, "/api/health", abort.signal, options.probeTimeoutMs ?? 20_000)
       abort.signal.throwIfAborted()
-      if (current && "pid" in current && typeof current.pid === "number") return "v2" as const
-      if (current && "healthy" in current && current.healthy === true) return "v2" as const
-      throw new ServerProtocolUnresolvedError()
+      if (current && "pid" in current && typeof current.pid === "number") return
+      if (current && "healthy" in current && current.healthy === true) return
+      throw new ServerNotReadyError()
     }, {
       attempts: options.attempts ?? 60,
       delay: options.retryDelayMs ?? 500,
       factor: 2,
       maxDelay: 5_000,
-      retryIf: (error) => error instanceof ServerProtocolUnresolvedError && !abort.signal.aborted,
+      retryIf: (error) => error instanceof ServerNotReadyError && !abort.signal.aborted,
     }),
     cancelled.promise,
   ]).finally(() => {

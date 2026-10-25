@@ -80,7 +80,7 @@ export function homeSessionIndexRefresh(event: Event["type"], connected: boolean
   if (event === "server.connected") return { connected: true, refetch: connected }
   return {
     connected,
-    refetch: event === "global.disposed" || event === "session.next.moved",
+    refetch: event === "session.next.moved",
   }
 }
 
@@ -146,11 +146,11 @@ export function createHomeSessionIndexCache(queryClient: QueryClient, server: st
 // current V2 API orders by creation time and cannot filter roots, archives, or
 // multiple directories. A bounded page could omit an old session updated today.
 // Once released, use client.v2.project.list() and client.v2.session.list({
-// parentID: null, order: "desc" }), then remove this adapter and its V1 fields.
+// parentID: null, order: "desc" }), then remove this adapter.
 export function parseHomeSessionIndex(sessions: SessionV2Info[]): AppSession[] {
   return sessions.flatMap((item) => {
     if (item.parentID || typeof item.time.archived === "number") return []
-    return [toLegacySummary(item)]
+    return [toSummary(item)]
   })
 }
 
@@ -171,6 +171,6 @@ export function applyHomeSessionEvent(sessions: Session[], event: HomeSessionEve
   return sessions.with(index, info)
 }
 
-function toLegacySummary(session: SessionV2Info): AppSession {
+function toSummary(session: SessionV2Info): AppSession {
   return normalizeSessionInfo(session)
 }

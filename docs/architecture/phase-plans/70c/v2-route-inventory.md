@@ -2,7 +2,7 @@
 
 Branch `v2-route-parity` off fork/dev 3e6030caba. Static measurement (grep of non-test src), 2026-10-19.
 
-How the app picks a path: `utils/server-protocol.ts` probes `/global/health` (V1) then `/api/health` with `pid` (V2).
+How the app picks a path: `utils/server-protocol.ts` (since removed; `utils/server-ready.ts` now waits for V2 only) probed `/global/health` (V1) then `/api/health` with `pid` (V2).
 On V2 every `sdk.api.*` call goes to the vendored `@opencode-ai/client` 1.17.13 (`/api/*`, upstream opencode contract);
 `sdk.client.*` / `legacy(...)` calls go to unprefixed V1 routes and 404 on V2 unless gated by `protocol === "v1"`.
 

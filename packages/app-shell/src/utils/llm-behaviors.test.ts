@@ -3,7 +3,6 @@ import {
   behaviorCardText,
   behaviorInstructions,
   behaviorProfileDirectory,
-  behaviorSystem,
   CAVEMAN_ID,
   defaultBehaviorState,
   filterBehaviors,
@@ -41,27 +40,24 @@ describe("LLM behaviors", () => {
     expect(state.behaviors.map((item) => [item.id, item.enabled, item.intensity])).toEqual([
       [CAVEMAN_ID, false, "full"],
     ])
-    expect(behaviorSystem(state.behaviors)).toBeUndefined()
+    expect(behaviorInstructions(state.behaviors)).toEqual([])
   })
 
-  test("only enabled behaviors reach the system text, with the selected Caveman intensity rule", () => {
+  test("only enabled behaviors are sent, with the selected Caveman intensity rule", () => {
     const caveman = { ...defaultBehaviorState().behaviors[0]!, enabled: true, intensity: "ultra" as const }
-    const system = behaviorSystem([caveman, custom, { ...custom, id: "off", name: "Off", enabled: false }])
-    expect(system).toContain("## Caveman (intensity: ultra)")
-    expect(system).toContain("Respond terse like smart caveman. Preserve technical accuracy.")
-    expect(system).toContain("one word when one word is enough")
-    expect(system).not.toContain("Keep articles and full sentences")
-    expect(system).toContain("## Reviewer\nCite the file and line for every claim.")
-    expect(system).not.toContain("## Off")
+    const active = behaviorInstructions([caveman, custom, { ...custom, id: "off", name: "Off", enabled: false }])
+    expect(active.map((item) => item.name)).toEqual(["Caveman (intensity: ultra)", "Reviewer"])
+    expect(active[0]?.instructions).toContain("one word when one word is enough")
+    expect(active[0]?.instructions).not.toContain("Keep articles and full sentences")
 
-    const lite = behaviorSystem([{ ...caveman, intensity: "lite" }])
-    expect(lite).toContain("## Caveman (intensity: lite)")
-    expect(lite).toContain("Keep articles and full sentences")
-    expect(lite).not.toContain("one word when one word is enough")
+    const [lite] = behaviorInstructions([{ ...caveman, intensity: "lite" }])
+    expect(lite?.name).toBe("Caveman (intensity: lite)")
+    expect(lite?.instructions).toContain("Keep articles and full sentences")
+    expect(lite?.instructions).not.toContain("one word when one word is enough")
   })
 
   test("an enabled custom behavior without instructions adds nothing", () => {
-    expect(behaviorSystem([{ ...custom, instructions: "   " }])).toBeUndefined()
+    expect(behaviorInstructions([{ ...custom, instructions: "   " }])).toEqual([])
   })
 
   test("only Caveman, or a behavior with instructions, sends anything", () => {
@@ -79,7 +75,7 @@ describe("LLM behaviors", () => {
     expect(seedText({ ...custom, name: "Caveman" }, "name", "Homem das cavernas")).toBe("Caveman")
   })
 
-  test("a V2 server receives each enabled behavior on its own, with the same text a V1 prompt carries", () => {
+  test("the server receives each enabled behavior on its own", () => {
     const caveman = { ...defaultBehaviorState().behaviors[0]!, enabled: true, intensity: "ultra" as const }
     const active = behaviorInstructions([caveman, custom, { ...custom, id: "off", enabled: false }])
     expect(active.map((item) => [item.id, item.name])).toEqual([
@@ -89,8 +85,6 @@ describe("LLM behaviors", () => {
     expect(active[0]?.instructions).toStartWith("Respond terse like smart caveman. Preserve technical accuracy.\n")
     expect(active[0]?.instructions).toContain("one word when one word is enough")
     expect(active[1]?.instructions).toBe("Cite the file and line for every claim.")
-    const system = behaviorSystem([caveman, custom])
-    active.forEach((item) => expect(system).toContain(`## ${item.name}\n${item.instructions}`))
     expect(behaviorInstructions(defaultBehaviorState().behaviors)).toEqual([])
     expect(behaviorInstructions([{ ...custom, instructions: "  " }])).toEqual([])
   })

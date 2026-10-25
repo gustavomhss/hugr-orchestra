@@ -1,7 +1,7 @@
 import { afterEach, expect, test } from "bun:test"
 import {
-  connectedSubagentModels, createModelPolicyEditor, createModelRuleEditor, effectiveModelState, modelUnavailable, sameModelPolicy,
-  type ModelPolicySnapshot, type ModelRule, type SubagentModelPolicy,
+  connectedSubagentModels, createModelPolicyEditor, modelUnavailable, sameModelPolicy,
+  type ModelPolicySnapshot, type SubagentModelPolicy,
 } from "./subagent-model-rules"
 import type { Provider } from "@/v2-wire"
 
@@ -38,7 +38,7 @@ test("reading an untouched draft keeps inheritance; removing the last choice kee
   expect(pendingPolicy(key)).toEqual({ mode: "inherit" })
 })
 
-test("V2 replaces full policies, retains unavailable selections, serializes writes and retries failed replacement", async () => {
+test("the server replaces full policies, retains unavailable selections, serializes writes and retries failed replacement", async () => {
   const gate = Promise.withResolvers<SubagentModelPolicy>()
   const writes: SubagentModelPolicy[] = []
   const editor = createModelPolicyEditor({
@@ -298,32 +298,4 @@ test("actual server store retains policy sequence over equal-time revisionless s
   expect(store.get(info.id)?.subagentModels).toEqual({ mode: "allowlist", models: [] })
   expect(store.get(info.id)?.subagentModelsRevision).toBe(3)
   expect(store.get(info.id)?.permission).toEqual(info.permission)
-})
-
-test("V1 editor sends append batches and keeps latest ACK over a delayed strict-prefix snapshot", async () => {
-  const source: { live: ModelRule[]; acknowledged: ModelRule[] } = { live: [], acknowledged: [] }
-  const writes: ModelRule[][] = []
-  const editor = createModelRuleEditor({ read: () => source.live, write: async (batch) => {
-    writes.push(batch)
-    source.acknowledged = [...source.acknowledged, ...batch]
-    return source.acknowledged
-  } })
-  await editor.set("router", "first", true)
-  const first = editor.rules()
-  await editor.set("router", "second", true)
-  expect(writes).toEqual([
-    [{ permission: "task", pattern: "*/*", action: "deny" }, { permission: "task", pattern: "router/first", action: "allow" }],
-    [{ permission: "task", pattern: "router/second", action: "allow" }],
-  ])
-  source.live = first
-  expect(editor.rules()).toEqual(source.acknowledged)
-  source.live = [{ permission: "task", pattern: "other/*", action: "deny" }]
-  expect(editor.rules()).toEqual(source.live)
-})
-
-test("V1 last matching ask replaces an earlier allow instead of inheriting permission", () => {
-  expect(effectiveModelState([
-    { permission: "task", pattern: "*/*", action: "allow" },
-    { permission: "task", pattern: "router/*", action: "ask" },
-  ], "router", "team/model/v1")).toBe("ask")
 })

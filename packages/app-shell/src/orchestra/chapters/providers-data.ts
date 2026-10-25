@@ -4,11 +4,9 @@ import { Option, Schema } from "effect"
 // Pure projection of server provider data into the mock's provider cards and popular rows.
 
 export type ProviderModel = { id: string; name: string }
-export type ProviderMethod = "apiKey" | "environment" | "config" | "custom" | "credential"
+export type ProviderMethod = "apiKey" | "environment" | "config" | "credential"
 export type ProviderDisconnect =
   | { type: "credentials"; ids: string[] }
-  | { type: "auth"; custom: boolean }
-  | { type: "enable" }
   | { type: "none" }
 export type ProviderCard = {
   id: string
@@ -16,7 +14,6 @@ export type ProviderCard = {
   name: string
   connected: boolean
   method: ProviderMethod
-  custom: boolean
   disconnect: ProviderDisconnect
   models: ProviderModel[]
 }
@@ -43,17 +40,6 @@ type V2Input = {
   }>
 }
 
-type V1Model = { id: string; name: string; status?: string }
-type V1Provider = { id: string; name: string; source?: string; models: Record<string, V1Model> }
-type V1Input = {
-  all: V1Provider[]
-  connected: V1Provider[]
-  config: {
-    provider?: Record<string, { name?: string; npm?: string; models?: Record<string, { name?: string }> }>
-    disabled_providers?: string[]
-  }
-}
-
 const NOTES = {
   anthropic: "dialog.provider.anthropic.note",
   openai: "dialog.provider.openai.note",
@@ -62,7 +48,6 @@ const NOTES = {
   vercel: "dialog.provider.vercel.note",
 } as const
 
-const OPENAI_COMPATIBLE = "@ai-sdk/openai-compatible"
 const SEPARATOR = "#"
 
 export function noteKey(id: string) {
@@ -93,7 +78,6 @@ export function fromV2(input: V2Input) {
       name: provider.name,
       connected: true,
       method: v2Method(credential, stored, integration),
-      custom: false,
       disconnect: ids.length ? { type: "credentials", ids } : { type: "none" },
       models: input.models
         .filter((model) => model.providerID === provider.id && model.status !== "deprecated")
@@ -112,48 +96,6 @@ export function fromV2(input: V2Input) {
     }),
   )
   return { cards, catalog }
-}
-
-// V1 keeps disabled providers in config, so a disconnected custom endpoint stays listed and can be enabled again.
-export function fromV1(input: V1Input) {
-  const configured = input.config.provider ?? {}
-  const custom = (id: string) =>
-    configured[id]?.npm === OPENAI_COMPATIBLE && Object.keys(configured[id]?.models ?? {}).length > 0
-  const connected = new Set(input.connected.map((item) => item.id))
-  const cards = input.connected.map((provider): ProviderCard => {
-    const credential = credentialOf(provider.id)
-    return {
-      id: provider.id,
-      base: baseID(provider.id),
-      name: provider.name,
-      connected: true,
-      method: v1Method(provider.source, custom(provider.id)),
-      custom: custom(provider.id),
-      disconnect: v1Disconnect(provider.source, credential, custom(provider.id)),
-      models: Object.values(provider.models)
-        .filter((model) => model.status !== "deprecated")
-        .map((model) => ({ id: model.id, name: model.name })),
-    }
-  })
-  const disabled = (input.config.disabled_providers ?? [])
-    .filter((id) => !connected.has(id) && Object.hasOwn(configured, id))
-    .map(
-      (id): ProviderCard => ({
-        id,
-        base: id,
-        name: configured[id]?.name ?? input.all.find((item) => item.id === id)?.name ?? id,
-        connected: false,
-        method: custom(id) ? "custom" : "config",
-        custom: custom(id),
-        disconnect: { type: "enable" },
-        models: Object.entries(configured[id]?.models ?? {}).map(([model, info]) => ({
-          id: model,
-          name: info.name ?? model,
-        })),
-      }),
-    )
-  const catalog = input.all.map((item): CatalogEntry => ({ id: item.id, name: item.name, methods: [] }))
-  return { cards: [...cards, ...disabled], catalog }
 }
 
 export function popularEntries(catalog: CatalogEntry[], cards: ProviderCard[], order: string[]) {
@@ -198,23 +140,6 @@ function v2Method(
   if (credential) return "apiKey"
   if (stored.length) return integration?.methods.some((item) => item.type === "oauth") ? "credential" : "apiKey"
   if (integration?.connections.some((item) => item.type === "env")) return "environment"
-  return "config"
-}
-
-function v1Disconnect(source: string | undefined, credential: string | undefined, custom: boolean): ProviderDisconnect {
-  if (source === "env") return { type: "none" }
-  if (credential) return { type: "credentials", ids: [credential] }
-  // The server sets source "config" on every provider with a config entry (provider.ts, "load config"), and such a
-  // provider stays listed whatever the auth store holds, so removing a stored key would not disconnect it. An
-  // OpenAI-compatible endpoint with models is the exception: it is disabled through config.
-  if (source === "config" && !custom) return { type: "none" }
-  return { type: "auth", custom }
-}
-
-function v1Method(source: string | undefined, custom: boolean): ProviderMethod {
-  if (source === "env") return "environment"
-  if (source === "api") return "apiKey"
-  if (source === "custom" || custom) return "custom"
   return "config"
 }
 

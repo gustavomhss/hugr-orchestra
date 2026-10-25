@@ -28,7 +28,7 @@ line). Runtime call counts are regex over `client.X.Y(` / `api.X.Y(` chains and 
      `/api/experimental/*`, `/api/integration/:id/connect/command*`, `/api/fs/read` (omitted from generation on
      purpose; raw transport). No server in the repo serves `/api/mcp`, `/api/project*`, `/api/session/:id/rename`
      (grep of removed-v1/src, packages/server/src, packages/protocol/src).
-2. **app-shell already runs two protocols.** `utils/server-protocol.ts` probes `/global/health` first: the legacy
+2. **app-shell already runs two protocols.** `utils/server-protocol.ts` (since removed; `utils/server-ready.ts` now waits for V2 only) probed `/global/health` first: the legacy
    sidecar answers it, so the desktop runs in **"v1" mode**. In v1 mode `utils/server-compat.ts#createV1Api` reroutes
    `session` (14 methods), `project` (3), `vcs` (2), `file` (2), `integration` (get/connect/oauth), `pty` (5),
    `permission.reply`, `question.reply/reject` to the **legacy `OrchestraClient`** (V1 routes); every other namespace

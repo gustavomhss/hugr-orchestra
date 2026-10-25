@@ -161,7 +161,6 @@ async function setup(page: Page, respond: (route: Route, attempt: number) => Pro
   const errors: string[] = []
   page.on("pageerror", (error) => errors.push(error.message))
   await mockOrchestraServer(page, {
-    protocol: "v2",
     directory,
     project: {
       id: projectID,

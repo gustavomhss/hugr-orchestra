@@ -5,18 +5,12 @@ import { pathKey } from "./path-key"
 import { Persist, persisted } from "./persist"
 import type { ServerScope } from "./server-scope"
 import {
-  behaviorProfileDirectory,
-  behaviorSystem,
   defaultBehaviorState,
   sanitizeBehaviorState,
   type LlmBehavior,
 } from "./llm-behaviors"
 
-// How long a send waits for a profile still loading from desktop storage before going without it.
-export const BEHAVIOR_LOAD_TIMEOUT = 1_000
-
-// The Plugins page and every composer read one store per profile (server + repository), so a
-// change on the page reaches the next message without a reload. Stores live for the app session.
+// The Plugins page reads one store per profile (server + repository). Stores live for the app session.
 const profiles = new Map<string, ReturnType<typeof open>>()
 
 export function llmBehaviors(platform: Platform, scope: ServerScope, directory: string) {
@@ -28,27 +22,6 @@ export function llmBehaviors(platform: Platform, scope: ServerScope, directory: 
   return next
 }
 
-// Behaviors never delay or fail a send. The message carries exactly what the Plugins page shows:
-// a storage error or a load slower than the timeout leaves the defaults, where nothing is enabled.
-export async function resolveBehaviorSystem(input: {
-  platform: Platform
-  scope: ServerScope
-  projects: readonly { worktree: string; sandboxes?: readonly string[] }[]
-  directory: string
-  timeout?: number
-}) {
-  const store = llmBehaviors(input.platform, input.scope, behaviorProfileDirectory(input.projects, input.directory))
-  const timer = { id: undefined as ReturnType<typeof setTimeout> | undefined }
-  await Promise.race([
-    store.loaded,
-    new Promise<void>((resolve) => {
-      timer.id = setTimeout(resolve, input.timeout ?? BEHAVIOR_LOAD_TIMEOUT)
-    }),
-  ])
-  clearTimeout(timer.id)
-  return store.system()
-}
-
 function open(platform: Platform, scope: ServerScope, directory: string) {
   const [state, setState, init] = persisted(
     { ...Persist.serverWorkspace(scope, directory, "orchestra-llm-behaviors"), migrate: sanitizeBehaviorState },
@@ -56,13 +29,11 @@ function open(platform: Platform, scope: ServerScope, directory: string) {
     tolerant(platform),
   )
   const [loading, setLoading] = createSignal(init instanceof Promise)
-  const loaded = Promise.resolve(init).then(() => void setLoading(false))
+  Promise.resolve(init).then(() => void setLoading(false))
   return {
     loading,
-    loaded,
     behaviors: () => state.behaviors,
     update: (next: LlmBehavior[]) => setState("behaviors", next),
-    system: () => behaviorSystem(state.behaviors),
   }
 }
 

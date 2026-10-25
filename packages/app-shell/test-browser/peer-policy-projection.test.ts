@@ -41,12 +41,12 @@ function projection(get: ServerApi["session"]["get"], list: () => SessionInfo[] 
     const server = createServerSession({ get } as ServerApi["session"], {} as ServerApi["message"], { todo: async () => [] })
     const [store, setStore] = createStore({
       status: "complete", session: [], sessionTotal: 0, limit: 10,
-      message: {}, session_message: {}, part: {}, part_text_accum_delta: {},
-      session_status: {}, session_diff: {}, todo: {}, permission: {}, question: {},
+      message: {}, session_message: {}, part: {},
+      session_status: {}, todo: {}, permission: {}, question: {},
     } as unknown as State)
     const publish = (rows: AppSession[]) => rows.forEach((info) => project({ type: "session.created", properties: { info } }))
     const project = (event: SessionManagementEvent) => applyDirectoryEvent({
-      event, readSession: server.get, fenceOwner: server, store, setStore, directory: "/repo", push() {}, loadLsp() {},
+      event, readSession: server.get, fenceOwner: server, store, setStore, directory: "/repo", push() {},
     })
     const directory = createDirSyncContext("/repo", {
       session: server,
@@ -276,7 +276,7 @@ test("actual server-sync recovery boundary indexes evicted A in A's live owner a
       applyDirectoryEvent({
         event: { type: "session.created", properties: { info: row } },
         readSession: ctx.server.get, fenceOwner: ctx.server, store: owner[0], setStore: owner[1],
-        directory: row.directory, push() {}, loadLsp() {},
+        directory: row.directory, push() {},
       })
     },
   })
@@ -485,7 +485,7 @@ test.each(["B fails before A", "B fails after A", "both succeed", "disposed owne
         applyDirectoryEvent({
           event: { type: "session.created", properties: { info: row } },
           readSession: ctx.server.get, fenceOwner: ctx.server, store: owner[0], setStore: owner[1],
-          directory: row.directory, push() {}, loadLsp() {},
+          directory: row.directory, push() {},
         })
       },
     })

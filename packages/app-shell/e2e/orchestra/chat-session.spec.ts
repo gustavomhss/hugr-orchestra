@@ -254,7 +254,6 @@ test("Files Changed and All files lead to each other", async ({ page }) => {
 test("V2: Steer is the default delivery and the Queue choice is sent with the next prompt", async ({ page }) => {
   const prompts: unknown[] = []
   await setupTimeline(page, {
-    protocol: "v2",
     locale: "en",
     settings: { shouldDisplayTabsToast: false },
     onPrompt: (input) => prompts.push(input.body),

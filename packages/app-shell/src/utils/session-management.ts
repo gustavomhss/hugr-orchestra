@@ -1,7 +1,6 @@
 import { createSignal } from "solid-js"
 import { Orchestra } from "@orchestra/client"
 import type { ServerConnection } from "@/context/server"
-import type { ServerProtocol } from "./server-protocol"
 import { authTokenFromCredentials } from "./server"
 import type { ModelPolicySnapshot, SubagentModelPolicy } from "@/components/subagent-model-rules"
 import { SessionManagementUnsupported } from "./session-management-errors"
@@ -12,12 +11,12 @@ import { directoryKey } from "@/context/global-sync/utils"
 export function createSessionManagementForServer(input: {
   server: ServerConnection.HttpBase
   fetch: typeof globalThis.fetch
-  protocol: Promise<ServerProtocol>
+  /** Settles when the server answers its health route; archive routes are offered from then on. */
+  ready: Promise<void>
   signal?: AbortSignal
 }) {
   const http = { ...input.server }
   const fetcher = input.fetch
-  const protocol = input.protocol
   const lifetime = input.signal
   const headers = http.password
     ? { Authorization: `Basic ${authTokenFromCredentials({ username: http.username, password: http.password })}` }
@@ -42,12 +41,12 @@ export function createSessionManagementForServer(input: {
     ),
     headers,
   })
-  // Every server speaks the V2 session routes; archive is available once the protocol settles.
+  // Every server speaks the V2 session routes; archive is available once the server is ready.
   const [archiveRouted, setArchiveRouted] = createSignal(false)
   let archiveProbe: Promise<boolean> | undefined
   const archiveRoutes = () => {
     if (archiveProbe) return archiveProbe
-    archiveProbe = protocol.then(() => true)
+    archiveProbe = input.ready.then(() => true)
     void archiveProbe.then((routed) => setArchiveRouted(routed), () => {})
     return archiveProbe
   }
@@ -84,7 +83,6 @@ export function createSessionManagementForServer(input: {
     },
     getSubagentModels(sessionID: string): Promise<SubagentModelPolicy> {
       return runSessionManagementOperation(lifetime, async () => {
-        if ((await protocol) !== "v2") throw new SessionManagementUnsupported()
         lifetime?.throwIfAborted()
         const policy = await client.sessions.getSubagentModels({ sessionID })
         lifetime?.throwIfAborted()
@@ -93,7 +91,6 @@ export function createSessionManagementForServer(input: {
     },
     readSubagentModels(sessionID: string): Promise<ModelPolicySnapshot> {
       return runSessionManagementOperation(lifetime, async () => {
-        if ((await protocol) !== "v2") throw new SessionManagementUnsupported()
         lifetime?.throwIfAborted()
         // The full snapshot anchors policy freshness; policy-only GET/PUT responses have no revision.
         const snapshot = await client.sessions.get({ sessionID })
@@ -109,7 +106,6 @@ export function createSessionManagementForServer(input: {
         // Only an explicit new write may retry a failed predecessor; dispatch waits must retain its failure.
         await (previous ? previous.catch(() => undefined) : Promise.resolve())
         lifetime?.throwIfAborted()
-        if ((await protocol) !== "v2") throw new SessionManagementUnsupported()
         lifetime?.throwIfAborted()
         const acknowledged = await client.sessions.setSubagentModels({ sessionID, policy })
         lifetime?.throwIfAborted()
@@ -153,7 +149,7 @@ export function createSessionManagementForServer(input: {
 
 export type SessionManagement = ReturnType<typeof createSessionManagementForServer>
 
-/** Race the complete generated operation, including protocol selection and response body decoding. */
+/** Race the complete generated operation, including readiness and response body decoding. */
 async function runSessionManagementOperation<T>(lifetime: AbortSignal | undefined, load: () => Promise<T>): Promise<T> {
   lifetime?.throwIfAborted()
   if (!lifetime) return load()

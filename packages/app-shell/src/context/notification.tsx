@@ -8,7 +8,6 @@ import { useLanguage } from "@/context/language"
 import { useSettings } from "@/context/settings"
 import { decode64 } from "@/utils/base64"
 import { sessionTitle } from "@/utils/session-title"
-import type { EventSessionError } from "@/v2-wire"
 import { Persist, persisted } from "@/utils/persist"
 import { playSoundById } from "@/utils/sound"
 import { useGlobal } from "./global"
@@ -31,7 +30,7 @@ type TurnCompleteNotification = NotificationBase & {
 
 type ErrorNotification = NotificationBase & {
   type: "error"
-  error: EventSessionError["properties"]["error"]
+  error?: { type: string; message: string }
 }
 
 export type Notification = TurnCompleteNotification | ErrorNotification
@@ -349,9 +348,7 @@ export function createServerNotificationState(input: {
     return sessionID === activeSession
   }
 
-  const handleSessionIdle = (directory: string, event: { properties: { sessionID?: string } }, time: number) => {
-    const sessionID = event.properties.sessionID
-    if (!sessionID) return
+  const handleSessionIdle = (directory: string, sessionID: string, time: number) => {
     void lookup(directory, sessionID).then((session) => {
       if (meta.disposed) return
       if (!session) return
@@ -380,10 +377,10 @@ export function createServerNotificationState(input: {
 
   const handleSessionError = (
     directory: string,
-    event: { properties: { sessionID?: string; error?: EventSessionError["properties"]["error"] } },
+    sessionID: string,
+    error: { type: string; message: string },
     time: number,
   ) => {
-    const sessionID = event.properties.sessionID
     void lookup(directory, sessionID).then((session) => {
       if (meta.disposed) return
       if (session?.parentID) return
@@ -392,7 +389,6 @@ export function createServerNotificationState(input: {
         void playSoundById(settings.sounds.errors())
       }
 
-      const error = "error" in event.properties ? event.properties.error : undefined
       append({
         directory,
         time,
@@ -401,9 +397,7 @@ export function createServerNotificationState(input: {
         session: sessionID ?? "global",
         error,
       })
-      const description =
-        session?.title ??
-        (typeof error === "string" ? error : language.t("notification.session.error.fallbackDescription"))
+      const description = session?.title ?? (error.message || language.t("notification.session.error.fallbackDescription"))
       if (settings.notifications.errors()) {
         const href = sessionID && sessionHref(originServer, sessionID)
         void platform.notify(
@@ -416,16 +410,13 @@ export function createServerNotificationState(input: {
   }
 
   const unsub = serverSDK().event.listen((e) => {
-    const event = e.details
-    if (event.type !== "session.idle" && event.type !== "session.error") return
-
-    const directory = e.name
-    const time = Date.now()
-    if (event.type === "session.idle") {
-      handleSessionIdle(directory, event, time)
-      return
-    }
-    handleSessionError(directory, event, time)
+    // The V2 server publishes no idle or error event: a turn ends with a step that settles without asking for tool
+    // results, and fails with a failed step.
+    const current = e.details.current
+    if (current?.type === "session.step.ended" && current.data.finish !== "tool-calls")
+      return handleSessionIdle(e.name, current.data.sessionID, Date.now())
+    if (current?.type === "session.step.failed")
+      handleSessionError(e.name, current.data.sessionID, current.data.error, Date.now())
   })
   onCleanup(() => {
     meta.disposed = true

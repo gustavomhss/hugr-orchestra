@@ -15,16 +15,13 @@ export function repositoryProject<T extends { worktree: string; sandboxes?: read
 
 type Entry = { directory: string; strategy?: string }
 
-// V1 reports a project's sandboxes (every directory it opened for the repository). V2 records workspaces in the
-// project's directory table instead, including the copies it creates, so pass `directories` on V2 and omit it on V1.
+// The server records workspaces in the project's directory table, including the copies it creates. `directories`
+// is that table.
 export function repositoryWorkspaces(
-  project: { id: string; worktree: string; sandboxes?: readonly string[] },
-  directories?: readonly Entry[],
+  project: { worktree: string },
+  directories: readonly Entry[],
 ) {
-  const entries = [
-    { directory: project.worktree },
-    ...(directories ?? (project.sandboxes ?? []).map((directory) => ({ directory }))),
-  ]
+  const entries = [{ directory: project.worktree }, ...directories]
   return entries
     .filter(
       (entry, index) => entries.findIndex((item) => pathKey(item.directory) === pathKey(entry.directory)) === index,
@@ -33,17 +30,8 @@ export function repositoryWorkspaces(
       directory: entry.directory,
       folder: pathKey(entry.directory).split("/").filter(Boolean).at(-1) ?? entry.directory,
       root: index === 0,
-      removable:
-        index > 0 &&
-        (directories ? "strategy" in entry && !!entry.strategy : serverWorktree(project.id, entry.directory)),
+      removable: index > 0 && "strategy" in entry && !!entry.strategy,
     }))
-}
-
-// V1 creates worktrees only at `<data>/worktree/<projectID>/<name>` (orchestra `Worktree.makeWorktreeInfo`). Its remove
-// deletes any other directory outright when git does not list it, so nothing outside that folder is offered.
-function serverWorktree(projectID: string, directory: string) {
-  const parts = pathKey(directory).split("/")
-  return parts.length > 3 && parts.at(-3) === "worktree" && parts.at(-2) === projectID
 }
 
 // A stored choice counts only while it still names one of this repository's workspaces; otherwise the root is active.
@@ -53,7 +41,7 @@ export function activeWorkspace(workspaces: readonly { directory: string }[], st
 }
 
 // A root draft's default workspace: unknown until the saved choice has loaded, and only while the server still lists
-// it, as a V1 sandbox or a copy the Workspaces screen last listed. The project's own spelling wins.
+// it, as a project sandbox or a copy the Workspaces screen last listed. The project's own spelling wins.
 export function preferredSandbox(input: {
   ready: boolean
   sandboxes: readonly string[]
@@ -65,7 +53,7 @@ export function preferredSandbox(input: {
   return [...input.sandboxes, ...(input.known ?? [])].find((sandbox) => pathKey(sandbox) === key)
 }
 
-// V2 creates a copy named `name` inside `parent`; both must be non-empty.
+// The server creates a copy named `name` inside `parent`; both must be non-empty.
 export function copyTarget(parent: string, name: string) {
   const directory = parent.trim().replace(/[\\/]+$/, "")
   const leaf = name.trim()
@@ -86,7 +74,7 @@ export function homeRelative(directory: string, home?: string) {
   return `~${directory.slice(base.length)}`
 }
 
-// V2 refuses to remove a copy with uncommitted changes unless the request is forced.
+// The server refuses to remove a copy with uncommitted changes unless the request is forced.
 export function forceRequired(error: unknown) {
   if (!error || typeof error !== "object" || !("data" in error)) return false
   const data = error.data

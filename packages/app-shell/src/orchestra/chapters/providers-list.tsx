@@ -5,7 +5,7 @@ import { DialogConnectProvider, useProviderConnectController } from "@/component
 import { useProviderDialogScope } from "@/components/settings-v2/provider-dialog-scope"
 import { useLanguage } from "@/context/language"
 import { type ServerConnection, serverName } from "@/context/server"
-import { useServerProtocol, useServerSDK } from "@/context/server-sdk"
+import { useServerReady, useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import { loadDefaultModel } from "@/context/global-sync/bootstrap"
 import { refetchProviderResource, resolveDefaultModel } from "@/hooks/provider-catalog"
@@ -16,7 +16,6 @@ import { ClaudeModeSection } from "./claude-mode"
 import { MxBadge } from "./kit"
 import {
   errorMessage,
-  fromV1,
   fromV2,
   matches,
   noteKey,
@@ -44,7 +43,7 @@ export function ProviderList(props: {
   const dialog = useDialog()
   const sdk = useServerSDK()
   const sync = useServerSync()
-  const protocol = useServerProtocol()
+  const ready = useServerReady()
   const providers = useProviders(() => props.directory || null)
   const child = props.directory ? sync().child(props.directory)[0] : undefined
   const scope = useProviderDialogScope(() => props.directory || null)
@@ -53,7 +52,7 @@ export function ProviderList(props: {
   const routeScope = createUniqueId()
   // V2 lists only available providers and has no default-model route on every server, so read the raw catalog here.
   const [v2, v2Actions] = createResource(
-    () => (protocol() === "v2" ? { directory: props.directory, client: sdk(), server: sdk().scope } : undefined),
+    () => (ready() ? { directory: props.directory, client: sdk(), server: sdk().scope } : undefined),
     async (input) => {
       const api = input.client.api
       const location = input.directory ? { directory: input.directory } : undefined
@@ -85,7 +84,6 @@ export function ProviderList(props: {
   const note = (card: ProviderCard) => {
     const key = noteKey(card.base)
     if (key) return language.t(key)
-    if (card.custom) return language.t("orchestra.providers.note.custom")
     return language.t("orchestra.providers.note.models", { count: card.models.length })
   }
   const noteText = (id: string) => {
@@ -97,7 +95,6 @@ export function ProviderList(props: {
   const method = (card: ProviderCard) => {
     if (card.method === "apiKey") return language.t("provider.connect.method.apiKey")
     if (card.method === "environment") return language.t("settings.providers.tag.environment")
-    if (card.method === "custom") return language.t("settings.providers.tag.custom")
     if (card.method === "credential") return language.t("orchestra.providers.method.credential")
     return language.t("settings.providers.tag.config")
   }
@@ -105,13 +102,10 @@ export function ProviderList(props: {
   // Read the resource only once settled: an unsettled read would suspend the host route.
   const v2Data = () => (v2.state === "ready" || v2.state === "refreshing" ? v2.latest : undefined)
   const data = createMemo(() => {
-    if (protocol() === "v2") {
-      const value = v2Data()
-      return value ? fromV2(value) : undefined
-    }
-    return undefined
+    const value = v2Data()
+    return value ? fromV2(value) : undefined
   })
-  const failed = () => protocol() === "v2" && v2.state === "errored"
+  const failed = () => v2.state === "errored"
   const profile = createMemo(() => {
     if (!props.directory) return serverName(props.server)
     const project = sync().data.project.find((item) => item.worktree === props.directory)
@@ -143,7 +137,7 @@ export function ProviderList(props: {
 
   const refresh = async () => {
     await providers.refresh()
-    if (protocol() === "v2") await refetchProviderResource(v2, v2Actions, () => language.t("common.requestFailed"))
+    await refetchProviderResource(v2, v2Actions, () => language.t("common.requestFailed"))
   }
   const requestFailed = (error: unknown) =>
     showToast({
@@ -169,13 +163,6 @@ export function ProviderList(props: {
   const toggle = (card: ProviderCard) => {
     const action = card.disconnect
     if (action.type === "none" || state.busy[card.id]) return
-    if (action.type === "enable") {
-      setState("busy", card.id, true)
-      void disconnect(card)
-        .catch(requestFailed)
-        .finally(() => refresh().finally(() => setState("busy", card.id, false)))
-      return
-    }
     // Pushed, not shown: inside the Settings dialog the question stacks on it instead of replacing it.
     void dialog.push(() => (
       <ProviderConfirmDialog
@@ -204,7 +191,6 @@ export function ProviderList(props: {
   const disconnect = (card: ProviderCard) =>
     disconnectProvider(card, {
       sdk: sdk(),
-      sync: sync(),
       directory: props.directory,
       failed: language.t("common.requestFailed"),
     })
@@ -384,32 +370,20 @@ export function ProviderList(props: {
   })
 }
 
-// Capture the profile's services before either write. Credential removal and config disable are separate
-// writes; neither a failed write nor a hidden credential source may be presented as success.
+// A failed write is never presented as success.
 export function disconnectProvider(
   card: ProviderCard,
   input: {
     sdk: ReturnType<ReturnType<typeof useServerSDK>>
-    sync: ReturnType<ReturnType<typeof useServerSync>>
     directory: string
     failed: string
   },
 ) {
   const run = async () => {
     const action = card.disconnect
-    const disabled = input.sync.data.config.disabled_providers ?? []
     const location = input.directory ? { directory: input.directory } : undefined
-    if (action.type === "credentials") {
+    if (action.type === "credentials")
       await Promise.all(action.ids.map((credentialID) => input.sdk.api.credential.remove({ credentialID, location })))
-      return
-    }
-    if (action.type === "enable") {
-      await input.sync.updateConfig({ disabled_providers: disabled.filter((id) => id !== card.id) })
-      return
-    }
-    // A stored provider key with no credential record of its own: remove every stored credential of the provider's
-    // integration, so the provider is not left connected by a key that survives in the auth store.
-    if (action.type === "auth") await input.sdk.orchestra.integrations.disconnect({ integrationID: card.base, location })
   }
   return run().catch(() => {
     throw new Error(input.failed)

@@ -518,13 +518,7 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
         if (requested === color) continue
         colorRequested.set(worktree, color)
 
-        if (project.id === "global") {
-          serverSync().project.meta(worktree, { icon: { color } })
-          continue
-        }
-
-        // V2 path does not update legacy project icon here.
-        void 0
+        if (project.id === "global") serverSync().project.meta(worktree, { icon: { color } })
       }
     })
 

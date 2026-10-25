@@ -137,11 +137,11 @@ export function createModelCatalog(
 
 export function resolveDefaultModel(
   current: NormalizedProviderListResponse["defaultModel"],
-  legacy: string | undefined,
+  configured: string | undefined,
 ) {
   if (current !== undefined) return current ?? undefined
-  if (!legacy) return undefined
-  const separator = legacy.indexOf("/")
-  if (separator <= 0 || separator === legacy.length - 1) return undefined
-  return { providerID: legacy.slice(0, separator), modelID: legacy.slice(separator + 1) }
+  if (!configured) return undefined
+  const separator = configured.indexOf("/")
+  if (separator <= 0 || separator === configured.length - 1) return undefined
+  return { providerID: configured.slice(0, separator), modelID: configured.slice(separator + 1) }
 }

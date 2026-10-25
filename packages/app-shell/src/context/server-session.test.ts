@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import type { retry } from "@orchestra/core/util/retry"
 import type { MessageListOutput } from "@/server-api"
-import type { OpenCodeEvent, SessionMessageInfo } from "@/v2-legacy"
+import type { ClientEvent, SessionMessageInfo } from "@/session-types"
 import type { Message, Part, Session } from "@/v2-wire"
 import type { ServerApi } from "@/utils/server"
 import { sessionMessagePartID } from "@/utils/session-message"
@@ -41,7 +41,7 @@ const v2Assistant = (id: string, created: number, text?: string): SessionMessage
   time: { created, completed: created },
 })
 
-// Legacy-shaped messages, used for live events and optimistic input.
+// Wire-shaped messages, used for live events and optimistic input.
 const userMessage = (id: string, input: Partial<UserMessage> = {}): UserMessage => ({
   id,
   sessionID: "child",
@@ -148,7 +148,7 @@ function setup(sessions: Record<string, Session>) {
 }
 
 describe("server session", () => {
-  test("projects V2 session events into current and legacy message state", () => {
+  test("projects V2 session events into current and wire message state", () => {
     const ctx = setup({ child: session("child") })
     ctx.store.remember(session("child"))
     ctx.store.set("session_message", "child", [
@@ -159,7 +159,7 @@ describe("server session", () => {
         time: { created: 1 },
       },
     ])
-    const apply = (input: object) => ctx.store.applyV2(input as OpenCodeEvent)
+    const apply = (input: object) => ctx.store.applyV2(input as ClientEvent)
 
     apply({
       id: "evt_step",
@@ -621,22 +621,6 @@ describe("server session", () => {
     expect(store.data.part[message.id]).toEqual([pendingPart])
   })
 
-  test("clears delta buffers when removing optimistic content", () => {
-    const message = userMessage("message")
-    const part = textPart(message.id, { text: "optimistic" })
-    const store = setup({ child: session("child") }).store
-    store.optimistic.add({ sessionID: "child", message, parts: [part] })
-    store.apply({
-      type: "message.part.delta",
-      properties: { sessionID: "child", messageID: message.id, partID: part.id, field: "text", delta: " delta" },
-    })
-
-    store.optimistic.remove({ sessionID: "child", messageID: message.id })
-
-    expect(store.data.part[message.id]).toBeUndefined()
-    expect(store.data.part_text_accum_delta[part.id]).toBeUndefined()
-  })
-
   test("does not remove content confirmed by a message event", () => {
     const message = userMessage("message")
     const part = textPart(message.id)
@@ -693,112 +677,6 @@ describe("server session", () => {
     expect(store.data.part[message.id]).toEqual([textPart(message.id)])
   })
 
-  test("clears delta buffers for parts omitted by the initial page", async () => {
-    const pending = deferredPage()
-    const message = userMessage("message")
-    const kept = textPart(message.id, { text: "kept" })
-    const removed: Part = { ...kept, id: "part-2", text: "removed" }
-    const store = create(messageClient(pending.promise))
-    store.apply({ type: "message.updated", properties: { info: message } })
-    store.apply({ type: "message.part.updated", properties: { sessionID: "child", part: kept, time: 1 } })
-    store.apply({ type: "message.part.updated", properties: { sessionID: "child", part: removed, time: 1 } })
-    store.apply({
-      type: "message.part.delta",
-      properties: { sessionID: "child", messageID: message.id, partID: removed.id, field: "text", delta: " delta" },
-    })
-    const loading = store.sync("child")
-
-    pending.resolve(page([v2User(message.id, 1, "kept")]))
-    await loading
-
-    expect(store.data.part[message.id]).toEqual([kept])
-    expect(store.data.part_text_accum_delta[removed.id]).toBeUndefined()
-  })
-
-  test("clears a stale delta buffer when a refresh replaces its part", async () => {
-    const message = userMessage("message")
-    const stale = textPart(message.id, { text: "stale" })
-    const store = create(
-      messageClient(page([v2User(message.id, 1, "stale")]), page([v2User(message.id, 1, "fetched")])),
-    )
-    await store.sync("child")
-    store.apply({
-      type: "message.part.delta",
-      properties: { sessionID: "child", messageID: message.id, partID: stale.id, field: "text", delta: " delta" },
-    })
-
-    await store.sync("child", { force: true })
-
-    expect(store.data.part[message.id]).toEqual([{ ...stale, text: "fetched" }])
-    expect(store.data.part_text_accum_delta[stale.id]).toBeUndefined()
-  })
-
-  test("preserves a non-durable delta received before refresh", async () => {
-    const message = userMessage("message")
-    const part = textPart(message.id, { text: "stale" })
-    const store = create(
-      messageClient(page([v2User(message.id, 1, "stale")]), page([v2User(message.id, 1, "stale")])),
-    )
-    await store.sync("child")
-    store.apply({
-      type: "message.part.delta",
-      properties: { sessionID: "child", messageID: message.id, partID: part.id, field: "text", delta: " delta" },
-    })
-
-    await store.sync("child", { force: true })
-
-    expect(store.data.part[message.id]).toEqual([{ ...part, text: "stale delta" }])
-    expect(store.data.part_text_accum_delta[part.id]).toBe("stale delta")
-  })
-
-  test("accepts fetched text that intentionally replaces an accumulated prefix", async () => {
-    const message = userMessage("message")
-    const part = textPart(message.id, { text: "abc" })
-    const store = create(messageClient(page([v2User(message.id, 1, "abc")]), page([v2User(message.id, 1, "ab")])))
-    await store.sync("child")
-    store.apply({
-      type: "message.part.delta",
-      properties: { sessionID: "child", messageID: message.id, partID: part.id, field: "text", delta: "def" },
-    })
-
-    await store.sync("child", { force: true })
-
-    expect(store.data.part[message.id]).toEqual([{ ...part, text: "ab" }])
-    expect(store.data.part_text_accum_delta[part.id]).toBeUndefined()
-  })
-
-  test("preserves an unpersisted delta suffix after partial server catch-up", async () => {
-    const message = userMessage("message")
-    const part = textPart(message.id, { text: "a" })
-    const store = create(messageClient(page([v2User(message.id, 1, "a")]), page([v2User(message.id, 1, "ab")])))
-    await store.sync("child")
-    store.apply({
-      type: "message.part.delta",
-      properties: { sessionID: "child", messageID: message.id, partID: part.id, field: "text", delta: "bc" },
-    })
-
-    await store.sync("child", { force: true })
-
-    expect(store.data.part[message.id]).toEqual([{ ...part, text: "abc" }])
-    expect(store.data.part_text_accum_delta[part.id]).toBe("abc")
-  })
-
-  test("clears delta state after exact server catch-up", async () => {
-    const message = userMessage("message")
-    const part = textPart(message.id, { text: "a" })
-    const store = create(messageClient(page([v2User(message.id, 1, "a")]), page([v2User(message.id, 1, "ab")])))
-    await store.sync("child")
-    store.apply({
-      type: "message.part.delta",
-      properties: { sessionID: "child", messageID: message.id, partID: part.id, field: "text", delta: "b" },
-    })
-
-    await store.sync("child", { force: true })
-
-    expect(store.data.part[message.id]).toEqual([{ ...part, text: "ab" }])
-    expect(store.data.part_text_accum_delta[part.id]).toBeUndefined()
-  })
-
   test("uses the successful retry response over events from a failed attempt", async () => {
     const failed = deferredPage()
     const retried = deferredPage()
@@ -818,29 +696,6 @@ describe("server session", () => {
     await loading
 
     expect(store.data.part[message.id]).toEqual([{ ...stale, text: "fetched" }])
-  })
-
-  test("preserves non-durable deltas across message retries", async () => {
-    const failed = deferredPage()
-    const retried = deferredPage()
-    const message = userMessage("message")
-    const part = textPart(message.id, { text: "stale" })
-    const client = messageClient(failed.promise, retried.promise)
-    const store = create(client, { retry: retryImmediately })
-    store.apply({ type: "message.updated", properties: { info: message } })
-    store.apply({ type: "message.part.updated", properties: { sessionID: "child", part, time: 1 } })
-    const loading = store.sync("child")
-
-    store.apply({
-      type: "message.part.delta",
-      properties: { sessionID: "child", messageID: message.id, partID: part.id, field: "text", delta: " delta" },
-    })
-    failed.reject(new Error("failed to fetch"))
-    await client.requested(2)
-    retried.resolve(page([v2User(message.id, 1, "stale")]))
-    await loading
-
-    expect(store.data.part[message.id]).toEqual([{ ...part, text: "stale delta" }])
   })
 
   test("preserves part removals across message retries", async () => {
@@ -905,7 +760,7 @@ describe("server session", () => {
     expect(store.data.part[message.id]).toEqual([optimistic])
   })
 
-  test("accepts part omission from a successful retry after an earlier delta", async () => {
+  test("accepts part omission from a successful retry", async () => {
     const failed = deferredPage()
     const retried = deferredPage()
     // An assistant can omit a part; a projected user always carries its prompt text part.
@@ -919,17 +774,12 @@ describe("server session", () => {
     await store.sync("child")
     const loading = store.sync("child", { force: true })
 
-    store.apply({
-      type: "message.part.delta",
-      properties: { sessionID: "child", messageID: part.messageID, partID: part.id, field: "text", delta: " delta" },
-    })
     failed.reject(new Error("failed to fetch"))
     await client.requested(3)
     retried.resolve(page([v2User("message-1"), v2Assistant("message-2", 2)]))
     await loading
 
     expect(store.data.part[part.messageID]).toBeUndefined()
-    expect(store.data.part_text_accum_delta[part.id]).toBeUndefined()
   })
 
   test("clears load-owned orphan parts when all retries fail", async () => {
@@ -963,8 +813,8 @@ describe("server session", () => {
 
     store.apply({ type: "message.updated", properties: { info: live } })
     store.apply({
-      type: "message.part.delta",
-      properties: { sessionID: "child", messageID: stale.id, partID: stalePart.id, field: "text", delta: " live" },
+      type: "message.part.updated",
+      properties: { sessionID: "child", part: { ...stalePart, text: "stale live" }, time: 2 },
     })
     pending.resolve(page([v2User(stale.id, 1, "stale")]))
     await refreshing
@@ -981,8 +831,8 @@ describe("server session", () => {
     const refreshing = store.sync("child", { force: true })
 
     store.apply({
-      type: "message.part.delta",
-      properties: { sessionID: "child", messageID: "message", partID: part.id, field: "text", delta: " live" },
+      type: "message.part.updated",
+      properties: { sessionID: "child", part: { ...part, text: "stale live" }, time: 2 },
     })
     pending.resolve(page([v2User("message", 2, "stale")]))
     await refreshing
@@ -1068,23 +918,6 @@ describe("server session", () => {
     store.optimistic.add({ sessionID: "child", message, parts: [part] })
 
     expect(store.data.part[message.id]).toEqual([])
-  })
-
-  test("clears stale delta buffers when replacing optimistic parts", () => {
-    const message = userMessage("message")
-    const stale = textPart(message.id, { id: "stale", text: "stale" })
-    const optimistic = textPart(message.id, { id: "optimistic", text: "optimistic" })
-    const store = setup({ child: session("child") }).store
-    store.optimistic.add({ sessionID: "child", message, parts: [stale] })
-    store.apply({
-      type: "message.part.delta",
-      properties: { sessionID: "child", messageID: message.id, partID: stale.id, field: "text", delta: " delta" },
-    })
-
-    store.optimistic.add({ sessionID: "child", message, parts: [optimistic] })
-
-    expect(store.data.part_text_accum_delta[stale.id]).toBeUndefined()
-    expect(store.data.part_text_accum_delta[optimistic.id]).toBeUndefined()
   })
 
   test("preserves removals during history prepend", async () => {
@@ -1210,7 +1043,21 @@ describe("server session", () => {
   test("applies events without a directory store", () => {
     const ctx = setup({})
     ctx.store.apply({ type: "session.created", properties: { sessionID: "root", info: session("root") } })
-    ctx.store.apply({ type: "session.status", properties: { sessionID: "root", status: { type: "busy" } } })
+    ctx.store.applyV2(
+      {
+        id: "evt_step_root",
+        created: 2,
+        type: "session.step.started",
+        durable: { aggregateID: "root", seq: 1, version: 1 },
+        location: { directory: "/repo" },
+        data: {
+          sessionID: "root",
+          assistantMessageID: "msg_assistant",
+          agent: "build",
+          model: { id: "model", providerID: "provider" },
+        },
+      } as unknown as ClientEvent,
+    )
 
     expect(ctx.store.get("root")?.directory).toBe("/repo")
     expect(ctx.store.data.session_working("root")).toBe(true)
@@ -1238,10 +1085,20 @@ describe("server session", () => {
 
     for (let index = 0; index < 50; index++) {
       ctx.store.remember(session(`session-${index}`))
-      ctx.store.apply({
-        type: "session.status",
-        properties: { sessionID: `session-${index}`, status: { type: "idle" } },
-      })
+      ctx.store.applyV2({
+        id: `evt_step_${index}`,
+        created: 2,
+        type: "session.step.ended",
+        durable: { aggregateID: `session-${index}`, seq: 1, version: 1 },
+        location: { directory: "/repo" },
+        data: {
+          sessionID: `session-${index}`,
+          assistantMessageID: "msg_assistant",
+          finish: "stop",
+          cost: 0,
+          tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+        },
+      } as unknown as ClientEvent)
     }
 
     expect(ctx.store.data.message.active?.map((message) => message.id)).toEqual(["message"])

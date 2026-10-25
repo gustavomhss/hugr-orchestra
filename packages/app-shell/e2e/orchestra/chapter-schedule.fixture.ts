@@ -103,7 +103,6 @@ export async function setup(
     { server, directory, scheme: input.scheme ?? "dark" },
   )
   await mockOrchestraServer(page, {
-    protocol: "v2",
     eventRetry: 60_000,
     provider: { all: [], connected: [], default: {} },
     directory,

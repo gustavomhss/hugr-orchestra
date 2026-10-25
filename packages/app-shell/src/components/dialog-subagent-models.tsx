@@ -48,24 +48,17 @@ export const DialogSubagentModels: Component<{ sessionID?: string; directory: st
   const [snapshot, actions] = createResource(
     () => ({ source: origin, sessionID }),
     ({ source, sessionID }) => {
-      if (!owns()) return { source, protocol: source.protocolKind(), error: new DOMException("", "AbortError") }
+      if (!owns()) return { source, error: new DOMException("", "AbortError") }
       setState("unsupported", false)
-      return source.protocol
-        .then(async (protocol) => {
+      return source.ready
+        .then(async () => {
           if (!owns()) throw new DOMException("", "AbortError")
-          if (protocol !== "v2" || !sessionID)
-            return {
-              protocol, source, error: undefined as unknown,
-            }
-          await policy!.load()
-          return { protocol, source, error: undefined as unknown }
+          if (sessionID) await policy!.load()
+          return { source, error: undefined as unknown }
         })
-        .catch((error: unknown) => ({
-          source, protocol: source.protocolKind(), error,
-        }))
+        .catch((error: unknown) => ({ source, error }))
     },
   )
-  const protocol = () => snapshot()?.protocol ?? origin.protocolKind()
   const failure = () => snapshot()?.error ?? policy?.state.error
   const unsupported = () => state.unsupported || sessionManagementUnsupported(failure())
   const providers = createMemo(() => {
@@ -80,21 +73,9 @@ export const DialogSubagentModels: Component<{ sessionID?: string; directory: st
       pendingKey={pendingKey}
       providers={providers()}
       status={catalog.status}
-      protocol={protocol()}
       supported={!owns() || unsupported() ? false : failure() || snapshot.loading ? undefined : !!snapshot()}
       loadFailed={!!failure() && !unsupported()}
-      rulesReady={
-        owns() && (protocol() === "v2"
-          ? !!snapshot() && !failure() && !snapshot.loading
-          : !sessionID || !!directoryState.session.get(sessionID))
-      }
-      readRules={() => (sessionID ? (directoryState.session.get(sessionID)?.permission ?? []) : [])}
-      writeRules={async (permission) => {
-        if (!owns() || !sessionID) throw new DOMException("", "AbortError")
-        const result = await origin.orchestra.sessions.setPermission({ sessionID, permission })
-        if (!owns()) throw new DOMException("", "AbortError")
-        return [...(result ?? [])]
-      }}
+      rulesReady={owns() && !!snapshot() && !failure() && !snapshot.loading}
       policy={{
         read: () => policy?.read() ?? { policy: { mode: "inherit" } },
         write: (next) => {

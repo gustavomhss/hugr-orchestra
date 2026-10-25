@@ -195,7 +195,7 @@ if (process.env.LEAN_TOOL_METRICS_DOM !== "1") {
     }
     const dispose = render(() => createComponent(DataProvider, {
       get directory() { return directory() },
-      data: { get session() { return native.session }, session_status: {}, session_diff: {}, message: {}, part: {} },
+      data: { get session() { return native.session }, session_status: {}, message: {}, part: {} },
       get children() { return createComponent(PART_MAPPING.tool!, {
         get part() { return current() },
         message: { id: "msg_alpha", sessionID: "ses_alpha", role: "user", time: { created: 0 },

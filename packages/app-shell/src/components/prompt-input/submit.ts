@@ -17,8 +17,6 @@ import { type ImageAttachmentPart, type Prompt, type usePrompt } from "@/context
 import { useSDK, type DirectorySDK } from "@/context/sdk"
 import { useServerSDK, type ServerSDK } from "@/context/server-sdk"
 import { ServerConnection } from "@/context/server"
-import { usePlatform, type Platform } from "@/context/platform"
-import { resolveBehaviorSystem } from "@/utils/llm-behaviors-store"
 import { clearPending, pendingSnapshot } from "@/components/draft-subagent-models"
 import { sessionManagementUnsupported } from "@/utils/session-management-errors"
 import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
@@ -58,11 +56,6 @@ type PendingPrompt = {
 }
 
 const pending = new Map<string, Set<PendingPrompt>>()
-
-// Read the profile's behaviors at send time. Never rejects, and gives up on a slow storage load.
-export function followupSystem(platform: Platform, scope: ServerScope, serverSync: ServerSync, directory: string) {
-  return resolveBehaviorSystem({ platform, scope, projects: serverSync.data.project, directory }).catch(() => undefined)
-}
 
 export const sendFollowupDraft = createFollowupSender()
 
@@ -162,7 +155,6 @@ export function createPromptSubmit(input: PromptSubmitInput) {
   const serverSync = useServerSync()
   const serverSDK = useServerSDK()
   const local = useLocal()
-  const platform = usePlatform()
   const permission = usePermission()
   const prompt = input.prompt
   const layout = useLayout()
@@ -321,7 +313,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     if (isNewSession) {
       if (!admission.directory && worktreeSelection === "create") {
         const project = repositoryProject(serverState.data.project, projectDirectory)
-        // The server names the copy, as V1 did; it lands beside the repository like a Workspaces copy.
+        // The server names the copy; it lands beside the repository like a Workspaces copy.
         const createdWorktree = await (project
           ? server.api.projectCopy.create({
               projectID: project.id,
@@ -367,7 +359,6 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       sessionDirectory === projectDirectory
         ? directorySDK.api.session
         : createCompatibleApi({
-            protocol: server.protocol,
             current: server.currentApi,
             directory: sessionDirectory,
           }).session
@@ -484,7 +475,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       admission.failedWrite = undefined
     }
     const policy = createSubmissionPolicy({
-      key: rulesKey, sessionID: session.id, protocol: server.protocol,
+      key: rulesKey, sessionID: session.id,
       management: server.sessionManagement, admission, current: ownsSource,
       initialPolicy: isNewSession ? { mode: "inherit" } : undefined,
       failedMessage: language.t("common.requestFailed"),
@@ -650,8 +641,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       api,
       sync: syncState,
       serverSync: serverState,
-      draft: { ...draft, system: isCommand ? undefined : request?.preparation ? request.preparation.system :
-        await followupSystem(platform, directorySDK.scope, serverState, projectDirectory) },
+      draft,
       messageID,
       optimisticBusy: isCommand || sessionDirectory === projectDirectory,
       pending: queued,

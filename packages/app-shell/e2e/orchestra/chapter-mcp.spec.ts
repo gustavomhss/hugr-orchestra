@@ -38,7 +38,6 @@ function fixture() {
       Record<string, string[]>
     >,
     configError: false,
-    events: {} as Record<string, { type: string; data: Record<string, string> }[]>,
     loadError: false,
     actionError: false,
     beforeList: undefined as ((url: URL) => Promise<void>) | undefined,
@@ -415,31 +414,6 @@ test("same directory and MCP name stay isolated across profiles, including late 
   await expect(row(page, "only-b")).toHaveCount(0)
 })
 
-test("status events refresh the owning profile without connection requests", async ({ page }) => {
-  const state = fixture()
-  await setup(page, state)
-  await openChapter(page)
-  await expect(row(page, "shared").getByRole("switch")).not.toBeChecked()
-  state.inventory[serverA].shared = { status: "connected" }
-  state.events[serverA] = [{ type: "mcp.status.changed", data: { server: "shared" } }]
-  await expect(row(page, "shared")).toHaveAttribute("data-status", "connected")
-  await expect(row(page, "shared").getByRole("switch")).toBeChecked()
-  expect(state.requests.filter((request) => request.method === "POST")).toHaveLength(0)
-  await chooseProfile(page, "Profile B")
-  await expect(row(page, "only-b")).toBeVisible()
-  state.inventory[serverA].shared = { status: "failed", error: "Another profile changed" }
-  const refresh = page.waitForResponse(
-    (response) => new URL(response.url()).origin === serverA && new URL(response.url()).pathname === "/api/mcp",
-  )
-  state.events[serverA] = [{ type: "mcp.status.changed", data: { server: "shared" } }]
-  await (await refresh).finished()
-  await expect(row(page, "shared")).toHaveAttribute("data-status", "connected")
-  await expect(row(page, "broken")).toHaveCount(0)
-  await chooseProfile(page, "Profile A")
-  await expect(row(page, "shared")).toHaveAttribute("data-status", "failed")
-  await expect(row(page, "shared")).toContainText("Another profile changed")
-})
-
 for (const path of ["/api/mcp/config", "/api/mcp/entries"] as const) {
   test(`audit: MCP ${path} must load before editing; read failure has retry`, async ({ page }) => {
     const state = fixture()
@@ -471,14 +445,6 @@ for (const path of ["/api/mcp/config", "/api/mcp/entries"] as const) {
     await expect(dialog.getByLabel("Command or server URL")).toHaveValue(`bunx 'broken server' --token {env:TOKEN}`)
     await expect(dialog.getByLabel("Command or server URL")).toBeEditable()
     await dialog.getByLabel("Command or server URL").fill("bunx keep-this-draft")
-    // A status event refetches config; it must not recreate the editable draft on failure.
-    fault.fail = true
-    const refreshed = page.waitForResponse(
-      (response) => new URL(response.url()).pathname === path && response.status() === 503,
-    )
-    state.events[serverA] = [{ type: "mcp.status.changed", data: { server: "broken" } }]
-    await refreshed
-    await expect(dialog.getByLabel("Command or server URL")).toHaveValue("bunx keep-this-draft")
     await dialog.getByRole("button", { name: "Save", exact: true }).click()
     await expect(dialog).toHaveCount(0)
     expect(state.requests.filter((request) => request.method === "PUT").map((request) => request.body)).toEqual([
@@ -597,13 +563,11 @@ async function setup(page: Page, state: ReturnType<typeof fixture>) {
     const path = url.pathname
     if (path === "/api/event") {
       // Each stream opens with server.connected, so the client reconnects without backing off.
-      const event = state.events[url.origin]?.shift()
       return route.fulfill({
         status: 200,
         contentType: "text/event-stream",
         body: [
           { id: "evt_connected", type: "server.connected", data: {} },
-          ...(event ? [{ id: `evt_${Date.now()}`, created: Date.now(), ...event, location: { directory } }] : []),
         ]
           .map((item) => `data: ${JSON.stringify(item)}\n\n`)
           .join(""),

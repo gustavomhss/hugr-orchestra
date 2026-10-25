@@ -1,7 +1,4 @@
-import type { AssistantMessage, Message, Part } from "@/v2-wire"
-
-
-type Parts = Record<string, Part[] | undefined>
+import type { AssistantMessage, Message } from "@/v2-wire"
 
 type Provider = {
   id: string
@@ -33,11 +30,11 @@ const tokenTotal = (msg: AssistantMessage) => {
   return msg.tokens.input + msg.tokens.output + msg.tokens.reasoning + msg.tokens.cache.read + msg.tokens.cache.write
 }
 
-const lastAssistantWithTokens = (messages: Message[], parts: Parts) => {
+const lastAssistantWithTokens = (messages: Message[]) => {
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i]
     if (msg.role !== "assistant") continue
-    if (syntheticAssistant(msg, parts)) continue
+    if (syntheticAssistant(msg)) continue
     if (!msg.tokens?.cache) continue
     if ("tokensAvailable" in msg && msg.tokensAvailable === false) continue
     if (!Number.isFinite(tokenTotal(msg))) continue
@@ -46,8 +43,8 @@ const lastAssistantWithTokens = (messages: Message[], parts: Parts) => {
   }
 }
 
-const build = (messages: Message[] = [], providers: Provider[] = [], parts: Parts = {}, metadata?: Record<string, unknown>): Context | undefined => {
-  const message = lastAssistantWithTokens(messages, parts)
+const build = (messages: Message[] = [], providers: Provider[] = [], metadata?: Record<string, unknown>): Context | undefined => {
+  const message = lastAssistantWithTokens(messages)
   if (!message) return undefined
 
   const provider = providers.find((item) => item.id === message.providerID)
@@ -70,34 +67,33 @@ const build = (messages: Message[] = [], providers: Provider[] = [], parts: Part
   }
 }
 
-export function getSessionContext(messages: Message[] = [], providers: Provider[] = [], parts: Parts = {}, metadata?: Record<string, unknown>) {
-  return build(messages, providers, parts, metadata)
+export function getSessionContext(messages: Message[] = [], providers: Provider[] = [], metadata?: Record<string, unknown>) {
+  return build(messages, providers, metadata)
 }
 
 export function getSessionCost(
   cost: number | null | undefined,
   messages: Message[] | undefined,
   providers: Provider[],
-  parts: Parts = {},
   metadata?: Record<string, unknown>,
 ) {
   const native = messages?.filter((message): message is AssistantMessage =>
-    message.role === "assistant" && !syntheticAssistant(message, parts) && nativeMessage(metadata, message)) ?? []
+    message.role === "assistant" && !syntheticAssistant(message) && nativeMessage(metadata, message)) ?? []
   const host = metadata?.claudeCode
   const reported = native.length && record(host) && typeof host.cost === "number" && Number.isFinite(host.cost) && host.cost >= 0
     ? host.cost : undefined
   // Loaded messages may be only a page. Preserve the aggregate and use native + ordinary charges as a floor.
   const mixed = reported === undefined ? undefined : reported + (messages ?? []).reduce((sum, message) =>
-    sum + (message.role === "assistant" && !syntheticAssistant(message, parts) && !nativeMessage(metadata, message) &&
+    sum + (message.role === "assistant" && !syntheticAssistant(message) && !nativeMessage(metadata, message) &&
       Number.isFinite(message.cost) && message.cost >= 0 ? message.cost : 0), 0)
   if (cost === undefined || cost === null || !Number.isFinite(cost))
     return reported !== undefined && messages?.every((message) => message.role !== "assistant" ||
-      syntheticAssistant(message, parts) || nativeMessage(metadata, message)) ? reported : undefined
+      syntheticAssistant(message) || nativeMessage(metadata, message)) ? reported : undefined
   if (!messages) return cost !== 0 ? cost : undefined
   // A zero aggregate is also the server default when pricing or cost reports are absent.
   const unknown = messages.some((message) => {
     if (message.role !== "assistant") return false
-    if (syntheticAssistant(message, parts)) return false
+    if (syntheticAssistant(message)) return false
     if (reported !== undefined && nativeMessage(metadata, message)) return false
     if ("costAvailable" in message && message.costAvailable === false) return true
     if (!Number.isFinite(message.cost)) return true
@@ -111,7 +107,7 @@ export function getSessionCost(
 }
 
 // The host reports native usage durably. The UI's V2 provider catalog can be absent or stale and is separate from
-// the legacy provider catalog the host updates, so a matching SDK model report takes precedence over list pricing.
+// the provider catalog the host updates, so a matching SDK model report takes precedence over list pricing.
 function hostUsage(metadata: Record<string, unknown> | undefined, message: AssistantMessage) {
   const host = metadata?.claudeCode
   if (!nativeMessage(metadata, message) || !record(host) || !record(host.modelUsage)) return
@@ -140,17 +136,6 @@ function record(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
-function syntheticAssistant(message: AssistantMessage, parts: Parts) {
-  if ("synthetic" in message && message.synthetic === true) return true
-  if (message.finish !== undefined || message.cost !== 0 || !message.tokens?.cache || tokenTotal(message) !== 0)
-    return false
-  const content = parts[message.id]
-  if (content?.length !== 1 || content[0].type !== "tool" || content[0].tool !== "bash") return false
-  // V1 shellImpl has no message-level marker; its synthetic parent is the wire provenance.
-  return (
-    parts[message.parentID]?.some(
-      (part) =>
-        part.type === "text" && part.synthetic === true && part.text === "The following tool was executed by the user",
-    ) === true
-  )
+function syntheticAssistant(message: AssistantMessage) {
+  return "synthetic" in message && message.synthetic === true
 }

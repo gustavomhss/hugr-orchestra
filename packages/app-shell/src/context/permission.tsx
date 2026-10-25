@@ -315,8 +315,8 @@ function createServerPermissionState(input: { sdk: ServerSDK; sync: ServerSync }
 
   const handlePermission = (e: PermissionEvent) => {
     const event = e.details
-    if (event?.type !== "permission.asked") return
-    void respondPending(event.properties, e.name)
+    if (event?.type !== "permission.v2.asked") return
+    void respondPending(normalizePermissionRequest(event.properties), e.name)
   }
 
   const unsubscribe = input.sdk.event.listen((event) => {

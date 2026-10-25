@@ -12,7 +12,7 @@ beforeAll(async () => {
   const local = await import("@/utils/session-management")
   const server = { url: "https://capability-probe.invalid" }
   const fetcher = Object.assign(async () => { throw new Error("Unexpected transport probe request") }, { preconnect: fetch.preconnect })
-  const probe = local.createSessionManagementForServer({ server, fetch: fetcher, protocol: Promise.resolve("v2") })
+  const probe = local.createSessionManagementForServer({ server, fetch: fetcher, ready: Promise.resolve() })
   if ("subagentModelsWriteVersion" in probe && typeof probe.subagentModelsWriteVersion === "function") {
     createManagement = local.createSessionManagementForServer
     return
@@ -63,7 +63,7 @@ test.each(["same-policy", "changed-policy", "failed"])("real writers join SET du
     backend.policy = body.policy
     return Response.json({ data: body.policy })
   }, { preconnect: fetch.preconnect })
-  const management = createManagement({ server, fetch: fetcher, protocol: Promise.resolve("v2") }) as Parameters<typeof createSubmissionPolicy>[0]["management"]
+  const management = createManagement({ server, fetch: fetcher, ready: Promise.resolve() }) as Parameters<typeof createSubmissionPolicy>[0]["management"]
   if (!management.waitSubagentModels || !management.subagentModelsWriteVersion) throw new Error("Qualified producer lacks frozen ports")
   const wait = management.waitSubagentModels.bind(management)
   const probe = spyOn(management, "waitSubagentModels").mockImplementation((id) => {

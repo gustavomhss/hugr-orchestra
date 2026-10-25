@@ -190,13 +190,13 @@ function directory(empty = false) {
     limit: 10,
     message: {},
     session_message: {},
-    session_diff: {},
+   
     todo: {},
     permission: {},
     question: {},
     session_status: {},
     part: {},
-    part_text_accum_delta: {},
+   
   } as State)
   const reloads: string[] = []
   const apply = (event: Parameters<typeof applyDirectoryEvent>[0]["event"], scope = "/repo") =>
@@ -206,7 +206,7 @@ function directory(empty = false) {
       setStore,
       directory: scope,
       push: (value) => reloads.push(value),
-      loadLsp() {},
+     
     })
   return { store, apply, reloads }
 }

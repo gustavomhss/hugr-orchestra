@@ -115,7 +115,7 @@ test("V2 archive sends the supported request and disables unsupported servers wi
       await release.promise
       return route.fulfill({ status: 204 })
     }
-    // Older V2 deployments may omit this route; protocol version alone does not imply support.
+    // Older V2 deployments may omit this route; server version alone does not imply support.
     return json(route, { name: "NotFound", message: "Archive route not installed" }, 404)
   })
   await installReviewTabs(page)
@@ -168,7 +168,6 @@ async function mockReviewServers(
   diff: (origin: string, url: URL) => Promise<{ status: number; data: unknown[] }>,
 ) {
   await mockOrchestraServer(page, {
-    protocol: "v2",
     directory: "/shared/repo",
     project: { id: "review", worktree: "/shared/repo", vcs: "git", time: { created: 1, updated: 1 }, sandboxes: [] },
     sessions: [sessionA, sessionB].map((session) => ({ ...session, directory: "/shared/repo", projectID: "review" })),

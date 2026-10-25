@@ -56,10 +56,8 @@ function buttonFor(host: HTMLElement, text: string) {
   return button
 }
 
-test.each([
-  ["v2", "ltr"], ["v2", "rtl"],
-] as const)("real picker keeps empty %s drafts denied with populated or empty catalogs until explicit Inherit (%s)", async (protocol, direction) => {
-  const key = `policy-picker/${protocol}/${direction}`
+test.each(["ltr", "rtl"] as const)("real picker keeps empty drafts denied with populated or empty catalogs until explicit Inherit (%s)", async (direction) => {
+  const key = `policy-picker/${direction}`
   const [state, setState] = createStore<{ providers: Provider[]; status: "success" | "error" }>({ providers: [provider], status: "success" })
   const host = document.createElement("div")
   host.dir = direction
@@ -68,7 +66,7 @@ test.each([
     language.useLanguage().setDirection(direction)
     return createComponent(Root, { open: true, get children() {
       return createComponent(picker.SubagentModelPicker, {
-        directory: "/repo", pendingKey: key, get providers() { return state.providers }, get status() { return state.status }, protocol,
+        directory: "/repo", pendingKey: key, get providers() { return state.providers }, get status() { return state.status },
         supported: true, rulesReady: true, readRules: () => [], writeRules: async () => [], onRetry() {},
       })
     } })
@@ -104,10 +102,8 @@ test.each([
   drafts.clearPending(key)
 })
 
-test.each([
-  ["v2", "ltr"], ["v2", "rtl"],
-] as const)("real picker Enter toggles focused second row despite a different search-active row (%s, %s)", async (protocol, direction) => {
-  const key = `policy-picker-focus/${protocol}/${direction}`
+test.each(["ltr", "rtl"] as const)("real picker Enter toggles focused second row despite a different search-active row (%s)", async (direction) => {
+  const key = `policy-picker-focus/${direction}`
   const second = { ...model, id: "team/model:second/v2", name: "Second model", api: { ...model.api, id: "team/model:second/v2" } }
   const host = document.createElement("div")
   host.dir = direction
@@ -117,7 +113,7 @@ test.each([
     return createComponent(Root, { open: true, get children() {
       return createComponent(picker.SubagentModelPicker, {
         directory: "/repo", pendingKey: key, providers: [{ ...provider, models: { [model.id]: model, [second.id]: second } }],
-        status: "success", protocol, supported: true, rulesReady: true,
+        status: "success", supported: true, rulesReady: true,
         readRules: () => [], writeRules: async () => [], onRetry() {},
       })
     } })
@@ -171,7 +167,7 @@ test("real picker preserves unavailable refs, waits for ACK and retries failed s
   const dispose = renderPicker(() => createComponent(language.LanguageProvider, { locale: "en", get children() {
     return createComponent(Root, { open: true, get children() {
       return createComponent(picker.SubagentModelPicker, {
-        sessionID: "ses_picker", directory: "/repo", providers: [provider], status: "success", protocol: "v2",
+        sessionID: "ses_picker", directory: "/repo", providers: [provider], status: "success",
         supported: true, rulesReady: true, readRules: () => [], writeRules: async () => [], onRetry() {},
         policy: {
           read: () => ({ policy: { mode: "allowlist", models: [{ providerID: "offline", id: "full/slash/model" }] }, timestamp: 1 }),
@@ -217,7 +213,7 @@ test("real picker disables unresolved policy/catalog state and retries catalog f
   const dispose = renderPicker(() => createComponent(language.LanguageProvider, { locale: "en", get children() {
     return createComponent(Root, { open: true, get children() {
       return createComponent(picker.SubagentModelPicker, {
-        sessionID: "ses_loading", directory: "/repo", providers: [provider], protocol: "v2", supported: true,
+        sessionID: "ses_loading", directory: "/repo", providers: [provider], supported: true,
         get status() { return state.status }, get rulesReady() { return state.ready },
         readRules: () => [], writeRules: async () => [], onRetry() { retries.count++ },
         policy: { read: () => ({ policy: { mode: "inherit" } }), write: async (policy) => policy },
@@ -268,7 +264,7 @@ test("canonical read loading and rejection disable Inherit until a successful fr
       holder.policy = policy
       return createComponent(Root, { open: true, get children() {
         return createComponent(picker.SubagentModelPicker, {
-          sessionID: "ses_canonical_loading", directory: "/repo", providers: [provider], status: "success", protocol: "v2",
+          sessionID: "ses_canonical_loading", directory: "/repo", providers: [provider], status: "success",
           get supported() { return policy.state.refreshing || policy.state.error ? undefined : true },
           get rulesReady() { return !!policy.state.snapshot && !policy.state.refreshing && !policy.state.error },
           get loadFailed() { return !!policy.state.error },
@@ -333,7 +329,7 @@ test.each(Object.entries(subagentModels))("picker confirmation failure uses loca
     language.useLanguage().setLocale(tag)
     return createComponent(Root, { open: true, get children() {
       return createComponent(picker.SubagentModelPicker, {
-        sessionID: "ses_localized_failure", directory: "/repo", providers: [provider], status: "success", protocol: "v2",
+        sessionID: "ses_localized_failure", directory: "/repo", providers: [provider], status: "success",
         supported: true, rulesReady: true, readRules: () => [], writeRules: async () => [], onRetry() {},
         policy: { read: () => ({ policy: { mode: "inherit" } }), write: async () => { throw new Error("confirmation GET failed after ACK") } },
       })
@@ -454,7 +450,7 @@ test.each(["ltr", "rtl"] as const)("real picker virtualizes full catalog and ret
     language.useLanguage().setDirection(direction)
     return createComponent(Root, { open: true, get children() {
       return createComponent(picker.SubagentModelPicker, {
-        directory: "/repo", pendingKey: key, providers: [{ ...provider, models }], status: "success", protocol: "v2",
+        directory: "/repo", pendingKey: key, providers: [{ ...provider, models }], status: "success",
         supported: true, rulesReady: true, readRules: () => [], writeRules: async () => [], onRetry() {},
       })
     } })

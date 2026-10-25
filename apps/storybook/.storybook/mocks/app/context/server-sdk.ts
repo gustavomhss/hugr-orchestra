@@ -90,11 +90,11 @@ export function useServerSDK() {
       },
     },
   }
-  return () => ({ client, api, scope: "story-server", server: { type: "mock" }, protocolKind: () => "v2" as const })
+  return () => ({ client, api, scope: "story-server", server: { type: "mock" }, ready: Promise.resolve(), isReady: () => true })
 }
 
-export function useServerProtocol() {
-  return () => "v2" as const
+export function useServerReady() {
+  return () => true
 }
 
 export function ServerSDKProvider(props: { children?: unknown }) {

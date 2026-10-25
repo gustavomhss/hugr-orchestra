@@ -183,7 +183,6 @@ export async function setup(
     sandboxes: [],
   })
   await mockOrchestraServer(page, {
-    protocol: "v2",
     directory,
     project: project(serverA),
     provider: provider(),

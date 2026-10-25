@@ -26,7 +26,7 @@ test("row, ArrowDown/Enter, switch Space and clear search target models once", a
   await page.keyboard.press("Space")
   await expect(reasoner).not.toBeChecked()
   expect(await writes()).toHaveLength(3)
-  expect((await writes())[2]).toEqual([{ permission: "task", pattern: "example/reasoner", action: "deny" }])
+  expect((await writes())[2]).toEqual({ mode: "allowlist", models: [{ providerID: "example", id: "builder" }] })
   await search.fill("Reasoner")
   await expect(page.locator('[data-slot="list-item"]')).toHaveCount(1)
   await page.getByRole("button", { name: "Clear filter", exact: true }).click()
@@ -40,7 +40,7 @@ test("row, ArrowDown/Enter, switch Space and clear search target models once", a
   await page.keyboard.press("Enter")
   await expect(reasoner).toBeChecked()
   expect(await writes()).toHaveLength(5)
-  expect((await writes())[4]).toEqual([{ permission: "task", pattern: "example/reasoner", action: "allow" }])
+  expect((await writes())[4]).toEqual({ mode: "allowlist", models: [{ providerID: "example", id: "reasoner" }] })
 })
 
 for (const dir of ["ltr", "rtl"]) {
@@ -109,9 +109,9 @@ test("draft selections honor the supplied pendingKey and inheritance clears it",
   await page.goto("/e2e/orchestra/agent-picker.fixture.html?auto=0&draft=1&pending=server-B-profile-draft-A")
   await page.getByTestId("open-picker").click()
   await page.getByRole("button", { name: "Builder", exact: true }).click()
-  await expect(page.getByTestId("pending")).toContainText("example/builder")
+  await expect(page.getByTestId("pending")).toContainText('"id":"builder"')
   await page.getByRole("button", { name: "Inherit", exact: true }).click()
-  await expect(page.getByTestId("pending")).toHaveText("[]")
+  await expect(page.getByTestId("pending")).toHaveText('{"mode":"inherit"}')
 })
 
 test("5000 models mount a bounded keyed window, retain focus and discard stale pointer targets", async ({ page }) => {
@@ -138,7 +138,7 @@ test("5000 models mount a bounded keyed window, retain focus and discard stale p
   await expect(last).toBeFocused()
   await page.keyboard.press("Space")
   await expect(page.getByRole("switch", { name: "Model 04999", exact: true })).toBeChecked()
-  await expect(page.getByTestId("writes")).toContainText("provider-49/team/model-4999")
+  await expect(page.getByTestId("writes")).toContainText('"id":"team/model-4999"')
   const search = page.getByRole("combobox")
   await search.fill("Model 04242")
   await expect(grid).toHaveAttribute("aria-rowcount", "2")
@@ -162,7 +162,7 @@ test("catalog metadata refresh reorders keyed rows without replacing or losing t
   await expect(page.getByRole("switch", { name: "Renamed Builder", exact: true })).toBeFocused()
   expect(await original!.evaluate((element) => element === document.activeElement)).toBe(true)
   await page.keyboard.press("Space")
-  await expect(page.getByTestId("writes")).toContainText("example/builder")
+  await expect(page.getByTestId("writes")).toContainText('"id":"builder"')
 })
 
 test("roster pagination and search keep stable agent identity with bounded DOM", async ({ page }) => {

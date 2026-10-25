@@ -142,7 +142,6 @@ export async function setupResearchTimeline(
 ) {
   const status = input.status ?? "completed"
   const timeline = await setupTimeline(page, {
-    protocol: "v2",
     messages: [userMessage(), assistantMessage([], { completed: status === "completed" })],
   })
   const messages = [

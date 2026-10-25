@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { clearPending, modelKey, pendingPolicy, pendingRules, pendingSelection, pendingSnapshot, restorePending, togglePending } from "./draft-subagent-models"
+import { clearPending, modelKey, pendingPolicy, pendingSelection, pendingSnapshot, restorePending, togglePending } from "./draft-subagent-models"
 
 const DIR = "/tmp/draft-test"
 
@@ -13,20 +13,6 @@ describe("draft subagent models", () => {
     clearPending(DIR)
   })
 
-  test("pendingRules emits deny baseline plus allows", () => {
-    clearPending(DIR)
-    expect(pendingRules(DIR)).toEqual([])
-    togglePending(DIR, "openrouter", "x")
-    togglePending(DIR, "groq", "y")
-    expect(pendingRules(DIR)).toEqual([
-      { permission: "task", pattern: "*/*", action: "deny" },
-      { permission: "task", pattern: "openrouter/x", action: "allow" },
-      { permission: "task", pattern: "groq/y", action: "allow" },
-    ])
-    clearPending(DIR)
-    expect(pendingRules(DIR)).toEqual([])
-  })
-
   test("modelKey joins provider and model", () => {
     expect(modelKey("openrouter", "a/b")).toBe("openrouter/a/b")
   })
@@ -35,14 +21,10 @@ describe("draft subagent models", () => {
     clearPending(DIR)
     expect(togglePending(DIR, "openrouter", "team/model", true)).toBe(true)
     expect(togglePending(DIR, "openrouter", "team/model", true)).toBe(true)
-    expect(pendingRules(DIR)).toEqual([
-      { permission: "task", pattern: "*/*", action: "deny" },
-      { permission: "task", pattern: "openrouter/team/model", action: "allow" },
-    ])
-    expect(pendingRules(DIR).at(-1)?.pattern).toBe("openrouter/team/model")
+    expect(pendingPolicy(DIR)).toEqual({ mode: "allowlist", models: [{ providerID: "openrouter", id: "team/model" }] })
     expect(togglePending(DIR, "openrouter", "team/model", false)).toBe(false)
     expect(togglePending(DIR, "openrouter", "team/model", false)).toBe(false)
-    expect(pendingRules(DIR)).toEqual([{ permission: "task", pattern: "*/*", action: "deny" }])
+    expect(pendingPolicy(DIR)).toEqual({ mode: "allowlist", models: [] })
     clearPending(DIR)
   })
 

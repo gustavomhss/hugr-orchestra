@@ -1,22 +1,19 @@
 import type { PermissionRequest, QuestionRequest } from "@/v2-types"
 import type { Message, Part, SessionStatus, Todo } from "@/v2-wire"
 
-import type { FileDiffInfo } from "@/v2-legacy"
-import type { SessionMessageInfo } from "@/v2-legacy"
+import type { SessionMessageInfo } from "@/session-types"
 
 
 export const SESSION_CACHE_LIMIT = 40
 
 type SessionCache = {
   session_status: Record<string, SessionStatus | undefined>
-  session_diff: Record<string, FileDiffInfo[] | undefined>
   todo: Record<string, Todo[] | undefined>
   message: Record<string, Message[] | undefined>
   session_message: Record<string, SessionMessageInfo[] | undefined>
   part: Record<string, Part[] | undefined>
   permission: Record<string, PermissionRequest[] | undefined>
   question: Record<string, QuestionRequest[] | undefined>
-  part_text_accum_delta: Record<string, string | undefined>
 }
 
 export function dropSessionCaches(store: SessionCache, sessionIDs: Iterable<string>) {
@@ -26,9 +23,6 @@ export function dropSessionCaches(store: SessionCache, sessionIDs: Iterable<stri
   for (const key of Object.keys(store.part)) {
     const parts = store.part[key]
     if (!parts?.some((part) => stale.has(part?.sessionID ?? ""))) continue
-    for (const part of parts) {
-      delete store.part_text_accum_delta[part.id]
-    }
     delete store.part[key]
   }
 
@@ -36,7 +30,6 @@ export function dropSessionCaches(store: SessionCache, sessionIDs: Iterable<stri
     delete store.message[sessionID]
     delete store.todo[sessionID]
     delete store.session_message[sessionID]
-    delete store.session_diff[sessionID]
     delete store.session_status[sessionID]
     delete store.permission[sessionID]
     delete store.question[sessionID]

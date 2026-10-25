@@ -7,7 +7,6 @@ export async function setupCompactNavigation(
     locale?: "en" | "ar"
     scheme?: "dark" | "light"
     projectName?: string
-    protocol?: "v2"
     // Home shows no profile until one is chosen; a returning user has the repository chosen and persisted.
     selected?: boolean
   } = {},
@@ -23,7 +22,6 @@ export async function setupCompactNavigation(
     sandboxes: [],
   }
   await mockOrchestraServer(page, {
-    protocol: input.protocol,
     directory,
     project,
     provider: { all: [], connected: [], default: {} },

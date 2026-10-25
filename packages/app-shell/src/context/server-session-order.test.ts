@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import type { OpenCodeEvent } from "@/v2-legacy"
+import type { ClientEvent } from "@/session-types"
 import type { Session } from "@/v2-wire"
 import type { ServerApi } from "@/utils/server"
 import { createServerSession } from "./server-session"
@@ -50,7 +50,7 @@ describe("server session part order", () => {
         durable: { aggregateID: "child", seq: index + 1, version: 1 },
         location: { directory: "/repo" },
         data: { sessionID: "child", ...event.data },
-      } as unknown as OpenCodeEvent),
+      } as unknown as ClientEvent),
     )
 
     expect(store.data.part.msg_2_assistant?.map((part) => part.id)).toEqual([

@@ -128,7 +128,7 @@ export async function setupTimelineBenchmark(
     eventRetry: 16,
   })
   // The build retains the base config's default backend port while performance workers mock the app port.
-  // Bridge that authority through the shared mock so failed health probes cannot select a different protocol.
+  // Bridge that authority through the shared mock so failed health probes cannot select a different server.
   const server = new URL(`http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:4096`)
   const mock = new URL(
     `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`,
@@ -218,11 +218,11 @@ export function buildStreamDeltaEvents(deltaCount: number): EventPayload[] {
   return Array.from({ length: deltaCount }, (_, index) => ({
     directory,
     payload: {
-      type: "message.part.delta",
+      type: "session.text.delta",
       properties: {
-        messageID: assistantMessageID,
-        partID: textPartID,
-        field: "text",
+        sessionID,
+        assistantMessageID,
+        ordinal: 0,
         delta: streamChunk(index + 1, deltaCount + 1),
       },
     },

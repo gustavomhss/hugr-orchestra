@@ -1,6 +1,6 @@
 import { createMemo, type Accessor } from "solid-js"
 import { useLanguage } from "@/context/language"
-import { useServerProtocol } from "@/context/server-sdk"
+import { useServerReady } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import { resolveDefaultModel } from "@/hooks/provider-catalog"
 import { useProviders } from "@/hooks/use-providers"
@@ -9,11 +9,10 @@ import { showToast } from "@/utils/toast"
 type ModelKey = { providerID: string; modelID: string }
 
 // New turns start on the configured default model (`config.model`, "provider/model").
-// Only the v1 API writes the global config, so v2 servers show the default without a way to change it.
 export function createDefaultModelController(directory: Accessor<string | null | undefined>) {
   const language = useLanguage()
   const serverSync = useServerSync()
-  const protocol = useServerProtocol()
+  const ready = useServerReady()
   const providers = useProviders(directory)
   const project = () => {
     const value = directory()
@@ -25,8 +24,8 @@ export function createDefaultModelController(directory: Accessor<string | null |
   )
 
   return {
-    // V1 writes the model into its config; V2 into its global config document.
-    writable: () => protocol() !== undefined,
+    // The model is written into the global config document once the server answers.
+    writable: () => ready(),
     isDefault: (key: ModelKey) => current()?.providerID === key.providerID && current()?.modelID === key.modelID,
     set: (key: ModelKey) => {
       const model = `${key.providerID}/${key.modelID}`

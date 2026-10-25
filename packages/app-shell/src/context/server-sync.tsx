@@ -335,7 +335,7 @@ export function createServerSyncContextInner(
       .fetchQuery({
         ...queryOptionsApi.sessions(key),
         queryFn: () =>
-          serverSDK.protocol
+          serverSDK.ready
             .then(() =>
               loadRootSessions({ api: serverSDK.api.session, directory, limit }),
             )
@@ -441,7 +441,6 @@ export function createServerSyncContextInner(
       retainedLimit: sessionMeta.get(key)?.limit,
       sessionContent: false,
       permission: session.data.permission,
-      loadLsp() {},
     })
   }
 
@@ -487,21 +486,13 @@ export function createServerSyncContextInner(
         void activeSessionsQuery.refetch()
       applyGlobalEvent({
         event,
-        project: globalStore.project,
         refresh: () => {
           if (recent) return
           bootstrap.refetch()
         },
-        setGlobalProject: setProjects,
       })
-      if (
-        eventType === "config.updated" ||
-        eventType === "catalog.updated" ||
-        eventType === "agent.updated" ||
-        eventType === "project.directories.updated"
-      )
-        bootstrap.refetch()
-      if (eventType === "server.connected" || eventType === "global.disposed") {
+      if (eventType === "catalog.updated" || eventType === "project.directories.updated") bootstrap.refetch()
+      if (eventType === "server.connected") {
         if (recent) return
         for (const directory of Object.keys(children.children)) {
           if (!children.active(directory)) continue
@@ -515,11 +506,6 @@ export function createServerSyncContextInner(
       const info = session.get(event.current.data.sessionID)
       if (info) indexSession(info)
     }
-    if (event.current?.type === "session.forked")
-      void session
-        .resolve(event.current.data.sessionID, { force: true })
-        .then(indexSession)
-        .catch(() => {})
 
     const existing = children.children[key]
     if (!existing) {
@@ -533,17 +519,7 @@ export function createServerSyncContextInner(
       return
     }
     children.mark(key)
-    if (
-      event.current?.type === "session.moved" ||
-      // event.current?.type === "session.archived" ||
-      event.current?.type === "session.forked" ||
-      eventType === "command.updated" ||
-      eventType === "config.updated" ||
-      eventType === "agent.updated"
-    )
-      queue.push(key)
-    if (eventType === "mcp.status.changed") void queryClient.invalidateQueries(queryOptionsApi.mcp(key))
-    if (eventType === "mcp.resources.changed") void queryClient.invalidateQueries(queryOptionsApi.mcpResources(key))
+    if (event.current?.type === "session.moved") queue.push(key)
     const [store, setStore] = existing
     applyDirectoryEvent({
       event,
@@ -559,10 +535,6 @@ export function createServerSyncContextInner(
       sessionContent: false,
       permission: session.data.permission,
       vcsCache: children.vcsCache.get(key),
-      loadLsp: () => {
-        if (!children.active(key)) return
-        void queryClient.fetchQuery(queryOptionsApi.lsp(key))
-      },
       loadReferences: () => {
         if (!children.active(key)) return
         void queryClient.fetchQuery(queryOptionsApi.references(key))

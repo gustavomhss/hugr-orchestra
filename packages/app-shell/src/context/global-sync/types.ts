@@ -2,7 +2,7 @@ import type { LspStatus, PermissionRequest, QuestionRequest, ReferenceInfo, VcsI
 import type { Message, Part, SessionStatus, Todo } from "@/v2-wire"
 
 import type { Agent, Config, Path } from "@/v2-wire"
-import type { FileDiffInfo, SessionMessageInfo } from "@/v2-legacy"
+import type { SessionMessageInfo } from "@/session-types"
 import { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 import type { CommandInfo } from "@/v2-wire"
 import type { McpResource, McpServer } from "@/v2-wire"
@@ -49,9 +49,6 @@ export type State = {
     [sessionID: string]: SessionStatus
   }
   session_working(id: string): boolean
-  session_diff: {
-    [sessionID: string]: FileDiffInfo[]
-  }
   todo: {
     [sessionID: string]: Todo[]
   }
@@ -80,9 +77,6 @@ export type State = {
   }
   part: {
     [messageID: string]: Part[]
-  }
-  part_text_accum_delta: {
-    [partID: string]: string
   }
 }
 

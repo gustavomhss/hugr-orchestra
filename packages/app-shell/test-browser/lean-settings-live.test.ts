@@ -23,8 +23,8 @@ if (process.env.LEAN_SETTINGS_DOM !== "1") {
 } else {
   const { createComponent, createStore, render } = await import("./lean-dom.test-helper")
   const { solidDom } = await import("./solid-dom")
-  const [state, setState] = createStore<{ protocol: "v2" | undefined; ready: boolean; error: unknown; config: Config }>({
-    protocol: undefined, ready: false, error: undefined,
+  const [state, setState] = createStore<{ ready: boolean; error: unknown; config: Config }>({
+    ready: false, error: undefined,
     config: { tool_output: { max_lines: 42, max_bytes: 900, lean: { enabled: false } } },
   })
   const calls: Config[] = []
@@ -47,8 +47,8 @@ if (process.env.LEAN_SETTINGS_DOM !== "1") {
   )
   mock.module(solidDom("@/context/server-sync", import.meta.dir), () => ({ ...serverSync, useServerSync: () => () => sync }))
   mock.module(solidDom("@/context/server-sdk", import.meta.dir), () => ({ ...sdk,
-    useServerProtocol: () => () => state.protocol,
-    useServerSDK: () => () => ({ protocol: Promise.resolve(state.protocol ?? "v2"), client: { pty: { shells: async () => ({ data: [] }) } } }),
+    useServerReady: () => () => state.ready,
+    useServerSDK: () => () => ({ ready: Promise.resolve(), client: { pty: { shells: async () => ({ data: [] }) } } }),
   }))
   mock.module(solidDom("@/context/permission", import.meta.dir), () => ({ ...permission,
     usePermission: () => ({ isAutoAcceptingDirectory: () => false, isAutoAccepting: () => false }),
@@ -105,8 +105,8 @@ if (process.env.LEAN_SETTINGS_DOM !== "1") {
   }
   const expectNoLean = async (host: HTMLElement) => {
     for (const capability of [
-      { protocol: undefined, ready: false, error: undefined }, { protocol: "v2" as const, ready: true, error: undefined },
-      { protocol: "v2" as const, ready: true, error: new Error("offline") },
+      { ready: false, error: undefined }, { ready: true, error: undefined },
+      { ready: true, error: new Error("offline") },
     ]) {
       setState(capability)
       await Bun.sleep(20)

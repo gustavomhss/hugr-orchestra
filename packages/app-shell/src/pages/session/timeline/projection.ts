@@ -1,4 +1,4 @@
-import type { SessionMessageInfo } from "@/v2-legacy"
+import type { SessionMessageInfo } from "@/session-types"
 
 
 import type { AssistantMessage, Message, Part, SessionStatus, SnapshotFileDiff, UserMessage } from "@/v2-wire"

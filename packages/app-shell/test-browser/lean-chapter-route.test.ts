@@ -53,13 +53,11 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
     items: (["cargo", "pytest", "go"] as const).map((id) => ({ id, enabled: true,
       savings: { bytesSaved: bytes, tokensSaved: bytes / 4, calls: 1, tokenCalls: 1 } })),
   })
-  type Event = { name: string; details: { type: string } }
   async function nativeServer(bytes: number, name: string, supported = true) {
     const data = new Map<string, LeanDashboard.Info>()
     const provider: NormalizedProviderListResponse = { all: new Map(), connected: [], default: {} }
     const catalogs = new Map<string, { directory: string; provider_ready: boolean; provider: typeof provider }>()
     const requests: { method: string; directory: string; path: string; body?: LeanDashboard.Update }[] = []
-    const listeners = new Set<(event: Event) => void>()
     const gates = { read: undefined as Promise<void> | undefined, write: undefined as Promise<void> | undefined,
       history: undefined as Promise<void> | undefined }
     const server = createServer(async (request, response) => {
@@ -96,7 +94,7 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
     const connection: ServerConnection.Any = { type: "http", http: { url: `http://127.0.0.1:${address.port}` } }
     const scope = ServerScope.fromServerKey(ServerConnection.key(connection))
     return {
-      connection, data, requests, gates, listeners, catalogs,
+      connection, data, requests, gates, catalogs,
       projects: { list: () => [{ id: "same-git-project", name, worktree: "/one", sandboxes: ["/two"] }] },
       sync: { data: { provider }, child: (directory: string) => {
         const catalog = catalogs.get(directory) ?? { directory, provider_ready: true, provider }
@@ -105,7 +103,6 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
       } },
       sdk: { scope, orchestra: Orchestra.make({ baseUrl: connection.http.url }),
         ensureDirSdkContext: (directory: string) => ({ scope, directory }),
-        event: { listen: (listener: (event: Event) => void) => { listeners.add(listener); return () => { listeners.delete(listener) } } },
       },
       close: () => new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve())),
     }
@@ -197,7 +194,7 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
       await until(() => total() === "+3.91 KiB")
       expect(host.textContent).toContain("Remote named profile")
       two.data.set("/two", snapshot("/two", 4800, false))
-      two.listeners.forEach((listener) => listener({ name: "/two", details: { type: "config.updated" } }))
+      host.querySelector<HTMLButtonElement>(".lean-caption button")!.click()
       await until(() => total() === "+4.69 KiB")
       expect(host.textContent).toContain("Lean is off for this profile")
       two.data.set("/two", snapshot("/two", 5200))
@@ -213,8 +210,6 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
       expect(unsupported.requests.map((request) => [request.method, request.path, request.directory])).toEqual([
         ["GET", "/api/lean", "/fallback-name"],
       ])
-      expect(one.listeners.size).toBe(0)
-      expect(two.listeners.size).toBe(0)
       expect([...one.catalogs.keys()]).toEqual(["/one", "/two"])
       expect([...two.catalogs.keys()]).toEqual(["/two", "/fallback-name"])
       expect([...unsupported.catalogs.keys()]).toEqual(["/fallback-name"])

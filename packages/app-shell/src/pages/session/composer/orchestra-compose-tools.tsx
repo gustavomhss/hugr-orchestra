@@ -9,7 +9,7 @@ import { useSessionDelivery } from "./delivery"
 export function OrchestraComposeTools(props: { controller: PromptInputV2Interaction; sessionID: string }) {
   const language = useLanguage()
   const delivery = useSessionDelivery(() => props.sessionID)
-  const queued = () => delivery.supported() && delivery.choice() === "queue"
+  const queued = () => delivery.choice() === "queue"
   const hintID = createUniqueId()
   const deliveryHint = () => {
     return language.t(
@@ -29,23 +29,20 @@ export function OrchestraComposeTools(props: { controller: PromptInputV2Interact
           <path d="M4 2h5l3 3v9H4V2ZM9 2v3h3M6 8h4M6 11h3" />
         </svg>
       </button>
-      {/* Steer/Queue only works on V2 servers; the bundled server is V1, where a click did nothing. */}
-      <Show when={delivery.supported()}>
-        <button
-          type="button"
-          data-action="prompt-delivery"
-          data-delivery={queued() ? "queue" : "steer"}
-          aria-pressed={queued()}
-          aria-describedby={hintID}
-          title={deliveryHint()}
-          onClick={() => delivery.toggle()}
-        >
-          {language.t(queued() ? "orchestra.chat.delivery.queue" : "orchestra.chat.delivery.steer")}
-        </button>
-        <span id={hintID} hidden>
-          {deliveryHint()}
-        </span>
-      </Show>
+      <button
+        type="button"
+        data-action="prompt-delivery"
+        data-delivery={queued() ? "queue" : "steer"}
+        aria-pressed={queued()}
+        aria-describedby={hintID}
+        title={deliveryHint()}
+        onClick={() => delivery.toggle()}
+      >
+        {language.t(queued() ? "orchestra.chat.delivery.queue" : "orchestra.chat.delivery.steer")}
+      </button>
+      <span id={hintID} hidden>
+        {deliveryHint()}
+      </span>
       <Show when={props.controller.view.submit.working?.()}>
         <button type="button" data-action="prompt-stop-run" onClick={() => props.controller.view.submit.onStop()}>
           {language.t("orchestra.chat.stop")}

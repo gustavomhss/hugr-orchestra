@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import type { AssistantMessage, Message, Part, Session, UserMessage } from "@/v2-wire"
 import type { MessageListOutput } from "@/server-api"
-import type { SessionMessageAssistant, SessionMessageInfo } from "@/v2-legacy"
+import type { SessionMessageAssistant, SessionMessageInfo } from "@/session-types"
 import type { ServerApi } from "@/utils/server"
 
 import { ServerConnection } from "@/context/server"
@@ -94,7 +94,6 @@ function setup(input: Partial<TasksInput> & { calls?: Part[] }): TasksInput {
     agents: [],
     loaded: () => false,
     more: () => false,
-    aggregates: true,
     ...input,
   }
 }
@@ -393,7 +392,6 @@ describe("deriveTasks stats", () => {
           part: store.data.part,
           loaded: store.history.loaded,
           more: store.history.more,
-          aggregates: false,
         }),
       ).stats
     const unknown = { toolCalls: undefined, fails: undefined, tokens: undefined, cost: undefined }
@@ -454,11 +452,6 @@ describe("deriveTasks stats", () => {
     const bare = only(setup({ sessions: [session("ses_b", { parentID: parent })] })).stats
     expect(bare?.tokens).toBeUndefined()
     expect(bare?.cost).toBeUndefined()
-
-    // v1 compat zero-fills missing aggregates, so they prove nothing there.
-    const v1 = only(setup({ sessions: [child], aggregates: false })).stats
-    expect(v1?.tokens).toBeUndefined()
-    expect(v1?.cost).toBeUndefined()
   })
 
   test("a complete transcript keeps real zeros", () => {

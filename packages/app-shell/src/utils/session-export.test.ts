@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import type { SessionInfo } from "@/v2-types"
-import type { SessionMessageInfo } from "@/v2-legacy"
+import type { SessionMessageInfo } from "@/session-types"
 
 
 import { fetchSessionExport, type SessionExportApi } from "./session-export"

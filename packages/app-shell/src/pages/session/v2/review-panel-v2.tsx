@@ -2,7 +2,7 @@ import { createEffect, createMemo, createSignal, on, onCleanup, Show, type JSX }
 import type { VcsFileDiff } from "@/v2-types"
 import type { SnapshotFileDiff } from "@/v2-wire"
 
-import type { FileDiffInfo } from "@/v2-legacy"
+import type { FileDiffInfo } from "@/session-types"
 import {
   SESSION_REVIEW_V2_SIDEBAR_WIDTH_MAX,
   SESSION_REVIEW_V2_SIDEBAR_WIDTH_MIN,

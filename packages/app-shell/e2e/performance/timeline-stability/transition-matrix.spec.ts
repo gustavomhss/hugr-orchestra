@@ -170,15 +170,7 @@ test("updates retry attempts and long provider messages without remounting the r
   })
   await startVisualProbe(page, regions)
   await timeline.send(
-    event("session.status", {
-      sessionID: "ses_timeline_stability",
-      status: {
-        type: "retry",
-        attempt: 2,
-        message: "A very long provider retry message ".repeat(8),
-        next: Date.now() + 10_000,
-      },
-    }),
+    status("retry", 2, "A very long provider retry message ".repeat(8)),
     300,
   )
   await timeline.send(status("retry", 3), 300)

@@ -131,7 +131,7 @@ export function SessionContextTab() {
     { equals: same },
   )
 
-  const ctx = createMemo(() => getSessionContext(messages(), [...providers.all().values()], sync().data.part, info()?.metadata))
+  const ctx = createMemo(() => getSessionContext(messages(), [...providers.all().values()], info()?.metadata))
   const formatter = createMemo(() => createSessionContextFormatter(language.intl()))
 
   const cost = createMemo(() => {
@@ -140,7 +140,6 @@ export function SessionContextTab() {
         info()?.cost,
         params.id ? sync().data.message[params.id] : undefined,
         [...providers.all().values()],
-        sync().data.part,
         info()?.metadata,
       ),
     )

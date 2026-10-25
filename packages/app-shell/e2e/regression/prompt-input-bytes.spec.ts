@@ -335,7 +335,7 @@ for (const scenario of cases) {
     await info.attach("prompt-byte-contract.json", {
       contentType: "application/json",
       body: JSON.stringify({
-        protocol: "v2", mode: scenario.mode, sessionID, dom, canonical, payload, executions,
+        mode: scenario.mode, sessionID, dom, canonical, payload, executions,
         cursorContract: { immediateInsertion: insertionCursor, finalBeforeSend: finalCursor, nativeRedo: "browser-owned selection recorded in history receipts" },
         inputProvenance: scenario.mode === "raw-clipboard" || scenario.mode === "undo-raw-clipboard"
           ? "synthetic-raw-clipboard-event; native keyboard history when requested"

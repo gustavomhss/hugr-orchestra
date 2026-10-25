@@ -1,4 +1,4 @@
-import type { SessionMessageAssistant, SessionMessageInfo, SessionMessageUser } from "@/v2-legacy"
+import type { SessionMessageAssistant, SessionMessageInfo, SessionMessageUser } from "@/session-types"
 import type { SessionMessageAssistantTool, SessionMessageShell } from "@/v2-wire"
 
 import type { FilePart } from "@/v2-types"
@@ -105,7 +105,7 @@ export function normalizeSessionMessages(sessionID: string, source: readonly Ses
       parts.set(message.id, assistantParts(sessionID, message))
       return
     }
-    // A compaction is its own turn, as V1 recorded it: a divider in place of the user prompt and the summary as the
+    // A compaction is its own turn: a divider in place of the user prompt and the summary as the
     // reply. The runner's work after an automatic compaction continues that turn.
     if (message.type !== "compaction" || message.status === "failed") return
     parentID = message.id

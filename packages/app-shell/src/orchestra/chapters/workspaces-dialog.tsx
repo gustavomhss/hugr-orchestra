@@ -16,7 +16,6 @@ type Workspace = { directory: string; root: boolean; removable: boolean; active:
 // The mock's native `<dialog class="mx-dialog">`: one element, its content keyed by the open dialog.
 export function WorkspacesDialog(props: {
   dialog?: WorkspaceDialog
-  protocol: "v2"
   busy: boolean
   error?: string
   home?: string
@@ -74,15 +73,9 @@ export function WorkspacesDialog(props: {
     return language.t("common.save")
   }
 
-  // V1 always forces the removal and deletes the worktree's branch; V2 refuses a dirty tree until asked again.
-  const deleteNote = (directory: string) => {
-    const path = homeRelative(directory, props.home)
-    if (props.protocol === "v2") return language.t("orchestra.workspaces.confirm.guarded", { path })
-    const note = language.t("orchestra.workspaces.confirm.note", { path })
-    const branch = props.branch(directory)
-    if (!branch) return note
-    return `${note} ${language.t("orchestra.workspaces.confirm.branch", { branch })}`
-  }
+  // The server refuses a dirty tree until asked again.
+  const deleteNote = (directory: string) =>
+    language.t("orchestra.workspaces.confirm.guarded", { path: homeRelative(directory, props.home) })
 
   return (
     <dialog
@@ -167,20 +160,12 @@ export function WorkspacesDialog(props: {
                 <Match when={current.kind === "new"}>
                   <WorkspaceFields
                     name=""
-                    directory={props.protocol === "v2" ? props.copyParent : ""}
-                    directoryLabel={
-                      props.protocol === "v2"
-                        ? "orchestra.workspaces.field.parentDirectory"
-                        : "orchestra.workspaces.field.directory"
-                    }
-                    directoryEditable={props.protocol === "v2"}
+                    directory={props.copyParent}
+                    directoryLabel="orchestra.workspaces.field.parentDirectory"
+                    directoryEditable
                     directoryPlaceholder={language.t("orchestra.workspaces.field.serverDirectory")}
                     branch=""
-                    branchPlaceholder={language.t(
-                      props.protocol === "v2"
-                        ? "orchestra.workspaces.field.detached"
-                        : "orchestra.workspaces.field.newBranch",
-                    )}
+                    branchPlaceholder={language.t("orchestra.workspaces.field.detached")}
                     root={false}
                   />
                 </Match>
