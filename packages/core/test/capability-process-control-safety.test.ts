@@ -4,6 +4,7 @@ import { join } from "node:path"
 import { tmpdir } from "node:os"
 import { CapabilityProcessRegistry } from "@orchestra/core/capability/process-control/registry"
 import { ToolSafety } from "@orchestra/core/tool-safety"
+import { ToolSafetyCommands } from "../src/tool-safety-commands"
 import { Effect } from "effect"
 import { CapabilityPolicyFixture } from "./fixture/capability-policy"
 import { ProcessControlFixture } from "./fixture/capability-process-control"
@@ -26,7 +27,7 @@ it.live("explicit env is part of the approved command: an argv-only allow rule d
   const s = yield* f.session()
   const running = yield* live
   yield* CapabilityPolicyFixture.setRules([...allow, { action: "bash", resource: "*", effect: "deny" },
-    { action: "bash", resource: `${process.execPath} *`, effect: "allow" }, { action: "bash", resource: "A=1 *", effect: "allow" }])
+    { action: "bash", resource: `${ToolSafetyCommands.display([process.execPath], {})} *`, effect: "allow" }, { action: "bash", resource: "A=1 *", effect: "allow" }])
   expect(yield* s.failure({ action: "start", argv: child(`1`), env: { NODE_OPTIONS: "--require=/tmp/x.js" } })).toContain("Blocked")
   expect(yield* s.failure({ action: "start", argv: ["A=1", ...child(`1`)] })).toContain("Blocked")
   yield* refused(f, s.context.sessionID, running)

@@ -17,6 +17,8 @@ import { testEffect } from "./lib/effect"
 
 // Real child processes (bun -e). Qualified on macOS only; Linux and Windows kill-tree are unqualified.
 const it = testEffect(LayerNode.compile(AppProcess.node))
+// Windows has no POSIX signals or pgrep: a stopped or self-killed child reports an exit code instead.
+const posix = process.platform === "win32" ? it.live.skip : it.live
 const encode = (text: string) => new TextEncoder().encode(text)
 const owner = (): Capability.Owner => ({
   projectID: Project.ID.make("project"), location: { directory: AbsolutePath.make(tmpdir()) },
@@ -127,7 +129,7 @@ describe("CapabilityProcessRegistry", () => {
     expect(yield* run({ capacity: 4 })).toMatchObject({ start: 8, end: 12, text: "cccc", lost: { from: 0, to: 8 }, eof: true })
   }))
 
-  it.live("stop kills the process tree and settles once as stopped", Effect.gen(function* () {
+  posix("stop kills the process tree and settles once as stopped", Effect.gen(function* () {
     const h = yield* harness()
     const p = yield* h.start(descendant("{ stdio: 'ignore' }"))
     const grandchild = yield* pidLine(p.live)
@@ -172,7 +174,7 @@ describe("CapabilityProcessRegistry", () => {
     expect([...h.registry.live()]).toEqual([ref.id])
   }))
 
-  it.live("records exit codes and signals; a failing settle does not break the registry", Effect.gen(function* () {
+  posix("records exit codes and signals; a failing settle does not break the registry", Effect.gen(function* () {
     const h = yield* harness()
     const coded = yield* h.start("process.exit(7)")
     expect(yield* coded.live.exited).toEqual({ code: 7 })
@@ -239,7 +241,7 @@ describe("CapabilityProcessRegistry", () => {
     expect(yield* Effect.forEach(pids, gone)).toEqual([true, true, true])
   }))
 
-  it.live("shutdown racing a fresh start still kills the child", Effect.gen(function* () {
+  posix("shutdown racing a fresh start still kills the child", Effect.gen(function* () {
     const token = Capability.JobID.create()
     const { scope, h } = yield* closable()
     yield* h.start(`${hold} // ${token}`)

@@ -14,6 +14,8 @@ import { it } from "./lib/effect"
 
 const windows = process.platform === "win32"
 const NAME = windows ? "interpreter.cmd" : "interpreter"
+// cmd /c cannot run a .cmd whose path has spaces once Bun quotes the arguments, so running it is POSIX-only.
+const posix = windows ? it.live.skip : it.live
 const SCRIPT = windows ? "@echo runtime fixture %*\r\n" : "#!/bin/sh\necho \"runtime fixture $*\"\n"
 const sri = (bytes: string | Uint8Array) => `sha256-${createHash("sha256").update(bytes).digest("base64")}` as const
 
@@ -87,7 +89,7 @@ const execute = (file: string, args: ReadonlyArray<string>) => Effect.gen(functi
   return yield* Effect.promise(async () => ({ exitCode: await child.exited, stdout: await new Response(child.stdout).text() }))
 })
 
-it.live("shared runtime installs lazily at the backend-compatible path with spaces and executes its verified file", () =>
+posix("shared runtime installs lazily at the backend-compatible path with spaces and executes its verified file", () =>
   Effect.gen(function* () {
     const f = yield* fixture
     const spec: ToolkitRuntime.Runtime = f.runtime()
