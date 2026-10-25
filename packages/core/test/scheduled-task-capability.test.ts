@@ -54,6 +54,8 @@ const execution = Layer.succeed(
           }),
         ),
       ),
+    exclusive: (_, effect) => Effect.asSome(effect),
+    withRunner: () => Effect.die("No Session runner in this test"),
   }),
 )
 const projects = Layer.succeed(
@@ -61,6 +63,7 @@ const projects = Layer.succeed(
   ProjectV2.Service.of({
     resolve: (directory) => once("beforeResolve").pipe(Effect.as({ id: ProjectV2.ID.global, directory })),
     directories: () => Effect.succeed([]),
+    list: () => Effect.succeed([]),
     commit: () => Effect.void,
   }),
 )

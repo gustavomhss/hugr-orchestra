@@ -37,10 +37,11 @@ import { tmpdir } from "./tmpdir"
 export const tmp = await tmpdir()
 const placement = location(Location.Ref.make({ directory: AbsolutePath.make(tmp.path) }))
 const execution = Layer.succeed(SessionExecution.Service, SessionExecution.Service.of({
-  active: Effect.succeed(new Set()), resume: () => Effect.void, interrupt: () => Effect.void, wake: () => Effect.void }))
+  active: Effect.succeed(new Set()), resume: () => Effect.void, interrupt: () => Effect.void, wake: () => Effect.void,
+  exclusive: (_, effect) => Effect.asSome(effect), withRunner: () => Effect.die("No Session runner in this fixture") }))
 const projects = Layer.succeed(ProjectV2.Service, ProjectV2.Service.of({
   resolve: (directory) => Effect.succeed({ id: ProjectV2.ID.global, directory }),
-  directories: () => Effect.succeed([]), commit: () => Effect.void }))
+  directories: () => Effect.succeed([]), list: () => Effect.succeed([]), commit: () => Effect.void }))
 export const layer = AppNodeBuilder.build(LayerNode.group([Database.node, EventV2.node, SessionProjector.node,
   SessionStore.node, SessionV2.node, ScheduledTask.node, ScheduledTaskPort.node, PermissionV2.node, PermissionSaved.node, AgentV2.node,
   Location.node, ToolRegistry.node]), [
