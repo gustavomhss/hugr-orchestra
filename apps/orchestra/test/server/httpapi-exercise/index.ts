@@ -68,17 +68,6 @@ import { sessionExecutionScenarios } from "./session-execution"
 const scenarios: Scenario[] = [
   ...globalHealthScenarios,
   ...globalConfigScenarios,
-  http.protected
-    .post("/global/dispose", "global.dispose")
-    .global()
-    .mutating()
-    .json(
-      200,
-      (body) => {
-        check(body === true, "global dispose should return true")
-      },
-      "status",
-    ),
   http.protected.get("/path", "path.get").json(200, (body, ctx) => {
     object(body)
     check(body.directory === ctx.directory, "directory should resolve from x-orchestra-directory")

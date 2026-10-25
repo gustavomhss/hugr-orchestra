@@ -211,7 +211,10 @@ it.live("V2 configured tiny descriptor budget rejects complete schema before rec
       expect(blocked._tag).toBe("Success")
       if (blocked._tag !== "Success") throw new Error(Cause.pretty(blocked.cause))
       expect(blocked.value.result.type).toBe("error")
-      expect(JSON.stringify(blocked.value)).toContain("Describe this Arsenal capability")
+      // Failure text is bounded like success text: the full guidance lives in the retained output file.
+      const saved = blocked.value.outputPaths?.[0]
+      if (!saved) throw new Error("Bounded Arsenal failure should retain its full text")
+      expect(yield* Effect.promise(() => Bun.file(saved).text())).toContain("Describe this Arsenal capability")
       expect(yield* Effect.promise(() => Bun.file(path.join(MaestroArsenal.stateDirectory(Global.Path.data, session.projectID), session.projectID, "profile/preferences.json")).exists())).toBe(false)
     }).pipe(Effect.provide(locations.get(projected.location)))
   }))
