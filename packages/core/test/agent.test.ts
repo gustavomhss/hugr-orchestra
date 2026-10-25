@@ -173,7 +173,7 @@ describe("AgentV2", () => {
         "title",
       ])
       expect(yield* agent.default()).toMatchObject({ id: "maestro", mode: "primary" })
-      for (const item of agents) {
+      for (const item of agents.filter((item) => item.id !== "explore")) {
         expect(item.permissions.some((rule) => rule.action === "bash" && rule.effect === "allow")).toBe(false)
       }
     }),
@@ -203,7 +203,12 @@ describe("AgentV2", () => {
           decide("explore", "read", file),
         ),
       ).toEqual(["ask", "ask", "allow", "allow"])
-      expect(decide("explore", "bash", "ls")).toBe("deny")
+      // Explore's shell is read-only by sandbox (tool/bash.ts); publishing stays denied outright.
+      expect(
+        ["ls", "git log -1", "git push origin dev", "git -C /project push", "gh pr create --fill", "gh pr merge 1", "gh release create v1"].map(
+          (command) => decide("explore", "bash", command),
+        ),
+      ).toEqual(["allow", "allow", "deny", "deny", "deny", "deny", "deny"])
     }),
   )
 

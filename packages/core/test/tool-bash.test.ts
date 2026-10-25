@@ -3,6 +3,7 @@ import { realpathSync } from "node:fs"
 import path from "path"
 import { describe, expect, test } from "bun:test"
 import { Effect, Layer } from "effect"
+import { AgentV2 } from "@orchestra/core/agent"
 import { ChildProcess } from "effect/unstable/process"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Config } from "@orchestra/core/config"
@@ -331,6 +332,28 @@ describe("BashTool", () => {
             "background-process-sandbox-unbound",
           )
           expect(yield* background(undefined)).toContain("Session process registry is unavailable")
+          expect(runs).toEqual([])
+        }),
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ),
+  )
+
+  it.live("confines the explore agent's shell as a sandbox with no write root, so it refuses a background process", () =>
+    Effect.acquireUseRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) =>
+        Effect.gen(function* () {
+          reset()
+          const background = (agent: string) =>
+            withTool(tmp.path, (registry) =>
+              executeTool(registry, { ...call({ command: "sleep 1", background: true }), agent: AgentV2.ID.make(agent) }),
+            ).pipe(
+              Effect.provideService(ToolSafety.RuntimeProfile, undefined),
+              Effect.map((output) => JSON.stringify(output)),
+            )
+          // An unconfined agent reaches the process registry; explore's profile requires the sandbox first.
+          expect(yield* background("general")).toContain("Session process registry is unavailable")
+          expect(yield* background("explore")).toContain("background-process-sandbox-unbound")
           expect(runs).toEqual([])
         }),
       (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),

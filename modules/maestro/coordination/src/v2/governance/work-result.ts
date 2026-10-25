@@ -9,8 +9,8 @@ import { MaestroAtlasMemoryTools } from "../tools/atlas-memory"
 import { WriteRootsV2 } from "./write-roots"
 
 // V2 port of V1's SeatWork projection (`apps/orchestra/src/maestro/backend-work.ts` with `backend-result.ts`) for a
-// foreground reply core Task already found completed. Not ported: worker evidence, owned-tool outcomes and the shell
-// fact, whose V2 host records (BackendEvidence binding, HuGR outcome metadata, ToolSafety.shellFact) do not exist yet.
+// foreground reply core Task already found completed. Not ported: worker evidence and owned-tool outcomes, whose V2
+// host records (BackendEvidence binding, HuGR outcome metadata) do not exist yet.
 
 // The worker-claim card the backend specialist ends its final message with; V1's `BackendResult.Card`, closed at every
 // level so excess properties fail the decode.
@@ -61,6 +61,10 @@ export function assemble(input: {
   readonly authoritySessionID: string
   readonly taskId?: string
   readonly writeRoots?: ReadonlyArray<string>
+  /** The write-jail fact of the child's sandbox-bound shell commands; reported only beside bound write roots. */
+  readonly shell?: ToolSafety.ShellFact
+  /** The resume marker of the Task call that resumed this child, when it did. */
+  readonly resumeRef?: string
 }) {
   const text = input.reply.content.findLast((part) => part.type === "text")
   const card = text?.type === "text" ? parse(text.text, input.seat.returnCard) : undefined
@@ -73,6 +77,7 @@ export function assemble(input: {
     executionSessionId: input.executionSessionID,
     authoritySessionId: input.authoritySessionID,
     mode: "delegated" as const,
+    ...(input.resumeRef ? { resumeRef: input.resumeRef } : {}),
     acceptance: { state: "pending" as const },
     verification: { state: "not-host-verified" as const },
     card: { parsed: card !== undefined, messageID: input.reply.id },
@@ -84,7 +89,7 @@ export function assemble(input: {
     nextActions: card?.nextActions ?? [],
     terminal: { reason: host === "ended" && card?.outcome === "blocked" ? ("blocked" as const) : host },
     memory: input.seat.atlasMemory ? memory(input.history) : { reads: [], writes: [] },
-    ...(input.writeRoots ? { writeRoots: [...input.writeRoots] } : {}),
+    ...(input.writeRoots ? { writeRoots: [...input.writeRoots], ...input.shell } : {}),
   }
 }
 

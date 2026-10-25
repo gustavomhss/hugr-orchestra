@@ -94,6 +94,18 @@ export const read = Effect.fn("ResumeAdmissionV2.read")(function* (
   return record.executionSessionID === childID && record.promptID === promptID ? record : undefined
 })
 
+/**
+ * V1's `LogicalTask.readResumeRef` over the record: the resume marker of the child's prompt `promptID`, only when the
+ * dispatching Session is the child's own parent.
+ */
+export const readResumeRef = Effect.fn("ResumeAdmissionV2.readResumeRef")(function* (
+  db: Database.Interface["db"],
+  input: { readonly childID: string; readonly promptID: string; readonly parentID: string | undefined },
+) {
+  const ref = (yield* read(db, input.childID, input.promptID))?.resumeRef
+  return ref && input.parentID && ref.startsWith(`${input.parentID}/`) ? ref : undefined
+})
+
 /** Every Atlas resume admission recorded for the child's prompts, by prompt. */
 export const admissions = Effect.fn("ResumeAdmissionV2.admissions")(function* (
   db: Database.Interface["db"],

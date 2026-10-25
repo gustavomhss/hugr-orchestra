@@ -32,6 +32,7 @@ export const Plugin = define({
     const publish: PermissionV2.Ruleset = ["git push *", "git -C * push *", "gh pr create *", "gh pr merge *", "gh release *"].map(
       (resource) => ({ action: "bash", resource, effect: "ask" }),
     )
+    const publishDeny: PermissionV2.Ruleset = publish.map((rule) => ({ ...rule, effect: "deny" }))
     const defaults: PermissionV2.Ruleset = [
       { action: "*", resource: "*", effect: "allow" },
       ...readonlyExternalDirectory,
@@ -58,7 +59,7 @@ export const Plugin = define({
 
       draft.update(AgentV2.ID.make("explore"), (item) => {
         item.description =
-          'Read-only codebase exploration: finds files and code and explains how they work. Reads and searches files and the web; cannot edit or run commands. Say how thorough to be: "quick", "medium" or "very thorough". Returns findings with file and line references.'
+          'Read-only codebase exploration: finds files and code and explains how they work. Reads and searches files and the web, and runs read-only shell commands; cannot edit. Say how thorough to be: "quick", "medium" or "very thorough". Returns findings with file and line references.'
         item.system = AgentPrompt.explore
         item.mode = "subagent"
         item.permissions.push(
@@ -68,6 +69,9 @@ export const Plugin = define({
               { action: "*", resource: "*", effect: "deny" },
               { action: "grep", resource: "*", effect: "allow" },
               { action: "glob", resource: "*", effect: "allow" },
+              // The shell is sandboxed with no write root (tool/bash.ts READ_ONLY_SHELL), and explore never publishes.
+              { action: "bash", resource: "*", effect: "allow" },
+              ...publishDeny,
               { action: "webfetch", resource: "*", effect: "allow" },
               { action: "websearch", resource: "*", effect: "allow" },
             ],
