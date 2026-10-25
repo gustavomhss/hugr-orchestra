@@ -428,7 +428,14 @@ test("the plan step checks admission, then holds on the Atlas source V2 cannot r
       const held = yield* call("maestro", "maestro_record_plan_revision", plan)
       expect(String(held.result.value)).toStartWith(`provider-unconfigured: ${location.project.id}.`)
       expect(String(held.result.value)).toContain("Atlas is not configured")
-      const workflow = yield* call("maestro", "maestro_record_plan_revision", {
+      // A workflow plan without upstream holds before anything else and says how to author it.
+      const unattributed = yield* call("maestro", "maestro_record_plan_revision", {
+        ...plan,
+        workflow: { documentID: "wf_1", parameters: {}, writePaths: ["src"] },
+      })
+      expect(String(unattributed.result.value)).toStartWith("Tool safety HOLD: UPSTREAM_ATTRIBUTION_MISSING")
+      expect(String(unattributed.result.value)).toContain("A workflow plan is authored upstream")
+      const workflow =yield* call("maestro", "maestro_record_plan_revision", {
         ...plan,
         upstream: {
           parentMessageID: "msg_calling",
