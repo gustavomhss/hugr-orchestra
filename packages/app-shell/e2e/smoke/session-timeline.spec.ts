@@ -129,22 +129,7 @@ test.describe("smoke: session timeline", () => {
       pageMessages: (sessionID) => ({ items: fixture.messages[sessionID as keyof typeof fixture.messages] ?? [] }),
     })
     await configureSmokePage(page, fixture.directory)
-    await page.addInitScript(
-      ({ dirBase64, sourceID, targetID }) => {
-        localStorage.setItem(
-          "orchestra.window.browser.dat:tabs",
-          JSON.stringify(
-            [sourceID, targetID].map((sessionId) => ({
-              type: "session",
-              server: "http://127.0.0.1:4096",
-              dirBase64,
-              sessionId,
-            })),
-          ),
-        )
-      },
-      { dirBase64: base64Encode(fixture.directory), sourceID: fixture.sourceID, targetID: fixture.targetID },
-    )
+    await seedSessionTabs(page)
 
     await page.goto(`/${base64Encode(fixture.directory)}/session/${fixture.targetID}`)
     await expectSessionTitle(page, fixture.expected.targetTitle)
@@ -255,22 +240,7 @@ test.describe("smoke: session timeline", () => {
       pageMessages: (sessionID) => ({ items: fixture.messages[sessionID as keyof typeof fixture.messages] ?? [] }),
     })
     await configureSmokePage(page, fixture.directory)
-    await page.addInitScript(
-      ({ dirBase64, sourceID, targetID }) => {
-        localStorage.setItem(
-          "orchestra.window.browser.dat:tabs",
-          JSON.stringify(
-            [sourceID, targetID].map((sessionId) => ({
-              type: "session",
-              server: "http://127.0.0.1:4096",
-              dirBase64,
-              sessionId,
-            })),
-          ),
-        )
-      },
-      { dirBase64: base64Encode(fixture.directory), sourceID: fixture.sourceID, targetID: fixture.targetID },
-    )
+    await seedSessionTabs(page)
     await page.goto(`/${base64Encode(fixture.directory)}/session/${fixture.sourceID}`)
     await expectSessionTitle(page, fixture.expected.sourceTitle)
     const last = fixture.expected.targetMessageIDs.at(-1)!
@@ -334,11 +304,14 @@ test.describe("smoke: session timeline", () => {
       pageMessages,
     })
     await configureSmokePage(page, fixture.directory)
+    await seedSessionTabs(page)
 
+    // Sessions open through their tabs. A reload aborts the previous document's bootstrap reads still in flight,
+    // and that document logs them as a bootstrap failure before it unloads.
     await selectHomeProject(page, fixture.project.name)
-    await navigateToSession(page, fixture.directory, fixture.sourceID, fixture.expected.sourceTitle)
+    await switchTitlebarSession(page, fixture.sourceID, fixture.expected.sourceTitle)
     await expectSessionReady(page)
-    await navigateToSession(page, fixture.directory, fixture.targetID, fixture.expected.targetTitle)
+    await switchTitlebarSession(page, fixture.targetID, fixture.expected.targetTitle)
     const expectedPartIDs = targetPartIDs()
     const expectedMessageIDs = fixture.expected.targetMessageIDs
     await expectSessionTimelineReady(page, expectedPartIDs, expectedMessageIDs, errors)
@@ -725,6 +698,25 @@ function expectCompleteScroll(
   expect(new Set(expectedPartIDs).size).toBe(expectedPartIDs.length)
   expect(new Set(expectedMessageIDs).size).toBe(expectedMessageIDs.length)
   expect(expectedPartIDs.length).toBe(331)
+}
+
+async function seedSessionTabs(page: Page) {
+  await page.addInitScript(
+    ({ dirBase64, sourceID, targetID }) => {
+      localStorage.setItem(
+        "orchestra.window.browser.dat:tabs",
+        JSON.stringify(
+          [sourceID, targetID].map((sessionId) => ({
+            type: "session",
+            server: "http://127.0.0.1:4096",
+            dirBase64,
+            sessionId,
+          })),
+        ),
+      )
+    },
+    { dirBase64: base64Encode(fixture.directory), sourceID: fixture.sourceID, targetID: fixture.targetID },
+  )
 }
 
 async function selectHomeProject(page: Page, projectName: string) {
