@@ -14,7 +14,7 @@ test.describe("Orchestra layout", () => {
   for (const scheme of ["dark", "light"] as const) {
     test(`matches the rounded panel corners to the ${scheme} Orchestra backdrop`, async ({ page }, testInfo) => {
       const corners = await readPanelCorners(page, testInfo, scheme)
-      // The glass panel is transparent outside its 9px radius: each corner must show the same workspace
+      // The glass panel is transparent outside its 10px radius: each corner must show the same workspace
       // backdrop as the gutter just outside it, never a differently coloured layer behind the panel.
       expect(
         corners.filter(

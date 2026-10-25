@@ -1,11 +1,11 @@
 /* Workspaces keeps the mock's `.inner` + `.mast.slim` heading (app.html #viewWorkspaces); the body uses the kit.
    The kit has no tokens for the mast's kicker and title, so they are declared once here with their light values. */
 html[data-color-scheme] body[data-new-layout] {
-  --mx-mast-kicker: #788899;
+  --mx-mast-kicker: #97abbc;
   --mx-mast-title: #ebeff3;
 }
 html[data-color-scheme="light"] body[data-new-layout] {
-  --mx-mast-kicker: #6f7883;
+  --mx-mast-kicker: #3b444f;
   --mx-mast-title: #171c23;
 }
 .orchestra-workspaces .ws-inner {
@@ -22,7 +22,7 @@ html[data-color-scheme="light"] body[data-new-layout] {
 }
 .orchestra-workspaces .ws-kicker {
   color: var(--mx-mast-kicker);
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
   /* Mock weight 580, drawn as Medium plus synthetic bold (see kit.css). */
   font-family: var(--mx-emphasis);
   font-weight: 600;
@@ -32,7 +32,7 @@ html[data-color-scheme="light"] body[data-new-layout] {
 .orchestra-workspaces .ws-mast h1 {
   margin: 9px 0 0;
   color: var(--mx-mast-title);
-  font-size: 30px;
+  font-size: var(--orchestra-font-size-4xl);
   line-height: 36px;
   font-weight: 600;
   letter-spacing: -0.035em;

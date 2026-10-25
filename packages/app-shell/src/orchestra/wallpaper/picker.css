@@ -12,11 +12,11 @@
   gap: 6px;
   padding: 5px 5px 7px;
   border: 1px solid var(--orchestra-border-muted);
-  border-radius: 9px;
+  border-radius: var(--orchestra-radius-md);
   background: transparent;
   color: var(--orchestra-body);
   font: inherit;
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   line-height: 16px;
   cursor: pointer;
 }
@@ -37,7 +37,7 @@
 .orchestra-wallpapers img {
   inline-size: 100%;
   aspect-ratio: 16 / 10;
-  border-radius: 5px;
+  border-radius: var(--orchestra-radius-sm);
   object-fit: cover;
   pointer-events: none;
 }
@@ -63,7 +63,7 @@
   align-items: center;
   gap: 10px;
   color: var(--orchestra-muted);
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   line-height: 16px;
 }
 
