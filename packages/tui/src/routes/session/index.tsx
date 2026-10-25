@@ -52,6 +52,7 @@ import { DialogTimeline } from "./dialog-timeline"
 import { DialogForkFromTimeline } from "./dialog-fork-from-timeline"
 import { DialogSessionRename } from "../../component/dialog-session-rename"
 import { Sidebar } from "./sidebar"
+import { useArgs } from "../../context/args"
 import { SubagentFooter } from "./subagent-footer.tsx"
 import { filetype } from "../../util/filetype"
 import parsers from "../../parsers-config"
@@ -222,6 +223,7 @@ export function Session() {
     return messages().findLast((x) => x.role === "assistant")
   })
 
+  const args = useArgs()
   const dimensions = useTerminalDimensions()
   const [sidebar, setSidebar] = kv.signal<"auto" | "hide">("sidebar", "auto")
   const [sidebarOpen, setSidebarOpen] = createSignal(false)
@@ -241,7 +243,7 @@ export function Session() {
   const sidebarVisible = createMemo(() => {
     if (session()?.parentID) return false
     if (sidebarOpen()) return true
-    if (sidebar() === "auto" && wide()) return true
+    if (sidebar() === "auto" && wide() && !args.mini) return true
     return false
   })
   const showTimestamps = createMemo(() => timestamps() === "show")

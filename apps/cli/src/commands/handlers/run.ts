@@ -38,27 +38,52 @@ export default Runtime.handler(
       return yield* Effect.fail(new Error("--fork requires --continue or --session"))
 
     const attach = Option.getOrUndefined(input.attach)
+    const port = Option.getOrUndefined(input.port)
+    if (attach && port !== undefined) return yield* Effect.fail(new Error("--port cannot be used with --attach"))
     // The daemon shares this machine's filesystem; an attached server may not, so files travel inline there.
     const files = yield* Effect.promise(() => readFiles(input.file, attach !== undefined))
     if (typeof files === "string") return yield* Effect.fail(new Error(files))
 
     const typed = input.message.map((arg) => (arg.includes(" ") ? `"${arg.replace(/"/g, '\\"')}"` : arg)).join(" ")
-    const piped = process.stdin.isTTY ? undefined : yield* Effect.promise(() => Bun.stdin.text())
+    const piped = input.mini || process.stdin.isTTY ? undefined : yield* Effect.promise(() => Bun.stdin.text())
     const message = !piped ? typed : !typed ? piped : typed + "\n" + piped
     const command = Option.getOrUndefined(input.command)
-    if (message.trim().length === 0 && !command) return yield* Effect.fail(new Error("You must provide a message or a command"))
+    if (message.trim().length === 0 && !command && !input.mini) return yield* Effect.fail(new Error("You must provide a message or a command"))
 
     const dir = Option.getOrUndefined(input.dir)
     const daemon = yield* Daemon.Service
-    const client = attach
-      ? Orchestra.make({
-          baseUrl: attach,
+    const transport = attach
+      ? {
+          url: attach,
           headers: ServerAuth.headers({
             password: Option.getOrUndefined(input.password),
             username: Option.getOrUndefined(input.username),
           }),
-        })
-      : yield* daemon.client()
+        }
+      : port !== undefined
+        ? { url: yield* daemon.startOn(port), headers: ServerAuth.headers({ password: yield* daemon.password() }) }
+        : yield* daemon.transport()
+    const client = Orchestra.make({ baseUrl: transport.url, headers: transport.headers })
+
+    if (input.mini) {
+      if (command) return yield* Effect.fail(new Error("--mini cannot be used with --command"))
+      if (input.format === "json") return yield* Effect.fail(new Error("--mini cannot be used with --format json"))
+      if (!process.stdout.isTTY) return yield* Effect.fail(new Error("--mini requires a TTY stdout"))
+      const { runTui } = yield* Effect.promise(() => import("../../tui"))
+      return yield* runTui(transport, {
+        directory: dir ? (attach ? dir : path.resolve(process.cwd(), dir)) : undefined,
+        args: miniArgs({
+          message,
+          model: Option.getOrUndefined(input.model),
+          agent: Option.getOrUndefined(input.agent),
+          variant: Option.getOrUndefined(input.variant),
+          continue: input.continue,
+          session: Option.getOrUndefined(input.session),
+          fork: input.fork,
+          auto: input.auto,
+        }),
+      })
+    }
     const title = Option.getOrUndefined(input.title)
 
     const ok = yield* Effect.promise(() =>
@@ -83,6 +108,30 @@ export default Runtime.handler(
     if (!ok) process.exitCode = 1
   }),
 )
+
+/** What the TUI is started with for `run --mini`: the same choices a headless run takes, minus the message framing. */
+export function miniArgs(input: {
+  readonly message: string
+  readonly model?: string
+  readonly agent?: string
+  readonly variant?: string
+  readonly continue: boolean
+  readonly session?: string
+  readonly fork: boolean
+  readonly auto: boolean
+}) {
+  return {
+    mini: true,
+    ...(input.message.trim() ? { prompt: input.message } : {}),
+    ...(input.model ? { model: input.model } : {}),
+    ...(input.agent ? { agent: input.agent } : {}),
+    ...(input.variant ? { variant: input.variant } : {}),
+    ...(input.session ? { sessionID: input.session } : {}),
+    continue: input.continue,
+    fork: input.fork,
+    auto: input.auto,
+  }
+}
 
 /** Runs one prompt (or slash command) to completion and prints the turn. Resolves false when the run reported a failure. */
 export async function execute(client: Client, options: Options) {

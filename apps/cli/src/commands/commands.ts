@@ -134,6 +134,15 @@ const run = Spec.make("run", {
       Flag.withDefault(false),
       Flag.withDescription("auto-approve permissions that are not explicitly denied (dangerous!)"),
     ),
+    port: Flag.integer("port").pipe(
+      Flag.withDescription("use the local server on this port, starting one there if none answers"),
+      Flag.optional,
+    ),
+    mini: Flag.boolean("mini").pipe(
+      Flag.withAlias("i"),
+      Flag.withDefault(false),
+      Flag.withDescription("open the minimal interactive TUI instead of printing the turn"),
+    ),
   },
 })
 
@@ -158,6 +167,7 @@ const attach = Spec.make("attach", {
       Flag.withDescription("basic auth username (defaults to ORCHESTRA_SERVER_USERNAME or 'orchestra')"),
       Flag.optional,
     ),
+    mini: Flag.boolean("mini").pipe(Flag.withDefault(false), Flag.withDescription("start the minimal TUI layout")),
   },
 })
 
