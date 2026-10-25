@@ -1,7 +1,7 @@
 // Actual product HTTP admission drives write/LSP, bash, MCP stdio and two terminals.
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
-import { BUN, FIXTURES, control, fakeLLM, fileTree, isolated, provider, table, until, win } from "@orchestra/omni-campaign/lib"
+import { BUN, FIXTURES, control, fakeLLM, fileTree, isolated, provider, table, until, win, writeConfig } from "@orchestra/omni-campaign/lib"
 
 export async function fixtures() {
   const scratch = isolated("actual-desktop", {})
@@ -17,11 +17,12 @@ export async function fixtures() {
     permission: { "*": "allow", bash: "allow", edit: "allow", external_directory: "allow" }, provider: provider(llm.url),
     lsp: { ...Object.fromEntries(["typescript", "deno", "eslint", "oxlint", "biome"].map((id) => [id, { disabled: true }])),
       campaign: { command: [BUN, path.join(FIXTURES, "lsp/fake-lsp-server.js"), lspNonce], extensions: [".ts"] } },
-    // Renderer boots its own default Location. Explicit project-scoped connect prevents duplicate fixture peers.
-    mcp: { campaign: { type: "local", enabled: false, command: [BUN, path.join(FIXTURES, "mcp-omni-stdio.ts"), mcpNonce],
+    // Only the project's Location reads this file, so the renderer's own default Location never starts a duplicate fixture peer.
+    mcp: { campaign: { type: "local", command: [BUN, path.join(FIXTURES, "mcp-omni-stdio.ts"), mcpNonce],
       environment: { MCP_OMNI_TREE: JSON.stringify({ command: trees.mcpTree.command, args: trees.mcpTree.args }) }, timeout: 30_000 } } }
+  writeConfig(scratch.project, config)
   const report = path.join(scratch.home, "smoke.json")
-  const env: Record<string, string> = { ...scratch.env, ORCHESTRA_CONFIG_CONTENT: JSON.stringify(config), ORCHESTRA_TEST_ONBOARDING: "1",
+  const env: Record<string, string> = { ...scratch.env, ORCHESTRA_TEST_ONBOARDING: "1",
     ORCHESTRA_DB: ":memory:", ORCHESTRA_DISABLE_DEFAULT_PLUGINS: "1", ORCHESTRA_DESKTOP_OMNI_SMOKE: report,
     ORCHESTRA_DESKTOP_OMNI_SMOKE_NONCE: trees.main.nonce, ORCHESTRA_DESKTOP_OMNI_SMOKE_ARGV: JSON.stringify([trees.main.command, ...trees.main.args]) }
   delete env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER
@@ -39,22 +40,26 @@ export function events(report: string) {
 
 export async function activate(scratch: Awaited<ReturnType<typeof fixtures>>, server: Report, skipTerminal2 = false) {
   const call = async <T>(method: string, route: string, body?: unknown): Promise<T> => {
-    const response = await fetch(new URL(route, server.url), { method, headers: { authorization: `Basic ${Buffer.from(`${server.username}:${server.password}`).toString("base64")}`,
-      "content-type": "application/json", "x-orchestra-directory": encodeURIComponent(scratch.project) }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(30_000) })
+    const url = new URL(route, server.url)
+    url.searchParams.set("location[directory]", scratch.project)
+    const response = await fetch(url, { method, headers: { authorization: `Basic ${Buffer.from(`${server.username}:${server.password}`).toString("base64")}`,
+      "content-type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(30_000) })
     const text = await response.text()
     if (!response.ok) throw new Error(`${method} ${route}: ${response.status} ${text.slice(0, 2000)}`)
     return (text ? JSON.parse(text) : undefined) as T
   }
-  const session = await call<{ id: string }>("POST", "/session", {})
-  if (!await call<boolean>("POST", "/mcp/campaign/connect", {})) throw new Error("actual project MCP connect failed")
-  await call("POST", `/session/${session.id}/prompt_async`, { agent: "campaign", model: { providerID: "test", modelID: "test-model" }, parts: [{ type: "text", text: "Write b.ts and hold bash tree." }] })
-  const terminals = await Promise.all([scratch.trees.terminal, ...(skipTerminal2 ? [] : [scratch.trees.terminal2])].map((tree) => call<{ id: string; pid: number }>("POST", "/pty", { command: tree.command, args: tree.args, cols: 100, rows: 30 })))
+  const session = (await call<{ data: { id: string } }>("POST", "/api/session", { agent: "campaign", model: { providerID: "test", id: "test-model" }, location: { directory: scratch.project } })).data
+  // Answers NoContent once the server is connected (or failed, which the status poll below reports).
+  await call("POST", "/api/mcp/campaign/connect")
+  await call("POST", `/api/session/${session.id}/prompt`, { prompt: { text: "Write b.ts and hold bash tree." }, delivery: "steer", resume: true })
+  const terminals = await Promise.all([scratch.trees.terminal, ...(skipTerminal2 ? [] : [scratch.trees.terminal2])].map(async (tree) =>
+    (await call<{ data: { id: string; pid: number } }>("POST", "/api/pty", { command: tree.command, args: tree.args, cols: 100, rows: 30 })).data))
   const protocols = await until(90_000, "actual bash running, LSP/MCP connected, write persisted", async () => {
-    const messages = await call<{ parts: { type: string; tool?: string; state?: { status: string } }[] }[]>("GET", `/session/${session.id}/message`)
-    const lsp = await call<{ id: string; status: string }[]>("GET", "/lsp")
-    const mcp = await call<Record<string, { status: string }>>("GET", "/mcp")
-    const running = messages.flatMap((message) => message.parts).some((part) => part.type === "tool" && part.tool === "bash" && part.state?.status === "running")
-    return running && lsp.some((server) => server.id === "campaign" && server.status === "connected") && mcp.campaign?.status === "connected" &&
+    const messages = (await call<{ data: { content?: { type: string; name?: string; state?: { status: string } }[] }[] }>("GET", `/api/session/${session.id}/message?order=asc&limit=200`)).data
+    const lsp = (await call<{ data: { id: string; status: string }[] }>("GET", "/api/lsp")).data
+    const mcp = (await call<{ data: { name: string; status: { status: string } }[] }>("GET", "/api/mcp")).data
+    const running = messages.flatMap((message) => message.content ?? []).some((part) => part.type === "tool" && part.name === "bash" && part.state?.status === "running")
+    return running && lsp.some((server) => server.id === "campaign" && server.status === "connected") && mcp.some((server) => server.name === "campaign" && server.status.status === "connected") &&
       existsSync(path.join(scratch.project, "b.ts")) && readFileSync(path.join(scratch.project, "b.ts"), "utf8") === "export const b = 2\n" ? { running, lsp, mcp, terminals, session } : undefined
   })
   writeFileSync(path.join(scratch.home, "protocols.json"), JSON.stringify(protocols))
