@@ -27,7 +27,10 @@ import { child, toolsLayer, worktree } from "./fixture/v2-governance"
 
 // The research seat's tools as the runner settles them: under a bound dispatch whose first provider turn has run.
 
-const run = <A, E, R>(body: (directory: string) => Effect.Effect<A, E, R | Scope.Scope>, entries: Config.Entry[] = []) =>
+const run = <A, E>(
+  body: (directory: string) => Effect.Effect<A, E, Layer.Success<ReturnType<typeof toolsLayer>> | Scope.Scope>,
+  entries: Config.Entry[] = [],
+) =>
   Effect.runPromise(
     Effect.scoped(
       Effect.gen(function* () {
@@ -146,7 +149,7 @@ const called = (
   })
 
 // The row keeps a message without its id and type.
-const rest = ({ id: _id, type: _type, ...data }: Schema.Schema.Encoded<typeof SessionMessage.Message>) => data
+const rest = ({ id: _id, type: _type, ...data }: (typeof SessionMessage.Message)["Encoded"]) => data
 
 const charged = (allowance: Parameters<typeof ResearchLedger.dispatch>[0], kind: string) =>
   ResearchLedger.dispatch(allowance).pipe(

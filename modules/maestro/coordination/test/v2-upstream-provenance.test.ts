@@ -147,10 +147,10 @@ test("the archie Task that settled this exact reply attributes the proposal", ()
     Effect.gen(function* () {
       const seeded = yield* seed(directory)
       expect(card).toBeDefined()
-      expect(yield* UpstreamProvenanceV2.observe(seeded.services, seeded.input)).toEqual({
+      expect<unknown>(yield* UpstreamProvenanceV2.observe(seeded.services, seeded.input)).toEqual({
         schema: "maestro-upstream-attribution-v1",
         projectID,
-        memberID: AgentV2.ID.make("archie"),
+        memberID: "archie",
         profile: "upstream",
         authorSessionID: seeded.input.authorSessionID,
         authorMessageID: seeded.input.authorMessageID,
