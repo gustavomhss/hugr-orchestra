@@ -13,6 +13,7 @@ function recorder() {
         path: new URL(request.url).pathname,
         body: request.body ? await request.json() : undefined,
       })
+      if (request.url.endsWith("/compact")) return Response.json({ data: { compacted: true } })
       return request.url.endsWith("/revert/stage") || request.url.endsWith("/command")
         ? Response.json({ data: {} })
         : new Response(null, { status: 204 })
