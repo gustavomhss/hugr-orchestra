@@ -138,23 +138,11 @@ function stateApi(sync: ReturnType<typeof useSync>): TuiPluginApi["state"] {
         return sync.data.session_status[sessionID]
       },
       permission(sessionID) {
-        // The plugin contract (packages/plugin/src/tui.ts) still names the V1 request shape.
-        return (sync.data.permission[sessionID] ?? []).map((request) => ({
-          id: request.id,
-          sessionID: request.sessionID,
-          permission: request.action,
-          patterns: request.resources,
-          metadata: request.metadata ?? {},
-          always: request.save ?? [],
-          ...(request.source ? { tool: { messageID: request.source.messageID, callID: request.source.callID } } : {}),
-        }))
+        return sync.data.permission[sessionID] ?? []
       },
       question(sessionID) {
         return sync.data.question[sessionID] ?? []
       },
-    },
-    part(messageID) {
-      return sync.data.part[messageID] ?? []
     },
     lsp() {
       return sync.data.lsp.map((item) => ({ id: item.id, root: item.root, status: item.status }))

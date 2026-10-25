@@ -1,4 +1,4 @@
-import type { LocationRef } from "../compat/schema"
+import type { LocationRef } from "../types"
 import { createContext, useContext, type Accessor, type ParentProps } from "solid-js"
 
 const context = createContext<Accessor<LocationRef | undefined>>()

@@ -1,6 +1,6 @@
 /** @jsxImportSource @opentui/solid */
 import { expect, test } from "bun:test"
-import type { GlobalEvent } from "../../../../src/compat/schema"
+import type { GlobalEvent, SessionMessage } from "../../../../src/types"
 import { tmpdir } from "../../../fixture/fixture"
 import { json, mount, wait } from "./sync-fixture"
 import { v2Session } from "../../../fixture/tui-sdk"
@@ -10,11 +10,16 @@ const assistantID = "msg_hydration_assistant"
 const directory = "/tmp/orchestra/apps/cli"
 const model = { id: "model", providerID: "test" }
 
-function global(type: string, properties: Record<string, unknown>) {
+function content(sync: { data: { message: Record<string, SessionMessage[]> } }) {
+  const message = sync.data.message[sessionID]?.find((item) => item.id === assistantID)
+  return message?.type === "assistant" ? message.content : undefined
+}
+
+function global(type: string, data: Record<string, unknown>) {
   return {
     directory: "/tmp/other",
     project: "proj_test",
-    payload: { id: `evt_${type}_${Math.random()}`, type, properties: { sessionID, timestamp: 5, ...properties } },
+    payload: { id: `evt_${type}_${Math.random()}`, type, data: { sessionID, timestamp: 5, ...data } },
   } as GlobalEvent
 }
 
@@ -37,7 +42,7 @@ function fetchHandler(input: { messages: () => Response | Promise<Response>; sta
   }
 }
 
-test("V2 history hydrates into V1 messages, parts and the Session diff", async () => {
+test("V2 history hydrates into the message store and the Session diff", async () => {
   await using tmp = await tmpdir()
   await Bun.write(`${tmp.path}/kv.json`, "{}")
   const route = fetchHandler({
@@ -84,17 +89,16 @@ test("V2 history hydrates into V1 messages, parts and the Session diff", async (
   try {
     await sync.session.sync(sessionID)
 
-    expect(sync.data.message[sessionID].map((message) => [message.id, message.role])).toEqual([
+    expect(sync.data.message[sessionID].map((message) => [message.id, message.type])).toEqual([
       ["msg_user", "user"],
       [assistantID, "assistant"],
     ])
-    expect(sync.data.message[sessionID][0]).toMatchObject({ agent: "maestro", model: { modelID: "model" } })
-    expect(sync.data.message[sessionID][1]).toMatchObject({ parentID: "msg_user", modelID: "model" })
-    expect([...sync.data.part["msg_user"]]).toMatchObject([{ type: "text", text: "hello" }])
-    expect(sync.data.part[assistantID].map((part) => part.type)).toEqual(["step-start", "text", "tool", "step-finish"])
-    expect(sync.data.part[assistantID][2]).toMatchObject({
-      tool: "read",
-      state: { status: "completed", output: "contents", title: "a.ts" },
+    expect(sync.data.message[sessionID][0]).toMatchObject({ text: "hello" })
+    expect(sync.data.message[sessionID][1]).toMatchObject({ agent: "maestro", model: { id: "model" } })
+    expect(content(sync)?.map((part) => part.type)).toEqual(["text", "tool"])
+    expect(content(sync)?.[1]).toMatchObject({
+      name: "read",
+      state: { status: "completed", content: [{ type: "text", text: "contents" }], structured: { title: "a.ts" } },
     })
     expect(sync.data.session_diff[sessionID]).toEqual([
       { file: "a.ts", additions: 2, deletions: 1, status: "modified" },
@@ -104,7 +108,7 @@ test("V2 history hydrates into V1 messages, parts and the Session diff", async (
   }
 })
 
-test("live V2 events stream into the projected parts", async () => {
+test("live V2 events stream into the projected content", async () => {
   await using tmp = await tmpdir()
   await Bun.write(`${tmp.path}/kv.json`, "{}")
   const route = fetchHandler({ messages: () => json({ data: [], cursor: {} }) })
@@ -116,9 +120,9 @@ test("live V2 events stream into the projected parts", async () => {
     emit(global("session.next.text.started", { assistantMessageID: assistantID, textID: "txt_1" }))
     emit(global("session.next.text.delta", { assistantMessageID: assistantID, textID: "txt_1", delta: "hel" }))
     emit(global("session.next.text.delta", { assistantMessageID: assistantID, textID: "txt_1", delta: "lo" }))
-    await wait(() => sync.data.part[assistantID]?.[1]?.type === "text")
+    await wait(() => content(sync)?.[0]?.type === "text")
 
-    expect(sync.data.part[assistantID][1]).toMatchObject({ type: "text", text: "hello" })
+    expect(content(sync)?.[0]).toMatchObject({ type: "text", text: "hello" })
     expect(sync.session.status(sessionID)).toBe("working")
   } finally {
     app.renderer.destroy()
@@ -158,7 +162,7 @@ test("stale Session hydration does not overwrite live message content", async ()
     )
     await hydrate
 
-    expect(sync.data.part[assistantID][1]).toMatchObject({ type: "text", text: "live" })
+    expect(content(sync)?.[0]).toMatchObject({ type: "text", text: "live" })
   } finally {
     app.renderer.destroy()
   }

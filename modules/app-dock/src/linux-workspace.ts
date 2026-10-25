@@ -98,7 +98,7 @@ export function createLinuxWorkspaceHooks(port: Transport): Hooks {
   return {
     event: async ({ event }) => {
       if (event.type === "session.deleted")
-        port.postMessage({ type: "linux.session.close", sessionID: event.properties.info.id })
+        port.postMessage({ type: "linux.session.close", sessionID: event.data.sessionID })
     },
     tool: {
       linux_exec: tool({

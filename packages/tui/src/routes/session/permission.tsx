@@ -4,10 +4,11 @@ import { createMemo, For, Match, Show, Switch } from "solid-js"
 import { Portal, useRenderer, useTerminalDimensions, type JSX } from "@opentui/solid"
 import type { TextareaRenderable } from "@opentui/core"
 import { useTheme, selectedForeground } from "../../context/theme"
-import type { PermissionV2Request } from "../../compat/schema"
+import type { PermissionV2Request } from "../../types"
 import { useSDK } from "../../context/sdk"
 import { SplitBorder } from "../../ui/border"
 import { useSync } from "../../context/sync"
+import { toolInput, tools } from "../../util/session-message"
 import { filetype } from "../../util/filetype"
 import { Locale } from "../../util/locale"
 import { webSearchProviderLabel } from "../../util/tool-display"
@@ -120,13 +121,9 @@ export function PermissionPrompt(props: { request: PermissionV2Request; director
   const input = createMemo(() => {
     const tool = props.request.source
     if (!tool) return {}
-    const parts = sync.data.part[tool.messageID] ?? []
-    for (const part of parts) {
-      if (part.type === "tool" && part.callID === tool.callID && part.state.status !== "pending") {
-        return part.state.input ?? {}
-      }
-    }
-    return {}
+    const message = sync.data.message[props.request.sessionID]?.find((item) => item.id === tool.messageID)
+    const call = message ? tools(message).find((item) => item.id === tool.callID) : undefined
+    return call ? toolInput(call) : {}
   })
 
   const { theme } = useTheme()

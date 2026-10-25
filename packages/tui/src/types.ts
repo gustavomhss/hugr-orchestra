@@ -1,4 +1,3 @@
-import type { EventManifest } from "@orchestra/schema/event-manifest"
 import type { FileDiff } from "@orchestra/schema/file-diff"
 import type { FileSystem } from "@orchestra/schema/filesystem"
 import type { Integration } from "@orchestra/schema/integration"
@@ -7,14 +6,12 @@ import type { Permission } from "@orchestra/schema/permission"
 import type { PermissionSaved } from "@orchestra/schema/permission-saved"
 import type { Question } from "@orchestra/schema/question"
 import type { Reference } from "@orchestra/schema/reference"
-import type { Session } from "@orchestra/schema/session"
 import type { SessionMessage } from "@orchestra/schema/session-message"
 import type { SessionStatusEvent } from "@orchestra/schema/session-status-event"
 import type { SessionTodo } from "@orchestra/schema/session-todo"
-import type { SessionV1 } from "@orchestra/schema/session-v1"
 import type { Skill } from "@orchestra/schema/skill"
 import type { Model } from "@orchestra/schema/model"
-import type { TuiPluginApi } from "@orchestra/plugin/tui"
+import type { Event, SessionInfo, TuiPluginApi } from "@orchestra/plugin/tui"
 
 type Mutable<T> =
   T extends ReadonlyMap<infer K, infer V>
@@ -29,16 +26,7 @@ type Mutable<T> =
 
 export type LocationRef = typeof Location.Ref.Encoded
 
-export type AssistantMessage = Mutable<typeof SessionV1.Assistant.Encoded>
-export type UserMessage = Mutable<typeof SessionV1.User.Encoded>
-export type Message = Mutable<typeof SessionV1.Info.Encoded>
-export type Part = Mutable<typeof SessionV1.Part.Encoded>
-export type TextPart = Mutable<typeof SessionV1.TextPart.Encoded>
-export type ReasoningPart = Mutable<typeof SessionV1.ReasoningPart.Encoded>
-export type ToolPart = Mutable<typeof SessionV1.ToolPart.Encoded>
-export type FilePart = Mutable<typeof SessionV1.FilePart.Encoded>
-export type AgentPart = Mutable<typeof SessionV1.AgentPart.Encoded>
-export type Session = Mutable<typeof SessionV1.SessionInfo.Encoded>
+export type Session = SessionInfo
 export type SessionStatus = Mutable<typeof SessionStatusEvent.Info.Encoded>
 export type Todo = Mutable<typeof SessionTodo.Info.Encoded>
 export type QuestionAnswer = Mutable<typeof Question.Answer.Encoded>
@@ -74,10 +62,12 @@ export type PermissionSavedInfo = Mutable<typeof PermissionSaved.Info.Encoded>
 export type PermissionV2Request = Mutable<typeof Permission.Request.Encoded>
 export type QuestionV2Request = Mutable<typeof Question.Request.Encoded>
 export type ReferenceInfo = Mutable<typeof Reference.Info.Encoded>
-export type SessionV2Info = Mutable<typeof Session.Info.Encoded>
 export type SkillV2Info = Mutable<typeof Skill.Info.Encoded>
 
 export type SessionMessage = Mutable<typeof SessionMessage.Message.Encoded>
+export type SessionMessageUser = Mutable<typeof SessionMessage.User.Encoded>
+export type SessionMessageSynthetic = Mutable<typeof SessionMessage.Synthetic.Encoded>
+export type SessionMessageCompaction = Mutable<typeof SessionMessage.Compaction.Encoded>
 export type SessionMessageAssistant = Mutable<typeof SessionMessage.Assistant.Encoded>
 export type SessionMessageAssistantReasoning = Mutable<typeof SessionMessage.AssistantReasoning.Encoded>
 export type SessionMessageAssistantText = Mutable<typeof SessionMessage.AssistantText.Encoded>
@@ -184,30 +174,7 @@ export type ProviderAuthAuthorization = {
   instructions: string
 }
 
-type BusEvent<Bus> = Parameters<Bus extends { on: (...args: never[]) => unknown } ? Bus["on"] : never>[1] extends (
-  event: infer Event,
-) => void
-  ? Event
-  : never
-
-type ManifestV2Event<Definition> = Definition extends {
-  readonly type: infer Type extends string
-  readonly data: infer Data extends { readonly Encoded: unknown }
-}
-  ? {
-      id: string
-      metadata?: Record<string, unknown>
-      type: Type
-      durable?: { aggregateID: string; seq: number; version: number }
-      location?: LocationRef
-      data: Mutable<Data["Encoded"]>
-    }
-  : never
-
-type Definition = (typeof EventManifest.Definitions)[number]
-
-export type Event = BusEvent<TuiPluginApi["event"]>
-export type V2Event = ManifestV2Event<Definition>
+export type { Event }
 
 // The TUI wraps each V2 stream event in this envelope before it reaches the store handlers.
 export type GlobalEvent = { directory: string; workspace?: string; project?: string; payload: Event }

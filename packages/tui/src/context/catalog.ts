@@ -13,16 +13,14 @@ import type {
   SnapshotFileDiff,
   Todo,
   VcsInfo,
-} from "../compat/schema"
+} from "../types"
 
 type Client = ReturnType<typeof Orchestra.make>
 type Location = { directory?: string; workspace?: string }
 type V2Model = Awaited<ReturnType<Client["models"]["list"]>>["data"][number]
-type V2Session = Awaited<ReturnType<Client["sessions"]["get"]>>
 
-// The TUI store still holds the V1 shapes its components render, so the V2 catalog routes are read here
-// and mapped into them. The legacy `/config/providers`, `/provider`, `/agent`, `/config`, `/session` and
-// `/command` routes are not served by the V2 server.
+// Reads the V2 catalog routes into the TUI store. Sessions and messages pass through as V2; providers, agents
+// and commands are mapped into the shapes the TUI plugin API exposes.
 export function createCatalog(client: Client) {
   return {
     async bootstrap(location: Location) {
@@ -142,12 +140,12 @@ export function createCatalog(client: Client) {
         })
         .then((result) =>
           result.data
-            .map(toSession)
+            .map((session): Session => session)
             .filter((session) => !input.roots || !session.parentID)
             .toSorted((a, b) => a.id.localeCompare(b.id)),
         ),
-    session: (sessionID: string) => client.sessions.get({ sessionID }).then(toSession),
-    // Newest first, as V2 returns them; the store projects them into the V1 message and part shapes.
+    session: (sessionID: string) => client.sessions.get({ sessionID }).then((session): Session => session),
+    // Newest first, as V2 returns them; the store keeps them oldest first.
     messages: (sessionID: string) =>
       client.messages.list({ sessionID, limit: 100 }).then((result) => result.data as SessionMessage[]),
     // V2 has no per-Session diff route. A Session's diff is the working-tree status of the files its steps
@@ -170,33 +168,6 @@ export function createCatalog(client: Client) {
           (active): Record<string, SessionStatus> =>
             Object.fromEntries(Object.keys(active).map((sessionID) => [sessionID, { type: "busy" }])),
         ),
-  }
-}
-
-function toSession(session: V2Session): Session {
-  return {
-    id: session.id,
-    slug: session.id,
-    projectID: session.projectID,
-    workspaceID: session.location.workspaceID,
-    directory: session.location.directory,
-    path: session.subpath,
-    parentID: session.parentID,
-    cost: session.cost,
-    tokens: { ...session.tokens, cache: { ...session.tokens.cache } },
-    title: session.title,
-    agent: session.agent,
-    model: session.model ? { ...session.model } : undefined,
-    version: "v2",
-    time: { ...session.time },
-    revert: session.revert
-      ? {
-          messageID: session.revert.messageID,
-          partID: session.revert.partID,
-          snapshot: session.revert.snapshot,
-          diff: session.revert.diff,
-        }
-      : undefined,
   }
 }
 

@@ -14,17 +14,16 @@ describe("demo slash commands", () => {
     expect(parse("/help")).toBeUndefined()
   })
 
-  test("every /fmt kind yields a completed assistant message with parts", () => {
+  test("every /fmt kind yields a completed assistant message with content", () => {
     const options = { now: 5, sequence: 1, cwd: "/work", agent: "build" }
     for (const kind of FORMATS) {
-      const built = message("ses_1", "demo_usr_1", kind, options)
-      expect(built.info).toMatchObject({ role: "assistant", sessionID: "ses_1", parentID: "demo_usr_1" })
-      expect(built.parts.length).toBeGreaterThan(0)
-      expect(built.parts.every((part) => part.messageID === built.info.id)).toBe(true)
+      const built = message(kind, options)
+      expect(built).toMatchObject({ type: "assistant", agent: "build", time: { created: 5, completed: 5 } })
+      expect(built.content.length).toBeGreaterThan(0)
     }
-    expect(message("s", "p", "bash", options).parts[0]).toMatchObject({ type: "tool", tool: "bash" })
-    expect(message("s", "p", "error", options).parts[0]).toMatchObject({ state: { status: "error" } })
-    expect(user("s", "/fmt mix", { now: 5, sequence: 1, agent: "build" }).info.role).toBe("user")
+    expect(message("bash", options).content[0]).toMatchObject({ type: "tool", name: "bash" })
+    expect(message("error", options).content[0]).toMatchObject({ state: { status: "error" } })
+    expect(user("/fmt mix", { now: 5, sequence: 1 })).toMatchObject({ type: "user", text: "/fmt mix" })
   })
 
   test("permission and question requests carry ids the SDK answers locally", () => {
@@ -34,36 +33,41 @@ describe("demo slash commands", () => {
   })
 })
 
-describe("demo request replies settle their tool part", () => {
+describe("demo request replies settle their tool call", () => {
   const options = { now: 5, sequence: 9, cwd: "/work", agent: "build" }
   const waitFor = (id: string, tool: string) =>
-    waitingMessage("ses_1", "demo_usr_9", { id, tool, input: { filePath: "a" }, done: { title: tool, output: "Allowed" } }, options)
+    waitingMessage({ id, tool, input: { filePath: "a" }, done: { title: tool, output: "Allowed" } }, options)
 
-  test("the request's tool points at a running part", () => {
+  test("the request's tool points at a running call", () => {
     const pending = waitFor("demo_per_1", "edit")
-    expect(pending.parts[0]).toMatchObject({ type: "tool", tool: "edit", state: { status: "running" } })
-    expect(pending.tool).toEqual({ messageID: pending.info.id, callID: (pending.parts[0] as { callID: string }).callID })
+    expect(pending.message.content[0]).toMatchObject({ type: "tool", name: "edit", state: { status: "running" } })
+    expect(pending.tool).toEqual({ messageID: pending.message.id, callID: pending.message.content[0].id })
     settle("demo_per_1", { type: "error", error: "x" })
   })
 
-  test("an accepted permission completes the part, a rejected one fails it with V1's message", () => {
-    waitFor("demo_per_2", "bash")
-    expect(settle("demo_per_2", { type: "completed" }, 8)?.state).toEqual({
-      status: "completed", input: { filePath: "a" }, output: "Allowed", title: "bash", metadata: {}, time: { start: 5, end: 8 },
+  test("an accepted permission completes the call, a rejected one fails it with its message", () => {
+    const pending = waitFor("demo_per_2", "bash")
+    const accepted = settle("demo_per_2", { type: "completed" }, 8)
+    expect(accepted?.messageID).toBe(pending.message.id)
+    expect(accepted?.tool.state).toEqual({
+      status: "completed", input: { filePath: "a" }, content: [{ type: "text", text: "Allowed" }], structured: { title: "bash" }, metadata: undefined,
     })
+    expect(accepted?.tool.time).toEqual({ created: 5, ran: 5, completed: 8 })
     expect(settle("demo_per_2", { type: "completed" })).toBeUndefined()
     waitFor("demo_per_3", "bash")
-    expect(settle("demo_per_3", { type: "error", error: "permission rejected" }, 8)?.state).toMatchObject({
-      status: "error", error: "permission rejected", time: { start: 5, end: 8 },
+    expect(settle("demo_per_3", { type: "error", error: "permission rejected" }, 8)?.tool.state).toMatchObject({
+      status: "error", error: { type: "unknown", message: "permission rejected" },
     })
   })
 
   test("an answered question completes with its answers, a rejected one fails", () => {
     waitFor("demo_que_1", "question")
-    expect(settle("demo_que_1", { type: "completed", answers: [["Alpha"]] })?.state).toMatchObject({
+    expect(settle("demo_que_1", { type: "completed", answers: [["Alpha"]] })?.tool.state).toMatchObject({
       status: "completed", metadata: { answers: [["Alpha"]] },
     })
     waitFor("demo_que_2", "question")
-    expect(settle("demo_que_2", { type: "error", error: "question rejected" })?.state).toMatchObject({ status: "error", error: "question rejected" })
+    expect(settle("demo_que_2", { type: "error", error: "question rejected" })?.tool.state).toMatchObject({
+      status: "error", error: { message: "question rejected" },
+    })
   })
 })

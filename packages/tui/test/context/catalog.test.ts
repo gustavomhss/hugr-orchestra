@@ -135,12 +135,9 @@ test("sessions lists by project and subpath and maps V2 Sessions to the V1 shape
   expect(sessions.map((item) => item.id)).toEqual(["ses_a", "ses_b"])
   expect(sessions[0]).toMatchObject({
     id: "ses_a",
-    slug: "ses_a",
     projectID: "proj_1",
-    directory: "/repo/app",
-    workspaceID: "ws_1",
-    path: "app",
-    version: "v2",
+    location: { directory: "/repo/app", workspaceID: "ws_1" },
+    subpath: "app",
   })
 })
 

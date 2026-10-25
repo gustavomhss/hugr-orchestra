@@ -2,7 +2,7 @@
 import { describe, expect, test } from "bun:test"
 import { tmpdir } from "../../../fixture/fixture"
 import { mount, wait } from "./sync-fixture"
-import type { GlobalEvent } from "../../../../src/compat/schema"
+import type { GlobalEvent } from "../../../../src/types"
 
 function branchEvent(branch: string, workspace?: string): GlobalEvent {
   return {
@@ -12,7 +12,7 @@ function branchEvent(branch: string, workspace?: string): GlobalEvent {
     payload: {
       id: `evt_vcs_${branch}`,
       type: "vcs.branch.updated",
-      properties: { branch },
+      data: { branch },
     },
   }
 }
@@ -71,7 +71,7 @@ describe("tui sync", () => {
     try {
       event("evt_perm_asked", {
         type: "permission.v2.asked",
-        properties: {
+        data: {
           id: "per_live",
           sessionID: "ses_live",
           action: "bash",
@@ -82,7 +82,7 @@ describe("tui sync", () => {
       })
       event("evt_que_asked", {
         type: "question.v2.asked",
-        properties: {
+        data: {
           id: "que_live",
           sessionID: "ses_live",
           questions: [{ question: "Pick one", header: "One", options: [{ label: "A", description: "a" }] }],
@@ -100,11 +100,11 @@ describe("tui sync", () => {
 
       event("evt_perm_replied", {
         type: "permission.v2.replied",
-        properties: { sessionID: "ses_live", requestID: "per_live", reply: "once" },
+        data: { sessionID: "ses_live", requestID: "per_live", reply: "once" },
       })
       event("evt_que_rejected", {
         type: "question.v2.rejected",
-        properties: { sessionID: "ses_live", requestID: "que_live" },
+        data: { sessionID: "ses_live", requestID: "que_live" },
       })
       await wait(() => sync.data.permission["ses_live"]?.length === 0 && sync.data.question["ses_live"]?.length === 0)
     } finally {

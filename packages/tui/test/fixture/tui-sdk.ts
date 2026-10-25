@@ -1,4 +1,4 @@
-import type { GlobalEvent } from "../../src/compat/schema"
+import type { GlobalEvent } from "../../src/types"
 import type { EventSource } from "../../src/context/sdk"
 
 export const worktree = "/tmp/orchestra"
@@ -31,12 +31,10 @@ export function createEventSource() {
     emit(event: GlobalEvent) {
       if (!fn) throw new Error("event source not ready")
       fn(event)
-      if (!("properties" in event.payload)) return
       const chunk = new TextEncoder().encode(
         `data: ${JSON.stringify({
           ...event.payload,
           location: { directory: event.directory, workspaceID: event.workspace },
-          data: event.payload.properties,
         })}\n\n`,
       )
       if (stream) return stream.enqueue(chunk)

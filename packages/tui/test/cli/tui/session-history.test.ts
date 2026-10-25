@@ -1,16 +1,16 @@
 import { expect, test } from "bun:test"
-import type { SessionMessage, V2Event } from "../../../src/compat/schema"
-import { applyEvent, toLegacy } from "../../../src/context/session-history"
+import type { Event, SessionMessage } from "../../../src/types"
+import { applyEvent } from "../../../src/context/session-history"
+import { toolMetadata, toolOutput, toolTitle } from "../../../src/util/session-message"
 
 const sessionID = "ses_history"
 const model = { id: "model", providerID: "test" }
-const path = { cwd: "/repo", root: "/repo" }
 
 function event(type: string, data: Record<string, unknown>) {
-  return { id: `evt_${type}`, type, data: { sessionID, timestamp: 10, ...data } } as V2Event
+  return { id: `evt_${type}`, type, data: { sessionID, timestamp: 10, ...data } } as Event
 }
 
-test("tool events settle into a completed V1 tool part with the step's changed files", () => {
+test("tool events settle into a completed V2 tool call with the step's changed files", () => {
   const messages: SessionMessage[] = []
   const assistantMessageID = "msg_assistant"
   ;[
@@ -40,59 +40,29 @@ test("tool events settle into a completed V1 tool part with the step's changed f
   ].forEach((item) => applyEvent(messages, item))
 
   expect(messages[0]).toMatchObject({ type: "assistant", snapshot: { files: ["a.ts"] }, finish: "stop" })
-  const projected = toLegacy(sessionID, messages, path)
-  expect(projected[0].parts.map((part) => part.type)).toEqual(["step-start", "tool", "step-finish"])
-  expect(projected[0].parts[1]).toMatchObject({
-    tool: "edit",
-    state: { status: "completed", input: { filePath: "a.ts" }, output: "edited", title: "a.ts" },
-  })
+  const assistant = messages[0]
+  if (assistant.type !== "assistant") throw new Error("expected an assistant message")
+  expect(assistant.content.map((item) => item.type)).toEqual(["tool"])
+  const tool = assistant.content[0]
+  if (tool.type !== "tool") throw new Error("expected a tool call")
+  expect(tool).toMatchObject({ id: "call_1", name: "edit", state: { status: "completed", input: { filePath: "a.ts" } } })
+  expect(toolOutput(tool)).toBe("edited")
+  expect(toolTitle(tool)).toBe("a.ts")
+  expect(toolMetadata(tool)).toEqual({ title: "a.ts" })
 })
 
-test("shell, compaction and failed steps project into V1 shapes, oldest first", () => {
-  const projected = toLegacy(
-    sessionID,
-    [
-      {
-        id: "msg_failed",
-        type: "assistant",
-        agent: "maestro",
-        model,
-        content: [],
-        finish: "error",
-        error: { type: "unknown", message: "boom" },
-        time: { created: 4, completed: 5 },
-      },
-      { id: "msg_compact", type: "compaction", reason: "auto", summary: "summary", time: { created: 3 } },
-      {
-        id: "msg_shell",
-        type: "shell",
-        callID: "call_sh",
-        command: "ls",
-        output: "a.ts",
-        time: { created: 2, completed: 2 },
-      },
-      { id: "msg_user", type: "user", text: "hi", time: { created: 1 } },
-    ] as SessionMessage[],
-    path,
-  )
-
-  expect(projected.map((item) => [item.info.id, item.info.role])).toEqual([
-    ["msg_user", "user"],
-    ["msg_shell", "assistant"],
-    ["msg_compact", "user"],
-    ["msg_compact-summary", "assistant"],
-    ["msg_failed", "assistant"],
-  ])
-  expect(projected[1].parts[0]).toMatchObject({
-    type: "tool",
-    tool: "bash",
-    state: { status: "completed", output: "a.ts" },
-  })
-  expect(projected[2].parts[0]).toMatchObject({ type: "compaction", auto: true })
-  expect(projected[3].info).toMatchObject({ summary: true, parentID: "msg_compact" })
-  expect(projected[4].info).toMatchObject({
-    parentID: "msg_compact",
-    agent: "maestro",
-    error: { name: "UnknownError", data: { message: "boom" } },
-  })
+test("tool helpers read a failed call's structured output and host metadata", () => {
+  const tool = {
+    state: {
+      status: "error" as const,
+      input: { command: "false" },
+      content: [{ type: "text" as const, text: "exit 1" }],
+      structured: { title: "false", exit: 1 },
+      metadata: { lean: true },
+      error: { type: "unknown" as const, message: "boom" },
+    },
+  }
+  expect(toolOutput(tool)).toBe("exit 1")
+  expect(toolMetadata(tool)).toEqual({ title: "false", exit: 1, lean: true })
+  expect(toolTitle({ state: { status: "pending", input: "{" } })).toBe("")
 })

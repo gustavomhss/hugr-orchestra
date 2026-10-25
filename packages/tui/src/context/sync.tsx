@@ -1,9 +1,7 @@
 import type {
-  Message,
   Agent,
   Provider,
   Session,
-  Part,
   Config,
   Todo,
   Command,
@@ -18,8 +16,8 @@ import type {
   VcsInfo,
   SnapshotFileDiff,
   SessionMessage,
-  V2Event,
-} from "../compat/schema"
+  Event,
+} from "../types"
 import { createStore, produce, reconcile } from "solid-js/store"
 import { useProject } from "./project"
 import { useEvent } from "./event"
@@ -33,7 +31,7 @@ import path from "path"
 import { useKV } from "./kv"
 import { usePermission } from "./permission"
 import { isDemoRequest, settle } from "./demo"
-import { applyEvent, toLegacy } from "./session-history"
+import { applyEvent } from "./session-history"
 
 function search<T>(items: T[], target: string, key: (item: T) => string) {
   let left = 0
@@ -85,11 +83,9 @@ export const {
       todo: {
         [sessionID: string]: Todo[]
       }
+      // V2 messages per Session, oldest first, at most the latest 100.
       message: {
-        [sessionID: string]: Message[]
-      }
-      part: {
-        [messageID: string]: Part[]
+        [sessionID: string]: SessionMessage[]
       }
       lsp: LspStatus[]
       mcp: {
@@ -122,7 +118,6 @@ export const {
       session_diff: {},
       todo: {},
       message: {},
-      part: {},
       lsp: [],
       mcp: {},
       mcp_resource: {},
@@ -138,28 +133,13 @@ export const {
     const syncingSessions = new Map<string, Promise<void>>()
     // Message IDs that live events changed while a Session's history was being fetched.
     const hydratingSessions = new Map<string, Set<string>>()
-    // V2 messages per Session, newest first. The store's V1 `message` and `part` entries are projections of them.
+    // V2 messages per Session, newest first as the history route returns them; the store holds them oldest first.
     const history = new Map<string, SessionMessage[]>()
+    // Sessions with a compaction in progress, between its started and ended events.
+    const compacting = new Set<string>()
 
     function projectHistory(sessionID: string) {
-      const session = store.session.find((item) => item.id === sessionID)
-      const directory = session?.directory ?? sdk.directory ?? ""
-      const projected = toLegacy(sessionID, history.get(sessionID) ?? [], {
-        cwd: directory,
-        root: project.data.instance.path.worktree ?? directory,
-      }).slice(-100)
-      batch(() => {
-        setStore(
-          "part",
-          produce((draft) => {
-            for (const message of store.message[sessionID] ?? []) {
-              if (!projected.some((item) => item.info.id === message.id)) delete draft[message.id]
-            }
-          }),
-        )
-        setStore("message", sessionID, reconcile(projected.map((item) => item.info)))
-        projected.forEach((item) => setStore("part", item.info.id, reconcile(item.parts)))
-      })
+      setStore("message", sessionID, reconcile((history.get(sessionID) ?? []).toReversed()))
     }
 
     function refreshDiff(sessionID: string) {
@@ -170,11 +150,11 @@ export const {
         ),
       )
       return sdk.catalog
-        .diff({ directory: session?.directory, workspace: session?.workspaceID }, files)
+        .diff({ directory: session?.location.directory, workspace: session?.location.workspaceID }, files)
         .then((diff) => setStore("session_diff", sessionID, diff))
     }
 
-    function receiveHistory(event: V2Event) {
+    function receiveHistory(event: Event) {
       if (!event.type.startsWith("session.next.")) return
       const sessionID = "sessionID" in event.data ? event.data.sessionID : undefined
       if (!sessionID) return
@@ -209,28 +189,56 @@ export const {
       })
     }
 
-    // A demo request's tool part is settled here: the server never heard of it.
-    function settleDemo(requestID: string, outcome: Parameters<typeof settle>[1]) {
+    // A demo request's tool call is settled here: the server never heard of it.
+    function settleDemo(sessionID: string, requestID: string, outcome: Parameters<typeof settle>[1]) {
       if (!isDemoRequest(requestID)) return
-      const part = settle(requestID, outcome)
-      if (part) setStore("part", part.messageID, [part])
+      const settled = settle(requestID, outcome)
+      if (!settled || !store.message[sessionID]) return
+      setStore(
+        "message",
+        sessionID,
+        produce((messages) => {
+          const message = messages.find((item) => item.id === settled.messageID)
+          if (message?.type !== "assistant") return
+          message.content = message.content.map((item) =>
+            item.type === "tool" && item.id === settled.tool.id ? settled.tool : item,
+          )
+        }),
+      )
+    }
+
+    // Core still announces Session changes with the V1 Session shape, so its id is only a signal to read the V2 Session.
+    function upsertSession(sessionID: string) {
+      return sdk.catalog
+        .session(sessionID)
+        .then((session) => {
+          const result = search(store.session, session.id, (s) => s.id)
+          if (result.found) return setStore("session", result.index, reconcile(session))
+          setStore(
+            "session",
+            produce((draft) => {
+              draft.splice(result.index, 0, session)
+            }),
+          )
+        })
+        .catch(() => undefined)
     }
 
     event.subscribe((event, { workspace }) => {
-      receiveHistory({ ...event, data: event.properties } as V2Event)
+      receiveHistory(event)
       switch (event.type) {
         case "global.disposed":
           void bootstrap()
           break
         case "permission.v2.replied": {
-          settleDemo(event.properties.requestID, event.properties.reply === "reject" ? { type: "error", error: "permission rejected" } : { type: "completed" })
-          const requests = store.permission[event.properties.sessionID]
+          settleDemo(event.data.sessionID, event.data.requestID, event.data.reply === "reject" ? { type: "error", error: "permission rejected" } : { type: "completed" })
+          const requests = store.permission[event.data.sessionID]
           if (!requests) break
-          const match = search(requests, event.properties.requestID, (r) => r.id)
+          const match = search(requests, event.data.requestID, (r) => r.id)
           if (!match.found) break
           setStore(
             "permission",
-            event.properties.sessionID,
+            event.data.sessionID,
             produce((draft) => {
               draft.splice(match.index, 1)
             }),
@@ -239,7 +247,7 @@ export const {
         }
 
         case "permission.v2.asked": {
-          const request = event.properties
+          const request = event.data
           if (permission.mode === "auto") {
             void sdk.actions.reply({ sessionID: request.sessionID, requestID: request.id, reply: "once" })
             break
@@ -267,18 +275,19 @@ export const {
         case "question.v2.replied":
         case "question.v2.rejected": {
           settleDemo(
-            event.properties.requestID,
+            event.data.sessionID,
+            event.data.requestID,
             event.type === "question.v2.rejected"
               ? { type: "error", error: "question rejected" }
-              : { type: "completed", answers: "answers" in event.properties ? event.properties.answers : undefined },
+              : { type: "completed", answers: "answers" in event.data ? event.data.answers : undefined },
           )
-          const requests = store.question[event.properties.sessionID]
+          const requests = store.question[event.data.sessionID]
           if (!requests) break
-          const match = search(requests, event.properties.requestID, (r) => r.id)
+          const match = search(requests, event.data.requestID, (r) => r.id)
           if (!match.found) break
           setStore(
             "question",
-            event.properties.sessionID,
+            event.data.sessionID,
             produce((draft) => {
               draft.splice(match.index, 1)
             }),
@@ -287,7 +296,7 @@ export const {
         }
 
         case "question.v2.asked": {
-          const request = event.properties
+          const request = event.data
           const requests = store.question[request.sessionID]
           if (!requests) {
             setStore("question", request.sessionID, [request])
@@ -309,15 +318,15 @@ export const {
         }
 
         case "todo.updated":
-          setStore("todo", event.properties.sessionID, event.properties.todos)
+          setStore("todo", event.data.sessionID, event.data.todos)
           break
 
         case "session.diff":
-          setStore("session_diff", event.properties.sessionID, event.properties.diff)
+          setStore("session_diff", event.data.sessionID, event.data.diff)
           break
 
         case "session.deleted": {
-          const result = search(store.session, event.properties.info.id, (s) => s.id)
+          const result = search(store.session, event.data.info.id, (s) => s.id)
           if (result.found) {
             setStore(
               "session",
@@ -328,39 +337,35 @@ export const {
           }
           break
         }
-        case "session.updated": {
-          const result = search(store.session, event.properties.info.id, (s) => s.id)
-          if (result.found) {
-            setStore("session", result.index, reconcile(event.properties.info))
-            break
-          }
-          setStore(
-            "session",
-            produce((draft) => {
-              draft.splice(result.index, 0, event.properties.info)
-            }),
-          )
+        case "session.updated":
+          void upsertSession(event.data.info.id)
           break
-        }
+
+        case "session.next.compaction.started":
+          compacting.add(event.data.sessionID)
+          break
+
+        case "session.next.compaction.ended":
+          compacting.delete(event.data.sessionID)
+          break
 
         case "session.next.moved": {
-          const result = search(store.session, event.properties.sessionID, (s) => s.id)
+          const result = search(store.session, event.data.sessionID, (s) => s.id)
           if (!result.found) break
           setStore(
             "session",
             result.index,
             produce((session) => {
-              session.directory = event.properties.location.directory
-              session.path = event.properties.subdirectory
-              session.workspaceID = event.properties.location.workspaceID
-              session.time.updated = event.properties.timestamp
+              session.location = { ...event.data.location }
+              session.subpath = event.data.subdirectory
+              session.time.updated = event.data.timestamp
             }),
           )
           break
         }
 
         case "session.status": {
-          setStore("session_status", event.properties.sessionID, event.properties.status)
+          setStore("session_status", event.data.sessionID, event.data.status)
           break
         }
 
@@ -372,7 +377,7 @@ export const {
 
         case "vcs.branch.updated": {
           if (workspace === project.workspace.current()) {
-            setStore("vcs", { branch: event.properties.branch })
+            setStore("vcs", { branch: event.data.branch })
           }
           break
         }
@@ -489,14 +494,12 @@ export const {
           setStore("session", reconcile(list))
         },
         status(sessionID: string) {
-          const session = result.session.get(sessionID)
-          if (!session) return "idle"
-          if (session.time.compacting) return "compacting"
-          const messages = store.message[sessionID] ?? []
-          const last = messages.at(-1)
-          if (!last) return "idle"
-          if (last.role === "user") return "working"
-          return last.time.completed ? "idle" : "working"
+          if (!result.session.get(sessionID)) return "idle"
+          if (compacting.has(sessionID)) return "compacting"
+          const last = store.message[sessionID]?.at(-1)
+          if (last?.type === "user" || last?.type === "synthetic") return "working"
+          if (last?.type === "assistant" || last?.type === "shell") return last.time.completed ? "idle" : "working"
+          return "idle"
         },
         async sync(sessionID: string) {
           if (fullSyncedSessions.has(sessionID)) return

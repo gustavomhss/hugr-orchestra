@@ -9,11 +9,11 @@ import type {
   ProviderV2Info,
   QuestionV2Request,
   ReferenceInfo,
+  Event,
+  Session,
   SessionMessage,
-  SessionV2Info,
   SkillV2Info,
-  V2Event,
-} from "../compat/schema"
+} from "../types"
 import { createStore, produce } from "solid-js/store"
 import { createSimpleContext } from "./helper"
 import { useSDK } from "./sdk"
@@ -33,7 +33,7 @@ type LocationData = {
 
 type Data = {
   session: {
-    info: Record<string, SessionV2Info>
+    info: Record<string, Session>
     message: Record<string, SessionMessage[]>
     permission: Record<string, PermissionV2Request[]>
     question: Record<string, QuestionV2Request[]>
@@ -86,7 +86,7 @@ export const { use: useData, provider: DataProvider } = createSimpleContext({
       },
     }
 
-    function handleEvent(event: V2Event) {
+    function handleEvent(event: Event) {
       const sessionID = "sessionID" in event.data ? event.data.sessionID : undefined
       if (event.type.startsWith("session.next.") && sessionID)
         message.update(sessionID, (draft) => applyEvent(draft, event))
@@ -112,11 +112,7 @@ export const { use: useData, provider: DataProvider } = createSimpleContext({
 
     onMount(() => {
       const unsub = events.subscribe((event, metadata) => {
-        handleEvent({
-          ...event,
-          data: event.properties,
-          location: { directory: metadata.directory, workspaceID: metadata.workspace },
-        } as V2Event)
+        handleEvent({ ...event, location: { directory: metadata.directory, workspaceID: metadata.workspace } })
       })
       onCleanup(unsub)
     })
@@ -127,7 +123,7 @@ export const { use: useData, provider: DataProvider } = createSimpleContext({
           return store.session.info[sessionID]
         },
         async refresh(sessionID: string) {
-          setStore("session", "info", sessionID, (await sdk.api.sessions.get({ sessionID })) as SessionV2Info)
+          setStore("session", "info", sessionID, await sdk.api.sessions.get({ sessionID }))
         },
         message: {
           list(sessionID: string) {

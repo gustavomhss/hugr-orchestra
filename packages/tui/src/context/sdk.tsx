@@ -1,7 +1,7 @@
 import { Orchestra } from "@orchestra/client"
 import { createSessionActions } from "./session-actions"
 import { createCatalog } from "./catalog"
-import type { GlobalEvent } from "../compat/schema"
+import type { GlobalEvent } from "../types"
 import { createSimpleContext } from "./helper"
 import { isDemoRequest } from "./demo"
 import { batch, createSignal, onCleanup, onMount } from "solid-js"
@@ -93,7 +93,7 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
               handleEvent({
                 directory: event.location?.directory ?? props.directory ?? "",
                 workspace: event.location?.workspaceID,
-                payload: { id: event.id, type: event.type, properties: event.data } as GlobalEvent["payload"],
+                payload: { id: event.id, type: event.type, data: event.data } as GlobalEvent["payload"],
               })
             }
           })().catch(() => {})
@@ -128,10 +128,10 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
     })
 
     // Replies to the requests the mini-mode demo made up are answered here instead of by the server.
-    const answerLocally = (type: string, properties: Record<string, unknown>) =>
+    const answerLocally = (type: string, data: Record<string, unknown>) =>
       emitter.emit("event", {
         directory: props.directory ?? "",
-        payload: { id: `demo_evt_${type}`, type, properties },
+        payload: { id: `demo_evt_${type}`, type, data },
       } as GlobalEvent)
     const api = {
       ...v2,

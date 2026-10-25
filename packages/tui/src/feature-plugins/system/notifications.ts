@@ -1,10 +1,10 @@
-import type { Event } from "../../compat/schema"
+import type { Event } from "../../types"
 import type { TuiAttentionSoundName, TuiPlugin, TuiPluginApi } from "@orchestra/plugin/tui"
 import type { BuiltinTuiPlugin } from "../builtins"
 
 const id = "internal:notifications"
 
-type SessionError = Extract<Event, { type: "session.error" }>["properties"]["error"]
+type SessionError = Extract<Event, { type: "session.error" }>["data"]["error"]
 
 function notify(api: TuiPluginApi, sessionID: string | undefined, message: string, sound: TuiAttentionSoundName) {
   const session = sessionID ? api.state.session.get(sessionID) : undefined
@@ -33,38 +33,38 @@ const tui: TuiPlugin = async (api) => {
   const permissions = new Set<string>()
 
   api.event.on("question.v2.asked", (event) => {
-    if (questions.has(event.properties.id)) return
-    questions.add(event.properties.id)
-    notify(api, event.properties.sessionID, "Question needs input", "question")
+    if (questions.has(event.data.id)) return
+    questions.add(event.data.id)
+    notify(api, event.data.sessionID, "Question needs input", "question")
   })
 
   api.event.on("question.v2.replied", (event) => {
-    questions.delete(event.properties.requestID)
+    questions.delete(event.data.requestID)
   })
 
   api.event.on("question.v2.rejected", (event) => {
-    questions.delete(event.properties.requestID)
+    questions.delete(event.data.requestID)
   })
 
   api.event.on("permission.v2.asked", (event) => {
-    if (permissions.has(event.properties.id)) return
-    permissions.add(event.properties.id)
-    notify(api, event.properties.sessionID, "Permission needs input", "permission")
+    if (permissions.has(event.data.id)) return
+    permissions.add(event.data.id)
+    notify(api, event.data.sessionID, "Permission needs input", "permission")
   })
 
   api.event.on("permission.v2.replied", (event) => {
-    permissions.delete(event.properties.requestID)
+    permissions.delete(event.data.requestID)
   })
 
   api.event.on("session.status", (event) => {
-    const sessionID = event.properties.sessionID
-    if (event.properties.status.type === "busy" || event.properties.status.type === "retry") {
+    const sessionID = event.data.sessionID
+    if (event.data.status.type === "busy" || event.data.status.type === "retry") {
       active.add(sessionID)
       errored.delete(sessionID)
       return
     }
 
-    if (event.properties.status.type !== "idle") return
+    if (event.data.status.type !== "idle") return
     if (!active.has(sessionID)) return
     active.delete(sessionID)
 
@@ -78,11 +78,11 @@ const tui: TuiPlugin = async (api) => {
   })
 
   api.event.on("session.error", (event) => {
-    const sessionID = event.properties.sessionID
+    const sessionID = event.data.sessionID
     if (!sessionID) return
     if (!active.has(sessionID)) return
     errored.add(sessionID)
-    notify(api, sessionID, sessionErrorMessage(event.properties.error), "error")
+    notify(api, sessionID, sessionErrorMessage(event.data.error), "error")
   })
 }
 

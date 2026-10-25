@@ -1,6 +1,7 @@
-import type { AssistantMessage, Part, Provider, UserMessage } from "../compat/schema"
+import type { Provider, SessionMessage, SessionMessageAssistant } from "../types"
 import { Locale } from "./locale"
 import * as Model from "./model"
+import { toolInput, toolOutput } from "./session-message"
 
 export type TranscriptOptions = {
   thinking: boolean
@@ -18,97 +19,65 @@ export type SessionInfo = {
   }
 }
 
-export type MessageWithParts = {
-  info: UserMessage | AssistantMessage
-  parts: Part[]
-}
-
-export function formatTranscript(
-  session: SessionInfo,
-  messages: MessageWithParts[],
-  options: TranscriptOptions,
-): string {
+export function formatTranscript(session: SessionInfo, messages: SessionMessage[], options: TranscriptOptions): string {
   const providers = Model.index(options.providers)
-  let transcript = `# ${session.title}\n\n`
-  transcript += `**Session ID:** ${session.id}\n`
-  transcript += `**Created:** ${new Date(session.time.created).toLocaleString()}\n`
-  transcript += `**Updated:** ${new Date(session.time.updated).toLocaleString()}\n\n`
-  transcript += `---\n\n`
-
-  for (const msg of messages.toSorted(
-    (a, b) => a.info.time.created - b.info.time.created || a.info.id.localeCompare(b.info.id),
-  )) {
-    transcript += formatMessage(msg.info, msg.parts, options, providers)
-    transcript += `---\n\n`
-  }
-
-  return transcript
+  const header =
+    `# ${session.title}\n\n` +
+    `**Session ID:** ${session.id}\n` +
+    `**Created:** ${new Date(session.time.created).toLocaleString()}\n` +
+    `**Updated:** ${new Date(session.time.updated).toLocaleString()}\n\n` +
+    `---\n\n`
+  return messages
+    .toSorted((a, b) => a.time.created - b.time.created || a.id.localeCompare(b.id))
+    .map((message) => formatMessage(message, options, providers))
+    .filter((text) => text !== "")
+    .reduce((transcript, text) => transcript + text + `---\n\n`, header)
 }
 
+/** One message as Markdown. Host-injected, system and switch messages are not part of the conversation and render empty. */
 export function formatMessage(
-  msg: UserMessage | AssistantMessage,
-  parts: Part[],
+  message: SessionMessage,
   options: TranscriptOptions,
   providers?: Provider[] | ReadonlyMap<string, Provider>,
 ): string {
-  let result = ""
-
-  if (msg.role === "user") {
-    result += `## User\n\n`
-  } else {
-    result += formatAssistantHeader(msg, options.assistantMetadata, providers ?? options.providers)
-  }
-
-  for (const part of parts) {
-    result += formatPart(part, options)
-  }
-
-  return result
+  if (message.type === "user") return `## User\n\n${message.text}\n\n`
+  if (message.type === "shell") return `## Shell\n\n\`\`\`\n$ ${message.command}\n${message.output}\n\`\`\`\n\n`
+  if (message.type === "compaction") return `## Compaction\n\n${message.summary}\n\n`
+  if (message.type !== "assistant") return ""
+  return (
+    formatAssistantHeader(message, options.assistantMetadata, providers ?? options.providers) +
+    message.content.map((part) => formatPart(part, options)).join("")
+  )
 }
 
 export function formatAssistantHeader(
-  msg: AssistantMessage,
+  message: SessionMessageAssistant,
   includeMetadata: boolean,
   providers?: Provider[] | ReadonlyMap<string, Provider>,
 ): string {
-  if (!includeMetadata) {
-    return `## Assistant\n\n`
-  }
-
-  const duration =
-    msg.time.completed && msg.time.created ? ((msg.time.completed - msg.time.created) / 1000).toFixed(1) + "s" : ""
-
-  const modelName = Model.name(providers, msg.providerID, msg.modelID)
-
-  return `## Assistant (${Locale.titlecase(msg.agent)} · ${modelName}${duration ? ` · ${duration}` : ""})\n\n`
+  if (!includeMetadata) return `## Assistant\n\n`
+  const duration = message.time.completed
+    ? ((message.time.completed - message.time.created) / 1000).toFixed(1) + "s"
+    : ""
+  const modelName = Model.name(providers, message.model.providerID, message.model.id)
+  return `## Assistant (${Locale.titlecase(message.agent)} · ${modelName}${duration ? ` · ${duration}` : ""})\n\n`
 }
 
-export function formatPart(part: Part, options: TranscriptOptions): string {
-  if (part.type === "text" && !part.synthetic) {
-    return `${part.text}\n\n`
-  }
-
-  if (part.type === "reasoning") {
-    if (options.thinking) {
-      return `_Thinking:_\n\n${part.text}\n\n`
-    }
-    return ""
-  }
-
-  if (part.type === "tool") {
-    let result = `**Tool: ${part.tool}**\n`
-    if (options.toolDetails && part.state.input) {
-      result += `\n**Input:**\n\`\`\`json\n${JSON.stringify(part.state.input, null, 2)}\n\`\`\`\n`
-    }
-    if (options.toolDetails && part.state.status === "completed" && part.state.output) {
-      result += `\n**Output:**\n\`\`\`\n${part.state.output}\n\`\`\`\n`
-    }
-    if (options.toolDetails && part.state.status === "error" && part.state.error) {
-      result += `\n**Error:**\n\`\`\`\n${part.state.error}\n\`\`\`\n`
-    }
-    result += `\n`
-    return result
-  }
-
-  return ""
+export function formatPart(part: SessionMessageAssistant["content"][number], options: TranscriptOptions): string {
+  if (part.type === "text") return `${part.text}\n\n`
+  if (part.type === "reasoning") return options.thinking ? `_Thinking:_\n\n${part.text}\n\n` : ""
+  const input = toolInput(part)
+  const output = toolOutput(part)
+  const details = [
+    options.toolDetails && Object.keys(input).length > 0
+      ? `\n**Input:**\n\`\`\`json\n${JSON.stringify(input, null, 2)}\n\`\`\`\n`
+      : "",
+    options.toolDetails && part.state.status === "completed" && output
+      ? `\n**Output:**\n\`\`\`\n${output}\n\`\`\`\n`
+      : "",
+    options.toolDetails && part.state.status === "error"
+      ? `\n**Error:**\n\`\`\`\n${part.state.error.message}\n\`\`\`\n`
+      : "",
+  ]
+  return `**Tool: ${part.name}**\n${details.join("")}\n`
 }
