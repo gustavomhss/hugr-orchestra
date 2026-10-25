@@ -257,7 +257,7 @@ O registry não substitui parsers/compilers/OS que conhecem a semântica. Novo g
 | --- | --- |
 | Session/Core | `test/session-create.test.ts`, `session-prompt`, `session-runner`, `session-run-coordinator`, `session-runner-recorded`, `location-layer`, `session-runner-tool-registry` |
 | Dados/config | Core `test/database-migration.test.ts`, `database-sqlite`, `credential-inherit`, `config/config`, `location-filesystem`, `project` |
-| APIs | Client `test/contract-identity.test.ts`, `import-boundaries`, `type-conformance`, `promise`, `effect`; sdk-next `embedded`/boundaries; schema compatibility/event/v1 |
+| APIs | Server `test/client-contract-identity.test.ts`, `import-boundaries`, `type-conformance`, `promise`, `effect`; sdk-next `embedded`/boundaries; schema compatibility/event/v1 |
 | Legacy HTTP/SDK | Orchestra `test/server/httpapi-public-openapi.test.ts`, query-schema-drift, authorization, SDK, sdk-v1-smoke, sdk-error-shape; `test:httpapi` |
 | Plugins | Core `test/plugin/sdk-runtime.test.ts`, `sdk-authority`; SDK/plugin export/consumer tests |
 | UI | App `test:unit`, `test:browser` (browser/solid conditions), `typecheck:e2e`, selected Playwright; session-ui/UI tests; TUI lifecycle/runtime/keymap; Storybook build |

@@ -19,7 +19,7 @@ import { SessionMessage } from "@orchestra/schema/session-message"
 import { Workspace } from "@orchestra/schema/workspace"
 import { Api } from "@orchestra/server/api"
 import { compile, emitPromise } from "@orchestra/httpapi-codegen"
-import { ClientApi, endpointNames, groupNames, omitEndpoints } from "../src/contract"
+import { ClientApi, endpointNames, groupNames, omitEndpoints } from "@orchestra/client/contract"
 
 test("Core and Server reuse the authoritative Schema and Protocol values", () => {
   expect(AgentV2.ID).toBe(Agent.ID)

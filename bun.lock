@@ -399,9 +399,7 @@
       },
       "devDependencies": {
         "@effect/platform-node": "catalog:",
-        "@orchestra/core": "workspace:*",
         "@orchestra/httpapi-codegen": "workspace:*",
-        "@orchestra/server": "workspace:*",
         "@tsconfig/bun": "catalog:",
         "@types/bun": "catalog:",
         "@typescript/native-preview": "catalog:",
@@ -684,6 +682,8 @@
       },
       "devDependencies": {
         "@effect/platform-node": "catalog:",
+        "@orchestra/client": "workspace:*",
+        "@orchestra/httpapi-codegen": "workspace:*",
         "@tsconfig/bun": "catalog:",
         "@types/bun": "catalog:",
         "@typescript/native-preview": "catalog:",
