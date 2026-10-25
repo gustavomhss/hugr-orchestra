@@ -25,7 +25,7 @@ function changeCountWidth(file: VcsFileStatus) {
 }
 
 export function DialogWorkspaceFileChanges(props: {
-  files: VcsFileStatus[]
+  files: readonly VcsFileStatus[]
   onSelect: (choice: WorkspaceFileChangesChoice) => void
   title?: string
   message?: string
@@ -132,7 +132,7 @@ export function DialogWorkspaceFileChanges(props: {
 
 DialogWorkspaceFileChanges.show = (
   dialog: DialogContext,
-  files: VcsFileStatus[],
+  files: readonly VcsFileStatus[],
   options?: { title?: string; message?: string },
 ) => {
   return new Promise<WorkspaceFileChangesChoice | undefined>((resolve) => {
