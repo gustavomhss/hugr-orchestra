@@ -35,6 +35,9 @@ export function parse(input: string): Command | undefined {
   return undefined
 }
 
+/** The tool a demo permission request is for. */
+export const PERMISSION_TOOLS = { edit: "edit", bash: "bash", read: "read", task: "task", external: "read", doom: "bash" } as const
+
 /** Ids of everything the demo makes up start with this, so a reply to one is answered locally. */
 export const PREFIX = "demo_"
 
@@ -185,5 +188,61 @@ export function user(
   return {
     info: { id, sessionID, role: "user", time: { created: options.now }, agent: options.agent, model: { providerID: "demo", modelID: "demo" } },
     parts: [{ sessionID, messageID: id, id: `${id}_0`, type: "text", text }],
+  }
+}
+
+type Waiting = { readonly part: Extract<Part, { type: "tool" }>; readonly done: { readonly title: string; readonly output: string } }
+
+// The synthetic tool part each unanswered demo request is waiting on, by request id.
+const waiting = new Map<string, Waiting>()
+
+/** An assistant message holding a running tool part for a demo request, which the request's tool field points at. */
+export function waitingMessage(
+  sessionID: string,
+  parentID: string,
+  request: { readonly id: string; readonly tool: string; readonly input: Record<string, unknown>; readonly done: Waiting["done"] },
+  options: { readonly now: number; readonly sequence: number; readonly cwd: string; readonly agent: string },
+): { info: AssistantMessage; parts: Part[]; tool: { messageID: string; callID: string } } {
+  const built = message(sessionID, parentID, "text", options)
+  const part: Waiting["part"] = {
+    sessionID,
+    messageID: built.info.id,
+    id: `${built.info.id}_wait`,
+    type: "tool",
+    callID: `${built.info.id}_call`,
+    tool: request.tool,
+    state: { status: "running", input: request.input, time: { start: options.now } },
+  }
+  waiting.set(request.id, { part, done: request.done })
+  return { info: { ...built.info, time: { created: options.now } }, parts: [part], tool: { messageID: built.info.id, callID: part.callID } }
+}
+
+/**
+ * Settles the tool part a demo request waited on, as V1's demo did: an accepted permission completes it, a rejected
+ * permission or question fails it, and an answered question completes it with the answers in its metadata.
+ */
+export function settle(
+  requestID: string,
+  outcome: { readonly type: "completed"; readonly answers?: readonly (readonly string[])[] } | { readonly type: "error"; readonly error: string },
+  now = Date.now(),
+): Part | undefined {
+  const entry = waiting.get(requestID)
+  if (!entry) return undefined
+  waiting.delete(requestID)
+  const state = entry.part.state
+  const start = state.status === "running" ? state.time.start : now
+  return {
+    ...entry.part,
+    state:
+      outcome.type === "error"
+        ? { status: "error", input: state.input, error: outcome.error, metadata: {}, time: { start, end: now } }
+        : {
+            status: "completed",
+            input: state.input,
+            output: entry.done.output,
+            title: entry.done.title,
+            metadata: outcome.answers ? { answers: outcome.answers } : {},
+            time: { start, end: now },
+          },
   }
 }
