@@ -5,9 +5,7 @@ import type { Integration } from "@orchestra/schema/integration"
 import type { Location } from "@orchestra/schema/location"
 import type { Permission } from "@orchestra/schema/permission"
 import type { PermissionSaved } from "@orchestra/schema/permission-saved"
-import type { PermissionV1 } from "@orchestra/schema/permission-v1"
 import type { Question } from "@orchestra/schema/question"
-import type { QuestionV1 } from "@orchestra/schema/question-v1"
 import type { Reference } from "@orchestra/schema/reference"
 import type { Session } from "@orchestra/schema/session"
 import type { SessionMessage } from "@orchestra/schema/session-message"
@@ -43,9 +41,7 @@ export type AgentPart = Mutable<typeof SessionV1.AgentPart.Encoded>
 export type Session = Mutable<typeof SessionV1.SessionInfo.Encoded>
 export type SessionStatus = Mutable<typeof SessionStatusEvent.Info.Encoded>
 export type Todo = Mutable<typeof SessionTodo.Info.Encoded>
-export type PermissionRequest = Mutable<typeof PermissionV1.Request.Encoded>
-export type QuestionAnswer = Mutable<typeof QuestionV1.Answer.Encoded>
-export type QuestionRequest = Mutable<typeof QuestionV1.Request.Encoded>
+export type QuestionAnswer = Mutable<typeof Question.Answer.Encoded>
 
 export type SnapshotFileDiff = Mutable<typeof FileDiff.Info.Encoded>
 export type VcsFileStatus = {

@@ -7,8 +7,8 @@ import type {
   Config,
   Todo,
   Command,
-  PermissionRequest,
-  QuestionRequest,
+  PermissionV2Request,
+  QuestionV2Request,
   LspStatus,
   McpStatus,
   McpResource,
@@ -69,10 +69,10 @@ export const {
       agent: Agent[]
       command: Command[]
       permission: {
-        [sessionID: string]: PermissionRequest[]
+        [sessionID: string]: PermissionV2Request[]
       }
       question: {
-        [sessionID: string]: QuestionRequest[]
+        [sessionID: string]: QuestionV2Request[]
       }
       config: Config
       session: Session[]
@@ -222,7 +222,7 @@ export const {
         case "global.disposed":
           void bootstrap()
           break
-        case "permission.replied": {
+        case "permission.v2.replied": {
           settleDemo(event.properties.requestID, event.properties.reply === "reject" ? { type: "error", error: "permission rejected" } : { type: "completed" })
           const requests = store.permission[event.properties.sessionID]
           if (!requests) break
@@ -238,7 +238,7 @@ export const {
           break
         }
 
-        case "permission.asked": {
+        case "permission.v2.asked": {
           const request = event.properties
           if (permission.mode === "auto") {
             void sdk.actions.reply({ sessionID: request.sessionID, requestID: request.id, reply: "once" })
@@ -264,11 +264,11 @@ export const {
           break
         }
 
-        case "question.replied":
-        case "question.rejected": {
+        case "question.v2.replied":
+        case "question.v2.rejected": {
           settleDemo(
             event.properties.requestID,
-            event.type === "question.rejected"
+            event.type === "question.v2.rejected"
               ? { type: "error", error: "question rejected" }
               : { type: "completed", answers: "answers" in event.properties ? event.properties.answers : undefined },
           )
@@ -286,7 +286,7 @@ export const {
           break
         }
 
-        case "question.asked": {
+        case "question.v2.asked": {
           const request = event.properties
           const requests = store.question[request.sessionID]
           if (!requests) {

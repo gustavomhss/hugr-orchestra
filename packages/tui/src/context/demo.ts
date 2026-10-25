@@ -1,4 +1,4 @@
-import type { AssistantMessage, Message, Part, ToolPart, PermissionRequest, QuestionRequest } from "../compat/schema"
+import type { AssistantMessage, Message, Part, ToolPart, PermissionV2Request, QuestionV2Request } from "../compat/schema"
 
 // Demo mode (`run --mini --demo`): slash commands that put synthetic output on screen instead of running a model
 // turn, to check formatting and the permission and question prompts without a provider.
@@ -149,7 +149,7 @@ export function message(
   }
 }
 
-export function permission(sessionID: string, kind: (typeof PERMISSIONS)[number], sequence: number): PermissionRequest {
+export function permission(sessionID: string, kind: (typeof PERMISSIONS)[number], sequence: number): PermissionV2Request {
   const patterns: Record<(typeof PERMISSIONS)[number], string[]> = {
     edit: ["demo.txt"],
     bash: ["ls -la"],
@@ -158,15 +158,15 @@ export function permission(sessionID: string, kind: (typeof PERMISSIONS)[number]
     external: ["/tmp/*"],
     doom: ["doom"],
   }
-  return { id: `${PREFIX}per_${sequence}`, sessionID, permission: kind, patterns: patterns[kind], metadata: {}, always: patterns[kind] }
+  return { id: `${PREFIX}per_${sequence}`, sessionID, action: kind, resources: patterns[kind], metadata: {}, save: patterns[kind] }
 }
 
-export function question(sessionID: string, kind: (typeof QUESTIONS)[number], sequence: number): QuestionRequest {
+export function question(sessionID: string, kind: (typeof QUESTIONS)[number], sequence: number): QuestionV2Request {
   const options = [
     { label: "Alpha", description: "First option" },
     { label: "Beta", description: "Second option" },
   ]
-  const info: Record<(typeof QUESTIONS)[number], QuestionRequest["questions"]> = {
+  const info: Record<(typeof QUESTIONS)[number], QuestionV2Request["questions"]> = {
     multi: [
       { question: "Pick a letter", header: "Letter", options, multiple: false },
       { question: "Pick any of these", header: "Many", options, multiple: true },

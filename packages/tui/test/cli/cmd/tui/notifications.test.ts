@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import Notifications from "../../../../src/feature-plugins/system/notifications"
-import type { Event, PermissionRequest, QuestionRequest, Session } from "../../../../src/compat/schema"
+import type { Event, PermissionV2Request, QuestionV2Request, Session } from "../../../../src/compat/schema"
 import type { TuiAttentionNotifyInput } from "@orchestra/plugin/tui"
 import { createTuiPluginApi } from "../../../fixture/tui-plugin"
 
@@ -64,7 +64,7 @@ async function setup() {
   }
 }
 
-function question(id: string, sessionID = "session"): QuestionRequest {
+function question(id: string, sessionID = "session"): QuestionV2Request {
   return {
     id,
     sessionID,
@@ -72,14 +72,12 @@ function question(id: string, sessionID = "session"): QuestionRequest {
   }
 }
 
-function permission(id: string, sessionID = "session"): PermissionRequest {
+function permission(id: string, sessionID = "session"): PermissionV2Request {
   return {
     id,
     sessionID,
-    permission: "edit",
-    patterns: [],
-    metadata: {},
-    always: [],
+    action: "edit",
+    resources: [],
   }
 }
 
@@ -101,8 +99,8 @@ describe("internal notifications TUI plugin", () => {
   test("notifies for question and permission requests with blurred notifications and always-on sounds", async () => {
     const harness = await setup()
 
-    harness.emit({ id: "event-1", type: "question.asked", properties: question("question-1") })
-    harness.emit({ id: "event-2", type: "permission.asked", properties: permission("permission-1") })
+    harness.emit({ id: "event-1", type: "question.v2.asked", properties: question("question-1") })
+    harness.emit({ id: "event-2", type: "permission.v2.asked", properties: permission("permission-1") })
 
     expect(harness.notifications).toEqual([questionNotification, permissionNotification])
   })
@@ -110,23 +108,23 @@ describe("internal notifications TUI plugin", () => {
   test("dedupes pending questions and permissions until they are resolved", async () => {
     const harness = await setup()
 
-    harness.emit({ id: "event-1", type: "question.asked", properties: question("question-1") })
-    harness.emit({ id: "event-2", type: "question.asked", properties: question("question-1") })
+    harness.emit({ id: "event-1", type: "question.v2.asked", properties: question("question-1") })
+    harness.emit({ id: "event-2", type: "question.v2.asked", properties: question("question-1") })
     harness.emit({
       id: "event-3",
-      type: "question.replied",
+      type: "question.v2.replied",
       properties: { sessionID: "session", requestID: "question-1", answers: [] },
     })
-    harness.emit({ id: "event-4", type: "question.asked", properties: question("question-1") })
+    harness.emit({ id: "event-4", type: "question.v2.asked", properties: question("question-1") })
 
-    harness.emit({ id: "event-5", type: "permission.asked", properties: permission("permission-1") })
-    harness.emit({ id: "event-6", type: "permission.asked", properties: permission("permission-1") })
+    harness.emit({ id: "event-5", type: "permission.v2.asked", properties: permission("permission-1") })
+    harness.emit({ id: "event-6", type: "permission.v2.asked", properties: permission("permission-1") })
     harness.emit({
       id: "event-7",
-      type: "permission.replied",
+      type: "permission.v2.replied",
       properties: { sessionID: "session", requestID: "permission-1", reply: "once" },
     })
-    harness.emit({ id: "event-8", type: "permission.asked", properties: permission("permission-1") })
+    harness.emit({ id: "event-8", type: "permission.v2.asked", properties: permission("permission-1") })
 
     expect(harness.notifications).toEqual([
       questionNotification,
@@ -168,7 +166,7 @@ describe("internal notifications TUI plugin", () => {
   test("uses sound-only notifications and subagent_done sound for subagent sessions", async () => {
     const harness = await setup()
 
-    harness.emit({ id: "event-1", type: "question.asked", properties: question("question-1", "subagent") })
+    harness.emit({ id: "event-1", type: "question.v2.asked", properties: question("question-1", "subagent") })
     harness.emit({
       id: "event-2",
       type: "session.status",

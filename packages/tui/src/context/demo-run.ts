@@ -43,7 +43,12 @@ function run(command: Demo_.Command, context: Context) {
     }
     return context.sdk.event.emit("event", {
       directory: context.cwd,
-      payload: { id: `${Demo_.PREFIX}evt_${n}`, type: `${command.type}.asked`, properties: { ...request, tool: pending.tool } },
+      payload: {
+        id: `${Demo_.PREFIX}evt_${n}`,
+        type: `${command.type}.v2.asked`,
+        properties:
+          command.type === "permission" ? { ...request, source: { type: "tool", ...pending.tool } } : { ...request, tool: pending.tool },
+      },
     } as GlobalEvent)
   }
   const answer = Demo_.message(context.sessionID, asked.info.id, command.kind, { now, sequence: n, cwd: context.cwd, agent: context.agent })

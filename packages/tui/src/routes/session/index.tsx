@@ -1709,7 +1709,7 @@ function InlineTool(props: {
   const [errorExpanded, setErrorExpanded] = createSignal(false)
 
   const permission = createMemo(() => {
-    const callID = sync.data.permission[ctx.sessionID]?.at(0)?.tool?.callID
+    const callID = sync.data.permission[ctx.sessionID]?.at(0)?.source?.callID
     if (!callID) return false
     return callID === props.part.callID
   })

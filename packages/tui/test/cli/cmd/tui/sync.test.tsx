@@ -60,4 +60,50 @@ describe("tui sync", () => {
       app.renderer.destroy()
     }
   })
+
+  test("V2 permission and question events reach the store and their replies clear it", async () => {
+    await using tmp = await tmpdir()
+    await Bun.write(`${tmp.path}/kv.json`, "{}")
+    const { app, emit, sync } = await mount(undefined, tmp.path)
+    const event = (id: string, payload: Omit<GlobalEvent["payload"], "id">) =>
+      emit({ directory: "/tmp/other", payload: { id, ...payload } as GlobalEvent["payload"] })
+
+    try {
+      event("evt_perm_asked", {
+        type: "permission.v2.asked",
+        properties: {
+          id: "per_live",
+          sessionID: "ses_live",
+          action: "bash",
+          resources: ["ls"],
+          save: ["ls *"],
+          source: { type: "tool", messageID: "msg_live", callID: "call_live" },
+        },
+      })
+      event("evt_que_asked", {
+        type: "question.v2.asked",
+        properties: {
+          id: "que_live",
+          sessionID: "ses_live",
+          questions: [{ question: "Pick one", header: "One", options: [{ label: "A", description: "a" }] }],
+        },
+      })
+      await wait(() => sync.data.permission["ses_live"]?.length === 1 && sync.data.question["ses_live"]?.length === 1)
+
+      expect(sync.data.permission["ses_live"]?.[0]).toMatchObject({ id: "per_live", action: "bash", resources: ["ls"] })
+      expect(sync.data.question["ses_live"]?.[0]?.id).toBe("que_live")
+
+      event("evt_perm_replied", {
+        type: "permission.v2.replied",
+        properties: { sessionID: "ses_live", requestID: "per_live", reply: "once" },
+      })
+      event("evt_que_rejected", {
+        type: "question.v2.rejected",
+        properties: { sessionID: "ses_live", requestID: "que_live" },
+      })
+      await wait(() => sync.data.permission["ses_live"]?.length === 0 && sync.data.question["ses_live"]?.length === 0)
+    } finally {
+      app.renderer.destroy()
+    }
+  })
 })

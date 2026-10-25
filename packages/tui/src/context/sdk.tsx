@@ -140,7 +140,7 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
         reply: (input: Parameters<typeof v2.permissions.reply>[0], options?: Parameters<typeof v2.permissions.reply>[1]) =>
           isDemoRequest(input.requestID)
             ? Promise.resolve(
-                answerLocally("permission.replied", { sessionID: input.sessionID, requestID: input.requestID, reply: input.reply }),
+                answerLocally("permission.v2.replied", { sessionID: input.sessionID, requestID: input.requestID, reply: input.reply }),
               )
             : v2.permissions.reply(input, options),
       },
@@ -149,12 +149,12 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
         reply: (input: Parameters<typeof v2.questions.reply>[0], options?: Parameters<typeof v2.questions.reply>[1]) =>
           isDemoRequest(input.requestID)
             ? Promise.resolve(
-                answerLocally("question.replied", { sessionID: input.sessionID, requestID: input.requestID, answers: input.answers }),
+                answerLocally("question.v2.replied", { sessionID: input.sessionID, requestID: input.requestID, answers: input.answers }),
               )
             : v2.questions.reply(input, options),
         reject: (input: Parameters<typeof v2.questions.reject>[0], options?: Parameters<typeof v2.questions.reject>[1]) =>
           isDemoRequest(input.requestID)
-            ? Promise.resolve(answerLocally("question.rejected", { sessionID: input.sessionID, requestID: input.requestID }))
+            ? Promise.resolve(answerLocally("question.v2.rejected", { sessionID: input.sessionID, requestID: input.requestID }))
             : v2.questions.reject(input, options),
       },
     }
