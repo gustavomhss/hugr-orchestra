@@ -3,7 +3,7 @@ import { base64Encode } from "@orchestra/core/util/encode"
 import { fixture, pageMessages } from "./session-timeline.fixture"
 import { trackPageErrors, expectNoSmokeErrors } from "../utils/errors"
 import { mockOrchestraServer } from "../utils/mock-server"
-import { APP_READY_TIMEOUT, expectAppVisible, expectSessionTitle } from "../utils/waits"
+import { expectAppVisible, expectSessionTitle } from "../utils/waits"
 
 const forbiddenText = ["Load details", "Show earlier steps"]
 
@@ -306,10 +306,9 @@ test.describe("smoke: session timeline", () => {
     await configureSmokePage(page, fixture.directory)
     await seedSessionTabs(page)
 
-    // Sessions open through their tabs. A reload aborts the previous document's bootstrap reads still in flight,
-    // and that document logs them as a bootstrap failure before it unloads.
-    await selectHomeProject(page, fixture.project.name)
-    await switchTitlebarSession(page, fixture.sourceID, fixture.expected.sourceTitle)
+    // One page load, then the target opens through its tab. A second load aborts the previous document's bootstrap
+    // reads still in flight, and that document logs them as a bootstrap failure before it unloads.
+    await navigateToSession(page, fixture.directory, fixture.sourceID, fixture.expected.sourceTitle)
     await expectSessionReady(page)
     await switchTitlebarSession(page, fixture.targetID, fixture.expected.targetTitle)
     const expectedPartIDs = targetPartIDs()
@@ -717,20 +716,6 @@ async function seedSessionTabs(page: Page) {
     },
     { dirBase64: base64Encode(fixture.directory), sourceID: fixture.sourceID, targetID: fixture.targetID },
   )
-}
-
-async function selectHomeProject(page: Page, projectName: string) {
-  await page.goto("/")
-  const profile = page.locator('[data-slot="orchestra-profile"]')
-  await expectAppVisible(profile)
-  await profile.click()
-  const project = page
-    .locator('[data-component="orchestra-profile-picker"]')
-    .getByRole("menuitemradio", { name: projectName, exact: true })
-  await expectAppVisible(project)
-  await project.click()
-  await expect(page.locator("#orchestra-profile-name")).toHaveText(projectName, { timeout: APP_READY_TIMEOUT })
-  await expect(page).toHaveURL(/\/$/)
 }
 
 async function navigateToSession(page: Page, directory: string, sessionId: string, expectedTitle: string) {
