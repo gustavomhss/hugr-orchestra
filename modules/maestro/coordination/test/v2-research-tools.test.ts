@@ -1,7 +1,9 @@
 import { expect, test } from "bun:test"
 import path from "node:path"
+import { eq } from "drizzle-orm"
 import { DateTime, Effect, Schema, type Scope } from "effect"
 import { AgentV2 } from "@orchestra/core/agent"
+import { CapabilityInvocation } from "@orchestra/core/capability/invocation"
 import { Config } from "@orchestra/core/config"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
@@ -58,16 +60,89 @@ const dispatch = (directory: string) =>
     return { info, allowance: admitted.allowance }
   })
 
-const settle = (sessionID: SessionSchema.ID, name: string, input: unknown, callID = `call_${name}`) =>
+// Settled as the runner settles a provider tool call: its tool part is persisted on the assistant first, and the call
+// runs under the invocation frame the runner issues for it.
+const settle = (sessionID: SessionSchema.ID, name: string, input: Record<string, unknown>, callID = `call_${name}`) =>
   Effect.gen(function* () {
     const registry = yield* ToolRegistry.Service
+    const location = yield* Location.Service
     const tools = yield* registry.materialize(allow)
-    return (yield* tools.settle({
-      sessionID,
-      agent: AgentV2.ID.make("jimmy"),
-      assistantMessageID: SessionMessage.ID.make("msg_research"),
-      call: { type: "tool-call", id: callID, name, input },
-    })).result
+    const agentID = AgentV2.ID.make("jimmy")
+    const assistantMessageID = SessionMessage.ID.make("msg_research")
+    yield* called(sessionID, assistantMessageID, { id: callID, name, input })
+    return (yield* CapabilityInvocation.withContext(
+      {
+        issuer: "core",
+        owner: {
+          projectID: location.project.id,
+          location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }),
+          sessionID,
+          agentID,
+        },
+        invocation: { sessionID, agentID, assistantMessageID, callID },
+        rootToolName: name,
+        effectiveRules: allow,
+        nativeDenyFloor: [],
+      },
+      tools.settle({ sessionID, agent: agentID, assistantMessageID, call: { type: "tool-call", id: callID, name, input } }),
+    ).pipe(Effect.orDie)).result
+  })
+
+/** Appends a running tool part for the call to the research assistant message, once per call id; the message moves to
+ * the calling Session when another Session last used it. */
+const called = (
+  sessionID: SessionSchema.ID,
+  assistantMessageID: SessionMessage.ID,
+  call: { readonly id: string; readonly name: string; readonly input: Record<string, unknown> },
+) =>
+  Effect.gen(function* () {
+    const database = yield* Database.Service
+    const time = DateTime.makeUnsafe(1_700_000_000_000)
+    const row = yield* database.db
+      .select()
+      .from(SessionMessageTable)
+      .where(eq(SessionMessageTable.id, assistantMessageID))
+      .get()
+      .pipe(Effect.orDie)
+    const existing = row?.session_id === sessionID
+      ? Schema.decodeUnknownSync(SessionMessage.Message)({ ...row.data, id: row.id, type: row.type })
+      : undefined
+    const content = existing?.type === "assistant" ? existing.content : []
+    if (content.some((part) => part.type === "tool" && part.id === call.id)) return
+    const message = Schema.encodeSync(SessionMessage.Message)(
+      SessionMessage.Assistant.make({
+        id: assistantMessageID,
+        type: "assistant",
+        agent: "jimmy",
+        model: { id: ModelV2.ID.make("model"), providerID: ProviderV2.ID.make("provider") },
+        content: [
+          ...content,
+          {
+            type: "tool",
+            id: call.id,
+            name: call.name,
+            state: { status: "running", input: call.input, content: [], structured: {} },
+            time: { created: time },
+          },
+        ],
+        time: { created: time },
+      }),
+    )
+    const data = Object.fromEntries(Object.entries(message).filter(([key]) => key !== "id" && key !== "type"))
+    yield* database.db
+      .insert(SessionMessageTable)
+      .values({
+        id: assistantMessageID,
+        session_id: sessionID,
+        type: message.type,
+        // Above the rows a test inserts itself.
+        seq: 1_000_000,
+        time_created: DateTime.toEpochMillis(time),
+        data,
+      })
+      .onConflictDoUpdate({ target: SessionMessageTable.id, set: { session_id: sessionID, data } })
+      .run()
+      .pipe(Effect.orDie)
   })
 
 const charged = (allowance: Parameters<typeof ResearchLedger.dispatch>[0], kind: string) =>

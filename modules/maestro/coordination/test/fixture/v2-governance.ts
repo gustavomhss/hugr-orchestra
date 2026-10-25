@@ -11,9 +11,12 @@ import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { EventV2 } from "@orchestra/core/event"
 import { FSUtil } from "@orchestra/core/fs-util"
+import { GitCli } from "@orchestra/core/git-cli"
 import { Location } from "@orchestra/core/location"
 import { Project } from "@orchestra/core/project"
 import { ProjectTable } from "@orchestra/core/project/sql"
+import { ResearchAllowance } from "@orchestra/core/research/allowance"
+import { ResearchRecords } from "@orchestra/core/research/records"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { SessionSchema, SessionStore, SessionV2 } from "@orchestra/core/session"
 import { SessionMessage } from "@orchestra/core/session/message"
@@ -120,6 +123,12 @@ export const toolsLayer = (directory: string, entries: Config.Entry[] = []) =>
       Database.node,
       FSUtil.node,
       EventV2.node,
+      // The research tools' own services, exported so a test can charge, read or query them directly.
+      Location.node,
+      Config.node,
+      GitCli.node,
+      ResearchAllowance.node,
+      ResearchRecords.node,
     ]),
     [
       [ToolSafety.node, WriteRootsV2.safetyNode],
