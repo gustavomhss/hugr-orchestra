@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import { ConfigV1 } from "@orchestra/core/v1/config/config"
+import { Config } from "@orchestra/core/config"
 import { TuiConfig } from "@orchestra/tui/config"
 import path from "node:path"
 import { Schema } from "effect"
@@ -70,7 +70,7 @@ export const tuiSchemaFile = path.resolve(import.meta.dir, "../../../schema/tui.
 export const themeSchemaFile = path.resolve(import.meta.dir, "../../../schema/theme.json")
 export const themeSchemaSource = path.resolve(import.meta.dir, "../../../packages/ui/src/theme/desktop-theme.schema.json")
 
-export const configSchemaText = () => JSON.stringify(generateEffect(ConfigV1.Info), null, 2)
+export const configSchemaText = () => JSON.stringify(generateEffect(Config.Info), null, 2)
 export const tuiSchemaText = () => JSON.stringify(generateEffect(TuiConfig.Info), null, 2)
 
 // schema/ is what editors fetch through the $schema URLs; the theme schema is hand-written in packages/ui and mirrored verbatim.

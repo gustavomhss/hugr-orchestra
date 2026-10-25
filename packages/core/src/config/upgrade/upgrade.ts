@@ -1,13 +1,13 @@
-export * as ConfigMigrateV1 from "./migrate"
+export * as ConfigUpgrade from "./upgrade"
 
 import { Schema } from "effect"
 import { ConfigMaestro } from "@orchestra/schema/config-maestro"
-import { ConfigV1 } from "./config"
-import { ConfigAgentV1 } from "./agent"
-import { ConfigMCPV1 } from "./mcp"
-import { ConfigPermissionV1 } from "./permission"
-import { ConfigProviderV1 } from "./provider"
-import { ConfigProviderOptionsV1 } from "./provider-options"
+import { ConfigUpgradeSource } from "./source"
+import { ConfigUpgradeAgent } from "./agent"
+import { ConfigUpgradeMCP } from "./mcp"
+import { ConfigUpgradePermission } from "./permission"
+import { ConfigUpgradeProvider } from "./provider"
+import { ConfigProviderOptions } from "../provider-options"
 import { Wildcard } from "../../util/wildcard"
 
 const keys = new Set([
@@ -29,19 +29,19 @@ const keys = new Set([
   "layout",
 ])
 
-export function isV1(input: unknown) {
+export function needsUpgrade(input: unknown) {
   if (typeof input !== "object" || input === null || Array.isArray(input)) return false
-  return Object.keys(input).some((key) => keys.has(key)) || ("mcp" in input && v1Mcp(input.mcp))
+  return Object.keys(input).some((key) => keys.has(key)) || ("mcp" in input && oldMcp(input.mcp))
 }
 
-// A V1 `mcp` maps server names to entries; V2 nests them under `servers`. A file whose only V1 key is `mcp`, such as
-// one `orchestra mcp add` created, is still V1.
-function v1Mcp(mcp: unknown) {
+// An old-format `mcp` maps server names to entries; the current format nests them under `servers`. A file whose only old key is `mcp`, such as
+// one `orchestra mcp add` created, still needs the upgrade.
+function oldMcp(mcp: unknown) {
   if (typeof mcp !== "object" || mcp === null) return false
   return Object.values(mcp).some((entry) => typeof entry === "object" && entry !== null && "type" in entry)
 }
 
-export function migrate(info: typeof ConfigV1.Info.Type) {
+export function migrate(info: typeof ConfigUpgradeSource.Info.Type) {
   return {
     $schema: info.$schema,
     shell: info.shell,
@@ -77,13 +77,13 @@ export function migrate(info: typeof ConfigV1.Info.Type) {
     experimental: policies(info),
     relay: info.relay,
     research: info.research,
-    // Encoded, so a decoded V1 value's undefined keys stay absent as the V2 document schema requires.
+    // Encoded, so a decoded old-format value's undefined keys stay absent as the current document schema requires.
     maestro: info.maestro && Schema.encodeSync(ConfigMaestro.Info)(info.maestro),
     providers: providers(info.provider),
   }
 }
 
-function policies(info: typeof ConfigV1.Info.Type) {
+function policies(info: typeof ConfigUpgradeSource.Info.Type) {
   const original = info.experimental?.policies ?? []
   // Legacy allowlists and disabled providers are restrictions, not authentication. Preserve existing
   // policy denials for allowed IDs, then place disabled IDs last so an allow cannot revive them.
@@ -108,8 +108,8 @@ function policies(info: typeof ConfigV1.Info.Type) {
   return statements.length ? { policies: statements } : undefined
 }
 
-function permissions(info?: ConfigPermissionV1.Info, tools?: Readonly<Record<string, boolean>>) {
-  const rules: Array<{ action: string; resource: string; effect: ConfigPermissionV1.Action }> = Object.entries(
+function permissions(info?: ConfigUpgradePermission.Info, tools?: Readonly<Record<string, boolean>>) {
+  const rules: Array<{ action: string; resource: string; effect: ConfigUpgradePermission.Action }> = Object.entries(
     tools ?? {},
   ).map(([action, enabled]) => ({
     action: normalizeAction(action),
@@ -131,7 +131,7 @@ function normalizeAction(action: string) {
   return action === "write" || action === "patch" ? "edit" : action
 }
 
-function agents(info: typeof ConfigV1.Info.Type) {
+function agents(info: typeof ConfigUpgradeSource.Info.Type) {
   const entries = [
     ...Object.entries(info.agent ?? {}),
     ...Object.entries(info.mode ?? {}).map(([name, agent]) => [name, { ...agent, mode: "primary" as const }] as const),
@@ -140,7 +140,7 @@ function agents(info: typeof ConfigV1.Info.Type) {
   return Object.fromEntries(entries.flatMap(([name, agent]) => (agent ? [[name, migrateAgent(agent)]] : [])))
 }
 
-export function migrateAgent(info: ConfigAgentV1.Info) {
+export function migrateAgent(info: ConfigUpgradeAgent.Info) {
   const body = {
     ...info.options,
     ...(info.temperature === undefined ? {} : { temperature: info.temperature }),
@@ -163,7 +163,7 @@ export function migrateAgent(info: ConfigAgentV1.Info) {
   }
 }
 
-function mcp(info: typeof ConfigV1.Info.Type) {
+function mcp(info: typeof ConfigUpgradeSource.Info.Type) {
   const servers = Object.fromEntries(
     Object.entries(info.mcp ?? {}).flatMap(([name, server]) =>
       "type" in server ? [[name, migrateMcp(server)] as const] : [],
@@ -174,7 +174,7 @@ function mcp(info: typeof ConfigV1.Info.Type) {
   return { timeout: timeout === undefined ? undefined : { request: timeout }, servers }
 }
 
-function migrateMcp(info: ConfigMCPV1.Info) {
+function migrateMcp(info: ConfigUpgradeMCP.Info) {
   const disabled = info.enabled === undefined ? undefined : !info.enabled
   if (info.type === "local")
     return {
@@ -201,13 +201,13 @@ function migrateMcp(info: ConfigMCPV1.Info) {
   }
 }
 
-function providers(info?: Readonly<Record<string, ConfigProviderV1.Info>>) {
+function providers(info?: Readonly<Record<string, ConfigUpgradeProvider.Info>>) {
   if (!info) return undefined
   return Object.fromEntries(Object.entries(info).map(([name, provider]) => [name, migrateProvider(provider)]))
 }
 
-function migrateProvider(info: ConfigProviderV1.Info) {
-  const lowerer = ConfigProviderOptionsV1.get(info.npm)
+function migrateProvider(info: ConfigUpgradeProvider.Info) {
+  const lowerer = ConfigProviderOptions.get(info.npm)
   const options = lowerer.provider(info.options ?? {})
   const url = info.api ?? options.url
   return {
@@ -228,9 +228,9 @@ function migrateProvider(info: ConfigProviderV1.Info) {
   }
 }
 
-function migrateModel(info: typeof ConfigProviderV1.Model.Type, packageName?: string) {
+function migrateModel(info: typeof ConfigUpgradeProvider.Model.Type, packageName?: string) {
   const packageID = info.provider?.npm ?? packageName
-  const lowerer = ConfigProviderOptionsV1.get(packageID)
+  const lowerer = ConfigProviderOptions.get(packageID)
   const request = info.options && lowerer.request(info.options)
   const costs = info.cost && [
     {

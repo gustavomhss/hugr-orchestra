@@ -30,7 +30,7 @@ import sessionMetadataMigration from "@orchestra/core/database/migration/2026051
 import type { SqlClient as SqlClientService } from "effect/unstable/sql/SqlClient"
 import { Database } from "@orchestra/core/database/database"
 import { SessionProjector } from "@orchestra/core/session/projector"
-import { SessionV1 } from "@orchestra/core/v1/session"
+import { SessionV1 } from "@orchestra/schema/session-v1"
 import { tmpdir } from "./fixture/tmpdir"
 import { rethrow } from "./lib/rejection"
 

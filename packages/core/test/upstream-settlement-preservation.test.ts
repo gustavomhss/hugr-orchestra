@@ -19,7 +19,7 @@ import { MessageTable, PartTable, SessionMessageTable, SessionTable } from "../s
 import { Location } from "../src/location"
 import { WorkspaceV2 } from "../src/workspace"
 import { WorkspaceTable } from "../src/control-plane/workspace.sql"
-import { SessionV1 } from "../src/v1/session"
+import { SessionV1 } from "@orchestra/schema/session-v1"
 import { Project } from "../src/project"
 import { ProjectTable } from "../src/project/sql"
 import { AbsolutePath } from "../src/schema"

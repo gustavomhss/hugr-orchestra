@@ -1,5 +1,6 @@
-import type { Project, Model, Provider, Permission, Config as SDKConfig } from "./compat/legacy-v1.js"
-import type { Provider as ProviderV2, Model as ModelV2, Auth } from "./compat/legacy-v2.js"
+import type { Permission } from "@orchestra/schema/permission"
+import type { Project } from "@orchestra/schema/project"
+import type { Provider, Model, Auth, Config as SDKConfig } from "./compat/legacy-v2.js"
 import type { Event, UserMessage, Message, Part } from "./compat/schema.js"
 
 import type { BunShell } from "./shell.js"
@@ -49,7 +50,7 @@ export interface PluginClient {}
 
 export type PluginInput = {
   client: PluginClient
-  project: Project
+  project: Project.Info
   directory: string
   worktree: string
   experimental_workspace: {
@@ -207,7 +208,7 @@ export type ProviderHookContext = {
 
 export type ProviderHook = {
   id: string
-  models?: (provider: ProviderV2, ctx: ProviderHookContext) => Promise<Record<string, ModelV2>>
+  models?: (provider: Provider, ctx: ProviderHookContext) => Promise<Record<string, Model>>
 }
 
 /** @deprecated Use AuthOAuthResult instead. */
@@ -252,7 +253,7 @@ export interface Hooks {
     input: { sessionID: string; agent: string; model: Model; provider: ProviderContext; message: UserMessage },
     output: { headers: Record<string, string> },
   ) => Promise<void>
-  "permission.ask"?: (input: Permission, output: { status: "ask" | "deny" | "allow" }) => Promise<void>
+  "permission.ask"?: (input: Permission.Request, output: { status: "ask" | "deny" | "allow" }) => Promise<void>
   "command.execute.before"?: (
     input: { command: string; sessionID: string; arguments: string },
     output: { parts: Part[] },
@@ -288,7 +289,7 @@ export interface Hooks {
       system: string[]
     },
   ) => Promise<void>
-  "experimental.provider.small_model"?: (input: { provider: ProviderV2 }, output: { model?: ModelV2 }) => Promise<void>
+  "experimental.provider.small_model"?: (input: { provider: Provider }, output: { model?: Model }) => Promise<void>
   /**
    * Called before session compaction starts. Allows plugins to customize
    * the compaction prompt.

@@ -1,4 +1,4 @@
-export * as ConfigPermissionV1 from "./permission"
+export * as ConfigUpgradePermission from "./permission"
 
 import { Schema, SchemaGetter } from "effect"
 

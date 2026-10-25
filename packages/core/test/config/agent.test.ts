@@ -11,7 +11,7 @@ import { FSUtil } from "@orchestra/core/fs-util"
 import { Global } from "@orchestra/core/global"
 import { PermissionV2 } from "@orchestra/core/permission"
 import { AbsolutePath } from "@orchestra/core/schema"
-import { ConfigMigrateV1 } from "@orchestra/core/v1/config/migrate"
+import { ConfigUpgrade } from "@orchestra/core/config/upgrade/upgrade"
 import { tmpdir } from "../fixture/tmpdir"
 import { testEffect } from "../lib/effect"
 import { agentHost, host } from "../plugin/host"
@@ -223,8 +223,8 @@ describe("ConfigAgentPlugin.Plugin", () => {
 
       expect((yield* agents.get(AgentV2.ID.make("reviewer")))?.name).toBe("Ana")
       expect((yield* agents.get(AgentV2.defaultID))?.name).toBeUndefined()
-      expect(ConfigMigrateV1.migrateAgent({ name: "Ana" }).name).toBe("Ana")
-      expect(ConfigMigrateV1.migrateAgent({}).name).toBeUndefined()
+      expect(ConfigUpgrade.migrateAgent({ name: "Ana" }).name).toBe("Ana")
+      expect(ConfigUpgrade.migrateAgent({}).name).toBeUndefined()
     }),
   )
 
@@ -422,7 +422,7 @@ function loadHomePermissions(home: string) {
           new Config.Document({
             type: "document",
             info: decode(
-              ConfigMigrateV1.migrate({
+              ConfigUpgrade.migrate({
                 permission: {
                   external_directory: {
                     "~/p/**": "allow",

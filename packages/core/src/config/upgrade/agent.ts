@@ -1,8 +1,8 @@
-export * as ConfigAgentV1 from "./agent"
+export * as ConfigUpgradeAgent from "./agent"
 
 import { Schema, SchemaGetter } from "effect"
 import { PositiveInt } from "../../schema"
-import { ConfigPermissionV1 } from "./permission"
+import { ConfigUpgradePermission } from "./permission"
 
 const Color = Schema.Union([
   Schema.String.check(Schema.isPattern(/^#[0-9a-fA-F]{6}$/)),
@@ -35,7 +35,7 @@ const AgentSchema = Schema.StructWithRest(
       description: "Maximum number of agentic iterations before forcing text-only response",
     }),
     maxSteps: Schema.optional(PositiveInt).annotate({ description: "@deprecated Use 'steps' field instead." }),
-    permission: Schema.optional(ConfigPermissionV1.Info),
+    permission: Schema.optional(ConfigUpgradePermission.Info),
     engine: Schema.optional(Schema.Literals(["orchestra", "claude-code"])).annotate({
       description: "Harness that runs the agent's turns: Orchestra's own loop (default) or Claude Code",
     }),
@@ -69,7 +69,7 @@ const normalize = (agent: Schema.Schema.Type<typeof AgentSchema>): Schema.Schema
     if (!KNOWN_KEYS.has(key)) options[key] = value
   }
 
-  const permission: ConfigPermissionV1.Info = {}
+  const permission: ConfigUpgradePermission.Info = {}
   for (const [tool, enabled] of Object.entries(agent.tools ?? {})) {
     const action = enabled ? "allow" : "deny"
     if (tool === "write" || tool === "edit" || tool === "patch") {

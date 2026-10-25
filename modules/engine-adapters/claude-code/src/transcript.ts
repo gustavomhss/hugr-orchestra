@@ -1,6 +1,6 @@
 export * as ClaudeCodeTranscript from "./transcript"
 
-import type { SessionV1 } from "./compat/core-v1-session"
+import type { SessionV1 } from "@orchestra/schema/session-v1"
 
 export const record = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value)

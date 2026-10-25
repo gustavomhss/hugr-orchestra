@@ -22,6 +22,7 @@
   "dependencies": {
     "@orchestra/core": "workspace:*",
     "@orchestra/llm": "workspace:*",
+    "@orchestra/schema": "workspace:*",
     "effect": "catalog:",
     "jsonc-parser": "3.3.1"
   },

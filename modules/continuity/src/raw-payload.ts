@@ -1,7 +1,7 @@
 export * as RawPayload from "./raw-payload"
 
 import { Option, Schema } from "effect"
-import type { SessionV1 } from "./compat/core-v1-session"
+import type { SessionV1 } from "@orchestra/schema/session-v1"
 import { userText } from "./alias"
 import { getNodeValue, parseTree } from "jsonc-parser"
 import type { Node } from "jsonc-parser"

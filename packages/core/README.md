@@ -81,7 +81,7 @@ files directly.
 - Status: `canonical`
 - Owner: core platform maintainer
 - Public entry: explicit `exports` in package.json
-- Legacy and compatibility: `packages/core/src/v1` (legacy, successor the V2 Session core in packages/core); `packages/core/src/github-copilot` (vendored)
+- Legacy and compatibility: `packages/core/src/github-copilot` (vendored)
 - Enforced by `bun run check:boundaries`; exceptions in `script/boundary-ledger.json`.
 
 ### Domains
@@ -111,5 +111,4 @@ files directly.
 - `scheduled-task` — platform — `src/scheduled-task/`, `src/scheduled-task.ts` — packages/core
 - `actions` — platform — `src/actions/`, `src/actions.ts` — packages/core
 - `util` — platform — `src/util/`, `src/image/`, `src/image.ts`, `src/npm.ts`, `src/npm-config.ts` — packages/core
-- `v1` — compat — `src/v1/` — packages/core
 <!-- module-contract:end -->

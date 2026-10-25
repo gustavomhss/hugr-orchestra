@@ -1,9 +1,10 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
 import type { SessionID } from "@orchestra/schema/session-id"
-import type { SessionV1 } from "./session"
-import { SessionTable } from "../session/sql"
+import type { SessionV1 } from "@orchestra/schema/session-v1"
+import { SessionTable } from "./sql"
 
-// Creation provenance survives ordinary message edits and removal; it is not an inbox.
+// Nothing reads or writes this table any more. It stays declared because existing databases hold it and the Drizzle
+// snapshot must keep matching them: dropping it would need a migration that deletes stored rows.
 export const PromptAdmissionTable = sqliteTable("session_v1_prompt_admission", {
   id: text().$type<SessionV1.MessageID>().primaryKey(),
   session_id: text()

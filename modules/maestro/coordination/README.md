@@ -14,7 +14,7 @@ Exports are explicit keys derived from the source wildcard in the module registr
 
 ## Dependencies and boundaries
 
-Layer `product`: it may import foundation, native, library, contract, extension-api, module, platform and product packages, never composition or app packages. V1 core types are reached only through `src/compat/core-v1-session.ts`.
+Layer `product`: it may import foundation, native, library, contract, extension-api, module, platform and product packages, never composition or app packages.
 
 ## Assets, schemas and generated files
 
