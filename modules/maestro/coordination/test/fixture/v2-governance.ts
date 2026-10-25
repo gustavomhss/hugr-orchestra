@@ -21,6 +21,7 @@ import { SessionInputTable, SessionTable } from "@orchestra/core/session/sql"
 import { SkillV2 } from "@orchestra/core/skill"
 import { TaskGovernance } from "@orchestra/core/tool/task-governance"
 import { ToolSafety } from "@orchestra/core/tool-safety"
+import { ReadTool } from "@orchestra/core/tool/read"
 import { AppProcess } from "@orchestra/core/process"
 import { Global } from "@orchestra/core/global"
 import { SystemContextRegistry } from "@orchestra/core/system-context"
@@ -102,8 +103,8 @@ export const researchLayer = (directory: string) =>
   )
 
 /**
- * The Location's Maestro tools, governance and research inquiry context source over one in-memory database, placed at
- * `directory`, as the runner sees them; Config holds only `entries`.
+ * The Location's Maestro tools, governance, write-roots ToolSafety and research inquiry context source over one
+ * in-memory database, placed at `directory`, as the runner sees them; Config holds only `entries`.
  */
 export const toolsLayer = (directory: string, entries: Config.Entry[] = []) =>
   AppNodeBuilder.build(
@@ -113,6 +114,7 @@ export const toolsLayer = (directory: string, entries: Config.Entry[] = []) =>
       MaestroResearchInquiryV2.node,
       SystemContextRegistry.node,
       ToolRegistry.node,
+      ReadTool.node,
       AgentV2.node,
       SessionStore.node,
       Database.node,
@@ -120,6 +122,7 @@ export const toolsLayer = (directory: string, entries: Config.Entry[] = []) =>
       EventV2.node,
     ]),
     [
+      [ToolSafety.node, WriteRootsV2.safetyNode],
       ...placed(directory),
       [Global.node, Layer.unwrap(worktree.pipe(Effect.map((data) => Global.layerWith({ data }))))],
       [ToolOutputStore.node, ToolOutputStore.nodeWithoutConfig],

@@ -10,6 +10,7 @@ import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { ResearchAllowance } from "@orchestra/core/research/allowance"
 import { ResearchLedger } from "@orchestra/core/research/ledger"
+import { ResearchRecords } from "@orchestra/core/research/records"
 import { ResearchToolkit } from "@orchestra/core/research-toolkit/index"
 import { SessionSchema, SessionStore } from "@orchestra/core/session"
 import { SessionMessage } from "@orchestra/core/session/message"
@@ -196,5 +197,37 @@ test("research_view returns a source page still in context as its ref, and a pru
       yield* shown(2, false)
       const again = JSON.parse(String((yield* settle(bound.info.id, "research_view", input, "call_view_2")).value))
       expect(again).toMatchObject({ ref: input.ref, unchanged: true })
+    }),
+  ))
+
+test("a retained tool's output is captured as its returned representation and settles one attempt receipt", () =>
+  run((directory) =>
+    Effect.gen(function* () {
+      yield* Effect.promise(() => Bun.write(path.join(directory, "notes.txt"), "alpha\nbeta\n"))
+      const bound = yield* dispatch(directory)
+      const read = String((yield* settle(bound.info.id, "read", { path: "notes.txt" }, "call_read")).value)
+      expect(read).toContain("alpha")
+      expect(read).toContain("Retained output evidence: ")
+      expect(read).toContain("This is the native tool's returned representation")
+      const records = yield* ResearchRecords.Service
+      const attempts = yield* records.view(bound.allowance.binding, { action: "attempts" })
+      expect("attempts" in attempts ? attempts.attempts : []).toMatchObject([
+        { outcome: "captured", stage: "representation", reason: "complete", returned: true },
+      ])
+    }),
+  ))
+
+test("a retried acquisition replays its retained source instead of reacquiring it", () =>
+  run((directory) =>
+    Effect.gen(function* () {
+      yield* Effect.promise(() => Bun.write(path.join(directory, "notes.txt"), "alpha\nbeta\n"))
+      const bound = yield* dispatch(directory)
+      const input = { kind: "file", path: "notes.txt" }
+      expect(String((yield* settle(bound.info.id, "research_capture", input, "call_retry")).value)).not.toContain("no live source")
+      yield* Effect.promise(() => Bun.write(path.join(directory, "notes.txt"), "gamma\n"))
+      const replay = String((yield* settle(bound.info.id, "research_capture", input, "call_retry")).value)
+      expect(replay).toContain("alpha\nbeta\n")
+      expect(replay).toContain("Historical retained representation; no live source was reacquired.")
+      expect(replay).not.toContain("gamma")
     }),
   ))
