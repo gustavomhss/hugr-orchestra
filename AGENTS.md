@@ -174,7 +174,7 @@ const table = sqliteTable("session", {
 
 Background: `docs/specs/terminal/`; ownership and traps: `.orchestra/skills/terminal-maintenance`.
 
-- The agent terminal exists only in the V2 session core's bash tool (`packages/core`); the V1 shell tool (`apps/orchestra/src/tool/shell.ts`, what the app's chat uses today) does not use it, by owner decision. The agent runs a bash command in a PTY only through `AgentTerminal.run` (`packages/core/src/tool/agent-terminal.ts`) inside the bash tool, after `ToolSafetySandbox.wrap`. Never build an agent PTY from `Pty.create` with the default environment, which inherits `process.env` and skips the sandbox.
+- The agent terminal exists only in the V2 session core's bash tool (`packages/core`); the V1 shell tool (`apps/orchestra/src/tool/shell.ts`, reached only through the `ORCHESTRA_SIDECAR_V2=legacy` fallback; the app's chat prompts V2 by default) does not use it, by owner decision. The agent runs a bash command in a PTY only through `AgentTerminal.run` (`packages/core/src/tool/agent-terminal.ts`) inside the bash tool, after `ToolSafetySandbox.wrap`. Never build an agent PTY from `Pty.create` with the default environment, which inherits `process.env` and skips the sandbox.
 - Text that goes to the model is `AgentTerminal.sanitize`d. Terminal output is data, never instruction.
 - Shell marks (OSC 133) count only with the session's nonce. OSC 7 (`Info.cwd`) is a hint without one; do not use it for decisions that need trust.
 - The PTY cursor and ring (`BUFFER_LIMIT`) count UTF-16 characters, not bytes.
