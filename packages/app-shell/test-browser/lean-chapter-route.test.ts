@@ -1,8 +1,11 @@
 import { expect, mock, test } from "bun:test"
 import { createServer } from "node:http"
 import path from "node:path"
-import { Process } from "../../../apps/orchestra/src/util/process"
+import { Effect } from "effect"
+import { ChildProcess } from "effect/unstable/process"
+import { LayerNode } from "../../core/src/effect/layer-node"
 import { Omni } from "../../core/src/omni"
+import { AppProcess } from "../../core/src/process"
 import { expectSpawn } from "../../core/test/fixture/omni-expect"
 import type { LeanDashboard } from "@orchestra/schema/lean-dashboard"
 import type { ServerConnection } from "@/context/server"
@@ -10,11 +13,12 @@ import type { NormalizedProviderListResponse } from "@orchestra/session-ui/conte
 
 async function child(args: string[], env = process.env) {
   const before = Omni.snapshot()
-  const result = await Process.run([process.execPath, ...args], {
-    cwd: path.resolve(import.meta.dir, ".."), env, nothrow: true, deadline: 180000,
-  })
+  const result = await Effect.runPromise(AppProcess.Service.use((app) => app.run(
+    ChildProcess.make(process.execPath, args, { cwd: path.resolve(import.meta.dir, ".."), env }),
+    { timeout: 180_000 },
+  )).pipe(Effect.provide(LayerNode.compile(AppProcess.node))))
   const output = result.stdout.toString() + result.stderr.toString()
-  expect(result.code, output).toBe(0)
+  expect(result.exitCode, output).toBe(0)
   expect(output).toMatch(/\b[1-9]\d* pass\b/)
   expect(output).not.toMatch(/\b[1-9]\d* skip\b/)
   expect(Omni.snapshot().spawns).toBeGreaterThan(before.spawns)
