@@ -106,6 +106,7 @@ const withTool = <A, E, R>(
   directory: string,
   body: (registry: ToolRegistry.Interface) => Effect.Effect<A, E, R>,
   processLayer: Layer.Layer<AppProcess.Service> = appProcess,
+  ptyLayer?: Layer.Layer<Pty.Service>,
 ) => {
   const activeLocation = Layer.succeed(
     Location.Service,
@@ -123,6 +124,7 @@ const withTool = <A, E, R>(
           [AppProcess.node, processLayer],
           [Config.node, config],
           [ToolOutputStore.node, ToolOutputStore.nodeWithoutConfig],
+          ...(ptyLayer ? [[Pty.node, ptyLayer] as const] : []),
         ],
       ),
     ),
@@ -299,9 +301,7 @@ describe("BashTool", () => {
         } as unknown as Pty.Interface)
         const previous = process.env.ORCHESTRA_AGENT_TERMINAL
         const exec = () =>
-          withTool(tmp.path, (registry) => settleTool(registry, call({ command: "echo hi" }))).pipe(
-            Effect.provideService(Pty.Service, fakePty),
-          )
+          withTool(tmp.path, (registry) => settleTool(registry, call({ command: "echo hi" })), appProcess, Layer.succeed(Pty.Service, fakePty))
         return Effect.gen(function* () {
           delete process.env.ORCHESTRA_AGENT_TERMINAL
           yield* exec()

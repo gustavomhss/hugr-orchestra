@@ -119,7 +119,7 @@ const layer = Layer.effectDiscard(
     const fs = yield* FSUtil.Service
     const appProcess = yield* AppProcess.Service
     const sessionProcess = yield* Effect.serviceOption(SessionProcess.Service)
-    const pty = yield* Effect.serviceOption(Pty.Service)
+    const pty = yield* Pty.Service
     const config = yield* Config.Service
     const permission = yield* PermissionV2.Service
     const location = yield* Location.Service
@@ -238,8 +238,8 @@ const layer = Layer.effectDiscard(
                 const inspector = OutputInspector.make()
                 const wrapped = yield* ToolSafetySandbox.wrap(command, { prepareParents: true }).pipe(Effect.provideService(FSUtil.Service, fs))
                 // Same confinement and inspection, but the command runs in a terminal tab the owner can see and answer.
-                if (Option.isSome(pty) && wrapped._tag === "StandardCommand" && AgentTerminal.enabled(wrapped)) {
-                  const ran = yield* AgentTerminal.run(pty.value, {
+                if (wrapped._tag === "StandardCommand" && AgentTerminal.enabled(wrapped)) {
+                  const ran = yield* AgentTerminal.run(pty, {
                     command: wrapped,
                     title: input.command,
                     timeout,
@@ -309,5 +309,5 @@ const layer = Layer.effectDiscard(
 export const node = makeLocationNode({
   name: "tool/bash",
   layer,
-  deps: [ToolRegistry.node, LocationMutation.node, Location.node, FSUtil.node, AppProcess.node, Config.node, PermissionV2.node],
+  deps: [ToolRegistry.node, LocationMutation.node, Location.node, FSUtil.node, AppProcess.node, Config.node, PermissionV2.node, Pty.node],
 })
