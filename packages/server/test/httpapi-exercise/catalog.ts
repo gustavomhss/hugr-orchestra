@@ -34,24 +34,31 @@ export const catalogScenarios: Scenario[] = [
   // No Claude Code binary is signed in or reachable in the isolated fixtures: the status reads signed out and a
   // sign-in is refused with the declared error, without starting a process.
   http.protected
-    .get("/api/claude-code/account", "v2.claudeCode.account")
+    .get("/api/provider/claude-code/account", "v2.provider.claudeCode.account")
     .global()
     .json(200, (body) => {
       object(body)
       check(typeof body.signedIn === "boolean", "account must report whether Claude Code is signed in")
     }),
   http.protected
-    .post("/api/claude-code/login", "v2.claudeCode.login")
+    .post("/api/provider/claude-code/login", "v2.provider.claudeCode.login")
     .global()
-    .at(() => ({ path: "/api/claude-code/login" }))
+    .at(() => ({ path: "/api/provider/claude-code/login" }))
     .status(400),
   http.protected
-    .post("/api/claude-code/login/code", "v2.claudeCode.loginCode")
+    .post("/api/provider/claude-code/login/code", "v2.provider.claudeCode.loginCode")
     .global()
-    .at(() => ({ path: "/api/claude-code/login/code", body: { code: "abc#state" } }))
+    .at(() => ({ path: "/api/provider/claude-code/login/code", body: { code: "abc#state" } }))
     .json(200, (body) => {
       check(body === false, "a code with no running sign-in must be refused")
     }),
+  http.protected.get("/api/formatter", "v2.formatter.status").json(200, locationData(array)),
+  // The test server is not an installed release, so the upgrade is refused before any package manager runs.
+  http.protected
+    .post("/api/installation/upgrade", "v2.installation.upgrade")
+    .global()
+    .at(() => ({ path: "/api/installation/upgrade", body: { target: "0.0.0" } }))
+    .status(400, undefined, "status"),
   http.protected.get("/api/command", "v2.command.list").json(200, locationData(array)),
   http.protected.get("/api/project", "v2.project.list").json(200, array),
   // Writes the isolated global config document and reloads open locations.

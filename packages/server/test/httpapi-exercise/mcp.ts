@@ -21,6 +21,10 @@ export const mcpScenarios: Scenario[] = [
   http.protected.get("/api/mcp/entries", "v2.mcp.entries").json(200, locationData(object)),
   http.protected.get("/api/mcp/tools", "v2.mcp.tools").json(200, locationData(object)),
   http.protected
+    .get("/api/mcp/{server}/debug", "v2.mcp.debug")
+    .at((ctx) => ({ path: route("/api/mcp/{server}/debug", { server: "httpapi-missing" }), headers: ctx.headers() }))
+    .json(404, object, "status"),
+  http.protected
     .post("/api/mcp/{server}/auth", "v2.mcp.auth.start")
     .at((ctx) => ({ path: route("/api/mcp/{server}/auth", { server: "httpapi-missing" }), headers: ctx.headers() }))
     .json(404, object, "status"),

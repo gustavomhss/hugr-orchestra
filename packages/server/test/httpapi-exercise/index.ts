@@ -541,6 +541,17 @@ export const scenarios: Scenario[] = [
     }))
     .json(404, object, "status"),
   http.protected
+    .post("/api/session/{sessionID}/background", "v2.session.background")
+    .seeded((ctx) => ctx.session({ title: "Background owner" }))
+    .at((ctx) => ({
+      path: route("/api/session/{sessionID}/background", { sessionID: ctx.state.id }),
+      headers: ctx.headers(),
+    }))
+    .json(200, (body) => {
+      object(body)
+      check(body.data === 0, "a session with no foreground subagents moves nothing to the background")
+    }),
+  http.protected
     .post("/api/session/{sessionID}/prompt", "v2.session.prompt.invalid")
     .seeded((ctx) => ctx.session({ title: "Invalid prompt owner" }))
     .at((ctx) => ({

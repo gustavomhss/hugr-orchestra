@@ -18,6 +18,14 @@ export const integrationScenarios: Scenario[] = [
     }))
     .json(200, object),
   http.protected
+    .delete("/api/integration/{integrationID}/connection", "v2.integration.disconnect")
+    .mutating()
+    .at((ctx) => ({
+      path: route("/api/integration/{integrationID}/connection", { integrationID: "missing" }),
+      headers: ctx.headers(),
+    }))
+    .status(204, undefined, "status"),
+  http.protected
     .post("/api/integration/{integrationID}/connect/key", "v2.integration.connect.key")
     .at((ctx) => ({
       path: route("/api/integration/{integrationID}/connect/key", { integrationID: "missing" }),
