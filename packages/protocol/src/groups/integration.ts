@@ -2,7 +2,7 @@ import { Integration } from "@orchestra/schema/integration"
 import { Location } from "@orchestra/schema/location"
 import { Schema } from "effect"
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/unstable/httpapi"
-import { InvalidRequestError } from "../errors"
+import { ConflictError, InvalidRequestError } from "../errors"
 import { LocationQuery, locationQueryOpenApi } from "./location"
 
 const Inputs = Schema.Record(Schema.String, Schema.String)
@@ -34,6 +34,23 @@ export const IntegrationGroup = HttpApiGroup.make("server.integration")
           identifier: "v2.integration.get",
           summary: "Get integration",
           description: "Retrieve one integration and its authentication methods.",
+        }),
+      ),
+  )
+  .add(
+    HttpApiEndpoint.delete("integration.disconnect", "/api/integration/:integrationID/connection", {
+      params: { integrationID: Integration.ID },
+      query: LocationQuery,
+      success: HttpApiSchema.NoContent,
+      error: ConflictError,
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        OpenApi.annotations({
+          identifier: "v2.integration.disconnect",
+          summary: "Disconnect integration",
+          description:
+            "Remove every stored credential of one integration, such as a provider's saved key or sign-in. Environment variables are not stored and stay.",
         }),
       ),
   )

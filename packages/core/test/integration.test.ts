@@ -201,6 +201,23 @@ describe("Integration", () => {
     }),
   )
 
+  it.effect("disconnect removes every stored credential of one integration and keeps the others", () =>
+    Effect.gen(function* () {
+      const integrations = yield* Integration.Service
+      const credentials = yield* Credential.Service
+      const target = Integration.ID.make("disconnect-target")
+      const other = Integration.ID.make("disconnect-other")
+      yield* integrations.connection.key({ integrationID: target, key: "a", label: "Work" })
+      yield* integrations.connection.key({ integrationID: target, key: "b", label: "Personal" })
+      yield* integrations.connection.key({ integrationID: other, key: "c" })
+
+      expect(yield* integrations.connection.disconnect(target)).toBe(2)
+      expect(yield* credentials.list(target)).toEqual([])
+      expect(yield* credentials.list(other)).toHaveLength(1)
+      expect(yield* integrations.connection.disconnect(target)).toBe(0)
+    }),
+  )
+
   it.effect("completes code OAuth once and stores the credential", () =>
     Effect.gen(function* () {
       const integrations = yield* Integration.Service

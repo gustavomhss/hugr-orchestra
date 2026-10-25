@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { CLAUDE_MODE_PATH, enableClaudeMode, setMaestroEngine } from "../claude-mode-entry"
+import { readAccount, sendCode, startSignIn, type ClaudeProviders } from "./claude-mode-account"
 
 const server = "http://127.0.0.1:4096" as Parameters<typeof enableClaudeMode>[0]["server"]
 
@@ -55,4 +56,74 @@ test("a refused engine write leaves the dialog open and does not navigate", asyn
   const { calls, options } = fixture({ fails: true })
   await expect(enableClaudeMode(options)).rejects.toThrow("write refused")
   expect(calls).toEqual([["updateConfig", { agent: { maestro: { engine: "claude-code" } } }]])
+})
+
+function providers(input: Partial<ClaudeProviders> = {}): ClaudeProviders {
+  return {
+    claudeCodeAccount: async () => ({ signedIn: false }),
+    claudeCodeLogin: async () => ({ url: "https://claude.com/cai/oauth/authorize?state=s" }),
+    claudeCodeLoginCode: async () => true,
+    ...input,
+  }
+}
+
+test("the account reads the server's sign-in status and treats an unreachable server as unknown", async () => {
+  expect(
+    await readAccount(
+      providers({ claudeCodeAccount: async () => ({ signedIn: true, email: "owner@example.com", subscription: "max" }) }),
+    ),
+  ).toEqual({ signedIn: true, email: "owner@example.com", subscription: "max" })
+  expect(
+    await readAccount(
+      providers({
+        claudeCodeAccount: async () => {
+          throw new Error("offline")
+        },
+      }),
+    ),
+  ).toBeUndefined()
+})
+
+test("starting a sign-in returns the fallback URL, or the server's own failure", async () => {
+  expect(await startSignIn(providers())).toEqual({ url: "https://claude.com/cai/oauth/authorize?state=s" })
+  const refusal = { name: "ServiceUnavailableError", message: "Claude Code is not available on this server" }
+  expect(
+    await startSignIn(
+      providers({
+        claudeCodeLogin: async () => {
+          throw refusal
+        },
+      }),
+    ),
+  ).toEqual({ error: refusal })
+})
+
+test("a pasted code reaches the running sign-in, and a refused one is a failure", async () => {
+  const sent: unknown[] = []
+  expect(
+    await sendCode(
+      providers({
+        claudeCodeLoginCode: async (input) => {
+          sent.push(input)
+          return true
+        },
+      }),
+      "good#state",
+    ),
+  ).toEqual({ delivered: true })
+  expect(sent).toEqual([{ code: "good#state" }])
+  // No sign-in is running on the server: the code went nowhere, so the form must not clear as if it had.
+  expect(await sendCode(providers({ claudeCodeLoginCode: async () => false }), "good#state")).toEqual({
+    error: undefined,
+  })
+  expect(
+    await sendCode(
+      providers({
+        claudeCodeLoginCode: async () => {
+          throw new Error("offline")
+        },
+      }),
+      "x",
+    ),
+  ).toMatchObject({ error: expect.any(Error) })
 })

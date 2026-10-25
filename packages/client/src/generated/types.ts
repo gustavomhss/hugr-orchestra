@@ -2228,6 +2228,18 @@ export type ProvidersGetOutput = {
   }
 }
 
+export type ProvidersClaudeCodeAccountOutput = {
+  readonly signedIn: boolean
+  readonly email?: string | undefined
+  readonly subscription?: string | undefined
+}
+
+export type ProvidersClaudeCodeLoginOutput = { readonly url: string }
+
+export type ProvidersClaudeCodeLoginCodeInput = { readonly code: { readonly code: string }["code"] }
+
+export type ProvidersClaudeCodeLoginCodeOutput = boolean
+
 export type IntegrationsListInput = {
   readonly location?: {
     readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
@@ -2330,6 +2342,15 @@ export type IntegrationsGetOutput = {
     >
   } | null
 }
+
+export type IntegrationsDisconnectInput = {
+  readonly integrationID: { readonly integrationID: string }["integrationID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type IntegrationsDisconnectOutput = void
 
 export type IntegrationsConnectKeyInput = {
   readonly integrationID: { readonly integrationID: string }["integrationID"]
@@ -2992,6 +3013,51 @@ export type McpResourcesOutput = {
       readonly mimeType?: string | null
     }>
   }
+}
+
+export type McpConfigInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type McpConfigOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly servers: {
+      readonly [x: string]: {
+        readonly type?: "local" | "remote" | null
+        readonly command?: ReadonlyArray<string> | null
+        readonly url?: string | null
+      }
+    }
+    readonly entries: {
+      readonly [x: string]: {
+        readonly type?: "local" | "remote" | null
+        readonly command?: ReadonlyArray<string> | null
+        readonly url?: string | null
+      }
+    }
+  }
+}
+
+export type McpToolsInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type McpToolsOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: { readonly [x: string]: ReadonlyArray<string> }
 }
 
 export type McpAddInput = {

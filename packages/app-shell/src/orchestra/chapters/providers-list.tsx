@@ -407,9 +407,9 @@ export function disconnectProvider(
       await input.sync.updateConfig({ disabled_providers: disabled.filter((id) => id !== card.id) })
       return
     }
-    // Only a V1 server lists "auth" cards, and its /auth/{providerID} route has no V2 equivalent. Fail rather than
-    // disable the provider in config while its stored key survives.
-    if (action.type === "auth") throw new Error("Provider auth removal is not supported")
+    // A stored provider key with no credential record of its own: remove every stored credential of the provider's
+    // integration, so the provider is not left connected by a key that survives in the auth store.
+    if (action.type === "auth") await input.sdk.orchestra.integrations.disconnect({ integrationID: card.base, location })
   }
   return run().catch(() => {
     throw new Error(input.failed)
