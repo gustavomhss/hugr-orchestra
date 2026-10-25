@@ -22,7 +22,7 @@ Small declarative CI rules over the lines and paths a change adds. Run with `bun
 
 CI: `.github/workflows/guards.yml` runs on every PR: a gate finding fails the job, a warn finding is an annotation, from the base branch's copy of the engine when it has one, so the change cannot edit the code that judges it. A label `guardrail-approved:<rule id>`, applied by someone with write access, clears that changed-paths rule; plain `guardrail-approved` means protected-paths. Every new `guardrail-ignore` is reported by the warn rule `guardrail-ignore-added`.
 
-Catalog, evidence and the next rules: `docs/guardrail/`.
+Catalog (`bun run script/guards/catalog.ts > docs/guardrail/catalog.md`), evidence and the next rules: `docs/guardrail/`. Ownership and maintenance: skills `guardrail-ownership` and `guardrail-maintenance` in `.orchestra/skills/`.
 
 ## Adding a rule
 
