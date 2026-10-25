@@ -37,6 +37,7 @@ import { layer as locationLayer } from "./location"
 import { sessionLocationLayer } from "./middleware/session-location"
 import { capabilityAuthorizationLayer } from "./middleware/capability-authorization"
 import { ServerOperator } from "./operator"
+import { ServerContentTicket } from "./capability-content-ticket"
 import { ServerCapabilityVerification } from "./capability-verification"
 import type { CapabilityOperatorContract } from "@orchestra/core/capability/operator/contract"
 import type { CapabilityConnectionSetupContract } from "@orchestra/core/capability/connection/setup-contract"
@@ -114,6 +115,7 @@ function makeRoutes<AuthError, AuthServices>(
     Layer.provide(schemaErrorLayer),
     Layer.provide(auth),
     Layer.provide(options.operator ? Layer.succeed(ServerOperator.Service, options.operator) : ServerOperator.layer),
+    Layer.provide(ServerContentTicket.layer),
     Layer.provide(options.verifier ? Layer.succeed(ServerCapabilityVerification.Service, options.verifier) : ServerCapabilityVerification.layer),
     Layer.provide(serviceLayer),
     // The desktop renderer (`oc://renderer`) calls a desktop-owned server cross-origin, as it does V1.

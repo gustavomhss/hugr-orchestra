@@ -1,19 +1,22 @@
+import { randomUUID } from "node:crypto"
 import { CapabilityArtifactManagement } from "@orchestra/core/capability/artifact/management"
 import { CapabilityArtifacts } from "@orchestra/core/capability/artifact/index"
 import { Database } from "@orchestra/core/database/database"
-import { ConflictError, ForbiddenError, InvalidRequestError, UnknownError } from "@orchestra/protocol/errors"
+import { ConflictError, ForbiddenError, InvalidRequestError, UnauthorizedError, UnknownError } from "@orchestra/protocol/errors"
 import { Capability } from "@orchestra/schema/capability"
 import { Cause, Context, Effect } from "effect"
 import { HttpServerResponse } from "effect/unstable/http"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { Api } from "../api"
-import { capabilityError } from "../middleware/capability-authorization"
+import { ServerContentTicket } from "../capability-content-ticket"
+import { RequestAuthority, capabilityError } from "../middleware/capability-authorization"
 import { ServerOperator } from "../operator"
 
 export const CapabilityArtifactsHandler = HttpApiBuilder.group(Api, "server.capability.artifacts", (handlers) =>
   Effect.gen(function* () {
     const operators = yield* ServerOperator.Service
     const database = yield* Database.Service
+    const tickets = yield* ServerContentTicket.Service
     // Built once per handler layer, never per request.
     const management = yield* CapabilityArtifactManagement.make({ operators }).pipe(
       Effect.provideService(Database.Service, database),
@@ -27,6 +30,14 @@ export const CapabilityArtifactsHandler = HttpApiBuilder.group(Api, "server.capa
       .handleRaw("capability.artifact.content", ({ params, headers }) =>
         management.content(params.sessionID, { id: params.artifactID, revision: params.revision }).pipe(
           Effect.map((content) => contentResponse(content.artifact, content.data, headers.range)), artifactResponse))
+      .handle("capability.artifact.contentTicket", ({ params }) => Effect.gen(function* () {
+        const ref = { id: params.artifactID, revision: params.revision }
+        // The same Session, placement and artifact.read checks as `content`, without reading the blob.
+        yield* management.get(params.sessionID, ref).pipe(artifactResponse)
+        const authority = yield* RequestAuthority
+        if (authority === undefined) return yield* new UnauthorizedError({ message: "Authentication required" })
+        return tickets.mint({ authority, sessionID: params.sessionID, ref })
+      }))
       .handle("capability.artifact.share", ({ params, payload }) =>
         management.share(params.sessionID, { id: params.artifactID, revision: params.revision }, payload)
           .pipe(artifactResponse))
@@ -36,6 +47,33 @@ export const CapabilityArtifactsHandler = HttpApiBuilder.group(Api, "server.capa
       .handle("capability.artifact.removeReference", ({ params }) =>
         management.removeReference(params.sessionID, { id: params.artifactID, revision: params.revision })
           .pipe(artifactResponse))
+  }),
+)
+
+export const CapabilityContentHandler = HttpApiBuilder.group(Api, "server.capability.content", (handlers) =>
+  Effect.gen(function* () {
+    const operators = yield* ServerOperator.Service
+    const database = yield* Database.Service
+    const tickets = yield* ServerContentTicket.Service
+    const management = yield* CapabilityArtifactManagement.make({ operators }).pipe(
+      Effect.provideService(Database.Service, database),
+    )
+    return handlers.handleRaw("capability.content.read", ({ params, headers }) => {
+      const claim = tickets.verify(params.ticket)
+      // Expired and unknown tickets are indistinguishable: an empty 401.
+      if (claim === undefined) return Effect.succeed(HttpServerResponse.empty({ status: 401 }))
+      // Re-run the content read under the minting authority; Core rejects it once revoked or expired.
+      return operators.withRequest(claim.authority, { requestID: randomUUID() },
+        management.content(claim.sessionID, claim.ref)).pipe(
+        Effect.map((content) => contentResponse(content.artifact, content.data, headers.range)),
+        Effect.catchIf((error): error is Capability.Failure => error instanceof Capability.Failure,
+          () => Effect.succeed(HttpServerResponse.empty({ status: 401 }))),
+        // The minting authority could read it, so unavailable now means the artifact or its reference is gone.
+        Effect.catchIf((error): error is CapabilityArtifacts.Failure =>
+          error instanceof CapabilityArtifacts.Failure && error.code === "artifact_unavailable",
+          () => Effect.succeed(HttpServerResponse.empty({ status: 404 }))),
+        artifactResponse)
+    })
   }),
 )
 

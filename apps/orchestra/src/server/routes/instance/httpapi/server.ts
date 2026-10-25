@@ -87,6 +87,7 @@ import { ServerCapabilityVerification } from "@orchestra/server/capability-verif
 import type { CapabilityConnectionSetupContract } from "@orchestra/core/capability/connection/setup-contract"
 import type { CapabilityOperatorContract } from "@orchestra/core/capability/operator/contract"
 import { ServerOperator } from "@orchestra/server/operator"
+import { ServerContentTicket } from "@orchestra/server/capability-content-ticket"
 import { capabilityAuthorizationLayer } from "@orchestra/server/middleware/capability-authorization"
 import { PublicApi } from "./public"
 import {
@@ -340,6 +341,7 @@ export function createRoutes(
     Layer.provide(capabilityAuthorizationLayer.pipe(Layer.provide(ServerAuth.Config.layer))),
     // Middleware and every capability handler share one facade for the host's scope.
     Layer.provide(operator === undefined ? ServerOperator.layer : Layer.succeed(ServerOperator.Service, operator)),
+    Layer.provide(ServerContentTicket.layer),
     Layer.provide(sessionLocationLayer),
     Layer.provide(locationLayer),
     Layer.provide(PtyEnvironment.layer),
