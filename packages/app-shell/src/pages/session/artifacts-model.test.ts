@@ -169,8 +169,9 @@ test("ordering breaks ties by identity, independent of arrival order", () => {
 
 test("preview kind follows the mime and falls back to download", () => {
   expect(["image/PNG", "image/svg+xml", "video/mp4", "application/pdf", "text/csv; charset=utf-8",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "image/tiff", "application/zip", ""]
-    .map(previewKind)).toEqual(["image", "image", "video", "pdf", "sheet", "sheet", "download", "download", "download"])
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.oasis.opendocument.spreadsheet",
+    "application/vnd.ms-excel", "image/tiff", "application/zip", ""].map(previewKind))
+    .toEqual(["image", "image", "video", "pdf", "sheet", "sheet", "sheet", "download", "download", "download", "download"])
   expect(["verified", "observed", "acknowledged"].map((value) => verificationNote(value as Capability.Verification)))
     .toEqual([undefined, "not-verified", "not-verified"])
 })
