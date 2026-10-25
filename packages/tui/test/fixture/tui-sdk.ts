@@ -1,4 +1,4 @@
-import type { GlobalEvent } from "@orchestra/sdk/v2"
+import type { GlobalEvent } from "../../src/compat/schema"
 import type { EventSource } from "../../src/context/sdk"
 
 export const worktree = "/tmp/orchestra"

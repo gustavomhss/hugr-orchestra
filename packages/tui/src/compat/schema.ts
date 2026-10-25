@@ -230,4 +230,5 @@ type Definition = (typeof EventManifest.Definitions)[number]
 export type Event = BusEvent<TuiPluginApi["event"]>
 export type V2Event = ManifestV2Event<Definition>
 
-export type GlobalEvent = import("./sdk-v2").GlobalEvent
+// The TUI wraps each V2 stream event in this envelope before it reaches the store handlers.
+export type GlobalEvent = { directory: string; workspace?: string; project?: string; payload: Event }
