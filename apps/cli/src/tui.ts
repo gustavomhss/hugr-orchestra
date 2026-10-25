@@ -4,11 +4,15 @@ import { Effect } from "effect"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { Global } from "@orchestra/core/global"
 
-export function runTui(transport: { url: string; headers: RequestInit["headers"] }) {
+export function runTui(
+  transport: { url: string; headers: RequestInit["headers"] },
+  options: { args?: { continue?: boolean; sessionID?: string; fork?: boolean }; directory?: string } = {},
+) {
   const config = TuiConfig.resolve({}, { terminalSuspend: false })
   return run({
     ...transport,
-    args: {},
+    args: options.args ?? {},
+    directory: options.directory,
     config,
     pluginHost: {
       async start() {},

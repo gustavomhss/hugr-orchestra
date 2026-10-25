@@ -41,6 +41,32 @@ const Handlers = Runtime.handlers(Commands, {
     password: () => import("./commands/handlers/service/password"),
   },
   serve: () => import("./commands/handlers/serve"),
+  run: () => import("./commands/handlers/run"),
+  attach: () => import("./commands/handlers/attach"),
+  plugin: () => import("./commands/handlers/plugin"),
+  toolkit: {
+    status: () => import("./commands/handlers/toolkit/status"),
+    prefetch: () => import("./commands/handlers/toolkit/prefetch"),
+  },
+  stats: () => import("./commands/handlers/stats"),
+  agent: {
+    list: () => import("./commands/handlers/agent/list"),
+    create: () => import("./commands/handlers/agent/create"),
+  },
+  mcp: {
+    list: () => import("./commands/handlers/mcp/list"),
+    add: () => import("./commands/handlers/mcp/add"),
+    auth: {
+      $: () => import("./commands/handlers/mcp/auth"),
+      list: () => import("./commands/handlers/mcp/auth-list"),
+    },
+    logout: () => import("./commands/handlers/mcp/logout"),
+  },
+  providers: {
+    list: () => import("./commands/handlers/providers/list"),
+    login: () => import("./commands/handlers/providers/login"),
+    logout: () => import("./commands/handlers/providers/logout"),
+  },
 })
 
 Runtime.run(Commands, Handlers, { version: InstallationVersion }).pipe(

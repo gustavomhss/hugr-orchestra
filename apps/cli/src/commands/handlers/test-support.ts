@@ -29,7 +29,7 @@ export function fakeDaemon(baseUrl: string) {
   } satisfies Daemon.Interface
 }
 
-export function stubServer(handle: (request: Request) => Response) {
+export function stubServer(handle: (request: Request) => Response | Promise<Response>) {
   return Bun.serve({ port: 0, fetch: handle })
 }
 

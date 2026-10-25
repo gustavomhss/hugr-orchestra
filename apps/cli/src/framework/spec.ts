@@ -2,6 +2,7 @@ import * as Command from "effect/unstable/cli/Command"
 
 type Options<Config extends Command.Command.Config, Commands extends ReadonlyArray<Any>> = {
   readonly description?: string
+  readonly aliases?: ReadonlyArray<string>
   readonly params?: Config
   readonly commands?: Commands
 }
@@ -25,7 +26,8 @@ export function make<
   const Commands extends ReadonlyArray<Any> = [],
 >(name: Name, options: Options<Config, Commands> = {}) {
   const command = Command.make(name, options.params ?? ({} as Config))
-  const spec = options.description ? command.pipe(Command.withDescription(options.description)) : command
+  const described = options.description ? command.pipe(Command.withDescription(options.description)) : command
+  const spec = (options.aliases ?? []).reduce((current, alias) => current.pipe(Command.withAlias(alias)), described)
   return {
     name,
     spec,
