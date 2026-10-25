@@ -60,7 +60,7 @@ export async function payloadFixture(roots: string[], parent = tmpdir()) {
   await mkdir(join(source, "bin"), { recursive: true })
   await writeFile(join(source, "package.json"), JSON.stringify({ name: `@humanguardrail/cli-${tuple.target}`, version: input.version, os: [tuple.os], cpu: [tuple.arch] }))
   if (process.platform !== "win32") await chmod(join(source, "package.json"), 0o644)
-  const files = [`bin/${tuple.executable}`, "bin/hugr_omni.node", `bin/${tuple.supervisor}`, "bin/extra/note.txt", ...treeSitterPaths]
+  const files = [`bin/${tuple.executable}`, "bin/hugr_omni.node", `bin/${tuple.supervisor}`, "bin/extra/note.txt", "bin/licenses/hugr-lean/manifest.json", "bin/licenses/hugr-lean/LICENSE", ...treeSitterPaths]
   await Promise.all(files.map(async (file) => {
     const path = join(source, file)
     await mkdir(dirname(path), { recursive: true })
