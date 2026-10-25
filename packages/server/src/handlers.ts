@@ -29,6 +29,7 @@ import { ConfigHandler } from "./handlers/config"
 import { RelayDocumentHandler, RelayPublishHandler } from "./handlers/relay-document"
 import { RelayHookHandler } from "./handlers/relay-hook"
 import { RelayRunHandler } from "./handlers/relay-run"
+import { GuardrailHandler } from "./handlers/guardrail"
 import { PullRequestHandler } from "./handlers/pull-request"
 import { ScheduleHandler } from "./handlers/schedule"
 import { ResearchArtifactHandler } from "./handlers/research-artifact"
@@ -79,6 +80,7 @@ export const handlers = Layer.mergeAll(
   RelayHookHandler,
   RelayRunHandler,
   PullRequestHandler,
+  GuardrailHandler,
   ScheduleHandler,
   ResearchArtifactHandler,
   ActionsBindingHandler,

@@ -9294,6 +9294,74 @@ export type RelayRunsLedgerOutput = {
   readonly data: ReadonlyArray<{ readonly [x: string]: JsonValue }>
 }
 
+export type GuardrailRulesInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type GuardrailRulesOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly rules: ReadonlyArray<{
+      readonly id: string
+      readonly group: "tests" | "silenced" | "secrets" | "leftovers" | "dependencies" | "workflows" | "hygiene"
+      readonly severity: "gate" | "warn"
+      readonly kind: "added-lines" | "changed-paths" | "line-balance"
+      readonly message: string
+      readonly summary: string | null
+      readonly positive: ReadonlyArray<string>
+      readonly negative: ReadonlyArray<string>
+      readonly paths: ReadonlyArray<string>
+      readonly clearedBy: "fix" | "ignore" | "approval"
+    }>
+    readonly errors: ReadonlyArray<{
+      readonly kind: "no-repository" | "base-not-found" | "no-rules" | "rules-invalid" | "other"
+      readonly message: string
+    }>
+  }
+}
+
+export type GuardrailRunInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly base?: { readonly base?: string | null }["base"]
+}
+
+export type GuardrailRunOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly base: string | null
+    readonly bootstrap: boolean
+    readonly rules: number
+    readonly files: number
+    readonly findings: ReadonlyArray<{
+      readonly rule: string
+      readonly severity: "gate" | "warn"
+      readonly path: string
+      readonly line: number | null
+      readonly message: string
+      readonly excerpt: string | null
+      readonly match: readonly [number, number] | null
+    }>
+    readonly errors: ReadonlyArray<{
+      readonly kind: "no-repository" | "base-not-found" | "no-rules" | "rules-invalid" | "other"
+      readonly message: string
+    }>
+    readonly approved: ReadonlyArray<string>
+    readonly touchesGuards: boolean
+  }
+}
+
 export type OperatorInspectInput = {
   readonly location?: {
     readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
@@ -9951,6 +10019,8 @@ export {
   isScheduleRunError,
   type ActionsError,
   isActionsError,
+  type GuardrailError,
+  isGuardrailError,
   type ForbiddenError,
   isForbiddenError,
 } from "./errors"

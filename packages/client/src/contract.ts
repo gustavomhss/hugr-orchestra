@@ -50,6 +50,7 @@ export const groupNames = {
   "server.relay.hook": "relayHooks",
   "server.relay.run": "relayRuns",
   "server.pullRequest": "pullRequests",
+  "server.guardrail": "guardrail",
   "server.schedule": "schedules",
   "server.actionsBinding": "actionsBindings",
   "server.actionsOperation": "actionsOperations",
