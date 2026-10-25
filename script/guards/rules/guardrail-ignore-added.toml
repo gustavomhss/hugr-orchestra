@@ -1,4 +1,5 @@
 id = "guardrail-ignore-added"
+group = "silenced"
 severity = "warn"
 on = "added-lines"
 paths = ["**/*"]

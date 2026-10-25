@@ -1,4 +1,5 @@
 id = "rs-test-ignored"
+group = "tests"
 severity = "gate"
 on = "added-lines"
 paths = ["**/*.rs"]

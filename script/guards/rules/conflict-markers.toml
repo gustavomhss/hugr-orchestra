@@ -1,4 +1,5 @@
 id = "conflict-markers"
+group = "leftovers"
 severity = "gate"
 on = "added-lines"
 paths = ["**"]

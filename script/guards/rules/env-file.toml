@@ -1,4 +1,5 @@
 id = "env-file"
+group = "secrets"
 severity = "gate"
 on = "changed-paths"
 paths = ["**/.env", "**/.env.*"]

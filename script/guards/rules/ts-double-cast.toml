@@ -1,4 +1,5 @@
 id = "ts-double-cast"
+group = "silenced"
 severity = "warn"
 on = "added-lines"
 paths = ["**/*.{ts,tsx,mts,cts}"]

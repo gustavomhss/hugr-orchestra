@@ -1,4 +1,5 @@
 id = "os-junk"
+group = "leftovers"
 severity = "gate"
 on = "changed-paths"
 paths = ["**/.DS_Store", "**/Thumbs.db", "**/desktop.ini"]

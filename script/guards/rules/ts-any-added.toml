@@ -1,4 +1,5 @@
 id = "ts-any-added"
+group = "silenced"
 severity = "warn"
 on = "added-lines"
 paths = ["**/*.{ts,tsx,mts,cts}"]

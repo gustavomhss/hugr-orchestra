@@ -1,4 +1,5 @@
 id = "wip-marker"
+group = "leftovers"
 severity = "gate"
 on = "added-lines"
 paths = ["**/*.{ts,tsx,mts,cts,js,jsx,mjs,py,rs,sh,yml,yaml,toml}"]

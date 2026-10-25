@@ -1,4 +1,5 @@
 id = "py-noqa-blanket"
+group = "silenced"
 severity = "gate"
 on = "added-lines"
 paths = ["**/*.py"]

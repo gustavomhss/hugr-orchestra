@@ -1,4 +1,5 @@
 id = "build-output"
+group = "leftovers"
 severity = "gate"
 on = "changed-paths"
 paths = ["**/node_modules/**", "**/__pycache__/**", "**/.turbo/**", "**/.next/**", "**/target/debug/**", "**/target/release/**", "**/dist/**", "**/coverage/**"]

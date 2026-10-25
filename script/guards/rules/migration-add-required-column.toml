@@ -1,4 +1,5 @@
 id = "migration-add-required-column"
+group = "dependencies"
 severity = "warn"
 on = "added-lines"
 paths = ["apps/orchestra/migration/**/*.sql", "packages/core/src/database/migration/**/*.ts"]

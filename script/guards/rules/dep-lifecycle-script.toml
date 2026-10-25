@@ -1,4 +1,5 @@
 id = "dep-lifecycle-script"
+group = "dependencies"
 severity = "gate"
 on = "added-lines"
 paths = ["**/package.json"]
