@@ -28,15 +28,16 @@ export type { Identity, Row } from "./process-rows.ts"
 export { client, decodeUnixTable, fakeLLM, hasNonce, isolated, matches, provider, sleep, until }
 
 export const ROOT = path.resolve(import.meta.dirname, "../../..")
-export const ORCHESTRA = path.join(ROOT, "apps/orchestra")
+export const FIXTURES = path.join(ROOT, "packages/core/test/fixture")
+export const CLI_APP = path.join(ROOT, "apps/cli")
 export const LOGS = path.join(import.meta.dirname, "logs")
 export const win = process.platform === "win32"
 
-/** The compiled CLI: OMNI_CAMPAIGN_CLI, else the one target under apps/orchestra/dist. */
+/** The compiled CLI: OMNI_CAMPAIGN_CLI, else the one target under apps/cli/dist. */
 export function cli() {
   if (process.env.OMNI_CAMPAIGN_CLI) return process.env.OMNI_CAMPAIGN_CLI
-  const dist = path.join(ORCHESTRA, "dist")
-  const targets = existsSync(dist) ? readdirSync(dist).filter((name) => name.startsWith("orchestra-")) : []
+  const dist = path.join(CLI_APP, "dist")
+  const targets = existsSync(dist) ? readdirSync(dist).filter((name) => name.startsWith("cli-")) : []
   if (targets.length !== 1) throw new Error(`expected one built CLI target in ${dist}, found [${targets.join(", ")}]`)
   return path.join(dist, targets[0]!, "bin", win ? "orchestra.exe" : "orchestra")
 }

@@ -465,7 +465,13 @@
     {
       "rule": "R5",
       "file": "packages/app-shell/test-browser/lean-chapter-route.test.ts",
-      "specifier": "../../../apps/orchestra/src/util/process",
+      "specifier": "../../core/src/effect/layer-node",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/app-shell/test-browser/lean-chapter-route.test.ts",
+      "specifier": "../../core/src/process",
       "reason": "D8: relative import across a package root; retargets are deferred"
     },
     {
@@ -478,24 +484,6 @@
       "rule": "R5",
       "file": "packages/app-shell/test-browser/lean-chapter-route.test.ts",
       "specifier": "../../core/test/fixture/omni-expect",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "packages/app-shell/test-browser/lean-native-product.test-helper.ts",
-      "specifier": "../../../apps/orchestra/src/session/lean-project",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "packages/app-shell/test-browser/lean-native-product.test.ts",
-      "specifier": "../../session-ui/src/components/message-part",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "packages/app-shell/test-browser/lean-native-product.test.ts",
-      "specifier": "../../session-ui/src/context/data",
       "reason": "D8: relative import across a package root; retargets are deferred"
     },
     {
@@ -525,7 +513,13 @@
     {
       "rule": "R5",
       "file": "packages/app-shell/test-browser/session-regressions.test.ts",
-      "specifier": "../../../apps/orchestra/src/util/process",
+      "specifier": "../../core/src/effect/layer-node",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/app-shell/test-browser/session-regressions.test.ts",
+      "specifier": "../../core/src/process",
       "reason": "D8: relative import across a package root; retargets are deferred"
     },
     {
