@@ -438,7 +438,9 @@ test("the plan step checks admission, then holds on the Atlas source V2 cannot r
         },
         workflow: { documentID: "wf_1", parameters: {}, writePaths: ["src"] },
       })
-      expect(workflow.result).toEqual({ type: "error", value: "Tool safety HOLD: WORKFLOW_NATIVE_HOST_UNBOUND" })
+      // The workflow plan observes its archie Task before it opens the publication port; an unknown author holds first.
+      expect(workflow.result.type).toBe("error")
+      expect(String(workflow.result.value)).toStartWith("Tool safety HOLD: UPSTREAM_ATTRIBUTION_MISSING")
       // Nothing durable is recorded by a held step.
       const plans = yield* db
         .select()
@@ -626,7 +628,6 @@ test("chain steps without their evidence refuse with the V1 reasons and record n
           { parentSessionID: "ses_parent", messageID: "msg_task", partID: "prt_task", decision: "accepted" },
           "HOLD work-result-unavailable:",
         ],
-        ["maestro", "maestro_workflows", {}, "Tool safety HOLD: WORKFLOW_NATIVE_HOST_UNBOUND"],
       ]
       for (const [agent, name, input, expected] of cases) {
         const result = yield* call(agent, name, input)
@@ -637,5 +638,18 @@ test("chain steps without their evidence refuse with the V1 reasons and record n
       expect(
         yield* database.db.select().from(EventTable).where(like(EventTable.type, "maestro.%")).all().pipe(Effect.orDie),
       ).toEqual([])
+    }),
+  ))
+
+test("the workflow catalog reads the calling Location's own Relay publication and lists what can run", () =>
+  run(
+    Effect.gen(function* () {
+      yield* setup
+      const location = yield* Location.Service
+      const listed = yield* call("maestro", "maestro_workflows", {})
+      expect(listed.result).toEqual({ type: "text", value: JSON.stringify({ projectID: location.project.id, workflows: [] }) })
+      // A query names what it resolved, so an unknown id is an empty match, not an error.
+      const queried = yield* call("maestro", "maestro_workflows", { workflow: "wf_missing" })
+      expect(JSON.parse(String(queried.result.value))).toEqual({ projectID: location.project.id, workflows: [], unavailable: [] })
     }),
   ))

@@ -12,6 +12,7 @@ import { Global } from "@orchestra/core/global"
 import { Location } from "@orchestra/core/location"
 import { LocationMutation } from "@orchestra/core/location-mutation"
 import { PermissionV2 } from "@orchestra/core/permission"
+import { Relay } from "@orchestra/core/relay"
 import { AppProcess } from "@orchestra/core/process"
 import { ResearchAllowance } from "@orchestra/core/research/allowance"
 import { ResearchRecords } from "@orchestra/core/research/records"
@@ -25,6 +26,7 @@ import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { Tools } from "@orchestra/core/tool/tools"
 import { Tool } from "@orchestra/core/tool/tool"
 import { ToolOutputStore } from "@orchestra/core/tool-output-store"
+import type { ProjectID } from "@orchestra/schema/project-id"
 import { ArsenalObservations } from "../arsenal-observations"
 import { GovernanceBackgroundV2 } from "./governance/background"
 import { MaestroSeats } from "./seats-service"
@@ -38,6 +40,7 @@ import { MaestroResultTools } from "./tools/result"
 import { MaestroReviewTools } from "./tools/review"
 import { MaestroWorkflowTools } from "./tools/workflows"
 import { WorkflowArmV2 } from "./workflow/arm"
+import { WorkflowRelayV2 } from "./workflow/relay"
 
 /**
  * Maestro's native tools in every Location. Visibility stays with the rules `v2/seats.ts` gives every agent; each tool
@@ -74,11 +77,15 @@ const layer = Layer.effectDiscard(
         skills: yield* SkillV2.Service,
       },
     }
+    const relay = yield* Relay.Service
+    // The Location's published workflows as a plan revision and the catalog read them.
+    const publication = (placement: { readonly projectID: ProjectID }) =>
+      WorkflowRelayV2.publication(relay, placement, { store, seats, atlas: services.atlas })
     yield* tools
       .register({
         ...MaestroAdmissionTools.tools({ db: database.db, events, store, gate }),
         ...MaestroApprovalTools.tools({ services, gate }),
-        ...MaestroPlanningTools.tools({ services, gate }),
+        ...MaestroPlanningTools.tools({ services, gate, publication }),
         ...MaestroReviewTools.tools({
           services,
           gate,
@@ -86,7 +93,7 @@ const layer = Layer.effectDiscard(
           execution: yield* MaestroReviewTools.Execution,
         }),
         ...MaestroResultTools.tools({ gate }),
-        ...MaestroWorkflowTools.tools({ gate }),
+        ...MaestroWorkflowTools.tools({ services, gate, publication }),
         ...MaestroAtlasMemoryTools.tools({ agents, seats, permission, git, location }),
         ...MaestroResearchTools.tools({
           db: database.db,
@@ -157,6 +164,7 @@ export const node = makeLocationNode({
     FSUtil.node,
     LocationMutation.node,
     PermissionV2.node,
+    Relay.node,
     ToolOutputStore.node,
     Config.node,
     GitCli.node,
