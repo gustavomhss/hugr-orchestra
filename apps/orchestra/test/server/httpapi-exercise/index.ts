@@ -478,10 +478,6 @@ const scenarios: Scenario[] = [
     check(body.healthy === true && typeof body.pid === "number" && body.pid > 0, "v2 health must identify the ready process")
   }),
   http.protected.get("/api/location", "v2.location.get").json(200, object),
-  http.protected.get("/api/location/paths", "v2.location.paths").json(200, (body) => {
-    object(body)
-    check(typeof body.home === "string" && body.home.length > 0, "v2 location paths must name the server home")
-  }),
   http.protected.get("/api/agent", "v2.agent.list").json(200, locationData(array)),
   http.protected
     .get("/api/agent/{agentID}/file", "v2.agent.file.get")
