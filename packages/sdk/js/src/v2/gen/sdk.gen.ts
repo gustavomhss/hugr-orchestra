@@ -407,6 +407,16 @@ import type {
   ServerCapabilityContentCapabilityContentReadResponses,
   ServerCapabilityOperatorCapabilityOperatorInspectErrors,
   ServerCapabilityOperatorCapabilityOperatorInspectResponses,
+  ServerCapabilitySchedulesCapabilityScheduleListErrors,
+  ServerCapabilitySchedulesCapabilityScheduleListResponses,
+  ServerCapabilitySchedulesCapabilitySchedulePauseErrors,
+  ServerCapabilitySchedulesCapabilitySchedulePauseResponses,
+  ServerCapabilitySchedulesCapabilityScheduleRemoveErrors,
+  ServerCapabilitySchedulesCapabilityScheduleRemoveResponses,
+  ServerCapabilitySchedulesCapabilityScheduleResumeErrors,
+  ServerCapabilitySchedulesCapabilityScheduleResumeResponses,
+  ServerCapabilitySchedulesCapabilityScheduleRunErrors,
+  ServerCapabilitySchedulesCapabilityScheduleRunResponses,
   SessionAbortErrors,
   SessionAbortResponses,
   SessionActivityErrors,
@@ -15284,6 +15294,190 @@ export class Artifacts extends HeyApiClient {
   }
 }
 
+export class Schedule2 extends HeyApiClient {
+  /**
+   * List agent schedules
+   *
+   * Every schedule created by an agent in this location, with its owning Session and agent.
+   */
+  public list<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).get<
+      ServerCapabilitySchedulesCapabilityScheduleListResponses,
+      ServerCapabilitySchedulesCapabilityScheduleListErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/schedules",
+      ...options,
+      ...params,
+    })
+  }
+
+  public pause<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      scheduleID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "path", key: "scheduleID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerCapabilitySchedulesCapabilitySchedulePauseResponses,
+      ServerCapabilitySchedulesCapabilitySchedulePauseErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/schedules/{scheduleID}/pause",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * 409 when the repeat limit is used up or a once lies in the past.
+   */
+  public resume<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      scheduleID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "path", key: "scheduleID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerCapabilitySchedulesCapabilityScheduleResumeResponses,
+      ServerCapabilitySchedulesCapabilityScheduleResumeErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/schedules/{scheduleID}/resume",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Start a run now without moving the next slot. A retry with the same idempotency key returns the same Session.
+   */
+  public run<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      scheduleID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "path", key: "scheduleID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerCapabilitySchedulesCapabilityScheduleRunResponses,
+      ServerCapabilitySchedulesCapabilityScheduleRunErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/schedules/{scheduleID}/run",
+      ...options,
+      ...params,
+    })
+  }
+
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      scheduleID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "path", key: "scheduleID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<
+      ServerCapabilitySchedulesCapabilityScheduleRemoveResponses,
+      ServerCapabilitySchedulesCapabilityScheduleRemoveErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/schedules/{scheduleID}",
+      ...options,
+      ...params,
+    })
+  }
+}
+
+export class Capability4 extends HeyApiClient {
+  private _schedule?: Schedule2
+  get schedule(): Schedule2 {
+    return (this._schedule ??= new Schedule2({ client: this.client }))
+  }
+}
+
+export class Schedules extends HeyApiClient {
+  private _capability?: Capability4
+  get capability(): Capability4 {
+    return (this._capability ??= new Capability4({ client: this.client }))
+  }
+}
+
 export class Content extends HeyApiClient {
   /**
    * Read artifact bytes by ticket
@@ -15320,7 +15514,7 @@ export class Content extends HeyApiClient {
   }
 }
 
-export class Capability4 extends HeyApiClient {
+export class Capability5 extends HeyApiClient {
   private _content?: Content
   get content(): Content {
     return (this._content ??= new Content({ client: this.client }))
@@ -15328,13 +15522,13 @@ export class Capability4 extends HeyApiClient {
 }
 
 export class Content2 extends HeyApiClient {
-  private _capability?: Capability4
-  get capability(): Capability4 {
-    return (this._capability ??= new Capability4({ client: this.client }))
+  private _capability?: Capability5
+  get capability(): Capability5 {
+    return (this._capability ??= new Capability5({ client: this.client }))
   }
 }
 
-export class Capability5 extends HeyApiClient {
+export class Capability6 extends HeyApiClient {
   private _operator?: Operator2
   get operator(): Operator2 {
     return (this._operator ??= new Operator2({ client: this.client }))
@@ -15348,6 +15542,11 @@ export class Capability5 extends HeyApiClient {
   private _artifacts?: Artifacts
   get artifacts(): Artifacts {
     return (this._artifacts ??= new Artifacts({ client: this.client }))
+  }
+
+  private _schedules?: Schedules
+  get schedules(): Schedules {
+    return (this._schedules ??= new Schedules({ client: this.client }))
   }
 
   private _content?: Content2
@@ -15402,9 +15601,9 @@ export class Server extends HeyApiClient {
     return (this._actionsTransfer ??= new ActionsTransfer({ client: this.client }))
   }
 
-  private _capability?: Capability5
-  get capability(): Capability5 {
-    return (this._capability ??= new Capability5({ client: this.client }))
+  private _capability?: Capability6
+  get capability(): Capability6 {
+    return (this._capability ??= new Capability6({ client: this.client }))
   }
 }
 

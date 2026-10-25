@@ -82,6 +82,7 @@
     "./capability/process-control/sweep": "./src/capability/process-control/sweep.ts",
     "./capability/schedule/contract": "./src/capability/schedule/contract.ts",
     "./capability/schedule/index": "./src/capability/schedule/index.ts",
+    "./capability/schedule/management": "./src/capability/schedule/management.ts",
     "./capability/service/contract": "./src/capability/service/contract.ts",
     "./capability/service/execute": "./src/capability/service/execute.ts",
     "./capability/service/execution/projection": "./src/capability/service/execution/projection.ts",

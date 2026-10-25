@@ -362,6 +362,16 @@ import type {
   ArtifactsPinOutput,
   ArtifactsRemoveReferenceInput,
   ArtifactsRemoveReferenceOutput,
+  CapabilitySchedulesListInput,
+  CapabilitySchedulesListOutput,
+  CapabilitySchedulesPauseInput,
+  CapabilitySchedulesPauseOutput,
+  CapabilitySchedulesResumeInput,
+  CapabilitySchedulesResumeOutput,
+  CapabilitySchedulesRunInput,
+  CapabilitySchedulesRunOutput,
+  CapabilitySchedulesRemoveInput,
+  CapabilitySchedulesRemoveOutput,
 } from "./types"
 import { ClientError } from "./client-error"
 import { makeResearch } from "./research"
@@ -2915,6 +2925,72 @@ export function make(options: ClientOptions) {
             headers: { "idempotency-key": input["idempotency-key"] },
             successStatus: 200,
             declaredStatuses: [400, 409, 500, 401, 403],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    capabilitySchedules: {
+      list: (input?: CapabilitySchedulesListInput, requestOptions?: RequestOptions) =>
+        request<CapabilitySchedulesListOutput>(
+          {
+            method: "GET",
+            path: `/api/capability/schedules`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [409, 500, 400, 401, 403],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      pause: (input: CapabilitySchedulesPauseInput, requestOptions?: RequestOptions) =>
+        request<CapabilitySchedulesPauseOutput>(
+          {
+            method: "POST",
+            path: `/api/capability/schedules/${encodeURIComponent(input.scheduleID)}/pause`,
+            query: { location: input["location"] },
+            headers: { "idempotency-key": input["idempotency-key"] },
+            successStatus: 200,
+            declaredStatuses: [409, 500, 400, 401, 403],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      resume: (input: CapabilitySchedulesResumeInput, requestOptions?: RequestOptions) =>
+        request<CapabilitySchedulesResumeOutput>(
+          {
+            method: "POST",
+            path: `/api/capability/schedules/${encodeURIComponent(input.scheduleID)}/resume`,
+            query: { location: input["location"] },
+            headers: { "idempotency-key": input["idempotency-key"] },
+            successStatus: 200,
+            declaredStatuses: [409, 500, 400, 401, 403],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      run: (input: CapabilitySchedulesRunInput, requestOptions?: RequestOptions) =>
+        request<CapabilitySchedulesRunOutput>(
+          {
+            method: "POST",
+            path: `/api/capability/schedules/${encodeURIComponent(input.scheduleID)}/run`,
+            query: { location: input["location"] },
+            headers: { "idempotency-key": input["idempotency-key"] },
+            successStatus: 200,
+            declaredStatuses: [409, 500, 400, 401, 403],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      remove: (input: CapabilitySchedulesRemoveInput, requestOptions?: RequestOptions) =>
+        request<CapabilitySchedulesRemoveOutput>(
+          {
+            method: "DELETE",
+            path: `/api/capability/schedules/${encodeURIComponent(input.scheduleID)}`,
+            query: { location: input["location"] },
+            headers: { "idempotency-key": input["idempotency-key"] },
+            successStatus: 200,
+            declaredStatuses: [409, 500, 400, 401, 403],
             empty: false,
           },
           requestOptions,

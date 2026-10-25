@@ -44,6 +44,7 @@ import { ActionsTransferHandler } from "./handlers/actions-transfer"
 import { CapabilityOperatorHandler } from "./handlers/capability-operator"
 import { CapabilityConnectionsHandler } from "./handlers/capability-connections"
 import { CapabilityArtifactsHandler, CapabilityContentHandler } from "./handlers/capability-artifacts"
+import { CapabilitySchedulesHandler } from "./handlers/capability-schedules"
 
 export const handlers = Layer.mergeAll(
   HealthHandler,
@@ -92,5 +93,6 @@ export const handlers = Layer.mergeAll(
   CapabilityOperatorHandler,
   CapabilityConnectionsHandler,
   CapabilityArtifactsHandler,
+  CapabilitySchedulesHandler,
   CapabilityContentHandler,
 )
