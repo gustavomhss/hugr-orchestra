@@ -1,16 +1,6 @@
-import type {
-  Event,
-  createOrchestraClient,
-  Project,
-  Model,
-  Provider,
-  Permission,
-  UserMessage,
-  Message,
-  Part,
-  Config as SDKConfig,
-} from "./compat/sdk.js"
-import type { Provider as ProviderV2, Model as ModelV2, Auth } from "./compat/sdk-v2.js"
+import type { Project, Model, Provider, Permission, Config as SDKConfig } from "./compat/legacy-v1.js"
+import type { Provider as ProviderV2, Model as ModelV2, Auth } from "./compat/legacy-v2.js"
+import type { Event, UserMessage, Message, Part } from "./compat/schema.js"
 
 import type { BunShell } from "./shell.js"
 import { type ToolDefinition } from "./tool.js"
@@ -53,8 +43,12 @@ export type WorkspaceAdapter = {
   target(config: WorkspaceInfo): WorkspaceTarget | Promise<WorkspaceTarget>
 }
 
+// The host supplies the client. Hosts declare its shape by augmenting this interface, so the plugin contract does
+// not depend on a client package.
+export interface PluginClient {}
+
 export type PluginInput = {
-  client: ReturnType<typeof createOrchestraClient>
+  client: PluginClient
   project: Project
   directory: string
   worktree: string
