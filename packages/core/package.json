@@ -197,6 +197,7 @@
     "./test/fixture/omni-expect": "./test/fixture/omni-expect.ts",
     "./test/lib/effect": "./test/lib/effect.ts",
     "./test/fixture/windows-process-query": "./test/fixture/windows-process-query.ts",
+    "./test/fixture/tmpdir": "./test/fixture/tmpdir.ts",
     "./test/fixture/process-tree": "./test/fixture/process-tree.ts",
     "./test/fixture/omni-effect": "./test/fixture/omni-effect.ts",
     "./project": "./src/project.ts",
@@ -415,8 +416,6 @@
     "@orchestra/http-recorder": "workspace:*",
     "@orchestra/sdk": "workspace:*",
     "@orchestra/omni-campaign": "workspace:*",
-    "@orchestra/protocol": "workspace:*",
-    "@orchestra/server": "workspace:*",
     "drizzle-kit": "catalog:"
   },
   "dependencies": {
