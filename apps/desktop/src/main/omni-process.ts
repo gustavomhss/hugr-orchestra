@@ -99,6 +99,7 @@ export interface Spawned {
   readonly stderr: Readable
   kill(signal?: NodeJS.Signals): boolean
   once(event: "error", listener: (error: Error) => void): unknown
+  once(event: "spawn", listener: () => void): unknown
   once(event: "exit" | "close", listener: (code: number | null, signal: NodeJS.Signals | null) => void): unknown
 }
 
@@ -108,6 +109,8 @@ export type SpawnOptions = {
   stdin?: "pipe" | "closed"
   output?: "pipe" | "ignore"
   signal?: AbortSignal
+  /** How long the tree gets to wind down once it is stopped, including when this process dies. */
+  graceMs?: number
 }
 
 /**
@@ -174,6 +177,7 @@ class OmniProcess extends EventEmitter {
           inheritEnv: false,
           env: environment(options.env),
           stdin: options.stdin ?? "pipe",
+          graceMs: options.graceMs,
           text: false,
           backpressure: true,
         }),

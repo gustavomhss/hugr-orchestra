@@ -33,7 +33,9 @@ pub(super) fn take_channel() -> std::io::Result<OwnedFd> {
     Ok(sys::owned(0))
 }
 
-/// Empty mask; SIGPIPE, SIGINT and SIGHUP ignored (the host's terminal is not ours); SIGCHLD wakes the loop
+/// Empty mask; SIGPIPE, SIGINT, SIGHUP and SIGTERM ignored (the host's terminal is not ours, and a host that is itself
+/// a tree of an outer supervisor must still be alive to stop its own trees when the outer graceful step reaches the
+/// whole session; the forced step still ends it); SIGCHLD wakes the loop
 /// through a self-pipe and replaces any inherited SIG_IGN, which would auto-reap roots and lose the pin.
 pub(super) fn signals() -> std::io::Result<(OwnedFd, OwnedFd)> {
     let (r, w) = sys::pipe()?;
@@ -51,7 +53,7 @@ pub(super) fn signals() -> std::io::Result<(OwnedFd, OwnedFd)> {
         ))?;
         let mut ign: libc::sigaction = std::mem::zeroed();
         ign.sa_sigaction = libc::SIG_IGN;
-        for sig in [libc::SIGPIPE, libc::SIGINT, libc::SIGHUP] {
+        for sig in [libc::SIGPIPE, libc::SIGINT, libc::SIGHUP, libc::SIGTERM] {
             sys::cvt(libc::sigaction(sig, &raw const ign, std::ptr::null_mut()))?;
         }
         let mut chld: libc::sigaction = std::mem::zeroed();
