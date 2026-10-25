@@ -1,11 +1,11 @@
 import { describe, expect, test } from "bun:test"
 import fs from "node:fs/promises"
 import path from "node:path"
-import { seatSkillsFiles, seatSkillsModule } from "../../script/seat-skills"
+import { seatSkillsFiles, seatSkillsModule } from "@orchestra/maestro/seat-skills-module"
 import { SeatSkillContent } from "@orchestra/maestro/seat-skill-content"
 import { Seats } from "@orchestra/maestro/seats"
 import { PlaybookContent } from "@orchestra/maestro/playbook-content"
-import { tmpdir } from "../fixture/fixture"
+import { tmpdir } from "../../../../packages/core/test/fixture/tmpdir"
 
 const entry = "cold-review/SKILL.md"
 const valid = "---\nname: cold-review\ndescription: Review: implementation\n---\nReview body.\n"
@@ -91,7 +91,7 @@ describe("seat skill packaging", () => {
     const result = await bundle(tmp.path, target, await seatSkillsFiles(), seat)
     if (result.exit !== 0) throw new Error(`Compiled seat root acquisition failed (${target}, ${result.exit}):\n${result.stderr}`)
     const evidence = JSON.parse(result.stdout) as { root: string; files: Record<string, string>; sourceAvailable: boolean; playbooks: Record<string, string> }
-    expect(evidence.playbooks).toEqual(await PlaybookContent.read(path.resolve(import.meta.dir, "../../playbooks")))
+    expect(evidence.playbooks).toEqual(await PlaybookContent.read(path.resolve(import.meta.dir, "../playbooks")))
     expect(evidence.sourceAvailable).toBe(false)
     expect(evidence.root).not.toBe(Seats.skillSource(seat))
     expect(path.basename(evidence.root)).toMatch(/^local-[0-9a-f]{12}$/)
@@ -216,7 +216,7 @@ async function bundle(dir: string, target: "bun" | "node", files: Record<string,
     if (!built.success || built.outputs.length !== 1) throw new Error("Seat proof build failed: " + built.logs.join("\\n"));
     await Bun.write(${JSON.stringify(outfile)}, built.outputs[0]);
   `)
-  const build = Bun.spawn([process.execPath, builder], { cwd: path.resolve(import.meta.dir, "../.."), stdout: "pipe", stderr: "pipe" })
+  const build = Bun.spawn([process.execPath, builder], { cwd: path.resolve(import.meta.dir, ".."), stdout: "pipe", stderr: "pipe" })
   const [buildout, builderr, buildexit] = await Promise.all([new Response(build.stdout).text(), new Response(build.stderr).text(), build.exited])
   if (buildexit !== 0) throw new Error(`Seat proof build failed (${buildexit}):\n${buildout}\n${builderr}`)
   const child = Bun.spawn([target === "bun" ? process.execPath : "node", outfile], {

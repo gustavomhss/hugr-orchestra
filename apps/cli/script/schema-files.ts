@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 
-import { Config } from "@/config/config"
 import { ConfigV1 } from "@orchestra/core/v1/config/config"
 import { TuiConfig } from "@orchestra/tui/config"
 import path from "node:path"

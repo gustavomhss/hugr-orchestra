@@ -1,13 +1,14 @@
 import { describe, expect, spyOn, test } from "bun:test"
 import fs from "node:fs/promises"
 import path from "node:path"
-import { add } from "../../script/seat"
+import { add } from "../script/seat"
 import { canonicalMemberId, createRoster, LEGACY_BACKEND_ID, roster } from "@orchestra/maestro/roster"
 import { Seats } from "@orchestra/maestro/seats"
 import { define } from "@orchestra/maestro/seats/seat"
-import { tmpdir } from "../fixture/fixture"
+import { tmpdir } from "../../../../packages/core/test/fixture/tmpdir"
 
-const source = path.resolve(import.meta.dirname, "../..")
+const source = path.resolve(import.meta.dirname, "..")
+const repository = path.resolve(import.meta.dirname, "../../../..")
 // The seat registry, roster and seat-skill-root live in the maestro coordination module; the scaffold writes into that package layout.
 const seatsSource = path.resolve(import.meta.dirname, "../../../../modules/maestro/coordination")
 const sample = { ...Seats.all.backend, id: "sample-seat", skills: ["sample-seat-work"], atlasMemory: false, toolkit: false }
@@ -90,9 +91,9 @@ describe("seat scaffold validation", () => {
         .replace('from "./seats"', `from ${JSON.stringify(registry)}`)
         .replace('from "./seats/seat"', `from ${JSON.stringify(path.join(seatsSource, "src/seats/seat.ts"))}`)
         .replace('from "./seat-skill-root"', `from ${JSON.stringify(path.join(seatsSource, "src/seat-skill-root.ts"))}`)
-        .replace('from "@orchestra/core/tool/truncation-dir"', `from ${JSON.stringify(path.join(source, "../../packages/core/src/tool/truncation-dir.ts"))}`)
-        .replace('from "@orchestra/core/tool/upstream-arsenal"', `from ${JSON.stringify(path.join(source, "../../packages/core/src/tool/upstream-arsenal.ts"))}`)
-        .replace('from "@orchestra/core/research/seat-tools"', `from ${JSON.stringify(path.join(source, "../../packages/core/src/research/seat-tools.ts"))}`))
+        .replace('from "@orchestra/core/tool/truncation-dir"', `from ${JSON.stringify(path.join(repository, "packages/core/src/tool/truncation-dir.ts"))}`)
+        .replace('from "@orchestra/core/tool/upstream-arsenal"', `from ${JSON.stringify(path.join(repository, "packages/core/src/tool/upstream-arsenal.ts"))}`)
+        .replace('from "@orchestra/core/research/seat-tools"', `from ${JSON.stringify(path.join(repository, "packages/core/src/research/seat-tools.ts"))}`))
       await expect(import(copied)).rejects.toThrow(error)
     }
   })
@@ -259,7 +260,7 @@ test("legacy negative test detects isolated mutation and passes after restoratio
   const copy = original.replaceAll('from "@orchestra/maestro/', `from "${path.join(seatsSource, "src").replaceAll("\\", "/")}/`)
   expect(copy).not.toContain('from "@orchestra/')
   const config = path.join(tmp.path, "bunfig.toml")
-  await fs.writeFile(config, `[test]\npreload = ${JSON.stringify([path.resolve(source, "../../script/test-guard.ts")])}\n`)
+  await fs.writeFile(config, `[test]\npreload = ${JSON.stringify([path.resolve(repository, "script/test-guard.ts")])}\n`)
   const negative = path.join(tmp.path, "legacy.test.ts")
   await fs.writeFile(negative, `import { expect, test } from "bun:test"
 import { add } from "./scaffold"

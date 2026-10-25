@@ -8,7 +8,7 @@ import { define, validateInstalled } from "@orchestra/maestro/seats/seat"
 import { canonicalMemberId } from "@orchestra/maestro/roster"
 
 // Source scaffold only. Registration is the existing barrel, not a runtime plugin loader.
-export async function add(id: string, role: string, directory = path.resolve(import.meta.dirname, "../../../modules/maestro/coordination")) {
+export async function add(id: string, role: string, directory = path.resolve(import.meta.dirname, "..")) {
   if (canonicalMemberId(id) !== id) throw new Error(`Native seat id must be canonical: ${id}`)
   if (!role.trim() || /[\p{Cc}\p{Zl}\p{Zp}]/u.test(role)) throw new Error("Seat role must be nonempty and single-line")
   const seat = define({

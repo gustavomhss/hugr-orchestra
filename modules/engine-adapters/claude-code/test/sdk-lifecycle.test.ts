@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { spawn } from "node:child_process"
 import { query } from "@anthropic-ai/claude-agent-sdk"
 import { ClaudeCodeSDK } from "@orchestra/engine-claude-code/sdk"
-import { tmpdir } from "../fixture/fixture"
+import { tmpdir } from "../../../../packages/core/test/fixture/tmpdir"
 
 // Retain the deprecated rollout flag here to exercise child-environment compatibility stripping.
 const approved = { ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED: "1" }

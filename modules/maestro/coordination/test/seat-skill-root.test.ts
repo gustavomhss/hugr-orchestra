@@ -3,7 +3,7 @@ import fs from "node:fs/promises"
 import path from "node:path"
 import { SeatSkillRoot } from "@orchestra/maestro/seat-skill-root"
 import { backendSkills } from "@orchestra/maestro/roster"
-import { tmpdir } from "../fixture/fixture"
+import { tmpdir } from "../../../../packages/core/test/fixture/tmpdir"
 
 const SOURCE = path.resolve(import.meta.dir, "../../../../modules/specialists/backend/skills")
 
@@ -137,7 +137,7 @@ describe("backend skill root", () => {
       const { SeatSkillRoot } = await import(${JSON.stringify(module)});
       const root = await SeatSkillRoot.extract("backend", ${JSON.stringify(files)}, ${JSON.stringify(tmp.path)}, "local");
       console.log(JSON.stringify({ root, ino: (await fs.stat(root)).ino }));
-    `], { cwd: path.resolve(import.meta.dir, "../.."), env: process.env, stdout: "pipe", stderr: "pipe" }))
+    `], { cwd: path.resolve(import.meta.dir, ".."), env: process.env, stdout: "pipe", stderr: "pipe" }))
     const evidence = await Promise.all(children.map(async (child) => {
       const [stdout, stderr, exit] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
       if (exit !== 0) throw new Error(`Competing seat root acquisition failed (${exit}):\n${stdout}\n${stderr}`)
@@ -187,7 +187,7 @@ describe("backend skill root", () => {
       const { SeatSkillRoot } = await import(${JSON.stringify(module)});
       const root = await SeatSkillRoot.extract("backend", ${JSON.stringify(files)}, ${JSON.stringify(tmp.path)}, "local");
       console.log(JSON.stringify({ root }));
-    `], { cwd: path.resolve(import.meta.dir, "../.."), env: process.env, stdin: "pipe", stdout: "pipe", stderr: "pipe" })
+    `], { cwd: path.resolve(import.meta.dir, ".."), env: process.env, stdin: "pipe", stdout: "pipe", stderr: "pipe" })
     const ready = Promise.withResolvers<void>()
     const stdout = (async () => {
       const chunks: string[] = []

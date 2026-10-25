@@ -8,8 +8,6 @@ import { Glob } from "bun"
 const repository = path.resolve(import.meta.dir, "../../../..")
 const removed = /\b(?:evaluateCompletion|runCompletion)\b/
 const scope = [
-  "apps/orchestra/src",
-  "apps/orchestra/test",
   "modules/maestro/coordination/playbooks",
   "modules/maestro/arsenal/src",
   "modules/maestro/arsenal/test",
@@ -26,8 +24,6 @@ test("no source, test or doc names the removed Arsenal evaluator", () => {
   )
   // The scan reaches the files that held the evaluator and its callers, so an empty result is not an empty scan.
   for (const known of [
-    "apps/orchestra/src/maestro/arsenal-completion.ts",
-    "apps/orchestra/src/maestro/arsenal-bindings.ts",
     "modules/maestro/arsenal/src/index.ts",
     "modules/maestro/arsenal/src/governance/completion.ts",
     "modules/maestro/arsenal/src/tools/relay-arm.ts",

@@ -2,7 +2,7 @@ import { describe, test, expect } from "bun:test"
 import path from "path"
 import fs from "fs/promises"
 import { Glob } from "@orchestra/core/util/glob"
-import { tmpdir } from "../fixture/fixture"
+import { tmpdir } from "../fixture/tmpdir"
 
 describe("Glob", () => {
   describe("scan()", () => {

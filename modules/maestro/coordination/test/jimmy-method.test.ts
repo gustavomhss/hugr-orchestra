@@ -3,7 +3,7 @@ import fs from "node:fs/promises"
 import path from "node:path"
 import { Seats } from "@orchestra/maestro/seats"
 import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
-import { tmpdir } from "../fixture/fixture"
+import { tmpdir } from "../../../../packages/core/test/fixture/tmpdir"
 
 // JE-AC-M1 (specs/jimmy-engine/acceptance.md, method.md §2 and §4). The method lives in the host and the tools, so the
 // prompt stays short, never asks the model to write the card the host assembles from `inquiry close`, names only the

@@ -11,7 +11,7 @@ const ALLOWED_FILE = "modules/maestro/coordination/src/roster.ts"
 const ALLOWED_LINE = /^export const BACKEND_DEFAULT_LABEL = "[^"]+"$/
 // Positive control: this file is tracked, so the same search must find this constant's own line.
 const SENTINEL = "Specialist-Name-Guard-Positive-Control"
-const SELF = "apps/orchestra/test/agent/specialist-name-guard.test.ts"
+const SELF = "modules/maestro/coordination/test/specialist-name-guard.test.ts"
 
 describe("specialist name guard", () => {
   test("the search target is the pinned default label", () => {

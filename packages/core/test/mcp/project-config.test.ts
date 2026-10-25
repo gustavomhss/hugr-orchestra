@@ -5,7 +5,7 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Effect } from "effect"
 import { McpProjectConfig } from "@orchestra/core/mcp/project-config"
-import { tmpdir } from "../fixture/fixture"
+import { tmpdir } from "../fixture/tmpdir"
 import { testEffect } from "../lib/effect"
 
 const it = testEffect(LayerNode.compile(LayerNode.group([FSUtil.node])))
