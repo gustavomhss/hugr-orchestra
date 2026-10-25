@@ -21,6 +21,8 @@ export type LocalPTY = {
   buffer?: string
   scrollY?: number
   cursor?: number
+  // Set on an agent's tab when its command ended.
+  exitCode?: number
 }
 
 export type TerminalCreateResult = { status: "created"; id: string } | { status: "failed"; error?: unknown }
@@ -64,6 +66,7 @@ function pty(value: unknown): LocalPTY | undefined {
   const buffer = text(value.buffer)
   const scrollY = num(value.scrollY)
   const cursor = num(value.cursor)
+  const exitCode = num(value.exitCode)
 
   return {
     id,
@@ -74,6 +77,7 @@ function pty(value: unknown): LocalPTY | undefined {
     ...(buffer !== undefined ? { buffer } : {}),
     ...(scrollY !== undefined ? { scrollY } : {}),
     ...(cursor !== undefined ? { cursor } : {}),
+    ...(exitCode !== undefined ? { exitCode } : {}),
   }
 }
 
@@ -242,17 +246,27 @@ function createWorkspaceTerminalSession(
   // A command the agent runs gets its own tab, started by the server rather than by this client.
   const isAgentTab = (title?: string) => title?.startsWith(AGENT_TAB_PREFIX) === true
 
-  const unsub = sdk.event.on("pty.exited", (event: { properties: { id: string } }) => {
+  const unsub = sdk.event.on("pty.exited", (event: { properties: { id: string; exitCode?: number } }) => {
     // An agent's tab stays after its command ends, so the owner can read what ran; closing it removes it.
-    if (isAgentTab(store.all.find((x) => x.id === event.properties.id)?.title)) return
+    const index = store.all.findIndex((x) => x.id === event.properties.id)
+    if (index >= 0 && isAgentTab(store.all[index]?.title)) {
+      if (event.properties.exitCode !== undefined) setStore("all", index, "exitCode", event.properties.exitCode)
+      return
+    }
     removeExited(event.properties.id)
   })
   onCleanup(unsub)
 
-  const unsubCreated = sdk.event.on("pty.created", (event: { properties: { info: { id: string; title: string } } }) => {
+  const unsubCreated = sdk.event.on("pty.created", (event: { properties: { info: { id: string; title: string; exitCode?: number } } }) => {
     const info = event.properties.info
     if (!isAgentTab(info.title) || store.all.some((x) => x.id === info.id)) return
-    setStore("all", store.all.length, { id: info.id, title: info.title, titleNumber: 0 })
+    // A command can end before the event reaches us, and then pty.exited never comes for this tab.
+    setStore("all", store.all.length, {
+      id: info.id,
+      title: info.title,
+      titleNumber: 0,
+      ...(info.exitCode === undefined ? {} : { exitCode: info.exitCode }),
+    })
   })
   onCleanup(unsubCreated)
 

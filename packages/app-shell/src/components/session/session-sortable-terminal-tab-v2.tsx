@@ -40,9 +40,16 @@ export function SortableTerminalTabV2(props: {
     return isDefaultTerminalTitle(props.terminal.title, number)
   }
 
+  // An agent's finished command: a check for a clean exit, a cross with the code otherwise.
+  const outcome = () => {
+    const code = props.terminal.exitCode
+    if (code === undefined) return ""
+    return code === 0 ? " \u2713" : ` \u2717 ${code}`
+  }
+
   const label = () => {
     language.locale()
-    if (props.terminal.title && !isDefaultTitle()) return props.terminal.title
+    if (props.terminal.title && !isDefaultTitle()) return props.terminal.title + outcome()
 
     const number = props.terminal.titleNumber
     if (Number.isFinite(number) && number > 0) return language.t("terminal.title.numbered", { number })
