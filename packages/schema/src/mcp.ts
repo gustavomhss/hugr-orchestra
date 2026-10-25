@@ -83,3 +83,33 @@ export type Config = Schema.Schema.Type<typeof Config>
 // The tool names each connected server offers, by server.
 export const Tools = Schema.Record(Schema.String, Schema.Array(Schema.String)).annotate({ identifier: "McpTools" })
 export type Tools = Schema.Schema.Type<typeof Tools>
+// What a remote server's debug probe saw: stored sign-in state, the answer to an unauthenticated initialize request,
+// and, when that answer was 401, how the OAuth discovery went. Secrets are masked.
+export const Debug = Schema.Struct({
+  name: Schema.String,
+  url: Schema.String,
+  oauth: Schema.Boolean,
+  tokens: Schema.Struct({
+    access: Schema.String,
+    expiresAt: Schema.Number.pipe(Schema.optional),
+    refreshToken: Schema.Boolean,
+  }).pipe(Schema.optional),
+  client: Schema.Struct({
+    id: Schema.String,
+    secretExpiresAt: Schema.Number.pipe(Schema.optional),
+  }).pipe(Schema.optional),
+  http: Schema.Struct({
+    status: Schema.Number,
+    statusText: Schema.String,
+    wwwAuthenticate: Schema.String.pipe(Schema.optional),
+    serverInfo: Schema.String.pipe(Schema.optional),
+    body: Schema.String.pipe(Schema.optional),
+  }).pipe(Schema.optional),
+  flow: Schema.Struct({
+    result: Schema.Literals(["authenticated", "unauthorized", "error"]),
+    message: Schema.String.pipe(Schema.optional),
+    clientRegistered: Schema.Boolean.pipe(Schema.optional),
+  }).pipe(Schema.optional),
+  error: Schema.String.pipe(Schema.optional),
+}).annotate({ identifier: "McpDebug" })
+export type Debug = Schema.Schema.Type<typeof Debug>

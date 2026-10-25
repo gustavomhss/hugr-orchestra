@@ -61,6 +61,7 @@ export const IntegrationGroup = HttpApiGroup.make("server.integration")
       payload: Schema.Struct({
         key: Schema.String,
         label: Schema.optional(Schema.String),
+        metadata: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
       }),
       success: HttpApiSchema.NoContent,
       error: InvalidRequestError,

@@ -43,6 +43,8 @@ const Handlers = Runtime.handlers(Commands, {
   serve: () => import("./commands/handlers/serve"),
   run: () => import("./commands/handlers/run"),
   attach: () => import("./commands/handlers/attach"),
+  web: () => import("./commands/handlers/web"),
+  acp: () => import("./commands/handlers/acp"),
   plugin: () => import("./commands/handlers/plugin"),
   toolkit: {
     status: () => import("./commands/handlers/toolkit/status"),
@@ -60,6 +62,7 @@ const Handlers = Runtime.handlers(Commands, {
       $: () => import("./commands/handlers/mcp/auth"),
       list: () => import("./commands/handlers/mcp/auth-list"),
     },
+    debug: () => import("./commands/handlers/mcp/debug"),
     logout: () => import("./commands/handlers/mcp/logout"),
   },
   providers: {

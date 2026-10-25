@@ -134,6 +134,15 @@ const run = Spec.make("run", {
       Flag.withDefault(false),
       Flag.withDescription("auto-approve permissions that are not explicitly denied (dangerous!)"),
     ),
+    port: Flag.integer("port").pipe(
+      Flag.withDescription("use the local server on this port, starting one there if none answers"),
+      Flag.optional,
+    ),
+    mini: Flag.boolean("mini").pipe(
+      Flag.withAlias("i"),
+      Flag.withDefault(false),
+      Flag.withDescription("open the minimal interactive TUI instead of printing the turn"),
+    ),
   },
 })
 
@@ -158,6 +167,7 @@ const attach = Spec.make("attach", {
       Flag.withDescription("basic auth username (defaults to ORCHESTRA_SERVER_USERNAME or 'orchestra')"),
       Flag.optional,
     ),
+    mini: Flag.boolean("mini").pipe(Flag.withDefault(false), Flag.withDescription("start the minimal TUI layout")),
   },
 })
 
@@ -169,9 +179,12 @@ const providers = Spec.make("providers", {
     Spec.make("login", {
       description: "Log in to a provider",
       params: {
+        url: Argument.string("auth provider URL, whose /.well-known/orchestra names the login command").pipe(
+          Argument.optional,
+        ),
         provider: Flag.string("provider").pipe(
           Flag.withAlias("p"),
-          Flag.withDescription("provider id or name to log in to (skips provider selection)"),
+          Flag.withDescription("provider id or name to log in to, or other for a custom id (skips selection)"),
           Flag.optional,
         ),
         method: Flag.string("method").pipe(
@@ -218,6 +231,10 @@ const mcp = Spec.make("mcp", {
       description: "Authenticate with an OAuth-enabled MCP server",
       params: { name: mcpName("name of the MCP server") },
       commands: [Spec.make("list", { description: "List MCP servers and their auth status", aliases: ["ls"] })],
+    }),
+    Spec.make("debug", {
+      description: "Debug the OAuth connection of an MCP server",
+      params: { name: Argument.string("name of the MCP server") },
     }),
     Spec.make("logout", {
       description: "Remove OAuth credentials for an MCP server",
@@ -320,6 +337,28 @@ const plugin = Spec.make("plugin", {
   },
 })
 
+const acp = Spec.make("acp", {
+  description: "Start the ACP (Agent Client Protocol) server on stdio",
+  params: { cwd: Flag.string("cwd").pipe(Flag.withDescription("working directory"), Flag.optional) },
+})
+
+const web = Spec.make("web", {
+  description: "Start the Orchestra server and open the web interface",
+  params: {
+    hostname: Flag.string("hostname").pipe(Flag.withDefault("127.0.0.1"), Flag.withDescription("hostname to listen on")),
+    port: Flag.integer("port").pipe(Flag.withDescription("port to listen on (default: the first free port from 4096)"), Flag.optional),
+    mdns: Flag.boolean("mdns").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("enable mDNS service discovery (defaults hostname to 0.0.0.0)"),
+    ),
+    "mdns-domain": Flag.string("mdns-domain").pipe(
+      Flag.withDefault("orchestra.local"),
+      Flag.withDescription("custom domain name for mDNS service"),
+    ),
+    cors: Flag.string("cors").pipe(Flag.withDescription("additional domains to allow for CORS"), Flag.atMost(100)),
+  },
+})
+
 declare const ORCHESTRA_CLI_NAME: string | undefined
 
 export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHESTRA_CLI_NAME : "orchestra", {
@@ -378,6 +417,8 @@ export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHE
     stats,
     toolkit,
     plugin,
+    acp,
+    web,
     Spec.make("migrate", { description: "Migrate v1 data to v2" }),
     Spec.make("service", {
       description: "Manage the background server",

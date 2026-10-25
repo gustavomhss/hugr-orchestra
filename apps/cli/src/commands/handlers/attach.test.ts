@@ -40,6 +40,12 @@ describe("attach", () => {
     }
   })
 
+  test("--mini reaches the TUI args", async () => {
+    const target = await prepare({ ...base, url: "http://127.0.0.1:1", mini: true })
+    expect(target.args.mini).toBe(true)
+    expect((await prepare({ ...base, url: "http://127.0.0.1:1" })).args).not.toHaveProperty("mini")
+  })
+
   test("passes a directory that does not exist locally through to the remote server", async () => {
     const target = await prepare({ ...base, url: "http://127.0.0.1:1", dir: "/remote/only/dir" })
     expect(target.directory).toBe("/remote/only/dir")

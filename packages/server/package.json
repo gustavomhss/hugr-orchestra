@@ -17,7 +17,8 @@
     "./middleware/authorization": "./src/middleware/authorization.ts",
     "./middleware/schema-error": "./src/middleware/schema-error.ts",
     "./middleware/session-location": "./src/middleware/session-location.ts",
-    "./routes": "./src/routes.ts"
+    "./routes": "./src/routes.ts",
+    "./web-ui": "./src/web-ui.ts"
   },
   "scripts": {
     "test": "bun test --timeout 30000 --only-failures",

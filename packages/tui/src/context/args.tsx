@@ -8,6 +8,10 @@ export interface Args {
   sessionID?: string
   fork?: boolean
   auto?: boolean
+  /** Model variant (reasoning effort) applied to the chosen model. */
+  variant?: string
+  /** Minimal layout: no sidebar unless it is opened by hand. */
+  mini?: boolean
 }
 
 export const { use: useArgs, provider: ArgsProvider } = createSimpleContext({

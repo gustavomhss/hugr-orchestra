@@ -133,6 +133,23 @@ export const McpGroup = HttpApiGroup.make("server.mcp")
       ),
   )
   .add(
+    HttpApiEndpoint.get("mcp.debug", "/api/mcp/:server/debug", {
+      params: ServerParams,
+      query: LocationQuery,
+      success: Location.response(Mcp.Debug),
+      error: [McpServerNotFoundError, InvalidRequestError],
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        OpenApi.annotations({
+          identifier: "v2.mcp.debug",
+          summary: "Debug MCP server",
+          description:
+            "Probe a remote MCP server with an unauthenticated initialize request and report stored sign-in state, the HTTP answer and the OAuth discovery result. Secrets are masked.",
+        }),
+      ),
+  )
+  .add(
     HttpApiEndpoint.post("mcp.auth.start", "/api/mcp/:server/auth", {
       params: ServerParams,
       query: LocationQuery,

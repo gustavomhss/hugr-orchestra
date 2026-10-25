@@ -34,6 +34,7 @@ import { authorizationLayer } from "./middleware/authorization"
 import { schemaErrorLayer } from "./middleware/schema-error"
 import { PtyEnvironment } from "@orchestra/core/host/pty-environment"
 import { layer as locationLayer } from "./location"
+import { WebUi } from "./web-ui"
 import { sessionLocationLayer } from "./middleware/session-location"
 
 const applicationServices = LayerNode.group([
@@ -67,6 +68,10 @@ export interface Options {
   readonly password?: string
   /** Product contributions the application composes (apps/cli `CliHost.contributions`); sdk-next passes none. */
   readonly host?: ReadonlyArray<Host.Contribution>
+  /** Directory of the built web UI; when set, the server also serves it at `/`. */
+  readonly webRoot?: string
+  /** Extra origins the server answers cross-origin, besides the local and desktop ones. */
+  readonly cors?: ReadonlyArray<string>
 }
 
 export function createRoutes(options: Options = {}) {
@@ -75,6 +80,8 @@ export function createRoutes(options: Options = {}) {
       ? ServerAuth.Config.configLayer({ username: "orchestra", password: Option.some(options.password) })
       : ServerAuth.Config.layer,
     options.host ?? [],
+    options.webRoot,
+    options.cors,
   )
 }
 
@@ -85,6 +92,8 @@ export function createEmbeddedRoutes(options: Pick<Options, "host"> = {}) {
 function makeRoutes<AuthError, AuthServices>(
   auth: Layer.Layer<ServerAuth.Config, AuthError, AuthServices>,
   host: ReadonlyArray<Host.Contribution>,
+  webRoot?: string,
+  cors?: ReadonlyArray<string>,
 ) {
   const merged = Host.merge(host)
   // Contributed global nodes add services and may not fail, so the root keeps the application services' types.
@@ -95,7 +104,7 @@ function makeRoutes<AuthError, AuthServices>(
       merged.locationNodes,
     )
 
-  return HttpApiBuilder.layer(Api, { openapiPath: "/openapi.json" }).pipe(
+  const api = HttpApiBuilder.layer(Api, { openapiPath: "/openapi.json" }).pipe(
     Layer.provide(handlers),
     Layer.provide(merged.references),
     Layer.provide(sessionLocationLayer),
@@ -105,8 +114,9 @@ function makeRoutes<AuthError, AuthServices>(
     Layer.provide(auth),
     Layer.provide(serviceLayer),
     // The desktop renderer (`oc://renderer`) calls a desktop-owned server cross-origin, as it does V1.
-    Layer.provide(corsLayer()),
+    Layer.provide(corsLayer({ cors })),
   )
+  return Layer.merge(api, webRoot ? WebUi.layer(webRoot) : Layer.empty)
 }
 
 export const routes = createRoutes()

@@ -6,6 +6,7 @@ import { listServers } from "./list"
 import { add, parse } from "./add"
 import { authenticate } from "./auth"
 import { logout } from "./logout"
+import { debug } from "./debug"
 
 const location = { directory: "/work", project: { id: "p", directory: "/work" } }
 const servers = [
@@ -143,6 +144,43 @@ describe("mcp logout", () => {
       await expect(logout(s.client, script([]), "/work", "ghost")).rejects.toThrow("MCP server not found: ghost")
     } finally {
       s.server.stop(true)
+    }
+  })
+})
+
+describe("mcp debug", () => {
+  test("renders the server's report: masked tokens, the HTTP answer and the OAuth discovery", async () => {
+    const reports: Record<string, unknown> = {
+      remote: {
+        name: "remote",
+        url: "https://mcp.example/mcp",
+        oauth: true,
+        tokens: { access: "abcd***wxyz", expiresAt: 1, refreshToken: true },
+        client: { id: "client-1" },
+        http: { status: 401, statusText: "Unauthorized", wwwAuthenticate: 'Bearer realm="x"' },
+        flow: { result: "unauthorized", message: "needs sign-in", clientRegistered: true },
+      },
+      plain: { name: "plain", url: "https://mcp.example/mcp", oauth: false },
+    }
+    const server = stubServer(async (request) => {
+      const match = new URL(request.url).pathname.match(/^\/api\/mcp\/([^/]+)\/debug$/)
+      const report = match ? reports[match[1]] : undefined
+      return report ? Response.json({ location, data: report }) : new Response("not found", { status: 404 })
+    })
+    const client = Orchestra.make({ baseUrl: clientUrl(server) })
+    try {
+      const lines = await debug(client, "/work", "remote")
+      expect(lines).toContain("URL: https://mcp.example/mcp")
+      expect(lines).toContain("  Access token: abcd***wxyz")
+      expect(lines.some((line) => line.startsWith("  Expires: 1970-01-01T00:00:01.000Z") && line.endsWith("(EXPIRED)"))).toBe(true)
+      expect(lines).toContain("  Refresh token: present")
+      expect(lines).toContain("HTTP response: 401 Unauthorized")
+      expect(lines).toContain('WWW-Authenticate: Bearer realm="x"')
+      expect(lines).toContain("OAuth flow triggered: needs sign-in")
+      expect(lines).toContain("Client ID available")
+      expect(await debug(client, "/work", "plain")).toEqual(["MCP server plain has OAuth explicitly disabled"])
+    } finally {
+      server.stop(true)
     }
   })
 })

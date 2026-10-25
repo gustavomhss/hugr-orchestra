@@ -17,6 +17,7 @@
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
+    "@agentclientprotocol/sdk": "0.21.0",
     "@effect/platform-node": "catalog:",
     "@orchestra/app-dock": "workspace:*",
     "@orchestra/client": "workspace:*",
@@ -29,6 +30,7 @@
     "@orchestra/tui": "workspace:*",
     "@opentui/core": "catalog:",
     "@opentui/solid": "catalog:",
+    "bonjour-service": "1.3.0",
     "@parcel/watcher": "2.5.1",
     "drizzle-orm": "catalog:",
     "effect": "catalog:",

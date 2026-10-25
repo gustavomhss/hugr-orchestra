@@ -2357,8 +2357,21 @@ export type IntegrationsConnectKeyInput = {
   readonly location?: {
     readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
   }["location"]
-  readonly key: { readonly key: string; readonly label?: string | undefined }["key"]
-  readonly label?: { readonly key: string; readonly label?: string | undefined }["label"]
+  readonly key: {
+    readonly key: string
+    readonly label?: string | undefined
+    readonly metadata?: { readonly [x: string]: unknown } | undefined
+  }["key"]
+  readonly label?: {
+    readonly key: string
+    readonly label?: string | undefined
+    readonly metadata?: { readonly [x: string]: unknown } | undefined
+  }["label"]
+  readonly metadata?: {
+    readonly key: string
+    readonly label?: string | undefined
+    readonly metadata?: { readonly [x: string]: unknown } | undefined
+  }["metadata"]
 }
 
 export type IntegrationsConnectKeyOutput = void
@@ -3127,6 +3140,48 @@ export type McpDisconnectInput = {
 }
 
 export type McpDisconnectOutput = void
+
+export type McpDebugInput = {
+  readonly server: { readonly server: string }["server"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type McpDebugOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly name: string
+    readonly url: string
+    readonly oauth: boolean
+    readonly tokens?: {
+      readonly access: string
+      readonly expiresAt?: number | "Infinity" | "-Infinity" | "NaN" | null
+      readonly refreshToken: boolean
+    } | null
+    readonly client?: {
+      readonly id: string
+      readonly secretExpiresAt?: number | "Infinity" | "-Infinity" | "NaN" | null
+    } | null
+    readonly http?: {
+      readonly status: number | "Infinity" | "-Infinity" | "NaN"
+      readonly statusText: string
+      readonly wwwAuthenticate?: string | null
+      readonly serverInfo?: string | null
+      readonly body?: string | null
+    } | null
+    readonly flow?: {
+      readonly result: "authenticated" | "unauthorized" | "error"
+      readonly message?: string | null
+      readonly clientRegistered?: boolean | null
+    } | null
+    readonly error?: string | null
+  }
+}
 
 export type McpAuthStartInput = {
   readonly server: { readonly server: string }["server"]
