@@ -1,6 +1,5 @@
 import type {
   AgentPart,
-  OrchestraClient,
   Event,
   FilePart,
   LspStatus,
@@ -16,6 +15,7 @@ import type {
   TextPart,
   Config as SdkConfig,
 } from "./compat/sdk-v2.js"
+import type { Orchestra } from "@orchestra/client"
 import type { CliRenderer, KeyEvent, RGBA, Renderable, SlotMode } from "@opentui/core"
 import type { Binding, Keymap } from "@opentui/keymap"
 import {
@@ -610,7 +610,7 @@ export type TuiPluginApi = {
   kv: TuiKV
   state: TuiState
   theme: TuiTheme
-  client: OrchestraClient
+  client: ReturnType<typeof Orchestra.make>
   event: TuiEventBus
   renderer: CliRenderer
   slots: TuiSlots

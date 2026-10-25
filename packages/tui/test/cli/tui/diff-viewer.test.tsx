@@ -4,7 +4,7 @@ import { createDefaultOpenTuiKeymap } from "@opentui/keymap/opentui"
 import { DiffRenderable, type Renderable, ScrollBoxRenderable } from "@opentui/core"
 import { testRender, useRenderer } from "@opentui/solid"
 import type { TuiPluginApi, TuiPluginMeta, TuiRouteCurrent, TuiRouteDefinition } from "@orchestra/plugin/tui"
-import type { Session } from "@orchestra/sdk/v2"
+import type { Session } from "../../../src/compat/schema"
 import { KVProvider } from "../../../src/context/kv"
 import { ThemeProvider } from "../../../src/context/theme"
 import { TuiConfigProvider } from "../../../src/config"
@@ -106,7 +106,6 @@ async function renderDiffViewer(vcsDiff: unknown[], height = 20, initialRoute?: 
   let current = initialRoute ?? startRoute
   let renderDiff: TuiRouteDefinition["render"] | undefined
   let vcsDiffInput: unknown
-  let sessionDiffInput: unknown
   const config = createTuiResolvedConfig()
   function Harness() {
     const renderer = useRenderer()
@@ -125,16 +124,11 @@ async function renderDiffViewer(vcsDiff: unknown[], height = 20, initialRoute?: 
             return { data: vcsDiff }
           },
         },
-        session: {
-          diff: async (input: unknown) => {
-            sessionDiffInput = input
-            return { data: [] }
-          },
-        },
       } as unknown as TuiPluginApi["client"],
       state: {
         session: {
           get: () => session,
+          diff: () => [{ file: "changed.ts", additions: 1, deletions: 0, status: "modified" as const }],
         },
       },
     })
@@ -179,7 +173,6 @@ async function renderDiffViewer(vcsDiff: unknown[], height = 20, initialRoute?: 
     commands,
     current: () => current,
     vcsDiffInput: () => vcsDiffInput,
-    sessionDiffInput: () => sessionDiffInput,
   }
 }
 
@@ -218,25 +211,35 @@ test("branch diff source requests branch VCS diff", async () => {
       name: "diff",
       params: { mode: "branch", sessionID: "session-1", returnRoute: startRoute },
     })
-    expect(viewer.vcsDiffInput()).toEqual({ directory: "/repo/session", mode: "branch", context: 12 })
-    expect(viewer.sessionDiffInput()).toBeUndefined()
+    expect(viewer.vcsDiffInput()).toEqual({ location: { directory: "/repo/session" }, mode: "branch", context: 12 })
   } finally {
     viewer.app.renderer.destroy()
   }
 })
 
-test("last-turn diff source requests session diff", async () => {
-  const viewer = await renderDiffViewer([], 20, {
-    name: "diff",
-    params: { mode: "last-turn", sessionID: "session-1", messageID: "message-1", returnRoute: startRoute },
-  })
+test("last-turn diff source shows the working diff of the files the Session changed", async () => {
+  const patch = (file: string) =>
+    `diff --git a/${file} b/${file}\n--- a/${file}\n+++ b/${file}\n@@ -1 +1 @@\n-old\n+new\n`
+  const viewer = await renderDiffViewer(
+    [
+      { file: "changed.ts", patch: patch("changed.ts"), additions: 1, deletions: 1, status: "modified" },
+      { file: "untouched.ts", patch: patch("untouched.ts"), additions: 1, deletions: 1, status: "modified" },
+    ],
+    20,
+    {
+      name: "diff",
+      params: { mode: "last-turn", sessionID: "session-1", messageID: "message-1", returnRoute: startRoute },
+    },
+  )
   try {
     expect(viewer.current()).toEqual({
       name: "diff",
       params: { mode: "last-turn", sessionID: "session-1", messageID: "message-1", returnRoute: startRoute },
     })
-    expect(viewer.sessionDiffInput()).toEqual({ sessionID: "session-1", messageID: "message-1" })
-    expect(viewer.vcsDiffInput()).toBeUndefined()
+    expect(viewer.vcsDiffInput()).toEqual({ location: { directory: "/repo/session" }, mode: "working", context: 12 })
+    await viewer.app.renderOnce()
+    expect(viewer.app.captureCharFrame()).toContain("changed.ts")
+    expect(viewer.app.captureCharFrame()).not.toContain("untouched.ts")
   } finally {
     viewer.app.renderer.destroy()
   }
