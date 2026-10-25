@@ -2,7 +2,8 @@ import { describe, expect, test } from "bun:test"
 import { SessionProcess } from "@orchestra/core/session-process"
 import { SessionV2 } from "@orchestra/core/session"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
-import { Effect, Schedule } from "effect"
+import { AppProcess } from "@orchestra/core/process"
+import { Effect, Layer, Schedule, Stream } from "effect"
 import { it } from "./lib/effect"
 
 const layer = LayerNode.compile(SessionProcess.node)
@@ -91,7 +92,7 @@ describe("SessionProcess", () => {
     }).pipe(Effect.provide(layer)),
   )
 
-  it.live("includes output printed right before exit in the finished notice", () =>
+  it.live("includes output that is still in the pipe when the exit lands", () =>
     Effect.gen(function* () {
       const processes = yield* SessionProcess.Service
       const sessionID = "ses_session_process_drain"
@@ -100,9 +101,8 @@ describe("SessionProcess", () => {
         synthetic: (input: { text: string }) => Effect.sync(() => delivered.push(input.text)),
         wait: () => Effect.void,
       } as unknown as SessionV2.Interface
-      // A large burst then the marker with no pause: the exit lands while the pipe still holds the tail.
       const launched = yield* processes
-        .launch({ sessionID, command: "head -c 2000000 /dev/zero | tr '\\0' x; printf drain-marker", title: "burst" })
+        .launch({ sessionID, command: "drain", title: "drain" })
         .pipe(Effect.provideService(SessionV2.Service, sessions))
       const waited = yield* processes.wait(sessionID, launched.id)
       yield* Effect.suspend(() => (delivered.length ? Effect.void : Effect.fail("pending"))).pipe(
@@ -110,7 +110,28 @@ describe("SessionProcess", () => {
       )
       expect(delivered[0]).toContain("drain-marker")
       expect(waited.info?.output).toContain("drain-marker")
-    }).pipe(Effect.provide(layer)),
+    }).pipe(
+      Effect.provide(
+        LayerNode.compile(SessionProcess.node, [
+          [
+            AppProcess.node,
+            // The exit resolves before the last chunk reaches the reader, the order a real spawner cannot rule out.
+            Layer.succeed(
+              AppProcess.Service,
+              AppProcess.Service.of({
+                spawn: () =>
+                  Effect.succeed({
+                    pid: 4242,
+                    all: Stream.fromEffect(Effect.sleep("100 millis").pipe(Effect.as(new TextEncoder().encode("drain-marker")))),
+                    exitCode: Effect.succeed(0),
+                    kill: () => Effect.void,
+                  }),
+              } as unknown as AppProcess.Interface),
+            ),
+          ],
+        ]),
+      ),
+    ),
   )
 
   it.live("forgets the oldest finished processes beyond the kept count", () =>
