@@ -2,11 +2,14 @@ import { execFileSync } from "node:child_process"
 import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { afterEach, describe, expect, test } from "bun:test"
+import { afterEach, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { parsePatch, parseStatuses } from "../../../script/guards/diff"
 import { evaluate } from "../../../script/guards/engine"
 import { parseRule, selfCheck, type Rule } from "../../../script/guards/rule"
 import { format, runGuards } from "../../../script/guards/run"
+
+// Each runGuards test builds a temp git repo and spawns git several times; a loaded CI host needs more than 5s.
+setDefaultTimeout(30_000)
 
 const guardsDir = join(import.meta.dir, "../../../script/guards")
 const repos: string[] = []
@@ -291,6 +294,74 @@ describe("runGuards", () => {
       "gha-template-injection",
       "gha-unpinned-uses",
       "hook-bypass",
+    ])
+  })
+
+  // Golden: one planted defect per suppression and debug rule across TypeScript, Python, Rust, env files and scripts,
+  // next to look-alike files that must stay clean.
+  test("the suppression and debug pack flags every planted defect and nothing in the look-alikes", () => {
+    const cwd = guarded()
+    write(
+      cwd,
+      "lib/bad.ts",
+      [
+        "const a: any = 1",
+        "const b = value as unknown as Foo",
+        "debugger",
+        "console.log(a)",
+        "try { run() } catch (e) {}",
+        "// WIP: finish this",
+        "",
+      ].join("\n"),
+    )
+    write(
+      cwd,
+      "lib/bad.py",
+      ["x = f(y)  # type: ignore", "import os  # noqa", "    pass  # pragma: no cover", "    except:", "    breakpoint()", ""].join("\n"),
+    )
+    write(
+      cwd,
+      "lib/bad.rs",
+      ["#[allow(dead_code)]", "let v = m.get(&k).unwrap();", "    todo!()", "    dbg!(x);", ""].join("\n"),
+    )
+    write(cwd, "web/.env.local.example", "VITE_API_TOKEN=abc\n")
+    write(cwd, "scripts/clean.sh", "git push --force origin dev\n")
+    write(
+      cwd,
+      "lib/good.ts",
+      [
+        "const x: unknown = 1",
+        "// catch {} is banned",
+        "console.error(e)",
+        "const s = value as Session",
+        "// the cast is not as unknown as it looks",
+        "",
+      ].join("\n"),
+    )
+    write(cwd, "lib/good.py", ["x = f(y)  # type: ignore[arg-type]", "import os  # noqa: F401", "    except OSError:", ""].join("\n"))
+    write(cwd, "lib/good.rs", ['#[expect(dead_code, reason = "used by tests")]', "let v = m.get(&k)?;", ""].join("\n"))
+    write(cwd, "web/good.env", "NEXT_PUBLIC_SUPABASE_ANON_KEY=x\n")
+    commit(cwd, "pack")
+    const findings = runGuards({ cwd, baseRef: "main", approved: [] }).findings
+    expect(findings.filter((finding) => finding.path.includes("good"))).toEqual([])
+    expect(findings.map((finding) => finding.rule).sort()).toEqual([
+      "client-env-secret",
+      "destructive-shell",
+      "js-console-log",
+      "js-debugger",
+      "js-empty-catch",
+      "py-bare-except",
+      "py-breakpoint",
+      "py-no-cover",
+      "py-noqa-blanket",
+      "py-type-ignore",
+      "rs-allow-lint",
+      "rs-dbg-macro",
+      "rs-todo-macros",
+      "rs-unwrap-added",
+      "ts-any-added",
+      "ts-double-cast",
+      "wip-marker",
     ])
   })
 

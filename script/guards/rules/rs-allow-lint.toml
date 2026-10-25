@@ -1,0 +1,9 @@
+id = "rs-allow-lint"
+severity = "warn"
+on = "added-lines"
+paths = ["**/*.rs"]
+exclude = []
+match = '#!?\[allow\('
+message = "Silences a compiler or clippy lint. Fix the cause, or use #[expect(...)] with a reason so it stops compiling when the lint goes away."
+positive = ['#[allow(dead_code)]', '#![allow(clippy::too_many_arguments)]', '    #[allow(unused)]']
+negative = ['#[expect(dead_code, reason = "used by the tests")]', '#[derive(Debug)]', '// we allow(nothing) here']

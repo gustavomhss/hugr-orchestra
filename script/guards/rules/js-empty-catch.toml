@@ -1,0 +1,10 @@
+id = "js-empty-catch"
+severity = "warn"
+on = "added-lines"
+paths = ["**/*.{ts,tsx,mts,cts,js,jsx,mjs}"]
+exclude = []
+# Best-effort cleanup with an empty catch is idiomatic in this repo, so this only warns; say why in a comment.
+match = '^(?!\s*(//|#)).*(?:\bcatch\s*(\(\s*\w*\s*\))?\s*\{\s*\})'
+message = "Empty catch swallows the error. Handle it, log it, or put a comment inside saying why ignoring it is safe."
+positive = ['  } catch {}', 'try { a() } catch (e) {}', '} catch (error) { }']
+negative = ['} catch {', '} catch (e) { log(e) }', '// catch {} is banned']

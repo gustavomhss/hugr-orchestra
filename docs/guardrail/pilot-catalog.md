@@ -77,6 +77,7 @@ Scanned the last 300 commits of `origin/dev` (88k added lines). Per-rule pattern
 - Squawk names corrected: `ban-drop-column` exists; adding a NOT NULL column is `adding-required-field`; `adding-not-nullable-field` is the `SET NOT NULL` case.
 - Not diff-catchable, handled elsewhere: type errors found after push (make `typecheck.yml` a required check), Windows path bugs (existing Windows lane).
 - Workflow pack implemented (13 rules, `gha-*` plus `hook-bypass`). Not yet: C2 `gha-permissions-missing` and C11 `gha-checkout-credentials`, which need whole-file or YAML-step checks the line engine does not do. `bun run script/guards/baseline.ts` (scan of today's code) found four false positives the hand-written samples missed, now fixed: a `fit(372, 94)` helper, bare `JSON` button text, a `test.only(name, ...)` wrapper, a commented/echoed `curl | bash`. `heredoc-residue` no longer looks for `JSON`.
+- Suppression and debug pack implemented (17 rules: S3-S8, S10-S14, D1-D6). `rs-unsafe-no-safety` (S9) is deferred: a line engine cannot see the previous line. The baseline scan tightened `wip-marker` (WIP is a product term here, so only a comment-leading WIP/XXX counts), `js-console-log` (CLI, gates and examples print on purpose) and made five rules skip comment lines.
 - Next candidates from prior art (`sources.md`): `migration-add-required-column`, `gha-secrets-tojson`, `gha-deprecated-commands`, `gha-unpinned-images`, `gha-hardcoded-credentials`, `path-illegal-windows-name`.
 
 ## Catalog

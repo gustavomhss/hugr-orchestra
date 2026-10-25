@@ -79,12 +79,34 @@ export function format(report: Report) {
 
 type Source = { list: () => string[]; read: (file: string) => string | undefined }
 
+// Every rule file and the config come out of the base in one `git cat-file --batch` call, not one spawn per file.
 function baseSource(cwd: string, base: string): Source {
-  return {
-    list: () =>
-      (tryGit(cwd, ["ls-tree", "-r", "--name-only", base, "--", RULES_DIR]) ?? "").split("\n").filter((file) => file.length > 0),
-    read: (file) => tryGit(cwd, ["show", `${base}:${file}`]),
+  const rules = (tryGit(cwd, ["ls-tree", "-r", "--name-only", base, "--", RULES_DIR]) ?? "")
+    .split("\n")
+    .filter((file) => file.length > 0)
+  const blobs = readBlobs(cwd, base, [...rules, CONFIG_FILE])
+  return { list: () => rules, read: (file) => blobs.get(file) }
+}
+
+// `git cat-file --batch` answers each `<rev>:<path>` with `<sha> blob <size>\n<content>\n`, or `<rev>:<path> missing\n`.
+function readBlobs(cwd: string, base: string, files: string[]) {
+  const result = Bun.spawnSync(["git", "-C", cwd, "cat-file", "--batch"], {
+    stdin: Buffer.from(files.map((file) => `${base}:${file}`).join("\n") + "\n"),
+  })
+  const output = result.stdout
+  const blobs = new Map<string, string>()
+  let offset = 0
+  for (const file of files) {
+    const end = output.indexOf(10, offset)
+    if (end < 0) break
+    const header = output.subarray(offset, end).toString()
+    offset = end + 1
+    if (header.endsWith(" missing")) continue
+    const size = Number(header.split(" ").at(-1))
+    blobs.set(file, output.subarray(offset, offset + size).toString())
+    offset += size + 1
   }
+  return blobs
 }
 
 function diskSource(cwd: string): Source {

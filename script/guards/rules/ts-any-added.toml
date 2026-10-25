@@ -1,0 +1,10 @@
+id = "ts-any-added"
+severity = "warn"
+on = "added-lines"
+paths = ["**/*.{ts,tsx,mts,cts}"]
+exclude = []
+# `: any` as a type annotation (followed by punctuation, not prose), `as any`, `<any>` and `any[]`. AGENTS.md says avoid any.
+match = '''(:\s*any\s*([,;)=>\]}|&]|$))|(\bas any\b(?!\s+[a-z]))|<any>|\bany\[\]'''
+message = "Explicit any switches the type checker off for this value. Use the real type, unknown plus a narrowing check, or a generic."
+positive = ['const a: any = 1', 'function f(a: any) {}', 'const b = x as any', 'const c = <any>x', 'let list: any[] = []', 'type T = { v: any }']
+negative = ['// note: any value works here', 'const company = "anyone"', '// treat it as any other file', 'const x: unknown = 1', 'const many = items.length']
