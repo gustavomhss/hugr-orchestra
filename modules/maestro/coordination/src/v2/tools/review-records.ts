@@ -275,19 +275,19 @@ export const recordReview = Effect.fn("MaestroReviewRecords.recordReview")(funct
   const stage = input.stage ?? "plan"
   const planned = stage === "code" ? yield* findReview(services, input.sessionID, input.validationRecordID) : undefined
   if (stage === "code" && planned?.verdict !== "APPROVE") return yield* reviewRejected("code-review-base-mismatch")
-  // A plan-stage review may carry no head; a code review has nothing to build on without one.
-  const base = planned?.artifact.headSHA
-  if (planned && !base) return yield* reviewRejected("code-review-base-missing")
-  const code = base
+  // A validation recorded without its plan revision cannot scope a code review's write paths.
+  const planRevisionID = record.planRevisionID
+  if (planned && !planRevisionID) return yield* reviewRejected("plan-revision-missing")
+  const code = planned && planRevisionID
     ? yield* WorkflowReviewV2.verify({ db: services.db, git: services.atlas.git }, input.artifact, {
         worktree: trusted.root,
-        base,
-        planRevisionID: record.planRevisionID,
+        base: planned.artifact.headSHA,
+        planRevisionID,
         workCardHash: record.workCardHash,
         maxOutputBytes: REVIEW_ARTIFACT_MAX_BYTES,
       })
     : undefined
-  if (code && "reason" in code) return yield* reviewRejected(code.reason)
+  if (code && "reason" in code) return yield* reviewRejected(code.reason ?? "malformed-artifact-evidence")
   const reviewed =
     code ??
     (yield* requireArtifact(
