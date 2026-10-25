@@ -1,0 +1,10 @@
+id = "js-test-skipped"
+severity = "gate"
+on = "added-lines"
+paths = ["$js_tests"]
+exclude = []
+# `.skip(` only. skipIf(cond) is the platform-gating idiom this repo uses and does not match.
+match = '\b(describe|it|test)\.skip\(|(^|[^.\w])(xit|xdescribe)\('
+message = "Skipped test (.skip / xit / xdescribe). Fix the test or delete it with a reason; do not leave it skipped."
+positive = ["  it.skip(\"does a thing\", () => {", "describe.skip('group', () => {", "  xit(\"works\", () => {", "test.skip(\"x\", () => {})"]
+negative = ["  it(\"does a thing\", () => {", "test.skipIf(process.platform === \"win32\")(\"x\", () => {})", "// we skip this when offline", "const skipped = items.filter(Boolean)"]

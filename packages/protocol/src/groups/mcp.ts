@@ -40,30 +40,45 @@ export const McpGroup = HttpApiGroup.make("server.mcp")
   .add(
     HttpApiEndpoint.get("mcp.config", "/api/mcp/config", {
       query: LocationQuery,
-      success: Location.response(Mcp.Config),
-      error: InvalidRequestError,
+      success: Location.response(Schema.Record(Schema.String, Mcp.Entry)),
     })
       .annotateMerge(locationQueryOpenApi)
       .annotateMerge(
         OpenApi.annotations({
           identifier: "v2.mcp.config",
-          summary: "Read MCP config",
+          summary: "Read resolved MCP config",
           description:
-            "Read the MCP servers the Location resolved and the profile files' own unresolved entries. Only type, command and url are returned.",
+            "Read each configured MCP server's resolved transport and endpoint. Headers, environment and OAuth settings are never returned.",
         }),
       ),
   )
   .add(
-    HttpApiEndpoint.get("mcp.tools", "/api/mcp/tool", {
+    HttpApiEndpoint.get("mcp.entries", "/api/mcp/entries", {
       query: LocationQuery,
-      success: Location.response(Mcp.Tools),
+      success: Location.response(Schema.Record(Schema.String, Mcp.Entry)),
+      error: InvalidRequestError,
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        OpenApi.annotations({
+          identifier: "v2.mcp.entries",
+          summary: "Read MCP profile entries",
+          description:
+            "Read the MCP servers of the Location's own config files exactly as written, with `{env:...}` references unresolved.",
+        }),
+      ),
+  )
+  .add(
+    HttpApiEndpoint.get("mcp.tools", "/api/mcp/tools", {
+      query: LocationQuery,
+      success: Location.response(Schema.Record(Schema.String, Schema.Array(Schema.String))),
     })
       .annotateMerge(locationQueryOpenApi)
       .annotateMerge(
         OpenApi.annotations({
           identifier: "v2.mcp.tools",
-          summary: "List MCP tools",
-          description: "List the tool names each connected MCP server offers.",
+          summary: "List MCP tool names",
+          description: "List the tool names of each connected MCP server that lists tools.",
         }),
       ),
   )

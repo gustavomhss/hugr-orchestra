@@ -222,3 +222,8 @@ export type ActionsError = {
 
 export const isActionsError = (value: unknown): value is ActionsError =>
   typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "ActionsError"
+
+export type ForbiddenError = { readonly _tag: "ForbiddenError"; readonly message: string }
+
+export const isForbiddenError = (value: unknown): value is ForbiddenError =>
+  typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "ForbiddenError"

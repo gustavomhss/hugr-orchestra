@@ -1,0 +1,9 @@
+id = "gha-deprecated-commands"
+severity = "gate"
+on = "added-lines"
+paths = [".github/workflows/**/*.{yml,yaml}", ".github/actions/**/*.{yml,yaml}"]
+exclude = []
+match = '::(set-output|save-state|set-env|add-path)\b'
+message = "Deprecated workflow command. Write to the GITHUB_OUTPUT, GITHUB_STATE, GITHUB_ENV or GITHUB_PATH file instead."
+positive = ['echo "::set-output name=a::b"', 'echo ::add-path::/x', 'echo "::save-state name=a::b"']
+negative = ['echo "::warning::x"', 'echo "a=b" >> $GITHUB_OUTPUT', 'echo "::group::build"']

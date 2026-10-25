@@ -21,7 +21,7 @@ async function openMockedApp(page: Page, root: unknown[]) {
   page.on("request", (request) => {
     const url = new URL(request.url())
     if (url.port !== serverPort) return
-    requests.push({ method: request.method(), path: url.pathname, directory: url.searchParams.get("directory") })
+    requests.push({ method: request.method(), path: url.pathname, directory: url.searchParams.get("location[directory]") })
   })
   await mockOrchestraServer(page, {
     directory,
@@ -40,13 +40,13 @@ async function openMockedApp(page: Page, root: unknown[]) {
   // The shared mock has no git init route; the real one answers with the refreshed project. Registered after the
   // mock so it runs first for this one URL.
   await page.route(
-    (url) => url.port === serverPort && url.pathname === "/project/git/init",
+    (url) => url.port === serverPort && url.pathname === "/api/project/git",
     (route) =>
       route.fulfill({
         status: 200,
         contentType: "application/json",
         headers: { "access-control-allow-origin": "*" },
-        body: JSON.stringify(project),
+        body: JSON.stringify({ location: { directory, project: { id: project.id, directory } }, data: project }),
       }),
   )
   await page.addInitScript(() => {
@@ -59,13 +59,13 @@ async function openMockedApp(page: Page, root: unknown[]) {
     // Every git init the page sent, whatever folder it named.
     initialized: () =>
       requests
-        .filter((request) => request.method === "POST" && request.path === "/project/git/init")
+        .filter((request) => request.method === "POST" && request.path === "/api/project/git")
         .map((request) => request.directory),
-    // Reads of the folder's existing project: the step an unconfirmed folder takes instead of initializing.
+    // Reads of the folder's existing project: the step an unconfirmed folder takes instead of initializing. V2
+    // resolves the project from the location route.
     lookups: () =>
       requests.filter(
-        (request) =>
-          request.method === "GET" && request.path === "/project/current" && request.directory === directory,
+        (request) => request.method === "GET" && request.path === "/api/location" && request.directory === directory,
       ).length,
   }
 }

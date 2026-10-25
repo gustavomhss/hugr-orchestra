@@ -1,4 +1,3 @@
-import type { PermissionActionConfig, PermissionRuleConfig } from "@/v2-wire"
 import { matchWildcard } from "@/utils/wildcard"
 
 // Sections of the routed Settings view, in navigation order: the Settings dialog's tabs first (General, Shortcuts,
@@ -39,75 +38,59 @@ export const PERMISSION_TOOLS = [
 export type PermissionTool = (typeof PERMISSION_TOOLS)[number]
 export const PERMISSION_ACTIONS = ["allow", "ask", "deny"] as const
 
-type Rule = { key: string; pattern: string; action: PermissionActionConfig }
+export type PermissionEffect = (typeof PERMISSION_ACTIONS)[number]
+export type PermissionRule = { action: string; resource: string; effect: PermissionEffect }
 
-// The server's own defaults. It evaluates them first, then each agent's
-// built-in rules (plan denies edits, for example), then the configured rules; the last matching rule wins. Only
-// their "*" defaults are listed: everything is allowed except doom_loop and external_directory, which ask.
-const BUILT_IN: Rule[] = [
-  { key: "*", pattern: "*", action: "allow" },
-  { key: "doom_loop", pattern: "*", action: "ask" },
-  { key: "external_directory", pattern: "*", action: "ask" },
+// The server's own "*" defaults (packages/core/src/plugin/agent.ts). It evaluates each agent's defaults first, then
+// the configured rules; the last matching rule wins. Everything is allowed except external_directory, which asks.
+const BUILT_IN: PermissionRule[] = [
+  { action: "*", resource: "*", effect: "allow" },
+  { action: "external_directory", resource: "*", effect: "ask" },
 ]
 
-export function permissionMap(config: unknown): Record<string, PermissionRuleConfig> {
-  if (config && typeof config === "object" && !Array.isArray(config))
-    return Object.fromEntries(Object.entries(config).filter((entry) => rule(entry[1])))
-  const action = actionOf(config)
-  if (action) return { "*": action }
-  return {}
+// Keeps the well-formed rules of a config value, in its order.
+export function permissionRules(value: unknown): PermissionRule[] {
+  if (!Array.isArray(value)) return []
+  return value.flatMap((item: { action?: unknown; resource?: unknown; effect?: unknown } | null) => {
+    if (!item || typeof item !== "object") return []
+    const effect = PERMISSION_ACTIONS.find((action) => action === item.effect)
+    if (typeof item.action !== "string" || typeof item.resource !== "string" || !effect) return []
+    return [{ action: item.action, resource: item.resource, effect }]
+  })
 }
 
-// The tool's default, as the server evaluates it: rules in key order, last match wins, and only rules that
-// cover every input ("*") decide the default.
-export function permissionAction(config: unknown, tool: PermissionTool): PermissionActionConfig {
+// The tool's default, as the server evaluates it: last match wins, and only rules that cover every input
+// (resource "*") decide the default.
+export function permissionAction(rules: readonly PermissionRule[], tool: PermissionTool): PermissionEffect {
   return (
-    [...BUILT_IN, ...rules(config)].findLast((item) => item.pattern === "*" && matchWildcard(tool, item.key))?.action ??
+    [...BUILT_IN, ...rules].findLast((item) => item.resource === "*" && matchWildcard(tool, item.action))?.effect ??
     "ask"
   )
 }
 
-// The server deep-merges a config patch: existing keys keep their place and new keys go last, at every level.
-// A write therefore cannot move a tool past a later wildcard rule, and a "*" added to a patterned rule would land
-// after (and override) its patterns. Both cases are reported instead of written.
+// Rewrites the tool's own "*" rules in place, so every other rule keeps its place, or appends one for a tool without
+// rules. A tool whose rules are all patterns, or whose new rule a later wildcard would override, is reported instead:
+// fixing either would reorder rules the user wrote in the config file.
 export function permissionWrite(
-  config: unknown,
+  rules: readonly PermissionRule[],
   tool: PermissionTool,
-  action: PermissionActionConfig,
-): { next: Record<string, PermissionRuleConfig> } | { locked: PermissionLock } {
-  const map = permissionMap(config)
-  const current = map[tool]
-  if (typeof current === "object" && !("*" in current) && Object.keys(current).length > 0) return { locked: "patterns" }
-  const next = { ...map, [tool]: typeof current === "object" ? { ...current, "*": action } : action }
-  if (permissionAction(next, tool) !== action) return { locked: "shadowed" }
+  effect: PermissionEffect,
+): { next: PermissionRule[] } | { locked: PermissionLock } {
+  const own = rules.filter((item) => item.action === tool)
+  if (own.length > 0 && own.every((item) => item.resource !== "*")) return { locked: "patterns" }
+  const next = own.length
+    ? rules.map((item) => (item.action === tool && item.resource === "*" ? { ...item, effect } : item))
+    : [...rules, { action: tool, resource: "*", effect }]
+  if (permissionAction(next, tool) !== effect) return { locked: "shadowed" }
   return { next }
 }
 export type PermissionLock = "patterns" | "shadowed"
 
-export function permissionLock(config: unknown, tool: PermissionTool) {
-  return PERMISSION_ACTIONS.flatMap((action) => {
-    const result = permissionWrite(config, tool, action)
+export function permissionLock(rules: readonly PermissionRule[], tool: PermissionTool) {
+  return PERMISSION_ACTIONS.flatMap((effect) => {
+    const result = permissionWrite(rules, tool, effect)
     return "locked" in result ? [result.locked] : []
   })[0]
-}
-
-function rules(config: unknown): Rule[] {
-  return Object.entries(permissionMap(config)).flatMap(([key, value]) => {
-    if (typeof value === "string") return [{ key, pattern: "*", action: value }]
-    return Object.entries(value).flatMap(([pattern, action]) => {
-      const valid = actionOf(action)
-      return valid ? [{ key, pattern, action: valid }] : []
-    })
-  })
-}
-
-function actionOf(value: unknown) {
-  return PERMISSION_ACTIONS.find((item) => item === value)
-}
-
-function rule(value: unknown): value is PermissionRuleConfig {
-  if (actionOf(value)) return true
-  return !!value && typeof value === "object" && !Array.isArray(value)
 }
 
 // Context windows read the way the mock writes them: 200000 -> 200K, 262144 -> 256K, 1000000 -> 1M.

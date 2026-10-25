@@ -27,7 +27,7 @@ and the HTTP-facing authoring orchestration.
 
 `src/routes.ts` owns the HTTP layer assembly: application service nodes, API
 handlers, auth, schema-error handling, and location middleware. It exports
-`createRoutes({ password?, host? })`, `createEmbeddedRoutes({ host? })`, the default `routes` layer,
+`createRoutes({ password?, host?, operator?, verifier? })`, `createEmbeddedRoutes({ host?, operator?, verifier? })`, the default `routes` layer,
 and `webHandler()` for Fetch-compatible hosting. The package export map exposes
 these modules by name, for example `@orchestra/server/routes`.
 

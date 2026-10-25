@@ -9,7 +9,9 @@ type RawClient = HttpApiClient.ForApi<typeof ClientApi>
 type Endpoint33_0Request = Parameters<RawClient["server.actionsBinding"]["actions.binding.list"]>[0]
 type Endpoint33_0Input = { readonly location?: Endpoint33_0Request["query"]["location"] }
 const Endpoint33_0 = (raw: RawClient["server.actionsBinding"]) => (input?: Endpoint33_0Input) =>
-  raw["actions.binding.list"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError))
+  raw["actions.binding.list"]({
+    query: { ...(input?.["location"] === undefined ? {} : { location: input?.["location"] }) },
+  }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint33_1Request = Parameters<RawClient["server.actionsBinding"]["actions.binding.create"]>[0]
 type Endpoint33_1Input = {
@@ -21,7 +23,7 @@ type Endpoint33_1Input = {
 }
 const Endpoint33_1 = (raw: RawClient["server.actionsBinding"]) => (input: Endpoint33_1Input) =>
   raw["actions.binding.create"]({
-    query: { location: input["location"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
     payload: {
       remote: input["remote"],
       provider: input["provider"],
@@ -39,7 +41,7 @@ type Endpoint33_2Input = {
 const Endpoint33_2 = (raw: RawClient["server.actionsBinding"]) => (input: Endpoint33_2Input) =>
   raw["actions.binding.get"]({
     params: { bindingID: input["bindingID"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint33_3Request = Parameters<RawClient["server.actionsBinding"]["actions.binding.update"]>[0]
@@ -55,7 +57,7 @@ type Endpoint33_3Input = {
 const Endpoint33_3 = (raw: RawClient["server.actionsBinding"]) => (input: Endpoint33_3Input) =>
   raw["actions.binding.update"]({
     params: { bindingID: input["bindingID"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
     payload: {
       remote: input["remote"],
       provider: input["provider"],
@@ -73,7 +75,7 @@ type Endpoint33_4Input = {
 const Endpoint33_4 = (raw: RawClient["server.actionsBinding"]) => (input: Endpoint33_4Input) =>
   raw["actions.binding.remove"]({
     params: { bindingID: input["bindingID"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint33_5Request = Parameters<RawClient["server.actionsBinding"]["actions.binding.capabilities"]>[0]
@@ -85,7 +87,7 @@ type Endpoint33_5Input = {
 const Endpoint33_5 = (raw: RawClient["server.actionsBinding"]) => (input: Endpoint33_5Input) =>
   raw["actions.binding.capabilities"]({
     params: { bindingID: input["bindingID"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint33_6Request = Parameters<RawClient["server.actionsBinding"]["actions.binding.policy"]>[0]
@@ -97,7 +99,7 @@ type Endpoint33_6Input = {
 const Endpoint33_6 = (raw: RawClient["server.actionsBinding"]) => (input: Endpoint33_6Input) =>
   raw["actions.binding.policy"]({
     params: { bindingID: input["bindingID"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint33_7Request = Parameters<RawClient["server.actionsBinding"]["actions.binding.updatePolicy"]>[0]
@@ -111,7 +113,7 @@ type Endpoint33_7Input = {
 const Endpoint33_7 = (raw: RawClient["server.actionsBinding"]) => (input: Endpoint33_7Input) =>
   raw["actions.binding.updatePolicy"]({
     params: { bindingID: input["bindingID"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
     payload: { retentionDays: input["retentionDays"], execution: input["execution"] },
   }).pipe(Effect.mapError(mapClientError))
 

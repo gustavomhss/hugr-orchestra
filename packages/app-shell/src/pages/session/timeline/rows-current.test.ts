@@ -51,6 +51,7 @@ describe("current session timeline rows", () => {
       true,
       "busy",
       normalized.messages.filter((message) => message.role === "user"),
+      () => undefined,
     )
 
     expect(result.activeMessageID).toBe("msg_3")
@@ -60,6 +61,50 @@ describe("current session timeline rows", () => {
       "turn-gap:msg_3",
       "user-message:msg_3",
       "assistant-part:msg_3:msg_4:reasoning:0",
+    ])
+  })
+
+  test("orders assistant parts by content, not by the id order the part store keeps", () => {
+    const source = [
+      { id: "msg_1", type: "user", text: "inspect", time: { created: 1 } },
+      {
+        id: "msg_2",
+        type: "assistant",
+        agent: "build",
+        model: { id: "model", providerID: "provider" },
+        content: [
+          { type: "text", text: "Reading the file." },
+          {
+            id: "prt_tool",
+            type: "tool",
+            name: "read",
+            time: { created: 2, ran: 2, completed: 3 },
+            state: { status: "completed", input: {}, metadata: {}, content: [{ type: "text", text: "contents" }] },
+          },
+          { type: "text", text: "The file is fine." },
+        ],
+        time: { created: 2, completed: 4 },
+      },
+    ] satisfies SessionMessageInfo[]
+    const normalized = normalizeSessionMessages("ses_1", source)
+    const messages = new Map(normalized.messages.map((message) => [message.id, message]))
+
+    const result = Timeline.constructSessionMessageRows(
+      source,
+      (messageID) => messages.get(messageID),
+      // The server-session store sorts each message's parts by id.
+      (messageID) => (normalized.parts.get(messageID) ?? []).toSorted((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)),
+      true,
+      "idle",
+      normalized.messages.filter((message) => message.role === "user"),
+      () => undefined,
+    )
+
+    expect(result.rows.map(TimelineRow.key)).toEqual([
+      "user-message:msg_1",
+      "assistant-part:msg_1:msg_2:text:0",
+      "assistant-part:msg_1:prt_tool",
+      "assistant-part:msg_1:msg_2:text:1",
     ])
   })
 
@@ -86,6 +131,7 @@ describe("current session timeline rows", () => {
       true,
       "idle",
       normalized.messages.filter((message) => message.role === "user"),
+      () => undefined,
     )
 
     expect(result.activeMessageID).toBe("msg_shell")
@@ -126,6 +172,7 @@ describe("current session timeline rows", () => {
       true,
       "idle",
       normalized.messages.filter((message) => message.role === "user"),
+      () => undefined,
     )
 
     expect(result.rows.map(TimelineRow.key)).toEqual([
@@ -158,6 +205,7 @@ describe("current session timeline rows", () => {
       true,
       "busy",
       [...normalized.messages.filter((message) => message.role === "user"), optimistic],
+      () => undefined,
     )
 
     expect(result.activeMessageID).toBe(optimistic.id)
@@ -200,6 +248,7 @@ describe("current session timeline rows", () => {
       true,
       "busy",
       normalized.messages.filter((message) => message.role === "user"),
+      () => undefined,
     )
 
     expect(result.rows.map((row) => row._tag)).toEqual(["UserMessage", "AssistantPart"])
@@ -216,6 +265,7 @@ describe("current session timeline rows", () => {
         true,
         "idle",
         false,
+        undefined,
       ).flatMap((row) => (row._tag === "Error" ? [row.providerID] : []))
 
     expect(failed({ name: "ProviderAuthError", data: { providerID: "openai", message: "No API key" } })).toEqual([
@@ -238,6 +288,7 @@ describe("current session timeline rows", () => {
       false,
       "idle",
       false,
+      undefined,
     )
 
     expect(rows.some((row) => row._tag === "UserMessage")).toBe(false)

@@ -1,6 +1,8 @@
-import type { Message, UserMessage } from "@/v2-wire"
+import type { Message, SnapshotFileDiff, UserMessage } from "@/v2-wire"
 
-import { createMemo, createResource, onCleanup, untrack, type Accessor } from "solid-js"
+import { createEffect, createMemo, createResource, onCleanup, untrack, type Accessor } from "solid-js"
+import { createStore } from "solid-js/store"
+import { useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import { useSync } from "@/context/sync"
 import { same } from "@/utils/same"
@@ -12,6 +14,7 @@ export function createTimelineModel(input: {
   sessionID: Accessor<string | undefined>
   revertMessageID: Accessor<string | undefined>
 }) {
+  const serverSDK = useServerSDK()
   const serverSync = useServerSync()
   const sync = useSync()
   let refreshFrame: number | undefined
@@ -56,6 +59,37 @@ export function createTimelineModel(input: {
     emptyUserMessages,
     { equals: same },
   )
+  const [turnDiffs, setTurnDiffs] = createStore<Record<string, SnapshotFileDiff[]>>({})
+  const requested = new Set<string>()
+  createEffect(() => {
+    const id = input.sessionID()
+    if (!id) return
+    const users = userMessages()
+    // The last turn keeps changing files while the Session runs, so it is fetched again once the Session goes idle.
+    const running = (sync().data.session_status[id]?.type ?? "idle") !== "idle"
+    const last = users.at(-1)?.id
+    if (running && last) requested.delete(last)
+    users.forEach((message) => {
+      if ((running && message.id === last) || requested.has(message.id)) return
+      requested.add(message.id)
+      serverSDK()
+        .orchestra.sessions.diff({ sessionID: id, messageID: message.id })
+        .then(
+          (files) =>
+            setTurnDiffs(
+              message.id,
+              files.map((file) => ({
+                file: file.path,
+                patch: file.patch,
+                additions: file.additions,
+                deletions: file.deletions,
+                status: file.status,
+              })),
+            ),
+          () => requested.delete(message.id),
+        )
+    })
+  })
   const more = createMemo(() => {
     const id = input.sessionID()
     return id ? sync().session.history.more(id) : false
@@ -84,6 +118,7 @@ export function createTimelineModel(input: {
     ready,
     resource,
     refetch,
+    turnDiffs: (messageID: string): SnapshotFileDiff[] | undefined => turnDiffs[messageID],
     userMessages,
     visibleUserMessages,
   }

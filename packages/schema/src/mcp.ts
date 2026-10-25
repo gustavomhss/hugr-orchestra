@@ -1,6 +1,7 @@
 export * as Mcp from "./mcp"
 
 import { Schema } from "effect"
+import { optional } from "./schema"
 
 // Connection state of one configured MCP server, as reported to clients.
 const StatusConnected = Schema.Struct({ status: Schema.Literal("connected") }).annotate({
@@ -65,24 +66,6 @@ export const AuthStart = Schema.Struct({
 }).annotate({ identifier: "McpAuthStart" })
 export type AuthStart = Schema.Schema.Type<typeof AuthStart>
 
-// The fields a client shows or edits for one server; env, headers and OAuth secrets never leave the server.
-export const ConfigEntry = Schema.Struct({
-  type: Schema.Literals(["local", "remote"]).pipe(Schema.optional),
-  command: Schema.Array(Schema.String).pipe(Schema.optional),
-  url: Schema.String.pipe(Schema.optional),
-}).annotate({ identifier: "McpConfigEntry" })
-export type ConfigEntry = Schema.Schema.Type<typeof ConfigEntry>
-
-// `servers` is what the Location resolved; `entries` is what the profile's own files define, unresolved.
-export const Config = Schema.Struct({
-  servers: Schema.Record(Schema.String, ConfigEntry),
-  entries: Schema.Record(Schema.String, ConfigEntry),
-}).annotate({ identifier: "McpConfig" })
-export type Config = Schema.Schema.Type<typeof Config>
-
-// The tool names each connected server offers, by server.
-export const Tools = Schema.Record(Schema.String, Schema.Array(Schema.String)).annotate({ identifier: "McpTools" })
-export type Tools = Schema.Schema.Type<typeof Tools>
 // What a remote server's debug probe saw: stored sign-in state, the answer to an unauthenticated initialize request,
 // and, when that answer was 401, how the OAuth discovery went. Secrets are masked.
 export const Debug = Schema.Struct({
@@ -113,3 +96,11 @@ export const Debug = Schema.Struct({
   error: Schema.String.pipe(Schema.optional),
 }).annotate({ identifier: "McpDebug" })
 export type Debug = Schema.Schema.Type<typeof Debug>
+
+// What the MCP page shows of one server's config: its transport and endpoint only, never headers, environment or OAuth.
+export interface Entry extends Schema.Schema.Type<typeof Entry> {}
+export const Entry = Schema.Struct({
+  type: optional(Schema.Literals(["local", "remote"])),
+  command: optional(Schema.Array(Schema.String)),
+  url: optional(Schema.String),
+}).annotate({ identifier: "McpEntry" })

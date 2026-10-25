@@ -246,6 +246,12 @@ function buildServerApi(input: {
         orchestra.mcp.connect(value, requestOptions),
       disconnect: (value: Parameters<typeof orchestra.mcp.disconnect>[0], requestOptions?: Parameters<typeof orchestra.mcp.disconnect>[1]) =>
         orchestra.mcp.disconnect(value, requestOptions),
+      config: (value?: Parameters<typeof orchestra.mcp.config>[0], requestOptions?: Parameters<typeof orchestra.mcp.config>[1]) =>
+        orchestra.mcp.config(value, requestOptions),
+      entries: (value?: Parameters<typeof orchestra.mcp.entries>[0], requestOptions?: Parameters<typeof orchestra.mcp.entries>[1]) =>
+        orchestra.mcp.entries(value, requestOptions),
+      tools: (value?: Parameters<typeof orchestra.mcp.tools>[0], requestOptions?: Parameters<typeof orchestra.mcp.tools>[1]) =>
+        orchestra.mcp.tools(value, requestOptions),
       resource: {
         catalog: (value?: Parameters<typeof orchestra.mcp.resources>[0], requestOptions?: Parameters<typeof orchestra.mcp.resources>[1]) =>
           orchestra.mcp.resources(value, requestOptions),

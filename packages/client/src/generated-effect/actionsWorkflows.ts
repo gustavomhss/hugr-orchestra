@@ -20,12 +20,12 @@ const Endpoint35_0 = (raw: RawClient["server.actionsWorkflow"]) => (input: Endpo
   raw["actions.workflow.list"]({
     params: { bindingID: input["bindingID"] },
     query: {
-      location: input["location"],
+      ...(input["location"] === undefined ? {} : { location: input["location"] }),
       revision: input["revision"],
-      cursor: input["cursor"],
-      limit: input["limit"],
-      query: input["query"],
-      state: input["state"],
+      ...(input["cursor"] === undefined ? {} : { cursor: input["cursor"] }),
+      ...(input["limit"] === undefined ? {} : { limit: input["limit"] }),
+      ...(input["query"] === undefined ? {} : { query: input["query"] }),
+      ...(input["state"] === undefined ? {} : { state: input["state"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -40,7 +40,12 @@ type Endpoint35_1Input = {
 const Endpoint35_1 = (raw: RawClient["server.actionsWorkflow"]) => (input: Endpoint35_1Input) =>
   raw["actions.workflow.source"]({
     params: { bindingID: input["bindingID"] },
-    query: { location: input["location"], revision: input["revision"], path: input["path"], ref: input["ref"] },
+    query: {
+      ...(input["location"] === undefined ? {} : { location: input["location"] }),
+      revision: input["revision"],
+      path: input["path"],
+      ref: input["ref"],
+    },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint35_2Request = Parameters<RawClient["server.actionsWorkflow"]["actions.workflow.graph"]>[0]
@@ -54,7 +59,12 @@ type Endpoint35_2Input = {
 const Endpoint35_2 = (raw: RawClient["server.actionsWorkflow"]) => (input: Endpoint35_2Input) =>
   raw["actions.workflow.graph"]({
     params: { bindingID: input["bindingID"] },
-    query: { location: input["location"], revision: input["revision"], path: input["path"], ref: input["ref"] },
+    query: {
+      ...(input["location"] === undefined ? {} : { location: input["location"] }),
+      revision: input["revision"],
+      path: input["path"],
+      ref: input["ref"],
+    },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint35_3Request = Parameters<RawClient["server.actionsWorkflow"]["actions.workflow.dispatch"]>[0]
@@ -69,7 +79,7 @@ type Endpoint35_3Input = {
 const Endpoint35_3 = (raw: RawClient["server.actionsWorkflow"]) => (input: Endpoint35_3Input) =>
   raw["actions.workflow.dispatch"]({
     params: { bindingID: input["bindingID"], workflowID: input["workflowID"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
     payload: { id: input["id"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -85,7 +95,7 @@ type Endpoint35_4Input = {
 const Endpoint35_4 = (raw: RawClient["server.actionsWorkflow"]) => (input: Endpoint35_4Input) =>
   raw["actions.workflow.state"]({
     params: { bindingID: input["bindingID"], workflowID: input["workflowID"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
     payload: { id: input["id"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 

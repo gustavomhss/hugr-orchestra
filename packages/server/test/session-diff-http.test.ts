@@ -156,13 +156,12 @@ it.live(
         .pipe(Effect.orDie)
 
       const diff = (messageID: SessionMessage.ID) =>
-        request(`/api/session/${sessionID}/diff?messageID=${messageID}`).pipe(
+        request(`/api/session/${sessionID}/message/${messageID}/diff`).pipe(
           Effect.flatMap(HttpClientResponse.schemaBodyJson(Diffs)),
           Effect.map((body) => body.data.map((item) => [String(item.path), item.status, item.additions, item.deletions])),
         )
       expect(yield* diff(firstPrompt)).toEqual([["first.txt", "modified", 1, 1]])
       expect(yield* diff(secondPrompt)).toEqual([["second.txt", "modified", 1, 1]])
-      expect(yield* diff(firstReply)).toEqual([])
     }),
   30_000,
 )

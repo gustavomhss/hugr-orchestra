@@ -177,12 +177,6 @@ export interface Interface {
   readonly context: (
     sessionID: SessionSchema.ID,
   ) => Effect.Effect<SessionMessage.Message[], NotFoundError | MessageDecodeError>
-  /** Diffs the project from the first to the last snapshot of the turn that answered user message `messageID`. */
-  readonly diff: (input: {
-    sessionID: SessionSchema.ID
-    messageID: SessionMessage.ID
-    context?: number
-  }) => Effect.Effect<readonly File.Diff[], NotFoundError | MessageDecodeError | Snapshot.Error>
   readonly events: (input: {
     sessionID: SessionSchema.ID
     after?: number
@@ -249,6 +243,13 @@ export interface Interface {
   readonly active: Effect.Effect<ReadonlySet<SessionSchema.ID>>
   readonly resume: (sessionID: SessionSchema.ID) => Effect.Effect<void, NotFoundError | SessionRunner.RunError>
   readonly interrupt: (sessionID: SessionSchema.ID) => Effect.Effect<void>
+  /** File changes made by the assistant turns that answer the user message `messageID`. */
+  readonly diff: (input: {
+    sessionID: SessionSchema.ID
+    messageID: SessionMessage.ID
+    /** Unchanged lines kept around each hunk. */
+    context?: number
+  }) => Effect.Effect<readonly File.Diff[], NotFoundError | MessageNotFoundError | Snapshot.Error>
   readonly revert: {
     readonly stage: (input: {
       sessionID: SessionSchema.ID
@@ -471,30 +472,6 @@ const layer = Layer.effect(
         yield* result.get(sessionID)
         return yield* store.context(sessionID)
       }),
-      diff: Effect.fn("V2Session.diff")(function* (input) {
-        const session = yield* result.get(input.sessionID)
-        const messages = yield* result.messages({ sessionID: input.sessionID, order: "asc" })
-        const index = messages.findIndex((message) => message.id === input.messageID)
-        if (messages[index]?.type !== "user") return []
-        const next = messages.findIndex((message, position) => position > index && message.type === "user")
-        const snapshots = messages
-          .slice(index + 1, next < 0 ? undefined : next)
-          .flatMap((message) => (message.type === "assistant" && message.snapshot ? [message.snapshot] : []))
-        const from = snapshots.find((snapshot) => snapshot.start)?.start
-        const to = snapshots.findLast((snapshot) => snapshot.end)?.end
-        if (!from || !to) return []
-        return yield* Effect.gen(function* () {
-          const snapshot = yield* Snapshot.Service
-          return yield* snapshot.diff({
-            from: Snapshot.ID.make(from),
-            to: Snapshot.ID.make(to),
-            context: input.context,
-          })
-        }).pipe(
-          Effect.provide(locations.get(session.location)),
-          Effect.mapError((error) => error as Snapshot.Error),
-        )
-      }),
       events: (input) =>
         Stream.unwrap(
           result
@@ -705,6 +682,14 @@ const layer = Layer.effect(
       interrupt: Effect.fn("V2Session.interrupt")((sessionID) =>
         Effect.uninterruptible(execution.interrupt(sessionID)),
       ),
+      diff: Effect.fn("V2Session.diff")(function* (input) {
+        const session = yield* result.get(input.sessionID)
+        return yield* SessionRevert.diff(input).pipe(
+          Effect.provideService(Database.Service, database),
+          Effect.provide(locations.get(session.location)),
+          Effect.mapError((error) => error as NotFoundError | MessageNotFoundError | Snapshot.Error),
+        )
+      }),
       revert: {
         stage: Effect.fn("V2Session.revert.stage")(function* (input) {
           const session = yield* result.get(input.sessionID)

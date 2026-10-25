@@ -101,6 +101,7 @@ import { createSessionOwnership } from "./session/session-ownership"
 import { createSessionLineage } from "./session/session-lineage"
 import { SessionLineageBoundary } from "./session/session-lineage-boundary"
 import { createSessionVcsReview } from "./session/session-vcs-review"
+import { SessionCapabilitiesProvider } from "./session/capabilities"
 import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
 
 type FollowupItem = QueuedPrompt
@@ -140,7 +141,7 @@ async function runPromptRollbackMutation<T, R>(input: {
 export function SessionPage() {
   return (
     <SessionProviders>
-      <Page />
+      <SessionCapabilitiesProvider><Page /></SessionCapabilitiesProvider>
     </SessionProviders>
   )
 }
@@ -552,7 +553,10 @@ export default function Page() {
     return open
   }, desktopReviewOpen())
 
-  const turnDiffs = createMemo(() => list(lastUserMessage()?.summary?.diffs))
+  const turnDiffs = createMemo(() => {
+    const id = lastUserMessage()?.id
+    return list(id ? timeline.turnDiffs(id) : undefined)
+  })
   const nogit = createMemo(() => !!sync().project && sync().project?.vcs !== "git" && !!serverSDK().protocolKind())
   const changesOptions = createMemo<ChangeMode[]>(() => {
     const list: ChangeMode[] = []
@@ -1984,14 +1988,13 @@ export default function Page() {
                     if (root) scheduleScrollState(root)
                   }}
                   userMessages={visibleUserMessages()}
+                  turnDiffs={timeline.turnDiffs}
                   setHistoryAnchor={(handlers) => {
                     captureHistoryAnchor = handlers.capture
                     restoreHistoryAnchor = handlers.restore
                   }}
                   anchor={anchor}
-                  setRevealMessage={(fn) => {
-                    revealMessage = fn
-                  }}
+                  setRevealMessage={(fn) => (revealMessage = fn)}
                   setScrollToEnd={(fn) => {
                     scrollToEnd = fn
                   }}

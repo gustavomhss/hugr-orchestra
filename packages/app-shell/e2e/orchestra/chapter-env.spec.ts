@@ -27,48 +27,48 @@ async function setup(page: Page, scheme = "dark") {
     sessions: [],
     pageMessages: () => ({ items: [] }),
   })
-  await page.route(`${serverA}/project`, (route) =>
-    route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify(projects),
-    }),
+  const headers = { "access-control-allow-origin": "*" }
+  await page.route(
+    (url) => url.origin === serverA && url.pathname === "/api/project",
+    (route) => route.fulfill({ json: projects, headers }),
   )
+  // Server B is a second V2 server with its own project; the shared mock answers only server A's port.
   await page.route(`${serverB}/**`, async (route) => {
     const path = new URL(route.request().url()).pathname
+    if (path === "/api/event") return route.fulfill({ contentType: "text/event-stream", body: ": ok\n\n", headers })
+    const location = { directory, project: { id: remoteProjects[0].id, directory } }
+    const lists = ["/api/provider", "/api/model", "/api/agent", "/api/command", "/api/mcp", "/api/reference"]
     const data =
-      path === "/global/health"
-        ? { healthy: true }
-        : path === "/project"
+      path === "/api/health"
+        ? { healthy: true, version: "2.0.0", pid: 1 }
+        : path === "/api/project"
           ? remoteProjects
-          : path === "/provider"
-            ? { all: [], connected: [], default: {} }
-            : ["/session", "/agent", "/skill", "/command", "/permission", "/question", "/lsp", "/formatter"].includes(
-                  path,
-                )
-              ? []
-              : {}
-    if (path.endsWith("/event")) return route.fulfill({ contentType: "text/event-stream", body: ": ok\n\n" })
-    return route.fulfill({ contentType: "application/json", body: JSON.stringify(data) })
+          : path === "/api/model/default"
+            ? { location, data: null }
+            : lists.includes(path) || path.endsWith("/request")
+              ? { location, data: [] }
+              : path === "/api/session"
+                ? { data: [], cursor: {} }
+                : path === "/api/session/active"
+                  ? { data: {} }
+                  : {}
+    return route.fulfill({ json: data, headers })
   })
+  // Each server resolves only its own repositories.
   await page.route("**/*", (route) => {
     const url = new URL(route.request().url())
-    if (![serverA, serverB].includes(url.origin) || !["/path", "/project/current"].includes(url.pathname))
+    if (![serverA, serverB].includes(url.origin) || !["/api/location", "/api/project/current"].includes(url.pathname))
       return route.fallback()
     const project = (url.origin === serverB ? remoteProjects : projects).find(
-      (item) => item.worktree === (url.searchParams.get("directory") ?? directory),
+      (item) => item.worktree === (url.searchParams.get("location[directory]") ?? directory),
     )
-    if (!project) return route.fulfill({ status: 404, json: { name: "NotFound" } })
+    if (!project) return route.fulfill({ status: 404, json: { name: "NotFound" }, headers })
     return route.fulfill({
       json:
-        url.pathname === "/project/current"
-          ? project
-          : {
-              state: project.worktree,
-              config: project.worktree,
-              worktree: project.worktree,
-              directory: project.worktree,
-              home: "/",
-            },
+        url.pathname === "/api/project/current"
+          ? { id: project.id, directory: project.worktree }
+          : { directory: project.worktree, project: { id: project.id, directory: project.worktree } },
+      headers,
     })
   })
   await page.addInitScript(
@@ -323,8 +323,8 @@ test("both directory and server switches start empty; switching back and reloadi
     { origin: serverA, directory: "/env-unknown" },
     { origin: serverB, directory: "/env-second" },
   ]) {
-    for (const path of ["/path", "/project/current"]) {
-      const response = await page.goto(`${input.origin}${path}?directory=${encodeURIComponent(input.directory)}`)
+    for (const path of ["/api/location", "/api/project/current"]) {
+      const response = await page.goto(`${input.origin}${path}?${new URLSearchParams({ "location[directory]": input.directory })}`)
       expect(response?.status()).toBe(404)
       expect(await response?.json()).toEqual({ name: "NotFound" })
     }

@@ -163,38 +163,6 @@ test("V2 archive sends the supported request and disables unsupported servers wi
   ])
 })
 
-// V1 cannot clear time.archived, so the app does not offer Archive there: it could never be undone.
-test("V1 server does not offer an irreversible Archive", async ({ page }) => {
-  const shared = { ...sessionA, id: "shared-session", directory: "/shared/repo", title: "Shared session" }
-  const started: string[] = []
-  await mockOrchestraServer(page, {
-    directory: shared.directory,
-    project: {
-      id: shared.projectID,
-      worktree: shared.directory,
-      vcs: "git",
-      time: { created: 1, updated: 1 },
-      sandboxes: [],
-    },
-    sessions: [shared],
-    provider: { all: [], connected: [], default: {} },
-    pageMessages: () => ({ items: [] }),
-  })
-  await page.route(`**/session/${shared.id}*`, async (route) => {
-    if (route.request().method() !== "PATCH") return route.fallback()
-    started.push(new URL(route.request().url()).origin)
-    return json(route, { ...shared, time: { ...shared.time, archived: Date.now() } })
-  })
-  await installReviewTabs(page, [shared.id, shared.id])
-  await page.goto(`/server/${base64Encode(reviewServerB)}/session/${shared.id}`)
-  await page.getByRole("button", { name: "More options", exact: true }).click()
-  await expect(page.locator('[data-action="session-archive"]')).toHaveAttribute("aria-disabled", "true")
-  await page.keyboard.press("Escape")
-  await page.keyboard.press("Control+Shift+Backspace")
-  await page.waitForTimeout(300)
-  expect(started).toEqual([])
-})
-
 async function mockReviewServers(
   page: Page,
   diff: (origin: string, url: URL) => Promise<{ status: number; data: unknown[] }>,

@@ -166,7 +166,15 @@ const layer = Layer.effect(
 
       const info = Option.getOrUndefined(
         ConfigMigrateV1.isV1(input)
-          ? decodeV1Info(input).pipe(Option.map(ConfigMigrateV1.migrate), Option.flatMap(decodeInfo))
+          ? decodeV1Info(input).pipe(
+              Option.map(ConfigMigrateV1.migrate),
+              // Settings write V2 `permissions` into a file that may still hold V1 keys; the V1 decode drops them.
+              Option.map((info) => {
+                const rules = [...(info.permissions ?? []), ...settings(text).permissions]
+                return { ...info, permissions: rules.length ? rules : undefined }
+              }),
+              Option.flatMap(decodeInfo),
+            )
           : decodeInfo(input),
       )
       if (!info) return
@@ -249,6 +257,8 @@ export interface GlobalPatch {
   readonly disabledProviders?: ReadonlyArray<string>
   /** Custom providers by ID, each replacing any previous definition of that ID. */
   readonly providers?: Readonly<Record<string, unknown>>
+  /** The whole ordered list of tool permission rules. Replaces the previous list. */
+  readonly permissions?: Permission.Ruleset
 }
 
 /**
@@ -269,6 +279,8 @@ export const updateGlobal = Effect.fn("Config.updateGlobal")(function* (patch: G
     ...leaves({ model: patch.model, shell: patch.shell, agents: patch.agents }, []),
     ...(patch.disabledProviders === undefined ? [] : providerEdits(text, patch.disabledProviders)),
     ...Object.entries(patch.providers ?? {}).map(([id, value]): [string[], unknown] => [["providers", id], value]),
+    // Written whole: `leaves` would edit array indices, and a shorter list must drop the old tail.
+    ...(patch.permissions === undefined ? [] : [[["permissions"], [...patch.permissions]] as [string[], unknown]]),
   ].reduce(
     (text, [at, value]) =>
       applyEdits(text, modify(text, at, value, { formattingOptions: { insertSpaces: true, tabSize: 2 } })),
@@ -296,8 +308,12 @@ export const readGlobal = Effect.fn("Config.readGlobal")(function* () {
         ...document.disabled.filter((item): item is string => typeof item === "string"),
       ]),
     ],
+    // In the document's order: a later matching rule wins, so reordering would change what the rules decide.
+    permissions: document.permissions.flatMap((item) => Option.toArray(decodeRule(item))),
   }
 })
+
+const decodeRule = Schema.decodeUnknownOption(Permission.Rule)
 
 const globalDocument = Effect.fnUntraced(function* () {
   const fs = yield* FSUtil.Service
@@ -339,6 +355,7 @@ function settings(text: string) {
     policies: Array.isArray(policies) ? policies.map(record) : [],
     disabled: Array.isArray(root.disabled_providers) ? root.disabled_providers : [],
     hasDisabled: "disabled_providers" in root,
+    permissions: Array.isArray(root.permissions) ? root.permissions : [],
   }
 }
 

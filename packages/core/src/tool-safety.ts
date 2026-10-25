@@ -374,7 +374,7 @@ export const make = Effect.gen(function* () {
 
   const before = Effect.fn("ToolSafety.before")(function* (input: Invocation) {
     const args = record(input.args)
-    const command = input.tool !== "task" && typeof args.command === "string" ? args.command : undefined
+    const command = ToolSafetyCommands.command(input.tool, input.args)
     if (command) {
       const reason = ToolSafetyCommands.reason(command)
       if (reason) return yield* new Denied({ reason })
@@ -387,7 +387,7 @@ export const make = Effect.gen(function* () {
         command,
         directory: input.directory,
         projectDirectory: input.projectDirectory,
-        cwd: typeof args.workdir === "string" ? args.workdir : undefined,
+        cwd: typeof args.workdir === "string" ? args.workdir : typeof args.cwd === "string" ? args.cwd : undefined,
         managedPaths: [
           ...(global
             ? [
@@ -422,7 +422,7 @@ export const make = Effect.gen(function* () {
         { discard: true },
       )
     }
-    if (profile.requireSandbox && command !== undefined && !["bash", "shell", "task", "process"].includes(input.tool))
+    if (profile.requireSandbox && command !== undefined && !["bash", "shell", "task", "process", "process_control"].includes(input.tool))
       return yield* new Denied({ reason: "required-process-sandbox-unbound" })
 
     const writing = ["write", "edit", "multiedit", "apply_patch"].includes(input.tool)

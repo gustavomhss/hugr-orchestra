@@ -1,6 +1,6 @@
 import { getFilename } from "@orchestra/core/util/path"
 import { useQuery } from "@tanstack/solid-query"
-import { createMemo, createResource, For, Match, onCleanup, Show, Switch } from "solid-js"
+import { createMemo, For, Match, onCleanup, Show, Switch } from "solid-js"
 import { toggleMcp } from "@/context/global-sync/mcp"
 import { createStore } from "solid-js/store"
 import { useGlobal } from "@/context/global"
@@ -31,7 +31,6 @@ export default function McpPage(props: ChapterPageProps) {
     serverSDK: serverSDK(),
     open: (url) => platform.openExternal(url),
   })
-  const [v1] = createResource(source.v1)
   // ServerSync keeps observing this profile's MCP status and resources after the page closes, so a
   // status event still refreshes the owning profile while another profile is open.
   sync().child(props.directory, { bootstrap: false, mcp: true })
@@ -340,8 +339,7 @@ export default function McpPage(props: ChapterPageProps) {
           <McpEditDialog
             card={selected()}
             names={cards().map((card) => card.name)}
-            writable={!v1.loading && false}
-            read={v1.loading || status.isPending ? "loading" : status.isError ? "error" : "ready"}
+            read={status.isPending ? "loading" : status.isError ? "error" : "ready"}
             retrying={status.isFetching}
             onRetry={() => void status.refetch()}
             load={async () => {
@@ -359,8 +357,7 @@ export default function McpPage(props: ChapterPageProps) {
             <McpToolsDialog
               card={card()}
               status={label(card())}
-              supported={!v1.loading && false}
-              read={v1.loading || tools.isPending ? "loading" : tools.isError ? "error" : "ready"}
+              read={tools.isPending ? "loading" : tools.isError ? "error" : "ready"}
               retrying={tools.isFetching}
               onRetry={() => void tools.refetch()}
               onClose={close}

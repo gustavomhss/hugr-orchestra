@@ -14,6 +14,8 @@
   "dependencies": {
     "@orchestra/client": "workspace:*",
     "@orchestra/core": "workspace:*",
+    "@orchestra/protocol": "workspace:*",
+    "@orchestra/schema": "workspace:*",
     "@orchestra/server": "workspace:*",
     "effect": "catalog:"
   },

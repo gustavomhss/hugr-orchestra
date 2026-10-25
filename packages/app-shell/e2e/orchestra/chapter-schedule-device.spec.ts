@@ -225,18 +225,3 @@ test("leaving the page mid-run neither navigates nor keeps scheduling", async ({
   await expect.poll(() => api.attempts).toBe(2)
   expect(api.requests[1]).toEqual({ id: expect.stringMatching(SESSION_ID), agent: "maestro", location: { directory } })
 })
-
-test("V1 servers dispatch through the legacy session API on Maestro", async ({ page }) => {
-  const api = await setup(page, { protocol: "v1", legacy: true })
-  await openSchedule(page)
-  await createTask(page, { name: "Legacy run", prompt: "Summarize open issues." })
-  await page.getByRole("article", { name: "Legacy run" }).getByRole("button", { name: "Run now", exact: true }).click()
-  await expect(page).toHaveURL(/\/session\/ses_schedule_1$/)
-  expect(api.attempts).toBe(1)
-  expect(api.prompts).toEqual([
-    {
-      sessionID: "ses_schedule_1",
-      body: expect.objectContaining({ agent: "maestro", parts: [{ type: "text", text: "Summarize open issues." }] }),
-    },
-  ])
-})

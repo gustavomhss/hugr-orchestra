@@ -17,6 +17,7 @@ import { TodoWriteTool } from "./todowrite"
 import { WebFetchTool } from "./webfetch"
 import { WebSearchTool } from "./websearch"
 import { WriteTool } from "./write"
+import { CapabilityTools } from "../capability/tools"
 
 /**
  * Composes only the shipped Location-scoped built-in tool transforms.
@@ -35,6 +36,7 @@ export const node = makeLocationNode({
   name: "built-in-tools",
   layer: Layer.empty,
   deps: [
+    CapabilityTools.node,
     ApplyPatchTool.node,
     BashTool.node,
     ProcessTool.node,

@@ -21,13 +21,13 @@ const Endpoint41_0 = (raw: RawClient["server.actionsTransfer"]) => (input: Endpo
   raw["actions.transfer.info"]({
     params: { bindingID: input["bindingID"] },
     query: {
-      location: input["location"],
+      ...(input["location"] === undefined ? {} : { location: input["location"] }),
       revision: input["revision"],
       kind: input["kind"],
       id: input["id"],
-      runID: input["runID"],
-      attempt: input["attempt"],
-      path: input["path"],
+      ...(input["runID"] === undefined ? {} : { runID: input["runID"] }),
+      ...(input["attempt"] === undefined ? {} : { attempt: input["attempt"] }),
+      ...(input["path"] === undefined ? {} : { path: input["path"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 

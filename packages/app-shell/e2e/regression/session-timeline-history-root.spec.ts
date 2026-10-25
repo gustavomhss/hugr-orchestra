@@ -3,6 +3,7 @@ import { expect, test, type Page } from "@playwright/test"
 import {
   assistantMessage,
   directory,
+  loadedPartID,
   messageUpdated,
   project,
   session,
@@ -18,7 +19,6 @@ import { installSseTransport } from "../utils/sse-transport"
 import { expectSessionTitle } from "../utils/waits"
 
 const initialPageSize = 20
-const historyPageSize = 200
 const assistants = Array.from({ length: initialPageSize + 1 }, (_, index) =>
   assistantMessage([textPart(`prt_history_root_${index}`, `Assistant response ${index}`)], {
     id: `msg_${String(index + 1001).padStart(4, "0")}_history_root_assistant`,
@@ -29,8 +29,9 @@ const assistants = Array.from({ length: initialPageSize + 1 }, (_, index) =>
 )
 const messages = [userMessage(), ...assistants]
 const lastAssistant = assistants.at(-1)!
-const lastPartID = assistants.at(-1)!.parts[0]!.id
-const userPartID = `prt_${userID}_text`
+const lastPartID = loadedPartID(lastAssistant.info.id, "text")
+const userPartID = loadedPartID(userID, "text")
+const assistantParts = '[data-timeline-part-id$="_history_root_assistant:text:0"]'
 const completed = {
   ...lastAssistant.info,
   time: { ...lastAssistant.info.time, completed: lastAssistant.info.time.created + 15_000 },
@@ -51,9 +52,7 @@ for (const scenario of scenarios) {
   test(`keeps visible timeline content visible through ${scenario.name}`, async ({ page }) => {
     const requests: { before?: string; phase: "start" | "end" }[] = []
     const pages: { before?: string; limit: number }[] = []
-    const roots: { sessionID: string; messageID: string }[] = []
     const sequence: string[] = []
-    const history = Promise.withResolvers<void>()
     const transport = await installSseTransport<{ directory: string; payload: Record<string, unknown> }>(page, {
       server: `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`,
       retry: 20,
@@ -80,18 +79,9 @@ for (const scenario of scenarios) {
       },
       sessions: [session()],
       sessionStatus: { [sessionID]: { type: "busy" } },
-      beforeMessagesResponse: (request) => (request.before ? history.promise : Promise.resolve()),
       onMessages: (request) => {
         requests.push(request)
         sequence.push(`messages:${request.phase}:${request.before ?? "latest"}`)
-      },
-      onMessage: (request) => {
-        roots.push(request)
-        sequence.push(`message:${request.messageID}`)
-      },
-      message: (requestedSessionID, messageID) => {
-        if (requestedSessionID !== sessionID) return
-        return messages.find((item) => item.info.id === messageID)
       },
       pageMessages: (_, limit, before) => {
         pages.push({ before, limit })
@@ -154,15 +144,15 @@ for (const scenario of scenarios) {
     await expectSessionTitle(page, title)
     await expect(page.locator(`[data-timeline-part-id="${lastPartID}"]`)).toBeVisible()
     await expect(page.locator(`[data-timeline-part-id="${userPartID}"]`)).toBeVisible()
-    await expect.poll(() => requests.filter((request) => request.phase === "start").length).toBe(2)
-    expect(requests.filter((request) => request.phase === "end")).toHaveLength(1)
+    // V2 reaches the turn root by paging on while the oldest loaded message is an assistant reply.
+    await expect.poll(() => requests.filter((request) => request.phase === "end").length).toBe(2)
     expect(sequence.slice(0, 4)).toEqual([
       "messages:start:latest",
       "messages:end:latest",
-      `message:${userID}`,
       `messages:start:${messages.at(-initialPageSize)!.info.id}`,
+      `messages:end:${messages.at(-initialPageSize)!.info.id}`,
     ])
-    await expect(page.locator('[data-timeline-part-id^="prt_history_root_"]')).toHaveCount(initialPageSize)
+    await expect(page.locator(assistantParts)).toHaveCount(assistants.length)
     await page.evaluate(() => {
       ;(
         window as Window & {
@@ -172,17 +162,11 @@ for (const scenario of scenarios) {
     })
     await waitForProbeSamples(page, 0)
     expect(await visibleContentHidden(page)).toBe(false)
-    const beforeHistory = await probeSamples(page)
-    history.resolve()
-    await expect(page.locator('[data-timeline-part-id^="prt_history_root_"]')).toHaveCount(assistants.length)
-    await expect.poll(() => requests.filter((request) => request.phase === "end").length).toBe(2)
     await expect(page.getByRole("button", { name: "Stop" })).toBeVisible()
-    await waitForProbeSamples(page, beforeHistory)
-    expect(pages).toEqual([
+    expect(pages.slice(0, 2)).toEqual([
       { before: undefined, limit: initialPageSize },
-      { before: messages.at(-initialPageSize)!.info.id, limit: historyPageSize },
+      { before: messages.at(-initialPageSize)!.info.id, limit: initialPageSize },
     ])
-    expect(roots).toEqual([{ sessionID, messageID: userID }])
 
     const message = messageUpdated(scenario.info)
     const idle = status("idle")

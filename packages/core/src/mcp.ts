@@ -74,15 +74,14 @@ export interface Interface {
   readonly add: (name: string, config: ConfigMCP.Local | ConfigMCP.Remote) => Effect.Effect<void, ConfigError>
   /** Removes the server from every profile file that defines it, then disconnects it. */
   readonly remove: (name: string) => Effect.Effect<void, NotFoundError | ConfigError>
+  /** Each configured server's resolved transport and endpoint; headers, environment and OAuth never leave core. */
+  readonly config: () => Effect.Effect<Record<string, Mcp.Entry>>
+  /** Each server of the profile's own config files exactly as written, so `{env:...}` references stay unresolved. */
+  readonly entries: () => Effect.Effect<Record<string, Mcp.Entry>, ConfigError>
+  /** The tool names of each connected server that lists tools. */
+  readonly tools: () => Effect.Effect<Record<string, string[]>>
   /** The resources and resource templates of the connected servers. */
   readonly resources: () => Effect.Effect<Mcp.ResourceCatalog>
-  /**
-   * The servers the Location resolved (display fields only) and the profile files' own unresolved entries, the only
-   * source an editor may prefill from. Environment, headers and OAuth secrets are never returned.
-   */
-  readonly config: () => Effect.Effect<Mcp.Config, ConfigError>
-  /** The tool names each connected server offers, by server. */
-  readonly toolNames: () => Effect.Effect<Mcp.Tools>
   /** Reads a resource by URI from the connected server that lists it; undefined when no connected server lists it. */
   readonly readResource: (uri: string) => Effect.Effect<ReadResourceResult["contents"] | undefined, RequestError>
   /** The prompts of the connected servers. */
@@ -114,7 +113,7 @@ type Entry = {
   client?: Client
   // Holds the server's tool registrations; closing it removes them.
   tools?: Scope.Closeable
-  // The names the connected server lists, as it names them.
+  // The names of the tools the server listed, while it is connected.
   toolNames?: string[]
   // Bumped by every connect and disconnect; an attempt that finishes under a newer generation is stale.
   generation: number
@@ -365,6 +364,31 @@ const layer = Layer.effect(
       }
     })
 
+    const resolved = Effect.fn("Mcp.config")(function* () {
+      return Object.fromEntries(
+        Array.from((yield* configured()).servers, ([name, server]): [string, Mcp.Entry] => [
+          name,
+          server.type === "local" ? { type: "local", command: [...server.command] } : { type: "remote", url: server.url },
+        ]),
+      )
+    })
+
+    const profile = Effect.fn("Mcp.entries")(function* () {
+      return yield* McpProjectConfig.entries(location.directory).pipe(
+        Effect.provideService(FSUtil.Service, fs),
+        Effect.mapError((error) => new ConfigError({ message: error.message })),
+      )
+    })
+
+    const inventory = Effect.fn("Mcp.tools")(function* () {
+      yield* ready()
+      return Object.fromEntries(
+        Array.from(entries).flatMap(([name, current]) =>
+          current.client && current.toolNames ? [[name, current.toolNames] as const] : [],
+        ),
+      )
+    })
+
     const connected = () =>
       Array.from(entries).flatMap(([server, current]) => (current.client ? [{ server, client: current.client }] : []))
 
@@ -400,34 +424,6 @@ const layer = Layer.effect(
         resources: listed.flatMap((item) => item.resources),
         templates: listed.flatMap((item) => item.templates),
       }
-    })
-
-    const settings = Effect.fn("Mcp.config")(function* () {
-      const found = yield* configured()
-      const written = yield* McpProjectConfig.entries(location.directory).pipe(
-        Effect.provideService(FSUtil.Service, fs),
-        Effect.mapError((error) => new ConfigError({ message: error.message })),
-      )
-      return {
-        servers: Object.fromEntries(
-          Array.from(found.servers, ([name, server]) => [
-            name,
-            server.type === "local"
-              ? { type: "local" as const, command: [...server.command] }
-              : { type: "remote" as const, url: server.url },
-          ]),
-        ),
-        entries: written,
-      }
-    })
-
-    const toolNames = Effect.fn("Mcp.toolNames")(function* () {
-      yield* ready()
-      return Object.fromEntries(
-        Array.from(entries).flatMap(([server, current]) =>
-          current.client && current.toolNames ? [[server, [...current.toolNames]] as const] : [],
-        ),
-      )
     })
 
     const readResource = Effect.fn("Mcp.readResource")(function* (uri: string) {
@@ -677,9 +673,10 @@ const layer = Layer.effect(
       disconnect,
       add,
       remove,
+      config: resolved,
+      entries: profile,
+      tools: inventory,
       resources,
-      config: settings,
-      toolNames,
       readResource,
       prompts,
       getPrompt,

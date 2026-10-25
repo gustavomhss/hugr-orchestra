@@ -474,10 +474,10 @@ function serverBResponse(route: Route, url: URL) {
   const path = url.pathname
   if (["/global/event", "/event", "/api/event"].includes(path))
     return route.fulfill({ status: 200, contentType: "text/event-stream", body: ": ok\n\n" })
-  if (path === "/global/health") return json(route, { healthy: true })
+  if (path === "/api/health") return json(route, { healthy: true, version: "2", pid: 1 })
   if (path === "/project" || path === "/api/project") return json(route, [project])
   if (path === "/project/current") return json(route, project)
-  if (path === "/api/project/current") return json(route, { id: project.id, directory })
+  if (path === "/api/location") return json(route, { directory, project: { id: project.id, directory } })
   if (path === "/path" || path === "/api/path")
     return json(route, { state: directory, config: directory, worktree: directory, directory, home: "/work" })
   if (path === "/provider") return json(route, { all: [], connected: [], default: {} })

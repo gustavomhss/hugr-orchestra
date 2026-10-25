@@ -255,7 +255,9 @@ export type ContrastResult = { name: string; ratio: number; required: number; fg
 // evaluated at that point (linear by angle, explicit-size radial; any other gradient falls back to all of its
 // stops, the worst of which wins), covering ::before/::after overlays, and backdrop-filter brightness() and
 // saturate() applied to everything beneath. A background photograph (cover, centered) is drawn into a canvas,
-// blurred by the backdrop-filter blur() of the glass above it, and read at the point. Ancestor opacity is a
+// blurred by the backdrop-filter blur() of the glass above it, and read at the point; a natural-size image tiled
+// from the padding-box corner (the glass grain) is read from its tile. Placement is read per layer from the
+// background-size/position/repeat/origin lists, and any other placement of an image throws. Ancestor opacity is a
 // group lerp. The ink (text color, icon stroke or outline color) is composited over that background and the
 // minimum ratio over all points is reported. Portals are measured over their DOM ancestors, not over a sibling
 // scrim; dialogs and menus are >= 97% opaque, so that error is below the reported precision. Text >= 24px, or
@@ -399,11 +401,7 @@ export function measureContrast(page: Page, targets: ContrastTarget[]) {
         )
     }
     const images = new Map<string, HTMLImageElement>()
-    const photo = async (owner: Element, style: CSSStyleDeclaration, image: string, blur: number) => {
-      if (style.backgroundSize !== "cover" || style.backgroundPosition !== "50% 50%")
-        throw new Error(
-          `Unsupported background ${style.backgroundSize} ${style.backgroundPosition} on ${describe(owner)}`,
-        )
+    const load = async (image: string) => {
       const url = image.slice(4, -1).replace(/^["']|["']$/g, "")
       const source = images.get(url) ?? new Image()
       if (!images.has(url)) {
@@ -411,6 +409,51 @@ export function measureContrast(page: Page, targets: ContrastTarget[]) {
         await source.decode()
         images.set(url, source)
       }
+      return source
+    }
+    // The lists background-size, -position, -repeat and -origin hold one value per image and cycle when shorter.
+    const placement = (style: CSSStyleDeclaration, index: number) => {
+      const pick = (value: string) => {
+        const list = split(value)
+        return list[index % list.length]
+      }
+      return {
+        size: pick(style.backgroundSize),
+        position: pick(style.backgroundPosition),
+        repeat: pick(style.backgroundRepeat),
+        origin: pick(style.backgroundOrigin),
+      }
+    }
+    // A natural-size image tiled from the padding-box corner (the glass grain) is read back from one tile.
+    const tiled = async (owner: Element, source: HTMLImageElement) => {
+      const surface = document.createElement("canvas")
+      surface.width = source.naturalWidth
+      surface.height = source.naturalHeight
+      const draw = surface.getContext("2d", { willReadFrequently: true })!
+      draw.drawImage(source, 0, 0)
+      const data = draw.getImageData(0, 0, surface.width, surface.height).data
+      const box = owner.getBoundingClientRect()
+      const wrap = (value: number, size: number) => ((Math.floor(value) % size) + size) % size
+      return (point: Point) => {
+        const x = wrap(point.x - box.left - owner.clientLeft, surface.width)
+        const y = wrap(point.y - box.top - owner.clientTop, surface.height)
+        const offset = (y * surface.width + x) * 4
+        return [{ r: data[offset], g: data[offset + 1], b: data[offset + 2], a: data[offset + 3] / 255 }]
+      }
+    }
+    const photo = async (owner: Element, style: CSSStyleDeclaration, index: number, blur: number) => {
+      const place = placement(style, index)
+      const unsupported = () =>
+        new Error(
+          `Unsupported background ${place.size} ${place.position} ${place.repeat} ${place.origin} (layer ${index}) on ${describe(owner)}`,
+        )
+      const image = split(style.backgroundImage)[index]
+      const source = await load(image)
+      if (place.size === "auto" && place.position === "0% 0%") {
+        if (place.repeat !== "repeat" || place.origin !== "padding-box" || !(source.naturalWidth > 0)) throw unsupported()
+        return tiled(owner, source)
+      }
+      if (place.size !== "cover" || place.position !== "50% 50%") throw unsupported()
       const box = owner.getBoundingClientRect()
       const scale = Math.max(box.width / source.naturalWidth, box.height / source.naturalHeight)
       const surface = document.createElement("canvas")
@@ -464,8 +507,10 @@ export function measureContrast(page: Page, targets: ContrastTarget[]) {
           a: current.a,
         }
       }, color)
+    // A masked overlay (the glass rim) paints only the ring its mask leaves, never the area under the text.
     const covering = (layer: CSSStyleDeclaration) =>
       layer.content !== "none" &&
+      [layer.maskImage, layer.webkitMaskImage].every((value) => !value || value === "none") &&
       ["absolute", "fixed"].includes(layer.position) &&
       [layer.top, layer.right, layer.bottom, layer.left].every((value) => value === "0px")
     // Each painted layer of one element, bottom first, as a function from a point to its candidate colors.
@@ -475,10 +520,12 @@ export function measureContrast(page: Page, targets: ContrastTarget[]) {
         Promise.all([
           Promise.resolve<Layer>(() => [parse(layer.backgroundColor)]),
           ...split(layer.backgroundImage)
-            .filter((image) => image !== "none")
+            .map((image, index) => ({ image, index }))
+            .filter((item) => item.image !== "none")
             .toReversed()
-            .map(async (image): Promise<Layer> => {
-              if (image.startsWith("url(")) return photo(element, layer, image, blur)
+            .map(async (item): Promise<Layer> => {
+              const image = item.image
+              if (image.startsWith("url(")) return photo(element, layer, item.index, blur)
               const gradient = evaluate(image, box)
               if (gradient) return (point) => [gradient(point)]
               const stops = (image.match(colorPattern) ?? []).map(parse)

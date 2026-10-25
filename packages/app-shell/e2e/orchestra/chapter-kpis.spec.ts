@@ -664,7 +664,7 @@ async function setup(
     if (url.pathname === "/api/session/active") return json(route, { data: {} })
     if (["/path", "/api/path"].includes(url.pathname))
       return json(route, { directory, worktree: directory, home: "/", config: directory, state: directory })
-    if (url.pathname === "/api/project/current") return json(route, { id: project.id, directory })
+    if (url.pathname === "/api/location") return json(route, { directory, project: { id: project.id, directory } })
     if (url.pathname === "/project/current") return json(route, { ...project, name: "Recorded repo B" })
     if (
       [

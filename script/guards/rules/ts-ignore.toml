@@ -1,0 +1,10 @@
+id = "ts-ignore"
+severity = "gate"
+on = "added-lines"
+paths = ["**/*.{ts,tsx,mts,cts}"]
+exclude = ["specs/**"]
+# @ts-ignore and @ts-nocheck always; @ts-expect-error only when nothing explains it after the directive.
+match = '@ts-(ignore|nocheck)\b|@ts-expect-error\s*(\*/)?\s*$'
+message = "Type suppression without an explanation. Fix the type error, or use @ts-expect-error with the reason after it."
+positive = ["// @ts-ignore", "  // @ts-nocheck", "// @ts-expect-error", "/* @ts-expect-error */", "const a = b // @ts-ignore legacy"]
+negative = ["// @ts-expect-error the SDK types omit this field", "const note = \"see tsconfig\"", "// ts-ignore is banned", "// @ts-expect-error-free"]

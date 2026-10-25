@@ -1,0 +1,10 @@
+id = "dep-lifecycle-script"
+severity = "gate"
+on = "added-lines"
+paths = ["**/package.json"]
+exclude = ["**/node_modules/**"]
+# preinstall, install and postinstall run on every machine that installs the package. prepare (husky) is left out.
+match = '^\s*"(preinstall|install|postinstall)"\s*:'
+message = "Install-time script added. It runs code on every machine that installs this package; do the work in an explicit build step instead."
+positive = ['    "postinstall": "node scripts/setup.js"', '"preinstall": "x"', '  "install": "node-gyp rebuild"']
+negative = ['    "prepare": "husky"', '    "install-deps": "bun install"', '    "build": "bun run postinstall-check"']

@@ -18,7 +18,7 @@ import stripAnsi from "strip-ansi"
 import { Dynamic } from "solid-js/web"
 import type { SessionV1 } from "@orchestra/schema/session-v1"
 import type { QuestionV1 } from "@orchestra/schema/v1/question"
-import { useData } from "../context"
+import { useData, useToolPartSlot } from "../context"
 import { useFileComponent } from "@orchestra/ui/context/file"
 import { useDialog } from "@orchestra/ui/context/dialog"
 import { type UiI18n, useI18n } from "@orchestra/ui/context/i18n"
@@ -322,9 +322,7 @@ function createPacedValue(getValue: () => string, live?: () => boolean) {
     timeout = setTimeout(run, TEXT_RENDER_PACE_MS)
   })
 
-  onCleanup(() => {
-    clear()
-  })
+  onCleanup(clear)
 
   return value
 }
@@ -1622,6 +1620,7 @@ PART_MAPPING["tool"] = function ToolPartDisplay(props) {
         <Show when={part().tool === "task"}>
           <ResearchResult value={partMetadata().workResult} sessionID={taskId()} />
         </Show>
+        <Show when={useToolPartSlot()}>{(slot) => <Dynamic component={slot()} part={part()} />}</Show>
       </div>
     </Show>
   )

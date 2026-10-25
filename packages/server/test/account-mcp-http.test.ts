@@ -192,15 +192,16 @@ describe("MCP config and tools routes", () => {
           const entry = { type: "local" as const, command: ["bun", "serve.ts"] }
           const server = yield* serve({
             mcp: {
-              config: () => Effect.succeed({ servers: { docs: entry, remote: { type: "remote", url: "https://x.test" } }, entries: { docs: entry } }),
-              toolNames: () => Effect.succeed({ docs: ["search", "fetch"] }),
+              config: () => Effect.succeed({ docs: entry, remote: { type: "remote", url: "https://x.test" } }),
+              entries: () => Effect.succeed({ docs: entry }),
+              tools: () => Effect.succeed({ docs: ["search", "fetch"] }),
             },
           })
           const config = yield* json(yield* server.request("/api/mcp/config?location[directory]=/repo"))
-          expect(config).toMatchObject({
-            data: { servers: { docs: entry, remote: { type: "remote", url: "https://x.test" } }, entries: { docs: entry } },
-          })
-          const tools = yield* json(yield* server.request("/api/mcp/tool?location[directory]=/repo"))
+          expect(config).toMatchObject({ data: { docs: entry, remote: { type: "remote", url: "https://x.test" } } })
+          const entries = yield* json(yield* server.request("/api/mcp/entries?location[directory]=/repo"))
+          expect(entries).toMatchObject({ data: { docs: entry } })
+          const tools = yield* json(yield* server.request("/api/mcp/tools?location[directory]=/repo"))
           expect(tools).toMatchObject({ data: { docs: ["search", "fetch"] } })
         }),
       ),
@@ -211,9 +212,9 @@ describe("MCP config and tools routes", () => {
       Effect.scoped(
         Effect.gen(function* () {
           const server = yield* serve({
-            mcp: { config: () => Effect.fail(new Mcp.ConfigError({ message: "orchestra.json: invalid JSON" })) },
+            mcp: { entries: () => Effect.fail(new Mcp.ConfigError({ message: "orchestra.json: invalid JSON" })) },
           })
-          const response = yield* server.request("/api/mcp/config?location[directory]=/repo")
+          const response = yield* server.request("/api/mcp/entries?location[directory]=/repo")
           expect(response.status).toBe(400)
           expect(yield* json(response)).toMatchObject({ message: "orchestra.json: invalid JSON" })
         }),

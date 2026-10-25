@@ -72,9 +72,15 @@ async function openSession(page: Page) {
       },
     ],
     pageMessages: () => ({ items: [] }),
-    // Each event-stream reconnect resyncs providers, which resets the list's active row.
-    eventRetry: 600_000,
   })
+  // Each server.connected resyncs providers, which resets the list's active row. The V2 client ignores SSE
+  // `retry`, so later reconnects get an event-free stream.
+  const streams = { count: 0 }
+  await page.route("**/api/event", (route) =>
+    streams.count++ === 0
+      ? route.fallback()
+      : route.fulfill({ status: 200, contentType: "text/event-stream", body: ": ok\n\n" }),
+  )
   await page.addInitScript(() => {
     localStorage.setItem("settings.v3", JSON.stringify({ general: { shouldDisplayTabsToast: false } }))
   })

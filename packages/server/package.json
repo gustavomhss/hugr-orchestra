@@ -8,6 +8,8 @@
   "exports": {
     "./api": "./src/api.ts",
     "./auth": "./src/auth.ts",
+    "./capability-content-ticket": "./src/capability-content-ticket.ts",
+    "./capability-verification": "./src/capability-verification.ts",
     "./cors": "./src/cors.ts",
     "./handlers": "./src/handlers.ts",
     "./handlers/agent": "./src/handlers/agent.ts",
@@ -15,10 +17,16 @@
     "./handlers/session": "./src/handlers/session.ts",
     "./location": "./src/location.ts",
     "./middleware/authorization": "./src/middleware/authorization.ts",
+    "./middleware/capability-authorization": "./src/middleware/capability-authorization.ts",
     "./middleware/schema-error": "./src/middleware/schema-error.ts",
     "./middleware/session-location": "./src/middleware/session-location.ts",
+    "./operator": "./src/operator.ts",
+    "./principal": "./src/principal.ts",
     "./routes": "./src/routes.ts",
-    "./web-ui": "./src/web-ui.ts"
+    "./web-ui": "./src/web-ui.ts",
+    "./test/capability-connections-fixture": "./test/capability-connections-fixture.ts",
+    "./test/capability-setup-http-fixture": "./test/capability-setup-http-fixture.ts",
+    "./handlers/capability-connections": "./src/handlers/capability-connections.ts"
   },
   "scripts": {
     "test": "bun test --timeout 30000 --only-failures",

@@ -3,7 +3,7 @@ import { base64Encode } from "@orchestra/core/util/encode"
 import { fixture, pageMessages } from "./session-timeline.fixture"
 import { trackPageErrors, expectNoSmokeErrors } from "../utils/errors"
 import { mockOrchestraServer } from "../utils/mock-server"
-import { APP_READY_TIMEOUT, expectAppVisible, expectSessionTitle } from "../utils/waits"
+import { expectAppVisible, expectSessionTitle } from "../utils/waits"
 
 const forbiddenText = ["Load details", "Show earlier steps"]
 
@@ -129,22 +129,7 @@ test.describe("smoke: session timeline", () => {
       pageMessages: (sessionID) => ({ items: fixture.messages[sessionID as keyof typeof fixture.messages] ?? [] }),
     })
     await configureSmokePage(page, fixture.directory)
-    await page.addInitScript(
-      ({ dirBase64, sourceID, targetID }) => {
-        localStorage.setItem(
-          "orchestra.window.browser.dat:tabs",
-          JSON.stringify(
-            [sourceID, targetID].map((sessionId) => ({
-              type: "session",
-              server: "http://127.0.0.1:4096",
-              dirBase64,
-              sessionId,
-            })),
-          ),
-        )
-      },
-      { dirBase64: base64Encode(fixture.directory), sourceID: fixture.sourceID, targetID: fixture.targetID },
-    )
+    await seedSessionTabs(page)
 
     await page.goto(`/${base64Encode(fixture.directory)}/session/${fixture.targetID}`)
     await expectSessionTitle(page, fixture.expected.targetTitle)
@@ -255,22 +240,7 @@ test.describe("smoke: session timeline", () => {
       pageMessages: (sessionID) => ({ items: fixture.messages[sessionID as keyof typeof fixture.messages] ?? [] }),
     })
     await configureSmokePage(page, fixture.directory)
-    await page.addInitScript(
-      ({ dirBase64, sourceID, targetID }) => {
-        localStorage.setItem(
-          "orchestra.window.browser.dat:tabs",
-          JSON.stringify(
-            [sourceID, targetID].map((sessionId) => ({
-              type: "session",
-              server: "http://127.0.0.1:4096",
-              dirBase64,
-              sessionId,
-            })),
-          ),
-        )
-      },
-      { dirBase64: base64Encode(fixture.directory), sourceID: fixture.sourceID, targetID: fixture.targetID },
-    )
+    await seedSessionTabs(page)
     await page.goto(`/${base64Encode(fixture.directory)}/session/${fixture.sourceID}`)
     await expectSessionTitle(page, fixture.expected.sourceTitle)
     const last = fixture.expected.targetMessageIDs.at(-1)!
@@ -334,12 +304,14 @@ test.describe("smoke: session timeline", () => {
       pageMessages,
     })
     await configureSmokePage(page, fixture.directory)
+    await seedSessionTabs(page)
 
-    await selectHomeProject(page, fixture.project.name)
+    // One page load, then the target opens through its tab. A second load aborts the previous document's bootstrap
+    // reads still in flight, and that document logs them as a bootstrap failure before it unloads.
     await navigateToSession(page, fixture.directory, fixture.sourceID, fixture.expected.sourceTitle)
     await expectSessionReady(page)
-    await navigateToSession(page, fixture.directory, fixture.targetID, fixture.expected.targetTitle)
-    const expectedPartIDs = fixture.expected.targetPartIDs
+    await switchTitlebarSession(page, fixture.targetID, fixture.expected.targetTitle)
+    const expectedPartIDs = targetPartIDs()
     const expectedMessageIDs = fixture.expected.targetMessageIDs
     await expectSessionTimelineReady(page, expectedPartIDs, expectedMessageIDs, errors)
     await expectCanScrollToStart(page, expectedPartIDs, expectedMessageIDs, errors)
@@ -619,6 +591,18 @@ function expectOrderedIDs(expected: string[], actual: string[], label: string) {
   expect(actual, `${label} ids`).toEqual(expected.filter((id) => actualSet.has(id)))
 }
 
+// V2 history carries no text/reasoning part ids: the app derives message:type:ordinal, and keeps content order.
+function targetPartIDs() {
+  return fixture.messages[fixture.targetID].flatMap((message) => {
+    const ordinals = { text: 0, reasoning: 0 }
+    return message.parts.map((part) =>
+      part.type === "text" || part.type === "reasoning"
+        ? `${message.info.id}:${part.type}:${ordinals[part.type]++}`
+        : part.id,
+    )
+  })
+}
+
 function unique(values: string[]) {
   return values.filter((value, index) => values.indexOf(value) === index)
 }
@@ -715,18 +699,23 @@ function expectCompleteScroll(
   expect(expectedPartIDs.length).toBe(331)
 }
 
-async function selectHomeProject(page: Page, projectName: string) {
-  await page.goto("/")
-  const profile = page.locator('[data-slot="orchestra-profile"]')
-  await expectAppVisible(profile)
-  await profile.click()
-  const project = page
-    .locator('[data-component="orchestra-profile-picker"]')
-    .getByRole("menuitemradio", { name: projectName, exact: true })
-  await expectAppVisible(project)
-  await project.click()
-  await expect(page.locator("#orchestra-profile-name")).toHaveText(projectName, { timeout: APP_READY_TIMEOUT })
-  await expect(page).toHaveURL(/\/$/)
+async function seedSessionTabs(page: Page) {
+  await page.addInitScript(
+    ({ dirBase64, sourceID, targetID }) => {
+      localStorage.setItem(
+        "orchestra.window.browser.dat:tabs",
+        JSON.stringify(
+          [sourceID, targetID].map((sessionId) => ({
+            type: "session",
+            server: "http://127.0.0.1:4096",
+            dirBase64,
+            sessionId,
+          })),
+        ),
+      )
+    },
+    { dirBase64: base64Encode(fixture.directory), sourceID: fixture.sourceID, targetID: fixture.targetID },
+  )
 }
 
 async function navigateToSession(page: Page, directory: string, sessionId: string, expectedTitle: string) {

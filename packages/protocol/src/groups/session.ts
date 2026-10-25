@@ -528,6 +528,25 @@ export const makeSessionGroup = <I extends HttpApiMiddleware.AnyId, S>(sessionLo
         ),
     )
     .add(
+      HttpApiEndpoint.get("session.message.diff", "/api/session/:sessionID/message/:messageID/diff", {
+        params: { sessionID: Session.ID, messageID: SessionMessage.ID },
+        query: Schema.Struct({
+          context: Schema.NumberFromString.pipe(Schema.decodeTo(NonNegativeInt), Schema.optional),
+        }),
+        success: Schema.Struct({ data: Schema.Array(Revert.FileDiff) }),
+        error: [MessageNotFoundError, SessionNotFoundError, UnknownError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.message.diff",
+            summary: "Get turn diff",
+            description:
+              "File changes made by the assistant turns that answer a user message, from the first start snapshot to the last end snapshot.",
+          }),
+        ),
+    )
+    .add(
       HttpApiEndpoint.post("session.revert.stage", "/api/session/:sessionID/revert/stage", {
         params: { sessionID: Session.ID },
         payload: Schema.Struct({ messageID: SessionMessage.ID, files: Schema.Boolean.pipe(Schema.optional) }),
@@ -575,26 +594,6 @@ export const makeSessionGroup = <I extends HttpApiMiddleware.AnyId, S>(sessionLo
             identifier: "v2.session.context",
             summary: "Get session context",
             description: "Retrieve the active context messages for a session (all messages after the last compaction).",
-          }),
-        ),
-    )
-    .add(
-      HttpApiEndpoint.get("session.diff", "/api/session/:sessionID/diff", {
-        params: { sessionID: Session.ID },
-        query: Schema.Struct({
-          messageID: SessionMessage.ID,
-          context: Schema.NumberFromString.pipe(Schema.decodeTo(NonNegativeInt), Schema.optional),
-        }),
-        success: Schema.Struct({ data: Schema.Array(Revert.FileDiff) }),
-        error: [SessionNotFoundError, UnknownError],
-      })
-        .middleware(sessionLocationMiddleware)
-        .annotateMerge(
-          OpenApi.annotations({
-            identifier: "v2.session.diff",
-            summary: "Get turn diff",
-            description:
-              "Diff the files changed by the turn that answered a user message, from its first to its last snapshot. Returns an empty list when the message is not a user message or the turn has no snapshots.",
           }),
         ),
     )

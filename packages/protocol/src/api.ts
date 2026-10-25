@@ -46,6 +46,10 @@ import { ActionsPipelineGroup } from "./groups/actions-pipeline"
 import { ActionsResourceGroup } from "./groups/actions-resource"
 import { ActionsSourceGroup } from "./groups/actions-source"
 import { ActionsTransferGroup } from "./groups/actions-transfer"
+import { makeCapabilityOperatorGroup } from "./groups/capability-operator"
+import { makeCapabilityConnectionsGroup } from "./groups/capability-connections"
+import { CapabilityContentGroup, makeCapabilityArtifactsGroup } from "./groups/capability-artifacts"
+import { makeCapabilitySchedulesGroup } from "./groups/capability-schedules"
 
 // Protocol owns middleware placement, while Server injects concrete keys so Core service identities stay downstream.
 const makeApiFromGroup = <
@@ -104,6 +108,12 @@ const makeApiFromGroup = <
     .add(ActionsTransferGroup.middleware(locationMiddleware))
     .add(RelayRunGroup.middleware(locationMiddleware))
     .add(InstallationGroup)
+    // Last-applied middleware runs first: authenticate before caller-selected Location construction.
+    .add(makeCapabilityOperatorGroup(locationMiddleware))
+    .add(makeCapabilityConnectionsGroup(locationMiddleware))
+    .add(makeCapabilityArtifactsGroup(locationMiddleware))
+    .add(makeCapabilitySchedulesGroup(locationMiddleware))
+    .add(CapabilityContentGroup)
     .annotateMerge(
       OpenApi.annotations({
         title: "orchestra HttpApi",

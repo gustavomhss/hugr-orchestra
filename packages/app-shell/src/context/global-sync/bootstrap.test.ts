@@ -29,6 +29,7 @@ type ProjectApi = ServerApi["project"]
 const provider = { all: new Map(), connected: [], default: {} } satisfies NormalizedProviderListResponse
 const api = {
   agent: { list: async () => ({ location: {}, data: [] }) },
+  location: { paths: async () => ({ home: "/home" }) },
   provider: { list: async () => ({ location: {}, data: [] }) },
   model: {
     list: async () => ({ location: {}, data: [] }),

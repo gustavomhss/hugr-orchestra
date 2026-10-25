@@ -1,5 +1,4 @@
 import type { Orchestra } from "@orchestra/client"
-import type { Config } from "@/v2-wire"
 import type { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 import { queryOptions, type QueryClient, type SolidQueryOptions } from "@tanstack/solid-query"
 import type { McpListInput, McpListOutput, McpResourceCatalogInput, McpResourceCatalogOutput } from "@/v2-wire"
@@ -14,6 +13,7 @@ import { directoryKey } from "./global-sync/utils"
 import {
   loadAgentsQuery,
   loadGlobalConfigQuery,
+  type GlobalConfig,
   loadPathQuery,
   loadProjectsQuery,
   loadProvidersQuery,
@@ -86,14 +86,14 @@ export const loadLspQuery = (
 export function makeQueryOptionsApi(
   scope: ServerScope,
   serverAPI: CompatibleApi,
-  readV2Config?: () => Promise<Config>,
+  readV2Config?: () => Promise<GlobalConfig>,
   orchestra?: ReturnType<typeof Orchestra.make>,
 ) {
   return {
     globalConfig: () => loadGlobalConfigQuery(scope, readV2Config),
     projects: () => loadProjectsQuery(scope, serverAPI.project),
     providers: (directory: PathKey | null) => loadProvidersQuery(scope, directory, serverAPI),
-    path: (directory: PathKey | null) => loadPathQuery(scope, directory),
+    path: (directory: PathKey | null) => loadPathQuery(scope, directory, serverAPI.location),
     agents: (directory: PathKey) => loadAgentsQuery(scope, directory, serverAPI.agent),
     references: (directory: PathKey) => loadReferencesQuery(scope, directory, serverAPI.reference),
     mcp: (directory: PathKey) => loadMcpQuery(scope, directory, serverAPI.mcp),

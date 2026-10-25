@@ -1,6 +1,6 @@
 import { expect, test, type Page, type Request } from "@playwright/test"
 import { base64Encode } from "@orchestra/core/util/encode"
-import { mockOrchestraServer } from "../utils/mock-server"
+import { currentSession, mockOrchestraServer } from "../utils/mock-server"
 import { expectAppVisible } from "../utils/waits"
 
 // Production benchmark baseline reused: 38521663841 @ e6c39ff; audited UI source unchanged at e87fd95799.
@@ -19,7 +19,7 @@ const draftTab = `[data-tab-key="draft:${draftID}"]`
 const composer = '[data-prompt-admitting]'
 const editor = '[data-component="prompt-input-v2"] [data-component="prompt-input"]'
 const submit = '[data-component="prompt-input-v2"] [data-action="prompt-submit"]'
-const promptPath = `/session/${sessionID}/prompt_async`
+const promptPath = `/api/session/${sessionID}/prompt`
 const userCard = '[data-component="user-message"]'
 const userText = `${userCard} [data-slot="user-message-text"]`
 
@@ -44,7 +44,7 @@ test("fresh Send admits exactly one first turn before route/tab remount", async 
   gate.resolve()
   const receipt = await response
   expect(receipt.request()).toBe(sent)
-  expect(receipt.status()).toBe(204)
+  expect(receipt.status()).toBe(200)
   await expect(page).toHaveURL(sessionURL)
   await expect(page.locator(draftTab)).toHaveCount(0)
   await expect(page.locator(userCard)).toHaveCount(1)
@@ -87,7 +87,7 @@ test("delayed failure keeps draft and retries same Session/message ID", async ({
   await page.locator(submit).click()
   const retryReceipt = await retried
   expect(retryReceipt.request()).toBe(await retryRequest)
-  expect(retryReceipt.status()).toBe(204)
+  expect(retryReceipt.status()).toBe(200)
   await expect(page).toHaveURL(sessionURL)
   await expect(page.locator(userCard)).toHaveCount(1)
   await expect(page.locator(userText)).toHaveText("retry retained turn")
@@ -113,10 +113,10 @@ test("new edit during admission moves to the session composer unsent until delib
   await page.locator(editor).fill("newer unsent draft")
   await expect(page.locator(editor)).toHaveText("newer unsent draft")
   gate.resolve()
-  // V1 admission is the matching 204 receipt, not a streamed body-completion promise.
+  // V2 admission is the matching 200 receipt, not a streamed body-completion promise.
   const receipt = await response
   expect(receipt.request()).toBe(sent)
-  expect(receipt.status()).toBe(204)
+  expect(receipt.status()).toBe(200)
   // An admitted prompt always hands the draft off to its Session; the newer edit follows it without being sent.
   await expect(page).toHaveURL(sessionURL)
   await expect(page.locator(draftTab)).toHaveCount(0)
@@ -130,7 +130,7 @@ test("new edit during admission moves to the session composer unsent until delib
   await page.locator(submit).click()
   const nextReceipt = await next
   expect(nextReceipt.request()).toBe(await nextRequest)
-  expect(nextReceipt.status()).toBe(204)
+  expect(nextReceipt.status()).toBe(200)
   await expect(page).toHaveURL(sessionURL)
   await expect(page.locator(userCard)).toHaveCount(2)
   await expect(page.locator(userText)).toHaveText(["admitted original", "newer unsent draft"])
@@ -148,8 +148,8 @@ test("closing admitting draft tears down its owner and stays Home on a late crea
   const original = await page.locator(composer).elementHandle()
   if (!original) throw new Error("Missing draft composer")
   await page.locator(editor).fill("closed draft must not dispatch")
-  const request = page.waitForRequest((request) => new URL(request.url()).pathname === "/session" && request.method() === "POST")
-  const response = page.waitForResponse((response) => new URL(response.url()).pathname === "/session" && response.request().method() === "POST")
+  const request = page.waitForRequest((request) => new URL(request.url()).pathname === "/api/session" && request.method() === "POST")
+  const response = page.waitForResponse((response) => new URL(response.url()).pathname === "/api/session" && response.request().method() === "POST")
   await page.locator(submit).click()
   const sent = await request
   await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "true")
@@ -166,7 +166,7 @@ test("closing admitting draft tears down its owner and stays Home on a late crea
   const created = await response
   expect(created.request()).toBe(sent)
   expect(created.status()).toBe(200)
-  expect(await created.json()).toMatchObject({ id: sessionID, directory })
+  expect(await created.json()).toMatchObject({ data: { id: sessionID, location: { directory } } })
   await expect(page).toHaveURL("/")
   await selectProfile(page, "draft-handoff-b")
   await expect(page).toHaveURL(otherURL)
@@ -184,8 +184,8 @@ test("server A to B to A remount cannot resurrect late creation; explicit retry 
   const original = await page.locator(editor).elementHandle()
   if (!original) throw new Error("Missing draft composer")
   await page.locator(editor).fill("server A retained turn")
-  const request = page.waitForRequest((request) => new URL(request.url()).pathname === "/session" && request.method() === "POST")
-  const response = page.waitForResponse((response) => new URL(response.url()).pathname === "/session" && response.request().method() === "POST")
+  const request = page.waitForRequest((request) => new URL(request.url()).pathname === "/api/session" && request.method() === "POST")
+  const response = page.waitForResponse((response) => new URL(response.url()).pathname === "/api/session" && response.request().method() === "POST")
   await page.locator(submit).click()
   const sent = await request
   await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "true")
@@ -210,7 +210,7 @@ test("server A to B to A remount cannot resurrect late creation; explicit retry 
   const created = await response
   expect(created.request()).toBe(sent)
   expect(created.status()).toBe(200)
-  expect(await created.json()).toMatchObject({ id: sessionID, directory })
+  expect(await created.json()).toMatchObject({ data: { id: sessionID, location: { directory } } })
   await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "false")
   await expect(page).toHaveURL(draftURL)
   expect(fixture.admissions).toEqual([])
@@ -220,7 +220,7 @@ test("server A to B to A remount cannot resurrect late creation; explicit retry 
   await page.locator(submit).click()
   const retryReceipt = await retried
   expect(retryReceipt.request()).toBe(await retryRequest)
-  expect(retryReceipt.status()).toBe(204)
+  expect(retryReceipt.status()).toBe(200)
   await expect(page).toHaveURL(sessionURL)
   await expect(page.locator(userCard)).toHaveCount(1)
   await expect(page.locator(userText)).toHaveText("server A retained turn")
@@ -254,7 +254,6 @@ async function setup(page: Page) {
     if (isAdmissionRequest(request)) fixture.admissions.push(request)
   })
   await mockOrchestraServer(page, {
-    protocol: "v1",
     directory,
     project: { id: session.projectID, worktree: directory, vcs: "git", name: "draft-handoff", time: session.time, sandboxes: [] },
     provider: {
@@ -269,13 +268,19 @@ async function setup(page: Page) {
     const url = new URL(request.url())
     const path = url.pathname
     if (isCreateWrite(request)) {
-      if (request.method() !== "POST" || url.origin !== server || path !== "/session") {
+      if (request.method() !== "POST" || url.origin !== server || path !== "/api/session") {
         await route.fulfill({ status: 500, json: { error: "Unexpected creation request" }, headers: { "access-control-allow-origin": "*" } })
         throw new Error(`Unexpected creation ${request.method()} ${request.url()}`)
       }
       await fixture.createGate
       sessions.push(session)
-      return route.fulfill({ json: session, headers: { "access-control-allow-origin": "*" } })
+      return route.fulfill({ json: { data: currentSession(session, directory) }, headers: { "access-control-allow-origin": "*" } })
+    }
+    // V2 Send selects the agent and model before it admits the prompt; a closed source must not reach either.
+    if (isSelectionRequest(request)) {
+      if (!fixture.rejectPrompts) return route.fallback()
+      await route.fulfill({ status: 500, json: { error: "Closed source attempted selection" }, headers: { "access-control-allow-origin": "*" } })
+      throw new Error("Closed source attempted agent/model selection")
     }
     if (isAdmissionRequest(request)) {
       try {
@@ -283,7 +288,7 @@ async function setup(page: Page) {
         if (!isPromptRequest(request)) throw new Error(`Unexpected admission ${request.method()} ${request.url()}`)
         const body = requirePromptBody(request)
         fixture.prompts.push({
-          id: body.messageID, text: body.parts.flatMap((part) => part.type === "text" ? [part.text ?? ""] : []).join("\n"),
+          id: body.messageID, text: body.text,
           server: url.origin, payload: body.payload,
           url: new URL(page.url()).pathname + new URL(page.url()).search,
           draft: await page.locator(draftTab).count() === 1,
@@ -291,21 +296,28 @@ async function setup(page: Page) {
         await fixture.promptGate
         if (fixture.fail) return route.fulfill({ status: 500, json: { name: "UnknownError", data: { message: "admission failed" } }, headers: { "access-control-allow-origin": "*" } })
         if (!fixture.messages.some((message) => message.info.id === body.messageID)) fixture.messages.push({
-          info: { id: body.messageID, sessionID, role: "user", agent: body.agent, model: body.model, time: { created: Date.now() } },
-          parts: body.parts,
+          info: { id: body.messageID, sessionID, role: "user", agent: "maestro", model: undefined, time: { created: Date.now() } },
+          parts: [{ type: "text", text: body.text }],
         })
-        return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" } })
+        return route.fulfill({
+          json: { data: { admittedSeq: fixture.messages.length, id: body.messageID, sessionID, prompt: body.prompt, delivery: body.delivery, timeCreated: Date.now() } },
+          headers: { "access-control-allow-origin": "*" },
+        })
       } catch (error) {
         await route.fulfill({ status: 500, json: { error: String(error) }, headers: { "access-control-allow-origin": "*" } })
         throw error
       }
     }
     if (request.method() === "GET" && url.origin === otherServer) {
-      if (path === "/project" || path === "/project/current") return route.fulfill({
-        json: path === "/project" ? [otherProject] : otherProject,
+      // The mock serves both hosts from one config; B answers with its own repository.
+      if (path === "/api/project") return route.fulfill({ json: [otherProject], headers: { "access-control-allow-origin": "*" } })
+      if (path === "/api/location" || path === "/api/project/current") return route.fulfill({
+        json: path === "/api/location"
+          ? { directory: otherDirectory, project: { id: otherProject.id, directory: otherDirectory } }
+          : { id: otherProject.id, directory: otherDirectory },
         headers: { "access-control-allow-origin": "*" },
       })
-      if (path === "/path") return route.fulfill({
+      if (path === "/api/path") return route.fulfill({
         json: { state: otherDirectory, config: otherDirectory, worktree: otherDirectory, directory: otherDirectory, home: "C:/Orchestra" },
         headers: { "access-control-allow-origin": "*" },
       })
@@ -354,8 +366,13 @@ function isPromptRequest(request: Request) {
 function isAdmissionRequest(request: Request) {
   const path = new URL(request.url()).pathname
   if (request.method() === "OPTIONS") return false
+  if (isSelectionRequest(request)) return false
   if (/^\/(?:api\/)?session\/[^/]+\/(?:prompt|prompt_async)$/.test(path)) return true
   return /^\/(?:api\/)?session\/[^/]+(?:\/.*)?$/.test(path) && !["GET", "HEAD", "OPTIONS"].includes(request.method())
+}
+
+function isSelectionRequest(request: Request) {
+  return request.method() === "POST" && /^\/api\/session\/[^/]+\/(?:agent|model)$/.test(new URL(request.url()).pathname)
 }
 
 function isCreateWrite(request: Request) {
@@ -365,15 +382,11 @@ function isCreateWrite(request: Request) {
 function requirePromptBody(request: Request) {
   const body: unknown = request.postDataJSON()
   if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Prompt body is not an object")
-  if (!("messageID" in body) || typeof body.messageID !== "string" || !/^msg_[0-9a-f]{12}[A-Za-z0-9]{14}$/.test(body.messageID)) {
-    throw new Error("Prompt messageID does not match Identifier.ascending(message)")
+  if (!("id" in body) || typeof body.id !== "string" || !/^msg_[0-9a-f]{12}[A-Za-z0-9]{14}$/.test(body.id)) {
+    throw new Error("Prompt id does not match Identifier.ascending(message)")
   }
-  if (!("agent" in body) || typeof body.agent !== "string") throw new Error("Prompt agent is not a string")
-  if (!("parts" in body) || !Array.isArray(body.parts)) throw new Error("Prompt parts are not an array")
-  const parts = body.parts.map((part: unknown) => {
-    if (!part || typeof part !== "object" || !("type" in part) || typeof part.type !== "string") throw new Error("Invalid prompt part")
-    if ("text" in part && typeof part.text !== "string") throw new Error("Prompt part text is not a string")
-    return part as { type: string; text?: string }
-  })
-  return { messageID: body.messageID, agent: body.agent, model: "model" in body ? body.model : undefined, parts, payload: body }
+  if (!("prompt" in body) || !body.prompt || typeof body.prompt !== "object") throw new Error("Prompt is not an object")
+  if (!("text" in body.prompt) || typeof body.prompt.text !== "string") throw new Error("Prompt text is not a string")
+  const delivery = "delivery" in body && typeof body.delivery === "string" ? body.delivery : "steer"
+  return { messageID: body.id, text: body.prompt.text, prompt: body.prompt, delivery, payload: body }
 }

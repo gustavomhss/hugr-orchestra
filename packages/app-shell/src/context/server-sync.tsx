@@ -1,4 +1,4 @@
-import type { Config, Path, ProviderAuthResponse } from "@/v2-wire"
+import type { Path, ProviderAuthResponse } from "@/v2-wire"
 import type { Project } from "@/v2-types"
 import type { SessionStatus } from "@/v2-wire"
 
@@ -9,7 +9,13 @@ import { createStore, produce, reconcile } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import type { InitError } from "../pages/error"
 import { ServerSDK } from "./server-sdk"
-import { bootstrapDirectory, bootstrapGlobal, clearProviderRev, loadCommands } from "./global-sync/bootstrap"
+import {
+  bootstrapDirectory,
+  bootstrapGlobal,
+  clearProviderRev,
+  loadCommands,
+  type GlobalConfig,
+} from "./global-sync/bootstrap"
 import { createChildStoreManager } from "./global-sync/child-store"
 import { applyDirectoryEvent, applyGlobalEvent } from "./global-sync/event-reducer"
 import { estimateRootSessionTotal, loadRootSessions } from "./global-sync/session-load"
@@ -52,7 +58,7 @@ type GlobalStore = {
   project: Project[]
   provider: NormalizedProviderListResponse
   provider_auth: ProviderAuthResponse
-  config: Config
+  config: GlobalConfig
   reload: undefined | "pending" | "complete"
 }
 
@@ -144,16 +150,18 @@ export function createServerSyncContextInner(
   const session = createServerSession(serverSDK.api.session, serverSDK.api.message, {
     todo: (sessionID) => serverSDK.orchestra.sessions.todo({ sessionID }),
   })
-  // V2 keeps only the settings the app writes (default model, disabled providers) in its global config document.
+  // V2 keeps only the settings the app writes (default model, shell, engines, disabled providers, tool permission
+  // rules) in its global config document.
   const readV2Config = () =>
     serverSDK.orchestra.config
       .get()
       .then(
-        (settings): Config => ({
+        (settings): GlobalConfig => ({
           model: settings.model,
           shell: settings.shell,
           agent: settings.agents,
           disabled_providers: [...settings.disabledProviders],
+          permissions: settings.permissions,
         }),
       )
   const queryOptionsApi = makeQueryOptionsApi(
@@ -600,12 +608,14 @@ export function createServerSyncContextInner(
   }
 
   const updateConfigMutation = useMutation(() => ({
-    mutationFn: async (config: Config) => {
-      // V2 keeps the default model, shell, per-agent engines and disabled providers in its global config document.
+    mutationFn: async (config: GlobalConfig) => {
+      // V2 keeps the default model, shell, per-agent engines, disabled providers and tool permission rules in its
+      // global config document. `permissions` is the whole ordered list and replaces the stored one.
       return serverSDK.orchestra.config.update({
         model: config.model,
         shell: config.shell,
         disabledProviders: config.disabled_providers,
+        permissions: config.permissions,
         agents:
           config.agent &&
           Object.fromEntries(

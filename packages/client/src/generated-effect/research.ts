@@ -16,7 +16,7 @@ type Endpoint4_0Input = {
 const Endpoint4_0 = (raw: RawClient["server.research"]) => (input: Endpoint4_0Input) =>
   raw["research.artifact"]({
     params: { sessionID: input["sessionID"], artifactID: input["artifactID"] },
-    query: { revision: input["revision"], cursor: input["cursor"] },
+    query: { revision: input["revision"], ...(input["cursor"] === undefined ? {} : { cursor: input["cursor"] }) },
   }).pipe(Effect.mapError(mapClientError))
 
 export const adaptGroup4 = (raw: RawClient["server.research"]) => ({ artifact: Endpoint4_0(raw) })

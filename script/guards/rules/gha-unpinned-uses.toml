@@ -1,0 +1,10 @@
+id = "gha-unpinned-uses"
+severity = "gate"
+on = "added-lines"
+paths = [".github/workflows/**/*.{yml,yaml}", ".github/actions/**/*.{yml,yaml}"]
+exclude = []
+# A tag or branch can be moved by whoever owns the action. Local actions (./) and docker:// refs are not covered here.
+match = '''^\s*(-\s*)?uses:\s*["']?(?!\.{1,2}/)(?!docker://)[^\s"'@#]+@(?![0-9a-f]{40}(?:["'\s]|$))[^\s"'#]+'''
+message = "Action not pinned to a full commit SHA. Pin uses: to the 40-character commit and keep the tag in a comment."
+positive = ['      - uses: actions/checkout@v4', '        uses: "actions/cache@v4"', 'uses: owner/repo/.github/workflows/x.yml@main', '- uses: actions/checkout@0123456789abcdef0123456789abcdef0123456']
+negative = ['      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4', 'uses: ./.github/actions/setup', 'uses: docker://alpine:3.19', '        name: uses the cache']

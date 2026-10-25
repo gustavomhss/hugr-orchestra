@@ -50,7 +50,6 @@ test("creates a session in a new project, connects OpenCode Go, and selects its 
       connected: connectedGo ? ["opencode-go"] : [],
       default: connectedGo ? { "opencode-go": "go-model-1" } : {},
     }),
-    integrationMethods: { "opencode-go": [{ type: "api", label: "API key" }] },
     onConnectKey: (input) => {
       connections.push(input)
       if (input.integrationID === "opencode-go") connectedGo = true
@@ -69,6 +68,24 @@ test("creates a session in a new project, connects OpenCode Go, and selects its 
         : [{ name: "NewProject", path: "NewProject", absolute: directory, type: "directory", ignored: false }]
     },
     findFiles: () => ["NewProject"],
+  })
+  // The connect dialog lists the server's integrations, which the shared mock does not serve.
+  const location = { directory, project: { id: "proj_model_selection_flow", directory } }
+  const integration = () => ({
+    id: "opencode-go",
+    name: "OpenCode Go",
+    methods: [{ type: "key", label: "API key" }],
+    connections: connectedGo ? [{ id: "conn_go", label: "API key" }] : [],
+  })
+  await page.route((url) => /^\/api\/integration(\/[^/]+)?$/.test(url.pathname), (route) => {
+    if (route.request().method() !== "GET") return route.fallback()
+    const data = new URL(route.request().url()).pathname.split("/").at(3) ? integration() : [integration()]
+    return route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      headers: { "access-control-allow-origin": "*" },
+      body: JSON.stringify({ location, data }),
+    })
   })
   await page.addInitScript(() => {
     localStorage.setItem("settings.v3", JSON.stringify({ general: { shouldDisplayTabsToast: false } }))
@@ -145,7 +162,8 @@ test("creates a session in a new project, connects OpenCode Go, and selects its 
   await page.locator('[data-input="provider-api-key"]').fill("mock-go-api-key")
   await page.locator('[data-action="provider-connect-submit"]').click()
   await expect(page.locator('[data-component="dialog-v2"]')).toHaveCount(0)
-  expect(connections).toEqual([{ integrationID: "opencode-go", body: { key: "mock-go-api-key" } }])
+  expect(connections.map((item) => item.integrationID)).toEqual(["opencode-go"])
+  expect(connections[0]?.body).toMatchObject({ key: "mock-go-api-key" })
   await expect(providerTip).toHaveCount(0)
 
   await expect(modelControl).toHaveAttribute("data-control-type", "popover")
@@ -165,5 +183,5 @@ test("creates a session in a new project, connects OpenCode Go, and selects its 
   await expect(meta).toHaveAttribute("title", directory)
   await expect(modelControl).toHaveText("Go Model 1")
   await expect(editor).toHaveText(draft)
-  expect(connections).toEqual([{ integrationID: "opencode-go", body: { key: "mock-go-api-key" } }])
+  expect(connections.map((item) => item.integrationID)).toEqual(["opencode-go"])
 })

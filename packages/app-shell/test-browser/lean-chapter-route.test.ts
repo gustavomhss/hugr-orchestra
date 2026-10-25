@@ -62,7 +62,7 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
       history: undefined as Promise<void> | undefined }
     const server = createServer(async (request, response) => {
       response.setHeader("access-control-allow-origin", "*")
-      response.setHeader("access-control-allow-headers", "authorization,content-type,x-orchestra-directory")
+      response.setHeader("access-control-allow-headers", "content-type,authorization")
       response.setHeader("access-control-allow-methods", "GET,PATCH,OPTIONS")
       if (request.method === "OPTIONS") { response.writeHead(204); response.end(); return }
       const url = new URL(request.url!, "http://fixture")

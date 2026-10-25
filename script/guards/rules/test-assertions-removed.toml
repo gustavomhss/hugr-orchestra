@@ -1,0 +1,12 @@
+id = "test-assertions-removed"
+severity = "warn"
+on = "line-balance"
+paths = ["$js_tests", "$py_tests", "$rs_tests"]
+exclude = []
+# Three or more assertions net removed from one test file. Often a deliberate removal of dead behavior (real history: removing a protocol), so a warning; it is the signal an agent weakening a test leaves. Moved lines and deleted files do not count.
+skip_comments = ["//", "#"]
+match = '(\bexpect\(|\bassert(_\w+)?[!(\s]|\bself\.assert\w+\()'
+min_net_removed = 3
+message = "This change removes assertions from a test file. Check that the behavior they pinned is really gone."
+positive = ['expect(a).toBe(1)', '    assert x == 1', 'assert_eq!(a, b);', 'self.assertEqual(a, b)']
+negative = ['const expected = 1', '// assert that later', '# assert x', 'test("asserts nothing", () => {})']

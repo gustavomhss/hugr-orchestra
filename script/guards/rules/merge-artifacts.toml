@@ -1,0 +1,9 @@
+id = "merge-artifacts"
+severity = "gate"
+on = "changed-paths"
+paths = ["**/*.{orig,rej,bak,swp,swo}", "**/*~"]
+exclude = []
+statuses = ["A", "R", "C"]
+message = "Editor or merge leftover added to the repository. Delete it."
+positive = ["src/a.ts.orig", "src/a.ts.rej", "notes.bak", "src/.a.ts.swp", "src/a.ts~"]
+negative = ["src/a.ts", "docs/backup.md", "src/original.ts"]

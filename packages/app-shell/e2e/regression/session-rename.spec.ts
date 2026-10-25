@@ -5,16 +5,15 @@ import { mockOrchestraServer } from "../utils/mock-server"
 test.beforeEach(async ({ page }) => {
   const sessions = fixture.sessions.map((session) => ({ ...session }))
   await mockOrchestraServer(page, {
-    protocol: "v1",
     sessions,
     provider: fixture.provider,
     directory: fixture.directory,
     project: fixture.project,
     pageMessages,
   })
-  await page.route(/\/session\/[^/]+(?:\?.*)?$/, async (route) => {
-    if (route.request().method() !== "PATCH") return route.fallback()
-    const id = new URL(route.request().url()).pathname.split("/").at(-1)
+  await page.route(/\/api\/session\/[^/]+\/rename(?:\?.*)?$/, async (route) => {
+    if (route.request().method() !== "POST") return route.fallback()
+    const id = new URL(route.request().url()).pathname.split("/").at(-2)
     const session = sessions.find((item) => item.id === id)
     const payload: unknown = route.request().postDataJSON()
     if (
@@ -26,7 +25,7 @@ test.beforeEach(async ({ page }) => {
     )
       throw new Error("Invalid rename request")
     session.title = payload.title
-    await route.fulfill({ json: session, headers: { "access-control-allow-origin": "*" } })
+    await route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" } })
   })
   // Home ranks the selected profile's sessions; the mock server gives each one message today.
   await page.addInitScript(
@@ -77,8 +76,8 @@ test("cancels the session heading with Escape", async ({ page }) => {
 })
 
 test("keeps the draft when saving the session heading fails", async ({ page }) => {
-  await page.route(/\/session\/[^/]+(?:\?.*)?$/, (route) => {
-    if (route.request().method() !== "PATCH") return route.fallback()
+  await page.route(/\/api\/session\/[^/]+\/rename(?:\?.*)?$/, (route) => {
+    if (route.request().method() !== "POST") return route.fallback()
     return route.fulfill({ status: 500, headers: { "access-control-allow-origin": "*" } })
   })
   await page.getByRole("heading", { name: fixture.expected.targetTitle, exact: true }).click()

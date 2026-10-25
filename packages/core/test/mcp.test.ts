@@ -78,13 +78,11 @@ describe("Mcp", () => {
               })
               expect(yield* status("fixture")).toBe("connected")
               expect((yield* registry.materialize()).definition("fixture_probe")).toBeDefined()
-              expect(yield* mcp.toolNames()).toEqual({ fixture: ["probe"] })
+              expect(yield* mcp.tools()).toEqual({ fixture: ["probe"] })
               // Config shows only type, command and url: the resolved server and the file's own entry, never its env.
               const command = [process.execPath, fixture, "probe"]
-              expect(yield* mcp.config()).toEqual({
-                servers: { fixture: { type: "local", command } },
-                entries: { fixture: { type: "local", command } },
-              })
+              expect(yield* mcp.config()).toEqual({ fixture: { type: "local", command } })
+              expect(yield* mcp.entries()).toEqual({ fixture: { type: "local", command } })
               expect(yield* mcp.resources()).toEqual({
                 resources: [{ server: "fixture", name: "fixture note", uri: "fixture://note", mimeType: "text/plain" }],
                 templates: [{ server: "fixture", name: "fixture notes", uriTemplate: "fixture://note/{id}" }],
@@ -118,7 +116,7 @@ describe("Mcp", () => {
               expect(yield* status("fixture")).toBe("disabled")
               expect((yield* registry.materialize()).definition("fixture_probe")).toBeUndefined()
               expect((yield* mcp.resources()).resources).toEqual([])
-              expect(yield* mcp.toolNames()).toEqual({})
+              expect(yield* mcp.tools()).toEqual({})
 
               yield* mcp.add("saved", new ConfigMCP.Local({ type: "local", command: ["bun", "--version"], disabled: true }))
               expect(yield* status("saved")).toBe("disabled")

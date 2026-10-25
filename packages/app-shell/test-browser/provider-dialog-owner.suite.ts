@@ -16,7 +16,6 @@ const subject = (path: string) => `${Bun.resolveSync(path, import.meta.dir)}?pro
 const calls: Request[] = []
 const modelCatalogs: string[][] = []
 const failures: unknown[] = []
-const controls = { protocol: "v2" as "v2" }
 const nativeHTTP = { FormData, Request, Response, Headers, fetch }
 const a: ServerConnection.Http = {
   type: "http",
@@ -35,8 +34,7 @@ const transport = Object.assign(
     const request = new Request(input, init)
     calls.push(request)
     const url = new URL(request.url)
-    if (url.pathname === "/global/health")
-      return controls.protocol === "v1" ? Response.json({ healthy: true }) : new Response(null, { status: 404 })
+    if (url.pathname === "/global/health") return new Response(null, { status: 404 })
     if (url.pathname === "/api/health") return Response.json({ pid: 1 })
     if (url.pathname === "/api/integration")
       return Response.json({
@@ -409,7 +407,6 @@ function mount() {
 
 test("A-opened Settings replaces with B picker, catalog and key request; revoked B transport stays local", async () => {
   calls.length = 0
-  controls.protocol = "v2"
   setState({ servers: [a, b], directory: "/b" })
   const screen = mount()
   try {
@@ -453,45 +450,6 @@ test("A-opened Settings replaces with B picker, catalog and key request; revoked
     await until(() => !!screen.host.querySelector('[role="alert"]'))
     expect(calls.filter((request) => request.url.includes("/connect/key"))).toHaveLength(before)
     expect(screen.dialog?.open).toBe(true)
-    expect(failures).toEqual([])
-  } finally {
-    screen.close()
-  }
-})
-
-test("direct custom-provider replacement writes B auth and config under A dialog root", async () => {
-  calls.length = 0
-  controls.protocol = "v1"
-  setState({ servers: [a, b], directory: "/b" })
-  const screen = mount()
-  try {
-    await until(() => !!labelled(screen.host, "orchestra.providers.connect"))
-    labelled(screen.host, "orchestra.providers.connect").click()
-    // The connect dialog's picker offers the custom provider form on a v1 server.
-    await until(() => !!screen.host.querySelector('[data-provider-id="_custom"]'))
-    screen.host.querySelector<HTMLButtonElement>('[data-provider-id="_custom"]')!.click()
-    await until(() => !!screen.host.querySelector('input[placeholder="provider.custom.field.providerID.placeholder"]'))
-    for (const [key, value] of [
-      ["provider.custom.field.providerID.placeholder", "synthetic-custom"],
-      ["provider.custom.field.name.placeholder", "Synthetic custom"],
-      ["provider.custom.field.baseURL.placeholder", "https://synthetic.invalid/v1"],
-      ["provider.custom.field.apiKey.placeholder", "synthetic-custom-key"],
-      ["provider.custom.models.id.placeholder", "synthetic-model"],
-      ["provider.custom.models.name.placeholder", "Synthetic model"],
-    ])
-      fill(screen.host.querySelector<HTMLInputElement>(`input[placeholder="${key}"]`)!, value)
-    screen.host.querySelector("form")!.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }))
-    await until(() => calls.some((request) => request.method === "PATCH"))
-    const writes = calls.filter((request) => request.method === "PUT" || request.method === "PATCH")
-    expect(writes).toHaveLength(2)
-    for (const write of writes) {
-      expect(new URL(write.url).origin).toBe(b.http.url)
-      expect(write.headers.get("authorization")).toBe(`Basic ${btoa("b:synthetic-b")}`)
-    }
-    expect(await writes[0].clone().json()).toMatchObject({ type: "api", key: "synthetic-custom-key" })
-    expect(await writes[1].clone().json()).toMatchObject({
-      provider: { "synthetic-custom": { name: "Synthetic custom" } },
-    })
     expect(failures).toEqual([])
   } finally {
     screen.close()

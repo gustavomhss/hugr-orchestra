@@ -70,7 +70,7 @@ for (const sample of [
 }
 
 test("evidence supports legacy tool parts and keeps incomplete or unknown output raw", async ({ page }) => {
-  const timeline = await evidencePage(page, { protocol: "v1" })
+  const timeline = await evidencePage(page)
   const card = runCard(page)
   await expect(card).toHaveAttribute("data-state", "passed")
   const output = await evidenceFixture("bun-pass")
@@ -141,7 +141,7 @@ test("partial output has no totals, keeps retained log, and never opens a saved 
 })
 
 test("unknown exit and zero tests remain neutral", async ({ page }) => {
-  const timeline = await evidencePage(page, { protocol: "v1", metadata: { exit: null } })
+  const timeline = await evidencePage(page, { metadata: { exit: null } })
   await expect(runCard(page)).toHaveAttribute("data-state", "unconfirmed")
   await expect(runCard(page)).toContainText("Exit code not reported")
   await timeline.send(

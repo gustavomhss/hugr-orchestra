@@ -1,0 +1,12 @@
+id = "cargo-lockfile-stale"
+severity = "gate"
+on = "changed-paths"
+paths = ["**/Cargo.toml"]
+exclude = ["**/target/**"]
+statuses = ["A", "M"]
+requires_changed = ["**/Cargo.lock"]
+# Fires when a dependency table line or a version moved. A package version is in Cargo.lock too, so a version bump counts.
+touches = '''^\s*[\w-]+\s*=\s*(\{[^}]*\b(version|path|git|workspace)\s*=|"[~^<>=*\d][^"]*")\s*,?\s*$|^\s*\[(dev-|build-)?dependencies|^\s*\[workspace\.dependencies'''
+message = "A dependency or version changed in Cargo.toml but Cargo.lock did not. Run cargo update -w or cargo build and commit the lockfile."
+positive = ["Cargo.toml", "native/omni/crates/hugr-omni/Cargo.toml"]
+negative = ["native/omni/Cargo.lock", "docs/Cargo.md", "target/x/Cargo.toml"]

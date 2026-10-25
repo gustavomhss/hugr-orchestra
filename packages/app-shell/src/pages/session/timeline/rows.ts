@@ -2,13 +2,13 @@ import { parseCommentNote, readCommentMetadata } from "@/utils/comment-note"
 import type { SessionMessageInfo } from "@/v2-legacy"
 
 
-import type { Part, SessionStatus, UserMessage } from "@/v2-wire"
+import type { Part, SessionStatus, SnapshotFileDiff, UserMessage } from "@/v2-wire"
 
 import type { AssistantMessage } from "@/v2-wire"
 import { groupParts, renderable, type PartGroup } from "@orchestra/session-ui/message-part"
 import { TimelineRow, type SummaryDiff } from "./timeline-row"
 import { uniqueSummaryDiffs } from "./summary-diffs"
-import { compareMessages } from "@/utils/session-message"
+import { compareMessages, sessionMessagePartID } from "@/utils/session-message"
 
 export { TimelineRow, type SummaryDiff } from "./timeline-row"
 
@@ -38,6 +38,7 @@ export namespace Timeline {
     showReasoning: boolean,
     status: SessionStatus["type"],
     projectedUserMessages: UserMessage[],
+    turnDiffs: (userMessageID: string) => SnapshotFileDiff[] | undefined,
   ) {
     const turns: { user: UserMessage; assistants: AssistantMessage[] }[] = []
     const turnByUserID = new Map<string, (typeof turns)[number]>()
@@ -78,17 +79,41 @@ export namespace Timeline {
       turnByUserID.set(user.id, turn)
     })
     const activeMessageID = turns.at(-1)?.user.id
+    // The part store keeps each message's parts sorted by id for binary search, and V2 text and reasoning
+    // ids are synthesized (`<message>:text:<n>`), so id order is not content order. Rows follow the
+    // assistant message's own content order.
+    const contentOrder = new Map(
+      messages.flatMap((message) => {
+        if (message.type !== "assistant") return []
+        const ordinals = { text: 0, reasoning: 0 }
+        const ids = message.content.map((content) =>
+          content.type === "text" || content.type === "reasoning"
+            ? sessionMessagePartID(message.id, content.type, ordinals[content.type]++)
+            : content.id,
+        )
+        return [[message.id, new Map(ids.map((id, index) => [id, index]))] as const]
+      }),
+    )
+    const orderedParts = (messageID: string) => {
+      const order = contentOrder.get(messageID)
+      const parts = getMessageParts(messageID)
+      if (!order) return parts
+      return parts.toSorted(
+        (a, b) => (order.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (order.get(b.id) ?? Number.MAX_SAFE_INTEGER),
+      )
+    }
     return {
       activeMessageID,
       rows: turns.flatMap((turn, index) =>
         constructMessageRows(
           turn.user,
-          getMessageParts,
+          orderedParts,
           turn.assistants,
           index,
           showReasoning,
           status,
           turn.user.id === activeMessageID,
+          turnDiffs(turn.user.id),
         ),
       ),
     }
@@ -102,6 +127,7 @@ export namespace Timeline {
     showReasoning: boolean,
     status: SessionStatus["type"],
     isActive: boolean,
+    turnDiffs: SnapshotFileDiff[] | undefined,
   ) {
     const rows: TimelineRow.TimelineRow[] = []
 
@@ -187,7 +213,7 @@ export namespace Timeline {
 
     if (isActive && status === "retry") rows.push(new TimelineRow.Retry({ userMessageID: userMessage.id }))
 
-    const diffs = uniqueSummaryDiffs(userMessage.summary?.diffs)
+    const diffs = uniqueSummaryDiffs(turnDiffs)
     if (diffs.length > 0 && (status === "idle" || !isActive)) {
       rows.push(
         new TimelineRow.DiffSummary({

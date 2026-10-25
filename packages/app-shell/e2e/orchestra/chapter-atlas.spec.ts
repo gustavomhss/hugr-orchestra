@@ -1,7 +1,7 @@
 import { expect, test, type Page, type Route } from "@playwright/test"
 
-// The Atlas chapter against a fake server. On v1 the legacy `atlas` httpapi group (D4) answers one small store,
-// the one of src/orchestra/chapters/atlas/atlas-model.fixture.ts; v2 has no Atlas routes, so the chapter says so.
+// The Atlas chapter against a fake server. The `/api/atlas/*` routes (D4) answer one small store, the one of
+// src/orchestra/chapters/atlas/atlas-model.fixture.ts; a server without them answers 404, so the chapter says so.
 const server = "http://127.0.0.1:4096"
 const directory = "/repo/atlas"
 
@@ -124,9 +124,9 @@ const review = {
   },
 }
 
-test("v1: every Atlas view renders the store", async ({ page }) => {
+test("every Atlas view renders the store", async ({ page }) => {
   const requests: string[] = []
-  await setup(page, { protocol: "v1", requests })
+  await setup(page, { atlas: true, requests })
   await openAtlas(page)
   const main = page.locator(".atlas-main")
   const rail = page.locator(".atlas-context")
@@ -135,9 +135,9 @@ test("v1: every Atlas view renders the store", async ({ page }) => {
   await expect(rail).toContainText("project demo")
   await expect(main).not.toContainText(pending)
   const first = new URL(requests[0])
-  expect(first.pathname).toBe("/atlas/snapshot")
-  expect(first.searchParams.get("directory")).toBe(directory)
-  expect(requests.some((url) => new URL(url).pathname === "/atlas/review")).toBe(true)
+  expect(first.pathname).toBe("/api/atlas/snapshot")
+  expect(first.searchParams.get("location[directory]")).toBe(directory)
+  expect(requests.some((url) => new URL(url).pathname === "/api/atlas/review")).toBe(true)
 
   await rail.getByRole("link", { name: "Explore" }).click()
   await expect(page).toHaveURL(/\/orchestra\/atlas\/explore$/)
@@ -227,12 +227,13 @@ test("v1: every Atlas view renders the store", async ({ page }) => {
   await expect(main).not.toContainText(pending)
 })
 
-test("v2: a server without the atlas routes says so", async ({ page }) => {
+test("a server without the atlas routes says so", async ({ page }) => {
   const requests: string[] = []
-  await setup(page, { protocol: "v2", requests })
+  await setup(page, { atlas: false, requests })
   await openAtlas(page)
   await expect(page.locator(".atlas-main")).toContainText("This server does not provide Atlas.")
-  expect(requests).toEqual([])
+  // The first read learns the routes are missing; the chapter does not ask again.
+  expect(requests.map((url) => new URL(url).pathname).toSorted()).toEqual(["/api/atlas/review", "/api/atlas/snapshot"])
 })
 
 async function openAtlas(page: Page) {
@@ -241,7 +242,7 @@ async function openAtlas(page: Page) {
   await expect(page).toHaveURL(/\/orchestra\/atlas$/)
 }
 
-async function setup(page: Page, input: { protocol: "v2"; requests: string[] }) {
+async function setup(page: Page, input: { atlas: boolean; requests: string[] }) {
   await page.setViewportSize({ width: 1440, height: 960 })
   await page.addInitScript(
     ({ server, directory }) => {
@@ -274,17 +275,20 @@ async function setup(page: Page, input: { protocol: "v2"; requests: string[] }) 
       sandboxes: [],
     }
     const location = { directory, project: { id: project.id, directory } }
-    if (path.startsWith("/atlas/")) {
+    if (path.startsWith("/api/atlas/")) {
       input.requests.push(url.toString())
-      return atlas(route, path.split("/")[2] ?? "", path.split("/")[3] ?? "")
+      // A server that predates the routes answers with an undeclared 404.
+      if (!input.atlas) return json(route, { error: "Not Found" }, 404)
+      return atlas(route, location, path.split("/")[3] ?? "", path.split("/")[4] ?? "")
     }
+    if (path.startsWith("/api/atlas/")) return json(route, {}, 404)
     if (path === "/global/event" || path === "/event" || path === "/api/event")
       return route.fulfill({ status: 200, contentType: "text/event-stream", body: ": ok\n\n" })
-    if (path === "/global/health") return json(route, { healthy: true }, input.protocol === "v1" ? 200 : 404)
+    if (path === "/global/health") return json(route, { healthy: true }, 404)
     if (path === "/api/health") return json(route, { healthy: true, version: "2", pid: 1 })
     if (path === "/project" || path === "/api/project") return json(route, [project])
     if (path === "/project/current") return json(route, project)
-    if (path === "/api/project/current") return json(route, { id: project.id, directory })
+    if (path === "/api/location") return json(route, { directory, project: { id: project.id, directory } })
     if (path === "/path" || path === "/api/path")
       return json(route, { state: directory, config: directory, worktree: directory, directory, home: "/home/user" })
     if (path === "/provider") return json(route, { all: [], connected: [], default: {} })
@@ -299,13 +303,14 @@ async function setup(page: Page, input: { protocol: "v2"; requests: string[] }) 
   })
 }
 
-// The legacy `atlas` group: the snapshot, the review, a missing reasoning entry, health; every other call answers empty.
-function atlas(route: Route, call: string, id: string) {
-  if (call === "snapshot") return json(route, snapshot)
-  if (call === "reasoning") return json(route, { state: "missing", id })
-  if (call === "health") return json(route, health)
-  if (call === "review") return json(route, review)
-  return json(route, { state: "empty" })
+// The `/api/atlas/*` routes: the snapshot, the review, a missing reasoning entry, health; every other call answers empty.
+function atlas(route: Route, location: unknown, call: string, id: string) {
+  const data = (value: unknown) => json(route, { location, data: value })
+  if (call === "snapshot") return data(snapshot)
+  if (call === "reasoning") return data({ state: "missing", id })
+  if (call === "health") return data(health)
+  if (call === "review") return data(review)
+  return data({ state: "empty" })
 }
 
 function json(route: Route, body: unknown, status = 200) {

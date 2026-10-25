@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test"
 import { attachImage, editor, evidenceFixture, evidencePage, runCard } from "./evidence.fixture"
-import { directory, partUpdated, sessionID, status, toolPart } from "../performance/timeline-stability/fixture"
+import { directory, sessionID } from "../performance/timeline-stability/fixture"
 
 test.setTimeout(120_000)
 
@@ -37,8 +37,7 @@ test("replay confirms exact command, preserves draft and attachment, and creates
   await expect(dialog.getByRole("button", { name: "Sending…", exact: true })).toBeDisabled()
   await expect.poll(() => fixture.writes.length).toBe(1)
   expect(fixture.writes[0]!.url).toContain(`/session/${sessionID}/shell`)
-  // V2 shell transport carries command/id; agent/model are session-owned. The
-  // shared submit helper also passes the visible selection to the V1 adapter.
+  // The shell transport carries command/id; agent/model are session-owned.
   expect(fixture.writes[0]!.body).toMatchObject({ command: "bun test" })
   expect(fixture.writes[0]!.body.id).toEqual(expect.any(String))
   expect(fixture.writes[0]!.body.id).not.toBe("prt_evidence")
@@ -89,14 +88,26 @@ test("replay confirms exact command, preserves draft and attachment, and creates
 })
 
 test("busy state is rechecked after confirmation opens", async ({ page }) => {
-  const fixture = await evidencePage(page, { protocol: "v1" })
+  const fixture = await evidencePage(page)
   await runCard(page).getByRole("button", { name: "Run tests again…", exact: true }).click()
   const dialog = page.getByRole("dialog")
   await expect(dialog.getByRole("button", { name: "Run command", exact: true })).toBeEnabled()
-  await fixture.send(status("busy"))
+  await fixture.send({
+    id: "evt_busy",
+    type: "session.execution.started",
+    created: 1700000004000,
+    location: { directory },
+    data: { sessionID },
+  })
   await expect(dialog).toContainText("This session is working")
   await expect(dialog.getByRole("button", { name: "Run command", exact: true })).toBeDisabled()
-  await fixture.send(status("idle"))
+  await fixture.send({
+    id: "evt_idle",
+    type: "session.execution.succeeded",
+    created: 1700000005000,
+    location: { directory },
+    data: { sessionID },
+  })
   await expect(dialog.getByRole("button", { name: "Run command", exact: true })).toBeEnabled()
   await dialog.getByRole("button", { name: "Cancel", exact: true }).click()
   expect(fixture.writes).toEqual([])
@@ -171,19 +182,13 @@ test("uncertain replay response remains visible without retry or draft loss", as
 })
 
 test("confirmation captures command instead of replaying a later part revision", async ({ page }) => {
-  const fixture = await evidencePage(page, { protocol: "v1" })
+  const fixture = await evidencePage(page)
   await runCard(page).getByRole("button", { name: "Run tests again…", exact: true }).click()
-  await fixture.send(
-    partUpdated(
-      toolPart(
-        "prt_evidence",
-        "bash",
-        "completed",
-        { command: "bun test changed" },
-        { output: await evidenceFixture("bun-pass"), metadata: { exit: 0, truncated: false } },
-      ),
-    ),
-  )
+  await fixture.revise({
+    command: "bun test changed",
+    output: await evidenceFixture("bun-pass"),
+    metadata: { exit: 0, truncated: false },
+  })
   await expect(page.getByRole("dialog").locator("code")).toHaveText("bun test")
   await page.getByRole("dialog").getByRole("button", { name: "Cancel", exact: true }).click()
   await expect(runCard(page, "bun test changed")).toBeVisible()
@@ -236,7 +241,7 @@ test("switching server with the same session ID cancels captured replay", async 
 })
 
 test("prepare PR uses real session summary and remains unsent", async ({ page }) => {
-  const fixture = await evidencePage(page, { protocol: "v1" })
+  const fixture = await evidencePage(page)
   await page.getByRole("button", { name: "Toggle review", exact: true }).click()
   await expect(page.locator("#review-panel")).toContainText("approval.ts")
   await runCard(page).getByRole("button", { name: "Prepare pull request…", exact: true }).click()

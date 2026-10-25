@@ -155,7 +155,7 @@ test("nested view refresh calls ServerSync owner API; explicit global and unreso
   }
 })
 
-test("V2 discovery includes disconnected integrations, waits for scope, and preserves V1 catalog discovery", async () => {
+test("discovery includes disconnected integrations and waits for scope", async () => {
   setState({ directory: undefined, protocol: "v2" })
   discovered.length = 0
   const scope = createRoot((dispose) => ({ dispose, discovery: useProviderDiscovery(() => state.directory) }))
@@ -168,8 +168,6 @@ test("V2 discovery includes disconnected integrations, waits for scope, and pres
     expect(discovered).toEqual([{ location: { directory: "/project" } }])
     expect(scope.discovery.all().map((item) => item.id)).toEqual(["openrouter", "anthropic"])
     expect(sync.child("/project")[0].provider.all.has("openrouter")).toBe(false)
-    setState("protocol", "v1")
-    expect(scope.discovery.all().map((item) => item.id)).toEqual(["/project"])
     expect(discovered).toHaveLength(1)
   } finally {
     scope.dispose()

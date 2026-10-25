@@ -99,7 +99,7 @@ export async function setupTimelineBenchmark(
     historyTurns: number
     eventBatch: number
     vcsDiff?: unknown[]
-    turnDiffs?: unknown[]
+    turnDiffs?: { file: string; patch: string; additions: number; deletions: number }[]
   },
 ) {
   const events: EventPayload[] = []
@@ -120,6 +120,10 @@ export async function setupTimelineBenchmark(
         assistantMessage,
       ],
     }),
+    diffs: (_, messageID) =>
+      messageID === userMessageID
+        ? (options.turnDiffs ?? []).map((diff) => ({ ...diff, path: diff.file, status: "modified" }))
+        : [],
     events: () => events.splice(0, eventBatch),
     eventRetry: 16,
   })

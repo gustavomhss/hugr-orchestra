@@ -1,0 +1,10 @@
+id = "heredoc-residue"
+severity = "gate"
+on = "added-lines"
+paths = ["**/*.{ts,tsx,js,jsx,mjs}"]
+exclude = []
+# A shell heredoc terminator pasted into source: a line that is only EOF, PY or HEREDOC. Seen three times in real history, all defects. JSON is left out: a bare JSON line is button text in JSX.
+match = '^\s*(EOF|PY|HEREDOC)\s*$'
+message = "Shell heredoc terminator left in source. Delete the stray line."
+positive = ["EOF", "  PY", "HEREDOC"]
+negative = ["const EOF = 1", "EOF_MARKER", "// EOF", "type JSON = string", "            JSON", ""]
