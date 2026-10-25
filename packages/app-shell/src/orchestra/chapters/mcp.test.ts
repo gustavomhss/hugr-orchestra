@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { createRoot } from "solid-js"
 import { toggleMcp } from "@/context/global-sync/mcp"
-import type { ServerConnection } from "@/context/server"
 import { createMcpActions, createMcpAuth, mcpErrorDetail } from "./mcp-actions"
 import {
   formatCommand,
@@ -19,7 +18,6 @@ import {
   mcpUnchanged,
   parseCommand,
 } from "./mcp-model"
-import { mcpRequest } from "./mcp-source"
 
 describe("MCP chapter actions", () => {
   test.each([
@@ -391,33 +389,5 @@ describe("MCP chapter model", () => {
       "bunx @modelcontextprotocol/server-filesystem .",
     )
     expect(formatCommand(["it's", "a b"])).toBe(`'it'"'"'s' 'a b'`)
-  })
-})
-
-describe("MCP profile config requests", () => {
-  const server = (password?: string) =>
-    ({ type: "http", http: { url: "http://127.0.0.1:4096/", username: "owner", password } }) as ServerConnection.Any
-
-  test("GET routes the directory in the query and sends credentials", () => {
-    const request = mcpRequest({ server: server("pw"), directory: "/work/a b" }, "GET", "/mcp/tools")
-    expect(request.url.toString()).toBe("http://127.0.0.1:4096/mcp/tools?directory=%2Fwork%2Fa+b")
-    expect(request.init.method).toBe("GET")
-    expect(request.init.body).toBeUndefined()
-    expect(request.init.headers.get("authorization")).toBe(`Basic ${btoa("owner:pw")}`)
-    expect(request.init.headers.get("x-orchestra-directory")).toBeNull()
-  })
-
-  test("writes route the directory in a header, send JSON, and omit auth without a password", () => {
-    const request = mcpRequest({ server: server(), directory: "/work/a b" }, "PUT", "/mcp/docs%2F/config", {
-      config: { type: "remote", url: "https://x.test" },
-    })
-    expect(request.url.toString()).toBe("http://127.0.0.1:4096/mcp/docs%2F/config")
-    expect(request.init.headers.get("x-orchestra-directory")).toBe(encodeURIComponent("/work/a b"))
-    expect(request.init.headers.get("content-type")).toBe("application/json")
-    expect(request.init.headers.get("authorization")).toBeNull()
-    expect(JSON.parse(request.init.body!)).toEqual({ config: { type: "remote", url: "https://x.test" } })
-    const remove = mcpRequest({ server: server(), directory: "/w" }, "DELETE", "/mcp/docs/config")
-    expect(remove.init.body).toBeUndefined()
-    expect(remove.init.headers.get("content-type")).toBeNull()
   })
 })

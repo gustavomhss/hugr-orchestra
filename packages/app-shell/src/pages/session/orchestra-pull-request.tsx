@@ -65,18 +65,13 @@ export function OrchestraPullRequest(props: { sessionID?: string; files: () => P
     if (state.step !== "edit" || state.busy || !proposal.title.trim() || !proposal.base.trim()) return
     setState("busy", true)
     const result = await pullRequestCall(
-      sdk().client.v2.pullRequest.create(
-        {
-          location: { directory: sdk().directory },
-          pullRequestCreateInput: {
-            title: proposal.title.trim(),
-            body: proposal.description,
-            base: proposal.base.trim(),
-            head: proposal.from.trim() || undefined,
-          },
-        },
-        { throwOnError: false },
-      ),
+      sdk().orchestra.pullRequests.create({
+        location: { directory: sdk().directory },
+        title: proposal.title.trim(),
+        body: proposal.description,
+        base: proposal.base.trim(),
+        head: proposal.from.trim() || undefined,
+      }),
       createdPullRequest,
     )
     setState({

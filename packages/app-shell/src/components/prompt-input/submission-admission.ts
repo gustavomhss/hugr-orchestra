@@ -10,7 +10,6 @@ export type Admission = {
   directory?: string
   session?: Session
   policyWritten?: boolean
-  legacyOverrideAcknowledged?: boolean
   acknowledgedPolicy?: SubagentModelPolicy
   failedWrite?: FailedPolicyWrite
   cleanup?: VoidFunction

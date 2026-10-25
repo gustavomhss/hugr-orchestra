@@ -6,7 +6,6 @@ import { createStore } from "solid-js/store"
 import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
-import { useSDK } from "@/context/sdk"
 import { useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import type { ChapterPageProps } from "@/orchestra/chapter-route"
@@ -25,16 +24,11 @@ export default function McpPage(props: ChapterPageProps) {
   const global = useGlobal()
   const platform = usePlatform()
   const serverSDK = useServerSDK()
-  const sdk = useSDK()
   const sync = useServerSync()
   const key = pathKey(props.directory)
   const source = createMcpSource({
-    server: props.server,
     directory: props.directory,
-    sdk: sdk(),
     serverSDK: serverSDK(),
-    // Called through a wrapper: window.fetch throws when invoked as a method of another object.
-    fetch: (url, init) => (platform.fetch ?? globalThis.fetch)(url, init),
     open: (url) => platform.openExternal(url),
   })
   const [v1] = createResource(source.v1)

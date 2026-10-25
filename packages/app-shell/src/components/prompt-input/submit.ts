@@ -25,6 +25,7 @@ import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
 import { useSync } from "@/context/sync"
 import { Identifier } from "@/utils/id"
 import { Worktree as WorktreeState } from "@/utils/worktree"
+import { defaultCopyParent, repositoryProject, WORKTREE_STRATEGY } from "@/orchestra/chapters/workspaces-model"
 import { setCursorPosition } from "./editor-dom"
 import { formatServerError, hookRefusal } from "@/utils/server-errors"
 import { ScopedKey, type ServerScope } from "@/utils/server-scope"
@@ -315,14 +316,21 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     const worktreeSelection = admission.selection
 
     let sessionDirectory = admission.directory ?? projectDirectory
-    const client = directorySDK.client
     let session = admission.session ?? input.info()
 
     if (isNewSession) {
       if (!admission.directory && worktreeSelection === "create") {
-        const createdWorktree = await client.worktree
-          .create({ directory: projectDirectory })
-          .then((x) => x.data)
+        const project = repositoryProject(serverState.data.project, projectDirectory)
+        // The server names the copy, as V1 did; it lands beside the repository like a Workspaces copy.
+        const createdWorktree = await (project
+          ? server.api.projectCopy.create({
+              projectID: project.id,
+              strategy: WORKTREE_STRATEGY,
+              directory: defaultCopyParent(project.worktree),
+              location: { directory: projectDirectory },
+            })
+          : Promise.resolve(undefined)
+        )
           .catch((err) => {
             if (ownsSource()) showToast({
               title: language.t("prompt.toast.worktreeCreateFailed.title"),
@@ -472,7 +480,6 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       admission.session = undefined
       admission.request = undefined
       admission.policyWritten = undefined
-      admission.legacyOverrideAcknowledged = undefined
       admission.acknowledgedPolicy = undefined
       admission.failedWrite = undefined
     }
@@ -481,7 +488,6 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       management: server.sessionManagement, admission, current: ownsSource,
       initialPolicy: isNewSession ? { mode: "inherit" } : undefined,
       failedMessage: language.t("common.requestFailed"),
-      legacyWrite: (permission) => server.client.session.update({ sessionID: session.id, directory: sessionDirectory, permission }),
     })
     const policyError = async (err: unknown) => {
       if (controller.signal.aborted) return false as const

@@ -678,11 +678,9 @@ export default function Page() {
 
   const gitMutation = useMutation(() => ({
     mutationFn: async () =>
-      false
-        ? sdk().client.project.initGit()
-        : serverSDK()
-            .orchestra.projects.initGit({ location: { directory: sdk().directory } })
-            .then((result) => ({ data: result.data && { ...result.data, sandboxes: [...result.data.sandboxes] } })),
+      serverSDK()
+        .orchestra.projects.initGit({ location: { directory: sdk().directory } })
+        .then((result) => ({ data: result.data && { ...result.data, sandboxes: [...result.data.sandboxes] } })),
     onSuccess: (x) => {
       if (!x.data) return
       upsert(x.data)

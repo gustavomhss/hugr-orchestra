@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { createRoot } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createServerScheduleSource } from "../src/orchestra/chapters/schedule-server"
-import { createSdkForServer } from "../src/utils/server"
+import { Orchestra } from "@orchestra/client"
 import type { ScheduleTask } from "../src/orchestra/chapters/schedule-model"
 import { localInput } from "../src/orchestra/chapters/schedule-model"
 import { scheduleEditorFields } from "../src/orchestra/chapters/schedule"
@@ -27,11 +27,11 @@ function fixture(tasks: ScheduleTask[] = []) {
   }, { preconnect: fetch.preconnect })
   return createRoot((dispose) => {
     const [saved, setSaved] = createStore({ tasks })
-    const sdk = createSdkForServer({ server: { url: "http://schedule.test" }, fetch: transport })
+    const orchestra = Orchestra.make({ baseUrl: "http://schedule.test", fetch: transport })
     const callbacks: (() => void)[] = []
     const state = { unsupported: 0 }
     const source = createServerScheduleSource({ directory: "/repo", store: { saved, setSaved, ready: () => true, key: "cold-review" }, onUnsupported: () => state.unsupported++ }, {
-      language: { t: (key) => key }, api: () => sdk.v2.schedule, timezone: "America/New_York",
+      language: { t: (key) => key }, api: () => orchestra.schedules, timezone: "America/New_York",
       poll: (refresh) => { callbacks.push(refresh); return () => {} },
     })
     return { source, state, callbacks, saved, reply, changed, requests, dispose }

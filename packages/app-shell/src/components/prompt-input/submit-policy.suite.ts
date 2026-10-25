@@ -42,7 +42,6 @@ test("deliberate retry follows its own retained failed barrier and obtains a fre
     key, sessionID: "same-session", protocol: Promise.resolve("v2"),
     current: () => true, initialPolicy: { mode: "inherit" }, failedMessage: "bad receipt",
     admission: { policyWritten: true, failedWrite: { cause: failure, version: 1 } },
-    legacyWrite: async () => { throw new Error("unexpected V1 write") },
     management: {
       waitSubagentModels: () => barrier.current,
       subagentModelsWriteVersion: () => clock.version,

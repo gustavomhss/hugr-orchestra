@@ -1,5 +1,4 @@
 import { Orchestra } from "@orchestra/client"
-import { createOrchestraClient } from "../compat/sdk-v2-client"
 import type { ServerConnection } from "@/context/server"
 import type {
   RequestOptions,
@@ -24,33 +23,6 @@ export function authFromToken(token: string | null) {
     username: decoded.slice(0, separator) || "orchestra",
     password: decoded.slice(separator + 1),
   }
-}
-
-/**
- * The legacy SDK client: the app's HTTP client for the routes the current client does not expose (the generated
- * `v2` groups and the V1 compatibility surface). This is the app-shell's single boundary to that package.
- */
-export function createSdkForServer({
-  server,
-  ...config
-}: Omit<NonNullable<Parameters<typeof createOrchestraClient>[0]>, "baseUrl"> & {
-  server: ServerConnection.HttpBase
-}) {
-  const auth = (() => {
-    if (!server.password) return
-    return {
-      Authorization: `Basic ${authTokenFromCredentials({ username: server.username, password: server.password })}`,
-    }
-  })()
-
-  return createOrchestraClient({
-    ...config,
-    headers: {
-      ...(config.headers instanceof Headers ? Object.fromEntries(config.headers.entries()) : config.headers),
-      ...auth,
-    },
-    baseUrl: server.url,
-  })
 }
 
 export function createApiForServer(input: {
@@ -397,9 +369,6 @@ function selectedModel(value: unknown, variant: unknown) {
 
 /** The legacy-shaped view of the current API: the groups the app calls, in their legacy shape. */
 export type { ServerApi } from "@/server-api"
-
-/** The legacy SDK client: the app's HTTP client for the routes the current client does not expose. */
-export type ServerSdk = ReturnType<typeof createSdkForServer>
 
 /** The current server's HTTP client. */
 export type ServerClient = ReturnType<typeof Orchestra.make>

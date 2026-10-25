@@ -1,6 +1,6 @@
 import { batch, createComputed, createMemo, onCleanup } from "solid-js"
 import { pendingSnapshot } from "../draft-subagent-models"
-import { sameModelPolicy, type ModelRule, type SubagentModelPolicy } from "../subagent-model-rules"
+import { sameModelPolicy, type SubagentModelPolicy } from "../subagent-model-rules"
 import type { SessionManagement } from "@/utils/session-management"
 import { SessionManagementUnsupported } from "@/utils/session-management-errors"
 import type { ServerProtocol } from "@/utils/server-protocol"
@@ -78,8 +78,7 @@ export function createSubmissionPolicy(input: {
   sessionID: string
   protocol: Promise<ServerProtocol>
   management: SubmissionManagement
-  legacyWrite: (permission: ModelRule[]) => Promise<unknown>
-  admission: { policyWritten?: boolean; legacyOverrideAcknowledged?: boolean; acknowledgedPolicy?: SubagentModelPolicy; failedWrite?: FailedPolicyWrite }
+  admission: { policyWritten?: boolean; acknowledgedPolicy?: SubagentModelPolicy; failedWrite?: FailedPolicyWrite }
   current: () => boolean
   initialPolicy?: SubagentModelPolicy
   failedMessage: string
@@ -115,16 +114,9 @@ export function createSubmissionPolicy(input: {
           input.admission.failedWrite = undefined
           return acknowledged
         }
-        if (policy.mode === "inherit") {
-          if (input.admission.legacyOverrideAcknowledged) throw new SessionManagementUnsupported()
-          return policy
-        }
-        await input.legacyWrite([
-          { permission: "task", pattern: "*/*", action: "deny" },
-          ...policy.models.map((model): ModelRule => ({ permission: "task", pattern: `${model.providerID}/${model.id}`, action: "allow" })),
-        ])
-        input.admission.legacyOverrideAcknowledged = true
-        return policy
+        // Only the V2 subagent-model route can store a narrowed policy.
+        if (policy.mode === "inherit") return policy
+        throw new SessionManagementUnsupported()
       },
     }),
   }

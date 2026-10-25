@@ -22,6 +22,7 @@ import {
 } from "@/utils/llm-behaviors"
 import { llmBehaviors } from "@/utils/llm-behaviors-store"
 import { pathKey } from "@/utils/path-key"
+import { errorStatus } from "./agents-roster"
 import { MxBadge, MxPage, MxToggle } from "./kit"
 import { BehaviorDialog, PluginIcon, RemoveDialog } from "./plugins-dialog"
 import "./plugins.css"
@@ -57,16 +58,18 @@ export default function PluginsPage(props: ChapterPageProps) {
     if (store().loading()) return
     const input = {
       location: { directory: directory() },
-      behaviorSetInput: { behaviors: behaviorInstructions(store().behaviors()) },
+      behaviors: behaviorInstructions(store().behaviors()),
     }
     const id = ++push.latest
     push.queue = push.queue.then(async () => {
-      const result = await serverSDK()
-        .client.v2.behavior.set(input, { throwOnError: false })
-        .catch(() => undefined)
+      const status = await serverSDK()
+        .orchestra.behaviors.set(input)
+        .then(
+          () => 200,
+          (error: unknown) => errorStatus(error),
+        )
       if (id !== push.latest) return
-      const status = result?.response?.status
-      if (result?.response?.ok) return void setServer("supported")
+      if (status === 200) return void setServer("supported")
       setServer(status === 404 || status === 405 || status === 501 ? "unsupported" : "failed")
     })
   })

@@ -72,16 +72,9 @@ export default function Cicd(props: ChapterPageProps) {
   })
   // Only a form default, so a failed read leaves it to the synced branch.
   const [vcs] = createResource(() =>
-    sdk()
-      .protocol.then((protocol) =>
-        false
-          ? sdk()
-              .client.vcs.get(undefined, { signal: abort.signal, throwOnError: false })
-              .then((result) => result.data?.branch)
-          : serverSDK()
-              .orchestra.vcs.get({ location: { directory: props.directory } }, { signal: abort.signal })
-              .then((result) => result.data.branch ?? undefined),
-      )
+    serverSDK()
+      .orchestra.vcs.get({ location: { directory: props.directory } }, { signal: abort.signal })
+      .then((result) => result.data.branch ?? undefined)
       .catch(() => undefined),
   )
   const branch = () => vcs() ?? sync().child(props.directory, { bootstrap: false })[0].vcs?.branch ?? ""
