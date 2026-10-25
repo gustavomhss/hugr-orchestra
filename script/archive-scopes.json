@@ -1,12 +1,5 @@
 [
   {
-    "path": "apps/orchestra/specs/benchmark-evidence",
-    "disposition": "review-history",
-    "owner": "continuity",
-    "readers": ["apps/orchestra/specs/context-continuity-benchmark-v3-v4.md", "apps/orchestra/script/continuity-bench/v4.ts"],
-    "uncertainty": "The spec associates retained benchmark evidence with the harness; v4.ts reads BENCH_DIR scratch evidence. Direct readership of each retained evidence file remains unverified."
-  },
-  {
     "path": "docs/specs/backend-specialist/research",
     "disposition": "review-history",
     "owner": "backend",
