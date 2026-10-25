@@ -60,9 +60,21 @@ export const groupNames = {
   "server.actionsTransfer": "actionsTransfers",
   "server.actionsSource": "actionsSource",
   "server.lsp": "server.lsp",
+  "server.capability.operator": "operator",
+  "server.capability.connections": "connections",
+  "server.capability.artifacts": "artifacts",
 } as const
 
 export const endpointNames = {
+  "capability.connection.connect": "connect",
+  "capability.target.get": "getTarget",
+  "capability.binding.list": "bindings",
+  "capability.connection.targets": "targets",
+  "capability.target.create": "createTarget",
+  "capability.target.retarget": "retargetTarget",
+  "capability.target.remove": "removeTarget",
+  "capability.binding.put": "bind",
+  "capability.binding.remove": "unbind",
   "agent.file.get": "getFile",
   "agent.file.update": "updateFile",
   "session.messages": "list",
@@ -90,4 +102,4 @@ export const endpointNames = {
 } as const
 
 // Raw transfers use the handwritten streaming adapter; JSON metadata/admission stay generated.
-export const omitEndpoints = new Set(["pty.connect", "pty.connectToken", "actions.transfer.read", "actions.transfer.upload"])
+export const omitEndpoints = new Set(["pty.connect", "pty.connectToken", "actions.transfer.read", "actions.transfer.upload", "capability.artifact.content"])
