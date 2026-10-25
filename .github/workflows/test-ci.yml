@@ -252,7 +252,10 @@ jobs:
               # The `solid` condition routes solid-sonner to its untranspiled dist/index.jsx
               # source, which does not make that import. test-ci bypasses the package's own
               # `test:unit` script (which already passes `--conditions=solid`), so reproduce it.
-              if [ "$DIRECTORY" = "packages/app-shell" ]; then
+              if [ "$DIRECTORY" = "packages/app-shell" ] && [[ "${args[0]:-}" == test-browser/* ]]; then
+                # Named test-browser files run as the package's `test:browser` script does: browser conditions, happydom.
+                GITHUB_ACTIONS=false bun test --conditions=browser --preload ../../script/test-omni-control.ts --preload ./happydom.ts "${args[@]}"
+              elif [ "$DIRECTORY" = "packages/app-shell" ]; then
                 GITHUB_ACTIONS=false bun test --conditions=solid "${args[@]}"
               else
                 GITHUB_ACTIONS=false bun test "${args[@]}"
