@@ -176,8 +176,8 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
       return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" } })
     }
     if (path === "/api/project") return json(route, [config.project])
-    if (path === "/api/project/current")
-      return json(route, { id: (config.project as { id?: string }).id, directory: config.directory })
+    // project.current resolves through the location route; the server has no /api/project/current.
+    if (path === "/api/location") return json(route, location(config))
     if (path.startsWith("/api/project/") && route.request().method() === "PATCH") return json(route, config.project)
     if (path === "/api/path")
       return json(route, {

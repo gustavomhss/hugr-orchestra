@@ -324,25 +324,16 @@ test("each repository profile owns its behaviors", async ({ page }) => {
     sessions: [],
     pageMessages: () => ({ items: [] }),
   })
-  await page.route(`${server}/project`, (route) =>
+  await page.route(`${server}/api/project`, (route) =>
     route.fulfill({ contentType: "application/json", body: JSON.stringify(projects) }),
   )
   await page.route("**/*", (route) => {
     const url = new URL(route.request().url())
-    if (url.origin !== server || !["/path", "/project/current"].includes(url.pathname)) return route.fallback()
-    const project = projects.find((item) => item.worktree === (url.searchParams.get("directory") ?? "/plugins-a"))
+    if (url.origin !== server || url.pathname !== "/api/location") return route.fallback()
+    const project = projects.find((item) => item.worktree === (url.searchParams.get("location[directory]") ?? "/plugins-a"))
     if (!project) return route.fulfill({ status: 404, json: { name: "NotFound" } })
     return route.fulfill({
-      json:
-        url.pathname === "/project/current"
-          ? project
-          : {
-              state: project.worktree,
-              config: project.worktree,
-              worktree: project.worktree,
-              directory: project.worktree,
-              home: "/",
-            },
+      json: { directory: project.worktree, project: { id: project.id, directory: project.worktree } },
     })
   })
   await page.addInitScript(() => {
@@ -379,12 +370,10 @@ test("each repository profile owns its behaviors", async ({ page }) => {
   await expect(toggle()).toHaveAttribute("aria-checked", "false")
   await pick("Plugins A")
   await expect(toggle()).toHaveAttribute("aria-checked", "true")
-  for (const path of ["/path", "/project/current"]) {
-    const outside = await page.goto(`${foreign}${path}?directory=/plugins-b`)
-    expect(outside?.status()).toBe(418)
-    expect(await outside?.json()).toEqual({ owner: "foreign" })
-    const unknown = await page.goto(`${server}${path}?directory=/plugins-unknown`)
-    expect(unknown?.status()).toBe(404)
-    expect(await unknown?.json()).toEqual({ name: "NotFound" })
-  }
+  const outside = await page.goto(`${foreign}/api/location?location[directory]=/plugins-b`)
+  expect(outside?.status()).toBe(418)
+  expect(await outside?.json()).toEqual({ owner: "foreign" })
+  const unknown = await page.goto(`${server}/api/location?location[directory]=/plugins-unknown`)
+  expect(unknown?.status()).toBe(404)
+  expect(await unknown?.json()).toEqual({ name: "NotFound" })
 })

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test"
-import { adopt, relayState, setupRelay } from "./relay.fixture"
+import { adopt, directory, relayState, setupRelay } from "./relay.fixture"
 
 test.use({ viewport: { width: 1440, height: 900 }, serviceWorkers: "block", locale: "en-US" })
 test.setTimeout(180_000)
@@ -160,7 +160,9 @@ test("a server without the Relay routes says so on both chapters", async ({ page
 test("outside git the library refuses new workflows and says why, even on the New workflow route", async ({ page }) => {
   await setupRelay(page)
   // Every folder outside git resolves to the one global project those folders share.
-  await page.route("**/api/project/current**", (route) => route.fulfill({ json: { id: "global", directory: "/" } }))
+  await page.route("**/api/location**", (route) =>
+    route.fulfill({ json: { directory, project: { id: "global", directory: "/" } } }),
+  )
   await page.goto("/orchestra/workflows/new")
   const view = page.locator('[data-mx-page="orchestra-workflows"]')
   await expect(view.locator('[data-slot="relay-repository-required"]')).toHaveText(
