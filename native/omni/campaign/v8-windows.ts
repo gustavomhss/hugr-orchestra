@@ -52,17 +52,16 @@ async function powershellBash(scratch: ReturnType<typeof isolated>, env: Record<
     const pending = api.post(`/api/session/${session.id}/shell`, { command: `& ${tree.line}` })
       .then(() => ({ status: 204 }), (error: unknown) => ({ status: 0, error: String(error) }))
     await until(25_000, "PowerShell bash nonce tree", async () => (await remaining(tree.nonce)) === tree.size ? true : undefined)
-    // Every record exists before the leaf's ready line has crossed its ancestors and the server's stream into the part;
-    // aborting on the records alone raced that line (run 38160151593). Abort once the user can see it.
-    await until(25_000, "PowerShell bash ready line in the running part", async () =>
-      JSON.stringify(await api.events(session.id)).includes(tree.ready) ? true : undefined)
+    // V2 records a shell command's output only when it ends (runner/llm.ts SessionEvent.Shell.Ended), and an interrupt
+    // records "User aborted the command" in its place, so the ready line is never observable while it runs. The owned
+    // records are the live signal; the interrupt result and the empty tree are the verdict.
     const control = supervised(tree.nonce)
     await api.post(`/api/session/${session.id}/interrupt`)
     const result = await pending
     const left = await remaining(tree.nonce)
     const text = JSON.stringify(await api.events(session.id))
     return { name: "powershell-bash", ...result, supervised: control, left,
-      pass: control && result.status === 204 && text.includes(tree.ready) && left === 0 }
+      pass: control && result.status === 204 && text.includes("User aborted the command") && left === 0 }
   } catch (error) {
     return { name: "powershell-bash", pass: false, error: String(error), server: hosts.map((host) => host.out()) }
   } finally {

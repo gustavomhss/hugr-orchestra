@@ -9,7 +9,7 @@ import { Omni } from "../src/omni"
 import { Schema } from "effect"
 import { run } from "../../../native/omni/campaign/v1-background.ts"
 
-test("Windows compiled CLI V1 adoption, V2 serve crash, V10 serve quit and oracle mutations", async () => {
+test("Windows compiled CLI V1 adoption, V2 serve and attached-TUI crash, V10 serve and TUI quit and oracle mutations", async () => {
   expectSpawn(import.meta.path)
   expect(process.platform).toBe("win32")
   expect(process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER).toBe("1")
@@ -43,7 +43,7 @@ test("Windows compiled CLI V1 adoption, V2 serve crash, V10 serve quit and oracl
   expect(existsSync(cli())).toBe(true)
   const v2 = await import("../../../native/omni/campaign/v2-kill.ts")
   const failure = (error: unknown) => ({ pass: false, error: String(error), phase: "unhandled campaign/cleanup failure" })
-  const results = { v1: await run().catch(failure), v2Serve: await v2.run("serve").catch(failure), v10Serve: await v2.run("serve", "quit").catch(failure) }
+  const results = { v1: await run().catch(failure), v2Serve: await v2.run("serve").catch(failure), v2Tui: await v2.run("tui").catch(failure), v10Tui: await v2.run("tui", "quit").catch(failure), v10Serve: await v2.run("serve", "quit").catch(failure) }
   console.log("WINDOWS_LIFECYCLE_PROOF " + JSON.stringify(Object.fromEntries(Object.entries(results).map(([cell, result]) => [cell, {
     pass: result.pass, error: "error" in result ? result.error : undefined,
     esc: "esc" in result ? result.esc : undefined, afterEsc: "afterEsc" in result ? result.afterEsc : undefined,
