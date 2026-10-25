@@ -98,6 +98,7 @@ const layer = Layer.effectDiscard(
           reader: yield* ReadToolFileSystem.Service,
           database,
           gate,
+          fs: services.atlas.fs,
         }),
       })
       .pipe(Effect.orDie)

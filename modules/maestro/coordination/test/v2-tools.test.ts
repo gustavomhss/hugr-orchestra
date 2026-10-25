@@ -45,7 +45,7 @@ const governance = [
 ]
 const arsenal = Object.values(MaestroArsenal.names)
 const memory = ["atlas_memory_recall", "atlas_memory_emit"]
-const research = ["research_capture", "research_view", "research_record"]
+const research = ["research_capture", "research_view", "research_record", "inquiry"]
 
 const temporary = (prefix: string) =>
   Effect.acquireRelease(

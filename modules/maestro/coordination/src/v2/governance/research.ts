@@ -3,10 +3,12 @@ export * as ResearchDispatchV2 from "./research"
 import { ToolFailure } from "@orchestra/llm"
 import { desc, eq } from "drizzle-orm"
 import { Effect, Option, Schema } from "effect"
+import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
 import type { Location } from "@orchestra/core/location"
 import type { PermissionV2 } from "@orchestra/core/permission"
 import type { ResearchAllowance } from "@orchestra/core/research/allowance"
+import { ResearchBinding } from "@orchestra/core/research/binding"
 import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
 import type { SessionSchema } from "@orchestra/core/session"
 import { SessionInputTable } from "@orchestra/core/session/sql"
@@ -67,15 +69,12 @@ export const allowance = Effect.fn("ResearchDispatchV2.allowance")(function* (
     return yield* refuse("binding_missing", `${ResearchSeatTools.SEAT} runs only under its research dispatch allowance`)
   const task = yield* LogicalTaskV2.read(services, session.id)
   if (!task) return yield* refuse("binding_missing", "the research child has no logical Task binding")
-  const binding = yield* Schema.decodeUnknownEffect(Research.Binding)({
-    projectID: session.projectID,
-    memberID: ResearchSeatTools.SEAT,
-    taskId: task.taskId,
-    executionSessionID: session.id,
-    authoritySessionID: task.authoritySessionID,
-    directory: services.location.directory,
-    worktree: services.location.project.directory === "/" ? services.location.directory : services.location.project.directory,
-  }).pipe(Effect.mapError(() => failure("binding_mismatch", "invalid research placement")))
+  // The allowance carries exactly the retained binding the records check on every write (V1 required the frame's
+  // binding to equal it), so the dispatch ledger, its records and its inquiry events share one scope.
+  const binding = yield* ResearchBinding.resolve(session.id, session.projectID).pipe(
+    Effect.provideService(Database.Service, { db: services.db }),
+    Effect.mapError(fromResearch),
+  )
   const admitted = yield* services.allowances.bind(binding, dispatch.callID, dispatch.tier).pipe(Effect.mapError(fromResearch))
   const started = yield* services.db
     .select({ time: SessionInputTable.time_created })
