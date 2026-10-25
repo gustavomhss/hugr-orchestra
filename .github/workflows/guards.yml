@@ -43,7 +43,9 @@ jobs:
           # Run the engine from the base branch so the change under test cannot edit the code that judges it; the PR
           # that introduces the engine falls back to its own copy.
           runner=script/guards/run.ts
-          if git cat-file -e "$BASE:script/guards/run.ts" 2>/dev/null; then
+          # A base whose runner predates --cwd (a stacked PR below the one that adds it) would judge its own checkout
+          # instead of the change, so it is not used.
+          if git show "$BASE:script/guards/run.ts" 2>/dev/null | grep -q -- '--cwd'; then
             mkdir -p "$RUNNER_TEMP/guards-base"
             git archive "$BASE" script/guards | tar -x -C "$RUNNER_TEMP/guards-base"
             runner="$RUNNER_TEMP/guards-base/script/guards/run.ts"
