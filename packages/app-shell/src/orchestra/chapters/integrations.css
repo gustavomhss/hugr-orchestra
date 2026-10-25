@@ -8,9 +8,40 @@
   align-items: center;
   gap: 8px;
 }
+.integrations-notes {
+  display: grid;
+  gap: 6px;
+  padding-block: 12px;
+  padding-inline: 16px;
+  border: 1px solid var(--mx-line);
+  border-radius: var(--orchestra-radius-lg);
+  background: var(--mx-soft);
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-sm);
+  line-height: 1.5;
+}
+.integrations-notes p {
+  margin: 0;
+  max-inline-size: 72ch;
+}
+.integrations-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-block-start: 8px;
+}
+.integrations-screen h2 {
+  margin: 0;
+  font-size: var(--orchestra-font-size-md);
+  font-weight: 600;
+  color: var(--mx-strong);
+  font-family: var(--mx-emphasis);
+}
 .integrations-list {
   display: grid;
   gap: 12px;
+  margin: 0;
   padding-inline-start: 0;
   list-style: none;
 }

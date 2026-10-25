@@ -1,8 +1,10 @@
 export const INTEGRATIONS_COPY = {
   "orchestra.integrations.title": "Integrations",
+  "orchestra.integrations.eyebrow": "{{profile}} · Connections",
   "orchestra.integrations.description": "Choose explicit accounts, targets, and session bindings for this profile.",
   "orchestra.integrations.loading": "Loading integrations…",
   "orchestra.integrations.empty": "No accounts are configured for this profile.",
+  "orchestra.integrations.emptyHint": "Connect an account to give this profile's agents a provider to act on.",
   "orchestra.integrations.connect": "Connect account",
   "orchestra.integrations.provider": "Provider",
   "orchestra.integrations.label": "Account label",
