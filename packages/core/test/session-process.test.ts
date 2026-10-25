@@ -91,6 +91,28 @@ describe("SessionProcess", () => {
     }).pipe(Effect.provide(layer)),
   )
 
+  it.live("includes output printed right before exit in the finished notice", () =>
+    Effect.gen(function* () {
+      const processes = yield* SessionProcess.Service
+      const sessionID = "ses_session_process_drain"
+      const delivered: string[] = []
+      const sessions = {
+        synthetic: (input: { text: string }) => Effect.sync(() => delivered.push(input.text)),
+        wait: () => Effect.void,
+      } as unknown as SessionV2.Interface
+      // A large burst then the marker with no pause: the exit lands while the pipe still holds the tail.
+      const launched = yield* processes
+        .launch({ sessionID, command: "head -c 2000000 /dev/zero | tr '\\0' x; printf drain-marker", title: "burst" })
+        .pipe(Effect.provideService(SessionV2.Service, sessions))
+      const waited = yield* processes.wait(sessionID, launched.id)
+      yield* Effect.suspend(() => (delivered.length ? Effect.void : Effect.fail("pending"))).pipe(
+        Effect.retry({ schedule: Schedule.spaced("20 millis"), times: 250 }),
+      )
+      expect(delivered[0]).toContain("drain-marker")
+      expect(waited.info?.output).toContain("drain-marker")
+    }).pipe(Effect.provide(layer)),
+  )
+
   it.live("forgets the oldest finished processes beyond the kept count", () =>
     Effect.gen(function* () {
       const processes = yield* SessionProcess.Service
