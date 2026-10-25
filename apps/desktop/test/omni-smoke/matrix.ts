@@ -63,9 +63,11 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic?: Diagnost
       if (state.error || app.exitCode !== null || app.signalCode !== null) throw new Error(`actual app startup failed: ${state.error}; ${state.output}`)
       return existsSync(scratch.report) ? JSON.parse(readFileSync(scratch.report, "utf8")) as Report : undefined
     })
-    if (!server.packaged || !server.versions.electron || server.db !== ":memory:" || server.home !== scratch.home || server.nonce !== scratch.trees.main.nonce ||
-      path.resolve(server.resources) !== path.resolve(manifest.resources) || !withoutMain && (server.main?.line !== scratch.trees.main.ready || !server.main.bytes) ||
-      !Number.isSafeInteger(server.utilityPID) || server.pid === server.utilityPID) throw new Error("actual packaged Electron/isolation/bytes/utility PID control failed")
+    const controls = { packaged: server.packaged, electron: !!server.versions.electron, db: server.db === ":memory:", home: server.home === scratch.home,
+      nonce: server.nonce === scratch.trees.main.nonce, resources: path.resolve(server.resources) === path.resolve(manifest.resources),
+      main: withoutMain || (server.main?.line === scratch.trees.main.ready && !!server.main.bytes),
+      utility: Number.isSafeInteger(server.utilityPID) && server.pid !== server.utilityPID }
+    if (!Object.values(controls).every(Boolean)) throw new Error(`actual packaged Electron/isolation/bytes/utility PID control failed: ${JSON.stringify({ controls, db: server.db, home: server.home, resources: server.resources, utilityPID: server.utilityPID })}`)
     logReport.userData = server.userData
     const rows = table()
     const main = identity(server.pid, rows)
