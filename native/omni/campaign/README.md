@@ -32,7 +32,7 @@ observations. Preserve the JSON verdicts, negative controls and command logs whe
 | V7 | `v7-overhead.ts --quiet` | 1,000 interleaved samples per real AppProcess caller; `--control` is readiness only. |
 | V8 | `v8-windows.ts` | Windows command lines, npx, PowerShell and ConPTY stop/exit/EOF deadline. |
 | V9 | `v9-broken-artifacts.ts --quiet --mutation --diagnose` | Copied shipped binaries; missing/corrupt native files; two-second rejection. |
-| V10 | `v10-exit.ts` | Serve disposal/cleanup. Windows console quit and actual Electron app.quit have separate hosted proofs. |
+| V10 | `v10-exit.ts`, `v10-natural-exit.ts` | Serve disposal/cleanup plus a Bun host over core AppProcess and omni that exits by itself, code zero and unsignalled. Windows console quit and actual Electron app.quit have separate hosted proofs. |
 
 Timing acceptance requires a quiet host; a refused or interrupted measurement is not green. V7's limit is
 `p50(omni) <= max(p50(legacy) * 1.10, p50(legacy) + 2 ms)`. Do not loosen it to accommodate local load.
