@@ -6,7 +6,7 @@ import { DockPrompt } from "@orchestra/session-ui/dock-prompt"
 import { Icon } from "@orchestra/ui/icon"
 import { useSpring } from "@orchestra/ui/motion-spring"
 import { showToast } from "@/utils/toast"
-import type { QuestionAnswer } from "@/v2-wire"
+import type { QuestionV2Answer } from "@/v2-wire"
 import type { QuestionRequest } from "@/v2-types"
 import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
@@ -15,7 +15,7 @@ import { createResizeObserver } from "@solid-primitives/resize-observer"
 import { useServerSDK } from "@/context/server-sdk"
 import { ScopedKey } from "@/utils/server-scope"
 
-const cache = new Map<string, { tab: number; answers: QuestionAnswer[]; custom: string[]; customOn: boolean[] }>()
+const cache = new Map<string, { tab: number; answers: QuestionV2Answer[]; custom: string[]; customOn: boolean[] }>()
 
 function Mark(props: { multi: boolean; picked: boolean; onClick?: (event: MouseEvent) => void }) {
   return (
@@ -74,7 +74,7 @@ export const SessionQuestionDock: Component<{ request: QuestionRequest; onSubmit
   const cached = cache.get(cacheKey)
   const [store, setStore] = createStore({
     tab: cached?.tab ?? 0,
-    answers: cached?.answers ?? ([] as QuestionAnswer[]),
+    answers: cached?.answers ?? ([] as QuestionV2Answer[]),
     custom: cached?.custom ?? ([] as string[]),
     customOn: cached?.customOn ?? ([] as boolean[]),
     editing: false,
@@ -226,7 +226,7 @@ export const SessionQuestionDock: Component<{ request: QuestionRequest; onSubmit
   }
 
   const replyMutation = useMutation(() => ({
-    mutationFn: (answers: QuestionAnswer[]) =>
+    mutationFn: (answers: QuestionV2Answer[]) =>
       sdk().api.question.reply({ sessionID: props.request.sessionID, requestID: props.request.id, answers }),
     onMutate: () => {
       props.onSubmit()
@@ -252,7 +252,7 @@ export const SessionQuestionDock: Component<{ request: QuestionRequest; onSubmit
 
   const sending = createMemo(() => replyMutation.isPending || rejectMutation.isPending)
 
-  const reply = async (answers: QuestionAnswer[]) => {
+  const reply = async (answers: QuestionV2Answer[]) => {
     if (sending()) return
     await replyMutation.mutateAsync(answers)
   }

@@ -1246,7 +1246,6 @@ function Playground() {
     session: [session()],
     agent: [{ name: "build" }, { name: "plan" }, { name: "explore" }, { name: "review" }],
     session_status: {},
-    session_diff: {},
     message: { [session().id]: state.messages },
     part: state.parts,
     provider: {

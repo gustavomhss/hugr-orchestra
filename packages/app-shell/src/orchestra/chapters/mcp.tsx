@@ -249,16 +249,12 @@ export default function McpPage(props: ChapterPageProps) {
                         <p>{language.t("orchestra.mcp.registrationHint", { file: MCP_CONFIG_FILE })}</p>
                       </Show>
                       <Show when={auth.state.waiting[name]}>
-                        {() => (
-                          <>
-                            <p role="status">{language.t("orchestra.mcp.authWaiting")}</p>
-                            <div class="mx-meta">
-                              <button type="button" class="mx-btn" onClick={() => auth.cancel(name)}>
-                                {language.t("orchestra.mcp.cancel")}
-                              </button>
-                            </div>
-                          </>
-                        )}
+                        <p role="status">{language.t("orchestra.mcp.authWaiting")}</p>
+                        <div class="mx-meta">
+                          <button type="button" class="mx-btn" onClick={() => auth.cancel(name)}>
+                            {language.t("orchestra.mcp.cancel")}
+                          </button>
+                        </div>
                       </Show>
                       <footer class="mx-card-foot">
                         <div>
