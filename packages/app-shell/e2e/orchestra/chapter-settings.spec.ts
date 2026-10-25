@@ -581,9 +581,9 @@ async function setup(page: Page, state: ReturnType<typeof fixture>) {
       })
     // The server's catalog default follows the configured model, so a saved default comes back on refetch.
     if (url.pathname === "/api/model/default") {
-      const separator = state.config.model.indexOf("/")
-      const id = state.config.model.slice(separator + 1)
-      return json(route, { location, data: model(state.config.model.slice(0, separator), id, id, 400_000) })
+      const configured = String(state.config.model)
+      const id = configured.slice(configured.indexOf("/") + 1)
+      return json(route, { location, data: model(configured.slice(0, configured.indexOf("/")), id, id, 400_000) })
     }
     return route.fallback()
   })
