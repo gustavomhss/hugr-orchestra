@@ -12,6 +12,7 @@ import { EventV2 } from "@orchestra/core/event"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { GitCli } from "@orchestra/core/git-cli"
 import { Location } from "@orchestra/core/location"
+import { ResearchAllowance } from "@orchestra/core/research/allowance"
 import { SessionInput, SessionSchema, SessionStore } from "@orchestra/core/session"
 import { SkillV2 } from "@orchestra/core/skill"
 import { TaskTool } from "@orchestra/core/tool/task"
@@ -28,6 +29,7 @@ import { GovernanceInputV2 } from "./governance/input"
 import { LogicalTaskV2 } from "./governance/logical-task"
 import { GovernanceRecordsV2 } from "./governance/records"
 import { GovernanceReservationV2 } from "./governance/reservation"
+import { ResearchDispatchV2 } from "./governance/research"
 import { UnsupportedV2 } from "./governance/unsupported"
 import { WorkResultV2 } from "./governance/work-result"
 import { WorkflowGateV2 } from "./governance/workflow"
@@ -57,13 +59,14 @@ export const make = Effect.gen(function* () {
   const git = yield* GitCli.Service
   const config = yield* Config.Service
   const skills = yield* SkillV2.Service
+  const allowances = yield* ResearchAllowance.Service
   const sessions = yield* GovernanceBackgroundV2.Sessions
   const background = yield* GovernanceBackgroundV2.make(events)
   // The roster loads lazily (see `seats.ts`); where it cannot load no agent is a seat, so no profile is read.
   const roster = yield* Effect.tryPromise(() => import("../roster")).pipe(Effect.option)
   const profiles = roster._tag === "Some" ? roster.value.nativeProfiles : {}
   const canonical = (id: string): string => (roster._tag === "Some" ? roster.value.canonicalMemberId(id) : id)
-  const services = { db: database.db, store, events, canonical, atlas: { config, git, fs, skills } }
+  const services = { db: database.db, store, events, canonical, allowances, location, atlas: { config, git, fs, skills } }
   const seatOf = (id: string) => (seats.has(canonical(id)) ? Seats.all[canonical(id)] : undefined)
 
   return TaskGovernance.Service.of({
@@ -97,7 +100,16 @@ export const make = Effect.gen(function* () {
         const base = !reserved && resumed
           ? yield* store.permissions(resumed.id)
           : TaskTool.inheritedPermissions(yield* store.permissions(parent.id), TaskTool.primaryTools(yield* config.entries()))
-        const permissions = seat?.writeRoots ? yield* WriteRootsV2.bind(fs, location, input.writePaths, base) : base
+        const scoped = seat?.writeRoots ? yield* WriteRootsV2.bind(fs, location, input.writePaths, base) : base
+        // The research seat runs under the allowance this call binds (V1's ResearchExecution.enter); the child reads it
+        // back on every provider turn and tool call, since fiber context does not reach the Session executor.
+        const permissions = seat?.research
+          ? ResearchDispatchV2.bind(scoped, {
+              callID: admission.context.toolCallID,
+              effort: input.effort,
+              allowedDomains: input.allowedDomains,
+            })
+          : scoped
         const snapshot = permissions.map((rule) => ({ permission: rule.action, pattern: rule.resource, action: rule.effect }))
 
         const authorized = input.authorizationID === undefined
@@ -173,7 +185,7 @@ export const make = Effect.gen(function* () {
         }
         return {
           ...(childID ? { childID } : {}),
-          ...(seat?.writeRoots || reserved ? { permissions } : {}),
+          ...(seat?.writeRoots || seat?.research || reserved ? { permissions } : {}),
           ...(text.length > 1 ? { prompt: { text: text.join("\n\n") } } : {}),
           ...(input.background === true ? { background: true } : {}),
         }
@@ -232,30 +244,16 @@ export const make = Effect.gen(function* () {
         if (!session.parentID) return
         // Only a child's first provider turn is gated; every later turn already ran under the same checks.
         // A refused turn leaves its input pending, so a promoted input means an earlier turn already passed this gate.
-        if ((yield* SessionInput.promotedAfter(database.db, session.id, -1)).length > 0) return
-        const dispatch = session.id.startsWith(GovernanceDispatchV2.CHILD_PREFIX)
-        const governed = session.id.startsWith(GovernanceReservationV2.CHILD_PREFIX)
-        if (dispatch) yield* revalidateDispatch(session.id)
-        if (governed) yield* GovernanceReservationV2.consume(services, session.id)
-        const member = canonical(session.agent ?? AgentV2.defaultID)
-        if (!seatOf(member)?.strictResume) return
-        const authority = yield* SessionAuthority.make(store.get)(session.id, session.projectID).pipe(
-          Effect.mapError((error) => new ToolFailure({ message: `Task binding denied: ${error.reason}` })),
-        )
-        yield* LogicalTaskV2.ensure(services, {
-          executionSessionID: session.id,
-          authoritySessionID: authority.rootID,
-          projectID: session.projectID,
-          memberID: member,
-          ...LogicalTaskV2.origin(dispatch || governed ? session.id : undefined, governed),
-        })
+        if ((yield* SessionInput.promotedAfter(database.db, session.id, -1)).length === 0) yield* firstTurn(session)
+        // Every provider turn of a research child is charged to its dispatch allowance.
+        yield* ResearchDispatchV2.turn(services, session)
       }),
     settle: (input) =>
       Effect.gen(function* () {
         const settled = yield* TaskGovernance.allowAll.settle(input)
         const seat = seatOf(input.child.agent ?? AgentV2.defaultID)
         const schema = seat?.workResult
-        // Jimmy's discovery result needs the research host, and jimmy Tasks are refused before admission.
+        // The research seat's discovery result needs the research host's inquiry card, which V2 does not build yet.
         if (!seat || !schema || schema === "discovery-work-result-v1") return settled
         if (schema === UpstreamResult.SCHEMA) {
           const card = UpstreamResult.parse(settled.text)
@@ -288,6 +286,28 @@ export const make = Effect.gen(function* () {
         return { ...settled, structured: { [WorkResultV2.KEY]: workResult } }
       }),
   })
+
+  // A child's first provider turn: its reservation is revalidated or consumed, and a strict-resume seat binds its task.
+  function firstTurn(session: SessionSchema.Info) {
+    return Effect.gen(function* () {
+      const dispatch = session.id.startsWith(GovernanceDispatchV2.CHILD_PREFIX)
+      const governed = session.id.startsWith(GovernanceReservationV2.CHILD_PREFIX)
+      if (dispatch) yield* revalidateDispatch(session.id)
+      if (governed) yield* GovernanceReservationV2.consume(services, session.id)
+      const member = canonical(session.agent ?? AgentV2.defaultID)
+      if (!seatOf(member)?.strictResume) return
+      const authority = yield* SessionAuthority.make(store.get)(session.id, session.projectID).pipe(
+        Effect.mapError((error) => new ToolFailure({ message: `Task binding denied: ${error.reason}` })),
+      )
+      yield* LogicalTaskV2.ensure(services, {
+        executionSessionID: session.id,
+        authoritySessionID: authority.rootID,
+        projectID: session.projectID,
+        memberID: member,
+        ...LogicalTaskV2.origin(dispatch || governed ? session.id : undefined, governed),
+      })
+    })
+  }
 
   // Before the dispatch child's first provider call its reservation must still replay with the child's own rules, and
   // the recorded context must still describe the tree (V1's beforeModel revalidation).
@@ -333,6 +353,7 @@ export const node = makeLocationNode({
     GitCli.node,
     Config.node,
     SkillV2.node,
+    ResearchAllowance.node,
     GovernanceBackgroundV2.sessionsNode,
   ],
 })

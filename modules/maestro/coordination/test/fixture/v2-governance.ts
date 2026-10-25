@@ -71,6 +71,28 @@ export const safetyLayer = (directory: string) =>
     [[ToolSafety.node, WriteRootsV2.safetyNode], ...placed(directory)],
   )
 
+/** The Location's Maestro governance and its ToolSafety replacement over one in-memory database, as the runner sees both. */
+export const researchLayer = (directory: string) =>
+  AppNodeBuilder.build(
+    LayerNode.group([
+      MaestroGovernanceV2.node,
+      ToolSafety.node,
+      AgentV2.node,
+      SessionStore.node,
+      Database.node,
+      FSUtil.node,
+      EventV2.node,
+      AppProcess.node,
+    ]),
+    [
+      [ToolSafety.node, WriteRootsV2.safetyNode],
+      ...placed(directory),
+      [Config.node, Layer.mock(Config.Service, { entries: () => Effect.succeed([]) })],
+      [SkillV2.node, Layer.mock(SkillV2.Service, { list: () => Effect.succeed([]) })],
+      [GovernanceBackgroundV2.sessionsNode, Layer.succeed(GovernanceBackgroundV2.Sessions, Option.none())],
+    ],
+  )
+
 /** Inserts a Session row as the store reads it; `permission` keeps V1 rule fields, as the column does. */
 export const session = Effect.fn("GovernanceFixture.session")(function* (input: {
   readonly id?: SessionSchema.ID

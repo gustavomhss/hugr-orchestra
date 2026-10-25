@@ -10,7 +10,7 @@ export const RESEARCH_SEAT = "jimmy"
 
 /**
  * V1 Task phases whose host is not on V2 yet. Each one refuses the call with its reason rather than running it with
- * the check skipped: workflow steps and the research allowance.
+ * the check skipped: workflow steps.
  */
 export const check = Effect.fn("UnsupportedV2.check")(function* (
   seats: MaestroSeats.Interface,
@@ -20,8 +20,6 @@ export const check = Effect.fn("UnsupportedV2.check")(function* (
   if (input.workflow !== undefined)
     return yield* refuse("workflow-unavailable", "a Relay workflow step needs the workflow host")
   if (!seats.has(target)) return
-  if (target === RESEARCH_SEAT)
-    return yield* refuse("research-allowance-unavailable", `${RESEARCH_SEAT} runs only under a research dispatch allowance`)
 })
 
 export function refuse(reason: string, why: string) {

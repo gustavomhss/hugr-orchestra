@@ -1,0 +1,163 @@
+import { expect, test } from "bun:test"
+import { randomUUID } from "node:crypto"
+import { Effect, Layer, type Scope } from "effect"
+import { Database } from "@orchestra/core/database/database"
+import { Project } from "@orchestra/core/project"
+import { SessionSchema, SessionStore } from "@orchestra/core/session"
+import { SessionMessage } from "@orchestra/core/session/message"
+import { SessionInputTable } from "@orchestra/core/session/sql"
+import { TaskGovernance } from "@orchestra/core/tool/task-governance"
+import { AllowedDomains } from "@orchestra/core/tool/websearch"
+import { ToolSafety } from "@orchestra/core/tool-safety"
+import { Research } from "@orchestra/schema/research"
+import { ResearchDispatchV2 } from "../src/v2/governance/research"
+import { admit, governanceLayer, researchLayer, session, worktree } from "./fixture/v2-governance"
+
+const run = <A, E, R>(layer: (directory: string) => Layer.Layer<R, unknown>, body: (directory: string) => Effect.Effect<A, E, R | Scope.Scope>) =>
+  Effect.runPromise(
+    Effect.scoped(
+      Effect.gen(function* () {
+        const directory = yield* worktree
+        return yield* body(directory).pipe(Effect.provide(layer(directory)))
+      }),
+    ),
+  )
+
+const refusal = <R>(effect: Effect.Effect<unknown, { readonly message: string }, R>) =>
+  Effect.flip(effect).pipe(Effect.map((error) => error.message))
+
+/** A research child under maestro, bound to the dispatch `callID` unless `bound` is false, with one pending input. */
+const child = Effect.fn("ResearchTest.child")(function* (
+  directory: string,
+  input: { readonly bound?: boolean; readonly effort?: Research.Depth; readonly allowedDomains?: string[]; readonly started?: number } = {},
+) {
+  const parentID = yield* session({ directory, agent: "maestro" })
+  const rules = input.bound === false
+    ? []
+    : ResearchDispatchV2.bind([], { callID: "call_research", effort: input.effort, allowedDomains: input.allowedDomains })
+  const id = yield* session({
+    directory,
+    agent: "jimmy",
+    parentID,
+    permission: rules.map((rule) => ({ permission: rule.action, pattern: rule.resource, action: rule.effect })),
+  })
+  const database = yield* Database.Service
+  yield* database.db.insert(SessionInputTable)
+    .values({
+      id: SessionMessage.ID.make(`msg_${randomUUID().replaceAll("-", "")}`),
+      session_id: id,
+      prompt: { text: "p" },
+      delivery: "steer",
+      admitted_seq: 0,
+      ...(input.started === undefined ? {} : { time_created: input.started }),
+    })
+    .run().pipe(Effect.orDie)
+  const store = yield* SessionStore.Service
+  const info = yield* store.get(id)
+  if (!info) return yield* Effect.die("fixture child missing")
+  return info
+})
+
+const tool = (sessionID: SessionSchema.ID, callID: string) =>
+  Effect.gen(function* () {
+    const safety = yield* ToolSafety.Service
+    return yield* safety.run(
+      { tool: "websearch", args: {}, sessionID, callID, assistantMessageID: "msg_research", directory: "/", projectID: Project.ID.global },
+      AllowedDomains,
+      () => Effect.void,
+    )
+  })
+
+test("a Task to the research seat binds its dispatch: the call, the effort tier and the allowed domains", () =>
+  run(governanceLayer, (directory) =>
+    Effect.gen(function* () {
+      const admitted = yield* admit({
+        directory,
+        caller: "maestro",
+        target: "jimmy",
+        extra: { effort: "focused", allowedDomains: ["docs.python.org"] },
+      })
+      expect(admitted.permissions?.filter((rule) => rule.action === ResearchDispatchV2.PERMISSION)).toEqual([
+        { action: ResearchDispatchV2.PERMISSION, resource: "call:call_governance_fixture", effect: "deny" },
+        { action: ResearchDispatchV2.PERMISSION, resource: "tier:focused", effect: "deny" },
+        { action: ResearchDispatchV2.PERMISSION, resource: "domain:docs.python.org", effect: "deny" },
+      ])
+      // Without effort the dispatch is quick and web search is unrestricted, as on V1.
+      expect(ResearchDispatchV2.read((yield* admit({ directory, caller: "maestro", target: "jimmy" })).permissions ?? []))
+        .toEqual({ callID: "call_governance_fixture", tier: "quick", domains: undefined })
+      // Other teammates ignore the research fields and carry no dispatch.
+      expect(yield* admit({ directory, caller: "maestro", target: "general", extra: { effort: "deep" } })).toEqual({})
+    }),
+  ))
+
+test("rebinding a resumed research child replaces the previous dispatch", () => {
+  const first = ResearchDispatchV2.bind([{ action: "read", resource: "*", effect: "allow" }], {
+    callID: "call_a",
+    effort: "deep",
+    allowedDomains: ["a.example"],
+  })
+  expect(ResearchDispatchV2.read(ResearchDispatchV2.bind(first, { callID: "call_b" }))).toEqual({
+    callID: "call_b",
+    tier: "quick",
+    domains: undefined,
+  })
+  expect(ResearchDispatchV2.bind(first, { callID: "call_b" })[0]).toEqual({ action: "read", resource: "*", effect: "allow" })
+})
+
+test("the research seat never takes a provider turn without its dispatch allowance", () =>
+  run(governanceLayer, (directory) =>
+    Effect.gen(function* () {
+      const governance = yield* TaskGovernance.Service
+      expect(yield* refusal(governance.beforeTurn(yield* child(directory, { bound: false }))))
+        .toStartWith("Research denied: binding_missing:")
+    }),
+  ))
+
+test("every provider turn of a research child is charged until its tier's allowance is spent", () =>
+  run(governanceLayer, (directory) =>
+    Effect.gen(function* () {
+      const governance = yield* TaskGovernance.Service
+      const info = yield* child(directory)
+      yield* Effect.forEach(Array.from({ length: Research.Tiers.quick.providerCalls }), () => governance.beforeTurn(info), {
+        discard: true,
+      })
+      expect(yield* refusal(governance.beforeTurn(info))).toStartWith("Research denied: budget_exhausted:")
+    }),
+  ))
+
+test("a research child past its dispatch deadline takes no further turn", () =>
+  run(governanceLayer, (directory) =>
+    Effect.gen(function* () {
+      const governance = yield* TaskGovernance.Service
+      const info = yield* child(directory, { started: Date.now() - (Research.Tiers.quick.deadlineSeconds + 1) * 1000 })
+      expect(yield* refusal(governance.beforeTurn(info))).toContain("deadline exhausted")
+    }),
+  ))
+
+test("a research child's tool calls are charged and its web search sees only the dispatch's domains", () =>
+  run(researchLayer, (directory) =>
+    Effect.gen(function* () {
+      const governance = yield* TaskGovernance.Service
+      const restricted = yield* child(directory, { allowedDomains: ["docs.python.org"] })
+      // The first provider turn binds the logical task the allowance is keyed by.
+      yield* governance.beforeTurn(restricted)
+      expect(yield* tool(restricted.id, "call_0")).toEqual(["docs.python.org"])
+      const open = yield* child(directory)
+      yield* governance.beforeTurn(open)
+      expect(yield* tool(open.id, "call_0")).toBeUndefined()
+      yield* Effect.forEach(Array.from({ length: Research.Tiers.quick.toolCalls - 1 }, (_, index) => `call_${index + 1}`), (callID) =>
+        tool(open.id, callID), { discard: true })
+      const denied = yield* Effect.flip(tool(open.id, "call_last"))
+      expect(denied).toBeInstanceOf(ToolSafety.Denied)
+      expect(denied.reason).toBe("research-dispatch")
+      expect(denied.detail).toStartWith("Research denied: budget_exhausted:")
+    }),
+  ))
+
+test("a research child with no dispatch runs no tool", () =>
+  run(researchLayer, (directory) =>
+    Effect.gen(function* () {
+      const denied = yield* Effect.flip(tool((yield* child(directory, { bound: false })).id, "call_0"))
+      expect(denied.detail).toStartWith("Research denied: binding_missing:")
+    }),
+  ))
