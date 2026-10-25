@@ -289,6 +289,11 @@ export const make = Effect.gen(function* () {
           taskId: binding?.taskId,
           writeRoots: roots,
           shell,
+          resumeRef: yield* ResumeAdmissionV2.readResumeRef(database.db, {
+            childID: input.child.id,
+            promptID: TaskTool.taskPromptID(input.context, input.child.id),
+            parentID: input.child.parentID,
+          }),
         })
         return { ...settled, structured: { [WorkResultV2.KEY]: workResult } }
       }),

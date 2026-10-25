@@ -151,6 +151,15 @@ test("a resumed child records its resume marker and leaves the prompt alone", ()
       expect(yield* resumeAdmitted).toEqual([
         { executionSessionID: childID, promptID: expect.any(String), resumeRef: `${parentID}/call_governance_fixture` },
       ])
+      // The reader returns the marker only to the child's own parent and only for the prompt it was written for.
+      const database = yield* Database.Service
+      const [record] = yield* resumeAdmitted
+      const at = (parent: string | undefined, promptID = record!.promptID) =>
+        ResumeAdmissionV2.readResumeRef(database.db, { childID, promptID, parentID: parent })
+      expect(yield* at(parentID)).toBe(`${parentID}/call_governance_fixture`)
+      expect(yield* at("ses_foreign")).toBeUndefined()
+      expect(yield* at(undefined)).toBeUndefined()
+      expect(yield* at(parentID, "msg_other")).toBeUndefined()
       // A fresh child that is not an Atlas seat records nothing.
       yield* admit({ directory, caller: "maestro", target: "general", extra: { memoryUnit: { kind: "task", id: "t" } } })
       expect(yield* resumeAdmitted).toHaveLength(1)

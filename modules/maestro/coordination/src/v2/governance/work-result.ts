@@ -63,6 +63,8 @@ export function assemble(input: {
   readonly writeRoots?: ReadonlyArray<string>
   /** The write-jail fact of the child's sandbox-bound shell commands; reported only beside bound write roots. */
   readonly shell?: ToolSafety.ShellFact
+  /** The resume marker of the Task call that resumed this child, when it did. */
+  readonly resumeRef?: string
 }) {
   const text = input.reply.content.findLast((part) => part.type === "text")
   const card = text?.type === "text" ? parse(text.text, input.seat.returnCard) : undefined
@@ -75,6 +77,7 @@ export function assemble(input: {
     executionSessionId: input.executionSessionID,
     authoritySessionId: input.authoritySessionID,
     mode: "delegated" as const,
+    ...(input.resumeRef ? { resumeRef: input.resumeRef } : {}),
     acceptance: { state: "pending" as const },
     verification: { state: "not-host-verified" as const },
     card: { parsed: card !== undefined, messageID: input.reply.id },
