@@ -1,6 +1,5 @@
-// Frozen declarations for the app-shell legacy-type contract, exported under the legacy wire
-// names. They were extracted verbatim from the generated legacy SDK, which is deleted; edit by hand
-// or replace with schema types.
+// View-model types the app renders. Every request goes through the V2 `/api` client; adapters shape its
+// results into these models. Edit by hand.
 
 export type Agent = {
   id?: string
