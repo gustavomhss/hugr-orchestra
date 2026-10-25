@@ -17,7 +17,7 @@ type BuildIdentity = {
   schemaVersion: number; status: string; accepted: boolean; sourceCommit: string; sourceTree: string; treeDigest: string
   platform: string; arch: string; appRelativePath: string; appId: string; productName: string
   tools: { bun: string; node: string; electron: string; "electron-builder": string }
-  main: Material[]; preload: Material[]; renderer: Material[]; backend: Material[]; packaged: Material[]
+  main: Material[]; preload: Material[]; renderer: Material[]; packaged: Material[]
   nativePty: { name: string; version: string; binaries: Material[] }
   ripgrep: { key: string; manifest: RipgrepBundle.Manifest; signed: boolean; files: Material[] }
 }
@@ -85,9 +85,9 @@ export async function packagedCandidate() {
   assert.equal(manifest.tools.electron, pkg.devDependencies.electron)
   assert.equal(manifest.tools["electron-builder"], pkg.devDependencies["electron-builder"])
   assert.deepEqual(manifest.packaged, await inventory(app), "Packaged receipt differs from actual app bytes")
-  for (const key of ["main", "preload", "renderer", "backend"] as const) {
+  for (const key of ["main", "preload", "renderer"] as const) {
     assert.ok(manifest[key].length > 0, `Empty candidate ${key} inventory`)
-    assert.deepEqual(manifest[key], await inventory(key === "backend" ? path.resolve(desktop, "../orchestra/dist/node") : path.join(desktop, "out", key)),
+    assert.deepEqual(manifest[key], await inventory(path.join(desktop, "out", key)),
       `Build receipt differs from actual ${key} compiler output`)
   }
   // The build receipt is evidence to retain, not an acceptance verdict.
@@ -107,7 +107,7 @@ export async function verifyCandidateArchive() {
   }
   const archive = path.join(candidate.resources, "app.asar")
   const members = asar.listPackage(archive).map((member) => member.replace(/^\//, ""))
-  for (const required of ["package.json", "out/main/index.js", "out/main/sidecar.js", "out/preload/index.js", "out/renderer/index.html"])
+  for (const required of ["package.json", "out/main/index.js", "out/preload/index.js", "out/renderer/index.html"])
     assert.ok(members.includes(required), `Missing packaged production entry: ${required}`)
   assert.equal(JSON.parse(asar.extractFile(archive, "package.json").toString()).main, "./out/main/index.js")
   const outputs = await Array.fromAsync(new Bun.Glob("**/*").scan({ cwd: path.join(desktop, "out"), onlyFiles: true }))
@@ -126,7 +126,6 @@ export async function verifyCandidateArchive() {
   assert.ok(main.includes("await-initialization"), "Missing own initialization IPC")
   const preload = asar.extractFile(archive, "out/preload/index.js").toString()
   assert.ok(preload.includes("await-initialization") && preload.includes("store-set"), "Production preload APIs missing")
-  assert.ok(outputs.some((file) => file.startsWith("main/") && file.endsWith(".wasm")), "Missing backend WASM")
   const pty = members.filter((file) => file.includes("node-pty-darwin-x64/") && file.endsWith(".node"))
   assert.ok(pty.length > 0, "Missing packaged x64 native PTY addon")
   for (const file of pty) {

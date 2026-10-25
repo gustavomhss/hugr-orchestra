@@ -1,12 +1,6 @@
 {
   "entries": [
     {
-      "rule": "R1",
-      "file": "apps/desktop/src/main/env.d.ts",
-      "specifier": "../../../orchestra/dist/types/src/node",
-      "reason": "D13: a legacy package is reached across layers; the FAC cards leave only the core compat facade"
-    },
-    {
       "rule": "R11",
       "file": "apps/orchestra/src/project/bootstrap.ts",
       "specifier": "@/maestro/upstream-v2",
@@ -398,12 +392,6 @@
     },
     {
       "rule": "R3",
-      "file": "apps/desktop/src/main/env.d.ts",
-      "specifier": "../../../orchestra/dist/types/src/node",
-      "reason": "D13: legacy import outside src/compat/; the FAC cards route it through the package facade"
-    },
-    {
-      "rule": "R3",
       "file": "packages/core/src/config.ts",
       "specifier": "./v1/config/config",
       "reason": "D13: legacy import outside src/compat/; the FAC cards route it through the package facade"
@@ -692,68 +680,14 @@
     },
     {
       "rule": "R5",
-      "file": "apps/desktop/electron-builder.candidate.config.test.ts",
-      "specifier": "../orchestra/script/lean-notices",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
       "file": "apps/desktop/electron.vite.config.ts",
       "specifier": "../../packages/script/src/workspace-paths.ts",
       "reason": "D8: relative import across a package root; retargets are deferred"
     },
     {
       "rule": "R5",
-      "file": "apps/desktop/scripts/lean-candidate.ts",
-      "specifier": "../../orchestra/script/lean-notices",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/desktop/scripts/stage-claude.ts",
-      "specifier": "../../orchestra/package.json",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
       "file": "apps/desktop/src/main/apps.test.ts",
       "specifier": "../../../../packages/core/test/fixture/omni-expect",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/desktop/src/main/env.d.ts",
-      "specifier": "../../../orchestra/dist/types/src/node",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/desktop/src/main/jimmy-desktop-proof.test.ts",
-      "specifier": "../../../../packages/client/src/index",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/desktop/src/main/jimmy-desktop-proof.test.ts",
-      "specifier": "../../../../packages/core/test/fixture/omni-expect",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/desktop/src/main/jimmy-desktop-proof.test.ts",
-      "specifier": "../../../../packages/schema/src/research",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/desktop/src/main/jimmy-desktop-proof.test.ts",
-      "specifier": "../../../orchestra/test/lib/llm-server",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/desktop/src/main/jimmy-desktop-proof.test.ts",
-      "specifier": "../../../orchestra/test/lib/test-provider",
       "reason": "D8: relative import across a package root; retargets are deferred"
     },
     {
@@ -1564,12 +1498,6 @@
       "rule": "R5",
       "file": "packages/core/test/tool-task-http.test.ts",
       "specifier": "../../server/src/middleware/session-location",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "packages/script/src/index.test.ts",
-      "specifier": "../../../apps/orchestra/package.json",
       "reason": "D8: relative import across a package root; retargets are deferred"
     },
     {

@@ -16,7 +16,7 @@ export async function buildCliToResources(input: { targets?: readonly string[]; 
   const paths = ResourcePaths.make(import.meta.dir)
   const cli = paths.cli
   const version =
-    process.env.ORCHESTRA_VERSION ?? (await Bun.file(join(paths.orchestra, "package.json")).json()).version
+    process.env.ORCHESTRA_VERSION ?? (await Bun.file(join(paths.cli, "package.json")).json()).version
   const targets = input.targets ?? desktopCliTargets(...placement())
   const prebuilt = input.prebuilt ?? process.env.ORCHESTRA_CLI_PREBUILT_DIR
   if (prebuilt === undefined) {

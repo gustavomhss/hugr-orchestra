@@ -51,6 +51,8 @@ async function fixture() {
       cpu: [arch],
     }),
   )
+  await writeFile(join(native, "README.md"), "fixture readme\n")
+  await writeFile(join(native, "LICENSE.md"), "fixture license\n")
   const binary = join(native, platform === "win32" ? "claude.exe" : "claude")
   await writeFile(binary, nativeHeader(platform, arch), { mode: 0o755 })
   return { sdk, binary, directory: join(root, "resources/claude-code"), platform, arch }
@@ -93,6 +95,8 @@ test("stages native SDK bytes unchanged with a target/version/hash receipt", asy
   const staged = await stageClaude(input)
   const original = await readFile(input.binary)
   expect(await readFile(staged.path)).toEqual(original)
+  expect(await readFile(join(input.directory, "README.md"), "utf8")).toBe("fixture readme\n")
+  expect(await readFile(join(input.directory, "LICENSE.md"), "utf8")).toBe("fixture license\n")
   expect(staged).toMatchObject({
     schema: 1,
     target: `${input.platform}-${input.arch}`,

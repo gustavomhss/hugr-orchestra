@@ -7,15 +7,13 @@ export function make(start: string) {
   const workspace = WorkspacePaths.make(start)
   const desktop = workspace.module("desktop")
   const cli = workspace.module("cli")
-  const orchestra = workspace.module("orchestra")
   return {
     root: workspace.root,
     desktop,
     cli,
-    orchestra,
+    claudeCode: workspace.module("engine-claude-code"),
     app: workspace.module("app"),
     omni: workspace.domain("omni"),
-    serverDist: path.join(orchestra, "dist/node"),
     cliDist: path.join(cli, "dist"),
     cliResources: path.join(desktop, "resources/cli"),
     signWindows: path.join(workspace.root, "script/sign-windows.ps1"),

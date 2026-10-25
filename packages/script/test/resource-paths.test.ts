@@ -11,7 +11,7 @@ test("resolves resources from a relocated module registry", async () => {
       ["app", "@orchestra/app", "apps/ui"],
       ["cli", "@orchestra/cli", "tools/command"],
       ["desktop", "@orchestra/desktop", "apps/shell"],
-      ["orchestra", "orchestra", "services/api"],
+      ["engine-claude-code", "@orchestra/engine-claude-code", "engines/claude"],
     ] as const
     await writeFile(path.join(root, "package.json"), JSON.stringify({ name: "workspace" }))
     await mkdir(path.join(root, "script"), { recursive: true })
@@ -38,10 +38,9 @@ test("resolves resources from a relocated module registry", async () => {
       root,
       desktop: path.join(root, "apps/shell"),
       cli: path.join(root, "tools/command"),
-      orchestra: path.join(root, "services/api"),
+      claudeCode: path.join(root, "engines/claude"),
       app: path.join(root, "apps/ui"),
       omni: path.join(root, "native/omni"),
-      serverDist: path.join(root, "services/api/dist/node"),
       cliDist: path.join(root, "tools/command/dist"),
       cliResources: path.join(root, "apps/shell/resources/cli"),
       signWindows: path.join(root, "script/sign-windows.ps1"),

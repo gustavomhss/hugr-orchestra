@@ -1,54 +1,13 @@
-import { dirname, join, resolve, sep, isAbsolute } from "node:path"
+import { dirname, join, resolve, sep } from "node:path"
 import { access } from "node:fs/promises"
 import { fileURLToPath } from "node:url"
-import { app, utilityProcess } from "electron"
-import type { Details } from "electron"
+import { app } from "electron"
 import { getLogger } from "./logging"
-import { OmniHost } from "./omni-host"
-import { OmniSmoke } from "./omni-smoke"
 import { ripgrepEnv } from "./ripgrep-env"
 import { getUserShell, loadShellEnv } from "./shell-env"
 import { getStore } from "./store"
 import { DEFAULT_SERVER_URL_KEY } from "./store-keys"
 import { applyCandidateEnvironment, candidateEnvironment, type CandidateProfile } from "./candidate-profile"
-
-export type HealthCheck = { wait: Promise<void> }
-
-type SidecarMessage =
-  | { type: "ready" }
-  | { type: "stopped" }
-  | { type: "error"; error: { message: string; stack?: string } }
-
-export type SidecarListener = { stop: () => Promise<void> }
-
-// Shown as the utility process name in the OS task manager.
-const SIDECAR_SERVICE_NAME = "Orchestra server"
-// 20s is sufficient for sidecar boot + health on all supported platforms.
-// 60s masked slow-start regressions; 20s fails fast on CI while leaving
-// headroom for cold starts (observed p99 ~8s on macOS, ~12s on Linux).
-const SIDECAR_START_STALL_TIMEOUT = 20_000
-const SIDECAR_STOP_TIMEOUT = 6_000
-
-function validateSidecarPath(sidecarPath: string): string {
-  if (!isAbsolute(sidecarPath)) {
-    throw new Error("sidecarPath must be an absolute path")
-  }
-  const resolved = resolve(sidecarPath)
-  if (resolved.includes(".." + sep) || resolved.includes(sep + "..")) {
-    throw new Error("sidecarPath must not contain directory traversal sequences")
-  }
-  return resolved
-}
-
-type SpawnLocalServerOptions = {
-  userDataPath: string
-  candidateProfile?: CandidateProfile
-  sidecarPath?: string
-  onStdout?: (message: string) => void
-  onStderr?: (message: string) => void
-  onExit?: (code: number) => void
-  onMessage?: (message: unknown, reply: (message: unknown) => void) => void
-}
 
 export function getDefaultServerUrl(): string | null {
   const value = getStore().get(DEFAULT_SERVER_URL_KEY)
@@ -81,157 +40,7 @@ export function preferAppEnv(userDataPath: string, candidateProfile?: CandidateP
   return shellEnv
 }
 
-export async function spawnLocalServer(
-  hostname: string,
-  port: number,
-  password: string,
-  options: SpawnLocalServerOptions,
-) {
-  const outDir = join(dirname(fileURLToPath(import.meta.url)))
-  const defaultSidecar = join(outDir, "sidecar.js")
-  const sidecar = options.sidecarPath ? validateSidecarPath(options.sidecarPath) : defaultSidecar
-  await access(sidecar)
-  const child = utilityProcess.fork(sidecar, [], {
-    cwd: process.cwd(),
-    env: { ...(await sidecarLaunchEnv(options.userDataPath, options.candidateProfile)), ...OmniHost.sidecarEnv() },
-    serviceName: SIDECAR_SERVICE_NAME,
-    stdio: "pipe",
-  })
-  let exited = false
-  const exit = defer<number>()
-
-  const onProcessGone = (_event: unknown, details: Details) => {
-    if (details.type !== "Utility" || details.name !== SIDECAR_SERVICE_NAME) return
-    options.onStderr?.(`utility process gone reason=${details.reason} exitCode=${details.exitCode}`)
-  }
-
-  app.on("child-process-gone", onProcessGone)
-  child.once("exit", (code) => {
-    OmniSmoke.event("utility-exit", { utilityPID: child.pid, code })
-    exited = true
-    app.off("child-process-gone", onProcessGone)
-    options.onExit?.(code)
-    exit.resolve(code)
-  })
-  child.on("error", (error) => options.onStderr?.(`utility process error: ${serializeError(error).message}`))
-
-  child.on("message", (message) => {
-    if (message?.type === "stopped") OmniSmoke.event("utility-stopped")
-    if (!options.onMessage) return
-    if (!exited) options.onMessage(message, (reply) => child.postMessage(reply))
-  })
-
-  child.stdout?.on("data", (chunk: Buffer) => options.onStdout?.(chunk.toString("utf8").trimEnd()))
-  child.stderr?.on("data", (chunk: Buffer) => options.onStderr?.(chunk.toString("utf8").trimEnd()))
-
-  await new Promise<void>((resolve, reject) => {
-    let done = false
-    let timeout: NodeJS.Timeout
-
-    const fail = (error: Error) => {
-      if (done) return
-      done = true
-      cleanup()
-      reject(error)
-    }
-
-    const refreshTimeout = () => {
-      clearTimeout(timeout)
-      timeout = setTimeout(() => {
-        fail(new Error(`Sidecar did not become ready within ${SIDECAR_START_STALL_TIMEOUT}ms: ${sidecar}`))
-      }, SIDECAR_START_STALL_TIMEOUT)
-    }
-
-    const onMessage = (message: SidecarMessage) => {
-      if (message.type === "ready") {
-        if (done) return
-        done = true
-        cleanup()
-        resolve()
-        return
-      }
-      if (message.type === "error") {
-        fail(Object.assign(new Error(message.error.message), { stack: message.error.stack }))
-      }
-    }
-    const onExit = (code: number) => {
-      fail(new Error(`Sidecar exited before ready with code ${code}`))
-    }
-    const cleanup = () => {
-      clearTimeout(timeout)
-      child.off("message", onMessage)
-      child.off("exit", onExit)
-    }
-
-    child.on("message", onMessage)
-    child.on("exit", onExit)
-    refreshTimeout()
-    child.postMessage({
-      type: "start",
-      hostname,
-      port,
-      password,
-      userDataPath: options.userDataPath,
-    })
-  }).catch((error) => {
-    if (!exited) child.kill()
-    throw error
-  })
-
-  const wait = (async () => {
-    const url = `http://${hostname}:${port}`
-    let healthy = false
-    const gone = exit.promise.then((code) => {
-      if (healthy) return
-      throw new Error(`Sidecar exited before health check passed with code ${code}`)
-    })
-
-    const ready = async () => {
-      while (true) {
-        await new Promise((resolve) => setTimeout(resolve, 100))
-        if (await checkHealth(url, password)) {
-          healthy = true
-          return
-        }
-      }
-    }
-
-    // Health polling is otherwise unbounded: if the sidecar stays alive but
-    // never serves HTTP, wait would hang forever. Bound it by the same
-    // start-stall budget used for the ready handshake.
-    const timedOut = delay(SIDECAR_START_STALL_TIMEOUT).then(() => {
-      throw new Error("Sidecar health check timed out")
-    })
-
-    await Promise.race([ready(), gone, timedOut])
-  })()
-
-  let stopping: Promise<void> | undefined
-  OmniSmoke.utilityStarted(child.pid)
-
-  return {
-    listener: {
-      stop: () => {
-        if (stopping) return stopping
-        if (exited) return Promise.resolve()
-        child.postMessage({ type: "stop" })
-        stopping = Promise.race([
-          exit.promise.then(() => undefined),
-          delay(SIDECAR_STOP_TIMEOUT).then(() => {
-            if (!exited) {
-              OmniSmoke.event("utility-watchdog")
-              child.kill()
-            }
-          }),
-        ])
-        return stopping
-      },
-    },
-    health: { wait },
-  }
-}
-
-/** The per-launch environment of a desktop-owned server, shared by the V1 sidecar and the owned `orchestra serve`. */
+/** The per-launch environment of the desktop-owned `orchestra serve`. */
 export async function sidecarLaunchEnv(userDataPath: string, candidateProfile?: CandidateProfile) {
   const outDir = dirname(fileURLToPath(import.meta.url))
   const claudeExecutable = join(
@@ -250,43 +59,15 @@ export async function sidecarLaunchEnv(userDataPath: string, candidateProfile?: 
     // The SDK gets an explicit real-file path; its bundled module cannot resolve optional native packages.
     ORCHESTRA_CLAUDE_CODE_EXECUTABLE: claudeExecutable,
     ...ripgrepEnv(app.isPackaged, process.resourcesPath),
-    ORCHESTRA_CLAUDE_CODE_RESOURCES: app.isPackaged
-      ? join(process.resourcesPath, "claude-code")
-      : resolve(outDir, "../../../orchestra/dist/node/claude-code"),
+    ORCHESTRA_CLAUDE_CODE_RESOURCES: dirname(claudeExecutable),
     ORCHESTRA_LINUX_ROOT: join(userDataPath, "app-dock-linux"),
     // Maestro's playbooks ship outside the app archive, where every tool can read them. Dev runs read the
-    // repository copy, since the bundled server cannot locate it from its own path.
+    // repository copy, since the bundled server cannot locate it from its own path. They still live in
+    // apps/orchestra/playbooks, where modules/maestro reads its source copy, until they move with B1-C.
     ORCHESTRA_PLAYBOOKS_DIR: app.isPackaged
       ? join(process.resourcesPath, "playbooks")
       : resolve(outDir, "../../../orchestra/playbooks"),
   }
-}
-
-export async function checkHealth(url: string, password?: string | null): Promise<boolean> {
-  let healthUrls: URL[]
-  try {
-    healthUrls = [new URL("/api/health", url), new URL("/global/health", url)]
-  } catch {
-    return false
-  }
-
-  const headers = new Headers()
-  if (password) {
-    const auth = Buffer.from(`orchestra:${password}`).toString("base64")
-    headers.set("authorization", `Basic ${auth}`)
-  }
-
-  for (const healthUrl of healthUrls) {
-    try {
-      const res = await fetch(healthUrl, {
-        method: "GET",
-        headers,
-        signal: AbortSignal.timeout(3000),
-      })
-      if (res.ok) return true
-    } catch {}
-  }
-  return false
 }
 
 export function createSidecarEnv(candidateProfile?: CandidateProfile): Record<string, string> {
@@ -298,23 +79,4 @@ export function createSidecarEnv(candidateProfile?: CandidateProfile): Record<st
   delete env.DEBUG
   if (process.platform === "linux") delete env.LD_PRELOAD
   return env
-}
-
-function delay(ms: number) {
-  return new Promise<void>((resolve) => setTimeout(resolve, ms))
-}
-
-function serializeError(error: unknown) {
-  if (error instanceof Error) return { message: error.message, stack: error.stack }
-  return { message: String(error) }
-}
-
-function defer<T>() {
-  let resolve!: (value: T) => void
-  let reject!: (error: Error) => void
-  const promise = new Promise<T>((res, rej) => {
-    resolve = res
-    reject = rej
-  })
-  return { promise, resolve, reject }
 }
