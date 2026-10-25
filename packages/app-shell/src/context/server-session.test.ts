@@ -1088,14 +1088,15 @@ describe("server session", () => {
       ctx.store.applyV2({
         id: `evt_step_${index}`,
         created: 2,
-        type: "session.step.started",
+        type: "session.step.ended",
         durable: { aggregateID: `session-${index}`, seq: 1, version: 1 },
         location: { directory: "/repo" },
         data: {
           sessionID: `session-${index}`,
           assistantMessageID: "msg_assistant",
-          agent: "build",
-          model: { id: "model", providerID: "provider" },
+          finish: "stop",
+          cost: 0,
+          tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
         },
       } as unknown as ClientEvent)
     }
