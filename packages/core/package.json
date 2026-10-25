@@ -203,6 +203,7 @@
     "./pty/omni": "./src/pty/omni.ts",
     "./pty/protocol": "./src/pty/protocol.ts",
     "./pty/shell-integration": "./src/pty/shell-integration.ts",
+    "./pty/shell-cwd": "./src/pty/shell-cwd.ts",
     "./pty/shell-marks": "./src/pty/shell-marks.ts",
     "./pty/schema": "./src/pty/schema.ts",
     "./pty/ticket": "./src/pty/ticket.ts",

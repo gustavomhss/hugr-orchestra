@@ -336,8 +336,19 @@ function createWorkspaceTerminalSession(
       const nextNumber = pickNextTerminalNumber()
       const focusRequest = options?.focus ? requestFocus(undefined, true) : undefined
 
+      // The shell in the active tab reports where it is (OSC 7, kept by the server); a new tab starts there.
       const doCreate = async () => {
-        return (await sdk.api.pty.create({ location, title: defaultTitle(nextNumber) })).data
+        const title = defaultTitle(nextNumber)
+        const active = store.active
+        const cwd = active
+          ? await sdk.api.pty
+              .get({ ptyID: active, location })
+              .then((result) => result.data.cwd)
+              .catch(() => undefined)
+          : undefined
+        if (!cwd) return (await sdk.api.pty.create({ location, title })).data
+        // The directory may be gone by now, and then the shell cannot start in it.
+        return (await sdk.api.pty.create({ location, title, cwd }).catch(() => sdk.api.pty.create({ location, title }))).data
       }
       return doCreate()
         .then((data): TerminalCreateResult => {

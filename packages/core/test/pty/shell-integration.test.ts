@@ -1,7 +1,7 @@
 import { describe, expect } from "bun:test"
 import { Effect, Layer } from "effect"
-import { existsSync } from "node:fs"
-import { mkdtemp, writeFile } from "node:fs/promises"
+import { existsSync, realpathSync } from "node:fs"
+import { mkdir, mkdtemp, writeFile } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { Config } from "@orchestra/core/config"
@@ -68,7 +68,7 @@ const session = Effect.fn("ShellIntegrationTest.session")(function* (shell: stri
     )
   // The marks sit between the command and its output, so strip them before reading the output.
   const plain = () => text.replace(/\x1b\][^\x07]*\x07/g, "")
-  return { attachment, marks, parser, until, text: () => text, plain }
+  return { attachment, marks, parser, until, text: () => text, plain, id: info.id }
 })
 
 // /bin/bash is 3.2 on macOS, which has no PS0, so the older path matters; /usr/local/bin/bash covers a current one there.
@@ -122,6 +122,27 @@ describe("shell integration", () => {
           expect(plain()).toMatch(/[\r\n]0\r\ndone-42/)
           expect(text().replaceAll(nonce, "")).not.toContain("nonce-")
           expect(existsSync(path.join(os.tmpdir(), `orchestra-shell-integration-${process.getuid?.() ?? 0}`))).toBe(true)
+        }),
+      30000,
+    )
+
+  for (const shell of shells)
+    shellTest(
+      `${shell} reports its directory so Info.cwd follows a cd`,
+      () =>
+        Effect.gen(function* () {
+          const pty = yield* Pty.Service
+          const { attachment, marks, until, id } = yield* session(shell)
+          yield* until("first prompt", () => marks.length > 0)
+          // The OS resolves the symlink the shell starts in, and the shell reports what it has.
+          expect((yield* pty.get(id)).cwd).toBe(realpathSync("/tmp"))
+
+          const base = yield* Effect.promise(() => mkdtemp(path.join(os.tmpdir(), "orchestra-si-cwd-")))
+          const target = path.join(base, "a b%c")
+          yield* Effect.promise(() => mkdir(target))
+          attachment.write(`cd '${target}'\n`)
+          yield* until("the shell to report it", () => marks.some((mark) => mark.kind === "prompt" && mark.seq === 1))
+          expect((yield* pty.get(id)).cwd).toBe(target)
         }),
       30000,
     )

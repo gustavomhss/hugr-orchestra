@@ -14,6 +14,7 @@ Background and decisions: `docs/specs/terminal/plan.md` (section 1.1 prevails), 
 | Session, ring buffer, replay gap, repaint | `packages/core/src/pty.ts` | One implementation serves both HTTP surfaces (legacy handlers and `@orchestra/server`); change both or neither |
 | Wire framing (meta frame, cut, afterFirstLine) | `packages/core/src/pty/protocol.ts` | A protocol change needs `bun run generate` in `packages/client` |
 | Shell marks (OSC 133) | `pty/shell-marks.ts`, `pty/shell-integration.ts` | Marks count only with the session nonce; zsh and bash on posix; opt-in per create |
+| Shell cwd (OSC 7) | `pty/shell-cwd.ts`, `Info.cwd` in `pty.ts` | A hint, never a boundary: no nonce, any output can print one; the new-terminal default only |
 | Agent command in a tab | `packages/core/src/tool/agent-terminal.ts` | Behind `ORCHESTRA_AGENT_TERMINAL`; only the foreground block of `bash.ts` |
 | Client write path (sync output 2026) | `packages/app-shell/src/utils/terminal-writer.ts` | Holds a DEC 2026 frame until it closes or 250 ms pass |
 | Emulator | `ghostty-web`, pinned fork | Swap only behind the plan's plan B, after a failing Phase 1 test |
@@ -37,4 +38,5 @@ Background and decisions: `docs/specs/terminal/plan.md` (section 1.1 prevails), 
 - A command that exits right after spawn is seen whole through `CreateOptions.observe`. `attach` on an exited session serves the retained replay and then the end (no `ExitedError` any more); the client keeps `agent: ` tabs after `pty.exited` and adds them from `pty.created` (`context/terminal.tsx`).
 - bun-pty and omni deliver the first read differently; tests that depend on it use the legacy-only helper.
 - bash 3.2 (macOS `/bin/bash`) fires the DEBUG trap on `PROMPT_COMMAND`; the init script starts `__orc_busy=1` for that reason.
+- Shell integration also turns on with `ORCHESTRA_SHELL_INTEGRATION` for every terminal created without `exact`; it replaces a user's own bash DEBUG trap, so it stays off by default until that is decided.
 - Do not name the backend specialist's default display name outside `roster.ts` (guard test).

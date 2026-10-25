@@ -106,6 +106,7 @@ __orc_precmd() {
     printf '\\033]133;D;%s;orchestra=%s:%s\\007' $ec $__orc_nonce $__orc_seq
     __orc_running=0
   fi
+  printf '\\033]7;file://localhost%s\\007' "\${PWD//\\%/%25}"
   printf '\\033]133;A;orchestra=%s:%s\\007' $__orc_nonce $__orc_seq
   return $ec
 }
@@ -154,6 +155,7 @@ __orc_precmd() {
     printf '\\033]133;D;%s;orchestra=%s:%s\\007' "$ec" "$__orc_nonce" "$__orc_seq"
     __orc_running=
   fi
+  printf '\\033]7;file://localhost%s\\007' "\${PWD//\\%/%25}"
   printf '\\033]133;A;orchestra=%s:%s\\007' "$__orc_nonce" "$__orc_seq"
   return $ec
 }

@@ -6,11 +6,12 @@ import { Context, Effect, Exit, Layer, Option, Schema, Types } from "effect"
 import { Pty } from "@orchestra/schema/pty"
 import { Config } from "./config"
 import { EventV2 } from "./event"
-import { Flag } from "./flag/flag"
+import { Flag, truthy } from "./flag/flag"
 import { Location } from "./location"
 import { OmniAdoption } from "./omni-adoption"
 import { OmniBackground } from "./omni-background"
 import { PtyProtocol } from "./pty/protocol"
+import { ShellCwd } from "./pty/shell-cwd"
 import { ShellIntegration } from "./pty/shell-integration"
 import { clampSize } from "./pty/pty"
 import type { OmniProc } from "./pty/omni"
@@ -71,7 +72,8 @@ export type UpdateInput = Types.DeepMutable<typeof UpdateInput.Type>
 export const Event = Pty.Event
 
 export type CreateOptions = {
-  // Starts zsh or bash with marks the caller can trust (ShellMarks). Off unless asked; other shells ignore it.
+  // Starts zsh or bash with marks the caller can trust (ShellMarks). Off unless asked or ORCHESTRA_SHELL_INTEGRATION is
+  // set; other shells ignore it.
   readonly shellIntegration?: boolean
   // Runs command and args as given with only the given env (plus TERM and ORCHESTRA_TERMINAL): no login flag, nothing
   // inherited from the server process. For a caller that already built a confined command.
@@ -236,7 +238,7 @@ const layer = Layer.effect(
         TERM: "xterm-256color",
         ORCHESTRA_TERMINAL: "1",
       } as Record<string, string>
-      const integration = options?.shellIntegration
+      const integration = (options?.shellIntegration ?? (!options?.exact && truthy("ORCHESTRA_SHELL_INTEGRATION")))
         ? yield* Effect.promise(() => ShellIntegration.prepare({ command, args: given, env: base }))
         : undefined
       const args = integration?.args ?? given
@@ -281,6 +283,7 @@ const layer = Layer.effect(
         status: "running",
         pid: proc.pid,
       }
+      const announcements = ShellCwd.parser()
       const session: Active = {
         info,
         process: proc,
@@ -297,6 +300,9 @@ const layer = Layer.effect(
       session.listeners.push(
         proc.onData((chunk) => {
           session.cursor += chunk.length
+          // The shell's own report of where it is, so a new terminal can start there. Info.cwd follows it.
+          const announced = announcements.push(chunk)
+          if (announced) session.info.cwd = announced
           options?.observe?.onData(chunk)
           for (const [token, subscriber] of session.subscribers.entries()) {
             if (!subscriber.active) {
