@@ -117,7 +117,8 @@ const withTool = <A, E, R>(
   }).pipe(
     Effect.provide(
       AppNodeBuilder.build(
-        LayerNode.group([ToolRegistry.node, ToolRegistry.toolsNode, LocationMutation.node, BashTool.node, EventV2.node]),
+        // Location.node and EventV2.node must be exported: the registry reads them with serviceOption at call time.
+        LayerNode.group([ToolRegistry.node, ToolRegistry.toolsNode, LocationMutation.node, BashTool.node, Location.node, EventV2.node]),
         [
           [Location.node, activeLocation],
           [PermissionV2.node, permission],
