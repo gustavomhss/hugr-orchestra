@@ -35,6 +35,13 @@ export const start = Effect.fn("ClaudeCodeLogin.start")(function* (input: {
   yield* Stream.fromQueue(stdin).pipe(Stream.run(child.stdin), Effect.ignore, Effect.forkScoped)
   const url = yield* Deferred.make<string, ClaudeCodeAccount.LoginError>()
   const exited = yield* Deferred.make<boolean>()
+  // A stop settles both waiters as a failed sign-in. It can interrupt the exit watcher before that fiber first ran,
+  // and an interrupted fiber that never started runs none of its own cleanup, so the Scope settles them instead.
+  yield* Effect.addFinalizer(() =>
+    Deferred.fail(url, new ClaudeCodeAccount.LoginError({ message: "Claude Code sign-in was stopped" })).pipe(
+      Effect.andThen(Deferred.succeed(exited, false)),
+    ),
+  )
   const output = { text: "" }
   const errors = { text: "" }
   const reading = yield* child.stdout.pipe(
@@ -72,8 +79,6 @@ export const start = Effect.fn("ClaudeCodeLogin.start")(function* (input: {
         yield* Deferred.succeed(exited, ok)
       }),
     ),
-    // Interruption (stop) settles the waiters too, as a failed sign-in.
-    Effect.ensuring(Deferred.succeed(exited, false)),
     Effect.forkScoped,
   )
   return {

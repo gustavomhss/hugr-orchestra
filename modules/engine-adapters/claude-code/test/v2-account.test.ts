@@ -96,6 +96,21 @@ test.skipIf(process.platform === "win32")("stopping a sign-in ends the CLI", asy
   expect(ok).toBe(false)
 })
 
+// A stop that lands before the login's own fibers first ran (here: at once, with no yield in between) still settles
+// both waiters. It used to leave `exited` pending forever, since the exit watcher never started to run its cleanup.
+test.skipIf(process.platform === "win32")("stopping a sign-in before it printed anything settles it", async () => {
+  await using fake = await cli()
+  const result = await run(
+    Effect.gen(function* () {
+      const login = yield* ClaudeCodeLogin.start({ executable: fake.file, env: { ...process.env } })
+      yield* login.stop
+      return { ok: yield* login.exited, url: yield* login.url.pipe(Effect.flip) }
+    }),
+  )
+  expect(result.ok).toBe(false)
+  expect(result.url.message).toBe("Claude Code sign-in was stopped")
+})
+
 // The account service end to end: the status comes from the SDK seam, the sign-in from a real process.
 const info = { current: { subscriptionType: "max", email: "owner@example.com", apiProvider: "firstParty" } as Record<string, unknown> }
 const sdk = Layer.succeed(
