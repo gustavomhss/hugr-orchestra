@@ -77,6 +77,7 @@ export const IntegrationHandler = HttpApiBuilder.group(Api, "server.integration"
               integrationID: ctx.params.integrationID,
               key: ctx.payload.key,
               label: ctx.payload.label,
+              metadata: ctx.payload.metadata,
             }),
           )
           return HttpApiSchema.NoContent.make()

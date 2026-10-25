@@ -6,9 +6,28 @@ import { ProviderV2 } from "../../provider"
 
 const providerID = ProviderV2.ID.make("cloudflare-workers-ai")
 
+export const ACCOUNT_PROMPT = {
+  type: "text" as const,
+  key: "accountId",
+  message: "Enter your Cloudflare Account ID",
+  placeholder: "e.g. 1234567890abcdef1234567890abcdef",
+}
+
 export const CloudflareWorkersAIPlugin = define({
   id: "cloudflare-workers-ai",
   effect: Effect.fn(function* (ctx) {
+    // The key method asks the account ID unless the environment supplies it; the answer is stored as key metadata,
+    // which the runner merges into the request body the account ID is resolved from.
+    yield* ctx.integration.transform((draft) => {
+      draft.method.update({
+        integrationID: providerID,
+        method: {
+          type: "key",
+          label: "API key",
+          prompts: process.env.CLOUDFLARE_ACCOUNT_ID ? [] : [ACCOUNT_PROMPT],
+        },
+      })
+    })
     yield* ctx.catalog.transform(
       Effect.fn(function* (evt) {
         const item = evt.provider.get(providerID)
