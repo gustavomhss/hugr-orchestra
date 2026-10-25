@@ -130,7 +130,7 @@ function DiffViewer(props: { api: TuiPluginApi }) {
     }
     const result = await props.api.client.vcs.diff({
       location: { directory: input.directory },
-      mode: input.mode,
+      mode: input.mode === "git" ? "working" : "branch",
       context: VCS_DIFF_CONTEXT_LINES,
     })
     return normalizeDiffs(result.data)

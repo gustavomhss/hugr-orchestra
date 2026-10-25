@@ -11,10 +11,6 @@ export function useEvent() {
 
   function subscribe(handler: (event: Event, metadata: EventMetadata) => void) {
     return sdk.event.on("event", (event) => {
-      if (event.payload.type === "sync") {
-        return
-      }
-
       handler(event.payload, { directory: event.directory, workspace: event.workspace })
     })
   }

@@ -218,7 +218,7 @@ export const {
     event.subscribe((event, { workspace }) => {
       receiveHistory({ ...event, data: event.properties } as V2Event)
       switch (event.type) {
-        case "server.instance.disposed":
+        case "global.disposed":
           void bootstrap()
           break
         case "permission.replied": {

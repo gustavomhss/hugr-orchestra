@@ -497,7 +497,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
 
   async function forkSession(sessionID: string): Promise<void> {
     const result = await sdk.api.sessions.fork({ sessionID }).then(
-      (value) => ({ data: value.data, error: undefined }),
+      (value) => ({ data: value, error: undefined }),
       (error: unknown) => ({ data: undefined, error }),
     )
     if (result.data?.id) return route.navigate({ type: "session", sessionID: result.data.id })

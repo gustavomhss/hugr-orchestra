@@ -143,7 +143,7 @@ export const { use: useData, provider: DataProvider } = createSimpleContext({
           },
           async refresh(sessionID: string) {
             const result = await sdk.api.permissions.list({ sessionID })
-            setStore("session", "permission", sessionID, result.data as PermissionV2Request[])
+            setStore("session", "permission", sessionID, result as PermissionV2Request[])
           },
         },
         question: {
@@ -152,7 +152,7 @@ export const { use: useData, provider: DataProvider } = createSimpleContext({
           },
           async refresh(sessionID: string) {
             const result = await sdk.api.questions.list({ sessionID })
-            setStore("session", "question", sessionID, result.data as QuestionV2Request[])
+            setStore("session", "question", sessionID, result as QuestionV2Request[])
           },
         },
       },
@@ -163,7 +163,7 @@ export const { use: useData, provider: DataProvider } = createSimpleContext({
           },
           async refresh(projectID: string) {
             const result = await sdk.api.permissions.listSaved({ projectID })
-            setStore("project", "permission", projectID, result.data as PermissionSavedInfo[])
+            setStore("project", "permission", projectID, result as PermissionSavedInfo[])
           },
         },
       },

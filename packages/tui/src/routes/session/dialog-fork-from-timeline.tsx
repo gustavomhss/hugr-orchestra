@@ -28,7 +28,7 @@ export function DialogForkFromTimeline(props: { sessionID: string; onMove: (mess
       value: undefined,
       onSelect: async (dialog: DialogContext) => {
         const forked = await sdk.api.sessions.fork({ sessionID: props.sessionID }).then(
-          (value) => ({ data: value.data, error: undefined }),
+          (value) => ({ data: value, error: undefined }),
           (error: unknown) => ({ data: undefined, error }),
         )
         if (!forked.data) {
@@ -56,7 +56,7 @@ export function DialogForkFromTimeline(props: { sessionID: string; onMove: (mess
         footer: Locale.time(message.time.created),
         onSelect: async (dialog) => {
           const forked = await sdk.api.sessions.fork({ sessionID: props.sessionID, messageID: message.id }).then(
-            (value) => ({ data: value.data, error: undefined }),
+            (value) => ({ data: value, error: undefined }),
             (error: unknown) => ({ data: undefined, error }),
           )
           if (!forked.data) {
