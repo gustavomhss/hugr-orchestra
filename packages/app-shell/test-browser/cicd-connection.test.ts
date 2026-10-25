@@ -19,7 +19,6 @@ function fixture(protocol: "v2", manual = false) {
   const transport = Object.assign(async (input: string | URL | Request, init?: RequestInit) => {
     const request = new Request(input, init)
     const url = new URL(request.url)
-    if (url.pathname === "/global/health") return Response.json({ healthy: true }, { status: protocol === "v1" ? 200 : 404 })
     if (url.pathname === "/api/health") return Response.json({ pid: 1 })
     if (url.pathname.endsWith("connect-token")) {
       state.ticketRequests.push({ url: request.url, ticket: request.headers.get("x-orchestra-ticket") })
@@ -37,7 +36,7 @@ function fixture(protocol: "v2", manual = false) {
     }
     const data = request.method === "POST" ? { id: "pty-owned" } : { id: "pty-owned", status: "running" }
     if (request.method === "GET") state.gets++
-    return Response.json(protocol === "v1" ? data : { data, location: { directory: "/repo" } })
+    return Response.json({ data, location: { directory: "/repo" } })
   }, { preconnect: fetch.preconnect })
   const platform = { platform: "desktop" as const, openExternal() {}, restart: async () => {}, notify: async () => {},
     openDirectoryPickerDialog: async () => null,

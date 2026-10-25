@@ -15,9 +15,6 @@ import {
 } from "@/components/titlebar-session-events"
 
 const servers = { A: "http://a.invalid", B: "http://b.invalid" }
-let kind: "v1" | "v2" = "v1"
-// A V1 server whose /api/health reports a pid also serves the V2 archive routes, as the desktop sidecar does.
-let sidecar = false
 let active: "A" | "B" = "B"
 let pathname = "/source-B/shared"
 let request = Promise.withResolvers<void>()
@@ -72,7 +69,7 @@ beforeAll(async () => {
       const sdk = {
         scope: source,
         directory: "/shared/repo",
-        protocol: Promise.resolve(kind),
+        protocol: Promise.resolve("v2"),
         client: {
           session: {
             update: (input: unknown) => {
@@ -106,12 +103,12 @@ beforeAll(async () => {
         const key = servers[source]
         return {
         scope: `${key}:${missing}`,
-        server: { type: "http", http: { url: key } }, protocolKind: () => kind,
+        server: { type: "http", http: { url: key } }, protocolKind: () => "v2",
         api: { session: { list: async () => {
           if (listFailure) throw new Error("history offline")
           return { data: stores[source].data.session, cursor: {} }
         } } },
-        sessionManagement: { hasArchiveRoutes: () => kind === "v2" || sidecar, listArchived: async () => {
+        sessionManagement: { hasArchiveRoutes: () => true, listArchived: async () => {
           if (listFailure) throw new Error("history offline")
           return [...stores[source].canonical.values()].filter((session) => session.time.archived !== undefined)
         }, archive: async (sessionID: string, archived: boolean) => {
@@ -157,8 +154,6 @@ beforeAll(async () => {
 })
 
 beforeEach(() => {
-  kind = "v2"
-  sidecar = false
   missing = false
   listFailure = false
   reactive = false
@@ -170,36 +165,7 @@ beforeEach(() => {
   writes.length = navigated.length = drafts.length = notices.length = toasts.length = opened.length = 0
 })
 
-test("V1 offers no archive because restore does not exist there", async () => {
-  kind = "v1"
-  const action = useSessionArchive()
-  expect(action.available()).toBe(false)
-  expect(action.restorable()).toBe(false)
-  await action.archive("shared")
-  expect(writes).toEqual([])
-  expect(notices).toEqual([])
-  expect(stores.B.data.session.map((item) => item.id)).toEqual(["shared", "neighbor"])
-  expect(toasts[0]).toMatchObject({ title: "Archive unavailable on this server" })
-})
-
-test("V1 server whose /api/health reports a pid gets restore", async () => {
-  kind = "v1"
-  sidecar = true
-  stores.B.set("session", 0, "time", "archived", 5)
-  const action = useSessionArchive()
-  expect(action.available()).toBe(true)
-  expect(action.restorable()).toBe(true)
-  const restored = action.restore("shared")
-  await started.promise
-  request.resolve()
-  expect(await restored).toBe(true)
-  expect(writes).toEqual([{ source: "B", input: { sessionID: "shared", archived: false } }])
-  expect(stores.B.data.session.find((item) => item.id === "shared")?.time.archived).toBeUndefined()
-  expect(toasts).toEqual([])
-})
-
 test("old V2 archive explains unsupported operations without removing sessions or tabs", async () => {
-  kind = "v2"
   missing = true
   const action = useSessionArchive()
   expect(action.available()).toBe(true)
@@ -250,7 +216,6 @@ test("failed archive preserves both servers' sessions and tabs", async () => {
 })
 
 test("V2 archive coalesces duplicate clicks until acknowledgement", async () => {
-  kind = "v2"
   const action = useSessionArchive()
   const pending = action.archive("shared")
   await started.promise
@@ -265,7 +230,6 @@ test("V2 archive coalesces duplicate clicks until acknowledgement", async () => 
 })
 
 test("V2 restore keeps archived session intact on failure and restores within its origin scope on retry", async () => {
-  kind = "v2"
   stores.B.set("session", 0, "time", "archived", 5)
   const action = useSessionArchive()
   const failed = action.restore("shared")
@@ -287,7 +251,6 @@ test("V2 restore keeps archived session intact on failure and restores within it
 })
 
 test("real archive history DOM retries a failed load, then restores only its captured server and directory", async () => {
-  kind = "v2"
   reactive = true
   listFailure = true
   stores.B.set("session", 0, "time", "archived", 5)

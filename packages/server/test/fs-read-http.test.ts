@@ -58,7 +58,7 @@ const it = testEffect(
 const read = (file: string, directory: string) =>
   HttpClientRequest.get("/api/fs/read").pipe(
     HttpClientRequest.setUrlParam("path", file),
-    HttpClientRequest.setHeader("x-orchestra-directory", directory),
+    HttpClientRequest.setUrlParam("location[directory]", directory),
     HttpClient.execute,
   )
 

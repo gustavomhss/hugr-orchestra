@@ -85,11 +85,7 @@ export async function mockPty(page: Page) {
     (route) => {
       const url = new URL(route.request().url())
       const method = route.request().method()
-      const header = route.request().headers()["x-orchestra-directory"]
-      expect(
-        url.searchParams.get("location[directory]") ??
-          (header === undefined ? undefined : decodeURIComponent(header)),
-      ).toBe(directory)
+      expect(url.searchParams.get("location[directory]")).toBe(directory)
       if (url.pathname === prefix && method === "POST") {
         if (state.createFailure) return json(route, {}, 500)
         state.creates.push(route.request().postDataJSON())
@@ -198,7 +194,7 @@ export async function setup(
     const url = new URL(route.request().url())
     if (url.origin !== serverA && url.origin !== serverB) return route.fallback()
     const path = url.pathname
-    // These legacy servers expose filesystem workflows and PTYs, not native Actions bindings.
+    // These servers expose filesystem workflows and PTYs, not native Actions bindings.
     if (path === "/api/actions/binding" && route.request().method() === "GET") {
       expect(url.searchParams.get("location[directory]")).toBe(directory)
       return json(route, {}, 404)
@@ -260,7 +256,6 @@ export async function setup(
     if (url.origin === serverA) return route.fallback()
     if (["/global/event", "/event", "/api/event"].includes(path))
       return route.fulfill({ status: 200, contentType: "text/event-stream", body: ": ok\n\n" })
-    if (path === "/global/health") return json(route, {}, 404)
     if (path === "/api/health") return json(route, { healthy: true, pid: 1, version: "2.0.0" })
     if (path === "/project" || path === "/api/project") return json(route, [project(serverB)])
     if (path === "/project/current") return json(route, project(serverB))

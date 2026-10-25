@@ -214,13 +214,13 @@ export async function mockResearchArtifacts(
     )
     const index = request.cursor === null ? 0 : document?.pages.findIndex((value) => value.cursor === request.cursor)
     const body = document?.pages[request.cursor === null ? 0 : (index ?? -1) + 1]
-    const directoryHeader = route.request().headers()["x-orchestra-directory"]
+    const directory = url.searchParams.get("location[directory]")
     if (
       route.request().method() !== "GET" ||
       !document ||
       !body ||
       index === -1 ||
-      (directoryHeader !== undefined && decodeURIComponent(directoryHeader) !== document.receipt.binding.directory)
+      (directory !== null && directory !== document.receipt.binding.directory)
     )
       throw new Error(`Unexpected research artifact request: ${url.href}`)
     // Native session lookup may omit the directory header; the receipt-bound session path still owns the request.

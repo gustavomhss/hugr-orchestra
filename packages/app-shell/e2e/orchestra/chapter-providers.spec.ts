@@ -320,7 +320,6 @@ async function setup(page: Page, mock: Mock, scheme: "dark" | "light" = "dark") 
     }
     if (path === "/global/event" || path === "/event" || path === "/api/event")
       return route.fulfill({ status: 200, contentType: "text/event-stream", body: ": ok\n\n" })
-    if (path === "/global/health") return json(route, { healthy: true }, 404)
     if (path === "/api/health") return json(route, { healthy: true, version: "2", pid: 1 })
     if (path === "/api/config" && method === "PATCH") {
       const patch = JSON.parse(raw ?? "{}")

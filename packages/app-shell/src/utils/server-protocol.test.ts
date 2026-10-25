@@ -8,8 +8,7 @@ const listen = (fetch: (request: Request) => Response | Promise<Response>) =>
 describe("detectServerProtocol", () => {
   test("recognizes API health v2", async () => {
     const body = { healthy: true, version: "2.0.0", pid: 123 }
-    const listener = listen((request) => new URL(request.url).pathname === "/global/health"
-      ? Response.json({}, { status: 404 }) : Response.json(body))
+    const listener = listen(() => Response.json(body))
     try {
       expect(await detectServerProtocol({ url: listener.url.origin }, fetch)).toBe("v2")
     } finally {

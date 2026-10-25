@@ -13,7 +13,7 @@ import {
   userMessage,
 } from "../performance/timeline-stability/fixture"
 
-// The V1 server protocol is gone; the timeline speaks the current one only.
+// The timeline speaks the current protocol only.
 for (const scenario of [{ protocol: "v2" }] as const) {
   test(`renders confirmed historical checklists as read-only snapshots (${scenario.protocol}, virtual)`, async ({
     page,

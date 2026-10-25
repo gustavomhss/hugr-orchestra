@@ -47,7 +47,7 @@ test("source fixture: sole unreachable server can repair credentials before rout
   let repaired = false
   await page.route(
     (url) =>
-      url.origin === "http://127.0.0.1:4096" && ["/api/health", "/health", "/global/health"].includes(url.pathname),
+      url.origin === "http://127.0.0.1:4096" && url.pathname === "/api/health",
     async (route) => {
       const headers = {
         "access-control-allow-origin": "*",

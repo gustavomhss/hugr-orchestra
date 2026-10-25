@@ -21,7 +21,7 @@ async function endpoint(handle: (request: IncomingMessage) => { body: unknown; s
   // App preload installs browser Response globally; use Node's actual HTTP server boundary.
   const server = createServer(async (request, response) => {
     response.setHeader("access-control-allow-origin", "*")
-    response.setHeader("access-control-allow-headers", "authorization,content-type,x-orchestra-directory")
+    response.setHeader("access-control-allow-headers", "authorization,content-type")
     response.setHeader("access-control-allow-methods", "GET,PATCH,OPTIONS")
     if (request.method === "OPTIONS") { response.writeHead(204); response.end(); return }
     const result = await handle(request)

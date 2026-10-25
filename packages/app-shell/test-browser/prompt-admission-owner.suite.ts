@@ -136,8 +136,8 @@ beforeAll(async () => {
       {
         scope: servers[server],
         server: { type: "http", http: { url: servers[server] } },
-        protocol: Promise.resolve("v1"),
-        // This V1 fixture has no outstanding V2 writes. Its real exercised rules boundary is update/saveGate below.
+        protocol: Promise.resolve("v2"),
+        // This fixture has no outstanding V2 writes. Its real exercised rules boundary is update/saveGate below.
         sessionManagement: { waitSubagentModels: async (id: string) => { policyWaits.push(id) } },
         client: {
           session: {

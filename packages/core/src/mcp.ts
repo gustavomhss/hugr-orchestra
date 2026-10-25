@@ -63,8 +63,8 @@ export type Prompt = Awaited<ReturnType<typeof McpCatalog.prompts>>[number] & { 
 
 export interface Interface {
   /**
-   * Starts the configured servers on first use and waits until each one connected or failed. Servers start lazily, as
-   * in V1, so a process that opens Locations without running V2 turns, such as the V1 server, never spawns them.
+   * Starts the configured servers on first use and waits until each one connected or failed. Servers start lazily, so
+   * a process that opens Locations without running turns never spawns them.
    */
   readonly ready: () => Effect.Effect<void>
   readonly list: () => Effect.Effect<Mcp.Server[]>

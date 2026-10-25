@@ -133,11 +133,9 @@ test("a first send whose policy write fails deletes the Session the server confi
 
 // A dispatched prompt may have been admitted before the failure, so its Session is never deleted: the retry is exact.
 test.each([
-  { name: "the server cannot be read", protocol: "v1", messageCount: undefined },
-  { name: "the server confirms it empty on v1", protocol: "v1", messageCount: 0 },
-  { name: "the server confirms it empty on v2", protocol: "v2", messageCount: 0 },
+  { name: "the server cannot be read", messageCount: undefined },
+  { name: "the server confirms it empty", messageCount: 0 },
 ])("failed first send keeps the Session as Empty session when $name, and the retry sends to it", async (probe) => {
-  state.protocol = probe.protocol
   state.messageCount = probe.messageCount
   const real = createPromptState({ prompt: "first turn" })
   state.sendHook = async () => { throw new Error("admission failed") }
