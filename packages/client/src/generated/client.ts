@@ -66,6 +66,8 @@ import type {
   SessionsContextOutput,
   SessionsDiffInput,
   SessionsDiffOutput,
+  SessionsBackgroundInput,
+  SessionsBackgroundOutput,
   SessionsHistoryInput,
   SessionsHistoryOutput,
   SessionsEventsInput,
@@ -888,6 +890,17 @@ export function make(options: ClientOptions) {
             query: { messageID: input["messageID"], context: input["context"] },
             successStatus: 200,
             declaredStatuses: [404, 500, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
+      background: (input: SessionsBackgroundInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: SessionsBackgroundOutput }>(
+          {
+            method: "POST",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/background`,
+            successStatus: 200,
+            declaredStatuses: [404, 400, 401],
             empty: false,
           },
           requestOptions,

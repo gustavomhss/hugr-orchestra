@@ -17,6 +17,7 @@ import { ScheduledTask } from "@orchestra/core/scheduled-task"
 import { SessionV2 } from "@orchestra/core/session"
 import { SessionProcess } from "@orchestra/core/session-process"
 import { MoveSession } from "@orchestra/core/control-plane/move-session"
+import { TaskBackground } from "@orchestra/core/tool/task-background"
 import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { SessionExecution } from "@orchestra/core/session/execution"
 import { LocationServiceMap } from "@orchestra/core/location-service-map"
@@ -47,6 +48,7 @@ const applicationServices = LayerNode.group([
   SessionSubagentModels.node,
   SessionProcess.node,
   MoveSession.node,
+  TaskBackground.node,
   ScheduledTask.node,
   ScheduledTask.daemonNode,
   PermissionSaved.node,

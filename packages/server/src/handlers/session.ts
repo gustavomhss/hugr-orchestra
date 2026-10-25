@@ -1,6 +1,7 @@
 import { SessionTodo, SessionV2 } from "@orchestra/core/session"
 import { SessionProcess } from "@orchestra/core/session-process"
 import { MoveSession } from "@orchestra/core/control-plane/move-session"
+import { TaskBackground } from "@orchestra/core/tool/task-background"
 import { SlashCommand } from "@orchestra/core/slash-command"
 import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { DateTime, Effect, Stream } from "effect"
@@ -52,6 +53,7 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
     const sessionProcess = yield* SessionProcess.Service
     const fs = yield* FSUtil.Service
     const moveSession = yield* MoveSession.Service
+    const taskBackground = yield* TaskBackground.Service
 
     const admit = (input: Parameters<SessionV2.Interface["prompt"]>[0]) =>
       session.prompt(input).pipe(
@@ -541,7 +543,9 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
             return Effect.logError("failed to diff session turn", { cause: error }).pipe(
               Effect.annotateLogs({ ref, sessionID: ctx.params.sessionID }),
               Effect.andThen(
-                Effect.fail(new UnknownError({ message: "Unexpected server error. Check server logs for details.", ref })),
+                Effect.fail(
+                  new UnknownError({ message: "Unexpected server error. Check server logs for details.", ref }),
+                ),
               ),
             )
           }
@@ -560,6 +564,15 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
               }),
             ),
           }
+        }),
+      )
+      .handle(
+        "session.background",
+        Effect.fn(function* (ctx) {
+          yield* session
+            .get(ctx.params.sessionID)
+            .pipe(Effect.catchTags({ "Session.NotFoundError": operationErrors["Session.NotFoundError"] }))
+          return { data: yield* taskBackground.request(ctx.params.sessionID) }
         }),
       )
       .handle(

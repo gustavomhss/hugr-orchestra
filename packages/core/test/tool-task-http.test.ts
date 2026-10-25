@@ -1,5 +1,6 @@
 import { SessionProcess } from "@orchestra/core/session-process"
 import { MoveSession } from "@orchestra/core/control-plane/move-session"
+import { TaskBackground } from "@orchestra/core/tool/task-background"
 import { expect } from "bun:test"
 import { NodeHttpServer, NodeServices } from "@effect/platform-node"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
@@ -41,6 +42,7 @@ const services = AppNodeBuilder.build(
     SessionSubagentModels.node,
     SessionProcess.node,
     MoveSession.node,
+    TaskBackground.node,
   ]),
   [[SessionExecution.node, SessionExecutionLocal.node]],
 )

@@ -1160,6 +1160,10 @@ export type SessionsDiffOutput = {
   }>
 }["data"]
 
+export type SessionsBackgroundInput = { readonly sessionID: { readonly sessionID: string }["sessionID"] }
+
+export type SessionsBackgroundOutput = { readonly data: number }["data"]
+
 export type SessionsHistoryInput = {
   readonly sessionID: { readonly sessionID: string }["sessionID"]
   readonly limit?: { readonly limit?: number | undefined; readonly after?: number | undefined }["limit"]

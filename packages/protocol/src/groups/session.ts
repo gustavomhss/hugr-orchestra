@@ -599,6 +599,22 @@ export const makeSessionGroup = <I extends HttpApiMiddleware.AnyId, S>(sessionLo
         ),
     )
     .add(
+      HttpApiEndpoint.post("session.background", "/api/session/:sessionID/background", {
+        params: { sessionID: Session.ID },
+        success: Schema.Struct({ data: Schema.Number }),
+        error: [SessionNotFoundError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.background",
+            summary: "Background subagents",
+            description:
+              "Move the Session's foreground subagent tasks to the background so the parent turn continues. Returns how many tasks were moved.",
+          }),
+        ),
+    )
+    .add(
       HttpApiEndpoint.get("session.history", "/api/session/:sessionID/history", {
         params: { sessionID: Session.ID },
         query: SessionHistoryQuery,

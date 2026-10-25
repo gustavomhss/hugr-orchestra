@@ -384,8 +384,8 @@ export const {
             setStore("provider", reconcile(catalog.provider))
             setStore("provider_default", reconcile(catalog.default))
             setStore("provider_next", reconcile(catalog.next))
-            // V2 serves no experimental capabilities route, so background subagents stay off as in V1 without it.
-            setStore("capabilities", "experimentalBackgroundSubagents", false)
+            // V2 always serves session.background, so foreground subagents can always be moved to the background.
+            setStore("capabilities", "experimentalBackgroundSubagents", true)
             setStore("agent", reconcile(catalog.agent))
             setStore("config", reconcile(catalog.config))
             if (sessions !== undefined) setStore("session", reconcile(sessions))
