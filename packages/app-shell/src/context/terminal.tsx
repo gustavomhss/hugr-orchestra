@@ -4,6 +4,7 @@ import { batch, createEffect, createMemo, createRoot, on, onCleanup } from "soli
 import { useParams } from "@solidjs/router"
 import { useSDK, type DirectorySDK } from "./sdk"
 import { useLanguage } from "./language"
+import { usePlatform } from "./platform"
 import { useServerSDK } from "./server-sdk"
 import { base64Encode } from "@orchestra/core/util/encode"
 import { defaultTitle, titleNumber } from "./terminal-title"
@@ -144,6 +145,7 @@ export function updateServerPty(
 
 // Titles the server gives to terminals that run an agent's command (see AgentTerminal in core).
 const AGENT_TAB_PREFIX = "agent: "
+const LONG_COMMAND_MS = 10_000
 
 function terminalPersistTarget(scope: ServerScopeValue, dir: string, legacy?: string[]) {
   return Persist.serverWorkspace(scope, dir, "terminal", legacy)
@@ -155,6 +157,7 @@ function createWorkspaceTerminalSession(
   scope: ServerScopeValue,
   legacySessionID?: string,
   notifyFailure?: (action: "create" | "close", error: unknown) => void,
+  notifyFinished?: (title: string, exitCode: number) => void,
 ) {
   const location = { directory: sdk.directory }
   const legacy = scope === ServerScope.local ? getLegacyTerminalStorageKeys(dir, legacySessionID) : []
@@ -245,12 +248,21 @@ function createWorkspaceTerminalSession(
 
   // A command the agent runs gets its own tab, started by the server rather than by this client.
   const isAgentTab = (title?: string) => title?.startsWith(AGENT_TAB_PREFIX) === true
+  // When each agent command was seen starting; in memory only, since a reload ends the wait for its news.
+  const started = new Map<string, number>()
 
   const unsub = sdk.event.on("pty.exited", (event: { properties: { id: string; exitCode?: number } }) => {
     // An agent's tab stays after its command ends, so the owner can read what ran; closing it removes it.
     const index = store.all.findIndex((x) => x.id === event.properties.id)
     if (index >= 0 && isAgentTab(store.all[index]?.title)) {
-      if (event.properties.exitCode !== undefined) setStore("all", index, "exitCode", event.properties.exitCode)
+      const exitCode = event.properties.exitCode
+      if (exitCode !== undefined) setStore("all", index, "exitCode", exitCode)
+      const since = started.get(event.properties.id)
+      started.delete(event.properties.id)
+      // A long command that ends where nobody is looking is the one worth interrupting for.
+      const unseen = typeof document !== "undefined" && document.hidden ? true : store.active !== event.properties.id
+      if (exitCode !== undefined && since !== undefined && Date.now() - since >= LONG_COMMAND_MS && unseen)
+        notifyFinished?.(store.all[index]?.title.slice(AGENT_TAB_PREFIX.length) ?? "", exitCode)
       return
     }
     removeExited(event.properties.id)
@@ -260,6 +272,7 @@ function createWorkspaceTerminalSession(
   const unsubCreated = sdk.event.on("pty.created", (event: { properties: { info: { id: string; title: string; exitCode?: number } } }) => {
     const info = event.properties.info
     if (!isAgentTab(info.title) || store.all.some((x) => x.id === info.id)) return
+    if (info.exitCode === undefined) started.set(info.id, Date.now())
     // A command can end before the event reaches us, and then pty.exited never comes for this tab.
     setStore("all", store.all.length, {
       id: info.id,
@@ -499,6 +512,7 @@ export const { use: useTerminal, provider: TerminalProvider } = createSimpleCont
     const serverSDK = useServerSDK()
     const params = useParams()
     const language = useLanguage()
+    const platform = usePlatform()
     const cache = new Map<string, TerminalCacheEntry>()
     const scope = () => serverSDK().scope
     const directory = createMemo(() => base64Encode(sdk().directory))
@@ -534,6 +548,15 @@ export const { use: useTerminal, provider: TerminalProvider } = createSimpleCont
         description: error === undefined ? undefined : formatServerError(error, language.t),
       })
 
+    const notifyFinished = (command: string, exitCode: number) => {
+      const title =
+        exitCode === 0
+          ? language.t("orchestra.chat.terminal.agentFinished")
+          : language.t("orchestra.chat.terminal.agentFailed", { code: exitCode })
+      showToast({ variant: exitCode === 0 ? "success" : "error", title, description: command })
+      if (typeof document !== "undefined" && document.hidden) void platform.notify(title, command)
+    }
+
     const loadWorkspace = (dir: string, legacySessionID: string | undefined, serverScope: ServerScopeValue) => {
       // Terminals are workspace-scoped so tabs persist while switching sessions in the same directory.
       const key = getWorkspaceTerminalCacheKey(dir, serverScope)
@@ -545,7 +568,7 @@ export const { use: useTerminal, provider: TerminalProvider } = createSimpleCont
       }
 
       const entry = createRoot((dispose) => ({
-        value: createWorkspaceTerminalSession(sdk(), dir, serverScope, legacySessionID, notifyFailure),
+        value: createWorkspaceTerminalSession(sdk(), dir, serverScope, legacySessionID, notifyFailure, notifyFinished),
         dispose,
       }))
 
