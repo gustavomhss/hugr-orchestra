@@ -22,9 +22,16 @@ const MCP_PREFIX = `mcp__${MCP_SERVER}__`
 
 /** Orchestra tools Claude Code has as built-ins, or that belong to Orchestra's own loop: never served (as V1). */
 const UNSERVED = new Set([
-  "bash", "read", "write", "edit", "apply_patch", "grep", "glob", "webfetch", "websearch", "task", "todowrite",
+  "bash", "read", "write", "edit", "apply_patch", "grep", "glob", "webfetch", "websearch", "todowrite",
   "question", "skill", "lsp", "invalid", "context_compact", "execute",
 ])
+
+/**
+ * Claude Code's own subagent tool. Orchestra's `task` is served instead, so every delegation passes Task Governance;
+ * a subagent Claude Code spawned itself would skip admission, reservation and settlement.
+ */
+const SUBAGENT_TOOLS = new Set(["Agent", "Task"])
+const SUBAGENT_DENIAL = "Delegate through `mcp__orchestra__task`: Orchestra governs every delegation in this session."
 
 /** How a Claude Code built-in maps to a V2 permission: its action and the input field that names the resource. */
 const PERMISSIONS: Readonly<Record<string, { action: string; field: string; path?: boolean }>> = {
@@ -74,6 +81,8 @@ export const make = Effect.gen(function* () {
               // The registry settles the Orchestra tool's own permissions when the runner executes it.
               return Promise.resolve({ behavior: "allow" as const, updatedInput: input })
             }
+            if (SUBAGENT_TOOLS.has(tool) && served.some((item) => item.name === "task"))
+              return Promise.resolve({ behavior: "deny" as const, message: SUBAGENT_DENIAL })
             return Effect.runPromise(
               turn.authorize({ callID: options.toolUseID, tool, ...permission(tool, input, turn.session.location.directory) }).pipe(
                 Effect.as({ behavior: "allow" as const, updatedInput: input }),
