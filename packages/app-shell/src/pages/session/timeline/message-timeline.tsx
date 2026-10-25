@@ -33,7 +33,7 @@ import { SessionRetry } from "@orchestra/session-ui/session-retry"
 import { isScrollKeyTarget, scrollKey, scrollKeyOwner, ScrollView } from "@orchestra/ui/scroll-view"
 import { TextReveal } from "@orchestra/ui/text-reveal"
 import { TextShimmer } from "@orchestra/ui/text-shimmer"
-import type { AssistantMessage, Part, ToolPart, UserMessage } from "@/v2-wire"
+import type { AssistantMessage, Part, SnapshotFileDiff, ToolPart, UserMessage } from "@/v2-wire"
 
 import { showToast } from "@/utils/toast"
 import { downloadSessionExport, fetchSessionExport, sessionExportFilename } from "@/utils/session-export"
@@ -134,6 +134,7 @@ export function MessageTimeline(props: {
   centered: boolean
   setContentRef: (el: HTMLDivElement) => void
   userMessages: UserMessage[]
+  turnDiffs: (userMessageID: string) => SnapshotFileDiff[] | undefined
   anchor: (id: string) => string
   setRevealMessage?: (fn: (id: string) => void) => void
   setScrollToEnd?: (fn: () => void) => void
@@ -239,6 +240,7 @@ export function MessageTimeline(props: {
     parts: getMsgParts,
     status: sessionStatus,
     showReasoningSummaries: settings.general.showReasoningSummaries,
+    turnDiffs: (userMessageID) => props.turnDiffs(userMessageID),
   })
   const activeMessageID = projection.activeMessageID
   const assistantMessagesByParent = projection.assistantMessagesByParent

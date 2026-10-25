@@ -1,7 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test"
 import {
   assistantMessage,
-  messageUpdated,
   setupTimeline,
   shell,
   textPart,
@@ -146,7 +145,7 @@ test("allows paint rounding for every framed row but not fixed turn gaps", async
       ],
     },
   })
-  const timeline = await setupTimeline(page, {
+  await setupTimeline(page, {
     messages: [
       firstUser,
       assistantMessage([textPart("prt_outline_text", "Assistant text")]),
@@ -158,8 +157,6 @@ test("allows paint rounding for every framed row but not fixed turn gaps", async
       }),
     ],
   })
-  // V2 history carries no user summary diffs; they arrive with the live user message update.
-  await timeline.send(messageUpdated(firstUser.info))
   await expect(page.locator('[data-timeline-row="DiffSummary"]')).toBeVisible()
   await expect(page.locator('[data-timeline-row="TurnGap"]')).toBeVisible()
 

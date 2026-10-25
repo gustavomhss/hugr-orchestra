@@ -136,8 +136,7 @@ test.describe("session timeline projection", () => {
     await expect(page.getByText("Keep this stable", { exact: true })).toBeVisible()
   })
 
-  // V2 records no per-turn diffs (the user message never carries `summary`), so the row cannot render from history.
-  test.fixme("renders historical diff summary overflow", async ({ page }) => {
+  test("renders historical diff summary overflow", async ({ page }) => {
     const user = commentUser("prt_diff_comment", "prt_diff_visible", {
       summary: { diffs: Array.from({ length: 11 }, (_, index) => summaryDiff(index)) },
     })

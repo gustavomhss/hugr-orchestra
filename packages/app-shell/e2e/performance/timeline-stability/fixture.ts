@@ -123,6 +123,18 @@ export async function setupTimeline(
     pageMessages: () => ({
       items: messages,
     }),
+    // The fixtures keep a turn's diffs on the V1-shaped user summary; V2 serves them per turn.
+    diffs: (_, messageID) =>
+      messages
+        .flatMap((message) => (message.info.role === "user" && message.info.id === messageID ? [message.info] : []))
+        .flatMap((info) => info.summary?.diffs ?? [])
+        .map((diff) => ({
+          path: diff.file,
+          status: diff.status ?? "modified",
+          additions: diff.additions,
+          deletions: diff.deletions,
+          patch: diff.patch ?? "",
+        })),
     onPrompt: input.onPrompt,
   })
   await page.addInitScript((settings) => {

@@ -87,8 +87,6 @@ test("moves busy through retry and recovery to final idle content", async ({ pag
   })
   const timeline = await setupTimeline(page, { messages: [user, assistant] })
   await timeline.send(status("busy"), 140)
-  // V2 history carries no user summary diffs; they arrive with the live user message update.
-  await timeline.send(messageUpdated(user.info), 100)
   await expect(page.locator('[data-timeline-row="Thinking"]')).toBeVisible()
   await expect(page.locator('[data-timeline-row="DiffSummary"]')).toHaveCount(0)
   await timeline.send(status("retry"), 180)

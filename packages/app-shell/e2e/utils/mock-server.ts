@@ -23,6 +23,8 @@ export interface MockServerConfig {
   beforeMessagesResponse?: (input: { sessionID: string; before?: string }) => Promise<void>
   onMessages?: (input: { sessionID: string; before?: string; phase: "start" | "end" }) => void
   message?: (sessionID: string, messageID: string) => unknown
+  // V2 per-turn diff (`GET /api/session/:id/message/:messageID/diff`); an unknown turn has none.
+  diffs?: (sessionID: string, messageID: string) => unknown[]
   onMessage?: (input: { sessionID: string; messageID: string }) => void
   onPrompt?: (input: { sessionID: string; body: unknown }) => void
   events?: () => unknown[]
@@ -383,6 +385,9 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
     const todoMatch = path.match(/^\/session\/([^/]+)\/todo$/)
     if (todoMatch) return json(route, config.todos?.(todoMatch[1]!) ?? [])
     if (/^\/session\/[^/]+\/(children|diff)$/.test(path)) return json(route, [])
+
+    const currentDiffMatch = path.match(/^\/api\/session\/([^/]+)\/message\/([^/]+)\/diff$/)
+    if (currentDiffMatch) return json(route, { data: config.diffs?.(currentDiffMatch[1]!, currentDiffMatch[2]!) ?? [] })
 
     const currentMessagesMatch = path.match(/^\/api\/session\/([^/]+)\/message$/)
     if (currentMessagesMatch) {

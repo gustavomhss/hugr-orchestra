@@ -51,6 +51,7 @@ describe("current session timeline rows", () => {
       true,
       "busy",
       normalized.messages.filter((message) => message.role === "user"),
+      () => undefined,
     )
 
     expect(result.activeMessageID).toBe("msg_3")
@@ -86,6 +87,7 @@ describe("current session timeline rows", () => {
       true,
       "idle",
       normalized.messages.filter((message) => message.role === "user"),
+      () => undefined,
     )
 
     expect(result.activeMessageID).toBe("msg_shell")
@@ -126,6 +128,7 @@ describe("current session timeline rows", () => {
       true,
       "idle",
       normalized.messages.filter((message) => message.role === "user"),
+      () => undefined,
     )
 
     expect(result.rows.map(TimelineRow.key)).toEqual([
@@ -158,6 +161,7 @@ describe("current session timeline rows", () => {
       true,
       "busy",
       [...normalized.messages.filter((message) => message.role === "user"), optimistic],
+      () => undefined,
     )
 
     expect(result.activeMessageID).toBe(optimistic.id)
@@ -200,6 +204,7 @@ describe("current session timeline rows", () => {
       true,
       "busy",
       normalized.messages.filter((message) => message.role === "user"),
+      () => undefined,
     )
 
     expect(result.rows.map((row) => row._tag)).toEqual(["UserMessage", "AssistantPart"])
