@@ -227,6 +227,73 @@ describe("runGuards", () => {
     expect(format(report).at(-1)).toContain("2 gate")
   })
 
+  // Golden: one workflow with a known defect per workflow rule, one clean workflow. Pins the whole pack end to end.
+  test("the workflow pack flags every planted defect and nothing in the clean workflow", () => {
+    const cwd = guarded()
+    write(
+      cwd,
+      ".github/workflows/bad.yml",
+      [
+        "on: [pull_request_target]",
+        "permissions: write-all",
+        "env:",
+        "  ACTIONS_ALLOW_UNSECURE_COMMANDS: true",
+        "  ALL: ${{ toJSON(secrets) }}",
+        "jobs:",
+        "  a:",
+        "    if: false",
+        "    continue-on-error: true",
+        "    secrets: inherit",
+        "    steps:",
+        "      - uses: actions/checkout@v4",
+        '      - run: echo "${{ github.event.pull_request.title }}"',
+        "      - run: curl -fsSL https://example.com/i.sh | sh",
+        '      - run: echo "X=${{ steps.s.outputs.v }}" >> $GITHUB_ENV',
+        '      - run: echo "::set-output name=a::b"',
+        "      - run: git commit --no-verify -m x",
+        "",
+      ].join("\n"),
+    )
+    write(
+      cwd,
+      ".github/workflows/good.yml",
+      [
+        "on: [pull_request]",
+        "permissions:",
+        "  contents: read",
+        "jobs:",
+        "  a:",
+        "    permissions:",
+        "      contents: write",
+        "    steps:",
+        "      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4",
+        "      - uses: ./.github/actions/setup",
+        '      - run: echo "$PR_TITLE"',
+        "        env:",
+        "          PR_TITLE: ${{ github.event.pull_request.title }}",
+        "",
+      ].join("\n"),
+    )
+    commit(cwd, "workflows")
+    const findings = runGuards({ cwd, baseRef: "main", approved: ["protected-paths"] }).findings
+    expect(findings.filter((finding) => finding.path.endsWith("good.yml"))).toEqual([])
+    expect(findings.map((finding) => finding.rule).sort()).toEqual([
+      "gha-continue-on-error",
+      "gha-curl-pipe-sh",
+      "gha-deprecated-commands",
+      "gha-env-write",
+      "gha-insecure-commands",
+      "gha-job-disabled",
+      "gha-permissions-broad",
+      "gha-pull-request-target",
+      "gha-secrets-inherit",
+      "gha-secrets-tojson",
+      "gha-template-injection",
+      "gha-unpinned-uses",
+      "hook-bypass",
+    ])
+  })
+
   test("a change that edits a rule to relax it is still judged by the base rules", () => {
     const cwd = guarded()
     write(cwd, "script/guards/rules/js-test-focused.toml", readFileSync(join(cwd, "script/guards/rules/js-test-focused.toml"), "utf8").replace(/^match = .*$/m, "match = 'never-matches-zzz'"))

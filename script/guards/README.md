@@ -13,3 +13,9 @@ Small declarative CI rules over the lines and paths a change adds. Run with `bun
 Known gap: the runner script itself comes from the change under test. CI must run the engine from the base checkout for the base-branch rule to be fully tamper-proof; until that is wired, `protected-paths` (which covers `script/guards/**`) is what flags edits to the engine.
 
 Catalog, evidence and the next rules: `docs/guardrail/`.
+
+## Adding a rule
+
+1. Copy `rule.template.toml` to `rules/<id>.toml`.
+2. Run `bun run script/guards/baseline.ts <id>`: it lists what the rule flags in the code that exists today. Each hit is a real defect or a false positive; put every false positive in `negative` and tighten the pattern. Real example: a bare `JSON` line is button text in JSX, so `heredoc-residue` does not look for it.
+3. Fill `positive` and `negative` with real lines. The test runs them against the rule.

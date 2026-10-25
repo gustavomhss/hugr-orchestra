@@ -76,6 +76,7 @@ Scanned the last 300 commits of `origin/dev` (88k added lines). Per-rule pattern
 - Engine prerequisites, before any line rule ships: rename/move detection (`-M`) with a skip for lines identical to a deleted line in the same PR, a shared generated-path exclusion (S3 drops from 145 raw hits to 19 real), and explicit handling of merge commits.
 - Squawk names corrected: `ban-drop-column` exists; adding a NOT NULL column is `adding-required-field`; `adding-not-nullable-field` is the `SET NOT NULL` case.
 - Not diff-catchable, handled elsewhere: type errors found after push (make `typecheck.yml` a required check), Windows path bugs (existing Windows lane).
+- Workflow pack implemented (13 rules, `gha-*` plus `hook-bypass`). Not yet: C2 `gha-permissions-missing` and C11 `gha-checkout-credentials`, which need whole-file or YAML-step checks the line engine does not do. `bun run script/guards/baseline.ts` (scan of today's code) found four false positives the hand-written samples missed, now fixed: a `fit(372, 94)` helper, bare `JSON` button text, a `test.only(name, ...)` wrapper, a commented/echoed `curl | bash`. `heredoc-residue` no longer looks for `JSON`.
 - Next candidates from prior art (`sources.md`): `migration-add-required-column`, `gha-secrets-tojson`, `gha-deprecated-commands`, `gha-unpinned-images`, `gha-hardcoded-credentials`, `path-illegal-windows-name`.
 
 ## Catalog
