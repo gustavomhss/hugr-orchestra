@@ -3,10 +3,7 @@ import { tool } from "@orchestra/plugin"
 import { randomUUID } from "node:crypto"
 import { AppDockHints } from "./app-dock-hints"
 import { AppDockOutline } from "./app-dock-outline"
-import { scopeLinuxWorkspace } from "./app-dock-linux"
 import type { Transport } from "./transport"
-
-export { scopeLinuxWorkspace } from "./app-dock-linux"
 
 type Pending = {
   native: boolean
@@ -449,7 +446,7 @@ export function createAppDockHooks(port: Transport, config: { timeoutMs?: number
             ...(args.actionable === undefined ? {} : { actionable: args.actionable }),
             ...(args.visible === undefined ? {} : { visible: args.visible }) }).then((value) => toJSON(readable(value)), toolError),
       }),
-      // Agents never see dock_find or dock_action (see scopeLinuxWorkspace); the linux agent has them as ui_find and ui_act.
+      // Agents never see dock_find or dock_action (see AppDockTools.scope); the linux agent has them as ui_find and ui_act.
       dock_find: tool({
         description: "Find controls of the apps in the Linux workspace by accessible name and/or role.",
         args: {
@@ -771,5 +768,5 @@ export function createAppDockHooks(port: Transport, config: { timeoutMs?: number
 export const AppDockPlugin: Plugin = async (_input: PluginInput): Promise<Hooks> => {
   const port = parentPort()
   if (!port) return {}
-  return { ...createAppDockHooks(port), config: async (config) => scopeLinuxWorkspace(config) }
+  return createAppDockHooks(port)
 }

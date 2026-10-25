@@ -1,30 +1,5 @@
-// Provider, model, auth and config wire types the plugin contract names. They are frozen here so this
+// Provider, model and config wire types the plugin contract names. They are frozen here so this
 // package does not depend on a generated SDK; replace each with its schema type when one exists.
-
-export type OAuth = {
-  type: "oauth"
-  refresh: string
-  access: string
-  expires: number
-  accountId?: string
-  enterpriseUrl?: string
-}
-
-export type ApiAuth = {
-  type: "api"
-  key: string
-  metadata?: {
-    [key: string]: string
-  }
-}
-
-export type WellKnownAuth = {
-  type: "wellknown"
-  key: string
-  token: string
-}
-
-export type Auth = OAuth | ApiAuth | WellKnownAuth
 
 /**
  * Log level
