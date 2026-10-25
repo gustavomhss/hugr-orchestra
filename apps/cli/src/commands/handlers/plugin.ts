@@ -12,7 +12,11 @@ export default Runtime.handler(
     if (!module) return yield* Effect.fail(new Error("module is required"))
     const directory = input.global ? Global.Path.config : process.cwd()
     const result = yield* Effect.tryPromise({
-      try: () => ConfigPluginFile.add(directory, module, { force: input.force }),
+      try: async () => {
+        const manifest = await ConfigPluginFile.install(module)
+        process.stdout.write(`Detected ${manifest.targets.join(" + ")} target${manifest.targets.length === 1 ? "" : "s"}` + EOL)
+        return ConfigPluginFile.add(directory, module, { force: input.force })
+      },
       catch: (cause) => (cause instanceof Error ? cause : new Error(String(cause))),
     })
     const outcome = { add: "Added to", replace: "Replaced in", noop: "Already configured in" }[result.mode]
