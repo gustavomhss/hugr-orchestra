@@ -81,7 +81,7 @@ export function DialogMessage(props: {
           description: "create a new session",
           onSelect: async (dialog) => {
             const result = await sdk.api.sessions.fork({ sessionID: props.sessionID, messageID: props.messageID }).then(
-              (value) => ({ data: value.data, error: undefined }),
+              (value) => ({ data: value, error: undefined }),
               (error: unknown) => ({ data: undefined, error }),
             )
             if (!result.data) {

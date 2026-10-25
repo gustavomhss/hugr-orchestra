@@ -1,4 +1,4 @@
-import type { AssistantMessage, Message, Part, PermissionRequest, QuestionRequest } from "../compat/schema"
+import type { AssistantMessage, Message, Part, ToolPart, PermissionRequest, QuestionRequest } from "../compat/schema"
 
 // Demo mode (`run --mini --demo`): slash commands that put synthetic output on screen instead of running a model
 // turn, to check formatting and the permission and question prompts without a provider.
@@ -225,7 +225,7 @@ export function settle(
   requestID: string,
   outcome: { readonly type: "completed"; readonly answers?: readonly (readonly string[])[] } | { readonly type: "error"; readonly error: string },
   now = Date.now(),
-): Part | undefined {
+): ToolPart | undefined {
   const entry = waiting.get(requestID)
   if (!entry) return undefined
   waiting.delete(requestID)

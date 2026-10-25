@@ -139,14 +139,14 @@ export function createDialogProviderOptions() {
             const integration = await sdk.api.integrations
               .get({ integrationID: providerID, location: { directory: sdk.directory } })
               .catch(() => undefined)
-            const listed = (integration?.data?.methods ?? []).flatMap((method) => {
+            const listed = (integration?.data?.methods ?? []).flatMap((method): AuthMethod[] => {
               if (method.type === "oauth")
                 return [{ type: "oauth" as const, id: method.id, label: method.label, prompts: method.prompts }]
               if (method.type === "key")
                 return [{ type: "api" as const, label: method.label ?? "API key", prompts: method.prompts }]
               return []
             })
-            const methods = listed.length ? listed : [{ type: "api" as const, label: "API key", prompts: undefined }]
+            const methods: AuthMethod[] = listed.length ? listed : [{ type: "api" as const, label: "API key", prompts: undefined }]
             let index: number | null = 0
             if (methods.length > 1) {
               index = await new Promise<number | null>((resolve) => {
@@ -230,6 +230,10 @@ export function DialogProvider() {
   const options = createDialogProviderOptions()
   return <DialogSelect title="Connect a provider" options={options()} />
 }
+
+type AuthMethod =
+  | { type: "oauth"; id: string; label: string; prompts: ProviderAuthMethod["prompts"] }
+  | { type: "api"; label: string; prompts: ProviderAuthMethod["prompts"] }
 
 type OauthAttempt = { attemptID: string; url: string; instructions: string }
 

@@ -87,8 +87,9 @@ export const { use: useData, provider: DataProvider } = createSimpleContext({
     }
 
     function handleEvent(event: V2Event) {
-      if (event.type.startsWith("session.next.") && "sessionID" in event.data)
-        message.update(event.data.sessionID, (draft) => applyEvent(draft, event))
+      const sessionID = "sessionID" in event.data ? event.data.sessionID : undefined
+      if (event.type.startsWith("session.next.") && sessionID)
+        message.update(sessionID, (draft) => applyEvent(draft, event))
       switch (event.type) {
         case "catalog.updated":
           void Promise.all([

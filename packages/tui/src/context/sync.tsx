@@ -175,8 +175,9 @@ export const {
     }
 
     function receiveHistory(event: V2Event) {
-      if (!event.type.startsWith("session.next.") || !("sessionID" in event.data)) return
-      const sessionID = event.data.sessionID
+      if (!event.type.startsWith("session.next.")) return
+      const sessionID = "sessionID" in event.data ? event.data.sessionID : undefined
+      if (!sessionID) return
       if (!fullSyncedSessions.has(sessionID) && !hydratingSessions.has(sessionID)) return
       const messages = history.get(sessionID) ?? []
       if (!applyEvent(messages, event)) return
