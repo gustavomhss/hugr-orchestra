@@ -70,7 +70,7 @@
 [data-slot="artifacts-link"]:focus-visible,
 [data-slot="artifact-actions"] button:focus-visible,
 [data-slot="artifact-status"] button:focus-visible,
-[data-component="capability-processes-trigger"]:focus-visible,
+.capability-processes-trigger:focus-visible,
 [data-slot="capability-process"]:focus-visible {
   outline: 2px solid var(--orchestra-accent, #9abfe5);
   outline-offset: 2px;
@@ -551,7 +551,7 @@
 
 /* Header process pill */
 
-[data-component="capability-processes-trigger"] {
+.capability-processes-trigger {
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -570,8 +570,8 @@
     border-color var(--capability-fast) var(--capability-ease);
 }
 
-[data-component="capability-processes-trigger"]:hover,
-[data-component="capability-processes-trigger"][data-state="open"] {
+.capability-processes-trigger:hover,
+.capability-processes-trigger[data-expanded] {
   background: color-mix(in srgb, var(--orchestra-success, #92bea7) 16%, transparent);
   border-color: color-mix(in srgb, var(--orchestra-success, #92bea7) 40%, transparent);
 }

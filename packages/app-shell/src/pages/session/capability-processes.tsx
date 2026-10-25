@@ -21,8 +21,8 @@ export function CapabilityProcesses() {
         triggerAs="button"
         triggerProps={{
           type: "button",
-          "data-component": "capability-processes-trigger",
-          "data-state": open() ? "open" : undefined,
+          // Kobalte marks the open trigger with data-expanded; triggerProps types reject data-* keys, so style by class.
+          class: "capability-processes-trigger",
           "aria-label": language.t("orchestra.capabilityProcesses.running", { n: running() }),
         }}
         trigger={
@@ -58,7 +58,7 @@ export function CapabilityProcesses() {
                         {language.t(`orchestra.capabilityProcesses.state.${item.state}`)}
                       </span>
                       <Show when={item.exit?.code !== undefined}>
-                        <span>{language.t("orchestra.capabilityProcesses.exit.code", { code: item.exit?.code })}</span>
+                        <span>{language.t("orchestra.capabilityProcesses.exit.code", { code: String(item.exit?.code) })}</span>
                       </Show>
                       <Show when={item.exit?.signal}>
                         {(signal) => <span>{language.t("orchestra.capabilityProcesses.exit.signal", { signal: signal() })}</span>}
