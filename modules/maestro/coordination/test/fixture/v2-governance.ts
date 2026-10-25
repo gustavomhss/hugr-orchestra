@@ -41,15 +41,19 @@ const placed = (directory: string) => [
 ] as const
 
 /**
- * The Location's real Maestro governance over an in-memory database, placed at `directory`. Config and skills are empty
- * (no Own source, no skills); the process Session service is absent unless a test passes a layer for it.
+ * The Location's real Maestro governance over an in-memory database, placed at `directory`. Config holds only `entries`
+ * and skills are empty (no Own source, no skills); the process Session service is absent unless a test passes a layer for it.
  */
-export const governanceLayer = (directory: string, sessions?: Layer.Layer<SessionV2.Service>) =>
+export const governanceLayer = (
+  directory: string,
+  sessions?: Layer.Layer<SessionV2.Service>,
+  entries: Config.Entry[] = [],
+) =>
   AppNodeBuilder.build(
     LayerNode.group([MaestroGovernanceV2.node, AgentV2.node, SessionStore.node, Database.node, FSUtil.node, EventV2.node]),
     [
       ...placed(directory),
-      [Config.node, Layer.mock(Config.Service, { entries: () => Effect.succeed([]) })],
+      [Config.node, Layer.mock(Config.Service, { entries: () => Effect.succeed(entries) })],
       [SkillV2.node, Layer.mock(SkillV2.Service, { list: () => Effect.succeed([]) })],
       [
         GovernanceBackgroundV2.sessionsNode,

@@ -232,6 +232,37 @@ describe("TaskTool canonical delegation", () => {
     expect((yield* f.sessions.messages({ sessionID: first.sessionID, order: "asc" })).filter((message) => message.type === "user")).toHaveLength(1)
   }))
 
+  it.effect("a child inherits its parent's deny and external_directory rules, never its allows", () => Effect.gen(function* () {
+    const f = yield* setup
+    yield* f.sessions.setPermission({
+      sessionID: f.parent.id,
+      permission: [
+        { permission: "bash", pattern: "rm *", action: "deny" },
+        { permission: "external_directory", pattern: "/shared/*", action: "allow" },
+        { permission: "read", pattern: "*", action: "allow" },
+      ],
+    })
+    const child = result(yield* settleTool(f.registry, yield* record(f.parent.id, "inherit")))
+    expect(yield* f.sessions.getPermission(child.sessionID)).toEqual([
+      { permission: "bash", pattern: "rm *", action: "deny" },
+      { permission: "external_directory", pattern: "/shared/*", action: "allow" },
+    ])
+  }))
+
+  it.effect("primary_tools from the highest-priority config are denied to every child", () => Effect.sync(() => {
+    const document = (info: unknown) => Schema.decodeUnknownSync(Config.Document)({ type: "document", info })
+    const primary = TaskTool.primaryTools([
+      document({ experimental: { primary_tools: ["todowrite"] } }),
+      document({ experimental: { primary_tools: ["question", "todowrite"] } }),
+      document({}),
+    ])
+    expect(primary).toEqual(["question", "todowrite"])
+    expect(TaskTool.inheritedPermissions([{ action: "question", resource: "*", effect: "deny" }], primary)).toEqual([
+      { action: "question", resource: "*", effect: "deny" },
+      { action: "todowrite", resource: "*", effect: "deny" },
+    ])
+  }))
+
   it.effect("rejects forbidden explicit and configured models before creating a child", () => Effect.gen(function* () {
     const f = yield* setup
     yield* f.policy.set(f.parent.id, { mode: "allowlist", models: [cheap] })

@@ -17,7 +17,10 @@ export type InputFields = { readonly [key: string]: Schema.Codec<unknown, unknow
 export interface Admission {
   /** Child Session ID when the caller did not name one with `task_id`; it must be stable across exact retries. */
   readonly childID?: SessionSchema.ID
-  /** The child Session's own permission rules; applied only when they differ from the recorded ones. */
+  /**
+   * The child Session's own permission rules, in place of the inherited `TaskTool.inheritedPermissions` (which they
+   * must start from, so a child never widens its parent's denies); applied only when they differ from the recorded ones.
+   */
   readonly permissions?: Permission.Ruleset
   /** The prompt admitted to the child in place of the caller's `prompt` text. */
   readonly prompt?: PromptInput.Prompt

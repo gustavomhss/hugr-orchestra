@@ -39,7 +39,8 @@ const decodeReserved = Schema.decodeUnknownSync(MaestroEvent.Dispatch.ReservedV2
 /**
  * Maestro's Task governance on V2, in V1's phase order: the caller seat's native profile, the phases whose host is not
  * on V2 yet (refused, never skipped), the workflow holds, logical-task resume, the authorized and governed
- * reservations with their write-once child, then a write-roots seat's bound scope as the child's rules. Each reserved
+ * reservations with their write-once child, then a write-roots seat's bound scope over the parent's inherited rules as
+ * the child's rules. Each reserved
  * child is revalidated (dispatch) or consumes its approval (governed) once, before its first provider turn. A plain
  * Task otherwise delegates exactly as core's `allowAll`.
  */
@@ -54,7 +55,7 @@ export const make = Effect.gen(function* () {
   const config = yield* Config.Service
   const skills = yield* SkillV2.Service
   const sessions = yield* GovernanceBackgroundV2.Sessions
-  const background = yield* GovernanceBackgroundV2.make()
+  const background = yield* GovernanceBackgroundV2.make(events)
   // The roster loads lazily (see `seats.ts`); where it cannot load no agent is a seat, so no profile is read.
   const roster = yield* Effect.tryPromise(() => import("../roster")).pipe(Effect.option)
   const profiles = roster._tag === "Some" ? roster.value.nativeProfiles : {}
@@ -87,8 +88,12 @@ export const make = Effect.gen(function* () {
           projectID: parent.projectID,
           memberID,
         })
-        // A reserved child is created by its reservation, so its rules are the snapshot alone.
-        const base = !reserved && resumed ? yield* store.permissions(resumed.id) : []
+        // Every child starts from the rules core's TaskTool inherits from the parent (V1's childPermissions); a resumed
+        // child keeps its own recorded rules. A reserved child is created by its reservation, so its rules are the
+        // snapshot, which therefore must already hold the inherited rules.
+        const base = !reserved && resumed
+          ? yield* store.permissions(resumed.id)
+          : TaskTool.inheritedPermissions(yield* store.permissions(parent.id), TaskTool.primaryTools(yield* config.entries()))
         const permissions = seat?.writeRoots ? yield* WriteRootsV2.bind(fs, location, input.writePaths, base) : base
         const snapshot = permissions.map((rule) => ({ permission: rule.action, pattern: rule.resource, action: rule.effect }))
 
@@ -141,7 +146,7 @@ export const make = Effect.gen(function* () {
         }
         return {
           ...(childID ? { childID } : {}),
-          ...(seat?.writeRoots ? { permissions } : {}),
+          ...(seat?.writeRoots || reserved ? { permissions } : {}),
           ...(skillsText.length > 0 ? { prompt: { text: [input.prompt, ...skillsText].join("\n\n") } } : {}),
           ...(input.background === true ? { background: true } : {}),
         }
