@@ -236,3 +236,7 @@ dep-git-source, dep-lifecycle-script, dep-registry-override, lockfile-stale, car
 ### Migration pack (implemented)
 
 migration-destructive (gate), migration-edited (gate), migration-add-required-column (warn). Baseline: 11 existing intentional DROP statements in shipped migrations (only new lines fire), 2 existing NOT NULL adds without DEFAULT. History over 300 commits: 0 hits, so no false alarms on normal work.
+
+### Agent-mistake pack (implemented, from the cold review)
+
+secret-token, local-abs-path (warn), llm-elision (warn), tls-verify-off, ts-strict-relaxed, local-tests-escape (warn), test-globalthis (warn), test-timeout-raised (warn). Baseline: secret-token 0 after excluding the secret-scrubbing fixtures; ts-strict-relaxed lists only default-on flags because `noUncheckedIndexedAccess: false` is the repo convention in 21 packages; local-abs-path skips tests and synthetic users (6 real hits, two with the owner's name); one existing `NODE_TLS_REJECT_UNAUTHORIZED=0` in a test. History over 300 commits: 0 hits for all eight. Still deferred: dep-new-added.

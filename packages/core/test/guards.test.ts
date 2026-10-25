@@ -567,6 +567,35 @@ describe("runGuards", () => {
     ])
   })
 
+  // Golden: the agent-mistake rules fire on planted lines and stay quiet on the look-alikes beside them.
+  test("the agent-mistake pack flags planted lines and nothing in the look-alikes", () => {
+    const cwd = repo()
+    cpSync(guardsDir, join(cwd, "script/guards"), { recursive: true })
+    write(cwd, "README.md", "base\n")
+    commit(cwd, "base")
+    git(cwd, "checkout", "--quiet", "-b", "change")
+    write(cwd, "src/bad.ts", ['const key = "ghp_aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789"', 'const dir = "/Users/alice/work"', "  // ... existing code ...", "const agent = { rejectUnauthorized: false }", ""].join("\n"))
+    write(cwd, "src/ok.ts", ['const key = process.env.TOKEN', 'const dir = path.join(os.homedir(), "work")', "const rest = items.slice(1)", "const agent = { rejectUnauthorized: true }", "// /Users/alice/work in a comment", ""].join("\n"))
+    write(cwd, "tsconfig.json", '{\n  "compilerOptions": {\n    "strict": false,\n    "noUncheckedIndexedAccess": false\n  }\n}\n')
+    write(cwd, "src/slow.test.ts", ["setDefaultTimeout(30_000)", "globalThis.fetch = fake", "const t = globalThis.setTimeout", ""].join("\n"))
+    write(cwd, "ci.sh", "ORCHESTRA_LOCAL_TESTS=1 bun test\n")
+    commit(cwd, "mistakes")
+    const found = runGuards({ cwd, baseRef: "main", approved: [] })
+      .findings.filter((finding) => finding.rule !== "protected-paths")
+      .map((finding) => `${finding.rule} ${finding.path}:${finding.line}`)
+      .sort()
+    expect(found).toEqual([
+      "llm-elision src/bad.ts:3",
+      "local-abs-path src/bad.ts:2",
+      "local-tests-escape ci.sh:1",
+      "secret-token src/bad.ts:1",
+      "test-globalthis src/slow.test.ts:2",
+      "test-timeout-raised src/slow.test.ts:1",
+      "tls-verify-off src/bad.ts:4",
+      "ts-strict-relaxed tsconfig.json:3",
+    ])
+  })
+
   // Golden: real git modes, sizes and binary detection, so the file filters (modes, min_bytes, binary, no_shebang) run
   // against what git reports. Clean look-alikes sit beside the defects.
   test("the hygiene pack flags every planted file and nothing in the look-alikes", () => {

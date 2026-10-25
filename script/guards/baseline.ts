@@ -14,7 +14,7 @@ import { expandSets, parseRule, type Rule } from "./rule"
 const root = path.resolve(import.meta.dir, "..", "..")
 const only = process.argv.slice(2)
 const MAX_TEXT_BYTES = 1_000_000
-const SHOWN = 5
+const SHOWN = Number(process.env.SHOWN ?? 5)
 
 const config = (() => {
   const raw = Bun.TOML.parse(readFileSync(path.join(import.meta.dir, "config.toml"), "utf8")) as {
