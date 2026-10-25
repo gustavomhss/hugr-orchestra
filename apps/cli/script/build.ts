@@ -42,6 +42,7 @@ const { modelsData } = await import("./generate")
 const { copyOmni, resolveOmni } = await import("@orchestra/script/omni")
 const { copyTreeSitter, resolveTreeSitter } = await import("@orchestra/script/tree-sitter-prebuilds")
 const { RipgrepBundle } = await import("@orchestra/core/ripgrep/bundle")
+const { leanNotices } = await import("./lean-notices")
 const { packagedSkills } = await import("./packaged-skills")
 const skillTrees = await packagedSkills()
 const { seatSkillsFiles } = await import("@orchestra/maestro/seat-skills-module")
@@ -208,6 +209,8 @@ for (const { item, name, omni, omniFiles, treeSitter } of prepared) {
       directory: `dist/${name}/bin/ripgrep`,
       archives: process.env[RipgrepBundle.ARCHIVES],
     })
+  // The payload admits only package.json and bin/**; the bundled hugr-lean notices ship beside the binary.
+  await leanNotices(`dist/${name}/bin`)
 
   await Bun.write(
     `./dist/${name}/package.json`,

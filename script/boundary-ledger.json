@@ -488,6 +488,24 @@
     },
     {
       "rule": "R5",
+      "file": "packages/app-shell/test-browser/lean-native-product.test.ts",
+      "specifier": "../../core/src/effect/layer-node",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/app-shell/test-browser/lean-native-product.test.ts",
+      "specifier": "../../core/src/process",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/app-shell/test-browser/lean-native-product.test.ts",
+      "specifier": "../../core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
       "file": "packages/app-shell/test-browser/lean-tool-preservation.test.ts",
       "specifier": "../../session-ui/src/components/message-part",
       "reason": "D8: relative import across a package root; retargets are deferred"
@@ -646,6 +664,30 @@
       "rule": "R5",
       "file": "packages/core/test/omni-expect-guard.test.ts",
       "specifier": "../../../script/test-ci-request",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/debug-omni.test.ts",
+      "specifier": "../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/debug-omni.test.ts",
+      "specifier": "../../../packages/core/test/lib/effect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-natural-exit.hosted.ts",
+      "specifier": "../../../native/omni/campaign/delivery-fixtures.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-natural-exit.hosted.ts",
+      "specifier": "../../../native/omni/campaign/v10-natural-exit.ts",
       "reason": "D8: relative import across a package root; retargets are deferred"
     },
     {

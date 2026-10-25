@@ -70,14 +70,15 @@ export async function run(options: { mutation?: boolean; diagnose?: boolean; qui
       // addon, so the budget below times the CLI's own rejection.
       if (win) await execute(bin, ["--version"], { ...env, ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "0" }, scratch.project, 30_000, [scratch.home])
       const beforeLoad = load()
-      const observed = await execute(bin, ["--version"], env, scratch.project, cell === "intact" ? 30_000 : 2000, [scratch.home])
+      const observed = await execute(bin, ["debug", "omni"], env, scratch.project, cell === "intact" ? 30_000 : 2000, [scratch.home])
       const text = observed.stdout + observed.stderr
       const pass = cell === "intact"
         ? !observed.timedOut && !observed.error && observed.code === 0 && observed.signal === null &&
-          /^\d+\.\d+\.\d+/.test(observed.stdout) && !text.includes("hugr-omni CLI preflight")
+          text.includes("path: omni") && text.includes(`addon: ${addon}`) && text.includes(`supervisor: ${supervisor}`) &&
+          text.includes("nonce tree: ok") && /counters: spawns=[1-9]\d* delegations=0/.test(text)
         : rejectsArtifact(observed, cell === "supervisor-missing" ? supervisor : addon, cell === "supervisor-missing" ? "supervisor" : "addon")
       const diagnostic = options.diagnose && observed.timedOut
-        ? await execute(bin, ["--version"], env, scratch.project, 25_000, [scratch.home])
+        ? await execute(bin, ["debug", "omni"], env, scratch.project, 25_000, [scratch.home])
         : undefined
       cells.push({ cell, bin, addon, supervisor, ...observed, pass: pass && quiet(), ...{ beforeLoad, afterLoad: load() }, ...(diagnostic ? { diagnostic } : {}) })
     }
@@ -95,7 +96,7 @@ export async function run(options: { mutation?: boolean; diagnose?: boolean; qui
           : rejectsArtifact(result, corrupt.addon, "addon") })
     }
     if (!quiet()) throw new Error(`V9 machine became busy before strict control: ${load()}`)
-    const strict = await execute(missing.bin, ["--version"], { ...env, ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "strict" }, scratch.project, 2000, [scratch.home])
+    const strict = await execute(missing.bin, ["debug", "omni"], { ...env, ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "strict" }, scratch.project, 2000, [scratch.home])
     controls.push({ name: "strict-preflights", result: strict, pass: rejectsArtifact(strict, missing.addon, "addon") && quiet() })
     // Compile a fixture variant of the actual preflight with shipped configure() removed. Its loader really selects
     // an implicit resources candidate. No HUGR_OMNI_* override: this exercises the forbidden fallback seam.
@@ -127,7 +128,7 @@ process.exit(0);
       const selected = line ? JSON.parse(line.slice(marker.length)) as { addon: string; supervisor: string } : undefined
       const success = observed.code === 0 && !observed.timedOut &&
         selected?.addon === path.join(resources, "omni", names.addon) && selected.supervisor === path.join(resources, "omni", names.supervisor)
-      const restored = await execute(target.bin, ["--version"], env, scratch.project, 2000, [scratch.home])
+      const restored = await execute(target.bin, ["debug", "omni"], env, scratch.project, 2000, [scratch.home])
       return { kind: "compiled-preflight-implicit-fallback", ...observed, selected, gatePass: rejected,
         detected: success && !rejected, restored, missingArtifactPreserved: !existsSync(target.addon) }
     })() : undefined

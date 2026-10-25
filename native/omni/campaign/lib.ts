@@ -13,9 +13,9 @@ import os from "node:os"
 import path from "node:path"
 import { tree } from "../../../packages/core/test/fixture/process-tree.ts"
 import { fakeLLM, provider } from "./fake-llm.ts"
-import { isolated } from "./isolated-user.ts"
+import { isolated, writeConfig } from "./isolated-user.ts"
 import { birth, decodeUnixTable, hasNonce, matches, type Identity, type Row } from "./process-rows.ts"
-import { client } from "./server-client.ts"
+import { client, SERVER_PASSWORD } from "./server-client.ts"
 import { sleep, until } from "./wait.ts"
 import { WindowsInventory } from "./windows-inventory.ts"
 
@@ -25,7 +25,7 @@ export type { Identity, Row } from "./process-rows.ts"
 
 // The stateless parts of the harness live in modules of their own; this file re-exports them, so importers keep one
 // entry point. omni-campaign-inventory.test.ts instruments a copy of this file beside copies of those modules.
-export { client, decodeUnixTable, fakeLLM, hasNonce, isolated, matches, provider, sleep, until }
+export { client, decodeUnixTable, fakeLLM, hasNonce, isolated, matches, provider, SERVER_PASSWORD, sleep, until, writeConfig }
 
 export const ROOT = path.resolve(import.meta.dirname, "../../..")
 export const FIXTURES = path.join(ROOT, "packages/core/test/fixture")
