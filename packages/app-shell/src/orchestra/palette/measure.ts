@@ -2,49 +2,50 @@ import { COLOR_LITERAL, contrast, filtered, over, parseColor, type Rgba } from "
 import type { CssNode } from "./css"
 import { split } from "./css"
 
-// The backdrop photograph (/orchestra/mtn-src.jpg) covering a 1416x836 workspace with the glass's 8px blur, as
-// the darkest and brightest pixel of each tenth of its height, top to bottom. The overlay and every glass panel
+// The backdrop photograph (/orchestra/mtn-src.jpg) covering a 1416x836 workspace with the glass's 28px blur (the
+// narrowest blur any glass draws), as the darkest and brightest pixel by luminance of each tenth of its height,
+// top to bottom, leaving out the blur's edge falloff. The overlay and every glass panel
 // are vertical gradients over the same height, so each band meets the gradient values at its own height.
 const BANDS = [
   [
-    [11, 29, 65],
-    [36, 71, 111],
+    [12, 32, 69],
+    [32, 66, 109],
   ],
   [
-    [14, 34, 72],
-    [114, 126, 169],
+    [13, 34, 73],
+    [71, 96, 141],
   ],
   [
-    [15, 41, 84],
-    [166, 152, 187],
+    [16, 43, 87],
+    [138, 131, 173],
   ],
   [
-    [20, 57, 102],
-    [220, 200, 223],
+    [20, 60, 104],
+    [202, 170, 210],
   ],
   [
-    [40, 59, 74],
-    [230, 208, 224],
+    [29, 86, 131],
+    [216, 191, 212],
   ],
   [
-    [11, 27, 41],
-    [238, 219, 224],
+    [43, 60, 78],
+    [230, 210, 216],
   ],
   [
-    [6, 17, 27],
-    [238, 228, 233],
+    [20, 36, 48],
+    [230, 210, 215],
   ],
   [
-    [4, 17, 23],
-    [234, 227, 232],
+    [5, 21, 31],
+    [128, 136, 146],
   ],
   [
-    [5, 17, 23],
-    [81, 99, 120],
+    [5, 20, 28],
+    [49, 69, 85],
   ],
   [
-    [7, 17, 22],
-    [11, 35, 47],
+    [6, 20, 29],
+    [8, 28, 38],
   ],
 ].map((band) => band.map(([r, g, b]) => ({ r: r / 255, g: g / 255, b: b / 255, a: 1 })))
 

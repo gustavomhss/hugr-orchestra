@@ -8,7 +8,7 @@
 .providers-route-label {
   display: block;
   margin-block-end: 7px;
-  font-size: 11.5px;
+  font-size: var(--orchestra-font-size-sm);
   color: var(--mx-dim);
 }
 .providers-route-label + .mx-note {

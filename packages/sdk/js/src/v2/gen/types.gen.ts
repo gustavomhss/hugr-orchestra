@@ -4413,6 +4413,11 @@ export type ProjectCopyError = {
 export type ConfigSettings = {
   model?: string
   shell?: string
+  agents: {
+    [key: string]: {
+      engine: "orchestra" | "claude-code"
+    }
+  }
   disabledProviders: Array<string>
 }
 

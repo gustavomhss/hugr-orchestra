@@ -28,6 +28,7 @@ export const ConfigPatch = Schema.Struct({
 export const ConfigSettings = Schema.Struct({
   model: Schema.optional(Schema.String),
   shell: Schema.optional(Schema.String),
+  agents: Schema.Record(Schema.String, Schema.Struct({ engine: Schema.Literals(["orchestra", "claude-code"]) })),
   disabledProviders: Schema.Array(Schema.String),
 }).annotate({ identifier: "ConfigSettings" })
 

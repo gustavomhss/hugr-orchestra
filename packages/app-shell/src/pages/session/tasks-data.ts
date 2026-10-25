@@ -6,6 +6,7 @@ import type { AssistantMessage, Message, Part, Session, SessionStatus } from "@/
 import { useServerSDK } from "@/context/server-sdk"
 import { useSync } from "@/context/sync"
 import { ScopedKey, type ServerScope } from "@/utils/server-scope"
+import { sessionTitle } from "@/utils/session-title"
 import { useSessionLayout } from "./session-layout"
 import { agentKey } from "@/context/agent-identity"
 import { isTaskTool, taskAgentType } from "@orchestra/core/util/task-tool"
@@ -271,7 +272,7 @@ function agentItem(
     headline:
       (call && toolTitle(call.state)) ||
       text(callInput.description) ||
-      (child ? (child.title ?? "").replace(/ \(@[^)]* subagent\)$/, "") : childID),
+      (child ? (sessionTitle(child.title) ?? "").replace(/ \(@[^)]* subagent\)$/, "") : childID),
     agentID: agentType,
     agent: label(input, agentType),
     state: outcome.state,
