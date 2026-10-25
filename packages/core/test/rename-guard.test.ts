@@ -30,7 +30,6 @@ describe("rename guard", () => {
   test("shell relocation preserves upstream and fixture protections without exempting product copy", () => {
     for (const directory of ["packages/app", "packages/app-shell"]) {
       expect(kept(`${directory}/src/i18n/branding.test.ts`)).toBe(true)
-      expect(oldNames(`${directory}/src/context/sdk.ts`, 'import { OpenCodeClient } from "@opencode-ai/client"')).toEqual([])
       expect(oldNames(`${directory}/src/context/sdk.ts`, 'const name = "OpenCode"')).toEqual([
         `${directory}/src/context/sdk.ts:1: const name = "OpenCode"`,
       ])

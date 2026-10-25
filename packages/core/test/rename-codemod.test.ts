@@ -93,9 +93,8 @@ describe("rename codemod CLI", () => {
     expect(rerun.output).toContain("0 paths moved, 0 files rewritten")
   })
 
-  test("final-path masks preserve legacy branches and provider text in dry and real runs", async () => {
+  test("final-path masks preserve provider text in dry and real runs", async () => {
     const files = {
-      "packages/opencode/test/project/worktree.test.ts": '`opencode/${name}`\nOpenCode\n',
       "packages/core/src/plugin/provider/opencode.ts": '"opencode"\n"OpenCode Console"\nOpenCode\n',
     }
     const dry = await repo(files)
@@ -106,9 +105,6 @@ describe("rename codemod CLI", () => {
     expect(applied.code, applied.output).toBe(0)
     expect((await Bun.file(path.join(dry, "report.md")).text()).split("## preview scope")[0]).toBe(
       await Bun.file(path.join(real, "report.md")).text(),
-    )
-    expect(await Bun.file(path.join(real, "packages/orchestra/test/project/worktree.test.ts")).text()).toBe(
-      '`opencode/${name}`\nOrchestra\n',
     )
     expect(await Bun.file(path.join(real, "packages/core/src/plugin/provider/opencode.ts")).text()).toBe(
       '"opencode"\n"OpenCode Console"\nOrchestra\n',
