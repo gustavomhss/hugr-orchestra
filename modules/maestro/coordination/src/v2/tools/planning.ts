@@ -11,6 +11,7 @@ import { UpstreamAttribution } from "@orchestra/schema/upstream-attribution"
 import { MaestroAtlasSourceV2 } from "../atlas-source"
 import { GovernanceEvidenceV2 } from "../governance/evidence"
 import { GovernanceRecordsV2 } from "../governance/records"
+import { UpstreamProvenanceV2 } from "../workflow/upstream-provenance"
 import { MaestroAdmissionTools } from "./admission"
 import { MaestroChainTools } from "./chain"
 import { MaestroToolGate } from "./gate"
@@ -68,8 +69,9 @@ const ContextConflict = (planRevisionID: string) =>
 /**
  * V2 ports of V1's catalog, plan revision and context steps (`apps/orchestra/src/tool/maestro-{plan,context}.ts`). A
  * plan revision is always grounded (`units` is required), so it records `maestro.plan_revision.recorded` v2 and its
- * context `maestro.context.recorded` v2, the versions `GovernanceRecordsV2` reads. Upstream-authored and workflow
- * plans hold: V2 has neither the upstream provenance resolver nor the native workflow host V1 binds them through.
+ * context `maestro.context.recorded` v2, the versions `GovernanceRecordsV2` reads. An upstream-authored plan records
+ * v3 with the attribution `UpstreamProvenanceV2` observes from the archie Task. Workflow plans hold: V2 has no native
+ * workflow host bound yet.
  */
 export function tools(input: { readonly services: MaestroChainTools.Services; readonly gate: MaestroToolGate.Gate }) {
   const services = input.services
@@ -138,14 +140,16 @@ export function tools(input: { readonly services: MaestroChainTools.Services; re
           ]
           if (!params.upstream && fields.some((field) => field.source === "upstream"))
             return yield* held("UPSTREAM_ATTRIBUTION_MISSING")
-          // V1 records an upstream-authored revision (v3) with the author's attribution, which it resolves from the
-          // archie Task's Session and its dispatch reservation. V2 records no such provenance yet.
-          if (params.upstream)
-            return yield* MaestroToolGate.hold(
-              "upstream-provenance-unavailable",
-              "V2 cannot verify the archie Task that authored this plan, so it cannot record an upstream-attributed plan revision. Record the plan without upstream (and without upstream fields) in this Session; the owner decides.",
-            )
           const session = yield* MaestroChainTools.placement(services, context.sessionID)
+          // V1 observes the archie Task behind an upstream plan before it reads Atlas; this calling Session is always
+          // the dispatch parent, never a payload field.
+          const upstreamAttribution = params.upstream
+            ? yield* UpstreamProvenanceV2.observe(services, {
+                ...params.upstream,
+                parentSessionID: context.sessionID,
+                projectID: session.projectID,
+              }).pipe(Effect.mapError((error) => held(error.code, error.message)))
+            : undefined
           const source = yield* MaestroChainTools.fromAtlas(MaestroAtlasSourceV2.read(services.atlas, session))
           const body = {
             sessionID: context.sessionID,
@@ -160,7 +164,6 @@ export function tools(input: { readonly services: MaestroChainTools.Services; re
             assumptions: params.assumptions,
             risks: params.risks,
             status: "PROPOSED" as const,
-            revision: "v2" as const,
             grounding: {
               catalogVersion: source.context.catalogVersion,
               snapshot: source.context.snapshot,
@@ -169,18 +172,25 @@ export function tools(input: { readonly services: MaestroChainTools.Services; re
               units: [...params.units],
             },
           }
-          const revisionHash = GovernanceRecordsV2.hash(body)
-          const next = Schema.decodeUnknownSync(MaestroEvent.PlanRevision.RecordedV2.data)({
-            ...body,
+          const revision = upstreamAttribution
+            ? { ...body, revision: "v3" as const, upstreamAttribution }
+            : { ...body, revision: "v2" as const }
+          const revisionHash = GovernanceRecordsV2.hash(revision)
+          const proposed = {
+            ...revision,
             id: `evt_maestro_plan_revision_${revisionHash}`,
             revisionHash,
             createdAt: Date.now(),
-          })
+          }
+          const next =
+            proposed.revision === "v3"
+              ? Schema.decodeUnknownSync(MaestroEvent.PlanRevision.RecordedV3.data)(proposed)
+              : Schema.decodeUnknownSync(MaestroEvent.PlanRevision.RecordedV2.data)(proposed)
           yield* MaestroChainTools.compile({
             session,
             revision: { id: next.id, hash: next.revisionHash },
             territories: next.scope.map((field) => field.value),
-            units: next.grounding.units,
+            units: body.grounding.units,
             context: source.context,
           })
           const existing = yield* GovernanceRecordsV2.readPlanRevision(services.db, next.id)
@@ -188,9 +198,13 @@ export function tools(input: { readonly services: MaestroChainTools.Services; re
             ? isDeepStrictEqual({ ...existing, createdAt: 0 }, { ...next, createdAt: 0 })
               ? existing
               : yield* PlanConflict(params.admissionMessageID)
-            : (yield* services.events.publish(MaestroEvent.PlanRevision.RecordedV2, next, {
-                id: EventV2.ID.make(next.id),
-              })).data
+            : next.revision === "v3"
+              ? (yield* services.events.publish(MaestroEvent.PlanRevision.RecordedV3, next, {
+                  id: EventV2.ID.make(next.id),
+                })).data
+              : (yield* services.events.publish(MaestroEvent.PlanRevision.RecordedV2, next, {
+                  id: EventV2.ID.make(next.id),
+                })).data
           const bindings = { planRevisionID: record.id, revisionHash: record.revisionHash }
           return `${record.status}: ${record.id}\n\nBindings: ${JSON.stringify(bindings)}`
         }),
