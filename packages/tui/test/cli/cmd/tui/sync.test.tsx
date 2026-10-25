@@ -90,7 +90,12 @@ describe("tui sync", () => {
       })
       await wait(() => sync.data.permission["ses_live"]?.length === 1 && sync.data.question["ses_live"]?.length === 1)
 
-      expect(sync.data.permission["ses_live"]?.[0]).toMatchObject({ id: "per_live", action: "bash", resources: ["ls"] })
+      // The store entry is a Solid proxy, so compare its fields instead of the object.
+      const permission = sync.data.permission["ses_live"]?.[0]
+      expect(permission?.id).toBe("per_live")
+      expect(permission?.action).toBe("bash")
+      expect([...(permission?.resources ?? [])]).toEqual(["ls"])
+      expect(permission?.source?.callID).toBe("call_live")
       expect(sync.data.question["ses_live"]?.[0]?.id).toBe("que_live")
 
       event("evt_perm_replied", {
