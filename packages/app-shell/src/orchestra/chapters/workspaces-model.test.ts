@@ -37,7 +37,7 @@ describe("repositoryWorkspaces", () => {
       { directory: "/repos/orchestra/" },
       { directory: "/repos/opened" },
     ]
-    expect(repositoryWorkspaces({ ...projects[0], sandboxes: [] }, directories)).toEqual([
+    expect(repositoryWorkspaces(projects[0], directories)).toEqual([
       { directory: "/repos/orchestra", folder: "orchestra", root: true, removable: false },
       { directory: "/copies/new", folder: "new", root: false, removable: true },
       { directory: "/repos/opened", folder: "opened", root: false, removable: false },
