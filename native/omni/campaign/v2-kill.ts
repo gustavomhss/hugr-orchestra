@@ -34,7 +34,7 @@ import {
 } from "./lib.ts"
 import { deliveryEnv } from "./delivery-fixtures.ts"
 import { consoleHost, consoleInput, finishCampaign, gracefulEvidence, isolatedEnvironment, windowsInventory, windowsSnapshots } from "./windows-lifecycle.ts"
-import { PtyOmni } from "../../../packages/core/src/pty/omni.ts"
+import { PtyOmni } from "@orchestra/core/pty/omni"
 
 const KPI_MS = 8_000
 

@@ -3,11 +3,11 @@ import { expect, test } from "bun:test"
 import { expectSpawn } from "./fixture/omni-expect"
 import { copyFileSync, existsSync, mkdirSync } from "node:fs"
 import path from "node:path"
-import { CLI_APP, LOGS, cli } from "../../../native/omni/campaign/lib.ts"
-import { appRuntime, effectModules } from "../../../native/omni/campaign/delivery-fixtures.ts"
+import { CLI_APP, LOGS, cli } from "@orchestra/omni-campaign/lib.ts"
+import { appRuntime, effectModules } from "@orchestra/omni-campaign/delivery-fixtures.ts"
 import { Omni } from "../src/omni"
 import { Schema } from "effect"
-import { run } from "../../../native/omni/campaign/v1-background.ts"
+import { run } from "@orchestra/omni-campaign/v1-background.ts"
 
 test("Windows compiled CLI V1 adoption, V2 serve crash, V10 serve quit and oracle mutations", async () => {
   expectSpawn(import.meta.path)
@@ -41,7 +41,7 @@ test("Windows compiled CLI V1 adoption, V2 serve crash, V10 serve quit and oracl
   })
   expect(await build.exited).toBe(0)
   expect(existsSync(cli())).toBe(true)
-  const v2 = await import("../../../native/omni/campaign/v2-kill.ts")
+  const v2 = await import("@orchestra/omni-campaign/v2-kill.ts")
   const failure = (error: unknown) => ({ pass: false, error: String(error), phase: "unhandled campaign/cleanup failure" })
   const results = { v1: await run().catch(failure), v2Serve: await v2.run("serve").catch(failure), v10Serve: await v2.run("serve", "quit").catch(failure) }
   console.log("WINDOWS_LIFECYCLE_PROOF " + JSON.stringify(Object.fromEntries(Object.entries(results).map(([cell, result]) => [cell, {

@@ -2,8 +2,8 @@
 import { expect, test } from "bun:test"
 import { expectSpawn } from "./fixture/omni-expect"
 import { Omni } from "../src/omni"
-import { appRuntime, effectModules } from "../../../native/omni/campaign/delivery-fixtures.ts"
-import { prepare } from "../../../native/omni/campaign/matrix-build.ts"
+import { appRuntime, effectModules } from "@orchestra/omni-campaign/delivery-fixtures.ts"
+import { prepare } from "@orchestra/omni-campaign/matrix-build.ts"
 
 test("V3/V4/V5/V6 real OS functional matrix and targeted red mutations", async () => {
   expectSpawn(import.meta.path)
@@ -25,10 +25,10 @@ test("V3/V4/V5/V6 real OS functional matrix and targeted red mutations", async (
     console.log("MATRIX_PARENT_NATIVE_CONTROL " + JSON.stringify({ before, after: Omni.snapshot(), stdout: git.stdout.toString() }))
   } finally { await runtime.dispose() }
   const provenance = await prepare()
-  const v3 = await import("../../../native/omni/campaign/v3-supervisor.ts")
-  const v4 = await import("../../../native/omni/campaign/v4-lsp.ts")
-  const v5 = await import("../../../native/omni/campaign/v5-mcp.ts")
-  const v6 = await import("../../../native/omni/campaign/v6-terminal.ts")
+  const v3 = await import("@orchestra/omni-campaign/v3-supervisor.ts")
+  const v4 = await import("@orchestra/omni-campaign/v4-lsp.ts")
+  const v5 = await import("@orchestra/omni-campaign/v5-mcp.ts")
+  const v6 = await import("@orchestra/omni-campaign/v6-terminal.ts")
   const failure = (error: unknown) => ({ pass: false, error: String(error) })
   const owner = await v3.run({ mutation: "wrong-owner" }).catch(failure)
   const marker = await v5.run({ mutation: "missing-marker" }).catch(failure)

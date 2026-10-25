@@ -54,6 +54,7 @@
         "solid-js": "catalog:",
       },
       "devDependencies": {
+        "@orchestra/omni-campaign": "workspace:*",
         "@orchestra/script": "workspace:*",
         "@tsconfig/bun": "catalog:",
         "@types/bun": "catalog:",
@@ -80,6 +81,7 @@
         "@lydell/node-pty": "catalog:",
         "@orchestra/app": "workspace:*",
         "@orchestra/app-dock": "workspace:*",
+        "@orchestra/omni-campaign": "workspace:*",
         "@orchestra/script": "workspace:*",
         "@orchestra/ui": "workspace:*",
         "@sentry/solid": "catalog:",
@@ -448,6 +450,13 @@
         "hugr-omni-win32-x64-msvc": "0.1.0",
       },
     },
+    "native/omni/campaign": {
+      "name": "@orchestra/omni-campaign",
+      "version": "0.0.0",
+      "dependencies": {
+        "@orchestra/core": "workspace:*",
+      },
+    },
     "packages/app-shell": {
       "name": "@orchestra/app",
       "version": "1.18.27",
@@ -651,6 +660,7 @@
       },
       "devDependencies": {
         "@orchestra/http-recorder": "workspace:*",
+        "@orchestra/omni-campaign": "workspace:*",
         "@orchestra/sdk": "workspace:*",
         "@parcel/watcher-darwin-arm64": "2.5.1",
         "@parcel/watcher-darwin-x64": "2.5.1",
@@ -1723,6 +1733,8 @@
     "@orchestra/maestro": ["@orchestra/maestro@workspace:modules/maestro/coordination"],
 
     "@orchestra/maestro-arsenal": ["@orchestra/maestro-arsenal@workspace:modules/maestro/arsenal"],
+
+    "@orchestra/omni-campaign": ["@orchestra/omni-campaign@workspace:native/omni/campaign"],
 
     "@orchestra/plugin": ["@orchestra/plugin@workspace:packages/plugin"],
 

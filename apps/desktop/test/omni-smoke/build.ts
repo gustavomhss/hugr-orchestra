@@ -3,7 +3,7 @@ import { createHash } from "node:crypto"
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
 import { createRequire } from "node:module"
 import path from "node:path"
-import { ROOT, win } from "../../../../native/omni/campaign/lib"
+import { ROOT, win } from "@orchestra/omni-campaign/lib"
 
 export const logs = path.join(ROOT, "apps/desktop/.omni-desktop-evidence")
 export const digest = (file: string) => createHash("sha256").update(readFileSync(file)).digest("hex")

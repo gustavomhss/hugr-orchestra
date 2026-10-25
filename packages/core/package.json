@@ -411,6 +411,7 @@
     "@parcel/watcher-win32-x64": "2.5.1",
     "@orchestra/http-recorder": "workspace:*",
     "@orchestra/sdk": "workspace:*",
+    "@orchestra/omni-campaign": "workspace:*",
     "drizzle-kit": "catalog:"
   },
   "dependencies": {
