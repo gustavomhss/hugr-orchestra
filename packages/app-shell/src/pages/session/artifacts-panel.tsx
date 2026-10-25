@@ -13,6 +13,7 @@ import { useSync } from "@/context/sync"
 import { bytes, relative } from "@/orchestra/actions/format"
 import type { Artifact, ArtifactRef, ArtifactSelection, ArtifactsOutcome } from "./artifacts-model"
 import { previewKind } from "./artifacts-model"
+import { sheetRows } from "./artifacts-sheet"
 import { useSessionCapabilities } from "./capabilities"
 
 const KIND_ICON = { image: "photo", video: "photo", pdf: "open-file", sheet: "bullet-list", download: "download" } as const
@@ -149,10 +150,10 @@ function ArtifactDetail(props: { selection: ArtifactSelection }) {
         owned.url = URL.createObjectURL(blob)
         return setPreview({ status: "ready", url: owned.url })
       }
-      const rows = sheetRows(artifact().mime, await blob.text())
+      const rows = await sheetRows(artifact().mime, blob, SHEET_ROWS + 1)
       if (!rows) return setPreview({ status: "error" })
       setPreview({ status: "ready", rows: rows.slice(0, SHEET_ROWS), truncated: rows.length > SHEET_ROWS })
-    }, () => {
+    }).catch(() => {
       if (!controller.signal.aborted) setPreview({ status: "error" })
     })
   }))
@@ -387,20 +388,4 @@ function ShareDialog(props: { artifact: ArtifactRef }) {
       </div>
     </Dialog>
   )
-}
-
-/** The first sheet of a delimited file; binary workbooks have no reader here and fall back to Download. */
-function sheetRows(mime: string, text: string) {
-  const type = mime.split(";")[0].trim().toLowerCase()
-  if (type !== "text/csv" && type !== "text/tab-separated-values") return
-  const delimiter = type === "text/csv" ? "," : "\t"
-  // A field is either quoted (doubled quotes escape a quote) or runs to the next delimiter or line break.
-  const field = new RegExp(`(?:"((?:[^"]|"")*)"|([^"${delimiter}\\n]*))(${delimiter}|\\n|$)`, "g")
-  const rows: string[][] = [[]]
-  for (const match of text.replace(/\r\n?/g, "\n").matchAll(field)) {
-    rows[rows.length - 1].push(match[1] === undefined ? match[2] : match[1].replaceAll('""', '"'))
-    if (match[3] === "") break
-    if (match[3] === "\n") rows.push([])
-  }
-  return rows.filter((row) => row.some((value) => value !== ""))
 }

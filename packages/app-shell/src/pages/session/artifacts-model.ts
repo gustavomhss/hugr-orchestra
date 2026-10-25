@@ -212,7 +212,7 @@ export function orderArtifacts(items: readonly Artifact[]) {
 }
 
 const images = new Set(["image/png", "image/jpeg", "image/gif", "image/webp", "image/svg+xml"])
-const sheets = new Set(["text/csv", "text/tab-separated-values", "application/vnd.ms-excel",
+const sheets = new Set(["text/csv", "text/tab-separated-values",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.oasis.opendocument.spreadsheet"])
 
 /** How the panel previews a mime. Anything it cannot render inline is offered as a download only. */
