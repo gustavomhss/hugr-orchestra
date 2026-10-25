@@ -1,9 +1,10 @@
 // V2: `kill -9` (TerminateProcess on Windows) of a live Orchestra host, while it runs a bash tool tree, an LSP, an MCP
 // stdio server (with a grandchild) and 2 terminals. KPI: 0 omni-tree processes 8 s after the kill.
 //
-//   bun native/omni/campaign/v2-kill.ts [serve|tui]
+//   bun native/omni/campaign/v2-kill.ts [serve|tui|hold]
 //
 //   serve  the compiled CLI's `orchestra serve`; a fake LLM drives a real agent turn (bash + write tools)
+//   hold   the compiled CLI's `debug omni --hold` (the WP5 crash smoke, as a baseline)
 //   tui    compiled TUI/Worker, fixed HTTP port; product ConPTY on Windows, python pty on Unix
 
 import { spawn, type ChildProcess } from "node:child_process"
@@ -38,9 +39,41 @@ import { PtyOmni } from "../../../packages/core/src/pty/omni.ts"
 
 const KPI_MS = 8_000
 
-export async function run(target: "serve" | "tui" = "serve", action: "kill" | "quit" = "kill") {
+export async function run(target: "serve" | "tui" | "hold" = "serve", action: "kill" | "quit" = "kill") {
   if (process.env.ORCHESTRA_LOCAL_TESTS !== "1" && !process.env.CI) throw new Error("local campaign requires ORCHESTRA_LOCAL_TESTS=1")
+  if (target === "hold") return hold()
   return host(target, action)
+}
+
+async function hold() {
+  const bin = cli()
+  const { env, home, project } = isolated("v2-hold", {})
+  const proc = spawn(bin, ["debug", "omni", "--hold"], { env, cwd: project, stdio: ["ignore", "pipe", "pipe"] })
+  const hostIdentity = own(home, proc)
+  let out = ""
+  const steps: Record<string, unknown>[] = []
+  proc.stdout!.on("data", (chunk) => (out += chunk))
+  proc.stderr!.on("data", (chunk) => (out += chunk))
+  let nonce: string | undefined
+  try {
+    nonce = await until(60_000, "holding line", () => out.match(/holding (\S+)/)?.[1])
+    const marker = nonce
+    const before = await until(30_000, "both exact debug members protected", () => {
+      const found = control(marker, 2, [hostIdentity])
+      return found.pass ? found : undefined
+    })
+    const supervisors = [...new Map(before.protectedMembers.flatMap((member) => member.supervisors).map((pinned) => [pinned.pid, pinned])).values()]
+    steps.push({ phase: "control", before, supervisors, at: Date.now() })
+    if (!kill9(hostIdentity)) throw new Error("could not kill pinned hold host")
+    const killed = Date.now()
+    steps.push({ phase: "host-killed", at: killed })
+    const observed = await deadlineSnapshots(killed, KPI_MS, [nonce], [hostIdentity, ...supervisors, ...before.fixtureIds, ...before.wrappers])
+    return verdict("v2-hold", { target: "hold", nonce, hostIdentity, before, supervisors, observed, pass: observed.zeroAtMs !== undefined && observed.last.counts[0] === 0 && observed.last.retained.length === 0 })
+  } catch (error) {
+    return verdict("v2-hold", { pass: false, nonce, hostIdentity, steps, error: String(error), output: out })
+  } finally {
+    await cleanup(home, nonce ? [nonce] : [])
+  }
 }
 
 async function host(target: "serve" | "tui", action: "kill" | "quit") {
@@ -236,6 +269,6 @@ function freePort() {
 }
 
 if (import.meta.main) {
-  const result = await run((process.argv[2] as "serve" | "tui" | undefined) ?? "serve")
+  const result = await run((process.argv[2] as "serve" | "tui" | "hold" | undefined) ?? "serve")
   process.exit(result.pass ? 0 : 1)
 }
