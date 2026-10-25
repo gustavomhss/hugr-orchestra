@@ -475,48 +475,6 @@
       "reason": "D13: legacy import outside src/compat/; the FAC cards route it through the package facade"
     },
     {
-      "rule": "R4",
-      "file": "apps/desktop/scripts/app-dock-native-proof.ts",
-      "specifier": "@orchestra/plugin",
-      "reason": "D7: undeclared workspace import; 70-90 makes no manifest dependency edits"
-    },
-    {
-      "rule": "R4",
-      "file": "apps/desktop/scripts/app-dock-workspace-proof.ts",
-      "specifier": "@orchestra/plugin",
-      "reason": "D7: undeclared workspace import; 70-90 makes no manifest dependency edits"
-    },
-    {
-      "rule": "R4",
-      "file": "apps/desktop/scripts/linux-workspace-proof.ts",
-      "specifier": "@orchestra/plugin",
-      "reason": "D7: undeclared workspace import; 70-90 makes no manifest dependency edits"
-    },
-    {
-      "rule": "R4",
-      "file": "apps/desktop/src/main/app-dock-rpc-native.test.ts",
-      "specifier": "@orchestra/plugin",
-      "reason": "D7: undeclared workspace import; 70-90 makes no manifest dependency edits"
-    },
-    {
-      "rule": "R4",
-      "file": "apps/desktop/src/main/app-dock-rpc-workspace.fixture.ts",
-      "specifier": "@orchestra/plugin",
-      "reason": "D7: undeclared workspace import; 70-90 makes no manifest dependency edits"
-    },
-    {
-      "rule": "R4",
-      "file": "apps/desktop/test/lean-candidate-native.fixture.ts",
-      "specifier": "@orchestra/sdk/v2/client",
-      "reason": "D7: undeclared workspace import; 70-90 makes no manifest dependency edits"
-    },
-    {
-      "rule": "R4",
-      "file": "apps/storybook/.storybook/mocks/app/context/server-sync.ts",
-      "specifier": "@orchestra/sdk/v2/client",
-      "reason": "D7: undeclared workspace import; 70-90 makes no manifest dependency edits"
-    },
-    {
       "rule": "R5",
       "file": "apps/cli/script/ripgrep-proof.ts",
       "specifier": "../../desktop/src/main/cli-artifacts",
@@ -1738,6 +1696,12 @@
       "rule": "R5",
       "file": "tooling/httpapi-codegen/test/capability-contract.test.ts",
       "specifier": "../../../packages/schema/src/capability",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/script/test/translate-app.test.ts",
+      "specifier": "../../../script/translate-app",
       "reason": "D8: relative import across a package root; retargets are deferred"
     },
     {

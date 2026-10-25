@@ -328,6 +328,7 @@
             "src/models-dev.ts",
             "src/aisdk.ts",
             "src/catalog.ts",
+            "src/claude-account.ts",
             "src/github-copilot/",
             "src/plugin/provider/",
             "src/plugin/provider.ts",
