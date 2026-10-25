@@ -29,7 +29,7 @@ import { nativeProfiles } from "../src/roster"
 import { MaestroSeatsV2 } from "../src/v2/seats"
 import { MaestroToolsV2 } from "../src/v2/tools"
 
-// The fifteen Maestro tools V2 registers: the governance tools, the Arsenal, and the cold reviewer's receipt.
+// The Maestro tools V2 registers: the governance tools, the Arsenal, the cold reviewer's receipt, and the seats' Atlas Memory.
 const governance = [
   "maestro_record_admission",
   "maestro_present_approval",
@@ -44,6 +44,7 @@ const governance = [
   "maestro_workflows",
 ]
 const arsenal = Object.values(MaestroArsenal.names)
+const memory = ["atlas_memory_recall", "atlas_memory_emit"]
 
 const temporary = (prefix: string) =>
   Effect.acquireRelease(
@@ -208,11 +209,12 @@ test("Maestro sees its tools and the Arsenal, each seat only its own, every othe
         registry.materialize(rulesOf(id)).pipe(Effect.map((item) => item.definitions.map((tool) => tool.name).sort()))
       expect(yield* visible("maestro")).toEqual([...governance, ...arsenal].sort())
       expect(yield* visible("lucy")).toEqual(["maestro_record_review"])
-      expect(yield* visible("archie")).toEqual([...arsenal].sort())
-      for (const id of ["general", "explore", "backend", "custom"]) expect(yield* visible(id)).toEqual([])
-      // Everything is registered: unfiltered materialization lists all fifteen.
+      expect(yield* visible("archie")).toEqual([...arsenal, ...memory].sort())
+      for (const id of ["backend", "jimmy"]) expect(yield* visible(id)).toEqual([...memory].sort())
+      for (const id of ["general", "explore", "custom"]) expect(yield* visible(id)).toEqual([])
+      // Everything is registered: unfiltered materialization lists every tool.
       expect((yield* registry.materialize()).definitions.map((tool) => tool.name).sort()).toEqual(
-        [...governance, ...arsenal, "maestro_record_review"].sort(),
+        [...governance, ...arsenal, "maestro_record_review", ...memory].sort(),
       )
     }),
   ))
@@ -247,6 +249,27 @@ test("each tool refuses a caller that is not its owner even where rules would al
         type: "error",
         value: "Maestro Arsenal requires native Maestro identity.",
       })
+    }),
+  ))
+
+test("Arsenal governance reads the host's own Session observations instead of refusing for a missing binding", () =>
+  run(
+    Effect.gen(function* () {
+      yield* setup
+      const agents = yield* AgentV2.Service
+      yield* agents.transform((draft) =>
+        draft.update(AgentV2.ID.make("maestro"), (agent) => {
+          agent.permissions = allow
+        }),
+      )
+      const described = yield* call("maestro", MaestroArsenal.names.describe, { name: "governance" })
+      expect(described.result).toMatchObject({ type: "text" })
+      const executed = yield* call("maestro", MaestroArsenal.names.execute, {
+        name: "governance",
+        arguments: { operation: "status", observations: { complete: false }, prices: [] },
+      })
+      expect(JSON.stringify(executed.result)).not.toContain("no observation binding")
+      expect(executed.result).toMatchObject({ type: "text" })
     }),
   ))
 
