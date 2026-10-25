@@ -192,3 +192,29 @@ test("Claude Code's approvals become V2 permission checks: allowed runs, a deny 
     { behavior: "deny", message: "Orchestra's permission rules deny this call." },
   ])
 })
+
+test("delegation goes through Orchestra's governed task: served over MCP, Claude Code's own subagent tool refused", async () => {
+  let listed: string[] = []
+  const decisions: unknown[] = []
+  during = async (options) => {
+    const signal = new AbortController().signal
+    decisions.push(await options.canUseTool?.("Agent", { prompt: "go" }, { signal, toolUseID: "tu-1", requestId: "r1" }))
+    decisions.push(await options.canUseTool?.("Task", { prompt: "go" }, { signal, toolUseID: "tu-2", requestId: "r2" }))
+    const server = options.mcpServers?.orchestra as McpSdkServerConfigWithInstance
+    const [client, transport] = InMemoryTransport.createLinkedPair()
+    await server.instance.connect(transport)
+    const mcp = new Client({ name: "test", version: "0" })
+    await mcp.connect(client)
+    listed = (await mcp.listTools()).tools.map((tool) => tool.name)
+    await mcp.close()
+  }
+  script = [done]
+  await collect(turnOf({
+    tools: [new ToolDefinition({ name: "task", description: "task", inputSchema: { type: "object", properties: {} } })],
+    authorize: () => Effect.die("a subagent call must not reach the permission check"),
+  }))
+
+  expect(listed).toEqual(["task"])
+  const denied = { behavior: "deny", message: "Delegate through `mcp__orchestra__task`: Orchestra governs every delegation in this session." }
+  expect(decisions).toEqual([denied, denied])
+})
