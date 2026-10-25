@@ -57,6 +57,7 @@
     "./config/attachments": "./src/config/attachments.ts",
     "./config/compaction": "./src/config/compaction.ts",
     "./config/markdown": "./src/config/markdown.ts",
+    "./config/plugin-file": "./src/config/plugin-file.ts",
     "./config/plugin/agent": "./src/config/plugin/agent.ts",
     "./config/plugin/command": "./src/config/plugin/command.ts",
     "./config/plugin/external": "./src/config/plugin/external.ts",

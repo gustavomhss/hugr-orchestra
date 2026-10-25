@@ -42,6 +42,7 @@ const Handlers = Runtime.handlers(Commands, {
   serve: () => import("./commands/handlers/serve"),
   run: () => import("./commands/handlers/run"),
   attach: () => import("./commands/handlers/attach"),
+  plugin: () => import("./commands/handlers/plugin"),
   toolkit: {
     status: () => import("./commands/handlers/toolkit/status"),
     prefetch: () => import("./commands/handlers/toolkit/prefetch"),

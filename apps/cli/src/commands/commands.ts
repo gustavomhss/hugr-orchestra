@@ -310,6 +310,16 @@ const toolkit = Spec.make("toolkit", {
   ],
 })
 
+const plugin = Spec.make("plugin", {
+  description: "Register a plugin package in the config",
+  aliases: ["plug"],
+  params: {
+    module: Argument.string("module").pipe(Argument.withDescription("npm module name")),
+    global: Flag.boolean("global").pipe(Flag.withAlias("g"), Flag.withDefault(false), Flag.withDescription("use the global config")),
+    force: Flag.boolean("force").pipe(Flag.withAlias("f"), Flag.withDefault(false), Flag.withDescription("replace the existing plugin version")),
+  },
+})
+
 declare const ORCHESTRA_CLI_NAME: string | undefined
 
 export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHESTRA_CLI_NAME : "orchestra", {
@@ -356,6 +366,7 @@ export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHE
     agent,
     stats,
     toolkit,
+    plugin,
     Spec.make("migrate", { description: "Migrate v1 data to v2" }),
     Spec.make("service", {
       description: "Manage the background server",
