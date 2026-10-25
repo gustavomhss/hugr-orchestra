@@ -341,7 +341,8 @@ test("the plan step checks admission, then holds on the Atlas source V2 cannot r
       expect(String(early.result.value)).toStartWith("MaestroPlanRevisionConflict: admission message msg_owner")
       yield* call("maestro", "maestro_record_admission", { methodVersion: "admit-request-v1", assessment: ready })
       const held = yield* call("maestro", "maestro_record_plan_revision", plan)
-      expect(String(held.result.value)).toStartWith(`HOLD provider-unconfigured: ${location.project.id}.`)
+      expect(String(held.result.value)).toStartWith(`provider-unconfigured: ${location.project.id}.`)
+      expect(String(held.result.value)).toContain("Atlas is not configured")
       const workflow = yield* call("maestro", "maestro_record_plan_revision", {
         ...plan,
         upstream: {
@@ -362,13 +363,12 @@ test("the plan step checks admission, then holds on the Atlas source V2 cannot r
         .all()
         .pipe(Effect.orDie)
       expect(plans).toEqual([])
-      for (const name of ["maestro_catalog_context", "maestro_record_context"])
-        expect(
-          String(
-            (yield* call("maestro", name, name === "maestro_record_context" ? { planRevisionID: "evt_x" } : {})).result
-              .value,
-          ),
-        ).toStartWith("HOLD provider-unconfigured:")
+      expect(String((yield* call("maestro", "maestro_catalog_context", {})).result.value)).toStartWith(
+        "provider-unconfigured:",
+      )
+      expect(
+        String((yield* call("maestro", "maestro_record_context", { planRevisionID: "evt_x" })).result.value),
+      ).toStartWith("MaestroContextConflict: plan revision evt_x")
     }),
   ))
 
@@ -481,11 +481,10 @@ test("approval holds when the reply is not immediate or the presentation is no l
     }),
   ))
 
-test("steps whose evidence V2 cannot record refuse with a hold and record nothing", () =>
+test("chain steps without their evidence refuse with the V1 reasons and record nothing", () =>
   run(
     Effect.gen(function* () {
       yield* setup
-      const chain = "HOLD governed-chain-unavailable:"
       const check = { id: "tests", status: "PASS", detail: "green" }
       const cases: ReadonlyArray<readonly [string, string, unknown, string]> = [
         [
@@ -506,13 +505,13 @@ test("steps whose evidence V2 cannot record refuse with a hold and record nothin
             validationLedger: presented.validationLedger,
             contextState: "CURRENT",
           },
-          chain,
+          "Approval presentation evidence not found",
         ],
         [
           "maestro",
           "maestro_grant_authorization",
           { validationRecordID: "evt_v", approvalMessageID: "msg_reply" },
-          chain,
+          "MaestroAuthorizationRejected: validation-not-found.",
         ],
         [
           "maestro",
@@ -528,15 +527,15 @@ test("steps whose evidence V2 cannot record refuse with a hold and record nothin
             validatorVersion: "v1",
             checks: [check],
           },
-          chain,
+          "Validation rejected workCard:",
         ],
         [
           "maestro",
           "maestro_request_review",
           { validationRecordID: "evt_v", workCard: "card", reviewMethodVersion: "v1" },
-          chain,
+          "Review delegation validation mismatch:",
         ],
-        ["lucy", "maestro_record_review", reviewInput, chain],
+        ["lucy", "maestro_record_review", reviewInput, "Review recording requires a lucy child session"],
         [
           "maestro",
           "maestro_record_result_decision",
