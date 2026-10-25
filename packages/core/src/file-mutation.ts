@@ -3,6 +3,7 @@ export * as FileMutation from "./file-mutation"
 import { makeLocationNode } from "./effect/app-node"
 import { Context, Effect, Layer, Schema } from "effect"
 import { KeyedMutex } from "./effect/keyed-mutex"
+import { Format } from "./format"
 import { FSUtil } from "./fs-util"
 
 export interface Target {
@@ -69,6 +70,9 @@ export class Service extends Context.Service<Service, Interface>()("@orchestra/v
  * Writes go to the resolved canonical target and refuse a symlink swapped in after resolution instead of following
  * it, so a check made at resolve time still holds at write time.
  *
+ * Every write runs the Location's configured formatters on the canonical target before the lock is released, as V1's
+ * edit, write and apply_patch tools did.
+ *
  * Serialize file changes by canonical target. Conditional writes compare and
  * write under the same process-local lock so cooperating Orchestra mutations do
  * not overwrite changes made from the same stale content.
@@ -77,6 +81,7 @@ const layer = Layer.effect(
   Service,
   Effect.gen(function* () {
     const fs = yield* FSUtil.Service
+    const format = yield* Format.Service
     const locks = KeyedMutex.makeUnsafe<string>()
     const withTargetLock =
       (target: Target) =>
@@ -102,6 +107,7 @@ const layer = Layer.effect(
         Effect.gen(function* () {
           const existed = yield* fs.exists(input.target.canonical)
           yield* fs.writePhysical(input.target.canonical, input.content)
+          yield* format.file(input.target.canonical)
           return writeResult(input.target, existed)
         }),
       ),
@@ -114,10 +120,14 @@ const layer = Layer.effect(
           const current = yield* fs
             .readFile(input.target.canonical)
             .pipe(Effect.catchReason("PlatformError", "NotFound", () => Effect.succeed(undefined)))
-          yield* fs.writePhysical(
-            input.target.canonical,
-            joinBom(next.text, Boolean(current && hasUtf8Bom(current)) || next.bom),
-          )
+          const bom = Boolean(current && hasUtf8Bom(current)) || next.bom
+          yield* fs.writePhysical(input.target.canonical, joinBom(next.text, bom))
+          // A formatter may drop or add the BOM; restore the one this write chose.
+          if (yield* format.file(input.target.canonical)) {
+            const formatted = yield* fs.readFile(input.target.canonical)
+            if (hasUtf8Bom(formatted) !== bom)
+              yield* fs.writePhysical(input.target.canonical, joinBom(new TextDecoder().decode(formatted), bom))
+          }
           return writeResult(input.target, current !== undefined)
         }),
       ),
@@ -133,6 +143,7 @@ const layer = Layer.effect(
                 Effect.fail(new TargetExistsError({ path: input.target.canonical })),
               ),
             )
+          yield* format.file(input.target.canonical)
           return writeResult(input.target, false)
         }),
       ),
@@ -146,6 +157,7 @@ const layer = Layer.effect(
             return yield* new StaleContentError({ path: input.target.canonical })
           }
           yield* fs.writePhysical(input.target.canonical, input.content)
+          yield* format.file(input.target.canonical)
           return writeResult(input.target, true)
         }),
       ),
@@ -188,12 +200,11 @@ function sameBytes(left: Uint8Array, right: Uint8Array) {
 
 export const locationLayer = layer
 
-export const node = makeLocationNode({ service: Service, layer, deps: [FSUtil.node] })
+export const node = makeLocationNode({ service: Service, layer, deps: [FSUtil.node, Format.node] })
 
 /**
  * Deferred until the corresponding V2 integrations exist.
  */
-// TODO: Add formatter integration after V2 formatter runtime exists.
 // TODO: Publish watcher/file-edit events after V2 watcher integration exists.
 // TODO: Add snapshots / undo after V2 snapshot design exists.
 // TODO: Notify LSP and collect diagnostics after V2 LSP runtime exists.
