@@ -1,4 +1,5 @@
 id = "destructive-shell"
+group = "hygiene"
 severity = "gate"
 on = "added-lines"
 paths = [".github/**", "script/**", "scripts/**", "**/scripts/**", "**/script/**", "**/*.sh", "**/package.json", ".husky/**"]

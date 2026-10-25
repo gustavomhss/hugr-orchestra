@@ -3,6 +3,12 @@
 # every hit there is either a real defect or a false positive to tighten, and each false positive becomes a negative sample.
 id = "my-rule-id"
 
+# One of: tests, silenced, secrets, leftovers, dependencies, workflows, hygiene. Used to group the rule in the catalog and the rule browser.
+group = "leftovers"
+
+# Optional, one sentence on what the rule looks at (shown in the rule browser).
+# summary = "Lines that leave a debug print behind."
+
 # gate fails CI, warn only reports. Use warn for anything a regex cannot decide exactly.
 severity = "gate"
 

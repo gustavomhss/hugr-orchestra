@@ -1,4 +1,5 @@
 id = "tls-verify-off"
+group = "silenced"
 severity = "gate"
 on = "added-lines"
 paths = ["**/*.{ts,tsx,mts,cts,js,jsx,mjs,py,rs,sh,go,yml,yaml,env}", "**/Dockerfile*"]

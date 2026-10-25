@@ -18,6 +18,10 @@ export type Finding = {
   path: string
   line: number | undefined
   message: string
+  // added-lines only: the offending added line and where `match` hit in it, [start, end) in UTF-16 units, so a
+  // viewer can underline the hit without running the regex again.
+  excerpt?: string
+  match?: [number, number]
 }
 
 // `guardrail-ignore: <rule id> <reason>` on the offending line. Without a reason it does not count.
@@ -76,6 +80,8 @@ function lineFindings(rule: Rule, input: Parameters<typeof evaluate>[0]): Findin
           path: change.path,
           line: added.line,
           message: rule.message,
+          excerpt: added.text,
+          match: hitRange(rule, added.text),
         })),
     )
 }
@@ -93,6 +99,11 @@ function balanceFindings(rule: Rule, input: Parameters<typeof evaluate>[0]): Fin
       return lost - added >= (rule.minNetRemoved ?? 1)
     })
     .map((change) => ({ rule: rule.id, severity: rule.severity, path: change.path, line: undefined, message: rule.message }))
+}
+
+function hitRange(rule: Rule, text: string): [number, number] | undefined {
+  const hit = rule.match?.exec(text)
+  return hit ? [hit.index, hit.index + hit[0].length] : undefined
 }
 
 // A version bump removes the line that names the same dependency. Only meaningful with new_only.

@@ -1,4 +1,5 @@
 id = "gha-pull-request-target"
+group = "workflows"
 severity = "gate"
 on = "added-lines"
 paths = [".github/workflows/**/*.{yml,yaml}", ".github/actions/**/*.{yml,yaml}"]

@@ -1,4 +1,5 @@
 id = "ts-ignore"
+group = "silenced"
 severity = "gate"
 on = "added-lines"
 paths = ["**/*.{ts,tsx,mts,cts}"]

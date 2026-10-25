@@ -1,4 +1,5 @@
 id = "private-key"
+group = "secrets"
 severity = "gate"
 on = "added-lines"
 paths = ["**"]

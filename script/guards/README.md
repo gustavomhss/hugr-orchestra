@@ -20,6 +20,9 @@ Small declarative CI rules over the lines and paths a change adds. Run with `bun
 
 - `--warn` reports gate findings without failing (setup errors still fail). On GitHub Actions each finding becomes an annotation (`::error` for a gate unless `--warn`, `::warning` otherwise). `--cwd <repo>` points the engine at another checkout.
 
+- `--json` prints the whole report as one JSON object and no annotations: `{base, bootstrap, rules, files, findings, errors, approved, touchesGuards}`. Each finding carries `rule`, `severity`, `path`, `line`, `message`, `excerpt` and `match` (`[start, end)` inside `excerpt`, or null). Findings are sorted gate first, then path, then line. `errors` are `{kind, message}` with kind `no-repository | base-not-found | no-rules | rules-invalid | other`. The exit code is the same as without `--json`.
+- `--rules` prints `{rules, errors}`: every rule read from the merge-base with `id`, `group`, `severity`, `kind`, `message`, `summary`, `positive`, `negative`, `paths` and `clearedBy` (`fix`, `ignore` or `approval`). `group` is required in every rule (one of `GROUPS` in `rule.ts`); `summary` is optional plain-language text for the app and is null until a rule has one.
+
 CI: `.github/workflows/guards.yml` runs on every PR: a gate finding fails the job, a warn finding is an annotation, from the base branch's copy of the engine when it has one, so the change cannot edit the code that judges it. A label `guardrail-approved:<rule id>`, applied by someone with write access, clears that changed-paths rule; plain `guardrail-approved` means protected-paths. Every new `guardrail-ignore` is reported by the warn rule `guardrail-ignore-added`.
 
 Catalog, evidence and the next rules: `docs/guardrail/`.

@@ -1,4 +1,5 @@
 id = "dep-new-added"
+group = "dependencies"
 severity = "warn"
 on = "added-lines"
 paths = ["**/package.json"]

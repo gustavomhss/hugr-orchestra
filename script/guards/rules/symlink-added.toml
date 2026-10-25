@@ -1,4 +1,5 @@
 id = "symlink-added"
+group = "hygiene"
 severity = "warn"
 on = "changed-paths"
 paths = ["**"]

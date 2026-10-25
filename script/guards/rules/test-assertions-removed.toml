@@ -1,4 +1,5 @@
 id = "test-assertions-removed"
+group = "tests"
 severity = "warn"
 on = "line-balance"
 paths = ["$js_tests", "$py_tests", "$rs_tests"]

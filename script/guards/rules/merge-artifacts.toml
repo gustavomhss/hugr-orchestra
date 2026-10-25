@@ -1,4 +1,5 @@
 id = "merge-artifacts"
+group = "leftovers"
 severity = "gate"
 on = "changed-paths"
 paths = ["**/*.{orig,rej,bak,swp,swo}", "**/*~"]

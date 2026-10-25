@@ -1,4 +1,5 @@
 id = "js-empty-catch"
+group = "hygiene"
 severity = "warn"
 on = "added-lines"
 paths = ["**/*.{ts,tsx,mts,cts,js,jsx,mjs}"]
