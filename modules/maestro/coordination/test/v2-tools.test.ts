@@ -235,7 +235,8 @@ test("the research tools run only as the research seat and only under its dispat
     Effect.gen(function* () {
       yield* setup
       const agents = yield* AgentV2.Service
-      yield* agents.transform((draft) => draft.update(AgentV2.ID.make("jimmy"), () => {}))
+      // The seat's own rules, as production grants them: with none, the research permission asks the owner and waits.
+      yield* agents.transform((draft) => draft.update(AgentV2.ID.make("jimmy"), (agent) => { agent.permissions = rulesOf("jimmy") }))
       const settle = (agent: string, name: string, input: unknown) =>
         Effect.gen(function* () {
           const registry = yield* ToolRegistry.Service
