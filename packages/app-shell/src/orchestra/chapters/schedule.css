@@ -31,3 +31,15 @@
   outline: auto;
   outline-offset: 0;
 }
+/* Agent schedules: the owner link sits on its own line, start-aligned, and the in-place delete confirm wraps. */
+.mx-card .schedule-agent-owner {
+  align-self: flex-start;
+  margin-block-end: 10px;
+  text-align: start;
+}
+.schedule-agent-confirm {
+  flex-wrap: wrap;
+}
+.schedule-agent-confirm p {
+  margin: 0;
+}

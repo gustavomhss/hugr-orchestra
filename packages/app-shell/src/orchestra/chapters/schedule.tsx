@@ -14,6 +14,7 @@ import {
 import { createStore } from "solid-js/store"
 import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
+import { usePlatform } from "@/context/platform"
 import { useSDK } from "@/context/sdk"
 import { ServerConnection } from "@/context/server"
 import { useTabs } from "@/context/tabs"
@@ -22,6 +23,8 @@ import { pathKey } from "@/utils/path-key"
 import { Persist, persisted } from "@/utils/persist"
 import type { ChapterPageProps } from "../chapter-route"
 import { MxBadge, MxPage, MxToggle } from "./kit"
+import { AgentSchedules } from "./schedule-agents"
+import { createScheduleAgentsApi } from "./schedule-agents-api"
 import {
   createDeviceSchedule,
   type DeviceStore,
@@ -68,6 +71,7 @@ function ScheduleScreen(props: ChapterPageProps & { source: () => ScheduleSource
   const language = useLanguage()
   const global = useGlobal()
   const tabs = useTabs()
+  const platform = usePlatform()
   // Created once per screen: a source owns its timers and requests for as long as the screen is mounted.
   const source = props.source()
   const [state, setState] = createStore({ search: "", retrying: false })
@@ -312,6 +316,13 @@ function ScheduleScreen(props: ChapterPageProps & { source: () => ScheduleSource
         </Match>
       </Switch>
       <Show when={note()}>{(text) => <p class="mx-note">{text()}</p>}</Show>
+      {/* Agent schedules live on the server; a device-only fallback has none to list. */}
+      <Show when={!props.device}>
+        <AgentSchedules
+          api={createScheduleAgentsApi({ server: props.server.http, directory: props.directory, fetch: platform.fetch })}
+          openSession={openSession}
+        />
+      </Show>
       <Show when={dialog()} keyed>
         {(current) => (
           <Switch>
