@@ -7,8 +7,7 @@ import { Effect, Option, Schema } from "effect"
 import { KeyedMutex } from "@orchestra/core/effect/keyed-mutex"
 import { Global } from "@orchestra/core/global"
 
-// The on-disk format is V1's (apps/orchestra/src/continuity/archive-format.ts), unchanged, so V1 and V2 sessions
-// share one archive: <data>/continuity/<sha256(sessionID)>/{index.json,memory.json,<sha256(markdown)>.md}.
+// On-disk layout: <data>/continuity/<sha256(sessionID)>/{index.json,memory.json,<sha256(markdown)>.md}.
 
 export const PAYLOAD_LIMIT = 32 * 1024
 // An absolute end assertion: JavaScript's `$` also accepts a final newline.
