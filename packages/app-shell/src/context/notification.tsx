@@ -397,7 +397,7 @@ export function createServerNotificationState(input: {
         session: sessionID ?? "global",
         error,
       })
-      const description = session?.title ?? error.message || language.t("notification.session.error.fallbackDescription")
+      const description = session?.title ?? (error.message || language.t("notification.session.error.fallbackDescription"))
       if (settings.notifications.errors()) {
         const href = sessionID && sessionHref(originServer, sessionID)
         void platform.notify(
