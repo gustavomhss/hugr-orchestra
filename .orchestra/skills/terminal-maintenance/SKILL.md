@@ -34,7 +34,7 @@ Background and decisions: `docs/specs/terminal/plan.md` (section 1.1 prevails), 
 
 ## Traps
 
-- A command that exits right after spawn is only seen whole through `CreateOptions.observe`; `attach` rejects an exited session.
+- A command that exits right after spawn is seen whole through `CreateOptions.observe`. `attach` on an exited session serves the retained replay and then the end (no `ExitedError` any more); the client keeps `agent: ` tabs after `pty.exited` and adds them from `pty.created` (`context/terminal.tsx`).
 - bun-pty and omni deliver the first read differently; tests that depend on it use the legacy-only helper.
 - bash 3.2 (macOS `/bin/bash`) fires the DEBUG trap on `PROMPT_COMMAND`; the init script starts `__orc_busy=1` for that reason.
 - Do not name the backend specialist's default display name outside `roster.ts` (guard test).

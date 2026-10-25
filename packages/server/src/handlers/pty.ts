@@ -187,8 +187,6 @@ export const PtyHandler = HttpApiBuilder.group(Api, "server.pty", (handlers) =>
               Effect.catchTags({
                 "Pty.NotFoundError": () =>
                   closeAccepted(new Socket.CloseEvent(4404, "session not found")).pipe(Effect.as(undefined)),
-                "Pty.ExitedError": () =>
-                  closeAccepted(new Socket.CloseEvent(4404, "session exited")).pipe(Effect.as(undefined)),
               }),
             )
           if (!attachment) return HttpServerResponse.empty()

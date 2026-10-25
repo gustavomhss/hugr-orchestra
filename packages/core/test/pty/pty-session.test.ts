@@ -243,7 +243,7 @@ describe("pty", () => {
     }),
   )
 
-  ptyTest("notifies attachments with the exit code and rejects attach after exit", () =>
+  ptyTest("notifies attachments with the exit code and serves an attach after exit", () =>
     Effect.gen(function* () {
       const pty = yield* Pty.Service
       const events = yield* subscribePtyEvents()
@@ -254,10 +254,9 @@ describe("pty", () => {
       expect(yield* Deferred.await(attached.ended).pipe(Effect.timeout("5 seconds"))).toEqual({ exitCode: 0 })
       yield* waitForEvents(events, info.id, 2)
 
-      const result = yield* pty.attach(info.id, { onData: () => {}, onEnd: () => {} }).pipe(Effect.exit)
-      expect(Exit.isFailure(result)).toBe(true)
-      if (Exit.isFailure(result))
-        expect(Cause.squash(result.cause)).toMatchObject({ _tag: "Pty.ExitedError", ptyID: info.id })
+      // An exited session still serves what it retained, then reports the same end.
+      const late = yield* attachCollecting(info.id)
+      expect(yield* Deferred.await(late.ended).pipe(Effect.timeout("5 seconds"))).toEqual({ exitCode: 0 })
     }),
   )
 })

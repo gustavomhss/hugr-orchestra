@@ -110,10 +110,6 @@ export class NotFoundError extends Schema.TaggedErrorClass<NotFoundError>()("Pty
   ptyID: PtyID,
 }) {}
 
-export class ExitedError extends Schema.TaggedErrorClass<ExitedError>()("Pty.ExitedError", {
-  ptyID: PtyID,
-}) {}
-
 export interface Interface {
   readonly list: () => Effect.Effect<Info[]>
   readonly get: (id: PtyID) => Effect.Effect<Info, NotFoundError>
@@ -121,7 +117,7 @@ export interface Interface {
   readonly update: (id: PtyID, input: UpdateInput) => Effect.Effect<Info, NotFoundError>
   readonly remove: (id: PtyID) => Effect.Effect<void, NotFoundError>
   readonly write: (id: PtyID, data: string) => Effect.Effect<void, NotFoundError>
-  readonly attach: (id: PtyID, input: AttachInput) => Effect.Effect<Attachment, NotFoundError | ExitedError>
+  readonly attach: (id: PtyID, input: AttachInput) => Effect.Effect<Attachment, NotFoundError>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/Pty") {}
@@ -362,7 +358,6 @@ const layer = Layer.effect(
 
     const attach = Effect.fn("Pty.attach")(function* (id: PtyID, input: AttachInput) {
       const session = yield* requireSession(id)
-      if (session.info.status !== "running") return yield* new ExitedError({ ptyID: id })
       yield* Effect.logInfo("client attached to session", { id, directory: location.directory })
       const token = {}
       const subscriber: Subscriber = {
@@ -372,7 +367,9 @@ const layer = Layer.effect(
         detached: false,
         pending: [],
       }
-      session.subscribers.set(token, subscriber)
+      // An exited session still serves its retained output: the client gets the replay, then the end.
+      if (session.info.status === "running") session.subscribers.set(token, subscriber)
+      else subscriber.end = { exitCode: session.info.exitCode }
       const start = session.bufferCursor
       const end = session.cursor
       const from =

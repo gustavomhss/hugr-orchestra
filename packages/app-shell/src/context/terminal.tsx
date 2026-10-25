@@ -138,6 +138,9 @@ export function updateServerPty(
   })
 }
 
+// Titles the server gives to terminals that run an agent's command (see AgentTerminal in core).
+const AGENT_TAB_PREFIX = "agent: "
+
 function terminalPersistTarget(scope: ServerScopeValue, dir: string, legacy?: string[]) {
   return Persist.serverWorkspace(scope, dir, "terminal", legacy)
 }
@@ -236,10 +239,22 @@ function createWorkspaceTerminalSession(
     })
   }
 
+  // A command the agent runs gets its own tab, started by the server rather than by this client.
+  const isAgentTab = (title?: string) => title?.startsWith(AGENT_TAB_PREFIX) === true
+
   const unsub = sdk.event.on("pty.exited", (event: { properties: { id: string } }) => {
+    // An agent's tab stays after its command ends, so the owner can read what ran; closing it removes it.
+    if (isAgentTab(store.all.find((x) => x.id === event.properties.id)?.title)) return
     removeExited(event.properties.id)
   })
   onCleanup(unsub)
+
+  const unsubCreated = sdk.event.on("pty.created", (event: { properties: { info: { id: string; title: string } } }) => {
+    const info = event.properties.info
+    if (!isAgentTab(info.title) || store.all.some((x) => x.id === info.id)) return
+    setStore("all", store.all.length, { id: info.id, title: info.title, titleNumber: 0 })
+  })
+  onCleanup(unsubCreated)
 
   const update = (pty: Partial<LocalPTY> & { id: string }) => {
     const index = store.all.findIndex((x) => x.id === pty.id)
