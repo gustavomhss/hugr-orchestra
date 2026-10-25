@@ -400,7 +400,8 @@ function toolStart(state: ToolPart["state"]) {
 function toolMetadata(part: ToolPart | undefined): Record<string, unknown> {
   if (!part) return {}
   if (part.state.status === "pending") return part.metadata ?? {}
-  return part.metadata ?? part.state.metadata ?? {}
+  // The V2 projection always sets part metadata (provider state); the tool's own metadata, which carries the child session id, lives on the state.
+  return { ...part.state.metadata, ...part.metadata }
 }
 
 // Task calls and messages store the agent's stable id; servers that predate ids store the name, which is then the key.

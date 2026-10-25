@@ -383,15 +383,15 @@ test("Docs render MDX as text and preserve a denied read with explicit retry", a
     const path = new URL(route.request().url()).searchParams.get("path")
     if (path !== "AGENTS.md") return route.fallback()
     attempts.push(path)
-    return route.fulfill({
-      status: attempts.length === 1 ? 403 : 200,
-      contentType: "application/json",
-      body: JSON.stringify(
-        attempts.length === 1
-          ? { name: "UnknownError", data: { message: "Read denied" } }
-          : { type: "text", content: "# Retry loaded" },
-      ),
-    })
+    const headers = { "access-control-allow-origin": "*" }
+    if (attempts.length === 1)
+      return route.fulfill({
+        status: 403,
+        contentType: "application/json",
+        headers,
+        body: JSON.stringify({ name: "UnknownError", data: { message: "Read denied" } }),
+      })
+    return route.fulfill({ status: 200, contentType: "application/octet-stream", headers, body: "# Retry loaded" })
   })
   await dock.getByRole("button", { name: "AGENTS.md", exact: true }).click()
   await expect(dock.getByRole("alert")).toContainText("UnexpectedStatus")
