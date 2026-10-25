@@ -9,6 +9,7 @@ import { VcsHandler } from "./handlers/vcs"
 import { CommandHandler } from "./handlers/command"
 import { McpHandler } from "./handlers/mcp"
 import { LspHandler } from "./handlers/lsp"
+import { FormatterHandler } from "./handlers/formatter"
 import { SkillHandler } from "./handlers/skill"
 import { BehaviorHandler } from "./handlers/behavior"
 import { EventHandler } from "./handlers/event"
@@ -57,6 +58,7 @@ export const handlers = Layer.mergeAll(
   CommandHandler,
   McpHandler,
   LspHandler,
+  FormatterHandler,
   SkillHandler,
   BehaviorHandler,
   EventHandler,

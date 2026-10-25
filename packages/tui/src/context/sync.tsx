@@ -398,6 +398,7 @@ export const {
             ...(args.continue ? [] : [sessionListPromise.then((sessions) => setStore("session", reconcile(sessions)))]),
             sdk.catalog.commands(location).then((x) => setStore("command", reconcile(x))),
             sdk.catalog.lsp(location).then((x) => setStore("lsp", reconcile(x))),
+            sdk.catalog.formatter(location).then((x) => setStore("formatter", reconcile(x))),
             sdk.catalog.mcp(location).then((x) => setStore("mcp", reconcile(x))),
             sdk.api.mcp
               .resources({ location })

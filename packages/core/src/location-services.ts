@@ -10,6 +10,7 @@ import { LayerNode } from "./effect/layer-node"
 import { Node } from "./effect/app-node"
 import { FileMutation } from "./file-mutation"
 import { FileSystem } from "./filesystem"
+import { Format } from "./format"
 import { FileSystemSearch } from "./filesystem/search"
 import { Watcher } from "./filesystem/watcher"
 import { Image } from "./image"
@@ -87,6 +88,7 @@ export const locationServices = LayerNode.group([
   BuiltInTools.node,
   Mcp.node,
   LSP.node,
+  Format.node,
   SessionRunnerModel.node,
   Snapshot.node,
   Relay.node,
