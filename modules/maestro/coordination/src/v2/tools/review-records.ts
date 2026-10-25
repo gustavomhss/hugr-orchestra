@@ -65,7 +65,7 @@ function behavior(member: RosterMember) {
   return Object.fromEntries(Object.entries(member).filter(([key]) => key !== "displayName"))
 }
 
-function actor(session: { readonly id: string; readonly projectID: string }, memberId: "maestro" | "lucy") {
+export function actor(session: { readonly id: string; readonly projectID: string }, memberId: "maestro" | "lucy") {
   const bytes = stable({ memberId, projectId: session.projectID, sessionId: session.id })
   return { version: "rfc8785-v1" as const, bytes, sha256: createHash("sha256").update(bytes, "utf8").digest("hex") }
 }
@@ -375,7 +375,7 @@ function decodeReview(row: { readonly id: string; readonly type: string; readonl
 
 /** The newest plan-stage receipt for a validation: a later verdict on the same tree supersedes an earlier one. */
 export const findReview = Effect.fn("MaestroReviewRecords.findReview")(function* (
-  services: MaestroChainTools.Services,
+  services: Pick<MaestroChainTools.Services, "db">,
   sessionID: string,
   validationRecordID: string,
   cardHash?: string,
