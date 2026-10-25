@@ -36,7 +36,8 @@ export const Input = Schema.Struct({
   prompt: Schema.String.annotate({ description: "The complete instructions for the subagent" }),
   subagent_type: Schema.String.annotate({ description: "The stable ID of a visible subagent or all-mode agent" }),
   model: Schema.String.pipe(Schema.optional).annotate({ description: "Optional exact provider/model identity" }),
-  task_id: SessionSchema.ID.pipe(Schema.optional).annotate({ description: "An existing child Session to resume" }),
+  // A Location's TaskGovernance may resolve a logical task id; core resumes only a Session ID it owns.
+  task_id: Schema.String.pipe(Schema.optional).annotate({ description: "An existing child Session or task to resume" }),
 })
 
 export const Output = Schema.Struct({
@@ -87,10 +88,12 @@ const layer = Layer.effectDiscard(
           const target = yield* requireTarget(agents, input.subagent_type)
           const admission = yield* governance.admit({ parent, target, input: called, context })
           const childID =
-            input.task_id ?? admission.childID ?? SessionSchema.ID.make(`ses_${identity("task-child", context)}`)
+            admission.childID ??
+            (input.task_id && Schema.is(SessionSchema.ID)(input.task_id) ? input.task_id : undefined) ??
+            taskChildID(context)
           const existing = yield* store.get(childID)
           if (input.task_id && !existing)
-            return yield* new ToolFailure({ message: `Task child not found: ${childID}` })
+            return yield* new ToolFailure({ message: `Task child not found: ${input.task_id}` })
           const model = yield* resolveModel(catalog, policy, context, target, input.model, existing)
           const revalidateTarget = Effect.fnUntraced(function* (child: SessionSchema.Info | undefined) {
             const current = yield* requireTarget(agents, input.subagent_type)
@@ -149,7 +152,7 @@ const layer = Layer.effectDiscard(
               },
               content: [],
             })
-            const promptID = SessionMessage.ID.make(`msg_${identity("task-prompt", context, child.id)}`)
+            const promptID = taskPromptID(context, child.id)
             // Exact retries retain the delivery admitted by an earlier Task version.
             const recordedInput = yield* SessionInput.find(database.db, promptID)
             const admitted = yield* sessions.prompt({
@@ -348,7 +351,7 @@ const requireParent = Effect.fn("TaskTool.requireParent")(function* (
   const called = call && call.state.status !== "pending" ? decodeCalled(call.state.input) : Option.none()
   if (Option.isNone(called))
     return yield* new ToolFailure({ message: "Task invocation has no valid recorded called input" })
-  const childID = SessionSchema.ID.make(`ses_${identity("task-child", context)}`)
+  const childID = taskChildID(context)
   if (!isDeepStrictEqual(
     { ...called.value, task_id: called.value.task_id ?? childID },
     { ...input, task_id: input.task_id ?? childID },
@@ -392,7 +395,18 @@ function requireChild(
     return new ToolFailure({ message: `Task cannot change the recorded child model: ${child.id}` })
 }
 
-function completedReply(messages: ReadonlyArray<SessionMessage.Message>, promptID: SessionMessage.ID) {
+/** The child a Task call creates when neither `task_id` nor its governance names one; stable across exact retries. */
+export function taskChildID(context: Tool.Context) {
+  return SessionSchema.ID.make(`ses_${identity("task-child", context)}`)
+}
+
+/** The durable prompt a Task call admits into its child; a retry of the same call reuses it. */
+export function taskPromptID(context: Tool.Context, childID: SessionSchema.ID) {
+  return SessionMessage.ID.make(`msg_${identity("task-prompt", context, childID)}`)
+}
+
+/** The child's completed reply to `promptID`, or undefined while it is unfinished, failed or calling tools. */
+export function completedReply(messages: ReadonlyArray<SessionMessage.Message>, promptID: SessionMessage.ID) {
   const index = messages.findIndex((message) => message.id === promptID && message.type === "user")
   if (index < 0) return
   const following = messages.slice(index + 1)

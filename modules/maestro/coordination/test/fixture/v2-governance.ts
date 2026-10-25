@@ -2,8 +2,10 @@ import { randomUUID } from "node:crypto"
 import { mkdtemp, realpath, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
-import { Effect, Layer } from "effect"
+import { eq } from "drizzle-orm"
+import { Effect, Layer, Option } from "effect"
 import { AgentV2 } from "@orchestra/core/agent"
+import { Config } from "@orchestra/core/config"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -13,13 +15,15 @@ import { Location } from "@orchestra/core/location"
 import { Project } from "@orchestra/core/project"
 import { ProjectTable } from "@orchestra/core/project/sql"
 import { AbsolutePath } from "@orchestra/core/schema"
-import { SessionSchema, SessionStore } from "@orchestra/core/session"
+import { SessionSchema, SessionStore, SessionV2 } from "@orchestra/core/session"
 import { SessionMessage } from "@orchestra/core/session/message"
-import { SessionTable } from "@orchestra/core/session/sql"
+import { SessionInputTable, SessionTable } from "@orchestra/core/session/sql"
+import { SkillV2 } from "@orchestra/core/skill"
 import { TaskGovernance } from "@orchestra/core/tool/task-governance"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { AppProcess } from "@orchestra/core/process"
 import { MaestroGovernanceV2 } from "../../src/v2/governance"
+import { GovernanceBackgroundV2 } from "../../src/v2/governance/background"
 import { WriteRootsV2 } from "../../src/v2/governance/write-roots"
 
 /** A real temporary worktree, removed when the scope closes. */
@@ -36,11 +40,24 @@ const placed = (directory: string) => [
   [Database.node, Database.layerFromPath(":memory:")],
 ] as const
 
-/** The Location's real Maestro governance over an in-memory database, placed at `directory`. */
-export const governanceLayer = (directory: string) =>
+/**
+ * The Location's real Maestro governance over an in-memory database, placed at `directory`. Config and skills are empty
+ * (no Own source, no skills); the process Session service is absent unless a test passes a layer for it.
+ */
+export const governanceLayer = (directory: string, sessions?: Layer.Layer<SessionV2.Service>) =>
   AppNodeBuilder.build(
-    LayerNode.group([MaestroGovernanceV2.node, AgentV2.node, SessionStore.node, Database.node, FSUtil.node]),
-    placed(directory),
+    LayerNode.group([MaestroGovernanceV2.node, AgentV2.node, SessionStore.node, Database.node, FSUtil.node, EventV2.node]),
+    [
+      ...placed(directory),
+      [Config.node, Layer.mock(Config.Service, { entries: () => Effect.succeed([]) })],
+      [SkillV2.node, Layer.mock(SkillV2.Service, { list: () => Effect.succeed([]) })],
+      [
+        GovernanceBackgroundV2.sessionsNode,
+        sessions
+          ? Layer.effect(GovernanceBackgroundV2.Sessions, Effect.serviceOption(SessionV2.Service)).pipe(Layer.provide(sessions))
+          : Layer.succeed(GovernanceBackgroundV2.Sessions, Option.none()),
+      ],
+    ],
   )
 
 /** The Location's ToolSafety with Maestro's write-roots replacement, over an in-memory database. */
@@ -52,13 +69,14 @@ export const safetyLayer = (directory: string) =>
 
 /** Inserts a Session row as the store reads it; `permission` keeps V1 rule fields, as the column does. */
 export const session = Effect.fn("GovernanceFixture.session")(function* (input: {
+  readonly id?: SessionSchema.ID
   readonly directory: string
   readonly agent: string
   readonly parentID?: SessionSchema.ID
   readonly permission?: { permission: string; pattern: string; action: "allow" | "deny" | "ask" }[]
 }) {
   const database = yield* Database.Service
-  const id = SessionSchema.ID.make(`ses_${randomUUID().replaceAll("-", "")}`)
+  const id = input.id ?? SessionSchema.ID.make(`ses_${randomUUID().replaceAll("-", "")}`)
   yield* database.db.insert(ProjectTable)
     .values({ id: Project.ID.global, worktree: AbsolutePath.make(input.directory), sandboxes: [] })
     .onConflictDoNothing().run().pipe(Effect.orDie)
@@ -69,11 +87,35 @@ export const session = Effect.fn("GovernanceFixture.session")(function* (input: 
   return id
 })
 
-/** Writes a durable event row of `type` with the given id, as a host writer would. */
-export const event = Effect.fn("GovernanceFixture.event")(function* (id: string, aggregate: string, type: string) {
+/** Writes a durable event row of `type` with the given id and data, next in its aggregate, as a host writer would. */
+export const event = Effect.fn("GovernanceFixture.event")(function* (
+  id: string,
+  aggregate: string,
+  type: string,
+  data: { readonly [key: string]: unknown } = {},
+) {
   const database = yield* Database.Service
-  yield* database.db.insert(EventV2.EventSequenceTable).values({ aggregate_id: aggregate, seq: 0 }).onConflictDoNothing().run().pipe(Effect.orDie)
-  yield* database.db.insert(EventV2.EventTable).values({ id: EventV2.ID.make(id), aggregate_id: aggregate, seq: 0, type, data: {} })
+  const rows = yield* database.db.select().from(EventV2.EventTable).where(eq(EventV2.EventTable.aggregate_id, aggregate))
+    .all().pipe(Effect.orDie)
+  yield* database.db.insert(EventV2.EventSequenceTable).values({ aggregate_id: aggregate, seq: rows.length })
+    .onConflictDoUpdate({ target: EventV2.EventSequenceTable.aggregate_id, set: { seq: rows.length } }).run().pipe(Effect.orDie)
+  yield* database.db.insert(EventV2.EventTable)
+    .values({ id: EventV2.ID.make(id), aggregate_id: aggregate, seq: rows.length, type, data })
+    .run().pipe(Effect.orDie)
+})
+
+/** Records that `sessionID` already promoted an input, so its first provider turn is behind it. */
+export const answered = Effect.fn("GovernanceFixture.answered")(function* (sessionID: SessionSchema.ID) {
+  const database = yield* Database.Service
+  yield* database.db.insert(SessionInputTable)
+    .values({
+      id: SessionMessage.ID.make(`msg_${randomUUID().replaceAll("-", "")}`),
+      session_id: sessionID,
+      prompt: { text: "p" },
+      delivery: "steer",
+      admitted_seq: 0,
+      promoted_seq: 1,
+    })
     .run().pipe(Effect.orDie)
 })
 

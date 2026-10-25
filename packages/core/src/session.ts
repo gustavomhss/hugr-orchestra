@@ -58,6 +58,7 @@ export type RevertState = Revert.State
 export { ListAnchor }
 // Public through the session entry so product modules need no deep import (R7).
 export { SessionStore }
+export { SessionInput }
 export { SessionLegacyImport } from "./session/legacy-import"
 export { SessionActivity } from "./session/activity"
 export { LeanProfilePreferences } from "./session/lean-profile-preferences"
