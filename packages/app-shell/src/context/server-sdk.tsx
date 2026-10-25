@@ -6,7 +6,7 @@ import { makeEventListener } from "@solid-primitives/event-listener"
 import { type Accessor, type ParentProps, batch, createMemo, onCleanup, onMount } from "solid-js"
 import { createStore } from "solid-js/store"
 import { Orchestra } from "@orchestra/client"
-import { authTokenFromCredentials, createApiForServer, createSdkForServer, type ServerApi } from "@/utils/server"
+import { authTokenFromCredentials, createApiForServer, type ServerApi } from "@/utils/server"
 import { type Platform, usePlatform } from "./platform"
 import { ServerConnection, useServer } from "./server"
 import { ServerRequired } from "@/components/server-unavailable"
@@ -224,7 +224,6 @@ type ServerSDKBase = {
   protocol: Promise<ServerProtocol>
   protocolKind: Accessor<ServerProtocol | undefined>
   url: string
-  client: ReturnType<typeof createSdkForServer>
   api: CompatibleApi
   currentApi: ServerApi
   sessionManagement: ReturnType<typeof createSessionManagementForServer>
@@ -234,9 +233,6 @@ type ServerSDKBase = {
     listen: ServerEventEmitter["listen"]
     start: () => Promise<void> | undefined
   }
-  createClient: (
-    opts: Omit<Parameters<typeof createSdkForServer>[0], "server" | "fetch">,
-  ) => ReturnType<typeof createSdkForServer>
 }
 
 export function createServerProtocolPromise(
@@ -462,12 +458,6 @@ function createServerSdkContextBase(
     buffer.length = 0
   })
 
-  const sdk = createSdkForServer({
-    signal: abort.signal,
-    server: http,
-    fetch: scopedFetch(),
-    throwOnError: true,
-  })
   const currentApi: ServerApi = createApiForServer({ server: http, fetch: scopedFetch() })
   // Routes only the Orchestra V2 server serves (the bundled client predates them).
   const orchestra = Orchestra.make({
@@ -481,7 +471,6 @@ function createServerSdkContextBase(
     server: http,
     fetch: scopedFetch(),
     protocol,
-    legacy: sdk,
     signal: abort.signal,
   })
   const api = createCompatibleApi({ protocol, current: currentApi })
@@ -492,7 +481,6 @@ function createServerSdkContextBase(
     protocol,
     protocolKind,
     url: server.http.url,
-    client: sdk,
     api,
     currentApi,
     sessionManagement,
@@ -501,14 +489,6 @@ function createServerSdkContextBase(
       on: emitter.on.bind(emitter),
       listen: emitter.listen.bind(emitter),
       start,
-    },
-    createClient(opts: Omit<Parameters<typeof createSdkForServer>[0], "server" | "fetch">) {
-      return createSdkForServer({
-        signal: abort.signal,
-        server: http,
-        fetch: scopedFetch(),
-        ...opts,
-      })
     },
   }
 }
@@ -567,11 +547,6 @@ type SDKEventMap = {
 }
 
 function createDirSdkContext(directory: string, serverSDK: ServerSDKBase) {
-  const client = serverSDK.createClient({
-    directory,
-    throwOnError: true,
-  })
-
   const emitter = createGlobalEmitter<SDKEventMap>()
 
   const unsub = serverSDK.event.on(directory, (event) => {
@@ -583,7 +558,7 @@ function createDirSdkContext(directory: string, serverSDK: ServerSDKBase) {
     scope: serverSDK.scope,
     protocol: serverSDK.protocol,
     directory,
-    client,
+    orchestra: serverSDK.orchestra,
     api: createCompatibleApi({
       protocol: serverSDK.protocol,
       current: serverSDK.currentApi,
@@ -592,9 +567,6 @@ function createDirSdkContext(directory: string, serverSDK: ServerSDKBase) {
     event: emitter,
     get url() {
       return serverSDK.url
-    },
-    createClient(opts: Parameters<typeof serverSDK.createClient>[0]) {
-      return serverSDK.createClient(opts)
     },
   }
 }

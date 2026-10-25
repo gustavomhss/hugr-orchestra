@@ -6,11 +6,10 @@ import type { ServerCurrentEvent } from "./server-sdk"
 import type { PermissionRequest, QuestionRequest } from "@/v2-types"
 import type { Message, Part, Session, SessionStatus, Todo } from "@/v2-wire"
 
-import type { ServerApi, ServerSdk } from "@/utils/server"
+import type { ServerApi } from "@/utils/server"
 import { batch } from "solid-js"
 import { createStore, produce, reconcile } from "solid-js/store"
 import { message as cleanMessage } from "@/utils/diffs"
-import { sessionNotFoundError } from "@/utils/server-errors"
 import { rootSession } from "@/utils/session-route"
 import {
   decodeSessionManagementEvent,
@@ -185,16 +184,12 @@ function reconcileFetched<T extends { id: string }>(
 }
 
 type TodoRead = (sessionID: string) => Promise<readonly { content: string; status: string; priority: string }[]>
-type ServerSessionOptions = { retry?: typeof retry; protocol?: Promise<"v2">; todo?: TodoRead }
 
 export function createServerSession(
-  client: ServerSdk,
-  sessionApiOrOptions?: Pick<ServerApi["session"], "get" | "message"> | ServerSessionOptions,
-  messageApi?: MessageApi,
-  currentOptions?: ServerSessionOptions,
+  sessionApi: Pick<ServerApi["session"], "get" | "message">,
+  messageApi: MessageApi,
+  options: { retry?: typeof retry; todo: TodoRead },
 ) {
-  const sessionApi = messageApi ? (sessionApiOrOptions as Pick<ServerApi["session"], "get" | "message">) : undefined
-  const options = messageApi ? currentOptions : (sessionApiOrOptions as ServerSessionOptions | undefined)
   const [data, setData] = createStore({
     info: {} as Record<string, AppSession | undefined>,
     session_status: {} as Record<string, SessionStatus>,
@@ -284,14 +279,8 @@ export function createServerSession(
     requests,
     generations,
     read: (sessionID) => data.info[sessionID],
-    source: sessionApi ? "canonical" : "snapshot",
-    request: (sessionID) =>
-      sessionApi
-        ? sessionApi.get({ sessionID }).then(normalizeSessionInfo)
-        : client.session.get({ sessionID }).then((result) => {
-            if (!result.data) throw sessionNotFoundError(sessionID)
-            return result.data
-          }),
+    source: "canonical",
+    request: (sessionID) => sessionApi.get({ sessionID }).then(normalizeSessionInfo),
     retain: remember,
     busy: (sessionID) => messageLoads.has(sessionID) || inflight.has(sessionID) || inflightTodo.has(sessionID),
   })
@@ -497,72 +486,43 @@ export function createServerSession(
     )
 
   const fetchMessages = async (sessionID: string, limit: number, before?: string, onAttempt?: () => void) => {
-    if (messageApi) {
-      const request = (cursor?: string) =>
-        (options?.retry ?? retry)(() => {
-          onAttempt?.()
-          return messageApi.list(cursor ? { sessionID, limit, cursor } : { sessionID, limit, order: "desc" })
-        })
-      const first = await request(before)
-      const pages = [first]
-      while (pages.at(-1)?.cursor.next && needsOlderTurnRoot(pages.flatMap((page) => page.data).toReversed())) {
-        const response = await request(pages.at(-1)!.cursor.next ?? undefined)
-        pages.push(response)
-        if (!response.data.length) break
-      }
-      const response = pages.at(-1)!
-      const source = pages.flatMap((page) => page.data).toReversed()
-      const normalized = normalizeSessionMessages(sessionID, source)
-      return {
-        session: normalized.messages.sort(compareMessages),
-        part: [...normalized.parts.entries()]
-          .map(([id, part]) => ({ id, part: part.sort((a, b) => cmp(a.id, b.id)) }))
-          .sort((a, b) => cmp(a.id, b.id)),
-        source,
-        sourceMode: before ? ("older" as const) : ("latest" as const),
-        projectSource: true,
-        cursor: response.cursor.next ?? undefined,
-        complete: response.data.length === 0,
-      }
+    const request = (cursor?: string) =>
+      (options.retry ?? retry)(() => {
+        onAttempt?.()
+        return messageApi.list(cursor ? { sessionID, limit, cursor } : { sessionID, limit, order: "desc" })
+      })
+    const first = await request(before)
+    const pages = [first]
+    while (pages.at(-1)?.cursor.next && needsOlderTurnRoot(pages.flatMap((page) => page.data).toReversed())) {
+      const response = await request(pages.at(-1)!.cursor.next ?? undefined)
+      pages.push(response)
+      if (!response.data.length) break
     }
-    const response = await (options?.retry ?? retry)(() => {
-      onAttempt?.()
-      return client.session.messages({ sessionID, limit, before })
-    })
-    const items = (response.data ?? []).filter((item) => !!item?.info?.id)
+    const response = pages.at(-1)!
+    const source = pages.flatMap((page) => page.data).toReversed()
+    const normalized = normalizeSessionMessages(sessionID, source)
     return {
-      session: items.map((item) => cleanMessage(item.info)).sort(compareMessages),
-      part: items.map((item) => ({
-        id: item.info.id,
-        part: item.parts.filter((part) => !!part?.id).sort((a, b) => cmp(a.id, b.id)),
-      })),
-      source: legacyMessageSource(items),
+      session: normalized.messages.sort(compareMessages),
+      part: [...normalized.parts.entries()]
+        .map(([id, part]) => ({ id, part: part.sort((a, b) => cmp(a.id, b.id)) }))
+        .sort((a, b) => cmp(a.id, b.id)),
+      source,
       sourceMode: before ? ("older" as const) : ("latest" as const),
-      cursor: response.response.headers.get("x-next-cursor") ?? undefined,
-      complete: !response.response.headers.get("x-next-cursor"),
+      projectSource: true,
+      cursor: response.cursor.next ?? undefined,
+      complete: response.data.length === 0,
     }
   }
 
   const fetchMessage = async (sessionID: string, messageID: string, onAttempt?: () => void) => {
-    if (sessionApi) {
-      const response = await (options?.retry ?? retry)(() => {
-        onAttempt?.()
-        return sessionApi.message({ sessionID, messageID })
-      })
-      const normalized = normalizeSessionMessages(sessionID, [response])
-      const message = normalized.messages[0]
-      if (!message) throw new Error(`Message not found: ${messageID}`)
-      return { message, parts: normalized.parts.get(messageID) ?? [] }
-    }
-    const response = await (options?.retry ?? retry)(() => {
+    const response = await (options.retry ?? retry)(() => {
       onAttempt?.()
-      return client.session.message({ sessionID, messageID })
+      return sessionApi.message({ sessionID, messageID })
     })
-    if (!response.data?.info?.id) throw new Error(`Message not found: ${messageID}`)
-    return {
-      message: cleanMessage(response.data.info),
-      parts: response.data.parts.filter((part) => !!part?.id).sort((a, b) => cmp(a.id, b.id)),
-    }
+    const normalized = normalizeSessionMessages(sessionID, [response])
+    const message = normalized.messages[0]
+    if (!message) throw new Error(`Message not found: ${messageID}`)
+    return { message, parts: normalized.parts.get(messageID) ?? [] }
   }
 
   const replaceMessages = (sessionID: string, messages: Message[]) => {
@@ -866,7 +826,6 @@ export function createServerSession(
   }
 
   const hydrateV2Message = (sessionID: string, messageID: string) => {
-    if (!sessionApi) return
     void sessionApi
       .message({ sessionID, messageID })
       .then((message) => {
@@ -1339,12 +1298,10 @@ export function createServerSession(
     async todo(sessionID: string, request?: { force?: boolean }) {
       touch(sessionID)
       if (data.todo[sessionID] !== undefined && !request?.force) return
-      const v2 = (await options?.protocol) === "v2" ? options?.todo : undefined
       return runInflight(inflightTodo, sessionID, () => {
         const active = recovery.generation(sessionID)
-        const read = (): Promise<Todo[]> =>
-          v2 ? v2(sessionID).then((todos) => [...todos]) : client.session.todo({ sessionID }).then((result) => result.data ?? [])
-        return (options?.retry ?? retry)(read).then((todos) => {
+        const read = (): Promise<Todo[]> => options.todo(sessionID).then((todos) => [...todos])
+        return (options.retry ?? retry)(read).then((todos) => {
           if (generations.get(sessionID) !== active) return
           setData("todo", sessionID, reconcile(todos, { key: "id" }))
         })

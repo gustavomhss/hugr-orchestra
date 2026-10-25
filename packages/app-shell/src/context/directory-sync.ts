@@ -28,7 +28,6 @@ export const createDirSyncContext = (
   serverSync: ReturnType<typeof createServerSyncContextInner>,
   serverSDK: ReturnType<typeof createServerSdkContext>,
 ) => {
-  const client = serverSDK.createClient({ directory, throwOnError: true })
   const current = createMemo(() => serverSync.child(directory, { mcp: true }))
   const fences = sessionManagementFences(serverSync.session, directory)
   const absolute = (path: string) => (current()[0].path.directory + "/" + path).replace("//", "/")

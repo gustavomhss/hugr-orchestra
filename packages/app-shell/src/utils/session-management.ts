@@ -1,6 +1,5 @@
 import { createSignal } from "solid-js"
 import { Orchestra } from "@orchestra/client"
-import type { ServerSdk } from "@/utils/server"
 import type { ServerConnection } from "@/context/server"
 import type { ServerProtocol } from "./server-protocol"
 import { authTokenFromCredentials } from "./server"
@@ -14,13 +13,11 @@ export function createSessionManagementForServer(input: {
   server: ServerConnection.HttpBase
   fetch: typeof globalThis.fetch
   protocol: Promise<ServerProtocol>
-  legacy: Pick<ServerSdk, "session">
   signal?: AbortSignal
 }) {
   const http = { ...input.server }
   const fetcher = input.fetch
   const protocol = input.protocol
-  const legacy = input.legacy
   const lifetime = input.signal
   const headers = http.password
     ? { Authorization: `Basic ${authTokenFromCredentials({ username: http.username, password: http.password })}` }
@@ -158,14 +155,9 @@ export function createSessionManagementForServer(input: {
         }
       })
     },
-    archive(sessionID: string, archived: boolean, directory: string) {
+    archive(sessionID: string, archived: boolean) {
       return runSessionManagementOperation(lifetime, async () => {
-        if (!(await archiveRoutes())) {
-          lifetime?.throwIfAborted()
-          if (!archived) throw new SessionManagementUnsupported()
-          await legacy.session.update({ sessionID, directory, time: { archived: Date.now() } })
-          return
-        }
+        if (!(await archiveRoutes())) throw new SessionManagementUnsupported()
         lifetime?.throwIfAborted()
         await client.sessions.archive({ sessionID, archived })
       })

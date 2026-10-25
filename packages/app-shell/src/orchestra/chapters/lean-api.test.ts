@@ -2,7 +2,6 @@ import { expect, test } from "bun:test"
 import { createServer, type IncomingMessage } from "node:http"
 import type { LeanDashboard } from "@orchestra/schema/lean-dashboard"
 import { Orchestra } from "@orchestra/client"
-import { createSdkForServer } from "@/utils/server"
 import { createLeanAPI, LeanAPIError } from "./lean-api"
 
 const info: LeanDashboard.Info = {
@@ -49,7 +48,7 @@ test("v2 reads the dashboard from the Location-scoped Orchestra route and unwrap
     return { body: { location, data: url.pathname.includes("history") ? history : info } }
   })
   const api = createLeanAPI(
-    { client: createSdkForServer({ server: { url: server.url } }), directory: "/repo one", protocol: Promise.resolve("v2") },
+    { directory: "/repo one" },
     Orchestra.make({ baseUrl: server.url }),
   )
   try {

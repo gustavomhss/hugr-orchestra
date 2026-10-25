@@ -85,7 +85,7 @@ export function useSessionArchive(input?: { server: ServerSDK; directory: string
 
     setOperations(key, true)
     await serverSDK.sessionManagement
-      .archive(sessionID, true, source.directory)
+      .archive(sessionID, true)
       .then(() => {
         const current = state.session.get(sessionID)
         if (
@@ -115,7 +115,6 @@ export function useSessionArchive(input?: { server: ServerSDK; directory: string
 
   const restore = async (sessionID: string, info?: AppSession) => {
     const serverSDK = origin()
-    const source = frozen?.source ?? sdk()
     const state = frozen?.state ?? sync()
     const serverState = frozen?.serverState ?? serverSync()
     const key = ScopedKey.from(serverSDK.scope, sessionID)
@@ -129,7 +128,7 @@ export function useSessionArchive(input?: { server: ServerSDK; directory: string
       return false
     }
     setOperations(key, true)
-    return serverSDK.sessionManagement.archive(sessionID, false, session.directory ?? input?.directory ?? source.directory)
+    return serverSDK.sessionManagement.archive(sessionID, false)
       .then(async () => {
         const current = serverState.session.get(sessionID)
         if (current?.time.archived !== undefined &&

@@ -1,6 +1,5 @@
 import type { Config, Path, ProviderAuthResponse } from "@/v2-wire"
 import type { Project } from "@/v2-types"
-import type { ServerSdk } from "@/utils/server"
 import type { SessionStatus } from "@/v2-wire"
 
 import { showToast } from "@/utils/toast"
@@ -136,27 +135,13 @@ export function createServerSyncContextInner(
     })
   }
 
-  const sdkCache = new Map<string, ServerSdk>()
   const booting = new Map<string, Promise<void>>()
   const sessionLoads = new Map<string, Promise<void>>()
   const sessionMeta = new Map<string, { limit: number }>()
   const lifetime = { disposed: false }
   onCleanup(() => { lifetime.disposed = true })
 
-  const sdkFor = (directory: string) => {
-    const key = directoryKey(directory)
-    const cached = sdkCache.get(key)
-    if (cached) return cached
-    const sdk = serverSDK.createClient({
-      directory,
-      throwOnError: true,
-    })
-    sdkCache.set(key, sdk)
-    return sdk
-  }
-
-  const session = createServerSession(serverSDK.client, serverSDK.api.session, serverSDK.api.message, {
-    protocol: serverSDK.protocol,
+  const session = createServerSession(serverSDK.api.session, serverSDK.api.message, {
     todo: (sessionID) => serverSDK.orchestra.sessions.todo({ sessionID }),
   })
   // V2 keeps only the settings the app writes (default model, disabled providers) in its global config document.
@@ -172,10 +157,7 @@ export function createServerSyncContextInner(
       )
   const queryOptionsApi = makeQueryOptionsApi(
     serverSDK.scope,
-    () => serverSDK.client,
     serverSDK.api,
-    sdkFor,
-    serverSDK.protocol,
     readV2Config,
     serverSDK.orchestra,
   )
@@ -251,10 +233,8 @@ export function createServerSyncContextInner(
     queryKey: [serverSDK.scope, "bootstrap"],
     queryFn: async () => {
       await bootstrapGlobal({
-        serverSDK: serverSDK.client,
         readV2Config,
         serverAPI: serverSDK.api,
-        protocol: serverSDK.protocol,
         scope: serverSDK.scope,
         requestFailedTitle: language.t("common.requestFailed"),
         translate: language.t,
@@ -294,7 +274,7 @@ export function createServerSyncContextInner(
       void bootstrapInstance(directory)
     },
     onMcp: (directory, setStore) => {
-      void loadCommands(directory, serverSDK.api.command, sdkFor(directory), serverSDK.protocol)
+      void loadCommands(directory, serverSDK.api.command)
         .then((commands) => setStore("command", commands))
         .catch((err) => {
           if (isLocationNotFoundError(err)) return directoryMissing(directory)
@@ -406,7 +386,6 @@ export function createServerSyncContextInner(
       const child = children.ensureChild(directory)
       const cache = children.vcsCache.get(key)
       if (!cache) return
-      const sdk = sdkFor(directory)
       await bootstrapDirectory({
         directory,
         scope: serverSDK.scope,
@@ -417,7 +396,6 @@ export function createServerSyncContextInner(
           project: globalStore.project,
           provider: globalStore.provider,
         },
-        sdk,
         api: serverSDK.api,
         store: child[0],
         setStore: child[1],
@@ -427,7 +405,6 @@ export function createServerSyncContextInner(
         translate: language.t,
         queryClient,
         session,
-        protocol: serverSDK.protocol,
         branches: (value) => serverSDK.orchestra.vcs.get(value),
         onMissingDirectory: directoryMissing,
       })
@@ -669,7 +646,6 @@ export function createServerSyncContextInner(
     mcp: {
       toggle: async (directory: string, name: string, open: (url: string) => void) => {
         const key = directoryKey(directory)
-        const sdk = sdkFor(key)
         const status = children.child(key, { bootstrap: false })[0].mcp[name]?.status
         if (!status) return
         await toggleMcp({

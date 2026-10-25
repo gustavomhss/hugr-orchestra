@@ -4,6 +4,7 @@ import path from "node:path"
 import { createComponent } from "solid-js"
 import { render } from "solid-js/web"
 import { QueryClient } from "@tanstack/solid-query"
+import { Orchestra } from "@orchestra/client"
 import { flowFromDocument, issues } from "@/orchestra/relay/graph"
 import type { RelaySource } from "@/orchestra/relay/source"
 
@@ -46,7 +47,6 @@ Bun.plugin({
 })
 const load = (specifier: string) => import(`${Bun.resolveSync(specifier, import.meta.dir)}?relay-policy`)
 const { PlatformProvider }: typeof import("@/context/platform") = await load("@/context/platform")
-const { createSdkForServer }: typeof import("@/utils/server") = await load("@/utils/server")
 const { createRelayClient, decodeDocument }: typeof import("@/orchestra/relay/client") = await load(
   "@/orchestra/relay/client",
 )
@@ -73,7 +73,7 @@ test("Relay UI cannot POST start, release or check; authoring and recorded GETs 
       ? { status: "pass", rows: [{ label: "Recorded", value: "hash" }] }
       : path.endsWith("/ledger") ? [] : path.includes("/run") ? run : doc })
   }, { preconnect: fetch.preconnect })
-  const client = createRelayClient({ sdk: createSdkForServer({ server, directory, fetch: fetcher }), directory })
+  const client = createRelayClient({ orchestra: Orchestra.make({ baseUrl: server.url, fetch: fetcher }), directory })
   const runClient = createRunClient({ server, directory, fetch: fetcher })
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })
   const source = { client, runClient, queryClient: () => queryClient, key: (...parts: string[]) => parts,

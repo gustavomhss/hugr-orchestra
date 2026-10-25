@@ -1,7 +1,8 @@
+import { ClientError } from "@orchestra/client"
 import type { RelayAuthoring } from "@orchestra/schema/relay-authoring"
 import type { RelayHook } from "@orchestra/schema/relay-hook"
 import type { RelayLedger } from "@orchestra/schema/relay-ledger"
-import type { ServerSdk } from "@/utils/server"
+import type { ServerClient } from "@/utils/server"
 
 // The Relay authoring routes (`server.relay.document`, `server.relay.publish`, `server.relay.hook`), called through
 // the generated V2 client. The types are the frozen schema contracts: the generator drops `NullOr` (an unpublished
@@ -80,94 +81,76 @@ export function writeFailure(error: unknown) {
 
 export type RelayClient = ReturnType<typeof createRelayClient>
 
-type Answer = { data?: unknown; error?: unknown; response?: Response }
-
-export function createRelayClient(input: { sdk: ServerSdk; directory: string }) {
+export function createRelayClient(input: { orchestra: ServerClient; directory: string }) {
   const location = { directory: input.directory }
-  const relay = input.sdk.v2.relay
-  const off = { throwOnError: false } as const
+  const documents = input.orchestra.relayDocuments
+  const publication = input.orchestra.relayPublish
+  const hooks = input.orchestra.relayHooks
 
   return {
-    documents: async () =>
-      (await body<RelayDocumentView[]>(relay.document.list({ location }, off))).map(decodeDocument),
+    documents: async () => (await body<RelayDocumentView[]>(documents.list({ location }))).map(decodeDocument),
     document: async (documentID: string) =>
-      decodeDocument(await body<RelayDocumentView>(relay.document.get({ documentID, location }, off))),
+      decodeDocument(await body<RelayDocumentView>(documents.get({ documentID, location }))),
     version: (documentID: string, versionID: string) =>
-      body<RelayAuthoring.Version>(relay.document.version({ documentID, versionID, location }, off)),
-    versions: (documentID: string) =>
-      body<RelayAuthoring.Version[]>(relay.document.versions({ documentID, location }, off)),
+      body<RelayAuthoring.Version>(documents.version({ documentID, versionID, location })),
+    versions: (documentID: string) => body<RelayAuthoring.Version[]>(documents.versions({ documentID, location })),
     create: async (fields: RelayDocumentFields) =>
       decodeDocument(
-        await body<RelayDocumentView>(relay.document.create({ location, relayDocumentCreate: contract(fields) }, off)),
+        await body<RelayDocumentView>(
+          documents.create({ location, ...contract<Omit<Parameters<typeof documents.create>[0] & {}, "location">>(fields) }),
+        ),
       ),
     // A save of the loaded version; a stale one is a 409 version-conflict. `force` writes over whatever is stored.
     save: async (document: RelayDocument, fields: RelayDocumentFields, options: { force?: boolean } = {}) =>
       decodeDocument(
         await body<RelayDocumentView>(
-          relay.document.update(
-            {
-              documentID: document.id,
-              location,
-              relayDocumentUpdate: contract({
-                ...fields,
-                versionId: document.versionId,
-                expectedChecksum: document.checksum,
-                // Sent only to overwrite: an ordinary save keeps the update body it always had.
-                ...(options.force ? { force: true } : {}),
-              }),
-            },
-            off,
-          ),
+          documents.update({
+            documentID: document.id,
+            location,
+            ...contract<Omit<Parameters<typeof documents.update>[0], "documentID" | "location">>({
+              ...fields,
+              versionId: document.versionId,
+              expectedChecksum: document.checksum,
+              // Sent only to overwrite: an ordinary save keeps the update body it always had.
+              ...(options.force ? { force: true } : {}),
+            }),
+          }),
         ),
       ),
-    remove: (documentID: string) => body<void>(relay.document.remove({ documentID, location }, off), true),
-    definition: (documentID: string) => body<unknown>(relay.document.export({ documentID, location }, off)),
-    nodeTypes: () =>
-      body<{ workflow: RelayNodeType[]; hook: RelayNodeType[] }>(relay.document.nodeTypes({ location }, off)),
+    remove: (documentID: string) => body<void>(documents.remove({ documentID, location }), true),
+    definition: (documentID: string) => body<unknown>(documents.definition({ documentID, location })),
+    nodeTypes: () => body<{ workflow: RelayNodeType[]; hook: RelayNodeType[] }>(documents.nodeTypes({ location })),
     publish: async (document: RelayDocument) =>
       decodeDocument(
         await body<RelayDocumentView>(
-          relay.publish.publish(
-            {
-              documentID: document.id,
-              location,
-              relayPublishInput: { versionId: document.versionId, expectedChecksum: document.checksum },
-            },
-            off,
-          ),
+          publication.publish({
+            documentID: document.id,
+            location,
+            versionId: document.versionId,
+            expectedChecksum: document.checksum,
+          }),
         ),
       ),
     // Withdraws the published version; the draft is kept.
     unpublish: async (document: RelayDocument) =>
       decodeDocument(
         await body<RelayDocumentView>(
-          relay.publish.unpublish(
-            { documentID: document.id, location, relayUnpublishInput: { expectedChecksum: document.checksum } },
-            off,
-          ),
+          publication.unpublish({ documentID: document.id, location, expectedChecksum: document.checksum }),
         ),
       ),
-    installs: async () => (await body<{ installs: RelayInstall[] }>(relay.hook.list({ location }, off))).installs,
+    installs: async () => (await body<{ installs: RelayInstall[] }>(hooks.list({ location }))).installs,
     // The server pins the document's published version; `version` is left out so it never pins anything else.
-    install: (documentID: string) =>
-      body<RelayInstall>(relay.hook.install({ location, relayHookInstallInput: { document: documentID } }, off)),
-    update: (installID: string) =>
-      body<RelayInstall>(relay.hook.update({ installID, location, relayHookUpdateInput: {} }, off)),
+    install: (documentID: string) => body<RelayInstall>(hooks.install({ location, document: documentID })),
+    update: (installID: string) => body<RelayInstall>(hooks.update({ installID, location })),
     // The server moves a corrupt hooks.json aside and starts an empty install list; it refuses a valid or unreadable file.
-    repair: () =>
-      body<{ backup: string; installs: RelayInstall[] }>(
-        relay.hook.repair({ location, relayHookRepairInput: { confirm: true } }, off),
-      ),
+    repair: () => body<{ backup: string; installs: RelayInstall[] }>(hooks.repair({ location, confirm: true })),
     // The evaluation order: every install exactly once, first to last. Answers the installs in their new order.
     order: async (installIDs: string[]) =>
-      (await body<{ installs: RelayInstall[] }>(relay.hook.order({ location, relayHookOrderInput: { installIDs } }, off)))
-        .installs,
+      (await body<{ installs: RelayInstall[] }>(hooks.order({ location, installIDs }))).installs,
     enable: (installID: string, enabled: boolean) =>
-      body<RelayInstall>(
-        enabled ? relay.hook.enable({ installID, location }, off) : relay.hook.disable({ installID, location }, off),
-      ),
-    uninstall: (installID: string) => body<void>(relay.hook.uninstall({ installID, location }, off), true),
-    decisions: (installID: string) => body<RelayDecision[]>(relay.hook.decisions({ installID, location }, off)),
+      body<RelayInstall>(enabled ? hooks.enable({ installID, location }) : hooks.disable({ installID, location })),
+    uninstall: (installID: string) => body<void>(hooks.uninstall({ installID, location }), true),
+    decisions: (installID: string) => body<RelayDecision[]>(hooks.decisions({ installID, location })),
   }
 }
 
@@ -177,31 +160,43 @@ function contract<T>(value: unknown) {
 }
 
 // A Location-scoped success is `{location, data}`; anything else from a 2xx is not the Relay API.
-async function body<T>(call: Promise<Answer>, empty = false): Promise<T> {
+async function body<T>(call: Promise<unknown>, empty = false): Promise<T> {
   const result = await call.catch((cause: unknown) => {
-    // The SDK rejects a bare `text/html` answer (a server's embedded web app) before the body can be read.
-    if (cause instanceof Error && cause.message.includes("Server responded with text/html"))
-      throw new RelayError(0, "The server did not answer as Relay")
-    throw new RelayError(-1, cause instanceof Error ? cause.message : String(cause), "transport")
+    throw failure(cause)
   })
-  // No response at all: the request never reached the server, or the server never answered.
-  if (!result.response) {
-    const message = record(result.error) && typeof result.error.message === "string" ? result.error.message : ""
-    throw new RelayError(-1, message || String(result.error), "transport")
-  }
-  if (!result.response.ok || result.error !== undefined) throw refusal(result.response.status, result.error, result.response.statusText)
   if (empty) return contract<T>(undefined)
-  if (!record(result.data) || !("data" in result.data)) throw new RelayError(0, "The server did not answer as Relay")
-  return contract<T>(result.data.data)
+  if (!record(result) || !("data" in result)) throw new RelayError(0, "The server did not answer as Relay")
+  return contract<T>(result.data)
 }
 
-function refusal(status: number, value: unknown, statusText = "") {
-  const fallback = `Request failed (HTTP ${status}${statusText ? ` ${statusText}` : ""})`
-  if (!record(value)) return new RelayError(status, fallback)
-  const message = typeof value.message === "string" && value.message ? value.message : fallback
-  const code = typeof value.code === "string" ? value.code : undefined
-  const tag = typeof value._tag === "string" ? value._tag : undefined
-  return new RelayError(status, message, code, tag)
+// The generated client throws a declared refusal's body as it is, and a `ClientError` for everything else.
+function failure(cause: unknown) {
+  if (cause instanceof ClientError) {
+    // The request never reached the server, or the server never answered.
+    if (cause.reason === "Transport")
+      return new RelayError(-1, cause.cause instanceof Error ? cause.cause.message : cause.message, "transport")
+    if (cause.reason === "UnexpectedStatus") {
+      const status = record(cause.cause) && typeof cause.cause.status === "number" ? cause.cause.status : 0
+      return new RelayError(status, `Request failed (HTTP ${status})`)
+    }
+    // A body that is not JSON (a server's embedded web app, a bare 404 page) is not the Relay API.
+    return new RelayError(0, "The server did not answer as Relay")
+  }
+  if (!record(cause)) return new RelayError(-1, cause instanceof Error ? cause.message : String(cause), "transport")
+  const tag = typeof cause._tag === "string" ? cause._tag : undefined
+  const status = (tag && refusalStatus[tag]) || 400
+  const message = typeof cause.message === "string" && cause.message ? cause.message : `Request failed (HTTP ${status})`
+  return new RelayError(status, message, typeof cause.code === "string" ? cause.code : undefined, tag)
+}
+
+// The declared refusals' statuses (protocol `groups/relay-*.ts`, `errors.ts`); the body does not carry its status.
+const refusalStatus: Record<string, number> = {
+  RelayInvalidError: 400,
+  UnauthorizedError: 401,
+  RelayForbiddenError: 403,
+  RelayNotFoundError: 404,
+  RelayConflictError: 409,
+  RelayUnavailableError: 503,
 }
 
 export function decodeDocument(view: RelayDocumentView): RelayDocument {

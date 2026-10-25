@@ -1,5 +1,5 @@
 import { normalizeSessionInfo } from "@/utils/session"
-import type { ServerApi, ServerSdk } from "@/utils/server"
+import type { ServerApi } from "@/utils/server"
 
 export async function loadRootSessions(input: { api: Pick<ServerApi["session"], "list">; directory: string; limit: number }) {
   const result = await input.api.list({
@@ -12,16 +12,6 @@ export async function loadRootSessions(input: { api: Pick<ServerApi["session"], 
     limit: input.limit,
     limited: true,
   } as const
-}
-
-export async function loadRootSessionsV1(input: { client: ServerSdk; directory: string; limit: number }) {
-  try {
-    const result = await input.client.session.list({ directory: input.directory, roots: true, limit: input.limit })
-    return { data: result.data, limit: input.limit, limited: true } as const
-  } catch {
-    const result = await input.client.session.list({ directory: input.directory, roots: true })
-    return { data: result.data, limit: input.limit, limited: false } as const
-  }
 }
 
 export function estimateRootSessionTotal(input: { count: number; limit: number; limited: boolean }) {

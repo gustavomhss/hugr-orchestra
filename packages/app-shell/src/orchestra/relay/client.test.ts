@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { createSdkForServer } from "@/utils/server"
+import { Orchestra } from "@orchestra/client"
 import {
   createRelayClient,
   decisionTime,
@@ -25,7 +25,14 @@ function server(respond: (request: Request) => Response) {
     { preconnect: globalThis.fetch.preconnect },
   )
   const http = { url: "http://127.0.0.1:4096", username: "orchestra", password: "secret" }
-  const client = createRelayClient({ sdk: createSdkForServer({ server: http, fetch: fetcher, directory }), directory })
+  const client = createRelayClient({
+    orchestra: Orchestra.make({
+      baseUrl: http.url,
+      fetch: fetcher,
+      headers: { Authorization: `Basic ${btoa(`${http.username}:${http.password}`)}` },
+    }),
+    directory,
+  })
   const runs = createRunClient({ server: http, directory, fetch: (url, init) => fetcher(url, init) })
   return { client, runs, requests }
 }
