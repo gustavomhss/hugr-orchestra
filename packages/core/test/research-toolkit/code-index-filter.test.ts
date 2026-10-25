@@ -47,7 +47,7 @@ describe("code-index filter", () => {
     const root = path.resolve(import.meta.dirname, "../../../..")
     const all = await Array.fromAsync(new Bun.Glob("packages/core/src/**/*").scan({ cwd: root, onlyFiles: true }))
     const paths = all.map((item) => item.replaceAll("\\", "/"))
-    const source = paths.filter((item) => /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|py|pyi)$/.test(item))
+    const source = paths.filter((item) => /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|py|pyi|go|rs)$/.test(item))
     const result = CodeIndexFilter.select(paths)
     expect(source.length).toBeGreaterThan(200)
     expect(result.files.length + result.skipped.length).toBe(source.length)

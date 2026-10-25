@@ -55,15 +55,6 @@ export const keptPaths: Kept[] = [
     reason: "frozen upstream OpenAPI fixture",
   },
   {
-    path: /^(?:(?:packages|apps)\/[^/]+|tooling\/http-recorder)\/test\/fixtures\/recordings\//,
-    reason:
-      "recorded HTTP cassettes; replay matches request bodies byte for byte, so they are re-recorded, not renamed",
-  },
-  {
-    path: /^(?:packages\/(?:opencode|orchestra)|apps\/orchestra)\/test\/tool\/fixtures\/models-api\.json$/,
-    reason: "snapshot of the third-party models.dev catalog, which lists the Zen provider",
-  },
-  {
     path: /^packages\/tui\/test\/cli\/tui\/(?:inline-tool-wrap-snapshot\.test\.tsx|__snapshots__\/inline-tool-wrap-snapshot\.test\.tsx\.snap)$/,
     reason: "line-wrap fixture whose arbitrary transcript text fixes the wrap points of its snapshot",
   },
