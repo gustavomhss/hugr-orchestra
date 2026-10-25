@@ -161,7 +161,7 @@ Size is not a rule here: the engine calls the existing `script/godfile.ts` (500/
 | # | id | Catches | Sev | Src |
 |---|---|---|---|---|
 | B1 | import-direction | added import of `@orchestra/core` or `@orchestra/server` from `packages/client`, `packages/schema`, `packages/protocol` (AGENTS.md direction rule). Probe found 0 hits, so it is cheap and quiet. Home: `script/check-module-boundaries.ts` | G | A, history |
-| N1 | legacy-name | case-insensitive `opencode` in added lines of non-doc, non-generated source, reusing the `rename-ledger` allowlist. Warn until vendored legacy types are gone, then gate (replaces file-growth) | W | history |
+| N1 | legacy-name | case-insensitive the legacy upstream name in added lines of non-doc, non-generated source, reusing the `rename-ledger` allowlist. Warn until vendored legacy types are gone, then gate (replaces file-growth) | W | history |
 
 ### CI and workflows (14)
 
