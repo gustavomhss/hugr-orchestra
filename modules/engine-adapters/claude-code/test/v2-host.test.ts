@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test"
+import { beforeEach, expect, test } from "bun:test"
 import type { HookInput, McpSdkServerConfigWithInstance, Options, SDKMessage, SDKUserMessage, query } from "@anthropic-ai/claude-agent-sdk"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
@@ -21,6 +21,10 @@ const calls: { prompt: unknown; options: Options | undefined }[] = []
 let script: SDKMessage[] | ((sent: string | undefined) => SDKMessage[]) = []
 // Runs before the frames, as Claude Code would mid-turn: approvals and Orchestra tool calls.
 let during: (options: Options) => Promise<void> = async () => {}
+// A test that sets `during` would otherwise run its approvals and MCP calls inside every later test's turn.
+beforeEach(() => {
+  during = async () => {}
+})
 
 // Replaces the scripted frames when a test needs to read the whole streaming input or outlive the turn.
 let pump: ((input: AsyncIterable<SDKUserMessage>, options: Options) => AsyncGenerator<SDKMessage>) | undefined

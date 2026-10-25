@@ -1,5 +1,5 @@
 import { describe, expect } from "bun:test"
-import { Effect, Layer } from "effect"
+import { Effect, Layer, Schema } from "effect"
 import { Config } from "@orchestra/core/config"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { Format } from "@orchestra/core/format"
@@ -17,7 +17,8 @@ const withFormat = (formatter: Config.Info["formatter"]) =>
           Config.Service,
           Config.Service.of({
             entries: () =>
-              Effect.succeed([new Config.Document({ type: "document", info: new Config.Info({ formatter }) })]),
+              // Decoded like a config file, so plain override objects become formatter entries.
+              Effect.succeed([new Config.Document({ type: "document", info: Schema.decodeUnknownSync(Config.Info)({ formatter }) })]),
           }),
         ),
       ],

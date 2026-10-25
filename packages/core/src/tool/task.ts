@@ -197,7 +197,11 @@ const layer = Layer.effectDiscard(
                   message: `Task ${child.id} has unfinished promoted work; resume explicitly with task_id`,
                 })
               // The drain outlives a move to the background; cancelling the Task before that still stops it.
-              const drain = yield* Effect.forkDetach(execution.resume(child.id, { interruptOnCancel: true }))
+              // Starting immediately joins the drain that is active now: a deferred start could find it settled and
+              // force a second provider turn for an exact retry.
+              const drain = yield* Effect.forkDetach(execution.resume(child.id, { interruptOnCancel: true }), {
+                startImmediately: true,
+              })
               return yield* restore(
                 Effect.raceFirst(
                   Fiber.join(drain).pipe(Effect.as(false)),

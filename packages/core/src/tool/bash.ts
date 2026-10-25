@@ -232,7 +232,7 @@ const layer = Layer.effectDiscard(
 
               if (input.background) {
                 if (Option.isNone(sessionProcess))
-                  return yield* Effect.fail(new Error("Session process registry is unavailable"))
+                  return yield* new ToolFailure({ message: "Session process registry is unavailable" })
                 // The same confinement and environment scrub as a foreground call, kept open for the process's life.
                 const launched = yield* sessionProcess.value.launch({
                   sessionID: context.sessionID,
@@ -317,7 +317,7 @@ const layer = Layer.effectDiscard(
                 ...(warnings.length ? { warnings } : {}),
               }
                }).pipe(Effect.provideService(ToolSafety.NativeContext, { directory: location.directory, projectID: location.project.id }),
-                 Effect.mapError((error) => new ToolFailure({ message: error instanceof ToolSafety.Denied
+                 Effect.mapError((error) => error instanceof ToolFailure ? error : new ToolFailure({ message: error instanceof ToolSafety.Denied
                 ? error.message : `Unable to execute command: ${input.command}`,
                 ...(error instanceof ToolSafety.Denied ? { error } : {}),
               }))),
