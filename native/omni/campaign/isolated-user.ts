@@ -12,7 +12,7 @@ import { SERVER_PASSWORD } from "./server-client.ts"
  * to the campaign password.
  */
 export function isolated(name: string, config: Record<string, unknown>) {
-  const home = realpathSync(mkdtempSync(path.join(os.tmpdir(), `omni-campaign-${name}-`)))
+  const home = realpathSync.native(mkdtempSync(path.join(os.tmpdir(), `omni-campaign-${name}-`)))
   const project = path.join(home, "project")
   mkdirSync(project, { recursive: true })
   writeFileSync(path.join(project, "a.ts"), "export const a = 1\n")

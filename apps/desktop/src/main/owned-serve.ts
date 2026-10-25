@@ -38,7 +38,7 @@ export async function startOwnedServe(options: {
     ORCHESTRA_SERVER_USERNAME: "orchestra",
     ORCHESTRA_SERVER_PASSWORD: password,
   }
-  const state = { child: undefined as DesktopOmni.Spawned | undefined, stopping: false, failures: 0 }
+  const state = { child: undefined as DesktopOmni.Spawned | undefined, stopping: false, killed: false, failures: 0 }
 
   const launch = () => {
     const startedAt = Date.now()
@@ -54,7 +54,10 @@ export async function startOwnedServe(options: {
       child.once("exit", (code, signal) => {
         resolve()
         if (state.child === child) state.child = undefined
-        options.onEvent?.("utility-exit", { utilityPID: child.pid, code })
+        // The server answers the SIGTERM it was asked to stop on with the signal's exit status (143); that is an orderly
+        // stop. A server that had to be killed, or that failed on its own, keeps its real status.
+        const requested = state.stopping && !state.killed && (code === 143 || signal === "SIGTERM" || process.platform === "win32")
+        options.onEvent?.("utility-exit", { utilityPID: child.pid, code: requested ? 0 : code })
         options.logger.log("owned serve exited", { code, signal, stopping: state.stopping })
         if (state.stopping) return
         state.failures = Date.now() - startedAt > STABLE_AFTER ? 0 : state.failures + 1
@@ -82,10 +85,15 @@ export async function startOwnedServe(options: {
     const child = state.child
     if (!child) return
     const exited = new Promise<"exited">((resolve) => child.once("exit", () => resolve("exited")))
-    child.kill("SIGTERM")
+    // SIGTERM goes to the server alone. Stopping its whole omni tree would also end the supervisor the server relies on
+    // to reap the shells and MCP servers its tools started, and they would outlive it. Windows has no SIGTERM, and its
+    // job object ends the tree.
+    if (child.pid === undefined || process.platform === "win32") child.kill("SIGTERM")
+    else process.kill(child.pid, "SIGTERM")
     const outcome = await Promise.race([exited, delay(STOP_TIMEOUT).then(() => "timeout" as const)])
     if (outcome === "exited") return options.onEvent?.("utility-stopped", {})
     options.onEvent?.("utility-watchdog", {})
+    state.killed = true
     child.kill("SIGKILL")
   }
 
