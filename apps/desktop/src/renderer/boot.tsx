@@ -1,3 +1,6 @@
+// This entry sorts first, so its import of the app would load app-shell's optional `window.api` before the desktop's
+// own declaration and that one would lose; referencing it here keeps the desktop's typing in force.
+/// <reference path="./env.d.ts" />
 import { render } from "solid-js/web"
 import { CometSplash } from "./splash/comet-splash"
 
