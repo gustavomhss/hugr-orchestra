@@ -4,14 +4,13 @@ import { pathToFileURL } from "url"
 import * as Effect from "effect/Effect"
 import { Option } from "effect"
 import { Orchestra } from "@orchestra/client"
-import type { SessionsEventsOutput } from "@orchestra/client"
 import { ServerAuth } from "@orchestra/server/auth"
 import { Commands } from "../commands"
 import { Runtime } from "../../framework/runtime"
 import { Daemon } from "../../services/daemon"
+import { runTurn, type Event } from "../../turn"
 
 type Client = ReturnType<typeof Orchestra.make>
-type Event = SessionsEventsOutput
 
 export type Options = {
   readonly message: string
@@ -98,14 +97,7 @@ export async function execute(client: Client, options: Options) {
   if (agent) await client.sessions.switchAgent({ sessionID, agent })
   if (model) await client.sessions.switchModel({ sessionID, model })
 
-  const baseline = await lastSeq(client, sessionID)
-  const state = {
-    seq: baseline ?? -1,
-    started: false,
-    failure: false,
-    promoted: new Set<string>(),
-    tools: new Map<string, string>(),
-  }
+  const state = { started: false, failure: false, tools: new Map<string, string>() }
 
   const out = (line: string) => process.stdout.write(line + EOL)
   const emit = (type: string, data: unknown) => {
@@ -119,17 +111,9 @@ export async function execute(client: Client, options: Options) {
   }
 
   const render = (event: Event) => {
-    const seq = event.durable?.seq
-    if (seq !== undefined) {
-      if (seq <= state.seq) return
-      state.seq = seq
-    }
     const data = event.data as Record<string, any>
     if (data.sessionID !== sessionID) return
     switch (event.type) {
-      case "session.next.prompted":
-        state.promoted.add(data.messageID)
-        return
       case "session.next.step.started":
         if (emit("step_start", data) || state.started) return
         state.started = true
@@ -173,35 +157,20 @@ export async function execute(client: Client, options: Options) {
     }
   }
 
-  const stop = new AbortController()
-  const stream = (async () => {
-    for await (const event of client.sessions.events({ sessionID, after: baseline }, { signal: stop.signal })) render(event)
-  })().catch(() => undefined)
-  const permissions = answerPermissions(client, sessionID, options.auto, location, stop.signal, warn)
-
-  const admitted = await (options.command
-    ? client.sessions.command({ sessionID, command: options.command, arguments: options.message })
-    : client.sessions.prompt({ sessionID, prompt: { text: options.message, files: options.files.map((file) => ({ ...file })) } })
-  ).catch((error) => (error instanceof Error ? error : new Error(JSON.stringify(error))))
-  if (admitted instanceof Error) {
-    stop.abort()
-    await Promise.all([stream, permissions])
-    return fail(options, admitted.message || "Prompt was rejected")
-  }
-
-  // The wake that drains the prompt is advisory: a wait that returns before our prompt was promoted observed an idle
-  // session, not our turn, so wait again until the history shows the prompt was picked up.
-  const finished = await (async () => {
-    for (let attempt = 0; attempt < 40; attempt++) {
-      await client.sessions.wait({ sessionID })
-      await flush(client, sessionID, state, render)
-      if (state.promoted.has(admitted.id)) return true
-      await Bun.sleep(250)
-    }
-    return false
-  })()
-  stop.abort()
-  await Promise.all([stream, permissions])
+  const finished = await runTurn(client, {
+    sessionID,
+    location,
+    onEvent: render,
+    onPermission: async (request) => {
+      if (!options.auto) warn(`! permission requested: ${request.action} (${request.resources.join(", ")}); auto-rejecting`)
+      return options.auto ? "once" : "reject"
+    },
+    submit: () =>
+      options.command
+        ? client.sessions.command({ sessionID, command: options.command, arguments: options.message })
+        : client.sessions.prompt({ sessionID, prompt: { text: options.message, files: options.files.map((file) => ({ ...file })) } }),
+  }).catch((error: Error) => error)
+  if (finished instanceof Error) return fail(options, finished.message || "Prompt was rejected")
   if (!finished) return fail(options, "The prompt was not processed")
   return !state.failure
 }
@@ -249,56 +218,6 @@ function parseModel(value: string | undefined, variant: string | undefined) {
   const id = rest.join("/")
   if (!providerID || !id) return "invalid" as const
   return { providerID, id, variant }
-}
-
-async function lastSeq(client: Client, sessionID: string) {
-  let after: number | undefined
-  while (true) {
-    const page = await client.sessions.history({ sessionID, after })
-    after = page.data.at(-1)?.durable?.seq ?? after
-    if (!page.hasMore) return after
-  }
-}
-
-async function flush(client: Client, sessionID: string, state: { seq: number }, render: (event: Event) => void) {
-  while (true) {
-    const page = await client.sessions.history({ sessionID, after: state.seq < 0 ? undefined : state.seq })
-    page.data.forEach((event) => render(event as Event))
-    if (!page.hasMore) return
-  }
-}
-
-/** Answers permission requests raised by this session or its subagents; an unanswered request would block the run forever. */
-async function answerPermissions(
-  client: Client,
-  sessionID: string,
-  auto: boolean,
-  location: { directory: string } | undefined,
-  signal: AbortSignal,
-  warn: (line: string) => void,
-) {
-  const answered = new Set<string>()
-  const family = new Map<string, boolean>([[sessionID, true]])
-  const belongs = async (id: string): Promise<boolean> => {
-    const known = family.get(id)
-    if (known !== undefined) return known
-    const parent = (await client.sessions.get({ sessionID: id }).catch(() => undefined))?.parentID
-    const result = parent ? await belongs(parent) : false
-    family.set(id, result)
-    return result
-  }
-  while (!signal.aborted) {
-    const requests = await client.permissions.listRequests({ location }).catch(() => undefined)
-    for (const request of requests?.data ?? []) {
-      if (answered.has(request.id) || !(await belongs(request.sessionID))) continue
-      answered.add(request.id)
-      if (!auto) warn(`! permission requested: ${request.action} (${request.resources.join(", ")}); auto-rejecting`)
-      await client.permissions
-        .reply({ sessionID: request.sessionID, requestID: request.id, reply: auto ? "once" : "reject" })
-        .catch(() => undefined)
-    }
-    await Bun.sleep(200)
-  }
 }
 
 /** Resolves --file arguments to prompt attachments; returns an error message string on failure. */

@@ -34,6 +34,7 @@
         "orchestra": "./bin/orchestra.cjs",
       },
       "dependencies": {
+        "@agentclientprotocol/sdk": "0.21.0",
         "@effect/platform-node": "catalog:",
         "@opentui/core": "catalog:",
         "@opentui/solid": "catalog:",

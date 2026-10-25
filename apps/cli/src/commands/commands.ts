@@ -320,6 +320,11 @@ const plugin = Spec.make("plugin", {
   },
 })
 
+const acp = Spec.make("acp", {
+  description: "Start the ACP (Agent Client Protocol) server on stdio",
+  params: { cwd: Flag.string("cwd").pipe(Flag.withDescription("working directory"), Flag.optional) },
+})
+
 declare const ORCHESTRA_CLI_NAME: string | undefined
 
 export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHESTRA_CLI_NAME : "orchestra", {
@@ -378,6 +383,7 @@ export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHE
     stats,
     toolkit,
     plugin,
+    acp,
     Spec.make("migrate", { description: "Migrate v1 data to v2" }),
     Spec.make("service", {
       description: "Manage the background server",
