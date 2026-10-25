@@ -22,9 +22,17 @@ import { SkillV2 } from "@orchestra/core/skill"
 import { TaskGovernance } from "@orchestra/core/tool/task-governance"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { AppProcess } from "@orchestra/core/process"
+import { Global } from "@orchestra/core/global"
+import { SystemContextRegistry } from "@orchestra/core/system-context"
+import { ToolRegistry } from "@orchestra/core/tool/registry"
+import { ToolOutputStore } from "@orchestra/core/tool-output-store"
+import { MaestroResearchInquiryV2 } from "../../src/v2/research-inquiry-source"
+import { MaestroToolsV2 } from "../../src/v2/tools"
 import { MaestroGovernanceV2 } from "../../src/v2/governance"
 import { GovernanceBackgroundV2 } from "../../src/v2/governance/background"
 import { WriteRootsV2 } from "../../src/v2/governance/write-roots"
+import { ResearchDispatchV2 } from "../../src/v2/governance/research"
+import { Research } from "@orchestra/schema/research"
 
 /** A real temporary worktree, removed when the scope closes. */
 export const worktree = Effect.acquireRelease(
@@ -93,6 +101,34 @@ export const researchLayer = (directory: string) =>
     ],
   )
 
+/**
+ * The Location's Maestro tools, governance and research inquiry context source over one in-memory database, placed at
+ * `directory`, as the runner sees them; Config holds only `entries`.
+ */
+export const toolsLayer = (directory: string, entries: Config.Entry[] = []) =>
+  AppNodeBuilder.build(
+    LayerNode.group([
+      MaestroToolsV2.node,
+      MaestroGovernanceV2.node,
+      MaestroResearchInquiryV2.node,
+      SystemContextRegistry.node,
+      ToolRegistry.node,
+      AgentV2.node,
+      SessionStore.node,
+      Database.node,
+      FSUtil.node,
+      EventV2.node,
+    ]),
+    [
+      ...placed(directory),
+      [Global.node, Layer.unwrap(worktree.pipe(Effect.map((data) => Global.layerWith({ data }))))],
+      [ToolOutputStore.node, ToolOutputStore.nodeWithoutConfig],
+      [Config.node, Layer.mock(Config.Service, { entries: () => Effect.succeed(entries) })],
+      [SkillV2.node, Layer.mock(SkillV2.Service, { list: () => Effect.succeed([]) })],
+      [GovernanceBackgroundV2.sessionsNode, Layer.succeed(GovernanceBackgroundV2.Sessions, Option.none())],
+    ],
+  )
+
 /** Inserts a Session row as the store reads it; `permission` keeps V1 rule fields, as the column does. */
 export const session = Effect.fn("GovernanceFixture.session")(function* (input: {
   readonly id?: SessionSchema.ID
@@ -111,6 +147,38 @@ export const session = Effect.fn("GovernanceFixture.session")(function* (input: 
     version: "test", agent: input.agent, permission: input.permission,
   }).run().pipe(Effect.orDie)
   return id
+})
+
+/** A research child under maestro, bound to the dispatch `callID` unless `bound` is false, with one pending input. */
+export const child = Effect.fn("GovernanceFixture.child")(function* (
+  directory: string,
+  input: { readonly bound?: boolean; readonly effort?: Research.Depth; readonly allowedDomains?: string[]; readonly started?: number } = {},
+) {
+  const parentID = yield* session({ directory, agent: "maestro" })
+  const rules = input.bound === false
+    ? []
+    : ResearchDispatchV2.bind([], { callID: "call_research", effort: input.effort, allowedDomains: input.allowedDomains })
+  const id = yield* session({
+    directory,
+    agent: "jimmy",
+    parentID,
+    permission: rules.map((rule) => ({ permission: rule.action, pattern: rule.resource, action: rule.effect })),
+  })
+  const database = yield* Database.Service
+  yield* database.db.insert(SessionInputTable)
+    .values({
+      id: SessionMessage.ID.make(`msg_${randomUUID().replaceAll("-", "")}`),
+      session_id: id,
+      prompt: { text: "p" },
+      delivery: "steer",
+      admitted_seq: 0,
+      ...(input.started === undefined ? {} : { time_created: input.started }),
+    })
+    .run().pipe(Effect.orDie)
+  const store = yield* SessionStore.Service
+  const info = yield* store.get(id)
+  if (!info) return yield* Effect.die("fixture child missing")
+  return info
 })
 
 /** Writes a durable event row of `type` with the given id and data, next in its aggregate, as a host writer would. */
