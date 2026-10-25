@@ -87,7 +87,9 @@ export async function startOwnedServe(options: {
     state.stopping = true
     const child = state.child
     if (!child) return
-    const exited = new Promise<"exited">((resolve) => child.once("exit", () => resolve("exited")))
+    // Wait for "close", not "exit": the omni child still drains its output and reaps its tree after the exit, and the app
+    // must not quit under that native work (on Windows it ends the process with a nonzero status).
+    const exited = new Promise<"exited">((resolve) => child.once("close", () => resolve("exited")))
     // SIGTERM goes to the server alone. Stopping its whole omni tree would also end the supervisor the server relies on
     // to reap the shells and MCP servers its tools started, and they would outlive it. Windows has no SIGTERM, and its
     // job object ends the tree.
