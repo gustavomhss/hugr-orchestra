@@ -2430,6 +2430,73 @@ const adaptGroup45 = (raw: RawClient["server.capability.artifacts"]) => ({
   removeReference: Endpoint45_4(raw),
 })
 
+type Endpoint46_0Request = Parameters<RawClient["server.capability.schedules"]["capability.schedule.list"]>[0]
+type Endpoint46_0Input = { readonly location?: Endpoint46_0Request["query"]["location"] }
+const Endpoint46_0 = (raw: RawClient["server.capability.schedules"]) => (input?: Endpoint46_0Input) =>
+  raw["capability.schedule.list"]({
+    query: { ...(input?.["location"] === undefined ? {} : { location: input?.["location"] }) },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint46_1Request = Parameters<RawClient["server.capability.schedules"]["capability.schedule.pause"]>[0]
+type Endpoint46_1Input = {
+  readonly scheduleID: Endpoint46_1Request["params"]["scheduleID"]
+  readonly location?: Endpoint46_1Request["query"]["location"]
+  readonly "idempotency-key": Endpoint46_1Request["headers"]["idempotency-key"]
+}
+const Endpoint46_1 = (raw: RawClient["server.capability.schedules"]) => (input: Endpoint46_1Input) =>
+  raw["capability.schedule.pause"]({
+    params: { scheduleID: input["scheduleID"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    headers: { "idempotency-key": input["idempotency-key"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint46_2Request = Parameters<RawClient["server.capability.schedules"]["capability.schedule.resume"]>[0]
+type Endpoint46_2Input = {
+  readonly scheduleID: Endpoint46_2Request["params"]["scheduleID"]
+  readonly location?: Endpoint46_2Request["query"]["location"]
+  readonly "idempotency-key": Endpoint46_2Request["headers"]["idempotency-key"]
+}
+const Endpoint46_2 = (raw: RawClient["server.capability.schedules"]) => (input: Endpoint46_2Input) =>
+  raw["capability.schedule.resume"]({
+    params: { scheduleID: input["scheduleID"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    headers: { "idempotency-key": input["idempotency-key"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint46_3Request = Parameters<RawClient["server.capability.schedules"]["capability.schedule.run"]>[0]
+type Endpoint46_3Input = {
+  readonly scheduleID: Endpoint46_3Request["params"]["scheduleID"]
+  readonly location?: Endpoint46_3Request["query"]["location"]
+  readonly "idempotency-key": Endpoint46_3Request["headers"]["idempotency-key"]
+}
+const Endpoint46_3 = (raw: RawClient["server.capability.schedules"]) => (input: Endpoint46_3Input) =>
+  raw["capability.schedule.run"]({
+    params: { scheduleID: input["scheduleID"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    headers: { "idempotency-key": input["idempotency-key"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint46_4Request = Parameters<RawClient["server.capability.schedules"]["capability.schedule.remove"]>[0]
+type Endpoint46_4Input = {
+  readonly scheduleID: Endpoint46_4Request["params"]["scheduleID"]
+  readonly location?: Endpoint46_4Request["query"]["location"]
+  readonly "idempotency-key": Endpoint46_4Request["headers"]["idempotency-key"]
+}
+const Endpoint46_4 = (raw: RawClient["server.capability.schedules"]) => (input: Endpoint46_4Input) =>
+  raw["capability.schedule.remove"]({
+    params: { scheduleID: input["scheduleID"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    headers: { "idempotency-key": input["idempotency-key"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+const adaptGroup46 = (raw: RawClient["server.capability.schedules"]) => ({
+  list: Endpoint46_0(raw),
+  pause: Endpoint46_1(raw),
+  resume: Endpoint46_2(raw),
+  run: Endpoint46_3(raw),
+  remove: Endpoint46_4(raw),
+})
+
 const adaptClient = (raw: RawClient) => ({
   health: adaptGroup0(raw["server.health"]),
   location: adaptGroup1(raw["server.location"]),
@@ -2477,6 +2544,7 @@ const adaptClient = (raw: RawClient) => ({
   operator: adaptGroup43(raw["server.capability.operator"]),
   connections: adaptGroup44(raw["server.capability.connections"]),
   artifacts: adaptGroup45(raw["server.capability.artifacts"]),
+  capabilitySchedules: adaptGroup46(raw["server.capability.schedules"]),
 })
 
 export const make = (options?: {

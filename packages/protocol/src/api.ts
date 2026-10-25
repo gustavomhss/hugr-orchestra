@@ -48,6 +48,7 @@ import { ActionsTransferGroup } from "./groups/actions-transfer"
 import { makeCapabilityOperatorGroup } from "./groups/capability-operator"
 import { makeCapabilityConnectionsGroup } from "./groups/capability-connections"
 import { makeCapabilityArtifactsGroup } from "./groups/capability-artifacts"
+import { makeCapabilitySchedulesGroup } from "./groups/capability-schedules"
 
 // Protocol owns middleware placement, while Server injects concrete keys so Core service identities stay downstream.
 const makeApiFromGroup = <
@@ -109,6 +110,7 @@ const makeApiFromGroup = <
     .add(makeCapabilityOperatorGroup(locationMiddleware))
     .add(makeCapabilityConnectionsGroup(locationMiddleware))
     .add(makeCapabilityArtifactsGroup(locationMiddleware))
+    .add(makeCapabilitySchedulesGroup(locationMiddleware))
     .annotateMerge(
       OpenApi.annotations({
         title: "orchestra HttpApi",

@@ -63,6 +63,7 @@ export const groupNames = {
   "server.capability.operator": "operator",
   "server.capability.connections": "connections",
   "server.capability.artifacts": "artifacts",
+  "server.capability.schedules": "capabilitySchedules",
 } as const
 
 export const endpointNames = {

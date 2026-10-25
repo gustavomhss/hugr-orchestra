@@ -114,6 +114,7 @@
     "./worktree-event": "./src/worktree-event.ts",
     "./capability-artifact-management": "./src/capability-artifact-management.ts",
     "./capability-management": "./src/capability-management.ts",
+    "./capability-schedule-management": "./src/capability-schedule-management.ts",
     "./capability-setup": "./src/capability-setup.ts",
     "./lsp": "./src/lsp.ts"
   },

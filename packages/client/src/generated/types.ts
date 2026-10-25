@@ -9634,6 +9634,136 @@ export type ArtifactsRemoveReferenceOutput = {
   readonly reused: boolean
   readonly data: JsonValue
 }
+
+export type CapabilitySchedulesListInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type CapabilitySchedulesListOutput = {
+  readonly items: ReadonlyArray<{
+    readonly schedule: {
+      readonly id: string
+      readonly revision: number
+      readonly name: string
+      readonly prompt: string
+      readonly cadence:
+        | { readonly kind: "once"; readonly at: number }
+        | { readonly kind: "interval"; readonly minutes: number }
+        | { readonly kind: "daily"; readonly time: string }
+        | { readonly kind: "weekly"; readonly day: number; readonly time: string }
+        | { readonly kind: "cron"; readonly expression: string }
+      readonly timezone: string
+      readonly catchUp: "latest" | "skip"
+      readonly repeat?: number | null
+      readonly enabled: boolean
+      readonly disabledReason?: "exhausted" | "owner-missing" | null
+      readonly next?: number | null
+      readonly runs: number
+      readonly skipped: number
+      readonly last?:
+        | (
+            | { readonly outcome: "started"; readonly time: number; readonly slot?: number; readonly sessionID: string }
+            | { readonly outcome: "failed"; readonly time: number; readonly slot?: number; readonly error: string }
+          )
+        | null
+    }
+    readonly sessionID: string
+    readonly agentID: string
+  }>
+  readonly coverage: "live"
+}
+
+export type CapabilitySchedulesPauseInput = {
+  readonly scheduleID: { readonly scheduleID: string }["scheduleID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly "idempotency-key": { readonly "idempotency-key": string }["idempotency-key"]
+}
+
+export type CapabilitySchedulesPauseOutput = {
+  readonly id: string
+  readonly revision: number
+  readonly name: string
+  readonly prompt: string
+  readonly cadence:
+    | { readonly kind: "once"; readonly at: number }
+    | { readonly kind: "interval"; readonly minutes: number }
+    | { readonly kind: "daily"; readonly time: string }
+    | { readonly kind: "weekly"; readonly day: number; readonly time: string }
+    | { readonly kind: "cron"; readonly expression: string }
+  readonly timezone: string
+  readonly catchUp: "latest" | "skip"
+  readonly repeat?: number | null
+  readonly enabled: boolean
+  readonly disabledReason?: "exhausted" | "owner-missing" | null
+  readonly next?: number | null
+  readonly runs: number
+  readonly skipped: number
+  readonly last?:
+    | (
+        | { readonly outcome: "started"; readonly time: number; readonly slot?: number; readonly sessionID: string }
+        | { readonly outcome: "failed"; readonly time: number; readonly slot?: number; readonly error: string }
+      )
+    | null
+}
+
+export type CapabilitySchedulesResumeInput = {
+  readonly scheduleID: { readonly scheduleID: string }["scheduleID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly "idempotency-key": { readonly "idempotency-key": string }["idempotency-key"]
+}
+
+export type CapabilitySchedulesResumeOutput = {
+  readonly id: string
+  readonly revision: number
+  readonly name: string
+  readonly prompt: string
+  readonly cadence:
+    | { readonly kind: "once"; readonly at: number }
+    | { readonly kind: "interval"; readonly minutes: number }
+    | { readonly kind: "daily"; readonly time: string }
+    | { readonly kind: "weekly"; readonly day: number; readonly time: string }
+    | { readonly kind: "cron"; readonly expression: string }
+  readonly timezone: string
+  readonly catchUp: "latest" | "skip"
+  readonly repeat?: number | null
+  readonly enabled: boolean
+  readonly disabledReason?: "exhausted" | "owner-missing" | null
+  readonly next?: number | null
+  readonly runs: number
+  readonly skipped: number
+  readonly last?:
+    | (
+        | { readonly outcome: "started"; readonly time: number; readonly slot?: number; readonly sessionID: string }
+        | { readonly outcome: "failed"; readonly time: number; readonly slot?: number; readonly error: string }
+      )
+    | null
+}
+
+export type CapabilitySchedulesRunInput = {
+  readonly scheduleID: { readonly scheduleID: string }["scheduleID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly "idempotency-key": { readonly "idempotency-key": string }["idempotency-key"]
+}
+
+export type CapabilitySchedulesRunOutput = { readonly id: string; readonly sessionID: string; readonly reused: boolean }
+
+export type CapabilitySchedulesRemoveInput = {
+  readonly scheduleID: { readonly scheduleID: string }["scheduleID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly "idempotency-key": { readonly "idempotency-key": string }["idempotency-key"]
+}
+
+export type CapabilitySchedulesRemoveOutput = { readonly id: string; readonly removed: true }
 export {
   type UnauthorizedError,
   isUnauthorizedError,

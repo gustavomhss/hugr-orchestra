@@ -1,23 +1,14 @@
 export * as CapabilityScheduleContract from "./contract"
 
 import { Schema } from "effect"
+import { CapabilityScheduleManagement } from "@orchestra/schema/capability-schedule-management"
 import { ScheduledTask } from "@orchestra/schema/scheduled-task"
-import { NonNegativeInt } from "@orchestra/schema/schema"
 import { SessionID } from "@orchestra/schema/session-id"
 
 const Name = Schema.Trim.check(Schema.isNonEmpty(), Schema.isMaxLength(200))
 const Prompt = Schema.Trim.check(Schema.isNonEmpty(), Schema.isMaxLength(32_768))
-// Local wall-clock time in the schedule's IANA time zone.
-const Clock = Schema.String.check(Schema.isPattern(/^([01][0-9]|2[0-3]):[0-5][0-9](?![\s\S])/))
-export const Cadence = Schema.Union([
-  Schema.Struct({ kind: Schema.Literal("once"), at: Schema.Finite }),
-  Schema.Struct({ kind: Schema.Literal("interval"), minutes: Schema.Int.check(Schema.isBetween({ minimum: 5, maximum: 525_600 })) }),
-  Schema.Struct({ kind: Schema.Literal("daily"), time: Clock }),
-  Schema.Struct({ kind: Schema.Literal("weekly"), day: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 6 })), time: Clock }),
-  // Five fields: minute hour day-of-month month day-of-week; lists, ranges, steps and `*`; day fields use Vixie OR.
-  Schema.Struct({ kind: Schema.Literal("cron"), expression: Schema.String.check(Schema.isMaxLength(256)) }),
-])
-export type Cadence = typeof Cadence.Type
+export const Cadence = CapabilityScheduleManagement.Cadence
+export type Cadence = CapabilityScheduleManagement.Cadence
 
 const Definition = {
   name: Name,
@@ -46,24 +37,8 @@ export const Input = Schema.Union([
 ])
 export type Input = typeof Input.Type
 
-export const Schedule = Schema.Struct({
-  id: ScheduledTask.ID,
-  revision: NonNegativeInt,
-  name: Schema.String,
-  prompt: Schema.String,
-  cadence: Cadence,
-  timezone: Schema.String,
-  catchUp: Schema.Literals(["latest", "skip"]),
-  repeat: Schema.optional(Schema.Int),
-  enabled: Schema.Boolean,
-  disabledReason: Schema.optional(Schema.Literals(["exhausted", "owner-missing"])),
-  /** Epoch ms of the next slot; absent when disabled or a once schedule has run. */
-  next: Schema.optional(Schema.Finite),
-  runs: NonNegativeInt,
-  skipped: NonNegativeInt,
-  last: Schema.optional(ScheduledTask.Run),
-})
-export interface Schedule extends Schema.Schema.Type<typeof Schedule> {}
+export const Schedule = CapabilityScheduleManagement.Schedule
+export type Schedule = CapabilityScheduleManagement.Schedule
 export const Output = Schema.Union([
   Schema.Struct({ action: Schema.Literals(["create", "get", "update", "pause", "resume"]), schedule: Schedule }),
   Schema.Struct({ action: Schema.Literal("list"), items: Schema.Array(Schedule) }),

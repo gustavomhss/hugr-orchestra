@@ -10393,6 +10393,64 @@ export type CapabilityArtifactManagementArtifactPage = {
   coverage: "live"
 }
 
+export type CapabilityScheduleManagementItem = {
+  schedule: {
+    id: string
+    revision: number
+    name: string
+    prompt: string
+    cadence:
+      | {
+          kind: "once"
+          at: number
+        }
+      | {
+          kind: "interval"
+          minutes: number
+        }
+      | {
+          kind: "daily"
+          time: string
+        }
+      | {
+          kind: "weekly"
+          day: number
+          time: string
+        }
+      | {
+          kind: "cron"
+          expression: string
+        }
+    timezone: string
+    catchUp: "latest" | "skip"
+    repeat?: number
+    enabled: boolean
+    disabledReason?: "exhausted" | "owner-missing"
+    next?: number
+    runs: number
+    skipped: number
+    last?: ScheduledTaskRun
+  }
+  sessionID: string
+  agentID: string
+}
+
+export type CapabilityScheduleManagementPage = {
+  items: Array<CapabilityScheduleManagementItem>
+  coverage: "live"
+}
+
+export type CapabilityScheduleManagementStarted = {
+  id: string
+  sessionID: string
+  reused: boolean
+}
+
+export type CapabilityScheduleManagementRemoved = {
+  id: string
+  removed: true
+}
+
 export type EventModelsDevRefreshed = {
   id: string
   type: "models-dev.refreshed"
@@ -26897,6 +26955,338 @@ export type ServerCapabilityArtifactsCapabilityArtifactPinResponses = {
 
 export type ServerCapabilityArtifactsCapabilityArtifactPinResponse =
   ServerCapabilityArtifactsCapabilityArtifactPinResponses[keyof ServerCapabilityArtifactsCapabilityArtifactPinResponses]
+
+export type ServerCapabilitySchedulesCapabilityScheduleListData = {
+  body?: never
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/capability/schedules"
+}
+
+export type ServerCapabilitySchedulesCapabilityScheduleListErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ForbiddenError
+   */
+  403: ForbiddenError
+  /**
+   * ConflictError
+   */
+  409: ConflictError
+  /**
+   * UnknownError
+   */
+  500: UnknownError1
+}
+
+export type ServerCapabilitySchedulesCapabilityScheduleListError =
+  ServerCapabilitySchedulesCapabilityScheduleListErrors[keyof ServerCapabilitySchedulesCapabilityScheduleListErrors]
+
+export type ServerCapabilitySchedulesCapabilityScheduleListResponses = {
+  /**
+   * CapabilityScheduleManagement.Page
+   */
+  200: CapabilityScheduleManagementPage
+}
+
+export type ServerCapabilitySchedulesCapabilityScheduleListResponse =
+  ServerCapabilitySchedulesCapabilityScheduleListResponses[keyof ServerCapabilitySchedulesCapabilityScheduleListResponses]
+
+export type ServerCapabilitySchedulesCapabilitySchedulePauseData = {
+  body?: never
+  headers: {
+    "idempotency-key": string
+  }
+  path: {
+    scheduleID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/capability/schedules/{scheduleID}/pause"
+}
+
+export type ServerCapabilitySchedulesCapabilitySchedulePauseErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ForbiddenError
+   */
+  403: ForbiddenError
+  /**
+   * ConflictError
+   */
+  409: ConflictError
+  /**
+   * UnknownError
+   */
+  500: UnknownError1
+}
+
+export type ServerCapabilitySchedulesCapabilitySchedulePauseError =
+  ServerCapabilitySchedulesCapabilitySchedulePauseErrors[keyof ServerCapabilitySchedulesCapabilitySchedulePauseErrors]
+
+export type ServerCapabilitySchedulesCapabilitySchedulePauseResponses = {
+  /**
+   * Success
+   */
+  200: {
+    id: string
+    revision: number
+    name: string
+    prompt: string
+    cadence:
+      | {
+          kind: "once"
+          at: number
+        }
+      | {
+          kind: "interval"
+          minutes: number
+        }
+      | {
+          kind: "daily"
+          time: string
+        }
+      | {
+          kind: "weekly"
+          day: number
+          time: string
+        }
+      | {
+          kind: "cron"
+          expression: string
+        }
+    timezone: string
+    catchUp: "latest" | "skip"
+    repeat?: number
+    enabled: boolean
+    disabledReason?: "exhausted" | "owner-missing"
+    next?: number
+    runs: number
+    skipped: number
+    last?: ScheduledTaskRun
+  }
+}
+
+export type ServerCapabilitySchedulesCapabilitySchedulePauseResponse =
+  ServerCapabilitySchedulesCapabilitySchedulePauseResponses[keyof ServerCapabilitySchedulesCapabilitySchedulePauseResponses]
+
+export type ServerCapabilitySchedulesCapabilityScheduleResumeData = {
+  body?: never
+  headers: {
+    "idempotency-key": string
+  }
+  path: {
+    scheduleID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/capability/schedules/{scheduleID}/resume"
+}
+
+export type ServerCapabilitySchedulesCapabilityScheduleResumeErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ForbiddenError
+   */
+  403: ForbiddenError
+  /**
+   * ConflictError
+   */
+  409: ConflictError
+  /**
+   * UnknownError
+   */
+  500: UnknownError1
+}
+
+export type ServerCapabilitySchedulesCapabilityScheduleResumeError =
+  ServerCapabilitySchedulesCapabilityScheduleResumeErrors[keyof ServerCapabilitySchedulesCapabilityScheduleResumeErrors]
+
+export type ServerCapabilitySchedulesCapabilityScheduleResumeResponses = {
+  /**
+   * Success
+   */
+  200: {
+    id: string
+    revision: number
+    name: string
+    prompt: string
+    cadence:
+      | {
+          kind: "once"
+          at: number
+        }
+      | {
+          kind: "interval"
+          minutes: number
+        }
+      | {
+          kind: "daily"
+          time: string
+        }
+      | {
+          kind: "weekly"
+          day: number
+          time: string
+        }
+      | {
+          kind: "cron"
+          expression: string
+        }
+    timezone: string
+    catchUp: "latest" | "skip"
+    repeat?: number
+    enabled: boolean
+    disabledReason?: "exhausted" | "owner-missing"
+    next?: number
+    runs: number
+    skipped: number
+    last?: ScheduledTaskRun
+  }
+}
+
+export type ServerCapabilitySchedulesCapabilityScheduleResumeResponse =
+  ServerCapabilitySchedulesCapabilityScheduleResumeResponses[keyof ServerCapabilitySchedulesCapabilityScheduleResumeResponses]
+
+export type ServerCapabilitySchedulesCapabilityScheduleRunData = {
+  body?: never
+  headers: {
+    "idempotency-key": string
+  }
+  path: {
+    scheduleID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/capability/schedules/{scheduleID}/run"
+}
+
+export type ServerCapabilitySchedulesCapabilityScheduleRunErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ForbiddenError
+   */
+  403: ForbiddenError
+  /**
+   * ConflictError
+   */
+  409: ConflictError
+  /**
+   * UnknownError
+   */
+  500: UnknownError1
+}
+
+export type ServerCapabilitySchedulesCapabilityScheduleRunError =
+  ServerCapabilitySchedulesCapabilityScheduleRunErrors[keyof ServerCapabilitySchedulesCapabilityScheduleRunErrors]
+
+export type ServerCapabilitySchedulesCapabilityScheduleRunResponses = {
+  /**
+   * CapabilityScheduleManagement.Started
+   */
+  200: CapabilityScheduleManagementStarted
+}
+
+export type ServerCapabilitySchedulesCapabilityScheduleRunResponse =
+  ServerCapabilitySchedulesCapabilityScheduleRunResponses[keyof ServerCapabilitySchedulesCapabilityScheduleRunResponses]
+
+export type ServerCapabilitySchedulesCapabilityScheduleRemoveData = {
+  body?: never
+  headers: {
+    "idempotency-key": string
+  }
+  path: {
+    scheduleID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/capability/schedules/{scheduleID}"
+}
+
+export type ServerCapabilitySchedulesCapabilityScheduleRemoveErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ForbiddenError
+   */
+  403: ForbiddenError
+  /**
+   * ConflictError
+   */
+  409: ConflictError
+  /**
+   * UnknownError
+   */
+  500: UnknownError1
+}
+
+export type ServerCapabilitySchedulesCapabilityScheduleRemoveError =
+  ServerCapabilitySchedulesCapabilityScheduleRemoveErrors[keyof ServerCapabilitySchedulesCapabilityScheduleRemoveErrors]
+
+export type ServerCapabilitySchedulesCapabilityScheduleRemoveResponses = {
+  /**
+   * CapabilityScheduleManagement.Removed
+   */
+  200: CapabilityScheduleManagementRemoved
+}
+
+export type ServerCapabilitySchedulesCapabilityScheduleRemoveResponse =
+  ServerCapabilitySchedulesCapabilityScheduleRemoveResponses[keyof ServerCapabilitySchedulesCapabilityScheduleRemoveResponses]
 
 export type PtyConnectData = {
   body?: never

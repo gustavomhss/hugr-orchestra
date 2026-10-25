@@ -33,6 +33,10 @@ export interface Interface {
     input: CapabilityCreate,
   ) => Effect.Effect<Schedule, ScheduledTaskShared.InvalidError>
   readonly list: (owner: Capability.Owner) => Effect.Effect<Schedule[]>
+  /** Every capability schedule of the placement with its owner, for the operator surface; never a caller-scoped read. */
+  readonly placed: (
+    placement: Pick<Capability.Owner, "projectID" | "location">,
+  ) => Effect.Effect<{ owner: Capability.Owner; schedule: Schedule }[]>
   readonly get: (owner: Capability.Owner, id: ID) => Effect.Effect<Schedule, ScheduledTaskShared.NotFoundError>
   /** Bumps the revision, recomputes `next`, and revokes claims of older revisions not yet admitted. */
   readonly update: (
@@ -242,6 +246,25 @@ export function make(store: ScheduledTaskShared.Store, sessions: SessionV2.Inter
         .all()
         .pipe(Effect.orDie)
       return yield* schedules(tasks.filter((task) => sameOwner(task, owner)))
+    }),
+    placed: Effect.fn("ScheduledTask.capability.placed")(function* (placement) {
+      const tasks = yield* db
+        .select()
+        .from(ScheduledTaskTable)
+        .where(
+          and(eq(ScheduledTaskTable.directory, placement.location.directory), eq(ScheduledTaskTable.policy, "capability")),
+        )
+        .orderBy(asc(ScheduledTaskTable.time_created), asc(ScheduledTaskTable.id))
+        .all()
+        .pipe(Effect.orDie)
+      const found = tasks.flatMap((task) => {
+        const owner = task.policy === "capability" ? task.owner : null
+        if (!owner || owner.projectID !== placement.projectID || owner.location.directory !== placement.location.directory ||
+          owner.location.workspaceID !== placement.location.workspaceID) return []
+        return [{ task, owner }]
+      })
+      const listed = yield* schedules(found.map((item) => item.task))
+      return found.map((item, index) => ({ owner: item.owner, schedule: listed[index]! }))
     }),
     get: getOwned,
     update: (owner, id, input) =>

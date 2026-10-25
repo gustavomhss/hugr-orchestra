@@ -29,6 +29,7 @@ export const node = makeGlobalNode({
   layer: Layer.succeed(Service, Service.of({
     create: (owner, input) => Effect.flatMap(current, (api) => api.create(owner, input)),
     list: (owner) => Effect.flatMap(current, (api) => api.list(owner)),
+    placed: (placement) => Effect.flatMap(current, (api) => api.placed(placement)),
     get: (owner, id) => Effect.flatMap(current, (api) => api.get(owner, id)),
     update: (owner, id, input) => Effect.flatMap(current, (api) => api.update(owner, id, input)),
     pause: (owner, id) => Effect.flatMap(current, (api) => api.pause(owner, id)),
