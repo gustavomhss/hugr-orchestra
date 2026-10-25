@@ -4,12 +4,11 @@ name: omni-cli-smoke
 # supervisor shipped next to it (D-L8), start it with omni on, let it hold a nonce tree, `kill -9` it, and require 0
 # nonce processes 8 s later. Runs by hand and on pull requests that touch the build scripts or omni.
 #
-# What runs the tree: no CLI subcommand on this branch keeps an omni tree alive (`debug omni`, WP3, starts one and
-# stops it at once). So the shipped executable runs a hold script as Bun (BUN_BE_BUN=1): the binary, its compiled
+# What runs the tree: the shipped executable runs a hold script as Bun (BUN_BE_BUN=1): the binary, its compiled
 # runtime, process.execPath and its realpath (reached through a symlink on Unix), the shipped addon and the shipped
 # supervisor are all the real ones; only the yargs layer is bypassed. The script fails unless the core loader took
-# both files from next to the binary. When `debug omni` exists, a second step requires it to print `nonce tree: ok`,
-# which covers the import of hugr-omni from inside the compiled bundle.
+# both files from next to the binary. A second step requires `debug omni` to print `nonce tree: ok`, which covers the
+# import of hugr-omni from inside the compiled bundle.
 on:
   workflow_dispatch:
   pull_request:
@@ -69,7 +68,7 @@ jobs:
       - name: Build the CLI (--single)
         working-directory: apps/cli
         run: |
-          bun script/build.ts --single --skip-install --skip-embed-web-ui
+          bun script/build.ts --single --skip-install
           ls -l dist/*/bin
 
       - name: Crash smoke

@@ -68,7 +68,7 @@ jobs:
         run: |
           # --single takes the exact checkout binaries restored or built by omni-binaries.
           unset OMNI_ARTIFACTS
-          bun script/build.ts --single --skip-install --skip-embed-web-ui 2>&1 | tee ../../native/omni/campaign/logs/build.log
+          bun script/build.ts --single --skip-install 2>&1 | tee ../../native/omni/campaign/logs/build.log
       - name: Wait for the build's load to settle
         if: ${{ !cancelled() && steps.build.outcome == 'success' && runner.os != 'Windows' }}
         run: |
