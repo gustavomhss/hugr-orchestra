@@ -6,7 +6,7 @@ App Dock and Linux workspace tools: the hooks that let an agent read and operate
 
 App Dock and Linux workspace tools: the hooks that let an agent read and operate desktop apps over the Electron main channel. Owner: The App Dock owner.
 
-Sources live in `src/`. `createAppDockHooks` and `createLinuxWorkspaceHooks` take a `Transport` (`src/transport.ts`). `AppDockPlugin` and `LinuxWorkspacePlugin` read `process.parentPort`.
+Sources live in `src/`. `createAppDockHooks` and `createLinuxWorkspaceHooks` take a `Transport` (`src/transport.ts`). `AppDockTools.contribution` (`src/application-tools.ts`) registers both as core Tools on V2 and, through its `app-dock/linux-reaper` node, sends `linux.session.close` when a Session is deleted.
 
 ## Public entry points and consumers
 

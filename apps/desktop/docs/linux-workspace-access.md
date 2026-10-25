@@ -51,8 +51,9 @@ stdio are user-managed guest processes.
 
 ## Agent tools
 
-The desktop sidecar registers an independent `LinuxWorkspacePlugin` alongside
-the existing Dock plugin. The private `linux.rpc` channel targets the runtime
+The V2 server registers the Linux workspace tools next to the Dock tools through
+`AppDockTools.contribution`, and closes a deleted Session's workspace by sending
+`linux.session.close` when it observes `session.deleted`. The private `linux.rpc` channel targets the runtime
 already bound by the desktop; models cannot choose Docker endpoints, container
 IDs, host metadata paths or another workspace.
 

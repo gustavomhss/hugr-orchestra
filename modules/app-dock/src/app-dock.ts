@@ -1,4 +1,4 @@
-import type { Plugin, PluginInput, Hooks, ToolContext } from "@orchestra/plugin"
+import type { Hooks, ToolContext } from "@orchestra/plugin"
 import { tool } from "@orchestra/plugin"
 import { randomUUID } from "node:crypto"
 import { AppDockHints } from "./app-dock-hints"
@@ -115,9 +115,6 @@ function request(port: Transport, op: string, args: Record<string, unknown>, sig
     }
   })
 }
-
-const parentPort = (): Transport | undefined =>
-  (process as typeof process & { parentPort?: Transport }).parentPort
 
 const toolError = (error: unknown) => error instanceof NativeRPCError
   ? toJSON({ backend: error.backend, code: error.code, message: error.message, outcome: error.outcome,
@@ -763,10 +760,4 @@ export function createAppDockHooks(port: Transport, config: { timeoutMs?: number
       ui_wait: linux(dock.dock_wait, "Wait a bounded time for a Linux workspace app to settle; this is a delay, not proof that the app is ready.", dock.dock_wait.args),
     },
   }
-}
-
-export const AppDockPlugin: Plugin = async (_input: PluginInput): Promise<Hooks> => {
-  const port = parentPort()
-  if (!port) return {}
-  return createAppDockHooks(port)
 }

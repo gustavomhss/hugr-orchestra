@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto"
 import { tool } from "@orchestra/plugin"
-import type { Hooks, Plugin, ToolContext } from "@orchestra/plugin"
+import type { Hooks, ToolContext } from "@orchestra/plugin"
 import type { Transport } from "./transport"
 // What the agent can do about each workspace state; without it models retry blindly or reach for other tools.
 // Only the linux agent holds these tools, and it cannot ask the owner, so each hint ends in a report.
@@ -175,9 +175,4 @@ export function createLinuxWorkspaceHooks(port: Transport): Hooks {
       }),
     },
   }
-}
-
-export const LinuxWorkspacePlugin: Plugin = async () => {
-  const port = (process as typeof process & { parentPort?: Transport }).parentPort
-  return port ? createLinuxWorkspaceHooks(port) : {}
 }

@@ -1,9 +1,9 @@
 import { expect, spyOn, test } from "bun:test"
-import type { Hooks, PluginInput, ToolContext } from "@orchestra/plugin"
+import type { Hooks, ToolContext } from "@orchestra/plugin"
 import { tool } from "@orchestra/plugin"
-import { AppDockPlugin, createAppDockHooks } from "./app-dock"
+import { createAppDockHooks } from "./app-dock"
 import { LINUX_PROMPT } from "./app-dock-linux"
-import { context, input, fakePort, host, page, control, field, nativeError, type Envelope, type Reply } from "./app-dock.fixture"
+import { context, fakePort, host, page, control, field, nativeError, type Envelope, type Reply } from "./app-dock.fixture"
 
 test("dock_find pages native continuations itself and returns compact matches from the matching observation", async () => {
   const { hooks, calls } = host((_op, args) => args.cursor === undefined ? page([control("n:a", "Explorer")], "c1")

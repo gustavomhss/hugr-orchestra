@@ -7,8 +7,17 @@ import { MessageChannel } from "node:worker_threads"
 import { AppDockRuntime } from "../src/main/app-dock-runtime"
 import { LinuxWorkspaceFiles } from "../src/main/linux-workspace-files"
 import { LinuxWorkspaceRPC } from "../src/main/linux-workspace-rpc"
+import { AppDockTools } from "@orchestra/app-dock/application-tools"
 import { createLinuxWorkspaceHooks } from "@orchestra/app-dock/linux-workspace"
+import { Database } from "@orchestra/core/database/database"
+import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { EventV2 } from "@orchestra/core/event"
 import type { ToolContext } from "@orchestra/plugin"
+import { Project } from "@orchestra/schema/project"
+import { Session } from "@orchestra/schema/session"
+import { SessionV1 } from "@orchestra/schema/session-v1"
+import { Effect, type Layer } from "effect"
 
 const root = process.env.APP_DOCK_ACCESS_ROOT
 assert(root, "APP_DOCK_ACCESS_ROOT must select an existing owned workspace")
@@ -16,7 +25,7 @@ const context = resolve("resources/linux-runtime")
 const runtime = AppDockRuntime.create({ root, context })
 const files = LinuxWorkspaceFiles.create(runtime.access)
 const directory = `/home/dock/.access-proof-${randomUUID()}`
-const owner = `proof-${randomUUID()}`
+const owner = Session.ID.create()
 const scope = process.env.APP_DOCK_ACCESS_PROOF_SCOPE ?? "full"
 assert(["full", "file", "pty"].includes(scope), "Unknown proof scope")
 const metadata = JSON.parse(await readFile(join(root, "metadata.json"), "utf8")) as {
@@ -172,12 +181,13 @@ try {
     channel.port2.on("message", (message) =>
       LinuxWorkspaceRPC.handle(message, (response) => channel.port2.postMessage(response)),
     )
-    const hooks = createLinuxWorkspaceHooks({
-      postMessage: (message) => channel.port1.postMessage(message),
-      on: (_event, listener) => {
+    const port = {
+      postMessage: (message: unknown) => channel.port1.postMessage(message),
+      on: (_event: "message", listener: (event: { data: unknown }) => void) => {
         listeners.push(listener)
       },
-    })
+    }
+    const hooks = createLinuxWorkspaceHooks(port)
     const permissions: string[] = []
     const toolContext: ToolContext = {
       sessionID: owner,
@@ -209,13 +219,48 @@ try {
       assert.match(String(denied), /permission-denied/)
       const checked = await runtime.access.run({ argv: ["test", "-e", `${directory}/must-not-exist`] })
       assert.equal(checked.exitCode, 1)
-      assert(hooks.tool.linux_terminal_open && hooks.tool.linux_terminal_close)
+      assert(hooks.tool.linux_terminal_open)
       const opened = await hooks.tool.linux_terminal_open.execute({ cwd: directory }, toolContext)
       const terminalID = JSON.parse(String(opened)).terminalID as string
       assert(terminalID)
       const alive = await runtime.access.read(owner, terminalID)
       assert(alive.running)
-      await hooks.tool.linux_terminal_close.execute({ terminalID }, toolContext)
+      const closed = Promise.withResolvers<void>()
+      listeners.push((event) => {
+        const value = event.data
+        if (value && typeof value === "object" && "type" in value && value.type === "linux.session.closed") {
+          assert("ok" in value && value.ok === true)
+          closed.resolve()
+        }
+      })
+      // The server's V2 deletion path: SessionV2.remove publishes `session.deleted` and the App Dock reaper forwards it.
+      const reaper = AppDockTools.contribution(port).nodes!.find((node) => node.name === "app-dock/linux-reaper")!
+      await Effect.runPromise(
+        Effect.scoped(
+          Effect.gen(function* () {
+            const events = yield* EventV2.Service
+            yield* events.publish(SessionV1.Event.Deleted, {
+              sessionID: owner,
+              info: {
+                id: owner,
+                slug: "proof",
+                projectID: Project.ID.global,
+                directory: "/host-only",
+                title: "proof",
+                version: "0.0.0",
+                time: { created: 0, updated: 0 },
+              },
+            })
+            yield* Effect.promise(() => closed.promise).pipe(Effect.timeout("30 seconds"))
+          }),
+        ).pipe(
+          Effect.provide(
+            AppNodeBuilder.build(LayerNode.group([reaper, EventV2.node]), [
+              [Database.node, Database.layerFromPath(":memory:")],
+            ]) as Layer.Layer<EventV2.Service>,
+          ),
+        ),
+      )
       await assert.rejects(runtime.access.read(owner, terminalID), /terminal-not-found/)
       receipt.tools = {
         actualRegisteredDefinition: true,
@@ -224,7 +269,7 @@ try {
         guestExecution: true,
         permissions,
         deniedNotExecuted: true,
-        terminalClosedThroughTool: true,
+        deletedSessionTerminalReaped: true,
       }
     } finally {
       channel.port1.close()

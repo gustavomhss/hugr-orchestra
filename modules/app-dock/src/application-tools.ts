@@ -1,9 +1,10 @@
 export * as AppDockTools from "./application-tools"
 
-import { Effect, JsonSchema, Layer, Schema, SchemaRepresentation } from "effect"
+import { Effect, JsonSchema, Layer, Schema, SchemaRepresentation, Stream } from "effect"
 import { tool, type Hooks, type ToolContext } from "@orchestra/plugin"
 import { AgentV2 } from "@orchestra/core/agent"
 import { makeGlobalNode, makeLocationNode } from "@orchestra/core/effect/app-node"
+import { EventV2 } from "@orchestra/core/event"
 import type { Host } from "@orchestra/core/host"
 import { LocationServiceMap } from "@orchestra/core/location-service-map"
 import { PermissionV2 } from "@orchestra/core/permission"
@@ -11,6 +12,7 @@ import { PluginV2 } from "@orchestra/core/plugin"
 import { SessionStore } from "@orchestra/core/session"
 import { ApplicationTools } from "@orchestra/core/tool/application-tools"
 import { Tool } from "@orchestra/core/tool/tool"
+import { SessionV1 } from "@orchestra/schema/session-v1"
 import { createAppDockHooks } from "./app-dock"
 import { LINUX_DESCRIPTION, LINUX_PROMPT } from "./app-dock-linux"
 import { createLinuxWorkspaceHooks } from "./linux-workspace"
@@ -110,8 +112,31 @@ export function contribution(port: Transport): Host.Contribution {
         layer,
         deps: [ApplicationTools.node, SessionStore.node, LocationServiceMap.node],
       }),
+      reaper(port),
     ],
   }
+}
+
+/**
+ * Closes a deleted Session's Linux workspace: the desktop aborts the Session's pending calls and stops the processes and
+ * terminals it owns. `SessionV2.remove` publishes `session.deleted` for the Session and each child it cascades to.
+ */
+export function reaper(port: Transport) {
+  return makeGlobalNode({
+    name: "app-dock/linux-reaper",
+    layer: Layer.effectDiscard(
+      Effect.gen(function* () {
+        const events = yield* EventV2.Service
+        yield* events.subscribe(SessionV1.Event.Deleted).pipe(
+          Stream.runForEach((event) =>
+            Effect.sync(() => port.postMessage({ type: "linux.session.close", sessionID: event.data.sessionID })),
+          ),
+          Effect.forkScoped({ startImmediately: true }),
+        )
+      }),
+    ),
+    deps: [EventV2.node],
+  })
 }
 
 /**
