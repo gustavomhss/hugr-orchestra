@@ -1,0 +1,10 @@
+id = "test-file-deleted"
+severity = "gate"
+on = "changed-paths"
+paths = ["**/*.test.{ts,tsx,js,jsx,mjs}", "**/*.spec.{ts,tsx,js,jsx,mjs}", "**/test/**/*.{ts,tsx,js,jsx,mjs}", "**/test_*.py", "**/*_test.py", "**/tests/**/*.py", "**/test/**/*.py", "**/tests/**/*.rs", "**/*_test.rs", "**/*_tests.rs"]
+exclude = []
+# A rename is status R, not D, so moving a test does not fire.
+statuses = ["D"]
+message = "Test file deleted. If the code under test is gone, an approver can clear this; otherwise restore the test."
+positive = ["packages/server/test/lsp-http.test.ts", "tests/test_session.py", "crates/a/tests/contract.rs", "apps/x/src/a.spec.tsx"]
+negative = ["packages/server/src/lsp.ts", "docs/testing.md", "scripts/test-runner.sh"]

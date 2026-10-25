@@ -1,0 +1,10 @@
+id = "test-retry-added"
+severity = "warn"
+on = "added-lines"
+paths = ["**/*.test.{ts,tsx,js,jsx,mjs}", "**/*.spec.{ts,tsx,js,jsx,mjs}", "**/test/**/*.{ts,tsx,js,jsx,mjs}", "**/test_*.py", "**/*_test.py", "**/tests/**/*.py", "**/playwright.config.*", "**/vitest.config.*", "**/jest.config.*", "**/conftest.py"]
+exclude = []
+# `retries: 3` is left out: tests here set it as an option of the code under test, not as a test retry.
+match = '\bjest\.retryTimes\(|\bpytest\.mark\.flaky\b|--retries?[= ]\d'
+message = "Retries added to a test or runner. A retry hides a flaky test instead of fixing it."
+positive = ['jest.retryTimes(3)', '@pytest.mark.flaky(reruns=2)', 'addopts = --retries 2']
+negative = ['retries: 3,', 'retries: 0,', 'const retried = true', 'jest.setTimeout(5000)']

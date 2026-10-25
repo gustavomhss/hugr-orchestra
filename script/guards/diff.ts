@@ -20,6 +20,8 @@ export type Change = {
   binary?: boolean
   // The file starts with a #! line. Only read for executable files.
   shebang?: boolean
+  // Trimmed text of the lines the change removes from this file.
+  removedLines?: string[]
 }
 
 export type Diff = {
@@ -48,11 +50,13 @@ export function resolveBase(cwd: string, baseRef: string) {
   return tryGit(cwd, ["rev-parse", "--verify", `${baseRef}^{commit}`])?.trim()
 }
 
-export function readDiff(cwd: string, base: string): Diff {
-  const entries = parseRaw(git(cwd, ["diff", "--raw", "-z", "-M", "-l0", "--no-abbrev", base]))
-  const binary = parseBinary(git(cwd, ["diff", "--numstat", "-z", "-M", "-l0", base]))
+// The change from `base` to the working tree, or, when `head` is given, from `base` to that commit (history scans).
+export function readDiff(cwd: string, base: string, head?: string): Diff {
+  const range = head ? [base, head] : [base]
+  const entries = parseRaw(git(cwd, ["diff", "--raw", "-z", "-M", "-l0", "--no-abbrev", ...range]))
+  const binary = parseBinary(git(cwd, ["diff", "--numstat", "-z", "-M", "-l0", ...range]))
   const patch = parsePatch(
-    git(cwd, ["-c", "core.quotepath=off", "diff", "-U0", "-M", "-l0", "--no-color", "--no-ext-diff", "--no-prefix", base]),
+    git(cwd, ["-c", "core.quotepath=off", "diff", "-U0", "-M", "-l0", "--no-color", "--no-ext-diff", "--no-prefix", ...range]),
   )
   const sizes = blobSizes(
     cwd,
@@ -63,13 +67,14 @@ export function readDiff(cwd: string, base: string): Diff {
     status: entry.status,
     from: entry.from,
     added: patch.added.get(entry.path) ?? [],
+    removedLines: patch.removedBy.get(entry.path) ?? [],
     mode: entry.mode,
     size: sizes.get(entry.sha),
     binary: binary.has(entry.path),
     // Only an executable can be missing its shebang, so only those blobs are read.
     shebang: entry.mode === "100755" ? (tryGit(cwd, ["cat-file", "blob", entry.sha]) ?? "").startsWith("#!") : undefined,
   }))
-  return { changes: [...tracked, ...untracked(cwd)], removed: patch.removed }
+  return { changes: head ? tracked : [...tracked, ...untracked(cwd)], removed: patch.removed }
 }
 
 // `git diff --raw -z --no-abbrev`: `:<old mode> <new mode> <old sha> <new sha> <status>` then the path (two for R and C).
@@ -124,13 +129,20 @@ function blobSizes(cwd: string, shas: string[]) {
 export function parsePatch(patch: string) {
   const added = new Map<string, Added[]>()
   const removed = new Set<string>()
+  const removedBy = new Map<string, string[]>()
   let current: string | undefined
+  let previous: string | undefined
   let line = 0
   let inHunk = false
   for (const text of patch.split("\n")) {
     if (text.startsWith("diff --git ")) {
       current = undefined
+      previous = undefined
       inHunk = false
+      continue
+    }
+    if (!inHunk && text.startsWith("--- ")) {
+      previous = text === "--- /dev/null" ? undefined : text.slice(4)
       continue
     }
     if (!inHunk && text.startsWith("+++ ")) {
@@ -149,9 +161,13 @@ export function parsePatch(patch: string) {
       line += 1
       continue
     }
-    if (text.startsWith("-")) removed.add(text.slice(1).trim())
+    if (text.startsWith("-")) {
+      removed.add(text.slice(1).trim())
+      const owner = current ?? previous
+      if (owner) removedBy.set(owner, [...(removedBy.get(owner) ?? []), text.slice(1).trim()])
+    }
   }
-  return { added, removed }
+  return { added, removed, removedBy }
 }
 
 // A new file that git does not track yet has no diff. Read it whole so a local run sees it.

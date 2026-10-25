@@ -380,6 +380,48 @@ describe("runGuards", () => {
     ])
   })
 
+  // Golden: a base with tests, then a change that deletes one, guts one, skips and weakens others, plus look-alikes.
+  test("the test pack flags every planted weakening and nothing in the look-alikes", () => {
+    const cwd = repo()
+    cpSync(guardsDir, join(cwd, "script/guards"), { recursive: true })
+    write(cwd, "src/gone.test.ts", 'it("a", () => {})\n')
+    write(cwd, "src/moved.test.ts", 'it("m", () => {\n  expect(m).toBe(1)\n})\n')
+    write(
+      cwd,
+      "src/weak.test.ts",
+      ["a", "b", "c", "d"].map((name) => `it("${name}", () => { expect(${name}).toBe(1) })`).join("\n") + "\n",
+    )
+    commit(cwd, "base")
+    git(cwd, "checkout", "--quiet", "-b", "change")
+    git(cwd, "rm", "--quiet", "src/gone.test.ts")
+    git(cwd, "mv", "src/moved.test.ts", "src/renamed.test.ts")
+    write(cwd, "src/weak.test.ts", 'it("a", () => { expect(a).toBe(1) })\n')
+    write(cwd, "tests/test_a.py", "@pytest.mark.skip\ndef test_a():\n    assert True\n")
+    write(cwd, "crates/x/tests/t.rs", "#[ignore]\n#[should_panic]\nfn t() {}\n")
+    write(cwd, "src/loose.test.ts", "expect(true).toBe(true)\njest.retryTimes(3)\n")
+    // Look-alikes that must stay quiet.
+    write(
+      cwd,
+      "tests/test_ok.py",
+      '@pytest.mark.skipif(sys.platform == "win32", reason="posix only")\ndef test_ok():\n    assert x == 1\n',
+    )
+    write(cwd, "crates/x/tests/ok.rs", '#[ignore = "needs a display"]\nfn ok() {}\n')
+    write(cwd, "src/ok.test.ts", "expect(result).toBe(1)\nexpect(map.get(k)).toBeDefined()\n")
+    commit(cwd, "weaken")
+    const findings = runGuards({ cwd, baseRef: "main", approved: [] }).findings
+    expect(findings.map((finding) => `${finding.rule} ${finding.path}`).sort()).toEqual([
+      "js-loose-assertion src/loose.test.ts",
+      "py-assert-trivial tests/test_a.py",
+      "py-test-skipped tests/test_a.py",
+      "rs-should-panic-bare crates/x/tests/t.rs",
+      "rs-test-ignored crates/x/tests/t.rs",
+      "test-assertions-removed src/weak.test.ts",
+      "test-declaration-removed src/weak.test.ts",
+      "test-file-deleted src/gone.test.ts",
+      "test-retry-added src/loose.test.ts",
+    ])
+  })
+
   // Golden: real git modes, sizes and binary detection, so the file filters (modes, min_bytes, binary, no_shebang) run
   // against what git reports. Clean look-alikes sit beside the defects.
   test("the hygiene pack flags every planted file and nothing in the look-alikes", () => {

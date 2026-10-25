@@ -1,0 +1,11 @@
+id = "js-loose-assertion"
+severity = "warn"
+on = "added-lines"
+paths = ["**/*.test.{ts,tsx,js,jsx,mjs}", "**/*.spec.{ts,tsx,js,jsx,mjs}", "**/test/**/*.{ts,tsx,js,jsx,mjs}"]
+exclude = []
+# toBeDefined, toBeTruthy and toBeFalsy are left out: all three are this repo's everyday idiom (101 toBeTruthy calls in tests today), so a rule on them would only add noise. What stays is an assertion on a literal.
+# Anchored to a statement: tests here generate sample test files as strings, and those contain expect(1).toBe(1).
+match = '^\s*expect\((true|1|"[^"]*")\)\.(toBe|toEqual|toBeTruthy)\('
+message = "Assertion on a literal, which cannot fail. Assert the value the code under test produced."
+positive = ['expect(true).toBe(true)', '  expect(1).toBeTruthy()', 'expect("ok").toEqual("ok")']
+negative = ['expect(result).toBe(1)', 'expect(map.get(k)).toBeDefined()', 'expect(result).toBeTruthy()', 'const truthy = Boolean(x)']

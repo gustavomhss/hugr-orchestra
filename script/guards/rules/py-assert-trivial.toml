@@ -1,0 +1,9 @@
+id = "py-assert-trivial"
+severity = "gate"
+on = "added-lines"
+paths = ["**/test_*.py", "**/*_test.py", "**/tests/**/*.py", "**/test/**/*.py", "**/conftest.py"]
+exclude = []
+match = '^\s*assert\s+(True|1)\s*(,|$)|\bassert\s+.*\bor\s+True\b'
+message = "Assertion that cannot fail. Assert the real condition."
+positive = ['    assert True', 'assert 1', 'assert x == 1 or True', 'assert True, "ok"']
+negative = ['    assert x == 1', 'assert result is True', 'assert items', '# assert True']

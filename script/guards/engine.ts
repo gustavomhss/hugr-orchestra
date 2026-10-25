@@ -22,9 +22,11 @@ export type Finding = {
 const IGNORE = /guardrail-ignore:\s*(\S+)\s+\S/
 
 export function evaluate(input: { rules: Rule[]; config: Config; diff: Diff; approved: string[] }) {
-  return input.rules.flatMap((rule) =>
-    rule.on === "changed-paths" ? pathFindings(rule, input) : lineFindings(rule, input),
-  )
+  return input.rules.flatMap((rule) => {
+    if (rule.on === "changed-paths") return pathFindings(rule, input)
+    if (rule.on === "line-balance") return balanceFindings(rule, input)
+    return lineFindings(rule, input)
+  })
 }
 
 function pathFindings(rule: Rule, input: Parameters<typeof evaluate>[0]): Finding[] {
@@ -62,4 +64,19 @@ function lineFindings(rule: Rule, input: Parameters<typeof evaluate>[0]): Findin
           message: rule.message,
         })),
     )
+}
+
+// Lines a file loses minus lines it gains, counting only lines the rule matches. A removed line that reappears
+// anywhere else in the change was moved, not removed. Deleted files are the business of path rules.
+function balanceFindings(rule: Rule, input: Parameters<typeof evaluate>[0]): Finding[] {
+  const gained = new Set(input.diff.changes.flatMap((change) => change.added.map((added) => added.text.trim())))
+  return input.diff.changes
+    .filter((change) => change.status !== "D" && inScope(rule, change.path) && !globs(input.config.exclude, change.path))
+    .filter((change) => rule.generated === "include" || !globs(input.config.generated, change.path))
+    .filter((change) => {
+      const lost = (change.removedLines ?? []).filter((text) => lineHits(rule, text) && !gained.has(text)).length
+      const added = change.added.filter((line) => lineHits(rule, line.text)).length
+      return lost - added >= (rule.minNetRemoved ?? 1)
+    })
+    .map((change) => ({ rule: rule.id, severity: rule.severity, path: change.path, line: undefined, message: rule.message }))
 }
