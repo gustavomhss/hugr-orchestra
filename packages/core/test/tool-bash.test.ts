@@ -289,7 +289,7 @@ describe("BashTool", () => {
         reset()
         const created: Array<{ command?: string; env?: Record<string, string>; title?: string }> = []
         const fakePty = Pty.Service.of({
-          create: (input, options) =>
+          create: (input: Pty.CreateInput, options?: Pty.CreateOptions) =>
             Effect.sync(() => {
               created.push(input)
               queueMicrotask(() => {
