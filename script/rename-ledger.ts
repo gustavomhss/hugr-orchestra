@@ -51,6 +51,13 @@ export const keptPaths: Kept[] = [
     reason: "frozen upstream OpenAPI fixture",
   },
   {
+    path: /^(?:(?:packages|apps)\/[^/]+|tooling\/http-recorder)\/test\/fixtures\/recordings\//,
+    reason:
+      "recorded HTTP cassettes; replay matches request bodies byte for byte, so they are re-recorded, not renamed",
+    // Dormant where apps/orchestra is gone: no tracked cassette there names the old name, so the entry would match nothing.
+    requires: "apps/orchestra",
+  },
+  {
     path: /^packages\/tui\/test\/cli\/tui\/(?:inline-tool-wrap-snapshot\.test\.tsx|__snapshots__\/inline-tool-wrap-snapshot\.test\.tsx\.snap)$/,
     reason: "line-wrap fixture whose arbitrary transcript text fixes the wrap points of its snapshot",
   },
@@ -69,32 +76,8 @@ export const protectedStrings: Protected[] = [
   { pattern: /\b(?:sst|claudianus)(?:\/|\\+)opencode\b/g, reason: "upstream repository" },
   { pattern: /\bupstream (?:opencode|OpenCode)\b/g, reason: "sentence about the upstream project" },
   { pattern: /\bOpenCode's historical\b/g, reason: "sentence about upstream history" },
-  { pattern: /\bopencode 2\.0\b/g, reason: "sentence about an upstream release" },
-  {
-    pattern:
-      /Older releases named these branches `opencode\/<name>`|older worktrees keep their `opencode\/<name>` branch|legacy opencode\/ branch/g,
-    reason: "sentence about branches created by older releases",
-  },
-  {
-    pattern: /`opencode\/\$\{name\}`/g,
-    paths: /^(?:packages\/(?:opencode|orchestra)|apps\/orchestra)\/test\/project\/worktree\.test\.ts$/,
-    reason: "legacy branch name the worktree test creates on purpose",
-  },
 
   // Third-party packages
-  {
-    // The upstream @opencode-ai/client 1.17.13 tarball is no longer vendored: the app-shell compiles against the
-    // workspace client. Its published name survives only in the provenance of the legacy wire the app-shell still
-    // declares; the extractor reads the tarball when one is vendored and skips it otherwise.
-    pattern: /@opencode-ai\/client\b|opencode-ai-client[\s-]1\.17\.13(?:-v2(?:\.tgz)?)?/g,
-    paths: /^packages\/(?:app(?:-shell)?|session-ui)\/|^bun\.lock$|^script\/(?:module-architecture|boundary-ledger)\.json$/,
-    reason: "provenance of the legacy wire, from the upstream client tarball that is no longer vendored",
-  },
-  {
-    pattern: /\bOpenCode(?:Event|Client)\b|\bOpenCode(?=\.make\b)|(?<=import \{ (?:ClientError, )?)OpenCode\b/g,
-    paths: /^packages\/app(?:-shell)?\/(?:src|e2e)\//,
-    reason: "legacy names of the upstream client the app-shell no longer vendors",
-  },
   {
     pattern: /(?:@gitlab\/)?opencode-(?:gitlab|poe|openai-codex|copilot)-auth\b/g,
     reason: "third-party plugin package",
@@ -130,7 +113,6 @@ export const protectedStrings: Protected[] = [
     pattern: /\b(?:providerID|provider|id|router)\s*[!=]==?\s*(["'])opencode\1/g,
     reason: "comparison with the Zen provider id",
   },
-  { pattern: /\.startsWith\((["'])opencode\1\)/g, reason: "match on the Zen provider id prefix" },
   {
     pattern:
       /\bproviderID:\s*(["'])opencode\1|\bID\.opencode\b|\bID\.make\((["'])opencode\2\)|\bopencode: schema\.make\("opencode"\)/g,
@@ -162,11 +144,6 @@ export const protectedStrings: Protected[] = [
     paths:
       /^packages\/ui\/src\/components\/provider-icons\/(?:sprite\.svg|types\.ts)$|^packages\/app(?:-shell)?\/src\/hooks\/use-providers\.ts$|^apps\/storybook\/\.storybook\/mocks\/app\/(?:hooks\/use-providers|context\/server-sdk)\.ts$|^packages\/app(?:-shell)?\/src\/orchestra\/(?:model-logo-resolver(?:\.test)?\.ts|chapters\/providers-data\.test\.ts)$|\/test\/session\/retry\.test\.ts$/,
     reason: "the Zen provider id",
-  },
-  {
-    pattern: /\["opencode", "/g,
-    paths: /\/test\/provider\/transform\.test\.ts$/,
-    reason: "the Zen provider id in a transform table",
   },
   {
     pattern: /(?<=catalog\.all\.get\()"opencode"/g,
@@ -217,17 +194,6 @@ export const protectedStrings: Protected[] = [
     pattern: /\["deepinfra", "poe", "opencode"\]/g,
     paths: /^packages\/core\/test\/plugin\/models-dev\.test\.ts$/,
     reason: "decoded provider keys must equal the raw models.dev snapshot's external ids",
-  },
-  {
-    pattern: /\bmodel: "opencode\/httpapi-free"|\benabled_providers: \["opencode"\]/g,
-    paths: /^apps\/orchestra\/test\/server\/httpapi-exercise\/catalog\.ts$/,
-    reason: "HTTP default-model exercise config must select and enable the external Zen provider by its wire id",
-  },
-  {
-    pattern:
-      /"opencode\/ux-paid"|\b(?:enabled|disabled)_providers: \["opencode"\]|(?<=\.toContain\(\s*)"opencode"|\bresource: "opencode"/g,
-    paths: /^apps\/orchestra\/test\/server\/httpapi-model-recovery\.test\.ts$/,
-    reason: "HTTP model recovery config, returned provider and policy resource must address the external Zen wire id",
   },
   {
     pattern: /\bopencode-v2-openapi\.json\b/g,
