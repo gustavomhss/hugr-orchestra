@@ -1085,6 +1085,8 @@ describe("server session", () => {
 
     for (let index = 0; index < 50; index++) {
       ctx.store.remember(session(`session-${index}`))
+      // `apply` touches the session cache (and evicts); the step event itself reaches the store through `applyV2`.
+      ctx.store.apply({ type: "session.step.ended", properties: { sessionID: `session-${index}` } })
       ctx.store.applyV2({
         id: `evt_step_${index}`,
         created: 2,
