@@ -2,6 +2,7 @@ export * as MaestroResearchTools from "./research"
 
 import path from "node:path"
 import { Effect, Schema } from "effect"
+import { Config } from "@orchestra/core/config"
 import { Database } from "@orchestra/core/database/database"
 import { FSUtil } from "@orchestra/core/fs-util"
 import type { GitCli } from "@orchestra/core/git-cli"
@@ -59,6 +60,7 @@ export type Services = ResearchDispatchV2.Services & {
   readonly processes: AppProcess.Interface
   readonly ripgrep: Ripgrep.RipgrepBinary.Interface
   readonly git: GitCli.Interface
+  readonly config: Config.Interface
 }
 
 export const captureDescription = [
@@ -73,6 +75,7 @@ export const viewDescription = [
   "records/source/document reopen exact revisions; find searches literal text in one admitted representation and gives each match its line.",
   "Use returned handles/revisions/cursors, never filesystem paths or guessed owner/root fields. Bounded pages and partial captures remain explicit.",
   "Line numbers are original-file lines, 1-based and inclusive (lines.basis \"original\"); basis \"retained\" means the source has no original line origin.",
+  "A source or document page still in your context comes back as {ref, unchanged:true}, not its bytes again.",
   "Historical records do not prove present applicability.",
 ].join(" ")
 
@@ -269,8 +272,35 @@ export function tools(services: Services) {
       execute: (input, context) =>
         Effect.gen(function* () {
           const research = yield* bound(names.view, context)
-          const result = yield* services.records.view(research.binding, input).pipe(Effect.catch(denied))
           const page = (value: unknown) => ({ title: `Research ${input.action}`, output: JSON.stringify(value), research: value })
+          // V1 `shown`: an earlier completed call with the same input whose output is still in this Session's context
+          // (after the latest compaction and not pruned) returns its ref, never the immutable bytes again.
+          const key = ResearchLedger.canonical(input)
+          if (
+            (input.action === "source" || input.action === "document") &&
+            (yield* SessionHistory.load(services.db, context.sessionID).pipe(Effect.orElseSucceed(() => [])))
+              .flatMap((message) => (message.type === "assistant" ? message.content : []))
+              .some(
+                (part) =>
+                  part.type === "tool" &&
+                  part.name.split("__").at(-1) === names.view &&
+                  part.id !== context.toolCallID &&
+                  part.state.status === "completed" &&
+                  part.time.pruned === undefined &&
+                  ResearchLedger.canonical(part.state.input) === key,
+              )
+          )
+            return {
+              title: `Research ${input.action}`,
+              output: JSON.stringify({
+                ref: input.ref,
+                ...(input.cursor ? { cursor: input.cursor } : {}),
+                unchanged: true,
+                summary: "This exact page is already in your context from an earlier research_view call; its bytes are immutable",
+              }),
+              research: { ref: input.ref, unchanged: true },
+            }
+          const result = yield* services.records.view(research.binding, input).pipe(Effect.catch(denied))
           if (input.action === "source" && "receipt" in result && "origin" in result.receipt && !input.cursor)
             return page({ ...result, lines: basis(result.receipt) })
           if (input.action !== "find" || !("matches" in result) || result.matches.length === 0) return page(result)
@@ -645,8 +675,7 @@ const SHOWN_LINES = 320
 
 /**
  * The code index query (V1 `CodeIndexTools` Engine) over the real build path. Pack readiness is read per query, so a
- * pack installed after startup serves the next call. Config research limits are not on V2 config, so the toolkit caps
- * stay at their defaults.
+ * pack installed after startup serves the next call, and config `research.limits` is read per query too.
  */
 function index(services: Services, worktree: string, input: CodeIndex.CodeQuery) {
   return Effect.gen(function* () {
@@ -657,8 +686,29 @@ function index(services: Services, worktree: string, input: CodeIndex.CodeQuery)
       overlay: parts.overlay,
       extract: parts.extract,
     })
-    return yield* engine.query(worktree, input)
+    return yield* engine.query(worktree, input).pipe(Effect.provideService(ResearchToolkit.Caps, yield* caps(services.config)))
   }).pipe(Effect.provideService(AppProcess.Service, services.processes))
+}
+
+/** `ResearchToolkit.Caps` from config `research.limits`, which may only lower the owner caps (V1 `code-index.ts`). */
+export function caps(config: Config.Interface) {
+  return config.entries().pipe(Effect.map((entries) => ResearchToolkit.caps(Config.latest(entries, "research")?.limits)))
+}
+
+/**
+ * The code-index warm-up V1 starts with the tool registry (`registry.ts` `research.prewarm`): only where the research
+ * seat exists and the worktree is a real one, and only on a platform that can confine the indexer. `prewarm` forks
+ * detached and runs once per worktree per process.
+ */
+export function warm(input: { config: Config.Interface; processes: AppProcess.Interface; seat: boolean; worktree: string }) {
+  return Effect.gen(function* () {
+    if (!input.seat || input.worktree === "/") return
+    if (process.platform !== "darwin" && process.platform !== "linux") return
+    yield* ResearchToolkit.prewarm(input.worktree).pipe(
+      Effect.provideService(ResearchToolkit.Index, yield* CodeIndexExtract.toolkit),
+      Effect.provideService(ResearchToolkit.Caps, yield* caps(input.config)),
+    )
+  }).pipe(Effect.provideService(AppProcess.Service, input.processes))
 }
 
 /**

@@ -15,6 +15,7 @@ import { PermissionV2 } from "@orchestra/core/permission"
 import { AppProcess } from "@orchestra/core/process"
 import { ResearchAllowance } from "@orchestra/core/research/allowance"
 import { ResearchRecords } from "@orchestra/core/research/records"
+import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
 import { Ripgrep } from "@orchestra/core/ripgrep"
 import { SessionStore } from "@orchestra/core/session"
 import { SkillV2 } from "@orchestra/core/skill"
@@ -105,9 +106,16 @@ const layer = Layer.effectDiscard(
           processes: yield* AppProcess.Service,
           ripgrep: yield* Ripgrep.RipgrepBinary.Service,
           git,
+          config: services.atlas.config,
         }),
       })
       .pipe(Effect.orDie)
+    yield* MaestroResearchTools.warm({
+      config: services.atlas.config,
+      processes: yield* AppProcess.Service,
+      seat: seats.has(ResearchSeatTools.SEAT),
+      worktree: location.project.directory,
+    })
     if (applications.entries().has(MaestroArsenal.names.catalog)) return
     yield* MaestroArsenal.registerScoped({
       ...WorkflowArmV2.hooks({

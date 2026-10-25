@@ -26,6 +26,7 @@ import { ConfigPlugin } from "./config/plugin"
 import { ConfigProvider } from "./config/provider"
 import { ConfigReference } from "./config/reference"
 import { ConfigRelay } from "./config/relay"
+import { ConfigResearch } from "./config/research"
 import { ConfigToolOutput } from "./config/tool-output"
 import { ConfigWatcher } from "./config/watcher"
 import { ConfigV1 } from "./v1/config/config"
@@ -102,6 +103,9 @@ export class Info extends Schema.Class<Info>("Config.Info")({
   }),
   experimental: ConfigExperimental.Experimental.pipe(Schema.optional),
   relay: ConfigRelay.Info.pipe(Schema.optional).annotate({ description: "Relay workflow and hook engine settings" }),
+  research: ConfigResearch.Info.pipe(Schema.optional).annotate({
+    description: "Resource caps of the discovery seat's research toolkit. A configured value can only lower its built-in cap.",
+  }),
   maestro: ConfigMaestro.Info.pipe(Schema.optional).annotate({
     description: "Project-bound static Atlas/Own context for governed Maestro work",
   }),
