@@ -37,6 +37,7 @@
     "solid-js": "catalog:"
   },
   "devDependencies": {
+    "@orchestra/omni-campaign": "workspace:*",
     "@orchestra/script": "workspace:*",
     "@tsconfig/bun": "catalog:",
     "@types/bun": "catalog:",

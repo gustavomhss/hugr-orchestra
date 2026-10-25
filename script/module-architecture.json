@@ -55,6 +55,13 @@
       "summary": "Public authoring contracts and helpers for server, terminal UI and V2 plugins.",
       "exportsPolicy": "none"
     },
+    "omni/campaign": {
+      "layer": "app",
+      "status": "canonical",
+      "owner": "Omni maintainer",
+      "summary": "Validation campaign scripts that drive real Orchestra callers and compiled binaries to produce Omni evidence.",
+      "exportsPolicy": "none"
+    },
     "omni/bindings/node": {
       "layer": "native",
       "status": "canonical",
@@ -205,7 +212,7 @@
         { "path": "src/permission", "kind": "cohesive", "entries": ["src/permission.ts"] },
         { "path": "src/plugin", "kind": "cohesive", "entries": ["src/plugin.ts"] },
         { "path": "src/project", "kind": "cohesive", "entries": ["src/project.ts"] },
-        { "path": "src/pty", "kind": "cohesive", "entries": ["src/pty.ts"] },
+        { "path": "src/pty", "kind": "cohesive", "entries": ["src/pty.ts", "src/pty/omni.ts"] },
         { "path": "src/reference", "kind": "cohesive", "entries": ["src/reference.ts"] },
         { "path": "src/ripgrep", "kind": "cohesive", "entries": ["src/ripgrep.ts"] },
         { "path": "src/scheduled-task", "kind": "cohesive", "entries": ["src/scheduled-task.ts"] },

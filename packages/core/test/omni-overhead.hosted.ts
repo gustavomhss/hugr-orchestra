@@ -3,8 +3,8 @@ import { expect, test } from "bun:test"
 import { cpSync, mkdtempSync, rmSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { BUN, ROOT } from "../../../native/omni/campaign/lib.ts"
-import { run, settle } from "../../../native/omni/campaign/v7-attribution.ts"
+import { BUN, ROOT } from "@orchestra/omni-campaign/lib.ts"
+import { run, settle } from "@orchestra/omni-campaign/v7-attribution.ts"
 
 if (process.platform !== "linux" || process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER !== "1")
   throw new Error("Linux overhead proof requires its explicit Linux runner and Omni release binaries")
@@ -29,7 +29,7 @@ test("V7 Linux syscall attribution (unprivileged native strace)", async () => {
 
 test("V7 unchanged 1000-pair quiet real AppProcess KPI and baseline mutation", async () => {
   await settle()
-  const { run } = await import("../../../native/omni/campaign/v7-overhead.ts")
+  const { run } = await import("@orchestra/omni-campaign/v7-overhead.ts")
   const result = await run({ quiet: true })
   console.log("V7_KPI " + JSON.stringify(result))
   expect(result.timingKpiRun).toBe(true)

@@ -1,7 +1,7 @@
 // PID+birth and nonce oracles shared with campaign; Electron roots retained separately.
 import type { ChildProcess } from "node:child_process"
-import { identity, inventoryScope, kill9, matches, members, sleep, table, until, win, type Identity } from "../../../../native/omni/campaign/lib"
-import { WindowsInventory } from "../../../../native/omni/campaign/windows-inventory"
+import { identity, inventoryScope, kill9, matches, members, sleep, table, until, win, type Identity } from "@orchestra/omni-campaign/lib"
+import { WindowsInventory } from "@orchestra/omni-campaign/windows-inventory"
 
 export function owned(rows: ReturnType<typeof table>, roots: Identity[]) {
   if (!roots.length) throw new Error("Electron inventory requires explicit captured owner roots")

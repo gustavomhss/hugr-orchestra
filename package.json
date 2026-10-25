@@ -41,6 +41,7 @@
       "tooling/http-recorder",
       "packages/sdk/js",
       "native/omni/bindings/node",
+      "native/omni/campaign",
       "modules/atlas/boundary"
     ],
     "catalog": {

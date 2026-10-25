@@ -109,9 +109,9 @@ export async function run(options: { controlOnly?: boolean; quiet?: boolean; int
 
 async function host() {
   const { Effect, ChildProcess } = await effectModules()
-  const { AppProcess } = await import("../../../packages/core/src/process.ts")
-  const { Flag } = await import("../../../packages/core/src/flag/flag.ts")
-  const { Omni } = await import("../../../packages/core/src/omni.ts")
+  const { AppProcess } = await import("@orchestra/core/process")
+  const { Flag } = await import("@orchestra/core/flag/flag")
+  const { Omni } = await import("@orchestra/core/omni")
   const runtime = await appRuntime()
   // Build services before reporting readiness: lazy startup is never a measured sample.
   await runtime.context()

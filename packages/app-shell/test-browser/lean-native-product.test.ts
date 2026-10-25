@@ -8,9 +8,9 @@ import { Effect, Option, Stream } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { Orchestra } from "@orchestra/client"
 import type { LeanDashboard } from "@orchestra/schema/lean-dashboard"
-import { LayerNode } from "../../core/src/effect/layer-node"
-import { AppProcess } from "../../core/src/process"
-import { expectSpawn } from "../../core/test/fixture/omni-expect"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { AppProcess } from "@orchestra/core/process"
+import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 
 // The V2 CLI product end to end: apps/cli/script/build.ts builds the real binary, `serve` runs it with a password, a
 // loopback provider drives two bash turns (`go test -v .`) through the real session API, and the Lean dashboard route

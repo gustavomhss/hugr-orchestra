@@ -3,8 +3,8 @@ import { createReadStream } from "node:fs"
 import { open, realpath, type FileHandle } from "node:fs/promises"
 import { finished } from "node:stream/promises"
 import { Schema } from "effect"
-import { WindowsProcessQuery } from "../../../../packages/core/test/fixture/windows-process-query"
-import { WindowsInventory } from "../../../../native/omni/campaign/windows-inventory"
+import { WindowsProcessQuery } from "@orchestra/core/test/fixture/windows-process-query"
+import { WindowsInventory } from "@orchestra/omni-campaign/windows-inventory"
 
 const Identity = Schema.Struct({
   pid: Schema.Int.check(Schema.isGreaterThan(0)),

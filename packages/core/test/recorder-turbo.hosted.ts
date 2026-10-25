@@ -3,7 +3,7 @@ import { Effect } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { LayerNode } from "../src/effect/layer-node"
 import { AppProcess } from "../src/process"
-import { ROOT } from "../../../native/omni/campaign/lib"
+import { ROOT } from "@orchestra/omni-campaign/lib"
 import { testEffect } from "./lib/effect"
 
 const it = testEffect(LayerNode.compile(AppProcess.node))

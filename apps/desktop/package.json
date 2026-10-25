@@ -45,6 +45,7 @@
     "@lydell/node-pty": "catalog:",
     "@orchestra/app": "workspace:*",
     "@orchestra/app-dock": "workspace:*",
+    "@orchestra/omni-campaign": "workspace:*",
     "@orchestra/script": "workspace:*",
     "@orchestra/ui": "workspace:*",
     "@sentry/solid": "catalog:",

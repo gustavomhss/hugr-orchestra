@@ -3,9 +3,9 @@ import { expect, test } from "bun:test"
 import { expectSpawn } from "./fixture/omni-expect"
 import { existsSync } from "node:fs"
 import path from "node:path"
-import { CLI_APP, ROOT, cli } from "../../../native/omni/campaign/lib.ts"
-import { run } from "../../../native/omni/campaign/v8-windows.ts"
-import { appRuntime, effectModules } from "../../../native/omni/campaign/delivery-fixtures.ts"
+import { CLI_APP, ROOT, cli } from "@orchestra/omni-campaign/lib.ts"
+import { run } from "@orchestra/omni-campaign/v8-windows.ts"
+import { appRuntime, effectModules } from "@orchestra/omni-campaign/delivery-fixtures.ts"
 
 // Explicit Windows-only request. A wrong runner is red, never an unexecuted Windows green.
 test("V8 Windows actual delivery campaign and V9 shipped-artifact rejection", async () => {

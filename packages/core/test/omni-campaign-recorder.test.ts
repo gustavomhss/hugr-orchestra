@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
-import { BUN, hasNonce, table, win } from "../../../native/omni/campaign/lib.ts"
-import { WindowsInventory } from "../../../native/omni/campaign/windows-inventory.ts"
+import { BUN, hasNonce, table, win } from "@orchestra/omni-campaign/lib.ts"
+import { WindowsInventory } from "@orchestra/omni-campaign/windows-inventory.ts"
 
 test("real recorder no-ready, malformed-ready, early-close and stuck-shutdown faults are red and closed", async () => {
   const healthyNonce = `recorder-control-${crypto.randomUUID()}`

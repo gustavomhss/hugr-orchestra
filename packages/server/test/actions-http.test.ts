@@ -9,7 +9,7 @@ import { ActionsApiError } from "@orchestra/protocol/groups/actions-common"
 import { Cause, Effect, Exit, Schema } from "effect"
 import { OpenApi } from "effect/unstable/httpapi"
 import { intent } from "../../core/test/actions/assembly-fixture"
-import { expectSpawn } from "../../core/test/fixture/omni-expect"
+import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { Api } from "../src/api"
 import { ServerAuth } from "../src/auth"
 import {

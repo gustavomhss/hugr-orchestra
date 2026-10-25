@@ -4,7 +4,7 @@ import { spawn } from "node:child_process"
 import { randomUUID, createHash } from "node:crypto"
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
-import { Omni } from "../../../packages/core/src/omni.ts"
+import { Omni } from "@orchestra/core/omni"
 import { cli, LOGS, until, verdict, win } from "./lib.ts"
 import { api, evidence, finish, fixture, main, processTable, start, type Fixture } from "./protocol-fixtures.ts"
 

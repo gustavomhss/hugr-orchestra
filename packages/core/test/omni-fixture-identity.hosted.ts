@@ -5,10 +5,10 @@ import os from "node:os"
 import path from "node:path"
 import { Omni } from "../src/omni"
 import { alive } from "./fixture/process-tree"
-import { appRuntime, effectModules } from "../../../native/omni/campaign/delivery-fixtures.ts"
-import { fileTree, LOGS, matches, table, until, win } from "../../../native/omni/campaign/lib.ts"
-import { fixture } from "../../../native/omni/campaign/protocol-fixtures.ts"
-import { WindowsInventory } from "../../../native/omni/campaign/windows-inventory.ts"
+import { appRuntime, effectModules } from "@orchestra/omni-campaign/delivery-fixtures.ts"
+import { fileTree, LOGS, matches, table, until, win } from "@orchestra/omni-campaign/lib.ts"
+import { fixture } from "@orchestra/omni-campaign/protocol-fixtures.ts"
+import { WindowsInventory } from "@orchestra/omni-campaign/windows-inventory.ts"
 
 beforeAll(async () => {
   expect(process.env.CI).toBeTruthy()

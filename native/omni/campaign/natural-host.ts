@@ -3,10 +3,10 @@
 // must end with no help: no exit hook, forced exit, watchdog or unref belongs here. The parent owns failure cleanup.
 import { createServer } from "node:http"
 import { writeFileSync } from "node:fs"
-import { Effect, ManagedRuntime, ChildProcess } from "../../../packages/core/test/fixture/omni-effect.ts"
-import { LayerNode } from "../../../packages/core/src/effect/layer-node.ts"
-import { AppProcess } from "../../../packages/core/src/process.ts"
-import { Omni } from "../../../packages/core/src/omni.ts"
+import { Effect, ManagedRuntime, ChildProcess } from "@orchestra/core/test/fixture/omni-effect"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { AppProcess } from "@orchestra/core/process"
+import { Omni } from "@orchestra/core/omni"
 
 type Stoppable = { pid: number | undefined; output: AsyncIterable<{ data: Uint8Array }>; stop: (options: { graceMs: number }) => Promise<unknown> }
 

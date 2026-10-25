@@ -21,6 +21,7 @@
     { "alias": "maestro", "kind": "bun", "scope": ".", "name": "@orchestra/maestro", "path": "modules/maestro/coordination" },
     { "alias": "maestro-arsenal", "kind": "bun", "scope": ".", "name": "@orchestra/maestro-arsenal", "path": "modules/maestro/arsenal" },
     { "alias": "omni/bindings/node", "kind": "bun", "scope": ".", "name": "hugr-omni", "path": "native/omni/bindings/node" },
+    { "alias": "omni/campaign", "kind": "bun", "scope": ".", "name": "@orchestra/omni-campaign", "path": "native/omni/campaign" },
     { "alias": "plugin", "kind": "bun", "scope": ".", "name": "@orchestra/plugin", "path": "packages/plugin" },
     { "alias": "protocol", "kind": "bun", "scope": ".", "name": "@orchestra/protocol", "path": "packages/protocol" },
     { "alias": "relay", "kind": "bun", "scope": ".", "name": "@orchestra/relay", "path": "modules/relay" },

@@ -5,8 +5,8 @@ import { ChildProcess } from "effect/unstable/process"
 import { Omni } from "../src/omni"
 import { OmniSpawner } from "../src/omni-spawner"
 import os from "node:os"
-import { ROOT, until } from "../../../native/omni/campaign/lib"
-import { run } from "../../../native/omni/campaign/v7-overhead"
+import { ROOT, until } from "@orchestra/omni-campaign/lib"
+import { run } from "@orchestra/omni-campaign/v7-overhead"
 
 // Dedicated hosted proof: excluded from ordinary Bun suffix discovery, selected by its exact path.
 test("macOS V7 completes 1000 paced pairs and rejects measured caller slowdown", async () => {

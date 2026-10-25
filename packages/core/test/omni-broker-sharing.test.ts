@@ -3,8 +3,8 @@ import { spawn } from "node:child_process"
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { until, win } from "../../../native/omni/campaign/lib.ts"
-import { WindowsInventory } from "../../../native/omni/campaign/windows-inventory.ts"
+import { until, win } from "@orchestra/omni-campaign/lib.ts"
+import { WindowsInventory } from "@orchestra/omni-campaign/windows-inventory.ts"
 
 // Windows file-sharing semantics require real Windows handles; Linux success cannot prove this boundary.
 // The broker retries a transient read fault for one second. This fixture releases its fault only after the test has
