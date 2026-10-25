@@ -124,6 +124,8 @@ test("a backend reply settles its work result with the card, the tree and the bo
         terminal: { reason: "ended" },
         memory: { reads: [], writes: [] },
         writeRoots: ["src"],
+        shellWrites: expect.stringMatching(/^(enforced|unenforced)$/),
+        shellSandbox: { kind: expect.stringMatching(/^(seatbelt|srt|appcontainer|none)$/) },
       })
       const store = yield* SessionStore.Service
       const child = yield* store.get(SessionSchema.ID.make(result.executionSessionId))
@@ -138,6 +140,7 @@ test("a blocked backend card lowers the terminal, an unbound child reports no wr
       const blocked = yield* settle(directory, "backend", backendReply({ ...backendCard, outcome: "blocked" }))
       expect(blocked.structured?.workResult).toMatchObject({ outcome: "blocked", terminal: { reason: "blocked" } })
       expect(blocked.structured?.workResult).not.toHaveProperty("writeRoots")
+      expect(blocked.structured?.workResult).not.toHaveProperty("shellWrites")
       const loose = yield* settle(directory, "backend", backendReply({ ...backendCard, extra: true }))
       expect(loose.structured?.workResult).toMatchObject({ card: { parsed: false }, changes: [], terminal: { reason: "ended" } })
     }),
@@ -178,4 +181,25 @@ test("memory outcomes come from the execution Session's Atlas receipts, keyed by
     reads: [{ outcome: "read", callID: "call_recall", refs: [] }],
     writes: [{ outcome: "refused", callID: "call_emit" }],
   })
+})
+
+test("the shell fact rides beside the write roots and only there (V1 SeatWork.project)", () => {
+  const fact = { shellWrites: "unenforced", shellSandbox: { kind: "none", reason: "no-sandbox" } } as const
+  const reply = SessionMessage.Assistant.make({
+    id: SessionMessage.ID.make("msg_shell_reply"),
+    type: "assistant",
+    agent: "backend",
+    model: { id: ModelV2.ID.make("model"), providerID: ProviderV2.ID.make("provider") },
+    content: [],
+    time: { created: DateTime.makeUnsafe(0), completed: DateTime.makeUnsafe(0) },
+  })
+  const base = {
+    seat: { ...Seats.all.backend, workResult: "backend-work-result-v1" },
+    reply,
+    history: [reply],
+    executionSessionID: "ses_child",
+    authoritySessionID: "ses_root",
+  }
+  expect(WorkResultV2.assemble({ ...base, writeRoots: ["src"], shell: fact })).toMatchObject({ writeRoots: ["src"], ...fact })
+  expect(WorkResultV2.assemble({ ...base, shell: fact })).not.toHaveProperty("shellWrites")
 })

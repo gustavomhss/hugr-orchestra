@@ -18,6 +18,7 @@ import { SkillV2 } from "@orchestra/core/skill"
 import { TaskTool } from "@orchestra/core/tool/task"
 import { TaskGovernance } from "@orchestra/core/tool/task-governance"
 import { ToolSafety } from "@orchestra/core/tool-safety"
+import { ToolSafetySandbox } from "@orchestra/core/tool-safety-sandbox"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { Seats } from "../seats"
 import { SessionAuthority } from "../session-authority"
@@ -271,6 +272,14 @@ export const make = Effect.gen(function* () {
         const history = yield* store
           .entries(input.child.id)
           .pipe(Effect.mapError((error) => new ToolFailure({ message: error.message, error })))
+        const roots = WorkResultV2.effective(WriteRootsV2.read(yield* store.permissions(input.child.id)), project, {
+          directory: location.directory,
+          worktree: location.vcs?.type === "git" ? location.project.directory : location.directory,
+        })
+        // V1 reports the shell fact beside the roots: the worst one the child's commands met, else this host's status.
+        const shell = roots
+          ? (ToolSafety.shellFact(input.child.id) ?? (yield* ToolSafetySandbox.status().pipe(Effect.provideService(FSUtil.Service, fs))))
+          : undefined
         const workResult = WorkResultV2.assemble({
           seat: { ...seat, workResult: schema },
           reply: input.reply,
@@ -278,10 +287,8 @@ export const make = Effect.gen(function* () {
           executionSessionID: input.child.id,
           authoritySessionID: authority.rootID,
           taskId: binding?.taskId,
-          writeRoots: WorkResultV2.effective(WriteRootsV2.read(yield* store.permissions(input.child.id)), project, {
-            directory: location.directory,
-            worktree: location.vcs?.type === "git" ? location.project.directory : location.directory,
-          }),
+          writeRoots: roots,
+          shell,
         })
         return { ...settled, structured: { [WorkResultV2.KEY]: workResult } }
       }),
