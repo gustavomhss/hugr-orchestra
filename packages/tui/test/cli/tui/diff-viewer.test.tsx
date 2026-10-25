@@ -22,7 +22,7 @@ test("closing the diff viewer returns to the route it opened from", async () => 
       name: "diff",
       params: { mode: "git", sessionID: "session-1", returnRoute: startRoute },
     })
-    expect(viewer.vcsDiffInput()).toEqual({ directory: "/repo/session", mode: "git", context: 12 })
+    expect(viewer.vcsDiffInput()).toEqual({ location: { directory: "/repo/session" }, mode: "git", context: 12 })
 
     expect(viewer.commands.has("diff.close")).toBe(true)
     viewer.commands.get("diff.close")!.run?.({} as never)
