@@ -275,7 +275,6 @@ export async function setup(
             : selectedDirectory === otherDirectory
               ? [{ ...agents[0], name: "other-agent" }]
               : roster
-      if (input.protocol !== "v2") return json(data)
       return json({
         location: { directory: selectedDirectory },
         data: data.map((agent) => ({
