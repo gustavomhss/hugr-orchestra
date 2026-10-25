@@ -344,6 +344,13 @@ jobs:
         working-directory: packages/client
         run: bun run check:generated
 
+      - name: Run HttpApi exerciser gates
+        if: matrix.part == 'gates'
+        # Effect mode runs every scenario against a fresh in-memory server; fail instead of holding the runner if one wedges.
+        timeout-minutes: 25
+        working-directory: packages/server
+        run: bun run test:httpapi
+
       # Relay's retained Python oracle runs even when an earlier step failed, so one failure does not
       # hide the other. Benchmark runtime tests nest real pytest campaigns and stay manual:
       # `python -m pytest tests/test_benchmark_runtime.py` from modules/relay.

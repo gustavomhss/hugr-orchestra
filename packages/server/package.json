@@ -30,6 +30,7 @@
   },
   "scripts": {
     "test": "bun test --timeout 30000 --only-failures",
+    "test:httpapi": "bun run script/httpapi-exercise.ts --mode coverage --fail-on-missing --fail-on-skip && bun run script/httpapi-exercise.ts --mode auth --fail-on-missing --fail-on-skip && bun run script/httpapi-exercise.ts --mode effect --fail-on-missing --fail-on-skip",
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
