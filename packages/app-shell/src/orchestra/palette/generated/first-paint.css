@@ -4,7 +4,7 @@ html[data-orchestra-palette="graphite"] {
 }
 html[data-orchestra-palette="graphite"][data-color-scheme] {
   --orchestra-background: #0c0d0e;
-  --orchestra-page-background: radial-gradient(900px 700px at 15% 0%, #222326 0%, transparent 65%), #0c0d0e;
+  --orchestra-page-background: radial-gradient(900px 700px at 15% 0%, #212224 0%, transparent 65%), #0c0d0e;
 }
 html[data-orchestra-palette="graphite"][data-new-layout] {
   background-color: var(--orchestra-background);

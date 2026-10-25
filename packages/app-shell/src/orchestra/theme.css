@@ -43,12 +43,12 @@ html[data-color-scheme] body[data-new-layout] {
   --glass-shadow: var(--orchestra-glass-shadow);
   --orchestra-text: #eef1f5;
   --orchestra-body: #c7d0d9;
-  --orchestra-muted: #9aa8b7;
-  --orchestra-faint: #96aabc;
-  --orchestra-accent: #88aed4;
-  --orchestra-warm: #c9b78f;
-  --orchestra-success: #9dbfae;
-  --orchestra-danger: #d29e9b;
+  --orchestra-muted: #b2c0cf;
+  --orchestra-faint: #aec2d4;
+  --orchestra-accent: #9dc3e9;
+  --orchestra-warm: #cfbd95;
+  --orchestra-success: #a6c8b7;
+  --orchestra-danger: #e7b3b0;
 
   --orchestra-shell-background: #0e141b;
   --orchestra-shell-border: rgba(145, 166, 187, 0.25);
@@ -63,18 +63,20 @@ html[data-color-scheme] body[data-new-layout] {
   /* The photograph stays visible: the glass carries the tint that keeps text legible, not a veil over
      the whole workspace, so there is something behind the glass for it to refract. */
   --orchestra-workspace-overlay:
-    linear-gradient(180deg, rgba(9, 14, 20, 0.5), rgba(9, 14, 20, 0.32) 42%, rgba(9, 14, 20, 0.56)),
+    linear-gradient(180deg, rgba(9, 14, 20, 0.39), rgba(9, 14, 20, 0.22) 42%, rgba(9, 14, 20, 0.43)),
     radial-gradient(1100px 780px at 12% 4%, rgba(26, 37, 50, 0.32), transparent 68%);
 
-  /* Chrome glass: the sidebar, the tab strip and the toolbar. A wide blur that lifts saturation reads as
-     glass; a narrow one that darkens and desaturates reads as tinted plastic. */
+  /* Chrome glass: the sidebar, the tab strip and the toolbar. A wide blur that lifts saturation reads as glass,
+     but only under a light tint: a heavy one hides the photo, and a narrow one that darkens and desaturates
+     reads as tinted plastic. The main panel covers nearly the whole workspace, so this tint is most of what
+     stands between the user and their wallpaper. */
   --orchestra-glass-background: linear-gradient(
     180deg,
-    rgba(32, 44, 58, 0.54) 0%,
-    rgba(17, 24, 33, 0.62) 46%,
-    rgba(11, 16, 23, 0.66) 100%
+    rgba(32, 44, 58, 0.44) 0%,
+    rgba(17, 24, 33, 0.52) 46%,
+    rgba(11, 16, 23, 0.58) 100%
   );
-  --orchestra-glass-filter: blur(28px) brightness(0.8) saturate(1.6);
+  --orchestra-glass-filter: blur(28px) brightness(0.84) saturate(1.5);
   --orchestra-glass-border: rgba(160, 179, 197, 0.1);
   /* The rim catches light from above and fades down the sides; drawn as a masked ring (see below). */
   --orchestra-glass-rim: linear-gradient(
@@ -298,13 +300,13 @@ html[data-color-scheme="light"] body[data-new-layout] {
   --orchestra-text: #1a1f26;
   /* Role colors darkened, hue kept, to WCAG AA on the light glass over the photograph's darkest band
      (the palette gate in orchestra/palette). Danger was the dark scheme's pink, nearly invisible here. */
-  --orchestra-body: #3e4651;
-  --orchestra-muted: #3d4651;
-  --orchestra-faint: #3c444e;
-  --orchestra-accent: #164775;
-  --orchestra-warm: #564218;
-  --orchestra-success: #1f4d3a;
-  --orchestra-danger: #653938;
+  --orchestra-body: #353d48;
+  --orchestra-muted: #343d48;
+  --orchestra-faint: #363e48;
+  --orchestra-accent: #0c3e6c;
+  --orchestra-warm: #4d390f;
+  --orchestra-success: #164431;
+  --orchestra-danger: #5c302f;
 
   --orchestra-shell-background: #e9ecf0;
   --orchestra-shell-border: rgba(60, 72, 86, 0.22);
@@ -317,16 +319,16 @@ html[data-color-scheme="light"] body[data-new-layout] {
   --orchestra-toolbar-brand: #2b3440;
   --orchestra-toolbar-button: #57606c;
   --orchestra-workspace-overlay:
-    linear-gradient(180deg, rgba(226, 231, 236, 0.4), rgba(226, 231, 236, 0.22) 42%, rgba(222, 228, 234, 0.46)),
+    linear-gradient(180deg, rgba(226, 231, 236, 0.35), rgba(226, 231, 236, 0.18) 42%, rgba(222, 228, 234, 0.4)),
     radial-gradient(1100px 780px at 12% 4%, rgba(255, 255, 255, 0.4), transparent 68%);
 
   --orchestra-glass-background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.62) 0%,
-    rgba(248, 250, 252, 0.54) 46%,
-    rgba(240, 244, 247, 0.64) 100%
+    rgba(255, 255, 255, 0.57) 0%,
+    rgba(248, 250, 252, 0.49) 46%,
+    rgba(240, 244, 247, 0.59) 100%
   );
-  --orchestra-glass-filter: blur(28px) brightness(1.06) saturate(1.6);
+  --orchestra-glass-filter: blur(28px) brightness(1.06) saturate(1.5);
   --orchestra-glass-border: rgba(70, 84, 98, 0.12);
   --orchestra-glass-rim: linear-gradient(
     180deg,

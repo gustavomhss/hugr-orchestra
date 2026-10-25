@@ -265,7 +265,7 @@
   }
 
   body[data-new-layout] .orchestra-glass-layer {
-    --orchestra-session-filter: blur(32px) brightness(0.66) saturate(1.4);
+    --orchestra-session-filter: blur(28px) brightness(0.72) saturate(1.4);
     position: absolute;
     inset: 0;
     pointer-events: none;
@@ -273,7 +273,7 @@
   }
 
   html[data-color-scheme="light"] body[data-new-layout] .orchestra-glass-layer {
-    --orchestra-session-filter: blur(32px) brightness(1.06) saturate(1.5);
+    --orchestra-session-filter: blur(28px) brightness(1.04) saturate(1.5);
   }
 
   body[data-new-layout] .orchestra-glass-layer > [data-orchestra-glass] {

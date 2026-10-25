@@ -9,11 +9,11 @@ html[data-color-scheme] body[data-mx-kit] {
   --mx-soft: rgba(170, 196, 220, 0.055);
   --mx-raised: rgba(19, 28, 38, 0.55);
   --mx-modal: #111922;
-  --mx-dim: #9aa8b7;
+  --mx-dim: #b2c0cf;
   --mx-strong: #e1e9f0;
-  --mx-blue: #9abfe5;
-  --mx-good: #92bea7;
-  --mx-bad: #d99a94;
+  --mx-blue: #9dc2e8;
+  --mx-good: #9ecab3;
+  --mx-bad: #eeafa9;
   --mx-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.035);
   --mx-shadow: 0 30px 100px rgba(0, 0, 0, 0.36);
   --mx-pop-shadow: 0 14px 35px rgba(0, 0, 0, 0.24);
@@ -33,11 +33,11 @@ html[data-color-scheme="light"] body[data-mx-kit] {
   --mx-raised: rgba(255, 255, 255, 0.63);
   --mx-modal: #f8fafc;
   /* WCAG AA on the light glass over the photograph's darkest band, hue kept (owner decision). */
-  --mx-dim: #3d4651;
+  --mx-dim: #343d48;
   --mx-strong: #263341;
-  --mx-blue: #0b477b;
-  --mx-good: #045033;
-  --mx-bad: #7b2a24;
+  --mx-blue: #003e72;
+  --mx-good: #00472c;
+  --mx-bad: #72211b;
   --mx-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.7);
   --mx-shadow: 0 30px 100px rgba(28, 46, 65, 0.2);
   --mx-pop-shadow: 0 14px 35px rgba(28, 46, 65, 0.16);
