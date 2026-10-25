@@ -123,6 +123,8 @@ export const mergeGenerationOptions = (...items: ReadonlyArray<GenerationOptions
 
 export class ModelLimits extends Schema.Class<ModelLimits>("LLM.ModelLimits")({
   context: Schema.optional(Schema.Number),
+  /** Hard cap on prompt tokens when the provider states one apart from the context window; it wins over `context`. */
+  input: Schema.optional(Schema.Number),
   output: Schema.optional(Schema.Number),
 }) {}
 
