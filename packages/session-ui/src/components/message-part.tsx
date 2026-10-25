@@ -322,9 +322,7 @@ function createPacedValue(getValue: () => string, live?: () => boolean) {
     timeout = setTimeout(run, TEXT_RENDER_PACE_MS)
   })
 
-  onCleanup(() => {
-    clear()
-  })
+  onCleanup(clear)
 
   return value
 }
@@ -1524,7 +1522,6 @@ function ToolFileAccordion(props: { path: string; actions?: JSX.Element; childre
 
 PART_MAPPING["tool"] = function ToolPartDisplay(props) {
   const data = useData()
-  const slot = useToolPartSlot()
   const i18n = useI18n()
   const part = () => props.part as ToolPart
   const hideTodo = createMemo(() => part().tool === "todowrite" && confirmedTodos(part().state) === undefined)
@@ -1623,7 +1620,7 @@ PART_MAPPING["tool"] = function ToolPartDisplay(props) {
         <Show when={part().tool === "task"}>
           <ResearchResult value={partMetadata().workResult} sessionID={taskId()} />
         </Show>
-        <Show when={slot}>{(slot) => <Dynamic component={slot()} part={part()} />}</Show>
+        <Show when={useToolPartSlot()}>{(slot) => <Dynamic component={slot()} part={part()} />}</Show>
       </div>
     </Show>
   )

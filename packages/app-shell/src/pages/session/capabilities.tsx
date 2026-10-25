@@ -10,6 +10,7 @@ import { useServerSDK } from "@/context/server-sdk"
 import { useSync } from "@/context/sync"
 import { bytes } from "@/orchestra/actions/format"
 import type { Part } from "@/v2-wire"
+import type { TimelineRow } from "./timeline/rows"
 import { createArtifactsApi } from "./artifacts-api"
 import { artifactChips, createArtifactsModel, previewKind, type ArtifactRef } from "./artifacts-model"
 import { processItems, runningCount } from "./process-control-data"
@@ -18,7 +19,8 @@ import "./capabilities.css"
 
 const KIND_ICON = { image: "photo", video: "photo", pdf: "open-file", sheet: "bullet-list", download: "download" } as const
 
-function createSessionCapabilities(props: { revealPart: (partID: string) => boolean }) {
+function createSessionCapabilities() {
+  let revealPart = (_partID: string) => false
   const platform = usePlatform()
   const sdk = useSDK()
   const serverSDK = useServerSDK()
@@ -58,7 +60,7 @@ function createSessionCapabilities(props: { revealPart: (partID: string) => bool
   }
   const revealCall = (callID: string) => {
     const part = parts().find((item) => item.type === "tool" && item.callID === callID)
-    if (!part || !props.revealPart(part.id)) return
+    if (!part || !revealPart(part.id)) return
     // The virtualizer mounts the row after the scroll lands, so flash it on the next frames.
     requestAnimationFrame(() => requestAnimationFrame(() => {
       const row = document.querySelector<HTMLElement>(`[data-timeline-part-id="${CSS.escape(part.id)}"]`)
@@ -69,7 +71,10 @@ function createSessionCapabilities(props: { revealPart: (partID: string) => bool
       setTimeout(() => row.removeAttribute("data-capability-flash"), 1600)
     }))
   }
-  return { session, processes, running, artifactsOpen, toggleArtifacts, openArtifact, revealCall }
+  const setRevealPart = (fn: (partID: string) => boolean) => {
+    revealPart = fn
+  }
+  return { session, processes, running, artifactsOpen, toggleArtifacts, openArtifact, revealCall, setRevealPart }
 }
 
 type SessionCapabilities = ReturnType<typeof createSessionCapabilities>
@@ -79,8 +84,21 @@ const SessionCapabilitiesContext = createContext<SessionCapabilities>()
 /** Absent outside a Session route, so shared chrome renders without capability controls. */
 export const useSessionCapabilities = () => useContext(SessionCapabilitiesContext)
 
-export function SessionCapabilitiesProvider(props: ParentProps<{ revealPart: (partID: string) => boolean }>) {
-  const value = createSessionCapabilities(props)
+/** Lets the timeline scroll a tool call's row into view for `revealCall`; a no-op outside a Session route. */
+export function useRevealPart(rows: () => readonly TimelineRow[], scrollToIndex: (index: number) => void) {
+  const capabilities = useSessionCapabilities()
+  capabilities?.setRevealPart((partID) => {
+    const index = rows().findIndex((row) => row._tag === "AssistantPart" && (row.group.type === "part"
+      ? row.group.ref.partID === partID : row.group.refs.some((ref) => ref.partID === partID)))
+    if (index === -1) return false
+    scrollToIndex(index)
+    return true
+  })
+  onCleanup(() => capabilities?.setRevealPart(() => false))
+}
+
+export function SessionCapabilitiesProvider(props: ParentProps) {
+  const value = createSessionCapabilities()
   return (
     <SessionCapabilitiesContext.Provider value={value}>
       <ToolPartSlot.Provider value={ArtifactChips}>{props.children}</ToolPartSlot.Provider>
