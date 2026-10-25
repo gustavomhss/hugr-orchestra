@@ -154,6 +154,8 @@ import type {
   McpConnectOutput,
   McpDisconnectInput,
   McpDisconnectOutput,
+  McpDebugInput,
+  McpDebugOutput,
   McpAuthStartInput,
   McpAuthStartOutput,
   McpAuthCallbackInput,
@@ -1443,6 +1445,18 @@ export function make(options: ClientOptions) {
             successStatus: 204,
             declaredStatuses: [404, 401, 400],
             empty: true,
+          },
+          requestOptions,
+        ),
+      debug: (input: McpDebugInput, requestOptions?: RequestOptions) =>
+        request<McpDebugOutput>(
+          {
+            method: "GET",
+            path: `/api/mcp/${encodeURIComponent(input.server)}/debug`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [404, 400, 401],
+            empty: false,
           },
           requestOptions,
         ),

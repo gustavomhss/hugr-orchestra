@@ -232,6 +232,10 @@ const mcp = Spec.make("mcp", {
       params: { name: mcpName("name of the MCP server") },
       commands: [Spec.make("list", { description: "List MCP servers and their auth status", aliases: ["ls"] })],
     }),
+    Spec.make("debug", {
+      description: "Debug the OAuth connection of an MCP server",
+      params: { name: Argument.string("name of the MCP server") },
+    }),
     Spec.make("logout", {
       description: "Remove OAuth credentials for an MCP server",
       params: { name: mcpName("name of the MCP server") },

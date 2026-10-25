@@ -41,6 +41,18 @@ export const McpHandler = HttpApiBuilder.group(Api, "server.mcp", (handlers) =>
       }),
     )
     .handle(
+      "mcp.debug",
+      Effect.fn(function* (ctx) {
+        const mcp = yield* Mcp.Service
+        return yield* response(
+          mcp.debug(ctx.params.server).pipe(
+            Effect.catchTag("Mcp.NotFoundError", notFound),
+            Effect.catchTag("Mcp.ConfigError", (error) => Effect.fail(invalid(error))),
+          ),
+        )
+      }),
+    )
+    .handle(
       "mcp.auth.start",
       Effect.fn(function* (ctx) {
         const mcp = yield* Mcp.Service

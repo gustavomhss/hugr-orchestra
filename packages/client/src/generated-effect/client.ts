@@ -931,35 +931,45 @@ const Endpoint14_5 = (raw: RawClient["server.mcp"]) => (input: Endpoint14_5Input
     Effect.mapError(mapClientError),
   )
 
-type Endpoint14_6Request = Parameters<RawClient["server.mcp"]["mcp.auth.start"]>[0]
+type Endpoint14_6Request = Parameters<RawClient["server.mcp"]["mcp.debug"]>[0]
 type Endpoint14_6Input = {
   readonly server: Endpoint14_6Request["params"]["server"]
   readonly location?: Endpoint14_6Request["query"]["location"]
 }
 const Endpoint14_6 = (raw: RawClient["server.mcp"]) => (input: Endpoint14_6Input) =>
+  raw["mcp.debug"]({ params: { server: input["server"] }, query: { location: input["location"] } }).pipe(
+    Effect.mapError(mapClientError),
+  )
+
+type Endpoint14_7Request = Parameters<RawClient["server.mcp"]["mcp.auth.start"]>[0]
+type Endpoint14_7Input = {
+  readonly server: Endpoint14_7Request["params"]["server"]
+  readonly location?: Endpoint14_7Request["query"]["location"]
+}
+const Endpoint14_7 = (raw: RawClient["server.mcp"]) => (input: Endpoint14_7Input) =>
   raw["mcp.auth.start"]({ params: { server: input["server"] }, query: { location: input["location"] } }).pipe(
     Effect.mapError(mapClientError),
   )
 
-type Endpoint14_7Request = Parameters<RawClient["server.mcp"]["mcp.auth.callback"]>[0]
-type Endpoint14_7Input = {
-  readonly server: Endpoint14_7Request["params"]["server"]
-  readonly location?: Endpoint14_7Request["query"]["location"]
-  readonly code: Endpoint14_7Request["payload"]["code"]
+type Endpoint14_8Request = Parameters<RawClient["server.mcp"]["mcp.auth.callback"]>[0]
+type Endpoint14_8Input = {
+  readonly server: Endpoint14_8Request["params"]["server"]
+  readonly location?: Endpoint14_8Request["query"]["location"]
+  readonly code: Endpoint14_8Request["payload"]["code"]
 }
-const Endpoint14_7 = (raw: RawClient["server.mcp"]) => (input: Endpoint14_7Input) =>
+const Endpoint14_8 = (raw: RawClient["server.mcp"]) => (input: Endpoint14_8Input) =>
   raw["mcp.auth.callback"]({
     params: { server: input["server"] },
     query: { location: input["location"] },
     payload: { code: input["code"] },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint14_8Request = Parameters<RawClient["server.mcp"]["mcp.auth.remove"]>[0]
-type Endpoint14_8Input = {
-  readonly server: Endpoint14_8Request["params"]["server"]
-  readonly location?: Endpoint14_8Request["query"]["location"]
+type Endpoint14_9Request = Parameters<RawClient["server.mcp"]["mcp.auth.remove"]>[0]
+type Endpoint14_9Input = {
+  readonly server: Endpoint14_9Request["params"]["server"]
+  readonly location?: Endpoint14_9Request["query"]["location"]
 }
-const Endpoint14_8 = (raw: RawClient["server.mcp"]) => (input: Endpoint14_8Input) =>
+const Endpoint14_9 = (raw: RawClient["server.mcp"]) => (input: Endpoint14_9Input) =>
   raw["mcp.auth.remove"]({ params: { server: input["server"] }, query: { location: input["location"] } }).pipe(
     Effect.mapError(mapClientError),
   )
@@ -971,9 +981,10 @@ const adaptGroup14 = (raw: RawClient["server.mcp"]) => ({
   remove: Endpoint14_3(raw),
   connect: Endpoint14_4(raw),
   disconnect: Endpoint14_5(raw),
-  authStart: Endpoint14_6(raw),
-  authCallback: Endpoint14_7(raw),
-  authRemove: Endpoint14_8(raw),
+  debug: Endpoint14_6(raw),
+  authStart: Endpoint14_7(raw),
+  authCallback: Endpoint14_8(raw),
+  authRemove: Endpoint14_9(raw),
 })
 
 type Endpoint15_0Request = Parameters<RawClient["server.lsp"]["lsp.status"]>[0]
