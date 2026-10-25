@@ -7,5 +7,6 @@ exclude = []
 # `.skip(` only. skipIf(cond) is the platform-gating idiom this repo uses and does not match.
 match = '\b(describe|it|test)\.skip\(|(^|[^.\w])(xit|xdescribe)\('
 message = "Skipped test (.skip / xit / xdescribe). Fix the test or delete it with a reason; do not leave it skipped."
+summary = "A skipped test stops guarding its behavior while still looking like part of the suite. Fix the test, or delete it and explain why."
 positive = ["  it.skip(\"does a thing\", () => {", "describe.skip('group', () => {", "  xit(\"works\", () => {", "test.skip(\"x\", () => {})"]
 negative = ["  it(\"does a thing\", () => {", "test.skipIf(process.platform === \"win32\")(\"x\", () => {})", "// we skip this when offline", "const skipped = items.filter(Boolean)"]

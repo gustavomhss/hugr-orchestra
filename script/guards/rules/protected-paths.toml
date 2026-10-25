@@ -16,5 +16,6 @@ exclude = []
 # Workflow edits are not listed: the gha-* rules judge what matters in them, and a blanket label on every workflow change turns the approval into a rubber stamp.
 # CI sets GUARDRAIL_APPROVED=protected-paths when an approver has labelled the PR.
 message = "Protected file changed: it defines or enforces the repository's own rules. An approver must clear this change."
+summary = "These files define or enforce the repository's own rules, so changing them changes what every other check allows. An approver must review the change and clear it with the approval label."
 positive = [".github/CODEOWNERS", "AGENTS.md", "godfile-waivers.json", "script/guards/rules/ts-ignore.toml", "script/check-spawn-imports.ts", "script/spawn-allowlist.json"]
 negative = [".github/workflows/test.yml", "packages/core/src/session.ts", "docs/guardrail/pilot-catalog.md", "README.md", "script/format.ts"]

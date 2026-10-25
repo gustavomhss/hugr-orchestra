@@ -8,5 +8,6 @@ exclude = []
 # Anchored to a statement: tests here generate sample test files as strings, and those contain expect(1).toBe(1).
 match = '^\s*expect\((true|1|"[^"]*")\)\.(toBe|toEqual|toBeTruthy)\('
 message = "Assertion on a literal, which cannot fail. Assert the value the code under test produced."
+summary = "A test that checks a fixed value against itself always passes and proves nothing. Check the value the code under test actually returns."
 positive = ['expect(true).toBe(true)', '  expect(1).toBeTruthy()', 'expect("ok").toEqual("ok")']
 negative = ['expect(result).toBe(1)', 'expect(map.get(k)).toBeDefined()', 'expect(result).toBeTruthy()', 'const truthy = Boolean(x)']

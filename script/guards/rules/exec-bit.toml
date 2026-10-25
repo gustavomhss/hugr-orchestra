@@ -9,5 +9,6 @@ binary = false
 no_shebang = true
 # Decided by the file's first line, not its extension: a .ts entry that starts with #! is a script and may be executable.
 message = "Executable bit set on a text file with no #! line. Run chmod -x, or add the interpreter line if it is a script."
+summary = "A text file marked as executable without an interpreter line is usually a mistake from copying files around. Remove the executable flag, or add the interpreter line if the file really is a script."
 positive = ["docs/readme.md", "src/index.ts"]
 negative = ["node_modules/pkg/bin.js"]

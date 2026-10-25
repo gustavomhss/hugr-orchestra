@@ -6,5 +6,6 @@ paths = ["**/.DS_Store", "**/Thumbs.db", "**/desktop.ini"]
 exclude = []
 statuses = ["A", "R", "C"]
 message = "Operating-system file added to the repository. Delete it and add it to .gitignore."
+summary = "Files the operating system creates on its own, like folder view settings, are noise in a repository. Delete them and add them to .gitignore."
 positive = [".DS_Store", "assets/.DS_Store", "docs/Thumbs.db"]
 negative = ["docs/store.md", "src/desktop.ts"]

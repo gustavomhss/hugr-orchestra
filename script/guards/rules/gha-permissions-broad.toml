@@ -7,5 +7,6 @@ exclude = []
 # Workflow-level write scopes (children of the top-level permissions: block sit at two spaces) and write-all. Job-level scopes sit deeper and are the right place for a write.
 match = '^\s*permissions:\s*write-all\b|^  (actions|attestations|checks|contents|deployments|discussions|id-token|issues|packages|pages|pull-requests|repository-projects|security-events|statuses):\s*write\b'
 message = "Write permission granted for the whole workflow. Keep the workflow at read and grant the write on the one job that needs it."
+summary = "Giving the whole workflow write access means every job, and any compromised step, can change the repository. Keep the workflow read-only and grant write access only on the job that needs it."
 positive = ['permissions: write-all', '  contents: write', '  id-token: write']
 negative = ['      contents: write', '  contents: read', '    steps:']

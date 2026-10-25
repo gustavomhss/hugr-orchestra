@@ -6,5 +6,6 @@ paths = ["**/*.py"]
 exclude = []
 match = '^\s*except\s*:|^\s*except\b[^:]*:\s*pass\b'
 message = "Bare except or except ...: pass swallows every error, including KeyboardInterrupt. Catch the specific exception and handle it."
+summary = "Catching every error, or catching one and doing nothing, hides real bugs and even blocks stopping the program. Catch the specific error you expect and handle it."
 positive = ['    except:', 'except Exception: pass', '  except (OSError, ValueError):  pass']
 negative = ['    except OSError as error:', '    except ValueError:', '# except: is banned']

@@ -9,5 +9,6 @@ new_only = true
 # before is reported. A model that cannot find a function often invents a package for it, and the name may be taken by a squatter.
 match = '''^\s*"((?!version"|name"|packageManager"|node"|bun"|npm"|private"|type"|main"|module")@?[a-z0-9][\w./-]*)":\s*"(\^|~|>=?|<|workspace:|catalog:|npm:|\d)[^"]*",?\s*$'''
 message = "New dependency. Check that the package exists, is the one you mean (not a look-alike name), and is needed; then say why in the PR."
+summary = "Every new package is code we now trust and maintain, and look-alike names are a known attack. Check the package is real, is the one you meant and is needed, and explain why in the pull request."
 positive = ['    "left-pad": "^1.3.0",', '    "@scope/pkg": "workspace:*"', '    "zod": "catalog:",']
 negative = ['  "version": "1.2.3",', '    "build": "bun run x"', '  "name": "@orchestra/core",', '    "exports": {']

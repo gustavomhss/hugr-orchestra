@@ -6,5 +6,6 @@ paths = ["**/*.py"]
 exclude = []
 match = '#\s*noqa\s*$'
 message = "Blanket # noqa hides every lint rule on the line. Name the rule: # noqa: E501."
+summary = "A bare lint suppression silences every rule on the line, including ones you did not mean to hide. Name the specific rule being suppressed."
 positive = ['import os  # noqa', 'x = 1 #noqa  ']
 negative = ['import os  # noqa: F401', 'x = 1  # not a noqa comment here', 'noqa = True']

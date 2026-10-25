@@ -7,5 +7,6 @@ exclude = []
 # pull_request_target runs with the base repository's secrets on code a fork controls.
 match = '^(?!\s*#).*\bpull_request_target\b'
 message = "pull_request_target gives untrusted pull request code access to secrets. Use pull_request, or split the privileged part into a workflow_run."
+summary = "This trigger runs with the repository's secrets even for pull requests from strangers, so their code can steal them. Use the normal pull request trigger, or move the privileged part to a separate follow-up workflow."
 positive = ['  pull_request_target:', 'on: [push, pull_request_target]']
 negative = ['# never use pull_request_target', '  pull_request:', '  workflow_dispatch:']

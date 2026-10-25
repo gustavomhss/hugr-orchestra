@@ -6,5 +6,6 @@ paths = ["**/node_modules/**", "**/__pycache__/**", "**/.turbo/**", "**/.next/**
 exclude = []
 statuses = ["A", "R", "C"]
 message = "Build output or dependency directory added. Delete it and add the directory to .gitignore."
+summary = "Build results and installed dependencies are produced on each machine and should never be committed. Remove the folder from the change and list it in .gitignore."
 positive = ["node_modules/x/index.js", "packages/core/dist/index.js", "tool/__pycache__/a.pyc", "native/omni/target/release/omni", "coverage/lcov.info"]
 negative = ["src/distance.ts", "docs/targets.md", "src/coverage-report.ts"]

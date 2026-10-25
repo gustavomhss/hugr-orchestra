@@ -7,5 +7,6 @@ exclude = []
 # A focused test silently turns the rest of the suite off. Only a call with a title string counts: a helper named fit(372, 94) and a test library that defines its own test.only(name, ...) wrapper are both real code here, not focused tests.
 match = '''\b(describe|it|test)\.only\(\s*["'`]|(^|[^.\w])(fit|fdescribe)\(\s*["'`]'''
 message = "Focused test (.only / fit / fdescribe) disables the rest of the suite. Remove it before merging."
+summary = "Marking one test or group as the only one to run silently skips the rest of the suite. Remove the marker before merging."
 positive = ['  it.only("does a thing", () => {', "describe.only('group', () => {", '  fit("works", () => {', 'test.only("x", async () => {']
 negative = ['  it("does a thing", () => {', 'graph.handle?.fit()', 'const benefit(1)', 'test.skipIf(process.platform === "win32")("x", () => {})', '    expect(fit(372, 94)).toEqual({ width: 1024 })', '    test.only(name, () => run(value, testLayer), opts)']

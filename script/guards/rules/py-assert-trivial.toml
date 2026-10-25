@@ -6,5 +6,6 @@ paths = ["$py_tests"]
 exclude = []
 match = '^\s*assert\s+(True|1)\s*(,|$)|\bassert\s+.*\bor\s+True\b'
 message = "Assertion that cannot fail. Assert the real condition."
+summary = "A test assertion that is always true checks nothing and gives false confidence. Assert the real condition the test is about."
 positive = ['    assert True', 'assert 1', 'assert x == 1 or True', 'assert True, "ok"']
 negative = ['    assert x == 1', 'assert result is True', 'assert items', '# assert True']

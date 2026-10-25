@@ -8,5 +8,6 @@ skip_comments = ["//", "#"]
 # A slow test made to pass by waiting longer hides the slowness. 10 seconds and up is the signal.
 match = '''(setDefaultTimeout|setTimeout)\(\s*\d[\d_]{4,}\b|\{\s*timeout:\s*\d[\d_]{4,}\s*\}|@pytest\.mark\.timeout\(\s*\d{3,}'''
 message = "Test timeout raised to 10s or more. Find out why it is slow instead of waiting longer."
+summary = "Raising a test's time limit to ten seconds or more hides a slowdown or a hang instead of explaining it. Find out why the test is slow and fix that."
 positive = ['setDefaultTimeout(30_000)', '  test("slow", async () => {}, { timeout: 60000 })', '@pytest.mark.timeout(300)']
 negative = ['setDefaultTimeout(5000)', 'test("x", () => {}, { timeout: 1000 })', 'await new Promise((r) => setTimeout(r, 50))']

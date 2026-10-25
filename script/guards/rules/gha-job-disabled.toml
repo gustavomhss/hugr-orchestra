@@ -7,5 +7,6 @@ exclude = []
 # Anchored so cache options like save-if: false do not match.
 match = '^\s*(-\s*)?if:\s*(\$\{\{\s*)?false\b'
 message = "Job or step switched off with if: false. Delete it or fix it; a disabled check looks like a passing one."
+summary = "A job or step switched off with a false condition looks like a passing check while doing nothing. Delete it or fix it so it runs."
 positive = ['    if: false', '      - if: ${{ false }}']
 negative = ['        save-if: false', '    if: github.event_name == "push"', '    if: always()']
