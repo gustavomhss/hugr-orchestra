@@ -5,7 +5,7 @@ export type DiffMode = "git" | "branch" | "last-turn"
 export type DiffViewerFocus = "patches" | "files"
 export type DiffView = "split" | "unified"
 
-type DiffFile = {
+export type DiffFile = {
   readonly file: string
   readonly patch?: string
   readonly additions: number
