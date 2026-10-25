@@ -1,7 +1,6 @@
 import { expect, test } from "@playwright/test"
 import {
   assistantMessage,
-  partUpdated,
   session,
   sessionID,
   setupTimeline,
@@ -170,7 +169,6 @@ for (const bytes of [16 * 1024, 16 * 1024 + 1]) {
 test("V2 initial native structured result opens exact retained document", async ({ page }) => {
   const document = researchDocument()
   await setupResearchTimeline(page, {
-    protocol: "v2",
     value: researchEnvelope({ documents: [document.receipt] }),
   })
   const requests = await mockResearchArtifacts(page, [document])
@@ -183,19 +181,13 @@ test("V2 initial native structured result opens exact retained document", async 
   expect(requests.map((request) => request.cursor)).toEqual([null, "research-page-1"])
 })
 
-for (const profile of [
-  { protocol: "v1", replacement: "selection" },
-  { protocol: "v1", replacement: "envelope" },
-  { protocol: "v2", replacement: "selection" },
-  { protocol: "v2", replacement: "envelope" },
-] as const) {
-  test(`pending ${profile.protocol} ${profile.replacement} replacement aborts native request and stops stale display`, async ({ page }) => {
+for (const replacement of ["selection", "envelope"] as const) {
+  test(`pending ${replacement} replacement aborts native request and stops stale display`, async ({ page }) => {
     const old = researchDocument(["# Stale document\n\n", "Old body must never display."], { title: "Old report" })
     const fresh = researchDocument(["# Fresh document\n\nFresh body."], { index: 2, title: "Fresh report" })
     const held = Promise.withResolvers<void>()
     const timeline = await setupResearchTimeline(page, {
-      protocol: profile.protocol,
-      status: profile.protocol === "v2" && profile.replacement === "envelope" ? "running" : "completed",
+      status: replacement === "envelope" ? "running" : "completed",
       value: researchEnvelope({ documents: [old.receipt, fresh.receipt] }),
     })
     const requests = await mockResearchArtifacts(page, [old, fresh], {
@@ -207,14 +199,11 @@ for (const profile of [
     const pending = await oldRequest
     await expect(result.getByRole("status")).toHaveText("Loading research document")
     const oldFailed = page.waitForEvent("requestfailed", { predicate: (request) => request === pending })
-    if (profile.replacement === "envelope") {
-      const replacement = researchEnvelope({ answer: "## Replacement answer", documents: [fresh.receipt] })
-      if (profile.protocol === "v1") await timeline.send(partUpdated(researchTask(replacement)))
-      if (profile.protocol === "v2") {
-        const connection = await timeline.transport.waitForConnection()
-        expect(connection.path).toBe("/api/event")
-        await timeline.transport.writeRaw(`data: ${JSON.stringify(nativeResearchSuccess(replacement))}\n\n`)
-      }
+    if (replacement === "envelope") {
+      const next = researchEnvelope({ answer: "## Replacement answer", documents: [fresh.receipt] })
+      const connection = await timeline.transport.waitForConnection()
+      expect(connection.path).toBe("/api/event")
+      await timeline.transport.writeRaw(`data: ${JSON.stringify(nativeResearchSuccess(next))}\n\n`)
       await expect(result.getByRole("heading", { name: "Replacement answer", exact: true })).toBeVisible()
       await expect(result.getByRole("region", { name: old.receipt.title, exact: true })).toHaveCount(0)
       expect((await oldFailed).failure()?.errorText).toBe("net::ERR_ABORTED")
@@ -226,7 +215,7 @@ for (const profile of [
       expect(requests.filter((request) => request.artifactID === old.receipt.artifact.id).map((request) => request.cursor)).toEqual([null])
       await result.getByRole("button", { name: fresh.receipt.title, exact: true }).click()
     }
-    if (profile.replacement === "selection") {
+    if (replacement === "selection") {
       await result.getByRole("button", { name: fresh.receipt.title, exact: true }).click()
       expect((await oldFailed).failure()?.errorText).toBe("net::ERR_ABORTED")
       held.resolve()

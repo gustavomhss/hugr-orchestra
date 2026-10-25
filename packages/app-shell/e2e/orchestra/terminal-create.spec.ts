@@ -21,67 +21,62 @@ const location = { directory, project: { id: projectID, directory } }
 
 test.use({ viewport: { width: 1440, height: 900 }, serviceWorkers: "block", colorScheme: "light" })
 
-for (const protocol of ["v1", "v2"] as const) {
-  test(`${protocol}: cockpit shows creation failure and explicit retry without duplicate requests`, async ({
-    page,
-  }) => {
-    const pending: Route[] = []
-    const app = await setup(page, protocol, async (route) => {
-      pending.push(route)
-    })
-    const dock = await openTerminal(page)
-    const create = dock.getByRole("button", { name: "New terminal", exact: true })
-    await expect(create).toBeEnabled()
-    expect(app.creates).toHaveLength(0)
-    await create.click()
-    await expect(create).toBeDisabled()
-    await expect(create).toHaveAttribute("aria-busy", "true")
-    await expect(dock.getByRole("status")).toContainText("Loading terminal...")
-    await expect.poll(() => pending.length).toBe(1)
-    // Exercise a queued duplicate click even though the native button is already disabled.
-    await create.dispatchEvent("click")
-    await pending.shift()!.fulfill({
-      status: 500,
-      contentType: "application/json",
-      body: JSON.stringify({ name: "UnknownError", data: { message: "PTY create denied" } }),
-    })
-    const alert = dock.getByRole("alert")
-    await expect(alert).toHaveAccessibleName("New terminal")
-    await expect(alert).toContainText("Request failed")
-    await expect(alert.locator("span")).toHaveText(protocol === "v1" ? "PTY create denied" : "UnexpectedStatus")
-    await expect(dock.locator('[data-component="terminal"]')).toHaveCount(0)
-    await expect(alert.getByRole("button", { name: "Retry", exact: true })).toBeEnabled()
-    expect(app.creates).toHaveLength(1)
-    expect(app.connections).toHaveLength(0)
-    await page.screenshot({
-      path: test.info().outputPath(`terminal-create-${protocol}-failed.png`),
-      animations: "disabled",
-    })
-
-    await alert.getByRole("button", { name: "Retry", exact: true }).click()
-    await expect(create).toBeDisabled()
-    await expect.poll(() => pending.length).toBe(1)
-    await pending.shift()!.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify(protocol === "v1" ? pty : { location, data: pty }),
-    })
-    await expect(dock.locator('[data-component="terminal"] canvas')).toBeVisible()
-    await expect.poll(() => app.connections.length).toBe(1)
-    await expect(dock.getByRole("alert")).toHaveCount(0)
-    await expect(page.locator('[data-component="terminal"]')).toHaveCount(1)
-    expect(app.creates).toHaveLength(2)
-    expect(app.creates.map((request) => request.title)).toEqual(["Terminal 1", "Terminal 1"])
-    expect(app.errors).toEqual([])
+test("cockpit shows creation failure and explicit retry without duplicate requests", async ({ page }) => {
+  const pending: Route[] = []
+  const app = await setup(page, async (route) => {
+    pending.push(route)
   })
-}
+  const dock = await openTerminal(page)
+  const create = dock.getByRole("button", { name: "New terminal", exact: true })
+  await expect(create).toBeEnabled()
+  expect(app.creates).toHaveLength(0)
+  await create.click()
+  await expect(create).toBeDisabled()
+  await expect(create).toHaveAttribute("aria-busy", "true")
+  await expect(dock.getByRole("status")).toContainText("Loading terminal...")
+  await expect.poll(() => pending.length).toBe(1)
+  // Exercise a queued duplicate click even though the native button is already disabled.
+  await create.dispatchEvent("click")
+  await pending.shift()!.fulfill({
+    status: 500,
+    contentType: "application/json",
+    body: JSON.stringify({ name: "UnknownError", data: { message: "PTY create denied" } }),
+  })
+  const alert = dock.getByRole("alert")
+  await expect(alert).toHaveAccessibleName("New terminal")
+  await expect(alert).toContainText("Request failed")
+  await expect(alert.locator("span")).toHaveText("UnexpectedStatus")
+  await expect(dock.locator('[data-component="terminal"]')).toHaveCount(0)
+  await expect(alert.getByRole("button", { name: "Retry", exact: true })).toBeEnabled()
+  expect(app.creates).toHaveLength(1)
+  expect(app.connections).toHaveLength(0)
+  await page.screenshot({
+    path: test.info().outputPath("terminal-create-failed.png"),
+    animations: "disabled",
+  })
 
+  await alert.getByRole("button", { name: "Retry", exact: true }).click()
+  await expect(create).toBeDisabled()
+  await expect.poll(() => pending.length).toBe(1)
+  await pending.shift()!.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({ location, data: pty }),
+  })
+  await expect(dock.locator('[data-component="terminal"] canvas')).toBeVisible()
+  await expect.poll(() => app.connections.length).toBe(1)
+  await expect(dock.getByRole("alert")).toHaveCount(0)
+  await expect(page.locator('[data-component="terminal"]')).toHaveCount(1)
+  expect(app.creates).toHaveLength(2)
+  expect(app.creates.map((request) => request.title)).toEqual(["Terminal 1", "Terminal 1"])
+  expect(app.errors).toEqual([])
+})
 test("a response without a PTY ID fails visibly and retries through the same controller", async ({ page }) => {
-  const app = await setup(page, "v1", (route, attempt) =>
+  const app = await setup(page, (route, attempt) =>
     route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify(attempt === 1 ? {} : pty),
+      body: JSON.stringify({ location, data: attempt === 1 ? {} : pty }),
     }),
   )
   const dock = await openTerminal(page)
@@ -99,7 +94,7 @@ test("a response without a PTY ID fails visibly and retries through the same con
 
 test("a late failure cannot set an error on a remounted cockpit pane", async ({ page }) => {
   const pending: Route[] = []
-  const app = await setup(page, "v1", async (route) => {
+  const app = await setup(page, async (route) => {
     pending.push(route)
   })
   const dock = await openTerminal(page)
@@ -118,18 +113,18 @@ test("a late failure cannot set an error on a remounted cockpit pane", async ({ 
   await expect(dock.getByRole("alert")).toHaveCount(0)
   await dock.getByRole("button", { name: "New terminal", exact: true }).click()
   await expect.poll(() => pending.length).toBe(1)
-  await pending.shift()!.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(pty) })
+  await pending.shift()!.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ location, data: pty }) })
   await expect(dock.locator('[data-component="terminal"] canvas')).toBeVisible()
   expect(app.creates).toHaveLength(2)
   expect(app.errors).toEqual([])
 })
 
 test("legacy fire-and-forget terminal creation remains handled and can be requested again", async ({ page }) => {
-  const app = await setup(page, "v1", (route, attempt) =>
+  const app = await setup(page, (route, attempt) =>
     route.fulfill({
       status: attempt === 1 ? 500 : 200,
       contentType: "application/json",
-      body: JSON.stringify(attempt === 1 ? { message: "legacy failure" } : pty),
+      body: JSON.stringify(attempt === 1 ? { message: "legacy failure" } : { location, data: pty }),
     }),
   )
   await page.goto(`/server/${base64Encode(server)}/session/${sessionID}`)
@@ -160,13 +155,13 @@ async function openTerminal(page: Page) {
   return dock
 }
 
-async function setup(page: Page, protocol: "v2", respond: (route: Route, attempt: number) => Promise<void>) {
+async function setup(page: Page, respond: (route: Route, attempt: number) => Promise<void>) {
   const creates: { title?: string }[] = []
   const connections: string[] = []
   const errors: string[] = []
   page.on("pageerror", (error) => errors.push(error.message))
   await mockOrchestraServer(page, {
-    protocol,
+    protocol: "v2",
     directory,
     project: {
       id: projectID,
@@ -190,7 +185,7 @@ async function setup(page: Page, protocol: "v2", respond: (route: Route, attempt
     ],
     pageMessages: () => ({ items: [] }),
   })
-  const prefix = protocol === "v1" ? "/pty" : "/api/pty"
+  const prefix = "/api/pty"
   await page.route(
     (url) => url.port === new URL(server).port && url.pathname.startsWith(prefix),
     (route) => {
@@ -203,7 +198,7 @@ async function setup(page: Page, protocol: "v2", respond: (route: Route, attempt
       return route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify(protocol === "v1" ? data : { location, data }),
+        body: JSON.stringify({ location, data }),
       })
     },
   )

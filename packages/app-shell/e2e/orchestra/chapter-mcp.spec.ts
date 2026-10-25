@@ -41,7 +41,7 @@ function fixture() {
       string,
       Record<string, string[]>
     >,
-    protocol: "v1" as "v2",
+    protocol: "v2" as const,
     configError: false,
     events: {} as Record<string, { directory: string; payload: { type: string; properties: Record<string, never> } }[]>,
     loadError: false,
@@ -185,7 +185,6 @@ test("loading, empty, inventory failure and retry", async ({ page }) => {
 
 test("V2 lists, toggles, saves and removes through the current API", async ({ page }) => {
   const state = fixture()
-  state.protocol = "v2"
   await setup(page, state)
   await openChapter(page)
   await expect(page.locator("[data-mcp-name]")).toHaveCount(6)
@@ -613,7 +612,7 @@ async function setup(page: Page, state: ReturnType<typeof fixture>) {
       })
     }
     if (path === "/global/health")
-      return json(route, state.protocol === "v1" ? { healthy: true } : {}, state.protocol === "v1" ? 200 : 404)
+      return json(route, {}, 404)
     if (path === "/api/health") return json(route, { pid: 1, healthy: true })
     if (path === "/project" || path === "/api/project") return json(route, [project])
     if (path === "/project/current") return json(route, project)

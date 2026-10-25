@@ -34,7 +34,7 @@ export async function createPipeline(page: Page) {
 // Server PTY double: records creates, gate input and removal attempts; `exit` ends the run like the
 // server (status first, then a normal close), and `missing` answers like a server that lost the
 // session. Register it after `setup`: Playwright tries the most recently registered route first.
-export async function mockPty(page: Page, protocol: "v2") {
+export async function mockPty(page: Page) {
   const state = {
     creates: [] as Record<string, unknown>[],
     inputs: [] as string[],
@@ -68,7 +68,7 @@ export async function mockPty(page: Page, protocol: "v2") {
       })
     },
   }
-  const prefix = protocol === "v1" ? "/pty" : "/api/pty"
+  const prefix = "/api/pty"
   const info = () => ({
     id: "pty_cicd",
     title: "CI/CD · Project checks",
@@ -79,16 +79,15 @@ export async function mockPty(page: Page, protocol: "v2") {
     pid: 1,
     ...(state.status === "exited" ? { exitCode: state.exitCode } : {}),
   })
-  const body = (data: unknown) => (protocol === "v1" ? data : { location: { directory }, data })
+  const body = (data: unknown) => ({ location: { directory }, data })
   await page.route(
     (url) => url.origin === serverA && (url.pathname === prefix || url.pathname.startsWith(`${prefix}/`)),
     (route) => {
       const url = new URL(route.request().url())
       const method = route.request().method()
-      // The V1 SDK sends the directory as a query only for GET/HEAD; other methods carry a header.
       const header = route.request().headers()["x-orchestra-directory"]
       expect(
-        url.searchParams.get(protocol === "v1" ? "directory" : "location[directory]") ??
+        url.searchParams.get("location[directory]") ??
           (header === undefined ? undefined : decodeURIComponent(header)),
       ).toBe(directory)
       if (url.pathname === prefix && method === "POST") {
@@ -104,13 +103,7 @@ export async function mockPty(page: Page, protocol: "v2") {
       }
       state.gets += 1
       if (state.missing)
-        return json(
-          route,
-          protocol === "v1"
-            ? { name: "NotFoundError", data: { message: "missing" } }
-            : { _tag: "PtyNotFoundError", ptyID: "pty_cicd", message: "missing" },
-          404,
-        )
+        return json(route, { _tag: "PtyNotFoundError", ptyID: "pty_cicd", message: "missing" }, 404)
       return json(route, body(info()))
     },
   )
@@ -160,7 +153,6 @@ export async function chooseProfile(page: Page, name: string) {
 export async function setup(
   page: Page,
   options: {
-    protocol?: "v2"
     state?: "empty" | "error" | "unavailable"
     gitlab?: boolean
     listFailure?: () => boolean
@@ -195,7 +187,7 @@ export async function setup(
     sandboxes: [],
   })
   await mockOrchestraServer(page, {
-    protocol: options.protocol ?? "v2",
+    protocol: "v2",
     directory,
     project: project(serverA),
     provider: provider(),

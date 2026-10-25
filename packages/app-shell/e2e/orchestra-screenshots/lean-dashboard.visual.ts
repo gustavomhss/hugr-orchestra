@@ -34,7 +34,7 @@ test.use({ viewport: { width: 1672, height: 941 }, deviceScaleFactor: 1, locale:
 test("native Lean production page: profiles, controls, history and dark/light captures", async ({ page }) => {
   const data = profiles.map((_, index) => demo(index))
   const requests: { method: string; directory: string; path: string; body?: LeanDashboard.Update }[] = []
-  await mockOrchestraServer(page, { directory: profiles[0].worktree, project: profiles[0],
+  await mockOrchestraServer(page, { protocol: "v2", directory: profiles[0].worktree, project: profiles[0],
     provider: { all: [], connected: [], default: {} }, sessions: [], pageMessages: () => ({ items: [] }) })
   await page.addInitScript(({ profiles }) => {
     const server = "http://127.0.0.1:4096"
@@ -48,29 +48,29 @@ test("native Lean production page: profiles, controls, history and dark/light ca
     localStorage.setItem("orchestra.global.dat:language", JSON.stringify({ locale: "br" }))
     localStorage.setItem("orchestra.global.dat:layout", JSON.stringify({ home: { selection: { server, directory } } }))
   }, { profiles })
-  await page.route((url) => url.port === "4096" && ["/project", "/project/current", "/path"].includes(url.pathname), (route) => {
+  await page.route((url) => url.port === "4096" && ["/api/project", "/api/project/current", "/api/path"].includes(url.pathname), (route) => {
     const url = new URL(route.request().url())
-    const directory = url.searchParams.get("directory") ?? decodeURIComponent(route.request().headers()["x-orchestra-directory"] ?? profiles[0].worktree)
+    const directory = url.searchParams.get("location[directory]") ?? profiles[0].worktree
     const project = profiles.find((project) => project.worktree === directory)
     expect(project, `known demo directory for ${url.pathname}`).toBeDefined()
-    return route.fulfill({ json: url.pathname === "/project" ? profiles : url.pathname === "/project/current" ? project
+    return route.fulfill({ json: url.pathname === "/api/project" ? profiles : url.pathname === "/api/project/current" ? { id: project!.id, directory }
       : { directory, worktree: directory, state: directory, config: directory, home: "/work" },
       headers: { "access-control-allow-origin": "*" } })
   })
-  await page.route((url) => url.port === "4096" && url.pathname.startsWith("/project/lean"), (route) => {
+  await page.route((url) => url.port === "4096" && url.pathname.startsWith("/api/lean"), (route) => {
     const request = route.request()
     const url = new URL(request.url())
-    const headers = { "access-control-allow-origin": "*", "access-control-allow-headers": "content-type,x-orchestra-directory", "access-control-allow-methods": "GET,PATCH,OPTIONS" }
+    const headers = { "access-control-allow-origin": "*", "access-control-allow-headers": "content-type,authorization", "access-control-allow-methods": "GET,PATCH,OPTIONS" }
     if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers })
-    const directory = url.searchParams.get("directory")!
+    const directory = url.searchParams.get("location[directory]")!
+    const location = { directory, project: { id: profiles.find((profile) => profile.worktree === directory)?.id, directory } }
     const index = profiles.findIndex((profile) => profile.worktree === directory)
     expect(index, "SDK directory stays within public demo profiles").toBeGreaterThanOrEqual(0)
-    expect(request.headers()["x-orchestra-directory"]).toBe(request.method() === "GET" ? undefined : encodeURIComponent(directory))
     const body = request.method() === "PATCH" ? Schema.decodeUnknownSync(LeanDashboard.Update)(request.postDataJSON()) : undefined
     requests.push({ method: request.method(), directory, path: url.pathname, body })
     if (body) data[index] = decode(body.itemID ? { ...data[index], items: data[index].items.map((item) => item.id === body.itemID ? { ...item, enabled: body.enabled } : item) }
       : { ...data[index], enabled: body.enabled })
-    if (url.pathname === "/project/lean") return route.fulfill({ headers, json: data[index] })
+    if (url.pathname === "/api/lean") return route.fulfill({ headers, json: { location, data: data[index] } })
     const itemID = Schema.decodeUnknownSync(LeanCoverage.ItemID)(url.pathname.split("/").at(-1))
     expect(request.method()).toBe("GET")
     const savings = data[index].items.find((item) => item.id === itemID)!.savings
@@ -79,7 +79,7 @@ test("native Lean production page: profiles, controls, history and dark/light ca
         partID: `demo-part-${position}`, callID: `demo-call-${position}`, itemID, command: position ? "cargo test --workspace --test preservation" : "cargo test --workspace --all-features",
         commandTruncated: false, status, exit: position, time: Date.UTC(2026, 9, 10, 10, 32 - position * 7),
         bytesSaved: position ? 0 : savings.bytesSaved, tokensSaved: position ? 0 : savings.tokensSaved })) })
-    return route.fulfill({ headers, json: history })
+    return route.fulfill({ headers, json: { location, data: history } })
   })
   const manifest: unknown[] = []
   const sidebar = page.locator('[data-component="orchestra-sidebar"]')
@@ -91,7 +91,7 @@ test("native Lean production page: profiles, controls, history and dark/light ca
   // mounted the page. The mount itself sends this read, so wait for it rather than racing all three against the 10 s
   // assertion timeout below; its own limit stays under the test's so a page that never mounts still fails with a snapshot.
   const mounted = page.waitForResponse((response) => response.request().method() === "GET" &&
-    new URL(response.url()).pathname === "/project/lean" && new URL(response.url()).searchParams.get("directory") === profiles[0].worktree,
+    new URL(response.url()).pathname === "/api/lean" && new URL(response.url()).searchParams.get("location[directory]") === profiles[0].worktree,
   { timeout: 120_000 })
   await page.goto("/orchestra/lean")
   expect((await mounted).status()).toBe(200)
@@ -106,7 +106,7 @@ test("native Lean production page: profiles, controls, history and dark/light ca
     await expect(row.locator('[data-lean-value="tokens"]')).toHaveText(fmt(item.savings.tokensSaved!))
   }
   const earned = await lean.locator('[data-lean-total="bytes"]').getAttribute("title")
-  const patch = page.waitForResponse((response) => response.request().method() === "PATCH" && new URL(response.url()).pathname === "/project/lean")
+  const patch = page.waitForResponse((response) => response.request().method() === "PATCH" && new URL(response.url()).pathname === "/api/lean")
   await cargo.getByRole("switch").click()
   expect((await patch).status()).toBe(200)
   await expect(cargo.getByRole("switch")).toHaveAttribute("aria-checked", "false")
@@ -116,7 +116,7 @@ test("native Lean production page: profiles, controls, history and dark/light ca
   await capture(page, "dashboard-dark", manifest, requests, data[0])
   await search.fill("cargo")
   await expect(rows).toHaveCount(1)
-  const history = page.waitForResponse((response) => new URL(response.url()).pathname === "/project/lean/history/cargo")
+  const history = page.waitForResponse((response) => new URL(response.url()).pathname === "/api/lean/history/cargo")
   await cargo.getByRole("button", { name: "Cargo", exact: true }).click()
   expect((await history).status()).toBe(200)
   await expect(lean.locator("[data-lean-execution]")).toHaveCount(2)
@@ -158,7 +158,7 @@ test("native Lean production page: profiles, controls, history and dark/light ca
   await expect(page.locator("html")).toHaveAttribute("data-color-scheme", "dark")
   await sidebar.locator('[data-slot="orchestra-profile"]').click()
   await expect(page.getByRole("menuitemradio", { name: "Orchestra", exact: true })).toBeEnabled()
-  const switched = page.waitForResponse((response) => new URL(response.url()).pathname === "/project/lean" && new URL(response.url()).searchParams.get("directory") === profiles[1].worktree)
+  const switched = page.waitForResponse((response) => new URL(response.url()).pathname === "/api/lean" && new URL(response.url()).searchParams.get("location[directory]") === profiles[1].worktree)
   await page.getByRole("menuitemradio", { name: "Orchestra", exact: true }).click()
   expect((await switched).status()).toBe(200)
   await expect(lean.locator(".mx-eyebrow")).toHaveText("Perfil Orchestra · Orchestra")
@@ -173,7 +173,7 @@ test("native Lean production page: profiles, controls, history and dark/light ca
   await expect(sidebar).toHaveCSS("width", "230px")
   await expect(lean.locator(".lean-table-wrap")).toBeInViewport()
   expect(await lean.locator(".lean-table-wrap").evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true)
-  expect(requests.filter((request) => request.method === "PATCH")).toEqual([{ method: "PATCH", directory: profiles[0].worktree, path: "/project/lean", body: { itemID: "cargo", enabled: false } }])
+  expect(requests.filter((request) => request.method === "PATCH")).toEqual([{ method: "PATCH", directory: profiles[0].worktree, path: "/api/lean", body: { itemID: "cargo", enabled: false } }])
   await writeFile(path.join(process.env.ORCHESTRA_VISUAL_OUT!, "manifest.json"), JSON.stringify({ synthetic: true,
     polishDependency: "ae0f158f08712b28f64ab1445fc7712e793120fe", detailAlignment: alignment,
     base: "cc726a13aaf211f831cc7a039cff8df635d4743d", source: process.env.LEAN_VISUAL_SOURCE, captures: manifest }, null, 2) + "\n")

@@ -114,6 +114,17 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
         typeof config.sessionStatus === "function" ? config.sessionStatus() : (config.sessionStatus ?? {}),
       )
     if (path === "/vcs/diff" && config.vcsDiff) return json(route, config.vcsDiff)
+    if (path === "/api/fs/list" && config.fileList)
+      return json(route, { location: location(config), data: await config.fileList(url.searchParams.get("path") ?? "") })
+    if (path === "/api/fs/read" && config.fileContent) {
+      const file = (await config.fileContent(url.searchParams.get("path") ?? "")) as { content?: string }
+      return route.fulfill({
+        status: 200,
+        contentType: "application/octet-stream",
+        headers: { "access-control-allow-origin": "*" },
+        body: file.content ?? "",
+      })
+    }
     if (path === "/file" && config.fileList)
       return json(route, await config.fileList(url.searchParams.get("path") ?? ""))
     if (path === "/file/content" && config.fileContent)
@@ -226,8 +237,13 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
           )
         })
       const ordered = url.searchParams.get("order") === "asc" ? sessions.toReversed() : sessions
-      const data = ordered.slice(offset, offset + limit)
-      const next = offset + limit < ordered.length ? String(offset + limit) : undefined
+      // The limit pages roots; a root's child sessions always travel with it.
+      const roots = ordered.filter((session) => session.parentID === undefined)
+      const page = roots.slice(offset, offset + limit)
+      const data = ordered.filter((session) =>
+        session.parentID === undefined ? page.includes(session) : page.some((root) => root.id === session.parentID),
+      )
+      const next = offset + limit < roots.length ? String(offset + limit) : undefined
       return json(route, {
         data: data.map((session) => currentSession(session, config.directory)),
         cursor: { next },
@@ -506,7 +522,7 @@ function currentMessage(value: unknown) {
           type: "tool",
           id: part.id,
           name: part.tool,
-          time: state.time ?? { created: item.info.time.created },
+          time: toolTime(state.time, item.info.time.created),
           state:
             state.status === "pending"
               ? { status: "streaming", input: state.raw ?? JSON.stringify(state.input ?? {}) }
@@ -521,6 +537,7 @@ function currentMessage(value: unknown) {
                   ? {
                       status: "error",
                       input: state.input ?? {},
+                      metadata: state.metadata ?? {},
                       structured: state.metadata ?? {},
                       content: [],
                       error: { type: "ToolError", message: state.error ?? "Tool failed" },
@@ -530,6 +547,12 @@ function currentMessage(value: unknown) {
       ]
     }),
   }
+}
+
+// The fixtures write V1 tool times ({start, end}); V2 records {created, completed}.
+function toolTime(value: unknown, fallback: number) {
+  const time = (value ?? {}) as { start?: number; end?: number; created?: number; completed?: number }
+  return { created: time.created ?? time.start ?? fallback, completed: time.completed ?? time.end }
 }
 
 function json(route: Route, body: unknown, headers?: Record<string, string>, status = 200) {
