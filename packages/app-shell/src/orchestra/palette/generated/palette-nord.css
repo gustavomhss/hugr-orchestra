@@ -16,9 +16,9 @@ html[data-orchestra-palette="nord"][data-color-scheme] body[data-new-layout] {
   --orchestra-toolbar-border: rgba(179, 184, 192, 0.08);
   --orchestra-toolbar-highlight: inset 0 1px 0 rgba(221, 225, 232, 0.06);
   --orchestra-toolbar-drop: 0 6px 20px rgba(0, 0, 0, 0.22);
-  --orchestra-toolbar-label: #e0e6ef;
+  --orchestra-toolbar-label: #e1e6ed;
   --orchestra-toolbar-brand: #e2e6ee;
-  --orchestra-toolbar-button: #e1e6f0;
+  --orchestra-toolbar-button: #e0e6ef;
   --orchestra-workspace-overlay: linear-gradient(180deg, rgba(48, 54, 66, 0.39), rgba(48, 54, 66, 0.22) 42%, rgba(48, 54, 66, 0.43)),
     radial-gradient(1100px 780px at 12% 4%, rgba(69, 75, 87, 0.32), transparent 68%);
   --orchestra-glass-background: linear-gradient(
@@ -47,31 +47,32 @@ html[data-orchestra-palette="nord"][data-color-scheme] body[data-new-layout] {
   --orchestra-sidebar-active-text: #e6eaf1;
   --orchestra-sidebar-active-accent: #39b6d3;
   --orchestra-sidebar-active-highlight: rgba(255, 255, 255, 0.035);
+  --orchestra-sidebar-active-rim: rgba(107, 174, 193, 0.14);
   --orchestra-sidebar-icon: #e1e6ee;
   --orchestra-sidebar-active-icon: #e1e6ed;
   --orchestra-sidebar-key-background: rgba(45, 51, 63, 0.18);
   --orchestra-sidebar-key-border: rgba(170, 175, 184, 0.24);
-  --orchestra-sidebar-key-text: #e2e6ef;
+  --orchestra-sidebar-key-text: #e2e6ee;
   --orchestra-sidebar-rule: rgba(175, 180, 188, 0.16);
   --orchestra-sidebar-profile-background: rgba(63, 69, 80, 0.6);
   --orchestra-sidebar-profile-border: rgba(172, 177, 186, 0.21);
   --orchestra-sidebar-profile-hover-border: rgba(186, 191, 199, 0.32);
   --orchestra-sidebar-profile-shadow: inset 0 1px rgba(255, 255, 255, 0.04), 0 1px 2px rgba(0, 0, 0, 0.18);
   --orchestra-sidebar-profile-text: var(--orchestra-text);
-  --orchestra-sidebar-profile-muted: #e2e6ef;
+  --orchestra-sidebar-profile-muted: #e2e6ee;
   --orchestra-sidebar-profile-chevron: #e0e6ef;
   --orchestra-sidebar-profile-logo: #0087a7;
   --orchestra-sidebar-profile-logo-text: #ffffff;
-  --orchestra-brand-descriptor: #e0e6ee;
-  --orchestra-sidebar-footer: #e1e6ef;
+  --orchestra-brand-descriptor: #e2e6ee;
+  --orchestra-sidebar-footer: #e1e6ee;
   --orchestra-wip-text: var(--orchestra-warm);
   --orchestra-wip-background: var(--orchestra-overlay-hover);
-  --orchestra-tab-text: #e0e6ee;
+  --orchestra-tab-text: #e2e6ee;
   --orchestra-tab-hover-background: rgba(195, 200, 208, 0.045);
   --orchestra-tab-hover-text: #e1e6ee;
   --orchestra-tab-active-text: #e2e6ed;
   --orchestra-tab-icon: #e1e6ee;
-  --orchestra-branch-color: #ffded7;
+  --orchestra-branch-color: #ffded6;
   --orchestra-surface: rgba(74, 80, 92, 0.7);
   --orchestra-surface-hover: rgba(87, 92, 104, 0.8);
   --orchestra-surface-active: rgba(74, 114, 127, 0.62);
@@ -199,6 +200,9 @@ html[data-orchestra-palette="nord"][data-color-scheme] body[data-new-layout] [da
   background: var(--orchestra-sidebar-active-background);
   color: var(--orchestra-sidebar-active-text);
   box-shadow: var(--orchestra-sidebar-active-shadow);
+}
+[data-orchestra-palette="nord"] .orchestra-nav-button[aria-current="page"]::before {
+  background: var(--orchestra-sidebar-active-accent);
 }
 [data-orchestra-palette="nord"] .orchestra-nav-button:focus-visible,
 [data-orchestra-palette="nord"] .orchestra-profile:focus-visible,
@@ -1775,7 +1779,7 @@ html[data-orchestra-palette="nord"][data-color-scheme] body[data-mx-kit] {
 }
 /* orchestra/chapters/workspaces.css */
 html[data-orchestra-palette="nord"][data-color-scheme] body[data-new-layout] {
-  --mx-mast-kicker: #e1e6ef;
+  --mx-mast-kicker: #e2e6ee;
   --mx-mast-title: #e3e7ee;
 }
 [data-orchestra-palette="nord"] .orchestra-workspaces .ws-kicker {

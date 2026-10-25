@@ -57,9 +57,9 @@ html[data-color-scheme] body[data-new-layout] {
   --orchestra-toolbar-border: rgba(155, 174, 192, 0.08);
   --orchestra-toolbar-highlight: inset 0 1px 0 rgba(214, 231, 247, 0.06);
   --orchestra-toolbar-drop: 0 6px 20px rgba(0, 0, 0, 0.22);
-  --orchestra-toolbar-label: #98a9b9;
+  --orchestra-toolbar-label: #b6c7d7;
   --orchestra-toolbar-brand: #b9c4cf;
-  --orchestra-toolbar-button: #7d8ca0;
+  --orchestra-toolbar-button: #8ea0b4;
   /* The photograph stays visible: the glass carries the tint that keeps text legible, not a veil over
      the whole workspace, so there is something behind the glass for it to refract. */
   --orchestra-workspace-overlay:
@@ -105,36 +105,36 @@ html[data-color-scheme] body[data-new-layout] {
   --orchestra-sidebar-active-text: #edf3f9;
   --orchestra-sidebar-active-accent: #65aef2;
   --orchestra-sidebar-active-highlight: rgba(255, 255, 255, 0.035);
-  --orchestra-sidebar-active-inset: 2px;
   --orchestra-sidebar-active-shadow:
-    inset var(--orchestra-sidebar-active-inset) 0 var(--orchestra-sidebar-active-accent),
-    inset 0 1px var(--orchestra-sidebar-active-highlight);
+    inset 0 1px var(--orchestra-sidebar-active-highlight),
+    inset 0 0 0 1px var(--orchestra-sidebar-active-rim);
+  --orchestra-sidebar-active-rim: rgba(126, 170, 214, 0.14);
   --orchestra-sidebar-icon: #aebdcb;
   --orchestra-sidebar-active-icon: #c8dcec;
   --orchestra-sidebar-key-background: rgba(7, 11, 16, 0.18);
   --orchestra-sidebar-key-border: rgba(143, 163, 182, 0.24);
-  --orchestra-sidebar-key-text: #9cacbc;
+  --orchestra-sidebar-key-text: #b5c5d5;
   --orchestra-sidebar-rule: rgba(149, 169, 188, 0.16);
   --orchestra-sidebar-profile-background: rgba(18, 30, 41, 0.6);
   --orchestra-sidebar-profile-border: rgba(144, 166, 187, 0.21);
   --orchestra-sidebar-profile-hover-border: rgba(160, 184, 207, 0.32);
   --orchestra-sidebar-profile-shadow: inset 0 1px rgba(255, 255, 255, 0.04), 0 1px 2px rgba(0, 0, 0, 0.18);
   --orchestra-sidebar-profile-text: var(--orchestra-text);
-  --orchestra-sidebar-profile-muted: #9bacbe;
+  --orchestra-sidebar-profile-muted: #b4c5d7;
   --orchestra-sidebar-profile-chevron: #8fa0b2;
   --orchestra-sidebar-profile-logo: #2c70bd;
   --orchestra-sidebar-profile-logo-text: #fff;
-  --orchestra-brand-descriptor: #9bacc1;
-  --orchestra-sidebar-footer: #96aabc;
+  --orchestra-brand-descriptor: #b4c5da;
+  --orchestra-sidebar-footer: #afc3d5;
   --orchestra-wip-text: var(--orchestra-warm);
   --orchestra-wip-background: var(--orchestra-overlay-hover);
 
-  --orchestra-tab-text: #98a9b8;
+  --orchestra-tab-text: #b6c7d6;
   --orchestra-tab-hover-background: rgba(173, 196, 217, 0.045);
   --orchestra-tab-hover-text: #bcc8d4;
   --orchestra-tab-active-text: #e0e7ee;
   --orchestra-tab-icon: #aebdcb;
-  --orchestra-branch-color: #d5ae68;
+  --orchestra-branch-color: #e4bd77;
   --orchestra-branch-font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   --orchestra-branch-font-size: var(--orchestra-font-size-2xs);
   --orchestra-branch-font-weight: 500;
@@ -315,9 +315,9 @@ html[data-color-scheme="light"] body[data-new-layout] {
   --orchestra-toolbar-border: rgba(70, 84, 98, 0.12);
   --orchestra-toolbar-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.95);
   --orchestra-toolbar-drop: 0 6px 16px rgba(40, 50, 62, 0.09);
-  --orchestra-toolbar-label: #3b4450;
+  --orchestra-toolbar-label: #333c48;
   --orchestra-toolbar-brand: #2b3440;
-  --orchestra-toolbar-button: #57606c;
+  --orchestra-toolbar-button: #4f5864;
   --orchestra-workspace-overlay:
     linear-gradient(180deg, rgba(226, 231, 236, 0.35), rgba(226, 231, 236, 0.18) 42%, rgba(222, 228, 234, 0.4)),
     radial-gradient(1100px 780px at 12% 4%, rgba(255, 255, 255, 0.4), transparent 68%);
@@ -347,15 +347,16 @@ html[data-color-scheme="light"] body[data-new-layout] {
   --orchestra-scrim: rgba(40, 52, 66, 0.2);
   --orchestra-scrim-filter: blur(6px) saturate(1.1);
 
-  --orchestra-sidebar-text: #3b4450;
+  --orchestra-sidebar-text: #333c48;
   --orchestra-sidebar-hover-background: rgba(255, 255, 255, 0.55);
   --orchestra-sidebar-hover-text: #161b21;
   --orchestra-sidebar-active-background: linear-gradient(90deg, rgba(96, 138, 180, 0.28), rgba(120, 160, 200, 0.18));
   --orchestra-sidebar-active-text: #141a21;
   --orchestra-sidebar-active-accent: #3f6f9f;
   --orchestra-sidebar-active-highlight: rgba(255, 255, 255, 0.6);
-  --orchestra-sidebar-icon: #555e6a;
-  --orchestra-sidebar-active-icon: #205cb0;
+  --orchestra-sidebar-active-rim: rgba(63, 111, 159, 0.16);
+  --orchestra-sidebar-icon: #4d5662;
+  --orchestra-sidebar-active-icon: #1653a6;
   --orchestra-sidebar-key-background: rgba(255, 255, 255, 0.4);
   --orchestra-sidebar-key-border: rgba(70, 84, 98, 0.2);
   --orchestra-sidebar-secondary: #5c646e;
@@ -369,20 +370,20 @@ html[data-color-scheme="light"] body[data-new-layout] {
   --orchestra-sidebar-profile-shadow: inset 0 1px rgba(255, 255, 255, 0.8), 0 1px 2px rgba(40, 50, 62, 0.1);
   --orchestra-sidebar-profile-text: #1d232a;
   --orchestra-sidebar-profile-muted: var(--orchestra-sidebar-secondary);
-  --orchestra-sidebar-profile-chevron: #57606c;
+  --orchestra-sidebar-profile-chevron: #4f5864;
   --orchestra-sidebar-profile-logo: #2f6bbf;
   --orchestra-brand-descriptor: var(--orchestra-sidebar-secondary);
-  --orchestra-sidebar-footer: #3d454e;
+  --orchestra-sidebar-footer: #353d46;
   /* The reference's near-transparent amber mark misses AA on the light glass over the photograph. */
-  --orchestra-wip-text: #57421c;
-  --orchestra-wip-background: rgba(255, 255, 255, 0.5);
+  --orchestra-wip-text: #4f3a14;
+  --orchestra-wip-background: rgba(28, 46, 65, 0.05);
 
-  --orchestra-tab-text: #3b4450;
+  --orchestra-tab-text: #333c48;
   --orchestra-tab-hover-background: rgba(40, 56, 74, 0.035);
-  --orchestra-tab-hover-text: #354150;
+  --orchestra-tab-hover-text: #313d4c;
   --orchestra-tab-active-text: #25313e;
-  --orchestra-tab-icon: #4f6073;
-  --orchestra-branch-color: #5f4000;
+  --orchestra-tab-icon: #47586b;
+  --orchestra-branch-color: #553800;
 
   --orchestra-surface: rgba(255, 255, 255, 0.6);
   --orchestra-surface-hover: rgba(255, 255, 255, 0.9);
@@ -397,7 +398,6 @@ html[data-color-scheme="light"] body[data-new-layout] {
 }
 
 html[data-color-scheme][dir="rtl"] body[data-new-layout] {
-  --orchestra-sidebar-active-inset: -2px;
   --orchestra-sidebar-active-background: linear-gradient(270deg, rgba(55, 80, 108, 0.58), rgba(41, 57, 75, 0.48));
 }
 

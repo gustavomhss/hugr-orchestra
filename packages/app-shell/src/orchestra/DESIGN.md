@@ -181,7 +181,9 @@ Measured at 1920×1200 in the dev app. Spacing values sit on a 2px grid; most ga
 | Brand block | padding 2px 10px 16px |
 | Nav item | 31px tall, padding 0 10px, gap 11px, radius 6px, 13px text, 1px between items |
 | Nav icon | 16×16px |
-| Sidebar active item | gradient fill, 2px accent inset bar (mirrored in RTL) |
+| Sidebar active item | gradient fill, 1px inset rim, 3×(row−16px) rounded accent pill inset 3px from the start edge (logical, so RTL follows) |
+| WIP chip (light) | `rgba(28,46,65,.05)` fill, ink `#4f3a14` |
+| Light chrome text | toolbar labels, sidebar and tab text `#333c48`, icons ≥3:1 on the brightest glass band |
 | Chapter column | `min(1020px, calc(100% - 72px))`, padding 52px top and 72px bottom |
 | Chapter header | eyebrow, 4xl title, optional subtitle; primary action top right (`align-items: flex-start`) |
 | Card | radius 10px, padding 19px 20px 18px |

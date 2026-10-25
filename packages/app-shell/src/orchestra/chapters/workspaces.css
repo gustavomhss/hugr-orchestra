@@ -1,11 +1,11 @@
 /* Workspaces keeps the mock's `.inner` + `.mast.slim` heading (app.html #viewWorkspaces); the body uses the kit.
    The kit has no tokens for the mast's kicker and title, so they are declared once here with their light values. */
 html[data-color-scheme] body[data-new-layout] {
-  --mx-mast-kicker: #97abbc;
+  --mx-mast-kicker: #b0c4d5;
   --mx-mast-title: #ebeff3;
 }
 html[data-color-scheme="light"] body[data-new-layout] {
-  --mx-mast-kicker: #3b444f;
+  --mx-mast-kicker: #333c47;
   --mx-mast-title: #171c23;
 }
 .orchestra-workspaces .ws-inner {

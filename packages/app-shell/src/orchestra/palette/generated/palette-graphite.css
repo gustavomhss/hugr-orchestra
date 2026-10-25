@@ -47,18 +47,19 @@ html[data-orchestra-palette="graphite"][data-color-scheme] body[data-new-layout]
   --orchestra-sidebar-active-text: #eeeeee;
   --orchestra-sidebar-active-accent: #89a2bd;
   --orchestra-sidebar-active-highlight: rgba(255, 255, 255, 0.035);
+  --orchestra-sidebar-active-rim: rgba(143, 159, 176, 0.14);
   --orchestra-sidebar-icon: #bdbfc2;
   --orchestra-sidebar-active-icon: #c9cacb;
   --orchestra-sidebar-key-background: rgba(11, 12, 13, 0.18);
   --orchestra-sidebar-key-border: rgba(136, 138, 141, 0.24);
-  --orchestra-sidebar-key-text: #bdbfc2;
+  --orchestra-sidebar-key-text: #bdbfc1;
   --orchestra-sidebar-rule: rgba(141, 143, 146, 0.16);
   --orchestra-sidebar-profile-background: rgba(26, 27, 30, 0.6);
   --orchestra-sidebar-profile-border: rgba(139, 140, 143, 0.21);
   --orchestra-sidebar-profile-hover-border: rgba(153, 155, 158, 0.32);
   --orchestra-sidebar-profile-shadow: inset 0 1px rgba(255, 255, 255, 0.04), 0 1px 2px rgba(0, 0, 0, 0.18);
   --orchestra-sidebar-profile-text: var(--orchestra-text);
-  --orchestra-sidebar-profile-muted: #bdbfc2;
+  --orchestra-sidebar-profile-muted: #bdbfc1;
   --orchestra-sidebar-profile-chevron: #bdbfc2;
   --orchestra-sidebar-profile-logo: #536a87;
   --orchestra-sidebar-profile-logo-text: #ffffff;
@@ -71,7 +72,7 @@ html[data-orchestra-palette="graphite"][data-color-scheme] body[data-new-layout]
   --orchestra-tab-hover-text: #bdbfc1;
   --orchestra-tab-active-text: #ddddde;
   --orchestra-tab-icon: #bdbfc2;
-  --orchestra-branch-color: #ddba78;
+  --orchestra-branch-color: #ddba7a;
   --orchestra-surface: rgba(38, 39, 41, 0.7);
   --orchestra-surface-hover: rgba(50, 51, 53, 0.8);
   --orchestra-surface-active: rgba(78, 87, 98, 0.62);
@@ -199,6 +200,9 @@ html[data-orchestra-palette="graphite"][data-color-scheme] body[data-new-layout]
   background: var(--orchestra-sidebar-active-background);
   color: var(--orchestra-sidebar-active-text);
   box-shadow: var(--orchestra-sidebar-active-shadow);
+}
+[data-orchestra-palette="graphite"] .orchestra-nav-button[aria-current="page"]::before {
+  background: var(--orchestra-sidebar-active-accent);
 }
 [data-orchestra-palette="graphite"] .orchestra-nav-button:focus-visible,
 [data-orchestra-palette="graphite"] .orchestra-profile:focus-visible,
@@ -1775,7 +1779,7 @@ html[data-orchestra-palette="graphite"][data-color-scheme] body[data-mx-kit] {
 }
 /* orchestra/chapters/workspaces.css */
 html[data-orchestra-palette="graphite"][data-color-scheme] body[data-new-layout] {
-  --mx-mast-kicker: #bdbfc1;
+  --mx-mast-kicker: #bdbfc2;
   --mx-mast-title: #eaeaea;
 }
 [data-orchestra-palette="graphite"] .orchestra-workspaces .ws-kicker {
