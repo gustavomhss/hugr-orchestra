@@ -97,7 +97,7 @@ export function tools(services: Services) {
       execute: (input, context) =>
         Effect.gen(function* () {
           const bound = yield* bind(services, names.recall, context)
-          if ("refused" in bound) return unavailable(bound.refused)
+          if (bound.refused !== undefined) return unavailable(bound.refused)
           const receipt = (fields: Pick<Receipt, "outcome" | "store" | "refs">): Receipt => ({
             schema: "atlas-memory-receipt-v1",
             op: "recall",
@@ -141,7 +141,7 @@ export function tools(services: Services) {
       execute: (input, context) =>
         Effect.gen(function* () {
           const bound = yield* bind(services, names.emit, context)
-          if ("refused" in bound) return unavailable(bound.refused)
+          if (bound.refused !== undefined) return unavailable(bound.refused)
           const memory = bound.memory
           const verdict: Verdict =
             "unavailable" in memory
