@@ -41,6 +41,7 @@ const Handlers = Runtime.handlers(Commands, {
   },
   serve: () => import("./commands/handlers/serve"),
   run: () => import("./commands/handlers/run"),
+  attach: () => import("./commands/handlers/attach"),
 })
 
 Runtime.run(Commands, Handlers, { version: InstallationVersion }).pipe(

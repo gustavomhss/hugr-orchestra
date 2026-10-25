@@ -137,6 +137,30 @@ const run = Spec.make("run", {
   },
 })
 
+const attach = Spec.make("attach", {
+  description: "Attach to a running Orchestra server",
+  params: {
+    url: Argument.string("url").pipe(Argument.withDescription("http://localhost:4096")),
+    dir: Flag.string("dir").pipe(Flag.withDescription("directory to run in"), Flag.optional),
+    continue: Flag.boolean("continue").pipe(Flag.withAlias("c"), Flag.withDefault(false), Flag.withDescription("continue the last session")),
+    session: Flag.string("session").pipe(Flag.withAlias("s"), Flag.withDescription("session id to continue"), Flag.optional),
+    fork: Flag.boolean("fork").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("fork the session when continuing (use with --continue or --session)"),
+    ),
+    password: Flag.string("password").pipe(
+      Flag.withAlias("p"),
+      Flag.withDescription("basic auth password (defaults to ORCHESTRA_SERVER_PASSWORD)"),
+      Flag.optional,
+    ),
+    username: Flag.string("username").pipe(
+      Flag.withAlias("u"),
+      Flag.withDescription("basic auth username (defaults to ORCHESTRA_SERVER_USERNAME or 'orchestra')"),
+      Flag.optional,
+    ),
+  },
+})
+
 declare const ORCHESTRA_CLI_NAME: string | undefined
 
 export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHESTRA_CLI_NAME : "orchestra", {
@@ -177,6 +201,7 @@ export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHE
     transcriptExport,
     transcriptImport,
     run,
+    attach,
     Spec.make("migrate", { description: "Migrate v1 data to v2" }),
     Spec.make("service", {
       description: "Manage the background server",
