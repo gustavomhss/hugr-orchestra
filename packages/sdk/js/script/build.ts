@@ -10,9 +10,8 @@ import path from "path"
 import { createClient } from "@hey-api/openapi-ts"
 import { splitTypes } from "./split-types"
 
-const orchestra = path.resolve(dir, "../../../apps/orchestra")
-
-await $`bun dev generate > ${dir}/openapi.json`.cwd(orchestra)
+// The legacy SDK is frozen on the last V1 API document; the V2 client generates from packages/client.
+await Bun.write(`${dir}/openapi.json`, Bun.file(path.resolve(dir, "../openapi.json")))
 
 const document = (await Bun.file("./openapi.json").json()) as {
   components?: { schemas?: Record<string, unknown> }
