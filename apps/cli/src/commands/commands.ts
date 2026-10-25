@@ -161,6 +161,34 @@ const attach = Spec.make("attach", {
   },
 })
 
+const providers = Spec.make("providers", {
+  description: "Manage AI providers and credentials",
+  aliases: ["auth"],
+  commands: [
+    Spec.make("list", { description: "List providers and credentials", aliases: ["ls"] }),
+    Spec.make("login", {
+      description: "Log in to a provider",
+      params: {
+        provider: Flag.string("provider").pipe(
+          Flag.withAlias("p"),
+          Flag.withDescription("provider id or name to log in to (skips provider selection)"),
+          Flag.optional,
+        ),
+        method: Flag.string("method").pipe(
+          Flag.withAlias("m"),
+          Flag.withDescription("login method label (skips method selection)"),
+          Flag.optional,
+        ),
+        label: Flag.string("label").pipe(Flag.withDescription("label for the stored credential"), Flag.optional),
+      },
+    }),
+    Spec.make("logout", {
+      description: "Log out from a configured provider",
+      params: { provider: Argument.string("provider id or name to log out from").pipe(Argument.optional) },
+    }),
+  ],
+})
+
 declare const ORCHESTRA_CLI_NAME: string | undefined
 
 export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHESTRA_CLI_NAME : "orchestra", {
@@ -202,6 +230,7 @@ export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHE
     transcriptImport,
     run,
     attach,
+    providers,
     Spec.make("migrate", { description: "Migrate v1 data to v2" }),
     Spec.make("service", {
       description: "Manage the background server",

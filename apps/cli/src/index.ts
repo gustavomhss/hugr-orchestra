@@ -42,6 +42,11 @@ const Handlers = Runtime.handlers(Commands, {
   serve: () => import("./commands/handlers/serve"),
   run: () => import("./commands/handlers/run"),
   attach: () => import("./commands/handlers/attach"),
+  providers: {
+    list: () => import("./commands/handlers/providers/list"),
+    login: () => import("./commands/handlers/providers/login"),
+    logout: () => import("./commands/handlers/providers/logout"),
+  },
 })
 
 Runtime.run(Commands, Handlers, { version: InstallationVersion }).pipe(
