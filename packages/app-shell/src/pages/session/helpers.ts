@@ -21,6 +21,8 @@ type TabsInput = {
   hasReview?: Accessor<boolean>
   fileBrowser?: Accessor<boolean>
   apps?: Accessor<boolean>
+  /** The Artifacts tab exists only once the Session has an artifact. */
+  artifacts?: Accessor<boolean>
   /** Orchestra's Apps tab is the cockpit, so a persisted Tasks tab resolves to it. */
   cockpit?: Accessor<boolean>
   /** Orchestra's rail keeps Context and Tasks as permanent tabs, so tab commands never close them. */
@@ -38,6 +40,7 @@ export const createSessionTabs = (input: TabsInput) => {
   const hasReview = input.hasReview ?? (() => false)
   const fileBrowser = input.fileBrowser ?? (() => false)
   const apps = input.apps ?? (() => false)
+  const artifacts = input.artifacts ?? (() => false)
   const tasksTab = () => (input.cockpit?.() && apps() ? "apps" : "tasks")
   const contextOpen = createMemo(() => input.tabs().active() === "context" || input.tabs().all().includes("context"))
   const tasksOpen = createMemo(() => input.tabs().active() === "tasks" || input.tabs().all().includes("tasks"))
@@ -53,7 +56,7 @@ export const createSessionTabs = (input: TabsInput) => {
         .tabs()
         .all()
         .flatMap((tab) => {
-          if (tab === "context" || tab === "review" || tab === "tasks" || tab === "apps") return []
+          if (tab === "context" || tab === "review" || tab === "tasks" || tab === "apps" || tab === "artifacts") return []
           if (tab === SESSION_OPEN_FILE_TAB && !fileBrowser()) return []
           const value = input.pathFromTab(tab) ? input.normalizeTab(tab) : tab
           if (seen.has(value)) return []
@@ -72,6 +75,7 @@ export const createSessionTabs = (input: TabsInput) => {
     if (active === "context") return active
     if (active === "tasks" && tasksOpen()) return tasksTab()
     if (active === "apps" && apps()) return active
+    if (active === "artifacts" && artifacts()) return active
     if (active === SESSION_OPEN_FILE_TAB && openFileOpen()) return active
     if (active === "review" && review()) return active
     if (active && input.pathFromTab(active)) return input.normalizeTab(active)
