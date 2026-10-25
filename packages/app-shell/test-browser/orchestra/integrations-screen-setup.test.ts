@@ -105,3 +105,24 @@ test("a failed session list falls back to the typed session ID", async () => {
   )
   expect((field("sessionID") as HTMLInputElement).required).toBe(true)
 })
+
+test("binding with neither a picked nor a typed session stays open and says so", async () => {
+  const view = await mount({ sessions: async () => [{ id: SessionID.create(), title: "Only work", updated: 1 }] })
+  view.host.querySelector<HTMLButtonElement>(".integrations-select")?.click()
+  await settle()
+  await selectTarget()
+  button("Save binding").click()
+  await settle()
+  field("actions").value = "slack.message.send"
+  submit()
+  await settle()
+  expect(view.calls.some((call) => call.method === "bind")).toBe(false)
+  expect(document.querySelector(".integrations-dialog [role=alert]")?.textContent).toBe(
+    "Choose a session or enter a session ID.",
+  )
+  expect(field("sessionPick").getAttribute("aria-invalid")).toBe("true")
+  field("sessionID").value = "x"
+  field("sessionID").dispatchEvent(new Event("input", { bubbles: true }))
+  await settle()
+  expect(document.querySelector(".integrations-dialog [role=alert]")).toBeNull()
+})

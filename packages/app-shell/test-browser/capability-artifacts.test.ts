@@ -99,7 +99,7 @@ if (process.env.CAPABILITY_ARTIFACTS_DOM !== "1") {
       value: { platform: "web", openExternal() {}, async restart() {}, async notify() {} },
       get children() { return createComponent(LanguageProvider, { locale: "en", get children() {
         return createComponent(DialogProvider, { get children() {
-          return createComponent(SessionCapabilitiesProvider, { revealPart: () => false, get children() {
+          return createComponent(SessionCapabilitiesProvider, { get children() {
             // The transcript renders the host's slot under each tool part; the side panel shows the tab once selected.
             const Chips = useToolPartSlot()
             return [
