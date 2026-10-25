@@ -23,6 +23,7 @@ import { AtlasKnowledge } from "@orchestra/schema/atlas-knowledge"
 import { DateTime, Effect, Layer, Schema } from "effect"
 import { MaestroSeats } from "../src/v2/seats-service"
 import { MaestroAtlasToolV2 } from "../src/v2/tools/atlas"
+import { WorkflowKnowledgeV2 } from "../src/v2/workflow/knowledge"
 
 // V2 atlas_context against a real verified Own fixture: Maestro reads catalog and unit but never anchors, Archie anchors
 // exact verified units, the Atlas Memory seats keep their reads, every other agent is refused by name, and every failure
@@ -113,6 +114,24 @@ async function fixture() {
 
 const directory = await fixture()
 
+const skillsNode = [SkillV2.node, Layer.mock(SkillV2.Service, { list: () => Effect.sync(() => state.skills) })] as const
+const configNode = [
+  Config.node,
+  Layer.mock(Config.Service, {
+    entries: () =>
+      Effect.sync(() =>
+        state.configured
+          ? [
+              new Config.Document({
+                type: "document",
+                info: new Config.Info({ maestro: { atlas: { projectID, directory: "." } } }),
+              }),
+            ]
+          : [],
+      ),
+  }),
+] as const
+
 const layer = AppNodeBuilder.build(
   LayerNode.group([ToolRegistry.node, ToolRegistry.toolsNode, MaestroAtlasToolV2.node]),
   [
@@ -136,10 +155,7 @@ const layer = AppNodeBuilder.build(
         }),
       ),
     ],
-    [
-      SkillV2.node,
-      Layer.mock(SkillV2.Service, { list: () => Effect.sync(() => state.skills) }),
-    ],
+    skillsNode,
     [ToolOutputStore.node, ToolOutputStore.nodeWithoutConfig],
     [MaestroSeats.node, Layer.succeed(MaestroSeats.Service, MaestroSeats.make(["backend", "archie", "lucy"]))],
     [
@@ -170,22 +186,7 @@ const layer = AppNodeBuilder.build(
           ),
       }),
     ],
-    [
-      Config.node,
-      Layer.mock(Config.Service, {
-        entries: () =>
-          Effect.sync(() =>
-            state.configured
-              ? [
-                  new Config.Document({
-                    type: "document",
-                    info: new Config.Info({ maestro: { atlas: { projectID, directory: "." } } }),
-                  }),
-                ]
-              : [],
-          ),
-      }),
-    ],
+    configNode,
   ],
 ) as Layer.Layer<ToolRegistry.Service>
 
@@ -387,5 +388,169 @@ describe("V2 atlas_context output bound", () => {
     expect(MaestroAtlasToolV2.bound(unavailable, { maxBytes: 1000, maxLines: 1 }).output).toBe(
       JSON.stringify({ status: "unavailable", reason: "r" }),
     )
+  })
+})
+
+// V1's `AtlasKnowledge.resolve` on V2: a workflow publication's anchor reference resolves only to the anchor native
+// Archie produced through one completed atlas_context call in its own Session, with the same units still loading
+// unchanged from the source.
+describe("V2 workflow knowledge resolve", () => {
+  const atlasLayer = AppNodeBuilder.build(LayerNode.group([Config.node, GitCli.node, FSUtil.node, SkillV2.node]), [
+    configNode,
+    skillsNode,
+  ]) as Layer.Layer<Config.Service | GitCli.Service | FSUtil.Service | SkillV2.Service>
+  const anchorInput = { action: "anchor", target: { kind: "assignment", id: "work" }, units }
+
+  const assistant = (input: {
+    readonly structured: unknown
+    readonly agent?: string
+    readonly status?: "completed" | "running"
+    readonly toolInput?: unknown
+    readonly callID?: string
+    readonly id?: string
+  }) =>
+    Schema.decodeUnknownSync(SessionMessage.Message)({
+      id: input.id ?? "msg_atlas_v2",
+      type: "assistant",
+      agent: input.agent ?? "archie",
+      model: { id: "model", providerID: "provider" },
+      time: { created: 0 },
+      content: [
+        {
+          type: "tool",
+          id: input.callID ?? "call_archie_anchor",
+          name: "atlas_context",
+          state: {
+            status: input.status ?? "completed",
+            input: input.toolInput ?? anchorInput,
+            content: [],
+            structured: input.structured,
+          },
+          time: { created: 0 },
+        },
+      ],
+    })
+
+  const resolve = (input: {
+    readonly messages: readonly SessionMessage.Message[]
+    readonly reference: unknown
+    readonly agent?: string
+    readonly seats?: readonly string[]
+  }) =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const atlas = {
+          config: yield* Config.Service,
+          git: yield* GitCli.Service,
+          fs: yield* FSUtil.Service,
+          skills: yield* SkillV2.Service,
+        }
+        const store = {
+          get: (id: SessionV2.ID) =>
+            Effect.succeed(
+              id === sessionID
+                ? SessionV2.Info.make({
+                    id: sessionID,
+                    projectID,
+                    agent: AgentV2.ID.make(input.agent ?? "archie"),
+                    title: "atlas",
+                    cost: 0,
+                    tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+                    time: { created: DateTime.makeUnsafe(0), updated: DateTime.makeUnsafe(0) },
+                    location: { directory: AbsolutePath.make(directory) },
+                  })
+                : undefined,
+            ),
+          entries: () => Effect.succeed(input.messages.map((message, seq) => ({ seq, message }))),
+          context: () => Effect.die("unused"),
+          runnerContext: () => Effect.die("unused"),
+          message: () => Effect.die("unused"),
+          permissions: () => Effect.die("unused"),
+        } satisfies SessionStore.Interface
+        return yield* WorkflowKnowledgeV2.resolve(
+          { store, seats: MaestroSeats.make(input.seats ?? ["backend", "archie", "lucy"]), atlas },
+          { projectID, authorSessionID: sessionID, reference: input.reference },
+        ).pipe(
+          Effect.match({
+            onFailure: (held) => ({ reason: held.reason }),
+            onSuccess: (anchor) => ({ anchor }),
+          }),
+        )
+      }).pipe(Effect.provide(atlasLayer)),
+    )
+
+  test("a native Archie anchor resolves; any change to its call, author or bytes holds", async () => {
+    reset()
+    const archie = await call("archie", anchorInput)
+    const bound = archie.receipt?.anchor as AtlasKnowledge.Anchor
+    const structured = { atlasContext: archie.receipt }
+    const reference = bound.reference
+    const reason = async (input: Partial<Parameters<typeof resolve>[0]>) =>
+      (await resolve({ messages: [assistant({ structured })], reference, ...input })) as { reason?: string }
+
+    expect(await resolve({ messages: [assistant({ structured })], reference })).toEqual({ anchor: bound })
+    // History behind a compaction still counts: resolve reads every entry.
+    expect(
+      await resolve({
+        messages: [
+          assistant({ structured }),
+          Schema.decodeUnknownSync(SessionMessage.Message)({
+            id: "msg_compact",
+            type: "compaction",
+            reason: "auto",
+            summary: "earlier work",
+            recent: "",
+            time: { created: 1 },
+          }),
+        ],
+        reference,
+      }),
+    ).toEqual({ anchor: bound })
+
+    expect((await reason({ reference: "not-a-digest" })).reason).toBe("anchor-reference-invalid")
+    expect((await reason({ seats: ["backend", "lucy"] })).reason).toBe("native-archie-required")
+    expect((await reason({ agent: "backend" })).reason).toBe("author-session-binding-mismatch")
+    expect((await reason({ messages: [] })).reason).toBe("anchor-not-found")
+    expect(
+      (await reason({ messages: [assistant({ structured }), assistant({ structured, id: "msg_atlas_copy" })] })).reason,
+    ).toBe("anchor-duplicate")
+    expect((await reason({ messages: [assistant({ structured, agent: "backend" })] })).reason).toBe(
+      "anchor-invocation-mismatch",
+    )
+    expect((await reason({ messages: [assistant({ structured, status: "running" })] })).reason).toBe(
+      "anchor-invocation-mismatch",
+    )
+    expect((await reason({ messages: [assistant({ structured, callID: "call_other" })] })).reason).toBe(
+      "anchor-invocation-mismatch",
+    )
+    expect(
+      (await reason({ messages: [assistant({ structured, toolInput: { ...anchorInput, units: [units[0]] } })] })).reason,
+    ).toBe("anchor-invocation-mismatch")
+
+    const tampered = { ...bound, units: bound.units.map((unit) => ({ ...unit, content: `${unit.content}\nedited` })) }
+    expect(
+      (await reason({ messages: [assistant({ structured: { atlasContext: { ...archie.receipt, anchor: tampered } } })] }))
+        .reason,
+    ).toBe("anchor-digest-mismatch")
+  })
+
+  test("an anchor whose units no longer load unchanged from the source drifts", async () => {
+    reset()
+    const archie = await call("archie", anchorInput)
+    const bound = archie.receipt?.anchor as AtlasKnowledge.Anchor
+    // A self-consistent anchor over bytes the source never had: digests bind, the fresh load does not match.
+    const forged = {
+      ...bound,
+      units: bound.units.map((unit) => ({
+        ...unit,
+        content: `${unit.content}\nforged`,
+        bodyHash: createHash("sha256").update(`${unit.content}\nforged`, "utf8").digest("hex"),
+      })),
+    }
+    const reference = createHash("sha256").update(AtlasKnowledge.canonical(forged), "utf8").digest("hex")
+    const anchor = { ...forged, reference }
+    expect(
+      await resolve({ messages: [assistant({ structured: { atlasContext: { ...archie.receipt, anchor } } })], reference }),
+    ).toEqual({ reason: "anchor-source-drift" })
   })
 })

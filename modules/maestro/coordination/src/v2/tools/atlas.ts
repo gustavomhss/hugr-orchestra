@@ -232,8 +232,7 @@ function unavailable(reason: string): Result {
 
 /**
  * V1's `AtlasKnowledge.anchor` on V2: Archie's exact selection of verified Own units, bound to this native call by a
- * reference over the canonical payload. Every unit must come from one unchanged source, complete and fresh, inside the
- * Knowledge body budget; anything else is a hold. The call identity is the runner's, so no history lookup is needed.
+ * reference over the canonical payload. The call identity is the runner's, so no history lookup is needed.
  */
 const anchor = Effect.fn("MaestroAtlasToolV2.anchor")(function* (
   services: MaestroAtlasSourceV2.Services,
@@ -247,9 +246,31 @@ const anchor = Effect.fn("MaestroAtlasToolV2.anchor")(function* (
     readonly units: readonly string[]
   },
 ) {
+  const payload = {
+    projectID: input.projectID,
+    authorSessionID: input.authorSessionID,
+    assistantMessageID: input.assistantMessageID,
+    callID: input.callID,
+    memberID: "archie" as const,
+    target: input.target,
+    units: yield* acquire(services, placement, input.units),
+  }
+  return { reference: digest(AtlasKnowledge.canonical(payload)), ...payload } satisfies AtlasKnowledge.Anchor
+})
+
+/**
+ * The exact verified Own units an anchor binds, as V1's `AtlasKnowledge.acquire` loads them for both anchoring and
+ * resolving: every unit from one unchanged source, complete and fresh, inside the Knowledge body budget; anything else
+ * is a hold.
+ */
+export const acquire = Effect.fn("MaestroAtlasToolV2.acquire")(function* (
+  services: MaestroAtlasSourceV2.Services,
+  placement: MaestroAtlasSourceV2.Placement,
+  ids: readonly string[],
+) {
   const before = yield* MaestroAtlasSourceV2.read(services, placement)
   const units = yield* Effect.forEach(
-    input.units,
+    ids,
     Effect.fnUntraced(function* (id) {
       const unit = yield* MaestroAtlasSourceV2.unit(services, placement, id)
       if (
@@ -276,27 +297,18 @@ const anchor = Effect.fn("MaestroAtlasToolV2.anchor")(function* (
     }),
   )
   if (units.reduce((bytes, unit) => bytes + Buffer.byteLength(unit.content, "utf8"), 0) > AtlasKnowledge.MAX_BYTES)
-    return yield* held("knowledge-body-budget-exceeded", input.units)
+    return yield* held("knowledge-body-budget-exceeded", ids)
   const after = yield* MaestroAtlasSourceV2.read(services, placement)
   if (after.identityHash !== before.identityHash || after.directory !== before.directory)
     return yield* held("source-changed-during-anchor", [before.identityHash, after.identityHash])
-  const payload = {
-    projectID: input.projectID,
-    authorSessionID: input.authorSessionID,
-    assistantMessageID: input.assistantMessageID,
-    callID: input.callID,
-    memberID: "archie" as const,
-    target: input.target,
-    units,
-  }
-  return { reference: digest(AtlasKnowledge.canonical(payload)), ...payload } satisfies AtlasKnowledge.Anchor
+  return units
 })
 
 function held(reason: string, evidence: readonly string[]) {
   return Effect.fail(new MaestroAtlasSourceV2.Held({ reason, evidence }))
 }
 
-function digest(content: string) {
+export function digest(content: string) {
   return createHash("sha256").update(content, "utf8").digest("hex")
 }
 
