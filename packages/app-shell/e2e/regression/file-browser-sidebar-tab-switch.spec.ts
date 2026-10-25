@@ -62,7 +62,7 @@ test("keeps the file-browser sidebar mounted when switching file tabs", async ({
 
 test("keeps previous file search results visible while the next search loads", async ({ page }) => {
   const searchPending = Promise.withResolvers<void>()
-  await setup(page, async ({ query }) => {
+  await setup(page, async (query) => {
     if (query === "file-0") return ["file-00.ts"]
     if (query === "file-7") {
       await searchPending.promise
@@ -82,7 +82,7 @@ test("keeps previous file search results visible while the next search loads", a
 
   const nextSearch = page.waitForRequest((request) => {
     const url = new URL(request.url())
-    return url.pathname === "/find/file" && url.searchParams.get("query") === "file-7"
+    return url.pathname === "/api/fs/find" && url.searchParams.get("query") === "file-7"
   })
   await filter.fill("file-7")
   await nextSearch
@@ -107,10 +107,7 @@ async function readProbe(page: Page) {
     .evaluate((el) => (el as Probed).__e2eProbe)
 }
 
-async function setup(
-  page: Page,
-  findFiles?: (input: { query: string; dirs?: string; limit?: number }) => unknown | Promise<unknown>,
-) {
+async function setup(page: Page, findFiles?: (query: string) => string[] | Promise<string[]>) {
   await mockOrchestraServer(page, {
     directory,
     project: {
@@ -155,9 +152,26 @@ async function setup(
       }))
     },
     fileContent: (path) => ({ type: "text", content: `contents:${path}` }),
-    findFiles,
     pageMessages: () => ({ items: [] }),
   })
+  // The shared mock does not serve the V2 file search yet.
+  if (findFiles)
+    await page.route(
+      (url) => url.pathname === "/api/fs/find",
+      async (route) => {
+        const query = new URL(route.request().url()).searchParams.get("query") ?? ""
+        const paths = await findFiles(query)
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          headers: { "access-control-allow-origin": "*" },
+          body: JSON.stringify({
+            location: { directory, project: { id: projectID, directory } },
+            data: paths.map((path) => ({ path, type: "file" })),
+          }),
+        })
+      },
+    )
 
   await page.addInitScript(
     ({ directory, server, sessionID }) => {

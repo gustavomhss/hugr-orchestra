@@ -65,3 +65,29 @@ export function reason(command: string) {
       [..."dxX"].some((flag) => flags.includes(flag))) return "known-unrecoverable-git-clean"
   }
 }
+
+/** The shell text a call runs: `command` for shell tools, the explicit-argv display for a process_control start. */
+export function command(tool: string, args: unknown) {
+  if (tool === "task" || args === null || typeof args !== "object" || Array.isArray(args)) return undefined
+  const record = Object.fromEntries(Object.entries(args))
+  if (tool !== "process_control") return typeof record.command === "string" ? record.command : undefined
+  const argv: unknown = record.argv
+  const env: unknown = record.env ?? {}
+  // Another tool registered under this name keeps the generic `command` extraction.
+  const fallback = typeof record.command === "string" ? record.command : undefined
+  if (record.action !== "start" || !Array.isArray(argv) || !argv.every((arg) => typeof arg === "string") ||
+    env === null || typeof env !== "object" || Array.isArray(env)) return fallback
+  const entries = Object.entries(env)
+  if (!entries.every((entry): entry is [string, string] => typeof entry[1] === "string")) return fallback
+  return display(argv, Object.fromEntries(entries))
+}
+
+/** One POSIX display for every gate: sorted explicit env as KEY=value prefixes, then argv; argv[0] with `=` is quoted. */
+export function display(argv: readonly string[], env: Readonly<Record<string, string>>) {
+  return [...Object.keys(env).toSorted().map((key) => `${key}=${quote(env[key] ?? "")}`),
+    ...argv.map((arg, index) => index === 0 && arg.includes("=") ? `'${arg.replaceAll("'", `'\\''`)}'` : quote(arg))].join(" ")
+}
+
+function quote(arg: string) {
+  return /^[A-Za-z0-9_\/.,:=@%+-]+$/.test(arg) ? arg : `'${arg.replaceAll("'", `'\\''`)}'`
+}

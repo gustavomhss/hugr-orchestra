@@ -264,7 +264,7 @@ export async function setup(
     if (path === "/api/health") return json(route, { healthy: true, pid: 1, version: "2.0.0" })
     if (path === "/project" || path === "/api/project") return json(route, [project(serverB)])
     if (path === "/project/current") return json(route, project(serverB))
-    if (path === "/api/project/current") return json(route, { id: "project-b", directory })
+    if (path === "/api/location") return json(route, { directory, project: { id: "project-b", directory } })
     if (path === "/api/path" || path === "/path")
       return json(route, { directory, worktree: directory, home: directory, config: directory, state: directory })
     if (path === "/api/session") return json(route, { data: [], cursor: {} })

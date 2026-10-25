@@ -57,6 +57,13 @@ function runAuth(scenario: ActiveScenario) {
       if (authed.status === 401) throw new Error("auth rejected valid credentials")
       return
     }
+    if (scenario.auth === "ticket-bypass") {
+      // The ticket is the only credential: header auth is skipped, and Basic must not stand in for a missing ticket.
+      if (result.status !== 401) throw new Error(`auth expected 401 without a ticket, got ${result.status}`)
+      const authed = yield* callAuthProbe(scenario, "valid")
+      if (authed.status !== 401) throw new Error(`auth expected Basic not to replace the ticket, got ${authed.status}`)
+      return
+    }
 
     if (result.status === 401) throw new Error("auth expected public access, got 401")
     if (result.timedOut) throw new Error("auth expected public access, probe timed out")

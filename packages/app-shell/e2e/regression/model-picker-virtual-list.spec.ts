@@ -72,9 +72,17 @@ async function openSession(page: Page) {
       },
     ],
     pageMessages: () => ({ items: [] }),
-    // Each event-stream reconnect resyncs providers, which resets the list's active row.
-    eventRetry: 600_000,
   })
+  // The mock closes /api/event at once and each reconnect resyncs providers, which resets the list's active row.
+  // A real server keeps the stream open, so later connections stay pending.
+  const streams = { opened: 0 }
+  await page.route(
+    (url) => url.pathname === "/api/event",
+    async (route) => {
+      streams.opened += 1
+      if (streams.opened === 1) return route.fallback()
+    },
+  )
   await page.addInitScript(() => {
     localStorage.setItem("settings.v3", JSON.stringify({ general: { shouldDisplayTabsToast: false } }))
   })

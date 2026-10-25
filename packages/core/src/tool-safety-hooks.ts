@@ -14,6 +14,7 @@ import { Patch } from "./patch"
 import type { Relay } from "./relay"
 import { RelayHookShipper } from "./relay-hook-shipper"
 import { ToolSafety } from "./tool-safety"
+import { ToolSafetyCommands } from "./tool-safety-commands"
 
 // Installed Relay hooks on the tool path (relay-exec-spec H2, port plan §5). ToolSafety.run calls `before` once native
 // safety passed and `after` once the effect settled successfully, both over the snapshot it loaded at the call's start.
@@ -216,14 +217,12 @@ const invocation = Effect.fnUntraced(function* (
       const root = yield* resolve(call.projectDirectory ?? call.directory)
       return path.relative(root, yield* resolve(path.resolve(call.directory, target))).replaceAll("\\", "/")
     })
-  const operation = OPERATIONS.get(call.tool)
+  const command = ToolSafetyCommands.command(call.tool, call.args)
+  // A process_control start is a command under the same display its permission and safety gates use.
+  const operation = call.tool === "process_control" ? (command === undefined ? undefined : "command" as const)
+    : OPERATIONS.get(call.tool)
   if (operation === "command")
-    return {
-      operation,
-      tool: call.tool,
-      paths: [],
-      ...(typeof args.command === "string" ? { command: args.command } : {}),
-    }
+    return { operation, tool: call.tool, paths: [], ...(command !== undefined ? { command } : {}) }
   if (call.tool === "apply_patch") {
     const hunks = yield* Effect.try({
       try: () => Patch.parse(typeof args.patchText === "string" ? args.patchText : ""),

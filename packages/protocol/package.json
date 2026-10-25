@@ -50,7 +50,13 @@
     "./groups/skill": "./src/groups/skill.ts",
     "./groups/vcs": "./src/groups/vcs.ts",
     "./middleware/authorization": "./src/middleware/authorization.ts",
-    "./middleware/schema-error": "./src/middleware/schema-error.ts"
+    "./middleware/schema-error": "./src/middleware/schema-error.ts",
+    "./groups/capability-artifacts": "./src/groups/capability-artifacts.ts",
+    "./groups/capability-schedules": "./src/groups/capability-schedules.ts",
+    "./groups/capability-connections": "./src/groups/capability-connections.ts",
+    "./groups/capability-operator": "./src/groups/capability-operator.ts",
+    "./groups/relay-run": "./src/groups/relay-run.ts",
+    "./middleware/capability-authorization": "./src/middleware/capability-authorization.ts"
   },
   "scripts": {
     "test": "bun test ./test --preload ../../script/test-guard.ts --timeout 30000 --only-failures",

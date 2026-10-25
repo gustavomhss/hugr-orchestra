@@ -10,7 +10,7 @@ test("restored local profile loads agents and opens a draft through the mocked A
   const mutations: string[] = []
   page.on("response", (response) => {
     const url = new URL(response.url())
-    if (url.pathname === "/agent") agents.push(url.origin)
+    if (url.pathname === "/api/agent") agents.push(url.origin)
   })
   page.on("request", (request) => {
     if (request.method() === "POST" && /\/(api\/)?session(?:\/|$)/.test(new URL(request.url()).pathname))

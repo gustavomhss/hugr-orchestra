@@ -15,6 +15,7 @@ Small declarative CI rules over the lines and paths a change adds. Run with `bun
 - `$name` in `paths`, `exclude` or `requires_changed` expands to the glob list `[sets] name` in `config.toml` (`$js_tests`, `$py_tests`, `$rs_tests` today). An undefined name stops the run.
 - Moved code is counted: each removed line excuses one identical added line for a rule, not every identical line.
 - `new_only = true` (added-lines, `match` needs a capture group) skips a line when a removed line in the same file has the same first group, so a version bump is not reported as a new dependency.
+- `leaves_scope = true` (changed-paths) makes a rename or copy count when its old path is in scope and the new one is not, so a test renamed out of the test globs reads as a deletion (`test-file-deleted`); a rename that stays in scope is a move.
 - Size limits stay in `script/godfile.ts`; this directory does not reimplement them.
 
 - `--warn` reports gate findings without failing (setup errors still fail). On GitHub Actions each finding becomes an annotation (`::error` for a gate unless `--warn`, `::warning` otherwise). `--cwd <repo>` points the engine at another checkout.

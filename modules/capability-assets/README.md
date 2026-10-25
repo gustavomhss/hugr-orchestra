@@ -14,6 +14,9 @@ Provider endpoint/auth/filter presets are declarations, never connection, approv
 License blob SHAs identify Git's `blob <byte-length>\0<bytes>` SHA-1, not raw-file SHA-1 or runtime readiness.
 No file integrity is claimed for uncopied content. The source manifest lists pending evidence.
 
+`assets/skills` holds the adapted skill bodies (A01–A12 plus `platform-cli` and `vault-operations`), each ending
+with its upstream attribution. No skill root loads them yet; a later capability slice adds the loader.
+
 Later source-import WPs must enumerate companion files explicitly, preserve notices, record actual digests and
 modifications, and qualify their owning operations. Native implementation, dependency installation and ready-state
 qualification belong to their owning WPs. Shared `document_read`/`sheet_*` surfaces retain distinct adapters.

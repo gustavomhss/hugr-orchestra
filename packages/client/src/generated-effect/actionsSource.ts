@@ -16,7 +16,11 @@ type Endpoint40_0Input = {
 const Endpoint40_0 = (raw: RawClient["server.actionsSource"]) => (input: Endpoint40_0Input) =>
   raw["actions.source.base"]({
     params: { bindingID: input["bindingID"] },
-    query: { location: input["location"], revision: input["revision"], ref: input["ref"] },
+    query: {
+      ...(input["location"] === undefined ? {} : { location: input["location"] }),
+      revision: input["revision"],
+      ...(input["ref"] === undefined ? {} : { ref: input["ref"] }),
+    },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint40_1Request = Parameters<RawClient["server.actionsSource"]["actions.source.validateDraft"]>[0]
@@ -31,7 +35,7 @@ type Endpoint40_1Input = {
 const Endpoint40_1 = (raw: RawClient["server.actionsSource"]) => (input: Endpoint40_1Input) =>
   raw["actions.source.validateDraft"]({
     params: { bindingID: input["bindingID"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
     payload: { base: input["base"], path: input["path"], draft: input["draft"] },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -46,7 +50,7 @@ type Endpoint40_2Input = {
 const Endpoint40_2 = (raw: RawClient["server.actionsSource"]) => (input: Endpoint40_2Input) =>
   raw["actions.source.validate"]({
     params: { bindingID: input["bindingID"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
     payload: { source: input["source"], draft: input["draft"] },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -62,7 +66,7 @@ type Endpoint40_3Input = {
 const Endpoint40_3 = (raw: RawClient["server.actionsSource"]) => (input: Endpoint40_3Input) =>
   raw["actions.source.command"]({
     params: { bindingID: input["bindingID"], action: input["action"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
     payload: { id: input["id"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 

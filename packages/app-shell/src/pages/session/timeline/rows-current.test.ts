@@ -63,6 +63,49 @@ describe("current session timeline rows", () => {
     ])
   })
 
+  test("orders assistant parts by content, not by the id order the part store keeps", () => {
+    const source = [
+      { id: "msg_1", type: "user", text: "inspect", time: { created: 1 } },
+      {
+        id: "msg_2",
+        type: "assistant",
+        agent: "build",
+        model: { id: "model", providerID: "provider" },
+        content: [
+          { type: "text", text: "Reading the file." },
+          {
+            id: "prt_tool",
+            type: "tool",
+            name: "read",
+            time: { created: 2, ran: 2, completed: 3 },
+            state: { status: "completed", input: {}, metadata: {}, content: [{ type: "text", text: "contents" }] },
+          },
+          { type: "text", text: "The file is fine." },
+        ],
+        time: { created: 2, completed: 4 },
+      },
+    ] satisfies SessionMessageInfo[]
+    const normalized = normalizeSessionMessages("ses_1", source)
+    const messages = new Map(normalized.messages.map((message) => [message.id, message]))
+
+    const result = Timeline.constructSessionMessageRows(
+      source,
+      (messageID) => messages.get(messageID),
+      // The server-session store sorts each message's parts by id.
+      (messageID) => (normalized.parts.get(messageID) ?? []).toSorted((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)),
+      true,
+      "idle",
+      normalized.messages.filter((message) => message.role === "user"),
+    )
+
+    expect(result.rows.map(TimelineRow.key)).toEqual([
+      "user-message:msg_1",
+      "assistant-part:msg_1:msg_2:text:0",
+      "assistant-part:msg_1:prt_tool",
+      "assistant-part:msg_1:msg_2:text:1",
+    ])
+  })
+
   test("renders a current shell message as a standalone turn", () => {
     const source = [
       {

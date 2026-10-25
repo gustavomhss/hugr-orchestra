@@ -1,7 +1,7 @@
 export * as ScheduledTask from "./scheduled-task"
 
-import { and, asc, desc, eq, inArray, lt, lte, ne, notInArray } from "drizzle-orm"
-import { Cause, Clock, Context, Duration, Effect, Exit, Layer, Schedule, Schema } from "effect"
+import { and, asc, desc, eq, lt, lte, ne, notInArray } from "drizzle-orm"
+import { Cause, Clock, Context, Duration, Effect, Layer, Schedule, Schema } from "effect"
 import { ScheduledTask } from "@orchestra/schema/scheduled-task"
 import { AgentV2 } from "./agent"
 import { Database } from "./database/database"
@@ -9,8 +9,10 @@ import { makeGlobalNode } from "./effect/app-node"
 import { AbsolutePath } from "./schema"
 import { SessionV2 } from "./session"
 import { SessionInput } from "./session/input"
-import { SessionMessage } from "./session/message"
+import { ScheduledTaskCapability } from "./scheduled-task/capability"
 import { ScheduledTaskModel } from "./scheduled-task/model"
+import { ScheduledTaskPort } from "./scheduled-task/port"
+import { ScheduledTaskShared } from "./scheduled-task/shared"
 import { ScheduledTaskRunTable, ScheduledTaskTable } from "./scheduled-task/sql"
 
 export const ID = ScheduledTask.ID
@@ -25,22 +27,14 @@ export const TICK = Duration.seconds(15)
 // Settled runs kept per task. Only the latest is shown; a slot can no longer run once the task moved past it.
 const KEEP = 20
 
-export class NotFoundError extends Schema.TaggedErrorClass<NotFoundError>()("ScheduledTask.NotFoundError", {
-  id: Schema.String,
-}) {}
-
-export class InvalidError extends Schema.TaggedErrorClass<InvalidError>()("ScheduledTask.InvalidError", {
-  field: Schema.String,
-  message: Schema.String,
-}) {}
-
-export class ConflictError extends Schema.TaggedErrorClass<ConflictError>()("ScheduledTask.ConflictError", {
-  id: Schema.String,
-}) {}
-
-export class RunError extends Schema.TaggedErrorClass<RunError>()("ScheduledTask.RunError", {
-  reason: Schema.String,
-}) {}
+export const NotFoundError = ScheduledTaskShared.NotFoundError
+export type NotFoundError = ScheduledTaskShared.NotFoundError
+export const InvalidError = ScheduledTaskShared.InvalidError
+export type InvalidError = ScheduledTaskShared.InvalidError
+export const ConflictError = ScheduledTaskShared.ConflictError
+export type ConflictError = ScheduledTaskShared.ConflictError
+export const RunError = ScheduledTaskShared.RunError
+export type RunError = ScheduledTaskShared.RunError
 
 export interface Interface {
   readonly list: (directory: AbsolutePath) => Effect.Effect<Info[]>
@@ -58,61 +52,33 @@ export interface Interface {
   readonly run: (directory: AbsolutePath, id: ID) => Effect.Effect<ScheduledTask.RunResult, NotFoundError | RunError>
   /** Finishes claims a stopped process left behind, then serves every due slot once. */
   readonly tick: Effect.Effect<void>
+  /** Capability schedules (schedule_manage), scoped to their owner. The legacy methods above never see them. */
+  readonly capability: ScheduledTaskCapability.Interface
 }
+
+export type Schedule = ScheduledTaskCapability.Schedule
+export type CapabilityCreate = ScheduledTaskCapability.CapabilityCreate
+export type CapabilityUpdate = ScheduledTaskCapability.CapabilityUpdate
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/ScheduledTask") {}
 
-type Task = typeof ScheduledTaskTable.$inferSelect
-type RunRow = typeof ScheduledTaskRunTable.$inferSelect
-type Claim = {
-  readonly id: string
-  readonly task: Task
-  readonly sessionID: SessionV2.ID
-  readonly messageID: SessionMessage.ID
-  readonly prompt: string
-}
-type Outcome = { type: "started"; sessionID: SessionV2.ID } | { type: "failed"; error: string } | { type: "void" }
+type Task = ScheduledTaskShared.Task
+type LegacyTask = ScheduledTaskShared.LegacyTask
+type RunRow = ScheduledTaskShared.RunRow
+type Claim = ScheduledTaskShared.Claim
+type Outcome = ScheduledTaskShared.Outcome
 
 const layer = Layer.effect(
   Service,
   Effect.gen(function* () {
     const { db } = yield* Database.Service
     const sessions = yield* SessionV2.Service
-    // Marks this process's claims. A restarted process takes its old claims over once their lease ends.
-    const owner = crypto.randomUUID()
-    const immediate = <A, E>(effect: Effect.Effect<A, E>) =>
-      db.transaction(() => effect, { behavior: "immediate" }).pipe(Effect.orDie)
+    const tasks = ScheduledTaskShared.store(db, crypto.randomUUID())
+    const { lease, immediate, find, lastRuns, advance, claim } = tasks
+    const cap = ScheduledTaskCapability.make(tasks, sessions)
 
-    const find = (id: ID, directory?: AbsolutePath) =>
-      db
-        .select()
-        .from(ScheduledTaskTable)
-        .where(
-          directory
-            ? and(eq(ScheduledTaskTable.id, id), eq(ScheduledTaskTable.directory, directory))
-            : eq(ScheduledTaskTable.id, id),
-        )
-        .get()
-
-    const infos = Effect.fn("ScheduledTask.infos")(function* (tasks: Task[]) {
-      const runs =
-        tasks.length === 0
-          ? []
-          : yield* db
-              .select()
-              .from(ScheduledTaskRunTable)
-              .where(
-                and(
-                  inArray(
-                    ScheduledTaskRunTable.task_id,
-                    tasks.map((task) => task.id),
-                  ),
-                  ne(ScheduledTaskRunTable.state, "running"),
-                ),
-              )
-              .orderBy(desc(ScheduledTaskRunTable.time_settled))
-              .all()
-              .pipe(Effect.orDie)
+    const infos = Effect.fn("ScheduledTask.infos")(function* (tasks: LegacyTask[]) {
+      const runs = yield* lastRuns(tasks)
       return tasks.map((task) =>
         toInfo(
           task,
@@ -123,7 +89,7 @@ const layer = Layer.effect(
 
     const get = Effect.fn("ScheduledTask.get")(function* (directory: AbsolutePath, id: ID) {
       const task = yield* find(id, directory).pipe(Effect.orDie)
-      if (!task) return yield* new NotFoundError({ id })
+      if (!task || !legacy(task)) return yield* new NotFoundError({ id })
       return (yield* infos([task]))[0]!
     })
 
@@ -134,32 +100,6 @@ const layer = Layer.effect(
         .where(eq(ScheduledTaskTable.id, task.id))
         .run()
 
-    const claim = Effect.fn("ScheduledTask.claim")(function* (task: Task, slot: number | undefined, now: number) {
-      const ids = slot === undefined ? undefined : ScheduledTaskModel.slotIDs(task.id, slot)
-      const claimed = {
-        id: crypto.randomUUID(),
-        task,
-        sessionID: ids ? SessionV2.ID.make(ids.session) : SessionV2.ID.create(),
-        messageID: ids ? SessionMessage.ID.make(ids.message) : SessionMessage.ID.create(),
-        prompt: task.prompt,
-      }
-      yield* db
-        .insert(ScheduledTaskRunTable)
-        .values({
-          id: claimed.id,
-          task_id: task.id,
-          slot: slot ?? null,
-          state: "running",
-          session_id: claimed.sessionID,
-          message_id: claimed.messageID,
-          prompt: claimed.prompt,
-          owner,
-          time_claimed: now,
-        })
-        .run()
-      return claimed
-    })
-
     // Plans the task at `now` under the write lock. A skipped slot is recorded as missed, and a due slot is
     // claimed when no run holds it. `extra` (Run now) claims an extra run whenever the slot is not claimed.
     const begin = (id: ID, now: number, input: { directory?: AbsolutePath; extra: boolean }) =>
@@ -167,6 +107,8 @@ const layer = Layer.effect(
         Effect.gen(function* () {
           const task = yield* find(id, input.directory)
           if (!task) return { type: "missing" } as const
+          if (task.policy === "capability") return yield* cap.plan(task, now)
+          if (!legacy(task)) return { type: "idle" } as const
           const due = ScheduledTaskModel.plan(timing(task), now)
           if (due.type === "skip") yield* write(task, ScheduledTaskModel.skipRun(timing(task), due.slot, now), now)
           if (due.type === "run") {
@@ -191,17 +133,39 @@ const layer = Layer.effect(
       )
 
     // The path a user prompt takes: the Session (adopted when its ID exists), durable admission, then a wake.
-    // The user talks only to Maestro, so every scheduled run is a Maestro Session, like every chat.
-    const dispatch = (claimed: Claim) =>
+    // Legacy runs are Maestro Sessions in the task's directory. A capability run uses its owner's agent and
+    // placement, and only while the owner Session still exists there with that agent. `admitted` is a takeover
+    // retrying a prompt that is already durable, which only reconciles and wakes.
+    const dispatch = (claimed: Claim, admitted = false) =>
       Effect.gen(function* () {
+        const owner = claimed.task.policy === "capability" ? claimed.task.owner : undefined
+        if (claimed.task.policy === "capability" && !(owner && (yield* cap.present(owner))))
+          return { type: "revoked" } as const
+        // Checked before the Session too, so a void claim leaves no empty Session behind.
+        const checked = claimed.task.policy === "capability" && !admitted
+        if (checked && !(yield* cap.holds(claimed))) return { type: "void" } as const
         const session = yield* sessions.create({
           id: claimed.sessionID,
-          agent: AgentV2.defaultID,
-          location: { directory: claimed.task.directory },
+          agent: owner?.agentID ?? AgentV2.defaultID,
+          location: owner?.location ?? { directory: claimed.task.directory },
         })
+        // An edit, pause or removal since the claim voids it before admission. What remains is the window from this
+        // read to the durable admission inside `sessions.prompt` (its prompt hooks included); a claim revoked in it
+        // still settles with an honest `started` receipt.
+        if (checked && !(yield* cap.holds(claimed))) return { type: "void" } as const
         yield* sessions.prompt({ id: claimed.messageID, sessionID: session.id, prompt: { text: claimed.prompt } })
-        return session.id
-      }).pipe(Effect.exit)
+        return { type: "started", sessionID: session.id } as const
+      }).pipe(
+        Effect.catchCause((cause) =>
+          Effect.gen(function* () {
+            // A capability prompt that was admitted before the failure (a wake that failed, say) did start.
+            const durable =
+              claimed.task.policy === "capability" ? yield* SessionInput.find(db, claimed.messageID) : undefined
+            if (durable) return { type: "started", sessionID: durable.sessionID } as const
+            return { type: "failed", error: reason(cause) } as const
+          }),
+        ),
+      )
 
     const settle = Effect.fn("ScheduledTask.settle")(function* (claimed: Claim, outcome: Outcome) {
       const now = yield* Clock.currentTimeMillis
@@ -212,15 +176,23 @@ const layer = Layer.effect(
             .from(ScheduledTaskRunTable)
             .where(eq(ScheduledTaskRunTable.id, claimed.id))
             .get()
-          // Gone with its task, or taken over after the lease ended: the new owner settles it.
-          if (run?.state !== "running" || run.owner !== owner) return
+          // A claim an edit revoked while its prompt was being admitted keeps an honest receipt; it never counts
+          // toward repeat or moves `next`, so this race can admit one run past the repeat limit.
+          if (run?.state === "revoked" && outcome.type === "started")
+            return yield* db
+              .update(ScheduledTaskRunTable)
+              .set({ state: "started", session_id: outcome.sessionID, error: null, time_settled: now })
+              .where(eq(ScheduledTaskRunTable.id, run.id))
+              .run()
+          // Gone with its task, taken over after the lease ended (the new lease settles it), or revoked by an edit.
+          if (run?.state !== "running" || run.owner !== lease) return
           if (outcome.type === "void")
             return yield* db.delete(ScheduledTaskRunTable).where(eq(ScheduledTaskRunTable.id, run.id)).run()
           yield* db
             .update(ScheduledTaskRunTable)
             .set({
               state: outcome.type,
-              error: outcome.type === "failed" ? outcome.error : null,
+              error: outcome.type === "failed" ? outcome.error : outcome.type === "revoked" ? "owner-missing" : null,
               owner: null,
               time_settled: now,
             })
@@ -228,29 +200,32 @@ const layer = Layer.effect(
             .run()
           const task = yield* find(claimed.task.id)
           if (!task) return
-          // The task still points at (or before) the served slot unless it was rescheduled while the run started;
-          // then the run counts as an extra run and the task keeps its new time.
-          const slot = run.slot !== null && task.next <= run.slot ? run.slot : undefined
-          const missed =
-            slot !== undefined && task.cadence !== "once" && task.next < slot
-              ? ScheduledTaskModel.previous(task, task.cadence, slot)
-              : undefined
-          // A failed slot is consumed like a run, so it is never retried; a failure leaves a rescheduled task alone.
-          const advanced =
-            outcome.type === "started" || slot !== undefined
-              ? ScheduledTaskModel.recordRun(timing(task), { time: now, slot, missed })
-              : timing(task)
-          yield* db
-            .update(ScheduledTaskTable)
-            .set({
-              next: advanced.next,
-              enabled: advanced.enabled,
-              missed: advanced.missed ?? null,
-              runs: outcome.type === "started" ? task.runs + 1 : task.runs,
-              time_updated: now,
-            })
-            .where(eq(ScheduledTaskTable.id, task.id))
-            .run()
+          if (task.policy === "capability")
+            yield* advance(task, ScheduledTaskCapability.settledCapability(task, run, outcome), now)
+          if (legacy(task)) {
+            // The task still points at (or before) the served slot unless it was rescheduled while the run
+            // started; then the run counts as an extra run and the task keeps its new time.
+            const slot = run.slot !== null && task.next <= run.slot ? run.slot : undefined
+            const missed =
+              slot !== undefined && task.cadence !== "once" && task.next < slot
+                ? ScheduledTaskModel.previous(task, task.cadence, slot)
+                : undefined
+            // A failed slot is consumed like a run, so it is never retried; a failure leaves a rescheduled task alone.
+            const advanced =
+              outcome.type === "started" || slot !== undefined
+                ? ScheduledTaskModel.recordRun(timing(task), { time: now, slot, missed })
+                : timing(task)
+            yield* advance(
+              task,
+              {
+                next: advanced.next,
+                enabled: advanced.enabled,
+                missed: advanced.missed ?? null,
+                runs: outcome.type === "started" ? task.runs + 1 : task.runs,
+              },
+              now,
+            )
+          }
           const kept = db
             .select({ id: ScheduledTaskRunTable.id })
             .from(ScheduledTaskRunTable)
@@ -274,13 +249,7 @@ const layer = Layer.effect(
     const serve = Effect.fn("ScheduledTask.serve")(function* (id: ID, now: number) {
       const begun = yield* begin(id, now, { extra: false })
       if (begun.type !== "claimed") return
-      const exit = yield* dispatch(begun.claim)
-      yield* settle(
-        begun.claim,
-        Exit.isSuccess(exit)
-          ? { type: "started", sessionID: exit.value }
-          : { type: "failed", error: reason(exit.cause) },
-      )
+      yield* settle(begun.claim, yield* dispatch(begun.claim))
     })
 
     // Only a claim whose prompt was admitted happened. It is finished with the exact retry a client would send,
@@ -295,7 +264,7 @@ const layer = Layer.effect(
           if (!task || !run.message_id || run.prompt === null) return
           yield* db
             .update(ScheduledTaskRunTable)
-            .set({ owner, time_claimed: now })
+            .set({ owner: lease, time_claimed: now })
             .where(eq(ScheduledTaskRunTable.id, run.id))
             .run()
           return {
@@ -310,8 +279,8 @@ const layer = Layer.effect(
       if (!claimed) return
       const admitted = yield* SessionInput.find(db, claimed.messageID)
       if (!admitted) return yield* settle(claimed, { type: "void" })
-      const exit = yield* dispatch(claimed)
-      if (Exit.isFailure(exit)) yield* Effect.logWarning("Scheduled run retry failed", exit.cause)
+      const retried = yield* dispatch(claimed, true)
+      if (retried.type !== "started") yield* Effect.logWarning("Scheduled run retry failed", retried)
       yield* settle(claimed, { type: "started", sessionID: admitted.sessionID })
     })
 
@@ -333,16 +302,18 @@ const layer = Layer.effect(
       yield* Effect.forEach(due, (task) => serve(task.id, now).pipe(Effect.catchCause(logFailure)), { discard: true })
     }).pipe(Effect.withSpan("ScheduledTask.tick"))
 
+    const capability = cap.api({ dispatch, settle })
+    yield* ScheduledTaskPort.bind(capability)
     return Service.of({
       list: Effect.fn("ScheduledTask.list")(function* (directory) {
         const tasks = yield* db
           .select()
           .from(ScheduledTaskTable)
-          .where(eq(ScheduledTaskTable.directory, directory))
+          .where(and(eq(ScheduledTaskTable.directory, directory), ScheduledTaskShared.LEGACY))
           .orderBy(asc(ScheduledTaskTable.time_created), asc(ScheduledTaskTable.id))
           .all()
           .pipe(Effect.orDie)
-        return yield* infos(tasks)
+        return yield* infos(tasks.filter(legacy))
       }),
       create: Effect.fn("ScheduledTask.create")(function* (directory, input) {
         if (!ScheduledTaskModel.validZone(input.timezone))
@@ -397,7 +368,7 @@ const layer = Layer.effect(
         const result = yield* immediate(
           Effect.gen(function* () {
             const task = yield* find(id, directory)
-            if (!task) return "missing" as const
+            if (!task || !legacy(task)) return "missing" as const
             const timed = input.next !== undefined || input.timezone !== undefined || input.cadence !== undefined
             const next = input.next ?? task.next
             const timezone = input.timezone ?? task.timezone
@@ -437,7 +408,9 @@ const layer = Layer.effect(
       remove: Effect.fn("ScheduledTask.remove")(function* (directory, id) {
         const removed = yield* db
           .delete(ScheduledTaskTable)
-          .where(and(eq(ScheduledTaskTable.id, id), eq(ScheduledTaskTable.directory, directory)))
+          .where(
+            and(eq(ScheduledTaskTable.id, id), eq(ScheduledTaskTable.directory, directory), ScheduledTaskShared.LEGACY),
+          )
           .returning({ id: ScheduledTaskTable.id })
           .all()
           .pipe(Effect.orDie)
@@ -446,20 +419,22 @@ const layer = Layer.effect(
       run: Effect.fn("ScheduledTask.run")(function* (directory, id) {
         const begun = yield* begin(id, yield* Clock.currentTimeMillis, { directory, extra: true })
         if (begun.type !== "claimed") return yield* new NotFoundError({ id })
-        const exit = yield* dispatch(begun.claim)
-        if (Exit.isFailure(exit)) {
+        const outcome = yield* dispatch(begun.claim)
+        if (outcome.type !== "started") {
           yield* settle(begun.claim, { type: "void" })
-          return yield* new RunError({ reason: reason(exit.cause) })
+          return yield* new RunError({ reason: outcome.type === "failed" ? outcome.error : "owner-missing" })
         }
-        yield* settle(begun.claim, { type: "started", sessionID: exit.value })
-        return { sessionID: exit.value }
+        yield* settle(begun.claim, outcome)
+        return { sessionID: outcome.sessionID }
       }),
       tick,
+      capability,
     })
   }),
 )
 
 export const node = makeGlobalNode({ service: Service, layer, deps: [Database.node, SessionV2.node] })
+
 
 /** Serves due slots on the server whether or not any client is open, starting with a pass at boot. */
 export const daemonNode = makeGlobalNode({
@@ -474,7 +449,11 @@ export const daemonNode = makeGlobalNode({
   deps: [node],
 })
 
-function timing(task: Task): ScheduledTaskModel.Timing {
+function legacy(task: Task): task is LegacyTask {
+  return task.policy === "legacy-browser" && task.cadence !== "interval" && task.cadence !== "cron"
+}
+
+function timing(task: LegacyTask): ScheduledTaskModel.Timing {
   return {
     cadence: task.cadence,
     minute: task.minute,
@@ -494,7 +473,7 @@ function toggle(task: ScheduledTaskModel.Timing, enabled: boolean | undefined, r
   return ScheduledTaskModel.resume(task, now)
 }
 
-function toInfo(task: Task, run: RunRow | undefined): Info {
+function toInfo(task: LegacyTask, run: RunRow | undefined): Info {
   return {
     id: task.id,
     name: task.name,
@@ -506,15 +485,8 @@ function toInfo(task: Task, run: RunRow | undefined): Info {
     enabled: task.enabled,
     runs: task.runs,
     ...(task.missed === null ? {} : { missed: task.missed }),
-    ...(run ? { last: toRun(run) } : {}),
+    ...(run ? { last: ScheduledTaskShared.toRun(run) } : {}),
   }
-}
-
-function toRun(run: RunRow): ScheduledTask.Run {
-  const time = run.time_settled ?? run.time_claimed
-  const slot = run.slot === null ? {} : { slot: run.slot }
-  if (run.state === "failed") return { outcome: "failed", time, ...slot, error: run.error ?? "" }
-  return { outcome: "started", time, ...slot, sessionID: run.session_id }
 }
 
 // The failure as the page shows it.
