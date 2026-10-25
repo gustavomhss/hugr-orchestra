@@ -2,10 +2,35 @@ import os from "os"
 import { InstallationVersion } from "../../installation/version"
 import { Effect, Option, Schema } from "effect"
 import { define } from "../internal"
+import { ACCOUNT_PROMPT } from "./cloudflare-workers-ai"
 
 export const CloudflareAIGatewayPlugin = define({
   id: "cloudflare-ai-gateway",
   effect: Effect.fn(function* (ctx) {
+    // The key method asks the account and gateway IDs the environment does not supply; the answers are stored as key
+    // metadata, which the runner merges into the options gatewayConfig reads.
+    yield* ctx.integration.transform((draft) => {
+      draft.method.update({
+        integrationID: "cloudflare-ai-gateway",
+        method: {
+          type: "key",
+          label: "Gateway API token",
+          prompts: [
+            ...(process.env.CLOUDFLARE_ACCOUNT_ID ? [] : [ACCOUNT_PROMPT]),
+            ...(process.env.CLOUDFLARE_GATEWAY_ID
+              ? []
+              : [
+                  {
+                    type: "text" as const,
+                    key: "gatewayId",
+                    message: "Enter your Cloudflare AI Gateway ID",
+                    placeholder: "e.g. my-gateway",
+                  },
+                ]),
+          ],
+        },
+      })
+    })
     yield* ctx.aisdk.sdk(
       Effect.fn(function* (evt) {
         if (evt.package !== "ai-gateway-provider") return

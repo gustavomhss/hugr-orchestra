@@ -101,6 +101,13 @@ test("resolves a session move keybind", () => {
   expect(config.keybinds.get("session.move")).toMatchObject([{ key: "ctrl+o" }])
 })
 
+test("serves no workspace keybind", () => {
+  const config = resolve({}, { terminalSuspend: true })
+
+  expect(config.keybinds.has("workspace.set")).toBe(false)
+  expect(config.keybinds.has("workspace.list")).toBe(false)
+})
+
 test("keeps ctrl+d off the session delete default and binds the common actions", () => {
   const config = resolve({}, { terminalSuspend: true })
 

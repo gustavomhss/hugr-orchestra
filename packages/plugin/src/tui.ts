@@ -7,14 +7,13 @@ import type {
   Todo,
   Message,
   Part,
-  Provider,
   PermissionRequest,
   QuestionRequest,
   Session,
   SessionStatus,
   TextPart,
-  Config as SdkConfig,
-} from "./compat/sdk-v2.js"
+} from "./compat/schema.js"
+import type { Provider, Config as SdkConfig } from "./compat/legacy-v2.js"
 import type { Orchestra } from "@orchestra/client"
 import type { CliRenderer, KeyEvent, RGBA, Renderable, SlotMode } from "@opentui/core"
 import type { Binding, Keymap } from "@opentui/keymap"

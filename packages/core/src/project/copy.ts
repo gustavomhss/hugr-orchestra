@@ -98,6 +98,28 @@ export interface Strategy {
 
 export { Event }
 
+// A copy is named after the task it is for by one plain call to the small model, outside any Session.
+export const NAME_SYSTEM =
+  "You name a copy of a project after the task it is for. Reply with only the name: two or three plain English words, with no punctuation, quotes or explanation."
+
+export function namePrompt(context: string) {
+  return `Generate a short 2-3 word name that describes this task:\n${context}`
+}
+
+// The model's reply becomes a slug of its first three words; an empty reply falls back to a random slug.
+export function nameFromReply(reply: string) {
+  const output = reply.trim()
+  if (!output) return Slug.create()
+  return output
+    .split(/\s+/)
+    .slice(0, 3)
+    .join(" ")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+/, "")
+    .replace(/-+$/, "")
+}
+
 export interface Interface {
   readonly register: (strategy: Strategy) => Effect.Effect<void, DuplicateStrategyError>
   readonly create: (input: CreateInput) => Effect.Effect<Copy, Error>

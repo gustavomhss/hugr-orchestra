@@ -142,10 +142,11 @@ export function createDialogProviderOptions() {
             const listed = (integration?.data?.methods ?? []).flatMap((method) => {
               if (method.type === "oauth")
                 return [{ type: "oauth" as const, id: method.id, label: method.label, prompts: method.prompts }]
-              if (method.type === "key") return [{ type: "api" as const, label: method.label ?? "API key" }]
+              if (method.type === "key")
+                return [{ type: "api" as const, label: method.label ?? "API key", prompts: method.prompts }]
               return []
             })
-            const methods = listed.length ? listed : [{ type: "api" as const, label: "API key" }]
+            const methods = listed.length ? listed : [{ type: "api" as const, label: "API key", prompts: undefined }]
             let index: number | null = 0
             if (methods.length > 1) {
               index = await new Promise<number | null>((resolve) => {
@@ -209,7 +210,13 @@ export function createDialogProviderOptions() {
               }
             }
             if (method.type === "api") {
-              return dialog.replace(() => <ApiMethod providerID={providerID} title={method.label} />)
+              const metadata = method.prompts?.length
+                ? await PromptsMethod({ dialog, prompts: method.prompts })
+                : undefined
+              if (metadata === null) return
+              return dialog.replace(() => (
+                <ApiMethod providerID={providerID} title={method.label} metadata={metadata} />
+              ))
             }
           },
         }
@@ -342,6 +349,7 @@ interface ApiMethodProps {
   providerID: string
   title: string
   custom?: boolean
+  metadata?: Record<string, string>
 }
 function ApiMethod(props: ApiMethodProps) {
   const dialog = useDialog()
@@ -356,7 +364,12 @@ function ApiMethod(props: ApiMethodProps) {
       onConfirm={async (value) => {
         if (!value) return
         const saved = await sdk.api.integrations
-          .connectKey({ integrationID: props.providerID, location: { directory: sdk.directory }, key: value })
+          .connectKey({
+            integrationID: props.providerID,
+            location: { directory: sdk.directory },
+            key: value,
+            metadata: props.metadata,
+          })
           .then(
             () => ({ error: undefined }),
             (error: unknown) => ({ error }),

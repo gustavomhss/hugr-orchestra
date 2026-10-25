@@ -7,6 +7,7 @@ import { useSDK } from "../../context/sdk"
 import { useSync } from "../../context/sync"
 import { useToast } from "../../ui/toast"
 import { DialogMoveSession, type MoveSessionSelection } from "../dialog-move-session"
+import { DialogWorkspaceFileChanges } from "../dialog-workspace-file-changes"
 import { useHomeSessionDestination } from "../../routes/home/session-destination"
 import { useProject } from "../../context/project"
 
@@ -26,19 +27,24 @@ export function usePromptMove(input: { projectID: () => string | undefined; sess
   const [creatingDots, setCreatingDots] = createSignal(3)
   const [progress, setProgress] = createSignal<string>()
 
-  async function create() {
+  async function create(context?: string) {
     const projectID = input.projectID()
     if (!projectID) return
     setCreating(true)
     setProgress("Creating copy")
     try {
-      // V2 has no copy-name generator, so the server picks the copy name.
+      const generated = await sdk.api.projectCopies.generateName({
+        projectID,
+        location: { directory: sdk.directory },
+        context,
+      })
       const directory = await sdk.api.projectCopies
         .create({
           projectID,
           location: { directory: sdk.directory },
           strategy: "git_worktree",
           directory: path.join(paths.worktree, projectID.slice(0, 6)),
+          name: generated.name,
         })
         .then((result) => result.directory)
 
@@ -92,9 +98,28 @@ export function usePromptMove(input: { projectID: () => string | undefined; sess
     ))
   }
 
+  function sessionContext(sessionID: string) {
+    const session = sync.session.get(sessionID)
+    const messages = (sync.data.message[sessionID] ?? [])
+      .slice(-6)
+      .map((message) =>
+        [
+          message.role + ":",
+          ...(sync.data.part[message.id] ?? []).flatMap((part) => (part.type === "text" ? [part.text] : [])),
+        ].join(" "),
+      )
+    return [session?.title, ...messages].filter(Boolean).join("\n") || undefined
+  }
+
   async function moveExistingSession(sessionID: string, selection: MoveSessionSelection) {
+    const session = sync.session.get(sessionID)
+    const status = session
+      ? await sdk.api.vcs.status({ location: { directory: session.directory } }).catch(() => undefined)
+      : undefined
+    const choice = status?.data.length ? await DialogWorkspaceFileChanges.show(dialog, status.data) : "no"
+    if (!choice) return
     dialog.clear()
-    const directory = selection.type === "new" ? await create() : selection.directory
+    const directory = selection.type === "new" ? await create(sessionContext(sessionID)) : selection.directory
     if (!directory) {
       setProgress(undefined)
       dialog.clear()
@@ -102,8 +127,7 @@ export function usePromptMove(input: { projectID: () => string | undefined; sess
     }
     setProgress("Moving session")
     try {
-      // V2 moves only the Session; uncommitted changes stay in the source directory.
-      await sdk.api.sessions.move({ sessionID, location: { directory } })
+      await sdk.api.sessions.move({ sessionID, location: { directory }, moveChanges: choice === "yes" })
       await sdk.api.sessions
         .synthetic({ sessionID, text: moveReminderText(directory), resume: false })
         .catch(() => undefined)
@@ -120,13 +144,13 @@ export function usePromptMove(input: { projectID: () => string | undefined; sess
   const pending = createMemo(() => Boolean(homeDestination?.destination()))
   const pendingNew = createMemo(() => homeDestination?.destination()?.type === "new")
 
-  async function getDirectory() {
+  async function getDirectory(context?: string) {
     const value = homeDestination?.destination()
     if (!value) return
     if (value.type === "directory") {
       return value.directory
     }
-    return await create()
+    return await create(context)
   }
 
   function startSubmit() {

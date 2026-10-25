@@ -1,5 +1,7 @@
 import { SessionTodo, SessionV2 } from "@orchestra/core/session"
 import { SessionProcess } from "@orchestra/core/session-process"
+import { MoveSession } from "@orchestra/core/control-plane/move-session"
+import { TaskBackground } from "@orchestra/core/tool/task-background"
 import { SlashCommand } from "@orchestra/core/slash-command"
 import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { DateTime, Effect, Stream } from "effect"
@@ -50,6 +52,8 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
     const appProcess = yield* AppProcess.Service
     const sessionProcess = yield* SessionProcess.Service
     const fs = yield* FSUtil.Service
+    const moveSession = yield* MoveSession.Service
+    const taskBackground = yield* TaskBackground.Service
 
     const admit = (input: Parameters<SessionV2.Interface["prompt"]>[0]) =>
       session.prompt(input).pipe(
@@ -320,6 +324,49 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
       .handle(
         "session.move",
         Effect.fn(function* (ctx) {
+          if (ctx.payload.moveChanges) {
+            // Carrying uncommitted changes is the control-plane move: capture, apply at the destination, then reset the source.
+            yield* moveSession
+              .moveSession({
+                sessionID: ctx.params.sessionID,
+                destination: { directory: ctx.payload.location.directory },
+                moveChanges: true,
+              })
+              .pipe(
+                Effect.catchTags({
+                  "Session.NotFoundError": operationErrors["Session.NotFoundError"],
+                  "MoveSession.DestinationProjectMismatchError": () =>
+                    Effect.fail(
+                      new InvalidRequestError({
+                        message: `${ctx.payload.location.directory} is not in the Session's project`,
+                        field: "location",
+                      }),
+                    ),
+                  "MoveSession.CaptureChangesError": (error) =>
+                    Effect.fail(
+                      new ConflictError({
+                        message: `Could not capture changes: ${error.message}`,
+                        resource: ctx.params.sessionID,
+                      }),
+                    ),
+                  "MoveSession.ApplyChangesError": (error) =>
+                    Effect.fail(
+                      new ConflictError({
+                        message: `Could not apply changes: ${error.message}`,
+                        resource: ctx.payload.location.directory,
+                      }),
+                    ),
+                  "MoveSession.ResetSourceChangesError": (error) =>
+                    Effect.fail(
+                      new ConflictError({
+                        message: `Session moved, but its source changes were not reset: ${error.message}`,
+                        resource: error.directory,
+                      }),
+                    ),
+                }),
+              )
+            return HttpApiSchema.NoContent.make()
+          }
           yield* session.move({ sessionID: ctx.params.sessionID, location: ctx.payload.location }).pipe(
             Effect.catchTags({
               "Session.NotFoundError": operationErrors["Session.NotFoundError"],
@@ -486,6 +533,46 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
             ),
           )
           return HttpApiSchema.NoContent.make()
+        }),
+      )
+      .handle(
+        "session.diff",
+        Effect.fn(function* (ctx) {
+          const unexpected = (error: unknown) => {
+            const ref = `err_${crypto.randomUUID().slice(0, 8)}`
+            return Effect.logError("failed to diff session turn", { cause: error }).pipe(
+              Effect.annotateLogs({ ref, sessionID: ctx.params.sessionID }),
+              Effect.andThen(
+                Effect.fail(
+                  new UnknownError({ message: "Unexpected server error. Check server logs for details.", ref }),
+                ),
+              ),
+            )
+          }
+          return {
+            data: yield* session.diff({ sessionID: ctx.params.sessionID, ...ctx.query }).pipe(
+              Effect.catchTags({
+                "Session.NotFoundError": (error) =>
+                  Effect.fail(
+                    new SessionNotFoundError({
+                      sessionID: error.sessionID,
+                      message: `Session not found: ${error.sessionID}`,
+                    }),
+                  ),
+                "Session.MessageDecodeError": unexpected,
+                "Snapshot.Error": unexpected,
+              }),
+            ),
+          }
+        }),
+      )
+      .handle(
+        "session.background",
+        Effect.fn(function* (ctx) {
+          yield* session
+            .get(ctx.params.sessionID)
+            .pipe(Effect.catchTags({ "Session.NotFoundError": operationErrors["Session.NotFoundError"] }))
+          return { data: yield* taskBackground.request(ctx.params.sessionID) }
         }),
       )
       .handle(

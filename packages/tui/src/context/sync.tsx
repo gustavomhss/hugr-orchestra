@@ -399,8 +399,8 @@ export const {
             setStore("provider", reconcile(catalog.provider))
             setStore("provider_default", reconcile(catalog.default))
             setStore("provider_next", reconcile(catalog.next))
-            // V2 serves no experimental capabilities route, so background subagents stay off as in V1 without it.
-            setStore("capabilities", "experimentalBackgroundSubagents", false)
+            // V2 always serves session.background, so foreground subagents can always be moved to the background.
+            setStore("capabilities", "experimentalBackgroundSubagents", true)
             setStore("agent", reconcile(catalog.agent))
             setStore("config", reconcile(catalog.config))
             if (sessions !== undefined) setStore("session", reconcile(sessions))
@@ -413,6 +413,7 @@ export const {
             ...(args.continue ? [] : [sessionListPromise.then((sessions) => setStore("session", reconcile(sessions)))]),
             sdk.catalog.commands(location).then((x) => setStore("command", reconcile(x))),
             sdk.catalog.lsp(location).then((x) => setStore("lsp", reconcile(x))),
+            sdk.catalog.formatter(location).then((x) => setStore("formatter", reconcile(x))),
             sdk.catalog.mcp(location).then((x) => setStore("mcp", reconcile(x))),
             sdk.api.mcp
               .resources({ location })
@@ -438,7 +439,6 @@ export const {
               .catch(() => undefined),
             sdk.catalog.status().then((x) => setStore("session_status", reconcile(x))),
             sdk.catalog.vcs(location).then((x) => setStore("vcs", reconcile(x))),
-            project.workspace.sync(),
           ]).then(() => {
             setStore("status", "complete")
           })

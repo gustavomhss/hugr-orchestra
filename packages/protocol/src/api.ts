@@ -11,12 +11,14 @@ import { VcsGroup } from "./groups/vcs"
 import { CommandGroup } from "./groups/command"
 import { McpGroup } from "./groups/mcp"
 import { LspGroup } from "./groups/lsp"
+import { FormatterGroup } from "./groups/formatter"
 import { SkillGroup } from "./groups/skill"
 import { BehaviorGroup } from "./groups/behavior"
 import { EventGroup, makeEventGroup } from "./groups/event"
 import type { Definition } from "@orchestra/schema/event"
 import { AgentGroup } from "./groups/agent"
 import { HealthGroup } from "./groups/health"
+import { InstallationGroup } from "./groups/installation"
 import { PtyGroup } from "./groups/pty"
 import { makeQuestionGroup } from "./groups/question"
 import { ReferenceGroup } from "./groups/reference"
@@ -74,6 +76,7 @@ const makeApiFromGroup = <
     .add(CommandGroup.middleware(locationMiddleware))
     .add(McpGroup.middleware(locationMiddleware))
     .add(LspGroup.middleware(locationMiddleware))
+    .add(FormatterGroup.middleware(locationMiddleware))
     .add(SkillGroup.middleware(locationMiddleware))
     .add(BehaviorGroup.middleware(locationMiddleware))
     .add(eventGroup)
@@ -100,6 +103,7 @@ const makeApiFromGroup = <
     .add(ActionsSourceGroup.middleware(locationMiddleware))
     .add(ActionsTransferGroup.middleware(locationMiddleware))
     .add(RelayRunGroup.middleware(locationMiddleware))
+    .add(InstallationGroup)
     .annotateMerge(
       OpenApi.annotations({
         title: "orchestra HttpApi",

@@ -89,6 +89,9 @@ export const Flag = {
   get ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER() {
     return omniSpawner(process.env["ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER"])
   },
+  get ORCHESTRA_EXPERIMENTAL_OXFMT() {
+    return enabledByExperimental("ORCHESTRA_EXPERIMENTAL_OXFMT")
+  },
   get ORCHESTRA_EXPERIMENTAL_REFERENCES() {
     return enabledByExperimental("ORCHESTRA_EXPERIMENTAL_REFERENCES")
   },

@@ -53,4 +53,14 @@ export const ProjectCopyGroup = HttpApiGroup.make("server.projectCopy")
       .annotateMerge(locationQueryOpenApi)
       .annotateMerge(OpenApi.annotations({ identifier: "v2.projectCopy.refresh" })),
   )
+  .add(
+    HttpApiEndpoint.post("projectCopy.generateName", `${root}/generate-name`, {
+      params: { projectID: Project.ID },
+      query: LocationQuery,
+      payload: Schema.Struct({ context: Schema.optional(Schema.String) }),
+      success: Schema.Struct({ name: Schema.String }),
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(OpenApi.annotations({ identifier: "v2.projectCopy.generateName" })),
+  )
   .annotateMerge(OpenApi.annotations({ title: "projectCopy", description: "Project copy management routes." }))

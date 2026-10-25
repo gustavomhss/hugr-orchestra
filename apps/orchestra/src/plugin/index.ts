@@ -7,7 +7,7 @@ import type {
   WorkspaceAdapter as PluginWorkspaceAdapter,
 } from "@orchestra/plugin"
 import { Config } from "@/config/config"
-import { createOrchestraClient } from "@orchestra/sdk"
+import { createOrchestraClient, type OrchestraClient } from "@orchestra/sdk"
 import { ServerAuth } from "@/server/auth"
 import { CodexAuthPlugin } from "./openai/codex"
 import { Session } from "@/session/session"
@@ -37,6 +37,11 @@ import { HuGRComposerPlugin } from "./hugr-composer"
 import { AppDockPlugin } from "@orchestra/app-dock/app-dock"
 import { LinuxWorkspacePlugin } from "@orchestra/app-dock/linux-workspace"
 import { ListenerContext } from "@/server/listener-context"
+
+// The server hands every plugin the legacy SDK client built below.
+declare module "@orchestra/plugin" {
+  interface PluginClient extends OrchestraClient {}
+}
 
 type State = {
   hooks: Hooks[]

@@ -10,6 +10,7 @@ import { AppProcess } from "@orchestra/core/process"
 import { Npm } from "@orchestra/core/npm"
 import { GitCli } from "@orchestra/core/git-cli"
 import { Global } from "@orchestra/core/global"
+import { Installation } from "@orchestra/core/installation/service"
 import { ProjectV2 } from "@orchestra/core/project"
 import { Host } from "@orchestra/core/host"
 import { PermissionSaved } from "@orchestra/core/permission/saved"
@@ -17,6 +18,8 @@ import { PtyTicket } from "@orchestra/core/pty/ticket"
 import { ScheduledTask } from "@orchestra/core/scheduled-task"
 import { SessionV2 } from "@orchestra/core/session"
 import { SessionProcess } from "@orchestra/core/session-process"
+import { MoveSession } from "@orchestra/core/control-plane/move-session"
+import { TaskBackground } from "@orchestra/core/tool/task-background"
 import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { SessionExecution } from "@orchestra/core/session/execution"
 import { LocationServiceMap } from "@orchestra/core/location-service-map"
@@ -47,6 +50,8 @@ const applicationServices = LayerNode.group([
   SessionExecution.node,
   SessionSubagentModels.node,
   SessionProcess.node,
+  MoveSession.node,
+  TaskBackground.node,
   ScheduledTask.node,
   ScheduledTask.daemonNode,
   PermissionSaved.node,
@@ -62,6 +67,7 @@ const applicationServices = LayerNode.group([
   GitCli.node,
   Global.node,
   ProjectV2.node,
+  Installation.node,
 ])
 
 export interface Options {
@@ -86,7 +92,10 @@ export function createRoutes(options: Options = {}) {
 }
 
 export function createEmbeddedRoutes(options: Pick<Options, "host"> = {}) {
-  return makeRoutes(ServerAuth.Config.configLayer({ username: "orchestra", password: Option.none() }), options.host ?? [])
+  return makeRoutes(
+    ServerAuth.Config.configLayer({ username: "orchestra", password: Option.none() }),
+    options.host ?? [],
+  )
 }
 
 function makeRoutes<AuthError, AuthServices>(
@@ -97,12 +106,14 @@ function makeRoutes<AuthError, AuthServices>(
 ) {
   const merged = Host.merge(host)
   // Contributed global nodes add services and may not fail, so the root keeps the application services' types.
-  const serviceLayer: Layer.Layer<LayerNode.Output<typeof applicationServices>, LayerNode.Error<typeof applicationServices>> =
-    AppNodeBuilder.build(
-      LayerNode.group([applicationServices, ...merged.nodes]),
-      [[SessionExecution.node, SessionExecutionLocal.node], ...merged.replacements],
-      merged.locationNodes,
-    )
+  const serviceLayer: Layer.Layer<
+    LayerNode.Output<typeof applicationServices>,
+    LayerNode.Error<typeof applicationServices>
+  > = AppNodeBuilder.build(
+    LayerNode.group([applicationServices, ...merged.nodes]),
+    [[SessionExecution.node, SessionExecutionLocal.node], ...merged.replacements],
+    merged.locationNodes,
+  )
 
   const api = HttpApiBuilder.layer(Api, { openapiPath: "/openapi.json" }).pipe(
     Layer.provide(handlers),

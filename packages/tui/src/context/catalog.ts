@@ -3,6 +3,7 @@ import type {
   Agent,
   Command,
   Config,
+  FormatterStatus,
   LspStatus,
   McpStatus,
   Provider,
@@ -107,6 +108,12 @@ export function createCatalog(client: Client) {
       client["server.lsp"]
         .status({ location })
         .then((result): LspStatus[] => result.data.map((server) => ({ ...server }))),
+    formatter: (location: Location) =>
+      client["server.formatter"]
+        .status({ location })
+        .then((result): FormatterStatus[] =>
+          result.data.map((formatter) => ({ ...formatter, extensions: [...formatter.extensions] })),
+        ),
     mcp: (location: Location) =>
       client.mcp
         .list({ location })

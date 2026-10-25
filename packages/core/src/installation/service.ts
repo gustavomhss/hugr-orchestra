@@ -1,17 +1,16 @@
-import { LayerNode } from "@orchestra/core/effect/layer-node"
-import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
-import { LayerNodePlatform } from "@orchestra/core/effect/app-node-platform"
-import { Effect, Layer, Schema, Context } from "effect"
+import { LayerNode } from "../effect/layer-node"
+import { AppNodeBuilder } from "../effect/app-node-builder"
+import { LayerNodePlatform } from "../effect/app-node-platform"
+import { Effect, Layer, Schedule, Schema, Context } from "effect"
 import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/unstable/http"
-import { withTransientReadRetry } from "@/util/effect-http-client"
-import { serviceUse } from "@orchestra/core/effect/service-use"
+import { serviceUse } from "../effect/service-use"
 import { ChildProcess } from "effect/unstable/process"
-import { AppProcess } from "@orchestra/core/process"
-import { Global } from "@orchestra/core/global"
+import { AppProcess } from "../process"
+import { Global } from "../global"
 import path from "path"
-import { makeRuntime } from "@orchestra/core/effect/runtime"
+import { makeRuntime } from "../effect/runtime"
 import semver from "semver"
-import { InstallationChannel, InstallationVersion } from "@orchestra/core/installation/version"
+import { InstallationChannel, InstallationVersion } from "./version"
 import { InstallationEvent } from "@orchestra/schema/installation-event"
 
 export type Method = "curl" | "npm" | "yarn" | "pnpm" | "bun" | "scoop" | "choco" | "desktop" | "unknown"
@@ -82,14 +81,24 @@ export const use = serviceUse(Service)
 const layer: Layer.Layer<Service, never, HttpClient.HttpClient | AppProcess.Service> = Layer.effect(
   Service,
   Effect.gen(function* () {
-    const http = HttpClient.filterStatusOk(withTransientReadRetry(yield* HttpClient.HttpClient))
+    const http = HttpClient.filterStatusOk(
+      (yield* HttpClient.HttpClient).pipe(
+        HttpClient.retryTransient({
+          retryOn: "errors-and-responses",
+          times: 2,
+          schedule: Schedule.exponential(200).pipe(Schedule.jittered),
+        }),
+      ),
+    )
     const appProcess = yield* AppProcess.Service
 
     const text = Effect.fnUntraced(
       function* (cmd: string[]) {
         // Package managers read project files from their cwd, and some run them (yarn's .yarnrc yarn-path, pnpm's packageManager,
         // bunfig.toml). The process cwd is the workspace, which a sandboxed command can write; Orchestra's state directory it cannot.
-        const result = yield* appProcess.run(ChildProcess.make(cmd[0], cmd.slice(1), { cwd: Global.Path.state, extendEnv: true }))
+        const result = yield* appProcess.run(
+          ChildProcess.make(cmd[0], cmd.slice(1), { cwd: Global.Path.state, extendEnv: true }),
+        )
         return result.stdout.toString("utf8")
       },
       Effect.catch(() => Effect.succeed("")),
@@ -137,8 +146,7 @@ const layer: Layer.Layer<Service, never, HttpClient.HttpClient | AppProcess.Serv
 
         for (const check of checks) {
           const output = yield* check.command()
-          const installedName =
-            check.name === "choco" || check.name === "scoop" ? "orchestra" : PACKAGE
+          const installedName = check.name === "choco" || check.name === "scoop" ? "orchestra" : PACKAGE
           if (output.includes(installedName)) {
             return check.name
           }
@@ -183,7 +191,8 @@ export function upgradeCommand(method: Method, target: string): string[] | strin
   if (method === "curl")
     return "Download the release archive from https://github.com/gustavomhss/hugr-orchestra/releases and run its install.sh."
   if (method === "desktop") return "This CLI belongs to the Orchestra desktop app. Update the desktop app instead."
-  if (method === "scoop" || method === "choco") return `Orchestra has no ${method} package. Reinstall with npm i -g ${PACKAGE}.`
+  if (method === "scoop" || method === "choco")
+    return `Orchestra has no ${method} package. Reinstall with npm i -g ${PACKAGE}.`
   return "Orchestra could not tell how it was installed. Reinstall with npm i -g @humanguardrail/cli."
 }
 
@@ -199,4 +208,4 @@ export const latest = (...args: Parameters<Interface["latest"]>) => runPromise((
 export const method = () => runPromise((s) => s.method())
 export const upgrade = (...args: Parameters<Interface["upgrade"]>) => runPromise((s) => s.upgrade(...args))
 
-export * as Installation from "."
+export * as Installation from "./service"

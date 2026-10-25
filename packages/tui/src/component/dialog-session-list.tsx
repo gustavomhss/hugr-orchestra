@@ -12,15 +12,8 @@ import { useLocal } from "../context/local"
 import { DialogSessionRename } from "./dialog-session-rename"
 import { createDebouncedSignal } from "../util/signal"
 import { useToast } from "../ui/toast"
-import {
-  openWorkspaceSelect,
-  type WorkspaceSelection,
-  warpWorkspaceSession,
-  WORKSPACES_UNAVAILABLE,
-} from "./dialog-workspace-create"
 import { Spinner } from "./spinner"
 import { errorMessage } from "../util/error"
-import { DialogSessionDeleteFailed } from "./dialog-session-delete-failed"
 import { useCommandShortcut } from "../keymap"
 import { useEvent } from "../context/event"
 
@@ -126,58 +119,6 @@ export function DialogSessionList() {
       setDeleted((current) => new Set(current).add(event.properties.info.id))
     }),
   )
-
-  function recover(session: NonNullable<ReturnType<typeof sessions>[number]>) {
-    const workspace = project.workspace.get(session.workspaceID!)
-    const list = () => dialog.replace(() => <DialogSessionList />)
-    const warp = async (selection: WorkspaceSelection) => {
-      const workspaceID = await (async () => {
-        if (selection.type === "none") return null
-        if (selection.type === "existing") return selection.workspaceID
-        // V2 serves no workspace routes, so a new workspace cannot be created here.
-        toast.show({ title: "Failed to create workspace", message: WORKSPACES_UNAVAILABLE, variant: "error" })
-        return
-      })()
-      if (workspaceID === undefined) return
-      await warpWorkspaceSession({
-        dialog,
-        sdk,
-        sync,
-        project,
-        toast,
-        sourceWorkspaceID: session.workspaceID,
-        workspaceID,
-        sessionID: session.id,
-        copyChanges: false,
-        done: list,
-      })
-    }
-    dialog.replace(() => (
-      <DialogSessionDeleteFailed
-        session={session.title}
-        workspace={workspace?.name ?? session.workspaceID!}
-        onDone={list}
-        onDelete={() => {
-          // V2 serves no workspace routes, so the workspace cannot be removed here.
-          toast.show({ variant: "error", title: "Failed to delete workspace", message: WORKSPACES_UNAVAILABLE })
-          return false
-        }}
-        onRestore={() => {
-          void openWorkspaceSelect({
-            dialog,
-            sdk,
-            sync,
-            project,
-            toast,
-            onSelect: (selection) => {
-              void warp(selection)
-            },
-          })
-          return false
-        }}
-      />
-    ))
-  }
 
   function orderByRecency(sessionsList: NonNullable<ReturnType<typeof sessions>>) {
     return sessionsList
@@ -294,42 +235,18 @@ export function DialogSessionList() {
           title: "delete",
           onTrigger: async (option) => {
             if (toDelete() === option.value) {
-              const session = sessions().find((item) => item.id === option.value)
-              const status = session?.workspaceID ? project.workspace.status(session.workspaceID) : undefined
-
-              try {
-                const result = await sdk.api.sessions.remove({ sessionID: option.value }).then(
-                  () => ({ error: undefined }),
-                  (error: unknown) => ({ error: error ?? "delete failed" }),
-                )
-                if (result.error) {
-                  if (session?.workspaceID) {
-                    recover(session)
-                  } else {
-                    toast.show({
-                      variant: "error",
-                      title: "Failed to delete session",
-                      message: errorMessage(result.error),
-                    })
-                  }
-                  setToDelete(undefined)
-                  return
-                }
-              } catch (err) {
-                if (session?.workspaceID) {
-                  recover(session)
-                } else {
-                  toast.show({
-                    variant: "error",
-                    title: "Failed to delete session",
-                    message: errorMessage(err),
-                  })
-                }
+              const error = await sdk.api.sessions.remove({ sessionID: option.value }).then(
+                () => undefined,
+                (error: unknown) => error ?? "delete failed",
+              )
+              if (error) {
+                toast.show({
+                  variant: "error",
+                  title: "Failed to delete session",
+                  message: errorMessage(error),
+                })
                 setToDelete(undefined)
                 return
-              }
-              if (status && status !== "connected") {
-                await sync.session.refresh()
               }
               await refetchBrowse()
               if (search()) await refetch()

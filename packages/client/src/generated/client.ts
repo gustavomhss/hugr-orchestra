@@ -64,6 +64,10 @@ import type {
   SessionsCommitOutput,
   SessionsContextInput,
   SessionsContextOutput,
+  SessionsDiffInput,
+  SessionsDiffOutput,
+  SessionsBackgroundInput,
+  SessionsBackgroundOutput,
   SessionsHistoryInput,
   SessionsHistoryOutput,
   SessionsEventsInput,
@@ -174,6 +178,8 @@ import type {
   McpAuthRemoveOutput,
   ServerLspStatusInput,
   ServerLspStatusOutput,
+  ServerFormatterStatusInput,
+  ServerFormatterStatusOutput,
   SkillsListInput,
   SkillsListOutput,
   SkillsSaveInput,
@@ -209,6 +215,8 @@ import type {
   ProjectCopiesRemoveOutput,
   ProjectCopiesRefreshInput,
   ProjectCopiesRefreshOutput,
+  ProjectCopiesGenerateNameInput,
+  ProjectCopiesGenerateNameOutput,
   ProjectsListOutput,
   ProjectsDirectoriesInput,
   ProjectsDirectoriesOutput,
@@ -332,6 +340,8 @@ import type {
   RelayRunsAuditOutput,
   RelayRunsLedgerInput,
   RelayRunsLedgerOutput,
+  InstallationUpgradeInput,
+  InstallationUpgradeOutput,
 } from "./types"
 import { ClientError } from "./client-error"
 import { makeResearch } from "./research"
@@ -766,7 +776,7 @@ export function make(options: ClientOptions) {
           {
             method: "POST",
             path: `/api/session/${encodeURIComponent(input.sessionID)}/move`,
-            body: { location: input["location"] },
+            body: { location: input["location"], moveChanges: input["moveChanges"] },
             successStatus: 204,
             declaredStatuses: [404, 409, 400, 401],
             empty: true,
@@ -884,6 +894,29 @@ export function make(options: ClientOptions) {
             path: `/api/session/${encodeURIComponent(input.sessionID)}/context`,
             successStatus: 200,
             declaredStatuses: [404, 500, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
+      diff: (input: SessionsDiffInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: SessionsDiffOutput }>(
+          {
+            method: "GET",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/diff`,
+            query: { messageID: input["messageID"], context: input["context"] },
+            successStatus: 200,
+            declaredStatuses: [404, 500, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
+      background: (input: SessionsBackgroundInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: SessionsBackgroundOutput }>(
+          {
+            method: "POST",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/background`,
+            successStatus: 200,
+            declaredStatuses: [404, 400, 401],
             empty: false,
           },
           requestOptions,
@@ -1592,6 +1625,20 @@ export function make(options: ClientOptions) {
           requestOptions,
         ),
     },
+    "server.formatter": {
+      status: (input?: ServerFormatterStatusInput, requestOptions?: RequestOptions) =>
+        request<ServerFormatterStatusOutput>(
+          {
+            method: "GET",
+            path: `/api/formatter`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
     skills: {
       list: (input?: SkillsListInput, requestOptions?: RequestOptions) =>
         request<SkillsListOutput>(
@@ -1829,6 +1876,19 @@ export function make(options: ClientOptions) {
             successStatus: 204,
             declaredStatuses: [400, 401],
             empty: true,
+          },
+          requestOptions,
+        ),
+      generateName: (input: ProjectCopiesGenerateNameInput, requestOptions?: RequestOptions) =>
+        request<ProjectCopiesGenerateNameOutput>(
+          {
+            method: "POST",
+            path: `/experimental/project/${encodeURIComponent(input.projectID)}/copy/generate-name`,
+            query: { location: input["location"] },
+            body: { context: input["context"] },
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
           },
           requestOptions,
         ),
@@ -2678,6 +2738,20 @@ export function make(options: ClientOptions) {
             query: { location: input["location"], after: input["after"] },
             successStatus: 200,
             declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    installation: {
+      upgrade: (input: InstallationUpgradeInput, requestOptions?: RequestOptions) =>
+        request<InstallationUpgradeOutput>(
+          {
+            method: "POST",
+            path: `/api/installation/upgrade`,
+            body: { target: input["target"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
             empty: false,
           },
           requestOptions,

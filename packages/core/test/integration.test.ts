@@ -201,6 +201,36 @@ describe("Integration", () => {
     }),
   )
 
+  it.effect("stores key prompt answers as credential metadata", () =>
+    Effect.gen(function* () {
+      const integrations = yield* Integration.Service
+      const credentials = yield* Credential.Service
+      const integrationID = Integration.ID.make("cloudflare-workers-ai")
+      yield* integrations.transform((editor) =>
+        editor.method.update({
+          integrationID,
+          method: {
+            type: "key",
+            label: "API key",
+            prompts: [{ type: "text", key: "accountId", message: "Enter your Cloudflare Account ID" }],
+          },
+        }),
+      )
+
+      expect((yield* integrations.get(integrationID))?.methods).toEqual([
+        expect.objectContaining({ type: "key", prompts: [expect.objectContaining({ key: "accountId" })] }),
+      ])
+
+      yield* integrations.connection.key({ integrationID, key: "secret", metadata: { accountId: "acct-1" } })
+
+      expect(yield* credentials.list(integrationID)).toEqual([
+        expect.objectContaining({
+          value: Credential.Key.make({ type: "key", key: "secret", metadata: { accountId: "acct-1" } }),
+        }),
+      ])
+    }),
+  )
+
   it.effect("disconnect removes every stored credential of one integration and keeps the others", () =>
     Effect.gen(function* () {
       const integrations = yield* Integration.Service
