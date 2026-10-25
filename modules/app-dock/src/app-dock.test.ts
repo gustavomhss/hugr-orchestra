@@ -1,8 +1,8 @@
 import { expect, spyOn, test } from "bun:test"
-import type { Hooks, PluginInput, ToolContext } from "@orchestra/plugin"
+import type { Hooks, ToolContext } from "@orchestra/plugin"
 import { tool } from "@orchestra/plugin"
-import { AppDockPlugin, createAppDockHooks } from "./app-dock"
-import { context, input, fakePort, turn, admission, control, type Envelope } from "./app-dock.fixture"
+import { createAppDockHooks } from "./app-dock"
+import { context, fakePort, turn, admission, control, type Envelope } from "./app-dock.fixture"
 
 // A native timeout tells the model the app may be busy in a dialog (see app-dock.ts hints).
 const busy = expect.stringContaining("may be busy, e.g. showing a dialog an action opened")
@@ -53,18 +53,13 @@ const toolNames = [
   "dock_close",
 ]
 
-test("AppDockPlugin registers no tools without parentPort", async () => {
-    const hooks = await AppDockPlugin(input)
-    expect(hooks.tool ?? {}).toEqual({})
-})
-
-test("AppDockPlugin registers dock_* tools when parentPort present", async () => {
+test("createAppDockHooks registers the dock_* and ui_* tools", async () => {
     const { port } = fakePort()
     const hooks = createAppDockHooks(port) as Required<Hooks>
     expect(Object.keys(hooks.tool).sort()).toEqual([...toolNames].sort())
 })
 
-test("AppDockPlugin executes posts dock.rpc envelope and resolves matching result", async () => {
+test("createAppDockHooks executes posts dock.rpc envelope and resolves matching result", async () => {
     const { port, sent, deliver } = fakePort()
     const hooks = createAppDockHooks(port) as Required<Hooks>
     const promise = hooks.tool.dock_list.execute({}, context)
@@ -78,7 +73,7 @@ test("AppDockPlugin executes posts dock.rpc envelope and resolves matching resul
     expect(await promise).toBe('{\n  "count": 2\n}')
 })
 
-test("AppDockPlugin asks scoped dock permission before sending RPC", async () => {
+test("createAppDockHooks asks scoped dock permission before sending RPC", async () => {
     const { port, sent, deliver } = fakePort()
     const requests: unknown[] = []
     const hooks = createAppDockHooks(port) as Required<Hooks>
@@ -96,7 +91,7 @@ test("AppDockPlugin asks scoped dock permission before sending RPC", async () =>
     expect(await promise).toBe('"ok"')
 })
 
-test("AppDockPlugin ignores results for other request ids", async () => {
+test("createAppDockHooks ignores results for other request ids", async () => {
     const { port, sent, deliver } = fakePort()
     const hooks = createAppDockHooks(port) as Required<Hooks>
     const promise = hooks.tool.dock_list.execute({}, context)
@@ -108,7 +103,7 @@ test("AppDockPlugin ignores results for other request ids", async () => {
     expect(await promise).toBe("2")
 })
 
-test("AppDockPlugin rejects with error message from result", async () => {
+test("createAppDockHooks rejects with error message from result", async () => {
     const { port, sent, deliver } = fakePort()
     const hooks = createAppDockHooks(port) as Required<Hooks>
     const promise = hooks.tool.dock_click.execute({ ref: 7 }, context)
@@ -120,7 +115,7 @@ test("AppDockPlugin rejects with error message from result", async () => {
     expect(await promise).toBe("Element ref 7 is gone")
 })
 
-test("AppDockPlugin passes typed args through envelope", async () => {
+test("createAppDockHooks passes typed args through envelope", async () => {
     const { port, sent, deliver } = fakePort()
     const hooks = createAppDockHooks(port) as Required<Hooks>
     const promise = hooks.tool.dock_read.execute({ budget: 25, maxText: 400 }, context)
@@ -139,7 +134,7 @@ test("AppDockPlugin passes typed args through envelope", async () => {
     expect(await go).toBe('"gone"')
 })
 
-test("AppDockPlugin routes coordinate clicks and scoped closes without destructive defaults", async () => {
+test("createAppDockHooks routes coordinate clicks and scoped closes without destructive defaults", async () => {
     const { port, sent, deliver } = fakePort()
     const hooks = createAppDockHooks(port) as Required<Hooks>
 

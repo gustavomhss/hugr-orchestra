@@ -166,6 +166,7 @@
       "dependencies": {
         "@orchestra/core": "workspace:*",
         "@orchestra/plugin": "workspace:*",
+        "@orchestra/schema": "workspace:*",
         "effect": "catalog:",
       },
       "devDependencies": {
