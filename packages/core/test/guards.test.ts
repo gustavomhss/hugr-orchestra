@@ -422,6 +422,65 @@ describe("runGuards", () => {
     ])
   })
 
+  // Golden: dependency edits with and without their lockfile, and metadata-only edits that need none.
+  test("the dependency pack flags planted edits, and the lockfile rules stand down once the lockfile moves", () => {
+    const cwd = repo()
+    cpSync(guardsDir, join(cwd, "script/guards"), { recursive: true })
+    write(cwd, "pkgs/a/package.json", '{\n  "name": "a",\n  "dependencies": {\n    "x": "1.0.0"\n  }\n}\n')
+    write(cwd, "pkgs/exp/package.json", '{\n  "name": "exp",\n  "exports": {\n    "./a": "./src/a.ts"\n  }\n}\n')
+    write(cwd, "crates/c/Cargo.toml", '[package]\nname = "c"\n\n[dependencies]\n')
+    write(cwd, "bun.lock", "{}\n")
+    commit(cwd, "base")
+    git(cwd, "checkout", "--quiet", "-b", "change")
+    write(
+      cwd,
+      "pkgs/a/package.json",
+      [
+        "{",
+        '  "name": "a",',
+        '  "scripts": {',
+        '    "postinstall": "node setup.js"',
+        "  },",
+        '  "dependencies": {',
+        '    "x": "1.0.0",',
+        '    "y": "github:org/y",',
+        '    "z": "2.0.0"',
+        "  }",
+        "}",
+        "",
+      ].join("\n"),
+    )
+    write(
+      cwd,
+      "pkgs/exp/package.json",
+      '{\n  "name": "exp",\n  "exports": {\n    "./a": "./src/a.ts",\n    "./b": "./src/b.ts"\n  }\n}\n',
+    )
+    write(cwd, "crates/c/Cargo.toml", '[package]\nname = "c"\n\n[dependencies]\nserde = "1.0"\nfoo = { git = "https://github.com/x/y" }\n')
+    write(cwd, ".npmrc", "registry=https://npm.pkg.github.com\n")
+    commit(cwd, "dependencies")
+    const ids = () =>
+      runGuards({ cwd, baseRef: "main", approved: [] })
+        .findings.map((finding) => `${finding.rule} ${finding.path}`)
+        .sort()
+    expect(ids()).toEqual([
+      "cargo-lockfile-stale crates/c/Cargo.toml",
+      "dep-git-source crates/c/Cargo.toml",
+      "dep-git-source pkgs/a/package.json",
+      "dep-lifecycle-script pkgs/a/package.json",
+      "dep-registry-override .npmrc",
+      "lockfile-stale pkgs/a/package.json",
+    ])
+    write(cwd, "bun.lock", '{ "lockfileVersion": 1 }\n')
+    write(cwd, "crates/c/Cargo.lock", "# lock\n")
+    commit(cwd, "lockfiles")
+    expect(ids()).toEqual([
+      "dep-git-source crates/c/Cargo.toml",
+      "dep-git-source pkgs/a/package.json",
+      "dep-lifecycle-script pkgs/a/package.json",
+      "dep-registry-override .npmrc",
+    ])
+  })
+
   // Golden: real git modes, sizes and binary detection, so the file filters (modes, min_bytes, binary, no_shebang) run
   // against what git reports. Clean look-alikes sit beside the defects.
   test("the hygiene pack flags every planted file and nothing in the look-alikes", () => {

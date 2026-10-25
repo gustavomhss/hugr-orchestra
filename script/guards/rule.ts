@@ -23,6 +23,10 @@ export type Rule = {
   noShebang: boolean
   // line-balance only.
   minNetRemoved: number | undefined
+  // changed-paths only. The rule stays quiet when any change touches one of these globs (the lockfile moved with the manifest).
+  requiresChanged: string[]
+  // changed-paths only. The file must have an added or removed line matching this.
+  touches: RegExp | undefined
   match: RegExp | undefined
   message: string
   // added-lines: sample lines. changed-paths: sample paths.
@@ -61,6 +65,10 @@ export function parseRule(file: string, text: string): Rule | string {
   if (minNetRemoved !== undefined && (typeof minNetRemoved !== "number" || !Number.isSafeInteger(minNetRemoved) || minNetRemoved < 1)) {
     return `${file}: min_net_removed must be a positive integer`
   }
+  const requiresChanged = strings(raw.requires_changed ?? [])
+  if (!requiresChanged) return `${file}: requires_changed must be a list of globs`
+  const touches = raw.touches === undefined ? undefined : compile(raw.touches)
+  if (raw.touches !== undefined && !touches) return `${file}: touches is not a valid regular expression`
   const generated = raw.generated ?? "skip"
   if (generated !== "skip" && generated !== "include") return `${file}: generated must be "skip" or "include"`
   const message = raw.message
@@ -75,8 +83,9 @@ export function parseRule(file: string, text: string): Rule | string {
   if (on !== "changed-paths" && !match) return `${file}: an ${on} rule needs a match`
   if (on === "line-balance" && minNetRemoved === undefined) return `${file}: a line-balance rule needs min_net_removed`
   if (on !== "line-balance" && minNetRemoved !== undefined) return `${file}: min_net_removed is for line-balance rules`
-  const fileFilters = modes.length > 0 || minBytes !== undefined || binary !== undefined || noShebang
-  if (on === "added-lines" && fileFilters) return `${file}: modes, min_bytes, binary and no_shebang are for changed-paths rules`
+  const fileFilters =
+    modes.length > 0 || minBytes !== undefined || binary !== undefined || noShebang || requiresChanged.length > 0 || touches !== undefined
+  if (on === "added-lines" && fileFilters) return `${file}: modes, min_bytes, binary, no_shebang, requires_changed and touches are for changed-paths rules`
   if (on === "changed-paths" && match) return `${file}: a changed-paths rule matches by paths, not by match`
   return {
     id,
@@ -91,6 +100,8 @@ export function parseRule(file: string, text: string): Rule | string {
     binary,
     noShebang,
     minNetRemoved,
+    requiresChanged,
+    touches,
     match,
     message,
     positive,

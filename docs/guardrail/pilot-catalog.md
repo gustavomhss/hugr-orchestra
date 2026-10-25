@@ -228,3 +228,7 @@ dep-wildcard-version, dep-new-added, dep-registry-override, migration-not-null-n
 1. Engine + Z1 (port godfile), C14, T1, T2, S1, S2, H1 as the first slice.
 2. Run in warn mode for one week on `dev` to measure noise. Any rule that fires on legit code is retuned or demoted before it becomes a gate.
 3. Fill the remaining packs, one pack per PR, each rule with fixtures through `bun run test:ci`.
+
+### Dependency pack (implemented)
+
+dep-git-source, dep-lifecycle-script, dep-registry-override, lockfile-stale, cargo-lockfile-stale. Baseline: one real `github:` dependency (packages/app-shell) and two existing postinstall scripts. History over 300 commits: lockfile-stale found 2 real hits. Deferred: dep-new-added (needs to tell a new dependency from a bump).

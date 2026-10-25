@@ -31,6 +31,7 @@ export function evaluate(input: { rules: Rule[]; config: Config; diff: Diff; app
 
 function pathFindings(rule: Rule, input: Parameters<typeof evaluate>[0]): Finding[] {
   if (input.approved.includes(rule.id)) return []
+  if (input.diff.changes.some((change) => globs(rule.requiresChanged, change.path))) return []
   return input.diff.changes
     .filter((change) => rule.statuses.length === 0 || rule.statuses.includes(change.status))
     .filter((change) => inScope(rule, change.path) || (change.from !== undefined && inScope(rule, change.from)))
@@ -38,6 +39,7 @@ function pathFindings(rule: Rule, input: Parameters<typeof evaluate>[0]): Findin
     .filter((change) => rule.minBytes === undefined || (change.size ?? 0) >= rule.minBytes)
     .filter((change) => rule.binary === undefined || (change.binary ?? false) === rule.binary)
     .filter((change) => !rule.noShebang || !(change.shebang ?? false))
+    .filter((change) => !rule.touches || [...change.added.map((added) => added.text), ...(change.removedLines ?? [])].some((text) => rule.touches?.test(text)))
     .map((change) => ({
       rule: rule.id,
       severity: rule.severity,

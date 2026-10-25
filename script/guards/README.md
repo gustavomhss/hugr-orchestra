@@ -10,6 +10,7 @@ Small declarative CI rules over the lines and paths a change adds. Run with `bun
 - `GUARDRAIL_APPROVED=protected-paths` clears a changed-paths rule; CI sets it from an approver's label.
 - A `changed-paths` rule can also filter on what git reports about the file: `modes` (100755, 120000, 160000), `min_bytes`, `binary` and `no_shebang`. Its samples are paths and check the path scope only; the golden test in `packages/core/test/guards.test.ts` covers the file filters.
 - A `line-balance` rule fires on one file when lines matching `match` removed minus added reaches `min_net_removed`; removed lines that reappear elsewhere in the change (moved) and deleted files do not count. It is how assertion and test-case removal is caught.
+- A `changed-paths` rule can also require a companion change: `requires_changed` lists globs (a lockfile) and the rule stands down when any of them changed; `touches` is a regex the added or removed lines of the path must match (a dependency edit, not any edit).
 - Size limits stay in `script/godfile.ts`; this directory does not reimplement them.
 
 Known gap: the runner script itself comes from the change under test. CI must run the engine from the base checkout for the base-branch rule to be fully tamper-proof; until that is wired, `protected-paths` (which covers `script/guards/**`) is what flags edits to the engine.

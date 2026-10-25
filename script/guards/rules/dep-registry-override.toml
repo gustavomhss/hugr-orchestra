@@ -1,0 +1,10 @@
+id = "dep-registry-override"
+severity = "gate"
+on = "added-lines"
+paths = ["**/.npmrc", "**/bunfig.toml", "**/requirements*.txt", "**/pip.conf", "**/pyproject.toml", "**/uv.toml", "**/.cargo/config.toml", "**/.cargo/config"]
+exclude = ["**/node_modules/**"]
+# A different registry or index can serve a different package under the same name (dependency confusion).
+match = '^\s*(@[\w.-]+:)?registry\s*=\s*"?(?!https://registry\.npmjs\.org/?"?\s*$)\S|^\s*--?(extra-)?index-url\b|^\s*(extra-)?index-url\s*=|\bextra-index-url\b|^\s*replace-with\s*=|^\s*\[source\.'
+message = "Package registry or index overridden. Packages with the same name can then come from another source; keep the default registry."
+positive = ['registry=https://npm.pkg.github.com', '@org:registry=https://example.com/npm/', '--extra-index-url https://example.com/simple', 'extra-index-url = https://example.com/simple', 'replace-with = "mirror"', '[source.crates-io]']
+negative = ['registry=https://registry.npmjs.org/', 'requests==2.31.0', '# registry docs live elsewhere', 'exact = true']
