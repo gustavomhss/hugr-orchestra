@@ -37,7 +37,15 @@ type TimelinePayload = Extract<
   }
 >
 
-const nativeTypes = ["session.step.started", "session.step.ended", "session.retry.scheduled", "session.text.delta"] as const
+const nativeTypes = [
+  "session.step.started",
+  "session.step.ended",
+  "session.retry.scheduled",
+  "session.text.delta",
+  "session.text.ended",
+  "session.tool.called",
+  "session.tool.success",
+] as const
 type NativePayload = { id: string; type: (typeof nativeTypes)[number]; properties: Record<string, unknown> }
 
 type DeepReadonly<Value> = Value extends readonly unknown[]
@@ -354,6 +362,31 @@ export function partUpdated(part: Part | PartSeed<"assistant">) {
 // V2 text deltas address the assistant message and the text ordinal, not a part ID.
 export function partDelta(_partID: string, delta: string, messageID = assistantID) {
   return nativeEvent("session.text.delta", { sessionID, assistantMessageID: messageID, ordinal: 0, delta })
+}
+
+// The V2 server never sends part snapshots: tool and text progress arrives as native events that rebuild the message.
+export function toolCalled(callID: string, input: Record<string, unknown>, messageID = assistantID) {
+  return nativeEvent("session.tool.called", { sessionID, assistantMessageID: messageID, callID, input, executed: false })
+}
+
+export function toolSucceeded(
+  callID: string,
+  output: string,
+  metadata: Record<string, unknown> = {},
+  messageID = assistantID,
+) {
+  return nativeEvent("session.tool.success", {
+    sessionID,
+    assistantMessageID: messageID,
+    callID,
+    executed: false,
+    metadata,
+    content: [{ type: "text", text: output }],
+  })
+}
+
+export function textEnded(text: string, ordinal = 0, messageID = assistantID) {
+  return nativeEvent("session.text.ended", { sessionID, assistantMessageID: messageID, ordinal, text })
 }
 
 export function messageUpdated(info: Message) {

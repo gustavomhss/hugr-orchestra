@@ -8,8 +8,11 @@ import {
   sessionID,
   setupTimeline,
   status,
+  textEnded,
   textPart,
+  toolCalled,
   toolPart,
+  toolSucceeded,
   userMessage,
 } from "../performance/timeline-stability/fixture"
 
@@ -72,15 +75,14 @@ test("reveals a pending checklist only after successful confirmation", async ({ 
   const snapshot = page.locator('[data-timeline-part-id="prt_todo_live"]')
   await expect(page.getByText("Still working", { exact: true })).toBeVisible()
   await expect(snapshot).toHaveCount(0)
-  await timeline.send(partUpdated(toolPart("prt_todo_live", "todowrite", "running", proposed)))
-  await timeline.send(partUpdated(textPart("prt_following", "Running checklist call")))
+  await timeline.send(toolCalled("prt_todo_live", proposed))
+  await timeline.send(textEnded("Running checklist call"))
   await expect(page.getByText("Running checklist call", { exact: true })).toBeVisible()
   await expect(snapshot).toHaveCount(0)
   await timeline.send(
-    partUpdated(
-      toolPart("prt_todo_live", "todowrite", "completed", proposed, {
-        output: JSON.stringify({ todos: [{ content: "Confirmed step", status: "completed", priority: "high" }] }),
-      }),
+    toolSucceeded(
+      "prt_todo_live",
+      JSON.stringify({ todos: [{ content: "Confirmed step", status: "completed", priority: "high" }] }),
     ),
   )
   await expect(snapshot).toContainText("Confirmed step")
