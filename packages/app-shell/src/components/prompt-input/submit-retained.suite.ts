@@ -6,7 +6,7 @@ import { Worktree } from "@/utils/worktree"
 import { clearPending, pendingPolicy, pendingSnapshot, togglePending } from "../draft-subagent-models"
 import { draftSessionKey } from "./draft-session"
 import {
-  commands, createPromptSubmit, holdSendAfterClear, createdSessions, enabledAutoAccept, optimistic, optimisticRemovals,
+  commands, createPromptSubmit, createdSessions, enabledAutoAccept, optimistic, optimisticRemovals,
   policyWrites, promoted, promotedDrafts, promptInputs, removedSessions, sentCommands, sentShell, state, storedSessions,
   submitInput, policyFixture, sdkFor,
 } from "./submit-harness"
