@@ -1,9 +1,5 @@
 # tr Glossary
 
-## Sources
-
-- PR #15835: https://github.com/anomalyco/opencode/pull/15835
-
 ## Do Not Translate (Locale Additions)
 
 - `Orchestra` (preserve casing in prose, docs, and UI copy)

@@ -43,10 +43,6 @@ export const keptPaths: Kept[] = [
     reason: "recovery and handoff records that cite the real paths of past sessions",
   },
   {
-    path: /^patches\/install-korean-ime-fix\.sh$/,
-    reason: "third-party installer script that builds upstream opencode from a community fork",
-  },
-  {
     path: /^packages\/codemode\/test\/fixtures\/opencode-v2-openapi\.json$/,
     reason: "frozen upstream OpenAPI fixture",
   },
@@ -75,7 +71,7 @@ export const protectedStrings: Protected[] = [
     pattern: /(?:[A-Za-z0-9-]+\.)*opencode\\?\.(?:ai|cafe)\b/g,
     reason: "upstream-hosted domain; renaming would point at an unrelated domain",
   },
-  { pattern: /\b(?:anomalyco|sst|claudianus)(?:\/|\\+)opencode\b/g, reason: "upstream repository" },
+  { pattern: /\b(?:sst|claudianus)(?:\/|\\+)opencode\b/g, reason: "upstream repository" },
   { pattern: /\bupstream (?:opencode|OpenCode)\b/g, reason: "sentence about the upstream project" },
   { pattern: /\bOpenCode's historical\b/g, reason: "sentence about upstream history" },
   { pattern: /\bopencode 2\.0\b/g, reason: "sentence about an upstream release" },

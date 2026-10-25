@@ -20,7 +20,7 @@ Verified with `gh repo view <owner/name> --json nameWithOwner,...` on 2026-10-01
 |---|---|---|---|---|
 | google-gemini/gemini-cli | google-gemini/gemini-cli | TS | core | unchanged |
 | cline/cline | cline/cline | TS | core | unchanged |
-| sst/opencode | **anomalyco/opencode** | TS | core | renamed |
+| sst/opencode | sst/opencode | TS | core | unchanged |
 | continuedev/continue | continuedev/continue | TS | core | unchanged |
 | Aider-AI/aider | Aider-AI/aider | Python | core | unchanged |
 | All-Hands-AI/OpenHands | **OpenHands/OpenHands** | Python | core | renamed |
@@ -46,7 +46,7 @@ Each cell is `open/closed` counted issues whose **primary** category is that col
 |---|---|---|---|---|---|---|---|---|---|
 | google-gemini/gemini-cli | TS | 4/19 | 1/9 | 1/57 | 0/46 | 1/29 | 2/24 | 2/27 | **222** (11/211) |
 | cline/cline | TS | 7/2 | 0/1 | 1/2 | 6/21 | 12/37 | 5/21 | 0/0 | **115** (31/84) |
-| anomalyco/opencode | TS | 21/50 | 6/13 | 15/41 | 22/33 | 13/27 | 15/30 | 2/4 | **292** (94/198) |
+| sst/opencode | TS | 21/50 | 6/13 | 15/41 | 22/33 | 13/27 | 15/30 | 2/4 | **292** (94/198) |
 | continuedev/continue | TS | 0/3 | 1/0 | 0/0 | 1/19 | 1/3 | 1/0 | 0/1 | **30** (4/26) |
 | Aider-AI/aider | PY | 0/0 | 1/0 | 3/17 | 0/8 | 1/1 | 0/1 | 2/0 | **34** (7/27) |
 | OpenHands/OpenHands | PY | 1/7 | 1/2 | 0/5 | 2/4 | 1/1 | 0/20 | 0/2 | **46** (5/41) |
@@ -76,7 +76,7 @@ Repos with at least one counted issue per category (out of the repos in that eco
 | Python | 1/4 | 3/4 | 3/4 | 4/4 | 3/4 | 4/4 | 3/4 |
 | Rust | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 |
 
-Largest trackers by counted issues: openai/codex 786 (49%); anomalyco/opencode 292 (18%); google-gemini/gemini-cli 222 (14%).
+Largest trackers by counted issues: openai/codex 786 (49%); sst/opencode 292 (18%); google-gemini/gemini-cli 222 (14%).
 
 Counted issues by creation year:
 
@@ -100,7 +100,7 @@ Definition (deterministic, applied to title + body of each counted issue): the i
 |---|---|---|
 | google-gemini/gemini-cli | 96 / 222 | 43% |
 | cline/cline | 65 / 115 | 57% |
-| anomalyco/opencode | 160 / 292 | 55% |
+| sst/opencode | 160 / 292 | 55% |
 | continuedev/continue | 22 / 30 | 73% |
 | Aider-AI/aider | 22 / 34 | 65% |
 | OpenHands/OpenHands | 9 / 46 | 20% |
@@ -133,9 +133,9 @@ Selection rule (deterministic): among counted issues, take the one with the high
 | 4 | [openai/codex#40752](https://github.com/openai/codex/issues/40752) | C4 | open | 87 | Windows 11 x64 | Windows desktop app fails to start after update: bundled binary not found, then `spawn EINVAL` when CODEX_CLI_PATH points at the npm `codex.cmd` shim. |
 | 5 | [cline/cline#3445](https://github.com/cline/cline/issues/3445) | C5 | closed | 103 | macOS client to Ubuntu 24.04 remote | Terminal output capture fails after upgrade (shell integration over a remote SSH host); commands run but output is not seen. |
 | 6 | [cline/cline#1404](https://github.com/cline/cline/issues/1404) | C6 | closed | 31 | macOS 15.3 | Cline hangs after command execution; first command runs, second hangs every time, only workaround is closing the terminal. |
-| 7 | [anomalyco/opencode#2242](https://github.com/anomalyco/opencode/issues/2242) | C7 | open | 94 | macOS referenced (seatbelt); OS not stated | Asks how to confine terminal commands of the agent to the project directory; notes Gemini CLI and Codex use macOS seatbelt and orchestra has no equivalent. |
+| 7 | [sst/opencode#2242](https://github.com/sst/opencode/issues/2242) | C7 | open | 94 | macOS referenced (seatbelt); OS not stated | Asks how to confine terminal commands of the agent to the project directory; notes Gemini CLI and Codex use macOS seatbelt and orchestra has no equivalent. |
 | 8 | [microsoft/autogen#7462](https://github.com/microsoft/autogen/issues/7462) | C7 | open | 19 | OS not stated | LocalCommandLineCodeExecutor runs LLM-generated code as a host subprocess with no sandboxing, filesystem isolation or network restriction. |
-| 9 | [anomalyco/opencode#2447](https://github.com/anomalyco/opencode/issues/2447) | C4 | closed | 17 | Windows (PowerShell, Git Bash) | npm-installed `orchestra` fails on Windows: the generated .ps1 wrapper calls `/bin/sh.exe`, and Git Bash cannot execute the Unix shell script. |
+| 9 | [sst/opencode#2447](https://github.com/sst/opencode/issues/2447) | C4 | closed | 17 | Windows (PowerShell, Git Bash) | npm-installed `orchestra` fails on Windows: the generated .ps1 wrapper calls `/bin/sh.exe`, and Git Bash cannot execute the Unix shell script. |
 | 10 | [OpenHands/OpenHands#6218](https://github.com/OpenHands/OpenHands/issues/6218) | C6 | closed | 16 | macOS | Commands in the OpenHands terminal are executed with long delay and hit the 120 s timeout, then the agent loops. |
 
 ## 6. Pipeline: from raw hits to counted
@@ -146,7 +146,7 @@ Stage 0 = unique issues returned by the 65 queries per repo (dedup by repo+numbe
 |---|---|---|---|---|---|---|---|---|---|---|
 | google-gemini/gemini-cli | 1750 | 1116 | 243 | 499 | 374 | 742 | 222 | 59 | 77 | 384 |
 | cline/cline | 756 | 370 | 86 | 205 | 79 | 291 | 115 | 20 | 10 | 146 |
-| anomalyco/opencode | 2291 | 1561 | 387 | 840 | 334 | 1227 | 292 | 54 | 38 | 843 |
+| sst/opencode | 2291 | 1561 | 387 | 840 | 334 | 1227 | 292 | 54 | 38 | 843 |
 | continuedev/continue | 522 | 223 | 18 | 125 | 80 | 165 | 30 | 5 | 0 | 130 |
 | Aider-AI/aider | 427 | 147 | 14 | 78 | 55 | 92 | 34 | 3 | 1 | 54 |
 | OpenHands/OpenHands | 788 | 357 | 22 | 188 | 147 | 210 | 46 | 3 | 5 | 156 |
@@ -158,7 +158,7 @@ Stage 0 = unique issues returned by the 65 queries per repo (dedup by repo+numbe
 
 Stage 1 dropped 4148 raw hits without reading them (no execution-context term in the cleaned title/body, or none of the returning query's words found there after prefix-stemming).
 
-Tier-3 audit: 70 Tier-3 issues drawn at random (seed 20261001) across the 10 repos were read; **5 clearly** (cline/cline#1064 C6, google-gemini/gemini-cli#27751 C4, openai/codex#17770 C1, anomalyco/opencode#28697 C6, google-gemini/gemini-cli#24796 C1) and 2 borderline (continuedev/continue#5542, Aider-AI/aider#3489) would have been counted, i.e. 7% to 10% of Tier 3. Extrapolated to the 1,533 unread Tier-3 issues that is roughly 100 to 150 counted-type issues missing (about 6 to 9% on top of 1592). Gemini-cli had a separate audit of 40: 3 possibly relevant, none countable without further reading.
+Tier-3 audit: 70 Tier-3 issues drawn at random (seed 20261001) across the 10 repos were read; **5 clearly** (cline/cline#1064 C6, google-gemini/gemini-cli#27751 C4, openai/codex#17770 C1, sst/opencode#28697 C6, google-gemini/gemini-cli#24796 C1) and 2 borderline (continuedev/continue#5542, Aider-AI/aider#3489) would have been counted, i.e. 7% to 10% of Tier 3. Extrapolated to the 1,533 unread Tier-3 issues that is roughly 100 to 150 counted-type issues missing (about 6 to 9% on top of 1592). Gemini-cli had a separate audit of 40: 3 possibly relevant, none countable without further reading.
 
 ## 7. Sensitivity: duplicate clusters and query caps
 
@@ -187,7 +187,7 @@ Query cap (`--limit 100`): queries that returned exactly 100 results (so results
 |---|---|
 | google-gemini/gemini-cli | 20 / 65 |
 | cline/cline | 7 / 65 |
-| anomalyco/opencode | 27 / 65 |
+| sst/opencode | 27 / 65 |
 | continuedev/continue | 4 / 65 |
 | Aider-AI/aider | 1 / 65 |
 | OpenHands/OpenHands | 8 / 65 |
@@ -334,7 +334,7 @@ Issue numbers (open and closed) per repo and primary category; open issues are w
 - C5 (49): 299, 458, 611, 791, 1100, 1325, 1371, 1974, 2271, 3136, 3445, 3565, 3804, 3905, 4002, 4177, 4311, 4356o, 4638, 5176, 5990, 6603, 6708, 7043, 7110, 7898, 7906, 7985, 9859, 10066, 10122, 10235, 10378, 10537o, 10633, 11022o, 11295o, 11350, 11878, 12079o, 12198o, 12293o, 12389o, 12723, 12864o, 13272, 13346o, 13365o, 14126o
 - C6 (26): 531, 644, 756, 1146, 1404, 2517, 3187, 4737, 5771, 6518, 7080, 7097, 7355o, 7853, 8109, 8154, 10063, 10446, 10549o, 10931, 11622o, 11669o, 12417, 13246o, 13284, 13285
 
-### anomalyco/opencode (292)
+### sst/opencode (292)
 
 - C1 (71): 1195, 5819, 6633, 7261, 10563, 11225, 11527, 11959, 12240, 12596, 12767, 13777, 14091, 14199, 14237, 14504, 15037, 15348, 15349, 15808, 17068, 17287, 18334, 18632, 19225, 20077, 20899, 21628, 25883, 26336, 26714, 29506, 29939, 30073, 30123, 30868, 30876, 31554o, 32335, 35089, 36558, 36840, 37521, 37844o, 37908, 38244, 39292, 40439o, 41066o, 41806o, 42270o, 42291, 42989o, 43084, 43845o, 46035o, 46174o, 46253o, 47727o, 50361o, 50363o, 50633o, 50699o, 50758o, 50780o, 51003o, 51731, 52020, 52203o, 52251, 52410o
 - C2 (19): 3057, 9859, 20097, 24248, 24501, 24658, 28654, 33071, 33364, 37007o, 38291, 38564, 40829o, 41878o, 42162o, 45938o, 48838o, 51744, 52202

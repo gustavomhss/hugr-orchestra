@@ -144,14 +144,14 @@ Required integration cases beyond current fixtures: direct selection without Mae
 
 ## Primary upstream sources
 
-- Tag identity: https://api.github.com/repos/anomalyco/opencode/git/ref/tags/v1.18.27
+- Tag identity: https://api.github.com/repos/sst/opencode/git/ref/tags/v1.18.27
 - Published package metadata: https://registry.npmjs.org/orchestra-ai/1.18.27
-- [U1 — stock public plugin Hooks](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/plugin/src/index.ts)
-- [U2 — stock ToolContext](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/plugin/src/tool.ts)
-- [U3 — stock Agent/config/name lookup](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/agent/agent.ts)
-- [U4 — stock V1 plugin loader](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/plugin/index.ts)
-- [U5 — stock request preparation and hook ordering](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/session/llm/request.ts)
-- [U6 — stock prompt execution/title/message admission](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/session/prompt.ts); [compaction](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/session/compaction.ts)
-- [U7 — stock Session lifecycle](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/session/session.ts); [HTTP get/update contract](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/server/routes/instance/httpapi/groups/session.ts)
-- [U8 — SDK exports](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/sdk/js/package.json); [root legacy types](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/sdk/js/src/gen/types.gen.ts); [SDK/v2 types](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/sdk/js/src/v2/gen/types.gen.ts)
-- [U9 — stock skill discovery/permissions](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/skill/index.ts)
+- [U1 — stock public plugin Hooks](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/plugin/src/index.ts)
+- [U2 — stock ToolContext](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/plugin/src/tool.ts)
+- [U3 — stock Agent/config/name lookup](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/agent/agent.ts)
+- [U4 — stock V1 plugin loader](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/plugin/index.ts)
+- [U5 — stock request preparation and hook ordering](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/session/llm/request.ts)
+- [U6 — stock prompt execution/title/message admission](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/session/prompt.ts); [compaction](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/session/compaction.ts)
+- [U7 — stock Session lifecycle](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/session/session.ts); [HTTP get/update contract](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/server/routes/instance/httpapi/groups/session.ts)
+- [U8 — SDK exports](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/sdk/js/package.json); [root legacy types](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/sdk/js/src/gen/types.gen.ts); [SDK/v2 types](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/sdk/js/src/v2/gen/types.gen.ts)
+- [U9 — stock skill discovery/permissions](https://github.com/sst/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/skill/index.ts)
