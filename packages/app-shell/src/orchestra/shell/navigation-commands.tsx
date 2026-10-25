@@ -180,7 +180,7 @@ export function ShellNavigationCommands() {
     const directory = target().directory
     const sdk = conn && global.ensureServerCtx(conn).sdk
     // Same condition as the session page: only servers that can restore can list archived sessions.
-    const routed = !!sdk && (!!sdk.protocolKind() || sdk.sessionManagement.hasArchiveRoutes())
+    const routed = !!sdk && (!!sdk.isReady() || sdk.sessionManagement.hasArchiveRoutes())
     return [
       {
         id: "session.archived",

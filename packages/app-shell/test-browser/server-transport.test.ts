@@ -160,7 +160,7 @@ test("fetch fence blocks disposed owners despite live caller signals over real H
     state.sdk.api.session.prompt({ sessionID: "ses_probe", text }, { signal })
   const caller = new AbortController()
   try {
-    expect(await state.sdk.protocol).toBe("v2")
+    expect(await state.sdk.ready).toBeUndefined()
     await send(caller.signal)
     expect(requests.map((request) => request.path)).toEqual(["/api/session/ses_probe/prompt"])
     const pending = send(caller.signal, "synthetic-hold").then(

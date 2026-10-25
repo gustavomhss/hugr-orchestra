@@ -201,28 +201,6 @@ export function applyDirectoryEvent(input: {
       input.setStore("sessionTotal", (value) => Math.max(0, value - 1))
       break
     }
-    case "session.renamed": {
-      const properties = event.properties as { sessionID: string; title: string }
-      const result = Binary.search(input.store.session, properties.sessionID, (session) => session.id)
-      if (!result.found) break
-      input.setStore("session", result.index, (session) => ({
-        ...session,
-        title: properties.title,
-        time: { ...session.time, updated: Date.now() },
-      }))
-      break
-    }
-    case "session.usage.updated": {
-      const properties = event.properties as Pick<Session, "cost" | "tokens"> & { sessionID: string }
-      const result = Binary.search(input.store.session, properties.sessionID, (session) => session.id)
-      if (!result.found) break
-      input.setStore("session", result.index, (session) => ({
-        ...session,
-        cost: properties.cost,
-        tokens: properties.tokens,
-      }))
-      break
-    }
     case "session.next.subagent.models.changed":
     case "session.next.archive.changed": {
       const decoded = decodeSessionManagementEvent(event)

@@ -50,7 +50,7 @@ export const DialogSubagentModels: Component<{ sessionID?: string; directory: st
     ({ source, sessionID }) => {
       if (!owns()) return { source, error: new DOMException("", "AbortError") }
       setState("unsupported", false)
-      return source.protocol
+      return source.ready
         .then(async () => {
           if (!owns()) throw new DOMException("", "AbortError")
           if (sessionID) await policy!.load()

@@ -1,5 +1,7 @@
-// The event union the app-shell speaks internally (`ServerCurrentEvent`), captured verbatim from the bundled client's
-// generated types: the session event vocabulary plus the transitive closure of the types it names.
+// The event union the app-shell speaks internally (`ServerCurrentEvent`): the session event vocabulary plus the
+// transitive closure of the types it names. It holds only what the V2 server publishes (`EventManifest.ServerDefinitions`)
+// or what the app derives from it: `server-event-native.ts` translates `session.next.*`, and `adaptServerEvent` maps
+// `permission.v2.*` and `question.v2.*` onto `permission.*` and `question.*`.
 //
 // It is NOT the local `Event` union in `@/v2-wire`: that one carries the server's `session.next.*` vocabulary and
 // the `properties` payload, while this union carries the tags (`session.text.delta`, `session.tool.success`, ...)
@@ -117,22 +119,6 @@ type SessionMessageProviderState6 = {
 type SessionMessageProviderState7 = {
     [x: string]: any;
 };
-
-type FormOption = {
-    value: string;
-    label: string;
-    description?: string;
-};
-
-type FormExternalField = {
-    key: string;
-    type: "external";
-    url: string;
-    title?: string;
-    description?: string;
-};
-
-type FormValue = string | number | boolean | Array<string>;
 
 type PermissionV2Source = {
     type: "tool";
@@ -415,35 +401,6 @@ type QuestionV2Tool = {
 
 type QuestionV2Answer = Array<string>;
 
-type FormMetadata1 = {
-    [x: string]: any;
-};
-
-type FormWhen1 = {
-    key: string;
-    op: "eq" | "neq";
-    value: string | number | boolean;
-};
-
-type SessionStatus = {
-    type: "idle";
-} | {
-    type: "retry";
-    attempt: number;
-    message: string;
-    action?: {
-        reason: string;
-        provider: string;
-        title: string;
-        message: string;
-        label: string;
-        link?: string;
-    };
-    next: number;
-} | {
-    type: "busy";
-};
-
 type QuestionOption = {
     label: string;
     description: string;
@@ -515,64 +472,6 @@ type SessionMoved = {
     };
 };
 
-type SessionRenamed = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "session.renamed";
-    durable: {
-        aggregateID: string;
-        seq: number;
-        version: 1;
-    };
-    location?: LocationRef;
-    data: {
-        sessionID: string;
-        title: string;
-    };
-};
-
-type SessionDeleted = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "session.deleted";
-    durable: {
-        aggregateID: string;
-        seq: number;
-        version: 2;
-    };
-    location?: LocationRef;
-    data: {
-        sessionID: string;
-    };
-};
-
-type SessionForked = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "session.forked";
-    durable: {
-        aggregateID: string;
-        seq: number;
-        version: 2;
-    };
-    location?: LocationRef;
-    data: {
-        sessionID: string;
-        parentID: string;
-        parentSeq: number;
-        from?: string;
-    };
-};
-
 type SessionInputPromoted = {
     id: string;
     created: number;
@@ -589,82 +488,6 @@ type SessionInputPromoted = {
     data: {
         sessionID: string;
         inputID: string;
-    };
-};
-
-type SessionExecutionStarted = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "session.execution.started";
-    durable: {
-        aggregateID: string;
-        seq: number;
-        version: 1;
-    };
-    location?: LocationRef;
-    data: {
-        sessionID: string;
-    };
-};
-
-type SessionExecutionSucceeded = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "session.execution.succeeded";
-    durable: {
-        aggregateID: string;
-        seq: number;
-        version: 1;
-    };
-    location?: LocationRef;
-    data: {
-        sessionID: string;
-    };
-};
-
-type SessionExecutionInterrupted = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "session.execution.interrupted";
-    durable: {
-        aggregateID: string;
-        seq: number;
-        version: 1;
-    };
-    location?: LocationRef;
-    data: {
-        sessionID: string;
-        reason: "user" | "shutdown" | "superseded";
-    };
-};
-
-type SessionInstructionsUpdated = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "session.instructions.updated";
-    durable: {
-        aggregateID: string;
-        seq: number;
-        version: 2;
-    };
-    location?: LocationRef;
-    data: {
-        sessionID: string;
-        delta: {
-            [x: string]: string | "removed";
-        };
     };
 };
 
@@ -688,27 +511,6 @@ type SessionSynthetic = {
         metadata?: {
             [x: string]: any;
         };
-    };
-};
-
-type SessionSkillActivated = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "session.skill.activated";
-    durable: {
-        aggregateID: string;
-        seq: number;
-        version: 1;
-    };
-    location?: LocationRef;
-    data: {
-        sessionID: string;
-        id: string;
-        name: string;
-        text: string;
     };
 };
 
@@ -841,25 +643,6 @@ type SessionToolInputEnded = {
     };
 };
 
-type SessionCompactionAdmitted = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "session.compaction.admitted";
-    durable: {
-        aggregateID: string;
-        seq: number;
-        version: 1;
-    };
-    location?: LocationRef;
-    data: {
-        sessionID: string;
-        inputID: string;
-    };
-};
-
 type SessionCompactionStarted = {
     id: string;
     created: number;
@@ -985,17 +768,6 @@ type CatalogUpdated = {
     data: {};
 };
 
-type AgentUpdated = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "agent.updated";
-    location?: LocationRef;
-    data: {};
-};
-
 type MessageRemoved = {
     id: string;
     created: number;
@@ -1032,21 +804,6 @@ type MessagePartRemoved = {
         sessionID: string;
         messageID: string;
         partID: string;
-    };
-};
-
-type SessionUsageUpdated = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "session.usage.updated";
-    location?: LocationRef;
-    data: {
-        sessionID: string;
-        cost: MoneyUSD;
-        tokens: TokenUsageInfo;
     };
 };
 
@@ -1130,20 +887,6 @@ type SessionCompactionDelta = {
     };
 };
 
-type FilesystemChanged = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "filesystem.changed";
-    location?: LocationRef;
-    data: {
-        file: string;
-        event: "add" | "change" | "unlink";
-    };
-};
-
 type ReferenceUpdated = {
     id: string;
     created: number;
@@ -1168,17 +911,6 @@ type PluginAdded = {
     };
 };
 
-type PluginUpdated = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "plugin.updated";
-    location?: LocationRef;
-    data: {};
-};
-
 type ProjectDirectoriesUpdated = {
     id: string;
     created: number;
@@ -1190,39 +922,6 @@ type ProjectDirectoriesUpdated = {
     data: {
         projectID: string;
     };
-};
-
-type CommandUpdated = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "command.updated";
-    location?: LocationRef;
-    data: {};
-};
-
-type ConfigUpdated = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "config.updated";
-    location?: LocationRef;
-    data: {};
-};
-
-type SkillUpdated = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "skill.updated";
-    location?: LocationRef;
-    data: {};
 };
 
 type PtyExited = {
@@ -1252,34 +951,6 @@ type PtyDeleted = {
     };
 };
 
-type ShellExited = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "shell.exited";
-    location?: LocationRef;
-    data: {
-        id: string;
-        exit?: number;
-        status: "running" | "exited" | "timeout" | "killed";
-    };
-};
-
-type ShellDeleted = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "shell.deleted";
-    location?: LocationRef;
-    data: {
-        id: string;
-    };
-};
-
 type QuestionV2Rejected = {
     id: string;
     created: number;
@@ -1294,114 +965,6 @@ type QuestionV2Rejected = {
     };
 };
 
-type FormCancelled = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "form.cancelled";
-    location?: LocationRef;
-    data: {
-        id: string;
-        sessionID: string;
-    };
-};
-
-type SessionIdle = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "session.idle";
-    location?: LocationRef;
-    data: {
-        sessionID: string;
-    };
-};
-
-type TuiPromptAppend = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "tui.prompt.append";
-    location?: LocationRef;
-    data: {
-        text: string;
-    };
-};
-
-type TuiCommandExecute = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "tui.command.execute";
-    location?: LocationRef;
-    data: {
-        command: "session.list" | "session.new" | "session.share" | "session.interrupt" | "session.background" | "session.compact" | "session.page.up" | "session.page.down" | "session.line.up" | "session.line.down" | "session.half.page.up" | "session.half.page.down" | "session.first" | "session.last" | "prompt.clear" | "prompt.submit" | "agent.cycle" | (string & {});
-    };
-};
-
-type TuiToastShow = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "tui.toast.show";
-    location?: LocationRef;
-    data: {
-        title?: string;
-        message: string;
-        variant: "info" | "success" | "warning" | "error";
-        duration?: number | undefined;
-    };
-};
-
-type TuiSessionSelect = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "tui.session.select";
-    location?: LocationRef;
-    data: {
-        sessionID: string;
-    };
-};
-
-type InstallationUpdated = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "installation.updated";
-    location?: LocationRef;
-    data: {
-        version: string;
-    };
-};
-
-type InstallationUpdateAvailable = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "installation.update-available";
-    location?: LocationRef;
-    data: {
-        version: string;
-    };
-};
-
 type VcsBranchUpdated = {
     id: string;
     created: number;
@@ -1412,32 +975,6 @@ type VcsBranchUpdated = {
     location?: LocationRef;
     data: {
         branch?: string;
-    };
-};
-
-type McpStatusChanged = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "mcp.status.changed";
-    location?: LocationRef;
-    data: {
-        server: string;
-    };
-};
-
-type McpResourcesChanged = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "mcp.resources.changed";
-    location?: LocationRef;
-    data: {
-        server: string;
     };
 };
 
@@ -1527,25 +1064,6 @@ type PromptAgentAttachment = {
 
 type LLMToolContent = ToolTextContent | ToolFileContent;
 
-type SessionExecutionFailed = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "session.execution.failed";
-    durable: {
-        aggregateID: string;
-        seq: number;
-        version: 1;
-    };
-    location?: LocationRef;
-    data: {
-        sessionID: string;
-        error: SessionStructuredError;
-    };
-};
-
 type SessionStepFailed = {
     id: string;
     created: number;
@@ -1589,27 +1107,6 @@ type SessionRetryScheduled = {
         attempt: number;
         at: number;
         error: SessionStructuredError;
-    };
-};
-
-type SessionCompactionFailed = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "session.compaction.failed";
-    durable: {
-        aggregateID: string;
-        seq: number;
-        version: 1;
-    };
-    location?: LocationRef;
-    data: {
-        sessionID: string;
-        reason: "auto" | "manual";
-        error: SessionStructuredError;
-        inputID?: string;
     };
 };
 
@@ -1660,19 +1157,6 @@ type SessionShellEnded = {
             size: number;
             truncated: boolean;
         };
-    };
-};
-
-type ShellCreated = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "shell.created";
-    location?: LocationRef;
-    data: {
-        info: ShellInfo;
     };
 };
 
@@ -1742,10 +1226,6 @@ type SessionToolCalled = {
         executed: boolean;
         state?: SessionMessageProviderState5;
     };
-};
-
-type FormAnswer = {
-    [x: string]: FormValue;
 };
 
 type PermissionV2Asked = {
@@ -1827,20 +1307,6 @@ type RetryPart = {
     error: APIError;
     time: {
         created: number;
-    };
-};
-
-type SessionError = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "session.error";
-    location?: LocationRef;
-    data: {
-        sessionID?: string | undefined;
-        error?: ProviderAuthError | UnknownError2 | MessageOutputLengthError | MessageAbortedError | StructuredOutputError | ContextOverflowError | ContentFilterError | APIError | undefined;
     };
 };
 
@@ -1927,85 +1393,6 @@ type QuestionV2Replied = {
         sessionID: string;
         requestID: string;
         answers: Array<QuestionV2Answer>;
-    };
-};
-
-type FormStringField1 = {
-    key: string;
-    title?: string;
-    description?: string;
-    required?: boolean;
-    when?: Array<FormWhen1>;
-    type: "string";
-    format?: "email" | "uri" | "date" | "date-time";
-    minLength?: number;
-    maxLength?: number;
-    pattern?: string;
-    placeholder?: string;
-    default?: string;
-    options?: Array<FormOption>;
-    custom?: boolean;
-};
-
-type FormNumberField1 = {
-    key: string;
-    title?: string;
-    description?: string;
-    required?: boolean;
-    when?: Array<FormWhen1>;
-    type: "number";
-    minimum?: number;
-    maximum?: number;
-    default?: number;
-};
-
-type FormIntegerField1 = {
-    key: string;
-    title?: string;
-    description?: string;
-    required?: boolean;
-    when?: Array<FormWhen1>;
-    type: "integer";
-    minimum?: number;
-    maximum?: number;
-    default?: number;
-};
-
-type FormBooleanField1 = {
-    key: string;
-    title?: string;
-    description?: string;
-    required?: boolean;
-    when?: Array<FormWhen1>;
-    type: "boolean";
-    default?: boolean;
-};
-
-type FormMultiselectField1 = {
-    key: string;
-    title?: string;
-    description?: string;
-    required?: boolean;
-    when?: Array<FormWhen1>;
-    type: "multiselect";
-    options: Array<FormOption>;
-    minItems?: number;
-    maxItems?: number;
-    custom?: boolean;
-    default?: Array<string>;
-};
-
-type SessionStatus2 = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "session.status";
-    location?: LocationRef;
-    data: {
-        sessionID: string;
-        status: SessionStatus;
     };
 };
 
@@ -2113,21 +1500,6 @@ type SessionToolFailed = {
     };
 };
 
-type FormReplied = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "form.replied";
-    location?: LocationRef;
-    data: {
-        id: string;
-        sessionID: string;
-        answer: FormAnswer;
-    };
-};
-
 type PermissionRuleset = Array<PermissionRule>;
 
 type UserMessage = {
@@ -2172,8 +1544,6 @@ type QuestionV2Asked = {
         tool?: QuestionV2Tool;
     };
 };
-
-type FormField1 = FormStringField1 | FormNumberField1 | FormIntegerField1 | FormBooleanField1 | FormMultiselectField1 | FormExternalField;
 
 type QuestionAsked = {
     id: string;
@@ -2263,8 +1633,6 @@ type FilePart = {
     source?: FilePartSource | undefined;
 };
 
-type FormFields1 = [FormField1, ...Array<FormField1>];
-
 type SessionPendingMessage = SessionPendingUserMessage | SessionPendingSyntheticMessage;
 
 type SessionCreated = {
@@ -2305,7 +1673,7 @@ type SessionUpdated = {
     };
 };
 
-type SessionDeleted1 = {
+type SessionDeleted = {
     id: string;
     created: number;
     metadata?: {
@@ -2361,14 +1729,6 @@ type ToolStateCompleted = {
     attachments?: Array<FilePart> | undefined;
 };
 
-type FormInfo1 = {
-    id: string;
-    sessionID: string;
-    title: string;
-    metadata?: FormMetadata1;
-    fields: FormFields1;
-};
-
 type SessionInputAdmitted = {
     id: string;
     created: number;
@@ -2390,19 +1750,6 @@ type SessionInputAdmitted = {
 };
 
 type ToolState = ToolStatePending | ToolStateRunning | ToolStateCompleted | ToolStateError;
-
-type FormCreated = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "form.created";
-    location?: LocationRef;
-    data: {
-        form: FormInfo1;
-    };
-};
 
 type ToolPart = {
     id: string;
@@ -2439,10 +1786,9 @@ type MessagePartUpdated = {
     };
 };
 
-export type ClientEvent = ModelsDevRefreshed | IntegrationUpdated | IntegrationConnectionUpdated | CatalogUpdated | AgentUpdated | SessionCreated | SessionUpdated | SessionDeleted1 | MessageUpdated | MessageRemoved | MessagePartUpdated | MessagePartRemoved | SessionAgentSelected | SessionModelSelected | SessionMoved | SessionRenamed | SessionUsageUpdated | SessionDeleted | SessionForked | SessionInputPromoted | SessionInputAdmitted | SessionExecutionStarted | SessionExecutionSucceeded | SessionExecutionFailed | SessionExecutionInterrupted | SessionInstructionsUpdated | SessionSynthetic | SessionSkillActivated | SessionShellStarted | SessionShellEnded | SessionStepStarted | SessionStepEnded | SessionStepFailed | SessionTextStarted | SessionTextDelta | SessionTextEnded | SessionReasoningStarted | SessionReasoningDelta | SessionReasoningEnded | SessionToolInputStarted | SessionToolInputDelta | SessionToolInputEnded | SessionToolCalled | SessionToolProgress | SessionToolSuccess | SessionToolFailed | SessionRetryScheduled | SessionCompactionAdmitted | SessionCompactionStarted | SessionCompactionDelta | SessionCompactionEnded | SessionCompactionFailed | SessionRevertStaged | SessionRevertCleared | SessionRevertCommitted | FilesystemChanged | ReferenceUpdated | PermissionV2Asked | PermissionV2Replied | PluginAdded | PluginUpdated | ProjectDirectoriesUpdated | CommandUpdated | ConfigUpdated | SkillUpdated | PtyCreated | PtyUpdated | PtyExited | PtyDeleted | ShellCreated | ShellExited | ShellDeleted | QuestionV2Asked | QuestionV2Replied | QuestionV2Rejected | FormCreated | FormReplied | FormCancelled | SessionStatus2 | SessionIdle | TuiPromptAppend | TuiCommandExecute | TuiToastShow | TuiSessionSelect | InstallationUpdated | InstallationUpdateAvailable | VcsBranchUpdated | McpStatusChanged | McpResourcesChanged | PermissionAsked | PermissionReplied | QuestionAsked | QuestionReplied | QuestionRejected | SessionError | V2EventServerConnected;
-
 type UnknownError = {
     readonly _tag: "UnknownError";
     readonly message: string;
     readonly ref?: string | undefined;
 };
+export type ClientEvent = ModelsDevRefreshed | IntegrationUpdated | IntegrationConnectionUpdated | CatalogUpdated | SessionCreated | SessionUpdated | SessionDeleted | MessageUpdated | MessageRemoved | MessagePartUpdated | MessagePartRemoved | SessionAgentSelected | SessionModelSelected | SessionMoved | SessionDeleted | SessionInputPromoted | SessionInputAdmitted | SessionSynthetic | SessionShellStarted | SessionShellEnded | SessionStepStarted | SessionStepEnded | SessionStepFailed | SessionTextStarted | SessionTextDelta | SessionTextEnded | SessionReasoningStarted | SessionReasoningDelta | SessionReasoningEnded | SessionToolInputStarted | SessionToolInputDelta | SessionToolInputEnded | SessionToolCalled | SessionToolProgress | SessionToolSuccess | SessionToolFailed | SessionRetryScheduled | SessionCompactionStarted | SessionCompactionDelta | SessionCompactionEnded | SessionRevertStaged | SessionRevertCleared | SessionRevertCommitted | ReferenceUpdated | PermissionV2Asked | PermissionV2Replied | PluginAdded | ProjectDirectoriesUpdated | PtyCreated | PtyUpdated | PtyExited | PtyDeleted | QuestionV2Asked | QuestionV2Replied | QuestionV2Rejected | VcsBranchUpdated | PermissionAsked | PermissionReplied | QuestionAsked | QuestionReplied | QuestionRejected | V2EventServerConnected;

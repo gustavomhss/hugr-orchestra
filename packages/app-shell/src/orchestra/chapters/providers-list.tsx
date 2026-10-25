@@ -5,7 +5,7 @@ import { DialogConnectProvider, useProviderConnectController } from "@/component
 import { useProviderDialogScope } from "@/components/settings-v2/provider-dialog-scope"
 import { useLanguage } from "@/context/language"
 import { type ServerConnection, serverName } from "@/context/server"
-import { useServerProtocol, useServerSDK } from "@/context/server-sdk"
+import { useServerReady, useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import { loadDefaultModel } from "@/context/global-sync/bootstrap"
 import { refetchProviderResource, resolveDefaultModel } from "@/hooks/provider-catalog"
@@ -43,7 +43,7 @@ export function ProviderList(props: {
   const dialog = useDialog()
   const sdk = useServerSDK()
   const sync = useServerSync()
-  const protocol = useServerProtocol()
+  const ready = useServerReady()
   const providers = useProviders(() => props.directory || null)
   const child = props.directory ? sync().child(props.directory)[0] : undefined
   const scope = useProviderDialogScope(() => props.directory || null)
@@ -52,7 +52,7 @@ export function ProviderList(props: {
   const routeScope = createUniqueId()
   // V2 lists only available providers and has no default-model route on every server, so read the raw catalog here.
   const [v2, v2Actions] = createResource(
-    () => (protocol() ? { directory: props.directory, client: sdk(), server: sdk().scope } : undefined),
+    () => (ready() ? { directory: props.directory, client: sdk(), server: sdk().scope } : undefined),
     async (input) => {
       const api = input.client.api
       const location = input.directory ? { directory: input.directory } : undefined

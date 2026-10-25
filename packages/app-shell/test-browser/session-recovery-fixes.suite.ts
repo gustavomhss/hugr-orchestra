@@ -129,16 +129,15 @@ function fixture() {
   const source = {
     scope: http.url,
     server: { type: "http" as const, http },
-    protocol: Promise.resolve("v2" as const),
-    protocolKind: () => "v2" as const,
+    ready: Promise.resolve(),
+    isReady: () => true,
     api: createCompatibleApi({
-      protocol: Promise.resolve("v2"),
       current: canonicalApi,
     }),
     sessionManagement: createSessionManagementForServer({
       server: http,
       fetch: fetcher,
-      protocol: Promise.resolve("v2"),
+      ready: Promise.resolve(),
     }),
   }
   return {

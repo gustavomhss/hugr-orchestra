@@ -574,7 +574,6 @@ async function setup(
 ) {
   await page.clock.setFixedTime(now)
   await mockOrchestraServer(page, {
-    protocol: "v2",
     directory,
     project,
     sessions: records,

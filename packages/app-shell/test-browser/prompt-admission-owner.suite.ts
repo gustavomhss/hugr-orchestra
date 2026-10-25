@@ -80,7 +80,6 @@ beforeAll(async () => {
   }))
   mock.module("@/context/language", () => ({ useLanguage: () => ({ t: (key: string) => key }) }))
   mock.module("@/utils/toast", () => ({ showToast: () => undefined }))
-  mock.module("@/utils/llm-behaviors-store", () => ({ resolveBehaviorSystem: async () => undefined }))
   mock.module("@/context/tabs", () => ({
     useTabs: () => ({
       store: tabs,
@@ -138,7 +137,7 @@ beforeAll(async () => {
       {
         scope: servers[server],
         server: { type: "http", http: { url: servers[server] } },
-        protocol: Promise.resolve("v2"),
+        ready: Promise.resolve(),
         sessionManagement: {
           waitSubagentModels: async (id: string) => { policyWaits.push(id) },
           subagentModelsWriteVersion: () => 0,

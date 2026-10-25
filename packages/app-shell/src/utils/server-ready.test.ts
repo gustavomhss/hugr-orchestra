@@ -1,29 +1,29 @@
 import { describe, expect, test } from "bun:test"
-import { detectServerProtocol, ServerProtocolUnresolvedError } from "./server-protocol"
+import { waitForServer, ServerNotReadyError } from "./server-ready"
 import { rejection } from "../testing/rejection"
 
 const listen = (fetch: (request: Request) => Response | Promise<Response>) =>
   Bun.serve({ port: 0, hostname: "127.0.0.1", fetch })
 
-describe("detectServerProtocol", () => {
-  test("recognizes API health v2", async () => {
+describe("waitForServer", () => {
+  test("resolves on a ready API health response", async () => {
     const body = { healthy: true, version: "2.0.0", pid: 123 }
     const listener = listen(() => Response.json(body))
     try {
-      expect(await detectServerProtocol({ url: listener.url.origin }, fetch)).toBe("v2")
+      expect(await waitForServer({ url: listener.url.origin }, fetch)).toBeUndefined()
     } finally {
       listener.stop(true)
     }
   })
 
-  test("retries real 503 probes until v2 is ready", async () => {
+  test("retries real 503 probes until the server is ready", async () => {
     let current = 0
     const listener = listen((request) => {
       current++
       return current < 3 ? Response.json({}, { status: 503 }) : Response.json({ pid: 123 })
     })
     try {
-      expect(await detectServerProtocol({ url: listener.url.origin }, fetch, { retryDelayMs: 10 })).toBe("v2")
+      expect(await waitForServer({ url: listener.url.origin }, fetch, { retryDelayMs: 10 })).toBeUndefined()
       expect(current).toBe(3)
     } finally {
       listener.stop(true)
@@ -38,25 +38,25 @@ describe("detectServerProtocol", () => {
       return Response.json({ pid: 123 })
     })
     try {
-      expect(await detectServerProtocol({ url: listener.url.origin }, fetch, {
+      expect(await waitForServer({ url: listener.url.origin }, fetch, {
         probeTimeoutMs: 50, retryDelayMs: 10, timeoutMs: 1_000,
-      })).toBe("v2")
+      })).toBeUndefined()
       expect(probes).toBe(2)
     } finally {
       listener.stop(true)
     }
   })
 
-  test("does not invent a protocol when real endpoints stay unavailable", async () => {
+  test("does not report ready while real endpoints stay unavailable", async () => {
     let probes = 0
     const listener = listen(() => {
       probes++
       return Response.json({ error: "unavailable" }, { status: 503 })
     })
     try {
-      expect(await rejection(detectServerProtocol({ url: listener.url.origin }, fetch, {
+      expect(await rejection(waitForServer({ url: listener.url.origin }, fetch, {
         attempts: 2, retryDelayMs: 10,
-      }))).toBeInstanceOf(ServerProtocolUnresolvedError)
+      }))).toBeInstanceOf(ServerNotReadyError)
       expect(probes).toBe(6)
     } finally {
       listener.stop(true)
@@ -70,8 +70,8 @@ describe("detectServerProtocol", () => {
     })
     try {
       const start = Date.now()
-      expect(await rejection(detectServerProtocol({ url: listener.url.origin }, fetch, { timeoutMs: 50 })))
-        .toMatchObject({ name: "ServerProtocolUnresolvedError" })
+      expect(await rejection(waitForServer({ url: listener.url.origin }, fetch, { timeoutMs: 50 })))
+        .toMatchObject({ name: "ServerNotReadyError" })
       expect(Date.now() - start).toBeLessThan(400)
     } finally {
       listener.stop(true)
@@ -90,14 +90,14 @@ describe("detectServerProtocol", () => {
     const abort = new AbortController()
     const reason = new DOMException("Connection disposed", "AbortError")
     try {
-      const protocol = detectServerProtocol({ url: listener.url.origin }, fetch, { signal: abort.signal })
-      const rejected = rejection(protocol)
+      const ready = waitForServer({ url: listener.url.origin }, fetch, { signal: abort.signal })
+      const rejected = rejection(ready)
       await reached.promise
       abort.abort(reason)
       expect(await rejected).toBe(reason)
       await Bun.sleep(20)
       expect(paths).toEqual(["/api/health"])
-      expect(await rejection(detectServerProtocol({ url: listener.url.origin }, fetch, { signal: abort.signal })))
+      expect(await rejection(waitForServer({ url: listener.url.origin }, fetch, { signal: abort.signal })))
         .toBe(reason)
       expect(paths).toHaveLength(1)
     } finally {
@@ -119,7 +119,7 @@ describe("detectServerProtocol", () => {
       return fetch(input, { ...init, headers })
     }, { preconnect: fetch.preconnect })
     try {
-      expect(await detectServerProtocol({ url: listener.url.origin }, fetcher, { attempts: 1 })).toBe("v2")
+      expect(await waitForServer({ url: listener.url.origin }, fetcher, { attempts: 1 })).toBeUndefined()
       expect(calls).toEqual(["/api/health", "/api/health"])
     } finally {
       listener.stop(true)
@@ -136,11 +136,11 @@ describe("detectServerProtocol", () => {
     }, { preconnect: fetch.preconnect })
     try {
       const server = { url: listener.url.origin }
-      expect(await rejection(detectServerProtocol(server, fetcher, { attempts: 1 })))
-        .toBeInstanceOf(ServerProtocolUnresolvedError)
+      expect(await rejection(waitForServer(server, fetcher, { attempts: 1 })))
+        .toBeInstanceOf(ServerNotReadyError)
       expect(calls).toEqual([...Array(3).fill("/api/health")])
       state.ready = true
-      expect(await detectServerProtocol(server, fetcher, { attempts: 1 })).toBe("v2")
+      expect(await waitForServer(server, fetcher, { attempts: 1 })).toBeUndefined()
       expect(calls).toHaveLength(4)
     } finally {
       listener.stop(true)

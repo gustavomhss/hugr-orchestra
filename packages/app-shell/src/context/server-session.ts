@@ -855,8 +855,6 @@ export function createServerSession(
     }
 
     const info = data.info[sessionID]
-    if (event.type === "session.renamed" && info)
-      remember({ ...info, title: event.data.title, time: { ...info.time, updated: event.created } })
     if (event.type === "session.moved" && info)
       remember({
         ...info,
@@ -881,7 +879,6 @@ export function createServerSession(
         message: event.data.error.message,
         next: event.data.at,
       })
-    if (event.type === "session.forked") void recovery.resolve(sessionID, { force: true }).catch(() => {})
     if (
       event.type === "session.revert.staged" ||
       event.type === "session.revert.cleared" ||

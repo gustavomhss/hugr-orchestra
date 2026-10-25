@@ -1,6 +1,6 @@
 import { createMemo, type Accessor } from "solid-js"
 import { useLanguage } from "@/context/language"
-import { useServerProtocol } from "@/context/server-sdk"
+import { useServerReady } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import { resolveDefaultModel } from "@/hooks/provider-catalog"
 import { useProviders } from "@/hooks/use-providers"
@@ -12,7 +12,7 @@ type ModelKey = { providerID: string; modelID: string }
 export function createDefaultModelController(directory: Accessor<string | null | undefined>) {
   const language = useLanguage()
   const serverSync = useServerSync()
-  const protocol = useServerProtocol()
+  const ready = useServerReady()
   const providers = useProviders(directory)
   const project = () => {
     const value = directory()
@@ -25,7 +25,7 @@ export function createDefaultModelController(directory: Accessor<string | null |
 
   return {
     // The model is written into the global config document once the server answers.
-    writable: () => protocol() !== undefined,
+    writable: () => ready(),
     isDefault: (key: ModelKey) => current()?.providerID === key.providerID && current()?.modelID === key.modelID,
     set: (key: ModelKey) => {
       const model = `${key.providerID}/${key.modelID}`

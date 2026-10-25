@@ -40,7 +40,7 @@ beforeAll(() => {
         import { queuedPromptSources } from "@/components/prompt-input/queued-prompt"
         export function mount(input) {
           const { params, sdk, serverSDK, sync, serverSync, sessionOwnership, followup, setFollowup,
-            platform, followupSystem, sendFollowupDraft, fail, resumeScroll, composer, busy, isChildSession } = input
+            platform, sendFollowupDraft, fail, resumeScroll, composer, busy, isChildSession } = input
           const emptyFollowups = []
           ${[...selected, ...idle].map((statement) => statement.getFullText(source)).join("\n")}
           return { send: sendFollowup, mutation: followupMutation }
@@ -88,7 +88,7 @@ async function mountQueue(options: { foreign?: boolean; prepare?: Promise<void> 
   const api = { prompt: async () => { counts.dispatch++; if (state.throwDispatch) throw failure } } as unknown as FollowupSendInput["api"]
   const directorySync = { session: { get: () => undefined, optimistic: { add() {}, remove() {} } } } as unknown as FollowupSendInput["sync"]
   const serverState = { data: { project: [] }, session: { set() {} } } as unknown as FollowupSendInput["serverSync"]
-  const server = { server: { http: { url: "https://queue.invalid" } }, protocol: Promise.resolve("v2"), sessionManagement: { waitSubagentModels: async () => {} } }
+  const server = { server: { http: { url: "https://queue.invalid" } }, ready: Promise.resolve(), sessionManagement: { waitSubagentModels: async () => {} } }
   const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
   const sdk = { get scope() { return status.scope }, directory: "/repo/main", api: { session: api } }
   const controls: { current?: { send: (sid: string, id: string, options?: { manual?: boolean }) => Promise<unknown>; mutation: { isPending: boolean; isSuccess: boolean } } } = {}
@@ -99,8 +99,8 @@ async function mountQueue(options: { foreign?: boolean; prepare?: Promise<void> 
         params: { get id() { return status.id } }, sdk: () => sdk, serverSDK: () => server,
         sync: () => directorySync, serverSync: () => serverState, sessionOwnership: ownership,
         followup: persisted.store[0], setFollowup: persisted.store[1], platform: persisted.platform,
-        followupSystem: async () => { await options.prepare; return undefined },
-        sendFollowupDraft: (input: FollowupSendInput) => {
+        sendFollowupDraft: async (input: FollowupSendInput) => {
+          await options.prepare
           if (input.deliberate) counts.manual++
           if (!input.deliberate && ++counts.automatic === 4) {
             setStatus("busy", true)

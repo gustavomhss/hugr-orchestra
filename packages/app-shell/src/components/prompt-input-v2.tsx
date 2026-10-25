@@ -25,7 +25,7 @@ import { usePlatform } from "@/context/platform"
 import { useSDK } from "@/context/sdk"
 import { useSync } from "@/context/sync"
 import { createDraftSessionState, useDraftSessionKey } from "./prompt-input/draft-session"
-import { useServerProtocol } from "@/context/server-sdk"
+import { useServerReady } from "@/context/server-sdk"
 import { createSessionTabs } from "@/pages/session/helpers"
 import { OrchestraComposeTools } from "@/pages/session/composer/orchestra-compose-tools"
 import { useSessionDelivery } from "@/pages/session/composer/delivery"
@@ -502,10 +502,10 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string; pending
   const dialog = useDialog()
   const language = useLanguage()
   const sdk = useSDK()
-  const protocol = useServerProtocol()
+  const ready = useServerReady()
   const draftSession = createDraftSessionState({ sessionID: () => props.sessionID, pendingKey: () => props.pendingKey })
   const unresolved = () => !!props.sessionID && (
-    protocol() === undefined || draftSession.loading() || !!draftSession.error() || !draftSession.policy()
+    !ready() || draftSession.loading() || !!draftSession.error() || !draftSession.policy()
   )
   const life = { active: true }
   onCleanup(() => { life.active = false })
@@ -515,7 +515,7 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string; pending
   })
 
   const label = () => {
-    if (props.sessionID && protocol() === undefined) return language.t("common.loading")
+    if (props.sessionID && !ready()) return language.t("common.loading")
     const current = draftSession.policy()
     if (draftSession.error()) return language.t("dialog.subagentModels.saveFailed")
     if (draftSession.loading() || !current) return language.t("common.loading")
@@ -539,7 +539,7 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string; pending
         data-action="prompt-subagent-models"
         data-control-type="dialog"
         disabled={unresolved()}
-        aria-busy={!!props.sessionID && (protocol() === undefined || draftSession.loading()) || undefined}
+        aria-busy={!!props.sessionID && (!ready() || draftSession.loading()) || undefined}
         onClick={open}
       >
         <span class="truncate leading-4">

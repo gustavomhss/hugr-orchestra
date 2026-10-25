@@ -28,8 +28,6 @@ type PromptExtras = {
   agent?: string
   model?: { providerID: string; modelID: string }
   variant?: string
-  // Per-message system instructions the draft carries; the prompt route does not forward them.
-  system?: string
 }
 type DirectoryHint = { directory?: string }
 type CompatibleInput = {

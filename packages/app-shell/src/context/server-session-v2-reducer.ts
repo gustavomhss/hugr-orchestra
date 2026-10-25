@@ -83,16 +83,6 @@ export function createV2SessionReducer() {
           description: event.data.description,
           time: { created: event.created },
         })
-      case "session.skill.activated":
-        return append({
-          id: messageID(event.id),
-          type: "skill",
-          metadata: event.metadata,
-          skill: event.data.id,
-          name: event.data.name,
-          text: event.data.text,
-          time: { created: event.created },
-        })
       case "session.shell.started":
         return append({
           id: messageID(event.id),
@@ -167,6 +157,8 @@ export function createV2SessionReducer() {
         return updateAssistant(source, event.data.assistantMessageID, sessionID, (item) => ({
           ...item,
           finish: event.data.finish,
+          // A retried step that settles clears its retry marker: the V2 server has no execution event to do it.
+          retry: undefined,
           cost: event.data.cost,
           tokens: event.data.tokens,
           snapshot:
@@ -328,13 +320,6 @@ export function createV2SessionReducer() {
           ...item,
           retry: { attempt: event.data.attempt, at: event.data.at, error: event.data.error },
         }))
-      case "session.execution.succeeded":
-      case "session.execution.failed":
-      case "session.execution.interrupted": {
-        const current = source.findLast((item): item is Assistant => item.type === "assistant" && !item.time.completed)
-        if (!current?.retry) return result([...source])
-        return updateAssistant(source, current.id, sessionID, (item) => ({ ...item, retry: undefined }))
-      }
       case "session.compaction.started":
         return append({
           id: event.data.inputID ?? messageID(event.id),
@@ -382,26 +367,6 @@ export function createV2SessionReducer() {
             recent: event.data.recent,
           })),
           [current.id],
-        )
-      }
-      case "session.compaction.failed": {
-        const current = source.findLast(
-          (item): item is Extract<Compaction, { status: "running" }> =>
-            item.type === "compaction" && item.status === "running",
-        )
-        const failed: Extract<Compaction, { status: "failed" }> = {
-          id: current?.id ?? event.data.inputID ?? messageID(event.id),
-          type: "compaction",
-          status: "failed",
-          metadata: current?.metadata ?? event.metadata,
-          reason: event.data.reason,
-          error: event.data.error,
-          time: current?.time ?? { created: event.created },
-        }
-        if (!current) return append(failed)
-        return result(
-          update(source, current.id, () => failed),
-          [failed.id],
         )
       }
       default:

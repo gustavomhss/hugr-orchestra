@@ -16,7 +16,7 @@ export type QueuedPromptRuntime = QueuedPromptIdentity & {
   current: () => boolean
   before: (signal?: AbortSignal) => Promise<boolean>
 }
-export type QueuedPrompt = Omit<FollowupDraft, "system"> & { id: string }
+export type QueuedPrompt = FollowupDraft & { id: string }
 
 export function createQueuedPromptStore(owner: Pick<QueuedPromptIdentity, "serverScopeKey" | "directory">, platform?: Platform) {
   return persisted({

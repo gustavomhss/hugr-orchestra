@@ -13,54 +13,50 @@ import {
   userMessage,
 } from "../performance/timeline-stability/fixture"
 
-// The timeline speaks the current protocol only.
-for (const scenario of [{ protocol: "v2" }] as const) {
-  test(`renders confirmed historical checklists as read-only snapshots (${scenario.protocol}, virtual)`, async ({
-    page,
-  }) => {
-    const proposed = { todos: [{ content: "Unconfirmed proposal", status: "completed", priority: "high" }] }
-    const confirmed = [
-      { content: "Verified change", status: "completed", priority: "high" },
-      { content: "Next step", status: "in_progress", priority: "medium" },
-    ]
-    await setupTimeline(page, {
-      protocol: scenario.protocol,
-      messages: [
-        userMessage(),
-        assistantMessage([
-          toolPart("prt_todo_snapshot", "todowrite", "completed", proposed, {
-            metadata: { todos: confirmed },
-            output: "[\n...output truncated...",
-          }),
-          toolPart("prt_todo_output", "todowrite", "completed", proposed, {
-            output: JSON.stringify([{ content: "Later snapshot", status: "pending", priority: "low" }]),
-          }),
-          toolPart("prt_todo_unconfirmed", "todowrite", "completed", proposed),
-          toolPart("prt_todo_failed", "todowrite", "error", proposed, { error: "Todo update failed" }),
-        ]),
-      ],
-    })
-
-    const snapshot = page.locator('[data-timeline-part-id="prt_todo_snapshot"]')
-    await expect(snapshot.getByRole("button", { name: /To-dos.*1\/2/ })).toBeVisible()
-    await expect(snapshot.getByRole("checkbox")).toHaveCount(2)
-    const completed = snapshot.getByRole("checkbox", { name: "Verified change" })
-    const current = snapshot.getByRole("checkbox", { name: "Next step" })
-    await expect(completed).toBeChecked()
-    await expect(current).not.toBeChecked()
-    await expect(completed).toHaveAttribute("aria-readonly", "true")
-    await snapshot.locator('[data-component="todos"]').click()
-    await expect(completed).toBeChecked()
-    await current.focus()
-    await current.press("Space")
-    await expect(current).not.toBeChecked()
-    await expect(page.locator('[data-timeline-part-id="prt_todo_output"]')).toContainText("Later snapshot")
-    await expect(snapshot).toContainText("Next step")
-    await expect(page.getByText("Unconfirmed proposal", { exact: true })).toHaveCount(0)
-    await expect(page.locator('[data-timeline-part-id="prt_todo_unconfirmed"]')).toHaveCount(0)
-    await expect(page.locator('[data-timeline-part-id="prt_todo_failed"]')).toHaveCount(0)
+test("renders confirmed historical checklists as read-only snapshots (virtual)", async ({
+  page,
+}) => {
+  const proposed = { todos: [{ content: "Unconfirmed proposal", status: "completed", priority: "high" }] }
+  const confirmed = [
+    { content: "Verified change", status: "completed", priority: "high" },
+    { content: "Next step", status: "in_progress", priority: "medium" },
+  ]
+  await setupTimeline(page, {
+    messages: [
+      userMessage(),
+      assistantMessage([
+        toolPart("prt_todo_snapshot", "todowrite", "completed", proposed, {
+          metadata: { todos: confirmed },
+          output: "[\n...output truncated...",
+        }),
+        toolPart("prt_todo_output", "todowrite", "completed", proposed, {
+          output: JSON.stringify([{ content: "Later snapshot", status: "pending", priority: "low" }]),
+        }),
+        toolPart("prt_todo_unconfirmed", "todowrite", "completed", proposed),
+        toolPart("prt_todo_failed", "todowrite", "error", proposed, { error: "Todo update failed" }),
+      ]),
+    ],
   })
-}
+
+  const snapshot = page.locator('[data-timeline-part-id="prt_todo_snapshot"]')
+  await expect(snapshot.getByRole("button", { name: /To-dos.*1\/2/ })).toBeVisible()
+  await expect(snapshot.getByRole("checkbox")).toHaveCount(2)
+  const completed = snapshot.getByRole("checkbox", { name: "Verified change" })
+  const current = snapshot.getByRole("checkbox", { name: "Next step" })
+  await expect(completed).toBeChecked()
+  await expect(current).not.toBeChecked()
+  await expect(completed).toHaveAttribute("aria-readonly", "true")
+  await snapshot.locator('[data-component="todos"]').click()
+  await expect(completed).toBeChecked()
+  await current.focus()
+  await current.press("Space")
+  await expect(current).not.toBeChecked()
+  await expect(page.locator('[data-timeline-part-id="prt_todo_output"]')).toContainText("Later snapshot")
+  await expect(snapshot).toContainText("Next step")
+  await expect(page.getByText("Unconfirmed proposal", { exact: true })).toHaveCount(0)
+  await expect(page.locator('[data-timeline-part-id="prt_todo_unconfirmed"]')).toHaveCount(0)
+  await expect(page.locator('[data-timeline-part-id="prt_todo_failed"]')).toHaveCount(0)
+})
 
 test("reveals a pending checklist only after successful confirmation", async ({ page }) => {
   const proposed = { todos: [{ content: "Proposed step", status: "pending", priority: "high" }] }
@@ -100,7 +96,6 @@ test("preserves live V2 structured checklists with truncated output", async ({ p
   const previous = [{ content: "Historical step", status: "pending", priority: "low" }]
   const confirmed = [{ content: "Live confirmed step", status: "completed", priority: "high" }]
   const timeline = await setupTimeline(page, {
-    protocol: "v2",
     messages: [
       userMessage(),
       assistantMessage(

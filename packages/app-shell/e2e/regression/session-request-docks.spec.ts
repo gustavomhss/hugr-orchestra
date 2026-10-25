@@ -228,7 +228,6 @@ async function mockServer(
   },
 ) {
   await mockOrchestraServer(page, {
-    protocol: "v2",
     directory,
     project: {
       id: projectID,

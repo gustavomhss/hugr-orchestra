@@ -133,7 +133,18 @@ describe("v2 session reducer", () => {
         error: { type: "ProviderError", message: "retry" },
       },
     })
-    apply({ ...base, id: "evt_done", type: "session.execution.succeeded", data: { sessionID: "ses_1" } })
+    apply({
+      ...base,
+      id: "evt_done",
+      type: "session.step.ended",
+      data: {
+        sessionID: "ses_1",
+        assistantMessageID: "msg_assistant",
+        finish: "stop",
+        cost: 0,
+        tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+      },
+    })
 
     expect(messages[0]).toMatchObject({
       type: "assistant",

@@ -96,7 +96,6 @@ export async function setupTimeline(
     locale?: string
     deviceScaleFactor?: number
     seedHistory?: boolean
-    protocol?: "v2"
     onPrompt?: (input: { sessionID: string; body: unknown }) => void
   } = {},
 ) {
@@ -115,7 +114,6 @@ export async function setupTimeline(
     retry: input.eventRetry ?? 20,
   })
   await mockOrchestraServer(page, {
-    protocol: input.protocol,
     directory,
     project: project(),
     provider: provider(),

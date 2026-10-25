@@ -205,18 +205,12 @@ export function createNativeEventAdapter() {
 }
 
 /**
- * Busy or idle from execution events, or from steps on the V2 server, which has no execution events: a step start
- * means busy, and a step that fails or settles without asking for tool results ends the drain.
+ * Busy or idle from steps, since the V2 server has no execution events: a step start means busy, and a step that fails
+ * or settles without asking for tool results ends the drain.
  */
 export function executionStatus(event: ServerCurrentEvent) {
-  if (event.type === "session.execution.started" || event.type === "session.step.started") return "busy" as const
-  if (
-    event.type === "session.execution.succeeded" ||
-    event.type === "session.execution.failed" ||
-    event.type === "session.execution.interrupted" ||
-    event.type === "session.step.failed" ||
-    (event.type === "session.step.ended" && event.data.finish !== "tool-calls")
-  )
+  if (event.type === "session.step.started") return "busy" as const
+  if (event.type === "session.step.failed" || (event.type === "session.step.ended" && event.data.finish !== "tool-calls"))
     return "idle" as const
 }
 
@@ -237,11 +231,10 @@ type Usage = {
 }
 
 /**
- * A session's usage totals after an event: `session.usage.updated` carries them; the V2 server sends none, so each
- * settled step adds its own, as the server's projection does. Undefined for any other event.
+ * A session's usage totals after an event: the V2 server sends no totals, so each settled step adds its own, as the
+ * server's projection does. Undefined for any other event.
  */
 export function sessionUsage<Info extends Usage>(info: Info, event: ServerCurrentEvent): Info | undefined {
-  if (event.type === "session.usage.updated") return { ...info, cost: event.data.cost, tokens: event.data.tokens }
   if (event.type !== "session.step.ended") return
   const step = event.data.tokens
   const tokens = info.tokens ?? { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } }

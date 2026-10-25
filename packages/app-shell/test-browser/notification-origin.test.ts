@@ -7,8 +7,13 @@ import type { ServerEvent } from "../src/context/server-sdk"
 import { ServerScope } from "../src/utils/server-scope"
 import { sessionHref } from "../src/utils/session-route"
 
-for (const type of ["session.idle", "session.error"] as const) {
-  test(`${type} click captures the originating server even after active server changes`, async () => {
+const settled = {
+  "turn complete": { type: "session.step.ended", data: { sessionID: "ses_shared", finish: "stop" } },
+  "step failure": { type: "session.step.failed", data: { sessionID: "ses_shared", error: { type: "unknown", message: "boom" } } },
+} as const
+
+for (const [name, current] of Object.entries(settled)) {
+  test(`${name} click captures the originating server even after active server changes`, async () => {
     const origin = ServerConnection.Key.make("https://origin.test")
     const shown = Promise.withResolvers<(() => void) | undefined>()
     const navigated: string[] = []
@@ -27,7 +32,7 @@ for (const type of ["session.idle", "session.error"] as const) {
       return dispose
     })
     try {
-      emitter.emit(directory, { type, properties: { sessionID: "ses_shared" } })
+      emitter.emit(directory, { type: current.type, properties: current.data, current } as unknown as ServerEvent)
       const click = await shown.promise
       expect(click).toBeDefined()
       selected.server = ServerConnection.Key.make("https://other.test")

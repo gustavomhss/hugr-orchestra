@@ -24,7 +24,7 @@ test("a rejected global config GET still completes the global bootstrap; a later
   const transport = { reads: 0, read: async (): Promise<Settings> => { throw new Error("config GET denied") } }
   const client = {}
   const sdk = {
-    scope: ServerScope.local, server: { type: "http", http: { url: "http://config-test" } }, protocol: Promise.resolve("v2"),
+    scope: ServerScope.local, server: { type: "http", http: { url: "http://config-test" } }, ready: Promise.resolve(),
     client, createClient: () => client,
     api: {
       project: { list: async () => [] }, session: {}, message: {},

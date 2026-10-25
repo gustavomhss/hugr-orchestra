@@ -268,18 +268,15 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
     })),
   )
   if (!(await wait())) return false
-  const preparation = input.request?.preparation ?? {
-    ...buildRequestParts({
-      prompt: input.draft.prompt,
-      context: input.draft.context,
-      images: encodedImages,
-      text,
-      sessionID: input.draft.sessionID,
-      messageID,
-      sessionDirectory: input.draft.sessionDirectory,
-    }),
-    system: input.draft.system,
-  }
+  const preparation = input.request?.preparation ?? buildRequestParts({
+    prompt: input.draft.prompt,
+    context: input.draft.context,
+    images: encodedImages,
+    text,
+    sessionID: input.draft.sessionID,
+    messageID,
+    sessionDirectory: input.draft.sessionDirectory,
+  })
   if (input.request) input.request.preparation = preparation
   const prepared = { request: input.request, value: preparation }
 
@@ -330,7 +327,6 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
           request.preparation = {
             requestParts,
             optimisticParts: prepared.value.optimisticParts.map((part, index) => ({ ...part, id: requestParts[index].id, messageID: request.id })),
-            system: prepared.value.system,
           }
         }
         prepared.request = request
@@ -352,7 +348,6 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
         agent: input.draft.agent,
         model: input.draft.model,
         variant: input.draft.variant,
-        system: prepared.value.system,
         delivery: input.draft.delivery,
         text: requestParts.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n"),
         files: requestParts.flatMap((part) => {

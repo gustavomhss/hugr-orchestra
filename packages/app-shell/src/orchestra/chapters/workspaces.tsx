@@ -69,7 +69,7 @@ export default function Workspaces(props: ChapterPageProps) {
     // Desktop storage is asynchronous; read the saved choice before marking a card Active.
     await preferenceReady.promise
     const result = await serverSDK()
-      .protocol.then(async () => {
+      .ready.then(async () => {
         const project = repositoryProject(await serverSDK().api.project.list(), props.directory)
         if (!project) return { project, directories: [] }
         const directories = await serverSDK().api.project.directories({

@@ -492,7 +492,6 @@ async function setup(page: Page, state: ReturnType<typeof fixture>) {
   )
   // The provider catalog is served below in the V2 shape, with the integrations the list needs.
   await mockOrchestraServer(page, {
-    protocol: "v2",
     provider: { all: [], connected: [], default: {} },
     directory,
     project: {

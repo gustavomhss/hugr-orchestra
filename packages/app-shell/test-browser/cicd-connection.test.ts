@@ -12,7 +12,7 @@ class Socket extends EventTarget {
   closed() { this.dispatchEvent(new CloseEvent("close", { code: 1000 })) }
 }
 
-function fixture(protocol: "v2", manual = false) {
+function fixture(manual = false) {
   const sockets: Socket[] = []
   const timers: (() => void)[] = []
   const state = { gets: 0, ticketRequests: [] as { url: string; ticket: string | null }[], tickets: [] as ReturnType<typeof Promise.withResolvers<Response>>[], removes: [] as ReturnType<typeof Promise.withResolvers<Response>>[] }
@@ -53,7 +53,7 @@ function fixture(protocol: "v2", manual = false) {
 }
 
 test("cold review: failed stop ignores retired socket close and invalidates its reconnect timer", async () => {
-  const f = fixture("v2")
+  const f = fixture()
   try {
     await f.runner.run("pipeline", "dev")
     await until(() => f.sockets.length === 1)
@@ -80,7 +80,7 @@ test("cold review: failed stop ignores retired socket close and invalidates its 
 })
 
 test("cold review: an old awaited PTY ticket cannot attach after stop failure starts a new connection", async () => {
-  const f = fixture("v2", true)
+  const f = fixture(true)
   try {
     await f.runner.run("pipeline", "dev")
     await until(() => f.state.tickets.length === 1)
@@ -97,7 +97,7 @@ test("cold review: an old awaited PTY ticket cannot attach after stop failure st
 })
 
 test("the runner fetches a V2 connect ticket before it opens the WebSocket", async () => {
-  const f = fixture("v2")
+  const f = fixture()
   try {
     await f.runner.run("pipeline", "dev")
     await until(() => f.sockets.length === 1)

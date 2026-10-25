@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { defaultBehaviorState, type LlmBehavior } from "../src/utils/llm-behaviors"
-import { llmBehaviors, resolveBehaviorSystem } from "../src/utils/llm-behaviors-store"
+import { llmBehaviors } from "../src/utils/llm-behaviors-store"
 import { pathKey } from "../src/utils/path-key"
 import { PersistTesting } from "../src/utils/persist"
 import { ServerScope } from "../src/utils/server-scope"
@@ -33,76 +33,46 @@ function saved(directory: string, behaviors: LlmBehavior[]) {
     storage === name && key === KEY ? JSON.stringify({ behaviors }) : null
 }
 
-describe("profile LLM behavior store", () => {
-  test("a sandbox send waits for its repository's saved behaviors and the page shares that store", async () => {
-    const stub = desktop(saved("/repo/a", [caveman({ enabled: true, intensity: "ultra" })]))
-    const projects = [{ worktree: "/repo/a", sandboxes: ["/repo/a-feature"] }]
-    const system = await resolveBehaviorSystem({
-      platform: stub.platform,
-      scope: ServerScope.local,
-      projects,
-      directory: "/repo/a-feature",
-    })
-    expect(system).toContain("## Caveman (intensity: ultra)")
+async function settled(store: ReturnType<typeof llmBehaviors>) {
+  while (store.loading()) await Bun.sleep(0)
+}
 
-    const page = llmBehaviors(stub.platform, ServerScope.local, "/repo/a/")
-    expect(page.loading()).toBe(false)
+describe("profile LLM behavior store", () => {
+  test("the page loads its profile's saved behaviors and persists changes", async () => {
+    const stub = desktop(saved("/repo/a", [caveman({ enabled: true, intensity: "ultra" })]))
+    const page = llmBehaviors(stub.platform, ServerScope.local, "/repo/a")
+    await settled(page)
+    expect(page.behaviors()[0]).toMatchObject({ enabled: true, intensity: "ultra" })
+    expect(llmBehaviors(stub.platform, ServerScope.local, "/repo/a/")).toBe(page)
+
     page.update([caveman({ enabled: false })])
     expect(stub.writes.at(-1)).toMatchObject({ name: PersistTesting.workspaceStorage(pathKey("/repo/a")), key: KEY })
-    expect(
-      await resolveBehaviorSystem({
-        platform: stub.platform,
-        scope: ServerScope.local,
-        projects,
-        directory: "/repo/a",
-      }),
-    ).toBeUndefined()
+    expect(page.behaviors()[0]?.enabled).toBe(false)
   })
 
   test("profiles on another directory or server keep their own behaviors", async () => {
     const stub = desktop(saved("/repo/b", [caveman({ enabled: true })]))
-    const resolve = (scope: ServerScope, directory: string) =>
-      resolveBehaviorSystem({ platform: stub.platform, scope, projects: [], directory })
-    expect(await resolve(ServerScope.local, "/repo/b")).toContain("## Caveman (intensity: full)")
-    expect(await resolve(ServerScope.local, "/repo/b-other")).toBeUndefined()
+    const open = async (scope: ServerScope, directory: string) => {
+      const store = llmBehaviors(stub.platform, scope, directory)
+      await settled(store)
+      return store.behaviors()[0]?.enabled
+    }
+    expect(await open(ServerScope.local, "/repo/b")).toBe(true)
+    expect(await open(ServerScope.local, "/repo/b-other")).toBe(false)
     expect(
-      await resolve(
+      await open(
         ServerScope.fromServerKey("http://remote:4096" as Parameters<typeof ServerScope.fromServerKey>[0]),
         "/repo/b",
       ),
-    ).toBeUndefined()
+    ).toBe(false)
   })
 
-  test("a storage read that fails sends nothing and never throws", async () => {
+  test("a storage read that fails keeps the defaults and never throws", async () => {
     const stub = desktop(async () => {
       throw new Error("storage unavailable")
     })
     const store = llmBehaviors(stub.platform, ServerScope.local, "/repo/c")
-    await store.loaded
-    expect(store.loading()).toBe(false)
+    await settled(store)
     expect(store.behaviors()).toEqual(defaultBehaviorState().behaviors)
-    expect(
-      await resolveBehaviorSystem({
-        platform: stub.platform,
-        scope: ServerScope.local,
-        projects: [],
-        directory: "/repo/c",
-      }),
-    ).toBeUndefined()
-  })
-
-  test("a storage read that never answers does not hold the message past the timeout", async () => {
-    const stub = desktop(() => new Promise<string | null>(() => {}))
-    const started = performance.now()
-    const system = await resolveBehaviorSystem({
-      platform: stub.platform,
-      scope: ServerScope.local,
-      projects: [],
-      directory: "/repo/d",
-      timeout: 30,
-    })
-    expect(system).toBeUndefined()
-    expect(performance.now() - started).toBeLessThan(1_000)
-    expect(llmBehaviors(stub.platform, ServerScope.local, "/repo/d").loading()).toBe(true)
   })
 })

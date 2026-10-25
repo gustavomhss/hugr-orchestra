@@ -1,7 +1,6 @@
 import { createSignal } from "solid-js"
 import { Orchestra } from "@orchestra/client"
 import type { ServerConnection } from "@/context/server"
-import type { ServerProtocol } from "./server-protocol"
 import { authTokenFromCredentials } from "./server"
 import type { ModelPolicySnapshot, SubagentModelPolicy } from "@/components/subagent-model-rules"
 import { SessionManagementUnsupported } from "./session-management-errors"
@@ -13,12 +12,11 @@ export function createSessionManagementForServer(input: {
   server: ServerConnection.HttpBase
   fetch: typeof globalThis.fetch
   /** Settles when the server answers its health route; archive routes are offered from then on. */
-  protocol: Promise<ServerProtocol>
+  ready: Promise<void>
   signal?: AbortSignal
 }) {
   const http = { ...input.server }
   const fetcher = input.fetch
-  const protocol = input.protocol
   const lifetime = input.signal
   const headers = http.password
     ? { Authorization: `Basic ${authTokenFromCredentials({ username: http.username, password: http.password })}` }
@@ -43,12 +41,12 @@ export function createSessionManagementForServer(input: {
     ),
     headers,
   })
-  // Every server speaks the V2 session routes; archive is available once the protocol settles.
+  // Every server speaks the V2 session routes; archive is available once the server is ready.
   const [archiveRouted, setArchiveRouted] = createSignal(false)
   let archiveProbe: Promise<boolean> | undefined
   const archiveRoutes = () => {
     if (archiveProbe) return archiveProbe
-    archiveProbe = protocol.then(() => true)
+    archiveProbe = input.ready.then(() => true)
     void archiveProbe.then((routed) => setArchiveRouted(routed), () => {})
     return archiveProbe
   }
@@ -151,7 +149,7 @@ export function createSessionManagementForServer(input: {
 
 export type SessionManagement = ReturnType<typeof createSessionManagementForServer>
 
-/** Race the complete generated operation, including protocol selection and response body decoding. */
+/** Race the complete generated operation, including readiness and response body decoding. */
 async function runSessionManagementOperation<T>(lifetime: AbortSignal | undefined, load: () => Promise<T>): Promise<T> {
   lifetime?.throwIfAborted()
   if (!lifetime) return load()

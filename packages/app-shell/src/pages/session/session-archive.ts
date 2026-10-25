@@ -156,7 +156,7 @@ export function useSessionArchive(input?: { server: ServerSDK; directory: string
   return { archive, restore, available, restorable, busy, navigateAfterRemoval }
 }
 
-// Archive routes exist once the protocol settles; session management reports that before the SDK kind is read.
+// Archive routes exist once the server is ready; session management reports that before the SDK flag is read.
 function archiveRouted(server: ServerSDK) {
-  return !!server.protocolKind() || server.sessionManagement.hasArchiveRoutes()
+  return !!server.isReady() || server.sessionManagement.hasArchiveRoutes()
 }

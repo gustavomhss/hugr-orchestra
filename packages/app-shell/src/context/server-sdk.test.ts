@@ -1,14 +1,14 @@
 import { describe, expect, test } from "bun:test"
-import { adaptServerEvent, coalesceServerEvents, createServerProtocolPromise, enqueueServerEvent, resumeStreamAfterPageShow } from "./server-sdk"
+import { adaptServerEvent, coalesceServerEvents, createServerReadyPromise, enqueueServerEvent, resumeStreamAfterPageShow } from "./server-sdk"
 import type { ClientEvent } from "@/session-types"
 import type { Event } from "@/v2-wire"
 
-import { ServerProtocolUnresolvedError, type ServerProtocol } from "@/utils/server-protocol"
+import { ServerNotReadyError } from "@/utils/server-ready"
 import { createCompatibleApi } from "@/utils/server-compat"
 import { createApiForServer } from "@/utils/server"
 import { rejection } from "@/testing/rejection"
 
-describe("createServerProtocolPromise", () => {
+describe("createServerReadyPromise", () => {
   test("shares in-flight detection and retains a successful connection result", async () => {
     let probes = 0
     const listener = Bun.serve({
@@ -20,17 +20,17 @@ describe("createServerProtocolPromise", () => {
       },
     })
     try {
-      const protocol = createServerProtocolPromise({ url: listener.url.origin }, fetch)
-      expect(await Promise.all([protocol, protocol, protocol.then((kind) => kind)])).toEqual(["v2", "v2", "v2"])
-      expect(await protocol).toBe("v2")
+      const ready = createServerReadyPromise({ url: listener.url.origin }, fetch)
+      expect(await Promise.all([ready, ready, ready.then(() => "settled")])).toEqual([undefined, undefined, "settled"])
+      expect(await ready).toBeUndefined()
       expect(probes).toBe(1)
     } finally {
       listener.stop(true)
     }
   })
 
-  test("existing consumers recover a failed connection as v2", async () => {
-    const state = { ready: false, probes: 0, detected: undefined as ServerProtocol | undefined }
+  test("existing consumers recover a failed connection", async () => {
+    const state = { ready: false, probes: 0, detected: 0 }
     const paths: string[] = []
     const listener = Bun.serve({
       port: 0, hostname: "127.0.0.1",
@@ -47,21 +47,21 @@ describe("createServerProtocolPromise", () => {
     })
     try {
       const server = { url: listener.url.origin }
-      const protocol = createServerProtocolPromise(server, fetch, { attempts: 1 }, (value) => {
-        state.detected = value
+      const ready = createServerReadyPromise(server, fetch, { attempts: 1 }, () => {
+        state.detected++
       })
-      const chain = protocol.then((value) => value).then((value) => ({ kind: value }))
+      const chain = ready.then(() => ({ settled: true }))
       const api = createCompatibleApi({
         current: createApiForServer({ server, fetch }),
       })
-      expect(await rejection(protocol)).toBeInstanceOf(ServerProtocolUnresolvedError)
-      expect(state.detected).toBeUndefined()
+      expect(await rejection(ready)).toBeInstanceOf(ServerNotReadyError)
+      expect(state.detected).toBe(0)
       expect(state.probes).toBe(3)
       state.ready = true
       expect(await api.project.list()).toEqual([])
-      expect(await chain).toEqual({ kind: "v2" })
-      expect(await protocol).toBe("v2")
-      expect(state.detected).toBe("v2")
+      expect(await chain).toEqual({ settled: true })
+      expect(await ready).toBeUndefined()
+      expect(state.detected).toBe(1)
       const probes = state.probes
       await api.project.list()
       expect(state.probes).toBe(probes)
@@ -86,13 +86,13 @@ describe("createServerProtocolPromise", () => {
     const abort = new AbortController()
     const reason = new DOMException("Connection disposed", "AbortError")
     try {
-      const protocol = createServerProtocolPromise({ url: listener.url.origin }, fetch, { signal: abort.signal })
-      const chain = protocol.then((kind) => kind)
+      const ready = createServerReadyPromise({ url: listener.url.origin }, fetch, { signal: abort.signal })
+      const chain = ready.then(() => undefined)
       const failed = rejection(chain)
       await reached.promise
       abort.abort(reason)
       expect(await failed).toBe(reason)
-      expect(await rejection(protocol)).toBe(reason)
+      expect(await rejection(ready)).toBe(reason)
       expect(probes).toBe(1)
     } finally {
       listener.stop(true)

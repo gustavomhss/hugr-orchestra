@@ -49,12 +49,11 @@ function fixture(origin = "https://pending-list.test") {
     return Response.json({ data: [] })
   }, { preconnect: fetch.preconnect })
   const http = { url: origin }
-  const protocol = Promise.resolve("v2" as const)
   const currentApi = createApiForServer({ server: http, fetch: fetcher })
-  const api = createCompatibleApi({ protocol, current: currentApi })
+  const api = createCompatibleApi({ current: currentApi })
   const emitter = createGlobalEmitter<Record<string, ServerEvent>>()
   const sdk = {
-    server: { type: "http", http }, scope: ServerScope.local, protocol, api, currentApi,
+    server: { type: "http", http }, scope: ServerScope.local, api, currentApi,
     orchestra: Orchestra.make({ baseUrl: origin, fetch: fetcher }),
     event: { listen: emitter.listen.bind(emitter), start: async () => {} },
   } as unknown as ServerSDK
@@ -189,8 +188,8 @@ test("server index excludes an archived GET result for an existing visible row",
   ctx.canonical.archived = 40
   const pending = sync.session.resolve(id, { force: true })
   ctx.events.emit("/repo", {
-    type: "session.forked", properties: { sessionID: id },
-    current: { type: "session.forked", data: { sessionID: id }, created: 40 },
+    type: "session.revert.cleared", properties: { sessionID: id },
+    current: { type: "session.revert.cleared", data: { sessionID: id }, created: 40 },
   } as unknown as ServerEvent)
   await pending
   await Promise.resolve()

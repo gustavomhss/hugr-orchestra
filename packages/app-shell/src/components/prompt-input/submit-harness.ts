@@ -15,14 +15,13 @@ export let createPromptSubmit: typeof import("./submit").createPromptSubmit
 export let sendFollowupDraft: typeof import("./submit").sendFollowupDraft
 export let createFollowupSender: typeof import("./submit").createFollowupSender
 export let followupInput: (draft: import("./submit").FollowupDraft) => import("./submit").FollowupSendInput
-export let followupSystem: typeof import("./submit").followupSystem
 export let acknowledgeDraftPolicy: typeof import("./submit").acknowledgeDraftPolicy
 export const policyWrites: { id: string; policy: SubagentModelPolicy }[] = []
 export const toasts: { title?: unknown; description?: unknown }[] = []
 type FixtureServer = {
   scope: ServerScope
-  protocol: Promise<"v2">
-  protocolKind: () => "v2"
+  ready: Promise<void>
+  isReady: () => boolean
   api: ServerApi
   currentApi: ServerApi
   sessionManagement: {
@@ -81,16 +80,25 @@ export const sentPrompts: string[] = []
 export const promptInputs: unknown[] = []
 export const sentCommands: unknown[] = []
 export const commands: Array<{ name: string }> = []
-export const behaviorReads: Array<{ scope: string; directory: string; projects: unknown }> = []
-export const behaviors = { system: undefined as string | undefined, fail: false }
-export const events: string[] = []
-export const profileProjects = [{ id: "project", worktree: "/repo/main", sandboxes: ["/repo/worktree-a"] }]
+export const profileProjects = [{ id: "project", worktree: "/repo/main" }]
 export const savedPolicies: { sessionID: string; policy: SubagentModelPolicy }[] = []
 export const interrupts: string[] = []
-export const preparations: PromiseWithResolvers<void>[] = []
 export const statusWrites: { sessionID: string; type: string }[] = []
 export const sdkReads: { scope: string; directory: string }[] = []
 export const removedSessions: string[] = []
+
+// Holds a send at a policy barrier. By default it is the one after the composer cleared and before the Session is
+// marked busy; pass `setPopover` to createPromptSubmit, because the clear is what arms the hold. A new Session never
+// clears the composer first, so `armed` holds at its first barrier instead.
+export function holdSendAfterClear(release: Promise<void>, armed = false) {
+  const hold = { cleared: armed, entered: Promise.withResolvers<void>() }
+  state.policyWait = async () => {
+    if (!hold.cleared) return
+    hold.entered.resolve()
+    await release
+  }
+  return { entered: hold.entered.promise, setPopover: () => void (hold.cleared = true) }
+}
 
 export const state = {
   // How many messages the server reports for a Session; undefined makes the read fail, as an unreachable server would.
@@ -103,7 +111,6 @@ export const state = {
   variant: undefined as string | undefined,
   permissionServer: "server-a",
   createSessionGate: undefined as Promise<void> | undefined,
-  protocol: "v2",
   rulesFailure: false,
   rulesGate: undefined as Promise<void> | undefined,
   rulesStarted: Promise.withResolvers<void>(),
@@ -121,7 +128,6 @@ export const state = {
   promoteProbe: undefined as VoidFunction | undefined,
   promoteDraftHook: () => {},
   sendHook: async (_input: unknown) => {},
-  behaviorHook: async () => {},
   statusObserved: (_args: unknown[]) => {},
   modelID: "model",
   agentID: "backend",
@@ -241,8 +247,8 @@ export function serverFor(scope = ServerScope.local): FixtureServer {
     },
   } as unknown as ServerApi
   return {
-    scope, get protocol() { return Promise.resolve("v2" as const) },
-    protocolKind: () => "v2",
+    scope, ready: Promise.resolve(),
+    isReady: () => true,
     api,
     currentApi: api,
     sessionManagement: {
@@ -297,20 +303,6 @@ beforeAll(async () => {
   mock.module("@orchestra/core/util/encode", () => ({
     base64Encode: (value: string) => value,
     checksum,
-  }))
-
-  // This suite runs Solid's server build, where persisted stores cannot load. The real store (storage
-  // failures, slow loads, profile resolution) is covered in test-browser/llm-behaviors-store.test.ts.
-  mock.module("@/utils/llm-behaviors-store", () => ({
-    resolveBehaviorSystem: async (input: { scope: string; directory: string; projects: unknown }) => {
-      events.push("resolve behaviors")
-      behaviorReads.push({ scope: input.scope, directory: input.directory, projects: input.projects })
-      await state.behaviorHook()
-      const preparation = preparations.shift()
-      if (preparation) await preparation.promise
-      if (behaviors.fail) throw new Error("storage unavailable")
-      return behaviors.system
-    },
   }))
 
   mock.module("@/context/local", () => ({
@@ -488,7 +480,6 @@ beforeAll(async () => {
     api: policyFixture.sdk.api.session as unknown as import("./submit").FollowupSendInput["api"],
     sync: useSync()(), serverSync: useServerSync()(), draft,
   })
-  followupSystem = mod.followupSystem
   acknowledgeDraftPolicy = mod.acknowledgeDraftPolicy
 })
 
@@ -506,10 +497,6 @@ beforeEach(() => {
   promotedDrafts.length = 0
   sentPrompts.length = 0
   promptInputs.length = 0
-  behaviorReads.length = 0
-  behaviors.system = undefined
-  behaviors.fail = false
-  events.length = 0
   sentCommands.length = 0
   commands.length = 0
   state.promptValue = [{ type: "text", content: "ls", start: 0, end: 2 }]
@@ -521,7 +508,6 @@ beforeEach(() => {
   state.variant = undefined
   state.permissionServer = "server-a"
   state.createSessionGate = undefined
-  state.protocol = "v2"
   state.rulesFailure = false
   state.rulesGate = undefined
   state.rulesStarted = Promise.withResolvers<void>()
@@ -531,7 +517,6 @@ beforeEach(() => {
   state.serverOverride = undefined
   state.createStarted = Promise.withResolvers<void>()
   interrupts.length = 0
-  preparations.length = 0
   statusWrites.length = 0
   sdkReads.length = 0
   removedSessions.length = 0
@@ -547,7 +532,6 @@ beforeEach(() => {
   state.promoteProbe = undefined
   state.promoteDraftHook = () => {}
   state.sendHook = async () => {}
-  state.behaviorHook = async () => {}
   state.statusObserved = () => {}
   state.modelID = "model"
   state.agentID = "backend"

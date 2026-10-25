@@ -69,15 +69,6 @@ export function behaviorInstructions(behaviors: LlmBehavior[]) {
     }))
 }
 
-export function behaviorSystem(behaviors: LlmBehavior[]) {
-  const active = behaviorInstructions(behaviors)
-  if (!active.length) return
-  return [
-    "LLM behaviors active for this profile. Apply them to every answer.",
-    ...active.map((behavior) => `## ${behavior.name}\n${behavior.instructions}`),
-  ].join("\n\n")
-}
-
 // Caveman always sends its intensity rule; any other behavior sends nothing until it has instructions.
 export function sendsInstructions(behavior: LlmBehavior) {
   return behavior.id === CAVEMAN_ID || behavior.instructions.trim() !== ""

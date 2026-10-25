@@ -3,8 +3,7 @@ import type { Event } from "@/v2-wire"
 import { createSimpleContext } from "@orchestra/ui/context"
 import { createGlobalEmitter } from "@solid-primitives/event-bus"
 import { makeEventListener } from "@solid-primitives/event-listener"
-import { type Accessor, type ParentProps, batch, createMemo, onCleanup, onMount } from "solid-js"
-import { createStore } from "solid-js/store"
+import { type Accessor, type ParentProps, batch, createMemo, createSignal, onCleanup, onMount } from "solid-js"
 import { Orchestra } from "@orchestra/client"
 import { authTokenFromCredentials, createApiForServer, type ServerApi } from "@/utils/server"
 import { type Platform, usePlatform } from "./platform"
@@ -13,7 +12,7 @@ import { ServerRequired } from "@/components/server-unavailable"
 import { createRefCountMap } from "@/utils/refcount"
 import { useGlobal } from "./global"
 import { ServerScope } from "@/utils/server-scope"
-import { detectServerProtocol, type ServerProtocol, type ServerProtocolOptions } from "@/utils/server-protocol"
+import { waitForServer, type ServerReadyOptions } from "@/utils/server-ready"
 import { createCompatibleApi, type CompatibleApi } from "@/utils/server-compat"
 import { createSessionManagementForServer } from "@/utils/session-management"
 import { createScopedFetch } from "@/utils/scoped-fetch"
@@ -221,8 +220,9 @@ type ServerEventEmitter = ReturnType<typeof createGlobalEmitter<{ [key: string]:
 type ServerSDKBase = {
   server: ServerConnection.Any
   scope: ServerScope
-  protocol: Promise<ServerProtocol>
-  protocolKind: Accessor<ServerProtocol | undefined>
+  /** Settles once the server health endpoint reports ready; a rejected link is retried by the next consumer. */
+  ready: Promise<void>
+  isReady: Accessor<boolean>
   url: string
   api: CompatibleApi
   currentApi: ServerApi
@@ -235,24 +235,23 @@ type ServerSDKBase = {
   }
 }
 
-export function createServerProtocolPromise(
+export function createServerReadyPromise(
   server: ServerConnection.HttpBase,
   fetcher: typeof fetch,
-  options: ServerProtocolOptions = {},
-  onDetected?: (kind: ServerProtocol) => void,
+  options: ServerReadyOptions = {},
+  onReady?: () => void,
 ) {
   // Every consumer retries a failed detection; consecutive failures back off so an unreachable server is not probed in
   // a loop. The first retry is immediate.
   const failed = { count: 0, at: 0 }
   return connectionPromise(async () => {
     const delay =
-      failed.count < 2 ? 0 : Math.min(PROTOCOL_RETRY_MS * 2 ** (failed.count - 2), PROTOCOL_RETRY_MAX_MS) - (Date.now() - failed.at)
+      failed.count < 2 ? 0 : Math.min(READY_RETRY_MS * 2 ** (failed.count - 2), READY_RETRY_MAX_MS) - (Date.now() - failed.at)
     if (delay > 0) await new Promise((resolve) => setTimeout(resolve, delay))
-    return detectServerProtocol(server, fetcher, options).then(
-      (kind) => {
+    return waitForServer(server, fetcher, options).then(
+      () => {
         failed.count = 0
-        onDetected?.(kind)
-        return kind
+        onReady?.()
       },
       (error: unknown) => {
         failed.count++
@@ -263,8 +262,8 @@ export function createServerProtocolPromise(
   })
 }
 
-const PROTOCOL_RETRY_MS = 1_000
-const PROTOCOL_RETRY_MAX_MS = 30_000
+const READY_RETRY_MS = 1_000
+const READY_RETRY_MAX_MS = 30_000
 
 // Consumers retain both this promise and derived .then chains (including the compatibility API).
 // Cache pending/successful results at each link, but let the next consumer retry a rejected link.
@@ -318,14 +317,8 @@ function createServerSdkContextBase(
   })()
 
   const eventApi = createApiForServer({ server: http, fetch: scopedFetch(eventFetch ?? globalThis.fetch) })
-  const [protocolState, setProtocolState] = createStore({ kind: undefined as ServerProtocol | undefined })
-  const protocol = createServerProtocolPromise(
-    http,
-    scopedFetch(),
-    { signal: abort.signal },
-    (kind) => setProtocolState("kind", kind),
-  )
-  const protocolKind = () => protocolState.kind
+  const [isReady, setReady] = createSignal(false)
+  const ready = createServerReadyPromise(http, scopedFetch(), { signal: abort.signal }, () => setReady(true))
   const emitter = createGlobalEmitter<{
     [key: string]: ServerEvent
   }>()
@@ -470,7 +463,7 @@ function createServerSdkContextBase(
   const sessionManagement = createSessionManagementForServer({
     server: http,
     fetch: scopedFetch(),
-    protocol,
+    ready,
     signal: abort.signal,
   })
   const api = createCompatibleApi({ current: currentApi })
@@ -478,8 +471,8 @@ function createServerSdkContextBase(
   return {
     server,
     scope,
-    protocol,
-    protocolKind,
+    ready,
+    isReady,
     url: server.http.url,
     api,
     currentApi,
@@ -537,9 +530,9 @@ export function ServerSDKProvider(props: ParentProps<Parameters<typeof ServerSDK
   )
 }
 
-export function useServerProtocol() {
+export function useServerReady() {
   const serverSDK = useServerSDK()
-  return createMemo(() => serverSDK().protocolKind())
+  return createMemo(() => serverSDK().isReady())
 }
 
 type SDKEventMap = {
@@ -556,7 +549,7 @@ function createDirSdkContext(directory: string, serverSDK: ServerSDKBase) {
 
   return {
     scope: serverSDK.scope,
-    protocol: serverSDK.protocol,
+    ready: serverSDK.ready,
     directory,
     orchestra: serverSDK.orchestra,
     api: createCompatibleApi({

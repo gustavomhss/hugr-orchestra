@@ -197,7 +197,7 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
       await until(() => total() === "+3.91 KiB")
       expect(host.textContent).toContain("Remote named profile")
       two.data.set("/two", snapshot("/two", 4800, false))
-      two.listeners.forEach((listener) => listener({ name: "/two", details: { type: "config.updated" } }))
+      two.listeners.forEach((listener) => listener({ name: "/two", details: { type: "global.disposed" } }))
       await until(() => total() === "+4.69 KiB")
       expect(host.textContent).toContain("Lean is off for this profile")
       two.data.set("/two", snapshot("/two", 5200))

@@ -63,7 +63,7 @@ import { PromptInputV2Composer, usePromptInputV2Controller } from "@/components/
 import { useSettingsCommand } from "@/components/settings-dialog"
 import { setCursorPosition } from "@/components/prompt-input/editor-dom"
 import { promptLength } from "@/components/prompt-input/history"
-import { type FollowupDraft, followupSystem, sendFollowupDraft } from "@/components/prompt-input/submit"
+import { type FollowupDraft, sendFollowupDraft } from "@/components/prompt-input/submit"
 import { type QueuedPrompt, createQueuedPromptStore, queuedPromptPayload, queuedPromptSources } from "@/components/prompt-input/queued-prompt"
 import {
   createEvidenceComposerActions,
@@ -557,7 +557,7 @@ export default function Page() {
     const id = lastUserMessage()?.id
     return list(id ? timeline.turnDiffs(id) : undefined)
   })
-  const nogit = createMemo(() => !!sync().project && sync().project?.vcs !== "git" && !!serverSDK().protocolKind())
+  const nogit = createMemo(() => !!sync().project && sync().project?.vcs !== "git" && !!serverSDK().isReady())
   const changesOptions = createMemo<ChangeMode[]>(() => {
     const list: ChangeMode[] = []
     const vcs = sync().data.vcs
@@ -788,7 +788,7 @@ export default function Page() {
 
   const stopVcs = sdk().event.listen((evt) => {
     const details = evt.details as { type: string; properties?: unknown }
-    if (details.type !== "file.watcher.updated" && details.type !== "filesystem.changed") return
+    if (details.type !== "file.watcher.updated") return
     const props =
       typeof details.properties === "object" && details.properties
         ? (details.properties as Record<string, unknown>)
@@ -1591,7 +1591,7 @@ export default function Page() {
         api: directorySDK.api.session,
         sync: directorySync,
         serverSync: state,
-        draft: { ...item, system: await followupSystem(platform, directorySDK.scope, state, directorySDK.directory) },
+        draft: item,
         optimisticBusy: item.sessionDirectory === directorySDK.directory,
         deliberate: input.manual === true,
         currentSource: {

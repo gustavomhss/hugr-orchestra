@@ -168,7 +168,6 @@ async function mockReviewServers(
   diff: (origin: string, url: URL) => Promise<{ status: number; data: unknown[] }>,
 ) {
   await mockOrchestraServer(page, {
-    protocol: "v2",
     directory: "/shared/repo",
     project: { id: "review", worktree: "/shared/repo", vcs: "git", time: { created: 1, updated: 1 }, sandboxes: [] },
     sessions: [sessionA, sessionB].map((session) => ({ ...session, directory: "/shared/repo", projectID: "review" })),

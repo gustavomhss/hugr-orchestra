@@ -148,7 +148,7 @@ export function BackgroundProcessesPanel() {
 
   const refresh = (sessionID: string) =>
     sdk()
-      .protocol.then(async (): Promise<readonly SessionProcess[]> => {
+      .ready.then(async (): Promise<readonly SessionProcess[]> => {
         const items = await serverSDK().orchestra.sessions.processes({ sessionID })
         return items.map((item) => ({
           ...item,
@@ -169,7 +169,7 @@ export function BackgroundProcessesPanel() {
     const sessionID = params.id
     if (!sessionID) return Promise.resolve()
     return sdk()
-      .protocol.then(async () => {
+      .ready.then(async () => {
         await serverSDK().orchestra.sessions.processStop({ sessionID: sessionID!, processID })
       })
       .then(() => refresh(sessionID))

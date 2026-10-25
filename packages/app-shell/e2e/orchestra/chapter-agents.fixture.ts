@@ -126,7 +126,6 @@ export async function setup(
     wait?: Promise<void>
     waitOther?: Promise<void>
     response?: { state: string }
-    protocol?: "v2"
     models?: boolean
     files?: Record<string, AgentFile>
     // `html`: an older server answers unknown routes with its web app and status 200.
@@ -195,7 +194,6 @@ export async function setup(
     { serverA, serverB, directory, otherDirectory, scheme: input.scheme ?? "dark" },
   )
   await mockOrchestraServer(page, {
-    protocol: input.protocol,
     eventRetry: 60_000,
     provider: input.models
       ? ({

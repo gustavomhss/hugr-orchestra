@@ -42,8 +42,7 @@ export default function LeanPage(props: ChapterPageProps) {
   onCleanup(serverSDK().event.listen((event) => {
     if (event.name !== "global" && pathKey(event.name) !== key) return
     const type: string = event.details.type
-    if (type === "config.updated" || type === "global.disposed" || type === "server.instance.disposed")
-      void controller.refresh()
+    if (type === "global.disposed" || type === "server.instance.disposed") void controller.refresh()
   }))
   return <LeanProfileView
     profileName={profileName()}

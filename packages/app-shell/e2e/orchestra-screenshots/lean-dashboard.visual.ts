@@ -34,7 +34,7 @@ test.use({ viewport: { width: 1672, height: 941 }, deviceScaleFactor: 1, locale:
 test("native Lean production page: profiles, controls, history and dark/light captures", async ({ page }) => {
   const data = profiles.map((_, index) => demo(index))
   const requests: { method: string; directory: string; path: string; body?: LeanDashboard.Update }[] = []
-  await mockOrchestraServer(page, { protocol: "v2", directory: profiles[0].worktree, project: profiles[0],
+  await mockOrchestraServer(page, { directory: profiles[0].worktree, project: profiles[0],
     provider: { all: [], connected: [], default: {} }, sessions: [], pageMessages: () => ({ items: [] }) })
   await page.addInitScript(({ profiles }) => {
     const server = "http://127.0.0.1:4096"

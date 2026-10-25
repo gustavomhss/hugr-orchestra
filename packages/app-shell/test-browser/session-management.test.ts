@@ -14,7 +14,7 @@ test("canonical policy read uses generated Session.Info as the timestamp fence",
     cost: 0, tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
     time: { created: 1, updated: 20 }, subagentModels: policy,
   } }), { preconnect: fetch.preconnect })
-  const management = createSessionManagementForServer({ server, fetch: fetcher, protocol: Promise.resolve("v2") })
+  const management = createSessionManagementForServer({ server, fetch: fetcher, ready: Promise.resolve() })
   expect(await management.readSubagentModels("ses_origin")).toEqual({ policy, timestamp: 20 })
 })
 
@@ -31,7 +31,7 @@ test("generated session management captures origin credentials and replaces poli
     if (body && typeof body === "object" && "archived" in body) return new Response(null, { status: 204 })
     return Response.json({ data: body && typeof body === "object" && "policy" in body ? body.policy : { mode: "inherit" } })
   }, { preconnect: fetch.preconnect })
-  const management = createSessionManagementForServer({ server, fetch: fetcher, protocol: Promise.resolve("v2") })
+  const management = createSessionManagementForServer({ server, fetch: fetcher, ready: Promise.resolve() })
   server.url = "https://other.test"
   server.password = "changed"
   expect(await management.getSubagentModels("ses_origin")).toEqual({ mode: "inherit" })
@@ -51,7 +51,7 @@ test.each([404, 405, 501, 401, 403, 500])("generated runtime classifies HTTP %s 
   const { createSessionManagementForServer } = await import("@/utils/session-management")
   const server = { url: "https://origin.test" }
   const fetcher = Object.assign(async () => Response.json({ _tag: "UnauthorizedError" }, { status }), { preconnect: fetch.preconnect })
-  const management = createSessionManagementForServer({ server, fetch: fetcher, protocol: Promise.resolve("v2") })
+  const management = createSessionManagementForServer({ server, fetch: fetcher, ready: Promise.resolve() })
   const result = await management.getSubagentModels("ses_origin").then(() => undefined, (error: unknown) => error)
   expect(result).toBeDefined()
   expect(sessionManagementUnsupported(result)).toBe([404, 405, 501].includes(status))
@@ -60,10 +60,10 @@ test.each([404, 405, 501, 401, 403, 500])("generated runtime classifies HTTP %s 
 const policy: SubagentModelPolicy = { mode: "allowlist", models: [{ providerID: "router", id: "full/slash/model" }] }
 const incomplete = Symbol("operation did not settle")
 
-function management(fetcher: typeof fetch, input: Partial<Pick<Parameters<typeof createSessionManagementForServer>[0], "server" | "protocol" | "signal">> = {}) {
+function management(fetcher: typeof fetch, input: Partial<Pick<Parameters<typeof createSessionManagementForServer>[0], "server" | "ready" | "signal">> = {}) {
   const server = input.server ?? { url: "https://synthetic-origin.invalid" }
   return createSessionManagementForServer({
-    server, fetch: fetcher, protocol: input.protocol ?? Promise.resolve("v2"), signal: input.signal,
+    server, fetch: fetcher, ready: input.ready ?? Promise.resolve(), signal: input.signal,
   })
 }
 
@@ -347,15 +347,15 @@ test.each(["get", "read", "post", "list"] as const)("generated %s rejects stalle
   }
 })
 
-test.each(["get", "read", "post", "archive", "list"] as const)("generated %s aborts pending protocol and rejects a late request", async (operation) => {
+test.each(["get", "read", "post", "archive", "list"] as const)("generated %s aborts a pending readiness wait and rejects a late request", async (operation) => {
   const lifetime = new AbortController()
-  const protocol = Promise.withResolvers<"v2">()
+  const ready = Promise.withResolvers<void>()
   const requests: Request[] = []
   const fetcher = Object.assign(async (input: string | URL | Request, init?: RequestInit) => {
     requests.push(new Request(input, init))
     return Response.json({ data: policy })
   }, { preconnect: fetch.preconnect })
-  const port = management(fetcher, { protocol: protocol.promise, signal: lifetime.signal })
+  const port = management(fetcher, { ready: ready.promise, signal: lifetime.signal })
   const operations = {
     get: () => port.getSubagentModels("ses_origin"), read: () => port.readSubagentModels("ses_origin"),
     post: () => port.setSubagentModels("ses_origin", policy), archive: () => port.archive("ses_origin", true),
@@ -364,13 +364,13 @@ test.each(["get", "read", "post", "archive", "list"] as const)("generated %s abo
   const pending = result(operations[operation]())
   try {
     await Bun.sleep(0)
-    const reason = new Error("synthetic owner disposed during protocol discovery")
+    const reason = new Error("synthetic owner disposed while waiting for readiness")
     lifetime.abort(reason)
     expect(await pending).toBe(reason)
-    protocol.resolve("v2")
+    ready.resolve()
     await Bun.sleep(0)
     expect(requests).toEqual([])
-  } finally { protocol.resolve("v2") }
+  } finally { ready.resolve() }
 })
 
 test("disposed instance cannot launch reads, archives, dispatch waits or fresh retry barriers", async () => {
