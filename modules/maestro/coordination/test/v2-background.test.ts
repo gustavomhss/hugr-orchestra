@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
-import { DateTime, Deferred, Effect, Layer, Ref } from "effect"
+import { eq } from "drizzle-orm"
+import { DateTime, Deferred, Effect, Layer, Ref, Schedule } from "effect"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { SessionSchema, SessionStore, SessionV2 } from "@orchestra/core/session"
@@ -7,6 +8,8 @@ import { SessionMessage } from "@orchestra/core/session/message"
 import { TaskTool } from "@orchestra/core/tool/task"
 import { TaskGovernance } from "@orchestra/core/tool/task-governance"
 import { AgentV2 } from "@orchestra/core/agent"
+import { Database } from "@orchestra/core/database/database"
+import { EventV2 } from "@orchestra/core/event"
 import { GovernanceBackgroundV2 } from "../src/v2/governance/background"
 import { admit, governanceLayer, session, worktree } from "./fixture/v2-governance"
 
@@ -32,11 +35,12 @@ test("a background Task returns at once and delivers the child's reply to its pa
         const sessions = Layer.mock(SessionV2.Service, {
           wait: () => Effect.void,
           messages: () => Ref.get(reply).pipe(Effect.map((messages) => [...messages])),
-          // Delivery ignores the admitted record, so the capture ends the call once it has seen the input.
+          // Delivery ignores the admitted record, so the capture parks the call once it has seen the input; a failed
+          // call would be retried and counted again.
           prompt: (input) =>
             Ref.update(prompts, (count) => count + 1).pipe(
               Effect.andThen(Deferred.succeed(delivered, input)),
-              Effect.andThen(Effect.die("captured")),
+              Effect.andThen(Effect.never),
             ),
           revert: { stage: unused, clear: unused, commit: unused },
         })
@@ -103,6 +107,53 @@ test("a background child that ends without a completed reply returns a failure t
           const governance = yield* TaskGovernance.Service
           yield* governance.beforeTurn(child)
           expect(yield* Deferred.await(delivered)).toStartWith(`Background task failed: d\ntask_id: ${childID}\n`)
+        }).pipe(Effect.provide(governanceLayer(directory, sessions)))
+      }),
+    ),
+  ))
+
+test("a background return that keeps failing is retried, then held as a durable notice in the parent's history", () =>
+  Effect.runPromise(
+    Effect.scoped(
+      Effect.gen(function* () {
+        const directory = yield* worktree
+        const prompts = yield* Ref.make(0)
+        const parent = yield* Deferred.make<SessionSchema.Info>()
+        const sessions = Layer.mock(SessionV2.Service, {
+          wait: () => Effect.void,
+          messages: () => Effect.succeed([]),
+          prompt: () => Ref.update(prompts, (count) => count + 1).pipe(Effect.andThen(Effect.die("parent inbox unavailable"))),
+          get: () => Deferred.await(parent),
+          message: () => Effect.succeed(undefined),
+          revert: { stage: unused, clear: unused, commit: unused },
+        })
+        yield* Effect.gen(function* () {
+          const parentID = yield* session({ directory, agent: "maestro" })
+          yield* admit({ directory, caller: "maestro", target: "general", parentID, extra: { background: true } })
+          const childID = TaskTool.taskChildID(context(parentID))
+          const store = yield* SessionStore.Service
+          const parentInfo = yield* store.get(parentID)
+          const child = yield* store.get(yield* session({ directory, agent: "general", parentID, id: childID }))
+          if (!parentInfo || !child) return yield* Effect.die("fixture session missing")
+          yield* Deferred.succeed(parent, parentInfo)
+          const governance = yield* TaskGovernance.Service
+          yield* governance.beforeTurn(child)
+          const database = yield* Database.Service
+          const held = yield* database.db.select().from(EventV2.EventTable).where(eq(EventV2.EventTable.aggregate_id, parentID))
+            .all().pipe(
+              Effect.orDie,
+              Effect.map((rows) => rows.filter((row) => row.type.startsWith("session.next.synthetic"))),
+              Effect.repeat({ until: (rows) => rows.length > 0, schedule: Schedule.spaced("50 millis") }),
+              Effect.timeout("5 seconds"),
+            )
+          expect(yield* Ref.get(prompts)).toBe(GovernanceBackgroundV2.RETRIES + 1)
+          expect(held).toHaveLength(1)
+          expect(held[0].data).toMatchObject({
+            messageID: GovernanceBackgroundV2.holdID(
+              GovernanceBackgroundV2.watch({ parentID, childID, description: "d", context: context(parentID) }),
+            ),
+            text: expect.stringContaining(`task_id: ${childID}`),
+          })
         }).pipe(Effect.provide(governanceLayer(directory, sessions)))
       }),
     ),

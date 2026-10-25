@@ -3,9 +3,11 @@ export * as TaskTool from "./task"
 import { createHash } from "node:crypto"
 import { isDeepStrictEqual } from "node:util"
 import { ToolFailure } from "@orchestra/llm"
+import type { Permission } from "@orchestra/schema/permission"
 import { Context, DateTime, Effect, Layer, Option, Schema } from "effect"
 import { AgentV2 } from "../agent"
 import { Catalog } from "../catalog"
+import { Config } from "../config"
 import { Database } from "../database/database"
 import { makeLocationNode, Node } from "../effect/app-node"
 import { LayerNode } from "../effect/layer-node"
@@ -69,6 +71,7 @@ const layer = Layer.effectDiscard(
     const events = yield* EventV2.Service
     const policy = yield* SessionSubagentModels.Service
     const governance = yield* TaskGovernance.Service
+    const config = yield* Config.Service
     // Governance fields are recorded with the call, so the recorded input decodes with this same schema.
     const taskInput = Schema.Struct({ ...Input.fields, ...governance.input })
     const decodeCalled = Schema.decodeUnknownOption(taskInput)
@@ -126,13 +129,13 @@ const layer = Layer.effectDiscard(
           })
           const failure = requireChild(child, location, context, target.id, model)
           if (failure) return yield* failure
-          const permissions = admission.permissions?.map((rule) => ({
-            action: rule.action,
-            resource: rule.resource,
-            effect: rule.effect,
-          }))
+          // A governance that binds rules starts from the inherited ones (see `TaskGovernance.Admission`).
+          const permissions = (
+            admission.permissions ??
+            inheritedPermissions(yield* store.permissions(context.sessionID), primaryTools(yield* config.entries()))
+          ).map((rule) => ({ action: rule.action, resource: rule.resource, effect: rule.effect }))
           // Compared first so an exact retry records no second permission change.
-          if (permissions && !isDeepStrictEqual(permissions, yield* store.permissions(child.id)))
+          if (!isDeepStrictEqual(permissions, yield* store.permissions(child.id)))
             yield* sessions.setPermission({
               sessionID: child.id,
               permission: permissions.map((rule) => ({ permission: rule.action, pattern: rule.resource, action: rule.effect })),
@@ -243,6 +246,7 @@ export const node: LayerNode.Node<never, never, typeof Node.tags.values.location
     EventV2.node,
     SessionSubagentModels.node,
     TaskGovernance.node,
+    Config.node,
   ],
 })
 
@@ -393,6 +397,30 @@ function requireChild(
     return new ToolFailure({ message: `Task child parent, agent, or placement mismatch: ${child.id}` })
   if (!sameModel(child.model, model))
     return new ToolFailure({ message: `Task cannot change the recorded child model: ${child.id}` })
+}
+
+/**
+ * The rules every Task child inherits, as V1 derived them: the parent Session's deny and `external_directory` rules, so a
+ * child is never more permissive than its parent on a denied pattern, then a deny of each `experimental.primary_tools`
+ * tool, which only primary agents may use.
+ */
+export function inheritedPermissions(parent: Permission.Ruleset, primary: ReadonlyArray<string>): Permission.Ruleset {
+  const inherited = parent.filter((rule) => rule.action === "external_directory" || rule.effect === "deny")
+  return [
+    ...inherited,
+    ...primary
+      .map((action) => ({ action, resource: "*", effect: "deny" as const }))
+      .filter((deny) => !inherited.some((rule) => rule.action === deny.action && rule.resource === deny.resource && rule.effect === deny.effect)),
+  ]
+}
+
+/** The configured `experimental.primary_tools`, from the highest-priority document that sets it. */
+export function primaryTools(entries: ReadonlyArray<Config.Entry>) {
+  return (
+    entries
+      .filter((entry): entry is Config.Document => entry.type === "document")
+      .findLast((entry) => entry.info.experimental?.primary_tools !== undefined)?.info.experimental?.primary_tools ?? []
+  )
 }
 
 /** The child a Task call creates when neither `task_id` nor its governance names one; stable across exact retries. */
