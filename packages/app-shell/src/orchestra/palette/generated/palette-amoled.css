@@ -5,7 +5,7 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] {
   --orchestra-body: #dedede;
   --orchestra-muted: #cecece;
   --orchestra-faint: #cfcfcf;
-  --orchestra-accent: #b388ff;
+  --orchestra-accent: #7fb3fd;
   --orchestra-warm: #ffea00;
   --orchestra-success: #00ff88;
   --orchestra-danger: #ff1744;
@@ -42,9 +42,9 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] {
   --orchestra-sidebar-text: #cecece;
   --orchestra-sidebar-hover-background: rgba(255, 255, 255, 0.045);
   --orchestra-sidebar-hover-text: #ffffff;
-  --orchestra-sidebar-active-background: linear-gradient(90deg, rgba(46, 0, 82, 0.58), rgba(53, 53, 53, 0.48));
+  --orchestra-sidebar-active-background: linear-gradient(90deg, rgba(9, 40, 91, 0.58), rgba(53, 53, 53, 0.48));
   --orchestra-sidebar-active-text: #ffffff;
-  --orchestra-sidebar-active-accent: #9e5aff;
+  --orchestra-sidebar-active-accent: #4695ff;
   --orchestra-sidebar-active-highlight: rgba(255, 255, 255, 0.035);
   --orchestra-sidebar-icon: #cacaca;
   --orchestra-sidebar-active-icon: #e8e8e8;
@@ -59,7 +59,7 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] {
   --orchestra-sidebar-profile-text: var(--orchestra-text);
   --orchestra-sidebar-profile-muted: #b6b6b6;
   --orchestra-sidebar-profile-chevron: #a9a9a9;
-  --orchestra-sidebar-profile-logo: #60009c;
+  --orchestra-sidebar-profile-logo: #003fc2;
   --orchestra-sidebar-profile-logo-text: #ffffff;
   --orchestra-brand-descriptor: #b7b7b7;
   --orchestra-sidebar-footer: #b3b3b3;
@@ -73,7 +73,7 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] {
   --orchestra-branch-color: #fbd800;
   --orchestra-surface: rgba(37, 37, 37, 0.7);
   --orchestra-surface-hover: rgba(54, 54, 54, 0.8);
-  --orchestra-surface-active: rgba(62, 21, 104, 0.62);
+  --orchestra-surface-active: rgba(27, 58, 108, 0.62);
   --orchestra-surface-float: rgba(21, 21, 21, 0.97);
   --orchestra-surface-float-shadow: 0 18px 44px rgba(0, 0, 0, 0.5);
   --orchestra-border: rgba(195, 195, 195, 0.2);
@@ -85,7 +85,7 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] {
   background: var(--orchestra-page-background);
 }
 html[data-orchestra-palette="amoled"][data-color-scheme][dir="rtl"] body[data-new-layout] {
-  --orchestra-sidebar-active-background: linear-gradient(270deg, rgba(46, 0, 82, 0.58), rgba(53, 53, 53, 0.48));
+  --orchestra-sidebar-active-background: linear-gradient(270deg, rgba(9, 40, 91, 0.58), rgba(53, 53, 53, 0.48));
 }
 html[data-orchestra-palette="amoled"][data-color-scheme]
   body[data-new-layout]
@@ -422,9 +422,9 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] [
     --orchestra-composer-text: #f0f0f0;
     --orchestra-composer-placeholder: #939393;
     --orchestra-composer-control: #c3c3c3;
-    --orchestra-send-background: linear-gradient(180deg, #7100bd, #510084);
-    --orchestra-send-border: rgba(131, 0, 201, 0.5);
-    --orchestra-send-shadow: 0 2px 8px rgba(81, 0, 132, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    --orchestra-send-background: linear-gradient(180deg, #0054d5, #0032ae);
+    --orchestra-send-border: rgba(49, 95, 215, 0.5);
+    --orchestra-send-shadow: 0 2px 8px rgba(0, 50, 174, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
     --orchestra-apps-chrome: rgba(20, 20, 20, 0.55);
     --orchestra-apps-host: rgba(20, 20, 20, 0.42);
     --orchestra-rail-tab-text: #a3a3a3;
@@ -437,7 +437,7 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] [
     --orchestra-rail-tab-highlight: rgba(255, 255, 255, 0.05);
     --orchestra-rail-badge-background: rgba(255, 255, 255, 0.07);
     --orchestra-rail-badge-text: #bbbbbb;
-    --orchestra-rail-badge-active-background: rgba(144, 97, 219, 0.22);
+    --orchestra-rail-badge-active-background: rgba(89, 141, 217, 0.22);
     --orchestra-rail-badge-active-text: #e0e0e0;
     --orchestra-card-background: linear-gradient(180deg, rgba(30, 30, 30, 0.7), rgba(20, 20, 20, 0.66));
     --orchestra-task-mark-background: #1f1f1f;
@@ -871,7 +871,7 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] [
 }
 @media (min-width: 768px) {
   [data-orchestra-palette="amoled"] body[data-new-layout] [data-session-layout="surface"] {
-    --orchestra-chat-who: #9364de;
+    --orchestra-chat-who: #598dd9;
     --orchestra-chat-button-border: rgba(195, 195, 195, 0.2);
     --orchestra-chat-button-background: rgba(37, 37, 37, 0.7);
     --orchestra-chat-button-text: #e0e0e0;
@@ -1233,16 +1233,16 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-mx-kit] {
   --mx-modal: #121212;
   --mx-dim: #cecece;
   --mx-strong: #f6f6f6;
-  --mx-blue: #b387fd;
+  --mx-blue: #80b2fb;
   --mx-good: #00ff7e;
   --mx-bad: #ff1437;
   --mx-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.035);
   --mx-shadow: 0 30px 100px rgba(0, 0, 0, 0.36);
   --mx-pop-shadow: 0 14px 35px rgba(0, 0, 0, 0.24);
   --mx-backdrop: rgba(0, 0, 0, 0.55);
-  --mx-primary: linear-gradient(180deg, #6b00bc, #520090);
+  --mx-primary: linear-gradient(180deg, #0057c4, #00419f);
   --mx-primary-text: #ffffff;
-  --mx-enabled: rgba(106, 43, 196, 0.22);
+  --mx-enabled: rgba(19, 103, 188, 0.22);
 }
 [data-orchestra-palette="amoled"] .mx-eyebrow {
   color: var(--orchestra-muted);
@@ -1918,7 +1918,7 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] .
   --zen-ws-hover: rgba(255, 255, 255, 0.05);
   --zen-control-hover: rgba(255, 255, 255, 0.07);
   --zen-control-hover-text: #ececec;
-  --zen-active-control: #b481f1;
+  --zen-active-control: #83abf6;
   --zen-icon: rgba(0, 0, 0, 0.5);
   --zen-input: rgba(0, 0, 0, 0.55);
   --zen-field: rgba(0, 0, 0, 0.6);
@@ -1942,7 +1942,7 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] .
   --zen-popover-dim: #959595;
   --zen-popover-hover: rgba(255, 255, 255, 0.06);
   --zen-library-empty: #959595;
-  --zen-focus: #b481f1;
+  --zen-focus: #83abf6;
 }
 [data-orchestra-palette="amoled"] .zen-dock-modes {
   border-block-end: 1px solid var(--border-weak);
@@ -2453,12 +2453,12 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] .
   --background-stronger: #0a0a0a;
   --color-background-stronger: #0a0a0a;
   --syntax-comment: #797979;
-  --syntax-keyword: #ff00ff;
+  --syntax-keyword: #5fa1fd;
   --syntax-string: #00ff88;
   --syntax-primitive: #18ffff;
   --syntax-property: #ffea00;
   --syntax-type: #fef5a2;
-  --syntax-constant: #b388ff;
+  --syntax-constant: #98c6ff;
   --syntax-variable: #ffffff;
   --syntax-operator: #dbdbdb;
   --syntax-punctuation: #dbdbdb;
