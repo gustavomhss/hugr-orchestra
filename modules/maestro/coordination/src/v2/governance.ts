@@ -29,6 +29,7 @@ import { LogicalTaskV2 } from "./governance/logical-task"
 import { GovernanceRecordsV2 } from "./governance/records"
 import { GovernanceReservationV2 } from "./governance/reservation"
 import { UnsupportedV2 } from "./governance/unsupported"
+import { WorkResultV2 } from "./governance/work-result"
 import { WorkflowGateV2 } from "./governance/workflow"
 import { WriteRootsV2 } from "./governance/write-roots"
 import { MaestroSeats } from "./seats-service"
@@ -226,9 +227,39 @@ export const make = Effect.gen(function* () {
     settle: (input) =>
       Effect.gen(function* () {
         const settled = yield* TaskGovernance.allowAll.settle(input)
-        if (seatOf(input.child.agent ?? AgentV2.defaultID)?.workResult !== UpstreamResult.SCHEMA) return settled
-        const card = UpstreamResult.parse(settled.text)
-        return card ? { ...settled, structured: { upstreamResult: card } } : settled
+        const seat = seatOf(input.child.agent ?? AgentV2.defaultID)
+        const schema = seat?.workResult
+        // Jimmy's discovery result needs the research host, and jimmy Tasks are refused before admission.
+        if (!seat || !schema || schema === "discovery-work-result-v1") return settled
+        if (schema === UpstreamResult.SCHEMA) {
+          const card = UpstreamResult.parse(settled.text)
+          return card ? { ...settled, structured: { upstreamResult: card } } : settled
+        }
+        // V1's SeatWork.track: the seat's work result rides with the Task result, host facts included.
+        const authority = yield* SessionAuthority.make(store.get)(input.child.id, input.child.projectID).pipe(
+          Effect.mapError((error) => new ToolFailure({ message: `Task binding denied: ${error.reason}` })),
+        )
+        const binding = yield* LogicalTaskV2.read(services, input.child.id)
+        const loader = yield* ToolSafety.RuntimeProfileLoader
+        const project = loader
+          ? yield* loader().pipe(Effect.mapError((error) => new ToolFailure({ message: error.message, error })))
+          : yield* ToolSafety.RuntimeProfile
+        const history = yield* store
+          .entries(input.child.id)
+          .pipe(Effect.mapError((error) => new ToolFailure({ message: error.message, error })))
+        const workResult = WorkResultV2.assemble({
+          seat: { ...seat, workResult: schema },
+          reply: input.reply,
+          history: history.map((entry) => entry.message),
+          executionSessionID: input.child.id,
+          authoritySessionID: authority.rootID,
+          taskId: binding?.taskId,
+          writeRoots: WorkResultV2.effective(WriteRootsV2.read(yield* store.permissions(input.child.id)), project, {
+            directory: location.directory,
+            worktree: location.vcs?.type === "git" ? location.project.directory : location.directory,
+          }),
+        })
+        return { ...settled, structured: { [WorkResultV2.KEY]: workResult } }
       }),
   })
 
