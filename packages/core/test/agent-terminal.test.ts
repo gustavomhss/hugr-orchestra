@@ -58,6 +58,19 @@ describe("AgentTerminal.sanitize", () => {
 })
 
 describe("AgentTerminal.run", () => {
+  test("the stdin note the model reads follows the flag", () => {
+    const before = process.env.ORCHESTRA_AGENT_TERMINAL
+    try {
+      delete process.env.ORCHESTRA_AGENT_TERMINAL
+      expect(AgentTerminal.stdinNote()).toContain("Stdin is empty")
+      process.env.ORCHESTRA_AGENT_TERMINAL = "1"
+      expect(AgentTerminal.stdinNote()).toContain(process.platform === "win32" ? "Stdin is empty" : "terminal tab the owner can watch")
+    } finally {
+      if (before === undefined) delete process.env.ORCHESTRA_AGENT_TERMINAL
+      else process.env.ORCHESTRA_AGENT_TERMINAL = before
+    }
+  })
+
   test("enabled follows the flag", () => {
     const before = process.env.ORCHESTRA_AGENT_TERMINAL
     try {

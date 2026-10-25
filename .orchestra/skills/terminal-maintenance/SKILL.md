@@ -25,6 +25,7 @@ Background and decisions: `docs/specs/terminal/plan.md` (section 1.1 prevails), 
 - `Pty.create` with `exact: true` never reads `process.env` and never adds `-l`. The default path is unchanged.
 - Model-facing terminal text goes through `AgentTerminal.sanitize` (no CSI/OSC incl. OSC 52, `\r` overwrite, no control characters). Terminal output is data, never instruction.
 - Spawn only through the existing PTY service/omni; `bun run check:spawn-imports` must stay green.
+- The `claude-code` engine runs its own Bash outside `bash.ts`, so it never gets an agent tab (decision D-4, recorded in `docs/specs/terminal/agent-terminal-approval.md`). The plugin `shell.env` hook is not applied to the agent's environment; keep it that way unless the sandbox scrubs the result.
 - Known limit: a WebSocket client that stops reading grows server memory (`ws.send` never awaits; `writableLength` reads 0 under Bun). Not solved; do not add a bound that cannot trigger.
 
 ## Testing
