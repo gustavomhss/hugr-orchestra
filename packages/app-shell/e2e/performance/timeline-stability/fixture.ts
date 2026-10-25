@@ -2,7 +2,7 @@ import { base64Encode } from "@orchestra/core/util/encode"
 import { Event } from "@orchestra/schema/event"
 import { SessionStatusEvent } from "@orchestra/schema/session-status-event"
 import { SessionV1 } from "@orchestra/schema/session-v1"
-import type { AssistantMessage, Message, Part, Session, SessionStatus, ToolPart, ToolState, UserMessage } from "@/v2-wire"
+import type { AssistantMessage, Message, Part, Session, ToolPart, ToolState, UserMessage } from "@/v2-wire"
 
 
 import { expect, type Page } from "@playwright/test"
@@ -34,10 +34,11 @@ type TimelinePayload = Extract<
       | "message.removed"
       | "message.part.updated"
       | "message.part.removed"
-      | "message.part.delta"
-      | "session.status"
   }
 >
+
+const nativeTypes = ["session.step.started", "session.step.ended", "session.retry.scheduled", "session.text.delta"] as const
+type NativePayload = { id: string; type: (typeof nativeTypes)[number]; properties: Record<string, unknown> }
 
 type DeepReadonly<Value> = Value extends readonly unknown[]
   ? { readonly [Key in keyof Value]: DeepReadonly<Value[Key]> }
@@ -45,7 +46,7 @@ type DeepReadonly<Value> = Value extends readonly unknown[]
     ? { readonly [Key in keyof Value]: DeepReadonly<Value[Key]> }
     : Value
 
-export type TimelineEvent = DeepReadonly<Omit<GlobalEvent, "payload"> & { payload: TimelinePayload }>
+export type TimelineEvent = DeepReadonly<Omit<GlobalEvent, "payload"> & { payload: TimelinePayload | NativePayload }>
 export type EventPayload = TimelineEvent
 export type ToolStatus = ToolState["status"]
 export type TimelineMessage = { info: UserMessage; parts: Part[] } | { info: AssistantMessage; parts: Part[] }
@@ -77,8 +78,14 @@ const timelineEventSchema = Schema.Union([
   eventSchema("message.removed", SessionV1.Event.MessageRemoved.data),
   eventSchema("message.part.updated", SessionV1.Event.PartUpdated.data),
   eventSchema("message.part.removed", SessionV1.Event.PartRemoved.data),
-  eventSchema("message.part.delta", SessionV1.Event.PartDelta.data),
-  eventSchema("session.status", SessionStatusEvent.Status.data),
+  Schema.Struct({
+    directory: Schema.String,
+    payload: Schema.Struct({
+      id: Event.ID,
+      type: Schema.Literals(nativeTypes),
+      properties: Schema.Record(Schema.String, Schema.Unknown),
+    }),
+  }),
 ])
 const decodeEvent = Schema.decodeUnknownSync(timelineEventSchema)
 let eventSequence = 0
@@ -224,12 +231,7 @@ function describeEvent(event: EventPayload) {
       .filter(Boolean)
       .join(":")
   }
-  if (event.payload.type === "session.status") {
-    const status = event.payload.properties.status
-    return [event.payload.type, status.type, status.type === "retry" ? status.attempt : undefined]
-      .filter((value) => value !== undefined)
-      .join(":")
-  }
+  if (event.payload.type === "session.retry.scheduled") return `${event.payload.type}:${event.payload.properties.attempt}`
   return event.payload.type
 }
 
@@ -238,6 +240,13 @@ export function event<const Type extends TimelinePayload["type"]>(
   properties: Extract<TimelinePayload, { type: Type }>["properties"],
 ): TimelineEvent
 export function event(type: TimelinePayload["type"], properties: TimelinePayload["properties"]): TimelineEvent {
+  return validateTimelineEvent({
+    directory,
+    payload: { id: `evt_timeline_${String(++eventSequence).padStart(4, "0")}`, type, properties },
+  })
+}
+
+function nativeEvent(type: NativePayload["type"], properties: Record<string, unknown>): TimelineEvent {
   return validateTimelineEvent({
     directory,
     payload: { id: `evt_timeline_${String(++eventSequence).padStart(4, "0")}`, type, properties },
@@ -342,18 +351,37 @@ export function partUpdated(part: Part | PartSeed<"assistant">) {
   })
 }
 
-export function partDelta(partID: string, delta: string, messageID = assistantID) {
-  return event("message.part.delta", { sessionID, messageID, partID, field: "text", delta })
+// V2 text deltas address the assistant message and the text ordinal, not a part ID.
+export function partDelta(_partID: string, delta: string, messageID = assistantID) {
+  return nativeEvent("session.text.delta", { sessionID, assistantMessageID: messageID, ordinal: 0, delta })
 }
 
 export function messageUpdated(info: Message) {
   return event("message.updated", { sessionID, info })
 }
 
-export function status(type: SessionStatus["type"], attempt = 1) {
-  return event("session.status", {
+export function status(type: "busy" | "idle" | "retry", attempt = 1, message = "Rate limited") {
+  if (type === "busy")
+    return nativeEvent("session.step.started", {
+      sessionID,
+      assistantMessageID: assistantID,
+      agent: "build",
+      model: { id: "model", providerID: "provider" },
+    })
+  if (type === "idle")
+    return nativeEvent("session.step.ended", {
+      sessionID,
+      assistantMessageID: assistantID,
+      finish: "stop",
+      cost: 0,
+      tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+    })
+  return nativeEvent("session.retry.scheduled", {
     sessionID,
-    status: type === "retry" ? { type, attempt, message: "Rate limited", next: 1700000010000 } : { type },
+    assistantMessageID: assistantID,
+    attempt,
+    at: 1700000010000,
+    error: { type: "retry", message },
   })
 }
 

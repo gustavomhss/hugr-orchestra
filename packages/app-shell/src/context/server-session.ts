@@ -1,9 +1,9 @@
 import { Binary } from "@orchestra/core/util/binary"
 import { retry } from "@orchestra/core/util/retry"
-import type { FileDiffInfo, SessionMessageInfo } from "@/session-types"
+import type { SessionMessageInfo } from "@/session-types"
 
 import type { ServerCurrentEvent } from "./server-sdk"
-import type { PermissionRequest, QuestionRequest } from "@/v2-types"
+import type { PermissionRequest, PermissionV2Request, QuestionRequest } from "@/v2-types"
 import type { Message, Part, Session, SessionStatus, Todo } from "@/v2-wire"
 
 import type { ServerApi } from "@/utils/server"
@@ -18,6 +18,7 @@ import {
 } from "@/utils/session"
 import { compareMessages, messageKey, normalizeSessionMessages } from "@/utils/session-message"
 import { dropSessionCaches, pickSessionCacheEvictions, SESSION_CACHE_LIMIT } from "./global-sync/session-cache"
+import { normalizePermissionRequest } from "./global-sync/utils"
 import { createV2SessionReducer, type V2SessionReduction } from "./server-session-v2-reducer"
 import { executionStatus, sessionSelection, sessionUsage } from "./server-event-native"
 import { eventSessionID, projectSessionManagementEvent } from "./session-management-state"
@@ -84,14 +85,12 @@ function wireMessageSource(items: { info: Message; parts: Part[] }[]): SessionMe
     })
 }
 
-// Most markers describe the current HTTP attempt; deltaParts persists non-durable stream state across retries.
+// The markers describe the current HTTP attempt.
 type MessageLoadState = {
   touchedMessages: Set<string>
   removedMessages: Set<string>
   retainedMessages: Set<string>
   touchedParts: Map<string, Set<string>>
-  deltaParts: Map<string, Set<string>>
-  carriedDeltaParts: Map<string, Set<string>>
   removedParts: Map<string, Set<string>>
   optimisticParts: Map<string, Set<string>>
   orphanParents: Set<string>
@@ -194,14 +193,12 @@ export function createServerSession(
   const [data, setData] = createStore({
     info: {} as Record<string, AppSession | undefined>,
     session_status: {} as Record<string, SessionStatus>,
-    session_diff: {} as Record<string, FileDiffInfo[]>,
     todo: {} as Record<string, Todo[]>,
     permission: {} as Record<string, PermissionRequest[]>,
     question: {} as Record<string, QuestionRequest[]>,
     message: {} as Record<string, Message[]>,
     session_message: {} as Record<string, SessionMessageInfo[]>,
     part: {} as Record<string, Part[]>,
-    part_text_accum_delta: {} as Record<string, string>,
     session_working(id: string) {
       return (this.session_status[id]?.type ?? "idle") !== "idle"
     },
@@ -215,15 +212,7 @@ export function createServerSession(
   const pendingParts = new Map<string, Map<string, Set<string>>>()
   const orphanParts = new Map<string, Set<string>>()
   const removedMessages = new Map<string, Set<string>>()
-  const deltaBases = new Map<string, { base: string; sessionID: string }>()
-  const deleteMessageParts = (
-    cache: { part: Record<string, Part[] | undefined>; part_text_accum_delta: Record<string, string | undefined> },
-    messageID: string,
-  ) => {
-    for (const part of cache.part[messageID] ?? []) {
-      delete cache.part_text_accum_delta[part.id]
-      deltaBases.delete(part.id)
-    }
+  const deleteMessageParts = (cache: { part: Record<string, Part[] | undefined> }, messageID: string) => {
     delete cache.part[messageID]
   }
   const seen = new Set<string>()
@@ -378,17 +367,10 @@ export function createServerSession(
     load.touchedMessages.clear()
     load.retainedMessages.clear()
     load.touchedParts.clear()
-    load.carriedDeltaParts.clear()
     load.clearedMessageParts.clear()
     for (const messageID of load.removedMessages) {
       load.touchedMessages.add(messageID)
       load.clearedMessageParts.add(messageID)
-    }
-    for (const [messageID, parts] of load.deltaParts) {
-      load.touchedParts.set(messageID, new Set(parts))
-      load.carriedDeltaParts.set(messageID, new Set(parts))
-      const messages = data.message[sessionID]
-      if (messages?.some((message) => message.id === messageID)) load.retainedMessages.add(messageID)
     }
     for (const [messageID, parts] of load.removedParts) {
       const touched = load.touchedParts.get(messageID) ?? new Set<string>()
@@ -429,9 +411,6 @@ export function createServerSession(
   const evict = (sessionIDs: string[]) => {
     if (sessionIDs.length === 0) return
     const evicted = new Set(sessionIDs)
-    for (const [partID, item] of deltaBases) {
-      if (evicted.has(item.sessionID)) deltaBases.delete(partID)
-    }
     sessionIDs.forEach((sessionID) => {
       generations.delete(sessionID)
       clearOptimistic(sessionID)
@@ -549,44 +528,14 @@ export function createServerSession(
       const fetched = load?.clearedMessageParts.has(item.id)
         ? []
         : item.part.filter((part) => !SKIP_PARTS.has(part.type))
-      const fetchedIDs = new Set(fetched.map((part) => part.id))
       const pending = pendingParts.get(sessionID)?.get(item.id)
       const touched = new Set([...(load?.touchedParts.get(item.id) ?? []), ...(pending ?? [])])
-      for (const part of fetched) {
-        const accumulated = data.part_text_accum_delta[part.id]
-        const base = deltaBases.get(part.id)?.base
-        const preserveDelta =
-          base !== undefined &&
-          accumulated !== undefined &&
-          "text" in part &&
-          typeof part.text === "string" &&
-          part.text.startsWith(base) &&
-          accumulated.startsWith(part.text) &&
-          accumulated !== part.text
-        if (preserveDelta) touched.add(part.id)
-        if (load?.carriedDeltaParts.get(item.id)?.has(part.id) && !preserveDelta) touched.delete(part.id)
-      }
-      for (const partID of load?.carriedDeltaParts.get(item.id) ?? []) {
-        if (!fetchedIDs.has(partID)) touched.delete(partID)
-      }
       const parts = reconcileFetched(fetched, data.part[item.id] ?? [], { touched })
       if (!parts.length) {
         orphanParts.get(sessionID)?.delete(item.id)
         setData(produce((draft) => deleteMessageParts(draft, item.id)))
         continue
       }
-      const partIDs = new Set(parts.map((part) => part.id))
-      setData(
-        "part_text_accum_delta",
-        produce((draft) => {
-          for (const part of data.part[item.id] ?? []) {
-            if (!partIDs.has(part.id) || !touched.has(part.id)) {
-              delete draft[part.id]
-              deltaBases.delete(part.id)
-            }
-          }
-        }),
-      )
       setData("part", item.id, reconcile(parts, { key: "id" }))
       orphanParts.get(sessionID)?.delete(item.id)
     }
@@ -661,8 +610,6 @@ export function createServerSession(
       removedMessages: new Set(),
       retainedMessages: new Set(),
       touchedParts: new Map(),
-      deltaParts: new Map(),
-      carriedDeltaParts: new Map(),
       removedParts: new Map(),
       optimisticParts: new Map(),
       orphanParents: new Set(),
@@ -944,11 +891,6 @@ export function createServerSession(
         setData("todo", props.sessionID, reconcile(props.todos, { key: "id" }))
         return
       }
-      case "session.status": {
-        const props = event.properties as { sessionID: string; status: SessionStatus }
-        setData("session_status", props.sessionID, reconcile(props.status))
-        return
-      }
       case "message.updated": {
         const info = cleanMessage((event.properties as { info: Message }).info)
         indexWireMessage(info)
@@ -991,8 +933,6 @@ export function createServerSession(
         load?.touchedMessages.add(props.messageID)
         load?.removedMessages.add(props.messageID)
         load?.clearedMessageParts.add(props.messageID)
-        load?.deltaParts.delete(props.messageID)
-        load?.carriedDeltaParts.delete(props.messageID)
         load?.removedParts.delete(props.messageID)
         load?.optimisticParts.delete(props.messageID)
         pendingParts.get(props.sessionID)?.delete(props.messageID)
@@ -1033,12 +973,6 @@ export function createServerSession(
           orphanParts.set(part.sessionID, orphans)
           load?.orphanParents.add(part.messageID)
         }
-        const deltas = load?.deltaParts.get(part.messageID)
-        deltas?.delete(part.id)
-        if (deltas?.size === 0) load?.deltaParts.delete(part.messageID)
-        const carried = load?.carriedDeltaParts.get(part.messageID)
-        carried?.delete(part.id)
-        if (carried?.size === 0) load?.carriedDeltaParts.delete(part.messageID)
         const removed = load?.removedParts.get(part.messageID)
         removed?.delete(part.id)
         if (removed?.size === 0) load?.removedParts.delete(part.messageID)
@@ -1049,13 +983,8 @@ export function createServerSession(
         const optimistic = load?.optimisticParts.get(part.messageID)
         optimistic?.delete(part.id)
         if (optimistic?.size === 0) load?.optimisticParts.delete(part.messageID)
-        deltaBases.delete(part.id)
         trackPartChange(part.sessionID, part.messageID, part.id)
         confirmOptimisticPart(part.sessionID, part.messageID, part)
-        setData(
-          "part_text_accum_delta",
-          produce((draft) => void delete draft[part.id]),
-        )
         const parts = data.part[part.messageID]
         if (!parts) {
           setData("part", part.messageID, [part])
@@ -1074,13 +1003,7 @@ export function createServerSession(
         parts.add(props.partID)
         pending.set(props.messageID, parts)
         pendingParts.set(props.sessionID, pending)
-        const deltas = messageLoads.get(props.sessionID)?.deltaParts.get(props.messageID)
-        deltas?.delete(props.partID)
-        if (deltas?.size === 0) messageLoads.get(props.sessionID)?.deltaParts.delete(props.messageID)
         const load = messageLoads.get(props.sessionID)
-        const carried = load?.carriedDeltaParts.get(props.messageID)
-        carried?.delete(props.partID)
-        if (carried?.size === 0) load?.carriedDeltaParts.delete(props.messageID)
         if (load) {
           const parts = load.removedParts.get(props.messageID) ?? new Set<string>()
           parts.add(props.partID)
@@ -1093,8 +1016,6 @@ export function createServerSession(
         clearOptimisticPart(props.sessionID, props.messageID, props.partID)
         setData(
           produce((draft) => {
-            delete draft.part_text_accum_delta[props.partID]
-            deltaBases.delete(props.partID)
             const parts = draft.part[props.messageID]
             if (!parts) return
             const index = parts.findIndex((part) => part.id === props.partID)
@@ -1104,51 +1025,8 @@ export function createServerSession(
         )
         return
       }
-      case "message.part.delta": {
-        const props = event.properties as {
-          sessionID: string
-          messageID: string
-          partID: string
-          field: string
-          delta: string
-        }
-        const parts = data.part[props.messageID]
-        if (!parts) return
-        const index = parts.findIndex((part) => part.id === props.partID)
-        if (index < 0) return
-        trackPartChange(props.sessionID, props.messageID, props.partID)
-        const load = messageLoads.get(props.sessionID)
-        if (load) {
-          const parts = load.deltaParts.get(props.messageID) ?? new Set<string>()
-          parts.add(props.partID)
-          load.deltaParts.set(props.messageID, parts)
-          const carried = load.carriedDeltaParts.get(props.messageID)
-          carried?.delete(props.partID)
-          if (carried?.size === 0) load.carriedDeltaParts.delete(props.messageID)
-        }
-        const field = props.field as keyof (typeof parts)[number]
-        const current = parts[index]?.[field]
-        if (!deltaBases.has(props.partID) && typeof current === "string")
-          deltaBases.set(props.partID, { base: current, sessionID: props.sessionID })
-        setData(
-          "part_text_accum_delta",
-          props.partID,
-          (value) => (value ?? (typeof current === "string" ? current : "")) + props.delta,
-        )
-        setData(
-          "part",
-          props.messageID,
-          produce((draft) => {
-            if (!draft) return
-            const part = draft[index]
-            const field = props.field as keyof typeof part
-            ;(part[field] as string) = ((part[field] as string | undefined) ?? "") + props.delta
-          }),
-        )
-        return
-      }
-      case "permission.asked": {
-        const permission = event.properties as PermissionRequest
+      case "permission.v2.asked": {
+        const permission = normalizePermissionRequest(event.properties as PermissionV2Request)
         const permissions = data.permission[permission.sessionID]
         if (!permissions) {
           setData("permission", permission.sessionID, [permission])
@@ -1164,7 +1042,7 @@ export function createServerSession(
           )
         return
       }
-      case "permission.replied": {
+      case "permission.v2.replied": {
         const props = event.properties as { sessionID: string; requestID: string }
         setData(
           "permission",
@@ -1177,7 +1055,7 @@ export function createServerSession(
         )
         return
       }
-      case "question.asked": {
+      case "question.v2.asked": {
         const question = event.properties as QuestionRequest
         const questions = data.question[question.sessionID]
         if (!questions) {
@@ -1194,8 +1072,8 @@ export function createServerSession(
           )
         return
       }
-      case "question.replied":
-      case "question.rejected": {
+      case "question.v2.replied":
+      case "question.v2.rejected": {
         const props = event.properties as { sessionID: string; requestID: string }
         setData(
           "question",
@@ -1256,15 +1134,6 @@ export function createServerSession(
         if (!items)
           optimistic.set(input.sessionID, new Map([[input.message.id, { ...input, parts, confirmedParts: [] }]]))
         setData("message", input.sessionID, (messages = []) => merge(messages, [input.message]).sort(compareMessages))
-        setData(
-          "part_text_accum_delta",
-          produce((draft) => {
-            for (const part of [...(data.part[input.message.id] ?? []), ...parts]) {
-              delete draft[part.id]
-              deltaBases.delete(part.id)
-            }
-          }),
-        )
         setData("part", input.message.id, parts)
       },
       remove(input: { sessionID: string; messageID: string }) {
@@ -1276,10 +1145,6 @@ export function createServerSession(
           const partIDs = new Set(item.parts.map((part) => part.id))
           setData(
             produce((draft) => {
-              for (const part of item.parts) {
-                delete draft.part_text_accum_delta[part.id]
-                deltaBases.delete(part.id)
-              }
               const parts = draft.part[input.messageID]
               if (!parts) return
               draft.part[input.messageID] = parts.filter((part) => !partIDs.has(part.id))

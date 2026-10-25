@@ -13,14 +13,12 @@ const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
 const sessionFields = new Set([
   "session_status",
   "session_working",
-  "session_diff",
   "todo",
   "permission",
   "question",
   "message",
   "session_message",
   "part",
-  "part_text_accum_delta",
 ])
 
 export const createDirSyncContext = (

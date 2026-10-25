@@ -1,6 +1,5 @@
 import { onCleanup } from "solid-js"
 import { createStore } from "solid-js/store"
-import { mcpBrowserOpenFailed } from "./mcp-model"
 
 // One request per server at a time; failures stay on their row until that row acts again.
 export function createMcpActions() {
@@ -33,10 +32,10 @@ export function createMcpActions() {
 }
 
 // OAuth sign-ins waiting on the server's browser callback. The server holds the request open for up to five minutes,
-// so each wait keeps its AbortController (Cancel) and, when the server host could not open a browser, the link to open.
+// so each wait keeps its AbortController (Cancel).
 export function createMcpAuth() {
   const [state, setState] = createStore({
-    waiting: Object.create(null) as Record<string, { url?: string } | undefined>,
+    waiting: Object.create(null) as Record<string, object | undefined>,
   })
   const aborts = new Map<string, AbortController>()
 
@@ -58,11 +57,6 @@ export function createMcpAuth() {
     },
     cancel(name: string) {
       aborts.get(name)?.abort()
-    },
-    /** Takes the `mcp.browser.open.failed` payload; a server this page is not waiting on is ignored. */
-    openFailed(properties: unknown) {
-      const failed = mcpBrowserOpenFailed(properties)
-      if (failed && aborts.has(failed.name)) setState("waiting", failed.name, { url: failed.url })
     },
   }
 }

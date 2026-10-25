@@ -8,7 +8,6 @@ import {
   maskUrl,
   mcpAction,
   mcpBadges,
-  mcpBrowserOpenFailed,
   mcpCards,
   mcpConfig,
   mcpDraft,
@@ -111,8 +110,6 @@ describe("MCP chapter actions", () => {
 })
 
 describe("MCP OAuth sign-in wait", () => {
-  const authorize = "https://auth.example.test/authorize?state=abc"
-
   test("Cancel aborts the request, ends the wait and reports no failure", async () => {
     const owner = createRoot((dispose) => ({ dispose, auth: createMcpAuth() }))
     const seen: AbortSignal[] = []
@@ -140,44 +137,6 @@ describe("MCP OAuth sign-in wait", () => {
     )
     expect(owner.auth.state.waiting.secured).toBeUndefined()
     owner.dispose()
-  })
-
-  test("the server's browser failure puts its link on the waiting card only", async () => {
-    const owner = createRoot((dispose) => ({ dispose, auth: createMcpAuth() }))
-    const gate = Promise.withResolvers<void>()
-    const request = owner.auth.run("secured", () => gate.promise)
-    owner.auth.openFailed({ mcpName: "other", url: authorize })
-    expect(owner.auth.state.waiting.other).toBeUndefined()
-    owner.auth.openFailed({ mcpName: "secured", url: "javascript:alert(1)" })
-    expect(owner.auth.state.waiting.secured).toEqual({})
-    owner.auth.openFailed({ mcpName: "secured", url: authorize })
-    expect(owner.auth.state.waiting.secured).toEqual({ url: authorize })
-    gate.resolve()
-    await request
-    expect(owner.auth.state.waiting.secured).toBeUndefined()
-    owner.auth.openFailed({ mcpName: "secured", url: authorize })
-    expect(owner.auth.state.waiting.secured).toBeUndefined()
-    owner.dispose()
-  })
-
-  test("only well-formed web links from the event are offered", () => {
-    expect(mcpBrowserOpenFailed({ mcpName: "secured", url: authorize })).toEqual({ name: "secured", url: authorize })
-    expect(mcpBrowserOpenFailed({ mcpName: "secured", url: "http://127.0.0.1:19876/start" })).toEqual({
-      name: "secured",
-      url: "http://127.0.0.1:19876/start",
-    })
-    for (const value of [
-      undefined,
-      "https://auth.example.test",
-      {},
-      { mcpName: "secured" },
-      { url: authorize },
-      { mcpName: 1, url: authorize },
-      { mcpName: "secured", url: "not a url" },
-      { mcpName: "secured", url: "file:///etc/passwd" },
-      { mcpName: "secured", url: "javascript:alert(1)" },
-    ])
-      expect(mcpBrowserOpenFailed(value)).toBeUndefined()
   })
 })
 

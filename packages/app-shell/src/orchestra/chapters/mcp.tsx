@@ -1,6 +1,6 @@
 import { getFilename } from "@orchestra/core/util/path"
 import { useQuery } from "@tanstack/solid-query"
-import { createMemo, For, Match, onCleanup, Show, Switch } from "solid-js"
+import { createMemo, For, Match, Show, Switch } from "solid-js"
 import { toggleMcp } from "@/context/global-sync/mcp"
 import { createStore } from "solid-js/store"
 import { useGlobal } from "@/context/global"
@@ -11,7 +11,6 @@ import { useServerSync } from "@/context/server-sync"
 import type { ChapterPageProps } from "@/orchestra/chapter-route"
 import { displayName } from "@/pages/layout/helpers"
 import { pathKey } from "@/utils/path-key"
-import { showToast } from "@/utils/toast"
 import { MxBadge, MxPage, MxToggle } from "./kit"
 import { createMcpActions, createMcpAuth, mcpErrorDetail } from "./mcp-actions"
 import { McpEditDialog, McpRemoveDialog, McpToolsDialog } from "./mcp-dialogs"
@@ -77,14 +76,6 @@ export default function McpPage(props: ChapterPageProps) {
       client().refetchQueries(sync().queryOptions.mcpResources(key)),
     ]).then(() => undefined)
   const auth = createMcpAuth()
-  onCleanup(
-    serverSDK().event.on(props.directory, (event) => {
-      const type: string = event.type
-      if (type === "mcp.status.changed") void refresh()
-      if (type === "mcp.tools.changed") void tools.refetch()
-      if (type === "mcp.browser.open.failed") auth.openFailed("properties" in event ? event.properties : undefined)
-    }),
-  )
   const actions = createMcpActions()
   const [state, setState] = createStore({
     search: "",
@@ -135,12 +126,6 @@ export default function McpPage(props: ChapterPageProps) {
         authenticate: () => auth.run(card.name, (signal) => source.authenticate(card.name, signal)),
         refresh,
       }),
-    )
-  // The link is on screen too, so a blocked clipboard needs no message.
-  const copyLink = (url: string) =>
-    navigator.clipboard?.writeText(url).then(
-      () => showToast({ variant: "success", icon: "circle-check", title: language.t("ui.textField.copied") }),
-      () => undefined,
     )
   // The refresh after a config write can take as long as MCP startup, so dialogs do not wait for it.
   const save = (name: string, value: Parameters<typeof source.save>[1]) =>
@@ -264,29 +249,10 @@ export default function McpPage(props: ChapterPageProps) {
                         <p>{language.t("orchestra.mcp.registrationHint", { file: MCP_CONFIG_FILE })}</p>
                       </Show>
                       <Show when={auth.state.waiting[name]}>
-                        {(waiting) => (
+                        {() => (
                           <>
                             <p role="status">{language.t("orchestra.mcp.authWaiting")}</p>
-                            <Show when={waiting().url}>
-                              {(url) => (
-                                <p role="status">
-                                  {language.t("orchestra.mcp.authBrowserFailed")} <bdi>{url()}</bdi>
-                                </p>
-                              )}
-                            </Show>
                             <div class="mx-meta">
-                              <Show when={waiting().url}>
-                                {(url) => (
-                                  <>
-                                    <button type="button" class="mx-btn" onClick={() => void copyLink(url())}>
-                                      {language.t("orchestra.mcp.authCopy")}
-                                    </button>
-                                    <button type="button" class="mx-btn" onClick={() => platform.openExternal(url())}>
-                                      {language.t("orchestra.mcp.authOpen")}
-                                    </button>
-                                  </>
-                                )}
-                              </Show>
                               <button type="button" class="mx-btn" onClick={() => auth.cancel(name)}>
                                 {language.t("orchestra.mcp.cancel")}
                               </button>

@@ -441,7 +441,6 @@ export function createServerSyncContextInner(
       retainedLimit: sessionMeta.get(key)?.limit,
       sessionContent: false,
       permission: session.data.permission,
-      loadLsp() {},
     })
   }
 
@@ -487,15 +486,13 @@ export function createServerSyncContextInner(
         void activeSessionsQuery.refetch()
       applyGlobalEvent({
         event,
-        project: globalStore.project,
         refresh: () => {
           if (recent) return
           bootstrap.refetch()
         },
-        setGlobalProject: setProjects,
       })
       if (eventType === "catalog.updated" || eventType === "project.directories.updated") bootstrap.refetch()
-      if (eventType === "server.connected" || eventType === "global.disposed") {
+      if (eventType === "server.connected") {
         if (recent) return
         for (const directory of Object.keys(children.children)) {
           if (!children.active(directory)) continue
@@ -538,10 +535,6 @@ export function createServerSyncContextInner(
       sessionContent: false,
       permission: session.data.permission,
       vcsCache: children.vcsCache.get(key),
-      loadLsp: () => {
-        if (!children.active(key)) return
-        void queryClient.fetchQuery(queryOptionsApi.lsp(key))
-      },
       loadReferences: () => {
         if (!children.active(key)) return
         void queryClient.fetchQuery(queryOptionsApi.references(key))

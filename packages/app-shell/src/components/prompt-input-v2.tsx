@@ -656,9 +656,7 @@ function openComment(
       })
     })
   }
-  const diffs = props.controls.session.id ? sync().data.session_diff[props.controls.session.id] : undefined
-  const review =
-    item.commentOrigin === "review" || (item.commentOrigin !== "file" && diffs?.some((diff) => diff.file === item.path))
+  const review = item.commentOrigin === "review"
   if (!props.controls.session.reviewPanel.opened()) props.controls.session.reviewPanel.open()
   if (review) {
     layout.fileTree.setTab("changes")

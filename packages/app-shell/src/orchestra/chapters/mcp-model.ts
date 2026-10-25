@@ -49,17 +49,6 @@ export function mcpError(status: McpStatus) {
   return "error" in status ? status.error : undefined
 }
 
-/** The `mcp.browser.open.failed` payload. Only web links are offered, never another scheme. */
-export function mcpBrowserOpenFailed(properties: unknown): { name: string; url: string } | undefined {
-  if (!properties || typeof properties !== "object") return
-  if (!("mcpName" in properties) || typeof properties.mcpName !== "string") return
-  if (!("url" in properties) || typeof properties.url !== "string") return
-  if (!URL.canParse(properties.url)) return
-  const protocol = new URL(properties.url).protocol
-  if (protocol !== "http:" && protocol !== "https:") return
-  return { name: properties.mcpName, url: properties.url }
-}
-
 /**
  * The status map is the inventory. The profile's own entry (unresolved) wins over the server's
  * resolved config for display; either way credentials are masked. Tools add the count.

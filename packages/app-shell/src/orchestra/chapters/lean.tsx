@@ -39,11 +39,6 @@ export default function LeanPage(props: ChapterPageProps) {
   })
   void controller.select({ server: ServerConnection.key(props.server), directory: props.directory, transport: createLeanAPI(sdk(), serverSDK().orchestra) })
   onCleanup(() => controller.dispose())
-  onCleanup(serverSDK().event.listen((event) => {
-    if (event.name !== "global" && pathKey(event.name) !== key) return
-    const type: string = event.details.type
-    if (type === "global.disposed" || type === "server.instance.disposed") void controller.refresh()
-  }))
   return <LeanProfileView
     profileName={profileName()}
     {...controller.state}

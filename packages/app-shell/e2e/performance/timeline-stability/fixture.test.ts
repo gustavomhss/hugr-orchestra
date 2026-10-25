@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import {
   assistantMessage,
-  event,
+  status,
   toolPart,
   userMessage,
   validateTimelineEvent,
@@ -23,11 +23,7 @@ describe("timeline fixture validation", () => {
     expect(() =>
       validateTimelineEvent({
         directory: "C:/Orchestra/TimelineStability",
-        payload: {
-          id: "evt_invalid_status",
-          type: "session.status",
-          properties: { sessionID: "ses_timeline_stability", status: { type: "retry", attempt: 1 } },
-        },
+        payload: { id: "evt_invalid_status", type: "session.step.started", properties: "invalid" },
       }),
     ).toThrow()
   })
@@ -40,8 +36,8 @@ describe("timeline fixture validation", () => {
   })
 
   test("assigns deterministic event IDs", () => {
-    const first = event("session.status", { sessionID: "ses_timeline_stability", status: { type: "busy" } })
-    const second = event("session.status", { sessionID: "ses_timeline_stability", status: { type: "idle" } })
+    const first = status("busy")
+    const second = status("idle")
     expect(first.payload.id).toMatch(/^evt_timeline_\d{4}$/)
     expect(Number(second.payload.id.slice(-4))).toBe(Number(first.payload.id.slice(-4)) + 1)
   })
@@ -62,7 +58,4 @@ if (false) {
     // @ts-expect-error Agent references belong to user messages, not assistant messages.
     { id: "prt_invalid_owner", type: "agent", name: "explore", source: { value: "@explore", start: 0, end: 8 } },
   ])
-
-  // @ts-expect-error Retry status events require message and next.
-  event("session.status", { sessionID: "ses_timeline_stability", status: { type: "retry", attempt: 1 } })
 }

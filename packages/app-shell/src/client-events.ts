@@ -401,18 +401,6 @@ type QuestionV2Tool = {
 
 type QuestionV2Answer = Array<string>;
 
-type QuestionOption = {
-    label: string;
-    description: string;
-};
-
-type QuestionTool = {
-    messageID: string;
-    callID: string;
-};
-
-type QuestionAnswer = Array<string>;
-
 type SessionAgentSelected = {
     id: string;
     created: number;
@@ -978,59 +966,6 @@ type VcsBranchUpdated = {
     };
 };
 
-type PermissionAsked = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "permission.asked";
-    location?: LocationRef;
-    data: {
-        id: string;
-        sessionID: string;
-        permission: string;
-        patterns: Array<string>;
-        metadata: {
-            [x: string]: any;
-        };
-        always: Array<string>;
-        tool?: {
-            messageID: string;
-            callID: string;
-        } | undefined;
-    };
-};
-
-type PermissionReplied = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "permission.replied";
-    location?: LocationRef;
-    data: {
-        sessionID: string;
-        requestID: string;
-        reply: "once" | "always" | "reject";
-    };
-};
-
-type QuestionRejected = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "question.rejected";
-    location?: LocationRef;
-    data: {
-        sessionID: string;
-        requestID: string;
-    };
-};
-
 type V2EventServerConnected = {
     id: string;
     metadata?: {
@@ -1396,29 +1331,6 @@ type QuestionV2Replied = {
     };
 };
 
-type QuestionInfo = {
-    question: string;
-    header: string;
-    options: Array<QuestionOption>;
-    multiple?: boolean | undefined;
-    custom?: boolean | undefined;
-};
-
-type QuestionReplied = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "question.replied";
-    location?: LocationRef;
-    data: {
-        sessionID: string;
-        requestID: string;
-        answers: Array<QuestionAnswer>;
-    };
-};
-
 type SessionRevertStaged = {
     id: string;
     created: number;
@@ -1542,22 +1454,6 @@ type QuestionV2Asked = {
         sessionID: string;
         questions: Array<QuestionV2Info>;
         tool?: QuestionV2Tool;
-    };
-};
-
-type QuestionAsked = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "question.asked";
-    location?: LocationRef;
-    data: {
-        id: string;
-        sessionID: string;
-        questions: Array<QuestionInfo>;
-        tool?: QuestionTool | undefined;
     };
 };
 
@@ -1791,4 +1687,4 @@ type UnknownError = {
     readonly message: string;
     readonly ref?: string | undefined;
 };
-export type ClientEvent = ModelsDevRefreshed | IntegrationUpdated | IntegrationConnectionUpdated | CatalogUpdated | SessionCreated | SessionUpdated | SessionDeleted | MessageUpdated | MessageRemoved | MessagePartUpdated | MessagePartRemoved | SessionAgentSelected | SessionModelSelected | SessionMoved | SessionDeleted | SessionInputPromoted | SessionInputAdmitted | SessionSynthetic | SessionShellStarted | SessionShellEnded | SessionStepStarted | SessionStepEnded | SessionStepFailed | SessionTextStarted | SessionTextDelta | SessionTextEnded | SessionReasoningStarted | SessionReasoningDelta | SessionReasoningEnded | SessionToolInputStarted | SessionToolInputDelta | SessionToolInputEnded | SessionToolCalled | SessionToolProgress | SessionToolSuccess | SessionToolFailed | SessionRetryScheduled | SessionCompactionStarted | SessionCompactionDelta | SessionCompactionEnded | SessionRevertStaged | SessionRevertCleared | SessionRevertCommitted | ReferenceUpdated | PermissionV2Asked | PermissionV2Replied | PluginAdded | ProjectDirectoriesUpdated | PtyCreated | PtyUpdated | PtyExited | PtyDeleted | QuestionV2Asked | QuestionV2Replied | QuestionV2Rejected | VcsBranchUpdated | PermissionAsked | PermissionReplied | QuestionAsked | QuestionReplied | QuestionRejected | V2EventServerConnected;
+export type ClientEvent = ModelsDevRefreshed | IntegrationUpdated | IntegrationConnectionUpdated | CatalogUpdated | SessionCreated | SessionUpdated | SessionDeleted | MessageUpdated | MessageRemoved | MessagePartUpdated | MessagePartRemoved | SessionAgentSelected | SessionModelSelected | SessionMoved | SessionDeleted | SessionInputPromoted | SessionInputAdmitted | SessionSynthetic | SessionShellStarted | SessionShellEnded | SessionStepStarted | SessionStepEnded | SessionStepFailed | SessionTextStarted | SessionTextDelta | SessionTextEnded | SessionReasoningStarted | SessionReasoningDelta | SessionReasoningEnded | SessionToolInputStarted | SessionToolInputDelta | SessionToolInputEnded | SessionToolCalled | SessionToolProgress | SessionToolSuccess | SessionToolFailed | SessionRetryScheduled | SessionCompactionStarted | SessionCompactionDelta | SessionCompactionEnded | SessionRevertStaged | SessionRevertCleared | SessionRevertCommitted | ReferenceUpdated | PermissionV2Asked | PermissionV2Replied | PluginAdded | ProjectDirectoriesUpdated | PtyCreated | PtyUpdated | PtyExited | PtyDeleted | QuestionV2Asked | QuestionV2Replied | QuestionV2Rejected | VcsBranchUpdated | V2EventServerConnected;

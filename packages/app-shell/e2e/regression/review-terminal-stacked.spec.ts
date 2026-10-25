@@ -311,7 +311,10 @@ function base64Encode(value: string) {
 function statusEvent(type: "busy" | "idle") {
   return {
     directory,
-    payload: { type: "session.status", properties: { sessionID, status: { type } } },
+    payload:
+      type === "busy"
+        ? { type: "session.step.started", properties: { sessionID, assistantMessageID: "msg_busy", agent: "build", model: { id: "model", providerID: "provider" } } }
+        : { type: "session.step.ended", properties: { sessionID, assistantMessageID: "msg_busy", finish: "stop", cost: 0, tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } } } },
   }
 }
 

@@ -193,7 +193,7 @@ function sse(route: Route, busy: boolean) {
     status: 200,
     contentType: "text/event-stream",
     body: busy
-      ? 'data: {"id":"evt_busy","type":"session.status","data":{"sessionID":"ses_server_b","status":{"type":"busy"}}}\n\n'
+      ? 'data: {"id":"evt_busy","type":"session.step.started","data":{"sessionID":"ses_server_b","assistantMessageID":"msg_busy","agent":"build","model":{"id":"model","providerID":"provider"}}}\n\n'
       : ": ok\n\n",
   })
 }
