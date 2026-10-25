@@ -26,6 +26,10 @@ export const locationQueryOpenApi = OpenApi.annotations({
   },
 })
 
+export const LocationPaths = Schema.Struct({
+  home: Schema.String,
+}).annotate({ identifier: "LocationPaths" })
+
 export const LocationGroup = HttpApiGroup.make("server.location").add(
   HttpApiEndpoint.get("location.get", "/api/location", {
     query: LocationQuery,
@@ -39,4 +43,13 @@ export const LocationGroup = HttpApiGroup.make("server.location").add(
         description: "Resolve the requested location or the server default location.",
       }),
     ),
+  HttpApiEndpoint.get("location.paths", "/api/location/paths", {
+    success: LocationPaths,
+  }).annotateMerge(
+    OpenApi.annotations({
+      identifier: "v2.location.paths",
+      summary: "Get server paths",
+      description: "Return the server user's home directory, where the app's folder picker starts.",
+    }),
+  ),
 )

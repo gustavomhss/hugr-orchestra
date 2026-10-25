@@ -24,6 +24,8 @@ export type LocationGetOutput = {
   readonly project: { readonly id: string; readonly directory: string }
 }
 
+export type LocationPathsOutput = { readonly home: string }
+
 export type AgentsListInput = {
   readonly location?: {
     readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined

@@ -117,6 +117,7 @@ export type ServerApi = {
   health: { get: (requestOptions?: RequestOptions) => Promise<{ healthy: boolean; pid?: number }> }
   location: {
     get: (input?: ClientInput<"location", "get">, requestOptions?: RequestOptions) => Promise<{ project: ProjectCurrentOutput }>
+    paths: (requestOptions?: RequestOptions) => Promise<{ home: string }>
   }
   agent: {
     list: (input?: ClientInput<"agents", "list">, requestOptions?: RequestOptions) => Promise<AgentListOutput>

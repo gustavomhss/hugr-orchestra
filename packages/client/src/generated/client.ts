@@ -3,6 +3,7 @@ import type {
   HealthGetOutput,
   LocationGetInput,
   LocationGetOutput,
+  LocationPathsOutput,
   AgentsListInput,
   AgentsListOutput,
   AgentsGetFileInput,
@@ -476,6 +477,17 @@ export function make(options: ClientOptions) {
             method: "GET",
             path: `/api/location`,
             query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      paths: (requestOptions?: RequestOptions) =>
+        request<LocationPathsOutput>(
+          {
+            method: "GET",
+            path: `/api/location/paths`,
             successStatus: 200,
             declaredStatuses: [400, 401],
             empty: false,
