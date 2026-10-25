@@ -1,4 +1,4 @@
-import type { SessionV1 } from "./compat/core-v1-session"
+import type { SessionV1 } from "@orchestra/schema/session-v1"
 import { isTaskTool } from "@orchestra/core/util/task-tool"
 import { createHash } from "node:crypto"
 

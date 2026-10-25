@@ -41,7 +41,7 @@ export interface Scope {
 }
 
 /**
- * Where a host's calls run outside a Location (V1 Sessions): the Location their decisions belong to, and its Relay
+ * Where a host runs calls outside a Location: the Location their decisions belong to, and its Relay
  * service, acquired only once an enabled hook is in play.
  */
 export const Placement = Context.Reference<

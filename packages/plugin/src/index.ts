@@ -1,6 +1,8 @@
-import type { Project, Model, Provider, Permission, Config as SDKConfig } from "./compat/legacy-v1.js"
-import type { Provider as ProviderV2, Model as ModelV2, Auth } from "./compat/legacy-v2.js"
-import type { Event, UserMessage, Message, Part } from "./compat/schema.js"
+import type { Permission } from "@orchestra/schema/permission"
+import type { Project } from "@orchestra/schema/project"
+import type { Prompt } from "@orchestra/schema/prompt"
+import type { Provider, Model, Auth, Config as SDKConfig } from "./wire.js"
+import type { Event, Message, UserMessage } from "./types.js"
 
 import type { BunShell } from "./shell.js"
 import { type ToolDefinition } from "./tool.js"
@@ -49,7 +51,7 @@ export interface PluginClient {}
 
 export type PluginInput = {
   client: PluginClient
-  project: Project
+  project: Project.Info
   directory: string
   worktree: string
   experimental_workspace: {
@@ -207,7 +209,7 @@ export type ProviderHookContext = {
 
 export type ProviderHook = {
   id: string
-  models?: (provider: ProviderV2, ctx: ProviderHookContext) => Promise<Record<string, ModelV2>>
+  models?: (provider: Provider, ctx: ProviderHookContext) => Promise<Record<string, Model>>
 }
 
 /** @deprecated Use AuthOAuthResult instead. */
@@ -233,7 +235,7 @@ export interface Hooks {
       messageID?: string
       variant?: string
     },
-    output: { message: UserMessage; parts: Part[] },
+    output: { message: UserMessage },
   ) => Promise<void>
   /**
    * Modify parameters sent to LLM
@@ -252,10 +254,10 @@ export interface Hooks {
     input: { sessionID: string; agent: string; model: Model; provider: ProviderContext; message: UserMessage },
     output: { headers: Record<string, string> },
   ) => Promise<void>
-  "permission.ask"?: (input: Permission, output: { status: "ask" | "deny" | "allow" }) => Promise<void>
+  "permission.ask"?: (input: Permission.Request, output: { status: "ask" | "deny" | "allow" }) => Promise<void>
   "command.execute.before"?: (
     input: { command: string; sessionID: string; arguments: string },
-    output: { parts: Part[] },
+    output: { prompt: Prompt },
   ) => Promise<void>
   "tool.execute.before"?: (
     input: { tool: string; sessionID: string; callID: string },
@@ -276,10 +278,7 @@ export interface Hooks {
   "experimental.chat.messages.transform"?: (
     input: {},
     output: {
-      messages: {
-        info: Message
-        parts: Part[]
-      }[]
+      messages: Message[]
     },
   ) => Promise<void>
   "experimental.chat.system.transform"?: (
@@ -288,7 +287,7 @@ export interface Hooks {
       system: string[]
     },
   ) => Promise<void>
-  "experimental.provider.small_model"?: (input: { provider: ProviderV2 }, output: { model?: ModelV2 }) => Promise<void>
+  "experimental.provider.small_model"?: (input: { provider: Provider }, output: { model?: Model }) => Promise<void>
   /**
    * Called before session compaction starts. Allows plugins to customize
    * the compaction prompt.
@@ -319,7 +318,7 @@ export interface Hooks {
     output: { enabled: boolean },
   ) => Promise<void>
   "experimental.text.complete"?: (
-    input: { sessionID: string; messageID: string; partID: string },
+    input: { sessionID: string; messageID: string; textID: string },
     output: { text: string },
   ) => Promise<void>
   /**

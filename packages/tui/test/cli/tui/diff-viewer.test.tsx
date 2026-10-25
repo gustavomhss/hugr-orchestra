@@ -4,7 +4,7 @@ import { createDefaultOpenTuiKeymap } from "@opentui/keymap/opentui"
 import { DiffRenderable, type Renderable, ScrollBoxRenderable } from "@opentui/core"
 import { testRender, useRenderer } from "@opentui/solid"
 import type { TuiPluginApi, TuiPluginMeta, TuiRouteCurrent, TuiRouteDefinition } from "@orchestra/plugin/tui"
-import type { Session } from "../../../src/compat/schema"
+import type { Session } from "../../../src/types"
 import { KVProvider } from "../../../src/context/kv"
 import { ThemeProvider } from "../../../src/context/theme"
 import { TuiConfigProvider } from "../../../src/config"
@@ -202,11 +202,11 @@ function containsDiff(root: Renderable): boolean {
 
 const session = {
   id: "session-1",
-  slug: "session-1",
   projectID: "project-1",
-  directory: "/repo/session",
+  location: { directory: "/repo/session" },
   title: "Session",
-  version: "1",
+  cost: 0,
+  tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
   time: {
     created: 0,
     updated: 0,

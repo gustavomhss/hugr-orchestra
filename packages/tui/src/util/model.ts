@@ -1,4 +1,4 @@
-import type { Provider } from "../compat/schema"
+import type { Provider } from "../types"
 
 export function parse(value: string) {
   const [providerID, ...modelID] = value.split("/")

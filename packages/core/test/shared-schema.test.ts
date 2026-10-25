@@ -10,7 +10,6 @@ import { AgentAttachment, FileAttachment, Prompt, Source } from "@orchestra/sche
 import { Provider } from "@orchestra/schema/provider"
 import { Project } from "@orchestra/schema/project"
 import { ProjectDirectories } from "@orchestra/schema/project-directories"
-import { PermissionV1 } from "@orchestra/schema/permission-v1"
 import { Session } from "@orchestra/schema/session"
 import { SessionInput } from "@orchestra/schema/session-input"
 import { SessionMessage } from "@orchestra/schema/session-message"
@@ -41,7 +40,6 @@ test("Core reuses the canonical shared schemas", async () => {
     coreLocation,
     coreLLM,
     corePermission,
-    corePermissionV1,
     coreProjectCopy,
     corePty,
     coreProject,
@@ -63,7 +61,6 @@ test("Core reuses the canonical shared schemas", async () => {
     import("@orchestra/core/location"),
     import("@orchestra/llm"),
     import("@orchestra/core/permission"),
-    import("@orchestra/core/v1/permission"),
     import("@orchestra/core/project/copy"),
     import("@orchestra/core/pty"),
     import("@orchestra/core/project/schema"),
@@ -127,7 +124,6 @@ test("Core reuses the canonical shared schemas", async () => {
     [corePermission.Effect, Permission.Effect],
     [corePermission.Rule, Permission.Rule],
     [corePermission.Ruleset, Permission.Ruleset],
-    [corePermissionV1.Event, PermissionV1.Event],
     [coreProjectCopy.Event, ProjectDirectories.Event],
     [PluginV2.ID, Plugin.ID],
     [PluginV2.Event, Plugin.Event],

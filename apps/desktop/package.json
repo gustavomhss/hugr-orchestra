@@ -47,6 +47,7 @@
     "@orchestra/app-dock": "workspace:*",
     "@orchestra/omni-campaign": "workspace:*",
     "@orchestra/plugin": "workspace:*",
+    "@orchestra/schema": "workspace:*",
     "@orchestra/script": "workspace:*",
     "@orchestra/ui": "workspace:*",
     "@sentry/solid": "catalog:",

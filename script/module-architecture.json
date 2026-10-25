@@ -225,7 +225,6 @@
         { "path": "src/share", "kind": "collection" },
         { "path": "src/tool", "kind": "collection" },
         { "path": "src/util", "kind": "collection" },
-        { "path": "src/v1", "kind": "collection", "status": "legacy" },
         { "path": "src/github-copilot", "kind": "collection", "status": "vendored" }
       ],
       "domains": {
@@ -377,8 +376,7 @@
         "capability": { "kind": "platform", "patterns": ["src/capability/", "src/toolkit/"] },
         "scheduled-task": { "kind": "platform", "entry": "src/scheduled-task.ts", "patterns": ["src/scheduled-task/", "src/scheduled-task.ts"] },
         "actions": { "kind": "platform", "entry": "src/actions.ts", "patterns": ["src/actions/", "src/actions.ts"] },
-        "util": { "kind": "platform", "patterns": ["src/util/", "src/image/", "src/image.ts", "src/npm.ts", "src/npm-config.ts"] },
-        "v1": { "kind": "compat", "patterns": ["src/v1/"] }
+        "util": { "kind": "platform", "patterns": ["src/util/", "src/image/", "src/image.ts", "src/npm.ts", "src/npm-config.ts"] }
       }
     },
     "server": {
@@ -459,13 +457,6 @@
     }
   },
   "legacy": [
-    {
-      "path": "packages/core/src/v1",
-      "status": "legacy",
-      "successor": "the V2 Session core in packages/core",
-      "reason": "v1 compatibility surface kept for the legacy server",
-      "decision": "D14"
-    },
     {
       "path": "packages/core/src/github-copilot",
       "status": "vendored",

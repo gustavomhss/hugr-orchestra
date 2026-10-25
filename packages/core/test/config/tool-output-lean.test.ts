@@ -2,8 +2,8 @@ import { describe, expect, test } from "bun:test"
 import { Schema } from "effect"
 import { Config } from "@orchestra/core/config"
 import { ConfigToolOutput } from "@orchestra/core/config/tool-output"
-import { ConfigV1 } from "@orchestra/core/v1/config/config"
-import { ConfigMigrateV1 } from "@orchestra/core/v1/config/migrate"
+import { ConfigUpgradeSource } from "@orchestra/core/config/upgrade/source"
+import { ConfigUpgrade } from "@orchestra/core/config/upgrade/upgrade"
 
 const limits = { max_lines: 123, max_bytes: 4567 }
 
@@ -33,15 +33,15 @@ function leanSuite<T extends { readonly tool_output?: object }, I extends { read
   })
 }
 
-leanSuite("v1", ConfigV1.Info)
+leanSuite("v1", ConfigUpgradeSource.Info)
 leanSuite("v2", Config.Info)
 
 describe("lean v1 migration to v2", () => {
   for (const lean of [undefined, {}, { enabled: true }, { enabled: false }]) {
     test(`lean migration roundtrip preserves ${JSON.stringify(lean)}`, () => {
       const tool_output = { ...limits, ...(lean === undefined ? {} : { lean }) }
-      const v1 = Schema.decodeUnknownSync(ConfigV1.Info)({ snapshot: false, tool_output })
-      const migrated = ConfigMigrateV1.migrate(v1)
+      const v1 = Schema.decodeUnknownSync(ConfigUpgradeSource.Info)({ snapshot: false, tool_output })
+      const migrated = ConfigUpgrade.migrate(v1)
       expect(migrated.tool_output).toEqual(tool_output)
       const v2 = Schema.decodeUnknownSync(Config.Info)(migrated)
       expect(v2.snapshots).toBe(false)
@@ -55,7 +55,7 @@ describe("lean v1 migration to v2", () => {
   }
 
   test("lean migration omission stays absent", () => {
-    const v1 = Schema.decodeUnknownSync(ConfigV1.Info)({ snapshot: false })
-    expect(Schema.decodeUnknownSync(Config.Info)(ConfigMigrateV1.migrate(v1)).tool_output).toBeUndefined()
+    const v1 = Schema.decodeUnknownSync(ConfigUpgradeSource.Info)({ snapshot: false })
+    expect(Schema.decodeUnknownSync(Config.Info)(ConfigUpgrade.migrate(v1)).tool_output).toBeUndefined()
   })
 })

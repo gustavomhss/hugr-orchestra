@@ -2,7 +2,7 @@
 import { describe, expect, test } from "bun:test"
 import { tmpdir } from "../../../fixture/fixture"
 import { mount, wait } from "./sync-fixture"
-import type { GlobalEvent } from "../../../../src/compat/schema"
+import type { GlobalEvent } from "../../../../src/types"
 
 function branchEvent(branch: string, workspace?: string): GlobalEvent {
   return {
@@ -12,7 +12,7 @@ function branchEvent(branch: string, workspace?: string): GlobalEvent {
     payload: {
       id: `evt_vcs_${branch}`,
       type: "vcs.branch.updated",
-      properties: { branch },
+      data: { branch },
     },
   }
 }
@@ -56,6 +56,57 @@ describe("tui sync", () => {
       await wait(() => sync.data.vcs?.branch === "feature")
 
       expect(sync.data.vcs?.branch).toBe("feature")
+    } finally {
+      app.renderer.destroy()
+    }
+  })
+
+  test("V2 permission and question events reach the store and their replies clear it", async () => {
+    await using tmp = await tmpdir()
+    await Bun.write(`${tmp.path}/kv.json`, "{}")
+    const { app, emit, sync } = await mount(undefined, tmp.path)
+    const event = (id: string, payload: Omit<GlobalEvent["payload"], "id">) =>
+      emit({ directory: "/tmp/other", payload: { id, ...payload } as GlobalEvent["payload"] })
+
+    try {
+      event("evt_perm_asked", {
+        type: "permission.v2.asked",
+        data: {
+          id: "per_live",
+          sessionID: "ses_live",
+          action: "bash",
+          resources: ["ls"],
+          save: ["ls *"],
+          source: { type: "tool", messageID: "msg_live", callID: "call_live" },
+        },
+      })
+      event("evt_que_asked", {
+        type: "question.v2.asked",
+        data: {
+          id: "que_live",
+          sessionID: "ses_live",
+          questions: [{ question: "Pick one", header: "One", options: [{ label: "A", description: "a" }] }],
+        },
+      })
+      await wait(() => sync.data.permission["ses_live"]?.length === 1 && sync.data.question["ses_live"]?.length === 1)
+
+      // The store entry is a Solid proxy, so compare its fields instead of the object.
+      const permission = sync.data.permission["ses_live"]?.[0]
+      expect(permission?.id).toBe("per_live")
+      expect(permission?.action).toBe("bash")
+      expect([...(permission?.resources ?? [])]).toEqual(["ls"])
+      expect(permission?.source?.callID).toBe("call_live")
+      expect(sync.data.question["ses_live"]?.[0]?.id).toBe("que_live")
+
+      event("evt_perm_replied", {
+        type: "permission.v2.replied",
+        data: { sessionID: "ses_live", requestID: "per_live", reply: "once" },
+      })
+      event("evt_que_rejected", {
+        type: "question.v2.rejected",
+        data: { sessionID: "ses_live", requestID: "que_live" },
+      })
+      await wait(() => sync.data.permission["ses_live"]?.length === 0 && sync.data.question["ses_live"]?.length === 0)
     } finally {
       app.renderer.destroy()
     }

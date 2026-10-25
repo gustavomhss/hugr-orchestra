@@ -19,7 +19,6 @@ const publicEventTypes = [
   "session.created",
   "session.updated",
   "session.deleted",
-  "session.v1.prompt.admitted",
   "message.updated",
   "message.removed",
   "message.part.updated",
@@ -107,7 +106,6 @@ const publicEventTypes = [
   "mcp.tools.changed",
   "mcp.status.changed",
   "mcp.browser.open.failed",
-  "command.executed",
   "project.updated",
   "session.status",
   "session.idle",
@@ -127,15 +125,14 @@ const publicEventTypes = [
 
 describe("public event manifest", () => {
   test("owns the complete public event surface", () => {
-    expect(EventManifest.ServerDefinitions.length).toBe(90)
+    expect(EventManifest.ServerDefinitions.length).toBe(89)
     // The V2 server's HEAD watcher announces branch switches.
     expect(EventManifest.ServerDefinitions).toContain(VcsEvent.BranchUpdated)
-    expect(EventManifest.Definitions.length).toBe(120)
+    expect(EventManifest.Definitions.length).toBe(118)
     expect(SessionV1.Event.Definitions).toEqual([
       SessionV1.Event.Created,
       SessionV1.Event.Updated,
       SessionV1.Event.Deleted,
-      SessionV1.Event.PromptAdmitted,
       SessionV1.Event.MessageUpdated,
       SessionV1.Event.MessageRemoved,
       SessionV1.Event.PartUpdated,
@@ -149,7 +146,7 @@ describe("public event manifest", () => {
     expect(EventManifest.Latest.size).toBe(publicEventTypes.length)
     // Research's ten durable-only definitions are already canonical; the two Session settings events add two more,
     // and Maestro's durable-only workflow review hold, workflow rebind, review findings and resume admission four.
-    expect(EventManifest.Durable.size).toBe(80)
+    expect(EventManifest.Durable.size).toBe(79)
     expect(EventManifest.Durable.get("maestro.task.workflow_review_held.1")).toBe(MaestroEvent.Task.WorkflowReviewHeld)
     expect(EventManifest.Latest.has("maestro.task.workflow_review_held")).toBe(false)
     expect(EventManifest.Durable.get("maestro.task.workflow_rebound.1")).toBe(MaestroEvent.Task.WorkflowRebound)

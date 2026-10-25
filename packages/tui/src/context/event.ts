@@ -1,4 +1,4 @@
-import type { Event } from "../compat/schema"
+import type { Event } from "../types"
 import { useSDK } from "./sdk"
 
 type EventMetadata = {

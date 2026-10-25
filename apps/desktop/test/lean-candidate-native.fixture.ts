@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import path from "node:path"
 import http from "node:http"
 import { access, chmod, mkdir, readdir, readFile, writeFile } from "node:fs/promises"
-import { LeanMetrics } from "../../../packages/schema/src/lean-metrics"
+import { LeanMetrics } from "@orchestra/schema/lean-metrics"
 import { bounded, inside, until, type OwnedCandidate } from "./lean-candidate-runtime.fixture"
 import type { CandidateRecorder } from "./lean-candidate-record.fixture"
 

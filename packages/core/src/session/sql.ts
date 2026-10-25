@@ -5,10 +5,10 @@ import type { SessionMessage } from "./message"
 import type { Prompt } from "./prompt"
 import type { SessionInput } from "./input"
 import type { Snapshot } from "../snapshot"
-import { PermissionV1 } from "../v1/permission"
+import type { PermissionV1 } from "@orchestra/schema/permission-v1"
 import { ProjectV2 } from "../project"
 import type { SessionSchema } from "./schema"
-import type { MessageID, PartID, SessionV1 } from "../v1/session"
+import type { MessageID, PartID, SessionV1 } from "@orchestra/schema/session-v1"
 import { WorkspaceV2 } from "../workspace"
 import { Timestamps } from "../database/schema.sql"
 import type { SystemContext } from "../system-context/index"
@@ -17,8 +17,8 @@ import type { Revert } from "@orchestra/schema/revert"
 import type { PromptContext } from "@orchestra/schema/prompt-context"
 
 type SessionMessageData = Omit<(typeof SessionMessage.Message)["Encoded"], "type" | "id">
-type V1MessageData = Omit<SessionV1.Info, "id" | "sessionID">
-type V1PartData = Omit<SessionV1.Part, "id" | "sessionID" | "messageID">
+type StoredMessageData = Omit<SessionV1.Info, "id" | "sessionID">
+type StoredPartData = Omit<SessionV1.Part, "id" | "sessionID" | "messageID">
 
 export const SessionTable = sqliteTable(
   "session",
@@ -88,7 +88,7 @@ export const MessageTable = sqliteTable(
       .notNull()
       .references(() => SessionTable.id, { onDelete: "cascade" }),
     ...Timestamps,
-    data: text({ mode: "json" }).notNull().$type<V1MessageData>(),
+    data: text({ mode: "json" }).notNull().$type<StoredMessageData>(),
   },
   (table) => [index("message_session_time_created_id_idx").on(table.session_id, table.time_created, table.id)],
 )
@@ -103,7 +103,7 @@ export const PartTable = sqliteTable(
       .references(() => MessageTable.id, { onDelete: "cascade" }),
     session_id: text().$type<SessionSchema.ID>().notNull(),
     ...Timestamps,
-    data: text({ mode: "json" }).notNull().$type<V1PartData>(),
+    data: text({ mode: "json" }).notNull().$type<StoredPartData>(),
   },
   (table) => [
     index("part_message_id_id_idx").on(table.message_id, table.id),

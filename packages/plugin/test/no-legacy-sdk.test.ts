@@ -22,4 +22,17 @@ describe("plugin package", () => {
     )
     expect(offenders.filter((file) => file !== undefined)).toEqual([])
   })
+
+  test("no source file names a V1 schema module", async () => {
+    const files = (await Array.fromAsync(new Bun.Glob("src/**/*.{ts,tsx}").scan({ cwd: root }))).map((file) =>
+      file.replaceAll("\\", "/"),
+    )
+    expect(files).toEqual(expect.arrayContaining(["src/index.ts", "src/tui.ts", "src/types.ts"]))
+    const offenders = await Promise.all(
+      files.map(async (file) =>
+        /@orchestra\/schema\/(v1\/|[\w-]+-v1["/])/.test(await Bun.file(path.join(root, file)).text()) ? file : undefined,
+      ),
+    )
+    expect(offenders.filter((file) => file !== undefined)).toEqual([])
+  })
 })

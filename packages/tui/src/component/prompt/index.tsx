@@ -36,7 +36,8 @@ import { usePromptStash } from "../../prompt/stash"
 import { DialogStash } from "../dialog-stash"
 import { type AutocompleteRef, Autocomplete } from "./autocomplete"
 import { useRenderer, useTerminalDimensions, type JSX } from "@opentui/solid"
-import type { AssistantMessage, FilePart, UserMessage } from "../../compat/schema"
+import type { SessionMessageAssistant } from "../../types"
+import type { TuiPromptFilePart } from "@orchestra/plugin/tui"
 import { Locale } from "../../util/locale"
 import { errorMessage } from "../../util/error"
 import { formatDuration } from "../../util/format"
@@ -235,7 +236,7 @@ export function Prompt(props: PromptProps) {
   event.on("tui.prompt.append", (evt, { workspace }) => {
     if (workspace !== project.workspace.current()) return
     if (!input || input.isDestroyed) return
-    input.insertText(evt.properties.text)
+    input.insertText(evt.data.text)
     setTimeout(() => {
       // setTimeout is a workaround and needs to be addressed properly
       if (!input || input.isDestroyed) return
@@ -252,25 +253,29 @@ export function Prompt(props: PromptProps) {
     if (tuiConfig.cursor) input.cursorStyle = tuiConfig.cursor
   })
 
-  const lastUserMessage = createMemo(() => {
+  // V2 user messages carry no agent or model; the last assistant turn records which ones answered.
+  const lastTurn = createMemo(() => {
     if (!props.sessionID) return undefined
     const messages = sync.data.message[props.sessionID]
     if (!messages) return undefined
-    return messages.findLast((m): m is UserMessage => m.role === "user")
+    return messages.findLast((m): m is SessionMessageAssistant => m.type === "assistant")
   })
 
   const usage = createMemo(() => {
     if (!props.sessionID) return
     const session = sync.session.get(props.sessionID)
     const msg = sync.data.message[props.sessionID] ?? []
-    const last = msg.findLast((item): item is AssistantMessage => item.role === "assistant" && item.tokens.output > 0)
+    const last = msg.findLast(
+      (item): item is SessionMessageAssistant & { tokens: NonNullable<SessionMessageAssistant["tokens"]> } =>
+        item.type === "assistant" && (item.tokens?.output ?? 0) > 0,
+    )
     if (!last) return
 
     const tokens =
       last.tokens.input + last.tokens.output + last.tokens.reasoning + last.tokens.cache.read + last.tokens.cache.write
     if (tokens <= 0) return
 
-    const model = sync.data.provider.find((item) => item.id === last.providerID)?.models[last.modelID]
+    const model = sync.data.provider.find((item) => item.id === last.model.providerID)?.models[last.model.id]
     const pct = model?.limit.context ? `${Math.round((tokens / model.limit.context) * 100)}%` : undefined
     const cost = session?.cost ?? 0
     return {
@@ -310,7 +315,7 @@ export function Prompt(props: PromptProps) {
   let syncedSessionID: string | undefined
   createEffect(() => {
     const sessionID = props.sessionID
-    const msg = lastUserMessage()
+    const msg = lastTurn()
 
     if (sessionID !== syncedSessionID) {
       if (!sessionID || !msg) return
@@ -322,10 +327,8 @@ export function Prompt(props: PromptProps) {
       if (msg.agent && isPrimaryAgent) {
         // Keep command line --agent if specified.
         if (!args.agent) local.agent.set(msg.agent)
-        if (msg.model) {
-          local.model.set(msg.model)
-          local.model.variant.set(msg.model.variant)
-        }
+        local.model.set({ providerID: msg.model.providerID, modelID: msg.model.id })
+        local.model.variant.set(msg.model.variant)
       }
     }
   })
@@ -1190,7 +1193,7 @@ export function Prompt(props: PromptProps) {
       typeId: promptPartTypeId,
     })
 
-    const part: Omit<FilePart, "id" | "messageID" | "sessionID"> = {
+    const part: TuiPromptFilePart = {
       type: "file" as const,
       mime: file.mime,
       filename: file.filename,
@@ -1266,7 +1269,7 @@ export function Prompt(props: PromptProps) {
   })
 
   const spinnerDef = createMemo(() => {
-    const active = status().type !== "idle" ? findAgent(local.agent.list(), lastUserMessage()?.agent) : undefined
+    const active = status().type !== "idle" ? findAgent(local.agent.list(), lastTurn()?.agent) : undefined
     const agent = active ?? local.agent.current()
     const color = agent ? local.agent.color(agentKey(agent)) : theme.border
     return {

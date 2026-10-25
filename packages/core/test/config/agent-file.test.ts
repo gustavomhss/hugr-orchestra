@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { Option, Schema } from "effect"
 import { ConfigAgentFile } from "@orchestra/core/config/agent-file"
 import { ConfigMarkdown } from "@orchestra/core/config/markdown"
-import { ConfigAgentV1 } from "@orchestra/core/v1/config/agent"
+import { ConfigUpgradeAgent } from "@orchestra/core/config/upgrade/agent"
 
 const render = (existing: string | undefined, input: Parameters<typeof ConfigAgentFile.render>[1]) => {
   const text = ConfigAgentFile.render(existing, input)
@@ -23,7 +23,7 @@ describe("ConfigAgentFile", () => {
     const content = render(undefined, input)
     expect(ConfigAgentFile.parse(content)).toEqual(input)
     const markdown = ConfigMarkdown.parse(content)
-    const decoded = Schema.decodeUnknownOption(ConfigAgentV1.Info)({ ...markdown.data, prompt: markdown.content.trim() })
+    const decoded = Schema.decodeUnknownOption(ConfigUpgradeAgent.Info)({ ...markdown.data, prompt: markdown.content.trim() })
     expect(Option.getOrThrow(decoded)).toMatchObject({
       description: input.description,
       mode: "subagent",

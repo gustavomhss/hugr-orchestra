@@ -75,8 +75,8 @@ export function usePromptMove(input: { projectID: () => string | undefined; sess
           (session
             ? {
                 type: "directory",
-                directory: session.directory,
-                subdirectory: !!session.path,
+                directory: session.location.directory,
+                subdirectory: !!session.subpath,
               }
             : {
                 type: "directory",
@@ -102,19 +102,20 @@ export function usePromptMove(input: { projectID: () => string | undefined; sess
     const session = sync.session.get(sessionID)
     const messages = (sync.data.message[sessionID] ?? [])
       .slice(-6)
-      .map((message) =>
-        [
-          message.role + ":",
-          ...(sync.data.part[message.id] ?? []).flatMap((part) => (part.type === "text" ? [part.text] : [])),
-        ].join(" "),
-      )
+      .flatMap((message) => {
+        if (message.type === "user") return [`user: ${message.text}`]
+        if (message.type !== "assistant") return []
+        return [
+          ["assistant:", ...message.content.flatMap((part) => (part.type === "text" ? [part.text] : []))].join(" "),
+        ]
+      })
     return [session?.title, ...messages].filter(Boolean).join("\n") || undefined
   }
 
   async function moveExistingSession(sessionID: string, selection: MoveSessionSelection) {
     const session = sync.session.get(sessionID)
     const status = session
-      ? await sdk.api.vcs.status({ location: { directory: session.directory } }).catch(() => undefined)
+      ? await sdk.api.vcs.status({ location: { directory: session.location.directory } }).catch(() => undefined)
       : undefined
     const choice = status?.data.length ? await DialogWorkspaceFileChanges.show(dialog, status.data) : "no"
     if (!choice) return

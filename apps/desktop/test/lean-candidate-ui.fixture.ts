@@ -1,8 +1,8 @@
 import assert from "node:assert/strict"
 import path from "node:path"
 import type { ElectronAPI } from "../src/preload/types"
-import { LeanCoverage } from "../../../packages/schema/src/lean-coverage"
-import type { LeanDashboard } from "../../../packages/schema/src/lean-dashboard"
+import { LeanCoverage } from "@orchestra/schema/lean-coverage"
+import type { LeanDashboard } from "@orchestra/schema/lean-dashboard"
 import { bounded, expect, type OwnedCandidate } from "./lean-candidate-runtime.fixture"
 import type { NativeRun } from "./lean-candidate-native.fixture"
 
@@ -27,7 +27,7 @@ export async function seedNativeRenderer(candidate: OwnedCandidate, directories:
 export async function verifyNativeRows(candidate: OwnedCandidate, info: LeanDashboard.Info) {
   const page = candidate.page
   await expect(page.locator("[data-lean-item]")).toHaveCount(LeanCoverage.ids.length)
-  assert.equal(info.items.length, LeanCoverage.ids.length)
+  assert.deepEqual(info.items.map((item) => item.id), [...LeanCoverage.ids])
   await expect(page.locator('.lean-control [role="switch"]')).toHaveAttribute("aria-checked", String(info.enabled))
   const signed = (value: number | null) => {
     assert.ok(value !== null, "Public fixture savings unexpectedly unavailable")

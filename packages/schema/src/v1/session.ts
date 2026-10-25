@@ -565,16 +565,6 @@ export const SessionInfo = Schema.Struct({
 }).annotate({ identifier: "Session" })
 export type SessionInfo = typeof SessionInfo.Type
 
-export const PromptTransition = Schema.Struct({
-  expectedRevert: Schema.NullOr(SessionRevert),
-  removeMessageIDs: Schema.Array(MessageID),
-  removePartIDs: Schema.Array(PartID),
-  permission: optional(PermissionV1.Ruleset),
-  // Let the projector name omission/undefined consistently for both typed publication and replay.
-  expectedPermission: Schema.optional(Schema.NullOr(PermissionV1.Ruleset)),
-  timeUpdated: NonNegativeInt,
-}).annotate({ identifier: "SessionV1PromptTransition" })
-
 const events = {
   Created: define({
     type: "session.created",
@@ -598,20 +588,6 @@ const events = {
     schema: {
       sessionID: SessionID,
       info: SessionInfo,
-    },
-  }),
-  PromptAdmitted: define({
-    type: "session.v1.prompt.admitted",
-    ...options,
-    dataIdentifier: "SessionV1PromptAdmission",
-    schema: {
-      sessionID: SessionID,
-      messageID: MessageID,
-      identityVersion: Schema.Literal(1),
-      identity: Schema.String,
-      info: User,
-      parts: Schema.Array(Part),
-      transition: optional(PromptTransition),
     },
   }),
   MessageUpdated: define({
@@ -686,7 +662,6 @@ export const Event = {
     events.Created,
     events.Updated,
     events.Deleted,
-    events.PromptAdmitted,
     events.MessageUpdated,
     events.MessageRemoved,
     events.PartUpdated,

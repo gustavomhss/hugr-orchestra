@@ -1,4 +1,4 @@
-import type { GlobalEvent } from "../compat/schema"
+import type { GlobalEvent, SessionMessage } from "../types"
 import type { useSDK } from "./sdk"
 import type { useSync } from "./sync"
 import * as Demo_ from "./demo"
@@ -20,15 +20,15 @@ function run(command: Demo_.Command, context: Context) {
   if (command.type === "invalid") return context.warn(command.message)
   const n = ++sequence
   const now = Date.now()
-  const asked = Demo_.user(context.sessionID, context.text, { now, sequence: n, agent: context.agent })
+  const asked = Demo_.user(context.text, { now, sequence: n })
+  const append = (...messages: SessionMessage[]) =>
+    context.sync.set("message", context.sessionID, (current) => [...(current ?? []), ...messages])
   if (command.type === "permission" || command.type === "question") {
     const request =
       command.type === "permission"
         ? Demo_.permission(context.sessionID, command.kind, n)
         : Demo_.question(context.sessionID, command.kind, n)
     const pending = Demo_.waitingMessage(
-      context.sessionID,
-      asked.info.id,
       {
         id: request.id,
         tool: command.type === "permission" ? Demo_.PERMISSION_TOOLS[command.kind] : "question",
@@ -37,20 +37,18 @@ function run(command: Demo_.Command, context: Context) {
       },
       { now, sequence: n, cwd: context.cwd, agent: context.agent },
     )
-    for (const item of [asked, pending]) {
-      context.sync.set("message", context.sessionID, (messages) => [...(messages ?? []), item.info])
-      context.sync.set("part", item.info.id, item.parts)
-    }
+    append(asked, pending.message)
     return context.sdk.event.emit("event", {
       directory: context.cwd,
-      payload: { id: `${Demo_.PREFIX}evt_${n}`, type: `${command.type}.asked`, properties: { ...request, tool: pending.tool } },
+      payload: {
+        id: `${Demo_.PREFIX}evt_${n}`,
+        type: `${command.type}.v2.asked`,
+        data:
+          command.type === "permission" ? { ...request, source: { type: "tool", ...pending.tool } } : { ...request, tool: pending.tool },
+      },
     } as GlobalEvent)
   }
-  const answer = Demo_.message(context.sessionID, asked.info.id, command.kind, { now, sequence: n, cwd: context.cwd, agent: context.agent })
-  for (const item of [asked, answer]) {
-    context.sync.set("message", context.sessionID, (messages) => [...(messages ?? []), item.info])
-    context.sync.set("part", item.info.id, item.parts)
-  }
+  append(asked, Demo_.message(command.kind, { now, sequence: n, cwd: context.cwd, agent: context.agent }))
 }
 
 export const Demo = { parse: Demo_.parse, run }

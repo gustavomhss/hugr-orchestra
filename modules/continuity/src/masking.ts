@@ -1,6 +1,6 @@
 export * as ContinuityMasking from "./masking"
 
-import type { SessionV1 } from "./compat/core-v1-session"
+import type { SessionV1 } from "@orchestra/schema/session-v1"
 import { Token } from "@orchestra/core/util/token"
 import { ATTACHMENT_TOKENS, ERROR_LINES, PROTECTED, TAIL_STEPS, describe } from "./masking-rules"
 

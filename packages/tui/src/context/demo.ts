@@ -1,4 +1,12 @@
-import type { AssistantMessage, Message, Part, ToolPart, PermissionRequest, QuestionRequest } from "../compat/schema"
+import type {
+  PermissionV2Request,
+  QuestionV2Request,
+  SessionMessageAssistant,
+  SessionMessageAssistantTool,
+  SessionMessageUser,
+} from "../types"
+
+type Content = SessionMessageAssistant["content"][number]
 
 // Demo mode (`run --mini --demo`): slash commands that put synthetic output on screen instead of running a model
 // turn, to check formatting and the permission and question prompts without a provider.
@@ -71,28 +79,25 @@ const TABLE = [
   "| Wrap | `LongTokenWithoutNaturalBreaks_1234567890` | Width stress |",
 ].join("\n")
 
-/** A completed assistant message with the parts one `/fmt` kind shows. */
+/** A completed assistant message with the content one `/fmt` kind shows. */
 export function message(
-  sessionID: string,
-  parentID: string,
   kind: (typeof FORMATS)[number],
   options: { readonly now: number; readonly sequence: number; readonly cwd: string; readonly agent: string },
-): { info: AssistantMessage; parts: Part[] } {
+): SessionMessageAssistant {
   const id = `${PREFIX}msg_${options.sequence}`
-  const base = { sessionID, messageID: id }
-  const time = { start: options.now, end: options.now }
+  const time = { created: options.now, completed: options.now }
   let n = 0
-  const text = (value: string): Part => ({ ...base, id: `${id}_${n++}`, type: "text", text: value })
-  const tool = (name: string, input: Record<string, unknown>, output: string, metadata: Record<string, unknown> = {}): Part => ({
-    ...base,
-    id: `${id}_${n++}`,
+  const text = (value: string): Content => ({ id: `${id}_${n++}`, type: "text", text: value })
+  const tool = (name: string, input: Record<string, unknown>, output: string, structured: Record<string, unknown> = {}): Content => ({
+    id: `${id}_call_${n++}`,
     type: "tool",
-    callID: `${id}_call_${n}`,
-    tool: name,
-    state: { status: "completed", input, output, title: name, metadata, time },
+    name,
+    provider: { executed: false },
+    state: { status: "completed", input, content: [{ type: "text", text: output }], structured: { title: name, ...structured } },
+    time: { created: options.now, ran: options.now, completed: options.now },
   })
-  const reasoning = (value: string): Part => ({ ...base, id: `${id}_${n++}`, type: "reasoning", text: value, time })
-  const parts: Record<(typeof FORMATS)[number], () => Part[]> = {
+  const reasoning = (value: string): Content => ({ id: `${id}_${n++}`, type: "reasoning", text: value, time })
+  const content: Record<(typeof FORMATS)[number], () => Content[]> = {
     markdown: () => [text(MARKDOWN)],
     table: () => [text(TABLE)],
     text: () => [text("Plain assistant text with a second sentence to check wrapping at the edge of the terminal.")],
@@ -119,37 +124,36 @@ export function message(
     ],
     error: () => [
       {
-        ...base,
-        id: `${id}_${n++}`,
+        id: `${id}_call`,
         type: "tool",
-        callID: `${id}_call`,
-        tool: "bash",
-        state: { status: "error", input: { command: "false" }, error: "Command exited with code 1", time },
+        name: "bash",
+        provider: { executed: false },
+        state: {
+          status: "error",
+          input: { command: "false" },
+          content: [],
+          structured: {},
+          error: { type: "unknown", message: "Command exited with code 1" },
+        },
+        time: { created: options.now, ran: options.now, completed: options.now },
       },
     ],
     mix: () => [reasoning("Plan: list, then summarise."), tool("bash", { command: "ls" }, "demo.txt", { output: "demo.txt" }), text(MARKDOWN)],
   }
   return {
-    info: {
-      id,
-      sessionID,
-      role: "assistant",
-      time: { created: options.now, completed: options.now },
-      parentID,
-      modelID: "demo",
-      providerID: "demo",
-      mode: options.agent,
-      agent: options.agent,
-      path: { cwd: options.cwd, root: options.cwd },
-      cost: 0,
-      tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
-      finish: "stop",
-    },
-    parts: parts[kind](),
+    id,
+    type: "assistant",
+    agent: options.agent,
+    model: { id: "demo", providerID: "demo" },
+    content: content[kind](),
+    cost: 0,
+    tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+    finish: "stop",
+    time,
   }
 }
 
-export function permission(sessionID: string, kind: (typeof PERMISSIONS)[number], sequence: number): PermissionRequest {
+export function permission(sessionID: string, kind: (typeof PERMISSIONS)[number], sequence: number): PermissionV2Request {
   const patterns: Record<(typeof PERMISSIONS)[number], string[]> = {
     edit: ["demo.txt"],
     bash: ["ls -la"],
@@ -158,15 +162,15 @@ export function permission(sessionID: string, kind: (typeof PERMISSIONS)[number]
     external: ["/tmp/*"],
     doom: ["doom"],
   }
-  return { id: `${PREFIX}per_${sequence}`, sessionID, permission: kind, patterns: patterns[kind], metadata: {}, always: patterns[kind] }
+  return { id: `${PREFIX}per_${sequence}`, sessionID, action: kind, resources: patterns[kind], metadata: {}, save: patterns[kind] }
 }
 
-export function question(sessionID: string, kind: (typeof QUESTIONS)[number], sequence: number): QuestionRequest {
+export function question(sessionID: string, kind: (typeof QUESTIONS)[number], sequence: number): QuestionV2Request {
   const options = [
     { label: "Alpha", description: "First option" },
     { label: "Beta", description: "Second option" },
   ]
-  const info: Record<(typeof QUESTIONS)[number], QuestionRequest["questions"]> = {
+  const info: Record<(typeof QUESTIONS)[number], QuestionV2Request["questions"]> = {
     multi: [
       { question: "Pick a letter", header: "Letter", options, multiple: false },
       { question: "Pick any of these", header: "Many", options, multiple: true },
@@ -179,70 +183,75 @@ export function question(sessionID: string, kind: (typeof QUESTIONS)[number], se
 }
 
 /** The user message that carries the demo command the person typed. */
-export function user(
-  sessionID: string,
-  text: string,
-  options: { readonly now: number; readonly sequence: number; readonly agent: string },
-): { info: Message; parts: Part[] } {
-  const id = `${PREFIX}usr_${options.sequence}`
-  return {
-    info: { id, sessionID, role: "user", time: { created: options.now }, agent: options.agent, model: { providerID: "demo", modelID: "demo" } },
-    parts: [{ sessionID, messageID: id, id: `${id}_0`, type: "text", text }],
-  }
+export function user(text: string, options: { readonly now: number; readonly sequence: number }): SessionMessageUser {
+  return { id: `${PREFIX}usr_${options.sequence}`, type: "user", text, time: { created: options.now } }
 }
 
-type Waiting = { readonly part: Extract<Part, { type: "tool" }>; readonly done: { readonly title: string; readonly output: string } }
+type Waiting = {
+  readonly messageID: string
+  readonly tool: SessionMessageAssistantTool
+  readonly done: { readonly title: string; readonly output: string }
+}
 
-// The synthetic tool part each unanswered demo request is waiting on, by request id.
+// The synthetic tool call each unanswered demo request is waiting on, by request id.
 const waiting = new Map<string, Waiting>()
 
-/** An assistant message holding a running tool part for a demo request, which the request's tool field points at. */
+/** An assistant message holding a running tool call for a demo request, which the request's tool field points at. */
 export function waitingMessage(
-  sessionID: string,
-  parentID: string,
   request: { readonly id: string; readonly tool: string; readonly input: Record<string, unknown>; readonly done: Waiting["done"] },
   options: { readonly now: number; readonly sequence: number; readonly cwd: string; readonly agent: string },
-): { info: AssistantMessage; parts: Part[]; tool: { messageID: string; callID: string } } {
-  const built = message(sessionID, parentID, "text", options)
-  const part: Waiting["part"] = {
-    sessionID,
-    messageID: built.info.id,
-    id: `${built.info.id}_wait`,
+): { message: SessionMessageAssistant; tool: { messageID: string; callID: string } } {
+  const built = message("text", options)
+  const tool: SessionMessageAssistantTool = {
+    id: `${built.id}_call`,
     type: "tool",
-    callID: `${built.info.id}_call`,
-    tool: request.tool,
-    state: { status: "running", input: request.input, time: { start: options.now } },
+    name: request.tool,
+    provider: { executed: false },
+    state: { status: "running", input: request.input, structured: {}, content: [] },
+    time: { created: options.now, ran: options.now },
   }
-  waiting.set(request.id, { part, done: request.done })
-  return { info: { ...built.info, time: { created: options.now } }, parts: [part], tool: { messageID: built.info.id, callID: part.callID } }
+  waiting.set(request.id, { messageID: built.id, tool, done: request.done })
+  return {
+    message: { ...built, content: [tool], finish: undefined, time: { created: options.now } },
+    tool: { messageID: built.id, callID: tool.id },
+  }
 }
 
 /**
- * Settles the tool part a demo request waited on, as V1's demo did: an accepted permission completes it, a rejected
- * permission or question fails it, and an answered question completes it with the answers in its metadata.
+ * Settles the tool call a demo request waited on: an accepted permission completes it, a rejected permission or
+ * question fails it, and an answered question completes it with the answers in its metadata.
  */
 export function settle(
   requestID: string,
   outcome: { readonly type: "completed"; readonly answers?: readonly (readonly string[])[] } | { readonly type: "error"; readonly error: string },
   now = Date.now(),
-): ToolPart | undefined {
+): { messageID: string; tool: SessionMessageAssistantTool } | undefined {
   const entry = waiting.get(requestID)
   if (!entry) return undefined
   waiting.delete(requestID)
-  const state = entry.part.state
-  const start = state.status === "running" ? state.time.start : now
+  const input = entry.tool.state.status === "pending" ? {} : entry.tool.state.input
+  const time = { ...entry.tool.time, completed: now }
+  if (outcome.type === "error")
+    return {
+      messageID: entry.messageID,
+      tool: {
+        ...entry.tool,
+        state: { status: "error", input, content: [], structured: {}, error: { type: "unknown", message: outcome.error } },
+        time,
+      },
+    }
   return {
-    ...entry.part,
-    state:
-      outcome.type === "error"
-        ? { status: "error", input: state.input, error: outcome.error, metadata: {}, time: { start, end: now } }
-        : {
-            status: "completed",
-            input: state.input,
-            output: entry.done.output,
-            title: entry.done.title,
-            metadata: outcome.answers ? { answers: outcome.answers } : {},
-            time: { start, end: now },
-          },
+    messageID: entry.messageID,
+    tool: {
+      ...entry.tool,
+      state: {
+        status: "completed",
+        input,
+        content: [{ type: "text", text: entry.done.output }],
+        structured: { title: entry.done.title },
+        metadata: outcome.answers ? { answers: outcome.answers.map((answer) => [...answer]) } : undefined,
+      },
+      time,
+    },
   }
 }

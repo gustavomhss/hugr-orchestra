@@ -7,8 +7,8 @@ import { Config } from "@orchestra/core/config"
 import { ConfigProvider } from "@orchestra/core/config/provider"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
-import { ConfigMigrateV1 } from "@orchestra/core/v1/config/migrate"
-import { ConfigV1 } from "@orchestra/core/v1/config/config"
+import { ConfigUpgrade } from "@orchestra/core/config/upgrade/upgrade"
+import { ConfigUpgradeSource } from "@orchestra/core/config/upgrade/source"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Global } from "@orchestra/core/global"
 import { Location } from "@orchestra/core/location"
@@ -68,19 +68,19 @@ describe("Config", () => {
 
   it.effect("detects v1 configuration from any v1-only top-level key", () =>
     Effect.sync(() => {
-      expect(ConfigMigrateV1.isV1({ snapshot: false })).toBe(true)
-      expect(ConfigMigrateV1.isV1({ snapshot: false, agents: {} })).toBe(true)
-      expect(ConfigMigrateV1.isV1({ reference: {} })).toBe(true)
-      expect(ConfigMigrateV1.isV1({ shell: "/bin/zsh", model: "anthropic/claude" })).toBe(false)
-      expect(ConfigMigrateV1.isV1({ references: {} })).toBe(false)
+      expect(ConfigUpgrade.needsUpgrade({ snapshot: false })).toBe(true)
+      expect(ConfigUpgrade.needsUpgrade({ snapshot: false, agents: {} })).toBe(true)
+      expect(ConfigUpgrade.needsUpgrade({ reference: {} })).toBe(true)
+      expect(ConfigUpgrade.needsUpgrade({ shell: "/bin/zsh", model: "anthropic/claude" })).toBe(false)
+      expect(ConfigUpgrade.needsUpgrade({ references: {} })).toBe(false)
     }),
   )
 
   it.effect("migrates arbitrary v1 configuration into valid v2 configuration", () =>
     Effect.sync(() => {
       FastCheck.assert(
-        FastCheck.property(Schema.toArbitrary(ConfigV1.Info), (info) => {
-          Schema.decodeUnknownSync(Config.Info)(ConfigMigrateV1.migrate(info), { errors: "all" })
+        FastCheck.property(Schema.toArbitrary(ConfigUpgradeSource.Info), (info) => {
+          Schema.decodeUnknownSync(Config.Info)(ConfigUpgrade.migrate(info), { errors: "all" })
         }),
         { numRuns: 100 },
       )
@@ -89,7 +89,7 @@ describe("Config", () => {
 
   it.effect("migrates v1 provider setup options into AISDK settings", () =>
     Effect.sync(() => {
-      const migrated = ConfigMigrateV1.migrate({
+      const migrated = ConfigUpgrade.migrate({
         provider: {
           bedrock: {
             npm: "@ai-sdk/amazon-bedrock",
@@ -118,7 +118,7 @@ describe("Config", () => {
   it.effect("migrates v1 command configuration", () =>
     Effect.sync(() => {
       expect(
-        ConfigMigrateV1.migrate({
+        ConfigUpgrade.migrate({
           command: {
             review: {
               template: "Review changes",

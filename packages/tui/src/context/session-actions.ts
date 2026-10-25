@@ -1,5 +1,5 @@
 import type { Orchestra } from "@orchestra/client"
-import type { AgentPart, FilePart } from "../compat/schema"
+import type { TuiPromptAgentPart, TuiPromptFilePart } from "@orchestra/plugin/tui"
 
 type Client = ReturnType<typeof Orchestra.make>
 type Model = { providerID: string; modelID: string; variant?: string }
@@ -32,8 +32,8 @@ export function createSessionActions(client: Client) {
       context?: string
       agent: string
       model: Model
-      files: ReadonlyArray<Pick<FilePart, "url" | "filename" | "source">>
-      agents: ReadonlyArray<Pick<AgentPart, "name" | "source">>
+      files: ReadonlyArray<Pick<TuiPromptFilePart, "url" | "filename" | "source">>
+      agents: ReadonlyArray<Pick<TuiPromptAgentPart, "name" | "source">>
     }) {
       await select(input)
       if (input.context)
@@ -68,7 +68,7 @@ export function createSessionActions(client: Client) {
       arguments: string
       agent: string
       model: Model
-      files: ReadonlyArray<Pick<FilePart, "url" | "filename" | "source">>
+      files: ReadonlyArray<Pick<TuiPromptFilePart, "url" | "filename" | "source">>
     }) {
       await select(input)
       return client.sessions.command({
@@ -81,7 +81,7 @@ export function createSessionActions(client: Client) {
   }
 }
 
-function toFile(file: Pick<FilePart, "url" | "filename" | "source">) {
+function toFile(file: Pick<TuiPromptFilePart, "url" | "filename" | "source">) {
   return {
     uri: file.url,
     name: file.filename,
