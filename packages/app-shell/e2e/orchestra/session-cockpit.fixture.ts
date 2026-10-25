@@ -272,7 +272,6 @@ function parentMessages(shell = false, outcomes = false) {
                 state: {
                   status: "running",
                   input: { command: "pwd" },
-                  title: "Inspect workspace",
                   metadata: {},
                   time: { start: 1700000002000 },
                 },

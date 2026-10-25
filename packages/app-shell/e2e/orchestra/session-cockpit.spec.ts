@@ -26,7 +26,7 @@ test("the Apps tab hosts only the Dock and the Tasks tab holds Tasks and Activit
   const lists: string[] = []
   await setupCockpit(page, { bridge: false, reads, lists })
   await page.route(
-    (url) => url.port === new URL(server).port && url.pathname.startsWith("/pty"),
+    (url) => url.port === new URL(server).port && url.pathname.startsWith("/api/pty"),
     (route) => {
       ptys.push(`${route.request().method()} ${new URL(route.request().url()).pathname}`)
       return route.fulfill({ status: 200, contentType: "application/json", body: "[]" })
@@ -303,7 +303,7 @@ test("Terminal hands one existing PTY renderer between Dock and bottom panel", a
   const requests: string[] = []
   const connections: string[] = []
   await page.route(
-    (url) => url.port === new URL(server).port && url.pathname.startsWith("/pty"),
+    (url) => url.port === new URL(server).port && url.pathname.startsWith("/api/pty"),
     (route) => {
       const path = new URL(route.request().url()).pathname
       requests.push(`${route.request().method()} ${path}`)
@@ -316,7 +316,9 @@ test("Terminal hands one existing PTY renderer between Dock and bottom panel", a
         status: "running",
         pid: 1,
       }
-      const body = path.endsWith("connect-token") ? { ticket: "cockpit-ticket", expires_in: 60 } : pty
+      const body = path.endsWith("connect-token")
+        ? { location: { directory }, data: { ticket: "cockpit-ticket", expires_in: 60 } }
+        : { location: { directory }, data: pty }
       return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) })
     },
   )
@@ -377,7 +379,7 @@ test("Docs render MDX as text and preserve a denied read with explicit retry", a
   await expect(dock.getByRole("button", { name: "Never execute MDX" })).toHaveCount(0)
   await dock.getByRole("button", { name: "Docs", exact: true }).click()
   const attempts: string[] = []
-  await page.route("**/file/content*", (route) => {
+  await page.route("**/api/fs/read*", (route) => {
     const path = new URL(route.request().url()).searchParams.get("path")
     if (path !== "AGENTS.md") return route.fallback()
     attempts.push(path)
@@ -431,8 +433,8 @@ test("shell tasks and Activity reveal the confirmed originating turn without int
   })
   await openCockpit(page)
   await railTab(page, "tasks").click()
-  // The row is named by what it shows; where it leads is its description.
-  const shell = page.locator('[data-component="tasks-panel"]').getByRole("button", { name: /^Inspect workspace/ })
+  // A running V2 tool record carries no title, so the row is named by the tool; where it leads is its description.
+  const shell = page.locator('[data-component="tasks-panel"]').getByRole("button", { name: /^shell/ })
   await expect(shell).toHaveAccessibleDescription("Open execution")
   await expect(shell.getByRole("button", { name: "Stop task" })).toHaveCount(0)
   await shell.click()
