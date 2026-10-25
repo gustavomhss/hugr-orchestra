@@ -1,5 +1,4 @@
 import { describe, expect, test } from "bun:test"
-import type { ServerSdk } from "@/utils/server"
 import type { McpListInput, McpResourceCatalogInput, SessionListInput } from "@/v2-wire"
 import type { SessionInfo } from "@/v2-types"
 
@@ -81,7 +80,11 @@ describe("active session query", () => {
   })
 
   test("does not overwrite statuses already written by events", () => {
-    const session = createServerSession({} as ServerSdk)
+    const session = createServerSession(
+      {} as Pick<ServerApi["session"], "get" | "message">,
+      {} as ServerApi["message"],
+      { todo: async () => [] },
+    )
     session.set("session_status", "ses_retry", { type: "retry", attempt: 2, message: "retrying", next: 10 })
 
     seedActiveSessionStatuses(session, {

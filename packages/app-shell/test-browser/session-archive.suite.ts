@@ -5,7 +5,7 @@ import { createComponent } from "solid-js"
 import { render } from "solid-js/web"
 import { Root } from "@kobalte/core/dialog"
 import { createServerSession } from "@/context/server-session"
-import { createSdkForServer } from "@/utils/server"
+import type { ServerApi } from "@/utils/server"
 import { SessionManagementUnsupported } from "@/utils/session-management-errors"
 import { base64Encode } from "@orchestra/core/util/encode"
 import {
@@ -15,7 +15,7 @@ import {
 } from "@/components/titlebar-session-events"
 
 const servers = { A: "http://a.invalid", B: "http://b.invalid" }
-let kind: "v2" = "v1"
+let kind: "v1" | "v2" = "v1"
 // A V1 server whose /api/health reports a pid also serves the V2 archive routes, as the desktop sidecar does.
 let sidecar = false
 let active: "A" | "B" = "B"
@@ -41,16 +41,12 @@ function state() {
   }))
   const [data, set] = createStore({ session: rows })
   const canonical = new Map(rows.map((row) => [row.id, structuredClone(row)]))
-  const session = createServerSession(
-    createSdkForServer({
-      server: { url: "https://archive-fixture.test" },
-      fetch: Object.assign(async (input: string | URL | Request) => {
-        const id = new URL(input instanceof Request ? input.url : input).pathname.split("/").at(-1)!
-        return Response.json(canonical.get(id))
-      }, { preconnect: fetch.preconnect }),
-    }),
-    { protocol: Promise.resolve("v2") },
-  )
+  // Each read returns a copy of the canonical row, as an HTTP response would.
+  const sessionApi = {
+    get: async (input: { sessionID: string }) => structuredClone(canonical.get(input.sessionID)),
+    message: () => Promise.reject(new Error("message endpoint unused")),
+  } as unknown as Pick<ServerApi["session"], "get" | "message">
+  const session = createServerSession(sessionApi, {} as ServerApi["message"], { todo: async () => [] })
   rows.forEach(session.remember)
   return {
     data,
@@ -118,10 +114,10 @@ beforeAll(async () => {
         sessionManagement: { hasArchiveRoutes: () => kind === "v2" || sidecar, listArchived: async () => {
           if (listFailure) throw new Error("history offline")
           return [...stores[source].canonical.values()].filter((session) => session.time.archived !== undefined)
-        }, archive: async (sessionID: string, archived: boolean, directory: string) => {
+        }, archive: async (sessionID: string, archived: boolean) => {
           if (missing) throw new SessionManagementUnsupported()
           const store = stores[source]
-          writes.push({ source, input: { sessionID, archived, directory } })
+          writes.push({ source, input: { sessionID, archived } })
           started.resolve()
           await request.promise
           const row = store.canonical.get(sessionID)!
@@ -197,7 +193,7 @@ test("V1 server whose /api/health reports a pid gets restore", async () => {
   await started.promise
   request.resolve()
   expect(await restored).toBe(true)
-  expect(writes).toEqual([{ source: "B", input: { sessionID: "shared", archived: false, directory: "/shared/repo" } }])
+  expect(writes).toEqual([{ source: "B", input: { sessionID: "shared", archived: false } }])
   expect(stores.B.data.session.find((item) => item.id === "shared")?.time.archived).toBeUndefined()
   expect(toasts).toEqual([])
 })
@@ -224,7 +220,7 @@ test("late archive stays source scoped even when its disposed SDK accessor stays
   request.resolve()
   await pending
   expect(writes).toEqual([
-    { source: "B", input: { sessionID: "shared", directory: "/shared/repo", archived: true } },
+    { source: "B", input: { sessionID: "shared", archived: true } },
   ])
   expect(stores.B.data.session.map((item) => item.id)).toEqual(["neighbor"])
   expect(stores.A.data.session.map((item) => item.id)).toEqual(["shared", "neighbor"])
@@ -285,7 +281,7 @@ test("V2 restore keeps archived session intact on failure and restores within it
   pathname = "/source-A/shared"
   request.resolve()
   expect(await retry).toBe(true)
-  expect(writes.at(-1)).toEqual({ source: "B", input: { sessionID: "shared", archived: false, directory: "/shared/repo" } })
+  expect(writes.at(-1)).toEqual({ source: "B", input: { sessionID: "shared", archived: false } })
   expect(stores.B.data.session.find((item) => item.id === "shared")?.time.archived).toBeUndefined()
   expect(notices).toEqual([])
 })
@@ -314,7 +310,7 @@ test("real archive history DOM retries a failed load, then restores only its cap
   const restore = [...host.querySelectorAll<HTMLButtonElement>("button")].find((button) => button.textContent === "Restore session")!
   restore.click()
   await started.promise
-  expect(writes).toEqual([{ source: "B", input: { sessionID: "shared", archived: false, directory: "/shared/repo" } }])
+  expect(writes).toEqual([{ source: "B", input: { sessionID: "shared", archived: false } }])
   expect(restore.disabled).toBe(true)
   request.resolve()
   await until(() => !host.querySelector('[data-session-id="shared"]'))

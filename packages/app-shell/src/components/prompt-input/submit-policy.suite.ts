@@ -6,8 +6,8 @@ import { ServerScope } from "@/utils/server-scope"
 import { createSubmissionPolicy } from "./submission-policy"
 import type { SubagentModelPolicy } from "../subagent-model-rules"
 import {
-  acknowledgeDraftPolicy, createPromptSubmit, createdSessions, promptInputs, savedPolicies, savedRules,
-  policyWrites, legacyBaseline, legacySessionPermissions, policyFixture, serverFor, sdkFor, promoted,
+  acknowledgeDraftPolicy, createPromptSubmit, createdSessions, promptInputs, savedPolicies,
+  policyWrites, policyFixture, serverFor, sdkFor, promoted,
   state, submitInput, sentShell, promotedDrafts,
   storedSessions, canonicalPolicies,
 } from "./submit-harness"

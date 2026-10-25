@@ -1,7 +1,6 @@
 import { expect, spyOn, test } from "bun:test"
 import type { SessionInfo } from "@/v2-types"
 
-import type { ServerSdk } from "@/utils/server"
 import { createRoot } from "solid-js"
 import { createStore } from "solid-js/store"
 import type { State } from "@/context/global-sync/types"
@@ -14,7 +13,7 @@ const { createDirSyncContext }: typeof import("@/context/directory-sync") = awai
 const { createServerSession }: typeof import("@/context/server-session") = await import(solidDom("@/context/server-session", import.meta.dir))
 const { applySessionPolicyEvent }: typeof import("@/context/server-sync") = await import(solidDom("@/context/server-sync", import.meta.dir))
 const { applyDirectoryEvent }: typeof import("@/context/global-sync/event-reducer") = await import(solidDom("@/context/global-sync/event-reducer", import.meta.dir))
-const { createApiForServer, createSdkForServer }: typeof import("@/utils/server") = await import(solidDom("@/utils/server", import.meta.dir))
+const { createApiForServer }: typeof import("@/utils/server") = await import(solidDom("@/utils/server", import.meta.dir))
 const { normalizeSessionInfo, applySessionManagementEvent }: typeof import("@/utils/session") = await import(solidDom("@/utils/session", import.meta.dir))
 
 const denied = { mode: "allowlist", models: [] } as const
@@ -39,7 +38,7 @@ function policyEvent(id: string, seq: number, policy: AppSession["subagentModels
 
 function projection(get: ServerApi["session"]["get"], list: () => SessionInfo[] = () => []) {
   return createRoot((dispose) => {
-    const server = createServerSession({} as ServerSdk, { get } as ServerApi["session"], {} as ServerApi["message"])
+    const server = createServerSession({ get } as ServerApi["session"], {} as ServerApi["message"], { todo: async () => [] })
     const [store, setStore] = createStore({
       status: "complete", session: [], sessionTotal: 0, limit: 10,
       message: {}, session_message: {}, part: {}, part_text_accum_delta: {},
@@ -53,7 +52,6 @@ function projection(get: ServerApi["session"]["get"], list: () => SessionInfo[] 
       session: server,
       child: () => [store, setStore],
     } as unknown as Parameters<typeof createDirSyncContext>[1], {
-      createClient: () => ({}),
       api: { session: { list: async () => ({ data: list(), cursor: {} }) } },
     } as unknown as Parameters<typeof createDirSyncContext>[2])
     return {
@@ -364,7 +362,7 @@ test("only a valid canonical GET mints a numeric local receipt", async () => {
     data: state.valid ? snapshot("ses_valid", inherited) : { ...snapshot("ses_valid", denied), subagentModels: { mode: "invalid" } },
   }), { preconnect: fetch.preconnect })
   const api = createApiForServer({ server: http, fetch: fetcher })
-  const server = createServerSession(createSdkForServer({ server: http, fetch: fetcher }), api.session, api.message)
+  const server = createServerSession(api.session, api.message, { todo: async () => [] })
   server.remember(normalizeSessionInfo(snapshot("ses_valid", denied)))
   await expect(server.resolve("ses_valid", { force: true })).rejects.toThrow()
   expect(server.get("ses_valid")?.subagentModelsReadReceipt).toBeUndefined()

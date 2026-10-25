@@ -5,7 +5,7 @@ import {
   type ModelPolicySnapshot,
   type SubagentModelPolicy,
 } from "@/components/subagent-model-rules"
-import { createSdkForServer } from "@/utils/server"
+import type { ServerApi } from "@/utils/server"
 import type { AppSession } from "@/utils/session"
 import { createServerSession } from "@/context/server-session"
 import { applyDirectoryEvent } from "@/context/global-sync/event-reducer"
@@ -133,19 +133,16 @@ test.each(["unknown ACK revision", "older timestamp"] as const)("ancestor remain
 function service() {
   const gate = Promise.withResolvers<void>()
   const requests: string[] = []
-  const client = createSdkForServer({
-    server: { url: "https://session-regression.test" },
-    throwOnError: true,
-    fetch: Object.assign(
-      async (input: RequestInfo | URL, init?: RequestInit) => {
-        requests.push(new URL(new Request(input, init).url).pathname)
-        await gate.promise
-        return Response.json(info())
-      },
-      { preconnect: fetch.preconnect },
-    ),
-  })
-  return { gate, requests, store: createServerSession(client) }
+  // A canonical V2 read carries the policy the events announced, but not the later archive change.
+  const sessionApi = {
+    get: async (input: { sessionID: string }) => {
+      requests.push(input.sessionID)
+      await gate.promise
+      return { ...info(), subagentModels: allow }
+    },
+    message: () => Promise.reject(new Error("message endpoint unused")),
+  } as unknown as Pick<ServerApi["session"], "get" | "message">
+  return { gate, requests, store: createServerSession(sessionApi, {} as ServerApi["message"], { todo: async () => [] }) }
 }
 
 test("retaining newer policy keeps latest activity timestamp and other snapshot times", () => {
@@ -168,7 +165,7 @@ test.each(["delete", "delete and recreate"] as const)("missing management recove
   ctx.gate.resolve()
   await projection
   await Promise.resolve()
-  expect(ctx.requests).toEqual([`/session/${info().id}`])
+  expect(ctx.requests).toEqual([info().id])
   expect(ctx.store.get(info().id)).toEqual(phase === "delete" ? undefined : { ...info(30), subagentModels: deny })
 })
 
