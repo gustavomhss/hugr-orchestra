@@ -76,7 +76,8 @@ test("invalid resource and SessionID block controller writes; target resource ne
   field("resource").value = "{not json"
   submit()
   await settle()
-  expect(document.querySelector("[role=alert]")?.textContent).toContain("Check the selected account")
+  expect(document.querySelector("[role=alert]")?.textContent).toContain("The resource is not valid JSON.")
+  expect(view.model.state.resourceError).toBeDefined()
   expect(view.calls.some((call) => call.method === "createTarget")).toBe(false)
   field("environment").value = "production"
   field("resource").value = '{"channel":"explicit-42"}'
@@ -109,7 +110,9 @@ test("invalid resource and SessionID block controller writes; target resource ne
 test("host bearer stays out of Basic mode, clears on submit and disposal", async () => {
   const basic = await mount()
   expect(basic.host.querySelector('[name="bearer"]')).toBeNull()
-  const view = await mount({ basic: false })
+  const authorized = await mount({ basic: false })
+  expect(authorized.host.querySelector('[name="bearer"]')).toBeNull()
+  const view = await mount({ basic: false, unauthorized: true })
   const bearer = field("bearer")
   bearer.value = "fixture-host-bearer"
   const form = bearer.closest("form")

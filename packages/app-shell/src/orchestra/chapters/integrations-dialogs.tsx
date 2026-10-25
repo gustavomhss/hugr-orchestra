@@ -2,10 +2,11 @@ import { Dialog } from "@kobalte/core/dialog"
 import { CapabilityManagement } from "@orchestra/schema/capability-management"
 import { CapabilitySetup } from "@orchestra/schema/capability-setup"
 import { Option, Schema } from "effect"
-import { onCleanup, Show } from "solid-js"
+import { For, onCleanup, onMount, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import type { Model } from "./integrations-contract"
+import { INTEGRATION_PROVIDERS } from "./integrations-model"
 
 export type IntegrationForm = "connect" | "createTarget" | "retarget" | "bind" | "remove" | "disconnect" | "unbind"
 
@@ -20,9 +21,29 @@ export function IntegrationsDialog(props: {
 }) {
   const language = useLanguage()
   const opener = props.opener
-  const [state, setState] = createStore({ invalid: false })
+  const [state, setState] = createStore({
+    invalid: false,
+    provider: INTEGRATION_PROVIDERS[0].id as string,
+    resourceChecked: false,
+  })
   const form = { current: undefined as HTMLFormElement | undefined }
   onCleanup(() => form.current?.reset())
+  onMount(() => {
+    if (props.kind === "bind") void props.model.loadSessions()
+  })
+  const keyHint = () => INTEGRATION_PROVIDERS.find((item) => item.id === state.provider)?.hint
+  // The actions example follows the provider of the account the target belongs to.
+  const actionsExample = () => {
+    const provider = props.model.state.connections.find(
+      (item) => item.connection.id === props.model.state.connectionID,
+    )?.connection.provider
+    const item = INTEGRATION_PROVIDERS.find((item) => item.id === provider)
+    return item?.available ? item.actionsHint : undefined
+  }
+  const checkResource = (text: string) => {
+    setState("resourceChecked", true)
+    return props.model.checkResource(text)
+  }
   const close = () => {
     form.current?.reset()
     if (!props.isCurrent()) return
@@ -61,11 +82,11 @@ export function IntegrationsDialog(props: {
       void props.model.connect(input.value)
     }
     if (props.kind === "createTarget" || props.kind === "retarget") {
-      const resource = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(values.get("resource"))
-      if (Option.isNone(resource)) return invalid()
+      const resource = checkResource(String(values.get("resource") ?? ""))
+      if (resource === undefined) return
       const input = Schema.decodeUnknownOption(CapabilityManagement.TargetInput)({
         environment: values.get("environment"),
-        resource: resource.value,
+        resource,
       })
       if (Option.isNone(input)) return invalid()
       void (props.kind === "createTarget"
@@ -74,7 +95,8 @@ export function IntegrationsDialog(props: {
     }
     if (props.kind === "bind") {
       const input = Schema.decodeUnknownOption(CapabilityManagement.BindingInput)({
-        sessionID: values.get("sessionID"),
+        // A typed ID wins over the picker, which stays advisory when the session list cannot load.
+        sessionID: String(values.get("sessionID") ?? "").trim() || values.get("sessionPick"),
         actions: String(values.get("actions") ?? "")
           .split(/\r?\n/)
           .map((line) => line.trim())
@@ -130,6 +152,7 @@ export function IntegrationsDialog(props: {
                 form.current = element
               }}
               autocomplete="off"
+              onReset={() => setState("provider", INTEGRATION_PROVIDERS[0].id)}
               onSubmit={(event) => {
                 event.preventDefault()
                 submit(event.currentTarget)
@@ -163,15 +186,40 @@ export function IntegrationsDialog(props: {
                 <Show when={props.kind === "connect"}>
                   <label class="mx-field">
                     <span>{language.t("orchestra.integrations.provider")}</span>
-                    <select name="provider">
-                      <option value="slack">Slack</option>
-                      <option value="discord">Discord</option>
+                    <select name="provider" onChange={(event) => setState("provider", event.currentTarget.value)}>
+                      <For each={INTEGRATION_PROVIDERS.filter((item) => item.available)}>
+                        {(item) => <option value={item.id}>{language.t(item.name)}</option>}
+                      </For>
+                      <optgroup label={language.t("orchestra.integrations.providerUnavailable")}>
+                        <For each={INTEGRATION_PROVIDERS.filter((item) => !item.available)}>
+                          {(item) => (
+                            <option value={item.id} disabled>
+                              {language.t(item.name)}
+                            </option>
+                          )}
+                        </For>
+                      </optgroup>
                     </select>
                   </label>
                   <label class="mx-field">
                     <span>{language.t("orchestra.integrations.key")}</span>
-                    <input name="key" type="password" dir="ltr" required maxlength={4096} autocomplete="off" />
+                    <input
+                      name="key"
+                      type="password"
+                      dir="ltr"
+                      required
+                      maxlength={4096}
+                      autocomplete="off"
+                      aria-describedby="integrations-key-hint"
+                    />
                   </label>
+                  <Show when={keyHint()}>
+                    {(hint) => (
+                      <p id="integrations-key-hint" class="mx-note">
+                        {language.t(hint())}
+                      </p>
+                    )}
+                  </Show>
                   <label class="mx-field">
                     <span>{language.t("orchestra.integrations.label")}</span>
                     <input name="label" dir="auto" maxlength={128} />
@@ -184,13 +232,61 @@ export function IntegrationsDialog(props: {
                   </label>
                   <label class="mx-field">
                     <span>{language.t("orchestra.integrations.resource")}</span>
-                    <textarea name="resource" dir="ltr" required spellcheck={false} />
+                    <textarea
+                      name="resource"
+                      dir="ltr"
+                      required
+                      spellcheck={false}
+                      aria-invalid={state.resourceChecked && !!props.model.state.resourceError}
+                      onChange={(event) => checkResource(event.currentTarget.value)}
+                    />
                   </label>
+                  <Show when={state.resourceChecked && props.model.state.resourceError}>
+                    <p role="alert" class="mx-error">
+                      {language.t("orchestra.integrations.resourceError")}
+                    </p>
+                  </Show>
                 </Show>
                 <Show when={props.kind === "bind"}>
+                  <Show when={props.model.state.sessions.length}>
+                    <label class="mx-field">
+                      <span>{language.t("orchestra.integrations.sessionPick")}</span>
+                      <select name="sessionPick">
+                        <option value="" />
+                        <For each={props.model.state.sessions}>
+                          {(session) => (
+                            <option value={session.id} dir="auto">
+                              {session.title || session.id}
+                            </option>
+                          )}
+                        </For>
+                      </select>
+                    </label>
+                  </Show>
+                  <Show when={props.model.state.sessionsStatus === "loading"}>
+                    <p role="status" class="mx-note">
+                      {language.t("orchestra.integrations.sessionsLoading")}
+                    </p>
+                  </Show>
+                  <Show when={props.model.state.sessionsStatus === "ready" && !props.model.state.sessions.length}>
+                    <p role="status" class="mx-note">
+                      {language.t("orchestra.integrations.sessionsEmpty")}
+                    </p>
+                  </Show>
+                  <Show when={props.model.state.sessionsStatus === "error"}>
+                    <p role="status" class="mx-note">
+                      {language.t("orchestra.integrations.sessionsError")}
+                    </p>
+                  </Show>
                   <label class="mx-field">
-                    <span>{language.t("orchestra.integrations.session")}</span>
-                    <input name="sessionID" dir="ltr" required />
+                    <span>
+                      {language.t(
+                        props.model.state.sessions.length
+                          ? "orchestra.integrations.sessionTyped"
+                          : "orchestra.integrations.session",
+                      )}
+                    </span>
+                    <input name="sessionID" dir="ltr" required={!props.model.state.sessions.length} />
                   </label>
                   <label class="mx-field">
                     <span>{language.t("orchestra.integrations.actions")}</span>
@@ -199,12 +295,19 @@ export function IntegrationsDialog(props: {
                       dir="ltr"
                       required
                       spellcheck={false}
-                      aria-describedby="integrations-actions-hint"
+                      aria-describedby="integrations-actions-hint integrations-actions-example"
                     />
                   </label>
                   <p id="integrations-actions-hint" class="mx-note">
                     {language.t("orchestra.integrations.actionsHint")}
                   </p>
+                  <Show when={actionsExample()}>
+                    {(example) => (
+                      <p id="integrations-actions-example" class="mx-note">
+                        {language.t(example())}
+                      </p>
+                    )}
+                  </Show>
                 </Show>
                 <Show when={props.kind === "unbind"}>
                   <bdi dir="ltr">
