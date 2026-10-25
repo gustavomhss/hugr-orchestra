@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import path from "node:path"
 import type { ElectronAPI } from "../src/preload/types"
+import { LeanCoverage } from "../../../packages/schema/src/lean-coverage"
 import type { LeanDashboard } from "../../../packages/schema/src/lean-dashboard"
 import { bounded, expect, type OwnedCandidate } from "./lean-candidate-runtime.fixture"
 import type { NativeRun } from "./lean-candidate-native.fixture"
@@ -25,8 +26,8 @@ export async function seedNativeRenderer(candidate: OwnedCandidate, directories:
 
 export async function verifyNativeRows(candidate: OwnedCandidate, info: LeanDashboard.Info) {
   const page = candidate.page
-  await expect(page.locator("[data-lean-item]")).toHaveCount(32)
-  assert.equal(info.items.length, 32)
+  await expect(page.locator("[data-lean-item]")).toHaveCount(LeanCoverage.ids.length)
+  assert.equal(info.items.length, LeanCoverage.ids.length)
   await expect(page.locator('.lean-control [role="switch"]')).toHaveAttribute("aria-checked", String(info.enabled))
   const signed = (value: number | null) => {
     assert.ok(value !== null, "Public fixture savings unexpectedly unavailable")
@@ -64,10 +65,10 @@ export async function verifyNativeRows(candidate: OwnedCandidate, info: LeanDash
 export async function selectNativeProfile(candidate: OwnedCandidate, directory: string, expected: LeanDashboard.Info) {
   const page = candidate.page
   const loaded = page.waitForResponse((response) => response.request().method() === "GET" &&
-    new URL(response.url()).pathname === "/project/lean" && new URL(response.url()).searchParams.get("directory") === directory)
+    new URL(response.url()).pathname === "/api/lean" && new URL(response.url()).searchParams.get("location[directory]") === directory)
   await page.locator('[data-slot="orchestra-profile"]').click()
   await page.locator('[data-component="orchestra-profile-picker"]').getByRole("menuitemradio", { name: path.basename(directory), exact: true }).click()
-  assert.deepEqual(await (await loaded).json(), expected, "Actual profile picker read the wrong backend owner")
+  assert.deepEqual((await (await loaded).json()).data, expected, "Actual profile picker read the wrong backend owner")
   await expect(page.locator("#orchestra-profile-name")).toHaveText(path.basename(directory))
   const selected = await bounded("native selected profile persistence", page.evaluate(async () => {
     const api = (window as unknown as { api: ElectronAPI }).api
@@ -80,7 +81,7 @@ export async function selectNativeProfile(candidate: OwnedCandidate, directory: 
 
 export async function nativeItemToggle(candidate: OwnedCandidate, itemID: string, enabled: boolean) {
   const page = candidate.page
-  const patch = page.waitForResponse((response) => response.request().method() === "PATCH" && new URL(response.url()).pathname === "/project/lean")
+  const patch = page.waitForResponse((response) => response.request().method() === "PATCH" && new URL(response.url()).pathname === "/api/lean")
   await page.locator(`[data-lean-item="${itemID}"] [role="switch"]`).click()
   const response = await patch
   assert.ok(response.ok(), "Actual renderer item PATCH failed")
@@ -89,7 +90,7 @@ export async function nativeItemToggle(candidate: OwnedCandidate, itemID: string
 }
 
 export async function nativeMasterToggle(candidate: OwnedCandidate, enabled: boolean) {
-  const patch = candidate.page.waitForResponse((response) => response.request().method() === "PATCH" && new URL(response.url()).pathname === "/project/lean")
+  const patch = candidate.page.waitForResponse((response) => response.request().method() === "PATCH" && new URL(response.url()).pathname === "/api/lean")
   await candidate.page.locator('.lean-control [role="switch"]').click()
   const response = await patch
   assert.ok(response.ok(), "Actual renderer master PATCH failed")
@@ -98,16 +99,17 @@ export async function nativeMasterToggle(candidate: OwnedCandidate, enabled: boo
 }
 
 export async function nativeHistory(candidate: OwnedCandidate, directory: string, itemID: string, runs: NativeRun[]) {
-  const history = await candidate.request<LeanDashboard.History>(`project/lean/history/${itemID}`, "GET", undefined, directory)
+  const history = (await candidate.request<{ data: LeanDashboard.History }>(`api/lean/history/${itemID}`, "GET", undefined, directory)).data
   assert.equal(history.executions.length, runs.length)
   assert.equal(history.scope.directory, directory)
   await candidate.page.locator(`#lean-trigger-${itemID}`).click()
   await expect(candidate.page.locator("[data-lean-execution]")).toHaveCount(runs.length)
   for (const run of runs) {
-    const execution = history.executions.find((entry) => entry.callID === run.tool.callID)
+    const execution = history.executions.find((entry) => entry.callID === run.tool.id)
     assert.ok(execution, "Actual native history omitted durable tool identity")
     assert.equal(execution.sessionID, run.session.id)
     assert.equal(execution.messageID, run.tool.messageID)
+    // A V2 tool part is identified by its provider call ID, which is also the history's part ID.
     assert.equal(execution.partID, run.tool.id)
     const originalCommand = run.tool.state.input.command
     assert.ok(typeof originalCommand === "string", "Original native tool command is missing")
@@ -116,7 +118,7 @@ export async function nativeHistory(candidate: OwnedCandidate, directory: string
     assert.equal(execution.bytesSaved, run.metric.bytes.saved)
     assert.ok(run.metric.tokens.kind === "estimated")
     assert.equal(execution.tokensSaved, run.metric.tokens.saved)
-    const row = candidate.page.locator(`[data-lean-execution="${run.tool.callID}"]`)
+    const row = candidate.page.locator(`[data-lean-execution="${run.tool.id}"]`)
     await expect(row.locator("code")).toHaveJSProperty("textContent", originalCommand)
     const fmt = (value: number) => new Intl.NumberFormat("en-US", { signDisplay: "exceptZero" }).format(value)
     await expect(row.locator('[data-lean-value="bytes"]')).toHaveText(fmt(run.metric.bytes.saved))

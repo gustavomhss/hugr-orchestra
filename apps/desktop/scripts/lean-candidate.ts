@@ -325,6 +325,8 @@ export async function candidate(action: string) {
     } finally {
       await rm(cliOmni, { recursive: true, force: true })
     }
+    // beforePack also refuses a package without the pinned Claude Code asset, which the production prebuild stages.
+    await command(["bun", "-e", 'await (await import("./scripts/stage-claude.ts")).stageClaude()'], env)
     // buildCliToResources staged the pinned rg with the CLI; the record pins it, signature checked.
     const ripgrep = await ripgrepRecord(path.join(desktop, "resources", ripgrepDirectory))
     await command(["bun", "run", "electron-vite", "build", "--config", "electron.vite.candidate.config.ts"], viteEnv)
