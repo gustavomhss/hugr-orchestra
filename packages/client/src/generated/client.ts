@@ -57,6 +57,8 @@ import type {
   SessionsTodoOutput,
   SessionsWaitInput,
   SessionsWaitOutput,
+  SessionsDiffInput,
+  SessionsDiffOutput,
   SessionsStageInput,
   SessionsStageOutput,
   SessionsClearInput,
@@ -853,6 +855,17 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ),
+      diff: (input: SessionsDiffInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: SessionsDiffOutput }>(
+          {
+            method: "GET",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/message/${encodeURIComponent(input.messageID)}/diff`,
+            successStatus: 200,
+            declaredStatuses: [404, 500, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
       stage: (input: SessionsStageInput, requestOptions?: RequestOptions) =>
         request<{ readonly data: SessionsStageOutput }>(
           {
