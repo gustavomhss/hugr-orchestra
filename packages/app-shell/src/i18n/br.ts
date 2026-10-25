@@ -1,10 +1,8 @@
 import { FrontendRecovery } from "./frontend-recovery"
-import { GUARDRAILS_COPY_BR } from "./orchestra-chapters/guardrails"
 
 export const dict = {
   ...FrontendRecovery.subagentModelsBase,
   ...FrontendRecovery.subagentModels.br,
-  ...GUARDRAILS_COPY_BR,
   "desktop.menu.app": "HuGR Orchestra",
   "desktop.menu.about": "Sobre o HuGR Orchestra",
   "desktop.menu.hide": "Ocultar HuGR Orchestra",
