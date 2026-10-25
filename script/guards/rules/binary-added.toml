@@ -1,0 +1,10 @@
+id = "binary-added"
+severity = "warn"
+on = "changed-paths"
+paths = ["**"]
+exclude = ["**/*.{jpg,jpeg,png,webp,gif,ico,icns,woff,woff2,ttf,otf,pdf}", "**/public/**", "**/assets/**", "**/fixtures/**", "**/__fixtures__/**", "**/test/**", "**/tests/**"]
+statuses = ["A"]
+binary = true
+message = "Binary file added outside the usual media and fixture locations. Check it belongs in git."
+positive = ["tools/helper.bin", "vendor/lib.tgz"]
+negative = ["packages/app-shell/public/a.png", "assets/icon.icns", "test/fixtures/a.bin"]

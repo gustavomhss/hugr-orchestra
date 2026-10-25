@@ -1,0 +1,9 @@
+id = "os-junk"
+severity = "gate"
+on = "changed-paths"
+paths = ["**/.DS_Store", "**/Thumbs.db", "**/desktop.ini"]
+exclude = []
+statuses = ["A", "R", "C"]
+message = "Operating-system file added to the repository. Delete it and add it to .gitignore."
+positive = [".DS_Store", "assets/.DS_Store", "docs/Thumbs.db"]
+negative = ["docs/store.md", "src/desktop.ts"]

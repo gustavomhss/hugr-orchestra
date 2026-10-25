@@ -12,6 +12,14 @@ export type Rule = {
   generated: "skip" | "include"
   // Git status letters (A, M, D, R, C) a changed-paths rule applies to. Empty means all.
   statuses: string[]
+  // changed-paths only. The file must have one of these git modes (100755 executable, 120000 symlink, 160000 submodule).
+  modes: string[]
+  // changed-paths only. The file must be at least this many bytes.
+  minBytes: number | undefined
+  // changed-paths only. true: only binary files. false: only text files.
+  binary: boolean | undefined
+  // changed-paths only. true: only files that do not start with a #! line.
+  noShebang: boolean
   match: RegExp | undefined
   message: string
   // added-lines: sample lines. changed-paths: sample paths.
@@ -34,6 +42,16 @@ export function parseRule(file: string, text: string): Rule | string {
   if (!exclude) return `${file}: exclude must be a list of globs`
   const statuses = strings(raw.statuses ?? [])
   if (!statuses) return `${file}: statuses must be a list of git status letters`
+  const modes = strings(raw.modes ?? [])
+  if (!modes) return `${file}: modes must be a list of git modes`
+  const minBytes = raw.min_bytes
+  if (minBytes !== undefined && (typeof minBytes !== "number" || !Number.isSafeInteger(minBytes) || minBytes < 1)) {
+    return `${file}: min_bytes must be a positive integer`
+  }
+  const binary = raw.binary
+  if (binary !== undefined && typeof binary !== "boolean") return `${file}: binary must be true or false`
+  const noShebang = raw.no_shebang ?? false
+  if (typeof noShebang !== "boolean") return `${file}: no_shebang must be true or false`
   const generated = raw.generated ?? "skip"
   if (generated !== "skip" && generated !== "include") return `${file}: generated must be "skip" or "include"`
   const message = raw.message
@@ -46,8 +64,10 @@ export function parseRule(file: string, text: string): Rule | string {
   const match = raw.match === undefined ? undefined : compile(raw.match)
   if (raw.match !== undefined && !match) return `${file}: match is not a valid regular expression`
   if (on === "added-lines" && !match) return `${file}: an added-lines rule needs a match`
+  const fileFilters = modes.length > 0 || minBytes !== undefined || binary !== undefined || noShebang
+  if (on === "added-lines" && fileFilters) return `${file}: modes, min_bytes, binary and no_shebang are for changed-paths rules`
   if (on === "changed-paths" && match) return `${file}: a changed-paths rule matches by paths, not by match`
-  return { id, severity, on, paths, exclude, generated, statuses, match, message, positive, negative }
+  return { id, severity, on, paths, exclude, generated, statuses, modes, minBytes, binary, noShebang, match, message, positive, negative }
 }
 
 export function inScope(rule: Rule, path: string) {
@@ -62,7 +82,8 @@ export function lineHits(rule: Rule, text: string) {
   return rule.match?.test(text) ?? false
 }
 
-// Runs the rule's own samples. Returns one error per sample that behaves wrongly.
+// Runs the rule's own samples. Returns one error per sample that behaves wrongly. A changed-paths rule's samples are
+// paths, so they check the path scope only; its mode, size and content filters are covered by the pack's golden test.
 export function selfCheck(rule: Rule) {
   const hits = (sample: string) => (rule.on === "added-lines" ? lineHits(rule, sample) : inScope(rule, sample))
   return [

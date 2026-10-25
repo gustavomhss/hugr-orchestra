@@ -1,9 +1,9 @@
 import { execFileSync } from "node:child_process"
-import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { chmodSync, cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterEach, describe, expect, setDefaultTimeout, test } from "bun:test"
-import { parsePatch, parseStatuses } from "../../../script/guards/diff"
+import { parseBinary, parsePatch, parseRaw } from "../../../script/guards/diff"
 import { evaluate } from "../../../script/guards/engine"
 import { parseRule, selfCheck, type Rule } from "../../../script/guards/rule"
 import { format, runGuards } from "../../../script/guards/run"
@@ -108,13 +108,28 @@ describe("guard rules", () => {
 })
 
 describe("git output parsing", () => {
-  test("parseStatuses pairs renames and copies", () => {
-    const output = ["M", "a.ts", "R100", "old.ts", "new.ts", "D", "gone.ts", ""].join("\0")
-    expect(parseStatuses(output)).toEqual([
-      { status: "M", path: "a.ts", from: undefined },
-      { status: "R", path: "new.ts", from: "old.ts" },
-      { status: "D", path: "gone.ts", from: undefined },
+  test("parseRaw reads modes and shas and pairs renames and copies", () => {
+    const sha = (letter: string) => letter.repeat(40)
+    const output = [
+      `:100644 100755 ${sha("a")} ${sha("b")} M`,
+      "tool.sh",
+      `:100644 100644 ${sha("c")} ${sha("d")} R100`,
+      "old.ts",
+      "new.ts",
+      `:100644 000000 ${sha("e")} ${"0".repeat(40)} D`,
+      "gone.ts",
+      "",
+    ].join("\0")
+    expect(parseRaw(output)).toEqual([
+      { status: "M", path: "tool.sh", from: undefined, mode: "100755", sha: sha("b") },
+      { status: "R", path: "new.ts", from: "old.ts", mode: "100644", sha: sha("d") },
+      { status: "D", path: "gone.ts", from: undefined, mode: "000000", sha: "0".repeat(40) },
     ])
+  })
+
+  test("parseBinary finds files git reports without line counts, including renamed ones", () => {
+    const output = ["1\t2\ta.ts", "-\t-\tlogo.png", "-\t-\t", "old.bin", "new.bin", "3\t0\tb.ts", ""].join("\0")
+    expect([...parseBinary(output)].sort()).toEqual(["logo.png", "new.bin"])
   })
 
   test("parsePatch numbers added lines and collects removed ones", () => {
@@ -362,6 +377,48 @@ describe("runGuards", () => {
       "ts-any-added",
       "ts-double-cast",
       "wip-marker",
+    ])
+  })
+
+  // Golden: real git modes, sizes and binary detection, so the file filters (modes, min_bytes, binary, no_shebang) run
+  // against what git reports. Clean look-alikes sit beside the defects.
+  test("the hygiene pack flags every planted file and nothing in the look-alikes", () => {
+    const cwd = guarded()
+    write(cwd, "web/.env", "A=1\n")
+    write(cwd, "web/.env.example", "A=\n")
+    write(cwd, "web/.DS_Store", "x")
+    write(cwd, "src/a.ts.orig", "x")
+    write(cwd, "scratch/a.ts", "x")
+    write(cwd, "pkg/dist/index.js", "x")
+    write(cwd, "data/big.json", "x".repeat(1_100_000))
+    write(cwd, "tools/blob.bin", "a\0b")
+    write(cwd, "lib/key.ts", "-----BEGIN RSA PRIVATE KEY-----\n")
+    write(cwd, "docs/tool.md", "hi\n")
+    chmodSync(join(cwd, "docs/tool.md"), 0o755)
+    symlinkSync("../README.md", join(cwd, "docs/current"))
+    // Look-alikes that must stay quiet: executable script with a shebang, media under public/, a small text file.
+    write(cwd, "bin/run", "#!/bin/sh\n")
+    chmodSync(join(cwd, "bin/run"), 0o755)
+    write(cwd, "public/logo.png", "a\0b")
+    write(cwd, "docs/readme.md", "hi\n")
+    git(cwd, "add", ".")
+    // A checkout leaves an empty directory where a submodule is; without it `git diff <base>` omits the gitlink.
+    mkdirSync(join(cwd, "vendor/lib"), { recursive: true })
+    git(cwd, "update-index", "--add", "--cacheinfo", `160000,${"1".repeat(40)},vendor/lib`)
+    git(cwd, "commit", "--quiet", "-m", "hygiene")
+    const findings = runGuards({ cwd, baseRef: "main", approved: [] }).findings
+    expect(findings.map((finding) => `${finding.rule} ${finding.path}`).sort()).toEqual([
+      "agent-scratch scratch/a.ts",
+      "binary-added tools/blob.bin",
+      "build-output pkg/dist/index.js",
+      "env-file web/.env",
+      "exec-bit docs/tool.md",
+      "large-file data/big.json",
+      "merge-artifacts src/a.ts.orig",
+      "os-junk web/.DS_Store",
+      "private-key lib/key.ts",
+      "submodule-added vendor/lib",
+      "symlink-added docs/current",
     ])
   })
 
