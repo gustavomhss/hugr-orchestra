@@ -1,4 +1,6 @@
+import { Orchestra } from "@orchestra/client"
 import { createOrchestraClient } from "../compat/sdk-v2"
+import { createSessionActions } from "./session-actions"
 import type { GlobalEvent } from "../compat/schema"
 import { Flag } from "@orchestra/core/flag/flag"
 import { createSimpleContext } from "./helper"
@@ -31,6 +33,10 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
     }
 
     let sdk = createSDK()
+    // Session actions the V2 server serves; the legacy client above covers the rest until it is migrated.
+    const actions = createSessionActions(
+      Orchestra.make({ baseUrl: props.url, fetch: props.fetch, headers: props.headers }),
+    )
     // True while the event stream is down and being retried. Embedded event sources have no stream to observe.
     const [offline, setOffline] = createSignal(false)
 
@@ -149,6 +155,7 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
       get client() {
         return sdk
       },
+      actions,
       offline,
       directory: props.directory,
       event: emitter,
