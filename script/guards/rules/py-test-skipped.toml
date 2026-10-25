@@ -1,4 +1,5 @@
 id = "py-test-skipped"
+group = "tests"
 severity = "gate"
 on = "added-lines"
 paths = ["$py_tests"]

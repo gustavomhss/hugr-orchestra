@@ -1,4 +1,5 @@
 id = "lockfile-stale"
+group = "dependencies"
 severity = "gate"
 on = "changed-paths"
 paths = ["**/package.json"]

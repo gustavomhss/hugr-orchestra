@@ -1,4 +1,5 @@
 id = "dep-git-source"
+group = "dependencies"
 severity = "gate"
 on = "added-lines"
 paths = ["**/package.json", "**/Cargo.toml", "**/requirements*.txt", "**/pyproject.toml"]

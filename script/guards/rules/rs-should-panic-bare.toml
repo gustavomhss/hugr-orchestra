@@ -1,4 +1,5 @@
 id = "rs-should-panic-bare"
+group = "tests"
 severity = "warn"
 on = "added-lines"
 paths = ["**/*.rs"]

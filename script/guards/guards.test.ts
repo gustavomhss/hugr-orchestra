@@ -6,7 +6,7 @@ import { afterEach, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { parseBinary, parsePatch, parseRaw } from "./diff"
 import { evaluate } from "./engine"
 import { expandSets, parseRule, selfCheck, type Rule } from "./rule"
-import { annotation, exitCode, format, runGuards } from "./run"
+import { annotation, exitCode, format, listRules, runGuards, toJson } from "./run"
 
 // Each runGuards test builds a temp git repo and spawns git several times; a loaded CI host needs more than 5s.
 setDefaultTimeout(30_000)
@@ -64,6 +64,7 @@ function rule(text: string) {
 
 const SAMPLE = `
 id = "sample"
+group = "leftovers"
 severity = "gate"
 on = "added-lines"
 paths = ["src/**/*.ts"]
@@ -255,6 +256,7 @@ describe("evaluate", () => {
   test("a changed-paths rule fires on the path and on a rename's old path, unless approved", () => {
     const protectedPaths = rule(`
 id = "sample"
+group = "leftovers"
 severity = "gate"
 on = "changed-paths"
 paths = ["locked/**"]
@@ -281,7 +283,7 @@ negative = ["open/a"]
 
 describe("warn mode", () => {
   const gate = { rule: "r", severity: "gate" as const, path: "a.ts", line: 3, message: "bad\nthing 100%" }
-  const report = { base: "abc", bootstrap: false, rules: 1, files: 1, findings: [gate], errors: [] as string[] }
+  const report = { base: "abc", bootstrap: false, rules: 1, files: 1, findings: [gate], errors: [] as string[], approved: [] as string[], touchesGuards: false }
 
   test("a gate finding fails the run, and only warn mode lets it pass", () => {
     expect(exitCode(report, false)).toBe(1)
@@ -782,5 +784,62 @@ describe("runGuards", () => {
     write(cwd, "x.ts", "EOF\n")
     commit(cwd, "change")
     expect(runGuards({ cwd, baseRef: "main", approved: [] }).errors[0]).toContain("positive sample does not fire")
+  })
+
+  test("the JSON report carries the offending line, the match inside it, and null where a value does not apply", () => {
+    const cwd = guarded()
+    write(cwd, "src/a.test.ts", 'import { it } from "bun:test"\nit.only("x", () => {})\n')
+    write(cwd, "AGENTS.md", "rules\n")
+    commit(cwd, "change")
+    const json = toJson(runGuards({ cwd, baseRef: "main", approved: [] }))
+    const focused = json.findings.find((finding) => finding.rule === "js-test-focused")!
+    expect(focused.line).toBe(2)
+    expect(focused.excerpt).toBe('it.only("x", () => {})')
+    expect(focused.excerpt!.slice(focused.match![0], focused.match![1])).toBe('it.only("')
+    const protectedPath = json.findings.find((finding) => finding.rule === "protected-paths")!
+    expect([protectedPath.line, protectedPath.excerpt, protectedPath.match]).toEqual([null, null, null])
+    expect(json.errors).toEqual([])
+    expect(json.touchesGuards).toBe(false)
+    expect(JSON.parse(JSON.stringify(json))).toEqual(json)
+  })
+
+  test("every way the run can prove nothing has its own failure kind", () => {
+    const empty = mkdtempSync(join(tmpdir(), "guards-"))
+    repos.push(empty)
+    const kinds = (cwd: string, baseRef: string) => toJson(runGuards({ cwd, baseRef, approved: [] })).errors.map((error) => error.kind)
+    expect(kinds(empty, "main")).toEqual(["no-repository"])
+    const noRules = repo()
+    write(noRules, "README.md", "base\n")
+    commit(noRules, "base")
+    expect(kinds(noRules, "no-such-ref")).toEqual(["base-not-found"])
+    expect(kinds(noRules, "main")).toEqual(["no-rules"])
+    const broken = repo()
+    cpSync(guardsDir, join(broken, "script/guards"), { recursive: true })
+    const file = join(broken, "script/guards/rules/heredoc-residue.toml")
+    writeFileSync(file, readFileSync(file, "utf8").replace(/^match = .*$/m, () => "match = '^never$'"))
+    commit(broken, "base with a broken rule")
+    git(broken, "checkout", "--quiet", "-b", "change")
+    write(broken, "x.ts", "EOF\n")
+    commit(broken, "change")
+    expect(kinds(broken, "main")).toEqual(["rules-invalid"])
+  })
+
+  test("touchesGuards is true only when the change edits the guards", () => {
+    const cwd = guarded()
+    write(cwd, "script/guards/README.md", "edited\n")
+    commit(cwd, "edit the guards")
+    expect(runGuards({ cwd, baseRef: "main", approved: ["protected-paths"] }).touchesGuards).toBe(true)
+  })
+
+  test("the rule list covers every rule, with how each kind is cleared", () => {
+    const cwd = guarded()
+    write(cwd, "x.ts", "1\n")
+    commit(cwd, "change")
+    const listed = listRules({ cwd, baseRef: "main" })
+    expect(listed.errors).toEqual([])
+    expect(listed.rules).toHaveLength(readdirSync(join(guardsDir, "rules")).length)
+    const cleared = (id: string) => listed.rules.find((rule) => rule.id === id)?.clearedBy
+    expect([cleared("ts-ignore"), cleared("test-file-deleted"), cleared("test-assertions-removed")]).toEqual(["ignore", "approval", "fix"])
+    expect(listed.rules.find((rule) => rule.id === "ts-ignore")?.group).toBe("silenced")
   })
 })

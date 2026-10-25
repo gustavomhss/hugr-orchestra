@@ -1,4 +1,5 @@
 id = "js-test-skipped"
+group = "tests"
 severity = "gate"
 on = "added-lines"
 paths = ["$js_tests"]

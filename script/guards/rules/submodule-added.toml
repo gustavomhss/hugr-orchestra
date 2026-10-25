@@ -1,4 +1,5 @@
 id = "submodule-added"
+group = "hygiene"
 severity = "gate"
 on = "changed-paths"
 paths = ["**"]

@@ -1,4 +1,5 @@
 id = "agent-scratch"
+group = "leftovers"
 severity = "gate"
 on = "changed-paths"
 paths = ["**/.tc-errors.txt", "**/*-errors.txt", "**/*.log", "**/scratch", "**/scratch.*", "**/scratch/**", "**/notes-*.md", "**/.claude/worktrees/**"]

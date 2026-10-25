@@ -1,4 +1,5 @@
 id = "llm-elision"
+group = "leftovers"
 severity = "warn"
 on = "added-lines"
 paths = ["**/*.{ts,tsx,mts,cts,js,jsx,mjs,py,rs,sh,go,java}"]

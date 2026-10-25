@@ -1,4 +1,5 @@
 id = "heredoc-residue"
+group = "leftovers"
 severity = "gate"
 on = "added-lines"
 paths = ["**/*.{ts,tsx,js,jsx,mjs}"]

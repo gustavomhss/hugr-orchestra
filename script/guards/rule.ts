@@ -1,8 +1,15 @@
 // A guard rule is one TOML file in script/guards/rules/. The id is the file name. A rule without positive and negative
 // samples does not load, so every rule that runs has been shown to fire and to stay quiet.
 
+export const GROUPS = ["tests", "silenced", "secrets", "leftovers", "dependencies", "workflows", "hygiene"] as const
+export type Group = (typeof GROUPS)[number]
+
 export type Rule = {
   id: string
+  // What the rule is about, for browsing. Display only; the engine never reads it.
+  group: Group
+  // One sentence on what the rule looks at, for a rule browser. Optional until every rule has one.
+  summary: string | undefined
   severity: "gate" | "warn"
   // added-lines: `match` runs on each added line. changed-paths: the rule fires on a changed path inside `paths`.
   // line-balance: in one file, lines matching `match` removed minus lines matching it added reaches `minNetRemoved`.
@@ -47,6 +54,10 @@ export function parseRule(file: string, text: string): Rule | string {
   if (typeof raw === "string") return `${file}: ${raw}`
   const id = raw.id
   if (typeof id !== "string" || `${id}.toml` !== file) return `${file}: id must equal the file name`
+  const group = GROUPS.find((name) => name === raw.group)
+  if (!group) return `${file}: group must be one of ${GROUPS.join(", ")}`
+  const summary = raw.summary
+  if (summary !== undefined && typeof summary !== "string") return `${file}: summary must be a string`
   const severity = raw.severity
   if (severity !== "gate" && severity !== "warn") return `${file}: severity must be "gate" or "warn"`
   const on = raw.on
@@ -107,6 +118,8 @@ export function parseRule(file: string, text: string): Rule | string {
   if (on === "changed-paths" && match) return `${file}: a changed-paths rule matches by paths, not by match`
   return {
     id,
+    group,
+    summary,
     severity,
     on,
     paths,

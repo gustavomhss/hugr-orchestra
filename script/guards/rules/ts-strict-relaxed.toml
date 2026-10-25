@@ -1,4 +1,5 @@
 id = "ts-strict-relaxed"
+group = "silenced"
 severity = "gate"
 on = "added-lines"
 paths = ["**/tsconfig*.json"]

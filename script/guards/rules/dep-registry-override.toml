@@ -1,4 +1,5 @@
 id = "dep-registry-override"
+group = "dependencies"
 severity = "gate"
 on = "added-lines"
 paths = ["**/.npmrc", "**/bunfig.toml", "**/requirements*.txt", "**/pip.conf", "**/pyproject.toml", "**/uv.toml", "**/.cargo/config.toml", "**/.cargo/config"]

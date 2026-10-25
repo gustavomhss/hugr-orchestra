@@ -1,4 +1,5 @@
 id = "py-no-cover"
+group = "silenced"
 severity = "warn"
 on = "added-lines"
 paths = ["**/*.py"]

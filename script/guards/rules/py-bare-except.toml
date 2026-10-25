@@ -1,4 +1,5 @@
 id = "py-bare-except"
+group = "hygiene"
 severity = "gate"
 on = "added-lines"
 paths = ["**/*.py"]

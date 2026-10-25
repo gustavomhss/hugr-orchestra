@@ -1,4 +1,5 @@
 id = "hook-bypass"
+group = "silenced"
 severity = "gate"
 on = "added-lines"
 paths = [".github/**", "script/**", "scripts/**", "**/scripts/**", "**/package.json", "**/*.sh", ".husky/**"]

@@ -1,4 +1,5 @@
 id = "local-tests-escape"
+group = "hygiene"
 severity = "warn"
 on = "added-lines"
 paths = ["**"]

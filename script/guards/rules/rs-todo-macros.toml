@@ -1,4 +1,5 @@
 id = "rs-todo-macros"
+group = "leftovers"
 severity = "gate"
 on = "added-lines"
 paths = ["**/*.rs"]
