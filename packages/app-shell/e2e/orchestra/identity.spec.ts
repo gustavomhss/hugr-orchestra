@@ -11,23 +11,22 @@ import {
 } from "../performance/timeline-stability/fixture"
 import { setupIdentity } from "./identity.fixture"
 
-// Frozen approved app.html values, normalized by Chromium's computed-style engine.
+// Frozen glass material values (orchestra/theme.css), normalized by Chromium's computed-style engine.
+const grain = `url("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27160%27%20height=%27160%27%3E%3Cfilter%20id=%27n%27%3E%3CfeTurbulence%20type=%27fractalNoise%27%20baseFrequency=%27.85%27%20numOctaves=%272%27%20stitchTiles=%27stitch%27/%3E%3CfeColorMatrix%20values=%270%200%200%200%201%200%200%200%200%201%200%200%200%200%201%200%200%200%20.05%200%27/%3E%3C/filter%3E%3Crect%20width=%27100%25%27%20height=%27100%25%27%20filter=%27url%28%23n%29%27/%3E%3C/svg%3E")`
 const glass = {
   dark: {
-    backgroundImage:
-      "linear-gradient(rgba(26, 36, 48, 0.5) 0%, rgba(13, 19, 26, 0.46) 46%, rgba(10, 15, 21, 0.54) 100%)",
-    backdropFilter: "blur(8px) brightness(0.74) saturate(0.9)",
-    borderTopColor: "rgba(160, 179, 197, 0.16)",
+    backgroundImage: `${grain}, radial-gradient(120% 60% at 0% 0%, rgba(214, 231, 247, 0.07), rgba(0, 0, 0, 0) 60%), linear-gradient(rgba(32, 44, 58, 0.44) 0%, rgba(17, 24, 33, 0.52) 46%, rgba(11, 16, 23, 0.58) 100%)`,
+    backdropFilter: "blur(28px) brightness(0.84) saturate(1.5)",
+    borderTopColor: "rgba(160, 179, 197, 0.1)",
     boxShadow:
-      "rgba(214, 231, 247, 0.08) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.3) 0px -1px 0px 0px inset, rgba(0, 0, 0, 0.4) 0px 1px 2px 0px, rgba(0, 0, 0, 0.2) 0px 4px 12px 0px",
+      "rgba(214, 231, 247, 0.1) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.28) 0px -1px 0px 0px inset, rgba(0, 0, 0, 0.36) 0px 1px 2px 0px, rgba(0, 0, 0, 0.24) 0px 10px 30px 0px",
   },
   light: {
-    backgroundImage:
-      "linear-gradient(rgba(255, 255, 255, 0.62) 0%, rgba(248, 250, 252, 0.5) 46%, rgba(240, 244, 247, 0.6) 100%)",
-    backdropFilter: "blur(16px) brightness(1.04) saturate(0.96)",
-    borderTopColor: "rgba(70, 84, 98, 0.16)",
+    backgroundImage: `${grain}, radial-gradient(120% 60% at 0% 0%, rgba(255, 255, 255, 0.35), rgba(0, 0, 0, 0) 60%), linear-gradient(rgba(255, 255, 255, 0.57) 0%, rgba(248, 250, 252, 0.49) 46%, rgba(240, 244, 247, 0.59) 100%)`,
+    backdropFilter: "blur(28px) brightness(1.06) saturate(1.5)",
+    borderTopColor: "rgba(70, 84, 98, 0.12)",
     boxShadow:
-      "rgba(255, 255, 255, 0.95) 0px 1px 0px 0px inset, rgba(120, 136, 152, 0.14) 0px -1px 0px 0px inset, rgba(38, 50, 64, 0.14) 0px 1px 2px 0px, rgba(38, 50, 64, 0.08) 0px 4px 12px 0px",
+      "rgba(255, 255, 255, 0.9) 0px 1px 0px 0px inset, rgba(120, 136, 152, 0.12) 0px -1px 0px 0px inset, rgba(38, 50, 64, 0.12) 0px 1px 2px 0px, rgba(38, 50, 64, 0.1) 0px 10px 30px 0px",
   },
 }
 
@@ -119,8 +118,8 @@ for (const scheme of ["dark", "light"] as const) {
       )
       for (const locator of [sidebar, tabs]) expectGlass(await readPlatedGlass(locator), glass[scheme])
       expectGlass(await readGlass(active), glass[scheme])
-      await expect(sidebar).toHaveCSS("border-radius", "9px")
-      await expect(tabs).toHaveCSS("border-radius", "9px")
+      await expect(sidebar).toHaveCSS("border-radius", "10px")
+      await expect(tabs).toHaveCSS("border-radius", "10px")
 
       const profileBox = await readBox(profile)
       expect(profileBox.bottom, "repository picker stays near sidebar bottom").toBeGreaterThan(sidebarBox.bottom - 180)
@@ -269,8 +268,8 @@ test("graphite: a palette recolors the glass and keeps the frozen geometry, radi
     expect(value.backgroundImage, "palette tints the glass").not.toBe(glass.dark.backgroundImage)
     expect(value.borderTopColor, "palette tints the glass border").not.toBe(glass.dark.borderTopColor)
   }
-  await expect(sidebar).toHaveCSS("border-radius", "9px")
-  await expect(tabs).toHaveCSS("border-radius", "9px")
+  await expect(sidebar).toHaveCSS("border-radius", "10px")
+  await expect(tabs).toHaveCSS("border-radius", "10px")
 })
 
 test("oracle calibration: real production toolbar rejects geometry and glass mutations", async ({ page }) => {

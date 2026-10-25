@@ -44,6 +44,11 @@ const ADAPTER_EDGES = [
     target: "claude-code/sdk",
     reason: "Server composition supplies the SDK service for host catalog probes.",
   },
+  {
+    file: "server/routes/instance/httpapi/server.ts",
+    target: "claude-code/v2/account",
+    reason: "Server composition supplies the Claude Code account behind the V2 sign-in routes.",
+  },
 ]
 
 /** Normal-mode modules Claude mode may import: shared services and types, never the loop. Add one only with a reason. */

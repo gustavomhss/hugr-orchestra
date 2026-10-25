@@ -7,6 +7,7 @@ import { usePlatform } from "@/context/platform"
 import { useLanguage } from "@/context/language"
 import { useSettings } from "@/context/settings"
 import { decode64 } from "@/utils/base64"
+import { sessionTitle } from "@/utils/session-title"
 import type { EventSessionError } from "@/v2-wire"
 import { Persist, persisted } from "@/utils/persist"
 import { playSoundById } from "@/utils/sound"
@@ -370,7 +371,7 @@ export function createServerNotificationState(input: {
 
       const href = sessionHref(originServer, sessionID)
       if (settings.notifications.agent()) {
-        void platform.notify(language.t("notification.session.responseReady.title"), session.title ?? sessionID, () =>
+        void platform.notify(language.t("notification.session.responseReady.title"), sessionTitle(session.title) ?? sessionID, () =>
           input.navigate(href),
         )
       }

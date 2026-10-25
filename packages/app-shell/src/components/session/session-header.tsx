@@ -21,6 +21,7 @@ import { CapabilityProcesses } from "@/pages/session/capability-processes"
 import { SessionCrumbs } from "@/orchestra/crumbs"
 import { decode64 } from "@/utils/base64"
 import { requireServerKey } from "@/utils/session-route"
+import { sessionTitle } from "@/utils/session-title"
 import { StatusPopoverV2 } from "../status-popover"
 import { IconButtonV2 } from "@orchestra/ui/v2/icon-button-v2"
 import { Icon as IconV2 } from "@orchestra/ui/v2/icon"
@@ -60,7 +61,7 @@ export function SessionHeader() {
     return getFilename(projectDirectory())
   })
   const title = createMemo(
-    () => (params.id ? sync().session.get(params.id)?.title : undefined) || language.t("command.session.new"),
+    () => (params.id ? sessionTitle(sync().session.get(params.id)?.title) : undefined) || language.t("command.session.new"),
   )
   // The titlebar's breadcrumb links the project back to Home with that project selected.
   const openProject = () => {

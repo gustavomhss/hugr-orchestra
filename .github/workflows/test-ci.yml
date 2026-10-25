@@ -252,11 +252,28 @@ jobs:
               # The `solid` condition routes solid-sonner to its untranspiled dist/index.jsx
               # source, which does not make that import. test-ci bypasses the package's own
               # `test:unit` script (which already passes `--conditions=solid`), so reproduce it.
+              # test-browser/ files follow `test:browser` instead: solid-js has no `solid`
+              # export, so under `solid` it falls through to `node` and loads its server build,
+              # where memos never recompute and onMount never runs. They also preload happydom.
               if [ "$DIRECTORY" = "packages/app-shell" ]; then
-                GITHUB_ACTIONS=false bun test --conditions=solid "${args[@]}"
-              else
-                GITHUB_ACTIONS=false bun test "${args[@]}"
+                unit=()
+                browser=()
+                for arg in "${args[@]}"; do
+                  case "$arg" in
+                    test-browser|test-browser/*|./test-browser/*) browser+=("$arg") ;;
+                    *) unit+=("$arg") ;;
+                  esac
+                done
+                status=0
+                if [ ${#unit[@]} -gt 0 ] || [ ${#browser[@]} -eq 0 ]; then
+                  GITHUB_ACTIONS=false bun test --conditions=solid "${unit[@]}" || status=$?
+                fi
+                if [ ${#browser[@]} -gt 0 ]; then
+                  GITHUB_ACTIONS=false bun test --conditions=browser --preload ../../script/test-omni-control.ts --preload ./happydom.ts "${browser[@]}" || status=$?
+                fi
+                exit $status
               fi
+              GITHUB_ACTIONS=false bun test "${args[@]}"
               ;;
             node)
               for file in "${args[@]}"; do

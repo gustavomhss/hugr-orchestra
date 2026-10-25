@@ -27,7 +27,7 @@
 .orchestra-mcp-card > p.orchestra-mcp-detail {
   margin: -3px 0 15px;
   color: var(--mx-bad);
-  font-size: 11.5px;
+  font-size: var(--orchestra-font-size-sm);
   line-height: 1.5;
 }
 
