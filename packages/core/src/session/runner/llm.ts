@@ -9,7 +9,7 @@ import {
   type ProviderErrorEvent,
   type ToolCall,
 } from "@orchestra/llm"
-import { Cause, Context, DateTime, Duration, Effect, FiberSet, Layer, Option, Queue, Scope, Semaphore, Stream } from "effect"
+import { Cause, Context, DateTime, Effect, FiberSet, Layer, Option, Queue, Scope, Semaphore, Stream } from "effect"
 import { asc, eq } from "drizzle-orm"
 import { AgentV2 } from "../../agent"
 import { CapabilityInvocation } from "../../capability/invocation"
@@ -26,9 +26,7 @@ import { SystemContextRegistry } from "../../system-context/registry"
 import { SkillGuidance } from "../../skill/guidance"
 import { ReferenceGuidance } from "../../reference/guidance"
 import { ToolRegistry } from "../../tool/registry"
-import { AllowedDomains } from "../../tool/websearch"
 import { ToolSafety } from "../../tool-safety"
-import { ToolSafetySandbox } from "../../tool-safety-sandbox"
 import { TaskGovernance } from "../../tool/task-governance"
 import { Mcp } from "../../mcp"
 import { ToolOutputStore } from "../../tool-output-store"
@@ -49,9 +47,11 @@ import { SessionRunnerModel } from "./model"
 import { createLLMEventPublisher } from "./publish-llm-event"
 import { ExecutionHost } from "./execution-host"
 import { toLLMMessages } from "./to-llm-message"
-import { SessionMentions } from "./mentions"
 import { SessionTitle } from "./title"
 import { ReadToolFileSystem } from "../../tool/read-filesystem"
+import { SessionDirectCommands } from "./direct-commands"
+import { hostedCall } from "./hosted-call"
+import { TurnTransitionError, continueAfterCompaction, continueAfterOverflowCompaction } from "./turn-transition"
 import { MAX_STEPS_PROMPT } from "./max-steps"
 import { Snapshot } from "../../snapshot"
 import { makeLocationNode } from "../../effect/app-node"
@@ -60,9 +60,6 @@ import { RelayWorkflowSession } from "../../relay-workflow-session"
 import { FSUtil } from "../../fs-util"
 import { AppProcess } from "../../process"
 import { SkillV2 } from "../../skill"
-import { SkillTool } from "../../tool/skill"
-import { BashTool } from "../../tool/bash"
-import { ChildProcess } from "effect/unstable/process"
 
 /**
  * Runs one durable coding-agent Session until it settles.
@@ -113,8 +110,6 @@ import { ChildProcess } from "effect/unstable/process"
  * provider turn. Registry definitions are advertised, local tool calls are settled durably, and an
  * explicit loop starts the next provider turn after local settlement. Configured agent step limits bound the loop.
  */
-
-const SHELL_OUTPUT_BYTES = 1024 * 1024
 
 const layer = Layer.effect(
   Service,
@@ -167,77 +162,13 @@ const layer = Layer.effect(
     const getContext = Effect.fn("SessionRunner.getContext")(function* (sessionID: SessionSchema.ID) {
       return yield* store.context(sessionID)
     })
-    const failInterruptedTools = Effect.fn("SessionRunner.failInterruptedTools")(function* (
-      sessionID: SessionSchema.ID,
-    ) {
-      for (const message of yield* getContext(sessionID)) {
-        if (message.type !== "assistant") continue
-        for (const tool of message.content) {
-          if (tool.type !== "tool" || (tool.state.status !== "pending" && tool.state.status !== "running")) continue
-          yield* events.publish(SessionEvent.Tool.Failed, {
-            sessionID,
-            timestamp: yield* DateTime.now,
-            assistantMessageID: message.id,
-            callID: tool.id,
-            error: { type: "unknown", message: "Tool execution interrupted" },
-            provider: {
-              executed: tool.provider?.executed === true,
-              ...(tool.provider?.metadata === undefined ? {} : { metadata: tool.provider.metadata }),
-            },
-          })
-        }
-      }
-    })
-
     const awaitToolFibers = (fibers: FiberSet.FiberSet<void, ToolOutputStore.Error>) =>
       Effect.raceFirst(FiberSet.join(fibers), FiberSet.awaitEmpty(fibers))
-
-    // Match V1: declining a user prompt halts the loop instead of becoming model-facing tool output.
-    const isUserDeclined = (cause: Cause.Cause<unknown>) =>
-      cause.reasons.some(
-        (reason) =>
-          Cause.isDieReason(reason) &&
-          (reason.defect instanceof PermissionV2.DeclinedError || reason.defect instanceof QuestionV2.RejectedError),
-      )
-
-    type TurnTransition =
-      // Automatic compaction completed; rebuild the request from compacted history.
-      | { readonly _tag: "ContinueAfterCompaction"; readonly step: number }
-      // Overflow compaction completed; rebuild once through the path without overflow recovery.
-      | { readonly _tag: "ContinueAfterOverflowCompaction"; readonly step: number }
-
-    class TurnTransitionError extends Error {
-      constructor(readonly transition: TurnTransition) {
-        super()
-      }
-    }
-
-    const continueAfterCompaction = (step: number) => new TurnTransitionError({ _tag: "ContinueAfterCompaction", step })
-    const continueAfterOverflowCompaction = (step: number) =>
-      new TurnTransitionError({ _tag: "ContinueAfterOverflowCompaction", step })
 
     const loadSystemContext = (sessionID: SessionSchema.ID, agent: AgentV2.Selection) =>
       Effect.all([systemContext.load({ sessionID, agent: agent.id }), skillGuidance.load(agent), referenceGuidance.load()], {
         concurrency: "unbounded",
       }).pipe(Effect.map(SystemContext.combine))
-
-    // Attachments are read once, as the inputs are promoted; an admitted prompt keeps its URIs.
-    const readMentions = Effect.fnUntraced(function* (
-      sessionID: SessionSchema.ID,
-      inputs: ReadonlyArray<{ readonly prompt: Parameters<typeof SessionMentions.read>[1] }>,
-    ) {
-      for (const input of inputs) {
-        const mentions = yield* SessionMentions.read({ reader, mcp, fs }, input.prompt)
-        if (mentions.text)
-          yield* events.publish(SessionEvent.Synthetic, {
-            sessionID,
-            messageID: SessionMessage.ID.create(),
-            timestamp: yield* DateTime.now,
-            text: mentions.text,
-            ...(mentions.files.length === 0 ? {} : { files: mentions.files }),
-          })
-      }
-    })
 
     const runTurnAttempt = Effect.fn("SessionRunner.runTurn")(function* (
       sessionID: SessionSchema.ID,
@@ -280,7 +211,7 @@ const layer = Layer.effect(
             Effect.forkDetach,
           )
           // Attachments are read once, as they are promoted; the admitted prompt keeps its URIs.
-          yield* readMentions(session.id, yield* SessionInput.promotedAfter(db, session.id, cutoff))
+          yield* SessionDirectCommands.readMentions({ events, reader, mcp, fs }, session.id, yield* SessionInput.promotedAfter(db, session.id, cutoff))
         }
       }
       const system =
@@ -469,7 +400,7 @@ const layer = Layer.effect(
             if (promoted.length === 0) return []
             // New user input resets the agent's provider-turn allowance (AGENTS "V2 Session Core").
             currentStep = 1
-            yield* readMentions(session.id, promoted)
+            yield* SessionDirectCommands.readMentions({ events, reader, mcp, fs }, session.id, promoted)
             promoted.forEach((input) => liveSteers.add(input.id))
             return promoted.map((input) => ({ id: input.id, text: input.prompt.text }))
           }),
@@ -571,7 +502,7 @@ const layer = Layer.effect(
           }
           if (stream._tag === "Failure" && Cause.hasInterrupts(stream.cause)) yield* FiberSet.clear(toolFibers)
           const settled = yield* restore(awaitToolFibers(toolFibers)).pipe(Effect.exit)
-          if (settled._tag === "Failure" && isUserDeclined(settled.cause)) {
+          if (settled._tag === "Failure" && SessionDirectCommands.isUserDeclined(settled.cause)) {
             yield* FiberSet.clear(toolFibers)
             yield* withPublication(publisher.failUnsettledTools("Tool execution interrupted"))
             return yield* Effect.interrupt
@@ -676,7 +607,7 @@ const layer = Layer.effect(
       const hasSteer = yield* SessionInput.hasPending(db, input.sessionID, "steer")
       const hasQueue = hasSteer ? false : yield* SessionInput.hasPending(db, input.sessionID, "queue")
       if (!input.force && !hasSteer && !hasQueue) return
-      yield* failInterruptedTools(input.sessionID)
+      yield* SessionDirectCommands.failInterruptedTools({ events, store }, input.sessionID)
       let promotion: SessionInput.Delivery | undefined = hasSteer ? "steer" : hasQueue ? "queue" : undefined
       let shouldRun = input.force || hasSteer || hasQueue
       while (shouldRun) {
@@ -730,14 +661,6 @@ const layer = Layer.effect(
         ),
       )
 
-    const affinity = (session: SessionSchema.Info) => ({
-      headers: {
-        "x-session-affinity": session.id,
-        "X-Session-Id": session.id,
-        ...(session.parentID ? { "x-parent-session-id": session.parentID } : {}),
-      },
-    })
-
     const compact = Effect.fn("SessionRunner.compact")(function* (sessionID: SessionSchema.ID) {
       const session = yield* getSession(sessionID)
       const history = yield* SessionHistory.load(db, session.id)
@@ -747,7 +670,7 @@ const layer = Layer.effect(
         sessionID: session.id,
         entries: history.map((message, seq) => ({ seq, message })),
         model,
-        request: LLM.request({ model, http: affinity(session) }),
+        request: LLM.request({ model, http: SessionDirectCommands.affinity(session) }),
       })
     })
 
@@ -762,7 +685,7 @@ const layer = Layer.effect(
       const chunks: string[] = []
       yield* llm
         .stream(
-          LLM.request({ model, http: affinity(session), messages: toLLMMessages(history, model), prompt: input.prompt }),
+          LLM.request({ model, http: SessionDirectCommands.affinity(session), messages: toLLMMessages(history, model), prompt: input.prompt }),
         )
         .pipe(
           Stream.runForEach((event) => {
@@ -774,71 +697,13 @@ const layer = Layer.effect(
       return chunks.join("")
     })
 
-    // A person's `!` command, run as V1 ran it: in the Location, with the configured shell, outside the agent's
-    // sandbox. An interrupt stops it and still records what it printed.
-    const shell = Effect.fn("SessionRunner.shell")(function* (input: {
-      readonly sessionID: SessionSchema.ID
-      readonly command: string
-      readonly callID?: string
-    }) {
-      const callID = input.callID ?? `call_${crypto.randomUUID()}`
-      yield* events.publish(SessionEvent.Shell.Started, {
-        sessionID: input.sessionID,
-        messageID: SessionMessage.ID.create(),
-        timestamp: yield* DateTime.now,
-        callID,
-        command: input.command,
-      })
-      const command = ChildProcess.make(input.command, [], {
-        cwd: location.directory,
-        shell: BashTool.configuredShell(yield* config.entries()),
-        stdin: "ignore",
-        detached: process.platform !== "win32",
-        forceKillAfter: Duration.seconds(3),
-      })
-      const ended = (output: string) =>
-        Effect.gen(function* () {
-          yield* events.publish(SessionEvent.Shell.Ended, {
-            sessionID: input.sessionID,
-            timestamp: yield* DateTime.now,
-            callID,
-            output,
-          })
-        })
-      yield* appProcess.run(command, { combineOutput: true, maxOutputBytes: SHELL_OUTPUT_BYTES }).pipe(
-        Effect.map((result) => {
-          const output = (result.output ?? result.stdout).toString("utf8")
-          const truncated = result.outputTruncated ? "\n[output truncated]" : ""
-          const exit = result.exitCode === 0 ? "" : `\n[exit code ${result.exitCode}]`
-          return `${output}${truncated}${exit}`
-        }),
-        Effect.catchTag("AppProcessError", (error) => Effect.succeed(error.message)),
-        Effect.onInterrupt(() => ended("User aborted the command")),
-        Effect.flatMap(ended),
-      )
-    })
-
-    const skill = Effect.fn("SessionRunner.skill")(function* (input: {
-      readonly sessionID: SessionSchema.ID
-      readonly skill: string
-    }) {
-      const found = (yield* skills.list()).find((item) => item.name === input.skill)
-      if (!found) return false
-      yield* events.publish(SessionEvent.Synthetic, {
-        sessionID: input.sessionID,
-        messageID: SessionMessage.ID.create(),
-        timestamp: yield* DateTime.now,
-        text: yield* SkillTool.load(fs, found).pipe(Effect.orDie),
-      })
-      return true
-    })
 
     return Service.of({
       run,
       compact,
       generate,
-      shell,
-      skill,
+      shell: (input) => SessionDirectCommands.shell({ events, location, config, appProcess }, input),
+      skill: (input) => SessionDirectCommands.skill({ events, skills, fs }, input),
     })
   }),
 )
@@ -875,67 +740,6 @@ export const node = makeLocationNode({
     ToolSafety.node,
   ],
 })
-
-/**
- * What Orchestra adds to a call the host's engine runs itself, inside ToolSafety's `run` so the profile is the one
- * narrowed to the Session's write roots: the dispatch's web domains and, for a shell command under a profile that
- * confines shells, the command wrapped in the jail (one the Location cannot provide refuses the call).
- */
-const hostedCall = Effect.fnUntraced(function* (
-  call: { readonly tool: string; readonly args: Readonly<Record<string, unknown>> },
-  directory: string,
-  scope: Scope.Scope,
-  fs: FSUtil.Interface,
-) {
-  const domains = yield* AllowedDomains
-  const profile = yield* ToolSafety.RuntimeProfile
-  const command = call.tool === "bash" && typeof call.args.command === "string" ? call.args.command : undefined
-  const confined =
-    command === undefined || !confines(profile)
-      ? undefined
-      : yield* ToolSafetySandbox.wrap(ChildProcess.make("/bin/sh", ["-c", command], { cwd: directory })).pipe(
-          Effect.provideService(ToolSafety.RuntimeProfile, {
-            ...profile,
-            requireSandbox: true,
-            sandbox: { ...profile?.sandbox, enabled: true, unconfinedFallback: false },
-          }),
-          Effect.provideService(FSUtil.Service, fs),
-          Scope.provide(scope),
-        )
-  if (confined && confined._tag !== "StandardCommand") return yield* new ToolSafety.Denied({ reason: "sandbox-pipeline-unbound" })
-  return {
-    ...(confined ? { input: { command: shellLine(confined) } } : {}),
-    ...(domains ? { domains } : {}),
-  } satisfies ExecutionHost.Authorization
-})
-
-/** Any restriction on a shell requires the jail, whether or not the profile set `requireSandbox`. */
-function confines(profile: ToolSafety.Profile | undefined) {
-  return Boolean(
-    profile?.requireSandbox ||
-      profile?.sandbox?.enabled ||
-      profile?.writeRoots !== undefined ||
-      profile?.sandbox?.readRoots !== undefined ||
-      profile?.neverTouch?.length ||
-      profile?.managedPaths?.length ||
-      profile?.protectedWrites?.length ||
-      profile?.sandbox?.denyPaths?.length ||
-      profile?.sandbox?.allowedUnixSockets?.length ||
-      profile?.sandbox?.allowedLoopbackEndpoints?.length,
-  )
-}
-
-/** The jailed command as one shell line, keeping the environment the jail built for it. */
-function shellLine(command: ChildProcess.StandardCommand) {
-  const env = command.options.env ?? {}
-  const unset = Object.keys(process.env).filter((name) => !(name in env)).flatMap((name) => ["-u", name])
-  const set = Object.entries(env).flatMap(([name, value]) =>
-    value !== undefined && process.env[name] !== value ? [`${name}=${value}`] : [],
-  )
-  return ["/usr/bin/env", ...unset, ...set, command.command, ...command.args]
-    .map((word) => `'${word.replaceAll("'", `'\\''`)}'`)
-    .join(" ")
-}
 
 function messageOf(failure: unknown) {
   return failure instanceof Error ? failure.message : String(failure)

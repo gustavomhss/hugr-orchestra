@@ -1,20 +1,21 @@
 /** @jsxImportSource @opentui/solid */
 import type { TuiPlugin, TuiPluginApi, TuiRouteCurrent } from "@orchestra/plugin/tui"
 import {
-  TextAttributes,
   type BorderSides,
   type BoxRenderable,
   type DiffRenderable,
   type ScrollBoxRenderable,
 } from "@opentui/core"
-import { LANGUAGE_EXTENSIONS } from "../../util/filetype"
 import { useBindings, useCommandShortcut } from "../../keymap"
 import { useTheme } from "../../context/theme"
 import { useTerminalDimensions } from "@opentui/solid"
-import path from "path"
 import { createEffect, createMemo, createResource, createSignal, For, Match, onCleanup, Show, Switch } from "solid-js"
 import { DiffViewerFileTree } from "./diff-viewer-file-tree"
 import { Panel, PanelGroup, Separator } from "./diff-viewer-ui"
+import { DiffViewerFooter } from "./diff-viewer-footer"
+import { DiffViewerHelpDialog } from "./diff-viewer-help"
+import { diffSourceLabel, normalizeDiffs, storedView, type DiffMode, type DiffView } from "./diff-viewer-model"
+import { DiffViewerPatch } from "./diff-viewer-patch"
 import { DialogSelect } from "../../ui/dialog-select"
 import { getScrollAcceleration } from "../../util/scroll"
 import {
@@ -37,63 +38,12 @@ import {
 const ROUTE = "diff"
 const MIN_SPLIT_WIDTH = 100
 const FILE_TREE_WIDTH = 32
-const PLAIN_TEXT_FILETYPE = "orchestra-plain-text"
 const VCS_DIFF_CONTEXT_LINES = 12
 const KV_SHOW_FILE_TREE = "diff_viewer_show_file_tree"
 const KV_SINGLE_PATCH = "diff_viewer_single_patch"
 const KV_VIEW = "diff_viewer_view"
-type DiffMode = "git" | "branch" | "last-turn"
 type DiffViewerFocus = "patches" | "files"
-type DiffView = "split" | "unified"
 type SelectedHunk = { readonly fileIndex: number; readonly hunkIndex: number; readonly scrollTop: number }
-
-type DiffFile = {
-  readonly file: string
-  readonly patch?: string
-  readonly additions: number
-  readonly deletions: number
-  readonly status: "added" | "deleted" | "modified"
-}
-
-const normalizeDiffs = (
-  diffs: ReadonlyArray<{
-    readonly file?: string
-    readonly patch?: string | null
-    readonly additions: number
-    readonly deletions: number
-    readonly status?: DiffFile["status"] | null
-  }>,
-): DiffFile[] =>
-  diffs.flatMap((item) =>
-    item.file
-      ? [
-          {
-            file: item.file,
-            patch: item.patch ?? undefined,
-            additions: item.additions,
-            deletions: item.deletions,
-            status: item.status ?? "modified",
-          } satisfies DiffFile,
-        ]
-      : [],
-  )
-
-function filetype(input?: string) {
-  if (!input) return "none"
-  const language = LANGUAGE_EXTENSIONS[path.extname(input)]
-  if (["typescriptreact", "javascriptreact", "javascript"].includes(language)) return "typescript"
-  return language
-}
-
-function storedView(value: unknown): DiffView | undefined {
-  if (value === "split" || value === "unified") return value
-}
-
-function diffSourceLabel(mode: DiffMode) {
-  if (mode === "last-turn") return "last turn"
-  if (mode === "branch") return "main branch"
-  return "working tree"
-}
 
 function DiffViewer(props: { api: TuiPluginApi }) {
   const dimensions = useTerminalDimensions()
@@ -162,17 +112,9 @@ function DiffViewer(props: { api: TuiPluginApi }) {
   const fileRows = createMemo(() => flattenFileTree(fileTree(), expandedFileNodes()))
   const patchFileIndexes = createMemo(() => orderedPatchFileIndexes(flattenFileTree(fileTree())))
   const focusRunner = (input: Record<DiffViewerFocus, () => void>) => () => input[focus()]()
-  const switchFocusShortcut = useCommandShortcut("diff.switch_focus")
-  const nextHunkShortcut = useCommandShortcut("diff.next_hunk")
-  const previousHunkShortcut = useCommandShortcut("diff.previous_hunk")
-  const nextFileShortcut = useCommandShortcut("diff.next_file")
-  const previousFileShortcut = useCommandShortcut("diff.previous_file")
   const toggleFileTreeShortcut = useCommandShortcut("diff.toggle_file_tree")
   const singlePatchShortcut = useCommandShortcut("diff.single_patch")
-  const switchSourceShortcut = useCommandShortcut("diff.switch_source")
   const toggleViewShortcut = useCommandShortcut("diff.toggle_view")
-  const markReviewedShortcut = useCommandShortcut("diff.mark_reviewed")
-  const helpShortcut = useCommandShortcut("diff.help")
   let scroll: ScrollBoxRenderable | undefined
   const patchNodeByFileIndex = new Map<number, BoxRenderable>()
   const diffNodeByFileIndex = new Map<number, DiffRenderable>()
@@ -817,64 +759,20 @@ function DiffViewer(props: { api: TuiPluginApi }) {
                     horizontalScrollbarOptions={{ visible: false }}
                   >
                     <For each={visiblePatchFiles()}>
-                      {(entry, index) => {
-                        const reviewed = () => reviewedFileNames().has(entry.file.file)
-                        return (
-                          <box ref={(element: BoxRenderable) => registerPatchNode(entry.fileIndex, element)}>
-                            {index() !== 0 ? <Separator axis="x" start={showFileTree() ? "edge" : undefined} /> : null}
-                            <box
-                              flexDirection="row"
-                              gap={1}
-                              flexShrink={0}
-                              paddingLeft={1}
-                              paddingRight={1}
-                              border={patchLeftBorder()}
-                              borderColor={theme().border}
-                            >
-                              <text fg={reviewed() ? theme().textMuted : theme().text}>{entry.file.file}</text>
-                              <box flexGrow={1} />
-                              <text fg={reviewed() ? theme().textMuted : theme().diffAdded}>
-                                +{entry.file.additions}
-                              </text>
-                              <text fg={reviewed() ? theme().textMuted : theme().diffRemoved}>
-                                -{entry.file.deletions}
-                              </text>
-                            </box>
-                            <Separator axis="x" start={showFileTree() ? "edge" : undefined} />
-                            <Show
-                              when={entry.file.patch}
-                              fallback={<text fg={theme().textMuted}>No patch available for this file.</text>}
-                            >
-                              {(patch) => (
-                                <box border={patchLeftBorder()} borderColor={theme().border}>
-                                  <diff
-                                    ref={(element: DiffRenderable) => diffNodeByFileIndex.set(entry.fileIndex, element)}
-                                    diff={patch()}
-                                    view={view()}
-                                    filetype={reviewed() ? PLAIN_TEXT_FILETYPE : filetype(entry.file.file)}
-                                    syntaxStyle={themeState.syntax()}
-                                    showLineNumbers={true}
-                                    width="100%"
-                                    wrapMode="char"
-                                    fg={reviewed() ? theme().textMuted : theme().text}
-                                    addedBg={reviewed() ? theme().backgroundElement : theme().diffAddedBg}
-                                    removedBg={reviewed() ? theme().backgroundElement : theme().diffRemovedBg}
-                                    addedSignColor={reviewed() ? theme().textMuted : theme().diffHighlightAdded}
-                                    removedSignColor={reviewed() ? theme().textMuted : theme().diffHighlightRemoved}
-                                    lineNumberFg={theme().diffLineNumber}
-                                    addedLineNumberBg={
-                                      reviewed() ? theme().backgroundElement : theme().diffAddedLineNumberBg
-                                    }
-                                    removedLineNumberBg={
-                                      reviewed() ? theme().backgroundElement : theme().diffRemovedLineNumberBg
-                                    }
-                                  />
-                                </box>
-                              )}
-                            </Show>
-                          </box>
-                        )
-                      }}
+                      {(entry, index) => (
+                        <DiffViewerPatch
+                          entry={entry}
+                          index={index()}
+                          reviewed={reviewedFileNames().has(entry.file.file)}
+                          showFileTree={showFileTree()}
+                          leftBorder={patchLeftBorder()}
+                          theme={theme()}
+                          syntax={themeState.syntax()}
+                          view={view()}
+                          registerNode={registerPatchNode}
+                          registerDiff={(fileIndex, element) => diffNodeByFileIndex.set(fileIndex, element)}
+                        />
+                      )}
                     </For>
                     <Show when={patchFillerHeight() > 0}>
                       <box height={patchFillerHeight()} border={patchLeftBorder()} borderColor={theme().border} />
@@ -887,164 +785,8 @@ function DiffViewer(props: { api: TuiPluginApi }) {
           </Switch>
         </box>
 
-        <Panel flexShrink={0} gap={2} paddingLeft={1} border="none">
-          <Show when={switchFocusShortcut()}>
-            {(shortcut) => (
-              <text fg={theme().text}>
-                {shortcut()} <span style={{ fg: theme().textMuted }}>focus file tree</span>
-              </text>
-            )}
-          </Show>
-          <Show when={nextFileShortcut()}>
-            {(shortcut) => (
-              <text fg={theme().text}>
-                {shortcut()} <span style={{ fg: theme().textMuted }}>next file</span>
-              </text>
-            )}
-          </Show>
-          <Show when={nextHunkShortcut()}>
-            {(shortcut) => (
-              <text fg={theme().text}>
-                {shortcut()} <span style={{ fg: theme().textMuted }}>next hunk</span>
-              </text>
-            )}
-          </Show>
-          <Show when={previousHunkShortcut()}>
-            {(shortcut) => (
-              <text fg={theme().text}>
-                {shortcut()} <span style={{ fg: theme().textMuted }}>previous hunk</span>
-              </text>
-            )}
-          </Show>
-          <Show when={previousFileShortcut()}>
-            {(shortcut) => (
-              <text fg={theme().text}>
-                {shortcut()} <span style={{ fg: theme().textMuted }}>previous file</span>
-              </text>
-            )}
-          </Show>
-          <Show when={switchSourceShortcut()}>
-            {(shortcut) => (
-              <text fg={theme().text}>
-                {shortcut()} <span style={{ fg: theme().textMuted }}>switch source</span>
-              </text>
-            )}
-          </Show>
-          <Show when={markReviewedShortcut()}>
-            {(shortcut) => (
-              <text fg={theme().text}>
-                {shortcut()} <span style={{ fg: theme().textMuted }}>mark reviewed</span>
-              </text>
-            )}
-          </Show>
-          <Show when={helpShortcut()}>
-            {(shortcut) => (
-              <text fg={theme().text}>
-                {shortcut()} <span style={{ fg: theme().textMuted }}>all</span>
-              </text>
-            )}
-          </Show>
-        </Panel>
+        <DiffViewerFooter theme={theme} />
       </PanelGroup>
-    </box>
-  )
-}
-
-function DiffViewerHelpDialog() {
-  const { theme } = useTheme()
-  const rows = [
-    {
-      shortcut: () => "q",
-      action: "Close viewer",
-      description: "Quit the diff viewer",
-    },
-    {
-      shortcut: useCommandShortcut("diff.switch_focus"),
-      action: "Focus file tree",
-      description: "Move keyboard focus between the file tree and patch pane",
-    },
-    {
-      shortcut: useCommandShortcut("diff.next_hunk"),
-      action: "Next hunk",
-      description: "Jump to the next diff hunk",
-    },
-    {
-      shortcut: useCommandShortcut("diff.previous_hunk"),
-      action: "Previous hunk",
-      description: "Jump to the previous diff hunk",
-    },
-    {
-      shortcut: useCommandShortcut("diff.next_file"),
-      action: "Next file",
-      description: "Select the next changed file in file-tree order",
-    },
-    {
-      shortcut: useCommandShortcut("diff.previous_file"),
-      action: "Previous file",
-      description: "Select the previous changed file in file-tree order",
-    },
-    {
-      shortcut: useCommandShortcut("diff.toggle_file_tree"),
-      action: "Toggle file tree",
-      description: "Show or hide the file tree sidebar",
-    },
-    {
-      shortcut: useCommandShortcut("diff.single_patch"),
-      action: "Toggle patches",
-      description: "Switch between one selected patch and all patches",
-    },
-    {
-      shortcut: useCommandShortcut("diff.switch_source"),
-      action: "Switch source",
-      description: "Choose working tree, main branch, or last-turn changes",
-    },
-    {
-      shortcut: useCommandShortcut("diff.toggle_view"),
-      action: "Toggle view",
-      description: "Switch between split and unified diff layout",
-    },
-    {
-      shortcut: useCommandShortcut("diff.expand_all"),
-      action: "Expand all folders",
-      description: "Open every folder in the file tree",
-    },
-    {
-      shortcut: useCommandShortcut("diff.mark_reviewed"),
-      action: "Mark reviewed",
-      description: "Toggle reviewed state for the selected file",
-    },
-  ]
-
-  return (
-    <box paddingLeft={2} paddingRight={2} paddingBottom={1} gap={1}>
-      <box flexDirection="row" justifyContent="space-between">
-        <text attributes={TextAttributes.BOLD} fg={theme.text}>
-          Diff shortcuts
-        </text>
-        <text fg={theme.textMuted}>esc</text>
-      </box>
-      <box flexDirection="row">
-        <text fg={theme.textMuted} width={5} wrapMode="none">
-          Key
-        </text>
-        <text fg={theme.textMuted} width={22} wrapMode="none">
-          Action
-        </text>
-        <text fg={theme.textMuted}>Description</text>
-      </box>
-      <For each={rows}>
-        {(row) => (
-          <box flexDirection="row">
-            <text fg={theme.text} width={5} wrapMode="none">
-              {row.shortcut() || "-"}
-            </text>
-            <text fg={theme.text} width={22} wrapMode="none">
-              {row.action}
-            </text>
-            <text fg={theme.textMuted}>{row.description}</text>
-          </box>
-        )}
-      </For>
     </box>
   )
 }
