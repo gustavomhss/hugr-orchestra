@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import Notifications from "../../../../src/feature-plugins/system/notifications"
-import type { Event, PermissionRequest, QuestionRequest, Session } from "@orchestra/sdk/v2"
+import type { Event, PermissionRequest, QuestionRequest, Session } from "../../../../src/compat/schema"
 import type { TuiAttentionNotifyInput } from "@orchestra/plugin/tui"
 import { createTuiPluginApi } from "../../../fixture/tui-plugin"
 

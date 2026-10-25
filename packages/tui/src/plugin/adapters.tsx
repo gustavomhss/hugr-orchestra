@@ -299,7 +299,7 @@ export function createTuiApiAdapters(input: Input): Omit<TuiPluginApi, "lifecycl
     },
     state: stateApi(input.sync),
     get client() {
-      return input.sdk.client
+      return input.sdk.api
     },
     event: input.event,
     renderer: input.renderer,

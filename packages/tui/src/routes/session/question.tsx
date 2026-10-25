@@ -47,17 +47,17 @@ export function QuestionPrompt(props: { request: QuestionRequest; directory?: st
 
   function submit() {
     const answers = questions().map((_, i) => store.answers[i] ?? [])
-    void sdk.client.question.reply({
+    void sdk.api.questions.reply({
+      sessionID: props.request.sessionID,
       requestID: props.request.id,
-      directory: props.directory,
       answers,
     })
   }
 
   function reject() {
-    void sdk.client.question.reject({
+    void sdk.api.questions.reject({
+      sessionID: props.request.sessionID,
       requestID: props.request.id,
-      directory: props.directory,
     })
   }
 
@@ -71,9 +71,9 @@ export function QuestionPrompt(props: { request: QuestionRequest; directory?: st
       setStore("custom", inputs)
     }
     if (single()) {
-      void sdk.client.question.reply({
+      void sdk.api.questions.reply({
+        sessionID: props.request.sessionID,
         requestID: props.request.id,
-        directory: props.directory,
         answers: [[answer]],
       })
       return

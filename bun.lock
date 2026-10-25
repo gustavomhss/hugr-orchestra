@@ -721,6 +721,7 @@
       "version": "1.18.27",
       "dependencies": {
         "@ai-sdk/provider": "3.0.8",
+        "@orchestra/client": "workspace:*",
         "@orchestra/protocol": "workspace:*",
         "@orchestra/schema": "workspace:*",
         "@orchestra/sdk": "workspace:*",
@@ -883,7 +884,6 @@
         "@orchestra/core": "workspace:*",
         "@orchestra/plugin": "workspace:*",
         "@orchestra/schema": "workspace:*",
-        "@orchestra/sdk": "workspace:*",
         "@orchestra/ui": "workspace:*",
         "clipboardy": "4.0.0",
         "diff": "catalog:",

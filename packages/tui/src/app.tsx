@@ -270,7 +270,9 @@ export const run = Effect.fn("Tui.run")(function* (input: TuiInput) {
                     >
                       <TuiStartupProvider
                         value={{
-                          initialRoute: process.env.ORCHESTRA_ROUTE ? JSON.parse(process.env.ORCHESTRA_ROUTE) : undefined,
+                          initialRoute: process.env.ORCHESTRA_ROUTE
+                            ? JSON.parse(process.env.ORCHESTRA_ROUTE)
+                            : undefined,
                           skipInitialLoading: Boolean(process.env.ORCHESTRA_FAST_BOOT),
                         }}
                       >
@@ -495,7 +497,10 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
   })
 
   async function forkSession(sessionID: string): Promise<void> {
-    const result = await sdk.client.session.fork({ sessionID }).catch((error: unknown) => ({ data: undefined, error }))
+    const result = await sdk.api.sessions.fork({ sessionID }).then(
+      (value) => ({ data: value.data, error: undefined }),
+      (error: unknown) => ({ data: undefined, error }),
+    )
     if (result.data?.id) return route.navigate({ type: "session", sessionID: result.data.id })
     const message = `${result.error ? errorMessage(result.error) : "no response"}. Confirm to retry, or run: orchestra --session ${sessionID} --fork`
     if (await DialogConfirm.show(dialog, "Failed to fork session", message, "dismiss")) return forkSession(sessionID)
@@ -1018,31 +1023,12 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
 
     if (choice !== true) return
 
-    toast.show({
-      variant: "info",
-      message: `Updating to v${version}…`,
-      duration: 30000,
-    })
-
-    const result = await sdk.client.global.upgrade({ target: version })
-
-    if (result.error || !result.data?.success) {
-      toast.show({
-        variant: "error",
-        title: "Update Failed",
-        message: "Update failed",
-        duration: 10000,
-      })
-      return
-    }
-
+    // V2 serves no in-process upgrade route; the CLI upgrade command installs the release.
     await DialogAlert.show(
       dialog,
-      "Update Complete",
-      `Successfully updated to Orchestra v${result.data.version}. Please restart the application.`,
+      "Update Available",
+      `Run \`orchestra upgrade ${version}\` in a terminal, then restart Orchestra.`,
     )
-
-    void exit()
   })
 
   const plugin = createMemo(() => {

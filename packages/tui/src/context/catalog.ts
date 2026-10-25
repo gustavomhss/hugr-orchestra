@@ -7,7 +7,9 @@ import type {
   McpStatus,
   Provider,
   Session,
+  SessionMessage,
   SessionStatus,
+  SnapshotFileDiff,
   Todo,
   VcsInfo,
 } from "../compat/schema"
@@ -95,14 +97,12 @@ export function createCatalog(client: Client) {
         ),
       ),
     vcs: (location: Location) =>
-      client.vcs
-        .get({ location })
-        .then(
-          (result): VcsInfo => ({
-            branch: result.data.branch ?? undefined,
-            default_branch: result.data.default_branch ?? undefined,
-          }),
-        ),
+      client.vcs.get({ location }).then(
+        (result): VcsInfo => ({
+          branch: result.data.branch ?? undefined,
+          default_branch: result.data.default_branch ?? undefined,
+        }),
+      ),
     lsp: (location: Location) =>
       client["server.lsp"]
         .status({ location })
@@ -115,19 +115,53 @@ export function createCatalog(client: Client) {
             Object.fromEntries(result.data.map((server) => [server.name, { ...server.status }])),
         ),
     // V2 lists sessions by project and subpath instead of V1's `scope` and `path`, and has no start-time window.
-    sessions: (input: { workspace?: string; project?: string; subpath?: string }) =>
+    // `roots` keeps top-level Sessions only, as V1's `roots` query did; V2 filters it here.
+    sessions: (input: {
+      workspace?: string
+      project?: string
+      subpath?: string
+      search?: string
+      limit?: number
+      roots?: boolean
+    }) =>
       client.sessions
-        .list({ ...input, limit: 100, order: "desc" })
-        .then((result) => result.data.map(toSession).toSorted((a, b) => a.id.localeCompare(b.id))),
+        .list({
+          workspace: input.workspace,
+          project: input.project,
+          subpath: input.subpath,
+          search: input.search,
+          limit: input.limit ?? 100,
+          order: "desc",
+        })
+        .then((result) =>
+          result.data
+            .map(toSession)
+            .filter((session) => !input.roots || !session.parentID)
+            .toSorted((a, b) => a.id.localeCompare(b.id)),
+        ),
     session: (sessionID: string) => client.sessions.get({ sessionID }).then(toSession),
+    // Newest first, as V2 returns them; the store projects them into the V1 message and part shapes.
+    messages: (sessionID: string) =>
+      client.messages.list({ sessionID, limit: 100 }).then((result) => result.data as SessionMessage[]),
+    // V2 has no per-Session diff route. A Session's diff is the working-tree status of the files its steps
+    // changed, which matches V1's diff while those changes are uncommitted.
+    diff: (location: Location, files: ReadonlySet<string>) =>
+      files.size === 0
+        ? Promise.resolve<SnapshotFileDiff[]>([])
+        : client.vcs
+            .status({ location })
+            .then((result): SnapshotFileDiff[] =>
+              result.data.filter((item) => files.has(item.file)).map((item) => ({ ...item })),
+            ),
     todo: (sessionID: string) =>
       client.sessions.todo({ sessionID }).then((todos): Todo[] => todos.map((todo) => ({ ...todo }))),
     // V2 reports running Sessions only; every other Session is idle.
     status: () =>
       client.sessions
         .active()
-        .then((active): Record<string, SessionStatus> =>
-          Object.fromEntries(Object.keys(active).map((sessionID) => [sessionID, { type: "busy" }])),
+        .then(
+          (active): Record<string, SessionStatus> =>
+            Object.fromEntries(Object.keys(active).map((sessionID) => [sessionID, { type: "busy" }])),
         ),
   }
 }

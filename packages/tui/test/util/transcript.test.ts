@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { formatAssistantHeader, formatMessage, formatPart, formatTranscript } from "../../src/util/transcript"
-import type { AssistantMessage, Part, Provider, UserMessage } from "@orchestra/sdk/v2"
+import type { AssistantMessage, Part, Provider, UserMessage } from "../../src/compat/schema"
 
 const providers: Provider[] = [
   {

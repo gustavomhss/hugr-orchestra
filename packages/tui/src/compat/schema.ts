@@ -181,7 +181,7 @@ export type ExperimentalWorkspaceAdapterListResponse = Array<{
 export type ProviderAuthMethod = {
   type: "oauth" | "api"
   label: string
-  prompts?: Array<
+  prompts?: ReadonlyArray<
     | {
         type: "text"
         key: string
@@ -193,7 +193,7 @@ export type ProviderAuthMethod = {
         type: "select"
         key: string
         message: string
-        options: Array<{ label: string; value: string; hint?: string }>
+        options: ReadonlyArray<{ label: string; value: string; hint?: string }>
         when?: { key: string; op: "eq" | "neq"; value: string }
       }
   >
@@ -230,4 +230,5 @@ type Definition = (typeof EventManifest.Definitions)[number]
 export type Event = BusEvent<TuiPluginApi["event"]>
 export type V2Event = ManifestV2Event<Definition>
 
-export type GlobalEvent = import("./sdk-v2").GlobalEvent
+// The TUI wraps each V2 stream event in this envelope before it reaches the store handlers.
+export type GlobalEvent = { directory: string; workspace?: string; project?: string; payload: Event }

@@ -322,14 +322,19 @@ export function Autocomplete(props: {
       const { lineRange, baseQuery } = extractLineRange(input.query ?? "")
 
       // Get files from SDK
-      const result = await sdk.client.v2.fs.find({
-        query: baseQuery,
-        limit: "20",
-        location: {
-          directory: input.location?.directory,
-          workspace: input.location?.workspaceID ?? project.workspace.current(),
-        },
-      })
+      const result = await sdk.api.files
+        .find({
+          query: baseQuery,
+          limit: 20,
+          location: {
+            directory: input.location?.directory,
+            workspace: input.location?.workspaceID ?? project.workspace.current(),
+          },
+        })
+        .then(
+          (data) => ({ data, error: undefined }),
+          (error: unknown) => ({ data: undefined, error }),
+        )
 
       const options: AutocompleteOption[] = []
 

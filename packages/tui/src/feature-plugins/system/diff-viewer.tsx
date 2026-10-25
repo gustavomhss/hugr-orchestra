@@ -1,6 +1,5 @@
 /** @jsxImportSource @opentui/solid */
 import type { TuiPlugin, TuiPluginApi, TuiRouteCurrent } from "@orchestra/plugin/tui"
-import type { SnapshotFileDiff, VcsFileDiff } from "../../compat/schema"
 import {
   TextAttributes,
   type BorderSides,
@@ -56,13 +55,21 @@ type DiffFile = {
   readonly status: "added" | "deleted" | "modified"
 }
 
-const normalizeDiffs = (diffs: readonly (VcsFileDiff | SnapshotFileDiff)[]): DiffFile[] =>
+const normalizeDiffs = (
+  diffs: ReadonlyArray<{
+    readonly file?: string
+    readonly patch?: string | null
+    readonly additions: number
+    readonly deletions: number
+    readonly status?: DiffFile["status"] | null
+  }>,
+): DiffFile[] =>
   diffs.flatMap((item) =>
     item.file
       ? [
           {
             file: item.file,
-            patch: item.patch,
+            patch: item.patch ?? undefined,
             additions: item.additions,
             deletions: item.deletions,
             status: item.status ?? "modified",
@@ -112,21 +119,18 @@ function DiffViewer(props: { api: TuiPluginApi }) {
     }
   })
   const [diff] = createResource(diffInput, async (input) => {
-    if (input.mode === "last-turn") {
-      const sessionID = input.sessionID
-      if (!sessionID) return []
-      const result = await props.api.client.session.diff(
-        { sessionID, messageID: input.messageID },
-        { throwOnError: true },
-      )
-      return normalizeDiffs(result.data ?? [])
-    }
-
-    const result = await props.api.client.vcs.diff(
-      { directory: input.directory, mode: input.mode, context: VCS_DIFF_CONTEXT_LINES },
-      { throwOnError: true },
-    )
-    return normalizeDiffs(result.data ?? [])
+    // V2 has no per-turn snapshot diff, so last-turn shows the working diff of the files this Session changed.
+    const sessionFiles =
+      input.mode === "last-turn" && input.sessionID
+        ? new Set(props.api.state.session.diff(input.sessionID).map((item) => item.file))
+        : undefined
+    if (input.mode === "last-turn" && !sessionFiles?.size) return []
+    const result = await props.api.client.vcs.diff({
+      location: { directory: input.directory },
+      mode: input.mode === "last-turn" ? "working" : input.mode,
+      context: VCS_DIFF_CONTEXT_LINES,
+    })
+    return normalizeDiffs(result.data.filter((item) => !sessionFiles || sessionFiles.has(item.file)))
   })
   const files = createMemo(() => diff() ?? [])
   const [focus, setFocus] = createSignal<DiffViewerFocus>("patches")

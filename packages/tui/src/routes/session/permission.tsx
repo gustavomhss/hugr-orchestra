@@ -8,7 +8,6 @@ import type { PermissionRequest } from "../../compat/schema"
 import { useSDK } from "../../context/sdk"
 import { SplitBorder } from "../../ui/border"
 import { useSync } from "../../context/sync"
-import { useProject } from "../../context/project"
 import { filetype } from "../../util/filetype"
 import { Locale } from "../../util/locale"
 import { webSearchProviderLabel } from "../../util/tool-display"
@@ -110,7 +109,6 @@ function TextBody(props: { title: string; description?: string; icon?: string })
 
 export function PermissionPrompt(props: { request: PermissionRequest; directory?: string }) {
   const sdk = useSDK()
-  const project = useProject()
   const sync = useSync()
   const [store, setStore] = createStore({
     stage: "permission" as PermissionStage,
@@ -165,11 +163,10 @@ export function PermissionPrompt(props: { request: PermissionRequest; directory?
           onSelect={(option) => {
             setStore("stage", "permission")
             if (option === "cancel") return
-            void sdk.client.permission.reply({
-              reply: "always",
+            void sdk.api.permissions.reply({
+              sessionID: props.request.sessionID,
               requestID: props.request.id,
-              directory: props.directory,
-              workspace: project.workspace.current(),
+              reply: "always",
             })
           }}
         />
@@ -177,12 +174,11 @@ export function PermissionPrompt(props: { request: PermissionRequest; directory?
       <Match when={store.stage === "reject"}>
         <RejectPrompt
           onConfirm={(message) => {
-            void sdk.client.permission.reply({
-              reply: "reject",
+            void sdk.api.permissions.reply({
+              sessionID: props.request.sessionID,
               requestID: props.request.id,
-              directory: props.directory,
+              reply: "reject",
               message: message || undefined,
-              workspace: project.workspace.current(),
             })
           }}
           onCancel={() => {
@@ -415,19 +411,17 @@ export function PermissionPrompt(props: { request: PermissionRequest; directory?
                     setStore("stage", "reject")
                     return
                   }
-                  void sdk.client.permission.reply({
-                    reply: "reject",
+                  void sdk.api.permissions.reply({
+                    sessionID: props.request.sessionID,
                     requestID: props.request.id,
-                    directory: props.directory,
-                    workspace: project.workspace.current(),
+                    reply: "reject",
                   })
                   return
                 }
-                void sdk.client.permission.reply({
-                  reply: "once",
+                void sdk.api.permissions.reply({
+                  sessionID: props.request.sessionID,
                   requestID: props.request.id,
-                  directory: props.directory,
-                  workspace: project.workspace.current(),
+                  reply: "once",
                 })
               }}
             />

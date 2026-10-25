@@ -15,9 +15,10 @@ import type {
   FormatterStatus,
   SessionStatus,
   ProviderListResponse,
-  ProviderAuthMethod,
   VcsInfo,
   SnapshotFileDiff,
+  SessionMessage,
+  V2Event,
 } from "../compat/schema"
 import { createStore, produce, reconcile } from "solid-js/store"
 import { useProject } from "./project"
@@ -31,6 +32,7 @@ import { batch, onMount } from "solid-js"
 import path from "path"
 import { useKV } from "./kv"
 import { usePermission } from "./permission"
+import { applyEvent, toLegacy } from "./session-history"
 
 function search<T>(items: T[], target: string, key: (item: T) => string) {
   let left = 0
@@ -44,12 +46,6 @@ function search<T>(items: T[], target: string, key: (item: T) => string) {
   }
   return { found: false, index: left }
 }
-
-function compareMessage(a: Message, b: Message) {
-  return a.time.created - b.time.created || a.id.localeCompare(b.id)
-}
-
-const messageKey = (message: Message) => message.time.created + message.id
 
 export const {
   context: SyncContext,
@@ -69,7 +65,6 @@ export const {
       capabilities: {
         experimentalBackgroundSubagents: boolean
       }
-      provider_auth: Record<string, ProviderAuthMethod[]>
       agent: Agent[]
       command: Command[]
       permission: {
@@ -113,7 +108,6 @@ export const {
       capabilities: {
         experimentalBackgroundSubagents: false,
       },
-      provider_auth: {},
       config: {},
       status: "loading",
       agent: [],
@@ -141,12 +135,57 @@ export const {
 
     const fullSyncedSessions = new Set<string>()
     const syncingSessions = new Map<string, Promise<void>>()
-    const hydratingSessions = new Map<string, { messages: Set<string>; parts: Set<string> }>()
-    const touchMessage = (sessionID: string, messageID: string) => {
-      hydratingSessions.get(sessionID)?.messages.add(messageID)
+    // Message IDs that live events changed while a Session's history was being fetched.
+    const hydratingSessions = new Map<string, Set<string>>()
+    // V2 messages per Session, newest first. The store's V1 `message` and `part` entries are projections of them.
+    const history = new Map<string, SessionMessage[]>()
+
+    function projectHistory(sessionID: string) {
+      const session = store.session.find((item) => item.id === sessionID)
+      const directory = session?.directory ?? sdk.directory ?? ""
+      const projected = toLegacy(sessionID, history.get(sessionID) ?? [], {
+        cwd: directory,
+        root: project.data.instance.path.worktree ?? directory,
+      }).slice(-100)
+      batch(() => {
+        setStore(
+          "part",
+          produce((draft) => {
+            for (const message of store.message[sessionID] ?? []) {
+              if (!projected.some((item) => item.info.id === message.id)) delete draft[message.id]
+            }
+          }),
+        )
+        setStore("message", sessionID, reconcile(projected.map((item) => item.info)))
+        projected.forEach((item) => setStore("part", item.info.id, reconcile(item.parts)))
+      })
     }
-    const touchPart = (sessionID: string, partID: string) => {
-      hydratingSessions.get(sessionID)?.parts.add(partID)
+
+    function refreshDiff(sessionID: string) {
+      const session = store.session.find((item) => item.id === sessionID)
+      const files = new Set(
+        (history.get(sessionID) ?? []).flatMap((message) =>
+          message.type === "assistant" ? (message.snapshot?.files ?? []) : [],
+        ),
+      )
+      return sdk.catalog
+        .diff({ directory: session?.directory, workspace: session?.workspaceID }, files)
+        .then((diff) => setStore("session_diff", sessionID, diff))
+    }
+
+    function receiveHistory(event: V2Event) {
+      if (!event.type.startsWith("session.next.") || !("sessionID" in event.data)) return
+      const sessionID = event.data.sessionID
+      if (!fullSyncedSessions.has(sessionID) && !hydratingSessions.has(sessionID)) return
+      const messages = history.get(sessionID) ?? []
+      if (!applyEvent(messages, event)) return
+      history.set(sessionID, messages.slice(0, 100))
+      hydratingSessions
+        .get(sessionID)
+        ?.add("assistantMessageID" in event.data ? event.data.assistantMessageID : messages[0].id)
+      if (!fullSyncedSessions.has(sessionID)) return
+      projectHistory(sessionID)
+      if (event.type === "session.next.step.ended") void refreshDiff(sessionID)
     }
 
     function sessionListQuery(): { scope?: "project"; path?: string } {
@@ -169,6 +208,7 @@ export const {
     }
 
     event.subscribe((event, { workspace }) => {
+      receiveHistory({ ...event, data: event.properties } as V2Event)
       switch (event.type) {
         case "server.instance.disposed":
           void bootstrap()
@@ -308,118 +348,6 @@ export const {
           break
         }
 
-        case "message.updated": {
-          touchMessage(event.properties.info.sessionID, event.properties.info.id)
-          const messages = store.message[event.properties.info.sessionID]
-          if (!messages) {
-            setStore("message", event.properties.info.sessionID, [event.properties.info])
-            break
-          }
-          const result = search(messages, messageKey(event.properties.info), messageKey)
-          if (result.found) {
-            setStore("message", event.properties.info.sessionID, result.index, reconcile(event.properties.info))
-            break
-          }
-          setStore(
-            "message",
-            event.properties.info.sessionID,
-            produce((draft) => {
-              draft.splice(result.index, 0, event.properties.info)
-            }),
-          )
-          const updated = store.message[event.properties.info.sessionID]
-          if (updated.length > 100) {
-            const oldest = updated[0]
-            batch(() => {
-              setStore(
-                "message",
-                event.properties.info.sessionID,
-                produce((draft) => {
-                  draft.shift()
-                }),
-              )
-              setStore(
-                "part",
-                produce((draft) => {
-                  delete draft[oldest.id]
-                }),
-              )
-            })
-          }
-          break
-        }
-        case "message.removed": {
-          touchMessage(event.properties.sessionID, event.properties.messageID)
-          const messages = store.message[event.properties.sessionID]
-          const index = messages.findIndex((message) => message.id === event.properties.messageID)
-          if (index !== -1) {
-            setStore(
-              "message",
-              event.properties.sessionID,
-              produce((draft) => {
-                draft.splice(index, 1)
-              }),
-            )
-          }
-          break
-        }
-        case "message.part.updated": {
-          touchPart(event.properties.part.sessionID, event.properties.part.id)
-          const parts = store.part[event.properties.part.messageID]
-          if (!parts) {
-            setStore("part", event.properties.part.messageID, [event.properties.part])
-            break
-          }
-          const result = search(parts, event.properties.part.id, (part) => part.id)
-          if (result.found) {
-            setStore("part", event.properties.part.messageID, result.index, reconcile(event.properties.part))
-            break
-          }
-          setStore(
-            "part",
-            event.properties.part.messageID,
-            produce((draft) => {
-              draft.splice(result.index, 0, event.properties.part)
-            }),
-          )
-          break
-        }
-
-        case "message.part.delta": {
-          const parts = store.part[event.properties.messageID]
-          if (!parts) break
-          const result = search(parts, event.properties.partID, (part) => part.id)
-          if (!result.found) break
-          touchPart(event.properties.sessionID, event.properties.partID)
-          setStore(
-            "part",
-            event.properties.messageID,
-            produce((draft) => {
-              const part = draft[result.index]
-              const field = event.properties.field as keyof typeof part
-              const existing = part[field] as string | undefined
-              ;(part[field] as string) = (existing ?? "") + event.properties.delta
-            }),
-          )
-          break
-        }
-
-        case "message.part.removed": {
-          touchPart(event.properties.sessionID, event.properties.partID)
-          const parts = store.part[event.properties.messageID]
-          const result = search(parts, event.properties.partID, (part) => part.id)
-          if (result.found) {
-            setStore(
-              "part",
-              event.properties.messageID,
-              produce((draft) => {
-                draft.splice(result.index, 1)
-              }),
-            )
-          }
-          break
-        }
-
         case "lsp.updated": {
           const workspace = project.workspace.current()
           void sdk.catalog.lsp({ directory: sdk.directory, workspace }).then((x) => setStore("lsp", x))
@@ -471,6 +399,28 @@ export const {
             sdk.catalog.commands(location).then((x) => setStore("command", reconcile(x))),
             sdk.catalog.lsp(location).then((x) => setStore("lsp", reconcile(x))),
             sdk.catalog.mcp(location).then((x) => setStore("mcp", reconcile(x))),
+            sdk.api.mcp
+              .resources({ location })
+              .then((result) =>
+                setStore(
+                  "mcp_resource",
+                  reconcile(
+                    Object.fromEntries(
+                      result.data.resources.map((resource) => [
+                        `${resource.server}:${resource.uri}`,
+                        {
+                          name: resource.name,
+                          uri: resource.uri,
+                          description: resource.description ?? undefined,
+                          mimeType: resource.mimeType ?? undefined,
+                          client: resource.server,
+                        },
+                      ]),
+                    ),
+                  ),
+                ),
+              )
+              .catch(() => undefined),
             sdk.catalog.status().then((x) => setStore("session_status", reconcile(x))),
             sdk.catalog.vcs(location).then((x) => setStore("vcs", reconcile(x))),
             project.workspace.sync(),
@@ -536,69 +486,36 @@ export const {
           if (fullSyncedSessions.has(sessionID)) return
           const syncing = syncingSessions.get(sessionID)
           if (syncing) return syncing
-          const tracker = { messages: new Set<string>(), parts: new Set<string>() }
-          hydratingSessions.set(sessionID, tracker)
+          const touched = new Set<string>()
+          hydratingSessions.set(sessionID, touched)
           const task = (async () => {
-            const [session, messages, todo, diff] = await Promise.all([
+            const [session, messages, todo] = await Promise.all([
               sdk.catalog.session(sessionID),
-              sdk.client.session.messages({ sessionID, limit: 100 }),
+              // V1 rendered a Session whose message route failed as empty instead of failing the sync.
+              sdk.catalog.messages(sessionID).catch(() => []),
               sdk.catalog.todo(sessionID),
-              sdk.client.session.diff({ sessionID }),
             ])
+            const live = history.get(sessionID) ?? []
+            history.set(
+              sessionID,
+              [
+                ...messages.map(
+                  (message) => live.find((item) => item.id === message.id && touched.has(item.id)) ?? message,
+                ),
+                ...live.filter((item) => touched.has(item.id) && !messages.some((message) => message.id === item.id)),
+              ].toSorted((a, b) => b.time.created - a.time.created || b.id.localeCompare(a.id)),
+            )
             setStore(
               produce((draft) => {
                 const match = search(draft.session, sessionID, (s) => s.id)
                 if (match.found) draft.session[match.index] = session
                 if (!match.found) draft.session.splice(match.index, 0, session)
                 draft.todo[sessionID] = todo
-                const currentMessages = draft.message[sessionID] ?? []
-                const infos = (messages.data ?? []).flatMap((message) => {
-                  if (!tracker.messages.has(message.info.id)) return [message.info]
-                  const current = currentMessages.find((item) => item.id === message.info.id)
-                  return current ? [current] : []
-                })
-                infos.push(
-                  ...currentMessages.filter(
-                    (message) => tracker.messages.has(message.id) && !infos.some((item) => item.id === message.id),
-                  ),
-                )
-                infos.sort(compareMessage)
-                const removed = infos.slice(0, -100)
-                const visible = infos.slice(-100)
-                const visibleIDs = new Set(visible.map((message) => message.id))
-                for (const message of messages.data ?? []) {
-                  if (!visibleIDs.has(message.info.id)) {
-                    delete draft.part[message.info.id]
-                    continue
-                  }
-                  const currentParts = draft.part[message.info.id] ?? []
-                  const parts = message.parts.flatMap((part) => {
-                    const current = currentParts.find((item) => item.id === part.id)
-                    if (tracker.parts.has(part.id)) return current ? [current] : []
-                    if (
-                      current &&
-                      (part.type === "text" || part.type === "reasoning") &&
-                      (current.type === "text" || current.type === "reasoning") &&
-                      part.text.length === 0 &&
-                      current.text.length > 0
-                    ) {
-                      return [current]
-                    }
-                    return [part]
-                  })
-                  parts.push(
-                    ...currentParts.filter(
-                      (part) => tracker.parts.has(part.id) && !parts.some((item) => item.id === part.id),
-                    ),
-                  )
-                  draft.part[message.info.id] = parts
-                }
-                for (const message of removed) delete draft.part[message.id]
-                draft.message[sessionID] = visible
-                draft.session_diff[sessionID] = diff.data ?? []
               }),
             )
+            projectHistory(sessionID)
             fullSyncedSessions.add(sessionID)
+            await refreshDiff(sessionID)
           })().finally(() => {
             syncingSessions.delete(sessionID)
             hydratingSessions.delete(sessionID)
