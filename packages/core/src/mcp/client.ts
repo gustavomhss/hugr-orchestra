@@ -7,14 +7,8 @@ import { InstallationVersion } from "../installation/version"
 
 const CLIENT_OPTIONS = {
   capabilities: {
-    // https://github.com/anomalyco/opencode/issues/11948
-    // sampling: {},
-    // https://github.com/anomalyco/opencode/issues/23066
-    // elicitation: {},
-    // https://github.com/anomalyco/opencode/issues/2308
+    // Sampling, elicitation and tasks stay off until Orchestra handles those requests.
     roots: {},
-    // https://github.com/anomalyco/opencode/issues/28567
-    // tasks: {},
   },
 } satisfies ClientOptions
 

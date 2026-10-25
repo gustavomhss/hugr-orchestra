@@ -21,10 +21,10 @@ afterEach(() => {
 describe("resource", () => {
   test("parses and decodes OTEL resource attributes", () => {
     process.env.OTEL_RESOURCE_ATTRIBUTES =
-      "service.namespace=anomalyco,team=platform%2Cobservability,label=hello%3Dworld,key%2Fname=value%20here"
+      "service.namespace=hugr,team=platform%2Cobservability,label=hello%3Dworld,key%2Fname=value%20here"
 
     expect(resource().attributes).toMatchObject({
-      "service.namespace": "anomalyco",
+      "service.namespace": "hugr",
       team: "platform,observability",
       label: "hello=world",
       "key/name": "value here",
@@ -32,7 +32,7 @@ describe("resource", () => {
   })
 
   test("drops OTEL resource attributes when any entry is invalid", () => {
-    process.env.OTEL_RESOURCE_ATTRIBUTES = "service.namespace=anomalyco,broken"
+    process.env.OTEL_RESOURCE_ATTRIBUTES = "service.namespace=hugr,broken"
 
     expect(resource().attributes["service.namespace"]).toBeUndefined()
     expect(resource().attributes["orchestra.client"]).toBeDefined()
@@ -41,11 +41,11 @@ describe("resource", () => {
   test("keeps built-in attributes when env values conflict", () => {
     process.env.ORCHESTRA_CLIENT = "cli"
     process.env.OTEL_RESOURCE_ATTRIBUTES =
-      "orchestra.client=web,service.instance.id=override,service.namespace=anomalyco"
+      "orchestra.client=web,service.instance.id=override,service.namespace=hugr"
 
     expect(resource().attributes).toMatchObject({
       "orchestra.client": "cli",
-      "service.namespace": "anomalyco",
+      "service.namespace": "hugr",
     })
     expect(resource().attributes["service.instance.id"]).not.toBe("override")
     expect(resource().attributes["orchestra.run"]).toMatch(/^[0-9a-f]{8}$/)

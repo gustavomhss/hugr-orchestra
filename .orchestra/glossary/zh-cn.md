@@ -1,9 +1,5 @@
 # zh-cn Glossary
 
-## Sources
-
-- PR #13942: https://github.com/anomalyco/opencode/pull/13942
-
 ## Do Not Translate (Locale Additions)
 
 - `Orchestra` (preserve casing in prose; keep `orchestra` only when it is part of commands, package names, paths, or code)

@@ -68,7 +68,7 @@ nesse checkout, preservados também em `handoff/archives/ancillary-assets.tar.gz
 | `fork`           | `git@gitlab.com:gmhelmold/hugr-orchestra.git`       | Publicação autorizada (GitLab); MRs contra `dev` |
 | `github-archive` | `https://github.com/gusmhs/HuGR-Orchestra.git`      | Só arquivo; a conta parece sinalizada            |
 | `myfork`         | `https://github.com/gustavomhss/HuGR-Orchestra.git` | Outro fork; não é destino desta campanha         |
-| `origin`         | `https://github.com/anomalyco/opencode.git`         | Upstream; não usar como base por engano          |
+| `origin`         | `git@github.com:gustavomhss/hugr-orchestra.git`     | Canônico (GitHub); PRs contra `dev`              |
 
 O `dev` local está antigo. Use `fork/dev` após fetch. Não assumir que `main`
 existe, não resetar o canônico e não modificar worktrees de outras campanhas.
