@@ -97,6 +97,7 @@ describe("current session timeline rows", () => {
       true,
       "idle",
       normalized.messages.filter((message) => message.role === "user"),
+      () => undefined,
     )
 
     expect(result.rows.map(TimelineRow.key)).toEqual([
