@@ -32,6 +32,7 @@ import { batch, onMount } from "solid-js"
 import path from "path"
 import { useKV } from "./kv"
 import { usePermission } from "./permission"
+import { isDemoRequest, settle } from "./demo"
 import { applyEvent, toLegacy } from "./session-history"
 
 function search<T>(items: T[], target: string, key: (item: T) => string) {
@@ -207,6 +208,13 @@ export const {
       })
     }
 
+    // A demo request's tool part is settled here: the server never heard of it.
+    function settleDemo(requestID: string, outcome: Parameters<typeof settle>[1]) {
+      if (!isDemoRequest(requestID)) return
+      const part = settle(requestID, outcome)
+      if (part) setStore("part", part.messageID, [part])
+    }
+
     event.subscribe((event, { workspace }) => {
       receiveHistory({ ...event, data: event.properties } as V2Event)
       switch (event.type) {
@@ -214,6 +222,7 @@ export const {
           void bootstrap()
           break
         case "permission.replied": {
+          settleDemo(event.properties.requestID, event.properties.reply === "reject" ? { type: "error", error: "permission rejected" } : { type: "completed" })
           const requests = store.permission[event.properties.sessionID]
           if (!requests) break
           const match = search(requests, event.properties.requestID, (r) => r.id)
@@ -256,6 +265,12 @@ export const {
 
         case "question.replied":
         case "question.rejected": {
+          settleDemo(
+            event.properties.requestID,
+            event.type === "question.rejected"
+              ? { type: "error", error: "question rejected" }
+              : { type: "completed", answers: "answers" in event.properties ? event.properties.answers : undefined },
+          )
           const requests = store.question[event.properties.sessionID]
           if (!requests) break
           const match = search(requests, event.properties.requestID, (r) => r.id)
