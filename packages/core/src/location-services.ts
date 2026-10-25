@@ -17,6 +17,7 @@ import { Integration } from "./integration"
 import { Location } from "./location"
 import { LocationMutation } from "./location-mutation"
 import { LSP } from "./lsp"
+import { Guardrail } from "./guardrail"
 import { LocationServiceMap } from "./location-service-map"
 import { Mcp } from "./mcp"
 import { PermissionV2 } from "./permission"
@@ -61,6 +62,7 @@ export const locationServices = LayerNode.group([
   ProjectCopy.node,
   ProjectCopy.refreshNode,
   PullRequest.node,
+  Guardrail.node,
   Actions.node,
   FileSystemSearch.node,
   FileSystem.node,
