@@ -350,7 +350,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         sessionDirectory = createdWorktree.directory
         admission.directory = sessionDirectory
         if (!ownsSource() || controller.signal.aborted) return false
-        WorktreeState.pending(directorySDK.scope, sessionDirectory)
+        WorktreeState.ready(directorySDK.scope, sessionDirectory)
       }
 
       if (!admission.directory && worktreeSelection !== "main" && worktreeSelection !== "create") {

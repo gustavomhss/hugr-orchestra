@@ -39,7 +39,7 @@ const steps = [
   { name: "file-size guard (own tests)", on: lint, cmd: ["python3", "scripts/test_file_size_guard.py"] },
   { name: "plan sections", on: lint, cmd: ["python3", "scripts/plan-sections-check.py"] },
   { name: "rustfmt", on: lint, cmd: ["cargo", "fmt", "--all", "--", "--check"] },
-  { name: "surface checks (own tests)", on: lint, release: true, cmd: ["node", "--test", "scripts/surface-check/surface.test.mjs", "scripts/guarantees-check/check.test.mjs", "scripts/skill-check/check.test.mjs"] },
+  { name: "surface checks (own tests)", on: lint, cmd: ["node", "--test", "scripts/surface-check/surface.test.mjs", "scripts/guarantees-check/check.test.mjs", "scripts/skill-check/check.test.mjs"] },
   { name: "surface parity", on: lint, cmd: ["node", "scripts/surface-check/parity.mjs"] },
   { name: "binding surface", on: lint, cmd: ["node", "scripts/surface-check/binding.mjs"] },
   { name: "guarantees ledger", on: lint, cmd: ["node", "scripts/guarantees-check/check.mjs"] },
@@ -53,6 +53,9 @@ const steps = [
   // The suite on this OS.
   { name: "build", cmd: ["cargo", "build", "--workspace", "--bins"] },
   { name: "build addon", cmd: ["cargo", "build", "-p", "hugr-omni-node"] },
+  // The teeth of the docs-block checker. Its run cases need the workspace binaries and the addon built above, and network
+  // once for TypeScript; the lint lane already fetches TypeScript, so Linux only.
+  { name: "readme-check teeth", on: lint, cmd: ["node", "--test", "scripts/readme-check/check.test.mjs"] },
   { name: "cargo test", cmd: ["cargo", "test", "--workspace", "--no-fail-fast", "--", ...filter] },
   { name: "TS runner teeth", cmd: ["node", "bindings/node/test/teeth.mjs"] },
   { name: "TS contract (node 22)", cmd: ["node", "bindings/node/test/contract.mjs"] },

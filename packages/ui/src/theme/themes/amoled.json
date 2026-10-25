@@ -5,7 +5,7 @@
     "palette": {
       "neutral": "#f0f0f0",
       "ink": "#0a0a0a",
-      "primary": "#6200ff",
+      "primary": "#0145c6",
       "accent": "#ff0080",
       "success": "#00e676",
       "warning": "#ffab00",
@@ -16,18 +16,18 @@
     },
     "overrides": {
       "syntax-comment": "#757575",
-      "syntax-keyword": "#d500f9",
+      "syntax-keyword": "#0059e8",
       "syntax-string": "#00e676",
       "syntax-primitive": "#00b0ff",
       "syntax-property": "#ff9100",
-      "syntax-constant": "#6200ff"
+      "syntax-constant": "#023eb0"
     }
   },
   "dark": {
     "palette": {
       "neutral": "#000000",
       "ink": "#ffffff",
-      "primary": "#b388ff",
+      "primary": "#7fb3fd",
       "accent": "#ff4081",
       "success": "#00ff88",
       "warning": "#ffea00",
@@ -38,11 +38,11 @@
     },
     "overrides": {
       "syntax-comment": "#555555",
-      "syntax-keyword": "#ff00ff",
+      "syntax-keyword": "#5fa1fd",
       "syntax-string": "#00ff88",
       "syntax-primitive": "#18ffff",
       "syntax-property": "#ffea00",
-      "syntax-constant": "#b388ff"
+      "syntax-constant": "#98c6ff"
     }
   }
 }

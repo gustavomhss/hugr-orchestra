@@ -130,7 +130,7 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
     border-width: 1px;
     border-style: solid;
     border-color: var(--glass-border);
-    border-radius: 13px;
+    border-radius: var(--orchestra-radius-xl);
     isolation: isolate;
   }
 
@@ -175,7 +175,7 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
     min-inline-size: 0;
     flex-shrink: 0;
     border: 1px solid var(--glass-border);
-    border-radius: 9px;
+    border-radius: var(--orchestra-radius-lg);
     background: var(--glass-background);
     box-shadow: var(--glass-shadow);
     -webkit-backdrop-filter: var(--glass-filter);
@@ -188,7 +188,7 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
     margin-block: 0;
     margin-inline: 0;
     border: 1px solid var(--glass-border);
-    border-radius: 9px;
+    border-radius: var(--orchestra-radius-lg);
     background: var(--glass-background);
     box-shadow: var(--glass-shadow);
     -webkit-backdrop-filter: var(--glass-filter);
@@ -208,7 +208,7 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
    titlebar sets the type of its own reference slots below. */
 .orchestra-sidebar,
 .orchestra-profile-menu {
-  font-size: 16px;
+  font-size: var(--orchestra-font-size-xl);
   font-weight: 400;
   line-height: normal;
 }
@@ -223,7 +223,7 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   padding-block: 14px 13px;
   padding-inline: 10px;
   border: 1px solid var(--glass-border);
-  border-radius: 9px;
+  border-radius: var(--orchestra-radius-lg);
   background: var(--glass-background);
   box-shadow: var(--glass-shadow);
   -webkit-backdrop-filter: var(--glass-filter);
@@ -248,7 +248,7 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
 
 .orchestra-brand-descriptor {
   color: var(--v2-text-text-faint);
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
   line-height: 14px;
   letter-spacing: 0.01em;
 }
@@ -257,6 +257,10 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   min-block-size: 0;
   flex: 1;
   overflow-y: auto;
+  /* Content scrolling under the profile card fades out instead of being cut; the end padding lets
+     the last row scroll clear of the fade. */
+  padding-block-end: 16px;
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent);
   scrollbar-width: thin;
   scrollbar-color: var(--glass-border) transparent;
 }
@@ -276,11 +280,11 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   padding-block: 0;
   padding-inline: 10px;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--orchestra-radius-sm);
   background: transparent;
   color: var(--orchestra-sidebar-text);
   font: inherit;
-  font-size: 12.5px;
+  font-size: var(--orchestra-font-size-md);
   text-align: start;
   cursor: pointer;
 }
@@ -336,11 +340,11 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   padding-block: 1px;
   padding-inline: 5px;
   border: 1px solid var(--orchestra-sidebar-key-border);
-  border-radius: 4px;
+  border-radius: var(--orchestra-radius-xs);
   color: var(--orchestra-sidebar-key-text);
   background: var(--orchestra-sidebar-key-background);
   font-family: monospace;
-  font-size: 10px;
+  font-size: var(--orchestra-font-size-2xs);
   line-height: normal;
   white-space: nowrap;
 }
@@ -363,15 +367,13 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
 
 /* The reference's chapter marker (.mx-origin), marking screens to revisit before production. */
 :is(.orchestra-wip-chip, .orchestra-wip-mark, .orchestra-attention-chip) {
-  border: 1px solid var(--orchestra-border-muted);
-  border-radius: 6px;
+  border-radius: var(--orchestra-radius-sm);
   background: var(--orchestra-wip-background);
   color: var(--orchestra-wip-text);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 10px;
-  font-weight: 400;
+  font-size: var(--orchestra-font-size-2xs);
+  font-weight: 500;
   line-height: 16px;
-  letter-spacing: 0;
+  letter-spacing: 0.02em;
   white-space: nowrap;
 }
 
@@ -418,7 +420,7 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   padding-block: 8px;
   padding-inline: 8px;
   border: 1px solid var(--orchestra-sidebar-profile-border);
-  border-radius: 8px;
+  border-radius: var(--orchestra-radius-md);
   background: var(--orchestra-sidebar-profile-background);
   color: var(--orchestra-sidebar-profile-text);
   box-shadow: var(--orchestra-sidebar-profile-shadow);
@@ -439,8 +441,8 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
 .orchestra-profile-avatar [data-slot="project-avatar-surface"] {
   inline-size: 100%;
   block-size: 100%;
-  border-radius: 6px;
-  font-size: 12px;
+  border-radius: var(--orchestra-radius-sm);
+  font-size: var(--orchestra-font-size-sm);
   font-weight: 650;
 }
 
@@ -465,21 +467,21 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
 }
 
 .orchestra-profile-text strong {
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   font-weight: 600;
   line-height: normal;
 }
 
 .orchestra-profile-text small {
   color: var(--orchestra-sidebar-profile-muted);
-  font-size: 10px;
+  font-size: var(--orchestra-font-size-2xs);
   line-height: normal;
 }
 
 .orchestra-profile-chevron {
   flex-shrink: 0;
   color: var(--orchestra-sidebar-profile-chevron);
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
   line-height: normal;
 }
 
@@ -487,7 +489,7 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   margin-block: 1px 0;
   margin-inline: 10px;
   color: var(--orchestra-sidebar-footer);
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
   line-height: 15px;
   white-space: pre-line;
 }
@@ -501,7 +503,7 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   padding-block: 6px;
   padding-inline: 6px;
   border: 1px solid var(--glass-border);
-  border-radius: 9px;
+  border-radius: var(--orchestra-radius-lg);
   background: var(--v2-background-bg-layer-01);
   color: var(--v2-text-text-base);
   box-shadow: var(--v2-elevation-floating);
@@ -511,7 +513,7 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   padding-block: 7px 3px;
   padding-inline: 9px;
   color: var(--v2-text-text-faint);
-  font-size: 10px;
+  font-size: var(--orchestra-font-size-2xs);
 }
 
 .orchestra-profile-item {
@@ -521,8 +523,8 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   gap: 9px;
   padding-block: 6px;
   padding-inline: 9px;
-  border-radius: 6px;
-  font-size: 12.5px;
+  border-radius: var(--orchestra-radius-sm);
+  font-size: var(--orchestra-font-size-md);
   cursor: pointer;
 }
 
@@ -553,14 +555,14 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   padding-block: 9px;
   padding-inline: 9px;
   color: var(--v2-text-text-faint);
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
 }
 
 .orchestra-chapter-label {
   margin-block: 0 12px;
   margin-inline: 0;
   color: var(--v2-text-text-muted);
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
 }
 
 .orchestra-sr-only {
@@ -624,7 +626,7 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
 }
 
 .orchestra-shell > [data-slot="titlebar-v2"] [data-slot="orchestra-titlebar-breadcrumb"] {
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   font-weight: 400;
   line-height: normal;
 }
@@ -722,7 +724,7 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   inset-inline-start: 0;
   inset-block: 4px;
   inline-size: 2px;
-  border-radius: 1px;
+  border-radius: var(--orchestra-radius-xs);
   background: var(--orchestra-sidebar-active-icon);
 }
 
@@ -766,4 +768,23 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
 [data-navigation="compact"] .orchestra-profile-avatar[data-component="project-avatar-v2"] {
   inline-size: 30px;
   block-size: 30px;
+}
+
+/* The palette's search field is the float glass itself, divided from the results by one hairline, not a
+   filled box inside the box. */
+body[data-new-layout] .command-palette-v2-search {
+  padding: 4px 6px;
+  border-block-end: 1px solid var(--orchestra-border-muted);
+}
+
+body[data-new-layout] .command-palette-v2-search [data-component="text-input-v2"],
+body[data-new-layout]
+  .command-palette-v2-search
+  [data-component="text-input-v2"]:where(:hover, :focus-within):not([data-disabled], [data-invalid]) {
+  height: 44px;
+  background: transparent;
+}
+
+body[data-new-layout] .command-palette-v2-search [data-component="text-input-v2"] [data-slot="text-input-v2-input"] {
+  font-size: var(--orchestra-font-size-lg);
 }

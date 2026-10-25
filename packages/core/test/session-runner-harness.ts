@@ -74,6 +74,8 @@ export function make(input: {
   config?: Layer.Layer<Config.Service>
   /** Further node replacements, applied to the runner and to the application graph. */
   replacements?: LayerNode.Replacements
+  /** Real tool nodes (and what they need) added to the application graph, for a test that runs one end to end. */
+  nodes?: ReadonlyArray<LayerNode.Node<unknown, unknown, any>>
   /** The Location's directory; default `/project`, which does not exist on disk. Sessions must be set up there too. */
   directory?: string
 }) {
@@ -137,6 +139,7 @@ export function make(input: {
         node,
         SessionExecution.node,
         SessionV2.node,
+        ...(input.nodes ?? []),
       ]),
       [
         [LayerNodePlatform.llmClient, input.client],

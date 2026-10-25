@@ -41,6 +41,12 @@ export function cut(data: string, index: number) {
   return high >= 0xd800 && high <= 0xdbff && low >= 0xdc00 && low <= 0xdfff ? index - 1 : index
 }
 
+// The ring is cut at an arbitrary character, so its first line may begin inside an escape sequence; drop it.
+export function afterFirstLine(buffer: string) {
+  const newline = buffer.indexOf("\n")
+  return newline >= 0 && newline < 4096 ? buffer.slice(newline + 1) : buffer
+}
+
 // Inbound client frames are UTF-8 text or binary; invalid UTF-8 input is dropped.
 export function decodeInput(message: string | Uint8Array | ArrayBuffer) {
   if (typeof message === "string") return message

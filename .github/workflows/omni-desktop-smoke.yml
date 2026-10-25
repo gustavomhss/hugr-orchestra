@@ -1,16 +1,10 @@
 name: omni-desktop-smoke
 
 # Extension: original allTrees3 plus actual Electron main/utility kill and app.quit cells.
-# Only this closeout child PR triggers hosted unsigned --dir packaging. No publishing/signing claims.
+# Hosted unsigned --dir packaging, by hand only (the omni-closeout pull_request trigger was removed: that base branch no
+# longer exists). No publishing/signing claims.
 on:
   workflow_dispatch:
-  pull_request:
-    branches: [omni-closeout]
-    paths:
-      - "apps/desktop/test/omni-smoke/**"
-      - "apps/desktop/src/main/omni-smoke.ts"
-      - "apps/desktop/src/main/server.ts"
-      - ".github/workflows/omni-desktop-smoke.yml"
 
 concurrency:
   group: omni-desktop-smoke-${{ github.event.pull_request.number || github.ref }}

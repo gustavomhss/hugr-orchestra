@@ -35,10 +35,7 @@ export function ClaudeModeSection() {
   // Sign-in failures arrive as `{ name, data: { message } }`; the message is Claude Code's own stderr.
   const failed = (error: unknown) =>
     language.t("orchestra.providers.claudeMode.failed", {
-      message: errorMessage(
-        error && typeof error === "object" && "data" in error ? error.data : error,
-        language.t("common.requestFailed"),
-      ),
+      message: errorMessage(error, language.t("common.requestFailed")),
     })
 
   const refresh = async () => {

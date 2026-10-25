@@ -87,6 +87,10 @@ export const make = Effect.gen(function* () {
           const prompt = pending.map((message) => message.text).join("\n\n").trim()
           if (!prompt) return Stream.make(LLMEvent.stepStart({ index: 0 }), LLMEvent.stepFinish({ index: 0, reason: "stop" }))
           const abort = new AbortController()
+          // `handed`: Claude Code took the prompt from its input. Its transcript then holds the prompt, so a turn that
+          // stops or breaks before its result must not send it again. Only a result that answered nothing (signed out,
+          // billing) leaves the prompt to be sent again.
+          const progress = { handed: false, answered: false, resulted: false }
           const served = turn.tools.filter((tool) => !UNSERVED.has(tool.name))
           // Claude Code's tool_use id for an Orchestra tool, learned at the gate; the MCP request does not carry it.
           const callIDs = new Map<string, string[]>()
@@ -206,7 +210,10 @@ export const make = Effect.gen(function* () {
             env: ClaudeHostOptions.environment(env),
             abortController: abort,
           })
-          const channel = inbox(user(prompt, sent), abort.signal)
+          // The SDK asks for the next input message only after it wrote the previous one to Claude Code.
+          const channel = inbox(user(prompt, sent), abort.signal, (uuid) => {
+            if (uuid === sent) progress.handed = true
+          })
           // Background work Claude Code still has running when the turn's result arrives keeps the process up.
           const live = { background: 0, keep: false }
           const query = yield* Effect.acquireRelease(
@@ -222,13 +229,27 @@ export const make = Effect.gen(function* () {
                   if (tails.get(turn.session.id) === entry) tails.delete(turn.session.id)
                 })())
               const entry = { close }
-              if (!live.keep) return Effect.promise(close)
+              // A taken prompt that was answered, or whose turn ended without a result, is in Claude Code's transcript.
+              const settle = Effect.suspend(() =>
+                progress.handed && (progress.answered || !progress.resulted)
+                  ? turn.state.update((value) => {
+                      const record = ClaudeCodeTranscript.record(value) ? value : {}
+                      const prior = Array.isArray(record.delivered) ? record.delivered : []
+                      return { ...record, delivered: [...new Set([...prior, ...pending.map((item) => item.id), ...consumed])] }
+                    })
+                  : Effect.void,
+              )
+              if (!live.keep) return Effect.promise(close).pipe(Effect.andThen(settle))
               tails.set(turn.session.id, entry)
-              return follow(opened[Symbol.asyncIterator](), live, turn).pipe(
-                Effect.timeout(BACKGROUND_PATIENCE),
-                Effect.ignore,
-                Effect.andThen(Effect.promise(close)),
-                Effect.forkDetach,
+              return settle.pipe(
+                Effect.andThen(
+                  follow(opened[Symbol.asyncIterator](), live, turn).pipe(
+                    Effect.timeout(BACKGROUND_PATIENCE),
+                    Effect.ignore,
+                    Effect.andThen(Effect.promise(close)),
+                    Effect.forkDetach,
+                  ),
+                ),
                 Effect.asVoid,
               )
             },
@@ -253,6 +274,9 @@ export const make = Effect.gen(function* () {
             Stream.takeUntil((message) => message.type === "result"),
             Stream.mapEffect((message) =>
               Effect.gen(function* () {
+                if (message.type === "assistant" && message.parent_tool_use_id === null && !message.error)
+                  progress.answered = true
+                if (message.type === "result") progress.resulted = true
                 if (message.type === "system" && message.subtype === "init")
                   yield* turn.state.update((value) => ({ ...(ClaudeCodeTranscript.record(value) ? value : {}), sessionId: message.session_id }))
                 if (message.type === "system" && message.subtype === "background_tasks_changed")
@@ -456,7 +480,7 @@ function user(text: string, uuid: SDKUserMessage["uuid"]): SDKUserMessage {
 }
 
 /** The query's streaming input: the turn's prompt first, then whatever is pushed while it runs, until aborted. */
-function inbox(first: SDKUserMessage, signal: AbortSignal) {
+function inbox(first: SDKUserMessage, signal: AbortSignal, handed: (uuid: SDKUserMessage["uuid"]) => void) {
   const queue = [first]
   let wake: (() => void) | undefined
   return {
@@ -469,6 +493,7 @@ function inbox(first: SDKUserMessage, signal: AbortSignal) {
         const next = queue.shift()
         if (next) {
           yield next
+          handed(next.uuid)
           continue
         }
         await new Promise<void>((resolve) => {
@@ -513,13 +538,14 @@ function replacements(tool: string, authorization: ExecutionHost.Authorization |
   return Object.keys(changed).length ? changed : undefined
 }
 
-function permission(tool: string, input: Record<string, unknown>, directory: string) {
+export function permission(tool: string, input: Record<string, unknown>, directory: string) {
   const rule = PERMISSIONS[tool]
   const value = rule ? input[rule.field] : undefined
   if (!rule || typeof value !== "string") return { action: tool.toLowerCase(), resources: ["*"] }
   if (!rule.path || !path.isAbsolute(value)) return { action: rule.action, resources: [value] }
   const relative = path.relative(directory, value)
-  return { action: rule.action, resources: [relative.startsWith("..") || path.isAbsolute(relative) ? value : relative] }
+  const outside = relative === ".." || relative.startsWith(".." + path.sep) || path.isAbsolute(relative)
+  return { action: rule.action, resources: [outside ? value : relative] }
 }
 
 function denial(error: { readonly _tag: string }) {

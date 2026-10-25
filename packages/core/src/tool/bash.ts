@@ -10,6 +10,7 @@ import { FSUtil } from "../fs-util"
 import { LocationMutation } from "../location-mutation"
 import { Location } from "../location"
 import { AppProcess } from "../process"
+import { Project } from "../project"
 import { SessionProcess } from "../session-process"
 import { PermissionV2 } from "../permission"
 import { PositiveInt } from "../schema"
@@ -21,6 +22,8 @@ import { ToolSafety } from "../tool-safety"
 import { ToolSafetySandbox } from "../tool-safety-sandbox"
 import { ToolSafetyGit } from "../tool-safety-git"
 import { OutputInspector } from "../output-inspector"
+import { Pty } from "../pty"
+import { AgentTerminal } from "./agent-terminal"
 
 export const name = "bash"
 export const DEFAULT_TIMEOUT_MS = 2 * 60 * 1_000
@@ -119,6 +122,7 @@ const layer = Layer.effectDiscard(
     const fs = yield* FSUtil.Service
     const appProcess = yield* AppProcess.Service
     const sessionProcess = yield* Effect.serviceOption(SessionProcess.Service)
+    const pty = yield* Pty.Service
     const config = yield* Config.Service
     const permission = yield* PermissionV2.Service
     const location = yield* Location.Service
@@ -129,7 +133,7 @@ const layer = Layer.effectDiscard(
           description: `Run a command in a fresh, non-interactive process, with the configured shell or else \`/bin/sh\` (\`cmd.exe\` on Windows).
 
 - \`cd\`, variables and other shell state do not carry over between calls. Commands run in the working directory; to run one elsewhere, set \`workdir\` rather than starting with \`cd\`. A \`workdir\` outside the working directory asks the owner first.
-- Stdin is empty and there is no terminal, so nothing can answer a prompt or an editor: pass flags that skip them, such as \`-m\` for \`git commit\`. Credential-like variables such as \`GH_TOKEN\` and the SSH agent are removed.
+- ${AgentTerminal.stdinNote()} Credential-like variables such as \`GH_TOKEN\` and the SSH agent are removed.
 - Read files and edit their contents with the file tools rather than shell commands.
 - \`timeout\` is in milliseconds: ${DEFAULT_TIMEOUT_MS} by default, ${MAX_TIMEOUT_MS} at most.
 
@@ -208,28 +212,9 @@ const layer = Layer.effectDiscard(
                     sandbox: { ...project?.sandbox, enabled: true, scratch: true, unconfinedFallback: false },
                   } satisfies ToolSafety.Profile
                 : project
-              if (input.background) {
-                // Background processes launch outside ToolSafetySandbox.wrap, so a profile that confines shells refuses them.
-                if (profile?.requireSandbox || profile?.sandbox?.enabled || profile?.sandbox?.readRoots)
-                  return yield* new ToolSafety.Denied({ reason: "background-process-sandbox-unbound" })
-                if (Option.isNone(sessionProcess))
-                  return yield* Effect.fail(new Error("Session process registry is unavailable"))
-                const shell = configuredShell(yield* config.entries())
-                const launched = yield* sessionProcess.value.launch({
-                  sessionID: context.sessionID,
-                  command: input.command,
-                  title: input.command,
-                  cwd: target.canonical,
-                  shell,
-                })
-                return {
-                  output: `Started background process ${launched.processID}.`,
-                  truncated: false,
-                  processID: launched.processID,
-                  ...(warnings.length ? { warnings } : {}),
-                }
-              }
-
+              // A background process outlives the call, so a profile that confines shells refuses it.
+              if (input.background && (profile?.requireSandbox || profile?.sandbox?.enabled || profile?.sandbox?.readRoots))
+                return yield* new ToolSafety.Denied({ reason: "background-process-sandbox-unbound" })
               const shell = configuredShell(yield* config.entries())
               const command = ChildProcess.make(input.command, [], {
                 cwd: target.canonical,
@@ -240,16 +225,60 @@ const layer = Layer.effectDiscard(
               })
               const timeout = input.timeout ?? DEFAULT_TIMEOUT_MS
               yield* ToolSafetyGit.before({ command: input.command, directory: location.directory,
-                projectDirectory: location.project.directory === "/" ? location.directory : location.project.directory,
+                projectDirectory: Project.isRoot(location.project.directory) ? location.directory : location.project.directory,
                 cwd: target.canonical, env: ToolSafetySandbox.environment(), managedPaths: profile?.managedPaths,
                 neverTouch: profile?.neverTouch,
               }).pipe(Effect.provideService(FSUtil.Service, fs), Effect.provideService(AppProcess.Service, appProcess))
+
+              if (input.background) {
+                if (Option.isNone(sessionProcess))
+                  return yield* Effect.fail(new Error("Session process registry is unavailable"))
+                // The same confinement and environment scrub as a foreground call, kept open for the process's life.
+                const launched = yield* sessionProcess.value.launch({
+                  sessionID: context.sessionID,
+                  command,
+                  title: input.command,
+                  prepare: (command) =>
+                    ToolSafetySandbox.wrap(command, { prepareParents: true }).pipe(
+                      Effect.provideService(FSUtil.Service, fs),
+                      Effect.provideService(ToolSafety.RuntimeProfile, profile),
+                    ),
+                })
+                return {
+                  output: `Started background process ${launched.processID}.`,
+                  truncated: false,
+                  processID: launched.processID,
+                  ...(warnings.length ? { warnings } : {}),
+                }
+              }
+
               const result = yield* Effect.scoped(Effect.gen(function* () {
                 const inspector = OutputInspector.make()
                 const wrapped = yield* ToolSafetySandbox.wrap(command, { prepareParents: true }).pipe(
                   Effect.provideService(FSUtil.Service, fs),
                   Effect.provideService(ToolSafety.RuntimeProfile, profile),
                 )
+                // Same confinement and inspection, but the command runs in a terminal tab the owner can see and answer.
+                if (wrapped._tag === "StandardCommand" && AgentTerminal.enabled(wrapped)) {
+                  const ran = yield* AgentTerminal.run(pty, {
+                    command: wrapped,
+                    title: input.command,
+                    timeout,
+                    maxChars: MAX_CAPTURE_BYTES,
+                  })
+                  if (!ran) return undefined
+                  const output = Buffer.from(ran.output)
+                  return {
+                    command: input.command,
+                    exitCode: ran.exitCode,
+                    output,
+                    stdout: output,
+                    stderr: Buffer.alloc(0),
+                    outputTruncated: ran.truncated,
+                    stdoutTruncated: ran.truncated,
+                    stderrTruncated: false,
+                  } satisfies AppProcess.RunResult
+                }
                 const captured = yield* appProcess.run(wrapped, {
                   combineOutput: true,
                   timeout: Duration.millis(timeout),
@@ -301,5 +330,5 @@ const layer = Layer.effectDiscard(
 export const node = makeLocationNode({
   name: "tool/bash",
   layer,
-  deps: [ToolRegistry.node, LocationMutation.node, Location.node, FSUtil.node, AppProcess.node, Config.node, PermissionV2.node],
+  deps: [ToolRegistry.node, LocationMutation.node, Location.node, FSUtil.node, AppProcess.node, Config.node, PermissionV2.node, Pty.node],
 })

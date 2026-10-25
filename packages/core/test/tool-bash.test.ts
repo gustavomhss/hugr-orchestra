@@ -12,10 +12,13 @@ import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Location } from "@orchestra/core/location"
 import { LocationMutation } from "@orchestra/core/location-mutation"
+import { Pty } from "@orchestra/core/pty"
+import { EventV2 } from "@orchestra/core/event"
 import { PermissionV2 } from "@orchestra/core/permission"
 import { AppProcess } from "@orchestra/core/process"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { SessionV2 } from "@orchestra/core/session"
+import { SessionProcess } from "@orchestra/core/session-process"
 import { BashTool } from "@orchestra/core/tool/bash"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { ToolOutputStore } from "@orchestra/core/tool-output-store"
@@ -107,6 +110,7 @@ const withTool = <A, E, R>(
   directory: string,
   body: (registry: ToolRegistry.Interface) => Effect.Effect<A, E, R>,
   processLayer: Layer.Layer<AppProcess.Service> = appProcess,
+  ptyLayer?: Layer.Layer<Pty.Service>,
 ) => {
   const activeLocation = Layer.succeed(
     Location.Service,
@@ -125,6 +129,7 @@ const withTool = <A, E, R>(
           [AppProcess.node, processLayer],
           [Config.node, config],
           [ToolOutputStore.node, ToolOutputStore.nodeWithoutConfig],
+          ...(ptyLayer ? [[Pty.node, ptyLayer] as const] : []),
         ],
       ),
     ),
@@ -136,6 +141,21 @@ const call = (input: typeof BashTool.Input.Type, id = "call-bash") => ({
   ...toolIdentity,
   call: { type: "tool-call" as const, id, name: "bash", input },
 })
+
+// Records launches instead of spawning; the bash tool hands the registry its command and confinement.
+const backgroundProcesses = (launches: SessionProcess.LaunchInput[]) =>
+  SessionProcess.Service.of({
+    launch: (input) =>
+      Effect.sync(() => {
+        launches.push(input)
+        return { id: "job_test", processID: "job_test", pid: 1, title: input.title ?? "", started: 0, processes: [], output: "", written: 0 }
+      }),
+    list: () => Effect.succeed([]),
+    get: () => Effect.succeed(undefined),
+    wait: () => Effect.succeed({ timedOut: false }),
+    cancel: () => Effect.succeed(false),
+    stopSession: () => Effect.void,
+  })
 
 const it = testEffect(Layer.empty)
 
@@ -265,6 +285,136 @@ describe("BashTool", () => {
       ),
     )
   }
+
+  // The agent terminal is off on Windows (AgentTerminal.enabled), so these run on posix only.
+  ;(process.platform === "win32" ? it.live.skip : it.live)("runs a foreground command in the agent terminal only when the flag is on", () =>
+    Effect.acquireUseRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => {
+        reset()
+        const created: Array<{ command?: string; env?: Record<string, string>; title?: string }> = []
+        const fakePty = Pty.Service.of({
+          create: (input: Pty.CreateInput, options?: Pty.CreateOptions) =>
+            Effect.sync(() => {
+              created.push(input)
+              queueMicrotask(() => {
+                options?.observe?.onData("\x1b[1mfrom pty\x1b[0m\r\n")
+                options?.observe?.onExit(4)
+              })
+              return { id: "pty_test", title: input.title ?? "", command: "", args: [], cwd: "", status: "running", pid: 1 }
+            }),
+          remove: () => Effect.void,
+        } as unknown as Pty.Interface)
+        const previous = process.env.ORCHESTRA_AGENT_TERMINAL
+        const exec = () =>
+          withTool(tmp.path, (registry) => settleTool(registry, call({ command: "echo hi" })), appProcess, Layer.succeed(Pty.Service, fakePty))
+        return Effect.gen(function* () {
+          delete process.env.ORCHESTRA_AGENT_TERMINAL
+          yield* exec()
+          expect(created).toEqual([])
+          expect(runs).toHaveLength(1)
+
+          process.env.ORCHESTRA_AGENT_TERMINAL = "1"
+          const settled = yield* exec()
+          expect(runs).toHaveLength(1)
+          expect(created).toHaveLength(1)
+          expect(created[0]?.title).toBe("agent: echo hi")
+          expect(JSON.stringify(settled)).toContain("from pty")
+          expect(JSON.stringify(settled)).not.toContain("\\u001b")
+          expect(JSON.stringify(settled)).toContain("code 4")
+        }).pipe(
+          Effect.ensuring(
+            Effect.sync(() => {
+              if (previous === undefined) delete process.env.ORCHESTRA_AGENT_TERMINAL
+              else process.env.ORCHESTRA_AGENT_TERMINAL = previous
+            }),
+          ),
+        )
+      },
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ),
+  )
+
+  ;(process.platform === "win32" ? it.live.skip : it.live)("a real foreground call under the flag runs in a retained, titled tab and returns clean output", () =>
+    Effect.acquireUseRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => {
+        reset()
+        const previous = process.env.ORCHESTRA_AGENT_TERMINAL
+        process.env.ORCHESTRA_AGENT_TERMINAL = "1"
+        const activeLocation = Layer.succeed(
+          Location.Service,
+          Location.Service.of(location({ directory: AbsolutePath.make(tmp.path) })),
+        )
+        return Effect.gen(function* () {
+          const registry = yield* ToolRegistry.Service
+          const pty = yield* Pty.Service
+          const settled = yield* settleTool(registry, call({ command: "printf '\\033[31mhello\\033[0m\\n'; exit 5" }))
+          expect(runs).toHaveLength(0)
+          expect(JSON.stringify(settled)).toContain("hello")
+          expect(JSON.stringify(settled)).not.toContain("\\u001b")
+          expect(JSON.stringify(settled)).toContain("code 5")
+          const tab = (yield* pty.list()).find((info) => info.title.startsWith("agent: printf"))
+          expect(tab).toMatchObject({ status: "exited", exitCode: 5, cwd: realpathSync(tmp.path) })
+        }).pipe(
+          Effect.provide(
+            AppNodeBuilder.build(
+              LayerNode.group([ToolRegistry.node, ToolRegistry.toolsNode, LocationMutation.node, BashTool.node, Pty.node, EventV2.node]),
+              [
+                [Location.node, activeLocation],
+                [PermissionV2.node, permission],
+                [AppProcess.node, appProcess],
+                [Config.node, config],
+                [ToolOutputStore.node, ToolOutputStore.nodeWithoutConfig],
+              ],
+            ),
+          ),
+          Effect.ensuring(
+            Effect.sync(() => {
+              if (previous === undefined) delete process.env.ORCHESTRA_AGENT_TERMINAL
+              else process.env.ORCHESTRA_AGENT_TERMINAL = previous
+            }),
+          ),
+        )
+      },
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ),
+  )
+
+  it.live("launches a background command with the scrubbed environment", () =>
+    Effect.acquireUseRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => {
+        reset()
+        const launches: SessionProcess.LaunchInput[] = []
+        const previous = process.env.GH_TOKEN
+        process.env.GH_TOKEN = "ghp_background_test_token"
+        return withTool(tmp.path, (registry) => settleTool(registry, call({ command: "env", background: true }))).pipe(
+          Effect.provideService(SessionProcess.Service, backgroundProcesses(launches)),
+          Effect.andThen((settled) =>
+            Effect.gen(function* () {
+              expect(settled.output?.structured).toMatchObject({ truncated: false })
+              expect(launches).toHaveLength(1)
+              const launched = launches[0]!
+              expect(launched.prepare).toBeDefined()
+              if (typeof launched.command === "string") throw new Error("expected a built command")
+              const spawned = yield* Effect.scoped(launched.prepare!(launched.command))
+              if (spawned._tag !== "StandardCommand") throw new Error("expected standard command")
+              expect(spawned.options.extendEnv).toBe(false)
+              expect(spawned.options.env).not.toHaveProperty("GH_TOKEN")
+            }),
+          ),
+          Effect.ensuring(
+            Effect.sync(() => {
+              if (previous === undefined) delete process.env.GH_TOKEN
+              if (previous !== undefined) process.env.GH_TOKEN = previous
+            }),
+          ),
+        )
+      },
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ),
+  )
 
   it.live("approves an explicit external workdir before bash execution", () =>
     Effect.acquireUseRelease(

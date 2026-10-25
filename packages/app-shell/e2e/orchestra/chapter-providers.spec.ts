@@ -9,43 +9,12 @@ type Call = { method: string; path: string; body: unknown }
 type Mock = {
   calls: Call[]
   failProviders?: boolean
-  failModelWrite?: boolean
   auto?: "pending" | "failed" | "complete"
   fillers?: number
   engine?: string
   claude?: { signedIn: boolean; loginError?: string }
 }
 
-const v1Model = (providerID: string, id: string) => ({
-  id,
-  providerID,
-  name: id.toUpperCase(),
-  api: { id, url: "", npm: providerID },
-  capabilities: {
-    temperature: false,
-    reasoning: false,
-    attachment: false,
-    toolcall: true,
-    input: { text: true, audio: false, image: false, video: false, pdf: false },
-    output: { text: true, audio: false, image: false, video: false, pdf: false },
-    interleaved: false,
-  },
-  cost: { input: 1, output: 1, cache: { read: 0, write: 0 } },
-  limit: { context: 200_000, output: 8_000 },
-  status: "active",
-  options: {},
-  headers: {},
-  release_date: "2026-09-01",
-  variants: {},
-})
-const v1Provider = (id: string, name: string, source: string, models: string[]) => ({
-  id,
-  name,
-  source,
-  env: [],
-  options: {},
-  models: Object.fromEntries(models.map((model) => [model, v1Model(id, model)])),
-})
 const v2Model = (providerID: string, id: string) => ({
   id,
   providerID,
@@ -100,142 +69,9 @@ const openai = {
 }
 const openrouter = { id: "openrouter", name: "OpenRouter", methods: [{ type: "key" }], connections: [] }
 
-test("v1: cards, route scope and revert, confirmed disconnects, enable and custom endpoint", async ({ page }) => {
-  const mock: Mock = { calls: [] }
-  await setup(page, "v1", mock)
-  await openProviders(page)
-  const chapter = page.locator('[data-chapter="providers"]')
-  const cards = chapter.locator(".mx-card")
-  await expect(cards).toHaveCount(5)
-  await expect(chapter.locator(".mx-eyebrow")).toHaveText("Providers project / profile configuration")
-  await expect(chapter.locator(".mx-toolbar .mx-badge")).toHaveText("Providers project")
-
-  const anthropic = chapter.locator('.mx-card[data-provider-id="anthropic"]')
-  await expect(anthropic.locator(".mx-badge")).toHaveText(["Connected", "API key"])
-  await expect(anthropic.locator(".mx-badge.good")).toHaveText("Connected")
-  await expect(anthropic.locator("p")).toHaveText("Direct access to Claude models, including Pro and Max")
-  const env = chapter.locator('.mx-card[data-provider-id="mistral"]')
-  await expect(env.locator(".mx-badge")).toHaveText(["Connected", "Environment"])
-  await expect(env.getByRole("button", { name: "Disconnect" })).toBeDisabled()
-  const local = chapter.locator('.mx-card[data-provider-id="local"]')
-  await expect(local.locator(".mx-badge")).toHaveText(["Disconnected", "Custom"])
-  await expect(local.locator(".mx-badge.bad")).toHaveText("Disconnected")
-  await expect(local.locator("p")).toHaveText("OpenAI-compatible provider")
-
-  const route = chapter.getByRole("combobox", { name: "Route for new turns" })
-  await expect(route).toHaveValue("anthropic")
-  await expect(route).toHaveAccessibleDescription(
-    "Saved in this server's config, so it applies to every profile on this server.",
-  )
-  await expect(route.locator("option")).toHaveText([
-    "Choose a connected provider",
-    "OpenCode Zen",
-    "Anthropic",
-    "Mistral",
-    "LM Studio",
-  ])
-  mock.failModelWrite = true
-  await route.selectOption("opencode")
-  await expect(page.getByText("Request failed", { exact: true })).toBeVisible()
-  await expect(route).toHaveValue("anthropic")
-  await expect(route).toBeEnabled()
-  mock.failModelWrite = false
-  await route.selectOption("opencode")
-  await expect.poll(() => patches(mock).at(-1)).toEqual({ model: "opencode/big-pickle" })
-
-  const popular = chapter.locator("[data-providers-popular] .mx-row")
-  await expect(popular.locator("strong")).toHaveText(["OpenAI", "OpenRouter"])
-  const search = chapter.getByRole("textbox", { name: "Search Providers" })
-  await search.fill("  router ")
-  await expect(cards).toHaveCount(0)
-  await expect(chapter.getByRole("status")).toHaveText("No providers match your search.")
-  await expect(popular.locator("strong")).toHaveText(["OpenRouter"])
-  await search.fill("")
-  await expect(cards).toHaveCount(5)
-
-  // Connect opens the app's one connect dialog, straight on the provider.
-  await popular.filter({ hasText: "OpenRouter" }).getByRole("button", { name: "Connect" }).click()
-  const connect = page.locator('[data-component="dialog-v2"]')
-  await expect(connect.getByText("Connect OpenRouter", { exact: true })).toBeVisible()
-  const submit = connect.locator('[data-action="provider-connect-submit"]')
-  await submit.click()
-  await expect(connect.getByRole("alert")).toHaveText("API key is required")
-  expect(mock.calls.filter((call) => call.path.startsWith("/auth/"))).toHaveLength(0)
-  await connect.getByLabel("OpenRouter API key", { exact: true }).fill(secret)
-  await submit.click()
-  await expect(connect).toHaveCount(0)
-  expect(mock.calls.find((call) => call.method === "PUT" && call.path === "/auth/openrouter")?.body).toEqual({
-    type: "api",
-    key: secret,
-  })
-  await expect(page.getByText("API key saved for OpenRouter", { exact: true })).toBeVisible()
-  await expectSecretGone(page)
-
-  const dialog = page.locator(".providers-dialog")
-  await anthropic.getByRole("button", { name: "Disconnect" }).click()
-  await expect(dialog.getByRole("heading", { name: "Disconnect Anthropic?" })).toBeVisible()
-  await expect(dialog.getByText("This removes the stored key or sign-in for Anthropic.")).toBeVisible()
-  await dialog.getByRole("button", { name: "Cancel" }).click()
-  await expect(dialog).toHaveCount(0)
-  expect(mock.calls.some((call) => call.method === "DELETE")).toBe(false)
-  await anthropic.getByRole("button", { name: "Disconnect" }).click()
-  await dialog.getByRole("button", { name: "Disconnect" }).click()
-  await expect(dialog).toHaveCount(0)
-  await expect(page.getByText("Anthropic disconnected", { exact: true })).toBeVisible()
-  expect(mock.calls.some((call) => call.method === "DELETE" && call.path === "/auth/anthropic")).toBe(true)
-  expect(mock.calls.some((call) => call.method === "POST" && call.path === "/global/dispose")).toBe(true)
-
-  const lmstudio = chapter.locator('.mx-card[data-provider-id="lmstudio"]')
-  await expect(lmstudio.locator(".mx-badge")).toHaveText(["Connected", "Custom"])
-  await lmstudio.getByRole("button", { name: "Disconnect" }).click()
-  await dialog.getByRole("button", { name: "Disconnect" }).click()
-  await expect(dialog).toHaveCount(0)
-  expect(mock.calls.some((call) => call.method === "DELETE" && call.path === "/auth/lmstudio")).toBe(true)
-  expect(patches(mock).at(-1)).toEqual({ disabled_providers: ["local", "lmstudio"] })
-
-  await local.getByRole("button", { name: "Connect" }).click()
-  await expect.poll(() => patches(mock).at(-1)).toEqual({ disabled_providers: [] })
-
-  await chapter.locator('.mx-card[data-provider-id="opencode"]').getByRole("button", { name: "Models" }).click()
-  await expect(page.getByRole("tab", { name: "Models" })).toHaveAttribute("aria-selected", "true")
-  await page.keyboard.press("Escape")
-  await expect(page.getByRole("tab", { name: "Models" })).toHaveCount(0)
-
-  // Connect provider opens the same dialog on its picker: Claude mode leads, then the custom form and popular providers.
-  await chapter.getByRole("button", { name: "Connect provider" }).click()
-  await expect(connect.getByText("Connect provider", { exact: true })).toBeVisible()
-  await expect(connect.locator("[data-provider-id]").first()).toHaveAttribute("data-provider-id", "_claude-mode")
-  await connect.locator('[data-provider-id="_custom"]').click()
-  await expect(connect.getByText("Custom provider", { exact: true })).toBeVisible()
-  await connect.getByLabel("Provider ID", { exact: true }).fill("anthropic")
-  await connect.getByLabel("Display name", { exact: true }).fill("My LLM")
-  await connect.getByLabel("Base URL", { exact: true }).fill("ftp://nope")
-  await connect.getByPlaceholder("model-id", { exact: true }).fill("qwen")
-  await connect.getByPlaceholder("Display Name", { exact: true }).fill("qwen")
-  await connect.getByRole("button", { name: "Submit" }).click()
-  await expect(connect.getByText("That provider ID already exists", { exact: true })).toBeVisible()
-  await expect(connect.getByText("Must start with http:// or https://", { exact: true })).toBeVisible()
-  await connect.getByLabel("Provider ID", { exact: true }).fill("my-llm")
-  await connect.getByLabel("Base URL", { exact: true }).fill("http://localhost:8080/v1")
-  await connect.getByRole("button", { name: "Submit" }).click()
-  await expect(connect).toHaveCount(0)
-  expect(patches(mock).at(-1)).toEqual({
-    provider: {
-      "my-llm": {
-        npm: "@ai-sdk/openai-compatible",
-        name: "My LLM",
-        options: { baseURL: "http://localhost:8080/v1" },
-        models: { qwen: { name: "qwen" } },
-      },
-    },
-    disabled_providers: ["local"],
-  })
-  await page.screenshot({ path: test.info().outputPath("v1-dark.png") })
-})
-
 test("v2: error and retry, server route, confirmed credential removal, key and picker", async ({ page }) => {
   const mock: Mock = { calls: [], failProviders: true, fillers: 40 }
-  await setup(page, "v2", mock, "light")
+  await setup(page, mock, "light")
   await openProviders(page)
   const chapter = page.locator('[data-chapter="providers"]')
   await expect(chapter.getByRole("alert")).toContainText("Could not load providers for this profile.")
@@ -294,7 +130,7 @@ test("v2: error and retry, server route, confirmed credential removal, key and p
 
 test("v2: OAuth code, automatic, prompted and unsafe-link flows", async ({ page }) => {
   const mock: Mock = { calls: [], auto: "pending" }
-  await setup(page, "v2", mock)
+  await setup(page, mock)
   await openProviders(page)
   const chapter = page.locator('[data-chapter="providers"]')
   const card = chapter.locator('.mx-card[data-provider-id="openai"]')
@@ -354,16 +190,16 @@ test("v2: OAuth code, automatic, prompted and unsafe-link flows", async ({ page 
   await expect(dialog.locator("a")).toHaveCount(0)
 })
 
-test("v1: Claude mode engine write and sign-in states", async ({ page }) => {
+test("v2: Claude mode engine write and sign-in states", async ({ page }) => {
   const mock: Mock = { calls: [], claude: { signedIn: false } }
-  await setup(page, "v1", mock)
+  await setup(page, mock)
   await openProviders(page)
   const section = page.locator("[data-providers-claude-mode]")
   await expect(section.getByRole("heading", { name: "Claude mode" })).toBeVisible()
   const engine = section.getByRole("combobox", { name: "Maestro engine" })
   await expect(engine).toHaveValue("orchestra")
   await engine.selectOption("claude-code")
-  await expect.poll(() => patches(mock).at(-1)).toEqual({ agent: { maestro: { engine: "claude-code" } } })
+  await expect.poll(() => patches(mock).at(-1)).toEqual({ agents: { maestro: { engine: "claude-code" } } })
   await expect(engine).toHaveValue("claude-code")
   await expect(engine).toBeEnabled()
 
@@ -399,9 +235,9 @@ test("v1: Claude mode engine write and sign-in states", async ({ page }) => {
   await expect(section.getByRole("status")).toHaveCount(0)
 })
 
-test("v1: Claude mode shows the sign-in failure message", async ({ page }) => {
+test("v2: Claude mode shows the sign-in failure message", async ({ page }) => {
   const mock: Mock = { calls: [], claude: { signedIn: false, loginError: "Managed settings block sign-in." } }
-  await setup(page, "v1", mock)
+  await setup(page, mock)
   await openProviders(page)
   const section = page.locator("[data-providers-claude-mode]")
   await section.getByRole("button", { name: "Sign in to Claude" }).click()
@@ -418,7 +254,7 @@ function statusPolls(mock: Mock) {
 }
 
 function patches(mock: Mock) {
-  return mock.calls.filter((call) => call.method === "PATCH" && call.path === "/global/config").map((call) => call.body)
+  return mock.calls.filter((call) => call.method === "PATCH" && call.path === "/api/config").map((call) => call.body)
 }
 
 async function expectSecretGone(page: Page) {
@@ -433,7 +269,7 @@ async function openProviders(page: Page) {
   await expect(page).toHaveURL(/\/orchestra\/providers$/)
 }
 
-async function setup(page: Page, protocol: "v2", mock: Mock, scheme: "dark" | "light" = "dark") {
+async function setup(page: Page, mock: Mock, scheme: "dark" | "light" = "dark") {
   await page.setViewportSize({ width: 1440, height: 960 })
   await page.addInitScript(
     ({ server, directory, scheme }) => {
@@ -484,17 +320,18 @@ async function setup(page: Page, protocol: "v2", mock: Mock, scheme: "dark" | "l
     }
     if (path === "/global/event" || path === "/event" || path === "/api/event")
       return route.fulfill({ status: 200, contentType: "text/event-stream", body: ": ok\n\n" })
-    if (path === "/global/health") return json(route, { healthy: true }, protocol === "v1" ? 200 : 404)
+    if (path === "/global/health") return json(route, { healthy: true }, 404)
     if (path === "/api/health") return json(route, { healthy: true, version: "2", pid: 1 })
-    const stored = { ...config, ...(mock.engine ? { agent: { maestro: { engine: mock.engine } } } : {}) }
-    if (path === "/global/config" && method === "PATCH") {
+    if (path === "/api/config" && method === "PATCH") {
       const patch = JSON.parse(raw ?? "{}")
-      if (mock.failModelWrite && "model" in patch) return json(route, { message: "write refused" }, 500)
-      if (patch.agent) mock.engine = patch.agent.maestro.engine
-      return json(route, { ...stored, ...patch })
+      if (patch.agents) mock.engine = patch.agents.maestro.engine
+      return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" } })
     }
-    if (path === "/global/config") return json(route, stored)
-    if (path === "/config") return json(route, { ...stored, model: "anthropic/claude" })
+    if (path === "/api/config")
+      return json(route, {
+        disabledProviders: config.disabled_providers,
+        agents: mock.engine ? { maestro: { engine: mock.engine } } : {},
+      })
     if (path === "/api/provider/claude-code/account" && mock.claude)
       return json(
         route,
@@ -508,22 +345,6 @@ async function setup(page: Page, protocol: "v2", mock: Mock, scheme: "dark" | "l
       mock.claude.signedIn = true
       return json(route, true)
     }
-    if (path === "/provider")
-      return json(route, {
-        all: [
-          v1Provider("opencode", "OpenCode Zen", "custom", ["big-pickle"]),
-          v1Provider("anthropic", "Anthropic", "api", ["claude"]),
-          v1Provider("mistral", "Mistral", "env", ["small"]),
-          v1Provider("lmstudio", "LM Studio", "config", ["gemma"]),
-          v1Provider("openai", "OpenAI", "custom", ["gpt"]),
-          v1Provider("openrouter", "OpenRouter", "custom", ["auto"]),
-        ],
-        connected: ["opencode", "anthropic", "mistral", "lmstudio"],
-        default: { anthropic: "claude", orchestra: "big-pickle" },
-      })
-    if (path === "/provider/auth") return json(route, { openrouter: [{ type: "api", label: "API key" }] })
-    if (path.startsWith("/auth/") || path === "/global/dispose" || path === "/instance/dispose")
-      return json(route, true)
     if (path === "/api/provider") {
       if (mock.failProviders) return json(route, { message: "boom" }, 500)
       return json(route, {
@@ -539,7 +360,7 @@ async function setup(page: Page, protocol: "v2", mock: Mock, scheme: "dark" | "l
     if (path === "/api/integration/openai") return json(route, { location, data: openai })
     if (path === "/api/integration/openrouter") return json(route, { location, data: openrouter })
     if (path === "/api/integration/openrouter/connect/key")
-      return protocol === "v2" ? route.fulfill({ status: 204 }) : json(route, { name: "NotFound" }, 404)
+      return route.fulfill({ status: 204 })
     if (path === "/api/integration/openai/connect/oauth") {
       const methodID = JSON.parse(raw ?? "{}").methodID
       const time = { created: 1, expires: 9_999_999_999_999 }

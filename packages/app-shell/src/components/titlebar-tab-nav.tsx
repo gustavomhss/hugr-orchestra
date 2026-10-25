@@ -13,6 +13,7 @@ import { displayName, projectForSession } from "@/pages/layout/helpers"
 import { SessionTabAvatar } from "@/pages/layout/session-tab-avatar"
 import { ModelLogo, SessionModelLogo } from "@/orchestra/model-logo"
 import type { Session } from "@/v2-wire"
+import { sessionTitle } from "@/utils/session-title"
 
 import { canOpenTabRename, forwardTabRef } from "./titlebar-tab-gesture"
 import { TabPreviewPopover } from "./titlebar-tab-popover"
@@ -62,7 +63,7 @@ export function TabNavItem(props: {
     if (!session) return
     return projectForSession(session, serverCtx()?.projects.list() ?? [])
   })
-  const title = createMemo(() => props.session()?.title ?? props.fallbackTitle)
+  const title = createMemo(() => sessionTitle(props.session()?.title) ?? sessionTitle(props.fallbackTitle))
   const branch = createMemo(() => {
     const session = props.session()
     if (!props.workspace || !session) return
@@ -129,7 +130,7 @@ export function TabNavItem(props: {
   const closeRename = async (save: boolean) => {
     if (rename.isPending || !editing()) return
 
-    const original = props.session()?.title ?? ""
+    const original = sessionTitle(props.session()?.title) ?? ""
     const next = (titleEl.textContent ?? "").trim()
 
     titleEl.scrollLeft = 0
@@ -156,7 +157,7 @@ export function TabNavItem(props: {
     if (!canOpenTabRename(props.dragging, editing(), rename.isPending)) return
     const session = props.session()
     if (!session) return
-    titleEl.textContent = session.title
+    titleEl.textContent = sessionTitle(session.title) ?? ""
     setEditing(true)
 
     requestAnimationFrame(() => {
@@ -294,7 +295,7 @@ export function TabNavItem(props: {
             }
             if (event.key !== "Escape") return
             event.preventDefault()
-            titleEl.textContent = props.session()?.title ?? ""
+            titleEl.textContent = sessionTitle(props.session()?.title) ?? ""
             void closeRename(false)
           }}
           onBlur={() => void closeRename(true)}
@@ -349,7 +350,7 @@ export function TabNavItem(props: {
         }}
         data={{
           projectName: projectName(),
-          title: props.session()?.title,
+          title: sessionTitle(props.session()?.title),
           path: previewPath(),
           serverName: serverLabel(),
         }}

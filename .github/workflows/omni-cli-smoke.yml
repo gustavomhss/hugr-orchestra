@@ -15,7 +15,6 @@ on:
     paths:
       - "apps/cli/script/**"
       - "apps/cli/src/omni-entry.ts"
-      - "packages/omni/**"
       - "native/omni/**"
       - ".github/workflows/omni-cli-smoke.yml"
 

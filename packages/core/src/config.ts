@@ -283,6 +283,13 @@ export const readGlobal = Effect.fn("Config.readGlobal")(function* () {
   return {
     ...(typeof document.model === "string" ? { model: document.model } : {}),
     ...(typeof document.shell === "string" ? { shell: document.shell } : {}),
+    // The per-agent engines `updateGlobal` writes; the app reads them back to show the Maestro engine it saved.
+    agents: Object.fromEntries(
+      Object.entries(document.agents).flatMap(([id, agent]): [string, { engine: "orchestra" | "claude-code" }][] => {
+        const engine = agent !== null && typeof agent === "object" ? (agent as { engine?: unknown }).engine : undefined
+        return engine === "orchestra" || engine === "claude-code" ? [[id, { engine }]] : []
+      }),
+    ) as Record<string, { engine: "orchestra" | "claude-code" }>,
     disabledProviders: [
       ...new Set([
         ...document.policies.filter(providerDenial).map((item) => item.resource),
@@ -328,6 +335,7 @@ function settings(text: string) {
   return {
     model: root.model,
     shell: root.shell,
+    agents: record(root.agents),
     policies: Array.isArray(policies) ? policies.map(record) : [],
     disabled: Array.isArray(root.disabled_providers) ? root.disabled_providers : [],
     hasDisabled: "disabled_providers" in root,

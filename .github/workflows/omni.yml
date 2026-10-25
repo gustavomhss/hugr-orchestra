@@ -8,12 +8,10 @@ on:
     branches:
       - dev
     paths:
-      - "packages/omni/**"
       - "native/omni/**"
   pull_request:
     types: [opened, synchronize, reopened, labeled]
     paths:
-      - "packages/omni/**"
       - "native/omni/**"
       - ".github/workflows/omni.yml"
   workflow_dispatch:

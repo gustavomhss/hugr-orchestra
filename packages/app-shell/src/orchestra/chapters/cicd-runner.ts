@@ -5,6 +5,7 @@ import type { useLanguage } from "@/context/language"
 import type { Platform } from "@/context/platform"
 import type { ServerSDK } from "@/context/server-sdk"
 import { Persist, persisted } from "@/utils/persist"
+import { fetchPtyTicket } from "@/utils/pty-ticket"
 import { terminalWebSocketURL } from "@/utils/terminal-websocket-url"
 import {
   decodeStoredPipelines,
@@ -133,23 +134,23 @@ export function createPipelines(input: Input) {
     if (!ptyID || entry.stopped || live.get(id) !== entry) return
     const connection = ++entry.connection
     const current = () => !entry.stopped && live.get(id) === entry && entry.connection === connection
-    const protocol = await input.sdk.protocol
-    if (!current()) return
-    const ticket = undefined
-    if (!current()) return
     const server = input.sdk.server
+    const ticket = await fetchPtyTicket({
+      url: input.sdk.url,
+      ptyID,
+      directory: input.directory,
+      username: server.http.username,
+      password: server.http.password,
+      fetch: input.platform.fetch,
+    }).catch(() => undefined)
+    if (!current()) return
     const socket = (input.socket ?? ((url) => new WebSocket(url)))(
       terminalWebSocketURL({
-        protocol,
         url: input.sdk.url,
         id: ptyID,
         directory: input.directory,
         cursor: entry.cursor,
         ticket,
-        sameOrigin: new URL(input.sdk.url, location.href).origin === location.origin,
-        username: server.http.username ?? "orchestra",
-        password: server.http.password ?? "",
-        authToken: server.type === "http" ? server.authToken : false,
       }),
     )
     socket.binaryType = "arraybuffer"

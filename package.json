@@ -20,7 +20,7 @@
     "postinstall": "bun run --cwd packages/core fix-node-pty",
     "prepare": "husky",
     "random": "echo 'Random script'",
-    "translate:app": "bun run script/translate-app.ts",
+    "translate:app": "bun run packages/app-shell/script/translate-app.ts",
     "test": "echo 'do not run tests from root' && exit 1",
     "omni:build": "cargo build --manifest-path native/omni/Cargo.toml -p hugr-omni-node -p omni-supervisor",
     "test:ci": "bun run script/test-ci.ts"

@@ -11,6 +11,8 @@ import { Location } from "./location"
 import { OmniAdoption } from "./omni-adoption"
 import { OmniBackground } from "./omni-background"
 import { PtyProtocol } from "./pty/protocol"
+import { ShellCwd } from "./pty/shell-cwd"
+import { ShellIntegration } from "./pty/shell-integration"
 import { clampSize } from "./pty/pty"
 import type { OmniProc } from "./pty/omni"
 import { PtyID } from "./pty/schema"
@@ -43,6 +45,10 @@ type Active = {
   buffer: string
   bufferCursor: number
   cursor: number
+  // Set when the shell was started with integration; the nonce its marks carry.
+  shellNonce?: string
+  // The size the backend last got, so a repaint nudge can restore it.
+  size: { cols: number; rows: number }
   subscribers: Map<object, Subscriber>
   listeners: Disp[]
   // Set when omni runs this session: its tree, and the adoption services the creating caller had (R2-3).
@@ -65,6 +71,21 @@ export type UpdateInput = Types.DeepMutable<typeof UpdateInput.Type>
 
 export const Event = Pty.Event
 
+export type CreateOptions = {
+  // Starts zsh or bash with marks the caller can trust (ShellMarks). Off unless asked or ORCHESTRA_SHELL_INTEGRATION is
+  // set; other shells ignore it.
+  readonly shellIntegration?: boolean
+  // Runs command and args as given with only the given env (plus TERM and ORCHESTRA_TERMINAL): no login flag, nothing
+  // inherited from the server process. For a caller that already built a confined command.
+  readonly exact?: boolean
+  // Called from the data and exit paths themselves, so a command that ends right after spawn is still seen whole,
+  // which attach cannot offer once the session has exited.
+  readonly observe?: {
+    readonly onData: (chunk: string) => void
+    readonly onExit: (exitCode: number) => void
+  }
+}
+
 export type AttachInput = {
   // Absolute output cursor to replay from. -1 tails from the current end; omitted replays the full retained buffer.
   readonly cursor?: number
@@ -79,6 +100,8 @@ export type Attachment = {
   readonly replay: string
   // Absolute output cursor after replay.
   readonly cursor: number
+  // The nonce this session's shell marks carry, when it was created with shellIntegration.
+  readonly shellNonce?: string
   readonly write: (data: string) => void
   // Starts live delivery after the caller has applied replay and cursor metadata.
   readonly activate: () => void
@@ -89,18 +112,14 @@ export class NotFoundError extends Schema.TaggedErrorClass<NotFoundError>()("Pty
   ptyID: PtyID,
 }) {}
 
-export class ExitedError extends Schema.TaggedErrorClass<ExitedError>()("Pty.ExitedError", {
-  ptyID: PtyID,
-}) {}
-
 export interface Interface {
   readonly list: () => Effect.Effect<Info[]>
   readonly get: (id: PtyID) => Effect.Effect<Info, NotFoundError>
-  readonly create: (input: CreateInput) => Effect.Effect<Info>
+  readonly create: (input: CreateInput, options?: CreateOptions) => Effect.Effect<Info>
   readonly update: (id: PtyID, input: UpdateInput) => Effect.Effect<Info, NotFoundError>
   readonly remove: (id: PtyID) => Effect.Effect<void, NotFoundError>
   readonly write: (id: PtyID, data: string) => Effect.Effect<void, NotFoundError>
-  readonly attach: (id: PtyID, input: AttachInput) => Effect.Effect<Attachment, NotFoundError | ExitedError>
+  readonly attach: (id: PtyID, input: AttachInput) => Effect.Effect<Attachment, NotFoundError>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/Pty") {}
@@ -207,17 +226,23 @@ const layer = Layer.effect(
       return (yield* requireSession(id)).info
     })
 
-    const create = Effect.fn("Pty.create")(function* (input: CreateInput) {
+    const create = Effect.fn("Pty.create")(function* (input: CreateInput, options?: CreateOptions) {
       const id = PtyID.ascending()
       const command = input.command || Shell.preferred(Config.latest(yield* config.entries(), "shell"))
-      const args = Shell.login(command) ? [...(input.args ?? []), "-l"] : [...(input.args ?? [])]
+      const given =
+        !options?.exact && Shell.login(command) ? [...(input.args ?? []), "-l"] : [...(input.args ?? [])]
       const cwd = input.cwd || location.directory
-      const env = {
-        ...process.env,
+      const base = {
+        ...(options?.exact ? {} : process.env),
         ...input.env,
         TERM: "xterm-256color",
         ORCHESTRA_TERMINAL: "1",
       } as Record<string, string>
+      const integration = (options?.shellIntegration ?? (!options?.exact && Flag.ORCHESTRA_SHELL_INTEGRATION))
+        ? yield* Effect.promise(() => ShellIntegration.prepare({ command, args: given, env: base }))
+        : undefined
+      const args = integration?.args ?? given
+      const env = integration ? { ...base, ...integration.env } : base
       if (process.platform === "win32") {
         env.LC_ALL = "C.UTF-8"
         env.LC_CTYPE = "C.UTF-8"
@@ -258,12 +283,15 @@ const layer = Layer.effect(
         status: "running",
         pid: proc.pid,
       }
+      const announcements = ShellCwd.parser()
       const session: Active = {
         info,
         process: proc,
         buffer: "",
         bufferCursor: 0,
         cursor: 0,
+        size: { cols: size.cols ?? 80, rows: size.rows ?? 24 },
+        ...(integration ? { shellNonce: integration.nonce } : {}),
         subscribers: new Map(),
         listeners: [],
         ...(omni ? { omni } : {}),
@@ -272,6 +300,10 @@ const layer = Layer.effect(
       session.listeners.push(
         proc.onData((chunk) => {
           session.cursor += chunk.length
+          // The shell's own report of where it is, so a new terminal can start there. Info.cwd follows it.
+          const announced = announcements.push(chunk)
+          if (announced) session.info.cwd = announced
+          options?.observe?.onData(chunk)
           for (const [token, subscriber] of session.subscribers.entries()) {
             if (!subscriber.active) {
               subscriber.pending.push(chunk)
@@ -295,6 +327,7 @@ const layer = Layer.effect(
           session.info.status = "exited"
           session.info.exitCode = exitCode
           notifyEnd(session, { exitCode })
+          options?.observe?.onExit(exitCode)
           exitOrder.push(id)
           runFork(
             Effect.gen(function* () {
@@ -316,8 +349,10 @@ const layer = Layer.effect(
     const update = Effect.fn("Pty.update")(function* (id: PtyID, input: UpdateInput) {
       const session = yield* requireSession(id)
       if (input.title) session.info.title = input.title
-      if (input.size && session.info.status === "running")
-        session.process.resize(clampSize(input.size.cols), clampSize(input.size.rows))
+      if (input.size && session.info.status === "running") {
+        session.size = { cols: clampSize(input.size.cols), rows: clampSize(input.size.rows) }
+        session.process.resize(session.size.cols, session.size.rows)
+      }
       yield* events.publish(Event.Updated, { info: session.info })
       return session.info
     })
@@ -329,7 +364,6 @@ const layer = Layer.effect(
 
     const attach = Effect.fn("Pty.attach")(function* (id: PtyID, input: AttachInput) {
       const session = yield* requireSession(id)
-      if (session.info.status !== "running") return yield* new ExitedError({ ptyID: id })
       yield* Effect.logInfo("client attached to session", { id, directory: location.directory })
       const token = {}
       const subscriber: Subscriber = {
@@ -339,7 +373,9 @@ const layer = Layer.effect(
         detached: false,
         pending: [],
       }
-      session.subscribers.set(token, subscriber)
+      // An exited session still serves its retained output: the client gets the replay, then the end.
+      if (session.info.status === "running") session.subscribers.set(token, subscriber)
+      else subscriber.end = { exitCode: session.info.exitCode }
       const start = session.bufferCursor
       const end = session.cursor
       const from =
@@ -348,8 +384,12 @@ const layer = Layer.effect(
           : typeof input.cursor === "number" && Number.isSafeInteger(input.cursor)
             ? Math.max(0, input.cursor)
             : 0
+      // The ring dropped output this client never saw, so the replay starts mid-stream: reset the terminal rather than
+      // paint garbage over its old screen, and nudge the program to redraw once the replay is queued.
+      const gap = from < start
       const replay = (() => {
         if (!session.buffer || from >= end) return ""
+        if (gap) return GAP_RESET + PtyProtocol.afterFirstLine(session.buffer)
         const offset = Math.max(0, from - start)
         if (offset >= session.buffer.length) return ""
         return session.buffer.slice(offset)
@@ -357,12 +397,14 @@ const layer = Layer.effect(
       return {
         replay,
         cursor: end,
+        ...(session.shellNonce ? { shellNonce: session.shellNonce } : {}),
         write: (data: string) => {
           if (session.info.status === "running") session.process.write(data)
         },
         activate: () => {
           if (subscriber.active || subscriber.detached) return
           subscriber.active = true
+          if (gap && session.info.status === "running") repaint(session)
           try {
             for (const chunk of subscriber.pending) subscriber.onData(chunk)
             subscriber.pending.length = 0
@@ -383,6 +425,17 @@ const layer = Layer.effect(
     return Service.of({ list, get, create, update, remove, write, attach })
   }),
 )
+
+// RIS: a full terminal reset, sent ahead of a replay that does not continue what the client already has.
+const GAP_RESET = "\x1bc"
+
+// A resize signals the program in the foreground, and full-screen programs redraw on it. The size changes and changes
+// back, since the kernel only signals when it differs.
+function repaint(session: Active) {
+  const { cols, rows } = session.size
+  session.process.resize(cols > 1 ? cols - 1 : cols + 1, rows)
+  session.process.resize(cols, rows)
+}
 
 // Whether anything besides the root is alive in the tree, such as a background job the shell left behind.
 async function descendants(proc: OmniProc) {

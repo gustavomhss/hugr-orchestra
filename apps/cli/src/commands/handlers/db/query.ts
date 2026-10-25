@@ -14,5 +14,8 @@ export default Runtime.handler(
     const keys = Object.keys(result[0])
     process.stdout.write(keys.join("\t") + EOL)
     for (const row of result) process.stdout.write(keys.map((key) => row[key]).join("\t") + EOL)
-  }),
+  },
+  // Opening the database applies migrations, so only these commands do it.
+  Effect.provide(Database.layerFromPath(Database.path())),
+  ),
 )

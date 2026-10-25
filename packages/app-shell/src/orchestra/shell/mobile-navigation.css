@@ -6,7 +6,7 @@
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: var(--v2-overlay-backdrop, rgb(0 0 0 / 50%));
+  background: var(--v2-overlay-backdrop, var(--orchestra-scrim));
 }
 .orchestra-mobile-navigation {
   position: fixed;

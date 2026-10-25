@@ -64,7 +64,7 @@ body[data-new-layout] :is(.zen-browser-shell, .zen-tab-menu) {
   --zen-field-text: #dbe4ec;
   --zen-placeholder: #757575;
   --zen-option: #141b23;
-  --zen-empty: #7c8b9b;
+  --zen-empty: #8090a0;
   --zen-empty-strong: #cdd6df;
   --zen-error: rgba(201, 138, 132, 0.14);
   --zen-error-text: #e0b0aa;
@@ -76,17 +76,17 @@ body[data-new-layout] :is(.zen-browser-shell, .zen-tab-menu) {
   --zen-popover-border: rgba(163, 184, 203, 0.18);
   --zen-popover-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
   --zen-find-shadow: none;
-  --zen-popover-title: #6c7c8e;
+  --zen-popover-title: #7c8da2;
   --zen-popover-text: #c3ccd6;
-  --zen-popover-dim: #75859a;
+  --zen-popover-dim: #7d8ea4;
   --zen-popover-hover: rgba(255, 255, 255, 0.06);
-  --zen-library-empty: #6b7480;
+  --zen-library-empty: #838d9c;
   --zen-focus: #9dbde4;
 }
 
 /* The mock's base type, not the app body's 13px/24px/440. */
 body[data-new-layout] .zen-browser-shell {
-  font-size: 16px;
+  font-size: var(--orchestra-font-size-xl);
   font-weight: 400;
   line-height: normal;
 }
@@ -100,19 +100,19 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   --zen-page: rgba(255, 255, 255, 0.5);
   --zen-text: #1f2833;
   --zen-muted: #5f6874;
-  --zen-label: #8a929c;
+  --zen-label: #5e646c;
   --zen-hover: rgba(40, 56, 74, 0.06);
   --zen-ws-hover: rgba(40, 56, 74, 0.05);
   --zen-control-hover: rgba(40, 56, 74, 0.07);
   --zen-control-hover-text: #2b3440;
-  --zen-active-control: #2f6bbf;
+  --zen-active-control: #2a66ba;
   --zen-icon: rgba(255, 255, 255, 0.75);
   --zen-input: rgba(255, 255, 255, 0.8);
   --zen-profile-input: rgba(255, 255, 255, 0.9);
   --zen-field: rgba(240, 243, 247, 0.95);
   --zen-field-text: #1f2833;
   --zen-option: #fff;
-  --zen-empty: #6b7480;
+  --zen-empty: #5f6874;
   --zen-empty-strong: #1f2833;
   --zen-error: rgba(156, 74, 66, 0.12);
   --zen-error-text: #8a3f38;
@@ -124,11 +124,11 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   --zen-popover-border: rgba(70, 84, 98, 0.18);
   --zen-popover-shadow: 0 16px 40px rgba(60, 74, 92, 0.18);
   --zen-find-shadow: 0 16px 40px rgba(60, 74, 92, 0.18);
-  --zen-popover-title: #8a929c;
+  --zen-popover-title: #5e646c;
   --zen-popover-text: #3a434e;
-  --zen-popover-dim: #6b7480;
+  --zen-popover-dim: #5f6874;
   --zen-popover-hover: rgba(40, 56, 74, 0.06);
-  --zen-library-empty: #8a929c;
+  --zen-library-empty: #5e646c;
   --zen-focus: #2f6bbf;
 }
 
@@ -160,11 +160,11 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   min-block-size: 34px;
   padding-inline: 12px;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: var(--orchestra-radius-md);
   color: var(--text-weak);
   background: transparent;
   font: inherit;
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   cursor: pointer;
 }
 
@@ -184,8 +184,8 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
 .zen-browser-shell {
   --zen-toolbox-padding: 6px;
   --zen-sidebar-width: 250px;
-  --zen-tab-radius: 8px;
-  --zen-panel-radius: 14px;
+  --zen-tab-radius: var(--orchestra-radius-md);
+  --zen-panel-radius: var(--orchestra-radius-xl);
   --zen-workspace-indicator-height: 44px;
   --zen-active-tab-scale: 0.985;
   font-family: var(--zen-font);
@@ -209,7 +209,7 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
 .zen-workspace-kind {
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
 }
 
 .zen-window-picker {
@@ -217,12 +217,12 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   min-inline-size: 60px;
   block-size: 28px;
   border: 1px solid var(--border-weak);
-  border-radius: 7px;
+  border-radius: var(--orchestra-radius-sm);
   padding-inline: 8px;
   background: var(--zen-input);
   color: var(--zen-text);
   font: inherit;
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
 }
 
 .zen-browser-tools {
@@ -268,7 +268,7 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   padding: 3px 12px;
   border-radius: var(--zen-panel-radius);
   color: var(--zen-text);
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   font-weight: 600;
   cursor: default;
 }
@@ -314,10 +314,10 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   place-items: center;
   padding: 0;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--orchestra-radius-sm);
   color: var(--zen-muted);
   background: transparent;
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   cursor: pointer;
 }
 
@@ -340,12 +340,12 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   height: 24px;
   padding: 0 7px;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--orchestra-radius-sm);
   outline: 0;
   color: var(--zen-field-text);
   background: var(--zen-profile-input, var(--zen-input));
   font-family: var(--zen-input-font);
-  font-size: 11.5px;
+  font-size: var(--orchestra-font-size-sm);
 }
 
 .zen-profile-form button {
@@ -354,10 +354,10 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   flex: none;
   padding: 0;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--orchestra-radius-sm);
   color: var(--zen-muted);
   background: transparent;
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
   cursor: pointer;
 }
 
@@ -378,7 +378,7 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
 .zen-tab-section-label {
   padding: 8px 8px 3px;
   color: var(--zen-label);
-  font-size: 10px;
+  font-size: var(--orchestra-font-size-2xs);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -398,7 +398,7 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   border-radius: var(--zen-tab-radius);
   color: var(--zen-muted);
   background: transparent;
-  font-size: 12.5px;
+  font-size: var(--orchestra-font-size-md);
   text-align: start;
   cursor: pointer;
 }
@@ -433,17 +433,17 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   height: 20px;
   flex: 0 0 20px;
   place-items: center;
-  border-radius: 6px;
+  border-radius: var(--orchestra-radius-sm);
   color: var(--zen-muted);
   background: var(--zen-icon);
-  font-size: 10px;
+  font-size: var(--orchestra-font-size-2xs);
   font-weight: 700;
 }
 
 .zen-tab-icon img {
   width: 14px;
   height: 14px;
-  border-radius: 4px;
+  border-radius: var(--orchestra-radius-xs);
 }
 
 .zen-tab-icon.is-loading {
@@ -470,18 +470,18 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   flex: 1;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
 }
 
 .zen-tab-pinmark {
   color: var(--zen-muted);
-  font-size: 9.5px;
+  font-size: var(--orchestra-font-size-2xs);
   opacity: 0.75;
 }
 
 .zen-tab-audio {
   color: var(--zen-muted);
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
 }
 
 .zen-browser-content {
@@ -514,7 +514,7 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   padding-inline: 10px 6px;
   border-radius: var(--zen-panel-radius);
   background: var(--zen-panel);
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
 }
 
 .zen-native-toolbar strong {
@@ -531,12 +531,12 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   flex: 1;
   padding: 0 10px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--orchestra-radius-md);
   outline: 0;
   color: var(--zen-text);
   background: var(--zen-input);
   font-family: var(--zen-input-font);
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
 }
 
 .zen-nav-button,
@@ -545,15 +545,15 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   min-width: 28px;
   padding: 0 8px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--orchestra-radius-md);
   color: var(--zen-muted);
   background: transparent;
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   cursor: pointer;
 }
 
 .zen-open-button {
-  font-size: 11.5px;
+  font-size: var(--orchestra-font-size-sm);
 }
 
 .zen-nav-button:hover:not(:disabled),
@@ -578,10 +578,10 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   align-items: center;
   gap: 8px;
   padding: 7px 10px;
-  border-radius: 8px;
+  border-radius: var(--orchestra-radius-md);
   color: var(--zen-error-text);
   background: var(--zen-error);
-  font-size: 11.5px;
+  font-size: var(--orchestra-font-size-sm);
 }
 
 .zen-error.warn {
@@ -594,10 +594,10 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   align-items: center;
   gap: 10px;
   padding: 8px 11px;
-  border-radius: 8px;
+  border-radius: var(--orchestra-radius-md);
   color: var(--zen-error-text);
   background: var(--zen-crash);
-  font-size: 11.5px;
+  font-size: var(--orchestra-font-size-sm);
 }
 
 /* Popovers float over the page area, so the native browser is occluded while one is open. */
@@ -611,7 +611,7 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   overflow: auto;
   padding: 5px;
   border: 1px solid var(--zen-popover-border);
-  border-radius: 10px;
+  border-radius: var(--orchestra-radius-lg);
   background: var(--zen-popover);
   box-shadow: var(--zen-popover-shadow);
 }
@@ -619,7 +619,7 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
 .zen-library-title {
   padding: 7px 9px;
   color: var(--zen-popover-title);
-  font-size: 10px;
+  font-size: var(--orchestra-font-size-2xs);
   letter-spacing: 0.07em;
   text-transform: uppercase;
 }
@@ -634,10 +634,10 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   gap: 8px;
   padding: 6px 9px;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--orchestra-radius-sm);
   color: var(--zen-popover-text);
   background: transparent;
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   text-align: start;
 }
 
@@ -665,7 +665,7 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   margin: 0;
   padding: 10px 9px;
   color: var(--zen-library-empty, var(--zen-popover-dim));
-  font-size: 11.5px;
+  font-size: var(--orchestra-font-size-sm);
 }
 
 /* The find bar floats where the mock draws it; the native page starts below it instead of under it. */
@@ -679,7 +679,7 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   gap: 4px;
   padding: 5px 6px;
   border: 1px solid var(--zen-popover-border);
-  border-radius: 10px;
+  border-radius: var(--orchestra-radius-lg);
   background: var(--zen-popover);
   box-shadow: var(--zen-find-shadow);
 }
@@ -689,12 +689,12 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   height: 24px;
   padding: 0 8px;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--orchestra-radius-sm);
   outline: 0;
   color: var(--zen-field-text);
   background: var(--zen-field);
   font-family: var(--zen-input-font);
-  font-size: 11.5px;
+  font-size: var(--orchestra-font-size-sm);
 }
 
 .zen-findbar span {
@@ -709,10 +709,10 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   height: 24px;
   padding: 0;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--orchestra-radius-sm);
   color: var(--zen-muted);
   background: transparent;
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
   cursor: pointer;
 }
 
@@ -757,13 +757,13 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   gap: 6px;
   padding: 24px;
   color: var(--zen-empty);
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   text-align: center;
 }
 
 .zen-empty-state strong {
   color: var(--zen-empty-strong);
-  font-size: 13px;
+  font-size: var(--orchestra-font-size-md);
 }
 
 /* Portaled to the body, so it repeats the shell's type and stacks like the app's other menus. */
@@ -777,7 +777,7 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   flex-direction: column;
   padding: 4px;
   border: 1px solid var(--zen-popover-border);
-  border-radius: 9px;
+  border-radius: var(--orchestra-radius-md);
   background: var(--zen-popover);
   box-shadow: var(--zen-popover-shadow);
 }
@@ -785,11 +785,11 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
 .zen-tab-menu button {
   padding: 6px 9px;
   border: 0;
-  border-radius: 5px;
+  border-radius: var(--orchestra-radius-sm);
   color: var(--zen-popover-text);
   background: transparent;
   font: inherit;
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   text-align: start;
   cursor: pointer;
 }
@@ -861,7 +861,7 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
 }
 
 .zen-browser-shell.is-compact :is(.zen-urlbar, .zen-browser-host) {
-  border-radius: 8px;
+  border-radius: var(--orchestra-radius-md);
 }
 
 .zen-browser-shell.is-compact .zen-urlbar {
@@ -890,7 +890,7 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
 
   .zen-open-button {
     padding: 0 6px;
-    font-size: 11px;
+    font-size: var(--orchestra-font-size-xs);
   }
 
   .zen-urlbar {
@@ -900,7 +900,7 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
 
   .zen-nav-button {
     padding: 0 5px;
-    font-size: 11px;
+    font-size: var(--orchestra-font-size-xs);
   }
 
   .zen-urlbar input {

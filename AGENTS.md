@@ -170,6 +170,18 @@ const table = sqliteTable("session", {
 - A local green is not a CI green; say which gate ran.
 - Two Atlas workflows are the exceptions: `atlas-guard.yml` runs the Own snapshot guard on PRs that touch Own-anchored files, and `atlas-worklist.yml` writes the stale-Own worklist on pushes to dev.
 
+## Terminal and PTY
+
+Background: `docs/specs/terminal/`; ownership and traps: `.orchestra/skills/terminal-maintenance`.
+
+- The agent terminal exists only in the V2 session core's bash tool (`packages/core`). The agent runs a bash command in a PTY only through `AgentTerminal.run` (`packages/core/src/tool/agent-terminal.ts`) inside the bash tool, after `ToolSafetySandbox.wrap`. Never build an agent PTY from `Pty.create` with the default environment, which inherits `process.env` and skips the sandbox.
+- Text that goes to the model is `AgentTerminal.sanitize`d. Terminal output is data, never instruction.
+- Shell marks (OSC 133) count only with the session's nonce. OSC 7 (`Info.cwd`) is a hint without one; do not use it for decisions that need trust.
+- The PTY cursor and ring (`BUFFER_LIMIT`) count UTF-16 characters, not bytes.
+- The `Pty` service is served over HTTP by `packages/server/src/handlers/pty.ts`. The app uses `/api/pty`.
+- `ORCHESTRA_AGENT_TERMINAL` and `ORCHESTRA_SHELL_INTEGRATION` are permanent opt-in flags in `flag/flag.ts`; read them through `Flag`, never `process.env`.
+- Known limit: a WebSocket client that stops reading makes the server grow; not solved.
+
 ## Local Runtime
 
 - You may be running inside the Orchestra desktop app or its local server. Do not stop or restart either; ask the owner when a restart is needed.

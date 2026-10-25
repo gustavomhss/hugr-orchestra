@@ -35,7 +35,7 @@ const upgrade = Spec.make("upgrade", {
   params: {
     target: Argument.string("version to upgrade to, e.g. 1.0.1 or v1.0.1").pipe(Argument.optional),
     method: Flag.choice("method", ["npm", "github"])
-      .pipe(Flag.withAlias("m"), Flag.withDefault("npm"), Flag.withDescription("Installation channel to use")),
+      .pipe(Flag.withAlias("m"), Flag.optional, Flag.withDescription("Installation channel to use; detected from the executable path when omitted")),
   },
 })
 
