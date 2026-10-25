@@ -18,11 +18,14 @@ import { ApplicationTools } from "@orchestra/core/tool/application-tools"
 import { MaestroArsenal } from "@orchestra/core/tool/maestro-arsenal"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { Tools } from "@orchestra/core/tool/tools"
+import { Tool } from "@orchestra/core/tool/tool"
 import { ToolOutputStore } from "@orchestra/core/tool-output-store"
+import { ArsenalObservations } from "../arsenal-observations"
 import { GovernanceBackgroundV2 } from "./governance/background"
 import { MaestroSeats } from "./seats-service"
 import { MaestroAdmissionTools } from "./tools/admission"
 import { MaestroApprovalTools } from "./tools/approval"
+import { MaestroAtlasMemoryTools } from "./tools/atlas-memory"
 import { MaestroToolGate } from "./tools/gate"
 import { MaestroPlanningTools } from "./tools/planning"
 import { MaestroResultTools } from "./tools/result"
@@ -33,7 +36,8 @@ import { MaestroWorkflowTools } from "./tools/workflows"
  * Maestro's native tools in every Location. Visibility stays with the rules `v2/seats.ts` gives every agent; each tool
  * also checks its caller itself. The Arsenal registers here only where the application has not bound it already: a
  * host that binds it as an application tool installs its runtime guard and governance observations there, and a
- * Location registration would shadow them.
+ * Location registration would shadow them. Without that host binding, governance audit, usage and status read the
+ * actual host Session observations here, behind the same Session read permission V1 asks.
  */
 const layer = Layer.effectDiscard(
   Effect.gen(function* () {
@@ -44,14 +48,18 @@ const layer = Layer.effectDiscard(
     const events = yield* EventV2.Service
     const store = yield* SessionStore.Service
     const applications = yield* ApplicationTools.Service
+    const permission = yield* PermissionV2.Service
+    const location = yield* Location.Service
+    const observations = yield* ArsenalObservations.Service
     const gate = MaestroToolGate.make(agents, seats)
+    const git = yield* GitCli.Service
     const services = {
       db: database.db,
       store,
       events,
       atlas: {
         config: yield* Config.Service,
-        git: yield* GitCli.Service,
+        git,
         fs: yield* FSUtil.Service,
         skills: yield* SkillV2.Service,
       },
@@ -69,12 +77,32 @@ const layer = Layer.effectDiscard(
         }),
         ...MaestroResultTools.tools({ gate }),
         ...MaestroWorkflowTools.tools({ gate }),
+        ...MaestroAtlasMemoryTools.tools({ agents, seats, permission, git, location }),
       })
       .pipe(Effect.orDie)
     if (applications.entries().has(MaestroArsenal.names.catalog)) return
     yield* MaestroArsenal.registerScoped({
       nativeMaestro: (agent) => Effect.succeed(agent === AgentV2.defaultID),
       nativeUpstream: (agent) => Effect.succeed(agent === "archie" && seats.has("archie")),
+      observeGovernance: (context, operation) =>
+        permission
+          .assert({
+            action: "read",
+            resources: [`session:${context.sessionID}`],
+            sessionID: context.sessionID,
+            agent: context.agent,
+            source: { type: "tool", messageID: context.assistantMessageID, callID: context.toolCallID },
+          })
+          .pipe(
+            Effect.mapError((error) => new Tool.Failure({ message: "Arsenal governance was not permitted", error })),
+            Effect.andThen(
+              observations.read({
+                sessionID: context.sessionID,
+                operation,
+                placement: { directory: location.directory, projectID: location.project.id },
+              }),
+            ),
+          ),
     }).pipe(Effect.orDie)
   }),
 )
@@ -102,5 +130,6 @@ export const node = makeLocationNode({
     SkillV2.node,
     GovernanceBackgroundV2.sessionsNode,
     MaestroReviewTools.executionNode,
+    ArsenalObservations.node,
   ],
 })
