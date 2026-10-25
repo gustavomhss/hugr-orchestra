@@ -1,0 +1,20 @@
+id = "protected-paths"
+severity = "gate"
+on = "changed-paths"
+paths = [
+  ".github/workflows/**",
+  ".github/actions/**",
+  "AGENTS.md",
+  "CODEOWNERS",
+  ".github/CODEOWNERS",
+  "godfile-waivers.json",
+  "script/spawn-allowlist.json",
+  "script/godfile.ts",
+  "script/check-*.ts",
+  "script/guards/**",
+]
+exclude = []
+# CI sets GUARDRAIL_APPROVED=protected-paths when an approver has labelled the PR.
+message = "Protected file changed: it defines or enforces the repository's own rules. An approver must clear this change."
+positive = [".github/workflows/test.yml", "AGENTS.md", "godfile-waivers.json", "script/guards/rules/ts-ignore.toml", "script/check-spawn-imports.ts", "script/spawn-allowlist.json"]
+negative = ["packages/core/src/session.ts", "docs/guardrail/pilot-catalog.md", "README.md", "script/format.ts"]

@@ -1,0 +1,10 @@
+id = "js-test-focused"
+severity = "gate"
+on = "added-lines"
+paths = ["**/*.test.{ts,tsx,js,jsx,mjs}", "**/*.spec.{ts,tsx,js,jsx,mjs}", "**/test/**/*.{ts,tsx,js,jsx,mjs}"]
+exclude = []
+# A focused test silently turns the rest of the suite off. `.only(` after a test word, or fit/fdescribe not preceded by a dot or word character (so graph.fit() is not a hit).
+match = '\b(describe|it|test)\.only\(|(^|[^.\w])(fit|fdescribe)\('
+message = "Focused test (.only / fit / fdescribe) disables the rest of the suite. Remove it before merging."
+positive = ["  it.only(\"does a thing\", () => {", "describe.only('group', () => {", "  fit(\"works\", () => {", "test.only(\"x\", async () => {"]
+negative = ["  it(\"does a thing\", () => {", "graph.handle?.fit()", "const benefit(1)", "test.skipIf(process.platform === \"win32\")(\"x\", () => {})"]

@@ -12,6 +12,7 @@
     "dev:storybook": "bun --cwd apps/storybook storybook",
     "lint": "oxlint",
     "check:godfile": "bun run script/godfile.ts",
+    "check:guards": "bun run script/guards/run.ts",
     "check:spawn-imports": "bun run script/check-spawn-imports.ts",
     "check:boundaries": "bun run script/check-module-boundaries.ts",
     "check:ripgrep-pins": "bun run script/check-ripgrep-pins.ts",

@@ -1,0 +1,10 @@
+id = "lint-disable"
+severity = "gate"
+on = "added-lines"
+paths = ["**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}"]
+exclude = []
+# eslint-disable* needs `-- reason`; biome-ignore needs `: reason`. A bare directive hides the rule it silences.
+match = 'eslint-disable(-next-line|-line)?\b(?!.*--\s*\S)|biome-ignore\b(?!.*:\s*\S)'
+message = "Lint suppression without a reason. Add the reason after the directive (eslint: `-- why`, biome: `: why`) or fix the code."
+positive = ["// eslint-disable-next-line no-console", "/* eslint-disable */", "// biome-ignore lint/suspicious/noExplicitAny", "foo() // eslint-disable-line"]
+negative = ["// eslint-disable-next-line no-console -- CLI prints by design", "// biome-ignore lint/suspicious/noExplicitAny: wire type is untyped", "const rule = \"eslint\"", "// we no longer disable lint here"]
