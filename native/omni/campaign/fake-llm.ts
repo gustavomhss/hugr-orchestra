@@ -2,7 +2,7 @@
 
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http"
 
-/** The provider block for the fake LLM (the shape of apps/orchestra/test/lib/test-provider.ts). */
+/** The provider block for the fake LLM. */
 export function provider(url: string) {
   return {
     test: {
