@@ -100,6 +100,7 @@ export async function captureOracle() {
   const { Seats } = await import("@orchestra/maestro/seats")
   const { SeatSkillContent } = await import("@orchestra/maestro/seat-skill-content")
   const { packagedSkills } = await import("../../script/packaged-skills")
+  const { PlaybookContent } = await import("@orchestra/maestro/playbook-content")
   const trees = Object.fromEntries(await Promise.all(Object.values(Seats.all)
     .filter((seat) => seat.skills.length > 0)
     .map(async (seat) => [seat.id, await SeatSkillContent.read(seat.id, Seats.skillSource(seat.id), seat.skills)] as const)))
@@ -111,14 +112,21 @@ export async function captureOracle() {
   const frontmatter = Schema.Struct({
     name: Schema.String, description: Schema.optional(Schema.String), slash: Schema.optional(Schema.Boolean),
   })
-  const catalog = files.filter((file) => file.path.endsWith("/SKILL.md")).map((file) => {
-    const parsed = ConfigMarkdown.parse(file.bytes.toString("utf8"))
-    return { ...Schema.decodeUnknownSync(frontmatter)(parsed.data), content: parsed.content, path: file.path }
-  })
+  const parse = (entries: { path: string; text: string }[]) =>
+    entries.filter((file) => file.path.endsWith("/SKILL.md")).map((file) => {
+      const parsed = ConfigMarkdown.parse(file.text)
+      return { ...Schema.decodeUnknownSync(frontmatter)(parsed.data), content: parsed.content, path: file.path }
+    })
+  const catalog = parse(files.map((file) => ({ path: file.path, text: file.bytes.toString("utf8") })))
   expect(catalog.length).toBeGreaterThan(0)
   expect(new Set(catalog.map((skill) => skill.name)).size).toBe(catalog.length)
+  // The server also lists Maestro's bundled playbooks, extracted to their own content-addressed cache root.
+  const playbooks = parse(Object.entries(await PlaybookContent.read(
+    join(import.meta.dirname, "../../../../modules/maestro/coordination/playbooks"),
+  )).map(([path, text]) => ({ path, text })))
+  expect(playbooks.map((skill) => skill.name).toSorted()).toEqual([...PlaybookContent.names])
   return {
-    trees, files, catalog, digest: PackagedSkills.digest(trees),
+    trees, files, catalog, playbooks, digest: PackagedSkills.digest(trees),
     directories: [...new Set(files.flatMap((file) => file.path.split("/").slice(0, -1)
       .map((_, index) => file.path.split("/").slice(0, index + 1).join("/"))))].sort(),
   }
