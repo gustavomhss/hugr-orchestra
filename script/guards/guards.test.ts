@@ -293,8 +293,13 @@ describe("warn mode", () => {
   })
 
   test("the annotation names the file and line and cannot break out of the command", () => {
-    expect(annotation(gate)).toBe("::warning file=a.ts,line=3,title=guard r::bad%0Athing 100%25")
-    expect(annotation({ ...gate, line: undefined })).toBe("::warning file=a.ts,title=guard r::bad%0Athing 100%25")
+    expect(annotation(gate, true)).toBe("::warning file=a.ts,line=3,title=guard r::bad%0Athing 100%25")
+    expect(annotation({ ...gate, line: undefined }, true)).toBe("::warning file=a.ts,title=guard r::bad%0Athing 100%25")
+  })
+
+  test("a gate finding is an error annotation unless --warn", () => {
+    expect(annotation(gate, false)).toStartWith("::error file=a.ts")
+    expect(annotation({ ...gate, severity: "warn" }, false)).toStartWith("::warning file=a.ts")
   })
 
   test("the CLI honours --cwd and --warn", () => {
@@ -615,6 +620,49 @@ describe("runGuards", () => {
       "tls-verify-off src/bad.ts:4",
       "ts-strict-relaxed tsconfig.json:3",
     ])
+  })
+
+  // Scenario for the escape hatches and exemptions that single-rule goldens do not reach: the ignore comment (with and
+  // without a reason), counted moved lines, a rename of a test, a generated file, and a per-rule approval.
+  test("escapes and exemptions behave end to end", () => {
+    const cwd = repo()
+    cpSync(guardsDir, join(cwd, "script/guards"), { recursive: true })
+    write(cwd, "src/old.ts", "// @ts-ignore\nexport const a = 1\n")
+    write(cwd, "src/mv.test.ts", 'import { it } from "bun:test"\nit("a", () => {})\n')
+    write(cwd, "src/gone.test.ts", 'import { expect, it } from "bun:test"\nit("parses the header", () => {\n  expect(parse("a: b")).toEqual({ a: "b" })\n})\n')
+    commit(cwd, "base")
+    git(cwd, "checkout", "--quiet", "-b", "change")
+    // One removed @ts-ignore excuses one moved copy; the second copy is new and fires.
+    write(cwd, "src/old.ts", "export const a = 1\n")
+    write(cwd, "src/new.ts", "// @ts-ignore\n// @ts-ignore\nexport const b = 2\n")
+    git(cwd, "mv", "src/mv.test.ts", "src/mv2.test.ts")
+    rmSync(join(cwd, "src/gone.test.ts"))
+    write(cwd, "src/skip.test.ts", 'import { it } from "bun:test"\nit.skip("renders the footer", () => {})\n')
+    write(cwd, "src/lint.ts", "// eslint-disable-next-line no-console\nexport const l = 1\n")
+    write(
+      cwd,
+      "src/app.ts",
+      ['console.log("kept") // guardrail-ignore: js-console-log CLI output for the user', 'console.log("bare") // guardrail-ignore: js-console-log', ""].join("\n"),
+    )
+    write(cwd, "packages/client/src/generated/x.ts", "export const g = 1 as any as string\n")
+    commit(cwd, "scenario")
+    const found = (approved: string[]) =>
+      runGuards({ cwd, baseRef: "main", approved })
+        .findings.filter((finding) => finding.rule !== "protected-paths")
+        .map((finding) => `${finding.rule} ${finding.path}:${finding.line ?? "-"}`)
+        .sort()
+    expect(found([])).toEqual([
+      "guardrail-ignore-added src/app.ts:1",
+      "guardrail-ignore-added src/app.ts:2",
+      "js-console-log src/app.ts:2",
+      "js-test-skipped src/skip.test.ts:2",
+      "lint-disable src/lint.ts:1",
+      "test-file-deleted src/gone.test.ts:-",
+      "ts-ignore src/new.ts:2",
+    ])
+    // Approval clears a changed-paths rule only, and only the named one.
+    expect(found(["test-file-deleted"])).not.toContain("test-file-deleted src/gone.test.ts:-")
+    expect(found(["test-file-deleted"])).toContain("js-test-skipped src/skip.test.ts:2")
   })
 
   // Golden: real git modes, sizes and binary detection, so the file filters (modes, min_bytes, binary, no_shebang) run

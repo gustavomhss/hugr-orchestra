@@ -35,7 +35,7 @@ if (import.meta.main) {
     approved: (process.env.GUARDRAIL_APPROVED ?? "").split(",").filter((id) => id.length > 0),
   })
   for (const line of format(report)) console.log(line)
-  if (warn && process.env.GITHUB_ACTIONS) for (const finding of report.findings) console.log(annotation(finding))
+  if (process.env.GITHUB_ACTIONS) for (const finding of report.findings) console.log(annotation(finding, warn))
   process.exit(exitCode(report, warn))
 }
 
@@ -44,10 +44,11 @@ export function exitCode(report: Report, warn: boolean) {
   return !warn && report.findings.some((finding) => finding.severity === "gate") ? 1 : 0
 }
 
-// GitHub Actions workflow command: shows the finding on the PR's Files tab. Warn mode only, where nothing else surfaces it.
-export function annotation(finding: Finding) {
+// GitHub Actions workflow command: shows the finding on the PR's Files tab. A gate finding is an error unless --warn.
+export function annotation(finding: Finding, warn: boolean) {
   const props = [`file=${finding.path}`, finding.line === undefined ? "" : `line=${finding.line}`, `title=guard ${finding.rule}`]
-  return `::warning ${props.filter((prop) => prop.length > 0).join(",")}::${finding.message.replace(/%/g, "%25").replace(/\r/g, "%0D").replace(/\n/g, "%0A")}`
+  const level = finding.severity === "gate" && !warn ? "error" : "warning"
+  return `::${level} ${props.filter((prop) => prop.length > 0).join(",")}::${finding.message.replace(/%/g, "%25").replace(/\r/g, "%0D").replace(/\n/g, "%0A")}`
 }
 
 function flag(name: string) {

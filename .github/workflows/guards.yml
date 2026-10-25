@@ -1,7 +1,7 @@
 name: guards
 
 # Cheap tripwires over the lines and paths a PR changes. No build, so it runs on every PR rather than only with the
-# epic label. Warn mode: findings show as annotations and never fail the job; setup errors do.
+# epic label. A gate finding fails the job; a warn finding is an annotation only.
 on:
   pull_request:
     types: [opened, synchronize, reopened, labeled, unlabeled]
@@ -50,4 +50,4 @@ jobs:
             git archive "$BASE" script/guards | tar -x -C "$RUNNER_TEMP/guards-base"
             runner="$RUNNER_TEMP/guards-base/script/guards/run.ts"
           fi
-          GUARDRAIL_APPROVED="${approved#,}" bun run "$runner" --cwd "$PWD" --base "$BASE" --warn
+          GUARDRAIL_APPROVED="${approved#,}" bun run "$runner" --cwd "$PWD" --base "$BASE"
