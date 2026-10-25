@@ -290,7 +290,6 @@ export function createServerSyncContextInner(
       const key = directoryKey(directory)
       queue.clear(key)
       sessionMeta.delete(key)
-      sdkCache.delete(key)
       clearProviderRev(serverSDK.scope, key)
     },
     translate: language.t,
