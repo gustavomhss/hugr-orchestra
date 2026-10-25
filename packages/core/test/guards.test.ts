@@ -6,7 +6,7 @@ import { afterEach, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { parseBinary, parsePatch, parseRaw } from "../../../script/guards/diff"
 import { evaluate } from "../../../script/guards/engine"
 import { parseRule, selfCheck, type Rule } from "../../../script/guards/rule"
-import { format, runGuards } from "../../../script/guards/run"
+import { annotation, exitCode, format, runGuards } from "../../../script/guards/run"
 
 // Each runGuards test builds a temp git repo and spawns git several times; a loaded CI host needs more than 5s.
 setDefaultTimeout(30_000)
@@ -226,6 +226,37 @@ negative = ["open/a"]
       "open/b",
     ])
     expect(evaluate({ rules: [protectedPaths], config, diff: changes, approved: ["sample"] })).toEqual([])
+  })
+})
+
+describe("warn mode", () => {
+  const gate = { rule: "r", severity: "gate" as const, path: "a.ts", line: 3, message: "bad\nthing 100%" }
+  const report = { base: "abc", bootstrap: false, rules: 1, files: 1, findings: [gate], errors: [] as string[] }
+
+  test("a gate finding fails the run, and only warn mode lets it pass", () => {
+    expect(exitCode(report, false)).toBe(1)
+    expect(exitCode(report, true)).toBe(0)
+  })
+
+  test("a setup error fails even in warn mode", () => {
+    expect(exitCode({ ...report, findings: [], errors: ["no rules"] }, true)).toBe(1)
+  })
+
+  test("the annotation names the file and line and cannot break out of the command", () => {
+    expect(annotation(gate)).toBe("::warning file=a.ts,line=3,title=guard r::bad%0Athing 100%25")
+    expect(annotation({ ...gate, line: undefined })).toBe("::warning file=a.ts,title=guard r::bad%0Athing 100%25")
+  })
+
+  test("the CLI honours --cwd and --warn", () => {
+    const cwd = guarded()
+    write(cwd, "src/a.ts", "EOF\n")
+    commit(cwd, "change")
+    const run = (...flags: string[]) =>
+      Bun.spawnSync(["bun", join(guardsDir, "run.ts"), "--cwd", cwd, "--base", "main", ...flags])
+    const strict = run()
+    expect(strict.exitCode).toBe(1)
+    expect(strict.stdout.toString()).toContain("GATE src/a.ts:1 [heredoc-residue]")
+    expect(run("--warn").exitCode).toBe(0)
   })
 })
 

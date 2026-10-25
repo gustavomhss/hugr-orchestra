@@ -404,6 +404,22 @@ jobs:
         if: matrix.part == 'packages'
         run: bun run check:spawn-imports
 
+      # Guards run in warn mode for now: findings show as annotations and never fail the job. When dev already has the
+      # engine it runs from dev's copy, so the change under test cannot edit the code that judges it; the PR that
+      # introduces the engine falls back to its own copy. A `guardrail-approved` label clears protected-paths.
+      - name: Run guards
+        if: matrix.part == 'packages'
+        env:
+          GUARDRAIL_APPROVED: ${{ contains(github.event.pull_request.labels.*.name, 'guardrail-approved') && 'protected-paths' || '' }}
+        run: |
+          runner=script/guards/run.ts
+          if git cat-file -e origin/dev:script/guards/run.ts 2>/dev/null; then
+            mkdir -p "$RUNNER_TEMP/guards-base"
+            git archive origin/dev script/guards | tar -x -C "$RUNNER_TEMP/guards-base"
+            runner="$RUNNER_TEMP/guards-base/script/guards/run.ts"
+          fi
+          bun run "$runner" --cwd "$PWD" --base origin/dev --warn
+
       # The base comparison fails when the boundary ledger gains a key or a per-rule count over dev's; it needs the full
       # history this job's packages lane checks out (fetch-depth 0), like the godfile gate.
       - name: Run module-boundary gate
