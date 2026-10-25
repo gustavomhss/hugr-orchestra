@@ -85,6 +85,13 @@ import type {
   AuthSetResponses,
   BehaviorSetInput,
   CapabilityArtifactId,
+  CapabilityArtifactManagementArtifactCursor,
+  CapabilityConnectionId,
+  CapabilityConnectionRef,
+  CapabilityManagementTargetCursor,
+  CapabilitySetupInput,
+  CapabilityTargetId,
+  CapabilityTargetRef,
   ClaudeCodeLoginCode,
   CommandListErrors,
   CommandListResponses,
@@ -358,6 +365,58 @@ import type {
   ServerActionsWorkflowActionsWorkflowSourceResponses,
   ServerActionsWorkflowActionsWorkflowStateErrors,
   ServerActionsWorkflowActionsWorkflowStateResponses,
+  ServerCapabilityArtifactsCapabilityArtifactContentErrors,
+  ServerCapabilityArtifactsCapabilityArtifactContentResponses,
+  ServerCapabilityArtifactsCapabilityArtifactContentTicketErrors,
+  ServerCapabilityArtifactsCapabilityArtifactContentTicketResponses,
+  ServerCapabilityArtifactsCapabilityArtifactGetErrors,
+  ServerCapabilityArtifactsCapabilityArtifactGetResponses,
+  ServerCapabilityArtifactsCapabilityArtifactListErrors,
+  ServerCapabilityArtifactsCapabilityArtifactListResponses,
+  ServerCapabilityArtifactsCapabilityArtifactPinErrors,
+  ServerCapabilityArtifactsCapabilityArtifactPinResponses,
+  ServerCapabilityArtifactsCapabilityArtifactRemoveReferenceErrors,
+  ServerCapabilityArtifactsCapabilityArtifactRemoveReferenceResponses,
+  ServerCapabilityArtifactsCapabilityArtifactShareErrors,
+  ServerCapabilityArtifactsCapabilityArtifactShareResponses,
+  ServerCapabilityConnectionsCapabilityBindingListErrors,
+  ServerCapabilityConnectionsCapabilityBindingListResponses,
+  ServerCapabilityConnectionsCapabilityBindingPutErrors,
+  ServerCapabilityConnectionsCapabilityBindingPutResponses,
+  ServerCapabilityConnectionsCapabilityBindingRemoveErrors,
+  ServerCapabilityConnectionsCapabilityBindingRemoveResponses,
+  ServerCapabilityConnectionsCapabilityConnectionConnectErrors,
+  ServerCapabilityConnectionsCapabilityConnectionConnectResponses,
+  ServerCapabilityConnectionsCapabilityConnectionDisconnectErrors,
+  ServerCapabilityConnectionsCapabilityConnectionDisconnectResponses,
+  ServerCapabilityConnectionsCapabilityConnectionGetErrors,
+  ServerCapabilityConnectionsCapabilityConnectionGetResponses,
+  ServerCapabilityConnectionsCapabilityConnectionListErrors,
+  ServerCapabilityConnectionsCapabilityConnectionListResponses,
+  ServerCapabilityConnectionsCapabilityConnectionTargetsErrors,
+  ServerCapabilityConnectionsCapabilityConnectionTargetsResponses,
+  ServerCapabilityConnectionsCapabilityTargetCreateErrors,
+  ServerCapabilityConnectionsCapabilityTargetCreateResponses,
+  ServerCapabilityConnectionsCapabilityTargetGetErrors,
+  ServerCapabilityConnectionsCapabilityTargetGetResponses,
+  ServerCapabilityConnectionsCapabilityTargetRemoveErrors,
+  ServerCapabilityConnectionsCapabilityTargetRemoveResponses,
+  ServerCapabilityConnectionsCapabilityTargetRetargetErrors,
+  ServerCapabilityConnectionsCapabilityTargetRetargetResponses,
+  ServerCapabilityContentCapabilityContentReadErrors,
+  ServerCapabilityContentCapabilityContentReadResponses,
+  ServerCapabilityOperatorCapabilityOperatorInspectErrors,
+  ServerCapabilityOperatorCapabilityOperatorInspectResponses,
+  ServerCapabilitySchedulesCapabilityScheduleListErrors,
+  ServerCapabilitySchedulesCapabilityScheduleListResponses,
+  ServerCapabilitySchedulesCapabilitySchedulePauseErrors,
+  ServerCapabilitySchedulesCapabilitySchedulePauseResponses,
+  ServerCapabilitySchedulesCapabilityScheduleRemoveErrors,
+  ServerCapabilitySchedulesCapabilityScheduleRemoveResponses,
+  ServerCapabilitySchedulesCapabilityScheduleResumeErrors,
+  ServerCapabilitySchedulesCapabilityScheduleResumeResponses,
+  ServerCapabilitySchedulesCapabilityScheduleRunErrors,
+  ServerCapabilitySchedulesCapabilityScheduleRunResponses,
   SessionAbortErrors,
   SessionAbortResponses,
   SessionActivityErrors,
@@ -14407,6 +14466,1095 @@ export class ActionsTransfer extends HeyApiClient {
   }
 }
 
+export class Operator extends HeyApiClient {
+  public inspect<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).get<
+      ServerCapabilityOperatorCapabilityOperatorInspectResponses,
+      ServerCapabilityOperatorCapabilityOperatorInspectErrors,
+      ThrowOnError
+    >({
+      querySerializer: { parameters: { location: { object: { style: "form" } } } },
+      url: "/api/capability/operator",
+      ...options,
+      ...params,
+    })
+  }
+}
+
+export class Capability extends HeyApiClient {
+  private _operator?: Operator
+  get operator(): Operator {
+    return (this._operator ??= new Operator({ client: this.client }))
+  }
+}
+
+export class Operator2 extends HeyApiClient {
+  private _capability?: Capability
+  get capability(): Capability {
+    return (this._capability ??= new Capability({ client: this.client }))
+  }
+}
+
+export class Connection extends HeyApiClient {
+  public connect<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      capabilitySetupInput: CapabilitySetupInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "query", key: "location" },
+            { key: "capabilitySetupInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerCapabilityConnectionsCapabilityConnectionConnectResponses,
+      ServerCapabilityConnectionsCapabilityConnectionConnectErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/connections/connect",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  public list<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      after?: CapabilityConnectionId
+      limit?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { in: "query", key: "after" },
+            { in: "query", key: "limit" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerCapabilityConnectionsCapabilityConnectionListResponses,
+      ServerCapabilityConnectionsCapabilityConnectionListErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/connections",
+      ...options,
+      ...params,
+    })
+  }
+
+  public get<ThrowOnError extends boolean = false>(
+    parameters: {
+      connectionID: CapabilityConnectionId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "connectionID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerCapabilityConnectionsCapabilityConnectionGetResponses,
+      ServerCapabilityConnectionsCapabilityConnectionGetErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/connections/{connectionID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  public targets<ThrowOnError extends boolean = false>(
+    parameters: {
+      connectionID: CapabilityConnectionId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      after?: CapabilityManagementTargetCursor
+      limit?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "connectionID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "after" },
+            { in: "query", key: "limit" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerCapabilityConnectionsCapabilityConnectionTargetsResponses,
+      ServerCapabilityConnectionsCapabilityConnectionTargetsErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/connections/{connectionID}/targets",
+      ...options,
+      ...params,
+    })
+  }
+
+  public disconnect<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      connection?: CapabilityConnectionRef
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "query", key: "location" },
+            { in: "body", key: "connection" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerCapabilityConnectionsCapabilityConnectionDisconnectResponses,
+      ServerCapabilityConnectionsCapabilityConnectionDisconnectErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/connections/disconnect",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
+export class Target extends HeyApiClient {
+  public get<ThrowOnError extends boolean = false>(
+    parameters: {
+      targetID: CapabilityTargetId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "targetID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerCapabilityConnectionsCapabilityTargetGetResponses,
+      ServerCapabilityConnectionsCapabilityTargetGetErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/targets/{targetID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  public create<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      connection?: CapabilityConnectionRef
+      input?: {
+        environment: string
+        resource: unknown
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "query", key: "location" },
+            { in: "body", key: "connection" },
+            { in: "body", key: "input" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerCapabilityConnectionsCapabilityTargetCreateResponses,
+      ServerCapabilityConnectionsCapabilityTargetCreateErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/targets",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  public retarget<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      target?: CapabilityTargetRef
+      input?: {
+        environment: string
+        resource: unknown
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "query", key: "location" },
+            { in: "body", key: "target" },
+            { in: "body", key: "input" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerCapabilityConnectionsCapabilityTargetRetargetResponses,
+      ServerCapabilityConnectionsCapabilityTargetRetargetErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/targets/retarget",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      target?: CapabilityTargetRef
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "query", key: "location" },
+            { in: "body", key: "target" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerCapabilityConnectionsCapabilityTargetRemoveResponses,
+      ServerCapabilityConnectionsCapabilityTargetRemoveErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/targets/remove",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
+export class Binding2 extends HeyApiClient {
+  public list<ThrowOnError extends boolean = false>(
+    parameters: {
+      targetID: CapabilityTargetId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      after?: string
+      limit?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "targetID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "after" },
+            { in: "query", key: "limit" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerCapabilityConnectionsCapabilityBindingListResponses,
+      ServerCapabilityConnectionsCapabilityBindingListErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/targets/{targetID}/bindings",
+      ...options,
+      ...params,
+    })
+  }
+
+  public put<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      target?: CapabilityTargetRef
+      input?: {
+        sessionID: string
+        actions: Array<string>
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "query", key: "location" },
+            { in: "body", key: "target" },
+            { in: "body", key: "input" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerCapabilityConnectionsCapabilityBindingPutResponses,
+      ServerCapabilityConnectionsCapabilityBindingPutErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/bindings",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      target?: CapabilityTargetRef
+      sessionID?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "query", key: "location" },
+            { in: "body", key: "target" },
+            { in: "body", key: "sessionID" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerCapabilityConnectionsCapabilityBindingRemoveResponses,
+      ServerCapabilityConnectionsCapabilityBindingRemoveErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/bindings/remove",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
+export class Capability2 extends HeyApiClient {
+  private _connection?: Connection
+  get connection(): Connection {
+    return (this._connection ??= new Connection({ client: this.client }))
+  }
+
+  private _target?: Target
+  get target(): Target {
+    return (this._target ??= new Target({ client: this.client }))
+  }
+
+  private _binding?: Binding2
+  get binding(): Binding2 {
+    return (this._binding ??= new Binding2({ client: this.client }))
+  }
+}
+
+export class Connections extends HeyApiClient {
+  private _capability?: Capability2
+  get capability(): Capability2 {
+    return (this._capability ??= new Capability2({ client: this.client }))
+  }
+}
+
+export class Artifact extends HeyApiClient {
+  public list<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      after?: CapabilityArtifactManagementArtifactCursor
+      limit?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "sessionID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "after" },
+            { in: "query", key: "limit" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerCapabilityArtifactsCapabilityArtifactListResponses,
+      ServerCapabilityArtifactsCapabilityArtifactListErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/sessions/{sessionID}/artifacts",
+      ...options,
+      ...params,
+    })
+  }
+
+  public removeReference<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      sessionID: string
+      artifactID: CapabilityArtifactId
+      revision: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "path", key: "sessionID" },
+            { in: "path", key: "artifactID" },
+            { in: "path", key: "revision" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<
+      ServerCapabilityArtifactsCapabilityArtifactRemoveReferenceResponses,
+      ServerCapabilityArtifactsCapabilityArtifactRemoveReferenceErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/sessions/{sessionID}/artifacts/{artifactID}/{revision}",
+      ...options,
+      ...params,
+    })
+  }
+
+  public get<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+      artifactID: CapabilityArtifactId
+      revision: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "sessionID" },
+            { in: "path", key: "artifactID" },
+            { in: "path", key: "revision" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerCapabilityArtifactsCapabilityArtifactGetResponses,
+      ServerCapabilityArtifactsCapabilityArtifactGetErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/sessions/{sessionID}/artifacts/{artifactID}/{revision}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Read artifact bytes
+   *
+   * Verified artifact bytes with attachment, sandbox and no-store headers. Supports one `bytes=` Range.
+   */
+  public content<ThrowOnError extends boolean = false>(
+    parameters: {
+      range?: string
+      sessionID: string
+      artifactID: CapabilityArtifactId
+      revision: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "range" },
+            { in: "path", key: "sessionID" },
+            { in: "path", key: "artifactID" },
+            { in: "path", key: "revision" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerCapabilityArtifactsCapabilityArtifactContentResponses,
+      ServerCapabilityArtifactsCapabilityArtifactContentErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/sessions/{sessionID}/artifacts/{artifactID}/{revision}/content",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Mint an artifact content ticket
+   *
+   * Short-lived URL for the same bytes as `content`, bound to this caller, revision and Location.
+   */
+  public contentTicket<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+      artifactID: CapabilityArtifactId
+      revision: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "sessionID" },
+            { in: "path", key: "artifactID" },
+            { in: "path", key: "revision" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerCapabilityArtifactsCapabilityArtifactContentTicketResponses,
+      ServerCapabilityArtifactsCapabilityArtifactContentTicketErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/sessions/{sessionID}/artifacts/{artifactID}/{revision}/content-ticket",
+      ...options,
+      ...params,
+    })
+  }
+
+  public share<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      sessionID: string
+      artifactID: CapabilityArtifactId
+      revision: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      targetSessionID?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "path", key: "sessionID" },
+            { in: "path", key: "artifactID" },
+            { in: "path", key: "revision" },
+            { in: "query", key: "location" },
+            { in: "body", key: "targetSessionID" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerCapabilityArtifactsCapabilityArtifactShareResponses,
+      ServerCapabilityArtifactsCapabilityArtifactShareErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/sessions/{sessionID}/artifacts/{artifactID}/{revision}/share",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  public pin<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      sessionID: string
+      artifactID: CapabilityArtifactId
+      revision: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      pinned?: boolean
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "path", key: "sessionID" },
+            { in: "path", key: "artifactID" },
+            { in: "path", key: "revision" },
+            { in: "query", key: "location" },
+            { in: "body", key: "pinned" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).put<
+      ServerCapabilityArtifactsCapabilityArtifactPinResponses,
+      ServerCapabilityArtifactsCapabilityArtifactPinErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/sessions/{sessionID}/artifacts/{artifactID}/{revision}/pin",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
+export class Capability3 extends HeyApiClient {
+  private _artifact?: Artifact
+  get artifact(): Artifact {
+    return (this._artifact ??= new Artifact({ client: this.client }))
+  }
+}
+
+export class Artifacts extends HeyApiClient {
+  private _capability?: Capability3
+  get capability(): Capability3 {
+    return (this._capability ??= new Capability3({ client: this.client }))
+  }
+}
+
+export class Schedule2 extends HeyApiClient {
+  /**
+   * List agent schedules
+   *
+   * Every schedule created by an agent in this location, with its owning Session and agent.
+   */
+  public list<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).get<
+      ServerCapabilitySchedulesCapabilityScheduleListResponses,
+      ServerCapabilitySchedulesCapabilityScheduleListErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/schedules",
+      ...options,
+      ...params,
+    })
+  }
+
+  public pause<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      scheduleID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "path", key: "scheduleID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerCapabilitySchedulesCapabilitySchedulePauseResponses,
+      ServerCapabilitySchedulesCapabilitySchedulePauseErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/schedules/{scheduleID}/pause",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * 409 when the repeat limit is used up or a once lies in the past.
+   */
+  public resume<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      scheduleID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "path", key: "scheduleID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerCapabilitySchedulesCapabilityScheduleResumeResponses,
+      ServerCapabilitySchedulesCapabilityScheduleResumeErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/schedules/{scheduleID}/resume",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Start a run now without moving the next slot. A retry with the same idempotency key returns the same Session.
+   */
+  public run<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      scheduleID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "path", key: "scheduleID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerCapabilitySchedulesCapabilityScheduleRunResponses,
+      ServerCapabilitySchedulesCapabilityScheduleRunErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/schedules/{scheduleID}/run",
+      ...options,
+      ...params,
+    })
+  }
+
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      "idempotency-key": string
+      scheduleID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "idempotency-key" },
+            { in: "path", key: "scheduleID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<
+      ServerCapabilitySchedulesCapabilityScheduleRemoveResponses,
+      ServerCapabilitySchedulesCapabilityScheduleRemoveErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/schedules/{scheduleID}",
+      ...options,
+      ...params,
+    })
+  }
+}
+
+export class Capability4 extends HeyApiClient {
+  private _schedule?: Schedule2
+  get schedule(): Schedule2 {
+    return (this._schedule ??= new Schedule2({ client: this.client }))
+  }
+}
+
+export class Schedules extends HeyApiClient {
+  private _capability?: Capability4
+  get capability(): Capability4 {
+    return (this._capability ??= new Capability4({ client: this.client }))
+  }
+}
+
+export class Content extends HeyApiClient {
+  /**
+   * Read artifact bytes by ticket
+   *
+   * Header-free read for media elements. Same bytes and headers as `content`; invalid tickets yield 401.
+   */
+  public read<ThrowOnError extends boolean = false>(
+    parameters: {
+      range?: string
+      ticket: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "range" },
+            { in: "path", key: "ticket" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerCapabilityContentCapabilityContentReadResponses,
+      ServerCapabilityContentCapabilityContentReadErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/content/{ticket}",
+      ...options,
+      ...params,
+    })
+  }
+}
+
+export class Capability5 extends HeyApiClient {
+  private _content?: Content
+  get content(): Content {
+    return (this._content ??= new Content({ client: this.client }))
+  }
+}
+
+export class Content2 extends HeyApiClient {
+  private _capability?: Capability5
+  get capability(): Capability5 {
+    return (this._capability ??= new Capability5({ client: this.client }))
+  }
+}
+
+export class Capability6 extends HeyApiClient {
+  private _operator?: Operator2
+  get operator(): Operator2 {
+    return (this._operator ??= new Operator2({ client: this.client }))
+  }
+
+  private _connections?: Connections
+  get connections(): Connections {
+    return (this._connections ??= new Connections({ client: this.client }))
+  }
+
+  private _artifacts?: Artifacts
+  get artifacts(): Artifacts {
+    return (this._artifacts ??= new Artifacts({ client: this.client }))
+  }
+
+  private _schedules?: Schedules
+  get schedules(): Schedules {
+    return (this._schedules ??= new Schedules({ client: this.client }))
+  }
+
+  private _content?: Content2
+  get content(): Content2 {
+    return (this._content ??= new Content2({ client: this.client }))
+  }
+}
+
 export class Server extends HeyApiClient {
   private _actionsBinding?: ActionsBinding
   get actionsBinding(): ActionsBinding {
@@ -14451,6 +15599,11 @@ export class Server extends HeyApiClient {
   private _actionsTransfer?: ActionsTransfer
   get actionsTransfer(): ActionsTransfer {
     return (this._actionsTransfer ??= new ActionsTransfer({ client: this.client }))
+  }
+
+  private _capability?: Capability6
+  get capability(): Capability6 {
+    return (this._capability ??= new Capability6({ client: this.client }))
   }
 }
 

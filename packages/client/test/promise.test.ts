@@ -42,6 +42,7 @@ test("exposes every standard HTTP API group", () => {
     "lean",
     "atlas",
     "config",
+    "claudeCode",
     "relayDocuments",
     "relayPublish",
     "relayHooks",
@@ -57,6 +58,10 @@ test("exposes every standard HTTP API group", () => {
     "actionsSource",
     "actionsTransfers",
     "relayRuns",
+    "operator",
+    "connections",
+    "artifacts",
+    "capabilitySchedules",
   ]
   expect(Object.keys(client)).toEqual(groups)
   expect(

@@ -70,6 +70,7 @@
     "./provider": "./src/provider.ts",
     "./pty": "./src/pty.ts",
     "./pty-ticket": "./src/pty-ticket.ts",
+    "./guardrail": "./src/guardrail.ts",
     "./pull-request": "./src/pull-request.ts",
     "./question": "./src/question.ts",
     "./question-v1": "./src/question-v1.ts",
@@ -111,7 +112,12 @@
     "./workspace": "./src/workspace.ts",
     "./workspace-event": "./src/workspace-event.ts",
     "./workspace-id": "./src/workspace-id.ts",
-    "./worktree-event": "./src/worktree-event.ts"
+    "./worktree-event": "./src/worktree-event.ts",
+    "./capability-artifact-management": "./src/capability-artifact-management.ts",
+    "./capability-management": "./src/capability-management.ts",
+    "./capability-schedule-management": "./src/capability-schedule-management.ts",
+    "./capability-setup": "./src/capability-setup.ts",
+    "./lsp": "./src/lsp.ts"
   },
   "scripts": {
     "test": "bun test ./test --preload ../../script/test-guard.ts --timeout 30000 --only-failures",

@@ -114,6 +114,19 @@ describe("deriveTasks state", () => {
     expect(item.endTime).toBe(4_000)
   })
 
+  test("a task call keeps its child join when the V2 projection also sets part metadata", () => {
+    const call = taskCall("c1", "ses_a", "error")
+    if (call.type !== "tool") throw new Error("expected a tool part")
+    const item = only(
+      setup({
+        sessions: [session("ses_a", { parentID: parent })],
+        calls: [{ ...call, metadata: { providerState: undefined, providerResultState: undefined } }],
+      }),
+    )
+    expect(item.state).toBe("error")
+    expect(item.endTime).toBe(4_000)
+  })
+
   test("an aborted task call is interrupted", () => {
     const aborted = tool("msg_parent", "c1", "task", {
       status: "error",

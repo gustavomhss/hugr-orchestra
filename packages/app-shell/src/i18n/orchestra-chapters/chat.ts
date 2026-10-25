@@ -18,6 +18,8 @@ export const CHAT_COPY = {
   "orchestra.chat.revert.draftKept.description":
     "The composer still holds what you typed, so the reverted message was not put back in it. It is listed above the composer.",
   "orchestra.chat.terminal.createFailed": "Could not open a terminal",
+  "orchestra.chat.terminal.agentFinished": "Command finished",
+  "orchestra.chat.terminal.agentFailed": "Command failed (exit {{code}})",
   "orchestra.chat.terminal.closeFailed": "Could not close the terminal. It may still be running on the server.",
   "orchestra.chat.send.blockedByHook": "Blocked by hook “{{name}}”: {{message}}",
   "orchestra.chat.send.emptySession": "Empty session",

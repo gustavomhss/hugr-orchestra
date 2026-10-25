@@ -118,8 +118,6 @@ function McpDialog(props: {
 type McpEditProps = {
   card?: McpCard
   names: readonly string[]
-  // False when the server cannot report an existing server's config (V2): saving would guess.
-  writable: boolean
   // Sessions of this profile that a config write would stop (it restarts the profile's MCP servers).
   running: () => Promise<number>
   onSave: (name: string, config: McpServerConfig) => Promise<unknown>
@@ -193,7 +191,6 @@ function McpEditor(props: McpEditProps) {
   const language = useLanguage()
   const card = props.card
   const initial = mcpDraft(card?.entry)
-  const locked = !!card && !props.writable
   const [draft, setDraft] = createStore({
     name: card?.name ?? "",
     transport: initial?.transport ?? ("stdio" as McpTransport),
@@ -245,7 +242,7 @@ function McpEditor(props: McpEditProps) {
       subtitle={language.t("orchestra.mcp.editSubtitle")}
       error={draft.error}
       busy={draft.busy}
-      save={locked ? undefined : language.t(draft.running ? "orchestra.mcp.saveAnyway" : "orchestra.mcp.save")}
+      save={language.t(draft.running ? "orchestra.mcp.saveAnyway" : "orchestra.mcp.save")}
       onSubmit={(close) => void submit(close)}
       onClose={() => props.onClose()}
     >
@@ -264,7 +261,6 @@ function McpEditor(props: McpEditProps) {
         <span>{language.t("orchestra.mcp.transport")}</span>
         <select
           name="transport"
-          disabled={locked}
           value={draft.transport}
           onChange={(event) => setDraft("transport", event.currentTarget.value === "http" ? "http" : "stdio")}
         >
@@ -278,19 +274,16 @@ function McpEditor(props: McpEditProps) {
           name="endpoint"
           type="text"
           required
-          disabled={locked}
           value={draft.endpoint}
           onInput={(event) => setDraft("endpoint", event.currentTarget.value)}
         />
       </label>
-      <Show when={!locked}>
-        <p class="mx-note orchestra-mcp-dialog-note" role="note">
-          {language.t("orchestra.mcp.credentialsHint", { file: MCP_CONFIG_FILE })}
-        </p>
-      </Show>
+      <p class="mx-note orchestra-mcp-dialog-note" role="note">
+        {language.t("orchestra.mcp.credentialsHint", { file: MCP_CONFIG_FILE })}
+      </p>
       <Show when={card && !initial}>
         <p class="mx-note orchestra-mcp-dialog-note" role="note">
-          {language.t(locked ? "orchestra.mcp.configUnavailable" : "orchestra.mcp.configOutside")}
+          {language.t("orchestra.mcp.configOutside")}
         </p>
       </Show>
       <Show when={card}>
@@ -305,7 +298,6 @@ function McpEditor(props: McpEditProps) {
 export function McpToolsDialog(props: {
   card: McpCard
   status: string
-  supported: boolean
   read: "loading" | "error" | "ready"
   retrying: boolean
   onRetry: () => void
@@ -327,11 +319,9 @@ export function McpToolsDialog(props: {
                 ? "orchestra.mcp.toolsLoading"
                 : props.read === "error"
                   ? "orchestra.mcp.toolsLoadFailed"
-                  : !props.supported
-                    ? "orchestra.mcp.toolsUnsupported"
-                    : props.card.tools
-                      ? "orchestra.mcp.toolsNone"
-                      : "orchestra.mcp.toolsUnknown",
+                  : props.card.tools
+                    ? "orchestra.mcp.toolsNone"
+                    : "orchestra.mcp.toolsUnknown",
             )}
             <Show when={props.read === "error"}>
               <button type="button" class="mx-btn" disabled={props.retrying} onClick={props.onRetry}>

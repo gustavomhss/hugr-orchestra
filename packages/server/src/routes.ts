@@ -35,6 +35,12 @@ import { schemaErrorLayer } from "./middleware/schema-error"
 import { PtyEnvironment } from "@orchestra/core/host/pty-environment"
 import { layer as locationLayer } from "./location"
 import { sessionLocationLayer } from "./middleware/session-location"
+import { capabilityAuthorizationLayer } from "./middleware/capability-authorization"
+import { ServerOperator } from "./operator"
+import { ServerContentTicket } from "./capability-content-ticket"
+import { ServerCapabilityVerification } from "./capability-verification"
+import type { CapabilityOperatorContract } from "@orchestra/core/capability/operator/contract"
+import type { CapabilityConnectionSetupContract } from "@orchestra/core/capability/connection/setup-contract"
 
 const applicationServices = LayerNode.group([
   Database.node,
@@ -67,6 +73,10 @@ export interface Options {
   readonly password?: string
   /** Product contributions the application composes (apps/cli `CliHost.contributions`); sdk-next passes none. */
   readonly host?: ReadonlyArray<Host.Contribution>
+  /** Replaces the capability operator; tests and sdk-next embed their own. */
+  readonly operator?: CapabilityOperatorContract.Interface
+  /** Replaces the capability setup verifier; tests avoid vendor calls with it. */
+  readonly verifier?: CapabilityConnectionSetupContract.Verifier
 }
 
 export function createRoutes(options: Options = {}) {
@@ -74,19 +84,19 @@ export function createRoutes(options: Options = {}) {
     options.password
       ? ServerAuth.Config.configLayer({ username: "orchestra", password: Option.some(options.password) })
       : ServerAuth.Config.layer,
-    options.host ?? [],
+    options,
   )
 }
 
-export function createEmbeddedRoutes(options: Pick<Options, "host"> = {}) {
-  return makeRoutes(ServerAuth.Config.configLayer({ username: "orchestra", password: Option.none() }), options.host ?? [])
+export function createEmbeddedRoutes(options: Omit<Options, "password"> = {}) {
+  return makeRoutes(ServerAuth.Config.configLayer({ username: "orchestra", password: Option.none() }), options)
 }
 
 function makeRoutes<AuthError, AuthServices>(
   auth: Layer.Layer<ServerAuth.Config, AuthError, AuthServices>,
-  host: ReadonlyArray<Host.Contribution>,
+  options: Omit<Options, "password">,
 ) {
-  const merged = Host.merge(host)
+  const merged = Host.merge(options.host ?? [])
   // Contributed global nodes add services and may not fail, so the root keeps the application services' types.
   const serviceLayer: Layer.Layer<LayerNode.Output<typeof applicationServices>, LayerNode.Error<typeof applicationServices>> =
     AppNodeBuilder.build(
@@ -101,8 +111,12 @@ function makeRoutes<AuthError, AuthServices>(
     Layer.provide(sessionLocationLayer),
     Layer.provide(locationLayer),
     Layer.provide(authorizationLayer),
+    Layer.provide(capabilityAuthorizationLayer),
     Layer.provide(schemaErrorLayer),
     Layer.provide(auth),
+    Layer.provide(options.operator ? Layer.succeed(ServerOperator.Service, options.operator) : ServerOperator.layer),
+    Layer.provide(ServerContentTicket.layer),
+    Layer.provide(options.verifier ? Layer.succeed(ServerCapabilityVerification.Service, options.verifier) : ServerCapabilityVerification.layer),
     Layer.provide(serviceLayer),
     // The desktop renderer (`oc://renderer`) calls a desktop-owned server cross-origin, as it does V1.
     Layer.provide(corsLayer()),

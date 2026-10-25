@@ -1,6 +1,6 @@
 import { test } from "@playwright/test"
 import { fixture, pageMessages } from "../smoke/session-timeline.fixture"
-import { mockOrchestraServer } from "../utils/mock-server"
+import { mockOrchestraServer, sessionActivity } from "../utils/mock-server"
 import { expectAppVisible } from "../utils/waits"
 
 test("shows loaded sessions before the directory path request resolves", async ({ page }) => {
@@ -16,11 +16,23 @@ test("shows loaded sessions before the directory path request resolves", async (
   const pathBlocked = new Promise<void>((resolve) => {
     releasePath = resolve
   })
-  await page.route("**/api/path?*", async (route) => {
+  await page.route("**/api/location/paths?*", async (route) => {
     if (!new URL(route.request().url()).searchParams.has("location[directory]")) return route.fallback()
     await pathBlocked
     return route.fallback()
   })
+  // The shared mock still answers the V1 activity route; V2 reads it from `/api/activity/session`, wrapped with its location.
+  await page.route("**/api/activity/session?*", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      headers: { "access-control-allow-origin": "*" },
+      body: JSON.stringify({
+        location: { directory: fixture.directory, project: { id: fixture.project.id, directory: fixture.directory } },
+        data: sessionActivity(fixture.sessions, new URL(route.request().url()).searchParams.get("period") ?? "30d"),
+      }),
+    }),
+  )
 
   await page.addInitScript(
     ({ directory, server }) => {

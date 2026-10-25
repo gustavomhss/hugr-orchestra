@@ -61,10 +61,12 @@ export const HOME_COPY = {
   "orchestra.home.sessionMessage": "{{count}} message",
   "orchestra.home.sessionMessages": "{{count}} messages",
   "orchestra.home.sessionsEmpty": "No session activity in this period.",
+  "orchestra.home.sessionsHint": "Start a session and every turn, token and commit your agents produce lands here, ranked by impact.",
   "orchestra.home.startSession": "Start a session",
   "orchestra.home.models": "Spend by model",
   "orchestra.home.manage": "Manage",
   "orchestra.home.modelsEmpty": "No model runs in this period.",
+  "orchestra.home.modelsHint": "Spend per model, in tokens and cost, appears as soon as an agent runs.",
   "orchestra.home.footer": "Orchestra · {{name}}",
   "orchestra.home.footerSource": "local history",
   "orchestra.home.footerDetail":

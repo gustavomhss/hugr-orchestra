@@ -1,0 +1,12 @@
+id = "agent-scratch"
+group = "leftovers"
+severity = "gate"
+on = "changed-paths"
+paths = ["**/.tc-errors.txt", "**/*-errors.txt", "**/*.log", "**/scratch", "**/scratch.*", "**/scratch/**", "**/notes-*.md", "**/.claude/worktrees/**"]
+exclude = []
+statuses = ["A", "R", "C"]
+# Names seen in real history: .tc-errors.txt (typecheck output) was committed and later deleted.
+message = "Scratch or tool-output file added. Delete it; do not commit agent working files."
+summary = "Scratch notes, error dumps, logs and worktree copies that an agent or a tool left behind add noise and can leak local details. Delete the file from the change; keep working files out of git."
+positive = [".tc-errors.txt", "packages/core/tc-errors.txt", "server.log", "scratch/a.ts", "notes-today.md", ".claude/worktrees/x/a.ts"]
+negative = ["src/errors.ts", "docs/notes.md", "src/catalog.ts"]

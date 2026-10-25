@@ -1,0 +1,13 @@
+id = "llm-elision"
+group = "leftovers"
+severity = "warn"
+on = "added-lines"
+paths = ["**/*.{ts,tsx,mts,cts,js,jsx,mjs,py,rs,sh,go,java}"]
+exclude = []
+flags = "i"
+# A model that stops writing leaves a placeholder where the code was. The comment compiles, so only a reader notices.
+match = '''(\.\.\.|…)\s*(existing|rest of|previous|remaining|other|unchanged)\b[^.]{0,30}\b(code|implementation|content|methods?|file|logic)\b|\b(rest of|remaining)\s+(the\s+)?(code|file|implementation|function)\s+(here|unchanged|stays)|\bimplementation (goes|omitted|left)\b'''
+message = "Placeholder left where code should be (a model elided it). Write the real code or delete the stub."
+summary = "AI tools sometimes leave a placeholder comment where real code should be, which ships missing behavior. Write the actual code, or remove the stub."
+positive = ['  // ... existing code ...', '# ... rest of the implementation ...', '// rest of the code here', '  // implementation goes here', '/* ...remaining logic unchanged */']
+negative = ['const rest = items.slice(1)', '// keep the existing behaviour for old clients', 'throw new Error("not implemented")', 'spread ...rest into the call']

@@ -67,7 +67,6 @@ async function switchSession(page: Page, title: string) {
 
 async function setup(page: Page) {
   await mockOrchestraServer(page, {
-    protocol: "v1",
     directory,
     project: {
       id: projectID,
@@ -91,22 +90,25 @@ async function setup(page: Page) {
     sessions: [session(sessionA, titleA, 1700000000000), session(sessionB, titleB, 1700000001000)],
     pageMessages: () => ({ items: [] }),
   })
-  await page.route(/\/vcs(?:\?.*)?$/, (route) =>
+  const location = { directory, project: { id: projectID, directory } }
+  await page.route(/\/api\/vcs(?:\?.*)?$/, (route) =>
     route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify({ branch: "feature", default_branch: "dev" }),
+      body: JSON.stringify({ location, data: { branch: "feature", default_branch: "dev" } }),
     }),
   )
-  await page.route("**/vcs/diff**", (route) =>
+  await page.route(/\/api\/vcs\/diff(?:\?.*)?$/, (route) =>
     route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify(
-        new URL(route.request().url()).searchParams.get("mode") === "branch"
-          ? [diff("src/alpha.ts"), diff("src/beta.ts")]
-          : [diff("src/alpha.ts"), diff("src/gamma.ts")],
-      ),
+      body: JSON.stringify({
+        location,
+        data:
+          new URL(route.request().url()).searchParams.get("mode") === "branch"
+            ? [diff("src/alpha.ts"), diff("src/beta.ts")]
+            : [diff("src/alpha.ts"), diff("src/gamma.ts")],
+      }),
     }),
   )
   await page.addInitScript(

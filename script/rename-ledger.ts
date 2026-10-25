@@ -89,11 +89,6 @@ export const protectedStrings: Protected[] = [
     paths: /^(?:packages\/(?:opencode|orchestra)|apps\/orchestra)\/test\/project\/worktree\.test\.ts$/,
     reason: "legacy branch name the worktree test creates on purpose",
   },
-  {
-    pattern: /opencode\/legacy|`opencode\/\$\{directory/g,
-    paths: /^packages\/app(?:-shell)?\/e2e\/orchestra\/chapter-workspaces\.spec\.ts$/,
-    reason: "legacy branch name the worktree e2e test creates on purpose",
-  },
 
   // Third-party packages
   {

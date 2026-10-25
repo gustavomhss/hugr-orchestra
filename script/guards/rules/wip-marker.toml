@@ -1,0 +1,12 @@
+id = "wip-marker"
+group = "leftovers"
+severity = "gate"
+on = "added-lines"
+paths = ["**/*.{ts,tsx,mts,cts,js,jsx,mjs,py,rs,sh,yml,yaml,toml}"]
+exclude = []
+# WIP and XXX only count at the start of a comment: WIP is a product term here ("the WIP item") and oc-cli-XXX is a placeholder in a test. Case-sensitive on purpose.
+match = 'DO NOT MERGE|(//|#|/\*|^\s*\*)\s*(WIP|XXX)\b'
+message = "Work-in-progress marker left in the change. Finish it or remove the marker."
+summary = "A marker saying the work is unfinished or must not be merged means the change is not ready. Finish the work, or remove the marker if it no longer applies."
+positive = ['// DO NOT MERGE', '# WIP: finish the parser', '// XXX fix this', '/* WIP */', ' * XXX']
+negative = ['const key = "sk-xxxx"', 'the pressed WIP item opens no tooltip', "// The WIP row's tooltip is a Kobalte layer", '//   1. The harness subdir oc-cli-XXX collapses', 'let xxxl = 1']

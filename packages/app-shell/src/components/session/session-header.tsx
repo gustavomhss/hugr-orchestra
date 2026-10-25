@@ -16,6 +16,8 @@ import { useSync } from "@/context/sync"
 import { useTerminal } from "@/context/terminal"
 import { focusTerminalById } from "@/pages/session/helpers"
 import { useSessionLayout } from "@/pages/session/session-layout"
+import { useSessionCapabilities } from "@/pages/session/capabilities"
+import { CapabilityProcesses } from "@/pages/session/capability-processes"
 import { SessionCrumbs } from "@/orchestra/crumbs"
 import { decode64 } from "@/utils/base64"
 import { requireServerKey } from "@/utils/session-route"
@@ -173,9 +175,12 @@ type SessionHeaderV2ActionsState = {
 
 function SessionHeaderV2Actions(props: { state: SessionHeaderV2ActionsState }) {
   const language = useLanguage()
+  const capabilities = useSessionCapabilities()
+  const artifacts = () => props.state.reviewVisible && !!capabilities?.session()?.model.visible()
 
   return (
     <div class="flex items-center gap-2">
+      <CapabilityProcesses />
       <Show when={props.state.statusVisible}>
         <Tooltip placement="bottom" value={props.state.statusLabel}>
           <StatusPopoverV2 />
@@ -206,6 +211,21 @@ function SessionHeaderV2Actions(props: { state: SessionHeaderV2ActionsState }) {
           icon={<Icon name={props.state.terminalOpened ? "terminal-active" : "terminal"} size="small" />}
         />
       </TooltipV2>
+      <Show when={artifacts()}>
+        <TooltipV2 class="shrink-0" placement="bottom" value={language.t("orchestra.artifacts.toggle")}>
+          <IconButtonV2
+            type="button"
+            variant="ghost-muted"
+            size="large"
+            class="!w-9 shrink-0"
+            state={capabilities?.artifactsOpen() ? "pressed" : undefined}
+            onClick={() => capabilities?.toggleArtifacts()}
+            aria-label={language.t("orchestra.artifacts.toggle")}
+            aria-pressed={!!capabilities?.artifactsOpen()}
+            icon={<Icon name="photo" size="small" />}
+          />
+        </TooltipV2>
+      </Show>
       <Show when={props.state.reviewVisible}>
         <TooltipV2
           class="shrink-0"

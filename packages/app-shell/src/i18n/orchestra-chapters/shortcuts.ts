@@ -1,6 +1,6 @@
 // Copy owned by the shortcuts screen. Add new keys here instead of i18n/orchestra.ts so screens merge without conflicts.
 export const SHORTCUTS_COPY = {
-  "orchestra.shortcuts.eyebrow": "{{profile}} / profile configuration",
+  "orchestra.shortcuts.eyebrow": "{{profile}} · Configuration",
   "orchestra.shortcuts.title": "Shortcuts",
   "orchestra.shortcuts.description": "Make the workspace feel like yours.",
   "orchestra.shortcuts.reset": "Reset to defaults",

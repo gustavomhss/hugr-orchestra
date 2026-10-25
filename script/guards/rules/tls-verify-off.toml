@@ -1,0 +1,13 @@
+id = "tls-verify-off"
+group = "silenced"
+severity = "gate"
+on = "added-lines"
+paths = ["**/*.{ts,tsx,mts,cts,js,jsx,mjs,py,rs,sh,go,yml,yaml,env}", "**/Dockerfile*"]
+exclude = []
+skip_comments = ["//", "#"]
+# The usual way to make a TLS error go away. It turns off the check that protects every request after it.
+match = '''rejectUnauthorized\s*:\s*false|NODE_TLS_REJECT_UNAUTHORIZED\s*=\s*['"]?0|\bverify\s*=\s*False\b|danger_accept_invalid_(certs|hostnames)\s*\(\s*true|InsecureSkipVerify\s*:\s*true|\bcurl\b[^|;&]*\s(-k|--insecure)\b|GIT_SSL_NO_VERIFY|strict-ssl\s*=\s*false'''
+message = "TLS verification turned off. Fix the certificate or trust store instead of disabling the check."
+summary = "Turning off certificate checks lets anyone between you and the server read or change the traffic. Fix the certificate or trust settings instead of disabling the check."
+positive = ['  rejectUnauthorized: false,', 'NODE_TLS_REJECT_UNAUTHORIZED=0 bun run x', 'requests.get(url, verify=False)', 'builder.danger_accept_invalid_certs(true)', 'curl -k https://example.com', 'GIT_SSL_NO_VERIFY=1 git clone x']
+negative = ['requests.get(url, verify=True)', 'rejectUnauthorized: true', 'curl -fsSL https://example.com', '// rejectUnauthorized: false was removed']

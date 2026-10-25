@@ -1,12 +1,11 @@
 import { getFilename } from "@orchestra/core/util/path"
 import { useQuery } from "@tanstack/solid-query"
-import { createMemo, createResource, For, Match, onCleanup, Show, Switch } from "solid-js"
+import { createMemo, For, Match, onCleanup, Show, Switch } from "solid-js"
 import { toggleMcp } from "@/context/global-sync/mcp"
 import { createStore } from "solid-js/store"
 import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
-import { useSDK } from "@/context/sdk"
 import { useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import type { ChapterPageProps } from "@/orchestra/chapter-route"
@@ -25,19 +24,13 @@ export default function McpPage(props: ChapterPageProps) {
   const global = useGlobal()
   const platform = usePlatform()
   const serverSDK = useServerSDK()
-  const sdk = useSDK()
   const sync = useServerSync()
   const key = pathKey(props.directory)
   const source = createMcpSource({
-    server: props.server,
     directory: props.directory,
-    sdk: sdk(),
     serverSDK: serverSDK(),
-    // Called through a wrapper: window.fetch throws when invoked as a method of another object.
-    fetch: (url, init) => (platform.fetch ?? globalThis.fetch)(url, init),
     open: (url) => platform.openExternal(url),
   })
-  const [v1] = createResource(source.v1)
   // ServerSync keeps observing this profile's MCP status and resources after the page closes, so a
   // status event still refreshes the owning profile while another profile is open.
   sync().child(props.directory, { bootstrap: false, mcp: true })
@@ -196,8 +189,7 @@ export default function McpPage(props: ChapterPageProps) {
         </Match>
         <Match when={!cards().length}>
           <div class="mx-empty" role="status">
-            {language.t("orchestra.mcp.empty")}
-            <br />
+            <strong>{language.t("orchestra.mcp.empty")}</strong>
             {language.t("orchestra.mcp.emptyHint")}
           </div>
         </Match>
@@ -346,8 +338,7 @@ export default function McpPage(props: ChapterPageProps) {
           <McpEditDialog
             card={selected()}
             names={cards().map((card) => card.name)}
-            writable={!v1.loading && false}
-            read={v1.loading || status.isPending ? "loading" : status.isError ? "error" : "ready"}
+            read={status.isPending ? "loading" : status.isError ? "error" : "ready"}
             retrying={status.isFetching}
             onRetry={() => void status.refetch()}
             load={async () => {
@@ -365,8 +356,7 @@ export default function McpPage(props: ChapterPageProps) {
             <McpToolsDialog
               card={card()}
               status={label(card())}
-              supported={!v1.loading && false}
-              read={v1.loading || tools.isPending ? "loading" : tools.isError ? "error" : "ready"}
+              read={tools.isPending ? "loading" : tools.isError ? "error" : "ready"}
               retrying={tools.isFetching}
               onRetry={() => void tools.refetch()}
               onClose={close}

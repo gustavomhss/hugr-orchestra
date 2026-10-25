@@ -18,7 +18,7 @@
 // forces the classification to be DECLARED rather than discovered by the next reviewer.
 //
 // ── DECLARED COUNTS (gate-checked; a drift here FAILS this gate) ────────────────────────────────────────
-//   declared-modules: 37 · dead-value-exports: 129 · type-reachable: 4
+//   declared-modules: 38 · dead-value-exports: 131 · type-reachable: 4
 //   These three are read back from THIS file and asserted against the measured tree at the foot of the run
 //   (see "THE HEADER STATES COUNTS, AND THIS CHECKS THEM"). No count is QUOTED anywhere else in this
 //   header — a quoted integer that nothing checks is exactly what rotted here (task #143); this one cannot.
@@ -278,6 +278,10 @@ const BUILTIN_LEDGER = {
   // with a zero-length pointer. Named refusal added; module still has ZERO production callers.
   "packages/knowledge/src/write/archive.ts": { values: 2, shipped: null, banner: false },
   "packages/knowledge/src/write/template.ts": { values: 3, shipped: null, banner: false },
+  // No `packages/*/src` module calls `mineSites` / `mineWith`: the Orchestra host drives them through the
+  // `@orchestra/atlas-boundary` `./mine` entry, which `boundary/script/build.ts` bundles from this file (D39).
+  // Shipped, but outside the analyser's reach, so it is ledgered rather than bannered as a specification artifact.
+  "packages/cli/src/surface-mine.ts": { values: 2, shipped: "boundary/script/build.ts", banner: false },
   // #99b N2 landed: the N2 governed-emit door (`adapter-io/src/governed-emit-negation.ts`) now VALUE-IMPORTS
   // `negationKey` (mints an admitted negation's id AND an AbstainedRecord's address), so the row that tracked
   // it dead-until-wired went dead→live and was REMOVED here — the ledger keeping the N1→N2 transition on the

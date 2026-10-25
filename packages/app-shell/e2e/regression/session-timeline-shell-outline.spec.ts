@@ -133,20 +133,21 @@ test("keeps the patch card inside a fractionally short virtual row", async ({ pa
 
 test("allows paint rounding for every framed row but not fixed turn gaps", async ({ page }) => {
   const secondUserID = "msg_outline_second_user"
+  const firstUser = userMessage(undefined, {
+    summary: {
+      diffs: [
+        {
+          file: "src/summary.ts",
+          additions: 1,
+          deletions: 1,
+          patch: "@@ -1 +1 @@\n-export const value = 1\n+export const value = 2",
+        },
+      ],
+    },
+  })
   await setupTimeline(page, {
     messages: [
-      userMessage(undefined, {
-        summary: {
-          diffs: [
-            {
-              file: "src/summary.ts",
-              additions: 1,
-              deletions: 1,
-              patch: "@@ -1 +1 @@\n-export const value = 1\n+export const value = 2",
-            },
-          ],
-        },
-      }),
+      firstUser,
       assistantMessage([textPart("prt_outline_text", "Assistant text")]),
       userMessage(undefined, { id: secondUserID, created: 1700000010000 }),
       assistantMessage([], {

@@ -42,6 +42,8 @@ import {
 } from "@/pages/session/helpers"
 import { setSessionHandoff } from "@/pages/session/handoff"
 import { useSessionLayout } from "@/pages/session/session-layout"
+import { useSessionCapabilities } from "@/pages/session/capabilities"
+import { ArtifactsPanel } from "@/pages/session/artifacts-panel"
 import { SessionFileBrowserTab, type SessionFileBrowserState } from "@/pages/session/v2/session-file-browser-tab"
 import { FILE_TREE_WIDTH_MIN, LegacyFileTreePanel } from "./legacy-file-tree-panel"
 import { TasksPanel } from "./tasks-panel"
@@ -81,6 +83,7 @@ export function SessionSidePanel(props: {
   const dialog = useDialog()
   const sdk = useSDK()
   const { sessionKey, tabs, view, params } = useSessionLayout()
+  const capabilities = useSessionCapabilities()
   const projectDirectory = createMemo(() => sdk().directory)
 
   const isDesktop = createMediaQuery("(min-width: 768px)")
@@ -156,6 +159,7 @@ export function SessionSidePanel(props: {
     review: reviewTab,
     hasReview: props.canReview,
     fileBrowser: () => true,
+    artifacts: () => !!capabilities?.session()?.model.visible(),
     // The approved rail gives Tasks its own tab beside Apps, which hosts only the Dock.
     cockpit: () => false,
   })
@@ -221,7 +225,7 @@ export function SessionSidePanel(props: {
   }
   const activateTab = (value: string) => {
     const next = normalizeTab(value)
-    if (next === "apps") tabs().open("apps")
+    if (next === "apps" || next === "artifacts") tabs().open(next)
     const path = file.pathFromTab(next)
     if (path) void file.load(path)
     openReviewPanel()
@@ -239,7 +243,7 @@ export function SessionSidePanel(props: {
   const fileBrowserMounted = createMemo(() => openedTabs().length > 0 || openFileOpen() || !!browserTab())
   const fileBrowserVisible = createMemo(() => {
     const active = activeTab()
-    return active !== "review" && active !== "context" && active !== "apps" && active !== "empty"
+    return active !== "review" && active !== "context" && active !== "apps" && active !== "artifacts" && active !== "empty"
   })
   const openFileKeybind = createMemo(() => command.keybindParts("file.open"))
   const closeTabKeybind = createMemo(() => command.keybindParts("tab.close"))
@@ -361,6 +365,16 @@ export function SessionSidePanel(props: {
                           <Tabs.Trigger value="apps">
                             <div>{language.t("orchestra.chat.apps")}</div>
                           </Tabs.Trigger>
+                          <Show when={capabilities?.session()?.model.visible()}>
+                            <Tabs.Trigger value="artifacts">
+                              <div class="flex items-center gap-1.5">
+                                <div>{language.t("orchestra.artifacts.tab")}</div>
+                                <div data-slot="session-side-panel-tab-count">
+                                  {capabilities?.session()?.model.state.artifacts.length}
+                                </div>
+                              </div>
+                            </Tabs.Trigger>
+                          </Show>
                           <For each={panelTabs()}>
                             {(tab) => (
                               <Show
@@ -505,6 +519,16 @@ export function SessionSidePanel(props: {
                           class="flex flex-col h-full overflow-hidden contain-strict"
                         >
                           <OrchestraCockpit />
+                        </Tabs.Content>
+                      </Show>
+
+                      <Show when={activeTab() === "artifacts"}>
+                        <Tabs.Content
+                          data-session-tab="artifacts"
+                          value="artifacts"
+                          class="flex flex-col h-full overflow-hidden contain-strict"
+                        >
+                          <ArtifactsPanel />
                         </Tabs.Content>
                       </Show>
 

@@ -23,7 +23,7 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-new-l
   --orchestra-toolbar-drop: 0 6px 16px rgba(68, 75, 84, 0.09);
   --orchestra-toolbar-label: #3d454f;
   --orchestra-toolbar-brand: #3e454e;
-  --orchestra-toolbar-button: #3f454c;
+  --orchestra-toolbar-button: #3e454c;
   --orchestra-workspace-overlay: linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.18) 42%, rgba(255, 255, 255, 0.4)),
     radial-gradient(1100px 780px at 12% 4%, rgba(255, 255, 255, 0.4), transparent 68%);
   --orchestra-glass-background: linear-gradient(
@@ -52,8 +52,9 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-new-l
   --orchestra-sidebar-active-text: #1e2329;
   --orchestra-sidebar-active-accent: #65a7ff;
   --orchestra-sidebar-active-highlight: rgba(255, 255, 255, 0.6);
-  --orchestra-sidebar-icon: #3f454d;
-  --orchestra-sidebar-active-icon: #133ba1;
+  --orchestra-sidebar-active-rim: rgba(101, 167, 255, 0.16);
+  --orchestra-sidebar-icon: #3e454d;
+  --orchestra-sidebar-active-icon: #0e37ad;
   --orchestra-sidebar-key-background: rgba(255, 255, 255, 0.4);
   --orchestra-sidebar-key-border: rgba(110, 118, 127, 0.2);
   --orchestra-sidebar-secondary: #7f868e;
@@ -65,18 +66,18 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-new-l
   --orchestra-sidebar-profile-shadow: inset 0 1px rgba(255, 255, 255, 0.8), 0 1px 2px rgba(68, 75, 84, 0.1);
   --orchestra-sidebar-profile-text: #2a3036;
   --orchestra-sidebar-profile-muted: var(--orchestra-sidebar-secondary);
-  --orchestra-sidebar-profile-chevron: #3f454c;
+  --orchestra-sidebar-profile-chevron: #3e454c;
   --orchestra-sidebar-profile-logo: #78a4ff;
   --orchestra-brand-descriptor: var(--orchestra-sidebar-secondary);
-  --orchestra-sidebar-footer: #3d454e;
-  --orchestra-wip-text: #603d00;
-  --orchestra-wip-background: rgba(255, 255, 255, 0.5);
+  --orchestra-sidebar-footer: #3d454f;
+  --orchestra-wip-text: #613d00;
+  --orchestra-wip-background: rgba(60, 67, 75, 0.05);
   --orchestra-tab-text: #3d454f;
   --orchestra-tab-hover-background: rgba(77, 86, 95, 0.035);
   --orchestra-tab-hover-text: #3d454f;
   --orchestra-tab-active-text: #3d454d;
-  --orchestra-tab-icon: #3f454d;
-  --orchestra-branch-color: #623c00;
+  --orchestra-tab-icon: #3e454c;
+  --orchestra-branch-color: #633c00;
   --orchestra-surface: rgba(255, 255, 255, 0.6);
   --orchestra-surface-hover: rgba(255, 255, 255, 0.9);
   --orchestra-surface-active: rgba(156, 198, 255, 0.28);
@@ -206,6 +207,9 @@ html[data-orchestra-palette="github"][data-color-scheme] body[data-new-layout] [
   color: var(--orchestra-sidebar-active-text);
   box-shadow: var(--orchestra-sidebar-active-shadow);
 }
+[data-orchestra-palette="github"] .orchestra-nav-button[aria-current="page"]::before {
+  background: var(--orchestra-sidebar-active-accent);
+}
 [data-orchestra-palette="github"] .orchestra-nav-button:focus-visible,
 [data-orchestra-palette="github"] .orchestra-profile:focus-visible,
 [data-orchestra-palette="github"] .orchestra-profile-item[data-highlighted] {
@@ -315,7 +319,7 @@ html[data-orchestra-palette="github"][data-color-scheme] body[data-new-layout] [
 @media (min-width: 768px) {
   [data-orchestra-palette="github"] #orchestra-session-tabs {
     border: 1px solid var(--orchestra-glass-border);
-    background: var(--orchestra-glass-background);
+    background: var(--orchestra-grain), var(--orchestra-glass-sheen), var(--orchestra-glass-background);
     box-shadow: var(--orchestra-glass-shadow);
   }
   [data-orchestra-palette="github"] [data-orchestra-tabs] [data-titlebar-tab] {
@@ -329,7 +333,7 @@ html[data-orchestra-palette="github"][data-color-scheme] body[data-new-layout] [
   }
   [data-orchestra-palette="github"] [data-orchestra-tabs] [data-titlebar-tab]:is([data-state="pressed"], [data-editing="true"]) {
     border-color: var(--orchestra-glass-border);
-    background: var(--orchestra-glass-background);
+    background: var(--orchestra-grain), var(--orchestra-glass-sheen), var(--orchestra-glass-background);
     color: var(--orchestra-tab-active-text);
     box-shadow: var(--orchestra-glass-shadow);
   }
@@ -1254,6 +1258,9 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-mx-ki
   --mx-shadow: 0 30px 100px rgba(60, 67, 75, 0.2);
   --mx-pop-shadow: 0 14px 35px rgba(60, 67, 75, 0.16);
   --mx-backdrop: rgba(55, 61, 69, 0.3);
+  --mx-rim: rgba(111, 119, 128, 0.24);
+  --mx-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0) 56px);
+  --mx-card-shadow: 0 1px 2px rgba(60, 67, 75, 0.06), 0 8px 22px -10px rgba(60, 67, 75, 0.16);
   --mx-enabled: rgba(141, 195, 255, 0.16);
 }
 [data-orchestra-palette="github"] .mx-eyebrow {
@@ -1276,8 +1283,13 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-mx-ki
 }
 [data-orchestra-palette="github"] .mx-card {
   border: 1px solid var(--mx-line);
-  background: var(--mx-raised);
-  box-shadow: var(--mx-highlight);
+  background: var(--mx-sheen), var(--mx-raised);
+  box-shadow: var(--mx-highlight), var(--mx-card-shadow);
+}
+[data-orchestra-palette="github"] .mx-card:hover,
+[data-orchestra-palette="github"] .mx-card:focus-within {
+  border-color: var(--mx-rim);
+  box-shadow: var(--mx-highlight), var(--mx-pop-shadow);
 }
 [data-orchestra-palette="github"] .mx-mark {
   border: 1px solid var(--mx-line);
@@ -1302,6 +1314,13 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-mx-ki
 }
 [data-orchestra-palette="github"] .mx-badge.bad {
   color: var(--mx-bad);
+}
+[data-orchestra-palette="github"] .mx-badge:is(.good, .bad) {
+  border-color: transparent;
+  background: color-mix(in srgb, currentColor 9%, transparent);
+}
+[data-orchestra-palette="github"] .mx-badge:is(.good, .bad)::before {
+  background: currentColor;
 }
 [data-orchestra-palette="github"] .mx-card-foot .mx-btn:not(.primary, .danger, :hover) {
   background: transparent;
@@ -1367,8 +1386,32 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-mx-ki
   color: var(--mx-dim);
 }
 [data-orchestra-palette="github"] .mx-empty {
-  border: 1px dashed var(--mx-line);
+  border: 1px solid var(--mx-line);
+  background: linear-gradient(180deg, var(--mx-soft), transparent 75%);
+  box-shadow: var(--mx-highlight);
   color: var(--mx-dim);
+}
+[data-orchestra-palette="github"] .mx-empty::before {
+  border: 1px solid var(--mx-line);
+  background: radial-gradient(circle, var(--mx-dim) 0 2px, transparent 2.5px),
+    radial-gradient(circle, transparent 0 7px, var(--mx-line) 7.5px 8.5px, transparent 9px),
+    var(--mx-soft);
+  box-shadow: var(--mx-highlight);
+}
+[data-orchestra-palette="github"] .mx-empty[role="alert"],
+[data-orchestra-palette="github"] .mx-empty:has([role="alert"]) {
+  border-color: color-mix(in srgb, var(--mx-bad) 28%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--mx-bad) 7%, transparent), transparent 75%);
+}
+[data-orchestra-palette="github"] .mx-empty[role="alert"]::before,
+[data-orchestra-palette="github"] .mx-empty:has([role="alert"])::before {
+  border-color: color-mix(in srgb, var(--mx-bad) 32%, transparent);
+  background: radial-gradient(circle, var(--mx-bad) 0 2px, transparent 2.5px),
+    radial-gradient(circle, transparent 0 7px, color-mix(in srgb, var(--mx-bad) 45%, transparent) 7.5px 8.5px, transparent 9px),
+    color-mix(in srgb, var(--mx-bad) 8%, transparent);
+}
+[data-orchestra-palette="github"] .mx-empty strong {
+  color: var(--mx-strong);
 }
 [data-orchestra-palette="github"] .mx-note {
   color: var(--mx-dim);
@@ -1385,16 +1428,25 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-mx-ki
   border: 1px solid var(--mx-line);
   background: var(--mx-modal);
   color: var(--mx-strong);
-  box-shadow: var(--mx-shadow);
+  box-shadow: var(--mx-highlight), var(--mx-shadow);
 }
 [data-orchestra-palette="github"] .mx-dialog-head {
   border-block-end: 1px solid var(--mx-line);
+  background: var(--mx-sheen);
 }
 [data-orchestra-palette="github"] .mx-dialog-head p {
   color: var(--mx-dim);
 }
+[data-orchestra-palette="github"] .mx-dialog-head .mx-link:has(> svg:only-child) {
+  color: var(--mx-dim);
+}
+[data-orchestra-palette="github"] .mx-dialog-head .mx-link:has(> svg:only-child):hover {
+  background: var(--mx-soft);
+  color: var(--mx-strong);
+}
 [data-orchestra-palette="github"] .mx-dialog-foot {
   border-block-start: 1px solid var(--mx-line);
+  background: var(--mx-soft);
 }
 [data-orchestra-palette="github"] .mx-field > span {
   color: var(--mx-dim);
@@ -1565,7 +1617,10 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-mx-ki
 [data-orchestra-palette="github"] .home-live::before {
   background: currentColor;
 }
-[data-orchestra-palette="github"] .home-empty {
+[data-orchestra-palette="github"] .home-first strong {
+  color: var(--mx-strong);
+}
+[data-orchestra-palette="github"] .home-first span {
   color: var(--mx-dim);
 }
 [data-orchestra-palette="github"] .home-foot {

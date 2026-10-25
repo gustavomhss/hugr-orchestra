@@ -137,19 +137,14 @@ export async function setupResearchTimeline(
   page: Page,
   input: {
     value: ReturnType<typeof researchEnvelope>
-    protocol: "v2"
     status?: "running" | "completed"
   },
 ) {
   const status = input.status ?? "completed"
   const timeline = await setupTimeline(page, {
-    protocol: input.protocol,
-    messages: [
-      userMessage(),
-      assistantMessage(input.protocol === "v2" ? [] : [researchTask(input.value, status)], { completed: status === "completed" }),
-    ],
+    protocol: "v2",
+    messages: [userMessage(), assistantMessage([], { completed: status === "completed" })],
   })
-  if (input.protocol === "v1") return timeline
   const messages = [
     { id: userID, type: "user", text: "Inspect native retained research", time: { created: 1700000000000 } },
     {

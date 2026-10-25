@@ -13,7 +13,7 @@ test("edit captures a combination, rejects conflicts, fires the new binding inst
   const drafts = page.locator('[data-tab-key^="draft:"]')
   await expect(chapter.getByRole("heading", { level: 1 })).toHaveText("Shortcuts")
   // The profile name is bidi-isolated (FSI ... PDI), the text form of <bdi>.
-  await expect(chapter.locator(".mx-eyebrow")).toHaveText("\u2068Shortcut repository\u2069 / profile configuration")
+  await expect(chapter.locator(".mx-eyebrow")).toHaveText("\u2068Shortcut repository\u2069 · Configuration")
   await expect(chapter.locator(".mx-toolbar .mx-badge bdi")).toHaveText("Shortcut repository")
   await expect(row(page, "command.palette").locator("strong")).toHaveText("Command palette")
   await expect(row(page, "command.palette").locator("small")).toHaveText("General shortcut")

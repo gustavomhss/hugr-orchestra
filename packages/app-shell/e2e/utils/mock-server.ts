@@ -5,6 +5,7 @@ const emptyList = new Set(["/skill", "/command", "/lsp", "/formatter", "/vcs/sta
 const emptyObject = new Set(["/global/config", "/config", "/provider/auth", "/mcp", "/experimental/resource"])
 
 export interface MockServerConfig {
+  // Only V2 exists; the mock always serves it. Kept so existing callers that still name it compile.
   protocol?: "v2"
   // Orchestra opens the review rail once per app storage. Mocked pages start after that default unless a
   // spec asks for a fresh profile, so specs that toggle the rail keep exact open/closed oracles.
@@ -22,6 +23,8 @@ export interface MockServerConfig {
   beforeMessagesResponse?: (input: { sessionID: string; before?: string }) => Promise<void>
   onMessages?: (input: { sessionID: string; before?: string; phase: "start" | "end" }) => void
   message?: (sessionID: string, messageID: string) => unknown
+  // V2 per-turn diff (`GET /api/session/:id/message/:messageID/diff`); an unknown turn has none.
+  diffs?: (sessionID: string, messageID: string) => unknown[]
   onMessage?: (input: { sessionID: string; messageID: string }) => void
   onPrompt?: (input: { sessionID: string; body: unknown }) => void
   events?: () => unknown[]
@@ -87,10 +90,9 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
         config.eventRetry,
       )
     }
-    if (path === "/global/health")
-      return config.protocol === "v2" ? json(route, {}, undefined, 404) : json(route, { healthy: true })
-    if (path === "/api/health" && config.protocol === "v2")
-      return json(route, { healthy: true, version: "2.0.0", pid: 1 })
+    // The app probes only /api/health since the V1 protocol was removed; an unanswered probe leaves it unconnected.
+    if (path === "/global/health") return json(route, {}, undefined, 404)
+    if (path === "/api/health") return json(route, { healthy: true, version: "2.0.0", pid: 1 })
     if (path === "/experimental/capabilities") return json(route, { backgroundSubagents: true })
     if (path === "/provider")
       return json(route, typeof config.provider === "function" ? config.provider() : config.provider)
@@ -114,6 +116,20 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
         typeof config.sessionStatus === "function" ? config.sessionStatus() : (config.sessionStatus ?? {}),
       )
     if (path === "/vcs/diff" && config.vcsDiff) return json(route, config.vcsDiff)
+    if (path === "/api/fs/list" && config.fileList)
+      return json(route, {
+        location: location(config),
+        data: await config.fileList(url.searchParams.get("path") ?? ""),
+      })
+    if (path === "/api/fs/read" && config.fileContent) {
+      const file = (await config.fileContent(url.searchParams.get("path") ?? "")) as { content?: string }
+      return route.fulfill({
+        status: 200,
+        contentType: "application/octet-stream",
+        headers: { "access-control-allow-origin": "*" },
+        body: file.content ?? "",
+      })
+    }
     if (path === "/file" && config.fileList)
       return json(route, await config.fileList(url.searchParams.get("path") ?? ""))
     if (path === "/file/content" && config.fileContent)
@@ -149,6 +165,12 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
           },
         ],
       })
+    if (path === "/api/provider" || path === "/api/model" || path === "/api/model/default") {
+      const catalog = currentCatalog(typeof config.provider === "function" ? config.provider() : config.provider)
+      const data =
+        path === "/api/provider" ? catalog.providers : path === "/api/model" ? catalog.models : catalog.default
+      return json(route, { location: location(config), data })
+    }
     if (path === "/api/command") return json(route, { location: location(config), data: [] })
     if (path === "/api/mcp") return json(route, { location: location(config), data: [] })
     if (path === "/api/mcp/resource")
@@ -164,9 +186,11 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
       config.onConnectKey?.({ integrationID: integrationConnect, body: route.request().postDataJSON() })
       return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" } })
     }
+    if (path === "/api/location") return json(route, location(config))
+    if (path === "/api/location/paths") return json(route, { home: "C:/Orchestra" })
     if (path === "/api/project") return json(route, [config.project])
-    if (path === "/api/project/current")
-      return json(route, { id: (config.project as { id?: string }).id, directory: config.directory })
+    // project.current resolves through the location route; the server has no /api/project/current.
+    if (path === "/api/location") return json(route, location(config))
     if (path.startsWith("/api/project/") && route.request().method() === "PATCH") return json(route, config.project)
     if (path === "/api/path")
       return json(route, {
@@ -226,8 +250,13 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
           )
         })
       const ordered = url.searchParams.get("order") === "asc" ? sessions.toReversed() : sessions
-      const data = ordered.slice(offset, offset + limit)
-      const next = offset + limit < ordered.length ? String(offset + limit) : undefined
+      // The limit pages roots; a root's child sessions always travel with it.
+      const roots = ordered.filter((session) => session.parentID === undefined)
+      const page = roots.slice(offset, offset + limit)
+      const data = ordered.filter((session) =>
+        session.parentID === undefined ? page.includes(session) : page.some((root) => root.id === session.parentID),
+      )
+      const next = offset + limit < roots.length ? String(offset + limit) : undefined
       return json(route, {
         data: data.map((session) => currentSession(session, config.directory)),
         cursor: { next },
@@ -293,6 +322,13 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
       const period = url.searchParams.get("period") ?? "30d"
       return json(route, config.activity?.(period) ?? sessionActivity(config.sessions, period))
     }
+    if (path === "/api/activity/session") {
+      const period = url.searchParams.get("period") ?? "30d"
+      return json(route, {
+        location: location(config),
+        data: config.activity?.(period) ?? sessionActivity(config.sessions, period),
+      })
+    }
     if (path === "/vcs/activity")
       return json(route, {
         repository: true,
@@ -305,6 +341,22 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
         ahead: null,
         behind: null,
         truncated: false,
+      })
+    if (path === "/api/vcs/activity")
+      return json(route, {
+        location: location(config),
+        data: {
+          repository: true,
+          since: Number(url.searchParams.get("since") ?? 0),
+          until: Number(url.searchParams.get("until") ?? Date.now()),
+          totals: { commits: 0, merges: 0, authors: 0, additions: 0, deletions: 0, filesChanged: 0 },
+          days: [],
+          topPaths: [],
+          recent: [],
+          ahead: null,
+          behind: null,
+          truncated: false,
+        },
       })
 
     const currentSessionMatch = path.match(/^\/api\/session\/([^/]+)$/)
@@ -338,6 +390,9 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
     if (todoMatch) return json(route, config.todos?.(todoMatch[1]!) ?? [])
     if (/^\/session\/[^/]+\/(children|diff)$/.test(path)) return json(route, [])
 
+    const currentDiffMatch = path.match(/^\/api\/session\/([^/]+)\/message\/([^/]+)\/diff$/)
+    if (currentDiffMatch) return json(route, { data: config.diffs?.(currentDiffMatch[1]!, currentDiffMatch[2]!) ?? [] })
+
     const currentMessagesMatch = path.match(/^\/api\/session\/([^/]+)\/message$/)
     if (currentMessagesMatch) {
       const token = url.searchParams.get("cursor") ?? undefined
@@ -351,7 +406,7 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
       const cursor = pageData.cursor ? `cursor_${++nextCursor}` : undefined
       if (cursor) cursors.set(cursor, pageData.cursor!)
       return json(route, {
-        data: pageData.items.map(currentMessage).reverse(),
+        data: pageData.items.flatMap(currentMessage).reverse(),
         cursor: { next: cursor },
       })
     }
@@ -430,6 +485,64 @@ function location(config: MockServerConfig) {
   }
 }
 
+// Serves a fixture's V1 provider catalog through the V2 provider, model and default model routes. Only
+// connected providers are listed, as the V2 server lists only the providers it can run; a fixture without a
+// connected list connects all of them.
+function currentCatalog(value: unknown) {
+  type LegacyModel = {
+    id: string
+    name?: string
+    family?: string
+    status?: string
+    attachment?: boolean
+    limit?: { context: number; output?: number }
+    cost?: { input?: number; output?: number; cache?: { read?: number; write?: number } }
+    variants?: Record<string, Record<string, unknown>>
+  }
+  const catalog = (value ?? {}) as {
+    all?: { id: string; name?: string; models?: Record<string, LegacyModel> }[]
+    connected?: string[]
+    default?: Record<string, string>
+  }
+  const providers = (catalog.all ?? []).filter((provider) => catalog.connected?.includes(provider.id) ?? true)
+  const models = providers.flatMap((provider) =>
+    Object.values(provider.models ?? {}).map((model) => ({
+      id: model.id,
+      modelID: model.id,
+      providerID: provider.id,
+      name: model.name ?? model.id,
+      family: model.family,
+      capabilities: { input: model.attachment ? ["text", "image"] : ["text"], output: ["text"], tools: true },
+      variants: Object.entries(model.variants ?? {}).map(([id, settings]) => ({ id, settings })),
+      time: { released: 1 },
+      cost: model.cost
+        ? [
+            {
+              input: model.cost.input ?? 0,
+              output: model.cost.output ?? 0,
+              cache: { read: model.cost.cache?.read ?? 0, write: model.cost.cache?.write ?? 0 },
+            },
+          ]
+        : [],
+      status: model.status ?? "active",
+      enabled: true,
+      limit: { context: model.limit?.context ?? 200_000, output: model.limit?.output ?? 8192 },
+    })),
+  )
+  // The V1 default is either one { providerID, modelID } pair or a model per provider.
+  const preferred = catalog.default?.providerID
+    ? [{ providerID: catalog.default.providerID, modelID: catalog.default.modelID }]
+    : Object.entries(catalog.default ?? {}).map(([providerID, modelID]) => ({ providerID, modelID }))
+  const defaults = preferred.flatMap((pick) =>
+    models.filter((model) => model.providerID === pick.providerID && model.id === pick.modelID),
+  )
+  return {
+    providers: providers.map((provider) => ({ id: provider.id, name: provider.name ?? provider.id, settings: {} })),
+    models,
+    default: defaults[0] ?? models[0] ?? null,
+  }
+}
+
 function currentPermission(value: unknown) {
   const permission = value as Record<string, unknown>
   if (permission.action) return permission
@@ -473,63 +586,141 @@ export function currentSession(session: { id: string } & Record<string, unknown>
   }
 }
 
-function currentMessage(value: unknown) {
+function currentMessage(value: unknown): unknown[] {
   const item = value as {
     info: Record<string, unknown> & { id: string; role: "user" | "assistant"; time: { created: number } }
     parts: Array<Record<string, unknown> & { type: string }>
   }
   if (item.info.role === "user") {
-    return {
+    const texts = item.parts.filter((part) => part.type === "text" && typeof part.text === "string")
+    return [
+      // V2 records a comment as its own synthetic message, just before the prompt it came with.
+      ...texts
+        .filter((part) => part.synthetic)
+        .map((part, index) => ({
+          id: `${item.info.id}_synthetic_${index}`,
+          type: "synthetic",
+          time: { created: item.info.time.created - 1 },
+          metadata: part.metadata,
+          text: part.text,
+          description: part.text,
+        })),
+      {
+        id: item.info.id,
+        type: "user",
+        time: item.info.time,
+        text: texts
+          .filter((part) => !part.synthetic)
+          .map((part) => part.text)
+          .join("\n"),
+        files: item.parts.flatMap((part) => {
+          if (part.type !== "file") return []
+          const url = String(part.url)
+          return [
+            {
+              data: url.startsWith("data:") ? (url.split("base64,")[1] ?? "") : "",
+              mime: part.mime,
+              name: part.filename,
+              source: url.startsWith("data:") ? { type: "inline" } : { type: "uri", uri: url },
+              mention: mention(part.source),
+            },
+          ]
+        }),
+        agents: item.parts.flatMap((part) =>
+          part.type === "agent" ? [{ name: part.name, mention: mention(part.source) }] : [],
+        ),
+      },
+    ]
+  }
+  const compaction = item.parts.find((part) => part.type === "compaction")
+  const error = item.info.error as { name: string; data: { message: string } } | undefined
+  return [
+    // V2 records a compaction as its own turn; the assistant work after it replies to it.
+    ...(compaction
+      ? [
+          {
+            id: `${item.info.id}_compaction`,
+            type: "compaction",
+            status: "completed",
+            reason: compaction.auto ? "auto" : "manual",
+            summary: "",
+            recent: "",
+            time: { created: item.info.time.created - 1 },
+          },
+        ]
+      : []),
+    {
       id: item.info.id,
-      type: "user",
+      type: "assistant",
       time: item.info.time,
-      text: item.parts
-        .flatMap((part) => (part.type === "text" && typeof part.text === "string" ? [part.text] : []))
-        .join("\n"),
-    }
-  }
-  return {
-    id: item.info.id,
-    type: "assistant",
-    time: item.info.time,
-    agent: item.info.agent ?? "build",
-    model: { id: item.info.modelID ?? "model", providerID: item.info.providerID ?? "provider" },
-    cost: item.info.cost,
-    tokens: item.info.tokens,
-    error: item.info.error,
-    content: item.parts.flatMap<unknown>((part) => {
-      if (part.type === "text" || part.type === "reasoning") return [{ type: part.type, text: part.text ?? "" }]
-      if (part.type !== "tool") return []
-      const state = part.state as Record<string, unknown>
-      return [
-        {
-          type: "tool",
-          id: part.id,
-          name: part.tool,
-          time: state.time ?? { created: item.info.time.created },
-          state:
-            state.status === "pending"
-              ? { status: "streaming", input: state.raw ?? JSON.stringify(state.input ?? {}) }
-              : state.status === "completed"
-                ? {
-                    status: "completed",
-                    input: state.input ?? {},
-                    structured: state.metadata ?? {},
-                    content: [{ type: "text", text: state.output ?? "" }],
-                  }
-                : state.status === "error"
+      agent: item.info.agent ?? "build",
+      model: { id: item.info.modelID ?? "model", providerID: item.info.providerID ?? "provider" },
+      cost: item.info.cost,
+      tokens: item.info.tokens,
+      // V1 { name, data: { message } } becomes V2 { type, message }.
+      error: error ? { type: error.name, message: error.data.message } : undefined,
+      content: item.parts.flatMap<unknown>((part) => {
+        if (part.type === "text" || part.type === "reasoning") return [{ type: part.type, text: part.text ?? "" }]
+        if (part.type !== "tool") return []
+        const state = part.state as Record<string, unknown>
+        return [
+          {
+            type: "tool",
+            id: part.id,
+            name: part.tool,
+            time: toolTime(state.time, item.info.time.created),
+            state:
+              state.status === "pending"
+                ? { status: "streaming", input: state.raw ?? JSON.stringify(state.input ?? {}) }
+                : state.status === "completed"
                   ? {
-                      status: "error",
+                      status: "completed",
                       input: state.input ?? {},
+                      metadata: state.metadata ?? {},
                       structured: state.metadata ?? {},
-                      content: [],
-                      error: { type: "ToolError", message: state.error ?? "Tool failed" },
+                      content: [{ type: "text", text: state.output ?? "" }],
                     }
-                  : { status: "running", input: state.input ?? {}, structured: state.metadata ?? {}, content: [] },
-        },
-      ]
-    }),
+                  : state.status === "error"
+                    ? {
+                        status: "error",
+                        input: state.input ?? {},
+                        metadata: state.metadata ?? {},
+                        structured: state.metadata ?? {},
+                        content: [],
+                        error: { type: "ToolError", message: state.error ?? "Tool failed" },
+                      }
+                    : {
+                        status: "running",
+                        input: state.input ?? {},
+                        metadata: state.metadata ?? {},
+                        structured: state.metadata ?? {},
+                        content: [],
+                      },
+          },
+        ]
+      }),
+    },
+  ]
+}
+
+// V1 sources are { value, start, end } for agents and { text: { value, start, end } } for files; V2 mentions are
+// { text, start, end }.
+function mention(value: unknown) {
+  const source = value as {
+    value?: string
+    start?: number
+    end?: number
+    text?: { value: string; start: number; end: number }
   }
+  const found = source?.text ?? source
+  if (typeof found?.value !== "string" || found.start === undefined || found.end === undefined) return undefined
+  return { text: found.value, start: found.start, end: found.end }
+}
+
+// The fixtures write V1 tool times ({start, end}); V2 records {created, completed}.
+function toolTime(value: unknown, fallback: number) {
+  const time = (value ?? {}) as { start?: number; end?: number; created?: number; completed?: number }
+  return { created: time.created ?? time.start ?? fallback, completed: time.completed ?? time.end }
 }
 
 function json(route: Route, body: unknown, headers?: Record<string, string>, status = 200) {

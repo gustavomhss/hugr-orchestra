@@ -33,7 +33,7 @@ import { SessionRetry } from "@orchestra/session-ui/session-retry"
 import { isScrollKeyTarget, scrollKey, scrollKeyOwner, ScrollView } from "@orchestra/ui/scroll-view"
 import { TextReveal } from "@orchestra/ui/text-reveal"
 import { TextShimmer } from "@orchestra/ui/text-shimmer"
-import type { AssistantMessage, Part, ToolPart, UserMessage } from "@/v2-wire"
+import type { AssistantMessage, Part, SnapshotFileDiff, ToolPart, UserMessage } from "@/v2-wire"
 
 import { showToast } from "@/utils/toast"
 import { downloadSessionExport, fetchSessionExport, sessionExportFilename } from "@/utils/session-export"
@@ -54,6 +54,7 @@ import { scheduleConnectedMeasure } from "./measure"
 import { observeElementOffsetReconnectAware } from "./observe-element-offset"
 import { createTimelineProjection } from "./projection"
 import { MessageComment, TimelineRow, TimelineRowMap } from "./rows"
+import { useRevealPart } from "../capabilities"
 import { TimelineDiffSummaryRow } from "./timeline-diff-summary-row"
 import { TimelineErrorCard } from "./timeline-error-row"
 import { filterVirtualIndexes } from "./virtual-items"
@@ -134,6 +135,7 @@ export function MessageTimeline(props: {
   centered: boolean
   setContentRef: (el: HTMLDivElement) => void
   userMessages: UserMessage[]
+  turnDiffs: (userMessageID: string) => SnapshotFileDiff[] | undefined
   anchor: (id: string) => string
   setRevealMessage?: (fn: (id: string) => void) => void
   setScrollToEnd?: (fn: () => void) => void
@@ -239,6 +241,7 @@ export function MessageTimeline(props: {
     parts: getMsgParts,
     status: sessionStatus,
     showReasoningSummaries: settings.general.showReasoningSummaries,
+    turnDiffs: (userMessageID) => props.turnDiffs(userMessageID),
   })
   const activeMessageID = projection.activeMessageID
   const assistantMessagesByParent = projection.assistantMessagesByParent
@@ -395,6 +398,7 @@ export function MessageTimeline(props: {
     () => new Map(virtualizer.getVirtualItems().map((item) => [item.key, item] as const)),
   )
   const virtualRowKeys = createMemo(() => virtualizer.getVirtualItems().map((item) => item.key as string))
+  useRevealPart(timelineRows, (index) => virtualizer.scrollToIndex(index, { align: "center" }))
   createEffect(() => {
     props.setRevealMessage?.((id) => {
       const index = projection.messageRowIndex().get(id)
@@ -538,9 +542,7 @@ export function MessageTimeline(props: {
     props.onMarkScrollGesture(event.currentTarget)
   }
 
-  onCleanup(() => {
-    props.setScrollRef(undefined)
-  })
+  onCleanup(() => props.setScrollRef(undefined))
 
   const titleMutation = useMutation(() => ({
     mutationFn: (input: { id: string; title: string }) =>

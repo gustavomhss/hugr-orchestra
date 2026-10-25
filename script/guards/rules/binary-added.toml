@@ -1,0 +1,12 @@
+id = "binary-added"
+group = "hygiene"
+severity = "warn"
+on = "changed-paths"
+paths = ["**"]
+exclude = ["**/*.{jpg,jpeg,png,webp,gif,ico,icns,woff,woff2,ttf,otf,pdf}", "**/public/**", "**/assets/**", "**/fixtures/**", "**/__fixtures__/**", "**/test/**", "**/tests/**"]
+statuses = ["A"]
+binary = true
+message = "Binary file added outside the usual media and fixture locations. Check it belongs in git."
+summary = "A binary file outside the folders meant for images, fonts and test fixtures is hard to review and makes the repository heavier forever. Confirm it really needs to live in git, or move it to the right folder."
+positive = ["tools/helper.bin", "vendor/lib.tgz"]
+negative = ["packages/app-shell/public/a.png", "assets/icon.icns", "test/fixtures/a.bin"]

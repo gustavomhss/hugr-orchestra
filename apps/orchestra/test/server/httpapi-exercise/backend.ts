@@ -13,8 +13,9 @@ type CallOptions = {
 }
 
 export function call(scenario: ActiveScenario, ctx: SeededContext<unknown>, options: CallOptions = {}) {
+  const auth = scenario.basicAuth ? { auth: { password: "secret" } } : options
   return Effect.promise(async () =>
-    capture(await app(await runtime(), options).request(toRequest(scenario, ctx)), scenario.capture),
+    capture(await app(await runtime(), auth).request(toRequest(scenario, ctx)), scenario.capture),
   )
 }
 
@@ -86,12 +87,13 @@ function app(modules: Runtime, options: CallOptions) {
 
 function toRequest(scenario: ActiveScenario, ctx: SeededContext<unknown>) {
   const spec = scenario.request(ctx, ctx.state)
+  const headers = scenario.basicAuth ? { ...spec.headers, authorization: basic("orchestra", "secret") } : spec.headers
   return new Request(new URL(spec.path, "http://localhost"), {
     method: scenario.method,
     headers:
       spec.body === undefined
-        ? spec.headers
-        : { "content-type": spec.contentType ?? "application/json", ...spec.headers },
+        ? headers
+        : { "content-type": spec.contentType ?? "application/json", ...headers },
     body: spec.body === undefined ? undefined : JSON.stringify(spec.body),
   })
 }

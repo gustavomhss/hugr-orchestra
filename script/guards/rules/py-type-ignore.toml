@@ -1,0 +1,12 @@
+id = "py-type-ignore"
+group = "silenced"
+severity = "gate"
+on = "added-lines"
+paths = ["**/*.py"]
+exclude = []
+# A bare ignore silences every type error on the line. `# type: ignore[code]` names what it silences and is allowed.
+match = '#\s*(type|pyright):\s*ignore(?!\[)'
+message = "Type-check suppression without an error code. Fix the type, or name the code: # type: ignore[arg-type]."
+summary = "Ignoring type errors without naming which one also hides any new errors on that line. Fix the type, or name the specific error code being ignored."
+positive = ['x = f(y)  # type: ignore', 'x = f(y)  # pyright: ignore', '# type:ignore']
+negative = ['x = f(y)  # type: ignore[arg-type]', 'x = f(y)  # pyright: ignore[reportGeneralTypeIssues]', '# we should not ignore this']

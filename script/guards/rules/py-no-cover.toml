@@ -1,0 +1,11 @@
+id = "py-no-cover"
+group = "silenced"
+severity = "warn"
+on = "added-lines"
+paths = ["**/*.py"]
+exclude = []
+match = 'pragma:\s*no cover'
+message = "Excludes this code from coverage. Test it, or say in a comment why it cannot be."
+summary = "Excluding code from coverage hides untested paths from the report. Write a test for it, or add a comment explaining why it cannot be tested."
+positive = ['    pass  # pragma: no cover', 'if TYPE_CHECKING:  # pragma:no cover']
+negative = ['# the pragma is documented elsewhere', 'cover = compute()']

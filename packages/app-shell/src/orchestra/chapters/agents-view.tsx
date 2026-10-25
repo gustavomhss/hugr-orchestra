@@ -11,6 +11,7 @@ const PAGE_SIZE = 24
 export function AgentsRoster(props: {
   agents: readonly Agent[]
   availability: (agent: Agent) => { ok: boolean; title?: string; modelIssue?: boolean } | undefined
+  scope: string
   onConfigure: (agent: Agent) => void
   onChat: () => void
   opening?: boolean
@@ -38,15 +39,20 @@ export function AgentsRoster(props: {
   }
   return (
     <div class="agents-roster">
-      <label class="mx-field agents-search">
-        <span>{language.t("orchestra.agents.search")}</span>
+      <div class="mx-toolbar">
         <input
+          class="mx-search"
           type="search"
+          aria-label={language.t("orchestra.agents.search")}
+          placeholder={language.t("orchestra.agents.search")}
           value={state.search}
           dir="auto"
           onInput={(event) => setState({ search: event.currentTarget.value, page: 0 })}
         />
-      </label>
+        <MxBadge>
+          <bdi>{props.scope}</bdi>
+        </MxBadge>
+      </div>
       <p class="mx-note" role="status">
         {language.t("orchestra.agents.page.range", {
           start: roster().length ? page() * PAGE_SIZE + 1 : 0,

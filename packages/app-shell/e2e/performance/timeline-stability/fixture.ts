@@ -20,6 +20,11 @@ export const assistantID = "msg_1001_timeline_assistant"
 export const title = "Timeline visual stability"
 export const model = { providerID: "opencode", modelID: "claude-opus-4-6", variant: "max" }
 
+// V2 history carries no text/reasoning part ids; the app derives them per message, type and ordinal.
+export function loadedPartID(messageID: string, type: "text" | "reasoning", ordinal = 0) {
+  return `${messageID}:${type}:${ordinal}`
+}
+
 type TimelinePayload = Extract<
   GlobalEvent["payload"],
   {
@@ -118,6 +123,18 @@ export async function setupTimeline(
     pageMessages: () => ({
       items: messages,
     }),
+    // The fixtures keep a turn's diffs on the V1-shaped user summary; V2 serves them per turn.
+    diffs: (_, messageID) =>
+      messages
+        .flatMap((message) => (message.info.role === "user" && message.info.id === messageID ? [message.info] : []))
+        .flatMap((info) => info.summary?.diffs ?? [])
+        .map((diff) => ({
+          path: diff.file,
+          status: diff.status ?? "modified",
+          additions: diff.additions,
+          deletions: diff.deletions,
+          patch: diff.patch ?? "",
+        })),
     onPrompt: input.onPrompt,
   })
   await page.addInitScript((settings) => {

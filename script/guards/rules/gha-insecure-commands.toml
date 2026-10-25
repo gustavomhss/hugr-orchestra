@@ -1,0 +1,11 @@
+id = "gha-insecure-commands"
+group = "workflows"
+severity = "gate"
+on = "added-lines"
+paths = [".github/workflows/**/*.{yml,yaml}", ".github/actions/**/*.{yml,yaml}"]
+exclude = []
+match = 'ACTIONS_ALLOW_UNSECURE_COMMANDS'
+message = "Re-enables the deprecated set-env and add-path commands, which let logged output change the environment. Use the GITHUB_ENV and GITHUB_PATH files."
+summary = "This setting turns back on old commands that let anything printed in the log change the job's environment, which attackers can abuse. Remove it and use the GitHub environment and path files."
+positive = ['  ACTIONS_ALLOW_UNSECURE_COMMANDS: true', 'env: { ACTIONS_ALLOW_UNSECURE_COMMANDS: "true" }']
+negative = ['  ACTIONS_STEP_DEBUG: true', '  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true']

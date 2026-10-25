@@ -1,7 +1,7 @@
 import type { SessionMessageInfo } from "@/v2-legacy"
 
 
-import type { AssistantMessage, Message, Part, SessionStatus, UserMessage } from "@/v2-wire"
+import type { AssistantMessage, Message, Part, SessionStatus, SnapshotFileDiff, UserMessage } from "@/v2-wire"
 
 import { createMemo, type Accessor } from "solid-js"
 import { reuseTimelineRows } from "./row-reconciliation"
@@ -16,6 +16,7 @@ export function createTimelineProjection(input: {
   parts: (messageID: string) => Part[]
   status: Accessor<SessionStatus>
   showReasoningSummaries: Accessor<boolean>
+  turnDiffs: (userMessageID: string) => SnapshotFileDiff[] | undefined
 }) {
   const messageByID = createMemo(() => new Map(input.messages().map((message) => [message.id, message] as const)))
   const assistantMessagesByParent = createMemo(() => {
@@ -39,6 +40,7 @@ export function createTimelineProjection(input: {
       input.showReasoningSummaries(),
       input.status().type,
       input.userMessages(),
+      input.turnDiffs,
     ),
   )
   const activeMessageID = createMemo(() => projection().activeMessageID)

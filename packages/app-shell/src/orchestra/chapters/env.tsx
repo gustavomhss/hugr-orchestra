@@ -246,13 +246,10 @@ export default function EnvPage(props: ChapterPageProps) {
           fallback={
             <Show when={!state.loading}>
               <div class="mx-empty">
-                <Show when={entries().rows.length} fallback={language.t("orchestra.env.empty")}>
+                <Show when={entries().rows.length} fallback={<strong>{language.t("orchestra.env.empty")}</strong>}>
                   {language.t("orchestra.env.noMatch")}
                 </Show>
-                <Show when={!entries().rows.length}>
-                  <br />
-                  {language.t("orchestra.env.emptyHint")}
-                </Show>
+                <Show when={!entries().rows.length}>{language.t("orchestra.env.emptyHint")}</Show>
               </div>
             </Show>
           }

@@ -17,64 +17,56 @@ import {
 
 test.use({ viewport: { width: 1440, height: 900 } })
 
-for (const protocol of ["v1", "v2"] as const) {
-  test(`${protocol}: repository workflows, literal source, and unsent draft target the profile`, async ({ page }) => {
-    const requests = await setup(page, { protocol, gitlab: true })
-    await openChapter(page)
-    await expect(workflowRows(page)).toHaveText([
-      ".gitlab-ci.ymlGitLab CIView",
-      ".github/workflows/ci.ymlGitHub ActionsView",
-      ".github/workflows/release.yamlGitHub ActionsView",
-    ])
-    expect(
-      requests.filter((url) => url.pathname === "/file/content" || url.pathname === "/api/fs/read"),
-    ).toEqual([])
-    const ci = await openSource(page, ".github/workflows/ci.yml")
-    await expect(ci.locator('[data-slot="cicd-source"]')).toHaveText(source)
-    expect(await ci.locator('[data-slot="cicd-source"]').textContent()).toBe(source)
-    await expect(ci.getByText("GitHub Actions · runs on the repository host, not in Orchestra.")).toBeVisible()
-    await ci.getByRole("button", { name: "Cancel", exact: true }).click()
-    await expect(ci).toHaveCount(0)
-    const release = await openSource(page, ".github/workflows/release.yaml")
-    await expect(release.locator('[data-slot="cicd-source"]')).toHaveText("name: Release\non: [workflow_dispatch]\n")
-    await expect
-      .poll(() =>
-        requests
-          .filter((url) => url.pathname === (protocol === "v1" ? "/file" : "/api/fs/list"))
-          .map((url) => url.searchParams.get("path")),
-      )
-      .toEqual(["", ".github", ".github/workflows"])
-    const reads = requests.filter((url) => url.pathname === "/file/content" || url.pathname === "/api/fs/read")
-    expect(
-      reads.map((url) =>
-        protocol === "v1"
-          ? url.searchParams.get("path")
-          : url.searchParams.get("path"),
-      ),
-    ).toEqual([".github/workflows/ci.yml", ".github/workflows/release.yaml"])
-    expect(
-      reads.every(
-        (url) =>
-          url.origin === serverA &&
-          url.searchParams.get(protocol === "v1" ? "directory" : "location[directory]") === directory,
-      ),
-    ).toBe(true)
-    const mutations: string[] = []
-    page.on("request", (request) => {
-      const url = new URL(request.url())
-      if (request.method() !== "GET" && /\/(api\/)?session(?:\/|$)/.test(url.pathname)) mutations.push(request.url())
-    })
-    await release.getByRole("button", { name: "Discuss in Chat", exact: true }).click()
-    await expect(page).toHaveURL(/\/new-session\?draftId=/)
-    await expect(page.locator('[data-component="prompt-input"][contenteditable="true"]')).toContainText(
-      ".github/workflows/release.yaml",
+test(`repository workflows, literal source, and unsent draft target the profile`, async ({ page }) => {
+  const requests = await setup(page, { gitlab: true })
+  await openChapter(page)
+  await expect(workflowRows(page)).toHaveText([
+    ".gitlab-ci.ymlGitLab CIView",
+    ".github/workflows/ci.ymlGitHub ActionsView",
+    ".github/workflows/release.yamlGitHub ActionsView",
+  ])
+  expect(
+    requests.filter((url) => url.pathname === "/api/fs/read"),
+  ).toEqual([])
+  const ci = await openSource(page, ".github/workflows/ci.yml")
+  await expect(ci.locator('[data-slot="cicd-source"]')).toHaveText(source)
+  expect(await ci.locator('[data-slot="cicd-source"]').textContent()).toBe(source)
+  await expect(ci.getByText("GitHub Actions · runs on the repository host, not in Orchestra.")).toBeVisible()
+  await ci.getByRole("button", { name: "Cancel", exact: true }).click()
+  await expect(ci).toHaveCount(0)
+  const release = await openSource(page, ".github/workflows/release.yaml")
+  await expect(release.locator('[data-slot="cicd-source"]')).toHaveText("name: Release\non: [workflow_dispatch]\n")
+  await expect
+    .poll(() =>
+      requests
+        .filter((url) => url.pathname === "/api/fs/list")
+        .map((url) => url.searchParams.get("path")),
     )
-    await expect
-      .poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("orchestra.window.browser.dat:tabs") ?? "[]")))
-      .toMatchObject([{ type: "draft", server: serverA, directory }])
-    expect(mutations).toEqual([])
+    .toEqual(["", ".github", ".github/workflows"])
+  const reads = requests.filter((url) => url.pathname === "/api/fs/read")
+  expect(
+    reads.map((url) => url.searchParams.get("path")),
+  ).toEqual([".github/workflows/ci.yml", ".github/workflows/release.yaml"])
+  expect(
+    reads.every(
+      (url) => url.origin === serverA && url.searchParams.get("location[directory]") === directory,
+    ),
+  ).toBe(true)
+  const mutations: string[] = []
+  page.on("request", (request) => {
+    const url = new URL(request.url())
+    if (request.method() !== "GET" && /\/(api\/)?session(?:\/|$)/.test(url.pathname)) mutations.push(request.url())
   })
-}
+  await release.getByRole("button", { name: "Discuss in Chat", exact: true }).click()
+  await expect(page).toHaveURL(/\/new-session\?draftId=/)
+  await expect(page.locator('[data-component="prompt-input"][contenteditable="true"]')).toContainText(
+    ".github/workflows/release.yaml",
+  )
+  await expect
+    .poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("orchestra.window.browser.dat:tabs") ?? "[]")))
+    .toMatchObject([{ type: "draft", server: serverA, directory }])
+  expect(mutations).toEqual([])
+})
 
 test("profiles on different servers keep separate inventories and discard a late preview", async ({ page }) => {
   const pending = Promise.withResolvers<void>()
@@ -218,7 +210,7 @@ test("pipelines are created, validated, edited, searched, persisted per profile 
   await setup(page)
   await openChapter(page)
   await expect(page.getByRole("heading", { name: "CI/CD", level: 1 })).toBeVisible()
-  await expect(page.getByText("Server A repository / profile configuration", { exact: true })).toBeVisible()
+  await expect(page.getByText("Server A repository · Configuration", { exact: true })).toBeVisible()
   await expect(page.locator('[data-mx-page="cicd"] > .mx-inner > .mx-note')).toHaveText(
     "Run executes the commands in this repository's working tree on the server; Stop asks the server to end them. Triggers, branch checkout and deployments are not executed yet.",
   )
@@ -260,7 +252,7 @@ test("pipelines are created, validated, edited, searched, persisted per profile 
   await expect(card.locator(".mx-badge")).toHaveText(["Not run"])
 
   const search = page.getByRole("textbox", { name: "Search CI/CD" })
-  await expect(search).toHaveAttribute("placeholder", "Search ci/cd")
+  await expect(search).toHaveAttribute("placeholder", "Search CI/CD")
   await search.fill("lint")
   await expect(card).toHaveCount(1)
   await expect(workflowRows(page)).toHaveCount(0)
@@ -289,55 +281,53 @@ test("pipelines are created, validated, edited, searched, persisted per profile 
   await expect(page.locator(".mx-empty")).toBeVisible()
 })
 
-for (const protocol of ["v1", "v2"] as const) {
-  test(`${protocol}: run executes the commands through a server PTY with live, downloadable logs`, async ({ page }) => {
-    await setup(page, { protocol })
-    const pty = await mockPty(page, protocol)
-    await openChapter(page)
-    await createPipeline(page)
-    const card = page.locator("article.mx-card")
-    // The second click of a double click must not stop the run the first click started.
-    await card.getByRole("button", { name: "Run", exact: true }).dblclick()
-    await expect(card.locator(".mx-badge").first()).toHaveText("Running")
-    await expect.poll(() => pty.inputs).toEqual(["\r"])
-    // Execution semantics of the generated script are unit-tested by running it in real shells; here
-    // the page must hand each command line to the pinned POSIX shell as its own step.
-    expect(pty.creates).toEqual([
-      { command: "/bin/sh", args: ["-c", expect.any(String)], title: "CI/CD · Project checks" },
-    ])
-    const script = String((pty.creates[0]?.args as string[])[1])
-    expect(script.startsWith("IFS= read -r orchestra_ready\n")).toBe(true)
-    expect(script.endsWith("\neval 'bun run build'\neval 'bun test'")).toBe(true)
-    expect(pty.connections.every((url) => url.includes(encodeURIComponent(directory)))).toBe(true)
-    pty.sockets[0]!.send("\r\n\x1b[32mbuild ok\x1b[0m\r\nprogress 10%\rprogress 100%\r\n")
-    await card.getByRole("button", { name: "Logs", exact: true }).click()
-    const logs = page.getByRole("dialog", { name: "Project checks · logs" })
-    await expect(logs.getByText("main · Running", { exact: true })).toBeVisible()
-    await expect(logs.locator('[data-slot="cicd-log"]')).toHaveText(
-      /^Run 1 · .+\nWorking tree branch: main\nDirectory: \/repo\/orchestra\n\$ bun run build\nbun test\nbuild ok\nprogress 100%$/,
-    )
-    pty.exit(0)
-    await expect(logs.getByText("main · Passed", { exact: true })).toBeVisible()
-    await expect(logs.locator('[data-slot="cicd-log"]')).toHaveText(
-      /\nprogress 100%\n\nExited with code 0\.\nPipeline passed\.$/,
-    )
-    await expect.poll(() => pty.removed).toEqual(["pty_cicd"])
-    const download = page.waitForEvent("download")
-    await logs.getByRole("button", { name: "Download logs", exact: true }).click()
-    expect((await download).suggestedFilename()).toBe("Project checks.log")
-    expect(await readFile(await (await download).path(), "utf8")).toMatch(/Pipeline passed\.\n$/)
-    await page.keyboard.press("Escape")
-    await expect(card.locator(".mx-badge").first()).toHaveText("Passed")
-    await expect(card.locator(".mx-badge.good")).toHaveText("Passed")
-    await page.reload()
-    await expect(card.locator(".mx-badge").first()).toHaveText("Passed")
-    expect(pty.creates).toHaveLength(1)
-  })
-}
+test(`run executes the commands through a server PTY with live, downloadable logs`, async ({ page }) => {
+  await setup(page)
+  const pty = await mockPty(page)
+  await openChapter(page)
+  await createPipeline(page)
+  const card = page.locator("article.mx-card")
+  // The second click of a double click must not stop the run the first click started.
+  await card.getByRole("button", { name: "Run", exact: true }).dblclick()
+  await expect(card.locator(".mx-badge").first()).toHaveText("Running")
+  await expect.poll(() => pty.inputs).toEqual(["\r"])
+  // Execution semantics of the generated script are unit-tested by running it in real shells; here
+  // the page must hand each command line to the pinned POSIX shell as its own step.
+  expect(pty.creates).toEqual([
+    { command: "/bin/sh", args: ["-c", expect.any(String)], title: "CI/CD · Project checks" },
+  ])
+  const script = String((pty.creates[0]?.args as string[])[1])
+  expect(script.startsWith("IFS= read -r orchestra_ready\n")).toBe(true)
+  expect(script.endsWith("\neval 'bun run build'\neval 'bun test'")).toBe(true)
+  expect(pty.connections.every((url) => url.includes(encodeURIComponent(directory)))).toBe(true)
+  pty.sockets[0]!.send("\r\n\x1b[32mbuild ok\x1b[0m\r\nprogress 10%\rprogress 100%\r\n")
+  await card.getByRole("button", { name: "Logs", exact: true }).click()
+  const logs = page.getByRole("dialog", { name: "Project checks · logs" })
+  await expect(logs.getByText("main · Running", { exact: true })).toBeVisible()
+  await expect(logs.locator('[data-slot="cicd-log"]')).toHaveText(
+    /^Run 1 · .+\nWorking tree branch: main\nDirectory: \/repo\/orchestra\n\$ bun run build\nbun test\nbuild ok\nprogress 100%$/,
+  )
+  pty.exit(0)
+  await expect(logs.getByText("main · Passed", { exact: true })).toBeVisible()
+  await expect(logs.locator('[data-slot="cicd-log"]')).toHaveText(
+    /\nprogress 100%\n\nExited with code 0\.\nPipeline passed\.$/,
+  )
+  await expect.poll(() => pty.removed).toEqual(["pty_cicd"])
+  const download = page.waitForEvent("download")
+  await logs.getByRole("button", { name: "Download logs", exact: true }).click()
+  expect((await download).suggestedFilename()).toBe("Project checks.log")
+  expect(await readFile(await (await download).path(), "utf8")).toMatch(/Pipeline passed\.\n$/)
+  await page.keyboard.press("Escape")
+  await expect(card.locator(".mx-badge").first()).toHaveText("Passed")
+  await expect(card.locator(".mx-badge.good")).toHaveText("Passed")
+  await page.reload()
+  await expect(card.locator(".mx-badge").first()).toHaveText("Passed")
+  expect(pty.creates).toHaveLength(1)
+})
 
 test("a failing run fails the pipeline; confirmed cancellation cannot complete later", async ({ page }) => {
   await setup(page)
-  const pty = await mockPty(page, "v2")
+  const pty = await mockPty(page)
   await openChapter(page)
   await createPipeline(page)
   const card = page.locator("article.mx-card")
@@ -374,107 +364,101 @@ test("a failing run fails the pipeline; confirmed cancellation cannot complete l
   expect(pty.sockets).toHaveLength(1)
 })
 
-for (const protocol of ["v1", "v2"] as const) {
-  for (const failure of ["http", "network"] as const) {
-    test(`${protocol}: audit: stop ${failure} failure retains ownership and retry targets the same PTY`, async ({
-      page,
-    }) => {
-      await setup(page, { protocol })
-      const pty = await mockPty(page, protocol)
-      const prefix = protocol === "v1" ? "/pty" : "/api/pty"
-      const gate = Promise.withResolvers<void>()
-      const started = Promise.withResolvers<void>()
-      const fault = { fail: true, deletes: [] as string[] }
-      await page.route(
-        (url) => url.origin === serverA && url.pathname === `${prefix}/pty_cicd`,
-        async (route) => {
-          if (route.request().method() !== "DELETE") return route.fallback()
-          fault.deletes.push(new URL(route.request().url()).pathname)
-          if (!fault.fail) return route.fallback()
-          started.resolve()
-          await gate.promise
-          if (failure === "network") return route.abort("failed")
-          return route.fulfill({ status: 500, json: { message: "Stop denied" } })
-        },
-      )
-      await openChapter(page)
-      await createPipeline(page)
-      const card = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Project checks" }) })
-      await card.getByRole("button", { name: "Run", exact: true }).click()
-      await expect.poll(() => pty.inputs).toEqual(["\r"])
-      await card.getByRole("button", { name: "Stop", exact: true }).click()
-      await started.promise
-      await expect(card.getByRole("button", { name: "Stopping…", exact: true })).toBeDisabled()
-      await expect(card.getByText("Running", { exact: true })).toBeVisible()
-      gate.resolve()
-      await expect(card.getByRole("alert")).toContainText("Could not stop the process:")
-      await expect(card.getByRole("button", { name: "Retry stop", exact: true })).toBeEnabled()
-      await expect(card.getByRole("button", { name: "Run", exact: true })).toHaveCount(0)
-      await expect(card.getByText("Cancelled", { exact: true })).toHaveCount(0)
-      // Removing a live pipeline must not discard the only PTY owner either.
-      await card.getByRole("button", { name: "Edit", exact: true }).click()
-      await page.getByRole("dialog").getByRole("button", { name: "Remove pipeline", exact: true }).click()
-      await page.getByRole("dialog").getByRole("button", { name: "Confirm", exact: true }).click()
-      await expect(page.getByRole("dialog").getByRole("alert")).toHaveText("Stop this pipeline before removing it.")
-      await page.getByRole("dialog").getByRole("button", { name: "Cancel", exact: true }).click()
-      fault.fail = false
-      await card.getByRole("button", { name: "Retry stop", exact: true }).click()
-      await expect(card.getByText("Cancelled", { exact: true })).toBeVisible()
-      await expect(card.getByRole("button", { name: "Run", exact: true })).toBeEnabled()
-      expect(fault.deletes).toEqual([`${prefix}/pty_cicd`, `${prefix}/pty_cicd`])
-      expect(pty.creates).toHaveLength(1)
-    })
-  }
-
-  test(`${protocol}: audit: stopping during delayed PTY creation waits for termination`, async ({ page }) => {
-    await setup(page, { protocol })
-    const pty = await mockPty(page, protocol)
-    const prefix = protocol === "v1" ? "/pty" : "/api/pty"
+for (const failure of ["http", "network"] as const) {
+  test(`audit: stop ${failure} failure retains ownership and retry targets the same PTY`, async ({
+    page,
+  }) => {
+    await setup(page)
+    const pty = await mockPty(page)
+    const prefix = "/api/pty"
     const gate = Promise.withResolvers<void>()
     const started = Promise.withResolvers<void>()
+    const fault = { fail: true, deletes: [] as string[] }
     await page.route(
-      (url) => url.origin === serverA && url.pathname === prefix,
+      (url) => url.origin === serverA && url.pathname === `${prefix}/pty_cicd`,
       async (route) => {
-        if (route.request().method() !== "POST") return route.fallback()
+        if (route.request().method() !== "DELETE") return route.fallback()
+        fault.deletes.push(new URL(route.request().url()).pathname)
+        if (!fault.fail) return route.fallback()
         started.resolve()
         await gate.promise
-        return route.fallback()
+        if (failure === "network") return route.abort("failed")
+        return route.fulfill({ status: 500, json: { message: "Stop denied" } })
       },
     )
-    pty.removeFailure = true
     await openChapter(page)
     await createPipeline(page)
     const card = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Project checks" }) })
     await card.getByRole("button", { name: "Run", exact: true }).click()
-    await started.promise
+    await expect.poll(() => pty.inputs).toEqual(["\r"])
     await card.getByRole("button", { name: "Stop", exact: true }).click()
+    await started.promise
     await expect(card.getByRole("button", { name: "Stopping…", exact: true })).toBeDisabled()
+    await expect(card.getByText("Running", { exact: true })).toBeVisible()
     gate.resolve()
+    await expect(card.getByRole("alert")).toContainText("Could not stop the process:")
     await expect(card.getByRole("button", { name: "Retry stop", exact: true })).toBeEnabled()
-    expect(pty.removed).toEqual(["pty_cicd"])
-    await expect.poll(() => pty.connections.length).toBe(1)
-    expect(pty.inputs).toEqual([])
-    // The failed stop's persisted identity survives a fresh page lifetime.
-    await page.reload()
-    await expect(card.getByRole("button", { name: "Retry stop", exact: true })).toBeEnabled()
-    await expect.poll(() => pty.connections.length).toBe(2)
-    expect(pty.inputs).toEqual([])
-    pty.removeFailure = false
+    await expect(card.getByRole("button", { name: "Run", exact: true })).toHaveCount(0)
+    await expect(card.getByText("Cancelled", { exact: true })).toHaveCount(0)
+    // Removing a live pipeline must not discard the only PTY owner either.
+    await card.getByRole("button", { name: "Edit", exact: true }).click()
+    await page.getByRole("dialog").getByRole("button", { name: "Remove pipeline", exact: true }).click()
+    await page.getByRole("dialog").getByRole("button", { name: "Confirm", exact: true }).click()
+    await expect(page.getByRole("dialog").getByRole("alert")).toHaveText("Stop this pipeline before removing it.")
+    await page.getByRole("dialog").getByRole("button", { name: "Cancel", exact: true }).click()
+    fault.fail = false
     await card.getByRole("button", { name: "Retry stop", exact: true }).click()
     await expect(card.getByText("Cancelled", { exact: true })).toBeVisible()
-    expect(pty.removed).toEqual(["pty_cicd", "pty_cicd"])
+    await expect(card.getByRole("button", { name: "Run", exact: true })).toBeEnabled()
+    expect(fault.deletes).toEqual([`${prefix}/pty_cicd`, `${prefix}/pty_cicd`])
     expect(pty.creates).toHaveLength(1)
   })
 }
 
-for (const [protocol, outcome] of [
-  ["v2", "gone"],
-  ["v2", "finished"],
-  ["v1", "gone"],
-] as const) {
-  test(`${protocol}: a run left running by a reload resumes from its server PTY (${outcome})`, async ({ page }) => {
-    await setup(page, { protocol })
-    const pty = await mockPty(page, protocol)
+test(`audit: stopping during delayed PTY creation waits for termination`, async ({ page }) => {
+  await setup(page)
+  const pty = await mockPty(page)
+  const prefix = "/api/pty"
+  const gate = Promise.withResolvers<void>()
+  const started = Promise.withResolvers<void>()
+  await page.route(
+    (url) => url.origin === serverA && url.pathname === prefix,
+    async (route) => {
+      if (route.request().method() !== "POST") return route.fallback()
+      started.resolve()
+      await gate.promise
+      return route.fallback()
+    },
+  )
+  pty.removeFailure = true
+  await openChapter(page)
+  await createPipeline(page)
+  const card = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Project checks" }) })
+  await card.getByRole("button", { name: "Run", exact: true }).click()
+  await started.promise
+  await card.getByRole("button", { name: "Stop", exact: true }).click()
+  await expect(card.getByRole("button", { name: "Stopping…", exact: true })).toBeDisabled()
+  gate.resolve()
+  await expect(card.getByRole("button", { name: "Retry stop", exact: true })).toBeEnabled()
+  expect(pty.removed).toEqual(["pty_cicd"])
+  await expect.poll(() => pty.connections.length).toBe(1)
+  expect(pty.inputs).toEqual([])
+  // The failed stop's persisted identity survives a fresh page lifetime.
+  await page.reload()
+  await expect(card.getByRole("button", { name: "Retry stop", exact: true })).toBeEnabled()
+  await expect.poll(() => pty.connections.length).toBe(2)
+  expect(pty.inputs).toEqual([])
+  pty.removeFailure = false
+  await card.getByRole("button", { name: "Retry stop", exact: true }).click()
+  await expect(card.getByText("Cancelled", { exact: true })).toBeVisible()
+  expect(pty.removed).toEqual(["pty_cicd", "pty_cicd"])
+  expect(pty.creates).toHaveLength(1)
+})
+
+for (const outcome of ["gone", "finished"] as const) {
+  test(`a run left running by a reload resumes from its server PTY (${outcome})`, async ({ page }) => {
+    await setup(page)
+    const pty = await mockPty(page)
     await openChapter(page)
     await createPipeline(page)
     const card = page.locator("article.mx-card")
@@ -503,7 +487,7 @@ for (const [protocol, outcome] of [
 
 test("a run the server cannot start is a start failure, not a failed check", async ({ page }) => {
   await setup(page)
-  const pty = await mockPty(page, "v2")
+  const pty = await mockPty(page)
   pty.createFailure = true
   await openChapter(page)
   await createPipeline(page)

@@ -152,14 +152,14 @@ export function verdict(mode: "off" | "on" | "strict", counts: { spawns: number;
 }
 
 /**
- * The environment of an omni child (D-L3), always used with inheritEnv:false: process.env, then `extra`, with
- * undefined values dropped and HUGR_OMNI_* removed from the final object. On Windows names are case-insensitive: a
- * later layer's `Path` replaces an earlier `PATH`, and only one key survives.
+ * The environment of an omni child (D-L3), always used with inheritEnv:false: `base` (process.env unless given), then
+ * `extra`, with undefined values dropped and HUGR_OMNI_* removed from the final object. On Windows names are
+ * case-insensitive: a later layer's `Path` replaces an earlier `PATH`, and only one key survives.
  */
-export function childEnv(extra?: Record<string, string | undefined>) {
+export function childEnv(extra?: Record<string, string | undefined>, base: Record<string, string | undefined> = process.env) {
   const env: Record<string, string> = {}
   const names = new Map<string, string>()
-  for (const layer of [process.env, extra ?? {}]) {
+  for (const layer of [base, extra ?? {}]) {
     for (const [key, value] of Object.entries(layer)) {
       const folded = process.platform === "win32" ? key.toUpperCase() : key
       const previous = names.get(folded)

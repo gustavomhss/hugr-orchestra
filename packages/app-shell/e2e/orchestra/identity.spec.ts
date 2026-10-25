@@ -1,5 +1,4 @@
 import { expect, test, type Locator } from "@playwright/test"
-import type { GlobalEvent } from "../../src/v2-legacy"
 import {
   completedAssistantInfo,
   directory,
@@ -227,14 +226,12 @@ for (const scheme of ["dark", "light"] as const) {
       const reply = page.waitForRequest(
         (request) =>
           request.method() === "POST" &&
-          /\/permission(?:\/per_orchestra_identity\/reply|s\/per_orchestra_identity)$/.test(
-            new URL(request.url()).pathname,
-          ),
+          /\/permission\/per_orchestra_identity\/reply$/.test(new URL(request.url()).pathname),
       )
       await permission.getByRole("button", { name: "Allow once", exact: true }).click()
       const request = await reply
-      expect(new URL(request.url()).pathname).toBe(`/session/${sessionID}/permissions/per_orchestra_identity`)
-      expect(request.postDataJSON()).toEqual({ response: "once" })
+      expect(new URL(request.url()).pathname).toBe(`/api/session/${sessionID}/permission/per_orchestra_identity/reply`)
+      expect(request.postDataJSON()).toEqual({ reply: "once" })
       await timeline.transport.writeRaw(`data: ${JSON.stringify(permissionReplied())}\n\n`)
       await expect(permission).toHaveCount(0)
       await timeline.send(status("busy"))
@@ -264,7 +261,9 @@ test("graphite: a palette recolors the glass and keeps the frozen geometry, radi
   expectPixels((await readBox(toolbar)).height, 45, "toolbar height")
   for (const value of [await readPlatedGlass(sidebar), await readPlatedGlass(tabs), await readGlass(active)]) {
     expect(value.backdropFilter, "palette keeps the glass blur").toBe(glass.dark.backdropFilter)
-    expect(value.backgroundImage, "palette tints the glass").toMatch(/^linear-gradient\(/)
+    // The palette keeps the material layers (grain, sheen) and tints the base gradient beneath them.
+    expect(value.backgroundImage.startsWith(`${grain}, radial-gradient(`), "palette keeps the glass grain and sheen").toBe(true)
+    expect(value.backgroundImage, "palette tints the glass").toMatch(/\), linear-gradient\(.+\)$/)
     expect(value.backgroundImage, "palette tints the glass").not.toBe(glass.dark.backgroundImage)
     expect(value.borderTopColor, "palette tints the glass border").not.toBe(glass.dark.borderTopColor)
   }
@@ -320,33 +319,32 @@ test("fixture calibration: pending permission traverses the real reducer and doc
   await expect(page.getByRole("textbox", { name: "Prompt", exact: true })).toBeEditable()
 })
 
+// The V2 server's own permission events, as /api/event streams them.
 function permissionAsked() {
   return {
-    directory,
-    payload: {
-      id: "evt_orchestra_permission_asked",
-      type: "permission.asked",
-      properties: {
-        id: "per_orchestra_identity",
-        sessionID,
-        permission: "bash",
-        patterns: ["git status"],
-        metadata: {},
-        always: [],
-      },
+    id: "evt_orchestra_permission_asked",
+    created: 1700000000000,
+    type: "permission.v2.asked",
+    location: { directory },
+    data: {
+      id: "per_orchestra_identity",
+      sessionID,
+      action: "bash",
+      resources: ["git status"],
+      metadata: {},
+      save: [],
     },
-  } satisfies GlobalEvent
+  }
 }
 
 function permissionReplied() {
   return {
-    directory,
-    payload: {
-      id: "evt_orchestra_permission_replied",
-      type: "permission.replied",
-      properties: { sessionID, requestID: "per_orchestra_identity", reply: "once" },
-    },
-  } satisfies GlobalEvent
+    id: "evt_orchestra_permission_replied",
+    created: 1700000000001,
+    type: "permission.v2.replied",
+    location: { directory },
+    data: { sessionID, requestID: "per_orchestra_identity", reply: "once" },
+  }
 }
 
 function readBox(locator: Locator) {

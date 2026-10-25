@@ -1,0 +1,14 @@
+id = "migration-destructive"
+group = "dependencies"
+severity = "gate"
+on = "added-lines"
+paths = ["apps/orchestra/migration/**/*.sql", "packages/core/src/database/migration/**/*.ts"]
+exclude = []
+# DROP TABLE/COLUMN, TRUNCATE and an unbounded DELETE lose data that no rollback brings back. DROP INDEX is reversible and not matched.
+flags = "i"
+skip_comments = ["--", "//", "*"]
+match = '''\b(DROP\s+TABLE|DROP\s+COLUMN|TRUNCATE\b|DELETE\s+FROM\s+[`"\w.]+\s*;)'''
+message = "Migration destroys data (DROP TABLE/COLUMN, TRUNCATE or DELETE without WHERE). Back the data up or copy it first, and say so in the PR."
+summary = "Dropping tables or columns, or emptying a table, destroys user data permanently once the migration ships. Back up or copy the data first, and explain the plan in the pull request."
+positive = ['DROP TABLE `session`;', '      yield* tx.run(`ALTER TABLE \\`workspace\\` DROP COLUMN \\`config\\`;`)', '      yield* tx.run(`DROP TABLE \\`permission\\`;`)', 'TRUNCATE session;', 'DELETE FROM `session`;']
+negative = ['DROP INDEX `session_idx`;', 'DELETE FROM `session` WHERE id = 1;', '-- DROP TABLE old;', 'CREATE TABLE `x` (id text);']

@@ -289,7 +289,10 @@ describe("pty on omni", () => {
         expect(skipped.every((bytes) => bytes > 0)).toBe(true)
         const later = yield* pty.attach(info.id, { cursor: 0, onData: () => {}, onEnd: () => {} })
         expect(later.cursor).toBe(session.full().length)
-        expect(later.replay).toBe(session.full().slice(later.cursor - later.replay.length))
+        // The ring dropped the start, so the replay resets the terminal and resumes at a line boundary.
+        expect(later.replay.startsWith("\x1bc")).toBe(true)
+        const tail = later.replay.slice(2)
+        expect(tail).toBe(session.full().slice(later.cursor - tail.length))
         later.detach()
       }),
     180_000,

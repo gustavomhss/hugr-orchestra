@@ -6,6 +6,8 @@ import { PLUGINS_COPY } from "./orchestra-chapters/plugins"
 import { HOOKS_COPY } from "./orchestra-chapters/hooks"
 import { WORKFLOWS_COPY } from "./orchestra-chapters/workflows"
 import { PROVIDERS_COPY } from "./orchestra-chapters/providers"
+import { INTEGRATIONS_COPY } from "./orchestra-chapters/integrations"
+import { CAPABILITIES_COPY } from "./orchestra-chapters/capabilities"
 import { SHORTCUTS_COPY } from "./orchestra-chapters/shortcuts"
 import { CICD_COPY } from "./orchestra-chapters/cicd"
 import { SCHEDULE_COPY } from "./orchestra-chapters/schedule"
@@ -16,6 +18,7 @@ import { DOCK_COPY } from "./orchestra-chapters/dock"
 import { SETTINGS_COPY } from "./orchestra-chapters/settings"
 import { CHAT_COPY } from "./orchestra-chapters/chat"
 import { ATLAS_COPY } from "./orchestra-chapters/atlas"
+import { GUARDRAILS_COPY } from "./orchestra-chapters/guardrails"
 import { ActionsCopy } from "./actions"
 import { SESSION_RECOVERY_COPY } from "./session-recovery"
 import { DESKTOP_RECOVERY_COPY } from "./desktop-recovery"
@@ -138,6 +141,7 @@ export const ORCHESTRA_COPY = {
   "orchestra.nav.search": "Search",
   "orchestra.profile.choose": "Choose repository profile",
   "orchestra.profile.empty": "Choose a project",
+  "orchestra.profile.emptyHint": "Pick a project folder and its agents, sessions and tools appear here.",
   "orchestra.rework.pending": "Orchestra · Rework pending",
   "orchestra.rework.title": "{{title}}",
   "orchestra.rework.body":
@@ -374,6 +378,8 @@ export const ORCHESTRA_COPY = {
   ...HOOKS_COPY,
   ...WORKFLOWS_COPY,
   ...PROVIDERS_COPY,
+  ...INTEGRATIONS_COPY,
+  ...CAPABILITIES_COPY,
   ...SHORTCUTS_COPY,
   ...CICD_COPY,
   ...SCHEDULE_COPY,
@@ -384,6 +390,7 @@ export const ORCHESTRA_COPY = {
   ...SETTINGS_COPY,
   ...CHAT_COPY,
   ...ATLAS_COPY,
+  ...GUARDRAILS_COPY,
   // English-only Actions copy: other locales fall back to it until translated.
   ...ActionsCopy.dict,
   ...SESSION_RECOVERY_COPY,

@@ -213,7 +213,7 @@ export function deriveTasks(input: TasksInput) {
         {
           key: ScopedKey.from(input.scope, input.sessionID, "shell", part.callID),
           kind: "shell",
-          headline: toolTitle(part.state) ?? part.tool,
+          headline: toolTitle(part) ?? part.tool,
           state: waiting.calls.has(part.callID) ? "needs-input" : "running",
           startTime: toolStart(part.state),
           sessionId: input.sessionID,
@@ -270,7 +270,7 @@ function agentItem(
     kind: "agent",
     // Child session titles read "<description> (@<agent> subagent)".
     headline:
-      (call && toolTitle(call.state)) ||
+      (call && toolTitle(call)) ||
       text(callInput.description) ||
       (child ? (sessionTitle(child.title) ?? "").replace(/ \(@[^)]* subagent\)$/, "") : childID),
     agentID: agentType,
@@ -387,9 +387,11 @@ function terminal(state: ToolPart["state"]) {
   return state.status === "completed" || state.status === "error"
 }
 
-function toolTitle(state: ToolPart["state"]) {
-  if (state.status === "completed" || state.status === "running") return state.title || undefined
-  return undefined
+function toolTitle(part: ToolPart) {
+  if (part.state.status !== "completed" && part.state.status !== "running") return undefined
+  // The V2 projection titles a completed call with the bare tool name, which says nothing about the task.
+  if (part.state.title === part.tool) return undefined
+  return part.state.title || undefined
 }
 
 function toolStart(state: ToolPart["state"]) {
@@ -400,7 +402,8 @@ function toolStart(state: ToolPart["state"]) {
 function toolMetadata(part: ToolPart | undefined): Record<string, unknown> {
   if (!part) return {}
   if (part.state.status === "pending") return part.metadata ?? {}
-  return part.metadata ?? part.state.metadata ?? {}
+  // The V2 projection always sets part metadata (provider state); the tool's own metadata, which carries the child session id, lives on the state.
+  return { ...part.state.metadata, ...part.metadata }
 }
 
 // Task calls and messages store the agent's stable id; servers that predate ids store the name, which is then the key.

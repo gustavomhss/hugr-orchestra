@@ -83,6 +83,12 @@ import { serveUIEffect } from "@/server/shared/ui"
 import { ServerAuth } from "@/server/auth"
 import { InstanceHttpApi, RootHttpApi } from "./api"
 import { Api } from "@orchestra/server/api"
+import { ServerCapabilityVerification } from "@orchestra/server/capability-verification"
+import type { CapabilityConnectionSetupContract } from "@orchestra/core/capability/connection/setup-contract"
+import type { CapabilityOperatorContract } from "@orchestra/core/capability/operator/contract"
+import { ServerOperator } from "@orchestra/server/operator"
+import { ServerContentTicket } from "@orchestra/server/capability-content-ticket"
+import { capabilityAuthorizationLayer } from "@orchestra/server/middleware/capability-authorization"
 import { PublicApi } from "./public"
 import {
   authorizationLayer,
@@ -191,7 +197,8 @@ const instanceRoutes = instanceApiRoutes.pipe(
   Layer.provide([httpApiAuthLayer, workspaceRoutingLive, instanceContextLayer, schemaErrorLayer]),
 )
 const serverRoutes = HttpApiBuilder.layer(Api).pipe(
-  Layer.provide(handlers),
+  // Invalid host factory options are startup defects, not request failures.
+  Layer.provide(handlers.pipe(Layer.orDie)),
   Layer.provide(HostCatalog.layer.pipe(Layer.provide(ClaudeCodeSDK.layer))),
   Layer.provide(HostAgentExecution.layer),
   Layer.provide(PluginPtyEnvironment.layer),
@@ -293,6 +300,8 @@ const app = LayerNode.group([
 
 export function createRoutes(
   corsOptions?: CorsOptions,
+  operator?: CapabilityOperatorContract.Interface,
+  verifier?: CapabilityConnectionSetupContract.Verifier,
 ): Layer.Layer<never, EffectConfig.ConfigError, RouteRequirements> {
   const locationServiceMapV2 = buildLocationServiceMap(ArsenalNative.nativeRegistryReplacements)
   // One root owns native Session execution, scheduled drains, legacy bootstrap,
@@ -326,8 +335,13 @@ export function createRoutes(
     docRoute,
     uiRoute,
   ).pipe(
+    Layer.provide(verifier ? Layer.succeed(ServerCapabilityVerification.Service, verifier) : ServerCapabilityVerification.layer),
     Layer.provide([errorLayer, compressionLayer, corsVaryFix, fenceLayer, cors(corsOptions), HttpServer.layerServices]),
     Layer.provide(Layer.succeed(CorsConfig)(corsOptions)),
+    Layer.provide(capabilityAuthorizationLayer.pipe(Layer.provide(ServerAuth.Config.layer))),
+    // Middleware and every capability handler share one facade for the host's scope.
+    Layer.provide(operator === undefined ? ServerOperator.layer : Layer.succeed(ServerOperator.Service, operator)),
+    Layer.provide(ServerContentTicket.layer),
     Layer.provide(sessionLocationLayer),
     Layer.provide(locationLayer),
     Layer.provide(PtyEnvironment.layer),

@@ -168,7 +168,7 @@ export function createActionsModel(input: {
       validate(await readProposalSource(input.api, target, state.binding?.provider.kind ?? "github", query, signal, false)))
   }
   const view = (force: boolean) => owner.run("view", identity(), async (handle) => {
-    if (state.route.view === "local") return
+    if (state.route.view === "local" || state.route.view === "guardrails") return
     if (force || state.bindings.status !== "ready") {
       await load("bindings", input.api.directory, state.bindings, (data) => update({ bindings: data }), (signal) => input.api.bindings(signal))
       if (!handle.current() || state.bindings.status !== "ready") return

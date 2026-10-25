@@ -1,0 +1,11 @@
+id = "hook-bypass"
+group = "silenced"
+severity = "gate"
+on = "added-lines"
+paths = [".github/**", "script/**", "scripts/**", "**/scripts/**", "**/package.json", "**/*.sh", ".husky/**"]
+exclude = []
+match = '--no-verify\b|\bHUSKY=0\b|\bHUSKY_SKIP_HOOKS\b|(^|\s)SKIP=\S'
+message = "Skips the git hooks that guard commits. Fix what the hook reports instead of bypassing it."
+summary = "Skipping git hooks turns off the checks that guard every commit. Fix whatever the hook reports instead of bypassing it."
+positive = ['git commit --no-verify -m wip', 'HUSKY=0 bun install', 'SKIP=lint git commit -m x', 'export HUSKY_SKIP_HOOKS=1']
+negative = ['git commit -m "x"', 'SKIP_PREPARE=1 bun install', 'husky']

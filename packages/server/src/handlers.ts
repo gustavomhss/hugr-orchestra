@@ -29,6 +29,7 @@ import { ConfigHandler } from "./handlers/config"
 import { RelayDocumentHandler, RelayPublishHandler } from "./handlers/relay-document"
 import { RelayHookHandler } from "./handlers/relay-hook"
 import { RelayRunHandler } from "./handlers/relay-run"
+import { GuardrailHandler } from "./handlers/guardrail"
 import { PullRequestHandler } from "./handlers/pull-request"
 import { ScheduleHandler } from "./handlers/schedule"
 import { ResearchArtifactHandler } from "./handlers/research-artifact"
@@ -41,6 +42,10 @@ import { ActionsPipelineHandler } from "./handlers/actions-pipeline"
 import { ActionsResourceHandler } from "./handlers/actions-resource"
 import { ActionsSourceHandler } from "./handlers/actions-source"
 import { ActionsTransferHandler } from "./handlers/actions-transfer"
+import { CapabilityOperatorHandler } from "./handlers/capability-operator"
+import { CapabilityConnectionsHandler } from "./handlers/capability-connections"
+import { CapabilityArtifactsHandler, CapabilityContentHandler } from "./handlers/capability-artifacts"
+import { CapabilitySchedulesHandler } from "./handlers/capability-schedules"
 
 export const handlers = Layer.mergeAll(
   HealthHandler,
@@ -75,6 +80,7 @@ export const handlers = Layer.mergeAll(
   RelayHookHandler,
   RelayRunHandler,
   PullRequestHandler,
+  GuardrailHandler,
   ScheduleHandler,
   ResearchArtifactHandler,
   ActionsBindingHandler,
@@ -86,4 +92,9 @@ export const handlers = Layer.mergeAll(
   ActionsResourceHandler,
   ActionsSourceHandler,
   ActionsTransferHandler,
+  CapabilityOperatorHandler,
+  CapabilityConnectionsHandler,
+  CapabilityArtifactsHandler,
+  CapabilitySchedulesHandler,
+  CapabilityContentHandler,
 )

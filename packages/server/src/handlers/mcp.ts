@@ -9,6 +9,11 @@ export const McpHandler = HttpApiBuilder.group(Api, "server.mcp", (handlers) =>
   handlers
     .handle("mcp.list", () => response(Mcp.Service.use((mcp) => mcp.list())))
     .handle("mcp.resource.catalog", () => response(Mcp.Service.use((mcp) => mcp.resources())))
+    .handle("mcp.config", () => response(Mcp.Service.use((mcp) => mcp.config())))
+    .handle("mcp.entries", () =>
+      response(Mcp.Service.use((mcp) => mcp.entries()).pipe(Effect.mapError(invalid))),
+    )
+    .handle("mcp.tools", () => response(Mcp.Service.use((mcp) => mcp.tools())))
     .handle(
       "mcp.add",
       Effect.fn(function* (ctx) {

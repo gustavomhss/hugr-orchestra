@@ -1,0 +1,12 @@
+id = "dep-git-source"
+group = "dependencies"
+severity = "gate"
+on = "added-lines"
+paths = ["**/package.json", "**/Cargo.toml", "**/requirements*.txt", "**/pyproject.toml"]
+exclude = ["**/node_modules/**"]
+# A dependency fetched from git or a tarball URL skips the registry's immutability and review. package.json keys that legitimately hold URLs (repository, homepage, url, bugs, funding) are skipped.
+match = '''^\s*"(?!repository"|homepage"|url"|bugs"|funding")[^"]+":\s*"(git\+|git:|github:|gitlab:|bitbucket:|ssh://|https?://[^"]*\.(tgz|tar\.gz)")|^\s*[\w-]+\s*=\s*\{[^}]*\bgit\s*=|^\s*git\s*=\s*"|^\s*(-e\s+)?git\+|\S\s@\sgit\+'''
+message = "Dependency from a git URL or tarball. Use a published, pinned version from the registry."
+summary = "A dependency pulled straight from a git repository or a download link can change under you and skips the registry's checks. Depend on a published, pinned version instead."
+positive = ['    "foo": "git+https://github.com/x/y.git"', '    "foo": "github:x/y"', '    "foo": "https://example.com/foo-1.0.0.tgz"', 'foo = { git = "https://github.com/x/y" }', 'git = "https://github.com/x/y"', '-e git+https://github.com/x/y#egg=y', 'foo @ git+https://github.com/x/y']
+negative = ['  "repository": "github:x/y"', '    "url": "git+https://github.com/x/y.git"', '  "homepage": "https://example.com"', '    "foo": "^1.2.3"', '    "foo": "workspace:*"', 'requests==2.31.0']

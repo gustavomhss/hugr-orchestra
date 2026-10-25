@@ -1,0 +1,13 @@
+id = "local-tests-escape"
+group = "hygiene"
+severity = "warn"
+on = "added-lines"
+paths = ["**"]
+exclude = ["**/*.md", "script/test-guard.ts", "native/omni/**"]
+skip_comments = ["//", "#"]
+# AGENTS.md: tests run on GitHub Actions; only the owner may allow a local run. An agent that sets this skips the stop.
+match = '''ORCHESTRA_LOCAL_TESTS\s*[=:]\s*['"]?1'''
+message = "ORCHESTRA_LOCAL_TESTS set in a file. Only the owner opts into local runs, per shell; run tests with bun run test:ci."
+summary = "Only the owner may allow tests to run locally, and only for their own shell session, so this switch must never be committed. Remove it and run tests through the CI test command."
+positive = ['ORCHESTRA_LOCAL_TESTS=1 bun test x', '  ORCHESTRA_LOCAL_TESTS: "1"']
+negative = ['bun run test:ci orchestra test/a.test.ts', 'const local = process.env.ORCHESTRA_LOCAL_TESTS']

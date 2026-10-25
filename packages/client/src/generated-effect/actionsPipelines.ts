@@ -18,7 +18,7 @@ type Endpoint38_0Input = {
 const Endpoint38_0 = (raw: RawClient["server.actionsPipeline"]) => (input: Endpoint38_0Input) =>
   raw["actions.pipeline.mergeRequest"]({
     params: { bindingID: input["bindingID"], mergeRequestID: input["mergeRequestID"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
     payload: { id: input["id"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -33,7 +33,7 @@ type Endpoint38_1Input = {
 const Endpoint38_1 = (raw: RawClient["server.actionsPipeline"]) => (input: Endpoint38_1Input) =>
   raw["actions.pipeline.trigger"]({
     params: { bindingID: input["bindingID"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
     payload: { id: input["id"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 

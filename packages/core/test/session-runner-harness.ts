@@ -72,7 +72,12 @@ export function make(input: {
   permissions?: Layer.Layer<PermissionV2.Service>
   /** Replaces the compaction-only config, for example to configure MCP servers. */
   config?: Layer.Layer<Config.Service>
+  /** Real tool nodes (and what they need) added to the application graph, for a test that runs one end to end. */
+  nodes?: ReadonlyArray<LayerNode.Node<unknown, unknown, any>>
+  /** The Location's working directory, "/project" unless a tool needs a real one. */
+  directory?: string
 }) {
+  const directory = AbsolutePath.make(input.directory ?? "/project")
   const permissions = input.permissions ?? PermissionFixture.normalLayer
   const config = input.config ?? defaultConfig
   const hosts: LayerNode.Replacements = input.hosts ? [[ExecutionHost.node, input.hosts]] : []
@@ -82,7 +87,7 @@ export function make(input: {
     [LayerNodePlatform.llmClient, input.client],
     [SessionRunnerModel.node, input.models],
     [SystemContextRegistry.node, input.systemContext],
-    [Location.node, Location.boundNode({ directory: AbsolutePath.make("/project") })],
+    [Location.node, Location.boundNode({ directory })],
     [SkillGuidance.node, input.skillGuidance],
     [ReferenceGuidance.node, referenceGuidance],
     [PermissionV2.node, permissions],
@@ -129,13 +134,14 @@ export function make(input: {
         node,
         SessionExecution.node,
         SessionV2.node,
+        ...(input.nodes ?? []),
       ]),
       [
         [LayerNodePlatform.llmClient, input.client],
         [PermissionV2.node, permissions],
         [SessionRunnerModel.node, input.models],
         [SystemContextRegistry.node, input.systemContext],
-        [Location.node, Location.boundNode({ directory: AbsolutePath.make("/project") })],
+        [Location.node, Location.boundNode({ directory })],
         [SkillGuidance.node, input.skillGuidance],
         [ReferenceGuidance.node, referenceGuidance],
         [Snapshot.node, Snapshot.noopLayer],
@@ -155,7 +161,7 @@ export const recoveryModel = Model.make({
   route: route.with({ limits: { context: 20_000, output: 1_000 } }),
 })
 
-export const insertSession = (id: SessionV2.ID) =>
+export const insertSession = (id: SessionV2.ID, directory = "/project") =>
   Effect.gen(function* () {
     const { db } = yield* Database.Service
     yield* db
@@ -164,7 +170,7 @@ export const insertSession = (id: SessionV2.ID) =>
         id,
         project_id: Project.ID.global,
         slug: id,
-        directory: "/project",
+        directory,
         title: "test",
         version: "test",
       })
@@ -173,16 +179,18 @@ export const insertSession = (id: SessionV2.ID) =>
       .pipe(Effect.orDie)
   })
 
-export const setup = Effect.gen(function* () {
+export const setupAt = (directory: string) => Effect.gen(function* () {
   const { db } = yield* Database.Service
   yield* db
     .insert(ProjectTable)
-    .values({ id: Project.ID.global, worktree: AbsolutePath.make("/project"), sandboxes: [] })
+    .values({ id: Project.ID.global, worktree: AbsolutePath.make(directory), sandboxes: [] })
     .onConflictDoNothing()
     .run()
     .pipe(Effect.orDie)
-  yield* insertSession(sessionID)
+  yield* insertSession(sessionID, directory)
 })
+
+export const setup = setupAt("/project")
 
 export type FragmentKind = "text" | "reasoning" | "tool input"
 

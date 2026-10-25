@@ -24,16 +24,16 @@ const Endpoint39_0 = (raw: RawClient["server.actionsResource"]) => (input: Endpo
   raw["actions.resource.list"]({
     params: { bindingID: input["bindingID"] },
     query: {
-      location: input["location"],
+      ...(input["location"] === undefined ? {} : { location: input["location"] }),
       revision: input["revision"],
       kind: input["kind"],
-      runID: input["runID"],
-      resourceID: input["resourceID"],
-      scope: input["scope"],
-      ref: input["ref"],
-      query: input["query"],
-      cursor: input["cursor"],
-      limit: input["limit"],
+      ...(input["runID"] === undefined ? {} : { runID: input["runID"] }),
+      ...(input["resourceID"] === undefined ? {} : { resourceID: input["resourceID"] }),
+      ...(input["scope"] === undefined ? {} : { scope: input["scope"] }),
+      ...(input["ref"] === undefined ? {} : { ref: input["ref"] }),
+      ...(input["query"] === undefined ? {} : { query: input["query"] }),
+      ...(input["cursor"] === undefined ? {} : { cursor: input["cursor"] }),
+      ...(input["limit"] === undefined ? {} : { limit: input["limit"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -50,7 +50,7 @@ type Endpoint39_1Input = {
 const Endpoint39_1 = (raw: RawClient["server.actionsResource"]) => (input: Endpoint39_1Input) =>
   raw["actions.resource.command"]({
     params: { bindingID: input["bindingID"], resourceKind: input["resourceKind"], action: input["action"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
     payload: { id: input["id"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 

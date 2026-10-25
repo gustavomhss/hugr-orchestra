@@ -389,7 +389,7 @@ describe("readGovernance", () => {
     }
   })
 
-  test("current server content order wins over lexically sorted opaque call IDs", () => {
+  test("the trail follows content order when opaque call IDs sort the other way", () => {
     const tools: SessionMessageAssistantTool[] = [
       {
         type: "tool",
@@ -433,7 +433,7 @@ describe("readGovernance", () => {
       working: false,
       source,
       messages: normalized.messages,
-      parts: (id) => normalized.parts.get(id)?.toReversed(),
+      parts: (id) => normalized.parts.get(id),
     })
     expect(result.approval.state).toBe("approved")
     expect(result.trail.map((record) => record.id)).toEqual(["msg_reply", "apr_1"])
