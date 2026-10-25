@@ -2,7 +2,6 @@ import { randomUUID } from "node:crypto"
 import { CapabilityArtifactManagement } from "@orchestra/core/capability/artifact/management"
 import { CapabilityArtifacts } from "@orchestra/core/capability/artifact/index"
 import { Database } from "@orchestra/core/database/database"
-import { Location } from "@orchestra/core/location"
 import { ConflictError, ForbiddenError, InvalidRequestError, UnauthorizedError, UnknownError } from "@orchestra/protocol/errors"
 import { Capability } from "@orchestra/schema/capability"
 import { Cause, Context, Effect } from "effect"
@@ -37,9 +36,7 @@ export const CapabilityArtifactsHandler = HttpApiBuilder.group(Api, "server.capa
         yield* management.get(params.sessionID, ref).pipe(artifactResponse)
         const authority = yield* RequestAuthority
         if (authority === undefined) return yield* new UnauthorizedError({ message: "Authentication required" })
-        const location = yield* Location.Service
-        return tickets.mint({ authority, sessionID: params.sessionID, ref,
-          location: { directory: location.directory, ...(location.workspaceID ? { workspaceID: location.workspaceID } : {}) } })
+        return tickets.mint({ authority, sessionID: params.sessionID, ref })
       }))
       .handle("capability.artifact.share", ({ params, payload }) =>
         management.share(params.sessionID, { id: params.artifactID, revision: params.revision }, payload)
@@ -63,7 +60,7 @@ export const CapabilityContentHandler = HttpApiBuilder.group(Api, "server.capabi
     )
     return handlers.handleRaw("capability.content.read", ({ params, headers }) => {
       const claim = tickets.verify(params.ticket)
-      // Expired, tampered and mismatched tickets are indistinguishable: an empty 401.
+      // Expired and unknown tickets are indistinguishable: an empty 401.
       if (claim === undefined) return Effect.succeed(HttpServerResponse.empty({ status: 401 }))
       // Re-run the content read under the minting authority; Core rejects it once revoked or expired.
       return operators.withRequest(claim.authority, { requestID: randomUUID() },
