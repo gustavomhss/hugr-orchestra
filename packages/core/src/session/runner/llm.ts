@@ -292,6 +292,7 @@ const layer = Layer.effect(
             sessionID: session.id,
             messages: [...toLLMMessages(context, model), ...(isLastStep ? [Message.assistant(MAX_STEPS_PROMPT)] : [])],
             model,
+            tools: toolMaterialization?.definitions ?? [],
           })
         : []
       const request = model && LLM.request({

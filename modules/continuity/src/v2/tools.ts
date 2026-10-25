@@ -12,9 +12,10 @@ import { Tools } from "@orchestra/core/tool/tools"
 import { ArchiveSearch } from "../archive-search"
 import { ContinuityAliasV2 } from "./alias"
 import { ContinuityArchive } from "./archive"
+import { ContinuityMaskingV2 } from "./masking"
 import { ContinuityStrategy } from "./strategy"
 
-export const RECALL = "context_recall"
+export const RECALL = ContinuityMaskingV2.RECALL
 export const COMPACT = "context_compact"
 
 // Every response, JSON escaping and UTF-8 included, stays under this many bytes.

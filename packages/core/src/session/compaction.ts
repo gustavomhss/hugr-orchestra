@@ -281,6 +281,8 @@ export interface Interface {
     readonly sessionID: SessionSchema.ID
     readonly messages: readonly Message[]
     readonly model: Model
+    /** The tools this turn offers, after the agent's permissions; a replacement may rely on one only if listed. */
+    readonly tools: LLMRequest["tools"]
   }) => Effect.Effect<readonly Message[]>
   /** Runs after a step settled with its token usage. */
   readonly afterStep: (input: {

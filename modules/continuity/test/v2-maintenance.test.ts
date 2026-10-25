@@ -68,7 +68,7 @@ const fixture = (summary: () => string | undefined, gate: Effect.Effect<void> = 
         })),
       )
     // The provider turn records its model; the turn's compaction check records its request.
-    yield* compaction.transform({ sessionID, messages: [], model: target })
+    yield* compaction.transform({ sessionID, messages: [], model: target, tools: [] })
     expect(yield* compaction.compactIfNeeded(yield* input())).toBe(false)
     const session = shared.session(sessionID)
     // Captures the running summary now: once released it may finish, and clear `running`, before the test resumes.
