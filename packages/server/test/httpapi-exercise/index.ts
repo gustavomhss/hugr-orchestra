@@ -548,6 +548,7 @@ export const scenarios: Scenario[] = [
       headers: ctx.headers(),
       body: {},
     }))
+    .status(400, undefined, "none"),
 ]
 
 export function main(args: readonly string[]) {
