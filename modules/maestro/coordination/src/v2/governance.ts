@@ -13,6 +13,7 @@ import { FSUtil } from "@orchestra/core/fs-util"
 import { GitCli } from "@orchestra/core/git-cli"
 import { Location } from "@orchestra/core/location"
 import { ResearchAllowance } from "@orchestra/core/research/allowance"
+import { ResearchRecords } from "@orchestra/core/research/records"
 import { SessionInput, SessionSchema, SessionStore } from "@orchestra/core/session"
 import { SkillV2 } from "@orchestra/core/skill"
 import { TaskTool } from "@orchestra/core/tool/task"
@@ -24,6 +25,7 @@ import { SessionAuthority } from "../session-authority"
 import { UpstreamResult } from "../upstream-result"
 import { GovernanceBackgroundV2 } from "./governance/background"
 import { CallerGateV2 } from "./governance/caller"
+import { DiscoveryResultV2 } from "./governance/discovery-result"
 import { GovernanceDispatchV2 } from "./governance/dispatch"
 import { GovernanceInputV2 } from "./governance/input"
 import { LogicalTaskV2 } from "./governance/logical-task"
@@ -60,6 +62,7 @@ export const make = Effect.gen(function* () {
   const config = yield* Config.Service
   const skills = yield* SkillV2.Service
   const allowances = yield* ResearchAllowance.Service
+  const records = yield* ResearchRecords.Service
   const sessions = yield* GovernanceBackgroundV2.Sessions
   const background = yield* GovernanceBackgroundV2.make(events)
   // The roster loads lazily (see `seats.ts`); where it cannot load no agent is a seat, so no profile is read.
@@ -253,8 +256,7 @@ export const make = Effect.gen(function* () {
         const settled = yield* TaskGovernance.allowAll.settle(input)
         const seat = seatOf(input.child.agent ?? AgentV2.defaultID)
         const schema = seat?.workResult
-        // The research seat's discovery result needs the research host's inquiry card, which V2 does not build yet.
-        if (!seat || !schema || schema === "discovery-work-result-v1") return settled
+        if (!seat || !schema) return settled
         if (schema === UpstreamResult.SCHEMA) {
           const card = UpstreamResult.parse(settled.text)
           return card ? { ...settled, structured: { upstreamResult: card } } : settled
@@ -283,7 +285,10 @@ export const make = Effect.gen(function* () {
             worktree: location.vcs?.type === "git" ? location.project.directory : location.directory,
           }),
         })
-        return { ...settled, structured: { [WorkResultV2.KEY]: workResult } }
+        if (schema !== "discovery-work-result-v1") return { ...settled, structured: { [WorkResultV2.KEY]: workResult } }
+        // The research seat's result comes from the dispatch's closed inquiry card, never from the worker's text.
+        const discovery = yield* DiscoveryResultV2.assemble({ records, database }, workResult, input.child)
+        return { ...settled, text: DiscoveryResultV2.report(settled.text, discovery), structured: { [WorkResultV2.KEY]: discovery } }
       }),
   })
 
@@ -354,6 +359,7 @@ export const node = makeLocationNode({
     Config.node,
     SkillV2.node,
     ResearchAllowance.node,
+    ResearchRecords.node,
     GovernanceBackgroundV2.sessionsNode,
   ],
 })

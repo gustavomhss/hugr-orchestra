@@ -179,3 +179,28 @@ test("memory outcomes come from the execution Session's Atlas receipts, keyed by
     writes: [{ outcome: "refused", callID: "call_emit" }],
   })
 })
+
+test("a research reply settles from the dispatch's closed inquiry card, never from its text (V1 DiscoveryResult)", () =>
+  run((directory) =>
+    Effect.gen(function* () {
+      const text = "The answer is in src/a.ts:1-3."
+      const settled = yield* settle(directory, "jimmy", text)
+      expect(settled.text).toStartWith("Inquiry not closed: the host holds no card for this dispatch")
+      expect(settled.text).toContain(JSON.stringify(text))
+      const result = settled.structured?.workResult as Record<string, unknown>
+      expect(result).toMatchObject({
+        schema: "discovery-work-result-v1",
+        memberId: "jimmy",
+        card: { parsed: false, messageID: "msg_settle_reply" },
+        referencesChecked: false,
+        changes: [],
+        checks: [],
+        blockers: [],
+        risks: ["Inquiry not closed: the dispatch ended without inquiry close, so no card exists."],
+        nextActions: ["Reopen retained research evidence before relying on the final report."],
+        terminal: { reason: "ended" },
+      })
+      expect(result.outcome).toBeUndefined()
+      expect(result.discovery).toBeUndefined()
+    }),
+  ))

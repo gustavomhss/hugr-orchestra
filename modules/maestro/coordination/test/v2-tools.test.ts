@@ -45,6 +45,16 @@ const governance = [
 ]
 const arsenal = Object.values(MaestroArsenal.names)
 const memory = ["atlas_memory_recall", "atlas_memory_emit"]
+const research = [
+  "research_capture",
+  "research_view",
+  "research_record",
+  "inquiry",
+  "code_search",
+  "code_query",
+  "code_locate",
+  "probe_run",
+]
 
 const temporary = (prefix: string) =>
   Effect.acquireRelease(
@@ -210,12 +220,62 @@ test("Maestro sees its tools and the Arsenal, each seat only its own, every othe
       expect(yield* visible("maestro")).toEqual([...governance, ...arsenal].sort())
       expect(yield* visible("lucy")).toEqual(["maestro_record_review"])
       expect(yield* visible("archie")).toEqual([...arsenal, ...memory].sort())
-      for (const id of ["backend", "jimmy"]) expect(yield* visible(id)).toEqual([...memory].sort())
+      expect(yield* visible("backend")).toEqual([...memory].sort())
+      expect(yield* visible("jimmy")).toEqual([...memory, ...research].sort())
       for (const id of ["general", "explore", "custom"]) expect(yield* visible(id)).toEqual([])
       // Everything is registered: unfiltered materialization lists every tool.
       expect((yield* registry.materialize()).definitions.map((tool) => tool.name).sort()).toEqual(
-        [...governance, ...arsenal, "maestro_record_review", ...memory].sort(),
+        [...governance, ...arsenal, "maestro_record_review", ...memory, ...research].sort(),
       )
+    }),
+  ))
+
+test("the research tools run only as the research seat and only under its dispatch allowance", () =>
+  run(
+    Effect.gen(function* () {
+      yield* setup
+      const agents = yield* AgentV2.Service
+      yield* agents.transform((draft) => draft.update(AgentV2.ID.make("jimmy"), () => {}))
+      const settle = (agent: string, name: string, input: unknown) =>
+        Effect.gen(function* () {
+          const registry = yield* ToolRegistry.Service
+          return (yield* (yield* registry.materialize(allow)).settle({
+            sessionID,
+            agent: AgentV2.ID.make(agent),
+            assistantMessageID: SessionMessage.ID.make("msg_calling"),
+            call: { type: "tool-call", id: "call", name, input },
+          })).result
+        })
+      expect(yield* settle("maestro", "research_view", { action: "corpus" })).toEqual({
+        type: "error",
+        value: "research_view runs only as the research seat",
+      })
+      // The calling Session is Maestro's own: no research dispatch is bound to it, so nothing is read or retained.
+      expect(yield* settle("jimmy", "research_view", { action: "corpus" })).toEqual({
+        type: "error",
+        value: "Research denied: binding_missing: Research runs only under its dispatch allowance",
+      })
+      expect(yield* settle("jimmy", "research_capture", { kind: "file", path: "missing.txt" })).toEqual({
+        type: "error",
+        value: "Research denied: binding_missing: Research runs only under its dispatch allowance",
+      })
+      expect(yield* settle("maestro", "code_search", { pattern: "settle" })).toEqual({
+        type: "error",
+        value: "code_search runs only as the research seat",
+      })
+      // The code tools search and retain only inside the dispatch, as the research records do.
+      expect(yield* settle("jimmy", "code_search", { pattern: "settle" })).toEqual({
+        type: "error",
+        value: "Research denied: binding_missing: Research runs only under its dispatch allowance",
+      })
+      expect(yield* settle("jimmy", "probe_run", { snapshot: { kind: "worktree" }, runner: { kind: "typecheck", project: "tsconfig.json" } })).toEqual({
+        type: "error",
+        value: "Research denied: binding_missing: Research runs only under its dispatch allowance",
+      })
+      expect(yield* settle("jimmy", "code_locate", { terms: ["settle"] })).toEqual({
+        type: "error",
+        value: "Research denied: binding_missing: Research runs only under its dispatch allowance",
+      })
     }),
   ))
 

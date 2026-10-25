@@ -12,9 +12,14 @@ import { Global } from "@orchestra/core/global"
 import { Location } from "@orchestra/core/location"
 import { LocationMutation } from "@orchestra/core/location-mutation"
 import { PermissionV2 } from "@orchestra/core/permission"
+import { AppProcess } from "@orchestra/core/process"
+import { ResearchAllowance } from "@orchestra/core/research/allowance"
+import { ResearchRecords } from "@orchestra/core/research/records"
+import { Ripgrep } from "@orchestra/core/ripgrep"
 import { SessionStore } from "@orchestra/core/session"
 import { SkillV2 } from "@orchestra/core/skill"
 import { ApplicationTools } from "@orchestra/core/tool/application-tools"
+import { ReadToolFileSystem } from "@orchestra/core/tool/read-filesystem"
 import { MaestroArsenal } from "@orchestra/core/tool/maestro-arsenal"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { Tools } from "@orchestra/core/tool/tools"
@@ -28,6 +33,7 @@ import { MaestroApprovalTools } from "./tools/approval"
 import { MaestroAtlasMemoryTools } from "./tools/atlas-memory"
 import { MaestroToolGate } from "./tools/gate"
 import { MaestroPlanningTools } from "./tools/planning"
+import { MaestroResearchTools } from "./tools/research"
 import { MaestroResultTools } from "./tools/result"
 import { MaestroReviewTools } from "./tools/review"
 import { MaestroWorkflowTools } from "./tools/workflows"
@@ -54,6 +60,9 @@ const layer = Layer.effectDiscard(
     const observations = yield* ArsenalObservations.Service
     const gate = MaestroToolGate.make(agents, seats)
     const git = yield* GitCli.Service
+    // The roster loads lazily (see `seats.ts`); where it cannot load no agent is the research seat.
+    const roster = yield* Effect.tryPromise(() => import("../roster")).pipe(Effect.option)
+    const canonical = (id: string): string => (roster._tag === "Some" ? roster.value.canonicalMemberId(id) : id)
     const services = {
       db: database.db,
       store,
@@ -79,6 +88,24 @@ const layer = Layer.effectDiscard(
         ...MaestroResultTools.tools({ gate }),
         ...MaestroWorkflowTools.tools({ gate }),
         ...MaestroAtlasMemoryTools.tools({ agents, seats, permission, git, location }),
+        ...MaestroResearchTools.tools({
+          db: database.db,
+          store,
+          events,
+          canonical,
+          allowances: yield* ResearchAllowance.Service,
+          location,
+          records: yield* ResearchRecords.Service,
+          permission,
+          mutation: yield* LocationMutation.Service,
+          reader: yield* ReadToolFileSystem.Service,
+          database,
+          gate,
+          fs: services.atlas.fs,
+          processes: yield* AppProcess.Service,
+          ripgrep: yield* Ripgrep.RipgrepBinary.Service,
+          git,
+        }),
       })
       .pipe(Effect.orDie)
     if (applications.entries().has(MaestroArsenal.names.catalog)) return
@@ -137,5 +164,10 @@ export const node = makeLocationNode({
     GovernanceBackgroundV2.sessionsNode,
     MaestroReviewTools.executionNode,
     ArsenalObservations.node,
+    ResearchAllowance.node,
+    ResearchRecords.node,
+    ReadToolFileSystem.node,
+    AppProcess.node,
+    Ripgrep.RipgrepBinary.node,
   ],
 })

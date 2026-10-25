@@ -7,6 +7,7 @@ import { makeLocationNode } from "@orchestra/core/effect/app-node"
 import type { Host } from "@orchestra/core/host"
 import type { PermissionV2 } from "@orchestra/core/permission"
 import { PluginV2 } from "@orchestra/core/plugin"
+import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
 import { SkillV2 } from "@orchestra/core/skill"
 import { ArsenalNative } from "../arsenal-native"
 import { MaestroGovernanceV2 } from "./governance"
@@ -17,6 +18,7 @@ import { MaestroSeats } from "./seats-service"
 import { MaestroSkillSourcesV2 } from "./skill-sources"
 import { MaestroToolsV2 } from "./tools"
 import { MaestroAtlasToolV2 } from "./tools/atlas"
+import { MaestroResearchTools } from "./tools/research"
 
 export const pluginID = PluginV2.ID.make("maestro/seats")
 
@@ -152,6 +154,7 @@ export const owners: readonly { readonly tools: readonly string[]; readonly agen
   // The upstream seat's own floor limits it to the pure authoring operations.
   { tools: ["maestro_arsenal_catalog", "maestro_arsenal_describe", "maestro_arsenal_execute"], agents: [AgentV2.defaultID, "archie"] },
   { tools: ["maestro_record_review"], agents: ["lucy"] },
+  { tools: Object.values(MaestroResearchTools.names), agents: [ResearchSeatTools.SEAT] },
   {
     tools: ["atlas_memory_recall", "atlas_memory_emit"],
     agents: Object.values(Seats.all).filter((seat) => seat.atlasMemory).map((seat) => seat.id),
