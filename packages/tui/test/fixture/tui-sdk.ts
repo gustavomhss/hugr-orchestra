@@ -84,22 +84,6 @@ export function createFetch(override?: FetchHandler, events?: ReturnType<typeof 
     if (overridden) return overridden
     if (url.pathname === "/api/event" && events) return events.response()
 
-    if (
-      [
-        "/agent",
-        "/command",
-        "/experimental/workspace",
-        "/experimental/workspace/status",
-        "/formatter",
-        "/lsp",
-      ].includes(url.pathname)
-    )
-      return json([])
-    if (["/config", "/experimental/resource", "/mcp", "/provider/auth", "/session/status"].includes(url.pathname))
-      return json({})
-    if (url.pathname === "/config/providers") return json({ providers: {}, default: {} })
-    if (url.pathname === "/experimental/capabilities") return json({ backgroundSubagents: false })
-    if (url.pathname === "/path") return json({ home: "", state: "", config: "", worktree, directory })
     if (url.pathname === "/api/location") return json({ directory, project: { id: "proj_test", directory: worktree } })
     if (
       ["/api/agent", "/api/model", "/api/provider", "/api/integration", "/api/command", "/api/skill"].includes(
@@ -123,12 +107,8 @@ export function createFetch(override?: FetchHandler, events?: ReturnType<typeof 
     if (url.pathname === "/api/session") return json({ data: [], cursor: {} })
     if (url.pathname === "/api/session/active") return json({ data: {} })
     if (url.pathname === "/api/project/proj_test/directories") return json([])
-    if (url.pathname === "/project/current") return json({ id: "proj_test" })
     if (url.pathname === "/api/reference")
       return json({ location: { directory, project: { id: "proj_test", directory } }, data: [] })
-    if (url.pathname === "/provider") return json({ all: [], default: {}, connected: [] })
-    if (url.pathname === "/session") return json([])
-    if (url.pathname === "/vcs") return json({ branch: "main" })
     throw new Error(`unexpected request: ${url.pathname}`)
   }) as typeof globalThis.fetch
   return { fetch, session }
