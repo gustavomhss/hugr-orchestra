@@ -8,5 +8,6 @@ exclude = []
 statuses = ["D", "R"]
 leaves_scope = true
 message = "Test file deleted. If the code under test is gone, an approver clears it with the label guardrail-approved:test-file-deleted; otherwise restore the test."
+summary = "Deleting a test file removes all the protection it gave. If the code it tested is gone too, an approver clears this with the label for this rule; otherwise restore the test."
 positive = ["packages/server/test/lsp-http.test.ts", "tests/test_session.py", "crates/a/tests/contract.rs", "apps/x/src/a.spec.tsx"]
 negative = ["packages/server/src/lsp.ts", "docs/testing.md", "scripts/test-runner.sh"]

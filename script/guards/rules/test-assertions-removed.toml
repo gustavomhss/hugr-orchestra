@@ -9,5 +9,6 @@ skip_comments = ["//", "#"]
 match = '(\bexpect\(|\bassert(_\w+)?[!(\s]|\bself\.assert\w+\()'
 min_net_removed = 3
 message = "This change removes assertions from a test file. Check that the behavior they pinned is really gone."
+summary = "Removing several checks from a test file can quietly drop protection for behavior that still exists. Confirm the behavior they covered is really gone before merging."
 positive = ['expect(a).toBe(1)', '    assert x == 1', 'assert_eq!(a, b);', 'self.assertEqual(a, b)']
 negative = ['const expected = 1', '// assert that later', '# assert x', 'test("asserts nothing", () => {})']

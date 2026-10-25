@@ -7,5 +7,6 @@ exclude = []
 # An attacker-controlled field expanded into a script line. A line that only assigns the field to an env variable (KEY: ${{ ... }}) is the recommended fix and is skipped, as are if: conditions.
 match = '''^(?!\s*[A-Za-z_][\w-]*:\s*["']?\$\{\{[^}]*\}\}["']?\s*$)(?!\s*(-\s*)?if:).*\$\{\{\s*(github\.head_ref|github\.event\.(issue\.(title|body)|pull_request\.(title|body|head\.(ref|label))|comment\.body|review\.body|review_comment\.body|discussion\.(title|body)|head_commit\.message|commits\[[^\]]*\]\.message|[\w.\[\]*]*author\.(email|name)))\s*\}\}'''
 message = "Attacker-controlled value expanded into a script. Pass it through an env variable and quote the variable in the script."
+summary = "Titles, branch names, commit messages and similar fields are written by whoever opens the pull request, so pasting them into a script lets them run commands. Pass the value through an environment variable and quote it in the script."
 positive = ['        run: echo "${{ github.event.pull_request.title }}"', '          echo ${{ github.head_ref }}', 'git checkout ${{ github.event.pull_request.head.ref }}']
 negative = ['          PR_TITLE: ${{ github.event.pull_request.title }}', '        run: echo "$PR_TITLE"', '    if: github.head_ref == "main"', 'echo ${{ github.event.pull_request.number }}']

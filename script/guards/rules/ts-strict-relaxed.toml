@@ -7,5 +7,6 @@ exclude = ["**/node_modules/**"]
 # Opt-in flags (noUncheckedIndexedAccess is off in 21 packages here) are not listed. Turning a default-on strictness flag off makes every type error in the package disappear at once.
 match = '''"(strict|noImplicitAny|strictNullChecks|strictFunctionTypes|noImplicitThis)"\s*:\s*false'''
 message = "TypeScript strictness flag turned off. Fix the type errors; do not disable the check for the package."
+summary = "Turning off a TypeScript strictness setting lowers type safety for the whole package. Fix the type errors instead of relaxing the setting."
 positive = ['    "strict": false,', '"noImplicitAny": false', '    "strictNullChecks": false']
 negative = ['    "strict": true,', '"skipLibCheck": true', '"noUnusedLocals": false']

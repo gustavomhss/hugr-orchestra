@@ -8,5 +8,6 @@ exclude = ["**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}", "**/test/**", "**/tests/*
 skip_comments = ["//", "#"]
 match = '(?:\bas unknown as\b)'
 message = "Double cast through unknown bypasses the type checker. Fix the type, or narrow the value with a guard."
+summary = "Casting a value through unknown into another type forces the compiler to accept something it would reject, hiding real type errors. Fix the type, or check the value with a type guard."
 positive = ['const a = value as unknown as Session', '  return (x as unknown as Foo[])']
 negative = ['const a = value as Session', '// the cast is not as unknown as it looks', 'const u: unknown = 1']

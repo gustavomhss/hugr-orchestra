@@ -7,5 +7,6 @@ exclude = []
 skip_comments = ["//", "#"]
 match = '(?:\bbreakpoint\(\)|\bpdb\.set_trace\(|^\s*import i?pdb\b|\bipdb\.set_trace\()'
 message = "Debugger call left in the code. Remove it."
+summary = "A leftover debugger call stops the program and waits for input, which hangs servers and CI. Remove it before merging."
 positive = ['    breakpoint()', 'import pdb; pdb.set_trace()', 'import ipdb', '  ipdb.set_trace()']
 negative = ['# use breakpoint() locally only', 'def set_breakpoints():', 'import pandas']

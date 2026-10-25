@@ -7,5 +7,6 @@ exclude = []
 # Anchored to a decorator line: a test that writes a sample test file as a string (real, in modules/relay) is not a skip. Unconditional skip, xfail without a reason, and unittest.skip. Conditional skips (skipif / skipIf) gate on a platform or a missing dependency and are allowed.
 match = '^\s*(@pytest\.mark\.skip\b|@pytest\.mark\.xfail\b(?!\(.*reason\s*=)|@unittest\.skip\()'
 message = "Skipped or expected-to-fail test with no reason. Fix the test or delete it; a conditional skipif with reason= is fine."
+summary = "A test skipped or expected to fail with no reason stops guarding its behavior and nobody knows why. Fix or delete the test, or give a conditional skip with a stated reason."
 positive = ['@pytest.mark.skip', '@pytest.mark.skip(reason="later")', '@pytest.mark.xfail', '@pytest.mark.xfail(strict=True)', '@unittest.skip("later")']
 negative = ['@pytest.mark.skipif(sys.platform == "win32", reason="posix only")', '@pytest.mark.xfail(reason="bug 12")', '@unittest.skipIf(is_ci, "no network")', '# skip this on windows', '    (work / "t.py").write_text("@pytest.mark.skip\ndef test_value(): pass")']
