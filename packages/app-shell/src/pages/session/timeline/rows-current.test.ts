@@ -221,6 +221,7 @@ describe("current session timeline rows", () => {
         true,
         "idle",
         false,
+        undefined,
       ).flatMap((row) => (row._tag === "Error" ? [row.providerID] : []))
 
     expect(failed({ name: "ProviderAuthError", data: { providerID: "openai", message: "No API key" } })).toEqual([
@@ -243,6 +244,7 @@ describe("current session timeline rows", () => {
       false,
       "idle",
       false,
+      undefined,
     )
 
     expect(rows.some((row) => row._tag === "UserMessage")).toBe(false)

@@ -90,6 +90,7 @@ export namespace Timeline {
           showReasoning,
           status,
           turn.user.id === activeMessageID,
+          turnDiffs(turn.user.id),
         ),
       ),
     }
@@ -103,6 +104,7 @@ export namespace Timeline {
     showReasoning: boolean,
     status: SessionStatus["type"],
     isActive: boolean,
+    turnDiffs: SnapshotFileDiff[] | undefined,
   ) {
     const rows: TimelineRow.TimelineRow[] = []
 
@@ -188,7 +190,7 @@ export namespace Timeline {
 
     if (isActive && status === "retry") rows.push(new TimelineRow.Retry({ userMessageID: userMessage.id }))
 
-    const diffs = uniqueSummaryDiffs(turnDiffs(userMessage.id))
+    const diffs = uniqueSummaryDiffs(turnDiffs)
     if (diffs.length > 0 && (status === "idle" || !isActive)) {
       rows.push(
         new TimelineRow.DiffSummary({
