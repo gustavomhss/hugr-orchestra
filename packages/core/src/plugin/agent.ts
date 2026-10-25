@@ -20,14 +20,23 @@ export const Plugin = define({
         (resource): PermissionV2.Rule => ({ action: "external_directory", resource, effect: "allow" }),
       ),
     ]
-    const defaults: PermissionV2.Ruleset = [
-      { action: "*", resource: "*", effect: "allow" },
-      ...readonlyExternalDirectory,
-      { action: "question", resource: "*", effect: "deny" },
+    // Reads every file but .env files, which hold secrets; .env.example stays readable. Last match wins, so an agent's
+    // own read allow goes before these.
+    const envRead: PermissionV2.Ruleset = [
       { action: "read", resource: "*", effect: "allow" },
       { action: "read", resource: "*.env", effect: "ask" },
       { action: "read", resource: "*.env.*", effect: "ask" },
       { action: "read", resource: "*.env.example", effect: "allow" },
+    ]
+    // Commands that publish work: Maestro and general ask the owner first, and configuration can allow them.
+    const publish: PermissionV2.Ruleset = ["git push *", "git -C * push *", "gh pr create *", "gh pr merge *", "gh release *"].map(
+      (resource) => ({ action: "bash", resource, effect: "ask" }),
+    )
+    const defaults: PermissionV2.Ruleset = [
+      { action: "*", resource: "*", effect: "allow" },
+      ...readonlyExternalDirectory,
+      { action: "question", resource: "*", effect: "deny" },
+      ...envRead,
     ]
 
     yield* ctx.agent.transform((draft) => {
@@ -36,7 +45,7 @@ export const Plugin = define({
           "High-agency development orchestrator. Uses governed approval only when explicitly requested."
         item.system ??= AgentPrompt.maestro
         item.mode = "primary"
-        item.permissions.push(...PermissionV2.merge(defaults, [{ action: "question", resource: "*", effect: "allow" }]))
+        item.permissions.push(...PermissionV2.merge(defaults, [{ action: "question", resource: "*", effect: "allow" }], publish))
       })
 
       draft.update(AgentV2.ID.make("general"), (item) => {
@@ -44,7 +53,7 @@ export const Plugin = define({
           "General-purpose work from a full brief: research, analysis or multi-step changes. Edits files and runs shell commands; cannot ask the owner questions or start teammates. Returns the outcome, what changed, how it was checked and what is left."
         item.system = AgentPrompt.general
         item.mode = "subagent"
-        item.permissions.push(...PermissionV2.merge(defaults, [{ action: "todowrite", resource: "*", effect: "deny" }]))
+        item.permissions.push(...PermissionV2.merge(defaults, [{ action: "todowrite", resource: "*", effect: "deny" }], publish))
       })
 
       draft.update(AgentV2.ID.make("explore"), (item) => {
@@ -61,8 +70,8 @@ export const Plugin = define({
               { action: "glob", resource: "*", effect: "allow" },
               { action: "webfetch", resource: "*", effect: "allow" },
               { action: "websearch", resource: "*", effect: "allow" },
-              { action: "read", resource: "*", effect: "allow" },
             ],
+            envRead,
             readonlyExternalDirectory,
           ),
         )

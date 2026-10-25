@@ -6,6 +6,7 @@ import { Effect, Layer } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Config } from "@orchestra/core/config"
+import { EventV2 } from "@orchestra/core/event"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Location } from "@orchestra/core/location"
@@ -17,6 +18,7 @@ import { SessionV2 } from "@orchestra/core/session"
 import { BashTool } from "@orchestra/core/tool/bash"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { ToolOutputStore } from "@orchestra/core/tool-output-store"
+import { ToolSafety } from "@orchestra/core/tool-safety"
 import { location } from "./fixture/location"
 import { tmpdir } from "./fixture/tmpdir"
 import { testEffect } from "./lib/effect"
@@ -114,7 +116,7 @@ const withTool = <A, E, R>(
   }).pipe(
     Effect.provide(
       AppNodeBuilder.build(
-        LayerNode.group([ToolRegistry.node, ToolRegistry.toolsNode, LocationMutation.node, BashTool.node]),
+        LayerNode.group([ToolRegistry.node, ToolRegistry.toolsNode, LocationMutation.node, BashTool.node, EventV2.node]),
         [
           [Location.node, activeLocation],
           [PermissionV2.node, permission],
@@ -311,6 +313,27 @@ describe("BashTool", () => {
         Effect.promise(() =>
           Promise.all([active[Symbol.asyncDispose](), outside[Symbol.asyncDispose]()]).then(() => undefined),
         ),
+    ),
+  )
+
+  it.live("refuses a background process under a profile that confines shells", () =>
+    Effect.acquireUseRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) =>
+        Effect.gen(function* () {
+          reset()
+          const background = (profile: ToolSafety.Profile | undefined) =>
+            withTool(tmp.path, (registry) => executeTool(registry, call({ command: "sleep 1", background: true }))).pipe(
+              Effect.provideService(ToolSafety.RuntimeProfile, profile),
+              Effect.map((output) => JSON.stringify(output)),
+            )
+          expect(yield* background({ requireSandbox: true, sandbox: { enabled: true, readRoots: [tmp.path] } })).toContain(
+            "background-process-sandbox-unbound",
+          )
+          expect(yield* background(undefined)).toContain("Session process registry is unavailable")
+          expect(runs).toEqual([])
+        }),
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
     ),
   )
 

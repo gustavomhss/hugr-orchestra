@@ -199,6 +199,35 @@ describe("ConfigAgentPlugin.Plugin", () => {
     }),
   )
 
+  it.effect("sets a configured display name on any agent but Maestro", () =>
+    Effect.gen(function* () {
+      const agents = yield* AgentV2.Service
+      yield* agents.transform((editor) =>
+        editor.update(AgentV2.defaultID, (agent) => {
+          agent.mode = "primary"
+        }),
+      )
+      const config = Config.Service.of({
+        entries: () =>
+          Effect.succeed([
+            new Config.Document({
+              type: "document",
+              info: decode({ agents: { reviewer: { name: "Ana" }, maestro: { name: "Conductor" } } }),
+            }),
+          ]),
+      })
+
+      yield* ConfigAgentPlugin.Plugin.effect(host({ agent: agentHost(agents) })).pipe(
+        Effect.provideService(Config.Service, config),
+      )
+
+      expect((yield* agents.get(AgentV2.ID.make("reviewer")))?.name).toBe("Ana")
+      expect((yield* agents.get(AgentV2.defaultID))?.name).toBeUndefined()
+      expect(ConfigMigrateV1.migrateAgent({ name: "Ana" }).name).toBe("Ana")
+      expect(ConfigMigrateV1.migrateAgent({}).name).toBeUndefined()
+    }),
+  )
+
   it.effect("removes a built-in agent disabled by configuration", () =>
     Effect.gen(function* () {
       const agents = yield* AgentV2.Service
@@ -319,6 +348,8 @@ Use native v2 fields.`,
             request: { body: { temperature: 0.5 } },
             permissions: [{ action: "edit", resource: "*", effect: "deny" }],
           })
+          // An agent file's id is its address, never its display name.
+          expect((yield* agents.get(AgentV2.ID.make("reviewer")))?.name).toBeUndefined()
           expect(yield* agents.get(AgentV2.ID.make("team/helper"))).toMatchObject({ system: "Help the team." })
           expect(yield* agents.get(AgentV2.ID.make("native"))).toMatchObject({
             system: "Use native v2 fields.",

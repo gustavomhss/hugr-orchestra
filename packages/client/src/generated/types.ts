@@ -38,6 +38,7 @@ export type AgentsListOutput = {
   }
   readonly data: ReadonlyArray<{
     readonly id: string
+    readonly name?: string
     readonly engine?: "orchestra" | "claude-code"
     readonly model?: { readonly id: string; readonly providerID: string; readonly variant?: string }
     readonly request: {

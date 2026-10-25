@@ -32,6 +32,7 @@ type PathAction =
   | typeof EditTool.name
 const pathActions = ["external_directory", "read", "edit"] as const satisfies readonly PathAction[]
 const agentKeys = new Set([
+  "name",
   "model",
   "variant",
   "request",
@@ -116,6 +117,8 @@ export const Plugin = define({
                 Object.assign(agent.request.headers, item.request.headers ?? {})
                 Object.assign(agent.request.body, item.request.body ?? {})
               }
+              // Maestro's name is fixed: the app and other Sessions address the conductor by it.
+              if (item.name !== undefined && !maestro) agent.name = item.name
               if (item.system !== undefined) agent.system = item.system
               if (item.description !== undefined) agent.description = item.description
               if (item.engine !== undefined) agent.engine = item.engine
@@ -183,7 +186,7 @@ function decode(file: { directory: string; filepath: string; primary: boolean },
     legacy
       ? Option.map(
           decodeLegacyAgent(
-            { name, ...markdown.data, ...(body ? { prompt: body } : {}) },
+            { ...markdown.data, ...(body ? { prompt: body } : {}) },
             { errors: "all", propertyOrder: "original" },
           ),
           ConfigMigrateV1.migrateAgent,

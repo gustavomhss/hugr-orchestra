@@ -195,7 +195,11 @@ const layer = Layer.effectDiscard(
               if ((yield* fs.stat(target.canonical)).type !== "Directory")
                 return yield* Effect.fail(new Error(`Working directory is not a directory: ${target.canonical}`))
 
+              const profile = yield* ToolSafety.RuntimeProfile
               if (input.background) {
+                // Background processes launch outside ToolSafetySandbox.wrap, so a profile that confines shells refuses them.
+                if (profile?.requireSandbox || profile?.sandbox?.enabled || profile?.sandbox?.readRoots)
+                  return yield* new ToolSafety.Denied({ reason: "background-process-sandbox-unbound" })
                 if (Option.isNone(sessionProcess))
                   return yield* Effect.fail(new Error("Session process registry is unavailable"))
                 const shell = configuredShell(yield* config.entries())
@@ -223,7 +227,6 @@ const layer = Layer.effectDiscard(
                 forceKillAfter: Duration.seconds(3),
               })
               const timeout = input.timeout ?? DEFAULT_TIMEOUT_MS
-              const profile = yield* ToolSafety.RuntimeProfile
               yield* ToolSafetyGit.before({ command: input.command, directory: location.directory,
                 projectDirectory: location.project.directory === "/" ? location.directory : location.project.directory,
                 cwd: target.canonical, env: ToolSafetySandbox.environment(), managedPaths: profile?.managedPaths,

@@ -146,6 +146,7 @@ export function migrateAgent(info: ConfigAgentV1.Info) {
     ...(info.top_p === undefined ? {} : { top_p: info.top_p }),
   }
   return {
+    name: typeof info.name === "string" ? info.name : undefined,
     model: info.model,
     variant: info.variant,
     request: Object.keys(body).length ? { body } : undefined,
