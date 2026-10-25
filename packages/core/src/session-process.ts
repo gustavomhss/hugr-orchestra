@@ -1,6 +1,6 @@
 export * as SessionProcess from "./session-process"
 
-import { Clock, Context, Deferred, Duration, Effect, Exit, Layer, Option, Scope, Stream } from "effect"
+import { Clock, Context, Deferred, Duration, Effect, Exit, Fiber, Layer, Option, Scope, Stream } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import type { ChildProcessHandle } from "effect/unstable/process/ChildProcessSpawner"
 import { AppProcess } from "./process"
@@ -15,6 +15,7 @@ export const RING_BYTES = OmniBackground.RING_BYTES
 export const TAIL_BYTES = OmniBackground.TAIL_BYTES
 /** Finished jobs kept for `get` and `wait`; older ones are forgotten. */
 export const FINISHED_KEPT = 32
+const DRAIN_TIMEOUT = Duration.millis(500)
 export const Ring = OmniBackground.Ring
 
 export type ProcessInfo = OmniBackground.ProcessInfo
@@ -196,7 +197,7 @@ const make = Effect.gen(function* () {
       exitCode: null,
     }
     entries.set(id, entry)
-    yield* Stream.runForEach(handle.all, (chunk) =>
+    const reader = yield* Stream.runForEach(handle.all, (chunk) =>
       Effect.sync(() => {
         entry.withheld ??= entry.inspection.push(chunk)
         ring.write(chunk)
@@ -204,6 +205,8 @@ const make = Effect.gen(function* () {
     ).pipe(Effect.ignore).pipe(Effect.forkIn(procScope))
     yield* Effect.gen(function* () {
       const code = yield* Effect.orElseSucceed(handle.exitCode, () => null)
+      // The exit can land before the pipe drains; bounded because a grandchild may keep the pipe open.
+      yield* Fiber.await(reader).pipe(Effect.timeout(DRAIN_TIMEOUT), Effect.ignore)
       if (entry.finished) return
       yield* finish(entry, code === 0 ? "completed" : "error", code, code === 0 ? undefined : `exit ${code}`)
     }).pipe(Effect.ignore, Effect.forkIn(procScope))
