@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { EOL } from "os"
 import { Orchestra } from "@orchestra/client"
 import { clientUrl, stubServer } from "../test-support"
 import type { Prompter } from "../prompt"
@@ -48,7 +49,7 @@ describe("mcp list", () => {
         "✓ files connected",
         "⚠ remote needs authentication",
         "○ off disabled",
-        "✗ bad failed\n    spawn ENOENT",
+        `✗ bad failed${EOL}    spawn ENOENT`,
         "4 server(s)",
       ])
     } finally {

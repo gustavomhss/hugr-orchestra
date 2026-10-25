@@ -2,7 +2,7 @@ import { array, check, object } from "./assertions"
 import { http } from "./dsl"
 import { type Scenario } from "./types"
 
-// Skill catalog and skill file write routes for V1 (/skill) and V2 (/api/skill).
+// Skill catalog and skill file write routes (/api/skill).
 const taken = ".orchestra/skills/httpapi-taken/SKILL.md"
 const takenText = "---\nname: httpapi-taken\ndescription: Seeded skill\n---\n# Taken\n"
 const missing = `?${new URLSearchParams({ path: "/missing/SKILL.md" })}`
