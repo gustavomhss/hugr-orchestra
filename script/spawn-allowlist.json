@@ -1,9 +1,6 @@
 {
   "$comment": "Files allowed to import a spawning module (script/check-spawn-imports.ts), seeded 2026-10-06. Remove migrated sites; new exceptions require a lead decision. This file is the source of truth for the exempt sites; native/omni/docs/orchestra-integration.md section 3 explains only the main groups.",
   "sites": {
-    ".github/scripts/archie-authoring-pair.ts": ["child_process"],
-    ".github/scripts/archie-host-acceptance.ts": ["child_process"],
-    ".github/scripts/maestro-authoring-run.ts": ["child_process"],
     "modules/atlas/harness/gates/doc-transcript-guard.mjs": ["child_process"],
     "modules/atlas/harness/gates/ears-coamend-guard.mjs": ["child_process"],
     "modules/atlas/harness/gates/godfile-guard.mjs": ["child_process"],
