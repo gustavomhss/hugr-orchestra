@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm"
 import { Effect, Option, Schema } from "effect"
 import type { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
+import { RelayWorkflowBinding } from "@orchestra/core/relay-workflow-binding"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 
 // Read-only V2 ports of the V1 governed-chain record readers (`apps/orchestra/src/maestro/{authorization,
@@ -96,4 +97,25 @@ export const readPlanRevision = Effect.fn("GovernanceRecordsV2.readPlanRevision"
     return Schema.decodeUnknownSync(MaestroEvent.PlanRevision.RecordedV2.data)(found.data)
   if (found.type !== EventV2.versionedType(MaestroEvent.PlanRevision.Recorded.type, 1)) return undefined
   return Schema.decodeUnknownSync(MaestroEvent.PlanRevision.Recorded.data)(found.data)
+})
+
+/**
+ * The workflow-bound v3 revision a workflow Task runs, as V1's `readWorkflowRevision` reads it: anything but a v3 row
+ * of this id holds as missing, a body that does not decode closed or whose hash no longer binds it holds, a row whose
+ * body names another id or Session holds, and a v3 revision without a workflow binding holds.
+ */
+export const readWorkflowRevision = Effect.fn("GovernanceRecordsV2.readWorkflowRevision")(function* (db: Db, id: string) {
+  const found = yield* row(db, id)
+  if (!found || found.type !== EventV2.versionedType(MaestroEvent.PlanRevision.RecordedV3.type, 3))
+    return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_PLAN_REVISION_MISSING" })
+  const revision = decodeV3(found.data, { onExcessProperty: "error" })
+  if (Option.isNone(revision)) return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_PLAN_REVISION_INVALID" })
+  const { id: revisionID, revisionHash, createdAt, ...body } = revision.value
+  if (hash(body) !== revisionHash || revisionID !== `evt_maestro_plan_revision_${revisionHash}`)
+    return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_PLAN_HASH_MISMATCH" })
+  if (revisionID !== found.id || revision.value.sessionID !== found.aggregate_id)
+    return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_PLAN_REVISION_MISMATCH" })
+  const workflowBinding = revision.value.workflowBinding
+  if (!workflowBinding) return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_PLAN_BINDING_MISSING" })
+  return { ...revision.value, id: found.id, workflowBinding }
 })
