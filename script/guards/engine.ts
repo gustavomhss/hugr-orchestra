@@ -37,6 +37,7 @@ function pathFindings(rule: Rule, input: Parameters<typeof evaluate>[0]): Findin
   return input.diff.changes
     .filter((change) => rule.statuses.length === 0 || rule.statuses.includes(change.status))
     .filter((change) => inScope(rule, change.path) || (change.from !== undefined && inScope(rule, change.from)))
+    .filter((change) => !rule.leavesScope || change.status === "D" || (change.from !== undefined && !inScope(rule, change.path)))
     .filter((change) => rule.modes.length === 0 || rule.modes.includes(change.mode ?? "100644"))
     .filter((change) => rule.minBytes === undefined || (change.size ?? 0) >= rule.minBytes)
     .filter((change) => rule.binary === undefined || (change.binary ?? false) === rule.binary)

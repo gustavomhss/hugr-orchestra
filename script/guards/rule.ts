@@ -33,6 +33,9 @@ export type Rule = {
   // added-lines only. The first capture group of `match` names the thing the line adds; a line is skipped when a removed
   // line in the same file names the same thing (a version bump), so only genuinely new names are reported.
   newOnly: boolean
+  // changed-paths only. A rename or copy counts when its old path is in scope and its new path is not, so moving a test out
+  // of the test globs is a deletion; a rename that stays in scope is still a move.
+  leavesScope: boolean
   message: string
   // added-lines: sample lines. changed-paths: sample paths.
   positive: string[]
@@ -89,6 +92,9 @@ export function parseRule(file: string, text: string): Rule | string {
   if (!skipComments) return `${file}: skip_comments must be a list of line prefixes`
   const newOnly = raw.new_only ?? false
   if (typeof newOnly !== "boolean") return `${file}: new_only must be true or false`
+  const leavesScope = raw.leaves_scope ?? false
+  if (typeof leavesScope !== "boolean") return `${file}: leaves_scope must be true or false`
+  if (leavesScope && on !== "changed-paths") return `${file}: leaves_scope needs a changed-paths rule`
   const match = raw.match === undefined ? undefined : compile(raw.match, flags)
   if (raw.match !== undefined && !match) return `${file}: match is not a valid regular expression`
   if (on !== "changed-paths" && !match) return `${file}: an ${on} rule needs a match`
@@ -117,6 +123,7 @@ export function parseRule(file: string, text: string): Rule | string {
     match,
     skipComments,
     newOnly,
+    leavesScope,
     message,
     positive,
     negative,
