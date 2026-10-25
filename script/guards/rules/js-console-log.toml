@@ -1,0 +1,10 @@
+id = "js-console-log"
+severity = "warn"
+on = "added-lines"
+paths = ["**/*.{ts,tsx,mts,cts,js,jsx,mjs}"]
+# Command-line tools, build scripts and tests print on purpose.
+exclude = ["apps/cli/**", "**/script/**", "**/scripts/**", "tooling/**", "**/bin/**", "**/*.test.*", "**/*.spec.*", "**/test/**", "**/tests/**", "**/*.fixture.*", "specs/**", "native/**", "perf/**", "**/docs/**", "**/cli/**", "modules/atlas/harness/**", "**/example/**", "**/examples/**"]
+match = '\bconsole\.log\('
+message = "console.log left in library or UI code. Use the project logger, or remove it."
+positive = ['  console.log("here", value)', 'console.log(x)']
+negative = ['console.error("failed", e)', '// console.log is for scripts', 'const consoleLogger = make()']

@@ -1,0 +1,10 @@
+id = "gha-pull-request-target"
+severity = "gate"
+on = "added-lines"
+paths = [".github/workflows/**/*.{yml,yaml}", ".github/actions/**/*.{yml,yaml}"]
+exclude = []
+# pull_request_target runs with the base repository's secrets on code a fork controls.
+match = '^(?!\s*#).*\bpull_request_target\b'
+message = "pull_request_target gives untrusted pull request code access to secrets. Use pull_request, or split the privileged part into a workflow_run."
+positive = ['  pull_request_target:', 'on: [push, pull_request_target]']
+negative = ['# never use pull_request_target', '  pull_request:', '  workflow_dispatch:']

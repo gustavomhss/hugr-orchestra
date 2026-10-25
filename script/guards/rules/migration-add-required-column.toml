@@ -1,0 +1,12 @@
+id = "migration-add-required-column"
+severity = "warn"
+on = "added-lines"
+paths = ["apps/orchestra/migration/**/*.sql", "packages/core/src/database/migration/**/*.ts"]
+exclude = []
+# A DEFAULT anywhere on the line clears it; in a TS migration the identifiers carry escaped backticks.
+flags = "i"
+skip_comments = ["--", "//", "*"]
+match = '''^(?!.*\bDEFAULT\b).*\bADD(\s+COLUMN)?\s+\S+\s+\w+[^;]*\bNOT\s+NULL\b'''
+message = "NOT NULL column added without DEFAULT. It fails on a table that already has rows; add a DEFAULT or backfill first."
+positive = ['ALTER TABLE `session` ADD `owner` text NOT NULL;', '      yield* tx.run(`ALTER TABLE \`workspace\` ADD \`type\` text NOT NULL;`)', 'alter table x add column y integer not null;']
+negative = ['ALTER TABLE `session` ADD `owner` text NOT NULL DEFAULT 0;', '      yield* tx.run(`ALTER TABLE \`session\` ADD \`cost\` real DEFAULT 0 NOT NULL;`)', 'ALTER TABLE `project` ADD `commands` text;', 'CREATE TABLE `x` (`id` text NOT NULL);', '-- ALTER TABLE x ADD y text NOT NULL;']

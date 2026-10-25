@@ -1,0 +1,22 @@
+# Read from the merge-base, not from the change under test (see run.ts).
+
+# Generated or vendored code that added-lines rules skip unless a rule sets generated = "include".
+generated = [
+  "packages/client/src/generated/**",
+  "packages/client/src/generated-effect/**",
+  "packages/sdk/js/src/v2/gen/**",
+  "modules/atlas/boundary/src/generated/**",
+  "packages/app-shell/src/v2-wire.ts",
+  "packages/app-shell/src/v2-legacy*.ts",
+]
+
+# The engine's own rule samples contain the very text the rules look for.
+exclude = [
+  "script/guards/**",
+]
+
+# Named glob lists a rule can use as `$name` in paths, exclude or requires_changed.
+[sets]
+js_tests = ["**/*.test.{ts,tsx,js,jsx,mjs}", "**/*.spec.{ts,tsx,js,jsx,mjs}", "**/test/**/*.{ts,tsx,js,jsx,mjs}"]
+py_tests = ["**/test_*.py", "**/*_test.py", "**/tests/**/*.py", "**/test/**/*.py", "**/conftest.py"]
+rs_tests = ["**/tests/**/*.rs", "**/*_test.rs", "**/*_tests.rs"]

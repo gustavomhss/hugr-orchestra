@@ -1,0 +1,10 @@
+id = "gha-job-disabled"
+severity = "gate"
+on = "added-lines"
+paths = [".github/workflows/**/*.{yml,yaml}", ".github/actions/**/*.{yml,yaml}"]
+exclude = []
+# Anchored so cache options like save-if: false do not match.
+match = '^\s*(-\s*)?if:\s*(\$\{\{\s*)?false\b'
+message = "Job or step switched off with if: false. Delete it or fix it; a disabled check looks like a passing one."
+positive = ['    if: false', '      - if: ${{ false }}']
+negative = ['        save-if: false', '    if: github.event_name == "push"', '    if: always()']

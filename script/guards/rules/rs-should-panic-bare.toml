@@ -1,0 +1,9 @@
+id = "rs-should-panic-bare"
+severity = "warn"
+on = "added-lines"
+paths = ["**/*.rs"]
+exclude = []
+match = '#\[should_panic\s*\]'
+message = "#[should_panic] without expected = \"...\" passes on any panic, including an unrelated one. Add the expected message."
+positive = ['#[should_panic]', '    #[should_panic ]']
+negative = ['#[should_panic(expected = "index out of bounds")]', '#[test]', 'let should_panic = true;']

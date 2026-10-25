@@ -1,0 +1,11 @@
+id = "ts-double-cast"
+severity = "warn"
+on = "added-lines"
+paths = ["**/*.{ts,tsx,mts,cts}"]
+# Fixture casts in tests are idiomatic here (most hits in real history); the rule reads source files.
+exclude = ["**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}", "**/test/**", "**/tests/**", "**/*.fixture.ts"]
+skip_comments = ["//", "#"]
+match = '(?:\bas unknown as\b)'
+message = "Double cast through unknown bypasses the type checker. Fix the type, or narrow the value with a guard."
+positive = ['const a = value as unknown as Session', '  return (x as unknown as Foo[])']
+negative = ['const a = value as Session', '// the cast is not as unknown as it looks', 'const u: unknown = 1']

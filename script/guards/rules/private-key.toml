@@ -1,0 +1,11 @@
+id = "private-key"
+severity = "gate"
+on = "added-lines"
+paths = ["**"]
+exclude = ["**/*.{png,jpg,jpeg,gif,webp,ico,icns,woff,woff2,ttf,zip,tgz,gz,lock}", "**/*.test.*", "**/*.spec.*", "**/test/**", "**/tests/**", "**/__fixtures__/**", "**/fixtures/**", "modules/atlas/harness/**"]
+# A key is a defect anywhere, including generated code. Tests and fixtures are skipped: secret-scrubbing tests carry fake keys on purpose (6 in real code).
+generated = "include"
+match = '-----BEGIN [A-Z ]*PRIVATE KEY-----'
+message = "Private key material in the change. Remove it, rotate the key, and load it from the environment or a secret store."
+positive = ["-----BEGIN RSA PRIVATE KEY-----", "-----BEGIN PRIVATE KEY-----", "-----BEGIN OPENSSH PRIVATE KEY-----"]
+negative = ["-----BEGIN PUBLIC KEY-----", "-----BEGIN CERTIFICATE-----", "the private key is stored elsewhere"]

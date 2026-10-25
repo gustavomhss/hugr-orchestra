@@ -1,0 +1,9 @@
+id = "submodule-added"
+severity = "gate"
+on = "changed-paths"
+paths = ["**"]
+exclude = ["node_modules/**", "**/node_modules/**"]
+modes = ["160000"]
+message = "Git submodule added or changed. Vendor the code or depend on a published package instead."
+positive = ["vendor/lib", "third_party/x"]
+negative = ["node_modules/pkg/sub"]

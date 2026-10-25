@@ -18,7 +18,7 @@ type Endpoint37_0Input = {
 const Endpoint37_0 = (raw: RawClient["server.actionsJob"]) => (input: Endpoint37_0Input) =>
   raw["actions.job.retry"]({
     params: { bindingID: input["bindingID"], jobID: input["jobID"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
     payload: { id: input["id"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -34,7 +34,7 @@ type Endpoint37_1Input = {
 const Endpoint37_1 = (raw: RawClient["server.actionsJob"]) => (input: Endpoint37_1Input) =>
   raw["actions.job.play"]({
     params: { bindingID: input["bindingID"], jobID: input["jobID"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
     payload: { id: input["id"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -50,7 +50,7 @@ type Endpoint37_2Input = {
 const Endpoint37_2 = (raw: RawClient["server.actionsJob"]) => (input: Endpoint37_2Input) =>
   raw["actions.job.cancel"]({
     params: { bindingID: input["bindingID"], jobID: input["jobID"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
     payload: { id: input["id"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -66,7 +66,7 @@ type Endpoint37_3Input = {
 const Endpoint37_3 = (raw: RawClient["server.actionsJob"]) => (input: Endpoint37_3Input) =>
   raw["actions.job.erase"]({
     params: { bindingID: input["bindingID"], jobID: input["jobID"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
     payload: { id: input["id"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 

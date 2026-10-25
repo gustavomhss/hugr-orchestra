@@ -184,14 +184,16 @@ jobs:
         # files vary by up to 40% between runs. Three Windows shards (~1306 s each) left no room under
         # the 27-minute watchdog below, so Windows gets four (~980 s each). By 2026-10-25 the Linux suite had
         # grown to ~2990 s (1615 s and 1375 s per shard, against 1620 s of watchdog), so Linux gets three.
+        # The same day every Windows shard ran close to the watchdog and one crossed it, so Windows gets five.
         include:
           - { name: linux, host: ubuntu-latest, shard: 1, shards: 3 }
           - { name: linux, host: ubuntu-latest, shard: 2, shards: 3 }
           - { name: linux, host: ubuntu-latest, shard: 3, shards: 3 }
-          - { name: windows, host: windows-latest, shard: 1, shards: 4 }
-          - { name: windows, host: windows-latest, shard: 2, shards: 4 }
-          - { name: windows, host: windows-latest, shard: 3, shards: 4 }
-          - { name: windows, host: windows-latest, shard: 4, shards: 4 }
+          - { name: windows, host: windows-latest, shard: 1, shards: 5 }
+          - { name: windows, host: windows-latest, shard: 2, shards: 5 }
+          - { name: windows, host: windows-latest, shard: 3, shards: 5 }
+          - { name: windows, host: windows-latest, shard: 4, shards: 5 }
+          - { name: windows, host: windows-latest, shard: 5, shards: 5 }
     runs-on: ${{ matrix.host }}
     timeout-minutes: 35
     defaults:
@@ -396,6 +398,14 @@ jobs:
         run: bun --cwd packages/core test test/godfile.test.ts
         env:
           # Build-time scanner test starts no runtime child; ordinary suites below stay default-native.
+          ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "0"
+
+      # Lives beside the engine, not in a package: it imports script/guards, which module boundaries forbid across a package root.
+      - name: Test guards
+        if: matrix.part == 'packages'
+        working-directory: script/guards
+        run: bun test ./guards.test.ts
+        env:
           ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "0"
 
       - name: Run godfile gate

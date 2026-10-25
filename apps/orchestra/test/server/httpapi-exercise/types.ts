@@ -95,6 +95,7 @@ export type ActiveScenario = {
   mutates: boolean
   reset: boolean
   auth: AuthPolicy
+  basicAuth: boolean
 }
 
 export type BuilderState<S> = {
@@ -109,6 +110,7 @@ export type BuilderState<S> = {
   mutates: boolean
   reset: boolean
   auth: AuthPolicy
+  basicAuth: boolean
 }
 
 export type TodoScenario = {

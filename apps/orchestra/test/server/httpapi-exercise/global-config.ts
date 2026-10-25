@@ -37,4 +37,15 @@ export const globalConfigScenarios: Scenario[] = [
         }),
       "status",
     ),
+  http.protected
+    .post("/global/dispose", "global.dispose")
+    .global()
+    .mutating()
+    .json(
+      200,
+      (body) => {
+        check(body === true, "global dispose should return true")
+      },
+      "status",
+    ),
 ]

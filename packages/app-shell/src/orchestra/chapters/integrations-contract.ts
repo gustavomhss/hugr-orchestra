@@ -1,0 +1,74 @@
+import type { Capability } from "@orchestra/schema/capability"
+import type { CapabilityManagement } from "@orchestra/schema/capability-management"
+import type { CapabilitySetup } from "@orchestra/schema/capability-setup"
+import type { SessionID } from "@orchestra/schema/session-id"
+import type { Schema } from "effect"
+
+export type Connection = typeof CapabilityManagement.Connection.Type
+export type Target = typeof CapabilityManagement.Target.Type
+export type Binding = typeof CapabilityManagement.Binding.Type
+export type Receipt = typeof CapabilityManagement.Receipt.Type
+export type Options = Readonly<{ signal?: AbortSignal }>
+/** A location session offered by the binding picker; `updated` is epoch milliseconds for relative time. */
+export type SessionOption = Readonly<{ id: SessionID; title: string; updated: number }>
+export type Api = Readonly<{
+  get: (connectionID: Capability.ConnectionID, options?: Options) => Promise<Connection>
+  getTarget: (targetID: Capability.TargetID, options?: Options) => Promise<Target>
+  list: (after?: Capability.ConnectionID, options?: Options) => Promise<typeof CapabilityManagement.ConnectionPage.Type>
+  targets: (connectionID: Capability.ConnectionID, after?: string, options?: Options) => Promise<typeof CapabilityManagement.TargetPage.Type>
+  bindings: (targetID: Capability.TargetID, after?: SessionID, options?: Options) => Promise<typeof CapabilityManagement.BindingPage.Type>
+  connect: (input: CapabilitySetup.Input, key: string, options?: Options) => Promise<Receipt>
+  createTarget: (connection: Capability.ConnectionRef, input: Readonly<{ environment: string; resource: Schema.Json }>, key: string, options?: Options) => Promise<Receipt>
+  retargetTarget: (target: Capability.TargetRef, input: Readonly<{ environment: string; resource: Schema.Json }>, key: string, options?: Options) => Promise<Receipt>
+  removeTarget: (target: Capability.TargetRef, key: string, options?: Options) => Promise<Receipt>
+  disconnect: (connection: Capability.ConnectionRef, key: string, options?: Options) => Promise<Receipt>
+  bind: (target: Capability.TargetRef, input: Readonly<{ sessionID: SessionID; actions: readonly string[] }>, key: string, options?: Options) => Promise<Receipt>
+  unbind: (target: Capability.TargetRef, sessionID: SessionID, key: string, options?: Options) => Promise<Receipt>
+  sessions: (options?: Options) => Promise<readonly SessionOption[]>
+}>
+export type Failure = "authorization" | "unsupported" | "invalid" | "request" | "unknown"
+export type State = Readonly<{
+  status: "loading" | "ready" | "error"
+  connections: readonly Connection[]
+  targets: readonly Target[]
+  bindings: readonly Binding[]
+  connectionID?: Capability.ConnectionID
+  targetID?: Capability.TargetID
+  after?: Capability.ConnectionID
+  targetsAfter?: string
+  bindingsAfter?: SessionID
+  busy: boolean
+  retryable: boolean
+  readRetryable: boolean
+  failure?: Failure
+  receipt?: Receipt
+  /** Verification reported by `connect`, per account connected through this page. Not stored by the server. */
+  verifications: Readonly<Partial<Record<Capability.ConnectionID, CapabilitySetup.Verification>>>
+  /** The last read answered 401 and the page has no Basic credential: show the host-authorization field. */
+  hostAuthorization: boolean
+  sessions: readonly SessionOption[]
+  sessionsStatus: "idle" | "loading" | "ready" | "error"
+  /** Local parse error of the Resource JSON editor; undefined when the last checked text parsed. */
+  resourceError?: string
+}>
+export type Model = Readonly<{
+  state: State
+  load: (more?: boolean) => Promise<void>
+  select: (connection: Connection) => Promise<void>
+  selectTarget: (target: Target) => Promise<void>
+  moreTargets: () => Promise<void>
+  moreBindings: () => Promise<void>
+  connect: (input: CapabilitySetup.Input) => Promise<void>
+  createTarget: (input: Readonly<{ environment: string; resource: Schema.Json }>) => Promise<void>
+  retargetTarget: (input: Readonly<{ environment: string; resource: Schema.Json }>) => Promise<void>
+  removeTarget: () => Promise<void>
+  disconnect: () => Promise<void>
+  bind: (input: Readonly<{ sessionID: SessionID; actions: readonly string[] }>) => Promise<void>
+  unbind: (sessionID: SessionID) => Promise<void>
+  loadSessions: () => Promise<void>
+  checkResource: (text: string) => Schema.Json | undefined
+  retry: () => Promise<void>
+  retryRead: () => Promise<void>
+  cancel: () => void
+  dispose: () => void
+}>
