@@ -39,15 +39,17 @@ export async function proveNativeCandidate(candidate: Awaited<ReturnType<typeof 
     const directories = [path.join(root, "public-profile-a"), path.join(root, "public-profile-b")]
     await Promise.all(directories.map((directory) => mkdir(directory)))
     const [a, b] = directories as [string, string]
-    assert.deepEqual(await app.request("session", "GET", undefined, a), [], "Default candidate startup admitted prompts")
-    assert.deepEqual(await app.request("pty", "GET", undefined, a), [], "Default candidate startup executed PTY tools")
+    const sessions = async (candidate: OwnedCandidate, directory?: string) =>
+      (await candidate.request<{ data: unknown[] }>("api/session", "GET", undefined, directory)).data
+    assert.deepEqual(await sessions(app, a), [], "Default candidate startup admitted prompts")
+    assert.deepEqual((await app.request<{ data: unknown[] }>("api/pty", "GET", undefined, a)).data, [], "Default candidate startup executed PTY tools")
     // Two instances of the same packaged executable in fresh owned roots must coexist.
     // Identity + isolated userData + held locks bind this control without launching production.
     const independent = await launchCandidate(candidate.executable, path.join(parent, "lock-control"), recorder)
     resources.push({ label: "independent owned lock control", close: independent.close })
     assert.notEqual(independent.application.process().pid, app.application.process().pid)
     assert.notEqual(independent.backend.url, app.backend.url)
-    assert.deepEqual(await independent.request("session"), [], "Fresh independent root reused candidate sessions")
+    assert.deepEqual(await sessions(independent), [], "Fresh independent root reused candidate sessions")
     await independent.close()
     assert.equal(recorder.failures.length, 0, "Independent lock control cleanup failed")
     await nativePtySmoke(app, a, recorder)
@@ -62,7 +64,9 @@ export async function proveNativeCandidate(candidate: Awaited<ReturnType<typeof 
       tokensSaved: runs.reduce((sum, run) => { assert.ok(run.metric.tokens.kind === "estimated"); return sum + run.metric.tokens.saved }, 0),
       calls: runs.length, tokenCalls: runs.length })
     for (let i = 0; i < 30; i++) assert.ok(on.raw.output.includes(`=== RUN   TestCase${i}\n`))
-    const read = (directory: string) => app.request<LeanDashboard.Info>("project/lean", "GET", undefined, directory)
+    const lean = async (candidate: OwnedCandidate, method: string, directory: string, body?: unknown) =>
+      (await candidate.request<{ data: LeanDashboard.Info }>("api/lean", method, body, directory)).data
+    const read = (directory: string) => lean(app, "GET", directory)
     const first = await read(a)
     const other = await read(b)
     assert.equal(first.complete, true)
@@ -76,16 +80,16 @@ export async function proveNativeCandidate(candidate: Awaited<ReturnType<typeof 
     const changed = await read(a)
     assert.deepEqual(changed, { ...first, items: first.items.map((item) => item.id === "go" ? { ...item, enabled: false } : item) },
       "Item-off altered another item, profile master or economy")
-    const config = await app.request("global/config")
+    const config = await app.request("api/config")
     // Explicit real HTTP PATCH is also idempotent and cannot broaden the scope.
-    assert.deepEqual(await app.request("project/lean", "PATCH", { itemID: "go", enabled: false }, a), changed)
-    assert.deepEqual(await app.request("global/config"), config)
+    assert.deepEqual(await lean(app, "PATCH", a, { itemID: "go", enabled: false }), changed)
+    assert.deepEqual(await app.request("api/config"), config)
     assert.deepEqual(await read(b), other)
     const off = await fixture.execute("call_go_off")
     assert.equal(off.metric.status, "passthrough")
     assert.equal(off.metric.reason, "item_disabled")
     assert.equal(off.metric.bytes.saved, 0)
-    assert.deepEqual(Buffer.from(off.tool.state.status === "completed" ? off.tool.state.output : ""), Buffer.from(off.raw.output))
+    assert.deepEqual(Buffer.from(off.output), Buffer.from(off.raw.output))
     assert.equal(off.raw.output.match(/=== RUN/g)?.length, 30)
     const cargo: NativeRun[] = []
     if (await which("cargo")) {
@@ -96,16 +100,16 @@ export async function proveNativeCandidate(candidate: Awaited<ReturnType<typeof 
       const enabled = await fixture.execute("call_cargo_on", "cargo test --offline --color never", rust)
       assert.equal(enabled.metric.status, "applied", `Supported native Cargo fixture declined: ${JSON.stringify(enabled.metric)}\n${enabled.raw.output}`)
       assert.ok(enabled.metric.bytes.saved > 0)
-      await app.request("project/lean", "PATCH", { itemID: "cargo", enabled: false }, a)
+      await lean(app, "PATCH", a, { itemID: "cargo", enabled: false })
       const disabled = await fixture.execute("call_cargo_off", "cargo test --offline --color never", rust)
       assert.equal(disabled.metric.reason, "item_disabled")
-      assert.deepEqual(Buffer.from(disabled.tool.state.status === "completed" ? disabled.tool.state.output : ""), Buffer.from(disabled.raw.output))
-      await app.request("project/lean", "PATCH", { itemID: "cargo", enabled: true }, a)
+      assert.deepEqual(Buffer.from(disabled.output), Buffer.from(disabled.raw.output))
+      await lean(app, "PATCH", a, { itemID: "cargo", enabled: true })
       cargo.push(enabled, disabled)
     }
     proof.cargo = cargo.length ? "actual supported fixture on/off" : "unavailable: cargo executable absent from runner PATH"
     const refresh = async () => {
-      const response = app.page.waitForResponse((response) => response.request().method() === "GET" && new URL(response.url()).pathname === "/project/lean")
+      const response = app.page.waitForResponse((response) => response.request().method() === "GET" && new URL(response.url()).pathname === "/api/lean")
       await app.page.locator(".lean-caption button").click()
       await response
     }
@@ -142,23 +146,23 @@ export async function proveNativeCandidate(candidate: Awaited<ReturnType<typeof 
     assert.equal(prefsA.items.go, false)
     assert.equal(prefsB.items.cargo, false)
     proof.profiles = { a: saved, b: savedB }
-    proof.native = [on, off, ...cargo].map((run) => ({ callID: run.tool.callID, raw: run.raw.output,
-      durable: run.tool.state.status === "completed" ? run.tool.state.output : run.tool.state, metric: run.metric }))
+    proof.native = [on, off, ...cargo].map((run) => ({ callID: run.tool.id, raw: run.raw.output, durable: run.output, metric: run.metric }))
     proof.ownedBackend = { url: app.backend.url, sidecarChildren: 1, ptyChildrenObserved: 1 }
     await app.close()
     assert.equal(recorder.failures.length, 0, "Owned quit/port-closure failed; refusing relaunch")
     const again = await launchCandidate(candidate.executable, root, recorder)
     owned.current = again
     resources.push({ label: "owned candidate relaunch", close: again.close })
-    assert.deepEqual(await again.request("project/lean", "GET", undefined, a), saved)
-    assert.deepEqual(await again.request("project/lean", "GET", undefined, b), savedB)
+    assert.deepEqual(await lean(again, "GET", a), saved)
+    assert.deepEqual(await lean(again, "GET", b), savedB)
     assert.deepEqual(await preferences(first.scope.profileID), prefsA)
     assert.deepEqual(await preferences(other.scope.profileID), prefsB)
-    const replay = await again.request<{ parts: { id: string; state?: unknown }[] }[]>(`session/${fixture.session.id}/message`, "GET", undefined, a)
+    const replay = (await again.request<{ data: { content?: { id?: string; state?: unknown }[] }[] }>(
+      `api/session/${fixture.session.id}/message?order=asc&limit=200`, "GET", undefined, a)).data
     for (const run of [on, off, ...cargo]) {
-      assert.deepEqual(replay.flatMap((message) => message.parts).find((part) => part.id === run.tool.id)?.state, run.tool.state,
+      assert.deepEqual(replay.flatMap((message) => message.content ?? []).find((part) => part.id === run.tool.id)?.state, run.tool.state,
         "Relaunched durable tool bytes/metadata differ from the observed native call")
-      assert.deepEqual(Buffer.from(JSON.parse(await readFile(path.join(root, `${run.tool.callID}.json`), "utf8")).output), Buffer.from(run.raw.output))
+      assert.deepEqual(Buffer.from(await readFile(run.raw.file, "utf8")), Buffer.from(run.raw.stdout))
     }
     // Relaunch receives no fixture state reseed. Actual MemoryRouter/persist restores the page/owner.
     await expect(again.page.locator('[data-component="orchestra-chapter"][data-chapter="lean"]')).toBeVisible()
