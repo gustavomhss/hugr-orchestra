@@ -842,4 +842,22 @@ describe("runGuards", () => {
     expect([cleared("ts-ignore"), cleared("test-file-deleted"), cleared("test-assertions-removed")]).toEqual(["ignore", "approval", "fix"])
     expect(listed.rules.find((rule) => rule.id === "ts-ignore")?.group).toBe("silenced")
   })
+
+  test("an approval clears a rule of every kind, and only that rule", () => {
+    const lines = rule(`
+id = "sample"
+group = "leftovers"
+severity = "gate"
+on = "added-lines"
+paths = ["src/**"]
+message = "no"
+match = "FORBIDDEN"
+positive = ["FORBIDDEN"]
+negative = ["fine"]
+`)
+    const other = diff("src/a.ts", ["FORBIDDEN"])
+    expect(evaluate({ rules: [lines], config, diff: other, approved: [] })).toHaveLength(1)
+    expect(evaluate({ rules: [lines], config, diff: other, approved: ["sample"] })).toEqual([])
+    expect(evaluate({ rules: [lines], config, diff: other, approved: ["another"] })).toHaveLength(1)
+  })
 })
