@@ -30,19 +30,7 @@ export function hold(reason: string, detail: string) {
   return new Tool.Failure({ message: `HOLD ${reason}: ${detail}`, metadata: { status: "HOLD", reason } })
 }
 
-/**
- * The governed chain after admission starts from the Atlas source: a plan revision is grounded in it, its context
- * loads from it, and validation, review, presentation and authorization all bind that context. V1 refuses the same
- * way when `maestro.atlas` is unconfigured; on V2 it always is, because V2 configuration does not carry it yet.
- */
-export function atlasHold(projectID: string) {
-  return hold(
-    "provider-unconfigured",
-    `${projectID}. Atlas is not configured for this project (maestro.atlas), so governed work cannot proceed here; the owner decides. V2 configuration does not read maestro.atlas yet, so this Session cannot ground a plan revision or record its context.`,
-  )
-}
-
-/** A step whose evidence only the Atlas-grounded chain records (see `atlasHold`). */
+/** A step whose evidence only the Atlas-grounded chain records. */
 export function chainHold(step: string) {
   return hold(
     "governed-chain-unavailable",
