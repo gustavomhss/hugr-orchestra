@@ -7,7 +7,7 @@ import {
   DESKTOP_NATIVE_LOCALES,
   desktopNativePluralCategories,
   type DesktopNativeLocale,
-} from "../packages/app-shell/src/i18n/desktop-native"
+} from "../src/i18n/desktop-native"
 
 type Locale = Exclude<DesktopNativeLocale, "en">
 const locales = DESKTOP_NATIVE_LOCALES.filter((locale): locale is Locale => locale !== "en")
@@ -81,7 +81,7 @@ type Drift = ReturnType<typeof findDrift>
 type Domain = { name: string; source: string; target: string; drift: Drift }
 
 const desktopLocales = new Set<Locale>(locales)
-const root = path.resolve(import.meta.dir, "..")
+const root = path.resolve(import.meta.dir, "../../..")
 
 export function parseTranslationArgs(args: string[]) {
   const parsed = parseArgs({
@@ -384,7 +384,7 @@ async function dictionary(file: string) {
 }
 
 async function commandTemplate() {
-  return (await Bun.file(path.join(root, "script/translate-app.md")).text()).trim()
+  return (await Bun.file(path.join(import.meta.dir, "translate-app.md")).text()).trim()
 }
 
 async function translate(

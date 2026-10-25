@@ -41,6 +41,11 @@ export const catalogScenarios: Scenario[] = [
       check(typeof body.signedIn === "boolean", "account must report whether Claude Code is signed in")
     }),
   http.protected
+    .post("/api/claude-code/login", "v2.claudeCode.login")
+    .global()
+    .at(() => ({ path: "/api/claude-code/login" }))
+    .status(400),
+  http.protected
     .post("/api/claude-code/login/code", "v2.claudeCode.loginCode")
     .global()
     .at(() => ({ path: "/api/claude-code/login/code", body: { code: "abc#state" } }))
