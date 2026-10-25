@@ -9,6 +9,8 @@ import { LocationServiceMap } from "@orchestra/core/location-service-map"
 import { AppProcess } from "@orchestra/core/process"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { ProjectV2 } from "@orchestra/core/project"
+import { SessionV2 } from "@orchestra/core/session"
+import { SessionExecution } from "@orchestra/core/session/execution"
 import { makeFileSystemGroup } from "@orchestra/protocol/groups/fs"
 import { SchemaErrorMiddleware } from "@orchestra/protocol/middleware/schema-error"
 import { Effect, Layer, Option } from "effect"
@@ -22,8 +24,18 @@ import { LocationMiddleware, layer } from "../src/location"
 import { authorizationLayer } from "../src/middleware/authorization"
 import { schemaErrorLayer } from "../src/middleware/schema-error"
 
+// A Location's task tool captures the process-global Session services, so the fixture exports them as the server does.
 const services = AppNodeBuilder.build(
-  LayerNode.group([Database.node, LocationServiceMap.node, AppProcess.node, FSUtil.node, ProjectV2.node]),
+  LayerNode.group([
+    Database.node,
+    LocationServiceMap.node,
+    AppProcess.node,
+    FSUtil.node,
+    ProjectV2.node,
+    SessionV2.node,
+    SessionExecution.node,
+  ]),
+  [[SessionExecution.node, SessionExecution.noopLayer]],
 )
 // Serve the actual fs group, handler and location middleware over TCP; other API groups are outside this fixture.
 const routes = HttpApiBuilder.layer(

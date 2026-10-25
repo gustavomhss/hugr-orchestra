@@ -66,8 +66,15 @@ const request = (path: string, init?: RequestInit) => {
     HttpClient.execute,
   )
 }
+// A route that declares no payload never reads one, and an unread request body keeps its connection open, which holds
+// the server's graceful shutdown for its full 20 s. The client sends no body to those routes, so neither does this.
 const post = (path: string, body?: unknown) =>
-  request(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body ?? {}) })
+  request(
+    path,
+    body === undefined
+      ? { method: "POST" }
+      : { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) },
+  )
 const Count = Schema.Struct({ data: Schema.Number })
 
 it.live("real HTTP background releases the foreground subagent the Session waits on", () =>
@@ -96,5 +103,6 @@ it.live("real HTTP background releases the foreground subagent the Session waits
     expect(again.data).toBe(0)
     const missing = yield* post("/api/session/ses_missing/background")
     expect(missing.status).toBe(404)
+    expect(yield* missing.json).toMatchObject({ _tag: "SessionNotFoundError", sessionID: "ses_missing" })
   }),
 )
