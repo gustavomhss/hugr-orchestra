@@ -116,7 +116,7 @@ it.live(
       const read = yield* request(`/api/session/${created.data.id}`).pipe(
         Effect.flatMap(HttpClientResponse.schemaBodyJson(Info)),
       )
-      expect(read.data.location.directory).toBe(destination)
+      expect<string>(read.data.location.directory).toBe(destination)
     }),
   30_000,
 )

@@ -81,6 +81,7 @@ function serve(input: { account?: ClaudeCodeAccount.Interface; mcp?: Partial<Mcp
             ...init,
             headers: { ...auth, "content-type": "application/json" },
           }),
+          context,
         ),
       )
     return { request, context }

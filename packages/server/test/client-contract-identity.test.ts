@@ -32,8 +32,8 @@ test("Core and Server reuse the authoritative Schema and Protocol values", () =>
   expect(Api.groups["server.session"].identifier).toBe("server.session")
   expect(Object.keys(ClientApi.groups)).toEqual(Object.keys(Api.groups))
   expect(Session.ID.create()).toStartWith("ses_")
-  expect(Project.ID.global).toBe("global")
-  expect(Provider.ID.anthropic).toBe("anthropic")
+  expect<string>(Project.ID.global).toBe("global")
+  expect<string>(Provider.ID.anthropic).toBe("anthropic")
   expect(Workspace.ID.create()).toStartWith("wrk_")
 })
 
