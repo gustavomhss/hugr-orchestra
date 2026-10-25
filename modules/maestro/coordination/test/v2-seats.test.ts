@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { AgentV2 } from "@orchestra/core/agent"
 import { PermissionV2 } from "@orchestra/core/permission"
 import { nativeProfiles } from "../src/roster"
 import { MaestroSeatsV2 } from "../src/v2/seats"
@@ -51,4 +52,30 @@ test("each seat keeps exactly its own Maestro and Atlas Memory tools", () => {
   for (const id of ["backend", "jimmy", "archie"]) expect(effect(id, "atlas_memory_emit")).toBe("allow")
   for (const id of ["patty", "lucy", "rosie"]) expect(effect(id, "atlas_memory_recall")).toBe("deny")
   expect(effect("backend", "skill", "maestro-governed")).toBe("deny")
+})
+
+// A seat's display label, as on V1: the label variable over `agent.<id>.name` over the roster default; an invalid label
+// keeps the default and names the problem.
+test("a seat's label comes from its variable, then configuration, else the default", () => {
+  const others = [AgentV2.ID.make("general"), AgentV2.ID.make("lucy")].map((id) => ({ ...AgentV2.Info.empty(id) }))
+  expect(MaestroSeatsV2.label("lucy", "Default", undefined, others)).toEqual({ label: "Default" })
+  expect(MaestroSeatsV2.label("lucy", "Default", " Ana ", others)).toEqual({ label: "Ana" })
+  for (const [configured, problem] of [
+    ["", "empty"],
+    ["x".repeat(41), "longer than 40 characters"],
+    ["A\nB", "contains a control character or line break"],
+    ["Explore", "reserved agent id"],
+    ["GENERAL", "reserved agent id"],
+  ])
+    expect(MaestroSeatsV2.label("lucy", "Default", configured, others)).toEqual({
+      label: "Default",
+      path: "agent.lucy.name",
+      problem,
+    })
+  expect(MaestroSeatsV2.label("backend", "Default", "Lucy", others)).toMatchObject({ problem: "already used by another agent" })
+  process.env.HUGR_UPSTREAM_NAME = "Upstream Ana"
+  const fromVariable = MaestroSeatsV2.label("archie", "Default", "Configured", others)
+  delete process.env.HUGR_UPSTREAM_NAME
+  expect(fromVariable).toEqual({ label: "Upstream Ana" })
+  expect(MaestroSeatsV2.label("archie", "Default", "Configured", others)).toEqual({ label: "Configured" })
 })

@@ -48,29 +48,74 @@ const layer = Layer.effectDiscard(
     yield* plugins.ensure(pluginID, () =>
       Effect.gen(function* () {
         if (skillRoot) yield* skills.transform(MaestroSkillSourcesV2.playbooks(skillRoot.SeatSkillRoot.playbooks))
-        yield* agents.transform((draft) => {
-          if (roster)
-            roster.roster
-              .filter((member) => seats.has(member.memberId))
-              .forEach((member) =>
-                draft.update(AgentV2.ID.make(member.memberId), (agent) => {
-                  const root = skillRoot?.SeatSkillRoot.roots[member.memberId]
-                  agent.system ??= roster.renderPrompt(member, member.displayName)
-                  agent.description ??= Seats.all[member.memberId].description
-                  agent.mode = "subagent"
-                  agent.permissions.push(
-                    ...floor(roster.nativeProfiles[member.memberId]),
-                    // A seat reads its own skill tree but never edits it; inside the Location it is ordinary source.
-                    ...(root ? [{ action: "edit", resource: path.join(root, "*"), effect: "deny" as const }] : []),
-                  )
-                }),
-              )
-          draft.list().forEach((agent) => draft.update(agent.id, (item) => item.permissions.push(...visibility(agent.id))))
-        })
+        yield* agents.transform(
+          Effect.fn(function* (draft) {
+            const members = roster ? roster.roster.filter((member) => seats.has(member.memberId)) : []
+            for (const member of members) {
+              const id = AgentV2.ID.make(member.memberId)
+              const resolved = label(member.memberId, member.displayName, draft.get(id)?.name, draft.list())
+              if (resolved.problem)
+                yield* Effect.logWarning(
+                  `Invalid configuration ${resolved.path}: label ${resolved.problem}. Using "${member.displayName}".`,
+                )
+              draft.update(id, (agent) => {
+                const root = skillRoot?.SeatSkillRoot.roots[member.memberId]
+                agent.name = resolved.label
+                agent.system ??= roster?.renderPrompt(member, resolved.label)
+                agent.description ??= Seats.all[member.memberId].description
+                agent.mode = "subagent"
+                agent.permissions.push(
+                  ...floor(roster?.nativeProfiles[member.memberId]),
+                  // A seat reads its own skill tree but never edits it; inside the Location it is ordinary source.
+                  ...(root ? [{ action: "edit", resource: path.join(root, "*"), effect: "deny" as const }] : []),
+                )
+              })
+            }
+            draft.list().forEach((agent) => draft.update(agent.id, (item) => item.permissions.push(...visibility(agent.id))))
+          }),
+        )
       }),
     )
   }),
 )
+
+/**
+ * A native seat's display label, as on V1: its label variable (`HUGR_BACKEND_NAME`, `HUGR_UPSTREAM_NAME`), else
+ * `agent.<id>.name`, else the roster default. The label is presentation only; the id stays the address. An invalid label
+ * keeps the default and names the problem.
+ */
+export function label(id: string, fallback: string, configured: string | undefined, others: ReadonlyArray<AgentV2.Info>) {
+  const variable = Seats.find(id)?.labelEnv
+  const value = variable ? process.env[variable] : undefined
+  const source =
+    value !== undefined
+      ? { path: variable, value }
+      : configured !== undefined
+        ? { path: `agent.${id}.name`, value: configured }
+        : undefined
+  if (!source) return { label: fallback }
+  const trimmed = source.value.trim()
+  const problem = labelProblem(trimmed, others.filter((agent) => agent.id !== id))
+  if (problem) return { label: fallback, path: source.path, problem }
+  return { label: trimmed }
+}
+
+const reservedLabels = new Set(["build", "plan", "general", "explore", "maestro", "title", "summary", "compaction"])
+
+// A label stays unambiguous against every other agent's id and label.
+function labelProblem(label: string, others: ReadonlyArray<AgentV2.Info>) {
+  if (!label) return "empty"
+  if ([...label].length > 40) return "longer than 40 characters"
+  if (/[\p{Cc}\p{Zl}\p{Zp}]/u.test(label)) return "contains a control character or line break"
+  const folded = fold(label)
+  if (reservedLabels.has(folded)) return "reserved agent id"
+  if (others.some((agent) => (agent.name !== undefined && fold(agent.name) === folded) || fold(agent.id) === folded))
+    return "already used by another agent"
+}
+
+function fold(value: string) {
+  return value.normalize("NFC").toLowerCase()
+}
 
 type RuleEffect = "allow" | "deny" | "ask"
 
