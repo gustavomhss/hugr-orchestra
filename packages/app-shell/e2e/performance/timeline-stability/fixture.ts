@@ -20,6 +20,11 @@ export const assistantID = "msg_1001_timeline_assistant"
 export const title = "Timeline visual stability"
 export const model = { providerID: "opencode", modelID: "claude-opus-4-6", variant: "max" }
 
+// V2 history carries no text/reasoning part ids; the app derives them per message, type and ordinal.
+export function loadedPartID(messageID: string, type: "text" | "reasoning", ordinal = 0) {
+  return `${messageID}:${type}:${ordinal}`
+}
+
 type TimelinePayload = Extract<
   GlobalEvent["payload"],
   {

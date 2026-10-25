@@ -95,6 +95,8 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
     if (path === "/provider")
       return json(route, typeof config.provider === "function" ? config.provider() : config.provider)
     if (path === "/provider/auth") return json(route, config.integrationMethods ?? {})
+    if (path === "/api/provider" || path === "/api/model" || path === "/api/model/default")
+      return json(route, { location: location(config), data: catalog(config, path) })
     const legacyAuth = path.match(/^\/auth\/([^/]+)$/)?.[1]
     if (legacyAuth && route.request().method() === "PUT") {
       config.onConnectKey?.({ integrationID: legacyAuth, body: route.request().postDataJSON() })
@@ -176,6 +178,7 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
       return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" } })
     }
     if (path === "/api/location") return json(route, location(config))
+    if (path === "/api/location/paths") return json(route, { home: "C:/Orchestra" })
     if (path === "/api/project") return json(route, [config.project])
     if (path === "/api/project/current")
       return json(route, { id: (config.project as { id?: string }).id, directory: config.directory })
@@ -447,6 +450,46 @@ function location(config: MockServerConfig) {
   }
 }
 
+// Specs describe providers in the V1 `{ all, connected, default }` shape; the V2 catalog lists only connected
+// providers, their models flattened, and the default model on its own route.
+function catalog(config: MockServerConfig, path: string) {
+  const value = (typeof config.provider === "function" ? config.provider() : config.provider) as {
+    all?: { id: string; name: string; models?: Record<string, Record<string, unknown>> }[]
+    connected?: string[]
+    default?: Record<string, string>
+  }
+  const providers = (value?.all ?? []).filter((provider) => value?.connected?.includes(provider.id) ?? true)
+  const models = providers.flatMap((provider) =>
+    Object.entries(provider.models ?? {}).map(([id, model]) => ({
+      id,
+      modelID: id,
+      providerID: provider.id,
+      name: (model.name as string | undefined) ?? id,
+      capabilities: { input: ["text"], output: ["text"], tools: true },
+      variants: Object.keys((model.variants as Record<string, unknown> | undefined) ?? {}).map((variant) => ({
+        id: variant,
+      })),
+      time: { released: 1 },
+      cost: [],
+      status: "active",
+      enabled: true,
+      limit: { output: 8192, ...(model.limit as Record<string, number> | undefined) },
+    })),
+  )
+  if (path === "/api/provider")
+    return providers.map((provider) => ({ id: provider.id, name: provider.name, settings: {} }))
+  if (path === "/api/model") return models
+  // Specs name the default either as `{ providerID, modelID }` or as V1's `{ [providerID]: modelID }` map.
+  const preferred = value?.default?.providerID
+    ? { providerID: value.default.providerID, modelID: value.default.modelID }
+    : Object.entries(value?.default ?? {}).map(([providerID, modelID]) => ({ providerID, modelID })).at(0)
+  return (
+    models.find((model) => model.providerID === preferred?.providerID && model.id === preferred?.modelID) ??
+    models[0] ??
+    null
+  )
+}
+
 function currentPermission(value: unknown) {
   const permission = value as Record<string, unknown>
   if (permission.action) return permission
@@ -531,6 +574,7 @@ function currentMessage(value: unknown) {
                 ? {
                     status: "completed",
                     input: state.input ?? {},
+                    metadata: state.metadata ?? {},
                     structured: state.metadata ?? {},
                     content: [{ type: "text", text: state.output ?? "" }],
                   }
@@ -543,7 +587,13 @@ function currentMessage(value: unknown) {
                       content: [],
                       error: { type: "ToolError", message: state.error ?? "Tool failed" },
                     }
-                  : { status: "running", input: state.input ?? {}, structured: state.metadata ?? {}, content: [] },
+                  : {
+                      status: "running",
+                      input: state.input ?? {},
+                      metadata: state.metadata ?? {},
+                      structured: state.metadata ?? {},
+                      content: [],
+                    },
         },
       ]
     }),

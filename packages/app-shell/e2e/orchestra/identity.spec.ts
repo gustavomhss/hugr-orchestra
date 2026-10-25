@@ -1,5 +1,5 @@
 import { expect, test, type Locator } from "@playwright/test"
-import type { GlobalEvent } from "../../src/v2-legacy"
+import type { OpenCodeEvent } from "@/v2-legacy-events"
 import {
   completedAssistantInfo,
   directory,
@@ -322,31 +322,22 @@ test("fixture calibration: pending permission traverses the real reducer and doc
 
 function permissionAsked() {
   return {
-    directory,
-    payload: {
-      id: "evt_orchestra_permission_asked",
-      type: "permission.asked",
-      properties: {
-        id: "per_orchestra_identity",
-        sessionID,
-        permission: "bash",
-        patterns: ["git status"],
-        metadata: {},
-        always: [],
-      },
-    },
-  } satisfies GlobalEvent
+    id: "evt_orchestra_permission_asked",
+    type: "permission.v2.asked",
+    created: 1700000003000,
+    location: { directory },
+    data: { id: "per_orchestra_identity", sessionID, action: "bash", resources: ["git status"], metadata: {}, save: [] },
+  } satisfies OpenCodeEvent
 }
 
 function permissionReplied() {
   return {
-    directory,
-    payload: {
-      id: "evt_orchestra_permission_replied",
-      type: "permission.replied",
-      properties: { sessionID, requestID: "per_orchestra_identity", reply: "once" },
-    },
-  } satisfies GlobalEvent
+    id: "evt_orchestra_permission_replied",
+    type: "permission.v2.replied",
+    created: 1700000004000,
+    location: { directory },
+    data: { sessionID, requestID: "per_orchestra_identity", reply: "once" },
+  } satisfies OpenCodeEvent
 }
 
 function readBox(locator: Locator) {

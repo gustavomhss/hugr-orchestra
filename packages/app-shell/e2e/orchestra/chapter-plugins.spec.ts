@@ -78,12 +78,6 @@ async function openSession(page: Page, scheme: "dark" | "light") {
   return prompts
 }
 
-function systemOf(prompts: Array<{ body: unknown }>, index: number) {
-  const body = prompts[index]?.body
-  if (!body || typeof body !== "object" || !("system" in body)) return undefined
-  return body.system
-}
-
 test("audit: plugins unmatched search explains the empty result and clearing restores cards", async ({ page }) => {
   await openSession(page, "dark")
   await openPlugins(page)
@@ -98,8 +92,10 @@ test("audit: plugins unmatched search explains the empty result and clearing res
 })
 
 for (const scheme of ["dark", "light"] as const) {
-  test(`${scheme}: configured behaviors persist per profile and reach new chat messages`, async ({ page }) => {
+  test(`${scheme}: configured behaviors persist per profile and reach the server`, async ({ page }) => {
     const prompts = await openSession(page, scheme)
+    await serveV2Catalog(page)
+    const sets = await serveBehaviors(page)
     await openPlugins(page)
 
     const view = chapter(page)
@@ -123,7 +119,7 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(caveman.locator(".mx-badge")).toHaveText(["LLM behavior", "full", "Disabled"])
     await expect(toggle).toHaveAttribute("aria-checked", "false")
     await expect(view.locator('[data-slot="plugins-application"]')).toHaveText(
-      "Active behaviors are added to the system instructions of new chat messages in this profile (not slash commands or shell runs).",
+      "Active behaviors are kept on this server for this profile and apply to every turn of its chats, including chats already open.",
     )
 
     await toggle.click()
@@ -169,12 +165,17 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(card(page, "Caveman").locator(".mx-badge")).toHaveText(["LLM behavior", "ultra", "Active"])
     await expect(card(page, "Reviewer").locator(".mx-badge")).toHaveText(["LLM behavior", "custom", "Active"])
 
+    // The blank behavior sends nothing, so the server set holds only the two with instructions.
+    await expect
+      .poll(() => sets.at(-1)?.behaviors.map((item) => item.name))
+      .toEqual(["Caveman (intensity: ultra)", "Reviewer"])
+    expect(sets.at(-1)?.behaviors[0]?.instructions).toContain(
+      "Respond terse like smart caveman. Preserve technical accuracy.",
+    )
+    expect(sets.at(-1)?.behaviors[1]?.instructions).toBe("Cite the file and line for every claim.")
     await sendPrompt(page, "Explain the failing test")
     await expect.poll(() => prompts.length).toBe(1)
-    const system = systemOf(prompts, 0)
-    expect(system).toContain("## Caveman (intensity: ultra)")
-    expect(system).toContain("Respond terse like smart caveman. Preserve technical accuracy.")
-    expect(system).toContain("## Reviewer\nCite the file and line for every claim.")
+    expectPlainPrompt(prompts[0]?.body, "Explain the failing test")
 
     await openPlugins(page)
     await card(page, "Caveman").getByRole("switch", { name: "Enable Caveman" }).click()
@@ -187,9 +188,10 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(card(page, "Reviewer")).toHaveCount(0)
     await expect(card(page, "Caveman").locator(".mx-badge")).toHaveText(["LLM behavior", "ultra", "Disabled"])
 
+    await expect.poll(() => sets.at(-1)?.behaviors).toEqual([])
     await sendPrompt(page, "Explain it again")
     await expect.poll(() => prompts.length).toBe(2)
-    expect(systemOf(prompts, 1)).toBeUndefined()
+    expectPlainPrompt(prompts[1]?.body, "Explain it again")
   })
 }
 
@@ -324,26 +326,16 @@ test("each repository profile owns its behaviors", async ({ page }) => {
     sessions: [],
     pageMessages: () => ({ items: [] }),
   })
-  await page.route(`${server}/project`, (route) =>
+  await page.route(`${server}/api/project`, (route) =>
     route.fulfill({ contentType: "application/json", body: JSON.stringify(projects) }),
   )
   await page.route("**/*", (route) => {
     const url = new URL(route.request().url())
-    if (url.origin !== server || !["/path", "/project/current"].includes(url.pathname)) return route.fallback()
-    const project = projects.find((item) => item.worktree === (url.searchParams.get("directory") ?? "/plugins-a"))
+    if (url.origin !== server || url.pathname !== "/api/project/current") return route.fallback()
+    const directory = url.searchParams.get("location[directory]") ?? "/plugins-a"
+    const project = projects.find((item) => item.worktree === directory)
     if (!project) return route.fulfill({ status: 404, json: { name: "NotFound" } })
-    return route.fulfill({
-      json:
-        url.pathname === "/project/current"
-          ? project
-          : {
-              state: project.worktree,
-              config: project.worktree,
-              worktree: project.worktree,
-              directory: project.worktree,
-              home: "/",
-            },
-    })
+    return route.fulfill({ json: { id: project.id, directory } })
   })
   await page.addInitScript(() => {
     localStorage.setItem("settings.v3", JSON.stringify({ general: {}, notifications: {} }))
@@ -379,12 +371,10 @@ test("each repository profile owns its behaviors", async ({ page }) => {
   await expect(toggle()).toHaveAttribute("aria-checked", "false")
   await pick("Plugins A")
   await expect(toggle()).toHaveAttribute("aria-checked", "true")
-  for (const path of ["/path", "/project/current"]) {
-    const outside = await page.goto(`${foreign}${path}?directory=/plugins-b`)
-    expect(outside?.status()).toBe(418)
-    expect(await outside?.json()).toEqual({ owner: "foreign" })
-    const unknown = await page.goto(`${server}${path}?directory=/plugins-unknown`)
-    expect(unknown?.status()).toBe(404)
-    expect(await unknown?.json()).toEqual({ name: "NotFound" })
-  }
+  const outside = await page.goto(`${foreign}/api/project/current?location[directory]=/plugins-b`)
+  expect(outside?.status()).toBe(418)
+  expect(await outside?.json()).toEqual({ owner: "foreign" })
+  const unknown = await page.goto(`${server}/api/project/current?location[directory]=/plugins-unknown`)
+  expect(unknown?.status()).toBe(404)
+  expect(await unknown?.json()).toEqual({ name: "NotFound" })
 })

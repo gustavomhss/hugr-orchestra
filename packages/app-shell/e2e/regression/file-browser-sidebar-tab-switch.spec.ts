@@ -82,7 +82,7 @@ test("keeps previous file search results visible while the next search loads", a
 
   const nextSearch = page.waitForRequest((request) => {
     const url = new URL(request.url())
-    return url.pathname === "/find/file" && url.searchParams.get("query") === "file-7"
+    return url.pathname === "/api/fs/find" && url.searchParams.get("query") === "file-7"
   })
   await filter.fill("file-7")
   await nextSearch
@@ -155,9 +155,20 @@ async function setup(
       }))
     },
     fileContent: (path) => ({ type: "text", content: `contents:${path}` }),
-    findFiles,
     pageMessages: () => ({ items: [] }),
   })
+  // The V2 app searches through /api/fs/find, which answers file entries inside a Location envelope.
+  if (findFiles)
+    await page.route(/\/api\/fs\/find\?/, async (route) => {
+      const url = new URL(route.request().url())
+      const found = (await findFiles({ query: url.searchParams.get("query") ?? "" })) as string[]
+      return route.fulfill({
+        json: {
+          location: { directory, project: { id: projectID, directory } },
+          data: found.map((path) => ({ path, type: "file" })),
+        },
+      })
+    })
 
   await page.addInitScript(
     ({ directory, server, sessionID }) => {
