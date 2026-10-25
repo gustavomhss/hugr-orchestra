@@ -109,6 +109,8 @@ export type SpawnOptions = {
   stdin?: "pipe" | "closed"
   output?: "pipe" | "ignore"
   signal?: AbortSignal
+  /** How long the tree gets to wind down once it is stopped, including when this process dies. */
+  graceMs?: number
 }
 
 /**
@@ -175,6 +177,7 @@ class OmniProcess extends EventEmitter {
           inheritEnv: false,
           env: environment(options.env),
           stdin: options.stdin ?? "pipe",
+          graceMs: options.graceMs,
           text: false,
           backpressure: true,
         }),

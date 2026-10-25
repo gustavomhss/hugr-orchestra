@@ -15,6 +15,9 @@ type Logger = {
 const HOSTNAME = "127.0.0.1"
 const READY_TIMEOUT = 20_000
 const STOP_TIMEOUT = 6_000
+// When the desktop dies, omni stops the server tree with this much grace: the server needs it to stop the shells and
+// MCP servers it started, through its own supervisor, before the forced step ends that supervisor too.
+const TREE_GRACE = 5_000
 const BACKOFF = [1_000, 2_000, 4_000, 8_000, 16_000, 30_000]
 // A child that served this long resets the backoff; a crash loop gives up after BACKOFF runs out.
 const STABLE_AFTER = 60_000
@@ -43,7 +46,7 @@ export async function startOwnedServe(options: {
   const launch = () => {
     const startedAt = Date.now()
     const args = [...options.command.slice(1), "serve", "--hostname", HOSTNAME, "--port", String(port)]
-    const child = DesktopOmni.spawn(options.command[0], args, { env, stdin: "closed" })
+    const child = DesktopOmni.spawn(options.command[0], args, { env, stdin: "closed", graceMs: TREE_GRACE })
     state.child = child
     // An omni child learns its pid asynchronously, so the witness waits for the spawn event.
     child.once("spawn", () => options.onSpawn?.(child.pid))
