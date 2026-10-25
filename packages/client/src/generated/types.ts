@@ -886,7 +886,14 @@ export type SessionsForkOutput = {
 
 export type SessionsMoveInput = {
   readonly sessionID: { readonly sessionID: string }["sessionID"]
-  readonly location: { readonly location: { readonly directory: string; readonly workspaceID?: string } }["location"]
+  readonly location: {
+    readonly location: { readonly directory: string; readonly workspaceID?: string }
+    readonly moveChanges?: boolean | null
+  }["location"]
+  readonly moveChanges?: {
+    readonly location: { readonly directory: string; readonly workspaceID?: string }
+    readonly moveChanges?: boolean | null
+  }["moveChanges"]
 }
 
 export type SessionsMoveOutput = void
@@ -1136,6 +1143,26 @@ export type SessionsContextOutput = {
       }
   >
 }["data"]
+
+export type SessionsDiffInput = {
+  readonly sessionID: { readonly sessionID: string }["sessionID"]
+  readonly messageID: { readonly messageID: string; readonly context?: number | undefined }["messageID"]
+  readonly context?: { readonly messageID: string; readonly context?: number | undefined }["context"]
+}
+
+export type SessionsDiffOutput = {
+  readonly data: ReadonlyArray<{
+    readonly path: string
+    readonly status: "added" | "modified" | "deleted"
+    readonly additions: number
+    readonly deletions: number
+    readonly patch: string
+  }>
+}["data"]
+
+export type SessionsBackgroundInput = { readonly sessionID: { readonly sessionID: string }["sessionID"] }
+
+export type SessionsBackgroundOutput = { readonly data: number }["data"]
 
 export type SessionsHistoryInput = {
   readonly sessionID: { readonly sessionID: string }["sessionID"]
@@ -2281,7 +2308,30 @@ export type IntegrationsListOutput = {
               }
           >
         }
-      | { readonly type: "key"; readonly label?: string }
+      | {
+          readonly type: "key"
+          readonly label?: string
+          readonly prompts?: ReadonlyArray<
+            | {
+                readonly type: "text"
+                readonly key: string
+                readonly message: string
+                readonly placeholder?: string
+                readonly when?: { readonly key: string; readonly op: "eq" | "neq"; readonly value: string }
+              }
+            | {
+                readonly type: "select"
+                readonly key: string
+                readonly message: string
+                readonly options: ReadonlyArray<{
+                  readonly label: string
+                  readonly value: string
+                  readonly hint?: string
+                }>
+                readonly when?: { readonly key: string; readonly op: "eq" | "neq"; readonly value: string }
+              }
+          >
+        }
       | { readonly type: "env"; readonly names: ReadonlyArray<string> }
     >
     readonly connections: ReadonlyArray<
@@ -2333,7 +2383,30 @@ export type IntegrationsGetOutput = {
               }
           >
         }
-      | { readonly type: "key"; readonly label?: string }
+      | {
+          readonly type: "key"
+          readonly label?: string
+          readonly prompts?: ReadonlyArray<
+            | {
+                readonly type: "text"
+                readonly key: string
+                readonly message: string
+                readonly placeholder?: string
+                readonly when?: { readonly key: string; readonly op: "eq" | "neq"; readonly value: string }
+              }
+            | {
+                readonly type: "select"
+                readonly key: string
+                readonly message: string
+                readonly options: ReadonlyArray<{
+                  readonly label: string
+                  readonly value: string
+                  readonly hint?: string
+                }>
+                readonly when?: { readonly key: string; readonly op: "eq" | "neq"; readonly value: string }
+              }
+          >
+        }
       | { readonly type: "env"; readonly names: ReadonlyArray<string> }
     >
     readonly connections: ReadonlyArray<
@@ -3236,6 +3309,25 @@ export type ServerLspStatusOutput = {
   }>
 }
 
+export type ServerFormatterStatusInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type ServerFormatterStatusOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: ReadonlyArray<{
+    readonly name: string
+    readonly extensions: ReadonlyArray<string>
+    readonly enabled: boolean
+  }>
+}
+
 export type SkillsListInput = {
   readonly location?: {
     readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
@@ -3648,6 +3740,16 @@ export type ProjectCopiesRefreshInput = {
 }
 
 export type ProjectCopiesRefreshOutput = void
+
+export type ProjectCopiesGenerateNameInput = {
+  readonly projectID: { readonly projectID: string }["projectID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly context?: { readonly context?: string | undefined }["context"]
+}
+
+export type ProjectCopiesGenerateNameOutput = { readonly name: string }
 
 export type ProjectsListOutput = ReadonlyArray<{
   readonly id: string
@@ -9294,6 +9396,10 @@ export type RelayRunsLedgerOutput = {
   }
   readonly data: ReadonlyArray<{ readonly [x: string]: JsonValue }>
 }
+
+export type InstallationUpgradeInput = { readonly target: { readonly target: string }["target"] }
+
+export type InstallationUpgradeOutput = { readonly success: true; readonly version: string }
 export {
   type UnauthorizedError,
   isUnauthorizedError,
