@@ -174,7 +174,7 @@ export function getLastFocusedWindow() {
 
 export function restoreMainWindows() {
   const ids = registry.persisted()
-  return (ids.length ? ids : [randomUUID()]).map((id) => createMainWindow(id))
+  return (ids.length ? ids : [randomUUID()]).map((id) => createMainWindow(id, true))
 }
 
 export function setDockIcon() {
@@ -183,7 +183,8 @@ export function setDockIcon() {
   if (!icon.isEmpty()) app.dock?.setIcon(icon)
 }
 
-export function createMainWindow(id: string = randomUUID()) {
+// Only the windows that open with the app play the opening splash; a window opened later does not.
+export function createMainWindow(id: string = randomUUID(), splash = false) {
   const state = windowState({
     file: windowStateFile(id),
     defaultWidth: 1280,
@@ -242,7 +243,7 @@ export function createMainWindow(id: string = randomUUID()) {
   registerWindow(win, id)
   registerAppDockWindow(win)
   wireFullscreen(win)
-  loadWindow(win, "index.html")
+  loadWindow(win, splash ? "index.html?splash" : "index.html")
   wireZoom(win)
 
   win.once("ready-to-show", () => {
