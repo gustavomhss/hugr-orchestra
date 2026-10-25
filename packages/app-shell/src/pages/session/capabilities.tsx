@@ -85,7 +85,7 @@ const SessionCapabilitiesContext = createContext<SessionCapabilities>()
 export const useSessionCapabilities = () => useContext(SessionCapabilitiesContext)
 
 /** Lets the timeline scroll a tool call's row into view for `revealCall`; a no-op outside a Session route. */
-export function useRevealPart(rows: () => readonly TimelineRow[], scrollToIndex: (index: number) => void) {
+export function useRevealPart(rows: () => readonly TimelineRow.TimelineRow[], scrollToIndex: (index: number) => void) {
   const capabilities = useSessionCapabilities()
   capabilities?.setRevealPart((partID) => {
     const index = rows().findIndex((row) => row._tag === "AssistantPart" && (row.group.type === "part"
