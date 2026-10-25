@@ -1,4 +1,4 @@
-import { Context, Effect, Layer, LayerMap } from "effect"
+import { Context, Deferred, Effect, Layer, LayerMap } from "effect"
 import { AgentV2 } from "./agent"
 import { Actions } from "./actions"
 import { AISDK } from "./aisdk"
@@ -107,40 +107,51 @@ export function buildLocationServiceMap(
 ): Layer.Layer<LocationServiceMap.Service> {
   return Layer.effect(
     LocationServiceMap.Service,
-    LayerMap.make(
-      (ref: Location.Ref) => {
-        const allReplacements: LayerNode.Replacements = [
-          [ToolRegistry.node, ToolRegistry.nativeNode],
-          [ToolRegistry.toolsNode, ToolRegistry.nativeToolsNode],
-          ...replacements,
-          [Location.node, Location.boundNode(ref)],
-        ]
-        // Apply replacements during hoist, not afterward: replacements can
-        // introduce new tagged dependencies (Location.boundNode depends on
-        // Project), and the hoist walk is the only pass that can still slice
-        // those back out.
-        const location = LayerNode.hoist(LayerNode.group([locationServices, ...extra]), Node.tags.values.global, allReplacements)
-        // Contributed nodes (Host.Contribution.locationNodes) add services; the map still exposes LocationServices.
-        const services: Layer.Layer<LocationServices, LocationError> = LayerNode.compile(location.node)
+    Effect.gen(function* () {
+      // A hoisted global (for example Arsenal observations) may depend on the Location map itself. Its node is
+      // unbound inside the hoisted graph, so it is bound to this map once the map exists.
+      const self = Deferred.makeUnsafe<Context.Service.Shape<typeof LocationServiceMap.Service>>()
+      const locations = yield* LayerMap.make(
+        (ref: Location.Ref) => {
+          const allReplacements: LayerNode.Replacements = [
+            [ToolRegistry.node, ToolRegistry.nativeNode],
+            [ToolRegistry.toolsNode, ToolRegistry.nativeToolsNode],
+            ...replacements,
+            [Location.node, Location.boundNode(ref)],
+          ]
+          // Apply replacements during hoist, not afterward: replacements can
+          // introduce new tagged dependencies (Location.boundNode depends on
+          // Project), and the hoist walk is the only pass that can still slice
+          // those back out.
+          const location = LayerNode.hoist(LayerNode.group([locationServices, ...extra]), Node.tags.values.global, allReplacements)
+          // Contributed nodes (Host.Contribution.locationNodes) add services; the map still exposes LocationServices.
+          const services: Layer.Layer<LocationServices, LocationError> = LayerNode.compile(location.node)
 
-        return services.pipe(
-          Layer.fresh,
-          Layer.tap((context) =>
-            Effect.gen(function* () {
-              const recovery = Context.get(context, RelayHookRecovery.Service)
-              yield* Effect.logInfo("booting location services", {
-                directory: ref.directory,
-                workspaceID: ref.workspaceID,
-              })
-              // Start only after the entire graph succeeds; the Location scope owns this one pass.
-              yield* recovery.recover().pipe(Effect.forkScoped)
-            }),
-          ),
-          Layer.provide(LayerNode.compile(location.hoisted)),
-        )
-      },
-      { idleTimeToLive: "60 minutes" },
-    ),
+          return services.pipe(
+            Layer.fresh,
+            Layer.tap((context) =>
+              Effect.gen(function* () {
+                const recovery = Context.get(context, RelayHookRecovery.Service)
+                yield* Effect.logInfo("booting location services", {
+                  directory: ref.directory,
+                  workspaceID: ref.workspaceID,
+                })
+                // Start only after the entire graph succeeds; the Location scope owns this one pass.
+                yield* recovery.recover().pipe(Effect.forkScoped)
+              }),
+            ),
+            Layer.provide(
+              LayerNode.compile(location.hoisted, [
+                [LocationServiceMap.node, Layer.effect(LocationServiceMap.Service, Deferred.await(self))],
+              ]),
+            ),
+          )
+        },
+        { idleTimeToLive: "60 minutes" },
+      )
+      yield* Deferred.succeed(self, locations)
+      return locations
+    }),
   )
 }
 

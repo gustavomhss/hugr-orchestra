@@ -1,7 +1,7 @@
 import fs from "fs/promises"
 import path from "path"
 import { describe, expect } from "bun:test"
-import { Effect, Layer } from "effect"
+import { Effect, Layer, Schema } from "effect"
 import { Config } from "@orchestra/core/config"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -36,7 +36,7 @@ function provide(directory: string) {
           Config.Service.of({
             entries: () =>
               Effect.succeed([
-                new Config.Document({ type: "document", info: new Config.Info({ formatter: { upper } }) }),
+                new Config.Document({ type: "document", info: Schema.decodeUnknownSync(Config.Info)({ formatter: { upper } }) }),
               ]),
           }),
         ),
