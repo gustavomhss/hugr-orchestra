@@ -93,7 +93,7 @@ async function host(target: "serve" | "tui", action: "kill" | "quit") {
   const mcpNonce = `omni-mcp-${trees.bash.nonce.slice(10)}`
   const llm = await fakeLLM([
     // The CLI canonicalizes Windows 8.3 temp paths. Resolve inside its Location, not through RUNNER~1.
-    { name: "write", args: { filePath: "b.ts", content: "export const b = 2\n" } },
+    { name: "write", args: { path: "b.ts", content: "export const b = 2\n" } },
     { name: "bash", args: { command: win ? `& ${trees.bash.line}` : trees.bash.line, timeout: 600_000, description: "Run the campaign tree" } },
   ])
   const config = {
