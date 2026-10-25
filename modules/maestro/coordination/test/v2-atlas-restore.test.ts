@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Location } from "@orchestra/core/location"
@@ -9,6 +10,7 @@ import { SystemContext, SystemContextRegistry } from "@orchestra/core/system-con
 import { Effect, Layer } from "effect"
 import { MaestroAtlasRestoreV2 } from "../src/v2/atlas-restore"
 import { MaestroSeats } from "../src/v2/seats-service"
+import { event } from "./fixture/v2-governance"
 
 // Ruling M3-1 on V2: a seat's admitted resume fold that a compaction left behind returns, with identical text, as a
 // System Context source of that seat's turns; a visible, refused, foreign or already restored fold restores nothing.
@@ -67,8 +69,8 @@ describe("V2 Atlas resume restore", () => {
     expect(MaestroAtlasRestoreV2.evicted(entries, "backend", projectID)?.key.id).toBe("new")
   })
 
-  const load = (agent: string) => {
-    const layer = AppNodeBuilder.build(LayerNode.group([SystemContextRegistry.node, MaestroAtlasRestoreV2.node]), [
+  const load = (agent: string, entries: unknown[] = [synthetic(1, admission({})), compaction(4)], records: unknown[] = []) => {
+    const layer = AppNodeBuilder.build(LayerNode.group([SystemContextRegistry.node, MaestroAtlasRestoreV2.node, Database.node]), [
       [
         Location.node,
         Layer.succeed(
@@ -80,15 +82,14 @@ describe("V2 Atlas resume restore", () => {
         ),
       ],
       [MaestroSeats.node, Layer.succeed(MaestroSeats.Service, MaestroSeats.make(["backend", "lucy"]))],
-      [
-        SessionStore.node,
-        Layer.mock(SessionStore.Service, {
-          entries: () => Effect.succeed([synthetic(1, admission({})), compaction(4)] as never),
-        }),
-      ],
-    ]) as Layer.Layer<SystemContextRegistry.Service>
+      [SessionStore.node, Layer.mock(SessionStore.Service, { entries: () => Effect.succeed(entries as never) })],
+      [Database.node, Database.layerFromPath(":memory:")],
+    ]) as Layer.Layer<SystemContextRegistry.Service | Database.Service>
     return Effect.runPromise(
       Effect.gen(function* () {
+        yield* Effect.forEach(records, (data, index) =>
+          event(`evt_resume_${index}`, "ses_restore", "maestro.task.resume_admitted.1", data as { readonly [key: string]: unknown }),
+        )
         const registry = yield* SystemContextRegistry.Service
         return (yield* SystemContext.initialize(yield* registry.load({ sessionID: "ses_restore", agent }))).baseline
       }).pipe(Effect.scoped, Effect.provide(layer)),
@@ -98,5 +99,16 @@ describe("V2 Atlas resume restore", () => {
   test("the restored fold reaches only its Atlas Memory seat's turns", async () => {
     expect(await load("backend")).toContain(admission({}).text)
     for (const agent of ["maestro", "lucy"]) expect(await load(agent)).not.toContain("Atlas Memory resume")
+  })
+
+  test("a governance record of the child's prompt restores once compaction evicts that prompt", async () => {
+    const prompt = (seq: number) => ({ seq, message: { id: "msg_prompt", type: "user", content: [] } })
+    const record = { executionSessionID: "ses_restore", promptID: "msg_prompt", atlasResume: admission({}) }
+    expect(await load("backend", [prompt(1), compaction(4)], [record])).toContain(admission({}).text)
+    // Still visible, or recorded for another child, the record restores nothing.
+    expect(await load("backend", [compaction(1), prompt(2)], [record])).not.toContain("Atlas Memory resume")
+    expect(await load("backend", [prompt(1), compaction(4)], [{ ...record, executionSessionID: "ses_other" }])).not.toContain(
+      "Atlas Memory resume",
+    )
   })
 })
