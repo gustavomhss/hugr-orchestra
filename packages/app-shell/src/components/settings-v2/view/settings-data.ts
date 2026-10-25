@@ -41,7 +41,7 @@ export const PERMISSION_ACTIONS = ["allow", "ask", "deny"] as const
 
 type Rule = { key: string; pattern: string; action: PermissionActionConfig }
 
-// The server's own defaults (apps/orchestra/src/agent/agent.ts). It evaluates them first, then each agent's
+// The server's own defaults. It evaluates them first, then each agent's
 // built-in rules (plan denies edits, for example), then the configured rules; the last matching rule wins. Only
 // their "*" defaults are listed: everything is allowed except doom_loop and external_directory, which ask.
 const BUILT_IN: Rule[] = [

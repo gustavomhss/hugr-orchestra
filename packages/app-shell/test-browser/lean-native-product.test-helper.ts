@@ -11,7 +11,7 @@ import type { ToolPart } from "@/v2-wire"
 // every check compares shapes (lengths, toMatchObject, serialized text), never identity or instanceof. The dashboard
 // schemas are Schema.Struct values, which decode to plain objects.
 export async function verifyProfileRows(scope: LeanDashboard.Scope, tool: ToolPart, metric: LeanMetrics.Decision) {
-  const { LeanProject } = await import("../../../apps/orchestra/src/session/lean-project")
+  const { LeanProject } = await import("../../core/src/session/lean-project")
   if (tool.state.status !== "completed") throw new Error("Expected completed durable ToolPart")
   const row = {
     sessionID: tool.sessionID, messageID: tool.messageID, partID: tool.id, callID: tool.callID,

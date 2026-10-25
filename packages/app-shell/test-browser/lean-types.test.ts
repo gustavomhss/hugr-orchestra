@@ -37,9 +37,9 @@ test("actual app and every Lean browser test file typecheck in one program", asy
   } finally { await rm(scratch, { recursive: true, force: true }) }
 }, 600000)
 
-test("combined Schema/Core/Orchestra/app/session-ui/ui types in CI", async () => {
-  for (const pkg of ["schema", "core", "orchestra", "app-shell", "session-ui", "ui"])
-    await typecheck(["typecheck"], pkg === "orchestra" ? path.resolve(app, "../../apps/orchestra") : path.resolve(app, "..", pkg))
+test("combined Schema/Core/app/session-ui/ui types in CI", async () => {
+  for (const pkg of ["schema", "core", "app-shell", "session-ui", "ui"])
+    await typecheck(["typecheck"], path.resolve(app, "..", pkg))
 }, 600000)
 
 test("app e2e types, including the Lean visual capture spec", async () => {
