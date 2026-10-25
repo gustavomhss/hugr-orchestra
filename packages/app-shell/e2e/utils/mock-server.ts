@@ -5,6 +5,7 @@ const emptyList = new Set(["/skill", "/command", "/lsp", "/formatter", "/vcs/sta
 const emptyObject = new Set(["/global/config", "/config", "/provider/auth", "/mcp", "/experimental/resource"])
 
 export interface MockServerConfig {
+  // Only V2 exists; the mock always serves it. Kept so existing callers that still name it compile.
   protocol?: "v2"
   // Orchestra opens the review rail once per app storage. Mocked pages start after that default unless a
   // spec asks for a fresh profile, so specs that toggle the rail keep exact open/closed oracles.
@@ -87,10 +88,9 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
         config.eventRetry,
       )
     }
-    if (path === "/global/health")
-      return config.protocol === "v2" ? json(route, {}, undefined, 404) : json(route, { healthy: true })
-    if (path === "/api/health" && config.protocol === "v2")
-      return json(route, { healthy: true, version: "2.0.0", pid: 1 })
+    // The app probes only /api/health since the V1 protocol was removed; an unanswered probe leaves it unconnected.
+    if (path === "/global/health") return json(route, {}, undefined, 404)
+    if (path === "/api/health") return json(route, { healthy: true, version: "2.0.0", pid: 1 })
     if (path === "/experimental/capabilities") return json(route, { backgroundSubagents: true })
     if (path === "/provider")
       return json(route, typeof config.provider === "function" ? config.provider() : config.provider)
