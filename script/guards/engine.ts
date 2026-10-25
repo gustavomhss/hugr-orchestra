@@ -68,6 +68,7 @@ function lineFindings(rule: Rule, input: Parameters<typeof evaluate>[0]): Findin
         .filter((added) => lineHits(rule, added.text))
         .filter((added) => IGNORE.exec(added.text)?.[1] !== rule.id)
         .filter((added) => !excused(added.text))
+        .filter((added) => !rule.newOnly || !renamedOnly(rule, added.text, change.removedLines ?? []))
         .map((added) => ({
           rule: rule.id,
           severity: rule.severity,
@@ -91,4 +92,10 @@ function balanceFindings(rule: Rule, input: Parameters<typeof evaluate>[0]): Fin
       return lost - added >= (rule.minNetRemoved ?? 1)
     })
     .map((change) => ({ rule: rule.id, severity: rule.severity, path: change.path, line: undefined, message: rule.message }))
+}
+
+// A version bump removes the line that names the same dependency. Only meaningful with new_only.
+function renamedOnly(rule: Rule, text: string, removed: string[]) {
+  const name = rule.match?.exec(text)?.[1]
+  return name !== undefined && removed.some((line) => rule.match?.exec(line)?.[1] === name)
 }

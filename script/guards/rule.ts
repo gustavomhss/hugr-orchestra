@@ -30,6 +30,9 @@ export type Rule = {
   match: RegExp | undefined
   // Added lines whose trimmed text starts with one of these are comments or docs, not code; `match` never sees them.
   skipComments: string[]
+  // added-lines only. The first capture group of `match` names the thing the line adds; a line is skipped when a removed
+  // line in the same file names the same thing (a version bump), so only genuinely new names are reported.
+  newOnly: boolean
   message: string
   // added-lines: sample lines. changed-paths: sample paths.
   positive: string[]
@@ -84,9 +87,12 @@ export function parseRule(file: string, text: string): Rule | string {
   if (flags !== "" && flags !== "i") return `${file}: flags may only be "i" (case-insensitive)`
   const skipComments = strings(raw.skip_comments ?? [])
   if (!skipComments) return `${file}: skip_comments must be a list of line prefixes`
+  const newOnly = raw.new_only ?? false
+  if (typeof newOnly !== "boolean") return `${file}: new_only must be true or false`
   const match = raw.match === undefined ? undefined : compile(raw.match, flags)
   if (raw.match !== undefined && !match) return `${file}: match is not a valid regular expression`
   if (on !== "changed-paths" && !match) return `${file}: an ${on} rule needs a match`
+  if (newOnly && (on !== "added-lines" || !match || !/\((?!\?)/.test(match.source))) return `${file}: new_only needs an added-lines rule whose match has a capture group`
   if (on === "line-balance" && minNetRemoved === undefined) return `${file}: a line-balance rule needs min_net_removed`
   if (on !== "line-balance" && minNetRemoved !== undefined) return `${file}: min_net_removed is for line-balance rules`
   const fileFilters =
@@ -110,6 +116,7 @@ export function parseRule(file: string, text: string): Rule | string {
     touches,
     match,
     skipComments,
+    newOnly,
     message,
     positive,
     negative,

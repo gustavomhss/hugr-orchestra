@@ -14,6 +14,7 @@ Small declarative CI rules over the lines and paths a change adds. Run with `bun
 - `flags = "i"` makes `match` case-insensitive (the only flag). `skip_comments = ["//", "#"]` hides added lines that start with one of those prefixes, so a rule does not repeat a comment lookahead.
 - `$name` in `paths`, `exclude` or `requires_changed` expands to the glob list `[sets] name` in `config.toml` (`$js_tests`, `$py_tests`, `$rs_tests` today). An undefined name stops the run.
 - Moved code is counted: each removed line excuses one identical added line for a rule, not every identical line.
+- `new_only = true` (added-lines, `match` needs a capture group) skips a line when a removed line in the same file has the same first group, so a version bump is not reported as a new dependency.
 - Size limits stay in `script/godfile.ts`; this directory does not reimplement them.
 
 - `--warn` reports gate findings without failing (setup errors still fail); on GitHub Actions each finding becomes a `::warning` annotation. `--cwd <repo>` points the engine at another checkout.

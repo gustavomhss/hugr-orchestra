@@ -221,6 +221,27 @@ describe("evaluate", () => {
     expect(evaluate({ rules: [expanded], config, diff: diff("lib/a.ts", ["FORBIDDEN"]), approved: [] })).toHaveLength(1)
   })
 
+  test("new_only reports a name that was not there before and stays quiet on a version bump", () => {
+    const named = rule(
+      SAMPLE.replace("match = 'FORBIDDEN'", "new_only = true\nmatch = '^\\s*\"(\\w+)\":'")
+        .replace('positive = ["FORBIDDEN"]', 'positive = [\'  "left": 1\']')
+        .replace('negative = ["fine"]', 'negative = ["fine"]'),
+    )
+    const change = {
+      path: "src/a.ts",
+      status: "M",
+      from: undefined,
+      added: [
+        { line: 1, text: '  "kept": 2,' },
+        { line: 2, text: '  "fresh": 1,' },
+      ],
+      removedLines: ['"kept": 1,'],
+    }
+    const found = evaluate({ rules: [named], config, diff: { changes: [change], removed: counts([]) }, approved: [] })
+    expect(found.map((finding) => finding.line)).toEqual([2])
+    expect(parseRule("sample.toml", SAMPLE.replace("match = 'FORBIDDEN'", "new_only = true\nmatch = 'FORBIDDEN'"))).toContain("new_only")
+  })
+
   test("the config's own exclude list hides a path from added-lines rules", () => {
     const found = evaluate({
       rules: [sample],
@@ -525,6 +546,7 @@ describe("runGuards", () => {
       "dep-git-source crates/c/Cargo.toml",
       "dep-git-source pkgs/a/package.json",
       "dep-lifecycle-script pkgs/a/package.json",
+      "dep-new-added pkgs/a/package.json",
       "dep-registry-override .npmrc",
       "lockfile-stale pkgs/a/package.json",
     ])
@@ -535,6 +557,7 @@ describe("runGuards", () => {
       "dep-git-source crates/c/Cargo.toml",
       "dep-git-source pkgs/a/package.json",
       "dep-lifecycle-script pkgs/a/package.json",
+      "dep-new-added pkgs/a/package.json",
       "dep-registry-override .npmrc",
     ])
   })

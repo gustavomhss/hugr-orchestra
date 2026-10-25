@@ -244,3 +244,7 @@ secret-token, local-abs-path (warn), llm-elision (warn), tls-verify-off, ts-stri
 ### Trim (after the cold review)
 
 rs-allow-lint and rs-unwrap-added were removed: they fired on most Rust diffs, and clippy's restriction lints do the job better for teams that want it. protected-paths no longer lists `.github/workflows/**` and `.github/actions/**`; the gha-* rules judge those edits, and a blanket label turned approval into a rubber stamp.
+
+### dep-new-added (implemented)
+
+Warn on a package name that was not in the manifest before (`new_only` in the engine). Baseline treats every dependency as new (765 lines), so only the history is informative: 18 hits over 300 commits, each a real new dependency.
