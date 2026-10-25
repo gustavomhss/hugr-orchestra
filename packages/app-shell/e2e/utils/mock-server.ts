@@ -226,10 +226,7 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
       const offset = Number(url.searchParams.get("cursor") ?? 0)
       const sessions = config.sessions
         .filter((session) => !directory || session.directory === directory)
-        // The app lists root Sessions; it sends no parent filter on the V2 list.
-        .filter((session) =>
-          parentID && parentID !== "null" ? session.parentID === parentID : session.parentID === undefined,
-        )
+        .filter((session) => parentID !== "null" || session.parentID === undefined)
         .filter((session) => {
           const search = url.searchParams.get("search")?.toLowerCase()
           return (
