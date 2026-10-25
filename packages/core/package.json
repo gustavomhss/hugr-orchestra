@@ -103,6 +103,7 @@
     "./filesystem/search": "./src/filesystem/search.ts",
     "./filesystem/watcher": "./src/filesystem/watcher.ts",
     "./flag/flag": "./src/flag/flag.ts",
+    "./format": "./src/format.ts",
     "./fs-util": "./src/fs-util.ts",
     "./git": "./src/git.ts",
     "./git-cli": "./src/git-cli.ts",

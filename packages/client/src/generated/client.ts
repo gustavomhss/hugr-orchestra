@@ -162,6 +162,8 @@ import type {
   McpAuthRemoveOutput,
   ServerLspStatusInput,
   ServerLspStatusOutput,
+  ServerFormatterStatusInput,
+  ServerFormatterStatusOutput,
   SkillsListInput,
   SkillsListOutput,
   SkillsSaveInput,
@@ -1490,6 +1492,20 @@ export function make(options: ClientOptions) {
           {
             method: "GET",
             path: `/api/lsp`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    "server.formatter": {
+      status: (input?: ServerFormatterStatusInput, requestOptions?: RequestOptions) =>
+        request<ServerFormatterStatusOutput>(
+          {
+            method: "GET",
+            path: `/api/formatter`,
             query: { location: input?.["location"] },
             successStatus: 200,
             declaredStatuses: [401, 400],

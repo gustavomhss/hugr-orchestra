@@ -6,25 +6,25 @@ import { mapClientError } from "./client-error"
 
 type RawClient = HttpApiClient.ForApi<typeof ClientApi>
 
-type Endpoint31_0Request = Parameters<RawClient["server.schedule"]["schedule.list"]>[0]
-type Endpoint31_0Input = { readonly location?: Endpoint31_0Request["query"]["location"] }
-const Endpoint31_0 = (raw: RawClient["server.schedule"]) => (input?: Endpoint31_0Input) =>
+type Endpoint32_0Request = Parameters<RawClient["server.schedule"]["schedule.list"]>[0]
+type Endpoint32_0Input = { readonly location?: Endpoint32_0Request["query"]["location"] }
+const Endpoint32_0 = (raw: RawClient["server.schedule"]) => (input?: Endpoint32_0Input) =>
   raw["schedule.list"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint31_1Request = Parameters<RawClient["server.schedule"]["schedule.create"]>[0]
-type Endpoint31_1Input = {
-  readonly location?: Endpoint31_1Request["query"]["location"]
-  readonly id?: Endpoint31_1Request["payload"]["id"]
-  readonly name: Endpoint31_1Request["payload"]["name"]
-  readonly prompt: Endpoint31_1Request["payload"]["prompt"]
-  readonly cadence: Endpoint31_1Request["payload"]["cadence"]
-  readonly next: Endpoint31_1Request["payload"]["next"]
-  readonly timezone: Endpoint31_1Request["payload"]["timezone"]
-  readonly minute?: Endpoint31_1Request["payload"]["minute"]
-  readonly enabled?: Endpoint31_1Request["payload"]["enabled"]
-  readonly history?: Endpoint31_1Request["payload"]["history"]
+type Endpoint32_1Request = Parameters<RawClient["server.schedule"]["schedule.create"]>[0]
+type Endpoint32_1Input = {
+  readonly location?: Endpoint32_1Request["query"]["location"]
+  readonly id?: Endpoint32_1Request["payload"]["id"]
+  readonly name: Endpoint32_1Request["payload"]["name"]
+  readonly prompt: Endpoint32_1Request["payload"]["prompt"]
+  readonly cadence: Endpoint32_1Request["payload"]["cadence"]
+  readonly next: Endpoint32_1Request["payload"]["next"]
+  readonly timezone: Endpoint32_1Request["payload"]["timezone"]
+  readonly minute?: Endpoint32_1Request["payload"]["minute"]
+  readonly enabled?: Endpoint32_1Request["payload"]["enabled"]
+  readonly history?: Endpoint32_1Request["payload"]["history"]
 }
-const Endpoint31_1 = (raw: RawClient["server.schedule"]) => (input: Endpoint31_1Input) =>
+const Endpoint32_1 = (raw: RawClient["server.schedule"]) => (input: Endpoint32_1Input) =>
   raw["schedule.create"]({
     query: { location: input["location"] },
     payload: {
@@ -40,18 +40,18 @@ const Endpoint31_1 = (raw: RawClient["server.schedule"]) => (input: Endpoint31_1
     },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint31_2Request = Parameters<RawClient["server.schedule"]["schedule.update"]>[0]
-type Endpoint31_2Input = {
-  readonly scheduleID: Endpoint31_2Request["params"]["scheduleID"]
-  readonly location?: Endpoint31_2Request["query"]["location"]
-  readonly name?: Endpoint31_2Request["payload"]["name"]
-  readonly prompt?: Endpoint31_2Request["payload"]["prompt"]
-  readonly cadence?: Endpoint31_2Request["payload"]["cadence"]
-  readonly next?: Endpoint31_2Request["payload"]["next"]
-  readonly timezone?: Endpoint31_2Request["payload"]["timezone"]
-  readonly enabled?: Endpoint31_2Request["payload"]["enabled"]
+type Endpoint32_2Request = Parameters<RawClient["server.schedule"]["schedule.update"]>[0]
+type Endpoint32_2Input = {
+  readonly scheduleID: Endpoint32_2Request["params"]["scheduleID"]
+  readonly location?: Endpoint32_2Request["query"]["location"]
+  readonly name?: Endpoint32_2Request["payload"]["name"]
+  readonly prompt?: Endpoint32_2Request["payload"]["prompt"]
+  readonly cadence?: Endpoint32_2Request["payload"]["cadence"]
+  readonly next?: Endpoint32_2Request["payload"]["next"]
+  readonly timezone?: Endpoint32_2Request["payload"]["timezone"]
+  readonly enabled?: Endpoint32_2Request["payload"]["enabled"]
 }
-const Endpoint31_2 = (raw: RawClient["server.schedule"]) => (input: Endpoint31_2Input) =>
+const Endpoint32_2 = (raw: RawClient["server.schedule"]) => (input: Endpoint32_2Input) =>
   raw["schedule.update"]({
     params: { scheduleID: input["scheduleID"] },
     query: { location: input["location"] },
@@ -65,30 +65,30 @@ const Endpoint31_2 = (raw: RawClient["server.schedule"]) => (input: Endpoint31_2
     },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint31_3Request = Parameters<RawClient["server.schedule"]["schedule.remove"]>[0]
-type Endpoint31_3Input = {
-  readonly scheduleID: Endpoint31_3Request["params"]["scheduleID"]
-  readonly location?: Endpoint31_3Request["query"]["location"]
+type Endpoint32_3Request = Parameters<RawClient["server.schedule"]["schedule.remove"]>[0]
+type Endpoint32_3Input = {
+  readonly scheduleID: Endpoint32_3Request["params"]["scheduleID"]
+  readonly location?: Endpoint32_3Request["query"]["location"]
 }
-const Endpoint31_3 = (raw: RawClient["server.schedule"]) => (input: Endpoint31_3Input) =>
+const Endpoint32_3 = (raw: RawClient["server.schedule"]) => (input: Endpoint32_3Input) =>
   raw["schedule.remove"]({ params: { scheduleID: input["scheduleID"] }, query: { location: input["location"] } }).pipe(
     Effect.mapError(mapClientError),
   )
 
-type Endpoint31_4Request = Parameters<RawClient["server.schedule"]["schedule.run"]>[0]
-type Endpoint31_4Input = {
-  readonly scheduleID: Endpoint31_4Request["params"]["scheduleID"]
-  readonly location?: Endpoint31_4Request["query"]["location"]
+type Endpoint32_4Request = Parameters<RawClient["server.schedule"]["schedule.run"]>[0]
+type Endpoint32_4Input = {
+  readonly scheduleID: Endpoint32_4Request["params"]["scheduleID"]
+  readonly location?: Endpoint32_4Request["query"]["location"]
 }
-const Endpoint31_4 = (raw: RawClient["server.schedule"]) => (input: Endpoint31_4Input) =>
+const Endpoint32_4 = (raw: RawClient["server.schedule"]) => (input: Endpoint32_4Input) =>
   raw["schedule.run"]({ params: { scheduleID: input["scheduleID"] }, query: { location: input["location"] } }).pipe(
     Effect.mapError(mapClientError),
   )
 
-export const adaptGroup31 = (raw: RawClient["server.schedule"]) => ({
-  list: Endpoint31_0(raw),
-  create: Endpoint31_1(raw),
-  update: Endpoint31_2(raw),
-  remove: Endpoint31_3(raw),
-  run: Endpoint31_4(raw),
+export const adaptGroup32 = (raw: RawClient["server.schedule"]) => ({
+  list: Endpoint32_0(raw),
+  create: Endpoint32_1(raw),
+  update: Endpoint32_2(raw),
+  remove: Endpoint32_3(raw),
+  run: Endpoint32_4(raw),
 })

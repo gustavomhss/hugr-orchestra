@@ -11,6 +11,7 @@ import { VcsGroup } from "./groups/vcs"
 import { CommandGroup } from "./groups/command"
 import { McpGroup } from "./groups/mcp"
 import { LspGroup } from "./groups/lsp"
+import { FormatterGroup } from "./groups/formatter"
 import { SkillGroup } from "./groups/skill"
 import { BehaviorGroup } from "./groups/behavior"
 import { EventGroup, makeEventGroup } from "./groups/event"
@@ -74,6 +75,7 @@ const makeApiFromGroup = <
     .add(CommandGroup.middleware(locationMiddleware))
     .add(McpGroup.middleware(locationMiddleware))
     .add(LspGroup.middleware(locationMiddleware))
+    .add(FormatterGroup.middleware(locationMiddleware))
     .add(SkillGroup.middleware(locationMiddleware))
     .add(BehaviorGroup.middleware(locationMiddleware))
     .add(eventGroup)

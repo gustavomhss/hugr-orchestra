@@ -110,7 +110,7 @@ export function createFetch(override?: FetchHandler, events?: ReturnType<typeof 
         location: { directory, project: { id: "proj_test", directory: worktree } },
         data: [],
       })
-    if (["/api/lsp", "/api/mcp"].includes(url.pathname))
+    if (["/api/formatter", "/api/lsp", "/api/mcp"].includes(url.pathname))
       return json({ location: { directory, project: { id: "proj_test", directory: worktree } }, data: [] })
     if (url.pathname === "/api/model/default")
       return json({ location: { directory, project: { id: "proj_test", directory: worktree } }, data: null })
