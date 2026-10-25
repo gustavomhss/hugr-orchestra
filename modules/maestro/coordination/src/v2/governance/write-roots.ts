@@ -8,7 +8,10 @@ import { Location } from "@orchestra/core/location"
 import type { PermissionV2 } from "@orchestra/core/permission"
 import { SessionSchema, SessionStore } from "@orchestra/core/session"
 import { ToolSafety } from "@orchestra/core/tool-safety"
+import { BackendToolkit } from "@orchestra/core/backend-toolkit"
+import { TRUNCATION_DIR } from "@orchestra/core/tool/truncation-dir"
 import { ArsenalNative } from "../../arsenal-native"
+import { Seats, type Seat } from "../../seats"
 
 // A write-roots seat's scope is bound by the host at Task dispatch and enforced by ToolSafety, never by the charter. It
 // is stored as reserved rules in the child Session's permission ruleset, so it is durable and no tool permission ever
@@ -42,21 +45,75 @@ export function read(permission: PermissionV2.Ruleset | undefined) {
 
 /**
  * The child's profile: the project profile with write roots narrowed to the bound roots, and every shell command
- * confined by the platform sandbox with a per-command scratch TMPDIR. Where this host has no sandbox yet, shell
- * commands run without the jail and the host fact says so; edit tools enforce the roots everywhere.
+ * confined by the platform sandbox with a per-command scratch TMPDIR. A host without a sandbox refuses the command;
+ * edit tools enforce the roots everywhere.
  */
 export function profile(project: ToolSafety.Profile | undefined, roots: ReadonlyArray<string>, directory: string) {
   return {
     ...project,
     writeRoots: intersect(project?.writeRoots, roots, directory),
     requireSandbox: true,
-    sandbox: { ...project?.sandbox, enabled: true, scratch: true, unconfinedFallback: true },
+    sandbox: { ...project?.sandbox, enabled: true, scratch: true, unconfinedFallback: false },
   } satisfies ToolSafety.Profile
 }
 
 /**
- * The Location's ToolSafety, over the Arsenal's native one, narrowed to the write roots bound to the calling Session.
- * The Session's rules are read on every call, so a binding made while it runs applies to its next tool call.
+ * A native seat cannot ask the owner, so on macOS and Linux its commands run in the OS sandbox with reads confined to its
+ * worktree (and the git directories a linked worktree keeps outside it), saved tool output, the external directories its
+ * native profile grants, the backend toolkit for the toolkit seat, and the host toolchain (ToolSafetySandbox.toolchain).
+ * Writes stay in its bound roots, else the project's, else the worktree. A host without a sandbox refuses the command.
+ * Windows has no read sandbox, so seats there keep the bound-root profile only.
+ */
+export const confine = Effect.fn("WriteRootsV2.confine")(function* (
+  fs: FSUtil.Interface,
+  scoped: ToolSafety.Profile | undefined,
+  seat: Seat,
+  location: Location.Interface,
+) {
+  const { nativeProfiles } = yield* Effect.tryPromise(() => import("../../roster")).pipe(
+    Effect.mapError(() => new ToolSafety.Denied({ reason: "seat-profile-unavailable" })),
+  )
+  const worktree = location.project.directory === "/" ? location.directory : location.project.directory
+  const external = nativeProfiles[seat.id]?.external_directory
+  const granted =
+    typeof external === "object"
+      ? Object.entries(external)
+          .filter((rule) => rule[1] === "allow" && rule[0] !== "*")
+          .map((rule) => rule[0].replace(/[\\/]\*$/, ""))
+      : []
+  // A linked worktree's `.git` file names its git directory, whose `commondir` names the repository's shared one.
+  const text = (file: string) => fs.readFileStringSafe(file).pipe(Effect.catch(() => Effect.succeed(undefined)))
+  const gitdir = (yield* text(path.join(worktree, ".git")))?.match(/^gitdir: (.+)$/m)?.[1].trim()
+  const gitdirs = gitdir ? [path.resolve(worktree, gitdir)] : []
+  const common = gitdirs.length ? (yield* text(path.join(gitdirs[0], "commondir")))?.trim() : undefined
+  return {
+    ...scoped,
+    requireSandbox: true,
+    writeRoots: scoped?.writeRoots ?? [worktree],
+    sandbox: {
+      ...scoped?.sandbox,
+      enabled: true,
+      scratch: true,
+      unconfinedFallback: false,
+      readRoots: [
+        ...new Set([
+          worktree,
+          location.directory,
+          ...gitdirs,
+          ...(common ? [path.resolve(gitdirs[0], common)] : []),
+          TRUNCATION_DIR,
+          ...granted,
+          ...(seat.toolkit ? [yield* BackendToolkit.Root] : []),
+        ]),
+      ],
+    },
+  } satisfies ToolSafety.Profile
+})
+
+/**
+ * The Location's ToolSafety, over the Arsenal's native one, narrowed to the write roots bound to the calling Session and,
+ * for a native seat, confined as `confine` says. The Session's rules are read on every call, so a binding made while it
+ * runs applies to its next tool call.
  */
 export const safetyNode = {
   ...ArsenalNative.nativeSafetyNode,
@@ -66,37 +123,40 @@ export const safetyNode = {
       const safety = yield* ToolSafety.Service
       const store = yield* SessionStore.Service
       const location = yield* Location.Service
+      const fs = yield* FSUtil.Service
       const roots = (sessionID: string) =>
         Schema.is(SessionSchema.ID)(sessionID) ? store.permissions(sessionID).pipe(Effect.map(read)) : Effect.succeed(undefined)
+      const narrow = (input: ToolSafety.Invocation, project: ToolSafety.Profile | undefined, bound: ReadonlyArray<string> | undefined) => {
+        const scoped = bound ? profile(project, bound, location.directory) : project
+        const seat = Seats.find(input.agent)
+        if (!seat || (process.platform !== "darwin" && process.platform !== "linux")) return Effect.succeed(scoped)
+        return confine(fs, scoped, seat, location)
+      }
       return ToolSafety.Service.of({
         ...safety,
         before: (input) =>
           Effect.gen(function* () {
             const bound = yield* roots(input.sessionID)
-            if (!bound) return yield* safety.before(input)
-            const project = yield* ToolSafety.RuntimeProfile
-            return yield* safety.before(input).pipe(
-              Effect.provideService(ToolSafety.RuntimeProfile, profile(project, bound, location.directory)),
-            )
+            if (!bound && !Seats.find(input.agent)) return yield* safety.before(input)
+            const scoped = yield* narrow(input, yield* ToolSafety.RuntimeProfile, bound)
+            return yield* safety.before(input).pipe(Effect.provideService(ToolSafety.RuntimeProfile, scoped))
           }),
         run: (input, effect, observe, outcome) =>
           Effect.gen(function* () {
             const bound = yield* roots(input.sessionID)
-            if (!bound) return yield* safety.run(input, effect, observe, outcome)
+            if (!bound && !Seats.find(input.agent)) return yield* safety.run(input, effect, observe, outcome)
             const load = yield* ToolSafety.RuntimeProfileLoader
             const fallback = yield* ToolSafety.RuntimeProfile
             return yield* safety.run(input, effect, observe, outcome).pipe(
               Effect.provideService(ToolSafety.RuntimeProfileLoader, () =>
-                (load ? load() : Effect.succeed(fallback)).pipe(
-                  Effect.map((project) => profile(project, bound, location.directory)),
-                ),
+                (load ? load() : Effect.succeed(fallback)).pipe(Effect.flatMap((project) => narrow(input, project, bound))),
               ),
             )
           }),
       })
     }),
   ).pipe(Layer.provide(ArsenalNative.nativeSafetyNode.implementation)),
-  dependencies: [...ArsenalNative.nativeSafetyNode.dependencies, SessionStore.node, Location.node],
+  dependencies: [...ArsenalNative.nativeSafetyNode.dependencies, SessionStore.node, Location.node, FSUtil.node],
 }
 
 // A bound root survives only inside a project root; a project root inside a bound root narrows it.

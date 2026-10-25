@@ -5,6 +5,8 @@ import { ToolFailure } from "@orchestra/llm"
 import { Effect, Layer, type Scope } from "effect"
 import { Project } from "@orchestra/core/project"
 import { ToolSafety } from "@orchestra/core/tool-safety"
+import { BackendToolkit } from "@orchestra/core/backend-toolkit"
+import { TRUNCATION_DIR } from "@orchestra/core/tool/truncation-dir"
 import { WriteRootsV2 } from "../src/v2/governance/write-roots"
 import { admit, governanceLayer, safetyLayer, session, worktree } from "./fixture/v2-governance"
 
@@ -86,7 +88,7 @@ test("read and profile narrow a project profile to the bound roots", () => {
   const narrowed = WriteRootsV2.profile({ writeRoots: ["src"], sandbox: { enabled: false } }, ["/w/src/a", "/w/lib"], "/w")
   expect(narrowed.writeRoots).toEqual(["/w/src/a"])
   expect(narrowed.requireSandbox).toBe(true)
-  expect(narrowed.sandbox).toEqual({ enabled: true, scratch: true, unconfinedFallback: true })
+  expect(narrowed.sandbox).toEqual({ enabled: true, scratch: true, unconfinedFallback: false })
   expect(WriteRootsV2.profile(undefined, ["/w/lib"], "/w").writeRoots).toEqual(["/w/lib"])
 })
 
@@ -113,5 +115,42 @@ test("the Location's ToolSafety holds a scoped Session's writes to its bound roo
       const denied = yield* Effect.flip(write(scoped, path.join(directory, "outside.ts")))
       expect(denied instanceof ToolSafety.Denied && denied.reason).toBe("write-outside-physical-roots")
       expect(yield* write(plain, path.join(directory, "outside.ts"))).toBe("written")
+    }),
+  ))
+
+test("a native seat's shell is confined to its worktree reads and refused without a sandbox; other agents are not", () =>
+  run(safetyLayer, (directory) =>
+    Effect.gen(function* () {
+      const safety = yield* ToolSafety.Service
+      yield* Effect.promise(() => mkdir(path.join(directory, "src")))
+      const scoped = yield* session({
+        directory, agent: "backend",
+        permission: [
+          { permission: PERMISSION, pattern: "*", action: "deny" },
+          { permission: PERMISSION, pattern: path.join(directory, "src"), action: "allow" },
+        ],
+      })
+      const plain = yield* session({ directory, agent: "lucy" })
+      const general = yield* session({ directory, agent: "general" })
+      const shell = (sessionID: string, agent: string) =>
+        safety.run(
+          { tool: "bash", args: { command: "true" }, sessionID, callID: "call", agent, directory, projectID: Project.ID.global },
+          ToolSafety.RuntimeProfile,
+          () => Effect.void,
+        )
+      const backend = yield* shell(scoped, "backend")
+      expect(backend?.requireSandbox).toBe(true)
+      expect(backend?.writeRoots).toEqual([path.join(directory, "src")])
+      expect(backend?.sandbox?.unconfinedFallback).toBe(false)
+      expect(backend?.sandbox?.readRoots?.slice(0, 2)).toEqual([directory, TRUNCATION_DIR])
+      expect(backend?.sandbox?.readRoots).toContain(yield* BackendToolkit.Root)
+      expect(backend?.sandbox?.readRoots?.every((root) => root !== path.parse(root).root)).toBe(true)
+      const lucy = yield* shell(plain, "lucy")
+      expect(lucy?.requireSandbox).toBe(true)
+      expect(lucy?.writeRoots).toEqual([directory])
+      expect(lucy?.sandbox).toMatchObject({ enabled: true, unconfinedFallback: false })
+      expect(lucy?.sandbox?.readRoots?.slice(0, 2)).toEqual([directory, TRUNCATION_DIR])
+      expect(lucy?.sandbox?.readRoots).not.toContain(yield* BackendToolkit.Root)
+      expect(yield* shell(general, "general")).toBeUndefined()
     }),
   ))
