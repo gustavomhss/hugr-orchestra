@@ -34,6 +34,7 @@ import { coverageResult, parseOptions, routeKey, routeKeys, selectedScenarios } 
 import { integrationScenarios } from "./integration"
 import { mcpScenarios } from "./mcp"
 import { relayScenarios } from "./relay"
+import { guardrailScenarios } from "./guardrail"
 import { runScenario } from "./runner"
 import { credentialScenarios } from "./credential"
 import { providerScenarios } from "./provider"
@@ -78,6 +79,7 @@ const scenarios: Scenario[] = [
   http.protected.get("/agent", "app.agents").json(200, array, "status"),
   ...skillScenarios,
   ...relayScenarios,
+  ...guardrailScenarios,
   ...catalogScenarios,
   ...researchArtifactScenarios,
   ...actionsBindingScenarios,

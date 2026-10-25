@@ -275,6 +275,7 @@
             "src/snapshot.ts",
             "src/patch.ts",
             "src/pull-request.ts",
+            "src/guardrail.ts",
             "src/workspace.ts"
           ]
         },
