@@ -6,7 +6,7 @@ import "./comet-splash.css"
 const WORD = "HUMAN GUARDRAIL"
 // Subset of Michroma (SIL OFL, see michroma-OFL.txt) holding only the wordmark's glyphs.
 const FAMILY = "HuGR Wordmark"
-const TEXT = { "font-family": FAMILY, "font-size": "66", "letter-spacing": "7", x: "600", y: "98", "text-anchor": "middle" }
+const TEXT = { "font-family": FAMILY, "font-size": "66", "letter-spacing": "7", x: "600", y: "98", "text-anchor": "middle" } as const
 
 // The opening animation: a comet strikes the plate and the HuGR symbol forms, then the wordmark slams in under it
 // and a light sweeps across. It covers whatever is still loading underneath, plays once per window load and then
@@ -131,7 +131,7 @@ export function CometSplash() {
                   </feSpecularLighting>
                   <feComposite in="s" in2="SourceAlpha" operator="in" result="sp" />
                   <feComposite in="SourceGraphic" in2="sp" operator="arithmetic" k2="1" k3=".75" result="lit" />
-                  <feDropShadow in="lit" dx="0" dy="4" stdDeviation="5" flood-color="#000814" flood-opacity=".8" />
+                  <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#000814" flood-opacity=".8" />
                 </filter>
               </defs>
               <g class="comet-splash-flare">
