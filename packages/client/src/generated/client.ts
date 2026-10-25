@@ -354,6 +354,8 @@ import type {
   ArtifactsListOutput,
   ArtifactsGetInput,
   ArtifactsGetOutput,
+  ArtifactsContentTicketInput,
+  ArtifactsContentTicketOutput,
   ArtifactsShareInput,
   ArtifactsShareOutput,
   ArtifactsPinInput,
@@ -2867,6 +2869,18 @@ export function make(options: ClientOptions) {
           {
             method: "GET",
             path: `/api/capability/sessions/${encodeURIComponent(input.sessionID)}/artifacts/${encodeURIComponent(input.artifactID)}/${encodeURIComponent(input.revision)}`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 409, 500, 401, 403],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      contentTicket: (input: ArtifactsContentTicketInput, requestOptions?: RequestOptions) =>
+        request<ArtifactsContentTicketOutput>(
+          {
+            method: "POST",
+            path: `/api/capability/sessions/${encodeURIComponent(input.sessionID)}/artifacts/${encodeURIComponent(input.artifactID)}/${encodeURIComponent(input.revision)}/content-ticket`,
             query: { location: input["location"] },
             successStatus: 200,
             declaredStatuses: [400, 409, 500, 401, 403],

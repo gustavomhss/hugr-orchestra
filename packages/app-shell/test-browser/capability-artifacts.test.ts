@@ -27,15 +27,22 @@ if (process.env.CAPABILITY_ARTIFACTS_DOM !== "1") {
   const ref = { id: Capability.ArtifactID.make(`cart_${"1".padStart(26, "0")}`), revision: 0 }
   const artifact = { artifact: ref, mime: "image/png", kind: "file", hash: "a".repeat(64), bytes: 68,
     verification: "observed", timeCreated: 1, pinned: false }
+  const clip = { ...artifact, artifact: { id: Capability.ArtifactID.make(`cart_${"2".padStart(26, "0")}`), revision: 0 },
+    mime: "video/mp4", bytes: 4096, timeCreated: 2 }
   // A 1x1 PNG, so the preview decodes a real image body.
   const png = Uint8Array.from(atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="),
     (char) => char.charCodeAt(0))
   const requests: string[] = []
+  const tickets = { minted: 0 }
   const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
     const url = new URL(request.url)
     requests.push(url.pathname)
     if (url.pathname.endsWith("/content")) return new Response(png, { headers: { "content-type": "image/png" } })
-    if (url.pathname.endsWith("/artifacts")) return Response.json({ items: [artifact], coverage: "live" })
+    if (url.pathname.endsWith("/content-ticket")) {
+      tickets.minted++
+      return Response.json({ url: `/api/capability/content/ticket-${tickets.minted}`, expiresAt: Date.now() + 300000 })
+    }
+    if (url.pathname.endsWith("/artifacts")) return Response.json({ items: [artifact, clip], coverage: "live" })
     return Response.json(artifact)
   } })
 
@@ -115,12 +122,28 @@ if (process.env.CAPABILITY_ARTIFACTS_DOM !== "1") {
     await until(() => !!host.querySelector('[data-slot="artifact-preview"] img'), host)
     expect(opened()).toBe(true)
     expect(active()).toBe("artifacts")
-    expect(host.querySelector('[data-slot="artifacts-row"]')?.getAttribute("aria-pressed")).toBe("true")
+    const rows = () => [...host.querySelectorAll<HTMLButtonElement>('[data-slot="artifacts-row"]')]
+    expect(rows().map((row) => row.getAttribute("aria-pressed")).filter((pressed) => pressed === "true")).toHaveLength(1)
     expect(host.querySelector('[data-slot="artifact-preview"]')?.getAttribute("data-preview")).toBe("image")
     expect(host.querySelector('[data-slot="artifact-preview"] img')?.getAttribute("src")).toStartWith("blob:")
     // An unverified artifact says so next to its preview.
     expect(host.querySelector('[data-slot="artifact-unverified"]')).not.toBeNull()
     expect(requests.some((item) => item.endsWith(`/artifacts/${ref.id}/0/content`))).toBe(true)
+
+    // A video streams from a header-free ticket URL instead of a downloaded blob.
+    rows().find((row) => row.getAttribute("aria-pressed") !== "true")?.click()
+    await until(() => !!host.querySelector('[data-slot="artifact-preview"] video'), host)
+    const video = () => host.querySelector<HTMLVideoElement>('[data-slot="artifact-preview"] video')!
+    expect(video().getAttribute("src")).toBe(new URL("/api/capability/content/ticket-1", server.url).href)
+    expect(requests.some((item) => item.endsWith(`/artifacts/${clip.artifact.id}/0/content`))).toBe(false)
+
+    // An expired ticket fails the element once; the panel mints a fresh one.
+    video().dispatchEvent(new Event("error"))
+    await until(() => video()?.getAttribute("src")?.endsWith("/ticket-2") ?? false, host)
+    // A second failure before playback resumes is a real error, not another mint.
+    video().dispatchEvent(new Event("error"))
+    await until(() => host.querySelector('[data-slot="artifact-preview"]')?.getAttribute("data-status") === "error", host)
+    expect(tickets.minted).toBe(2)
 
     dispose()
     host.remove()

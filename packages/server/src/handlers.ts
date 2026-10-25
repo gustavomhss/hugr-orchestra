@@ -43,7 +43,7 @@ import { ActionsSourceHandler } from "./handlers/actions-source"
 import { ActionsTransferHandler } from "./handlers/actions-transfer"
 import { CapabilityOperatorHandler } from "./handlers/capability-operator"
 import { CapabilityConnectionsHandler } from "./handlers/capability-connections"
-import { CapabilityArtifactsHandler } from "./handlers/capability-artifacts"
+import { CapabilityArtifactsHandler, CapabilityContentHandler } from "./handlers/capability-artifacts"
 import { CapabilitySchedulesHandler } from "./handlers/capability-schedules"
 
 export const handlers = Layer.mergeAll(
@@ -94,4 +94,5 @@ export const handlers = Layer.mergeAll(
   CapabilityConnectionsHandler,
   CapabilityArtifactsHandler,
   CapabilitySchedulesHandler,
+  CapabilityContentHandler,
 )

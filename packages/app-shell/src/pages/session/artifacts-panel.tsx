@@ -13,6 +13,7 @@ import { useSync } from "@/context/sync"
 import { bytes, relative } from "@/orchestra/actions/format"
 import type { Artifact, ArtifactRef, ArtifactSelection, ArtifactsOutcome } from "./artifacts-model"
 import { previewKind } from "./artifacts-model"
+import { sheetRows } from "./artifacts-sheet"
 import { useSessionCapabilities } from "./capabilities"
 
 const KIND_ICON = { image: "photo", video: "photo", pdf: "open-file", sheet: "bullet-list", download: "download" } as const
@@ -112,8 +113,24 @@ function ArtifactDetail(props: { selection: ArtifactSelection }) {
   const [preview, setPreview] = createStore<{ status: "loading" | "ready" | "error"; url?: string; rows?: string[][];
     truncated: boolean }>({ status: "loading", truncated: false })
 
-  // Capability content needs the Authorization header, so the preview reads it as a blob instead of pointing the
-  // element at the route.
+  // A video streams from a header-free ticket URL with its own range requests. Other kinds read the content as a blob,
+  // because capability content otherwise needs the Authorization header.
+  const stream = { controller: new AbortController(), retried: false, resumeAt: 0 }
+  const mint = () => {
+    const current = session()
+    if (!current) return
+    const controller = stream.controller
+    void current.api.ticket(ref(), controller.signal).then((ticket) => setPreview({ status: "ready", url: ticket.url }), () => {
+      if (!controller.signal.aborted) setPreview({ status: "error" })
+    })
+  }
+  // A ticket expires after a few minutes or on a server restart; mint one fresh ticket and resume where playback stopped.
+  const restream = (video: HTMLVideoElement) => {
+    if (stream.retried) return setPreview({ status: "error" })
+    stream.retried = true
+    stream.resumeAt = video.currentTime
+    mint()
+  }
   createEffect(on(() => props.selection.url, () => {
     const current = session()
     if (!current || props.selection.preview === "download") return
@@ -124,15 +141,19 @@ function ArtifactDetail(props: { selection: ArtifactSelection }) {
       controller.abort()
       if (owned.url) URL.revokeObjectURL(owned.url)
     })
+    if (props.selection.preview === "video") {
+      Object.assign(stream, { controller, retried: false, resumeAt: 0 })
+      return mint()
+    }
     void current.api.read(ref(), controller.signal).then(async (blob) => {
       if (props.selection.preview !== "sheet") {
         owned.url = URL.createObjectURL(blob)
         return setPreview({ status: "ready", url: owned.url })
       }
-      const rows = sheetRows(artifact().mime, await blob.text())
+      const rows = await sheetRows(artifact().mime, blob, SHEET_ROWS + 1)
       if (!rows) return setPreview({ status: "error" })
       setPreview({ status: "ready", rows: rows.slice(0, SHEET_ROWS), truncated: rows.length > SHEET_ROWS })
-    }, () => {
+    }).catch(() => {
       if (!controller.signal.aborted) setPreview({ status: "error" })
     })
   }))
@@ -206,7 +227,19 @@ function ArtifactDetail(props: { selection: ArtifactSelection }) {
             {(url) => <img src={url()} alt={artifact().kind} draggable={false} />}
           </Match>
           <Match when={props.selection.preview === "video" && preview.url}>
-            {(url) => <video src={url()} controls preload="metadata" aria-label={artifact().kind} />}
+            {(url) => (
+              <video
+                src={url()}
+                controls
+                preload="metadata"
+                aria-label={artifact().kind}
+                onError={(event) => restream(event.currentTarget)}
+                onLoadedMetadata={(event) => {
+                  if (stream.resumeAt) event.currentTarget.currentTime = stream.resumeAt
+                }}
+                onPlaying={() => (stream.retried = false)}
+              />
+            )}
           </Match>
           <Match when={props.selection.preview === "pdf" && preview.url}>
             {(url) => <iframe src={url()} title={artifact().kind} />}
@@ -355,20 +388,4 @@ function ShareDialog(props: { artifact: ArtifactRef }) {
       </div>
     </Dialog>
   )
-}
-
-/** The first sheet of a delimited file; binary workbooks have no reader here and fall back to Download. */
-function sheetRows(mime: string, text: string) {
-  const type = mime.split(";")[0].trim().toLowerCase()
-  if (type !== "text/csv" && type !== "text/tab-separated-values") return
-  const delimiter = type === "text/csv" ? "," : "\t"
-  // A field is either quoted (doubled quotes escape a quote) or runs to the next delimiter or line break.
-  const field = new RegExp(`(?:"((?:[^"]|"")*)"|([^"${delimiter}\\n]*))(${delimiter}|\\n|$)`, "g")
-  const rows: string[][] = [[]]
-  for (const match of text.replace(/\r\n?/g, "\n").matchAll(field)) {
-    rows[rows.length - 1].push(match[1] === undefined ? match[2] : match[1].replaceAll('""', '"'))
-    if (match[3] === "") break
-    if (match[3] === "\n") rows.push([])
-  }
-  return rows.filter((row) => row.some((value) => value !== ""))
 }

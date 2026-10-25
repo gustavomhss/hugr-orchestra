@@ -104,4 +104,5 @@ export const endpointNames = {
 } as const
 
 // Raw transfers use the handwritten streaming adapter; JSON metadata/admission stay generated.
-export const omitEndpoints = new Set(["pty.connect", "pty.connectToken", "actions.transfer.read", "actions.transfer.upload", "capability.artifact.content"])
+export const omitEndpoints = new Set(["pty.connect", "pty.connectToken", "actions.transfer.read", "actions.transfer.upload", "capability.artifact.content",
+  "capability.content.read"])

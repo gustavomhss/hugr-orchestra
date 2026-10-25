@@ -60,7 +60,7 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
     >
       <div class="integrations-screen" aria-busy={props.model.state.busy}>
         <p class="mx-note">{language.t("orchestra.integrations.supported")}</p>
-        <Show when={!props.basic}>
+        <Show when={props.model.state.hostAuthorization}>
           <form
             class="integrations-auth"
             ref={(element) => {
@@ -183,6 +183,13 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
                       <div class="mx-meta">
                         <MxBadge>{language.t(`orchestra.integrations.state.${current().state}`)}</MxBadge>
                         <MxBadge>{language.t(`orchestra.integrations.credential.${current().credential}`)}</MxBadge>
+                        <Show when={props.model.state.verifications[current().connection.id]}>
+                          {(verification) => (
+                            <MxBadge tone={verification() === "verified" ? "good" : undefined}>
+                              {language.t(`orchestra.integrations.verification.${verification()}`)}
+                            </MxBadge>
+                          )}
+                        </Show>
                       </div>
                     )}
                   </Show>

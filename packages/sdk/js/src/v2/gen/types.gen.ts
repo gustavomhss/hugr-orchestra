@@ -4725,6 +4725,17 @@ export type RelayExternalAudit = {
   }>
 }
 
+export type CapabilityArtifactContentTicket = {
+  /**
+   * Relative path that serves the bytes without an Authorization header.
+   */
+  url: string
+  /**
+   * Expiry as Unix epoch milliseconds.
+   */
+  expiresAt: number
+}
+
 export type EffectHttpApiErrorForbidden = {
   _tag: "Forbidden"
 }
@@ -26839,6 +26850,58 @@ export type ServerCapabilityArtifactsCapabilityArtifactContentResponses = {
 export type ServerCapabilityArtifactsCapabilityArtifactContentResponse =
   ServerCapabilityArtifactsCapabilityArtifactContentResponses[keyof ServerCapabilityArtifactsCapabilityArtifactContentResponses]
 
+export type ServerCapabilityArtifactsCapabilityArtifactContentTicketData = {
+  body?: never
+  path: {
+    sessionID: string
+    artifactID: CapabilityArtifactId
+    revision: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/capability/sessions/{sessionID}/artifacts/{artifactID}/{revision}/content-ticket"
+}
+
+export type ServerCapabilityArtifactsCapabilityArtifactContentTicketErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ForbiddenError
+   */
+  403: ForbiddenError
+  /**
+   * ConflictError
+   */
+  409: ConflictError
+  /**
+   * UnknownError
+   */
+  500: UnknownError1
+}
+
+export type ServerCapabilityArtifactsCapabilityArtifactContentTicketError =
+  ServerCapabilityArtifactsCapabilityArtifactContentTicketErrors[keyof ServerCapabilityArtifactsCapabilityArtifactContentTicketErrors]
+
+export type ServerCapabilityArtifactsCapabilityArtifactContentTicketResponses = {
+  /**
+   * CapabilityArtifactContentTicket
+   */
+  200: CapabilityArtifactContentTicket
+}
+
+export type ServerCapabilityArtifactsCapabilityArtifactContentTicketResponse =
+  ServerCapabilityArtifactsCapabilityArtifactContentTicketResponses[keyof ServerCapabilityArtifactsCapabilityArtifactContentTicketResponses]
+
 export type ServerCapabilityArtifactsCapabilityArtifactShareData = {
   body: {
     targetSessionID: string
@@ -27292,6 +27355,66 @@ export type ServerCapabilitySchedulesCapabilityScheduleRemoveResponses = {
 
 export type ServerCapabilitySchedulesCapabilityScheduleRemoveResponse =
   ServerCapabilitySchedulesCapabilityScheduleRemoveResponses[keyof ServerCapabilitySchedulesCapabilityScheduleRemoveResponses]
+
+export type ServerCapabilityContentCapabilityContentReadData = {
+  body?: never
+  headers?: {
+    range?: string
+  }
+  path: {
+    ticket: string
+  }
+  query?: never
+  url: "/api/capability/content/{ticket}"
+}
+
+export type ServerCapabilityContentCapabilityContentReadErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * <No Content> | UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ForbiddenError
+   */
+  403: ForbiddenError
+  /**
+   * <No Content>
+   */
+  404: unknown
+  /**
+   * ConflictError
+   */
+  409: ConflictError
+  /**
+   * <No Content>
+   */
+  416: unknown
+  /**
+   * UnknownError
+   */
+  500: UnknownError1
+}
+
+export type ServerCapabilityContentCapabilityContentReadError =
+  ServerCapabilityContentCapabilityContentReadErrors[keyof ServerCapabilityContentCapabilityContentReadErrors]
+
+export type ServerCapabilityContentCapabilityContentReadResponses = {
+  /**
+   * Success
+   */
+  200: Blob | File
+  /**
+   * Success
+   */
+  206: Blob | File
+}
+
+export type ServerCapabilityContentCapabilityContentReadResponse =
+  ServerCapabilityContentCapabilityContentReadResponses[keyof ServerCapabilityContentCapabilityContentReadResponses]
 
 export type PtyConnectData = {
   body?: never

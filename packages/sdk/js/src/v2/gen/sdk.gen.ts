@@ -367,6 +367,8 @@ import type {
   ServerActionsWorkflowActionsWorkflowStateResponses,
   ServerCapabilityArtifactsCapabilityArtifactContentErrors,
   ServerCapabilityArtifactsCapabilityArtifactContentResponses,
+  ServerCapabilityArtifactsCapabilityArtifactContentTicketErrors,
+  ServerCapabilityArtifactsCapabilityArtifactContentTicketResponses,
   ServerCapabilityArtifactsCapabilityArtifactGetErrors,
   ServerCapabilityArtifactsCapabilityArtifactGetResponses,
   ServerCapabilityArtifactsCapabilityArtifactListErrors,
@@ -401,6 +403,8 @@ import type {
   ServerCapabilityConnectionsCapabilityTargetRemoveResponses,
   ServerCapabilityConnectionsCapabilityTargetRetargetErrors,
   ServerCapabilityConnectionsCapabilityTargetRetargetResponses,
+  ServerCapabilityContentCapabilityContentReadErrors,
+  ServerCapabilityContentCapabilityContentReadResponses,
   ServerCapabilityOperatorCapabilityOperatorInspectErrors,
   ServerCapabilityOperatorCapabilityOperatorInspectResponses,
   ServerCapabilitySchedulesCapabilityScheduleListErrors,
@@ -15144,6 +15148,47 @@ export class Artifact extends HeyApiClient {
     })
   }
 
+  /**
+   * Mint an artifact content ticket
+   *
+   * Short-lived URL for the same bytes as `content`, bound to this caller, revision and Location.
+   */
+  public contentTicket<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+      artifactID: CapabilityArtifactId
+      revision: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "sessionID" },
+            { in: "path", key: "artifactID" },
+            { in: "path", key: "revision" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerCapabilityArtifactsCapabilityArtifactContentTicketResponses,
+      ServerCapabilityArtifactsCapabilityArtifactContentTicketErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/sessions/{sessionID}/artifacts/{artifactID}/{revision}/content-ticket",
+      ...options,
+      ...params,
+    })
+  }
+
   public share<ThrowOnError extends boolean = false>(
     parameters: {
       "idempotency-key": string
@@ -15433,7 +15478,57 @@ export class Schedules extends HeyApiClient {
   }
 }
 
+export class Content extends HeyApiClient {
+  /**
+   * Read artifact bytes by ticket
+   *
+   * Header-free read for media elements. Same bytes and headers as `content`; invalid tickets yield 401.
+   */
+  public read<ThrowOnError extends boolean = false>(
+    parameters: {
+      range?: string
+      ticket: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "headers", key: "range" },
+            { in: "path", key: "ticket" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerCapabilityContentCapabilityContentReadResponses,
+      ServerCapabilityContentCapabilityContentReadErrors,
+      ThrowOnError
+    >({
+      url: "/api/capability/content/{ticket}",
+      ...options,
+      ...params,
+    })
+  }
+}
+
 export class Capability5 extends HeyApiClient {
+  private _content?: Content
+  get content(): Content {
+    return (this._content ??= new Content({ client: this.client }))
+  }
+}
+
+export class Content2 extends HeyApiClient {
+  private _capability?: Capability5
+  get capability(): Capability5 {
+    return (this._capability ??= new Capability5({ client: this.client }))
+  }
+}
+
+export class Capability6 extends HeyApiClient {
   private _operator?: Operator2
   get operator(): Operator2 {
     return (this._operator ??= new Operator2({ client: this.client }))
@@ -15452,6 +15547,11 @@ export class Capability5 extends HeyApiClient {
   private _schedules?: Schedules
   get schedules(): Schedules {
     return (this._schedules ??= new Schedules({ client: this.client }))
+  }
+
+  private _content?: Content2
+  get content(): Content2 {
+    return (this._content ??= new Content2({ client: this.client }))
   }
 }
 
@@ -15501,9 +15601,9 @@ export class Server extends HeyApiClient {
     return (this._actionsTransfer ??= new ActionsTransfer({ client: this.client }))
   }
 
-  private _capability?: Capability5
-  get capability(): Capability5 {
-    return (this._capability ??= new Capability5({ client: this.client }))
+  private _capability?: Capability6
+  get capability(): Capability6 {
+    return (this._capability ??= new Capability6({ client: this.client }))
   }
 }
 

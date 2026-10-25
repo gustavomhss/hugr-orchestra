@@ -2371,16 +2371,29 @@ const Endpoint45_1 = (raw: RawClient["server.capability.artifacts"]) => (input: 
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint45_2Request = Parameters<RawClient["server.capability.artifacts"]["capability.artifact.share"]>[0]
+type Endpoint45_2Request = Parameters<RawClient["server.capability.artifacts"]["capability.artifact.contentTicket"]>[0]
 type Endpoint45_2Input = {
   readonly sessionID: Endpoint45_2Request["params"]["sessionID"]
   readonly artifactID: Endpoint45_2Request["params"]["artifactID"]
   readonly revision: Endpoint45_2Request["params"]["revision"]
   readonly location?: Endpoint45_2Request["query"]["location"]
-  readonly "idempotency-key": Endpoint45_2Request["headers"]["idempotency-key"]
-  readonly targetSessionID: Endpoint45_2Request["payload"]["targetSessionID"]
 }
 const Endpoint45_2 = (raw: RawClient["server.capability.artifacts"]) => (input: Endpoint45_2Input) =>
+  raw["capability.artifact.contentTicket"]({
+    params: { sessionID: input["sessionID"], artifactID: input["artifactID"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint45_3Request = Parameters<RawClient["server.capability.artifacts"]["capability.artifact.share"]>[0]
+type Endpoint45_3Input = {
+  readonly sessionID: Endpoint45_3Request["params"]["sessionID"]
+  readonly artifactID: Endpoint45_3Request["params"]["artifactID"]
+  readonly revision: Endpoint45_3Request["params"]["revision"]
+  readonly location?: Endpoint45_3Request["query"]["location"]
+  readonly "idempotency-key": Endpoint45_3Request["headers"]["idempotency-key"]
+  readonly targetSessionID: Endpoint45_3Request["payload"]["targetSessionID"]
+}
+const Endpoint45_3 = (raw: RawClient["server.capability.artifacts"]) => (input: Endpoint45_3Input) =>
   raw["capability.artifact.share"]({
     params: { sessionID: input["sessionID"], artifactID: input["artifactID"], revision: input["revision"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
@@ -2388,16 +2401,16 @@ const Endpoint45_2 = (raw: RawClient["server.capability.artifacts"]) => (input: 
     payload: { targetSessionID: input["targetSessionID"] },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint45_3Request = Parameters<RawClient["server.capability.artifacts"]["capability.artifact.pin"]>[0]
-type Endpoint45_3Input = {
-  readonly sessionID: Endpoint45_3Request["params"]["sessionID"]
-  readonly artifactID: Endpoint45_3Request["params"]["artifactID"]
-  readonly revision: Endpoint45_3Request["params"]["revision"]
-  readonly location?: Endpoint45_3Request["query"]["location"]
-  readonly "idempotency-key": Endpoint45_3Request["headers"]["idempotency-key"]
-  readonly pinned: Endpoint45_3Request["payload"]["pinned"]
+type Endpoint45_4Request = Parameters<RawClient["server.capability.artifacts"]["capability.artifact.pin"]>[0]
+type Endpoint45_4Input = {
+  readonly sessionID: Endpoint45_4Request["params"]["sessionID"]
+  readonly artifactID: Endpoint45_4Request["params"]["artifactID"]
+  readonly revision: Endpoint45_4Request["params"]["revision"]
+  readonly location?: Endpoint45_4Request["query"]["location"]
+  readonly "idempotency-key": Endpoint45_4Request["headers"]["idempotency-key"]
+  readonly pinned: Endpoint45_4Request["payload"]["pinned"]
 }
-const Endpoint45_3 = (raw: RawClient["server.capability.artifacts"]) => (input: Endpoint45_3Input) =>
+const Endpoint45_4 = (raw: RawClient["server.capability.artifacts"]) => (input: Endpoint45_4Input) =>
   raw["capability.artifact.pin"]({
     params: { sessionID: input["sessionID"], artifactID: input["artifactID"], revision: input["revision"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
@@ -2405,17 +2418,17 @@ const Endpoint45_3 = (raw: RawClient["server.capability.artifacts"]) => (input: 
     payload: { pinned: input["pinned"] },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint45_4Request = Parameters<
+type Endpoint45_5Request = Parameters<
   RawClient["server.capability.artifacts"]["capability.artifact.removeReference"]
 >[0]
-type Endpoint45_4Input = {
-  readonly sessionID: Endpoint45_4Request["params"]["sessionID"]
-  readonly artifactID: Endpoint45_4Request["params"]["artifactID"]
-  readonly revision: Endpoint45_4Request["params"]["revision"]
-  readonly location?: Endpoint45_4Request["query"]["location"]
-  readonly "idempotency-key": Endpoint45_4Request["headers"]["idempotency-key"]
+type Endpoint45_5Input = {
+  readonly sessionID: Endpoint45_5Request["params"]["sessionID"]
+  readonly artifactID: Endpoint45_5Request["params"]["artifactID"]
+  readonly revision: Endpoint45_5Request["params"]["revision"]
+  readonly location?: Endpoint45_5Request["query"]["location"]
+  readonly "idempotency-key": Endpoint45_5Request["headers"]["idempotency-key"]
 }
-const Endpoint45_4 = (raw: RawClient["server.capability.artifacts"]) => (input: Endpoint45_4Input) =>
+const Endpoint45_5 = (raw: RawClient["server.capability.artifacts"]) => (input: Endpoint45_5Input) =>
   raw["capability.artifact.removeReference"]({
     params: { sessionID: input["sessionID"], artifactID: input["artifactID"], revision: input["revision"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
@@ -2425,9 +2438,10 @@ const Endpoint45_4 = (raw: RawClient["server.capability.artifacts"]) => (input: 
 const adaptGroup45 = (raw: RawClient["server.capability.artifacts"]) => ({
   list: Endpoint45_0(raw),
   get: Endpoint45_1(raw),
-  share: Endpoint45_2(raw),
-  pin: Endpoint45_3(raw),
-  removeReference: Endpoint45_4(raw),
+  contentTicket: Endpoint45_2(raw),
+  share: Endpoint45_3(raw),
+  pin: Endpoint45_4(raw),
+  removeReference: Endpoint45_5(raw),
 })
 
 type Endpoint46_0Request = Parameters<RawClient["server.capability.schedules"]["capability.schedule.list"]>[0]

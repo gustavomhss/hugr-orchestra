@@ -8,8 +8,10 @@ import type {
   Connection,
   Model,
   Receipt,
+  SessionOption,
   Target,
 } from "../../src/orchestra/chapters/integrations-contract"
+import { DOMFormData } from "../../happydom"
 import { createPendingSetup } from "./integrations-screen-http.fixture"
 
 // Compile real components with Solid, not Bun's React JSX transform. Model imports use actual local source.
@@ -85,6 +87,8 @@ export async function mount(
     http?: { reply: Promise<Receipt>; started: () => void }
     failList?: () => boolean
     failGet?: () => boolean
+    unauthorized?: boolean
+    sessions?: () => Promise<readonly SessionOption[]>
   } = {},
 ) {
   const calls: { method: string; args: unknown[] }[] = []
@@ -117,6 +121,7 @@ export async function mount(
     },
     list: async (...args) => {
       record("list", args)
+      if (options.unauthorized) throw { status: 401 }
       if (options.failList?.()) throw { status: 503 }
       const rows = [...accounts.values()]
         .filter((row) => !args[0] || row.connection.id > args[0])
@@ -200,7 +205,7 @@ export async function mount(
       )
       return receipt(null)
     },
-    sessions: async () => [],
+    sessions: options.sessions ?? (async () => []),
     removeTarget: async (...args) => {
       record("removeTarget", args)
       targets.delete(args[0].id)
@@ -246,6 +251,12 @@ export async function mount(
     },
   })
   await model.load()
+  // The preload restores Bun's FormData for HTTP; the screen serializes DOM forms, which only Happy DOM's reads.
+  const native = globalThis.FormData
+  globalThis.FormData = DOMFormData as unknown as typeof FormData
+  cleanups.push(() => {
+    globalThis.FormData = native
+  })
   const host = document.body.appendChild(document.createElement("div"))
   const tokens: string[] = []
   const dispose = render(
