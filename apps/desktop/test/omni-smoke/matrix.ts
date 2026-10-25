@@ -135,7 +135,7 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic?: Diagnost
         !witnessed.some((event) => event.name === "utility-watchdog") && witnessed.some((event) => event.name === "utility-exit" && event.code === 0) && witnessed.some((event) => event.name === "quit" && event.code === 0) &&
         app.exitCode === 0 && app.signalCode === null && state.closed && state.exitedAt > started && state.exitedAt - started < boundMs
       evidence.orderly = orderly
-      if (!orderly) throw new Error("actual app.quit did not prove orderly code-zero exit without watchdog/forced kill")
+      if (!orderly) throw new Error(`actual app.quit did not prove orderly code-zero exit without watchdog/forced kill (exit ${JSON.stringify(evidence.exit)}, started ${started}, events ${witnessed.map((event) => event.name).join(",")})`)
     }
     if (!observed.pass || observed.zeroAtMs === undefined) throw new Error("actual desktop owned inventory not zero inside deadline")
     if (cell === "utility-kill") {
