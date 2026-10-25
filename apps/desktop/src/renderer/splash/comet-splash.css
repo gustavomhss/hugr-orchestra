@@ -15,8 +15,19 @@
 }
 
 /* The video's own background is near the page colour; the soft mask hides the seam at its edges. */
-.comet-splash video {
+.comet-splash video,
+.comet-splash img {
   width: min(100vw, 177.78vh);
   aspect-ratio: 16 / 9;
   mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 70%, transparent 100%);
+}
+
+/* The reduced-motion still only fades: opacity carries no motion. */
+.comet-splash img {
+  animation: comet-still-in 320ms ease-out both;
+}
+@keyframes comet-still-in {
+  from {
+    opacity: 0;
+  }
 }
