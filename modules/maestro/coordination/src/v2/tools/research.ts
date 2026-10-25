@@ -17,6 +17,8 @@ import { CodeIndex } from "@orchestra/core/research-toolkit/code-index/types"
 import { ResearchToolkit } from "@orchestra/core/research-toolkit/index"
 import { Liveness } from "@orchestra/core/research-toolkit/liveness"
 import { Locate } from "@orchestra/core/research-toolkit/locate"
+import { ProbeRun } from "@orchestra/core/research-toolkit/probe/run"
+import { Probe } from "@orchestra/core/research-toolkit/probe/types"
 import { CodeSearch } from "@orchestra/core/research-toolkit/search"
 import { SessionHistory } from "@orchestra/core/session"
 import { AbsolutePath } from "@orchestra/core/schema"
@@ -41,6 +43,7 @@ export const names = {
   search: "code_search",
   query: "code_query",
   locate: "code_locate",
+  probe: "probe_run",
 } as const
 
 export const Output = Schema.Struct({ title: Schema.String, output: Schema.String, research: Schema.optional(Schema.Unknown) })
@@ -125,6 +128,21 @@ export const queryDescription = [
   "Retains: nothing; capture the file range to cite it.",
   "Fails: index_unavailable, index_building, reference_invalid.",
 ].join("\n")
+
+export const probeDescription = [
+  "Run one probe in a fresh read-only snapshot of the worktree or a commit: `typecheck` (a tsconfig), `test` (one test file, optional name) or `script` (ts, js or py, up to 16 KiB). No network, no writes outside its scratch. `expect` makes the verdict reproduced or not_reproduced; `hypothesis` lets the host record and resolve it. Charged in probe seconds.",
+  "",
+  "Lines: diagnostics carry the original file path with 1-based line and column.",
+  "Empty: an empty stdout or stderr means the runner printed nothing; it proves nothing beyond this run.",
+  "Retains: every result, failed or not, as structured JSON; cite its source with a JSON pointer such as /verdict.",
+  "Fails: probe_timeout, probe_memory, probe_denied, budget_exhausted.",
+].join("\n")
+
+// The verdicts that end a probe early, as the named failures the seat reads (J4.7).
+const FAILURE: Partial<Record<Probe.Verdict, "probe_timeout" | "probe_memory">> = {
+  timeout: "probe_timeout",
+  memory_exceeded: "probe_memory",
+}
 
 export function tools(services: Services) {
   const bound = Effect.fn("MaestroResearchTools.bound")(function* (name: string, context: Tool.Context) {
@@ -406,6 +424,133 @@ export function tools(services: Services) {
               ...(result.next === undefined ? [] : [`next: offset=${result.next}`]),
               basis(result.basis),
             ].join("\n"),
+          }
+        }),
+    }),
+    // V1 `apps/orchestra/src/tool/probe-run.ts`: one closed runner in a fresh jailed snapshot (core ProbeRun, through
+    // AppProcess), charged in probe seconds, retained as citable structured JSON even when it fails, and with a
+    // hypothesis recorded against it.
+    [names.probe]: Tool.make({
+      description: probeDescription,
+      input: Probe.ProbeInput,
+      output: Output,
+      toModelOutput: ({ output }) => [{ type: "text", text: output.output }],
+      execute: (input, context) =>
+        Effect.gen(function* () {
+          const research = yield* bound(names.probe, context)
+          const binding = research.binding
+          const allowance = research.allowance
+          const records = services.records
+          // The hypothesis must be open before anything runs, so a probe never spends seconds it cannot record.
+          const hypothesis = input.hypothesis
+            ? ResearchInquiry.fold(yield* records.dispatch(allowance).pipe(Effect.catch(denied))).hypotheses.find(
+                (item) => item.ref.id === input.hypothesis?.id,
+              )
+            : undefined
+          if (input.hypothesis && hypothesis?.status !== "open")
+            return yield* denied(
+              new Research.Error({ code: "inquiry_state", message: `${input.hypothesis.id} is not an open hypothesis of this inquiry` }),
+            )
+          // V1 `ResearchExecution.probe`: the dispatch's probe seconds bound the run, and whole seconds are charged after it.
+          const limit = allowance.probeSecondsLimit
+          const used = (yield* ResearchLedger.dispatch(allowance).pipe(Effect.provideService(Database.Service, services.database))).reduce(
+            (total, step) => (step.type === "research.allowance.charged" && step.data.kind === "probe" ? total + step.data.amount : total),
+            0,
+          )
+          if (used >= limit)
+            return yield* denied(
+              new Research.Error({
+                code: "budget_exhausted",
+                message: `Research probe allowance exhausted (${used}/${limit} seconds); retained work remains available`,
+              }),
+            )
+          const result = yield* ProbeRun.run(input, {
+            worktree: binding.worktree,
+            executionSessionID: binding.executionSessionID,
+            dispatchID: `${binding.executionSessionID}:${allowance.dispatchCallID}`,
+            remainingSeconds: limit - used,
+          }).pipe(
+            Effect.scoped,
+            Effect.provideService(AppProcess.Service, services.processes),
+            Effect.mapError(
+              (error) =>
+                new Tool.Failure({
+                  message: `Research denied: ${error.code}: ${error.reason}${error.options ? ` (options: ${error.options.join(", ")})` : ""}`,
+                }),
+            ),
+          )
+          // Whole seconds, at least one per probe that ran; the timeout already bounds it by what remained.
+          yield* services.allowances
+            .charge(
+              allowance,
+              "probe",
+              `probe:${context.assistantMessageID}:${context.toolCallID}`,
+              Math.min(limit - used, Math.max(1, Math.ceil(result.durationMs / 1000))),
+            )
+            .pipe(Effect.catch(denied))
+          const uri = ProbeRun.uri(binding.executionSessionID, result.probeID)
+          const script =
+            input.runner.kind === "script"
+              ? (yield* records
+                  .capture(binding, context, {
+                    origin: { kind: "tool-output", uri: `${uri}/script` },
+                    representation: "text",
+                    mediaType: "text/plain",
+                    content: input.runner.source,
+                    complete: true,
+                  })
+                  .pipe(Effect.catch(denied))).ref
+              : undefined
+          const retained: Probe.ProbeResult = script ? { ...result, script } : result
+          const receipt = yield* records
+            .capture(binding, context, {
+              origin: { kind: "tool-output", uri },
+              representation: "structured-json",
+              mediaType: "application/json",
+              content: JSON.stringify(retained),
+              complete: true,
+            })
+            .pipe(Effect.catch(denied))
+          const relation = !hypothesis
+            ? undefined
+            : result.verdict === "not_reproduced"
+              ? ("refutes" as const)
+              : input.expect && (result.verdict === "reproduced" || result.verdict === "passed")
+                ? ("supports" as const)
+                : undefined
+          if (hypothesis && relation) {
+            const write = (record: Research.RecordInput, slot: string) =>
+              records.record(binding, context, record, slot).pipe(
+                Effect.flatMap((mutation) =>
+                  mutation.record
+                    ? Effect.succeed({ id: mutation.record.id, revision: mutation.record.revision })
+                    : Effect.fail(new Research.Error({ code: "publication_uncertain", message: "Probe observation was not retained" })),
+                ),
+                Effect.catch(denied),
+              )
+            const observation = yield* write(
+              {
+                action: "finding",
+                nature: "observation",
+                conditions: [],
+                contrary: [],
+                proposition: `probe ${result.probeID} ${result.verdict}: ${hypothesis.proposition}`.slice(0, 8192),
+                evidence: [{ source: receipt.ref, locator: { kind: "json", pointer: "/verdict" } }],
+              },
+              "probe:observation",
+            )
+            yield* write({ action: "relation", from: observation, to: hypothesis.ref, relation, reason: `probe ${result.verdict}` }, "probe:relation")
+          }
+          const failure = FAILURE[result.verdict]
+          return {
+            title: `${failure ?? result.verdict}: probe ${result.runner.kind}`,
+            output: JSON.stringify({
+              ...(failure ? { error: failure } : {}),
+              source: receipt.ref,
+              ...(hypothesis ? { hypothesis: { ref: hypothesis.ref, resolved: relation ?? null } } : {}),
+              ...retained,
+            }),
+            research: receipt,
           }
         }),
     }),

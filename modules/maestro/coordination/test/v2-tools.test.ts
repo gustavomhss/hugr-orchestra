@@ -53,6 +53,7 @@ const research = [
   "code_search",
   "code_query",
   "code_locate",
+  "probe_run",
 ]
 
 const temporary = (prefix: string) =>
@@ -264,6 +265,10 @@ test("the research tools run only as the research seat and only under its dispat
       })
       // The code tools search and retain only inside the dispatch, as the research records do.
       expect(yield* settle("jimmy", "code_search", { pattern: "settle" })).toEqual({
+        type: "error",
+        value: "Research denied: binding_missing: Research runs only under its dispatch allowance",
+      })
+      expect(yield* settle("jimmy", "probe_run", { snapshot: { kind: "worktree" }, runner: { kind: "typecheck", project: "tsconfig.json" } })).toEqual({
         type: "error",
         value: "Research denied: binding_missing: Research runs only under its dispatch allowance",
       })
