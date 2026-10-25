@@ -97,7 +97,7 @@ export function tools(services: Services) {
       execute: (input, context) =>
         Effect.gen(function* () {
           const bound = yield* bind(services, names.recall, context)
-          if (bound.refused !== undefined) return unavailable(bound.refused)
+          if ("refused" in bound) return unavailable(bound.refused)
           const receipt = (fields: Pick<Receipt, "outcome" | "store" | "refs">): Receipt => ({
             schema: "atlas-memory-receipt-v1",
             op: "recall",
@@ -141,7 +141,7 @@ export function tools(services: Services) {
       execute: (input, context) =>
         Effect.gen(function* () {
           const bound = yield* bind(services, names.emit, context)
-          if (bound.refused !== undefined) return unavailable(bound.refused)
+          if ("refused" in bound) return unavailable(bound.refused)
           const memory = bound.memory
           const verdict: Verdict =
             "unavailable" in memory
@@ -242,14 +242,25 @@ const bind = Effect.fn("MaestroAtlasMemoryTools.bind")(function* (
       source: { type: "tool", messageID: context.assistantMessageID, callID: context.toolCallID },
     })
     .pipe(Effect.mapError((error) => new Tool.Failure({ message: "Atlas memory was not permitted", error })))
-  const storage = {
-    projectID: services.location.project.id,
-    root: services.location.vcs?.type === "git" ? services.location.project.directory : services.location.directory,
-  }
-  const execution = {
+  return yield* open(services, member, {
     sessionID: context.sessionID,
     callID: context.toolCallID,
     assistantMessageID: context.assistantMessageID,
+  })
+})
+
+/**
+ * The member's Memory bound to the execution worktree and one call of `execution.sessionID`. The tools bind their own
+ * call; a resume admission binds the child Session to the dispatching Task call, as V1's `AtlasResume.admit` does.
+ */
+export const open = Effect.fn("MaestroAtlasMemoryTools.open")(function* (
+  services: Pick<Services, "git" | "location">,
+  member: MaestroAtlasSourceV2.Owner,
+  execution: { readonly sessionID: string; readonly callID: string; readonly assistantMessageID: string },
+) {
+  const storage = {
+    projectID: services.location.project.id,
+    root: services.location.vcs?.type === "git" ? services.location.project.directory : services.location.directory,
   }
   const binding = { ...storage, memoryOwner: member, ...execution }
   const head = yield* services.git.run(["rev-parse", "HEAD"], { cwd: storage.root })
@@ -270,18 +281,18 @@ const bind = Effect.fn("MaestroAtlasMemoryTools.bind")(function* (
           Effect.orElseSucceed((): string[] => []),
         )
       : []
-  const open = yield* Open
+  const create = yield* Open
   const memory = yield* Effect.try({
     try: (): NativeMemory | { readonly unavailable: string } =>
-      open({
+      create({
         storage,
         source: { worktree: storage.root, revision },
         memoryOwner: member,
         legacyOwners: legacy,
         execution: {
-          actor: { memberId: member, projectId: storage.projectID, sessionId: context.sessionID },
-          executionSessionID: context.sessionID,
-          invocation: { callID: context.toolCallID, assistantMessageID: context.assistantMessageID },
+          actor: { memberId: member, projectId: storage.projectID, sessionId: execution.sessionID },
+          executionSessionID: execution.sessionID,
+          invocation: { callID: execution.callID, assistantMessageID: execution.assistantMessageID },
         },
         ...(scanner && { scanner }),
       }),

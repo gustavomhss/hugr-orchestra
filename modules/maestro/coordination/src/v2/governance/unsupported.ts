@@ -2,7 +2,6 @@ export * as UnsupportedV2 from "./unsupported"
 
 import { ToolFailure } from "@orchestra/llm"
 import { Effect } from "effect"
-import { Seats } from "../../seats"
 import type { MaestroSeats } from "../seats-service"
 import type { GovernanceInputV2 } from "./input"
 
@@ -11,7 +10,7 @@ export const RESEARCH_SEAT = "jimmy"
 
 /**
  * V1 Task phases whose host is not on V2 yet. Each one refuses the call with its reason rather than running it with
- * the check skipped: workflow steps, Atlas resume and the research allowance.
+ * the check skipped: workflow steps and the research allowance.
  */
 export const check = Effect.fn("UnsupportedV2.check")(function* (
   seats: MaestroSeats.Interface,
@@ -21,8 +20,6 @@ export const check = Effect.fn("UnsupportedV2.check")(function* (
   if (input.workflow !== undefined)
     return yield* refuse("workflow-unavailable", "a Relay workflow step needs the workflow host")
   if (!seats.has(target)) return
-  if (input.memoryUnit !== undefined && Seats.all[target]?.atlasMemory)
-    return yield* refuse("atlas-resume-unavailable", "the Atlas Memory resume of a seat needs the Atlas restore")
   if (target === RESEARCH_SEAT)
     return yield* refuse("research-allowance-unavailable", `${RESEARCH_SEAT} runs only under a research dispatch allowance`)
 })
