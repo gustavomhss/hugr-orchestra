@@ -160,11 +160,11 @@ export function DialogSessionList() {
     function buildOption(id: string, category: string) {
       const x = sessionMap.get(id)
       if (!x) return undefined
-      const directory = x.path
-        ? x.directory.endsWith(x.path)
-          ? x.directory.slice(0, -x.path.length).replace(/\/$/, "")
+      const directory = x.subpath
+        ? x.location.directory.endsWith(x.subpath)
+          ? x.location.directory.slice(0, -x.subpath.length).replace(/\/$/, "")
           : undefined
-        : x.directory
+        : x.location.directory
       const footer =
         directory && directory !== project.data.project.mainDir ? Locale.truncate(path.basename(directory), 20) : ""
 

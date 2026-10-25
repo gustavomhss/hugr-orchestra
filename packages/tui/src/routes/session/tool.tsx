@@ -2,6 +2,7 @@ import { createMemo, createSignal, For, Match, onMount, Show, Switch } from "sol
 import stripAnsi from "strip-ansi"
 import { taskAgentType } from "@orchestra/core/util/task-tool"
 import { useRoute } from "../../context/route"
+import { useTuiTerminalEnvironment } from "../../context/runtime"
 import { useSync } from "../../context/sync"
 import { useTheme } from "../../context/theme"
 import { usePathFormatter } from "../../context/path-format"

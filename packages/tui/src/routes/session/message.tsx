@@ -231,11 +231,11 @@ function AssistantReasoning(props: { part: SessionMessageAssistantReasoning }) {
   const opaque = createMemo(() => !content() && Boolean(props.part.providerMetadata))
   // Reasoning is finalized when the server sets `time.completed`.
   // Flips independently of the parent message completing.
-  const isDone = createMemo(() => props.part.time.completed !== undefined)
+  const isDone = createMemo(() => props.part.time?.completed !== undefined)
   const inMinimal = createMemo(() => ctx.thinkingMode() === "hide")
   const duration = createMemo(() => {
-    const end = props.part.time.completed
-    return end === undefined ? 0 : Math.max(0, end - props.part.time.created)
+    const time = props.part.time
+    return time?.completed === undefined ? 0 : Math.max(0, time.completed - time.created)
   })
   const summary = createMemo(() => reasoningSummary(content()))
   const syntax = createSyntaxStyleMemo(() => generateSubtleSyntax(theme))

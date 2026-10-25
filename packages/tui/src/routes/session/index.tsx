@@ -1046,7 +1046,7 @@ export function Session() {
                         <></>
                       </Match>
                       <Match when={(message.type === "user" || message.type === "synthetic") && message}>
-                        {(prompt) => (
+                        {(item) => (
                         <UserMessage
                           index={index() + replayOffset()}
                           onMouseUp={() => {
@@ -1059,8 +1059,8 @@ export function Session() {
                               />
                             ))
                           }}
-                          message={prompt()}
-                          agent={promptAgent(messages(), prompt())}
+                          message={item()}
+                          agent={promptAgent(messages(), item())}
                           pending={pending()}
                         />
                         )}

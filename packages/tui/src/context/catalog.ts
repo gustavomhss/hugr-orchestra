@@ -140,11 +140,11 @@ export function createCatalog(client: Client) {
         })
         .then((result) =>
           result.data
-            .map((session): Session => session)
+            .map((session) => session as Session)
             .filter((session) => !input.roots || !session.parentID)
             .toSorted((a, b) => a.id.localeCompare(b.id)),
         ),
-    session: (sessionID: string) => client.sessions.get({ sessionID }).then((session): Session => session),
+    session: (sessionID: string) => client.sessions.get({ sessionID }).then((session) => session as Session),
     // Newest first, as V2 returns them; the store keeps them oldest first.
     messages: (sessionID: string) =>
       client.messages.list({ sessionID, limit: 100 }).then((result) => result.data as SessionMessage[]),

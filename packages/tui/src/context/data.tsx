@@ -123,7 +123,7 @@ export const { use: useData, provider: DataProvider } = createSimpleContext({
           return store.session.info[sessionID]
         },
         async refresh(sessionID: string) {
-          setStore("session", "info", sessionID, await sdk.api.sessions.get({ sessionID }))
+          setStore("session", "info", sessionID, (await sdk.api.sessions.get({ sessionID })) as Session)
         },
         message: {
           list(sessionID: string) {
