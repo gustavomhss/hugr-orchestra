@@ -1,6 +1,7 @@
 import { Orchestra } from "@orchestra/client"
 import { createOrchestraClient } from "../compat/sdk-v2"
 import { createSessionActions } from "./session-actions"
+import { createCatalog } from "./catalog"
 import type { GlobalEvent } from "../compat/schema"
 import { Flag } from "@orchestra/core/flag/flag"
 import { createSimpleContext } from "./helper"
@@ -33,10 +34,11 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
     }
 
     let sdk = createSDK()
-    // Session actions the V2 server serves; the legacy client above covers the rest until it is migrated.
-    const actions = createSessionActions(
-      Orchestra.make({ baseUrl: props.url, fetch: props.fetch, headers: props.headers }),
-    )
+    // The V2 client serves session actions, the catalog the store bootstraps from, and the event stream; the
+    // legacy client above covers the dialogs and routes that are not migrated yet.
+    const v2 = Orchestra.make({ baseUrl: props.url, fetch: props.fetch, headers: props.headers })
+    const actions = createSessionActions(v2)
+    const catalog = createCatalog(v2)
     // True while the event stream is down and being retried. Embedded event sources have no stream to observe.
     const [offline, setOffline] = createSignal(false)
 
@@ -96,25 +98,24 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
         while (true) {
           if (abort.signal.aborted || ctrl.signal.aborted) break
 
-          const events = await sdk.global
-            .event({ signal: ctrl.signal, sseMaxRetryAttempts: 0 })
-            .catch(() => undefined)
-
-          if (events) {
-            setOffline(false)
-            if (Flag.ORCHESTRA_EXPERIMENTAL_WORKSPACES) {
-              // Start syncing workspaces, it's important to do this after
-              // we've started listening to events
-              await sdk.sync.start().catch(() => {})
-            }
-
-            await (async () => {
-              for await (const event of events.stream) {
-                if (ctrl.signal.aborted) break
-                handleEvent(event)
+          // The V2 stream carries native events; the store handlers still take the legacy GlobalEvent envelope.
+          await (async () => {
+            let started = false
+            for await (const event of v2.events.subscribe({ signal: ctrl.signal })) {
+              if (ctrl.signal.aborted) break
+              if (!started) {
+                started = true
+                setOffline(false)
+                // Start syncing workspaces, it's important to do this after we've started listening to events
+                if (Flag.ORCHESTRA_EXPERIMENTAL_WORKSPACES) await sdk.sync.start().catch(() => {})
               }
-            })().catch(() => {})
-          }
+              handleEvent({
+                directory: event.location?.directory ?? props.directory ?? "",
+                workspace: event.location?.workspaceID,
+                payload: { id: event.id, type: event.type, properties: event.data } as GlobalEvent["payload"],
+              })
+            }
+          })().catch(() => {})
           if (!abort.signal.aborted && !ctrl.signal.aborted) setOffline(true)
 
           if (timer) clearTimeout(timer)
@@ -156,6 +157,7 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
         return sdk
       },
       actions,
+      catalog,
       offline,
       directory: props.directory,
       event: emitter,

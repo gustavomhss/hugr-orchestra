@@ -59,13 +59,27 @@ export function createEventSource() {
   }
 }
 
+// A V2 Session as `/api/session` routes return it.
+export function v2Session(input: { id: string; title?: string; directory?: string; subpath?: string }) {
+  return {
+    id: input.id,
+    projectID: "proj_test",
+    title: input.title ?? input.id,
+    cost: 0,
+    tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+    time: { created: 0, updated: 0 },
+    location: { directory: input.directory ?? directory },
+    subpath: input.subpath,
+  }
+}
+
 export type FetchHandler = (url: URL) => Response | Promise<Response> | undefined
 
 export function createFetch(override?: FetchHandler, events?: ReturnType<typeof createEventSource>) {
   const session = [] as URL[]
   const fetch = (async (input: RequestInfo | URL) => {
     const url = new URL(input instanceof Request ? input.url : String(input))
-    if (url.pathname === "/session") session.push(url)
+    if (url.pathname === "/api/session") session.push(url)
     const overridden = await override?.(url)
     if (overridden) return overridden
     if (url.pathname === "/api/event" && events) return events.response()
@@ -96,6 +110,19 @@ export function createFetch(override?: FetchHandler, events?: ReturnType<typeof 
         location: { directory, project: { id: "proj_test", directory: worktree } },
         data: [],
       })
+    if (["/api/lsp", "/api/mcp"].includes(url.pathname))
+      return json({ location: { directory, project: { id: "proj_test", directory: worktree } }, data: [] })
+    if (url.pathname === "/api/model/default")
+      return json({ location: { directory, project: { id: "proj_test", directory: worktree } }, data: null })
+    if (url.pathname === "/api/vcs")
+      return json({
+        location: { directory, project: { id: "proj_test", directory: worktree } },
+        data: { branch: "main" },
+      })
+    if (url.pathname === "/api/config") return json({ disabledProviders: [] })
+    if (url.pathname === "/api/session") return json({ data: [], cursor: {} })
+    if (url.pathname === "/api/session/active") return json({ data: {} })
+    if (url.pathname === "/api/project/proj_test/directories") return json([])
     if (url.pathname === "/project/current") return json({ id: "proj_test" })
     if (url.pathname === "/api/reference")
       return json({ location: { directory, project: { id: "proj_test", directory } }, data: [] })

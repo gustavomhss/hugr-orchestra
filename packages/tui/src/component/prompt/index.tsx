@@ -998,30 +998,26 @@ export function Prompt(props: PromptProps) {
       if (move.pending() && !directory) return false
       finishMoveProgress = Boolean(move.progress())
 
-      const res = await sdk.client.session.create({
-        directory,
-        workspace: workspaceID,
-        agent: agentKey(agent),
-        model: {
-          providerID: selectedModel.providerID,
-          id: selectedModel.modelID,
-          variant,
-        },
-      })
-
-      if (res.error) {
-        if (finishMoveProgress) move.finishSubmit()
-        console.log("Creating a session failed:", res.error)
-
-        toast.show({
-          message: "Creating a session failed. Open console for more details.",
-          variant: "error",
+      const created = await sdk.actions
+        .create({
+          agent: agentKey(agent),
+          model: { providerID: selectedModel.providerID, modelID: selectedModel.modelID, variant },
+          directory,
+          workspaceID,
         })
+        .catch((error: unknown) => {
+          if (finishMoveProgress) move.finishSubmit()
+          console.log("Creating a session failed:", error)
 
-        return true
-      }
+          toast.show({
+            message: "Creating a session failed. Open console for more details.",
+            variant: "error",
+          })
+          return undefined
+        })
+      if (!created) return true
 
-      sessionID = res.data.id
+      sessionID = created.id
     }
 
     const inputText = expandTrackedPastedText(
@@ -1040,22 +1036,8 @@ export function Prompt(props: PromptProps) {
     // Capture mode before it gets reset
     const currentMode = store.mode
     const editorSelection = editorContext()
-    const editorParts =
-      editorSelection && editor.labelState() === "pending"
-        ? [
-            {
-              type: "text" as const,
-              text: formatEditorContext(editorSelection),
-              synthetic: true,
-              metadata: {
-                kind: "editor_context",
-                source: editorSelection.source ?? "editor",
-                filePath: editorSelection.filePath,
-                ranges: editorSelection.ranges,
-              },
-            },
-          ]
-        : []
+    const editorText =
+      editorSelection && editor.labelState() === "pending" ? formatEditorContext(editorSelection) : undefined
 
     if (store.mode === "shell") {
       move.startSubmit()
@@ -1089,25 +1071,16 @@ export function Prompt(props: PromptProps) {
         })
     } else {
       move.startSubmit()
-      sdk.client.session
-        .prompt(
-          {
-            sessionID,
-            ...selectedModel,
-            agent: agentKey(agent),
-            model: selectedModel,
-            variant,
-            parts: [
-              ...editorParts,
-              {
-                type: "text",
-                text: inputText,
-              },
-              ...nonTextParts,
-            ],
-          },
-          { throwOnError: true },
-        )
+      sdk.actions
+        .prompt({
+          sessionID,
+          text: inputText,
+          context: editorText,
+          agent: agentKey(agent),
+          model: { providerID: selectedModel.providerID, modelID: selectedModel.modelID, variant },
+          files: nonTextParts.filter((part) => part.type === "file"),
+          agents: nonTextParts.filter((part) => part.type === "agent"),
+        })
         .catch((error) => {
           toast.show({
             title: "Failed to send prompt",
@@ -1115,7 +1088,7 @@ export function Prompt(props: PromptProps) {
             variant: "error",
           })
         })
-      if (editorParts.length > 0) editor.markSelectionSent()
+      if (editorText) editor.markSelectionSent()
     }
     history.append({
       ...store.prompt,
@@ -1131,7 +1104,7 @@ export function Prompt(props: PromptProps) {
 
     // temporary hack to make sure the message is sent
     if (!props.sessionID) {
-      if (editorParts.length > 0) editor.preserveSelectionFromNewSession()
+      if (editorText) editor.preserveSelectionFromNewSession()
       setTimeout(() => {
         route.navigate({
           type: "session",
