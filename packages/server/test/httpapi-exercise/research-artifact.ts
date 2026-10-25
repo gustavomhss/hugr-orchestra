@@ -17,7 +17,14 @@ export const researchArtifactScenarios: Scenario[] = [
       path: `${route(artifactPath, { sessionID: "ses_httpapi_missing", artifactID })}?revision=1`,
       headers: ctx.headers(),
     }))
-    .json(404, notFound, "status"),
+    .json(
+      404,
+      (body) => {
+        object(body)
+        check(body._tag === "SessionNotFoundError", "a missing session should map to the declared session 404")
+      },
+      "status",
+    ),
   http.protected
     .get(artifactPath, "v2.research.artifact.unbound-session")
     .probe(probe)
@@ -31,9 +38,10 @@ export const researchArtifactScenarios: Scenario[] = [
     http.protected
       .get(artifactPath, `v2.research.artifact.revision-invalid.${revision ?? "missing"}`)
       .probe(probe)
+      .seeded((ctx) => ctx.session())
       .at((ctx) => ({
         path:
-          route(artifactPath, { sessionID: "ses_httpapi_missing", artifactID }) +
+          route(artifactPath, { sessionID: ctx.state.id, artifactID }) +
           (revision === undefined ? "" : `?revision=${revision}`),
         headers: ctx.headers(),
       }))

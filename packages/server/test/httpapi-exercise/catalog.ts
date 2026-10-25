@@ -44,7 +44,7 @@ export const catalogScenarios: Scenario[] = [
     .post("/api/provider/claude-code/login", "v2.provider.claudeCode.login")
     .global()
     .at(() => ({ path: "/api/provider/claude-code/login" }))
-    .status(400),
+    .status(503),
   http.protected
     .post("/api/provider/claude-code/login/code", "v2.provider.claudeCode.loginCode")
     .global()
@@ -114,7 +114,10 @@ export const catalogScenarios: Scenario[] = [
     .json(
       200,
       locationData((value: unknown) => {
-        check(Schema.is(Model.Info)(value), "default model should match the public Model.Info shape")
+        check(
+          Schema.is(Model.Info)(value),
+          `default model should match the public Model.Info shape, got ${JSON.stringify(value)}`,
+        )
         check(
           value.providerID === "exercise" && value.id === "httpapi-free",
           "default should select the configured available model",
