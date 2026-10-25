@@ -24,7 +24,7 @@ const { disconnectProvider }: typeof import("./providers-list") = await import(
   `${Bun.resolveSync("./providers-list.tsx", import.meta.dir)}?disconnect-test`
 )
 
-test("an auth card fails without disabling the provider, since no V2 route removes its stored key", async () => {
+test("an auth card removes the provider's stored credentials without touching config", async () => {
   const card: ProviderCard = {
     id: "custom-profile",
     base: "custom-profile",
@@ -36,20 +36,64 @@ test("an auth card fails without disabling the provider, since no V2 route remov
     disconnect: { type: "auth", custom: true },
   }
   const calls: unknown[] = []
+  const config: unknown[] = []
+  await disconnectProvider(card, {
+    directory: "/profile-b",
+    failed: "Request failed",
+    sdk: {
+      orchestra: {
+        integrations: {
+          disconnect: async (payload: unknown) => {
+            calls.push(payload)
+          },
+        },
+      },
+    } as unknown as Parameters<typeof disconnectProvider>[1]["sdk"],
+    sync: {
+      data: { config: { disabled_providers: ["already-disabled"] } },
+      updateConfig: async (value: unknown) => {
+        config.push(value)
+      },
+    } as unknown as Parameters<typeof disconnectProvider>[1]["sync"],
+  })
+  expect(calls).toEqual([{ integrationID: "custom-profile", location: { directory: "/profile-b" } }])
+  expect(config).toEqual([])
+})
+
+test("an auth card whose removal fails reports the failure and never disables the provider", async () => {
+  const card: ProviderCard = {
+    id: "custom-profile",
+    base: "custom-profile",
+    name: "Custom",
+    connected: true,
+    method: "custom",
+    custom: true,
+    models: [],
+    disconnect: { type: "auth", custom: true },
+  }
+  const config: unknown[] = []
   await expect(
     disconnectProvider(card, {
-      directory: "/profile-b",
+      directory: "",
       failed: "Request failed",
-      sdk: {} as unknown as Parameters<typeof disconnectProvider>[1]["sdk"],
+      sdk: {
+        orchestra: {
+          integrations: {
+            disconnect: async () => {
+              throw new Error("inherited")
+            },
+          },
+        },
+      } as unknown as Parameters<typeof disconnectProvider>[1]["sdk"],
       sync: {
-        data: { config: { disabled_providers: ["already-disabled"] } },
+        data: { config: {} },
         updateConfig: async (value: unknown) => {
-          calls.push(value)
+          config.push(value)
         },
       } as unknown as Parameters<typeof disconnectProvider>[1]["sync"],
     }),
   ).rejects.toThrow("Request failed")
-  expect(calls).toEqual([])
+  expect(config).toEqual([])
 })
 
 test("disconnect without a project is server-wide and sends no directory", async () => {

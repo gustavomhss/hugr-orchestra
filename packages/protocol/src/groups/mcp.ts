@@ -38,6 +38,36 @@ export const McpGroup = HttpApiGroup.make("server.mcp")
       ),
   )
   .add(
+    HttpApiEndpoint.get("mcp.config", "/api/mcp/config", {
+      query: LocationQuery,
+      success: Location.response(Mcp.Config),
+      error: InvalidRequestError,
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        OpenApi.annotations({
+          identifier: "v2.mcp.config",
+          summary: "Read MCP config",
+          description:
+            "Read the MCP servers the Location resolved and the profile files' own unresolved entries. Only type, command and url are returned.",
+        }),
+      ),
+  )
+  .add(
+    HttpApiEndpoint.get("mcp.tools", "/api/mcp/tool", {
+      query: LocationQuery,
+      success: Location.response(Mcp.Tools),
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        OpenApi.annotations({
+          identifier: "v2.mcp.tools",
+          summary: "List MCP tools",
+          description: "List the tool names each connected MCP server offers.",
+        }),
+      ),
+  )
+  .add(
     HttpApiEndpoint.put("mcp.add", "/api/mcp/:server", {
       params: ServerParams,
       query: LocationQuery,

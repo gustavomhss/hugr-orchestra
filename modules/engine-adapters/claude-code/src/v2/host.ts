@@ -9,9 +9,11 @@ import { LLMEvent, type ToolContent, type ToolDefinition, type ToolResultValue }
 import { Effect, Layer, Stream } from "effect"
 import { createHash, randomUUID } from "node:crypto"
 import path from "node:path"
+import { ClaudeCodeAccount } from "@orchestra/core/claude-code-account"
 import { ClaudeHostOptions } from "../host/options"
 import { ClaudeCodeSDK } from "../sdk"
 import { ClaudeCodeTranscript } from "../transcript"
+import { ClaudeCodeAccountV2 } from "./account"
 
 export const ID = "claude-code"
 /** V1's `session.metadata` key (`host/session.ts`), so V1-era Claude-hosted sessions resume on V2. */
@@ -192,7 +194,14 @@ export const node = makeLocationNode({
   deps: [ClaudeCodeSDK.node],
 })
 
-export const contribution: Host.Contribution = { id: "engine-claude-code", replacements: [[ExecutionHost.node, node]] }
+export const contribution: Host.Contribution = {
+  id: "engine-claude-code",
+  replacements: [
+    [ExecutionHost.node, node],
+    // The app's Claude mode settings read the binary's sign-in and start its login through the server's account routes.
+    [ClaudeCodeAccount.node, ClaudeCodeAccountV2.node],
+  ],
+}
 
 /** Maps one main-thread SDK frame to runner events; subagent frames stay inside their Agent call. */
 function events(message: SDKMessage, names: Map<string, string>, failure: { uuid?: string; message?: string }): LLMEvent[] {

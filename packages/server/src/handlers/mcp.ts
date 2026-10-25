@@ -8,6 +8,14 @@ import { response } from "../location"
 export const McpHandler = HttpApiBuilder.group(Api, "server.mcp", (handlers) =>
   handlers
     .handle("mcp.list", () => response(Mcp.Service.use((mcp) => mcp.list())))
+    .handle(
+      "mcp.config",
+      Effect.fn(function* () {
+        const mcp = yield* Mcp.Service
+        return yield* response(mcp.config().pipe(Effect.mapError(invalid)))
+      }),
+    )
+    .handle("mcp.tools", () => response(Mcp.Service.use((mcp) => mcp.toolNames())))
     .handle("mcp.resource.catalog", () => response(Mcp.Service.use((mcp) => mcp.resources())))
     .handle(
       "mcp.add",

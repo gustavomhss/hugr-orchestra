@@ -3,6 +3,7 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { httpClient, llmClient } from "@orchestra/core/effect/app-node-platform"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { EventV2 } from "@orchestra/core/event"
+import { ClaudeCodeAccount } from "@orchestra/core/claude-code-account"
 import { Credential } from "@orchestra/core/credential"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { AppProcess } from "@orchestra/core/process"
@@ -50,6 +51,7 @@ const applicationServices = LayerNode.group([
   PermissionSaved.node,
   PtyTicket.node,
   Credential.node,
+  ClaudeCodeAccount.node,
   PtyEnvironment.node,
   LocationServiceMap.node,
   FSUtil.node,
