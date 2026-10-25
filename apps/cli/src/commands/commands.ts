@@ -189,6 +189,43 @@ const providers = Spec.make("providers", {
   ],
 })
 
+const mcpName = (description: string) => Argument.string(description).pipe(Argument.optional)
+
+const mcp = Spec.make("mcp", {
+  description: "Manage MCP (Model Context Protocol) servers",
+  commands: [
+    Spec.make("list", { description: "List MCP servers and their status", aliases: ["ls"] }),
+    Spec.make("add", {
+      description: "Add an MCP server",
+      params: {
+        name: mcpName("name of the MCP server"),
+        url: Flag.string("url").pipe(Flag.withDescription("URL for a remote MCP server"), Flag.optional),
+        env: Flag.string("env").pipe(
+          Flag.withDescription("environment variable for a local MCP server (KEY=VALUE)"),
+          Flag.atMost(100),
+        ),
+        header: Flag.string("header").pipe(
+          Flag.withDescription("HTTP header for a remote MCP server (KEY=VALUE)"),
+          Flag.atMost(100),
+        ),
+        command: Argument.string("command").pipe(
+          Argument.withDescription("command for a local MCP server, after --"),
+          Argument.variadic({ min: 0 }),
+        ),
+      },
+    }),
+    Spec.make("auth", {
+      description: "Authenticate with an OAuth-enabled MCP server",
+      params: { name: mcpName("name of the MCP server") },
+      commands: [Spec.make("list", { description: "List MCP servers and their auth status", aliases: ["ls"] })],
+    }),
+    Spec.make("logout", {
+      description: "Remove OAuth credentials for an MCP server",
+      params: { name: mcpName("name of the MCP server") },
+    }),
+  ],
+})
+
 declare const ORCHESTRA_CLI_NAME: string | undefined
 
 export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHESTRA_CLI_NAME : "orchestra", {
@@ -231,6 +268,7 @@ export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHE
     run,
     attach,
     providers,
+    mcp,
     Spec.make("migrate", { description: "Migrate v1 data to v2" }),
     Spec.make("service", {
       description: "Manage the background server",
