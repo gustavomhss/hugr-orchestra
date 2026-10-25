@@ -68,10 +68,9 @@ function recorder() {
 // `shared` lets a second page of the same context reuse the first page's recorder and sessions.
 export async function setup(
   page: Page,
-  input: { scheme?: "dark" | "light"; protocol?: "v2"; legacy?: boolean } = {},
+  input: { scheme?: "dark" | "light"; legacy?: boolean } = {},
   shared?: ReturnType<typeof recorder>,
 ) {
-  const protocol = input.protocol ?? "v2"
   const api = shared ?? recorder()
   if (input.legacy) api.schedule.supported = false
   await page.addInitScript(
@@ -104,7 +103,7 @@ export async function setup(
     { server, directory, scheme: input.scheme ?? "dark" },
   )
   await mockOrchestraServer(page, {
-    protocol,
+    protocol: "v2",
     eventRetry: 60_000,
     provider: { all: [], connected: [], default: {} },
     directory,
@@ -135,15 +134,14 @@ export async function setup(
       })
     if (url.pathname === "/api/schedule" || url.pathname.startsWith("/api/schedule/"))
       return schedule(api, route, url, json)
-    const create = url.pathname === (protocol === "v2" ? "/api/session" : "/session")
-    if (!create || route.request().method() !== "POST") return route.fallback()
+    if (url.pathname !== "/api/session" || route.request().method() !== "POST") return route.fallback()
     api.attempts++
     const attempt = api.attempts
     const body = route.request().postDataJSON()
     api.requests.push(body)
     await api.gate
     if (api.fail) return json({ message: "Session store is unavailable" }, 400)
-    if (protocol === "v2") api.created.push(body)
+    api.created.push(body)
     const id = typeof body?.id === "string" ? body.id : `ses_schedule_${attempt}`
     const session = api.sessions.find((item) => item.id === id) ?? {
       id,
@@ -153,16 +151,7 @@ export async function setup(
       time: { created: 1, updated: 1 },
     }
     if (!api.sessions.includes(session)) api.sessions.push(session)
-    if (protocol === "v2") return json({ data: currentSession(session, directory) })
-    return json({
-      id,
-      slug: id,
-      projectID: "schedule",
-      directory,
-      title: "New session",
-      version: "1",
-      time: session.time,
-    })
+    return json({ data: currentSession(session, directory) })
   })
   return api
 }

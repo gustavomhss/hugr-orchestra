@@ -175,6 +175,7 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
       config.onConnectKey?.({ integrationID: integrationConnect, body: route.request().postDataJSON() })
       return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" } })
     }
+    if (path === "/api/location") return json(route, location(config))
     if (path === "/api/project") return json(route, [config.project])
     if (path === "/api/project/current")
       return json(route, { id: (config.project as { id?: string }).id, directory: config.directory })
