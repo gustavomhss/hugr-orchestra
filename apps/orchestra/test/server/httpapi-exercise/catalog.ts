@@ -43,6 +43,7 @@ export const catalogScenarios: Scenario[] = [
   http.protected
     .post("/api/claude-code/login", "v2.claudeCode.login")
     .global()
+    .at(() => ({ path: "/api/claude-code/login" }))
     .status(400),
   http.protected
     .post("/api/claude-code/login/code", "v2.claudeCode.loginCode")

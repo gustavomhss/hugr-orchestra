@@ -16,7 +16,7 @@
   inline-size: min(680px, calc(100vw - 48px));
   max-block-size: calc(100vh - 64px);
   border: 1px solid var(--mx-line);
-  border-radius: 14px;
+  border-radius: var(--orchestra-radius-xl);
   background: var(--mx-modal);
   box-shadow: var(--mx-shadow);
 }
@@ -47,14 +47,14 @@
 
 .plugins-dialog [data-slot="dialog-header"] h2 {
   margin: 0;
-  font-size: 20px;
+  font-size: var(--orchestra-font-size-2xl);
   font-weight: 570;
   letter-spacing: -0.025em;
 }
 
 .plugins-dialog [data-slot="dialog-header"] p {
   margin: 7px 0 0;
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   color: var(--mx-dim);
   line-height: 1.6;
 }

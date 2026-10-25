@@ -9,7 +9,7 @@
   overflow: auto;
   padding-block-start: 6px;
   border-block-start: 1px solid var(--border-weak);
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
 }
 
 .zen-linux-heading {
@@ -71,7 +71,7 @@
 .zen-linux-detail,
 .zen-linux p {
   color: var(--text-weak);
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
 }
 
 .zen-linux-apps {
@@ -101,7 +101,7 @@
 .zen-browser-shell.is-sidebar-collapsed .zen-linux-open {
   justify-content: center;
   padding-inline: 0;
-  font-size: 10px;
+  font-size: var(--orchestra-font-size-2xs);
 }
 
 .zen-browser-shell.is-sidebar-collapsed .zen-linux-apps button {
@@ -111,6 +111,6 @@
 }
 
 .zen-browser-shell.is-sidebar-collapsed .zen-linux p {
-  font-size: 10px;
+  font-size: var(--orchestra-font-size-2xs);
   margin-inline: 0;
 }

@@ -16,6 +16,7 @@ import { displayName, projectForSession } from "@/pages/layout/helpers"
 import { createSessionTabs } from "@/pages/session/helpers"
 import { useSessionLayout } from "@/pages/session/session-layout"
 import { normalizeSessionInfo } from "@/utils/session"
+import { sessionTitle } from "@/utils/session-title"
 
 export type CommandPaletteEntry = {
   id: string
@@ -266,7 +267,7 @@ export function createServerSessionEntries(props: {
             return {
               id: `session:${props.server}:${session.id}`,
               type: "session" as const,
-              title: session.title || props.untitled(),
+              title: sessionTitle(session.title) || props.untitled(),
               description: project ? displayName(project) : getFilename(session.directory),
               category: props.category(),
               directory: session.directory,

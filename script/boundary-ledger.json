@@ -1699,12 +1699,6 @@
       "reason": "D8: relative import across a package root; retargets are deferred"
     },
     {
-      "rule": "R5",
-      "file": "packages/script/test/translate-app.test.ts",
-      "specifier": "../../../script/translate-app",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
       "rule": "R6b",
       "file": "apps/orchestra/specs/v2/api.ts",
       "specifier": "@orchestra/core",

@@ -12,11 +12,11 @@
   gap: 7px;
   padding: 5px 5px 7px;
   border: 1px solid var(--orchestra-border-muted);
-  border-radius: 9px;
+  border-radius: var(--orchestra-radius-md);
   background: transparent;
   color: var(--orchestra-body);
   font: inherit;
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   line-height: 16px;
   text-align: start;
   cursor: pointer;
@@ -43,7 +43,7 @@
   block-size: 52px;
   overflow: hidden;
   border: 1px solid var(--orchestra-border-muted);
-  border-radius: 6px;
+  border-radius: var(--orchestra-radius-sm);
 }
 
 .orchestra-palettes [data-palette-swatch] {
@@ -62,14 +62,14 @@
   gap: 5px;
   padding-inline: 7px;
   border: 1px solid var(--swatch-border);
-  border-radius: 5px;
+  border-radius: var(--orchestra-radius-sm);
   background: var(--swatch-glass);
 }
 
 .orchestra-palettes [data-slot="glass"] i {
   display: block;
   block-size: 4px;
-  border-radius: 2px;
+  border-radius: var(--orchestra-radius-xs);
 }
 
 .orchestra-palettes [data-slot="text"] {

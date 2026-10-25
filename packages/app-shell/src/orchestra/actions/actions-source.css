@@ -1,9 +1,9 @@
 /* Actions workflow source, matched to the approved Actions mock. */
-.actions-page .detail-source > .source-identity { border: 1px solid var(--actions-line); border-radius: 8px; }
+.actions-page .detail-source > .source-identity { border: 1px solid var(--actions-line); border-radius: var(--orchestra-radius-md); }
 .actions-page .detail-source .source-identity bdi { overflow-wrap: anywhere; }
-.actions-page .detail-source .source-identity code { margin-inline-start: 4px; font-size: 10.5px; }
+.actions-page .detail-source .source-identity code { margin-inline-start: 4px; font-size: var(--orchestra-font-size-xs); }
 .actions-page .detail-source .source-identity .source-access { margin-inline-start: auto; }
-.actions-page .detail-source .source-toolbar { background: var(--actions-raised); font-size: 12px; }
+.actions-page .detail-source .source-toolbar { background: var(--actions-raised); font-size: var(--orchestra-font-size-sm); }
 .actions-page .detail-source .source-toolbar > span { overflow-wrap: anywhere; }
 .actions-page .detail-source .source-toolbar form { display: inline-flex; align-items: center; gap: 8px; }
 .actions-page .detail-source .source-toolbar label { display: inline-flex; align-items: center; gap: 8px; color: var(--actions-dim); }
