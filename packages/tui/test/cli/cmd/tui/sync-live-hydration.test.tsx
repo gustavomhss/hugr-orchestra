@@ -1,295 +1,177 @@
 /** @jsxImportSource @opentui/solid */
 import { expect, test } from "bun:test"
-import type { GlobalEvent } from "@orchestra/sdk/v2"
+import type { GlobalEvent } from "../../../../src/compat/schema"
 import { tmpdir } from "../../../fixture/fixture"
 import { json, mount, wait } from "./sync-fixture"
 import { v2Session } from "../../../fixture/tui-sdk"
 
 const sessionID = "ses_hydration_race"
-const messageID = "msg_hydration_race"
-const partID = "prt_hydration_race"
-const session = {
-  id: sessionID,
-  title: "race",
-  time: { created: 0, updated: 0 },
-  version: "1.15.13",
-  directory: "/tmp/orchestra/apps/orchestra",
-}
-const assistant = {
-  id: messageID,
-  sessionID,
-  role: "assistant" as const,
-  agent: "maestro",
-  modelID: "model",
-  providerID: "test",
-  mode: "maestro",
-  parentID: "msg_user",
-  path: { cwd: session.directory, root: session.directory },
-  cost: 0,
-  tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
-  time: { created: 1, completed: 2 },
+const assistantID = "msg_hydration_assistant"
+const directory = "/tmp/orchestra/apps/orchestra"
+const model = { id: "model", providerID: "test" }
+
+function global(type: string, properties: Record<string, unknown>) {
+  return {
+    directory: "/tmp/other",
+    project: "proj_test",
+    payload: { id: `evt_${type}_${Math.random()}`, type, properties: { sessionID, timestamp: 5, ...properties } },
+  } as GlobalEvent
 }
 
-function global(payload: GlobalEvent["payload"]): GlobalEvent {
-  return { directory: "/tmp/other", project: "proj_test", payload }
+function fetchHandler(input: { messages: () => Response | Promise<Response>; status?: unknown[] }) {
+  const state = { requested: false }
+  return {
+    state,
+    handler: (url: URL) => {
+      if (url.pathname === `/api/session/${sessionID}`)
+        return json({ data: v2Session({ id: sessionID, title: "race", directory }) })
+      if (url.pathname === `/api/session/${sessionID}/todo`) return json({ data: [] })
+      if (url.pathname === `/api/session/${sessionID}/message`) {
+        state.requested = true
+        return input.messages()
+      }
+      if (url.pathname === "/api/vcs/status")
+        return json({ location: { directory, project: { id: "proj_test", directory } }, data: input.status ?? [] })
+      return undefined
+    },
+  }
 }
 
-test("live messages use creation time with an ID tie-break", async () => {
+test("V2 history hydrates into V1 messages, parts and the Session diff", async () => {
+  await using tmp = await tmpdir()
+  await Bun.write(`${tmp.path}/kv.json`, "{}")
+  const route = fetchHandler({
+    messages: () =>
+      json({
+        data: [
+          {
+            id: assistantID,
+            type: "assistant",
+            agent: "maestro",
+            model,
+            content: [
+              { type: "text", id: "txt_1", text: "done" },
+              {
+                type: "tool",
+                id: "call_1",
+                name: "read",
+                time: { created: 3, ran: 3, completed: 4 },
+                state: {
+                  status: "completed",
+                  input: { filePath: "a.ts" },
+                  structured: { title: "a.ts" },
+                  content: [{ type: "text", text: "contents" }],
+                },
+              },
+            ],
+            snapshot: { files: ["a.ts"] },
+            finish: "stop",
+            cost: 0,
+            tokens: { input: 1, output: 1, reasoning: 0, cache: { read: 0, write: 0 } },
+            time: { created: 2, completed: 4 },
+          },
+          { id: "msg_user", type: "user", text: "hello", time: { created: 1 } },
+        ],
+        cursor: {},
+      }),
+    status: [
+      { file: "a.ts", additions: 2, deletions: 1, status: "modified" },
+      { file: "unrelated.ts", additions: 9, deletions: 0, status: "added" },
+    ],
+  })
+  const { app, sync } = await mount(route.handler, tmp.path)
+
+  try {
+    await sync.session.sync(sessionID)
+
+    expect(sync.data.message[sessionID].map((message) => [message.id, message.role])).toEqual([
+      ["msg_user", "user"],
+      [assistantID, "assistant"],
+    ])
+    expect(sync.data.message[sessionID][0]).toMatchObject({ agent: "maestro", model: { modelID: "model" } })
+    expect(sync.data.message[sessionID][1]).toMatchObject({ parentID: "msg_user", modelID: "model" })
+    expect(sync.data.part["msg_user"]).toMatchObject([{ type: "text", text: "hello" }])
+    expect(sync.data.part[assistantID].map((part) => part.type)).toEqual(["step-start", "text", "tool", "step-finish"])
+    expect(sync.data.part[assistantID][2]).toMatchObject({
+      tool: "read",
+      state: { status: "completed", output: "contents", title: "a.ts" },
+    })
+    expect(sync.data.session_diff[sessionID]).toEqual([
+      { file: "a.ts", additions: 2, deletions: 1, status: "modified" },
+    ])
+  } finally {
+    app.renderer.destroy()
+  }
+})
+
+test("live V2 events stream into the projected parts", async () => {
+  await using tmp = await tmpdir()
+  await Bun.write(`${tmp.path}/kv.json`, "{}")
+  const route = fetchHandler({ messages: () => json({ data: [], cursor: {} }) })
+  const { app, emit, sync } = await mount(route.handler, tmp.path)
+
+  try {
+    await sync.session.sync(sessionID)
+    emit(global("session.next.step.started", { assistantMessageID: assistantID, agent: "maestro", model }))
+    emit(global("session.next.text.started", { assistantMessageID: assistantID, textID: "txt_1" }))
+    emit(global("session.next.text.delta", { assistantMessageID: assistantID, textID: "txt_1", delta: "hel" }))
+    emit(global("session.next.text.delta", { assistantMessageID: assistantID, textID: "txt_1", delta: "lo" }))
+    await wait(() => sync.data.part[assistantID]?.[1]?.type === "text")
+
+    expect(sync.data.part[assistantID][1]).toMatchObject({ type: "text", text: "hello" })
+    expect(sync.session.status(sessionID)).toBe("working")
+  } finally {
+    app.renderer.destroy()
+  }
+})
+
+test("stale Session hydration does not overwrite live message content", async () => {
+  await using tmp = await tmpdir()
+  await Bun.write(`${tmp.path}/kv.json`, "{}")
+  const pending = Promise.withResolvers<Response>()
+  const route = fetchHandler({ messages: () => pending.promise })
+  const { app, emit, sync } = await mount(route.handler, tmp.path)
+
+  try {
+    const hydrate = sync.session.sync(sessionID)
+    await wait(() => route.state.requested)
+    emit(global("session.next.step.started", { assistantMessageID: assistantID, agent: "maestro", model }))
+    emit(global("session.next.text.started", { assistantMessageID: assistantID, textID: "txt_1" }))
+    emit(global("session.next.text.delta", { assistantMessageID: assistantID, textID: "txt_1", delta: "live" }))
+
+    pending.resolve(
+      json({
+        data: [
+          {
+            id: assistantID,
+            type: "assistant",
+            agent: "maestro",
+            model,
+            content: [{ type: "text", id: "txt_1", text: "" }],
+            time: { created: 5 },
+          },
+        ],
+        cursor: {},
+      }),
+    )
+    await hydrate
+
+    expect(sync.data.part[assistantID][1]).toMatchObject({ type: "text", text: "live" })
+  } finally {
+    app.renderer.destroy()
+  }
+})
+
+test("events for Sessions that were never synced are not projected", async () => {
   await using tmp = await tmpdir()
   await Bun.write(`${tmp.path}/kv.json`, "{}")
   const { app, emit, sync } = await mount(undefined, tmp.path)
-  const messages = [
-    { ...assistant, id: "msg_a", time: { created: 30, completed: 31 } },
-    { ...assistant, id: "msg_z", time: { created: 10, completed: 11 } },
-    { ...assistant, id: "msg_m", time: { created: 20, completed: 21 } },
-    { ...assistant, id: "msg_b", time: { created: 20, completed: 21 } },
-  ]
 
   try {
-    for (const info of messages) {
-      emit(global({ id: `evt_${info.id}`, type: "message.updated", properties: { sessionID, info } }))
-    }
-    await wait(() => sync.data.message[sessionID]?.length === messages.length)
+    emit(global("session.next.step.started", { assistantMessageID: assistantID, agent: "maestro", model }))
+    await Bun.sleep(20)
 
-    expect(sync.data.message[sessionID].map((message) => message.id)).toEqual(["msg_z", "msg_b", "msg_m", "msg_a"])
-  } finally {
-    app.renderer.destroy()
-  }
-})
-
-test("stale session hydration does not overwrite live message parts", async () => {
-  await using tmp = await tmpdir()
-  await Bun.write(`${tmp.path}/kv.json`, "{}")
-
-  let resolveMessages!: (response: Response) => void
-  const messages = new Promise<Response>((resolve) => {
-    resolveMessages = resolve
-  })
-  let requested = false
-  const { app, emit, sync } = await mount((url) => {
-    if (url.pathname === `/api/session/${sessionID}`)
-      return json({ data: v2Session({ id: sessionID, title: session.title, directory: session.directory }) })
-    if (url.pathname === `/api/session/${sessionID}/todo`) return json({ data: [] })
-    if (url.pathname === `/session/${sessionID}/message`) {
-      requested = true
-      return messages
-    }
-    if (url.pathname === `/session/${sessionID}/diff`) return json([])
-    return undefined
-  }, tmp.path)
-
-  try {
-    const hydrate = sync.session.sync(sessionID)
-    await wait(() => requested)
-    emit(global({ id: "evt_message", type: "message.updated", properties: { sessionID, info: assistant } }))
-    emit(
-      global({
-        id: "evt_part",
-        type: "message.part.updated",
-        properties: {
-          sessionID,
-          time: 2,
-          part: { id: partID, sessionID, messageID, type: "text", text: "visible live content" },
-        },
-      }),
-    )
-    await wait(() => sync.data.part[messageID]?.[0]?.type === "text")
-
-    resolveMessages(
-      json([
-        {
-          info: assistant,
-          parts: [{ id: partID, sessionID, messageID, type: "text", text: "" }],
-        },
-      ]),
-    )
-    await hydrate
-
-    expect(sync.data.part[messageID][0]).toMatchObject({ text: "visible live content" })
-  } finally {
-    app.renderer.destroy()
-  }
-})
-
-test("orphan live deltas do not suppress hydrated parts", async () => {
-  await using tmp = await tmpdir()
-  await Bun.write(`${tmp.path}/kv.json`, "{}")
-
-  let resolveMessages!: (response: Response) => void
-  const messages = new Promise<Response>((resolve) => {
-    resolveMessages = resolve
-  })
-  let requested = false
-  const { app, emit, sync } = await mount((url) => {
-    if (url.pathname === `/api/session/${sessionID}`)
-      return json({ data: v2Session({ id: sessionID, title: session.title, directory: session.directory }) })
-    if (url.pathname === `/api/session/${sessionID}/todo`) return json({ data: [] })
-    if (url.pathname === `/session/${sessionID}/message`) {
-      requested = true
-      return messages
-    }
-    if (url.pathname === `/session/${sessionID}/diff`) return json([])
-    return undefined
-  }, tmp.path)
-
-  try {
-    const hydrate = sync.session.sync(sessionID)
-    await wait(() => requested)
-    emit(
-      global({
-        id: "evt_delta",
-        type: "message.part.delta",
-        properties: { sessionID, messageID, partID, field: "text", delta: "ignored until part exists" },
-      }),
-    )
-    resolveMessages(
-      json([{ info: assistant, parts: [{ id: partID, sessionID, messageID, type: "text", text: "hydrated" }] }]),
-    )
-    await hydrate
-
-    expect(sync.data.part[messageID][0]).toMatchObject({ text: "hydrated" })
-  } finally {
-    app.renderer.destroy()
-  }
-})
-
-test("hydration does not clear text streamed before it starts", async () => {
-  await using tmp = await tmpdir()
-  await Bun.write(`${tmp.path}/kv.json`, "{}")
-
-  let resolveMessages!: (response: Response) => void
-  const messages = new Promise<Response>((resolve) => {
-    resolveMessages = resolve
-  })
-  let requested = false
-  const { app, emit, sync } = await mount((url) => {
-    if (url.pathname === `/api/session/${sessionID}`)
-      return json({ data: v2Session({ id: sessionID, title: session.title, directory: session.directory }) })
-    if (url.pathname === `/api/session/${sessionID}/todo`) return json({ data: [] })
-    if (url.pathname === `/session/${sessionID}/message`) {
-      requested = true
-      return messages
-    }
-    if (url.pathname === `/session/${sessionID}/diff`) return json([])
-    return undefined
-  }, tmp.path)
-
-  try {
-    emit(global({ id: "evt_message", type: "message.updated", properties: { sessionID, info: assistant } }))
-    emit(
-      global({
-        id: "evt_part",
-        type: "message.part.updated",
-        properties: {
-          sessionID,
-          time: 1,
-          part: { id: partID, sessionID, messageID, type: "text", text: "" },
-        },
-      }),
-    )
-    emit(
-      global({
-        id: "evt_delta",
-        type: "message.part.delta",
-        properties: { sessionID, messageID, partID, field: "text", delta: "visible streamed content" },
-      }),
-    )
-    await wait(() => sync.data.part[messageID]?.[0]?.type === "text" && sync.data.part[messageID][0].text !== "")
-    const hydrate = sync.session.sync(sessionID)
-    await wait(() => requested)
-    resolveMessages(json([{ info: assistant, parts: [{ id: partID, sessionID, messageID, type: "text", text: "" }] }]))
-    await hydrate
-
-    expect(sync.data.part[messageID][0]).toMatchObject({ text: "visible streamed content" })
-  } finally {
-    app.renderer.destroy()
-  }
-})
-
-test("live messages merged during hydration retain the 100 message window", async () => {
-  await using tmp = await tmpdir()
-  await Bun.write(`${tmp.path}/kv.json`, "{}")
-
-  let resolveMessages!: (response: Response) => void
-  const messages = new Promise<Response>((resolve) => {
-    resolveMessages = resolve
-  })
-  let requested = false
-  const { app, emit, sync } = await mount((url) => {
-    if (url.pathname === `/api/session/${sessionID}`)
-      return json({ data: v2Session({ id: sessionID, title: session.title, directory: session.directory }) })
-    if (url.pathname === `/api/session/${sessionID}/todo`) return json({ data: [] })
-    if (url.pathname === `/session/${sessionID}/message`) {
-      requested = true
-      return messages
-    }
-    if (url.pathname === `/session/${sessionID}/diff`) return json([])
-    return undefined
-  }, tmp.path)
-
-  try {
-    const hydrate = sync.session.sync(sessionID)
-    await wait(() => requested)
-    const live = { ...assistant, id: "msg_z_live" }
-    emit(global({ id: "evt_live", type: "message.updated", properties: { sessionID, info: live } }))
-    await wait(() => sync.data.message[sessionID]?.some((message) => message.id === live.id) ?? false)
-    resolveMessages(
-      json(
-        Array.from({ length: 100 }, (_, index) => {
-          const id = `msg_${String(index).padStart(3, "0")}`
-          return {
-            info: { ...assistant, id },
-            parts: [{ id: `prt_${id}`, sessionID, messageID: id, type: "text", text: id }],
-          }
-        }),
-      ),
-    )
-    await hydrate
-
-    expect(sync.data.message[sessionID]).toHaveLength(100)
-    expect(sync.data.message[sessionID].at(-1)?.id).toBe(live.id)
-    expect(sync.data.message[sessionID].some((message) => message.id === "msg_000")).toBe(false)
-    expect(sync.data.part.msg_000).toBeUndefined()
-  } finally {
-    app.renderer.destroy()
-  }
-})
-
-test("a message removed during hydration does not regain stale parts", async () => {
-  await using tmp = await tmpdir()
-  await Bun.write(`${tmp.path}/kv.json`, "{}")
-
-  let resolveMessages!: (response: Response) => void
-  const messages = new Promise<Response>((resolve) => {
-    resolveMessages = resolve
-  })
-  let requested = false
-  const { app, emit, sync } = await mount((url) => {
-    if (url.pathname === `/api/session/${sessionID}`)
-      return json({ data: v2Session({ id: sessionID, title: session.title, directory: session.directory }) })
-    if (url.pathname === `/api/session/${sessionID}/todo`) return json({ data: [] })
-    if (url.pathname === `/session/${sessionID}/message`) {
-      requested = true
-      return messages
-    }
-    if (url.pathname === `/session/${sessionID}/diff`) return json([])
-    return undefined
-  }, tmp.path)
-
-  try {
-    emit(global({ id: "evt_message", type: "message.updated", properties: { sessionID, info: assistant } }))
-    await wait(() => sync.data.message[sessionID]?.length === 1)
-    const hydrate = sync.session.sync(sessionID)
-    await wait(() => requested)
-    emit(global({ id: "evt_removed", type: "message.removed", properties: { sessionID, messageID } }))
-    await wait(() => sync.data.message[sessionID]?.length === 0)
-    resolveMessages(
-      json([{ info: assistant, parts: [{ id: partID, sessionID, messageID, type: "text", text: "stale" }] }]),
-    )
-    await hydrate
-
-    expect(sync.data.message[sessionID]).toEqual([])
-    expect(sync.data.part[messageID]).toBeUndefined()
+    expect(sync.data.message[sessionID]).toBeUndefined()
   } finally {
     app.renderer.destroy()
   }
