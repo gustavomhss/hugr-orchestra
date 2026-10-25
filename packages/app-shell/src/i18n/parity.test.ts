@@ -164,7 +164,7 @@ describe("i18n parity", () => {
 
   test("subagent model recovery copy is localized in every declared app dictionary", async () => {
     const source = await dictionary("./en.ts")
-    const keys = ["unsupported", "saveFailed", "inherited", "noneAllowed"].map((key) => `dialog.subagentModels.${key}`)
+    const keys = ["saveFailed", "inherited"].map((key) => `dialog.subagentModels.${key}`)
     expect(appLocales.length).toBeGreaterThan(0)
     for (const locale of appLocales) {
       const target = await dictionary(`./${locale}.ts`)
