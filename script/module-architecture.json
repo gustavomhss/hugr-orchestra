@@ -202,7 +202,7 @@
         { "path": "src/account", "kind": "cohesive", "entries": ["src/account.ts"] },
         { "path": "src/actions", "kind": "cohesive", "entries": ["src/actions.ts"] },
         { "path": "src/agent", "kind": "cohesive", "entries": ["src/agent.ts"] },
-        { "path": "src/config", "kind": "cohesive", "entries": ["src/config.ts", "src/config/markdown.ts"] },
+        { "path": "src/config", "kind": "cohesive", "entries": ["src/config.ts", "src/config/markdown.ts", "src/config/plugin-file.ts"] },
         { "path": "src/credential", "kind": "cohesive", "entries": ["src/credential.ts"] },
         { "path": "src/event", "kind": "cohesive", "entries": ["src/event.ts"] },
         { "path": "src/filesystem", "kind": "cohesive", "entries": ["src/filesystem.ts"] },
@@ -211,14 +211,14 @@
         { "path": "src/observability", "kind": "cohesive", "entries": ["src/observability.ts"] },
         { "path": "src/permission", "kind": "cohesive", "entries": ["src/permission.ts"] },
         { "path": "src/plugin", "kind": "cohesive", "entries": ["src/plugin.ts"] },
-        { "path": "src/project", "kind": "cohesive", "entries": ["src/project.ts"] },
+        { "path": "src/project", "kind": "cohesive", "entries": ["src/project.ts", "src/project/sql.ts"] },
         { "path": "src/pty", "kind": "cohesive", "entries": ["src/pty.ts", "src/pty/omni.ts"] },
         { "path": "src/reference", "kind": "cohesive", "entries": ["src/reference.ts"] },
         { "path": "src/ripgrep", "kind": "cohesive", "entries": ["src/ripgrep.ts"] },
         { "path": "src/scheduled-task", "kind": "cohesive", "entries": ["src/scheduled-task.ts"] },
-        { "path": "src/session", "kind": "cohesive", "entries": ["src/session.ts", "src/session/runner/index.ts"] },
+        { "path": "src/session", "kind": "cohesive", "entries": ["src/session.ts", "src/session/runner/index.ts", "src/session/message.ts", "src/session/sql.ts", "src/session/execution.ts"] },
         { "path": "src/skill", "kind": "cohesive", "entries": ["src/skill.ts"] },
-        { "path": "src/backend-toolkit", "kind": "cohesive", "entries": ["src/backend-toolkit/index.ts"] },
+        { "path": "src/backend-toolkit", "kind": "cohesive", "entries": ["src/backend-toolkit/index.ts", "src/backend-toolkit/manifest.ts", "src/backend-toolkit/target.ts"] },
         { "path": "src/system-context", "kind": "cohesive", "entries": ["src/system-context/index.ts"] },
         { "path": "src/capability", "kind": "collection" },
         { "path": "src/control-plane", "kind": "collection" },
@@ -282,7 +282,9 @@
             "src/snapshot.ts",
             "src/patch.ts",
             "src/pull-request.ts",
-            "src/workspace.ts"
+            "src/workspace.ts",
+            "src/format.ts",
+            "src/format/"
           ]
         },
         "database": { "kind": "platform", "entry": "src/database/database.ts", "patterns": ["src/database/", "src/data-migration.sql.ts"] },
@@ -347,6 +349,7 @@
           "kind": "platform",
           "entry": "src/account.ts",
           "patterns": [
+            "src/claude-code-account.ts",
             "src/account/",
             "src/account.ts",
             "src/credential/",
@@ -493,11 +496,7 @@
       "decision": "D14"
     }
   ],
-  "productEdges": [
-    ["claude-code", "maestro"],
-    ["claude-code", "continuity"],
-    ["maestro", "continuity"]
-  ],
+  "productEdges": [],
   "relayContainment": { "package": "core", "specifier": "@orchestra/relay", "domains": ["relay", "tool-safety"] },
   "logicalModules": [
     {

@@ -28,7 +28,10 @@
   "workspaces": {
     "packages": [
       "packages/*",
-      "apps/*",
+      "apps/cli",
+      "apps/desktop",
+      "apps/storybook",
+      "apps/web",
       "modules/relay",
       "modules/capability-assets",
       "modules/maestro/arsenal",
