@@ -5,6 +5,10 @@
   "type": "module",
   "license": "MIT",
   "dependencies": {
-    "@orchestra/core": "workspace:*"
+    "@orchestra/core": "workspace:*",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:"
   }
 }

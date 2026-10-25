@@ -1,10 +1,10 @@
 import { expect } from "bun:test"
 import { Effect } from "effect"
 import { ChildProcess } from "effect/unstable/process"
-import { LayerNode } from "../src/effect/layer-node"
-import { AppProcess } from "../src/process"
-import { ROOT } from "@orchestra/omni-campaign/lib"
-import { testEffect } from "./lib/effect"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { AppProcess } from "@orchestra/core/process"
+import { ROOT } from "../lib"
+import { testEffect } from "@orchestra/core/test/lib/effect"
 
 const it = testEffect(LayerNode.compile(AppProcess.node))
 

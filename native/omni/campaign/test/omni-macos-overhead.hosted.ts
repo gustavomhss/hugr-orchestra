@@ -2,11 +2,11 @@ import { expect, test } from "bun:test"
 import path from "node:path"
 import { Effect } from "effect"
 import { ChildProcess } from "effect/unstable/process"
-import { Omni } from "../src/omni"
-import { OmniSpawner } from "../src/omni-spawner"
+import { Omni } from "@orchestra/core/omni"
+import { OmniSpawner } from "@orchestra/core/omni-spawner"
 import os from "node:os"
-import { ROOT, until } from "@orchestra/omni-campaign/lib"
-import { run } from "@orchestra/omni-campaign/v7-overhead"
+import { ROOT, until } from "../lib"
+import { run } from "../v7-overhead"
 
 // Dedicated hosted proof: excluded from ordinary Bun suffix discovery, selected by its exact path.
 test("macOS V7 completes 1000 paced pairs and rejects measured caller slowdown", async () => {

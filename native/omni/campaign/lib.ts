@@ -24,7 +24,7 @@ export type { ToolCall } from "./fake-llm.ts"
 export type { Identity, Row } from "./process-rows.ts"
 
 // The stateless parts of the harness live in modules of their own; this file re-exports them, so importers keep one
-// entry point. omni-campaign-inventory.test.ts instruments a copy of this file beside copies of those modules.
+// entry point. test/omni-campaign-inventory.test.ts instruments a copy of this file beside copies of those modules.
 export { client, decodeUnixTable, fakeLLM, hasNonce, isolated, matches, provider, SERVER_PASSWORD, sleep, until, writeConfig }
 
 export const ROOT = path.resolve(import.meta.dirname, "../../..")

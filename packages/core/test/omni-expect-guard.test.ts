@@ -50,7 +50,7 @@ const ledger: Record<string, string> = {
   "apps/cli/test/distribution-payload.test.ts":
     "its own Windows ABI test calls ArtifactNativeWindows' pure PE checks and spawns nothing; the spawning Windows controls it imports declare in fixture/artifact-native-windows-controls.ts",
   "apps/cli/test/export-artifacts.test.ts": cliArtifactFFI,
-  "packages/core/test/omni-campaign-inventory.test.ts":
+  "native/omni/campaign/test/omni-campaign-inventory.test.ts":
     "tests the omni campaign's process inventory; it reaches the surface only through native/omni/campaign helpers, and its own processes start through node:child_process",
   "packages/core/test/omni-loader.test.ts":
     "unit tests of the loader, the counters (which it takes back) and the verdict; its process-tree case spawns through node:child_process on purpose",

@@ -37,7 +37,7 @@ observations. Preserve the JSON verdicts, negative controls and command logs whe
 Timing acceptance requires a quiet host; a refused or interrupted measurement is not green. V7's limit is
 `p50(omni) <= max(p50(legacy) * 1.10, p50(legacy) + 2 ms)`. Do not loosen it to accommodate local load.
 
-The delivery workflow covers Unix V7, Windows V8, and V9 on three OSes. Dedicated `.hosted.ts` wrappers run V3–V6,
+The delivery workflow covers Unix V7, Windows V8, and V9 on three OSes. Dedicated `test/*.hosted.ts` wrappers run V3–V6,
 Windows lifecycle and fixture identity proofs only when explicitly selected through `test:ci`.
 `omni-desktop-smoke.yml` builds the actual unsigned Electron app on three OSes. See the WP10 report for exact
 revisions, mutation controls, raw ConPTY limits and the owner-authorized signing deferral. No individual workflow

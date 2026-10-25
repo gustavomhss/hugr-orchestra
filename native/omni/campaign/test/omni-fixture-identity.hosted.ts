@@ -3,18 +3,18 @@ import { afterAll, beforeAll, expect, test } from "bun:test"
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { Omni } from "../src/omni"
-import { alive } from "./fixture/process-tree"
-import { appRuntime, effectModules } from "@orchestra/omni-campaign/delivery-fixtures.ts"
-import { fileTree, LOGS, matches, table, until, win } from "@orchestra/omni-campaign/lib.ts"
-import { fixture } from "@orchestra/omni-campaign/protocol-fixtures.ts"
-import { WindowsInventory } from "@orchestra/omni-campaign/windows-inventory.ts"
+import { Omni } from "@orchestra/core/omni"
+import { alive } from "@orchestra/core/test/fixture/process-tree"
+import { appRuntime, effectModules } from "../delivery-fixtures.ts"
+import { fileTree, LOGS, matches, table, until, win } from "../lib.ts"
+import { fixture } from "../protocol-fixtures.ts"
+import { WindowsInventory } from "../windows-inventory.ts"
 
 beforeAll(async () => {
   expect(process.env.CI).toBeTruthy()
   process.env.ORCHESTRA_LOCAL_TESTS = "1"
   const { Effect, ChildProcess } = await effectModules()
-  const { AppProcess } = await import("../src/process")
+  const { AppProcess } = await import("@orchestra/core/process")
   const runtime = await appRuntime()
   const before = Omni.snapshot()
   try {

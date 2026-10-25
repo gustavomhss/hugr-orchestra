@@ -1,13 +1,13 @@
 // Dedicated hosted proof: excluded from ordinary Bun suffix discovery, selected by its exact path.
 import { expect, test } from "bun:test"
-import { expectSpawn } from "./fixture/omni-expect"
+import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { copyFileSync, existsSync, mkdirSync } from "node:fs"
 import path from "node:path"
-import { CLI_APP, LOGS, cli } from "@orchestra/omni-campaign/lib.ts"
-import { appRuntime, effectModules } from "@orchestra/omni-campaign/delivery-fixtures.ts"
-import { Omni } from "../src/omni"
+import { CLI_APP, LOGS, cli } from "../lib.ts"
+import { appRuntime, effectModules } from "../delivery-fixtures.ts"
+import { Omni } from "@orchestra/core/omni"
 import { Schema } from "effect"
-import { run } from "@orchestra/omni-campaign/v1-background.ts"
+import { run } from "../v1-background.ts"
 
 test("Windows compiled CLI V1 adoption, V2 serve and attached-TUI crash, V10 serve and TUI quit and oracle mutations", async () => {
   expectSpawn(import.meta.path)
@@ -17,7 +17,7 @@ test("Windows compiled CLI V1 adoption, V2 serve and attached-TUI crash, V10 ser
   expect(existsSync(process.env.HUGR_OMNI_ADDON ?? "")).toBe(true)
   expect(existsSync(process.env.HUGR_OMNI_SUPERVISOR ?? "")).toBe(true)
   const { Effect, ChildProcess } = await effectModules()
-  const { AppProcess } = await import("../src/process")
+  const { AppProcess } = await import("@orchestra/core/process")
   const runtime = await appRuntime()
   const before = Omni.snapshot()
   try {
@@ -41,7 +41,7 @@ test("Windows compiled CLI V1 adoption, V2 serve and attached-TUI crash, V10 ser
   })
   expect(await build.exited).toBe(0)
   expect(existsSync(cli())).toBe(true)
-  const v2 = await import("@orchestra/omni-campaign/v2-kill.ts")
+  const v2 = await import("../v2-kill.ts")
   const failure = (error: unknown) => ({ pass: false, error: String(error), phase: "unhandled campaign/cleanup failure" })
   const results = { v1: await run().catch(failure), v2Serve: await v2.run("serve").catch(failure), v2Tui: await v2.run("tui").catch(failure), v10Tui: await v2.run("tui", "quit").catch(failure), v10Serve: await v2.run("serve", "quit").catch(failure) }
   console.log("WINDOWS_LIFECYCLE_PROOF " + JSON.stringify(Object.fromEntries(Object.entries(results).map(([cell, result]) => [cell, {

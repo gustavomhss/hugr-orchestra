@@ -3,8 +3,8 @@ import { expect, test } from "bun:test"
 import { cpSync, mkdtempSync, rmSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { BUN, ROOT } from "@orchestra/omni-campaign/lib.ts"
-import { run, settle } from "@orchestra/omni-campaign/v7-attribution.ts"
+import { BUN, ROOT } from "../lib.ts"
+import { run, settle } from "../v7-attribution.ts"
 
 if (process.platform !== "linux" || process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER !== "1")
   throw new Error("Linux overhead proof requires its explicit Linux runner and Omni release binaries")
@@ -12,8 +12,8 @@ if (process.platform !== "linux" || process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAW
 test("V7 attribution: real Effect caller, bare binding, native exit/EOF/stop boundaries", async () => {
   const { Effect } = await import("effect")
   const { ChildProcess } = await import("effect/unstable/process")
-  const { Omni } = await import("../src/omni.ts")
-  const { OmniSpawner } = await import("../src/omni-spawner.ts")
+  const { Omni } = await import("@orchestra/core/omni")
+  const { OmniSpawner } = await import("@orchestra/core/omni-spawner")
   const binding = await Omni.load()
   const control = await Effect.runPromise(OmniSpawner.collect(binding, ChildProcess.make("git", ["rev-parse", "HEAD"]), {}))
   expect(control.exitCode).toBe(0)
@@ -29,7 +29,7 @@ test("V7 Linux syscall attribution (unprivileged native strace)", async () => {
 
 test("V7 unchanged 1000-pair quiet real AppProcess KPI and baseline mutation", async () => {
   await settle()
-  const { run } = await import("@orchestra/omni-campaign/v7-overhead.ts")
+  const { run } = await import("../v7-overhead.ts")
   const result = await run({ quiet: true })
   console.log("V7_KPI " + JSON.stringify(result))
   expect(result.timingKpiRun).toBe(true)

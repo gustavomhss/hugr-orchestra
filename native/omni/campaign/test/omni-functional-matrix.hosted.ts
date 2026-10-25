@@ -1,9 +1,9 @@
 // Dedicated hosted proof: excluded from ordinary Bun suffix discovery, selected by its exact path.
 import { expect, test } from "bun:test"
-import { expectSpawn } from "./fixture/omni-expect"
-import { Omni } from "../src/omni"
-import { appRuntime, effectModules } from "@orchestra/omni-campaign/delivery-fixtures.ts"
-import { prepare } from "@orchestra/omni-campaign/matrix-build.ts"
+import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
+import { Omni } from "@orchestra/core/omni"
+import { appRuntime, effectModules } from "../delivery-fixtures.ts"
+import { prepare } from "../matrix-build.ts"
 
 test("V3/V4/V5/V6 real OS functional matrix and targeted red mutations", async () => {
   expectSpawn(import.meta.path)
@@ -11,7 +11,7 @@ test("V3/V4/V5/V6 real OS functional matrix and targeted red mutations", async (
   expect(process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER).toBe("strict")
   // Parent counter measured before launching any campaign child; real AppProcess flow, no copied implementation.
   const { Effect, ChildProcess } = await effectModules()
-  const { AppProcess } = await import("../src/process")
+  const { AppProcess } = await import("@orchestra/core/process")
   const runtime = await appRuntime()
   const before = Omni.snapshot()
   try {
@@ -25,10 +25,10 @@ test("V3/V4/V5/V6 real OS functional matrix and targeted red mutations", async (
     console.log("MATRIX_PARENT_NATIVE_CONTROL " + JSON.stringify({ before, after: Omni.snapshot(), stdout: git.stdout.toString() }))
   } finally { await runtime.dispose() }
   const provenance = await prepare()
-  const v3 = await import("@orchestra/omni-campaign/v3-supervisor.ts")
-  const v4 = await import("@orchestra/omni-campaign/v4-lsp.ts")
-  const v5 = await import("@orchestra/omni-campaign/v5-mcp.ts")
-  const v6 = await import("@orchestra/omni-campaign/v6-terminal.ts")
+  const v3 = await import("../v3-supervisor.ts")
+  const v4 = await import("../v4-lsp.ts")
+  const v5 = await import("../v5-mcp.ts")
+  const v6 = await import("../v6-terminal.ts")
   const failure = (error: unknown) => ({ pass: false, error: String(error) })
   const owner = await v3.run({ mutation: "wrong-owner" }).catch(failure)
   const marker = await v5.run({ mutation: "missing-marker" }).catch(failure)

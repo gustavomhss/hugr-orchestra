@@ -1,0 +1,2 @@
+[test]
+preload = ["../../../script/test-guard.ts", "../../../script/test-omni-control.ts", "../../../packages/core/test/preload.ts"]

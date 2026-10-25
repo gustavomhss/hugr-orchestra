@@ -313,6 +313,10 @@
       "version": "0.0.0",
       "dependencies": {
         "@orchestra/core": "workspace:*",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@types/bun": "catalog:",
       },
     },
     "packages/app-shell": {
@@ -518,7 +522,6 @@
       },
       "devDependencies": {
         "@orchestra/http-recorder": "workspace:*",
-        "@orchestra/omni-campaign": "workspace:*",
         "@orchestra/sdk": "workspace:*",
         "@parcel/watcher-darwin-arm64": "2.5.1",
         "@parcel/watcher-darwin-x64": "2.5.1",

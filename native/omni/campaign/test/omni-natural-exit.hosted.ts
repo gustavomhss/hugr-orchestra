@@ -2,10 +2,10 @@
 import { expect, test } from "bun:test"
 import { Effect } from "effect"
 import { ChildProcess } from "effect/unstable/process"
-import { AppProcess } from "../src/process"
-import { appRuntime } from "@orchestra/omni-campaign/delivery-fixtures.ts"
-import { run } from "@orchestra/omni-campaign/v10-natural-exit.ts"
-import { expectSpawn } from "./fixture/omni-expect"
+import { AppProcess } from "@orchestra/core/process"
+import { appRuntime } from "../delivery-fixtures.ts"
+import { run } from "../v10-natural-exit.ts"
+import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 
 test("V10 core process disposal over omni releases the Bun event loop", async () => {
   expectSpawn(import.meta.path)

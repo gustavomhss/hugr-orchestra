@@ -3,9 +3,9 @@ import { spawn } from "node:child_process"
 import { readFileSync, readdirSync, writeFileSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { BUN, ROOT, adoptTree, alive, cleanup, control, decodeWindowsTable, hasMarker, hasNonce, identity, inventoryScope, isolated, kill9, markerArgument, matches, members, own, table, tree, until } from "@orchestra/omni-campaign/lib.ts"
-import { execute, startServer } from "@orchestra/omni-campaign/delivery-fixtures.ts"
-import { closeWithinDeadline } from "@orchestra/omni-campaign/v8-windows.ts"
+import { BUN, ROOT, adoptTree, alive, cleanup, control, decodeWindowsTable, hasMarker, hasNonce, identity, inventoryScope, isolated, kill9, markerArgument, matches, members, own, table, tree, until } from "../lib.ts"
+import { execute, startServer } from "../delivery-fixtures.ts"
+import { closeWithinDeadline } from "../v8-windows.ts"
 
 const host = { ProcessId: process.pid, ParentProcessId: 1, CommandLine: "campaign host", StartTime: "100", SessionId: 1 }
 const kernel = { ProcessId: 72, ParentProcessId: 4, CommandLine: null, StartTime: "134358940677579360", SessionId: 0 }
@@ -30,7 +30,7 @@ test("PID reuse rejects older PPID rows; equal/new births and named reparented i
   ]
   const scratch = isolated("birth-order-mutant", {})
   await instrumentCopy(scratch.home, (source) => replace(source, "return ordered", "return true"))
-  const mutant = await import(path.join(scratch.home, "lib.ts")) as typeof import("@orchestra/omni-campaign/lib.ts")
+  const mutant = await import(path.join(scratch.home, "lib.ts")) as typeof import("../lib.ts")
   for (const clock of clocks) {
     const rows = [
       { pid: process.pid, parent: 1, args: "host", state: "live", startTime: clock[1]! },
@@ -218,7 +218,7 @@ test("actual unknown-row and stale-PID mutants turn both controls red", async ()
   await instrumentCopy(scratch.home,
     (source) => replace(source, 'if (!table().some((row) => matches(row, pinned) && !row.state.startsWith("Z"))) return false', "if (false) return false"),
     (source) => replace(replace(source, "return [{ pid: row.ProcessId, parent: row.ParentProcessId", "if (row.CommandLine === null) return []\n    return [{ pid: row.ProcessId, parent: row.ParentProcessId"), " -ne '${pinned.startTime", " -eq '${pinned.startTime"))
-  const mutant = await import(path.join(scratch.home, "lib.ts")) as typeof import("@orchestra/omni-campaign/lib.ts")
+  const mutant = await import(path.join(scratch.home, "lib.ts")) as typeof import("../lib.ts")
   const unknownGatePass = mutant.decodeWindowsTable([host, kernel], 700099).some((row) => row.pid === 72 && row.args === null && row.startTime === kernel.StartTime)
   expect(unknownGatePass).toBe(false)
   const proc = spawn(BUN, ["-e", "setInterval(() => {}, 1000)"], { cwd: ROOT, env: scratch.env, stdio: "ignore" })
@@ -294,7 +294,7 @@ test("unconfirmed recorder kill keeps its handle; delayed close confirmation per
     'proc.on("close", () => { state.closed = true; close.resolve(); fail(new Error(`identity recorder closed: ${text.stderr}`)) })',
     'proc.on("close", () => { setTimeout(() => { state.closed = true; close.resolve(); fail(new Error(`identity recorder closed: ${text.stderr}`)) }, 500) })'),
     'const timer = setTimeout(() => resolve(false), timeoutMs)\n    state.close!.finally', 'const timer = setTimeout(() => resolve(false), 100)\n    state.close!.finally'))
-  const module = await import(path.join(scratch.home, "windows-inventory.ts")) as typeof import("@orchestra/omni-campaign/windows-inventory.ts")
+  const module = await import(path.join(scratch.home, "windows-inventory.ts")) as typeof import("../windows-inventory.ts")
   const recorder = module.WindowsInventory.makeRecorder({ command: BUN, args: ["-e", 'console.log(JSON.stringify({ready:true}));process.stdin.resume();process.stdin.on("end",()=>process.exit(0));setInterval(()=>{},1000)'] }, 2000)
   try {
     await recorder.prepare()
@@ -320,7 +320,7 @@ test("full close deadline rejects a delayed OS disappearance and delayed reachab
     'const within = () => deadline - performance.now()'),
     'timer.id = setTimeout(() => reject(new Error(`ConPTY stop + EOF + onExit watchdog expired after ${boundMs} ms`)), Math.max(0, deadline - performance.now()))',
     'timer.id = setTimeout(() => reject(new Error(`ConPTY stop + EOF + onExit watchdog expired after ${boundMs} ms`)), 10000)'))
-  const mutant = await import(file) as typeof import("@orchestra/omni-campaign/v8-windows.ts")
+  const mutant = await import(file) as typeof import("../v8-windows.ts")
   for (const stage of ["OS-zero", "reachability"] as const) {
     for (const mutation of [false, true]) {
       const fixture = tree(0)
@@ -381,7 +381,7 @@ function replace(source: string, before: string, after: string) {
 
 async function instrumentCopy(home: string, lib = (source: string) => source, windows = (source: string) => source) {
   await Bun.write(path.join(home, "lib.ts"), lib((await Bun.file(path.join(ROOT, "native/omni/campaign/lib.ts")).text()).replaceAll("\r\n", "\n")
-    .replaceAll('"../../../packages/core/test/fixture/process-tree.ts"', JSON.stringify(path.join(ROOT, "packages/core/test/fixture/process-tree.ts")))))
+    .replaceAll('"@orchestra/core/test/fixture/process-tree"', JSON.stringify(path.join(ROOT, "packages/core/test/fixture/process-tree.ts")))))
   await Bun.write(path.join(home, "windows-inventory.ts"), windows((await Bun.file(path.join(ROOT, "native/omni/campaign/windows-inventory.ts")).text()).replaceAll("\r\n", "\n")))
   for (const name of ["delivery-fixtures.ts", "fake-llm.ts", "isolated-user.ts", "process-rows.ts", "server-client.ts", "wait.ts"])
     await Bun.write(path.join(home, name), await Bun.file(path.join(ROOT, "native/omni/campaign", name)).text())
