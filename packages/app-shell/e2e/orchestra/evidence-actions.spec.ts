@@ -89,7 +89,7 @@ test("replay confirms exact command, preserves draft and attachment, and creates
 })
 
 test("busy state is rechecked after confirmation opens", async ({ page }) => {
-  const fixture = await evidencePage(page, { protocol: "v1" })
+  const fixture = await evidencePage(page)
   await runCard(page).getByRole("button", { name: "Run tests again…", exact: true }).click()
   const dialog = page.getByRole("dialog")
   await expect(dialog.getByRole("button", { name: "Run command", exact: true })).toBeEnabled()
@@ -171,7 +171,7 @@ test("uncertain replay response remains visible without retry or draft loss", as
 })
 
 test("confirmation captures command instead of replaying a later part revision", async ({ page }) => {
-  const fixture = await evidencePage(page, { protocol: "v1" })
+  const fixture = await evidencePage(page)
   await runCard(page).getByRole("button", { name: "Run tests again…", exact: true }).click()
   await fixture.send(
     partUpdated(
@@ -236,7 +236,7 @@ test("switching server with the same session ID cancels captured replay", async 
 })
 
 test("prepare PR uses real session summary and remains unsent", async ({ page }) => {
-  const fixture = await evidencePage(page, { protocol: "v1" })
+  const fixture = await evidencePage(page)
   await page.getByRole("button", { name: "Toggle review", exact: true }).click()
   await expect(page.locator("#review-panel")).toContainText("approval.ts")
   await runCard(page).getByRole("button", { name: "Prepare pull request…", exact: true }).click()

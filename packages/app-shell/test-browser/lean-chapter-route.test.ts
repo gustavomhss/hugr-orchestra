@@ -48,7 +48,8 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
       savings: { bytesSaved: bytes, tokensSaved: bytes / 4, calls: 1, tokenCalls: 1 } })),
   })
   type Event = { name: string; details: { type: string } }
-  async function nativeServer(bytes: number, name: string, protocol: "v2" = "v1") {
+  async function nativeServer(bytes: number, name: string) {
+    const protocol = "v2" as const
     const data = new Map<string, LeanDashboard.Info>()
     const provider: NormalizedProviderListResponse = { all: new Map(), connected: [], default: {} }
     const catalogs = new Map<string, { directory: string; provider_ready: boolean; provider: typeof provider }>()
@@ -106,7 +107,7 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
   test("registered native chapter remounts same-project directories and servers; late history/input and preferences cannot mix", async () => {
     const one = await nativeServer(800, "Native named profile")
     const two = await nativeServer(4000, "Remote named profile")
-    const unsupported = await nativeServer(0, "Unsupported", "v2")
+    const unsupported = await nativeServer(0, "Unsupported")
     const servers = [one, two, unsupported]
     const [selection, select] = createStore({ server: ServerConnection.key(one.connection), directory: "/one" })
     const opened: { server: ServerConnection.Key; sessionId: string }[] = []
@@ -161,7 +162,7 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
     const late = Promise.withResolvers<void>()
     try {
       await until(() => total() === "+800")
-      expect(protocol.read?.()).toBe("v1")
+      expect(protocol.read?.()).toBe("v2")
       expect(host.querySelector('[data-mx-page="orchestra-lean"]') !== null).toBe(true)
       expect(host.textContent).toContain("Native named profile")
       toggle("cargo").click()

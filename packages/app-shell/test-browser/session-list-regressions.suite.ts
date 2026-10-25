@@ -108,7 +108,8 @@ test.each(["directory fetch", "root bootstrap load"] as const)("pending %s canno
   expect(lists.length).toBeGreaterThanOrEqual(2)
   expect(lists.every((request) => new URL(request.url).origin === "https://pending-list.test")).toBe(true)
   expect(new URL(lists[0].url).searchParams.get("directory")).toBe("/repo")
-  if (path === "root bootstrap load") expect(new URL(lists[0].url).searchParams.get("parentID")).toBe("null")
+  // The V2 session list has no parent filter; it serves root Sessions without one.
+  if (path === "root bootstrap load") expect(new URL(lists[0].url).searchParams.has("parentID")).toBe(false)
 })
 
 test("index and directory setter share absent archive fence without leaking into another server or directory", async () => {

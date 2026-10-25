@@ -105,8 +105,8 @@ if (process.env.LEAN_SETTINGS_DOM !== "1") {
   }
   const expectNoLean = async (host: HTMLElement) => {
     for (const capability of [
-      { protocol: undefined, ready: false, error: undefined }, { protocol: "v1" as const, ready: true, error: undefined },
-      { protocol: "v1" as const, ready: true, error: new Error("offline") },
+      { protocol: undefined, ready: false, error: undefined }, { protocol: "v2" as const, ready: true, error: undefined },
+      { protocol: "v2" as const, ready: true, error: new Error("offline") },
     ]) {
       setState(capability)
       await Bun.sleep(20)
