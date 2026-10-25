@@ -25,7 +25,7 @@ import { EventV2 } from "../src/event"
 import { ApplicationTools } from "../src/tool/application-tools"
 import { ToolRegistry } from "../src/tool/registry"
 
-const fixture = path.join(import.meta.dir, "..", "..", "..", "apps", "orchestra", "test", "fixture", "mcp-omni-stdio.ts")
+const fixture = path.join(import.meta.dir, "fixture", "mcp-omni-stdio.ts")
 
 const it = testEffect(
   AppNodeBuilder.build(

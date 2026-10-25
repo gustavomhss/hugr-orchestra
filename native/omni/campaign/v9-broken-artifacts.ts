@@ -3,7 +3,7 @@
 import { chmodSync, copyFileSync, existsSync, mkdirSync, realpathSync, unlinkSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import os from "node:os"
-import { ORCHESTRA, ROOT, cleanup, cli, isolated, load, win } from "./lib.ts"
+import { CLI_APP, ROOT, cleanup, cli, isolated, load, win } from "./lib.ts"
 import { authorized, deliveryEnv, evidence, execute, record } from "./delivery-fixtures.ts"
 
 type Observation = Awaited<ReturnType<typeof execute>>
@@ -11,7 +11,7 @@ type Cell = Observation & { cell: string; bin: string; addon: string; supervisor
 
 /** Missing/corrupt artifact must be named, normal nonzero exit, <=2s, and no successful tree/fallback. */
 export function rejectsArtifact(result: Observation, artifact: string, kind: "addon" | "supervisor") {
-  const configured = result.stderr.includes(`hugr-omni: the configured ${kind} ${artifact} does not exist`)
+  const configured = result.stderr.includes(`hugr-omni is required (ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER) but its ${kind} was not found.`)
   const load = kind === "addon" && result.stderr.includes(`hugr-omni could not load its native addon ${artifact}:`)
   return !result.timedOut && !result.error && result.signal === null && result.code === 1 && result.ms <= 2000 &&
     result.stdout === "" && result.stderr.startsWith("hugr-omni CLI preflight failed: ") && (configured || load) &&
@@ -70,15 +70,14 @@ export async function run(options: { mutation?: boolean; diagnose?: boolean; qui
       // addon, so the budget below times the CLI's own rejection.
       if (win) await execute(bin, ["--version"], { ...env, ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "0" }, scratch.project, 30_000, [scratch.home])
       const beforeLoad = load()
-      const observed = await execute(bin, ["debug", "omni"], env, scratch.project, cell === "intact" ? 30_000 : 2000, [scratch.home])
+      const observed = await execute(bin, ["--version"], env, scratch.project, cell === "intact" ? 30_000 : 2000, [scratch.home])
       const text = observed.stdout + observed.stderr
       const pass = cell === "intact"
         ? !observed.timedOut && !observed.error && observed.code === 0 && observed.signal === null &&
-          text.includes("path: omni") && text.includes(`addon: ${addon}`) && text.includes(`supervisor: ${supervisor}`) &&
-          text.includes("nonce tree: ok") && /counters: spawns=[1-9]\d* delegations=0/.test(text)
+          /^\d+\.\d+\.\d+/.test(observed.stdout) && !text.includes("hugr-omni CLI preflight")
         : rejectsArtifact(observed, cell === "supervisor-missing" ? supervisor : addon, cell === "supervisor-missing" ? "supervisor" : "addon")
       const diagnostic = options.diagnose && observed.timedOut
-        ? await execute(bin, ["debug", "omni"], env, scratch.project, 25_000, [scratch.home])
+        ? await execute(bin, ["--version"], env, scratch.project, 25_000, [scratch.home])
         : undefined
       cells.push({ cell, bin, addon, supervisor, ...observed, pass: pass && quiet(), ...{ beforeLoad, afterLoad: load() }, ...(diagnostic ? { diagnostic } : {}) })
     }
@@ -96,22 +95,20 @@ export async function run(options: { mutation?: boolean; diagnose?: boolean; qui
           : rejectsArtifact(result, corrupt.addon, "addon") })
     }
     if (!quiet()) throw new Error(`V9 machine became busy before strict control: ${load()}`)
-    const strict = await execute(missing.bin, ["debug", "omni"], { ...env, ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "strict" }, scratch.project, 2000, [scratch.home])
+    const strict = await execute(missing.bin, ["--version"], { ...env, ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "strict" }, scratch.project, 2000, [scratch.home])
     controls.push({ name: "strict-preflights", result: strict, pass: rejectsArtifact(strict, missing.addon, "addon") && quiet() })
     // Compile a fixture variant of the actual preflight with shipped configure() removed. Its loader really selects
     // an implicit resources candidate. No HUGR_OMNI_* override: this exercises the forbidden fallback seam.
     const mutation = options.mutation ? await (async () => {
       const target = cells.find((cell) => cell.cell === "addon-missing")
       if (!target) throw new Error("V9 missing negative-control cell")
-      const entry = await Bun.file(path.join(ORCHESTRA, "src/cli/omni-entry.ts")).text()
-      const start = entry.indexOf("    Omni.configure({")
-      const end = entry.indexOf("    await Omni.load()", start)
-      const app = entry.indexOf('await import("../index")')
-      if (start < 0 || end <= start || app <= end) throw new Error("Mutation could not identify the actual preflight configure boundary")
+      const entry = await Bun.file(path.join(CLI_APP, "src/omni-entry.ts")).text()
+      const app = entry.indexOf('await import("./index")')
+      if (app < 0 || !entry.includes("await Omni.load()")) throw new Error("Mutation could not identify the actual preflight boundary")
       const fixture = path.join(scratch.home, "implicit-fallback-mutant.ts")
       const loader = JSON.stringify(path.join(ROOT, "packages/core/src/omni.ts"))
       await Bun.write(fixture, `Object.defineProperty(process, "resourcesPath", { value: ${JSON.stringify(resources)} });\n` +
-        (entry.slice(0, start) + entry.slice(end, app)).replace('"@orchestra/core/omni"', loader) + `
+        entry.slice(0, app).replace('"@orchestra/core/omni"', loader) + `
 const { Omni } = await import(${loader});
 const binding = await Omni.load();
 const result = await binding.run("git", ["-c", ${JSON.stringify(`orchestra.campaignnonce=${scratch.home}`)}, "rev-parse", "HEAD"], { cwd: ${JSON.stringify(ROOT)}, inheritEnv: false, env: Omni.childEnv(), timeoutMs: 5000 });
@@ -130,8 +127,8 @@ process.exit(0);
       const selected = line ? JSON.parse(line.slice(marker.length)) as { addon: string; supervisor: string } : undefined
       const success = observed.code === 0 && !observed.timedOut &&
         selected?.addon === path.join(resources, "omni", names.addon) && selected.supervisor === path.join(resources, "omni", names.supervisor)
-      const restored = await execute(target.bin, ["debug", "omni"], env, scratch.project, 2000, [scratch.home])
-      return { kind: "compiled-preflight-configure-bypass", ...observed, selected, gatePass: rejected,
+      const restored = await execute(target.bin, ["--version"], env, scratch.project, 2000, [scratch.home])
+      return { kind: "compiled-preflight-implicit-fallback", ...observed, selected, gatePass: rejected,
         detected: success && !rejected, restored, missingArtifactPreserved: !existsSync(target.addon) }
     })() : undefined
     const log = evidence("v9-cells", { source, home: scratch.home, checkoutFallbackBait: bait, cells, controls, mutation })

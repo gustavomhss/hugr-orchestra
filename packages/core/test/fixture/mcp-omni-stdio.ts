@@ -10,7 +10,7 @@ import {
   ReadResourceRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js"
 
-// An MCP stdio server for the omni transport tests (test/mcp/omni-stdio.test.ts). It lists one tool per argument.
+// An MCP stdio server for the omni transport tests (packages/core/test/mcp.test.ts). It lists one tool per argument.
 // MCP_OMNI_TREE ({command, args}) starts a nonce tree below it; MCP_OMNI_STDERR writes that many bytes of stderr
 // lines before it serves; MCP_OMNI_FAIL_LINES writes that many numbered stderr lines and exits 1 instead of serving.
 // MCP_OMNI_RESOURCE (a URI) also offers that resource, whose text names it, and one template, plus a `greet` prompt

@@ -2,7 +2,7 @@
 import { createHash } from "node:crypto"
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
-import { cli, LOGS, ORCHESTRA, ROOT, win } from "./lib.ts"
+import { cli, CLI_APP, LOGS, ROOT, win } from "./lib.ts"
 
 export const digest = (file: string) => createHash("sha256").update(readFileSync(file)).digest("hex")
 
@@ -40,7 +40,7 @@ export async function prepare() {
   const buildAt = new Date().toISOString()
   process.env.OMNI_ARTIFACTS = path.dirname(artifacts)
   console.log("MATRIX_BUILD_START " + JSON.stringify({ sourceSHA, buildAt, nativeSourceDigest, addonSha256: digest(addon), supervisorSha256: digest(supervisor) }))
-  const build = await command([process.execPath, "script/build.ts", "--single", "--skip-install", "--skip-embed-web-ui"], ORCHESTRA)
+  const build = await command([process.execPath, "script/build.ts", "--single", "--skip-install"], CLI_APP)
   writeFileSync(path.join(LOGS, "matrix-build.log"), build)
   const bin = cli()
   if (digest(path.join(path.dirname(bin), "hugr_omni.node")) !== digest(addon) ||

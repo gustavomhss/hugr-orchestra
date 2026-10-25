@@ -1,7 +1,7 @@
 // Actual product HTTP admission drives write/LSP, bash, MCP stdio and two terminals.
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
-import { BUN, ORCHESTRA, control, fakeLLM, fileTree, isolated, provider, table, until, win } from "../../../../native/omni/campaign/lib"
+import { BUN, FIXTURES, control, fakeLLM, fileTree, isolated, provider, table, until, win } from "../../../../native/omni/campaign/lib"
 
 export async function fixtures() {
   const scratch = isolated("actual-desktop", {})
@@ -16,9 +16,9 @@ export async function fixtures() {
     default_agent: "campaign", agent: { campaign: { mode: "primary", permission: { "*": "allow" } } },
     permission: { "*": "allow", bash: "allow", edit: "allow", external_directory: "allow" }, provider: provider(llm.url),
     lsp: { ...Object.fromEntries(["typescript", "deno", "eslint", "oxlint", "biome"].map((id) => [id, { disabled: true }])),
-      campaign: { command: [BUN, path.join(ORCHESTRA, "test/fixture/lsp/fake-lsp-server.js"), lspNonce], extensions: [".ts"] } },
+      campaign: { command: [BUN, path.join(FIXTURES, "lsp/fake-lsp-server.js"), lspNonce], extensions: [".ts"] } },
     // Renderer boots its own default Location. Explicit project-scoped connect prevents duplicate fixture peers.
-    mcp: { campaign: { type: "local", enabled: false, command: [BUN, path.join(ORCHESTRA, "test/fixture/mcp-omni-stdio.ts"), mcpNonce],
+    mcp: { campaign: { type: "local", enabled: false, command: [BUN, path.join(FIXTURES, "mcp-omni-stdio.ts"), mcpNonce],
       environment: { MCP_OMNI_TREE: JSON.stringify({ command: trees.mcpTree.command, args: trees.mcpTree.args }) }, timeout: 30_000 } } }
   const report = path.join(scratch.home, "smoke.json")
   const env: Record<string, string> = { ...scratch.env, ORCHESTRA_CONFIG_CONTENT: JSON.stringify(config), ORCHESTRA_TEST_ONBOARDING: "1",
