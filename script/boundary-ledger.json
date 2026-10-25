@@ -1151,6 +1151,84 @@
       "file": "packages/server/src/routes.ts",
       "specifier": "@orchestra/core/session/subagent-models",
       "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-functional-matrix.hosted.ts",
+      "specifier": "../../../native/omni/campaign/delivery-fixtures.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-functional-matrix.hosted.ts",
+      "specifier": "../../../native/omni/campaign/matrix-build.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-functional-matrix.hosted.ts",
+      "specifier": "../../../native/omni/campaign/v3-supervisor.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-functional-matrix.hosted.ts",
+      "specifier": "../../../native/omni/campaign/v4-lsp.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-functional-matrix.hosted.ts",
+      "specifier": "../../../native/omni/campaign/v5-mcp.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-functional-matrix.hosted.ts",
+      "specifier": "../../../native/omni/campaign/v6-terminal.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-delivery-campaign.hosted.ts",
+      "specifier": "../../../native/omni/campaign/delivery-fixtures.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-delivery-campaign.hosted.ts",
+      "specifier": "../../../native/omni/campaign/lib.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-delivery-campaign.hosted.ts",
+      "specifier": "../../../native/omni/campaign/v8-windows.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-windows-lifecycle.hosted.ts",
+      "specifier": "../../../native/omni/campaign/delivery-fixtures.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-windows-lifecycle.hosted.ts",
+      "specifier": "../../../native/omni/campaign/lib.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-windows-lifecycle.hosted.ts",
+      "specifier": "../../../native/omni/campaign/v1-background.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-windows-lifecycle.hosted.ts",
+      "specifier": "../../../native/omni/campaign/v2-kill.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
     }
   ]
 }
