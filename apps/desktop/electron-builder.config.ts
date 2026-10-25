@@ -180,10 +180,9 @@ const getBase = (appId: string): Configuration => ({
       from: "resources/linux-runtime",
       to: "linux-runtime",
     },
-    // Maestro's playbooks stay outside the app archive so ripgrep and the agent's file tools can read them. They still
-    // live in apps/orchestra/playbooks, where the V2 seat-skill root reads them in a source run, until B1-C moves them.
+    // Maestro's playbooks stay outside the app archive so ripgrep and the agent's file tools can read them.
     {
-      from: path.join(workspace.module("orchestra"), "playbooks"),
+      from: path.join(workspace.module("maestro"), "playbooks"),
       to: "playbooks",
     },
     { from: "resources/cli", to: "cli" },
