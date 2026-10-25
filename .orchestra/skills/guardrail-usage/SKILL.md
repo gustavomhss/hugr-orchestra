@@ -16,7 +16,7 @@ bun run check:guards --base origin/dev
 - `--base <ref>` is the target branch; the engine compares against the merge-base. If it says it cannot resolve a merge-base, fetch the branch (`git fetch origin dev`) or pass another `--base`.
 - `--warn` reports gate findings without failing, to see everything first. Setup errors still fail.
 - `--cwd <repo>` runs against another checkout. `GUARDRAIL_APPROVED=<rule id>,<rule id>` simulates approvals.
-- It reads committed and working-tree changes against the merge-base. New untracked files count only once they are tracked or staged (`git add -N <file>`).
+- It reads committed, staged and working-tree changes against the merge-base, and untracked files that are not gitignored.
 
 ## Read the output
 

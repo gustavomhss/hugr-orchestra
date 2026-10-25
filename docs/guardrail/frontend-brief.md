@@ -92,7 +92,11 @@ type Finding = {
   path: string
   line: number | null      // null for path and line-balance rules
   message: string          // same copy as Rule.message
+  excerpt: string | null   // text of the offending added line; null for path rules
+  match: [number, number] | null  // [start, end) of the match inside excerpt, in UTF-16 units
 }
+
+type Failure = "no-repository" | "base-not-found" | "no-rules" | "rules-invalid" | "other"
 
 type Report = {
   base: string | null      // merge-base commit; null if it could not be resolved
@@ -100,8 +104,9 @@ type Report = {
   rules: number            // how many rules were applied
   files: number            // how many changed paths were examined
   findings: Finding[]      // sorted: gate first, then path, then line
-  errors: string[]         // setup errors; a non-empty list means the run proves nothing
+  errors: { kind: Failure; message: string }[]  // setup errors; non-empty means the run proves nothing
   approved: string[]       // rule ids cleared by approval for this run
+  touchesGuards: boolean   // the change edits script/guards/**
 }
 ```
 
