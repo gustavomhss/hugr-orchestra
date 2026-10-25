@@ -21,6 +21,10 @@ export const keptPaths: Kept[] = [
   },
   { path: /^docs\/specs\/hugr-maestro\/BASELINE-EVIDENCE\.md$/, reason: "baseline evidence record" },
   {
+    path: /^docs\/architecture\/(?:monolith-map|restructure-plan)\.md$|^docs\/architecture\/phase-plans\//,
+    reason: "restructure plans that inventory the upstream client and the old names they remove",
+  },
+  {
     path: /^specs\/atlas-ui\/build\/|^specs\/atlas-ui\/mock\/data-spawns\.js$/,
     reason: "the Atlas UI build runner drives external executor CLIs, and the mock replays recorded spawn logs verbatim",
   },
