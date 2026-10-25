@@ -86,6 +86,20 @@ export type Input = {
   readonly request: LLMRequest
 }
 
+/**
+ * The prompt budget before compaction: the context window less the output reserve. A provider-stated `input` limit is a
+ * hard cap on the prompt itself and wins when it is the smaller (V1's `usable`), less the buffer so the next step fits.
+ */
+export const usable = (
+  limits: { readonly input?: number } | undefined,
+  context: number,
+  output: number,
+  buffer: number,
+) => {
+  const window = context - Math.max(output, buffer)
+  return limits?.input !== undefined && limits.input > 0 ? Math.min(window, limits.input - buffer) : window
+}
+
 const estimate = (value: unknown) => Token.estimate(JSON.stringify(value))
 
 const truncate = (value: string) =>
@@ -255,7 +269,7 @@ export const make = (dependencies: Dependencies) => {
     const output = input.request.generation?.maxTokens ?? input.model.route.defaults.limits?.output ?? 0
     if (
       estimate({ system: input.request.system, messages: input.request.messages, tools: input.request.tools }) <=
-      context - Math.max(output, config.buffer)
+      usable(input.model.route.defaults.limits, context, output, config.buffer)
     )
       return false
     return yield* compactAfterOverflow(input)
@@ -289,6 +303,8 @@ export interface Interface {
     readonly sessionID: SessionSchema.ID
     readonly tokens: EventV2.Data<typeof SessionEvent.Step.Ended>["tokens"]
     readonly model: ModelV2.Ref | undefined
+    /** The context window the provider or host reported with the step, when it did. */
+    readonly contextWindow?: number
   }) => Effect.Effect<void>
 }
 

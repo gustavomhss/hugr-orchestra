@@ -1,12 +1,12 @@
 export * as ClaudeCodeHost from "./host"
 
-import { createSdkMcpServer, type CanUseTool, type HookCallback, type SDKMessage, type SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
+import { createSdkMcpServer, type CanUseTool, type HookCallback, type PermissionResult, type SDKMessage, type SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js"
 import type { Host } from "@orchestra/core/host"
 import { makeLocationNode } from "@orchestra/core/effect/app-node"
 import { ExecutionHost } from "@orchestra/core/session/runner"
 import { LLMEvent, type ToolContent, type ToolDefinition, type ToolResultValue } from "@orchestra/llm"
-import { Effect, Layer, Stream } from "effect"
+import { Duration, Effect, Layer, Stream } from "effect"
 import { createHash, randomUUID } from "node:crypto"
 import path from "node:path"
 import { ClaudeHostOptions } from "../host/options"
@@ -32,12 +32,15 @@ const UNSERVED = new Set([
  */
 const SUBAGENT_TOOLS = new Set(["Agent", "Task"])
 const SUBAGENT_DENIAL = "Delegate through `mcp__orchestra__task`: Orchestra governs every delegation in this session."
-/** No question port reaches this host yet, so an allowed AskUserQuestion would return without the owner's answers. */
-const QUESTION_DENIAL = "Orchestra cannot show this question here: ask the owner in your reply and end your turn."
+const QUESTION_DISMISSED = "The owner dismissed this question."
+/** A finished background task's process stays up this long waiting for the task to report; then it is let go. */
+const BACKGROUND_PATIENCE = Duration.minutes(30)
 const UNCHECKED = "Orchestra could not check this call, so it is refused."
 
 /** One gate decision, shared by the PreToolUse hook and `canUseTool` so both settle a call the same way. */
-type Decision = { readonly allow: true } | { readonly allow: false; readonly reason: string }
+type Decision =
+  | { readonly allow: true; readonly input?: Record<string, unknown> }
+  | { readonly allow: false; readonly reason: string }
 
 /** How a Claude Code built-in maps to a V2 permission: its action and the input field that names the resource. */
 const PERMISSIONS: Readonly<Record<string, { action: string; field: string; path?: boolean }>> = {
@@ -62,12 +65,17 @@ const PERMISSIONS: Readonly<Record<string, { action: string; field: string; path
 export const make = Effect.gen(function* () {
   const sdk = yield* ClaudeCodeSDK.Service
   const env = yield* ClaudeCodeSDK.Environment
+  // Queries kept alive past their turn because background work still runs: one per Orchestra session, closed when
+  // that work reports, when the session's next turn starts, or when it has waited long enough.
+  const tails = new Map<string, { readonly close: () => Promise<void> }>()
   return {
     id: ID,
     stateKey: STATE_KEY,
     stream: (turn) =>
       Stream.unwrap(
         Effect.gen(function* () {
+          // A session has one Claude Code process at a time: a query left up for background work goes first.
+          yield* Effect.promise(() => tails.get(turn.session.id)?.close() ?? Promise.resolve())
           const stored = yield* turn.state.get
           const state = ClaudeCodeTranscript.record(stored) ? stored : {}
           const delivered = Array.isArray(state.delivered) ? state.delivered.filter((id) => typeof id === "string") : []
@@ -81,9 +89,14 @@ export const make = Effect.gen(function* () {
           // Claude Code's tool_use id for an Orchestra tool, learned at the gate; the MCP request does not carry it.
           const callIDs = new Map<string, string[]>()
           const learned = new Set<string>()
-          // Never rejects: a defect, a throw or an abort in Orchestra's own check refuses the call (fail closed).
-          const decide = (tool: string, input: Record<string, unknown>, toolUseID: string, signal: AbortSignal): Promise<Decision> =>
-            Promise.resolve()
+          // A call is settled once, whichever of the hook and `canUseTool` asks first: asking twice would ask the owner
+          // twice and charge a dispatch twice.
+          const decisions = new Map<string, Promise<Decision>>()
+          const decide = (tool: string, input: Record<string, unknown>, toolUseID: string, signal: AbortSignal) => {
+            const known = decisions.get(toolUseID)
+            if (known) return known
+            // Never rejects: a defect, a throw or an abort in Orchestra's own check refuses the call (fail closed).
+            const made = Promise.resolve()
               .then((): Decision | Promise<Decision> => {
                 if (tool.startsWith(MCP_PREFIX)) {
                   const name = tool.slice(MCP_PREFIX.length)
@@ -93,40 +106,83 @@ export const make = Effect.gen(function* () {
                   return { allow: true }
                 }
                 if (SUBAGENT_TOOLS.has(tool) && served.some((item) => item.name === "task")) return { allow: false, reason: SUBAGENT_DENIAL }
-                if (tool === "AskUserQuestion") return { allow: false, reason: QUESTION_DENIAL }
                 return Effect.runPromise(
-                  turn.authorize({ callID: toolUseID, tool, ...permission(tool, input, turn.session.location.directory) }).pipe(
-                    Effect.map((): Decision => ({ allow: true })),
+                  turn.authorize({ callID: toolUseID, tool, ...permission(tool, input, turn.session.location.directory), safety: safetyCall(tool, input) }).pipe(
+                    Effect.map((authorization): Decision => ({ allow: true, input: replacements(tool, authorization) })),
                     Effect.catch((error) => Effect.succeed<Decision>({ allow: false, reason: denial(error) })),
                   ),
                   { signal },
                 )
               })
               .catch((): Decision => ({ allow: false, reason: UNCHECKED }))
+            decisions.set(toolUseID, made)
+            return made
+          }
+          // AskUserQuestion shows the owner's question and returns the answers Claude Code reads from `answers`.
+          const ask = (input: Record<string, unknown>, toolUseID: string, signal: AbortSignal): Promise<PermissionResult> => {
+            const asked = questions(input)
+            return Effect.runPromise(
+              turn.question({ callID: toolUseID, questions: asked }).pipe(
+                Effect.map((answers): PermissionResult => ({
+                  behavior: "allow",
+                  updatedInput: { ...input, answers: Object.fromEntries(asked.map((item, index) => [item.question, (answers[index] ?? []).join(", ")])) },
+                })),
+                Effect.catch(() => Effect.succeed<PermissionResult>({ behavior: "deny", message: QUESTION_DISMISSED })),
+              ),
+              { signal },
+            ).catch((): PermissionResult => ({ behavior: "deny", message: UNCHECKED }))
+          }
           // Claude Code skips `canUseTool` whenever a settings allow rule matches, while a PreToolUse deny wins in every
           // permission mode: the hook is where Orchestra's permissions reach every call (V1 gate.ts, spike S7).
           const gate: HookCallback = (input, _toolUseID, options) => {
             if (input.hook_event_name !== "PreToolUse") return Promise.resolve({})
+            // The question needs the owner, so it is left to `canUseTool`, where its answers can be returned.
+            if (input.tool_name === "AskUserQuestion") return Promise.resolve({})
             const args = ClaudeCodeTranscript.record(input.tool_input) ? input.tool_input : {}
             return decide(input.tool_name, args, input.tool_use_id, options.signal).then((decision) => ({
               hookSpecificOutput: decision.allow
-                ? { hookEventName: "PreToolUse" as const, permissionDecision: "allow" as const }
+                ? {
+                    hookEventName: "PreToolUse" as const,
+                    permissionDecision: "allow" as const,
+                    ...(decision.input ? { updatedInput: { ...args, ...decision.input } } : {}),
+                  }
                 : { hookEventName: "PreToolUse" as const, permissionDecision: "deny" as const, permissionDecisionReason: decision.reason },
             }))
           }
-          const canUseTool: CanUseTool = (tool, input, options) =>
-            decide(tool, input, options.toolUseID, options.signal).then((decision) =>
-              decision.allow ? { behavior: "allow" as const, updatedInput: input } : { behavior: "deny" as const, message: decision.reason },
+          const canUseTool: CanUseTool = (tool, input, options) => {
+            if (tool === "AskUserQuestion") return ask(input, options.toolUseID, options.signal)
+            return decide(tool, input, options.toolUseID, options.signal).then((decision) =>
+              decision.allow ? { behavior: "allow" as const, updatedInput: { ...input, ...decision.input } } : { behavior: "deny" as const, message: decision.reason },
             )
+          }
+          // What Orchestra keeps beyond Claude Code's own summary comes back right after a compaction; the summary
+          // itself is archived in the session. A failure here never fails the turn.
+          const recall: HookCallback = (input, _toolUseID, options) => {
+            if (input.hook_event_name !== "SessionStart" || input.source !== "compact") return Promise.resolve({})
+            return Effect.runPromise(turn.memory.recall, { signal: options.signal }).then(
+              (text) => (text ? { hookSpecificOutput: { hookEventName: "SessionStart" as const, additionalContext: text } } : {}),
+              () => ({}),
+            )
+          }
+          const archive: HookCallback = (input, _toolUseID, options) => {
+            if (input.hook_event_name !== "PostCompact") return Promise.resolve({})
+            return Effect.runPromise(
+              turn.memory.archive({ summary: input.compact_summary, trigger: input.trigger, nativeSessionID: input.session_id }),
+              { signal: options.signal },
+            ).then(() => ({}), () => ({}))
+          }
           // The client uuid of this turn's prompt: Claude Code stamps it on the replies once it has consumed the prompt.
           const sent = randomUUID()
+          // Steers that arrive while the query runs go into its input; the uuid says which one Claude Code consumed.
+          const steered = new Map<string, string>()
+          const consumed = new Set<string>()
           // An assistant-level error (billing, rate limit, ...) fails the turn unless a later frame supersedes it (V1).
           const failure: { uuid?: string; message?: string } = {}
           const deliver = (sessionId: string) =>
             turn.state.update((value) => ({
               ...(ClaudeCodeTranscript.record(value) ? value : {}),
               sessionId,
-              delivered: [...new Set([...delivered, ...pending.map((item) => item.id)])],
+              delivered: [...new Set([...delivered, ...pending.map((item) => item.id), ...consumed])],
             }))
           const lifetime = ClaudeCodeSDK.processLifetime({
             cwd: turn.session.location.directory,
@@ -137,36 +193,81 @@ export const make = Effect.gen(function* () {
             settingSources: ["project"],
             permissionMode: "default",
             canUseTool,
-            hooks: { PreToolUse: [{ hooks: [gate] }] },
+            hooks: {
+              PreToolUse: [{ hooks: [gate] }],
+              SessionStart: [{ matcher: "compact", hooks: [recall] }],
+              PostCompact: [{ hooks: [archive] }],
+            },
             ...(served.length
               ? { mcpServers: { [MCP_SERVER]: server(served, (name) => callIDs.get(name)?.shift() ?? `orchestra_${randomUUID()}`, turn.execute) } }
               : {}),
             env: ClaudeHostOptions.environment(env),
             abortController: abort,
           })
+          const channel = inbox(user(prompt, sent), abort.signal)
+          // Background work Claude Code still has running when the turn's result arrives keeps the process up.
+          const live = { background: 0, keep: false }
           const query = yield* Effect.acquireRelease(
-            // Streaming input, which in-process MCP servers need; the turn ends at the `result` frame and the finalizer
-            // closes the input with the query.
-            Effect.sync(() => sdk.query({ prompt: input(prompt, sent, abort.signal), options: lifetime.options })),
-            () =>
-              Effect.sync(() => abort.abort()).pipe(
-                Effect.andThen(Effect.promise(() => lifetime.join().catch(() => undefined))),
-              ),
+            // Streaming input, which in-process MCP servers need and which carries mid-turn steers; the turn ends at
+            // the `result` frame and the finalizer closes the input with the query.
+            Effect.sync(() => sdk.query({ prompt: channel.messages, options: lifetime.options })),
+            (opened) => {
+              let closing: Promise<void> | undefined
+              const close = () =>
+                (closing ??= (async () => {
+                  abort.abort()
+                  await lifetime.join().catch(() => undefined)
+                  if (tails.get(turn.session.id) === entry) tails.delete(turn.session.id)
+                })())
+              const entry = { close }
+              if (!live.keep) return Effect.promise(close)
+              tails.set(turn.session.id, entry)
+              return follow(opened[Symbol.asyncIterator](), live, turn).pipe(
+                Effect.timeout(BACKGROUND_PATIENCE),
+                Effect.ignore,
+                Effect.andThen(Effect.promise(close)),
+                Effect.forkDetach,
+                Effect.asVoid,
+              )
+            },
+          )
+          yield* turn.steers.pipe(
+            Stream.runForEach((steer) =>
+              Effect.sync(() => {
+                const uuid = randomUUID()
+                steered.set(uuid, steer.id)
+                channel.push(user(steer.text, uuid))
+              }),
+            ),
+            Effect.forkScoped,
           )
           const names = new Map<string, string>()
-          const frames = Stream.fromAsyncIterable(query, (error) => error).pipe(
+          // Block ids by assistant message, for the retract a refusal fallback or a superseding reply asks for.
+          const emitted = new Map<string, string[]>()
+          // The iterator is pulled through a view without `return`: stopping at the result must not close the query.
+          const iterator = query[Symbol.asyncIterator]()
+          const pulled: AsyncIterable<SDKMessage> = { [Symbol.asyncIterator]: () => ({ next: () => iterator.next() }) }
+          const frames = Stream.fromAsyncIterable(pulled, (error) => error).pipe(
             Stream.takeUntil((message) => message.type === "result"),
             Stream.mapEffect((message) =>
               Effect.gen(function* () {
                 if (message.type === "system" && message.subtype === "init")
                   yield* turn.state.update((value) => ({ ...(ClaudeCodeTranscript.record(value) ? value : {}), sessionId: message.session_id }))
+                if (message.type === "system" && message.subtype === "background_tasks_changed")
+                  live.background = message.tasks.filter((task) => !task.ambient).length
                 // A prompt Claude Code consumed is in its transcript: an interrupted turn must not send it again.
-                if (message.type === "assistant" && message.parent_tool_use_id === null && !message.error &&
-                  (message.user_message_uuids ?? (message.user_message_uuid ? [message.user_message_uuid] : [])).includes(sent))
+                if (message.type === "assistant" && message.parent_tool_use_id === null && !message.error) {
+                  const echoed = message.user_message_uuids ?? (message.user_message_uuid ? [message.user_message_uuid] : [])
+                  const steers = echoed.flatMap((uuid) => steered.get(uuid) ?? [])
+                  steers.forEach((id) => consumed.add(id))
+                  if (echoed.includes(sent) || steers.length) yield* deliver(message.session_id)
+                  yield* Effect.forEach(steers, turn.consumed, { discard: true })
+                }
+                if (message.type === "result" && message.subtype === "success" && !message.is_error && failure.message === undefined) {
                   yield* deliver(message.session_id)
-                if (message.type === "result" && message.subtype === "success" && !message.is_error && failure.message === undefined)
-                  yield* deliver(message.session_id)
-                return events(message, names, failure)
+                  live.keep = live.background > 0
+                }
+                return events(message, { names, failure, emitted, model: turn.model?.id })
               }),
             ),
             Stream.flatMap((items) => Stream.fromIterable(items)),
@@ -194,29 +295,57 @@ export const node = makeLocationNode({
 
 export const contribution: Host.Contribution = { id: "engine-claude-code", replacements: [[ExecutionHost.node, node]] }
 
+type Tracker = {
+  readonly names: Map<string, string>
+  readonly failure: { uuid?: string; message?: string }
+  /** Block and call ids emitted for each main-thread assistant message, so a superseded message can be retracted. */
+  readonly emitted: Map<string, string[]>
+  /** The model the turn runs on, to pick its entry out of the per-model usage Claude Code reports. */
+  readonly model: string | undefined
+}
+
 /** Maps one main-thread SDK frame to runner events; subagent frames stay inside their Agent call. */
-function events(message: SDKMessage, names: Map<string, string>, failure: { uuid?: string; message?: string }): LLMEvent[] {
+function events(message: SDKMessage, tracker: Tracker): LLMEvent[] {
+  const { names, failure, emitted } = tracker
   if (message.type === "assistant" && message.supersedes?.some((uuid) => uuid === failure.uuid)) failure.message = undefined
   if (message.type === "system" && message.subtype === "model_refusal_fallback" &&
     message.retracted_message_uuids?.some((uuid) => uuid === failure.uuid)) failure.message = undefined
+  // What the engine replaced is retracted: a refusal fallback names the messages it retracts, a reply the ones it supersedes.
+  const replaced = message.type === "assistant" ? message.supersedes : message.type === "system" && message.subtype === "model_refusal_fallback" ? message.retracted_message_uuids : undefined
+  const retracted = (replaced ?? []).flatMap((uuid) => {
+    const ids = emitted.get(uuid)
+    emitted.delete(uuid)
+    return ids ?? []
+  })
+  const retract = retracted.length ? [LLMEvent.retract({ ids: retracted })] : []
   if (message.type === "assistant" && message.parent_tool_use_id === null && message.error) {
     const text = message.message.content.flatMap((block) => (block.type === "text" ? [block.text] : [])).join("\n") || message.error
     failure.uuid = message.uuid
     failure.message = ClaudeCodeSDK.signedOut(message) ? ClaudeCodeSDK.SIGNED_OUT : (ClaudeCodeSDK.billingRejection(text) ?? text)
-    return []
+    return retract
   }
-  if (message.type === "assistant" && message.parent_tool_use_id === null)
-    return message.message.content.flatMap((block, index): LLMEvent[] => {
+  if (message.type === "assistant" && message.parent_tool_use_id === null) {
+    const ids: string[] = []
+    const blocks = message.message.content.flatMap((block, index): LLMEvent[] => {
       const id = `${message.uuid}:${index}`
-      if (block.type === "text")
+      if (block.type === "text") {
+        ids.push(id)
         return [LLMEvent.textStart({ id }), LLMEvent.textDelta({ id, text: block.text }), LLMEvent.textEnd({ id })]
-      if (block.type === "thinking")
+      }
+      if (block.type === "thinking") {
+        ids.push(id)
         return [LLMEvent.reasoningStart({ id }), LLMEvent.reasoningDelta({ id, text: block.thinking }), LLMEvent.reasoningEnd({ id })]
+      }
       // Orchestra tools are recorded by the runner through `turn.execute`, never by the host.
       if (block.type !== "tool_use" || block.name.startsWith(MCP_PREFIX)) return []
       names.set(block.id, block.name)
+      ids.push(block.id)
       return [LLMEvent.toolCall({ id: block.id, name: block.name, input: block.input, providerExecuted: true })]
     })
+    emitted.set(message.uuid, ids)
+    return [...retract, ...blocks]
+  }
+  if (message.type === "system" && message.subtype === "model_refusal_fallback") return retract
   if (message.type === "user" && message.parent_tool_use_id === null && Array.isArray(message.message.content))
     return message.message.content.flatMap((block): LLMEvent[] => {
       if (block.type !== "tool_result") return []
@@ -249,8 +378,43 @@ function events(message: SDKMessage, names: Map<string, string>, failure: { uuid
       cacheWriteInputTokens: message.usage.cache_creation_input_tokens,
       inputTokens: message.usage.input_tokens + message.usage.cache_read_input_tokens + message.usage.cache_creation_input_tokens,
       outputTokens: message.usage.output_tokens,
+      // What Claude Code billed for the turn (this process is the turn's), and the window of the model that answered.
+      ...(Number.isFinite(message.total_cost_usd) && message.total_cost_usd >= 0 ? { cost: message.total_cost_usd } : {}),
+      ...contextWindow(message.modelUsage, tracker.model),
     },
   })]
+}
+
+/** The context window of the main model in Claude Code's per-model usage: the named model, else the busiest one. */
+function contextWindow(usage: Record<string, { readonly contextWindow: number; readonly inputTokens: number; readonly outputTokens: number }> | undefined, model: string | undefined) {
+  const entries = Object.entries(usage ?? {})
+  const main = entries.find(([id]) => model !== undefined && id.startsWith(model)) ??
+    entries.toSorted((a, b) => b[1].inputTokens + b[1].outputTokens - (a[1].inputTokens + a[1].outputTokens))[0]
+  return main && Number.isFinite(main[1].contextWindow) && main[1].contextWindow > 0 ? { contextWindow: main[1].contextWindow } : {}
+}
+
+/**
+ * Frames a query produces after its turn's result, while background work runs: a finished task reaches the session as
+ * a steer prompt, so the model hears of it (the turn that answers resumes this Claude Code session, which first
+ * closes this process). Reads until the work is gone, the query ends, or the host stops waiting.
+ */
+function follow(iterator: AsyncIterator<SDKMessage>, live: { background: number }, turn: ExecutionHost.Turn) {
+  return Effect.gen(function* () {
+    while (live.background > 0) {
+      const next = yield* Effect.promise(() => iterator.next())
+      if (next.done) return
+      const message = next.value
+      if (message.type === "system" && message.subtype === "background_tasks_changed")
+        live.background = message.tasks.filter((task) => !task.ambient).length
+      if (message.type === "system" && message.subtype === "task_notification") {
+        yield* turn.notify({
+          id: `msg_${turn.session.id}_task_${message.task_id}_${message.status}`,
+          text: `Background task ${message.task_id} ${message.status}: ${message.summary}\nOutput: ${message.output_file}`,
+        })
+        return
+      }
+    }
+  })
 }
 
 /** The `orchestra` MCP server: lists the served tools and settles each call through the runner. */
@@ -278,9 +442,66 @@ function modelText(result: ToolResultValue) {
   return typeof result.value === "string" ? result.value : JSON.stringify(result.value)
 }
 
-async function* input(text: string, uuid: SDKUserMessage["uuid"], signal: AbortSignal): AsyncGenerator<SDKUserMessage> {
-  yield { type: "user", message: { role: "user", content: text }, parent_tool_use_id: null, uuid }
-  await new Promise((resolve) => signal.addEventListener("abort", resolve, { once: true }))
+function user(text: string, uuid: SDKUserMessage["uuid"]): SDKUserMessage {
+  return { type: "user", message: { role: "user", content: text }, parent_tool_use_id: null, uuid }
+}
+
+/** The query's streaming input: the turn's prompt first, then whatever is pushed while it runs, until aborted. */
+function inbox(first: SDKUserMessage, signal: AbortSignal) {
+  const queue = [first]
+  let wake: (() => void) | undefined
+  return {
+    push: (message: SDKUserMessage) => {
+      queue.push(message)
+      wake?.()
+    },
+    messages: (async function* (): AsyncGenerator<SDKUserMessage> {
+      while (!signal.aborted) {
+        const next = queue.shift()
+        if (next) {
+          yield next
+          continue
+        }
+        await new Promise<void>((resolve) => {
+          wake = resolve
+          signal.addEventListener("abort", () => resolve(), { once: true })
+        })
+        wake = undefined
+      }
+    })(),
+  }
+}
+
+/** AskUserQuestion's questions in Orchestra's question shape. */
+function questions(input: Record<string, unknown>) {
+  const list = (value: unknown) => (Array.isArray(value) ? value.filter(ClaudeCodeTranscript.record) : [])
+  const text = (value: unknown) => (typeof value === "string" ? value : "")
+  return list(input.questions).map((item) => ({
+    question: text(item.question),
+    header: text(item.header),
+    options: list(item.options).map((option) => ({ label: text(option.label), description: text(option.description) })),
+    multiple: item.multiSelect === true,
+  }))
+}
+
+/** The call as ToolSafety reads it, under Orchestra's tool name and argument names (V1 `gate.invocation`). */
+function safetyCall(tool: string, input: Record<string, unknown>) {
+  const text = (key: string) => (typeof input[key] === "string" ? input[key] : undefined)
+  const file = text("file_path") ?? text("notebook_path")
+  if (tool === "Bash") return { tool: "bash", args: { command: text("command") ?? "" } }
+  if (tool === "Write") return { tool: "write", args: { filePath: file } }
+  if (tool === "Edit" || tool === "MultiEdit" || tool === "NotebookEdit") return { tool: "edit", args: { filePath: file } }
+  if (tool === "Read") return { tool: "read", args: { filePath: file, limit: input.limit, offset: input.offset } }
+  return { tool: PERMISSIONS[tool]?.action ?? tool.toLowerCase(), args: input }
+}
+
+/** What Orchestra changes in the call's input: the sandboxed command, and the dispatch's domains for a web search. */
+function replacements(tool: string, authorization: ExecutionHost.Authorization | undefined) {
+  const changed = {
+    ...authorization?.input,
+    ...(tool === "WebSearch" && authorization?.domains ? { allowed_domains: [...authorization.domains] } : {}),
+  }
+  return Object.keys(changed).length ? changed : undefined
 }
 
 function permission(tool: string, input: Record<string, unknown>, directory: string) {
@@ -294,6 +515,8 @@ function permission(tool: string, input: Record<string, unknown>, directory: str
 
 function denial(error: { readonly _tag: string }) {
   if ("feedback" in error && typeof error.feedback === "string") return error.feedback
+  // ToolSafety's refusal names its reason, so the model can act on it.
+  if (error._tag === "ToolSafety.Denied" && "message" in error && typeof error.message === "string") return error.message
   if (error._tag === "PermissionV2.DeclinedError") return "The owner declined this call."
   return "Orchestra's permission rules deny this call."
 }

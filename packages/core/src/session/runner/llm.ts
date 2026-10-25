@@ -9,7 +9,8 @@ import {
   type ProviderErrorEvent,
   type ToolCall,
 } from "@orchestra/llm"
-import { Cause, Context, DateTime, Duration, Effect, FiberSet, Layer, Option, Semaphore, Stream } from "effect"
+import { Cause, Context, DateTime, Duration, Effect, FiberSet, Layer, Option, Queue, Scope, Semaphore, Stream } from "effect"
+import { asc, eq } from "drizzle-orm"
 import { AgentV2 } from "../../agent"
 import { CapabilityInvocation } from "../../capability/invocation"
 import { Config } from "../../config"
@@ -25,9 +26,14 @@ import { SystemContextRegistry } from "../../system-context/registry"
 import { SkillGuidance } from "../../skill/guidance"
 import { ReferenceGuidance } from "../../reference/guidance"
 import { ToolRegistry } from "../../tool/registry"
+import { AllowedDomains } from "../../tool/websearch"
+import { ToolSafety } from "../../tool-safety"
+import { ToolSafetySandbox } from "../../tool-safety-sandbox"
 import { TaskGovernance } from "../../tool/task-governance"
 import { Mcp } from "../../mcp"
 import { ToolOutputStore } from "../../tool-output-store"
+import { SessionExecution } from "../execution"
+import { Prompt } from "../prompt"
 import { SessionContextEpoch } from "../context-epoch"
 import { SessionCompaction } from "../compaction"
 import { SessionEvent } from "../event"
@@ -36,6 +42,7 @@ import { SessionInput } from "../input"
 import { SessionMessage } from "../message"
 import { SessionSchema } from "../schema"
 import { SessionStore } from "../store"
+import { TodoTable } from "../sql"
 import { SessionSubagentModels } from "../subagent-models"
 import { INTERRUPTED_TURN, type RunError, Service } from "./index"
 import { SessionRunnerModel } from "./model"
@@ -133,6 +140,10 @@ const layer = Layer.effect(
     const fs = yield* FSUtil.Service
     const appProcess = yield* AppProcess.Service
     const skills = yield* SkillV2.Service
+    const questions = yield* QuestionV2.Service
+    const safety = yield* ToolSafety.Service
+    // The process-global execution, for the wake a host's own event asks for; absent where nothing drains Sessions.
+    const execution = Option.getOrUndefined(yield* Effect.serviceOption(SessionExecution.Service))
     const workflowHosts = yield* RelayWorkflowSession.Service
     const nativeHost = yield* RelayWorkflowSession.NativeHost
     const workflowContext = Context.make(Database.Service, database).pipe(
@@ -210,6 +221,24 @@ const layer = Layer.effect(
         concurrency: "unbounded",
       }).pipe(Effect.map(SystemContext.combine))
 
+    // Attachments are read once, as the inputs are promoted; an admitted prompt keeps its URIs.
+    const readMentions = Effect.fnUntraced(function* (
+      sessionID: SessionSchema.ID,
+      inputs: ReadonlyArray<{ readonly prompt: Parameters<typeof SessionMentions.read>[1] }>,
+    ) {
+      for (const input of inputs) {
+        const mentions = yield* SessionMentions.read({ reader, mcp, fs }, input.prompt)
+        if (mentions.text)
+          yield* events.publish(SessionEvent.Synthetic, {
+            sessionID,
+            messageID: SessionMessage.ID.create(),
+            timestamp: yield* DateTime.now,
+            text: mentions.text,
+            ...(mentions.files.length === 0 ? {} : { files: mentions.files }),
+          })
+      }
+    })
+
     const runTurnAttempt = Effect.fn("SessionRunner.runTurn")(function* (
       sessionID: SessionSchema.ID,
       promotion: SessionInput.Delivery | undefined,
@@ -251,17 +280,7 @@ const layer = Layer.effect(
             Effect.forkDetach,
           )
           // Attachments are read once, as they are promoted; the admitted prompt keeps its URIs.
-          for (const input of yield* SessionInput.promotedAfter(db, session.id, cutoff)) {
-            const mentions = yield* SessionMentions.read({ reader, mcp, fs }, input.prompt)
-            if (mentions.text)
-              yield* events.publish(SessionEvent.Synthetic, {
-                sessionID: session.id,
-                messageID: SessionMessage.ID.create(),
-                timestamp: yield* DateTime.now,
-                text: mentions.text,
-                ...(mentions.files.length === 0 ? {} : { files: mentions.files }),
-              })
-          }
+          yield* readMentions(session.id, yield* SessionInput.promotedAfter(db, session.id, cutoff))
         }
       }
       const system =
@@ -364,16 +383,108 @@ const layer = Layer.effect(
           )
           return settlement
         })
-      // Permission for a call the host's engine runs itself, with the agent's and Session's rules: an ask is an ordinary
-      // V2 permission request the app answers.
+      // Orchestra's decision on a call the host's engine runs itself: V2 permission with the agent's and Session's rules
+      // (an ask is an ordinary request the app answers), then the Location's ToolSafety for the call as Orchestra's tool
+      // would see it, and the sandbox a shell command must run under. The jail lives as long as the turn.
+      const scope = yield* Scope.Scope
       const authorize: ExecutionHost.Turn["authorize"] = (input) =>
-        permissions.authorize({
+        Effect.gen(function* () {
+          yield* permissions
+            .authorize({
+              sessionID: session.id,
+              agent: agent.id,
+              action: input.action,
+              resources: [...input.resources],
+              metadata: { tool: input.tool, callID: input.callID },
+            })
+            .pipe(Effect.catchTag("Session.NotFoundError", (error) => Effect.die(error)))
+          if (!input.safety) return {}
+          const call = input.safety
+          return yield* safety.run(
+            {
+              tool: call.tool,
+              args: call.args,
+              sessionID: session.id,
+              callID: input.callID,
+              agent: agent.id,
+              directory: location.directory,
+              projectID: location.project.id,
+              projectDirectory: location.project.directory === "/" ? location.directory : location.project.directory,
+            },
+            hostedCall(call, location.directory, scope, fs),
+            () => Effect.void,
+          )
+        })
+      // The Session's open todos, rendered for an engine that lost its context to its own compaction.
+      const memory: ExecutionHost.Turn["memory"] = {
+        recall: db
+          .select()
+          .from(TodoTable)
+          .where(eq(TodoTable.session_id, session.id))
+          .orderBy(asc(TodoTable.position))
+          .all()
+          .pipe(
+            Effect.orDie,
+            Effect.map((rows) => rows.filter((row) => row.status !== "completed" && row.status !== "cancelled")),
+            Effect.map((open) =>
+              open.length === 0
+                ? undefined
+                : ["# Orchestra working memory (after the engine's compaction)", "## Todos", ...open.map((row) => `- [${row.status}] ${row.content}`)].join("\n"),
+            ),
+          ),
+        archive: (input) =>
+          Effect.gen(function* () {
+            yield* events.publish(SessionEvent.Synthetic, {
+              sessionID: session.id,
+              messageID: SessionMessage.ID.create(),
+              timestamp: yield* DateTime.now,
+              text: `Engine compaction summary (${input.trigger}):\nNative owner: ${input.nativeSessionID}\n\n${input.summary}`,
+            })
+          }),
+      }
+      // Steers promoted live and not yet reported consumed; any left when the host stream ends get a turn of their own.
+      const liveSteers = new Set<string>()
+      const steers: ExecutionHost.Turn["steers"] = Stream.callback<void>(
+        (queue) =>
+          Effect.gen(function* () {
+            const stop = yield* events.listen((event) => {
+              const data = event.data as { sessionID?: unknown; delivery?: unknown }
+              return event.type === SessionEvent.PromptAdmitted.type &&
+                data.sessionID === session.id &&
+                data.delivery === "steer"
+                ? Queue.offer(queue, undefined).pipe(Effect.asVoid)
+                : Effect.void
+            })
+            yield* Effect.addFinalizer(() => stop)
+            // Steers admitted since the drain's last promotion, now that none can slip between it and the listener.
+            yield* Queue.offer(queue, undefined)
+          }),
+        { bufferSize: 1, strategy: "sliding" },
+      ).pipe(
+        Stream.mapEffect(() =>
+          Effect.gen(function* () {
+            const before = yield* EventV2.latestSequence(db, session.id)
+            yield* SessionInput.promoteSteers(db, events, session.id, before)
+            const promoted = yield* SessionInput.promotedAfter(db, session.id, before)
+            if (promoted.length === 0) return []
+            // New user input resets the agent's provider-turn allowance (AGENTS "V2 Session Core").
+            currentStep = 1
+            yield* readMentions(session.id, promoted)
+            promoted.forEach((input) => liveSteers.add(input.id))
+            return promoted.map((input) => ({ id: input.id, text: input.prompt.text }))
+          }),
+        ),
+        Stream.flatMap((items) => Stream.fromIterable(items)),
+      )
+      const notify: ExecutionHost.Turn["notify"] = (input) =>
+        SessionInput.admit(db, events, {
+          id: SessionMessage.ID.make(input.id.startsWith("msg_") ? input.id : `msg_${input.id}`),
           sessionID: session.id,
-          agent: agent.id,
-          action: input.action,
-          resources: [...input.resources],
-          metadata: { tool: input.tool, callID: input.callID },
-        }).pipe(Effect.catchTag("Session.NotFoundError", (error) => Effect.die(error)))
+          prompt: Prompt.make({ text: input.text }),
+          delivery: "steer",
+        }).pipe(
+          Effect.andThen(execution ? execution.wake(session.id) : Effect.void),
+        )
       const source = request
         ? llm.stream(request)
         : host && agent.info
@@ -386,6 +497,11 @@ const layer = Layer.effect(
               tools: toolMaterialization?.definitions ?? [],
               execute,
               authorize,
+              question: (input) => questions.ask({ sessionID: session.id, questions: input.questions }),
+              memory,
+              steers,
+              consumed: (id) => Effect.sync(() => void liveSteers.delete(id)),
+              notify,
               state: ExecutionHost.state(db, session.id, host.stateKey),
             })
           : Stream.die("SessionRunner: no provider for this turn")
@@ -435,6 +551,7 @@ const layer = Layer.effect(
       return yield* Effect.uninterruptibleMask((restore) =>
         Effect.gen(function* () {
           const stream = yield* restore(providerStream).pipe(Effect.exit)
+          if (liveSteers.size > 0) needsContinuation = true
           const failure =
             stream._tag === "Failure" ? Option.getOrUndefined(Cause.findErrorOption(stream.cause)) : undefined
           if (
@@ -487,14 +604,20 @@ const layer = Layer.effect(
                 timestamp: yield* DateTime.now,
                 assistantMessageID: yield* publisher.startAssistant(),
                 finish: stepSettlement.finish,
-                cost: 0,
+                // What the provider or host reported, else the model's price list over the settled tokens.
+                cost: stepSettlement.cost ?? (model ? SessionRunnerModel.cost(SessionRunnerModel.pricing(model), stepSettlement.tokens) : 0),
                 tokens: stepSettlement.tokens,
                 usageKnown: stepSettlement.usageKnown,
                 snapshot: endSnapshot,
                 files,
               }),
             )
-            yield* compaction.afterStep({ sessionID: session.id, tokens: stepSettlement.tokens, model: modelRef })
+            yield* compaction.afterStep({
+              sessionID: session.id,
+              tokens: stepSettlement.tokens,
+              model: modelRef,
+              ...(stepSettlement.contextWindow === undefined ? {} : { contextWindow: stepSettlement.contextWindow }),
+            })
           }
           if (publisher.hasProviderError())
             yield* withPublication(publisher.failUnsettledTools("Tool execution interrupted"))
@@ -748,8 +871,71 @@ export const node = makeLocationNode({
     FSUtil.node,
     AppProcess.node,
     SkillV2.node,
+    QuestionV2.node,
+    ToolSafety.node,
   ],
 })
+
+/**
+ * What Orchestra adds to a call the host's engine runs itself, inside ToolSafety's `run` so the profile is the one
+ * narrowed to the Session's write roots: the dispatch's web domains and, for a shell command under a profile that
+ * confines shells, the command wrapped in the jail (one the Location cannot provide refuses the call).
+ */
+const hostedCall = Effect.fnUntraced(function* (
+  call: { readonly tool: string; readonly args: Readonly<Record<string, unknown>> },
+  directory: string,
+  scope: Scope.Scope,
+  fs: FSUtil.Interface,
+) {
+  const domains = yield* AllowedDomains
+  const profile = yield* ToolSafety.RuntimeProfile
+  const command = call.tool === "bash" && typeof call.args.command === "string" ? call.args.command : undefined
+  const confined =
+    command === undefined || !confines(profile)
+      ? undefined
+      : yield* ToolSafetySandbox.wrap(ChildProcess.make("/bin/sh", ["-c", command], { cwd: directory })).pipe(
+          Effect.provideService(ToolSafety.RuntimeProfile, {
+            ...profile,
+            requireSandbox: true,
+            sandbox: { ...profile?.sandbox, enabled: true, unconfinedFallback: false },
+          }),
+          Effect.provideService(FSUtil.Service, fs),
+          Scope.provide(scope),
+        )
+  if (confined && confined._tag !== "StandardCommand") return yield* new ToolSafety.Denied({ reason: "sandbox-pipeline-unbound" })
+  return {
+    ...(confined ? { input: { command: shellLine(confined) } } : {}),
+    ...(domains ? { domains } : {}),
+  } satisfies ExecutionHost.Authorization
+})
+
+/** Any restriction on a shell requires the jail, whether or not the profile set `requireSandbox`. */
+function confines(profile: ToolSafety.Profile | undefined) {
+  return Boolean(
+    profile?.requireSandbox ||
+      profile?.sandbox?.enabled ||
+      profile?.writeRoots !== undefined ||
+      profile?.sandbox?.readRoots !== undefined ||
+      profile?.neverTouch?.length ||
+      profile?.managedPaths?.length ||
+      profile?.protectedWrites?.length ||
+      profile?.sandbox?.denyPaths?.length ||
+      profile?.sandbox?.allowedUnixSockets?.length ||
+      profile?.sandbox?.allowedLoopbackEndpoints?.length,
+  )
+}
+
+/** The jailed command as one shell line, keeping the environment the jail built for it. */
+function shellLine(command: ChildProcess.StandardCommand) {
+  const env = command.options.env ?? {}
+  const unset = Object.keys(process.env).filter((name) => !(name in env)).flatMap((name) => ["-u", name])
+  const set = Object.entries(env).flatMap(([name, value]) =>
+    value !== undefined && process.env[name] !== value ? [`${name}=${value}`] : [],
+  )
+  return ["/usr/bin/env", ...unset, ...set, command.command, ...command.args]
+    .map((word) => `'${word.replaceAll("'", `'\\''`)}'`)
+    .join(" ")
+}
 
 function messageOf(failure: unknown) {
   return failure instanceof Error ? failure.message : String(failure)

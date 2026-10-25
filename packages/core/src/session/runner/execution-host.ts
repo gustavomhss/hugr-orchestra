@@ -8,6 +8,8 @@ import type { Database } from "../../database/database"
 import { makeLocationNode } from "../../effect/app-node"
 import type { ModelV2 } from "../../model"
 import type { PermissionV2 } from "../../permission"
+import type { QuestionV2 } from "../../question"
+import type { ToolSafety } from "../../tool-safety"
 import type { ToolRegistry } from "../../tool/registry"
 import type { SessionMessage } from "../message"
 import type { SessionSchema } from "../schema"
@@ -33,13 +35,55 @@ export interface Turn {
    * settles it through the Location registry and records the result. The host never emits these calls itself.
    */
   readonly execute: (call: { readonly id: string; readonly name: string; readonly input: unknown }) => Effect.Effect<ToolRegistry.Settlement>
-  /** V2 permission for a call the engine runs itself; an ask waits for the owner's reply, a deny or decline fails. */
+  /**
+   * Orchestra's decision on a call the engine runs itself: V2 permission first (an ask waits for the owner's reply, a
+   * deny or decline fails), then, when `safety` names the call as Orchestra's tool would see it, the Location's
+   * ToolSafety under the Session's profile: write roots, never-touch paths, protected writes, the dispatch charge and,
+   * for a shell command, the sandbox the profile requires. Any refusal fails the effect and the host must deny the call.
+   */
   readonly authorize: (input: {
     readonly callID: string
     readonly tool: string
     readonly action: string
     readonly resources: ReadonlyArray<string>
-  }) => Effect.Effect<void, PermissionV2.Error | PermissionV2.DeclinedError>
+    /** The call as ToolSafety reads it: Orchestra's tool name (`bash`, `write`, `edit`, `read`, ...) and argument names. */
+    readonly safety?: { readonly tool: string; readonly args: Readonly<Record<string, unknown>> }
+  }) => Effect.Effect<Authorization, PermissionV2.Error | PermissionV2.DeclinedError | ToolSafety.Denied>
+  /**
+   * Asks the owner and waits for the answers: one answer (the chosen labels) per question, in order. A dismissed
+   * question fails; the host denies the engine's question tool with that.
+   */
+  readonly question: (input: {
+    readonly callID: string
+    readonly questions: ReadonlyArray<QuestionV2.Info>
+  }) => Effect.Effect<ReadonlyArray<QuestionV2.Answer>, QuestionV2.RejectedError>
+  /**
+   * The Session's working memory, for an engine that compacts its own context: `recall` renders what Orchestra
+   * keeps that the engine's summary cannot (open todos) so the host can hand it back right after a compaction;
+   * `archive` records the engine's own summary in the Session, as a synthetic message, without changing which
+   * history later turns see.
+   */
+  readonly memory: {
+    readonly recall: Effect.Effect<string | undefined>
+    readonly archive: (input: {
+      readonly summary: string
+      readonly trigger: string
+      readonly nativeSessionID: string
+    }) => Effect.Effect<void>
+  }
+  /**
+   * Steers admitted while this turn runs, promoted into the Session at the moment they arrive and emitted here, so the
+   * host can hand them to its running engine through streaming input. The host reports each one it passed on with
+   * `consumed`; a steer never reported gets a turn of its own once this one ends. Cold: it runs while subscribed.
+   */
+  readonly steers: Stream.Stream<Steer>
+  readonly consumed: (id: string) => Effect.Effect<void>
+  /**
+   * An event the engine produces on its own, after the turn that started the work (a background task finishing): it
+   * is recorded in the Session as a steer prompt, so it is never lost, and wakes the Session. Idempotent by `id`.
+   * Unlike everything else on a Turn it outlives the turn: the host may call it after its stream has ended.
+   */
+  readonly notify: (input: { readonly id: string; readonly text: string }) => Effect.Effect<void>
   /** The host's durable state, `session.metadata[host.stateKey]`. */
   readonly state: {
     readonly get: Effect.Effect<unknown>
@@ -47,11 +91,28 @@ export interface Turn {
   }
 }
 
+export interface Authorization {
+  /** Fields Orchestra replaces in the call's input, merged over it by the host (`command` wrapped in the required sandbox); absent: unchanged. */
+  readonly input?: Readonly<Record<string, unknown>>
+  /** The web domains the Session's dispatch binds its searches to; absent: unrestricted. The host applies them. */
+  readonly domains?: ReadonlyArray<string>
+}
+
+/** A steer promoted into the Session while the turn ran. */
+export interface Steer {
+  /** The promoted user message's id. */
+  readonly id: string
+  readonly text: string
+}
+
 /**
  * Stream rules: exactly one `step-start` and one `step-finish`; every `tool-call` is `providerExecuted` and settles
  * with its `tool-result` or `tool-error` in the same stream; provider failures are `provider-error` events, never
  * retried; interruption runs the stream's finalizer. A host owns its context window: the runner skips compaction and
- * overflow recovery for its turns.
+ * overflow recovery for its turns. A `step-finish` usage may carry the `cost` (USD) and `contextWindow` the engine
+ * reports, which the runner records instead of pricing the tokens. A `retract` names blocks and calls of an attempt the
+ * engine superseded; the runner blanks them in the Session. Steers reach a running engine through `Turn.steers`, and
+ * what the engine produces after its turn ended goes through `Turn.notify`, never as stream events.
  */
 export interface Interface {
   readonly id: string
