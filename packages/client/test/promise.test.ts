@@ -42,6 +42,7 @@ test("exposes every standard HTTP API group", () => {
     "lean",
     "atlas",
     "config",
+    "claudeCode",
     "relayDocuments",
     "relayPublish",
     "relayHooks",
