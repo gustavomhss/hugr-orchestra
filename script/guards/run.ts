@@ -3,7 +3,9 @@
 // test, so a PR cannot relax its own guards. Only when the base has no rules yet (the PR that introduces the engine)
 // does it read them from disk, and it says so. Applies them to the added lines and changed paths of the diff.
 //
-// Usage: bun run script/guards/run.ts [--base origin/dev]
+// Usage: bun run script/guards/run.ts [--base origin/dev] [--cwd <repo>] [--warn]
+// --cwd is the checkout under test (default: the repo this script lives in), so CI can run the engine from the base
+// branch against the change. --warn reports gate findings without failing; setup errors still fail.
 // Env: GUARDRAIL_BASE_REF (default origin/dev), GUARDRAIL_APPROVED (comma-separated changed-paths rule ids an
 // approver has cleared, set by CI from a label).
 
@@ -26,14 +28,31 @@ export type Report = {
 }
 
 if (import.meta.main) {
-  const baseFlag = process.argv.indexOf("--base")
+  const warn = process.argv.includes("--warn")
   const report = runGuards({
-    cwd: path.resolve(import.meta.dir, "..", ".."),
-    baseRef: (baseFlag >= 0 ? process.argv[baseFlag + 1] : undefined) ?? process.env.GUARDRAIL_BASE_REF ?? "origin/dev",
+    cwd: path.resolve(flag("--cwd") ?? path.join(import.meta.dir, "..", "..")),
+    baseRef: flag("--base") ?? process.env.GUARDRAIL_BASE_REF ?? "origin/dev",
     approved: (process.env.GUARDRAIL_APPROVED ?? "").split(",").filter((id) => id.length > 0),
   })
   for (const line of format(report)) console.log(line)
-  process.exit(report.errors.length > 0 || report.findings.some((finding) => finding.severity === "gate") ? 1 : 0)
+  if (warn && process.env.GITHUB_ACTIONS) for (const finding of report.findings) console.log(annotation(finding))
+  process.exit(exitCode(report, warn))
+}
+
+export function exitCode(report: Report, warn: boolean) {
+  if (report.errors.length > 0) return 1
+  return !warn && report.findings.some((finding) => finding.severity === "gate") ? 1 : 0
+}
+
+// GitHub Actions workflow command: shows the finding on the PR's Files tab. Warn mode only, where nothing else surfaces it.
+export function annotation(finding: Finding) {
+  const props = [`file=${finding.path}`, finding.line === undefined ? "" : `line=${finding.line}`, `title=guard ${finding.rule}`]
+  return `::warning ${props.filter((prop) => prop.length > 0).join(",")}::${finding.message.replace(/%/g, "%25").replace(/\r/g, "%0D").replace(/\n/g, "%0A")}`
+}
+
+function flag(name: string) {
+  const index = process.argv.indexOf(name)
+  return index >= 0 ? process.argv[index + 1] : undefined
 }
 
 export function runGuards(input: { cwd: string; baseRef: string; approved: string[] }): Report {
