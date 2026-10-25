@@ -30,7 +30,7 @@ export async function consoleHost(env: Record<string, string>, project: string, 
     })
   })
   const preparationMs = performance.now() - preparation
-  const terminal = isolatedEnvironment(deliveryEnv(env), () => backend.spawn(cli(), ["--print-logs", "--log-level", "DEBUG", ...(typeof target === "object" ? ["attach", target.attach, "--dir", project, "--session", target.sessionID] : [...(target === "serve" ? ["serve"] : []), "--port", String(port), "--hostname", "127.0.0.1"]), ...args], {
+  const terminal = isolatedEnvironment(deliveryEnv(env), () => backend.spawn(cli(), [...(typeof target === "object" ? ["attach", target.attach, "--dir", project, "--session", target.sessionID] : [...(target === "serve" ? ["serve"] : []), "--port", String(port), "--hostname", "127.0.0.1"]), ...args], {
     // The real session sidebar auto-renders only above 120 columns; attachment proves its session title.
     name: "xterm-256color", cols: typeof target === "object" ? 160 : 120, rows: 40, cwd: project,
     env: { ...deliveryEnv(env), TERM: "xterm-256color", COLUMNS: typeof target === "object" ? "160" : "120", LINES: "40" },

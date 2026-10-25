@@ -24,7 +24,7 @@ observations. Preserve the JSON verdicts, negative controls and command logs whe
 | Scenario | Entry point | Scope |
 |---|---|---|
 | V1 | `v1-background.ts` | Real agent turn, post-adoption output, same-Session frontend Esc and session removal; Windows included. |
-| V2 | `v2-kill.ts serve`, `tui`, `hold` | Compiled CLI/TUI crash with live supervised trees; Windows validates inner supervisor ownership. Actual Electron main/utility use the packaged smoke. |
+| V2 | `v2-kill.ts serve`, `hold` | Compiled CLI/TUI crash with live supervised trees; Windows validates inner supervisor ownership. Actual Electron main/utility use the packaged smoke. |
 | V3 | `v3-supervisor.ts` | Supervisor death, documented Unix hole, next-spawn recovery. |
 | V4 | `v4-lsp.ts` | Twenty same-instance crashes/restarts with real tsservers. |
 | V5 | `v5-mcp.ts` | One MiB measured stderr, real MCP handshake and final diagnostic marker. |
