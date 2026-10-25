@@ -325,6 +325,23 @@ const acp = Spec.make("acp", {
   params: { cwd: Flag.string("cwd").pipe(Flag.withDescription("working directory"), Flag.optional) },
 })
 
+const web = Spec.make("web", {
+  description: "Start the Orchestra server and open the web interface",
+  params: {
+    hostname: Flag.string("hostname").pipe(Flag.withDefault("127.0.0.1"), Flag.withDescription("hostname to listen on")),
+    port: Flag.integer("port").pipe(Flag.withDescription("port to listen on (default: the first free port from 4096)"), Flag.optional),
+    mdns: Flag.boolean("mdns").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("enable mDNS service discovery (defaults hostname to 0.0.0.0)"),
+    ),
+    "mdns-domain": Flag.string("mdns-domain").pipe(
+      Flag.withDefault("orchestra.local"),
+      Flag.withDescription("custom domain name for mDNS service"),
+    ),
+    cors: Flag.string("cors").pipe(Flag.withDescription("additional domains to allow for CORS"), Flag.atMost(100)),
+  },
+})
+
 declare const ORCHESTRA_CLI_NAME: string | undefined
 
 export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHESTRA_CLI_NAME : "orchestra", {
@@ -384,6 +401,7 @@ export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHE
     toolkit,
     plugin,
     acp,
+    web,
     Spec.make("migrate", { description: "Migrate v1 data to v2" }),
     Spec.make("service", {
       description: "Manage the background server",
