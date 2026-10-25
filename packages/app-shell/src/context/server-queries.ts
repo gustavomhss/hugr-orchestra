@@ -1,5 +1,4 @@
 import type { Orchestra } from "@orchestra/client"
-import type { Config } from "@/v2-wire"
 import type { ServerSdk } from "@/utils/server"
 import type { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 import { queryOptions, type QueryClient, type SolidQueryOptions } from "@tanstack/solid-query"
@@ -15,6 +14,7 @@ import { directoryKey } from "./global-sync/utils"
 import {
   loadAgentsQuery,
   loadGlobalConfigQuery,
+  type GlobalConfig,
   loadPathQuery,
   loadProjectsQuery,
   loadProvidersQuery,
@@ -96,7 +96,7 @@ export function makeQueryOptionsApi(
   serverAPI: CompatibleApi,
   sdkFor: (dir: PathKey) => ServerSdk,
   protocol: Promise<"v2">,
-  readV2Config?: () => Promise<Config>,
+  readV2Config?: () => Promise<GlobalConfig>,
   orchestra?: ReturnType<typeof Orchestra.make>,
 ) {
   return {

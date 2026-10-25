@@ -58,8 +58,6 @@ export const SETTINGS_COPY = {
   "orchestra.settings.wallpaper.sydney-rae": "Sydney Rae",
   "orchestra.settings.permissions.scope":
     "Server-wide defaults for every agent and repository. A project's config or an agent's own rules can override them.",
-  "orchestra.settings.permissions.readOnly":
-    "This server does not share its tool defaults, so the built-in defaults are shown and cannot be changed here.",
   "orchestra.settings.permissions.locked.patterns":
     "Pattern rules in the server config set this tool. Edit them in the config file.",
   "orchestra.settings.permissions.locked.shadowed":

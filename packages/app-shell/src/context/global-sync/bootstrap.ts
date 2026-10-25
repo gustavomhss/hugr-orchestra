@@ -89,11 +89,16 @@ function showErrors(input: {
   })
 }
 
+/** The global settings the app reads, plus the server's ordered tool permission rules, which V1's `Config` lacks. */
+export type GlobalConfig = Config & {
+  permissions?: ReadonlyArray<{ action: string; resource: string; effect: "allow" | "ask" | "deny" }>
+}
+
 export const loadGlobalConfigQuery = (
   scope: ServerScope,
   sdk: ServerSdk,
   protocol?: Promise<ServerProtocol>,
-  readV2?: () => Promise<Config>,
+  readV2?: () => Promise<GlobalConfig>,
 ) =>
   queryOptions({
     queryKey: [scope, "config"],
