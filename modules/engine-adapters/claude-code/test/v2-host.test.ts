@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import type { McpSdkServerConfigWithInstance, Options, SDKMessage, SDKUserMessage, query } from "@anthropic-ai/claude-agent-sdk"
+import type { HookInput, McpSdkServerConfigWithInstance, Options, SDKMessage, SDKUserMessage, query } from "@anthropic-ai/claude-agent-sdk"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
 import { ToolDefinition } from "@orchestra/llm"
@@ -15,7 +15,8 @@ import { ClaudeCodeHost } from "../src/v2/host"
 // One SDK query is one provider turn; the next turn resumes the same Claude Code session with only the new message.
 
 const calls: { prompt: unknown; options: Options | undefined }[] = []
-let script: SDKMessage[] = []
+// Frames, or frames built from the client uuid the host stamped on its prompt (Claude Code echoes it on its replies).
+let script: SDKMessage[] | ((sent: string | undefined) => SDKMessage[]) = []
 // Runs before the frames, as Claude Code would mid-turn: approvals and Orchestra tool calls.
 let during: (options: Options) => Promise<void> = async () => {}
 
@@ -28,7 +29,7 @@ const sdk = Layer.succeed(
         const first = await input.prompt[Symbol.asyncIterator]().next()
         calls.push({ prompt: first.done ? undefined : first.value.message.content, options: input.options })
         await during(input.options)
-        yield* frames
+        yield* typeof frames === "function" ? frames(first.done ? undefined : first.value.uuid) : frames
       })()
     }) as unknown as typeof query,
   }),
@@ -217,4 +218,107 @@ test("delegation goes through Orchestra's governed task: served over MCP, Claude
   expect(listed).toEqual(["task"])
   const denied = { behavior: "deny", message: "Delegate through `mcp__orchestra__task`: Orchestra governs every delegation in this session." }
   expect(decisions).toEqual([denied, denied])
+})
+
+// Claude Code skips canUseTool when a settings allow rule matches, so the PreToolUse hook is the call's only sure check.
+const pre = (options: Options, tool: string, input: Record<string, unknown>, id: string) =>
+  options.hooks?.PreToolUse?.[0]?.hooks[0]?.(
+    { hook_event_name: "PreToolUse", tool_name: tool, tool_input: input, tool_use_id: id, session_id: "claude-1", transcript_path: "", cwd: "/project" } as HookInput,
+    id,
+    { signal: new AbortController().signal },
+  )
+const allowed = { hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "allow" } }
+const refused = (reason: string) => ({ hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: reason } })
+
+test("the PreToolUse gate settles every call through Orchestra, failing closed, before any settings allow rule applies", async () => {
+  const asked: unknown[] = []
+  const decisions: unknown[] = []
+  const executed: unknown[] = []
+  during = async (options) => {
+    decisions.push(await pre(options, "Write", { file_path: "/project/a.ts" }, "tu-1"))
+    decisions.push(await pre(options, "Bash", { command: "rm -rf /" }, "tu-2"))
+    decisions.push(await pre(options, "Grep", { pattern: "boom" }, "tu-3"))
+    decisions.push(await pre(options, "Agent", { prompt: "go" }, "tu-4"))
+    decisions.push(await pre(options, "AskUserQuestion", { questions: [] }, "tu-5"))
+    decisions.push(await pre(options, "mcp__orchestra__task", { prompt: "go" }, "tu-6"))
+    // canUseTool after the hook already learned the call (both can run): the call id is not queued twice.
+    await options.canUseTool?.("mcp__orchestra__task", { prompt: "go" }, { signal: new AbortController().signal, toolUseID: "tu-6", requestId: "r6" })
+    const server = options.mcpServers?.orchestra as McpSdkServerConfigWithInstance
+    const [client, transport] = InMemoryTransport.createLinkedPair()
+    await server.instance.connect(transport)
+    const mcp = new Client({ name: "test", version: "0" })
+    await mcp.connect(client)
+    await mcp.callTool({ name: "task", arguments: { prompt: "go" } })
+    await mcp.callTool({ name: "task", arguments: { prompt: "again" } })
+    await mcp.close()
+  }
+  script = [done]
+  await collect(turnOf({
+    tools: [new ToolDefinition({ name: "task", description: "task", inputSchema: { type: "object", properties: {} } })],
+    execute: (call) => Effect.sync(() => executed.push(call.id)).pipe(Effect.as({ result: { type: "text" as const, value: "ok" } })),
+    authorize: (input) =>
+      Effect.sync(() => asked.push(input)).pipe(
+        Effect.andThen(
+          input.action === "bash" ? Effect.fail(new PermissionV2.BlockedError({ rules: [] }))
+            : input.action === "grep" ? Effect.die("permission store unavailable") : Effect.void,
+        ),
+      ),
+  }))
+
+  expect(asked).toEqual([
+    { callID: "tu-1", tool: "Write", action: "edit", resources: ["a.ts"] },
+    { callID: "tu-2", tool: "Bash", action: "bash", resources: ["rm -rf /"] },
+    { callID: "tu-3", tool: "Grep", action: "grep", resources: ["boom"] },
+  ])
+  expect(decisions).toEqual([
+    allowed,
+    refused("Orchestra's permission rules deny this call."),
+    refused("Orchestra could not check this call, so it is refused."),
+    refused("Delegate through `mcp__orchestra__task`: Orchestra governs every delegation in this session."),
+    refused("Orchestra cannot show this question here: ask the owner in your reply and end your turn."),
+    allowed,
+  ])
+  expect(executed[0]).toBe("tu-6")
+  expect(executed[1]).not.toBe("tu-6")
+})
+
+test("an assistant-level error fails the turn unless a later frame supersedes it", async () => {
+  const stored: { value: unknown } = { value: undefined }
+  const state = { get: Effect.sync(() => stored.value), update: (fn: (value: unknown) => unknown) => Effect.sync(() => void (stored.value = fn(stored.value))) }
+  script = [
+    frame({ type: "assistant", uuid: "e1", session_id: "claude-1", parent_tool_use_id: null, error: "billing_error",
+      message: { content: [{ type: "text", text: "billing_error: plan limits reached" }] } }),
+    done,
+  ]
+  const failed = await collect(turnOf({ state }))
+
+  expect(failed).toMatchObject([{ type: "step-start" }, { type: "provider-error", message: "Anthropic returned: billing_error: plan limits reached" }])
+  expect(failed.some((event) => event.type === "step-finish" || event.type === "text-delta")).toBe(false)
+  // The owner's message was never answered, so it is sent again next turn.
+  expect(stored.value).toBeUndefined()
+
+  script = [
+    frame({ type: "assistant", uuid: "e2", session_id: "claude-1", parent_tool_use_id: null, error: "rate_limit",
+      message: { content: [] } }),
+    frame({ type: "assistant", uuid: "a2", session_id: "claude-1", parent_tool_use_id: null, supersedes: ["e2"],
+      message: { content: [{ type: "text", text: "Recovered" }] } }),
+    done,
+  ]
+  const recovered = await collect(turnOf({ state }))
+
+  expect(recovered.map((event) => event.type)).toEqual(["step-start", "text-start", "text-delta", "text-end", "step-finish"])
+  expect(stored.value).toEqual({ sessionId: "claude-1", delivered: ["msg_1"] })
+})
+
+test("a prompt Claude Code consumed is delivered even when the turn is interrupted before its result", async () => {
+  const stored: { value: unknown } = { value: undefined }
+  script = (sent) => [
+    frame({ type: "assistant", uuid: "a1", session_id: "claude-1", parent_tool_use_id: null, user_message_uuid: sent,
+      user_message_uuids: [sent], message: { content: [{ type: "text", text: "Starting" }] } }),
+  ]
+  await collect(turnOf({
+    state: { get: Effect.sync(() => stored.value), update: (fn) => Effect.sync(() => void (stored.value = fn(stored.value))) },
+  }))
+
+  expect(stored.value).toEqual({ sessionId: "claude-1", delivered: ["msg_1"] })
 })
