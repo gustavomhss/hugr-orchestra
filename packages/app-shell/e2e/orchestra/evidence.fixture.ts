@@ -31,7 +31,6 @@ export async function evidencePage(
     workdir?: string
     directory?: string
     metadata?: Record<string, unknown>
-    protocol?: "v2"
     raw?: WireSessionMessageInfo[]
     secondServer?: string
     scheme?: "light" | "dark"
@@ -58,7 +57,7 @@ export async function evidencePage(
   }
   const metadata = { exit: 0, truncated: false, ...input.metadata }
   await mockOrchestraServer(page, {
-    protocol: input.protocol ?? "v2",
+    protocol: "v2",
     directory: root,
     project: { ...project(), worktree: root },
     provider: {
@@ -171,7 +170,25 @@ export async function evidencePage(
   await transport.waitForConnection()
   await expectSessionTitle(page, input.title ?? title)
   await expect(editor(page)).toBeEditable()
-  return { transport, send: (event: unknown) => transport.send(event), writes, sessionID, records }
+  // Reruns the evidence call in place with new input and output, as the server reports a tool call and its result.
+  const revise = async (value: { command: string; output: string; metadata: Record<string, unknown> }) => {
+    const call = { sessionID, assistantMessageID: "msg_1001_timeline_assistant", callID: "prt_evidence", executed: false }
+    await transport.send({
+      id: `evt_called_${crypto.randomUUID()}`,
+      type: "session.tool.called",
+      created: 1700000006000,
+      location: { directory: root },
+      data: { ...call, input: { command: value.command } },
+    })
+    await transport.send({
+      id: `evt_success_${crypto.randomUUID()}`,
+      type: "session.tool.success",
+      created: 1700000007000,
+      location: { directory: root },
+      data: { ...call, metadata: value.metadata, content: [{ type: "text", text: value.output }] },
+    })
+  }
+  return { transport, send: (event: unknown) => transport.send(event), revise, writes, sessionID, records }
 }
 
 export async function attachImage(page: Page) {

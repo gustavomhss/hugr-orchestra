@@ -72,6 +72,12 @@ export interface Interface {
   readonly add: (name: string, config: ConfigMCP.Local | ConfigMCP.Remote) => Effect.Effect<void, ConfigError>
   /** Removes the server from every profile file that defines it, then disconnects it. */
   readonly remove: (name: string) => Effect.Effect<void, NotFoundError | ConfigError>
+  /** Each configured server's resolved transport and endpoint; headers, environment and OAuth never leave core. */
+  readonly config: () => Effect.Effect<Record<string, Mcp.Entry>>
+  /** Each server of the profile's own config files exactly as written, so `{env:...}` references stay unresolved. */
+  readonly entries: () => Effect.Effect<Record<string, Mcp.Entry>, ConfigError>
+  /** The tool names of each connected server that lists tools. */
+  readonly tools: () => Effect.Effect<Record<string, string[]>>
   /** The resources and resource templates of the connected servers. */
   readonly resources: () => Effect.Effect<Mcp.ResourceCatalog>
   /** Reads a resource by URI from the connected server that lists it; undefined when no connected server lists it. */
@@ -103,6 +109,8 @@ type Entry = {
   client?: Client
   // Holds the server's tool registrations; closing it removes them.
   tools?: Scope.Closeable
+  // The names of the tools the server listed, while it is connected.
+  toolNames?: string[]
   // Bumped by every connect and disconnect; an attempt that finishes under a newer generation is stale.
   generation: number
 }
@@ -145,6 +153,7 @@ const layer = Layer.effect(
       const scope = current.tools
       current.client = undefined
       current.tools = undefined
+      current.toolNames = undefined
       return Effect.all([
         scope ? Scope.close(scope, Exit.void) : Effect.void,
         client ? Effect.promise(() => client.close().catch(() => undefined)) : Effect.void,
@@ -226,12 +235,14 @@ const layer = Layer.effect(
       // Connected is reported only once the server's tools are in the registry.
       current.client = client
       current.tools = yield* register(name, client, listed ?? [], request)
+      current.toolNames = (listed ?? []).map((def) => def.name)
       current.status = opened.status
       client.onclose = () => {
         if (current.client !== client) return
         const scope = current.tools
         current.client = undefined
         current.tools = undefined
+        current.toolNames = undefined
         current.status = { status: "failed", error: "Connection closed" }
         if (scope) Effect.runFork(Scope.close(scope, Exit.void))
       }
@@ -244,6 +255,7 @@ const layer = Layer.effect(
             if (!defs || current.client !== client) return
             const previous = current.tools
             current.tools = yield* register(name, client, defs, request)
+            current.toolNames = defs.map((def) => def.name)
             if (previous) yield* Scope.close(previous, Exit.void)
           }),
         ),
@@ -346,6 +358,31 @@ const layer = Layer.effect(
         current.generation++
         yield* release(current)
       }
+    })
+
+    const resolved = Effect.fn("Mcp.config")(function* () {
+      return Object.fromEntries(
+        Array.from((yield* configured()).servers, ([name, server]): [string, Mcp.Entry] => [
+          name,
+          server.type === "local" ? { type: "local", command: [...server.command] } : { type: "remote", url: server.url },
+        ]),
+      )
+    })
+
+    const profile = Effect.fn("Mcp.entries")(function* () {
+      return yield* McpProjectConfig.entries(location.directory).pipe(
+        Effect.provideService(FSUtil.Service, fs),
+        Effect.mapError((error) => new ConfigError({ message: error.message })),
+      )
+    })
+
+    const inventory = Effect.fn("Mcp.tools")(function* () {
+      yield* ready()
+      return Object.fromEntries(
+        Array.from(entries).flatMap(([name, current]) =>
+          current.client && current.toolNames ? [[name, current.toolNames] as const] : [],
+        ),
+      )
     })
 
     const connected = () =>
@@ -553,6 +590,9 @@ const layer = Layer.effect(
       disconnect,
       add,
       remove,
+      config: resolved,
+      entries: profile,
+      tools: inventory,
       resources,
       readResource,
       prompts,

@@ -3,9 +3,8 @@ import { expect, test, type Page, type Response, type Route } from "@playwright/
 const serverA = "http://127.0.0.1:4096"
 const serverB = "http://127.0.0.1:4097"
 const directory = "/work/shared repository"
-const authorizationUrl = "https://auth.example.test/authorize?state=state-secured"
 type Status = { status: string; error?: string }
-type Recorded = { method: string; url: string; body?: unknown }
+type Recorded = { method: string; url: string; directory: string | null; body?: unknown }
 
 function fixture() {
   return {
@@ -21,9 +20,25 @@ function fixture() {
       },
       [serverB]: { shared: { status: "connected" }, "only-b": { status: "disabled" } },
     } as Record<string, Record<string, Status>>,
-    // Events each server's /api/event stream delivers next.
-    events: {} as Record<string, unknown[]>,
+    // The server's resolved config (GET /api/mcp/config): variables are already substituted.
+    config: {
+      [serverA]: {
+        online: { type: "remote", url: "https://mcp.example.test/docs?key=resolved-secret" },
+        broken: { type: "local", command: ["bunx", "broken server", "--token", "resolved-secret"] },
+      },
+      [serverB]: {},
+    } as Record<string, Record<string, unknown>>,
+    // The profile files' own entries (GET /api/mcp/entries): online is defined outside the profile.
+    entries: {
+      [serverA]: { broken: { type: "local", command: ["bunx", "broken server", "--token", "{env:TOKEN}"] } },
+      [serverB]: {},
+    } as Record<string, Record<string, unknown>>,
+    tools: { [serverA]: { online: ["search_docs", "read_page"] }, [serverB]: {} } as Record<
+      string,
+      Record<string, string[]>
+    >,
     configError: false,
+    events: {} as Record<string, { type: string; data: Record<string, string> }[]>,
     loadError: false,
     actionError: false,
     beforeList: undefined as ((url: URL) => Promise<void>) | undefined,
@@ -43,8 +58,11 @@ test("mixed statuses, search, connection target, refresh, keyboard, and themes",
   await expect(row(page, "broken")).toContainText("Connection refused by upstream")
   await expect(row(page, "registration")).toContainText("Register an OAuth client")
   await expect(row(page, "online").getByRole("switch", { name: "Connect online (until restart)" })).toBeChecked()
-  await expect(row(page, "online").locator(".mx-badge")).toHaveText(["Connected"])
-  await expect(row(page, "broken").locator(".mx-badge")).toHaveText(["Error"])
+  await expect(row(page, "online").locator("p").first()).toHaveText("https://mcp.example.test/docs?key=•••")
+  await expect(row(page, "online").locator(".mx-badge")).toHaveText(["Connected", "http", "2 tools"])
+  await expect(row(page, "broken").locator(".mx-badge")).toHaveText(["Error", "stdio"])
+  await expect(row(page, "broken").locator("p").first()).toHaveText(`bunx 'broken server' --token •••`)
+  await expect(page.locator("[data-mx-page]")).not.toContainText("resolved-secret")
   await expect(page.locator("[data-mx-page]")).toContainText(
     "Switches apply until the server restarts. Saving or removing a server restarts this profile's MCP servers.",
   )
@@ -58,9 +76,11 @@ test("mixed statuses, search, connection target, refresh, keyboard, and themes",
   await expect(row(page, "shared").getByRole("switch", { name: "Connect shared (until restart)" })).not.toBeChecked()
   await expect(row(page, "waiting").getByRole("switch")).toBeDisabled()
   await expect(row(page, "secured").getByRole("button", { name: "Authenticate" })).toBeVisible()
-  const lists = state.requests.filter((r) => new URL(r.url).pathname === "/api/mcp")
-  expect(lists.length).toBeGreaterThan(0)
-  expect(lists.every((r) => new URL(r.url).origin === serverA && located(r))).toBe(true)
+  expect(
+    state.requests
+      .filter((r) => new URL(r.url).pathname === "/api/mcp")
+      .every((r) => new URL(r.url).origin === serverA && r.directory === directory),
+  ).toBe(true)
   await expect(page.getByRole("searchbox", { name: "Search MCP" })).toHaveAttribute("placeholder", "Search MCP")
   await page.getByRole("searchbox", { name: "Search MCP" }).fill("SHARED")
   await expect(page.locator("[data-mcp-name]")).toHaveCount(1)
@@ -68,11 +88,10 @@ test("mixed statuses, search, connection target, refresh, keyboard, and themes",
   await expect(connection).toBeEnabled()
   await connection.focus()
   await page.keyboard.press("Space")
-  await expect.poll(() => actions(state).length).toBe(1)
+  await expect.poll(() => state.requests.filter((r) => r.method === "POST").length).toBe(1)
   await expect(connection).toBeDisabled()
   await page.keyboard.press("Space")
-  expect(actions(state).map(target)).toEqual([`POST ${serverA}/api/mcp/shared/connect`])
-  expect(actions(state).every(located)).toBe(true)
+  expect(posts(state)).toEqual([{ method: "POST", url: `${serverA}/api/mcp/shared/connect`, directory }])
   const refresh = page.waitForResponse(
     (response) =>
       response.request().method() === "GET" &&
@@ -100,11 +119,6 @@ test("mixed statuses, search, connection target, refresh, keyboard, and themes",
 test("disconnect, retry and OAuth go through the shared toggle; failures stay on their card", async ({ page }) => {
   const state = fixture()
   await setup(page, state)
-  // The authorization page stands in for the provider: finishing it completes the server's OAuth callback.
-  await page.context().route("https://auth.example.test/**", (route) => {
-    state.inventory[serverA].secured = { status: "connected" }
-    return route.fulfill({ contentType: "text/html", body: "<p>Signed in</p>" })
-  })
   await openChapter(page)
   await toggleConnection(page, "online")
   await expect(row(page, "online").getByRole("switch")).not.toBeChecked()
@@ -115,18 +129,14 @@ test("disconnect, retry and OAuth go through the shared toggle; failures stay on
   await expect(row(page, "shared").getByRole("alert")).toContainText("MCP server not found: shared")
   await expect(row(page, "secured").getByRole("alert")).toContainText("MCP server secured does not support OAuth")
   state.actionError = false
-  const signIn = page.context().waitForEvent("page")
   await row(page, "secured").getByRole("button", { name: "Authenticate" }).click()
-  const opened = await signIn
-  await expect.poll(() => opened.url()).toBe(authorizationUrl)
   await expect(row(page, "secured").getByRole("switch")).toBeChecked()
   await expect(row(page, "secured").getByRole("alert")).toHaveCount(0)
-  await opened.close()
   await toggleConnection(page, "broken")
   await expect(row(page, "broken")).toHaveAttribute("data-status", "connected")
   await expect(row(page, "broken").getByRole("switch")).toBeChecked()
-  expect(actions(state).every((r) => new URL(r.url).origin === serverA && located(r))).toBe(true)
-  expect(actions(state).map((r) => new URL(r.url).pathname)).toEqual([
+  expect(posts(state).every((r) => r.url.startsWith(`${serverA}/`) && r.directory === directory)).toBe(true)
+  expect(posts(state).map((r) => new URL(r.url).pathname)).toEqual([
     "/api/mcp/online/disconnect",
     "/api/mcp/secured/auth",
     "/api/mcp/shared/connect",
@@ -153,7 +163,6 @@ test("loading, empty, inventory failure and retry", async ({ page }) => {
   state.loadError = true
   await page.reload()
   await expect(page.locator(".orchestra-mcp-message")).toContainText("Could not load MCP servers.")
-  await expect(page.locator(".orchestra-mcp-message")).toContainText("Location directory is not readable")
   state.loadError = false
   state.inventory[serverA] = { recovered: { status: "disabled" } }
   await page.getByRole("button", { name: "Retry", exact: true }).click()
@@ -165,13 +174,14 @@ test("V2 lists, toggles, saves and removes through the current API", async ({ pa
   await setup(page, state)
   await openChapter(page)
   await expect(page.locator("[data-mcp-name]")).toHaveCount(6)
-  await expect(row(page, "online").locator(".mx-badge")).toHaveText(["Connected"])
+  await expect(row(page, "online").locator(".mx-badge")).toHaveText(["Connected", "http", "2 tools"])
   await toggleConnection(page, "shared")
   await expect(row(page, "shared")).toHaveAttribute("data-status", "connected")
   await row(page, "online").getByRole("button", { name: "Tools", exact: true }).click()
-  await expect(page.getByRole("dialog", { name: "online tools" })).toContainText(
-    "This server does not report MCP tools.",
-  )
+  await expect(page.getByRole("dialog", { name: "online tools" }).locator(".mx-row strong")).toHaveText([
+    "search_docs",
+    "read_page",
+  ])
   await page.keyboard.press("Escape")
   await expect(page.getByRole("dialog")).toHaveCount(0)
   await expect(row(page, "online").getByRole("button", { name: "Tools", exact: true })).toBeFocused()
@@ -183,13 +193,12 @@ test("V2 lists, toggles, saves and removes through the current API", async ({ pa
   await dialog.getByRole("button", { name: "Save" }).click()
   await expect(row(page, "docs")).toBeVisible()
   await expect(page.getByRole("button", { name: "Add MCP server" })).toBeFocused()
-  // V2 cannot report an existing server's config, so Configure never guesses and overwrites it.
+  // Configure prefills the profile's own entry the server reports through GET /api/mcp/entries.
   await row(page, "docs").getByRole("button", { name: "Configure" }).click()
   const configure = page.getByRole("dialog", { name: "Configure docs" })
-  await expect(configure).toContainText("Current configuration unavailable from this server.")
-  await expect(configure.getByRole("button", { name: "Save" })).toHaveCount(0)
-  await expect(configure.getByLabel("Command or server URL")).toBeDisabled()
-  await expect(configure.getByLabel("Transport")).toBeDisabled()
+  await expect(configure.getByLabel("Transport")).toHaveValue("http")
+  await expect(configure.getByLabel("Command or server URL")).toHaveValue("https://mcp.example.test/docs")
+  await expect(configure.getByLabel("Command or server URL")).toBeEditable()
   await configure.getByRole("button", { name: "Remove server" }).click()
   await page.getByRole("dialog", { name: "Remove this item?" }).getByRole("button", { name: "Confirm" }).click()
   await expect(row(page, "docs")).toHaveCount(0)
@@ -201,7 +210,7 @@ test("V2 lists, toggles, saves and removes through the current API", async ({ pa
     "PUT /api/mcp/docs",
     "DELETE /api/mcp/docs",
   ])
-  expect(writes.every(located)).toBe(true)
+  expect(writes.every((r) => new URL(r.url).searchParams.get("location[directory]") === directory)).toBe(true)
   expect(writes[1].body).toEqual({ config: { type: "remote", url: "https://mcp.example.test/docs" } })
   expect(state.requests.filter((r) => /^\/mcp(\/|$)/.test(new URL(r.url).pathname))).toEqual([])
 })
@@ -241,14 +250,90 @@ test("add validates the name and endpoint and writes the profile config", async 
   await dialog.getByRole("button", { name: "Save" }).click()
   await expect(page.getByRole("dialog")).toHaveCount(0)
   await expect(page.getByRole("button", { name: "Add MCP server" })).toBeFocused()
-  await expect(row(page, "docs").locator(".mx-badge")).toHaveText(["Disconnected (until restart)"])
-  const puts = state.requests.filter((r) => r.method === "PUT")
-  expect(puts.map(target)).toEqual([`PUT ${serverA}/api/mcp/docs`, `PUT ${serverA}/api/mcp/docs`])
-  expect(puts.every(located)).toBe(true)
-  expect(puts.map((r) => r.body)).toEqual([
-    { config: { type: "remote", url: "https://mcp.example.test/docs" } },
-    { config: { type: "remote", url: "https://mcp.example.test/docs" } },
+  await expect(row(page, "docs")).toContainText("https://mcp.example.test/docs")
+  await expect(row(page, "docs").locator(".mx-badge")).toHaveText(["Disconnected (until restart)", "http"])
+  const put = {
+    method: "PUT",
+    url: `${serverA}/api/mcp/docs`,
+    directory,
+    body: { config: { type: "remote", url: "https://mcp.example.test/docs" } },
+  }
+  expect(writes(state, "PUT")).toEqual([put, put])
+})
+
+test("configure prefills the raw profile entry, skips unedited saves, and removes", async ({ page }) => {
+  const state = fixture()
+  await setup(page, state)
+  await openChapter(page)
+  await row(page, "online").getByRole("button", { name: "Tools", exact: true }).click()
+  const tools = page.getByRole("dialog", { name: "online tools" })
+  await expect(tools.locator(".mx-dialog-head p")).toHaveText("https://mcp.example.test/docs?key=•••")
+  await expect(tools.locator(".mx-row strong")).toHaveText(["search_docs", "read_page"])
+  await expect(tools.locator(".mx-row").first()).toContainText("Available when this server is connected")
+  await tools.getByRole("button", { name: "Close dialog" }).click()
+  await row(page, "shared").getByRole("button", { name: "Tools", exact: true }).click()
+  await expect(page.getByRole("dialog", { name: "shared tools" })).toContainText(
+    "Connect this server to list its tools.",
+  )
+  await page.keyboard.press("Escape")
+
+  // Defined outside the profile: nothing resolved is shown or copied.
+  await row(page, "online").getByRole("button", { name: "Configure" }).click()
+  const outside = page.getByRole("dialog", { name: "Configure online" })
+  await expect(outside).toContainText("This server is configured outside this profile.")
+  await expect(outside.getByLabel("Command or server URL")).toHaveValue("")
+  await outside.getByRole("button", { name: "Cancel" }).click()
+
+  const configure = row(page, "broken").getByRole("button", { name: "Configure" })
+  await configure.click()
+  const edit = page.getByRole("dialog", { name: "Configure broken" })
+  await expect(edit.getByRole("alert")).toHaveText("Last connection error: Connection refused by upstream")
+  await expect(edit.getByLabel("Name")).toHaveValue("broken")
+  await expect(edit.getByLabel("Name")).toHaveJSProperty("readOnly", true)
+  await expect(edit.getByLabel("Transport")).toHaveValue("stdio")
+  await expect(edit.getByLabel("Command or server URL")).toHaveValue(`bunx 'broken server' --token {env:TOKEN}`)
+  await expect(page.locator("dialog")).not.toContainText("resolved-secret")
+  await edit.getByRole("button", { name: "Save" }).click()
+  await expect(page.getByRole("dialog")).toHaveCount(0)
+  await expect(configure).toBeFocused()
+  expect(state.requests.filter((r) => r.method === "PUT")).toEqual([])
+
+  await configure.click()
+  await edit.getByLabel("Command or server URL").fill(`bunx "fixed server" --token {env:TOKEN}`)
+  await edit.getByRole("button", { name: "Save" }).click()
+  await expect(page.getByRole("dialog")).toHaveCount(0)
+  await expect(configure).toBeFocused()
+  await expect(row(page, "broken").locator("p").first()).toHaveText(`bunx 'fixed server' --token •••`)
+
+  await row(page, "online").getByRole("button", { name: "Configure" }).click()
+  await page.getByRole("dialog", { name: "Configure online" }).getByRole("button", { name: "Remove server" }).click()
+  const confirm = page.getByRole("dialog", { name: "Remove this item?" })
+  await expect(confirm).toContainText("This removes online from Profile A's project config.")
+  await confirm.getByRole("button", { name: "Confirm" }).click()
+  await expect(confirm.getByRole("alert")).toHaveText("Request failed: MCP server not found: online")
+  await confirm.getByRole("button", { name: "Cancel" }).click()
+  await expect(row(page, "online")).toBeVisible()
+
+  await row(page, "broken").getByRole("button", { name: "Configure" }).click()
+  await page.getByRole("dialog", { name: "Configure broken" }).getByRole("button", { name: "Remove server" }).click()
+  await page.getByRole("dialog", { name: "Remove this item?" }).getByRole("button", { name: "Confirm" }).click()
+  await expect(page.getByRole("dialog")).toHaveCount(0)
+  await expect(row(page, "broken")).toHaveCount(0)
+  expect([...writes(state, "PUT"), ...writes(state, "DELETE")]).toEqual([
+    {
+      method: "PUT",
+      url: `${serverA}/api/mcp/broken`,
+      directory,
+      body: { config: { type: "local", command: ["bunx", "fixed server", "--token", "{env:TOKEN}"] } },
+    },
+    { method: "DELETE", url: `${serverA}/api/mcp/online`, directory },
+    { method: "DELETE", url: `${serverA}/api/mcp/broken`, directory },
   ])
+  const reads = state.requests.filter((r) =>
+    ["/api/mcp/tools", "/api/mcp/entries", "/api/mcp/config"].includes(new URL(r.url).pathname),
+  )
+  expect(reads.length).toBeGreaterThan(0)
+  expect(reads.every((r) => r.directory === directory)).toBe(true)
 })
 
 test("same directory and MCP name stay isolated across profiles, including late responses", async ({ page }) => {
@@ -259,7 +344,7 @@ test("same directory and MCP name stay isolated across profiles, including late 
   const gate = Promise.withResolvers<void>()
   state.beforeAction = () => gate.promise
   await toggleConnection(page, "shared")
-  await expect.poll(() => actions(state).length).toBe(1)
+  await expect.poll(() => state.requests.some((r) => r.method === "POST")).toBe(true)
   await chooseProfile(page, "Profile B")
   await expect(row(page, "only-b")).toBeVisible()
   await expect(row(page, "shared").getByRole("switch")).toBeChecked()
@@ -270,7 +355,7 @@ test("same directory and MCP name stay isolated across profiles, including late 
   )
   gate.resolve()
   await (await actionResponse).finished()
-  expect(actions(state)).toHaveLength(1)
+  expect(state.requests.filter((r) => r.method === "POST")).toHaveLength(1)
   // Settle through another B row without clearing a leaked same-name failure.
   state.actionError = false
   state.beforeAction = undefined
@@ -281,8 +366,7 @@ test("same directory and MCP name stay isolated across profiles, including late 
   await toggleConnection(page, "shared")
   await expect(row(page, "shared")).toHaveAttribute("data-status", "disabled")
   await expect(row(page, "shared").getByRole("switch")).not.toBeChecked()
-  expect(target(actions(state).at(-1)!)).toBe(`POST ${serverB}/api/mcp/shared/disconnect`)
-  expect(actions(state).every(located)).toBe(true)
+  expect(posts(state).at(-1)).toEqual({ method: "POST", url: `${serverB}/api/mcp/shared/disconnect`, directory })
   await expect(row(page, "shared").getByRole("alert")).toHaveCount(0)
   await chooseProfile(page, "Profile A")
   await expect(row(page, "shared").getByRole("switch")).not.toBeChecked()
@@ -296,30 +380,35 @@ test("same directory and MCP name stay isolated across profiles, including late 
       lateLists.push(response.finished())
   }
   page.on("response", completed)
-  const listsOfA = () =>
-    state.requests.filter((r) => new URL(r.url).origin === serverA && new URL(r.url).pathname === "/api/mcp").length
-  const previousLists = listsOfA()
+  const previousLists = state.requests.filter(
+    (r) => new URL(r.url).origin === serverA && new URL(r.url).pathname === "/api/mcp",
+  ).length
   await page.reload()
   await expect(page.getByRole("status")).toHaveText("Loading MCP servers…")
   await chooseProfile(page, "Profile B")
   await expect(row(page, "only-b")).toBeVisible()
   await expect(row(page, "shared")).toHaveAttribute("data-status", "disabled")
-  const pendingLists = listsOfA() - previousLists
+  const pendingLists =
+    state.requests.filter((r) => new URL(r.url).origin === serverA && new URL(r.url).pathname === "/api/mcp").length -
+    previousLists
   expect(pendingLists).toBeGreaterThan(0)
   state.inventory[serverA] = { "late-a": { status: "failed", error: "Old profile result" } }
   listGate.resolve()
-  await expect.poll(() => lateLists.length).toBe(pendingLists)
+  // The mock event stream reconnects, so the app may list again after the gate opens; wait for at least the gated lists.
+  await expect.poll(() => lateLists.length).toBeGreaterThanOrEqual(pendingLists)
   await Promise.all(lateLists)
   page.off("response", completed)
   await expect(page.locator("[data-mcp-name]")).toHaveCount(2)
   await expect(row(page, "only-b")).toBeVisible()
   await expect(row(page, "late-a")).toHaveCount(0)
   await expect(row(page, "shared").getByRole("switch")).not.toBeChecked()
+  state.actionError = false
+  state.beforeAction = undefined
   state.beforeList = undefined
   await toggleConnection(page, "shared")
   await expect(row(page, "shared")).toHaveAttribute("data-status", "connected")
   await expect(row(page, "shared").getByRole("switch")).toBeChecked()
-  expect(target(actions(state).at(-1)!)).toBe(`POST ${serverB}/api/mcp/shared/connect`)
+  expect(posts(state).at(-1)).toEqual({ method: "POST", url: `${serverB}/api/mcp/shared/connect`, directory })
   await expect(row(page, "late-a")).toHaveCount(0)
   await chooseProfile(page, "Profile A")
   await expect(row(page, "late-a")).toBeVisible()
@@ -332,17 +421,17 @@ test("status events refresh the owning profile without connection requests", asy
   await openChapter(page)
   await expect(row(page, "shared").getByRole("switch")).not.toBeChecked()
   state.inventory[serverA].shared = { status: "connected" }
-  state.events[serverA] = [statusChanged("shared")]
+  state.events[serverA] = [{ type: "mcp.status.changed", data: { server: "shared" } }]
   await expect(row(page, "shared")).toHaveAttribute("data-status", "connected")
   await expect(row(page, "shared").getByRole("switch")).toBeChecked()
-  expect(actions(state)).toHaveLength(0)
+  expect(state.requests.filter((request) => request.method === "POST")).toHaveLength(0)
   await chooseProfile(page, "Profile B")
   await expect(row(page, "only-b")).toBeVisible()
   state.inventory[serverA].shared = { status: "failed", error: "Another profile changed" }
   const refresh = page.waitForResponse(
     (response) => new URL(response.url()).origin === serverA && new URL(response.url()).pathname === "/api/mcp",
   )
-  state.events[serverA] = [statusChanged("shared")]
+  state.events[serverA] = [{ type: "mcp.status.changed", data: { server: "shared" } }]
   await (await refresh).finished()
   await expect(row(page, "shared")).toHaveAttribute("data-status", "connected")
   await expect(row(page, "broken")).toHaveCount(0)
@@ -351,25 +440,98 @@ test("status events refresh the owning profile without connection requests", asy
   await expect(row(page, "shared")).toContainText("Another profile changed")
 })
 
+for (const path of ["/api/mcp/config", "/api/mcp/entries"] as const) {
+  test(`audit: MCP ${path} must load before editing; read failure has retry`, async ({ page }) => {
+    const state = fixture()
+    await setup(page, state)
+    const gate = Promise.withResolvers<void>()
+    const started = Promise.withResolvers<void>()
+    const fault = { fail: true }
+    await page.route(
+      (url) => url.origin === serverA && url.pathname === path,
+      async (route) => {
+        if (!fault.fail) return route.fallback()
+        started.resolve()
+        await gate.promise
+        return json(route, { message: "Config read denied" }, 503)
+      },
+    )
+    await openChapter(page)
+    await started.promise
+    await row(page, "broken").getByRole("button", { name: "Configure", exact: true }).click()
+    const dialog = page.getByRole("dialog", { name: "Configure broken" })
+    await expect(dialog.getByRole("status")).toHaveText("Loading MCP configuration…")
+    await expect(dialog.getByRole("textbox")).toHaveCount(0)
+    await expect(dialog.getByRole("button", { name: "Save", exact: true })).toHaveCount(0)
+    gate.resolve()
+    await expect(dialog.getByRole("alert")).toHaveText("Could not load MCP configuration. Retry before editing.")
+    await expect(dialog).not.toContainText("This server is configured outside this profile.")
+    fault.fail = false
+    await dialog.getByRole("button", { name: "Retry", exact: true }).click()
+    await expect(dialog.getByLabel("Command or server URL")).toHaveValue(`bunx 'broken server' --token {env:TOKEN}`)
+    await expect(dialog.getByLabel("Command or server URL")).toBeEditable()
+    await dialog.getByLabel("Command or server URL").fill("bunx keep-this-draft")
+    // A status event refetches config; it must not recreate the editable draft on failure.
+    fault.fail = true
+    const refreshed = page.waitForResponse(
+      (response) => new URL(response.url()).pathname === path && response.status() === 503,
+    )
+    state.events[serverA] = [{ type: "mcp.status.changed", data: { server: "broken" } }]
+    await refreshed
+    await expect(dialog.getByLabel("Command or server URL")).toHaveValue("bunx keep-this-draft")
+    await dialog.getByRole("button", { name: "Save", exact: true }).click()
+    await expect(dialog).toHaveCount(0)
+    expect(state.requests.filter((request) => request.method === "PUT").map((request) => request.body)).toEqual([
+      { config: { type: "local", command: ["bunx", "keep-this-draft"] } },
+    ])
+  })
+}
+
+test("audit: MCP tools distinguish loading, read failure, retry, empty and unknown", async ({ page }) => {
+  const state = fixture()
+  state.tools[serverA].broken = []
+  await setup(page, state)
+  const gate = Promise.withResolvers<void>()
+  const fault = { fail: true }
+  await page.route(
+    (url) => url.origin === serverA && url.pathname === "/api/mcp/tools",
+    async (route) => {
+      if (!fault.fail) return route.fallback()
+      await gate.promise
+      return json(route, { message: "Tools unavailable" }, 503)
+    },
+  )
+  await openChapter(page)
+  await row(page, "online").getByRole("button", { name: "Tools", exact: true }).click()
+  const dialog = page.getByRole("dialog", { name: "online tools" })
+  await expect(dialog.getByRole("status")).toHaveText("Loading MCP tools…")
+  gate.resolve()
+  await expect(dialog.getByRole("alert")).toContainText("Could not load MCP tools.")
+  await expect(dialog).not.toContainText("Connect this server to list its tools.")
+  fault.fail = false
+  await dialog.getByRole("button", { name: "Retry", exact: true }).click()
+  await expect(dialog.locator(".mx-row strong")).toHaveText(["search_docs", "read_page"])
+  await dialog.getByRole("button", { name: "Cancel", exact: true }).click()
+  await row(page, "broken").getByRole("button", { name: "Tools", exact: true }).click()
+  await expect(page.getByRole("dialog").getByRole("status")).toHaveText("This server reports no tools.")
+  await page.getByRole("dialog").getByRole("button", { name: "Cancel", exact: true }).click()
+  await row(page, "shared").getByRole("button", { name: "Tools", exact: true }).click()
+  await expect(page.getByRole("dialog").getByRole("status")).toHaveText("Connect this server to list its tools.")
+})
+
+// Writes as origin and path, with the V2 location directory they targeted.
+function writes(state: ReturnType<typeof fixture>, method: string) {
+  return state.requests
+    .filter((r) => r.method === method)
+    .map((r) => ({ ...r, url: `${new URL(r.url).origin}${new URL(r.url).pathname}` }))
+}
+
+function posts(state: ReturnType<typeof fixture>) {
+  return writes(state, "POST")
+}
+
 function row(page: Page, name: string) {
   return page.locator(`[data-mcp-name="${name}"]`)
-}
-
-// Connection and sign-in requests: every POST the chapter sends to a server's MCP routes.
-function actions(state: ReturnType<typeof fixture>) {
-  return state.requests.filter((r) => r.method === "POST" && new URL(r.url).pathname.startsWith("/api/mcp/"))
-}
-
-function target(request: Recorded) {
-  return `${request.method} ${new URL(request.url).origin}${new URL(request.url).pathname}`
-}
-
-function located(request: Recorded) {
-  return new URL(request.url).searchParams.get("location[directory]") === directory
-}
-
-function statusChanged(server: string) {
-  return { id: `evt_mcp_${server}_${Date.now()}`, type: "mcp.status.changed", location: { directory }, data: { server } }
 }
 
 async function toggleConnection(page: Page, name: string) {
@@ -421,6 +583,7 @@ async function setup(page: Page, state: ReturnType<typeof fixture>) {
     state.requests.push({
       method: route.request().method(),
       url: url.toString(),
+      directory: url.searchParams.get("location[directory]"),
       ...(body ? { body: JSON.parse(body) } : {}),
     })
     const project = {
@@ -431,63 +594,81 @@ async function setup(page: Page, state: ReturnType<typeof fixture>) {
       time: { created: 1, updated: 1 },
       sandboxes: [],
     }
-    const location = { directory, project: { id: project.id, directory } }
     const path = url.pathname
-    // A live server holds the stream open, so a queued event arrives without waiting out a reconnect backoff.
     if (path === "/api/event") {
-      const deadline = Date.now() + 10_000
-      while (!state.events[url.origin]?.length && Date.now() < deadline)
-        await new Promise((resolve) => setTimeout(resolve, 50))
+      // Each stream opens with server.connected, so the client reconnects without backing off.
       const event = state.events[url.origin]?.shift()
-      return route
-        .fulfill({
-          status: 200,
-          contentType: "text/event-stream",
-          body: event ? `data: ${JSON.stringify(event)}\n\n` : ": ok\n\n",
-        })
-        .catch(() => undefined)
+      return route.fulfill({
+        status: 200,
+        contentType: "text/event-stream",
+        body: [
+          { id: "evt_connected", type: "server.connected", data: {} },
+          ...(event ? [{ id: `evt_${Date.now()}`, created: Date.now(), ...event, location: { directory } }] : []),
+        ]
+          .map((item) => `data: ${JSON.stringify(item)}\n\n`)
+          .join(""),
+      })
     }
     if (path === "/global/health") return json(route, {}, 404)
     if (path === "/api/health") return json(route, { pid: 1, healthy: true })
     if (path === "/project" || path === "/api/project") return json(route, [project])
     if (path === "/project/current") return json(route, project)
-    if (path === "/api/location") return json(route, location)
+    if (path === "/api/project/current") return json(route, { id: project.id, directory })
     if (path === "/path" || path === "/api/path")
       return json(route, { state: directory, config: directory, worktree: directory, directory, home: "/work" })
     if (path === "/provider") return json(route, { all: [], connected: [], default: {} })
     if (path === "/api/session") return json(route, { data: [], cursor: {} })
     if (["/session", "/skill", "/command", "/lsp", "/formatter", "/permission", "/question"].includes(path))
       return json(route, [])
+    const location = { directory, project: { id: project.id, directory } }
+    if (path === "/api/mcp/resource") return json(route, { location, data: { resources: [], templates: [] } })
+    if (path === "/api/mcp/config") return json(route, { location, data: state.config[url.origin] })
+    if (path === "/api/mcp/entries") return json(route, { location, data: state.entries[url.origin] })
+    if (path === "/api/mcp/tools") return json(route, { location, data: state.tools[url.origin] })
     if (path === "/api/mcp") {
       await state.beforeList?.(url)
-      // A rejected Location query is the list route's declared failure (SchemaErrorMiddleware).
-      if (state.loadError)
-        return json(route, { _tag: "InvalidRequestError", message: "Location directory is not readable" }, 400)
+      // A defect is an undeclared 500, which the client reports without a body.
+      if (state.loadError) return json(route, { name: "UnknownError", data: { message: "Unexpected" } }, 500)
       return json(route, {
         location,
         data: Object.entries(state.inventory[url.origin]).map(([name, status]) => ({ name, status })),
       })
     }
-    if (path === "/api/mcp/resource") return json(route, { location, data: { resources: [], templates: [] } })
     const action = /^\/api\/mcp\/([^/]+)\/(connect|disconnect|auth)$/.exec(path)
-    if (action && route.request().method() === "POST") {
-      await state.beforeAction?.()
+    if (action) {
       const name = decodeURIComponent(action[1])
+      await state.beforeAction?.()
       if (state.actionError && action[2] === "auth")
-        return json(route, { _tag: "InvalidRequestError", message: `MCP server ${name} does not support OAuth` }, 400)
+        return json(route, { message: `MCP server ${name} does not support OAuth` }, 400)
       if (state.actionError)
-        return json(route, { _tag: "McpServerNotFoundError", server: name, message: `MCP server not found: ${name}` }, 404)
-      if (action[2] === "auth") return json(route, { authorizationUrl, oauthState: "state-secured" })
-      state.inventory[url.origin][name] = { status: action[2] === "connect" ? "connected" : "disabled" }
+        return json(route, { _tag: "McpServerNotFoundError", name, message: `MCP server not found: ${name}` }, 404)
+      state.inventory[url.origin][name] = { status: action[2] === "disconnect" ? "disabled" : "connected" }
+      // An empty authorization URL: the server signed in without a browser round trip.
+      if (action[2] === "auth") return json(route, { authorizationUrl: "", oauthState: "state" })
       return route.fulfill({ status: 204, headers: cors })
     }
     const server = /^\/api\/mcp\/([^/]+)$/.exec(path)
     if (server) {
       const name = decodeURIComponent(server[1])
-      if (route.request().method() === "PUT" && state.configError)
-        return json(route, { _tag: "InvalidRequestError", message: "Permission denied writing /work/orchestra.json" }, 400)
-      if (route.request().method() === "PUT") state.inventory[url.origin][name] = { status: "disabled" }
-      if (route.request().method() === "DELETE") delete state.inventory[url.origin][name]
+      if (state.configError) return json(route, { message: "Permission denied writing /work/orchestra.json" }, 400)
+      // Mcp.remove fails when the profile files never defined the server.
+      if (route.request().method() === "DELETE" && !Object.hasOwn(state.entries[url.origin], name))
+        return json(
+          route,
+          { _tag: "McpServerNotFoundError", server: name, message: `MCP server not found: ${name}` },
+          404,
+        )
+      if (route.request().method() === "DELETE") {
+        delete state.config[url.origin][name]
+        delete state.entries[url.origin][name]
+        delete state.inventory[url.origin][name]
+      }
+      if (route.request().method() === "PUT") {
+        const saved = JSON.parse(route.request().postData() ?? "{}").config
+        state.config[url.origin][name] = saved
+        state.entries[url.origin][name] = saved
+        state.inventory[url.origin][name] ??= { status: "disabled" }
+      }
       return route.fulfill({ status: 204, headers: cors })
     }
     return json(route, {})

@@ -117,6 +117,7 @@ export type ServerApi = {
   health: { get: (requestOptions?: RequestOptions) => Promise<{ healthy: boolean; pid?: number }> }
   location: {
     get: (input?: ClientInput<"location", "get">, requestOptions?: RequestOptions) => Promise<{ project: ProjectCurrentOutput }>
+    paths: (requestOptions?: RequestOptions) => Promise<{ home: string }>
   }
   agent: {
     list: (input?: ClientInput<"agents", "list">, requestOptions?: RequestOptions) => Promise<AgentListOutput>
@@ -204,6 +205,9 @@ export type ServerApi = {
     remove: (input: ClientInput<"mcp", "remove">, requestOptions?: RequestOptions) => Promise<unknown>
     connect: (input: ClientInput<"mcp", "connect">, requestOptions?: RequestOptions) => Promise<unknown>
     disconnect: (input: ClientInput<"mcp", "disconnect">, requestOptions?: RequestOptions) => Promise<unknown>
+    config: (input?: ClientInput<"mcp", "config">, requestOptions?: RequestOptions) => Promise<ClientOutput<"mcp", "config">>
+    entries: (input?: ClientInput<"mcp", "entries">, requestOptions?: RequestOptions) => Promise<ClientOutput<"mcp", "entries">>
+    tools: (input?: ClientInput<"mcp", "tools">, requestOptions?: RequestOptions) => Promise<ClientOutput<"mcp", "tools">>
     resource: {
       catalog: (input?: ClientInput<"mcp", "resources">, requestOptions?: RequestOptions) => Promise<McpResourceCatalogOutput>
     }

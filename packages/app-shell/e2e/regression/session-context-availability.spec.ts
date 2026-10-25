@@ -13,7 +13,16 @@ import {
 } from "../performance/timeline-stability/fixture"
 
 for (const scenario of [
-  { name: "missing cost", assistant: false, priced: true, limit: 1000, cost: "—", tokens: "—", usage: "—" },
+  {
+    name: "missing cost",
+    assistant: true,
+    reportsCost: false,
+    priced: true,
+    limit: 1000,
+    cost: "—",
+    tokens: "300",
+    usage: "30%",
+  },
   {
     name: "missing token data",
     assistant: false,
@@ -58,7 +67,7 @@ for (const scenario of [
         connected: [model.providerID],
         default: { [model.providerID]: model.modelID },
       },
-      sessions: [session(scenario.name === "missing cost" ? {} : { cost: 0 })],
+      sessions: [session({ cost: 0 })],
       pageMessages: () => ({
         items: [
           userMessage(),
@@ -68,7 +77,7 @@ for (const scenario of [
                   ...assistant,
                   info: {
                     ...assistant.info,
-                    cost: 0,
+                    cost: scenario.reportsCost === false ? undefined : 0,
                     ...(scenario.tokens === "0"
                       ? { tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } } }
                       : {}),
@@ -79,6 +88,32 @@ for (const scenario of [
         ],
       }),
     })
+    // The shared mock publishes every model unpriced; V2 prices a model by listing a cost entry in its catalog.
+    await page.route(/\/api\/model(?:\?.*)?$/, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({
+          location: { directory, project: { id: "proj_context_availability", directory } },
+          data: [
+            {
+              id: model.modelID,
+              modelID: model.modelID,
+              providerID: model.providerID,
+              name: "Model",
+              capabilities: { input: ["text"], output: ["text"], tools: true },
+              variants: [],
+              time: { released: 1 },
+              cost: scenario.priced ? [{ input: 0, output: 0, cache: { read: 0, write: 0 } }] : [],
+              status: "active",
+              enabled: true,
+              limit: { output: 8192, context: scenario.limit },
+            },
+          ],
+        }),
+      }),
+    )
     await page.addInitScript(() => {
       localStorage.setItem("orchestra.global.dat:language", JSON.stringify({ locale: "en" }))
     })

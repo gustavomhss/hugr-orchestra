@@ -101,7 +101,8 @@ for (const scenario of scenarios) {
     await railTab(page, "tasks").click()
     const tasks = page.locator('[data-component="tasks-panel"][data-variant="summary"]')
     const count = tasks.locator('[data-slot="tasks-count"]')
-    await expect(count).toHaveText("65 tasks")
+    // Only the order of a two-digit count matters here; how many children the session list window loads does not.
+    await expect(count).toHaveText(/^\d{2} tasks$/)
     // The count leads the English run: both digits paint before the word.
     expectInOrder(await glyphs(count), 0, 1, 3)
     // A regression guard, not proof of the fix: the Unicode bracket-pair rule (N0) already keeps

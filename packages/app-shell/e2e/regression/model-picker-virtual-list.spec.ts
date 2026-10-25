@@ -73,15 +73,13 @@ async function openSession(page: Page) {
     ],
     pageMessages: () => ({ items: [] }),
   })
-  // The mock closes /api/event at once and each reconnect resyncs providers, which resets the list's active row.
-  // A real server keeps the stream open, so later connections stay pending.
-  const streams = { opened: 0 }
-  await page.route(
-    (url) => url.pathname === "/api/event",
-    async (route) => {
-      streams.opened += 1
-      if (streams.opened === 1) return route.fallback()
-    },
+  // Each server.connected resyncs providers, which resets the list's active row. The V2 client ignores SSE
+  // `retry`, so later reconnects get an event-free stream.
+  const streams = { count: 0 }
+  await page.route("**/api/event", (route) =>
+    streams.count++ === 0
+      ? route.fallback()
+      : route.fulfill({ status: 200, contentType: "text/event-stream", body: ": ok\n\n" }),
   )
   await page.addInitScript(() => {
     localStorage.setItem("settings.v3", JSON.stringify({ general: { shouldDisplayTabsToast: false } }))

@@ -3,7 +3,7 @@ import {
   contextLabel,
   permissionAction,
   permissionLock,
-  permissionMap,
+  permissionRules,
   permissionWrite,
   SETTINGS_SECTIONS,
   settingsSection,
@@ -22,6 +22,9 @@ describe("settings sections", () => {
   })
 })
 
+// Rules as the server's config holds them: action, resource, effect.
+const rule = (action: string, resource: string, effect: "allow" | "ask" | "deny") => ({ action, resource, effect })
+
 describe("permission defaults", () => {
   test("permission defaults finish on repeated-star rules", async () => {
     const child = Bun.spawn(
@@ -29,7 +32,7 @@ describe("permission defaults", () => {
         process.execPath,
         "--eval",
         `import { permissionAction } from ${JSON.stringify(new URL("./settings-data.ts", import.meta.url).href)};
-         console.log(permissionAction({ ["*".repeat(32) + "z"]: "deny" }, "external_directory"));`,
+         console.log(permissionAction([{ action: "*".repeat(32) + "z", resource: "*", effect: "deny" }], "external_directory"));`,
       ],
       { cwd: import.meta.dir, stdout: "pipe", stderr: "pipe" },
     )
@@ -39,66 +42,73 @@ describe("permission defaults", () => {
   })
 
   test("an empty config follows the server's built-in rules", () => {
-    expect(permissionAction(undefined, "read")).toBe("allow")
-    expect(permissionAction({}, "bash")).toBe("allow")
-    expect(permissionAction({}, "doom_loop")).toBe("ask")
-    expect(permissionAction({}, "external_directory")).toBe("ask")
+    expect(permissionAction([], "read")).toBe("allow")
+    expect(permissionAction([], "bash")).toBe("allow")
+    expect(permissionAction([], "doom_loop")).toBe("allow")
+    expect(permissionAction([], "external_directory")).toBe("ask")
   })
 
-  test("the last matching rule wins, in key order, as on the server", () => {
-    expect(permissionAction({ "*": "deny", bash: "ask" }, "bash")).toBe("ask")
-    expect(permissionAction({ bash: "ask", "*": "deny" }, "bash")).toBe("deny")
-    expect(permissionAction({ "*": "deny", bash: "ask" }, "read")).toBe("deny")
-    expect(permissionAction({ "*": "deny" }, "doom_loop")).toBe("deny")
-    expect(permissionAction({ "web*": "deny" }, "webfetch")).toBe("deny")
-    expect(permissionAction({ "web*": "deny" }, "bash")).toBe("allow")
-    expect(permissionAction({ "web?etch": "deny" }, "webfetch")).toBe("deny")
-    expect(permissionAction({ WEBFETCH: "deny" }, "webfetch")).toBe("allow")
-    expect(permissionAction({ "web\\*": "deny" }, "webfetch")).toBe("allow")
+  test("the last matching rule wins and wildcards match tool names", () => {
+    expect(permissionAction([rule("*", "*", "deny"), rule("bash", "*", "ask")], "bash")).toBe("ask")
+    expect(permissionAction([rule("bash", "*", "ask"), rule("*", "*", "deny")], "bash")).toBe("deny")
+    expect(permissionAction([rule("*", "*", "deny"), rule("bash", "*", "ask")], "read")).toBe("deny")
+    expect(permissionAction([rule("*", "*", "deny")], "external_directory")).toBe("deny")
+    expect(permissionAction([rule("web*", "*", "deny")], "webfetch")).toBe("deny")
+    expect(permissionAction([rule("web*", "*", "deny")], "bash")).toBe("allow")
+    expect(permissionAction([rule("web?etch", "*", "deny")], "webfetch")).toBe("deny")
+    expect(permissionAction([rule("WEBFETCH", "*", "deny")], "webfetch")).toBe("allow")
+    expect(permissionAction([rule("web\\*", "*", "deny")], "webfetch")).toBe("allow")
   })
 
-  test('a string config is a wildcard, and only a rule\'s "*" pattern sets the default', () => {
-    expect(permissionAction("ask", "edit")).toBe("ask")
-    expect(permissionAction({ read: { "*": "deny", "*.md": "allow" } }, "read")).toBe("deny")
-    expect(permissionAction({ read: { "*.env": "ask" } }, "read")).toBe("allow")
-    expect(permissionAction({ read: { "*.env": "deny", "*": "ask" } }, "read")).toBe("ask")
+  test('only rules that cover every input ("*") decide the default', () => {
+    expect(permissionAction([rule("read", "*", "deny"), rule("read", "*.md", "allow")], "read")).toBe("deny")
+    expect(permissionAction([rule("read", "*.env", "ask")], "read")).toBe("allow")
+    expect(permissionAction([rule("read", "*.env", "deny"), rule("read", "*", "ask")], "read")).toBe("ask")
   })
 
-  test("invalid values are ignored", () => {
-    expect(permissionMap({ bash: 3, read: "allow", list: ["x"] })).toEqual({ read: "allow" })
-    expect(permissionAction({ bash: "maybe" }, "bash")).toBe("allow")
-    expect(permissionAction({ bash: { "*": "maybe" } }, "bash")).toBe("allow")
+  test("drops malformed rules and keeps the order of the rest", () => {
+    expect(
+      permissionRules([
+        rule("bash", "*", "ask"),
+        { action: "bash", resource: "*", effect: "maybe" },
+        { action: 3, resource: "*", effect: "deny" },
+        "deny",
+        rule("*", "*", "deny"),
+      ]),
+    ).toEqual([rule("bash", "*", "ask"), rule("*", "*", "deny")])
+    expect(permissionRules({ bash: "ask" })).toEqual([])
+    expect(permissionRules(undefined)).toEqual([])
   })
 })
 
 describe("permission writes", () => {
-  test("sets a plain action in place and appends new tools", () => {
-    const result = permissionWrite({ "*": "ask", read: "allow" }, "bash", "deny")
-    expect(result).toEqual({ next: { "*": "ask", read: "allow", bash: "deny" } })
-    expect(Object.keys("next" in result ? result.next : {})).toEqual(["*", "read", "bash"])
+  test("rewrites a tool's rule in place and appends new tools", () => {
+    expect(permissionWrite([rule("*", "*", "ask"), rule("read", "*", "allow")], "bash", "deny")).toEqual({
+      next: [rule("*", "*", "ask"), rule("read", "*", "allow"), rule("bash", "*", "deny")],
+    })
+    expect(permissionWrite([rule("read", "*", "allow"), rule("*", "*", "ask")], "read", "ask")).toEqual({
+      next: [rule("read", "*", "ask"), rule("*", "*", "ask")],
+    })
   })
 
-  test('changes the existing "*" of a patterned rule in place, keeping its patterns after it', () => {
-    const result = permissionWrite({ read: { "*": "allow", "*.env": "deny" } }, "read", "ask")
-    expect(result).toEqual({ next: { read: { "*": "ask", "*.env": "deny" } } })
-    expect(Object.keys("next" in result ? result.next.read : {})).toEqual(["*", "*.env"])
+  test('changes the "*" rule of a patterned tool in place, keeping its patterns after it', () => {
+    expect(permissionWrite([rule("read", "*", "allow"), rule("read", "*.env", "deny")], "read", "ask")).toEqual({
+      next: [rule("read", "*", "ask"), rule("read", "*.env", "deny")],
+    })
   })
 
-  test('refuses to add "*" to a patterned rule, because the server would place it after the patterns', () => {
-    expect(permissionWrite({ read: { "*.env": "deny" } }, "read", "allow")).toEqual({ locked: "patterns" })
-    expect(permissionLock({ read: { "*.env": "deny" } }, "read")).toBe("patterns")
-    expect(permissionWrite({ read: {} }, "read", "deny")).toEqual({ next: { read: { "*": "deny" } } })
+  test("refuses a tool whose rules are all patterns", () => {
+    expect(permissionWrite([rule("read", "*.env", "deny")], "read", "allow")).toEqual({ locked: "patterns" })
+    expect(permissionLock([rule("read", "*.env", "deny")], "read")).toBe("patterns")
   })
 
   test("refuses a write that a later wildcard rule would override", () => {
-    expect(permissionWrite({ bash: "ask", "*": "deny" }, "bash", "allow")).toEqual({ locked: "shadowed" })
-    expect(permissionLock({ bash: "ask", "*": "deny" }, "bash")).toBe("shadowed")
-    expect(permissionLock({ "*": "deny", bash: "ask" }, "bash")).toBeUndefined()
-    expect(permissionLock({ bash: "ask", "*": "deny" }, "read")).toBeUndefined()
-  })
-
-  test("a string config becomes a wildcard rule", () => {
-    expect(permissionWrite("ask", "edit", "allow")).toEqual({ next: { "*": "ask", edit: "allow" } })
+    expect(permissionWrite([rule("bash", "*", "ask"), rule("*", "*", "deny")], "bash", "allow")).toEqual({
+      locked: "shadowed",
+    })
+    expect(permissionLock([rule("bash", "*", "ask"), rule("*", "*", "deny")], "bash")).toBe("shadowed")
+    expect(permissionLock([rule("*", "*", "deny"), rule("bash", "*", "ask")], "bash")).toBeUndefined()
+    expect(permissionLock([rule("bash", "*", "ask"), rule("*", "*", "deny")], "read")).toBeUndefined()
   })
 })
 

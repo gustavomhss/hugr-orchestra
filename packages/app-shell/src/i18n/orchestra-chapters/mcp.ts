@@ -24,8 +24,6 @@ export const MCP_COPY = {
   "orchestra.mcp.configureTitle": "Configure {{name}}",
   "orchestra.mcp.editSubtitle":
     "Connect tools to this profile. Saving updates its project config and restarts its MCP servers.",
-  "orchestra.mcp.configUnavailable":
-    "Current configuration unavailable from this server. You can remove this server here.",
   "orchestra.mcp.configOutside":
     "This server is configured outside this profile. Saving adds this profile's own entry for it.",
   "orchestra.mcp.configLoading": "Loading MCP configuration…",
@@ -57,7 +55,6 @@ export const MCP_COPY = {
   "orchestra.mcp.toolsLoading": "Loading MCP tools…",
   "orchestra.mcp.toolsLoadFailed": "Could not load MCP tools.",
   "orchestra.mcp.toolsNone": "This server reports no tools.",
-  "orchestra.mcp.toolsUnsupported": "This server does not report MCP tools.",
   "orchestra.mcp.removeTitle": "Remove this item?",
   "orchestra.mcp.removeSubtitle": "Its configuration is removed from this profile.",
   "orchestra.mcp.removeNote": "This removes {{name}} from {{profile}}'s project config.",

@@ -12,7 +12,7 @@ const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${pr
 test.use({ viewport: { width: 1440, height: 900 } })
 
 test("opens and searches project files inline", async ({ page }) => {
-  const searches: { query: string; dirs?: string; limit?: number }[] = []
+  const searches: { query: string; type: string | null; limit: number }[] = []
   await mockOrchestraServer(page, {
     directory,
     project: {
@@ -54,11 +54,19 @@ test("opens and searches project files inline", async ({ page }) => {
       ]
     },
     fileContent: (path) => ({ type: "text", content: `contents:${path}` }),
-    findFiles: (input) => {
-      searches.push(input)
-      return input.query === "nested" ? ["src/nested.ts"] : []
-    },
     pageMessages: () => ({ items: [] }),
+  })
+  // The V2 app searches through /api/fs/find, which answers file entries inside a Location envelope.
+  await page.route(/\/api\/fs\/find\?/, (route) => {
+    const url = new URL(route.request().url())
+    const query = url.searchParams.get("query") ?? ""
+    searches.push({ query, type: url.searchParams.get("type"), limit: Number(url.searchParams.get("limit")) })
+    return route.fulfill({
+      json: {
+        location: { directory, project: { id: projectID, directory } },
+        data: query === "nested" ? [{ path: "src/nested.ts", type: "file" }] : [],
+      },
+    })
   })
   await page.addInitScript(
     ({ directory, server, sessionID }) => {
@@ -128,7 +136,7 @@ test("opens and searches project files inline", async ({ page }) => {
   await expect(panel.getByRole("tab", { name: "nested.ts" })).toHaveAttribute("data-selected", "")
   await expect(sidebarToggle).toBeEnabled()
   await expect(panel.getByText("contents:src/nested.ts", { exact: true })).toBeVisible()
-  expect(searches).toContainEqual({ query: "nested", dirs: "false", limit: 200 })
+  expect(searches).toContainEqual({ query: "nested", type: "file", limit: 200 })
 
   await panel.getByRole("button", { name: "Open file" }).click()
   await expect(panel.getByRole("tab", { name: "nested.ts" })).toHaveCount(1)

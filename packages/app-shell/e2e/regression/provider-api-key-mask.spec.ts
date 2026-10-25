@@ -8,8 +8,13 @@ const projectID = "proj_provider_api_key_mask"
 const sessionID = "ses_provider_api_key_mask"
 const secret = "sk-mask-test-0123456789"
 
-// Nothing is connected, so the model control opens the connect dialog. A connected OpenCode Zen counts as a
-// connected provider like any other and would open the model popover instead.
+// Nothing is connected, so the model control opens the connect dialog. The picker lists the server's integrations,
+// which the shared mock does not serve, so this spec answers that route itself.
+const integrations = [
+  { id: "mistral", name: "Mistral", methods: [{ type: "key", label: "API key" }], connections: [] },
+  { id: "_custom", name: "Custom provider", methods: [{ type: "key", label: "API key" }], connections: [] },
+]
+
 async function openSession(page: Page) {
   const connections: Array<{ integrationID: string; body: unknown }> = []
   await mockOrchestraServer(page, {
@@ -22,31 +27,7 @@ async function openSession(page: Page) {
       time: { created: 1700000000000, updated: 1700000000000 },
       sandboxes: [],
     },
-    provider: {
-      all: [
-        {
-          id: "opencode",
-          name: "Orchestra",
-          models: {
-            "free-model": {
-              id: "free-model",
-              name: "Free Model",
-              cost: { input: 0, output: 0 },
-              limit: { context: 1 },
-            },
-          },
-        },
-        {
-          id: "opencode-go",
-          name: "OpenCode Go",
-          models: {
-            "go-model": { id: "go-model", name: "Go Model", cost: { input: 1, output: 1 }, limit: { context: 1 } },
-          },
-        },
-      ],
-      connected: [],
-      default: {},
-    },
+    provider: { all: [], connected: [], default: {} },
     onConnectKey: (input) => connections.push(input),
     sessions: [
       {
@@ -61,6 +42,18 @@ async function openSession(page: Page) {
     ],
     pageMessages: () => ({ items: [] }),
   })
+  const location = { directory, project: { id: projectID, directory } }
+  await page.route((url) => /^\/api\/integration(\/[^/]+)?$/.test(url.pathname), (route) => {
+    if (route.request().method() !== "GET") return route.fallback()
+    const id = new URL(route.request().url()).pathname.split("/").at(3)
+    const data = id ? integrations.find((item) => item.id === id) : integrations
+    return route.fulfill({
+      status: data ? 200 : 404,
+      contentType: "application/json",
+      headers: { "access-control-allow-origin": "*" },
+      body: JSON.stringify({ location, data }),
+    })
+  })
   await page.addInitScript(() => {
     localStorage.setItem("settings.v3", JSON.stringify({ general: { shouldDisplayTabsToast: false } }))
   })
@@ -74,12 +67,12 @@ async function openSession(page: Page) {
 test("masks the provider API key while it is typed and keeps the reveal toggle keyboard operable", async ({ page }) => {
   const { control, connections } = await openSession(page)
   await control.click()
-  // OpenCode Go has no featured place in the dialog; it is connected from the full provider list.
+  // Mistral has no featured place in the dialog; it is connected from the full provider list.
   await page.getByRole("button", { name: "See 70+ more providers", exact: true }).click()
-  await page.locator('[data-provider-id="opencode-go"]').click()
+  await page.locator('[data-provider-id="mistral"]').click()
 
   const dialog = page.locator('[data-component="dialog-v2"]')
-  const key = dialog.getByLabel("OpenCode Go API key", { exact: true })
+  const key = dialog.getByLabel("Mistral API key", { exact: true })
   await expect(key).toHaveAttribute("type", "password")
   await key.click()
   await expect(key).toBeFocused()
@@ -103,7 +96,8 @@ test("masks the provider API key while it is typed and keeps the reveal toggle k
   await expect(key).toBeFocused()
   await key.press("Enter")
   await expect(dialog).toHaveCount(0)
-  expect(connections).toEqual([{ integrationID: "opencode-go", body: { key: secret } }])
+  expect(connections.map((item) => item.integrationID)).toEqual(["mistral"])
+  expect(connections[0].body).toMatchObject({ key: secret })
 })
 
 test("masks the custom provider API key", async ({ page }) => {

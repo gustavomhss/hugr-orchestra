@@ -113,7 +113,7 @@ test("new edit during admission moves to the session composer unsent until delib
   await page.locator(editor).fill("newer unsent draft")
   await expect(page.locator(editor)).toHaveText("newer unsent draft")
   gate.resolve()
-  // Admission is the matching prompt receipt, not a streamed body-completion promise.
+  // V2 admission is the matching 200 receipt, not a streamed body-completion promise.
   const receipt = await response
   expect(receipt.request()).toBe(sent)
   expect(receipt.status()).toBe(200)
@@ -242,7 +242,7 @@ async function setup(page: Page) {
     creates: Request[]
     admissions: Request[]
     prompts: { id: string; text: string; server: string; url: string; draft: boolean; payload: unknown }[]
-    messages: { info: { id: string; sessionID: string; role: "user"; time: { created: number } }; parts: unknown[] }[]
+    messages: { info: { id: string; sessionID: string; role: "user"; agent: string; model: unknown; time: { created: number } }; parts: unknown[] }[]
     createGate?: Promise<void>
     promptGate?: Promise<void>
     fail: boolean
@@ -276,28 +276,31 @@ async function setup(page: Page) {
       sessions.push(session)
       return route.fulfill({ json: { data: currentSession(session, directory) }, headers: { "access-control-allow-origin": "*" } })
     }
-    if (isSessionWrite(request)) {
+    // V2 Send selects the agent and model before it admits the prompt; a closed source must not reach either.
+    if (isSelectionRequest(request)) {
+      if (!fixture.rejectPrompts) return route.fallback()
+      await route.fulfill({ status: 500, json: { error: "Closed source attempted selection" }, headers: { "access-control-allow-origin": "*" } })
+      throw new Error("Closed source attempted agent/model selection")
+    }
+    if (isAdmissionRequest(request)) {
       try {
         if (fixture.rejectPrompts) throw new Error("Closed source attempted prompt admission")
-        // A V2 prompt first switches the Session's agent and model; the shared mock answers those.
-        if (isSelectionWrite(request)) return route.fallback()
         if (!isPromptRequest(request)) throw new Error(`Unexpected admission ${request.method()} ${request.url()}`)
         const body = requirePromptBody(request)
         fixture.prompts.push({
-          id: body.id, text: body.text,
+          id: body.messageID, text: body.text,
           server: url.origin, payload: body.payload,
           url: new URL(page.url()).pathname + new URL(page.url()).search,
           draft: await page.locator(draftTab).count() === 1,
         })
         await fixture.promptGate
         if (fixture.fail) return route.fulfill({ status: 500, json: { name: "UnknownError", data: { message: "admission failed" } }, headers: { "access-control-allow-origin": "*" } })
-        const created = Date.now()
-        if (!fixture.messages.some((message) => message.info.id === body.id)) fixture.messages.push({
-          info: { id: body.id, sessionID, role: "user", time: { created } },
+        if (!fixture.messages.some((message) => message.info.id === body.messageID)) fixture.messages.push({
+          info: { id: body.messageID, sessionID, role: "user", agent: "maestro", model: undefined, time: { created: Date.now() } },
           parts: [{ type: "text", text: body.text }],
         })
         return route.fulfill({
-          json: { data: { admittedSeq: fixture.prompts.length, id: body.id, sessionID, prompt: body.prompt, delivery: "steer", timeCreated: created } },
+          json: { data: { admittedSeq: fixture.messages.length, id: body.messageID, sessionID, prompt: body.prompt, delivery: body.delivery, timeCreated: Date.now() } },
           headers: { "access-control-allow-origin": "*" },
         })
       } catch (error) {
@@ -306,10 +309,16 @@ async function setup(page: Page) {
       }
     }
     if (request.method() === "GET" && url.origin === otherServer) {
+      // The mock serves both hosts from one config; B answers with its own repository.
       if (path === "/api/project") return route.fulfill({ json: [otherProject], headers: { "access-control-allow-origin": "*" } })
-      // project.current resolves through the location route.
-      if (path === "/api/location") return route.fulfill({
-        json: { directory: otherDirectory, project: { id: otherProject.id, directory: otherDirectory } },
+      if (path === "/api/location" || path === "/api/project/current") return route.fulfill({
+        json: path === "/api/location"
+          ? { directory: otherDirectory, project: { id: otherProject.id, directory: otherDirectory } }
+          : { id: otherProject.id, directory: otherDirectory },
+        headers: { "access-control-allow-origin": "*" },
+      })
+      if (path === "/api/path") return route.fulfill({
+        json: { state: otherDirectory, config: otherDirectory, worktree: otherDirectory, directory: otherDirectory, home: "C:/Orchestra" },
         headers: { "access-control-allow-origin": "*" },
       })
     }
@@ -354,17 +363,16 @@ function isPromptRequest(request: Request) {
   return request.method() === "POST" && url.origin === server && url.pathname === promptPath
 }
 
-// Every write to an existing Session, including wrong targets and methods.
-function isSessionWrite(request: Request) {
-  return /^\/(?:api\/)?session\/[^/]+(?:\/.*)?$/.test(new URL(request.url()).pathname) && !["GET", "HEAD", "OPTIONS"].includes(request.method())
-}
-
-function isSelectionWrite(request: Request) {
-  return request.method() === "POST" && /^\/api\/session\/[^/]+\/(?:agent|model)$/.test(new URL(request.url()).pathname)
-}
-
 function isAdmissionRequest(request: Request) {
-  return isSessionWrite(request) && !isSelectionWrite(request)
+  const path = new URL(request.url()).pathname
+  if (request.method() === "OPTIONS") return false
+  if (isSelectionRequest(request)) return false
+  if (/^\/(?:api\/)?session\/[^/]+\/(?:prompt|prompt_async)$/.test(path)) return true
+  return /^\/(?:api\/)?session\/[^/]+(?:\/.*)?$/.test(path) && !["GET", "HEAD", "OPTIONS"].includes(request.method())
+}
+
+function isSelectionRequest(request: Request) {
+  return request.method() === "POST" && /^\/api\/session\/[^/]+\/(?:agent|model)$/.test(new URL(request.url()).pathname)
 }
 
 function isCreateWrite(request: Request) {
@@ -379,5 +387,6 @@ function requirePromptBody(request: Request) {
   }
   if (!("prompt" in body) || !body.prompt || typeof body.prompt !== "object") throw new Error("Prompt is not an object")
   if (!("text" in body.prompt) || typeof body.prompt.text !== "string") throw new Error("Prompt text is not a string")
-  return { id: body.id, text: body.prompt.text, prompt: body.prompt, payload: body }
+  const delivery = "delivery" in body && typeof body.delivery === "string" ? body.delivery : "steer"
+  return { messageID: body.id, text: body.prompt.text, prompt: body.prompt, delivery, payload: body }
 }

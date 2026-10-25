@@ -259,32 +259,6 @@ test("V2: Steer is the default delivery and the Queue choice is sent with the ne
     settings: { shouldDisplayTabsToast: false },
     onPrompt: (input) => prompts.push(input.body),
   })
-  // The shared mock answers V2 catalog reads with `{}`, so a V2 composer has no model and never sends.
-  // Serve the fixture's model in the V2 shape, then reload so the catalog is read through this route,
-  // which takes precedence over the shared mock's.
-  const location = { directory }
-  const model = {
-    id: "claude-opus-4-6",
-    modelID: "claude-opus-4-6",
-    providerID: "opencode",
-    name: "Claude Opus 4.6",
-    capabilities: { input: ["text"], output: ["text"], tools: true },
-    variants: [],
-    time: { released: 1 },
-    cost: [],
-    status: "active",
-    enabled: true,
-    limit: { context: 200_000, output: 8192 },
-  }
-  await page.route("**/api/**", (route) => {
-    const path = new URL(route.request().url()).pathname
-    if (path === "/api/provider")
-      return route.fulfill({ json: { location, data: [{ id: "opencode", name: "Orchestra", settings: {} }] } })
-    if (path === "/api/model") return route.fulfill({ json: { location, data: [model] } })
-    if (path === "/api/model/default") return route.fulfill({ json: { location, data: model } })
-    return route.fallback()
-  })
-  await page.reload()
   await expect(page.locator('[data-action="prompt-model"]')).toContainText("Claude Opus 4.6")
   const delivery = page.locator('[data-action="prompt-delivery"]')
   const prompt = page.getByRole("textbox", { name: "Prompt", exact: true })

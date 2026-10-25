@@ -6,6 +6,7 @@ const directory = "C:/Orchestra/ReviewTerminalStacked"
 const projectID = "proj_review_terminal_stacked"
 const sessionID = "ses_review_terminal_stacked"
 const title = "Review terminal stacked"
+const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
 const branchDiffs = [
   fileDiff(".github/actions/setup-bun/action.yml", 7),
   ...Array.from({ length: 2_739 }, (_, index) =>
@@ -71,16 +72,16 @@ test("keeps the review tree and terminal sized when both panels are open", async
       }),
     }),
   )
-  await page.route("**/api/vcs/diff**", (route) => {
+  await page.route(/\/api\/vcs\/diff(?:\?.*)?$/, (route) => {
     const url = new URL(route.request().url())
-    const scope = url.searchParams.get("location[directory]")?.replaceAll("\\", "/") ?? directory
-    const detail = scope.endsWith("/src/branch/d00027")
+    const scope = url.searchParams.get("location[directory]")?.replaceAll("\\", "/")
+    const detail = scope?.endsWith("/src/branch/d00027")
     if (detail && detailFailures-- > 0) return route.fulfill({ status: 500, body: "retry detail" })
     return route.fulfill({
       status: 200,
       contentType: "application/json",
       body: JSON.stringify({
-        location: { directory: scope, project: { id: projectID, directory } },
+        location: { directory, project: { id: projectID, directory } },
         data:
           url.searchParams.get("mode") === "branch"
             ? detail
@@ -92,7 +93,7 @@ test("keeps the review tree and terminal sized when both panels are open", async
       }),
     })
   })
-  await page.route("**/pty*", (route) =>
+  await page.route(/\/api\/pty(?:\?.*)?$/, (route) =>
     route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -110,7 +111,7 @@ test("keeps the review tree and terminal sized when both panels are open", async
       }),
     }),
   )
-  await page.route("**/pty/pty_review_terminal*", (route) =>
+  await page.route(/\/api\/pty\/pty_review_terminal(?:\?.*)?$/, (route) =>
     route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -128,7 +129,7 @@ test("keeps the review tree and terminal sized when both panels are open", async
       }),
     }),
   )
-  await page.route("**/pty/pty_review_terminal/connect-token*", (route) =>
+  await page.route(/\/api\/pty\/pty_review_terminal\/connect-token(?:\?.*)?$/, (route) =>
     route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -138,16 +139,30 @@ test("keeps the review tree and terminal sized when both panels are open", async
       }),
     }),
   )
-  await page.routeWebSocket("**/pty/pty_review_terminal/connect", () => undefined)
-  await page.addInitScript(() => {
-    localStorage.setItem("settings.v3", JSON.stringify({ general: {} }))
-    localStorage.setItem(
-      "orchestra.global.dat:layout",
-      JSON.stringify({ review: { diffStyle: "split", panelOpened: true } }),
-    )
-  })
+  await page.routeWebSocket(/\/api\/pty\/pty_review_terminal\/connect/, () => undefined)
+  await page.addInitScript(
+    ({ directory, server, sessionID }) => {
+      localStorage.setItem("settings.v3", JSON.stringify({ general: {} }))
+      localStorage.setItem(
+        "orchestra.global.dat:server",
+        JSON.stringify({
+          projects: { local: [{ worktree: directory, expanded: true }] },
+          lastProject: { local: directory },
+        }),
+      )
+      localStorage.setItem(
+        "orchestra.global.dat:layout",
+        JSON.stringify({ review: { diffStyle: "split", panelOpened: true } }),
+      )
+      localStorage.setItem(
+        "orchestra.window.browser.dat:tabs",
+        JSON.stringify([{ type: "session", server, sessionId: sessionID }]),
+      )
+    },
+    { directory, server, sessionID },
+  )
 
-  await page.goto(`/${base64Encode(directory)}/session/${sessionID}`)
+  await page.goto(`/server/${base64Encode(server)}/session/${sessionID}`)
   await expectSessionTitle(page, title)
   await expect(page.locator("#review-panel")).toBeVisible()
   await page.getByRole("tab", { name: /^Review/ }).click()

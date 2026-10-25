@@ -1,6 +1,7 @@
 export * as Mcp from "./mcp"
 
 import { Schema } from "effect"
+import { optional } from "./schema"
 
 // Connection state of one configured MCP server, as reported to clients.
 const StatusConnected = Schema.Struct({ status: Schema.Literal("connected") }).annotate({
@@ -64,3 +65,11 @@ export const AuthStart = Schema.Struct({
   oauthState: Schema.String,
 }).annotate({ identifier: "McpAuthStart" })
 export type AuthStart = Schema.Schema.Type<typeof AuthStart>
+
+// What the MCP page shows of one server's config: its transport and endpoint only, never headers, environment or OAuth.
+export interface Entry extends Schema.Schema.Type<typeof Entry> {}
+export const Entry = Schema.Struct({
+  type: optional(Schema.Literals(["local", "remote"])),
+  command: optional(Schema.Array(Schema.String)),
+  url: optional(Schema.String),
+}).annotate({ identifier: "McpEntry" })

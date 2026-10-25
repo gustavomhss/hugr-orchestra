@@ -1,6 +1,6 @@
 export * as SessionRevert from "./revert"
 
-import { and, asc, eq, gt } from "drizzle-orm"
+import { and, asc, eq, gt, inArray, lt } from "drizzle-orm"
 import { DateTime, Effect, Schema } from "effect"
 import { Database } from "../database/database"
 import { EventV2 } from "../event"
@@ -55,6 +55,58 @@ const plan = Effect.fn("SessionRevert.plan")(function* (input: BoundaryInput) {
       if (!files.has(file)) files.set(file, Snapshot.ID.make(message.snapshot.start))
   }
   return files
+})
+
+/** Diffs what the assistant turns answering `messageID` changed, from the first start snapshot to the last end snapshot. */
+export const diff = Effect.fn("SessionRevert.diff")(function* (input: BoundaryInput) {
+  const db = (yield* Database.Service).db
+  const boundary = yield* db
+    .select({ seq: SessionMessageTable.seq })
+    .from(SessionMessageTable)
+    .where(and(eq(SessionMessageTable.session_id, input.sessionID), eq(SessionMessageTable.id, input.messageID)))
+    .get()
+    .pipe(Effect.orDie)
+  if (!boundary) return yield* new MessageNotFoundError(input)
+  // The turn ends where the next one starts: a prompt, a shell command or a compaction.
+  const next = yield* db
+    .select({ seq: SessionMessageTable.seq })
+    .from(SessionMessageTable)
+    .where(
+      and(
+        eq(SessionMessageTable.session_id, input.sessionID),
+        inArray(SessionMessageTable.type, ["user", "shell", "compaction"]),
+        gt(SessionMessageTable.seq, boundary.seq),
+      ),
+    )
+    .orderBy(asc(SessionMessageTable.seq))
+    .get()
+    .pipe(Effect.orDie)
+  const rows = yield* db
+    .select()
+    .from(SessionMessageTable)
+    .where(
+      and(
+        eq(SessionMessageTable.session_id, input.sessionID),
+        eq(SessionMessageTable.type, "assistant"),
+        gt(SessionMessageTable.seq, boundary.seq),
+        next ? lt(SessionMessageTable.seq, next.seq) : undefined,
+      ),
+    )
+    .orderBy(asc(SessionMessageTable.seq))
+    .all()
+    .pipe(Effect.orDie)
+  const decode = Schema.decodeUnknownEffect(SessionMessage.Message)
+  const snapshots = yield* Effect.forEach(rows, (row) =>
+    decode({ ...row.data, id: row.id, type: row.type }).pipe(
+      Effect.orDie,
+      Effect.map((message) => (message.type === "assistant" ? message.snapshot : undefined)),
+    ),
+  )
+  const from = snapshots.find((snapshot) => snapshot?.start)?.start
+  const to = snapshots.findLast((snapshot) => snapshot?.end)?.end
+  if (!from || !to) return []
+  const snapshot = yield* Snapshot.Service
+  return yield* snapshot.diff({ from: Snapshot.ID.make(from), to: Snapshot.ID.make(to) })
 })
 
 export const stage = Effect.fn("SessionRevert.stage")(function* (input: {

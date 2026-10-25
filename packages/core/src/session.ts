@@ -32,6 +32,7 @@ import { MessageDecodeError } from "./session/error"
 import { SessionEvent } from "./session/event"
 import { SessionInput } from "./session/input"
 import { Snapshot } from "./snapshot"
+import { File } from "./file"
 import { SessionRevert } from "./session/revert"
 import { Revert } from "@orchestra/schema/revert"
 import { FSUtil } from "./fs-util"
@@ -238,6 +239,11 @@ export interface Interface {
   readonly active: Effect.Effect<ReadonlySet<SessionSchema.ID>>
   readonly resume: (sessionID: SessionSchema.ID) => Effect.Effect<void, NotFoundError | SessionRunner.RunError>
   readonly interrupt: (sessionID: SessionSchema.ID) => Effect.Effect<void>
+  /** File changes made by the assistant turns that answer the user message `messageID`. */
+  readonly diff: (input: {
+    sessionID: SessionSchema.ID
+    messageID: SessionMessage.ID
+  }) => Effect.Effect<readonly File.Diff[], NotFoundError | MessageNotFoundError | Snapshot.Error>
   readonly revert: {
     readonly stage: (input: {
       sessionID: SessionSchema.ID
@@ -670,6 +676,14 @@ const layer = Layer.effect(
       interrupt: Effect.fn("V2Session.interrupt")((sessionID) =>
         Effect.uninterruptible(execution.interrupt(sessionID)),
       ),
+      diff: Effect.fn("V2Session.diff")(function* (input) {
+        const session = yield* result.get(input.sessionID)
+        return yield* SessionRevert.diff(input).pipe(
+          Effect.provideService(Database.Service, database),
+          Effect.provide(locations.get(session.location)),
+          Effect.mapError((error) => error as NotFoundError | MessageNotFoundError | Snapshot.Error),
+        )
+      }),
       revert: {
         stage: Effect.fn("V2Session.revert.stage")(function* (input) {
           const session = yield* result.get(input.sessionID)

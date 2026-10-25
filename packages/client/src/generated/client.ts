@@ -3,6 +3,7 @@ import type {
   HealthGetOutput,
   LocationGetInput,
   LocationGetOutput,
+  LocationPathsOutput,
   AgentsListInput,
   AgentsListOutput,
   AgentsGetFileInput,
@@ -56,6 +57,8 @@ import type {
   SessionsTodoOutput,
   SessionsWaitInput,
   SessionsWaitOutput,
+  SessionsDiffInput,
+  SessionsDiffOutput,
   SessionsStageInput,
   SessionsStageOutput,
   SessionsClearInput,
@@ -146,6 +149,12 @@ import type {
   McpListOutput,
   McpResourcesInput,
   McpResourcesOutput,
+  McpConfigInput,
+  McpConfigOutput,
+  McpEntriesInput,
+  McpEntriesOutput,
+  McpToolsInput,
+  McpToolsOutput,
   McpAddInput,
   McpAddOutput,
   McpRemoveInput,
@@ -530,6 +539,17 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ),
+      paths: (requestOptions?: RequestOptions) =>
+        request<LocationPathsOutput>(
+          {
+            method: "GET",
+            path: `/api/location/paths`,
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
     },
     agents: {
       list: (input?: AgentsListInput, requestOptions?: RequestOptions) =>
@@ -883,6 +903,17 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ),
+      diff: (input: SessionsDiffInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: SessionsDiffOutput }>(
+          {
+            method: "GET",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/message/${encodeURIComponent(input.messageID)}/diff`,
+            successStatus: 200,
+            declaredStatuses: [404, 500, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
       stage: (input: SessionsStageInput, requestOptions?: RequestOptions) =>
         request<{ readonly data: SessionsStageOutput }>(
           {
@@ -1442,6 +1473,42 @@ export function make(options: ClientOptions) {
           {
             method: "GET",
             path: `/api/mcp/resource`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      config: (input?: McpConfigInput, requestOptions?: RequestOptions) =>
+        request<McpConfigOutput>(
+          {
+            method: "GET",
+            path: `/api/mcp/config`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      entries: (input?: McpEntriesInput, requestOptions?: RequestOptions) =>
+        request<McpEntriesOutput>(
+          {
+            method: "GET",
+            path: `/api/mcp/entries`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      tools: (input?: McpToolsInput, requestOptions?: RequestOptions) =>
+        request<McpToolsOutput>(
+          {
+            method: "GET",
+            path: `/api/mcp/tools`,
             query: { location: input?.["location"] },
             successStatus: 200,
             declaredStatuses: [400, 401],
@@ -2186,6 +2253,7 @@ export function make(options: ClientOptions) {
               agents: input?.["agents"],
               disabledProviders: input?.["disabledProviders"],
               providers: input?.["providers"],
+              permissions: input?.["permissions"],
             },
             successStatus: 204,
             declaredStatuses: [401, 400],
