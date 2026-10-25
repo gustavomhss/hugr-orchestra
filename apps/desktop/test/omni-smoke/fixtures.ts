@@ -54,13 +54,18 @@ export async function activate(scratch: Awaited<ReturnType<typeof fixtures>>, se
   await call("POST", `/api/session/${session.id}/prompt`, { prompt: { text: "Write b.ts and hold bash tree." }, delivery: "steer", resume: true })
   const terminals = await Promise.all([scratch.trees.terminal, ...(skipTerminal2 ? [] : [scratch.trees.terminal2])].map(async (tree) =>
     (await call<{ data: { id: string; pid: number } }>("POST", "/api/pty", { command: tree.command, args: tree.args, cols: 100, rows: 30 })).data))
+  const seen: Record<string, unknown> = {}
   const protocols = await until(90_000, "actual bash running, LSP/MCP connected, write persisted", async () => {
     const messages = (await call<{ data: { content?: { type: string; name?: string; state?: { status: string } }[] }[] }>("GET", `/api/session/${session.id}/message?order=asc&limit=200`)).data
     const lsp = (await call<{ data: { id: string; status: string }[] }>("GET", "/api/lsp")).data
     const mcp = (await call<{ data: { name: string; status: { status: string } }[] }>("GET", "/api/mcp")).data
     const running = messages.flatMap((message) => message.content ?? []).some((part) => part.type === "tool" && part.name === "bash" && part.state?.status === "running")
+    Object.assign(seen, { running, lsp, mcp, messages: JSON.stringify(messages).slice(0, 3000), b: existsSync(path.join(scratch.project, "b.ts")) })
     return running && lsp.some((server) => server.id === "campaign" && server.status === "connected") && mcp.some((server) => server.name === "campaign" && server.status.status === "connected") &&
       existsSync(path.join(scratch.project, "b.ts")) && readFileSync(path.join(scratch.project, "b.ts"), "utf8") === "export const b = 2\n" ? { running, lsp, mcp, terminals, session } : undefined
+  }).catch(async (error: unknown) => {
+    const history = await call<{ data: { type: string }[] }>("GET", `/api/session/${session.id}/history`).then((found) => found.data.map((event) => event.type), (cause: unknown) => String(cause))
+    throw new Error(`${error}; last ${JSON.stringify(seen)}; history ${JSON.stringify(history)}`)
   })
   writeFileSync(path.join(scratch.home, "protocols.json"), JSON.stringify(protocols))
   return protocols
