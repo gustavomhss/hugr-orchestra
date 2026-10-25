@@ -2,6 +2,7 @@
 import { expect, test } from "bun:test"
 import type { GlobalEvent, SessionMessage } from "../../../../src/types"
 import { tmpdir } from "../../../fixture/fixture"
+import { toolOutput, toolTitle } from "../../../../src/util/session-message"
 import { json, mount, wait } from "./sync-fixture"
 import { v2Session } from "../../../fixture/tui-sdk"
 
@@ -96,10 +97,14 @@ test("V2 history hydrates into the message store and the Session diff", async ()
     expect(sync.data.message[sessionID][0]).toMatchObject({ text: "hello" })
     expect(sync.data.message[sessionID][1]).toMatchObject({ agent: "maestro", model: { id: "model" } })
     expect(content(sync)?.map((part) => part.type)).toEqual(["text", "tool"])
-    expect(content(sync)?.[1]).toMatchObject({
-      name: "read",
-      state: { status: "completed", content: [{ type: "text", text: "contents" }], structured: { title: "a.ts" } },
-    })
+    // Solid store proxies of nested arrays do not deep-match in Bun, so check the projected tool through the TUI's readers.
+    const tool = content(sync)?.[1]
+    expect(tool?.type === "tool" && [tool.name, tool.state.status, toolOutput(tool), toolTitle(tool)]).toEqual([
+      "read",
+      "completed",
+      "contents",
+      "a.ts",
+    ])
     expect(sync.data.session_diff[sessionID]).toEqual([
       { file: "a.ts", additions: 2, deletions: 1, status: "modified" },
     ])
