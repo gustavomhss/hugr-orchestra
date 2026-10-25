@@ -37,7 +37,9 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
   const { createComponent, createStore, render } = await import("./lean-dom.test-helper")
   const { MemoryRouter, Route, createMemoryHistory } = await import("@solidjs/router")
   const { solidDom } = await import("./solid-dom")
-  const { Orchestra } = await import("@orchestra/client")
+  // The chapter's lean-api checks `instanceof ClientError` against its solidDom() copy of the client, so the fixture
+  // client must come from that same copy.
+  const { Orchestra }: typeof import("@orchestra/client") = await import(solidDom("@orchestra/client", import.meta.dir))
   const { ServerConnection }: typeof import("@/context/server") = await import(solidDom("@/context/server", import.meta.dir))
   const { ServerScope }: typeof import("@/utils/server-scope") = await import(solidDom("@/utils/server-scope", import.meta.dir))
   const { PlatformProvider }: typeof import("@/context/platform") = await import(solidDom("@/context/platform", import.meta.dir))
