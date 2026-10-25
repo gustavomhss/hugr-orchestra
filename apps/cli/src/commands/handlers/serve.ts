@@ -9,12 +9,14 @@ import { Context, Layer, Option } from "effect"
 import * as Effect from "effect/Effect"
 import { HttpRouter, HttpServer } from "effect/unstable/http"
 import { createServer } from "node:http"
+import { writeSync } from "node:fs"
 import { createRoutes } from "@orchestra/server/routes"
 import { AppDockSocket } from "@orchestra/app-dock/socket-transport"
 import { Commands } from "../commands"
 import { ProductHost } from "../../host"
 import { Runtime } from "../../framework/runtime"
 import { Daemon } from "../../services/daemon"
+import { ServeShutdown } from "./serve-shutdown"
 
 const SHUTDOWN_GRACE_MS = 2_000
 
@@ -24,10 +26,29 @@ export default Runtime.handler(
     return yield* Effect.scoped(
       Effect.gen(function* () {
         // The runtime interrupts on SIGTERM and SIGINT and runs the finalizers; this bounds a finalizer that hangs,
-        // as the desktop kills its child a few seconds after SIGTERM.
-        const deadline = () => void setTimeout(() => process.exit(0), SHUTDOWN_GRACE_MS).unref()
-        process.once("SIGTERM", deadline)
-        process.once("SIGINT", deadline)
+        // as the desktop kills its child a few seconds after SIGTERM. SIGHUP and, on Windows, SIGBREAK are not
+        // interrupted by the runtime, so the wait at the end of this scope ends on them as well.
+        const shutdown = { signal: undefined as NodeJS.Signals | undefined, startedAt: 0 }
+        const note = (status: ServeShutdown.Status) => {
+          if (!shutdown.signal) return
+          const line = ServeShutdown.evidence({
+            level: process.env.ORCHESTRA_LOG_LEVEL,
+            pid: process.pid,
+            signal: shutdown.signal,
+            status,
+            elapsedMs: Date.now() - shutdown.startedAt,
+          })
+          if (line) writeSync(2, line)
+        }
+        // Registered first, so it runs after every other finalizer: the process exits with the signal's code only
+        // once the server and its connections are closed.
+        yield* Effect.addFinalizer(() =>
+          Effect.sync(() => {
+            if (!shutdown.signal) return
+            note("disposed")
+            process.exit()
+          }),
+        )
         const daemon = yield* Daemon.Service
         // A desktop-owned child gets a per-launch password in env and never touches the daemon's password file.
         const password = process.env.ORCHESTRA_SERVER_PASSWORD || (yield* daemon.password())
@@ -48,7 +69,14 @@ export default Runtime.handler(
           Effect.catchCause((cause) => Effect.logError("V1 session import failed", cause)),
           Effect.forkScoped,
         )
-        return yield* Effect.never
+        return yield* ServeShutdown.untilSignal(process, process.platform, (signal) => {
+          if (shutdown.signal) return
+          shutdown.signal = signal
+          shutdown.startedAt = Date.now()
+          process.exitCode = ServeShutdown.exitCode(signal)
+          note("started")
+          setTimeout(() => process.exit(), SHUTDOWN_GRACE_MS).unref()
+        })
       }),
     )
   }),
