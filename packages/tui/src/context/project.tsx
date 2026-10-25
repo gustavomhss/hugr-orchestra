@@ -1,11 +1,9 @@
 import { batch } from "solid-js"
-import type { Path, Workspace } from "../compat/schema"
+import type { Path } from "../compat/schema"
 import { createStore, reconcile } from "solid-js/store"
 import { createSimpleContext } from "./helper"
 import { useSDK } from "./sdk"
 import { useTuiPaths } from "./runtime"
-
-type WorkspaceStatus = "connected" | "connecting" | "disconnected" | "error"
 
 export const { use: useProject, provider: ProjectProvider } = createSimpleContext({
   name: "Project",
@@ -32,8 +30,6 @@ export const { use: useProject, provider: ProjectProvider } = createSimpleContex
       },
       workspace: {
         current: undefined as string | undefined,
-        list: [] as Workspace[],
-        status: {} as Record<string, WorkspaceStatus>,
       },
     })
 
@@ -53,21 +49,6 @@ export const { use: useProject, provider: ProjectProvider } = createSimpleContex
         setStore("project", "mainDir", directories.findLast((item) => item.strategy === undefined)?.directory)
       })
     }
-
-    // V2 serves no workspace routes, so there is never a remote workspace to list.
-    async function syncWorkspace() {
-      batch(() => {
-        setStore("workspace", "list", [])
-        setStore("workspace", "status", {})
-        setStore("workspace", "current", undefined)
-      })
-    }
-
-    sdk.event.on("event", (event) => {
-      if (event.payload.type === "workspace.status") {
-        setStore("workspace", "status", event.payload.properties.workspaceID, event.payload.properties.status)
-      }
-    })
 
     return {
       data: store,
@@ -91,19 +72,6 @@ export const { use: useProject, provider: ProjectProvider } = createSimpleContex
           if (store.workspace.current === workspace) return
           setStore("workspace", "current", workspace)
         },
-        list() {
-          return store.workspace.list
-        },
-        get(workspaceID: string) {
-          return store.workspace.list.find((item) => item.id === workspaceID)
-        },
-        status(workspaceID: string) {
-          return store.workspace.status[workspaceID]
-        },
-        statuses() {
-          return store.workspace.status
-        },
-        sync: syncWorkspace,
       },
       sync,
     }

@@ -423,7 +423,6 @@ export const {
               .catch(() => undefined),
             sdk.catalog.status().then((x) => setStore("session_status", reconcile(x))),
             sdk.catalog.vcs(location).then((x) => setStore("vcs", reconcile(x))),
-            project.workspace.sync(),
           ]).then(() => {
             setStore("status", "complete")
           })

@@ -84,17 +84,7 @@ export function createFetch(override?: FetchHandler, events?: ReturnType<typeof 
     if (overridden) return overridden
     if (url.pathname === "/api/event" && events) return events.response()
 
-    if (
-      [
-        "/agent",
-        "/command",
-        "/experimental/workspace",
-        "/experimental/workspace/status",
-        "/formatter",
-        "/lsp",
-      ].includes(url.pathname)
-    )
-      return json([])
+    if (["/agent", "/command", "/formatter", "/lsp"].includes(url.pathname)) return json([])
     if (["/config", "/experimental/resource", "/mcp", "/provider/auth", "/session/status"].includes(url.pathname))
       return json({})
     if (url.pathname === "/config/providers") return json({ providers: {}, default: {} })
