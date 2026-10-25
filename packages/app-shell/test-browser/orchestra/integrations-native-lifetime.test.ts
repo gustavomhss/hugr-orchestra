@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from "bun:test"
-import { button, field, idle, mountPage, startHost, submit, transport, waitFor } from "./integrations-native.fixture"
+import { button, field, idle, load, mountPage, startHost, submit, transport, waitFor } from "./integrations-native.fixture"
 import { navigation, breadcrumbLabel, isWip } from "../../src/orchestra/navigation"
 import { createIntegrationsApi } from "../../src/orchestra/chapters/integrations-api"
 import type { Component } from "solid-js"
@@ -128,14 +128,14 @@ test("navigation and lazy chapter registration retain actual route contract", as
   expect(navigation.find((item) => item.id === "integrations")).toEqual({ id: "integrations", label: "orchestra.integrations.title", chapter: "C15" })
   expect(isWip("integrations")).toBe(false)
   expect(breadcrumbLabel({ type: "chapter", chapter: "integrations" })).toBe("orchestra.integrations.title")
-  const { chapterPages } = await import("../../src/orchestra/chapter-route")
+  const { chapterPages }: typeof import("../../src/orchestra/chapter-route") = await load("../../src/orchestra/chapter-route")
   const page = chapterPages.integrations
   expect(page).toBeDefined()
   const host = await startHost()
   cleanup.push(host.stop)
   // Load through the actual lazy registration; entry fixtures mount that same default export.
   const loaded = await (page as Component & { preload: () => Promise<{ default: unknown }> }).preload()
-  const entry = await import("../../src/orchestra/chapters/integrations")
+  const entry = await load("../../src/orchestra/chapters/integrations")
   expect(loaded.default).toBe(entry.default)
   const view = mountPage(host)
   cleanup.push(view.dispose)

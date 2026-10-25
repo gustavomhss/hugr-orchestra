@@ -1,5 +1,5 @@
 import { expect } from "bun:test"
-import { createRequire } from "node:module"
+import { isolatedSolid } from "./integrations-solid.fixture"
 import { mkdir, mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
@@ -10,19 +10,14 @@ import type { SessionID } from "@orchestra/schema/session-id"
 import type { CapabilityConnectionTable, CapabilityBindingTable, CapabilityTargetTable, CapabilityRequestTable } from "@orchestra/core/capability/sql"
 import type { CredentialTable } from "@orchestra/core/credential/sql"
 
-const solid = createRequire(Bun.resolveSync("vite-plugin-solid", import.meta.dir))
-Bun.plugin({ name: "native-integrations-solid", setup(build) {
-  build.onLoad({ filter: /\.tsx$/ }, async (args) => {
-    const result = await solid("@babel/core").transformAsync(await Bun.file(args.path).text(), {
-      filename: args.path, presets: [[solid("babel-preset-solid"), { generate: "dom" }]],
-      parserOpts: { plugins: ["jsx", "typescript"] }, configFile: false, babelrc: false,
-    })
-    return { contents: result.code, loader: "ts" }
-  })
-} })
-const { default: IntegrationsPage } = await import("../../src/orchestra/chapters/integrations")
-const { LanguageProvider, useLanguage } = await import("../../src/context/language")
-const { PlatformProvider } = await import("../../src/context/platform")
+export const load = isolatedSolid("integrations-native")
+const { default: IntegrationsPage }: typeof import("../../src/orchestra/chapters/integrations") = await load(
+  "../../src/orchestra/chapters/integrations",
+)
+const { LanguageProvider, useLanguage }: typeof import("../../src/context/language") = await load(
+  "../../src/context/language",
+)
+const { PlatformProvider }: typeof import("../../src/context/platform") = await load("../../src/context/platform")
 
 type Snapshot = {
   connections: (typeof CapabilityConnectionTable.$inferSelect)[]

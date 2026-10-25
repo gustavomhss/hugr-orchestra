@@ -1,4 +1,4 @@
-import { createRequire } from "node:module"
+import { isolatedSolid } from "./integrations-solid.fixture"
 import { Capability } from "@orchestra/schema/capability"
 import { SessionID } from "@orchestra/schema/session-id"
 import { createComponent, render } from "solid-js/web"
@@ -15,31 +15,17 @@ import { DOMFormData } from "../../happydom"
 import { createPendingSetup } from "./integrations-screen-http.fixture"
 
 // Compile real components with Solid, not Bun's React JSX transform. Model imports use actual local source.
-const solid = createRequire(Bun.resolveSync("vite-plugin-solid", import.meta.dir))
-Bun.plugin({
-  name: "solid-integrations-screen",
-  setup(build) {
-    build.onLoad({ filter: /\.tsx(?:\?integrations-solid)?$/ }, async (args) => {
-      const file = args.path.replace(/\?integrations-solid$/, "")
-      const result = await solid("@babel/core").transformAsync(await Bun.file(file).text(), {
-        filename: file,
-        presets: [[solid("babel-preset-solid"), { generate: "dom" }]],
-        parserOpts: { plugins: ["jsx", "typescript"] },
-        configFile: false,
-        babelrc: false,
-      })
-      return { contents: result.code, loader: "ts" }
-    })
-  },
-})
-const { createIntegrationModel } = await import("../../src/orchestra/chapters/integrations-model")
-const { IntegrationsScreen }: typeof import("../../src/orchestra/chapters/integrations-screen") = await import(
-  "../../src/orchestra/chapters/integrations-screen"
+const load = isolatedSolid("integrations-screen")
+const { createIntegrationModel }: typeof import("../../src/orchestra/chapters/integrations-model") = await load(
+  "../../src/orchestra/chapters/integrations-model",
 )
-const { LanguageProvider, useLanguage }: typeof import("../../src/context/language") = await import(
-  "../../src/context/language"
+const { IntegrationsScreen }: typeof import("../../src/orchestra/chapters/integrations-screen") = await load(
+  "../../src/orchestra/chapters/integrations-screen",
 )
-const { PlatformProvider }: typeof import("../../src/context/platform") = await import("../../src/context/platform")
+const { LanguageProvider, useLanguage }: typeof import("../../src/context/language") = await load(
+  "../../src/context/language",
+)
+const { PlatformProvider }: typeof import("../../src/context/platform") = await load("../../src/context/platform")
 
 export const cleanups: (() => void)[] = []
 export const settle = () => new Promise((resolve) => setTimeout(resolve, 30))
