@@ -10,7 +10,7 @@ const fff = process.env["ORCHESTRA_DISABLE_FFF"]
 
 export type OmniSpawner = "off" | "on" | "strict"
 
-// Set by the CLI build per target (apps/orchestra/script/build.ts): false where omni ships no addon yet (D-L9).
+// Set by the CLI build per target (apps/cli/script/build.ts): false where omni ships no addon yet (D-L9).
 // Undefined in dev, tests and the desktop bundle, where Omni is on by default.
 declare const OMNI_ENABLED: boolean | undefined
 

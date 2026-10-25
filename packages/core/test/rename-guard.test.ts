@@ -86,8 +86,4 @@ describe("rename guard", () => {
       'packages/x/src/a.ts:1: Bun.file("./fixtures/opencode-v2-openapi.json")',
     ])
   })
-
-  test("recorded HTTP cassettes stay covered by a kept path", () => {
-    expect(keptPaths.find((entry) => entry.path.test("apps/orchestra/test/fixtures/recordings/session/native-zen-tool-loop.json"))).toBeDefined()
-  })
 })

@@ -12,7 +12,7 @@ import { ToolModelCapture } from "./model-capture"
 import { ToolModelProjection } from "./model-projection"
 
 /**
- * V2 port of the V1 Lean projection (`apps/orchestra/src/session/lean-output.ts`) over one settled ToolOutput.
+ * Lean projection over one settled ToolOutput.
  * The registry calls it after inspection and generic bounding, so `output` is the approved model view.
  */
 export interface Input {
