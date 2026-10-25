@@ -548,6 +548,15 @@ export interface Options {
     context: Tool.Context,
     operation: "audit" | "usage" | "status",
   ) => Effect.Effect<GovernanceEvidence, Tool.Failure>
+  /** The application's guard before a described capability runs, such as the Relay arm's Session binding. */
+  readonly beforeExecute?: (context: Tool.Context, name: string, args: unknown) => Effect.Effect<void, Tool.Failure>
+  /** The application's record of a successful capability result, such as the completion-arm token it observed. */
+  readonly afterExecute?: (
+    context: Tool.Context,
+    name: string,
+    args: unknown,
+    result: unknown,
+  ) => Effect.Effect<void, Tool.Failure>
 }
 
 /** Canonical application tool values; resolve Location services for each call at the host. */
@@ -625,8 +634,14 @@ export const registerScoped = Effect.fn("MaestroArsenal.registerScoped")(functio
             .pipe(Effect.mapError(() => new Tool.Failure({ message: "Arsenal permission denied." })))
         const host = { directory, stateDirectory: state, projectID: location.project.id, nativeMaestro, nativeUpstream, ask }
         const observe = options.observeGovernance
+        const before = options.beforeExecute
+        const after = options.afterExecute
         return {
           ...host,
+          ...(before ? { beforeExecute: (name: string, args: unknown) => before(context, name, args) } : {}),
+          ...(after
+            ? { afterExecute: (name: string, args: unknown, result: unknown) => after(context, name, args, result) }
+            : {}),
           outputBudget: outputs.limits,
           ...(observe
             ? { observeGovernance: (operation: "audit" | "usage" | "status") => observe(context, operation) }
