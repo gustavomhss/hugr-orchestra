@@ -78,6 +78,7 @@ test("exposes every standard HTTP API group", () => {
   expect(Object.keys(client.integrations)).toEqual([
     "list",
     "get",
+    "disconnect",
     "connectKey",
     "connectOauth",
     "oauthStatus",

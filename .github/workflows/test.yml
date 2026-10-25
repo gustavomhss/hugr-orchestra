@@ -190,8 +190,11 @@ jobs:
           # gets a shard to itself (~17 min); the other two take ~10 min each. The third shard is the complement of the
           # first two, so a package added later lands there instead of in no shard, and it carries the repo-wide gates.
           - { name: linux, host: ubuntu-latest, part: packages-core, label: "core", filters: "--filter=@orchestra/core" }
-          - { name: linux, host: ubuntu-latest, part: packages-app, label: "app, cli, server",
-              filters: "--filter=@orchestra/app --filter=@orchestra/cli --filter=@orchestra/server --filter=@orchestra/sdk-next --filter=@orchestra/client --filter=@orchestra/tui --filter=@orchestra/session-ui" }
+          # Deleting apps/orchestra moved its commands and their tests into the CLI, and run 40239011501 (2026-10-25) spent
+          # this lane's whole 40 minutes on app, CLI and server together, so the CLI gets a lane of its own.
+          - { name: linux, host: ubuntu-latest, part: packages-app, label: "app, server, clients",
+              filters: "--filter=@orchestra/app --filter=@orchestra/server --filter=@orchestra/sdk-next --filter=@orchestra/client --filter=@orchestra/tui --filter=@orchestra/session-ui" }
+          - { name: linux, host: ubuntu-latest, part: packages-cli, label: "cli", filters: "--filter=@orchestra/cli" }
           - { name: linux, host: ubuntu-latest, part: packages-libs, label: "other packages, godfile", repo_gates: true,
               filters: "--filter=!orchestra --filter=!@orchestra/core --filter=!@orchestra/app --filter=!@orchestra/cli --filter=!@orchestra/server --filter=!@orchestra/sdk-next --filter=!@orchestra/client --filter=!@orchestra/tui --filter=!@orchestra/session-ui" }
           - { name: linux, host: ubuntu-latest, part: gates, label: "httpapi, relay" }
