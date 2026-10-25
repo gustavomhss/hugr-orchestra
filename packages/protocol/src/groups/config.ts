@@ -1,3 +1,4 @@
+import { Permission } from "@orchestra/schema/permission"
 import { Schema } from "effect"
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/unstable/httpapi"
 
@@ -23,6 +24,10 @@ export const ConfigPatch = Schema.Struct({
   providers: Schema.optional(Schema.Record(Schema.String, CustomProvider)).annotate({
     description: "Custom providers by ID, each replacing any previous definition of that ID.",
   }),
+  permissions: Schema.optional(Permission.Ruleset).annotate({
+    description:
+      "The whole ordered list of tool permission rules; a later matching rule wins. Replaces the previous list.",
+  }),
 }).annotate({ identifier: "ConfigPatch" })
 
 export const ConfigSettings = Schema.Struct({
@@ -30,6 +35,8 @@ export const ConfigSettings = Schema.Struct({
   shell: Schema.optional(Schema.String),
   agents: Schema.Record(Schema.String, Schema.Struct({ engine: Schema.Literals(["orchestra", "claude-code"]) })),
   disabledProviders: Schema.Array(Schema.String),
+  // In the user's order, since a later matching rule wins.
+  permissions: Permission.Ruleset,
 }).annotate({ identifier: "ConfigSettings" })
 
 export const ConfigGroup = HttpApiGroup.make("server.config")
@@ -40,7 +47,8 @@ export const ConfigGroup = HttpApiGroup.make("server.config")
       OpenApi.annotations({
         identifier: "v2.config.get",
         summary: "Read global settings",
-        description: "Read the default model and disabled providers from the global config document.",
+        description:
+          "Read the default model, disabled providers and tool permission rules from the global config document.",
       }),
     ),
   )
@@ -53,7 +61,7 @@ export const ConfigGroup = HttpApiGroup.make("server.config")
         identifier: "v2.config.update",
         summary: "Update global settings",
         description:
-          "Merge the default model, agent engines and disabled providers into the global config document, then reload the agents and catalog of every open location.",
+          "Merge the default model, agent engines, disabled providers and tool permission rules into the global config document, then reload the agents and catalog of every open location.",
       }),
     ),
   )

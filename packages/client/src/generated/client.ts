@@ -147,6 +147,12 @@ import type {
   McpListOutput,
   McpResourcesInput,
   McpResourcesOutput,
+  McpConfigInput,
+  McpConfigOutput,
+  McpEntriesInput,
+  McpEntriesOutput,
+  McpToolsInput,
+  McpToolsOutput,
   McpAddInput,
   McpAddOutput,
   McpRemoveInput,
@@ -1413,6 +1419,42 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ),
+      config: (input?: McpConfigInput, requestOptions?: RequestOptions) =>
+        request<McpConfigOutput>(
+          {
+            method: "GET",
+            path: `/api/mcp/config`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      entries: (input?: McpEntriesInput, requestOptions?: RequestOptions) =>
+        request<McpEntriesOutput>(
+          {
+            method: "GET",
+            path: `/api/mcp/entries`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      tools: (input?: McpToolsInput, requestOptions?: RequestOptions) =>
+        request<McpToolsOutput>(
+          {
+            method: "GET",
+            path: `/api/mcp/tools`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
       add: (input: McpAddInput, requestOptions?: RequestOptions) =>
         request<McpAddOutput>(
           {
@@ -2150,6 +2192,7 @@ export function make(options: ClientOptions) {
               agents: input?.["agents"],
               disabledProviders: input?.["disabledProviders"],
               providers: input?.["providers"],
+              permissions: input?.["permissions"],
             },
             successStatus: 204,
             declaredStatuses: [401, 400],
