@@ -67,7 +67,7 @@ const ContextConflict = (planRevisionID: string) =>
   })
 
 /**
- * V2 ports of V1's catalog, plan revision and context steps (`apps/orchestra/src/tool/maestro-{plan,context}.ts`). A
+ * The catalog, plan revision and context steps. A
  * plan revision is always grounded (`units` is required), so it records `maestro.plan_revision.recorded` v2 and its
  * context `maestro.context.recorded` v2, the versions `GovernanceRecordsV2` reads. An upstream-authored plan records
  * v3 with the attribution `UpstreamProvenanceV2` observes from the archie Task. Workflow plans hold: V2 has no native

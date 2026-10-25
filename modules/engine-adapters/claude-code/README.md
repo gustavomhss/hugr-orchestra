@@ -6,11 +6,11 @@ The Claude Code engine adapter: SDK process lifetime, executable lookup, transcr
 
 The Claude Code engine adapter: SDK process lifetime, executable lookup, transcripts and host options. Owner: The Claude Code engine owner.
 
-Holds `src/sdk.ts` (the single spawn seam, `processLifetime`, which keeps the `claude_code` preset), `src/executable.ts`, `src/transcript.ts` and `src/host/{admission,join,options}.ts`. The sign-in (`host/provider.ts`, `login.ts`), the engine, the mirror and the rest of the host stay in apps/orchestra until they stop using V1 code. The SDK pin must equal the one in the apps/orchestra manifest, because the executable lookup reads it from this manifest.
+Holds `src/sdk.ts` (the single spawn seam, `processLifetime`, which keeps the `claude_code` preset), `src/executable.ts`, `src/transcript.ts` and `src/host/{admission,join,options}.ts`. The executable lookup reads the SDK pin from this manifest.
 
 ## Public entry points and consumers
 
-Exports are explicit keys derived from the source wildcard in the module registry. Consumers are the composition roots: apps/orchestra (legacy server) and apps/cli.
+Exports are explicit keys derived from the source wildcard in the module registry. Consumer is the composition root apps/cli.
 
 ## Dependencies and boundaries
 

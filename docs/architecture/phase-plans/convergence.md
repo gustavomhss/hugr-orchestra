@@ -27,7 +27,7 @@ line). Runtime call counts are regex over `client.X.Y(` / `api.X.Y(` chains and 
      `/api/generate`, `/api/plugin`, `/api/server`, `/api/service/stop`, `/api/debug/location`,
      `/api/experimental/*`, `/api/integration/:id/connect/command*`, `/api/fs/read` (omitted from generation on
      purpose; raw transport). No server in the repo serves `/api/mcp`, `/api/project*`, `/api/session/:id/rename`
-     (grep of apps/orchestra/src, packages/server/src, packages/protocol/src).
+     (grep of removed-v1/src, packages/server/src, packages/protocol/src).
 2. **app-shell already runs two protocols.** `utils/server-protocol.ts` probes `/global/health` first: the legacy
    sidecar answers it, so the desktop runs in **"v1" mode**. In v1 mode `utils/server-compat.ts#createV1Api` reroutes
    `session` (14 methods), `project` (3), `vcs` (2), `file` (2), `integration` (get/connect/oauth), `pty` (5),
@@ -35,8 +35,8 @@ line). Runtime call counts are regex over `client.X.Y(` / `api.X.Y(` chains and 
    goes to the vendored client at `/api/*`. The vendored client is therefore mainly the *TypeScript shape* of
    `ServerApi` (`export type ServerApi = OpenCodeClient`, utils/server.ts:62). Against a pure V2 server ("v2" mode) the
    vendored-only paths above 404 — see B.4.
-3. **The legacy SDK is generated from apps/orchestra** (`packages/sdk/js/script/build.ts:15` runs
-   `bun dev generate` in apps/orchestra). Once Track B deletes apps/orchestra the SDK can no longer be regenerated;
+3. **The legacy SDK is generated from removed-v1** (`packages/sdk/js/script/build.ts:15` runs
+   `bun dev generate` in removed-v1). Once Track B deletes removed-v1 the SDK can no longer be regenerated;
    it must be frozen or deleted at that point. Tracks A and B are coupled here.
 4. **Legacy *runtime* calls, not types, are the blocker.** Value imports through facades are only:
    `createOrchestraClient` (app-shell `utils/server.ts`, tui `context/sdk.tsx`, cli `services/daemon.ts`) and
@@ -46,7 +46,7 @@ line). Runtime call counts are regex over `client.X.Y(` / `api.X.Y(` chains and 
    `formatter.status`, `config.get`, `experimental.workspace.*` 7, `experimental.console.switchOrg`, `global.upgrade`)
    plus 18 `client.v2.*` calls; app-shell calls ~90 (e.g. `instance.dispose` 8, `session.update` 7, `vcs.get` 5,
    `file.read` 4, `pty.*` 12, `worktree.*` 6, `mcp.*` 5, `project.lean*` 3, `session.processes/processStop`,
-   `global.config.*`). These hit V1 routes that only apps/orchestra serves.
+   `global.config.*`). These hit V1 routes that only removed-v1 serves.
 5. **Wire-type policy is the one design decision.** SDK types are mutable with plain `string` ids; schema types are
    `readonly` with branded ids (`Model.ID = String.brand("ModelV2.ID")`). `typeof X.Encoded` gives plain-string,
    readonly shapes = the SDK's wire shape minus mutability. Mutating code (`variants.push`, Solid `produce` on parts)
@@ -93,7 +93,7 @@ Only caveat: `variant.ts#generate` returns `ModelV2Info["variants"]`; the schema
 | Symbol | n/m | Equivalent |
 |---|---|---|
 | OrchestraClient (TuiPluginApi.client) | 1/1 | ✗ no V1-route client in @orchestra/client |
-| createOrchestraClient (PluginInput.client) | 1/1 | ✗ same; apps/orchestra/src/plugin/index.ts:152 builds it for every V1 plugin |
+| createOrchestraClient (PluginInput.client) | 1/1 | ✗ same; removed-v1/src/plugin/index.ts:152 builds it for every V1 plugin |
 | Config | 2/2 | ✗ no config schema in schema/protocol |
 | LspStatus, McpStatus | 1/1 each | ✗ |
 | Event (V1 bus union) | 2/3 | ≈ partial: per-event definitions exist (`SessionV1.Event`, `LegacyEvent`), no union |
@@ -200,8 +200,8 @@ fallout in any code that mutates parts.
   `CatalogProviderRecord`, `CatalogDraft` (catalog.ts), `SkillDraft` (skill.ts). 16 exported types in 11 files.
 - **Change only when the TUI plugin API is redesigned (blocked):** `TuiPromptInfo`, `TuiState`, `TuiSidebarMcpItem`,
   `TuiSidebarLspItem`, `TuiSidebarTodoItem`, `TuiEventBus`, `TuiPluginApi` (src/tui.ts).
-- **Change only when V1 plugins are retired with apps/orchestra (blocked):** `ProviderContext`, `PluginInput`,
-  `Config`, `AuthHook`, `ProviderHookContext`, `ProviderHook`, `Hooks` (src/index.ts). Consumers: apps/orchestra
+- **Change only when V1 plugins are retired with removed-v1 (blocked):** `ProviderContext`, `PluginInput`,
+  `Config`, `AuthHook`, `ProviderHookContext`, `ProviderHook`, `Hooks` (src/index.ts). Consumers: removed-v1
   (20 files) and external V1 plugins; V2 core loads plugins only through `@orchestra/plugin/v2/*`
   (packages/core/src/plugin/sdk-runtime.ts maps `@orchestra/plugin` root to `./tool` only).
 - `@orchestra/plugin` has no `private` flag and no publish job in `.github/workflows`; it reaches plugin authors through
@@ -221,7 +221,7 @@ fallout in any code that mutates parts.
 | A8 | tests: app-shell 57 test files + 4 e2e, tui 8, desktop 1, storybook 1 move off direct legacy imports | test files only | M (2) | the package's src lot |
 | A9 | runtime cut: tui and app-shell legacy `OrchestraClient` → `@orchestra/client` per ported route group | per group, follows Track B lots B2–B6 | L (6–8) | Track B route ports |
 | A10 | plugin `src/tui.ts` TUI plugin API v2 (client = `@orchestra/client`) | plugin/src/tui.ts, tui plugin host | M (2) | A9, D-A4 |
-| A11 | final removal: delete V1 plugin API (`src/index.ts` hooks) with apps/orchestra, delete facades, deps, `app-shell/vendor/opencode-ai-client-1.17.13-v2.tgz`, `packages/sdk/js`, ledger rows, set `sdk/js` status removed in module-architecture.json | | S (1) | B9 |
+| A11 | final removal: delete V1 plugin API (`src/index.ts` hooks) with removed-v1, delete facades, deps, `app-shell/vendor/opencode-ai-client-1.17.13-v2.tgz`, `packages/sdk/js`, ledger rows, set `sdk/js` status removed in module-architecture.json | | S (1) | B9 |
 
 Order: **A1 ∥ A2 ∥ A3 ∥ A4 ∥ A7** (all independent, mechanical) → A5 → A6 → A8 → (Track B routes) → A9 → A10 → A11.
 After the first wave only app-shell, tui and the plugin V1/TUI API still touch the legacy packages.
@@ -231,11 +231,11 @@ First wave (A1–A4, A7) = 8 cards, no route dependency.
 
 ### A.5 What stays
 
-- `packages/sdk/js` stays (frozen) until apps/orchestra is deleted: it is generated from apps/orchestra's OpenAPI, the
+- `packages/sdk/js` stays (frozen) until removed-v1 is deleted: it is generated from removed-v1's OpenAPI, the
   legacy `orchestra generate` command prints `import { createOrchestraClient } from "@orchestra/sdk"` snippets, and
-  every V1 plugin receives a live `createOrchestraClient` instance (`apps/orchestra/src/plugin/index.ts:152`).
-- apps/orchestra's own 30 src + 21 test files that import `@orchestra/sdk` directly stay as they are; they die with
-  apps/orchestra (Track B), not through facades.
+  every V1 plugin receives a live `createOrchestraClient` instance (`removed-v1/src/plugin/index.ts:152`).
+- removed-v1's own 30 src + 21 test files that import `@orchestra/sdk` directly stay as they are; they die with
+  removed-v1 (Track B), not through facades.
 - `@orchestra/client` (private, generated) is the successor for in-repo consumers; `packages/sdk-next` stays as the
   embedded composition. No public SDK package exists after A11 unless D-A5 says otherwise.
 
@@ -258,7 +258,7 @@ First wave (A1–A4, A7) = 8 cards, no route dependency.
   type-only and typecheck-gated, no runtime change.
 - **The ServerApi rewrite (A5)** touches the protocol-switch proxy (`lazyApi`) that guards Stop/cancel; regressions are
   runtime, not type errors. Gate with the existing `server-compat`/`server-session` tests via `test:ci`.
-- **Coupling with Track B**: A9–A11 cannot finish while apps/orchestra serves V1 routes.
+- **Coupling with Track B**: A9–A11 cannot finish while removed-v1 serves V1 routes.
 
 ---
 ## Track B — one server, one CLI
@@ -266,20 +266,20 @@ First wave (A1–A4, A7) = 8 cards, no route dependency.
 ### B.0 Findings that shape the whole track
 
 1. **Released users already have only the V2 CLI.** `.github/workflows/release-cli.yml` builds and publishes only
-   `apps/cli` (npm `@hugr/cli`, Homebrew tap, AUR `orchestra-bin`, install.sh). `apps/orchestra` is `"private": true`
+   `apps/cli` (npm `@hugr/cli`, Homebrew tap, AUR `orchestra-bin`, install.sh). `removed-v1` is `"private": true`
    and has no publish path; its `orchestra` bin is reached only through the root `dev` script
-   (`bun run --cwd apps/orchestra src/index.ts`) and as the desktop's in-process sidecar bundle
-   (`apps/desktop/electron.vite.config.ts:74` → `virtual:orchestra-server` = `apps/orchestra/dist/node`).
+   (`bun run --cwd removed-v1 src/index.ts`) and as the desktop's in-process sidecar bundle
+   (`apps/desktop/electron.vite.config.ts:74` → `virtual:orchestra-server` = `removed-v1/dist/node`).
    "Two bins" is a developer and desktop problem, not a distribution conflict.
 2. **The V2 path is already live for WSL.** `apps/desktop/src/main/wsl/sidecar.ts` runs the apps/cli binary
    (`orchestra service password`, `orchestra serve --hostname 0.0.0.0 --port N`) inside the distro, so app-shell
    already talks to a pure V2 server there, in "v2" protocol mode. The gaps listed below are real for those users
    today.
-3. **The legacy server is more than legacy routes: it hosts the product.** apps/orchestra composes the canonical `/api`
+3. **The legacy server is more than legacy routes: it hosts the product.** removed-v1 composes the canonical `/api`
    handlers with host overrides that the standalone V2 server lacks
-   (`apps/orchestra/src/server/routes/instance/httpapi/server.ts:187-193`: `HostCatalog` + `ClaudeCodeSDK`,
+   (`removed-v1/src/server/routes/instance/httpapi/server.ts:187-193`: `HostCatalog` + `ClaudeCodeSDK`,
    `HostAgentExecution`, `PluginPtyEnvironment`, plus `ArsenalBindings` at :282/:288). Maestro (11.4k lines),
-   claude-code host (6.1k), continuity (3.9k), janitor, app-dock and linux-workspace live in apps/orchestra.
+   claude-code host (6.1k), continuity (3.9k), janitor, app-dock and linux-workspace live in removed-v1.
    `script/boundary-ledger.json` has 98 R11 rows for these (maestro 62, continuity 10, claude-code 5, …), all marked
    "resolved by the 70-C' cut". **A pure `apps/cli serve` has no Maestro-on-Claude-Code, no Arsenal, no Dock/Linux
    workspace.** The 70-C' cut is the real prerequisite of a sidecar flip.
@@ -287,9 +287,9 @@ First wave (A1–A4, A7) = 8 cards, no route dependency.
    `handleDockRPC`, `apps/desktop/src/main/index.ts:456-458`). The V2 daemon is detached and has no such channel.
 5. **Persistence is already shared.** One DB module (`packages/core/src/database/database.ts:42-53`):
    `ORCHESTRA_DB` or `Global.Path.data/orchestra.db`, one migration set (45 in `packages/core/src/database/migration`),
-   used by apps/orchestra, packages/server, sdk-next and apps/cli. The flip does not move the DB file.
+   used by removed-v1, packages/server, sdk-next and apps/cli. The flip does not move the DB file.
 
-### B.1 Legacy-only HTTP route groups (apps/orchestra: 138 endpoints in 20 groups; canonical /api: 146 in 33)
+### B.1 Legacy-only HTTP route groups (removed-v1: 138 endpoints in 20 groups; canonical /api: 146 in 33)
 
 | Legacy prefix | Endpoints | In /api? | Missing in V2 | Effort | Main caller |
 |---|---|---|---|---|---|
@@ -314,7 +314,7 @@ First wave (A1–A4, A7) = 8 cards, no route dependency.
 
 Plus app-shell's vendored client types 43 `/api/*` paths that no server serves (A.0.1); in "v2" mode those 404 today.
 
-### B.2 Legacy-only CLI commands (23 registered in `apps/orchestra/src/index.ts`; apps/cli has 5 top-level commands + default)
+### B.2 Legacy-only CLI commands (23 registered in `removed-v1/src/index.ts`; apps/cli has 5 top-level commands + default)
 
 | Legacy | V2 status | Effort | Recommendation |
 |---|---|---|---|
@@ -380,12 +380,12 @@ Totals: 0 exact, 4 partial, 19 missing; 8 S, 12 M, 3 L.
 | Area | Effect of the flip / removal | Migration |
 |---|---|---|
 | DB `orchestra.db` | none: same file, same 45 migrations | none |
-| Legacy JSON storage `Global.Path.data/storage` (`apps/orchestra/src/storage/storage.ts:224`, own migration marker; `session/revert.ts` writes `session_diff` there) | V2 never runs these storage migrations or reads `session_diff` | move the storage migrations into `apps/cli migrate` (today a placeholder that prints "No migrations to run.") and run it on daemon start |
+| Legacy JSON storage `Global.Path.data/storage` (`removed-v1/src/storage/storage.ts:224`, own migration marker; `session/revert.ts` writes `session_diff` there) | V2 never runs these storage migrations or reads `session_diff` | move the storage migrations into `apps/cli migrate` (today a placeholder that prints "No migrations to run.") and run it on daemon start |
 | State dir | desktop v1 sets `XDG_STATE_HOME` to Electron userData; the daemon uses the default XDG state home (`server.json`, `password`, and any state files) | copy or point: pass the userData state home to `service start`, or one-time copy |
 | V1 session history | V2 reads `session_message`; migration `20260622170816_reset_v2_session_state` emptied it, and V1-era history lives in `message`/`part` (the projector dual-writes new data) | verify old sessions render under V2; backfill card if not |
 | V1 plugins (`@orchestra/plugin` root `Hooks`, `PluginInput.client`) | stop loading (V2 core loads only `@orchestra/plugin/v2/*`) | announce; plugin authors move to the v2 API |
 | TUI plugins (`TuiPluginApi.client`) | break when the TUI drops the legacy client | A10 |
-| Dev workflow | root `dev` script and `orchestra` in a checkout point at apps/orchestra | repoint to apps/cli at removal |
+| Dev workflow | root `dev` script and `orchestra` in a checkout point at removed-v1 | repoint to apps/cli at removal |
 | Desktop features | Maestro on Claude Code, Arsenal, Dock, Linux workspace, janitor, continuity are absent on a pure V2 server | 70-C' cut first |
 | Settings pages | `/config`, `/global/config` absent on V2 | route lot B4 |
 
@@ -397,7 +397,7 @@ CORS and the Dock RPC. Porting CLI commands first does not unblock the desktop a
 
 | Step | Content | Cards |
 |---|---|---|
-| B1 | 70-C' cut: move maestro / claude-code host / continuity / janitor / app-dock / linux-workspace layers out of apps/orchestra so `apps/cli serve` composes the same host overrides (`HostCatalog`, `HostAgentExecution`, `PluginPtyEnvironment`, `ArsenalBindings`). Clears the 98 R11 rows. Already planned in the monolith campaign. | 10 |
+| B1 | 70-C' cut: move maestro / claude-code host / continuity / janitor / app-dock / linux-workspace layers out of removed-v1 so `apps/cli serve` composes the same host overrides (`HostCatalog`, `HostAgentExecution`, `PluginPtyEnvironment`, `ArsenalBindings`). Clears the 98 R11 rows. Already planned in the monolith campaign. | 10 |
 | B2 | Renderer-critical routes into protocol + server, then regenerate `@orchestra/client`: session gaps (L 4), session processes (1), vcs/path/lsp/formatter/dispose (2), project incl. lean (2), file find/status (2), pty shells (1) | 12 |
 | B3 | MCP group (3), provider auth onto `/api/integration` (2), config + global config/event/dispose (4), experimental worktree subset (2) | 11 |
 | B4 | Desktop V2 readiness: CORS layer (1), per-launch env/state through `service start` options (2), Dock/Linux RPC over a local channel (3), `kill-sidecar` semantics (1), V2 `/api/health` reports ready for protocol detection (1) | 8 |
@@ -405,7 +405,7 @@ CORS and the Dock RPC. Porting CLI commands first does not unblock the desktop a
 | B6 | **Flip:** default `ORCHESTRA_SIDECAR_V2=1` in index.ts and candidate-profile; keep the v1 bundle and a setting to fall back for one release; dogfood gate (owner validation in the real app) | 1 |
 | B7 | CLI ports into apps/cli (kept set from B.2: TUI flags 2, attach 1, run 4, serve flags 1, mcp 2, generate 1, debug 2, providers 2, agent create 2, upgrade 2, uninstall 2, models 1, stats 2, export 2, import 2, pr 1, session 1, plugin 2, db 1, toolkit 1) and the TUI's remaining routes (workspace 2, tui group or drop 2, sync 2, rest of experimental 2, generate-name 1, move-session 1) | 34 + 10 |
 | B8 | Remove the fallback after one release with no fallback use | 1 |
-| B9 | Delete apps/orchestra, repoint root `dev`, desktop `predev`/`prebuild` and `env.d.ts` (closes the R1/R3 rows), then Track A's A11 | 2 |
+| B9 | Delete removed-v1, repoint root `dev`, desktop `predev`/`prebuild` and `env.d.ts` (closes the R1/R3 rows), then Track A's A11 | 2 |
 
 **Effort Track B: ~92 cards** (B1 10, B2 12, B3 11, B4 8, B5 3, B6 1, B7 44, B8 1, B9 2). The desktop flip
 (B1–B6) is ~45 cards. B7 shrinks by 8–10 if D-B4 drops `acp`, `web`, `console`.
@@ -418,7 +418,7 @@ CORS and the Dock RPC. Porting CLI commands first does not unblock the desktop a
 | D-B2 | Flip style | Default-on flag with a user-visible fallback setting for one release, then delete |
 | D-B3 | Desktop server model on V2: shared detached daemon (CLI and desktop share one server) or a desktop-owned `serve` child | Desktop-owned child (`orchestra serve` with per-launch password, env, CORS, RPC); the shared daemon stays for the terminal. Removes gaps B.3-2 and B.3-5 |
 | D-B4 | Legacy commands to drop | Drop `console` (hidden) and `/tui/*` routes; keep `acp` only if an editor integration is planned; `web` only if the web UI ships separately |
-| D-B5 | V1 plugin API (`Hooks`, `PluginInput.client`) | Retire with apps/orchestra; no shim |
+| D-B5 | V1 plugin API (`Hooks`, `PluginInput.client`) | Retire with removed-v1; no shim |
 | D-B6 | TUI under V2 keeps faking `/config`, `/provider`, `/agent` until B3 | Yes, remove the fake in the B3 card that adds the routes |
 
 ### B.7 Risks (Track B)

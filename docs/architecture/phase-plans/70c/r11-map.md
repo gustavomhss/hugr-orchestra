@@ -1,4 +1,4 @@
-| # | importer (apps/orchestra/src/…) | specifier | closes by |
+| # | importer (removed-v1/src/…) | specifier | closes by |
 |---|---|---|---|
 | 1 | agent/agent.ts | `@/maestro/roster` | C4 |
 | 2 | agent/agent.ts | `@/maestro/seat-skill-root` | C4 |

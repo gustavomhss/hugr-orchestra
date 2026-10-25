@@ -60,8 +60,8 @@ const changed = files.flatMap((file) => {
 console.log(`compat-facade: ${changed.length} files ${args.includes("--write") ? "changed" : "would change"}`)
 if (args.includes("--check") && changed.length > 0) process.exit(1)
 
-// Always relative: other packages compile some of these files with their own `@/` alias (apps/orchestra includes
-// app-shell sources), so a workspace alias would resolve into the wrong package there.
+// Always relative: other packages compile some of these files with their own `@/` alias, so a workspace alias
+// would resolve into the wrong package there.
 function replacement(file: string, facade: string) {
   const relative = path.posix.relative(path.posix.dirname(file), facade)
   return `${relative.startsWith(".") ? relative : `./${relative}`}${nodeNext ? ".js" : ""}`

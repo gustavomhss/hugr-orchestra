@@ -89,8 +89,8 @@ Worker Step 0 in assigned worktree: `git rev-parse HEAD`, `git status --short` a
 `git merge-base --is-ancestor <assigned-baseline-sha> HEAD`, with the SHA resolved before dispatch.
 Initial HEAD equals assigned baseline unless a delta was explicitly assigned; verify complete
 baseline-to-working-tree diff on return. Nonzero Git exit is failure, not empty clean output.
-Tests here run on Actions via `bun run test:ci orchestra <resolved-suite>` from repository root;
-typecheck is `bun typecheck` in `packages/orchestra`, never local `bun test`.
+Tests here run on Actions via `bun run test:ci <package> <resolved-suite>` from repository root;
+typecheck is `bun typecheck` in the package directory, never local `bun test`.
 
 ## Success / fail
 

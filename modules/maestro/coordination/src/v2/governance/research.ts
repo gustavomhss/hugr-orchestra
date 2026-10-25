@@ -15,8 +15,7 @@ import { SessionInputTable } from "@orchestra/core/session/sql"
 import { Research } from "@orchestra/schema/research"
 import { LogicalTaskV2 } from "./logical-task"
 
-// V2 port of V1's research dispatch allowance (`apps/orchestra/src/research/allowance.ts`). V1 carried the allowance and
-// the web domain list in fiber context around the child run; V2 runs the child on the process-wide Session executor,
+// The research dispatch allowance. The allowance and the web domain list cannot ride in fiber context here: V2 runs the child on the process-wide Session executor,
 // so the dispatch is stored as reserved rules in the child Session's permission ruleset (as write roots are): durable,
 // rebound by every Task dispatch, and matched by no tool permission. Only the host writes these rules. The allowance
 // ledger itself is core's `ResearchAllowance`, keyed by the child Session and the dispatching Task call.

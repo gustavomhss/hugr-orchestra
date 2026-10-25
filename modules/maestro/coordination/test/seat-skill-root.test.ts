@@ -3,7 +3,7 @@ import fs from "node:fs/promises"
 import path from "node:path"
 import { SeatSkillRoot } from "@orchestra/maestro/seat-skill-root"
 import { backendSkills } from "@orchestra/maestro/roster"
-import { tmpdir } from "../../../../packages/core/test/fixture/tmpdir"
+import { tmpdir } from "./fixture/tmpdir"
 
 const SOURCE = path.resolve(import.meta.dir, "../../../../modules/specialists/backend/skills")
 

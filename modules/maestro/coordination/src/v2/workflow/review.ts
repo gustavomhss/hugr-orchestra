@@ -14,7 +14,7 @@ import type { GitCli } from "@orchestra/core/git-cli"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { GovernanceRecordsV2 } from "../governance/records"
 
-// V2 port of V1's code-review gate (`apps/orchestra/src/maestro/code-review.ts`): the workers' uncommitted result as a
+// The code-review gate: the workers' uncommitted result as a
 // Git tree, the approved writePaths that bound it, the check of Lucy's echoed code-stage artifact against it, and the
 // code-stage receipt the workflow host's cold review reads for that tree.
 

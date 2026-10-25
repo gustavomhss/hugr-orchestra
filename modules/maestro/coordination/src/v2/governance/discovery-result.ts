@@ -12,7 +12,7 @@ import { InquiryCheck } from "../tools/inquiry-check"
 import { MaestroResearchTools } from "../tools/research"
 import type { WorkResultV2 } from "./work-result"
 
-// V1 `apps/orchestra/src/maestro/discovery-result.ts` on V2: the research seat's `discovery-work-result-v1` comes from
+// The research seat's `discovery-work-result-v1` comes from
 // the dispatch's closed inquiry card the host stored in the ledger, never from the worker's text.
 
 // Qualifications travel for at most this many claims; the summary counts the rest as omitted.

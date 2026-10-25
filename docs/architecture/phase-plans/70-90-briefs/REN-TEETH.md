@@ -55,7 +55,7 @@ for old, new in edits:
 end = s.rstrip().rfind("})")
 s = s[:end] + '''
   test("recorded HTTP cassettes stay covered by a kept path", () => {
-    expect(keptPaths.find((entry) => entry.path.test("apps/orchestra/test/fixtures/recordings/session/native-zen-tool-loop.json"))).toBeDefined()
+    expect(keptPaths.find((entry) => entry.path.test("removed-v1/test/fixtures/recordings/session/native-zen-tool-loop.json"))).toBeDefined()
   })
 ''' + s[end:]
 p.write_text(s)

@@ -17,7 +17,7 @@ import type { GovernanceInputV2 } from "./input"
 import { GovernanceRecordsV2 } from "./records"
 import { WriteRootsV2 } from "./write-roots"
 
-// V2 port of V1's governed Task reservation (`apps/orchestra/src/maestro/governed-task-reservation.ts`). One approved
+// The governed Task reservation. One approved
 // presentation reserves exactly one child Session, write-once, with the permission snapshot it runs under, and is
 // consumed once before that child's first provider turn. Records and refusals are V1's, so V1 reservations replay here.
 

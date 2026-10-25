@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { spawn } from "node:child_process"
 import { query } from "@anthropic-ai/claude-agent-sdk"
 import { ClaudeCodeSDK } from "@orchestra/engine-claude-code/sdk"
-import { tmpdir } from "../../../../packages/core/test/fixture/tmpdir"
+import { tmpdir } from "./fixture/tmpdir"
 
 // Spawn-environment audit (meta-harness PLAN.md §3, V2-V4): Claude Code gets the owner's environment as it is.
 // Orchestra sets no login token, scope, plan, tier or host-managed provider variable, and strips nothing the owner set,

@@ -68,7 +68,7 @@ export const render = Effect.fn("MaestroAtlasHeaderV2.render")(function* (
   )
 })
 
-/** V1's header text (`apps/orchestra/src/maestro/atlas-header.ts`), byte for byte. */
+/** The Atlas header text, byte for byte as earlier sessions recorded it. */
 export function format(bound: BoundHeader, member: MaestroAtlasSourceV2.Owner) {
   if (!bound.header) return degraded(member, "the project rules store could not be read")
   const facets = Object.entries(bound.header.awareness).map(([name, facet]) =>

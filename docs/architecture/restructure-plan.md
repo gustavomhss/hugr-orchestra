@@ -311,11 +311,11 @@ Pré-condição de 50-C: readers Own, materializer e projeção EARS de CI resol
 | WP | Entrega | Saída verificável |
 | --- | --- | --- |
 | 60-A | Fronteira app-shell/web no caminho atual, depois `apps/web` | Desktop importa mesma facade; UI/state/assets/workers/Vite/Tailwind e stories equivalentes |
-| 60-B | CLI viva e composição legada em `apps/cli`/`apps/orchestra` | Todos os comandos, daemon, V1/V2 boot e entrypoints continuam suportados |
+| 60-B | CLI viva e composição legada em `apps/cli`/`removed-v1` | Todos os comandos, daemon, V1/V2 boot e entrypoints continuam suportados |
 | 60-C | Desktop/Storybook em `apps` | Dev/build/resources/asar/signing/titlebar/preload/renderer corretos |
 | 60-D | Tooling/Nix/scripts nos destinos finais, mantendo wrappers necessários | Todos os comandos documentados, workflows e artefatos continuam executáveis |
 
-Não declarar `apps/orchestra` aposentado porque `apps/cli` existe. O inventário de capacidades decide a convergência posterior. Primeiro separar runtime reutilizável das entradas; depois relocar.
+Não declarar `removed-v1` aposentado porque `apps/cli` existe. O inventário de capacidades decide a convergência posterior. Primeiro separar runtime reutilizável das entradas; depois relocar.
 
 Este marco pode relocar o entrypoint com facades provisórias. A declaração de **apps finos** só fecha depois de 70-G: o mapa atribui todos os domínios legados a owners finais, ou justifica o código que realmente é bootstrap/wiring/distribuição.
 
@@ -331,7 +331,7 @@ Este marco pode relocar o entrypoint com facades provisórias. A declaração de
 | 70-D | Maestro/Continuity e receitas/assets toolkit em módulos coesos | Seats/IDs/prompts/Atlas memory/Task/resume e aquisição Core preservados |
 | 70-E | App Dock com contracts + adapters Electron/Linux/native | Mesmos IPC/tools/permissions/profile fences/lifetimes e processos encerrados |
 | 70-F | Facades/exports explícitos e revisão de dependências | Superfície pública inventariada permanece compatível; runtime/type/dev separados |
-| 70-G | Disposição de todos os domínios legados de Orchestra | Tabela fonte → dono/path/README/facade/WP reconciliada; `apps/orchestra` contém somente entrada/composição/distribuição |
+| 70-G | Disposição de todos os domínios legados de Orchestra | Tabela fonte → dono/path/README/facade/WP reconciliada; `removed-v1` contém somente entrada/composição/distribuição |
 
 Cada extração começa como isolamento interno e ganha package boundary só quando necessário. Retargets de imports não podem duplicar tags de serviços, context singletons, MemoMap, caches, WeakMap de capabilities ou executors.
 
@@ -339,7 +339,7 @@ Cada extração começa como isolamento interno e ganha package boundary só qua
 
 - Core possui os contratos, IDs, serviços de storage/history, framework Agent e ports de lifecycle/engine/continuity. Extrair interfaces/tags existentes como canonical definitions e reexportá-las nos paths legados; preservar classes/tags/scope, sem recriar contratos paralelos.
 - `modules/continuity` e `modules/engine-adapters/claude-code` implementam os ports e dependem de Core/contracts; não fazem Core importar implementações de produto de volta. Providers/LLM/history/helpers compartilhados ficam no owner de plataforma, não no módulo de orquestração que os chama.
-- A implementação legada `SessionPrompt` que coordena Continuity/Claude/Atlas/Task fica em `modules/session-engine`, consumindo os mesmos contratos. O store/session model e adapters Instance-scoped permanecem Core-owned. `apps/orchestra` injeta/wire as implementações; wrappers legados preservam a API existente.
+- A implementação legada `SessionPrompt` que coordena Continuity/Claude/Atlas/Task fica em `modules/session-engine`, consumindo os mesmos contratos. O store/session model e adapters Instance-scoped permanecem Core-owned. `removed-v1` injeta/wire as implementações; wrappers legados preservam a API existente.
 - Framework Agent genérico e `generate.txt` ficam no owner Agent; roster/presets/native seats/skill roots/publish policy são contribuições de produto injetadas da composição. Preservar aliases, defaults, labels, subagent permissions e ordem do merge de configuração.
 - Congelar signatures, tags, error/return shapes e defaults antes de alterar providers/wiring. Provar ausência de `Core → Continuity/Claude/Maestro → Core` e de ciclos entre módulos, identidade de serviços, admission/cancel/resume/compaction/tool order e paused guard.
 - Esse corte é hard dependency de 70-D e dos movimentos Session/Agent/engine de 70-G. O runner V2 continua independente; não passa a chamar `SessionPrompt.loop` nem um tool loop em memória.
@@ -868,4 +868,4 @@ A campanha voltou para o Claude Code em 17 de outubro. A cópia não commitada d
   - O conteúdo está retido em `HuGR/orchestra-recovery`; a restauração de evidence e screenshots conferiu 100 de 100 blobs.
   - `docs/archives` indexa os dois bundles.
 
-Próximos marcos: evidência e pesquisa restantes (`specs/backend-specialist`, `apps/orchestra/specs/benchmark-evidence`) com retenção antes da remoção; documentação viva de `specs/` para `docs/`; depois 70–80 (modularidade interna).
+Próximos marcos: evidência e pesquisa restantes (`specs/backend-specialist`, `removed-v1/specs/benchmark-evidence`) com retenção antes da remoção; documentação viva de `specs/` para `docs/`; depois 70–80 (modularidade interna).

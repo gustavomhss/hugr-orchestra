@@ -1,6 +1,6 @@
 export * as InquiryCheck from "./inquiry-check"
 
-// V1 `apps/orchestra/src/research/inquiry-check.ts`, unchanged: the inquiry close check R1-R11 is pure over its inputs.
+// The inquiry close check R1-R11 is pure over its inputs.
 
 import path from "node:path"
 import { Effect } from "effect"

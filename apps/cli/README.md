@@ -1,8 +1,7 @@
 # `@orchestra/cli`
 
 `@orchestra/cli` is the executable and composition package for the Orchestra 2.0
-preview. It is live V2 code and coexists with the legacy `apps/orchestra`
-executable and product composition.
+preview.
 
 ## Entry points
 
@@ -46,9 +45,6 @@ files. The password is retained across server restarts.
 Desktop runs the compiled CLI as its server: by default as its own `orchestra serve`
 child, or, with `ORCHESTRA_SIDECAR_V2=1`, as the shared background service, whose
 artifact, status, start and password its main process manages through CLI commands.
-`ORCHESTRA_SIDECAR_V2=legacy` keeps the V1 sidecar for one release (see
-`apps/desktop/README.md`); the legacy executable's commands and compatibility
-remain owned by `apps/orchestra`.
 
 ## Development and packaging
 

@@ -73,8 +73,8 @@ never guess field names. An unavailable tool is UNKNOWN; ordinary tools may gath
 but cannot claim the missing operation ran. Host owns placement, permissions and state directory.
 
 Pin baseline with `git rev-parse HEAD` and `git status --short` in the actual worktree. In this repository,
-tests run on Actions via `bun run test:ci orchestra <resolved-suite>` from repository root; typecheck is
-`bun typecheck` in `packages/orchestra`. Record command, cwd, exit, evidence, baseline and skipped/missing
+tests run on Actions via `bun run test:ci <package> <resolved-suite>` from repository root; typecheck is
+`bun typecheck` in the package directory. Record command, cwd, exit, evidence, baseline and skipped/missing
 configurations. Use actual check results, not proposed oracles or an upstream `done` claim.
 
 ## Success / fail

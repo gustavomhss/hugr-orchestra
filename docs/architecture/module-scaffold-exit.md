@@ -14,7 +14,7 @@ The milestone closes when all of these hold:
   - 12 rows in 6 core V2 files (`session.ts`, `session/projector.ts`, `session/sql.ts`, `config.ts`,
     `config/plugin/agent.ts` and the Zen provider plugin) that import `packages/core/src/v1`; they close only when
     the V2 core stops reading v1 modules, which is 70-C' or later work, not a compat-facade card;
-  - `apps/desktop/src/main/env.d.ts` → `apps/orchestra` built types (legacy package reached by relative path).
+  - `apps/desktop/src/main/env.d.ts` → `removed-v1` built types (legacy package reached by relative path).
 - R1 has exactly 2 rows: the core compat facade `packages/core/src/compat/sdk-v2-types.ts` and the same
   `apps/desktop/src/main/env.d.ts` edge (the `app` layer does not list `app`).
 - The ledger shrinks from 735 to 487 entries: R1 2, R3 14, R4 8, R5 218, R6b 2, R7 145, R11 98.

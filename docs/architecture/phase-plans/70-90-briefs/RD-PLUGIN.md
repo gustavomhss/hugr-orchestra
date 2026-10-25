@@ -50,7 +50,7 @@ cat > 'packages/core/src/plugin/README.md' <<'README_EOF'
 
 ## Public entry points and consumers
 
-- Consumers: core, apps/orchestra, and plugin authors through `@orchestra/plugin`.
+- Consumers: core, removed-v1, and plugin authors through `@orchestra/plugin`.
 
 ## Dependencies and boundaries
 

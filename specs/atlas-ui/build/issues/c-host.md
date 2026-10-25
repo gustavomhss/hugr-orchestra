@@ -21,7 +21,7 @@ brief is written with the fix already in it.
 
 ## 2. The structured reply is assumed to arrive as text-delta JSON (C04a)
 
-- No production code calls `LLM.stream` with `responseSchema` today. `git grep responseSchema apps/orchestra/src`
+- No production code calls `LLM.stream` with `responseSchema` today. `git grep responseSchema removed-v1/src`
   finds only `session/llm*` and continuity bookkeeping.
 - On the AI SDK path, `llm.ts:387` sets `output: Output.object({ schema })`. The provider then streams the JSON object as
   text, and it reaches the stream as `LLMEvent` text deltas. The native runtime takes a response schema only for

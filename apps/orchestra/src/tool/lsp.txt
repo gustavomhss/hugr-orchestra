@@ -1,6 +1,0 @@
-Ask a file's language server about its code: definitions, references, hover text, symbols, implementations and calls.
-
-- `filePath`, `line` and `character` locate a symbol; line and character are 1-based, as editors show them. Every operation needs all three, even one that ignores the position.
-- `goToDefinition`, `findReferences`, `hover` and `goToImplementation` act on the symbol at the position. `prepareCallHierarchy`, `incomingCalls` and `outgoingCalls` act on the function or method there.
-- `documentSymbol` lists the symbols in `filePath`. `workspaceSymbol` searches the whole project for `query`, where an empty query lists every symbol; it uses `filePath` only to choose the language server.
-- Results come back as JSON. The call fails when no language server handles the file's type.

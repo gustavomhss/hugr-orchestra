@@ -8,7 +8,7 @@ import type { Seat } from "../../seats/seat"
 import { MaestroAtlasMemoryTools } from "../tools/atlas-memory"
 import { WriteRootsV2 } from "./write-roots"
 
-// V2 port of V1's SeatWork projection (`apps/orchestra/src/maestro/backend-work.ts` with `backend-result.ts`) for a
+// The SeatWork projection for a
 // foreground reply core Task already found completed. Not ported: worker evidence and owned-tool outcomes, whose V2
 // host records (BackendEvidence binding, HuGR outcome metadata) do not exist yet.
 

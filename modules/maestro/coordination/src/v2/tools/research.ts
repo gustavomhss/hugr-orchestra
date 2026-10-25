@@ -34,8 +34,8 @@ import type { MaestroToolGate } from "./gate"
 import { ResearchInquiry } from "./inquiry"
 import type { InquiryCheck } from "./inquiry-check"
 
-// V1's research seat tools (`apps/orchestra/src/tool/research-*.ts`) on V2. Each call is the research seat's own, under
-// its dispatch allowance and its retained logical-task binding (V1's `ResearchTools.run`); the runner's invocation frame
+// The research seat tools. Each call is the research seat's own, under
+// its dispatch allowance and its retained logical-task binding; the runner's invocation frame
 // is what core `ResearchRecords` checks before it writes. `v2/seats.ts` hides these tools from every other agent.
 
 export const names = {
@@ -423,7 +423,7 @@ export function tools(services: Services) {
           return yield* inquire(services, research, input, context).pipe(Effect.catch(denied))
         }),
     }),
-    // V1 `apps/orchestra/src/tool/code-search.ts`: the host builds the ripgrep argv and the seat supplies only values.
+    // The host builds the ripgrep argv and the seat supplies only values.
     // Each line carries the index symbol enclosing it when an index serves the worktree.
     [names.search]: Tool.make({
       description: searchDescription,
@@ -468,7 +468,7 @@ export function tools(services: Services) {
           }
         }),
     }),
-    // V1 `apps/orchestra/src/tool/code-query.ts`: the index fails `index_unavailable` rather than answering empty.
+    // The index fails `index_unavailable` rather than answering empty.
     [names.query]: Tool.make({
       description: queryDescription,
       input: CodeIndex.CodeQuery,
@@ -514,7 +514,7 @@ export function tools(services: Services) {
           }
         }),
     }),
-    // V1 `apps/orchestra/src/tool/probe-run.ts`: one closed runner in a fresh jailed snapshot (core ProbeRun, through
+    // One closed runner in a fresh jailed snapshot (core ProbeRun, through
     // AppProcess), charged in probe seconds, retained as citable structured JSON even when it fails, and with a
     // hypothesis recorded against it.
     [names.probe]: Tool.make({
@@ -641,7 +641,7 @@ export function tools(services: Services) {
           }
         }),
     }),
-    // V1 `apps/orchestra/src/tool/code-locate.ts`: one deterministic fan-out over ripgrep and the index whose ranges are
+    // One deterministic fan-out over ripgrep and the index whose ranges are
     // retained as one snapshot the seat cites without a second read.
     [names.locate]: Tool.make({
       description: locateDescription,
@@ -870,7 +870,7 @@ function scoped(worktree: string, input: CodeIndex.CodeQuery) {
 }
 
 /**
- * The seat's investigation (V1 `apps/orchestra/src/tool/inquiry.ts`, J5.4): every action writes the existing records or
+ * The seat's investigation (J5.4): every action writes the existing records or
  * an inquiry event, then answers with the compact state, so the model keeps ids instead of rereading.
  */
 const inquire = Effect.fn("MaestroResearchTools.inquire")(function* (

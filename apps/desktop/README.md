@@ -20,7 +20,7 @@ bun dev
 ```
 
 The `predev` lifecycle installs Electron, copies channel-specific icons, builds
-the legacy Orchestra Node bundle, stages Omni, and builds/stages the V2 CLI
+stages Omni, and builds/stages the V2 CLI
 resources. Then `dev` starts Electron Vite. Icons use `ORCHESTRA_CHANNEL` or
 `dev`; `predev` always uses Omni's `dev` staging policy. Bundle channel/version
 stamping follows the build helpers rather than one shared preparation default.

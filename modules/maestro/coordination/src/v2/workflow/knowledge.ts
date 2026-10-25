@@ -9,7 +9,7 @@ import { MaestroAtlasSourceV2 } from "../atlas-source"
 import type { MaestroSeats } from "../seats-service"
 import { MaestroAtlasToolV2 } from "../tools/atlas"
 
-// V2 port of V1's `AtlasKnowledge.resolve` (`apps/orchestra/src/maestro/atlas-knowledge.ts`): a workflow publication
+// `AtlasKnowledge.resolve`: a workflow publication
 // cites an anchor reference, and the host accepts it only when native Archie produced it through one completed
 // `atlas_context` call in the author Session and the same units still load unchanged from the Atlas source. V2 keeps one
 // message projection, so V1's legacy/modern projection cross-checks have nothing to compare here.

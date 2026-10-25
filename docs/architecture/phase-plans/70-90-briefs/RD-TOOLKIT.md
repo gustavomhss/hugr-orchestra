@@ -49,7 +49,7 @@ cat > 'packages/core/src/backend-toolkit/README.md' <<'README_EOF'
 
 ## Public entry points and consumers
 
-- Consumers include `apps/orchestra/src/cli/cmd/toolkit.ts` and `apps/orchestra/src/maestro/atlas-memory.ts`.
+- Consumers include `removed-v1/src/cli/cmd/toolkit.ts` and `removed-v1/src/maestro/atlas-memory.ts`.
 
 ## Dependencies and boundaries
 

@@ -236,7 +236,7 @@ dispatch, R7 republish, R8 replace and R9 repair stay as `New capability` marker
   decide, answer, memory-decide, territory}`, plus `POST /atlas/delegate` (D33). Same middleware, handler and
   `AtlasSurface` pattern as `promote`. The SDK is regenerated (lead step).
 - **D33 Delegation (R11).** `POST /atlas/delegate { questionIds: string[]; providerID; modelID }` lives in the host only
-  (`apps/orchestra/src/server/atlas-delegate.ts`, beside the surface service in `server/atlas-surface.ts`: the server domain may not import the maestro product domain). For each id in the current `review().interview.batch` it makes one
+  (`removed-v1/src/server/atlas-delegate.ts`, beside the surface service in `server/atlas-surface.ts`: the server domain may not import the maestro product domain). For each id in the current `review().interview.batch` it makes one
   `LLM.stream` call (the `project-copy.ts` one-shot pattern) with a `responseSchema` of `{ answer: string; why: string }`,
   then writes `surface.answer({ questionId, answer, drafted: { model: "<providerID>/<modelID>", why } })`. It answers
   `{ state: "ok"; drafted: { questionId; ok: boolean; rejected?: string }[] }`. A draft never ratifies: a person accepts it

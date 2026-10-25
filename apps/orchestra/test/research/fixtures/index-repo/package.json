@@ -1,5 +1,0 @@
-{
-  "name": "index-fixture",
-  "private": true,
-  "workspaces": ["packages/*"]
-}

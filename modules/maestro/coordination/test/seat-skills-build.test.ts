@@ -5,7 +5,7 @@ import { seatSkillsFiles, seatSkillsModule } from "@orchestra/maestro/seat-skill
 import { SeatSkillContent } from "@orchestra/maestro/seat-skill-content"
 import { Seats } from "@orchestra/maestro/seats"
 import { PlaybookContent } from "@orchestra/maestro/playbook-content"
-import { tmpdir } from "../../../../packages/core/test/fixture/tmpdir"
+import { tmpdir } from "./fixture/tmpdir"
 
 const entry = "cold-review/SKILL.md"
 const valid = "---\nname: cold-review\ndescription: Review: implementation\n---\nReview body.\n"

@@ -11,7 +11,7 @@ import { SessionAuthority } from "../../session-authority"
 import { UpstreamResult } from "../../upstream-result"
 import { LogicalTaskV2 } from "../governance/logical-task"
 
-// V2 port of V1's upstream provenance (`apps/orchestra/src/maestro/upstream-provenance.ts`): an upstream plan revision
+// Upstream provenance: an upstream plan revision
 // names the archie Task that authored it, and only stored host facts may establish that authorship.
 
 export class Denied extends Schema.TaggedErrorClass<Denied>()("UpstreamAttributionDenied", {

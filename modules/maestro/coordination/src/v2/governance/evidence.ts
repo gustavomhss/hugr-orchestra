@@ -11,8 +11,7 @@ import { SessionSchema, type SessionStore } from "@orchestra/core/session"
 import { MaestroAtlasSourceV2 } from "../atlas-source"
 import { GovernanceRecordsV2 } from "./records"
 
-// V2 port of V1's worktree evidence and context currency (`apps/orchestra/src/maestro/{worktree-evidence,
-// context-record}.ts`). The identity hash is computed exactly as V1 records it, so a V1 context stays current on V2
+// Worktree evidence and context currency. The identity hash is computed exactly as V1 records it, so a V1 context stays current on V2
 // only while HEAD, the diff, the untracked files and (for a grounded context) the Atlas source are unchanged.
 
 // The append-only Atlas Memory logs (the union-merged files in .gitattributes).

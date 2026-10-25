@@ -15,8 +15,7 @@ import { Effect, Option, Schema } from "effect"
 import { Seats } from "../seats"
 import type { MaestroSeats } from "./seats-service"
 
-// V2's verified Atlas Own reader: the same verification door as V1 (`apps/orchestra/src/maestro/atlas-source.ts`), over
-// V2 services. Config comes from the Location's documents (`maestro.atlas`), Git from the process git command line, and
+// The verified Atlas Own reader, over V2 services. Config comes from the Location's documents (`maestro.atlas`), Git from the process git command line, and
 // files through the Location's filesystem. Every failure is an explicit hold, never an absence claim.
 
 export type Owner = "backend" | "jimmy" | "archie"

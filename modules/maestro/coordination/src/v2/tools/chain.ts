@@ -13,7 +13,7 @@ import type { GovernanceEvidenceV2 } from "../governance/evidence"
 
 export type Services = GovernanceEvidenceV2.Services & { readonly events: EventV2.Interface }
 
-// V1's next steps for the Atlas holds a governed flow meets in practice (`apps/orchestra/src/maestro/atlas-source.ts`).
+// Next steps for the Atlas holds a governed flow meets in practice.
 const nextSteps: Record<string, string> = {
   "provider-unconfigured":
     "Atlas is not configured for this project (maestro.atlas), so governed work cannot proceed here; the owner decides.",

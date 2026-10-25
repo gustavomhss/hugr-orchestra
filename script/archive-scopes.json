@@ -9,6 +9,6 @@
     "path": "packages/jimmy-specialist",
     "disposition": "retain-runtime",
     "owner": "backend",
-    "readers": ["apps/orchestra/script/research-pilot.ts"]
+    "readers": ["modules/maestro/coordination/src/seats/seat.ts"]
   }
 ]

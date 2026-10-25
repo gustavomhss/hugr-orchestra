@@ -66,8 +66,8 @@ git worktree list --porcelain
 ```
 
 If local `dev` is unavailable, use verified `origin/dev`. For an existing PR: `gh pr view <pr>` and
-`gh pr checks <pr>`; confirm exact head. In `packages/orchestra`: `bun typecheck`; tests run on Actions from
-the repository root: `bun run test:ci orchestra <resolved-suite>`. Resolve parameters before executing.
+`gh pr checks <pr>`; confirm exact head. In the package directory: `bun typecheck`; tests run on Actions from
+the repository root: `bun run test:ci <package> <resolved-suite>`. Resolve parameters before executing.
 If branching is authorized here, use at most three hyphen-separated words, no slashes/type prefixes.
 
 ## Destructive/bypass refusal

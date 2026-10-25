@@ -5,7 +5,7 @@ import { add } from "../script/seat"
 import { canonicalMemberId, createRoster, LEGACY_BACKEND_ID, roster } from "@orchestra/maestro/roster"
 import { Seats } from "@orchestra/maestro/seats"
 import { define } from "@orchestra/maestro/seats/seat"
-import { tmpdir } from "../../../../packages/core/test/fixture/tmpdir"
+import { tmpdir } from "./fixture/tmpdir"
 
 const source = path.resolve(import.meta.dirname, "..")
 const repository = path.resolve(import.meta.dirname, "../../../..")

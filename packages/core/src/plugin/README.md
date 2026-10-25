@@ -8,7 +8,7 @@
 
 ## Public entry points and consumers
 
-- Consumers: core, apps/orchestra, and plugin authors through `@orchestra/plugin`.
+- Consumers: core and plugin authors through `@orchestra/plugin`.
 
 ## Dependencies and boundaries
 

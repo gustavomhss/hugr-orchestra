@@ -17,8 +17,8 @@ import { GovernanceEvidenceV2 } from "../governance/evidence"
 import { GovernanceRecordsV2 } from "../governance/records"
 import type { MaestroChainTools } from "./chain"
 
-// V2 port of V1's validation and review receipts (`apps/orchestra/src/maestro/validation-record.ts`). Records are
-// written as V1 writes them (same event types, ids, hashes and refusals) and read back through GovernanceRecordsV2.
+// Validation and review receipts. Records are
+// written as V1 wrote them (same event types, ids, hashes and refusals) and read back through GovernanceRecordsV2.
 // Only the current roster and review-policy hash versions are written or accepted on a retry, and only the plan stage
 // is recorded: the code stage needs V1's host-written result tree, which V2 does not produce.
 

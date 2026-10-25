@@ -6,11 +6,11 @@ Engine-neutral continuity helpers: transcript aliases, archive search, dry trans
 
 Engine-neutral continuity helpers: transcript aliases, archive search, dry transport, raw payloads, request sources and masking. Owner: The continuity owner.
 
-Moves in with card C8 of plan 70-C' B1; the continuity service and its V1 glue stay in apps/orchestra until B1-C.
+Moves in with card C8 of plan 70-C' B1.
 
 ## Public entry points and consumers
 
-Exports are explicit keys derived from the source wildcard in the module registry. Consumers are the composition roots: apps/orchestra (legacy server) and apps/cli.
+Exports are explicit keys derived from the source wildcard in the module registry. Consumer is the composition root apps/cli.
 
 ## Dependencies and boundaries
 

@@ -6,7 +6,7 @@ runtime for the repository at the working directory and serves its tools to any 
 ## Orchestra does not use this server
 
 Orchestra consumes Atlas in-process, not through `atlas-mcp`. Its native tools run inside the Orchestra process:
-`atlas_context` (`catalog` and `unit`) reads through `apps/orchestra/src/tool/atlas-context.ts`, and
+`atlas_context` (`catalog` and `unit`) reads through `modules/maestro/coordination/src/v2/tools/atlas.ts`, and
 `atlas_memory_recall` / `atlas_memory_emit` use the generated `@orchestra/atlas-boundary` bundles
 (`modules/atlas/boundary`, exports `./native-memory` and `./native-header`). No Orchestra source starts or connects
 to the `atlas-mcp` bin.

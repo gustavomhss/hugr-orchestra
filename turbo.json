@@ -14,15 +14,6 @@
     "typecheck": {
       "dependsOn": ["transit"]
     },
-    "orchestra#typecheck": {
-      "dependsOn": ["transit"],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/.github/scripts/archie-host-*.ts",
-        "$TURBO_ROOT$/.github/scripts/tsconfig.archie.json",
-        "$TURBO_ROOT$/packages/app-shell/src/**"
-      ]
-    },
     "build": {
       "dependsOn": [],
       "outputs": ["dist/**"]
@@ -48,11 +39,6 @@
         "$TURBO_ROOT$/native/omni/rust-toolchain.toml",
         "$TURBO_ROOT$/native/omni/.cargo/**"
       ]
-    },
-    "orchestra#test": {
-      "dependsOn": ["transit", "^build"],
-      "outputs": [],
-      "passThroughEnv": ["*"]
     },
     "@orchestra/core#test": {
       "dependsOn": ["transit", "^build"],

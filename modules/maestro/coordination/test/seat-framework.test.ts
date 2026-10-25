@@ -7,7 +7,7 @@ import { Seats } from "@orchestra/maestro/seats"
 import { define } from "@orchestra/maestro/seats/seat"
 import { add } from "../script/seat"
 import { seatSkillsModule } from "@orchestra/maestro/seat-skills-module"
-import { tmpdir } from "../../../../packages/core/test/fixture/tmpdir"
+import { tmpdir } from "./fixture/tmpdir"
 
 describe("native seat framework", () => {
   test("definitions correspond to registered files, charters and skill artifacts", async () => {

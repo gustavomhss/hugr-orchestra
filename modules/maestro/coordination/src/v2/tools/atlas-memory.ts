@@ -19,7 +19,7 @@ import { Context, Effect, Schema } from "effect"
 import { MaestroAtlasSourceV2 } from "../atlas-source"
 import { MaestroSeats } from "../seats-service"
 
-// V1's native Atlas Memory tools (`apps/orchestra/src/tool/atlas-memory.ts`) on V2. The host binds owner, storage and
+// The native Atlas Memory tools. The host binds owner, storage and
 // the call; the model supplies a unit or an entry and nothing else. Only native seats carrying Atlas Memory reach them:
 // `v2/seats.ts` hides them from every other agent and each call checks its caller again. Atlas storage is harness-owned,
 // so neither tool is a file write.

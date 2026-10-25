@@ -191,12 +191,12 @@ jobs:
         # its 30-minute test step with core alone at 1081 s. Core runs by itself on Windows; the legacy rollback checks,
         # 85 s in a job of their own, run after the other Windows packages.
         include:
-          - { name: linux, host: ubuntu-latest, part: packages, label: "other packages, godfile", filters: "--filter=!orchestra" }
+          - { name: linux, host: ubuntu-latest, part: packages, label: "other packages, godfile", filters: "--filter=!//" }
           - { name: linux, host: ubuntu-latest, part: gates, label: "relay" }
           - { name: windows, host: windows-latest, part: core, label: "core", filters: "--filter=@orchestra/core" }
           # httpapi-codegen is a build-time generator whose tests pin POSIX paths, so it runs on Linux only.
           - { name: windows, host: windows-latest, part: rest, label: "other packages, legacy rollback",
-              filters: "--filter=!orchestra --filter=!@orchestra/core --filter=!@orchestra/httpapi-codegen" }
+              filters: "--filter=!@orchestra/core --filter=!@orchestra/httpapi-codegen" }
     runs-on: ${{ matrix.host }}
     timeout-minutes: 35
     defaults:

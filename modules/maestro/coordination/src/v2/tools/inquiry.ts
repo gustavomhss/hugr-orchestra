@@ -1,6 +1,6 @@
 export * as ResearchInquiry from "./inquiry"
 
-// V1 `apps/orchestra/src/research/inquiry.ts` on V2: the fold, check, draft, card and snapshot are unchanged; the
+// The inquiry fold, check, draft, card and snapshot; the
 // code searches R5/R6 read come from the V2 Session messages.
 
 // The dispatch's investigation (J5.1-J5.2): a fold over the records and inquiry events its ledger already holds. Nothing

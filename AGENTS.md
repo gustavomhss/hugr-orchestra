@@ -14,7 +14,7 @@ Examples: `session-recovery`, `fix-scroll-state`, `regenerate-sdk`.
 
 - Maestro's name is fixed. The app and other Sessions find and address the conductor by it, so config cannot rename it.
 - Every other native seat is addressed by its stable id (for example `backend`); its display name is a user setting (`agent.<id>.name`). Code, tests, docs, commits and PR text refer to a seat by role or id, never by a default display name.
-- The backend specialist's default display name lives only in `BACKEND_DEFAULT_LABEL` (`modules/maestro/coordination/src/roster.ts`). `apps/orchestra/test/agent/specialist-name-guard.test.ts` fails on any other occurrence in the repository.
+- The backend specialist's default display name lives only in `BACKEND_DEFAULT_LABEL` (`modules/maestro/coordination/src/roster.ts`). `modules/maestro/coordination/test/specialist-name-guard.test.ts` fails on any other occurrence in the repository.
 
 ## Commits and PR Titles
 
@@ -148,7 +148,7 @@ const table = sqliteTable("session", {
 
 - Avoid mocks as much as possible, you shouldn't be using globalThis.\* at all unless it's the only option.
 - Test actual implementation, do not duplicate logic into tests
-- Tests run on GitHub Actions, never on this machine. From the repository root: `bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both]`, for example `bun run test:ci orchestra test/tool/task.test.ts`.
+- Tests run on GitHub Actions, never on this machine. From the repository root: `bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both]`, for example `bun run test:ci maestro test/roster.test.ts`.
   - Named test files run exactly and in the order given. Any other argument, such as a directory, is a Bun substring filter that may match several files, which Bun runs in its own order.
   - It uploads a snapshot of your working tree to a temporary `ci-run-*` branch, waits for the `test-ci` workflow, prints the result and exits non-zero when tests fail. No commit is needed; untracked files that are not gitignored are included, so keep secrets out of the tree.
   - A run takes a few minutes: give the shell call a long timeout or run it in the background.
@@ -176,7 +176,7 @@ const table = sqliteTable("session", {
 
 ## Type Checking
 
-- Always run `bun typecheck` from package directories (e.g., `apps/orchestra`), never `tsc` directly.
+- Always run `bun typecheck` from package directories (e.g., `apps/cli`), never `tsc` directly.
 
 ## V2 Session Core
 

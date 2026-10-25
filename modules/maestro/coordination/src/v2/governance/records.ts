@@ -8,8 +8,7 @@ import { EventV2 } from "@orchestra/core/event"
 import { RelayWorkflowBinding } from "@orchestra/core/relay-workflow-binding"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 
-// Read-only V2 ports of the V1 governed-chain record readers (`apps/orchestra/src/maestro/{authorization,
-// validation-record,context-record,plan-revision}.ts`). They read the V1 event rows as written, by id and versioned
+// Read-only governed-chain record readers. They read the V1 event rows as written, by id and versioned
 // type, and never write; a row of another type or shape reads as absent, as V1 reads it.
 
 type Db = Database.Interface["db"]

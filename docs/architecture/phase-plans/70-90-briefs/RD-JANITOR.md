@@ -32,14 +32,14 @@ SCOPED() { bun run check:boundaries --no-stale --json --scope "$@" 2>/dev/null |
 
 ## Owned files (exactly these, nothing else)
 
-- `apps/orchestra/src/janitor/README.md`
+- `removed-v1/src/janitor/README.md`
 
 ## Steps
 
 1. Create the file with this exact content (the quoted heredoc writes it byte for byte):
 
 ```bash
-cat > 'apps/orchestra/src/janitor/README.md' <<'README_EOF'
+cat > 'removed-v1/src/janitor/README.md' <<'README_EOF'
 # Janitor domain
 
 ## Purpose and ownership
@@ -49,7 +49,7 @@ cat > 'apps/orchestra/src/janitor/README.md' <<'README_EOF'
 
 ## Public entry points and consumers
 
-- Consumers: `apps/orchestra/src/server/server.ts` and the global handler (declared exceptions under rule R11).
+- Consumers: `removed-v1/src/server/server.ts` and the global handler (declared exceptions under rule R11).
 
 ## Dependencies and boundaries
 
@@ -76,7 +76,7 @@ README_EOF
 ## Commit and push
 
 ```bash
-git add 'apps/orchestra/src/janitor/README.md'
+git add 'removed-v1/src/janitor/README.md'
 git commit -m "docs(orchestra): add janitor domain README" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 git push fork ms-rd-janitor
 ```
@@ -85,9 +85,9 @@ Open no pull request.
 
 ## Acceptance (run after the commit; each must print the expected value)
 
-A1. `grep -c "^## " 'apps/orchestra/src/janitor/README.md'` -> prints `7`.
-A2. `grep -ci "open""code" 'apps/orchestra/src/janitor/README.md'` -> prints `0`.
-A3. `SCOPED apps/orchestra/src/janitor/README.md` -> prints `new=0 stale=1` (this also proves every backticked repository path in the file exists).
+A1. `grep -c "^## " 'removed-v1/src/janitor/README.md'` -> prints `7`.
+A2. `grep -ci "open""code" 'removed-v1/src/janitor/README.md'` -> prints `0`.
+A3. `SCOPED removed-v1/src/janitor/README.md` -> prints `new=0 stale=1` (this also proves every backticked repository path in the file exists).
 A4. `OWNED` prints exactly the owned files listed above, one per line, sorted.
 
 If an acceptance line fails, do not push a fix: report STOP with the exact output.

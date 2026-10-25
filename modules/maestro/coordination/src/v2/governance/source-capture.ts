@@ -17,7 +17,7 @@ import { Research } from "@orchestra/schema/research"
 import { ResearchEvent } from "@orchestra/schema/research-event"
 import { ResearchDispatchV2 } from "./research"
 
-// V1's acquisition receipts (`apps/orchestra/src/research/source-capture.ts`) on V2. Every research-seat call of a tool
+// Acquisition receipts. Every research-seat call of a tool
 // that acquires a source opens an acquisition request, replays a retried call from what it retained instead of
 // reacquiring, and settles one attempt receipt. A retained tool's output that captured no source of its own is captured
 // as the tool's returned representation.

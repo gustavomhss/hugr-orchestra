@@ -15,7 +15,7 @@ this data tree. Source attribution and authoring contracts remain with their exi
 From the repository root:
 
 ```sh
-bun run test:ci orchestra test/maestro/seat-framework.test.ts test/maestro/seat-skills-build.test.ts
+bun run test:ci maestro test/seat-framework.test.ts test/seat-skills-build.test.ts
 ```
 
 Orchestra owns the package-local typecheck. The paired-authoring harness pins the current authored

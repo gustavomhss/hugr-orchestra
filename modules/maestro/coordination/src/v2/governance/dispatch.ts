@@ -10,7 +10,7 @@ import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { GovernanceEvidenceV2 } from "./evidence"
 import { GovernanceRecordsV2 } from "./records"
 
-// V2 port of V1's authorized dispatch (`apps/orchestra/src/maestro/{dispatch,authorization,grounded-skills}.ts`). An
+// Authorized dispatch. An
 // authorization reserves exactly one child Session, write-once, with the permission snapshot it runs under; the
 // reservation and its refusals are the V1 records and wording, so a dispatch reserved by V1 replays here unchanged.
 

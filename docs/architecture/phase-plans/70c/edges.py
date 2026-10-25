@@ -1,6 +1,6 @@
 import json, os, re, sys, fnmatch, collections
 ROOT = sys.argv[1]
-APP = os.path.join(ROOT, "apps/orchestra")
+APP = os.path.join(ROOT, "removed-v1")
 arch = json.load(open(os.path.join(ROOT, "script/module-architecture.json")))
 doms = arch["packages"]["orchestra"]["domains"]
 def owner(rel):  # rel like src/x/y.ts

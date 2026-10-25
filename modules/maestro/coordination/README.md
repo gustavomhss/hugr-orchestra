@@ -6,11 +6,11 @@ Maestro coordination: the seat roster and seats, governance records and the Arse
 
 Maestro coordination: the seat roster and seats, governance records and the Arsenal native safety contribution. Owner: The Maestro owner. Seats are named by id, never by display name.
 
-Moves in with cards C4, C5 and C6 of plan 70-C' B1; Maestro's V1 tool glue stays in apps/orchestra until B1-C.
+Moves in with cards C4, C5 and C6 of plan 70-C' B1.
 
 ## Public entry points and consumers
 
-Exports are explicit keys derived from the source wildcard in the module registry. Consumers are the composition roots: apps/orchestra (legacy server) and apps/cli.
+Exports are explicit keys derived from the source wildcard in the module registry. Consumer is the composition root apps/cli.
 
 ## Dependencies and boundaries
 

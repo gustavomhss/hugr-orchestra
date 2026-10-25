@@ -15,7 +15,7 @@ import type { MaestroAtlasSourceV2 } from "../atlas-source"
 import { MaestroAtlasMemoryTools } from "../tools/atlas-memory"
 import { GovernanceRecordsV2 } from "./records"
 
-// V2 port of what V1's Task tool adds to a child's prompt (`apps/orchestra/src/tool/task.ts`): the resume marker of a
+// What the Task tool adds to a child's prompt: the resume marker of a
 // resumed child (`LogicalTask.resumeMarker`) and a native Atlas seat's resume admission (`AtlasResume.admit`). V2
 // prompts carry text only, so the parts' metadata becomes one Maestro record keyed by the child and its prompt, written
 // before the prompt is admitted; the admission text joins the prompt text, and the Atlas restore reads the record.

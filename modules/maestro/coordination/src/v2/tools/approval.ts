@@ -439,7 +439,7 @@ const ownerSpokeBetween = Effect.fn("MaestroApprovalTools.ownerSpokeBetween")(fu
   return ordered.slice(presented + 1, calling).some((message) => message.type !== "assistant")
 })
 
-// Each failed precondition names the one step that can satisfy it (V1 `apps/orchestra/src/maestro/authorization.ts`).
+// Each failed precondition names the one step that can satisfy it.
 const authorizationNextSteps: Record<string, string> = {
   "validation-not-found": "Pass the validationRecordID from the maestro_record_validation Bindings line.",
   "session-mismatch": "Authorize only a validation recorded in this Session.",

@@ -14,7 +14,7 @@ import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { SessionAuthority } from "../../session-authority"
 import { GovernanceRecordsV2 } from "./records"
 
-// V2 port of V1's logical task (`apps/orchestra/src/maestro/logical-task.ts`): the durable `tsk_` identity an execution
+// The logical task: the durable `tsk_` identity an execution
 // Session carries, and the resolution of a Task `task_id` to the child it resumes. The binding records are V1's.
 
 export type Binding = Schema.Schema.Type<typeof MaestroEvent.Task.Bound.data>

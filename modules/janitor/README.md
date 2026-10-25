@@ -11,7 +11,7 @@ Janitor scans the data directory for growth, keeps the latest report and hands e
 
 ## Public entry points and consumers
 
-Exports are explicit keys derived from the source wildcard in the module registry. Consumers are the composition roots: apps/orchestra (legacy server, which passes a sink that publishes on the legacy global bus) and apps/cli. `startJanitorLoop(scope, sink, env)` takes the sink as a parameter; the module never imports a bus.
+Exports are explicit keys derived from the source wildcard in the module registry. Consumer is the composition root apps/cli, which passes the sink. `startJanitorLoop(scope, sink, env)` takes the sink as a parameter; the module never imports a bus.
 
 ## Dependencies and boundaries
 
