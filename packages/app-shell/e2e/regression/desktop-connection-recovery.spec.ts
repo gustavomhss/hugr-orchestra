@@ -17,7 +17,6 @@ async function setup(page: Page) {
     )
   })
   await mockOrchestraServer(page, {
-    protocol: "v1",
     directory: "/repo",
     project: { id: "desktop-recovery", worktree: "/repo", vcs: "git", time: { created: 1, updated: 1 }, sandboxes: [] },
     sessions: [],

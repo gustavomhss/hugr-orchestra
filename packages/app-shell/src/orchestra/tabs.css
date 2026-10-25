@@ -9,7 +9,7 @@
     padding-inline: 8px;
     overflow: hidden;
     border: 1px solid var(--orchestra-glass-border);
-    border-radius: var(--orchestra-radius-md);
+    border-radius: var(--orchestra-radius-lg);
     background: var(--orchestra-glass-background);
     box-shadow: var(--orchestra-glass-shadow);
     -webkit-backdrop-filter: var(--orchestra-glass-filter);

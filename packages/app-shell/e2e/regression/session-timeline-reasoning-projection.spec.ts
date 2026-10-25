@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test"
 import {
+  assistantID,
   assistantMessage,
   reasoningPart,
   setupTimeline,
@@ -56,9 +57,12 @@ const profiles = [
 
 for (const profile of profiles) {
   test(`projects busy reasoning profile ${profile.name}`, async ({ page }) => {
-    const reasoningID = `prt_reasoning_matrix_${profiles.indexOf(profile)}`
+    // V2 reasoning has no id of its own; the app names it by message and ordinal.
+    const reasoningID = `${assistantID}:reasoning:0`
     const parts = [
-      ...(profile.reasoning ? [reasoningPart(reasoningID, profile.reasoning)] : []),
+      ...(profile.reasoning
+        ? [reasoningPart(`prt_reasoning_matrix_${profiles.indexOf(profile)}`, profile.reasoning)]
+        : []),
       ...(profile.other
         ? [toolPart(`prt_reasoning_tool_${profiles.indexOf(profile)}`, "skill", "running", { name: "inspect" })]
         : []),
@@ -89,5 +93,5 @@ test("does not infer reasoning visibility from provider identity", async ({ page
 
   await expect(page.locator('[data-timeline-row="Thinking"]')).toHaveCount(0)
   await expect(page.locator('[data-timeline-part-id*="reasoning"]')).toHaveCount(0)
-  await expect(page.locator('[data-timeline-part-id="prt_provider_text"]')).toBeVisible()
+  await expect(page.locator(`[data-timeline-part-id="${assistantID}:text:0"]`)).toBeVisible()
 })

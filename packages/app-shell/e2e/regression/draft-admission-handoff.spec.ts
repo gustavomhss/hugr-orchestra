@@ -254,7 +254,6 @@ async function setup(page: Page) {
     if (isAdmissionRequest(request)) fixture.admissions.push(request)
   })
   await mockOrchestraServer(page, {
-    protocol: "v1",
     directory,
     project: { id: session.projectID, worktree: directory, vcs: "git", name: "draft-handoff", time: session.time, sandboxes: [] },
     provider: {

@@ -251,13 +251,6 @@ test("Files Changed and All files lead to each other", async ({ page }) => {
   await expect(page.locator('[data-session-tab="files"]')).toBeHidden()
 })
 
-test("V1: the bundled server shows no Steer/Queue control", async ({ page }) => {
-  await setupCockpit(page, { bridge: false, empty: true })
-  await openParent(page)
-  await expect(page.locator('[data-slot="orchestra-compose-tools"]')).toBeVisible()
-  await expect(page.locator('[data-action="prompt-delivery"]')).toHaveCount(0)
-})
-
 test("V2: Steer is the default delivery and the Queue choice is sent with the next prompt", async ({ page }) => {
   const prompts: unknown[] = []
   await setupTimeline(page, {
