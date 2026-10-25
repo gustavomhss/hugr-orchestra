@@ -8,6 +8,7 @@
   "exports": {
     "./api": "./src/api.ts",
     "./auth": "./src/auth.ts",
+    "./capability-content-ticket": "./src/capability-content-ticket.ts",
     "./capability-verification": "./src/capability-verification.ts",
     "./cors": "./src/cors.ts",
     "./handlers": "./src/handlers.ts",

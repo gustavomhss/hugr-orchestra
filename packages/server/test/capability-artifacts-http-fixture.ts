@@ -18,7 +18,7 @@ import { ProjectTable } from "@orchestra/core/project/sql"
 import { SessionTable } from "@orchestra/core/session/sql"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { TaskTool } from "@orchestra/core/tool/task"
-import { makeCapabilityArtifactsGroup } from "@orchestra/protocol/groups/capability-artifacts"
+import { CapabilityContentGroup, makeCapabilityArtifactsGroup } from "@orchestra/protocol/groups/capability-artifacts"
 import { Agent } from "@orchestra/schema/agent"
 import { Capability } from "@orchestra/schema/capability"
 import { AbsolutePath } from "@orchestra/schema/schema"
@@ -31,7 +31,8 @@ import { mkdir, mkdtemp, realpath, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { ServerAuth } from "../src/auth"
-import { CapabilityArtifactsHandler } from "../src/handlers/capability-artifacts"
+import { ServerContentTicket } from "../src/capability-content-ticket"
+import { CapabilityArtifactsHandler, CapabilityContentHandler } from "../src/handlers/capability-artifacts"
 import { LocationMiddleware, layer } from "../src/location"
 import { Authorization, authorizationLayer } from "../src/middleware/authorization"
 import { capabilityAuthorizationLayer } from "../src/middleware/capability-authorization"
@@ -39,12 +40,12 @@ import { SchemaErrorMiddleware, schemaErrorLayer } from "../src/middleware/schem
 import { ServerOperator } from "../src/operator"
 
 // Same group identity, middleware order and real handler; aggregate registration belongs to the Lead.
-const TestApi = HttpApi.make("server").add(makeCapabilityArtifactsGroup(LocationMiddleware))
+const TestApi = HttpApi.make("server").add(makeCapabilityArtifactsGroup(LocationMiddleware)).add(CapabilityContentGroup)
   .middleware(Authorization).middleware(SchemaErrorMiddleware)
 export const secret = "artifact-http-private-metadata"
 export const denied = { _tag: "ForbiddenError", message: "Request denied" }
 
-export function make() {
+export function make(options: { ticketTtlMillis?: number } = {}) {
   return Effect.gen(function* () {
     // The blob store requires a canonical root; macOS temp paths are symlinked.
     const directory = yield* Effect.promise(async () => realpath(await mkdtemp(join(tmpdir(), "capability-artifacts-http-"))))
@@ -102,7 +103,9 @@ export function make() {
     const operators = yield* CapabilityOperator.make({ principal: `artifact-http-${crypto.randomUUID()}`,
       scope: { placements: "instance", actions: ["*"] } })
     const web = HttpRouter.toWebHandler(HttpApiBuilder.layer(TestApi).pipe(
-      Layer.provide(CapabilityArtifactsHandler),
+      Layer.provide([CapabilityArtifactsHandler, CapabilityContentHandler]),
+      Layer.provide(options.ticketTtlMillis === undefined ? ServerContentTicket.layer
+        : ServerContentTicket.layerWith({ ttlMillis: options.ticketTtlMillis })),
       Layer.provide(layer),
       Layer.provide(authorizationLayer), Layer.provide(capabilityAuthorizationLayer), Layer.provide(schemaErrorLayer),
       Layer.provide(Layer.mergeAll(Layer.succeed(ServerOperator.Service, operators),

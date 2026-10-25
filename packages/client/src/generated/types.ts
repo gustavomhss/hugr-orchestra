@@ -9570,6 +9570,25 @@ export type ArtifactsGetOutput = {
   readonly pinned: boolean
 }
 
+export type ArtifactsContentTicketInput = {
+  readonly sessionID: {
+    readonly sessionID: string
+    readonly artifactID: string
+    readonly revision: string
+  }["sessionID"]
+  readonly artifactID: {
+    readonly sessionID: string
+    readonly artifactID: string
+    readonly revision: string
+  }["artifactID"]
+  readonly revision: { readonly sessionID: string; readonly artifactID: string; readonly revision: string }["revision"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type ArtifactsContentTicketOutput = { readonly url: string; readonly expiresAt: number }
+
 export type ArtifactsShareInput = {
   readonly sessionID: {
     readonly sessionID: string

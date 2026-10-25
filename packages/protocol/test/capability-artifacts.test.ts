@@ -14,6 +14,7 @@ const cases = [
   { name: "capability.artifact.list", method: "get", path: "/api/capability/sessions/{sessionID}/artifacts", mutation: false },
   { name: "capability.artifact.get", method: "get", path: item, mutation: false },
   { name: "capability.artifact.content", method: "get", path: `${item}/content`, mutation: false },
+  { name: "capability.artifact.contentTicket", method: "post", path: `${item}/content-ticket`, mutation: false },
   { name: "capability.artifact.share", method: "post", path: `${item}/share`, mutation: true },
   { name: "capability.artifact.pin", method: "put", path: `${item}/pin`, mutation: true },
   { name: "capability.artifact.removeReference", method: "delete", path: item, mutation: true },

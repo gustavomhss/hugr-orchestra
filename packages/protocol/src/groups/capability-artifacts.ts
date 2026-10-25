@@ -5,7 +5,7 @@ import { NonNegativeInt } from "@orchestra/schema/schema"
 import { SessionID } from "@orchestra/schema/session-id"
 import { Context, Schema } from "effect"
 import { HttpApiEndpoint, HttpApiGroup, HttpApiMiddleware, HttpApiSchema, OpenApi } from "effect/unstable/httpapi"
-import { ConflictError, InvalidRequestError, UnknownError } from "../errors"
+import { ConflictError, ForbiddenError, InvalidRequestError, UnknownError } from "../errors"
 import { CapabilityAuthorization } from "../middleware/capability-authorization"
 import { LocationQuery, locationQueryOpenApi } from "./location"
 
@@ -33,6 +33,17 @@ const item = `${path}/:artifactID/:revision`
 // One mapper serves every endpoint; reads never produce 409 but share the declared set.
 const errors = [InvalidRequestError, ConflictError, UnknownError]
 const Bytes = Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array())
+const ContentSuccess = [Bytes, Bytes.pipe(HttpApiSchema.status(206))]
+const CONTENT_TICKET_PATH = /^\/api\/capability\/content\/[A-Za-z0-9_.-]+$/
+export const ContentTicket = Schema.Struct({
+  url: Schema.String.annotate({ description: "Relative path that serves the bytes without an Authorization header." }),
+  expiresAt: NonNegativeInt.annotate({ description: "Expiry as Unix epoch milliseconds." }),
+}).annotate({ identifier: "CapabilityArtifactContentTicket" })
+
+// Authorization middleware skips credential checks here: `<video src>` cannot send headers, the handler verifies the ticket.
+export function hasCapabilityContentTicketURL(url: URL) {
+  return CONTENT_TICKET_PATH.test(url.pathname)
+}
 
 export const CapabilityArtifactsGroup = HttpApiGroup.make("server.capability.artifacts")
   .add(
@@ -44,10 +55,16 @@ export const CapabilityArtifactsGroup = HttpApiGroup.make("server.capability.art
     }),
     HttpApiEndpoint.get("capability.artifact.content", `${item}/content`, {
       params: ArtifactParams, query: LocationQuery, headers: ContentHeaders,
-      success: [Bytes, Bytes.pipe(HttpApiSchema.status(206))], error: [...errors, HttpApiSchema.Empty(416)],
+      success: ContentSuccess, error: [...errors, HttpApiSchema.Empty(416)],
     }).annotateMerge(OpenApi.annotations({
       summary: "Read artifact bytes",
       description: "Verified artifact bytes with attachment, sandbox and no-store headers. Supports one `bytes=` Range.",
+    })),
+    HttpApiEndpoint.post("capability.artifact.contentTicket", `${item}/content-ticket`, {
+      params: ArtifactParams, query: LocationQuery, success: ContentTicket, error: errors,
+    }).annotateMerge(OpenApi.annotations({
+      summary: "Mint an artifact content ticket",
+      description: "Short-lived URL for the same bytes as `content`, bound to this caller, revision and Location.",
     })),
     HttpApiEndpoint.post("capability.artifact.share", `${item}/share`, {
       params: ArtifactParams, query: LocationQuery, headers: MutationHeaders,
@@ -63,6 +80,17 @@ export const CapabilityArtifactsGroup = HttpApiGroup.make("server.capability.art
     }),
   )
   .annotateEndpointsMerge(locationQueryOpenApi)
+
+// No Location or capability middleware: the ticket carries both and the handler re-checks them.
+export const CapabilityContentGroup = HttpApiGroup.make("server.capability.content").add(
+  HttpApiEndpoint.get("capability.content.read", "/api/capability/content/:ticket", {
+    params: { ticket: Schema.String }, headers: ContentHeaders, success: ContentSuccess,
+    error: [HttpApiSchema.Empty(401), HttpApiSchema.Empty(404), HttpApiSchema.Empty(416), ForbiddenError, ...errors],
+  }).annotateMerge(OpenApi.annotations({
+    summary: "Read artifact bytes by ticket",
+    description: "Header-free read for media elements. Same bytes and headers as `content`; invalid tickets yield 401.",
+  })),
+)
 
 export const makeCapabilityArtifactsGroup = <Id extends HttpApiMiddleware.AnyId, Service>(
   locationMiddleware: Context.Key<Id, Service>,

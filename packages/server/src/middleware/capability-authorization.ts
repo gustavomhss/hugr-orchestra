@@ -2,11 +2,17 @@ import { randomUUID } from "node:crypto"
 import { ForbiddenError, UnauthorizedError } from "@orchestra/protocol/errors"
 import { CapabilityAuthorization } from "@orchestra/protocol/middleware/capability-authorization"
 export { CapabilityAuthorization } from "@orchestra/protocol/middleware/capability-authorization"
+import type { CapabilityOperatorContract } from "@orchestra/core/capability/operator/contract"
 import { Capability } from "@orchestra/schema/capability"
 import { Cause, Context, Effect, Encoding, Layer, Redacted, Result } from "effect"
 import { HttpServerRequest } from "effect/unstable/http"
 import { ServerAuth } from "../auth"
 import { ServerOperator } from "../operator"
+
+/** The authority this request authenticated as; content tickets bind to it so a ticket never widens access. */
+export const RequestAuthority = Context.Reference<CapabilityOperatorContract.Authority | undefined>(
+  "@orchestra/server/CapabilityRequestAuthority", { defaultValue: () => undefined },
+)
 
 export const capabilityAuthorizationLayer = Layer.effect(
   CapabilityAuthorization,
@@ -37,7 +43,8 @@ export const capabilityAuthorizationLayer = Layer.effect(
         }
 
         // Only Core's private request frame carries authority. Caller-supplied IDs are not grants.
-        return yield* operator.withRequest(authority, { requestID: randomUUID(), idempotencyKey }, effect)
+        return yield* operator.withRequest(authority, { requestID: randomUUID(), idempotencyKey },
+          Effect.provideService(effect, RequestAuthority, authority))
       }).pipe(
         // Keep every defect, interrupt and failure annotation, including mixed lifecycle causes.
         Effect.catchCause((cause) =>
