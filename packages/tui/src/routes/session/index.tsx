@@ -162,6 +162,7 @@ export function Session() {
   const paths = useTuiPaths()
   const tuiConfig = useTuiConfig()
   const kv = useKV()
+  const args = useArgs()
   const { theme } = useTheme()
   const promptRef = usePromptRef()
   const session = createMemo(() => sync.session.get(route.sessionID))
@@ -229,7 +230,6 @@ export function Session() {
     return messages().findLast((x) => x.role === "assistant")
   })
 
-  const args = useArgs()
   const dimensions = useTerminalDimensions()
   const [sidebar, setSidebar] = kv.signal<"auto" | "hide">("sidebar", "auto")
   const [sidebarOpen, setSidebarOpen] = createSignal(false)

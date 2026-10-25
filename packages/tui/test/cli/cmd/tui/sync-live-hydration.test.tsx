@@ -90,7 +90,7 @@ test("V2 history hydrates into V1 messages, parts and the Session diff", async (
     ])
     expect(sync.data.message[sessionID][0]).toMatchObject({ agent: "maestro", model: { modelID: "model" } })
     expect(sync.data.message[sessionID][1]).toMatchObject({ parentID: "msg_user", modelID: "model" })
-    expect(sync.data.part["msg_user"]).toMatchObject([{ type: "text", text: "hello" }])
+    expect([...sync.data.part["msg_user"]]).toMatchObject([{ type: "text", text: "hello" }])
     expect(sync.data.part[assistantID].map((part) => part.type)).toEqual(["step-start", "text", "tool", "step-finish"])
     expect(sync.data.part[assistantID][2]).toMatchObject({
       tool: "read",
@@ -138,6 +138,8 @@ test("stale Session hydration does not overwrite live message content", async ()
     emit(global("session.next.step.started", { assistantMessageID: assistantID, agent: "maestro", model }))
     emit(global("session.next.text.started", { assistantMessageID: assistantID, textID: "txt_1" }))
     emit(global("session.next.text.delta", { assistantMessageID: assistantID, textID: "txt_1", delta: "live" }))
+    // SDK batches events that arrive within 16ms of the last flush; let the batch land first.
+    await Bun.sleep(20)
 
     pending.resolve(
       json({
