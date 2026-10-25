@@ -53,7 +53,7 @@ export type Binding = {
  * `held` durably records either hold before it returns, which is what lets that resume continue this step.
  */
 export const settle = <A, E, R, E2, R2, E3, R3>(input: {
-  readonly checklist: ReadonlyArray<{ readonly host_check?: string }> | undefined
+  readonly checklist: ReadonlyArray<{ readonly host_check?: string }> | null | undefined
   readonly coldReview: Effect.Effect<unknown, unknown> | undefined
   readonly held: Effect.Effect<void, E2, R2>
   readonly graded: Effect.Effect<string | undefined, E3, R3> | undefined
@@ -299,17 +299,19 @@ export const verification = Effect.fn("WorkflowSettlementV2.verification")(
     const document = yield* Effect.gen(function* () {
       const { XMLParser, XMLValidator } = yield* Effect.tryPromise(() => import("fast-xml-parser"))
       if (XMLValidator.validate(bytes, { allowBooleanAttributes: false }) !== true) return undefined
-      const parsed = yield* Effect.try(() =>
-        new XMLParser({
-          ignoreAttributes: false,
-          attributeNamePrefix: "@",
-          parseTagValue: false,
-          parseAttributeValue: false,
-          trimValues: false,
-          processEntities: false,
-          isArray: (name: string) => name === "testsuite" || name === "testcase",
-        }).parse(bytes),
-      )
+      const parsed = yield* Effect.try({
+        try: () =>
+          new XMLParser({
+            ignoreAttributes: false,
+            attributeNamePrefix: "@",
+            parseTagValue: false,
+            parseAttributeValue: false,
+            trimValues: false,
+            processEntities: false,
+            isArray: (name: string) => name === "testsuite" || name === "testcase",
+          }).parse(bytes),
+        catch: (error) => error,
+      })
       return Option.getOrUndefined(Schema.decodeUnknownOption(Document)(parsed))?.testsuites
     }).pipe(Effect.orElseSucceed(() => undefined))
     if (!document) return refused("acquisition-error", "RUNNER_REPORT_INVALID_OR_PARSER_UNAVAILABLE")

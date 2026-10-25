@@ -3,8 +3,10 @@ import { Effect, Layer, Option, type Scope } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
 import { Relay } from "@orchestra/core/relay"
+import { JudgeConfig } from "@orchestra/relay/judge/config"
 import { RelayWorkflowBinding } from "@orchestra/core/relay-workflow-binding"
 import type { RelayArm } from "@orchestra/schema/relay-arm"
+import { SessionSchema } from "@orchestra/core/session"
 import { SessionMessage } from "@orchestra/core/session/message"
 import { MaestroSeatsV2 } from "../src/v2/seats"
 import { MaestroWorkflowHostV2 } from "../src/v2/workflow/host"
@@ -30,6 +32,8 @@ const held = (reason: string, receiptID?: string) => Effect.fail(new RelayWorkfl
 const reviewed = [{ host_check: "cold-review" }]
 const evaluation = (outcome: RelayArm.Evaluation["outcome"]) => ({ outcome }) as RelayArm.Evaluation
 const token = "tok_host"
+const paths = { root: "/relay", authoring: "/relay/authoring", arms: "/relay/arms", hooks: "/relay/hooks", key: "/relay/key" }
+const child = SessionSchema.ID.make("ses_child")
 const position = { position: "wp-1", attempt: 1, ledgerSeq: 3 }
 
 const settle = (coldReview: Effect.Effect<unknown, unknown>, graded?: string) => {
@@ -131,6 +135,8 @@ test("only the owner's approval releases a parked arm", async () => {
       }).pipe(
         Effect.provide(
           Layer.mock(Relay.Service, {
+            paths,
+            judge: JudgeConfig.defaults,
             parked: () => Effect.succeed(parked ? Option.some({ wp: "wp-1", failing: ["tests"] }) : Option.none()),
             release: (_, reason) => Effect.sync(() => void released.push(reason)),
           }),
@@ -154,16 +160,16 @@ test("a retried hold or grade records once, and the newest grade of a step names
       const events = yield* EventV2.Service
       const services = { db: database.db, events }
       const settlement = { assistantMessageID: SessionMessage.ID.make("msg_reply"), expected: position }
-      const step = { executionSessionID: "ses_child", token, position: "wp-1" }
+      const step = { executionSessionID: child, token, position: "wp-1" }
       expect(yield* WorkflowRecordsV2.graded(database.db, step)).toBeUndefined()
-      yield* WorkflowRecordsV2.recordReviewHeld(services, { executionSessionID: "ses_child", token, settlement })
-      yield* WorkflowRecordsV2.recordReviewHeld(services, { executionSessionID: "ses_child", token, settlement })
-      expect(yield* WorkflowRecordsV2.reviewHolds(database.db, "ses_child")).toHaveLength(1)
-      const findings = { executionSessionID: "ses_child", token, assistantMessageID: settlement.assistantMessageID, expected: position }
+      yield* WorkflowRecordsV2.recordReviewHeld(services, { executionSessionID: child, token, settlement })
+      yield* WorkflowRecordsV2.recordReviewHeld(services, { executionSessionID: child, token, settlement })
+      expect(yield* WorkflowRecordsV2.reviewHolds(database.db, child)).toHaveLength(1)
+      const findings = { executionSessionID: child, token, assistantMessageID: settlement.assistantMessageID, expected: position }
       yield* WorkflowRecordsV2.recordReviewFindings(services, { ...findings, reviewID: "rev_1" })
       yield* WorkflowRecordsV2.recordReviewFindings(services, { ...findings, reviewID: "rev_1" })
       yield* WorkflowRecordsV2.recordReviewFindings(services, { ...findings, reviewID: "rev_2", expected: { ...position, attempt: 2 } })
-      expect(yield* WorkflowRecordsV2.findingsRecords(database.db, "ses_child")).toHaveLength(2)
+      expect(yield* WorkflowRecordsV2.findingsRecords(database.db, child)).toHaveLength(2)
       expect(yield* WorkflowRecordsV2.graded(database.db, step)).toBe("rev_2")
       expect(yield* WorkflowRecordsV2.graded(database.db, { ...step, position: "wp-2" })).toBeUndefined()
       // An unknown review id names no findings to carry.

@@ -122,7 +122,9 @@ test("a recorded reservation replays to the same write-once child on every retry
       yield* reservation(parent)
       const childID = GovernanceDispatchV2.childSessionID(AUTHORIZATION)
       const first = yield* admit({ directory, caller: "maestro", target: "general", parentID, extra: authorized })
-      expect(first).toEqual({ childID })
+      // A reserved child is created with its reservation's snapshot, so the admission always carries the rules the child
+      // starts from: the parent's inherited rules, which this fixture's parent (no rules, no primary-tool config) leaves empty.
+      expect(first).toEqual({ childID, permissions: [] })
       expect(childID).toStartWith("ses_maestro_dispatch_")
       expect(yield* admit({ directory, caller: "maestro", target: "general", parentID, extra: authorized })).toEqual(first)
       // A reserved child is prompted only by the call that reserved it; another call is not a replay of it.

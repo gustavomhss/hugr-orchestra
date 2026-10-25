@@ -6,6 +6,7 @@ import { EventV2 } from "@orchestra/core/event"
 import { PermissionV2 } from "@orchestra/core/permission"
 import { Project } from "@orchestra/core/project"
 import { Relay } from "@orchestra/core/relay"
+import { JudgeConfig } from "@orchestra/relay/judge/config"
 import { SessionSchema } from "@orchestra/core/session"
 import { SessionMessage } from "@orchestra/core/session/message"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
@@ -18,14 +19,17 @@ import { event, governanceLayer, session, worktree } from "./fixture/v2-governan
 const released: string[] = []
 const asked: PermissionV2.AssertInput[] = []
 const relay = Layer.mock(Relay.Service, {
+  paths: { root: "/relay", authoring: "/relay/authoring", arms: "/relay/arms", hooks: "/relay/hooks", key: "/relay/key" },
+  judge: JudgeConfig.defaults,
   parked: () => Effect.succeed(Option.some({ wp: "wp-1", failing: ["tests"] })),
   release: (_, reason) => Effect.sync(() => void released.push(reason)),
 })
 const permission = Layer.mock(PermissionV2.Service, {
   askExplicit: (input) =>
-    Effect.sync(() => void asked.push(input)).pipe(
-      Effect.andThen(String(input.metadata?.message).endsWith("flaky") ? Effect.void : Effect.fail(new Error("declined"))),
-    ),
+    Effect.gen(function* () {
+      asked.push(input)
+      if (!String(input.metadata?.message).endsWith("flaky")) return yield* new PermissionV2.DeclinedError()
+    }),
 })
 
 const run = <A, E>(

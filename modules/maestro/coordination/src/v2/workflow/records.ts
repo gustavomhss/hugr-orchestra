@@ -4,6 +4,7 @@ import { createHash } from "node:crypto"
 import { and, desc, eq, inArray, sql } from "drizzle-orm"
 import { Effect, Option, Schema } from "effect"
 import type { Database } from "@orchestra/core/database/database"
+import type { SessionSchema } from "@orchestra/core/session"
 import { EventV2 } from "@orchestra/core/event"
 import { RelayWorkflowBinding } from "@orchestra/core/relay-workflow-binding"
 import type { Event } from "@orchestra/schema/event"
@@ -36,7 +37,7 @@ export const read = Effect.fn("WorkflowRecordsV2.read")(function* (db: Db, execu
 /** Records that one settlement held for a code review before the arm graded it; the same reply at the same position records once. */
 export const recordReviewHeld = Effect.fn("WorkflowRecordsV2.recordReviewHeld")(function* (
   services: Services,
-  input: { readonly executionSessionID: string; readonly token: RelayArm.Token; readonly settlement: RelayArm.WorkflowSettlement },
+  input: { readonly executionSessionID: SessionSchema.ID; readonly token: RelayArm.Token; readonly settlement: RelayArm.WorkflowSettlement },
 ) {
   const expected = input.settlement.expected
   yield* write(

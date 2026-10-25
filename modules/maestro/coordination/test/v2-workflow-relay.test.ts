@@ -6,6 +6,7 @@ import { Effect, Layer, Scope } from "effect"
 import { Config } from "@orchestra/core/config"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { GitCli } from "@orchestra/core/git-cli"
+import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Global } from "@orchestra/core/global"
 import { Location } from "@orchestra/core/location"
@@ -46,7 +47,7 @@ const services = (skills: SkillV2.Info[] = []) =>
         Layer.mock(SessionStore.Service, {}),
         Layer.mock(Config.Service, {}),
         Layer.mock(GitCli.Service, {}),
-        Layer.mock(FSUtil.Service, {}),
+        AppNodeBuilder.build(FSUtil.node) as Layer.Layer<FSUtil.Service>,
         Layer.mock(SkillV2.Service, { list: () => Effect.succeed(skills) }),
       ),
     ),
