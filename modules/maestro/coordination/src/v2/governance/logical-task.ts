@@ -5,6 +5,7 @@ import { isDeepStrictEqual } from "node:util"
 import { ToolFailure } from "@orchestra/llm"
 import { and, eq, sql } from "drizzle-orm"
 import { Effect, Schema } from "effect"
+import { AgentV2 } from "@orchestra/core/agent"
 import type { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
 import { SessionSchema, type SessionStore } from "@orchestra/core/session"
@@ -92,7 +93,8 @@ export const resolveResume = Effect.fn("LogicalTaskV2.resolveResume")(function* 
   const session = input.strict
     ? yield* strictSession(services, { ...input, taskID })
     : yield* lenientSession(services, taskID, input.parentSessionID)
-  if (session && (session.parentID !== input.parentSessionID || services.canonical(session.agent) !== input.memberID))
+  const member = session ? services.canonical(session.agent ?? AgentV2.defaultID) : undefined
+  if (session && (session.parentID !== input.parentSessionID || member !== input.memberID))
     return yield* denied("resume", "task is not direct child for selected agent")
   return session
 })

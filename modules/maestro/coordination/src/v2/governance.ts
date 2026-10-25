@@ -176,7 +176,7 @@ export const make = Effect.gen(function* () {
           return Effect.gen(function* () {
             const existing = yield* store.get(id)
             if (!existing) return
-            if (existing.parentID !== parent.id || canonical(existing.agent) !== memberID)
+            if (existing.parentID !== parent.id || canonical(existing.agent ?? AgentV2.defaultID) !== memberID)
               return yield* new ToolFailure({ message: "Task denied: reservation-child-mismatch" })
             const recorded = (yield* store.permissions(existing.id)).map((rule) => ({
               permission: rule.action,
@@ -205,7 +205,7 @@ export const make = Effect.gen(function* () {
         const governed = session.id.startsWith(GovernanceReservationV2.CHILD_PREFIX)
         if (dispatch) yield* revalidateDispatch(session.id)
         if (governed) yield* GovernanceReservationV2.consume(services, session.id)
-        const member = canonical(session.agent)
+        const member = canonical(session.agent ?? AgentV2.defaultID)
         if (!seatOf(member)?.strictResume) return
         const authority = yield* SessionAuthority.make(store.get)(session.id, session.projectID).pipe(
           Effect.mapError((error) => new ToolFailure({ message: `Task binding denied: ${error.reason}` })),
@@ -221,7 +221,7 @@ export const make = Effect.gen(function* () {
     settle: (input) =>
       Effect.gen(function* () {
         const settled = yield* TaskGovernance.allowAll.settle(input)
-        if (seatOf(input.child.agent)?.workResult !== UpstreamResult.SCHEMA) return settled
+        if (seatOf(input.child.agent ?? AgentV2.defaultID)?.workResult !== UpstreamResult.SCHEMA) return settled
         const card = UpstreamResult.parse(settled.text)
         return card ? { ...settled, structured: { upstreamResult: card } } : settled
       }),

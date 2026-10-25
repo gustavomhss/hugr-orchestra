@@ -117,7 +117,7 @@ test("a binding V1 recorded under the immediate parent reads with the root as it
       const grandchildID = yield* session({ directory, agent: "backend", parentID: childID })
       const v1 = {
         taskId: "tsk_v1_recorded", projectID, memberID: "backend", executionSessionID: grandchildID,
-        authoritySessionID: childID, source: "host",
+        authoritySessionID: childID, source: "host" as const,
       }
       yield* event(
         `evt_maestro_task_bound_${createHash("sha256").update(grandchildID, "utf8").digest("hex")}`,
