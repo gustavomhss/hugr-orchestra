@@ -1,6 +1,6 @@
 import { type ChildProcess, spawnSync } from "node:child_process"
 
-// Duplicated from `apps/orchestra/src/util/process.ts` because the SDK cannot
+// Duplicated because the SDK cannot
 // import `orchestra` without creating a cycle (`orchestra` depends on `@orchestra/sdk`).
 // Only the legacy branch is duplicated: orchestra's `Process.stop` also stops omni trees, while the published SDK
 // stays on cross-spawn and never loads omni (integration plan D-L10).
