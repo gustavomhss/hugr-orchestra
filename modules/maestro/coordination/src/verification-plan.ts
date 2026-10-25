@@ -13,7 +13,7 @@ const checks = [
 const risks = ["docs", "package", "workflow", "api", "persistence", "security", "concurrency", "unknown"] as const
 const packageIDs = ["orchestra", "core", "schema"] as const
 // Orchestra is an app; core and schema are libraries.
-const packageRoots = { orchestra: "apps/orchestra/", core: "packages/core/", schema: "packages/schema/" } as const
+const packageRoots = { orchestra: "apps/cli/", core: "packages/core/", schema: "packages/schema/" } as const
 
 type CheckID = (typeof checks)[number]
 type PackageID = (typeof packageIDs)[number]

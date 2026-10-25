@@ -8,7 +8,7 @@ import {
 const input: CompileVerificationPlanInput = {
   baseSHA: "a".repeat(40),
   headSHA: "b".repeat(40),
-  changedPaths: ["apps/orchestra/src/index.ts"],
+  changedPaths: ["apps/cli/src/index.ts"],
   risk: "package",
   packages: ["orchestra"],
   reverseDependencies: [],
