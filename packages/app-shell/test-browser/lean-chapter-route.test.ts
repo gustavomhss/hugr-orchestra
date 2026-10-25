@@ -33,6 +33,7 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
   const { createComponent, createStore, render } = await import("./lean-dom.test-helper")
   const { MemoryRouter, Route, createMemoryHistory } = await import("@solidjs/router")
   const { solidDom } = await import("./solid-dom")
+  const { Orchestra } = await import("@orchestra/client")
   const { createSdkForServer }: typeof import("@/utils/server") = await import(solidDom("@/utils/server", import.meta.dir))
   const { ServerConnection }: typeof import("@/context/server") = await import(solidDom("@/context/server", import.meta.dir))
   const { ServerScope }: typeof import("@/utils/server-scope") = await import(solidDom("@/utils/server-scope", import.meta.dir))
@@ -48,7 +49,7 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
       savings: { bytesSaved: bytes, tokensSaved: bytes / 4, calls: 1, tokenCalls: 1 } })),
   })
   type Event = { name: string; details: { type: string } }
-  async function nativeServer(bytes: number, name: string) {
+  async function nativeServer(bytes: number, name: string, supported = true) {
     const protocol = "v2" as const
     const data = new Map<string, LeanDashboard.Info>()
     const provider: NormalizedProviderListResponse = { all: new Map(), connected: [], default: {} }
@@ -59,11 +60,11 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
       history: undefined as Promise<void> | undefined }
     const server = createServer(async (request, response) => {
       response.setHeader("access-control-allow-origin", "*")
-      response.setHeader("access-control-allow-headers", "content-type,x-orchestra-directory")
+      response.setHeader("access-control-allow-headers", "content-type,authorization")
       response.setHeader("access-control-allow-methods", "GET,PATCH,OPTIONS")
       if (request.method === "OPTIONS") { response.writeHead(204); response.end(); return }
       const url = new URL(request.url!, "http://fixture")
-      const directory = url.searchParams.get("directory")!
+      const directory = url.searchParams.get("location[directory]")!
       const chunks: Buffer[] = []
       for await (const chunk of request) chunks.push(Buffer.from(chunk))
       const body: LeanDashboard.Update | undefined = request.method === "PATCH" ? JSON.parse(Buffer.concat(chunks).toString()) : undefined
@@ -80,7 +81,7 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
         exit: 0, time: 123, bytesSaved: bytes, tokensSaved: bytes / 4,
       }] }
       response.writeHead(200, { "content-type": "application/json" })
-      response.end(JSON.stringify(url.pathname.includes("history") ? history : updated))
+      response.end(JSON.stringify({ location: { directory }, data: url.pathname.includes("history") ? history : updated }))
     })
     await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve))
     const address = server.address()
@@ -96,6 +97,8 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
         return [catalog] as const
       } },
       sdk: { scope, protocol: Promise.resolve(protocol), protocolKind: () => protocol,
+        // A server without the V2 Lean route has no current client, which the chapter reads as unsupported.
+        orchestra: supported ? Orchestra.make({ baseUrl: connection.http.url }) : undefined,
         ensureDirSdkContext: (directory: string) => ({ scope, directory, protocol: Promise.resolve(protocol),
           client: createSdkForServer({ server: connection.http, directory, throwOnError: true }) }),
         event: { listen: (listener: (event: Event) => void) => { listeners.add(listener); return () => { listeners.delete(listener) } } },
@@ -107,7 +110,7 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
   test("registered native chapter remounts same-project directories and servers; late history/input and preferences cannot mix", async () => {
     const one = await nativeServer(800, "Native named profile")
     const two = await nativeServer(4000, "Remote named profile")
-    const unsupported = await nativeServer(0, "Unsupported")
+    const unsupported = await nativeServer(0, "Unsupported", false)
     const servers = [one, two, unsupported]
     const [selection, select] = createStore({ server: ServerConnection.key(one.connection), directory: "/one" })
     const opened: { server: ServerConnection.Key; sessionId: string }[] = []
