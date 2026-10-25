@@ -17,9 +17,9 @@ Small declarative CI rules over the lines and paths a change adds. Run with `bun
 - `new_only = true` (added-lines, `match` needs a capture group) skips a line when a removed line in the same file has the same first group, so a version bump is not reported as a new dependency.
 - Size limits stay in `script/godfile.ts`; this directory does not reimplement them.
 
-- `--warn` reports gate findings without failing (setup errors still fail); on GitHub Actions each finding becomes a `::warning` annotation. `--cwd <repo>` points the engine at another checkout.
+- `--warn` reports gate findings without failing (setup errors still fail). On GitHub Actions each finding becomes an annotation (`::error` for a gate unless `--warn`, `::warning` otherwise). `--cwd <repo>` points the engine at another checkout.
 
-CI: `.github/workflows/guards.yml` runs on every PR in warn mode, from the base branch's copy of the engine when it has one, so the change cannot edit the code that judges it. A label `guardrail-approved:<rule id>`, applied by someone with write access, clears that changed-paths rule; plain `guardrail-approved` means protected-paths. Every new `guardrail-ignore` is reported by the warn rule `guardrail-ignore-added`. Promote to gate by dropping `--warn` after a week of measured noise.
+CI: `.github/workflows/guards.yml` runs on every PR: a gate finding fails the job, a warn finding is an annotation, from the base branch's copy of the engine when it has one, so the change cannot edit the code that judges it. A label `guardrail-approved:<rule id>`, applied by someone with write access, clears that changed-paths rule; plain `guardrail-approved` means protected-paths. Every new `guardrail-ignore` is reported by the warn rule `guardrail-ignore-added`.
 
 Catalog, evidence and the next rules: `docs/guardrail/`.
 

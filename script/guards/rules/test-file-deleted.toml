@@ -1,9 +1,9 @@
 id = "test-file-deleted"
-severity = "gate"
+severity = "warn"
 on = "changed-paths"
 paths = ["$js_tests", "$py_tests", "$rs_tests"]
 exclude = []
-# A rename is status R, not D, so moving a test does not fire.
+# Warn, not gate: 21 of the last 600 dev commits delete a test file, almost all with the code under test. A rename is status R, not D, so moving a test does not fire.
 statuses = ["D"]
 message = "Test file deleted. If the code under test is gone, an approver clears it with the label guardrail-approved:test-file-deleted; otherwise restore the test."
 positive = ["packages/server/test/lsp-http.test.ts", "tests/test_session.py", "crates/a/tests/contract.rs", "apps/x/src/a.spec.tsx"]
