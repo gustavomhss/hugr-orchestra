@@ -273,11 +273,11 @@ export const readGlobal = Effect.fn("Config.readGlobal")(function* () {
     ...(typeof document.shell === "string" ? { shell: document.shell } : {}),
     // The per-agent engines `updateGlobal` writes; the app reads them back to show the Maestro engine it saved.
     agents: Object.fromEntries(
-      Object.entries(document.agents).flatMap(([id, agent]) => {
+      Object.entries(document.agents).flatMap(([id, agent]): [string, { engine: "orchestra" | "claude-code" }][] => {
         const engine = agent !== null && typeof agent === "object" ? (agent as { engine?: unknown }).engine : undefined
         return engine === "orchestra" || engine === "claude-code" ? [[id, { engine }]] : []
       }),
-    ),
+    ) as Record<string, { engine: "orchestra" | "claude-code" }>,
     disabledProviders: [
       ...new Set([
         ...document.policies.filter(providerDenial).map((item) => item.resource),
