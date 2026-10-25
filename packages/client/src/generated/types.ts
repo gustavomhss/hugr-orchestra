@@ -1144,6 +1144,22 @@ export type SessionsContextOutput = {
   >
 }["data"]
 
+export type SessionsDiffInput = {
+  readonly sessionID: { readonly sessionID: string }["sessionID"]
+  readonly messageID: { readonly messageID: string; readonly context?: number | undefined }["messageID"]
+  readonly context?: { readonly messageID: string; readonly context?: number | undefined }["context"]
+}
+
+export type SessionsDiffOutput = {
+  readonly data: ReadonlyArray<{
+    readonly path: string
+    readonly status: "added" | "modified" | "deleted"
+    readonly additions: number
+    readonly deletions: number
+    readonly patch: string
+  }>
+}["data"]
+
 export type SessionsHistoryInput = {
   readonly sessionID: { readonly sessionID: string }["sessionID"]
   readonly limit?: { readonly limit?: number | undefined; readonly after?: number | undefined }["limit"]

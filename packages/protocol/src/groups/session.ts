@@ -579,6 +579,26 @@ export const makeSessionGroup = <I extends HttpApiMiddleware.AnyId, S>(sessionLo
         ),
     )
     .add(
+      HttpApiEndpoint.get("session.diff", "/api/session/:sessionID/diff", {
+        params: { sessionID: Session.ID },
+        query: Schema.Struct({
+          messageID: SessionMessage.ID,
+          context: Schema.NumberFromString.pipe(Schema.decodeTo(NonNegativeInt), Schema.optional),
+        }),
+        success: Schema.Struct({ data: Schema.Array(Revert.FileDiff) }),
+        error: [SessionNotFoundError, UnknownError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.diff",
+            summary: "Get turn diff",
+            description:
+              "Diff the files changed by the turn that answered a user message, from its first to its last snapshot. Returns an empty list when the message is not a user message or the turn has no snapshots.",
+          }),
+        ),
+    )
+    .add(
       HttpApiEndpoint.get("session.history", "/api/session/:sessionID/history", {
         params: { sessionID: Session.ID },
         query: SessionHistoryQuery,

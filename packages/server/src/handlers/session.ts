@@ -534,6 +534,35 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
         }),
       )
       .handle(
+        "session.diff",
+        Effect.fn(function* (ctx) {
+          const unexpected = (error: unknown) => {
+            const ref = `err_${crypto.randomUUID().slice(0, 8)}`
+            return Effect.logError("failed to diff session turn", { cause: error }).pipe(
+              Effect.annotateLogs({ ref, sessionID: ctx.params.sessionID }),
+              Effect.andThen(
+                Effect.fail(new UnknownError({ message: "Unexpected server error. Check server logs for details.", ref })),
+              ),
+            )
+          }
+          return {
+            data: yield* session.diff({ sessionID: ctx.params.sessionID, ...ctx.query }).pipe(
+              Effect.catchTags({
+                "Session.NotFoundError": (error) =>
+                  Effect.fail(
+                    new SessionNotFoundError({
+                      sessionID: error.sessionID,
+                      message: `Session not found: ${error.sessionID}`,
+                    }),
+                  ),
+                "Session.MessageDecodeError": unexpected,
+                "Snapshot.Error": unexpected,
+              }),
+            ),
+          }
+        }),
+      )
+      .handle(
         "session.context",
         Effect.fn(function* (ctx) {
           return {
