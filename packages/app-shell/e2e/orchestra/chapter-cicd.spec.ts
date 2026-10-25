@@ -327,7 +327,7 @@ test(`run executes the commands through a server PTY with live, downloadable log
 
 test("a failing run fails the pipeline; confirmed cancellation cannot complete later", async ({ page }) => {
   await setup(page)
-  const pty = await mockPty(page, "v2")
+  const pty = await mockPty(page)
   await openChapter(page)
   await createPipeline(page)
   const card = page.locator("article.mx-card")
@@ -487,7 +487,7 @@ for (const outcome of ["gone", "finished"] as const) {
 
 test("a run the server cannot start is a start failure, not a failed check", async ({ page }) => {
   await setup(page)
-  const pty = await mockPty(page, "v2")
+  const pty = await mockPty(page)
   pty.createFailure = true
   await openChapter(page)
   await createPipeline(page)
