@@ -1,9 +1,5 @@
 # pl Glossary
 
-## Sources
-
-- PR #9884: https://github.com/anomalyco/opencode/pull/9884
-
 ## Do Not Translate (Locale Additions)
 
 - `Orchestra` (preserve casing in prose; keep `orchestra` only in commands, package names, paths, or code)

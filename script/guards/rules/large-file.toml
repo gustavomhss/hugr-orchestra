@@ -1,4 +1,5 @@
 id = "large-file"
+group = "hygiene"
 severity = "warn"
 on = "changed-paths"
 paths = ["**"]
@@ -7,5 +8,6 @@ statuses = ["A"]
 min_bytes = 1000000
 # Warn, not gate: real history has intended large files (a 1.7 MB mock-data file, a 1.1 MB schema).
 message = "Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not."
+summary = "Files over a megabyte make every clone slower forever, and generated data or media rarely belongs in git. Confirm the file needs to be committed, or keep it elsewhere."
 positive = ["specs/mock/data-real.js", "schema/tui.json"]
 negative = ["packages/app-shell/public/wallpapers/a.jpg"]

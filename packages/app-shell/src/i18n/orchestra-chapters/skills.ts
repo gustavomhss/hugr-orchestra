@@ -1,6 +1,6 @@
 // Copy owned by the skills screen. Add new keys here instead of i18n/orchestra.ts so screens merge without conflicts.
 export const SKILLS_COPY = {
-  "orchestra.skills.eyebrow": "{{profile}} / profile configuration",
+  "orchestra.skills.eyebrow": "{{profile}} · Configuration",
   "orchestra.skills.add": "Add skill",
   "orchestra.skills.disabled": "Disabled",
   "orchestra.skills.source.project": "Project",

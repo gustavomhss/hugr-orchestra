@@ -1,7 +1,6 @@
 import type { QueryClient } from "@tanstack/solid-query"
 import { createEffect, createMemo, createSignal, For, on, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"
-import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
 import { useNavigate } from "@solidjs/router"
 import { useLanguage } from "@/context/language"
 import type { ServerSDK } from "@/context/server-sdk"
@@ -545,10 +544,13 @@ export function KpiDashboard(props: {
             </header>
             <div class="home-rows">
               <Show when={exportable() && sessions().length === 0}>
-                <p class="home-empty">{language.t("orchestra.home.sessionsEmpty")}</p>
-                <ButtonV2 variant="contrast" icon="plus" onClick={props.newSession}>
-                  {language.t("orchestra.home.startSession")}
-                </ButtonV2>
+                <div class="home-first">
+                  <strong>{language.t("orchestra.home.sessionsEmpty")}</strong>
+                  <span>{language.t("orchestra.home.sessionsHint")}</span>
+                  <button type="button" class="mx-btn primary" onClick={props.newSession}>
+                    {language.t("orchestra.home.startSession")}
+                  </button>
+                </div>
               </Show>
               <For each={sessions()}>
                 {(session) => (
@@ -594,7 +596,10 @@ export function KpiDashboard(props: {
             </header>
             <div class="home-rows">
               <Show when={exportable() && models().length === 0}>
-                <p class="home-empty">{language.t("orchestra.home.modelsEmpty")}</p>
+                <div class="home-first">
+                  <strong>{language.t("orchestra.home.modelsEmpty")}</strong>
+                  <span>{language.t("orchestra.home.modelsHint")}</span>
+                </div>
               </Show>
               <For each={models()}>
                 {(model) => (

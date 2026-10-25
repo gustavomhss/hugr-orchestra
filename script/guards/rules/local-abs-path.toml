@@ -1,4 +1,5 @@
 id = "local-abs-path"
+group = "secrets"
 severity = "warn"
 on = "added-lines"
 paths = ["**/*.{ts,tsx,mts,cts,js,jsx,mjs,py,rs,sh,json,toml,yml,yaml}"]
@@ -7,5 +8,6 @@ skip_comments = ["//", "#"]
 # Test files hold synthetic paths (/home/me, /Users/kelvin) on purpose, so they are skipped. A path under a personal home directory works on one machine only, and it leaks a user name. Placeholders such as /Users/you are skipped.
 match = '''(/Users/(?!you/|name/|user/|example/|someone/|runner/|Shared/)[A-Za-z0-9._-]+/|/home/(?!you/|name/|user/|example/|runner/|node/|dock/|proof/)[A-Za-z0-9._-]+/|C:\\Users\\[A-Za-z0-9._-]+\\)'''
 message = "Absolute path into a personal home directory. Use a relative path, an environment variable or os.homedir()."
+summary = "A path into someone's personal home folder only works on that one machine and reveals their username. Use a relative path, an environment variable or the system's home directory lookup."
 positive = ['const dir = "/Users/gustavo/Documents/HuGR"', 'path = "/home/alice/project/src"', 'cwd: "C:\Users\bob\repo"']
 negative = ['const dir = path.join(os.homedir(), ".orchestra")', '"/Users/you/project"', '// see /Users/gustavo/x', '/home/runner/work/repo', '/home/dock/.runtime/cert.pem']

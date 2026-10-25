@@ -1,4 +1,5 @@
 id = "guardrail-ignore-added"
+group = "silenced"
 severity = "warn"
 on = "added-lines"
 paths = ["**/*"]
@@ -6,5 +7,6 @@ exclude = ["script/guards/**", "docs/**", "**/*.md"]
 # Every escape hatch must be visible to a reviewer: an agent that cannot pass a guard will learn to write the comment.
 match = '''guardrail-ignore:\s*\S+'''
 message = "guardrail-ignore added. A reviewer must confirm the rule is wrong for this line and the reason is true."
+summary = "An ignore comment turns a guardrail off for that line, so it needs a second look. A reviewer should confirm the rule really is wrong here and that the stated reason holds."
 positive = ['const x = a as any // guardrail-ignore: ts-any-added boundary type from a vendor SDK', '# guardrail-ignore: js-console-log CLI output']
 negative = ['const x = 1', '// ignore this line when reading', '- Suppress one line with the guardrail comment.']

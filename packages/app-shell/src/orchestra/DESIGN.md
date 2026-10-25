@@ -81,6 +81,8 @@ A `backdrop-filter` repaints whenever anything inside its box paints. The sideba
 | `--orchestra-overlay-pressed` | `rgba(255,255,255,.08)` | pressed wash |
 | `--mx-raised` | `rgba(19,28,38,.55)` / light `rgba(255,255,255,.63)` | chapter cards |
 | `--mx-soft` | `rgba(170,196,220,.055)` | quiet chips and wells |
+| `--mx-rim` | `rgba(166,189,211,.24)` / light `rgba(65,86,107,.24)` | card rim on hover or focus-within |
+| `--mx-sheen` | white `.03` / light `.4` fading out over 56px | top light on cards and dialog heads |
 
 Hairlines: `--orchestra-border-muted` `.14`, `--orchestra-border` `.2`, `--orchestra-border-strong` `.34`
 (all on `rgb(163,184,203)`); chapter kit `--mx-line` `rgba(166,189,211,.14)`.
@@ -179,7 +181,9 @@ Measured at 1920×1200 in the dev app. Spacing values sit on a 2px grid; most ga
 | Brand block | padding 2px 10px 16px |
 | Nav item | 31px tall, padding 0 10px, gap 11px, radius 6px, 13px text, 1px between items |
 | Nav icon | 16×16px |
-| Sidebar active item | gradient fill, 2px accent inset bar (mirrored in RTL) |
+| Sidebar active item | gradient fill, 1px inset rim, 3×(row−16px) rounded accent pill inset 3px from the start edge (logical, so RTL follows) |
+| WIP chip (light) | `rgba(28,46,65,.05)` fill, ink `#4f3a14` |
+| Light chrome text | toolbar labels, sidebar and tab text `#333c48`, icons ≥3:1 on the brightest glass band |
 | Chapter column | `min(1020px, calc(100% - 72px))`, padding 52px top and 72px bottom |
 | Chapter header | eyebrow, 4xl title, optional subtitle; primary action top right (`align-items: flex-start`) |
 | Card | radius 10px, padding 19px 20px 18px |
@@ -190,8 +194,24 @@ Measured at 1920×1200 in the dev app. Spacing values sit on a 2px grid; most ga
 - **Buttons.** Primary: `--mx-primary` fill, white text, one per view. Secondary: no fill until hover, then
   `--orchestra-surface-hover`. Destructive: `--orchestra-danger` text, fill only on confirm.
 - **Tabs.** The close button shows only on hover or for the active tab. A single seam between stacked surfaces.
-- **Cards.** No footer divider. Empty states never sit in a hero-number slot.
-- **Dialogs.** Float glass over the scrim, radius xl, title 2xl.
+- **Cards.** No footer divider. Empty states never sit in a hero-number slot. `.mx-card` layers `--mx-sheen` over
+  `--mx-raised`, with the highlight rim and `--mx-card-shadow` (a 1px contact shadow plus a soft 22px drop). Hover
+  or focus inside firms the border to `--mx-rim` and swaps the drop for `--mx-pop-shadow`; cards never move.
+- **Status chips.** `.mx-badge.good` and `.bad` carry a 5px dot and a 9% wash of their own color, no border.
+  Neutral badges keep the `--mx-line` hairline.
+- **Empty, error and loading states.** One shared well, `.mx-empty` (`chapters/kit.css`): padding 30px 24px 32px,
+  1px solid `--mx-line` hairline, radius lg, a `--mx-soft` top gradient and the highlight rim, centered text. A 30px
+  mark (radius md, dot and ring) sits above a `<strong>` title (md, emphasis, 600), then the hint (sm, dim) and at
+  most one `.mx-btn` 14px below. `role="alert"` tints border, fill and mark with `--mx-bad`. Never a dashed box.
+  Inside a dashboard card (Home) the empty slot is `.home-first`: left-aligned title, 46ch hint, primary button.
+- **Chapter header.** Every chapter opens with `MxPage`: eyebrow `{{profile}} · Area` (always the middle dot,
+  never a slash), an h1, one short sentence and at most one primary action on the right. Search follows in
+  `.mx-toolbar` as `.mx-search` with a placeholder and the same text as `aria-label` (no visible label), the profile
+  badge beside it. On WIP chapters the seal sits above the page and the page gives back its height (top padding
+  14px), so the eyebrow lands at the same height (117px in the dev app) with or without it.
+- **Dialogs.** Float glass over the scrim, radius xl, title 2xl. The head carries `--mx-sheen`, the foot a
+  `--mx-soft` wash, and the frame the highlight rim over `--mx-shadow`. The head's close icon is a 28px rounded
+  square (radius sm, `--mx-dim`, `--mx-soft` on hover), so its focus ring is not a tight box around the glyph.
 - **Focus.** A visible ring in `--orchestra-accent` on every interactive element (`hit-areas.spec.ts` pins it).
 - **Clipping.** Anything cut off gets a fade mask, never a hard edge.
 

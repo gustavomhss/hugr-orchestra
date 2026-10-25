@@ -1,9 +1,11 @@
 id = "rs-todo-macros"
+group = "leftovers"
 severity = "gate"
 on = "added-lines"
 paths = ["**/*.rs"]
 exclude = ["**/tests/**", "**/benches/**", "**/examples/**"]
 match = '\b(todo|unimplemented)!\('
 message = "todo!/unimplemented! panics at run time and ships a stub. Implement it, or return an error."
+summary = "These placeholder macros compile fine but crash the program when that code runs, shipping a stub. Write the implementation, or return a proper error."
 positive = ['    todo!()', 'unimplemented!("later")', 'todo!("handle the empty case")']
 negative = ['// todo: handle this', 'let todo = vec![];', 'macro_rules! todo_item {}']

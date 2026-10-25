@@ -1,4 +1,5 @@
 id = "js-empty-catch"
+group = "hygiene"
 severity = "warn"
 on = "added-lines"
 paths = ["**/*.{ts,tsx,mts,cts,js,jsx,mjs}"]
@@ -7,5 +8,6 @@ exclude = []
 skip_comments = ["//", "#"]
 match = '(?:\bcatch\s*(\(\s*\w*\s*\))?\s*\{\s*\})'
 message = "Empty catch swallows the error. Handle it, log it, or put a comment inside saying why ignoring it is safe."
+summary = "An empty error handler hides failures, so bugs go unnoticed. Handle or log the error, or add a comment explaining why it is safe to ignore."
 positive = ['  } catch {}', 'try { a() } catch (e) {}', '} catch (error) { }']
 negative = ['} catch {', '} catch (e) { log(e) }', '// catch {} is banned']

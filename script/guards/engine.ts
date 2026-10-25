@@ -18,6 +18,10 @@ export type Finding = {
   path: string
   line: number | undefined
   message: string
+  // added-lines only: the offending added line and where `match` hit in it, [start, end) in UTF-16 units, so a
+  // viewer can underline the hit without running the regex again.
+  excerpt?: string
+  match?: [number, number]
 }
 
 // `guardrail-ignore: <rule id> <reason>` on the offending line. Without a reason it does not count.
@@ -25,6 +29,8 @@ const IGNORE = /guardrail-ignore:\s*(\S+)\s+\S/
 
 export function evaluate(input: { rules: Rule[]; config: Config; diff: Diff; approved: string[] }) {
   return input.rules.flatMap((rule) => {
+    // The label `guardrail-approved:<rule id>` clears a rule of any kind: a JSON line cannot carry an ignore comment.
+    if (input.approved.includes(rule.id)) return []
     if (rule.on === "changed-paths") return pathFindings(rule, input)
     if (rule.on === "line-balance") return balanceFindings(rule, input)
     return lineFindings(rule, input)
@@ -32,7 +38,6 @@ export function evaluate(input: { rules: Rule[]; config: Config; diff: Diff; app
 }
 
 function pathFindings(rule: Rule, input: Parameters<typeof evaluate>[0]): Finding[] {
-  if (input.approved.includes(rule.id)) return []
   if (input.diff.changes.some((change) => globs(rule.requiresChanged, change.path))) return []
   return input.diff.changes
     .filter((change) => rule.statuses.length === 0 || rule.statuses.includes(change.status))
@@ -76,6 +81,8 @@ function lineFindings(rule: Rule, input: Parameters<typeof evaluate>[0]): Findin
           path: change.path,
           line: added.line,
           message: rule.message,
+          excerpt: added.text,
+          match: hitRange(rule, added.text),
         })),
     )
 }
@@ -93,6 +100,11 @@ function balanceFindings(rule: Rule, input: Parameters<typeof evaluate>[0]): Fin
       return lost - added >= (rule.minNetRemoved ?? 1)
     })
     .map((change) => ({ rule: rule.id, severity: rule.severity, path: change.path, line: undefined, message: rule.message }))
+}
+
+function hitRange(rule: Rule, text: string): [number, number] | undefined {
+  const hit = rule.match?.exec(text)
+  return hit ? [hit.index, hit.index + hit[0].length] : undefined
 }
 
 // A version bump removes the line that names the same dependency. Only meaningful with new_only.

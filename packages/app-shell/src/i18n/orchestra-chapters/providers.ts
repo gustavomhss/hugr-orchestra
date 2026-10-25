@@ -1,6 +1,6 @@
 // Copy owned by the providers screen. Add new keys here instead of i18n/orchestra.ts so screens merge without conflicts.
 export const PROVIDERS_COPY = {
-  "orchestra.providers.eyebrow": "{{profile}} / profile configuration",
+  "orchestra.providers.eyebrow": "{{profile}} · Configuration",
   "orchestra.providers.description": "Choose how this profile reaches its models.",
   "orchestra.providers.connect": "Connect provider",
   "orchestra.providers.search": "Search providers",

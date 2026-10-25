@@ -277,6 +277,7 @@
     "./pty/shell-marks": "./src/pty/shell-marks.ts",
     "./pty/schema": "./src/pty/schema.ts",
     "./pty/ticket": "./src/pty/ticket.ts",
+    "./guardrail": "./src/guardrail.ts",
     "./pull-request": "./src/pull-request.ts",
     "./question": "./src/question.ts",
     "./reference": "./src/reference.ts",

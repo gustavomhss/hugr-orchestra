@@ -223,6 +223,14 @@ export type ActionsError = {
 export const isActionsError = (value: unknown): value is ActionsError =>
   typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "ActionsError"
 
+export type GuardrailError = {
+  readonly name: "GuardrailError"
+  readonly data: { readonly kind: "no-engine" | "no-bun" | "failed" | "unreadable"; readonly message: string }
+}
+
+export const isGuardrailError = (value: unknown): value is GuardrailError =>
+  typeof value === "object" && value !== null && "name" in value && value["name"] === "GuardrailError"
+
 export type ForbiddenError = { readonly _tag: "ForbiddenError"; readonly message: string }
 
 export const isForbiddenError = (value: unknown): value is ForbiddenError =>

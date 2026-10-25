@@ -1,4 +1,5 @@
 id = "rs-dbg-macro"
+group = "leftovers"
 severity = "gate"
 on = "added-lines"
 paths = ["**/*.rs"]
@@ -6,5 +7,6 @@ exclude = []
 skip_comments = ["//", "#"]
 match = '(?:\bdbg!\()'
 message = "dbg! prints to stderr and is for local debugging. Remove it, or use tracing."
+summary = "The debug print macro is meant for local debugging and writes noise to standard error in real runs. Remove it, or use the project's tracing instead."
 positive = ['    dbg!(&value);', 'let x = dbg!(a + b);']
 negative = ['// dbg!(x) was here', 'let dbg = true;', 'debug!("x")']

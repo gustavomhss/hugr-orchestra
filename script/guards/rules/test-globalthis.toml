@@ -1,4 +1,5 @@
 id = "test-globalthis"
+group = "tests"
 severity = "warn"
 on = "added-lines"
 paths = ["$js_tests"]
@@ -7,5 +8,6 @@ skip_comments = ["//"]
 # AGENTS.md: avoid mocks, and do not use globalThis.* in tests unless it is the only option. Assigning to it replaces a real thing with a fake.
 match = '''\bglobalThis\.\w+\s*=[^=]'''
 message = "Test assigns to globalThis. Exercise the real implementation or inject a dependency; patch the global only when nothing else works."
+summary = "Overwriting a global value in a test can leak into other tests and usually tests a fake instead of the real code. Exercise the real implementation or pass the dependency in, and patch globals only as a last resort."
 positive = ['  globalThis.fetch = async () => new Response("ok")', 'globalThis.Bun = fake']
 negative = ['const t = globalThis.setTimeout', 'if (globalThis.fetch === undefined) return', '// globalThis.x = 1']

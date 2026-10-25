@@ -1,4 +1,5 @@
 id = "conflict-markers"
+group = "leftovers"
 severity = "gate"
 on = "added-lines"
 paths = ["**"]
@@ -8,5 +9,6 @@ generated = "include"
 # Seven markers then a space or end of line. The bare ======= is left out because Markdown setext headings use it.
 match = '^(<{7}|>{7})( |$)'
 message = "Merge conflict marker left in the file. Resolve the conflict."
+summary = "Leftover markers from a merge conflict mean the file still holds both sides of the conflict and will usually break. Finish resolving the conflict and remove the markers."
 positive = ["<<<<<<< HEAD", ">>>>>>> 98d36706df (feat: thing)", "<<<<<<<"]
 negative = ["a << b", "=======", "<<<<<<<<< not a marker", "  <<<<<<< indented, not at line start", "const x = '>>>>>>>'"]

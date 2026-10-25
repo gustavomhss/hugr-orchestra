@@ -1,9 +1,11 @@
 id = "env-file"
+group = "secrets"
 severity = "gate"
 on = "changed-paths"
 paths = ["**/.env", "**/.env.*"]
 exclude = ["**/.env.example", "**/.env.sample", "**/.env.template", "**/.env.*.example", "**/.env.*.sample", "**/.env.*.template"]
 statuses = ["A", "R", "C"]
 message = "Environment file added: it normally holds real secrets. Commit a .env.example with placeholder values instead."
+summary = "Environment files usually hold real passwords and keys, so committing one leaks them. Remove it and commit an example file with placeholder values instead."
 positive = [".env", "apps/web/.env.local", ".env.production"]
 negative = [".env.example", "apps/web/.env.local.example", "docs/environment.md"]

@@ -164,8 +164,7 @@ export default function PluginsPage(props: ChapterPageProps) {
         </Match>
         <Match when={!store().behaviors().length}>
           <div class="mx-empty">
-            {language.t("orchestra.plugins.empty")}
-            <br />
+            <strong>{language.t("orchestra.plugins.empty")}</strong>
             {language.t("orchestra.plugins.emptyHint")}
           </div>
         </Match>

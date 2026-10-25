@@ -345,6 +345,10 @@ import type {
   RelayRunsLedgerOutput,
   InstallationUpgradeInput,
   InstallationUpgradeOutput,
+  GuardrailRulesInput,
+  GuardrailRulesOutput,
+  GuardrailRunInput,
+  GuardrailRunOutput,
   OperatorInspectInput,
   OperatorInspectOutput,
   ConnectionsConnectInput,
@@ -2827,6 +2831,33 @@ export function make(options: ClientOptions) {
             body: { target: input["target"] },
             successStatus: 200,
             declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    guardrail: {
+      rules: (input?: GuardrailRulesInput, requestOptions?: RequestOptions) =>
+        request<GuardrailRulesOutput>(
+          {
+            method: "GET",
+            path: `/api/guardrail/rules`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      run: (input?: GuardrailRunInput, requestOptions?: RequestOptions) =>
+        request<GuardrailRunOutput>(
+          {
+            method: "POST",
+            path: `/api/guardrail/run`,
+            query: { location: input?.["location"] },
+            body: { base: input?.["base"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
             empty: false,
           },
           requestOptions,

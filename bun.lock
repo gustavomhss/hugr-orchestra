@@ -364,7 +364,7 @@
         "effect": "catalog:",
         "force-graph": "1.43.5",
         "fuzzysort": "catalog:",
-        "ghostty-web": "github:anomalyco/ghostty-web#83c0a07b8628b748aed073b232cb4b52a6ca11c1",
+        "ghostty-web": "github:gustavomhss/ghostty-web#7a24976e93702ac99a5e2a3f6fb1232f94a0f48a",
         "luxon": "catalog:",
         "marked": "catalog:",
         "marked-shiki": "catalog:",
@@ -2837,7 +2837,7 @@
 
     "get-tsconfig": ["get-tsconfig@4.14.0", "", { "dependencies": { "resolve-pkg-maps": "^1.0.0" } }, "sha512-yTb+8DXzDREzgvYmh6s9vHsSVCHeC0G3PI5bEXNBHtmshPnO+S5O7qgLEOn0I5QvMy6kpZN8K1NKGyilLb93wA=="],
 
-    "ghostty-web": ["ghostty-web@github:anomalyco/ghostty-web#83c0a07", {}, "anomalyco-ghostty-web-83c0a07", "sha512-Lf2v1agHkVUpMpHBWWuCZrhOEmcwwin5/Hboc9rZwQ7/CKkIh5rU1r1CvfLlhkMoFv+ed8z52RZ8hkzGZZj3MQ=="],
+    "ghostty-web": ["ghostty-web@github:gustavomhss/ghostty-web#7a24976", {}, "gustavomhss-ghostty-web-7a24976", "sha512-aMV1aARaCalcrZoUTR9uqGoyvzsIXmXMOmyU/tLkIdBcBZD1BRPJvXbDNWQLsPzSGrhjVGHWeH8qsYrpWC4ahw=="],
 
     "gitlab-ai-provider": ["gitlab-ai-provider@6.13.0", "", { "dependencies": { "@anthropic-ai/sdk": "^0.71.0", "@anycable/core": "^0.9.2", "graphql-request": "^6.1.0", "isomorphic-ws": "^5.0.0", "openai": "^6.16.0", "socket.io-client": "^4.8.1", "vscode-jsonrpc": "^8.2.1", "zod": "^3.25.76" }, "peerDependencies": { "@ai-sdk/provider": ">=3.0.0", "@ai-sdk/provider-utils": ">=4.0.0" } }, "sha512-JDZhNjvoiB7xBfesNegXNDg6ItKf9M2l8/DifuIyuvYmGgaZnDDbl89QrOKSoIzAOpo/+3Om0qviBPm84nGEbg=="],
 

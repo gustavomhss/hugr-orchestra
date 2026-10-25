@@ -17,7 +17,7 @@ export const resourceLinks = [
 
 const text = Schema.String.check(Schema.isMaxLength(2048))
 const routeSchema = Schema.Struct({
-  view: Schema.Literals(["library", "runs", "workflow", "run", "job", "source", "resources", "settings", "local"]),
+  view: Schema.Literals(["library", "runs", "workflow", "run", "job", "source", "resources", "settings", "local", "guardrails"]),
   workflowID: Schema.optional(text), runID: Schema.optional(text), jobID: Schema.optional(text),
   attempt: Schema.optional(Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 1000000 }))),
   path: Schema.optional(text), ref: Schema.optional(text),
@@ -145,7 +145,7 @@ export function synchronizeNavigation(input: {
   })
   createEffect(() => {
     const value = snapshot()
-    if (value.route?.view !== "local" && (!synced() || !settled())) return
+    if (!["local", "guardrails"].includes(value.route?.view ?? "") && (!synced() || !settled())) return
     const key = navigationKey(value)
     if (key === cursor.written) return
     const route = JSON.stringify([value.bindingID, value.route])

@@ -287,6 +287,7 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   font-size: var(--orchestra-font-size-md);
   text-align: start;
   cursor: pointer;
+  position: relative;
 }
 
 .orchestra-nav-button:hover {
@@ -303,6 +304,17 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   background: var(--orchestra-sidebar-active-background);
   color: var(--orchestra-sidebar-active-text);
   box-shadow: var(--orchestra-sidebar-active-shadow);
+}
+
+/* A rounded pill inside the row, so the marker never meets the corner radius. */
+.orchestra-nav-button[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  inset-block: 8px;
+  inset-inline-start: 3px;
+  inline-size: 3px;
+  border-radius: 3px;
+  background: var(--orchestra-sidebar-active-accent);
 }
 
 .orchestra-nav-button:focus-visible,
@@ -399,6 +411,11 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   margin-inline: 16px;
   padding-block: 4px;
   padding-inline: 8px;
+}
+/* The mark takes 38px of flow (14px margin, 24px tall); the page gives it back so every header starts at
+   the same height with or without it. */
+.orchestra-chapter:has(> .orchestra-wip-mark) .mx-page > :first-child {
+  padding-block-start: 14px;
 }
 
 .orchestra-sidebar-foot {

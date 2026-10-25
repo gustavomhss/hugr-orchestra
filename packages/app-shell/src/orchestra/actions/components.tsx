@@ -1,7 +1,7 @@
 import { Show } from "solid-js"
 import type { Translate } from "./contract"
 
-export type IconName = "workflow" | "play" | "retry" | "stop" | "logs" | "code" | "box" | "settings" | "refresh" | "plus" | "search" | "branch" | "arrow" | "check" | "close" | "warning" | "github" | "gitlab" | "local"
+export type IconName = "workflow" | "play" | "retry" | "stop" | "logs" | "code" | "box" | "settings" | "refresh" | "plus" | "search" | "branch" | "arrow" | "check" | "close" | "warning" | "github" | "gitlab" | "local" | "shield"
 
 export function Icon(props: { name: IconName; size?: number }) {
   const size = () => props.size ?? 16
@@ -25,6 +25,7 @@ export function Icon(props: { name: IconName; size?: number }) {
       case "warning": return <path d="m12 3 9 17H3zM12 9v5m0 3v.1"/>
       case "github": return <path d="M12 3a9 9 0 0 0-9 9c0 4 2.6 7.4 6.2 8.6.5.1.7-.2.7-.5v-1.7c-2.5.5-3-.9-3-.9-.4-1-.9-1.2-.9-1.2-.8-.5.1-.5.1-.5.9.1 1.4.9 1.4.9.8 1.4 2.1 1 2.6.8.1-.6.3-1 .6-1.2-2-.2-4.1-1-4.1-4.4 0-1 .4-1.8.9-2.4-.1-.2-.4-1.1.1-2.3 0 0 .8-.2 2.5.9a8.5 8.5 0 0 1 4.6 0c1.7-1.1 2.5-.9 2.5-.9.5 1.2.2 2.1.1 2.3.6.6.9 1.4.9 2.4 0 3.4-2.1 4.2-4.1 4.4.3.3.6.8.6 1.6v2.4c0 .3.2.6.7.5A9 9 0 0 0 21 12a9 9 0 0 0-9-9Z"/>
       case "gitlab": return <><path d="M12 21 3 14 5.5 3 9 10h6l3.5-7L21 14Z"/><path d="M3 14l6-4 3 11 3-11 6 4M9 10h6"/></>
+      case "shield": return <path d="M12 3 19.5 5.5v5.8c0 4.6-3.3 7.3-7.5 9.2-4.2-1.9-7.5-4.6-7.5-9.2V5.5zM9 12l2.2 2.2L15.5 10"/>
       case "local": return <><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 8h8v8H8z"/></>
     }
   }
@@ -69,7 +70,7 @@ export function Status(props: { status?: string | null; conclusion?: string | nu
 
 // A failure state passes `retry` so the user can re-run the failed load from the same place.
 export function Empty(props: { title: string; detail?: string; busy?: boolean; error?: string; retry?: { label: string; run: () => void } }) {
-  return <section class="actions-empty" role="status" aria-live="polite" aria-busy={props.busy === true}>
+  return <section class="mx-empty actions-empty" role="status" aria-live="polite" aria-busy={props.busy === true}>
     <strong>{props.title}</strong><Show when={props.detail}><p>{props.detail}</p></Show>
     <Show when={props.busy}><span class="actions-empty-progress" aria-hidden="true"/></Show>
     <Show when={props.error}><p class="actions-error" role="alert">{props.error}</p></Show>

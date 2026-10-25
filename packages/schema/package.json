@@ -69,6 +69,7 @@
     "./provider": "./src/provider.ts",
     "./pty": "./src/pty.ts",
     "./pty-ticket": "./src/pty-ticket.ts",
+    "./guardrail": "./src/guardrail.ts",
     "./pull-request": "./src/pull-request.ts",
     "./question": "./src/question.ts",
     "./question-v1": "./src/question-v1.ts",

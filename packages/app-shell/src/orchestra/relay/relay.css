@@ -501,17 +501,6 @@ html[data-color-scheme="light"] body[data-new-layout] {
   padding-inline: max(20px, calc(50% - 250px));
   text-wrap: balance;
 }
-.wf-empty strong {
-  display: block;
-  margin-block-end: 6px;
-  color: var(--mx-strong);
-  font-family: var(--mx-emphasis);
-  font-weight: 600;
-  font-size: var(--orchestra-font-size-md);
-}
-.wf-empty .mx-btn {
-  margin-block-start: 14px;
-}
 .wf-toolbar {
   margin-block-start: 22px;
 }

@@ -39,13 +39,6 @@
 .agents-roster {
   min-inline-size: 0;
 }
-.agents-search {
-  max-inline-size: 360px;
-  margin-block-end: 12px;
-}
-.agents-search input {
-  min-inline-size: 0;
-}
 .agents-pages {
   display: flex;
   justify-content: space-between;
@@ -78,9 +71,6 @@
   stroke-width: 1.4;
   stroke-linecap: round;
   stroke-linejoin: round;
-}
-.orchestra-agents .mx-empty p {
-  margin: 0 0 12px;
 }
 .agents-draft-error {
   margin-block-start: 15px;

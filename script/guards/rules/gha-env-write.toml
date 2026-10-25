@@ -1,4 +1,5 @@
 id = "gha-env-write"
+group = "workflows"
 severity = "warn"
 on = "added-lines"
 paths = [".github/workflows/**/*.{yml,yaml}", ".github/actions/**/*.{yml,yaml}"]
@@ -6,5 +7,6 @@ exclude = []
 # Only when the written line also expands a ${{ }} expression; a fixed value is harmless.
 match = '(?=.*\$\{\{).*>>\s*"?\$\{?GITHUB_(ENV|PATH)\b'
 message = "An expression is written to GITHUB_ENV or GITHUB_PATH. If the value can come from outside the repository, it can inject variables or change which binary runs."
+summary = "Writing a workflow expression into the environment or search path file can let outside input set variables or change which program runs. Make sure the value cannot come from an untrusted source, or pass it another way."
 positive = ['echo "X=${{ steps.a.outputs.b }}" >> $GITHUB_ENV', 'echo "${{ github.event.x }}" >> "$GITHUB_PATH"']
 negative = ['echo "X=1" >> $GITHUB_ENV', 'echo "$HOME/bin" >> $GITHUB_PATH', 'echo "x=${{ steps.a.outputs.b }}" >> $GITHUB_OUTPUT']

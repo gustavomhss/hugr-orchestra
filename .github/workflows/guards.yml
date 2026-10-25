@@ -28,7 +28,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           BASE: origin/${{ github.event.pull_request.base.ref }}
         run: |
-          # A label `guardrail-approved:<rule id>` clears that changed-paths rule, but only when someone with write
+          # A label `guardrail-approved:<rule id>` clears that rule (any kind), but only when someone with write
           # access applied it. `guardrail-approved` alone keeps meaning protected-paths.
           approved=""
           for label in $(gh api "repos/$GITHUB_REPOSITORY/issues/${{ github.event.pull_request.number }}/events" --paginate \

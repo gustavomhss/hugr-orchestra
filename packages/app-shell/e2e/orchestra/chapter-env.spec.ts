@@ -132,7 +132,7 @@ for (const scheme of ["dark", "light"]) {
     const chapter = page.locator('[data-component="env-page"]')
     const screen = page.locator('[data-mx-page="orchestra-env"]')
     // The profile name is a first-strong isolate inside the copy.
-    await expect(screen.locator(".mx-eyebrow")).toHaveText("\u2068Env A\u2069 / profile configuration")
+    await expect(screen.locator(".mx-eyebrow")).toHaveText("\u2068Env A\u2069 · Configuration")
     await expect(screen.getByRole("heading", { name: ".env", level: 1 })).toBeVisible()
     await expect(screen.locator(".mx-heading").getByRole("button", { name: "Open .env", exact: true })).toHaveClass(
       /primary/,

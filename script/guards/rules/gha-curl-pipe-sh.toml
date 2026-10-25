@@ -1,4 +1,5 @@
 id = "gha-curl-pipe-sh"
+group = "workflows"
 severity = "gate"
 on = "added-lines"
 paths = [".github/workflows/**/*.{yml,yaml}", ".github/actions/**/*.{yml,yaml}", "**/*.sh"]
@@ -6,5 +7,6 @@ exclude = []
 # Comment lines and echo/printf lines are skipped: an installer script documents or prints the command it recommends.
 match = '^(?!\s*#)(?!\s*(echo|printf)\b).*\b(curl|wget)\b[^|\n]*\|\s*(sudo\s+)?(ba|z)?sh\b'
 message = "Downloads a script and runs it unverified. Download to a file, check its digest, then run it."
+summary = "Downloading a script and running it in one go executes whatever the server sends, with no check that it is what you expected. Download it to a file, verify its checksum, then run it."
 positive = ['curl -fsSL https://example.com/install.sh | sh', 'curl -s https://example.com/x | sudo bash', 'wget -qO- https://example.com/x | sh']
 negative = ['curl -fsSL https://example.com/x -o install.sh', 'curl -s https://example.com/x | jq .', 'echo shell | grep sh', '#   curl -fsSL https://example.com/x | bash', 'echo "  curl -fsSL https://example.com/install | bash"']

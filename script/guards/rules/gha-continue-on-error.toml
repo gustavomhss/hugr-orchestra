@@ -1,9 +1,11 @@
 id = "gha-continue-on-error"
+group = "workflows"
 severity = "gate"
 on = "added-lines"
 paths = [".github/workflows/**/*.{yml,yaml}", ".github/actions/**/*.{yml,yaml}"]
 exclude = []
 match = '''^\s*continue-on-error:\s*["']?true\b'''
 message = "continue-on-error: true lets a failing step pass. Fix the step, or move the optional work to a workflow that is not a gate."
+summary = "Letting a workflow step fail silently means a broken check still shows as passing. Fix the step, or move optional work to a workflow that does not gate merges."
 positive = ['    continue-on-error: true', '      continue-on-error: "true"']
 negative = ['    continue-on-error: false', '    continue-on-error: ${{ matrix.experimental }}', '# continue-on-error: true']

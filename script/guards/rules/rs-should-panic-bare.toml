@@ -1,9 +1,11 @@
 id = "rs-should-panic-bare"
+group = "tests"
 severity = "warn"
 on = "added-lines"
 paths = ["**/*.rs"]
 exclude = []
 match = '#\[should_panic\s*\]'
 message = "#[should_panic] without expected = \"...\" passes on any panic, including an unrelated one. Add the expected message."
+summary = "A test that only expects a panic passes on any panic, even one caused by an unrelated bug. Add the expected panic message so the test checks the right failure."
 positive = ['#[should_panic]', '    #[should_panic ]']
 negative = ['#[should_panic(expected = "index out of bounds")]', '#[test]', 'let should_panic = true;']

@@ -85,6 +85,7 @@ const CommandOutput = lazy(async () => {
   return { default: CommandOutput }
 })
 const LocalPipelines = lazy(() => import("./cicd"))
+const Guardrails = lazy(() => import("./guardrails/guardrails"))
 
 export default function ActionsChapter(props: ChapterPageProps) {
   const language = useLanguage()
@@ -174,6 +175,7 @@ function Workbench(props: ChapterPageProps & {
       ...(state.route.view === "resources" && resource ? [props.t(resource[1])] : []),
       ...(state.route.view === "settings" ? [props.t("orchestra.actions.shell.settings")] : []),
       ...(state.route.view === "local" ? [props.t("orchestra.actions.local")] : []),
+      ...(state.route.view === "guardrails" ? [props.t("orchestra.actions.guardrails")] : []),
     ])
   })
   onCleanup(() => setCrumbTrail([]))
@@ -191,6 +193,7 @@ function Workbench(props: ChapterPageProps & {
         <div class="context-group" role="group" aria-labelledby={`${ids}-browse`}><div class="context-label" id={`${ids}-browse`}>{props.t("orchestra.actions.shell.browse")}</div>
           {nav(props.t("orchestra.actions.shell.allWorkflows"), () => ({ view: "library" }), "workflow", () => state.route.view === "library")}
           {nav(props.t("orchestra.actions.shell.allRuns"), () => ({ view: "runs" }), "retry", () => state.route.view === "runs" && !state.route.workflowID)}
+          {nav(props.t("orchestra.actions.guardrails"), () => ({ view: "guardrails" }), "shield", () => state.route.view === "guardrails")}
         </div>
         <Show when={workflow()}>{(item) => <div class="context-selection">
           <strong><bdi>{item().name ?? item().id}</bdi></strong><small><bdi dir="ltr">{item().path}</bdi></small>
@@ -243,7 +246,7 @@ function Workbench(props: ChapterPageProps & {
               <Show when={state.route.view === "library"}><button type="button" class="mx-btn primary" disabled={!canCreate()} onClick={() => model.dialog({ kind: "create-workflow" })}>
                 <Icon name="plus" />{props.t(state.binding?.provider.kind === "gitlab" ? "orchestra.actions.createConfiguration" : "orchestra.actions.createWorkflow")}</button></Show></div>
           </header>
-          <div class="repo-strip"><label class="provider-label"><Icon name={state.binding?.provider.kind === "gitlab" ? "gitlab" : state.binding ? "github" : "workflow"} />
+          <Show when={state.route.view !== "guardrails"}><div class="repo-strip"><label class="provider-label"><Icon name={state.binding?.provider.kind === "gitlab" ? "gitlab" : state.binding ? "github" : "workflow"} />
             <span>{props.t("orchestra.actions.provider")}</span><select aria-label={props.t("orchestra.actions.provider")} value={state.binding?.id ?? ""}
               disabled={state.submitting || state.bindings.status !== "ready"} onChange={(event) => {
                 const binding = state.bindings.value?.find((item) => item.id === event.currentTarget.value)
@@ -257,10 +260,10 @@ function Workbench(props: ChapterPageProps & {
               <code dir="ltr">{binding().provider.hostname}</code><span class={`mx-badge ${settingsConnection(state).state === "available" ? "good" : ""}`}>{props.t(settingsConnection(state).label)}</span></>}</Show>
             <button type="button" class="mx-btn repo-connection" disabled={state.submitting} onClick={() => model.dialog({ kind: "connect" })}>
               <Icon name="settings" />{props.t("orchestra.actions.connect")}</button>
-          </div></Show>
+          </div></Show></Show>
           <Show when={!contextual()}><nav class="wf-tabs" role="tablist" aria-label={props.t("orchestra.actions.title")} onKeyDown={tabKeydown}>
             <For each={[["library", "orchestra.actions.shell.workflows", "workflow"], ["runs", "orchestra.actions.shell.runs", "retry"],
-              ["resources", "orchestra.actions.resources", "box"], ["settings", "orchestra.actions.shell.settings", "settings"]] as const}>{(item) =>
+              ["guardrails", "orchestra.actions.guardrails", "shield"], ["resources", "orchestra.actions.resources", "box"], ["settings", "orchestra.actions.shell.settings", "settings"]] as const}>{(item) =>
               <button type="button" role="tab" class="wf-tab" aria-selected={state.route.view === item[0]} tabindex={state.route.view === item[0] ? 0 : -1}
                 onClick={() => model.navigate({ view: item[0] })}><Icon name={item[2]} />{props.t(item[1])}
                 <Show when={item[0] === "library" ? loaded(state.workflows) : item[0] === "runs" ? loaded(state.runs) : undefined}>{(count) =>
@@ -279,6 +282,7 @@ function Workbench(props: ChapterPageProps & {
         <Suspense fallback={loading()}>
           <Switch>
             <Match when={state.route.view === "local"}><LocalPipelines server={props.server} directory={props.directory} /></Match>
+            <Match when={state.route.view === "guardrails"}><div class="actions-library gr-host"><Guardrails directory={props.directory} /></div></Match>
             <Match when={state.route.view === "settings"}><div class="[&>section>.mx-inner>.mx-heading]:hidden"><Settings model={model} t={props.t} /></div></Match>
             <Match when={state.bindings.status === "loading"}><Empty title={props.t("orchestra.actions.loading")} busy /></Match>
             <Match when={state.unsupported}><Empty title={props.t("orchestra.actions.unsupported")} /></Match>

@@ -1,4 +1,5 @@
 id = "lockfile-stale"
+group = "dependencies"
 severity = "gate"
 on = "changed-paths"
 paths = ["**/package.json"]
@@ -8,5 +9,6 @@ requires_changed = ["**/bun.lock", "**/bun.lockb", "**/package-lock.json", "**/p
 # Fires only when a dependency line moved: exports, scripts and metadata edits do not change the lockfile (9 of 10 package.json edits in real history). engines and version keys are skipped.
 touches = '''^\s*"(?!version"|node"|bun"|npm"|pnpm"|yarn"|deno")(?!\./)[^"]+":\s*"(workspace:[^"]*|catalog:[^"]*|npm:[^"]*|latest|\*|[~^<>=]*\s*\d[^"]*)"'''
 message = "A dependency changed in package.json but no lockfile changed. Run the package manager's install and commit the lockfile."
+summary = "When a JavaScript dependency changes, the lockfile must change with it, or other machines install different versions. Run the package manager's install and commit the updated lockfile."
 positive = ["package.json", "packages/core/package.json"]
 negative = ["packages/core/tsconfig.json", "node_modules/x/package.json", "docs/package.md"]

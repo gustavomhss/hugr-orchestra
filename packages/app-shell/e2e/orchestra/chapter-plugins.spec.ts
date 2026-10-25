@@ -100,13 +100,13 @@ for (const scheme of ["dark", "light"] as const) {
 
     const view = chapter(page)
     await expect(view.getByRole("heading", { level: 1 })).toHaveText("LLM Plugins")
-    await expect(view.locator(".mx-eyebrow")).toHaveText("timeline-stability / profile configuration")
+    await expect(view.locator(".mx-eyebrow")).toHaveText("timeline-stability · Configuration")
     await expect(view.locator(".mx-heading p")).toHaveText(
       "Shape how the LLM thinks and speaks. Each profile has its own behavior.",
     )
     await expect(view.getByRole("textbox", { name: "Search LLM Plugins" })).toHaveAttribute(
       "placeholder",
-      "Search llm plugins",
+      "Search LLM plugins",
     )
     await expect(view.locator(".mx-toolbar .mx-badge")).toHaveText("timeline-stability")
     // Mock geometry: 30px title, 280px grid tracks, 18px card padding.

@@ -194,6 +194,7 @@ function Fixture() {
         <section class="orchestra-agents">
           <AgentsRoster
             agents={agents}
+            scope="fixture"
             availability={() => ({ ok: true })}
             onConfigure={(agent) => setState("editing", agent)}
             onChat={() => {}}

@@ -1,9 +1,11 @@
 id = "submodule-added"
+group = "hygiene"
 severity = "gate"
 on = "changed-paths"
 paths = ["**"]
 exclude = ["node_modules/**", "**/node_modules/**"]
 modes = ["160000"]
 message = "Git submodule added or changed. Vendor the code or depend on a published package instead."
+summary = "Submodules pin another repository by reference, which complicates cloning, updates and reviews. Copy the code in, or depend on a published package instead."
 positive = ["vendor/lib", "third_party/x"]
 negative = ["node_modules/pkg/sub"]

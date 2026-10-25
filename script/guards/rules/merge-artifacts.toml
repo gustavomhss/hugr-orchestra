@@ -1,9 +1,11 @@
 id = "merge-artifacts"
+group = "leftovers"
 severity = "gate"
 on = "changed-paths"
 paths = ["**/*.{orig,rej,bak,swp,swo}", "**/*~"]
 exclude = []
 statuses = ["A", "R", "C"]
 message = "Editor or merge leftover added to the repository. Delete it."
+summary = "Backup, swap and reject files from editors and merge tools are leftovers, not part of the project. Delete them from the change."
 positive = ["src/a.ts.orig", "src/a.ts.rej", "notes.bak", "src/.a.ts.swp", "src/a.ts~"]
 negative = ["src/a.ts", "docs/backup.md", "src/original.ts"]

@@ -29,7 +29,7 @@ test(`catalog, filter, exact reader, safe text and keyboard in both directions`,
   const chapter = page.locator('[data-chapter="skills"]')
   const cards = chapter.locator(".skills-card")
   await expect(cards).toHaveCount(2)
-  await expect(chapter.locator(".mx-eyebrow")).toHaveText("Server A project / profile configuration")
+  await expect(chapter.locator(".mx-eyebrow")).toHaveText("Server A project · Configuration")
   await expect(cards.locator("h3")).toHaveText([catalog[0].name, catalog[1].name])
   await expect(cards.first().locator(".mx-meta .mx-badge")).toHaveText(["Project"])
   await expect(cards.last().locator(".mx-meta .mx-badge")).toHaveText(["Global"])
@@ -305,7 +305,7 @@ test(`profile ownership, same directory and a late response from A`, async ({ pa
   await expect(chapter.locator(".skills-card")).toHaveCount(2)
   await chooseProfile(page, "Server B project")
   await expect(chapter.locator(".skills-card h3")).toHaveText(["Server B instructions"])
-  await expect(chapter.locator(".mx-eyebrow")).toHaveText("Server B project / profile configuration")
+  await expect(chapter.locator(".mx-eyebrow")).toHaveText("Server B project · Configuration")
   await expect(chapter.getByText(catalog[0].name, { exact: true })).toHaveCount(0)
   expect(requests.map((request) => new URL(request).origin)).toEqual([serverA, serverB])
 

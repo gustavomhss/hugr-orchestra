@@ -184,8 +184,17 @@ jobs:
         # its 30-minute test step with core alone at 1081 s. Core runs by itself on Windows; the legacy rollback checks,
         # 85 s in a job of their own, run after the other Windows packages.
         include:
-          - { name: linux, host: ubuntu-latest, part: packages, label: "other packages, godfile" }
-          - { name: linux, host: ubuntu-latest, part: gates, label: "relay" }
+          # Run 40199722117 (2026-10-25) spent its whole 30-minute step on one Linux job of every package but orchestra,
+          # then timed out with no failed test and about seven small packages not started. Measured: core 956 s, app 250 s,
+          # cli 181 s, atlas-boundary 190 s, script 75 s, server 24 s, everything else under 20 s each. Core dominates, so it
+          # gets a shard to itself (~17 min); the other two take ~10 min each. The third shard is the complement of the
+          # first two, so a package added later lands there instead of in no shard, and it carries the repo-wide gates.
+          - { name: linux, host: ubuntu-latest, part: packages-core, label: "core", filters: "--filter=@orchestra/core" }
+          - { name: linux, host: ubuntu-latest, part: packages-app, label: "app, cli, server",
+              filters: "--filter=@orchestra/app --filter=@orchestra/cli --filter=@orchestra/server --filter=@orchestra/sdk-next --filter=@orchestra/client --filter=@orchestra/tui --filter=@orchestra/session-ui" }
+          - { name: linux, host: ubuntu-latest, part: packages-libs, label: "other packages, godfile", repo_gates: true,
+              filters: "--filter=!orchestra --filter=!@orchestra/core --filter=!@orchestra/app --filter=!@orchestra/cli --filter=!@orchestra/server --filter=!@orchestra/sdk-next --filter=!@orchestra/client --filter=!@orchestra/tui --filter=!@orchestra/session-ui" }
+          - { name: linux, host: ubuntu-latest, part: gates, label: "httpapi, relay" }
           - { name: windows, host: windows-latest, part: core, label: "core", filters: "--filter=@orchestra/core" }
           # httpapi-codegen is a build-time generator whose tests pin POSIX paths, so it runs on Linux only.
           - { name: windows, host: windows-latest, part: rest, label: "other packages, legacy rollback",
@@ -199,7 +208,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          fetch-depth: ${{ (matrix.part == 'packages' || matrix.part == 'rest') && '0' || '1' }}
+          fetch-depth: ${{ (startsWith(matrix.part, 'packages') || matrix.part == 'rest') && '0' || '1' }}
 
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
@@ -218,7 +227,7 @@ jobs:
 
 
       - name: Linux Electron dependencies
-        if: runner.os == 'Linux' && matrix.part == 'packages'
+        if: runner.os == 'Linux' && startsWith(matrix.part, 'packages')
         run: sudo apt-get install -y -qq xvfb xauth libgtk-3-0 libnss3 libasound2t64
 
       - name: Native test binaries
@@ -255,16 +264,16 @@ jobs:
 
       # Extension: installed Atlas code must match its canonical producer before any consumer proof.
       - name: Check generated Atlas boundary
-        if: matrix.part == 'packages'
+        if: matrix.repo_gates
         working-directory: modules/atlas/boundary
         run: bun run check:generated
 
       - name: Fetch target branch for godfile
-        if: matrix.part == 'packages'
+        if: matrix.repo_gates
         run: git fetch origin +dev:refs/remotes/origin/dev --depth=1
 
       - name: Test godfile gate
-        if: matrix.part == 'packages'
+        if: matrix.repo_gates
         run: bun --cwd packages/core test test/godfile.test.ts
         env:
           # Build-time scanner test starts no runtime child; ordinary suites below stay default-native.
@@ -272,29 +281,29 @@ jobs:
 
       # Lives beside the engine, not in a package: it imports script/guards, which module boundaries forbid across a package root.
       - name: Test guards
-        if: matrix.part == 'packages'
+        if: matrix.repo_gates
         working-directory: script/guards
         run: bun test ./guards.test.ts
         env:
           ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "0"
 
       - name: Run godfile gate
-        if: matrix.part == 'packages'
+        if: matrix.repo_gates
         run: bun run check:godfile
 
       - name: Run spawn-import gate
-        if: matrix.part == 'packages'
+        if: matrix.repo_gates
         run: bun run check:spawn-imports
 
       # The base comparison fails when the boundary ledger gains a key or a per-rule count over dev's; it needs the full
       # history this job's packages lane checks out (fetch-depth 0), like the godfile gate.
       - name: Run module-boundary gate
-        if: matrix.part == 'packages'
+        if: matrix.repo_gates
         run: bun run check:boundaries --base origin/dev
 
       # Every pinned ripgrep digest, not only the runners' platforms, against upstream's .sha256 files.
       - name: Run ripgrep pin gate
-        if: matrix.part == 'packages'
+        if: matrix.repo_gates
         run: bun run check:ripgrep-pins
 
       - name: Run unit tests
@@ -302,6 +311,13 @@ jobs:
         timeout-minutes: 30
         run: |
           read -ra filters <<< "$FILTERS"
+          # A shard that selects no test task must fail, not pass: a filter that stops matching would otherwise
+          # turn a lane green while running nothing.
+          if [[ "$PART" == packages-* ]]; then
+            selected=$(bun turbo test --dry=json "${filters[@]}" | jq -r '[.tasks[]? | select(.task == "test" and ((.command // "") != "<NONEXISTENT>")) | .package] | sort | join(" ")')
+            echo "shard $PART selects: $selected"
+            [ -n "$selected" ] || { echo "::error::shard $PART selects no test task"; exit 1; }
+          fi
           # Cold embedded startup on Windows and contract generation on Linux exceeded unchanged deadlines
           # when sharing the runner with another runtime suite. Keep every package and per-test budget.
           concurrency=1
@@ -311,6 +327,7 @@ jobs:
           GITHUB_ACTIONS=false bun turbo test --concurrency="$concurrency" --continue=dependencies-successful "${filters[@]}"
         env:
           FILTERS: ${{ matrix.filters }}
+          PART: ${{ matrix.part }}
           ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
 
       # Saved even when a package failed: Turbo records only passing tasks, so re-labeling the PR replays them

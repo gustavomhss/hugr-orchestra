@@ -3,7 +3,7 @@ import type { Store } from "solid-js/store"
 import type { ActionKey } from "@/i18n/actions"
 
 export type Route = {
-  view: "library" | "runs" | "workflow" | "run" | "job" | "source" | "resources" | "settings" | "local"
+  view: "library" | "runs" | "workflow" | "run" | "job" | "source" | "resources" | "settings" | "local" | "guardrails"
   workflowID?: string
   runID?: string
   jobID?: string

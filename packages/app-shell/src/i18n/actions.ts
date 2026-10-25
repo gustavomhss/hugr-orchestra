@@ -92,6 +92,7 @@ export const dict = {
   "orchestra.actions.reject": "Reject",
   "orchestra.actions.comment": "Comment",
   "orchestra.actions.local": "Local pipelines",
+  "orchestra.actions.guardrails": "Guardrails",
   "orchestra.actions.workflow": "Workflow",
   "orchestra.actions.run": "Run",
   "orchestra.actions.job": "Job",
