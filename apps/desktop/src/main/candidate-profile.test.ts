@@ -56,7 +56,7 @@ test("candidate defaults to own absolute profile and isolated Electron paths", (
   expect(f.paths.temp).toBe(p.tmp)
   expect(f.paths.documents).toBe(join(p.home, "Documents"))
   expect(f.paths.downloads).toBe(join(p.home, "Downloads"))
-  expect(process.env.ORCHESTRA_SIDECAR_V2).toBe("0")
+  expect(process.env.ORCHESTRA_SIDECAR_V2).toBeUndefined()
 })
 
 test("rejects relative, home, production/dev/beta and symlink-alias roots before writes", () => {
@@ -126,14 +126,13 @@ test("candidate environment keeps toolchain PATH but excludes proxy/auth/token/t
   expect(env.PATH).toBe(source.PATH)
   expect(env.JAVA_HOME).toBe(source.JAVA_HOME)
   for (const key of Object.keys(source).filter((key) => !["PATH", "JAVA_HOME", "HOME", "XDG_STATE_HOME", "ORCHESTRA_DB",
-    "ORCHESTRA_INHERIT_CREDENTIALS", "ORCHESTRA_SIDECAR_V2"].includes(key))) expect(env[key]).toBeUndefined()
+    "ORCHESTRA_INHERIT_CREDENTIALS"].includes(key))) expect(env[key]).toBeUndefined()
   expect([env.HOME, env.USERPROFILE, env.ORCHESTRA_TEST_HOME]).toEqual([p.home, p.home, p.home])
   expect([env.XDG_DATA_HOME, env.XDG_CONFIG_HOME, env.XDG_CACHE_HOME, env.XDG_STATE_HOME]).toEqual([p.data, p.config, p.cache, p.state])
   expect([env.TMPDIR, env.TMP, env.TEMP]).toEqual([p.tmp, p.tmp, p.tmp])
   expect(env.ORCHESTRA_DB).toBe(p.db)
   expect(env.ORCHESTRA_TEST_MANAGED_CONFIG_DIR).toBe(p.managed)
   expect(env.ORCHESTRA_INHERIT_CREDENTIALS).toBe("0")
-  expect(env.ORCHESTRA_SIDECAR_V2).toBe("0")
 })
 
 test("server blocks shell import/reintroduced secrets in candidate mode; normal mode still imports shell", () => {
@@ -156,7 +155,7 @@ test("server blocks shell import/reintroduced secrets in candidate mode; normal 
     assert.equal(process.env.XDG_STATE_HOME, p.state); assert.equal(process.env.ANTHROPIC_API_KEY, undefined);
     process.env.GH_TOKEN = "late-secret"; process.env.HTTP_PROXY = "http://late";
     const env = createSidecarEnv(p); assert.equal(env.GH_TOKEN, undefined); assert.equal(env.HTTP_PROXY, undefined);
-    assert.equal(env.ORCHESTRA_SIDECAR_V2, "0"); assert.equal(env.ORCHESTRA_DB, p.db);
+    assert.equal(env.ORCHESTRA_SIDECAR_V2, undefined); assert.equal(env.ORCHESTRA_DB, p.db);
     preferAppEnv("/normal"); assert.equal(shellReads, process.platform === "win32" ? 0 : 1);
     if (process.platform !== "win32") assert.equal(process.env.ANTHROPIC_API_KEY, "shell-secret");
     assert.equal(createSidecarEnv().GH_TOKEN, "late-secret");

@@ -41,7 +41,7 @@ export function copiedWorkspaceFixture(root: string, options: { version?: string
   copy(`${path.relative(source.root, source.domain("omni"))}/Cargo.toml`)
   copy(`${path.relative(source.root, source.domain("atlas"))}/package.json`)
   if (options.version !== undefined) {
-    const file = path.join(root, path.relative(source.root, source.module("orchestra")), "package.json")
+    const file = path.join(root, path.relative(source.root, source.module("cli")), "package.json")
     writeFileSync(file, JSON.stringify({ ...JSON.parse(readFileSync(file, "utf8")), version: options.version }))
   }
   if (options.bootstrap) {

@@ -3,8 +3,8 @@ import { createServer } from "node:net"
 import type { Readable } from "node:stream"
 import { DesktopOmni } from "./omni-process"
 
-// The desktop-owned V2 server: the bundled CLI as `orchestra serve`, a child of this app and its default server. It
-// replaces the V1 sidecar for the launch, never runs beside it, and is not the shared background daemon.
+// The desktop-owned V2 server: the bundled CLI as `orchestra serve`, a child of this app and its default server. It is
+// not the shared background daemon.
 // No electron import: index.ts resolves the CLI and the launch env, so this module runs under bun test.
 
 type Logger = {
@@ -25,6 +25,9 @@ export async function startOwnedServe(options: {
   command: [string, ...string[]]
   env: Record<string, string | undefined>
   write: (stream: "stdout" | "stderr", message: string) => void
+  /** Lifecycle witnesses for the packaged omni smoke: the server child's pid, then its exit and how it stopped. */
+  onSpawn?: (pid: number | undefined) => void
+  onEvent?: (name: string, data: Record<string, unknown>) => void
 }) {
   const port = await freePort()
   const password = randomUUID()
@@ -42,6 +45,7 @@ export async function startOwnedServe(options: {
     const args = [...options.command.slice(1), "serve", "--hostname", HOSTNAME, "--port", String(port)]
     const child = DesktopOmni.spawn(options.command[0], args, { env, stdin: "closed" })
     state.child = child
+    options.onSpawn?.(child.pid)
     forward(child.stdout, (line) => options.write("stdout", line.replaceAll(password, "[redacted]")))
     forward(child.stderr, (line) => options.write("stderr", line.replaceAll(password, "[redacted]")))
     child.once("error", (error) => options.logger.error("owned serve error", { message: error.message }))
@@ -49,6 +53,7 @@ export async function startOwnedServe(options: {
       child.once("exit", (code, signal) => {
         resolve()
         if (state.child === child) state.child = undefined
+        options.onEvent?.("utility-exit", { utilityPID: child.pid, code })
         options.logger.log("owned serve exited", { code, signal, stopping: state.stopping })
         if (state.stopping) return
         state.failures = Date.now() - startedAt > STABLE_AFTER ? 0 : state.failures + 1
@@ -75,20 +80,19 @@ export async function startOwnedServe(options: {
     state.stopping = true
     const child = state.child
     if (!child) return
-    const exited = new Promise<void>((resolve) => child.once("exit", () => resolve()))
+    const exited = new Promise<"exited">((resolve) => child.once("exit", () => resolve("exited")))
     child.kill("SIGTERM")
-    await Promise.race([exited, delay(STOP_TIMEOUT).then(() => void child.kill("SIGKILL"))])
+    const outcome = await Promise.race([exited, delay(STOP_TIMEOUT).then(() => "timeout" as const)])
+    if (outcome === "exited") return options.onEvent?.("utility-stopped", {})
+    options.onEvent?.("utility-watchdog", {})
+    child.kill("SIGKILL")
   }
 
   return { url, username: "orchestra", password, listener: { stop }, health: { wait: health } }
 }
 
-/**
- * The server a launch uses, from `ORCHESTRA_SIDECAR_V2`: the owned V2 child unless "legacy" (or "0") asks for the V1
- * sidecar, kept for one release as the fallback, or "1" for the shared background daemon.
- */
+/** The server a launch uses, from `ORCHESTRA_SIDECAR_V2`: the owned V2 child unless "1" asks for the shared daemon. */
 export function sidecarVersion(value: string | undefined) {
-  if (value === "legacy" || value === "0") return "v1" as const
   if (value === "1") return "v2" as const
   return "v2-owned" as const
 }

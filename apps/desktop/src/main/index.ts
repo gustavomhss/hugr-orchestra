@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto"
 import { mkdirSync, rmSync } from "node:fs"
 import * as http from "node:http"
-import { createServer } from "node:net"
 import { homedir, tmpdir } from "node:os"
 import { join } from "node:path"
 import { getCACertificates, setDefaultCACertificates } from "node:tls"
@@ -31,8 +30,6 @@ import {
   preferAppEnv,
   setDefaultServerUrl,
   sidecarLaunchEnv,
-  spawnLocalServer,
-  type SidecarListener,
 } from "./server"
 import { setupAutoUpdater, showUpdaterDialog } from "./updater"
 import { revealWindow, safeWebContentsURL } from "./window-state"
@@ -60,6 +57,7 @@ import { initializeCandidateProfile } from "./candidate-profile"
 import { getStore } from "./store"
 import { FIRST_LAUNCH_ONBOARDING_COMPLETE_KEY, OLD_LAYOUT_ELIGIBLE_KEY } from "./store-keys"
 import { OmniBoot } from "./omni-boot"
+import { OmniSmoke } from "./omni-smoke"
 import { createDeepLinkDelivery } from "./deep-links"
 
 const candidateProfile = (() => {
@@ -86,13 +84,13 @@ const APP_IDS: Record<string, string> = {
   prod: "ai.hugr.orchestra",
 }
 const TEST_ONBOARDING = process.env.ORCHESTRA_TEST_ONBOARDING === "1"
-// Default: a desktop-owned `orchestra serve` V2 child. "legacy" (or "0") falls back to the V1 sidecar for one release;
-// "1" uses the shared background daemon. See apps/desktop/README.md.
-const SIDECAR_VERSION = sidecarVersion(process.env.ORCHESTRA_SIDECAR_V2)
+// Default: a desktop-owned `orchestra serve` V2 child; "1" uses the shared background daemon. See apps/desktop/README.md.
+// A lean candidate always owns its server: its isolated profile must not reach the host's daemon.
+const SIDECAR_VERSION = candidateProfile ? "v2-owned" : sidecarVersion(process.env.ORCHESTRA_SIDECAR_V2)
 const jsCallStackFeature = "DocumentPolicyIncludeJSCallStacksInCrashReports"
 
 let logger: ReturnType<typeof initLogging>
-let server: SidecarListener | null = null
+let server: { stop: () => Promise<void> } | null = null
 const startup = { windowsRestored: false }
 
 const deepLinks = createDeepLinkDelivery(process.argv, (target, urls) => {
@@ -422,108 +420,43 @@ const main = Effect.gen(function* () {
       return
     }
 
-    // Exclusive with the V1 sidecar below: one server per launch on one database.
-    if (SIDECAR_VERSION === "v2-owned") {
-      // The child reaches main's Dock handlers through this channel, as the V1 sidecar does through its utility port.
-      const dock = yield* Effect.promise(() =>
-        startDockChannel({
-          onMessage: (message, reply) => {
-            if (!LinuxWorkspaceRPC.handle(message, reply)) handleDockRPC(message, reply)
-          },
-          onClose: () =>
-            void LinuxWorkspaceRPC.close().catch(() => writeLog("utility", "linux access cleanup failed", {}, "warn")),
-        }),
-      )
-      const owned = yield* Effect.promise(() =>
-        Promise.all([resolveCliBinary(logger), sidecarLaunchEnv(app.getPath("userData"), candidateProfile)]).then(
-          ([binary, env]) =>
-            startOwnedServe({
-              logger,
-              command: [binary],
-              env: { ...env, ...dock.env },
-              write: (stream, message) =>
-                writeLog("server", stream, { message }, stream === "stderr" ? "warn" : "info"),
-            }),
-        ),
-      )
-      server = { stop: () => owned.listener.stop().finally(() => dock.close()) }
-
-      if (process.platform === "win32") {
-        void wslServers.initialize().catch((error) => logger.error("wsl server initialization failed", error))
-      }
-
-      yield* Effect.tryPromise(() => owned.health.wait).pipe(
-        Effect.catch((e) => Effect.sync(() => logger.error("owned serve health check failed", String(e)))),
-        Effect.ensuring(
-          Deferred.succeed(serverReady, { url: owned.url, username: owned.username, password: owned.password }),
-        ),
-      )
-      logger.log("loading task finished")
-      return
-    }
-
-    const port = yield* Effect.gen(function* () {
-      const fromEnv = process.env.ORCHESTRA_PORT
-      if (fromEnv) {
-        const parsed = Number.parseInt(fromEnv, 10)
-        if (!Number.isNaN(parsed)) return parsed
-      }
-
-      const res = yield* Deferred.make<number, unknown>()
-      const socket = createServer()
-      socket.on("error", (e) => Deferred.failSync(res, () => e))
-      socket.listen(0, "127.0.0.1", () => {
-        const address = socket.address()
-        if (typeof address !== "object" || !address) {
-          socket.close()
-          Deferred.failSync(res, () => new Error("Failed to get port"))
-          return
-        }
-        const port = address.port
-        socket.close(() => Effect.runSync(Deferred.succeed(res, port)))
-      })
-
-      return yield* Deferred.await(res)
-    })
-    const hostname = "127.0.0.1"
-    const url = `http://${hostname}:${port}`
-    const password = randomUUID()
-
-    logger.log("spawning sidecar", { url })
-    const { listener, health } = yield* Effect.promise(() =>
-      spawnLocalServer(hostname, port, password, {
-        userDataPath: app.getPath("userData"),
-        candidateProfile,
-        onStdout: (message) => writeLog("server", "stdout", { message }),
-        onStderr: (message) => writeLog("server", "stderr", { message }, "warn"),
-        onExit: (code) => {
-          writeLog("utility", "sidecar exited", { code }, "warn")
-          void LinuxWorkspaceRPC.close().catch(() => writeLog("utility", "linux access cleanup failed", {}, "warn"))
-        },
+    // The child reaches main's Dock handlers through this channel.
+    const dock = yield* Effect.promise(() =>
+      startDockChannel({
         onMessage: (message, reply) => {
           if (!LinuxWorkspaceRPC.handle(message, reply)) handleDockRPC(message, reply)
         },
+        onClose: () =>
+          void LinuxWorkspaceRPC.close().catch(() => writeLog("utility", "linux access cleanup failed", {}, "warn")),
       }),
     )
-    server = listener
+    const owned = yield* Effect.promise(() =>
+      Promise.all([resolveCliBinary(logger), sidecarLaunchEnv(app.getPath("userData"), candidateProfile)]).then(
+        ([binary, env]) =>
+          startOwnedServe({
+            logger,
+            command: [binary],
+            env: { ...env, ...dock.env },
+            write: (stream, message) =>
+              writeLog("server", stream, { message }, stream === "stderr" ? "warn" : "info"),
+            onSpawn: (pid) => OmniSmoke.utilityStarted(pid),
+            onEvent: (name, data) => OmniSmoke.event(name, data),
+          }),
+      ),
+    )
+    server = { stop: () => owned.listener.stop().finally(() => dock.close()) }
 
     if (process.platform === "win32") {
       void wslServers.initialize().catch((error) => logger.error("wsl server initialization failed", error))
     }
 
-    yield* Effect.promise(() => health.wait).pipe(
-      Effect.timeout("30 seconds"),
-      Effect.catch((e) =>
-        Effect.sync(() => {
-          logger.error("sidecar health check failed", e.toString())
-        }),
+    yield* Effect.tryPromise(() => owned.health.wait).pipe(
+      Effect.catch((e) => Effect.sync(() => logger.error("owned serve health check failed", String(e)))),
+      Effect.ensuring(
+        Deferred.succeed(serverReady, { url: owned.url, username: owned.username, password: owned.password }),
       ),
-      // Windows open before the sidecar is up, so the renderer splash waits on this handshake. It is released once
-      // health settles, whatever the outcome, which is when windows used to open.
-      Effect.ensuring(Deferred.succeed(serverReady, { url, username: "orchestra", password })),
     )
-    yield* Effect.promise(() => OmniBoot.report({ url, username: "orchestra", password }, logger))
-
+    yield* Effect.promise(() => OmniBoot.report({ url: owned.url, username: owned.username, password: owned.password }, logger))
     logger.log("loading task finished")
   }).pipe(forwardInitializationFailure(serverReady), Effect.forkChild)
 

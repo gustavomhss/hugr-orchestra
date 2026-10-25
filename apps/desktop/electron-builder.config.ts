@@ -1,10 +1,8 @@
 import { execFile } from "node:child_process"
-import { createHash } from "node:crypto"
-import { readFile } from "node:fs/promises"
 import { readFileSync } from "node:fs"
 import { createRequire } from "node:module"
 import path from "node:path"
-import { fileURLToPath, pathToFileURL } from "node:url"
+import { fileURLToPath } from "node:url"
 import { WorkspacePaths } from "@orchestra/script/workspace-paths"
 import { promisify } from "node:util"
 
@@ -14,8 +12,7 @@ const execFileAsync = promisify(execFile)
 const packageDir = path.dirname(fileURLToPath(import.meta.url))
 const workspace = WorkspacePaths.make(packageDir)
 const rootDir = workspace.root
-const orchestraDir = workspace.module("orchestra")
-const source: { version: string } = JSON.parse(readFileSync(path.join(orchestraDir, "package.json"), "utf8"))
+const source: { version: string } = JSON.parse(readFileSync(path.join(workspace.module("cli"), "package.json"), "utf8"))
 const signScript = path.join(rootDir, "script", "sign-windows.ps1")
 // The Electron 42 packaging update briefly installed Linux launchers/icons under
 // "orchestra-desktop". Keep that hidden desktop entry around so existing GNOME/KDE
@@ -81,7 +78,6 @@ const APP_IDS = {
 async function verifyPackagedResources(context: AfterPackContext) {
   const { verifyPackagedCli } = await import("./scripts/cli-packaging")
   const { verifyClaudeAsset } = await import("./scripts/stage-claude")
-  const { verifyClaudeCodeResource } = await import(pathToFileURL(path.join(orchestraDir, "script/claude-code-resources.ts")).href)
   const { Arch } = await import("electron-builder")
   const directory =
     context.electronPlatformName === "darwin"
@@ -97,7 +93,6 @@ async function verifyPackagedResources(context: AfterPackContext) {
   const claude = path.join(path.dirname(directory), "claude-code")
   const platform = context.electronPlatformName === "mas" ? "darwin" : context.electronPlatformName
   await verifyClaudeAsset(claude, platform, Arch[context.arch])
-  verifyClaudeCodeResource(claude, { os: platform, arch: Arch[context.arch] })
 }
 
 // The rg each CLI target ships in Resources/cli/ripgrep-<target>/ is signed by staging, not here (Resources/cli is
@@ -147,7 +142,6 @@ const getBase = (appId: string): Configuration => ({
   beforePack: async (context) => {
     const { verifyPackagedCli } = await import("./scripts/cli-packaging")
     const { verifyClaudeAsset } = await import("./scripts/stage-claude")
-    const { verifyClaudeCodeResource } = await import(pathToFileURL(path.join(orchestraDir, "script/claude-code-resources.ts")).href)
     const { Arch } = await import("electron-builder")
     const { prepareTreeSitterPrebuilds } = await import("@orchestra/script/tree-sitter-prebuilds")
     // The app's node_modules carry tree-sitter prebuilds and the core binding maestro-arsenal parses with; repair,
@@ -167,13 +161,7 @@ const getBase = (appId: string): Configuration => ({
       await ripgrepChecks(),
     )
     const platform = context.electronPlatformName === "mas" ? "darwin" : context.electronPlatformName
-    const staged = await verifyClaudeAsset(path.join(packageDir, "resources/claude-code"), platform, Arch[context.arch])
-    const produced = verifyClaudeCodeResource(path.join(orchestraDir, "dist/node/claude-code"), {
-      os: platform,
-      arch: Arch[context.arch],
-    })
-    if (createHash("sha256").update(await readFile(produced)).digest("hex") !== staged.sha256)
-      throw new Error("Desktop and Node Claude Code producers staged different executable bytes")
+    await verifyClaudeAsset(path.join(packageDir, "resources/claude-code"), platform, Arch[context.arch])
   },
   afterPack: verifyPackagedResources,
   afterSign: verifyPackagedResources,
@@ -192,16 +180,19 @@ const getBase = (appId: string): Configuration => ({
       from: "resources/linux-runtime",
       to: "linux-runtime",
     },
-    // Maestro's playbooks stay outside the app archive so ripgrep and the agent's file tools can read them.
+    // Maestro's playbooks stay outside the app archive so ripgrep and the agent's file tools can read them. They still
+    // live in apps/orchestra/playbooks, where the V2 seat-skill root reads them in a source run, until B1-C moves them.
     {
-      from: path.join(orchestraDir, "playbooks"),
+      from: path.join(workspace.module("orchestra"), "playbooks"),
       to: "playbooks",
     },
     { from: "resources/cli", to: "cli" },
-    // One writer for the executable and receipt; the Node producer contributes only its required notices.
-    { from: "resources/claude-code", to: "claude-code", filter: ["claude", "claude.exe", "manifest.json"] },
-    { from: path.join(orchestraDir, "dist/node/claude-code/README.md"), to: "claude-code/README.md" },
-    { from: path.join(orchestraDir, "dist/node/claude-code/LICENSE.md"), to: "claude-code/LICENSE.md" },
+    // stage-claude.ts is the one writer for the executable, its receipt and the native package's required notices.
+    {
+      from: "resources/claude-code",
+      to: "claude-code",
+      filter: ["claude", "claude.exe", "manifest.json", "README.md", "LICENSE.md"],
+    },
     {
       from: "resources/omni",
       to: "omni",

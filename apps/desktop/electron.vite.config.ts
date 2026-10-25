@@ -1,13 +1,11 @@
 import { sentryVitePlugin } from "@sentry/vite-plugin"
 import { defineConfig } from "electron-vite"
 import appPlugin from "@orchestra/app/vite"
-import * as fs from "node:fs/promises"
 // Config loading externalizes package imports; bundle this TypeScript bootstrap with the config.
 import { WorkspacePaths } from "../../packages/script/src/workspace-paths.ts"
 import path from "node:path"
 
 const workspace = WorkspacePaths.make(import.meta.dirname)
-const ORCHESTRA_SERVER_DIST = path.join(workspace.module("orchestra"), "dist/node")
 
 const channel = (() => {
   const raw = process.env.ORCHESTRA_CHANNEL
@@ -43,7 +41,7 @@ export default defineConfig({
     },
     build: {
       rollupOptions: {
-        input: { index: "src/main/index.ts", sidecar: "src/main/sidecar.ts" },
+        input: { index: "src/main/index.ts" },
         // Keep this identical to electron-vite's Node 20.11+ shim. Its regex insertion can
         // corrupt bundled TypeScript, while a Rollup banner places the shim safely.
         output: {
@@ -65,22 +63,6 @@ const require = __cjs_mod__.createRequire(import.meta.url);
         enforce: "pre",
         resolveId(s) {
           if (s === "@lydell/node-pty") return nodePtyPkg
-        },
-      },
-      {
-        name: "orchestra:virtual-server-module",
-        enforce: "pre",
-        resolveId(id) {
-          if (id === "virtual:orchestra-server") return this.resolve(`${ORCHESTRA_SERVER_DIST}/node.js`)
-        },
-      },
-      {
-        name: "orchestra:copy-server-assets",
-        async writeBundle() {
-          for (const l of await fs.readdir(ORCHESTRA_SERVER_DIST)) {
-            if (!l.endsWith(".wasm")) continue
-            await fs.writeFile(`./out/main/chunks/${l}`, await fs.readFile(`${ORCHESTRA_SERVER_DIST}/${l}`))
-          }
         },
       },
     ],

@@ -1,6 +1,5 @@
 import { expect, test } from "bun:test"
 import path from "node:path"
-import ts from "typescript"
 import {
   assertBuildResources, assertIntelRunner, candidateEnv, electronViteEnv, omniSource, runCandidateCommand,
 } from "./scripts/lean-candidate"
@@ -96,30 +95,6 @@ test("spawn errors retain failure identity; empty commands and invalid deadlines
   expect(captured.error).toContain("ENOENT")
   expect(() => runCandidateCommand([])).toThrow("Invalid candidate command/deadline")
   expect(() => runCandidateCommand(["node"], process.env, import.meta.dirname, 0)).toThrow("Invalid candidate command/deadline")
-})
-
-test("actual Node build define is boolean source text gated only by explicit CLI argument", async () => {
-  const file = path.resolve(import.meta.dirname, "../orchestra/script/build-node.ts")
-  const source = ts.createSourceFile(file, await Bun.file(file).text(), ts.ScriptTarget.Latest, true)
-  const builds: ts.CallExpression[] = []
-  const visit = (node: ts.Node) => {
-    if (ts.isCallExpression(node) && node.expression.getText(source) === "Bun.build") builds.push(node)
-    ts.forEachChild(node, visit)
-  }
-  visit(source)
-  expect(builds).toHaveLength(1)
-  const options = builds[0]!.arguments[0]!
-  if (!ts.isObjectLiteralExpression(options)) throw new Error("Node build options are not literal")
-  const defines = options.properties.filter(ts.isPropertyAssignment).filter((node) => node.name.getText(source) === "define")
-  expect(defines).toHaveLength(1)
-  if (!ts.isObjectLiteralExpression(defines[0]!.initializer)) throw new Error("Node build define is not literal")
-  const flags = defines[0]!.initializer.properties.filter(ts.isPropertyAssignment)
-    .filter((node) => node.name.getText(source) === "ORCHESTRA_CANDIDATE_BUILD")
-  expect(flags).toHaveLength(1)
-  const evaluate = new Function("process", `return (${flags[0]!.initializer.getText(source)})`)
-  expect(evaluate({ argv: ["bun", file], env: { ORCHESTRA_CANDIDATE_BUILD: "true", ORCHESTRA_LEAN_CANDIDATE: "1" } })).toBe("false")
-  expect(evaluate({ argv: ["bun", file, "--lean-candidate=false"], env: {} })).toBe("false")
-  expect(evaluate({ argv: ["bun", file, "--lean-candidate"], env: {} })).toBe("true")
 })
 
 const withCallerNodeOptions = async <T>(run: () => T | Promise<T>) => {

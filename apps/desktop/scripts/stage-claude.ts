@@ -4,7 +4,10 @@ import { createRequire } from "node:module"
 import { dirname, join, resolve } from "node:path"
 import { Schema } from "effect"
 import { NATIVE_MACHINES, nativeMachines } from "@orchestra/script/tree-sitter-prebuilds"
-import source from "../../orchestra/package.json"
+import { WorkspacePaths } from "@orchestra/script/workspace-paths"
+
+// The V2 Claude Code engine owns the pinned SDK the desktop stages.
+const engine = WorkspacePaths.make(import.meta.dirname).module("engine-claude-code")
 
 const receipt = Schema.fromJsonString(
   Schema.Struct({
@@ -51,6 +54,8 @@ export async function stageClaude(
   try {
     // Copy signed upstream bytes unchanged; signing this executable would invalidate its receipt.
     await copyFile(binary, join(staging, expected.file))
+    // Ship the native package's required notices beside its unmodified binary.
+    await Promise.all(["README.md", "LICENSE.md"].map((file) => copyFile(join(dirname(native), file), join(staging, file))))
     await writeFile(
       join(staging, "manifest.json"),
       JSON.stringify(
@@ -109,13 +114,8 @@ export async function verifyClaudeAsset(directory: string, platform: string, arc
 async function claudeSource(platform: string, arch: string, sdk?: string) {
   const target = `${platform}-${arch}`
   if (NATIVE_MACHINES[target] === undefined) throw new Error(`CLAUDE_ASSET_TARGET_UNSUPPORTED: ${target}`)
-  const directory =
-    sdk ??
-    dirname(
-      createRequire(resolve(import.meta.dirname, "../../orchestra/package.json")).resolve(
-        "@anthropic-ai/claude-agent-sdk",
-      ),
-    )
+  const directory = sdk ?? dirname(createRequire(join(engine, "package.json")).resolve("@anthropic-ai/claude-agent-sdk"))
+  const source = JSON.parse(await readFile(join(engine, "package.json"), "utf8"))
   const metadata = JSON.parse(await readFile(join(directory, "package.json"), "utf8"))
   const name = `@anthropic-ai/claude-agent-sdk-${target}`
   if (

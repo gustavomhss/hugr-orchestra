@@ -16,6 +16,6 @@
     "path": "packages/jimmy-specialist",
     "disposition": "retain-runtime",
     "owner": "backend",
-    "readers": ["apps/desktop/src/main/jimmy-desktop-proof.test.ts", "apps/orchestra/script/research-pilot.ts"]
+    "readers": ["apps/orchestra/script/research-pilot.ts"]
   }
 ]

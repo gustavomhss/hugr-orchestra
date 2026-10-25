@@ -272,9 +272,10 @@ export async function launchCandidate(executable: string, root: string, recorder
     assert.equal((await request<{ healthy: boolean }>("global/health")).healthy, true)
     const paths = await request<{ home: string; state: string; config: string }>("path")
     for (const [key, value] of Object.entries(paths).filter(([key]) => ["home", "state", "config"].includes(key))) inside(root, value, `backend path.${key}`)
-    const utilities = await bounded("actual sidecar child counter", application.evaluate(({ app }) =>
+    // The candidate owns a V2 `orchestra serve` child; the retired V1 utility-process server must not start.
+    const utilities = await bounded("retired sidecar utility counter", application.evaluate(({ app }) =>
       app.getAppMetrics().filter((metric) => metric.type === "Utility" && metric.name === "Orchestra server").length))
-    assert.equal(utilities, 1, "Missing actual owned utility sidecar child")
+    assert.equal(utilities, 0, "The retired V1 utility sidecar started")
     const marker = JSON.parse(await readFile(path.join(root, ".orchestra-lean-candidate.json"), "utf8"))
     assert.deepEqual(marker, { appId: appID, version: 1, root })
     return { application, page, backend, request, close, get diagnostics() { return [stdout.read(), stderr.read(), renderer.read()] }, root }

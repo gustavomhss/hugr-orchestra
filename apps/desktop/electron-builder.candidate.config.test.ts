@@ -9,10 +9,9 @@ import builder from "./electron-builder.candidate.config"
 import baseVite from "./electron.vite.config"
 import vite from "./electron.vite.candidate.config"
 import { assertCandidateHost, assertMachOX64, inventory, verifyMaterials } from "./scripts/lean-candidate"
-import { leanNotices, leanPin } from "../orchestra/script/lean-notices"
-import { WorkspacePaths } from "@orchestra/script/workspace-paths"
+import { leanNotices, leanOutput, leanPin } from "./scripts/lean-notices"
 
-const licenses = path.join(WorkspacePaths.make(import.meta.dirname).module("orchestra"), "dist/node/licenses")
+const licenses = path.join(leanOutput, "licenses")
 
 
 test("candidate identity disables production protocols, feeds and signing", () => {
@@ -52,7 +51,7 @@ test("candidate preserves production package filters and app resources, appends 
   expect(builder.mac.icon).toBe(baseBuilder.mac?.icon)
 })
 
-test("candidate defines compiled isolation only; preserves real main/sidecar/preload/renderer graph", () => {
+test("candidate defines compiled isolation only; preserves real main/preload/renderer graph", () => {
   expect(vite.main?.define?.["import.meta.env.ORCHESTRA_LEAN_CANDIDATE"]).toBe('"1"')
   expect(baseVite.main?.define?.["import.meta.env.ORCHESTRA_LEAN_CANDIDATE"]).toBeUndefined()
   expect(vite.main?.define?.["import.meta.env.ORCHESTRA_CHANNEL"]).toBe(baseVite.main?.define?.["import.meta.env.ORCHESTRA_CHANNEL"])
@@ -60,7 +59,7 @@ test("candidate defines compiled isolation only; preserves real main/sidecar/pre
   expect(vite.main?.plugins).toBe(baseVite.main?.plugins)
   expect(vite.preload).toBe(baseVite.preload)
   expect(vite.renderer).toBe(baseVite.renderer)
-  expect(vite.main?.build?.rollupOptions?.input).toEqual({ index: "src/main/index.ts", sidecar: "src/main/sidecar.ts" })
+  expect(vite.main?.build?.rollupOptions?.input).toEqual({ index: "src/main/index.ts" })
 })
 
 for (const channel of ["dev", "beta", "prod"]) {
