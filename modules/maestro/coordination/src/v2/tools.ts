@@ -31,6 +31,7 @@ import { MaestroPlanningTools } from "./tools/planning"
 import { MaestroResultTools } from "./tools/result"
 import { MaestroReviewTools } from "./tools/review"
 import { MaestroWorkflowTools } from "./tools/workflows"
+import { WorkflowArmV2 } from "./workflow/arm"
 
 /**
  * Maestro's native tools in every Location. Visibility stays with the rules `v2/seats.ts` gives every agent; each tool
@@ -82,6 +83,11 @@ const layer = Layer.effectDiscard(
       .pipe(Effect.orDie)
     if (applications.entries().has(MaestroArsenal.names.catalog)) return
     yield* MaestroArsenal.registerScoped({
+      ...WorkflowArmV2.hooks({
+        database,
+        observations,
+        placement: { directory: location.directory, projectID: location.project.id },
+      }),
       nativeMaestro: (agent) => Effect.succeed(agent === AgentV2.defaultID),
       nativeUpstream: (agent) => Effect.succeed(agent === "archie" && seats.has("archie")),
       observeGovernance: (context, operation) =>
