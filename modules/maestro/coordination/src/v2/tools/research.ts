@@ -1,18 +1,28 @@
 export * as MaestroResearchTools from "./research"
 
+import path from "node:path"
 import { Effect, Schema } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import { FSUtil } from "@orchestra/core/fs-util"
+import type { GitCli } from "@orchestra/core/git-cli"
 import { LocationMutation } from "@orchestra/core/location-mutation"
 import type { PermissionV2 } from "@orchestra/core/permission"
+import { AppProcess } from "@orchestra/core/process"
 import { ResearchLedger } from "@orchestra/core/research/ledger"
 import type { ResearchRecords } from "@orchestra/core/research/records"
 import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
+import { CodeIndexExtract } from "@orchestra/core/research-toolkit/code-index/extract"
+import { CodeIndexQuery } from "@orchestra/core/research-toolkit/code-index/query"
+import { CodeIndex } from "@orchestra/core/research-toolkit/code-index/types"
+import { ResearchToolkit } from "@orchestra/core/research-toolkit/index"
 import { Liveness } from "@orchestra/core/research-toolkit/liveness"
+import { Locate } from "@orchestra/core/research-toolkit/locate"
+import { CodeSearch } from "@orchestra/core/research-toolkit/search"
 import { SessionHistory } from "@orchestra/core/session"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { Tool } from "@orchestra/core/tool/tool"
 import { ReadToolFileSystem } from "@orchestra/core/tool/read-filesystem"
+import { Ripgrep } from "@orchestra/core/ripgrep"
 import { Research } from "@orchestra/schema/research"
 import { ResearchDispatchV2 } from "../governance/research"
 import type { MaestroToolGate } from "./gate"
@@ -23,7 +33,15 @@ import type { InquiryCheck } from "./inquiry-check"
 // its dispatch allowance and its retained logical-task binding (V1's `ResearchTools.run`); the runner's invocation frame
 // is what core `ResearchRecords` checks before it writes. `v2/seats.ts` hides these tools from every other agent.
 
-export const names = { capture: "research_capture", view: "research_view", record: "research_record", inquiry: "inquiry" } as const
+export const names = {
+  capture: "research_capture",
+  view: "research_view",
+  record: "research_record",
+  inquiry: "inquiry",
+  search: "code_search",
+  query: "code_query",
+  locate: "code_locate",
+} as const
 
 export const Output = Schema.Struct({ title: Schema.String, output: Schema.String, research: Schema.optional(Schema.Unknown) })
 
@@ -35,6 +53,9 @@ export type Services = ResearchDispatchV2.Services & {
   readonly database: Database.Interface
   readonly gate: MaestroToolGate.Gate
   readonly fs: FSUtil.Interface
+  readonly processes: AppProcess.Interface
+  readonly ripgrep: Ripgrep.RipgrepBinary.Interface
+  readonly git: GitCli.Interface
 }
 
 export const captureDescription = [
@@ -69,6 +90,40 @@ export const inquiryDescription = [
   "Empty: zero claims or no resolved evidence is never answered.",
   "Retains: every write; the host builds the card.",
   "Fails: inquiry_state, binding_missing.",
+].join("\n")
+
+export const searchDescription = [
+  "Ripgrep search of the working tree for exact text. For a symbol's definition or callers use code_query; to find where a behavior lives, code_locate. Batch several patterns in one regex or parallel calls.",
+  "",
+  "pattern: at most 512 characters. mode: literal (default), identifier (bounded by identifier characters) or regex. caseSensitive: false ignores case. paths: up to 16 globs, e.g. src/**/*.ts or !**/test/**. context: 0 to 5 lines. limit: default 50, max 200; next gives the offset. Hidden files are searched, .gitignore respected.",
+  "",
+  "Lines: rows are path:line text, 1-based, sorted by path.",
+  "Empty: absent from this scope only when coverage.complete is true; otherwise it proves nothing.",
+  "Retains: nothing; capture the range to cite it.",
+  "Fails: index_unavailable (no ripgrep), unsupported (invalid pattern), source_unavailable.",
+].join("\n")
+
+export const locateDescription = [
+  "Start here for where, how and why questions about code. One call runs many searches (ripgrep and the code index), fuses them, rereads every range on disk and returns ranked file:line ranges with their lines.",
+  "",
+  "Give everything you know in one call: terms (up to 16), symbols (up to 16, e.g. DiscoveryResult.assemble), question (plain words). paths (globs) narrows; limit defaults to 12, max 40.",
+  "",
+  "Lines: original 1-based, inclusive startLine and endLine; a long range shows its first 40 lines.",
+  "Empty: no range matched; check searches and basis.coverage.complete before claiming absence.",
+  "Retains: one snapshot of every range, citable by its ref and original lines, with no further capture.",
+  "Fails: index_unavailable (no ripgrep), unsupported (no input, or outside a research dispatch).",
+].join("\n")
+
+export const queryDescription = [
+  "Ask the prebuilt code index about a named symbol or file; one call answers what several greps would.",
+  "",
+  "op: definition (also first callers and file imports), references, callers, callees, implementations, imports and importers (need path), symbols (outline of path, or by name, kind, exported), map (files ranked by importance).",
+  "Target: name (\"DiscoveryResult.assemble\") narrowed by path, or symbol id, or at {path, line, column}. An ambiguous name returns candidates only: repeat with symbol. limit max 200; next pages.",
+  "",
+  "Lines: 1-based, inclusive, as on disk.",
+  "Empty: no match in the index; absence is claimed only when basis.coverage.complete and freshness allow.",
+  "Retains: nothing; capture the file range to cite it.",
+  "Fails: index_unavailable, index_building, reference_invalid.",
 ].join("\n")
 
 export function tools(services: Services) {
@@ -263,7 +318,303 @@ export function tools(services: Services) {
           return yield* inquire(services, research, input, context).pipe(Effect.catch(denied))
         }),
     }),
+    // V1 `apps/orchestra/src/tool/code-search.ts`: the host builds the ripgrep argv and the seat supplies only values.
+    // Each line carries the index symbol enclosing it when an index serves the worktree.
+    [names.search]: Tool.make({
+      description: searchDescription,
+      input: CodeIndex.SearchInput,
+      output: Output,
+      toModelOutput: ({ output }) => [{ type: "text", text: output.output }],
+      execute: (input, context) =>
+        Effect.gen(function* () {
+          const research = yield* bound(names.search, context)
+          const directory = services.location.directory
+          const worktree = research.binding.worktree
+          const head = yield* services.git.run(["rev-parse", "HEAD"], { cwd: directory })
+          const resolve = enclosing(services, worktree)
+          // Search paths are relative to the directory, index paths to the git worktree.
+          const searched = yield* CodeSearch.run(input, {
+            cwd: directory,
+            ...(head.exitCode === 0 ? { commit: head.text().trim() } : {}),
+            enclosing: (file, line) => resolve(path.relative(worktree, path.join(directory, file)).replaceAll("\\", "/"), line),
+          }).pipe(
+            Effect.provideService(AppProcess.Service, services.processes),
+            Effect.provideService(Ripgrep.RipgrepBinary.Service, services.ripgrep),
+            Effect.map((result) => ({ ok: true as const, result })),
+            Effect.catchTag("CodeSearch.Failure", (failure) => Effect.succeed({ ok: false as const, failure })),
+          )
+          if (!searched.ok) return { title: input.pattern, output: `${searched.failure.reason}: ${searched.failure.message}` }
+          const found = searched.result
+          // Compact by contract: one row per hit, then one coverage line; no raw dump.
+          const rows = found.matches.flatMap((match) => [
+            ...(match.before ?? []).map((text, index, before) => `${match.path}-${match.line - (before.length - index)}- ${text}`),
+            `${match.path}:${match.line}:${match.enclosing ? ` [${match.enclosing.name}]` : ""} ${match.text}`,
+            ...(match.after ?? []).map((text, index) => `${match.path}-${match.line + index + 1}- ${text}`),
+          ])
+          const coverage = found.basis.coverage
+          return {
+            title: input.pattern,
+            output: [
+              ...rows,
+              `${found.matches.length} hit(s)${found.next === undefined ? "" : `; more: offset ${found.next}`}`,
+              `coverage: files=${coverage.documents} ignoreRespected=${coverage.ignoreRespected} binariesSkipped=${coverage.binariesSkipped} complete=${coverage.complete}` +
+                coverage.skipped.map((item) => ` skipped(${item.reason})`).join(""),
+            ].join("\n"),
+          }
+        }),
+    }),
+    // V1 `apps/orchestra/src/tool/code-query.ts`: the index fails `index_unavailable` rather than answering empty.
+    [names.query]: Tool.make({
+      description: queryDescription,
+      input: CodeIndex.CodeQuery,
+      output: Output,
+      toModelOutput: ({ output }) => [{ type: "text", text: output.output }],
+      execute: (input, context) =>
+        Effect.gen(function* () {
+          const research = yield* bound(names.query, context)
+          const worktree = research.binding.worktree
+          const query = yield* scoped(worktree, input).pipe(Effect.catch(denied))
+          const result = yield* index(services, worktree, query).pipe(Effect.catch(denied))
+          const lines = head(query, result)
+          // A definition also carries its first callers and the imports of its file.
+          const related =
+            query.op === "definition" && result.resolved
+              ? [
+                  ...(yield* index(services, worktree, { op: "callers", symbol: result.resolved.symbol, limit: CONTEXT_CALLERS }).pipe(
+                    Effect.map((callers) =>
+                      section(`callers${callers.next === undefined ? "" : ` (first ${CONTEXT_CALLERS}; op=callers for more)`}`, callers.hits),
+                    ),
+                    Effect.orElseSucceed(() => []),
+                  )),
+                  ...(yield* index(services, worktree, { op: "imports", path: result.resolved.range.path, limit: CONTEXT_IMPORTS }).pipe(
+                    Effect.map((imports) =>
+                      section(
+                        `imports of ${result.resolved?.range.path}${imports.next === undefined ? "" : ` (first ${CONTEXT_IMPORTS}; op=imports for more)`}`,
+                        imports.hits,
+                      ),
+                    ),
+                    Effect.orElseSucceed(() => []),
+                  )),
+                ]
+              : []
+          return {
+            title: `code_query ${input.op}`,
+            output: [
+              ...lines,
+              ...related,
+              ...section("hits", result.hits),
+              ...(result.next === undefined ? [] : [`next: offset=${result.next}`]),
+              basis(result.basis),
+            ].join("\n"),
+          }
+        }),
+    }),
+    // V1 `apps/orchestra/src/tool/code-locate.ts`: one deterministic fan-out over ripgrep and the index whose ranges are
+    // retained as one snapshot the seat cites without a second read.
+    [names.locate]: Tool.make({
+      description: locateDescription,
+      input: CodeIndex.LocateInput,
+      output: Output,
+      toModelOutput: ({ output }) => [{ type: "text", text: output.output }],
+      execute: (input, context) =>
+        Effect.gen(function* () {
+          const research = yield* bound(names.locate, context)
+          const worktree = research.binding.worktree
+          const resolve = enclosing(services, worktree)
+          const state: { receipt?: Research.SourceReceipt; snapshot?: string } = {}
+          const result = yield* Locate.run(input, {
+            search: (search) =>
+              CodeSearch.run(search, { cwd: worktree, enclosing: resolve }).pipe(
+                Effect.provideService(AppProcess.Service, services.processes),
+                Effect.provideService(Ripgrep.RipgrepBinary.Service, services.ripgrep),
+                Effect.mapError(
+                  (failure) =>
+                    new Research.Error({
+                      code:
+                        failure.reason === "index_unavailable"
+                          ? "index_unavailable"
+                          : failure.reason === "pattern_invalid"
+                            ? "unsupported"
+                            : "source_unavailable",
+                      message: failure.message,
+                    }),
+                ),
+              ),
+            query: (query) => index(services, worktree, query),
+            read: (file) => {
+              const absolute = path.resolve(worktree, file)
+              const relative = path.relative(worktree, absolute)
+              if (relative.startsWith("..") || path.isAbsolute(relative)) return Effect.succeed(undefined)
+              return Effect.promise(() => Bun.file(absolute).text().catch(() => undefined))
+            },
+            // One snapshot of every range, in original coordinates; the worktree is its origin since ranges span files.
+            retain: (snapshot) =>
+              services.allowances
+                .reserveBytes(research.allowance, `bytes:${context.assistantMessageID}:${context.toolCallID}:text`, Buffer.byteLength(snapshot, "utf8"))
+                .pipe(
+                  Effect.andThen(
+                    services.records.capture(research.binding, context, {
+                      origin: { kind: "file", uri: worktree },
+                      representation: "text",
+                      mediaType: "text/plain",
+                      content: snapshot,
+                      complete: true,
+                    }),
+                  ),
+                  Effect.tap((receipt) =>
+                    Effect.sync(() => {
+                      state.receipt = receipt
+                      state.snapshot = snapshot
+                    }),
+                  ),
+                  Effect.map((receipt) => receipt.ref),
+                ),
+          }).pipe(Effect.catch(denied))
+          // The result on the first line, then the lines of every range from the retained snapshot, cut to a budget.
+          const budget = { left: SHOWN_LINES }
+          const shown = (state.snapshot ?? "")
+            .split("\n\n")
+            .slice(1)
+            .map((block) => {
+              const [first, ...rows] = block.split("\n")
+              const keep = rows.slice(0, Math.max(0, Math.min(RANGE_LINES, budget.left)))
+              budget.left -= keep.length
+              const rest = rows.length - keep.length
+              return [first, ...keep, ...(rest ? [`(${rest} more lines held in the snapshot; research_capture the file range to see them)`] : [])].join("\n")
+            })
+            .join("\n\n")
+          return {
+            title: `${result.ranges.length} located range${result.ranges.length === 1 ? "" : "s"}`,
+            output: [JSON.stringify(result), ...(state.snapshot ? [shown] : [])].join("\n\n"),
+            ...(state.receipt ? { research: state.receipt } : {}),
+          }
+        }),
+    }),
   }
+}
+
+const CONTEXT_CALLERS = 5
+const CONTEXT_IMPORTS = 10
+const RANGE_LINES = 40
+const SHOWN_LINES = 320
+
+/**
+ * The code index query (V1 `CodeIndexTools` Engine) over the real build path. Pack readiness is read per query, so a
+ * pack installed after startup serves the next call. Config research limits are not on V2 config, so the toolkit caps
+ * stay at their defaults.
+ */
+function index(services: Services, worktree: string, input: CodeIndex.CodeQuery) {
+  return Effect.gen(function* () {
+    const parts = yield* CodeIndexExtract.make
+    const engine = yield* CodeIndexQuery.engine({
+      storeRoot: yield* ResearchToolkit.Root,
+      indexers: yield* CodeIndexExtract.indexers(),
+      overlay: parts.overlay,
+      extract: parts.extract,
+    })
+    return yield* engine.query(worktree, input)
+  }).pipe(Effect.provideService(AppProcess.Service, services.processes))
+}
+
+/**
+ * The innermost index definition around a line, from one `symbols` outline per file, shared by every search the
+ * resolver serves. Without an index, or while it builds, no line has an enclosing symbol, and the first such answer
+ * stops further index calls.
+ */
+function enclosing(services: Services, worktree: string) {
+  const outlines = new Map<string, ReadonlyArray<CodeIndex.SymbolRef>>()
+  const state = { unavailable: false }
+  return (file: string, line: number) =>
+    Effect.gen(function* () {
+      if (state.unavailable) return undefined
+      const symbols =
+        outlines.get(file) ??
+        (yield* index(services, worktree, { op: "symbols", path: file, limit: 200 }).pipe(
+          Effect.map((result) => result.hits.flatMap((hit) => (hit.via && hit.via.range.path === file ? [hit.via] : []))),
+          Effect.catch(() =>
+            Effect.sync((): ReadonlyArray<CodeIndex.SymbolRef> => {
+              state.unavailable = true
+              return []
+            }),
+          ),
+        ))
+      outlines.set(file, symbols)
+      return symbols
+        .filter((symbol) => symbol.range.startLine <= line && line <= symbol.range.endLine)
+        .toSorted((a, b) => a.range.endLine - a.range.startLine - (b.range.endLine - b.range.startLine))[0]
+    })
+}
+
+function head(query: CodeIndex.CodeQuery, result: CodeIndex.CodeQueryResult) {
+  if (result.resolved) return [`${query.op}: ${symbol(result.resolved)}`]
+  if (result.candidates.length === 0) return [`${query.op}: no target resolved`]
+  return [
+    `${query.op}: ambiguous, ${result.candidates.length} candidates; repeat with symbol or path`,
+    ...result.candidates.map((candidate) => `  ${symbol(candidate)} id=${candidate.symbol}`),
+  ]
+}
+
+function section(title: string, hits: CodeIndex.CodeQueryResult["hits"]) {
+  if (hits.length === 0) return []
+  return [
+    `${title} (${hits.length}):`,
+    ...hits.map((hit) =>
+      [
+        "  ",
+        range(hit.range),
+        " ",
+        hit.role,
+        hit.via ? ` in ${hit.via.name}` : "",
+        hit.sites ? ` lines ${hit.sites.join(",")}` : "",
+        hit.opaque ? " opaque" : "",
+      ].join(""),
+    ),
+  ]
+}
+
+function symbol(ref: CodeIndex.SymbolRef) {
+  return `${ref.name} ${ref.kind}${ref.exported ? " exported" : ""} ${range(ref.range)}`
+}
+
+function range(value: CodeIndex.Range) {
+  return value.startLine === value.endLine ? `${value.path}:${value.startLine}` : `${value.path}:${value.startLine}-${value.endLine}`
+}
+
+// The six dimensions beside every finding (JT.1), one line.
+function basis(value: CodeIndex.Basis) {
+  const skipped = value.coverage.skipped.slice(0, 5).map((item) => `${item.path} (${item.reason})`)
+  return [
+    `basis: commit ${value.basis.commit.slice(0, 12)}${value.basis.dirtyDigest ? "+dirty" : ""}`,
+    // The indexer tells a precise shard from a structural one (`tree-sitter`), which has no references.
+    `shards ${value.basis.shards.map((shard) => `${shard.language}:${shard.project}@${shard.indexer}`).join(",") || "none"}`,
+    `${value.execution.op} ${value.execution.ms}ms`,
+    `docs ${value.coverage.documents}${value.coverage.complete ? "" : " INCOMPLETE"}`,
+    ...(value.coverage.languagesMissing.length ? [`missing ${value.coverage.languagesMissing.join(",")}`] : []),
+    ...(value.coverage.opaqueSites ? [`opaque ${value.coverage.opaqueSites}`] : []),
+    ...(skipped.length
+      ? [`skipped ${skipped.join("; ")}${value.coverage.skipped.length > skipped.length ? ` +${value.coverage.skipped.length - skipped.length}` : ""}`]
+      : []),
+    value.freshness,
+    `limit ${value.bounds.limit}${value.bounds.truncated ? " TRUNCATED" : ""}`,
+  ].join(" | ")
+}
+
+/** Paths are worktree-relative; anything that leaves the worktree is `reference_invalid` (J2.12). */
+function scoped(worktree: string, input: CodeIndex.CodeQuery) {
+  const inside = (value: string) => {
+    const relative = path.isAbsolute(value) ? path.relative(worktree, value) : path.normalize(value)
+    return relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)
+      ? undefined
+      : relative.split(path.sep).join("/")
+  }
+  const fields = ["path" in input ? input.path : undefined, "at" in input ? input.at?.path : undefined]
+  if (fields.some((value) => value !== undefined && inside(value) === undefined))
+    return Effect.fail(new Research.Error({ code: "reference_invalid", message: "Path is outside the linked worktree" }))
+  return Effect.succeed({
+    ...input,
+    ...("path" in input && input.path !== undefined ? { path: inside(input.path) } : {}),
+    ...("at" in input && input.at ? { at: { ...input.at, path: inside(input.at.path) ?? input.at.path } } : {}),
+  } as CodeIndex.CodeQuery)
 }
 
 /**

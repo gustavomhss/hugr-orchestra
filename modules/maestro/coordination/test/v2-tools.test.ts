@@ -45,7 +45,15 @@ const governance = [
 ]
 const arsenal = Object.values(MaestroArsenal.names)
 const memory = ["atlas_memory_recall", "atlas_memory_emit"]
-const research = ["research_capture", "research_view", "research_record", "inquiry"]
+const research = [
+  "research_capture",
+  "research_view",
+  "research_record",
+  "inquiry",
+  "code_search",
+  "code_query",
+  "code_locate",
+]
 
 const temporary = (prefix: string) =>
   Effect.acquireRelease(
@@ -247,6 +255,19 @@ test("the research tools run only as the research seat and only under its dispat
         value: "Research denied: binding_missing: Research runs only under its dispatch allowance",
       })
       expect(yield* settle("jimmy", "research_capture", { kind: "file", path: "missing.txt" })).toEqual({
+        type: "error",
+        value: "Research denied: binding_missing: Research runs only under its dispatch allowance",
+      })
+      expect(yield* settle("maestro", "code_search", { pattern: "settle" })).toEqual({
+        type: "error",
+        value: "code_search runs only as the research seat",
+      })
+      // The code tools search and retain only inside the dispatch, as the research records do.
+      expect(yield* settle("jimmy", "code_search", { pattern: "settle" })).toEqual({
+        type: "error",
+        value: "Research denied: binding_missing: Research runs only under its dispatch allowance",
+      })
+      expect(yield* settle("jimmy", "code_locate", { terms: ["settle"] })).toEqual({
         type: "error",
         value: "Research denied: binding_missing: Research runs only under its dispatch allowance",
       })

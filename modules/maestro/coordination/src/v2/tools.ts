@@ -12,8 +12,10 @@ import { Global } from "@orchestra/core/global"
 import { Location } from "@orchestra/core/location"
 import { LocationMutation } from "@orchestra/core/location-mutation"
 import { PermissionV2 } from "@orchestra/core/permission"
+import { AppProcess } from "@orchestra/core/process"
 import { ResearchAllowance } from "@orchestra/core/research/allowance"
 import { ResearchRecords } from "@orchestra/core/research/records"
+import { Ripgrep } from "@orchestra/core/ripgrep"
 import { SessionStore } from "@orchestra/core/session"
 import { SkillV2 } from "@orchestra/core/skill"
 import { ApplicationTools } from "@orchestra/core/tool/application-tools"
@@ -99,6 +101,9 @@ const layer = Layer.effectDiscard(
           database,
           gate,
           fs: services.atlas.fs,
+          processes: yield* AppProcess.Service,
+          ripgrep: yield* Ripgrep.RipgrepBinary.Service,
+          git,
         }),
       })
       .pipe(Effect.orDie)
@@ -156,5 +161,7 @@ export const node = makeLocationNode({
     ResearchAllowance.node,
     ResearchRecords.node,
     ReadToolFileSystem.node,
+    AppProcess.node,
+    Ripgrep.RipgrepBinary.node,
   ],
 })
