@@ -5,6 +5,9 @@ import { Token } from "@orchestra/core/util/token"
 import { ATTACHMENT_TOKENS, ERROR_LINES, PROTECTED, TAIL_STEPS, describe } from "../masking-rules"
 import { ContinuityArchive } from "./archive"
 
+/** The tool a stub points at; masking is only safe while the request offers it. */
+export const RECALL = "context_recall"
+
 /** Masked tool call IDs mapped to the archive reference holding the full output. */
 export type Masks = ReadonlyMap<string, string>
 
@@ -66,7 +69,7 @@ export function stub(call: ToolCallPart, result: ToolResultPart, reference: stri
   const lines = text.split("\n")
   const failure = failed(result)
   const status = failure ? "failed" : "completed"
-  const recall = `full output: context_recall {"reference":"${reference}"}`
+  const recall = `full output: ${RECALL} {"reference":"${reference}"}`
   const signature = describe(call.name, call.input)
   if (!failure) return `[masked tool result: ${signature} → ${status}, ~${tokens} tokens; ${recall}]`
   // Errors are high-value evidence: their head stays verbatim.

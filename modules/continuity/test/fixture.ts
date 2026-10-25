@@ -1,5 +1,5 @@
 import path from "node:path"
-import { LLMEvent, Message, Model, ToolCallPart, type LLMRequest } from "@orchestra/llm"
+import { LLMEvent, Message, Model, ToolCallPart, ToolDefinition, type LLMRequest } from "@orchestra/llm"
 import { OpenAIChat } from "@orchestra/llm/protocols/openai-chat"
 import { Effect, Layer, Schema, Scope, Stream } from "effect"
 import { Config } from "@orchestra/core/config"
@@ -17,6 +17,11 @@ export const sessionID = SessionV2.ID.make("ses_continuity_test")
 
 export const model = (context: number, output = 1_000) =>
   Model.make({ id: "continuity-model", provider: "fake", route: OpenAIChat.route.with({ limits: { context, output } }) })
+
+/** The tool set of a seat that may call context_recall, as the runner materializes it after permissions. */
+export const recallTools = [
+  ToolDefinition.make({ name: "context_recall", description: "Restore archived output", inputSchema: { type: "object" } }),
+]
 
 /** Runs a test body against a layer, with a scope for background work. */
 export const run =

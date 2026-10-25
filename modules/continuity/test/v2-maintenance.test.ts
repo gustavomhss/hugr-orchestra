@@ -16,7 +16,7 @@ import {
 import { Prompt } from "@orchestra/core/session/prompt"
 import { SessionProjector } from "@orchestra/core/session/projector"
 import { ContinuityStrategy } from "../src/v2/strategy"
-import { config, llm, model, run, seed, step } from "./fixture"
+import { config, llm, model, recallTools, run, seed, step } from "./fixture"
 
 const it = run(
   AppNodeBuilder.build(
@@ -64,11 +64,11 @@ const fixture = (summary: () => string | undefined, gate: Effect.Effect<void> = 
           sessionID,
           entries: stored,
           model: target,
-          request: LLM.request({ model: target, messages: [...messages], tools: [] }),
+          request: LLM.request({ model: target, messages: [...messages], tools: recallTools }),
         })),
       )
     // The provider turn records its model; the turn's compaction check records its request.
-    yield* compaction.transform({ sessionID, messages: [], model: target })
+    yield* compaction.transform({ sessionID, messages: [], model: target, tools: recallTools })
     expect(yield* compaction.compactIfNeeded(yield* input())).toBe(false)
     const session = shared.session(sessionID)
     // Captures the running summary now: once released it may finish, and clear `running`, before the test resumes.

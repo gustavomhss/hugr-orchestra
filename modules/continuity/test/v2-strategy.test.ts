@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import path from "node:path"
-import { Message, ToolCallPart, ToolResultPart } from "@orchestra/llm"
+import { LLM, Message, ToolCallPart, ToolResultPart } from "@orchestra/llm"
 import { Effect, Scope } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
@@ -11,7 +11,7 @@ import { SessionProjector } from "@orchestra/core/session/projector"
 import { ContinuityArchive } from "../src/v2/archive"
 import { ContinuityMaskingV2 } from "../src/v2/masking"
 import { ContinuityStrategy } from "../src/v2/strategy"
-import { archiveDirectory, config, llm, model, run, sessionID, step } from "./fixture"
+import { archiveDirectory, config, llm, model, recallTools, run, sessionID, step } from "./fixture"
 
 const it = run(
   AppNodeBuilder.build(
@@ -67,7 +67,7 @@ describe("ContinuityStrategy.transform", () => {
       Effect.gen(function* () {
         const compaction = yield* strategy([])
         const messages = history()
-        const view = yield* compaction.transform({ sessionID, messages, model: model(10_000) })
+        const view = yield* compaction.transform({ sessionID, messages, model: model(10_000), tools: recallTools })
         const masked = results(view)
         const original = results(messages)
 
@@ -106,8 +106,29 @@ describe("ContinuityStrategy.transform", () => {
         // A fresh Location restores the masks and sends the same request.
         const restored = yield* strategy([])
         expect(
-          results(yield* restored.transform({ sessionID, messages, model: model(1_000_000) })).get("call_1")?.result,
+          results(yield* restored.transform({ sessionID, messages, model: model(1_000_000), tools: recallTools })).get("call_1")?.result,
         ).toEqual(masked.get("call_1")?.result)
+      }),
+    ))
+
+  test("keeps full history when the seat cannot call context_recall", () =>
+    it(
+      Effect.gen(function* () {
+        const compaction = yield* strategy([])
+        const messages = history()
+        expect(yield* compaction.transform({ sessionID, messages, model: model(10_000), tools: [] })).toBe(messages)
+      }),
+    ))
+
+  test("relief masks only when the request offers context_recall", () =>
+    it(
+      Effect.gen(function* () {
+        const target = model(10_000)
+        const request = (tools: typeof recallTools) => LLM.request({ model: target, messages: history(), tools })
+        const input = (tools: typeof recallTools) => ({ sessionID: SessionV2.ID.make("ses_recall_relief"), entries: [], model: target, request: request(tools) })
+        const compaction = yield* strategy([])
+        expect(yield* compaction.compactIfNeeded(input([]))).toBe(false)
+        expect(yield* compaction.compactIfNeeded(input(recallTools))).toBe(true)
       }),
     ))
 
@@ -117,7 +138,7 @@ describe("ContinuityStrategy.transform", () => {
         const compaction = yield* strategy([])
         const messages = [Message.user("hello"), ...step(1, "bash", "small")]
         expect(
-          yield* compaction.transform({ sessionID: SessionV2.ID.make("ses_small"), messages, model: model(10_000) }),
+          yield* compaction.transform({ sessionID: SessionV2.ID.make("ses_small"), messages, model: model(10_000), tools: recallTools }),
         ).toBe(messages)
       }),
     ))
@@ -127,7 +148,7 @@ describe("ContinuityStrategy.transform", () => {
       Effect.gen(function* () {
         const compaction = yield* strategy(config({ continuity: { enabled: false } }))
         const messages = history()
-        expect(yield* compaction.transform({ sessionID, messages, model: model(10_000) })).toBe(messages)
+        expect(yield* compaction.transform({ sessionID, messages, model: model(10_000), tools: recallTools })).toBe(messages)
         yield* compaction.afterStep({
           sessionID,
           tokens: { input: 1_000_000, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },

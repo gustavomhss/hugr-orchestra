@@ -44,6 +44,11 @@ export function hardLimit(model: Model) {
   return Math.max(0, Math.floor(Math.min(HARD_LIMIT * context, context - output)))
 }
 
+/** Whether the request offers the tool that restores masked output. */
+export function canRecall(tools: LLMRequest["tools"]) {
+  return tools.some((tool) => tool.name === ContinuityMaskingV2.RECALL)
+}
+
 /** The context a settled step used: input, cache and output, as the provider reported it. */
 export function tokenCount(tokens: EventV2.Data<typeof SessionEvent.Step.Ended>["tokens"]) {
   const safe = (value: number) => (Number.isFinite(value) && value > 0 ? value : 0)
@@ -158,6 +163,8 @@ export function make(dependencies: Dependencies): SessionCompaction.Interface {
 
   /** Masks old output until the request fits the hard limit; `force` masks every old result. True when it masked. */
   const relieve = Effect.fnUntraced(function* (input: SessionCompaction.Input, force: boolean) {
+    // A stub points at context_recall: without it the full history stays native.
+    if (!canRecall(input.request.tools)) return false
     const session = dependencies.state.session(input.sessionID)
     yield* load(input.sessionID, session)
     const limit = hardLimit(input.model)
@@ -275,6 +282,9 @@ export function make(dependencies: Dependencies): SessionCompaction.Interface {
     transform: Effect.fn("ContinuityStrategy.transform")(function* (input) {
       const session = dependencies.state.session(input.sessionID)
       session.model = input.model
+      // The tool set already honours the agent's permissions (denied tools are not materialized), so a seat that
+      // cannot call context_recall keeps its full history instead of stubs it cannot expand.
+      if (!canRecall(input.tools)) return input.messages
       yield* load(input.sessionID, session)
       const limit = hardLimit(input.model)
       const fits = () => estimate(ContinuityMaskingV2.apply(input.messages, session.masks)) < limit
