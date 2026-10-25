@@ -9,22 +9,22 @@ import { EventV2 } from "@orchestra/core/event"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 
 /**
- * The workflow holds V1's Task keeps without a workflow host: a Session bound to a workflow step never starts a Task of
- * its own, and a resumed child bound to a workflow never continues as plain work.
+ * V1's workflow Task holds: a Session bound to a workflow step never starts a Task of its own, and a resumed child
+ * bound to a workflow continues only as that workflow's Task.
  */
 export const check = Effect.fn("WorkflowGateV2.check")(function* (
   database: Database.Interface,
-  input: { readonly parentID: string; readonly taskID?: string },
+  input: { readonly parentID: string; readonly taskID?: string; readonly workflow: boolean },
 ) {
   if (yield* bound(database, input.parentID))
     return yield* new ToolFailure({ message: "Tool safety HOLD: WORKFLOW_NESTED_TASK_REFUSED" })
-  if (input.taskID && (yield* bound(database, input.taskID)))
+  if (input.taskID && !input.workflow && (yield* bound(database, input.taskID)))
     return yield* new ToolFailure({ message: "Tool safety HOLD: WORKFLOW_TASK_BINDING_REQUIRED" })
 })
 
 /**
- * Whether the execution Session carries a workflow binding; a row of another type holds. Every binding refuses here,
- * so its data is not decoded: no V2 path continues a bound Session.
+ * Whether the execution Session carries a workflow binding; a row of another type holds. The workflow admission that
+ * continues a bound Session decodes the binding itself.
  */
 export const bound = Effect.fn("WorkflowGateV2.bound")(function* (database: Database.Interface, executionSessionID: string) {
   const row = yield* database.db

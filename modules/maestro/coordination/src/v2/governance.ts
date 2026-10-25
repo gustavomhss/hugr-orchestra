@@ -35,10 +35,12 @@ import { ResearchDispatchV2 } from "./governance/research"
 import { UnsupportedV2 } from "./governance/unsupported"
 import { WorkResultV2 } from "./governance/work-result"
 import { WorkflowGateV2 } from "./governance/workflow"
+import { WorkflowAdmissionV2 } from "./governance/workflow-admission"
 import { WriteRootsV2 } from "./governance/write-roots"
 import { MaestroAtlasSourceV2 } from "./atlas-source"
 import { ResumeAdmissionV2 } from "./governance/resume-admission"
 import { MaestroSeats } from "./seats-service"
+import { MaestroWorkflowHostV2 } from "./workflow/host"
 
 const decode = Schema.decodeUnknownOption(GovernanceInputV2.Input)
 const decodeReserved = Schema.decodeUnknownSync(MaestroEvent.Dispatch.ReservedV2.data)
@@ -64,6 +66,7 @@ export const make = Effect.gen(function* () {
   const allowances = yield* ResearchAllowance.Service
   const records = yield* ResearchRecords.Service
   const sessions = yield* GovernanceBackgroundV2.Sessions
+  const host = yield* MaestroWorkflowHostV2.Capture
   const background = yield* GovernanceBackgroundV2.make(events)
   // The roster loads lazily (see `seats.ts`); where it cannot load no agent is a seat, so no profile is read.
   const roster = yield* Effect.tryPromise(() => import("../roster")).pipe(Effect.option)
@@ -86,9 +89,10 @@ export const make = Effect.gen(function* () {
         const seat = seatOf(target)
         yield* CallerGateV2.check(seats, profiles, caller, target)
         yield* UnsupportedV2.check(seats, target, input)
-        yield* WorkflowGateV2.check(database, { parentID: parent.id, taskID: input.task_id })
-        // V1's Arsenal beforeDispatch binds a completion arm only through a native host, which V2 does not have; with
-        // no host it holds a workflow step (refused above) and passes every other Task, so nothing runs here.
+        yield* WorkflowGateV2.check(database, { parentID: parent.id, taskID: input.task_id, workflow: !!input.workflow })
+        const workflow = input.workflow
+          ? yield* WorkflowAdmissionV2.before({ ...services, database }, { task: input, workflow: input.workflow, parent })
+          : undefined
         const reserved = input.authorizationID !== undefined || input.governed !== undefined
         const resumed = yield* LogicalTaskV2.resolveResume(services, {
           taskID: input.task_id,
@@ -132,10 +136,26 @@ export const make = Effect.gen(function* () {
               callID: admission.context.toolCallID,
               target,
               permission: snapshot,
+              workflow: workflow && { workflowBinding: workflow.revision.workflowBinding, writePaths: input.writePaths ?? [] },
             })
         const reservedID = governed?.childSessionID ?? authorized?.childSessionID
         const reservedChild = reservedID ? SessionSchema.ID.make(reservedID) : undefined
-        if (reservedChild) yield* requireReservedChild(reservedChild, snapshot, authorized !== undefined)
+        // An authorized workflow child that already holds its binding resumes its step (V1's continuation).
+        const continuation = workflow && reservedChild
+          ? (yield* WorkflowAdmissionV2.bound(database.db, reservedChild)) !== undefined
+          : false
+        if (reservedChild) yield* requireReservedChild(reservedChild, snapshot, authorized !== undefined && !continuation)
+        if (workflow && reservedChild)
+          yield* WorkflowAdmissionV2.admit(services, {
+            ...workflow,
+            host,
+            parentID: parent.id,
+            childID: reservedChild,
+            governed: governed !== undefined,
+            authorizationID: input.authorizationID,
+            call: admission.context,
+            continuation,
+          })
         // Core resumes a `task_id` that is already the child's Session ID; only a resolved logical task names it here.
         const childID = reservedChild ?? (resumed && resumed.id !== input.task_id ? resumed.id : undefined)
         const skillsText = input.authorizationID === undefined
@@ -248,6 +268,7 @@ export const make = Effect.gen(function* () {
         // Only a child's first provider turn is gated; every later turn already ran under the same checks.
         // A refused turn leaves its input pending, so a promoted input means an earlier turn already passed this gate.
         if ((yield* SessionInput.promotedAfter(database.db, session.id, -1)).length === 0) yield* firstTurn(session)
+        yield* WorkflowAdmissionV2.turn(services, session)
         // Every provider turn of a research child is charged to its dispatch allowance.
         yield* ResearchDispatchV2.turn(services, session)
       }),
@@ -300,7 +321,7 @@ export const make = Effect.gen(function* () {
       if (dispatch) yield* revalidateDispatch(session.id)
       if (governed) yield* GovernanceReservationV2.consume(services, session.id)
       const member = canonical(session.agent ?? AgentV2.defaultID)
-      if (!seatOf(member)?.strictResume) return
+      if (!seatOf(member)?.strictResume && !(yield* WorkflowGateV2.bound(database, session.id))) return
       const authority = yield* SessionAuthority.make(store.get)(session.id, session.projectID).pipe(
         Effect.mapError((error) => new ToolFailure({ message: `Task binding denied: ${error.reason}` })),
       )
@@ -361,6 +382,7 @@ export const node = makeLocationNode({
     ResearchAllowance.node,
     ResearchRecords.node,
     GovernanceBackgroundV2.sessionsNode,
+    MaestroWorkflowHostV2.captureNode,
   ],
 })
 

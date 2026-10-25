@@ -5,11 +5,14 @@ import { and, desc, eq, sql } from "drizzle-orm"
 import { Effect, Option, Schema } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
+import type { PermissionV2 } from "@orchestra/core/permission"
+import type { Relay } from "@orchestra/core/relay"
 import { Tool } from "@orchestra/core/tool/tool"
 import { MaestroArsenal } from "@orchestra/core/tool/maestro-arsenal"
 import { SessionEvent } from "@orchestra/schema/session-event"
 import { ArsenalObservations } from "../../arsenal-observations"
 import { WorkflowGateV2 } from "../governance/workflow"
+import { WorkflowSettlementV2 } from "./settlement"
 
 /** The Arsenal capability that arms, and releases, a Relay completion contract. */
 export const CAPABILITY = "relay-arm"
@@ -70,12 +73,15 @@ export const receipt = Effect.fn("WorkflowArmV2.receipt")(function* (
 /**
  * The Arsenal execute guards for the Relay arm, as V1's native bindings keep them: a Session already bound to a
  * workflow Task never changes its arm, an arm names its own Session, and every successful arm records its token as a
- * native completion-arm fact the workflow Task reads back as its receipt.
+ * native completion-arm fact the workflow Task reads back as its receipt. A release names an arm this Session armed
+ * natively, and only the owner's answer to the approval releases it (V1's ArsenalBindings.release).
  */
 export function hooks(input: {
   readonly database: Database.Interface
   readonly observations: ArsenalObservations.Interface
   readonly placement: { readonly directory: string; readonly projectID: string }
+  readonly relay: Relay.Interface
+  readonly permission: PermissionV2.Interface
 }) {
   return {
     beforeExecute: (context: Tool.Context, name: string, args: unknown) =>
@@ -95,8 +101,30 @@ export function hooks(input: {
     afterExecute: (context: Tool.Context, name: string, args: unknown, result: unknown) =>
       Effect.gen(function* () {
         if (name !== CAPABILITY) return
-        const action = Schema.decodeUnknownOption(Schema.Struct({ action: Schema.Literal("arm") }))(args)
+        const action = Schema.decodeUnknownOption(Schema.Struct({ action: Schema.Literals(["arm", "release"]) }))(args)
         if (Option.isNone(action)) return
+        if (action.value.action === "release") {
+          const request = Schema.decodeUnknownOption(
+            Schema.Struct({ token: Schema.NonEmptyString, reason: Schema.NonEmptyString }),
+          )(args)
+          if (Option.isNone(request)) return yield* new ToolFailure({ message: "COMPLETION_RELEASE_INVALID" })
+          if (!(yield* arms(input.database, context.sessionID)).some((entry) => entry.token === request.value.token))
+            return yield* new ToolFailure({ message: "COMPLETION_RELEASE_TOKEN_UNBOUND" })
+          return yield* WorkflowSettlementV2.release({
+            relay: input.relay,
+            token: request.value.token,
+            reason: request.value.reason,
+            approve: (message) =>
+              input.permission.askExplicit({
+                sessionID: context.sessionID,
+                agent: context.agent,
+                action: "completion_release",
+                resources: [`relay-arm:${request.value.token}`],
+                source: { type: "tool", messageID: context.assistantMessageID, callID: context.toolCallID },
+                metadata: { nativeSafety: true, projectID: input.placement.projectID, message },
+              }),
+          })
+        }
         const armed = yield* Schema.decodeUnknownEffect(
           Schema.Struct({ content: Schema.Array(Schema.Struct({ text: Schema.String })) }),
         )(result).pipe(

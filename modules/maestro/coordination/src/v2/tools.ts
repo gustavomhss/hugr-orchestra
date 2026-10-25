@@ -13,6 +13,7 @@ import { Location } from "@orchestra/core/location"
 import { LocationMutation } from "@orchestra/core/location-mutation"
 import { PermissionV2 } from "@orchestra/core/permission"
 import { Relay } from "@orchestra/core/relay"
+import { RelayWorkflowBinding } from "@orchestra/core/relay-workflow-binding"
 import { AppProcess } from "@orchestra/core/process"
 import { ResearchAllowance } from "@orchestra/core/research/allowance"
 import { ResearchRecords } from "@orchestra/core/research/records"
@@ -29,6 +30,8 @@ import { ToolOutputStore } from "@orchestra/core/tool-output-store"
 import type { ProjectID } from "@orchestra/schema/project-id"
 import { ArsenalObservations } from "../arsenal-observations"
 import { GovernanceBackgroundV2 } from "./governance/background"
+import { GovernanceRecordsV2 } from "./governance/records"
+import { WorkflowAdmissionV2 } from "./governance/workflow-admission"
 import { MaestroSeats } from "./seats-service"
 import { MaestroAdmissionTools } from "./tools/admission"
 import { MaestroApprovalTools } from "./tools/approval"
@@ -84,7 +87,23 @@ const layer = Layer.effectDiscard(
     yield* tools
       .register({
         ...MaestroAdmissionTools.tools({ db: database.db, events, store, gate }),
-        ...MaestroApprovalTools.tools({ services, gate }),
+        ...MaestroApprovalTools.tools({
+          services,
+          gate,
+          // V1's presentation of a workflow plan: its publication still materializes the approved bytes and its
+          // upstream author still attributes it.
+          verifyWorkflow: (session, planRevisionID) =>
+            Effect.gen(function* () {
+              const revision = yield* GovernanceRecordsV2.readWorkflowRevision(database.db, planRevisionID)
+              const port = yield* publication(session)
+              yield* RelayWorkflowBinding.revalidate(port, revision.workflowBinding)
+              yield* WorkflowAdmissionV2.upstream(services, revision)
+            }).pipe(
+              Effect.catchTag("RelayWorkflow.Held", (held) =>
+                Effect.fail(MaestroToolGate.hold(held.reason, held.detail ?? held.reason)),
+              ),
+            ),
+        }),
         ...MaestroPlanningTools.tools({ services, gate, publication }),
         ...MaestroReviewTools.tools({
           services,
@@ -121,6 +140,8 @@ const layer = Layer.effectDiscard(
         database,
         observations,
         placement: { directory: location.directory, projectID: location.project.id },
+        relay,
+        permission,
       }),
       nativeMaestro: (agent) => Effect.succeed(agent === AgentV2.defaultID),
       nativeUpstream: (agent) => Effect.succeed(agent === "archie" && seats.has("archie")),

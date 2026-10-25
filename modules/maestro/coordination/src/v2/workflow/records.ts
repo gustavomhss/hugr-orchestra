@@ -1,7 +1,7 @@
 export * as WorkflowRecordsV2 from "./records"
 
 import { createHash } from "node:crypto"
-import { and, desc, eq } from "drizzle-orm"
+import { and, desc, eq, inArray, sql } from "drizzle-orm"
 import { Effect, Option, Schema } from "effect"
 import type { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
@@ -76,6 +76,45 @@ export const recordMove = Effect.fn("WorkflowRecordsV2.recordMove")(function* (
     input,
     `evt_maestro_workflow_rebound_${digest([input.token, input.from, input.executionSessionID])}`,
   )
+})
+
+/**
+ * Who holds an arm as Orchestra recorded it: the one Session a binding or move named that no later move left, and every
+ * Session an arm moved away from. Relay's own holder may be ahead of this when a move never got recorded.
+ */
+export const holders = Effect.fn("WorkflowRecordsV2.holders")(function* (db: Db, token: RelayArm.Token) {
+  const found = yield* db
+    .select({ type: EventV2.EventTable.type, data: EventV2.EventTable.data })
+    .from(EventV2.EventTable)
+    .where(
+      and(
+        inArray(EventV2.EventTable.type, [
+          EventV2.versionedType(MaestroEvent.Task.WorkflowBound.type, 1),
+          EventV2.versionedType(MaestroEvent.Task.WorkflowRebound.type, 1),
+        ]),
+        sql`json_extract(${EventV2.EventTable.data}, '$.token') = ${token}`,
+      ),
+    )
+    .all()
+    .pipe(Effect.orDie)
+  const moves = found.flatMap((row) =>
+    row.type === EventV2.versionedType(MaestroEvent.Task.WorkflowRebound.type, 1)
+      ? Option.toArray(Schema.decodeUnknownOption(MaestroEvent.Task.WorkflowRebound.data)(row.data))
+      : [],
+  )
+  const movedFrom = new Set<string>(moves.map((move) => move.from))
+  const named = [
+    ...found.flatMap((row) =>
+      row.type === EventV2.versionedType(MaestroEvent.Task.WorkflowBound.type, 1)
+        ? Option.toArray(Schema.decodeUnknownOption(MaestroEvent.Task.WorkflowBound.data)(row.data)).map(
+            (bound) => bound.executionSessionID,
+          )
+        : [],
+    ),
+    ...moves.map((move) => move.executionSessionID),
+  ].filter((id) => !movedFrom.has(id))
+  const unique = [...new Set<string>(named)]
+  return { holder: unique.length === 1 ? unique[0] : undefined, movedFrom }
 })
 
 /** The execution Session's held settlements, newest first. */
