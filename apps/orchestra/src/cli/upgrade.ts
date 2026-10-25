@@ -1,7 +1,7 @@
 import { Config } from "@/config/config"
 import { AppRuntime } from "@/effect/app-runtime"
 import { Flag } from "@orchestra/core/flag/flag"
-import { Installation } from "@/installation"
+import { Installation } from "@orchestra/core/installation/service"
 import { InstallationVersion } from "@orchestra/core/installation/version"
 import { GlobalBus } from "@/bus/global"
 

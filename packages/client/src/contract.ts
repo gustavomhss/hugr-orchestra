@@ -18,6 +18,7 @@ export const ClientApi = makeDefaultApi({
 
 export const groupNames = {
   "server.health": "health",
+  "server.installation": "installation",
   "server.location": "location",
   "server.agent": "agents",
   "server.session": "sessions",
@@ -89,4 +90,9 @@ export const endpointNames = {
 } as const
 
 // Raw transfers use the handwritten streaming adapter; JSON metadata/admission stay generated.
-export const omitEndpoints = new Set(["pty.connect", "pty.connectToken", "actions.transfer.read", "actions.transfer.upload"])
+export const omitEndpoints = new Set([
+  "pty.connect",
+  "pty.connectToken",
+  "actions.transfer.read",
+  "actions.transfer.upload",
+])

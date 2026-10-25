@@ -2015,6 +2015,13 @@ const adaptGroup41 = (raw: RawClient["server.relay.run"]) => ({
   ledger: Endpoint41_3(raw),
 })
 
+type Endpoint42_0Request = Parameters<RawClient["server.installation"]["installation.upgrade"]>[0]
+type Endpoint42_0Input = { readonly target: Endpoint42_0Request["payload"]["target"] }
+const Endpoint42_0 = (raw: RawClient["server.installation"]) => (input: Endpoint42_0Input) =>
+  raw["installation.upgrade"]({ payload: { target: input["target"] } }).pipe(Effect.mapError(mapClientError))
+
+const adaptGroup42 = (raw: RawClient["server.installation"]) => ({ upgrade: Endpoint42_0(raw) })
+
 const adaptClient = (raw: RawClient) => ({
   health: adaptGroup0(raw["server.health"]),
   location: adaptGroup1(raw["server.location"]),
@@ -2058,6 +2065,7 @@ const adaptClient = (raw: RawClient) => ({
   actionsSource: adaptGroup39(raw["server.actionsSource"]),
   actionsTransfers: adaptGroup40(raw["server.actionsTransfer"]),
   relayRuns: adaptGroup41(raw["server.relay.run"]),
+  installation: adaptGroup42(raw["server.installation"]),
 })
 
 export const make = (options?: { readonly baseUrl?: URL | string }) =>

@@ -1,7 +1,7 @@
 import type { Argv } from "yargs"
 import { UI } from "../ui"
 import * as prompts from "@clack/prompts"
-import { Installation } from "../../installation"
+import { Installation } from "@orchestra/core/installation/service"
 import { Global } from "@orchestra/core/global"
 import fs from "fs/promises"
 import path from "path"

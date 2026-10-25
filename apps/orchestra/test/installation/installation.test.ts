@@ -5,7 +5,7 @@ import { Effect, Layer, Sink, Stream } from "effect"
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process"
 import { HttpClient, HttpClientResponse } from "effect/unstable/http"
 import { LayerNodePlatform } from "@orchestra/core/effect/app-node-platform"
-import { Installation } from "../../src/installation"
+import { Installation } from "@orchestra/core/installation/service"
 import { InstallationVersion } from "@orchestra/core/installation/version"
 import { Global } from "@orchestra/core/global"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
@@ -53,7 +53,11 @@ function recordingLayer(fake: Fake = {}) {
     deps: [],
   })
   // Classification uses a recording spawner, not the native collection fast path or a real package manager.
-  const processNode = makeGlobalNode({ service: AppProcess.Service, layer: AppProcess.layerWith("off"), deps: [spawnerNode] })
+  const processNode = makeGlobalNode({
+    service: AppProcess.Service,
+    layer: AppProcess.layerWith("off"),
+    deps: [spawnerNode],
+  })
   const httpNode = makeGlobalNode({
     service: HttpClient.HttpClient,
     layer: Layer.succeed(
@@ -100,18 +104,19 @@ describe("installation", () => {
   )
 
   const commands = recordingLayer()
-  testEffect(commands.layer).effect("upgrade() runs the package manager command for the method in the state directory", () =>
-    Effect.gen(function* () {
-      for (const method of ["npm", "pnpm", "bun", "yarn"] as const)
-        yield* Installation.use.upgrade(method, "9.9.9")
-      expect(commands.spawns).toEqual([
-        "npm install -g @humanguardrail/cli@9.9.9",
-        "pnpm add -g @humanguardrail/cli@9.9.9",
-        "bun add -g @humanguardrail/cli@9.9.9",
-        "yarn global add @humanguardrail/cli@9.9.9",
-      ])
-      expect(commands.directories.every((directory) => directory === Global.Path.state)).toBe(true)
-    }),
+  testEffect(commands.layer).effect(
+    "upgrade() runs the package manager command for the method in the state directory",
+    () =>
+      Effect.gen(function* () {
+        for (const method of ["npm", "pnpm", "bun", "yarn"] as const) yield* Installation.use.upgrade(method, "9.9.9")
+        expect(commands.spawns).toEqual([
+          "npm install -g @humanguardrail/cli@9.9.9",
+          "pnpm add -g @humanguardrail/cli@9.9.9",
+          "bun add -g @humanguardrail/cli@9.9.9",
+          "yarn global add @humanguardrail/cli@9.9.9",
+        ])
+        expect(commands.directories.every((directory) => directory === Global.Path.state)).toBe(true)
+      }),
   )
 
   const failing = recordingLayer({ exitCode: 1, stderr: "EACCES" })
@@ -124,18 +129,22 @@ describe("installation", () => {
   )
 
   const refused = recordingLayer()
-  testEffect(refused.layer).effect("upgrade() refuses with an instruction, without spawning, for the other methods", () =>
-    Effect.gen(function* () {
-      for (const method of ["curl", "desktop", "scoop", "choco", "unknown"] as const) {
-        const error = yield* Effect.flip(Installation.use.upgrade(method, "9.9.9"))
-        expect(error).toBeInstanceOf(Installation.UpgradeFailedError)
-        expect(error.stderr.length).toBeGreaterThan(0)
-      }
-      expect((yield* Effect.flip(Installation.use.upgrade("curl", "9.9.9"))).stderr).toContain("install.sh")
-      expect((yield* Effect.flip(Installation.use.upgrade("desktop", "9.9.9"))).stderr).toContain("desktop app")
-      expect((yield* Effect.flip(Installation.use.upgrade("unknown", "9.9.9"))).stderr).toContain("npm i -g @humanguardrail/cli")
-      expect(refused.spawns).toEqual([])
-    }),
+  testEffect(refused.layer).effect(
+    "upgrade() refuses with an instruction, without spawning, for the other methods",
+    () =>
+      Effect.gen(function* () {
+        for (const method of ["curl", "desktop", "scoop", "choco", "unknown"] as const) {
+          const error = yield* Effect.flip(Installation.use.upgrade(method, "9.9.9"))
+          expect(error).toBeInstanceOf(Installation.UpgradeFailedError)
+          expect(error.stderr.length).toBeGreaterThan(0)
+        }
+        expect((yield* Effect.flip(Installation.use.upgrade("curl", "9.9.9"))).stderr).toContain("install.sh")
+        expect((yield* Effect.flip(Installation.use.upgrade("desktop", "9.9.9"))).stderr).toContain("desktop app")
+        expect((yield* Effect.flip(Installation.use.upgrade("unknown", "9.9.9"))).stderr).toContain(
+          "npm i -g @humanguardrail/cli",
+        )
+        expect(refused.spawns).toEqual([])
+      }),
   )
 
   test("isDesktopBundle() recognises the app bundle's CLI directory on both platforms", () => {
@@ -145,7 +154,9 @@ describe("installation", () => {
     expect(Installation.isDesktopBundle("/usr/local/bin/orchestra")).toBe(false)
   })
 
-  const detect = recordingLayer({ stdout: (command) => (command === "pnpm list -g --depth=0" ? "@humanguardrail/cli 1.0.0" : "orchestra-ai 1.0.0") })
+  const detect = recordingLayer({
+    stdout: (command) => (command === "pnpm list -g --depth=0" ? "@humanguardrail/cli 1.0.0" : "orchestra-ai 1.0.0"),
+  })
   testEffect(detect.layer).effect("method() matches the @humanguardrail/cli package name, not the old one", () =>
     Effect.gen(function* () {
       const detected = yield* Installation.use.method()

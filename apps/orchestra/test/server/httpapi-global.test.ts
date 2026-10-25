@@ -5,7 +5,7 @@ import { HttpBody, HttpClient, HttpClientRequest, HttpRouter } from "effect/unst
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { Auth } from "../../src/auth"
 import { Config } from "../../src/config/config"
-import { Installation } from "../../src/installation"
+import { Installation } from "@orchestra/core/installation/service"
 import { MoveSession } from "@orchestra/core/control-plane/move-session"
 import { ServerAuth } from "../../src/server/auth"
 import { RootHttpApi } from "../../src/server/routes/instance/httpapi/api"

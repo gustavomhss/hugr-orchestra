@@ -9232,6 +9232,10 @@ export type RelayRunsLedgerOutput = {
   }
   readonly data: ReadonlyArray<{ readonly [x: string]: JsonValue }>
 }
+
+export type InstallationUpgradeInput = { readonly target: { readonly target: string }["target"] }
+
+export type InstallationUpgradeOutput = { readonly success: true; readonly version: string }
 export {
   type UnauthorizedError,
   isUnauthorizedError,

@@ -1023,12 +1023,34 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
 
     if (choice !== true) return
 
-    // V2 serves no in-process upgrade route; the CLI upgrade command installs the release.
+    toast.show({
+      variant: "info",
+      message: `Updating to v${version}…`,
+      duration: 30000,
+    })
+
+    const result = await sdk.api.installation.upgrade({ target: version }).then(
+      (result) => result,
+      () => undefined,
+    )
+
+    if (!result) {
+      toast.show({
+        variant: "error",
+        title: "Update Failed",
+        message: "Update failed",
+        duration: 10000,
+      })
+      return
+    }
+
     await DialogAlert.show(
       dialog,
-      "Update Available",
-      `Run \`orchestra upgrade ${version}\` in a terminal, then restart Orchestra.`,
+      "Update Complete",
+      `Successfully updated to Orchestra v${result.version}. Please restart the application.`,
     )
+
+    void exit()
   })
 
   const plugin = createMemo(() => {
