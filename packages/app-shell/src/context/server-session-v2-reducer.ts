@@ -1,4 +1,4 @@
-import type { SessionMessageInfo, SessionPendingMessage } from "@/v2-legacy"
+import type { SessionMessageInfo, SessionPendingMessage } from "@/session-types"
 
 import type { ServerCurrentEvent } from "./server-sdk"
 
@@ -295,7 +295,7 @@ export function createV2SessionReducer() {
             state: {
               status: "completed",
               input: tool.state.input,
-              // Keep native output even when the bundled client only types legacy metadata.
+              // Keep native output even when the event type only declares metadata.
               ...("structured" in event.data ? { structured: event.data.structured } : {}),
               metadata: event.data.metadata,
               content: event.data.content,

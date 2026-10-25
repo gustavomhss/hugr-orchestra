@@ -174,9 +174,6 @@ describe("prompt delivery and model selection", () => {
       agents: [],
     })
     expect((promptInputs[0] as { id?: string }).id).toStartWith("msg_")
-    expect((promptInputs[0] as { legacyParts?: { id: string; type: string; text?: string }[] }).legacyParts).toEqual([
-      { id: expect.stringMatching(/^prt_/), type: "text", text: "ls" },
-    ])
   })
 
   test("reads the profile's LLM behaviors when each message is sent, after the input clears", async () => {

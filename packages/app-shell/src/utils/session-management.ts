@@ -12,6 +12,7 @@ import { directoryKey } from "@/context/global-sync/utils"
 export function createSessionManagementForServer(input: {
   server: ServerConnection.HttpBase
   fetch: typeof globalThis.fetch
+  /** Settles when the server answers its health route; archive routes are offered from then on. */
   protocol: Promise<ServerProtocol>
   signal?: AbortSignal
 }) {
@@ -84,7 +85,6 @@ export function createSessionManagementForServer(input: {
     },
     getSubagentModels(sessionID: string): Promise<SubagentModelPolicy> {
       return runSessionManagementOperation(lifetime, async () => {
-        if ((await protocol) !== "v2") throw new SessionManagementUnsupported()
         lifetime?.throwIfAborted()
         const policy = await client.sessions.getSubagentModels({ sessionID })
         lifetime?.throwIfAborted()
@@ -93,7 +93,6 @@ export function createSessionManagementForServer(input: {
     },
     readSubagentModels(sessionID: string): Promise<ModelPolicySnapshot> {
       return runSessionManagementOperation(lifetime, async () => {
-        if ((await protocol) !== "v2") throw new SessionManagementUnsupported()
         lifetime?.throwIfAborted()
         // The full snapshot anchors policy freshness; policy-only GET/PUT responses have no revision.
         const snapshot = await client.sessions.get({ sessionID })
@@ -109,7 +108,6 @@ export function createSessionManagementForServer(input: {
         // Only an explicit new write may retry a failed predecessor; dispatch waits must retain its failure.
         await (previous ? previous.catch(() => undefined) : Promise.resolve())
         lifetime?.throwIfAborted()
-        if ((await protocol) !== "v2") throw new SessionManagementUnsupported()
         lifetime?.throwIfAborted()
         const acknowledged = await client.sessions.setSubagentModels({ sessionID, policy })
         lifetime?.throwIfAborted()

@@ -3,11 +3,9 @@ import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
 import { Dialog, DialogBody, DialogHeader, DialogTitleGroup } from "@orchestra/ui/v2/dialog-v2"
 import { createEffect, createMemo, createUniqueId, For, Match, onCleanup, Show, Switch } from "solid-js"
 import { useLanguage } from "@/context/language"
-import { useServerProtocol } from "@/context/server-sdk"
 import { useSync } from "@/context/sync"
 import {
   maestroCapability,
-  ownSource,
   readGovernance,
   sessionWorking,
   type ApprovalState,
@@ -64,7 +62,6 @@ export function DialogOrchestraGovernance(props: {
 }) {
   const sync = useSync()()
   const language = useLanguage()
-  const protocol = useServerProtocol()
   const id = createUniqueId()
   createEffect(() => {
     if (!props.current()) props.dispose()
@@ -95,7 +92,6 @@ export function DialogOrchestraGovernance(props: {
   )
   const session = () => sync.session.get(props.sessionID)
   const capability = createMemo(() => maestroCapability(sync.data.agent, sync.data.load.agent))
-  const own = createMemo(() => ownSource(sync.data.config, protocol(), sync.data.load.config))
   const waiting = () =>
     (sync.data.permission[props.sessionID]?.length ?? 0) + (sync.data.question[props.sessionID]?.length ?? 0) > 0
   const loaded = () => sync.data.message[props.sessionID] !== undefined

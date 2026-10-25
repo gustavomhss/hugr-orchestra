@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { clearPending, pendingPolicy, pendingRules, togglePending } from "../draft-subagent-models"
+import { clearPending, pendingPolicy, togglePending } from "../draft-subagent-models"
 import { createRoot } from "solid-js"
 import { isServer } from "solid-js/web"
 import { ServerScope } from "@/utils/server-scope"

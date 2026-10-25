@@ -74,7 +74,7 @@ export function useProviderDiscovery(directory?: Accessor<string | null | undefi
     () => {
       const value = providers.directory()
       const client = sdk()
-      if (protocol() !== "v2" || value === undefined) return
+      if (!protocol() || value === undefined) return
       return { directory: value, client, server: client.scope }
     },
     (input) =>

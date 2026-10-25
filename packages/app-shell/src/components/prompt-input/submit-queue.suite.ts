@@ -48,7 +48,7 @@ test.skipIf(isServer).each(["same-owner", "server", "directory", "Session"])(
       serverScopeKey: change === "server" ? "foreign" as ServerScope : ServerScope.local,
       directory: change === "directory" ? "/other" : "/repo/main",
       sessionID: change === "Session" ? "other-session" : "session-1",
-      protocol: policyFixture.server.protocol, management: policyFixture.server.sessionManagement, current: () => true,
+      management: policyFixture.server.sessionManagement, current: () => true,
     }
     const sendAfterReload = createFollowupSender(createQueuedPromptSources())
     expect(await sendAfterReload(input)).toBe(change === "same-owner")
@@ -84,7 +84,7 @@ test.skipIf(isServer)("disposed or credentials-edited live sources cannot silent
   input.deliberate = true
   input.currentSource = {
     serverScopeKey: ServerScope.local, directory: "/repo/main", sessionID: "session-1",
-    protocol: policyFixture.server.protocol, management: policyFixture.server.sessionManagement, current: () => true,
+    management: policyFixture.server.sessionManagement, current: () => true,
   }
   setCredentials("password", "edited")
   setCredentials("password", "private-runtime-password")
@@ -104,7 +104,7 @@ test("legacy serialized capability objects migrate without calling non-functions
   const input = followupInput(migrated)
   input.deliberate = true
   input.currentSource = { serverScopeKey: ServerScope.local, directory: "/repo/main", sessionID: "session-1",
-    protocol: policyFixture.server.protocol, management: policyFixture.server.sessionManagement, current: () => true }
+    management: policyFixture.server.sessionManagement, current: () => true }
   expect(await createFollowupSender(createQueuedPromptSources())(input)).toBe(true)
   expect(promptInputs).toHaveLength(1)
 })

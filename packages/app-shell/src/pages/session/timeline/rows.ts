@@ -1,5 +1,5 @@
 import { parseCommentNote, readCommentMetadata } from "@/utils/comment-note"
-import type { SessionMessageInfo } from "@/v2-legacy"
+import type { SessionMessageInfo } from "@/session-types"
 
 
 import type { Part, SessionStatus, SnapshotFileDiff, UserMessage } from "@/v2-wire"

@@ -68,7 +68,7 @@ export function createMcpAuth() {
 }
 
 export function mcpErrorDetail(error: unknown): string | undefined {
-  // The legacy SDK wraps HttpApi failures in Error and preserves their body in cause.
+  // The client wraps HttpApi failures in Error and preserves their body in cause.
   if (error instanceof Error) {
     const cause = error.cause
     return (

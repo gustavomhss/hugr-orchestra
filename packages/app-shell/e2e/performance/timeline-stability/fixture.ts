@@ -4,7 +4,6 @@ import { SessionStatusEvent } from "@orchestra/schema/session-status-event"
 import { SessionV1 } from "@orchestra/schema/session-v1"
 import type { AssistantMessage, Message, Part, Session, SessionStatus, ToolPart, ToolState, UserMessage } from "@/v2-wire"
 
-import type { GlobalEvent } from "@/v2-legacy"
 
 import { expect, type Page } from "@playwright/test"
 import { Schema } from "effect"
@@ -24,6 +23,8 @@ export const model = { providerID: "opencode", modelID: "claude-opus-4-6", varia
 export function loadedPartID(messageID: string, type: "text" | "reasoning", ordinal = 0) {
   return `${messageID}:${type}:${ordinal}`
 }
+
+type GlobalEvent = { directory: string; project?: string; workspace?: string; payload: import("@/v2-wire").Event }
 
 type TimelinePayload = Extract<
   GlobalEvent["payload"],
@@ -123,7 +124,7 @@ export async function setupTimeline(
     pageMessages: () => ({
       items: messages,
     }),
-    // The fixtures keep a turn's diffs on the V1-shaped user summary; V2 serves them per turn.
+    // The fixtures keep a turn's diffs on the user summary; the server serves them per turn.
     diffs: (_, messageID) =>
       messages
         .flatMap((message) => (message.info.role === "user" && message.info.id === messageID ? [message.info] : []))

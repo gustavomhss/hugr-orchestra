@@ -25,8 +25,7 @@ describe("skills catalog", () => {
 })
 
 describe("skill source", () => {
-  test("marks V1 and V2 built-in skills as built in", () => {
-    expect(skillSource("<built-in>", "/repo")).toBe("builtin")
+  test("marks built-in skills as built in", () => {
     expect(skillSource("/builtin/style-guide.md", "/repo")).toBe("builtin")
   })
   test("marks files inside the profile directory as project skills", () => {
@@ -43,7 +42,7 @@ describe("skill source", () => {
     expect(
       sortSkills(
         [
-          entry("zeta", "<built-in>"),
+          entry("zeta", "/builtin/zeta"),
           entry("beta", "/home/me/.claude/skills/beta/SKILL.md"),
           entry("gamma", "/repo/.orchestra/skills/gamma/SKILL.md"),
           entry("alpha", "/home/me/.config/orchestra/skills/alpha/SKILL.md"),
@@ -71,16 +70,13 @@ describe("skill access", () => {
   test("keeps global and built-in skills read-only", () => {
     expect(skillAccess("/home/me/.config/orchestra/skills/a/SKILL.md", "/repo")).toBe("global")
     expect(skillAccess("/repo-other/.orchestra/skills/a/SKILL.md", "/repo")).toBe("global")
-    expect(skillAccess("<built-in>", "/repo")).toBe("builtin")
+    expect(skillAccess("/builtin/zeta", "/repo")).toBe("builtin")
     expect(skillAccess("/builtin/style-guide.md", "/repo")).toBe("builtin")
   })
 })
 
 describe("skill write errors", () => {
-  test("reads the V1 error body", () => {
-    expect(skillErrorMessage({ name: "SkillWriteError", data: { message: "Taken", reason: "conflict" } })).toBe("Taken")
-  })
-  test("reads the V2 error body", () => {
+  test("reads the error body", () => {
     expect(skillErrorMessage({ _tag: "InvalidRequestError", message: "Bad name" })).toBe("Bad name")
   })
   test("returns nothing for bodies without a message", () => {
@@ -91,7 +87,7 @@ describe("skill write errors", () => {
 })
 
 describe("skills reply", () => {
-  test("reads V1 and V2 catalogs, with or without descriptions and times", () => {
+  test("reads catalogs, with or without descriptions and times", () => {
     const entries = [...skills, { ...skills[0], description: null, mtime: 12 }]
     expect(readSkills(entries)).toEqual(entries)
   })

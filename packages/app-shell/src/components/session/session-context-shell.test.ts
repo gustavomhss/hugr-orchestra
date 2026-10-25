@@ -39,15 +39,6 @@ const assistant = {
   tokens: { input: 100, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
 } satisfies AssistantMessage
 const shellUser = { ...user, id: "msg_shell_user", time: { created: 4 } }
-// V1 SessionPrompt.shellImpl identifies user shells through the synthetic parent part.
-const shellUserPart = {
-  id: "prt_shell_user",
-  sessionID: session.id,
-  messageID: shellUser.id,
-  type: "text",
-  synthetic: true,
-  text: "The following tool was executed by the user",
-} satisfies Part
 const shell = {
   ...assistant,
   id: "msg_shell_assistant",
@@ -55,7 +46,9 @@ const shell = {
   finish: undefined,
   time: { created: 4, completed: 5 },
   tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
-} satisfies AssistantMessage
+  // A user shell is projected as a synthetic assistant.
+  synthetic: true,
+} as AssistantMessage
 const shellPart = {
   id: "prt_shell_tool",
   sessionID: session.id,
@@ -78,12 +71,11 @@ const history = [
   { info: assistant, parts: [] },
 ]
 const shells = [
-  { info: shellUser, parts: [shellUserPart] },
+  { info: shellUser, parts: [] },
   { info: shell, parts: [shellPart] },
 ]
 
-// The current message list has no V1 shell shape, so V1-shaped history reaches the store as the live events that
-// still carry it, after an empty page load.
+// History reaches the store as live events after an empty page load.
 async function load(items: { info: UserMessage | AssistantMessage; parts: Part[] }[]) {
   const sessionApi = {
     get: async () => session,
@@ -102,13 +94,12 @@ async function load(items: { info: UserMessage | AssistantMessage; parts: Part[]
   return store
 }
 
-describe("V1 Context shell provenance", () => {
+describe("Context shell provenance", () => {
   test.each(["history", "live"])("retains provider usage after a completed shell through %s", async (mode) => {
     const store = await load(mode === "history" ? [...history, ...shells] : history)
     if (mode === "live") {
-      expect(getSessionContext(store.data.message[session.id], providers, store.data.part)?.total).toBe(100)
+      expect(getSessionContext(store.data.message[session.id], providers)?.total).toBe(100)
       store.apply({ type: "message.updated", properties: { info: shellUser } })
-      store.apply({ type: "message.part.updated", properties: { part: shellUserPart } })
       store.apply({ type: "message.updated", properties: { info: { ...shell, time: { created: 4 } } } })
       store.apply({
         type: "message.part.updated",
@@ -120,34 +111,20 @@ describe("V1 Context shell provenance", () => {
         },
       })
       store.apply({ type: "message.updated", properties: { info: shell } })
-      expect(getSessionContext(store.data.message[session.id], providers, store.data.part)?.total).toBe(100)
+      expect(getSessionContext(store.data.message[session.id], providers)?.total).toBe(100)
       store.apply({ type: "message.part.updated", properties: { part: shellPart } })
     }
-    expect(getSessionContext(store.data.message[session.id], providers, store.data.part)).toMatchObject({
+    expect(getSessionContext(store.data.message[session.id], providers)).toMatchObject({
       message: { id: assistant.id },
       total: 100,
       usage: 10,
     })
-    expect(getSessionCost(0, store.data.message[session.id], providers, store.data.part)).toBe(0)
+    expect(getSessionCost(0, store.data.message[session.id], providers)).toBe(0)
   })
 
   test("a shell-only session has no provider usage and needs no model pricing", async () => {
     const store = await load(shells)
-    expect(getSessionContext(store.data.message[session.id], providers, store.data.part)).toBeUndefined()
-    expect(getSessionCost(0, store.data.message[session.id], [], store.data.part)).toBe(0)
-  })
-
-  test.each([
-    { name: "provider finish", parent: shellUserPart, message: { ...shell, finish: "stop" } },
-    { name: "ordinary user text", parent: { ...shellUserPart, synthetic: false }, message: shell },
-    { name: "other synthetic input", parent: { ...shellUserPart, text: "Continue working" }, message: shell },
-  ])("preserves explicit provider zero with $name", async ({ parent, message }) => {
-    const store = await load([...history, { info: shellUser, parts: [parent] }, { info: message, parts: [shellPart] }])
-    expect(getSessionContext(store.data.message[session.id], providers, store.data.part)).toMatchObject({
-      message: { id: shell.id },
-      total: 0,
-      usage: 0,
-    })
-    expect(getSessionCost(0, store.data.message[session.id], providers, store.data.part)).toBe(0)
+    expect(getSessionContext(store.data.message[session.id], providers)).toBeUndefined()
+    expect(getSessionCost(0, store.data.message[session.id], [])).toBe(0)
   })
 })

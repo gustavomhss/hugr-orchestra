@@ -32,7 +32,7 @@ export function OrchestraPullRequest(props: { sessionID?: string; files: () => P
   })
   let opener: HTMLButtonElement | undefined
 
-  // V1 servers sync the branches. Otherwise the workspace's branch request fills the fields that are
+  // The workspace's branch request fills the fields that are
   // still empty once it answers, so the dialog never waits on it.
   const open = () => {
     const vcs = sync().data.vcs

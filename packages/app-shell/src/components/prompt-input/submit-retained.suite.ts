@@ -173,16 +173,15 @@ test("failed exact retry reuses wire preparation, attachment bytes, optimistic p
   state.sendHook = async () => { throw new Error("prepared request failed") }
   const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined })
   expect(await submit.handleSubmit(new Event("submit"))).toBe(false)
-  const first = promptInputs[0] as { id: string; legacyParts: { id: string }[]; system?: string; files: { uri: string }[]; agents: unknown[] }
+  const first = promptInputs[0] as { id: string; system?: string; files: { uri: string }[]; agents: unknown[] }
   const serialized = JSON.stringify(first)
-  expect(first.legacyParts).toEqual(expect.arrayContaining([
+  expect(optimistic[0]?.parts).toEqual(expect.arrayContaining([
     expect.objectContaining({ type: "text" }),
     expect.objectContaining({ type: "file" }),
     expect.objectContaining({ type: "agent" }),
   ]))
   expect(first.files).toContainEqual(expect.objectContaining({ uri: "data:image/png;base64,aGk=" }))
   expect(first.agents).toContainEqual(expect.objectContaining({ name: "backend" }))
-  expect(optimistic[0]?.parts.map((part) => part.id)).toEqual(first.legacyParts.map((part) => part.id))
   expect(optimisticRemovals).toContainEqual(expect.objectContaining({ messageID: first.id }))
   behaviors.system = "later profile system"
   state.sendHook = async () => {}
@@ -204,7 +203,7 @@ test.each(["prompt", "policy", "model", "variant", "agent"])("editing %s after f
   state.sendHook = async () => { throw new Error("ambiguous admission") }
   const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key })
   expect(await submit.handleSubmit(new Event("submit"))).toBe(false)
-  const first = promptInputs[0] as { id: string; legacyParts: { id: string }[] }
+  const first = promptInputs[0] as { id: string }
   expect(first.id).toStartWith("msg_")
   if (edit === "prompt") real.set([{ type: "text", content: "edited action", start: 0, end: 13 }])
   if (edit === "policy") { clearPending(key); togglePending(key, "provider", "first-model", true) }
@@ -218,9 +217,8 @@ test.each(["prompt", "policy", "model", "variant", "agent"])("editing %s after f
   expect(promptInputs).toHaveLength(2)
   const second = promptInputs[1] as typeof first
   expect(second.id).not.toBe(first.id)
-  expect(second.legacyParts.map((part) => part.id)).not.toEqual(first.legacyParts.map((part) => part.id))
+  expect(optimistic[1]?.parts.map((part) => part.id)).not.toEqual(optimistic[0]?.parts.map((part) => part.id))
   expect(optimistic[1]?.message.id).toBe(second.id)
-  expect(optimistic[1]?.parts.map((part) => part.id)).toEqual(second.legacyParts.map((part) => part.id))
   if (edit === "prompt") expect(second).toMatchObject({ text: "edited action" })
   if (edit === "model") expect(second).toMatchObject({ model: { modelID: "edited-model" } })
   if (edit === "variant") expect(second).toMatchObject({ variant: "high" })
@@ -236,7 +234,7 @@ test("policy changed at a retry's worktree boundary rebinds wire and optimistic 
   state.sendHook = async () => { throw new Error("first prepared send failed") }
   const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key })
   expect(await submit.handleSubmit(new Event("submit"))).toBe(false)
-  const first = promptInputs[0] as { id: string; legacyParts: { id: string }[] }
+  const first = promptInputs[0] as { id: string }
   Worktree.pending(ServerScope.local, directory)
   expect(Worktree.get(ServerScope.local, directory)).toEqual({ status: "pending" })
   const entered = Promise.withResolvers<void>()
@@ -253,9 +251,8 @@ test("policy changed at a retry's worktree boundary rebinds wire and optimistic 
   expect(promptInputs).toHaveLength(2)
   const second = promptInputs[1] as typeof first
   expect(second.id).not.toBe(first.id)
-  expect(second.legacyParts.map((part) => part.id)).not.toEqual(first.legacyParts.map((part) => part.id))
+  expect(optimistic[1]?.parts.map((part) => part.id)).not.toEqual(optimistic[0]?.parts.map((part) => part.id))
   expect(optimistic[1]?.message.id).toBe(second.id)
-  expect(optimistic[1]?.parts.map((part) => part.id)).toEqual(second.legacyParts.map((part) => part.id))
   expect(optimistic[1]?.parts.every((part) => part.messageID === second.id)).toBe(true)
   expect(policyWrites.at(-1)?.policy).toEqual(latest.policy)
   expect(createdSessions).toEqual([directory])

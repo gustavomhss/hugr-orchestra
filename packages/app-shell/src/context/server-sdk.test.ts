@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { adaptServerEvent, coalesceServerEvents, createServerProtocolPromise, enqueueServerEvent, resumeStreamAfterPageShow } from "./server-sdk"
-import type { OpenCodeEvent } from "@/v2-legacy"
+import type { ClientEvent } from "@/session-types"
 import type { Event } from "@/v2-wire"
 
 import { ServerProtocolUnresolvedError, type ServerProtocol } from "@/utils/server-protocol"
@@ -52,7 +52,6 @@ describe("createServerProtocolPromise", () => {
       })
       const chain = protocol.then((value) => value).then((value) => ({ kind: value }))
       const api = createCompatibleApi({
-        protocol,
         current: createApiForServer({ server, fetch }),
       })
       expect(await rejection(protocol)).toBeInstanceOf(ServerProtocolUnresolvedError)
@@ -120,7 +119,7 @@ describe("adaptServerEvent", () => {
       created: 1,
       type: "permission.v2.asked",
       data: { id: "perm_1", sessionID: "ses_1", action: "read", resources: ["src/**"] },
-    } as OpenCodeEvent
+    } as ClientEvent
 
     expect(adaptServerEvent(current)).toMatchObject({
       type: "permission.asked",
@@ -158,7 +157,7 @@ describe("coalesceServerEvents", () => {
         type: "session.text.delta",
         location: { directory: "/repo" },
         data: { sessionID: "ses", assistantMessageID: "msg", ordinal: 0, delta: value },
-      } as OpenCodeEvent)
+      } as ClientEvent)
     const result = coalesceServerEvents([
       { directory: "/repo", payload: current("evt_1", "hello ") },
       { directory: "/repo", payload: current("evt_2", "world") },

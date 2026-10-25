@@ -1,12 +1,12 @@
 import { describe, expect, test } from "bun:test"
-import type { Agent, Config } from "@/v2-wire"
+import type { Agent } from "@/v2-wire"
 import type { AssistantMessage, Message, Part, ToolPart, UserMessage } from "@/v2-wire"
 
 
 import { normalizeSessionMessages } from "@/utils/session-message"
 import type { SessionMessageAssistantTool } from "@/v2-wire"
 
-import { maestroCapability, ownSource, readGovernance, sessionWorking } from "./orchestra-governance-data"
+import { maestroCapability, readGovernance, sessionWorking } from "./orchestra-governance-data"
 
 const sessionID = "ses_governance"
 
@@ -460,22 +460,5 @@ describe("maestroCapability", () => {
   test("reports a failed agent read as unknown instead of checking forever", () => {
     expect(maestroCapability([], "failed")).toBe("unknown")
     expect(maestroCapability([agent("build")], "failed")).toBe("unavailable")
-  })
-})
-
-describe("ownSource", () => {
-  test("separates unknown, missing and configured Own sources", () => {
-    const config: Config = { maestro: { atlas: { projectID: "atlas-project", directory: "/atlas" } } }
-    expect(ownSource(config, "v2", "ready").state).toBe("unknown")
-    expect(ownSource({}, "v2", "ready").state).toBe("unknown")
-    expect(ownSource({ model: "anthropic/claude" }, "v2", "ready").state).toBe("unknown")
-    expect(ownSource(config, "v2", "ready")).toEqual({ state: "unknown" })
-  })
-
-  test("follows the project config read, not unrelated bootstrap reads", () => {
-    const config: Config = { maestro: { atlas: { projectID: "atlas-project", directory: "/atlas" } } }
-    expect(ownSource(config, undefined, "ready").state).toBe("unknown")
-    expect(ownSource(config, "v2", "pending").state).toBe("unknown")
-    expect(ownSource(config, "v2", "failed").state).toBe("unknown")
   })
 })

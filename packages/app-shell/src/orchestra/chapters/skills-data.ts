@@ -41,10 +41,10 @@ export function filterSkills(skills: SkillEntry[], query: string) {
   )
 }
 
-// A server's built-in skills: V1 reports them as `<built-in>`, V2 under the virtual absolute path /builtin/.
+// A server's built-in skills live under the virtual absolute path /builtin/.
 // Orchestra's own server ships none (playbooks are files), but other servers may.
 export function skillSource(location: string, directory: string): SkillSource {
-  if (location === "<built-in>" || location.startsWith("/builtin/")) return "builtin"
+  if (location.startsWith("/builtin/")) return "builtin"
   return slash(location).startsWith(root(directory)) ? "project" : "global"
 }
 
@@ -66,11 +66,9 @@ export function sortSkills(skills: readonly SkillEntry[], directory: string) {
   )
 }
 
-/** Reads the message from a V1 `{ data: { message } }` or V2 `{ message }` error body. */
+/** Reads the message from a `{ message }` error body. */
 export function skillErrorMessage(error: unknown) {
   if (!error || typeof error !== "object") return
-  if ("data" in error && error.data && typeof error.data === "object" && "message" in error.data)
-    return typeof error.data.message === "string" ? error.data.message : undefined
   if ("message" in error && typeof error.message === "string") return error.message
 }
 

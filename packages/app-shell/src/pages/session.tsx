@@ -565,8 +565,8 @@ export default function Page() {
     const git = sync().project?.vcs === "git" || !!vcs?.branch
     if (git) list.push("git")
     if (git && vcs?.branch && vcs?.default_branch && vcs.branch !== vcs.default_branch) list.push("branch")
-    // V2 records no per-turn diffs: in a repository that view reads empty, and a fallback to it outlives a reload.
-    if (!git || serverSDK().protocolKind() !== "v2") list.push("turn")
+    // The server records no per-turn diffs: in a repository that view reads empty, and a fallback to it outlives a reload.
+    if (!git) list.push("turn")
     return list
   })
   const mobileChanges = createMemo(() => !isDesktop() && store.mobileTab === "changes")
@@ -1596,7 +1596,7 @@ export default function Page() {
         deliberate: input.manual === true,
         currentSource: {
           serverScopeKey: directorySDK.scope, directory: directorySDK.directory, sessionID,
-          protocol: server.protocol, management: server.sessionManagement,
+          management: server.sessionManagement,
           current,
         },
       }).catch((err) => {

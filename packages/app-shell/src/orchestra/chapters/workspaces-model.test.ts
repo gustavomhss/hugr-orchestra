@@ -31,37 +31,7 @@ describe("repositoryProject", () => {
 })
 
 describe("repositoryWorkspaces", () => {
-  test("V1 lists the root first, then its sandboxes, with folder names", () => {
-    expect(repositoryWorkspaces(projects[0])).toEqual([
-      { directory: "/repos/orchestra", folder: "orchestra", root: true, removable: false },
-      { directory: "/sandboxes/one", folder: "one", root: false, removable: false },
-      { directory: "/sandboxes/two", folder: "two", root: false, removable: false },
-    ])
-  })
-
-  test("V1 offers deletion only for worktrees in the server's own worktree folder for this project", () => {
-    const project = {
-      id: "abc",
-      worktree: "/repos/orchestra",
-      sandboxes: [
-        "/data/orchestra/worktree/abc/feature",
-        "/data/orchestra/worktree/other/feature",
-        "/repos/orchestra-clone",
-        "/data/orchestra/worktree/abc/feature/nested",
-        "C:\\data\\orchestra\\worktree\\abc\\fix",
-      ],
-    }
-    expect(repositoryWorkspaces(project).map((item) => [item.folder, item.removable])).toEqual([
-      ["orchestra", false],
-      ["feature", true],
-      ["feature", false],
-      ["orchestra-clone", false],
-      ["nested", false],
-      ["fix", true],
-    ])
-  })
-
-  test("V2 lists the project's directory table, including copies missing from sandboxes", () => {
+  test("lists the project's directory table, including copies missing from sandboxes", () => {
     const directories = [
       { directory: "/copies/new", strategy: "git_worktree" },
       { directory: "/repos/orchestra/" },
@@ -78,25 +48,20 @@ describe("repositoryWorkspaces", () => {
   })
 
   test("normalizes Windows paths for names and deduplication without changing directories", () => {
-    const project = { id: "p", worktree: "C:\\repo", sandboxes: ["C:\\trees\\one", "C:/trees/one/"] }
-    expect(repositoryWorkspaces(project).map((item) => [item.directory, item.folder])).toEqual([
+    const directories = [{ directory: "C:\\trees\\one" }, { directory: "C:/trees/one/" }]
+    expect(repositoryWorkspaces({ worktree: "C:\\repo" }, directories).map((item) => [item.directory, item.folder])).toEqual([
       ["C:\\repo", "repo"],
       ["C:\\trees\\one", "one"],
     ])
   })
 
-  test("deduplicates the root and handles a project without sandboxes", () => {
-    expect(repositoryWorkspaces({ id: "p", worktree: "/repo", sandboxes: ["/repo/", "/tree", "/tree"] })).toHaveLength(
-      2,
-    )
-    expect(repositoryWorkspaces({ id: "p", worktree: "/repo" })).toEqual([
-      { directory: "/repo", folder: "repo", root: true, removable: false },
-    ])
+  test("deduplicates the root", () => {
+    expect(repositoryWorkspaces({ worktree: "/repo" }, [{ directory: "/repo/" }, { directory: "/tree" }, { directory: "/tree" }])).toHaveLength(2)
   })
 })
 
 describe("active workspace", () => {
-  const workspaces = repositoryWorkspaces(projects[0])
+  const workspaces = repositoryWorkspaces(projects[0], [{ directory: "/sandboxes/one" }, { directory: "/sandboxes/two" }])
 
   test("defaults to the root and follows a stored choice that still exists", () => {
     expect(activeWorkspace(workspaces)).toBe("/repos/orchestra")
@@ -116,7 +81,7 @@ describe("active workspace", () => {
   })
 })
 
-test("recognizes only V2's dirty-tree refusal as a request to force", () => {
+test("recognizes only the server's dirty-tree refusal as a request to force", () => {
   expect(forceRequired({ name: "ProjectCopyError", data: { message: "dirty", forceRequired: true } })).toBe(true)
   expect(forceRequired({ name: "ProjectCopyError", data: { message: "missing" } })).toBe(false)
   expect(forceRequired({ data: { forceRequired: "true" } })).toBe(false)

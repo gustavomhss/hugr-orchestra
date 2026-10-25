@@ -321,7 +321,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     if (isNewSession) {
       if (!admission.directory && worktreeSelection === "create") {
         const project = repositoryProject(serverState.data.project, projectDirectory)
-        // The server names the copy, as V1 did; it lands beside the repository like a Workspaces copy.
+        // The server names the copy; it lands beside the repository like a Workspaces copy.
         const createdWorktree = await (project
           ? server.api.projectCopy.create({
               projectID: project.id,
@@ -367,7 +367,6 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       sessionDirectory === projectDirectory
         ? directorySDK.api.session
         : createCompatibleApi({
-            protocol: server.protocol,
             current: server.currentApi,
             directory: sessionDirectory,
           }).session
@@ -484,7 +483,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       admission.failedWrite = undefined
     }
     const policy = createSubmissionPolicy({
-      key: rulesKey, sessionID: session.id, protocol: server.protocol,
+      key: rulesKey, sessionID: session.id,
       management: server.sessionManagement, admission, current: ownsSource,
       initialPolicy: isNewSession ? { mode: "inherit" } : undefined,
       failedMessage: language.t("common.requestFailed"),

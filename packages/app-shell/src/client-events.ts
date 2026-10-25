@@ -1,12 +1,9 @@
-// The bundled client's event union, captured verbatim.
+// The event union the app-shell speaks internally (`ServerCurrentEvent`), captured verbatim from the bundled client's
+// generated types: the session event vocabulary plus the transitive closure of the types it names.
 //
-// Provenance: `@opencode-ai/client` 1.17.13, `package/dist/promise/generated/types.d.ts`. `V2Event` plus the
-// transitive closure of the types it names. Captured as-is because the app-shell keeps speaking the bundled
-// client's event vocabulary internally (`ServerCurrentEvent`).
-//
-// It is NOT the local `Event` union in `@/v2-wire`: that one carries the current server's `session.next.*`
-// vocabulary and the `properties` payload, while this union carries the bundled client's tags
-// (`session.text.delta`, `session.tool.success`, ...) and the `data` payload.
+// It is NOT the local `Event` union in `@/v2-wire`: that one carries the server's `session.next.*` vocabulary and
+// the `properties` payload, while this union carries the tags (`session.text.delta`, `session.tool.success`, ...)
+// and the `data` payload that `server-event-native.ts` produces.
 
 type JsonValue = null | boolean | number | string | Array<JsonValue> | {
     [key: string]: JsonValue;
@@ -143,7 +140,7 @@ type PermissionV2Source = {
     callID: string;
 };
 
-type FileDiffLegacyInfo = {
+type FileDiffEventInfo = {
     file?: string;
     patch?: string;
     additions: number;
@@ -2144,7 +2141,7 @@ type UserMessage = {
     summary?: {
         title?: string | undefined;
         body?: string | undefined;
-        diffs: Array<FileDiffLegacyInfo>;
+        diffs: Array<FileDiffEventInfo>;
     } | undefined;
     agent: string;
     model: {
@@ -2212,7 +2209,7 @@ type SessionV1Info = {
         additions: number;
         deletions: number;
         files: number;
-        diffs?: Array<FileDiffLegacyInfo>;
+        diffs?: Array<FileDiffEventInfo>;
     };
     cost?: number;
     tokens?: {
@@ -2442,9 +2439,7 @@ type MessagePartUpdated = {
     };
 };
 
-export type OpenCodeEvent = V2Event
-
-export type V2Event = ModelsDevRefreshed | IntegrationUpdated | IntegrationConnectionUpdated | CatalogUpdated | AgentUpdated | SessionCreated | SessionUpdated | SessionDeleted1 | MessageUpdated | MessageRemoved | MessagePartUpdated | MessagePartRemoved | SessionAgentSelected | SessionModelSelected | SessionMoved | SessionRenamed | SessionUsageUpdated | SessionDeleted | SessionForked | SessionInputPromoted | SessionInputAdmitted | SessionExecutionStarted | SessionExecutionSucceeded | SessionExecutionFailed | SessionExecutionInterrupted | SessionInstructionsUpdated | SessionSynthetic | SessionSkillActivated | SessionShellStarted | SessionShellEnded | SessionStepStarted | SessionStepEnded | SessionStepFailed | SessionTextStarted | SessionTextDelta | SessionTextEnded | SessionReasoningStarted | SessionReasoningDelta | SessionReasoningEnded | SessionToolInputStarted | SessionToolInputDelta | SessionToolInputEnded | SessionToolCalled | SessionToolProgress | SessionToolSuccess | SessionToolFailed | SessionRetryScheduled | SessionCompactionAdmitted | SessionCompactionStarted | SessionCompactionDelta | SessionCompactionEnded | SessionCompactionFailed | SessionRevertStaged | SessionRevertCleared | SessionRevertCommitted | FilesystemChanged | ReferenceUpdated | PermissionV2Asked | PermissionV2Replied | PluginAdded | PluginUpdated | ProjectDirectoriesUpdated | CommandUpdated | ConfigUpdated | SkillUpdated | PtyCreated | PtyUpdated | PtyExited | PtyDeleted | ShellCreated | ShellExited | ShellDeleted | QuestionV2Asked | QuestionV2Replied | QuestionV2Rejected | FormCreated | FormReplied | FormCancelled | SessionStatus2 | SessionIdle | TuiPromptAppend | TuiCommandExecute | TuiToastShow | TuiSessionSelect | InstallationUpdated | InstallationUpdateAvailable | VcsBranchUpdated | McpStatusChanged | McpResourcesChanged | PermissionAsked | PermissionReplied | QuestionAsked | QuestionReplied | QuestionRejected | SessionError | V2EventServerConnected;
+export type ClientEvent = ModelsDevRefreshed | IntegrationUpdated | IntegrationConnectionUpdated | CatalogUpdated | AgentUpdated | SessionCreated | SessionUpdated | SessionDeleted1 | MessageUpdated | MessageRemoved | MessagePartUpdated | MessagePartRemoved | SessionAgentSelected | SessionModelSelected | SessionMoved | SessionRenamed | SessionUsageUpdated | SessionDeleted | SessionForked | SessionInputPromoted | SessionInputAdmitted | SessionExecutionStarted | SessionExecutionSucceeded | SessionExecutionFailed | SessionExecutionInterrupted | SessionInstructionsUpdated | SessionSynthetic | SessionSkillActivated | SessionShellStarted | SessionShellEnded | SessionStepStarted | SessionStepEnded | SessionStepFailed | SessionTextStarted | SessionTextDelta | SessionTextEnded | SessionReasoningStarted | SessionReasoningDelta | SessionReasoningEnded | SessionToolInputStarted | SessionToolInputDelta | SessionToolInputEnded | SessionToolCalled | SessionToolProgress | SessionToolSuccess | SessionToolFailed | SessionRetryScheduled | SessionCompactionAdmitted | SessionCompactionStarted | SessionCompactionDelta | SessionCompactionEnded | SessionCompactionFailed | SessionRevertStaged | SessionRevertCleared | SessionRevertCommitted | FilesystemChanged | ReferenceUpdated | PermissionV2Asked | PermissionV2Replied | PluginAdded | PluginUpdated | ProjectDirectoriesUpdated | CommandUpdated | ConfigUpdated | SkillUpdated | PtyCreated | PtyUpdated | PtyExited | PtyDeleted | ShellCreated | ShellExited | ShellDeleted | QuestionV2Asked | QuestionV2Replied | QuestionV2Rejected | FormCreated | FormReplied | FormCancelled | SessionStatus2 | SessionIdle | TuiPromptAppend | TuiCommandExecute | TuiToastShow | TuiSessionSelect | InstallationUpdated | InstallationUpdateAvailable | VcsBranchUpdated | McpStatusChanged | McpResourcesChanged | PermissionAsked | PermissionReplied | QuestionAsked | QuestionReplied | QuestionRejected | SessionError | V2EventServerConnected;
 
 type UnknownError = {
     readonly _tag: "UnknownError";

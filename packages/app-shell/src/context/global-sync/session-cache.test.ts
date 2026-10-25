@@ -3,7 +3,7 @@ import type { PermissionRequest, QuestionRequest } from "@/v2-types"
 import type { Message, Part, SessionStatus, Todo } from "@/v2-wire"
 
 
-import type { FileDiffInfo } from "@/v2-legacy"
+import type { FileDiffInfo } from "@/session-types"
 import { dropSessionCaches, pickSessionCacheEvictions } from "./session-cache"
 
 const msg = (id: string, sessionID: string) =>

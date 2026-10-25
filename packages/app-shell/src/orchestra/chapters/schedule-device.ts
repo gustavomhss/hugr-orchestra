@@ -230,7 +230,7 @@ export function createDeviceSchedule(props: { directory: string; store: DeviceSt
   }
 }
 
-// V2 rejects with the parsed error body, V1 with its legacy body; both may carry only `message`.
+// The server rejects with the parsed error body, which may carry only `message`.
 export function runError(language: Pick<ReturnType<typeof useLanguage>, "t">, name: string, error: unknown) {
   const message =
     error && typeof error === "object" && "message" in error && typeof error.message === "string"

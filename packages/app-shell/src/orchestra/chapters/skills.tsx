@@ -66,7 +66,7 @@ export default function Skills(props: ChapterPageProps) {
   })
 
   async function load() {
-    const entries = await serverSDK().protocol.then(async (protocol) => {
+    const entries = await serverSDK().protocol.then(async () => {
       if (abort.signal.aborted) return []
       return (
         await serverSDK().currentApi.skill.list({ location: { directory: props.directory } }, { signal: abort.signal })

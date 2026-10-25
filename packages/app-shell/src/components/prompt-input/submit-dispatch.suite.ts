@@ -3,7 +3,7 @@ import { createPromptState } from "@/context/prompt-state"
 import { Worktree } from "@/utils/worktree"
 import { ServerScope } from "@/utils/server-scope"
 import { createCompatibleApi } from "@/utils/server-compat"
-import { clearPending, pendingRules, togglePending } from "../draft-subagent-models"
+import { clearPending, togglePending } from "../draft-subagent-models"
 import type { FollowupDraft } from "./submit"
 import {
   clientFor,

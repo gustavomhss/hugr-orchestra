@@ -9,7 +9,6 @@ import { showToast } from "@/utils/toast"
 type ModelKey = { providerID: string; modelID: string }
 
 // New turns start on the configured default model (`config.model`, "provider/model").
-// Only the v1 API writes the global config, so v2 servers show the default without a way to change it.
 export function createDefaultModelController(directory: Accessor<string | null | undefined>) {
   const language = useLanguage()
   const serverSync = useServerSync()
@@ -25,7 +24,7 @@ export function createDefaultModelController(directory: Accessor<string | null |
   )
 
   return {
-    // V1 writes the model into its config; V2 into its global config document.
+    // The model is written into the global config document once the server answers.
     writable: () => protocol() !== undefined,
     isDefault: (key: ModelKey) => current()?.providerID === key.providerID && current()?.modelID === key.modelID,
     set: (key: ModelKey) => {

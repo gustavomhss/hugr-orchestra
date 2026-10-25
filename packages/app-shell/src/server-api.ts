@@ -1,7 +1,7 @@
 // The app-shell's own API contract: the groups the app calls, in the shapes the app stores and reads.
 //
 // The adapter in `@/utils/server` builds this surface from the current API client. The shapes here are the
-// app's contract, not the current API's generated ones: the app keeps the legacy field names and envelopes
+// app's contract, not the current API's generated ones: the app keeps its own field names and envelopes
 // (the `data` envelope, the mutable payloads) that its state and reducers work with.
 //
 // Every input is the input the generated client sends: `ClientInput` reads it off the client, so the contract
@@ -10,7 +10,7 @@
 import type { Orchestra, SessionsEventsOutput } from "@orchestra/client"
 
 import type { AgentFileInfo, IntegrationMethod, Message, PermissionRequest, ProjectListOutput, QuestionRequest, SessionInfo, Todo, ToolPart } from "@/v2-types"
-import type { SessionMessageInfo } from "@/v2-legacy"
+import type { SessionMessageInfo } from "@/session-types"
 
 import type {
   AgentListOutput,
@@ -32,7 +32,7 @@ import type {
   SessionPromptOutput,
   SessionShellOutput,
 } from "@/v2-wire"
-import type { FileDiffInfo, OpenCodeEvent } from "@/v2-legacy"
+import type { FileDiffInfo, ClientEvent } from "@/session-types"
 
 /** The generated client: the wire the adapter speaks. */
 type Client = ReturnType<typeof Orchestra.make>
@@ -110,7 +110,7 @@ export type SessionCompactInput = {
 export type SessionStageInput = { sessionID: string; messageID: string }
 
 /**
- * The legacy-shaped view of the current API. Every group the adapter exposes, with the legacy envelopes and
+ * The app's view of the current API. Every group the adapter exposes, with the envelopes and
  * field names the app's state and reducers work with.
  */
 export type ServerApi = {
@@ -148,7 +148,6 @@ export type ServerApi = {
     interrupt: (input: ClientInput<"sessions", "interrupt">, requestOptions?: RequestOptions) => Promise<void>
     processes: (input: ClientInput<"sessions", "processes">, requestOptions?: RequestOptions) => Promise<SessionProcess[]>
     getPermission: (input: ClientInput<"sessions", "getPermission">, requestOptions?: RequestOptions) => Promise<PermissionRequest[]>
-    setPermission: (input: ClientInput<"sessions", "setPermission">, requestOptions?: RequestOptions) => Promise<void>
     getSubagentModels: (input: ClientInput<"sessions", "getSubagentModels">, requestOptions?: RequestOptions) => Promise<unknown>
     setSubagentModels: (input: ClientInput<"sessions", "setSubagentModels">, requestOptions?: RequestOptions) => Promise<unknown>
     revert: {
@@ -248,7 +247,7 @@ export type ServerApi = {
     list: (input?: ClientInput<"skills", "list">, requestOptions?: RequestOptions) => Promise<{ data: Array<{ name: string; location?: string; description?: string }> }>
   }
   event: {
-    subscribe: (requestOptions?: RequestOptions) => AsyncIterable<OpenCodeEvent & { location?: { directory?: string } }>
+    subscribe: (requestOptions?: RequestOptions) => AsyncIterable<ClientEvent & { location?: { directory?: string } }>
   }
   pty: {
     create: (input: ClientInput<"ptys", "create">, requestOptions?: RequestOptions) => Promise<{ data: Pty }>

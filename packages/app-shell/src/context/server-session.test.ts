@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import type { retry } from "@orchestra/core/util/retry"
 import type { MessageListOutput } from "@/server-api"
-import type { OpenCodeEvent, SessionMessageInfo } from "@/v2-legacy"
+import type { ClientEvent, SessionMessageInfo } from "@/session-types"
 import type { Message, Part, Session } from "@/v2-wire"
 import type { ServerApi } from "@/utils/server"
 import { sessionMessagePartID } from "@/utils/session-message"
@@ -41,7 +41,7 @@ const v2Assistant = (id: string, created: number, text?: string): SessionMessage
   time: { created, completed: created },
 })
 
-// Legacy-shaped messages, used for live events and optimistic input.
+// Wire-shaped messages, used for live events and optimistic input.
 const userMessage = (id: string, input: Partial<UserMessage> = {}): UserMessage => ({
   id,
   sessionID: "child",
@@ -148,7 +148,7 @@ function setup(sessions: Record<string, Session>) {
 }
 
 describe("server session", () => {
-  test("projects V2 session events into current and legacy message state", () => {
+  test("projects V2 session events into current and wire message state", () => {
     const ctx = setup({ child: session("child") })
     ctx.store.remember(session("child"))
     ctx.store.set("session_message", "child", [
@@ -159,7 +159,7 @@ describe("server session", () => {
         time: { created: 1 },
       },
     ])
-    const apply = (input: object) => ctx.store.applyV2(input as OpenCodeEvent)
+    const apply = (input: object) => ctx.store.applyV2(input as ClientEvent)
 
     apply({
       id: "evt_step",

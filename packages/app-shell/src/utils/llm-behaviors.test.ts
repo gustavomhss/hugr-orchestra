@@ -79,7 +79,7 @@ describe("LLM behaviors", () => {
     expect(seedText({ ...custom, name: "Caveman" }, "name", "Homem das cavernas")).toBe("Caveman")
   })
 
-  test("a V2 server receives each enabled behavior on its own, with the same text a V1 prompt carries", () => {
+  test("the server receives each enabled behavior on its own, with the same text the joined system text carries", () => {
     const caveman = { ...defaultBehaviorState().behaviors[0]!, enabled: true, intensity: "ultra" as const }
     const active = behaviorInstructions([caveman, custom, { ...custom, id: "off", enabled: false }])
     expect(active.map((item) => [item.id, item.name])).toEqual([

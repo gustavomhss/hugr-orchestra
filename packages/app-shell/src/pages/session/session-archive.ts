@@ -33,7 +33,7 @@ export function useSessionArchive(input?: { server: ServerSDK; directory: string
   const { params } = useSessionKey()
   const frozen = input ? { source: sdk(), state: sync(), serverState: serverSync() } : undefined
   const origin = () => input?.server ?? serverSDK()
-  // Restore needs the V2 session routes: the V1 session update cannot clear time.archived. Offer Archive nowhere it could not be undone.
+  // Restore needs the session archive routes. Offer Archive nowhere it could not be undone.
   const restorable = () => archiveRouted(origin()) && !unsupported[origin().scope]
   const available = restorable
   const busy = (sessionID: string) => operations[ScopedKey.from(origin().scope, sessionID)] ?? false
@@ -158,5 +158,5 @@ export function useSessionArchive(input?: { server: ServerSDK; directory: string
 
 // Archive routes exist once the protocol settles; session management reports that before the SDK kind is read.
 function archiveRouted(server: ServerSDK) {
-  return server.protocolKind() === "v2" || server.sessionManagement.hasArchiveRoutes()
+  return !!server.protocolKind() || server.sessionManagement.hasArchiveRoutes()
 }

@@ -1,9 +1,6 @@
-// App-shell legacy-type contract: stable names for the v2 wire. Later migration slices
-// rewrite compat import specifiers to this module; the underlying shapes keep the legacy
-// field names, so consumers recompile unchanged. `Mutable<typeof Schema.Encoded>` keeps
+// App-shell type contract: stable names for the wire. `Mutable<typeof Schema.Encoded>` keeps
 // the schema's encoded side but drops its readonly-ness; the adapted aliases below keep
-// the legacy (vendored opencode-ai-client 1.17.13) field shapes, which are authoritative
-// for those names.
+// the app's own field shapes, which are authoritative for those names.
 
 import type { AgentFile } from "@orchestra/schema/agent-file"
 import type { Command } from "@orchestra/schema/command"
@@ -65,7 +62,7 @@ export type AgentFileInfo = Mutable<typeof AgentFile.Info.Encoded>
 export type AgentFileInput = Mutable<typeof AgentFile.Input.Encoded>
 export type AgentFilePermission = Mutable<typeof AgentFile.Permission.Encoded>
 
-// --- Adapted aliases: legacy field shapes authoritative (vendored opencode-ai-client 1.17.13) ---
+// --- Adapted aliases: the app's field shapes are authoritative ---
 
 type MoneyUSD = number
 

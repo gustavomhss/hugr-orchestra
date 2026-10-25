@@ -19,7 +19,6 @@ export const WORKSPACES_COPY = {
   "orchestra.workspaces.field.branch": "Branch",
   "orchestra.workspaces.field.type": "Type",
   "orchestra.workspaces.field.serverDirectory": "Chosen by the server",
-  "orchestra.workspaces.field.newBranch": "Created with the worktree",
   "orchestra.workspaces.field.detached": "Detached HEAD",
   "orchestra.workspaces.field.noBranch": "No branch",
   "orchestra.workspaces.field.unknownBranch": "Not reported by this server",
@@ -28,8 +27,6 @@ export const WORKSPACES_COPY = {
   "orchestra.workspaces.external": "This server cannot remove this directory. Remove it with git.",
   "orchestra.workspaces.confirm.title": "Delete workspace?",
   "orchestra.workspaces.confirm.description": "Removes this git worktree and its files from disk.",
-  "orchestra.workspaces.confirm.note": "Uncommitted changes in {{path}} are lost.",
-  "orchestra.workspaces.confirm.branch": "Its branch {{branch}} is deleted too; commits not merged elsewhere are lost.",
   "orchestra.workspaces.confirm.guarded":
     "If {{path}} has uncommitted changes, you are asked again before they are discarded.",
   "orchestra.workspaces.confirm.action": "Confirm",

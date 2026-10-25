@@ -109,7 +109,7 @@ export function SessionCapabilitiesProvider(props: ParentProps) {
 function ArtifactChips(props: { part: typeof SessionV1.ToolPart.Encoded }) {
   const language = useLanguage()
   const capabilities = useSessionCapabilities()
-  // The transcript's v1 tool part and the v2 wire part share the fields the chip reader looks at.
+  // The transcript's tool part and the wire part share the fields the chip reader looks at.
   const refs = createMemo(() => artifactChips(props.part as unknown as Part))
   return (
     <div data-component="artifact-chips" hidden={refs().length === 0 || undefined}>

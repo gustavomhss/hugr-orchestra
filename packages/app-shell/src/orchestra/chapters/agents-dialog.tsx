@@ -86,7 +86,7 @@ export function AgentDialog(props: {
     return state.error
   }
   const commit = (name: string, input: AgentFileInput, removing = false) => {
-    // The roster refresh after the write can rewrite this agent in place (a legacy server sends no ids), so what the
+    // The roster refresh after the write can rewrite this agent in place (an agent can lose its id there), so what the
     // page needs to restore it is read before the write.
     const removed = removing && props.agent ? { id: agentKey(props.agent), name: props.agent.name } : undefined
     setState({ saving: true, error: "" })

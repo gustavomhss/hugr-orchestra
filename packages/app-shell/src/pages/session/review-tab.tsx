@@ -3,7 +3,7 @@ import { makeEventListener } from "@solid-primitives/event-listener"
 import type { VcsFileDiff } from "@/v2-types"
 import type { SnapshotFileDiff } from "@/v2-wire"
 
-import type { FileDiffInfo } from "@/v2-legacy"
+import type { FileDiffInfo } from "@/session-types"
 import { SessionReview } from "@orchestra/session-ui/session-review"
 import type {
   SessionReviewCommentActions,

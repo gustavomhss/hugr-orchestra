@@ -1,6 +1,6 @@
 import { Binary } from "@orchestra/core/util/binary"
 import { retry } from "@orchestra/core/util/retry"
-import type { FileDiffInfo, SessionMessageInfo } from "@/v2-legacy"
+import type { FileDiffInfo, SessionMessageInfo } from "@/session-types"
 
 import type { ServerCurrentEvent } from "./server-sdk"
 import type { PermissionRequest, QuestionRequest } from "@/v2-types"
@@ -60,7 +60,7 @@ type MessagePage = {
   complete: boolean
 }
 
-function legacyMessageSource(items: { info: Message; parts: Part[] }[]): SessionMessageInfo[] {
+function wireMessageSource(items: { info: Message; parts: Part[] }[]): SessionMessageInfo[] {
   return items
     .slice()
     .sort((a, b) => compareMessages(a.info, b.info))
@@ -238,13 +238,13 @@ export function createServerSession(
     at: {} as Record<string, number | undefined>,
   })
 
-  const indexLegacyMessage = (message: Message) => {
+  const indexWireMessage = (message: Message) => {
     const current = data.session_message[message.sessionID] ?? []
     if (current.some((item) => item.id === message.id)) return
     setData(
       "session_message",
       message.sessionID,
-      reconcile([...current, ...legacyMessageSource([{ info: message, parts: [] }])]),
+      reconcile([...current, ...wireMessageSource([{ info: message, parts: [] }])]),
     )
   }
 
@@ -954,7 +954,7 @@ export function createServerSession(
       }
       case "message.updated": {
         const info = cleanMessage((event.properties as { info: Message }).info)
-        indexLegacyMessage(info)
+        indexWireMessage(info)
         const load = messageLoads.get(info.sessionID)
         load?.touchedMessages.add(info.id)
         load?.removedMessages.delete(info.id)

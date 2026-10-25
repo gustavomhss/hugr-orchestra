@@ -53,8 +53,7 @@ export function sanitizeBehaviorState(value: unknown): LlmBehaviorState {
   return { behaviors: value.behaviors.flatMap((item) => (isBehavior(item) ? [normalize(item)] : [])) }
 }
 
-// The active behaviors as model instructions: a V1 prompt carries them joined (behaviorSystem), a V2 server keeps
-// them per project and applies each one to every turn.
+// The active behaviors as model instructions: the server keeps them per project and applies each one to every turn.
 export function behaviorInstructions(behaviors: LlmBehavior[]) {
   return behaviors
     .filter((behavior) => behavior.enabled && sendsInstructions(behavior))

@@ -3,7 +3,6 @@ import { pendingSnapshot } from "../draft-subagent-models"
 import { sameModelPolicy, type SubagentModelPolicy } from "../subagent-model-rules"
 import type { SessionManagement } from "@/utils/session-management"
 import { SessionManagementUnsupported } from "@/utils/session-management-errors"
-import type { ServerProtocol } from "@/utils/server-protocol"
 import { Worktree } from "@/utils/worktree"
 import type { ServerScope } from "@/utils/server-scope"
 import type { Message } from "@/v2-wire"
@@ -76,7 +75,6 @@ export async function acknowledgeDraftPolicy(input: {
 export function createSubmissionPolicy(input: {
   key: string
   sessionID: string
-  protocol: Promise<ServerProtocol>
   management: SubmissionManagement
   admission: { policyWritten?: boolean; acknowledgedPolicy?: SubagentModelPolicy; failedWrite?: FailedPolicyWrite }
   current: () => boolean
@@ -99,24 +97,19 @@ export function createSubmissionPolicy(input: {
       wait: () => wait(signal),
       beforeWrite: () => wait(signal, failedWrite),
       write: async (policy) => {
-        const protocol = await waitForSubmission(input.protocol, signal)
-        if (!input.current() || signal.aborted) return policy
-        if (protocol === "v2") {
-          const write = input.management.setSubagentModels(input.sessionID, policy)
-          const version = input.management.subagentModelsWriteVersion?.(input.sessionID)
-          const acknowledged = await write.catch((cause: unknown) => {
-            input.admission.failedWrite = { cause, version }
-            throw cause
-          })
-          if (!sameModelPolicy(acknowledged, policy)) throw new Error(input.failedMessage)
-          expected.policy = acknowledged
-          input.admission.acknowledgedPolicy = acknowledged
-          input.admission.failedWrite = undefined
-          return acknowledged
-        }
-        // Only the V2 subagent-model route can store a narrowed policy.
-        if (policy.mode === "inherit") return policy
-        throw new SessionManagementUnsupported()
+        signal.throwIfAborted()
+        if (!input.current()) return policy
+        const write = input.management.setSubagentModels(input.sessionID, policy)
+        const version = input.management.subagentModelsWriteVersion?.(input.sessionID)
+        const acknowledged = await write.catch((cause: unknown) => {
+          input.admission.failedWrite = { cause, version }
+          throw cause
+        })
+        if (!sameModelPolicy(acknowledged, policy)) throw new Error(input.failedMessage)
+        expected.policy = acknowledged
+        input.admission.acknowledgedPolicy = acknowledged
+        input.admission.failedWrite = undefined
+        return acknowledged
       },
     }),
   }
@@ -125,7 +118,6 @@ export function createSubmissionPolicy(input: {
 /** A canonical response is ready only across a stable per-Session SET generation. */
 export async function waitForSubagentPolicy(input: {
   sessionID: string
-  protocol: Promise<ServerProtocol>
   management: SubmissionManagement
   current: () => boolean
   signal: AbortSignal
@@ -134,7 +126,6 @@ export async function waitForSubagentPolicy(input: {
   retry?: FailedPolicyWrite
 }) {
   if (!input.current() || input.signal.aborted) return false
-  if ((await waitForSubmission(input.protocol, input.signal)) !== "v2") return input.current() && !input.signal.aborted
   const management = input.management
   if (!management.waitSubagentModels) throw new SessionManagementUnsupported()
   const join = () => waitForSubmission(management.waitSubagentModels!(input.sessionID), input.signal).catch((cause: unknown) => {
@@ -363,7 +354,6 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
         variant: input.draft.variant,
         system: prepared.value.system,
         delivery: input.draft.delivery,
-        legacyParts: requestParts,
         text: requestParts.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n"),
         files: requestParts.flatMap((part) => {
           if (part.type !== "file") return []

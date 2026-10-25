@@ -52,7 +52,6 @@ export type FollowupSendInput = {
     serverScopeKey: ServerScope
     directory: string
     sessionID: string | undefined
-    protocol: Parameters<typeof createSubmissionPolicy>[0]["protocol"]
     management: Parameters<typeof createSubmissionPolicy>[0]["management"]
     current: () => boolean
   }

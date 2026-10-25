@@ -2,7 +2,7 @@ import type { LspStatus, PermissionRequest, QuestionRequest, ReferenceInfo, VcsI
 import type { Message, Part, SessionStatus, Todo } from "@/v2-wire"
 
 import type { Agent, Config, Path } from "@/v2-wire"
-import type { FileDiffInfo, SessionMessageInfo } from "@/v2-legacy"
+import type { FileDiffInfo, SessionMessageInfo } from "@/session-types"
 import { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 import type { CommandInfo } from "@/v2-wire"
 import type { McpResource, McpServer } from "@/v2-wire"

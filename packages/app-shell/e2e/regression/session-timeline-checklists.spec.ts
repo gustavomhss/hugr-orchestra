@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test"
-import type { OpenCodeEvent } from "@/v2-legacy-events"
+import type { ClientEvent } from "@/client-events"
 import {
   assistantID,
   assistantMessage,
@@ -122,7 +122,7 @@ test("preserves live V2 structured checklists with truncated output", async ({ p
   await expect(page.getByText("Waiting for confirmation", { exact: true })).toBeVisible()
   await expect(live).toHaveCount(0)
 
-  const send = (event: OpenCodeEvent) => timeline.transport.writeRaw(`data: ${JSON.stringify(event)}\n\n`)
+  const send = (event: ClientEvent) => timeline.transport.writeRaw(`data: ${JSON.stringify(event)}\n\n`)
   await send({
     id: "evt_v2_success",
     type: "session.tool.success",

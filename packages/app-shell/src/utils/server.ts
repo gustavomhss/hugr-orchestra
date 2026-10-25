@@ -29,7 +29,7 @@ export function createApiForServer(input: {
   server: ServerConnection.HttpBase
   fetch?: typeof globalThis.fetch
 }): ServerApi {
-  // The contract keeps the app's legacy view of the client's outputs, so the two sides are not assignable to
+  // The contract keeps the app's own view of the client's outputs, so the two sides are not assignable to
   // each other. `server-api-parity.ts` holds them to the same groups, methods and inputs instead.
   return buildServerApi(input) as unknown as ServerApi
 }
@@ -192,8 +192,6 @@ function buildServerApi(input: {
         orchestra.sessions.setSubagentModels(value, requestOptions),
       getPermission: (value: Parameters<typeof orchestra.sessions.getPermission>[0], requestOptions?: Parameters<typeof orchestra.sessions.getPermission>[1]) =>
         orchestra.sessions.getPermission(value, requestOptions),
-      setPermission: (value: Parameters<typeof orchestra.sessions.setPermission>[0], requestOptions?: Parameters<typeof orchestra.sessions.setPermission>[1]) =>
-        orchestra.sessions.setPermission(value, requestOptions),
       todo: (value: Parameters<typeof orchestra.sessions.todo>[0], requestOptions?: Parameters<typeof orchestra.sessions.todo>[1]) =>
         orchestra.sessions.todo(value, requestOptions),
       archive: (value: Parameters<typeof orchestra.sessions.archive>[0], requestOptions?: Parameters<typeof orchestra.sessions.archive>[1]) =>
@@ -373,7 +371,7 @@ function selectedModel(value: unknown, variant: unknown) {
   return { providerID: value.providerID, id, ...(typeof chosen === "string" ? { variant: chosen } : {}) }
 }
 
-/** The legacy-shaped view of the current API: the groups the app calls, in their legacy shape. */
+/** The app's view of the current API: the groups the app calls, in the shapes the app stores. */
 export type { ServerApi } from "@/server-api"
 
 /** The current server's HTTP client. */

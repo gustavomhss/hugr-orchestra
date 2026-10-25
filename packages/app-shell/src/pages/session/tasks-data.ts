@@ -69,8 +69,6 @@ export type TasksInput = {
   loaded: (sessionID: string) => boolean
   /** True while older transcript pages exist that the store has not loaded. */
   more: (sessionID: string) => boolean
-  /** Session cost/tokens are server data only on v2; the v1 compat layer zero-fills missing ones. */
-  aggregates: boolean
 }
 
 /**
@@ -99,7 +97,6 @@ export function createTasksData() {
       agents: store.data.agent,
       loaded: store.session.history.loaded,
       more: store.session.history.more,
-      aggregates: serverSDK().protocolKind() === "v2",
     })
   })
 
@@ -327,7 +324,7 @@ function agentStats(
     ? messages.flatMap((message) => (input.part[message.id] ?? []).filter((part) => part.type === "tool"))
     : undefined
   const callModel = toolMetadata(call).model
-  const aggregate = input.aggregates ? child : undefined
+  const aggregate = child
   return {
     model:
       (last && shortModel(last.providerID, last.modelID)) ??

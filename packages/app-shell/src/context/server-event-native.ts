@@ -1,4 +1,4 @@
-import type { OpenCodeEvent } from "@/v2-legacy"
+import type { ClientEvent } from "@/session-types"
 import type { ServerCurrentEvent } from "./server-sdk"
 
 type NativeEvent = {
@@ -33,7 +33,7 @@ export function createNativeEventAdapter() {
       .filter((item) => item.startsWith(`${data.assistantMessageID}\n`))
       .forEach((item) => ordinals.delete(item))
 
-  return (input: { type: string }): OpenCodeEvent | undefined => {
+  return (input: { type: string }): ClientEvent | undefined => {
     if (!input.type.startsWith("session.next.")) return
     const event = input as NativeEvent
     const data = event.data
@@ -49,7 +49,7 @@ export function createNativeEventAdapter() {
         location: event.location,
         durable: event.durable,
         data: next,
-      }) as unknown as OpenCodeEvent
+      }) as unknown as ClientEvent
     const prompt = data.prompt as { text?: string; files?: unknown; agents?: unknown } | undefined
 
     switch (event.type) {

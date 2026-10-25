@@ -1,4 +1,4 @@
-import type { OpenCodeEvent } from "@/v2-legacy"
+import type { ClientEvent } from "@/session-types"
 import type { Event } from "@/v2-wire"
 import { createSimpleContext } from "@orchestra/ui/context"
 import { createGlobalEmitter } from "@solid-primitives/event-bus"
@@ -25,14 +25,14 @@ const isAbortError = (error: unknown) =>
   error !== null && typeof error === "object" && "name" in error && error.name === "AbortError"
 
 const isStreamClosed = (error: unknown, signal?: AbortSignal) => isAbortError(error) || signal?.aborted === true
-type NativeToolSuccess = Omit<Extract<OpenCodeEvent, { type: "session.tool.success" }>, "durable"> & {
+type NativeToolSuccess = Omit<Extract<ClientEvent, { type: "session.tool.success" }>, "durable"> & {
   durable?: Schema.Codec.Encoded<typeof SessionEvent.Tool.Success>["durable"]
 }
-export type ServerCurrentEvent = OpenCodeEvent | NativeToolSuccess
+export type ServerCurrentEvent = ClientEvent | NativeToolSuccess
 export type ServerEvent = Event & { current?: ServerCurrentEvent }
 type QueuedServerEvent = { directory: string; payload: ServerEvent }
 type CurrentDelta = Extract<
-  OpenCodeEvent,
+  ClientEvent,
   { type: "session.text.delta" | "session.reasoning.delta" | "session.tool.input.delta" | "session.compaction.delta" }
 >
 
@@ -473,7 +473,7 @@ function createServerSdkContextBase(
     protocol,
     signal: abort.signal,
   })
-  const api = createCompatibleApi({ protocol, current: currentApi })
+  const api = createCompatibleApi({ current: currentApi })
 
   return {
     server,
@@ -560,7 +560,6 @@ function createDirSdkContext(directory: string, serverSDK: ServerSDKBase) {
     directory,
     orchestra: serverSDK.orchestra,
     api: createCompatibleApi({
-      protocol: serverSDK.protocol,
       current: serverSDK.currentApi,
       directory,
     }),

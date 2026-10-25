@@ -4,7 +4,7 @@ import type { Project } from "@/v2-types"
 import type { PermissionRequest, QuestionRequest } from "@/v2-types"
 import type { Message, Part, Session, SessionStatus, Todo } from "@/v2-wire"
 
-import type { FileDiffInfo } from "@/v2-legacy"
+import type { FileDiffInfo } from "@/session-types"
 import type { State, VcsCache } from "./types"
 import { trimSessions } from "./session-trim"
 import { dropSessionCaches } from "./session-cache"

@@ -1,6 +1,6 @@
 import { Dialog } from "@orchestra/ui/dialog"
 import { DialogProvider, useDialog } from "@orchestra/ui/context/dialog"
-import { createMemo, onCleanup, onMount, Show } from "solid-js"
+import { createMemo, createSignal, onCleanup, onMount, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { render } from "solid-js/web"
 import type { Agent, Provider } from "../../src/v2-wire"
@@ -13,8 +13,8 @@ import { Empty } from "../../src/orchestra/actions/components"
 import { AgentsRoster } from "../../src/orchestra/chapters/agents-view"
 import { AgentDialog } from "../../src/orchestra/chapters/agents-dialog"
 import { agentModels } from "../../src/orchestra/chapters/agents-roster"
-import type { ModelRule } from "../../src/components/subagent-model-rules"
-import { draftVersion, pendingRules } from "../../src/components/draft-subagent-models"
+import type { SubagentModelPolicy } from "../../src/components/subagent-model-rules"
+import { pendingPolicy } from "../../src/components/draft-subagent-models"
 import { agentProvider } from "./chapter-agents.models"
 import "../../src/index.css"
 import "../../src/orchestra/chapters/agents.css"
@@ -25,10 +25,8 @@ function Fixture() {
   const params = new URL(location.href).searchParams
   const count = Math.min(5000, Math.max(1, Number(params.get("count") ?? 2)))
   const pendingKey = params.get("pending") ?? "fixture/server/draft"
-  const pending = createMemo(() => {
-    draftVersion()
-    return pendingRules(pendingKey)
-  })
+  const pending = createMemo(() => pendingPolicy(pendingKey))
+  const [policy, setPolicy] = createSignal<SubagentModelPolicy>({ mode: "inherit" })
   const providers: Provider[] = params.has("count")
     ? Array.from({ length: Math.ceil(count / 100) }, (_, group) => ({
         ...agentProvider,
@@ -60,8 +58,7 @@ function Fixture() {
     options: {},
   }))
   const [state, setState] = createStore({
-    rules: [] as ModelRule[],
-    writes: [] as ModelRule[][],
+    writes: [] as SubagentModelPolicy[],
     roster: false,
     retries: 0,
     refreshed: false,
@@ -110,15 +107,17 @@ function Fixture() {
         status="success"
         supported
         rulesReady
-        readRules={() => state.rules}
-        writeRules={async (rules) => {
-          setState("writes", [...state.writes, rules])
-          if (params.has("remote")) {
-            const response = await fetch("/fixture-save", { method: "POST" })
-            if (!response.ok) throw new Error("Rejected")
-          }
-          setState("rules", [...state.rules, ...rules])
-          return state.rules
+        policy={{
+          read: () => ({ policy: policy() }),
+          write: async (next) => {
+            setState("writes", [...state.writes, next])
+            if (params.has("remote")) {
+              const response = await fetch("/fixture-save", { method: "POST" })
+              if (!response.ok) throw new Error("Rejected")
+            }
+            setPolicy(next)
+            return next
+          },
         }}
         onRetry={() => {}}
       />
