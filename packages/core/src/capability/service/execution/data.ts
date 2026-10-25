@@ -53,8 +53,13 @@ export function snapshot(value: unknown): Schema.Json | Capability.Failure {
   return copied instanceof Capability.Failure ? copied : CapabilityVendorSchema.snapshot(copied)
 }
 
-export function input(value: unknown) {
-  const fixed = snapshot(value)
+export function input(value: { readonly provider: string; readonly input: unknown; readonly context: object }) {
+  // The registry Context also carries the turn's optional model (often an explicit undefined, which no JSON snapshot
+  // admits). Copy only the invocation identity, from own data properties, so no caller accessor runs.
+  const fields = Object.keys(Envelope.fields.context.fields).map((key) => [key, Object.getOwnPropertyDescriptor(value.context, key)] as const)
+  if (fields.some(([, property]) => property && !("value" in property))) return failure("unsupported_schema")
+  const context = Object.fromEntries(fields.flatMap(([key, property]) => property ? [[key, property.value]] : []))
+  const fixed = snapshot({ provider: value.provider, input: value.input, context })
   if (fixed instanceof Capability.Failure) return fixed
   const decoded = Schema.decodeUnknownOption(Envelope)(fixed)
   if (Option.isNone(decoded)) return failure("unsupported_schema")
