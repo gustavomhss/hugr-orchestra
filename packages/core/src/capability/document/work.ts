@@ -11,6 +11,7 @@ export const Success = Schema.Struct({ status: Schema.Literal("ok"), files: Sche
   metadata: Schema.Json, incomplete: Schema.Array(Schema.String) })
 export type Success = typeof Success.Type
 export const Reply = Schema.Union([Success, Schema.Struct({ status: Schema.Literal("error"), code: Capability.ErrorCode })])
+export const Loaded = Schema.Struct({ status: Schema.Literal("loaded") })
 // One compute heap, at most four byte-bounded admitted requests. Admission is process-local, not a durable Job.
 const compute = Semaphore.makeUnsafe(1)
 const admitted = { count: 0 }
@@ -33,11 +34,21 @@ export function run(kind: "pdf" | "sheet", input: unknown, data: readonly Uint8A
   if (data.reduce((n, bytes) => n + bytes.byteLength, 0) > limits.bytes) return Effect.fail(failure("quota_exceeded"))
   if (new TextEncoder().encode(JSON.stringify(input)).byteLength > limits.input) return Effect.fail(failure("quota_exceeded"))
   const work = Effect.acquireUseRelease(
-    Effect.try({ try: () => new Worker(new URL("./worker.ts", import.meta.url), {
-      workerData: { kind, input, data }, resourceLimits: { maxOldGenerationSizeMb: limits.heapMB, maxYoungGenerationSizeMb: 16 },
-    }), catch: () => failure("acquisition_failed") }),
-    (worker) => Effect.callback<Success, Capability.Failure>((resume) => {
-      worker.once("message", (value: unknown) => {
+    Effect.try({ try: () => {
+      const worker = new Worker(new URL("./worker.ts", import.meta.url), {
+        workerData: { kind, input, data }, resourceLimits: { maxOldGenerationSizeMb: limits.heapMB, maxYoungGenerationSizeMb: 16 },
+      })
+      // Bun 1.3.14 segfaults when a worker is terminated while it still transpiles its imports. The worker's first
+      // message comes once its module graph is loaded (or it failed before importing), so termination waits for it.
+      const settled = new Promise<void>((resolve) => {
+        worker.once("message", () => resolve())
+        worker.once("exit", () => resolve())
+      })
+      return { worker, settled }
+    }, catch: () => failure("acquisition_failed") }),
+    ({ worker }) => Effect.callback<Success, Capability.Failure>((resume) => {
+      worker.on("message", (value: unknown) => {
+        if (Schema.is(Loaded)(value)) return
         const reply = Schema.decodeUnknownOption(Reply)(value)
         if (Option.isNone(reply)) return resume(Effect.fail(failure("outcome_unknown")))
         if (reply.value.status === "error") return resume(Effect.fail(failure(reply.value.code)))
@@ -47,7 +58,7 @@ export function run(kind: "pdf" | "sheet", input: unknown, data: readonly Uint8A
       worker.once("error", () => resume(Effect.fail(failure("acquisition_failed"))))
       worker.once("exit", () => resume(Effect.fail(failure("outcome_unknown"))))
     }),
-    (worker) => Effect.promise(() => worker.terminate()).pipe(Effect.asVoid),
+    ({ worker, settled }) => Effect.promise(() => settled.then(() => worker.terminate())).pipe(Effect.asVoid),
   )
   return Effect.acquireUseRelease(
     Effect.suspend(() => {

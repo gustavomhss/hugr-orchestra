@@ -75,7 +75,8 @@ function workerReply(input: unknown, data: Uint8Array) {
   return Effect.acquireUseRelease(Effect.sync(() => new Worker(new URL("../src/capability/document/worker.ts", import.meta.url),
     { workerData: { kind: "pdf", input, data: [data] } })),
   (worker) => Effect.callback<unknown, Error>((resume) => {
-    worker.once("message", (reply: unknown) => resume(Effect.succeed(reply)))
+    // The reply follows the worker's "loaded" message, so termination never interrupts its imports.
+    worker.on("message", (reply: unknown) => { if (!Schema.is(DocumentWork.Loaded)(reply)) resume(Effect.succeed(reply)) })
     worker.once("error", (error: Error) => resume(Effect.fail(error)))
     worker.once("exit", () => resume(Effect.fail(new Error("Worker exited without a reply"))))
   }), (worker) => Effect.promise(() => worker.terminate()).pipe(Effect.asVoid))
