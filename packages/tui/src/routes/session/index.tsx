@@ -460,19 +460,8 @@ export function Session() {
         aliases: ["summarize"],
       },
       run: () => {
-        const selectedModel = local.model.current()
-        if (!selectedModel) {
-          toast.show({
-            variant: "warning",
-            message: "Connect a provider to summarize this session",
-            duration: 3000,
-          })
-          return
-        }
-        void sdk.client.session.summarize({
-          sessionID: route.sessionID,
-          modelID: selectedModel.modelID,
-          providerID: selectedModel.providerID,
+        void sdk.actions.compact(route.sessionID).catch((error) => {
+          toast.show({ title: "Failed to compact session", message: errorMessage(error), variant: "error" })
         })
         dialog.clear()
       },
@@ -486,16 +475,16 @@ export function Session() {
       },
       run: async () => {
         const status = sync.data.session_status?.[route.sessionID]
-        if (status?.type !== "idle") await sdk.client.session.abort({ sessionID: route.sessionID }).catch(() => {})
+        if (status?.type !== "idle") await sdk.actions.interrupt(route.sessionID).catch(() => {})
         const message = messagesBeforeRevert().findLast((item) => item.role === "user")
         if (!message) return
-        void sdk.client.session
-          .revert({
-            sessionID: route.sessionID,
-            messageID: message.id,
-          })
+        void sdk.actions
+          .revert({ sessionID: route.sessionID, messageID: message.id })
           .then(() => {
             toBottom()
+          })
+          .catch((error) => {
+            toast.show({ title: "Failed to undo", message: errorMessage(error), variant: "error" })
           })
         const parts = sync.data.part[message.id]
         prompt?.set(
@@ -527,15 +516,14 @@ export function Session() {
         if (!messageID) return
         const message = messages().find((x) => x.role === "user" && x.id > messageID)
         if (!message) {
-          void sdk.client.session.unrevert({
-            sessionID: route.sessionID,
+          void sdk.actions.unrevert(route.sessionID).catch((error) => {
+            toast.show({ title: "Failed to redo", message: errorMessage(error), variant: "error" })
           })
           prompt?.set({ input: "", parts: [] })
           return
         }
-        void sdk.client.session.revert({
-          sessionID: route.sessionID,
-          messageID: message.id,
+        void sdk.actions.revert({ sessionID: route.sessionID, messageID: message.id }).catch((error) => {
+          toast.show({ title: "Failed to redo", message: errorMessage(error), variant: "error" })
         })
       },
     },

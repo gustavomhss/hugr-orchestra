@@ -414,8 +414,8 @@ export function Prompt(props: PromptProps) {
           }, 5000)
 
           if (store.interrupt >= 2) {
-            void sdk.client.session.abort({
-              sessionID: props.sessionID,
+            void sdk.actions.interrupt(props.sessionID).catch((error) => {
+              toast.show({ title: "Failed to interrupt", message: errorMessage(error), variant: "error" })
             })
             setStore("interrupt", 0)
           }
@@ -1059,14 +1059,8 @@ export function Prompt(props: PromptProps) {
 
     if (store.mode === "shell") {
       move.startSubmit()
-      void sdk.client.session.shell({
-        sessionID,
-        agent: agentKey(agent),
-        model: {
-          providerID: selectedModel.providerID,
-          modelID: selectedModel.modelID,
-        },
-        command: inputText,
+      void sdk.actions.shell({ sessionID, command: inputText }).catch((error) => {
+        toast.show({ title: "Failed to run shell command", message: errorMessage(error), variant: "error" })
       })
       setStore("mode", "normal")
     } else if (
@@ -1081,15 +1075,18 @@ export function Prompt(props: PromptProps) {
       const restOfInput = firstLineEnd === -1 ? "" : inputText.slice(firstLineEnd + 1)
       const args = firstLineArgs.join(" ") + (restOfInput ? "\n" + restOfInput : "")
 
-      void sdk.client.session.command({
-        sessionID,
-        command: command.slice(1),
-        arguments: args,
-        agent: agentKey(agent),
-        model: `${selectedModel.providerID}/${selectedModel.modelID}`,
-        variant,
-        parts: nonTextParts.filter((x) => x.type === "file"),
-      })
+      void sdk.actions
+        .command({
+          sessionID,
+          command: command.slice(1),
+          arguments: args,
+          agent: agentKey(agent),
+          model: { providerID: selectedModel.providerID, modelID: selectedModel.modelID, variant },
+          files: nonTextParts.filter((x) => x.type === "file"),
+        })
+        .catch((error) => {
+          toast.show({ title: "Failed to run command", message: errorMessage(error), variant: "error" })
+        })
     } else {
       move.startSubmit()
       sdk.client.session

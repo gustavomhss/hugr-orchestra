@@ -48,6 +48,7 @@
     "./component/register-spinner": "./src/component/register-spinner.ts"
   },
   "dependencies": {
+    "@orchestra/client": "workspace:*",
     "@orchestra/core": "workspace:*",
     "@orchestra/plugin": "workspace:*",
     "@orchestra/schema": "workspace:*",
