@@ -80,10 +80,10 @@ export function DialogMessage(props: {
           value: "session.fork",
           description: "create a new session",
           onSelect: async (dialog) => {
-            const result = await sdk.client.session.fork({
-              sessionID: props.sessionID,
-              messageID: props.messageID,
-            })
+            const result = await sdk.api.sessions.fork({ sessionID: props.sessionID, messageID: props.messageID }).then(
+              (value) => ({ data: value.data, error: undefined }),
+              (error: unknown) => ({ data: undefined, error }),
+            )
             if (!result.data) {
               toast.show({ variant: "error", message: JSON.stringify(result.error) })
               dialog.clear()

@@ -61,7 +61,21 @@ export function DialogSessionList() {
 
   const [browseResults, { refetch: refetchBrowse }] = createResource(
     () => sync.session.query(),
-    (filter) => loadDialogSessionList({ filter, list: (query) => sdk.client.session.list(query) }),
+    (filter) =>
+      loadDialogSessionList({
+        filter,
+        list: (query) =>
+          sdk.catalog
+            .sessions({
+              workspace: project.workspace.current(),
+              project: project.data.project.id,
+              subpath: query.path,
+              search: query.search,
+              limit: query.limit,
+              roots: query.roots,
+            })
+            .then((data) => ({ data })),
+      }),
   )
   const [searchResults, { refetch }] = createResource(
     () => ({ query: search(), filter: sync.session.query() }),
@@ -70,7 +84,17 @@ export function DialogSessionList() {
       return loadDialogSessionList({
         search: input.query,
         filter: input.filter,
-        list: (query) => sdk.client.session.list(query),
+        list: (query) =>
+          sdk.catalog
+            .sessions({
+              workspace: project.workspace.current(),
+              project: project.data.project.id,
+              subpath: query.path,
+              search: query.search,
+              limit: query.limit,
+              roots: query.roots,
+            })
+            .then((data) => ({ data })),
       })
     },
   )
@@ -304,9 +328,10 @@ export function DialogSessionList() {
               const status = session?.workspaceID ? project.workspace.status(session.workspaceID) : undefined
 
               try {
-                const result = await sdk.client.session.delete({
-                  sessionID: option.value,
-                })
+                const result = await sdk.api.sessions.remove({ sessionID: option.value }).then(
+                  () => ({ error: undefined }),
+                  (error: unknown) => ({ error: error ?? "delete failed" }),
+                )
                 if (result.error) {
                   if (session?.workspaceID) {
                     recover(session)

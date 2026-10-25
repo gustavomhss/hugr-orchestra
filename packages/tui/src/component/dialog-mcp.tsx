@@ -56,12 +56,7 @@ export function DialogMcp() {
         try {
           await local.mcp.toggle(option.value)
           // Refresh MCP status from server
-          const status = await sdk.client.mcp.status()
-          if (status.data) {
-            sync.set("mcp", status.data)
-          } else {
-            console.error("Failed to refresh MCP status: no data returned")
-          }
+          sync.set("mcp", await sdk.catalog.mcp({ directory: sdk.directory }))
         } catch (error) {
           console.error("Failed to toggle MCP:", error)
         } finally {

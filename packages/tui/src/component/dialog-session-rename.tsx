@@ -21,12 +21,12 @@ export function DialogSessionRename(props: DialogSessionRenameProps) {
       title="Rename Session"
       value={session()?.title}
       onConfirm={async (value) => {
-        const result = await sdk.client.session.update({
-          sessionID: props.session,
-          title: value,
-        })
-        if (result.error) {
-          toast.show({ variant: "error", message: JSON.stringify(result.error) })
+        const error = await sdk.api.sessions.rename({ sessionID: props.session, title: value }).then(
+          () => undefined,
+          (error: unknown) => error ?? "rename failed",
+        )
+        if (error) {
+          toast.show({ variant: "error", message: JSON.stringify(error) })
           return
         }
         dialog.clear()

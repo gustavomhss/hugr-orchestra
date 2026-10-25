@@ -27,7 +27,10 @@ export function DialogForkFromTimeline(props: { sessionID: string; onMove: (mess
       title: "Full session",
       value: undefined,
       onSelect: async (dialog: DialogContext) => {
-        const forked = await sdk.client.session.fork({ sessionID: props.sessionID })
+        const forked = await sdk.api.sessions.fork({ sessionID: props.sessionID }).then(
+          (value) => ({ data: value.data, error: undefined }),
+          (error: unknown) => ({ data: undefined, error }),
+        )
         if (!forked.data) {
           toast.show({ variant: "error", message: JSON.stringify(forked.error) })
           dialog.clear()
@@ -52,10 +55,10 @@ export function DialogForkFromTimeline(props: { sessionID: string; onMove: (mess
         value: message.id,
         footer: Locale.time(message.time.created),
         onSelect: async (dialog) => {
-          const forked = await sdk.client.session.fork({
-            sessionID: props.sessionID,
-            messageID: message.id,
-          })
+          const forked = await sdk.api.sessions.fork({ sessionID: props.sessionID, messageID: message.id }).then(
+            (value) => ({ data: value.data, error: undefined }),
+            (error: unknown) => ({ data: undefined, error }),
+          )
           if (!forked.data) {
             toast.show({ variant: "error", message: JSON.stringify(forked.error) })
             dialog.clear()

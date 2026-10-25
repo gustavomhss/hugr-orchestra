@@ -156,6 +156,8 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
       get client() {
         return sdk
       },
+      // The V2 Orchestra client.
+      api: v2,
       actions,
       catalog,
       offline,

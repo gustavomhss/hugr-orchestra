@@ -115,10 +115,30 @@ export function createCatalog(client: Client) {
             Object.fromEntries(result.data.map((server) => [server.name, { ...server.status }])),
         ),
     // V2 lists sessions by project and subpath instead of V1's `scope` and `path`, and has no start-time window.
-    sessions: (input: { workspace?: string; project?: string; subpath?: string }) =>
+    // `roots` keeps top-level Sessions only, as V1's `roots` query did; V2 filters it here.
+    sessions: (input: {
+      workspace?: string
+      project?: string
+      subpath?: string
+      search?: string
+      limit?: number
+      roots?: boolean
+    }) =>
       client.sessions
-        .list({ ...input, limit: 100, order: "desc" })
-        .then((result) => result.data.map(toSession).toSorted((a, b) => a.id.localeCompare(b.id))),
+        .list({
+          workspace: input.workspace,
+          project: input.project,
+          subpath: input.subpath,
+          search: input.search,
+          limit: input.limit ?? 100,
+          order: "desc",
+        })
+        .then((result) =>
+          result.data
+            .map(toSession)
+            .filter((session) => !input.roots || !session.parentID)
+            .toSorted((a, b) => a.id.localeCompare(b.id)),
+        ),
     session: (sessionID: string) => client.sessions.get({ sessionID }).then(toSession),
     // Newest first, as V2 returns them; the store projects them into the V1 message and part shapes.
     messages: (sessionID: string) =>
