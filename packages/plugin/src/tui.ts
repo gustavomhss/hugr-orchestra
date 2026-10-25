@@ -1,19 +1,27 @@
 import type {
-  AgentPart,
   Event,
-  FilePart,
   LspStatus,
   McpStatus,
   Todo,
   Message,
-  Part,
   PermissionRequest,
   QuestionRequest,
-  Session,
+  SessionInfo,
   SessionStatus,
-  TextPart,
-} from "./compat/schema.js"
-import type { Provider, Config as SdkConfig } from "./compat/legacy-v2.js"
+} from "./types.js"
+import type { Provider, Config as SdkConfig } from "./wire.js"
+export type {
+  Event,
+  LspStatus,
+  McpStatus,
+  Todo,
+  Message,
+  PermissionRequest,
+  QuestionRequest,
+  SessionInfo,
+  SessionStatus,
+  UserMessage,
+} from "./types.js"
 import type { Orchestra } from "@orchestra/client"
 import type { CliRenderer, KeyEvent, RGBA, Renderable, SlotMode } from "@opentui/core"
 import type { Binding, Keymap } from "@opentui/keymap"
@@ -179,22 +187,50 @@ export type TuiDialogSelectProps<Value = unknown> = {
   current?: Value
 }
 
+/** Where a prompt part's placeholder sits in the prompt input. */
+export type TuiPromptSourceText = {
+  start: number
+  end: number
+  value: string
+}
+
+export type TuiPromptFilePart = {
+  type: "file"
+  mime: string
+  filename?: string
+  url: string
+  source?:
+    | { type: "file"; path: string; text: TuiPromptSourceText }
+    | {
+        type: "symbol"
+        path: string
+        name: string
+        kind: number
+        range: { start: { line: number; character: number }; end: { line: number; character: number } }
+        text: TuiPromptSourceText
+      }
+    | { type: "resource"; clientName: string; uri: string; text: TuiPromptSourceText }
+}
+
+export type TuiPromptAgentPart = {
+  type: "agent"
+  name: string
+  source?: TuiPromptSourceText
+}
+
+/** Pasted text the prompt input shows as a placeholder. */
+export type TuiPromptTextPart = {
+  type: "text"
+  text: string
+  synthetic?: boolean
+  source?: { text: TuiPromptSourceText }
+}
+
+/** The prompt input's draft: its text plus the files, agents and pasted text it attaches. */
 export type TuiPromptInfo = {
   input: string
   mode?: "normal" | "shell"
-  parts: (
-    | Omit<FilePart, "id" | "messageID" | "sessionID">
-    | Omit<AgentPart, "id" | "messageID" | "sessionID">
-    | (Omit<TextPart, "id" | "messageID" | "sessionID"> & {
-        source?: {
-          text: {
-            start: number
-            end: number
-            value: string
-          }
-        }
-      })
-  )[]
+  parts: (TuiPromptFilePart | TuiPromptAgentPart | TuiPromptTextPart)[]
 }
 
 export type TuiPromptRef = {
@@ -384,15 +420,15 @@ export type TuiState = {
   readonly vcs: { branch?: string; default_branch?: string } | undefined
   session: {
     count: () => number
-    get: (sessionID: string) => Session | undefined
+    get: (sessionID: string) => SessionInfo | undefined
     diff: (sessionID: string) => ReadonlyArray<TuiSidebarFileItem>
     todo: (sessionID: string) => ReadonlyArray<TuiSidebarTodoItem>
+    /** The Session's V2 messages, oldest first. */
     messages: (sessionID: string) => ReadonlyArray<Message>
     status: (sessionID: string) => SessionStatus | undefined
     permission: (sessionID: string) => ReadonlyArray<PermissionRequest>
     question: (sessionID: string) => ReadonlyArray<QuestionRequest>
   }
-  part: (messageID: string) => ReadonlyArray<Part>
   lsp: () => ReadonlyArray<TuiSidebarLspItem>
   mcp: () => ReadonlyArray<TuiSidebarMcpItem>
 }

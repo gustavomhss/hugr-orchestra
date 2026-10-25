@@ -1,7 +1,8 @@
 import type { Permission } from "@orchestra/schema/permission"
 import type { Project } from "@orchestra/schema/project"
-import type { Provider, Model, Auth, Config as SDKConfig } from "./compat/legacy-v2.js"
-import type { Event, UserMessage, Message, Part } from "./compat/schema.js"
+import type { Prompt } from "@orchestra/schema/prompt"
+import type { Provider, Model, Auth, Config as SDKConfig } from "./wire.js"
+import type { Event, Message, UserMessage } from "./types.js"
 
 import type { BunShell } from "./shell.js"
 import { type ToolDefinition } from "./tool.js"
@@ -234,7 +235,7 @@ export interface Hooks {
       messageID?: string
       variant?: string
     },
-    output: { message: UserMessage; parts: Part[] },
+    output: { message: UserMessage },
   ) => Promise<void>
   /**
    * Modify parameters sent to LLM
@@ -256,7 +257,7 @@ export interface Hooks {
   "permission.ask"?: (input: Permission.Request, output: { status: "ask" | "deny" | "allow" }) => Promise<void>
   "command.execute.before"?: (
     input: { command: string; sessionID: string; arguments: string },
-    output: { parts: Part[] },
+    output: { prompt: Prompt },
   ) => Promise<void>
   "tool.execute.before"?: (
     input: { tool: string; sessionID: string; callID: string },
@@ -277,10 +278,7 @@ export interface Hooks {
   "experimental.chat.messages.transform"?: (
     input: {},
     output: {
-      messages: {
-        info: Message
-        parts: Part[]
-      }[]
+      messages: Message[]
     },
   ) => Promise<void>
   "experimental.chat.system.transform"?: (
@@ -320,7 +318,7 @@ export interface Hooks {
     output: { enabled: boolean },
   ) => Promise<void>
   "experimental.text.complete"?: (
-    input: { sessionID: string; messageID: string; partID: string },
+    input: { sessionID: string; messageID: string; textID: string },
     output: { text: string },
   ) => Promise<void>
   /**

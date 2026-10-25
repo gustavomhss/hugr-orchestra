@@ -1,5 +1,5 @@
-// Frozen copy of the legacy V2 wire types (from the deleted legacy SDK) that the plugin contract still
-// names, so this package does not depend on the legacy SDK. Do not regenerate; replace with schema types.
+// Provider, model, auth and config wire types the plugin contract names. They are frozen here so this
+// package does not depend on a generated SDK; replace each with its schema type when one exists.
 
 export type OAuth = {
   type: "oauth"
