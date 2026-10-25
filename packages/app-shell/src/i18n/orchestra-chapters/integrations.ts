@@ -54,6 +54,7 @@ export const INTEGRATIONS_COPY = {
   "orchestra.integrations.sessionsLoading": "Loading sessions…",
   "orchestra.integrations.sessionsEmpty": "No sessions in this location yet.",
   "orchestra.integrations.sessionsError": "Sessions could not be loaded. Enter a session ID instead.",
+  "orchestra.integrations.sessionMissing": "Choose a session or enter a session ID.",
   "orchestra.integrations.resourceError": "The resource is not valid JSON.",
   "orchestra.integrations.auth": "Host authorization",
   "orchestra.integrations.bearer": "Host-issued operator token",

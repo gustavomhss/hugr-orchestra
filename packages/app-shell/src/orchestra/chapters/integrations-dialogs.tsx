@@ -25,6 +25,7 @@ export function IntegrationsDialog(props: {
     invalid: false,
     provider: INTEGRATION_PROVIDERS[0].id as string,
     resourceChecked: false,
+    sessionMissing: false,
   })
   const form = { current: undefined as HTMLFormElement | undefined }
   onCleanup(() => form.current?.reset())
@@ -94,9 +95,12 @@ export function IntegrationsDialog(props: {
         : props.model.retargetTarget(input.value))
     }
     if (props.kind === "bind") {
+      // A typed ID wins over the picker, which stays advisory when the session list cannot load.
+      const sessionID = String(values.get("sessionID") ?? "").trim() || String(values.get("sessionPick") ?? "")
+      setState("sessionMissing", !sessionID)
+      if (!sessionID) return
       const input = Schema.decodeUnknownOption(CapabilityManagement.BindingInput)({
-        // A typed ID wins over the picker, which stays advisory when the session list cannot load.
-        sessionID: String(values.get("sessionID") ?? "").trim() || values.get("sessionPick"),
+        sessionID,
         actions: String(values.get("actions") ?? "")
           .split(/\r?\n/)
           .map((line) => line.trim())
@@ -251,7 +255,11 @@ export function IntegrationsDialog(props: {
                   <Show when={props.model.state.sessions.length}>
                     <label class="mx-field">
                       <span>{language.t("orchestra.integrations.sessionPick")}</span>
-                      <select name="sessionPick">
+                      <select
+                        name="sessionPick"
+                        aria-invalid={state.sessionMissing}
+                        onChange={() => setState("sessionMissing", false)}
+                      >
                         <option value="" />
                         <For each={props.model.state.sessions}>
                           {(session) => (
@@ -286,8 +294,19 @@ export function IntegrationsDialog(props: {
                           : "orchestra.integrations.session",
                       )}
                     </span>
-                    <input name="sessionID" dir="ltr" required={!props.model.state.sessions.length} />
+                    <input
+                      name="sessionID"
+                      dir="ltr"
+                      required={!props.model.state.sessions.length}
+                      aria-invalid={state.sessionMissing}
+                      onInput={() => setState("sessionMissing", false)}
+                    />
                   </label>
+                  <Show when={state.sessionMissing}>
+                    <p role="alert" class="mx-error">
+                      {language.t("orchestra.integrations.sessionMissing")}
+                    </p>
+                  </Show>
                   <label class="mx-field">
                     <span>{language.t("orchestra.integrations.actions")}</span>
                     <textarea
