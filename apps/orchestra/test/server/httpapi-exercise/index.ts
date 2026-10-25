@@ -38,6 +38,7 @@ import { runScenario } from "./runner"
 import { credentialScenarios } from "./credential"
 import { providerScenarios } from "./provider"
 import { scheduleScenarios } from "./schedule"
+import { capabilityScenarios } from "./capability"
 import { projectScenarios } from "./project"
 import { skillScenarios } from "./skill"
 import { catalogScenarios } from "./catalog"
@@ -102,6 +103,7 @@ const scenarios: Scenario[] = [
   ...actionsFailureScenarios,
   ...sessionSettingsScenarios,
   ...scheduleScenarios,
+  ...capabilityScenarios,
   http.protected.get("/lsp", "lsp.status").json(200, array),
   http.protected.get("/formatter", "formatter.status").json(200, array),
   http.protected.get("/config", "config.get").json(200, undefined, "status"),

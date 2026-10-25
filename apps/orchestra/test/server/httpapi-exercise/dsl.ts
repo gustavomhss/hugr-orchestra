@@ -35,6 +35,7 @@ class ScenarioBuilder<S = undefined> {
       mutates: false,
       reset: true,
       auth,
+      basicAuth: false,
     }
   }
 
@@ -68,6 +69,11 @@ class ScenarioBuilder<S = undefined> {
 
   stream() {
     return this.clone({ capture: "stream" })
+  }
+
+  /** Run against a server with Basic auth configured and send its credential: capability routes refuse anonymous calls. */
+  withBasicAuth() {
+    return this.clone({ basicAuth: true })
   }
 
   protected() {
@@ -171,6 +177,7 @@ class ScenarioBuilder<S = undefined> {
       mutates: state.mutates,
       reset: state.reset,
       auth: state.auth,
+      basicAuth: state.basicAuth,
     }
   }
 }
