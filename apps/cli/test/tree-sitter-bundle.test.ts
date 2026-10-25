@@ -93,3 +93,8 @@ test("the same binary without its tree-sitter reports parser-unavailable and nam
   // A compiled binary has no parser-worker asset, so none is tried.
   expect(result.coverage.detail).not.toContain("parser-worker")
 }, 120_000)
+
+test("the compiled CLI's debug omni names the spawner it took, and this build's omni pair is absent", async () => {
+  const result = await run([path.join(bin, executable), "debug", "omni"], 120_000, home)
+  expect(result.stdout.split("\n")[0]).toStartWith("path: legacy (ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=")
+}, 120_000)

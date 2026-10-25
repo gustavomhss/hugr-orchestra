@@ -15,6 +15,7 @@ const Handlers = Runtime.handlers(Commands, {
   debug: {
     agents: () => import("./commands/handlers/debug/agents"),
     symbols: () => import("./commands/handlers/debug/symbols"),
+    omni: () => import("./commands/handlers/debug/omni"),
   },
   session: {
     list: () => import("./commands/handlers/session/list"),
