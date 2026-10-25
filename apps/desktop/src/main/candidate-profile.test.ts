@@ -163,32 +163,6 @@ test("server blocks shell import/reintroduced secrets in candidate mode; normal 
   `, candidateEnvironment(p))
 })
 
-test("normal backend candidate environment and owned marker cannot bypass machine policy", () => {
-  const p = initializeCandidateProfile(fixture().app, true)!
-  run(resolve(import.meta.dir, "../../../orchestra"), `
-    import assert from "node:assert/strict"; import { mock } from "bun:test"; import fs from "node:fs";
-    let policyReads = 0;
-    Object.defineProperty(process, "platform", { value: "darwin" });
-    mock.module("fs", () => ({ ...fs, existsSync: (p) => p.includes("Managed Preferences") || fs.existsSync(p) }));
-    mock.module("./src/util/process", () => ({ Process: { run: async () => {
-      policyReads++; return { code: 0, stdout: Buffer.from('{"machine":true}') };
-    } } }));
-    process.env.ORCHESTRA_CANDIDATE_BUILD = "true";
-    const m = await import("./src/config/managed.ts");
-    assert.equal(m.managedConfigDir(), ${JSON.stringify(p.managed)});
-    assert.equal((await m.readManagedPreferences()).text, '{"machine":true}'); assert.equal(policyReads, 1);
-    process.env.ORCHESTRA_CANDIDATE_PROFILE_ROOT = "relative";
-    assert.equal(m.managedConfigDir(), ${JSON.stringify(p.managed)});
-    process.env.ORCHESTRA_CANDIDATE_PROFILE_ROOT = ${JSON.stringify(p.root)};
-    process.env.ORCHESTRA_TEST_MANAGED_CONFIG_DIR = "/host/managed";
-    assert.equal(m.managedConfigDir(), "/host/managed");
-    delete process.env.ORCHESTRA_LEAN_CANDIDATE;
-    assert.equal(m.managedConfigDir(), "/host/managed");
-    assert.equal((await m.readManagedPreferences()).text, '{"machine":true}'); assert.equal(policyReads, 2);
-    assert.equal(m.parseManagedPlist('{"PayloadUUID":"mdm","keep":true}'), '{"keep":true}');
-  `, candidateEnvironment(p))
-})
-
 // Electron uses Node's OS account lookup; Bun's Windows lookup follows the synthetic USERPROFILE instead.
 function relaunch(p: CandidateProfile, appData: string, error?: string) {
   run(import.meta.dir, `

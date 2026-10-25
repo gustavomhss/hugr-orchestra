@@ -61,7 +61,6 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/native/omni/campaign/**/*.ts",
         "$TURBO_ROOT$/script/test-ci-request.ts",
-        "$TURBO_ROOT$/script/test-ci-desktop.ts",
         "$TURBO_ROOT$/.github/workflows/test-ci.yml",
         "$TURBO_ROOT$/.github/actions/setup-bun/action.yml",
         "$TURBO_ROOT$/.github/workflows/distribution-bundle.yml",

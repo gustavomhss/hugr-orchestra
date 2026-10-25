@@ -1436,18 +1436,6 @@
     },
     {
       "rule": "R5",
-      "file": "packages/core/test/test-ci-desktop.test.ts",
-      "specifier": "../../../script/test-ci-desktop",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "packages/core/test/test-ci-desktop.test.ts",
-      "specifier": "../../../script/test-ci-upload",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
       "file": "packages/core/test/test-ci-request.test.ts",
       "specifier": "../../../script/test-ci-request",
       "reason": "D8: relative import across a package root; retargets are deferred"
