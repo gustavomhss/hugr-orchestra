@@ -29,7 +29,7 @@ export const create = Effect.fn("Orchestra.create")(function* () {
     ),
     (web) => Effect.promise(web.dispose),
   )
-  const fetch = Object.assign((input: RequestInfo | URL, init?: RequestInit) => web.handler(new Request(input, init)), {
+  const fetch = Object.assign((input: RequestInfo | URL, init?: RequestInit) => web.handler(new Request(input, init), context), {
     preconnect: () => undefined,
   }) satisfies typeof globalThis.fetch
   const client = yield* Orchestra.make({ baseUrl: "http://orchestra.local" }).pipe(
