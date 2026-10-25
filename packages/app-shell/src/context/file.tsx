@@ -205,7 +205,8 @@ export const { use: useFile, provider: FileProvider } = createSimpleContext({
           {
             location: { directory: sdk().directory },
             query,
-            type: dirs === "true" ? "directory" : "file",
+            // The server returns only directories for type "directory"; files and directories together omit it.
+            type: dirs === "true" ? undefined : "file",
             limit: options?.limit,
           },
           { signal: options?.signal },

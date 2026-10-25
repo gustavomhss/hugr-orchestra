@@ -1,5 +1,4 @@
 import { expect, test, type Locator } from "@playwright/test"
-import type { OpenCodeEvent } from "@/v2-legacy-events"
 import {
   completedAssistantInfo,
   directory,
@@ -11,19 +10,18 @@ import {
 } from "../performance/timeline-stability/fixture"
 import { setupIdentity } from "./identity.fixture"
 
-// Frozen glass tint values (orchestra/theme.css), normalized by Chromium's computed-style engine. Only the
-// gradient layer is fingerprinted: the grain and sheen layers sit under some surfaces (the sidebar) but not
-// others (#orchestra-session-tabs, whose id rule restates the background), so they are not common ground.
+// Frozen glass material values (orchestra/theme.css), normalized by Chromium's computed-style engine.
+const grain = `url("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27160%27%20height=%27160%27%3E%3Cfilter%20id=%27n%27%3E%3CfeTurbulence%20type=%27fractalNoise%27%20baseFrequency=%27.85%27%20numOctaves=%272%27%20stitchTiles=%27stitch%27/%3E%3CfeColorMatrix%20values=%270%200%200%200%201%200%200%200%200%201%200%200%200%200%201%200%200%200%20.05%200%27/%3E%3C/filter%3E%3Crect%20width=%27100%25%27%20height=%27100%25%27%20filter=%27url%28%23n%29%27/%3E%3C/svg%3E")`
 const glass = {
   dark: {
-    backgroundImage: `linear-gradient(rgba(32, 44, 58, 0.44) 0%, rgba(17, 24, 33, 0.52) 46%, rgba(11, 16, 23, 0.58) 100%)`,
+    backgroundImage: `${grain}, radial-gradient(120% 60% at 0% 0%, rgba(214, 231, 247, 0.07), rgba(0, 0, 0, 0) 60%), linear-gradient(rgba(32, 44, 58, 0.44) 0%, rgba(17, 24, 33, 0.52) 46%, rgba(11, 16, 23, 0.58) 100%)`,
     backdropFilter: "blur(28px) brightness(0.84) saturate(1.5)",
     borderTopColor: "rgba(160, 179, 197, 0.1)",
     boxShadow:
       "rgba(214, 231, 247, 0.1) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.28) 0px -1px 0px 0px inset, rgba(0, 0, 0, 0.36) 0px 1px 2px 0px, rgba(0, 0, 0, 0.24) 0px 10px 30px 0px",
   },
   light: {
-    backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.57) 0%, rgba(248, 250, 252, 0.49) 46%, rgba(240, 244, 247, 0.59) 100%)`,
+    backgroundImage: `${grain}, radial-gradient(120% 60% at 0% 0%, rgba(255, 255, 255, 0.35), rgba(0, 0, 0, 0) 60%), linear-gradient(rgba(255, 255, 255, 0.57) 0%, rgba(248, 250, 252, 0.49) 46%, rgba(240, 244, 247, 0.59) 100%)`,
     backdropFilter: "blur(28px) brightness(1.06) saturate(1.5)",
     borderTopColor: "rgba(70, 84, 98, 0.12)",
     boxShadow:
@@ -228,7 +226,7 @@ for (const scheme of ["dark", "light"] as const) {
       const reply = page.waitForRequest(
         (request) =>
           request.method() === "POST" &&
-          new URL(request.url()).pathname.endsWith("/permission/per_orchestra_identity/reply"),
+          /\/permission\/per_orchestra_identity\/reply$/.test(new URL(request.url()).pathname),
       )
       await permission.getByRole("button", { name: "Allow once", exact: true }).click()
       const request = await reply
@@ -263,7 +261,9 @@ test("graphite: a palette recolors the glass and keeps the frozen geometry, radi
   expectPixels((await readBox(toolbar)).height, 45, "toolbar height")
   for (const value of [await readPlatedGlass(sidebar), await readPlatedGlass(tabs), await readGlass(active)]) {
     expect(value.backdropFilter, "palette keeps the glass blur").toBe(glass.dark.backdropFilter)
-    expect(value.backgroundImage, "palette tints the glass").toMatch(/^linear-gradient\(/)
+    // The palette keeps the material layers (grain, sheen) and tints the base gradient beneath them.
+    expect(value.backgroundImage.startsWith(`${grain}, radial-gradient(`), "palette keeps the glass grain and sheen").toBe(true)
+    expect(value.backgroundImage, "palette tints the glass").toMatch(/\), linear-gradient\(.+\)$/)
     expect(value.backgroundImage, "palette tints the glass").not.toBe(glass.dark.backgroundImage)
     expect(value.borderTopColor, "palette tints the glass border").not.toBe(glass.dark.borderTopColor)
   }
@@ -319,24 +319,32 @@ test("fixture calibration: pending permission traverses the real reducer and doc
   await expect(page.getByRole("textbox", { name: "Prompt", exact: true })).toBeEditable()
 })
 
+// The V2 server's own permission events, as /api/event streams them.
 function permissionAsked() {
   return {
     id: "evt_orchestra_permission_asked",
+    created: 1700000000000,
     type: "permission.v2.asked",
-    created: 1700000003000,
     location: { directory },
-    data: { id: "per_orchestra_identity", sessionID, action: "bash", resources: ["git status"], metadata: {}, save: [] },
-  } satisfies OpenCodeEvent
+    data: {
+      id: "per_orchestra_identity",
+      sessionID,
+      action: "bash",
+      resources: ["git status"],
+      metadata: {},
+      save: [],
+    },
+  }
 }
 
 function permissionReplied() {
   return {
     id: "evt_orchestra_permission_replied",
+    created: 1700000000001,
     type: "permission.v2.replied",
-    created: 1700000004000,
     location: { directory },
     data: { sessionID, requestID: "per_orchestra_identity", reply: "once" },
-  } satisfies OpenCodeEvent
+  }
 }
 
 function readBox(locator: Locator) {
@@ -354,7 +362,7 @@ function readGlass(locator: Locator) {
   return locator.evaluate((element) => {
     const style = getComputedStyle(element)
     return {
-      backgroundImage: style.backgroundImage.slice(Math.max(style.backgroundImage.lastIndexOf("linear-gradient("), 0)),
+      backgroundImage: style.backgroundImage,
       backdropFilter: style.backdropFilter,
       borderTopColor: style.borderTopColor,
       boxShadow: style.boxShadow,

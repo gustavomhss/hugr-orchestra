@@ -498,7 +498,7 @@ async function setup(
     }
     if (path === "/project" || path === "/api/project") return json(route, [project])
     if (path === "/project/current") return json(route, project)
-    if (path === "/api/project/current") return json(route, { id: project.id, directory })
+    if (path === "/api/location") return json(route, { directory, project: { id: project.id, directory } })
     if (path === "/path" || path === "/api/path")
       return json(route, { state: directory, config: directory, worktree: directory, directory, home: "/home/user" })
     if (path === "/provider") return json(route, { all: [], connected: [], default: {} })

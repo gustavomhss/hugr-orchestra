@@ -97,8 +97,6 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
     if (path === "/provider")
       return json(route, typeof config.provider === "function" ? config.provider() : config.provider)
     if (path === "/provider/auth") return json(route, config.integrationMethods ?? {})
-    if (path === "/api/provider" || path === "/api/model" || path === "/api/model/default")
-      return json(route, { location: location(config), data: catalog(config, path) })
     const legacyAuth = path.match(/^\/auth\/([^/]+)$/)?.[1]
     if (legacyAuth && route.request().method() === "PUT") {
       config.onConnectKey?.({ integrationID: legacyAuth, body: route.request().postDataJSON() })
@@ -167,6 +165,12 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
           },
         ],
       })
+    if (path === "/api/provider" || path === "/api/model" || path === "/api/model/default") {
+      const catalog = currentCatalog(typeof config.provider === "function" ? config.provider() : config.provider)
+      const data =
+        path === "/api/provider" ? catalog.providers : path === "/api/model" ? catalog.models : catalog.default
+      return json(route, { location: location(config), data })
+    }
     if (path === "/api/command") return json(route, { location: location(config), data: [] })
     if (path === "/api/mcp") return json(route, { location: location(config), data: [] })
     if (path === "/api/mcp/resource")
@@ -185,8 +189,8 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
     if (path === "/api/location") return json(route, location(config))
     if (path === "/api/location/paths") return json(route, { home: "C:/Orchestra" })
     if (path === "/api/project") return json(route, [config.project])
-    if (path === "/api/project/current")
-      return json(route, { id: (config.project as { id?: string }).id, directory: config.directory })
+    // project.current resolves through the location route; the server has no /api/project/current.
+    if (path === "/api/location") return json(route, location(config))
     if (path.startsWith("/api/project/") && route.request().method() === "PATCH") return json(route, config.project)
     if (path === "/api/path")
       return json(route, {
@@ -481,46 +485,62 @@ function location(config: MockServerConfig) {
   }
 }
 
-// Specs describe providers in the V1 `{ all, connected, default }` shape; the V2 catalog lists only connected
-// providers, their models flattened, and the default model on its own route.
-function catalog(config: MockServerConfig, path: string) {
-  const value = (typeof config.provider === "function" ? config.provider() : config.provider) as {
-    all?: { id: string; name: string; models?: Record<string, Record<string, unknown>> }[]
+// Serves a fixture's V1 provider catalog through the V2 provider, model and default model routes. Only
+// connected providers are listed, as the V2 server lists only the providers it can run; a fixture without a
+// connected list connects all of them.
+function currentCatalog(value: unknown) {
+  type LegacyModel = {
+    id: string
+    name?: string
+    family?: string
+    status?: string
+    attachment?: boolean
+    limit?: { context: number; output?: number }
+    cost?: { input?: number; output?: number; cache?: { read?: number; write?: number } }
+    variants?: Record<string, Record<string, unknown>>
+  }
+  const catalog = (value ?? {}) as {
+    all?: { id: string; name?: string; models?: Record<string, LegacyModel> }[]
     connected?: string[]
     default?: Record<string, string>
   }
-  const providers = (value?.all ?? []).filter((provider) => value?.connected?.includes(provider.id) ?? true)
+  const providers = (catalog.all ?? []).filter((provider) => catalog.connected?.includes(provider.id) ?? true)
   const models = providers.flatMap((provider) =>
-    Object.entries(provider.models ?? {}).map(([id, model]) => ({
-      id,
-      modelID: id,
+    Object.values(provider.models ?? {}).map((model) => ({
+      id: model.id,
+      modelID: model.id,
       providerID: provider.id,
-      name: (model.name as string | undefined) ?? id,
-      capabilities: { input: ["text"], output: ["text"], tools: true },
-      variants: Object.keys((model.variants as Record<string, unknown> | undefined) ?? {}).map((variant) => ({
-        id: variant,
-      })),
+      name: model.name ?? model.id,
+      family: model.family,
+      capabilities: { input: model.attachment ? ["text", "image"] : ["text"], output: ["text"], tools: true },
+      variants: Object.entries(model.variants ?? {}).map(([id, settings]) => ({ id, settings })),
       time: { released: 1 },
-      cost: [],
-      status: "active",
+      cost: model.cost
+        ? [
+            {
+              input: model.cost.input ?? 0,
+              output: model.cost.output ?? 0,
+              cache: { read: model.cost.cache?.read ?? 0, write: model.cost.cache?.write ?? 0 },
+            },
+          ]
+        : [],
+      status: model.status ?? "active",
       enabled: true,
-      limit: { output: 8192, ...(model.limit as Record<string, number> | undefined) },
+      limit: { context: model.limit?.context ?? 200_000, output: model.limit?.output ?? 8192 },
     })),
   )
-  if (path === "/api/provider")
-    return providers.map((provider) => ({ id: provider.id, name: provider.name, settings: {} }))
-  if (path === "/api/model") return models
-  // Specs name the default either as `{ providerID, modelID }` or as V1's `{ [providerID]: modelID }` map.
-  const preferred = value?.default?.providerID
-    ? { providerID: value.default.providerID, modelID: value.default.modelID }
-    : Object.entries(value?.default ?? {})
-        .map(([providerID, modelID]) => ({ providerID, modelID }))
-        .at(0)
-  return (
-    models.find((model) => model.providerID === preferred?.providerID && model.id === preferred?.modelID) ??
-    models[0] ??
-    null
+  // The V1 default is either one { providerID, modelID } pair or a model per provider.
+  const preferred = catalog.default?.providerID
+    ? [{ providerID: catalog.default.providerID, modelID: catalog.default.modelID }]
+    : Object.entries(catalog.default ?? {}).map(([providerID, modelID]) => ({ providerID, modelID }))
+  const defaults = preferred.flatMap((pick) =>
+    models.filter((model) => model.providerID === pick.providerID && model.id === pick.modelID),
   )
+  return {
+    providers: providers.map((provider) => ({ id: provider.id, name: provider.name ?? provider.id, settings: {} })),
+    models,
+    default: defaults[0] ?? models[0] ?? null,
+  }
 }
 
 function currentPermission(value: unknown) {

@@ -1,7 +1,7 @@
 import { expect, test, type Page, type Route } from "@playwright/test"
 
-// The Atlas chapter against a fake server. On v1 the legacy `atlas` httpapi group (D4) answers one small store,
-// the one of src/orchestra/chapters/atlas/atlas-model.fixture.ts; v2 has no Atlas routes, so the chapter says so.
+// The Atlas chapter against a fake server. The `/api/atlas/*` routes (D4) answer one small store, the one of
+// src/orchestra/chapters/atlas/atlas-model.fixture.ts; a server without them answers 404, so the chapter says so.
 const server = "http://127.0.0.1:4096"
 const directory = "/repo/atlas"
 
@@ -232,7 +232,8 @@ test("a server without the atlas routes says so", async ({ page }) => {
   await setup(page, { atlas: false, requests })
   await openAtlas(page)
   await expect(page.locator(".atlas-main")).toContainText("This server does not provide Atlas.")
-  expect(requests).toEqual([])
+  // The first read learns the routes are missing; the chapter does not ask again.
+  expect(requests.map((url) => new URL(url).pathname).toSorted()).toEqual(["/api/atlas/review", "/api/atlas/snapshot"])
 })
 
 async function openAtlas(page: Page) {
@@ -274,8 +275,10 @@ async function setup(page: Page, input: { atlas: boolean; requests: string[] }) 
       sandboxes: [],
     }
     const location = { directory, project: { id: project.id, directory } }
-    if (input.atlas && path.startsWith("/api/atlas/")) {
+    if (path.startsWith("/api/atlas/")) {
       input.requests.push(url.toString())
+      // A server that predates the routes answers with an undeclared 404.
+      if (!input.atlas) return json(route, { error: "Not Found" }, 404)
       return atlas(route, location, path.split("/")[3] ?? "", path.split("/")[4] ?? "")
     }
     if (path.startsWith("/api/atlas/")) return json(route, {}, 404)
@@ -285,7 +288,7 @@ async function setup(page: Page, input: { atlas: boolean; requests: string[] }) 
     if (path === "/api/health") return json(route, { healthy: true, version: "2", pid: 1 })
     if (path === "/project" || path === "/api/project") return json(route, [project])
     if (path === "/project/current") return json(route, project)
-    if (path === "/api/project/current") return json(route, { id: project.id, directory })
+    if (path === "/api/location") return json(route, { directory, project: { id: project.id, directory } })
     if (path === "/path" || path === "/api/path")
       return json(route, { state: directory, config: directory, worktree: directory, directory, home: "/home/user" })
     if (path === "/provider") return json(route, { all: [], connected: [], default: {} })
@@ -300,7 +303,7 @@ async function setup(page: Page, input: { atlas: boolean; requests: string[] }) 
   })
 }
 
-// The legacy `atlas` group: the snapshot, the review, a missing reasoning entry, health; every other call answers empty.
+// The `/api/atlas/*` routes: the snapshot, the review, a missing reasoning entry, health; every other call answers empty.
 function atlas(route: Route, location: unknown, call: string, id: string) {
   const data = (value: unknown) => json(route, { location, data: value })
   if (call === "snapshot") return data(snapshot)

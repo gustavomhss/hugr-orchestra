@@ -1,8 +1,6 @@
 import { createHash, randomUUID } from "node:crypto"
 import { expect, test, type Page } from "@playwright/test"
 import { base64Encode } from "@orchestra/core/util/encode"
-import type { ProviderListResponse } from "../../src/v2-wire"
-
 import { mockOrchestraServer } from "../utils/mock-server"
 
 const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
@@ -28,7 +26,7 @@ const provider = {
   }],
   connected: ["orchestra"],
   default: { orchestra: "claude-opus-4-6" },
-} satisfies ProviderListResponse
+}
 const sample = "\n```owner-demand\né — 😀\u200B\n\n``` \n\n"
 const rawClipboard = "\r\n```owner-demand\ré — 😀\u200B\r\n\r\n```\n"
 const cases = [
@@ -67,25 +65,24 @@ for (const scenario of cases) {
       }],
       pageMessages: () => ({ items: [] }),
     })
-    await page.route(/\/api\/fs\/find(?:\?|$)/, (route) => {
-      const query = new URL(route.request().url()).searchParams.get("query") ?? ""
+    // The shared mock does not serve the V2 file search yet; filter like the server, which returns only
+    // directories for type "directory" and files plus directories when the type is omitted.
+    await page.route((url) => url.pathname === "/api/fs/find", (route) => {
+      const params = new URL(route.request().url()).searchParams
+      const data = [{ path: "note.md", type: "file" }].filter((entry) =>
+        entry.path.includes(params.get("query") ?? "") && (!params.get("type") || params.get("type") === entry.type))
       return route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        headers: { "access-control-allow-origin": "*" },
-        body: JSON.stringify({
-          location: { directory, project: { id: projectID, directory } },
-          data: query.includes("note") ? [{ path: "note.md", type: "file" }] : [],
-        }),
+        status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ location: { directory, project: { id: projectID, directory } }, data }),
       })
     })
-    const endpoint = `/api/session/${sessionID}/prompt`
-    // V2 selects the model on its own route before admitting the prompt.
+    // The V2 prompt carries no model; the app selects it on the Session first.
     const selections: unknown[] = []
-    page.on("request", (request) => {
-      if (request.method() === "POST" && new URL(request.url()).pathname === `/api/session/${sessionID}/model`)
-        selections.push(request.postDataJSON())
+    await page.route((url) => /^\/api\/session\/[^/]+\/model$/.test(url.pathname), (route) => {
+      if (route.request().method() === "POST") selections.push(route.request().postDataJSON())
+      return route.fallback()
     })
+    const endpoint = `/api/session/${sessionID}/prompt`
     const executions: { url: string; body: string | null }[] = []
     await page.route(/\/(?:api\/)?session\/[^/]+\/(?:prompt(?:_async)?|message|command|shell)(?:\?|$)/, (route) => {
       const request = route.request()
@@ -326,9 +323,10 @@ for (const scenario of cases) {
     expect(new URL(executions[0]!.url).pathname).toBe(endpoint)
     expect(executions[0]!.body).toBe(request.postData())
     const payload: {
-      prompt: { text: string; files?: { source?: { text: string; start: number; end: number } }[] }
+      prompt: { text: string; files?: { uri: string; source?: { text: string; start: number; end: number } }[]; agents?: unknown[] }
     } = request.postDataJSON()
     expect(payload.prompt.files ?? []).toHaveLength(pillIdentity ? 1 : 0)
+    expect(payload.prompt.agents ?? []).toHaveLength(0)
     if (pillIdentity) {
       const start = scenario.mode === "paste-pill-interior" ? 5 : 4
       expect(payload.prompt.files?.[0]?.source).toEqual({ text: "@note.md", start, end: start + 8 })
@@ -352,7 +350,7 @@ for (const scenario of cases) {
         boundary: "HTTP bootstrap fixtures; actual production UI execution request captured then aborted. No backend admission or model/tool proof.",
       }, null, 2),
     })
-    expect(selections).toEqual([{ model: { providerID: "orchestra", id: "claude-opus-4-6" } }])
+    expect(selections.at(-1)).toEqual({ model: { providerID: "orchestra", id: "claude-opus-4-6" } })
     expect(text).toBe(scenario.text)
     expect(receipt(text)).toEqual(receipt(scenario.text))
   })

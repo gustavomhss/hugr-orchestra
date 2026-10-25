@@ -231,10 +231,13 @@ export async function setup(
       return json(
         url.origin === serverB ? [project("Boreal")] : [project("Atlas"), project("Other worktree", otherDirectory)],
       )
-    if (url.pathname === "/api/project/current")
+    if (url.pathname === "/api/location")
       return json({
-        id: url.origin === serverB ? "Boreal" : selectedDirectory === otherDirectory ? "Other worktree" : "Atlas",
         directory: selectedDirectory,
+        project: {
+          id: url.origin === serverB ? "Boreal" : selectedDirectory === otherDirectory ? "Other worktree" : "Atlas",
+          directory: selectedDirectory,
+        },
       })
     const catalog = { location: { directory: selectedDirectory } }
     if (url.pathname === "/api/provider")
