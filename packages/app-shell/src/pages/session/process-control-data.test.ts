@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test"
-import type { Capability } from "@orchestra/schema/capability"
+import { Capability } from "@orchestra/schema/capability"
 import type { Part } from "@/v2-wire"
 import { processItems, runningCount } from "./process-control-data"
 
-const job = (index: number) => `cjob_${String(index).padStart(26, "0")}`
+const job = (index: number) => Capability.JobID.make(`cjob_${String(index).padStart(26, "0")}`)
 const status = (index: number, state: Capability.JobState, exit?: { code?: number; signal?: string }) => ({
   process: { id: job(index) }, state, output: { retainedStart: 0, end: 12, eof: state === "completed" }, input: "open",
   ...(exit ? { exit } : {}),
