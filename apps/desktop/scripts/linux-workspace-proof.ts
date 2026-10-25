@@ -209,39 +209,13 @@ try {
       assert.match(String(denied), /permission-denied/)
       const checked = await runtime.access.run({ argv: ["test", "-e", `${directory}/must-not-exist`] })
       assert.equal(checked.exitCode, 1)
-      assert(hooks.tool.linux_terminal_open && hooks.event)
+      assert(hooks.tool.linux_terminal_open && hooks.tool.linux_terminal_close)
       const opened = await hooks.tool.linux_terminal_open.execute({ cwd: directory }, toolContext)
       const terminalID = JSON.parse(String(opened)).terminalID as string
       assert(terminalID)
       const alive = await runtime.access.read(owner, terminalID)
       assert(alive.running)
-      const closed = Promise.withResolvers<void>()
-      const listener = (event: { data: unknown }) => {
-        const value = event.data
-        if (value && typeof value === "object" && "type" in value && value.type === "linux.session.closed") {
-          assert("ok" in value && value.ok === true)
-          closed.resolve()
-        }
-      }
-      listeners.push(listener)
-      await hooks.event({
-        event: {
-          type: "session.deleted",
-          properties: {
-            info: {
-              id: owner,
-              slug: "proof",
-              projectID: "proof",
-              directory: "/host-only",
-              title: "proof",
-              version: "1.18.27",
-              time: { created: 0, updated: 0 },
-            },
-          },
-        },
-      })
-      const timer = setTimeout(() => closed.reject(new Error("Deleted session terminal was not reaped")), 30000)
-      await closed.promise.finally(() => clearTimeout(timer))
+      await hooks.tool.linux_terminal_close.execute({ terminalID }, toolContext)
       await assert.rejects(runtime.access.read(owner, terminalID), /terminal-not-found/)
       receipt.tools = {
         actualRegisteredDefinition: true,
@@ -250,7 +224,7 @@ try {
         guestExecution: true,
         permissions,
         deniedNotExecuted: true,
-        deletedSessionTerminalReaped: true,
+        terminalClosedThroughTool: true,
       }
     } finally {
       channel.port1.close()

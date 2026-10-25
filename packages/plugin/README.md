@@ -18,7 +18,7 @@ From this package directory, run `bun typecheck` to typecheck the package.
 
 ## Legacy server plugins
 
-The legacy default export is a server module whose `server(input, options)` function returns a Promise of `Hooks`. `PluginInput` supplies the SDK client, project and workspace context, server URL, and Bun shell. Hooks include events such as `chat.params`, `tool.execute.before`, `session.start`, and `stop`.
+A legacy server plugin is a function that returns a Promise of `Hooks`. `Hooks` has one member, `tool`, because it is the only one a host invokes: the product host registers the in-repo App Dock `tool` hooks as core Tools (`modules/app-dock/src/application-tools.ts`). Core's external plugin loader accepts only V2 modules, so write anything else, including lifecycle, chat, permission and provider behaviour, as a V2 plugin.
 
 ```ts
 import { tool, type Plugin, type Hooks } from "@orchestra/plugin"
@@ -40,7 +40,7 @@ export const Example: Plugin = async () => {
 export default { server: Example }
 ```
 
-`tool()` uses Zod-shaped arguments and returns a tool definition; execution receives typed arguments and a `ToolContext` with session, directory, abort, permission, and metadata APIs. Legacy server modules and TUI modules have distinct entry shapes. Existing v1 plugins remain consumed by Orchestra's server and TUI loaders.
+`tool()` uses Zod-shaped arguments and returns a tool definition; execution receives typed arguments and a `ToolContext` with session, directory, abort, permission, and metadata APIs. Legacy server modules and TUI modules have distinct entry shapes.
 
 ## V2 server plugins
 V2 plugins register hooks through `PluginContext`; setup does not return a legacy `Hooks` object. Stateful transforms are available for agent, catalog, command, integration, reference, and skill domains. Reload reruns transforms for the selected domain. Registrations belong to plugin lifetime and can be disposed.
@@ -66,12 +66,12 @@ The Promise entrypoint offers the same domains and hooks with `setup: async (ctx
 ## TUI plugins
 Import `TuiPlugin` and `TuiPluginApi` from `@orchestra/plugin/tui`. TUI modules expose `tui(api, options, meta)` and can register routes, slots, key bindings, dialogs, toasts, attention sounds, and lifecycle cleanup. `api.command` remains present but is deprecated in favor of `api.keymap`.
 
-The contract speaks V2 only. `api.state.session.get` returns the V2 Session (`location`, `subpath`, `revert`), `api.state.session.messages` returns the Session's V2 messages oldest first (user, synthetic, shell, assistant with its text, reasoning and tool content, compaction and switch markers), and `permission`/`question` return V2 requests. `api.event.on` and the server `event` hook deliver V2 stream events, whose payload is `data`. The server hooks name V2 messages: `chat.message` receives the V2 user message, `command.execute.before` receives the V2 `prompt`, and `experimental.chat.messages.transform` receives V2 messages.
+The contract speaks V2 only. `api.state.session.get` returns the V2 Session (`location`, `subpath`, `revert`), `api.state.session.messages` returns the Session's V2 messages oldest first (user, synthetic, shell, assistant with its text, reasoning and tool content, compaction and switch markers), and `permission`/`question` return V2 requests. `api.event.on` delivers V2 stream events, whose payload is `data`.
 
 The OpenTUI packages (`@opentui/core`, `@opentui/keymap`, and `@opentui/solid`) are optional peers. Install compatible peers when authoring or running a TUI plugin. Keep TUI imports in TUI-specific modules; the TUI entrypoint loads OpenTUI types and key helpers and should not be pulled into server-only startup paths.
 
 ## Consumers and compatibility
-The Orchestra server imports `tool()` for built-in and configured plugins; the TUI and core plugin loader consume their respective subpaths. V2 server modules are loaded from configured plugin files or packages. Use the exact exported subpaths above: package exports are explicit, and unlisted deep paths are not public entrypoints. Core owns the bundled SDK manifest and runtime import map in `packages/core/src/plugin/sdk-package.ts` and `sdk-runtime.ts`, validates SDK scope and version during package installation, and admits external imports before evaluation. Hosted checks for those SDK boundaries are in `packages/core/test/npm-sdk.test.ts`. The manifest declares `effect`, `zod`, `@ai-sdk/provider`, `@orchestra/schema`, `@orchestra/protocol`, and `@orchestra/client` as dependencies and never the legacy `@orchestra/sdk`; the contract names Session, message, permission, question and event types from `@orchestra/schema` (opened up in `src/types.ts`), the provider, model, auth and config wire types it names are frozen copies in `src/wire.ts`, and `PluginInput.client` is the `PluginClient` interface each host augments; OpenTUI peers are optional. `files` publishes `dist`, so package builds must include the exported files before publishing.
+The Orchestra server imports `tool()` for built-in and configured plugins; the TUI and core plugin loader consume their respective subpaths. V2 server modules are loaded from configured plugin files or packages. Use the exact exported subpaths above: package exports are explicit, and unlisted deep paths are not public entrypoints. Core owns the bundled SDK manifest and runtime import map in `packages/core/src/plugin/sdk-package.ts` and `sdk-runtime.ts`, validates SDK scope and version during package installation, and admits external imports before evaluation. Hosted checks for those SDK boundaries are in `packages/core/test/npm-sdk.test.ts`. The manifest declares `effect`, `zod`, `@ai-sdk/provider`, `@orchestra/schema`, `@orchestra/protocol`, and `@orchestra/client` as dependencies and never the legacy `@orchestra/sdk`; the contract names Session, message, permission, question and event types from `@orchestra/schema` (opened up in `src/types.ts`), the provider, model and config wire types it names are frozen copies in `src/wire.ts`, and `PluginInput.client` is the `PluginClient` interface each host augments; OpenTUI peers are optional. `files` publishes `dist`, so package builds must include the exported files before publishing.
 
 <!-- module-contract:start (generated by script/module-readme.ts from script/module-architecture.json; do not edit) -->
 ## Module contract
