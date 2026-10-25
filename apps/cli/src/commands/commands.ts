@@ -81,6 +81,62 @@ const transcriptImport = Spec.make("import", {
   params: { file: Argument.string("path to the JSON file") },
 })
 
+const run = Spec.make("run", {
+  description: "Run Orchestra with a message",
+  params: {
+    message: Argument.string("message").pipe(Argument.withDescription("message to send"), Argument.variadic({ min: 0 })),
+    command: Flag.string("command").pipe(Flag.withDescription("the command to run, use message for args"), Flag.optional),
+    continue: Flag.boolean("continue").pipe(Flag.withAlias("c"), Flag.withDefault(false), Flag.withDescription("continue the last session")),
+    session: Flag.string("session").pipe(Flag.withAlias("s"), Flag.withDescription("session id to continue"), Flag.optional),
+    fork: Flag.boolean("fork").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("fork the session before continuing (requires --continue or --session)"),
+    ),
+    model: Flag.string("model").pipe(
+      Flag.withAlias("m"),
+      Flag.withDescription("model to use in the format of provider/model"),
+      Flag.optional,
+    ),
+    agent: Flag.string("agent").pipe(Flag.withDescription("agent to use"), Flag.optional),
+    format: Flag.choice("format", ["default", "json"]).pipe(
+      Flag.withDefault("default"),
+      Flag.withDescription("default (formatted) or json (raw JSON events)"),
+    ),
+    file: Flag.string("file").pipe(Flag.withAlias("f"), Flag.withDescription("file(s) to attach to message"), Flag.atMost(100)),
+    title: Flag.string("title").pipe(
+      Flag.withDescription("title for the session (an empty value uses the truncated prompt)"),
+      Flag.optional,
+    ),
+    attach: Flag.string("attach").pipe(
+      Flag.withDescription("attach to a running Orchestra server (e.g., http://localhost:4096)"),
+      Flag.optional,
+    ),
+    password: Flag.string("password").pipe(
+      Flag.withAlias("p"),
+      Flag.withDescription("basic auth password (defaults to ORCHESTRA_SERVER_PASSWORD)"),
+      Flag.optional,
+    ),
+    username: Flag.string("username").pipe(
+      Flag.withAlias("u"),
+      Flag.withDescription("basic auth username (defaults to ORCHESTRA_SERVER_USERNAME or 'orchestra')"),
+      Flag.optional,
+    ),
+    dir: Flag.string("dir").pipe(
+      Flag.withDescription("directory to run in, path on remote server if attaching"),
+      Flag.optional,
+    ),
+    variant: Flag.string("variant").pipe(
+      Flag.withDescription("model variant (provider-specific reasoning effort, e.g., high, max, minimal)"),
+      Flag.optional,
+    ),
+    thinking: Flag.boolean("thinking").pipe(Flag.withDefault(false), Flag.withDescription("show thinking blocks")),
+    auto: Flag.boolean("auto").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("auto-approve permissions that are not explicitly denied (dangerous!)"),
+    ),
+  },
+})
+
 declare const ORCHESTRA_CLI_NAME: string | undefined
 
 export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHESTRA_CLI_NAME : "orchestra", {
@@ -120,6 +176,7 @@ export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHE
     db,
     transcriptExport,
     transcriptImport,
+    run,
     Spec.make("migrate", { description: "Migrate v1 data to v2" }),
     Spec.make("service", {
       description: "Manage the background server",
