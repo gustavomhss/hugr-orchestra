@@ -119,18 +119,21 @@ function DiffViewer(props: { api: TuiPluginApi }) {
     }
   })
   const [diff] = createResource(diffInput, async (input) => {
-    // V2 has no per-turn snapshot diff, so last-turn shows the working diff of the files this Session changed.
-    const sessionFiles =
-      input.mode === "last-turn" && input.sessionID
-        ? new Set(props.api.state.session.diff(input.sessionID).map((item) => item.file))
-        : undefined
-    if (input.mode === "last-turn" && !sessionFiles?.size) return []
+    if (input.mode === "last-turn") {
+      if (!input.sessionID || !input.messageID) return []
+      const turn = await props.api.client.sessions.diff({
+        sessionID: input.sessionID,
+        messageID: input.messageID,
+        context: VCS_DIFF_CONTEXT_LINES,
+      })
+      return normalizeDiffs(turn.map((item) => ({ ...item, file: item.path })))
+    }
     const result = await props.api.client.vcs.diff({
       location: { directory: input.directory },
-      mode: input.mode === "last-turn" ? "working" : input.mode,
+      mode: input.mode,
       context: VCS_DIFF_CONTEXT_LINES,
     })
-    return normalizeDiffs(result.data.filter((item) => !sessionFiles || sessionFiles.has(item.file)))
+    return normalizeDiffs(result.data)
   })
   const files = createMemo(() => diff() ?? [])
   const [focus, setFocus] = createSignal<DiffViewerFocus>("patches")

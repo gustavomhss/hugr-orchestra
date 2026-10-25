@@ -1,14 +1,52 @@
+import { Catalog } from "@orchestra/core/catalog"
+import { Integration } from "@orchestra/core/integration"
 import { Location } from "@orchestra/core/location"
 import { ProjectCopy } from "@orchestra/core/project/copy"
 import { Git } from "@orchestra/core/git"
-import { Effect } from "effect"
+import { SessionRunnerModel } from "@orchestra/core/session/runner"
+import { Slug } from "@orchestra/core/util/slug"
+import { LLM, LLMClient, LLMEvent, SystemPart } from "@orchestra/llm"
+import { SessionID } from "@orchestra/schema/session-id"
+import { Effect, Stream } from "effect"
 import { HttpApiBuilder, HttpApiSchema } from "effect/unstable/httpapi"
 import { Api } from "../api"
 import { ProjectCopyError } from "@orchestra/protocol/groups/project-copy"
 
 export const ProjectCopyHandler = HttpApiBuilder.group(Api, "server.projectCopy", (handlers) =>
-  Effect.succeed(
-    handlers
+  Effect.gen(function* () {
+    const client = yield* LLMClient.Service
+    // The Location's small model names the copy; any failure falls back to a random slug, as V1 did.
+    const generateName = Effect.fn("ProjectCopyHandler.generateName")(function* (context: string | undefined) {
+      const text = context?.trim()
+      if (!text) return Slug.create()
+      const catalog = yield* Catalog.Service
+      const integrations = yield* Integration.Service
+      const fallback = yield* catalog.model.default()
+      if (!fallback) return Slug.create()
+      const selected = (yield* catalog.model.small(fallback.providerID)) ?? fallback
+      const model = yield* SessionRunnerModel.fromCatalogModel(
+        selected,
+        yield* SessionRunnerModel.credential(catalog, integrations, selected),
+      )
+      // Gateways such as OpenCode Go refuse a request without a session to route it by; each call is its own.
+      const sessionID = SessionID.descending()
+      const reply = yield* client
+        .stream(
+          LLM.request({
+            model,
+            http: { headers: { "x-session-affinity": sessionID, "X-Session-Id": sessionID } },
+            system: [SystemPart.make(ProjectCopy.NAME_SYSTEM)],
+            prompt: ProjectCopy.namePrompt(text),
+          }),
+        )
+        .pipe(
+          Stream.filter(LLMEvent.is.textDelta),
+          Stream.map((event) => event.text),
+          Stream.mkString,
+        )
+      return ProjectCopy.nameFromReply(reply)
+    })
+    return handlers
       .handle("projectCopy.create", (ctx) =>
         Effect.gen(function* () {
           const copies = yield* ProjectCopy.Service
@@ -35,8 +73,18 @@ export const ProjectCopyHandler = HttpApiBuilder.group(Api, "server.projectCopy"
             Effect.as(HttpApiSchema.NoContent.make()),
           ),
         ),
-      ),
-  ),
+      )
+      .handle("projectCopy.generateName", (ctx) =>
+        generateName(ctx.payload.context).pipe(
+          Effect.catchCause((cause) =>
+            Effect.logWarning("project copy name generation failed", { projectID: ctx.params.projectID, cause }).pipe(
+              Effect.as(Slug.create()),
+            ),
+          ),
+          Effect.map((name) => ({ name })),
+        ),
+      )
+  }),
 )
 
 function badRequest<A, R>(effect: Effect.Effect<A, ProjectCopy.Error, R>) {

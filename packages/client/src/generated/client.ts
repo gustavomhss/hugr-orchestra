@@ -64,6 +64,10 @@ import type {
   SessionsCommitOutput,
   SessionsContextInput,
   SessionsContextOutput,
+  SessionsDiffInput,
+  SessionsDiffOutput,
+  SessionsBackgroundInput,
+  SessionsBackgroundOutput,
   SessionsHistoryInput,
   SessionsHistoryOutput,
   SessionsEventsInput,
@@ -199,6 +203,8 @@ import type {
   ProjectCopiesRemoveOutput,
   ProjectCopiesRefreshInput,
   ProjectCopiesRefreshOutput,
+  ProjectCopiesGenerateNameInput,
+  ProjectCopiesGenerateNameOutput,
   ProjectsListOutput,
   ProjectsDirectoriesInput,
   ProjectsDirectoriesOutput,
@@ -756,7 +762,7 @@ export function make(options: ClientOptions) {
           {
             method: "POST",
             path: `/api/session/${encodeURIComponent(input.sessionID)}/move`,
-            body: { location: input["location"] },
+            body: { location: input["location"], moveChanges: input["moveChanges"] },
             successStatus: 204,
             declaredStatuses: [404, 409, 400, 401],
             empty: true,
@@ -874,6 +880,29 @@ export function make(options: ClientOptions) {
             path: `/api/session/${encodeURIComponent(input.sessionID)}/context`,
             successStatus: 200,
             declaredStatuses: [404, 500, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
+      diff: (input: SessionsDiffInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: SessionsDiffOutput }>(
+          {
+            method: "GET",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/diff`,
+            query: { messageID: input["messageID"], context: input["context"] },
+            successStatus: 200,
+            declaredStatuses: [404, 500, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
+      background: (input: SessionsBackgroundInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: SessionsBackgroundOutput }>(
+          {
+            method: "POST",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/background`,
+            successStatus: 200,
+            declaredStatuses: [404, 400, 401],
             empty: false,
           },
           requestOptions,
@@ -1751,6 +1780,19 @@ export function make(options: ClientOptions) {
             successStatus: 204,
             declaredStatuses: [400, 401],
             empty: true,
+          },
+          requestOptions,
+        ),
+      generateName: (input: ProjectCopiesGenerateNameInput, requestOptions?: RequestOptions) =>
+        request<ProjectCopiesGenerateNameOutput>(
+          {
+            method: "POST",
+            path: `/experimental/project/${encodeURIComponent(input.projectID)}/copy/generate-name`,
+            query: { location: input["location"] },
+            body: { context: input["context"] },
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
           },
           requestOptions,
         ),

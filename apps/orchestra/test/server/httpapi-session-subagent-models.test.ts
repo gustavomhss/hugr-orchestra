@@ -1,4 +1,6 @@
 import { SessionProcess } from "@orchestra/core/session-process"
+import { MoveSession } from "@orchestra/core/control-plane/move-session"
+import { TaskBackground } from "@orchestra/core/tool/task-background"
 import { describe, expect } from "bun:test"
 import { NodeHttpServer, NodeServices } from "@effect/platform-node"
 import path from "node:path"
@@ -49,6 +51,8 @@ const services = Layer.unwrap(
         SessionExecution.node,
         SessionSubagentModels.node,
         SessionProcess.node,
+        MoveSession.node,
+        TaskBackground.node,
         LocationServiceMap.node,
         AppProcess.node,
         FSUtil.node,

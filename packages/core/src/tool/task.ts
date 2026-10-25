@@ -4,7 +4,7 @@ import { createHash } from "node:crypto"
 import { isDeepStrictEqual } from "node:util"
 import { ToolFailure } from "@orchestra/llm"
 import type { Permission } from "@orchestra/schema/permission"
-import { Context, DateTime, Effect, Layer, Option, Schema } from "effect"
+import { Context, DateTime, Effect, Fiber, Layer, Option, Schema } from "effect"
 import { AgentV2 } from "../agent"
 import { Catalog } from "../catalog"
 import { Config } from "../config"
@@ -25,6 +25,7 @@ import { SessionSchema } from "../session/schema"
 import { SessionStore } from "../session/store"
 import { SessionSubagentModels } from "../session/subagent-models"
 import { ToolRegistry } from "./registry"
+import { TaskBackground } from "./task-background"
 import { TaskGovernance } from "./task-governance"
 import { ToolText } from "./text"
 import { Tool } from "./tool"
@@ -72,6 +73,7 @@ const layer = Layer.effectDiscard(
     const policy = yield* SessionSubagentModels.Service
     const governance = yield* TaskGovernance.Service
     const config = yield* Config.Service
+    const background = yield* TaskBackground.Service
     // Governance fields are recorded with the call, so the recorded input decodes with this same schema.
     const taskInput = Schema.Struct({ ...Input.fields, ...governance.input })
     const decodeCalled = Schema.decodeUnknownOption(taskInput)
@@ -171,30 +173,39 @@ const layer = Layer.effectDiscard(
                 : completedReply(yield* sessions.messages({ sessionID: child.id, order: "asc" }), promptID)
             yield* policy.assert(child.id, model)
             yield* revalidateTarget(child)
+            const handoff = (text: string) => ({
+              sessionID: child.id,
+              agent: target.id,
+              model: child.model,
+              text,
+              title: child.title,
+              sessionId: child.id,
+              parentSessionId: context.sessionID,
+              agentId: target.id,
+            })
             if (admission.background) {
               // Advisory: the admitted prompt is durable, so a lost wake leaves it for the next drain.
               yield* execution.wake(child.id)
-              return {
-                sessionID: child.id,
-                agent: target.id,
-                model: child.model,
-                text: "Task started in the background",
-                title: child.title,
-                sessionId: child.id,
-                parentSessionId: context.sessionID,
-                agentId: target.id,
-              }
+              return handoff("Task started in the background")
             }
-            yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
-              if (previous !== undefined) return
+            const detached = yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
+              if (previous !== undefined) return false
               // This snapshot gates post-crash eligibility only; the coordinator decides cancellation ownership.
               const active = (yield* execution.active).has(child.id)
               if (!active && admitted.promotedSeq !== undefined && !input.task_id)
                 return yield* new ToolFailure({
                   message: `Task ${child.id} has unfinished promoted work; resume explicitly with task_id`,
                 })
-              yield* restore(execution.resume(child.id, { interruptOnCancel: true }))
+              // The drain outlives a move to the background; cancelling the Task before that still stops it.
+              const drain = yield* Effect.forkDetach(execution.resume(child.id, { interruptOnCancel: true }))
+              return yield* restore(
+                Effect.raceFirst(
+                  Fiber.join(drain).pipe(Effect.as(false)),
+                  background.requested(context.sessionID).pipe(Effect.as(true)),
+                ),
+              ).pipe(Effect.onInterrupt(() => Fiber.interrupt(drain)))
             }))
+            if (detached) return handoff("Task moved to the background")
             const reply =
               previous ?? completedReply(yield* sessions.messages({ sessionID: child.id, order: "asc" }), promptID)
             if (reply === undefined)
@@ -247,6 +258,7 @@ export const node: LayerNode.Node<never, never, typeof Node.tags.values.location
     SessionSubagentModels.node,
     TaskGovernance.node,
     Config.node,
+    TaskBackground.node,
   ],
 })
 

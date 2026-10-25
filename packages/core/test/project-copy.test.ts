@@ -417,4 +417,15 @@ describe("ProjectCopy", () => {
       expect(yield* stored(input.projectID)).not.toContainEqual({ directory: missing, strategy: null })
     }),
   )
+
+  it.effect("names a copy after the first three words of the model reply", () =>
+    Effect.sync(() => {
+      expect(ProjectCopy.nameFromReply("  Fix Login-Flow bug, today please\n")).toBe("fix-login-flow-bug")
+      expect(ProjectCopy.nameFromReply('"Session Move"')).toBe("session-move")
+      expect(ProjectCopy.nameFromReply("   ")).toMatch(/^[a-z]+-[a-z]+$/)
+      expect(ProjectCopy.namePrompt("rename the dock")).toBe(
+        "Generate a short 2-3 word name that describes this task:\nrename the dock",
+      )
+    }),
+  )
 })

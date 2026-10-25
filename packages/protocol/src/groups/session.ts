@@ -413,7 +413,7 @@ export const makeSessionGroup = <I extends HttpApiMiddleware.AnyId, S>(sessionLo
     .add(
       HttpApiEndpoint.post("session.move", "/api/session/:sessionID/move", {
         params: { sessionID: Session.ID },
-        payload: Schema.Struct({ location: Location.Ref }),
+        payload: Schema.Struct({ location: Location.Ref, moveChanges: Schema.optional(Schema.Boolean) }),
         success: HttpApiSchema.NoContent,
         error: [SessionNotFoundError, ConflictError, InvalidRequestError],
       })
@@ -422,7 +422,8 @@ export const makeSessionGroup = <I extends HttpApiMiddleware.AnyId, S>(sessionLo
           OpenApi.annotations({
             identifier: "v2.session.move",
             summary: "Move session",
-            description: "Move the Session to another directory or workspace of its project.",
+            description:
+              "Move the Session to another directory or workspace of its project. With `moveChanges`, the source's uncommitted changes are applied at the destination and discarded at the source.",
           }),
         ),
     )
@@ -574,6 +575,42 @@ export const makeSessionGroup = <I extends HttpApiMiddleware.AnyId, S>(sessionLo
             identifier: "v2.session.context",
             summary: "Get session context",
             description: "Retrieve the active context messages for a session (all messages after the last compaction).",
+          }),
+        ),
+    )
+    .add(
+      HttpApiEndpoint.get("session.diff", "/api/session/:sessionID/diff", {
+        params: { sessionID: Session.ID },
+        query: Schema.Struct({
+          messageID: SessionMessage.ID,
+          context: Schema.NumberFromString.pipe(Schema.decodeTo(NonNegativeInt), Schema.optional),
+        }),
+        success: Schema.Struct({ data: Schema.Array(Revert.FileDiff) }),
+        error: [SessionNotFoundError, UnknownError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.diff",
+            summary: "Get turn diff",
+            description:
+              "Diff the files changed by the turn that answered a user message, from its first to its last snapshot. Returns an empty list when the message is not a user message or the turn has no snapshots.",
+          }),
+        ),
+    )
+    .add(
+      HttpApiEndpoint.post("session.background", "/api/session/:sessionID/background", {
+        params: { sessionID: Session.ID },
+        success: Schema.Struct({ data: Schema.Number }),
+        error: [SessionNotFoundError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.background",
+            summary: "Background subagents",
+            description:
+              "Move the Session's foreground subagent tasks to the background so the parent turn continues. Returns how many tasks were moved.",
           }),
         ),
     )

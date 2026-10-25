@@ -886,7 +886,14 @@ export type SessionsForkOutput = {
 
 export type SessionsMoveInput = {
   readonly sessionID: { readonly sessionID: string }["sessionID"]
-  readonly location: { readonly location: { readonly directory: string; readonly workspaceID?: string } }["location"]
+  readonly location: {
+    readonly location: { readonly directory: string; readonly workspaceID?: string }
+    readonly moveChanges?: boolean | null
+  }["location"]
+  readonly moveChanges?: {
+    readonly location: { readonly directory: string; readonly workspaceID?: string }
+    readonly moveChanges?: boolean | null
+  }["moveChanges"]
 }
 
 export type SessionsMoveOutput = void
@@ -1136,6 +1143,26 @@ export type SessionsContextOutput = {
       }
   >
 }["data"]
+
+export type SessionsDiffInput = {
+  readonly sessionID: { readonly sessionID: string }["sessionID"]
+  readonly messageID: { readonly messageID: string; readonly context?: number | undefined }["messageID"]
+  readonly context?: { readonly messageID: string; readonly context?: number | undefined }["context"]
+}
+
+export type SessionsDiffOutput = {
+  readonly data: ReadonlyArray<{
+    readonly path: string
+    readonly status: "added" | "modified" | "deleted"
+    readonly additions: number
+    readonly deletions: number
+    readonly patch: string
+  }>
+}["data"]
+
+export type SessionsBackgroundInput = { readonly sessionID: { readonly sessionID: string }["sessionID"] }
+
+export type SessionsBackgroundOutput = { readonly data: number }["data"]
 
 export type SessionsHistoryInput = {
   readonly sessionID: { readonly sessionID: string }["sessionID"]
@@ -3546,6 +3573,16 @@ export type ProjectCopiesRefreshInput = {
 }
 
 export type ProjectCopiesRefreshOutput = void
+
+export type ProjectCopiesGenerateNameInput = {
+  readonly projectID: { readonly projectID: string }["projectID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly context?: { readonly context?: string | undefined }["context"]
+}
+
+export type ProjectCopiesGenerateNameOutput = { readonly name: string }
 
 export type ProjectsListOutput = ReadonlyArray<{
   readonly id: string
