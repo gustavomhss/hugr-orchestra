@@ -115,9 +115,9 @@ export function contribution(port: Transport): Host.Contribution {
 }
 
 /**
- * V1's `scopeLinuxWorkspace` on V2: the Linux workspace tools, and the Dock tools that act only on native controls,
- * belong to the `linux` subagent alone. Every other agent gets V1's global denials ahead of its own rules (so its own
- * rules still win, as agent permissions win over global ones in V1); the `linux` agent gets V1's exact ruleset.
+ * The Linux workspace tools, and the Dock tools that act only on native controls, belong to the `linux` subagent alone.
+ * Every other agent gets these denials ahead of its own rules, so its own rules still win; the `linux` agent holds only
+ * the workspace tools.
  */
 export function scope(draft: AgentV2.Draft) {
   const linux = AgentV2.ID.make("linux")
