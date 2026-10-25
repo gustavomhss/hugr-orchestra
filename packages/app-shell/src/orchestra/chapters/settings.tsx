@@ -2,7 +2,6 @@ import { SettingsView } from "@/components/settings-v2/view/settings-view"
 import type { ChapterPageProps } from "@/orchestra/chapter-route"
 import { For, Match, Show, Switch } from "solid-js"
 import { useSearchParams } from "@solidjs/router"
-import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
 import { useLanguage } from "@/context/language"
 import { createHomeController } from "@/pages/home/home-controller"
 import { SettingsGeneralV2 } from "@/components/settings-v2/general"
@@ -51,11 +50,10 @@ export default function SettingsPage(props: ChapterPageProps) {
                 <Switch
                   fallback={
                     <div class="mx-empty" role="status">
-                      {language.t("orchestra.shell.settings.repository")}
-                      <br />
-                      <ButtonV2 class="mt-3" variant="contrast" icon="plus" onClick={() => home.project.choose(props.server)}>
+                      <p>{language.t("orchestra.shell.settings.repository")}</p>
+                      <button type="button" class="mx-btn primary" onClick={() => home.project.choose(props.server)}>
                         {language.t("command.project.open")}
-                      </ButtonV2>
+                      </button>
                     </div>
                   }
                 >

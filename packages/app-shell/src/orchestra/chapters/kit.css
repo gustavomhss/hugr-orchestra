@@ -345,14 +345,63 @@ html[data-color-scheme="light"] .mx-dialog {
   margin-block-start: 4px;
   line-height: 1.45;
 }
+/* One empty, loading and error state for every chapter: a lit glass well with a small mark above the copy.
+   A leading <strong> is the title; an alert (on the box or a child) tints the well and the mark. */
 .mx-empty {
-  padding: 38px 20px;
-  border: 1px dashed var(--mx-line);
+  padding: 30px 24px 32px;
+  border: 1px solid var(--mx-line);
   border-radius: var(--orchestra-radius-lg);
+  background: linear-gradient(180deg, var(--mx-soft), transparent 75%);
+  box-shadow: var(--mx-highlight);
   text-align: center;
+  text-wrap: balance;
   color: var(--mx-dim);
   font-size: var(--orchestra-font-size-sm);
-  line-height: 1.7;
+  line-height: 1.6;
+}
+.mx-empty::before {
+  content: "";
+  display: block;
+  inline-size: 30px;
+  block-size: 30px;
+  margin: 0 auto 14px;
+  border: 1px solid var(--mx-line);
+  border-radius: var(--orchestra-radius-md);
+  background:
+    radial-gradient(circle, var(--mx-dim) 0 2px, transparent 2.5px),
+    radial-gradient(circle, transparent 0 7px, var(--mx-line) 7.5px 8.5px, transparent 9px),
+    var(--mx-soft);
+  box-shadow: var(--mx-highlight);
+}
+.mx-empty[role="alert"],
+.mx-empty:has([role="alert"]) {
+  border-color: color-mix(in srgb, var(--mx-bad) 28%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--mx-bad) 7%, transparent), transparent 75%);
+}
+.mx-empty[role="alert"]::before,
+.mx-empty:has([role="alert"])::before {
+  border-color: color-mix(in srgb, var(--mx-bad) 32%, transparent);
+  background:
+    radial-gradient(circle, var(--mx-bad) 0 2px, transparent 2.5px),
+    radial-gradient(circle, transparent 0 7px, color-mix(in srgb, var(--mx-bad) 45%, transparent) 7.5px 8.5px, transparent 9px),
+    color-mix(in srgb, var(--mx-bad) 8%, transparent);
+}
+.mx-empty strong {
+  display: block;
+  margin-block-end: 4px;
+  color: var(--mx-strong);
+  font-family: var(--mx-emphasis);
+  font-weight: 600;
+  font-size: var(--orchestra-font-size-md);
+}
+.mx-empty p {
+  margin: 0;
+}
+.mx-empty p + p {
+  margin-block-start: 4px;
+}
+.mx-empty .mx-btn {
+  margin-block-start: 14px;
 }
 .mx-note {
   margin: 18px 0 0;

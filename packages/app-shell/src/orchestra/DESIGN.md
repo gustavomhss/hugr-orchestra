@@ -191,6 +191,11 @@ Measured at 1920×1200 in the dev app. Spacing values sit on a 2px grid; most ga
   `--orchestra-surface-hover`. Destructive: `--orchestra-danger` text, fill only on confirm.
 - **Tabs.** The close button shows only on hover or for the active tab. A single seam between stacked surfaces.
 - **Cards.** No footer divider. Empty states never sit in a hero-number slot.
+- **Empty, error and loading states.** One shared well, `.mx-empty` (`chapters/kit.css`): padding 30px 24px 32px,
+  1px solid `--mx-line` hairline, radius lg, a `--mx-soft` top gradient and the highlight rim, centered text. A 30px
+  mark (radius md, dot and ring) sits above a `<strong>` title (md, emphasis, 600), then the hint (sm, dim) and at
+  most one `.mx-btn` 14px below. `role="alert"` tints border, fill and mark with `--mx-bad`. Never a dashed box.
+  Inside a dashboard card (Home) the empty slot is `.home-first`: left-aligned title, 46ch hint, primary button.
 - **Dialogs.** Float glass over the scrim, radius xl, title 2xl.
 - **Focus.** A visible ring in `--orchestra-accent` on every interactive element (`hit-areas.spec.ts` pins it).
 - **Clipping.** Anything cut off gets a fade mask, never a hard edge.

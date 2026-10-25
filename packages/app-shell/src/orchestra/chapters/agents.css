@@ -79,9 +79,6 @@
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-.orchestra-agents .mx-empty p {
-  margin: 0 0 12px;
-}
 .agents-draft-error {
   margin-block-start: 15px;
 }

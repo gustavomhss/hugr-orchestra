@@ -1356,8 +1356,32 @@ html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-mx-kit] {
   color: var(--mx-dim);
 }
 [data-orchestra-palette="gruvbox"] .mx-empty {
-  border: 1px dashed var(--mx-line);
+  border: 1px solid var(--mx-line);
+  background: linear-gradient(180deg, var(--mx-soft), transparent 75%);
+  box-shadow: var(--mx-highlight);
   color: var(--mx-dim);
+}
+[data-orchestra-palette="gruvbox"] .mx-empty::before {
+  border: 1px solid var(--mx-line);
+  background: radial-gradient(circle, var(--mx-dim) 0 2px, transparent 2.5px),
+    radial-gradient(circle, transparent 0 7px, var(--mx-line) 7.5px 8.5px, transparent 9px),
+    var(--mx-soft);
+  box-shadow: var(--mx-highlight);
+}
+[data-orchestra-palette="gruvbox"] .mx-empty[role="alert"],
+[data-orchestra-palette="gruvbox"] .mx-empty:has([role="alert"]) {
+  border-color: color-mix(in srgb, var(--mx-bad) 28%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--mx-bad) 7%, transparent), transparent 75%);
+}
+[data-orchestra-palette="gruvbox"] .mx-empty[role="alert"]::before,
+[data-orchestra-palette="gruvbox"] .mx-empty:has([role="alert"])::before {
+  border-color: color-mix(in srgb, var(--mx-bad) 32%, transparent);
+  background: radial-gradient(circle, var(--mx-bad) 0 2px, transparent 2.5px),
+    radial-gradient(circle, transparent 0 7px, color-mix(in srgb, var(--mx-bad) 45%, transparent) 7.5px 8.5px, transparent 9px),
+    color-mix(in srgb, var(--mx-bad) 8%, transparent);
+}
+[data-orchestra-palette="gruvbox"] .mx-empty strong {
+  color: var(--mx-strong);
 }
 [data-orchestra-palette="gruvbox"] .mx-note {
   color: var(--mx-dim);
@@ -1554,7 +1578,10 @@ html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-mx-kit] {
 [data-orchestra-palette="gruvbox"] .home-live::before {
   background: currentColor;
 }
-[data-orchestra-palette="gruvbox"] .home-empty {
+[data-orchestra-palette="gruvbox"] .home-first strong {
+  color: var(--mx-strong);
+}
+[data-orchestra-palette="gruvbox"] .home-first span {
   color: var(--mx-dim);
 }
 [data-orchestra-palette="gruvbox"] .home-foot {

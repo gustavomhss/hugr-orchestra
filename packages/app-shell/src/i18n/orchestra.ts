@@ -138,6 +138,7 @@ export const ORCHESTRA_COPY = {
   "orchestra.nav.search": "Search",
   "orchestra.profile.choose": "Choose repository profile",
   "orchestra.profile.empty": "Choose a project",
+  "orchestra.profile.emptyHint": "Pick a project folder and its agents, sessions and tools appear here.",
   "orchestra.rework.pending": "Orchestra · Rework pending",
   "orchestra.rework.title": "{{title}}",
   "orchestra.rework.body":

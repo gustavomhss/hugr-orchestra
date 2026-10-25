@@ -213,8 +213,7 @@ function ScheduleScreen(props: ChapterPageProps & { source: () => ScheduleSource
         </Match>
         <Match when={source.tasks().length === 0}>
           <div class="mx-empty">
-            {language.t("orchestra.schedule.empty")}
-            <br />
+            <strong>{language.t("orchestra.schedule.empty")}</strong>
             {language.t("orchestra.schedule.emptyHint")}
           </div>
         </Match>
