@@ -39,6 +39,9 @@ Timing acceptance requires a quiet host; a refused or interrupted measurement is
 
 The delivery workflow covers Unix V7, Windows V8, and V9 on three OSes. Dedicated `test/*.hosted.ts` wrappers run V3–V6,
 Windows lifecycle and fixture identity proofs only when explicitly selected through `test:ci`.
+The package `test` script runs the other `test/*.test.ts` files with the omni control scoped to declaring tests: they
+measure omni through their own processes, so a run of them alone is "not applicable", never a pass. A whole-package
+`test:ci` request asks every run to spawn through omni and fails here by design; name the files instead.
 `omni-desktop-smoke.yml` builds the actual unsigned Electron app on three OSes. See the WP10 report for exact
 revisions, mutation controls, raw ConPTY limits and the owner-authorized signing deferral. No individual workflow
 certifies all of WP10; owner signature and default-on boundary acceptance remain separate gates.
