@@ -12,6 +12,8 @@ export interface Interface {
   readonly client: () => Effect.Effect<ReturnType<typeof Orchestra.make>, unknown>
   readonly transport: () => Effect.Effect<{ url: string; headers: RequestInit["headers"] }, unknown>
   readonly start: () => Effect.Effect<string, Error>
+  /** Points at the server already answering on this local port, or starts a dedicated one there. */
+  readonly startOn: (port: number) => Effect.Effect<string, Error>
   readonly status: () => Effect.Effect<string | undefined>
   readonly stop: () => Effect.Effect<void, unknown>
   readonly password: (value?: string) => Effect.Effect<string, unknown>
@@ -124,22 +126,9 @@ export const layer = Layer.effect(
       if (found?.version === InstallationVersion && compiled) return found.url
       if (found) yield* stopProcess(found).pipe(Effect.ignore)
 
-      const entrypoint = compiled ? undefined : process.argv[1]
-      if (!compiled && entrypoint === undefined)
-        return yield* Effect.fail(new Error("Failed to resolve CLI entrypoint"))
-      const started = Date.now()
-      const child: { exit?: string } = {}
-      yield* Effect.try({
-        try: () => {
-          const daemon = spawn(process.execPath, [...(entrypoint ? [entrypoint] : []), "serve", "--register"], {
-            detached: true,
-            stdio: "ignore",
-          })
-          daemon.once("exit", (code, signal) => (child.exit = signal ? `signal=${signal}` : `code=${code}`))
-          daemon.unref()
-        },
-        catch: (cause) => new Error("Failed to start server", { cause }),
-      })
+      const launched = yield* launch(["serve", "--register"])
+      const child = launched.child
+      const started = launched.started
 
       return yield* compatible().pipe(
         // A cold daemon start takes up to ~5s on slow hosts (macOS Intel CI), so
@@ -153,6 +142,48 @@ export const layer = Layer.effect(
           `Failed to start server (${child.exit ? `exited ${child.exit}` : error.message}, ${Date.now() - started}ms)`,
         )),
       )
+    })
+
+    // A detached server of this same executable; the caller waits for it to answer. `child.exit` is set if it dies first.
+    const launch = Effect.fnUntraced(function* (args: ReadonlyArray<string>) {
+      const compiled = path.basename(process.execPath).replace(/\.exe$/, "") !== "bun"
+      const entrypoint = compiled ? undefined : process.argv[1]
+      if (!compiled && entrypoint === undefined) return yield* Effect.fail(new Error("Failed to resolve CLI entrypoint"))
+      const started = Date.now()
+      const child: { exit?: string } = {}
+      yield* Effect.try({
+        try: () => {
+          const daemon = spawn(process.execPath, [...(entrypoint ? [entrypoint] : []), ...args], {
+            detached: true,
+            stdio: "ignore",
+          })
+          daemon.once("exit", (code, signal) => (child.exit = signal ? `signal=${signal}` : `code=${code}`))
+          daemon.unref()
+        },
+        catch: (cause) => new Error("Failed to start server", { cause }),
+      })
+      return { child, started }
+    })
+
+    const startOn = Effect.fn("cli.daemon.startOn")(function* (port: number) {
+      const url = `http://127.0.0.1:${port}`
+      const client = yield* createClient(url).pipe(Effect.mapError((error) => new Error(String(error))))
+      const answering = Effect.tryPromise({
+        try: () => client.health.get({ signal: AbortSignal.timeout(2_000) }),
+        catch: () => new Error("health-unreachable"),
+      })
+      if (Option.isSome(yield* answering.pipe(Effect.option))) return url
+      const launched = yield* launch(["serve", "--hostname", "127.0.0.1", "--port", String(port)])
+      yield* answering.pipe(
+        Effect.retry({
+          schedule: Schedule.spaced("50 millis").pipe(Schedule.both(Schedule.during("20 seconds"))),
+          while: () => launched.child.exit === undefined,
+        }),
+        Effect.mapError(
+          () => new Error(`Failed to start server on port ${port} (${launched.child.exit ?? "no answer"}, ${Date.now() - launched.started}ms)`),
+        ),
+      )
+      return url
     })
 
     const transport = Effect.fn("cli.daemon.transport")(function* () {
@@ -206,7 +237,7 @@ export const layer = Layer.effect(
       )
     })
 
-    return Service.of({ client, transport, start, status, stop, password, register })
+    return Service.of({ client, transport, start, startOn, status, stop, password, register })
   }),
 )
 

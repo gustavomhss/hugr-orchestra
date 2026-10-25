@@ -6,7 +6,23 @@ import { Global } from "@orchestra/core/global"
 
 export function runTui(
   transport: { url: string; headers: RequestInit["headers"] },
-  options: { args?: { continue?: boolean; sessionID?: string; fork?: boolean }; directory?: string } = {},
+  options: {
+    args?: {
+      continue?: boolean
+      sessionID?: string
+      fork?: boolean
+      prompt?: string
+      model?: string
+      agent?: string
+      variant?: string
+      auto?: boolean
+      mini?: boolean
+      replay?: boolean
+      replayLimit?: number
+      demo?: boolean
+    }
+    directory?: string
+  } = {},
 ) {
   const config = TuiConfig.resolve({}, { terminalSuspend: false })
   return run({

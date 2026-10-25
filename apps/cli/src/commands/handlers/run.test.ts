@@ -3,7 +3,7 @@ import { Effect, Option } from "effect"
 import { Orchestra } from "@orchestra/client"
 import { Daemon } from "../../services/daemon"
 import { clientUrl, fakeDaemon, stubServer, withCapturedStdout } from "./test-support"
-import run, { execute, type Options } from "./run"
+import run, { execute, miniArgs, type Options } from "./run"
 
 const base: Options = {
   message: "hello",
@@ -73,6 +73,28 @@ async function exec(url: string, options: Partial<Options>) {
     ok = await execute(Orchestra.make({ baseUrl: url }), { ...base, ...options })
   })
   return { ok, out }
+}
+
+const forkInput = {
+  message: ["hi"],
+  command: Option.none(),
+  continue: false,
+  session: Option.none(),
+  fork: true,
+  model: Option.none(),
+  agent: Option.none(),
+  format: "default" as const,
+  file: [],
+  title: Option.none(),
+  attach: Option.none(),
+  password: Option.none(),
+  username: Option.none(),
+  dir: Option.none(),
+  variant: Option.none(),
+  thinking: false,
+  auto: false,
+  mini: false,
+  port: Option.none<number>(),
 }
 
 describe("run", () => {
@@ -203,26 +225,39 @@ describe("run", () => {
     }
   })
 
-  test("--fork without --continue or --session fails before anything is sent", async () => {
-    const input = {
-      message: ["hi"],
-      command: Option.none(),
+  test("--mini hands the choices to the TUI and drops what is unset", () => {
+    expect(miniArgs({ message: "  ", continue: false, fork: false, auto: false })).toEqual({
+      mini: true,
       continue: false,
-      session: Option.none(),
-      fork: true,
-      model: Option.none(),
-      agent: Option.none(),
-      format: "default" as const,
-      file: [],
-      title: Option.none(),
-      attach: Option.none(),
-      password: Option.none(),
-      username: Option.none(),
-      dir: Option.none(),
-      variant: Option.none(),
-      thinking: false,
+      fork: false,
       auto: false,
-    }
+    })
+    expect(
+      miniArgs({ message: "fix it", model: "p/m", agent: "build", variant: "high", session: "ses_1", continue: false, fork: true, auto: true }),
+    ).toEqual({
+      mini: true,
+      prompt: "fix it",
+      model: "p/m",
+      agent: "build",
+      variant: "high",
+      sessionID: "ses_1",
+      continue: false,
+      fork: true,
+      auto: true,
+    })
+  })
+
+  test("--port cannot be combined with --attach", async () => {
+    await expect(
+      run({ ...forkInput, fork: false, attach: Option.some("http://127.0.0.1:1"), port: Option.some(4100) }).pipe(
+        Effect.provideService(Daemon.Service, fakeDaemon("http://127.0.0.1:1")),
+        Effect.runPromise,
+      ),
+    ).rejects.toThrow("--port cannot be used with --attach")
+  })
+
+  test("--fork without --continue or --session fails before anything is sent", async () => {
+    const input = forkInput
     await expect(
       run(input).pipe(Effect.provideService(Daemon.Service, fakeDaemon("http://127.0.0.1:1")), Effect.runPromise),
     ).rejects.toThrow("--fork requires --continue or --session")

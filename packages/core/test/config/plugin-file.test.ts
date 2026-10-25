@@ -43,3 +43,40 @@ describe("ConfigPluginFile.add", () => {
     expect(await readFile(file, "utf8")).toBe('{ "plugins": [')
   })
 })
+
+describe("ConfigPluginFile.install", () => {
+  const plugin = async (manifest: unknown) => {
+    const directory = await dir()
+    await writeFile(path.join(directory, "package.json"), JSON.stringify(manifest))
+    return directory
+  }
+
+  test("detects the server and tui targets a local plugin package exposes", async () => {
+    const both = await plugin({ name: "p", exports: { "./server": "./s.js", "./tui": { import: "./t.js" } } })
+    expect(await ConfigPluginFile.install(both)).toEqual({ directory: both, targets: ["server", "tui"] })
+    const main = await plugin({ name: "p", main: "index.js" })
+    expect((await ConfigPluginFile.install(`file://${main}`)).targets).toEqual(["server"])
+    const themes = await plugin({ name: "p", "oc-themes": ["themes/a.json"] })
+    expect((await ConfigPluginFile.install(themes)).targets).toEqual(["tui"])
+  })
+
+  test("refuses a package without entrypoints or with an unreadable manifest, naming the install failure", async () => {
+    const empty = await plugin({ name: "p", exports: { "./other": "./o.js" } })
+    await expect(ConfigPluginFile.install(empty)).rejects.toThrow("does not expose plugin entrypoints")
+    await expect(ConfigPluginFile.install(await dir())).rejects.toThrow("failed to read")
+    await expect(ConfigPluginFile.install(await plugin({ name: "p", "oc-themes": "x" }))).rejects.toThrow("invalid oc-themes")
+    await expect(
+      ConfigPluginFile.install("@acme/missing", async () => {
+        throw new Error("npm failed", { cause: new Error("x", { cause: undefined }) })
+      }),
+    ).rejects.toThrow('Could not install "@acme/missing": ')
+  })
+
+  test("installs an npm spec through the resolver before reading its manifest", async () => {
+    const directory = await plugin({ name: "p", main: "i.js" })
+    const asked: string[] = []
+    const manifest = await ConfigPluginFile.install("@acme/tool@1", async (spec) => (asked.push(spec), directory))
+    expect(asked).toEqual(["@acme/tool@1"])
+    expect(manifest.targets).toEqual(["server"])
+  })
+})

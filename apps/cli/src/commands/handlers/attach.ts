@@ -4,6 +4,7 @@ import { Option } from "effect"
 import { Orchestra } from "@orchestra/client"
 import { ServerAuth } from "@orchestra/server/auth"
 import { Commands } from "../commands"
+import { miniOptions } from "./mini-options"
 import { Runtime } from "../../framework/runtime"
 
 export default Runtime.handler(
@@ -19,6 +20,8 @@ export default Runtime.handler(
           fork: input.fork,
           password: Option.getOrUndefined(input.password),
           username: Option.getOrUndefined(input.username),
+          mini: input.mini,
+          ...miniOptions(input),
         }),
       catch: (cause) => (cause instanceof Error ? cause : new Error(String(cause))),
     })
@@ -36,6 +39,10 @@ export async function prepare(input: {
   readonly fork: boolean
   readonly password?: string
   readonly username?: string
+  readonly mini?: boolean
+  readonly replay?: boolean
+  readonly replayLimit?: number
+  readonly demo?: boolean
 }) {
   if (input.fork && !input.continue && !input.session) throw new Error("--fork requires --continue or --session")
   const headers = ServerAuth.headers({ password: input.password, username: input.username })
@@ -49,7 +56,11 @@ export async function prepare(input: {
   }
   return {
     transport: { url: input.url, headers },
-    args: { continue: input.continue, sessionID: input.session, fork: input.fork },
+    args: { continue: input.continue, sessionID: input.session, fork: input.fork, ...(input.mini ? { mini: true } : {}),
+      ...(input.replay === false ? { replay: false } : {}),
+      ...(input.replayLimit !== undefined ? { replayLimit: input.replayLimit } : {}),
+      ...(input.demo ? { demo: true } : {}),
+    },
     // The directory may exist only on the remote server, so a path that is not local passes through unchanged.
     directory: input.dir ? ((await Bun.file(input.dir).stat().catch(() => undefined))?.isDirectory() ? path.resolve(input.dir) : input.dir) : undefined,
   }

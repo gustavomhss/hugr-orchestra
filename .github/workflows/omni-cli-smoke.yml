@@ -108,7 +108,7 @@ jobs:
             console.error(`::error::${message}`)
             process.exit(1)
           }
-          const targets = readdirSync("dist").filter((name) => name.startsWith("orchestra-"))
+          const targets = readdirSync("dist").filter((name) => name.startsWith("cli-"))
           if (targets.length !== 1) fail(`expected one built target in dist, found ${targets.join(", ")}`)
           const real = path.resolve("dist", targets[0], "bin", process.platform === "win32" ? "orchestra.exe" : "orchestra")
           const link = path.join(mkdtempSync(path.join(os.tmpdir(), "omni-cli-")), "orchestra")

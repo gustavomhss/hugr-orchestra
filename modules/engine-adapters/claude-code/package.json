@@ -12,7 +12,9 @@
     "./host/options": "./src/host/options.ts",
     "./sdk": "./src/sdk.ts",
     "./transcript": "./src/transcript.ts",
-    "./v2/host": "./src/v2/host.ts"
+    "./v2/account": "./src/v2/account.ts",
+    "./v2/host": "./src/v2/host.ts",
+    "./v2/login": "./src/v2/login.ts"
   },
   "scripts": {
     "test": "bun test --timeout 30000",

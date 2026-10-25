@@ -32,12 +32,15 @@ export async function run(options: { mutation?: "missing-replay" | "truncated-re
     const host = await start(scratch)
     const call = api(host.url, scratch.project)
     const boot = Date.now()
-    await call("GET", "/lsp")
+    await call("GET", "/api/lsp")
     metrics.bootstrapMs = Date.now() - boot
     const attach = async (id: string, cursor?: number, fault?: "truncate" | "gap-count") => {
-      const url = new URL(`/pty/${id}/connect`, host.url)
+      // V2 admits a socket with a short-lived single-use ticket from an authenticated request.
+      const ticket = (await call<{ data: { ticket: string } }>("POST", `/api/pty/${id}/connect-token?location[directory]=${encodeURIComponent(scratch.project)}`, {})).data.ticket
+      const url = new URL(`/api/pty/${id}/connect`, host.url)
       url.protocol = "ws:"
-      url.searchParams.set("directory", scratch.project)
+      url.searchParams.set("location[directory]", scratch.project)
+      url.searchParams.set("ticket", ticket)
       if (cursor !== undefined) url.searchParams.set("cursor", String(cursor))
       const ws = new WebSocket(url)
       sockets.push(ws)
@@ -81,10 +84,10 @@ export async function run(options: { mutation?: "missing-replay" | "truncated-re
     try {
       const edited = path.join(scratch.home, `${nonce}.edited`)
       const size = path.join(scratch.home, `${nonce}.vim-size`)
-      const vim = await call<Terminal>("POST", "/pty", {
+      const vim = (await call<{ data: Terminal }>("POST", "/api/pty", {
         command: process.env.OMNI_CAMPAIGN_VIM ?? (win ? "vim.exe" : "vim"),
         args: ["-Nu", "NONE", "-n", "-i", "NONE", edited], cols: 100, rows: 30,
-      })
+      })).data
       ids.push(vim.id)
       const editor = await attach(vim.id)
       await until(30_000, "vim screen", () => plain(editor.state.text).includes("[New") ? true : undefined)
@@ -95,7 +98,7 @@ export async function run(options: { mutation?: "missing-replay" | "truncated-re
       const query = `:call writefile([string(&lines) . ' ' . string(&columns)], '${size.replaceAll("\\", "/").replaceAll("'", "''")}')\r`
       editor.ws.send(query)
       await until(20_000, "vim initial size 30x100", () => existsSync(size) && readFileSync(size, "utf8").trim() === "30 100" ? true : undefined)
-      await call("PUT", `/pty/${vim.id}`, { size: { cols: 120, rows: 40 } })
+      await call("PUT", `/api/pty/${vim.id}`, { size: { cols: 120, rows: 40 } })
       editor.ws.send(query)
       await until(20_000, "vim resized size 40x120", () => readFileSync(size, "utf8").trim() === "40 120" ? true : undefined)
       metrics.vimSize = readFileSync(size, "utf8").trim()
@@ -154,7 +157,7 @@ readline.createInterface({input: process.stdin}).on('line', line => {
   }
 });
 `)
-    const terminal = await call<Terminal>("POST", "/pty", { command: scratch.node, args: [producer, nonce], cols: 100, rows: 30 })
+    const terminal = (await call<{ data: Terminal }>("POST", "/api/pty", { command: scratch.node, args: [producer, nonce], cols: 100, rows: 30 })).data
     ids.push(terminal.id)
     const first = await attach(terminal.id, 0)
     await until(20_000, "producer READY", () => first.state.text.includes(`READY-${nonce}`) ? true : undefined)
@@ -164,7 +167,7 @@ readline.createInterface({input: process.stdin}).on('line', line => {
     try {
       first.ws.send("size\r")
       await until(20_000, "PTY initial size", () => plain(first.state.text).includes("SIZE 30 100") ? true : undefined)
-      await call("PUT", `/pty/${terminal.id}`, { size: { cols: 120, rows: 40 } })
+      await call("PUT", `/api/pty/${terminal.id}`, { size: { cols: 120, rows: 40 } })
       first.ws.send("size\r")
       await until(20_000, "PTY resized size", () => plain(first.state.text).includes("SIZE 40 120") ? true : undefined)
       metrics.size = "40 120"
@@ -224,7 +227,7 @@ readline.createInterface({input: process.stdin}).on('line', line => {
       output.ws.send("flood\r")
       await until(120_000, "50 MiB producer completion", async () => {
         const probe = Date.now()
-        await call("GET", "/global/health", undefined, 10_000)
+        await call("GET", "/api/health", undefined, 10_000)
         healthMs.push(Date.now() - probe)
         return existsSync(done) ? true : undefined
       })
@@ -307,7 +310,7 @@ if not os.path.exists(${JSON.stringify(`${files.termios}.initial`)}): json.dump(
         }`)
       if (!rawProducer.includes("setImmediate(() => { configureRaw();")) throw new Error("raw fixture readiness composition boundary changed")
       writeFileSync(`${files.base}.cjs`, "const credits = [];\n" + configureRaw + rawProducer)
-      const raw = await call<Terminal>("POST", "/pty", { command: "python3", args: files.args, cols: 120, rows: 40 })
+      const raw = (await call<{ data: Terminal }>("POST", "/api/pty", { command: "python3", args: files.args, cols: 120, rows: 40 })).data
       ids.push(raw.id)
       const stream = await attach(raw.id, 0)
       await until(20_000, "raw producer ready + verified slave termios", () => existsSync(files.ready) && existsSync(files.termios) ? true : undefined)
@@ -356,9 +359,9 @@ if not os.path.exists(${JSON.stringify(`${files.termios}.initial`)}): json.dump(
       checks.rawAccounting = "passed"
     } catch (cause) { checks.rawAccounting = "failed"; errors.push(`raw-accounting: ${String(cause)}`) }
     // Also discover sessions from a create whose HTTP request timed out after admission.
-    const owned = await call<Terminal[]>("GET", "/pty")
+    const owned = (await call<{ data: Terminal[] }>("GET", "/api/pty")).data
     for (const id of new Set([...ids, ...owned.map((terminal) => terminal.id)]))
-      await call("DELETE", `/pty/${id}`).catch((cause) => { errors.push(`remove ${id}: ${String(cause)}`) })
+      await call("DELETE", `/api/pty/${id}`).catch((cause) => { errors.push(`remove ${id}: ${String(cause)}`) })
     await until(8_000, "terminal nonce processes gone", async () => (await sweep(nonce)).length === 0 ? true : undefined)
     metrics.leftovers = (await sweep(nonce)).length
   } catch (cause) { errors.push(String(cause)) }

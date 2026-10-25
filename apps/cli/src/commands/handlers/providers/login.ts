@@ -2,9 +2,11 @@ import { EOL } from "os"
 import * as Effect from "effect/Effect"
 import { Option } from "effect"
 import type { IntegrationsListOutput, Orchestra } from "@orchestra/client"
+import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
 import { Commands } from "../../commands"
 import { Runtime } from "../../../framework/runtime"
 import { Daemon } from "../../../services/daemon"
+import { Spawn } from "../../../services/process"
 import { terminal, type Prompter } from "../prompt"
 
 type Integration = IntegrationsListOutput["data"][number]
@@ -16,9 +18,17 @@ export default Runtime.handler(
   Effect.fn("cli.providers.login")(function* (input) {
     const daemon = yield* Daemon.Service
     const client = yield* daemon.client()
+    const spawner = yield* ChildProcessSpawner
     yield* Effect.promise(() =>
       login(client, terminal, {
         directory: process.cwd(),
+        url: Option.getOrUndefined(input.url),
+        runAuth: (command) =>
+          Effect.runPromise(
+            Spawn.run(command, { stdin: "inherit", stderr: "inherit" }).pipe(
+              Effect.provideService(ChildProcessSpawner, spawner),
+            ),
+          ),
         provider: Option.getOrUndefined(input.provider),
         method: Option.getOrUndefined(input.method),
         label: Option.getOrUndefined(input.label),
@@ -33,6 +43,10 @@ export async function login(
   prompter: Prompter,
   options: {
     readonly directory: string
+    /** Auth provider URL: its `/.well-known/orchestra` names a command whose output is the token to store. */
+    readonly url?: string
+    /** Runs the well-known auth command with the terminal attached and returns what it printed. */
+    readonly runAuth?: (command: string[]) => Promise<{ readonly exitCode: number; readonly stdout: string }>
     readonly provider?: string
     readonly method?: string
     readonly label?: string
@@ -41,14 +55,20 @@ export async function login(
   },
 ) {
   const location = { directory: options.directory }
+  if (options.url) return wellknownLogin(client, options.url, location, options)
   const integrations = (await client.integrations.list({ location })).data
-  const integration = options.provider
-    ? find(integrations, options.provider, (item) => [item.id, item.name]) ??
-      fail(`Unknown provider "${options.provider}"`)
-    : await prompter.select(
-        "Select provider",
-        integrations.filter(loginMethods).map((item) => ({ label: item.name, value: item })),
-      )
+  const choice =
+    options.provider === other
+      ? other
+      : options.provider
+        ? find(integrations, options.provider, (item) => [item.id, item.name]) ??
+          fail(`Unknown provider "${options.provider}"`)
+        : await prompter.select<Integration | typeof other>("Select provider", [
+            ...integrations.filter(loginMethods).map((item) => ({ label: item.name, value: item })),
+            { label: "Other", value: other },
+          ])
+  if (choice === other) return customLogin(client, prompter, location, options)
+  const integration = choice
   const methods = loginMethods(integration)
   if (methods.length === 0) fail(`${integration.name} has no login method; configure it with its environment variables`)
   const method = options.method
@@ -125,4 +145,52 @@ async function collectInputs(prompter: Prompter, prompts: Prompts) {
         : await prompter.text(prompt.message)
   }
   return inputs
+}
+
+const other = "other"
+
+// A provider the server does not list: the credential is stored under the id the person types, to be wired in config.
+async function customLogin(
+  client: ReturnType<typeof Orchestra.make>,
+  prompter: Prompter,
+  location: { readonly directory: string },
+  options: { readonly label?: string; readonly say: (line: string) => void },
+) {
+  const id = (await prompter.text("Enter provider id")).replace(/^@ai-sdk\//, "")
+  if (!/^[0-9a-z-]+$/.test(id)) fail("Provider id: a-z, 0-9 and hyphens only")
+  options.say(`This only stores a credential for ${id} - you will need to configure it in the config file.`)
+  const key = await prompter.secret("Enter your API key")
+  if (!key) fail("An API key is required")
+  await client.integrations.connectKey({ integrationID: id, location, key, label: options.label })
+  options.say(`Logged into ${id}`)
+}
+
+async function wellknownLogin(
+  client: ReturnType<typeof Orchestra.make>,
+  rawURL: string,
+  location: { readonly directory: string },
+  options: {
+    readonly label?: string
+    readonly say: (line: string) => void
+    readonly runAuth?: (command: string[]) => Promise<{ readonly exitCode: number; readonly stdout: string }>
+  },
+) {
+  const url = rawURL.replace(/\/+$/, "")
+  const metadata = await fetch(`${url}/.well-known/orchestra`)
+    .then((response) => response.json() as Promise<{ auth: { command: string[]; env: string } }>)
+    .catch((error: unknown) =>
+      fail(`Failed to load auth provider metadata from ${url}: ${error instanceof Error ? error.message : error}`),
+    )
+  if (!options.runAuth) fail("Running an auth provider command is not available here")
+  options.say(`Running \`${metadata.auth.command.join(" ")}\``)
+  const result = await options.runAuth(metadata.auth.command)
+  if (result.exitCode !== 0) fail("The auth provider command failed")
+  await client.integrations.connectKey({
+    integrationID: url,
+    location,
+    key: result.stdout.trim(),
+    label: options.label,
+    metadata: { wellknown: { env: metadata.auth.env } },
+  })
+  options.say(`Logged into ${url}`)
 }

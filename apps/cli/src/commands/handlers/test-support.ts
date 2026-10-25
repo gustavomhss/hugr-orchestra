@@ -22,6 +22,7 @@ export function fakeDaemon(baseUrl: string) {
     client: () => Effect.succeed(Orchestra.make({ baseUrl })),
     transport: () => Effect.succeed({ url: baseUrl, headers: {} as RequestInit["headers"] }),
     start: () => Effect.succeed(baseUrl),
+    startOn: () => Effect.succeed(baseUrl),
     status: () => Effect.succeed(baseUrl),
     stop: () => Effect.void,
     password: () => Effect.succeed("test"),

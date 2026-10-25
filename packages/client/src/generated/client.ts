@@ -90,10 +90,16 @@ import type {
   ProvidersListOutput,
   ProvidersGetInput,
   ProvidersGetOutput,
+  ProvidersClaudeCodeAccountOutput,
+  ProvidersClaudeCodeLoginOutput,
+  ProvidersClaudeCodeLoginCodeInput,
+  ProvidersClaudeCodeLoginCodeOutput,
   IntegrationsListInput,
   IntegrationsListOutput,
   IntegrationsGetInput,
   IntegrationsGetOutput,
+  IntegrationsDisconnectInput,
+  IntegrationsDisconnectOutput,
   IntegrationsConnectKeyInput,
   IntegrationsConnectKeyOutput,
   IntegrationsConnectOauthInput,
@@ -150,6 +156,10 @@ import type {
   McpListOutput,
   McpResourcesInput,
   McpResourcesOutput,
+  McpConfigInput,
+  McpConfigOutput,
+  McpToolsInput,
+  McpToolsOutput,
   McpAddInput,
   McpAddOutput,
   McpRemoveInput,
@@ -158,6 +168,8 @@ import type {
   McpConnectOutput,
   McpDisconnectInput,
   McpDisconnectOutput,
+  McpDebugInput,
+  McpDebugOutput,
   McpAuthStartInput,
   McpAuthStartOutput,
   McpAuthCallbackInput,
@@ -1045,6 +1057,40 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ),
+      claudeCodeAccount: (requestOptions?: RequestOptions) =>
+        request<ProvidersClaudeCodeAccountOutput>(
+          {
+            method: "GET",
+            path: `/api/provider/claude-code/account`,
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      claudeCodeLogin: (requestOptions?: RequestOptions) =>
+        request<ProvidersClaudeCodeLoginOutput>(
+          {
+            method: "POST",
+            path: `/api/provider/claude-code/login`,
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      claudeCodeLoginCode: (input: ProvidersClaudeCodeLoginCodeInput, requestOptions?: RequestOptions) =>
+        request<ProvidersClaudeCodeLoginCodeOutput>(
+          {
+            method: "POST",
+            path: `/api/provider/claude-code/login/code`,
+            body: { code: input["code"] },
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
     },
     integrations: {
       list: (input?: IntegrationsListInput, requestOptions?: RequestOptions) =>
@@ -1068,6 +1114,18 @@ export function make(options: ClientOptions) {
             successStatus: 200,
             declaredStatuses: [401, 400],
             empty: false,
+          },
+          requestOptions,
+        ),
+      disconnect: (input: IntegrationsDisconnectInput, requestOptions?: RequestOptions) =>
+        request<IntegrationsDisconnectOutput>(
+          {
+            method: "DELETE",
+            path: `/api/integration/${encodeURIComponent(input.integrationID)}/connection`,
+            query: { location: input["location"] },
+            successStatus: 204,
+            declaredStatuses: [409, 401, 400],
+            empty: true,
           },
           requestOptions,
         ),
@@ -1430,6 +1488,30 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ),
+      config: (input?: McpConfigInput, requestOptions?: RequestOptions) =>
+        request<McpConfigOutput>(
+          {
+            method: "GET",
+            path: `/api/mcp/config`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      tools: (input?: McpToolsInput, requestOptions?: RequestOptions) =>
+        request<McpToolsOutput>(
+          {
+            method: "GET",
+            path: `/api/mcp/tool`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
       add: (input: McpAddInput, requestOptions?: RequestOptions) =>
         request<McpAddOutput>(
           {
@@ -1476,6 +1558,18 @@ export function make(options: ClientOptions) {
             successStatus: 204,
             declaredStatuses: [404, 401, 400],
             empty: true,
+          },
+          requestOptions,
+        ),
+      debug: (input: McpDebugInput, requestOptions?: RequestOptions) =>
+        request<McpDebugOutput>(
+          {
+            method: "GET",
+            path: `/api/mcp/${encodeURIComponent(input.server)}/debug`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [404, 400, 401],
+            empty: false,
           },
           requestOptions,
         ),

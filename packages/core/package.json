@@ -51,6 +51,7 @@
     "./capability/invocation": "./src/capability/invocation.ts",
     "./capability/policy": "./src/capability/policy.ts",
     "./catalog": "./src/catalog.ts",
+    "./claude-code-account": "./src/claude-code-account.ts",
     "./command": "./src/command.ts",
     "./config": "./src/config.ts",
     "./config/agent-file": "./src/config/agent-file.ts",

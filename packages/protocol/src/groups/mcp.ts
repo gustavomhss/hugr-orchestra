@@ -38,6 +38,36 @@ export const McpGroup = HttpApiGroup.make("server.mcp")
       ),
   )
   .add(
+    HttpApiEndpoint.get("mcp.config", "/api/mcp/config", {
+      query: LocationQuery,
+      success: Location.response(Mcp.Config),
+      error: InvalidRequestError,
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        OpenApi.annotations({
+          identifier: "v2.mcp.config",
+          summary: "Read MCP config",
+          description:
+            "Read the MCP servers the Location resolved and the profile files' own unresolved entries. Only type, command and url are returned.",
+        }),
+      ),
+  )
+  .add(
+    HttpApiEndpoint.get("mcp.tools", "/api/mcp/tool", {
+      query: LocationQuery,
+      success: Location.response(Mcp.Tools),
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        OpenApi.annotations({
+          identifier: "v2.mcp.tools",
+          summary: "List MCP tools",
+          description: "List the tool names each connected MCP server offers.",
+        }),
+      ),
+  )
+  .add(
     HttpApiEndpoint.put("mcp.add", "/api/mcp/:server", {
       params: ServerParams,
       query: LocationQuery,
@@ -99,6 +129,23 @@ export const McpGroup = HttpApiGroup.make("server.mcp")
           identifier: "v2.mcp.disconnect",
           summary: "Disconnect MCP server",
           description: "Disconnect one configured MCP server and remove its tools.",
+        }),
+      ),
+  )
+  .add(
+    HttpApiEndpoint.get("mcp.debug", "/api/mcp/:server/debug", {
+      params: ServerParams,
+      query: LocationQuery,
+      success: Location.response(Mcp.Debug),
+      error: [McpServerNotFoundError, InvalidRequestError],
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        OpenApi.annotations({
+          identifier: "v2.mcp.debug",
+          summary: "Debug MCP server",
+          description:
+            "Probe a remote MCP server with an unauthenticated initialize request and report stored sign-in state, the HTTP answer and the OAuth discovery result. Secrets are masked.",
         }),
       ),
   )

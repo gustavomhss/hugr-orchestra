@@ -2,7 +2,7 @@ import { Integration } from "@orchestra/core/integration"
 import { Effect } from "effect"
 import { HttpApiBuilder, HttpApiSchema } from "effect/unstable/httpapi"
 import { Api } from "../api"
-import { InvalidRequestError } from "@orchestra/protocol/errors"
+import { ConflictError, InvalidRequestError } from "@orchestra/protocol/errors"
 import { response } from "../location"
 
 const authorize = <A, R>(effect: Effect.Effect<A, Integration.AuthorizationError, R>) =>
@@ -66,6 +66,18 @@ export const IntegrationHandler = HttpApiBuilder.group(Api, "server.integration"
         Effect.fn(function* (ctx) {
           const service = yield* Integration.Service
           return yield* response(service.get(ctx.params.integrationID))
+        }),
+      )
+      .handle(
+        "integration.disconnect",
+        Effect.fn(function* (ctx) {
+          const service = yield* Integration.Service
+          yield* service.connection.disconnect(ctx.params.integrationID).pipe(
+            Effect.catchTag("Credential.InheritedError", (error) =>
+              Effect.fail(new ConflictError({ message: error.message, resource: "credential" })),
+            ),
+          )
+          return HttpApiSchema.NoContent.make()
         }),
       )
       .handle(

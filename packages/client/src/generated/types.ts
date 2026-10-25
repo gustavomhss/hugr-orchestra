@@ -886,14 +886,7 @@ export type SessionsForkOutput = {
 
 export type SessionsMoveInput = {
   readonly sessionID: { readonly sessionID: string }["sessionID"]
-  readonly location: {
-    readonly location: { readonly directory: string; readonly workspaceID?: string }
-    readonly moveChanges?: boolean | null
-  }["location"]
-  readonly moveChanges?: {
-    readonly location: { readonly directory: string; readonly workspaceID?: string }
-    readonly moveChanges?: boolean | null
-  }["moveChanges"]
+  readonly location: { readonly location: { readonly directory: string; readonly workspaceID?: string } }["location"]
 }
 
 export type SessionsMoveOutput = void
@@ -1143,26 +1136,6 @@ export type SessionsContextOutput = {
       }
   >
 }["data"]
-
-export type SessionsDiffInput = {
-  readonly sessionID: { readonly sessionID: string }["sessionID"]
-  readonly messageID: { readonly messageID: string; readonly context?: number | undefined }["messageID"]
-  readonly context?: { readonly messageID: string; readonly context?: number | undefined }["context"]
-}
-
-export type SessionsDiffOutput = {
-  readonly data: ReadonlyArray<{
-    readonly path: string
-    readonly status: "added" | "modified" | "deleted"
-    readonly additions: number
-    readonly deletions: number
-    readonly patch: string
-  }>
-}["data"]
-
-export type SessionsBackgroundInput = { readonly sessionID: { readonly sessionID: string }["sessionID"] }
-
-export type SessionsBackgroundOutput = { readonly data: number }["data"]
 
 export type SessionsHistoryInput = {
   readonly sessionID: { readonly sessionID: string }["sessionID"]
@@ -2255,6 +2228,18 @@ export type ProvidersGetOutput = {
   }
 }
 
+export type ProvidersClaudeCodeAccountOutput = {
+  readonly signedIn: boolean
+  readonly email?: string | undefined
+  readonly subscription?: string | undefined
+}
+
+export type ProvidersClaudeCodeLoginOutput = { readonly url: string }
+
+export type ProvidersClaudeCodeLoginCodeInput = { readonly code: { readonly code: string }["code"] }
+
+export type ProvidersClaudeCodeLoginCodeOutput = boolean
+
 export type IntegrationsListInput = {
   readonly location?: {
     readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
@@ -2296,30 +2281,7 @@ export type IntegrationsListOutput = {
               }
           >
         }
-      | {
-          readonly type: "key"
-          readonly label?: string
-          readonly prompts?: ReadonlyArray<
-            | {
-                readonly type: "text"
-                readonly key: string
-                readonly message: string
-                readonly placeholder?: string
-                readonly when?: { readonly key: string; readonly op: "eq" | "neq"; readonly value: string }
-              }
-            | {
-                readonly type: "select"
-                readonly key: string
-                readonly message: string
-                readonly options: ReadonlyArray<{
-                  readonly label: string
-                  readonly value: string
-                  readonly hint?: string
-                }>
-                readonly when?: { readonly key: string; readonly op: "eq" | "neq"; readonly value: string }
-              }
-          >
-        }
+      | { readonly type: "key"; readonly label?: string }
       | { readonly type: "env"; readonly names: ReadonlyArray<string> }
     >
     readonly connections: ReadonlyArray<
@@ -2371,30 +2333,7 @@ export type IntegrationsGetOutput = {
               }
           >
         }
-      | {
-          readonly type: "key"
-          readonly label?: string
-          readonly prompts?: ReadonlyArray<
-            | {
-                readonly type: "text"
-                readonly key: string
-                readonly message: string
-                readonly placeholder?: string
-                readonly when?: { readonly key: string; readonly op: "eq" | "neq"; readonly value: string }
-              }
-            | {
-                readonly type: "select"
-                readonly key: string
-                readonly message: string
-                readonly options: ReadonlyArray<{
-                  readonly label: string
-                  readonly value: string
-                  readonly hint?: string
-                }>
-                readonly when?: { readonly key: string; readonly op: "eq" | "neq"; readonly value: string }
-              }
-          >
-        }
+      | { readonly type: "key"; readonly label?: string }
       | { readonly type: "env"; readonly names: ReadonlyArray<string> }
     >
     readonly connections: ReadonlyArray<
@@ -2404,6 +2343,15 @@ export type IntegrationsGetOutput = {
   } | null
 }
 
+export type IntegrationsDisconnectInput = {
+  readonly integrationID: { readonly integrationID: string }["integrationID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type IntegrationsDisconnectOutput = void
+
 export type IntegrationsConnectKeyInput = {
   readonly integrationID: { readonly integrationID: string }["integrationID"]
   readonly location?: {
@@ -2412,17 +2360,17 @@ export type IntegrationsConnectKeyInput = {
   readonly key: {
     readonly key: string
     readonly label?: string | undefined
-    readonly metadata?: { readonly [x: string]: string } | undefined
+    readonly metadata?: { readonly [x: string]: unknown } | undefined
   }["key"]
   readonly label?: {
     readonly key: string
     readonly label?: string | undefined
-    readonly metadata?: { readonly [x: string]: string } | undefined
+    readonly metadata?: { readonly [x: string]: unknown } | undefined
   }["label"]
   readonly metadata?: {
     readonly key: string
     readonly label?: string | undefined
-    readonly metadata?: { readonly [x: string]: string } | undefined
+    readonly metadata?: { readonly [x: string]: unknown } | undefined
   }["metadata"]
 }
 
@@ -3080,6 +3028,51 @@ export type McpResourcesOutput = {
   }
 }
 
+export type McpConfigInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type McpConfigOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly servers: {
+      readonly [x: string]: {
+        readonly type?: "local" | "remote" | null
+        readonly command?: ReadonlyArray<string> | null
+        readonly url?: string | null
+      }
+    }
+    readonly entries: {
+      readonly [x: string]: {
+        readonly type?: "local" | "remote" | null
+        readonly command?: ReadonlyArray<string> | null
+        readonly url?: string | null
+      }
+    }
+  }
+}
+
+export type McpToolsInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type McpToolsOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: { readonly [x: string]: ReadonlyArray<string> }
+}
+
 export type McpAddInput = {
   readonly server: { readonly server: string }["server"]
   readonly location?: {
@@ -3148,6 +3141,48 @@ export type McpDisconnectInput = {
 
 export type McpDisconnectOutput = void
 
+export type McpDebugInput = {
+  readonly server: { readonly server: string }["server"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type McpDebugOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly name: string
+    readonly url: string
+    readonly oauth: boolean
+    readonly tokens?: {
+      readonly access: string
+      readonly expiresAt?: number | "Infinity" | "-Infinity" | "NaN" | null
+      readonly refreshToken: boolean
+    } | null
+    readonly client?: {
+      readonly id: string
+      readonly secretExpiresAt?: number | "Infinity" | "-Infinity" | "NaN" | null
+    } | null
+    readonly http?: {
+      readonly status: number | "Infinity" | "-Infinity" | "NaN"
+      readonly statusText: string
+      readonly wwwAuthenticate?: string | null
+      readonly serverInfo?: string | null
+      readonly body?: string | null
+    } | null
+    readonly flow?: {
+      readonly result: "authenticated" | "unauthorized" | "error"
+      readonly message?: string | null
+      readonly clientRegistered?: boolean | null
+    } | null
+    readonly error?: string | null
+  }
+}
+
 export type McpAuthStartInput = {
   readonly server: { readonly server: string }["server"]
   readonly location?: {
@@ -3198,25 +3233,6 @@ export type ServerLspStatusOutput = {
     readonly name: string
     readonly root: string
     readonly status: "connected" | "error"
-  }>
-}
-
-export type ServerFormatterStatusInput = {
-  readonly location?: {
-    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
-  }["location"]
-}
-
-export type ServerFormatterStatusOutput = {
-  readonly location: {
-    readonly directory: string
-    readonly workspaceID?: string
-    readonly project: { readonly id: string; readonly directory: string }
-  }
-  readonly data: ReadonlyArray<{
-    readonly name: string
-    readonly extensions: ReadonlyArray<string>
-    readonly enabled: boolean
   }>
 }
 
@@ -3632,16 +3648,6 @@ export type ProjectCopiesRefreshInput = {
 }
 
 export type ProjectCopiesRefreshOutput = void
-
-export type ProjectCopiesGenerateNameInput = {
-  readonly projectID: { readonly projectID: string }["projectID"]
-  readonly location?: {
-    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
-  }["location"]
-  readonly context?: { readonly context?: string | undefined }["context"]
-}
-
-export type ProjectCopiesGenerateNameOutput = { readonly name: string }
 
 export type ProjectsListOutput = ReadonlyArray<{
   readonly id: string
@@ -9288,10 +9294,6 @@ export type RelayRunsLedgerOutput = {
   }
   readonly data: ReadonlyArray<{ readonly [x: string]: JsonValue }>
 }
-
-export type InstallationUpgradeInput = { readonly target: { readonly target: string }["target"] }
-
-export type InstallationUpgradeOutput = { readonly success: true; readonly version: string }
 export {
   type UnauthorizedError,
   isUnauthorizedError,

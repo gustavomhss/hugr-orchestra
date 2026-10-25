@@ -3,6 +3,7 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { httpClient, llmClient } from "@orchestra/core/effect/app-node-platform"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { EventV2 } from "@orchestra/core/event"
+import { ClaudeCodeAccount } from "@orchestra/core/claude-code-account"
 import { Credential } from "@orchestra/core/credential"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { AppProcess } from "@orchestra/core/process"
@@ -36,6 +37,7 @@ import { authorizationLayer } from "./middleware/authorization"
 import { schemaErrorLayer } from "./middleware/schema-error"
 import { PtyEnvironment } from "@orchestra/core/host/pty-environment"
 import { layer as locationLayer } from "./location"
+import { WebUi } from "./web-ui"
 import { sessionLocationLayer } from "./middleware/session-location"
 
 const applicationServices = LayerNode.group([
@@ -55,6 +57,7 @@ const applicationServices = LayerNode.group([
   PermissionSaved.node,
   PtyTicket.node,
   Credential.node,
+  ClaudeCodeAccount.node,
   PtyEnvironment.node,
   LocationServiceMap.node,
   FSUtil.node,
@@ -71,6 +74,10 @@ export interface Options {
   readonly password?: string
   /** Product contributions the application composes (apps/cli `CliHost.contributions`); sdk-next passes none. */
   readonly host?: ReadonlyArray<Host.Contribution>
+  /** Directory of the built web UI; when set, the server also serves it at `/`. */
+  readonly webRoot?: string
+  /** Extra origins the server answers cross-origin, besides the local and desktop ones. */
+  readonly cors?: ReadonlyArray<string>
 }
 
 export function createRoutes(options: Options = {}) {
@@ -79,6 +86,8 @@ export function createRoutes(options: Options = {}) {
       ? ServerAuth.Config.configLayer({ username: "orchestra", password: Option.some(options.password) })
       : ServerAuth.Config.layer,
     options.host ?? [],
+    options.webRoot,
+    options.cors,
   )
 }
 
@@ -92,6 +101,8 @@ export function createEmbeddedRoutes(options: Pick<Options, "host"> = {}) {
 function makeRoutes<AuthError, AuthServices>(
   auth: Layer.Layer<ServerAuth.Config, AuthError, AuthServices>,
   host: ReadonlyArray<Host.Contribution>,
+  webRoot?: string,
+  cors?: ReadonlyArray<string>,
 ) {
   const merged = Host.merge(host)
   // Contributed global nodes add services and may not fail, so the root keeps the application services' types.
@@ -104,7 +115,7 @@ function makeRoutes<AuthError, AuthServices>(
     merged.locationNodes,
   )
 
-  return HttpApiBuilder.layer(Api, { openapiPath: "/openapi.json" }).pipe(
+  const api = HttpApiBuilder.layer(Api, { openapiPath: "/openapi.json" }).pipe(
     Layer.provide(handlers),
     Layer.provide(merged.references),
     Layer.provide(sessionLocationLayer),
@@ -114,8 +125,9 @@ function makeRoutes<AuthError, AuthServices>(
     Layer.provide(auth),
     Layer.provide(serviceLayer),
     // The desktop renderer (`oc://renderer`) calls a desktop-owned server cross-origin, as it does V1.
-    Layer.provide(corsLayer()),
+    Layer.provide(corsLayer({ cors })),
   )
+  return Layer.merge(api, webRoot ? WebUi.layer(webRoot) : Layer.empty)
 }
 
 export const routes = createRoutes()

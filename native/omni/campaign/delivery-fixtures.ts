@@ -20,6 +20,8 @@ export function deliveryEnv(env: Record<string, string>) {
     ...Object.fromEntries(Object.entries(env).filter(([key]) =>
       !/API_?KEY|TOKEN|SECRET|PASSWORD|CREDENTIAL|SSH_AUTH_SOCK/i.test(key) &&
       !/^(BUN_BE_BUN|BUN_OPTIONS|NODE_OPTIONS|NODE_PATH)$/.test(key))),
+    // V2 serve answers only to the campaign password, which the harness hands it on purpose.
+    ...(env.ORCHESTRA_SERVER_PASSWORD ? { ORCHESTRA_SERVER_PASSWORD: env.ORCHESTRA_SERVER_PASSWORD } : {}),
     ORCHESTRA_INHERIT_CREDENTIALS: "0",
     APPDATA: path.join(env.HOME, "AppData/Roaming"),
     LOCALAPPDATA: path.join(env.HOME, "AppData/Local"),
