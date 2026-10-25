@@ -39,6 +39,8 @@ type PluralKey =
   | "orchestra.tasks.count"
   // Atlas views word their counts with orchestra.atlas.<view>.<name>.one / .other (i18n/orchestra-chapters/atlas-*.ts).
   | `orchestra.atlas.${string}`
+  // Guardrails word their counts with orchestra.guardrails.<name>.one / .other (i18n/orchestra-chapters/guardrails.ts).
+  | `orchestra.guardrails.${string}`
 type Source = { dict: Record<string, string> }
 
 function cookie(locale: Locale) {

@@ -1,0 +1,878 @@
+/* Guardrails view inside CI/CD. Rows and file boxes keep fixed heights: the grouped virtualizer places them from
+   the sizes in guardrails.tsx (header 38, item 58, gap 12), so rings are inset shadows, never borders. */
+.gr-root {
+  container-type: inline-size;
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  --gr-warm: var(--actions-warm, var(--mx-warm, #c9b78f));
+}
+
+.gr-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.gr-head h2 {
+  margin: 0;
+  font-size: var(--orchestra-font-size-md);
+  font-weight: 600;
+  color: var(--mx-strong);
+}
+
+.gr-head p {
+  margin: 0;
+  max-width: 62ch;
+  font-size: var(--orchestra-font-size-sm);
+  color: var(--mx-dim);
+}
+
+.gr-views {
+  display: inline-flex;
+  gap: 2px;
+  justify-self: start;
+  padding: 3px;
+  border-radius: var(--orchestra-radius-md);
+  background: var(--mx-soft);
+  box-shadow: inset 0 0 0 1px var(--mx-line);
+}
+
+.gr-views .wf-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gr-count-gate {
+  color: var(--mx-bad);
+}
+
+.gr-panel {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+/* Every card follows .mx-card (DESIGN.md §7): sheen over the raised fill, hairline, top highlight, contact plus
+   drop shadow. Hover or focus inside firms the rim and lifts the shadow; nothing moves. */
+.gr-status,
+.gr-file,
+.gr-detail,
+.gr-rule-list,
+.gr-review .mx-table {
+  border: 1px solid var(--mx-line);
+  background: var(--mx-sheen), var(--mx-raised);
+  box-shadow: var(--mx-highlight), var(--mx-card-shadow);
+  transition:
+    border-color var(--orchestra-duration-base) var(--orchestra-ease-out),
+    box-shadow var(--orchestra-duration-base) var(--orchestra-ease-out);
+}
+
+.gr-file:focus-within,
+.gr-rule-list:focus-within,
+.gr-review .mx-table:hover,
+.gr-review .mx-table:focus-within {
+  border-color: var(--mx-rim);
+  box-shadow: var(--mx-highlight), var(--mx-pop-shadow);
+}
+
+/* A segmented control: the chosen view is a small raised key, not the tab strip's underline. */
+.gr-root .gr-views .wf-tab[aria-selected="true"] {
+  background: var(--mx-sheen), var(--mx-raised);
+  box-shadow: var(--mx-highlight), inset 0 0 0 1px var(--mx-line), var(--mx-card-shadow);
+  color: var(--mx-strong);
+}
+
+.gr-select-field {
+  display: grid;
+  gap: 4px;
+  font-size: var(--orchestra-font-size-2xs);
+  color: var(--mx-dim);
+}
+
+.gr-select-field select {
+  height: 34px;
+  padding: 0 28px 0 10px;
+  border: 0;
+  border-radius: var(--orchestra-radius-sm);
+  background: var(--mx-soft);
+  box-shadow: inset 0 0 0 1px var(--mx-line);
+  color: var(--mx-strong);
+  font: inherit;
+  font-size: var(--orchestra-font-size-sm);
+}
+
+.gr-select-field select:focus-visible {
+  outline: 2px solid var(--mx-blue);
+  outline-offset: 1px;
+}
+
+/* Status: one calm line per verdict. Only a blocking result carries saturated color. */
+.gr-status {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: var(--orchestra-radius-lg);
+}
+
+.gr-status-mark {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--mx-dim);
+}
+
+.gr-status[data-kind="clean"] .gr-status-mark {
+  background: var(--mx-good);
+}
+
+.gr-status[data-kind="warnings"] .gr-status-mark {
+  background: var(--gr-warm);
+}
+
+.gr-status[data-kind="blocked"] {
+  border-color: color-mix(in srgb, var(--mx-bad) 38%, var(--mx-line));
+  box-shadow: inset 3px 0 0 var(--mx-bad), var(--mx-highlight), var(--mx-card-shadow);
+}
+
+.gr-status[data-kind="blocked"] .gr-status-mark {
+  background: var(--mx-bad);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--mx-bad) 18%, transparent);
+}
+
+.gr-status[data-kind="running"] .gr-status-mark {
+  background: var(--mx-blue);
+  animation: gr-pulse 1.4s ease-in-out infinite;
+}
+
+.gr-status-copy h3 {
+  margin: 0;
+  font-size: var(--orchestra-font-size-md);
+  font-weight: 600;
+  color: var(--mx-strong);
+}
+
+.gr-status-copy p {
+  margin: 3px 0 0;
+  font-size: var(--orchestra-font-size-sm);
+  color: var(--mx-dim);
+}
+
+.gr-status-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.gr-failure {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--orchestra-radius-sm);
+  background: var(--mx-soft);
+  font-family: var(--mx-mono);
+  font-size: var(--orchestra-font-size-xs);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--mx-strong);
+  text-align: left;
+}
+
+.gr-note {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--orchestra-radius-md);
+  background: var(--mx-soft);
+  box-shadow: inset 0 0 0 1px var(--mx-line);
+  font-size: var(--orchestra-font-size-sm);
+  color: var(--mx-dim);
+}
+
+.gr-skeleton {
+  display: grid;
+  gap: 10px;
+}
+
+.gr-skeleton span {
+  height: 52px;
+  border-radius: var(--orchestra-radius-md);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--mx-strong) 5%, transparent) 0%,
+    color-mix(in srgb, var(--mx-strong) 10%, transparent) 50%,
+    color-mix(in srgb, var(--mx-strong) 5%, transparent) 100%
+  );
+  background-size: 200% 100%;
+  animation: gr-shimmer 1.6s linear infinite;
+}
+
+.gr-skeleton span:nth-child(2) {
+  width: 86%;
+}
+
+.gr-skeleton span:nth-child(4) {
+  width: 64%;
+}
+
+/* Findings and detail side by side; one column below 700px of container width. */
+.gr-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  gap: 16px;
+  align-items: start;
+}
+
+.gr-list-wrap {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.gr-label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  font-size: var(--orchestra-font-size-xs);
+  font-weight: 600;
+  color: var(--mx-strong);
+}
+
+.gr-label span {
+  font-weight: 400;
+  color: var(--mx-dim);
+}
+
+.gr-list {
+  max-height: min(62vh, 640px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  /* Room for the cards' drop shadow, which the scroller would otherwise clip. */
+  margin-inline: -4px;
+  padding: 2px 4px 18px;
+}
+
+.gr-file {
+  position: absolute;
+  inset-inline: 0;
+  border-radius: var(--orchestra-radius-lg);
+}
+
+.gr-file[data-gate] {
+  border-color: color-mix(in srgb, var(--mx-bad) 28%, var(--mx-line));
+}
+
+.gr-file-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: var(--orchestra-radius-lg) var(--orchestra-radius-lg) 0 0;
+  background: var(--mx-sheen), color-mix(in srgb, var(--mx-raised) 86%, transparent);
+  backdrop-filter: blur(12px) saturate(1.2);
+  box-shadow: inset 0 -1px 0 var(--mx-line);
+  font-size: var(--orchestra-font-size-xs);
+  color: var(--mx-strong);
+}
+
+.gr-path {
+  display: flex;
+  min-width: 0;
+  font-family: var(--mx-mono);
+  font-size: var(--orchestra-font-size-xs);
+  white-space: nowrap;
+}
+
+.gr-dir {
+  flex: 0 1 auto;
+  min-width: 2ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--mx-dim);
+}
+
+.gr-base {
+  flex: none;
+}
+
+.gr-row {
+  position: absolute;
+  inset-inline: 4px;
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  height: 54px;
+  margin-top: 2px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--orchestra-radius-md);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--orchestra-duration-fast) var(--orchestra-ease-out);
+}
+
+.gr-row:hover {
+  background: var(--mx-soft);
+}
+
+.gr-row[aria-current="true"] {
+  background: color-mix(in srgb, var(--mx-blue) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mx-blue) 32%, transparent);
+}
+
+.gr-row:focus-visible {
+  outline: 2px solid var(--mx-blue);
+  outline-offset: -2px;
+}
+
+.gr-row-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.gr-row-top code {
+  font-family: var(--mx-mono);
+  font-size: var(--orchestra-font-size-xs);
+  color: var(--mx-strong);
+}
+
+.gr-row-line {
+  margin-inline-start: auto;
+  flex: none;
+  font-size: var(--orchestra-font-size-2xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--mx-dim);
+}
+
+.gr-row-message {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--orchestra-font-size-xs);
+  color: var(--mx-dim);
+}
+
+/* Severity carries a glyph and a word, never color alone. */
+.gr-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: var(--orchestra-font-size-2xs);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.gr-chip::before {
+  font-size: 10px;
+  line-height: 1;
+}
+
+.gr-chip[data-severity="gate"] {
+  background: color-mix(in srgb, var(--mx-bad) 16%, transparent);
+  color: var(--mx-bad);
+}
+
+.gr-chip[data-severity="gate"]::before {
+  content: "■";
+}
+
+.gr-chip[data-severity="warn"] {
+  background: color-mix(in srgb, var(--gr-warm) 18%, transparent);
+  color: var(--mx-strong);
+}
+
+.gr-chip[data-severity="warn"]::before {
+  content: "▲";
+  color: var(--gr-warm);
+}
+
+/* Detail panel. */
+.gr-detail {
+  position: sticky;
+  top: 0;
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  min-width: 0;
+  min-height: 220px;
+  padding: 18px;
+  border-radius: var(--orchestra-radius-lg);
+}
+
+.gr-detail:has(.gr-select) {
+  align-content: center;
+}
+
+.gr-select {
+  margin: auto 0;
+  font-size: var(--orchestra-font-size-sm);
+  color: var(--mx-dim);
+  text-align: center;
+}
+
+.gr-detail-top {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.gr-detail-top h3 {
+  margin: 0;
+  font-size: var(--orchestra-font-size-md);
+  color: var(--mx-strong);
+}
+
+.gr-detail-top h3:focus-visible {
+  outline: 2px solid var(--mx-blue);
+  outline-offset: 2px;
+  border-radius: var(--orchestra-radius-xs);
+}
+
+.gr-detail-top h3 code {
+  font-family: var(--mx-mono);
+}
+
+.gr-detail-where {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  max-width: 100%;
+  margin: 0;
+  font-size: var(--orchestra-font-size-xs);
+  color: var(--mx-dim);
+}
+
+.gr-detail-where .gr-path {
+  max-width: 100%;
+  color: var(--mx-strong);
+}
+
+.gr-back {
+  display: none;
+}
+
+.gr-excerpt {
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.gr-excerpt figcaption {
+  font-size: var(--orchestra-font-size-2xs);
+  color: var(--mx-dim);
+}
+
+.gr-excerpt pre,
+.gr-samples pre {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--orchestra-radius-sm);
+  background: var(--mx-soft);
+  box-shadow: inset 0 0 0 1px var(--mx-line);
+  font-family: var(--mx-mono);
+  font-size: var(--orchestra-font-size-xs);
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--mx-strong);
+}
+
+.gr-excerpt-line {
+  display: inline-block;
+  min-width: 3ch;
+  margin-inline-end: 10px;
+  color: var(--mx-dim);
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+}
+
+.gr-excerpt mark {
+  padding: 1px 2px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--mx-bad) 22%, transparent);
+  box-shadow: inset 0 -1px 0 var(--mx-bad);
+  color: inherit;
+}
+
+.gr-message {
+  margin: 0;
+  font-size: var(--orchestra-font-size-sm);
+  line-height: 1.5;
+  color: var(--mx-strong);
+}
+
+.gr-summary {
+  margin: 0;
+  font-size: var(--orchestra-font-size-sm);
+  line-height: 1.5;
+  color: var(--mx-dim);
+}
+
+.gr-summary[data-tone="notice"] {
+  color: var(--mx-strong);
+}
+
+.gr-way {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: gr-way;
+}
+
+.gr-way li {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  padding-inline-start: 28px;
+  counter-increment: gr-way;
+  font-size: var(--orchestra-font-size-sm);
+  color: var(--mx-dim);
+}
+
+.gr-way li::before {
+  content: counter(gr-way);
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--mx-soft);
+  box-shadow: inset 0 0 0 1px var(--mx-line);
+  font-size: var(--orchestra-font-size-2xs);
+  font-weight: 600;
+  color: var(--mx-strong);
+}
+
+.gr-way strong {
+  font-weight: 600;
+  color: var(--mx-strong);
+}
+
+.gr-copyline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  min-width: 0;
+}
+
+.gr-copyline code {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  border-radius: var(--orchestra-radius-sm);
+  background: var(--mx-soft);
+  box-shadow: inset 0 0 0 1px var(--mx-line);
+  font-family: var(--mx-mono);
+  font-size: var(--orchestra-font-size-xs);
+  color: var(--mx-strong);
+  /* One unbroken token to copy; it scrolls rather than wrapping at a hyphen. */
+  white-space: nowrap;
+  overflow-x: auto;
+}
+
+.gr-copyline .mx-btn {
+  flex: none;
+  min-width: 72px;
+}
+
+.gr-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Rules view. */
+.gr-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 12px;
+}
+
+.gr-filters .mx-search {
+  flex: 1 1 240px;
+}
+
+.gr-count {
+  margin-inline-start: auto;
+  align-self: center;
+  font-size: var(--orchestra-font-size-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--mx-dim);
+}
+
+.gr-rules .gr-list-wrap {
+  gap: 18px;
+}
+
+.gr-rule-group {
+  display: grid;
+  gap: 8px;
+}
+
+.gr-rule-list {
+  display: grid;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  border-radius: var(--orchestra-radius-lg);
+}
+
+.gr-rule {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--orchestra-radius-md);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--orchestra-duration-fast) var(--orchestra-ease-out);
+}
+
+.gr-rule:hover {
+  background: var(--mx-soft);
+}
+
+.gr-rule[aria-current="true"] {
+  background: color-mix(in srgb, var(--mx-blue) 12%, transparent);
+}
+
+.gr-rule:focus-visible {
+  outline: 2px solid var(--mx-blue);
+  outline-offset: -2px;
+}
+
+.gr-rule code {
+  font-family: var(--mx-mono);
+  font-size: var(--orchestra-font-size-xs);
+  color: var(--mx-strong);
+}
+
+.gr-rule span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--orchestra-font-size-xs);
+  color: var(--mx-dim);
+}
+
+.gr-samples {
+  display: grid;
+  gap: 12px;
+}
+
+.gr-samples figure {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  margin: 0;
+  min-width: 0;
+}
+
+.gr-samples figcaption {
+  font-size: var(--orchestra-font-size-2xs);
+  font-weight: 600;
+}
+
+.gr-samples [data-side="flagged"] figcaption {
+  color: var(--mx-bad);
+}
+
+.gr-samples [data-side="passes"] figcaption {
+  color: var(--mx-good);
+}
+
+.gr-samples pre {
+  overflow-x: auto;
+}
+
+/* Samples are code: one line per sample, scrolled sideways rather than rewrapped mid-token. */
+.gr-samples pre span {
+  display: block;
+  white-space: pre;
+}
+
+.gr-samples [data-side="flagged"] pre span::before {
+  content: "− ";
+  color: var(--mx-bad);
+}
+
+.gr-samples [data-side="passes"] pre span::before {
+  content: "+ ";
+  color: var(--mx-good);
+}
+
+.gr-paths {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gr-paths code,
+.gr-tag code,
+.gr-rulefile {
+  font-family: var(--mx-mono);
+  font-size: var(--orchestra-font-size-xs);
+}
+
+.gr-paths li,
+.gr-tag {
+  padding: 3px 8px;
+  border-radius: var(--orchestra-radius-sm);
+  background: var(--mx-soft);
+  box-shadow: inset 0 0 0 1px var(--mx-line);
+  color: var(--mx-strong);
+}
+
+.gr-rulefile {
+  color: var(--mx-dim);
+}
+
+/* Review view. */
+.gr-review {
+  display: grid;
+  gap: 12px;
+  max-width: 820px;
+}
+
+.gr-review-row {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gr-review-row:hover {
+  background: var(--mx-soft);
+}
+
+.gr-review-row:focus-visible {
+  outline: 2px solid var(--mx-blue);
+  outline-offset: -2px;
+}
+
+.gr-review-row small code {
+  font-family: var(--mx-mono);
+}
+
+.gr-approved {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.gr-tag {
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.gr-tag:hover {
+  background: color-mix(in srgb, var(--mx-strong) 10%, transparent);
+}
+
+.gr-tag:focus-visible {
+  outline: 2px solid var(--mx-blue);
+  outline-offset: 1px;
+}
+
+@container (max-width: 700px) {
+  .gr-overview {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .gr-overview:not([data-open]) .gr-detail {
+    display: none;
+  }
+
+  .gr-overview[data-open] .gr-list-wrap {
+    display: none;
+  }
+
+  .gr-detail {
+    position: static;
+  }
+
+  .gr-back {
+    display: inline-flex;
+  }
+
+  .gr-status {
+    grid-template-columns: auto 1fr;
+  }
+
+  .gr-status-actions {
+    grid-column: 1 / -1;
+  }
+}
+
+@keyframes gr-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes gr-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gr-row,
+  .gr-rule {
+    transition: none;
+  }
+
+  .gr-skeleton span,
+  .gr-status[data-kind="running"] .gr-status-mark {
+    animation: none;
+  }
+}
+
+.gr-scenario {
+  flex: none;
+  grid-auto-flow: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.gr-scenario select {
+  width: 148px;
+}
