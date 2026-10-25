@@ -1,3 +1,4 @@
+import { EOL } from "os"
 import { describe, expect, test } from "bun:test"
 import { Effect } from "effect"
 import { Daemon } from "../../services/daemon"
@@ -69,7 +70,7 @@ describe("session list when empty", () => {
   test("prints an empty JSON array for --format json and nothing for the table", async () => {
     const server = stubServer(() => Response.json({ data: [], cursor: {} }))
     try {
-      expect(await withCapturedStdout(() => runWith(list({ limit: 50, format: "json" }), clientUrl(server)))).toBe("[]\n")
+      expect(await withCapturedStdout(() => runWith(list({ limit: 50, format: "json" }), clientUrl(server)))).toBe("[]" + EOL)
       expect(await withCapturedStdout(() => runWith(list({ limit: 50, format: "table" }), clientUrl(server)))).toBe("")
     } finally {
       server.stop(true)
