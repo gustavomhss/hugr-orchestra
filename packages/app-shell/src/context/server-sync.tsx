@@ -167,6 +167,7 @@ export function createServerSyncContextInner(
         (settings): Config => ({
           model: settings.model,
           shell: settings.shell,
+          agent: settings.agents,
           disabled_providers: [...settings.disabledProviders],
         }),
       )

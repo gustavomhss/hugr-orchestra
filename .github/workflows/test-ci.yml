@@ -128,8 +128,8 @@ jobs:
 
       - name: Configure git identity
         run: |
-          git config --global user.email "bot@opencode.ai"
-          git config --global user.name "orchestra"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
 
       - name: Resolve Jimmy desktop test selection
         id: desktop-selection
@@ -254,7 +254,7 @@ jobs:
               # `test:unit` script (which already passes `--conditions=solid`), so reproduce it.
               # test-browser/ files follow `test:browser` instead: solid-js has no `solid`
               # export, so under `solid` it falls through to `node` and loads its server build,
-              # where memos never recompute and onMount never runs.
+              # where memos never recompute and onMount never runs. They also preload happydom.
               if [ "$DIRECTORY" = "packages/app-shell" ]; then
                 unit=()
                 browser=()
@@ -269,7 +269,7 @@ jobs:
                   GITHUB_ACTIONS=false bun test --conditions=solid "${unit[@]}" || status=$?
                 fi
                 if [ ${#browser[@]} -gt 0 ]; then
-                  GITHUB_ACTIONS=false bun test --conditions=browser "${browser[@]}" || status=$?
+                  GITHUB_ACTIONS=false bun test --conditions=browser --preload ../../script/test-omni-control.ts --preload ./happydom.ts "${browser[@]}" || status=$?
                 fi
                 exit $status
               fi

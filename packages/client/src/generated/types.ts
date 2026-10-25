@@ -4971,6 +4971,7 @@ export type AtlasMineOutput = {
 export type ConfigGetOutput = {
   readonly model?: string | undefined
   readonly shell?: string | undefined
+  readonly agents: { readonly [x: string]: { readonly engine: "orchestra" | "claude-code" } }
   readonly disabledProviders: ReadonlyArray<string>
 }
 

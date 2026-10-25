@@ -1,6 +1,6 @@
 export * as SessionProcess from "./session-process"
 
-import { Clock, Context, Deferred, Duration, Effect, Exit, Layer, Option, Scope, Stream } from "effect"
+import { Clock, Context, Deferred, Duration, Effect, Exit, Fiber, Layer, Option, Scope, Stream } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import type { ChildProcessHandle } from "effect/unstable/process/ChildProcessSpawner"
 import { AppProcess } from "./process"
@@ -8,12 +8,14 @@ import { EventV2 } from "./event"
 import { Identifier } from "./id/id"
 import { makeGlobalNode } from "./effect/app-node"
 import { OmniBackground } from "./omni-background"
+import { OutputInspector } from "./output-inspector"
 import { SessionV2 } from "./session"
 
 export const RING_BYTES = OmniBackground.RING_BYTES
 export const TAIL_BYTES = OmniBackground.TAIL_BYTES
 /** Finished jobs kept for `get` and `wait`; older ones are forgotten. */
 export const FINISHED_KEPT = 32
+const DRAIN_TIMEOUT = Duration.millis(500)
 export const Ring = OmniBackground.Ring
 
 export type ProcessInfo = OmniBackground.ProcessInfo
@@ -68,6 +70,9 @@ type Entry = {
   readonly pid: number
   readonly handle: ChildProcessHandle
   readonly ring: OmniBackground.Ring
+  readonly inspection: ReturnType<typeof OutputInspector.make>
+  // Latched once the output shows a recognized secret: no tail of it leaves the registry afterwards.
+  withheld?: string
   readonly scope: Scope.Closeable
   readonly processes: ReadonlyArray<ProcessInfo>
   readonly done: Deferred.Deferred<Info>
@@ -84,13 +89,19 @@ const make = Effect.gen(function* () {
 
   const entries = new Map<string, Entry>()
 
+  // Mirrors foreground bash, which discards a result whose output shows a recognized secret.
+  const output = (entry: Entry, bytes: number) =>
+    entry.withheld
+      ? `[output withheld: ${entry.withheld}. The process ran, but its output contains a recognized secret.]`
+      : entry.ring.text(bytes)
+
   const snapshot = (entry: Entry): Info => ({
     id: entry.id,
     pid: entry.pid,
     title: entry.title,
     started: entry.started,
     processes: entry.processes,
-    output: entry.ring.text(RING_BYTES),
+    output: output(entry, RING_BYTES),
     written: entry.ring.written,
   })
 
@@ -105,12 +116,13 @@ const make = Effect.gen(function* () {
     entry.status = status
     entry.exitCode = exitCode
     entry.error = error
+    entry.withheld ??= entry.inspection.finish()
     const info = snapshot(entry)
     yield* Deferred.succeed(entry.done, info).pipe(Effect.ignore)
     const text =
       status === "completed"
-        ? `Background process "${entry.title}" exited with code ${exitCode ?? 0}.\n\n${entry.ring.text(4096)}`
-        : `Background process "${entry.title}" failed: ${error ?? "unknown"}.\n\n${entry.ring.text(4096)}`
+        ? `Background process "${entry.title}" exited with code ${exitCode ?? 0}.\n\n${output(entry, 4096)}`
+        : `Background process "${entry.title}" failed: ${error ?? "unknown"}.\n\n${output(entry, 4096)}`
     if (Option.isSome(entry.sessions))
       yield* deliver(entry.sessions.value, SessionV2.ID.make(entry.sessionID), text).pipe(Effect.forkIn(scope))
     yield* retire(entry)
@@ -176,6 +188,7 @@ const make = Effect.gen(function* () {
       pid: Number(handle.pid),
       handle,
       ring,
+      inspection: OutputInspector.make(),
       scope: procScope,
       processes: [{ pid: Number(handle.pid), parentPid: null, name: null }],
       done,
@@ -184,9 +197,16 @@ const make = Effect.gen(function* () {
       exitCode: null,
     }
     entries.set(id, entry)
-    yield* Stream.runForEach(handle.all, (chunk) => Effect.sync(() => ring.write(chunk))).pipe(Effect.ignore).pipe(Effect.forkIn(procScope))
+    const reader = yield* Stream.runForEach(handle.all, (chunk) =>
+      Effect.sync(() => {
+        entry.withheld ??= entry.inspection.push(chunk)
+        ring.write(chunk)
+      }),
+    ).pipe(Effect.ignore).pipe(Effect.forkIn(procScope))
     yield* Effect.gen(function* () {
       const code = yield* Effect.orElseSucceed(handle.exitCode, () => null)
+      // The exit can land before the pipe drains; bounded because a grandchild may keep the pipe open.
+      yield* Fiber.await(reader).pipe(Effect.timeout(DRAIN_TIMEOUT), Effect.ignore)
       if (entry.finished) return
       yield* finish(entry, code === 0 ? "completed" : "error", code, code === 0 ? undefined : `exit ${code}`)
     }).pipe(Effect.ignore, Effect.forkIn(procScope))
@@ -203,7 +223,7 @@ const make = Effect.gen(function* () {
         title: entry.title,
         started: entry.started,
         processes: entry.processes,
-        output: entry.ring.text(bytes),
+        output: output(entry, bytes),
         written: entry.ring.written,
       }))
   })
