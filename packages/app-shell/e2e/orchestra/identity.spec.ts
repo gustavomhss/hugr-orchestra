@@ -15,15 +15,15 @@ import { setupIdentity } from "./identity.fixture"
 const grain = `url("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27160%27%20height=%27160%27%3E%3Cfilter%20id=%27n%27%3E%3CfeTurbulence%20type=%27fractalNoise%27%20baseFrequency=%27.85%27%20numOctaves=%272%27%20stitchTiles=%27stitch%27/%3E%3CfeColorMatrix%20values=%270%200%200%200%201%200%200%200%200%201%200%200%200%200%201%200%200%200%20.05%200%27/%3E%3C/filter%3E%3Crect%20width=%27100%25%27%20height=%27100%25%27%20filter=%27url%28%23n%29%27/%3E%3C/svg%3E")`
 const glass = {
   dark: {
-    backgroundImage: `${grain}, radial-gradient(120% 60% at 0% 0%, rgba(214, 231, 247, 0.07), rgba(0, 0, 0, 0) 60%), linear-gradient(rgba(32, 44, 58, 0.54) 0%, rgba(17, 24, 33, 0.62) 46%, rgba(11, 16, 23, 0.66) 100%)`,
-    backdropFilter: "blur(28px) brightness(0.8) saturate(1.6)",
+    backgroundImage: `${grain}, radial-gradient(120% 60% at 0% 0%, rgba(214, 231, 247, 0.07), rgba(0, 0, 0, 0) 60%), linear-gradient(rgba(32, 44, 58, 0.44) 0%, rgba(17, 24, 33, 0.52) 46%, rgba(11, 16, 23, 0.58) 100%)`,
+    backdropFilter: "blur(28px) brightness(0.84) saturate(1.5)",
     borderTopColor: "rgba(160, 179, 197, 0.1)",
     boxShadow:
       "rgba(214, 231, 247, 0.1) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.28) 0px -1px 0px 0px inset, rgba(0, 0, 0, 0.36) 0px 1px 2px 0px, rgba(0, 0, 0, 0.24) 0px 10px 30px 0px",
   },
   light: {
-    backgroundImage: `${grain}, radial-gradient(120% 60% at 0% 0%, rgba(255, 255, 255, 0.35), rgba(0, 0, 0, 0) 60%), linear-gradient(rgba(255, 255, 255, 0.62) 0%, rgba(248, 250, 252, 0.54) 46%, rgba(240, 244, 247, 0.64) 100%)`,
-    backdropFilter: "blur(28px) brightness(1.06) saturate(1.6)",
+    backgroundImage: `${grain}, radial-gradient(120% 60% at 0% 0%, rgba(255, 255, 255, 0.35), rgba(0, 0, 0, 0) 60%), linear-gradient(rgba(255, 255, 255, 0.57) 0%, rgba(248, 250, 252, 0.49) 46%, rgba(240, 244, 247, 0.59) 100%)`,
+    backdropFilter: "blur(28px) brightness(1.06) saturate(1.5)",
     borderTopColor: "rgba(70, 84, 98, 0.12)",
     boxShadow:
       "rgba(255, 255, 255, 0.9) 0px 1px 0px 0px inset, rgba(120, 136, 152, 0.12) 0px -1px 0px 0px inset, rgba(38, 50, 64, 0.12) 0px 1px 2px 0px, rgba(38, 50, 64, 0.1) 0px 10px 30px 0px",
