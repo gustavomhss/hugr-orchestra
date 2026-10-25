@@ -62,11 +62,10 @@ export async function sidecarLaunchEnv(userDataPath: string, candidateProfile?: 
     ORCHESTRA_CLAUDE_CODE_RESOURCES: dirname(claudeExecutable),
     ORCHESTRA_LINUX_ROOT: join(userDataPath, "app-dock-linux"),
     // Maestro's playbooks ship outside the app archive, where every tool can read them. Dev runs read the
-    // repository copy, since the bundled server cannot locate it from its own path. They still live in
-    // apps/orchestra/playbooks, where modules/maestro reads its source copy, until they move with B1-C.
+    // repository copy, since the bundled server cannot locate it from its own path.
     ORCHESTRA_PLAYBOOKS_DIR: app.isPackaged
       ? join(process.resourcesPath, "playbooks")
-      : resolve(outDir, "../../../orchestra/playbooks"),
+      : resolve(outDir, "../../../../modules/maestro/coordination/playbooks"),
   }
 }
 

@@ -10,7 +10,7 @@ const removed = /\b(?:evaluateCompletion|runCompletion)\b/
 const scope = [
   "apps/orchestra/src",
   "apps/orchestra/test",
-  "apps/orchestra/playbooks",
+  "modules/maestro/coordination/playbooks",
   "modules/maestro/arsenal/src",
   "modules/maestro/arsenal/test",
   "packages/core/src",

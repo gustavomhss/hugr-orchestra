@@ -427,73 +427,6 @@
       "summary": "Terminal UI used by the CLI.",
       "exportsPolicy": "none"
     },
-    "orchestra": {
-      "layer": "app",
-      "status": "legacy",
-      "successor": "apps/cli and packages/server",
-      "live": "default desktop sidecar (v1)",
-      "owner": "core platform maintainer",
-      "summary": "The legacy-live Orchestra server and CLI that the desktop app starts as its default sidecar.",
-      "exportsPolicy": "demanded",
-      "sourceWildcards": {"./*": "./src/*.ts"},
-      "entries": ["node"],
-      "aliases": { "@/": "src/", "@test/": "test/" },
-      "domains": {
-        "composition": {
-          "kind": "composition",
-          "target": "apps/orchestra",
-          "patterns": ["src/cli/", "src/effect/", "src/index.ts", "src/node.ts", "src/temporary.ts"]
-        },
-        "maestro": { "kind": "product", "target": "modules/maestro", "patterns": ["src/maestro/", "src/tool/maestro-*", "src/tool/atlas-*"] },
-        "continuity": {
-          "kind": "product",
-          "target": "modules/continuity",
-          "patterns": [
-            "src/continuity/",
-            "src/tool/context-compact.ts",
-            "src/tool/context-recall.ts",
-            "src/tool/context-recall-archive.ts",
-            "src/session/prompt-continuity.ts"
-          ]
-        },
-        "claude-code": { "kind": "product", "target": "modules/engine-adapters/claude-code", "patterns": ["src/claude-code/"] },
-        "acp": { "kind": "product", "target": "modules/acp", "patterns": ["src/acp/"] },
-        "session-engine": {
-          "kind": "platform-legacy",
-          "target": "core v1 Session, storage and jobs plus modules/session-engine",
-          "patterns": ["src/session/", "src/storage/", "src/background/"]
-        },
-        "agent": { "kind": "platform-legacy", "target": "core agent plus the product roster (70-C')", "patterns": ["src/agent/"] },
-        "config": {
-          "kind": "platform-legacy",
-          "target": "core config, permission and instruction",
-          "patterns": ["src/config/", "src/permission/", "src/question/", "src/command/", "src/skill/", "src/env/"]
-        },
-        "identity": { "kind": "platform-legacy", "target": "core identity", "patterns": ["src/auth/"] },
-        "project": { "kind": "platform-legacy", "target": "core project", "patterns": ["src/project/", "src/git/", "src/worktree/", "src/snapshot/"] },
-        "provider": { "kind": "platform-legacy", "target": "core provider and plugin-host plus llm", "patterns": ["src/provider/", "src/plugin/"] },
-        "tool": { "kind": "platform-legacy", "target": "core tool", "patterns": ["src/tool/"] },
-        "integration": { "kind": "platform-legacy", "target": "core integration", "patterns": ["src/lsp/", "src/mcp/", "src/ide/", "src/format/"] },
-        "control-plane": { "kind": "platform-legacy", "target": "core control-plane plus server handlers", "patterns": ["src/control-plane/"] },
-        "event": {
-          "kind": "platform-legacy",
-          "target": "core event",
-          "patterns": ["src/bus/", "src/sync/", "src/event-manifest.ts", "src/event-v2-bridge.ts"]
-        },
-        "runtime": {
-          "kind": "platform-legacy",
-          "target": "core runtime and util",
-          "patterns": ["src/installation/", "src/util/", "src/id/", "src/image/", "src/patch/"]
-        },
-        "research": { "kind": "platform-legacy", "target": "core research", "patterns": ["src/research/"] },
-        "server": { "kind": "platform-legacy", "target": "packages/server compat v1", "patterns": ["src/server/"] },
-        "declarations": {
-          "kind": "platform-legacy",
-          "target": "next to their loader",
-          "patterns": ["src/audio.d.ts", "src/markdown.d.ts", "src/sql.d.ts"]
-        }
-      }
-    },
     "cli": {
       "layer": "app",
       "status": "canonical",
@@ -534,13 +467,6 @@
       "compat": { ".": "sdk", "./v2": "sdk-v2", "./v2/client": "sdk-v2-client", "./v2/types": "sdk-v2-types" }
     },
     {
-      "path": "apps/orchestra",
-      "status": "legacy",
-      "successor": "apps/cli and packages/server",
-      "reason": "legacy-live: the desktop app starts it as its default sidecar",
-      "decision": "D14"
-    },
-    {
       "path": "packages/core/src/v1",
       "status": "legacy",
       "successor": "the V2 Session core in packages/core",
@@ -557,27 +483,6 @@
       "path": "packages/effect-sqlite-node",
       "status": "unused",
       "reason": "declared by core but imported by nothing; removal needs a lockfile change",
-      "decision": "D14"
-    },
-    {
-      "path": "apps/orchestra/src/id/id.ts",
-      "status": "duplicate",
-      "successor": "packages/core/src/id/id.ts",
-      "reason": "second monotonic ID counter",
-      "decision": "D14"
-    },
-    {
-      "path": "apps/orchestra/src/util/iife.ts",
-      "status": "duplicate",
-      "successor": "packages/core/src/util/iife.ts",
-      "reason": "copy of the core helper",
-      "decision": "D14"
-    },
-    {
-      "path": "apps/orchestra/src/util/lazy.ts",
-      "status": "duplicate",
-      "successor": "packages/core/src/util/lazy.ts",
-      "reason": "copy of the core helper",
       "decision": "D14"
     }
   ],
@@ -617,12 +522,7 @@
     "apps/storybook/README.md",
     "packages/tui/README.md",
     "packages/ui/README.md",
-    "apps/orchestra/src/maestro/README.md",
-    "apps/orchestra/src/continuity/README.md",
-    "apps/orchestra/src/claude-code/README.md",
-    "apps/orchestra/src/acp/README.md",
     "modules/janitor/README.md",
-    "apps/orchestra/src/control-plane/README.md",
     "apps/desktop/src/main/README.md",
     "packages/core/src/session/README.md",
     "packages/core/src/backend-toolkit/README.md",

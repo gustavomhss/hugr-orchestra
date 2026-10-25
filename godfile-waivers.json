@@ -396,30 +396,6 @@
       "authorizedBy": "Gustavo, standing rule that generated outputs may raise their ceiling (2026-10-10)",
       "authorizedAt": "2026-10-19"
     },
-    "apps/orchestra/src/provider/provider.ts": {
-      "maximumLines": 1940,
-      "reason": "Human waiver: pre-existing file over Godfile cap.",
-      "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-08"
-    },
-    "apps/orchestra/src/session/prompt.ts": {
-      "maximumLines": 1543,
-      "reason": "Governed lifecycle integration extends pre-existing prompt surface.",
-      "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-09"
-    },
-    "apps/orchestra/src/session/session.ts": {
-      "maximumLines": 1002,
-      "reason": "Human waiver: pre-existing file over Godfile cap.",
-      "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-08"
-    },
-    "apps/orchestra/test/tool/task.test.ts": {
-      "maximumLines": 1188,
-      "reason": "Governed lifecycle and stable-resume coverage extends pre-existing task suite.",
-      "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-09"
-    },
     "packages/sdk/js/src/v2/gen/sdk.gen.ts": {
       "maximumLines": 12440,
       "reason": "@hey-api/OpenAPI generated V2 SDK output; splitting requires generator redesign. Extended only for Session process routes; owner answered 'Autorizar tetos gerados'. Extended for the Lean project dashboard and profile-preference routes (8838/17074 LOC plus a small margin). Extended for the native research routes merged with dev (8879 LOC plus a small margin). Includes the generated default-model operation for Claude host availability and dev's Lean 2.0 shell/read/webfetch/glob/grep families; official generator output is 8907 LOC under the owner's standing generated-file waiver. Extended for the Atlas knowledge Relay schemas; official generator output is 8972 LOC. Regenerated for the Claude mode sign-in routes together with the session archive and integration OAuth alias routes already in source; official generator output is 9261 LOC. Extended for the Atlas screen's routes merged with dev's config, MCP and session routes; official generator output is 11774 LOC plus a small margin. Extended for the Atlas review, decision, answer, territory and delegate routes; official generator output is 12146 LOC plus a small margin. Merged with dev's newer routes; official generator output is 12294 LOC plus a small margin. Extended for the Atlas install, index and mine routes; official generator output is 12398 LOC plus a small margin.",
