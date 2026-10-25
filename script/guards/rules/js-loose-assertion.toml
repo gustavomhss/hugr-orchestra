@@ -1,7 +1,7 @@
 id = "js-loose-assertion"
 severity = "warn"
 on = "added-lines"
-paths = ["**/*.test.{ts,tsx,js,jsx,mjs}", "**/*.spec.{ts,tsx,js,jsx,mjs}", "**/test/**/*.{ts,tsx,js,jsx,mjs}"]
+paths = ["$js_tests"]
 exclude = []
 # toBeDefined, toBeTruthy and toBeFalsy are left out: all three are this repo's everyday idiom (101 toBeTruthy calls in tests today), so a rule on them would only add noise. What stays is an assertion on a literal.
 # Anchored to a statement: tests here generate sample test files as strings, and those contain expect(1).toBe(1).

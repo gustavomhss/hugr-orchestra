@@ -11,6 +11,9 @@ Small declarative CI rules over the lines and paths a change adds. Run with `bun
 - A `changed-paths` rule can also filter on what git reports about the file: `modes` (100755, 120000, 160000), `min_bytes`, `binary` and `no_shebang`. Its samples are paths and check the path scope only; the golden test in `packages/core/test/guards.test.ts` covers the file filters.
 - A `line-balance` rule fires on one file when lines matching `match` removed minus added reaches `min_net_removed`; removed lines that reappear elsewhere in the change (moved) and deleted files do not count. It is how assertion and test-case removal is caught.
 - A `changed-paths` rule can also require a companion change: `requires_changed` lists globs (a lockfile) and the rule stands down when any of them changed; `touches` is a regex the added or removed lines of the path must match (a dependency edit, not any edit).
+- `flags = "i"` makes `match` case-insensitive (the only flag). `skip_comments = ["//", "#"]` hides added lines that start with one of those prefixes, so a rule does not repeat a comment lookahead.
+- `$name` in `paths`, `exclude` or `requires_changed` expands to the glob list `[sets] name` in `config.toml` (`$js_tests`, `$py_tests`, `$rs_tests` today). An undefined name stops the run.
+- Moved code is counted: each removed line excuses one identical added line for a rule, not every identical line.
 - Size limits stay in `script/godfile.ts`; this directory does not reimplement them.
 
 - `--warn` reports gate findings without failing (setup errors still fail); on GitHub Actions each finding becomes a `::warning` annotation. `--cwd <repo>` points the engine at another checkout.

@@ -13,7 +13,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs"
 import path from "node:path"
 import { readDiff, resolveBase, tryGit } from "./diff"
 import { evaluate, type Config, type Finding } from "./engine"
-import { parseRule, selfCheck, type Rule } from "./rule"
+import { expandSets, parseRule, selfCheck, type Rule } from "./rule"
 
 const RULES_DIR = "script/guards/rules"
 const CONFIG_FILE = "script/guards/config.toml"
@@ -63,10 +63,12 @@ export function runGuards(input: { cwd: string; baseRef: string; approved: strin
   const fromBase = tryGit(input.cwd, ["ls-tree", "-r", "--name-only", base, "--", RULES_DIR])
   const bootstrap = !fromBase || fromBase.trim().length === 0
   const source = bootstrap ? diskSource(input.cwd) : baseSource(input.cwd, base)
-  const loaded = loadRules(source)
-  if (typeof loaded === "string") return fail(base, bootstrap, loaded)
+  // Checked before the config so an empty checkout reports the real problem.
+  if (source.list().every((file) => !file.endsWith(".toml"))) return fail(base, bootstrap, `no rule files found under ${RULES_DIR}; refusing to pass`)
   const config = loadConfig(source)
   if (typeof config === "string") return fail(base, bootstrap, config)
+  const loaded = loadRules(source, config)
+  if (typeof loaded === "string") return fail(base, bootstrap, loaded)
   const diff = readDiff(input.cwd, base)
   return {
     base,
@@ -137,21 +139,24 @@ function diskSource(cwd: string): Source {
 }
 
 // A gate that loaded nothing proves nothing, so zero rules is an error.
-function loadRules(source: Source): Rule[] | string {
+function loadRules(source: Source, config: Config): Rule[] | string {
   const files = source.list().filter((file) => file.endsWith(".toml"))
   if (files.length === 0) return `no rule files found under ${RULES_DIR}; refusing to pass`
   const parsed = files.map((file) => parseRule(path.basename(file), source.read(file) ?? ""))
-  const errors = parsed.flatMap((entry) => (typeof entry === "string" ? [entry] : selfCheck(entry)))
+  const expanded = parsed.map((entry) => (typeof entry === "string" ? entry : expandSets(entry, config.sets)))
+  const errors = expanded.flatMap((entry) => (typeof entry === "string" ? [entry] : selfCheck(entry)))
   if (errors.length > 0) return errors.join("\n")
-  return parsed.filter((entry): entry is Rule => typeof entry !== "string")
+  return expanded.filter((entry): entry is Rule => typeof entry !== "string")
 }
 
 function loadConfig(source: Source): Config | string {
   const text = source.read(CONFIG_FILE)
   if (text === undefined) return `${CONFIG_FILE} not found`
-  const raw = Bun.TOML.parse(text) as { generated?: unknown; exclude?: unknown }
+  const raw = Bun.TOML.parse(text) as { generated?: unknown; exclude?: unknown; sets?: Record<string, unknown> }
   if (!isStrings(raw.generated) || !isStrings(raw.exclude)) return `${CONFIG_FILE}: generated and exclude must be lists of globs`
-  return { generated: raw.generated, exclude: raw.exclude }
+  const sets = Object.entries(raw.sets ?? {})
+  if (!sets.every((entry): entry is [string, string[]] => isStrings(entry[1]))) return `${CONFIG_FILE}: every [sets] entry must be a list of globs`
+  return { generated: raw.generated, exclude: raw.exclude, sets: Object.fromEntries(sets) }
 }
 
 function isStrings(value: unknown): value is string[] {

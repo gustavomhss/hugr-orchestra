@@ -15,3 +15,9 @@ exclude = [
   "script/guards/**",
   "packages/core/test/guards.test.ts",
 ]
+
+# Named glob lists a rule can use as `$name` in paths, exclude or requires_changed.
+[sets]
+js_tests = ["**/*.test.{ts,tsx,js,jsx,mjs}", "**/*.spec.{ts,tsx,js,jsx,mjs}", "**/test/**/*.{ts,tsx,js,jsx,mjs}"]
+py_tests = ["**/test_*.py", "**/*_test.py", "**/tests/**/*.py", "**/test/**/*.py", "**/conftest.py"]
+rs_tests = ["**/tests/**/*.rs", "**/*_test.rs", "**/*_tests.rs"]

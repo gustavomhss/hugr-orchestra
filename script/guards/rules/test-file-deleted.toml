@@ -1,7 +1,7 @@
 id = "test-file-deleted"
 severity = "gate"
 on = "changed-paths"
-paths = ["**/*.test.{ts,tsx,js,jsx,mjs}", "**/*.spec.{ts,tsx,js,jsx,mjs}", "**/test/**/*.{ts,tsx,js,jsx,mjs}", "**/test_*.py", "**/*_test.py", "**/tests/**/*.py", "**/test/**/*.py", "**/tests/**/*.rs", "**/*_test.rs", "**/*_tests.rs"]
+paths = ["$js_tests", "$py_tests", "$rs_tests"]
 exclude = []
 # A rename is status R, not D, so moving a test does not fire.
 statuses = ["D"]

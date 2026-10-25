@@ -4,7 +4,8 @@ on = "added-lines"
 paths = [".github/**", "script/**", "scripts/**", "**/scripts/**", "**/script/**", "**/*.sh", "**/package.json", ".husky/**"]
 exclude = []
 # Force-push, hard reset, dropping a database, or rm -rf on a root or home path. Plain rm -rf of build directories is normal (73 uses in real history) and is not covered; --force-with-lease is allowed.
-match = '''^(?!\s*(//|#)).*(?:git push\b[^\n]*(--force(?![-\w])|\s-f(\s|$))|git reset --hard|DROP DATABASE|\brm -rf\s+["']?(/|~|\$HOME|\$\{HOME\})["']?(\s|$|/\*))'''
+skip_comments = ["//", "#"]
+match = '''(?:git push\b[^\n]*(--force(?![-\w])|\s-f(\s|$))|git reset --hard|DROP DATABASE|\brm -rf\s+["']?(/|~|\$HOME|\$\{HOME\})["']?(\s|$|/\*))'''
 message = "Destructive command in a script or workflow. Use --force-with-lease, a scoped path, or a manual step a person confirms."
 positive = ['git push --force origin dev', 'git push origin dev -f', 'git reset --hard origin/dev', 'psql -c "DROP DATABASE app"', 'rm -rf /', 'rm -rf "$HOME"', 'rm -rf ~']
 negative = ['git push --force-with-lease origin x', 'rm -rf dist node_modules', 'rm -rf "$DIR/build"', 'git reset --soft HEAD~1', '# git push --force is banned']

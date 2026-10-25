@@ -1,7 +1,7 @@
 id = "py-assert-trivial"
 severity = "gate"
 on = "added-lines"
-paths = ["**/test_*.py", "**/*_test.py", "**/tests/**/*.py", "**/test/**/*.py", "**/conftest.py"]
+paths = ["$py_tests"]
 exclude = []
 match = '^\s*assert\s+(True|1)\s*(,|$)|\bassert\s+.*\bor\s+True\b'
 message = "Assertion that cannot fail. Assert the real condition."

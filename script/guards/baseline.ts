@@ -9,22 +9,29 @@ import { closeSync, openSync, readSync, readdirSync, readFileSync, statSync } fr
 import path from "node:path"
 import type { Change } from "./diff"
 import { evaluate, type Finding } from "./engine"
-import { parseRule, type Rule } from "./rule"
+import { expandSets, parseRule, type Rule } from "./rule"
 
 const root = path.resolve(import.meta.dir, "..", "..")
 const only = process.argv.slice(2)
 const MAX_TEXT_BYTES = 1_000_000
 const SHOWN = 5
 
+const config = (() => {
+  const raw = Bun.TOML.parse(readFileSync(path.join(import.meta.dir, "config.toml"), "utf8")) as {
+    generated: string[]
+    exclude: string[]
+    sets?: Record<string, string[]>
+  }
+  return { generated: raw.generated, exclude: raw.exclude, sets: raw.sets ?? {} }
+})()
+
 const dir = path.join(import.meta.dir, "rules")
 const rules = readdirSync(dir)
   .map((file) => parseRule(file, readFileSync(path.join(dir, file), "utf8")))
   .filter((rule): rule is Rule => typeof rule !== "string")
+  .map((rule) => expandSets(rule, config.sets))
+  .filter((rule): rule is Rule => typeof rule !== "string")
   .filter((rule) => only.length === 0 || only.includes(rule.id))
-const config = Bun.TOML.parse(readFileSync(path.join(import.meta.dir, "config.toml"), "utf8")) as {
-  generated: string[]
-  exclude: string[]
-}
 
 // `git ls-files -s -z`: `<mode> <sha> <stage>\t<path>` per tracked file.
 const changes = Bun.spawnSync(["git", "-C", root, "ls-files", "-s", "-z"])
@@ -55,7 +62,7 @@ const changes = Bun.spawnSync(["git", "-C", root, "ls-files", "-s", "-z"])
     ]
   })
 
-const found = evaluate({ rules, config, diff: { changes, removed: new Set() }, approved: [] })
+const found = evaluate({ rules, config, diff: { changes, removed: new Map() }, approved: [] })
 const byRule = Map.groupBy(found, (finding: Finding) => finding.rule)
 for (const rule of rules) {
   const hits = byRule.get(rule.id) ?? []

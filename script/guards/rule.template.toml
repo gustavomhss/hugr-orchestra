@@ -19,6 +19,10 @@ exclude = []
 # changed-paths only: git status letters (A, M, D, R, C) the rule applies to. Empty means all.
 # statuses = ["D"]
 
+# Optional. flags = "i" for case-insensitive; skip_comments hides added lines starting with one of these prefixes.
+# flags = "i"
+# skip_comments = ["//", "#"]
+
 # JavaScript regex over one added line. Anchor it. Use a '''triple-quoted literal''' when it needs a single quote.
 match = 'FORBIDDEN'
 

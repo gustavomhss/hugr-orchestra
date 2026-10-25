@@ -1,7 +1,7 @@
 id = "js-test-skipped"
 severity = "gate"
 on = "added-lines"
-paths = ["**/*.test.{ts,tsx,js,jsx,mjs}", "**/*.spec.{ts,tsx,js,jsx,mjs}", "**/test/**/*.{ts,tsx,js,jsx,mjs}"]
+paths = ["$js_tests"]
 exclude = []
 # `.skip(` only. skipIf(cond) is the platform-gating idiom this repo uses and does not match.
 match = '\b(describe|it|test)\.skip\(|(^|[^.\w])(xit|xdescribe)\('

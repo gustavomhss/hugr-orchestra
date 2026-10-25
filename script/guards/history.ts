@@ -9,7 +9,7 @@ import { readdirSync, readFileSync } from "node:fs"
 import path from "node:path"
 import { git, readDiff } from "./diff"
 import { evaluate } from "./engine"
-import { parseRule, type Rule } from "./rule"
+import { expandSets, parseRule, type Rule } from "./rule"
 
 const root = path.resolve(import.meta.dir, "..", "..")
 const args = process.argv.slice(2)
@@ -19,15 +19,22 @@ const ref = flag("--ref") ?? "origin/dev"
 const only = args.filter((arg, index) => !arg.startsWith("-") && !["-n", "--ref"].includes(args[index - 1] ?? ""))
 const SHOWN = 6
 
+const config = (() => {
+  const raw = Bun.TOML.parse(readFileSync(path.join(import.meta.dir, "config.toml"), "utf8")) as {
+    generated: string[]
+    exclude: string[]
+    sets?: Record<string, string[]>
+  }
+  return { generated: raw.generated, exclude: raw.exclude, sets: raw.sets ?? {} }
+})()
+
 const dir = path.join(import.meta.dir, "rules")
 const rules = readdirSync(dir)
   .map((file) => parseRule(file, readFileSync(path.join(dir, file), "utf8")))
   .filter((rule): rule is Rule => typeof rule !== "string")
+  .map((rule) => expandSets(rule, config.sets))
+  .filter((rule): rule is Rule => typeof rule !== "string")
   .filter((rule) => only.length === 0 || only.includes(rule.id))
-const config = Bun.TOML.parse(readFileSync(path.join(import.meta.dir, "config.toml"), "utf8")) as {
-  generated: string[]
-  exclude: string[]
-}
 
 // Merge commits are skipped: their first-parent diff is the whole merged branch, already seen commit by commit.
 const commits = git(root, ["rev-list", "--no-merges", `-n${count}`, ref]).split("\n").filter((sha) => sha.length > 0)

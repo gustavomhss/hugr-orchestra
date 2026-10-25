@@ -26,8 +26,9 @@ export type Change = {
 
 export type Diff = {
   changes: Change[]
-  // Trimmed text of every removed line. An added line identical to one of these is moved code, not new code.
-  removed: Set<string>
+  // Trimmed text of every removed line with how many times it was removed. An added line identical to a removed one is
+  // moved code, not new code, but each removal excuses one added line only.
+  removed: Map<string, number>
 }
 
 const MAX_UNTRACKED_BYTES = 1_000_000
@@ -128,7 +129,7 @@ function blobSizes(cwd: string, shas: string[]) {
 // Unified diff (-U0, --no-prefix) to added lines per new path plus the set of removed lines.
 export function parsePatch(patch: string) {
   const added = new Map<string, Added[]>()
-  const removed = new Set<string>()
+  const removed = new Map<string, number>()
   const removedBy = new Map<string, string[]>()
   let current: string | undefined
   let previous: string | undefined
@@ -162,7 +163,7 @@ export function parsePatch(patch: string) {
       continue
     }
     if (text.startsWith("-")) {
-      removed.add(text.slice(1).trim())
+      removed.set(text.slice(1).trim(), (removed.get(text.slice(1).trim()) ?? 0) + 1)
       const owner = current ?? previous
       if (owner) removedBy.set(owner, [...(removedBy.get(owner) ?? []), text.slice(1).trim()])
     }

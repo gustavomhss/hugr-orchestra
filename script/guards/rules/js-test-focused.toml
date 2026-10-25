@@ -1,7 +1,7 @@
 id = "js-test-focused"
 severity = "gate"
 on = "added-lines"
-paths = ["**/*.test.{ts,tsx,js,jsx,mjs}", "**/*.spec.{ts,tsx,js,jsx,mjs}", "**/test/**/*.{ts,tsx,js,jsx,mjs}"]
+paths = ["$js_tests"]
 exclude = []
 # A focused test silently turns the rest of the suite off. Only a call with a title string counts: a helper named fit(372, 94) and a test library that defines its own test.only(name, ...) wrapper are both real code here, not focused tests.
 match = '''\b(describe|it|test)\.only\(\s*["'`]|(^|[^.\w])(fit|fdescribe)\(\s*["'`]'''

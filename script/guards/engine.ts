@@ -8,6 +8,8 @@ export type Config = {
   generated: string[]
   // Paths no added-lines rule reads (the engine's own samples).
   exclude: string[]
+  // Named glob lists a rule refers to as `$name` (see expandSets in rule.ts).
+  sets: Record<string, string[]>
 }
 
 export type Finding = {
@@ -50,14 +52,22 @@ function pathFindings(rule: Rule, input: Parameters<typeof evaluate>[0]): Findin
 }
 
 function lineFindings(rule: Rule, input: Parameters<typeof evaluate>[0]): Finding[] {
+  // Each removed line excuses one identical added line for this rule, so deleting one `// @ts-ignore` does not let
+  // a new one through for free.
+  const moved = new Map(input.diff.removed)
+  const excused = (text: string) => {
+    const left = moved.get(text.trim()) ?? 0
+    if (left > 0) moved.set(text.trim(), left - 1)
+    return left > 0
+  }
   return input.diff.changes
     .filter((change) => inScope(rule, change.path) && !globs(input.config.exclude, change.path))
     .filter((change) => rule.generated === "include" || !globs(input.config.generated, change.path))
     .flatMap((change) =>
       change.added
         .filter((added) => lineHits(rule, added.text))
-        .filter((added) => !input.diff.removed.has(added.text.trim()))
         .filter((added) => IGNORE.exec(added.text)?.[1] !== rule.id)
+        .filter((added) => !excused(added.text))
         .map((added) => ({
           rule: rule.id,
           severity: rule.severity,

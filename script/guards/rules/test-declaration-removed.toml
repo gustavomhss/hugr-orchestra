@@ -1,7 +1,7 @@
 id = "test-declaration-removed"
 severity = "warn"
 on = "line-balance"
-paths = ["**/*.test.{ts,tsx,js,jsx,mjs}", "**/*.spec.{ts,tsx,js,jsx,mjs}", "**/test/**/*.{ts,tsx,js,jsx,mjs}", "**/test_*.py", "**/*_test.py", "**/tests/**/*.py", "**/test/**/*.py", "**/tests/**/*.rs", "**/*_test.rs", "**/*_tests.rs"]
+paths = ["$js_tests", "$py_tests", "$rs_tests"]
 exclude = []
 match = '''^\s*(it|test|describe)(\.\w+)?\(\s*["'`]|^\s*(async\s+)?def test_|^\s*#\[test\]'''
 min_net_removed = 2

@@ -28,6 +28,8 @@ export type Rule = {
   // changed-paths only. The file must have an added or removed line matching this.
   touches: RegExp | undefined
   match: RegExp | undefined
+  // Added lines whose trimmed text starts with one of these are comments or docs, not code; `match` never sees them.
+  skipComments: string[]
   message: string
   // added-lines: sample lines. changed-paths: sample paths.
   positive: string[]
@@ -67,7 +69,7 @@ export function parseRule(file: string, text: string): Rule | string {
   }
   const requiresChanged = strings(raw.requires_changed ?? [])
   if (!requiresChanged) return `${file}: requires_changed must be a list of globs`
-  const touches = raw.touches === undefined ? undefined : compile(raw.touches)
+  const touches = raw.touches === undefined ? undefined : compile(raw.touches, typeof raw.flags === "string" ? raw.flags : "")
   if (raw.touches !== undefined && !touches) return `${file}: touches is not a valid regular expression`
   const generated = raw.generated ?? "skip"
   if (generated !== "skip" && generated !== "include") return `${file}: generated must be "skip" or "include"`
@@ -78,7 +80,11 @@ export function parseRule(file: string, text: string): Rule | string {
   if (!positive || !negative || positive.length === 0 || negative.length === 0) {
     return `${file}: positive and negative samples are required`
   }
-  const match = raw.match === undefined ? undefined : compile(raw.match)
+  const flags = raw.flags ?? ""
+  if (flags !== "" && flags !== "i") return `${file}: flags may only be "i" (case-insensitive)`
+  const skipComments = strings(raw.skip_comments ?? [])
+  if (!skipComments) return `${file}: skip_comments must be a list of line prefixes`
+  const match = raw.match === undefined ? undefined : compile(raw.match, flags)
   if (raw.match !== undefined && !match) return `${file}: match is not a valid regular expression`
   if (on !== "changed-paths" && !match) return `${file}: an ${on} rule needs a match`
   if (on === "line-balance" && minNetRemoved === undefined) return `${file}: a line-balance rule needs min_net_removed`
@@ -103,6 +109,7 @@ export function parseRule(file: string, text: string): Rule | string {
     requiresChanged,
     touches,
     match,
+    skipComments,
     message,
     positive,
     negative,
@@ -118,7 +125,18 @@ export function globs(patterns: string[], path: string) {
 }
 
 export function lineHits(rule: Rule, text: string) {
+  const code = text.trimStart()
+  if (rule.skipComments.some((prefix) => code.startsWith(prefix))) return false
   return rule.match?.test(text) ?? false
+}
+
+// `$name` in paths, exclude or requires_changed stands for the glob list `[sets] name` in config.toml, so a test-file
+// glob lives in one place. An unknown name is an error: it would silently match nothing.
+export function expandSets(rule: Rule, sets: Record<string, string[]>): Rule | string {
+  const unknown = [...rule.paths, ...rule.exclude, ...rule.requiresChanged].find((glob) => glob.startsWith("$") && !sets[glob.slice(1)])
+  if (unknown) return `${rule.id}: ${unknown} is not defined under [sets] in config.toml`
+  const expand = (list: string[]) => list.flatMap((glob) => (glob.startsWith("$") ? sets[glob.slice(1)]! : [glob]))
+  return { ...rule, paths: expand(rule.paths), exclude: expand(rule.exclude), requiresChanged: expand(rule.requiresChanged) }
 }
 
 // Runs the rule's own samples. Returns one error per sample that behaves wrongly. A changed-paths rule's samples are
@@ -139,10 +157,10 @@ function parseToml(text: string): Record<string, unknown> | string {
   }
 }
 
-function compile(value: unknown) {
+function compile(value: unknown, flags = "") {
   if (typeof value !== "string") return undefined
   try {
-    return new RegExp(value)
+    return new RegExp(value, flags)
   } catch {
     return undefined
   }

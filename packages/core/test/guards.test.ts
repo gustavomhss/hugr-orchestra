@@ -5,7 +5,7 @@ import { join } from "node:path"
 import { afterEach, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { parseBinary, parsePatch, parseRaw } from "../../../script/guards/diff"
 import { evaluate } from "../../../script/guards/engine"
-import { parseRule, selfCheck, type Rule } from "../../../script/guards/rule"
+import { expandSets, parseRule, selfCheck, type Rule } from "../../../script/guards/rule"
 import { annotation, exitCode, format, runGuards } from "../../../script/guards/run"
 
 // Each runGuards test builds a temp git repo and spawns git several times; a loaded CI host needs more than 5s.
@@ -77,11 +77,15 @@ negative = ["fine"]
 function diff(path: string, lines: string[], removed: string[] = []) {
   return {
     changes: [{ path, status: "M", from: undefined, added: lines.map((text, index) => ({ line: index + 1, text })) }],
-    removed: new Set(removed),
+    removed: counts(removed),
   }
 }
 
-const config = { generated: ["src/gen/**"], exclude: [] as string[] }
+const config = { generated: ["src/gen/**"], exclude: [] as string[], sets: {} as Record<string, string[]> }
+
+function counts(lines: string[]) {
+  return lines.reduce((map, line) => map.set(line, (map.get(line) ?? 0) + 1), new Map<string, number>())
+}
 
 describe("guard rules", () => {
   test("every shipped rule loads and passes its own samples", () => {
@@ -89,7 +93,10 @@ describe("guard rules", () => {
     expect(loaded.length).toBeGreaterThanOrEqual(7)
     for (const entry of loaded) expect(typeof entry).not.toBe("string")
     const parsed = loaded.filter((entry): entry is Rule => typeof entry !== "string")
-    expect(parsed.flatMap(selfCheck)).toEqual([])
+    const sets = (Bun.TOML.parse(readFileSync(join(guardsDir, "config.toml"), "utf8")) as { sets: Record<string, string[]> }).sets
+    const expanded = parsed.map((entry) => expandSets(entry, sets))
+    for (const entry of expanded) expect(typeof entry).not.toBe("string")
+    expect(expanded.flatMap((entry) => (typeof entry === "string" ? [] : selfCheck(entry)))).toEqual([])
     expect(new Set(parsed.map((entry) => entry.id)).size).toBe(parsed.length)
   })
 
@@ -157,7 +164,7 @@ describe("git output parsing", () => {
       { line: 12, text: "--- looks like a header but is an added line" },
     ])
     expect(parsed.added.has("gone.ts")).toBe(false)
-    expect([...parsed.removed].sort()).toEqual(["old line", "removed"])
+    expect([...parsed.removed.keys()].sort()).toEqual(["old line", "removed"])
   })
 })
 
@@ -192,10 +199,32 @@ describe("evaluate", () => {
     expect(run(diff("src/a.ts", ["  FORBIDDEN"], ["FORBIDDEN"]))).toEqual([])
   })
 
+  test("each removed line excuses one identical added line, not every one", () => {
+    expect(run(diff("src/a.ts", ["FORBIDDEN", "FORBIDDEN"], ["FORBIDDEN"]))).toHaveLength(1)
+    expect(run(diff("src/a.ts", ["FORBIDDEN", "FORBIDDEN"], ["FORBIDDEN", "FORBIDDEN"]))).toEqual([])
+  })
+
+  test("flags = i matches case-insensitively and skip_comments hides comment lines", () => {
+    const loose = rule(SAMPLE.replace("match = 'FORBIDDEN'", "flags = \"i\"\nskip_comments = [\"//\", \"#\"]\nmatch = 'FORBIDDEN'").replace('negative = ["fine"]', 'negative = ["fine", "  // forbidden here"]'))
+    const lines = ["forbidden", "  // FORBIDDEN in a comment", "# forbidden", "x = FORBIDDEN"]
+    const found = evaluate({ rules: [loose], config, diff: diff("src/a.ts", lines), approved: [] })
+    expect(found.map((finding) => finding.line)).toEqual([1, 4])
+    expect(parseRule("sample.toml", SAMPLE.replace("match = 'FORBIDDEN'", "flags = \"g\"\nmatch = 'FORBIDDEN'"))).toContain("flags")
+  })
+
+  test("a $name in paths expands to its [sets] list, and an unknown name is an error", () => {
+    const named = rule(SAMPLE.replace('paths = ["src/**/*.ts"]', 'paths = ["$code"]').replace('positive = ["FORBIDDEN"]', 'positive = ["FORBIDDEN"]'))
+    expect(expandSets(named, {})).toContain("$code")
+    const expanded = expandSets(named, { code: ["src/**/*.ts", "lib/**/*.ts"] })
+    if (typeof expanded === "string") throw new Error(expanded)
+    expect(expanded.paths).toEqual(["src/**/*.ts", "lib/**/*.ts"])
+    expect(evaluate({ rules: [expanded], config, diff: diff("lib/a.ts", ["FORBIDDEN"]), approved: [] })).toHaveLength(1)
+  })
+
   test("the config's own exclude list hides a path from added-lines rules", () => {
     const found = evaluate({
       rules: [sample],
-      config: { generated: [], exclude: ["src/self/**"] },
+      config: { generated: [], exclude: ["src/self/**"], sets: {} },
       diff: diff("src/self/a.ts", ["FORBIDDEN"]),
       approved: [],
     })
@@ -219,7 +248,7 @@ negative = ["open/a"]
         { path: "open/b", status: "R", from: "locked/b", added: [] },
         { path: "locked/c", status: "A", from: undefined, added: [] },
       ],
-      removed: new Set<string>(),
+      removed: new Map<string, number>(),
     }
     expect(evaluate({ rules: [protectedPaths], config, diff: changes, approved: [] }).map((f) => f.path)).toEqual([
       "locked/a",
