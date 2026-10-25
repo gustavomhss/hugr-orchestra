@@ -182,10 +182,12 @@ jobs:
       matrix:
         # Measured test time on 2026-10-12 was 2215 s on Linux and 3918 s on Windows, where the same
         # files vary by up to 40% between runs. Three Windows shards (~1306 s each) left no room under
-        # the 27-minute watchdog below, so Windows gets four (~980 s each).
+        # the 27-minute watchdog below, so Windows gets four (~980 s each). By 2026-10-25 the Linux suite had
+        # grown to ~2990 s (1615 s and 1375 s per shard, against 1620 s of watchdog), so Linux gets three.
         include:
-          - { name: linux, host: ubuntu-latest, shard: 1, shards: 2 }
-          - { name: linux, host: ubuntu-latest, shard: 2, shards: 2 }
+          - { name: linux, host: ubuntu-latest, shard: 1, shards: 3 }
+          - { name: linux, host: ubuntu-latest, shard: 2, shards: 3 }
+          - { name: linux, host: ubuntu-latest, shard: 3, shards: 3 }
           - { name: windows, host: windows-latest, shard: 1, shards: 4 }
           - { name: windows, host: windows-latest, shard: 2, shards: 4 }
           - { name: windows, host: windows-latest, shard: 3, shards: 4 }
