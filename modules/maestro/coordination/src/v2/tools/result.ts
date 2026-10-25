@@ -17,8 +17,8 @@ const Input = Schema.Struct({
 })
 
 /**
- * V1 decides a backend WorkResult stored on the Task's V1 tool part. A V2 Task result has no part identity, and V2
- * Task settlement does not store a backend WorkResult yet, so there is nothing durable to decide.
+ * V1 decides a backend WorkResult stored on the Task's V1 tool part. V2 Task settlement carries the WorkResult in the
+ * Task's structured result, but that result has no V1 part identity and no decision record, so nothing here decides it.
  */
 export function tools(input: { readonly gate: MaestroToolGate.Gate }) {
   return {
@@ -35,7 +35,7 @@ export function tools(input: { readonly gate: MaestroToolGate.Gate }) {
               Effect.fail(
                 MaestroToolGate.hold(
                   "work-result-unavailable",
-                  "V2 Task settlement stores no backend WorkResult to decide yet, and a V2 Task result has no V1 part identity. Report the Task's result to the owner instead of recording a decision.",
+                  "A V2 Task result carries its backend WorkResult but has no V1 part identity to record a decision on. Report the Task's result to the owner instead of recording a decision.",
                 ),
               ),
             ),
