@@ -22,6 +22,8 @@ import { ToolSafety } from "../tool-safety"
 import { ToolSafetySandbox } from "../tool-safety-sandbox"
 import { ToolSafetyGit } from "../tool-safety-git"
 import { OutputInspector } from "../output-inspector"
+import { Pty } from "../pty"
+import { AgentTerminal } from "./agent-terminal"
 
 export const name = "bash"
 export const DEFAULT_TIMEOUT_MS = 2 * 60 * 1_000
@@ -117,6 +119,7 @@ const layer = Layer.effectDiscard(
     const fs = yield* FSUtil.Service
     const appProcess = yield* AppProcess.Service
     const sessionProcess = yield* Effect.serviceOption(SessionProcess.Service)
+    const pty = yield* Effect.serviceOption(Pty.Service)
     const config = yield* Config.Service
     const permission = yield* PermissionV2.Service
     const location = yield* Location.Service
@@ -234,6 +237,27 @@ const layer = Layer.effectDiscard(
               const result = yield* Effect.scoped(Effect.gen(function* () {
                 const inspector = OutputInspector.make()
                 const wrapped = yield* ToolSafetySandbox.wrap(command, { prepareParents: true }).pipe(Effect.provideService(FSUtil.Service, fs))
+                // Same confinement and inspection, but the command runs in a terminal tab the owner can see and answer.
+                if (Option.isSome(pty) && wrapped._tag === "StandardCommand" && AgentTerminal.enabled(wrapped)) {
+                  const ran = yield* AgentTerminal.run(pty.value, {
+                    command: wrapped,
+                    title: input.command,
+                    timeout,
+                    maxChars: MAX_CAPTURE_BYTES,
+                  })
+                  if (!ran) return undefined
+                  const output = Buffer.from(ran.output)
+                  return {
+                    command: input.command,
+                    exitCode: ran.exitCode,
+                    output,
+                    stdout: output,
+                    stderr: Buffer.alloc(0),
+                    outputTruncated: ran.truncated,
+                    stdoutTruncated: ran.truncated,
+                    stderrTruncated: false,
+                  } satisfies AppProcess.RunResult
+                }
                 const captured = yield* appProcess.run(wrapped, {
                   combineOutput: true,
                   timeout: Duration.millis(timeout),

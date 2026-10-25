@@ -73,6 +73,15 @@ export const Event = Pty.Event
 export type CreateOptions = {
   // Starts zsh or bash with marks the caller can trust (ShellMarks). Off unless asked; other shells ignore it.
   readonly shellIntegration?: boolean
+  // Runs command and args as given with only the given env (plus TERM and ORCHESTRA_TERMINAL): no login flag, nothing
+  // inherited from the server process. For a caller that already built a confined command.
+  readonly exact?: boolean
+  // Called from the data and exit paths themselves, so a command that ends right after spawn is still seen whole,
+  // which attach cannot offer once the session has exited.
+  readonly observe?: {
+    readonly onData: (chunk: string) => void
+    readonly onExit: (exitCode: number) => void
+  }
 }
 
 export type AttachInput = {
@@ -222,10 +231,11 @@ const layer = Layer.effect(
     const create = Effect.fn("Pty.create")(function* (input: CreateInput, options?: CreateOptions) {
       const id = PtyID.ascending()
       const command = input.command || Shell.preferred(Config.latest(yield* config.entries(), "shell"))
-      const given = Shell.login(command) ? [...(input.args ?? []), "-l"] : [...(input.args ?? [])]
+      const given =
+        !options?.exact && Shell.login(command) ? [...(input.args ?? []), "-l"] : [...(input.args ?? [])]
       const cwd = input.cwd || location.directory
       const base = {
-        ...process.env,
+        ...(options?.exact ? {} : process.env),
         ...input.env,
         TERM: "xterm-256color",
         ORCHESTRA_TERMINAL: "1",
@@ -291,6 +301,7 @@ const layer = Layer.effect(
       session.listeners.push(
         proc.onData((chunk) => {
           session.cursor += chunk.length
+          options?.observe?.onData(chunk)
           for (const [token, subscriber] of session.subscribers.entries()) {
             if (!subscriber.active) {
               subscriber.pending.push(chunk)
@@ -314,6 +325,7 @@ const layer = Layer.effect(
           session.info.status = "exited"
           session.info.exitCode = exitCode
           notifyEnd(session, { exitCode })
+          options?.observe?.onExit(exitCode)
           exitOrder.push(id)
           runFork(
             Effect.gen(function* () {

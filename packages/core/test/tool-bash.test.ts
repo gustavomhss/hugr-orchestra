@@ -10,6 +10,7 @@ import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Location } from "@orchestra/core/location"
 import { LocationMutation } from "@orchestra/core/location-mutation"
+import { Pty } from "@orchestra/core/pty"
 import { PermissionV2 } from "@orchestra/core/permission"
 import { AppProcess } from "@orchestra/core/process"
 import { AbsolutePath } from "@orchestra/core/schema"
@@ -277,6 +278,56 @@ describe("BashTool", () => {
       ),
     )
   }
+
+  it.live("runs a foreground command in the agent terminal only when the flag is on", () =>
+    Effect.acquireUseRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => {
+        reset()
+        const created: Array<{ command?: string; env?: Record<string, string>; title?: string }> = []
+        const fakePty = Pty.Service.of({
+          create: (input, options) =>
+            Effect.sync(() => {
+              created.push(input)
+              queueMicrotask(() => {
+                options?.observe?.onData("\x1b[1mfrom pty\x1b[0m\r\n")
+                options?.observe?.onExit(4)
+              })
+              return { id: "pty_test", title: input.title ?? "", command: "", args: [], cwd: "", status: "running", pid: 1 }
+            }),
+          remove: () => Effect.void,
+        } as unknown as Pty.Interface)
+        const previous = process.env.ORCHESTRA_AGENT_TERMINAL
+        const exec = () =>
+          withTool(tmp.path, (registry) => settleTool(registry, call({ command: "echo hi" }))).pipe(
+            Effect.provideService(Pty.Service, fakePty),
+          )
+        return Effect.gen(function* () {
+          delete process.env.ORCHESTRA_AGENT_TERMINAL
+          yield* exec()
+          expect(created).toEqual([])
+          expect(runs).toHaveLength(1)
+
+          process.env.ORCHESTRA_AGENT_TERMINAL = "1"
+          const settled = yield* exec()
+          expect(runs).toHaveLength(1)
+          expect(created).toHaveLength(1)
+          expect(created[0]?.title).toBe("agent: echo hi")
+          expect(JSON.stringify(settled)).toContain("from pty")
+          expect(JSON.stringify(settled)).not.toContain("\\u001b")
+          expect(JSON.stringify(settled)).toContain("code 4")
+        }).pipe(
+          Effect.ensuring(
+            Effect.sync(() => {
+              if (previous === undefined) delete process.env.ORCHESTRA_AGENT_TERMINAL
+              else process.env.ORCHESTRA_AGENT_TERMINAL = previous
+            }),
+          ),
+        )
+      },
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ),
+  )
 
   it.live("launches a background command with the scrubbed environment", () =>
     Effect.acquireUseRelease(
