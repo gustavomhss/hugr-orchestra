@@ -1,19 +1,21 @@
 // Dedicated hosted proof: excluded from ordinary Bun suffix discovery, selected by its exact path.
 import { expect, test } from "bun:test"
+import { expectSpawn } from "./fixture/omni-expect"
 import { existsSync } from "node:fs"
 import path from "node:path"
-import { ORCHESTRA, ROOT, cli } from "../../../native/omni/campaign/lib.ts"
+import { CLI_APP, ROOT, cli } from "../../../native/omni/campaign/lib.ts"
 import { run } from "../../../native/omni/campaign/v8-windows.ts"
 import { appRuntime, effectModules } from "../../../native/omni/campaign/delivery-fixtures.ts"
 
 // Explicit Windows-only request. A wrong runner is red, never an unexecuted Windows green.
 test("V8 Windows actual delivery campaign and V9 shipped-artifact rejection", async () => {
+  expectSpawn(import.meta.path)
   expect(process.platform).toBe("win32")
   expect(process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER).toBe("1")
   expect(existsSync(process.env.HUGR_OMNI_ADDON ?? "")).toBe(true)
   expect(existsSync(process.env.HUGR_OMNI_SUPERVISOR ?? "")).toBe(true)
   const { Effect, ChildProcess } = await effectModules()
-  const { AppProcess } = await import("@orchestra/core/process")
+  const { AppProcess } = await import("../src/process")
   const runtime = await appRuntime()
   try {
     const result = await runtime.runPromise(Effect.gen(function* () {
@@ -25,9 +27,9 @@ test("V8 Windows actual delivery campaign and V9 shipped-artifact rejection", as
   } finally {
     await runtime.dispose()
   }
-  if (!existsSync(path.join(ORCHESTRA, "dist", "orchestra-windows-x64", "bin", "orchestra.exe"))) {
-    const build = Bun.spawn([process.execPath, "script/build.ts", "--single", "--skip-install", "--skip-embed-web-ui"], {
-      cwd: ORCHESTRA, stdout: "inherit", stderr: "inherit", timeout: 180_000,
+  if (!existsSync(path.join(CLI_APP, "dist"))) {
+    const build = Bun.spawn([process.execPath, "script/build.ts", "--single", "--skip-install"], {
+      cwd: CLI_APP, stdout: "inherit", stderr: "inherit", timeout: 180_000,
       env: { ...process.env, ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "0" },
     })
     expect(await build.exited).toBe(0)

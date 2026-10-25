@@ -118,6 +118,11 @@ test("complete payload retains the full bin tree, verifies and reuses exact publ
   expect(manifest.schema).toBe("orchestra-distribution-v1")
   expect(manifest.files.map((file) => file.path)).toEqual(manifest.files.map((file) => file.path).sort())
   expect(manifest.files.find((file) => file.path === "bin/extra/note.txt")).toBeDefined()
+  // The bundled hugr-lean notices (build.ts leanNotices) ship under bin/licenses and are not omni companions.
+  expect(manifest.files.map((file) => file.path).filter((path) => path.startsWith("bin/licenses/hugr-lean/"))).toEqual([
+    "bin/licenses/hugr-lean/LICENSE",
+    "bin/licenses/hugr-lean/manifest.json",
+  ])
   expect(manifest.target).toBe(tuple.target)
   expect(manifest.files.filter((file) => file.executable).map((file) => file.path)).toEqual(process.platform === "win32" ? [] : [`bin/${tuple.supervisor}`, `bin/${tuple.executable}`])
   expect(await verifyDistribution(value.input.out, { version: "1.2.3", target: tuple.target })).toEqual(manifest)

@@ -1,5 +1,5 @@
 // V3: pinned supervisor SIGKILL, exact per-OS tier snapshots inside 8 s, then protected next-spawn recovery.
-import { cleanup, cli, client, control, fakeLLM, fileTree, identity, inventoryScope, isolated, kill9, matches, members, provider, remaining, serve, sleep, table, until, verdict, win, type Identity, type Row } from "./lib.ts"
+import { cleanup, cli, client, control, fakeLLM, fileTree, identity, inventoryScope, isolated, kill9, matches, members, provider, remaining, serve, sleep, table, until, verdict, win, writeConfig, type Identity, type Row } from "./lib.ts"
 import { deliveryEnv } from "./delivery-fixtures.ts"
 import type { ChildProcess } from "node:child_process"
 
@@ -17,14 +17,15 @@ export async function run(options: { mutation?: "wrong-owner" } = {}) {
   const result: { value: Record<string, unknown> & { pass: boolean } } = { value: { pass: false } }
   const step = (line: string) => { steps.push(`${new Date().toISOString()} ${line}`); console.error(`[v3] ${line}`) }
   try {
-    const host = await serve(cli(), ["serve", "--port", "0", "--hostname", "127.0.0.1"], deliveryEnv({ ...scratch.env, ORCHESTRA_CONFIG_CONTENT: JSON.stringify(config) }), scratch.project)
+    writeConfig(scratch.project, config)
+    const host = await serve(cli(), ["serve", "--port", "0", "--hostname", "127.0.0.1"], deliveryEnv(scratch.env), scratch.project)
     hosts.push(host.proc)
     const pinnedHost = host.identity ?? identity(host.pid)
     const api = client(host.url, scratch.project)
-    const session = await api.post("/session", {})
+    const session = await api.session()
     step(`host ${JSON.stringify(pinnedHost)}; home ${scratch.home}; nonces ${JSON.stringify(nonces)}`)
-    await api.post(`/session/${session.id}/prompt_async`, { agent: "maestro", model: { providerID: "test", modelID: "test-model" }, parts: [{ type: "text", text: "Run campaign tree." }] })
-    await api.post("/pty", { command: trees.pty.command, args: trees.pty.args })
+    await api.prompt(session.id, "Run campaign tree.")
+    await api.post("/api/pty", { command: trees.pty.command, args: trees.pty.args })
     const before = await until(90_000, "all exact bash and terminal members protected", () => {
       const rows = table()
       const found = { bash: control(trees.bash.nonce, trees.bash.size, [pinnedHost], rows), pty: control(trees.pty.nonce, trees.pty.size, [pinnedHost], rows) }
@@ -65,7 +66,7 @@ export async function run(options: { mutation?: "wrong-owner" } = {}) {
 
     const created = Date.now()
     const recovered = await until(30_000, "next spawn recovers protected tree", async () => {
-      await api.post("/pty", { command: trees.after.command, args: trees.after.args })
+      await api.post("/api/pty", { command: trees.after.command, args: trees.after.args })
       return until(30_000 - (Date.now() - created), "all recovery members protected", () => {
         const found = control(trees.after.nonce, trees.after.size, [pinnedHost])
         return found.pass ? found : undefined

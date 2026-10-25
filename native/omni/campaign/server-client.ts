@@ -38,6 +38,35 @@ export function client(url: string, directory: string, password = SERVER_PASSWOR
       if (failed) throw new Error(`session ${sessionID} recorded ${failed.type}: ${JSON.stringify(failed)}`)
       return history.data
     },
+    /** Every durable event of the session, oldest first. */
+    events: async (sessionID: string) => {
+      const found: { type: string; data: Record<string, any>; durable?: { seq: number } }[] = []
+      for (let after = 0; ; ) {
+        const page = (await api.get(`/api/session/${sessionID}/history?limit=100&after=${after}`)) as { data: typeof found; hasMore: boolean }
+        found.push(...page.data)
+        const last = page.data.at(-1)?.durable?.seq
+        if (!page.hasMore || last === undefined || last <= after) return found
+        after = last
+      }
+    },
+    /** The session's tool calls folded from its events: running until a success or failure settles them. */
+    tools: async (sessionID: string) => {
+      const calls = new Map<string, { callID: string; tool: string; input: Record<string, any>; status: "running" | "completed" | "error"; structured?: Record<string, any>; metadata?: Record<string, any>; error?: unknown; start: number; end?: number }>()
+      for (const event of await api.events(sessionID)) {
+        const callID = event.data.callID as string
+        if (event.type === "session.next.tool.called") calls.set(callID, { callID, tool: event.data.tool, input: event.data.input, status: "running", start: Number(event.data.timestamp) })
+        const call = calls.get(callID)
+        if (!call) continue
+        if (event.type === "session.next.tool.success") Object.assign(call, { status: "completed", structured: event.data.structured, metadata: event.data.metadata, end: Number(event.data.timestamp) })
+        if (event.type === "session.next.tool.failed") Object.assign(call, { status: "error", error: event.data.error, metadata: event.data.metadata, end: Number(event.data.timestamp) })
+      }
+      return [...calls.values()]
+    },
+    /** Sessions with a running agent loop. */
+    active: async () => (await api.get("/api/session/active")).data as Record<string, { type: "running" }>,
+    /** The background process trees the session's shell tool left running. */
+    processes: async (sessionID: string) =>
+      (await api.get(`/api/session/${sessionID}/processes`)).data as { id: string; pid: number; title: string; output: string; written: number; processes: { pid: number }[] }[],
   }
   return api
 }

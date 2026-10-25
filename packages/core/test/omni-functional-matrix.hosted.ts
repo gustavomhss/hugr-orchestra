@@ -1,15 +1,17 @@
 // Dedicated hosted proof: excluded from ordinary Bun suffix discovery, selected by its exact path.
 import { expect, test } from "bun:test"
-import { Omni } from "@orchestra/core/omni"
+import { expectSpawn } from "./fixture/omni-expect"
+import { Omni } from "../src/omni"
 import { appRuntime, effectModules } from "../../../native/omni/campaign/delivery-fixtures.ts"
 import { prepare } from "../../../native/omni/campaign/matrix-build.ts"
 
 test("V3/V4/V5/V6 real OS functional matrix and targeted red mutations", async () => {
+  expectSpawn(import.meta.path)
   expect(process.env.CI).toBeTruthy()
   expect(process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER).toBe("strict")
   // Parent counter measured before launching any campaign child; real AppProcess flow, no copied implementation.
   const { Effect, ChildProcess } = await effectModules()
-  const { AppProcess } = await import("@orchestra/core/process")
+  const { AppProcess } = await import("../src/process")
   const runtime = await appRuntime()
   const before = Omni.snapshot()
   try {

@@ -21,15 +21,17 @@ export async function run(options: { mutation?: "legacy" | "missing-marker" } = 
     const server = await start(scratch)
     const call = api(server.url, scratch.project)
     const before = Date.now()
-    const connected = await call<Record<string, { status: string; error?: string }>>("POST", "/mcp", {
-      name: "campaign", config: { type: "local", command: [scratch.node, mcpFixture(scratch, nonce, false, options.mutation === "missing-marker"), nonce], timeout: 10_000 },
+    // V2 adds the server to the Location config and connects it; the status is read back from the list.
+    await call("PUT", "/api/mcp/campaign", {
+      config: { type: "local", command: [scratch.node, mcpFixture(scratch, nonce, false, options.mutation === "missing-marker"), nonce], timeout: 10_000 },
     }, 25_000)
+    const connected = (await call<{ data: Record<string, { status: string; error?: string }> }>("GET", "/api/mcp")).data
     metrics.connectMs = Date.now() - before
     metrics.connected = connected
     metrics.processTablePositive = (await sweep(nonce)).length
     metrics.supervised = supervised(nonce)
     if (connected.campaign?.status !== "connected") throw new Error(`MCP did not connect: ${JSON.stringify(connected)}`)
-    const tools = await call<Record<string, string[]>>("GET", "/mcp/tools")
+    const tools = (await call<{ data: Record<string, string[]> }>("GET", "/api/mcp/tool")).data
     metrics.tools = tools
     if (!tools.campaign?.includes("probe")) throw new Error("connected MCP did not list probe tool")
     const written = JSON.parse(readFileSync(path.join(scratch.home, `${nonce}.written.json`), "utf8")) as { bytes: number; marker: string; markerBytes: number }
@@ -47,13 +49,14 @@ export async function run(options: { mutation?: "legacy" | "missing-marker" } = 
       written.markerBytes !== Buffer.byteLength(written.marker + "\n") || metrics.uniqueMarkerLines !== 1 ||
       !lines.at(-1)?.endsWith(`line=${written.marker}`) || !metrics.supervised || Number(metrics.processTablePositive) < 1)
       throw new Error("MCP payload/supervision positive control failed")
-    const failed = await call<Record<string, { status: string; error?: string }>>("POST", "/mcp", {
-      name: "failure", config: { type: "local", command: [scratch.node, mcpFixture(scratch, failureNonce, true), failureNonce], timeout: 10_000 },
+    await call("PUT", "/api/mcp/failure", {
+      config: { type: "local", command: [scratch.node, mcpFixture(scratch, failureNonce, true), failureNonce], timeout: 10_000 },
     }, 25_000)
+    const failed = (await call<{ data: Record<string, { status: string; error?: string }> }>("GET", "/api/mcp")).data
     metrics.failureDiagnostics = { status: failed.failure?.status, tail: failed.failure?.error?.slice(-350) }
     if (failed.failure?.status !== "failed" || !failed.failure.error?.includes(`LAST-STDERR-${failureNonce}`))
       throw new Error(`last stderr line absent from failed-connect diagnostics: ${JSON.stringify(failed.failure)}`)
-    await call("POST", "/mcp/campaign/disconnect", {})
+    await call("POST", "/api/mcp/campaign/disconnect", {})
     await until(8_000, "MCP process gone after disconnect", async () => (await sweep(nonce)).length === 0 ? true : undefined)
     metrics.leftovers = (await sweep(nonce)).length
     pass = true

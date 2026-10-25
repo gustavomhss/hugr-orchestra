@@ -1,20 +1,20 @@
 // V1: a real Maestro bash turn starts a background nonce tree. The tool and turn finish,
-// /session/:id/processes exposes the tree and post-adoption output, and Session.remove stops it.
+// /api/session/:id/processes exposes the tree and post-adoption output, and Session.remove stops it.
 // Run: ORCHESTRA_LOCAL_TESTS=1 bun native/omni/campaign/v1-background.ts
 import { appendFileSync, writeFileSync } from "node:fs"
 import { randomUUID } from "node:crypto"
 import path from "node:path"
 import { stripVTControlCharacters } from "node:util"
-import { cleanup, cli, client, control, fileTree, identity, isolated, matches, members, provider, remaining, serve, until, win } from "./lib.ts"
+import { cleanup, cli, client, control, fileTree, identity, isolated, matches, members, provider, remaining, serve, until, win, writeConfig } from "./lib.ts"
 import { deliveryEnv } from "./delivery-fixtures.ts"
 import { backgroundCommand, consoleHost, consoleInput, finishCampaign, observeFrontend, twoStageLLM, windowsInventory } from "./windows-lifecycle.ts"
 import type { ChildProcess } from "node:child_process"
 
-type Message = {
-  info: { role: string; finish?: string; error?: unknown }
-  parts: { type: string; tool?: string; state?: { status: string; error?: string; output?: string; input?: { command?: string }; metadata?: { interrupted?: boolean; aborted?: boolean; timeout?: boolean; exit?: number | null }; time?: { start: number; end?: number } } }[]
+/** The foreground bash call for a nonce, in the V1 part shape the checks below read. */
+function foregroundTool(calls: Awaited<ReturnType<ReturnType<typeof client>["tools"]>>, nonce: string) {
+  const call = calls.find((item) => item.tool === "bash" && String(item.input.command).includes(nonce))
+  return call && { state: { status: call.status, input: call.input, error: call.error, metadata: { ...call.structured, ...call.metadata }, output: String(call.structured?.output ?? "") } }
 }
-type Listed = { id: string; pid: number; title: string; output: string; written: number; processes: { pid: number }[] }
 
 export async function run() {
   const scratch = isolated("v1", {})
@@ -34,7 +34,8 @@ export async function run() {
     formatter: false, lsp: false, shell: win ? "powershell.exe" : "/bin/bash", share: "disabled", model: "test/test-model", provider: provider(llm.url),
     permission: { "*": "allow" }, agent: { maestro: { model: "test/test-model", permission: { "*": "allow" } } },
   }
-  const env = deliveryEnv({ ...scratch.env, ORCHESTRA_CONFIG_CONTENT: JSON.stringify(config) })
+  writeConfig(scratch.project, config)
+  const env = deliveryEnv(scratch.env)
   const terminalHost = { host: undefined as Awaited<ReturnType<typeof consoleHost>> | undefined }
   const recorder = { inventory: undefined as Awaited<ReturnType<typeof windowsInventory>> | undefined }
   const processHost = { proc: undefined as ChildProcess | undefined }
@@ -50,9 +51,10 @@ export async function run() {
     processHost.proc = host.proc
     const api = client(host.url, scratch.project)
     const title = `esc-${randomUUID().slice(0, 12)}`
-    const session = await api.post("/session", { title })
+    const session = await api.session()
+    await api.post(`/api/session/${session.id}/rename`, { title })
     step(`host ${host.pid}; session ${session.id}; nonce ${tree.nonce}; home ${scratch.home}`)
-    await api.post(`/session/${session.id}/prompt_async`, { agent: "maestro", model: { providerID: "test", modelID: "test-model" }, parts: [{ type: "text", text: prompt }] })
+    await api.prompt(session.id, prompt)
     const pinnedHost = host.identity ?? identity(host.pid)
     const before = await until(90_000, "every exact background member protected", async () => {
       const found = control(tree.nonce, tree.size, [pinnedHost], recorder.inventory ? await recorder.inventory.query() : undefined)
@@ -60,12 +62,9 @@ export async function run() {
     })
     writeFileSync(release, "release\n")
     const completed = await until(30_000, "completed bash tool and final assistant turn", async () => {
-      const messages = await api.get(`/session/${session.id}/message`) as Message[]
-      const failed = messages.find((message) => message.info.error)
-      if (failed) throw new Error(`assistant error: ${JSON.stringify(failed.info.error)}`)
-      const tool = messages.flatMap((message) => message.parts).find((part) => part.type === "tool" && part.tool === "bash")
-      if (tool?.state?.status === "error") throw new Error(`bash failed: ${tool.state.error}`)
-      return tool?.state?.status === "completed" && messages.some((message) => message.info.role === "assistant" && message.info.finish === "stop") ? tool.state : undefined
+      const tool = (await api.tools(session.id)).find((call) => call.tool === "bash")
+      if (tool?.status === "error") throw new Error(`bash failed: ${JSON.stringify(tool.error)}`)
+      return tool?.status === "completed" && !(await api.active())[session.id] ? { time: { start: tool.start, end: tool.end } } : undefined
     })
     const toolMs = completed.time?.end === undefined ? undefined : completed.time.end - completed.time.start
     if (toolMs === undefined) throw new Error("completed tool has no start/end timing")
@@ -73,13 +72,13 @@ export async function run() {
     if (process.env.OMNI_CAMPAIGN_MUTATION === "omit-adoption") {
       // Remove the actual registered job, rather than falsifying an HTTP response or masking the oracle.
       const job = await until(20_000, "registered job for omission fault", async () => {
-        const jobs = await api.get(`/session/${session.id}/processes`) as Listed[]
+        const jobs = await api.processes(session.id)
         return jobs.find((job) => job.processes.some((node) => before.fixtureIds.some((id) => id.pid === node.pid)))
       })
-      await api.post(`/session/${session.id}/processes/${job.id}/stop`)
+      await api.post(`/api/session/${session.id}/processes/${job.id}/stop`)
     }
     const adopted = await until(process.env.OMNI_CAMPAIGN_MUTATION === "omit-adoption" ? 3000 : 20_000, "exact tree adopted after tool completion", async () => {
-      const jobs = await api.get(`/session/${session.id}/processes`) as Listed[]
+      const jobs = await api.processes(session.id)
       const found = members(tree.nonce)
       return jobs.find((job) => found.members.length === tree.size && found.wrappers.length === 0 && job.processes.length === tree.size && found.members.every((row) => before.fixtureIds.some((original) => matches(row, original)) && job.processes.some((node) => node.pid === row.pid)))
     })
@@ -90,7 +89,7 @@ export async function run() {
     // Named fault injection lets the real post-adoption output oracle be tested in both directions.
     if (process.env.OMNI_CAMPAIGN_MUTATION !== "omit-post-tool-marker") writeFileSync(channel, marker)
     const listed = await until(20_000, "new post-tool output traversing adoption pump into registry", async () => {
-      const jobs = await api.get(`/session/${session.id}/processes`) as Listed[]
+      const jobs = await api.processes(session.id)
       return jobs.find((job) => job.id === adopted.id && job.written > adopted.written && job.output.includes(marker))
     })
     const afterTurn = await remaining(tree.nonce)
@@ -98,20 +97,19 @@ export async function run() {
       frontend.proxy = await observeFrontend(host.url)
       terminalHost.host = await consoleHost(env, scratch.project, { attach: frontend.proxy.url, sessionID: session.id }, [], recorder.inventory)
       const ui = terminalHost.host
-      await api.post(`/session/${session.id}/prompt_async`, { agent: "maestro", model: { providerID: "test", modelID: "test-model" }, parts: [{ type: "text", text: foregroundPrompt }] })
+      await api.prompt(session.id, foregroundPrompt)
       esc.before = await until(90_000, "foreground tool live, busy, displayed on attached same-session UI", async () => {
         if (ui.state.exit) throw new Error(`attached UI exited before foreground control: ${JSON.stringify(ui.state.exit)}`)
         const rows = await recorder.inventory!.query()
         const found = control(foreground.nonce, foreground.size, [pinnedHost], rows)
-        const messages = await api.get(`/session/${session.id}/message`) as Message[]
-        const tool = messages.flatMap((message) => message.parts).find((part) => part.tool === "bash" && part.state?.input?.command?.includes(foreground.nonce))
-        const status = await api.get("/session/status") as Record<string, { type: string }>
+        const tool = foregroundTool(await api.tools(session.id), foreground.nonce)
+        const status = Object.fromEntries(Object.keys(await api.active()).map((id) => [id, { type: "busy" }])) as Record<string, { type: string }>
         const output = stripVTControlCharacters(ui.out()).replaceAll("\r", "")
-        esc.probe = { protected: found.pass, toolStatus: tool?.state?.status, status: status[session.id]?.type, title: output.includes(title), interrupt: output.includes("interrupt"), sessionGet: frontend.proxy!.requests.some((request) => request.method === "GET" && request.path === `/session/${session.id}` && request.status === 200) }
+        esc.probe = { protected: found.pass, toolStatus: tool?.state?.status, status: status[session.id]?.type, title: output.includes(title), interrupt: output.includes("interrupt"), sessionGet: frontend.proxy!.requests.some((request) => request.method === "GET" && request.path === `/api/session/${session.id}` && request.status === 200) }
         return esc.probe.protected && esc.probe.toolStatus === "running" && esc.probe.status === "busy" && esc.probe.title && esc.probe.interrupt && esc.probe.sessionGet ? found : undefined
       })
       esc.displayedSession = session.id
-      const abortPath = `/session/${session.id}/abort`
+      const abortPath = `/api/session/${session.id}/interrupt`
       if (frontend.proxy.requests.some((request) => request.path === abortPath)) throw new Error("frontend aborted before Esc injection")
       const outputAt = ui.out().length
       const injected = Date.now()
@@ -125,20 +123,19 @@ export async function run() {
       }
       const canceled = await until(20_000, "foreground cancel from two frontend Esc", async () => {
         esc.abortRequests = frontend.proxy!.requests.filter((request) => request.method === "POST" && request.path === abortPath && request.at >= injected)
-        const messages = await api.get(`/session/${session.id}/message`) as Message[]
-        const tool = messages.flatMap((message) => message.parts).find((part) => part.tool === "bash" && part.state?.input?.command?.includes(foreground.nonce))
+        const tool = foregroundTool(await api.tools(session.id), foreground.nonce)
         const found = members(foreground.nonce, await recorder.inventory!.query())
         if (ui.state.exit) throw new Error("attached UI exited instead of canceling foreground")
         // Processor interruption and Shell's completed-but-aborted result are both durable cancellation
         // projections (session/processor.ts and tool/shell.ts). Normal completion is never cancellation.
-        const cancellation = tool?.state?.status === "error" && tool.state.error === "Tool execution aborted" && tool.state.metadata?.interrupted === true ? "processor-interrupted"
-          : tool?.state?.status === "completed" && tool.state.metadata?.aborted === true && tool.state.metadata.timeout === false && tool.state.metadata.exit === null && tool.state.output?.includes("User aborted the command") ? "shell-aborted" : undefined
+        const cancellation = tool?.state?.status === "error" ? "processor-interrupted"
+          : tool?.state?.status === "completed" && tool.state.metadata?.exit === null ? "shell-aborted" : undefined
         return esc.abortRequests.length === 1 && esc.abortRequests[0]!.status === 200 && cancellation !== undefined && found.members.length === 0 && found.wrappers.length === 0 ? { cancellation, tool: tool!.state!, foregroundRemaining: 0, cancelMs: Date.now() - injected } : undefined
       })
       const next = `post-escape-${randomUUID()}`
       writeFileSync(channel, next)
       const survived = await until(20_000, "original adopted identities and fresh output surviving two Esc", async () => {
-        const jobs = await api.get(`/session/${session.id}/processes`) as Listed[]
+        const jobs = await api.processes(session.id)
         const found = members(tree.nonce, await recorder.inventory!.query())
         return found.members.length === tree.size && found.members.every((row) => before.fixtureIds.some((original) => matches(row, original))) && jobs.some((job) => job.id === adopted.id && job.written > listed.written && job.output.includes(next)) ? { marker: next, count: found.members.length, fixtureIds: found.members.map((row) => identity(row.pid, found.members)) } : undefined
       })
@@ -146,7 +143,7 @@ export async function run() {
     })() : undefined
     const removed = Date.now()
     await until(20_000, "Session.remove stopping adopted nonce tree", async () => {
-      await api.del(`/session/${session.id}`)
+      await api.del(`/api/session/${session.id}`)
       return until(20_000 - (Date.now() - removed), "adopted tree gone", async () => (await remaining(tree.nonce)) === 0 ? true : undefined)
     })
     const afterRemove = await remaining(tree.nonce)

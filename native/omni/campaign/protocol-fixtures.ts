@@ -6,7 +6,7 @@ import os from "node:os"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
 import { promisify } from "node:util"
-import { cleanup, cli, isolated, LOGS, own, reap, ROOT, sweep, table, until } from "./lib.ts"
+import { cleanup, cli, isolated, LOGS, own, reap, ROOT, SERVER_PASSWORD, sweep, table, until } from "./lib.ts"
 
 export function requireLocal() {
   if (process.env.ORCHESTRA_LOCAL_TESTS !== "1") throw new Error("campaign requires ORCHESTRA_LOCAL_TESTS=1")
@@ -21,8 +21,8 @@ export async function fixture(name: string, config: Record<string, unknown> = {}
     /^(PATH|PATHEXT|SYSTEMROOT|WINDIR|COMSPEC|COMPUTERNAME|OS|PROCESSOR_.*|NUMBER_OF_PROCESSORS|PSMODULEPATH|PROGRAMFILES(?:\(X86\))?|PROGRAMW6432|COMMONPROGRAMFILES(?:\(X86\))?|PROGRAMDATA|ALLUSERSPROFILE|APPDATA|LOCALAPPDATA|TEMP|TMP|TMPDIR|LANG|LC_.*|TERM|HOME|USERPROFILE|XDG_.*|ORCHESTRA_.*)$/i.test(key),
   ))
   Object.assign(env, { ORCHESTRA_LOCAL_TESTS: "1", TERM: "xterm-256color", ORCHESTRA_DISABLE_DEFAULT_PLUGINS: "1" })
-  delete env.ORCHESTRA_SERVER_PASSWORD
-  delete env.ORCHESTRA_SERVER_USERNAME
+  // V2 serve answers only to its Basic credential; the campaign password is the only one in this environment.
+  Object.assign(env, { ORCHESTRA_SERVER_PASSWORD: SERVER_PASSWORD, ORCHESTRA_LOG_LEVEL: "DEBUG" })
   // Asynchronous: Bun 1.3.14's Windows spawnSync measures its timeout from the previous synchronous spawn's clock
   // (oven-sh/bun#33932), so a later cell's fixture would kill this query within milliseconds.
   const resolved = await promisify(execFile)(process.env.OMNI_CAMPAIGN_NODE ?? "node", ["-p",
@@ -76,7 +76,7 @@ export function processTable() {
 
 export async function start(scratch: Fixture) {
   evidence(scratch)
-  const proc = spawn(cli(), ["--print-logs", "--log-level", "DEBUG", "serve", "--port", "0", "--hostname", "127.0.0.1"], {
+  const proc = spawn(cli(), ["serve", "--port", "0", "--hostname", "127.0.0.1"], {
     env: scratch.env, cwd: scratch.project, stdio: ["ignore", "pipe", "pipe"], windowsHide: true,
   })
   scratch.hosts.push(proc)
@@ -129,7 +129,7 @@ export function finalSweep(nonce: string) {
 export function api(url: string, directory: string) {
   return async <T = unknown>(method: string, route: string, body?: unknown, timeoutMs = 120_000): Promise<T> => {
     const response = await fetch(new URL(route, url), {
-      method, headers: { "content-type": "application/json", "x-orchestra-directory": encodeURIComponent(directory) },
+      method, headers: { "content-type": "application/json", authorization: `Basic ${Buffer.from(`orchestra:${SERVER_PASSWORD}`).toString("base64")}`, "x-orchestra-directory": encodeURIComponent(directory) },
       body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(timeoutMs),
     })
     const text = await response.text()
