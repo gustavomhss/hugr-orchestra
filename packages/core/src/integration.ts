@@ -158,6 +158,8 @@ export interface Interface extends State.Transformable<Draft> {
       readonly key: string
       /** User-facing label for the stored credential. */
       readonly label?: string
+      /** Extra data stored beside the secret, for example the env name of a well-known provider token. */
+      readonly metadata?: Record<string, unknown>
     }) => Effect.Effect<void, AuthorizationError>
     /** Starts a stateful OAuth attempt. */
     readonly oauth: (input: {
@@ -428,7 +430,7 @@ export const locationLayer = Layer.effect(
           yield* credentials.create({
             integrationID: input.integrationID,
             label: input.label,
-            value: Credential.Key.make({ type: "key", key: input.key }),
+            value: Credential.Key.make({ type: "key", key: input.key, metadata: input.metadata }),
           })
           yield* events.publish(Event.ConnectionUpdated, { integrationID: input.integrationID })
           yield* events.publish(Event.Updated, {})

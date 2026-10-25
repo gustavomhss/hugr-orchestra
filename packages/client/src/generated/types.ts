@@ -2336,8 +2336,21 @@ export type IntegrationsConnectKeyInput = {
   readonly location?: {
     readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
   }["location"]
-  readonly key: { readonly key: string; readonly label?: string | undefined }["key"]
-  readonly label?: { readonly key: string; readonly label?: string | undefined }["label"]
+  readonly key: {
+    readonly key: string
+    readonly label?: string | undefined
+    readonly metadata?: { readonly [x: string]: unknown } | undefined
+  }["key"]
+  readonly label?: {
+    readonly key: string
+    readonly label?: string | undefined
+    readonly metadata?: { readonly [x: string]: unknown } | undefined
+  }["label"]
+  readonly metadata?: {
+    readonly key: string
+    readonly label?: string | undefined
+    readonly metadata?: { readonly [x: string]: unknown } | undefined
+  }["metadata"]
 }
 
 export type IntegrationsConnectKeyOutput = void

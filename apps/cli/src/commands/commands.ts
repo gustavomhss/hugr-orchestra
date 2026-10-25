@@ -179,9 +179,12 @@ const providers = Spec.make("providers", {
     Spec.make("login", {
       description: "Log in to a provider",
       params: {
+        url: Argument.string("auth provider URL, whose /.well-known/orchestra names the login command").pipe(
+          Argument.optional,
+        ),
         provider: Flag.string("provider").pipe(
           Flag.withAlias("p"),
-          Flag.withDescription("provider id or name to log in to (skips provider selection)"),
+          Flag.withDescription("provider id or name to log in to, or other for a custom id (skips selection)"),
           Flag.optional,
         ),
         method: Flag.string("method").pipe(

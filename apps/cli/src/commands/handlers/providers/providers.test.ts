@@ -140,6 +140,54 @@ describe("providers login", () => {
   })
 })
 
+describe("providers login for providers outside the list", () => {
+  test("stores a key under a custom provider id typed after choosing Other", async () => {
+    const s = stub()
+    const said: string[] = []
+    try {
+      await login(s.client, script(["other", "@ai-sdk/my-llm", "sk-custom"]), { directory: "/work", say: (line) => said.push(line) })
+      expect(s.calls.find((call) => call.route === "POST /integration/my-llm/connect/key")?.body).toEqual({ key: "sk-custom" })
+      expect(said.at(-1)).toBe("Logged into my-llm")
+      await expect(login(s.client, script(["Bad_ID"]), { directory: "/work", provider: "other", say: () => {} })).rejects.toThrow(
+        "a-z, 0-9 and hyphens only",
+      )
+    } finally {
+      s.server.stop(true)
+    }
+  })
+
+  test("runs the well-known auth command and stores its output with the env name", async () => {
+    const s = stub()
+    const wellknown = Bun.serve({
+      port: 0,
+      fetch: (request) =>
+        new URL(request.url).pathname === "/.well-known/orchestra"
+          ? Response.json({ auth: { command: ["print-token", "--now"], env: "CORP_TOKEN" } })
+          : new Response("no", { status: 404 }),
+    })
+    const ran: string[][] = []
+    try {
+      const url = `http://127.0.0.1:${wellknown.port}/`
+      await login(s.client, script([]), {
+        directory: "/work",
+        url,
+        say: () => {},
+        runAuth: async (command) => (ran.push(command), { exitCode: 0, stdout: "tok-123\n" }),
+      })
+      expect(ran).toEqual([["print-token", "--now"]])
+      expect(
+        s.calls.find((call) => call.route === `POST /integration/${encodeURIComponent(url.replace(/\/+$/, ""))}/connect/key`)?.body,
+      ).toEqual({ key: "tok-123", metadata: { wellknown: { env: "CORP_TOKEN" } } })
+      await expect(
+        login(s.client, script([]), { directory: "/work", url, say: () => {}, runAuth: async () => ({ exitCode: 1, stdout: "" }) }),
+      ).rejects.toThrow("The auth provider command failed")
+    } finally {
+      wellknown.stop(true)
+      s.server.stop(true)
+    }
+  })
+})
+
 describe("providers logout", () => {
   test("removes every credential of the named provider", async () => {
     const s = stub()
