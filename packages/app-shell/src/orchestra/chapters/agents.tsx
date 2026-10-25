@@ -11,7 +11,6 @@ import { useSDK } from "@/context/sdk"
 import { useTabs } from "@/context/tabs"
 import { directoryKey, normalizeAgentList } from "@/context/global-sync/utils"
 import type { ChapterPageProps } from "../chapter-route"
-import { MxBadge } from "./kit"
 import { AgentDialog } from "./agents-dialog"
 import { agentModels, agentRoster, agentUnavailable, restoreInput } from "./agents-roster"
 import { modelUnavailable } from "@/components/subagent-model-rules"
@@ -188,11 +187,6 @@ export default function Agents(props: ChapterPageProps) {
             {language.t("orchestra.agents.create")}
           </button>
         </header>
-        <div class="mx-toolbar">
-          <MxBadge>
-            <bdi>{getFilename(props.directory) || props.directory}</bdi>
-          </MxBadge>
-        </div>
         <Show when={state.removed}>
           {(removed) => (
             <p class="mx-note agents-removed" role="status">
@@ -251,6 +245,7 @@ export default function Agents(props: ChapterPageProps) {
             >
               <AgentsRoster
                 agents={query.data ?? []}
+                scope={getFilename(props.directory) || props.directory}
                 availability={availability}
                 onConfigure={(agent) => setState("editing", { agent })}
                 onChat={openChat}

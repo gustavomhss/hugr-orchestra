@@ -1,8 +1,8 @@
 // Copy owned by the mcp screen. Add new keys here instead of i18n/orchestra.ts so screens merge without conflicts.
 export const MCP_COPY = {
-  "orchestra.mcp.eyebrow": "{{profile}} / profile configuration",
+  "orchestra.mcp.eyebrow": "{{profile}} · Configuration",
   "orchestra.mcp.add": "Add MCP server",
-  "orchestra.mcp.searchPlaceholder": "Search mcp",
+  "orchestra.mcp.searchPlaceholder": "Search MCP",
   "orchestra.mcp.empty": "No MCP servers configured.",
   "orchestra.mcp.emptyHint": "Add a server to make its tools available to this profile.",
   "orchestra.mcp.error": "Error",

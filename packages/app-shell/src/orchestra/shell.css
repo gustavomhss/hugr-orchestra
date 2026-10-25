@@ -400,6 +400,11 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   padding-block: 4px;
   padding-inline: 8px;
 }
+/* The mark takes 38px of flow (14px margin, 24px tall); the page gives it back so every header starts at
+   the same height with or without it. */
+.orchestra-chapter:has(> .orchestra-wip-mark) .mx-page > :first-child {
+  padding-block-start: 14px;
+}
 
 .orchestra-sidebar-foot {
   display: grid;

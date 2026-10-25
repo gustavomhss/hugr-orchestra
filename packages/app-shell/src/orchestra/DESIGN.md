@@ -196,6 +196,11 @@ Measured at 1920×1200 in the dev app. Spacing values sit on a 2px grid; most ga
   mark (radius md, dot and ring) sits above a `<strong>` title (md, emphasis, 600), then the hint (sm, dim) and at
   most one `.mx-btn` 14px below. `role="alert"` tints border, fill and mark with `--mx-bad`. Never a dashed box.
   Inside a dashboard card (Home) the empty slot is `.home-first`: left-aligned title, 46ch hint, primary button.
+- **Chapter header.** Every chapter opens with `MxPage`: eyebrow `{{profile}} · Area` (always the middle dot,
+  never a slash), an h1, one short sentence and at most one primary action on the right. Search follows in
+  `.mx-toolbar` as `.mx-search` with a placeholder and the same text as `aria-label` (no visible label), the profile
+  badge beside it. On WIP chapters the seal sits above the page and the page gives back its height (top padding
+  14px), so the eyebrow lands at the same height (117px in the dev app) with or without it.
 - **Dialogs.** Float glass over the scrim, radius xl, title 2xl.
 - **Focus.** A visible ring in `--orchestra-accent` on every interactive element (`hit-areas.spec.ts` pins it).
 - **Clipping.** Anything cut off gets a fade mask, never a hard edge.

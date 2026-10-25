@@ -210,7 +210,7 @@ test("pipelines are created, validated, edited, searched, persisted per profile 
   await setup(page)
   await openChapter(page)
   await expect(page.getByRole("heading", { name: "CI/CD", level: 1 })).toBeVisible()
-  await expect(page.getByText("Server A repository / profile configuration", { exact: true })).toBeVisible()
+  await expect(page.getByText("Server A repository · Configuration", { exact: true })).toBeVisible()
   await expect(page.locator('[data-mx-page="cicd"] > .mx-inner > .mx-note')).toHaveText(
     "Run executes the commands in this repository's working tree on the server; Stop asks the server to end them. Triggers, branch checkout and deployments are not executed yet.",
   )
@@ -252,7 +252,7 @@ test("pipelines are created, validated, edited, searched, persisted per profile 
   await expect(card.locator(".mx-badge")).toHaveText(["Not run"])
 
   const search = page.getByRole("textbox", { name: "Search CI/CD" })
-  await expect(search).toHaveAttribute("placeholder", "Search ci/cd")
+  await expect(search).toHaveAttribute("placeholder", "Search CI/CD")
   await search.fill("lint")
   await expect(card).toHaveCount(1)
   await expect(workflowRows(page)).toHaveCount(0)

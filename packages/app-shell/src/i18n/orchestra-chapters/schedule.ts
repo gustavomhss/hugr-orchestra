@@ -1,6 +1,6 @@
 // Copy owned by the schedule screen. Add new keys here instead of i18n/orchestra.ts so screens merge without conflicts.
 export const SCHEDULE_COPY = {
-  "orchestra.schedule.eyebrow": "{{profile}} / profile configuration",
+  "orchestra.schedule.eyebrow": "{{profile}} · Configuration",
   "orchestra.schedule.description": "One-off work or a recurring rhythm for Maestro. Choose the task and its next run.",
   "orchestra.schedule.add": "Schedule task",
   "orchestra.schedule.search": "Search scheduled tasks",
