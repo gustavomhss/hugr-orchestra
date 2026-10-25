@@ -1,0 +1,12 @@
+id = "conflict-markers"
+severity = "gate"
+on = "added-lines"
+paths = ["**"]
+exclude = ["**/*.{png,jpg,jpeg,gif,webp,ico,icns,woff,woff2,ttf,zip,tgz,gz,lock}"]
+# Real history: a hand-merged conflict landed in a generated file, so this rule reads generated code too.
+generated = "include"
+# Seven markers then a space or end of line. The bare ======= is left out because Markdown setext headings use it.
+match = '^(<{7}|>{7})( |$)'
+message = "Merge conflict marker left in the file. Resolve the conflict."
+positive = ["<<<<<<< HEAD", ">>>>>>> 98d36706df (feat: thing)", "<<<<<<<"]
+negative = ["a << b", "=======", "<<<<<<<<< not a marker", "  <<<<<<< indented, not at line start", "const x = '>>>>>>>'"]

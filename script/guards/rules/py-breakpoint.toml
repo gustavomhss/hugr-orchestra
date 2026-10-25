@@ -1,0 +1,10 @@
+id = "py-breakpoint"
+severity = "gate"
+on = "added-lines"
+paths = ["**/*.py"]
+exclude = []
+skip_comments = ["//", "#"]
+match = '(?:\bbreakpoint\(\)|\bpdb\.set_trace\(|^\s*import i?pdb\b|\bipdb\.set_trace\()'
+message = "Debugger call left in the code. Remove it."
+positive = ['    breakpoint()', 'import pdb; pdb.set_trace()', 'import ipdb', '  ipdb.set_trace()']
+negative = ['# use breakpoint() locally only', 'def set_breakpoints():', 'import pandas']

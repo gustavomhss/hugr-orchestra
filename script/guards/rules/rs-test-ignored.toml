@@ -1,0 +1,10 @@
+id = "rs-test-ignored"
+severity = "gate"
+on = "added-lines"
+paths = ["**/*.rs"]
+exclude = []
+# Anchored to an attribute line: a doc comment that mentions #[ignore] is not one. A bare #[ignore] hides a test with no reason. #[ignore = "reason"] says why and is allowed.
+match = '^\s*#\[ignore\s*\]'
+message = "Test ignored with no reason. Fix it, delete it, or write #[ignore = \"why\"]."
+positive = ['#[ignore]', '    #[ignore ]']
+negative = ['#[ignore = "needs a display"]', '#[test]', 'let ignored = true;', '//! the helper itself is `#[ignore]`d']

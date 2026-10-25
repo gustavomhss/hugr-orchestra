@@ -1,0 +1,9 @@
+id = "build-output"
+severity = "gate"
+on = "changed-paths"
+paths = ["**/node_modules/**", "**/__pycache__/**", "**/.turbo/**", "**/.next/**", "**/target/debug/**", "**/target/release/**", "**/dist/**", "**/coverage/**"]
+exclude = []
+statuses = ["A", "R", "C"]
+message = "Build output or dependency directory added. Delete it and add the directory to .gitignore."
+positive = ["node_modules/x/index.js", "packages/core/dist/index.js", "tool/__pycache__/a.pyc", "native/omni/target/release/omni", "coverage/lcov.info"]
+negative = ["src/distance.ts", "docs/targets.md", "src/coverage-report.ts"]

@@ -398,6 +398,14 @@ jobs:
           # Build-time scanner test starts no runtime child; ordinary suites below stay default-native.
           ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "0"
 
+      # Lives beside the engine, not in a package: it imports script/guards, which module boundaries forbid across a package root.
+      - name: Test guards
+        if: matrix.part == 'packages'
+        working-directory: script/guards
+        run: bun test ./guards.test.ts
+        env:
+          ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "0"
+
       - name: Run godfile gate
         if: matrix.part == 'packages'
         run: bun run check:godfile

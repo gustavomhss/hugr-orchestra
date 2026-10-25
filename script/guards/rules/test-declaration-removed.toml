@@ -1,0 +1,10 @@
+id = "test-declaration-removed"
+severity = "warn"
+on = "line-balance"
+paths = ["$js_tests", "$py_tests", "$rs_tests"]
+exclude = []
+match = '''^\s*(it|test|describe)(\.\w+)?\(\s*["'`]|^\s*(async\s+)?def test_|^\s*#\[test\]'''
+min_net_removed = 2
+message = "This change removes test cases from a file without adding as many back. Check that the behavior they covered is really gone."
+positive = ['  it("does a thing", () => {', "test('works', async () => {", '    def test_session(self):', '#[test]', '  describe.skip("x", () => {']
+negative = ['const test = 1', '// it("old", () => {})', 'let it = 2;', 'fn helper() {}']

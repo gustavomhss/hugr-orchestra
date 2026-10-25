@@ -1,0 +1,35 @@
+# Copy to rules/<id>.toml (the file name must equal the id) and fill in every field.
+# Before adding a rule run `bun run script/guards/baseline.ts` and read what it flags in the code that exists today:
+# every hit there is either a real defect or a false positive to tighten, and each false positive becomes a negative sample.
+id = "my-rule-id"
+
+# gate fails CI, warn only reports. Use warn for anything a regex cannot decide exactly.
+severity = "gate"
+
+# added-lines: `match` runs on each line the change adds. changed-paths: the rule fires on a changed path in `paths`.
+on = "added-lines"
+
+# Globs (Bun.Glob syntax). `exclude` removes paths from `paths`.
+paths = ["**/*.ts"]
+exclude = []
+
+# Skip the shared generated-file list from config.toml. Set "include" only when the defect matters inside generated code too.
+# generated = "include"
+
+# changed-paths only: git status letters (A, M, D, R, C) the rule applies to. Empty means all.
+# statuses = ["D"]
+
+# Optional. flags = "i" for case-insensitive; skip_comments hides added lines starting with one of these prefixes.
+# flags = "i"
+# skip_comments = ["//", "#"]
+
+# JavaScript regex over one added line. Anchor it. Use a '''triple-quoted literal''' when it needs a single quote.
+match = 'FORBIDDEN'
+
+# Say what is wrong and how to fix it; this is the whole error message.
+message = "What is wrong. What to do instead."
+
+# Real lines that must fire (changed-paths: real paths) ...
+positive = ['FORBIDDEN']
+# ... and real lines that look similar but are legitimate. Harvest these from the repo, not from imagination.
+negative = ['fine']

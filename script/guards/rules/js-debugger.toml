@@ -1,0 +1,9 @@
+id = "js-debugger"
+severity = "gate"
+on = "added-lines"
+paths = ["**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}"]
+exclude = []
+match = '^\s*debugger\s*;?\s*$'
+message = "debugger statement left in the code. Remove it."
+positive = ['  debugger', 'debugger;', '    debugger ;']
+negative = ['// debugger is not allowed', 'const debuggerAttached = true', 'node --inspect']

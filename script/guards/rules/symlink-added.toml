@@ -1,0 +1,9 @@
+id = "symlink-added"
+severity = "warn"
+on = "changed-paths"
+paths = ["**"]
+exclude = ["node_modules/**", "**/node_modules/**"]
+modes = ["120000"]
+message = "Symbolic link added or changed. Links break on Windows checkouts; copy the file or resolve the path in code."
+positive = ["docs/current", "src/link.ts"]
+negative = ["node_modules/pkg/link"]
