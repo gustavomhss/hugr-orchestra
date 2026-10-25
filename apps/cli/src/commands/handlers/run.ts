@@ -145,9 +145,8 @@ export function miniArgs(input: {
 /** Runs one prompt (or slash command) to completion and prints the turn. Resolves false when the run reported a failure. */
 export async function execute(client: Client, options: Options) {
   const location = options.directory ? { directory: options.directory } : undefined
-  const session = await resolveSession(client, options, location)
-  if (typeof session === "string") return fail(options, session)
-  const sessionID = session
+  const sessionID = await resolveSession(client, options, location)
+  if (!sessionID) return fail(options, "Session not found")
 
   const agent = await pickAgent(client, options.agent, location)
   const model = parseModel(options.model, options.variant)
@@ -245,7 +244,8 @@ async function resolveSession(client: Client, options: Options, location: { dire
     : options.continue
       ? (await client.sessions.list({ limit: 25, order: "desc", directory: location?.directory })).data.find((item) => !item.parentID)
       : undefined
-  if (options.session && !found) return "Session not found"
+  // An unknown --session resolves to undefined; every other path resolves to the session ID the run prompts.
+  if (options.session && !found) return undefined
   if (found && options.fork) return (await client.sessions.fork({ sessionID: found.id })).id
   if (found) return found.id
   const created = await client.sessions.create({ location })

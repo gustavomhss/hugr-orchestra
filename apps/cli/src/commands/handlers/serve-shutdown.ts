@@ -24,15 +24,18 @@ export function exitCode(signal: NodeJS.Signals) {
 /** Completes on the first shutdown signal after calling onSignal, and removes every listener when it ends. */
 export function untilSignal(emitter: Emitter, platform: NodeJS.Platform, onSignal: (signal: NodeJS.Signals) => void) {
   return Effect.callback<void>((resume) => {
+    // The returned finalizer runs only on interruption, so a delivered signal removes the other listeners itself.
+    const remove = () => listeners.forEach((item) => emitter.off(item.signal, item.listener))
     const listeners = signals(platform).map((signal) => {
       const listener = () => {
+        remove()
         onSignal(signal)
         resume(Effect.void)
       }
       emitter.once(signal, listener)
       return { signal, listener }
     })
-    return Effect.sync(() => listeners.forEach((item) => emitter.off(item.signal, item.listener)))
+    return Effect.sync(remove)
   })
 }
 
