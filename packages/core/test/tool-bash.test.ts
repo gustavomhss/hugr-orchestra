@@ -6,6 +6,7 @@ import { Effect, Layer } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Config } from "@orchestra/core/config"
+import { EventV2 } from "@orchestra/core/event"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Location } from "@orchestra/core/location"
@@ -115,7 +116,7 @@ const withTool = <A, E, R>(
   }).pipe(
     Effect.provide(
       AppNodeBuilder.build(
-        LayerNode.group([ToolRegistry.node, ToolRegistry.toolsNode, LocationMutation.node, BashTool.node]),
+        LayerNode.group([ToolRegistry.node, ToolRegistry.toolsNode, LocationMutation.node, BashTool.node, EventV2.node]),
         [
           [Location.node, activeLocation],
           [PermissionV2.node, permission],
