@@ -11,6 +11,7 @@ import { Location } from "./location"
 import { OmniAdoption } from "./omni-adoption"
 import { OmniBackground } from "./omni-background"
 import { PtyProtocol } from "./pty/protocol"
+import { ShellIntegration } from "./pty/shell-integration"
 import { clampSize } from "./pty/pty"
 import type { OmniProc } from "./pty/omni"
 import { PtyID } from "./pty/schema"
@@ -43,6 +44,8 @@ type Active = {
   buffer: string
   bufferCursor: number
   cursor: number
+  // Set when the shell was started with integration; the nonce its marks carry.
+  shellNonce?: string
   // The size the backend last got, so a repaint nudge can restore it.
   size: { cols: number; rows: number }
   subscribers: Map<object, Subscriber>
@@ -67,6 +70,11 @@ export type UpdateInput = Types.DeepMutable<typeof UpdateInput.Type>
 
 export const Event = Pty.Event
 
+export type CreateOptions = {
+  // Starts zsh or bash with marks the caller can trust (ShellMarks). Off unless asked; other shells ignore it.
+  readonly shellIntegration?: boolean
+}
+
 export type AttachInput = {
   // Absolute output cursor to replay from. -1 tails from the current end; omitted replays the full retained buffer.
   readonly cursor?: number
@@ -81,6 +89,8 @@ export type Attachment = {
   readonly replay: string
   // Absolute output cursor after replay.
   readonly cursor: number
+  // The nonce this session's shell marks carry, when it was created with shellIntegration.
+  readonly shellNonce?: string
   readonly write: (data: string) => void
   // Starts live delivery after the caller has applied replay and cursor metadata.
   readonly activate: () => void
@@ -98,7 +108,7 @@ export class ExitedError extends Schema.TaggedErrorClass<ExitedError>()("Pty.Exi
 export interface Interface {
   readonly list: () => Effect.Effect<Info[]>
   readonly get: (id: PtyID) => Effect.Effect<Info, NotFoundError>
-  readonly create: (input: CreateInput) => Effect.Effect<Info>
+  readonly create: (input: CreateInput, options?: CreateOptions) => Effect.Effect<Info>
   readonly update: (id: PtyID, input: UpdateInput) => Effect.Effect<Info, NotFoundError>
   readonly remove: (id: PtyID) => Effect.Effect<void, NotFoundError>
   readonly write: (id: PtyID, data: string) => Effect.Effect<void, NotFoundError>
@@ -209,17 +219,22 @@ const layer = Layer.effect(
       return (yield* requireSession(id)).info
     })
 
-    const create = Effect.fn("Pty.create")(function* (input: CreateInput) {
+    const create = Effect.fn("Pty.create")(function* (input: CreateInput, options?: CreateOptions) {
       const id = PtyID.ascending()
       const command = input.command || Shell.preferred(Config.latest(yield* config.entries(), "shell"))
-      const args = Shell.login(command) ? [...(input.args ?? []), "-l"] : [...(input.args ?? [])]
+      const given = Shell.login(command) ? [...(input.args ?? []), "-l"] : [...(input.args ?? [])]
       const cwd = input.cwd || location.directory
-      const env = {
+      const base = {
         ...process.env,
         ...input.env,
         TERM: "xterm-256color",
         ORCHESTRA_TERMINAL: "1",
       } as Record<string, string>
+      const integration = options?.shellIntegration
+        ? yield* Effect.promise(() => ShellIntegration.prepare({ command, args: given, env: base }))
+        : undefined
+      const args = integration?.args ?? given
+      const env = integration ? { ...base, ...integration.env } : base
       if (process.platform === "win32") {
         env.LC_ALL = "C.UTF-8"
         env.LC_CTYPE = "C.UTF-8"
@@ -267,6 +282,7 @@ const layer = Layer.effect(
         bufferCursor: 0,
         cursor: 0,
         size: { cols: size.cols ?? 80, rows: size.rows ?? 24 },
+        ...(integration ? { shellNonce: integration.nonce } : {}),
         subscribers: new Map(),
         listeners: [],
         ...(omni ? { omni } : {}),
@@ -366,6 +382,7 @@ const layer = Layer.effect(
       return {
         replay,
         cursor: end,
+        ...(session.shellNonce ? { shellNonce: session.shellNonce } : {}),
         write: (data: string) => {
           if (session.info.status === "running") session.process.write(data)
         },

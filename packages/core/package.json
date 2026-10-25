@@ -202,6 +202,8 @@
     "./pty": "./src/pty.ts",
     "./pty/omni": "./src/pty/omni.ts",
     "./pty/protocol": "./src/pty/protocol.ts",
+    "./pty/shell-integration": "./src/pty/shell-integration.ts",
+    "./pty/shell-marks": "./src/pty/shell-marks.ts",
     "./pty/schema": "./src/pty/schema.ts",
     "./pty/ticket": "./src/pty/ticket.ts",
     "./pull-request": "./src/pull-request.ts",
