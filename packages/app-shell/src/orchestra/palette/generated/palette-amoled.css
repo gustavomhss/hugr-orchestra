@@ -1235,7 +1235,7 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-mx-kit] {
   --mx-soft: rgba(208, 208, 208, 0.055);
   --mx-raised: rgba(21, 21, 21, 0.55);
   --mx-modal: #121212;
-  --mx-dim: #cecece;
+  --mx-dim: #d7d7d7;
   --mx-strong: #f6f6f6;
   --mx-blue: #80b2fb;
   --mx-good: #00ff7e;
