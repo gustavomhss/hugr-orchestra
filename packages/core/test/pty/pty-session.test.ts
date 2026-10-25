@@ -281,6 +281,30 @@ const configuredIt = testEffect(
 )
 const configuredTest = process.platform === "win32" ? configuredIt.live.skip : configuredIt.live
 
+describe("pty attach after the ring overflowed", () => {
+  ptyTest(
+    "resets a client that missed output and leaves a caught-up client alone",
+    () =>
+      Effect.gen(function* () {
+        // More than the ring keeps (2M characters), then stay alive so the session is still attachable.
+        const info = yield* createPty("/usr/bin/env", [
+          "sh",
+          "-c",
+          "head -c 2400000 /dev/zero | tr '\\0' 'x' | fold -w 80; echo RING_DONE; sleep 30",
+        ])
+        const tail = yield* attachCollecting(info.id, -1)
+        yield* waitForOutput(tail.output, "RING_DONE")
+
+        const fresh = yield* attachCollecting(info.id)
+        expect(fresh.attachment.replay.startsWith("\x1bc")).toBe(true)
+
+        const caughtUp = yield* attachCollecting(info.id, fresh.attachment.cursor)
+        expect(caughtUp.attachment.replay).toBe("")
+      }),
+    30000,
+  )
+})
+
 describe("pty create defaults", () => {
   configuredTest("defaults command, login args, and cwd from config and location", () =>
     Effect.gen(function* () {

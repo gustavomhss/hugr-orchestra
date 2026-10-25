@@ -43,6 +43,8 @@ type Active = {
   buffer: string
   bufferCursor: number
   cursor: number
+  // The size the backend last got, so a repaint nudge can restore it.
+  size: { cols: number; rows: number }
   subscribers: Map<object, Subscriber>
   listeners: Disp[]
   // Set when omni runs this session: its tree, and the adoption services the creating caller had (R2-3).
@@ -264,6 +266,7 @@ const layer = Layer.effect(
         buffer: "",
         bufferCursor: 0,
         cursor: 0,
+        size: { cols: size.cols ?? 80, rows: size.rows ?? 24 },
         subscribers: new Map(),
         listeners: [],
         ...(omni ? { omni } : {}),
@@ -316,8 +319,10 @@ const layer = Layer.effect(
     const update = Effect.fn("Pty.update")(function* (id: PtyID, input: UpdateInput) {
       const session = yield* requireSession(id)
       if (input.title) session.info.title = input.title
-      if (input.size && session.info.status === "running")
-        session.process.resize(clampSize(input.size.cols), clampSize(input.size.rows))
+      if (input.size && session.info.status === "running") {
+        session.size = { cols: clampSize(input.size.cols), rows: clampSize(input.size.rows) }
+        session.process.resize(session.size.cols, session.size.rows)
+      }
       yield* events.publish(Event.Updated, { info: session.info })
       return session.info
     })
@@ -348,8 +353,12 @@ const layer = Layer.effect(
           : typeof input.cursor === "number" && Number.isSafeInteger(input.cursor)
             ? Math.max(0, input.cursor)
             : 0
+      // The ring dropped output this client never saw, so the replay starts mid-stream: reset the terminal rather than
+      // paint garbage over its old screen, and nudge the program to redraw once the replay is queued.
+      const gap = from < start
       const replay = (() => {
         if (!session.buffer || from >= end) return ""
+        if (gap) return GAP_RESET + PtyProtocol.afterFirstLine(session.buffer)
         const offset = Math.max(0, from - start)
         if (offset >= session.buffer.length) return ""
         return session.buffer.slice(offset)
@@ -363,6 +372,7 @@ const layer = Layer.effect(
         activate: () => {
           if (subscriber.active || subscriber.detached) return
           subscriber.active = true
+          if (gap && session.info.status === "running") repaint(session)
           try {
             for (const chunk of subscriber.pending) subscriber.onData(chunk)
             subscriber.pending.length = 0
@@ -383,6 +393,17 @@ const layer = Layer.effect(
     return Service.of({ list, get, create, update, remove, write, attach })
   }),
 )
+
+// RIS: a full terminal reset, sent ahead of a replay that does not continue what the client already has.
+const GAP_RESET = "\x1bc"
+
+// A resize signals the program in the foreground, and full-screen programs redraw on it. The size changes and changes
+// back, since the kernel only signals when it differs.
+function repaint(session: Active) {
+  const { cols, rows } = session.size
+  session.process.resize(cols > 1 ? cols - 1 : cols + 1, rows)
+  session.process.resize(cols, rows)
+}
 
 // Whether anything besides the root is alive in the tree, such as a background job the shell left behind.
 async function descendants(proc: OmniProc) {
