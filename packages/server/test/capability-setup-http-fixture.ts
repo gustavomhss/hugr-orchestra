@@ -22,8 +22,9 @@ export async function isolated(file: string, markers: readonly string[]) {
   const config = join(directory, "bunfig.toml")
   await Bun.write(config, `[test]\nroot = ${JSON.stringify(resolve(file, ".."))}\npreload = [${JSON.stringify(resolve(import.meta.dir, "../../../script/test-guard.ts"))}]\n`)
   const child = Bun.spawn([process.execPath, "test", "--config", config, file, "--timeout", "30000"], {
-    // Host worker stays in a package directory without Orchestra's legacy env-mutating preload.
-    cwd: file.includes("/test/server/") ? resolve(import.meta.dir, "..") : resolve(file, "../.."),
+    // A package cwd's bunfig.toml still preloads Core's env-mutating preload (ORCHESTRA_DB=":memory:")
+    // despite --config; the bootstrap directory's only bunfig.toml is the guard-only one above.
+    cwd: directory,
     env: { ...process.env, ORCHESTRA_SETUP_PROOF_WORKER: "1", ORCHESTRA_DB: join(directory, "proof.db"),
       ORCHESTRA_DISABLE_MODELS_FETCH: "1", ORCHESTRA_INHERIT_CREDENTIALS: "0",
       ORCHESTRA_TEST_HOME: join(directory, "home"), ORCHESTRA_TEST_MANAGED_CONFIG_DIR: join(directory, "managed"),

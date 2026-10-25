@@ -15,6 +15,7 @@ import { locationServices } from "@orchestra/core/location-services"
 import { ProjectTable } from "@orchestra/core/project/sql"
 import { SessionTable } from "@orchestra/core/session/sql"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
+import { TaskTool } from "@orchestra/core/tool/task"
 import { makeCapabilityConnectionsGroup } from "@orchestra/protocol/groups/capability-connections"
 import { Capability } from "@orchestra/schema/capability"
 import { Credential } from "@orchestra/schema/credential"
@@ -56,7 +57,8 @@ export function make(options: { password?: string } = {}) {
     const map = Layer.effect(LocationServiceMap.Service, LayerMap.make((ref: Location.Ref) => {
       const nodes = LayerNode.hoist(locationServices, Node.tags.values.global, [
         [ToolRegistry.node, ToolRegistry.nativeNode], [ToolRegistry.toolsNode, ToolRegistry.nativeToolsNode],
-        [Location.node, Location.boundNode(ref)],
+        // Task captures process-global Session services this focused host does not export.
+        [TaskTool.node, Layer.empty], [Location.node, Location.boundNode(ref)],
       ])
       return LayerNode.compile(nodes.node).pipe(Layer.fresh,
         Layer.provide(LayerNode.compile(nodes.hoisted, [[Database.node, databaseNode]])))
