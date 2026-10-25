@@ -9,7 +9,7 @@ export async function fixtures() {
   const lspNonce = `desktop-lsp-${trees.main.nonce.slice(10)}`
   const mcpNonce = `desktop-mcp-${trees.main.nonce.slice(10)}`
   const llm = await fakeLLM([
-    { name: "write", args: { filePath: "b.ts", content: "export const b = 2\n" } },
+    { name: "write", args: { path: "b.ts", content: "export const b = 2\n" } },
     { name: "bash", args: { command: win ? `& ${trees.shell.line}` : trees.shell.line, timeout: 600_000, description: "Hold actual desktop proof tree" } },
   ])
   const config = { plugin: [], formatter: false, share: "disabled", shell: win ? "powershell.exe" : "/bin/bash", model: "test/test-model",
