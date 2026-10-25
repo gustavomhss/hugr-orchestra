@@ -1,4 +1,5 @@
 import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
+import type { Capability } from "@orchestra/schema/capability"
 import type { ScheduledTask } from "@orchestra/schema/scheduled-task"
 import { absoluteColumn } from "../database/path"
 import { Timestamps } from "../database/schema.sql"
@@ -12,13 +13,26 @@ export const ScheduledTaskTable = sqliteTable(
     directory: absoluteColumn().notNull(),
     name: text().notNull(),
     prompt: text().notNull(),
-    cadence: text().$type<ScheduledTask.Cadence>().notNull(),
+    // Capability rows add interval and cron. Weekly capability rows encode `day * 1440 + minute of day` in `minute`.
+    cadence: text().$type<ScheduledTask.Cadence | "interval" | "cron">().notNull(),
     timezone: text().notNull(),
     minute: integer().notNull(),
     next: integer().notNull(),
     enabled: integer({ mode: "boolean" }).notNull(),
     runs: integer().notNull(),
     missed: integer(),
+    // Capability schedules (schedule_manage) carry an owner and a revision; legacy-browser tasks keep the
+    // imported device semantics and stay invisible to the capability leaf.
+    policy: text().$type<"legacy-browser" | "capability">().notNull().default("legacy-browser"),
+    revision: integer().notNull().default(0),
+    owner: text({ mode: "json" }).$type<Capability.Owner>(),
+    interval_minutes: integer(),
+    cron: text(),
+    catch_up: text().$type<"latest" | "skip">(),
+    repeat_limit: integer(),
+    // Slots never run because a later slot overtook them or the catch-up policy skipped them.
+    skipped: integer().notNull().default(0),
+    disabled_reason: text().$type<"exhausted" | "owner-missing">(),
     ...Timestamps,
   },
   (table) => [
@@ -38,7 +52,11 @@ export const ScheduledTaskRunTable = sqliteTable(
       .notNull()
       .references(() => ScheduledTaskTable.id, { onDelete: "cascade" }),
     slot: integer(),
-    state: text().$type<"running" | "started" | "failed">().notNull(),
+    // Slot runs are unique per task, revision and slot; an edit starts a new revision.
+    revision: integer().notNull().default(0),
+    // Manual runs of capability schedules dedupe on the caller's key; they never consume a slot.
+    manual_key: text(),
+    state: text().$type<"running" | "started" | "failed" | "revoked">().notNull(),
     session_id: text().$type<SessionSchema.ID>().notNull(),
     // What a running claim dispatches, so a claim taken over after a crash retries the exact prompt.
     // Runs imported from device storage do not know them.
@@ -51,7 +69,8 @@ export const ScheduledTaskRunTable = sqliteTable(
     time_settled: integer(),
   },
   (table) => [
-    uniqueIndex("scheduled_task_run_slot_idx").on(table.task_id, table.slot),
+    uniqueIndex("scheduled_task_run_slot_idx").on(table.task_id, table.revision, table.slot),
+    uniqueIndex("scheduled_task_run_manual_idx").on(table.task_id, table.manual_key),
     index("scheduled_task_run_state_idx").on(table.state, table.time_claimed),
   ],
 )

@@ -73,6 +73,21 @@ function frozen(value: Schema.Json) {
 }
 
 describe("capability descriptor metadata", () => {
+  test("batch admission is atomic against actual shared capacity and exact-ref removal frees only its record", () => {
+    const f = fixture(2)
+    const live = Effect.runSync(f.store.issue(f.input))
+    denied(f.store.issueBatch([f.input, f.input]), "quota_exceeded")
+    expect(Effect.runSync(f.store.read(live.ref, f.scope))).toBe(live)
+    const admitted = Effect.runSync(f.store.issueBatch([f.input]))
+    expect(admitted).toHaveLength(1)
+    Effect.runSync(f.store.remove({ ...live.ref, schemaHash: "b".repeat(64) }))
+    expect(Effect.runSync(f.store.read(live.ref, f.scope))).toBe(live)
+    Effect.runSync(f.store.remove(live.ref))
+    denied(f.store.read(live.ref, f.scope), "stale_descriptor")
+    expect(Effect.runSync(f.store.read(admitted[0].ref, f.scope))).toBe(admitted[0])
+    expect(Effect.runSync(f.store.issueBatch([f.input]))).toHaveLength(1)
+  })
+
   test("accepts decoded host Owners after importing the strict schema root", async () => {
     const { Capability } = await import("@orchestra/schema")
     const f = fixture()

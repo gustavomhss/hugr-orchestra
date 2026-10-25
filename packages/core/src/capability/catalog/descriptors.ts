@@ -27,6 +27,8 @@ export type ReadScope = Pick<
   Pick<Capability.DescriptorRef, "catalogGeneration" | "schemaHash">
 export type Store = {
   issue: (input: IssueInput) => Effect.Effect<DescriptorRecord, Capability.Failure>
+  issueBatch: (inputs: readonly IssueInput[]) => Effect.Effect<readonly DescriptorRecord[], Capability.Failure>
+  remove: (ref: Capability.DescriptorRef) => Effect.Effect<void>
   read: (ref: Capability.DescriptorRef, scope: ReadScope) => Effect.Effect<DescriptorRecord, Capability.Failure>
   reissue: (
     ref: Capability.DescriptorRef,
@@ -77,14 +79,14 @@ export function make(options: { maxEntries: number; ttlMillis: number; now: () =
       return record
     }
     // Synchronous state transition: no Effect may separate validation from insertion.
-    const create = (input: IssueInput): DescriptorRecord | Capability.Failure => {
+    const create = (input: IssueInput, storage = records): DescriptorRecord | Capability.Failure => {
       const issuedAt = now()
       const expiresAt = issuedAt + ttlMillis
       if (!Number.isFinite(issuedAt) || !Number.isFinite(expiresAt)) return failure("stale_descriptor")
-      Array.from(records.entries()).forEach(([id, record]) => {
-        if (record.expiresAt <= issuedAt) records.delete(id)
+      Array.from(storage.entries()).forEach(([id, record]) => {
+        if (record.expiresAt <= issuedAt) storage.delete(id)
       })
-      if (records.size >= maxEntries) return failure("quota_exceeded")
+      if (storage.size >= maxEntries) return failure("quota_exceeded")
       const ref = Schema.decodeUnknownOption(Capability.DescriptorRef)({
         id: Capability.DescriptorID.create(),
         schemaHash: input.schemaHash,
@@ -125,10 +127,28 @@ export function make(options: { maxEntries: number; ttlMillis: number; now: () =
       }
       Object.defineProperty(record, "canonicalIdentity", { enumerable: false })
       Object.freeze(record)
-      records.set(record.ref.id, record)
+      storage.set(record.ref.id, record)
       return record
     }
     return {
+      issueBatch: (inputs) => Effect.suspend(() => {
+        if (inputs.length > maxEntries) return Effect.fail(failure("quota_exceeded"))
+        const staged = new Map(records)
+        const issued = inputs.map((input) => create(input, staged))
+        const failed = issued.find((record) => record instanceof Capability.Failure)
+        if (failed instanceof Capability.Failure) {
+          return Effect.fail(failed)
+        }
+        records.clear()
+        staged.forEach((record, id) => records.set(id, record))
+        return Effect.succeed(issued.filter((record): record is DescriptorRecord => !(record instanceof Capability.Failure)))
+      }),
+      remove: (ref) => Effect.sync(() => {
+        const record = records.get(ref.id)
+        if (record && ref.connectionID === record.ref.connectionID && ref.targetID === record.ref.targetID &&
+          ref.catalogGeneration === record.ref.catalogGeneration && ref.schemaHash === record.ref.schemaHash)
+          records.delete(ref.id)
+      }),
       issue: (input) =>
         Effect.suspend(() => {
           const record = create(input)
