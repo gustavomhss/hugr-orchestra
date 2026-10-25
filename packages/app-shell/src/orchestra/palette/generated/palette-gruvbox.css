@@ -40,7 +40,7 @@ html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-new-layout] 
     0 10px 30px rgba(0, 0, 0, 0.24);
   --orchestra-float-background: linear-gradient(180deg, rgba(68, 65, 60, 0.72), rgba(54, 53, 50, 0.8));
   --orchestra-scrim: rgba(37, 37, 37, 0.42);
-  --orchestra-sidebar-text: #e6d9b7;
+  --orchestra-sidebar-text: #e7d9b6;
   --orchestra-sidebar-hover-background: rgba(255, 255, 255, 0.045);
   --orchestra-sidebar-hover-text: #ebdbb2;
   --orchestra-sidebar-active-background: linear-gradient(90deg, rgba(52, 78, 70, 0.58), rgba(82, 79, 70, 0.48));

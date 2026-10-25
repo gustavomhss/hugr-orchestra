@@ -98,7 +98,7 @@ html[data-color-scheme] body[data-new-layout] {
   --orchestra-scrim: rgba(5, 9, 14, 0.42);
   --orchestra-scrim-filter: blur(6px) saturate(1.1);
 
-  --orchestra-sidebar-text: #b4c0cf;
+  --orchestra-sidebar-text: #bcc8d6;
   --orchestra-sidebar-hover-background: rgba(255, 255, 255, 0.045);
   --orchestra-sidebar-hover-text: #edf2f7;
   --orchestra-sidebar-active-background: linear-gradient(90deg, rgba(55, 80, 108, 0.58), rgba(41, 57, 75, 0.48));

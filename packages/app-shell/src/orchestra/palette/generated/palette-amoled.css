@@ -39,7 +39,7 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] {
     0 10px 30px rgba(0, 0, 0, 0.24);
   --orchestra-float-background: linear-gradient(180deg, rgba(34, 34, 34, 0.72), rgba(18, 18, 18, 0.8));
   --orchestra-scrim: rgba(0, 0, 0, 0.42);
-  --orchestra-sidebar-text: #cecece;
+  --orchestra-sidebar-text: #d6d6d6;
   --orchestra-sidebar-hover-background: rgba(255, 255, 255, 0.045);
   --orchestra-sidebar-hover-text: #ffffff;
   --orchestra-sidebar-active-background: linear-gradient(90deg, rgba(9, 40, 91, 0.58), rgba(53, 53, 53, 0.48));
