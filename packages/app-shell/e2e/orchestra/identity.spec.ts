@@ -261,7 +261,9 @@ test("graphite: a palette recolors the glass and keeps the frozen geometry, radi
   expectPixels((await readBox(toolbar)).height, 45, "toolbar height")
   for (const value of [await readPlatedGlass(sidebar), await readPlatedGlass(tabs), await readGlass(active)]) {
     expect(value.backdropFilter, "palette keeps the glass blur").toBe(glass.dark.backdropFilter)
-    expect(value.backgroundImage, "palette tints the glass").toMatch(/^linear-gradient\(/)
+    // The palette keeps the material layers (grain, sheen) and tints the base gradient beneath them.
+    expect(value.backgroundImage.startsWith(`${grain}, radial-gradient(`), "palette keeps the glass grain and sheen").toBe(true)
+    expect(value.backgroundImage, "palette tints the glass").toMatch(/\), linear-gradient\(.+\)$/)
     expect(value.backgroundImage, "palette tints the glass").not.toBe(glass.dark.backgroundImage)
     expect(value.borderTopColor, "palette tints the glass border").not.toBe(glass.dark.borderTopColor)
   }
