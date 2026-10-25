@@ -71,7 +71,8 @@ it.live("a global that depends on the Location map is bound inside a Location's 
     )
     const locations = Context.get(context, LocationServiceMap.Service)
     const ref = Location.Ref.make({ directory: AbsolutePath.make(tmp.path) })
-    const seen = yield* Probe.pipe(Effect.provide(locations.get(ref)))
+    // LocationServices does not name contributed nodes, so the Probe is read from the built Location context.
+    const seen = Context.getUnsafe(yield* Layer.build(locations.get(ref)), Probe)
     expect(typeof seen.observer.locations.get).toBe("function")
   }),
   30_000,

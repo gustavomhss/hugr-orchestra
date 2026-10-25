@@ -210,7 +210,7 @@ describe("SessionRunner execution host ports", () => {
               { question: "Which db?", header: "DB", options: [{ label: "pg", description: "Postgres" }] },
               { question: "Which tags?", header: "Tags", options: [], multiple: true },
             ],
-          })
+          }).pipe(Effect.orDie)
           return answer()
         })
       yield* send(sessions, "go")
@@ -262,7 +262,9 @@ describe("SessionRunner execution host ports", () => {
           turns.push(turn.history.flatMap((message) => (message.type === "user" ? [message.text] : [])))
           if (turns.length === 1) {
             const received = yield* turn.steers.pipe(Stream.take(1), Stream.runCollect, Effect.forkChild)
-            yield* sessions.prompt({ sessionID, prompt: Prompt.make({ text: "also this" }), delivery: "steer", resume: false })
+            yield* sessions
+              .prompt({ sessionID, prompt: Prompt.make({ text: "also this" }), delivery: "steer", resume: false })
+              .pipe(Effect.orDie)
             const steer = Array.from(yield* Fiber.join(received))[0]
             expect(steer?.text).toBe("also this")
             if (takeIt && steer) yield* turn.consumed(steer.id)
