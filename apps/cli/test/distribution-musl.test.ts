@@ -4,7 +4,7 @@ import { chmod, copyFile, cp, lstat, mkdir, mkdtemp, readFile, readdir, realpath
 import { machine } from "node:os"
 import { join, resolve } from "node:path"
 import { Schema } from "effect"
-import { expectSpawn } from "../../../packages/core/test/fixture/omni-expect"
+import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { cli, command, nativeLibc, sandbox, sha256, successful, versions } from "./fixture/distribution-native"
 import { removeOwnedMuslContainers } from "./fixture/distribution-musl/cleanup"
 import type { MuslContainerLease } from "./fixture/distribution-musl/cleanup"

@@ -9,7 +9,7 @@ export * as DesktopOmni from "./omni-process"
 import { EventEmitter, once } from "node:events"
 import { constants } from "node:os"
 import { PassThrough, type Readable, Writable } from "node:stream"
-import { omniSpawner } from "../../../../packages/core/src/flag/flag"
+import { omniSpawner } from "@orchestra/core/flag/flag"
 import { Omni } from "@orchestra/core/omni"
 
 // The binding's pipe child, through core's loader (no import of hugr-omni here, D-L2).

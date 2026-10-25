@@ -8,9 +8,9 @@ import type { Built } from "./fixture/distribution-native"
 import { npmChannel } from "./fixture/distribution-native-npm"
 import { emergencyStop, stopServices } from "./fixture/distribution-native-proof"
 import { assertWindowsPE, nativeNodeCPU, windowsIdentity, windowsPEIO, windowsPEField, windowsFileSHA256 } from "./fixture/distribution-windows-process"
-import { expectSpawn } from "../../../packages/core/test/fixture/omni-expect"
+import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { namedTargets } from "../script/targets"
-import { WindowsProcessQuery } from "../../../packages/core/test/fixture/windows-process-query"
+import { WindowsProcessQuery } from "@orchestra/core/test/fixture/windows-process-query"
 import { Schema } from "effect"
 
 // Native hosted Windows x64-baseline and ARM64, matching their builder rows.

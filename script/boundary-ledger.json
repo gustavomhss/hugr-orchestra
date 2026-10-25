@@ -140,68 +140,8 @@
     },
     {
       "rule": "R5",
-      "file": "apps/cli/test/distribution-musl.test.ts",
-      "specifier": "../../../packages/core/test/fixture/omni-expect",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/test/distribution-native.test.ts",
-      "specifier": "../../../packages/core/test/fixture/omni-expect",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/test/distribution-process.test.ts",
-      "specifier": "../../../packages/core/test/fixture/omni-expect",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/test/distribution-process.test.ts",
-      "specifier": "../../../packages/core/test/lib/effect",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/test/distribution-provider.test.ts",
-      "specifier": "../../../packages/core/test/fixture/omni-expect",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/test/distribution-windows.test.ts",
-      "specifier": "../../../packages/core/test/fixture/omni-expect",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/test/distribution-windows.test.ts",
-      "specifier": "../../../packages/core/test/fixture/windows-process-query",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
       "file": "apps/cli/test/export-artifacts.test.ts",
       "specifier": "../../desktop/src/main/cli-artifacts",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/test/fixture/artifact-native-windows-controls.ts",
-      "specifier": "../../../../packages/core/test/fixture/omni-expect",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/test/fixture/distribution-musl-guest.test.ts",
-      "specifier": "../../../../packages/core/test/fixture/omni-expect",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/test/fixture/distribution-native-process.ts",
-      "specifier": "../../../../packages/core/test/fixture/windows-process-query",
       "reason": "D8: relative import across a package root; retargets are deferred"
     },
     {
@@ -284,62 +224,8 @@
     },
     {
       "rule": "R5",
-      "file": "apps/cli/test/fixture/distribution-windows-process.ts",
-      "specifier": "../../../../packages/core/test/fixture/windows-process-query",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
       "file": "apps/desktop/electron.vite.config.ts",
       "specifier": "../../packages/script/src/workspace-paths.ts",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/desktop/src/main/apps.test.ts",
-      "specifier": "../../../../packages/core/test/fixture/omni-expect",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/desktop/src/main/omni-process.test.ts",
-      "specifier": "../../../../packages/core/test/fixture/omni-expect",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/desktop/src/main/omni-process.test.ts",
-      "specifier": "../../../../packages/core/test/fixture/process-tree",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/desktop/src/main/omni-process.ts",
-      "specifier": "../../../../packages/core/src/flag/flag",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/desktop/src/main/response-download.native.test.ts",
-      "specifier": "../../../../packages/core/src/effect/layer-node",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/desktop/src/main/response-download.native.test.ts",
-      "specifier": "../../../../packages/core/src/process",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/desktop/src/main/response-download.native.test.ts",
-      "specifier": "../../../../packages/core/test/fixture/omni-expect",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/desktop/src/main/response-download.native.test.ts",
-      "specifier": "../../../../packages/core/test/lib/effect",
       "reason": "D8: relative import across a package root; retargets are deferred"
     },
     {
@@ -464,48 +350,6 @@
     },
     {
       "rule": "R5",
-      "file": "packages/app-shell/test-browser/lean-chapter-route.test.ts",
-      "specifier": "../../core/src/effect/layer-node",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "packages/app-shell/test-browser/lean-chapter-route.test.ts",
-      "specifier": "../../core/src/process",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "packages/app-shell/test-browser/lean-chapter-route.test.ts",
-      "specifier": "../../core/src/omni",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "packages/app-shell/test-browser/lean-chapter-route.test.ts",
-      "specifier": "../../core/test/fixture/omni-expect",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "packages/app-shell/test-browser/lean-native-product.test.ts",
-      "specifier": "../../core/src/effect/layer-node",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "packages/app-shell/test-browser/lean-native-product.test.ts",
-      "specifier": "../../core/src/process",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "packages/app-shell/test-browser/lean-native-product.test.ts",
-      "specifier": "../../core/test/fixture/omni-expect",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
       "file": "packages/app-shell/test-browser/lean-tool-preservation.test.ts",
       "specifier": "../../session-ui/src/components/message-part",
       "reason": "D8: relative import across a package root; retargets are deferred"
@@ -526,30 +370,6 @@
       "rule": "R5",
       "file": "packages/app-shell/test-browser/prompt-attachments.test.ts",
       "specifier": "../../session-ui/src/v2/components/prompt-input/types",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "packages/app-shell/test-browser/session-regressions.test.ts",
-      "specifier": "../../core/src/effect/layer-node",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "packages/app-shell/test-browser/session-regressions.test.ts",
-      "specifier": "../../core/src/process",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "packages/app-shell/test-browser/session-regressions.test.ts",
-      "specifier": "../../core/src/omni",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "packages/app-shell/test-browser/session-regressions.test.ts",
-      "specifier": "../../core/test/fixture/omni-expect",
       "reason": "D8: relative import across a package root; retargets are deferred"
     },
     {
@@ -664,18 +484,6 @@
       "rule": "R5",
       "file": "packages/core/test/omni-expect-guard.test.ts",
       "specifier": "../../../script/test-ci-request",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/test/debug-omni.test.ts",
-      "specifier": "../../../packages/core/test/fixture/omni-expect",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/test/debug-omni.test.ts",
-      "specifier": "../../../packages/core/test/lib/effect",
       "reason": "D8: relative import across a package root; retargets are deferred"
     },
     {
@@ -992,12 +800,6 @@
     },
     {
       "rule": "R5",
-      "file": "packages/server/test/actions-http.test.ts",
-      "specifier": "../../core/test/fixture/omni-expect",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
       "file": "packages/server/test/actions-resource-query.test.ts",
       "specifier": "../../../script/test-guard",
       "reason": "D8: relative import across a package root; retargets are deferred"
@@ -1006,12 +808,6 @@
       "rule": "R5",
       "file": "packages/server/test/actions-resource-query.test.ts",
       "specifier": "../../../script/test-omni-control",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "packages/server/test/actions-resource-query.test.ts",
-      "specifier": "../../core/test/fixture/omni-expect",
       "reason": "D8: relative import across a package root; retargets are deferred"
     },
     {

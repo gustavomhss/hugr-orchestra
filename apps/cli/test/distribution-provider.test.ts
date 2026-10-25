@@ -14,7 +14,7 @@ import { stopProviderDaemons } from "./fixture/distribution-provider-daemon"
 import { requireV2CompilerProvenance } from "./fixture/distribution-provider-sourcegraph"
 import type { CompilerReceipts } from "./fixture/distribution-provider-sourcegraph"
 import { exportProviderEvidence, markProviderEvidence } from "./fixture/distribution-provider-evidence"
-import { expectSpawn } from "../../../packages/core/test/fixture/omni-expect"
+import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 
 // Lead registers this file only on hosted Ubuntu x64. No local execution, skip,
 // emulation, fake inference or source CLI fallback. Real inference goes to the

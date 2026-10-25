@@ -5,7 +5,7 @@ import { join, parse } from "node:path"
 import { fileURLToPath } from "node:url"
 import { Schema } from "effect"
 import { ArtifactNativeWindows } from "@orchestra/core/artifact-native-windows"
-import { expectSpawn } from "../../../../packages/core/test/fixture/omni-expect"
+import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { command } from "./distribution-native-process"
 import { artifactNative } from "../../script/artifact-fs"
 

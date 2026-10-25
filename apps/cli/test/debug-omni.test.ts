@@ -4,8 +4,8 @@ import { Effect } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { AppProcess } from "@orchestra/core/process"
-import { expectSpawn } from "../../../packages/core/test/fixture/omni-expect"
-import { testEffect } from "../../../packages/core/test/lib/effect"
+import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
+import { testEffect } from "@orchestra/core/test/lib/effect"
 
 const it = testEffect(LayerNode.compile(AppProcess.node))
 const entry = fileURLToPath(new URL("../src/index.ts", import.meta.url))

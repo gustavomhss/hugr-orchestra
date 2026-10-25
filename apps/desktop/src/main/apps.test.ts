@@ -3,7 +3,7 @@ import { chmod, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises"
 import { basename, join } from "node:path"
 import { tmpdir } from "node:os"
 import { checkAppExists, openDesktopPath, resolveAppPath, resolveExecutable } from "./apps"
-import { expectSpawn } from "../../../../packages/core/test/fixture/omni-expect"
+import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 
 test("desktop recovery: openPath treats shell error text as failure and never falls back for a missing app", async () => {
   if (process.platform !== "linux") expectSpawn(import.meta.path)
