@@ -2,7 +2,7 @@ export * as Board from "./board"
 
 import fs from "fs/promises"
 import path from "path"
-import { and, asc, desc, eq, gt, inArray, isNotNull, ne, sql } from "drizzle-orm"
+import { and, asc, desc, eq, gt, inArray, isNull, ne, or, sql } from "drizzle-orm"
 import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors"
 import { Clock, Context, Effect, Layer, Schedule, Schema } from "effect"
 import { SqlError } from "effect/unstable/sql/SqlError"
@@ -14,14 +14,18 @@ import { Database } from "../database/database"
 import { makeGlobalNode } from "../effect/app-node"
 import { EventV2 } from "../event"
 import { Global } from "../global"
+import { Guardrail } from "../guardrail"
 import { AppProcess } from "../process"
 import { ProjectSchema } from "../project/schema"
 import { ProjectTable } from "../project/sql"
 import { PullRequest } from "../pull-request"
 import { AbsolutePath } from "../schema"
+import { SessionTable } from "../session/sql"
 import {
   BoardActivityTable,
   BoardAttachmentTable,
+  BoardCiRunTable,
+  BoardDecisionTable,
   BoardDependencyTable,
   BoardEpicTable,
   BoardIssueTable,
@@ -31,6 +35,7 @@ import {
   BoardStepTable,
 } from "./sql"
 import { BoardForecast } from "./forecast"
+import { BoardSpend } from "./spend"
 import { BoardGithub } from "./github"
 
 // The board service enforces the contract's rules (docs/specs/projects-board/CONTRACT.md section 1). Every write runs
@@ -46,7 +51,12 @@ export class RefusedError extends Schema.TaggedErrorClass<RefusedError>()("Board
   message: Schema.String,
 }) {}
 
-export type Error = NotFoundError | RefusedError
+/** The project spent its whole budget: the board starts no new work until the owner raises it. In-flight work continues. */
+export class BudgetPausedError extends Schema.TaggedErrorClass<BudgetPausedError>()("Board.BudgetPausedError", {
+  message: Schema.String,
+}) {}
+
+export type Error = NotFoundError | RefusedError | BudgetPausedError
 
 export interface Interface {
   /** Archived projects are left out unless `archived` is true. */
@@ -54,6 +64,12 @@ export interface Interface {
   readonly snapshot: (key: string) => Effect.Effect<Board.Snapshot, NotFoundError>
   readonly read: (input: Board.ReadInput) => Effect.Effect<Board.Read, NotFoundError>
   readonly issuePage: (key: string, number: number) => Effect.Effect<Board.IssuePage, NotFoundError>
+  /** Spend per card, epic, seat and project from session cost and cached CI minutes; never fetches GitHub. */
+  readonly spend: (key: string) => Effect.Effect<Board.SpendReport, NotFoundError>
+  /** Every answered question, newest first. */
+  readonly decisions: (key: string) => Effect.Effect<Board.Decision[], NotFoundError>
+  /** What backs a card's status: PR, checks, attempts, guardrail result, crash reason and when it was verified. */
+  readonly proof: (key: string, number: number) => Effect.Effect<Board.Proof, NotFoundError>
   readonly activity: (key: string, since?: string) => Effect.Effect<Board.Activity[], NotFoundError>
   readonly project: (input: Board.ProjectInput) => Effect.Effect<Board.WriteResult, Error>
   readonly epic: (input: Board.EpicInput) => Effect.Effect<Board.WriteResult, Error>
@@ -62,6 +78,16 @@ export interface Interface {
   readonly steps: (input: Board.StepsInput) => Effect.Effect<Board.WriteResult, Error>
   readonly question: (input: Board.QuestionInput) => Effect.Effect<Board.WriteResult, Error>
   readonly answer: (key: string, id: string, input: Board.AnswerInput) => Effect.Effect<Board.OwnerResult, Error>
+  /** The owner overturns an earlier answer; the old decision stays, linked to the new one. */
+  readonly changeDecision: (key: string, id: string, input: Board.DecisionChangeInput) => Effect.Effect<Board.OwnerResult, Error>
+  /** Maestro records what came of a decision. */
+  readonly decisionOutcome: (input: Board.DecisionOutcomeInput) => Effect.Effect<Board.OwnerResult, Error>
+  /** Target date and budget; omitted fields stay, null clears one. */
+  readonly settings: (
+    key: string,
+    input: { readonly target_date?: number | null; readonly budget_usd?: number | null; readonly reason?: string },
+    actor: "owner" | "maestro",
+  ) => Effect.Effect<Board.OwnerResult, Error>
   readonly note: (key: string, number: number, input: Board.NoteInput) => Effect.Effect<Board.OwnerResult, Error>
   readonly attach: (key: string, number: number, input: Board.AttachmentInput) => Effect.Effect<Board.OwnerResult, Error>
   /** Owner notes only; GitHub and Maestro notes stay as written. */
@@ -91,14 +117,16 @@ type ProjectRow = typeof BoardProjectTable.$inferSelect
 type IssueRow = typeof BoardIssueTable.$inferSelect
 type ActivityRow = typeof BoardActivityTable.$inferSelect
 type QuestionRow = typeof BoardQuestionTable.$inferSelect
+type DecisionRow = typeof BoardDecisionTable.$inferSelect
 type Fields = Record<string, unknown>
 type Changed = { readonly project: string; readonly issue?: string; readonly activity: string }
 
 const TRAIL_MS = 30_000
+const ATTEMPTS = 3
 // Fields GitHub mirrors (slice B2); changing one marks the issue for the next push.
 const MIRRORED = ["title", "body", "type", "epic_id", "stage", "steps"]
 const UNDOABLE = ["issue.update", "issue.move", "steps.set", "epic.upsert", "question.withdraw"]
-const ISSUE_COLUMNS = ["title", "body", "type", "epic_id", "estimate", "seat", "session_id", "branch", "pr_number", "stage", "position", "stage_entered_at"]
+const ISSUE_COLUMNS = ["title", "body", "type", "epic_id", "estimate", "seat", "session_id", "branch", "pr_number", "stage", "position", "stage_entered_at", "attempts", "crash_reason", "guardrail_rule"]
 const EPIC_COLUMNS = ["title", "goal", "position", "status"]
 
 /** `gh` replaces the GitHub runner (tests inject recorded responses); `poll` starts the 60 second sync of every mirrored project. */
@@ -286,6 +314,7 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
               state: "ok",
               branch: pr.branch,
               pr,
+              verifiedAt: now,
               commits: pr.commits.map((commit) => ({ hash: commit.hash, message: commit.message, seat: issue.seat })),
             }),
           ),
@@ -362,13 +391,135 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
         })
       })
 
-      // Persists how many evaluations in a row put P50 past the target date.
+      // Spend reads rows only: session cost and the CI minutes the poll cached. `forecast` null leaves the finish unknown.
+      const spendOf = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, forecast: Board.Forecast | null) {
+        const issues = yield* tx
+          .select()
+          .from(BoardIssueTable)
+          .where(and(eq(BoardIssueTable.project_id, project.id), ne(BoardIssueTable.stage, "cut")))
+          .orderBy(asc(BoardIssueTable.number))
+          .all()
+        const known = yield* numbers(tx, project)
+        const linked = issues.flatMap((row) => (row.session_id ? [row.session_id] : []))
+        const ids = linked as (typeof SessionTable.$inferSelect)["id"][]
+        const sessions =
+          linked.length === 0
+            ? []
+            : yield* tx
+                .select({
+                  id: SessionTable.id,
+                  parent: SessionTable.parent_id,
+                  cost: SessionTable.cost,
+                  model: SessionTable.model,
+                  tokens:
+                    sql<number>`${SessionTable.tokens_input} + ${SessionTable.tokens_output} + ${SessionTable.tokens_reasoning} + ${SessionTable.tokens_cache_read} + ${SessionTable.tokens_cache_write}`,
+                })
+                .from(SessionTable)
+                .where(or(inArray(SessionTable.id, ids), inArray(SessionTable.parent_id, ids)))
+                .all()
+        const runs = yield* tx
+          .select({ issue: BoardCiRunTable.issue_id, usd: sql<number>`sum(${BoardCiRunTable.cost_usd})` })
+          .from(BoardCiRunTable)
+          .where(eq(BoardCiRunTable.project_id, project.id))
+          .groupBy(BoardCiRunTable.issue_id)
+          .all()
+        const spends = issues.map((row) => {
+          const own = sessions.filter((item) => row.session_id !== null && (item.id === row.session_id || item.parent === row.session_id))
+          const ci: BoardSpend.Ci =
+            !row.pr_number || !project.github_repo
+              ? { kind: "none" }
+              : project.ci_synced_at === null
+                ? { kind: "pending" }
+                : { kind: "ok", usd: runs.find((item) => item.issue === row.id)?.usd ?? 0 }
+          return BoardSpend.card({
+            sessions: own.map((item) => ({ model: item.model?.id ?? null, provider: item.model?.providerID ?? null, cost: item.cost, tokens: item.tokens })),
+            ci,
+          })
+        })
+        const epicOf = (row: IssueRow) => (row.epic_id ? (known.epics.get(row.epic_id) ?? null) : null)
+        const flagged = BoardSpend.flags(issues.map((row, index) => ({ epic: epicOf(row), spend: spends[index]! })))
+        const cards = issues.map(
+          (row, index): Board.CardSpend => ({
+            ...spends[index]!,
+            issue: row.number,
+            ref: `${project.key}-${row.number}`,
+            epic: epicOf(row),
+            seat: row.seat,
+            flagged: flagged[index]!.flagged,
+            epicMedianUsd: flagged[index]!.median,
+          }),
+        )
+        const epics = Array.from(new Set(cards.flatMap((card) => (card.epic === null ? [] : [card.epic]))))
+          .toSorted((a, b) => a - b)
+          .map((number): Board.EpicSpend => ({ ...BoardSpend.total(cards.filter((card) => card.epic === number)), epic: number, ref: `${project.key}-E${number}` }))
+        const seats = Array.from(new Set(cards.flatMap((card) => (card.seat === null ? [] : [card.seat]))))
+          .toSorted()
+          .map((seat): Board.SeatSpend => ({ ...BoardSpend.total(cards.filter((card) => card.seat === seat)), seat }))
+        const total = BoardSpend.total(spends)
+        const now = yield* Clock.currentTimeMillis
+        return {
+          project: total,
+          budget: BoardSpend.budget({
+            budgetUsd: project.budget_usd,
+            spentUsd: total.usd,
+            forecastUsd: forecast ? BoardSpend.finish({ spentUsd: total.usd, since: project.time_created, now, forecast }) : null,
+          }),
+          cards,
+          epics,
+          seats,
+          infraSyncedAt: project.ci_synced_at,
+        } satisfies Board.SpendReport
+      })
+
+      // Persists how many evaluations in a row put P50 past the target date, and raises the one pre-emptive budget
+      // question when the forecast finish crosses 90% of the budget. Returns the activity of a question it raised.
       const evaluate = Effect.fnUntraced(function* (tx: Tx, id: string) {
         const project = yield* tx.select().from(BoardProjectTable).where(eq(BoardProjectTable.id, id as Board.ProjectID)).get()
-        if (!project) return
-        const streak = BoardForecast.late((yield* forecastOf(tx, project)).project) ? project.forecast_late_streak + 1 : 0
+        if (!project) return undefined
+        const forecast = yield* forecastOf(tx, project)
+        const streak = BoardForecast.late(forecast.project) ? project.forecast_late_streak + 1 : 0
         if (streak !== project.forecast_late_streak)
           yield* tx.update(BoardProjectTable).set({ forecast_late_streak: streak }).where(eq(BoardProjectTable.id, project.id)).run()
+        if (project.budget_usd === null || project.status === "archived" || forecast.project.kind === "done") return undefined
+        const budget = (yield* spendOf(tx, project, forecast.project)).budget
+        if (budget.forecastUsd === null || budget.forecastPercent === null || budget.forecastPercent < BoardSpend.QUESTION * 100) return undefined
+        // One question per budget figure: raising the budget makes a new one possible, answering never re-asks.
+        const kind = `budget:${project.budget_usd}`
+        const asked = yield* tx
+          .select({ id: BoardQuestionTable.id })
+          .from(BoardQuestionTable)
+          .where(and(eq(BoardQuestionTable.project_id, project.id), eq(BoardQuestionTable.kind, kind)))
+          .get()
+        if (asked) return undefined
+        const question = Board.QuestionID.create()
+        const text = `${project.key} is forecast to spend about $${budget.forecastUsd.toFixed(2)} by its finish, ${Math.round(budget.forecastPercent)}% of its $${project.budget_usd.toFixed(2)} budget. What should happen?`
+        yield* tx
+          .insert(BoardQuestionTable)
+          .values({
+            id: question,
+            project_id: project.id,
+            issue_id: null,
+            epic_id: null,
+            text,
+            options: [
+              { id: "raise", label: "Raise the budget", consequence: "Work continues; set the new amount in the project settings." },
+              { id: "cut", label: "Cut scope to fit", consequence: "Maestro proposes which cards to cut; the budget stays." },
+              { id: "continue", label: "Keep going as is", consequence: "Work continues until 100%, then new work stops." },
+            ],
+            recommended: "cut",
+            cost_of_waiting: "At 100% of the budget the board stops starting new work.",
+            kind,
+            blocking: false,
+            status: "open",
+          })
+          .run()
+        return yield* log(tx, {
+          project: project.id,
+          actor: "maestro",
+          action: "question.ask",
+          reason: "The forecast finish crossed 90% of the budget.",
+          after: { id: question, text, blocking: false },
+        })
       })
 
       const snapshotOf = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow) {
@@ -470,6 +621,16 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
           }),
         )
         return { ...loaded.page, trail: yield* trail(loaded.row, loaded.directory, false) } satisfies Board.IssuePage
+      })
+
+      // The plain-language summary of a guardrail rule from the checkout's own engine; null when it cannot be read.
+      const ruleSummary = Effect.fnUntraced(function* (directory: string | null, rule: string) {
+        if (!directory) return null
+        const guard = yield* Guardrail.make({ directory, env: options.env }).pipe(Effect.provideService(AppProcess.Service, proc))
+        return yield* guard.rules().pipe(
+          Effect.map((found) => found.rules.find((item) => item.id === rule)?.summary ?? null),
+          Effect.catchTag("Guardrail.EngineError", () => Effect.succeed(null)),
+        )
       })
 
       const requireActive = (project: ProjectRow, issue?: IssueRow): Effect.Effect<void, RefusedError> => {
@@ -630,12 +791,24 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
       if (options.poll)
         yield* reading((tx) =>
           tx
-            .select({ key: BoardProjectTable.key })
+            .select({ key: BoardProjectTable.key, id: BoardProjectTable.id, github: BoardProjectTable.github_repo })
             .from(BoardProjectTable)
-            .where(and(isNotNull(BoardProjectTable.github_repo), ne(BoardProjectTable.status, "archived")))
+            .where(ne(BoardProjectTable.status, "archived"))
             .all(),
         ).pipe(
-          Effect.flatMap((rows) => Effect.forEach(rows, (row) => github.sync(row.key))),
+          Effect.flatMap((rows) =>
+            Effect.forEach(rows, (row) =>
+              Effect.gen(function* () {
+                if (row.github) {
+                  yield* github.sync(row.key)
+                  yield* github.ci(row.key)
+                }
+                // CI minutes are spend too: a fetch can be what pushes the forecast past 90%.
+                const raised = yield* quiet((tx) => evaluate(tx, row.id))
+                if (raised) yield* events.publish(Board.Event.Changed, { project: row.id, activity: raised })
+              }),
+            ),
+          ),
           Effect.ignore,
           Effect.repeat(Schedule.spaced("60 seconds")),
           Effect.forkScoped,
@@ -743,6 +916,78 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
 
         issuePage: Effect.fn("Board.issuePage")(function* (key, number) {
           return yield* pageOf(key, number)
+        }),
+
+        spend: Effect.fn("Board.spend")(function* (key) {
+          return yield* reading((tx) =>
+            Effect.gen(function* () {
+              const project = yield* loadProject(tx, key)
+              return yield* spendOf(tx, project, (yield* forecastOf(tx, project)).project)
+            }),
+          )
+        }),
+
+        decisions: Effect.fn("Board.decisions")(function* (key) {
+          return yield* reading((tx) =>
+            Effect.gen(function* () {
+              const project = yield* loadProject(tx, key)
+              const known = yield* numbers(tx, project)
+              const rows = yield* tx
+                .select()
+                .from(BoardDecisionTable)
+                .where(eq(BoardDecisionTable.project_id, project.id))
+                .orderBy(desc(BoardDecisionTable.answered_at), desc(BoardDecisionTable.id))
+                .all()
+              return rows.map((row) => toDecision(row, known))
+            }),
+          )
+        }),
+
+        proof: Effect.fn("Board.proof")(function* (key, number) {
+          const loaded = yield* reading((tx) =>
+            Effect.gen(function* () {
+              const project = yield* loadProject(tx, key)
+              const row = yield* loadIssue(tx, project, number)
+              const known = yield* numbers(tx, project)
+              const decided = yield* tx
+                .select()
+                .from(BoardDecisionTable)
+                .where(and(eq(BoardDecisionTable.issue_id, row.id), isNull(BoardDecisionTable.overturned_by_id)))
+                .orderBy(desc(BoardDecisionTable.answered_at), desc(BoardDecisionTable.id))
+                .limit(1)
+                .get()
+              return { project, row, directory: yield* worktree(tx, project), decided: decided ? toDecision(decided, known) : null }
+            }),
+          )
+          const live = yield* trail(loaded.row, loaded.directory, false)
+          const rule = loaded.row.guardrail_rule
+          return {
+            issue: loaded.row.number,
+            ref: `${key}-${loaded.row.number}`,
+            banner:
+              loaded.project.github_state === "signed_out" || live.state === "signed_out"
+                ? "GitHub sign-in expired. Sign in with gh to refresh pull request and CI status."
+                : null,
+            pr:
+              live.state === "ok"
+                ? {
+                    number: live.pr.number,
+                    state: live.pr.state,
+                    merged: live.pr.merged,
+                    commits: live.pr.commits.length,
+                    lastSha: live.pr.commits.at(-1)?.hash ?? null,
+                  }
+                : null,
+            ci:
+              live.state === "ok"
+                ? { checks: live.pr.checks, failing: live.pr.checks.find((check) => failed(check.conclusion))?.name ?? null }
+                : null,
+            attempts: { n: loaded.row.attempts, of: ATTEMPTS },
+            guardrail: rule ? { rule, summary: yield* ruleSummary(loaded.directory, rule) } : null,
+            crashReason: loaded.row.crash_reason,
+            verifiedAt: live.state === "ok" ? (live.verifiedAt ?? null) : null,
+            decidedBy: loaded.decided,
+          } satisfies Board.Proof
         }),
 
         activity: Effect.fn("Board.activity")(function* (key, since) {
@@ -894,6 +1139,9 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
                 session_id: input.session,
                 branch: input.branch,
                 pr_number: input.pr,
+                attempts: input.attempts,
+                crash_reason: input.crash_reason,
+                guardrail_rule: input.guardrail_rule,
               }
               if (input.number === undefined) {
                 if (!input.title) return yield* new RefusedError({ message: "A new issue needs a title." })
@@ -913,6 +1161,9 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
                   session_id: input.session ?? null,
                   branch: input.branch ?? null,
                   pr_number: input.pr ?? null,
+                  attempts: input.attempts ?? 0,
+                  crash_reason: input.crash_reason ?? null,
+                  guardrail_rule: input.guardrail_rule ?? null,
                   stage_entered_at: now,
                   github_dirty: project.github_repo !== null,
                 }
@@ -1022,6 +1273,13 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
                   return yield* new RefusedError({ message: `PR #${issue.pr_number} could not be read: ${proof.message}` })
                 if (!proof.pr.merged)
                   return yield* new RefusedError({ message: `PR #${issue.pr_number} for ${ref} is not merged yet.` })
+              }
+              if (input.stage === "building" && issue.stage !== "building" && project.budget_usd !== null) {
+                const budget = (yield* spendOf(tx, project, null)).budget
+                if (budget.state === "paused")
+                  return yield* new BudgetPausedError({
+                    message: `${project.key} has spent $${budget.spentUsd.toFixed(2)} of its $${project.budget_usd.toFixed(2)} budget, so no new work starts; ${ref} stays where it is. Work in progress continues. Ask the owner to raise the budget.`,
+                  })
               }
               const now = yield* Clock.currentTimeMillis
               const moved = issue.stage !== input.stage
@@ -1166,6 +1424,23 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
                 .set({ status: "answered", answer_option: input.option, answer_text: input.text ?? null, answered_at: now })
                 .where(eq(BoardQuestionTable.id, question.id))
                 .run()
+              yield* tx
+                .insert(BoardDecisionTable)
+                .values({
+                  id: Board.DecisionID.create(),
+                  project_id: project.id,
+                  issue_id: question.issue_id,
+                  epic_id: question.epic_id,
+                  question_id: question.id,
+                  question: question.text,
+                  options: question.options,
+                  recommended: question.recommended,
+                  chosen: input.option,
+                  chosen_text: input.text ?? null,
+                  answered_by: "owner",
+                  answered_at: now,
+                })
+                .run()
               const activity = yield* log(tx, {
                 project: project.id,
                 issue: question.issue_id,
@@ -1175,6 +1450,120 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
                 after: { id: question.id, status: "answered", answer_option: input.option, answer_text: input.text ?? null },
               })
               return { result: { activity }, changed: changed(project.id, activity, question.issue_id) }
+            }),
+          )
+          return done.result
+        }),
+
+        changeDecision: Effect.fn("Board.changeDecision")(function* (key, id, input) {
+          const done = yield* write((tx) =>
+            Effect.gen(function* () {
+              const project = yield* loadProject(tx, key)
+              const old = yield* tx
+                .select()
+                .from(BoardDecisionTable)
+                .where(and(eq(BoardDecisionTable.id, id as Board.DecisionID), eq(BoardDecisionTable.project_id, project.id)))
+                .get()
+              if (!old) return yield* new NotFoundError({ message: `Decision ${id} is not on ${key}.` })
+              if (old.overturned_by_id)
+                return yield* new RefusedError({ message: "That decision was already overturned; change the newer one instead." })
+              if (!old.options.some((option) => option.id === input.option))
+                return yield* new RefusedError({ message: `Pick one of: ${old.options.map((option) => option.id).join(", ")}.` })
+              const text = input.text ?? null
+              if (old.chosen === input.option && old.chosen_text === text)
+                return yield* new RefusedError({ message: "That is already the answer." })
+              const now = yield* Clock.currentTimeMillis
+              const next = Board.DecisionID.create()
+              yield* tx
+                .insert(BoardDecisionTable)
+                .values({
+                  id: next,
+                  project_id: project.id,
+                  issue_id: old.issue_id,
+                  epic_id: old.epic_id,
+                  question_id: old.question_id,
+                  question: old.question,
+                  options: old.options,
+                  recommended: old.recommended,
+                  chosen: input.option,
+                  chosen_text: text,
+                  answered_by: "owner",
+                  answered_at: now,
+                  supersedes_id: old.id,
+                })
+                .run()
+              yield* tx.update(BoardDecisionTable).set({ overturned_by_id: next }).where(eq(BoardDecisionTable.id, old.id)).run()
+              // Maestro reads the question's answer, so it carries the current one.
+              yield* tx
+                .update(BoardQuestionTable)
+                .set({ answer_option: input.option, answer_text: text, answered_at: now })
+                .where(eq(BoardQuestionTable.id, old.question_id))
+                .run()
+              const activity = yield* log(tx, {
+                project: project.id,
+                issue: old.issue_id,
+                actor: "owner",
+                action: "question.answer",
+                before: { id: old.question_id, answer_option: old.chosen, answer_text: old.chosen_text },
+                after: { id: old.question_id, status: "answered", answer_option: input.option, answer_text: text, decision: next },
+              })
+              return { result: { activity }, changed: changed(project.id, activity, old.issue_id) }
+            }),
+          )
+          return done.result
+        }),
+
+        decisionOutcome: Effect.fn("Board.decisionOutcome")(function* (input) {
+          const done = yield* write((tx) =>
+            Effect.gen(function* () {
+              const project = yield* loadProject(tx, input.project)
+              const row = yield* tx
+                .select()
+                .from(BoardDecisionTable)
+                .where(
+                  and(
+                    eq(BoardDecisionTable.project_id, project.id),
+                    isNull(BoardDecisionTable.overturned_by_id),
+                    or(eq(BoardDecisionTable.id, input.id as Board.DecisionID), eq(BoardDecisionTable.question_id, input.id as Board.QuestionID)),
+                  ),
+                )
+                .orderBy(desc(BoardDecisionTable.answered_at))
+                .get()
+              if (!row) return yield* new NotFoundError({ message: `No standing decision ${input.id} on ${project.key}.` })
+              if (row.outcome === input.outcome) return yield* new RefusedError({ message: "That outcome is already recorded." })
+              const now = yield* Clock.currentTimeMillis
+              yield* tx.update(BoardDecisionTable).set({ outcome: input.outcome, outcome_at: now }).where(eq(BoardDecisionTable.id, row.id)).run()
+              const activity = yield* log(tx, {
+                project: project.id,
+                issue: row.issue_id,
+                actor: "maestro",
+                action: "question.answer",
+                reason: input.reason,
+                before: { id: row.question_id, outcome: row.outcome },
+                after: { id: row.question_id, decision: row.id, outcome: input.outcome },
+              })
+              return { result: { activity }, changed: changed(project.id, activity, row.issue_id) }
+            }),
+          )
+          return done.result
+        }),
+
+        settings: Effect.fn("Board.settings")(function* (key, input, actor) {
+          const done = yield* write((tx) =>
+            Effect.gen(function* () {
+              const project = yield* loadProject(tx, key)
+              if (project.status === "archived") return yield* archived(project)
+              const change = diff(project, { target_date: input.target_date, budget_usd: input.budget_usd })
+              if (!change) return yield* new RefusedError({ message: `Nothing to change on ${key}.` })
+              yield* tx.update(BoardProjectTable).set(change.after).where(eq(BoardProjectTable.id, project.id)).run()
+              const activity = yield* log(tx, {
+                project: project.id,
+                actor,
+                action: "project.upsert",
+                reason: input.reason ?? null,
+                ...change,
+              })
+              return { result: { activity }, changed: changed(project.id, activity) }
             }),
           )
           return done.result
@@ -1653,6 +2042,32 @@ function toQuestion(
     answeredAt: row.answered_at,
     timeCreated: row.time_created,
   }
+}
+
+function toDecision(row: DecisionRow, known: { readonly issues: Map<string, number>; readonly epics: Map<string, number> }): Board.Decision {
+  const chosen = row.options.find((option) => option.id === row.chosen)
+  return {
+    id: row.id,
+    issue: row.issue_id ? (known.issues.get(row.issue_id) ?? null) : null,
+    epic: row.epic_id ? (known.epics.get(row.epic_id) ?? null) : null,
+    date: row.answered_at,
+    question: row.question,
+    options: row.options,
+    recommended: row.recommended,
+    chosen: row.chosen,
+    chosenLabel: chosen?.label ?? row.chosen,
+    text: row.chosen_text,
+    answeredBy: row.answered_by,
+    outcome: row.outcome ?? "applied, no result yet",
+    outcomeAt: row.outcome_at,
+    supersedes: row.supersedes_id,
+    overturnedBy: row.overturned_by_id,
+  }
+}
+
+/** A check conclusion that is neither a pass nor a skip. */
+function failed(conclusion: string | null) {
+  return conclusion !== null && !["success", "neutral", "skipped"].includes(conclusion.toLowerCase())
 }
 
 function toNote(row: typeof BoardNoteTable.$inferSelect, issue: number): Board.Note {

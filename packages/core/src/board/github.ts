@@ -7,7 +7,15 @@ import { Board } from "@orchestra/schema/board"
 import type { Database } from "../database/database"
 import { AppProcess } from "../process"
 import { which } from "../util/which"
-import { BoardEpicTable, BoardIssueTable, BoardNoteTable, BoardProjectTable, BoardQuestionTable, BoardStepTable } from "./sql"
+import {
+  BoardCiRunTable,
+  BoardEpicTable,
+  BoardIssueTable,
+  BoardNoteTable,
+  BoardProjectTable,
+  BoardQuestionTable,
+  BoardStepTable,
+} from "./sql"
 
 // The GitHub Issues mirror (docs/specs/projects-board/CONTRACT.md section 6). Transport is the signed-in `gh` CLI, so
 // there is no token here to store or log. Every call goes through an injected `Gh` runner, which tests replace with
@@ -99,6 +107,22 @@ const decodeIssue = Schema.decodeUnknownOption(Schema.fromJsonString(Issue))
 const decodeComments = Schema.decodeUnknownOption(Schema.fromJsonString(Schema.Array(Comment)))
 const decodeCreated = Schema.decodeUnknownOption(Schema.fromJsonString(Created))
 
+const Pull = Schema.Struct({ head: Schema.Struct({ sha: Schema.String }) })
+const Runs = Schema.Struct({
+  workflow_runs: Schema.Array(
+    Schema.Struct({ id: Schema.Int, name: Schema.NullOr(Schema.String), status: Schema.String, run_attempt: Schema.optional(Schema.Int) }),
+  ),
+})
+const Timing = Schema.Struct({ billable: Schema.optional(Schema.Record(Schema.String, Schema.Struct({ total_ms: Schema.Finite }))) })
+const decodePull = Schema.decodeUnknownOption(Schema.fromJsonString(Pull))
+const decodeRuns = Schema.decodeUnknownOption(Schema.fromJsonString(Runs))
+const decodeTiming = Schema.decodeUnknownOption(Schema.fromJsonString(Timing))
+
+// GitHub's per-minute rates for hosted runners; public repositories bill nothing, which the timing endpoint reports as 0 ms.
+const RATES: Record<string, number> = { UBUNTU: 0.008, WINDOWS: 0.016, MACOS: 0.08 }
+/** CI minutes are refreshed at most this often unless the owner forces it. */
+const CI_TTL = 10 * 60_000
+
 const PAGE = 100
 const MAX_PAGES = 5
 const MARKER = /<!-- orchestra-board:([A-Z]+)-(\d+) -->/
@@ -126,6 +150,80 @@ export function make(deps: Deps) {
         return { status: "done", state, error } as const
       }),
     )
+
+  /**
+   * Fetches the Actions runs of every card's PR and caches their billable minutes in `board_ci_run`. Spend reads that
+   * cache, never GitHub, so a render never waits on the network. Runs are fetched once they complete and never again.
+   */
+  const ci = (key: string, force = false): Effect.Effect<Outcome> =>
+    gate.withPermits(1)(
+      Effect.gen(function* () {
+        const project = yield* deps.quiet((tx) => tx.select().from(BoardProjectTable).where(eq(BoardProjectTable.key, key)).get())
+        if (!project) return { status: "missing" } as const
+        if (!project.github_repo) return { status: "off" } as const
+        const repo = project.github_repo
+        const now = yield* Clock.currentTimeMillis
+        if (!force && project.ci_synced_at !== null && now - project.ci_synced_at < CI_TTL)
+          return { status: "done", state: project.github_state, error: project.github_error } as const
+        const issues = yield* deps.quiet((tx) =>
+          tx
+            .select()
+            .from(BoardIssueTable)
+            .where(and(eq(BoardIssueTable.project_id, project.id), sql`${BoardIssueTable.pr_number} is not null`, sql`${BoardIssueTable.stage} != 'cut'`))
+            .all(),
+        )
+        const failed = yield* Effect.forEach(issues, (issue) => runs(project, repo, issue), { discard: true }).pipe(
+          Effect.as(undefined),
+          Effect.catch((failure: Failure) => Effect.succeed(failure)),
+        )
+        if (!failed)
+          yield* deps.quiet((tx) => tx.update(BoardProjectTable).set({ ci_synced_at: now }).where(eq(BoardProjectTable.id, project.id)).run())
+        const state = failed ? failed.kind : "ok"
+        const error = failed ? failed.message : null
+        yield* settle(project, state, error)
+        return { status: "done", state, error } as const
+      }),
+    )
+
+  const runs = Effect.fnUntraced(function* (project: ProjectRow, repo: string, issue: IssueRow) {
+    const pull = Option.getOrUndefined(decodePull((yield* get(`repos/${repo}/pulls/${issue.pr_number}`, null)).body))
+    if (!pull) return
+    const found = Option.getOrUndefined(
+      decodeRuns((yield* get(`repos/${repo}/actions/runs?head_sha=${encodeURIComponent(pull.head.sha)}&per_page=${PAGE}`, null)).body),
+    )
+    const known = new Set(
+      (yield* deps.quiet((tx) =>
+        tx.select({ id: BoardCiRunTable.run_id }).from(BoardCiRunTable).where(eq(BoardCiRunTable.issue_id, issue.id)).all(),
+      )).map((row) => row.id),
+    )
+    const fresh = (found?.workflow_runs ?? []).filter((run) => run.status === "completed" && !known.has(run.id))
+    yield* Effect.forEach(
+      fresh,
+      (run) =>
+        Effect.gen(function* () {
+          const timing = Option.getOrUndefined(decodeTiming((yield* get(`repos/${repo}/actions/runs/${run.id}/timing`, null)).body))
+          const billable = Object.entries(timing?.billable ?? {})
+          const ms = billable.reduce((all, [, value]) => all + value.total_ms, 0)
+          const cost = billable.reduce((all, [runner, value]) => all + (value.total_ms / 60_000) * (RATES[runner.toUpperCase()] ?? RATES.UBUNTU), 0)
+          yield* deps.quiet((tx) =>
+            tx
+              .insert(BoardCiRunTable)
+              .values({
+                run_id: run.id,
+                project_id: project.id,
+                issue_id: issue.id,
+                name: run.name ?? "workflow",
+                attempt: run.run_attempt ?? 1,
+                billable_ms: Math.round(ms),
+                cost_usd: cost,
+              })
+              .onConflictDoNothing()
+              .run(),
+          )
+        }),
+      { discard: true },
+    )
+  })
 
   const settle = Effect.fnUntraced(function* (project: ProjectRow, state: Board.GithubState, error: string | null) {
     const now = yield* Clock.currentTimeMillis
@@ -473,7 +571,7 @@ export function make(deps: Deps) {
     })
   }
 
-  return { sync }
+  return { sync, ci }
 }
 
 /** The issue body GitHub shows: the card body, the steps as a task list, and the footer with the hidden marker. */
