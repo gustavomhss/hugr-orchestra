@@ -275,7 +275,8 @@ function grammarPackages(root: string) {
     ...grammars(modules).map((dir) => path.join(dir, "node_modules")),
     ...workspace.entries.map((entry) => path.join(entry.path, "node_modules")),
   ]
-  return [...new Set(parents.flatMap(grammars).map((dir) => realpathSync(dir)))]
+  // existsSync follows links, so a dangling grammar symlink drops out before realpathSync would throw on it.
+  return [...new Set(parents.flatMap(grammars).filter((dir) => existsSync(dir)).map((dir) => realpathSync(dir)))]
     .filter((dir) => existsSync(path.join(dir, "package.json")))
     .sort()
 }

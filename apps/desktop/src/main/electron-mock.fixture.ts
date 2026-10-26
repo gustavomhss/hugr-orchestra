@@ -29,6 +29,7 @@ export const electronMock = {
   crashReporter: {},
   desktopCapturer: {},
   dialog: {},
+  globalShortcut: {},
   ipcMain: {},
   ipcRenderer: {},
   nativeImage: {},
@@ -41,7 +42,6 @@ export const electronMock = {
   session: { fromPartition: () => ({}) },
   shell: {},
   systemPreferences: {},
-  utilityProcess: {},
   webContents: {},
   webUtils: {},
 }
