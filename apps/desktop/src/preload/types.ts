@@ -215,6 +215,9 @@ export type ElectronAPI = import("@orchestra/app/app-dock-linux").AppDockLinuxAP
   relaunch: () => void
   getZoomFactor: () => Promise<number>
   setZoomFactor: (factor: number) => Promise<void>
+  // Hides the live seat overlay from screen sharing and recordings; on by default.
+  getLiveOverlayContentProtection: () => Promise<boolean>
+  setLiveOverlayContentProtection: (enabled: boolean) => Promise<void>
   getPinchZoomEnabled: () => Promise<boolean>
   setPinchZoomEnabled: (enabled: boolean) => Promise<void>
   onPinchZoomEnabledChanged: (cb: (enabled: boolean) => void) => () => void
