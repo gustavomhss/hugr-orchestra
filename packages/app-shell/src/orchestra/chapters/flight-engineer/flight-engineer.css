@@ -567,6 +567,9 @@
   font-variant-numeric: tabular-nums;
 }
 .fe-dialog {
+  /* A global reset zeroes the margin the user agent uses to centre a modal dialog. */
+  margin: auto;
+  inset: 0;
   max-inline-size: 440px;
 }
 
