@@ -257,10 +257,10 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   min-block-size: 0;
   flex: 1;
   overflow-y: auto;
-  /* Content scrolling under the profile card fades out instead of being cut; the end padding lets
-     the last row scroll clear of the fade. */
-  padding-block-end: 16px;
-  mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent);
+  /* Rows scrolling under the brand or the profile card fade out instead of being cut; the padding lets the
+     first and last rows rest clear of the fades. */
+  padding-block: 8px 16px;
+  mask-image: linear-gradient(to bottom, transparent, #000 8px, #000 calc(100% - 16px), transparent);
   scrollbar-width: thin;
   scrollbar-color: var(--glass-border) transparent;
 }
@@ -268,7 +268,6 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
 .orchestra-nav {
   display: grid;
   gap: 1px;
-  margin-block-start: 2px;
 }
 
 .orchestra-nav-button {

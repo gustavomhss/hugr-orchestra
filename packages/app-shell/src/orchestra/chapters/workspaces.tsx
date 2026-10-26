@@ -9,6 +9,7 @@ import { displayName, errorMessage } from "@/pages/layout/helpers"
 import { pathKey } from "@/utils/path-key"
 import type { ChapterPageProps } from "../chapter-route"
 import { MxBadge } from "./kit"
+import { NoRepository } from "./no-repository"
 import { type WorkspaceDialog, WorkspacesDialog } from "./workspaces-dialog"
 import {
   activeWorkspace,
@@ -265,15 +266,26 @@ export default function Workspaces(props: ChapterPageProps) {
         <Show
           when={state.status === "ready"}
           fallback={
-            <div class="mx-empty" role={state.status === "error" ? "alert" : "status"}>
-              {language.t(`orchestra.workspaces.${state.status}`)}
-              <Show when={state.status === "error"}>
-                {" "}
-                <button type="button" class="mx-link" onClick={() => void load()}>
-                  {language.t("orchestra.workspaces.retry")}
-                </button>
-              </Show>
-            </div>
+            <Show
+              when={state.status === "empty" && state.project?.vcs !== "git"}
+              fallback={
+                <div class="mx-empty" role={state.status === "error" ? "alert" : "status"}>
+                  {language.t(`orchestra.workspaces.${state.status}`)}
+                  <Show when={state.status === "error"}>
+                    {" "}
+                    <button type="button" class="mx-link" onClick={() => void load()}>
+                      {language.t("orchestra.workspaces.retry")}
+                    </button>
+                  </Show>
+                </div>
+              }
+            >
+              <NoRepository
+                server={props.server}
+                title={language.t("orchestra.noRepository.title")}
+                hint={language.t("orchestra.workspaces.gitRequired")}
+              />
+            </Show>
           }
         >
           <div class="mx-grid">

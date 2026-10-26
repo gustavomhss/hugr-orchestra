@@ -18,7 +18,7 @@ import { ServerConnection, serverName, useServer } from "@/context/server"
 import { tabKey, type SessionTab, type Tab, useTabs } from "@/context/tabs"
 import { HugrBrand } from "@/orchestra/brand"
 import { chapterPages } from "@/orchestra/chapter-route"
-import { isWip, navigation } from "@/orchestra/navigation"
+import { navigation, showWip } from "@/orchestra/navigation"
 import { OrchestraNavigationToggle } from "@/orchestra/navigation-toggle"
 import { OrchestraNavigationTooltip } from "@/orchestra/navigation-tooltip"
 import { useAwaitingRuns } from "@/orchestra/relay/source"
@@ -406,9 +406,9 @@ export function OrchestraSidebar(props: {
                 </Show>
                 {/* Expanded, a WIP row's tooltip carries the mark's meaning; the compact rail keeps names. */}
                 <OrchestraNavigationTooltip
-                  enabled={props.compact || isWip(item.id)}
+                  enabled={props.compact || showWip(item.id)}
                   value={
-                    !props.compact && isWip(item.id)
+                    !props.compact && showWip(item.id)
                       ? language.t("orchestra.shell.wip.description")
                       : item.chapter && !chapterPages[item.id]
                         ? `${language.t(item.label)} · ${language.t("orchestra.rework.pending")}`
@@ -421,7 +421,7 @@ export function OrchestraSidebar(props: {
                       class="orchestra-nav-button"
                       aria-label={language.t(item.label)}
                       aria-description={
-                        isWip(item.id)
+                        showWip(item.id)
                           ? language.t("orchestra.shell.wip.description")
                           : item.chapter && !chapterPages[item.id]
                             ? language.t("orchestra.rework.pending")
@@ -468,12 +468,12 @@ export function OrchestraSidebar(props: {
                         </span>
                       </Show>
                       {/* The WIP mark replaces the pending dot; an unbuilt WIP chapter keeps its pending dialog. */}
-                      <Show when={isWip(item.id)}>
+                      <Show when={showWip(item.id)}>
                         <span class="orchestra-wip-chip" data-slot="orchestra-nav-wip">
                           <span aria-hidden="true">{language.t("orchestra.shell.wip.chip")}</span>
                         </span>
                       </Show>
-                      <Show when={!isWip(item.id) && item.chapter && !chapterPages[item.id]}>
+                      <Show when={!showWip(item.id) && item.chapter && !chapterPages[item.id]}>
                         <span class="orchestra-pending-dot" aria-hidden="true" />
                         <span class="orchestra-sr-only">{language.t("orchestra.rework.pending")}</span>
                       </Show>
