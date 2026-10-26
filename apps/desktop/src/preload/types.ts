@@ -218,6 +218,15 @@ export type ElectronAPI = import("@orchestra/app/app-dock-linux").AppDockLinuxAP
   // Hides the live seat overlay from screen sharing and recordings; on by default.
   getLiveOverlayContentProtection: () => Promise<boolean>
   setLiveOverlayContentProtection: (enabled: boolean) => Promise<void>
+  // Starts a meeting with the live seat: capture, transcription and the overlay. Refused while one runs or with no key.
+  startLiveMeeting: (
+    title?: string,
+  ) => Promise<{ ok: true; meetingID: string } | { ok: false; reason: "running" | "no-key" | "server" | "capture" }>
+  stopLiveMeeting: () => Promise<void>
+  getLiveMeetingRunning: () => Promise<boolean>
+  // The speech-to-text key is write-only from the renderer; an empty key clears it.
+  hasLiveTranscriptionKey: () => Promise<boolean>
+  setLiveTranscriptionKey: (key: string) => Promise<void>
   getPinchZoomEnabled: () => Promise<boolean>
   setPinchZoomEnabled: (enabled: boolean) => Promise<void>
   onPinchZoomEnabledChanged: (cb: (enabled: boolean) => void) => () => void
