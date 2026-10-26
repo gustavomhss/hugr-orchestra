@@ -14,9 +14,9 @@
   },
   "dependencies": {
     "@orchestra/schema": "workspace:*",
-    "@modelcontextprotocol/sdk": "1.29.0",
+    "@modelcontextprotocol/sdk": "1.32.2",
     "typescript": "catalog:",
-    "tree-sitter": "0.25.0",
+    "tree-sitter": "0.25.1",
     "tree-sitter-python": "0.25.0",
     "tree-sitter-typescript": "0.23.2"
   },

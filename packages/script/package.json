@@ -8,14 +8,14 @@
   },
   "dependencies": {
     "@orchestra/schema": "workspace:*",
-    "semver": "^7.6.3",
+    "semver": "^7.8.5",
     "typescript": "catalog:"
   },
   "devDependencies": {
     "@tsconfig/bun": "catalog:",
     "@typescript/native-preview": "catalog:",
     "@types/bun": "catalog:",
-    "@types/semver": "^7.5.8"
+    "@types/semver": "^7.8.0"
   },
   "exports": {
     ".": "./src/index.ts",

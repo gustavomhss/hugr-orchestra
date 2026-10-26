@@ -23,7 +23,7 @@
     "dist"
   ],
   "dependencies": {
-    "@ai-sdk/provider": "3.0.8",
+    "@ai-sdk/provider": "4.0.33",
     "@orchestra/client": "workspace:*",
     "@orchestra/protocol": "workspace:*",
     "@orchestra/schema": "workspace:*",
