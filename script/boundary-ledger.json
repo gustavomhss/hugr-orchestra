@@ -14,12 +14,6 @@
     },
     {
       "rule": "R5",
-      "file": "apps/cli/script/session-data-proof.ts",
-      "specifier": "../../desktop/src/main/cli-artifacts",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
       "file": "apps/cli/test/artifact-fs.test.ts",
       "specifier": "../../desktop/src/main/cli-artifacts",
       "reason": "D8: relative import across a package root; retargets are deferred"
