@@ -13,6 +13,7 @@ import {
   pollLimit,
   polling,
   refusal,
+  segmentAt,
   speaker,
   visible,
   type Summary,
@@ -144,5 +145,22 @@ describe("hotkeys", () => {
     expect(accelerator({ ...base, key: "m" }, true)).toBeUndefined()
     expect(accelerator({ ...base, key: "m", metaKey: true, shiftKey: true }, true)).toBe("Command+Shift+M")
     expect(accelerator({ ...base, key: "ArrowUp", ctrlKey: true }, false)).toBe("Control+Up")
+  })
+})
+
+describe("segmentAt", () => {
+  const segments = [
+    { id: "a", startMs: 0, endMs: 4000 },
+    { id: "b", startMs: 5000, endMs: 9000 },
+  ]
+  test("finds the segment that spans the time", () => {
+    expect(segmentAt(segments, 6000)?.id).toBe("b")
+  })
+  test("falls back to the last segment that began before it", () => {
+    expect(segmentAt(segments, 4500)?.id).toBe("a")
+    expect(segmentAt(segments, 99_000)?.id).toBe("b")
+  })
+  test("is undefined without segments", () => {
+    expect(segmentAt([], 10)).toBeUndefined()
   })
 })

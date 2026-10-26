@@ -1,6 +1,6 @@
 import { createEffect, createMemo, createRoot, createSignal, onCleanup } from "solid-js"
 import { createStore } from "solid-js/store"
-import type { LiveReadiness, LiveRunState, LiveSeatPlatform, LiveSource } from "@/context/platform"
+import type { LiveHotkey, LiveReadiness, LiveRunState, LiveSeatPlatform, LiveSource } from "@/context/platform"
 import { usePlatform } from "@/context/platform"
 import { useLanguage } from "@/context/language"
 import { showToast } from "@/utils/toast"
@@ -18,6 +18,8 @@ function create(seat: () => LiveSeatPlatform | undefined, t: ReturnType<typeof u
   const [store, setStore] = createStore({
     run: { running: false } as LiveRunState,
     readiness: undefined as LiveReadiness | undefined,
+    hotkeys: [] as LiveHotkey[],
+    protection: undefined as boolean | undefined,
     dialog: "none" as Dialog,
     starting: false,
     waiting: false,
@@ -31,6 +33,8 @@ function create(seat: () => LiveSeatPlatform | undefined, t: ReturnType<typeof u
     const off = current.onRunState((state) => setStore("run", state))
     onCleanup(off)
     void readiness()
+    void hotkeys()
+    void current.getContentProtection().then((value) => setStore("protection", value)).catch(() => undefined)
   })
 
   createEffect(() => {
@@ -54,6 +58,12 @@ function create(seat: () => LiveSeatPlatform | undefined, t: ReturnType<typeof u
       .then((value) => setStore({ readiness: value, waiting: false }))
       .catch(() => undefined)
 
+  const hotkeys = () =>
+    seat()
+      ?.getHotkeys()
+      .then((value) => setStore("hotkeys", value))
+      .catch(() => undefined)
+
   const elapsed = createMemo(() => (store.run.running ? Math.max(0, now() - store.run.startedAt) : 0))
 
   const showPermissions = () => {
@@ -74,6 +84,8 @@ function create(seat: () => LiveSeatPlatform | undefined, t: ReturnType<typeof u
     available: () => seat() !== undefined,
     seat,
     readiness,
+    hotkeys,
+    setProtection: (value: boolean) => setStore("protection", value),
     // Consent is asked at every start, with no remembered answer.
     requestStart: () => setStore("dialog", "consent"),
     showPermissions,

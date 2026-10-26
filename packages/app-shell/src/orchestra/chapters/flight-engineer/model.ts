@@ -82,7 +82,6 @@ export function listStatus(meeting: Summary): "recording" | "open" | "ended" {
   return num(meeting.counts.openCommitments) > 0 ? "open" : "ended"
 }
 
-export type Verdict = "confirmed" | "disputed" | "dismissed"
 
 // Dismissing hides an item here; the server keeps it until the meeting itself is deleted.
 export function visible<T extends { id: string }>(items: readonly T[], dismissed: ReadonlySet<string>) {
@@ -157,4 +156,14 @@ export function accelerator(press: Press, mac: boolean) {
     key,
   ]
   return parts.filter((part): part is string => part !== undefined).join("+")
+}
+
+// The segment an item came from: the one that spans its start, else the last one that began before it.
+export function segmentAt<T extends { id: string; startMs: number | string; endMs: number | string }>(
+  segments: readonly T[],
+  ms: number,
+) {
+  const spans = segments.find((item) => num(item.startMs) <= ms && ms < num(item.endMs))
+  if (spans) return spans
+  return segments.filter((item) => num(item.startMs) <= ms).at(-1) ?? segments[0]
 }
