@@ -5403,6 +5403,8 @@ export type ConfigShellsOutput = ReadonlyArray<{
   readonly acceptable: boolean
 }>
 
+export type ServerBoardListInput = { readonly archived?: { readonly archived?: boolean | undefined }["archived"] }
+
 export type ServerBoardListOutput = ReadonlyArray<{
   readonly project: {
     readonly id: string
@@ -5422,7 +5424,22 @@ export type ServerBoardListOutput = ReadonlyArray<{
   }
   readonly stages: { readonly [x: string]: number }
   readonly openQuestions: number
-  readonly health: "on_track" | "waiting_on_owner" | "paused"
+  readonly health: "on_track" | "at_risk" | "waiting_on_owner" | "paused"
+  readonly forecast: {
+    readonly shipped: number
+    readonly remaining: number
+    readonly targetDate: number | null
+    readonly forecast:
+      | { readonly kind: "done" }
+      | { readonly kind: "waits"; readonly on: string }
+      | { readonly kind: "insufficient"; readonly shipped: number; readonly needed: number }
+      | {
+          readonly kind: "dates"
+          readonly p50: number
+          readonly p85: number
+          readonly vsTarget: { readonly p50: number; readonly p85: number } | null
+        }
+  }
 }>
 
 export type ServerBoardGetInput = { readonly key: { readonly key: string }["key"] }
@@ -5496,6 +5513,44 @@ export type ServerBoardGetOutput = {
     readonly timeCreated: number
   }>
   readonly cursor: string | null
+  readonly forecast: {
+    readonly shipped: number
+    readonly remaining: number
+    readonly targetDate: number | null
+    readonly forecast:
+      | { readonly kind: "done" }
+      | { readonly kind: "waits"; readonly on: string }
+      | { readonly kind: "insufficient"; readonly shipped: number; readonly needed: number }
+      | {
+          readonly kind: "dates"
+          readonly p50: number
+          readonly p85: number
+          readonly vsTarget: { readonly p50: number; readonly p85: number } | null
+        }
+  }
+  readonly epicForecasts: ReadonlyArray<{
+    readonly epic: number
+    readonly ref: string
+    readonly shipped: number
+    readonly remaining: number
+    readonly forecast:
+      | { readonly kind: "done" }
+      | { readonly kind: "waits"; readonly on: string }
+      | { readonly kind: "insufficient"; readonly shipped: number; readonly needed: number }
+      | {
+          readonly kind: "dates"
+          readonly p50: number
+          readonly p85: number
+          readonly vsTarget: { readonly p50: number; readonly p85: number } | null
+        }
+    readonly setsDate: boolean
+  }>
+  readonly scope: ReadonlyArray<{
+    readonly at: number
+    readonly scope: number
+    readonly shipped: number
+    readonly reason: string | null
+  }>
 }
 
 export type ServerBoardIssueInput = {
@@ -5576,11 +5631,15 @@ export type ServerBoardIssueOutput = {
       | "question.withdraw"
       | "question.answer"
       | "note.add"
+      | "note.edit"
+      | "note.delete"
       | "attachment.add"
+      | "attachment.remove"
       | "intake.accept"
       | "intake.decline"
       | "hold.set"
       | "pause.set"
+      | "archive.set"
       | "github.overwrite"
       | "github.state"
       | "undo"
@@ -5643,11 +5702,15 @@ export type ServerBoardActivityOutput = ReadonlyArray<{
     | "question.withdraw"
     | "question.answer"
     | "note.add"
+    | "note.edit"
+    | "note.delete"
     | "attachment.add"
+    | "attachment.remove"
     | "intake.accept"
     | "intake.decline"
     | "hold.set"
     | "pause.set"
+    | "archive.set"
     | "github.overwrite"
     | "github.state"
     | "undo"
@@ -5675,6 +5738,23 @@ export type ServerBoardNoteInput = {
 }
 
 export type ServerBoardNoteOutput = { readonly activity: string }
+
+export type ServerBoardNoteEditInput = {
+  readonly key: { readonly key: string; readonly number: string; readonly id: string }["key"]
+  readonly number: { readonly key: string; readonly number: string; readonly id: string }["number"]
+  readonly id: { readonly key: string; readonly number: string; readonly id: string }["id"]
+  readonly body: { readonly body: string }["body"]
+}
+
+export type ServerBoardNoteEditOutput = { readonly activity: string }
+
+export type ServerBoardNoteDeleteInput = {
+  readonly key: { readonly key: string; readonly number: string; readonly id: string }["key"]
+  readonly number: { readonly key: string; readonly number: string; readonly id: string }["number"]
+  readonly id: { readonly key: string; readonly number: string; readonly id: string }["id"]
+}
+
+export type ServerBoardNoteDeleteOutput = { readonly activity: string }
 
 export type ServerBoardAttachInput = {
   readonly key: { readonly key: string; readonly number: string }["key"]
@@ -5718,6 +5798,14 @@ export type ServerBoardAttachInput = {
 
 export type ServerBoardAttachOutput = { readonly activity: string }
 
+export type ServerBoardAttachmentRemoveInput = {
+  readonly key: { readonly key: string; readonly number: string; readonly id: string }["key"]
+  readonly number: { readonly key: string; readonly number: string; readonly id: string }["number"]
+  readonly id: { readonly key: string; readonly number: string; readonly id: string }["id"]
+}
+
+export type ServerBoardAttachmentRemoveOutput = { readonly activity: string }
+
 export type ServerBoardUndoInput = {
   readonly key: { readonly key: string; readonly id: string }["key"]
   readonly id: { readonly key: string; readonly id: string }["id"]
@@ -5735,6 +5823,14 @@ export type ServerBoardPauseOutput = { readonly activity: string }
 export type ServerBoardResumeInput = { readonly key: { readonly key: string }["key"] }
 
 export type ServerBoardResumeOutput = { readonly activity: string }
+
+export type ServerBoardArchiveInput = { readonly key: { readonly key: string }["key"] }
+
+export type ServerBoardArchiveOutput = { readonly activity: string }
+
+export type ServerBoardUnarchiveInput = { readonly key: { readonly key: string }["key"] }
+
+export type ServerBoardUnarchiveOutput = { readonly activity: string }
 
 export type ServerBoardGithubSyncInput = { readonly key: { readonly key: string }["key"] }
 

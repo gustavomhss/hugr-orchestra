@@ -279,6 +279,7 @@ import type {
   ConfigUpdateInput,
   ConfigUpdateOutput,
   ConfigShellsOutput,
+  ServerBoardListInput,
   ServerBoardListOutput,
   ServerBoardGetInput,
   ServerBoardGetOutput,
@@ -290,14 +291,24 @@ import type {
   ServerBoardAnswerOutput,
   ServerBoardNoteInput,
   ServerBoardNoteOutput,
+  ServerBoardNoteEditInput,
+  ServerBoardNoteEditOutput,
+  ServerBoardNoteDeleteInput,
+  ServerBoardNoteDeleteOutput,
   ServerBoardAttachInput,
   ServerBoardAttachOutput,
+  ServerBoardAttachmentRemoveInput,
+  ServerBoardAttachmentRemoveOutput,
   ServerBoardUndoInput,
   ServerBoardUndoOutput,
   ServerBoardPauseInput,
   ServerBoardPauseOutput,
   ServerBoardResumeInput,
   ServerBoardResumeOutput,
+  ServerBoardArchiveInput,
+  ServerBoardArchiveOutput,
+  ServerBoardUnarchiveInput,
+  ServerBoardUnarchiveOutput,
   ServerBoardGithubSyncInput,
   ServerBoardGithubSyncOutput,
   ServerBoardPauseIssueInput,
@@ -2420,9 +2431,16 @@ export function make(options: ClientOptions) {
         ),
     },
     "server.board": {
-      list: (requestOptions?: RequestOptions) =>
+      list: (input?: ServerBoardListInput, requestOptions?: RequestOptions) =>
         request<ServerBoardListOutput>(
-          { method: "GET", path: `/api/board`, successStatus: 200, declaredStatuses: [401, 400], empty: false },
+          {
+            method: "GET",
+            path: `/api/board`,
+            query: { archived: input?.["archived"] },
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
+          },
           requestOptions,
         ),
       get: (input: ServerBoardGetInput, requestOptions?: RequestOptions) =>
@@ -2483,6 +2501,29 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ),
+      noteEdit: (input: ServerBoardNoteEditInput, requestOptions?: RequestOptions) =>
+        request<ServerBoardNoteEditOutput>(
+          {
+            method: "PATCH",
+            path: `/api/board/${encodeURIComponent(input.key)}/issue/${encodeURIComponent(input.number)}/note/${encodeURIComponent(input.id)}`,
+            body: { body: input["body"] },
+            successStatus: 200,
+            declaredStatuses: [404, 409, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      noteDelete: (input: ServerBoardNoteDeleteInput, requestOptions?: RequestOptions) =>
+        request<ServerBoardNoteDeleteOutput>(
+          {
+            method: "DELETE",
+            path: `/api/board/${encodeURIComponent(input.key)}/issue/${encodeURIComponent(input.number)}/note/${encodeURIComponent(input.id)}`,
+            successStatus: 200,
+            declaredStatuses: [404, 409, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
       attach: (input: ServerBoardAttachInput, requestOptions?: RequestOptions) =>
         request<ServerBoardAttachOutput>(
           {
@@ -2495,6 +2536,17 @@ export function make(options: ClientOptions) {
               data: input["data"],
               value: input["value"],
             },
+            successStatus: 200,
+            declaredStatuses: [404, 409, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      attachmentRemove: (input: ServerBoardAttachmentRemoveInput, requestOptions?: RequestOptions) =>
+        request<ServerBoardAttachmentRemoveOutput>(
+          {
+            method: "DELETE",
+            path: `/api/board/${encodeURIComponent(input.key)}/issue/${encodeURIComponent(input.number)}/attachment/${encodeURIComponent(input.id)}`,
             successStatus: 200,
             declaredStatuses: [404, 409, 401, 400],
             empty: false,
@@ -2529,6 +2581,28 @@ export function make(options: ClientOptions) {
           {
             method: "POST",
             path: `/api/board/${encodeURIComponent(input.key)}/resume`,
+            successStatus: 200,
+            declaredStatuses: [404, 409, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      archive: (input: ServerBoardArchiveInput, requestOptions?: RequestOptions) =>
+        request<ServerBoardArchiveOutput>(
+          {
+            method: "POST",
+            path: `/api/board/${encodeURIComponent(input.key)}/archive`,
+            successStatus: 200,
+            declaredStatuses: [404, 409, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      unarchive: (input: ServerBoardUnarchiveInput, requestOptions?: RequestOptions) =>
+        request<ServerBoardUnarchiveOutput>(
+          {
+            method: "POST",
+            path: `/api/board/${encodeURIComponent(input.key)}/unarchive`,
             successStatus: 200,
             declaredStatuses: [404, 409, 401, 400],
             empty: false,

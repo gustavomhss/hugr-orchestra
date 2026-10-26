@@ -42,6 +42,7 @@ const stageKey = {
 } as const
 const healthKey = {
   on_track: "orchestra.board.health.onTrack",
+  at_risk: "orchestra.board.health.atRisk",
   waiting_on_owner: "orchestra.board.health.waiting",
   paused: "orchestra.board.health.paused",
 } as const
@@ -61,7 +62,11 @@ const actionKey = {
   "question.withdraw": "orchestra.board.action.questionWithdraw",
   "question.answer": "orchestra.board.action.questionAnswer",
   "note.add": "orchestra.board.action.noteAdd",
+  "note.edit": "orchestra.board.action.noteEdit",
+  "note.delete": "orchestra.board.action.noteDelete",
   "attachment.add": "orchestra.board.action.attachmentAdd",
+  "attachment.remove": "orchestra.board.action.attachmentRemove",
+  "archive.set": "orchestra.board.action.archiveSet",
   "intake.accept": "orchestra.board.action.intakeAccept",
   "intake.decline": "orchestra.board.action.intakeDecline",
   "hold.set": "orchestra.board.action.holdSet",
