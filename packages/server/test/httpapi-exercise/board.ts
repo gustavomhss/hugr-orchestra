@@ -20,9 +20,14 @@ function read(path: string, name: string, params: Record<string, string>) {
     .json(404, notFound, "status")
 }
 
-function write(path: string, name: string, params: Record<string, string>, body: Record<string, unknown> = {}) {
-  return http.protected
-    .post(path, name)
+function write(
+  path: string,
+  name: string,
+  params: Record<string, string>,
+  body: Record<string, unknown> = {},
+  method: "post" | "patch" | "delete" = "post",
+) {
+  return http.protected[method](path, name)
     .at((ctx) => ({
       path: route(path, params),
       headers: { ...ctx.headers(), "content-type": "application/json" },
@@ -33,6 +38,10 @@ function write(path: string, name: string, params: Record<string, string>, body:
 
 export const boardScenarios: Scenario[] = [
   http.protected.get("/api/board", "v2.board.list").json(200, array),
+  http.protected
+    .get("/api/board", "v2.board.list.archived")
+    .at((ctx) => ({ path: "/api/board?archived=true", headers: ctx.headers() }))
+    .json(200, array),
   read("/api/board/{key}", "v2.board.get", { key }),
   read("/api/board/{key}/issue/{number}", "v2.board.issue", issue),
   read("/api/board/{key}/activity", "v2.board.activity", { key }),
@@ -43,6 +52,23 @@ export const boardScenarios: Scenario[] = [
     { option: "yes" },
   ),
   write("/api/board/{key}/issue/{number}/note", "v2.board.note", issue, { body: "Exercise note." }),
+  write(
+    "/api/board/{key}/issue/{number}/note/{id}",
+    "v2.board.noteEdit",
+    { ...issue, id: "bno_httpapi_missing" },
+    { body: "Edited note." },
+    "patch",
+  ),
+  write("/api/board/{key}/issue/{number}/note/{id}", "v2.board.noteDelete", { ...issue, id: "bno_httpapi_missing" }, {}, "delete"),
+  write(
+    "/api/board/{key}/issue/{number}/attachment/{id}",
+    "v2.board.attachmentRemove",
+    { ...issue, id: "bat_httpapi_missing" },
+    {},
+    "delete",
+  ),
+  write("/api/board/{key}/archive", "v2.board.archive", { key }),
+  write("/api/board/{key}/unarchive", "v2.board.unarchive", { key }),
   write("/api/board/{key}/issue/{number}/attachment", "v2.board.attach", issue, {
     kind: "file",
     name: "notes.txt",
