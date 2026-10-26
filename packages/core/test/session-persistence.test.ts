@@ -192,7 +192,7 @@ it.live("retains current-source Session state in a committed WAL snapshot and ac
       expect(state.context).toEqual(state.transcript)
       expect(state.history.hasMore).toBe(false)
       expect(state.history.events.map((event) => [event.id, event.durable?.seq])).toEqual(
-        state.events.slice(1).map((event) => [event.id, event.seq]),
+        state.events.map((event) => [event.id, event.seq]),
       )
       expect(state.sequences).toMatchObject([{ aggregate_id: sessionID, seq: 5 }])
       // All commits finished; this sole connection stays open and quiescent throughout the copies. No racing writer.

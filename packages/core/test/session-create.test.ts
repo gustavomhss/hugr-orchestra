@@ -334,8 +334,8 @@ describe("SessionV2.create", () => {
 
       expect(yield* session.get(created.id)).toMatchObject({ agent: "reviewer" })
       expect(
-        Array.from(yield* session.events({ sessionID: created.id }).pipe(Stream.take(1), Stream.runCollect)),
-      ).toMatchObject([{ type: "session.next.agent.switched", data: { agent: "reviewer" } }])
+        Array.from(yield* session.events({ sessionID: created.id }).pipe(Stream.take(2), Stream.runCollect)),
+      ).toMatchObject([{ type: "session.next.created" }, { type: "session.next.agent.switched", data: { agent: "reviewer" } }])
     }),
   )
 
@@ -367,8 +367,8 @@ describe("SessionV2.create", () => {
 
       expect(yield* session.get(created.id)).toMatchObject({ model })
       expect(
-        Array.from(yield* session.events({ sessionID: created.id }).pipe(Stream.take(1), Stream.runCollect)),
-      ).toMatchObject([{ type: "session.next.model.switched", data: { model } }])
+        Array.from(yield* session.events({ sessionID: created.id }).pipe(Stream.take(2), Stream.runCollect)),
+      ).toMatchObject([{ type: "session.next.created" }, { type: "session.next.model.switched", data: { model } }])
     }),
   )
 
