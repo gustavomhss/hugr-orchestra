@@ -52,6 +52,7 @@ export const boardScenarios: Scenario[] = [
   write("/api/board/{key}/activity/{id}/undo", "v2.board.undo", { key, id: "act_httpapi_missing" }),
   write("/api/board/{key}/pause", "v2.board.pause", { key }, { reason: "Exercise." }),
   write("/api/board/{key}/resume", "v2.board.resume", { key }),
+  write("/api/board/{key}/github/sync", "v2.board.githubSync", { key }),
   write("/api/board/{key}/issue/{number}/pause", "v2.board.pauseIssue", issue),
   write("/api/board/{key}/issue/{number}/resume", "v2.board.resumeIssue", issue),
   write("/api/board/{key}/issue/{number}/hold", "v2.board.hold", issue, { hold: true }),

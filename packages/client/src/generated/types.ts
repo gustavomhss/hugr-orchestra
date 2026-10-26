@@ -5702,6 +5702,13 @@ export type ServerBoardResumeInput = { readonly key: { readonly key: string }["k
 
 export type ServerBoardResumeOutput = { readonly activity: string }
 
+export type ServerBoardGithubSyncInput = { readonly key: { readonly key: string }["key"] }
+
+export type ServerBoardGithubSyncOutput = {
+  readonly state: "off" | "ok" | "signed_out" | "rate_limited" | "error"
+  readonly error: string | null
+}
+
 export type ServerBoardPauseIssueInput = {
   readonly key: { readonly key: string; readonly number: string }["key"]
   readonly number: { readonly key: string; readonly number: string }["number"]
