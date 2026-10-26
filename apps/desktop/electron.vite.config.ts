@@ -88,7 +88,7 @@ const require = __cjs_mod__.createRequire(import.meta.url);
   preload: {
     build: {
       rollupOptions: {
-        input: { index: "src/preload/index.ts" },
+        input: { index: "src/preload/index.ts", "live-capture": "src/preload/live-capture.ts" },
         output: {
           format: "cjs",
           entryFileNames: "[name].js",

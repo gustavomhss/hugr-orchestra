@@ -215,6 +215,11 @@ const getBase = (appId: string): Configuration => ({
     gatekeeperAssess: false,
     entitlements: "resources/entitlements.plist",
     entitlementsInherit: "resources/entitlements.plist",
+    // The live seat's senses: macOS shows these when the microphone or the system-audio tap is first used.
+    extendInfo: {
+      NSMicrophoneUsageDescription: "HuGR Orchestra listens to your microphone during a live meeting you start.",
+      NSAudioCaptureUsageDescription: "HuGR Orchestra hears the meeting's audio during a live meeting you start.",
+    },
     binaries: omniBinaries,
     sign: signMac,
     notarize: true,
