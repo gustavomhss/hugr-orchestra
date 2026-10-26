@@ -192,6 +192,21 @@ export function MoneyPanel(props: {
             <Amount value={props.spend.project.infra} />
           </div>
         </section>
+        <section class="board-sec money-infra">
+          <h3>{t("orchestra.money.infraItems")}</h3>
+          <div class="money-row">
+            <span>{t("orchestra.money.ci")}</span>
+            <Amount value={props.spend.project.infra} />
+          </div>
+          <div class="money-row">
+            <span>{t("orchestra.money.sandboxes")}</span>
+            <span class="money-unmetered">{t("orchestra.money.notMetered", { source: t("orchestra.money.source.sandboxes") })}</span>
+          </div>
+          <div class="money-row">
+            <span>{t("orchestra.money.hosting")}</span>
+            <span class="money-unmetered">{t("orchestra.money.notMetered", { source: t("orchestra.money.source.hosting") })}</span>
+          </div>
+        </section>
         <Show when={props.spend.infraSyncedAt}>
           {(at) => (
             <p class="money-quiet">
@@ -260,7 +275,7 @@ export function MoneyPanel(props: {
                 <button type="button" class="money-card" data-flagged={card.flagged} onClick={() => props.onCard(card.ref)}>
                   <span class="board-id">{card.ref}</span>
                   <span class="money-card-title">{props.cardTitle(card.issue)}</span>
-                  <Amount value={{ kind: "usd", usd: card.usd }} />
+                  <Amount value={card.usd === 0 && card.models.kind === "not-metered" ? card.models : { kind: "usd", usd: card.usd }} />
                   <Show when={card.flagged && card.epicMedianUsd !== null}>
                     <span class="money-quiet money-card-note">
                       {t("orchestra.money.outlier", { median: money(card.epicMedianUsd ?? 0) })}
