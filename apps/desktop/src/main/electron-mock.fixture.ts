@@ -29,7 +29,6 @@ export const electronMock = {
   crashReporter: {},
   desktopCapturer: {},
   dialog: {},
-  globalShortcut: {},
   ipcMain: {},
   ipcRenderer: {},
   nativeImage: {},

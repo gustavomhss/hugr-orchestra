@@ -188,8 +188,6 @@ const HISTORICAL_ROSTER_HASHES: ReadonlyMap<string, string> = new Map([
   ["2e940ff3b3b693177f372b9e9a144267102988ad0f777f9c5f408ae6c1a64a9f", ROSTER_V2], ["8d3204388b964a4236bdd7fe78fc7039eabc16642683dc017b91fde3cb67754b", ROSTER_V2],
   // Before the direct live seat joined the roster.
   ["eb49e7a6163514b011b2dca54cdee10bff97217008faf1cb1cf3bce5a5e28665", ROSTER_V2],
-  // Before the live seat's prompt told it to call live_look for a screen frame.
-  ["41405e4bdacc608691d093985a14523f964bdab13314f6531745afe2d687fa21", ROSTER_V2],
 ])
 const HISTORICAL_REVIEW_POLICY_HASHES: ReadonlyMap<string, string> = new Map([
   ["05807085f9d9cf64a9cad4766f7eacde2ff1898435252d177d2725434d646c59", "maestro-review-policy-v1"],
