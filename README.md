@@ -6,7 +6,7 @@ The app combines an Electron host (`apps/desktop`), a shared Solid UI (`packages
 
 ## Install
 
-The first public release is pending. No version is tagged yet, so the downloads and package names below do not exist until it ships. The first releases may ship before code signing is set up; the notes of each release say whether it is signed.
+Releases are on the [GitHub Releases](https://github.com/gustavomhss/hugr-orchestra/releases) page: command line releases are tagged `v<version>` and desktop releases `desktop-v<version>`. Current releases are 0.x. Builds may not be code signed yet; the notes of each release say whether it is signed.
 
 ### Desktop app
 
@@ -20,7 +20,7 @@ Download the installer for your system from the `desktop-v<version>` release on 
 
 The `.deb` and `.rpm` follow each package format's own architecture name (`amd64` and `x86_64`), so their file names differ slightly from the AppImage.
 
-An unsigned build makes the system ask before the first launch. On macOS, open System Settings > Privacy & Security and choose Open Anyway. On Windows, choose More info > Run anyway on the SmartScreen prompt. Linux installers carry no signature check.
+An unsigned build makes the system ask before the first launch (Gatekeeper on macOS, SmartScreen on Windows). On macOS, open System Settings > Privacy & Security and choose Open Anyway. On Windows, choose More info > Run anyway on the SmartScreen prompt. Linux installers carry no signature check.
 
 ### Command line
 

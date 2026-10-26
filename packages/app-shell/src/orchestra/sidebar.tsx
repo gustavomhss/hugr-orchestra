@@ -205,7 +205,9 @@ export function OrchestraSidebar(props: {
       const directory = tabs.info[tabKey(tab)]?.directory
       return !!directory && directories.has(pathKey(directory))
     }
-    const current = tabs.store.find(matches)
+    // A remembered session tab can outlive its session (deleted, or from a server that was reset). Chat must
+    // not open it: drop the tab and fall through to the next match or a fresh draft.
+    const current = await openable(tabs.store.find(matches))
     if (current) return current
     // Restored tabs may not have directory metadata yet. Join the sync store's
     // existing info request before deciding that this repository needs a draft.
@@ -226,7 +228,22 @@ export function OrchestraSidebar(props: {
           }),
         ),
     )
-    return tabs.store.find(matches)
+    return openable(tabs.store.find(matches))
+
+    async function openable(tab: Tab | undefined): Promise<Tab | undefined> {
+      if (!tab || tab.type !== "session" || ctx.sync.session.peek(tab.sessionId)) return tab
+      const found = await ctx.sync.session.resolve(tab.sessionId).then(
+        () => true,
+        (cause: unknown) => {
+          if (isLocalSessionNotFoundError(cause, tab.sessionId) || isSessionNotFoundError(cause, tab.sessionId))
+            return false
+          throw cause
+        },
+      )
+      if (found) return matches(tab) ? tab : openable(tabs.store.find((item) => item !== tab && matches(item)))
+      tabs.removeSessionTab({ server: tab.server, sessionId: tab.sessionId })
+      return openable(tabs.store.find(matches))
+    }
   }
 
   async function selectProject(conn: ServerConnection.Any, project: LocalProject, draft = false) {

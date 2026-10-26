@@ -1,4 +1,5 @@
 import { expect } from "bun:test"
+import { createHash } from "node:crypto"
 import { Effect, Schema } from "effect"
 import { asc, eq, sql } from "drizzle-orm"
 import { EventV2 } from "@orchestra/core/event"
@@ -105,6 +106,29 @@ it.live("edited content is BROKEN even with same expected tip; restored content 
     expect((yield* f.events.verifySealWindow(input)).reasons).toContain("HASH_MISMATCH")
     yield* f.database.db.update(EventTable).set({ data: f.rows[1].data }).where(eq(EventTable.id, f.rows[1].id)).run()
     expect((yield* f.events.verifySealWindow(input)).status).toBe("VERIFIED_WINDOW")
+  }),
+)
+
+it.live("a row sealed under the legacy domain still verifies", () =>
+  Effect.gen(function* () {
+    const f = yield* seed
+    const legacy = createHash("sha256")
+      .update(`opencode:event-seal:v1\n${f.rows[1].seal_prev}\n${EventSeal.canonicalRow(f.rows[1])}`)
+      .digest("hex")
+    expect(legacy).not.toBe(f.rows[1].seal_hash)
+    yield* f.database.db
+      .update(EventTable)
+      .set({ seal_hash: legacy })
+      .where(eq(EventTable.id, f.rows[1].id))
+      .run()
+    yield* f.database.db
+      .update(EventTable)
+      .set(EventSeal.sealRow(f.rows[2], { ...f.rows[1], seal_hash: legacy }))
+      .where(eq(EventTable.id, f.rows[2].id))
+      .run()
+    const report = yield* f.events.verifySealWindow(f.input)
+    expect(report.reasons).not.toContain("HASH_MISMATCH")
+    expect(report.status).toBe("VERIFIED_WINDOW")
   }),
 )
 
