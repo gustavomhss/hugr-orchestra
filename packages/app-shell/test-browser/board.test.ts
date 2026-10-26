@@ -77,12 +77,15 @@ if (process.env.BOARD_DOM !== "1") {
     return new Response("not found", { status: 404 })
   } })
 
-  const listeners: ((event: { details: unknown }) => void)[] = []
+  const listeners = new Set<(event: { details: unknown }) => void>()
   // External context fixture only; the real generated client talks to the fixture server and the real view renders.
   mock.module(solidDom("@/context/server-sdk", import.meta.dir), () => ({
     useServerSDK: () => () => ({
       orchestra: Orchestra.make({ baseUrl: server.url.origin }),
-      event: { listen(fn: (event: { details: unknown }) => void) { listeners.push(fn); return () => {} } },
+      event: { listen(fn: (event: { details: unknown }) => void) {
+        listeners.add(fn)
+        return () => listeners.delete(fn)
+      } },
     }),
   }))
   const { default: Board }: typeof import("@/orchestra/chapters/board/board") = await import(
