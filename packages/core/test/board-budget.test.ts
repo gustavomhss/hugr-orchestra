@@ -1,4 +1,5 @@
 import { describe, expect } from "bun:test"
+import { and, eq } from "drizzle-orm"
 import { Effect, Exit } from "effect"
 import { Board } from "@orchestra/core/board/board"
 import { Database } from "@orchestra/core/database/database"
@@ -6,6 +7,7 @@ import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { makeGlobalNode } from "@orchestra/core/effect/app-node"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { EventV2 } from "@orchestra/core/event"
+import { BoardIssueTable } from "@orchestra/core/board/sql"
 import { Credential } from "@orchestra/core/credential"
 import { Global } from "@orchestra/core/global"
 import { AppProcess } from "@orchestra/core/process"
@@ -28,6 +30,8 @@ const it = testEffect(
     ],
   ]),
 )
+
+const DAY = 86_400_000
 
 const options = [
   { id: "a", label: "Option A", consequence: "Does A." },
@@ -121,6 +125,51 @@ describe("Board spend, budget and decisions", () => {
       expect(Exit.isFailure(yield* Effect.exit(board.changeDecision("DEC", current.id, { option: "zzz" })))).toBe(true)
       // The card names the decision that moved it.
       expect((yield* board.proof("DEC", 1)).decidedBy?.id).toBe(current.id)
+    }),
+  )
+
+  it.live("a dates forecast past 90% of the budget raises one question, once per budget figure", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const database = yield* Database.Service
+      const today = Math.floor(Date.now() / DAY)
+      yield* board.project({ key: "FOR", name: "Forecast", reason: "Start." })
+      yield* Effect.forEach([1, 2, 3, 4, 5], (number) =>
+        Effect.gen(function* () {
+          yield* board.issue({ project: "FOR", title: `Done ${number}`, session: number === 1 ? "ses_for_one" : undefined, reason: "Plan." })
+          yield* board.move({ project: "FOR", number, stage: "shipped", reason: "Shipped without a PR." })
+        }),
+      )
+      yield* Effect.forEach([1, 2, 3], (number) => board.issue({ project: "FOR", title: `Open ${number}`, reason: "Plan." }))
+      // One ship on each of the last five days gives a "dates" forecast about three days out.
+      const project = (yield* board.snapshot("FOR")).project
+      yield* Effect.forEach([1, 2, 3, 4, 5], (number) =>
+        database.db
+          .update(BoardIssueTable)
+          .set({ stage_entered_at: (today - number + 1) * DAY + 3_600_000 })
+          .where(and(eq(BoardIssueTable.project_id, project.id), eq(BoardIssueTable.number, number)))
+          .run()
+          .pipe(Effect.orDie),
+      )
+      yield* session("ses_for_one", 3, { id: "m", providerID: "openai" })
+      expect((yield* board.snapshot("FOR")).forecast.forecast.kind).toBe("dates")
+      const budgetQuestions = () =>
+        board.snapshot("FOR").pipe(Effect.map((snapshot) => snapshot.questions.filter((item) => item.text.includes("budget"))))
+
+      yield* board.settings("FOR", { budget_usd: 10 }, "owner")
+      const asked = yield* budgetQuestions()
+      expect(asked).toHaveLength(1)
+      expect(asked[0]).toMatchObject({ blocking: false, recommended: "cut" })
+      expect(asked[0]?.options.map((item) => item.id)).toEqual(["raise", "cut", "continue"])
+
+      // Later writes re-evaluate the forecast but never repeat the question for the same budget.
+      yield* board.issue({ project: "FOR", title: "Another", reason: "Plan." })
+      yield* board.note("FOR", 6, { body: "Still here." })
+      expect(yield* budgetQuestions()).toHaveLength(1)
+
+      // A new budget figure may ask again.
+      yield* board.settings("FOR", { budget_usd: 11 }, "owner")
+      expect(yield* budgetQuestions()).toHaveLength(2)
     }),
   )
 

@@ -399,7 +399,7 @@
     "packages/core/src/board/board.ts": {
       "maximumLines": 2040,
       "reason": "Board service is one transactional module (write, log, evaluate share closures); slice F1 adds spend, decisions, proof and settings. Split into modules is a follow-up.",
-      "authorizedBy": "pending owner confirmation (slice F1 agent)",
+      "authorizedBy": "owner, accepted by the coordinator",
       "authorizedAt": "2026-10-26"
     }
   }
