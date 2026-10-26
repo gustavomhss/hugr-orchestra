@@ -235,6 +235,10 @@ export function update(adapter: Adapter, event: SessionEvent.Event) {
           }),
         )
       },
+      // Lifecycle events only touch the Session row, which the projector writes directly.
+      "session.next.created": () => Effect.void,
+      "session.next.renamed": () => Effect.void,
+      "session.next.deleted": () => Effect.void,
       "session.next.moved": () => Effect.void,
       // State changes replay through their durable events without adding transcript messages.
       "session.next.subagent.models.changed": () => Effect.void,
