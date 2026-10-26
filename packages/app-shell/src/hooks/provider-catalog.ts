@@ -1,5 +1,6 @@
 import type { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 import type { Provider } from "@/v2-wire"
+import { uniqueBy } from "remeda"
 import { createMemo, createResource, type Accessor, type Resource, type ResourceActions } from "solid-js"
 import type { ModelKey } from "@/context/models"
 import type { LayoutRoute } from "@/context/layout-route"
@@ -119,14 +120,19 @@ export function createModelCatalog(
   const visibility = createMemo(
     () => new Map(preferences().map((item) => [`${item.providerID}:${item.modelID}`, item.visibility])),
   )
+  // The same provider can arrive twice (a catalog merge) and a provider can list one model under two keys;
+  // one (providerID, modelID) pair is one model. The same model ID under different providers stays.
   const list = createMemo(() =>
-    connected().flatMap((provider) =>
-      Object.values(provider.models).map((model) => ({
-        ...model,
-        provider,
-        name: model.name.replace("(latest)", "").trim(),
-        latest: model.name.includes("(latest)"),
-      })),
+    uniqueBy(
+      connected().flatMap((provider) =>
+        Object.values(provider.models).map((model) => ({
+          ...model,
+          provider,
+          name: model.name.replace("(latest)", "").trim(),
+          latest: model.name.includes("(latest)"),
+        })),
+      ),
+      (model) => `${model.provider.id}:${model.id}`,
     ),
   )
   return {

@@ -1,11 +1,25 @@
 import { afterEach, describe, expect, test } from "bun:test"
 import type { LinuxOpenResult } from "../../app-dock-linux"
-import { appDockProfile, createAppDockController, tabLabel, type AppDockAPI, type TabIdentity } from "./apps-panel-controller"
+import { appDockProfile, createAppDockController, restorable, tabLabel, type AppDockAPI, type TabIdentity } from "./apps-panel-controller"
 
 const profileA = appDockProfile("http://127.0.0.1:4096", "/work/shared repository")
 const profileB = appDockProfile("http://127.0.0.1:4097", "/work/shared repository")
 // The controller takes its copy from the view's translator; the tests assert on the keys.
 const translate = (key: string | number) => String(key)
+
+describe("restorable tabs", () => {
+  test("skips new-tab placeholders, duplicates and non-https tabs", () => {
+    const saved = [
+      { url: "https://www.google.com" },
+      { url: "https://www.google.com/" },
+      { url: "https://example.com/a" },
+      { url: "https://example.com/a" },
+      { url: "appdock://linux" },
+      { url: "https://example.com/b" },
+    ]
+    expect(restorable(saved).map((tab) => tab.url)).toEqual(["https://example.com/a", "https://example.com/b"])
+  })
+})
 
 describe("App Dock controller", () => {
   test("native shortcuts are delivered only for the visible current browser generation", async () => {

@@ -286,7 +286,7 @@ function Workbench(props: ChapterPageProps & {
             <Match when={state.route.view === "settings"}><div class="[&>section>.mx-inner>.mx-heading]:hidden"><Settings model={model} t={props.t} /></div></Match>
             <Match when={state.bindings.status === "loading"}><Empty title={props.t("orchestra.actions.loading")} busy /></Match>
             <Match when={state.unsupported}><Empty title={props.t("orchestra.actions.unsupported")} /></Match>
-            <Match when={state.bindings.status === "error"}><Empty title={props.t("orchestra.actions.providerRequestFailed")} error={props.t("orchestra.actions.unavailable")} retry={{ label: props.t("orchestra.actions.loadRetry"), run: () => void model.refresh() }} /></Match>
+            <Match when={state.bindings.status === "error"}><Empty title={props.t("orchestra.actions.title")} error={props.t(state.bindings.error?.message ?? "orchestra.actions.unavailable")} retry={{ label: props.t("orchestra.actions.loadRetry"), run: () => void model.refresh() }} /></Match>
             <Match when={!state.binding}><Empty title={props.t("orchestra.actions.noConnection")} /></Match>
             <Match when={state.route.view === "resources"}><Resources model={model} t={props.t} /></Match>
             <Match when={state.route.view === "library"}><Library model={model} t={props.t} embedded /></Match>
