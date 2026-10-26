@@ -100,12 +100,12 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv }) =>
 
       const write = <A extends { readonly changed: Changed }, E>(work: (tx: Tx) => Effect.Effect<A, E>) =>
         db.transaction(work, { behavior: "immediate" }).pipe(
-          Effect.catchIf(isStorageError, Effect.die),
+          dieOnStorage,
           Effect.tap((result) => events.publish(Board.Event.Changed, result.changed)),
         )
 
       const reading = <A, E>(work: (tx: Tx) => Effect.Effect<A, E>) =>
-        db.transaction(work).pipe(Effect.catchIf(isStorageError, Effect.die))
+        db.transaction(work).pipe(dieOnStorage)
 
       const loadProject = Effect.fnUntraced(function* (tx: Tx, key: string) {
         const row = yield* tx.select().from(BoardProjectTable).where(eq(BoardProjectTable.key, key)).get()
@@ -1287,8 +1287,15 @@ export const node = makeGlobalNode({
   deps: [Database.node, EventV2.node, Credential.node, AppProcess.node, Global.node],
 })
 
-function isStorageError(error: unknown): error is SqlError | EffectDrizzleQueryError {
-  return error instanceof SqlError || error instanceof EffectDrizzleQueryError
+// Storage failures are defects: the board has no recovery for a broken database.
+function dieOnStorage<A, E, R>(effect: Effect.Effect<A, E, R>) {
+  return effect.pipe(
+    Effect.catchIf(
+      (error): error is Extract<E, SqlError | EffectDrizzleQueryError> =>
+        error instanceof SqlError || error instanceof EffectDrizzleQueryError,
+      Effect.die,
+    ),
+  )
 }
 
 function changed(project: string, activity: string, issue?: string | null): Changed {
