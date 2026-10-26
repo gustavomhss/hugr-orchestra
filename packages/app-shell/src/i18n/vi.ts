@@ -935,6 +935,8 @@ export const dict = {
   "settings.live.key.placeholder": "Dán khóa",
   "settings.live.key.save": "Lưu",
   "settings.live.key.remove": "Xóa",
+  "settings.live.key.failed": "Không thể lưu khóa",
+  "settings.live.key.keychain": "Chuỗi khóa của hệ thống không khả dụng",
   "settings.live.protection.title": "Ẩn khi chia sẻ màn hình",
   "settings.live.protection.description": "Không hiển thị lớp phủ trong màn hình chia sẻ và bản ghi",
   "live.command.start": "Bắt đầu cuộc họp",

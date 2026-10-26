@@ -998,6 +998,8 @@ export const dict = {
   "settings.live.key.placeholder": "Tempel kunci",
   "settings.live.key.save": "Simpan",
   "settings.live.key.remove": "Hapus",
+  "settings.live.key.failed": "Kunci tidak dapat disimpan",
+  "settings.live.key.keychain": "Keychain sistem tidak tersedia",
   "settings.live.protection.title": "Sembunyikan dari berbagi layar",
   "settings.live.protection.description": "Jaga overlay agar tidak muncul di berbagi layar dan rekaman",
   "live.command.start": "Mulai rapat",

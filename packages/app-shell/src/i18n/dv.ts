@@ -937,6 +937,8 @@ export const dict = {
   "settings.live.key.placeholder": "ކީ ޕޭސްޓް ކުރޭ",
   "settings.live.key.save": "ސޭވް ކުރޭ",
   "settings.live.key.remove": "ނައްތާލާ",
+  "settings.live.key.failed": "ކީ ރައްކާ ނުކުރެވުނު",
+  "settings.live.key.keychain": "ސިސްޓަމްގެ ކީޗެއިން ނުލިބޭ",
   "settings.live.protection.title": "ސްކްރީން ޝެއަރިންގުން ފޮރުވާ",
   "settings.live.protection.description": "އޮވަލޭ ސްކްރީން ޝެއަރާއި ރެކޯޑިންގްސް ތެރެއިން ދޫކޮށްލާ",
   "live.command.start": "މީޓިންގ ފަށާ",

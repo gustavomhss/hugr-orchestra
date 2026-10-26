@@ -837,6 +837,8 @@ export const dict = {
   "settings.live.key.placeholder": "キーを貼り付け",
   "settings.live.key.save": "保存",
   "settings.live.key.remove": "削除",
+  "settings.live.key.failed": "キーを保存できませんでした",
+  "settings.live.key.keychain": "システムのキーチェーンを利用できません",
   "settings.live.protection.title": "画面共有から隠す",
   "settings.live.protection.description": "オーバーレイを画面共有や録画に映らないようにします",
   "live.command.start": "会議を開始",

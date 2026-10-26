@@ -930,6 +930,8 @@ export const dict = {
   "settings.live.key.placeholder": "Ielīmēt atslēgu",
   "settings.live.key.save": "Saglabāt",
   "settings.live.key.remove": "Noņemt",
+  "settings.live.key.failed": "Atslēgu neizdevās saglabāt",
+  "settings.live.key.keychain": "Sistēmas atslēgu saišķis nav pieejams",
   "settings.live.protection.title": "Paslēpt no ekrāna koplietošanas",
   "settings.live.protection.description": "Neļaut pārklājumam parādīties ekrāna koplietošanā un ierakstos",
   "live.command.start": "Sākt sanāksmi",

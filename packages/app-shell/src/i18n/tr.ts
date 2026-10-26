@@ -915,6 +915,8 @@ export const dict = {
   "settings.live.key.placeholder": "Anahtarı yapıştır",
   "settings.live.key.save": "Kaydet",
   "settings.live.key.remove": "Kaldır",
+  "settings.live.key.failed": "Anahtar kaydedilemedi",
+  "settings.live.key.keychain": "Sistem anahtar zinciri kullanılamıyor",
   "settings.live.protection.title": "Ekran paylaşımından gizle",
   "settings.live.protection.description": "Kaplamayı ekran paylaşımlarından ve kayıtlardan uzak tut",
   "live.command.start": "Toplantıyı başlat",

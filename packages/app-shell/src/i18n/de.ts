@@ -742,6 +742,8 @@ export const dict = {
   "settings.live.key.placeholder": "Schlüssel einfügen",
   "settings.live.key.save": "Speichern",
   "settings.live.key.remove": "Entfernen",
+  "settings.live.key.failed": "Der Schlüssel konnte nicht gespeichert werden",
+  "settings.live.key.keychain": "Der Systemschlüsselbund ist nicht verfügbar",
   "settings.live.protection.title": "Vor Bildschirmfreigabe verbergen",
   "settings.live.protection.description": "Overlay von Bildschirmfreigaben und Aufnahmen fernhalten",
   "live.command.start": "Besprechung starten",

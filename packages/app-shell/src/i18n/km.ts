@@ -923,6 +923,8 @@ export const dict = {
   "settings.live.key.placeholder": "បិទភ្ជាប់កូដ",
   "settings.live.key.save": "រក្សាទុក",
   "settings.live.key.remove": "លុប",
+  "settings.live.key.failed": "មិនអាចរក្សាទុកសោបានទេ",
+  "settings.live.key.keychain": "ខ្សែសោរបស់ប្រព័ន្ធមិនអាចប្រើបានទេ",
   "settings.live.protection.title": "លាក់ពីការចែករំលែកអេក្រង់",
   "settings.live.protection.description": "កុំឱ្យផ្ទាំងបង្ហាញលេចឡើងក្នុងការចែករំលែកអេក្រង់ និងការថតវីដេអូ",
   "live.command.start": "ចាប់ផ្តើមការប្រជុំ",

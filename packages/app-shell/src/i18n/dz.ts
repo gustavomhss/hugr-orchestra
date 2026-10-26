@@ -939,6 +939,8 @@ export const dict: Record<string, string> = {
   "settings.live.key.placeholder": "ལྡེ་མིག་སྦྱར།",
   "settings.live.key.save": "ཉར་ཚགས།",
   "settings.live.key.remove": "སྲིབ་པ།",
+  "settings.live.key.failed": "ལྡེ་མིག་སྲུང་བཞག་མ་ཚུགས།",
+  "settings.live.key.keychain": "རིམ་ལུགས་ཀྱི་ལྡེ་མིག་མཛོད་མི་འཐོབ།",
   "settings.live.protection.title": "ཤོག་ངོས་མཐོང་སྤྲོད་ནས་སྦས།",
   "settings.live.protection.description": "ཡར་ཁྱབ་འདི་ཤོག་ངོས་མཐོང་སྤྲོད་དང་ཟིན་ཐོ་ལས་བཏོན་ཞིག",
   "live.command.start": "ཚོགས་འདུ་ཚུགས།",

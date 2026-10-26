@@ -931,6 +931,8 @@ export const dict = {
   "settings.live.key.placeholder": "Vložit klíč",
   "settings.live.key.save": "Uložit",
   "settings.live.key.remove": "Odebrat",
+  "settings.live.key.failed": "Klíč se nepodařilo uložit",
+  "settings.live.key.keychain": "Systémová klíčenka není dostupná",
   "settings.live.protection.title": "Skrýt při sdílení obrazovky",
   "settings.live.protection.description": "Nenechat překryvnou vrstvu ve sdílení obrazovky a nahrávkách",
   "live.command.start": "Spustit schůzku",

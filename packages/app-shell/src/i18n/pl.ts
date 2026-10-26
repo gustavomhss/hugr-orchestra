@@ -851,6 +851,8 @@ export const dict = {
   "settings.live.key.placeholder": "Wklej klucz",
   "settings.live.key.save": "Zapisz",
   "settings.live.key.remove": "Usuń",
+  "settings.live.key.failed": "Nie udało się zapisać klucza",
+  "settings.live.key.keychain": "Systemowy pęk kluczy jest niedostępny",
   "settings.live.protection.title": "Ukryj przy udostępnianiu ekranu",
   "settings.live.protection.description": "Nie pokazuj nakładki w udostępnianiu ekranu i nagraniach",
   "live.command.start": "Rozpocznij spotkanie",

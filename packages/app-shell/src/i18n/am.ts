@@ -912,6 +912,8 @@ export const dict = {
   "settings.live.key.placeholder": "ቁልፉን ለጥፍ",
   "settings.live.key.save": "አስቀምጥ",
   "settings.live.key.remove": "አስወግድ",
+  "settings.live.key.failed": "ቁልፉን ማስቀመጥ አልተቻለም",
+  "settings.live.key.keychain": "የስርዓቱ ቁልፍ ማከማቻ አይገኝም",
   "settings.live.protection.title": "የማያ ገጽ መጋራትን ደብቅ",
   "settings.live.protection.description": "ተደራቢው ከማያ ገጽ ማጋራቶችና ቀረጻዎች ውጭ እንዲሆን አድርግ",
   "live.command.start": "ስብሰባ ጀምር",

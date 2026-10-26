@@ -928,6 +928,8 @@ export const dict = {
   "settings.live.key.placeholder": "Калидро гузоред",
   "settings.live.key.save": "Захира",
   "settings.live.key.remove": "Нест кардан",
+  "settings.live.key.failed": "Калидро нигоҳ доштан нашуд",
+  "settings.live.key.keychain": "Калидони система дастрас нест",
   "settings.live.protection.title": "Аз мубодилаи экран пинҳон кардан",
   "settings.live.protection.description": "Қабати рӯйпӯш дар мубодилаи экран ва сабтҳо намоён нашавад",
   "live.command.start": "Оғози мулоқот",

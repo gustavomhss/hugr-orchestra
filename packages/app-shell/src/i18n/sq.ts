@@ -929,6 +929,8 @@ export const dict = {
   "settings.live.key.placeholder": "Ngjit çelësin",
   "settings.live.key.save": "Ruaj",
   "settings.live.key.remove": "Hiq",
+  "settings.live.key.failed": "Çelësi nuk mund të ruhej",
+  "settings.live.key.keychain": "Zinxhiri i çelësave të sistemit nuk është i disponueshëm",
   "settings.live.protection.title": "Fshih nga ndarja e ekranit",
   "settings.live.protection.description": "Mbaje shtresën jashtë ndarjeve të ekranit dhe regjistrimeve",
   "live.command.start": "Nis takimin",

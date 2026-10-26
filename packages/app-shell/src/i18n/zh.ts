@@ -902,6 +902,8 @@ export const dict = {
   "settings.live.key.placeholder": "粘贴密钥",
   "settings.live.key.save": "保存",
   "settings.live.key.remove": "移除",
+  "settings.live.key.failed": "无法保存密钥",
+  "settings.live.key.keychain": "系统钥匙串不可用",
   "settings.live.protection.title": "在屏幕共享中隐藏",
   "settings.live.protection.description": "让浮层不出现在屏幕共享和录制中",
   "live.command.start": "开始会议",

@@ -936,6 +936,8 @@ export const dict = {
   "settings.live.key.placeholder": "ကီး ကူးထည့်ရန်",
   "settings.live.key.save": "သိမ်းရန်",
   "settings.live.key.remove": "ဖယ်ရှားရန်",
+  "settings.live.key.failed": "ကီးကို သိမ်းဆည်း၍ မရပါ",
+  "settings.live.key.keychain": "စနစ်၏ ကီးချိန်း မရရှိနိုင်ပါ",
   "settings.live.protection.title": "မျက်နှာပြင် မျှဝေခြင်းမှ ဝှက်ရန်",
   "settings.live.protection.description": "မျက်နှာပြင် မျှဝေမှုနှင့် ရိုက်ကူးမှုများတွင် အထပ်ခံပြတင်း မပေါ်စေရန်",
   "live.command.start": "အစည်းအဝေး စတင်ရန်",

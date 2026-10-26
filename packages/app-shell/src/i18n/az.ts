@@ -933,6 +933,8 @@ export const dict = {
   "settings.live.key.placeholder": "Açarı yapışdırın",
   "settings.live.key.save": "Yadda saxla",
   "settings.live.key.remove": "Sil",
+  "settings.live.key.failed": "Açarı saxlamaq mümkün olmadı",
+  "settings.live.key.keychain": "Sistem açar zənciri əlçatan deyil",
   "settings.live.protection.title": "Ekran paylaşımından gizlət",
   "settings.live.protection.description": "Overlay-i ekran paylaşımlarından və yazılardan kənarda saxlayın",
   "live.command.start": "Görüşməni başlat",

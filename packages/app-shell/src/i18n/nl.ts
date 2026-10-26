@@ -932,6 +932,8 @@ export const dict = {
   "settings.live.key.placeholder": "Plak sleutel",
   "settings.live.key.save": "Opslaan",
   "settings.live.key.remove": "Verwijderen",
+  "settings.live.key.failed": "De sleutel kon niet worden opgeslagen",
+  "settings.live.key.keychain": "De systeemsleutelhanger is niet beschikbaar",
   "settings.live.protection.title": "Verbergen bij schermdeling",
   "settings.live.protection.description": "Houd de overlay uit schermdelingen en opnames",
   "live.command.start": "Vergadering starten",

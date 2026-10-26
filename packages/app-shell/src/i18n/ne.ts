@@ -925,6 +925,8 @@ export const dict: Record<string, string> = {
   "settings.live.key.placeholder": "कुञ्जी टाँस्नुहोस्",
   "settings.live.key.save": "सुरक्षित गर्नुहोस्",
   "settings.live.key.remove": "हटाउनुहोस्",
+  "settings.live.key.failed": "कुञ्जी सुरक्षित गर्न सकिएन",
+  "settings.live.key.keychain": "प्रणालीको किचेन उपलब्ध छैन",
   "settings.live.protection.title": "स्क्रिन सेयरिङबाट लुकाउनुहोस्",
   "settings.live.protection.description": "ओभरले स्क्रिन सेयर र रेकर्डिङमा नदेखिने बनाउनुहोस्",
   "live.command.start": "बैठक सुरु गर्नुहोस्",

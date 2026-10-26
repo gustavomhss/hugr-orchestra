@@ -24,7 +24,7 @@ if (process.env.BOARD_DOM !== "1") {
   const { Orchestra } = await import("@orchestra/client")
 
   const now = Date.now()
-  const project = {
+  const base = {
     id: "prj_launch", key: "LCH", name: "Launch", goal: "Ship the first public build", targetDate: null, budgetUsd: null,
     repoProjectID: null, githubRepo: null, status: "active", pausedReason: null, autoAcceptIntake: false,
     githubState: "signed_out", githubError: null, githubSyncedAt: null,
@@ -51,10 +51,19 @@ if (process.env.BOARD_DOM !== "1") {
       issue(6, "cut"),
     ],
     gets: 0,
+    paused: false,
+    refuse: false,
+    writes: [] as { path: string; body: unknown }[],
   }
   const page = (number: number) => ({
     issue: state.issues.find((item) => item.number === number),
-    questions: [],
+    questions: number === 3
+      ? [{
+          id: "bq_1", issue: 3, epic: null, text: "Which payment provider?", recommended: "stripe", costOfWaiting: null,
+          blocking: true, status: "open", answerOption: null, answerText: null, answeredAt: null, timeCreated: now,
+          options: [{ id: "stripe", label: "Stripe", consequence: null }, { id: "paddle", label: "Paddle", consequence: null }],
+        }]
+      : [],
     notes: [],
     // The server never sends a secret's value; the extra field proves the view would not print one if it did.
     attachments: [
@@ -64,8 +73,19 @@ if (process.env.BOARD_DOM !== "1") {
     dependencies: { dependsOn: [], blocks: [] },
     trail: { state: "signed_out", message: "Sign in to GitHub to see this trail" },
   })
-  const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch(request) {
+  const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) {
     const url = new URL(request.url)
+    const project = { ...base, status: state.paused ? "paused" : "active" }
+    // Every owner write is recorded so the tests can prove what reached the server, and what never did.
+    if (request.method === "POST") {
+      const text = await request.text()
+      state.writes.push({ path: url.pathname, body: text ? JSON.parse(text) : null })
+      if (url.pathname.endsWith("/undo") && state.refuse)
+        return Response.json({ _tag: "BoardRefusedError", message: "A later change touched the same fields" }, { status: 409 })
+      if (url.pathname === "/api/board/LCH/pause") state.paused = true
+      if (url.pathname === "/api/board/LCH/resume") state.paused = false
+      return Response.json({ activity: `bac_${state.writes.length}` })
+    }
     if (url.pathname === "/api/board")
       return Response.json([{ project, stages: { backlog: 1, ready: 1, building: 1, shipped: 1 }, openQuestions: 0, health: "on_track" }])
     if (url.pathname === "/api/board/LCH") {
@@ -143,10 +163,100 @@ if (process.env.BOARD_DOM !== "1") {
     state.issues = state.issues.map((item) => (item.number === 2 ? { ...item, stage: "building" } : item))
     // Another project's change does not refetch this board.
     listeners.forEach((listen) => listen({ details: { type: "board.changed", properties: { project: "prj_other" } } }))
-    listeners.forEach((listen) => listen({ details: { type: "board.changed", properties: { project: project.id } } }))
+    listeners.forEach((listen) => listen({ details: { type: "board.changed", properties: { project: base.id } } }))
     await until(() => view.lane("building").includes("LCH-2"), view.host)
     expect(state.gets).toBe(gets + 1)
     expect(view.lane("ready")).toEqual([])
+    view.done()
+  }, 20000)
+
+  const peek = async (view: Awaited<ReturnType<typeof mount>>) => {
+    view.host.querySelector<HTMLElement>('[data-ref="LCH-3"]')!
+      .dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
+    await until(() => !!view.host.querySelector(".board-peek .board-option"), view.host)
+    const button = (text: string) =>
+      [...view.host.querySelectorAll<HTMLButtonElement>("button")].find((item) => item.textContent?.trim() === text)
+    const type = (field: HTMLInputElement | HTMLTextAreaElement, value: string) => {
+      field.value = value
+      field.dispatchEvent(new Event("input", { bubbles: true }))
+    }
+    // A write is done once the server saw it and the view left its busy state.
+    const write = async (act: () => void) => {
+      const before = state.writes.length
+      act()
+      await until(() => state.writes.length > before && !view.host.querySelector<HTMLButtonElement>(".board-controls .mx-btn")?.disabled, view.host)
+      return state.writes.at(-1)!
+    }
+    return { button, type, write }
+  }
+
+  test("answers, notes, pauses, the merge hold and secrets go to the board API", async () => {
+    const view = await mount()
+    const ui = await peek(view)
+    state.writes = []
+
+    ui.type(view.host.querySelector<HTMLInputElement>(".board-question .board-input")!, "  go with the default  ")
+    expect(await ui.write(() => view.host.querySelector<HTMLButtonElement>(".board-peek .board-option")!.click()))
+      .toEqual({ path: "/api/board/LCH/question/bq_1/answer", body: { option: "stripe", text: "go with the default" } })
+
+    ui.type(view.host.querySelector<HTMLTextAreaElement>(".board-composer textarea")!, "Use the test keys first")
+    expect(await ui.write(() => ui.button("Add note")!.click()))
+      .toEqual({ path: "/api/board/LCH/issue/3/note", body: { body: "Use the test keys first" } })
+    await until(() => view.host.querySelector<HTMLTextAreaElement>(".board-composer textarea")!.value === "", view.host)
+
+    expect((await ui.write(() => ui.button("Pause issue")!.click())).path).toBe("/api/board/LCH/issue/3/pause")
+    expect(await ui.write(() => view.host.querySelector<HTMLButtonElement>('.board-hold [role="switch"]')!.click()))
+      .toEqual({ path: "/api/board/LCH/issue/3/hold", body: { hold: true } })
+    expect((await ui.write(() => ui.button("Pause project")!.click())).path).toBe("/api/board/LCH/pause")
+    await until(() => !!ui.button("Resume project"), view.host)
+    expect((await ui.write(() => ui.button("Resume project")!.click())).path).toBe("/api/board/LCH/resume")
+
+    ui.button("Add secret")!.click()
+    const [label, value] = [...view.host.querySelectorAll<HTMLInputElement>(".board-secret input")]
+    expect(value.type).toBe("password")
+    ui.type(label, "STRIPE_LIVE_KEY")
+    ui.type(value, "rk-vault-only-value-0001")
+    expect(await ui.write(() => ui.button("Save to vault")!.click())).toEqual({
+      path: "/api/board/LCH/issue/3/attachment",
+      body: { kind: "secret", name: "STRIPE_LIVE_KEY", value: "rk-vault-only-value-0001" },
+    })
+    await until(() => !view.host.querySelector(".board-secret"), view.host)
+    expect(document.body.innerHTML).not.toContain("rk-vault-only-value-0001")
+    view.done()
+  }, 20000)
+
+  test("a note holding a key is never sent; the key moves to the vault form instead", async () => {
+    const view = await mount()
+    const ui = await peek(view)
+    state.writes = []
+    // Split so the repo secret guard does not flag a fake token.
+    const token = "ghp" + "_abcdefghijklmnopqrstuvwxyz0123"
+    const draft = view.host.querySelector<HTMLTextAreaElement>(".board-composer textarea")!
+    ui.type(draft, `Deploy with ${token} please`)
+    ui.button("Add note")!.click()
+    await until(() => !!view.host.querySelector(".board-caught"), view.host)
+    expect(ui.button("Add note")!.disabled).toBe(true)
+
+    ui.button("Store as secret")!.click()
+    await until(() => !!view.host.querySelector(".board-secret"), view.host)
+    expect(view.host.querySelector<HTMLTextAreaElement>(".board-composer textarea")!.value).toBe("Deploy with  please")
+    const [label, value] = [...view.host.querySelectorAll<HTMLInputElement>(".board-secret input")]
+    expect(value.value).toBe(token)
+    ui.type(label, "GITHUB_TOKEN")
+    expect((await ui.write(() => ui.button("Save to vault")!.click())).body).toEqual({ kind: "secret", name: "GITHUB_TOKEN", value: token })
+    expect(state.writes.filter((item) => item.path.endsWith("/note"))).toEqual([])
+    view.done()
+  }, 20000)
+
+  test("undo runs from the activity row and a refusal shows the server's reason inline", async () => {
+    const view = await mount()
+    const ui = await peek(view)
+    state.writes = []
+    state.refuse = true
+    expect((await ui.write(() => ui.button("Undo")!.click())).path).toBe("/api/board/LCH/activity/act_1/undo")
+    await until(() => !!view.host.querySelector(".board-peek .mx-error"), view.host)
+    expect(view.host.querySelector(".board-peek .mx-error")?.textContent).toContain("A later change touched the same fields")
+    state.refuse = false
     view.done()
   }, 20000)
 

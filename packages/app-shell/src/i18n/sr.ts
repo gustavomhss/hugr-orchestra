@@ -929,6 +929,8 @@ export const dict = {
   "settings.live.key.placeholder": "Nalepi ključ",
   "settings.live.key.save": "Sačuvaj",
   "settings.live.key.remove": "Ukloni",
+  "settings.live.key.failed": "Кључ није могуће сачувати",
+  "settings.live.key.keychain": "Системски привезак за кључеве није доступан",
   "settings.live.protection.title": "Sakrij od deljenja ekrana",
   "settings.live.protection.description": "Preklop neka ne bude vidljiv u deljenju ekrana i snimcima",
   "live.command.start": "Pokreni sastanak",

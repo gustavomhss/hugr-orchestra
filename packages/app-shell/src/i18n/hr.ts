@@ -935,6 +935,8 @@ export const dict = {
   "settings.live.key.placeholder": "Zalijepi ključ",
   "settings.live.key.save": "Spremi",
   "settings.live.key.remove": "Ukloni",
+  "settings.live.key.failed": "Ključ nije moguće spremiti",
+  "settings.live.key.keychain": "Sustavski privjesak ključeva nije dostupan",
   "settings.live.protection.title": "Sakrij pri dijeljenju zaslona",
   "settings.live.protection.description": "Ne prikazuj overlay u dijeljenju zaslona i snimkama",
   "live.command.start": "Pokreni sastanak",

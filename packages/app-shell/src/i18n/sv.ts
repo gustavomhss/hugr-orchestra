@@ -930,6 +930,8 @@ export const dict = {
   "settings.live.key.placeholder": "Klistra in nyckel",
   "settings.live.key.save": "Spara",
   "settings.live.key.remove": "Ta bort",
+  "settings.live.key.failed": "Det gick inte att spara nyckeln",
+  "settings.live.key.keychain": "Systemets nyckelring är inte tillgänglig",
   "settings.live.protection.title": "Dölj vid skärmdelning",
   "settings.live.protection.description": "Håll överlagringen borta från skärmdelningar och inspelningar",
   "live.command.start": "Starta möte",

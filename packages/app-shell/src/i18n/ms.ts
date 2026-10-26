@@ -923,6 +923,8 @@ export const dict = {
   "settings.live.key.placeholder": "Tampal kunci",
   "settings.live.key.save": "Simpan",
   "settings.live.key.remove": "Alih keluar",
+  "settings.live.key.failed": "Kunci tidak dapat disimpan",
+  "settings.live.key.keychain": "Rantai kunci sistem tidak tersedia",
   "settings.live.protection.title": "Sembunyikan daripada perkongsian skrin",
   "settings.live.protection.description": "Pastikan tindihan tidak kelihatan dalam perkongsian skrin dan rakaman",
   "live.command.start": "Mula mesyuarat",

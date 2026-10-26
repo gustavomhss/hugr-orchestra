@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { across, group, order, progress, shippedDay, step, steps, ticks, waitingOn, type Issue } from "./model"
+import { across, attachmentKind, canUndo, credential, group, order, progress, shippedDay, step, steps, ticks, waitingOn, type Issue } from "./model"
 
 const day = 24 * 60 * 60 * 1000
 const now = new Date(2026, 9, 25, 15).getTime()
@@ -120,4 +120,36 @@ test("a paused card names the open question asked on it", () => {
   const questions = [{ ...question, status: "answered" as const }, question] as unknown as Parameters<typeof waitingOn>[0]["questions"]
   expect(waitingOn({ questions }, { number: 3 })).toBe(questions[1])
   expect(waitingOn({ questions }, { number: 4 })).toBeUndefined()
+})
+
+test("only Maestro's plan changes and GitHub overwrites offer undo, once", () => {
+  expect(canUndo({ actor: "maestro", action: "issue.move", undoneBy: null })).toBe(true)
+  expect(canUndo({ actor: "github", action: "github.overwrite", undoneBy: null })).toBe(true)
+  expect(canUndo({ actor: "maestro", action: "issue.move", undoneBy: "act_9" })).toBe(false)
+  expect(canUndo({ actor: "owner", action: "note.add", undoneBy: null })).toBe(false)
+  expect(canUndo({ actor: "maestro", action: "question.ask", undoneBy: null })).toBe(false)
+})
+
+test("a dropped file's kind follows its MIME type", () => {
+  expect(attachmentKind("image/png")).toBe("image")
+  expect(attachmentKind("video/mp4")).toBe("video")
+  expect(attachmentKind("application/pdf")).toBe("doc")
+  expect(attachmentKind("application/vnd.openxmlformats-officedocument.wordprocessingml.document")).toBe("doc")
+  expect(attachmentKind("text/markdown")).toBe("doc")
+  expect(attachmentKind("application/zip")).toBe("file")
+  expect(attachmentKind("")).toBe("file")
+})
+
+test("a note that carries a key is caught, a commit hash or a link is not", () => {
+  // Split so the repo secret guard does not flag fake tokens.
+  const github = "ghp" + "_abcdefghijklmnopqrstuvwxyz0123"
+  const aws = "AKIA" + "ABCDEFGHIJKLMNOP"
+  expect(credential("use sk-live-abcdefghijklmnop1234 for staging")).toBe("sk-live-abcdefghijklmnop1234")
+  expect(credential("token " + github)).toBe(github)
+  expect(credential(aws)).toBe(aws)
+  expect(credential("key: Zm9vYmFyYmF6cXV4cXV1eHF1dXpxdXV6cXV1eg")).toBe("Zm9vYmFyYmF6cXV4cXV1eHF1dXpxdXV6cXV1eg")
+  expect(credential("fixed in 3f9c2a1d4b5e6f708192a3b4c5d6e7f809102030")).toBeUndefined()
+  expect(credential("see https://github.com/acme/app/pull/12 before merging")).toBeUndefined()
+  expect(credential("run 550e8400-e29b-41d4-a716-446655440000 again")).toBeUndefined()
+  expect(credential("plain words only")).toBeUndefined()
 })

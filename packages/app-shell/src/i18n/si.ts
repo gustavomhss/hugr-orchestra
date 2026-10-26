@@ -922,6 +922,8 @@ export const dict: Record<string, string> = {
   "settings.live.key.placeholder": "යතුර ඇලවන්න",
   "settings.live.key.save": "සුරකින්න",
   "settings.live.key.remove": "ඉවත් කරන්න",
+  "settings.live.key.failed": "යතුර සුරැකිය නොහැකි විය",
+  "settings.live.key.keychain": "පද්ධති යතුරු දාමය ලබා ගත නොහැක",
   "settings.live.protection.title": "තිර බෙදාගැනීමෙන් සඟවන්න",
   "settings.live.protection.description": "උඩිතලය තිර බෙදාගැනීම් සහ පටිගත කිරීම්වලින් ඉවතව තබන්න",
   "live.command.start": "රැස්වීම ආරම්භ කරන්න",

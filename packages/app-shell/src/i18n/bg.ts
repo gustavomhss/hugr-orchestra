@@ -931,6 +931,8 @@ export const dict = {
   "settings.live.key.placeholder": "Постави ключа",
   "settings.live.key.save": "Запази",
   "settings.live.key.remove": "Премахни",
+  "settings.live.key.failed": "Ключът не можа да бъде запазен",
+  "settings.live.key.keychain": "Системният ключодържател не е наличен",
   "settings.live.protection.title": "Скрий при споделяне на екрана",
   "settings.live.protection.description": "Не показвай наслагването при споделяне на екрана и записи",
   "live.command.start": "Започни среща",

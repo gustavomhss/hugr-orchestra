@@ -931,6 +931,8 @@ export const dict = {
   "settings.live.key.placeholder": "ਕੁੰਜੀ ਪੇਸਟ ਕਰੋ",
   "settings.live.key.save": "ਸੇਵ ਕਰੋ",
   "settings.live.key.remove": "ਹਟਾਓ",
+  "settings.live.key.failed": "ਕੁੰਜੀ ਸੰਭਾਲੀ ਨਹੀਂ ਜਾ ਸਕੀ",
+  "settings.live.key.keychain": "ਸਿਸਟਮ ਕੀਚੇਨ ਉਪਲਬਧ ਨਹੀਂ ਹੈ",
   "settings.live.protection.title": "ਸਕ੍ਰੀਨ ਸ਼ੇਅਰਿੰਗ ਤੋਂ ਲੁਕਾਓ",
   "settings.live.protection.description": "ਓਵਰਲੇ ਨੂੰ ਸਕ੍ਰੀਨ ਸ਼ੇਅਰ ਅਤੇ ਰਿਕਾਰਡਿੰਗਾਂ ਤੋਂ ਬਾਹਰ ਰੱਖੋ",
   "live.command.start": "ਮੀਟਿੰਗ ਸ਼ੁਰੂ ਕਰੋ",

@@ -935,6 +935,8 @@ export const dict = {
   "settings.live.key.placeholder": "کلید پیسٹ کریں",
   "settings.live.key.save": "محفوظ کریں",
   "settings.live.key.remove": "ہٹائیں",
+  "settings.live.key.failed": "کلید محفوظ نہیں ہو سکی",
+  "settings.live.key.keychain": "سسٹم کی چین دستیاب نہیں ہے",
   "settings.live.protection.title": "اسکرین شیئرنگ سے چھپائیں",
   "settings.live.protection.description": "اوورلے کو اسکرین شیئرز اور ریکارڈنگز سے باہر رکھیں",
   "live.command.start": "میٹنگ شروع کریں",

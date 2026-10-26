@@ -930,6 +930,8 @@ export const dict = {
   "settings.live.key.placeholder": "Kalitni joylash",
   "settings.live.key.save": "Saqlash",
   "settings.live.key.remove": "Olib tashlash",
+  "settings.live.key.failed": "Kalitni saqlab bo‘lmadi",
+  "settings.live.key.keychain": "Tizim kalitlar to‘plami mavjud emas",
   "settings.live.protection.title": "Ekran ulashishdan yashirish",
   "settings.live.protection.description": "Qoplama ekran ulashish va yozuvlarda ko'rinmasin",
   "live.command.start": "Uchrashuvni boshlash",

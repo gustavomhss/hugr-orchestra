@@ -848,6 +848,8 @@ export const dict = {
   "settings.live.key.placeholder": "Incolla la chiave",
   "settings.live.key.save": "Salva",
   "settings.live.key.remove": "Rimuovi",
+  "settings.live.key.failed": "Impossibile salvare la chiave",
+  "settings.live.key.keychain": "Il portachiavi di sistema non è disponibile",
   "settings.live.protection.title": "Nascondi durante la condivisione dello schermo",
   "settings.live.protection.description": "Tieni l'overlay fuori da condivisioni e registrazioni dello schermo",
   "live.command.start": "Avvia riunione",

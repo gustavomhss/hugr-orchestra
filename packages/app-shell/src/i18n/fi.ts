@@ -827,6 +827,8 @@ export const dict = {
   "settings.live.key.placeholder": "Liitä avain",
   "settings.live.key.save": "Tallenna",
   "settings.live.key.remove": "Poista",
+  "settings.live.key.failed": "Avainta ei voitu tallentaa",
+  "settings.live.key.keychain": "Järjestelmän avainnippu ei ole käytettävissä",
   "settings.live.protection.title": "Piilota näytön jakamisesta",
   "settings.live.protection.description": "Pidä peittokuva poissa näytön jakamisesta ja tallennuksista",
   "live.command.start": "Aloita kokous",

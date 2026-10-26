@@ -913,6 +913,8 @@ export const dict = {
   "settings.live.key.placeholder": "Вставить ключ",
   "settings.live.key.save": "Сохранить",
   "settings.live.key.remove": "Удалить",
+  "settings.live.key.failed": "Не удалось сохранить ключ",
+  "settings.live.key.keychain": "Системная связка ключей недоступна",
   "settings.live.protection.title": "Скрывать при демонстрации экрана",
   "settings.live.protection.description": "Не показывать оверлей в демонстрации экрана и записях",
   "live.command.start": "Начать встречу",

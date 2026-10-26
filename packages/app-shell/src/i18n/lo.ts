@@ -921,6 +921,8 @@ export const dict = {
   "settings.live.key.placeholder": "ວາງກະແຈ",
   "settings.live.key.save": "ບັນທຶກ",
   "settings.live.key.remove": "ລຶບ",
+  "settings.live.key.failed": "ບໍ່ສາມາດບັນທຶກກະແຈໄດ້",
+  "settings.live.key.keychain": "ພວງກະແຈຂອງລະບົບບໍ່ພ້ອມໃຊ້ງານ",
   "settings.live.protection.title": "ເຊື່ອງຈາກການແບ່ງປັນໜ້າຈໍ",
   "settings.live.protection.description": "ບໍ່ໃຫ້ໜ້າຈໍຊ້ອນປາກົດໃນການແບ່ງປັນໜ້າຈໍ ແລະການບັນທຶກ",
   "live.command.start": "ເລີ່ມກອງປະຊຸມ",

@@ -896,6 +896,8 @@ export const dict = {
   "settings.live.key.placeholder": "貼上金鑰",
   "settings.live.key.save": "儲存",
   "settings.live.key.remove": "移除",
+  "settings.live.key.failed": "無法儲存金鑰",
+  "settings.live.key.keychain": "系統鑰匙圈無法使用",
   "settings.live.protection.title": "在螢幕共享中隱藏",
   "settings.live.protection.description": "讓浮層不出現在螢幕共享與錄影中",
   "live.command.start": "開始會議",

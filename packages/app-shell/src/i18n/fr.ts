@@ -852,6 +852,8 @@ export const dict = {
   "settings.live.key.placeholder": "Coller la clé",
   "settings.live.key.save": "Enregistrer",
   "settings.live.key.remove": "Supprimer",
+  "settings.live.key.failed": "Impossible d'enregistrer la clé",
+  "settings.live.key.keychain": "Le trousseau du système n'est pas disponible",
   "settings.live.protection.title": "Masquer lors du partage d'écran",
   "settings.live.protection.description": "Garder l'incrustation hors des partages d'écran et enregistrements",
   "live.command.start": "Démarrer la réunion",

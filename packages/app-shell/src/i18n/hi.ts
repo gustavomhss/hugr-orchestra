@@ -933,6 +933,8 @@ export const dict = {
   "settings.live.key.placeholder": "कुंजी चिपकाएँ",
   "settings.live.key.save": "सहेजें",
   "settings.live.key.remove": "हटाएँ",
+  "settings.live.key.failed": "कुंजी सहेजी नहीं जा सकी",
+  "settings.live.key.keychain": "सिस्टम कीचेन उपलब्ध नहीं है",
   "settings.live.protection.title": "स्क्रीन शेयरिंग से छिपाएँ",
   "settings.live.protection.description": "ओवरले को स्क्रीन शेयर और रिकॉर्डिंग में न दिखाएँ",
   "live.command.start": "मीटिंग शुरू करें",

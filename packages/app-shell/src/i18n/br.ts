@@ -850,6 +850,8 @@ export const dict = {
   "settings.live.key.placeholder": "Pegañ an alc'hwez",
   "settings.live.key.save": "Enrollañ",
   "settings.live.key.remove": "Lemel",
+  "settings.live.key.failed": "Não foi possível salvar a chave",
+  "settings.live.key.keychain": "O chaveiro do sistema não está disponível",
   "settings.live.protection.title": "Kuzh diouzh rannadur ar skramm",
   "settings.live.protection.description": "Derc'hel an diwelfenn kuit eus ar rannadennoù skramm hag ar rekordoù",
   "live.command.start": "Kregiñ ar c'henvod",

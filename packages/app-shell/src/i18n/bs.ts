@@ -913,6 +913,8 @@ export const dict = {
   "settings.live.key.placeholder": "Nalijepi ključ",
   "settings.live.key.save": "Sačuvaj",
   "settings.live.key.remove": "Ukloni",
+  "settings.live.key.failed": "Ključ nije moguće sačuvati",
+  "settings.live.key.keychain": "Sistemski privjesak za ključeve nije dostupan",
   "settings.live.protection.title": "Sakrij pri dijeljenju ekrana",
   "settings.live.protection.description": "Preklopni prozor drži podalje od dijeljenja ekrana i snimaka",
   "live.command.start": "Pokreni sastanak",

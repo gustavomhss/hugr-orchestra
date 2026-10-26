@@ -603,6 +603,8 @@ export const dict = {
   "settings.live.key.placeholder": "키 붙여넣기",
   "settings.live.key.save": "저장",
   "settings.live.key.remove": "제거",
+  "settings.live.key.failed": "키를 저장할 수 없습니다",
+  "settings.live.key.keychain": "시스템 키체인을 사용할 수 없습니다",
   "settings.live.protection.title": "화면 공유에서 숨기기",
   "settings.live.protection.description": "오버레이가 화면 공유와 녹화에 표시되지 않게 합니다",
   "live.command.start": "회의 시작",

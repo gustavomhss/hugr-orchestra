@@ -1011,6 +1011,8 @@ export const dict = {
   "settings.live.key.placeholder": "Вставити ключ",
   "settings.live.key.save": "Зберегти",
   "settings.live.key.remove": "Видалити",
+  "settings.live.key.failed": "Не вдалося зберегти ключ",
+  "settings.live.key.keychain": "Системна в'язка ключів недоступна",
   "settings.live.protection.title": "Приховати під час демонстрації екрана",
   "settings.live.protection.description": "Не показувати оверлей у демонстраціях екрана та записах",
   "live.command.start": "Почати зустріч",

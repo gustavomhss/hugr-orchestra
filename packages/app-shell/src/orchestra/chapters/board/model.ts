@@ -107,3 +107,28 @@ export function shippedDay(issue: Pick<Issue, "stageEnteredAt">, now: number) {
 export function waitingOn(snapshot: Pick<Snapshot, "questions">, issue: Pick<Issue, "number">) {
   return snapshot.questions.find((question) => question.status === "open" && question.issue === issue.number)
 }
+
+// Mirrors the server's rule (packages/core/src/board/board.ts UNDOABLE): only Maestro's plan changes and GitHub
+// overwrites undo; the owner reverses their own actions by doing the opposite.
+const undoable = ["issue.update", "issue.move", "steps.set", "epic.upsert", "question.withdraw"]
+export function canUndo(entry: Pick<Page["activity"][number], "actor" | "action" | "undoneBy">) {
+  if (entry.undoneBy !== null) return false
+  return entry.action === "github.overwrite" || (entry.actor === "maestro" && undoable.includes(entry.action))
+}
+
+// The attachment kind the server stores for a dropped file, from its MIME type.
+export function attachmentKind(mime: string) {
+  if (mime.startsWith("image/")) return "image" as const
+  if (mime.startsWith("video/")) return "video" as const
+  if (/^(text\/|application\/(pdf|rtf|msword|vnd\.(openxmlformats-officedocument|oasis\.opendocument|ms-excel|ms-powerpoint)))/.test(mime))
+    return "doc" as const
+  return "file" as const
+}
+
+// A note is plain text that GitHub may mirror, so a pasted key must go to the vault instead. Returns the token that
+// looks like a credential: a known prefix, a private key block, or a long unbroken run that is not a commit hash.
+export function credential(text: string) {
+  const known = text.match(/-----BEGIN [A-Z ]*PRIVATE KEY-----|\b(sk|pk|rk)-[A-Za-z0-9_-]{16,}|\b(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}|\bgithub_pat_[A-Za-z0-9_]{20,}|\bAKIA[A-Z0-9]{16}\b|\bxox[abpr]-[A-Za-z0-9-]{10,}/)
+  if (known) return known[0]
+  return text.match(/[A-Za-z0-9_+=-]{32,}/g)?.find((token) => !/^[0-9a-f-]+$/i.test(token))
+}

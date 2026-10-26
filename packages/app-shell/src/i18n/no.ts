@@ -775,6 +775,8 @@ export const dict = {
   "settings.live.key.placeholder": "Lim inn nøkkel",
   "settings.live.key.save": "Lagre",
   "settings.live.key.remove": "Fjern",
+  "settings.live.key.failed": "Kunne ikke lagre nøkkelen",
+  "settings.live.key.keychain": "Systemets nøkkelring er ikke tilgjengelig",
   "settings.live.protection.title": "Skjul for skjermdeling",
   "settings.live.protection.description": "Hold overlegget utenfor skjermdelinger og opptak",
   "live.command.start": "Start møte",

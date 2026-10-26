@@ -923,6 +923,8 @@ export const dict: Record<string, string> = {
   "settings.live.key.placeholder": "কী পেস্ট করুন",
   "settings.live.key.save": "সংরক্ষণ করুন",
   "settings.live.key.remove": "সরান",
+  "settings.live.key.failed": "কী সংরক্ষণ করা যায়নি",
+  "settings.live.key.keychain": "সিস্টেম কীচেইন উপলব্ধ নয়",
   "settings.live.protection.title": "স্ক্রিন শেয়ারিং থেকে লুকান",
   "settings.live.protection.description": "ওভারলেকে স্ক্রিন শেয়ার ও রেকর্ডিং থেকে দূরে রাখুন",
   "live.command.start": "মিটিং শুরু করুন",

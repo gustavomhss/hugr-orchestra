@@ -930,6 +930,8 @@ export const dict = {
   "settings.live.key.placeholder": "Түлхүүр буулгах",
   "settings.live.key.save": "Хадгалах",
   "settings.live.key.remove": "Устгах",
+  "settings.live.key.failed": "Түлхүүрийг хадгалж чадсангүй",
+  "settings.live.key.keychain": "Системийн түлхүүрийн сан ашиглах боломжгүй",
   "settings.live.protection.title": "Дэлгэц хуваалцахаас нуух",
   "settings.live.protection.description": "Гадаргууг дэлгэц хуваалцах болон бичлэгт харуулахгүй байх",
   "live.command.start": "Уулзалт эхлүүлэх",

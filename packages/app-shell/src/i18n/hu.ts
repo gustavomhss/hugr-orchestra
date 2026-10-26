@@ -934,6 +934,8 @@ export const dict = {
   "settings.live.key.placeholder": "Kulcs beillesztése",
   "settings.live.key.save": "Mentés",
   "settings.live.key.remove": "Eltávolítás",
+  "settings.live.key.failed": "A kulcsot nem sikerült menteni",
+  "settings.live.key.keychain": "A rendszer kulcskarikája nem érhető el",
   "settings.live.protection.title": "Elrejtés képernyőmegosztáskor",
   "settings.live.protection.description": "Az átfedés ne jelenjen meg képernyőmegosztásban és felvételeken",
   "live.command.start": "Megbeszélés indítása",

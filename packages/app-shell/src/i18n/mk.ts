@@ -930,6 +930,8 @@ export const dict = {
   "settings.live.key.placeholder": "Залепи клуч",
   "settings.live.key.save": "Зачувај",
   "settings.live.key.remove": "Отстрани",
+  "settings.live.key.failed": "Клучот не може да се зачува",
+  "settings.live.key.keychain": "Системскиот привезок за клучеви не е достапен",
   "settings.live.protection.title": "Сокриј од споделување екран",
   "settings.live.protection.description": "Преклопот да не се појавува во споделувања на екран и снимки",
   "live.command.start": "Започни состанок",

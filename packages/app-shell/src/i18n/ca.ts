@@ -935,6 +935,8 @@ export const dict = {
   "settings.live.key.placeholder": "Enganxa la clau",
   "settings.live.key.save": "Desa",
   "settings.live.key.remove": "Elimina",
+  "settings.live.key.failed": "No s'ha pogut desar la clau",
+  "settings.live.key.keychain": "El clauer del sistema no està disponible",
   "settings.live.protection.title": "Amaga en compartir la pantalla",
   "settings.live.protection.description": "Mantén la superposició fora de les compartides de pantalla i de les gravacions",
   "live.command.start": "Inicia la reunió",

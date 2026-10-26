@@ -849,6 +849,8 @@ export const dict = {
   "settings.live.key.placeholder": "الصق المفتاح",
   "settings.live.key.save": "حفظ",
   "settings.live.key.remove": "إزالة",
+  "settings.live.key.failed": "تعذّر حفظ المفتاح",
+  "settings.live.key.keychain": "سلسلة مفاتيح النظام غير متاحة",
   "settings.live.protection.title": "إخفاء من مشاركة الشاشة",
   "settings.live.protection.description": "إبقاء الطبقة بعيدة عن مشاركات الشاشة والتسجيلات",
   "live.command.start": "بدء الاجتماع",

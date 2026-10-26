@@ -900,6 +900,8 @@ export const dict = {
   "settings.live.key.placeholder": "วางคีย์",
   "settings.live.key.save": "บันทึก",
   "settings.live.key.remove": "ลบ",
+  "settings.live.key.failed": "ไม่สามารถบันทึกคีย์ได้",
+  "settings.live.key.keychain": "พวงกุญแจของระบบไม่พร้อมใช้งาน",
   "settings.live.protection.title": "ซ่อนจากการแชร์หน้าจอ",
   "settings.live.protection.description": "ไม่ให้โอเวอร์เลย์ปรากฏในการแชร์หน้าจอและการบันทึก",
   "live.command.start": "เริ่มการประชุม",

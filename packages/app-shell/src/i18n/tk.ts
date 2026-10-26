@@ -926,6 +926,8 @@ export const dict = {
   "settings.live.key.placeholder": "Açary goýmak",
   "settings.live.key.save": "Ýatda sakla",
   "settings.live.key.remove": "Aýyr",
+  "settings.live.key.failed": "Açary saklap bolmady",
+  "settings.live.key.keychain": "Ulgamyň açar zynjyry elýeterli däl",
   "settings.live.protection.title": "Ekran paýlaşmakdan gizle",
   "settings.live.protection.description": "Üstki gatlak ekran paýlaşmalarda we ýazgylarda görünmesin",
   "live.command.start": "Ýygnagy başla",

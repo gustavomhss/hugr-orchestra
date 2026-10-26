@@ -931,6 +931,8 @@ export const dict = {
   "settings.live.key.placeholder": "Տեղադրել բանալին",
   "settings.live.key.save": "Պահել",
   "settings.live.key.remove": "Հեռացնել",
+  "settings.live.key.failed": "Չհաջողվեց պահպանել բանալին",
+  "settings.live.key.keychain": "Համակարգի բանալիների շղթան հասանելի չէ",
   "settings.live.protection.title": "Թաքցնել էկրանի կիսումից",
   "settings.live.protection.description": "Վերադրումը թաքցնել էկրանի կիսման և ձայնագրությունների մեջ",
   "live.command.start": "Սկսել հանդիպումը",

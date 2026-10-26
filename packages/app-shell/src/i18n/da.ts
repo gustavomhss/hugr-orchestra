@@ -793,6 +793,8 @@ export const dict = {
   "settings.live.key.placeholder": "Indsæt nøgle",
   "settings.live.key.save": "Gem",
   "settings.live.key.remove": "Fjern",
+  "settings.live.key.failed": "Nøglen kunne ikke gemmes",
+  "settings.live.key.keychain": "Systemets nøglering er ikke tilgængelig",
   "settings.live.protection.title": "Skjul ved skærmdeling",
   "settings.live.protection.description": "Hold overlayet ude af skærmdelinger og optagelser",
   "live.command.start": "Start møde",

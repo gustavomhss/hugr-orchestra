@@ -931,6 +931,8 @@ export const dict = {
   "settings.live.key.placeholder": "Lipește cheia",
   "settings.live.key.save": "Salvează",
   "settings.live.key.remove": "Elimină",
+  "settings.live.key.failed": "Cheia nu a putut fi salvată",
+  "settings.live.key.keychain": "Breloc-ul de chei al sistemului nu este disponibil",
   "settings.live.protection.title": "Ascunde din partajarea ecranului",
   "settings.live.protection.description": "Overlay-ul nu apare în partajările de ecran și înregistrări",
   "live.command.start": "Pornește întâlnirea",

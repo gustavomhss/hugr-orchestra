@@ -939,6 +939,8 @@ export const dict = {
   "settings.live.key.placeholder": "Įklijuoti raktą",
   "settings.live.key.save": "Išsaugoti",
   "settings.live.key.remove": "Pašalinti",
+  "settings.live.key.failed": "Nepavyko išsaugoti rakto",
+  "settings.live.key.keychain": "Sistemos raktinė nepasiekiama",
   "settings.live.protection.title": "Slėpti nuo ekrano bendrinimo",
   "settings.live.protection.description": "Neleisti perdangai matytis ekrano bendrinimuose ir įrašuose",
   "live.command.start": "Pradėti susitikimą",

@@ -922,6 +922,8 @@ export const dict = {
   "settings.live.key.placeholder": "چسباندن کلید",
   "settings.live.key.save": "ذخیره",
   "settings.live.key.remove": "حذف",
+  "settings.live.key.failed": "ذخیرهٔ کلید ممکن نشد",
+  "settings.live.key.keychain": "جاکلیدی سیستم در دسترس نیست",
   "settings.live.protection.title": "پنهان کردن هنگام اشتراک‌گذاری صفحه",
   "settings.live.protection.description": "پوشش را از اشتراک‌گذاری صفحه و ضبط‌ها دور نگه دار",
   "live.command.start": "شروع جلسه",

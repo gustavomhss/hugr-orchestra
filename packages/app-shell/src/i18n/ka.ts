@@ -924,6 +924,8 @@ export const dict = {
   "settings.live.key.placeholder": "ჩასვი გასაღები",
   "settings.live.key.save": "შენახვა",
   "settings.live.key.remove": "წაშლა",
+  "settings.live.key.failed": "გასაღების შენახვა ვერ მოხერხდა",
+  "settings.live.key.keychain": "სისტემის გასაღებების შენახვა მიუწვდომელია",
   "settings.live.protection.title": "დამალვა ეკრანის გაზიარებისგან",
   "settings.live.protection.description": "გადაფარვა არ გამოჩნდეს ეკრანის გაზიარებასა და ჩანაწერებში",
   "live.command.start": "შეხვედრის დაწყება",

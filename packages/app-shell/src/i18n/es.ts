@@ -916,6 +916,8 @@ export const dict = {
   "settings.live.key.placeholder": "Pegar clave",
   "settings.live.key.save": "Guardar",
   "settings.live.key.remove": "Quitar",
+  "settings.live.key.failed": "No se pudo guardar la clave",
+  "settings.live.key.keychain": "El llavero del sistema no está disponible",
   "settings.live.protection.title": "Ocultar al compartir pantalla",
   "settings.live.protection.description": "Mantener la superposición fuera de las capturas y grabaciones de pantalla",
   "live.command.start": "Iniciar reunión",

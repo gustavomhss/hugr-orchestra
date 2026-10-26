@@ -935,6 +935,8 @@ export const dict = {
   "settings.live.key.placeholder": "Επικόλληση κλειδιού",
   "settings.live.key.save": "Αποθήκευση",
   "settings.live.key.remove": "Αφαίρεση",
+  "settings.live.key.failed": "Δεν ήταν δυνατή η αποθήκευση του κλειδιού",
+  "settings.live.key.keychain": "Η κλειδοθήκη του συστήματος δεν είναι διαθέσιμη",
   "settings.live.protection.title": "Απόκρυψη κατά την κοινοποίηση οθόνης",
   "settings.live.protection.description": "Η επικάλυψη δεν εμφανίζεται σε κοινοποιήσεις οθόνης και εγγραφές",
   "live.command.start": "Έναρξη συνάντησης",

@@ -923,6 +923,8 @@ export const dict = {
   "settings.live.key.placeholder": "Kleebi võti",
   "settings.live.key.save": "Salvesta",
   "settings.live.key.remove": "Eemalda",
+  "settings.live.key.failed": "Võtit ei õnnestunud salvestada",
+  "settings.live.key.keychain": "Süsteemi võtmehoidja pole saadaval",
   "settings.live.protection.title": "Peida ekraanijagamisel",
   "settings.live.protection.description": "Hoia kattekiht ekraanijagamistest ja salvestistest eemal",
   "live.command.start": "Alusta koosolekut",

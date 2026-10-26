@@ -931,6 +931,8 @@ export const dict = {
   "settings.live.key.placeholder": "Prilepi ključ",
   "settings.live.key.save": "Shrani",
   "settings.live.key.remove": "Odstrani",
+  "settings.live.key.failed": "Ključa ni bilo mogoče shraniti",
+  "settings.live.key.keychain": "Sistemska veriga ključev ni na voljo",
   "settings.live.protection.title": "Skrij pred deljenjem zaslona",
   "settings.live.protection.description": "Prekrivanje naj ne bo vidno v deljenju zaslona in posnetkih",
   "live.command.start": "Začni sestanek",

@@ -924,6 +924,8 @@ export const dict = {
   "settings.live.key.placeholder": "Set lykil inn",
   "settings.live.key.save": "Goym",
   "settings.live.key.remove": "Strika",
+  "settings.live.key.failed": "Lykilin kundi ikki goymast",
+  "settings.live.key.keychain": "Lyklaringurin hjá skipanini er ikki tøkur",
   "settings.live.protection.title": "Fjal undir skjámynd deiling",
   "settings.live.protection.description": "Halt yvirlagnum uttan fyri skjámyndadeilingar og upptøkur",
   "live.command.start": "Byrja fund",

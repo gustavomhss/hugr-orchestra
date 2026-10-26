@@ -926,6 +926,8 @@ export const dict = {
   "settings.live.key.placeholder": "Límdu lykil",
   "settings.live.key.save": "Vista",
   "settings.live.key.remove": "Fjarlægja",
+  "settings.live.key.failed": "Ekki tókst að vista lykilinn",
+  "settings.live.key.keychain": "Lyklakippa kerfisins er ekki tiltæk",
   "settings.live.protection.title": "Fela fyrir skjádeilingu",
   "settings.live.protection.description": "Halda yfirlaginu út af skjádeilingum og upptökum",
   "live.command.start": "Hefja fund",
