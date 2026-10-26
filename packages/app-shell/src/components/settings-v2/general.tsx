@@ -574,12 +574,13 @@ function LiveSeatSection(props: { seat: LiveSeatPlatform }) {
       props.seat
         .setTranscriptionKey(value)
         .then(() => void setKey(""))
-        .catch(() =>
-          showToast({
-            variant: "error",
-            title: language.t("settings.live.key.failed"),
-            description: language.t("settings.live.key.keychain"),
-          }),
+        .catch(
+          () =>
+            void showToast({
+              variant: "error",
+              title: language.t("settings.live.key.failed"),
+              description: language.t("settings.live.key.keychain"),
+            }),
         ),
     )
   const setProtection = (enabled: boolean) => {
