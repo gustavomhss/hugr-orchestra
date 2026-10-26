@@ -255,7 +255,7 @@ jobs:
       - name: Build the installers
         working-directory: apps/desktop
         env:
-          # The electron-vite build exceeds Node's default old space on hosted runners (scripts/lean-candidate.ts).
+          # The electron-vite build exceeds Node's default old space on hosted runners.
           # Builder only: it never reaches the packaged app.
           NODE_OPTIONS: --max-old-space-size=8192
           BUILDER_PLATFORM: ${{ matrix.builder }}

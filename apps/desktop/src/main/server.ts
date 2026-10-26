@@ -7,7 +7,6 @@ import { ripgrepEnv } from "./ripgrep-env"
 import { getUserShell, loadShellEnv } from "./shell-env"
 import { getStore } from "./store"
 import { DEFAULT_SERVER_URL_KEY } from "./store-keys"
-import { applyCandidateEnvironment, candidateEnvironment, type CandidateProfile } from "./candidate-profile"
 
 export function getDefaultServerUrl(): string | null {
   const value = getStore().get(DEFAULT_SERVER_URL_KEY)
@@ -23,11 +22,7 @@ export function setDefaultServerUrl(url: string | null) {
   getStore().delete(DEFAULT_SERVER_URL_KEY)
 }
 
-export function preferAppEnv(userDataPath: string, candidateProfile?: CandidateProfile) {
-  if (candidateProfile) {
-    applyCandidateEnvironment(candidateProfile)
-    return null
-  }
+export function preferAppEnv(userDataPath: string) {
   const shell = process.platform === "win32" ? null : getUserShell()
   const shellEnv = shell ? loadShellEnv(shell, getLogger()) : null
   Object.assign(process.env, {
@@ -41,7 +36,7 @@ export function preferAppEnv(userDataPath: string, candidateProfile?: CandidateP
 }
 
 /** The per-launch environment of the desktop-owned `orchestra serve`. */
-export async function sidecarLaunchEnv(userDataPath: string, candidateProfile?: CandidateProfile) {
+export async function sidecarLaunchEnv(userDataPath: string) {
   const outDir = dirname(fileURLToPath(import.meta.url))
   const claudeExecutable = join(
     app.isPackaged ? process.resourcesPath : resolve(outDir, "../../resources"),
@@ -55,7 +50,7 @@ export async function sidecarLaunchEnv(userDataPath: string, candidateProfile?: 
       resources: process.resourcesPath,
     })
   return {
-    ...createSidecarEnv(candidateProfile),
+    ...createSidecarEnv(),
     // The SDK gets an explicit real-file path; its bundled module cannot resolve optional native packages.
     ORCHESTRA_CLAUDE_CODE_EXECUTABLE: claudeExecutable,
     ...ripgrepEnv(app.isPackaged, process.resourcesPath),
@@ -69,12 +64,10 @@ export async function sidecarLaunchEnv(userDataPath: string, candidateProfile?: 
   }
 }
 
-export function createSidecarEnv(candidateProfile?: CandidateProfile): Record<string, string> {
-  if (candidateProfile) return candidateEnvironment(candidateProfile)
+export function createSidecarEnv(): Record<string, string> {
   const env = Object.fromEntries(
     Object.entries(process.env).flatMap(([key, value]) => (value === undefined ? [] : [[key, value]])),
   )
-  delete env.ORCHESTRA_LEAN_CANDIDATE // Only a validated compile-time candidate may enable backend isolation mode.
   delete env.DEBUG
   if (process.platform === "linux") delete env.LD_PRELOAD
   return env

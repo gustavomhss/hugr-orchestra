@@ -16,7 +16,7 @@ permissions:
 jobs:
   # A Windows desktop bundles its own CLI and the Linux CLIs its WSL guests run (scripts/cli-staging.ts). Bun 1.3.14 on
   # Windows cannot cross-compile the Linux CLIs ("Failed to extract executable for 'bun-linux-aarch64-v1.3.14'"), so a
-  # Linux producer builds all three, as runtime-products.yml and runtime-wsl.yml do, with the omni pairs and tree-sitter
+  # Linux producer builds all three, as runtime-products.yml does, with the omni pairs and tree-sitter
   # bundles built on their own hosts, and hands them to the Windows build as ORCHESTRA_CLI_PREBUILT_DIR.
   guest-omni:
     uses: ./.github/workflows/omni-artifacts.yml
