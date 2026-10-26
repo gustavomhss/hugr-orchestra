@@ -75,6 +75,16 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
         // A desktop-owned child gets a per-launch password in env and never touches the daemon's password file.
         const password = process.env.ORCHESTRA_SERVER_PASSWORD || (yield* daemon.password())
         const root = yield* Effect.promise(() => webRoot())
+        // V1 transcripts on this database are copied to V2 before the server answers: a Session is eligible only
+        // while it has no V2 message, so a prompt reaching an old Session first would skip its history forever.
+        yield* Effect.gen(function* () {
+          const database = yield* Database.Service
+          const imported = yield* SessionV2.SessionLegacyImport.run(database.db)
+          if (imported > 0) console.log(`imported ${imported} V1 session transcripts`)
+        }).pipe(
+          Effect.provide(AppNodeBuilder.build(LayerNode.group([Database.node]))),
+          Effect.catchCause((cause) => Effect.logError("V1 session import failed", cause)),
+        )
         const listening = yield* listen(input.hostname, input.port, password, hosts(), root, input.cors)
         const address = listening.address
         // Closing the server waits for every open connection, and the event stream never ends on its own. Scope
@@ -83,16 +93,6 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
         if (input.register) yield* daemon.register(address)
         console.log(`server listening on ${HttpServer.formatAddress(address)}`)
         if (input.onListening) yield* input.onListening(address, root)
-        // V1 transcripts on this database are copied to V2 once, after health already answers.
-        yield* Effect.gen(function* () {
-          const database = yield* Database.Service
-          const imported = yield* SessionV2.SessionLegacyImport.run(database.db)
-          if (imported > 0) console.log(`imported ${imported} V1 session transcripts`)
-        }).pipe(
-          Effect.provide(AppNodeBuilder.build(LayerNode.group([Database.node]))),
-          Effect.catchCause((cause) => Effect.logError("V1 session import failed", cause)),
-          Effect.forkScoped,
-        )
         return yield* ServeShutdown.untilSignal(process, process.platform, (signal) => {
           if (shutdown.signal) return
           shutdown.signal = signal

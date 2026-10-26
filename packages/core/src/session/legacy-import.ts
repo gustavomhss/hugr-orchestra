@@ -25,7 +25,11 @@ import { MessageTable, PartTable, SessionMessageTable, SessionTable } from "./sq
 const decode = Schema.decodeUnknownOption(SessionMessage.Message)
 const encode = Schema.encodeSync(SessionMessage.Message)
 
-/** Imports every pending V1 transcript; returns how many Sessions were imported. */
+/**
+ * Imports every pending V1 transcript; returns how many Sessions actually gained V2 messages. A Session whose
+ * messages all fail to decode stays pending (and is not counted), so it is retried, cheaply, on the next call.
+ * Callers must finish this before anything can prompt a Session: eligibility is "no V2 message yet".
+ */
 export const run = Effect.fn("SessionLegacyImport.run")(function* (db: Database.Interface["db"]) {
   const pending = yield* db
     .select({ sessionID: MessageTable.session_id })
@@ -36,8 +40,8 @@ export const run = Effect.fn("SessionLegacyImport.run")(function* (db: Database.
     .groupBy(MessageTable.session_id)
     .all()
     .pipe(Effect.orDie)
-  yield* Effect.forEach(pending, (item) => importSession(db, item.sessionID), { discard: true })
-  return pending.length
+  const results = yield* Effect.forEach(pending, (item) => importSession(db, item.sessionID))
+  return results.filter(Boolean).length
 })
 
 const importSession = Effect.fnUntraced(function* (
@@ -75,7 +79,7 @@ const importSession = Effect.fnUntraced(function* (
       decode(row.info.role === "user" ? user(row.info, row.parts, rows) : assistant(row.info, row.parts, rows, session?.directory)),
     ),
   )
-  if (converted.length === 0) return
+  if (converted.length === 0) return false
   yield* db
     .transaction(
       () =>
@@ -101,6 +105,7 @@ const importSession = Effect.fnUntraced(function* (
       { behavior: "immediate" },
     )
     .pipe(Effect.orDie)
+  return true
 })
 
 type Row = { readonly info: Info; readonly parts: ReadonlyArray<Part> }

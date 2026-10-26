@@ -192,6 +192,41 @@ describe("SessionLegacyImport", () => {
       expect(messages[3]).toMatchObject({ type: "user", text: "Continue" })
     }),
   )
+
+  it.live("counts only Sessions that gained messages and skips Sessions already holding V2 messages", () =>
+    Effect.gen(function* () {
+      const database = yield* Database.Service
+      const session = yield* SessionV2.Service
+      const broken = (yield* session.create({ location })).id
+      const prompted = (yield* session.create({ location })).id
+      const ok = (yield* session.create({ location })).id
+      const asked = { role: "user", time: { created: 1000 }, agent: "build", model: { providerID: "p", modelID: "m" } }
+      // An undecodable assistant message (no tokens) converts to nothing.
+      yield* insertV1(broken, [{ id: "msg_b1", role: "assistant", time: { created: 1 } }], [])
+      yield* insertV1(ok, [{ id: "msg_o1", ...asked }], [{ id: "prt_o1", message_id: "msg_o1", data: { type: "text", text: "old" } }])
+      yield* insertV1(prompted, [{ id: "msg_p1", ...asked }], [{ id: "prt_p1", message_id: "msg_p1", data: { type: "text", text: "old" } }])
+      // A prompt that reached the Session before the import ran leaves a V2 message behind.
+      yield* database.db
+        .insert(SessionMessageTable)
+        .values({
+          id: "msg_new" as never,
+          session_id: prompted,
+          type: "user",
+          seq: 1,
+          time_created: 5000,
+          data: { text: "new", time: { created: 5000 } } as never,
+        })
+        .run()
+        .pipe(Effect.orDie)
+
+      expect(yield* SessionV2.SessionLegacyImport.run(database.db)).toBe(1)
+      const rows = (id: SessionV2.ID) =>
+        database.db.select().from(SessionMessageTable).where(eq(SessionMessageTable.session_id, id)).all().pipe(Effect.orDie)
+      expect((yield* rows(ok)).length).toBe(1)
+      expect((yield* rows(broken)).length).toBe(0)
+      expect((yield* rows(prompted)).length).toBe(1)
+    }),
+  )
 })
 
 const insertV1 = (
