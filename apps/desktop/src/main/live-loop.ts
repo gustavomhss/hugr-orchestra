@@ -22,6 +22,9 @@ type Request = {
   firstAt?: number
   text: string
   dropped?: boolean
+  // The seat's `live_look` call: the turn that asked waits for the frame. `framed` means the frame was admitted and
+  // the reply to it has not started; an idle seen while looking is held until then.
+  look?: { framed?: boolean; idled?: boolean }
 }
 
 type Meeting = {
@@ -99,7 +102,21 @@ export function registerLiveLoop(options: {
 
   const onSession = (meeting: Meeting, event: LiveSessionEvent) => {
     const request = meeting.request
+    if (event.kind === "look") {
+      void (request ? lookFor(meeting, request, event.question) : look(meeting, event.question))
+      return
+    }
     if (!request) return
+    // The reply to the frame has begun: the text before the look was a preamble.
+    if (request.look?.framed && (event.kind === "delta" || event.kind === "text" || event.kind === "busy")) {
+      request.look = undefined
+      request.text = ""
+    }
+    if (event.kind === "busy") return
+    if (event.kind === "idle" && request.look) {
+      request.look.idled = true
+      return
+    }
     if (event.kind === "delta") {
       request.firstAt ??= Date.now()
       request.text += event.delta
@@ -137,7 +154,7 @@ export function registerLiveLoop(options: {
     if (event.kind === "recovered" && overlay.state().error?.kind === event.source) overlay.setError(undefined)
   }
 
-  const look = async (meeting: Meeting, question?: string) => {
+  const capture = async (meeting: Meeting, question?: string) => {
     // The overlay controller keeps its window private; the overlay is the only window loading the live page.
     const frame = await meeting.senses
       ?.look(BrowserWindow.getAllWindows().filter((win) => win.webContents.getURL().includes("/live/")))
@@ -146,13 +163,41 @@ export function registerLiveLoop(options: {
         return undefined
       })
     if (!frame) return
+    return {
+      text: question ? `${LIVE_PROMPTS.look}\n${question}` : LIVE_PROMPTS.look,
+      files: [{ uri: `data:image/jpeg;base64,${frame.jpeg.toString("base64")}`, name: "screen.jpg" }],
+    } satisfies LivePrompt
+  }
+
+  const look = async (meeting: Meeting, question?: string) => {
+    const prompt = await capture(meeting, question)
+    if (!prompt) return
     overlay.setView({ kind: "thinking", question })
-    const text = question ? `${LIVE_PROMPTS.look}\n${question}` : LIVE_PROMPTS.look
-    await send(
-      meeting,
-      { kind: "answer", source: "screen", question },
-      { text, files: [{ uri: `data:image/jpeg;base64,${frame.jpeg.toString("base64")}`, name: "screen.jpg" }] },
-    )
+    await send(meeting, { kind: "answer", source: "screen", question }, prompt)
+  }
+
+  // The seat looked in the middle of a reply: the frame joins that reply instead of starting a request.
+  const lookFor = async (meeting: Meeting, request: Request, question?: string) => {
+    request.look = {}
+    request.source = "screen"
+    const prompt = await capture(meeting, question)
+    const admitted =
+      prompt &&
+      (await meeting.client.prompt(meeting.sessionID, prompt, "steer").then(
+        () => true,
+        (error) => {
+          meeting.log.write({ event: "prompt-failed", kind: request.kind, reason: String(error) })
+          return false
+        },
+      ))
+    if (meeting.request !== request || !request.look) return
+    if (admitted) {
+      request.look.framed = true
+      return
+    }
+    const idled = request.look.idled
+    request.look = undefined
+    if (idled) settle(meeting)
   }
 
   const stop = async (meeting: Meeting) => {

@@ -385,6 +385,7 @@
     "./tool/registry": "./src/tool/registry.ts",
     "./tool/skill": "./src/tool/skill.ts",
     "./tool/task": "./src/tool/task.ts",
+    "./tool/live-look": "./src/tool/live-look.ts",
     "./tool/team-message": "./src/tool/team-message.ts",
     "./tool/text": "./src/tool/text.ts",
     "./tool/todowrite": "./src/tool/todowrite.ts",

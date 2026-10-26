@@ -54,7 +54,7 @@ test("creates the live session and admits prompts with their delivery", async ()
   ])
 })
 
-test("follows this session's deltas, text and idle across split frames", async () => {
+test("follows this session's deltas, text and status across split frames", async () => {
   const fake = fakeServer([
     frame("server.connected", {}),
     frame("session.next.text.delta", { sessionID: "other", delta: "no" }),
@@ -79,6 +79,7 @@ test("follows this session's deltas, text and idle across split frames", async (
     { kind: "delta", delta: "**Yes" },
     { kind: "delta", delta: ".**" },
     { kind: "text", text: "**Yes.**" },
+    { kind: "busy" },
     { kind: "idle" },
   ])
 })
@@ -89,4 +90,13 @@ test("a failed step carries its message; garbage frames are skipped", () => {
   ).toEqual({ kind: "failed", message: "rate limited" })
   expect(parseFrame("data: {not json", "s")).toBeUndefined()
   expect(parseFrame(": keepalive", "s")).toBeUndefined()
+})
+
+test("the seat's live_look call becomes a look request with its question", () => {
+  const called = (input: Record<string, unknown>, tool = "live_look") =>
+    parseFrame(frame("session.next.tool.called", { sessionID: "s", tool, input, provider: { executed: false } }), "s")
+  expect(called({ question: "Which slide?" })).toEqual({ kind: "look", question: "Which slide?" })
+  expect(called({ question: " " })).toEqual({ kind: "look" })
+  expect(called({})).toEqual({ kind: "look" })
+  expect(called({ path: "a" }, "read")).toBeUndefined()
 })

@@ -10,7 +10,10 @@ export type LiveSessionEvent =
   | { kind: "delta"; delta: string }
   | { kind: "text"; text: string }
   | { kind: "failed"; message: string }
+  | { kind: "busy" }
   | { kind: "idle" }
+  // The seat asked for a frame through its `live_look` tool; only the desktop can capture one.
+  | { kind: "look"; question?: string }
 
 export type LivePrompt = { text: string; files?: { uri: string; name?: string }[] }
 
@@ -73,8 +76,13 @@ export function parseFrame(frame: string, sessionID: string): LiveSessionEvent |
   if (event.type === "session.next.text.delta" && typeof body.delta === "string") return { kind: "delta", delta: body.delta }
   if (event.type === "session.next.text.ended" && typeof body.text === "string") return { kind: "text", text: body.text }
   if (event.type === "session.next.step.failed") return { kind: "failed", message: describe(body.error) }
-  if (event.type === "session.status" && (body.status as { type?: unknown } | undefined)?.type === "idle")
-    return { kind: "idle" }
+  if (event.type === "session.next.tool.called" && body.tool === "live_look") {
+    const question = (body.input as { question?: unknown } | undefined)?.question
+    return typeof question === "string" && question.trim() ? { kind: "look", question } : { kind: "look" }
+  }
+  const status = (body.status as { type?: unknown } | undefined)?.type
+  if (event.type === "session.status" && status === "busy") return { kind: "busy" }
+  if (event.type === "session.status" && status === "idle") return { kind: "idle" }
 }
 
 const decodeJson = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)
