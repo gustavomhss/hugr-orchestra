@@ -55,6 +55,9 @@ runs:
     # Every platform reuses the installed tree: on Linux a restore takes about 15 s where `bun install` from Bun's
     # package cache took about 50 s, and Windows cannot reuse Bun's package cache at all (see the install step).
     # The key covers everything that shapes node_modules; a partial tree from another lockfile is never restored.
+    # Every workspace directory must be listed: a hit skips install, so an unlisted workspace (native/omni/campaign,
+    # run 40343118717) restores without its links and its imports stop resolving. Changing this list changes the
+    # cache version, so old entries are not restored.
     - name: Restore node_modules
       id: modules-cache
       if: inputs.install-flags == ''
@@ -68,6 +71,8 @@ runs:
           modules/*/node_modules
           modules/*/*/node_modules
           tooling/*/node_modules
+          native/*/*/node_modules
+          native/*/*/*/node_modules
         key: ${{ steps.keys.outputs.modules }}
 
     - name: Restore Bun dependencies
@@ -135,4 +140,6 @@ runs:
           modules/*/node_modules
           modules/*/*/node_modules
           tooling/*/node_modules
+          native/*/*/node_modules
+          native/*/*/*/node_modules
         key: ${{ steps.keys.outputs.modules }}
