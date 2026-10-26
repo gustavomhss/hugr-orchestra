@@ -21,6 +21,9 @@ export const teamMessage = `Send a short message to a teammate on the Orchestra 
 It is queued into the teammate's current conversation and never interrupts a reply in progress.
 The teammate reads it as a peer's note, not as the owner. Use it to propose work, share what a meeting decided or answer a question.`
 
+export const liveLook = `Look at the owner's screen: the desktop captures one frame and sends it as your next input, labelled [On screen].
+Use it when the answer depends on what the owner is showing or reading. Pass question to say what to look for.`
+
 export const answered = (
   questions: ReadonlyArray<{ readonly question: string }>,
   answers: ReadonlyArray<ReadonlyArray<string>>,

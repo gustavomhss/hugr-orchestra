@@ -36,6 +36,7 @@ import { revealWindow, safeWebContentsURL } from "./window-state"
 import {
   flushWindows,
   getLastFocusedWindow,
+  isMainWindow,
   registerRendererProtocol,
   setRelaunchHandler,
   setAppQuitting,
@@ -59,6 +60,8 @@ import { FIRST_LAUNCH_ONBOARDING_COMPLETE_KEY, OLD_LAYOUT_ELIGIBLE_KEY } from ".
 import { OmniBoot } from "./omni-boot"
 import { OmniSmoke } from "./omni-smoke"
 import { createDeepLinkDelivery } from "./deep-links"
+import { registerLiveLoop } from "./live-loop"
+import { registerLiveOverlay } from "./live-overlay"
 
 const candidateProfile = (() => {
   try {
@@ -256,7 +259,7 @@ const main = Effect.gen(function* () {
       logger.log("deep link received via second-instance", { urls })
       emitDeepLinks(urls)
     }
-    const win = getLastFocusedWindow() ?? BrowserWindow.getAllWindows()[0]
+    const win = getLastFocusedWindow() ?? BrowserWindow.getAllWindows().find(isMainWindow)
     if (win) return revealWindow(win)
     // macOS keeps running with no window; reopen one so the launch (and any
     // queued deep link) lands somewhere. Before startup restores its windows,
@@ -340,6 +343,8 @@ const main = Effect.gen(function* () {
   )
   if (!candidateProfile) app.setAsDefaultProtocolClient("orchestra")
   registerRendererProtocol()
+  const liveOverlay = registerLiveOverlay()
+  app.once("will-quit", liveOverlay.destroy)
   setDockIcon()
   // The About panel would show the inherited process name (APP_NAMES); it names the product instead. Its icon is
   // still the bundle's, until HuGR desktop icons exist.
@@ -353,7 +358,20 @@ const main = Effect.gen(function* () {
     checkForUpdates: () => void showUpdaterDialog(updater, true),
     relaunch,
   }
+  const liveLoop = registerLiveLoop({
+    overlay: liveOverlay,
+    server: () =>
+      Effect.runPromise(Deferred.await(serverReady)).then((ready) => ({
+        url: ready.url,
+        username: ready.username ?? undefined,
+        password: ready.password ?? undefined,
+      })),
+    logDirectory: join(app.getPath("userData"), "logs", "live"),
+    openSettings: () => menuDeps.trigger("settings.open"),
+  })
+  app.once("will-quit", liveLoop.destroy)
   shutdown.runtimeStop = registerIpcHandlers({
+    liveLoop,
     killSidecar: () => killSidecar(),
     relaunch,
     awaitInitialization: Effect.fnUntraced(
@@ -465,7 +483,7 @@ const main = Effect.gen(function* () {
     app.quit()
   })
   app.on("activate", () => {
-    const open = BrowserWindow.getAllWindows()
+    const open = BrowserWindow.getAllWindows().filter(isMainWindow)
     if (open.length === 0) return void restoreMainWindows()
     // Electron tells AppKit not to reopen when no window is visible, so a dock
     // click with every window minimized would otherwise do nothing.

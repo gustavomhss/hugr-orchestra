@@ -47,6 +47,7 @@ describe("breadcrumbLabel", () => {
 
 test("marks exactly the owner's revisit-before-production screens as WIP", () => {
   expect(navigation.filter((item) => isWip(item.id)).map((item) => item.id)).toEqual([
+    "board",
     "agents",
     "mcp",
     "cicd",

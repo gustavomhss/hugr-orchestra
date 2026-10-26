@@ -1,0 +1,1045 @@
+import { createMemo, For, Match, onCleanup, onMount, Show, Switch } from "solid-js"
+import { createStore, reconcile } from "solid-js/store"
+import type { ServerBoardListOutput } from "@orchestra/client"
+import { useLanguage } from "@/context/language"
+import { useServerSDK } from "@/context/server-sdk"
+import { MxBadge } from "../kit"
+import {
+  age,
+  across,
+  columns,
+  group,
+  monogram,
+  order,
+  progress,
+  shippedDay,
+  step,
+  steps,
+  ticks,
+  waitingOn,
+  type Column,
+  type Issue,
+  type Page,
+  type Snapshot,
+  type Trail,
+} from "./model"
+import "./board.css"
+
+type Summary = ServerBoardListOutput[number]
+type Channel = "list" | "board" | "page"
+
+const stageKey = {
+  intake: "orchestra.board.stage.intake",
+  backlog: "orchestra.board.stage.backlog",
+  ready: "orchestra.board.stage.ready",
+  building: "orchestra.board.stage.building",
+  review: "orchestra.board.stage.review",
+  shipped: "orchestra.board.stage.shipped",
+  cut: "orchestra.board.stage.cut",
+} as const
+const healthKey = {
+  on_track: "orchestra.board.health.onTrack",
+  waiting_on_owner: "orchestra.board.health.waiting",
+  paused: "orchestra.board.health.paused",
+} as const
+const actorKey = {
+  maestro: "orchestra.board.actor.maestro",
+  owner: "orchestra.board.actor.owner",
+  github: "orchestra.board.actor.github",
+} as const
+const actionKey = {
+  "project.upsert": "orchestra.board.action.projectUpsert",
+  "epic.upsert": "orchestra.board.action.epicUpsert",
+  "issue.create": "orchestra.board.action.issueCreate",
+  "issue.update": "orchestra.board.action.issueUpdate",
+  "issue.move": "orchestra.board.action.issueMove",
+  "steps.set": "orchestra.board.action.stepsSet",
+  "question.ask": "orchestra.board.action.questionAsk",
+  "question.withdraw": "orchestra.board.action.questionWithdraw",
+  "question.answer": "orchestra.board.action.questionAnswer",
+  "note.add": "orchestra.board.action.noteAdd",
+  "attachment.add": "orchestra.board.action.attachmentAdd",
+  "intake.accept": "orchestra.board.action.intakeAccept",
+  "intake.decline": "orchestra.board.action.intakeDecline",
+  "hold.set": "orchestra.board.action.holdSet",
+  "pause.set": "orchestra.board.action.pauseSet",
+  "github.overwrite": "orchestra.board.action.githubOverwrite",
+  "github.state": "orchestra.board.action.githubState",
+  undo: "orchestra.board.action.undo",
+} as const
+const shippedKey = {
+  today: "orchestra.board.shipped.today",
+  yesterday: "orchestra.board.shipped.yesterday",
+  week: "orchestra.board.shipped.week",
+  earlier: "orchestra.board.shipped.earlier",
+} as const
+// Shipped is a compact log; older rows fold into a count.
+const shippedShown = 6
+
+// The Projects board (CONTRACT.md §7, slice C): read only, on real data, refetched whenever the server says a project
+// changed. It is cross-project, so it renders without a repository.
+export default function Board() {
+  const language = useLanguage()
+  const sdk = useServerSDK()
+  const t = language.t
+  const api = () => sdk().orchestra["server.board"]
+  const [store, setStore] = createStore({
+    projects: undefined as readonly Summary[] | undefined,
+    listFailed: false,
+    key: undefined as string | undefined,
+    snapshot: undefined as Snapshot | undefined,
+    boardFailed: false,
+    fetchedAt: 0,
+    trails: {} as Record<string, Trail>,
+    focused: undefined as string | undefined,
+    peek: undefined as string | undefined,
+    full: false,
+    page: undefined as Page | undefined,
+    pageFailed: false,
+  })
+  const channels: Partial<Record<Channel, AbortController>> = {}
+  const begin = (name: Channel) => {
+    channels[name]?.abort()
+    const controller = new AbortController()
+    channels[name] = controller
+    return controller
+  }
+  onCleanup(() => Object.values(channels).forEach((controller) => controller?.abort()))
+  let root: HTMLDivElement | undefined
+
+  const loadList = () => {
+    const controller = begin("list")
+    return api()
+      .list({ signal: controller.signal })
+      .then(
+        (result) => !controller.signal.aborted && setStore({ projects: result, listFailed: false }),
+        () => !controller.signal.aborted && setStore({ listFailed: true }),
+      )
+  }
+
+  const loadBoard = (key: string) => {
+    const controller = begin("board")
+    return api()
+      .get({ key }, { signal: controller.signal })
+      .then(
+        async (result) => {
+          if (controller.signal.aborted) return
+          setStore("snapshot", reconcile(result, { key: "id" }))
+          setStore({ boardFailed: false, fetchedAt: Date.now() })
+          // Review cards show CI from the live git trail, which only the issue page carries.
+          const review = result.issues.filter((issue) => issue.stage === "review" && issue.prNumber !== null)
+          const pages = await Promise.allSettled(
+            review.map((issue) => api().issue({ key, number: String(issue.number) }, { signal: controller.signal })),
+          )
+          if (controller.signal.aborted) return
+          setStore(
+            "trails",
+            reconcile(
+              Object.fromEntries(
+                pages.flatMap((page, index) => (page.status === "fulfilled" ? [[review[index].ref, page.value.trail]] : [])),
+              ),
+            ),
+          )
+        },
+        () => !controller.signal.aborted && setStore({ boardFailed: true }),
+      )
+  }
+
+  const loadPage = (ref: string) => {
+    const issue = store.snapshot?.issues.find((item) => item.ref === ref)
+    if (!issue || !store.key) return
+    const controller = begin("page")
+    return api()
+      .issue({ key: store.key, number: String(issue.number) }, { signal: controller.signal })
+      .then(
+        (result) => !controller.signal.aborted && setStore({ page: result, pageFailed: false }),
+        () => !controller.signal.aborted && setStore({ pageFailed: true }),
+      )
+  }
+
+  onMount(() => void loadList())
+  onCleanup(
+    sdk().event.listen((event) => {
+      const details = event.details as { type: string; properties?: { project?: unknown; issue?: unknown } }
+      if (details.type !== "board.changed") return
+      if (!store.key) return void loadList()
+      if (!store.snapshot || details.properties?.project !== store.snapshot.project.id) return
+      void loadBoard(store.key)
+      const open = store.page?.issue
+      if (store.peek && (details.properties?.issue === undefined || details.properties.issue === open?.id))
+        void loadPage(store.peek)
+    }),
+  )
+
+  const openProject = (key: string) => {
+    setStore({ key, snapshot: undefined, boardFailed: false, trails: {}, focused: undefined, peek: undefined, full: false })
+    void loadBoard(key)
+  }
+  const closeProject = () => {
+    channels.board?.abort()
+    channels.page?.abort()
+    setStore({ key: undefined, snapshot: undefined, peek: undefined, page: undefined, full: false })
+    void loadList()
+  }
+  const openPeek = (ref: string) => {
+    setStore({ peek: ref, focused: ref, page: store.page?.issue.ref === ref ? store.page : undefined, pageFailed: false })
+    void loadPage(ref)
+  }
+  const closePeek = () => {
+    channels.page?.abort()
+    const ref = store.peek
+    setStore({ peek: undefined, full: false, page: undefined })
+    if (ref) focus(ref)
+  }
+  // The peek's button leaves the DOM when the page opens, so focus moves to the page to keep J, K and Esc working.
+  const openFull = () => {
+    setStore("full", true)
+    requestAnimationFrame(() => root?.querySelector<HTMLElement>(".board-full")?.focus())
+  }
+  const focus = (ref: string) => {
+    setStore("focused", ref)
+    requestAnimationFrame(() => root?.querySelector<HTMLElement>(`[data-ref="${ref}"]`)?.focus())
+  }
+
+  const grouped = createMemo(() => group(store.snapshot?.issues ?? []))
+  const refs = createMemo(() => order(grouped().lanes))
+  const plan = createMemo(() => progress(store.snapshot?.issues ?? []))
+  const epics = createMemo(() => new Map((store.snapshot?.epics ?? []).map((epic) => [epic.number, epic.title])))
+  const questions = createMemo(() => (store.snapshot?.questions ?? []).filter((question) => question.status === "open"))
+  const crew = createMemo(() => [
+    ...new Set(
+      (store.snapshot?.issues ?? [])
+        .filter((issue) => (issue.stage === "building" || issue.stage === "review") && issue.seat)
+        .map((issue) => issue.seat as string),
+    ),
+  ])
+  const time = (value: number) =>
+    new Intl.DateTimeFormat(language.intl(), { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(value)
+  const date = (value: number) => new Intl.DateTimeFormat(language.intl(), { month: "short", day: "numeric" }).format(value)
+
+  const move = (next: string | undefined) => {
+    if (!next) return
+    focus(next)
+    if (store.peek && store.peek !== next) openPeek(next)
+  }
+  const keydown = (event: KeyboardEvent) => {
+    if (!store.snapshot) return
+    const key = event.key.length === 1 ? event.key.toLowerCase() : event.key
+    const current = store.focused ?? store.peek
+    if (key === "Escape" && store.peek) return (event.preventDefault(), closePeek())
+    if (key === "ArrowDown" || key === "j") return (event.preventDefault(), move(step(refs(), current, 1)))
+    if (key === "ArrowUp" || key === "k") return (event.preventDefault(), move(step(refs(), current, -1)))
+    if (store.full) return
+    if (key === "ArrowRight") return (event.preventDefault(), move(across(grouped().lanes, current, 1)))
+    if (key === "ArrowLeft") return (event.preventDefault(), move(across(grouped().lanes, current, -1)))
+  }
+  const cardKeydown = (event: KeyboardEvent, ref: string) => {
+    if (event.key !== "Enter" && event.key !== " ") return
+    event.preventDefault()
+    openPeek(ref)
+  }
+  const tab = (ref: string) => (store.focused ? store.focused === ref : refs()[0] === ref) ? 0 : -1
+
+  const Seat = (props: { seat: string | null }) => (
+    <Show when={props.seat}>
+      {(seat) => (
+        <span class="board-seat" title={seat()} aria-label={t("orchestra.board.seat", { seat: seat() })}>
+          {monogram(seat())}
+        </span>
+      )}
+    </Show>
+  )
+
+  const Ring = (props: { stage: string }) => (
+    <svg class="board-ring" data-stage={props.stage} viewBox="0 0 14 14" aria-hidden="true">
+      <circle class="board-ring-track" cx="7" cy="7" r="5.6" />
+      <Show when={props.stage === "building" || props.stage === "review"}>
+        <circle
+          class="board-ring-fill"
+          cx="7"
+          cy="7"
+          r="1.8"
+          stroke-dasharray={props.stage === "building" ? "5.65 11.3" : "8.5 11.3"}
+          transform="rotate(-90 7 7)"
+        />
+      </Show>
+      <Show when={props.stage === "shipped"}>
+        <path class="board-ring-check" d="m4.4 7.2 1.8 1.8 3.6-3.8" />
+      </Show>
+    </svg>
+  )
+
+  const Ticks = (props: { trail: Trail | undefined; compact?: boolean }) => (
+    <Show when={props.trail && narrow(props.trail, "ok")}>
+      {(trail) => {
+        const ci = () => ticks(trail().pr.checks)
+        return (
+          <Show when={ci().total > 0} fallback={<span class="board-quiet">{t("orchestra.board.ci.none")}</span>}>
+            <span class="board-ticks" aria-label={t("orchestra.board.ci.label", { passed: ci().passed, total: ci().total })}>
+              <span class="board-tick-run" aria-hidden="true">
+                <For each={ci().states}>{(state) => <i data-state={state} />}</For>
+              </span>
+              <b>{ci().passed}</b>
+              {t("orchestra.board.ci.of", { total: ci().total })}
+            </span>
+          </Show>
+        )
+      }}
+    </Show>
+  )
+
+  const Card = (props: { issue: Issue }) => {
+    const progress = () => steps(props.issue)
+    const question = () => (store.snapshot ? waitingOn(store.snapshot, props.issue) : undefined)
+    const epic = () => (props.issue.epic === null ? undefined : epics().get(props.issue.epic))
+    const after = () =>
+      props.issue.dependsOn.filter(
+        (ref) => store.snapshot?.issues.find((issue) => issue.ref === ref)?.stage !== "shipped",
+      )
+    return (
+      <button
+        type="button"
+        class="board-card"
+        classList={{ "board-held": props.issue.paused, "board-open": store.peek === props.issue.ref }}
+        data-ref={props.issue.ref}
+        data-stage={props.issue.stage}
+        tabindex={tab(props.issue.ref)}
+        onClick={() => openPeek(props.issue.ref)}
+        onKeyDown={(event) => cardKeydown(event, props.issue.ref)}
+        onFocus={() => setStore("focused", props.issue.ref)}
+      >
+        <span class="board-card-top">
+          <span class="board-id">{props.issue.ref}</span>
+          <Show when={epic()}>{(title) => <span class="board-epic">{title()}</span>}</Show>
+        </span>
+        <span class="board-card-title">{props.issue.title}</span>
+        <Show when={props.issue.stage === "building" && !props.issue.paused && progress().now}>
+          {(now) => (
+            <span class="board-now">
+              <span>{now()}</span>
+              <i class="board-caret" aria-hidden="true" />
+            </span>
+          )}
+        </Show>
+        <Show when={props.issue.stage === "building" && progress().total > 0}>
+          <span class="board-steps">
+            <span class="board-track" aria-hidden="true">
+              <For each={props.issue.steps}>
+                {(item) => <i data-state={item.status === "skipped" ? "done" : item.status} />}
+              </For>
+            </span>
+            {t("orchestra.board.steps.of", { current: progress().current ?? progress().done, total: progress().total })}
+          </span>
+        </Show>
+        <Show when={props.issue.paused}>
+          <span class="board-held-note">
+            {question() ? t("orchestra.board.paused.answer") : t("orchestra.board.paused.plain")}
+          </span>
+        </Show>
+        <Show when={props.issue.holdBeforeMerge}>
+          <span class="board-held-note">{t("orchestra.board.hold")}</span>
+        </Show>
+        <Show when={props.issue.stage === "review"}>
+          <Ticks trail={store.trails[props.issue.ref]} />
+        </Show>
+        <span class="board-card-foot">
+          <Seat seat={props.issue.seat} />
+          <Show when={props.issue.prNumber}>{(pr) => <span class="board-mono">#{pr()}</span>}</Show>
+          <For each={after()}>
+            {(ref) => (
+              <span class="board-dep">
+                {t("orchestra.board.after")} <span class="board-mono">{ref}</span>
+              </span>
+            )}
+          </For>
+          <span class="board-spacer" />
+          <Show when={props.issue.stage === "building" || props.issue.stage === "review"}>
+            <span>{t("orchestra.board.day", { day: age(props.issue, Date.now()) })}</span>
+          </Show>
+        </span>
+      </button>
+    )
+  }
+
+  const Row = (props: { issue: Issue }) => {
+    const epic = () => (props.issue.epic === null ? undefined : epics().get(props.issue.epic))
+    return (
+      <button
+        type="button"
+        class="board-row"
+        data-ref={props.issue.ref}
+        data-stage={props.issue.stage}
+        tabindex={tab(props.issue.ref)}
+        onClick={() => openPeek(props.issue.ref)}
+        onKeyDown={(event) => cardKeydown(event, props.issue.ref)}
+        onFocus={() => setStore("focused", props.issue.ref)}
+      >
+        <Show when={props.issue.stage === "shipped"}>
+          <Ring stage="shipped" />
+        </Show>
+        <span class="board-row-text">
+          <span class="board-row-title">{props.issue.title}</span>
+          <span class="board-row-meta">
+            <span class="board-mono">{props.issue.prNumber ? `#${props.issue.prNumber}` : props.issue.ref}</span>
+            <Show when={props.issue.stage === "shipped" ? props.issue.seat : epic()}>{(text) => <span>{text()}</span>}</Show>
+            <Show when={props.issue.stage === "backlog" && props.issue.estimate}>
+              <span class="board-size" aria-label={t("orchestra.board.estimate", { size: (props.issue.estimate ?? "").toUpperCase() })}>
+                {(props.issue.estimate ?? "").toUpperCase()}
+              </span>
+            </Show>
+          </span>
+        </span>
+      </button>
+    )
+  }
+
+  const Lane = (props: { stage: Column }) => {
+    const issues = () => grouped().lanes[props.stage]
+    const shipped = () =>
+      issues()
+        .slice(0, shippedShown)
+        .map((issue) => ({ issue, day: shippedDay(issue, store.fetchedAt) }))
+    return (
+      <section class="board-col" data-stage={props.stage} aria-labelledby={`board-col-${props.stage}`}>
+        <header class="board-col-head">
+          <Ring stage={props.stage} />
+          <b id={`board-col-${props.stage}`}>{t(stageKey[props.stage])}</b>
+          <span class="board-count">{issues().length}</span>
+          <Show when={props.stage === "ready"}>
+            <em>{t("orchestra.board.col.ready")}</em>
+          </Show>
+          <Show when={props.stage === "review"}>
+            <em>{t("orchestra.board.col.review")}</em>
+          </Show>
+        </header>
+        <div class="board-list">
+          <Show when={issues().length === 0}>
+            <p class="board-quiet board-col-empty">{t("orchestra.board.col.empty")}</p>
+          </Show>
+          <Switch>
+            <Match when={props.stage === "backlog"}>
+              <For each={issues()}>{(issue) => <Row issue={issue} />}</For>
+            </Match>
+            <Match when={props.stage === "shipped"}>
+              <For each={shipped()}>
+                {(item, index) => (
+                  <>
+                    <Show when={index() === 0 || shipped()[index() - 1].day !== item.day}>
+                      <div class="board-day">{t(shippedKey[item.day])}</div>
+                    </Show>
+                    <Row issue={item.issue} />
+                  </>
+                )}
+              </For>
+              <Show when={issues().length > shippedShown}>
+                <p class="board-quiet board-more">
+                  {language.plural("orchestra.board.shipped.more", issues().length - shippedShown)}
+                </p>
+              </Show>
+            </Match>
+            <Match when={true}>
+              <For each={issues()}>{(issue) => <Card issue={issue} />}</For>
+            </Match>
+          </Switch>
+        </div>
+      </section>
+    )
+  }
+
+  const TrailView = (props: { trail: Trail; branch: string | null }) => (
+    <Switch>
+      <Match when={narrow(props.trail, "signed_out")}>
+        {(trail) => (
+          <div class="board-trail-note">
+            <strong>{t("orchestra.board.trail.signedOut")}</strong>
+            <p>{trail().message}</p>
+          </div>
+        )}
+      </Match>
+      <Match when={narrow(props.trail, "error")}>
+        {(trail) => (
+          <div class="board-trail-note">
+            <strong>{t("orchestra.board.trail.error")}</strong>
+            <p>{trail().message}</p>
+          </div>
+        )}
+      </Match>
+      <Match when={props.trail.state === "none"}>
+        <div class="board-trail-note">
+          <Show when={props.branch} fallback={<p>{t("orchestra.board.trail.none")}</p>}>
+            {(branch) => (
+              <p>
+                {t("orchestra.board.trail.branchOnly")} <span class="board-mono">{branch()}</span>
+              </p>
+            )}
+          </Show>
+        </div>
+      </Match>
+      <Match when={narrow(props.trail, "ok")}>
+        {(trail) => (
+          <div class="board-trail">
+            <div class="board-trail-head">
+              <span class="board-mono board-strong">#{trail().pr.number}</span>
+              <span class="board-chip">
+                {trail().pr.merged
+                  ? t("orchestra.board.pr.merged")
+                  : trail().pr.state.toLowerCase() === "closed"
+                    ? t("orchestra.board.pr.closed")
+                    : t("orchestra.board.pr.open")}
+              </span>
+              <span class="board-trail-title">{trail().pr.title}</span>
+            </div>
+            <div class="board-trail-facts">
+              <span>
+                {t("orchestra.board.trail.branch")} <span class="board-mono">{trail().branch}</span>
+              </span>
+              <Ticks trail={trail()} />
+              <Show when={trail().pr.reviewDecision}>
+                {(decision) => <span>{t("orchestra.board.trail.review", { state: decision().toLowerCase().replaceAll("_", " ") })}</span>}
+              </Show>
+              <Show when={trail().pr.mergeCommit}>
+                {(hash) => (
+                  <span>
+                    {t("orchestra.board.trail.merge")} <span class="board-mono">{hash().slice(0, 7)}</span>
+                  </span>
+                )}
+              </Show>
+            </div>
+            <Show when={trail().commits.length > 0}>
+              <ol class="board-commits">
+                <For each={trail().commits}>
+                  {(commit) => (
+                    <li>
+                      <span class="board-mono">{commit.hash.slice(0, 7)}</span>
+                      <span class="board-commit-message">{commit.message}</span>
+                      <Seat seat={commit.seat} />
+                    </li>
+                  )}
+                </For>
+              </ol>
+            </Show>
+          </div>
+        )}
+      </Match>
+    </Switch>
+  )
+
+  // One renderer for the peek and the full page; the page adds the properties rail and the whole activity log.
+  const Detail = (props: { page: Page; full: boolean }) => {
+    const issue = () => props.page.issue
+    const progress = () => steps(issue())
+    const epic = () => {
+      const number = issue().epic
+      return number === null ? undefined : epics().get(number)
+    }
+    const open = () => props.page.questions.filter((question) => question.status === "open")
+    const activity = () => (props.full ? props.page.activity : props.page.activity.slice(-3))
+    const index = () => refs().indexOf(issue().ref)
+    return (
+      <div class="board-detail" data-full={props.full}>
+        <div class="board-detail-main">
+          <div class="board-detail-top">
+            <span class="board-id">{issue().ref}</span>
+            <span class="board-chip">
+              <Ring stage={issue().stage} />
+              {t(stageKey[issue().stage])}
+            </span>
+            <span class="board-spacer" />
+            <Show when={props.full}>
+              <span class="board-quiet">{t("orchestra.board.pager", { index: index() + 1, total: refs().length })}</span>
+            </Show>
+            <Show when={!props.full}>
+              <button type="button" class="mx-btn" onClick={openFull}>
+                {t("orchestra.board.openPage")}
+              </button>
+            </Show>
+            <button
+              type="button"
+              class="board-icon-button"
+              aria-label={props.full ? t("orchestra.board.backToBoard") : t("orchestra.board.closePeek")}
+              onClick={closePeek}
+            >
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M4 4l8 8M12 4l-8 8" />
+              </svg>
+            </button>
+          </div>
+          <h2 id="board-detail-title">{issue().title}</h2>
+          <div class="board-meta">
+            <Show when={epic()}>{(title) => <span>{title()}</span>}</Show>
+            <Show when={issue().seat}>
+              {(seat) => (
+                <span>
+                  <Seat seat={seat()} />
+                  {seat()}
+                </span>
+              )}
+            </Show>
+            <span>{t("orchestra.board.day", { day: age(issue(), Date.now()) })}</span>
+            <Show when={props.page.dependencies.blocks.length > 0}>
+              <span>
+                {t("orchestra.board.blocks")} <span class="board-mono">{props.page.dependencies.blocks.join(", ")}</span>
+              </span>
+            </Show>
+          </div>
+          <Show when={issue().body}>
+            <p class="board-body">{issue().body}</p>
+          </Show>
+
+          <Show when={open().length > 0}>
+            <section class="board-sec">
+              <h3>{t("orchestra.board.sec.questions")}</h3>
+              <For each={open()}>
+                {(question) => (
+                  <div class="board-question">
+                    <p>{question.text}</p>
+                    <ul>
+                      <For each={question.options}>
+                        {(option) => (
+                          <li data-recommended={option.id === question.recommended}>
+                            <b>{option.label}</b>
+                            <Show when={option.id === question.recommended}>
+                              <span class="board-quiet"> · {t("orchestra.board.recommended")}</span>
+                            </Show>
+                            <Show when={option.consequence}>
+                              <small>{option.consequence}</small>
+                            </Show>
+                          </li>
+                        )}
+                      </For>
+                    </ul>
+                    <p class="board-quiet">{t("orchestra.board.answerLater")}</p>
+                  </div>
+                )}
+              </For>
+            </section>
+          </Show>
+
+          <Show when={progress().total > 0}>
+            <section class="board-sec">
+              <h3>
+                {t("orchestra.board.sec.steps")}
+                <span class="board-count">{t("orchestra.board.steps.done", { done: progress().done, total: progress().total })}</span>
+              </h3>
+              <ol class="board-plan">
+                <For each={issue().steps}>
+                  {(item) => (
+                    <li data-state={item.status}>
+                      <span class="board-plan-mark" aria-hidden="true" />
+                      <span>
+                        {item.title}
+                        <Show when={item.status === "active" && item.now}>
+                          {(now) => <small class="board-now board-now-line">{now()}</small>}
+                        </Show>
+                      </span>
+                    </li>
+                  )}
+                </For>
+              </ol>
+            </section>
+          </Show>
+
+          <section class="board-sec">
+            <h3>{t("orchestra.board.sec.git")}</h3>
+            <TrailView trail={props.page.trail} branch={issue().branch} />
+          </section>
+
+          <Show when={props.page.attachments.length > 0}>
+            <section class="board-sec">
+              <h3>
+                {t("orchestra.board.sec.attachments")}
+                <span class="board-count">{props.page.attachments.length}</span>
+              </h3>
+              <ul class="board-files">
+                <For each={props.page.attachments}>
+                  {(file) => (
+                    <li data-kind={file.kind}>
+                      {/* A secret's name is its label. Its value never reaches the app. */}
+                      <span>{file.name}</span>
+                      <span class="board-quiet">
+                        {file.kind === "secret" ? t("orchestra.board.secret") : t(`orchestra.board.kind.${file.kind}`)}
+                      </span>
+                    </li>
+                  )}
+                </For>
+              </ul>
+            </section>
+          </Show>
+
+          <Show when={props.page.notes.length > 0}>
+            <section class="board-sec">
+              <h3>
+                {t("orchestra.board.sec.notes")}
+                <span class="board-count">{props.page.notes.length}</span>
+              </h3>
+              <For each={props.page.notes}>
+                {(note) => (
+                  <div class="board-note">
+                    <div class="board-note-by">
+                      <b>
+                        {note.author === "owner"
+                          ? t(actorKey.owner)
+                          : note.author === "maestro"
+                            ? t(actorKey.maestro)
+                            : note.author.replace(/^github:/, "@")}
+                      </b>
+                      <span class="board-quiet">{time(note.timeCreated)}</span>
+                    </div>
+                    <p>{note.body}</p>
+                  </div>
+                )}
+              </For>
+            </section>
+          </Show>
+
+          <section class="board-sec">
+            <h3>
+              {props.full ? t("orchestra.board.sec.activity") : t("orchestra.board.sec.latest")}
+              <span class="board-count">{props.page.activity.length}</span>
+            </h3>
+            <Show when={activity().length > 0} fallback={<p class="board-quiet">{t("orchestra.board.activity.none")}</p>}>
+              <ol class="board-activity">
+                <For each={activity()}>
+                  {(entry) => (
+                    <li>
+                      <span>
+                        <b>{t(actorKey[entry.actor])}</b> {t(actionKey[entry.action])}
+                        <Show when={entry.reason}>{(reason) => <span class="board-why"> · {reason()}</span>}</Show>
+                      </span>
+                      <span class="board-quiet">{time(entry.timeCreated)}</span>
+                    </li>
+                  )}
+                </For>
+              </ol>
+            </Show>
+          </section>
+        </div>
+
+        <Show when={props.full}>
+          <aside class="board-rail">
+            <h3>{t("orchestra.board.sec.properties")}</h3>
+            <dl class="board-props">
+              <dt>{t("orchestra.board.prop.stage")}</dt>
+              <dd>
+                {t(stageKey[issue().stage])}
+                <Show when={progress().current}>
+                  {(current) => <small>{t("orchestra.board.stage.of", { current: current(), total: progress().total })}</small>}
+                </Show>
+              </dd>
+              <dt>{t("orchestra.board.prop.epic")}</dt>
+              <dd>{epic() ?? t("orchestra.board.none")}</dd>
+              <dt>{t("orchestra.board.prop.seat")}</dt>
+              <dd>{issue().seat ?? t("orchestra.board.none")}</dd>
+              <dt>{t("orchestra.board.prop.type")}</dt>
+              <dd>{t(`orchestra.board.type.${issue().type}`)}</dd>
+              <dt>{t("orchestra.board.prop.estimate")}</dt>
+              <dd>{issue().estimate?.toUpperCase() ?? t("orchestra.board.none")}</dd>
+              <dt>{t("orchestra.board.prop.age")}</dt>
+              <dd>{t("orchestra.board.day", { day: age(issue(), Date.now()) })}</dd>
+            </dl>
+            <h3>{t("orchestra.board.sec.dependencies")}</h3>
+            <dl class="board-props">
+              <dt>{t("orchestra.board.prop.dependsOn")}</dt>
+              <dd class="board-mono">{props.page.dependencies.dependsOn.join(", ") || t("orchestra.board.none")}</dd>
+              <dt>{t("orchestra.board.prop.blocks")}</dt>
+              <dd class="board-mono">{props.page.dependencies.blocks.join(", ") || t("orchestra.board.none")}</dd>
+            </dl>
+            <Show when={props.page.activity[0]}>
+              {(first) => (
+                <>
+                  <h3>{t("orchestra.board.sec.history")}</h3>
+                  <dl class="board-props">
+                    <dt>{t("orchestra.board.prop.created")}</dt>
+                    <dd>{date(first().timeCreated)}</dd>
+                    <dt>{t("orchestra.board.prop.updated")}</dt>
+                    <dd>{time(props.page.activity[props.page.activity.length - 1].timeCreated)}</dd>
+                  </dl>
+                </>
+              )}
+            </Show>
+            <p class="board-footnote">
+              <b>{t("orchestra.board.readOnly")}</b> {t("orchestra.board.readOnlyBody")}
+              <span class="board-keys">
+                <span>
+                  <kbd>J</kbd>
+                  <kbd>K</kbd>
+                  {t("orchestra.board.keys.issues")}
+                </span>
+                <span>
+                  <kbd>Esc</kbd>
+                  {t("orchestra.board.keys.board")}
+                </span>
+              </span>
+            </p>
+          </aside>
+        </Show>
+      </div>
+    )
+  }
+
+  const DetailState = (props: { full: boolean }) => (
+    <Switch>
+      <Match when={store.page && store.page.issue.ref === store.peek && store.page}>
+        {(page) => <Detail page={page()} full={props.full} />}
+      </Match>
+      <Match when={store.pageFailed}>
+        <div class="mx-empty">
+          <strong>{t("orchestra.board.issueFailed")}</strong>
+          <button type="button" class="mx-btn" onClick={() => store.peek && loadPage(store.peek)}>
+            {t("orchestra.board.retry")}
+          </button>
+        </div>
+      </Match>
+      <Match when={true}>
+        <p class="board-quiet board-loading">{t("orchestra.board.loadingIssue")}</p>
+      </Match>
+    </Switch>
+  )
+
+  return (
+    <div class="board-root mx-page" ref={root} onKeyDown={keydown}>
+      <Show
+        when={store.key}
+        fallback={
+          <section class="board-page" aria-labelledby="board-projects-title">
+            <header class="board-head">
+              <div>
+                <h1 id="board-projects-title">{t("orchestra.board.title")}</h1>
+                <p class="board-sub">{t("orchestra.board.description")}</p>
+              </div>
+            </header>
+            <Switch>
+              <Match when={store.listFailed}>
+                <div class="mx-empty">
+                  <strong>{t("orchestra.board.listFailed")}</strong>
+                  <button type="button" class="mx-btn" onClick={() => void loadList()}>
+                    {t("orchestra.board.retry")}
+                  </button>
+                </div>
+              </Match>
+              <Match when={store.projects === undefined}>
+                <p class="board-quiet board-loading">{t("orchestra.board.loading")}</p>
+              </Match>
+              <Match when={store.projects?.length === 0}>
+                <div class="mx-empty">
+                  <strong>{t("orchestra.board.empty.title")}</strong>
+                  <p>{t("orchestra.board.empty.body")}</p>
+                </div>
+              </Match>
+              <Match when={store.projects}>
+                {(projects) => (
+                  <div class="board-projects">
+                    <For each={projects()}>
+                      {(summary) => (
+                        <button
+                          type="button"
+                          class="board-project"
+                          data-key={summary.project.key}
+                          onClick={() => openProject(summary.project.key)}
+                        >
+                          <span class="board-card-top">
+                            <span class="board-id">{summary.project.key}</span>
+                            <span class="board-health" data-health={summary.health}>
+                              <MxBadge tone={summary.health === "on_track" ? "good" : undefined}>{t(healthKey[summary.health])}</MxBadge>
+                            </span>
+                          </span>
+                          <span class="board-card-title">{summary.project.name}</span>
+                          <Show when={summary.project.goal}>
+                            <span class="board-quiet">{summary.project.goal}</span>
+                          </Show>
+                          <span class="board-bar" aria-hidden="true">
+                            <For each={columns.toReversed()}>
+                              {(stage) => (
+                                <Show when={(summary.stages[stage] ?? 0) > 0}>
+                                  <i data-stage={stage} style={{ "flex-grow": summary.stages[stage] }} />
+                                </Show>
+                              )}
+                            </For>
+                          </span>
+                          <span class="board-card-foot">
+                            <span>
+                              {t("orchestra.board.project.shipped", {
+                                shipped: summary.stages.shipped ?? 0,
+                                total: columns.reduce((sum, stage) => sum + (summary.stages[stage] ?? 0), 0),
+                              })}
+                            </span>
+                            <span class="board-spacer" />
+                            <Show when={summary.openQuestions > 0}>
+                              <span class="board-ask-count">
+                                {language.plural("orchestra.board.project.questions", summary.openQuestions)}
+                              </span>
+                            </Show>
+                          </span>
+                        </button>
+                      )}
+                    </For>
+                  </div>
+                )}
+              </Match>
+            </Switch>
+          </section>
+        }
+      >
+        <section class="board-page" aria-labelledby="board-title">
+          <nav class="board-crumb" aria-label={t("orchestra.board.crumb")}>
+            <button type="button" class="mx-link" onClick={closeProject}>
+              {t("orchestra.board.title")}
+            </button>
+            <span aria-hidden="true">/</span>
+            <span class="board-mono">{store.key}</span>
+          </nav>
+          <Switch>
+            <Match when={store.boardFailed && !store.snapshot}>
+              <div class="mx-empty">
+                <strong>{t("orchestra.board.boardFailed")}</strong>
+                <button type="button" class="mx-btn" onClick={() => store.key && loadBoard(store.key)}>
+                  {t("orchestra.board.retry")}
+                </button>
+              </div>
+            </Match>
+            <Match when={!store.snapshot}>
+              <p class="board-quiet board-loading">{t("orchestra.board.loading")}</p>
+            </Match>
+            <Match when={store.full && store.peek}>
+              <div class="board-full" role="region" tabindex="-1" aria-labelledby="board-detail-title">
+                <DetailState full />
+              </div>
+            </Match>
+            <Match when={store.snapshot}>
+              {(snapshot) => (
+                <>
+                  <header class="board-head">
+                    <div>
+                      <div class="board-eyebrow">
+                        {snapshot().project.key}
+                        <Show when={snapshot().project.targetDate}>
+                          {(target) => <> · {t("orchestra.board.target", { date: date(target()) })}</>}
+                        </Show>
+                      </div>
+                      <div class="board-title-row">
+                        <h1 id="board-title">{snapshot().project.name}</h1>
+                        <Show when={store.projects?.find((item) => item.project.id === snapshot().project.id)}>
+                          {(summary) => (
+                            <span class="board-health" data-health={summary().health}>
+                              <MxBadge tone={summary().health === "on_track" ? "good" : undefined}>
+                                {t(healthKey[summary().health])}
+                              </MxBadge>
+                            </span>
+                          )}
+                        </Show>
+                      </div>
+                      <div class="board-sub">
+                        {t("orchestra.board.kept", { time: time(store.fetchedAt) })}
+                        <span class="board-dot" aria-hidden="true" />
+                        {t("orchestra.board.onlyMaestro")}
+                      </div>
+                    </div>
+                    <Show when={crew().length > 0}>
+                      <div class="board-crew">
+                        <span class="board-stack">
+                          <For each={crew()}>{(seat) => <Seat seat={seat} />}</For>
+                        </span>
+                        {language.plural("orchestra.board.crew", crew().length)}
+                      </div>
+                    </Show>
+                  </header>
+
+                  <div class="board-top">
+                    <section class="board-brief" aria-label={t("orchestra.board.brief")}>
+                      <Show when={snapshot().project.goal}>
+                        <p>{snapshot().project.goal}</p>
+                      </Show>
+                      <Show when={snapshot().project.status === "paused" && snapshot().project.pausedReason}>
+                        {(reason) => <p class="board-held-note">{t("orchestra.board.projectPaused", { reason: reason() })}</p>}
+                      </Show>
+                      <div class="board-metric">
+                        <span>
+                          <b class="board-percent">{plan().percent}%</b>
+                          {t("orchestra.board.shippedOf", { shipped: plan().shipped, total: plan().total })}
+                        </span>
+                        <span class="board-bar" aria-hidden="true">
+                          <For each={plan().stages}>
+                            {(item) => (
+                              <Show when={item.count > 0}>
+                                <i data-stage={item.stage} style={{ "flex-grow": item.count }} />
+                              </Show>
+                            )}
+                          </For>
+                        </span>
+                        <span class="board-legend">
+                          <For each={plan().stages}>
+                            {(item) => (
+                              <span data-stage={item.stage}>
+                                <i aria-hidden="true" />
+                                {t(stageKey[item.stage])} {item.count}
+                              </span>
+                            )}
+                          </For>
+                          <Show when={grouped().intake > 0}>
+                            <span class="board-intake">{language.plural("orchestra.board.intake", grouped().intake)}</span>
+                          </Show>
+                        </span>
+                      </div>
+                    </section>
+                    <Show when={questions()[0]}>
+                      {(question) => {
+                        const issue = () => snapshot().issues.find((item) => item.number === question().issue)
+                        return (
+                          <section class="board-ask" aria-labelledby="board-ask-text">
+                            <div class="board-ask-kicker">
+                              {t("orchestra.board.ask.title")}
+                              <span>{t("orchestra.board.ask.position", { total: questions().length })}</span>
+                            </div>
+                            <p id="board-ask-text" class="board-ask-text">
+                              {question().text}
+                            </p>
+                            <Show when={issue()}>
+                              {(item) => (
+                                <p class="board-quiet">
+                                  {t("orchestra.board.ask.why", { title: item().title })}{" "}
+                                  <span class="board-mono">{item().ref}</span>
+                                </p>
+                              )}
+                            </Show>
+                            <ul class="board-ask-options">
+                              <For each={question().options}>
+                                {(option, index) => (
+                                  <li data-recommended={option.id === question().recommended}>
+                                    <kbd>{index() + 1}</kbd>
+                                    {option.label}
+                                  </li>
+                                )}
+                              </For>
+                            </ul>
+                          </section>
+                        )
+                      }}
+                    </Show>
+                  </div>
+
+                  <div class="board-grid" role="group" aria-label={t("orchestra.board.grid")}>
+                    <For each={columns}>{(stage) => <Lane stage={stage} />}</For>
+                  </div>
+                  <Show when={store.boardFailed}>
+                    <p class="board-quiet">{t("orchestra.board.stale")}</p>
+                  </Show>
+
+                  <Show when={store.peek}>
+                    <div class="board-scrim" aria-hidden="true" onClick={closePeek} />
+                    <aside class="board-peek" role="dialog" aria-labelledby="board-detail-title">
+                      <DetailState full={false} />
+                    </aside>
+                  </Show>
+                </>
+              )}
+            </Match>
+          </Switch>
+        </section>
+      </Show>
+    </div>
+  )
+}
+
+function narrow<S extends Trail["state"]>(trail: Trail, state: S) {
+  return trail.state === state ? (trail as Extract<Trail, { state: S }>) : undefined
+}

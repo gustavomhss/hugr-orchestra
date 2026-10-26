@@ -7,13 +7,8 @@ export type MeetingSegment = { id: string; track: "me" | "them"; text: string; s
 
 const RETRY_MS = 2000
 
-export function meetingClient(
-  server: MeetingServer,
-  hooks: { failed(reason: string, pending: number, offlineMs: number): void; recovered(): void } = {
-    failed() {},
-    recovered() {},
-  },
-) {
+// The owned server's requests from main: Basic credentials, and the meeting's directory as the request's Location.
+export function liveRequest(server: MeetingServer) {
   const headers = new Headers({ "content-type": "application/json" })
   if (server.password)
     headers.set(
@@ -25,11 +20,25 @@ export function meetingClient(
     if (server.directory) url.searchParams.set("location[directory]", server.directory)
     return url
   }
-  const post = async (path: string, body: unknown) => {
-    const response = await fetch(endpoint(path), { method: "POST", headers, body: JSON.stringify(body) })
-    if (!response.ok) throw new Error(`${path} answered ${response.status}: ${await response.text()}`)
-    return response
+  return {
+    endpoint,
+    headers,
+    async post(path: string, body: unknown) {
+      const response = await fetch(endpoint(path), { method: "POST", headers, body: JSON.stringify(body) })
+      if (!response.ok) throw new Error(`${path} answered ${response.status}: ${await response.text()}`)
+      return response
+    },
   }
+}
+
+export function meetingClient(
+  server: MeetingServer,
+  hooks: { failed(reason: string, pending: number, offlineMs: number): void; recovered(): void } = {
+    failed() {},
+    recovered() {},
+  },
+) {
+  const post = liveRequest(server).post
   const state = {
     pending: [] as MeetingSegment[],
     sending: undefined as Promise<void> | undefined,

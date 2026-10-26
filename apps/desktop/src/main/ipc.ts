@@ -31,6 +31,8 @@ import { registerAppDockIpcHandlers } from "./ipc-app-dock"
 import { registerResponseDownloadIpc } from "./response-download"
 import { setWindowZoom } from "./window-zoom"
 import { openDesktopPath } from "./apps"
+import { hasTranscriptionKey, saveTranscriptionKey } from "./live-key"
+import type { LiveLoop } from "./live-loop"
 
 const pickerFilters = (ext?: string[]) => {
   if (!ext || ext.length === 0) return undefined
@@ -40,6 +42,7 @@ const pickerFilters = (ext?: string[]) => {
 const pickedFiles = createPickedFileAuthorizations()
 
 type Deps = {
+  liveLoop: LiveLoop
   killSidecar: () => Promise<void> | void
   relaunch: () => void
   awaitInitialization: () => Promise<ServerReadyData>
@@ -306,6 +309,17 @@ export function registerIpcHandlers(deps: Deps) {
     const win = BrowserWindow.fromWebContents(event.sender)
     if (!win || win.webContents !== event.sender) return
     setWindowZoom(win, factor, () => updateTitlebar(win))
+  })
+  // A meeting with no title is named by its local start time, so no untranslated default reaches the record.
+  ipcMain.handle("start-live-meeting", (_event: IpcMainInvokeEvent, title: unknown) =>
+    deps.liveLoop.start(typeof title === "string" && title.trim() ? title.trim() : new Date().toLocaleString()),
+  )
+  ipcMain.handle("stop-live-meeting", () => deps.liveLoop.stop())
+  ipcMain.handle("get-live-meeting-running", () => deps.liveLoop.running())
+  // The key itself never goes back to a renderer; it can only be replaced or cleared.
+  ipcMain.handle("has-live-transcription-key", () => hasTranscriptionKey())
+  ipcMain.handle("set-live-transcription-key", (_event: IpcMainInvokeEvent, key: unknown) => {
+    if (typeof key === "string") saveTranscriptionKey(key)
   })
   ipcMain.handle("get-pinch-zoom-enabled", () => getPinchZoomEnabled())
   ipcMain.handle("set-pinch-zoom-enabled", (_event: IpcMainInvokeEvent, enabled: boolean) => {

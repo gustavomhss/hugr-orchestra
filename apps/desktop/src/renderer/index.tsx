@@ -295,6 +295,16 @@ const createPlatform = (windowState: DesktopWindowState): Platform => {
 
     getPinchZoomEnabled: () => window.api.getPinchZoomEnabled(),
 
+    liveSeat: {
+      start: (title) => window.api.startLiveMeeting(title),
+      stop: () => window.api.stopLiveMeeting(),
+      running: () => window.api.getLiveMeetingRunning(),
+      hasTranscriptionKey: () => window.api.hasLiveTranscriptionKey(),
+      setTranscriptionKey: (key) => window.api.setLiveTranscriptionKey(key),
+      getContentProtection: () => window.api.getLiveOverlayContentProtection(),
+      setContentProtection: (enabled) => window.api.setLiveOverlayContentProtection(enabled),
+    },
+
     setPinchZoomEnabled,
 
     runDesktopMenuAction,
