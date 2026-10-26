@@ -270,7 +270,7 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
                     <p class="fe-detail-meta">
                       {when(num(detail().meeting.timeStarted))}
                       {" · "}
-                      {t("orchestra.flightEngineer.detail.answers", { count: num(detail().summary.counts.answers) })}
+                      {language.plural("orchestra.flightEngineer.detail.answers", num(detail().summary.counts.answers))}
                       {" · "}
                       {t(`orchestra.flightEngineer.detail.retention.${detail().summary.retention}` as "orchestra.flightEngineer.detail.retention.kept")}
                     </p>

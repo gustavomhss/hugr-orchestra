@@ -29,14 +29,17 @@ function Frame(props: { id: string; title: string; close: () => void; children: 
   let dialog: HTMLDialogElement | undefined
   createEffect(() => {
     if (!dialog || dialog.open) return
-    dialog.showModal()
     const previous = document.activeElement
+    dialog.showModal()
+    // Start on the dialog itself so no control shows a focus ring before the person has touched anything.
+    dialog.focus()
     onCleanup(() => previous instanceof HTMLElement && previous.focus())
   })
   return (
     <dialog
       ref={dialog}
       class="fe-modal"
+      tabindex="-1"
       aria-labelledby={props.id}
       onCancel={(event) => {
         event.preventDefault()

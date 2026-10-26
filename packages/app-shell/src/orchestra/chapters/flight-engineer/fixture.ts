@@ -105,8 +105,8 @@ const seat: LiveSeatPlatform = {
   getHotkeys: async () => state.hotkeys.map((item) => ({ ...item })),
   async setHotkey(action: LiveHotkeyAction, accelerator: string) {
     if (!/\+/.test(accelerator)) return { ok: false, reason: "invalid" }
-    // Another app already holds this one in the fixture.
-    if (accelerator === "CommandOrControl+Shift+Enter") return { ok: false, reason: "conflict" }
+    // Another hotkey (or, in the fixture, another app) already holds this one.
+    if (state.hotkeys.some((item) => item.action !== action && same(item.accelerator, accelerator))) return { ok: false, reason: "conflict" }
     state.hotkeys = state.hotkeys.map((item) => (item.action === action ? { ...item, accelerator } : item))
     return { ok: true }
   },
@@ -289,6 +289,9 @@ const meetings: Meetings = {
 type Scenario = Partial<Pick<typeof state, "permissions" | "key" | "reachable" | "startReason">> & {
   running?: boolean
 }
+
+// The app records "Command+..." while the defaults are stored as "CommandOrControl+...".
+const same = (a: string, b: string) => a.replace(/^(Command|Control)\+/, "CommandOrControl+") === b.replace(/^(Command|Control)\+/, "CommandOrControl+")
 
 const hook = {
   on() {

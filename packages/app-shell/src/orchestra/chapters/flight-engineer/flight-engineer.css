@@ -91,7 +91,7 @@
   gap: 8px;
   font-size: var(--orchestra-font-size-sm);
 }
-.fe-card-title {
+.mx-card .fe-card-title {
   margin: 0 0 12px;
   color: var(--mx-strong);
   font-size: var(--orchestra-font-size-lg);
@@ -263,7 +263,25 @@
   margin-inline-end: auto;
 }
 .fe-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   min-inline-size: 220px;
+  color: var(--mx-dim);
+}
+.fe-search input {
+  flex: 1;
+  min-inline-size: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--mx-strong);
+  font: inherit;
+}
+.fe-search:focus-within {
+  outline: 2px solid var(--mx-blue);
+  outline-offset: 1px;
 }
 .fe-table {
   border: 1px solid var(--mx-line);
@@ -421,6 +439,35 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 12px;
+}
+.fe-states {
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--mx-line);
+  border-radius: var(--orchestra-radius-md);
+  background: var(--mx-soft);
+}
+.fe-states button {
+  padding: 2px 8px;
+  border: 0;
+  border-radius: var(--orchestra-radius-sm);
+  background: none;
+  color: var(--mx-dim);
+  font: 500 var(--orchestra-font-size-sm) / 18px var(--mx-sans);
+  cursor: pointer;
+  transition: background var(--orchestra-duration-fast) var(--orchestra-ease-out);
+}
+.fe-states button:hover {
+  color: var(--mx-strong);
+}
+.fe-states button[aria-pressed="true"] {
+  background: var(--mx-raised);
+  color: var(--mx-strong);
+  box-shadow: var(--mx-card-shadow);
+}
+.fe-states button:focus-visible {
+  outline: 2px solid var(--mx-blue);
+  outline-offset: 1px;
 }
 .fe-quote {
   display: flex;

@@ -23,6 +23,7 @@
 }
 
 .fe-home {
+  margin-block-start: 32px;
   display: flex;
   align-items: center;
   gap: 20px;
@@ -93,6 +94,9 @@
 
 /* Modal host: float glass over a scrim, never glass on glass (the page behind is covered by the scrim). */
 .fe-modal {
+  /* A global reset zeroes the margin the user agent uses to centre a modal dialog. */
+  margin: auto;
+  inset: 0;
   inline-size: min(600px, calc(100vw - 48px));
   max-block-size: calc(100vh - 64px);
   padding: 28px 28px 22px;
@@ -106,6 +110,9 @@
   font-size: var(--orchestra-font-size-md);
   line-height: 20px;
   box-shadow: var(--mx-highlight), var(--mx-shadow);
+}
+.fe-modal:focus {
+  outline: none;
 }
 .fe-modal::backdrop {
   background: var(--orchestra-scrim);
@@ -165,8 +172,21 @@
   outline-offset: 2px;
 }
 .fe-choice input {
-  margin-block-start: 3px;
-  accent-color: var(--mx-blue);
+  flex: none;
+  inline-size: 16px;
+  block-size: 16px;
+  margin: 2px 0 0;
+  appearance: none;
+  border: 1.5px solid var(--mx-dim);
+  border-radius: 50%;
+  background: transparent;
+}
+.fe-choice input:checked {
+  border-color: var(--mx-blue);
+  background: radial-gradient(circle, var(--mx-blue) 0 4px, transparent 5px);
+}
+.fe-choice input:focus-visible {
+  outline: none;
 }
 .fe-choice strong {
   display: block;
