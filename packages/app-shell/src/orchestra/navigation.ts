@@ -6,6 +6,8 @@ import type { LayoutRoute } from "../context/layout-route"
 export const navigation = [
   { id: "home", label: "home.title", chapter: undefined },
   { id: "chat", label: "orchestra.nav.chat", chapter: undefined },
+  // The Projects board Maestro keeps (docs/specs/projects-board), read only for now.
+  { id: "board", label: "orchestra.nav.board", chapter: "C16", wip: true },
   { id: "agents", label: "orchestra.nav.agents", chapter: "C11", wip: true },
   // Session-relative governance (S20), opened as a dialog over the current session; not a route.
   { id: "maestro", label: "orchestra.nav.maestro", chapter: undefined },

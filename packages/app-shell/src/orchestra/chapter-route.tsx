@@ -35,10 +35,11 @@ export const chapterPages: Partial<Record<string, Component<ChapterPageProps>>> 
   workflows: lazy(() => import("./chapters/workflows")),
   hooks: lazy(() => import("./chapters/hooks")),
   atlas: lazy(() => import("./chapters/atlas/atlas")),
+  board: lazy(() => import("./chapters/board/board")),
 }
 
-// These chapters configure the whole server, so they render without a project (with an empty directory).
-const serverWideChapters = ["settings", "providers", "shortcuts"]
+// These chapters span the whole server, so they render without a project (with an empty directory).
+const serverWideChapters = ["settings", "providers", "shortcuts", "board"]
 
 const ChapterEmpty = lazy(() => import("./chapter-empty"))
 
