@@ -13,6 +13,8 @@ export const OpenRouterPlugin = define({
           evt.provider.update(item.provider.id, (provider) => {
             // App attribution is optional; Orchestra has no site URL to send as HTTP-Referer.
             provider.request.headers["X-Title"] = "Orchestra"
+            // The V2 runner speaks OpenRouter's chat API directly and needs the endpoint the AI SDK package defaults to.
+            if (provider.api.type === "aisdk") provider.api.url ??= "https://openrouter.ai/api/v1"
           })
           for (const modelID of [ModelV2.ID.make("gpt-5-chat-latest"), ModelV2.ID.make("openai/gpt-5-chat")]) {
             if (!item.models.has(modelID)) continue
