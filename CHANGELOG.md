@@ -4,7 +4,18 @@ All notable changes to HuGR Orchestra are recorded here. The format follows [Kee
 
 ## [Unreleased]
 
-The first public release is pending. This section describes the product as it stands for that release.
+Changes since the last release go here.
+
+## Releases
+
+Releases are versioned 0.x. The command line (`@humanguardrail/cli`) is tagged `v<version>` and the desktop app `desktop-v<version>` on [GitHub Releases](https://github.com/gustavomhss/hugr-orchestra/releases); each release's notes say whether it is signed.
+
+- 0.2.2 (2026-10-21): desktop release.
+- 0.2.1 (2026-10-20): command line and desktop releases.
+- 0.2.0 (2026-10-20): command line and desktop releases.
+- 0.1.0 (2026-10-19): first command line and desktop releases, unsigned.
+
+The list below describes the product as it stands, not a per-release diff.
 
 ### Added
 
@@ -27,7 +38,7 @@ The first public release is pending. This section describes the product as it st
 ### Changed
 
 - Context compaction now uses a hard-limited continuity: early pruning at 40 percent of the window and a hard limit at 70 percent.
-- Shell commands, language servers and formatters run inside an OS sandbox on macOS, Linux and Windows, with seat reads limited to what the work needs.
+- An OS sandbox for shell commands, language servers and formatters is available on macOS, Linux and Windows. It applies to read-only agents and to projects that ask for it; it is not on for every command (see SECURITY.md).
 - The app tolerates slow service start-up and retries protocol probes that get no answer.
 - Sessions persist across branches.
 
