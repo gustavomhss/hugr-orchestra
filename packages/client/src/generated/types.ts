@@ -10036,8 +10036,30 @@ export type MeetingStartInput = {
   readonly location?: {
     readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
   }["location"]
-  readonly sessionID: { readonly sessionID: string; readonly title: string }["sessionID"]
-  readonly title: { readonly sessionID: string; readonly title: string }["title"]
+  readonly sessionID: {
+    readonly sessionID: string
+    readonly title: string
+    readonly retention?: ("kept" | "ephemeral") | undefined
+    readonly consent: "announced" | "not-needed" | "unknown"
+  }["sessionID"]
+  readonly title: {
+    readonly sessionID: string
+    readonly title: string
+    readonly retention?: ("kept" | "ephemeral") | undefined
+    readonly consent: "announced" | "not-needed" | "unknown"
+  }["title"]
+  readonly retention?: {
+    readonly sessionID: string
+    readonly title: string
+    readonly retention?: ("kept" | "ephemeral") | undefined
+    readonly consent: "announced" | "not-needed" | "unknown"
+  }["retention"]
+  readonly consent: {
+    readonly sessionID: string
+    readonly title: string
+    readonly retention?: ("kept" | "ephemeral") | undefined
+    readonly consent: "announced" | "not-needed" | "unknown"
+  }["consent"]
 }
 
 export type MeetingStartOutput = {
@@ -10137,7 +10159,358 @@ export type MeetingReadOutput = {
       readonly startMs: number | "Infinity" | "-Infinity" | "NaN"
       readonly endMs: number | "Infinity" | "-Infinity" | "NaN"
     }>
+    readonly summary: {
+      readonly id: string
+      readonly title: string
+      readonly startedAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly endedAt?: number | "Infinity" | "-Infinity" | "NaN" | null
+      readonly people: ReadonlyArray<{ readonly id: string; readonly name: string }>
+      readonly retention: "kept" | "ephemeral"
+      readonly consent: "announced" | "not-needed" | "unknown"
+      readonly counts: {
+        readonly decisions: number | "Infinity" | "-Infinity" | "NaN"
+        readonly commitments: number | "Infinity" | "-Infinity" | "NaN"
+        readonly openCommitments: number | "Infinity" | "-Infinity" | "NaN"
+        readonly answers: number | "Infinity" | "-Infinity" | "NaN"
+      }
+    }
+    readonly card: {
+      readonly status: "pending" | "ready" | "failed"
+      readonly error?: string | null
+      readonly summary: string
+      readonly decisions: ReadonlyArray<{
+        readonly id: string
+        readonly text: string
+        readonly asserter:
+          | { readonly id: string; readonly name: string }
+          | "me"
+          | { readonly unknown: number | "Infinity" | "-Infinity" | "NaN" }
+        readonly quote: string
+        readonly startMs?: number | "Infinity" | "-Infinity" | "NaN" | null
+        readonly status: "claimed" | "confirmed" | "disputed"
+        readonly sentToMaestro: boolean
+      }>
+      readonly commitments: ReadonlyArray<{
+        readonly id: string
+        readonly text: string
+        readonly asserter:
+          | { readonly id: string; readonly name: string }
+          | "me"
+          | { readonly unknown: number | "Infinity" | "-Infinity" | "NaN" }
+        readonly quote: string
+        readonly startMs?: number | "Infinity" | "-Infinity" | "NaN" | null
+        readonly status: "claimed" | "confirmed" | "disputed"
+        readonly sentToMaestro: boolean
+        readonly owner: { readonly id: string; readonly name: string } | "me"
+        readonly counterparty?: { readonly id: string; readonly name: string } | "me" | null
+        readonly due?: string | null
+        readonly state: "proposed" | "accepted" | "done" | "overdue" | "dropped"
+      }>
+      readonly questions: ReadonlyArray<{
+        readonly id: string
+        readonly text: string
+        readonly asserter:
+          | { readonly id: string; readonly name: string }
+          | "me"
+          | { readonly unknown: number | "Infinity" | "-Infinity" | "NaN" }
+        readonly quote: string
+        readonly startMs?: number | "Infinity" | "-Infinity" | "NaN" | null
+        readonly status: "claimed" | "confirmed" | "disputed"
+        readonly sentToMaestro: boolean
+      }>
+      readonly suggestions: ReadonlyArray<{
+        readonly id: string
+        readonly text: string
+        readonly asserter:
+          | { readonly id: string; readonly name: string }
+          | "me"
+          | { readonly unknown: number | "Infinity" | "-Infinity" | "NaN" }
+        readonly quote: string
+        readonly startMs?: number | "Infinity" | "-Infinity" | "NaN" | null
+        readonly status: "claimed" | "confirmed" | "disputed"
+        readonly sentToMaestro: boolean
+        readonly for: "owner" | "maestro"
+      }>
+      readonly newPeople: ReadonlyArray<{
+        readonly proposalID: string
+        readonly name: string
+        readonly mergeWith?: { readonly id: string; readonly name: string } | null
+      }>
+    }
   }
+}
+
+export type MeetingListInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly query?: string | undefined
+    readonly person?: string | undefined
+    readonly limit?: number | undefined
+    readonly before?: string | undefined
+  }["location"]
+  readonly query?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly query?: string | undefined
+    readonly person?: string | undefined
+    readonly limit?: number | undefined
+    readonly before?: string | undefined
+  }["query"]
+  readonly person?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly query?: string | undefined
+    readonly person?: string | undefined
+    readonly limit?: number | undefined
+    readonly before?: string | undefined
+  }["person"]
+  readonly limit?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly query?: string | undefined
+    readonly person?: string | undefined
+    readonly limit?: number | undefined
+    readonly before?: string | undefined
+  }["limit"]
+  readonly before?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly query?: string | undefined
+    readonly person?: string | undefined
+    readonly limit?: number | undefined
+    readonly before?: string | undefined
+  }["before"]
+}
+
+export type MeetingListOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly items: ReadonlyArray<{
+      readonly id: string
+      readonly title: string
+      readonly startedAt: number | "Infinity" | "-Infinity" | "NaN"
+      readonly endedAt?: number | "Infinity" | "-Infinity" | "NaN" | null
+      readonly people: ReadonlyArray<{ readonly id: string; readonly name: string }>
+      readonly retention: "kept" | "ephemeral"
+      readonly consent: "announced" | "not-needed" | "unknown"
+      readonly counts: {
+        readonly decisions: number | "Infinity" | "-Infinity" | "NaN"
+        readonly commitments: number | "Infinity" | "-Infinity" | "NaN"
+        readonly openCommitments: number | "Infinity" | "-Infinity" | "NaN"
+        readonly answers: number | "Infinity" | "-Infinity" | "NaN"
+      }
+    }>
+    readonly next?: string | null
+  }
+}
+
+export type MeetingRenameInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly meetingID: { readonly meetingID: string; readonly title: string }["meetingID"]
+  readonly title: { readonly meetingID: string; readonly title: string }["title"]
+}
+
+export type MeetingRenameOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly title: string
+    readonly startedAt: number | "Infinity" | "-Infinity" | "NaN"
+    readonly endedAt?: number | "Infinity" | "-Infinity" | "NaN" | null
+    readonly people: ReadonlyArray<{ readonly id: string; readonly name: string }>
+    readonly retention: "kept" | "ephemeral"
+    readonly consent: "announced" | "not-needed" | "unknown"
+    readonly counts: {
+      readonly decisions: number | "Infinity" | "-Infinity" | "NaN"
+      readonly commitments: number | "Infinity" | "-Infinity" | "NaN"
+      readonly openCommitments: number | "Infinity" | "-Infinity" | "NaN"
+      readonly answers: number | "Infinity" | "-Infinity" | "NaN"
+    }
+  }
+}
+
+export type MeetingDeleteInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly meetingID: string
+  }["location"]
+  readonly meetingID: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly meetingID: string
+  }["meetingID"]
+}
+
+export type MeetingDeleteOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly segments: number | "Infinity" | "-Infinity" | "NaN"
+    readonly claims: number | "Infinity" | "-Infinity" | "NaN"
+    readonly commitments: number | "Infinity" | "-Infinity" | "NaN"
+    readonly people: number | "Infinity" | "-Infinity" | "NaN"
+  }
+}
+
+export type MeetingConfirmInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly meetingID: {
+    readonly meetingID: string
+    readonly items?:
+      | ReadonlyArray<{ readonly id: string; readonly verdict: "confirmed" | "disputed" | "dismissed" }>
+      | undefined
+    readonly people?:
+      | ReadonlyArray<{ readonly proposalID: string; readonly verdict: "new" | "merge" | "dismissed" }>
+      | undefined
+  }["meetingID"]
+  readonly items?: {
+    readonly meetingID: string
+    readonly items?:
+      | ReadonlyArray<{ readonly id: string; readonly verdict: "confirmed" | "disputed" | "dismissed" }>
+      | undefined
+    readonly people?:
+      | ReadonlyArray<{ readonly proposalID: string; readonly verdict: "new" | "merge" | "dismissed" }>
+      | undefined
+  }["items"]
+  readonly people?: {
+    readonly meetingID: string
+    readonly items?:
+      | ReadonlyArray<{ readonly id: string; readonly verdict: "confirmed" | "disputed" | "dismissed" }>
+      | undefined
+    readonly people?:
+      | ReadonlyArray<{ readonly proposalID: string; readonly verdict: "new" | "merge" | "dismissed" }>
+      | undefined
+  }["people"]
+}
+
+export type MeetingConfirmOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly status: "pending" | "ready" | "failed"
+    readonly error?: string | null
+    readonly summary: string
+    readonly decisions: ReadonlyArray<{
+      readonly id: string
+      readonly text: string
+      readonly asserter:
+        | { readonly id: string; readonly name: string }
+        | "me"
+        | { readonly unknown: number | "Infinity" | "-Infinity" | "NaN" }
+      readonly quote: string
+      readonly startMs?: number | "Infinity" | "-Infinity" | "NaN" | null
+      readonly status: "claimed" | "confirmed" | "disputed"
+      readonly sentToMaestro: boolean
+    }>
+    readonly commitments: ReadonlyArray<{
+      readonly id: string
+      readonly text: string
+      readonly asserter:
+        | { readonly id: string; readonly name: string }
+        | "me"
+        | { readonly unknown: number | "Infinity" | "-Infinity" | "NaN" }
+      readonly quote: string
+      readonly startMs?: number | "Infinity" | "-Infinity" | "NaN" | null
+      readonly status: "claimed" | "confirmed" | "disputed"
+      readonly sentToMaestro: boolean
+      readonly owner: { readonly id: string; readonly name: string } | "me"
+      readonly counterparty?: { readonly id: string; readonly name: string } | "me" | null
+      readonly due?: string | null
+      readonly state: "proposed" | "accepted" | "done" | "overdue" | "dropped"
+    }>
+    readonly questions: ReadonlyArray<{
+      readonly id: string
+      readonly text: string
+      readonly asserter:
+        | { readonly id: string; readonly name: string }
+        | "me"
+        | { readonly unknown: number | "Infinity" | "-Infinity" | "NaN" }
+      readonly quote: string
+      readonly startMs?: number | "Infinity" | "-Infinity" | "NaN" | null
+      readonly status: "claimed" | "confirmed" | "disputed"
+      readonly sentToMaestro: boolean
+    }>
+    readonly suggestions: ReadonlyArray<{
+      readonly id: string
+      readonly text: string
+      readonly asserter:
+        | { readonly id: string; readonly name: string }
+        | "me"
+        | { readonly unknown: number | "Infinity" | "-Infinity" | "NaN" }
+      readonly quote: string
+      readonly startMs?: number | "Infinity" | "-Infinity" | "NaN" | null
+      readonly status: "claimed" | "confirmed" | "disputed"
+      readonly sentToMaestro: boolean
+      readonly for: "owner" | "maestro"
+    }>
+    readonly newPeople: ReadonlyArray<{
+      readonly proposalID: string
+      readonly name: string
+      readonly mergeWith?: { readonly id: string; readonly name: string } | null
+    }>
+  }
+}
+
+export type MeetingCommitmentInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly id: { readonly id: string; readonly state: "accepted" | "done" | "dropped" }["id"]
+  readonly state: { readonly id: string; readonly state: "accepted" | "done" | "dropped" }["state"]
+}
+
+export type MeetingCommitmentOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly text: string
+    readonly asserter:
+      | { readonly id: string; readonly name: string }
+      | "me"
+      | { readonly unknown: number | "Infinity" | "-Infinity" | "NaN" }
+    readonly quote: string
+    readonly startMs?: number | "Infinity" | "-Infinity" | "NaN" | null
+    readonly status: "claimed" | "confirmed" | "disputed"
+    readonly sentToMaestro: boolean
+    readonly owner: { readonly id: string; readonly name: string } | "me"
+    readonly counterparty?: { readonly id: string; readonly name: string } | "me" | null
+    readonly due?: string | null
+    readonly state: "proposed" | "accepted" | "done" | "overdue" | "dropped"
+  }
+}
+
+export type MeetingHandoffInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly meetingID: { readonly meetingID: string; readonly itemIDs: ReadonlyArray<string> }["meetingID"]
+  readonly itemIDs: { readonly meetingID: string; readonly itemIDs: ReadonlyArray<string> }["itemIDs"]
+}
+
+export type MeetingHandoffOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: { readonly sent: ReadonlyArray<string> }
 }
 
 export type OperatorInspectInput = {

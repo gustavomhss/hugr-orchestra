@@ -50,7 +50,7 @@ describe("SessionMeeting", () => {
     Effect.gen(function* () {
       yield* setup
       const meetings = yield* SessionMeeting.Service
-      const started = yield* meetings.start({ sessionID, title: "Standup" })
+      const started = yield* meetings.start({ sessionID, title: "Standup", consent: "unknown" })
       yield* meetings.append({
         meetingID: started.id,
         segments: [segment("seg_b", "them", "second", 1000), segment("seg_a", "me", "first", 0)],
@@ -66,7 +66,7 @@ describe("SessionMeeting", () => {
     Effect.gen(function* () {
       yield* setup
       const meetings = yield* SessionMeeting.Service
-      const started = yield* meetings.start({ sessionID, title: "Retry" })
+      const started = yield* meetings.start({ sessionID, title: "Retry", consent: "unknown" })
       const item = segment("seg_retry", "me", "once", 0)
       yield* meetings.append({ meetingID: started.id, segments: [item] })
       yield* meetings.append({ meetingID: started.id, segments: [item] })
@@ -78,7 +78,7 @@ describe("SessionMeeting", () => {
     Effect.gen(function* () {
       yield* setup
       const meetings = yield* SessionMeeting.Service
-      const started = yield* meetings.start({ sessionID, title: "Ended" })
+      const started = yield* meetings.start({ sessionID, title: "Ended", consent: "unknown" })
       const stopped = yield* meetings.stop({ meetingID: started.id })
       expect(stopped.timeEnded).not.toBeNull()
       const append = yield* meetings
@@ -90,12 +90,32 @@ describe("SessionMeeting", () => {
     }),
   )
 
+  it.effect("lists newest first, renames, and deletes only stopped meetings", () =>
+    Effect.gen(function* () {
+      yield* setup
+      const meetings = yield* SessionMeeting.Service
+      const first = yield* meetings.start({ sessionID, title: "First", consent: "unknown" })
+      yield* meetings.append({ meetingID: first.id, segments: [segment("seg_a", "me", "hello", 0)] })
+      yield* meetings.stop({ meetingID: first.id })
+      const second = yield* meetings.start({ sessionID, title: "Second", consent: "unknown" })
+      expect((yield* meetings.list({})).items.map((item) => item.id)).toEqual([second.id, first.id])
+      const page = yield* meetings.list({ limit: 1 })
+      expect(page.items.map((item) => item.id)).toEqual([second.id])
+      expect((yield* meetings.list({ before: page.next })).items.map((item) => item.id)).toEqual([first.id])
+      expect((yield* meetings.rename({ meetingID: second.id, title: "Renamed" })).title).toBe("Renamed")
+      expect((yield* meetings.list({ query: "Renam" })).items.map((item) => item.id)).toEqual([second.id])
+      expect((yield* meetings.remove({ meetingID: second.id }).pipe(Effect.flip)).reason).toBe("running")
+      expect(yield* meetings.remove({ meetingID: first.id })).toEqual({ segments: 1, claims: 0, commitments: 0, people: 0 })
+      expect((yield* meetings.get({ meetingID: first.id }).pipe(Effect.flip)).reason).toBe("missing_meeting")
+    }),
+  )
+
   it.effect("allows one running meeting per session", () =>
     Effect.gen(function* () {
       yield* setup
       const meetings = yield* SessionMeeting.Service
-      yield* meetings.start({ sessionID, title: "First" })
-      const second = yield* meetings.start({ sessionID, title: "Second" }).pipe(Effect.flip)
+      yield* meetings.start({ sessionID, title: "First", consent: "unknown" })
+      const second = yield* meetings.start({ sessionID, title: "Second", consent: "unknown" }).pipe(Effect.flip)
       expect(second.reason).toBe("active")
     }),
   )
@@ -105,7 +125,7 @@ describe("SessionMeeting", () => {
       yield* setup
       const meetings = yield* SessionMeeting.Service
       const error = yield* meetings
-        .start({ sessionID: SessionSchema.ID.make("ses_missing_meeting"), title: "Nowhere" })
+        .start({ sessionID: SessionSchema.ID.make("ses_missing_meeting"), title: "Nowhere", consent: "unknown" })
         .pipe(Effect.flip)
       expect(error.reason).toBe("missing_session")
     }),
@@ -119,7 +139,7 @@ describe("SessionMeeting", () => {
       const empty = yield* SystemContext.initialize(yield* context.load(sessionID))
       expect(empty.snapshot).toEqual({})
 
-      const started = yield* meetings.start({ sessionID, title: "Context" })
+      const started = yield* meetings.start({ sessionID, title: "Context", consent: "unknown" })
       yield* meetings.append({ meetingID: started.id, segments: [segment("seg_ctx", "them", "ship on friday", 0)] })
       const generation = yield* SystemContext.initialize(yield* context.load(sessionID))
       expect(generation.baseline).toContain("Live meeting: Context")

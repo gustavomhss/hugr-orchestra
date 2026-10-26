@@ -38,9 +38,39 @@ export const MeetingHandler = HttpApiBuilder.group(Api, "server.meeting", (handl
             return yield* meeting.get({ meetingID: ctx.query.meetingID }).pipe(Effect.mapError(apiError))
           }),
         ),
-      ),
+      )
+      .handle("meeting.list", (ctx) =>
+        response(
+          Effect.gen(function* () {
+            const meeting = yield* SessionMeeting.Service
+            return yield* meeting.list(ctx.query)
+          }),
+        ),
+      )
+      .handle("meeting.rename", (ctx) =>
+        response(
+          Effect.gen(function* () {
+            const meeting = yield* SessionMeeting.Service
+            return yield* meeting.rename(ctx.payload).pipe(Effect.mapError(apiError))
+          }),
+        ),
+      )
+      .handle("meeting.delete", (ctx) =>
+        response(
+          Effect.gen(function* () {
+            const meeting = yield* SessionMeeting.Service
+            return yield* meeting.remove({ meetingID: ctx.query.meetingID }).pipe(Effect.mapError(apiError))
+          }),
+        ),
+      )
+      // The memory store behind these is not built yet; the routes are frozen so the screens can be built first.
+      .handle("meeting.confirm", () => unavailable)
+      .handle("meeting.commitment", () => unavailable)
+      .handle("meeting.handoff", () => unavailable),
   ),
 )
+
+const unavailable = Effect.fail(new MeetingError({ name: "MeetingError", data: { reason: "unavailable" } }))
 
 function apiError(error: SessionMeeting.MeetingError) {
   return new MeetingError({ name: "MeetingError", data: { reason: error.reason } })

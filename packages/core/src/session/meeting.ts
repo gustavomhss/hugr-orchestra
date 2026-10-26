@@ -1,6 +1,6 @@
 export * as SessionMeeting from "./meeting"
 
-import { and, asc, desc, eq, isNull } from "drizzle-orm"
+import { and, asc, desc, eq, gt, isNull, like } from "drizzle-orm"
 import { Clock, Context, Effect, Layer, Schema } from "effect"
 import { Meeting } from "@orchestra/schema/meeting"
 import { Database } from "../database/database"
@@ -24,6 +24,10 @@ export interface Interface {
   readonly get: (input: Meeting.ReadQuery) => Effect.Effect<Meeting.Detail, MeetingError>
   // The running meeting of a Session, if any, with its latest segments in time order.
   readonly active: (sessionID: Meeting.Info["sessionID"]) => Effect.Effect<Meeting.Detail | undefined>
+  readonly list: (input: Meeting.ListQuery) => Effect.Effect<Meeting.ListResult>
+  readonly rename: (input: Meeting.RenameInput) => Effect.Effect<Meeting.Summary, MeetingError>
+  // Refused with "running" while the meeting runs.
+  readonly remove: (input: Meeting.ReadQuery) => Effect.Effect<Meeting.DeleteReceipt, MeetingError>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/SessionMeeting") {}
@@ -31,6 +35,7 @@ export class Service extends Context.Service<Service, Interface>()("@orchestra/v
 // CONTRACT FROZEN ABOVE. Builder A implements `layer` and `node` below, modelled on ./todo.ts.
 
 const LIVE_TAIL = 50
+const LIST_LIMIT = 50
 
 const meetingInfo = (row: typeof MeetingTable.$inferSelect): Meeting.Info => ({
   id: row.id,
@@ -38,6 +43,36 @@ const meetingInfo = (row: typeof MeetingTable.$inferSelect): Meeting.Info => ({
   title: row.title,
   timeStarted: row.time_started,
   timeEnded: row.time_ended,
+})
+
+// Retention, consent, people and counts come with the Flight Engineer memory store; until then they are defaults.
+const summaryOf = (row: typeof MeetingTable.$inferSelect): Meeting.Summary => ({
+  id: row.id,
+  title: row.title,
+  startedAt: row.time_started,
+  endedAt: row.time_ended ?? undefined,
+  people: [],
+  retention: "kept",
+  consent: "unknown",
+  counts: { decisions: 0, commitments: 0, openCommitments: 0, answers: 0 },
+})
+
+// Consolidation is not built yet: a stopped meeting has an empty ready card.
+const cardOf = (row: typeof MeetingTable.$inferSelect): Meeting.Card => ({
+  status: row.time_ended === null ? "pending" : "ready",
+  summary: "",
+  decisions: [],
+  commitments: [],
+  questions: [],
+  suggestions: [],
+  newPeople: [],
+})
+
+const detailOf = (row: typeof MeetingTable.$inferSelect, segments: (typeof MeetingSegmentTable.$inferSelect)[]) => ({
+  meeting: meetingInfo(row),
+  segments: segments.map(segmentOf),
+  summary: summaryOf(row),
+  card: cardOf(row),
 })
 
 const segmentOf = (row: typeof MeetingSegmentTable.$inferSelect): Meeting.Segment => ({
@@ -132,7 +167,7 @@ const layer = Layer.effect(
         .orderBy(asc(MeetingSegmentTable.start_ms))
         .all()
         .pipe(Effect.orDie)
-      return { meeting: meetingInfo(meeting), segments: segments.map(segmentOf) }
+      return detailOf(meeting, segments)
     })
 
     const active = Effect.fn("SessionMeeting.active")(function* (sessionID: Meeting.Info["sessionID"]) {
@@ -146,10 +181,56 @@ const layer = Layer.effect(
         .limit(LIVE_TAIL)
         .all()
         .pipe(Effect.orDie)
-      return { meeting: meetingInfo(meeting), segments: latest.toReversed().map(segmentOf) }
+      return detailOf(meeting, latest.toReversed())
     })
 
-    return Service.of({ start, append, stop, get, active })
+    // Meeting ids sort newest first, so the cursor is the last id of the previous page.
+    const list = Effect.fn("SessionMeeting.list")(function* (input: Meeting.ListQuery) {
+      const limit = input.limit ?? LIST_LIMIT
+      const rows = yield* db
+        .select()
+        .from(MeetingTable)
+        .where(
+          and(
+            input.before ? gt(MeetingTable.id, input.before) : undefined,
+            input.query ? like(MeetingTable.title, `%${input.query}%`) : undefined,
+          ),
+        )
+        .orderBy(asc(MeetingTable.id))
+        .limit(limit + 1)
+        .all()
+        .pipe(Effect.orDie)
+      const page = rows.slice(0, limit)
+      return { items: page.map(summaryOf), next: rows.length > limit ? page.at(-1)?.id : undefined }
+    })
+
+    const rename = Effect.fn("SessionMeeting.rename")(function* (input: Meeting.RenameInput) {
+      const meeting = yield* findMeeting(input.meetingID)
+      if (!meeting) return yield* new MeetingError({ reason: "missing_meeting" })
+      yield* db
+        .update(MeetingTable)
+        .set({ title: input.title })
+        .where(eq(MeetingTable.id, input.meetingID))
+        .run()
+        .pipe(Effect.orDie)
+      return summaryOf({ ...meeting, title: input.title })
+    })
+
+    const remove = Effect.fn("SessionMeeting.remove")(function* (input: Meeting.ReadQuery) {
+      const meeting = yield* findMeeting(input.meetingID)
+      if (!meeting) return yield* new MeetingError({ reason: "missing_meeting" })
+      if (meeting.time_ended === null) return yield* new MeetingError({ reason: "running" })
+      const segments = yield* db
+        .delete(MeetingSegmentTable)
+        .where(eq(MeetingSegmentTable.meeting_id, input.meetingID))
+        .returning({ id: MeetingSegmentTable.id })
+        .all()
+        .pipe(Effect.orDie)
+      yield* db.delete(MeetingTable).where(eq(MeetingTable.id, input.meetingID)).run().pipe(Effect.orDie)
+      return { segments: segments.length, claims: 0, commitments: 0, people: 0 }
+    })
+
+    return Service.of({ start, append, stop, get, active, list, rename, remove })
   }),
 )
 
