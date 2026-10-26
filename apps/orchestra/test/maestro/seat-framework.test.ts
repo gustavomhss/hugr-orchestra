@@ -53,11 +53,11 @@ describe("native seat framework", () => {
   })
 
   test("Atlas Memory remains closed to approved native owners", () => {
-    for (const id of ["backend", "jimmy", "archie"] as const) {
+    for (const id of ["backend", "jimmy", "archie", "live"] as const) {
       expect(define(Seats.all[id])).toBe(Seats.all[id])
       expect(Seats.all[id].atlasMemory).toBe(true)
     }
-    for (const seat of Object.values(Seats.all).filter((seat) => !["backend", "jimmy", "archie"].includes(seat.id))) {
+    for (const seat of Object.values(Seats.all).filter((seat) => !["backend", "jimmy", "archie", "live"].includes(seat.id))) {
       expect(() => define({ ...seat, atlasMemory: true })).toThrow(`Atlas Memory supports only backend, jimmy, archie and live owners: ${seat.id}`)
     }
   })

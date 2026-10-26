@@ -189,7 +189,7 @@ it.instance(
         // Skill reference files travel with their SKILL.md.
         expect(written.filter((file) => file.startsWith("skills/backend-implement/")).length).toBeGreaterThan(1)
 
-        for (const [seat, agent] of seats.flatMap((seat) => ClaudeHostPlugin.agents(seat.id!).map((agent) => [seat, agent] as const))) {
+        for (const [seat, agent] of seats.filter((seat) => !Seats.find(seat.id)?.direct).flatMap((seat) => ClaudeHostPlugin.agents(seat.id!).map((agent) => [seat, agent] as const))) {
           const text = await Bun.file(path.join(built.path, `agents/${agent.name}.md`)).text()
           const head = frontmatter(text)
           expect(head.name).toBe(agent.name)
