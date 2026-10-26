@@ -154,6 +154,46 @@ export default {
         );
       `)
       yield* tx.run(`
+        CREATE TABLE \`board_ci_run\` (
+          \`run_id\` integer PRIMARY KEY,
+          \`project_id\` text NOT NULL,
+          \`issue_id\` text NOT NULL,
+          \`name\` text NOT NULL,
+          \`attempt\` integer NOT NULL,
+          \`billable_ms\` integer NOT NULL,
+          \`cost_usd\` real NOT NULL,
+          \`time_created\` integer NOT NULL,
+          \`time_updated\` integer NOT NULL,
+          CONSTRAINT \`fk_board_ci_run_project_id_board_project_id_fk\` FOREIGN KEY (\`project_id\`) REFERENCES \`board_project\`(\`id\`) ON DELETE CASCADE,
+          CONSTRAINT \`fk_board_ci_run_issue_id_board_issue_id_fk\` FOREIGN KEY (\`issue_id\`) REFERENCES \`board_issue\`(\`id\`) ON DELETE CASCADE
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`board_decision\` (
+          \`id\` text PRIMARY KEY,
+          \`project_id\` text NOT NULL,
+          \`issue_id\` text,
+          \`epic_id\` text,
+          \`question_id\` text NOT NULL,
+          \`question\` text NOT NULL,
+          \`options\` text NOT NULL,
+          \`recommended\` text NOT NULL,
+          \`chosen\` text NOT NULL,
+          \`chosen_text\` text,
+          \`answered_by\` text NOT NULL,
+          \`answered_at\` integer NOT NULL,
+          \`outcome\` text,
+          \`outcome_at\` integer,
+          \`supersedes_id\` text,
+          \`overturned_by_id\` text,
+          \`time_created\` integer NOT NULL,
+          \`time_updated\` integer NOT NULL,
+          CONSTRAINT \`fk_board_decision_project_id_board_project_id_fk\` FOREIGN KEY (\`project_id\`) REFERENCES \`board_project\`(\`id\`) ON DELETE CASCADE,
+          CONSTRAINT \`fk_board_decision_issue_id_board_issue_id_fk\` FOREIGN KEY (\`issue_id\`) REFERENCES \`board_issue\`(\`id\`) ON DELETE SET NULL,
+          CONSTRAINT \`fk_board_decision_epic_id_board_epic_id_fk\` FOREIGN KEY (\`epic_id\`) REFERENCES \`board_epic\`(\`id\`) ON DELETE SET NULL
+        );
+      `)
+      yield* tx.run(`
         CREATE TABLE \`board_dependency\` (
           \`issue_id\` text NOT NULL,
           \`depends_on_id\` text NOT NULL,
@@ -200,6 +240,9 @@ export default {
           \`stage_entered_at\` integer NOT NULL,
           \`github_number\` integer,
           \`github_node_id\` text,
+          \`attempts\` integer DEFAULT 0 NOT NULL,
+          \`crash_reason\` text,
+          \`guardrail_rule\` text,
           \`github_dirty\` integer DEFAULT false NOT NULL,
           \`time_created\` integer NOT NULL,
           \`time_updated\` integer NOT NULL,
@@ -238,6 +281,7 @@ export default {
           \`github_comments_etag\` text,
           \`github_since\` integer,
           \`github_synced_at\` integer,
+          \`ci_synced_at\` integer,
           \`next_issue_number\` integer NOT NULL,
           \`next_epic_number\` integer NOT NULL,
           \`forecast_late_streak\` integer DEFAULT 0 NOT NULL,
@@ -256,6 +300,7 @@ export default {
           \`options\` text NOT NULL,
           \`recommended\` text NOT NULL,
           \`cost_of_waiting\` text,
+          \`kind\` text,
           \`blocking\` integer NOT NULL,
           \`status\` text NOT NULL,
           \`answer_option\` text,
@@ -665,6 +710,10 @@ export default {
       )
       yield* tx.run(`CREATE INDEX \`board_activity_project_idx\` ON \`board_activity\` (\`project_id\`,\`id\`);`)
       yield* tx.run(`CREATE INDEX \`board_attachment_issue_idx\` ON \`board_attachment\` (\`issue_id\`);`)
+      yield* tx.run(`CREATE INDEX \`board_ci_run_issue_idx\` ON \`board_ci_run\` (\`issue_id\`);`)
+      yield* tx.run(
+        `CREATE INDEX \`board_decision_project_idx\` ON \`board_decision\` (\`project_id\`,\`answered_at\`);`,
+      )
       yield* tx.run(`CREATE UNIQUE INDEX \`board_epic_number_idx\` ON \`board_epic\` (\`project_id\`,\`number\`);`)
       yield* tx.run(`CREATE UNIQUE INDEX \`board_issue_number_idx\` ON \`board_issue\` (\`project_id\`,\`number\`);`)
       yield* tx.run(
