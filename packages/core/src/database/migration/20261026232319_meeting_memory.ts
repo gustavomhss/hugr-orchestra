@@ -73,10 +73,10 @@ export default {
       yield* tx.run(
         `INSERT INTO \`__new_meeting\`(\`id\`, \`session_id\`, \`title\`, \`time_started\`, \`time_ended\`) SELECT \`id\`, \`session_id\`, \`title\`, \`time_started\`, \`time_ended\` FROM \`meeting\`;`,
       )
-      yield* tx.run(`DROP TABLE \`meeting\`;`)
+      yield* tx.run(`DROP TABLE \`meeting\`;`) // guardrail-ignore: migration-destructive rows were copied into __new_meeting above
       yield* tx.run(`ALTER TABLE \`__new_meeting\` RENAME TO \`meeting\`;`)
       yield* tx.run(`INSERT INTO \`meeting_segment\` SELECT * FROM \`__meeting_segment_keep\`;`)
-      yield* tx.run(`DROP TABLE \`__meeting_segment_keep\`;`)
+      yield* tx.run(`DROP TABLE \`__meeting_segment_keep\`;`) // guardrail-ignore: migration-destructive scratch copy, its rows were restored to meeting_segment above
       yield* tx.run(`CREATE INDEX \`meeting_session_idx\` ON \`meeting\` (\`session_id\`);`)
       yield* tx.run(`CREATE INDEX \`meeting_item_meeting_idx\` ON \`meeting_item\` (\`meeting_id\`);`)
       yield* tx.run(`CREATE INDEX \`meeting_proposal_meeting_idx\` ON \`meeting_proposal\` (\`meeting_id\`);`)
