@@ -1200,3 +1200,158 @@ html[data-color-scheme="light"] .board-root {
     display: none;
   }
 }
+
+/* Owner writes (slice D). Answers are quiet rows until hovered; the recommended one carries the accent tint. */
+.board-option {
+  display: flex;
+  inline-size: 100%;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  padding: 7px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--orchestra-radius-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition:
+    background var(--orchestra-duration-fast) var(--orchestra-ease-out),
+    border-color var(--orchestra-duration-fast) var(--orchestra-ease-out);
+}
+
+.board-option small {
+  flex-basis: 100%;
+}
+
+.board-option[data-recommended="true"] {
+  border-color: color-mix(in srgb, var(--mx-blue) 28%, transparent);
+  background: color-mix(in srgb, var(--mx-blue) 8%, transparent);
+  color: var(--mx-strong);
+}
+
+.board-option:hover:not(:disabled) {
+  border-color: var(--mx-blue);
+  background: var(--mx-raised);
+}
+
+.board-option:focus-visible {
+  outline: 2px solid var(--mx-blue);
+  outline-offset: 2px;
+}
+
+.board-option:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.board-ask-options .board-option {
+  padding-block: 5px;
+  padding-inline-start: 6px;
+}
+
+.board-input {
+  inline-size: 100%;
+  min-inline-size: 0;
+  padding: 7px 10px;
+  border: 1px solid var(--mx-line);
+  border-radius: var(--orchestra-radius-sm);
+  background: var(--mx-raised);
+  color: var(--mx-strong);
+  outline: 0;
+  font: inherit;
+  font-size: var(--orchestra-font-size-sm);
+  line-height: 1.5;
+}
+
+textarea.board-input {
+  resize: vertical;
+}
+
+.board-input::placeholder {
+  color: var(--orchestra-muted);
+}
+
+.board-input:focus {
+  border-color: var(--mx-blue);
+}
+
+.board-controls,
+.board-add,
+.board-head-end {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+.board-head-end {
+  gap: 16px;
+}
+
+.board-hold {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-sm);
+  cursor: pointer;
+}
+
+.board-composer,
+.board-secret {
+  display: grid;
+  gap: 8px;
+  margin-block-start: 4px;
+}
+
+.board-secret .mx-field {
+  margin-block-end: 0;
+}
+
+.board-secret p {
+  margin: 0;
+}
+
+.board-composer .board-add,
+.board-secret .board-add {
+  justify-content: flex-end;
+}
+
+.board-caught {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  flex-wrap: wrap;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--mx-bad) 40%, transparent);
+  border-radius: var(--orchestra-radius-sm);
+  background: color-mix(in srgb, var(--mx-bad) 8%, transparent);
+  color: var(--mx-strong);
+  font-size: var(--orchestra-font-size-sm);
+}
+
+.board-caught p {
+  margin: 0;
+}
+
+.board-activity-end {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.board-activity .mx-link:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* A file dragged over a card or the peek's attachments marks where it will land. */
+.board-drop {
+  outline: 2px dashed var(--mx-blue);
+  outline-offset: 2px;
+  background-color: color-mix(in srgb, var(--mx-blue) 6%, transparent);
+}

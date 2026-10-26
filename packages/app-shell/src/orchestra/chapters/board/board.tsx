@@ -3,11 +3,14 @@ import { createStore, reconcile } from "solid-js/store"
 import type { ServerBoardListOutput } from "@orchestra/client"
 import { useLanguage } from "@/context/language"
 import { useServerSDK } from "@/context/server-sdk"
-import { MxBadge } from "../kit"
+import { MxBadge, MxToggle } from "../kit"
 import {
   age,
   across,
+  attachmentKind,
+  canUndo,
   columns,
+  credential,
   group,
   monogram,
   order,
@@ -75,9 +78,12 @@ const shippedKey = {
 } as const
 // Shipped is a compact log; older rows fold into a count.
 const shippedShown = 6
+// Attachments travel base64 in one JSON request, so large files are refused before they are read.
+const attachLimit = 25 * 1024 * 1024
 
-// The Projects board (CONTRACT.md §7, slice C): read only, on real data, refetched whenever the server says a project
-// changed. It is cross-project, so it renders without a repository.
+// The Projects board (CONTRACT.md §7, slices C and D): Maestro moves the cards; the owner answers, adds notes and
+// context, pauses and undoes. Every view refetches whenever the server says a project changed. It is cross-project,
+// so it renders without a repository.
 export default function Board() {
   const language = useLanguage()
   const sdk = useServerSDK()
@@ -96,6 +102,12 @@ export default function Board() {
     full: false,
     page: undefined as Page | undefined,
     pageFailed: false,
+    busy: false,
+    failure: undefined as string | undefined,
+    draft: "",
+    caught: false,
+    secret: undefined as { name: string; value: string } | undefined,
+    drop: undefined as string | undefined,
   })
   const channels: Partial<Record<Channel, AbortController>> = {}
   const begin = (name: Channel) => {
@@ -157,6 +169,89 @@ export default function Board() {
       )
   }
 
+  // One owner write at a time. A refusal shows the server's own words; success refetches here, and board.changed
+  // refetches every other window.
+  const write = (run: (key: string) => Promise<unknown>) => {
+    const key = store.key
+    if (!key || store.busy) return Promise.resolve(false)
+    setStore({ busy: true, failure: undefined })
+    return run(key).then(
+      () => {
+        setStore("busy", false)
+        void loadBoard(key)
+        if (store.peek) void loadPage(store.peek)
+        return true
+      },
+      (error: unknown) => {
+        setStore({ busy: false, failure: refusal(error) ?? t("orchestra.board.write.failed") })
+        return false
+      },
+    )
+  }
+  const answer = (question: { id: string }, option: string, text?: string) =>
+    write((key) => api().answer({ key, id: question.id, option, text: text?.trim() || undefined }))
+  const addNote = (issue: number) => {
+    const body = store.draft.trim()
+    if (!body) return
+    // A key never leaves as a note; the owner moves it into the vault first.
+    if (credential(body)) return setStore("caught", true)
+    return write((key) => api().note({ key, number: String(issue), body })).then((ok) => ok && setStore("draft", ""))
+  }
+  const toSecret = () => {
+    const token = credential(store.draft)
+    if (!token) return setStore("caught", false)
+    setStore({ caught: false, draft: store.draft.replace(token, "").trim(), secret: { name: "", value: token } })
+  }
+  const saveSecret = (issue: number) => {
+    const secret = store.secret
+    if (!secret?.name.trim() || !secret.value) return
+    return write((key) =>
+      api().attach({ key, number: String(issue), kind: "secret", name: secret.name.trim(), value: secret.value }),
+    ).then((ok) => ok && setStore("secret", undefined))
+  }
+  const attach = (issue: number, files: readonly File[]) => {
+    if (!files.length) return
+    const big = files.find((file) => file.size > attachLimit)
+    if (big) return setStore("failure", t("orchestra.board.attach.tooBig", { name: big.name }))
+    return write((key) =>
+      Promise.all(
+        files.map(async (file) =>
+          api().attach({
+            key,
+            number: String(issue),
+            kind: attachmentKind(file.type),
+            name: file.name,
+            mime: file.type || undefined,
+            data: await encode(file),
+          }),
+        ),
+      ),
+    )
+  }
+  const undo = (id: string) => write((key) => api().undo({ key, id }))
+  const toggleProject = () =>
+    write((key) => (store.snapshot?.project.status === "paused" ? api().resume({ key }) : api().pause({ key })))
+  const toggleIssue = (issue: Issue) =>
+    write((key) =>
+      issue.paused
+        ? api().resumeIssue({ key, number: String(issue.number) })
+        : api().pauseIssue({ key, number: String(issue.number) }),
+    )
+  const hold = (issue: Issue, value: boolean) => write((key) => api().hold({ key, number: String(issue.number), hold: value }))
+  const droppable = (ref: string, issue: number) => ({
+    onDragOver: (event: DragEvent) => {
+      if (!event.dataTransfer?.types.includes("Files")) return
+      event.preventDefault()
+      setStore("drop", ref)
+    },
+    onDragLeave: () => setStore("drop", undefined),
+    onDrop: (event: DragEvent) => {
+      event.preventDefault()
+      setStore("drop", undefined)
+      void attach(issue, [...(event.dataTransfer?.files ?? [])])
+    },
+  })
+
   onMount(() => void loadList())
   onCleanup(
     sdk().event.listen((event) => {
@@ -182,13 +277,14 @@ export default function Board() {
     void loadList()
   }
   const openPeek = (ref: string) => {
+    if (store.peek !== ref) setStore({ draft: "", caught: false, secret: undefined, failure: undefined })
     setStore({ peek: ref, focused: ref, page: store.page?.issue.ref === ref ? store.page : undefined, pageFailed: false })
     void loadPage(ref)
   }
   const closePeek = () => {
     channels.page?.abort()
     const ref = store.peek
-    setStore({ peek: undefined, full: false, page: undefined })
+    setStore({ peek: undefined, full: false, page: undefined, draft: "", caught: false, secret: undefined, failure: undefined })
     if (ref) focus(ref)
   }
   // The peek's button leaves the DOM when the page opens, so focus moves to the page to keep J, K and Esc working.
@@ -227,6 +323,13 @@ export default function Board() {
     const key = event.key.length === 1 ? event.key.toLowerCase() : event.key
     const current = store.focused ?? store.peek
     if (key === "Escape" && store.peek) return (event.preventDefault(), closePeek())
+    // Typing a note or an answer never moves the board.
+    const target = event.target as HTMLElement
+    if (target.closest("input, textarea, [contenteditable]")) return
+    if (event.metaKey || event.ctrlKey || event.altKey) return
+    const top = questions()[0]
+    const choice = /^[1-9]$/.test(key) && !store.peek ? top?.options[Number(key) - 1] : undefined
+    if (top && choice) return (event.preventDefault(), void answer(top, choice.id))
     if (key === "ArrowDown" || key === "j") return (event.preventDefault(), move(step(refs(), current, 1)))
     if (key === "ArrowUp" || key === "k") return (event.preventDefault(), move(step(refs(), current, -1)))
     if (store.full) return
@@ -300,13 +403,18 @@ export default function Board() {
       <button
         type="button"
         class="board-card"
-        classList={{ "board-held": props.issue.paused, "board-open": store.peek === props.issue.ref }}
+        classList={{
+          "board-held": props.issue.paused,
+          "board-open": store.peek === props.issue.ref,
+          "board-drop": store.drop === props.issue.ref,
+        }}
         data-ref={props.issue.ref}
         data-stage={props.issue.stage}
         tabindex={tab(props.issue.ref)}
         onClick={() => openPeek(props.issue.ref)}
         onKeyDown={(event) => cardKeydown(event, props.issue.ref)}
         onFocus={() => setStore("focused", props.issue.ref)}
+        {...droppable(props.issue.ref, props.issue.number)}
       >
         <span class="board-card-top">
           <span class="board-id">{props.issue.ref}</span>
@@ -535,6 +643,7 @@ export default function Board() {
     const open = () => props.page.questions.filter((question) => question.status === "open")
     const activity = () => (props.full ? props.page.activity : props.page.activity.slice(-3))
     const index = () => refs().indexOf(issue().ref)
+    let picker: HTMLInputElement | undefined
     return (
       <div class="board-detail" data-full={props.full}>
         <div class="board-detail-main">
@@ -585,32 +694,70 @@ export default function Board() {
           <Show when={issue().body}>
             <p class="board-body">{issue().body}</p>
           </Show>
+          <div class="board-controls">
+            <button type="button" class="mx-btn" disabled={store.busy} onClick={() => void toggleIssue(issue())}>
+              {issue().paused ? t("orchestra.board.resume.issue") : t("orchestra.board.pause.issue")}
+            </button>
+            <label class="board-hold">
+              <MxToggle
+                checked={issue().holdBeforeMerge}
+                label={t("orchestra.board.holdToggle")}
+                disabled={store.busy}
+                onChange={(next) => void hold(issue(), next)}
+              />
+              <span>{t("orchestra.board.holdToggle")}</span>
+            </label>
+          </div>
+          <Show when={store.failure}>
+            {(failure) => (
+              <p class="mx-error" role="alert">
+                {failure()}
+              </p>
+            )}
+          </Show>
 
           <Show when={open().length > 0}>
             <section class="board-sec">
               <h3>{t("orchestra.board.sec.questions")}</h3>
               <For each={open()}>
-                {(question) => (
-                  <div class="board-question">
-                    <p>{question.text}</p>
-                    <ul>
-                      <For each={question.options}>
-                        {(option) => (
-                          <li data-recommended={option.id === question.recommended}>
-                            <b>{option.label}</b>
-                            <Show when={option.id === question.recommended}>
-                              <span class="board-quiet"> · {t("orchestra.board.recommended")}</span>
-                            </Show>
-                            <Show when={option.consequence}>
-                              <small>{option.consequence}</small>
-                            </Show>
-                          </li>
-                        )}
-                      </For>
-                    </ul>
-                    <p class="board-quiet">{t("orchestra.board.answerLater")}</p>
-                  </div>
-                )}
+                {(question) => {
+                  let reply: HTMLInputElement | undefined
+                  return (
+                    <div class="board-question">
+                      <p>{question.text}</p>
+                      <ul>
+                        <For each={question.options}>
+                          {(option) => (
+                            <li>
+                              <button
+                                type="button"
+                                class="board-option"
+                                data-recommended={option.id === question.recommended}
+                                disabled={store.busy}
+                                onClick={() => void answer(question, option.id, reply?.value)}
+                              >
+                                <b>{option.label}</b>
+                                <Show when={option.id === question.recommended}>
+                                  <span class="board-quiet"> · {t("orchestra.board.recommended")}</span>
+                                </Show>
+                                <Show when={option.consequence}>
+                                  <small>{option.consequence}</small>
+                                </Show>
+                              </button>
+                            </li>
+                          )}
+                        </For>
+                      </ul>
+                      <input
+                        ref={reply}
+                        class="board-input"
+                        type="text"
+                        aria-label={t("orchestra.board.answer.text")}
+                        placeholder={t("orchestra.board.answer.text")}
+                      />
+                    </div>
+                  )
+                }}
               </For>
             </section>
           </Show>
@@ -644,12 +791,12 @@ export default function Board() {
             <TrailView trail={props.page.trail} branch={issue().branch} />
           </section>
 
-          <Show when={props.page.attachments.length > 0}>
-            <section class="board-sec">
-              <h3>
-                {t("orchestra.board.sec.attachments")}
-                <span class="board-count">{props.page.attachments.length}</span>
-              </h3>
+          <section class="board-sec" classList={{ "board-drop": store.drop === issue().ref }} {...droppable(issue().ref, issue().number)}>
+            <h3>
+              {t("orchestra.board.sec.attachments")}
+              <span class="board-count">{props.page.attachments.length}</span>
+            </h3>
+            <Show when={props.page.attachments.length > 0}>
               <ul class="board-files">
                 <For each={props.page.attachments}>
                   {(file) => (
@@ -663,34 +810,126 @@ export default function Board() {
                   )}
                 </For>
               </ul>
-            </section>
-          </Show>
-
-          <Show when={props.page.notes.length > 0}>
-            <section class="board-sec">
-              <h3>
-                {t("orchestra.board.sec.notes")}
-                <span class="board-count">{props.page.notes.length}</span>
-              </h3>
-              <For each={props.page.notes}>
-                {(note) => (
-                  <div class="board-note">
-                    <div class="board-note-by">
-                      <b>
-                        {note.author === "owner"
-                          ? t(actorKey.owner)
-                          : note.author === "maestro"
-                            ? t(actorKey.maestro)
-                            : note.author.replace(/^github:/, "@")}
-                      </b>
-                      <span class="board-quiet">{time(note.timeCreated)}</span>
-                    </div>
-                    <p>{note.body}</p>
+            </Show>
+            <Show
+              when={store.secret}
+              fallback={
+                <div class="board-add">
+                  <input
+                    ref={picker}
+                    type="file"
+                    multiple
+                    hidden
+                    onChange={(event) => {
+                      void attach(issue().number, [...(event.currentTarget.files ?? [])])
+                      event.currentTarget.value = ""
+                    }}
+                  />
+                  <button type="button" class="mx-btn" disabled={store.busy} onClick={() => picker?.click()}>
+                    {t("orchestra.board.attach.file")}
+                  </button>
+                  <button type="button" class="mx-btn" disabled={store.busy} onClick={() => setStore("secret", { name: "", value: "" })}>
+                    {t("orchestra.board.attach.secret")}
+                  </button>
+                  <span class="board-quiet">{t("orchestra.board.attach.drop")}</span>
+                </div>
+              }
+            >
+              {(secret) => (
+                <form
+                  class="board-secret"
+                  onSubmit={(event) => {
+                    event.preventDefault()
+                    void saveSecret(issue().number)
+                  }}
+                >
+                  <label class="mx-field">
+                    <span>{t("orchestra.board.secret.name")}</span>
+                    <input
+                      type="text"
+                      value={secret().name}
+                      onInput={(event) => setStore("secret", "name", event.currentTarget.value)}
+                    />
+                  </label>
+                  <label class="mx-field">
+                    <span>{t("orchestra.board.secret.value")}</span>
+                    <input
+                      type="password"
+                      autocomplete="off"
+                      value={secret().value}
+                      onInput={(event) => setStore("secret", "value", event.currentTarget.value)}
+                    />
+                  </label>
+                  <p class="board-quiet">{t("orchestra.board.secret.hint")}</p>
+                  <div class="board-add">
+                    <button
+                      type="submit"
+                      class="mx-btn primary"
+                      disabled={store.busy || !secret().name.trim() || !secret().value}
+                    >
+                      {t("orchestra.board.secret.save")}
+                    </button>
+                    <button type="button" class="mx-btn" onClick={() => setStore("secret", undefined)}>
+                      {t("orchestra.board.cancel")}
+                    </button>
                   </div>
-                )}
-              </For>
-            </section>
-          </Show>
+                </form>
+              )}
+            </Show>
+          </section>
+
+          <section class="board-sec">
+            <h3>
+              {t("orchestra.board.sec.notes")}
+              <span class="board-count">{props.page.notes.length}</span>
+            </h3>
+            <For each={props.page.notes}>
+              {(note) => (
+                <div class="board-note">
+                  <div class="board-note-by">
+                    <b>
+                      {note.author === "owner"
+                        ? t(actorKey.owner)
+                        : note.author === "maestro"
+                          ? t(actorKey.maestro)
+                          : note.author.replace(/^github:/, "@")}
+                    </b>
+                    <span class="board-quiet">{time(note.timeCreated)}</span>
+                  </div>
+                  <p>{note.body}</p>
+                </div>
+              )}
+            </For>
+            <form
+              class="board-composer"
+              onSubmit={(event) => {
+                event.preventDefault()
+                void addNote(issue().number)
+              }}
+            >
+              <textarea
+                class="board-input"
+                rows={3}
+                value={store.draft}
+                aria-label={t("orchestra.board.note.placeholder")}
+                placeholder={t("orchestra.board.note.placeholder")}
+                onInput={(event) => setStore({ draft: event.currentTarget.value, caught: false })}
+              />
+              <Show when={store.caught}>
+                <div class="board-caught" role="alert">
+                  <p>{t("orchestra.board.note.secret")}</p>
+                  <button type="button" class="mx-btn" onClick={toSecret}>
+                    {t("orchestra.board.note.toSecret")}
+                  </button>
+                </div>
+              </Show>
+              <div class="board-add">
+                <button type="submit" class="mx-btn primary" disabled={store.busy || store.caught || !store.draft.trim()}>
+                  {t("orchestra.board.note.send")}
+                </button>
+              </div>
+            </form>
+          </section>
 
           <section class="board-sec">
             <h3>
@@ -706,7 +945,17 @@ export default function Board() {
                         <b>{t(actorKey[entry.actor])}</b> {t(actionKey[entry.action])}
                         <Show when={entry.reason}>{(reason) => <span class="board-why"> · {reason()}</span>}</Show>
                       </span>
-                      <span class="board-quiet">{time(entry.timeCreated)}</span>
+                      <span class="board-activity-end">
+                        <Show when={entry.undoneBy !== null}>
+                          <span class="board-chip">{t("orchestra.board.undone")}</span>
+                        </Show>
+                        <Show when={canUndo(entry)}>
+                          <button type="button" class="mx-link" disabled={store.busy} onClick={() => void undo(entry.id)}>
+                            {t("orchestra.board.undo")}
+                          </button>
+                        </Show>
+                        <span class="board-quiet">{time(entry.timeCreated)}</span>
+                      </span>
                     </li>
                   )}
                 </For>
@@ -758,7 +1007,7 @@ export default function Board() {
               )}
             </Show>
             <p class="board-footnote">
-              <b>{t("orchestra.board.readOnly")}</b> {t("orchestra.board.readOnlyBody")}
+              <b>{t("orchestra.board.yours")}</b> {t("orchestra.board.yoursBody")}
               <span class="board-keys">
                 <span>
                   <kbd>J</kbd>
@@ -934,23 +1183,41 @@ export default function Board() {
                         {t("orchestra.board.onlyMaestro")}
                       </div>
                     </div>
-                    <Show when={crew().length > 0}>
-                      <div class="board-crew">
-                        <span class="board-stack">
-                          <For each={crew()}>{(seat) => <Seat seat={seat} />}</For>
-                        </span>
-                        {language.plural("orchestra.board.crew", crew().length)}
-                      </div>
-                    </Show>
+                    <div class="board-head-end">
+                      <Show when={crew().length > 0}>
+                        <div class="board-crew">
+                          <span class="board-stack">
+                            <For each={crew()}>{(seat) => <Seat seat={seat} />}</For>
+                          </span>
+                          {language.plural("orchestra.board.crew", crew().length)}
+                        </div>
+                      </Show>
+                      <button type="button" class="mx-btn" disabled={store.busy} onClick={() => void toggleProject()}>
+                        {snapshot().project.status === "paused"
+                          ? t("orchestra.board.resume.project")
+                          : t("orchestra.board.pause.project")}
+                      </button>
+                    </div>
                   </header>
+                  <Show when={!store.peek && store.failure}>
+                    {(failure) => (
+                      <p class="mx-error" role="alert">
+                        {failure()}
+                      </p>
+                    )}
+                  </Show>
 
                   <div class="board-top">
                     <section class="board-brief" aria-label={t("orchestra.board.brief")}>
                       <Show when={snapshot().project.goal}>
                         <p>{snapshot().project.goal}</p>
                       </Show>
-                      <Show when={snapshot().project.status === "paused" && snapshot().project.pausedReason}>
-                        {(reason) => <p class="board-held-note">{t("orchestra.board.projectPaused", { reason: reason() })}</p>}
+                      <Show when={snapshot().project.status === "paused"}>
+                        <p class="board-held-note">
+                          {snapshot().project.pausedReason
+                            ? t("orchestra.board.projectPaused", { reason: snapshot().project.pausedReason ?? "" })
+                            : t("orchestra.board.projectPausedPlain")}
+                        </p>
                       </Show>
                       <div class="board-metric">
                         <span>
@@ -1004,9 +1271,17 @@ export default function Board() {
                             <ul class="board-ask-options">
                               <For each={question().options}>
                                 {(option, index) => (
-                                  <li data-recommended={option.id === question().recommended}>
-                                    <kbd>{index() + 1}</kbd>
-                                    {option.label}
+                                  <li>
+                                    <button
+                                      type="button"
+                                      class="board-option"
+                                      data-recommended={option.id === question().recommended}
+                                      disabled={store.busy}
+                                      onClick={() => void answer(question(), option.id)}
+                                    >
+                                      <kbd>{index() + 1}</kbd>
+                                      {option.label}
+                                    </button>
                                   </li>
                                 )}
                               </For>
@@ -1042,4 +1317,19 @@ export default function Board() {
 
 function narrow<S extends Trail["state"]>(trail: Trail, state: S) {
   return trail.state === state ? (trail as Extract<Trail, { state: S }>) : undefined
+}
+
+// Declared refusals arrive as the server's tagged JSON body; anything else (transport, parse) has no words to show.
+function refusal(error: unknown) {
+  if (typeof error !== "object" || error === null || !("_tag" in error) || !("message" in error)) return
+  return typeof error.message === "string" && error.message ? error.message : undefined
+}
+
+function encode(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result).replace(/^data:[^,]*,/, ""))
+    reader.onerror = () => reject(reader.error)
+    reader.readAsDataURL(file)
+  })
 }
