@@ -1,7 +1,7 @@
 import { Database as Sqlite } from "bun:sqlite"
 import { afterAll, expect, test } from "bun:test"
 import { randomBytes } from "crypto"
-import { mkdtempSync } from "fs"
+import { mkdirSync, mkdtempSync } from "fs"
 import { rm } from "fs/promises"
 import os from "os"
 import path from "path"
@@ -18,7 +18,11 @@ const openai = Integration.ID.make("openai")
 const key = (value: string) => Credential.Key.make({ type: "key", key: value })
 
 let count = 0
-const database = () => path.join(root, `case-${count++}`, "orchestra.db")
+const database = () => {
+  const dir = path.join(root, `case-${count++}`)
+  mkdirSync(dir)
+  return path.join(dir, "orchestra.db")
+}
 
 const run = <A>(filename: string, effect: (credentials: Credential.Interface) => Effect.Effect<A>) =>
   Effect.runPromise(
