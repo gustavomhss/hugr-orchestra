@@ -2,12 +2,14 @@
 // the Location's tool registry, its resources list and read, and its prompts become commands; disconnect removes them;
 // add and remove edit the profile's own config file; OAuth is refused for a local server and for one not configured.
 import fs from "fs/promises"
+import os from "os"
 import path from "path"
 import { describe, expect } from "bun:test"
 import { Effect } from "effect"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { LocationServiceMap } from "@orchestra/core/location-services"
+import { Global } from "@orchestra/core/global"
 import { Location } from "@orchestra/core/location"
 import { CommandV2 } from "@orchestra/core/command"
 import { Mcp } from "@orchestra/core/mcp"
@@ -27,6 +29,13 @@ import { ToolRegistry } from "../src/tool/registry"
 
 const fixture = path.join(import.meta.dir, "fixture", "mcp-omni-stdio.ts")
 
+// Project-declared local servers start only in an approved project: the user's global config trusts the temp root.
+const trust = await fs.mkdtemp(path.join(os.tmpdir(), "orchestra-mcp-trust-"))
+await Bun.write(
+  path.join(trust, "orchestra.json"),
+  JSON.stringify({ trusted_projects: [await fs.realpath(os.tmpdir())] }),
+)
+
 const it = testEffect(
   AppNodeBuilder.build(
     LayerNode.group([
@@ -37,7 +46,10 @@ const it = testEffect(
       SessionV2.node,
       SessionExecution.node,
     ]),
-    [[SessionExecution.node, SessionExecutionLocal.node]],
+    [
+      [SessionExecution.node, SessionExecutionLocal.node],
+      [Global.node, Global.layerWith({ config: trust })],
+    ],
   ),
 )
 

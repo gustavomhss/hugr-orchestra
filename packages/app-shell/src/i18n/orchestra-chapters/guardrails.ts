@@ -15,6 +15,9 @@ export const GUARDRAILS_COPY = {
 
   "orchestra.guardrails.running": "Checking your change…",
   "orchestra.guardrails.runningDetail": "Reading the lines and files it adds.",
+  "orchestra.guardrails.idle.title": "Guards have not run yet",
+  "orchestra.guardrails.idle.body":
+    "Running the guards executes this repository's own script/guards code on your machine. Run them when you trust the project.",
   "orchestra.guardrails.disconnected.title": "The guards could not run on this project",
   "orchestra.guardrails.disconnected.body":
     "The app could not start a check here. Guardrails still run on every pull request, so its guards run has the result. The Rules tab shows what is checked.",
@@ -156,6 +159,9 @@ export const GUARDRAILS_COPY_BR: Record<keyof typeof GUARDRAILS_COPY, string> = 
 
   "orchestra.guardrails.running": "Verificando sua mudança…",
   "orchestra.guardrails.runningDetail": "Lendo as linhas e os arquivos que ela adiciona.",
+  "orchestra.guardrails.idle.title": "Os guards ainda não rodaram",
+  "orchestra.guardrails.idle.body":
+    "Rodar os guards executa o código script/guards deste repositório na sua máquina. Rode quando confiar no projeto.",
   "orchestra.guardrails.disconnected.title": "Os guards não puderam rodar neste projeto",
   "orchestra.guardrails.disconnected.body":
     "O app não conseguiu iniciar uma verificação aqui. Os guardrails continuam rodando em todo pull request, e a execução de guards dele traz o resultado. A aba Regras mostra o que é verificado.",

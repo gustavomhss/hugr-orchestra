@@ -2,7 +2,7 @@ export * as Config from "./config"
 
 import { makeLocationNode } from "./effect/app-node"
 import path from "path"
-import { type ParseError, applyEdits, modify, parse } from "jsonc-parser"
+import { type ParseError, applyEdits, modify, parse, printParseErrorCode } from "jsonc-parser"
 import { Context, Effect, Layer, Option, Schema } from "effect"
 import { Permission } from "@orchestra/schema/permission"
 import { FSUtil } from "./fs-util"
@@ -80,6 +80,10 @@ export class Info extends Schema.Class<Info>("Config.Info")({
   mcp: ConfigMCP.Info.pipe(Schema.optional).annotate({
     description: "MCP server configuration",
   }),
+  trusted_projects: Schema.String.pipe(Schema.Array, Schema.optional).annotate({
+    description:
+      "Absolute paths of projects (or folders holding projects) whose own config may start local MCP servers. Honored only in the user's global config.",
+  }),
   compaction: ConfigCompaction.Info.pipe(Schema.optional).annotate({
     description: "Conversation compaction behavior",
   }),
@@ -131,6 +135,12 @@ export function latest<K extends keyof Info>(entries: readonly Entry[], key: K):
     .findLast((entry) => entry.info[key] !== undefined)?.info[key]
 }
 
+/** A config file that exists but cannot be parsed or does not match the schema. Never skipped: the user would silently run on defaults. */
+export class InvalidError extends Schema.TaggedErrorClass<InvalidError>()("Config.InvalidError", {
+  path: Schema.String,
+  message: Schema.String,
+}) {}
+
 export interface Interface {
   /** Returns location config documents and supplemental directories from lowest to highest priority. */
   readonly entries: () => Effect.Effect<Entry[]>
@@ -153,8 +163,8 @@ const layer = Layer.effect(
     const policy = yield* Policy.Service
     const names = ["orchestra.json", "orchestra.jsonc"]
     const decodeOptions = { errors: "all", onExcessProperty: "ignore", propertyOrder: "original" } as const
-    const decodeInfo = Schema.decodeUnknownOption(Info, decodeOptions)
-    const decodeOldInfo = Schema.decodeUnknownOption(ConfigUpgradeSource.Info, decodeOptions)
+    const decodeInfo = Schema.decodeUnknownEffect(Info, decodeOptions)
+    const decodeOldInfo = Schema.decodeUnknownEffect(ConfigUpgradeSource.Info, decodeOptions)
 
     const loadFile = Effect.fnUntraced(function* (filepath: string) {
       const text = yield* fs.readFileStringSafe(filepath)
@@ -162,22 +172,25 @@ const layer = Layer.effect(
 
       const errors: ParseError[] = []
       const input: unknown = parse(text, errors, { allowTrailingComma: true })
-      if (errors.length) return
+      if (errors.length)
+        return yield* new InvalidError({
+          path: filepath,
+          message: `${filepath}: ${errors.map((error) => `${printParseErrorCode(error.error)} at offset ${error.offset}`).join(", ")}`,
+        })
 
-      const info = Option.getOrUndefined(
+      const info = yield* (
         ConfigUpgrade.needsUpgrade(input)
           ? decodeOldInfo(input).pipe(
-              Option.map(ConfigUpgrade.migrate),
+              Effect.map(ConfigUpgrade.migrate),
               // Settings write current `permissions` into a file that may still hold old keys; the old-format decode drops them.
-              Option.map((info) => {
+              Effect.map((info) => {
                 const rules = [...(info.permissions ?? []), ...settings(text).permissions]
                 return { ...info, permissions: rules.length ? rules : undefined }
               }),
-              Option.flatMap(decodeInfo),
+              Effect.flatMap(decodeInfo),
             )
-          : decodeInfo(input),
-      )
-      if (!info) return
+          : decodeInfo(input)
+      ).pipe(Effect.mapError((error) => new InvalidError({ path: filepath, message: `${filepath}: ${error.message}` })))
       return new Document({ type: "document", path: filepath, info })
     })
 
@@ -259,6 +272,8 @@ export interface GlobalPatch {
   readonly providers?: Readonly<Record<string, unknown>>
   /** The whole ordered list of tool permission rules. Replaces the previous list. */
   readonly permissions?: Permission.Ruleset
+  /** The whole list of approved project paths. Replaces the previous list. */
+  readonly trustedProjects?: ReadonlyArray<string>
 }
 
 /**
@@ -281,6 +296,7 @@ export const updateGlobal = Effect.fn("Config.updateGlobal")(function* (patch: G
     ...Object.entries(patch.providers ?? {}).map(([id, value]): [string[], unknown] => [["providers", id], value]),
     // Written whole: `leaves` would edit array indices, and a shorter list must drop the old tail.
     ...(patch.permissions === undefined ? [] : [[["permissions"], [...patch.permissions]] as [string[], unknown]]),
+    ...(patch.trustedProjects === undefined ? [] : [[["trusted_projects"], [...patch.trustedProjects]] as [string[], unknown]]),
   ].reduce(
     (text, [at, value]) =>
       applyEdits(text, modify(text, at, value, { formattingOptions: { insertSpaces: true, tabSize: 2 } })),
@@ -310,6 +326,7 @@ export const readGlobal = Effect.fn("Config.readGlobal")(function* () {
     ],
     // In the document's order: a later matching rule wins, so reordering would change what the rules decide.
     permissions: document.permissions.flatMap((item) => Option.toArray(decodeRule(item))),
+    trustedProjects: document.trustedProjects.filter((item): item is string => typeof item === "string"),
   }
 })
 
@@ -356,6 +373,7 @@ function settings(text: string) {
     disabled: Array.isArray(root.disabled_providers) ? root.disabled_providers : [],
     hasDisabled: "disabled_providers" in root,
     permissions: Array.isArray(root.permissions) ? root.permissions : [],
+    trustedProjects: Array.isArray(root.trusted_projects) ? root.trusted_projects : [],
   }
 }
 

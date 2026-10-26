@@ -120,4 +120,26 @@ describe("Guardrail", () => {
       }),
     ),
   )
+
+  it.live("starts the engine without the server's secrets", () =>
+    withRepository(
+      `await Bun.write(import.meta.dir + "/env.json", JSON.stringify(process.env))
+console.log(${JSON.stringify(JSON.stringify(report))})
+process.exit(1)
+`,
+      (directory) =>
+        Effect.gen(function* () {
+          const service = yield* Guardrail.make({
+            directory,
+            env: { ...process.env, ANTHROPIC_API_KEY: "sk-secret", GITHUB_TOKEN: "ghp-secret", GUARDRAIL_BASE_REF: "origin/dev" },
+          })
+          yield* service.run({})
+          const seen = yield* Effect.promise(() => Bun.file(path.join(directory, "script", "guards", "env.json")).json())
+          expect(seen.PATH).toBe(process.env.PATH)
+          expect(seen.GUARDRAIL_BASE_REF).toBe("origin/dev")
+          expect(seen.ANTHROPIC_API_KEY).toBeUndefined()
+          expect(seen.GITHUB_TOKEN).toBeUndefined()
+        }),
+    ),
+  )
 })
