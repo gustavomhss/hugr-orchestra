@@ -188,9 +188,11 @@ export function Inbox(props: { onOpen: (key: string) => void; onClose: () => voi
                   onClick={() => setFocused(item.question.id)}
                 >
                   <div class="board-ask-kicker">
-                    <span class="board-mono">
-                      {item.key}
-                      {item.issue ? ` · ${item.issue.ref}` : ""}
+                    <span>
+                      {item.project}
+                      <Show when={item.issue}>
+                        {(issue) => <span class="board-mono"> · {issue().ref}</span>}
+                      </Show>
                     </span>
                     <span>{t("orchestra.board.inbox.asked", { ago: ago(item.question.timeCreated) })}</span>
                   </div>
