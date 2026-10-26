@@ -40,6 +40,7 @@
     "./groups/provider": "./src/groups/provider.ts",
     "./groups/pty": "./src/groups/pty.ts",
     "./groups/guardrail": "./src/groups/guardrail.ts",
+    "./groups/meeting": "./src/groups/meeting.ts",
     "./groups/pull-request": "./src/groups/pull-request.ts",
     "./groups/question": "./src/groups/question.ts",
     "./groups/reference": "./src/groups/reference.ts",

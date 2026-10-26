@@ -25,6 +25,7 @@ import { SystemContext } from "../../system-context/index"
 import { SystemContextRegistry } from "../../system-context/registry"
 import { SkillGuidance } from "../../skill/guidance"
 import { ReferenceGuidance } from "../../reference/guidance"
+import { MeetingContext } from "../meeting-context"
 import { ToolRegistry } from "../../tool/registry"
 import { ToolSafety } from "../../tool-safety"
 import { TaskGovernance } from "../../tool/task-governance"
@@ -127,6 +128,7 @@ const layer = Layer.effect(
     const systemContext = yield* SystemContextRegistry.Service
     const skillGuidance = yield* SkillGuidance.Service
     const referenceGuidance = yield* ReferenceGuidance.Service
+    const meetingContext = yield* MeetingContext.Service
     const config = yield* Config.Service
     const snapshots = yield* Snapshot.Service
     const database = yield* Database.Service
@@ -166,9 +168,15 @@ const layer = Layer.effect(
       Effect.raceFirst(FiberSet.join(fibers), FiberSet.awaitEmpty(fibers))
 
     const loadSystemContext = (sessionID: SessionSchema.ID, agent: AgentV2.Selection) =>
-      Effect.all([systemContext.load({ sessionID, agent: agent.id }), skillGuidance.load(agent), referenceGuidance.load()], {
-        concurrency: "unbounded",
-      }).pipe(Effect.map(SystemContext.combine))
+      Effect.all(
+        [
+          systemContext.load({ sessionID, agent: agent.id }),
+          skillGuidance.load(agent),
+          referenceGuidance.load(),
+          meetingContext.load(sessionID),
+        ],
+        { concurrency: "unbounded" },
+      ).pipe(Effect.map(SystemContext.combine))
 
     const runTurnAttempt = Effect.fn("SessionRunner.runTurn")(function* (
       sessionID: SessionSchema.ID,
@@ -725,6 +733,7 @@ export const node = makeLocationNode({
     SystemContextRegistry.node,
     SkillGuidance.node,
     ReferenceGuidance.node,
+    MeetingContext.node,
     Config.node,
     Snapshot.node,
     Database.node,

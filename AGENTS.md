@@ -181,6 +181,11 @@ Background: `docs/specs/terminal/`; ownership and traps: `.orchestra/skills/term
 - `ORCHESTRA_AGENT_TERMINAL` and `ORCHESTRA_SHELL_INTEGRATION` are permanent opt-in flags in `flag/flag.ts`; read them through `Flag`, never `process.env`.
 - Known limit: a WebSocket client that stops reading makes the server grow; not solved.
 
+## Guardrail
+
+- Before calling a change done, run `bun run check:guards --base origin/dev`; CI runs the same rules on every PR. Load the `guardrail-usage` skill to read a finding.
+- Fix the finding. Use `guardrail-ignore: <rule id> <reason>` only where the rule's `clearedBy` allows it, and apply a `guardrail-approved` label only if you are Maestro: any other agent asks Maestro, who decides.
+
 ## Local Runtime
 
 - You may be running inside the Orchestra desktop app or its local server. Do not stop or restart either; ask the owner when a restart is needed.

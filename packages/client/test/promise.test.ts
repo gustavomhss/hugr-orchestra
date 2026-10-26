@@ -60,6 +60,7 @@ test("exposes every standard HTTP API group", () => {
     "relayRuns",
     "installation",
     "guardrail",
+    "meeting",
     "operator",
     "connections",
     "artifacts",

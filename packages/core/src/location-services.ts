@@ -36,6 +36,8 @@ import { RelayHookRecovery } from "./relay-hook-recovery"
 import { SessionCompaction } from "./session/compaction"
 import * as SessionRunnerLLM from "./session/runner/llm"
 import { SessionRunnerModel } from "./session/runner/model"
+import { SessionMeeting } from "./session/meeting"
+import { MeetingContext } from "./session/meeting-context"
 import { SessionTodo } from "./session/todo"
 import { SkillV2 } from "./skill"
 import { SkillGuidance } from "./skill/guidance"
@@ -85,6 +87,8 @@ export const locationServices = LayerNode.group([
   SkillGuidance.node,
   ReferenceGuidance.node,
   SessionTodo.node,
+  SessionMeeting.node,
+  MeetingContext.node,
   QuestionV2.node,
   ReadToolFileSystem.node,
   BuiltInTools.node,
