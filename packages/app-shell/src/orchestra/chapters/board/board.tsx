@@ -723,7 +723,7 @@ export default function Board() {
               <dd>
                 {t(stageKey[issue().stage])}
                 <Show when={progress().current}>
-                  {(current) => <small>{t("orchestra.board.steps.of", { current: current(), total: progress().total })}</small>}
+                  {(current) => <small>{t("orchestra.board.stage.of", { current: current(), total: progress().total })}</small>}
                 </Show>
               </dd>
               <dt>{t("orchestra.board.prop.epic")}</dt>
