@@ -286,9 +286,9 @@ const layer = Layer.effect(
                     Permission.fromConfig(nativeProfiles[member.memberId]),
                     skillReadOnly[member.memberId] ?? [],
                   ),
-                  // The user talks only to Maestro, so every seat, the backend specialist included, works only as
-                  // Maestro's teammate and never as a primary agent.
-                  mode: "subagent" as const,
+                  // Seats work as Maestro's teammates, never as primary agents; only a direct seat (`live`) is one the
+                  // owner opens, and being primary keeps it out of the task tool.
+                  mode: Seats.find(member.memberId)?.direct ? ("primary" as const) : ("subagent" as const),
                   native: true,
                 },
               ]),

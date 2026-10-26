@@ -284,6 +284,8 @@ import type {
   ServerBoardPauseOutput,
   ServerBoardResumeInput,
   ServerBoardResumeOutput,
+  ServerBoardGithubSyncInput,
+  ServerBoardGithubSyncOutput,
   ServerBoardPauseIssueInput,
   ServerBoardPauseIssueOutput,
   ServerBoardResumeIssueInput,
@@ -2418,6 +2420,17 @@ export function make(options: ClientOptions) {
           {
             method: "POST",
             path: `/api/board/${encodeURIComponent(input.key)}/resume`,
+            successStatus: 200,
+            declaredStatuses: [404, 409, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      githubSync: (input: ServerBoardGithubSyncInput, requestOptions?: RequestOptions) =>
+        request<ServerBoardGithubSyncOutput>(
+          {
+            method: "POST",
+            path: `/api/board/${encodeURIComponent(input.key)}/github/sync`,
             successStatus: 200,
             declaredStatuses: [404, 409, 401, 400],
             empty: false,

@@ -12,6 +12,7 @@ import { QuestionTool } from "./question"
 import { ReadTool } from "./read"
 import { SkillTool } from "./skill"
 import { TaskTool } from "./task"
+import { TeamMessageTool } from "./team-message"
 import { TodoWriteTool } from "./todowrite"
 import { WebFetchTool } from "./webfetch"
 import { WebSearchTool } from "./websearch"
@@ -46,6 +47,7 @@ export const node = makeLocationNode({
     ReadTool.node,
     SkillTool.node,
     TaskTool.node,
+    TeamMessageTool.node,
     TodoWriteTool.node,
     WebFetchTool.node,
     WebSearchTool.node,

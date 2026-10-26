@@ -183,6 +183,9 @@ const layer = Layer.effectDiscard(
   }),
 )
 
+// One capture node per service: two nodes of the same name conflict when global nodes are hoisted.
+export const globalSessions = captureGlobal(SessionV2.Service)
+
 // Locations acquire the existing process-owned Session and execution services. Rebuilding
 // Session.node here would recursively compile the Location map during its own acquisition.
 export const node: LayerNode.Node<never, never, typeof Node.tags.values.location> = makeLocationNode({
@@ -195,7 +198,7 @@ export const node: LayerNode.Node<never, never, typeof Node.tags.values.location
     Catalog.node,
     Database.node,
     PermissionV2.node,
-    captureGlobal(SessionV2.Service),
+    globalSessions,
     SessionStore.node,
     captureGlobal(SessionExecution.Service),
     EventV2.node,
