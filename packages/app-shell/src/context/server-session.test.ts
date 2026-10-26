@@ -44,7 +44,7 @@ const v2Assistant = (id: string, created: number, text?: string): SessionMessage
 // Wire-shaped messages, used for live events and optimistic input.
 const userMessage = (id: string, input: Partial<UserMessage> = {}): UserMessage => ({
   id,
-  sessionID: "child",
+  sessionID: "ses_child",
   role: "user",
   time: { created: 1 },
   agent: "build",
@@ -55,7 +55,7 @@ const userMessage = (id: string, input: Partial<UserMessage> = {}): UserMessage 
 // A user message as the store projects it from a page with no preceding agent or model selection.
 const projectedUser = (id: string, created = 1): UserMessage => ({
   id,
-  sessionID: "child",
+  sessionID: "ses_child",
   role: "user",
   time: { created },
   agent: "",
@@ -64,7 +64,7 @@ const projectedUser = (id: string, created = 1): UserMessage => ({
 
 const textPart = (messageID: string, input: Partial<TextPart> = {}): TextPart => ({
   id: sessionMessagePartID(messageID, "text", 0),
-  sessionID: "child",
+  sessionID: "ses_child",
   messageID,
   type: "text",
   text: "text",
@@ -79,14 +79,14 @@ const page = (data: SessionMessageInfo[] = [], next?: string): MessageListOutput
 
 const deferredPage = () => Promise.withResolvers<MessageListOutput>()
 
-const ids = (store: ServerSession) => store.data.message.child?.map((message) => message.id)
+const ids = (store: ServerSession) => store.data.message.ses_child?.map((message) => message.id)
 
 function messageClient(...pages: Array<MessageListOutput | Promise<MessageListOutput>>) {
   const requests: unknown[] = []
   const messageRequests: unknown[] = []
   const waiting = new Map<number, () => void>()
   const sessionApi = {
-    get: async () => session("child", "root"),
+    get: async () => session("ses_child", "ses_root"),
     message: async (input: unknown) => {
       messageRequests.push(input)
       throw new Error("single message endpoint called")
@@ -149,9 +149,9 @@ function setup(sessions: Record<string, Session>) {
 
 describe("server session", () => {
   test("projects V2 session events into current and wire message state", () => {
-    const ctx = setup({ child: session("child") })
-    ctx.store.remember(session("child"))
-    ctx.store.set("session_message", "child", [
+    const ctx = setup({ ses_child: session("ses_child") })
+    ctx.store.remember(session("ses_child"))
+    ctx.store.set("session_message", "ses_child", [
       {
         id: "msg_1_user",
         type: "user",
@@ -165,10 +165,10 @@ describe("server session", () => {
       id: "evt_step",
       created: 2,
       type: "session.step.started",
-      durable: { aggregateID: "child", seq: 1, version: 1 },
+      durable: { aggregateID: "ses_child", seq: 1, version: 1 },
       location: { directory: "/repo" },
       data: {
-        sessionID: "child",
+        sessionID: "ses_child",
         assistantMessageID: "msg_2_assistant",
         agent: "build",
         model: { id: "model", providerID: "provider" },
@@ -178,45 +178,45 @@ describe("server session", () => {
       id: "evt_text_start",
       created: 3,
       type: "session.text.started",
-      durable: { aggregateID: "child", seq: 2, version: 1 },
+      durable: { aggregateID: "ses_child", seq: 2, version: 1 },
       location: { directory: "/repo" },
-      data: { sessionID: "child", assistantMessageID: "msg_2_assistant", ordinal: 0 },
+      data: { sessionID: "ses_child", assistantMessageID: "msg_2_assistant", ordinal: 0 },
     })
     apply({
       id: "evt_text_delta",
       created: 4,
       type: "session.text.delta",
       location: { directory: "/repo" },
-      data: { sessionID: "child", assistantMessageID: "msg_2_assistant", ordinal: 0, delta: "world" },
+      data: { sessionID: "ses_child", assistantMessageID: "msg_2_assistant", ordinal: 0, delta: "world" },
     })
 
-    expect(ctx.store.data.session_message.child?.at(-1)).toMatchObject({
+    expect(ctx.store.data.session_message.ses_child?.at(-1)).toMatchObject({
       id: "msg_2_assistant",
       type: "assistant",
       content: [{ type: "text", text: "world" }],
     })
-    expect(ctx.store.data.message.child?.map((message) => message.id)).toEqual(["msg_1_user", "msg_2_assistant"])
+    expect(ctx.store.data.message.ses_child?.map((message) => message.id)).toEqual(["msg_1_user", "msg_2_assistant"])
     expect(ctx.store.data.part.msg_2_assistant).toMatchObject([{ type: "text", text: "world" }])
   })
 
   test("resolves lineage by session ID without directory", async () => {
-    const ctx = setup({ child: session("child", "root"), root: session("root") })
+    const ctx = setup({ ses_child: session("ses_child", "ses_root"), ses_root: session("ses_root") })
 
-    const result = await ctx.store.lineage.resolve("child")
+    const result = await ctx.store.lineage.resolve("ses_child")
 
-    expect(result.root.id).toBe("root")
-    expect(ctx.get).toEqual([{ sessionID: "child" }, { sessionID: "root" }])
-    expect(ctx.store.lineage.peek("child")).toEqual(result)
+    expect(result.root.id).toBe("ses_root")
+    expect(ctx.get).toEqual([{ sessionID: "ses_child" }, { sessionID: "ses_root" }])
+    expect(ctx.store.lineage.peek("ses_child")).toEqual(result)
   })
 
   test("loads session content through the server client", async () => {
-    const ctx = setup({ root: session("root") })
+    const ctx = setup({ ses_root: session("ses_root") })
 
-    await ctx.store.sync("root")
+    await ctx.store.sync("ses_root")
 
-    expect(ctx.get).toEqual([{ sessionID: "root" }])
-    expect(ctx.messages).toEqual([{ sessionID: "root", limit: 20, order: "desc" }])
-    expect(ctx.store.data.message.root).toEqual([])
+    expect(ctx.get).toEqual([{ sessionID: "ses_root" }])
+    expect(ctx.messages).toEqual([{ sessionID: "ses_root", limit: 20, order: "desc" }])
+    expect(ctx.store.data.message.ses_root).toEqual([])
   })
 
   test("loads current session content through the current message API", async () => {
@@ -224,13 +224,13 @@ describe("server session", () => {
     const assistant = v2Assistant("msg_a_assistant", 2, "hi")
     const client = messageClient(page([user, assistant]))
     const store = create(client)
-    store.remember(session("root"))
+    store.remember(session("ses_root"))
 
-    await store.sync("root")
+    await store.sync("ses_root")
 
-    expect(client.requests).toEqual([{ sessionID: "root", limit: 20, order: "desc" }])
-    expect(store.data.session_message.root?.map((message) => message.id)).toEqual([user.id, assistant.id])
-    expect(store.data.message.root?.map((message) => message.id)).toEqual([user.id, assistant.id])
+    expect(client.requests).toEqual([{ sessionID: "ses_root", limit: 20, order: "desc" }])
+    expect(store.data.session_message.ses_root?.map((message) => message.id)).toEqual([user.id, assistant.id])
+    expect(store.data.message.ses_root?.map((message) => message.id)).toEqual([user.id, assistant.id])
   })
 
   test("extends a current page to include the user for split assistant turns", async () => {
@@ -242,15 +242,15 @@ describe("server session", () => {
     ]
     const client = messageClient(page(assistants.slice(1), "older"), page([user, assistants[0]!]))
     const store = create(client)
-    store.remember(session("root"))
+    store.remember(session("ses_root"))
 
-    await store.sync("root")
+    await store.sync("ses_root")
 
     expect(client.requests).toEqual([
-      { sessionID: "root", limit: 20, order: "desc" },
-      { sessionID: "root", limit: 20, cursor: "older" },
+      { sessionID: "ses_root", limit: 20, order: "desc" },
+      { sessionID: "ses_root", limit: 20, cursor: "older" },
     ])
-    expect(store.data.message.root?.map((message) => message.id)).toEqual([
+    expect(store.data.message.ses_root?.map((message) => message.id)).toEqual([
       user.id,
       ...assistants.map((item) => item.id),
     ])
@@ -264,15 +264,15 @@ describe("server session", () => {
     )
     const store = create(client)
 
-    await store.sync("child")
+    await store.sync("ses_child")
 
     expect(client.requests).toEqual([
-      { sessionID: "child", limit: 20, order: "desc" },
-      { sessionID: "child", limit: 20, cursor: "older" },
+      { sessionID: "ses_child", limit: 20, order: "desc" },
+      { sessionID: "ses_child", limit: 20, cursor: "older" },
     ])
     expect(client.messageRequests).toEqual([])
     expect(ids(store)).toEqual(["message-1", "message-2", "message-3"])
-    expect(store.history.more("child")).toBe(true)
+    expect(store.history.more("ses_child")).toBe(true)
   })
 
   test("does not let an optimistic user suppress initial root backfill", async () => {
@@ -282,10 +282,10 @@ describe("server session", () => {
       page([v2User(user.id)]),
     )
     const store = create(client)
-    store.optimistic.add({ sessionID: "child", message: user, parts: [textPart(user.id)] })
+    store.optimistic.add({ sessionID: "ses_child", message: user, parts: [textPart(user.id)] })
 
-    await store.sync("child")
-    store.optimistic.remove({ sessionID: "child", messageID: user.id })
+    await store.sync("ses_child")
+    store.optimistic.remove({ sessionID: "ses_child", messageID: user.id })
 
     expect(client.requests).toHaveLength(2)
     expect(client.messageRequests).toEqual([])
@@ -299,9 +299,9 @@ describe("server session", () => {
       page([v2User("message-1")]),
     )
     const store = create(client)
-    await store.sync("child")
+    await store.sync("ses_child")
 
-    await store.sync("child", { force: true })
+    await store.sync("ses_child", { force: true })
 
     expect(client.requests).toHaveLength(3)
     expect(client.messageRequests).toEqual([])
@@ -315,9 +315,9 @@ describe("server session", () => {
       page([v2User("message-1")]),
     )
     const store = create(client)
-    await store.sync("child")
+    await store.sync("ses_child")
 
-    await store.sync("child", { force: true })
+    await store.sync("ses_child", { force: true })
 
     expect(ids(store)).toEqual(["message-1", "message-3", "message-4"])
   })
@@ -329,9 +329,9 @@ describe("server session", () => {
       page([v2User("message-1", 1, "fresh")]),
     )
     const store = create(client)
-    await store.sync("child")
+    await store.sync("ses_child")
 
-    await store.sync("child", { force: true })
+    await store.sync("ses_child", { force: true })
 
     expect(client.messageRequests).toEqual([])
     expect(ids(store)).toEqual(["message-1", "message-2"])
@@ -348,10 +348,10 @@ describe("server session", () => {
       page([v2User(stale.id, 1, "fresh")]),
     )
     const store = create(client)
-    store.optimistic.add({ sessionID: "child", message: stale, parts: [confirmed, pending] })
-    await store.sync("child")
+    store.optimistic.add({ sessionID: "ses_child", message: stale, parts: [confirmed, pending] })
+    await store.sync("ses_child")
 
-    await store.sync("child", { force: true })
+    await store.sync("ses_child", { force: true })
 
     expect(client.messageRequests).toEqual([])
     expect(ids(store)).toEqual(["message-1", "message-2"])
@@ -363,16 +363,16 @@ describe("server session", () => {
     const user = userMessage("message-1")
     const client = messageClient(pending.promise, page())
     const store = create(client)
-    const loading = store.sync("child")
+    const loading = store.sync("ses_child")
 
-    store.apply({ type: "message.updated", properties: { info: user } })
+    store.transcript.putMessage(user)
     pending.resolve(page([v2Assistant("message-2", 2)], "older"))
     await loading
 
     expect(client.requests).toHaveLength(2)
     expect(client.messageRequests).toEqual([])
     expect(ids(store)).toEqual(["message-1", "message-2"])
-    expect(store.data.message.child?.[0]).toEqual(user)
+    expect(store.data.message.ses_child?.[0]).toEqual(user)
   })
 
   test("merges live events into the initial page", async () => {
@@ -380,15 +380,15 @@ describe("server session", () => {
     const live = userMessage("message-2", { time: { created: 2 } })
     const livePart = textPart(live.id, { text: "live" })
     const store = create(messageClient(pending.promise))
-    const loading = store.sync("child")
+    const loading = store.sync("ses_child")
 
-    store.apply({ type: "message.updated", properties: { info: live } })
-    store.apply({ type: "message.part.updated", properties: { sessionID: "child", part: livePart, time: 2 } })
+    store.transcript.putMessage(live)
+    store.transcript.putPart(livePart)
     pending.resolve(page([v2User("message-1")]))
     await loading
 
     expect(ids(store)).toEqual(["message-1", "message-2"])
-    expect(store.data.message.child?.[1]).toEqual(live)
+    expect(store.data.message.ses_child?.[1]).toEqual(live)
     expect(store.data.part[live.id]).toEqual([livePart])
   })
 
@@ -397,31 +397,27 @@ describe("server session", () => {
     const live = userMessage("message", { time: { created: 2 } })
     const livePart = textPart(live.id, { text: "live" })
     const store = create(messageClient(pending.promise))
-    const loading = store.sync("child")
+    const loading = store.sync("ses_child")
 
-    store.apply({ type: "message.updated", properties: { info: live } })
-    store.apply({ type: "message.part.updated", properties: { sessionID: "child", part: livePart, time: 2 } })
+    store.transcript.putMessage(live)
+    store.transcript.putPart(livePart)
     pending.resolve(page([v2User(live.id, 1, "fetched")]))
     await loading
 
-    expect(store.data.message.child).toEqual([live])
+    expect(store.data.message.ses_child).toEqual([live])
     expect(store.data.part[live.id]).toEqual([livePart])
   })
 
-  test("preserves removals received during the initial load", async () => {
+  test("preserves part removals received during the initial load", async () => {
     const pending = deferredPage()
     const store = create(messageClient(pending.promise))
-    const loading = store.sync("child")
+    const loading = store.sync("ses_child")
 
-    store.apply({ type: "message.removed", properties: { sessionID: "child", messageID: "message-1" } })
-    store.apply({
-      type: "message.part.removed",
-      properties: { sessionID: "child", messageID: "message-2", partID: textPart("message-2").id },
-    })
+    store.transcript.dropPart({ sessionID: "ses_child", messageID: "message-2", partID: textPart("message-2").id })
     pending.resolve(page([v2User("message-1"), v2User("message-2", 1, "removed")]))
     await loading
 
-    expect(store.data.message.child).toEqual([projectedUser("message-2")])
+    expect(store.data.message.ses_child).toEqual([projectedUser("message-1"), projectedUser("message-2")])
     expect(store.data.part["message-2"]).toBeUndefined()
   })
 
@@ -429,14 +425,11 @@ describe("server session", () => {
     const firstPage = deferredPage()
     const secondPage = deferredPage()
     const store = create(messageClient(firstPage.promise, secondPage.promise))
-    const first = store.sync("child")
+    const first = store.sync("ses_child")
 
-    store.apply({ type: "message.removed", properties: { sessionID: "child", messageID: "message" } })
-    store.apply({
-      type: "session.deleted",
-      properties: { sessionID: "child", info: session("child", "root") },
-    })
-    const second = store.sync("child")
+    store.transcript.dropPart({ sessionID: "ses_child", messageID: "message", partID: textPart("message").id })
+    store.apply({ type: "session.next.deleted", properties: { timestamp: 2, sessionID: "ses_child" } })
+    const second = store.sync("ses_child")
 
     firstPage.resolve(page())
     await first
@@ -444,115 +437,58 @@ describe("server session", () => {
     await second
 
     expect(ids(store)).toEqual(["message"])
+    expect(store.data.part.message).toEqual([textPart("message")])
   })
 
   test("tracks removals in a replacement load generation", async () => {
     const firstPage = deferredPage()
     const secondPage = deferredPage()
     const store = create(messageClient(firstPage.promise, secondPage.promise))
-    const first = store.sync("child")
-    store.apply({
-      type: "session.deleted",
-      properties: { sessionID: "child", info: session("child", "root") },
-    })
-    const second = store.sync("child")
+    const first = store.sync("ses_child")
+    store.apply({ type: "session.next.deleted", properties: { timestamp: 2, sessionID: "ses_child" } })
+    const second = store.sync("ses_child")
 
-    store.apply({ type: "message.removed", properties: { sessionID: "child", messageID: "message" } })
+    store.transcript.dropPart({ sessionID: "ses_child", messageID: "message", partID: textPart("message").id })
     firstPage.resolve(page())
     await first
     secondPage.resolve(page([v2User("message")]))
     await second
 
-    expect(store.data.message.child).toEqual([])
-  })
-
-  test("preserves remove then re-add when a refresh omits the message", async () => {
-    const pending = deferredPage()
-    const message = userMessage("message")
-    const store = create(messageClient(page([v2User(message.id)]), pending.promise))
-    await store.sync("child")
-    const refreshing = store.sync("child", { force: true })
-
-    store.apply({ type: "message.removed", properties: { sessionID: "child", messageID: message.id } })
-    store.apply({ type: "message.updated", properties: { info: message } })
-    pending.resolve(page())
-    await refreshing
-
-    expect(store.data.message.child).toEqual([message])
-  })
-
-  test("preserves a re-added message without restoring removed parts", async () => {
-    const pending = deferredPage()
-    const message = userMessage("message")
-    const store = create(messageClient(page([v2User(message.id)]), pending.promise))
-    await store.sync("child")
-    const refreshing = store.sync("child", { force: true })
-
-    store.apply({ type: "message.removed", properties: { sessionID: "child", messageID: message.id } })
-    store.apply({ type: "message.updated", properties: { info: message } })
-    pending.resolve(page([v2User(message.id, 1, "stale")]))
-    await refreshing
-
-    expect(store.data.message.child).toEqual([message])
-    expect(store.data.part[message.id]).toBeUndefined()
-  })
-
-  test("preserves optimistic parts re-added after removal during a refresh", async () => {
-    const pending = deferredPage()
-    const message = userMessage("message")
-    const part = textPart(message.id, { id: "optimistic", text: "optimistic" })
-    const store = create(messageClient(page([v2User(message.id)]), pending.promise))
-    await store.sync("child")
-    const refreshing = store.sync("child", { force: true })
-
-    store.apply({ type: "message.removed", properties: { sessionID: "child", messageID: message.id } })
-    store.optimistic.add({ sessionID: "child", message, parts: [part] })
-    pending.resolve(page([v2User(message.id, 1, "stale")]))
-    await refreshing
-
-    expect(store.data.message.child).toEqual([message])
-    expect(store.data.part[message.id]).toEqual([part])
+    expect(ids(store)).toEqual(["message"])
+    expect(store.data.part.message).toBeUndefined()
   })
 
   test("preserves event content outside an incomplete initial page", async () => {
     const live = userMessage("message-1")
     const store = create(messageClient(page([v2User("message-2", 2)], "older")))
-    store.apply({ type: "message.updated", properties: { info: live } })
+    store.transcript.putMessage(live)
 
-    await store.sync("child")
+    await store.sync("ses_child")
 
     expect(ids(store)).toEqual(["message-1", "message-2"])
   })
 
-  test("does not restore removed optimistic content on refresh", async () => {
-    const message = userMessage("message")
-    const part = textPart(message.id, { text: "removed" })
-    const kept = { ...message, id: "kept" }
+  test("does not restore removed optimistic parts on refresh", async () => {
+    const kept = userMessage("kept")
     const keptPart = textPart(kept.id, { text: "removed" })
     const store = create(messageClient(page([v2User(kept.id)])))
-    store.optimistic.add({ sessionID: "child", message, parts: [part] })
-    store.optimistic.add({ sessionID: "child", message: kept, parts: [keptPart] })
+    store.optimistic.add({ sessionID: "ses_child", message: kept, parts: [keptPart] })
 
-    store.apply({ type: "message.removed", properties: { sessionID: "child", messageID: message.id } })
-    store.apply({
-      type: "message.part.removed",
-      properties: { sessionID: "child", messageID: kept.id, partID: keptPart.id },
-    })
-    await store.sync("child", { force: true })
+    store.transcript.dropPart({ sessionID: "ses_child", messageID: kept.id, partID: keptPart.id })
+    await store.sync("ses_child", { force: true })
 
     expect(ids(store)).toEqual([kept.id])
-    expect(store.data.part[message.id]).toBeUndefined()
     expect(store.data.part[kept.id]).toBeUndefined()
   })
 
   test("replaces confirmed optimistic content with the initial page", async () => {
     const optimistic = userMessage("message")
     const store = create(messageClient(page([v2User(optimistic.id, 2)])))
-    store.optimistic.add({ sessionID: "child", message: optimistic, parts: [] })
+    store.optimistic.add({ sessionID: "ses_child", message: optimistic, parts: [] })
 
-    await store.sync("child")
+    await store.sync("ses_child")
 
-    expect(store.data.message.child).toEqual([projectedUser(optimistic.id, 2)])
+    expect(store.data.message.ses_child).toEqual([projectedUser(optimistic.id, 2)])
   })
 
   test("replaces a confirmed optimistic part with fetched content", async () => {
@@ -560,9 +496,9 @@ describe("server session", () => {
     const message = userMessage("message")
     const optimistic = textPart(message.id, { text: "optimistic" })
     const store = create(messageClient(pending.promise))
-    const loading = store.sync("child")
+    const loading = store.sync("ses_child")
 
-    store.optimistic.add({ sessionID: "child", message, parts: [optimistic] })
+    store.optimistic.add({ sessionID: "ses_child", message, parts: [optimistic] })
     pending.resolve(page([v2User(message.id, 1, "fetched")]))
     await loading
 
@@ -575,14 +511,14 @@ describe("server session", () => {
     const confirmed = textPart(message.id, { text: "confirmed" })
     const pendingPart = textPart(message.id, { id: "pending", text: "pending" })
     const store = create(messageClient(pending.promise))
-    const loading = store.sync("child")
-    store.optimistic.add({ sessionID: "child", message, parts: [confirmed, pendingPart] })
+    const loading = store.sync("ses_child")
+    store.optimistic.add({ sessionID: "ses_child", message, parts: [confirmed, pendingPart] })
 
     pending.resolve(page([v2User(message.id, 1, "confirmed")]))
     await loading
-    store.optimistic.remove({ sessionID: "child", messageID: message.id })
+    store.optimistic.remove({ sessionID: "ses_child", messageID: message.id })
 
-    expect(store.data.message.child).toEqual([projectedUser(message.id)])
+    expect(store.data.message.ses_child).toEqual([projectedUser(message.id)])
     expect(store.data.part[message.id]).toEqual([confirmed])
   })
 
@@ -593,11 +529,11 @@ describe("server session", () => {
     const store = create(
       messageClient(page([v2User(message.id, 1, "first")]), page([v2User(message.id, 1, "updated")])),
     )
-    store.optimistic.add({ sessionID: "child", message, parts: [confirmed, pendingPart] })
-    await store.sync("child")
+    store.optimistic.add({ sessionID: "ses_child", message, parts: [confirmed, pendingPart] })
+    await store.sync("ses_child")
 
-    await store.sync("child", { force: true })
-    store.optimistic.remove({ sessionID: "child", messageID: message.id })
+    await store.sync("ses_child", { force: true })
+    store.optimistic.remove({ sessionID: "ses_child", messageID: message.id })
 
     expect(store.data.part[message.id]).toEqual([{ ...confirmed, text: "updated" }])
   })
@@ -609,14 +545,11 @@ describe("server session", () => {
     const store = create(
       messageClient(page([v2User(message.id, 1, "confirmed")]), page([v2User(message.id, 1, "confirmed")])),
     )
-    store.optimistic.add({ sessionID: "child", message, parts: [confirmed, pendingPart] })
-    await store.sync("child")
-    store.apply({
-      type: "message.part.removed",
-      properties: { sessionID: "child", messageID: message.id, partID: confirmed.id },
-    })
+    store.optimistic.add({ sessionID: "ses_child", message, parts: [confirmed, pendingPart] })
+    await store.sync("ses_child")
+    store.transcript.dropPart({ sessionID: "ses_child", messageID: message.id, partID: confirmed.id })
 
-    await store.sync("child", { force: true })
+    await store.sync("ses_child", { force: true })
 
     expect(store.data.part[message.id]).toEqual([pendingPart])
   })
@@ -624,40 +557,40 @@ describe("server session", () => {
   test("does not remove content confirmed by a message event", () => {
     const message = userMessage("message")
     const part = textPart(message.id)
-    const store = setup({ child: session("child") }).store
-    store.optimistic.add({ sessionID: "child", message, parts: [part] })
-    store.apply({ type: "message.updated", properties: { sessionID: "child", info: message } })
+    const store = setup({ ses_child: session("ses_child") }).store
+    store.optimistic.add({ sessionID: "ses_child", message, parts: [part] })
+    store.transcript.putMessage(message)
 
-    store.optimistic.remove({ sessionID: "child", messageID: message.id })
+    store.optimistic.remove({ sessionID: "ses_child", messageID: message.id })
 
-    expect(store.data.message.child).toEqual([message])
+    expect(store.data.message.ses_child).toEqual([message])
     expect(store.data.part[message.id]).toBeUndefined()
   })
 
   test("does not remove parts confirmed by part events", () => {
     const message = userMessage("message")
     const part = textPart(message.id)
-    const store = setup({ child: session("child") }).store
-    store.optimistic.add({ sessionID: "child", message, parts: [part] })
-    store.apply({ type: "message.updated", properties: { sessionID: "child", info: message } })
-    store.apply({ type: "message.part.updated", properties: { sessionID: "child", part, time: 2 } })
+    const store = setup({ ses_child: session("ses_child") }).store
+    store.optimistic.add({ sessionID: "ses_child", message, parts: [part] })
+    store.transcript.putMessage(message)
+    store.transcript.putPart(part)
 
-    store.optimistic.remove({ sessionID: "child", messageID: message.id })
+    store.optimistic.remove({ sessionID: "ses_child", messageID: message.id })
 
-    expect(store.data.message.child).toEqual([message])
+    expect(store.data.message.ses_child).toEqual([message])
     expect(store.data.part[message.id]).toEqual([part])
   })
 
   test("treats a part event as confirmation when it precedes the message event", () => {
     const message = userMessage("message")
     const part = textPart(message.id)
-    const store = setup({ child: session("child") }).store
-    store.optimistic.add({ sessionID: "child", message, parts: [part] })
-    store.apply({ type: "message.part.updated", properties: { sessionID: "child", part, time: 2 } })
+    const store = setup({ ses_child: session("ses_child") }).store
+    store.optimistic.add({ sessionID: "ses_child", message, parts: [part] })
+    store.transcript.putPart(part)
 
-    store.optimistic.remove({ sessionID: "child", messageID: message.id })
+    store.optimistic.remove({ sessionID: "ses_child", messageID: message.id })
 
-    expect(store.data.message.child).toEqual([message])
+    expect(store.data.message.ses_child).toEqual([message])
     expect(store.data.part[message.id]).toEqual([part])
   })
 
@@ -666,9 +599,9 @@ describe("server session", () => {
     const message = userMessage("message")
     const part = textPart(message.id, { id: "stale", text: "stale" })
     const store = create(messageClient(pending.promise))
-    store.apply({ type: "message.updated", properties: { info: message } })
-    store.apply({ type: "message.part.updated", properties: { sessionID: "child", part, time: 1 } })
-    const loading = store.sync("child")
+    store.transcript.putMessage(message)
+    store.transcript.putPart(part)
+    const loading = store.sync("ses_child")
 
     pending.resolve(page([v2User(message.id)]))
     await loading
@@ -685,11 +618,11 @@ describe("server session", () => {
     const intermediate = { ...stale, text: "intermediate" }
     const client = messageClient(failed.promise, retried.promise)
     const store = create(client, { retry: retryImmediately })
-    store.apply({ type: "message.updated", properties: { info: message } })
-    store.apply({ type: "message.part.updated", properties: { sessionID: "child", part: stale, time: 1 } })
-    const loading = store.sync("child")
+    store.transcript.putMessage(message)
+    store.transcript.putPart(stale)
+    const loading = store.sync("ses_child")
 
-    store.apply({ type: "message.part.updated", properties: { sessionID: "child", part: intermediate, time: 2 } })
+    store.transcript.putPart(intermediate)
     failed.reject(new Error("failed to fetch"))
     await client.requested(2)
     retried.resolve(page([v2User(message.id, 1, "fetched")]))
@@ -705,59 +638,16 @@ describe("server session", () => {
     const part = textPart(message.id)
     const client = messageClient(page([v2User(message.id)]), failed.promise, retried.promise)
     const store = create(client, { retry: retryImmediately })
-    await store.sync("child")
-    const loading = store.sync("child", { force: true })
+    await store.sync("ses_child")
+    const loading = store.sync("ses_child", { force: true })
 
-    store.apply({
-      type: "message.part.removed",
-      properties: { sessionID: "child", messageID: message.id, partID: part.id },
-    })
+    store.transcript.dropPart({ sessionID: "ses_child", messageID: message.id, partID: part.id })
     failed.reject(new Error("failed to fetch"))
     await client.requested(3)
     retried.resolve(page([v2User(message.id)]))
     await loading
 
     expect(store.data.part[message.id]).toBeUndefined()
-  })
-
-  test("preserves message removals across message retries", async () => {
-    const failed = deferredPage()
-    const retried = deferredPage()
-    const message = userMessage("message")
-    const client = messageClient(page([v2User(message.id)]), failed.promise, retried.promise)
-    const store = create(client, { retry: retryImmediately })
-    await store.sync("child")
-    const loading = store.sync("child", { force: true })
-
-    store.apply({ type: "message.removed", properties: { sessionID: "child", messageID: message.id } })
-    failed.reject(new Error("failed to fetch"))
-    await client.requested(3)
-    retried.resolve(page([v2User(message.id)]))
-    await loading
-
-    expect(store.data.message.child).toEqual([])
-    expect(store.data.part[message.id]).toBeUndefined()
-  })
-
-  test("preserves optimistic re-adds across message retries", async () => {
-    const failed = deferredPage()
-    const retried = deferredPage()
-    const message = userMessage("message")
-    const optimistic = textPart(message.id, { id: "optimistic", text: "optimistic" })
-    const client = messageClient(page([v2User(message.id, 1, "stale")]), failed.promise, retried.promise)
-    const store = create(client, { retry: retryImmediately })
-    await store.sync("child")
-    const loading = store.sync("child", { force: true })
-
-    store.apply({ type: "message.removed", properties: { sessionID: "child", messageID: message.id } })
-    store.optimistic.add({ sessionID: "child", message, parts: [optimistic] })
-    failed.reject(new Error("failed to fetch"))
-    await client.requested(3)
-    retried.resolve(page([v2User(message.id, 1, "stale")]))
-    await loading
-
-    expect(store.data.message.child).toEqual([message])
-    expect(store.data.part[message.id]).toEqual([optimistic])
   })
 
   test("accepts part omission from a successful retry", async () => {
@@ -771,8 +661,8 @@ describe("server session", () => {
       retried.promise,
     )
     const store = create(client, { retry: retryImmediately })
-    await store.sync("child")
-    const loading = store.sync("child", { force: true })
+    await store.sync("ses_child")
+    const loading = store.sync("ses_child", { force: true })
 
     failed.reject(new Error("failed to fetch"))
     await client.requested(3)
@@ -789,9 +679,9 @@ describe("server session", () => {
     const part = textPart("message")
     const client = messageClient(first.promise, second.promise, third.promise)
     const store = create(client, { retry: retryImmediately })
-    const loading = store.sync("child").catch((error) => error)
+    const loading = store.sync("ses_child").catch((error) => error)
 
-    store.apply({ type: "message.part.updated", properties: { sessionID: "child", part, time: 2 } })
+    store.transcript.putPart(part)
     first.reject(new Error("failed to fetch"))
     await client.requested(2)
     second.reject(new Error("failed to fetch"))
@@ -807,19 +697,16 @@ describe("server session", () => {
     const stale = userMessage("message")
     const stalePart = textPart(stale.id, { text: "stale" })
     const store = create(messageClient(page([v2User(stale.id, 1, "stale")]), pending.promise))
-    await store.sync("child")
-    const refreshing = store.sync("child", { force: true })
+    await store.sync("ses_child")
+    const refreshing = store.sync("ses_child", { force: true })
     const live = { ...stale, time: { created: 2 } }
 
-    store.apply({ type: "message.updated", properties: { info: live } })
-    store.apply({
-      type: "message.part.updated",
-      properties: { sessionID: "child", part: { ...stalePart, text: "stale live" }, time: 2 },
-    })
+    store.transcript.putMessage(live)
+    store.transcript.putPart({ ...stalePart, text: "stale live" })
     pending.resolve(page([v2User(stale.id, 1, "stale")]))
     await refreshing
 
-    expect(store.data.message.child).toEqual([live])
+    expect(store.data.message.ses_child).toEqual([live])
     expect(store.data.part[stale.id]).toEqual([{ ...stalePart, text: "stale live" }])
   })
 
@@ -827,17 +714,14 @@ describe("server session", () => {
     const pending = deferredPage()
     const part = textPart("message", { text: "stale" })
     const store = create(messageClient(page([v2User("message", 1, "stale")]), pending.promise))
-    await store.sync("child")
-    const refreshing = store.sync("child", { force: true })
+    await store.sync("ses_child")
+    const refreshing = store.sync("ses_child", { force: true })
 
-    store.apply({
-      type: "message.part.updated",
-      properties: { sessionID: "child", part: { ...part, text: "stale live" }, time: 2 },
-    })
+    store.transcript.putPart({ ...part, text: "stale live" })
     pending.resolve(page([v2User("message", 2, "stale")]))
     await refreshing
 
-    expect(store.data.message.child).toEqual([projectedUser("message", 2)])
+    expect(store.data.message.ses_child).toEqual([projectedUser("message", 2)])
     expect(store.data.part.message).toEqual([{ ...part, text: "stale live" }])
   })
 
@@ -845,94 +729,36 @@ describe("server session", () => {
     const pending = deferredPage()
     const live = textPart("message", { text: "live" })
     const store = create(messageClient(page([v2User("message", 1, "stale")]), pending.promise))
-    await store.sync("child")
-    const refreshing = store.sync("child", { force: true })
+    await store.sync("ses_child")
+    const refreshing = store.sync("ses_child", { force: true })
 
-    store.apply({ type: "message.part.updated", properties: { sessionID: "child", part: live, time: 2 } })
+    store.transcript.putPart(live)
     pending.resolve(page())
     await refreshing
 
-    expect(store.data.message.child).toEqual([projectedUser("message")])
+    expect(store.data.message.ses_child).toEqual([projectedUser("message")])
     expect(store.data.part.message).toEqual([live])
-  })
-
-  test("ignores a late part update after its message is removed", async () => {
-    const pending = deferredPage()
-    const message = userMessage("message")
-    const part = textPart(message.id)
-    const store = create(messageClient(pending.promise))
-    const loading = store.sync("child")
-
-    store.apply({ type: "message.updated", properties: { info: message } })
-    store.apply({ type: "message.removed", properties: { sessionID: "child", messageID: message.id } })
-    store.apply({ type: "message.part.updated", properties: { sessionID: "child", part, time: 2 } })
-    pending.resolve(page([v2User(message.id)]))
-    await loading
-
-    expect(store.data.message.child).toEqual([])
-    expect(store.data.part[message.id]).toBeUndefined()
-  })
-
-  test("ignores a late part update after a completed message removal", () => {
-    const message = userMessage("message")
-    const part = textPart(message.id)
-    const store = setup({ child: session("child") }).store
-    store.apply({ type: "message.updated", properties: { info: message } })
-    store.apply({ type: "message.removed", properties: { sessionID: "child", messageID: message.id } })
-
-    store.apply({ type: "message.part.updated", properties: { sessionID: "child", part, time: 2 } })
-
-    expect(store.data.part[message.id]).toBeUndefined()
-  })
-
-  test("does not restore a completed message removal from a stale refresh", async () => {
-    const store = create(messageClient(page([v2User("message")]), page([v2User("message")])))
-    await store.sync("child")
-    store.apply({ type: "message.removed", properties: { sessionID: "child", messageID: "message" } })
-
-    await store.sync("child", { force: true })
-
-    expect(store.data.message.child).toEqual([])
-    expect(store.data.part.message).toBeUndefined()
   })
 
   test("does not restore a completed part removal from a stale refresh", async () => {
     const part = textPart("message")
     const store = create(messageClient(page([v2User("message")]), page([v2User("message")])))
-    await store.sync("child")
-    store.apply({
-      type: "message.part.removed",
-      properties: { sessionID: "child", messageID: part.messageID, partID: part.id },
-    })
+    await store.sync("ses_child")
+    store.transcript.dropPart({ sessionID: "ses_child", messageID: part.messageID, partID: part.id })
 
-    await store.sync("child", { force: true })
+    await store.sync("ses_child", { force: true })
 
     expect(store.data.part[part.messageID]).toBeUndefined()
   })
 
   test("does not cache skipped optimistic parts", () => {
     const message = userMessage("message")
-    const part = { id: "part", sessionID: "child", messageID: message.id, type: "step-start" as const }
-    const store = setup({ child: session("child") }).store
+    const part = { id: "part", sessionID: "ses_child", messageID: message.id, type: "step-start" as const }
+    const store = setup({ ses_child: session("ses_child") }).store
 
-    store.optimistic.add({ sessionID: "child", message, parts: [part] })
+    store.optimistic.add({ sessionID: "ses_child", message, parts: [part] })
 
     expect(store.data.part[message.id]).toEqual([])
-  })
-
-  test("preserves removals during history prepend", async () => {
-    const pending = deferredPage()
-    const client = messageClient(page([v2User("message-2", 2)], "older"), pending.promise)
-    const store = create(client)
-    await store.sync("child")
-    const loading = store.history.loadMore("child")
-
-    store.apply({ type: "message.removed", properties: { sessionID: "child", messageID: "message-1" } })
-    pending.resolve(page([v2User("message-1")]))
-    await loading
-
-    expect(client.requests.at(-1)).toEqual({ sessionID: "child", limit: 200, cursor: "older" })
-    expect(store.data.message.child).toEqual([projectedUser("message-2", 2)])
   })
 
   test("preserves loaded history during an incomplete refresh", async () => {
@@ -942,9 +768,9 @@ describe("server session", () => {
         page([v2User("message-2", 2), v2User("message-3", 3)], "older"),
       ),
     )
-    await store.sync("child")
+    await store.sync("ses_child")
 
-    await store.sync("child", { force: true })
+    await store.sync("ses_child", { force: true })
 
     expect(ids(store)).toEqual(["message-1", "message-2", "message-3"])
   })
@@ -953,10 +779,10 @@ describe("server session", () => {
     const pending = deferredPage()
     const live = textPart("message-1", { text: "live" })
     const store = create(messageClient(page([v2User("message-2", 2)], "older"), pending.promise))
-    await store.sync("child")
-    const loading = store.history.loadMore("child")
+    await store.sync("ses_child")
+    const loading = store.history.loadMore("ses_child")
 
-    store.apply({ type: "message.part.updated", properties: { sessionID: "child", part: live, time: 2 } })
+    store.transcript.putPart(live)
     pending.resolve(page([v2User("message-1", 1, "stale")]))
     await loading
 
@@ -968,13 +794,13 @@ describe("server session", () => {
     const newer = userMessage("message-3", { time: { created: 3 } })
     const part = textPart(newer.id, { text: "live" })
     const store = create(messageClient(page([v2User("message-2", 2)], "older"), pending.promise))
-    await store.sync("child")
-    const loading = store.history.loadMore("child")
+    await store.sync("ses_child")
+    const loading = store.history.loadMore("ses_child")
 
-    store.apply({ type: "message.part.updated", properties: { sessionID: "child", part, time: 3 } })
+    store.transcript.putPart(part)
     pending.resolve(page([v2User("message-1")]))
     await loading
-    store.apply({ type: "message.updated", properties: { sessionID: "child", info: newer } })
+    store.transcript.putMessage(newer)
 
     expect(store.data.part[newer.id]).toEqual([part])
   })
@@ -984,15 +810,15 @@ describe("server session", () => {
     const history = deferredPage()
     const part = textPart("message-1", { text: "live" })
     const store = create(messageClient(pending.promise, history.promise))
-    const loading = store.sync("child")
+    const loading = store.sync("ses_child")
 
-    store.apply({ type: "message.part.updated", properties: { sessionID: "child", part, time: 2 } })
+    store.transcript.putPart(part)
     pending.resolve(page([v2User("message-2", 2)], "older"))
     await loading
 
     expect(store.data.part[part.messageID]).toEqual([part])
 
-    const loadingHistory = store.history.loadMore("child")
+    const loadingHistory = store.history.loadMore("ses_child")
     history.resolve(page([v2User("message-1", 1, "stale")]))
     await loadingHistory
 
@@ -1004,15 +830,12 @@ describe("server session", () => {
     const history = deferredPage()
     const part = textPart("message-1")
     const store = create(messageClient(initial.promise, history.promise))
-    const loading = store.sync("child")
+    const loading = store.sync("ses_child")
 
-    store.apply({
-      type: "message.part.removed",
-      properties: { sessionID: "child", messageID: part.messageID, partID: part.id },
-    })
+    store.transcript.dropPart({ sessionID: "ses_child", messageID: part.messageID, partID: part.id })
     initial.resolve(page([v2User("message-2", 2)], "older"))
     await loading
-    const loadingHistory = store.history.loadMore("child")
+    const loadingHistory = store.history.loadMore("ses_child")
     history.resolve(page([v2User("message-1")]))
     await loadingHistory
 
@@ -1029,29 +852,32 @@ describe("server session", () => {
       },
     })
 
-    await store.todo("child")
-    await store.todo("child")
+    await store.todo("ses_child")
+    await store.todo("ses_child")
 
-    expect(requests).toEqual(["child"])
-    expect(store.data.todo.child).toEqual(todos)
+    expect(requests).toEqual(["ses_child"])
+    expect(store.data.todo.ses_child).toEqual(todos)
 
-    await store.todo("child", { force: true })
+    await store.todo("ses_child", { force: true })
 
-    expect(requests).toEqual(["child", "child"])
+    expect(requests).toEqual(["ses_child", "ses_child"])
   })
 
   test("applies events without a directory store", () => {
     const ctx = setup({})
-    ctx.store.apply({ type: "session.created", properties: { sessionID: "root", info: session("root") } })
+    ctx.store.apply({
+      type: "session.next.created",
+      properties: { timestamp: 1, sessionID: "ses_root", projectID: "project", location: { directory: "/repo" }, title: "ses_root" },
+    })
     ctx.store.applyV2(
       {
         id: "evt_step_root",
         created: 2,
         type: "session.step.started",
-        durable: { aggregateID: "root", seq: 1, version: 1 },
+        durable: { aggregateID: "ses_root", seq: 1, version: 1 },
         location: { directory: "/repo" },
         data: {
-          sessionID: "root",
+          sessionID: "ses_root",
           assistantMessageID: "msg_assistant",
           agent: "build",
           model: { id: "model", providerID: "provider" },
@@ -1059,8 +885,8 @@ describe("server session", () => {
       } as unknown as ClientEvent,
     )
 
-    expect(ctx.store.get("root")?.directory).toBe("/repo")
-    expect(ctx.store.data.session_working("root")).toBe(true)
+    expect(ctx.store.get("ses_root")?.directory).toBe("/repo")
+    expect(ctx.store.data.session_working("ses_root")).toBe(true)
     expect(ctx.get).toEqual([])
   })
 

@@ -1,7 +1,7 @@
-import type { SessionV1 } from "@orchestra/schema/session-v1"
+import type { Transcript } from "../transcript-model"
 
-type PartType = typeof SessionV1.Part.Encoded
-type ToolPart = typeof SessionV1.ToolPart.Encoded
+type PartType = Transcript.Part
+type ToolPart = Transcript.ToolPart
 
 function deletionOnly(part: ToolPart) {
   if (!("metadata" in part.state)) return false

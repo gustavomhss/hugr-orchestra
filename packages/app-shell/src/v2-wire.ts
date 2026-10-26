@@ -1,6 +1,92 @@
 // View-model types the app renders. Every request goes through the V2 `/api` client; adapters shape its
 // results into these models. Edit by hand.
 
+import type {
+  AgentPart,
+  ApiError,
+  AssistantMessage,
+  CompactionPart,
+  ContentFilterError,
+  ContextOverflowError,
+  FilePart,
+  FilePartSource,
+  FilePartSourceText,
+  FileSource,
+  Message,
+  MessageAbortedError,
+  MessageOutputLengthError,
+  OutputFormat,
+  OutputFormatJsonSchema,
+  OutputFormatText,
+  Part,
+  PatchPart,
+  ProviderAuthError,
+  Range,
+  ReasoningPart,
+  ResourceSource,
+  RetryPart,
+  Session,
+  SnapshotFileDiff,
+  SnapshotPart,
+  StepFinishPart,
+  StepStartPart,
+  StructuredOutputError,
+  SubtaskPart,
+  SymbolSource,
+  TextPart,
+  ToolPart,
+  ToolState,
+  ToolStateCompleted,
+  ToolStateError,
+  ToolStatePending,
+  ToolStateRunning,
+  UnknownError,
+  UserMessage,
+} from "@orchestra/session-ui/transcript-model"
+
+export type {
+  AgentPart,
+  ApiError,
+  AssistantMessage,
+  CompactionPart,
+  ContentFilterError,
+  ContextOverflowError,
+  FilePart,
+  FilePartSource,
+  FilePartSourceText,
+  FileSource,
+  Message,
+  MessageAbortedError,
+  MessageOutputLengthError,
+  OutputFormat,
+  OutputFormatJsonSchema,
+  OutputFormatText,
+  Part,
+  PatchPart,
+  ProviderAuthError,
+  Range,
+  ReasoningPart,
+  ResourceSource,
+  RetryPart,
+  Session,
+  SnapshotFileDiff,
+  SnapshotPart,
+  StepFinishPart,
+  StepStartPart,
+  StructuredOutputError,
+  SubtaskPart,
+  SymbolSource,
+  TextPart,
+  ToolPart,
+  ToolState,
+  ToolStateCompleted,
+  ToolStateError,
+  ToolStatePending,
+  ToolStateRunning,
+  UnknownError,
+  UserMessage,
+}
+
 export type Agent = {
   id?: string
   name: string
@@ -111,78 +197,6 @@ export type AgentListOutput = {
     };
     data: Array<AgentInfo>;
 };
-export type AgentPart = {
-  id: string
-  sessionID: string
-  messageID: string
-  type: "agent"
-  name: string
-  source?: {
-    value: string
-    start: number
-    end: number
-  }
-}
-
-export type ApiError = {
-  name: "APIError"
-  data: {
-    message: string
-    statusCode?: number
-    isRetryable: boolean
-    responseHeaders?: {
-      [key: string]: string
-    }
-    responseBody?: string
-    metadata?: {
-      [key: string]: string
-    }
-  }
-}
-
-export type AssistantMessage = {
-  id: string
-  sessionID: string
-  role: "assistant"
-  time: {
-    created: number
-    completed?: number
-  }
-  error?:
-    | ProviderAuthError
-    | UnknownError
-    | MessageOutputLengthError
-    | MessageAbortedError
-    | StructuredOutputError
-    | ContextOverflowError
-    | ContentFilterError
-    | ApiError
-  parentID: string
-  modelID: string
-  providerID: string
-  mode: string
-  agent: string
-  path: {
-    cwd: string
-    root: string
-  }
-  summary?: boolean
-  cost: number
-  tokens: {
-    total?: number
-    input: number
-    output: number
-    reasoning: number
-    cache: {
-      read: number
-      write: number
-    }
-  }
-  structured?: unknown
-  variant?: string
-  finish?: string
-}
-
 export type AtlasKnowledgeAnchor = {
   reference: AtlasKnowledgeReference
   projectID: string
@@ -245,16 +259,6 @@ export type CommandListOutput = {
     };
     data: Array<CommandInfo>;
 };
-export type CompactionPart = {
-  id: string
-  sessionID: string
-  messageID: string
-  type: "compaction"
-  auto: boolean
-  overflow?: boolean
-  tail_start_id?: string
-}
-
 export type Config = {
   $schema?: string
   shell?: string
@@ -451,34 +455,14 @@ export type ConfigV2RelayJudge = {
   maxTokens?: number
 }
 
-export type ContentFilterError = {
-  name: "ContentFilterError"
-  data: {
-    message: string
-  }
-}
-
-export type ContextOverflowError = {
-  name: "ContextOverflowError"
-  data: {
-    message: string
-    responseBody?: string
-  }
-}
-
 export type Event =
   | EventModelsDevRefreshed
   | EventIntegrationUpdated
   | EventIntegrationConnectionUpdated
   | EventCatalogUpdated
-  | EventSessionCreated
-  | EventSessionUpdated
-  | EventSessionDeleted
-  | EventSessionV1PromptAdmitted
-  | EventMessageUpdated
-  | EventMessageRemoved
-  | EventMessagePartUpdated
-  | EventMessagePartRemoved
+  | EventSessionNextCreated
+  | EventSessionNextRenamed
+  | EventSessionNextDeleted
   | EventSessionNextAgentSwitched
   | EventSessionNextModelSwitched
   | EventSessionNextSubagentModelsChanged
@@ -984,44 +968,6 @@ export type EventMaestroWorkResultDecided = {
   }
 }
 
-export type EventMessagePartRemoved = {
-  id: string
-  type: "message.part.removed"
-  properties: {
-    sessionID: string
-    messageID: string
-    partID: string
-  }
-}
-
-export type EventMessagePartUpdated = {
-  id: string
-  type: "message.part.updated"
-  properties: {
-    sessionID: string
-    part: Part
-    time: number
-  }
-}
-
-export type EventMessageRemoved = {
-  id: string
-  type: "message.removed"
-  properties: {
-    sessionID: string
-    messageID: string
-  }
-}
-
-export type EventMessageUpdated = {
-  id: string
-  type: "message.updated"
-  properties: {
-    sessionID: string
-    info: Message
-  }
-}
-
 export type EventModelsDevRefreshed = {
   id: string
   type: "models-dev.refreshed"
@@ -1189,21 +1135,41 @@ export type EventServerConnected = {
   }
 }
 
-export type EventSessionCreated = {
+export type EventSessionNextCreated = {
   id: string
-  type: "session.created"
+  type: "session.next.created"
   properties: {
+    timestamp: number
     sessionID: string
-    info: Session
+    projectID: string
+    parentID?: string
+    location: {
+      directory: string
+      workspaceID?: string
+    }
+    subdirectory?: string
+    title: string
+    agent?: string
+    model?: ModelRef
   }
 }
 
-export type EventSessionDeleted = {
+export type EventSessionNextDeleted = {
   id: string
-  type: "session.deleted"
+  type: "session.next.deleted"
   properties: {
+    timestamp: number
     sessionID: string
-    info: Session
+  }
+}
+
+export type EventSessionNextRenamed = {
+  id: string
+  type: "session.next.renamed"
+  properties: {
+    timestamp: number
+    sessionID: string
+    title: string
   }
 }
 
@@ -1626,21 +1592,6 @@ export type EventSessionNextToolSuccess = {
   }
 }
 
-export type EventSessionUpdated = {
-  id: string
-  type: "session.updated"
-  properties: {
-    sessionID: string
-    info: Session
-  }
-}
-
-export type EventSessionV1PromptAdmitted = {
-  id: string
-  type: "session.v1.prompt.admitted"
-  properties: SessionV1PromptAdmission
-}
-
 export type EventTodoUpdated = {
   id: string
   type: "todo.updated"
@@ -1694,31 +1645,6 @@ export type FileNode = {
   absolute: string
   type: "file" | "directory"
   ignored: boolean
-}
-
-export type FilePart = {
-  id: string
-  sessionID: string
-  messageID: string
-  type: "file"
-  mime: string
-  filename?: string
-  url: string
-  source?: FilePartSource
-}
-
-export type FilePartSource = FileSource | SymbolSource | ResourceSource
-
-export type FilePartSourceText = {
-  value: string
-  start: number
-  end: number
-}
-
-export type FileSource = {
-  text: FilePartSourceText
-  type: "file"
-  path: string
 }
 
 export type ImageAttachmentConfig = {
@@ -2006,22 +1932,6 @@ export type McpStatusNeedsClientRegistration = {
 export type McpStatusPending = {
     status: "pending";
 };
-export type Message = UserMessage | AssistantMessage
-
-export type MessageAbortedError = {
-  name: "MessageAbortedError"
-  data: {
-    message: string
-  }
-}
-
-export type MessageOutputLengthError = {
-  name: "MessageOutputLengthError"
-  data: {
-    [key: string]: unknown
-  }
-}
-
 export type Model = {
   id: string
   providerID: string
@@ -2207,41 +2117,6 @@ export type OAuth = {
   enterpriseUrl?: string
 }
 
-export type OutputFormat = OutputFormatText | OutputFormatJsonSchema
-
-export type OutputFormatJsonSchema = {
-  type: "json_schema"
-  schema: JsonSchema
-  retryCount?: number
-}
-
-export type OutputFormatText = {
-  type: "text"
-}
-
-export type Part =
-  | TextPart
-  | SubtaskPart
-  | ReasoningPart
-  | FilePart
-  | ToolPart
-  | StepStartPart
-  | StepFinishPart
-  | SnapshotPart
-  | PatchPart
-  | AgentPart
-  | RetryPart
-  | CompactionPart
-
-export type PatchPart = {
-  id: string
-  sessionID: string
-  messageID: string
-  type: "patch"
-  hash: string
-  files: Array<string>
-}
-
 export type Path = {
   home: string
   state: string
@@ -2360,14 +2235,6 @@ export type Provider = {
   }
   models: {
     [key: string]: Model
-  }
-}
-
-export type ProviderAuthError = {
-  name: "ProviderAuthError"
-  data: {
-    providerID: string
-    message: string
   }
 }
 
@@ -2618,32 +2485,6 @@ export type QuestionV2Tool = {
   callID: string
 }
 
-export type Range = {
-  start: {
-    line: number
-    character: number
-  }
-  end: {
-    line: number
-    character: number
-  }
-}
-
-export type ReasoningPart = {
-  id: string
-  sessionID: string
-  messageID: string
-  type: "reasoning"
-  text: string
-  metadata?: {
-    [key: string]: unknown
-  }
-  time: {
-    start: number
-    end?: number
-  }
-}
-
 export type ReferenceGitSource = {
     type: "git";
     repository: string;
@@ -2725,25 +2566,6 @@ export type RelayAuthoringSkillBinding = {
   content: string
 }
 
-export type ResourceSource = {
-  text: FilePartSourceText
-  type: "resource"
-  clientName: string
-  uri: string
-}
-
-export type RetryPart = {
-  id: string
-  sessionID: string
-  messageID: string
-  type: "retry"
-  attempt: number
-  error: ApiError
-  time: {
-    created: number
-  }
-}
-
 export type RevertState = {
   messageID: string
   partID?: string
@@ -2761,56 +2583,6 @@ export type ServerConfig = {
   mdns?: boolean
   mdnsDomain?: string
   cors?: Array<string>
-}
-
-export type Session = {
-  id: string
-  slug: string
-  projectID: string
-  workspaceID?: string
-  directory: string
-  path?: string
-  parentID?: string
-  summary?: {
-    additions: number
-    deletions: number
-    files: number
-    diffs?: Array<SnapshotFileDiff>
-  }
-  cost?: number
-  tokens?: {
-    input: number
-    output: number
-    reasoning: number
-    cache: {
-      read: number
-      write: number
-    }
-  }
-  title: string
-  agent?: string
-  model?: {
-    id: string
-    providerID: string
-    variant?: string
-  }
-  version: string
-  metadata?: {
-    [key: string]: unknown
-  }
-  time: {
-    created: number
-    updated: number
-    compacting?: number
-    archived?: number
-  }
-  permission?: PermissionRuleset
-  revert?: {
-    messageID: string
-    partID?: string
-    snapshot?: string
-    diff?: string
-  }
 }
 
 export type SessionActive = {
@@ -3637,30 +3409,6 @@ export type SessionSubagentModelsPolicy =
       models: Array<ModelRef>
     }
 
-export type SessionV1PromptAdmission = {
-  sessionID: string
-  messageID: string
-  identityVersion: 1
-  identity: string
-  info: UserMessage
-  parts: Array<Part>
-  transition?: SessionV1PromptTransition
-}
-
-export type SessionV1PromptTransition = {
-  expectedRevert: {
-    messageID: string
-    partID?: string
-    snapshot?: string
-    diff?: string
-  } | null
-  removeMessageIDs: Array<string>
-  removePartIDs: Array<string>
-  permission?: PermissionRuleset
-  expectedPermission?: PermissionRuleset | null
-  timeUpdated: number
-}
-
 export type SessionV2Info = {
   id: string
   parentID?: string
@@ -3697,99 +3445,6 @@ export type SessionsResponse = {
   }
 }
 
-export type SnapshotFileDiff = {
-  file?: string
-  patch?: string
-  additions: number
-  deletions: number
-  status?: "added" | "deleted" | "modified"
-}
-
-export type SnapshotPart = {
-  id: string
-  sessionID: string
-  messageID: string
-  type: "snapshot"
-  snapshot: string
-}
-
-export type StepFinishPart = {
-  id: string
-  sessionID: string
-  messageID: string
-  type: "step-finish"
-  reason: string
-  snapshot?: string
-  cost: number
-  tokens: {
-    total?: number
-    input: number
-    output: number
-    reasoning: number
-    cache: {
-      read: number
-      write: number
-    }
-  }
-}
-
-export type StepStartPart = {
-  id: string
-  sessionID: string
-  messageID: string
-  type: "step-start"
-  snapshot?: string
-}
-
-export type StructuredOutputError = {
-  name: "StructuredOutputError"
-  data: {
-    message: string
-    retries: number
-  }
-}
-
-export type SubtaskPart = {
-  id: string
-  sessionID: string
-  messageID: string
-  type: "subtask"
-  prompt: string
-  description: string
-  agent: string
-  model?: {
-    providerID: string
-    modelID: string
-  }
-  command?: string
-}
-
-export type SymbolSource = {
-  text: FilePartSourceText
-  type: "symbol"
-  path: string
-  range: Range
-  name: string
-  kind: number
-}
-
-export type TextPart = {
-  id: string
-  sessionID: string
-  messageID: string
-  type: "text"
-  text: string
-  synthetic?: boolean
-  ignored?: boolean
-  time?: {
-    start: number
-    end?: number
-  }
-  metadata?: {
-    [key: string]: unknown
-  }
-}
-
 export type Todo = {
   /**
    * Brief description of the task
@@ -3811,114 +3466,10 @@ export type ToolFileContent = {
     mime: string;
     name?: string;
 };
-export type ToolPart = {
-  id: string
-  sessionID: string
-  messageID: string
-  type: "tool"
-  callID: string
-  tool: string
-  state: ToolState
-  metadata?: {
-    [key: string]: unknown
-  }
-}
-
-export type ToolState = ToolStatePending | ToolStateRunning | ToolStateCompleted | ToolStateError
-
-export type ToolStateCompleted = {
-  status: "completed"
-  input: {
-    [key: string]: unknown
-  }
-  output: string
-  title: string
-  metadata: {
-    [key: string]: unknown
-  }
-  time: {
-    start: number
-    end: number
-    compacted?: number
-  }
-  attachments?: Array<FilePart>
-}
-
-export type ToolStateError = {
-  status: "error"
-  input: {
-    [key: string]: unknown
-  }
-  error: string
-  metadata?: {
-    [key: string]: unknown
-  }
-  time: {
-    start: number
-    end: number
-  }
-}
-
-export type ToolStatePending = {
-  status: "pending"
-  input: {
-    [key: string]: unknown
-  }
-  raw: string
-}
-
-export type ToolStateRunning = {
-  status: "running"
-  input: {
-    [key: string]: unknown
-  }
-  title?: string
-  metadata?: {
-    [key: string]: unknown
-  }
-  time: {
-    start: number
-  }
-}
-
 export type ToolTextContent = {
     type: "text";
     text: string;
 };
-export type UnknownError = {
-  name: "UnknownError"
-  data: {
-    message: string
-    ref?: string
-  }
-}
-
-export type UserMessage = {
-  id: string
-  sessionID: string
-  role: "user"
-  time: {
-    created: number
-  }
-  format?: OutputFormat
-  summary?: {
-    title?: string
-    body?: string
-    diffs: Array<SnapshotFileDiff>
-  }
-  agent: string
-  model: {
-    providerID: string
-    modelID: string
-    variant?: string
-  }
-  system?: string
-  tools?: {
-    [key: string]: boolean
-  }
-  promptContext?: PromptContextInfo
-}
-
 export type V2SessionListResponse = V2SessionListResponses[keyof V2SessionListResponses]
 
 export type V2SessionListResponses = {

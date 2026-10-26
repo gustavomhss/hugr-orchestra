@@ -4,7 +4,7 @@ import type { SessionMessageInfo } from "@/session-types"
 
 import type { ServerCurrentEvent } from "./server-sdk"
 import type { PermissionRequest, PermissionV2Request, QuestionRequest } from "@/v2-types"
-import type { Message, Part, Session, SessionStatus, Todo } from "@/v2-wire"
+import type { Message, Part, SessionStatus, Todo } from "@/v2-wire"
 
 import type { ServerApi } from "@/utils/server"
 import { batch } from "solid-js"
@@ -12,8 +12,10 @@ import { createStore, produce, reconcile } from "solid-js/store"
 import { message as cleanMessage } from "@/utils/diffs"
 import { rootSession } from "@/utils/session-route"
 import {
+  decodeSessionLifecycleEvent,
   decodeSessionManagementEvent,
   normalizeSessionInfo,
+  renameSession,
   type AppSession,
 } from "@/utils/session"
 import { compareMessages, messageKey, normalizeSessionMessages } from "@/utils/session-message"
@@ -211,7 +213,6 @@ export function createServerSession(
   const messageLoads = new Map<string, MessageLoadState>()
   const pendingParts = new Map<string, Map<string, Set<string>>>()
   const orphanParts = new Map<string, Set<string>>()
-  const removedMessages = new Map<string, Set<string>>()
   const deleteMessageParts = (cache: { part: Record<string, Part[] | undefined> }, messageID: string) => {
     delete cache.part[messageID]
   }
@@ -421,7 +422,6 @@ export function createServerSession(
       v2.clear(sessionID)
       pendingParts.delete(sessionID)
       orphanParts.delete(sessionID)
-      removedMessages.delete(sessionID)
     })
     setData(
       produce((draft) => {
@@ -576,9 +576,8 @@ export function createServerSession(
     merged.observed.forEach((item) => {
       if (!load?.clearedMessageParts.has(item.messageID)) confirmOptimistic(sessionID, item.messageID, item.parts)
     })
-    const touchedMessages = new Set([...(load?.touchedMessages ?? []), ...(removedMessages.get(sessionID) ?? [])])
     const messages = reconcileFetched(merged.session, data.message[sessionID] ?? [], {
-      touched: touchedMessages,
+      touched: load?.touchedMessages,
       retained: load?.retainedMessages,
       removed: load?.removedMessages,
       preserveUnfetched,
@@ -732,6 +731,101 @@ export function createServerSession(
     await runInflight(inflight, sessionID, () => loadMessages(sessionID, limit))
   }
 
+  // Transcript store writes: projectV2 maps each touched V2 message onto these view-model rows.
+  const transcript = {
+    putMessage(message: Message) {
+      const info = cleanMessage(message)
+      indexWireMessage(info)
+      const load = messageLoads.get(info.sessionID)
+      load?.touchedMessages.add(info.id)
+      load?.removedMessages.delete(info.id)
+      const items = optimistic.get(info.sessionID)
+      const item = items?.get(info.id)
+      if (items && item) {
+        if (item.parts.length === 0) clearOptimistic(info.sessionID, info.id)
+        if (item.parts.length > 0) items.set(info.id, { ...item, confirmedMessage: true })
+      }
+      const orphans = orphanParts.get(info.sessionID)
+      orphans?.delete(info.id)
+      if (orphans?.size === 0) orphanParts.delete(info.sessionID)
+      const messages = data.message[info.sessionID]
+      if (!messages) {
+        setData("message", info.sessionID, [info])
+        return
+      }
+      const result = Binary.search(messages, messageKey(info), messageKey)
+      if (result.found) setData("message", info.sessionID, result.index, reconcile(info))
+      if (!result.found)
+        setData("message", info.sessionID, (value = []) => {
+          const next = value.slice()
+          next.splice(result.index, 0, info)
+          return next
+        })
+    },
+    putPart(part: Part) {
+      if (SKIP_PARTS.has(part.type)) return
+      const messages = data.message[part.sessionID]
+      const load = messageLoads.get(part.sessionID)
+      const missing = !messages?.some((message) => message.id === part.messageID)
+      // Outside a page load, accepting a part without its ordered parent event would create an unbounded orphan.
+      if (missing && (!load || load.clearedMessageParts.has(part.messageID))) return
+      if (missing) {
+        const orphans = orphanParts.get(part.sessionID) ?? new Set<string>()
+        orphans.add(part.messageID)
+        orphanParts.set(part.sessionID, orphans)
+        load?.orphanParents.add(part.messageID)
+      }
+      const removed = load?.removedParts.get(part.messageID)
+      removed?.delete(part.id)
+      if (removed?.size === 0) load?.removedParts.delete(part.messageID)
+      const pending = pendingParts.get(part.sessionID)?.get(part.messageID)
+      pending?.delete(part.id)
+      if (pending?.size === 0) pendingParts.get(part.sessionID)?.delete(part.messageID)
+      if (pendingParts.get(part.sessionID)?.size === 0) pendingParts.delete(part.sessionID)
+      const optimistic = load?.optimisticParts.get(part.messageID)
+      optimistic?.delete(part.id)
+      if (optimistic?.size === 0) load?.optimisticParts.delete(part.messageID)
+      trackPartChange(part.sessionID, part.messageID, part.id)
+      confirmOptimisticPart(part.sessionID, part.messageID, part)
+      const parts = data.part[part.messageID]
+      if (!parts) {
+        setData("part", part.messageID, [part])
+        return
+      }
+      const index = parts.findIndex((item) => item.id === part.id)
+      if (index >= 0) setData("part", part.messageID, index, reconcile(part))
+      if (index < 0) setData("part", part.messageID, (value = []) => [...value, part])
+    },
+    dropPart(props: { sessionID: string; messageID: string; partID: string }) {
+      // Part removal is event-only on the server, so its tombstone lasts until a later update or eviction.
+      const pending = pendingParts.get(props.sessionID) ?? new Map<string, Set<string>>()
+      const parts = pending.get(props.messageID) ?? new Set<string>()
+      parts.add(props.partID)
+      pending.set(props.messageID, parts)
+      pendingParts.set(props.sessionID, pending)
+      const load = messageLoads.get(props.sessionID)
+      if (load) {
+        const parts = load.removedParts.get(props.messageID) ?? new Set<string>()
+        parts.add(props.partID)
+        load.removedParts.set(props.messageID, parts)
+        const optimistic = load.optimisticParts.get(props.messageID)
+        optimistic?.delete(props.partID)
+        if (optimistic?.size === 0) load.optimisticParts.delete(props.messageID)
+      }
+      trackPartChange(props.sessionID, props.messageID, props.partID)
+      clearOptimisticPart(props.sessionID, props.messageID, props.partID)
+      setData(
+        produce((draft) => {
+          const parts = draft.part[props.messageID]
+          if (!parts) return
+          const index = parts.findIndex((part) => part.id === props.partID)
+          if (index >= 0) parts.splice(index, 1)
+          if (parts.length === 0) delete draft.part[props.messageID]
+        }),
+      )
+    },
+  }
+
   const projectV2 = (reduction: V2SessionReduction) => {
     reduction.touched.forEach((messageID) => messageLoads.get(reduction.sessionID)?.touchedSource.add(messageID))
     setData("session_message", reduction.sessionID, reconcile(reduction.messages))
@@ -754,20 +848,17 @@ export function createServerSession(
     batch(() => {
       for (const message of normalized.messages) {
         if (!touched.has(message.id)) continue
-        apply({ type: "message.updated", properties: { sessionID: reduction.sessionID, info: message } })
+        transcript.putMessage(message)
       }
       for (const messageID of touched) {
         const next = normalized.parts.get(messageID) ?? []
         const nextIDs = new Set(next.map((part) => part.id))
         for (const part of next) {
-          apply({ type: "message.part.updated", properties: { sessionID: reduction.sessionID, part } })
+          transcript.putPart(part)
         }
         for (const part of data.part[messageID] ?? []) {
           if (nextIDs.has(part.id)) continue
-          apply({
-            type: "message.part.removed",
-            properties: { sessionID: reduction.sessionID, messageID, partID: part.id },
-          })
+          transcript.dropPart({ sessionID: reduction.sessionID, messageID, partID: part.id })
         }
         // Updates append parts they have not seen, so put the message back in the server's content order.
         const order = new Map(next.map((part, index) => [part.id, index]))
@@ -840,9 +931,8 @@ export function createServerSession(
       touch(eventID)
       if (
         !data.info[eventID] &&
-        event.type !== "session.created" &&
-        event.type !== "session.updated" &&
-        event.type !== "session.deleted" &&
+        event.type !== "session.next.created" &&
+        event.type !== "session.next.deleted" &&
         event.type !== "session.next.subagent.models.changed" &&
         event.type !== "session.next.archive.changed"
       )
@@ -865,164 +955,34 @@ export function createServerSession(
           () => generations.get(sessionID) === active,
         )
       }
-      case "session.created":
-        remember((event.properties as { info: Session }).info)
-        return
-      case "session.updated": {
-        const info = remember((event.properties as { info: AppSession }).info)
-        if (info.time.archived) evict([info.id])
+      case "session.next.created": {
+        const decoded = decodeSessionLifecycleEvent(event)
+        if (decoded?.type === "created") remember(decoded.info)
         return
       }
-      case "session.deleted": {
-        const properties = event.properties as { sessionID?: string; info?: Session }
-        const sessionID = properties.info?.id ?? properties.sessionID
-        if (!sessionID) return
-        recovery.forget(sessionID)
-        infoSeen.delete(sessionID)
+      case "session.next.renamed": {
+        const decoded = decodeSessionLifecycleEvent(event)
+        if (decoded?.type !== "renamed") return
+        const info = data.info[decoded.sessionID]
+        // A rename carries only the title; the guard above reads an unknown Session whole instead.
+        if (info) remember(renameSession(info, decoded.title, decoded.timestamp))
+        return
+      }
+      case "session.next.deleted": {
+        const decoded = decodeSessionLifecycleEvent(event)
+        if (decoded?.type !== "deleted") return
+        recovery.forget(decoded.sessionID)
+        infoSeen.delete(decoded.sessionID)
         setData(
           "info",
-          produce((draft) => void delete draft[sessionID]),
+          produce((draft) => void delete draft[decoded.sessionID]),
         )
-        evict([sessionID])
+        evict([decoded.sessionID])
         return
       }
       case "todo.updated": {
         const props = event.properties as { sessionID: string; todos: Todo[] }
         setData("todo", props.sessionID, reconcile(props.todos, { key: "id" }))
-        return
-      }
-      case "message.updated": {
-        const info = cleanMessage((event.properties as { info: Message }).info)
-        indexWireMessage(info)
-        const load = messageLoads.get(info.sessionID)
-        load?.touchedMessages.add(info.id)
-        load?.removedMessages.delete(info.id)
-        const items = optimistic.get(info.sessionID)
-        const item = items?.get(info.id)
-        if (items && item) {
-          if (item.parts.length === 0) clearOptimistic(info.sessionID, info.id)
-          if (item.parts.length > 0) items.set(info.id, { ...item, confirmedMessage: true })
-        }
-        const orphans = orphanParts.get(info.sessionID)
-        orphans?.delete(info.id)
-        if (orphans?.size === 0) orphanParts.delete(info.sessionID)
-        const removedMessagesForSession = removedMessages.get(info.sessionID)
-        removedMessagesForSession?.delete(info.id)
-        if (removedMessagesForSession?.size === 0) removedMessages.delete(info.sessionID)
-        const messages = data.message[info.sessionID]
-        if (!messages) {
-          setData("message", info.sessionID, [info])
-          return
-        }
-        const result = Binary.search(messages, messageKey(info), messageKey)
-        if (result.found) setData("message", info.sessionID, result.index, reconcile(info))
-        if (!result.found)
-          setData("message", info.sessionID, (value = []) => {
-            const next = value.slice()
-            next.splice(result.index, 0, info)
-            return next
-          })
-        return
-      }
-      case "message.removed": {
-        const props = event.properties as { sessionID: string; messageID: string }
-        setData("session_message", props.sessionID, (messages) =>
-          messages?.filter((message) => message.id !== props.messageID),
-        )
-        const load = messageLoads.get(props.sessionID)
-        load?.touchedMessages.add(props.messageID)
-        load?.removedMessages.add(props.messageID)
-        load?.clearedMessageParts.add(props.messageID)
-        load?.removedParts.delete(props.messageID)
-        load?.optimisticParts.delete(props.messageID)
-        pendingParts.get(props.sessionID)?.delete(props.messageID)
-        if (pendingParts.get(props.sessionID)?.size === 0) pendingParts.delete(props.sessionID)
-        const removedMessagesForSession = removedMessages.get(props.sessionID) ?? new Set<string>()
-        removedMessagesForSession.add(props.messageID)
-        removedMessages.set(props.sessionID, removedMessagesForSession)
-        clearOptimistic(props.sessionID, props.messageID)
-        setData(
-          produce((draft) => {
-            const messages = draft.message[props.sessionID]
-            if (messages) {
-              const index = messages.findIndex((message) => message.id === props.messageID)
-              if (index >= 0) messages.splice(index, 1)
-            }
-            deleteMessageParts(draft, props.messageID)
-          }),
-        )
-        return
-      }
-      case "message.part.updated": {
-        const part = (event.properties as { part: Part }).part
-        if (SKIP_PARTS.has(part.type)) return
-        const messages = data.message[part.sessionID]
-        const load = messageLoads.get(part.sessionID)
-        const missing = !messages?.some((message) => message.id === part.messageID)
-        // Outside a page load, accepting a part without its ordered parent event would create an unbounded orphan.
-        if (
-          missing &&
-          (!load ||
-            load.clearedMessageParts.has(part.messageID) ||
-            removedMessages.get(part.sessionID)?.has(part.messageID))
-        )
-          return
-        if (missing) {
-          const orphans = orphanParts.get(part.sessionID) ?? new Set<string>()
-          orphans.add(part.messageID)
-          orphanParts.set(part.sessionID, orphans)
-          load?.orphanParents.add(part.messageID)
-        }
-        const removed = load?.removedParts.get(part.messageID)
-        removed?.delete(part.id)
-        if (removed?.size === 0) load?.removedParts.delete(part.messageID)
-        const pending = pendingParts.get(part.sessionID)?.get(part.messageID)
-        pending?.delete(part.id)
-        if (pending?.size === 0) pendingParts.get(part.sessionID)?.delete(part.messageID)
-        if (pendingParts.get(part.sessionID)?.size === 0) pendingParts.delete(part.sessionID)
-        const optimistic = load?.optimisticParts.get(part.messageID)
-        optimistic?.delete(part.id)
-        if (optimistic?.size === 0) load?.optimisticParts.delete(part.messageID)
-        trackPartChange(part.sessionID, part.messageID, part.id)
-        confirmOptimisticPart(part.sessionID, part.messageID, part)
-        const parts = data.part[part.messageID]
-        if (!parts) {
-          setData("part", part.messageID, [part])
-          return
-        }
-        const index = parts.findIndex((item) => item.id === part.id)
-        if (index >= 0) setData("part", part.messageID, index, reconcile(part))
-        if (index < 0) setData("part", part.messageID, (value = []) => [...value, part])
-        return
-      }
-      case "message.part.removed": {
-        const props = event.properties as { sessionID: string; messageID: string; partID: string }
-        // Part removal is event-only on the server, so its tombstone lasts until a later update or eviction.
-        const pending = pendingParts.get(props.sessionID) ?? new Map<string, Set<string>>()
-        const parts = pending.get(props.messageID) ?? new Set<string>()
-        parts.add(props.partID)
-        pending.set(props.messageID, parts)
-        pendingParts.set(props.sessionID, pending)
-        const load = messageLoads.get(props.sessionID)
-        if (load) {
-          const parts = load.removedParts.get(props.messageID) ?? new Set<string>()
-          parts.add(props.partID)
-          load.removedParts.set(props.messageID, parts)
-          const optimistic = load.optimisticParts.get(props.messageID)
-          optimistic?.delete(props.partID)
-          if (optimistic?.size === 0) load.optimisticParts.delete(props.messageID)
-        }
-        trackPartChange(props.sessionID, props.messageID, props.partID)
-        clearOptimisticPart(props.sessionID, props.messageID, props.partID)
-        setData(
-          produce((draft) => {
-            const parts = draft.part[props.messageID]
-            if (!parts) return
-            const index = parts.findIndex((part) => part.id === props.partID)
-            if (index >= 0) parts.splice(index, 1)
-            if (parts.length === 0) delete draft.part[props.messageID]
-          }),
-        )
         return
       }
       case "permission.v2.asked": {
@@ -1127,9 +1087,6 @@ export function createServerSession(
           load.optimisticParts.set(input.message.id, new Set(parts.map((part) => part.id)))
         }
         const items = optimistic.get(input.sessionID)
-        const removedMessagesForSession = removedMessages.get(input.sessionID)
-        removedMessagesForSession?.delete(input.message.id)
-        if (removedMessagesForSession?.size === 0) removedMessages.delete(input.sessionID)
         if (items) items.set(input.message.id, { ...input, parts, confirmedParts: [] })
         if (!items)
           optimistic.set(input.sessionID, new Map([[input.message.id, { ...input, parts, confirmedParts: [] }]]))
@@ -1196,6 +1153,7 @@ export function createServerSession(
     },
     apply,
     applyV2,
+    transcript,
   }
 }
 

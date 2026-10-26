@@ -1,6 +1,5 @@
 import { Icon } from "@orchestra/ui/icon"
 import { ToolPartSlot } from "@orchestra/session-ui/context"
-import type { SessionV1 } from "@orchestra/schema/session-v1"
 import type { SessionID } from "@orchestra/schema/session-id"
 import { createContext, createMemo, For, onCleanup, untrack, useContext, type ParentProps } from "solid-js"
 import { useLanguage } from "@/context/language"
@@ -9,7 +8,7 @@ import { useSDK } from "@/context/sdk"
 import { useServerSDK } from "@/context/server-sdk"
 import { useSync } from "@/context/sync"
 import { bytes } from "@/orchestra/actions/format"
-import type { Part } from "@/v2-wire"
+import type { Part, ToolPart } from "@/v2-wire"
 import type { TimelineRow } from "./timeline/rows"
 import { createArtifactsApi } from "./artifacts-api"
 import { artifactChips, createArtifactsModel, previewKind, type ArtifactRef } from "./artifacts-model"
@@ -106,7 +105,7 @@ export function SessionCapabilitiesProvider(props: ParentProps) {
   )
 }
 
-function ArtifactChips(props: { part: typeof SessionV1.ToolPart.Encoded }) {
+function ArtifactChips(props: { part: ToolPart }) {
   const language = useLanguage()
   const capabilities = useSessionCapabilities()
   // The transcript's tool part and the wire part share the fields the chip reader looks at.

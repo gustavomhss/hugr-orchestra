@@ -81,25 +81,6 @@ function compatibilityJson(value: Schema.Json): NonNullable<NativeToolSuccess["d
   return value
 }
 
-const coalescedKey = (event: QueuedServerEvent) => {
-  if (event.payload.type === "message.part.updated") {
-    const part = event.payload.properties.part
-    return `message.part.updated:${event.directory}:${part.messageID}:${part.id}`
-  }
-  return undefined
-}
-
-export function enqueueServerEvent(queue: QueuedServerEvent[], event: QueuedServerEvent) {
-  const key = coalescedKey(event)
-  const previous = queue[queue.length - 1]
-  if (key && previous && coalescedKey(previous) === key) {
-    queue[queue.length - 1] = event
-    return false
-  }
-  queue.push(event)
-  return true
-}
-
 export function coalesceServerEvents(events: QueuedServerEvent[]) {
   const output: QueuedServerEvent[] = []
   events.forEach((event) => {
@@ -340,7 +321,8 @@ function createServerSdkContextBase(
             failures = 0
             const directory = event.location?.directory ?? "global"
             const payload = adaptServerEvent(native(event) ?? event)
-            if (enqueueServerEvent(queue, { directory, payload })) schedule()
+            queue.push({ directory, payload })
+            schedule()
 
             if (Date.now() - yielded < STREAM_YIELD_MS) continue
             yielded = Date.now()

@@ -1,24 +1,24 @@
 import { Binary } from "@orchestra/core/util/binary"
 import { produce, reconcile, type SetStoreFunction, type Store } from "solid-js/store"
 import type { PermissionV2Request, QuestionRequest } from "@/v2-types"
-import type { Message, Part, Session, Todo } from "@/v2-wire"
+import type { Session, Todo } from "@/v2-wire"
 
 import type { State, VcsCache } from "./types"
 import { trimSessions } from "./session-trim"
 import { dropSessionCaches } from "./session-cache"
-import { message as clean } from "@/utils/diffs"
 import { normalizePermissionRequest } from "./utils"
-import { messageKey } from "@/utils/session-message"
-import { applySessionManagementEvent, decodeSessionManagementEvent, mergeSessionManagementInfo, type AppSession } from "@/utils/session"
+import {
+  applySessionManagementEvent,
+  decodeSessionLifecycleEvent,
+  decodeSessionManagementEvent,
+  mergeSessionManagementInfo,
+  renameSession,
+  type AppSession,
+} from "@/utils/session"
 import { sessionManagementFences } from "../session-management-state"
 
-const SKIP_PARTS = new Set(["patch", "step-start", "step-finish"])
 const SESSION_CONTENT_EVENTS = new Set([
   "todo.updated",
-  "message.updated",
-  "message.removed",
-  "message.part.updated",
-  "message.part.removed",
   "permission.v2.asked",
   "permission.v2.replied",
   "question.v2.asked",
@@ -72,7 +72,7 @@ export function cleanupDroppedSessionCaches(
   )
 }
 
-export function applyDirectoryEvent(input: {
+type DirectoryEventInput = {
   event: { type: string; properties?: unknown; current?: unknown }
   store: Store<State>
   setStore: SetStoreFunction<State>
@@ -86,82 +86,65 @@ export function applyDirectoryEvent(input: {
   permission?: State["permission"]
   fenceOwner?: object
   readSession?: (sessionID: string) => AppSession | undefined
-}) {
+}
+
+// Index one Session row; an archived row leaves the index. `counted` marks a newly created Session,
+// which adds to the root total when it enters the index.
+export function upsertDirectorySession(input: Omit<DirectoryEventInput, "event">, incoming: AppSession, counted = false) {
+  const fences = sessionManagementFences(input.fenceOwner ?? input.store, input.directory)
+  const result = Binary.search(input.store.session, incoming.id, (s) => s.id)
+  const info = fences.merge(
+    mergeSessionManagementInfo(input.readSession?.(incoming.id), incoming),
+    result.found ? input.store.session[result.index] : undefined,
+  )
+  if (info.time.archived !== undefined) {
+    if (!result.found) return
+    input.setStore("session", produce((draft) => void draft.splice(result.index, 1)))
+    cleanupSessionCaches(input.setStore, info.id, input.setSessionTodo)
+    if (!info.parentID) input.setStore("sessionTotal", (value) => Math.max(0, value - 1))
+    return
+  }
+  if (result.found) {
+    input.setStore("session", result.index, reconcile(info))
+    return
+  }
+  const next = input.store.session.slice()
+  next.splice(result.index, 0, info)
+  const limit = Math.max(input.store.limit, input.retainedLimit ?? 0)
+  const trimmed = trimSessions(fences.visible(next), { limit, permission: input.permission ?? input.store.permission })
+  input.setStore("session", reconcile(trimmed, { key: "id" }))
+  cleanupDroppedSessionCaches(input.store, input.setStore, trimmed, input.setSessionTodo)
+  if (counted && !info.parentID) input.setStore("sessionTotal", (value) => value + 1)
+}
+
+export function applyDirectoryEvent(input: DirectoryEventInput) {
   const event = input.event
   if (input.sessionContent === false && SESSION_CONTENT_EVENTS.has(event.type)) return
-  const limit = Math.max(input.store.limit, input.retainedLimit ?? 0)
   const fences = sessionManagementFences(input.fenceOwner ?? input.store, input.directory)
   switch (event.type) {
-    case "session.created": {
-      const incoming = (event.properties as { info: AppSession }).info
-      const result = Binary.search(input.store.session, incoming.id, (s) => s.id)
-      const info = fences.merge(
-        mergeSessionManagementInfo(input.readSession?.(incoming.id), incoming),
-        result.found ? input.store.session[result.index] : undefined,
-      )
-      if (info.time.archived !== undefined) {
-        if (result.found) applyDirectoryEvent({ ...input, event: { type: "session.updated", properties: { info } } })
-        break
-      }
-      if (result.found) {
-        input.setStore("session", result.index, reconcile(info))
-        break
-      }
-      const next = input.store.session.slice()
-      next.splice(result.index, 0, info)
-      const trimmed = trimSessions(fences.visible(next), { limit, permission: input.permission ?? input.store.permission })
-      input.setStore("session", reconcile(trimmed, { key: "id" }))
-      cleanupDroppedSessionCaches(input.store, input.setStore, trimmed, input.setSessionTodo)
-      if (!info.parentID) input.setStore("sessionTotal", (value) => value + 1)
+    case "session.next.created": {
+      const decoded = decodeSessionLifecycleEvent(event)
+      if (decoded?.type !== "created") break
+      upsertDirectorySession(input, decoded.info, true)
       break
     }
-    case "session.updated": {
-      const incoming = (event.properties as { info: AppSession }).info
-      const result = Binary.search(input.store.session, incoming.id, (s) => s.id)
-      const info = fences.merge(
-        mergeSessionManagementInfo(input.readSession?.(incoming.id), incoming),
-        result.found ? input.store.session[result.index] : undefined,
-      )
-      if (info.time.archived !== undefined) {
-        if (!result.found) break
-        input.setStore(
-          "session",
-          produce((draft) => {
-            draft.splice(result.index, 1)
-          }),
-        )
-        cleanupSessionCaches(input.setStore, info.id, input.setSessionTodo)
-        if (info.parentID) break
-        input.setStore("sessionTotal", (value) => Math.max(0, value - 1))
-        break
-      }
-      if (result.found) {
-        input.setStore("session", result.index, reconcile(info))
-        break
-      }
-      const next = input.store.session.slice()
-      next.splice(result.index, 0, info)
-      const trimmed = trimSessions(fences.visible(next), { limit, permission: input.permission ?? input.store.permission })
-      input.setStore("session", reconcile(trimmed, { key: "id" }))
-      cleanupDroppedSessionCaches(input.store, input.setStore, trimmed, input.setSessionTodo)
+    case "session.next.renamed": {
+      const decoded = decodeSessionLifecycleEvent(event)
+      if (decoded?.type !== "renamed") break
+      const result = Binary.search(input.store.session, decoded.sessionID, (s) => s.id)
+      // A rename carries only the title, so an unindexed Session waits for its next canonical read.
+      if (!result.found) break
+      upsertDirectorySession(input, renameSession(input.store.session[result.index]!, decoded.title, decoded.timestamp))
       break
     }
-    case "session.deleted": {
-      const properties = event.properties as { sessionID?: string; info?: Session }
-      const sessionID = properties.info?.id ?? properties.sessionID
-      if (!sessionID) break
-      fences.delete(sessionID)
-      const result = Binary.search(input.store.session, sessionID, (s) => s.id)
-      const info = properties.info ?? (result.found ? input.store.session[result.index] : undefined)
-      if (result.found) {
-        input.setStore(
-          "session",
-          produce((draft) => {
-            draft.splice(result.index, 1)
-          }),
-        )
-      }
-      cleanupSessionCaches(input.setStore, sessionID, input.setSessionTodo)
+    case "session.next.deleted": {
+      const decoded = decodeSessionLifecycleEvent(event)
+      if (decoded?.type !== "deleted") break
+      fences.delete(decoded.sessionID)
+      const result = Binary.search(input.store.session, decoded.sessionID, (s) => s.id)
+      const info = result.found ? input.store.session[result.index] : undefined
+      if (result.found) input.setStore("session", produce((draft) => void draft.splice(result.index, 1)))
+      cleanupSessionCaches(input.setStore, decoded.sessionID, input.setSessionTodo)
       if (info?.parentID) break
       input.setStore("sessionTotal", (value) => Math.max(0, value - 1))
       break
@@ -223,82 +206,6 @@ export function applyDirectoryEvent(input: {
       const props = event.properties as { sessionID: string; todos: Todo[] }
       input.setStore("todo", props.sessionID, reconcile(props.todos, { key: "id" }))
       input.setSessionTodo?.(props.sessionID, props.todos)
-      break
-    }
-    case "message.updated": {
-      const info = clean((event.properties as { info: Message }).info)
-      const messages = input.store.message[info.sessionID]
-      if (!messages) {
-        input.setStore("message", info.sessionID, [info])
-        break
-      }
-      const result = Binary.search(messages, messageKey(info), messageKey)
-      if (result.found) {
-        input.setStore("message", info.sessionID, result.index, reconcile(info))
-        break
-      }
-      input.setStore(
-        "message",
-        info.sessionID,
-        produce((draft) => {
-          draft.splice(result.index, 0, info)
-        }),
-      )
-      break
-    }
-    case "message.removed": {
-      const props = event.properties as { sessionID: string; messageID: string }
-      input.setStore(
-        produce((draft) => {
-          const messages = draft.message[props.sessionID]
-          if (messages) {
-            const index = messages.findIndex((message) => message.id === props.messageID)
-            if (index >= 0) messages.splice(index, 1)
-          }
-          delete draft.part[props.messageID]
-        }),
-      )
-      break
-    }
-    case "message.part.updated": {
-      const part = (event.properties as { part: Part }).part
-      if (SKIP_PARTS.has(part.type)) break
-      const parts = input.store.part[part.messageID]
-      if (!parts) {
-        input.setStore("part", part.messageID, [part])
-        break
-      }
-      const result = Binary.search(parts, part.id, (item) => item.id)
-      if (result.found) {
-        input.setStore("part", part.messageID, result.index, reconcile(part))
-        break
-      }
-      input.setStore(
-        "part",
-        part.messageID,
-        produce((draft) => {
-          draft.splice(result.index, 0, part)
-        }),
-      )
-      break
-    }
-    case "message.part.removed": {
-      const props = event.properties as { messageID: string; partID: string }
-      const parts = input.store.part[props.messageID]
-      if (!parts) break
-      const result = Binary.search(parts, props.partID, (part) => part.id)
-      if (result.found) {
-        input.setStore(
-          produce((draft) => {
-            const list = draft.part[props.messageID]
-            if (!list) return
-            const next = Binary.search(list, props.partID, (part) => part.id)
-            if (!next.found) return
-            list.splice(next.index, 1)
-            if (list.length === 0) delete draft.part[props.messageID]
-          }),
-        )
-      }
       break
     }
     case "vcs.branch.updated": {

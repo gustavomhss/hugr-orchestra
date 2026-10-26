@@ -87,9 +87,9 @@ async function load(items: { info: UserMessage | AssistantMessage; parts: Part[]
   const store = createServerSession(sessionApi, messageApi, { todo: async () => [] })
   store.remember(session)
   await store.sync(session.id)
-  items.forEach((item) => store.apply({ type: "message.updated", properties: { info: item.info } }))
+  items.forEach((item) => store.transcript.putMessage(item.info))
   items.forEach((item) =>
-    item.parts.forEach((part) => store.apply({ type: "message.part.updated", properties: { part } })),
+    item.parts.forEach((part) => store.transcript.putPart(part)),
   )
   return store
 }
@@ -99,20 +99,15 @@ describe("Context shell provenance", () => {
     const store = await load(mode === "history" ? [...history, ...shells] : history)
     if (mode === "live") {
       expect(getSessionContext(store.data.message[session.id], providers)?.total).toBe(100)
-      store.apply({ type: "message.updated", properties: { info: shellUser } })
-      store.apply({ type: "message.updated", properties: { info: { ...shell, time: { created: 4 } } } })
-      store.apply({
-        type: "message.part.updated",
-        properties: {
-          part: {
-            ...shellPart,
-            state: { status: "running", input: shellPart.state.input, time: { start: 4 } },
-          },
-        },
+      store.transcript.putMessage(shellUser)
+      store.transcript.putMessage({ ...shell, time: { created: 4 } })
+      store.transcript.putPart({
+        ...shellPart,
+        state: { status: "running", input: shellPart.state.input, time: { start: 4 } },
       })
-      store.apply({ type: "message.updated", properties: { info: shell } })
+      store.transcript.putMessage(shell)
       expect(getSessionContext(store.data.message[session.id], providers)?.total).toBe(100)
-      store.apply({ type: "message.part.updated", properties: { part: shellPart } })
+      store.transcript.putPart(shellPart)
     }
     expect(getSessionContext(store.data.message[session.id], providers)).toMatchObject({
       message: { id: assistant.id },

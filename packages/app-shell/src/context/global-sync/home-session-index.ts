@@ -4,14 +4,15 @@ import type { Event, V2SessionListResponse } from "@/v2-wire"
 import type { QueryClient } from "@tanstack/solid-query"
 import { trimSessions } from "./session-trim"
 import { pathKey } from "@/utils/path-key"
-import { normalizeSessionInfo, type AppSession } from "@/utils/session"
+import { normalizeSessionInfo, renameSession, type AppSession } from "@/utils/session"
 
 export const HOME_V2_SESSION_PAGE_LIMIT = 5_000
 
-export type HomeSessionEvent = {
-  type: "session.created" | "session.updated" | "session.deleted"
-  properties: { sessionID: string; info: Session }
-}
+// A local change to the home index, derived from server lifecycle events or a canonical read.
+export type HomeSessionEvent =
+  | { type: "upsert"; info: Session }
+  | { type: "rename"; sessionID: string; title: string; timestamp: number }
+  | { type: "remove"; sessionID: string }
 export type HomeSessionEvents = {
   sequence: number
   entries: Array<{ sequence: number; event: HomeSessionEvent }>
@@ -105,8 +106,7 @@ export function createHomeSessionIndexCache(queryClient: QueryClient, server: st
       return removed.size === 0 ? sessions : sessions.filter((session) => !removed.has(session.id))
     },
     apply(event: HomeSessionEvent) {
-      if (event.type !== "session.deleted" && event.properties.info.time.archived === undefined)
-        removed.delete(event.properties.sessionID)
+      if (event.type === "upsert" && event.info.time.archived === undefined) removed.delete(event.info.id)
       if (!queryClient.getQueryState(indexKey)) return
       const next = appendHomeSessionEvent(queryClient.getQueryData<HomeSessionEvents>(eventsKey), event)
       if (queryClient.isFetching({ queryKey: indexKey, exact: true }) > 0) {
@@ -160,15 +160,17 @@ export function retainHomeSessions(sessions: Session[], limit: number, now: numb
 }
 
 export function applyHomeSessionEvent(sessions: Session[], event: HomeSessionEvent) {
-  const info = event.properties.info
-  const index = sessions.findIndex((session) => session.id === info.id)
-  if (event.type === "session.deleted" || info.parentID || typeof info.time.archived === "number") {
+  const index = sessions.findIndex((session) => session.id === (event.type === "upsert" ? event.info.id : event.sessionID))
+  if (event.type === "rename") {
+    if (index === -1) return sessions
+    return sessions.with(index, renameSession(sessions[index]!, event.title, event.timestamp))
+  }
+  if (event.type === "remove" || event.info.parentID || typeof event.info.time.archived === "number") {
     if (index === -1) return sessions
     return sessions.toSpliced(index, 1)
   }
-  if (event.type !== "session.created" && event.type !== "session.updated") return sessions
-  if (index === -1) return [...sessions, info]
-  return sessions.with(index, info)
+  if (index === -1) return [...sessions, event.info]
+  return sessions.with(index, event.info)
 }
 
 function toSummary(session: SessionV2Info): AppSession {

@@ -756,45 +756,6 @@ type CatalogUpdated = {
     data: {};
 };
 
-type MessageRemoved = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "message.removed";
-    durable: {
-        aggregateID: string;
-        seq: number;
-        version: 1;
-    };
-    location?: LocationRef;
-    data: {
-        sessionID: string;
-        messageID: string;
-    };
-};
-
-type MessagePartRemoved = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "message.part.removed";
-    durable: {
-        aggregateID: string;
-        seq: number;
-        version: 1;
-    };
-    location?: LocationRef;
-    data: {
-        sessionID: string;
-        messageID: string;
-        partID: string;
-    };
-};
-
 type SessionTextDelta = {
     id: string;
     created: number;
@@ -1463,59 +1424,6 @@ type SessionPendingUserMessage = {
     delivery: "steer" | "queue";
 };
 
-type SessionV1Info = {
-    id: string;
-    slug: string;
-    projectID: string;
-    workspaceID?: string;
-    directory: string;
-    path?: string;
-    parentID?: string;
-    summary?: {
-        additions: number;
-        deletions: number;
-        files: number;
-        diffs?: Array<FileDiffEventInfo>;
-    };
-    cost?: number;
-    tokens?: {
-        input: number;
-        output: number;
-        reasoning: number;
-        cache: {
-            read: number;
-            write: number;
-        };
-    };
-    share?: {
-        url: string;
-    };
-    title: string;
-    agent?: string;
-    model?: {
-        id: string;
-        providerID: string;
-        variant?: string;
-    };
-    version: string;
-    metadata?: {
-        [x: string]: any;
-    };
-    time: {
-        created: number;
-        updated: number;
-        compacting?: number;
-        archived?: number;
-    };
-    permission?: PermissionRuleset;
-    revert?: {
-        messageID: string;
-        partID?: string;
-        snapshot?: string;
-        diff?: string;
-    };
-};
-
 type Message = UserMessage | AssistantMessage;
 
 type FilePart = {
@@ -1530,82 +1438,6 @@ type FilePart = {
 };
 
 type SessionPendingMessage = SessionPendingUserMessage | SessionPendingSyntheticMessage;
-
-type SessionCreated = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "session.created";
-    durable: {
-        aggregateID: string;
-        seq: number;
-        version: 1;
-    };
-    location?: LocationRef;
-    data: {
-        sessionID: string;
-        info: SessionV1Info;
-    };
-};
-
-type SessionUpdated = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "session.updated";
-    durable: {
-        aggregateID: string;
-        seq: number;
-        version: 1;
-    };
-    location?: LocationRef;
-    data: {
-        sessionID: string;
-        info: SessionV1Info;
-    };
-};
-
-type SessionDeleted = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "session.deleted";
-    durable: {
-        aggregateID: string;
-        seq: number;
-        version: 1;
-    };
-    location?: LocationRef;
-    data: {
-        sessionID: string;
-        info: SessionV1Info;
-    };
-};
-
-type MessageUpdated = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "message.updated";
-    durable: {
-        aggregateID: string;
-        seq: number;
-        version: 1;
-    };
-    location?: LocationRef;
-    data: {
-        sessionID: string;
-        info: Message;
-    };
-};
 
 type ToolStateCompleted = {
     status: "completed";
@@ -1662,29 +1494,9 @@ type ToolPart = {
 
 type Part = TextPart | SubtaskPart | ReasoningPart | FilePart | ToolPart | StepStartPart | StepFinishPart | SnapshotPart | PatchPart | AgentPart | RetryPart | CompactionPart;
 
-type MessagePartUpdated = {
-    id: string;
-    created: number;
-    metadata?: {
-        [x: string]: any;
-    };
-    type: "message.part.updated";
-    durable: {
-        aggregateID: string;
-        seq: number;
-        version: 1;
-    };
-    location?: LocationRef;
-    data: {
-        sessionID: string;
-        part: Part;
-        time: number;
-    };
-};
-
 type UnknownError = {
     readonly _tag: "UnknownError";
     readonly message: string;
     readonly ref?: string | undefined;
 };
-export type ClientEvent = ModelsDevRefreshed | IntegrationUpdated | IntegrationConnectionUpdated | CatalogUpdated | SessionCreated | SessionUpdated | SessionDeleted | MessageUpdated | MessageRemoved | MessagePartUpdated | MessagePartRemoved | SessionAgentSelected | SessionModelSelected | SessionMoved | SessionDeleted | SessionInputPromoted | SessionInputAdmitted | SessionSynthetic | SessionShellStarted | SessionShellEnded | SessionStepStarted | SessionStepEnded | SessionStepFailed | SessionTextStarted | SessionTextDelta | SessionTextEnded | SessionReasoningStarted | SessionReasoningDelta | SessionReasoningEnded | SessionToolInputStarted | SessionToolInputDelta | SessionToolInputEnded | SessionToolCalled | SessionToolProgress | SessionToolSuccess | SessionToolFailed | SessionRetryScheduled | SessionCompactionStarted | SessionCompactionDelta | SessionCompactionEnded | SessionRevertStaged | SessionRevertCleared | SessionRevertCommitted | ReferenceUpdated | PermissionV2Asked | PermissionV2Replied | PluginAdded | ProjectDirectoriesUpdated | PtyCreated | PtyUpdated | PtyExited | PtyDeleted | QuestionV2Asked | QuestionV2Replied | QuestionV2Rejected | VcsBranchUpdated | V2EventServerConnected;
+export type ClientEvent = ModelsDevRefreshed | IntegrationUpdated | IntegrationConnectionUpdated | CatalogUpdated | SessionAgentSelected | SessionModelSelected | SessionMoved | SessionInputPromoted | SessionInputAdmitted | SessionSynthetic | SessionShellStarted | SessionShellEnded | SessionStepStarted | SessionStepEnded | SessionStepFailed | SessionTextStarted | SessionTextDelta | SessionTextEnded | SessionReasoningStarted | SessionReasoningDelta | SessionReasoningEnded | SessionToolInputStarted | SessionToolInputDelta | SessionToolInputEnded | SessionToolCalled | SessionToolProgress | SessionToolSuccess | SessionToolFailed | SessionRetryScheduled | SessionCompactionStarted | SessionCompactionDelta | SessionCompactionEnded | SessionRevertStaged | SessionRevertCleared | SessionRevertCommitted | ReferenceUpdated | PermissionV2Asked | PermissionV2Replied | PluginAdded | ProjectDirectoriesUpdated | PtyCreated | PtyUpdated | PtyExited | PtyDeleted | QuestionV2Asked | QuestionV2Replied | QuestionV2Rejected | VcsBranchUpdated | V2EventServerConnected;

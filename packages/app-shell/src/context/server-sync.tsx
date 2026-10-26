@@ -17,7 +17,7 @@ import {
   type GlobalConfig,
 } from "./global-sync/bootstrap"
 import { createChildStoreManager } from "./global-sync/child-store"
-import { applyDirectoryEvent, applyGlobalEvent } from "./global-sync/event-reducer"
+import { applyDirectoryEvent, applyGlobalEvent, upsertDirectorySession } from "./global-sync/event-reducer"
 import { estimateRootSessionTotal, loadRootSessions } from "./global-sync/session-load"
 import { trimSessions } from "./global-sync/session-trim"
 import type { ProjectMeta } from "./global-sync/types"
@@ -45,7 +45,7 @@ import { createServerSession, type ServerSession } from "./server-session"
 import { createProviderRefresher, makeQueryOptionsApi } from "./server-queries"
 import { notifySessionTabsRemoved } from "@/components/titlebar-session-events"
 import { applySessionPolicyEvent, sessionManagementFences } from "./session-management-state"
-import { decodeSessionManagementEvent } from "@/utils/session"
+import { decodeSessionLifecycleEvent, decodeSessionManagementEvent } from "@/utils/session"
 
 export { createProviderRefresher, loadLspQuery, loadMcpQuery, loadMcpResourcesQuery } from "./server-queries"
 export type { QueryOptionsApi } from "./server-queries"
@@ -430,22 +430,25 @@ export function createServerSyncContextInner(
     const key = directoryKey(info.directory)
     const existing = children.children[key]
     if (!existing) return
-    applyDirectoryEvent({
-      event: { type: "session.created", properties: { info } },
-      directory: key,
-      store: existing[0],
-      fenceOwner: session,
-      readSession: session.get,
-      setStore: existing[1],
-      push: queue.push,
-      retainedLimit: sessionMeta.get(key)?.limit,
-      sessionContent: false,
-      permission: session.data.permission,
-    })
+    upsertDirectorySession(
+      {
+        directory: key,
+        store: existing[0],
+        fenceOwner: session,
+        readSession: session.get,
+        setStore: existing[1],
+        push: queue.push,
+        retainedLimit: sessionMeta.get(key)?.limit,
+        sessionContent: false,
+        permission: session.data.permission,
+      },
+      info,
+      true,
+    )
   }
 
   const publishSession = (info: Parameters<typeof session.remember>[0]) => {
-    homeSessions.apply({ type: "session.updated", properties: { sessionID: info.id, info } })
+    homeSessions.apply({ type: "upsert", info })
     indexSession(info)
     if (info.time.archived === undefined) return
     homeSessions.remove(info.id)
@@ -468,9 +471,11 @@ export function createServerSyncContextInner(
         })
       : session.apply(event)
     void recovery?.catch(() => {})
-    if (event.type === "session.created" || event.type === "session.updated" || event.type === "session.deleted") {
-      homeSessions.apply(event)
-    }
+    const lifecycle = decodeSessionLifecycleEvent(event)
+    if (lifecycle?.type === "created") homeSessions.apply({ type: "upsert", info: session.get(lifecycle.sessionID) ?? lifecycle.info })
+    if (lifecycle?.type === "renamed")
+      homeSessions.apply({ type: "rename", sessionID: lifecycle.sessionID, title: lifecycle.title, timestamp: lifecycle.timestamp })
+    if (lifecycle?.type === "deleted") homeSessions.apply({ type: "remove", sessionID: lifecycle.sessionID })
     if (eventType === "session.next.subagent.models.changed" || eventType === "session.next.archive.changed") {
       const properties = event.properties
       if (properties && typeof properties === "object" && "sessionID" in properties && typeof properties.sessionID === "string") {
@@ -511,11 +516,7 @@ export function createServerSyncContextInner(
     if (!existing) {
       const decoded = decodeSessionManagementEvent(event)
       if (decoded) sessionManagementFences(session, key).apply(decoded)
-      if (event.type === "session.deleted") {
-        const properties = event.properties as { sessionID?: string; info?: { id: string } }
-        const sessionID = properties.sessionID ?? properties.info?.id
-        if (sessionID) sessionManagementFences(session, key).delete(sessionID)
-      }
+      if (lifecycle?.type === "deleted") sessionManagementFences(session, key).delete(lifecycle.sessionID)
       return
     }
     children.mark(key)

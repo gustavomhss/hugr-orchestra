@@ -63,6 +63,57 @@ export function normalizeSessionInfo(
   }
 }
 
+// The V2 lifecycle events (`session.next.created/renamed/deleted`) as the app's session index consumes them.
+// `created` carries enough to derive the full row: a new Session has zero cost and usage.
+export function decodeSessionLifecycleEvent(event: SessionManagementEvent) {
+  if (event.type === SessionEvent.Created.type) {
+    const decoded = Schema.decodeUnknownResult(SessionEvent.Created.data)(event.properties)
+    if (Result.isFailure(decoded)) {
+      console.warn("Invalid session lifecycle event", event.type, decoded.failure.message)
+      return
+    }
+    const data = Schema.encodeSync(SessionEvent.Created.data)(decoded.success)
+    return {
+      type: "created" as const,
+      sessionID: data.sessionID,
+      info: normalizeSessionInfo({
+        id: data.sessionID,
+        parentID: data.parentID,
+        projectID: data.projectID,
+        agent: data.agent,
+        model: data.model,
+        cost: 0,
+        tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+        time: { created: data.timestamp, updated: data.timestamp },
+        title: data.title,
+        location: data.location,
+        subpath: data.subdirectory,
+      }),
+    }
+  }
+  if (event.type === SessionEvent.Renamed.type) {
+    const decoded = Schema.decodeUnknownResult(SessionEvent.Renamed.data)(event.properties)
+    if (Result.isFailure(decoded)) {
+      console.warn("Invalid session lifecycle event", event.type, decoded.failure.message)
+      return
+    }
+    const data = Schema.encodeSync(SessionEvent.Renamed.data)(decoded.success)
+    return { type: "renamed" as const, sessionID: data.sessionID, title: data.title, timestamp: data.timestamp }
+  }
+  if (event.type === SessionEvent.Deleted.type) {
+    const decoded = Schema.decodeUnknownResult(SessionEvent.Deleted.data)(event.properties)
+    if (Result.isFailure(decoded)) {
+      console.warn("Invalid session lifecycle event", event.type, decoded.failure.message)
+      return
+    }
+    return { type: "deleted" as const, sessionID: Schema.encodeSync(SessionEvent.Deleted.data)(decoded.success).sessionID }
+  }
+}
+
+export function renameSession<T extends Pick<AppSession, "title" | "time">>(info: T, title: string, timestamp: number): T {
+  return { ...info, title, time: { ...info.time, updated: Math.max(info.time.updated, timestamp) } }
+}
+
 export function decodeSessionManagementEvent(event: SessionManagementEvent) {
   if (event.type === SessionEvent.SubagentModelsChanged.type) {
     const decoded = Schema.decodeUnknownResult(SessionEvent.SubagentModelsChanged.data)(event.properties)

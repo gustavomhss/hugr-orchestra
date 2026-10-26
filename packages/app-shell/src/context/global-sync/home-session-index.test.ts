@@ -121,29 +121,23 @@ describe("Home V2 session index", () => {
     const initial = parseHomeSessionIndex([session({ id: "old" })])
     const created = { ...initial[0], id: "new", slug: "new", title: "new", time: { created: 2, updated: 2 } }
 
-    const afterCreate = applyHomeSessionEvent(initial, {
-      type: "session.created",
-      properties: { sessionID: created.id, info: created },
-    })
-    expect(
-      applyHomeSessionEvent(afterCreate, {
-        type: "session.deleted",
-        properties: { sessionID: initial[0]!.id, info: initial[0]! },
-      }),
-    ).toEqual([created])
+    const afterCreate = applyHomeSessionEvent(initial, { type: "upsert", info: created })
+    expect(applyHomeSessionEvent(afterCreate, { type: "remove", sessionID: initial[0]!.id })).toEqual([created])
   })
 
   test("applies only events newer than the index baseline", () => {
     const initial = parseHomeSessionIndex([session({ id: "old" })])
-    const stale = { ...initial[0], title: "stale" }
-    const current = { ...initial[0], title: "current" }
     const first = appendHomeSessionEvent(undefined, {
-      type: "session.updated",
-      properties: { sessionID: stale.id, info: stale },
+      type: "rename",
+      sessionID: initial[0]!.id,
+      title: "stale",
+      timestamp: 2,
     })
     const events = appendHomeSessionEvent(first, {
-      type: "session.updated",
-      properties: { sessionID: current.id, info: current },
+      type: "rename",
+      sessionID: initial[0]!.id,
+      title: "current",
+      timestamp: 3,
     })
 
     expect(homeSessionIndexSessions({ sessions: initial, eventSequence: 1 }, events)[0]?.title).toBe("current")

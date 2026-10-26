@@ -15,6 +15,7 @@
     "./pierre": "./src/pierre/index.ts",
     "./context": "./src/context/index.ts",
     "./types": "./src/types.ts",
+    "./transcript-model": "./src/transcript-model.ts",
     "./styles": "./src/styles/index.css",
     "./v2/*.css": "./src/v2/components/*.css",
     "./v2/prompt-input": "./src/v2/components/prompt-input/index.tsx",

@@ -167,7 +167,7 @@ test("deletion clears archive metadata even before a directory store exists", as
   const ctx = fixture()
   const sync = await ctx.ready
   ctx.emit(20, 20, 2)
-  ctx.events.emit("/repo", { type: "session.deleted", properties: { sessionID: id } } as unknown as ServerEvent)
+  ctx.events.emit("/repo", { type: "session.next.deleted", properties: { timestamp: 25, sessionID: id } } as unknown as ServerEvent)
   const [store, setStore] = sync.child("/repo", { bootstrap: false })
   setStore("status", "partial")
   createDirSyncContext("/repo", sync, ctx.sdk).session.remember({

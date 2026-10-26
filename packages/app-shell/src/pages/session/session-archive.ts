@@ -136,7 +136,7 @@ export function useSessionArchive(input?: { server: ServerSDK; directory: string
         // A void ACK carries no archive revision. Read before projecting and respect remember's event fence.
         const restored = serverState.session.remember(await serverState.session.resolve(sessionID, { force: true }))
         if (restored.time.archived !== undefined) return false
-        serverState.homeSessions.apply({ type: "session.updated", properties: { sessionID, info: restored } })
+        serverState.homeSessions.apply({ type: "upsert", info: restored })
         state.set("session", (sessions) =>
           [...sessions.filter((item) => item.id !== sessionID), restored].sort((a, b) => a.id.localeCompare(b.id)),
         )

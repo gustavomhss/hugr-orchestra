@@ -14,12 +14,7 @@ describe("timeline fixture validation", () => {
     expect(validateTimelineMessages([userMessage(), assistantMessage()])).toHaveLength(2)
   })
 
-  test("rejects malformed SDK values at runtime", () => {
-    expect(() =>
-      assistantMessage([], {
-        error: { name: "APIError", data: { message: "failed" } } as never,
-      }),
-    ).toThrow()
+  test("rejects malformed event envelopes at runtime", () => {
     expect(() =>
       validateTimelineEvent({
         directory: "C:/Orchestra/TimelineStability",

@@ -1,4 +1,4 @@
-import type { SessionV1 } from "@orchestra/schema/session-v1"
+import type { Transcript } from "../transcript-model"
 import type { FileDiff } from "@orchestra/schema/file-diff"
 import type { SessionStatusEvent } from "@orchestra/schema/session-status-event"
 import type { FileDiffInfo } from "../types"
@@ -23,10 +23,10 @@ import { createAutoScroll } from "@orchestra/ui/hooks"
 import { useI18n } from "@orchestra/ui/context/i18n"
 import { normalize } from "./session-diff"
 
-type AssistantMessage = typeof SessionV1.Assistant.Encoded
+type AssistantMessage = Transcript.AssistantMessage
 type SnapshotFileDiff = typeof FileDiff.Info.Encoded
-type MessageType = typeof SessionV1.Info.Encoded
-type PartType = typeof SessionV1.Part.Encoded
+type MessageType = Transcript.Message
+type PartType = Transcript.Part
 type SessionStatus = typeof SessionStatusEvent.Info.Encoded
 
 function record(value: unknown): value is Record<string, unknown> {

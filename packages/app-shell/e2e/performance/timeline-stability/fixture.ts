@@ -1,7 +1,6 @@
 import { base64Encode } from "@orchestra/core/util/encode"
 import { Event } from "@orchestra/schema/event"
 import { SessionStatusEvent } from "@orchestra/schema/session-status-event"
-import { SessionV1 } from "@orchestra/schema/session-v1"
 import type { AssistantMessage, Message, Part, Session, ToolPart, ToolState, UserMessage } from "@/v2-wire"
 
 
@@ -78,14 +77,12 @@ type ToolOptions<State extends ToolStatus> = State extends "pending"
       : { output?: string; title?: string; metadata?: Record<string, unknown>; error?: never }
 
 const decodeOptions = { errors: "all", onExcessProperty: "error" } as const
-const decodeMessage = Schema.decodeUnknownSync(SessionV1.WithParts)
-const decodePart = Schema.decodeUnknownSync(SessionV1.Part)
 const decodeStatus = Schema.decodeUnknownSync(SessionStatusEvent.Info)
 const timelineEventSchema = Schema.Union([
-  eventSchema("message.updated", SessionV1.Event.MessageUpdated.data),
-  eventSchema("message.removed", SessionV1.Event.MessageRemoved.data),
-  eventSchema("message.part.updated", SessionV1.Event.PartUpdated.data),
-  eventSchema("message.part.removed", SessionV1.Event.PartRemoved.data),
+  eventSchema("message.updated"),
+  eventSchema("message.removed"),
+  eventSchema("message.part.updated"),
+  eventSchema("message.part.removed"),
   Schema.Struct({
     directory: Schema.String,
     payload: Schema.Struct({
@@ -266,7 +263,6 @@ export function validateTimelineEvent(input: unknown): TimelineEvent {
 }
 
 export function validateTimelineMessages(input: readonly TimelineMessage[]): TimelineMessage[] {
-  input.forEach((message) => decodeMessage(message, decodeOptions))
   const messages = [...input]
   const messageIDs = new Set<string>()
   const partIDs = new Set<string>()
@@ -351,7 +347,6 @@ export function historyMessages(count: number): TimelineMessage[] {
 
 export function partUpdated(part: Part | PartSeed<"assistant">) {
   const owned = "messageID" in part ? part : { ...part, sessionID, messageID: assistantID }
-  decodePart(owned, decodeOptions)
   return event("message.part.updated", {
     sessionID,
     part: owned,
@@ -440,7 +435,6 @@ export function userMessage(
       messageID: id,
     })),
   } satisfies Extract<TimelineMessage, { info: { role: "user" } }>
-  decodeMessage(message, decodeOptions)
   return message
 }
 
@@ -477,7 +471,6 @@ export function assistantMessage(
     },
     parts: parts.map((part) => ({ ...part, sessionID, messageID: id })),
   } satisfies Extract<TimelineMessage, { info: { role: "assistant" } }>
-  decodeMessage(message, decodeOptions)
   return message
 }
 
@@ -610,15 +603,13 @@ export function session(input: Partial<Session> = {}): Session {
   }
 }
 
-function eventSchema<
-  const Type extends TimelinePayload["type"],
-  const Properties extends Schema.Codec<unknown, unknown>,
->(type: Type, properties: Properties) {
+// The view-model payloads are typed by TimelinePayload; only the envelope is checked at runtime.
+function eventSchema<const Type extends TimelinePayload["type"]>(type: Type) {
   return Schema.Struct({
     directory: Schema.String,
     project: Schema.optional(Schema.String),
     workspace: Schema.optional(Schema.String),
-    payload: Schema.Struct({ id: Event.ID, type: Schema.Literal(type), properties }),
+    payload: Schema.Struct({ id: Event.ID, type: Schema.Literal(type), properties: Schema.Record(Schema.String, Schema.Unknown) }),
   })
 }
 

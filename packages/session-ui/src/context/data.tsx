@@ -1,12 +1,12 @@
-import type { SessionV1 } from "@orchestra/schema/session-v1"
+import type { Transcript } from "../transcript-model"
 import type { SessionStatusEvent } from "@orchestra/schema/session-status-event"
 import type { Provider } from "../types"
 import { createSimpleContext } from "@orchestra/ui/context"
 import type { Capability } from "@orchestra/schema/capability"
 
-type Session = typeof SessionV1.SessionInfo.Encoded
-type Message = typeof SessionV1.Info.Encoded
-type Part = typeof SessionV1.Part.Encoded
+type Session = Transcript.Session
+type Message = Transcript.Message
+type Part = Transcript.Part
 type SessionStatus = typeof SessionStatusEvent.Info.Encoded
 
 export type NormalizedProviderListResponse = {

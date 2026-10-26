@@ -381,8 +381,8 @@ describe("deriveTasks stats", () => {
     ]
     store.remember(child)
     latest.forEach(({ info, parts }) => {
-      store.apply({ type: "message.updated", properties: { info } })
-      parts.forEach((part) => store.apply({ type: "message.part.updated", properties: { part } }))
+      store.transcript.putMessage(info)
+      parts.forEach((part) => store.transcript.putPart(part))
     })
     const stats = () =>
       only(
