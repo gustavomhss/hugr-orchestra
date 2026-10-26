@@ -120,6 +120,11 @@ export const Flag = {
     if (process.env["ORCHESTRA_INHERIT_CREDENTIALS"] === undefined) return undefined
     return truthy("ORCHESTRA_INHERIT_CREDENTIALS")
   },
+  // A key file for the stored-credential cipher, used instead of the OS keychain. Tests point it at a temp file so
+  // they never touch the real keychain.
+  get ORCHESTRA_CREDENTIAL_KEY_FILE() {
+    return process.env["ORCHESTRA_CREDENTIAL_KEY_FILE"]
+  },
   get ORCHESTRA_PURE() {
     return truthy("ORCHESTRA_PURE")
   },

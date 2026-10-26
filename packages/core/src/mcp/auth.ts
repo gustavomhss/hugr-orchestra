@@ -5,6 +5,7 @@ import { Global } from "../global"
 import { Effect, Layer, Context, Option, Schema } from "effect"
 import { FSUtil } from "../fs-util"
 import { EffectFlock } from "../util/effect-flock"
+import { CredentialCipher } from "../credential/cipher"
 
 export const Tokens = Schema.Struct({
   accessToken: Schema.mutableKey(Schema.String),
@@ -32,6 +33,7 @@ export const Entry = Schema.Struct({
 export type Entry = Schema.Schema.Type<typeof Entry>
 
 const decodeAuthData = Schema.decodeUnknownOption(Schema.Record(Schema.String, Entry))
+const decodeAuthJson = Schema.decodeUnknownOption(Schema.fromJsonString(Schema.Record(Schema.String, Entry)))
 type AuthData = Record<string, Entry>
 
 const filepath = path.join(Global.Path.data, "mcp-auth.json")
@@ -61,12 +63,38 @@ const layer = Layer.effect(
   Effect.gen(function* () {
     const fs = yield* FSUtil.Service
     const flock = yield* EffectFlock.Service
+    const cipher = yield* CredentialCipher.Service
 
+    const write = (data: AuthData) => fs.writeJson(filepath, cipher.seal(JSON.stringify(data)), 0o600)
+
+    // The file holds one sealed JSON string; a plain object is a file written before encryption, which is read and
+    // sealed in place. A file that cannot be parsed, opened or decoded is moved aside, never overwritten, so a later
+    // write cannot wipe every MCP login. Any other read failure stops here instead of reading as empty.
     const read = Effect.fn("McpAuth.read")(function* () {
-      return yield* fs.readJson(filepath).pipe(
-        Effect.map((data): AuthData => Option.getOrElse(decodeAuthData(data), () => ({}) as AuthData) as AuthData),
-        Effect.catch(() => Effect.succeed({} as AuthData)),
+      const file = yield* fs.readJson(filepath).pipe(
+        Effect.map((json) => ({
+          legacy: typeof json !== "string",
+          data:
+            typeof json === "string"
+              ? Option.flatMap(Option.fromUndefinedOr(cipher.open(json)), decodeAuthJson)
+              : decodeAuthData(json),
+        })),
+        Effect.catchReason("PlatformError", "NotFound", () =>
+          Effect.succeed({ legacy: false, data: Option.some<AuthData>({}) }),
+        ),
+        Effect.catchTag("FileSystemError", () => Effect.succeed({ legacy: false, data: Option.none<AuthData>() })),
       )
+      if (Option.isNone(file.data)) {
+        const aside = `${filepath}.corrupt-${Date.now()}`
+        yield* fs.rename(filepath, aside)
+        yield* Effect.logError("mcp-auth.json could not be read and was moved aside; MCP servers need a new login", {
+          path: aside,
+        })
+        return {} as AuthData
+      }
+      const data: AuthData = { ...file.data.value }
+      if (file.legacy) yield* write(data)
+      return data
     })
 
     const all = Effect.fn("McpAuth.all")(function* () {
@@ -77,7 +105,7 @@ const layer = Layer.effect(
       yield* Effect.gen(function* () {
         const next = update(yield* read())
         if (!next) return
-        yield* fs.writeJson(filepath, next, 0o600).pipe(Effect.orDie)
+        yield* write(next).pipe(Effect.orDie)
       }).pipe(flock.withLock(lockKey), Effect.orDie)
     })
 
@@ -158,6 +186,6 @@ const layer = Layer.effect(
   }),
 )
 
-export const node = LayerNode.make({ service: Service, layer: layer, deps: [FSUtil.node, EffectFlock.node] })
+export const node = LayerNode.make({ service: Service, layer: layer, deps: [FSUtil.node, EffectFlock.node, CredentialCipher.node] })
 
 export * as McpAuth from "./auth"
