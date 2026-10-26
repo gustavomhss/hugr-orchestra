@@ -8,6 +8,7 @@ import billy from "./billy"
 import jimmy from "./jimmy"
 import rosie from "./rosie"
 import frankie from "./frankie"
+import live from "./live"
 import type { Seat } from "./seat"
 // seat-imports:end
 
@@ -24,6 +25,7 @@ export const all: Readonly<Record<string, Seat>> = Object.freeze({
   [jimmy.id]: jimmy,
   [rosie.id]: rosie,
   [frankie.id]: frankie,
+  [live.id]: live,
   // seat-entries:end
 })
 
