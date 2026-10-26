@@ -34,6 +34,11 @@ const permission = Layer.mock(PermissionV2.Service, {
     ),
 })
 const sessions = Layer.mock(SessionV2.Service, {
+  revert: {
+    stage: () => Effect.die("unused"),
+    clear: () => Effect.die("unused"),
+    commit: () => Effect.die("unused"),
+  },
   prompt: (input) =>
     Effect.sync(() => {
       prompts.push(input)
@@ -41,7 +46,7 @@ const sessions = Layer.mock(SessionV2.Service, {
         admittedSeq: prompts.length,
         id: SessionMessage.ID.make("msg_team_message_admitted"),
         sessionID: input.sessionID,
-        prompt: input.prompt,
+        prompt: { text: input.prompt.text },
         delivery: input.delivery ?? "steer",
         timeCreated: DateTime.makeUnsafe(0),
       })
