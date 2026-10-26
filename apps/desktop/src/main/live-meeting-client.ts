@@ -74,7 +74,7 @@ export function meetingClient(
 
   return {
     async start(sessionID: string, title: string) {
-      const info: { id: string; timeStarted: number } = await (await post("/api/meeting/start", { sessionID, title })).json()
+      const info: { id: string; timeStarted: number } = await (await post("/api/meeting/start", { sessionID, title, consent: "unknown" })).json()
       return info
     },
     append(meetingID: string, segment: MeetingSegment) {

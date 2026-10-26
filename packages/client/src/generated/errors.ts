@@ -243,7 +243,16 @@ export const isGuardrailError = (value: unknown): value is GuardrailError =>
 
 export type MeetingError = {
   readonly name: "MeetingError"
-  readonly data: { readonly reason: "missing_session" | "active" | "missing_meeting" | "ended" }
+  readonly data: {
+    readonly reason:
+      | "missing_session"
+      | "active"
+      | "missing_meeting"
+      | "ended"
+      | "running"
+      | "missing_item"
+      | "unavailable"
+  }
 }
 
 export const isMeetingError = (value: unknown): value is MeetingError =>

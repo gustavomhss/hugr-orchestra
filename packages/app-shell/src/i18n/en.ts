@@ -869,6 +869,7 @@ export const dict = {
   "live.start.reason.no-key": "Add a speech-to-text key in Settings first",
   "live.start.reason.server": "The local server did not respond",
   "live.start.reason.capture": "Audio capture could not start. Check the microphone and screen recording permissions.",
+  "live.start.reason.permission": "Allow microphone access in System Settings first",
 
   "settings.general.row.language.title": "Language",
   "settings.general.row.language.description": "Change the display language for HuGR Orchestra",

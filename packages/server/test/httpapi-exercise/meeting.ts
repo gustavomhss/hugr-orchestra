@@ -3,7 +3,8 @@ import { http } from "./dsl"
 import type { Scenario } from "./types"
 
 // Meeting routes (V2 /api/meeting). The exercise database holds no meetings or Sessions, so each route answers its
-// typed MeetingError with the reason for that refusal; the recording lifecycle is covered by core tests.
+// typed MeetingError with the reason for that refusal, and the list is empty; the lifecycle is covered by core tests.
+// confirm, commitment and handoff answer "unavailable" until the Flight Engineer memory store lands.
 function refused(reason: string) {
   return (body: unknown) => {
     object(body)
@@ -21,7 +22,7 @@ export const meetingScenarios: Scenario[] = [
     .at((ctx) => ({
       path: "/api/meeting/start",
       headers: { ...ctx.headers(), "content-type": "application/json" },
-      body: { sessionID: "ses_httpapi_meeting_missing", title: "Exercise" },
+      body: { sessionID: "ses_httpapi_meeting_missing", title: "Exercise", consent: "unknown" },
     }))
     .json(400, refused("missing_session"), "status"),
   http.protected
@@ -44,4 +45,51 @@ export const meetingScenarios: Scenario[] = [
     .get("/api/meeting", "v2.meeting.read")
     .at((ctx) => ({ path: `/api/meeting?meetingID=${meetingID}`, headers: ctx.headers() }))
     .json(400, refused("missing_meeting"), "status"),
+  http.protected
+    .get("/api/meeting/list", "v2.meeting.list")
+    .at((ctx) => ({ path: "/api/meeting/list", headers: ctx.headers() }))
+    .json(
+      200,
+      (body) => {
+        object(body)
+        check(isRecord(body.data) && Array.isArray(body.data.items), "meeting list should answer an items array")
+      },
+      "status",
+    ),
+  http.protected
+    .patch("/api/meeting", "v2.meeting.rename")
+    .at((ctx) => ({
+      path: "/api/meeting",
+      headers: { ...ctx.headers(), "content-type": "application/json" },
+      body: { meetingID, title: "Renamed" },
+    }))
+    .json(400, refused("missing_meeting"), "status"),
+  http.protected
+    .delete("/api/meeting", "v2.meeting.delete")
+    .at((ctx) => ({ path: `/api/meeting?meetingID=${meetingID}`, headers: ctx.headers() }))
+    .json(400, refused("missing_meeting"), "status"),
+  http.protected
+    .post("/api/meeting/confirm", "v2.meeting.confirm")
+    .at((ctx) => ({
+      path: "/api/meeting/confirm",
+      headers: { ...ctx.headers(), "content-type": "application/json" },
+      body: { meetingID },
+    }))
+    .json(400, refused("unavailable"), "status"),
+  http.protected
+    .post("/api/meeting/commitment", "v2.meeting.commitment")
+    .at((ctx) => ({
+      path: "/api/meeting/commitment",
+      headers: { ...ctx.headers(), "content-type": "application/json" },
+      body: { id: "cmt_httpapi_meeting", state: "done" },
+    }))
+    .json(400, refused("unavailable"), "status"),
+  http.protected
+    .post("/api/meeting/handoff", "v2.meeting.handoff")
+    .at((ctx) => ({
+      path: "/api/meeting/handoff",
+      headers: { ...ctx.headers(), "content-type": "application/json" },
+      body: { meetingID, itemIDs: [] },
+    }))
+    .json(400, refused("unavailable"), "status"),
 ]

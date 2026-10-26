@@ -6,6 +6,8 @@ import {
   AppInterface,
   loadLocaleDict,
   normalizeLocale,
+  type LiveHotkey,
+  type LiveSettings,
   type Locale,
   type Platform,
   PlatformProvider,
@@ -67,6 +69,17 @@ if (import.meta.env.VITE_SENTRY_DSN) {
 const [updaterState, setUpdaterState] = createSignal<UpdaterState>({ status: "disabled" })
 let requestFailed = () => dict["common.requestFailed"]
 void window.api.updater.subscribe(setUpdaterState)
+
+const liveSettingsStub: LiveSettings = {
+  answerModel: undefined,
+  language: "auto",
+  suggestions: false,
+  sources: { microphone: true, "system-audio": true },
+}
+
+const liveHotkeysStub: LiveHotkey[] = [
+  { action: "start-stop", accelerator: "CommandOrControl+Shift+M", defaultAccelerator: "CommandOrControl+Shift+M" },
+]
 
 type DesktopWindowState = {
   id?: string
@@ -303,6 +316,24 @@ const createPlatform = (windowState: DesktopWindowState): Platform => {
       setTranscriptionKey: (key) => window.api.setLiveTranscriptionKey(key),
       getContentProtection: () => window.api.getLiveOverlayContentProtection(),
       setContentProtection: (enabled) => window.api.setLiveOverlayContentProtection(enabled),
+      // Stubs until the Flight Engineer bridge lands: shapes are frozen, values are placeholders.
+      readiness: async () => ({
+        permissions: { microphone: "needed", "system-audio": "needed" },
+        microphone: undefined,
+        systemAudio: { available: true },
+        transcriptionKey: await window.api.hasLiveTranscriptionKey(),
+        answerModel: undefined,
+      }),
+      requestPermission: async () => "needed",
+      onLevels: () => () => {},
+      runState: async () => ({ running: false }),
+      onRunState: () => () => {},
+      rename: async () => {},
+      getSettings: async () => liveSettingsStub,
+      setSettings: async (patch) => ({ ...liveSettingsStub, ...patch }),
+      getHotkeys: async () => liveHotkeysStub,
+      setHotkey: async () => ({ ok: true }),
+      resetHotkeys: async () => liveHotkeysStub,
     },
 
     setPinchZoomEnabled,
