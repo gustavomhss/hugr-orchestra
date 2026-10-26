@@ -163,7 +163,9 @@ it.instance(
       const seats = f.seats
       yield* Effect.promise(async () => {
         const built = await ClaudeHostPlugin.build({ seats, tools, root: f.root })
-        const ids = Object.keys(Seats.all).toSorted()
+        // A direct seat talks to the owner and is never a Claude Code subagent.
+        expect(seats.some((seat) => Seats.find(seat.id)?.direct)).toBe(true)
+        const ids = Object.values(Seats.all).filter((seat) => !seat.direct).map((seat) => seat.id).toSorted()
         expect(ids.length).toBeGreaterThanOrEqual(8)
         // The research seat has one agent per tier (J1.4); every other seat has one agent named by its id.
         const agents = ids.flatMap((id) => ClaudeHostPlugin.agents(id).map((agent) => ({ id, name: agent.name })))
@@ -187,7 +189,7 @@ it.instance(
         // Skill reference files travel with their SKILL.md.
         expect(written.filter((file) => file.startsWith("skills/backend-implement/")).length).toBeGreaterThan(1)
 
-        for (const [seat, agent] of seats.flatMap((seat) => ClaudeHostPlugin.agents(seat.id!).map((agent) => [seat, agent] as const))) {
+        for (const [seat, agent] of seats.filter((seat) => !Seats.find(seat.id)?.direct).flatMap((seat) => ClaudeHostPlugin.agents(seat.id!).map((agent) => [seat, agent] as const))) {
           const text = await Bun.file(path.join(built.path, `agents/${agent.name}.md`)).text()
           const head = frontmatter(text)
           expect(head.name).toBe(agent.name)
@@ -501,7 +503,7 @@ it.instance(
       const seats = f.seats
       yield* Effect.promise(async () => {
         const built = await ClaudeHostPlugin.build({ seats, tools, root: f.root })
-        for (const seat of seats) {
+        for (const seat of seats.filter((seat) => !Seats.find(seat.id)?.direct)) {
           const listed = frontmatter(await Bun.file(path.join(built.path, `agents/${ClaudeHostPlugin.agents(seat.id!)[0].name}.md`)).text()).tools.split(
             ", ",
           )

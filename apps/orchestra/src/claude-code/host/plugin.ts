@@ -72,7 +72,8 @@ export const LOOP_TEXT: readonly (readonly [string, string])[] = [
 export async function build(input: Input) {
   const seats = input.seats.flatMap((agent) => {
     const seat = Seats.find(agent.id)
-    return seat && agent.native === true ? [{ agent, seat }] : []
+    // A direct seat talks to the owner, never as a subagent Maestro dispatches.
+    return seat && !seat.direct && agent.native === true ? [{ agent, seat }] : []
   }).toSorted((a, b) => a.seat.id.localeCompare(b.seat.id))
   const defined = seats.flatMap((item) => agents(item.seat.id).map((entry) => ({ id: item.seat.id, name: entry.name,
     definition: definition(item.agent, item.seat.id, input.tools[item.seat.id] ?? [], entry.tier) })))

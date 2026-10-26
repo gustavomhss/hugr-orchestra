@@ -54,6 +54,7 @@ import { AppNodeBuilderV1 } from "./app-node-builder-v1"
 import { SessionProjector } from "@orchestra/core/session/projector"
 import { ArsenalBindings } from "@/maestro/arsenal-bindings"
 import { ApplicationTools } from "@orchestra/core/tool/application-tools"
+import { BoardTools } from "@orchestra/core/board/tools"
 import { LocationServiceMap } from "@orchestra/core/location-services"
 import { EventV2 } from "@orchestra/core/event"
 import { SessionStore } from "@orchestra/core/session/store"
@@ -114,6 +115,7 @@ export const AppLayer = AppNodeBuilderV1.build(
     Worktree.node,
     Installation.node,
     ArsenalBindings.node,
+    BoardTools.node,
     ApplicationTools.node,
     LocationServiceMap.node,
     EventV2.node,

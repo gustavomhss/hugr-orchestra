@@ -54,3 +54,27 @@ export const ErrorKind = Schema.Literals([
   "cli_failed",
 ]).annotate({ identifier: "PullRequest.ErrorKind" })
 export type ErrorKind = typeof ErrorKind.Type
+
+// One CI check on a pull request, from GitHub's statusCheckRollup: a check run reports status and
+// conclusion, a legacy commit status reports its state as the conclusion.
+export const Check = Schema.Struct({
+  name: Schema.String,
+  status: Schema.String,
+  conclusion: Schema.NullOr(Schema.String),
+}).annotate({ identifier: "PullRequest.Check" })
+export interface Check extends Schema.Schema.Type<typeof Check> {}
+
+// One pull request read live from GitHub, with its commits, review state, CI checks and merge commit.
+export const Detail = Schema.Struct({
+  number: Schema.Int,
+  title: Schema.String,
+  url: Schema.String,
+  state: Schema.String,
+  merged: Schema.Boolean,
+  branch: Schema.String,
+  reviewDecision: Schema.NullOr(Schema.String),
+  mergeCommit: Schema.NullOr(Schema.String),
+  commits: Schema.Array(Schema.Struct({ hash: Schema.String, message: Schema.String })),
+  checks: Schema.Array(Check),
+}).annotate({ identifier: "PullRequest.Detail" })
+export interface Detail extends Schema.Schema.Type<typeof Detail> {}
