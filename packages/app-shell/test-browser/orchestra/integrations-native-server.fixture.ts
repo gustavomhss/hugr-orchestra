@@ -60,7 +60,7 @@ await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
   const map = Layer.effect(LocationServiceMap.Service, LayerMap.make((ref: Location.Ref) => {
     const nodes = LayerNode.hoist(locationServices, Node.tags.values.global, [
       [ToolRegistry.node, ToolRegistry.nativeNode], [ToolRegistry.toolsNode, ToolRegistry.nativeToolsNode],
-      // Task captures process-global Session services this focused host does not export.
+      // Task and team_message capture process-global Session services this focused host does not export.
       [TaskTool.node, Layer.empty], [TeamMessageTool.node, Layer.empty], [Location.node, Location.boundNode(ref)],
     ])
     return LayerNode.compile(nodes.node).pipe(Layer.fresh,

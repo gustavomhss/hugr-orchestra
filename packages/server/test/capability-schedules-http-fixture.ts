@@ -60,7 +60,7 @@ export function make() {
     const map = Layer.effect(LocationServiceMap.Service, LayerMap.make((ref: Location.Ref) => {
       const nodes = LayerNode.hoist(locationServices, Node.tags.values.global, [
         [ToolRegistry.node, ToolRegistry.nativeNode], [ToolRegistry.toolsNode, ToolRegistry.nativeToolsNode],
-        // Task captures process-global Session services this focused host does not export.
+        // Task and team_message capture process-global Session services this focused host does not export.
         [TaskTool.node, Layer.empty], [TeamMessageTool.node, Layer.empty], [Location.node, Location.boundNode(ref)],
       ])
       return LayerNode.compile(nodes.node).pipe(Layer.fresh,
@@ -133,7 +133,7 @@ export function make() {
       })
     // Every route names its Location in the query; without it the server falls back to its own cwd.
     const url = (path: string, at: CapabilityOperatorContract.Placement = placement) =>
-      `/api/capability/schedules${path}?location[directory]=${encodeURIComponent(at.location.directory)}`
+      `/api/capability/schedules${path}?directory=${encodeURIComponent(at.location.directory)}`
     return { database, placement, foreign, tasks, owner, issue, request, url }
   })
 }
