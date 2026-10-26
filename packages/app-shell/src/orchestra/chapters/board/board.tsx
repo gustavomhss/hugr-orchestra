@@ -26,56 +26,15 @@ import {
   type Snapshot,
   type Trail,
 } from "./model"
+import { actionKey, actorKey, healthKey, shippedKey, stageKey } from "./keys"
+import { Inbox } from "./inbox"
+import { Intake } from "./intake"
+import { createReplay } from "./replay"
 import "./board.css"
 
 type Summary = ServerBoardListOutput[number]
 type Channel = "list" | "board" | "page"
 
-const stageKey = {
-  intake: "orchestra.board.stage.intake",
-  backlog: "orchestra.board.stage.backlog",
-  ready: "orchestra.board.stage.ready",
-  building: "orchestra.board.stage.building",
-  review: "orchestra.board.stage.review",
-  shipped: "orchestra.board.stage.shipped",
-  cut: "orchestra.board.stage.cut",
-} as const
-const healthKey = {
-  on_track: "orchestra.board.health.onTrack",
-  waiting_on_owner: "orchestra.board.health.waiting",
-  paused: "orchestra.board.health.paused",
-} as const
-const actorKey = {
-  maestro: "orchestra.board.actor.maestro",
-  owner: "orchestra.board.actor.owner",
-  github: "orchestra.board.actor.github",
-} as const
-const actionKey = {
-  "project.upsert": "orchestra.board.action.projectUpsert",
-  "epic.upsert": "orchestra.board.action.epicUpsert",
-  "issue.create": "orchestra.board.action.issueCreate",
-  "issue.update": "orchestra.board.action.issueUpdate",
-  "issue.move": "orchestra.board.action.issueMove",
-  "steps.set": "orchestra.board.action.stepsSet",
-  "question.ask": "orchestra.board.action.questionAsk",
-  "question.withdraw": "orchestra.board.action.questionWithdraw",
-  "question.answer": "orchestra.board.action.questionAnswer",
-  "note.add": "orchestra.board.action.noteAdd",
-  "attachment.add": "orchestra.board.action.attachmentAdd",
-  "intake.accept": "orchestra.board.action.intakeAccept",
-  "intake.decline": "orchestra.board.action.intakeDecline",
-  "hold.set": "orchestra.board.action.holdSet",
-  "pause.set": "orchestra.board.action.pauseSet",
-  "github.overwrite": "orchestra.board.action.githubOverwrite",
-  "github.state": "orchestra.board.action.githubState",
-  undo: "orchestra.board.action.undo",
-} as const
-const shippedKey = {
-  today: "orchestra.board.shipped.today",
-  yesterday: "orchestra.board.shipped.yesterday",
-  week: "orchestra.board.shipped.week",
-  earlier: "orchestra.board.shipped.earlier",
-} as const
 // Shipped is a compact log; older rows fold into a count.
 const shippedShown = 6
 // Attachments travel base64 in one JSON request, so large files are refused before they are read.
@@ -108,6 +67,7 @@ export default function Board() {
     caught: false,
     secret: undefined as { name: string; value: string } | undefined,
     drop: undefined as string | undefined,
+    inbox: false,
   })
   const channels: Partial<Record<Channel, AbortController>> = {}
   const begin = (name: Channel) => {
@@ -257,7 +217,8 @@ export default function Board() {
     sdk().event.listen((event) => {
       const details = event.details as { type: string; properties?: { project?: unknown; issue?: unknown } }
       if (details.type !== "board.changed") return
-      if (!store.key) return void loadList()
+      void loadList()
+      if (!store.key) return
       if (!store.snapshot || details.properties?.project !== store.snapshot.project.id) return
       void loadBoard(store.key)
       const open = store.page?.issue
@@ -297,9 +258,18 @@ export default function Board() {
     requestAnimationFrame(() => root?.querySelector<HTMLElement>(`[data-ref="${ref}"]`)?.focus())
   }
 
-  const grouped = createMemo(() => group(store.snapshot?.issues ?? []))
+  const replay = createReplay({ key: () => store.key, snapshot: () => store.snapshot })
+  const grouped = createMemo(() => group(replay.issues() ?? store.snapshot?.issues ?? []))
   const refs = createMemo(() => order(grouped().lanes))
-  const plan = createMemo(() => progress(store.snapshot?.issues ?? []))
+  const plan = createMemo(() => progress(replay.issues() ?? store.snapshot?.issues ?? []))
+  const asks = () => (store.projects ?? []).reduce((sum, item) => sum + item.openQuestions, 0)
+  const needs = () => (
+    <Show when={asks() > 0}>
+      <button type="button" class="board-chip board-needs" onClick={() => setStore({ inbox: true, peek: undefined })}>
+        {t("orchestra.board.ask.title")} · <b>{asks()}</b>
+      </button>
+    </Show>
+  )
   const epics = createMemo(() => new Map((store.snapshot?.epics ?? []).map((epic) => [epic.number, epic.title])))
   const questions = createMemo(() => (store.snapshot?.questions ?? []).filter((question) => question.status === "open"))
   const crew = createMemo(() => [
@@ -319,7 +289,7 @@ export default function Board() {
     if (store.peek && store.peek !== next) openPeek(next)
   }
   const keydown = (event: KeyboardEvent) => {
-    if (!store.snapshot) return
+    if (!store.snapshot || store.inbox) return
     const key = event.key.length === 1 ? event.key.toLowerCase() : event.key
     const current = store.focused ?? store.peek
     if (key === "Escape" && store.peek) return (event.preventDefault(), closePeek())
@@ -410,6 +380,8 @@ export default function Board() {
         }}
         data-ref={props.issue.ref}
         data-stage={props.issue.stage}
+        data-changed={replay.changed(props.issue.number)}
+        data-moved={replay.moved(props.issue.number)}
         tabindex={tab(props.issue.ref)}
         onClick={() => openPeek(props.issue.ref)}
         onKeyDown={(event) => cardKeydown(event, props.issue.ref)}
@@ -477,6 +449,8 @@ export default function Board() {
         class="board-row"
         data-ref={props.issue.ref}
         data-stage={props.issue.stage}
+        data-changed={replay.changed(props.issue.number)}
+        data-moved={replay.moved(props.issue.number)}
         tabindex={tab(props.issue.ref)}
         onClick={() => openPeek(props.issue.ref)}
         onKeyDown={(event) => cardKeydown(event, props.issue.ref)}
@@ -1047,15 +1021,22 @@ export default function Board() {
 
   return (
     <div class="board-root mx-page" ref={root} onKeyDown={keydown}>
+      <Show when={store.inbox}>
+        <Inbox
+          onOpen={(key) => (setStore("inbox", false), openProject(key))}
+          onClose={() => (setStore("inbox", false), store.key ? void loadBoard(store.key) : void loadList())}
+        />
+      </Show>
       <Show
-        when={store.key}
-        fallback={
+        when={store.key && !store.inbox}
+        fallback={!store.inbox && (
           <section class="board-page" aria-labelledby="board-projects-title">
             <header class="board-head">
               <div>
                 <h1 id="board-projects-title">{t("orchestra.board.title")}</h1>
                 <p class="board-sub">{t("orchestra.board.description")}</p>
               </div>
+              {needs()}
             </header>
             <Switch>
               <Match when={store.listFailed}>
@@ -1127,7 +1108,7 @@ export default function Board() {
               </Match>
             </Switch>
           </section>
-        }
+        )}
       >
         <section class="board-page" aria-labelledby="board-title">
           <nav class="board-crumb" aria-label={t("orchestra.board.crumb")}>
@@ -1184,6 +1165,7 @@ export default function Board() {
                       </div>
                     </div>
                     <div class="board-head-end">
+                      {needs()}
                       <Show when={crew().length > 0}>
                         <div class="board-crew">
                           <span class="board-stack">
@@ -1246,6 +1228,7 @@ export default function Board() {
                             <span class="board-intake">{language.plural("orchestra.board.intake", grouped().intake)}</span>
                           </Show>
                         </span>
+                        <replay.Since />
                       </div>
                     </section>
                     <Show when={questions()[0]}>
@@ -1292,7 +1275,14 @@ export default function Board() {
                     </Show>
                   </div>
 
-                  <div class="board-grid" role="group" aria-label={t("orchestra.board.grid")}>
+                  <Intake
+                    snapshot={snapshot()}
+                    busy={store.busy}
+                    onAccept={(number) => void write((key) => api().accept({ key, number: String(number) }))}
+                    onDecline={(number) => void write((key) => api().decline({ key, number: String(number) }))}
+                  />
+                  <replay.Bar />
+                  <div class="board-grid" role="group" aria-label={t("orchestra.board.grid")} data-replay={replay.open()}>
                     <For each={columns}>{(stage) => <Lane stage={stage} />}</For>
                   </div>
                   <Show when={store.boardFailed}>
@@ -1317,12 +1307,6 @@ export default function Board() {
 
 function narrow<S extends Trail["state"]>(trail: Trail, state: S) {
   return trail.state === state ? (trail as Extract<Trail, { state: S }>) : undefined
-}
-
-// Declared refusals arrive as the server's tagged JSON body; anything else (transport, parse) has no words to show.
-function refusal(error: unknown) {
-  if (typeof error !== "object" || error === null || !("_tag" in error) || !("message" in error)) return
-  return typeof error.message === "string" && error.message ? error.message : undefined
 }
 
 function encode(file: File) {

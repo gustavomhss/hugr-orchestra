@@ -53,6 +53,9 @@ if (process.env.BOARD_DOM !== "1") {
     gets: 0,
     paused: false,
     refuse: false,
+    // Open questions the board snapshot carries; empty unless a test asks for the inbox.
+    asks: [] as Record<string, unknown>[],
+    repo: null as string | null,
     writes: [] as { path: string; body: unknown }[],
   }
   const page = (number: number) => ({
@@ -75,7 +78,7 @@ if (process.env.BOARD_DOM !== "1") {
   })
   const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) {
     const url = new URL(request.url)
-    const project = { ...base, status: state.paused ? "paused" : "active" }
+    const project = { ...base, githubRepo: state.repo, status: state.paused ? "paused" : "active" }
     // Every owner write is recorded so the tests can prove what reached the server, and what never did.
     if (request.method === "POST") {
       const text = await request.text()
@@ -87,11 +90,12 @@ if (process.env.BOARD_DOM !== "1") {
       return Response.json({ activity: `bac_${state.writes.length}` })
     }
     if (url.pathname === "/api/board")
-      return Response.json([{ project, stages: { backlog: 1, ready: 1, building: 1, shipped: 1 }, openQuestions: 0, health: "on_track" }])
+      return Response.json([{ project, stages: { backlog: 1, ready: 1, building: 1, shipped: 1 }, openQuestions: state.asks.length, health: "on_track" }])
     if (url.pathname === "/api/board/LCH") {
       state.gets++
-      return Response.json({ project, epics: [], issues: state.issues, questions: [], cursor: null })
+      return Response.json({ project, epics: [], issues: state.issues, questions: state.asks, cursor: null })
     }
+    if (url.pathname === "/api/board/LCH/activity") return Response.json([])
     const match = url.pathname.match(/^\/api\/board\/LCH\/issue\/(\d+)$/)
     if (match) return Response.json(page(Number(match[1])))
     return new Response("not found", { status: 404 })
@@ -257,6 +261,49 @@ if (process.env.BOARD_DOM !== "1") {
     await until(() => !!view.host.querySelector(".board-peek .mx-error"), view.host)
     expect(view.host.querySelector(".board-peek .mx-error")?.textContent).toContain("A later change touched the same fields")
     state.refuse = false
+    view.done()
+  }, 20000)
+
+  test("the needs-you chip opens the inbox, and one click answers with Maestro's recommendation", async () => {
+    state.asks = [{
+      id: "bq_9", issue: 3, epic: null, text: "Which region first?", recommended: "eu", costOfWaiting: "Building waits on it",
+      blocking: true, status: "open", answerOption: null, answerText: null, answeredAt: null, timeCreated: now - 3_600_000,
+      options: [{ id: "us", label: "US", consequence: "" }, { id: "eu", label: "EU", consequence: "" }],
+    }]
+    const view = await mount()
+    await until(() => !!view.host.querySelector(".board-needs"), view.host)
+    expect(view.host.querySelector(".board-needs")?.textContent).toContain("1")
+    view.host.querySelector<HTMLButtonElement>(".board-needs")!.click()
+    await until(() => !!view.host.querySelector(".board-inbox-item .board-option"), view.host)
+    expect(view.host.querySelector(".board-inbox-item")?.textContent).toContain("Building waits on it")
+    const first = view.host.querySelector<HTMLButtonElement>(".board-inbox-item .board-option")!
+    // The recommended option is first, so key 1 and the first button both take it.
+    expect(first.textContent).toContain("EU")
+    state.writes = []
+    first.click()
+    await until(() => state.writes.length > 0, view.host)
+    expect(state.writes[0]).toEqual({ path: "/api/board/LCH/question/bq_9/answer", body: { option: "eu" } })
+    state.asks = []
+    view.done()
+  }, 20000)
+
+  test("an intake card accepts and declines through the intake routes", async () => {
+    // A linked repository that is signed out cannot bring issues in, and the strip says so.
+    state.repo = "acme/launch"
+    const view = await mount()
+    state.writes = []
+    const card = view.host.querySelector<HTMLElement>('.board-intake-card[data-intake="LCH-5"]')!
+    expect(card.textContent).toContain("Issue 5")
+    expect(view.host.querySelector(".board-intake-strip")?.textContent).toContain("GitHub not synced")
+    const action = (text: string) => [...card.querySelectorAll<HTMLButtonElement>("button")].find((item) => item.textContent?.trim() === text)!
+    action("Accept").click()
+    await until(() => state.writes.length > 0, view.host)
+    expect(state.writes[0].path).toBe("/api/board/LCH/intake/5/accept")
+    await until(() => !action("Decline").disabled, view.host)
+    action("Decline").click()
+    await until(() => state.writes.length > 1, view.host)
+    expect(state.writes[1].path).toBe("/api/board/LCH/intake/5/decline")
+    state.repo = null
     view.done()
   }, 20000)
 
