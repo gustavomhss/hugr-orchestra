@@ -1,13 +1,17 @@
+import { release } from "node:os"
 import { BrowserWindow, shell } from "electron"
+import type { LiveRunState, LiveSource } from "@orchestra/app"
 
 import { isNoAnswer, LIVE_PROMPTS, NO_ANSWER, parseAnswer, parseStopSummary, worthSuggesting } from "./live-answer"
 import { readTranscriptionKey } from "./live-key"
-import type { MeetingServer } from "./live-meeting-client"
+import { renameMeeting, type MeetingServer } from "./live-meeting-client"
 import type { LiveOverlay } from "./live-overlay"
 import type { LiveOverlayError, LiveOverlaySource, LiveOverlayView } from "./live-overlay-state"
+import { PANES, sourcePermissions, systemAudioAvailable } from "./live-readiness"
 import type { Caption } from "./live-segmenter"
 import { startSenses } from "./live-senses"
 import { sessionClient, type LivePrompt, type LiveSessionEvent } from "./live-session-client"
+import { defaultTitle, liveSettings, modelRef } from "./live-settings"
 import { transportLog } from "./live-transport-log"
 
 // One meeting end to end: the live seat's session, the senses, and the overlay. The owner's actions in the overlay
@@ -33,17 +37,14 @@ type Meeting = {
   senses?: Awaited<ReturnType<typeof startSenses>>
   log: ReturnType<typeof transportLog>
   abort: AbortController
+  meetingID?: string
+  sources: Record<LiveSource, boolean>
   title: string
   startedAt: number
   captions: boolean
   lines: Caption[]
   lastQuestion?: string
   request?: Request
-}
-
-const SETTINGS_PANES = {
-  microphone: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone",
-  screen: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture",
 }
 
 export type LiveLoop = ReturnType<typeof registerLiveLoop>
@@ -56,6 +57,16 @@ export function registerLiveLoop(options: {
 }) {
   const overlay = options.overlay
   const state = { meeting: undefined as Meeting | undefined, starting: false }
+  const settings = liveSettings()
+  const runListeners = new Set<(state: LiveRunState) => void>()
+  const levelListeners = new Set<(levels: Record<LiveSource, number>) => void>()
+
+  const runState = (): LiveRunState => {
+    const meeting = state.meeting
+    if (!meeting?.senses || !meeting.meetingID) return { running: false }
+    return { running: true, meetingID: meeting.meetingID, title: meeting.title, startedAt: meeting.startedAt, sources: meeting.sources }
+  }
+  const emitRunState = () => runListeners.forEach((listener) => listener(runState()))
 
   const send = async (meeting: Meeting, request: Omit<Request, "sentAt" | "text">, prompt: LivePrompt, queue = false) => {
     if (meeting.request && request.kind !== "notice") return
@@ -209,6 +220,7 @@ export function registerLiveLoop(options: {
     })
     meeting.log.write({ event: "stopped", unsent: result?.unsent })
     meeting.senses = undefined
+    emitRunState()
     // The stop summary outranks whatever was still being answered.
     meeting.request = undefined
     await send(meeting, { kind: "stop", source: "memory" }, { text: LIVE_PROMPTS.stop })
@@ -260,15 +272,53 @@ export function registerLiveLoop(options: {
   })
 
   return {
+    settings,
     running: () => state.starting || state.meeting?.senses !== undefined,
-    async start(title: string) {
+    runState,
+    onRunState: (listener: (state: LiveRunState) => void) => {
+      runListeners.add(listener)
+      return () => runListeners.delete(listener)
+    },
+    onLevels: (listener: (levels: Record<LiveSource, number>) => void) => {
+      levelListeners.add(listener)
+      return () => levelListeners.delete(listener)
+    },
+    toggleCaptions() {
+      const meeting = state.meeting
+      if (meeting?.senses) void handle(meeting, { kind: "toggle-captions" })
+    },
+    async rename(meetingID: string, title: string) {
+      const next = title.trim()
+      if (!next) return
+      const saved = await renameMeeting(await options.server(), meetingID, next).catch((error) => {
+        transportLog(options.logDirectory, meetingID).write({ event: "rename-failed", reason: String(error) })
+        throw error
+      })
+      if (state.meeting?.meetingID !== meetingID) return
+      state.meeting.title = saved
+      emitRunState()
+    },
+    async start(title?: string) {
       if (state.starting || state.meeting?.senses) return { ok: false as const, reason: "running" as const }
       if (!readTranscriptionKey()) return { ok: false as const, reason: "no-key" as const }
+      const wanted = settings.get()
+      const permissions = sourcePermissions()
+      if (wanted.sources.microphone && permissions.microphone === "denied")
+        return { ok: false as const, reason: "permission" as const }
+      // Denied or unavailable system audio does not stop the meeting: it runs on the microphone alone.
+      const sources = {
+        microphone: wanted.sources.microphone,
+        "system-audio":
+          wanted.sources["system-audio"] &&
+          permissions["system-audio"] !== "denied" &&
+          systemAudioAvailable(process.platform, release()),
+      }
+      if (!sources.microphone && !sources["system-audio"]) return { ok: false as const, reason: "capture" as const }
       state.starting = true
       // The previous meeting's stream stays open until the next start, so its summary and open items can still land.
       state.meeting?.abort.abort()
       state.meeting = undefined
-      const result = await begin(title).finally(() => {
+      const result = await begin(title?.trim() || defaultTitle(), sources, wanted).finally(() => {
         state.starting = false
       })
       return result
@@ -283,10 +333,10 @@ export function registerLiveLoop(options: {
     },
   }
 
-  async function begin(title: string) {
+  async function begin(title: string, sources: Record<LiveSource, boolean>, wanted: ReturnType<typeof settings.get>) {
     const server = await options.server()
     const client = sessionClient(server)
-    const sessionID = await client.create().catch((error) => {
+    const sessionID = await client.create(modelRef(wanted.answerModel)).catch((error) => {
       transportLog(options.logDirectory, "session").write({ event: "session-failed", reason: String(error) })
       return undefined
     })
@@ -296,6 +346,7 @@ export function registerLiveLoop(options: {
       client,
       log: transportLog(options.logDirectory, sessionID),
       abort: new AbortController(),
+      sources,
       title,
       startedAt: Date.now(),
       captions: false,
@@ -304,12 +355,17 @@ export function registerLiveLoop(options: {
     state.meeting = meeting
     void client.follow(sessionID, (event) => onSession(meeting, event), meeting.abort.signal)
     // The indicator shows before capture starts, so the permission notes the senses raise while starting are seen.
-    overlay.start(meeting.startedAt)
+    overlay.start(meeting.startedAt, wanted.suggestions)
+    if (wanted.sources["system-audio"] && !sources["system-audio"])
+      meeting.log.write({ event: "sources", microphone: sources.microphone, systemAudio: false })
     const senses = await startSenses({
       server,
       sessionID,
       title,
       logDirectory: options.logDirectory,
+      language: wanted.language,
+      sources: { microphone: sources.microphone, systemAudio: sources["system-audio"] },
+      onLevels: (levels) => levelListeners.forEach((listener) => listener(levels)),
       onEvent: (event) => onSenses(meeting, event),
     }).catch((error) => {
       meeting.log.write({ event: "senses-failed", reason: String(error) })
@@ -322,12 +378,14 @@ export function registerLiveLoop(options: {
       return { ok: false as const, reason: "capture" as const }
     }
     meeting.senses = senses
+    meeting.meetingID = senses.meetingID
+    emitRunState()
     return { ok: true as const, meetingID: senses.meetingID }
   }
 }
 
 function openPrivacy(error?: LiveOverlayError) {
   if (process.platform !== "darwin") return
-  const pane = error?.kind === "permission" && error.microphone === "denied" ? "microphone" : "screen"
-  void shell.openExternal(SETTINGS_PANES[pane])
+  const pane = error?.kind === "permission" && error.microphone === "denied" ? "microphone" : "system-audio"
+  void shell.openExternal(PANES[pane])
 }

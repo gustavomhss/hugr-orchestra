@@ -18,7 +18,8 @@ export type CaptureHandlers = {
   state(state: "started" | "restarted" | "failed", reason: string): void
 }
 
-export async function startCapture(handlers: CaptureHandlers) {
+// `want` picks the tracks: a source left out is never opened, so no permission prompt or indicator appears for it.
+export async function startCapture(handlers: CaptureHandlers, want = { microphone: true, systemAudio: true }) {
   const captureSession = session.fromPartition(PARTITION)
   const win = new BrowserWindow({
     show: false,
@@ -58,6 +59,7 @@ export async function startCapture(handlers: CaptureHandlers) {
     contents.executeJavaScript("start(true)", true).catch((error) => handlers.state("failed", String(error))),
   )
   await win.loadURL(PAGE_URL)
+  await contents.executeJavaScript(`globalThis.want = ${JSON.stringify(want)}`, true)
   // getDisplayMedia needs a user gesture; the explicit meeting start is that gesture.
   await contents.executeJavaScript("start()", true)
   return {
@@ -104,11 +106,11 @@ async function start(restart) {
     window.liveCapture.audio(join(run.me), join(run.them))
     run.me = []; run.them = []; run.size = 0
   }
-  const mic = await navigator.mediaDevices
+  const mic = !want.microphone ? undefined : await navigator.mediaDevices
     .getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 } })
     .then((stream) => { window.liveCapture.status("microphone", "granted", ""); return stream })
     .catch((error) => { window.liveCapture.status("microphone", "denied", String(error)); return undefined })
-  const loop = await navigator.mediaDevices
+  const loop = !want.systemAudio ? undefined : await navigator.mediaDevices
     .getDisplayMedia({ audio: true, video: true })
     .catch((error) => { window.liveCapture.status("systemAudio", "denied", String(error)); return undefined })
   if (current !== run) return [mic, loop].forEach((stream) => stream?.getTracks().forEach((track) => track.stop()))

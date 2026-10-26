@@ -22,7 +22,8 @@ export type Transcriber = {
   stop(): Promise<void>
 }
 
-export type TranscriberConfig = { engine: "deepgram"; model: string; key: string; url?: string }
+// `language` is a BCP-47 tag; "multi" lets the engine follow a meeting that switches language.
+export type TranscriberConfig = { engine: "deepgram"; model: string; key: string; url?: string; language?: string }
 
 const TRACKS: Track[] = ["me", "them"]
 const MAX_BACKOFF_SECONDS = 30
@@ -49,6 +50,7 @@ function deepgram(config: TranscriberConfig, onEvent: (event: TranscriberEvent) 
     utterance_end_ms: "1000",
     punctuate: "true",
     smart_format: "true",
+    ...(config.language ? { language: config.language } : {}),
   }).forEach(([key, value]) => url.searchParams.set(key, value))
   const state = {
     socket: undefined as WebSocket | undefined,

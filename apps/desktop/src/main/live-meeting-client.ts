@@ -31,6 +31,19 @@ export function liveRequest(server: MeetingServer) {
   }
 }
 
+// Renames a meeting while it runs or after it stopped; answers the stored title.
+export async function renameMeeting(server: MeetingServer, meetingID: string, title: string) {
+  const request = liveRequest(server)
+  const response = await fetch(request.endpoint("/api/meeting"), {
+    method: "PATCH",
+    headers: request.headers,
+    body: JSON.stringify({ meetingID, title }),
+  })
+  if (!response.ok) throw new Error(`/api/meeting answered ${response.status}: ${await response.text()}`)
+  const body: { data: { title: string } } = await response.json()
+  return body.data.title
+}
+
 export function meetingClient(
   server: MeetingServer,
   hooks: { failed(reason: string, pending: number, offlineMs: number): void; recovered(): void } = {
