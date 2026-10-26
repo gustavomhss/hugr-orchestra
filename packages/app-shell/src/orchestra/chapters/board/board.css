@@ -219,13 +219,13 @@
 }
 
 .board-ask {
-  box-shadow: inset 0 0 0 1px var(--orchestra-accent), var(--mx-highlight);
+  box-shadow: inset 0 0 0 1px var(--orchestra-warm), var(--mx-highlight);
 }
 
 .board-ask-kicker {
   display: flex;
   justify-content: space-between;
-  color: var(--orchestra-accent);
+  color: var(--orchestra-warm);
   font-size: var(--orchestra-font-size-xs);
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -794,9 +794,15 @@
   box-shadow: inset 0 0 0 1.4px currentColor;
 }
 
-.board-plan li[data-state="done"] .board-plan-mark,
+.board-plan li[data-state="done"] .board-plan-mark {
+  background: var(--orchestra-success);
+  box-shadow: none;
+}
+
+/* Blue is the active step: a ring with a filled core. */
 .board-plan li[data-state="active"] .board-plan-mark {
-  background: currentColor;
+  color: var(--orchestra-accent);
+  background: radial-gradient(circle, currentColor 38%, transparent 42%);
 }
 
 .board-plan li[data-state="skipped"] {
