@@ -39,7 +39,7 @@ jobs:
   atlas-scope:
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
     name: atlas scope
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
       changed: ${{ steps.scope.outputs.changed }}
@@ -71,7 +71,7 @@ jobs:
 
   atlas:
     name: atlas
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     needs: atlas-scope
     # Atlas guards cover its vendor subtree; a failed scope detector fails this workflow rather than skipping it.
@@ -154,7 +154,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        host: [ubuntu-latest, windows-latest]
+        host: [ubuntu-24.04, windows-latest]
     runs-on: ${{ matrix.host }}
     timeout-minutes: 30
     steps:
@@ -189,15 +189,17 @@ jobs:
           # cli 181 s, atlas-boundary 190 s, script 75 s, server 24 s, everything else under 20 s each. Core dominates, so it
           # gets a shard to itself (~17 min); the other two take ~10 min each. The third shard is the complement of the
           # first two, so a package added later lands there instead of in no shard, and it carries the repo-wide gates.
-          - { name: linux, host: ubuntu-latest, part: packages-core, label: "core", filters: "--filter=@orchestra/core" }
+          # Pinned: on 2026-10-26 ubuntu-latest moved to 26.04, where bubblewrap cannot apply seccomp in a nested
+          # user namespace (run 40263348230), so every LIVE sandbox test failed. Move once the sandbox supports it.
+          - { name: linux, host: ubuntu-24.04, part: packages-core, label: "core", filters: "--filter=@orchestra/core" }
           # Deleting apps/orchestra moved its commands and their tests into the CLI, and run 40239011501 (2026-10-25) spent
           # this lane's whole 40 minutes on app, CLI and server together, so the CLI gets a lane of its own.
-          - { name: linux, host: ubuntu-latest, part: packages-app, label: "app, server, clients",
+          - { name: linux, host: ubuntu-24.04, part: packages-app, label: "app, server, clients",
               filters: "--filter=@orchestra/app --filter=@orchestra/server --filter=@orchestra/sdk-next --filter=@orchestra/client --filter=@orchestra/tui --filter=@orchestra/session-ui" }
-          - { name: linux, host: ubuntu-latest, part: packages-cli, label: "cli", filters: "--filter=@orchestra/cli" }
-          - { name: linux, host: ubuntu-latest, part: packages-libs, label: "other packages, godfile", repo_gates: true,
+          - { name: linux, host: ubuntu-24.04, part: packages-cli, label: "cli", filters: "--filter=@orchestra/cli" }
+          - { name: linux, host: ubuntu-24.04, part: packages-libs, label: "other packages, godfile", repo_gates: true,
               filters: "--filter=!@orchestra/core --filter=!@orchestra/app --filter=!@orchestra/cli --filter=!@orchestra/server --filter=!@orchestra/sdk-next --filter=!@orchestra/client --filter=!@orchestra/tui --filter=!@orchestra/session-ui" }
-          - { name: linux, host: ubuntu-latest, part: gates, label: "httpapi, relay" }
+          - { name: linux, host: ubuntu-24.04, part: gates, label: "httpapi, relay" }
           - { name: windows, host: windows-latest, part: core, label: "core", filters: "--filter=@orchestra/core" }
           # httpapi-codegen is a build-time generator whose tests pin POSIX paths, so it runs on Linux only.
           - { name: windows, host: windows-latest, part: rest, label: "other packages, legacy rollback",
@@ -398,7 +400,7 @@ jobs:
         shard: [1, 2, 3]
         # e2e drives Chromium against a per-page mocked backend, so Windows repeats the Linux
         # coverage; it runs only when dispatched with windows_e2e. Windows unit tests always run.
-        settings: ${{ fromJSON(inputs.windows_e2e && '[{"name":"linux","host":"ubuntu-latest"},{"name":"windows","host":"windows-latest"}]' || '[{"name":"linux","host":"ubuntu-latest"}]') }}
+        settings: ${{ fromJSON(inputs.windows_e2e && '[{"name":"linux","host":"ubuntu-24.04"},{"name":"windows","host":"windows-latest"}]' || '[{"name":"linux","host":"ubuntu-24.04"}]') }}
     runs-on: ${{ matrix.settings.host }}
     timeout-minutes: 40
     env:
