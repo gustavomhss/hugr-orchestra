@@ -127,7 +127,7 @@ export default function Board() {
   const loadList = () => {
     const controller = begin("list")
     return api()
-      .list({ signal: controller.signal })
+      .list({}, { signal: controller.signal })
       .then(
         (result) => !controller.signal.aborted && setStore({ projects: result, listFailed: false }),
         () => !controller.signal.aborted && setStore({ listFailed: true }),
