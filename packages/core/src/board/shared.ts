@@ -66,7 +66,7 @@ export const loadProject = Effect.fnUntraced(function* (tx: Tx, key: string) {
   return row
 })
 
-const loadIssue = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, number: number) {
+export const loadIssue = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, number: number) {
   const row = yield* tx
     .select()
     .from(BoardIssueTable)
@@ -76,7 +76,7 @@ const loadIssue = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, numb
   return row
 })
 
-const loadEpic = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, number: number) {
+export const loadEpic = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, number: number) {
   const row = yield* tx
     .select()
     .from(BoardEpicTable)
