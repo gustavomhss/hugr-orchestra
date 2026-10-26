@@ -8,6 +8,8 @@ export type LiveOverlayAnswer = {
   lead: string
   points: { text: string; source: LiveOverlaySource }[]
   latencyMs: number
+  // Still arriving: the next streamed or pushed answer replaces this one instead of adding a page.
+  streaming?: boolean
 }
 
 export type LiveOverlaySense = "granted" | "denied" | "on-request"
@@ -22,6 +24,8 @@ export type LiveOverlayView =
   | { kind: "idle" }
   | { kind: "answer" }
   | { kind: "quick" }
+  // Shown right after ask or look, until the first part of the answer arrives.
+  | { kind: "thinking"; question?: string }
   | { kind: "captions"; lines: { track: "me" | "them"; text: string; partial: string }[] }
   | { kind: "suggestion"; question: string }
   | { kind: "stop-pending"; title: string; durationMs: number }
@@ -108,9 +112,17 @@ export function pageAnswers(state: LiveOverlayState, step: -1 | 1): LiveOverlayS
   return { ...state, answerIndex, view: { kind: "answer" } }
 }
 
+// A new answer becomes the current page. One that replaces a streaming answer keeps the page the owner is reading.
 export function pushAnswer(state: LiveOverlayState, answer: LiveOverlayAnswer): LiveOverlayState {
-  const answers = [...state.answers, answer]
-  return { ...state, answers, answerIndex: answers.length - 1, view: { kind: "answer" } }
+  if (!state.answers.at(-1)?.streaming) {
+    const answers = [...state.answers, answer]
+    return { ...state, answers, answerIndex: answers.length - 1, view: { kind: "answer" } }
+  }
+  return { ...state, answers: [...state.answers.slice(0, -1), answer] }
+}
+
+export function streamAnswer(state: LiveOverlayState, answer: LiveOverlayAnswer): LiveOverlayState {
+  return pushAnswer(state, { ...answer, streaming: true })
 }
 
 // Top centre of the work area, a little below the menu bar, as in the approved mocks.
