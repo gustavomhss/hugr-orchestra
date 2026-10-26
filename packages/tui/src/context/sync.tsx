@@ -227,9 +227,6 @@ export const {
     event.subscribe((event, { workspace }) => {
       receiveHistory(event)
       switch (event.type) {
-        case "global.disposed":
-          void bootstrap()
-          break
         case "permission.v2.replied": {
           settleDemo(event.data.sessionID, event.data.requestID, event.data.reply === "reject" ? { type: "error", error: "permission rejected" } : { type: "completed" })
           const requests = store.permission[event.data.sessionID]
