@@ -1,6 +1,7 @@
 import { useLanguage } from "@/context/language"
 import type { ServerConnection } from "@/context/server"
 import { createHomeController } from "@/pages/home/home-controller"
+import { Icon } from "../actions/components"
 import "./kit.css"
 
 // A chapter that needs a git repository renders this when the open folder has none. The one next step the app
@@ -11,6 +12,9 @@ export function NoRepository(props: { server: ServerConnection.Any; title: strin
 
   return (
     <div class="mx-empty" role="status" data-slot="orchestra-no-repository">
+      <span class="mx-mark" aria-hidden="true">
+        <Icon name="branch" />
+      </span>
       <strong>{props.title}</strong>
       <p>{props.hint}</p>
       <button type="button" class="mx-btn primary" onClick={() => home.project.choose(props.server)}>

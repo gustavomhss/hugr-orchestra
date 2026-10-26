@@ -401,6 +401,13 @@ html[data-color-scheme="light"] .mx-dialog {
     var(--mx-soft);
   box-shadow: var(--mx-highlight);
 }
+/* A state that names its own icon (a .mx-mark) replaces the generic dot. */
+.mx-empty:has(> .mx-mark)::before {
+  display: none;
+}
+.mx-empty > .mx-mark {
+  margin: 0 auto 14px;
+}
 .mx-empty[role="alert"],
 .mx-empty:has([role="alert"]) {
   border-color: color-mix(in srgb, var(--mx-bad) 28%, transparent);
