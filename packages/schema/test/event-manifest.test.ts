@@ -124,7 +124,7 @@ const publicEventTypes = [
 
 describe("public event manifest", () => {
   test("owns the complete public event surface", () => {
-    expect(EventManifest.ServerDefinitions.length).toBe(88)
+    expect(EventManifest.ServerDefinitions.length).toBe(89)
     // The V2 server's HEAD watcher announces branch switches.
     expect(EventManifest.ServerDefinitions).toContain(VcsEvent.BranchUpdated)
     expect(EventManifest.Definitions.length).toBe(117)

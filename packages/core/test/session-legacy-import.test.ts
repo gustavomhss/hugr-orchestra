@@ -201,8 +201,8 @@ describe("SessionLegacyImport", () => {
       const prompted = (yield* session.create({ location })).id
       const ok = (yield* session.create({ location })).id
       const asked = { role: "user", time: { created: 1000 }, agent: "build", model: { providerID: "p", modelID: "m" } }
-      // An undecodable assistant message (no tokens) converts to nothing.
-      yield* insertV1(broken, [{ id: "msg_b1", role: "assistant", time: { created: 1 } }], [])
+      // A user message with no text and no files converts to nothing.
+      yield* insertV1(broken, [{ id: "msg_b1", ...asked }], [{ id: "prt_b1", message_id: "msg_b1", data: { type: "text", text: "" } }])
       yield* insertV1(ok, [{ id: "msg_o1", ...asked }], [{ id: "prt_o1", message_id: "msg_o1", data: { type: "text", text: "old" } }])
       yield* insertV1(prompted, [{ id: "msg_p1", ...asked }], [{ id: "prt_p1", message_id: "msg_p1", data: { type: "text", text: "old" } }])
       // A prompt that reached the Session before the import ran leaves a V2 message behind.
