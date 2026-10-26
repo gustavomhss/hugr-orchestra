@@ -534,17 +534,21 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
                   onClose={() => setStore("confirmDelete", false)}
                 >
                   <Show when={store.confirmDelete}>
-                    <div class="mx-dialog-body">
-                      <h2 id="fe-delete-title">{t("orchestra.flightEngineer.detail.deleteTitle")}</h2>
-                      <p>{t("orchestra.flightEngineer.detail.deleteBody")}</p>
-                      <Show when={store.deleteRefusal}>
+                    <div class="mx-dialog-head">
+                      <div>
+                        <h2 id="fe-delete-title">{t("orchestra.flightEngineer.detail.deleteTitle")}</h2>
+                        <p>{t("orchestra.flightEngineer.detail.deleteBody")}</p>
+                      </div>
+                    </div>
+                    <Show when={store.deleteRefusal}>
+                      <div class="mx-dialog-body">
                         <Note tone="bad">
                           {store.deleteRefusal === "running"
                             ? t("orchestra.flightEngineer.detail.deleteRunning")
                             : t("orchestra.flightEngineer.detail.deleteFailed")}
                         </Note>
-                      </Show>
-                    </div>
+                      </div>
+                    </Show>
                     <div class="mx-dialog-foot">
                       <button type="button" class="mx-btn" onClick={() => dialog?.close()}>
                         {t("orchestra.flightEngineer.cancel")}

@@ -572,6 +572,9 @@
   inset: 0;
   max-inline-size: 440px;
 }
+.fe-dialog::backdrop {
+  background: var(--mx-backdrop);
+}
 
 /* Settings */
 .fe-settings + .fe-settings {
