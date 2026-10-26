@@ -210,11 +210,11 @@ test("benchmark transport rejects missing, empty, unknown and regression rendere
 })
 
 test("report requires exact OS matrix jobs; missing, repeated and extra hosts fail", () => {
-  const jobs = ["ubuntu-latest", "windows-latest", "macos-14"].map((host) => ({ name: `test (${host})` }))
+  const jobs = ["ubuntu-24.04", "windows-latest", "macos-14"].map((host) => ({ name: `test (${host})` }))
   expect(requireTestJobs("all", [...jobs, { name: "cleanup" }])).toEqual(jobs)
   for (const [os, indices] of [["linux", [0]], ["windows", [1]], ["macos", [2]], ["both", [0, 1]]] as const)
     expect(requireTestJobs(os, indices.map((index) => jobs[index]!))).toHaveLength(indices.length)
-  expect(() => requireTestJobs("linux", [])).toThrow("test (ubuntu-latest): missing or repeated")
+  expect(() => requireTestJobs("linux", [])).toThrow("test (ubuntu-24.04): missing or repeated")
   expect(() => requireTestJobs("linux", undefined as unknown as { name: string }[])).toThrow("missing matrix jobs")
   expect(() => requireTestJobs("all", jobs.slice(0, 2))).toThrow("test (macos-14): missing or repeated")
   expect(() => requireTestJobs("linux", [jobs[0]!, jobs[0]!])).toThrow("repeated")
@@ -222,8 +222,8 @@ test("report requires exact OS matrix jobs; missing, repeated and extra hosts fa
 })
 
 test("successful report requires step metadata, step log, endgroup and nonempty output", () => {
-  const job = { name: "test (ubuntu-latest)", conclusion: "success", steps: [{ name: "Run tests", conclusion: "success" }] }
-  const log = (text: string) => `test (ubuntu-latest)\tRun tests\t2026-10-09T00:00:00Z ${text}`
+  const job = { name: "test (ubuntu-24.04)", conclusion: "success", steps: [{ name: "Run tests", conclusion: "success" }] }
+  const log = (text: string) => `test (ubuntu-24.04)\tRun tests\t2026-10-09T00:00:00Z ${text}`
   expect(reportLines(job, [log("##[endgroup]"), log("\u001b[32m1 pass\u001b[0m")].join("\n"))).toEqual(["1 pass"])
   expect(reportLines(job, [log("##[endgroup]"), log("1 pass")].join("\r\n"))).toEqual(["1 pass"])
   expect(() => reportLines(job, " \n")).toThrow(`${job.name}: empty job log`)
@@ -263,9 +263,9 @@ test("preloadsControl reads the package's own preload list", () => {
 })
 
 test("controlVerdict accepts exactly one verdict line carrying this job's nonce, nothing else", () => {
-  const job = { name: "test (ubuntu-latest)" }
+  const job = { name: "test (ubuntu-24.04)" }
   const nonce = "0123456789abcdef0123456789abcdef"
-  const row = (step: string, text: string) => `test (ubuntu-latest)\t${step}\t2026-10-12T03:10:05.9742438Z ${text}`
+  const row = (step: string, text: string) => `test (ubuntu-24.04)\t${step}\t2026-10-12T03:10:05.9742438Z ${text}`
   const nonceRow = row("Omni control nonce", `omni control nonce: ${nonce}`)
   const header = row("Omni control nonce", 'echo "omni control nonce: $nonce"')
   const verdict = row("Run tests", `omni positive control [${nonce}]: pass (declared: 1 test(s) in a.test.ts); 3 omni spawn(s), 0 delegated.`)
