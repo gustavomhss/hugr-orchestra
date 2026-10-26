@@ -52,8 +52,6 @@ database into V2 once.
 | unset or `owned` | the desktop-owned `orchestra serve` child (default) |
 | `shared` | the shared background daemon managed through the CLI |
 
-The lean candidate profile always uses the desktop-owned child.
-
 ## Persistent data
 
 Electron settings and desktop draft data live under Electron's `userData`
