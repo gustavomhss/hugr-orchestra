@@ -49,3 +49,19 @@ export const shippedKey = {
   week: "orchestra.board.shipped.week",
   earlier: "orchestra.board.shipped.earlier",
 } as const
+export const budgetKey = {
+  none: "orchestra.money.state.none",
+  ok: "orchestra.money.state.ok",
+  warn: "orchestra.money.state.warn",
+  paused: "orchestra.money.state.paused",
+} as const
+export const decidedKey = {
+  maestro: "orchestra.decisions.by.maestro",
+  owner: "orchestra.decisions.by.owner",
+  github: "orchestra.decisions.by.github",
+} as const
+export const checkKey = {
+  pass: "orchestra.proof.check.pass",
+  fail: "orchestra.proof.check.fail",
+  run: "orchestra.proof.check.run",
+} as const
