@@ -479,7 +479,7 @@ export function SettingsPanel(props: {
     // Only what changed is sent, so saving one field never rewrites the other.
     void props
       .onSave({
-        ...(day === props.targetDate ? {} : { target_date: day }),
+        ...(target() === dayInput(props.targetDate) ? {} : { target_date: day }),
         ...(money === props.budgetUsd ? {} : { budget_usd: money }),
         ...(reason().trim() ? { reason: reason().trim() } : {}),
       })
