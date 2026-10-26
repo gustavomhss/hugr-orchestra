@@ -317,6 +317,11 @@
   font-weight: 600;
 }
 
+.board-table-group-head .board-id {
+  color: var(--orchestra-muted);
+  font-size: var(--orchestra-font-size-xs);
+}
+
 .board-table-epic {
   appearance: none;
   padding: 0;
@@ -515,6 +520,15 @@
   font-weight: 400;
   letter-spacing: 0;
   text-transform: none;
+}
+
+/* The epic column is narrower than the list, so the fixed columns shrink to leave the title room. */
+.board-epic-stage .board-table {
+  --board-table-columns: 72px minmax(0, 1fr) 28px 112px 28px 56px 48px;
+}
+
+.board-epic-stage .board-table-row {
+  gap: 10px;
 }
 
 .board-epic-stage .board-table-row:first-child,
@@ -960,7 +974,8 @@ button.board-timeline-label:hover .board-timeline-issue-title {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
-  .board-table {
+  .board-table,
+  .board-epic-stage .board-table {
     --board-table-columns: 96px minmax(0, 1fr) 32px 120px 52px;
   }
 
@@ -985,7 +1000,8 @@ button.board-timeline-label:hover .board-timeline-issue-title {
     justify-content: flex-start;
   }
 
-  .board-table {
+  .board-table,
+  .board-epic-stage .board-table {
     --board-table-columns: minmax(0, 1fr) 32px 52px;
   }
 

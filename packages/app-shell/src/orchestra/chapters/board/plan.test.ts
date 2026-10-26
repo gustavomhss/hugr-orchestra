@@ -9,6 +9,7 @@ import {
   isoWeek,
   monday,
   range,
+  scopeLog,
   seats,
   segment,
   shipLine,
@@ -222,7 +223,7 @@ describe("timeline frame", () => {
     expect(isoWeek(Date.UTC(2027, 0, 1))).toBe(53)
   })
 
-  test("spans first activity to a week past the latest forecast or target, and places dates inside it", () => {
+  test("spans first activity to well past the latest forecast or target, and places dates inside it", () => {
     const p85 = Date.UTC(2026, 10, 6)
     const snapshot = {
       issues: [issue(1, "shipped", { stageEnteredAt: Date.UTC(2026, 9, 14) })],
@@ -237,11 +238,33 @@ describe("timeline frame", () => {
     }
     const view = frame(snapshot, Date.UTC(2026, 9, 26))
     expect(view.start).toBe(Date.UTC(2026, 9, 12))
-    expect(view.end).toBe(Date.UTC(2026, 10, 9))
-    expect(view.weeks.map((item) => item.week)).toEqual([42, 43, 44, 45])
+    expect(view.end).toBe(Date.UTC(2026, 10, 23))
+    expect(view.weeks.map((item) => item.week)).toEqual([42, 43, 44, 45, 46, 47])
     expect(view.at(view.start)).toBe(0)
-    expect(view.at(Date.UTC(2026, 9, 26))).toBe(50)
+    expect(view.at(Date.UTC(2026, 10, 2))).toBe(50)
     expect(view.at(Date.UTC(2027, 0, 1))).toBe(100)
+  })
+
+  test("the scope log skips the day the plan was written and folds same-day changes with one reason", () => {
+    const point = (days: number, scope: number, shipped: number, reason: string | null) => ({
+      at: start + days * day + 3_600_000,
+      scope,
+      shipped,
+      reason,
+    })
+    expect(
+      scopeLog([
+        point(0, 1, 0, "Plan."),
+        point(0, 2, 0, "Plan."),
+        point(2, 2, 1, null),
+        point(4, 3, 1, "Refunds joined."),
+        point(4, 4, 1, "Refunds joined."),
+        point(6, 3, 1, "Dropped the export."),
+      ]),
+    ).toEqual([
+      { at: start + 4 * day + 3_600_000, reason: "Refunds joined.", delta: 2 },
+      { at: start + 6 * day + 3_600_000, reason: "Dropped the export.", delta: -1 },
+    ])
   })
 
   test("bars follow Maestro's epic order and fall back to done without a forecast", () => {

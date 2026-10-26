@@ -133,7 +133,8 @@ export function isoWeek(at: number) {
   return Math.floor((thursday - Date.UTC(year, 0, 1)) / week) + 1
 }
 
-// The timeline's frame: whole weeks from the first board activity to a week past the latest date it must show.
+// The timeline's frame: whole weeks from the first board activity to at least eleven days past the latest date it
+// must show, so the date written after the last forecast window still fits inside the frame.
 export function frame(snapshot: Pick<Snapshot, "issues" | "scope" | "forecast" | "epicForecasts">, now: number) {
   const dates = [snapshot.forecast, ...snapshot.epicForecasts].flatMap((item) =>
     item.forecast.kind === "dates" ? [item.forecast.p85] : [],
@@ -146,7 +147,7 @@ export function frame(snapshot: Pick<Snapshot, "issues" | "scope" | "forecast" |
     ...(snapshot.forecast.targetDate === null ? [] : [snapshot.forecast.targetDate]),
   ]
   const start = monday(Math.min(...marks))
-  const end = monday(Math.max(...marks)) + week
+  const end = monday(Math.max(...marks) + 10 * day) + week
   const weeks = Array.from({ length: Math.round((end - start) / week) }, (_, index) => start + index * week)
   return {
     start,
@@ -177,6 +178,20 @@ export function bars(snapshot: Pick<Snapshot, "epics" | "issues" | "epicForecast
     })
     .filter((bar) => bar.total > 0)
     .toSorted((a, b) => a.epic.position - b.epic.position)
+}
+
+// Scope changes worth listing: the first day's growth is the plan being written, not a change to it, and same-day
+// changes with the same reason read as one.
+export function scopeLog(points: Snapshot["scope"]) {
+  const first = Math.floor((points[0]?.at ?? 0) / day)
+  return points.reduce<{ at: number; reason: string | null; delta: number }[]>((log, point, index) => {
+    const delta = point.scope - (points[index - 1]?.scope ?? point.scope)
+    if (Math.floor(point.at / day) === first || (delta === 0 && !point.reason)) return log
+    const last = log.at(-1)
+    if (last && Math.floor(last.at / day) === Math.floor(point.at / day) && last.reason === point.reason)
+      return [...log.slice(0, -1), { ...last, delta: last.delta + delta }]
+    return [...log, { at: point.at, reason: point.reason, delta }]
+  }, [])
 }
 
 // A P50–P85 range in the owner's language, read in UTC because forecast dates are UTC midnights.

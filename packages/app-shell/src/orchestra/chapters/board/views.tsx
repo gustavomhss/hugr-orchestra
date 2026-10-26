@@ -13,6 +13,7 @@ import {
   frame,
   needsYou,
   range,
+  scopeLog,
   seats,
   segment,
   shipLine,
@@ -806,12 +807,7 @@ export function Timeline(props: {
     "inline-size": `max(4px, ${Math.abs(view().at(to) - view().at(from))}%)`,
   })
   const scope = createMemo(() => props.snapshot.scope.toSorted((a, b) => a.at - b.at))
-  const changes = createMemo(() =>
-    scope().flatMap((point, index) => {
-      const delta = point.scope - (scope()[index - 1]?.scope ?? point.scope)
-      return index > 0 && (delta !== 0 || point.reason) ? [{ ...point, delta }] : []
-    }),
-  )
+  const changes = createMemo(() => scopeLog(scope()))
   const issueCount = createMemo(() => list().reduce((sum, bar) => sum + bar.total, 0))
 
   return (
