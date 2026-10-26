@@ -5,6 +5,7 @@ import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { EventV2 } from "@orchestra/core/event"
 import { ClaudeCodeAccount } from "@orchestra/core/claude-code-account"
 import { Credential } from "@orchestra/core/credential"
+import { Board } from "@orchestra/core/board/board"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { AppProcess } from "@orchestra/core/process"
 import { Npm } from "@orchestra/core/npm"
@@ -74,6 +75,7 @@ const applicationServices = LayerNode.group([
   Global.node,
   ProjectV2.node,
   Installation.node,
+  Board.node,
 ])
 
 export interface Options {

@@ -108,6 +108,7 @@ files directly.
 - `backend-toolkit` — platform — `src/backend-toolkit/`, `src/pinned-artifact.ts` — packs move to modules/backend-toolkit after the 70-C' cut
 - `control-plane` — platform — `src/control-plane/` — packages/core
 - `capability` — platform — `src/capability/`, `src/toolkit/` — packages/core
+- `board` — platform — `src/board/` — packages/core
 - `scheduled-task` — platform — `src/scheduled-task/`, `src/scheduled-task.ts` — packages/core
 - `actions` — platform — `src/actions/`, `src/actions.ts` — packages/core
 - `util` — platform — `src/util/`, `src/image/`, `src/image.ts`, `src/npm.ts`, `src/npm-config.ts` — packages/core

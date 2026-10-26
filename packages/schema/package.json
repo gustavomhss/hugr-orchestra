@@ -20,6 +20,7 @@
     "./atlas-screen": "./src/atlas-screen.ts",
     "./atlas-setup": "./src/atlas-setup.ts",
     "./behavior": "./src/behavior.ts",
+    "./board": "./src/board.ts",
     "./capability": "./src/capability.ts",
     "./catalog": "./src/catalog.ts",
     "./command": "./src/command.ts",

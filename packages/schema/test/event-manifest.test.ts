@@ -16,6 +16,7 @@ const publicEventTypes = [
   "integration.updated",
   "integration.connection.updated",
   "catalog.updated",
+  "board.changed",
   "session.created",
   "session.updated",
   "session.deleted",
@@ -124,10 +125,10 @@ const publicEventTypes = [
 
 describe("public event manifest", () => {
   test("owns the complete public event surface", () => {
-    expect(EventManifest.ServerDefinitions.length).toBe(89)
+    expect(EventManifest.ServerDefinitions.length).toBe(90)
     // The V2 server's HEAD watcher announces branch switches.
     expect(EventManifest.ServerDefinitions).toContain(VcsEvent.BranchUpdated)
-    expect(EventManifest.Definitions.length).toBe(117)
+    expect(EventManifest.Definitions.length).toBe(118)
     expect(SessionV1.Event.Definitions).toEqual([
       SessionV1.Event.Created,
       SessionV1.Event.Updated,

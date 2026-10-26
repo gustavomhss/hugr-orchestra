@@ -32,6 +32,7 @@ import { skillScenarios } from "./skill"
 import { relayScenarios } from "./relay"
 import { guardrailScenarios } from "./guardrail"
 import { meetingScenarios } from "./meeting"
+import { boardScenarios } from "./board"
 import { catalogScenarios } from "./catalog"
 import { researchArtifactScenarios } from "./research-artifact"
 import { actionsBindingScenarios } from "./actions-binding"
@@ -62,6 +63,7 @@ export const scenarios: Scenario[] = [
   ...relayScenarios,
   ...guardrailScenarios,
   ...meetingScenarios,
+  ...boardScenarios,
   ...catalogScenarios,
   ...researchArtifactScenarios,
   ...actionsBindingScenarios,

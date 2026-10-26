@@ -3,6 +3,7 @@ export * as MaestroSeatsV2 from "./seats"
 import path from "path"
 import { Effect, Layer, Option } from "effect"
 import { AgentV2 } from "@orchestra/core/agent"
+import { BoardTools } from "@orchestra/core/board/tools"
 import { makeLocationNode } from "@orchestra/core/effect/app-node"
 import type { Host } from "@orchestra/core/host"
 import type { PermissionV2 } from "@orchestra/core/permission"
@@ -180,11 +181,11 @@ export const node = makeLocationNode({
   deps: [PluginV2.node, AgentV2.node, SkillV2.node, MaestroSeats.node],
 })
 
-/** Maestro on V2: native seats as agents, Maestro's native and Atlas tools, the Atlas header and resume, the research seat's inquiry snapshot, the Arsenal's native safety owner and Maestro's Task governance in every Location, plus the workflow completion host. */
+/** Maestro on V2: native seats as agents, Maestro's native and Atlas tools, the Atlas header and resume, the research seat's inquiry snapshot, the Arsenal's native safety owner and Maestro's Task governance in every Location, plus the workflow completion host and Maestro's board tools. */
 export const contribution: Host.Contribution = {
   id: "maestro",
   replacements: [...ArsenalNative.nativeRegistryReplacements, ...MaestroGovernanceV2.replacements],
-  nodes: [MaestroWorkflowHostV2.node],
+  nodes: [MaestroWorkflowHostV2.node, BoardTools.node],
   locationNodes: [
     MaestroSeats.node,
     node,

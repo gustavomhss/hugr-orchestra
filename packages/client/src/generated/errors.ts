@@ -118,6 +118,16 @@ export type ProjectCopyError = {
 export const isProjectCopyError = (value: unknown): value is ProjectCopyError =>
   typeof value === "object" && value !== null && "name" in value && value["name"] === "ProjectCopyError"
 
+export type BoardNotFoundError = { readonly _tag: "BoardNotFoundError"; readonly message: string }
+
+export const isBoardNotFoundError = (value: unknown): value is BoardNotFoundError =>
+  typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "BoardNotFoundError"
+
+export type BoardRefusedError = { readonly _tag: "BoardRefusedError"; readonly message: string }
+
+export const isBoardRefusedError = (value: unknown): value is BoardRefusedError =>
+  typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "BoardRefusedError"
+
 export type RelayInvalidError = { readonly _tag: "RelayInvalidError"; readonly code: string; readonly message: string }
 
 export const isRelayInvalidError = (value: unknown): value is RelayInvalidError =>

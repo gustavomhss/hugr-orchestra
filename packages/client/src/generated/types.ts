@@ -5369,6 +5369,375 @@ export type ConfigShellsOutput = ReadonlyArray<{
   readonly acceptable: boolean
 }>
 
+export type ServerBoardListOutput = ReadonlyArray<{
+  readonly project: {
+    readonly id: string
+    readonly key: string
+    readonly name: string
+    readonly goal: string
+    readonly targetDate: number | null
+    readonly budgetUsd: number | null
+    readonly repoProjectID: string | null
+    readonly githubRepo: string | null
+    readonly status: "active" | "paused" | "shipped" | "archived"
+    readonly pausedReason: string | null
+    readonly autoAcceptIntake: boolean
+    readonly githubState: "off" | "ok" | "signed_out" | "rate_limited" | "error"
+    readonly githubError: string | null
+    readonly githubSyncedAt: number | null
+  }
+  readonly stages: { readonly [x: string]: number }
+  readonly openQuestions: number
+  readonly health: "on_track" | "waiting_on_owner" | "paused"
+}>
+
+export type ServerBoardGetInput = { readonly key: { readonly key: string }["key"] }
+
+export type ServerBoardGetOutput = {
+  readonly project: {
+    readonly id: string
+    readonly key: string
+    readonly name: string
+    readonly goal: string
+    readonly targetDate: number | null
+    readonly budgetUsd: number | null
+    readonly repoProjectID: string | null
+    readonly githubRepo: string | null
+    readonly status: "active" | "paused" | "shipped" | "archived"
+    readonly pausedReason: string | null
+    readonly autoAcceptIntake: boolean
+    readonly githubState: "off" | "ok" | "signed_out" | "rate_limited" | "error"
+    readonly githubError: string | null
+    readonly githubSyncedAt: number | null
+  }
+  readonly epics: ReadonlyArray<{
+    readonly id: string
+    readonly number: number
+    readonly ref: string
+    readonly title: string
+    readonly goal: string
+    readonly position: number
+    readonly status: "open" | "shipped" | "cut"
+    readonly githubMilestone: number | null
+  }>
+  readonly issues: ReadonlyArray<{
+    readonly id: string
+    readonly number: number
+    readonly ref: string
+    readonly epic: number | null
+    readonly title: string
+    readonly body: string
+    readonly type: "feature" | "bug" | "chore"
+    readonly stage: "intake" | "backlog" | "ready" | "building" | "review" | "shipped" | "cut"
+    readonly position: number
+    readonly estimate: ("s" | "m" | "l") | null
+    readonly seat: string | null
+    readonly sessionID: string | null
+    readonly branch: string | null
+    readonly prNumber: number | null
+    readonly holdBeforeMerge: boolean
+    readonly paused: boolean
+    readonly stageEnteredAt: number
+    readonly githubNumber: number | null
+    readonly steps: ReadonlyArray<{
+      readonly title: string
+      readonly status: "pending" | "active" | "done" | "skipped"
+      readonly now: string | null
+    }>
+    readonly dependsOn: ReadonlyArray<string>
+  }>
+  readonly questions: ReadonlyArray<{
+    readonly id: string
+    readonly issue: number | null
+    readonly epic: number | null
+    readonly text: string
+    readonly options: ReadonlyArray<{ readonly id: string; readonly label: string; readonly consequence: string }>
+    readonly recommended: string
+    readonly costOfWaiting: string | null
+    readonly blocking: boolean
+    readonly status: "open" | "answered" | "withdrawn"
+    readonly answerOption: string | null
+    readonly answerText: string | null
+    readonly answeredAt: number | null
+    readonly timeCreated: number
+  }>
+  readonly cursor: string | null
+}
+
+export type ServerBoardIssueInput = {
+  readonly key: { readonly key: string; readonly number: string }["key"]
+  readonly number: { readonly key: string; readonly number: string }["number"]
+}
+
+export type ServerBoardIssueOutput = {
+  readonly issue: {
+    readonly id: string
+    readonly number: number
+    readonly ref: string
+    readonly epic: number | null
+    readonly title: string
+    readonly body: string
+    readonly type: "feature" | "bug" | "chore"
+    readonly stage: "intake" | "backlog" | "ready" | "building" | "review" | "shipped" | "cut"
+    readonly position: number
+    readonly estimate: ("s" | "m" | "l") | null
+    readonly seat: string | null
+    readonly sessionID: string | null
+    readonly branch: string | null
+    readonly prNumber: number | null
+    readonly holdBeforeMerge: boolean
+    readonly paused: boolean
+    readonly stageEnteredAt: number
+    readonly githubNumber: number | null
+    readonly steps: ReadonlyArray<{
+      readonly title: string
+      readonly status: "pending" | "active" | "done" | "skipped"
+      readonly now: string | null
+    }>
+    readonly dependsOn: ReadonlyArray<string>
+  }
+  readonly questions: ReadonlyArray<{
+    readonly id: string
+    readonly issue: number | null
+    readonly epic: number | null
+    readonly text: string
+    readonly options: ReadonlyArray<{ readonly id: string; readonly label: string; readonly consequence: string }>
+    readonly recommended: string
+    readonly costOfWaiting: string | null
+    readonly blocking: boolean
+    readonly status: "open" | "answered" | "withdrawn"
+    readonly answerOption: string | null
+    readonly answerText: string | null
+    readonly answeredAt: number | null
+    readonly timeCreated: number
+  }>
+  readonly notes: ReadonlyArray<{
+    readonly id: string
+    readonly issue: number
+    readonly author: string
+    readonly body: string
+    readonly timeCreated: number
+  }>
+  readonly attachments: ReadonlyArray<{
+    readonly id: string
+    readonly issue: number
+    readonly kind: "file" | "image" | "video" | "doc" | "secret"
+    readonly name: string
+    readonly mime: string | null
+    readonly size: number | null
+    readonly timeCreated: number
+  }>
+  readonly activity: ReadonlyArray<{
+    readonly id: string
+    readonly issue: number | null
+    readonly actor: "maestro" | "owner" | "github"
+    readonly action:
+      | "project.upsert"
+      | "epic.upsert"
+      | "issue.create"
+      | "issue.update"
+      | "issue.move"
+      | "steps.set"
+      | "question.ask"
+      | "question.withdraw"
+      | "question.answer"
+      | "note.add"
+      | "attachment.add"
+      | "intake.accept"
+      | "intake.decline"
+      | "hold.set"
+      | "pause.set"
+      | "github.overwrite"
+      | "github.state"
+      | "undo"
+    readonly reason: string | null
+    readonly before: { readonly [x: string]: unknown } | null
+    readonly after: { readonly [x: string]: unknown } | null
+    readonly undoes: string | null
+    readonly undoneBy: string | null
+    readonly timeCreated: number
+  }>
+  readonly dependencies: { readonly dependsOn: ReadonlyArray<string>; readonly blocks: ReadonlyArray<string> }
+  readonly trail:
+    | { readonly state: "none"; readonly branch: string | null }
+    | { readonly state: "signed_out"; readonly message: string }
+    | { readonly state: "error"; readonly message: string }
+    | {
+        readonly state: "ok"
+        readonly branch: string
+        readonly pr: {
+          readonly number: number
+          readonly title: string
+          readonly url: string
+          readonly state: string
+          readonly merged: boolean
+          readonly branch: string
+          readonly reviewDecision: string | null
+          readonly mergeCommit: string | null
+          readonly commits: ReadonlyArray<{ readonly hash: string; readonly message: string }>
+          readonly checks: ReadonlyArray<{
+            readonly name: string
+            readonly status: string
+            readonly conclusion: string | null
+          }>
+        }
+        readonly commits: ReadonlyArray<{
+          readonly hash: string
+          readonly message: string
+          readonly seat: string | null
+        }>
+      }
+}
+
+export type ServerBoardActivityInput = {
+  readonly key: { readonly key: string }["key"]
+  readonly since?: { readonly since?: string | undefined }["since"]
+}
+
+export type ServerBoardActivityOutput = ReadonlyArray<{
+  readonly id: string
+  readonly issue: number | null
+  readonly actor: "maestro" | "owner" | "github"
+  readonly action:
+    | "project.upsert"
+    | "epic.upsert"
+    | "issue.create"
+    | "issue.update"
+    | "issue.move"
+    | "steps.set"
+    | "question.ask"
+    | "question.withdraw"
+    | "question.answer"
+    | "note.add"
+    | "attachment.add"
+    | "intake.accept"
+    | "intake.decline"
+    | "hold.set"
+    | "pause.set"
+    | "github.overwrite"
+    | "github.state"
+    | "undo"
+  readonly reason: string | null
+  readonly before: { readonly [x: string]: unknown } | null
+  readonly after: { readonly [x: string]: unknown } | null
+  readonly undoes: string | null
+  readonly undoneBy: string | null
+  readonly timeCreated: number
+}>
+
+export type ServerBoardAnswerInput = {
+  readonly key: { readonly key: string; readonly id: string }["key"]
+  readonly id: { readonly key: string; readonly id: string }["id"]
+  readonly option: { readonly option: string; readonly text?: string }["option"]
+  readonly text?: { readonly option: string; readonly text?: string }["text"]
+}
+
+export type ServerBoardAnswerOutput = { readonly activity: string }
+
+export type ServerBoardNoteInput = {
+  readonly key: { readonly key: string; readonly number: string }["key"]
+  readonly number: { readonly key: string; readonly number: string }["number"]
+  readonly body: { readonly body: string }["body"]
+}
+
+export type ServerBoardNoteOutput = { readonly activity: string }
+
+export type ServerBoardAttachInput = {
+  readonly key: { readonly key: string; readonly number: string }["key"]
+  readonly number: { readonly key: string; readonly number: string }["number"]
+  readonly kind: {
+    readonly kind: "file" | "image" | "video" | "doc" | "secret"
+    readonly name: string
+    readonly mime?: string
+    readonly data?: string
+    readonly value?: string
+  }["kind"]
+  readonly name: {
+    readonly kind: "file" | "image" | "video" | "doc" | "secret"
+    readonly name: string
+    readonly mime?: string
+    readonly data?: string
+    readonly value?: string
+  }["name"]
+  readonly mime?: {
+    readonly kind: "file" | "image" | "video" | "doc" | "secret"
+    readonly name: string
+    readonly mime?: string
+    readonly data?: string
+    readonly value?: string
+  }["mime"]
+  readonly data?: {
+    readonly kind: "file" | "image" | "video" | "doc" | "secret"
+    readonly name: string
+    readonly mime?: string
+    readonly data?: string
+    readonly value?: string
+  }["data"]
+  readonly value?: {
+    readonly kind: "file" | "image" | "video" | "doc" | "secret"
+    readonly name: string
+    readonly mime?: string
+    readonly data?: string
+    readonly value?: string
+  }["value"]
+}
+
+export type ServerBoardAttachOutput = { readonly activity: string }
+
+export type ServerBoardUndoInput = {
+  readonly key: { readonly key: string; readonly id: string }["key"]
+  readonly id: { readonly key: string; readonly id: string }["id"]
+}
+
+export type ServerBoardUndoOutput = { readonly activity: string }
+
+export type ServerBoardPauseInput = {
+  readonly key: { readonly key: string }["key"]
+  readonly reason?: { readonly reason?: string }["reason"]
+}
+
+export type ServerBoardPauseOutput = { readonly activity: string }
+
+export type ServerBoardResumeInput = { readonly key: { readonly key: string }["key"] }
+
+export type ServerBoardResumeOutput = { readonly activity: string }
+
+export type ServerBoardPauseIssueInput = {
+  readonly key: { readonly key: string; readonly number: string }["key"]
+  readonly number: { readonly key: string; readonly number: string }["number"]
+}
+
+export type ServerBoardPauseIssueOutput = { readonly activity: string }
+
+export type ServerBoardResumeIssueInput = {
+  readonly key: { readonly key: string; readonly number: string }["key"]
+  readonly number: { readonly key: string; readonly number: string }["number"]
+}
+
+export type ServerBoardResumeIssueOutput = { readonly activity: string }
+
+export type ServerBoardHoldInput = {
+  readonly key: { readonly key: string; readonly number: string }["key"]
+  readonly number: { readonly key: string; readonly number: string }["number"]
+  readonly hold: { readonly hold: boolean }["hold"]
+}
+
+export type ServerBoardHoldOutput = { readonly activity: string }
+
+export type ServerBoardAcceptInput = {
+  readonly key: { readonly key: string; readonly number: string }["key"]
+  readonly number: { readonly key: string; readonly number: string }["number"]
+}
+
+export type ServerBoardAcceptOutput = { readonly activity: string }
+
+export type ServerBoardDeclineInput = {
+  readonly key: { readonly key: string; readonly number: string }["key"]
+  readonly number: { readonly key: string; readonly number: string }["number"]
+}
+
+export type ServerBoardDeclineOutput = { readonly activity: string }
+
 export type RelayDocumentsListInput = {
   readonly location?: {
     readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
@@ -10271,6 +10640,10 @@ export {
   isQuestionNotFoundError,
   type ProjectCopyError,
   isProjectCopyError,
+  type BoardNotFoundError,
+  isBoardNotFoundError,
+  type BoardRefusedError,
+  isBoardRefusedError,
   type RelayInvalidError,
   isRelayInvalidError,
   type RelayNotFoundError,

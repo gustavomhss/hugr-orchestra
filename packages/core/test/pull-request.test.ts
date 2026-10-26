@@ -416,6 +416,79 @@ describe("PullRequest", () => {
       ),
     30_000,
   )
+
+  it.live(
+    "reads one GitHub pull request with its commits, CI checks and merge state, and names a missing one",
+    () =>
+      withFixture((fixture) =>
+        Effect.gen(function* () {
+          const directory = yield* repository(fixture.root, [["origin", "git@github.com:acme/widgets.git"]])
+          const detail = {
+            data: {
+              repository: {
+                pullRequest: {
+                  number: 7,
+                  title: "Build it",
+                  url: "https://github.com/acme/widgets/pull/7",
+                  state: "MERGED",
+                  merged: true,
+                  headRefName: "feature",
+                  reviewDecision: "APPROVED",
+                  mergeCommit: { oid: "def456" },
+                  commits: {
+                    nodes: [
+                      { commit: { oid: "abc123", messageHeadline: "First", statusCheckRollup: null } },
+                      {
+                        commit: {
+                          oid: "bcd234",
+                          messageHeadline: "Second",
+                          statusCheckRollup: {
+                            contexts: {
+                              nodes: [
+                                { name: "test", status: "COMPLETED", conclusion: "SUCCESS" },
+                                { context: "lint", state: "PENDING" },
+                              ],
+                            },
+                          },
+                        },
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          }
+          const gh = yield* fake(fixture.bin, "gh", { stdout: JSON.stringify(detail) })
+          const service = yield* PullRequest.make({ directory, env: env(fixture.bin) })
+          expect(yield* service.read(7)).toEqual({
+            number: 7,
+            title: "Build it",
+            url: "https://github.com/acme/widgets/pull/7",
+            state: "MERGED",
+            merged: true,
+            branch: "feature",
+            reviewDecision: "APPROVED",
+            mergeCommit: "def456",
+            commits: [
+              { hash: "abc123", message: "First" },
+              { hash: "bcd234", message: "Second" },
+            ],
+            checks: [
+              { name: "test", status: "COMPLETED", conclusion: "SUCCESS" },
+              { name: "lint", status: "COMPLETED", conclusion: "PENDING" },
+            ],
+          })
+          expect((yield* gh.calls())[0]?.argv).toEqual(expect.arrayContaining(["api", "graphql", "owner=acme", "name=widgets", "number=7"]))
+
+          yield* fake(fixture.bin, "gh", { stdout: JSON.stringify({ data: { repository: { pullRequest: null } } }) })
+          expect(yield* service.read(99).pipe(Effect.flip)).toMatchObject({
+            kind: "cli_failed",
+            message: "Pull request #99 does not exist in acme/widgets",
+          })
+        }),
+      ),
+    30_000,
+  )
 })
 
 function withFixture<A, E, R>(body: (fixture: { root: string; bin: string }) => Effect.Effect<A, E, R>) {

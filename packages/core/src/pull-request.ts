@@ -17,6 +17,8 @@ export const CreateInput = PullRequest.CreateInput
 export type CreateInput = typeof CreateInput.Type
 export const Created = PullRequest.Created
 export type Created = typeof Created.Type
+export const Detail = PullRequest.Detail
+export type Detail = typeof Detail.Type
 
 export class HostError extends Schema.TaggedErrorClass<HostError>()("PullRequest.HostError", {
   kind: PullRequest.ErrorKind,
@@ -29,6 +31,8 @@ export class HostError extends Schema.TaggedErrorClass<HostError>()("PullRequest
 export interface Interface {
   readonly list: () => Effect.Effect<List, HostError>
   readonly create: (input: CreateInput) => Effect.Effect<Created, HostError>
+  /** Reads one GitHub pull request with its commits, review state, CI checks and merge commit. */
+  readonly read: (number: number) => Effect.Effect<Detail, HostError>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/PullRequest") {}
@@ -74,6 +78,63 @@ const decodeGitHubList = Schema.decodeUnknownOption(
               }),
             ),
           }),
+        }),
+      }),
+    }),
+  ),
+)
+// One pull request with what the board's git trail shows. CI checks are the head commit's statusCheckRollup:
+// check runs carry status and conclusion, legacy commit statuses carry a state.
+const GITHUB_DETAIL_QUERY =
+  "query($owner: String!, $name: String!, $number: Int!) { repository(owner: $owner, name: $name) { pullRequest(number: $number) { " +
+  "number title url state merged headRefName reviewDecision mergeCommit { oid } " +
+  "commits(last: " +
+  PAGE +
+  ") { nodes { commit { oid messageHeadline statusCheckRollup { contexts(first: " +
+  PAGE +
+  ") { nodes { __typename ... on CheckRun { name status conclusion } ... on StatusContext { context state } } } } } } } } } }"
+const decodeGitHubDetail = Schema.decodeUnknownOption(
+  Schema.fromJsonString(
+    Schema.Struct({
+      data: Schema.Struct({
+        repository: Schema.Struct({
+          pullRequest: Schema.NullOr(
+            Schema.Struct({
+              number: Schema.Int,
+              title: Schema.String,
+              url: Schema.String,
+              state: Schema.String,
+              merged: Schema.Boolean,
+              headRefName: Schema.String,
+              reviewDecision: Schema.NullOr(Schema.String),
+              mergeCommit: Schema.NullOr(Schema.Struct({ oid: Schema.String })),
+              commits: Schema.Struct({
+                nodes: Schema.Array(
+                  Schema.Struct({
+                    commit: Schema.Struct({
+                      oid: Schema.String,
+                      messageHeadline: Schema.String,
+                      statusCheckRollup: Schema.NullOr(
+                        Schema.Struct({
+                          contexts: Schema.Struct({
+                            nodes: Schema.Array(
+                              Schema.Struct({
+                                name: Schema.optional(Schema.String),
+                                status: Schema.optional(Schema.String),
+                                conclusion: Schema.optional(Schema.NullOr(Schema.String)),
+                                context: Schema.optional(Schema.String),
+                                state: Schema.optional(Schema.String),
+                              }),
+                            ),
+                          }),
+                        }),
+                      ),
+                    }),
+                  }),
+                ),
+              }),
+            }),
+          ),
         }),
       }),
     }),
@@ -330,7 +391,62 @@ export const make = Effect.fn("PullRequest.make")(function* (input: { directory:
     return { host: remote.host, repository: remote.path, number: created.number, url: created.url }
   })
 
-  return Service.of({ list, create })
+  const read = Effect.fn("PullRequest.read")(function* (number: number) {
+    const remote = yield* target()
+    if (remote.host !== "github")
+      return yield* new HostError({
+        kind: "cli_failed",
+        host: remote.host,
+        remote: remote.name,
+        message: "Orchestra reads single pull requests from GitHub only",
+      })
+    const text = yield* cli(
+      remote,
+      [
+        "api",
+        "graphql",
+        "--hostname",
+        remote.hostname,
+        "-f",
+        `query=${GITHUB_DETAIL_QUERY}`,
+        "-f",
+        `owner=${remote.segments[0]}`,
+        "-f",
+        `name=${remote.segments[1]}`,
+        "-F",
+        `number=${number}`,
+      ],
+      { seconds: LIST_SECONDS },
+    )
+    const pull = Option.getOrUndefined(decodeGitHubDetail(text))?.data.repository.pullRequest
+    if (pull === undefined) return yield* unreadable(remote, "the pull request")
+    if (pull === null)
+      return yield* new HostError({
+        kind: "cli_failed",
+        host: remote.host,
+        remote: remote.name,
+        message: `Pull request #${number} does not exist in ${remote.path}`,
+      })
+    const head = pull.commits.nodes.at(-1)?.commit
+    return {
+      number: pull.number,
+      title: pull.title,
+      url: pull.url,
+      state: pull.state,
+      merged: pull.merged,
+      branch: pull.headRefName,
+      reviewDecision: pull.reviewDecision,
+      mergeCommit: pull.mergeCommit?.oid ?? null,
+      commits: pull.commits.nodes.map((node) => ({ hash: node.commit.oid, message: node.commit.messageHeadline })),
+      checks: (head?.statusCheckRollup?.contexts.nodes ?? []).map((check) => ({
+        name: check.name ?? check.context ?? "check",
+        status: check.status ?? "COMPLETED",
+        conclusion: check.conclusion ?? check.state ?? null,
+      })),
+    }
+  })
+
+  return Service.of({ list, create, read })
 })
 
 export const layer = Layer.effect(

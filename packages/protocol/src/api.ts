@@ -31,6 +31,7 @@ import { ProjectGroup } from "./groups/project"
 import { LeanGroup } from "./groups/lean"
 import { AtlasGroup } from "./groups/atlas"
 import { ConfigGroup } from "./groups/config"
+import { BoardGroup } from "./groups/board"
 import { RelayDocumentGroup, RelayPublishGroup } from "./groups/relay-document"
 import { RelayHookGroup } from "./groups/relay-hook"
 import { RelayRunGroup } from "./groups/relay-run"
@@ -94,6 +95,7 @@ const makeApiFromGroup = <
     .add(LeanGroup.middleware(locationMiddleware))
     .add(AtlasGroup.middleware(locationMiddleware))
     .add(ConfigGroup)
+    .add(BoardGroup)
     .add(RelayDocumentGroup.middleware(locationMiddleware))
     .add(RelayPublishGroup.middleware(locationMiddleware))
     .add(RelayHookGroup.middleware(locationMiddleware))

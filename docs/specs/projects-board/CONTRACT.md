@@ -178,7 +178,7 @@ Owner writes (actor `owner`, `reason` optional):
 |---|---|
 | `POST /api/board/:key/question/:id/answer` | `{ option, text? }`. Unblocks the issue if the question was blocking |
 | `POST /api/board/:key/issue/:number/note` | `{ body }` |
-| `POST /api/board/:key/issue/:number/attachment` | multipart file, or `{ kind: "secret", label, value }`; the value goes straight to `CredentialTable` and is never echoed |
+| `POST /api/board/:key/issue/:number/attachment` | JSON `{ kind, name, mime?, data?, value? }`: a file carries base64 `data`; a secret carries `value` and `name` is its label. The value goes straight to `CredentialTable` and is never echoed |
 | `POST /api/board/:key/activity/:id/undo` | Rule 4 |
 | `POST /api/board/:key/pause` and `/resume` | Project level; `{ reason? }` |
 | `POST /api/board/:key/issue/:number/pause` and `/resume` | Issue level |
@@ -189,6 +189,15 @@ Live updates: every committed write publishes one bus event `board.changed` `{ p
 `/api/event`. The app refetches what it shows; the event carries no board content.
 
 After the group lands, `bun run generate` in `packages/client`; the app calls `sdk().orchestra.board.*`.
+
+As built in slice B:
+
+- A write that changes nothing is refused, so every activity row records a real change.
+- `GET /activity` without `since` returns the last 100 rows not written by Maestro.
+- `github_state` starts as `off` until slice B2 turns the mirror on.
+- Moving to Shipped forces a fresh git trail read instead of the cached one.
+- Undo covers an allowlist of Maestro actions (section 3) and is the owner's only; no Maestro tool undoes.
+
 
 ## 6. GitHub Issues mirror (slice B2)
 
