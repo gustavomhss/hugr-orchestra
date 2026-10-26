@@ -14,6 +14,7 @@ export class MeetingError extends Schema.ErrorClass<MeetingError>("MeetingError"
 ) {}
 
 const ReadParams = Schema.Struct({ ...LocationQuery.fields, meetingID: Meeting.ID })
+const ListParams = Schema.Struct({ ...LocationQuery.fields, ...Meeting.ListQuery.fields })
 
 export const MeetingGroup = HttpApiGroup.make("server.meeting")
   .add(
@@ -77,6 +78,101 @@ export const MeetingGroup = HttpApiGroup.make("server.meeting")
           identifier: "v2.meeting.read",
           summary: "Read meeting",
           description: "Read a meeting record with its final transcript segments in time order.",
+        }),
+      ),
+  )
+  .add(
+    HttpApiEndpoint.get("meeting.list", "/api/meeting/list", {
+      query: ListParams,
+      success: Location.response(Meeting.ListResult),
+      error: MeetingError,
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        OpenApi.annotations({
+          identifier: "v2.meeting.list",
+          summary: "List meetings",
+          description: "List meetings newest first, optionally searched by text or filtered by person.",
+        }),
+      ),
+  )
+  .add(
+    HttpApiEndpoint.patch("meeting.rename", "/api/meeting", {
+      query: LocationQuery,
+      payload: Meeting.RenameInput,
+      success: Location.response(Meeting.Summary),
+      error: MeetingError,
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        OpenApi.annotations({
+          identifier: "v2.meeting.rename",
+          summary: "Rename meeting",
+          description: "Rename a meeting, while it runs or after it stopped.",
+        }),
+      ),
+  )
+  .add(
+    HttpApiEndpoint.delete("meeting.delete", "/api/meeting", {
+      query: ReadParams,
+      success: Location.response(Meeting.DeleteReceipt),
+      error: MeetingError,
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        OpenApi.annotations({
+          identifier: "v2.meeting.delete",
+          summary: "Delete meeting",
+          description:
+            "Delete a stopped meeting with its segments and every memory record whose only source is that meeting.",
+        }),
+      ),
+  )
+  .add(
+    HttpApiEndpoint.post("meeting.confirm", "/api/meeting/confirm", {
+      query: LocationQuery,
+      payload: Meeting.ConfirmInput,
+      success: Location.response(Meeting.Card),
+      error: MeetingError,
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        OpenApi.annotations({
+          identifier: "v2.meeting.confirm",
+          summary: "Confirm meeting card",
+          description: "Record the owner's verdicts on card items and proposed people.",
+        }),
+      ),
+  )
+  .add(
+    HttpApiEndpoint.post("meeting.commitment", "/api/meeting/commitment", {
+      query: LocationQuery,
+      payload: Meeting.CommitmentInput,
+      success: Location.response(Meeting.Commitment),
+      error: MeetingError,
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        OpenApi.annotations({
+          identifier: "v2.meeting.commitment",
+          summary: "Update commitment",
+          description: "Move a commitment to accepted, done or dropped.",
+        }),
+      ),
+  )
+  .add(
+    HttpApiEndpoint.post("meeting.handoff", "/api/meeting/handoff", {
+      query: LocationQuery,
+      payload: Meeting.HandoffInput,
+      success: Location.response(Meeting.HandoffResult),
+      error: MeetingError,
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        OpenApi.annotations({
+          identifier: "v2.meeting.handoff",
+          summary: "Send items to Maestro",
+          description: "Send card items to Maestro through team_message, with their source and no transcript.",
         }),
       ),
   )

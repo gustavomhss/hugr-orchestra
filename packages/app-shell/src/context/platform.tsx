@@ -9,9 +9,40 @@ import type { DraftStore } from "@/utils/draft-store"
 import type { NativeTitlebarFrame } from "../native-titlebar"
 export type { NativeTitlebarFrame } from "../native-titlebar"
 
+export type LiveSource = "microphone" | "system-audio"
+export type LivePermission = "granted" | "needed" | "denied"
+
+export type LiveReadiness = {
+  permissions: Record<LiveSource, LivePermission>
+  // The default input device name.
+  microphone: { label: string } | undefined
+  // false below macOS 14.2.
+  systemAudio: { available: boolean }
+  transcriptionKey: boolean
+  answerModel: { id: string; reachable: boolean | "unknown" } | undefined
+}
+
+export type LiveRunState =
+  | { running: false }
+  | { running: true; meetingID: string; title: string; startedAt: number; sources: Record<LiveSource, boolean> }
+
+export type LiveSettings = {
+  // provider/model id; undefined is the seat default.
+  answerModel: string | undefined
+  // A BCP-47 tag such as "pt-BR", or "auto".
+  language: string
+  suggestions: boolean
+  sources: Record<LiveSource, boolean>
+}
+
+export type LiveHotkeyAction = "start-stop" | "ask" | "toggle-overlay" | "toggle-captions"
+export type LiveHotkey = { action: LiveHotkeyAction; accelerator: string; defaultAccelerator: string }
+
 export type LiveSeatPlatform = {
+  // "permission": the microphone is denied. With only system audio denied the meeting starts on the microphone.
   start(title?: string): Promise<
-    { ok: true; meetingID: string } | { ok: false; reason: "running" | "no-key" | "server" | "capture" }
+    | { ok: true; meetingID: string }
+    | { ok: false; reason: "running" | "no-key" | "server" | "capture" | "permission" }
   >
   stop(): Promise<void>
   running(): Promise<boolean>
@@ -20,6 +51,26 @@ export type LiveSeatPlatform = {
   setTranscriptionKey(key: string): Promise<void>
   getContentProtection(): Promise<boolean>
   setContentProtection(enabled: boolean): Promise<void>
+  // Re-checked on every call; the renderer calls it on window focus.
+  readiness(): Promise<LiveReadiness>
+  // Shows the system prompt when "needed"; opens the matching System Settings pane when "denied".
+  requestPermission(source: LiveSource): Promise<LivePermission>
+  // RMS 0..1 at about 15 Hz while running or while subscribed. Returns unsubscribe.
+  onLevels(listener: (levels: Record<LiveSource, number>) => void): () => void
+  // Every renderer window gets the same run-state events. Returns unsubscribe.
+  runState(): Promise<LiveRunState>
+  onRunState(listener: (state: LiveRunState) => void): () => void
+  rename(meetingID: string, title: string): Promise<void>
+  // A partial write is merged; both return the full object.
+  getSettings(): Promise<LiveSettings>
+  setSettings(patch: Partial<LiveSettings>): Promise<LiveSettings>
+  // "conflict": another app or another of our actions holds the accelerator.
+  getHotkeys(): Promise<LiveHotkey[]>
+  setHotkey(
+    action: LiveHotkeyAction,
+    accelerator: string,
+  ): Promise<{ ok: true } | { ok: false; reason: "conflict" | "invalid" }>
+  resetHotkeys(): Promise<LiveHotkey[]>
 }
 
 type PickerPaths = string | string[] | null
