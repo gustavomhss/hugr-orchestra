@@ -171,7 +171,7 @@ async function body<T>(call: Promise<unknown>, empty = false): Promise<T> {
 
 // The generated client throws a declared refusal's body as it is, and a `ClientError` for everything else.
 function failure(cause: unknown) {
-  if (clientError(cause)) {
+  if (cause instanceof ClientError) {
     // The request never reached the server, or the server never answered.
     if (cause.reason === "Transport")
       return new RelayError(-1, cause.cause instanceof Error ? cause.cause.message : cause.message, "transport")
@@ -187,12 +187,6 @@ function failure(cause: unknown) {
   const status = (tag && refusalStatus[tag]) || 400
   const message = typeof cause.message === "string" && cause.message ? cause.message : `Request failed (HTTP ${status})`
   return new RelayError(status, message, typeof cause.code === "string" ? cause.code : undefined, tag)
-}
-
-// Matched by name as well as class: the app can hold two copies of the client module (a bundler alias, a test
-// loader), and a `ClientError` from the other copy would otherwise read as a declared refusal body.
-function clientError(cause: unknown): cause is ClientError {
-  return cause instanceof ClientError || (cause instanceof Error && cause.name === "ClientError" && "reason" in cause)
 }
 
 // The declared refusals' statuses (protocol `groups/relay-*.ts`, `errors.ts`); the body does not carry its status.

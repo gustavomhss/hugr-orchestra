@@ -6,7 +6,6 @@ import { createStore } from "solid-js/store"
 import { render } from "solid-js/web"
 import { QueryClient } from "@tanstack/solid-query"
 import { MemoryRouter } from "@solidjs/router"
-import { Orchestra } from "@orchestra/client"
 import type { RelayDocument, RelayDocumentFields } from "@/orchestra/relay/client"
 import type { RelaySource } from "@/orchestra/relay/source"
 import type { SaveState } from "@/orchestra/relay/editor-head"
@@ -44,6 +43,8 @@ Bun.plugin({
 const load = (specifier: string) => import(`${Bun.resolveSync(specifier, import.meta.dir)}?workflow-authoring`)
 const { PlatformProvider }: typeof import("@/context/platform") = await load("@/context/platform")
 const { LanguageProvider }: typeof import("@/context/language") = await load("@/context/language")
+// Through the same loader as the Relay client, so its `ClientError` is the class the client checks against.
+const { Orchestra }: typeof import("@orchestra/client") = await load("@orchestra/client")
 const { createRelayClient, decodeDocument }: typeof import("@/orchestra/relay/client") = await load("@/orchestra/relay/client")
 const { CreateWorkflowDialog }: typeof import("@/orchestra/relay/create") = await load("@/orchestra/relay/create")
 const { WorkflowLibrary }: typeof import("@/orchestra/relay/library") = await load("@/orchestra/relay/library")
