@@ -20,7 +20,6 @@ async function setup() {
   const sessions: Record<string, Session> = {
     session: session("session", "Demo session"),
     subagent: session("subagent", "Subagent session", "session"),
-    abort: session("abort", "Abort session"),
     timeout: session("timeout", "Timeout session"),
   }
 
@@ -205,7 +204,7 @@ describe("internal notifications TUI plugin", () => {
     harness.emit({
       id: "event-2",
       type: "session.next.step.failed",
-      data: { sessionID: "session", assistantMessageID: "message", error: { type: "unknown", message: "boom" } },
+      data: { timestamp: 0, sessionID: "session", assistantMessageID: "message", error: { type: "unknown", message: "boom" } },
     })
     harness.emit({
       id: "event-3",
@@ -235,6 +234,7 @@ describe("internal notifications TUI plugin", () => {
       id: "event-4",
       type: "session.next.step.failed",
       data: {
+        timestamp: 0,
         sessionID: "timeout",
         assistantMessageID: "message",
         error: { type: "unknown", message: "SSE read timed out" },
