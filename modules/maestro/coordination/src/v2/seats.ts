@@ -11,8 +11,9 @@ import { Seats } from "../seats"
 export const pluginID = PluginV2.ID.make("maestro/seats")
 
 /**
- * Projects every native seat of the roster into the Location's V2 agents as a subagent with its charter and task-tool
- * description, and its native profile as the last rules, so configuration cannot widen it (findLast wins). Maestro itself
+ * Projects every native seat of the roster into the Location's V2 agents as a subagent (a direct seat as a primary
+ * agent) with its charter and task-tool description, and its native profile as the last rules, so configuration cannot
+ * widen it (findLast wins). Maestro itself
  * is core's default agent; configuration (`agent.<id>`) installed before this plugin keeps its prompt and description,
  * and the seat's engine, model and display label stay the owner's settings.
  *
@@ -36,7 +37,7 @@ const layer = Layer.effectDiscard(
             draft.update(AgentV2.ID.make(seat.id), (agent) => {
               agent.system ??= renderPrompt(member, member.displayName)
               agent.description ??= seat.description
-              agent.mode = "subagent"
+              agent.mode = seat.direct ? "primary" : "subagent"
               agent.permissions.push(...floor(nativeProfiles[member.nativeProfile ?? ""]))
             })
           }),

@@ -17,6 +17,10 @@ Delegation requires the calling turn owner's task permission and every ancestor'
 Use task_id to continue an existing child of this Session or explicitly recover unfinished work.
 Calls without task_id are idempotent for the same recorded assistant and tool call. Maestro cannot be a target.`
 
+export const teamMessage = `Send a short message to a teammate on the Orchestra team: \`maestro\` from live, \`live\` from Maestro.
+It is queued into the teammate's current conversation and never interrupts a reply in progress.
+The teammate reads it as a peer's note, not as the owner. Use it to propose work, share what a meeting decided or answer a question.`
+
 export const answered = (
   questions: ReadonlyArray<{ readonly question: string }>,
   answers: ReadonlyArray<ReadonlyArray<string>>,
