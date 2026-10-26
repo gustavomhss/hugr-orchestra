@@ -933,6 +933,7 @@ export const dict: Record<string, string> = {
   "live.start.reason.no-key": "පළමුව සැකසුම් වලින් කථනය පෙළට යතුරක් එක් කරන්න",
   "live.start.reason.server": "දේශීය සේවාදායකය ප්‍රතිචාර නොදැක්වීය",
   "live.start.reason.capture": "ශ්‍රව්‍ය ග්‍රහණය ආරම්භ කළ නොහැකි විය. මයික්‍රොෆෝනය සහ තිර පටිගත කිරීමේ අවසර පරීක්ෂා කරන්න.",
+  "live.start.reason.permission": "පළමුව පද්ධති සැකසුම් තුළ මයික්‍රොෆෝන ප්‍රවේශය ලබා දෙන්න",
   "settings.general.row.language.title": "භාෂාව",
   "settings.general.row.language.description": "HuGR Orchestra සඳහා සංදර්ශක භාෂාව වෙනස් කරන්න",
   "settings.general.row.shell.title": "පර්යන්ත ෂෙල්",

@@ -18,6 +18,7 @@ import { ServerConnection, serverName, useServer } from "@/context/server"
 import { tabKey, type SessionTab, type Tab, useTabs } from "@/context/tabs"
 import { HugrBrand } from "@/orchestra/brand"
 import { chapterPages } from "@/orchestra/chapter-route"
+import { FlightNavChip } from "@/orchestra/chapters/flight-engineer/entry"
 import { isWip, navigation } from "@/orchestra/navigation"
 import { OrchestraNavigationToggle } from "@/orchestra/navigation-toggle"
 import { OrchestraNavigationTooltip } from "@/orchestra/navigation-tooltip"
@@ -53,6 +54,9 @@ const icons = {
     '<circle cx="8" cy="8" r="6.2"/><path d="M1.8 8h12.4M8 1.8c2 2 2.6 4 2.6 6.2S10 12.2 8 14.2M8 1.8C6 3.8 5.4 5.8 5.4 8S6 12.2 8 14.2"/>',
   maestro:
     '<g transform="scale(.8)" stroke-width="1.75"><path d="M13.332 8.7487C11.4911 8.7487 9.9987 7.25631 9.9987 5.41536M6.66536 11.2487C8.50631 11.2487 9.9987 12.7411 9.9987 14.582M9.9987 2.78209L9.9987 17.0658M16.004 15.0475C17.1255 14.5876 17.9154 13.4849 17.9154 12.1978C17.9154 11.3363 17.5615 10.5575 16.9913 9.9987C17.5615 9.43991 17.9154 8.66108 17.9154 7.79962C17.9154 6.21199 16.7136 4.90504 15.1702 4.73878C14.7858 3.21216 13.4039 2.08203 11.758 2.08203C11.1171 2.08203 10.5162 2.25337 9.9987 2.55275C9.48117 2.25337 8.88032 2.08203 8.23944 2.08203C6.59353 2.08203 5.21157 3.21216 4.82722 4.73878C3.28377 4.90504 2.08203 6.21199 2.08203 7.79962C2.08203 8.66108 2.43585 9.43991 3.00609 9.9987C2.43585 10.5575 2.08203 11.3363 2.08203 12.1978C2.08203 13.4849 2.87191 14.5876 3.99339 15.0475C4.46688 16.7033 5.9917 17.9154 7.79962 17.9154C8.61335 17.9154 9.36972 17.6698 9.9987 17.2488C10.6277 17.6698 11.384 17.9154 12.1978 17.9154C14.0057 17.9154 15.5305 16.7033 16.004 15.0475Z"/></g>',
+  // Flight Engineer: a microphone.
+  "flight-engineer":
+    '<rect x="5.6" y="1.8" width="4.8" height="7.4" rx="2.4"/><path d="M3.4 7.6a4.6 4.6 0 0 0 9.2 0M8 12.2v2"/>',
   mcp: '<path d="M5 2v3M11 2v3M3 5h10v3a5 5 0 0 1-10 0V5ZM8 13v2"/>',
   skills: '<path d="m8 1 2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z"/>',
   integrations: '<path d="M6 5H4a3 3 0 0 0 0 6h2M10 5h2a3 3 0 0 1 0 6h-2M5 8h6"/>',
@@ -437,6 +441,9 @@ export function OrchestraSidebar(props: {
                       <span class="orchestra-nav-label">{language.t(item.label)}</span>
                       <Show when={item.id === "search"}>
                         <kbd>{command.keybind("command.palette")}</kbd>
+                      </Show>
+                      <Show when={item.id === "flight-engineer"}>
+                        <FlightNavChip />
                       </Show>
                       <Show when={item.id === "workflows" && awaiting() > 0}>
                         <span

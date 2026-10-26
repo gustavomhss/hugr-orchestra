@@ -946,6 +946,7 @@ export const dict = {
   "live.start.reason.no-key": "پہلے ترتیبات میں اسپیچ ٹو ٹیکسٹ کلید شامل کریں",
   "live.start.reason.server": "مقامی سرور نے جواب نہیں دیا",
   "live.start.reason.capture": "آڈیو کیپچر شروع نہیں ہو سکا۔ مائیکروفون اور اسکرین ریکارڈنگ کی اجازتیں چیک کریں۔",
+  "live.start.reason.permission": "پہلے سسٹم سیٹنگز میں مائیکروفون تک رسائی کی اجازت دیں",
   "settings.general.row.language.title": "زبان",
   "settings.general.row.language.description": "HuGR Orchestra کے لیے ڈسپلے کی زبان تبدیل کریں۔",
   "settings.general.row.shell.title": "ٹرمینل شیل",

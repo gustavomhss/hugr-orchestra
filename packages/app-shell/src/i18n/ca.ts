@@ -946,6 +946,7 @@ export const dict = {
   "live.start.reason.no-key": "Afegeix primer una clau de veu a text a Configuració",
   "live.start.reason.server": "El servidor local no ha respost",
   "live.start.reason.capture": "No s'ha pogut iniciar la captura d'àudio. Comprova els permisos de micròfon i de gravació de pantalla.",
+  "live.start.reason.permission": "Primer permet l'accés al micròfon a Configuració del Sistema",
   "settings.general.row.language.title": "Llengua",
   "settings.general.row.language.description": "Canvia l'idioma de visualització de HuGR Orchestra",
   "settings.general.row.shell.title": "Carcassa terminal",

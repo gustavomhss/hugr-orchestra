@@ -15,6 +15,7 @@ import { OrchestraSidebar } from "@/orchestra/sidebar"
 import { createOrchestraNavigation } from "@/orchestra/compact-navigation"
 import { OrchestraNavigationToggle } from "@/orchestra/navigation-toggle"
 import { ShellNavigationCommands } from "@/orchestra/shell/navigation-commands"
+import { FlightEngineerHost } from "@/orchestra/chapters/flight-engineer/dialogs"
 import { LiveSeatCommands } from "@/orchestra/live/commands"
 import { MobileNavigation } from "@/orchestra/shell/mobile-navigation"
 import { NewShellIngress } from "@/orchestra/shell/ingress"
@@ -47,6 +48,7 @@ export default function NewLayout(props: ParentProps) {
     <>
       <ShellNavigationCommands />
       <LiveSeatCommands />
+      <FlightEngineerHost />
       <NewShellIngress />
       {/* Desktop preferences load over IPC; wait so a collapsed window never paints expanded first. */}
       <Show when={navigation.ready()}>

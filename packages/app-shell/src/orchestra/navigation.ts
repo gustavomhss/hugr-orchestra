@@ -12,6 +12,7 @@ export const navigation = [
   // Session-relative governance (S20), opened as a dialog over the current session; not a route.
   { id: "maestro", label: "orchestra.nav.maestro", chapter: undefined },
   // Relay workflows sit next to Maestro, which runs them (owner decision, 2026-10-06).
+  { id: "flight-engineer", label: "orchestra.nav.flightEngineer", chapter: undefined },
   { id: "workflows", label: "orchestra.nav.workflows", chapter: "C14" },
   { id: "atlas", label: "orchestra.nav.atlas", chapter: undefined },
   { id: "mcp", label: "orchestra.nav.mcp", chapter: "C01", wip: true },

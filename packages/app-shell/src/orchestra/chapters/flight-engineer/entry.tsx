@@ -25,12 +25,12 @@ export function FlightNavChip() {
 }
 
 // Home card. Idle: the last meeting and a Start button. Running: the title, the time, Open and Stop.
-export function HomeFlightCard(props: { sdk: () => ServerSDK; directory: string }) {
+export function HomeFlightCard(props: { sdk: ServerSDK; directory: string }) {
   const flight = useFlight()
   const language = useLanguage()
   const t = language.t
   const navigate = useNavigate()
-  const meetings = () => devMeetings() ?? (props.directory ? serverMeetings(props.sdk, props.directory) : undefined)
+  const meetings = () => devMeetings() ?? (props.directory ? serverMeetings(() => props.sdk, props.directory) : undefined)
   const [last] = createResource(
     () => (flight.store.run.running ? undefined : meetings()),
     (source) =>
