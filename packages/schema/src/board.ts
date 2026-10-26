@@ -58,6 +58,12 @@ export const ActivityID = Schema.String.pipe(
 )
 export type ActivityID = typeof ActivityID.Type
 
+export const DecisionID = Schema.String.pipe(
+  Schema.brand("Board.DecisionID"),
+  statics((schema) => ({ create: () => schema.make("bde_" + ascending()) })),
+)
+export type DecisionID = typeof DecisionID.Type
+
 export const Key = Schema.String.check(Schema.isPattern(/^[A-Z]{2,6}$/)).annotate({ identifier: "Board.Key" })
 
 export const ProjectStatus = Schema.Literals(["active", "paused", "shipped", "archived"]).annotate({
@@ -343,11 +349,141 @@ export const Trail = Schema.Union([
     state: Schema.Literal("ok"),
     branch: Schema.String,
     pr: PullRequest.Detail,
+    /** When GitHub was last asked; the read may come from the 30 second cache. */
+    verifiedAt: Schema.Finite.pipe(optional),
     /** Commits on the PR; `seat` is the issue's seat, since commits carry no agent id. */
     commits: Schema.Array(Schema.Struct({ hash: Schema.String, message: Schema.String, seat: Schema.NullOr(Schema.String) })),
   }),
 ]).annotate({ identifier: "Board.Trail" })
 export type Trail = typeof Trail.Type
+
+// ---- Spend, budget, decisions and proof (docs/specs/projects-board/CONTRACT.md, slice F1) ----
+
+/** A dollar figure from a real meter, or the reason there is none. Never a zero standing in for "unknown". */
+export const Meter = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("usd"), usd: Schema.Finite }),
+  Schema.Struct({ kind: Schema.Literal("not-metered"), source: Schema.String }),
+]).annotate({ identifier: "Board.Meter" })
+export type Meter = typeof Meter.Type
+
+export const ModelSpend = Schema.Struct({ model: Schema.String, usd: Schema.Finite }).annotate({
+  identifier: "Board.ModelSpend",
+})
+export type ModelSpend = typeof ModelSpend.Type
+
+/** `models` is session cost, `infra` is CI minutes; `usd` sums the metered parts and `partial` says some work has no meter. */
+export interface Spend extends Schema.Schema.Type<typeof Spend> {}
+export const Spend = Schema.Struct({
+  models: Meter,
+  infra: Meter,
+  byModel: Schema.Array(ModelSpend),
+  usd: Schema.Finite,
+  partial: Schema.Boolean,
+}).annotate({ identifier: "Board.Spend" })
+
+export interface CardSpend extends Schema.Schema.Type<typeof CardSpend> {}
+export const CardSpend = Schema.Struct({
+  ...Spend.fields,
+  issue: PositiveInt,
+  ref: Schema.String,
+  epic: Schema.NullOr(PositiveInt),
+  seat: Schema.NullOr(Schema.String),
+  /** At least 3 times the median of the other metered cards in its epic. */
+  flagged: Schema.Boolean,
+  epicMedianUsd: Schema.NullOr(Schema.Finite),
+}).annotate({ identifier: "Board.CardSpend" })
+
+export interface EpicSpend extends Schema.Schema.Type<typeof EpicSpend> {}
+export const EpicSpend = Schema.Struct({
+  ...Spend.fields,
+  epic: PositiveInt,
+  ref: Schema.String,
+}).annotate({ identifier: "Board.EpicSpend" })
+
+export interface SeatSpend extends Schema.Schema.Type<typeof SeatSpend> {}
+export const SeatSpend = Schema.Struct({
+  ...Spend.fields,
+  seat: Schema.String,
+}).annotate({ identifier: "Board.SeatSpend" })
+
+export const BudgetState = Schema.Literals(["none", "ok", "warn", "paused"]).annotate({ identifier: "Board.BudgetState" })
+export type BudgetState = typeof BudgetState.Type
+
+/** `warn` from 80% of the budget, `paused` from 100%: the board then refuses to start new work. */
+export interface Budget extends Schema.Schema.Type<typeof Budget> {}
+export const Budget = Schema.Struct({
+  budgetUsd: Schema.NullOr(Schema.Finite),
+  spentUsd: Schema.Finite,
+  percent: Schema.NullOr(Schema.Finite),
+  state: BudgetState,
+  /** Spend at the forecast finish (burn rate times the forecast remaining time); null when there is no forecast. */
+  forecastUsd: Schema.NullOr(Schema.Finite),
+  forecastPercent: Schema.NullOr(Schema.Finite),
+}).annotate({ identifier: "Board.Budget" })
+
+export interface SpendReport extends Schema.Schema.Type<typeof SpendReport> {}
+export const SpendReport = Schema.Struct({
+  project: Spend,
+  budget: Budget,
+  cards: Schema.Array(CardSpend),
+  epics: Schema.Array(EpicSpend),
+  seats: Schema.Array(SeatSpend),
+  /** When CI minutes were last fetched from GitHub Actions; null before the first fetch. */
+  infraSyncedAt: Schema.NullOr(Schema.Finite),
+}).annotate({ identifier: "Board.SpendReport" })
+
+/** A question the owner answered. An overturned decision stays, linked both ways to the one that replaced it. */
+export interface Decision extends Schema.Schema.Type<typeof Decision> {}
+export const Decision = Schema.Struct({
+  id: DecisionID,
+  issue: Schema.NullOr(PositiveInt),
+  epic: Schema.NullOr(PositiveInt),
+  /** Epoch milliseconds the answer was given. */
+  date: Schema.Finite,
+  question: Schema.String,
+  options: Schema.Array(Option),
+  recommended: Schema.String,
+  chosen: Schema.String,
+  chosenLabel: Schema.String,
+  text: Schema.NullOr(Schema.String),
+  answeredBy: Actor,
+  /** What came of it, or "applied, no result yet". */
+  outcome: Schema.String,
+  outcomeAt: Schema.NullOr(Schema.Finite),
+  supersedes: Schema.NullOr(DecisionID),
+  overturnedBy: Schema.NullOr(DecisionID),
+}).annotate({ identifier: "Board.Decision" })
+
+export const ProofPull = Schema.Struct({
+  number: Schema.Int,
+  state: Schema.String,
+  merged: Schema.Boolean,
+  commits: NonNegativeInt,
+  lastSha: Schema.NullOr(Schema.String),
+}).annotate({ identifier: "Board.ProofPull" })
+
+export const ProofCi = Schema.Struct({
+  checks: Schema.Array(PullRequest.Check),
+  /** The first failing check by name. */
+  failing: Schema.NullOr(Schema.String),
+}).annotate({ identifier: "Board.ProofCi" })
+
+/** What backs a card's status: the PR, the checks, the attempts, the guardrail and why an agent stopped. */
+export interface Proof extends Schema.Schema.Type<typeof Proof> {}
+export const Proof = Schema.Struct({
+  issue: PositiveInt,
+  ref: Schema.String,
+  /** One project-level line when GitHub auth expired; the same for every card. */
+  banner: Schema.NullOr(Schema.String),
+  pr: Schema.NullOr(ProofPull),
+  ci: Schema.NullOr(ProofCi),
+  attempts: Schema.Struct({ n: NonNegativeInt, of: PositiveInt }),
+  guardrail: Schema.NullOr(Schema.Struct({ rule: Schema.String, summary: Schema.NullOr(Schema.String) })),
+  crashReason: Schema.NullOr(Schema.String),
+  verifiedAt: Schema.NullOr(Schema.Finite),
+  /** The latest decision that was not overturned on this card. */
+  decidedBy: Schema.NullOr(Decision),
+}).annotate({ identifier: "Board.Proof" })
 
 export interface IssuePage extends Schema.Schema.Type<typeof IssuePage> {}
 export const IssuePage = Schema.Struct({
@@ -431,6 +567,12 @@ export const IssueInput = Schema.Struct({
   pr: Schema.NullOr(PositiveInt).pipe(optional),
   /** Issue refs such as `LCH-12` or plain numbers in the same project. Replaces the list. */
   depends_on: Schema.Array(Schema.String).pipe(optional),
+  /** Agent attempts so far, out of 3. */
+  attempts: NonNegativeInt.pipe(optional),
+  /** Why the agent stopped, in plain words; null clears it. */
+  crash_reason: Schema.NullOr(Schema.String).pipe(optional),
+  /** Id of the guardrail rule that blocked the card; null clears it. */
+  guardrail_rule: Schema.NullOr(Schema.String).pipe(optional),
   reason: Reason,
 }).annotate({ identifier: "Board.IssueInput" })
 export type IssueInput = typeof IssueInput.Type
@@ -497,6 +639,40 @@ export const AttachmentInput = Schema.Struct({
   value: Schema.String.pipe(optional),
 }).annotate({ identifier: "Board.AttachmentInput" })
 export type AttachmentInput = typeof AttachmentInput.Type
+
+/** Target date and budget of a project; omitted fields stay, null clears one. Owner route. */
+export const SettingsInput = Schema.Struct({
+  target_date: Schema.NullOr(Schema.Finite).pipe(optional),
+  budget_usd: Schema.NullOr(Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0))).pipe(optional),
+  reason: Schema.String.pipe(optional),
+}).annotate({ identifier: "Board.SettingsInput" })
+export type SettingsInput = typeof SettingsInput.Type
+
+/** The same settings as a Maestro tool call. */
+export const SettingsToolInput = Schema.Struct({
+  project: Key,
+  target_date: Schema.NullOr(Schema.Finite).pipe(optional),
+  budget_usd: Schema.NullOr(Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0))).pipe(optional),
+  reason: Reason,
+}).annotate({ identifier: "Board.SettingsToolInput" })
+export type SettingsToolInput = typeof SettingsToolInput.Type
+
+/** The owner overturns an earlier answer: the new decision links to the old one and both stay. */
+export const DecisionChangeInput = Schema.Struct({
+  option: Schema.String,
+  text: Schema.String.pipe(optional),
+}).annotate({ identifier: "Board.DecisionChangeInput" })
+export type DecisionChangeInput = typeof DecisionChangeInput.Type
+
+/** Maestro records what came of a decision. */
+export const DecisionOutcomeInput = Schema.Struct({
+  project: Key,
+  /** The decision's id, or the id of the question it answered (what board_read shows). */
+  id: Text,
+  outcome: Text,
+  reason: Reason,
+}).annotate({ identifier: "Board.DecisionOutcomeInput" })
+export type DecisionOutcomeInput = typeof DecisionOutcomeInput.Type
 
 export const PauseInput = Schema.Struct({ reason: Schema.String.pipe(optional) }).annotate({
   identifier: "Board.PauseInput",

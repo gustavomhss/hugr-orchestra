@@ -152,6 +152,59 @@ export const BoardGroup = HttpApiGroup.make("server.board")
     ),
   )
   .add(
+    HttpApiEndpoint.get("board.spend", "/api/board/:key/spend", {
+      params: project,
+      success: Board.SpendReport,
+      error: BoardNotFoundError,
+    }).annotateMerge(
+      doc(
+        "spend",
+        "Read project spend",
+        "Dollars per card, epic, seat and project from session cost with a breakdown by model, plus cached CI minutes. Anything without a meter says so. Owner only: guest views never include spend.",
+      ),
+    ),
+  )
+  .add(
+    HttpApiEndpoint.get("board.decisions", "/api/board/:key/decisions", {
+      params: project,
+      success: Schema.Array(Board.Decision),
+      error: BoardNotFoundError,
+    }).annotateMerge(
+      doc("decisions", "List decisions", "Every answered question, newest first, with its outcome and any overturned version."),
+    ),
+  )
+  .add(
+    HttpApiEndpoint.post("board.decisionChange", "/api/board/:key/decision/:id", {
+      params: { key: Schema.String, id: Schema.String },
+      payload: Board.DecisionChangeInput,
+      success: Board.OwnerResult,
+      error: errors,
+    }).annotateMerge(
+      doc("decisionChange", "Overturn a decision", "Answer again; the earlier decision stays, linked to the new one."),
+    ),
+  )
+  .add(
+    HttpApiEndpoint.get("board.proof", "/api/board/:key/issue/:number/proof", {
+      params: issue,
+      success: Board.Proof,
+      error: BoardNotFoundError,
+    }).annotateMerge(
+      doc(
+        "proof",
+        "Read a card's proof",
+        "The pull request, checks by name, attempts, guardrail result, crash reason and when it was verified.",
+      ),
+    ),
+  )
+  .add(
+    HttpApiEndpoint.post("board.settings", "/api/board/:key/settings", {
+      params: project,
+      payload: Board.SettingsInput,
+      success: Board.OwnerResult,
+      error: errors,
+    }).annotateMerge(doc("settings", "Set target date and budget", "Omitted fields stay; null clears one.")),
+  )
+  .add(
     HttpApiEndpoint.post("board.pause", "/api/board/:key/pause", {
       params: project,
       payload: Board.PauseInput,

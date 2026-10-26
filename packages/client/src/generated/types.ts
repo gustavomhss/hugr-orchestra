@@ -5644,8 +5644,8 @@ export type ServerBoardIssueOutput = {
       | "github.state"
       | "undo"
     readonly reason: string | null
-    readonly before: { readonly [x: string]: unknown } | null
-    readonly after: { readonly [x: string]: unknown } | null
+    readonly before: { readonly [x: string]: JsonValue } | null
+    readonly after: { readonly [x: string]: JsonValue } | null
     readonly undoes: string | null
     readonly undoneBy: string | null
     readonly timeCreated: number
@@ -5674,6 +5674,7 @@ export type ServerBoardIssueOutput = {
             readonly conclusion: string | null
           }>
         }
+        readonly verifiedAt?: number
         readonly commits: ReadonlyArray<{
           readonly hash: string
           readonly message: string
@@ -5812,6 +5813,170 @@ export type ServerBoardUndoInput = {
 }
 
 export type ServerBoardUndoOutput = { readonly activity: string }
+
+export type ServerBoardSpendInput = { readonly key: { readonly key: string }["key"] }
+
+export type ServerBoardSpendOutput = {
+  readonly project: {
+    readonly models:
+      | { readonly kind: "usd"; readonly usd: number }
+      | { readonly kind: "not-metered"; readonly source: string }
+    readonly infra:
+      | { readonly kind: "usd"; readonly usd: number }
+      | { readonly kind: "not-metered"; readonly source: string }
+    readonly byModel: ReadonlyArray<{ readonly model: string; readonly usd: number }>
+    readonly usd: number
+    readonly partial: boolean
+  }
+  readonly budget: {
+    readonly budgetUsd: number | null
+    readonly spentUsd: number
+    readonly percent: number | null
+    readonly state: "none" | "ok" | "warn" | "paused"
+    readonly forecastUsd: number | null
+    readonly forecastPercent: number | null
+  }
+  readonly cards: ReadonlyArray<{
+    readonly models:
+      | { readonly kind: "usd"; readonly usd: number }
+      | { readonly kind: "not-metered"; readonly source: string }
+    readonly infra:
+      | { readonly kind: "usd"; readonly usd: number }
+      | { readonly kind: "not-metered"; readonly source: string }
+    readonly byModel: ReadonlyArray<{ readonly model: string; readonly usd: number }>
+    readonly usd: number
+    readonly partial: boolean
+    readonly issue: number
+    readonly ref: string
+    readonly epic: number | null
+    readonly seat: string | null
+    readonly flagged: boolean
+    readonly epicMedianUsd: number | null
+  }>
+  readonly epics: ReadonlyArray<{
+    readonly models:
+      | { readonly kind: "usd"; readonly usd: number }
+      | { readonly kind: "not-metered"; readonly source: string }
+    readonly infra:
+      | { readonly kind: "usd"; readonly usd: number }
+      | { readonly kind: "not-metered"; readonly source: string }
+    readonly byModel: ReadonlyArray<{ readonly model: string; readonly usd: number }>
+    readonly usd: number
+    readonly partial: boolean
+    readonly epic: number
+    readonly ref: string
+  }>
+  readonly seats: ReadonlyArray<{
+    readonly models:
+      | { readonly kind: "usd"; readonly usd: number }
+      | { readonly kind: "not-metered"; readonly source: string }
+    readonly infra:
+      | { readonly kind: "usd"; readonly usd: number }
+      | { readonly kind: "not-metered"; readonly source: string }
+    readonly byModel: ReadonlyArray<{ readonly model: string; readonly usd: number }>
+    readonly usd: number
+    readonly partial: boolean
+    readonly seat: string
+  }>
+  readonly infraSyncedAt: number | null
+}
+
+export type ServerBoardDecisionsInput = { readonly key: { readonly key: string }["key"] }
+
+export type ServerBoardDecisionsOutput = ReadonlyArray<{
+  readonly id: string
+  readonly issue: number | null
+  readonly epic: number | null
+  readonly date: number
+  readonly question: string
+  readonly options: ReadonlyArray<{ readonly id: string; readonly label: string; readonly consequence: string }>
+  readonly recommended: string
+  readonly chosen: string
+  readonly chosenLabel: string
+  readonly text: string | null
+  readonly answeredBy: "maestro" | "owner" | "github"
+  readonly outcome: string
+  readonly outcomeAt: number | null
+  readonly supersedes: string | null
+  readonly overturnedBy: string | null
+}>
+
+export type ServerBoardDecisionChangeInput = {
+  readonly key: { readonly key: string; readonly id: string }["key"]
+  readonly id: { readonly key: string; readonly id: string }["id"]
+  readonly option: { readonly option: string; readonly text?: string }["option"]
+  readonly text?: { readonly option: string; readonly text?: string }["text"]
+}
+
+export type ServerBoardDecisionChangeOutput = { readonly activity: string }
+
+export type ServerBoardProofInput = {
+  readonly key: { readonly key: string; readonly number: string }["key"]
+  readonly number: { readonly key: string; readonly number: string }["number"]
+}
+
+export type ServerBoardProofOutput = {
+  readonly issue: number
+  readonly ref: string
+  readonly banner: string | null
+  readonly pr: {
+    readonly number: number
+    readonly state: string
+    readonly merged: boolean
+    readonly commits: number
+    readonly lastSha: string | null
+  } | null
+  readonly ci: {
+    readonly checks: ReadonlyArray<{
+      readonly name: string
+      readonly status: string
+      readonly conclusion: string | null
+    }>
+    readonly failing: string | null
+  } | null
+  readonly attempts: { readonly n: number; readonly of: number }
+  readonly guardrail: { readonly rule: string; readonly summary: string | null } | null
+  readonly crashReason: string | null
+  readonly verifiedAt: number | null
+  readonly decidedBy: {
+    readonly id: string
+    readonly issue: number | null
+    readonly epic: number | null
+    readonly date: number
+    readonly question: string
+    readonly options: ReadonlyArray<{ readonly id: string; readonly label: string; readonly consequence: string }>
+    readonly recommended: string
+    readonly chosen: string
+    readonly chosenLabel: string
+    readonly text: string | null
+    readonly answeredBy: "maestro" | "owner" | "github"
+    readonly outcome: string
+    readonly outcomeAt: number | null
+    readonly supersedes: string | null
+    readonly overturnedBy: string | null
+  } | null
+}
+
+export type ServerBoardSettingsInput = {
+  readonly key: { readonly key: string }["key"]
+  readonly target_date?: {
+    readonly target_date?: number | null
+    readonly budget_usd?: number | null
+    readonly reason?: string
+  }["target_date"]
+  readonly budget_usd?: {
+    readonly target_date?: number | null
+    readonly budget_usd?: number | null
+    readonly reason?: string
+  }["budget_usd"]
+  readonly reason?: {
+    readonly target_date?: number | null
+    readonly budget_usd?: number | null
+    readonly reason?: string
+  }["reason"]
+}
+
+export type ServerBoardSettingsOutput = { readonly activity: string }
 
 export type ServerBoardPauseInput = {
   readonly key: { readonly key: string }["key"]
