@@ -1,4 +1,4 @@
-import type { ServerBoardGetOutput, ServerBoardIssueOutput } from "@orchestra/client"
+import type { ServerBoardActivityOutput, ServerBoardGetOutput, ServerBoardIssueOutput } from "@orchestra/client"
 
 export type Snapshot = ServerBoardGetOutput
 export type Issue = Snapshot["issues"][number]
@@ -7,6 +7,8 @@ export type Trail = Page["trail"]
 export type Check = Extract<Trail, { state: "ok" }>["pr"]["checks"][number]
 export type Column = (typeof columns)[number]
 export type Tick = "pass" | "fail" | "run"
+export type Activity = ServerBoardActivityOutput[number]
+export type Question = Snapshot["questions"][number]
 
 // The board shows five stages. Intake is only counted in the header and Cut lives on the issue page (MOCKS.md v5).
 export const columns = ["backlog", "ready", "building", "review", "shipped"] as const
@@ -131,4 +133,142 @@ export function credential(text: string) {
   const known = text.match(/-----BEGIN [A-Z ]*PRIVATE KEY-----|\b(sk|pk|rk)-[A-Za-z0-9_-]{16,}|\b(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}|\bgithub_pat_[A-Za-z0-9_]{20,}|\bAKIA[A-Z0-9]{16}\b|\bxox[abpr]-[A-Za-z0-9-]{10,}/)
   if (known) return known[0]
   return text.match(/[A-Za-z0-9_+=-]{32,}/g)?.find((token) => !/^[0-9a-f-]+$/i.test(token))
+}
+
+// Declared refusals arrive as the server's tagged JSON body; anything else (transport, parse) has no words to show.
+export function refusal(error: unknown) {
+  if (typeof error !== "object" || error === null || !("_tag" in error) || !("message" in error)) return
+  return typeof error.message === "string" && error.message ? error.message : undefined
+}
+
+// Intake shows every card until there are more than five; then cards group by theme (their epic, else their type).
+export const intakeShown = 5
+export function intake(snapshot: Pick<Snapshot, "issues" | "epics">) {
+  const items = snapshot.issues.filter((issue) => issue.stage === "intake").sort((a, b) => b.stageEnteredAt - a.stageEnteredAt)
+  if (items.length <= intakeShown) return { items, themes: [] }
+  const theme = (issue: Issue) => {
+    const epic = snapshot.epics.find((entry) => entry.number === issue.epic)
+    return epic ? { id: `epic:${epic.number}`, epic: epic.title } : { id: `type:${issue.type}`, type: issue.type }
+  }
+  const themes = [...new Set(items.map((issue) => theme(issue).id))]
+    .map((id) => {
+      const members = items.filter((issue) => theme(issue).id === id)
+      return { ...theme(members[0]), issues: members }
+    })
+    .sort((a, b) => b.issues.length - a.issues.length || a.id.localeCompare(b.id))
+  return { items, themes }
+}
+
+// Every open question across projects, oldest first, with what each one holds up.
+export function inbox(snapshots: readonly Snapshot[]) {
+  return snapshots
+    .flatMap((snapshot) =>
+      snapshot.questions
+        .filter((question) => question.status === "open")
+        .map((question) => {
+          const issue = snapshot.issues.find((entry) => entry.number === question.issue)
+          return {
+            key: snapshot.project.key,
+            project: snapshot.project.name,
+            targetDate: snapshot.project.targetDate,
+            question,
+            issue,
+            blocks: issue ? snapshot.issues.filter((entry) => entry.dependsOn.includes(issue.ref)).map((entry) => entry.ref) : [],
+          }
+        }),
+    )
+    .sort((a, b) => a.question.timeCreated - b.question.timeCreated || a.question.id.localeCompare(b.question.id))
+}
+
+// Maestro's recommendation always comes first, so key 1 takes it.
+export function options(question: Pick<Question, "options" | "recommended">) {
+  return [...question.options].sort((a, b) => Number(b.id === question.recommended) - Number(a.id === question.recommended))
+}
+
+// Per project with open questions: how many, and which cards sit paused on one.
+export function waits(snapshots: readonly Snapshot[]) {
+  return snapshots.flatMap((snapshot) => {
+    const open = snapshot.questions.filter((question) => question.status === "open")
+    if (!open.length) return []
+    const held = snapshot.issues.filter((issue) => issue.paused && open.some((question) => question.issue === issue.number))
+    return [{ key: snapshot.project.key, project: snapshot.project.name, targetDate: snapshot.project.targetDate, questions: open.length, held: held.length }]
+  })
+}
+
+// The owner's answers from the last seven days, newest first, each with the next thing Maestro did on that issue.
+export function answered(activity: readonly Activity[], now: number) {
+  const text = (row: Activity, field: string) => {
+    const value = row.after?.[field]
+    return typeof value === "string" ? value : undefined
+  }
+  return activity
+    .filter((row) => row.action === "question.answer" && row.timeCreated >= now - 7 * day)
+    .map((row) => ({
+      id: row.id,
+      ask: text(row, "id"),
+      issue: row.issue,
+      at: row.timeCreated,
+      question: text(activity.find((ask) => ask.action === "question.ask" && text(ask, "id") === text(row, "id")) ?? row, "text"),
+      option: text(row, "answer_option"),
+      text: text(row, "answer_text"),
+      next: activity.find((later) => later.actor === "maestro" && later.issue === row.issue && later.timeCreated > row.timeCreated),
+    }))
+    .sort((a, b) => b.at - a.at)
+}
+
+// The board as it stood at `at`: undo every row after it, newest first, from the row's own before values. Rows carry
+// only the columns they changed, so anything else stays as it is now. An issue created after `at` disappears.
+export function rewind(issues: readonly Issue[], activity: readonly Activity[], at: number) {
+  return activity
+    .filter((row) => row.timeCreated > at && row.issue !== null)
+    .sort((a, b) => b.timeCreated - a.timeCreated || b.id.localeCompare(a.id))
+    .reduce<Issue[]>((board, row) => {
+      if (row.action === "issue.create") return board.filter((issue) => issue.number !== row.issue)
+      const before = row.before
+      if (!before) return board
+      return board.map((issue) => (issue.number === row.issue ? restore(issue, before) : issue))
+    }, [...issues])
+}
+
+function restore(issue: Issue, before: { readonly [x: string]: unknown }): Issue {
+  const stage = (["intake", ...columns, "cut"] as const).find((entry) => entry === before.stage)
+  return {
+    ...issue,
+    ...(stage ? { stage } : {}),
+    ...(typeof before.position === "number" ? { position: before.position } : {}),
+    ...(typeof before.stage_entered_at === "number" ? { stageEnteredAt: before.stage_entered_at } : {}),
+    ...(typeof before.title === "string" ? { title: before.title } : {}),
+    ...(typeof before.paused === "boolean" ? { paused: before.paused } : {}),
+    ...(typeof before.seat === "string" || before.seat === null ? { seat: before.seat } : {}),
+    ...(Array.isArray(before.steps) ? { steps: before.steps.filter(isStep) } : {}),
+  }
+}
+
+function isStep(value: unknown): value is Issue["steps"][number] {
+  return typeof value === "object" && value !== null && "title" in value && "status" in value
+}
+
+// Issues the replay touches: every issue named by a row after `at`.
+export function changed(activity: readonly Activity[], at: number) {
+  return new Set(activity.flatMap((row) => (row.timeCreated > at && row.issue !== null ? [row.issue] : [])))
+}
+
+// With many events, runs of Maestro's step updates fold into one entry so moves and answers stay readable.
+export const foldAbove = 40
+export function fold(activity: readonly Activity[]) {
+  if (activity.length <= foldAbove) return activity.map((row) => ({ row, count: 1 }))
+  return activity.reduce<{ row: Activity; count: number }[]>((entries, row) => {
+    const last = entries.at(-1)
+    if (last && last.row.action === "steps.set" && row.action === "steps.set") {
+      return [...entries.slice(0, -1), { row, count: last.count + 1 }]
+    }
+    return [...entries, { row, count: 1 }]
+  }, [])
+}
+
+// Quiet stretches of six hours or more. The scrubber hatches them as "No history" instead of drawing a smooth track.
+export const gapAfter = 6 * 60 * 60 * 1000
+export function gaps(times: readonly number[], start: number, end: number) {
+  const points = [start, ...times.filter((time) => time > start && time < end).sort((a, b) => a - b), end]
+  return points.slice(1).flatMap((time, index) => (time - points[index] >= gapAfter ? [{ from: points[index], to: time }] : []))
 }
