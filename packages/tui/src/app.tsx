@@ -946,8 +946,8 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
     })
   })
 
-  event.on("session.deleted", (evt) => {
-    if (route.data.type === "session" && route.data.sessionID === evt.data.info.id) {
+  event.on("session.next.deleted", (evt) => {
+    if (route.data.type === "session" && route.data.sessionID === evt.data.sessionID) {
       route.navigate({ type: "home" })
       toast.show({
         variant: "info",
@@ -956,15 +956,11 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
     }
   })
 
-  event.on("session.error", (evt, { workspace }) => {
+  event.on("session.next.step.failed", (evt, { workspace }) => {
     if (workspace !== project.workspace.current()) return
-    const error = evt.data.error
-    if (error && typeof error === "object" && error.name === "MessageAbortedError") return
-    const message = errorMessage(error)
-
     toast.show({
       variant: "error",
-      message,
+      message: errorMessage(evt.data.error),
       duration: 5000,
     })
   })

@@ -115,8 +115,8 @@ export function DialogSessionList() {
   })
 
   onCleanup(
-    event.on("session.deleted", (event) => {
-      setDeleted((current) => new Set(current).add(event.data.info.id))
+    event.on("session.next.deleted", (event) => {
+      setDeleted((current) => new Set(current).add(event.data.sessionID))
     }),
   )
 

@@ -467,8 +467,8 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
         })
       }
 
-      event.on("session.deleted", (evt) => {
-        prune(evt.data.info.id)
+      event.on("session.next.deleted", (evt) => {
+        prune(evt.data.sessionID)
       })
 
       return {

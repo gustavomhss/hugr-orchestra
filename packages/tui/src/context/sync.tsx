@@ -318,12 +318,8 @@ export const {
           setStore("todo", event.data.sessionID, event.data.todos)
           break
 
-        case "session.diff":
-          setStore("session_diff", event.data.sessionID, event.data.diff)
-          break
-
-        case "session.deleted": {
-          const result = search(store.session, event.data.info.id, (s) => s.id)
+        case "session.next.deleted": {
+          const result = search(store.session, event.data.sessionID, (s) => s.id)
           if (result.found) {
             setStore(
               "session",
@@ -334,8 +330,9 @@ export const {
           }
           break
         }
-        case "session.updated":
-          void upsertSession(event.data.info.id)
+        case "session.next.created":
+        case "session.next.renamed":
+          void upsertSession(event.data.sessionID)
           break
 
         case "session.next.compaction.started":

@@ -4,7 +4,7 @@ import type { BuiltinTuiPlugin } from "../builtins"
 
 const id = "internal:notifications"
 
-type SessionError = Extract<Event, { type: "session.error" }>["data"]["error"]
+type SessionError = Extract<Event, { type: "session.next.step.failed" }>["data"]["error"]
 
 function notify(api: TuiPluginApi, sessionID: string | undefined, message: string, sound: TuiAttentionSoundName) {
   const session = sessionID ? api.state.session.get(sessionID) : undefined
@@ -18,11 +18,7 @@ function notify(api: TuiPluginApi, sessionID: string | undefined, message: strin
 }
 
 function sessionErrorMessage(error: SessionError) {
-  if (error?.name === "MessageAbortedError") return "Session aborted"
-  const data = error?.data
-  if (data && typeof data === "object" && "message" in data && data.message === "SSE read timed out") {
-    return "Model stopped responding"
-  }
+  if (error.message === "SSE read timed out") return "Model stopped responding"
   return "Session error"
 }
 
@@ -77,9 +73,8 @@ const tui: TuiPlugin = async (api) => {
     notify(api, sessionID, "Session done", session?.parentID ? "subagent_done" : "done")
   })
 
-  api.event.on("session.error", (event) => {
+  api.event.on("session.next.step.failed", (event) => {
     const sessionID = event.data.sessionID
-    if (!sessionID) return
     if (!active.has(sessionID)) return
     errored.add(sessionID)
     notify(api, sessionID, sessionErrorMessage(event.data.error), "error")
