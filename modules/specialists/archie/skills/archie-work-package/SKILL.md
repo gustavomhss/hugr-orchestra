@@ -1,6 +1,7 @@
 ---
 name: archie-work-package
 description: Author complete linear work-package proposals targeting the native Relay sprint schema, without execution or approval.
+internal: true
 ---
 
 # Progressive work-package authoring
