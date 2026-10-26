@@ -5,6 +5,7 @@ import { ModelV2 } from "@orchestra/core/model"
 import { SessionEvent } from "@orchestra/core/session/event"
 import { SessionMessage } from "@orchestra/core/session/message"
 import { SessionSchema } from "@orchestra/core/session/schema"
+import { LeanOutput } from "@orchestra/core/tool/lean-output"
 
 type Input = {
   readonly sessionID: SessionSchema.ID
@@ -69,7 +70,20 @@ export const createLLMEventPublisher = (events: EventV2.Interface, input: Input)
   let assistantActive = false
   let assistantFailed = false
   let providerFailed = false
-  let stepSettlement: { readonly finish: string; readonly tokens: ReturnType<typeof tokens>; readonly usageKnown: boolean } | undefined
+  let stepSettlement:
+    | {
+        readonly finish: string
+        readonly tokens: ReturnType<typeof tokens>
+        readonly usageKnown: boolean
+        /** USD the provider or host reported; absent when the model's price list applies. */
+        readonly cost: number | undefined
+        readonly contextWindow: number | undefined
+      }
+    | undefined
+  // Text and reasoning blocks by id and the assistant message holding them, so a retract can blank them.
+  const blocks = new Map<string, { readonly kind: "text" | "reasoning"; readonly assistantMessageID: SessionMessage.ID }>()
+  // Blocks a retract blanked: what the superseded attempt still streams for them is dropped.
+  const retracted = new Set<string>()
 
   const startAssistant = Effect.fnUntraced(function* () {
     if (assistantMessageID !== undefined) return assistantMessageID
@@ -115,7 +129,9 @@ export const createLLMEventPublisher = (events: EventV2.Interface, input: Input)
     const flush = Effect.fnUntraced(function* () {
       for (const id of chunks.keys()) yield* end(id)
     })
-    return { start, append, end, flush }
+    /** Forgets an open block without recording its text. */
+    const drop = (id: string) => chunks.delete(id)
+    return { start, append, end, flush, drop }
   }
 
   const text = fragments("text", (textID, value) =>
@@ -236,6 +252,51 @@ export const createLLMEventPublisher = (events: EventV2.Interface, input: Input)
     return tool ? Effect.succeed(tool.assistantMessageID) : Effect.die(`Unknown tool call: ${callID}`)
   }
 
+  // A superseded attempt leaves no content behind: the ended-boundary event restates the block as empty, which the
+  // history translation already skips, and a call still unsettled is failed. A call that ran keeps its outcome.
+  const retract = Effect.fnUntraced(function* (ids: ReadonlyArray<string>) {
+    for (const id of ids) {
+      const block = blocks.get(id)
+      if (block) retracted.add(id)
+      if (block?.kind === "text") {
+        text.drop(id)
+        yield* events.publish(SessionEvent.Text.Ended, {
+          sessionID: input.sessionID,
+          assistantMessageID: block.assistantMessageID,
+          timestamp: yield* timestamp,
+          textID: id,
+          text: "",
+        })
+      }
+      if (block?.kind === "reasoning") {
+        reasoning.drop(id)
+        yield* events.publish(SessionEvent.Reasoning.Ended, {
+          sessionID: input.sessionID,
+          assistantMessageID: block.assistantMessageID,
+          timestamp: yield* timestamp,
+          reasoningID: id,
+          text: "",
+        })
+      }
+      const tool = tools.get(id)
+      if (tool && !tool.settled) {
+        toolInput.drop(id)
+        tool.settled = true
+        yield* events.publish(SessionEvent.Tool.Failed, {
+          sessionID: input.sessionID,
+          timestamp: yield* timestamp,
+          assistantMessageID: tool.assistantMessageID,
+          callID: id,
+          error: { type: "unknown", message: "Retracted: the attempt that made this call was superseded" },
+          provider: {
+            executed: tool.providerExecuted,
+            ...(tool.providerMetadata === undefined ? {} : { metadata: tool.providerMetadata }),
+          },
+        })
+      }
+    }
+  })
+
   const publish = Effect.fn("SessionRunner.publishLLMEvent")(function* (
     event: LLMEvent,
     outputPaths: ReadonlyArray<string> = [],
@@ -243,16 +304,20 @@ export const createLLMEventPublisher = (events: EventV2.Interface, input: Input)
     switch (event.type) {
       case "step-start":
         return
-      case "text-start":
+      case "text-start": {
         yield* text.start(event.id)
+        const started = yield* startAssistant()
+        blocks.set(event.id, { kind: "text", assistantMessageID: started })
         yield* events.publish(SessionEvent.Text.Started, {
           sessionID: input.sessionID,
-          assistantMessageID: yield* startAssistant(),
+          assistantMessageID: started,
           timestamp: yield* timestamp,
           textID: event.id,
         })
         return
+      }
       case "text-delta":
+        if (retracted.has(event.id)) return
         yield* text.append(event.id, event.text)
         yield* events.publish(SessionEvent.Text.Delta, {
           sessionID: input.sessionID,
@@ -263,19 +328,24 @@ export const createLLMEventPublisher = (events: EventV2.Interface, input: Input)
         })
         return
       case "text-end":
+        if (retracted.has(event.id)) return
         yield* text.end(event.id)
         return
-      case "reasoning-start":
+      case "reasoning-start": {
         yield* reasoning.start(event.id)
+        const started = yield* startAssistant()
+        blocks.set(event.id, { kind: "reasoning", assistantMessageID: started })
         yield* events.publish(SessionEvent.Reasoning.Started, {
           sessionID: input.sessionID,
-          assistantMessageID: yield* startAssistant(),
+          assistantMessageID: started,
           timestamp: yield* timestamp,
           reasoningID: event.id,
           providerMetadata: event.providerMetadata,
         })
         return
+      }
       case "reasoning-delta":
+        if (retracted.has(event.id)) return
         yield* reasoning.append(event.id, event.text)
         yield* events.publish(SessionEvent.Reasoning.Delta, {
           sessionID: input.sessionID,
@@ -286,6 +356,7 @@ export const createLLMEventPublisher = (events: EventV2.Interface, input: Input)
         })
         return
       case "reasoning-end":
+        if (retracted.has(event.id)) return
         yield* reasoning.end(event.id, event.providerMetadata)
         return
       case "tool-input-start":
@@ -349,6 +420,8 @@ export const createLLMEventPublisher = (events: EventV2.Interface, input: Input)
           executed: event.providerExecuted === true || tool.providerExecuted,
           ...(event.providerMetadata === undefined ? {} : { metadata: event.providerMetadata }),
         }
+        // Host metadata of an Orchestra settlement of this call, such as Lean measurements.
+        const metadata = LeanOutput.take({ sessionID: input.sessionID, callID: event.id })
         if ("error" in result) {
           yield* events.publish(SessionEvent.Tool.Failed, {
             sessionID: input.sessionID,
@@ -357,6 +430,7 @@ export const createLLMEventPublisher = (events: EventV2.Interface, input: Input)
             callID: event.id,
             error: result.error,
             result: event.result,
+            ...(metadata ? { metadata } : {}),
             provider,
           })
           return
@@ -368,6 +442,7 @@ export const createLLMEventPublisher = (events: EventV2.Interface, input: Input)
           callID: event.id,
           ...result,
           outputPaths,
+          ...(metadata ? { metadata } : {}),
           ...(provider.executed ? { result: event.result } : {}),
           provider,
         })
@@ -400,6 +475,8 @@ export const createLLMEventPublisher = (events: EventV2.Interface, input: Input)
         stepSettlement = {
           finish: event.reason,
           tokens: tokens(event.usage),
+          cost: event.usage?.cost !== undefined && Number.isFinite(event.usage.cost) && event.usage.cost >= 0 ? event.usage.cost : undefined,
+          contextWindow: event.usage?.contextWindow !== undefined && Number.isFinite(event.usage.contextWindow) && event.usage.contextWindow > 0 ? event.usage.contextWindow : undefined,
           usageKnown: event.usage !== undefined && [event.usage.nonCachedInputTokens, event.usage.outputTokens, event.usage.cacheReadInputTokens, event.usage.cacheWriteInputTokens].every((value) => value !== undefined && Number.isSafeInteger(value) && value >= 0) && (event.usage.reasoningTokens === undefined || Number.isSafeInteger(event.usage.reasoningTokens) && event.usage.reasoningTokens >= 0 && event.usage.outputTokens !== undefined && event.usage.reasoningTokens <= event.usage.outputTokens),
         }
         return
@@ -408,6 +485,9 @@ export const createLLMEventPublisher = (events: EventV2.Interface, input: Input)
       case "provider-error":
         providerFailed = true
         yield* failAssistant(event.message)
+        return
+      case "retract":
+        yield* retract(event.ids)
         return
     }
   })

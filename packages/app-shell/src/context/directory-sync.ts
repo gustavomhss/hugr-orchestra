@@ -13,14 +13,12 @@ const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
 const sessionFields = new Set([
   "session_status",
   "session_working",
-  "session_diff",
   "todo",
   "permission",
   "question",
   "message",
   "session_message",
   "part",
-  "part_text_accum_delta",
 ])
 
 export const createDirSyncContext = (
@@ -28,7 +26,6 @@ export const createDirSyncContext = (
   serverSync: ReturnType<typeof createServerSyncContextInner>,
   serverSDK: ReturnType<typeof createServerSdkContext>,
 ) => {
-  const client = serverSDK.createClient({ directory, throwOnError: true })
   const current = createMemo(() => serverSync.child(directory, { mcp: true }))
   const fences = sessionManagementFences(serverSync.session, directory)
   const absolute = (path: string) => (current()[0].path.directory + "/" + path).replace("//", "/")

@@ -24,7 +24,7 @@ verified: `415038b`).
   - No Effect caller uses `inherit`, `additionalFds`, `killSignal` or `unref`.
   - The only PipedCommand producer is a pass-through at `tool-safety-sandbox.ts:51`.
 - **The non-Effect paths.**
-  - The legacy `Process` (`apps/orchestra/src/util/process.ts`, 16 importers).
+  - The legacy `Process` (`removed-v1/src/util/process.ts`, 16 importers).
   - MCP's `StdioClientTransport`.
   - `maestro-arsenal` (`Bun.spawn`; no dependency on core).
   - The desktop main process.
@@ -159,8 +159,6 @@ verified: `415038b`).
 | `desktop/scripts/lean-candidate.ts` (`spawn`, detached process groups) | CI-only macOS candidate build and packaging script; owns each tool's process group to enforce deadlines and kill TERM-resistant descendants. Not a shipped process path. |
 | `packages/script/src/tree-sitter-prebuilds.ts` (`child_process`) | Packaging step: rebuilds mislabeled tree-sitter prebuilds with node-gyp before electron-builder packs; a build script, not a shipped process path. |
 | `orchestra/script/claude-code-engine/smoke.ts` (`execFileSync`) | Test harness initializes its throwaway git repository; this is not a shipped process path. |
-| `.github/scripts/maestro-authoring-run.ts`, `.github/scripts/archie-authoring-pair.ts` (`spawn`, `execFileSync`) | Lead-declared, 2026-10-11: owner-run Archie authoring harnesses. They launch the real candidate runtime in one detached, owned process group and must signal and reap that group; not a shipped process path. |
-| `.github/scripts/archie-host-acceptance.ts` (`spawn`, `execFileSync`) | Lead-declared, 2026-10-11: owner-run Archie host acceptance harness. It seeds a scratch git project and launches the real isolated runtime and offline verifier as owned children, then signals and reaps only those children; not a shipped process path. |
 | `modules/engine-adapters/claude-code/src/sdk.ts` (`spawn`, `spawnSync`) | Lead-declared integration exception, 2026-10-09: the current bridge implements the SDK's synchronous `SpawnedProcess` contract and tracks actual child exit; macOS machine-login lookup is synchronous and capped at 2 s. The former default SDK subprocess is now wrapped explicitly by `dev`. This bridge stays SDK-managed, outside Omni-tree guarantees; ordinary shell/LSP/MCP callers remain inside Omni. |
 | `core/src/tool-safety-sandbox.ts` (`require("child_process")` inside the `FORWARDER` source string) | Lead-declared, 2026-10-11: not a host spawn. It is the text of the endpoint forwarder that the pinned Bun runs inside the Linux srt sandbox, where it launches the confined command as its child (#292). |
 | `core/src/tool-safety-appcontainer.ts` (`execFile` of `hugr-omni-supervisor --appcontainer orchestra-toolchain`) | Lead-declared, 2026-10-11: launches the omni supervisor itself in its one-shot mode that grants the container profile read access to the host toolchain; omni cannot supervise its own launcher, and the call is fire-and-forget and bounded. |
@@ -333,7 +331,7 @@ bounded (≤ 20 s against a 600 s hang). They are not latency budgets.
 - **Regression:** `core/test/pty/*` and `orchestra/test/server/httpapi{,-v2}-pty.test.ts` (Linux and macOS; they skip
   Windows).
 
-**WP3 Legacy Process, LSP, MCP, maestro-arsenal** (`apps/orchestra/src/{util,lsp,mcp,session/prompt.ts,cli}`,
+**WP3 Legacy Process, LSP, MCP, maestro-arsenal** (`removed-v1/src/{util,lsp,mcp,session/prompt.ts,cli}`,
 `modules/maestro/arsenal`)
 
 - **`util/process.ts`.** Uses an explicit mapping table that must be written before any code, covering:
@@ -402,7 +400,7 @@ bounded (≤ 20 s against a 600 s hang). They are not latency budgets.
 
 ### Wave 3 (after Wave 2)
 
-**WP4 Desktop** (`apps/desktop/**`, plus `apps/orchestra/script/build-node.ts`, owned here)
+**WP4 Desktop** (`apps/desktop/**`, plus `removed-v1/script/build-node.ts`, owned here)
 
 - **Packaging.**
   - `prebuild.ts` stages `resources/omni/`.
@@ -429,7 +427,7 @@ bounded (≤ 20 s against a 600 s hang). They are not latency budgets.
     with a grandchild, then `kill -9` the Electron main process. The nonce oracle must find 0.
   - macOS `codesign --verify --deep --strict` plus stapler (O5, owner run).
 
-**WP5 CLI distribution** (`apps/orchestra/script/{build,postinstall,publish}.*`)
+**WP5 CLI distribution** (`removed-v1/script/{build,postinstall,publish}.*`)
 - **Build.**
   - `build.ts` defines `OMNI_ENABLED` per target (D-L9).
   - It copies `hugr_omni.node` and the supervisor into `dist/<t>/bin/` from `OMNI_ARTIFACTS`. A missing artifact

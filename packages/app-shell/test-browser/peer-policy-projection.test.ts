@@ -1,7 +1,6 @@
 import { expect, spyOn, test } from "bun:test"
 import type { SessionInfo } from "@/v2-types"
 
-import type { ServerSdk } from "@/utils/server"
 import { createRoot } from "solid-js"
 import { createStore } from "solid-js/store"
 import type { State } from "@/context/global-sync/types"
@@ -13,8 +12,8 @@ import { solidDom } from "./solid-dom"
 const { createDirSyncContext }: typeof import("@/context/directory-sync") = await import(solidDom("@/context/directory-sync", import.meta.dir))
 const { createServerSession }: typeof import("@/context/server-session") = await import(solidDom("@/context/server-session", import.meta.dir))
 const { applySessionPolicyEvent }: typeof import("@/context/server-sync") = await import(solidDom("@/context/server-sync", import.meta.dir))
-const { applyDirectoryEvent }: typeof import("@/context/global-sync/event-reducer") = await import(solidDom("@/context/global-sync/event-reducer", import.meta.dir))
-const { createApiForServer, createSdkForServer }: typeof import("@/utils/server") = await import(solidDom("@/utils/server", import.meta.dir))
+const { applyDirectoryEvent, upsertDirectorySession }: typeof import("@/context/global-sync/event-reducer") = await import(solidDom("@/context/global-sync/event-reducer", import.meta.dir))
+const { createApiForServer }: typeof import("@/utils/server") = await import(solidDom("@/utils/server", import.meta.dir))
 const { normalizeSessionInfo, applySessionManagementEvent }: typeof import("@/utils/session") = await import(solidDom("@/utils/session", import.meta.dir))
 
 const denied = { mode: "allowlist", models: [] } as const
@@ -39,25 +38,25 @@ function policyEvent(id: string, seq: number, policy: AppSession["subagentModels
 
 function projection(get: ServerApi["session"]["get"], list: () => SessionInfo[] = () => []) {
   return createRoot((dispose) => {
-    const server = createServerSession({} as ServerSdk, { get } as ServerApi["session"], {} as ServerApi["message"])
+    const server = createServerSession({ get } as ServerApi["session"], {} as ServerApi["message"], { todo: async () => [] })
     const [store, setStore] = createStore({
       status: "complete", session: [], sessionTotal: 0, limit: 10,
-      message: {}, session_message: {}, part: {}, part_text_accum_delta: {},
-      session_status: {}, session_diff: {}, todo: {}, permission: {}, question: {},
+      message: {}, session_message: {}, part: {},
+      session_status: {}, todo: {}, permission: {}, question: {},
     } as unknown as State)
-    const publish = (rows: AppSession[]) => rows.forEach((info) => project({ type: "session.created", properties: { info } }))
-    const project = (event: SessionManagementEvent) => applyDirectoryEvent({
-      event, readSession: server.get, fenceOwner: server, store, setStore, directory: "/repo", push() {}, loadLsp() {},
-    })
+    const owner = { readSession: server.get, fenceOwner: server, store, setStore, directory: "/repo", push() {} }
+    // A full row reaches the index from a canonical read, or counted as a newly created Session.
+    const upsert = (info: AppSession, counted = false) => upsertDirectorySession(owner, info, counted)
+    const publish = (rows: AppSession[]) => rows.forEach((info) => upsert(info, true))
+    const project = (event: SessionManagementEvent) => applyDirectoryEvent({ ...owner, event })
     const directory = createDirSyncContext("/repo", {
       session: server,
       child: () => [store, setStore],
     } as unknown as Parameters<typeof createDirSyncContext>[1], {
-      createClient: () => ({}),
       api: { session: { list: async () => ({ data: list(), cursor: {} }) } },
     } as unknown as Parameters<typeof createDirSyncContext>[2])
     return {
-      dispose, server, store, setStore, directory, project, publish,
+      dispose, server, store, setStore, directory, project, upsert, publish,
       apply(event: SessionManagementEvent) {
         const recovery = server.apply(event)
         project(event)
@@ -93,10 +92,10 @@ test("actual stores order policy seq 2 -> 3 at time 10 after unrelated updated t
   expect(listed.subagentModels).toEqual(inherited)
   expect(listed.subagentModelsChangedAt).toBe(10)
   expect(listed.subagentModelsRevision).toBe(3)
-  ctx.project({ type: "session.updated", properties: { info: { ...ctx.server.get("session"),
+  ctx.upsert({ ...ctx.server.get("session")!,
     subagentModels: denied, subagentModelsChangedAt: undefined, subagentModelsRevision: undefined,
     subagentModelsReadReceipt: undefined, title: "general snapshot", time: { created: 1, updated: 40 },
-  } } })
+  })
   expect(ctx.store.session[0]?.title).toBe("general snapshot")
   expect((ctx.store.session[0] as AppSession).subagentModels).toEqual(inherited)
   ctx.dispose()
@@ -275,11 +274,10 @@ test("actual server-sync recovery boundary indexes evicted A in A's live owner a
     indexSession(row) {
       const owner = children[row.directory]
       if (!owner) throw new Error(`Missing directory owner for ${row.directory}`)
-      applyDirectoryEvent({
-        event: { type: "session.created", properties: { info: row } },
+      upsertDirectorySession({
         readSession: ctx.server.get, fenceOwner: ctx.server, store: owner[0], setStore: owner[1],
-        directory: row.directory, push() {}, loadLsp() {},
-      })
+        directory: row.directory, push() {},
+      }, row, true)
     },
   })
   await expect(dispatch(policyEvent("ses_A", 2, denied))).rejects.toThrow("A read failed")
@@ -364,7 +362,7 @@ test("only a valid canonical GET mints a numeric local receipt", async () => {
     data: state.valid ? snapshot("ses_valid", inherited) : { ...snapshot("ses_valid", denied), subagentModels: { mode: "invalid" } },
   }), { preconnect: fetch.preconnect })
   const api = createApiForServer({ server: http, fetch: fetcher })
-  const server = createServerSession(createSdkForServer({ server: http, fetch: fetcher }), api.session, api.message)
+  const server = createServerSession(api.session, api.message, { todo: async () => [] })
   server.remember(normalizeSessionInfo(snapshot("ses_valid", denied)))
   await expect(server.resolve("ses_valid", { force: true })).rejects.toThrow()
   expect(server.get("ses_valid")?.subagentModelsReadReceipt).toBeUndefined()
@@ -400,7 +398,7 @@ test("publication rereads current row after a later deletion instead of indexing
   const read = Promise.withResolvers<SessionInfo>()
   const ctx = projection(() => read.promise)
   const pending = ctx.server.resolve("ses_late", { force: true })
-  void pending.then(() => ctx.server.apply({ type: "session.deleted", properties: { sessionID: "ses_late" } }))
+  void pending.then(() => ctx.server.apply({ type: "session.next.deleted", properties: { timestamp: 20, sessionID: "ses_late" } }))
   const recovery = applySessionPolicyEvent({
     event: policyEvent("ses_late", 2, denied), session: ctx.server,
     children: { "/repo": [ctx.store, ctx.setStore] }, disposed: () => false, indexSession: (row) => ctx.publish([row]),
@@ -412,7 +410,7 @@ test("publication rereads current row after a later deletion instead of indexing
   ctx.dispose()
 })
 
-test.each(["session.created", "session.updated", "consumed policy"])("directory %s forwards canonical server policy over a stale visible row", async (type) => {
+test.each(["created", "read", "consumed policy"])("directory %s forwards canonical server policy over a stale visible row", async (type) => {
   const ctx = projection(async () => snapshot("ses_forward", inherited), () => [snapshot("ses_forward", inherited)])
   await ctx.directory.session.fetch()
   ctx.apply(policyEvent("ses_forward", 2, denied))
@@ -420,9 +418,8 @@ test.each(["session.created", "session.updated", "consumed policy"])("directory 
   const receipt = ctx.server.get("ses_forward")?.subagentModelsReadReceipt
   const stale = normalizeSessionInfo(snapshot("ses_forward", denied, 100, "general title"))
   ctx.setStore("session", [stale])
-  ctx.project(type === "consumed policy"
-    ? policyEvent("ses_forward", 2, denied, 100)
-    : { type, properties: { info: stale } })
+  if (type === "consumed policy") ctx.project(policyEvent("ses_forward", 2, denied, 100))
+  if (type !== "consumed policy") ctx.upsert(stale, type === "created")
   expect(ctx.store.session[0]?.subagentModels).toEqual(inherited)
   expect(ctx.store.session[0]?.subagentModelsRevision).toBe(2)
   expect(ctx.store.session[0]?.subagentModelsReadReceipt).toBe(receipt)
@@ -484,11 +481,10 @@ test.each(["B fails before A", "B fails after A", "both succeed", "disposed owne
       indexSession(row) {
         const owner = children[row.directory === "/repo" ? "/repo" : "/other"]
         if (!owner) throw new Error(`Missing captured owner ${row.directory}`)
-        applyDirectoryEvent({
-          event: { type: "session.created", properties: { info: row } },
+        upsertDirectorySession({
           readSession: ctx.server.get, fenceOwner: ctx.server, store: owner[0], setStore: owner[1],
-          directory: row.directory, push() {}, loadLsp() {},
-        })
+          directory: row.directory, push() {},
+        }, row, true)
       },
     })
     try {

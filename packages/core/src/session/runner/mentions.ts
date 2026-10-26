@@ -1,9 +1,9 @@
 export * as SessionMentions from "./mentions"
 
-// What a promoted prompt's attachments point at, read once at promotion as V1 read them at send: a `file://` file or
+// What a promoted prompt's attachments point at, read once at promotion as the earlier runtime read them at send: a `file://` file or
 // directory through the Location's read filesystem, any other non-data URI as a resource of a connected MCP server.
 // The runner records the result as a synthetic message after the prompt; the prompt itself stays as admitted. Images,
-// PDFs and binary MCP resources of a type a model reads come back as inline media, as V1 attached them.
+// PDFs and binary MCP resources of a type a model reads come back as inline media, as the earlier runtime attached them.
 
 import path from "node:path"
 import { fileURLToPath } from "node:url"
@@ -86,7 +86,7 @@ const local = Effect.fnUntraced(function* (
   return { text: `Attached ${filepath}, but it could not be read: ${messageOf(failure)}` }
 })
 
-// The read filesystem refuses PDFs as binary; V1 sent them to the model whole, within the media ingest limit.
+// The read filesystem refuses PDFs as binary; the earlier runtime sent them to the model whole, within the media ingest limit.
 const pdf = Effect.fnUntraced(function* (fs: FSUtil.Interface, filepath: string) {
   const info = yield* fs.stat(filepath)
   if (Number(info.size) > ReadToolFileSystem.MAX_MEDIA_INGEST_BYTES)

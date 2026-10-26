@@ -32,20 +32,20 @@ SCOPED() { bun run check:boundaries --no-stale --json --scope "$@" 2>/dev/null |
 
 ## Owned files (exactly these, nothing else)
 
-- `apps/orchestra/src/maestro/README.md`
+- `removed-v1/src/maestro/README.md`
 
 ## Steps
 
 1. Create the file with this exact content (the quoted heredoc writes it byte for byte):
 
 ```bash
-cat > 'apps/orchestra/src/maestro/README.md' <<'README_EOF'
+cat > 'removed-v1/src/maestro/README.md' <<'README_EOF'
 # Maestro domain
 
 ## Purpose and ownership
 
 - Maestro coordination: seats and roster, governance, admission and approval records, proposal settlement, Arsenal bindings, Atlas memory and Task orchestration.
-- Product-owned files outside this folder: `apps/orchestra/src/tool/maestro-*.ts` (10 files) and `apps/orchestra/src/tool/atlas-*.ts` (2 files).
+- Product-owned files outside this folder: `removed-v1/src/tool/maestro-*.ts` (10 files) and `removed-v1/src/tool/atlas-*.ts` (2 files).
 - Target after the 70-C' cut: modules/maestro (a future path).
 
 ## Public entry points and consumers
@@ -72,14 +72,14 @@ cat > 'apps/orchestra/src/maestro/README.md' <<'README_EOF'
 
 ## Contracts and verification limits
 
-- Seats are referred to by id (AGENTS.md, "Agent Names"); default display names live only in `apps/orchestra/src/maestro/roster.ts`.
+- Seats are referred to by id (AGENTS.md, "Agent Names"); default display names live only in `removed-v1/src/maestro/roster.ts`.
 README_EOF
 ```
 
 ## Commit and push
 
 ```bash
-git add 'apps/orchestra/src/maestro/README.md'
+git add 'removed-v1/src/maestro/README.md'
 git commit -m "docs(orchestra): add maestro domain README" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 git push fork ms-rd-maestro
 ```
@@ -88,9 +88,9 @@ Open no pull request.
 
 ## Acceptance (run after the commit; each must print the expected value)
 
-A1. `grep -c "^## " 'apps/orchestra/src/maestro/README.md'` -> prints `7`.
-A2. `grep -ci "open""code" 'apps/orchestra/src/maestro/README.md'` -> prints `0`.
-A3. `SCOPED apps/orchestra/src/maestro/README.md` -> prints `new=0 stale=1` (this also proves every backticked repository path in the file exists).
+A1. `grep -c "^## " 'removed-v1/src/maestro/README.md'` -> prints `7`.
+A2. `grep -ci "open""code" 'removed-v1/src/maestro/README.md'` -> prints `0`.
+A3. `SCOPED removed-v1/src/maestro/README.md` -> prints `new=0 stale=1` (this also proves every backticked repository path in the file exists).
 A4. `OWNED` prints exactly the owned files listed above, one per line, sorted.
 
 If an acceptance line fails, do not push a fix: report STOP with the exact output.

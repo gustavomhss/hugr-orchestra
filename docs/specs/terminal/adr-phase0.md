@@ -4,7 +4,7 @@
 
 ## Evidências
 
-**D-2, superfícies de servidor.** As duas estão vivas no mesmo servidor: `apps/orchestra/src/server/routes/instance/httpapi/server.ts:109` monta os handlers legados de PTY e `:115` monta os `handlers` de `@orchestra/server`. A lógica de sessão é única (`packages/core/src/pty.ts`); as duas mudam juntas ou nenhuma.
+**D-2, superfícies de servidor.** Na época as duas estavam vivas no mesmo servidor: o servidor V1 montava os handlers legados de PTY e os `handlers` de `@orchestra/server`. Com a remoção do V1 resta só `@orchestra/server`. A lógica de sessão é única (`packages/core/src/pty.ts`).
 
 **`ghostty-web` no pin `83c0a07`** (fonte lido, não executado):
 

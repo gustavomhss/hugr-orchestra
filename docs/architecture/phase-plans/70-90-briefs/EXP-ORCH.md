@@ -30,17 +30,17 @@ SCOPED() { bun run check:boundaries --no-stale --json --scope "$@" 2>/dev/null |
 
 ## Owned files (exactly these, nothing else)
 
-- `apps/orchestra/package.json`
+- `removed-v1/package.json`
 
 ## Steps
 
 1. `bun run script/explicit-exports.ts orchestra --write` -> prints `explicit-exports: orchestra written with 1 keys (...)`.
-2. `git diff --stat` -> shows only `apps/orchestra/package.json` (numstat in the rehearsal: `1 1 1` as added, deleted, files).
+2. `git diff --stat` -> shows only `removed-v1/package.json` (numstat in the rehearsal: `1 1 1` as added, deleted, files).
 
 ## Commit and push
 
 ```bash
-git add 'apps/orchestra/package.json'
+git add 'removed-v1/package.json'
 git commit -m "refactor(orchestra): declare explicit package exports" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 git push fork ms-exp-orch
 ```
@@ -51,10 +51,10 @@ Open no pull request.
 
 A1. `bun run script/explicit-exports.ts orchestra --check` -> exit 0, prints `explicit-exports: orchestra is explicit`.
 A2. `bun run script/explicit-exports.ts orchestra --verify-resolution $BASE` -> prints `checked=1 same=1 changed=0 lost=0 ignored=43` and exits 0.
-A3. `node -e 'const e=require("./apps/orchestra/package.json").exports;const w=Object.keys(e).filter(k=>k.includes("*"));console.log(w.length,w.join(" "))'` -> prints `0`.
-A4. `node -e 'console.log(Object.keys(require("./apps/orchestra/package.json").exports).length)'` -> prints `1`.
-A5. `node -e 'const a=JSON.parse(require("child_process").execSync("git show '$BASE':apps/orchestra/package.json"));const b=require("./apps/orchestra/package.json");delete a.exports;delete b.exports;console.log(JSON.stringify(a)===JSON.stringify(b)?"same":"DIFF")'` -> prints `same`.
-A6. `SCOPED apps/orchestra/package.json` -> prints `new=0 stale=1`.
+A3. `node -e 'const e=require("./removed-v1/package.json").exports;const w=Object.keys(e).filter(k=>k.includes("*"));console.log(w.length,w.join(" "))'` -> prints `0`.
+A4. `node -e 'console.log(Object.keys(require("./removed-v1/package.json").exports).length)'` -> prints `1`.
+A5. `node -e 'const a=JSON.parse(require("child_process").execSync("git show '$BASE':removed-v1/package.json"));const b=require("./removed-v1/package.json");delete a.exports;delete b.exports;console.log(JSON.stringify(a)===JSON.stringify(b)?"same":"DIFF")'` -> prints `same`.
+A6. `SCOPED removed-v1/package.json` -> prints `new=0 stale=1`.
 A7. `OWNED` prints exactly the owned files listed above, one per line, sorted.
 
 If an acceptance line fails, do not push a fix: report STOP with the exact output.

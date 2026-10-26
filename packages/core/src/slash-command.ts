@@ -1,7 +1,7 @@
 export * as SlashCommand from "./slash-command"
 
-// The Location's slash commands, as V1 offers them: the configured commands, then each connected MCP server's prompts
-// named `server:prompt`. A run renders the command into the text one prompt sends, resolves its template as V1 did
+// The Location's slash commands, as the earlier runtime offers them: the configured commands, then each connected MCP server's prompts
+// named `server:prompt`. A run renders the command into the text one prompt sends, resolves its template as the earlier runtime did
 // (`!`command`` output and `@path` attachments) and carries the command's own agent, model and subtask settings; the
 // Session admits the result as any prompt.
 
@@ -24,7 +24,7 @@ import { BashTool } from "./tool/bash"
 
 const FILE_REFERENCE = /(?<![\w`])@(\.?[^\s`,.]*(?:\.[^\s`,.]+)*)/g
 const SHELL_REFERENCE = /!`([^`]+)`/g
-// V1 bound each template command to 120 s.
+// The earlier runtime bound each template command to 120 s.
 const SHELL_TIMEOUT = Duration.seconds(120)
 const SHELL_OUTPUT_BYTES = 256 * 1024
 
@@ -72,7 +72,7 @@ export const render = Effect.fn("SlashCommand.render")(function* (name: string, 
   const mcp = yield* Mcp.Service
   const prompt = (yield* mcp.prompts()).find((item) => promptName(item) === name)
   if (!prompt) return yield* new NotFoundError({ name })
-  // As V1: the prompt's arguments are rendered as `$1`…`$n` placeholders, which the invocation's arguments then fill.
+  // The prompt's arguments are rendered as `$1`…`$n` placeholders, which the invocation's arguments then fill.
   const template = yield* mcp.getPrompt(
     prompt.server,
     prompt.name,
@@ -82,7 +82,7 @@ export const render = Effect.fn("SlashCommand.render")(function* (name: string, 
 })
 
 /**
- * The prompt a rendered command sends, as V1 built it: each `!`command`` runs in the Location's shell and is replaced
+ * The prompt a rendered command sends, as the earlier runtime built it: each `!`command`` runs in the Location's shell and is replaced
  * by its output; each `@path` naming a file or directory (relative to the project, or `~/`) is attached, and one naming
  * an agent is mentioned. A subtask command (or one whose agent is a subagent) mentions its agent for the task tool;
  * otherwise its agent and model (the agent's own model by default) are what the Session switches to.

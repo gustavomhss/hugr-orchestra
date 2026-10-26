@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test"
-import type { SessionV1 } from "@orchestra/schema/session-v1"
+import type { Transcript } from "../transcript-model"
 import { attached, inline, kind, typeLabel } from "./message-file"
 
-type FilePart = typeof SessionV1.FilePart.Encoded
+type FilePart = Transcript.FilePart
 
 function file(part: Partial<FilePart> = {}): FilePart {
   return {

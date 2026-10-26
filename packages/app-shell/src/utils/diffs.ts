@@ -1,7 +1,7 @@
 import type { VcsFileDiff } from "@/v2-types"
 import type { Message, SnapshotFileDiff } from "@/v2-wire"
 
-import type { FileDiffInfo } from "@/v2-legacy"
+import type { FileDiffInfo } from "@/session-types"
 
 type Diff = FileDiffInfo | SnapshotFileDiff | VcsFileDiff
 

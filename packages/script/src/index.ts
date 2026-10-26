@@ -4,7 +4,7 @@ import path from "path"
 import { WorkspacePaths } from "./workspace-paths.ts"
 
 const workspace = WorkspacePaths.make(import.meta.dir)
-const pkg: { version: string } = await Bun.file(path.join(workspace.module("orchestra"), "package.json")).json()
+const pkg: { version: string } = await Bun.file(path.join(workspace.module("cli"), "package.json")).json()
 const rootPkg = await Bun.file(path.join(workspace.root, "package.json")).json()
 const expectedBunVersion = rootPkg.packageManager?.split("@")[1]
 

@@ -3,14 +3,15 @@ import { FSUtil } from "@orchestra/core/fs-util"
 import { Global } from "@orchestra/core/global"
 import { Location } from "@orchestra/core/location"
 import { LeanProfilePreferences, LeanProject } from "@orchestra/core/session"
+import { LeanOutput } from "@orchestra/core/tool/lean-output"
 import { ServiceUnavailableError } from "@orchestra/protocol/errors"
 import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { Api } from "../api"
 import { response } from "../location"
 
-// V1's Lean dashboard, read from the same collector and saved profile preferences in the requested Location. The V2
-// config has no `tool_output.lean` switch, so Lean counts as on unless the profile turns it off.
+// The earlier runtime's Lean dashboard, read from the same collector and saved profile preferences in the requested Location. A profile
+// without its own switch follows the Location config's `tool_output.lean.enabled`, which defaults to on.
 export const LeanHandler = HttpApiBuilder.group(Api, "server.lean", (handlers) =>
   Effect.gen(function* () {
     const preferences = LeanProfilePreferences.make(yield* FSUtil.Service, yield* Global.Service)
@@ -25,14 +26,14 @@ export const LeanHandler = HttpApiBuilder.group(Api, "server.lean", (handlers) =
       .handle("lean.get", () =>
         response(
           Effect.gen(function* () {
-            return yield* collector.read(yield* preferences.read(yield* owner), true)
+            return yield* collector.read(yield* preferences.read(yield* owner), yield* LeanOutput.configured())
           }).pipe(Effect.mapError(unavailable)),
         ),
       )
       .handle("lean.update", (ctx) =>
         response(
           Effect.gen(function* () {
-            return yield* collector.read(yield* preferences.update(yield* owner, ctx.payload), true)
+            return yield* collector.read(yield* preferences.update(yield* owner, ctx.payload), yield* LeanOutput.configured())
           }).pipe(Effect.mapError(unavailable)),
         ),
       )

@@ -1,6 +1,6 @@
 export * as SessionActivity from "./activity"
 
-// Recorded activity of a project's Sessions over a period, for the home dashboard. Moved from V1; V1 transcripts and V2
+// Recorded activity of a project's Sessions over a period, for the home dashboard. Moved from the retired runtime; legacy transcripts and V2
 // projected messages both count.
 
 import { Database } from "../database/database"

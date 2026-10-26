@@ -1,5 +1,5 @@
 // UI-local wire shapes that have no schema equivalent yet. Inputs come from the
-// V1 server and the vendored `/api` client, so these mirror the wire fields the
+// legacy server and the vendored `/api` client, so these mirror the wire fields the
 // components read rather than the V2 decoded structs.
 
 export type FileContent = {
@@ -24,7 +24,7 @@ export type FileContent = {
   mimeType?: string
 }
 
-// The `/api` diff feed always sends these fields; the V1 snapshot shape allows
+// The `/api` diff feed always sends these fields; the legacy snapshot shape allows
 // `file`/`patch`/`status` to be absent.
 export type FileDiffInfo = {
   file: string

@@ -1,4 +1,5 @@
 import { Orchestra } from "@orchestra/client/effect"
+import { ClaudeCodeAccount } from "@orchestra/core/claude-code-account"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { PermissionSaved } from "@orchestra/core/permission/saved"
@@ -14,19 +15,25 @@ export const create = Effect.fn("Orchestra.create")(function* () {
   const scope = yield* Scope.Scope
   const memoMap = yield* Layer.makeMemoMap
   const context = yield* Layer.buildWithMemoMap(
-    AppNodeBuilder.build(LayerNode.group([ApplicationTools.node, PermissionSaved.node])),
+    AppNodeBuilder.build(LayerNode.group([ApplicationTools.node, PermissionSaved.node, ClaudeCodeAccount.node])),
     memoMap,
     scope,
   )
   const tools = Context.get(context, ApplicationTools.Service)
   const permissions = Context.get(context, PermissionSaved.Service)
+  const account = Context.get(context, ClaudeCodeAccount.Service)
   const operator = yield* CapabilityOperator.make({ principal: Principal.account(),
     scope: { placements: "instance", actions: ["*"] } }).pipe(Effect.orDie)
   const web = yield* Effect.acquireRelease(
     Effect.sync(() =>
       HttpRouter.toWebHandler(
         createEmbeddedRoutes({ operator }).pipe(
-          HttpRouter.provideRequest(Layer.succeed(PermissionSaved.Service, permissions)),
+          HttpRouter.provideRequest(
+            Layer.mergeAll(
+              Layer.succeed(PermissionSaved.Service, permissions),
+              Layer.succeed(ClaudeCodeAccount.Service, account),
+            ),
+          ),
           Layer.provide(HttpServer.layerServices),
         ),
         { disableLogger: true, memoMap },

@@ -104,6 +104,8 @@ export const ToolStateCompleted = Schema.Struct({
   outputPaths: Schema.Array(Schema.String).pipe(optional),
   structured: Schema.Record(Schema.String, Schema.Unknown),
   result: Schema.Unknown.pipe(optional),
+  /** Host settlement facts that never reach the model, such as `lean` measurements. */
+  metadata: Schema.Record(Schema.String, Schema.Unknown).pipe(optional),
 }).annotate({ identifier: "Session.Message.ToolState.Completed" })
 
 export interface ToolStateError extends Schema.Schema.Type<typeof ToolStateError> {}
@@ -114,6 +116,7 @@ export const ToolStateError = Schema.Struct({
   structured: Schema.Record(Schema.String, Schema.Unknown),
   error: UnknownError,
   result: Schema.Unknown.pipe(optional),
+  metadata: Schema.Record(Schema.String, Schema.Unknown).pipe(optional),
 }).annotate({ identifier: "Session.Message.ToolState.Error" })
 
 export const ToolState = Schema.Union([ToolStatePending, ToolStateRunning, ToolStateCompleted, ToolStateError]).pipe(

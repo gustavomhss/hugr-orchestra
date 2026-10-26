@@ -1,5 +1,5 @@
 import { parseCommentNote, readCommentMetadata } from "@/utils/comment-note"
-import type { SessionMessageInfo } from "@/v2-legacy"
+import type { SessionMessageInfo } from "@/session-types"
 
 
 import type { Part, SessionStatus, SnapshotFileDiff, UserMessage } from "@/v2-wire"
@@ -224,7 +224,7 @@ export namespace Timeline {
     }
 
     if (error) {
-      const data = error.data?.message
+      const data = error.data && "message" in error.data ? error.data.message : undefined
       rows.push(
         new TimelineRow.Error({
           userMessageID: userMessage.id,

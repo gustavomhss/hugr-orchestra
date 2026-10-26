@@ -467,7 +467,7 @@ describe("ToolSafety hooks on the V2 registry path", () => {
             "tool.before reminded",
             "write.after reminded",
           ])
-          // A call that throws (V1 tools die with their errors) still hands its notes over, in the error's message.
+          // A call that throws (legacy tools die with their errors) still hands its notes over, in the error's message.
           const safety = yield* ToolSafety.make
           const fs = yield* FSUtil.Service
           const stateDirectory = MaestroArsenal.stateDirectory(dirs.data, projectID)

@@ -135,10 +135,10 @@ test("owned Claude roots propagate through the native process boundary without r
   const f = fixture()
   const env = candidateEnvironment(f.p, { ...process.env, CLAUDE_CONFIG_DIR: "/host/config", CLAUDE_SECURESTORAGE_CONFIG_DIR: "",
     ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED: "1" })
-  run(resolve(import.meta.dir, "../../../orchestra"), `
+  run(resolve(import.meta.dir, "../../../../modules/engine-adapters/claude-code"), `
     import assert from "node:assert/strict";
     const env = ${JSON.stringify(env)};
-    const build = await Bun.build({ entrypoints: ["../../modules/engine-adapters/claude-code/src/sdk.ts"], target: "node" });
+    const build = await Bun.build({ entrypoints: ["./src/sdk.ts"], target: "node" });
     assert.equal(build.success, true, build.logs.join("\\n"));
     await Bun.write(${JSON.stringify(join(env.TMPDIR, "sdk-boundary.mjs"))}, build.outputs[0]);
     const node = Bun.spawnSync(["node", "--input-type=module", "--eval", ${JSON.stringify(`
@@ -191,60 +191,6 @@ test("owned Claude roots propagate through the native process boundary without r
   expect(env.CLAUDE_SECURESTORAGE_CONFIG_DIR).toBe(join(f.p.home, ".claude-secure-storage"))
   expect(existsSync(env.CLAUDE_CONFIG_DIR)).toBe(true)
   expect(existsSync(env.CLAUDE_SECURESTORAGE_CONFIG_DIR)).toBe(true)
-})
-
-test("compiled false/undefined cannot bypass machine policy; compiled true still requires valid child profile", () => {
-  const f = fixture()
-  run(resolve(import.meta.dir, "../../../orchestra"), `
-    import { mock } from "bun:test"; import assert from "node:assert/strict";
-    import fs from "node:fs"; import { join, resolve } from "node:path";
-    let policyReads = 0;
-    Object.defineProperty(process, "platform", { value: "darwin" });
-    mock.module("fs", () => ({ ...fs, existsSync: (p) => p.includes("Managed Preferences") || fs.existsSync(p) }));
-    const boundary = resolve("./src/util/process.ts");
-    mock.module(boundary, () => ({ Process: { run: async () => {
-      policyReads++; return { code: 0, stdout: Buffer.from('{"machine":true}') };
-    } } }));
-    const env = ${JSON.stringify(candidateEnvironment(f.p))};
-    await Bun.write(join(env.TMPDIR, "tsconfig.json"), JSON.stringify({ compilerOptions: { paths: { "@/*": [resolve("./src/*")] } } }));
-    for (const mode of [false, undefined, true]) {
-      Object.assign(process.env, env); process.env.ORCHESTRA_CANDIDATE_BUILD = "true";
-      const build = await Bun.build({ entrypoints: ["./src/config/managed.ts"], target: "bun",
-        define: mode === undefined ? {} : { ORCHESTRA_CANDIDATE_BUILD: JSON.stringify(mode) },
-        plugins: [{ name: "synthetic-policy-boundary", setup(build) {
-          build.onResolve({ filter: /^@\\/util\\/process$/ }, () => ({ path: boundary, external: true }));
-        } }] });
-      assert.equal(build.success, true, build.logs.join("\\n"));
-      const file = join(env.TMPDIR, "managed-" + mode + ".mjs");
-      await Bun.write(file, build.outputs[0]); const m = await import(file);
-      const before = policyReads;
-      if (mode !== true) {
-        assert.equal((await m.readManagedPreferences()).text, '{"machine":true}');
-        assert.equal(policyReads, before + 1);
-        process.env.ORCHESTRA_CANDIDATE_PROFILE_ROOT = "relative";
-        assert.equal((await m.readManagedPreferences()).text, '{"machine":true}');
-        continue;
-      }
-      assert.equal(await m.readManagedPreferences(), undefined); assert.equal(policyReads, before);
-      delete process.env.ORCHESTRA_LEAN_CANDIDATE;
-      await assert.rejects(m.readManagedPreferences(), /candidate environment required/);
-      process.env.ORCHESTRA_LEAN_CANDIDATE = "1";
-      process.env.ORCHESTRA_CANDIDATE_PROFILE_ROOT = "relative";
-      await assert.rejects(m.readManagedPreferences(), /absolute root required/);
-      process.env.ORCHESTRA_CANDIDATE_PROFILE_ROOT = env.ORCHESTRA_CANDIDATE_PROFILE_ROOT;
-      process.env.HOME = "/foreign";
-      await assert.rejects(m.readManagedPreferences(), /invalid owned profile/);
-      process.env.HOME = env.HOME;
-      const marker = join(env.ORCHESTRA_CANDIDATE_PROFILE_ROOT, ".orchestra-lean-candidate.json");
-      const ownership = await Bun.file(marker).text();
-      await Bun.write(marker, "forged foreign marker");
-      await assert.rejects(m.readManagedPreferences(), /invalid owned profile/);
-      fs.unlinkSync(marker);
-      await assert.rejects(m.readManagedPreferences(), /invalid owned profile/);
-      await Bun.write(marker, ownership);
-      assert.equal(policyReads, before);
-    }
-  `, candidateEnvironment(f.p))
 })
 
 function check(

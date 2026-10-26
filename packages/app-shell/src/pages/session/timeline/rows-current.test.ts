@@ -1,5 +1,5 @@
 import { describe, expect, mock, test } from "bun:test"
-import type { SessionMessageInfo } from "@/v2-legacy"
+import type { SessionMessageInfo } from "@/session-types"
 
 
 import type { AssistantMessage, Part, UserMessage } from "@/v2-wire"

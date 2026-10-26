@@ -9,19 +9,16 @@ import type {
   ProviderV2Info,
   QuestionV2Request,
   ReferenceInfo,
+  Event,
+  Session,
   SessionMessage,
-  SessionMessageAssistant,
-  SessionMessageAssistantReasoning,
-  SessionMessageAssistantText,
-  SessionMessageAssistantTool,
-  SessionV2Info,
   SkillV2Info,
-  V2Event,
-} from "../compat/schema"
+} from "../types"
 import { createStore, produce } from "solid-js/store"
 import { createSimpleContext } from "./helper"
 import { useSDK } from "./sdk"
 import { useEvent } from "./event"
+import { applyEvent } from "./session-history"
 import { createSignal, onCleanup, onMount } from "solid-js"
 
 type LocationData = {
@@ -36,7 +33,7 @@ type LocationData = {
 
 type Data = {
   session: {
-    info: Record<string, SessionV2Info>
+    info: Record<string, Session>
     message: Record<string, SessionMessage[]>
     permission: Record<string, PermissionV2Request[]>
     question: Record<string, QuestionV2Request[]>
@@ -87,307 +84,18 @@ export const { use: useData, provider: DataProvider } = createSimpleContext({
           }),
         )
       },
-      prepend(messages: SessionMessage[], item: SessionMessage) {
-        if (messages.some((existing) => existing.id === item.id)) return
-        messages.unshift(item)
-      },
-      activeAssistant(messages: SessionMessage[]) {
-        const item = messages.find((item) => item.type === "assistant" && !item.time.completed)
-        return item?.type === "assistant" ? item : undefined
-      },
-      assistant(messages: SessionMessage[], messageID: string) {
-        const item = messages.find((item) => item.type === "assistant" && item.id === messageID)
-        return item?.type === "assistant" ? item : undefined
-      },
-      activeShell(messages: SessionMessage[], callID: string) {
-        const item = messages.find((item) => item.type === "shell" && item.callID === callID)
-        return item?.type === "shell" ? item : undefined
-      },
-      latestTool(assistant: SessionMessageAssistant | undefined, callID?: string) {
-        return assistant?.content.findLast(
-          (item): item is SessionMessageAssistantTool =>
-            item.type === "tool" && (callID === undefined || item.id === callID),
-        )
-      },
-      latestText(assistant: SessionMessageAssistant | undefined, textID: string) {
-        return assistant?.content.findLast(
-          (item): item is SessionMessageAssistantText => item.type === "text" && item.id === textID,
-        )
-      },
-      latestReasoning(assistant: SessionMessageAssistant | undefined, reasoningID: string) {
-        return assistant?.content.findLast(
-          (item): item is SessionMessageAssistantReasoning => item.type === "reasoning" && item.id === reasoningID,
-        )
-      },
     }
 
-    function handleEvent(event: V2Event) {
+    function handleEvent(event: Event) {
+      const sessionID = "sessionID" in event.data ? event.data.sessionID : undefined
+      if (event.type.startsWith("session.next.") && sessionID)
+        message.update(sessionID, (draft) => applyEvent(draft, event))
       switch (event.type) {
         case "catalog.updated":
           void Promise.all([
             result.location.model.refresh(event.location),
             result.location.provider.refresh(event.location),
           ])
-          break
-        case "session.next.agent.switched":
-          message.update(event.data.sessionID, (draft) => {
-            message.prepend(draft, {
-              id: event.data.messageID,
-              type: "agent-switched",
-              agent: event.data.agent,
-              time: { created: event.data.timestamp },
-            })
-          })
-          break
-        case "session.next.model.switched":
-          message.update(event.data.sessionID, (draft) => {
-            message.prepend(draft, {
-              id: event.data.messageID,
-              type: "model-switched",
-              model: event.data.model,
-              time: { created: event.data.timestamp },
-            })
-          })
-          break
-        case "session.next.prompted": {
-          message.update(event.data.sessionID, (draft) => {
-            message.prepend(draft, {
-              id: event.data.messageID,
-              type: "user",
-              text: event.data.prompt.text,
-              files: event.data.prompt.files,
-              agents: event.data.prompt.agents,
-              time: { created: event.data.timestamp },
-            })
-          })
-          break
-        }
-        case "session.next.prompt.admitted":
-          break
-        case "session.next.context.updated":
-          message.update(event.data.sessionID, (draft) => {
-            message.prepend(draft, {
-              id: event.data.messageID,
-              type: "system",
-              text: event.data.text,
-              time: { created: event.data.timestamp },
-            })
-          })
-          break
-        case "session.next.synthetic":
-          message.update(event.data.sessionID, (draft) => {
-            message.prepend(draft, {
-              id: event.data.messageID,
-              type: "synthetic",
-              sessionID: event.data.sessionID,
-              text: event.data.text,
-              time: { created: event.data.timestamp },
-            })
-          })
-          break
-        case "session.next.shell.started":
-          message.update(event.data.sessionID, (draft) => {
-            message.prepend(draft, {
-              id: event.data.messageID,
-              type: "shell",
-              callID: event.data.callID,
-              command: event.data.command,
-              output: "",
-              time: { created: event.data.timestamp },
-            })
-          })
-          break
-        case "session.next.shell.ended":
-          message.update(event.data.sessionID, (draft) => {
-            const match = message.activeShell(draft, event.data.callID)
-            if (!match) return
-            match.output = event.data.output
-            match.time.completed = event.data.timestamp
-          })
-          break
-        case "session.next.step.started":
-          message.update(event.data.sessionID, (draft) => {
-            if (draft.some((message) => message.id === event.data.assistantMessageID)) return
-            const currentAssistant = message.activeAssistant(draft)
-            if (currentAssistant) currentAssistant.time.completed = event.data.timestamp
-            message.prepend(draft, {
-              id: event.data.assistantMessageID,
-              type: "assistant",
-              agent: event.data.agent,
-              model: event.data.model,
-              content: [],
-              snapshot: event.data.snapshot ? { start: event.data.snapshot } : undefined,
-              time: { created: event.data.timestamp },
-            })
-          })
-          break
-        case "session.next.step.ended":
-          message.update(event.data.sessionID, (draft) => {
-            const currentAssistant = message.assistant(draft, event.data.assistantMessageID)
-            if (!currentAssistant) return
-            currentAssistant.time.completed = event.data.timestamp
-            currentAssistant.finish = event.data.finish
-            currentAssistant.cost = event.data.cost
-            currentAssistant.tokens = event.data.tokens
-            if (event.data.snapshot)
-              currentAssistant.snapshot = { ...currentAssistant.snapshot, end: event.data.snapshot }
-          })
-          break
-        case "session.next.step.failed":
-          message.update(event.data.sessionID, (draft) => {
-            const currentAssistant = message.assistant(draft, event.data.assistantMessageID)
-            if (!currentAssistant) return
-            currentAssistant.time.completed = event.data.timestamp
-            currentAssistant.finish = "error"
-            currentAssistant.error = event.data.error
-          })
-          break
-        case "session.next.text.started":
-          message.update(event.data.sessionID, (draft) => {
-            message.assistant(draft, event.data.assistantMessageID)?.content.push({
-              type: "text",
-              id: event.data.textID,
-              text: "",
-            })
-          })
-          break
-        case "session.next.text.delta":
-          message.update(event.data.sessionID, (draft) => {
-            const match = message.latestText(message.assistant(draft, event.data.assistantMessageID), event.data.textID)
-            if (match) match.text += event.data.delta
-          })
-          break
-        case "session.next.text.ended":
-          message.update(event.data.sessionID, (draft) => {
-            const match = message.latestText(message.assistant(draft, event.data.assistantMessageID), event.data.textID)
-            if (match) match.text = event.data.text
-          })
-          break
-        case "session.next.tool.input.started":
-          message.update(event.data.sessionID, (draft) => {
-            message.assistant(draft, event.data.assistantMessageID)?.content.push({
-              type: "tool",
-              id: event.data.callID,
-              name: event.data.name,
-              time: { created: event.data.timestamp },
-              state: { status: "pending", input: "" },
-            })
-          })
-          break
-        case "session.next.tool.input.delta":
-          message.update(event.data.sessionID, (draft) => {
-            const match = message.latestTool(message.assistant(draft, event.data.assistantMessageID), event.data.callID)
-            if (match?.state.status === "pending") match.state.input += event.data.delta
-          })
-          break
-        case "session.next.tool.input.ended":
-          message.update(event.data.sessionID, (draft) => {
-            const match = message.latestTool(message.assistant(draft, event.data.assistantMessageID), event.data.callID)
-            if (match?.state.status === "pending") match.state.input = event.data.text
-          })
-          break
-        case "session.next.tool.called":
-          message.update(event.data.sessionID, (draft) => {
-            const match = message.latestTool(message.assistant(draft, event.data.assistantMessageID), event.data.callID)
-            if (!match) return
-            match.time.ran = event.data.timestamp
-            match.provider = event.data.provider
-            match.state = { status: "running", input: event.data.input, structured: {}, content: [] }
-          })
-          break
-        case "session.next.tool.progress":
-          message.update(event.data.sessionID, (draft) => {
-            const match = message.latestTool(message.assistant(draft, event.data.assistantMessageID), event.data.callID)
-            if (match?.state.status !== "running") return
-            match.state.structured = event.data.structured
-            match.state.content = [...event.data.content]
-          })
-          break
-        case "session.next.tool.success":
-          message.update(event.data.sessionID, (draft) => {
-            const match = message.latestTool(message.assistant(draft, event.data.assistantMessageID), event.data.callID)
-            if (match?.state.status !== "running") return
-            match.state = {
-              status: "completed",
-              input: match.state.input,
-              structured: event.data.structured,
-              content: [...event.data.content],
-              result: event.data.result,
-            }
-            match.provider = {
-              executed: event.data.provider.executed || match.provider?.executed === true,
-              metadata: match.provider?.metadata,
-              resultMetadata: event.data.provider.metadata,
-            }
-            match.time.completed = event.data.timestamp
-          })
-          break
-        case "session.next.tool.failed":
-          message.update(event.data.sessionID, (draft) => {
-            const match = message.latestTool(message.assistant(draft, event.data.assistantMessageID), event.data.callID)
-            if (!match || (match.state.status !== "pending" && match.state.status !== "running")) return
-            match.state = {
-              status: "error",
-              error: event.data.error,
-              input: typeof match.state.input === "string" ? {} : match.state.input,
-              structured: match.state.status === "running" ? match.state.structured : {},
-              content: match.state.status === "running" ? match.state.content : [],
-              result: event.data.result,
-            }
-            match.provider = {
-              executed: event.data.provider.executed || match.provider?.executed === true,
-              metadata: match.provider?.metadata,
-              resultMetadata: event.data.provider.metadata,
-            }
-            match.time.completed = event.data.timestamp
-          })
-          break
-        case "session.next.reasoning.started":
-          message.update(event.data.sessionID, (draft) => {
-            message.assistant(draft, event.data.assistantMessageID)?.content.push({
-              type: "reasoning",
-              id: event.data.reasoningID,
-              text: "",
-              providerMetadata: event.data.providerMetadata,
-            })
-          })
-          break
-        case "session.next.reasoning.delta":
-          message.update(event.data.sessionID, (draft) => {
-            const match = message.latestReasoning(
-              message.assistant(draft, event.data.assistantMessageID),
-              event.data.reasoningID,
-            )
-            if (match) match.text += event.data.delta
-          })
-          break
-        case "session.next.reasoning.ended":
-          message.update(event.data.sessionID, (draft) => {
-            const match = message.latestReasoning(
-              message.assistant(draft, event.data.assistantMessageID),
-              event.data.reasoningID,
-            )
-            if (match) {
-              match.text = event.data.text
-              if (event.data.providerMetadata !== undefined) match.providerMetadata = event.data.providerMetadata
-            }
-          })
-          break
-        case "session.next.retried":
-        case "session.next.compaction.started":
-        case "session.next.compaction.delta":
-          break
-        case "session.next.compaction.ended":
-          message.update(event.data.sessionID, (draft) => {
-            message.prepend(draft, {
-              id: event.data.messageID,
-              type: "compaction",
-              reason: event.data.reason,
-              summary: event.data.text,
-              recent: event.data.recent,
-              time: { created: event.data.timestamp },
-            })
-          })
           break
         case "reference.updated":
           void result.location.reference.refresh()
@@ -404,11 +112,7 @@ export const { use: useData, provider: DataProvider } = createSimpleContext({
 
     onMount(() => {
       const unsub = events.subscribe((event, metadata) => {
-        handleEvent({
-          ...event,
-          data: event.properties,
-          location: { directory: metadata.directory, workspaceID: metadata.workspace },
-        } as V2Event)
+        handleEvent({ ...event, location: { directory: metadata.directory, workspaceID: metadata.workspace } })
       })
       onCleanup(unsub)
     })
@@ -419,16 +123,15 @@ export const { use: useData, provider: DataProvider } = createSimpleContext({
           return store.session.info[sessionID]
         },
         async refresh(sessionID: string) {
-          const result = await sdk.client.v2.session.get({ sessionID }, { throwOnError: true })
-          setStore("session", "info", sessionID, result.data.data)
+          setStore("session", "info", sessionID, (await sdk.api.sessions.get({ sessionID })) as Session)
         },
         message: {
           list(sessionID: string) {
             return store.session.message[sessionID]
           },
           async refresh(sessionID: string) {
-            const result = await sdk.client.v2.session.messages({ sessionID }, { throwOnError: true })
-            setStore("session", "message", sessionID, result.data.data)
+            const result = await sdk.api.messages.list({ sessionID })
+            setStore("session", "message", sessionID, result.data as SessionMessage[])
           },
         },
         permission: {
@@ -436,8 +139,8 @@ export const { use: useData, provider: DataProvider } = createSimpleContext({
             return store.session.permission[sessionID]
           },
           async refresh(sessionID: string) {
-            const result = await sdk.client.v2.session.permission.list({ sessionID }, { throwOnError: true })
-            setStore("session", "permission", sessionID, result.data.data)
+            const result = await sdk.api.permissions.list({ sessionID })
+            setStore("session", "permission", sessionID, result as PermissionV2Request[])
           },
         },
         question: {
@@ -445,8 +148,8 @@ export const { use: useData, provider: DataProvider } = createSimpleContext({
             return store.session.question[sessionID]
           },
           async refresh(sessionID: string) {
-            const result = await sdk.client.v2.session.question.list({ sessionID }, { throwOnError: true })
-            setStore("session", "question", sessionID, result.data.data)
+            const result = await sdk.api.questions.list({ sessionID })
+            setStore("session", "question", sessionID, result as QuestionV2Request[])
           },
         },
       },
@@ -456,8 +159,8 @@ export const { use: useData, provider: DataProvider } = createSimpleContext({
             return store.project.permission[projectID]
           },
           async refresh(projectID: string) {
-            const result = await sdk.client.v2.permission.saved.list({ projectID }, { throwOnError: true })
-            setStore("project", "permission", projectID, result.data.data)
+            const result = await sdk.api.permissions.listSaved({ projectID })
+            setStore("project", "permission", projectID, result as PermissionSavedInfo[])
           },
         },
       },
@@ -466,8 +169,7 @@ export const { use: useData, provider: DataProvider } = createSimpleContext({
           return defaultLocation()
         },
         async refresh(ref?: LocationRef) {
-          const response = await sdk.client.v2.location.get({ location: locationQuery(ref) }, { throwOnError: true })
-          const location = response.data
+          const location = await sdk.api.location.get({ location: locationQuery(ref) })
           const key = locationKey(location)
           if (!store.location[key]) setStore("location", key, {})
           if (!ref) setDefaultLocation({ directory: location.directory, workspaceID: location.workspaceID })
@@ -477,9 +179,8 @@ export const { use: useData, provider: DataProvider } = createSimpleContext({
             return store.location[locationKey(location ?? defaultLocation())]?.agent
           },
           async refresh(ref?: LocationRef) {
-            const result = await sdk.client.v2.agent.list({ location: locationQuery(ref) }, { throwOnError: true })
-            const key = locationKey(result.data.location)
-            setStore("location", key, "agent", result.data.data)
+            const result = await sdk.api.agents.list({ location: locationQuery(ref) })
+            setStore("location", locationKey(result.location), "agent", result.data as AgentV2Info[])
           },
         },
         command: {
@@ -487,9 +188,8 @@ export const { use: useData, provider: DataProvider } = createSimpleContext({
             return store.location[locationKey(location ?? defaultLocation())]?.command
           },
           async refresh(ref?: LocationRef) {
-            const result = await sdk.client.v2.command.list({ location: locationQuery(ref) }, { throwOnError: true })
-            const key = locationKey(result.data.location)
-            setStore("location", key, "command", result.data.data)
+            const result = await sdk.api.commands.list({ location: locationQuery(ref) })
+            setStore("location", locationKey(result.location), "command", result.data as CommandV2Info[])
           },
         },
         integration: {
@@ -497,12 +197,8 @@ export const { use: useData, provider: DataProvider } = createSimpleContext({
             return store.location[locationKey(location ?? defaultLocation())]?.integration
           },
           async refresh(ref?: LocationRef) {
-            const result = await sdk.client.v2.integration.list(
-              { location: locationQuery(ref) },
-              { throwOnError: true },
-            )
-            const key = locationKey(result.data.location)
-            setStore("location", key, "integration", result.data.data)
+            const result = await sdk.api.integrations.list({ location: locationQuery(ref) })
+            setStore("location", locationKey(result.location), "integration", result.data as IntegrationInfo[])
           },
         },
         model: {
@@ -510,9 +206,8 @@ export const { use: useData, provider: DataProvider } = createSimpleContext({
             return store.location[locationKey(location ?? defaultLocation())]?.model
           },
           async refresh(ref?: LocationRef) {
-            const result = await sdk.client.v2.model.list({ location: locationQuery(ref) }, { throwOnError: true })
-            const key = locationKey(result.data.location)
-            setStore("location", key, "model", result.data.data)
+            const result = await sdk.api.models.list({ location: locationQuery(ref) })
+            setStore("location", locationKey(result.location), "model", result.data as ModelV2Info[])
           },
         },
         provider: {
@@ -520,9 +215,8 @@ export const { use: useData, provider: DataProvider } = createSimpleContext({
             return store.location[locationKey(location ?? defaultLocation())]?.provider
           },
           async refresh(ref?: LocationRef) {
-            const result = await sdk.client.v2.provider.list({ location: locationQuery(ref) }, { throwOnError: true })
-            const key = locationKey(result.data.location)
-            setStore("location", key, "provider", result.data.data)
+            const result = await sdk.api.providers.list({ location: locationQuery(ref) })
+            setStore("location", locationKey(result.location), "provider", result.data as ProviderV2Info[])
           },
         },
         reference: {
@@ -530,9 +224,8 @@ export const { use: useData, provider: DataProvider } = createSimpleContext({
             return store.location[locationKey(location ?? defaultLocation())]?.reference
           },
           async refresh(ref?: LocationRef) {
-            const result = await sdk.client.v2.reference.list({ location: locationQuery(ref) }, { throwOnError: true })
-            const key = locationKey(result.data.location)
-            setStore("location", key, "reference", result.data.data)
+            const result = await sdk.api.references.list({ location: locationQuery(ref) })
+            setStore("location", locationKey(result.location), "reference", result.data as ReferenceInfo[])
           },
         },
         skill: {
@@ -540,9 +233,8 @@ export const { use: useData, provider: DataProvider } = createSimpleContext({
             return store.location[locationKey(location ?? defaultLocation())]?.skill
           },
           async refresh(ref?: LocationRef) {
-            const result = await sdk.client.v2.skill.list({ location: locationQuery(ref) }, { throwOnError: true })
-            const key = locationKey(result.data.location)
-            setStore("location", key, "skill", result.data.data)
+            const result = await sdk.api.skills.list({ location: locationQuery(ref) })
+            setStore("location", locationKey(result.location), "skill", result.data as SkillV2Info[])
           },
         },
       },

@@ -3,7 +3,7 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { httpClient, llmClient } from "@orchestra/core/effect/app-node-platform"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { EventV2 } from "@orchestra/core/event"
-import { ClaudeAccount } from "@orchestra/core/claude-account"
+import { ClaudeCodeAccount } from "@orchestra/core/claude-code-account"
 import { Credential } from "@orchestra/core/credential"
 import { Board } from "@orchestra/core/board/board"
 import { FSUtil } from "@orchestra/core/fs-util"
@@ -11,6 +11,7 @@ import { AppProcess } from "@orchestra/core/process"
 import { Npm } from "@orchestra/core/npm"
 import { GitCli } from "@orchestra/core/git-cli"
 import { Global } from "@orchestra/core/global"
+import { Installation } from "@orchestra/core/installation/service"
 import { ProjectV2 } from "@orchestra/core/project"
 import { Host } from "@orchestra/core/host"
 import { PermissionSaved } from "@orchestra/core/permission/saved"
@@ -18,6 +19,8 @@ import { PtyTicket } from "@orchestra/core/pty/ticket"
 import { ScheduledTask } from "@orchestra/core/scheduled-task"
 import { SessionV2 } from "@orchestra/core/session"
 import { SessionProcess } from "@orchestra/core/session-process"
+import { MoveSession } from "@orchestra/core/control-plane/move-session"
+import { TaskBackground } from "@orchestra/core/tool/task-background"
 import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { SessionExecution } from "@orchestra/core/session/execution"
 import { LocationServiceMap } from "@orchestra/core/location-service-map"
@@ -35,6 +38,7 @@ import { authorizationLayer } from "./middleware/authorization"
 import { schemaErrorLayer } from "./middleware/schema-error"
 import { PtyEnvironment } from "@orchestra/core/host/pty-environment"
 import { layer as locationLayer } from "./location"
+import { WebUi } from "./web-ui"
 import { sessionLocationLayer } from "./middleware/session-location"
 import { capabilityAuthorizationLayer } from "./middleware/capability-authorization"
 import { ServerOperator } from "./operator"
@@ -53,12 +57,14 @@ const applicationServices = LayerNode.group([
   SessionExecution.node,
   SessionSubagentModels.node,
   SessionProcess.node,
+  MoveSession.node,
+  TaskBackground.node,
   ScheduledTask.node,
   ScheduledTask.daemonNode,
   PermissionSaved.node,
   PtyTicket.node,
   Credential.node,
-  ClaudeAccount.node,
+  ClaudeCodeAccount.node,
   PtyEnvironment.node,
   LocationServiceMap.node,
   FSUtil.node,
@@ -68,6 +74,7 @@ const applicationServices = LayerNode.group([
   GitCli.node,
   Global.node,
   ProjectV2.node,
+  Installation.node,
   Board.node,
 ])
 
@@ -75,6 +82,10 @@ export interface Options {
   readonly password?: string
   /** Product contributions the application composes (apps/cli `CliHost.contributions`); sdk-next passes none. */
   readonly host?: ReadonlyArray<Host.Contribution>
+  /** Directory of the built web UI; when set, the server also serves it at `/`. */
+  readonly webRoot?: string
+  /** Extra origins the server answers cross-origin, besides the local and desktop ones. */
+  readonly cors?: ReadonlyArray<string>
   /** Replaces the capability operator; tests and sdk-next embed their own. */
   readonly operator?: CapabilityOperatorContract.Interface
   /** Replaces the capability setup verifier; tests avoid vendor calls with it. */
@@ -90,7 +101,7 @@ export function createRoutes(options: Options = {}) {
   )
 }
 
-export function createEmbeddedRoutes(options: Omit<Options, "password"> = {}) {
+export function createEmbeddedRoutes(options: Pick<Options, "host" | "operator" | "verifier"> = {}) {
   return makeRoutes(ServerAuth.Config.configLayer({ username: "orchestra", password: Option.none() }), options)
 }
 
@@ -100,14 +111,16 @@ function makeRoutes<AuthError, AuthServices>(
 ) {
   const merged = Host.merge(options.host ?? [])
   // Contributed global nodes add services and may not fail, so the root keeps the application services' types.
-  const serviceLayer: Layer.Layer<LayerNode.Output<typeof applicationServices>, LayerNode.Error<typeof applicationServices>> =
-    AppNodeBuilder.build(
-      LayerNode.group([applicationServices, ...merged.nodes]),
-      [[SessionExecution.node, SessionExecutionLocal.node], ...merged.replacements],
-      merged.locationNodes,
-    )
+  const serviceLayer: Layer.Layer<
+    LayerNode.Output<typeof applicationServices>,
+    LayerNode.Error<typeof applicationServices>
+  > = AppNodeBuilder.build(
+    LayerNode.group([applicationServices, ...merged.nodes]),
+    [[SessionExecution.node, SessionExecutionLocal.node], ...merged.replacements],
+    merged.locationNodes,
+  )
 
-  return HttpApiBuilder.layer(Api, { openapiPath: "/openapi.json" }).pipe(
+  const api = HttpApiBuilder.layer(Api, { openapiPath: "/openapi.json" }).pipe(
     Layer.provide(handlers),
     Layer.provide(merged.references),
     Layer.provide(sessionLocationLayer),
@@ -120,9 +133,10 @@ function makeRoutes<AuthError, AuthServices>(
     Layer.provide(ServerContentTicket.layer),
     Layer.provide(options.verifier ? Layer.succeed(ServerCapabilityVerification.Service, options.verifier) : ServerCapabilityVerification.layer),
     Layer.provide(serviceLayer),
-    // The desktop renderer (`oc://renderer`) calls a desktop-owned server cross-origin, as it does V1.
-    Layer.provide(corsLayer()),
+    // The desktop renderer (`oc://renderer`) calls a desktop-owned server cross-origin, as the earlier runtime did.
+    Layer.provide(corsLayer({ cors: options.cors })),
   )
+  return Layer.merge(api, options.webRoot ? WebUi.layer(options.webRoot) : Layer.empty)
 }
 
 export const routes = createRoutes()

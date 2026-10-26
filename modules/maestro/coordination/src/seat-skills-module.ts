@@ -17,7 +17,7 @@ export async function seatSkillsModule() {
         return [`  ${JSON.stringify(seat.id)}: {`, ...entries, "  },"]
       }),
   )
-  const playbooks = await PlaybookContent.read(fileURLToPath(new URL("../../../../apps/orchestra/playbooks", import.meta.url)))
+  const playbooks = await PlaybookContent.read(fileURLToPath(new URL("../playbooks", import.meta.url)))
   return [
     "export default {",
     ...trees.flat(),

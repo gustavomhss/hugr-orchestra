@@ -6,12 +6,14 @@ import { Credential } from "../../credential"
 import { EventV2 } from "../../event"
 import { Integration } from "../../integration"
 import { ModelV2 } from "../../model"
-import { ConfigProviderV1 } from "../../v1/config/provider"
-import { ConfigProviderOptionsV1 } from "../../v1/config/provider-options"
-import { ConfigV1 } from "../../v1/config/config"
+import { ConfigUpgradeProvider } from "../../config/upgrade/provider"
+import { ConfigProviderOptions } from "../../config/provider-options"
 
 const defaultServer = "https://opencode.ai/console"
-const RemoteResponse = Schema.Struct({ config: ConfigV1.Info })
+// The console answers with a whole config document; only its provider entries are used.
+const RemoteResponse = Schema.Struct({
+  config: Schema.Struct({ provider: Schema.optional(Schema.Record(Schema.String, ConfigUpgradeProvider.Info)) }),
+})
 
 export const OpencodePlugin = define<HttpClient.HttpClient | EventV2.Service | Scope.Scope>({
   id: "opencode",
@@ -19,7 +21,7 @@ export const OpencodePlugin = define<HttpClient.HttpClient | EventV2.Service | S
     const events = yield* EventV2.Service
     const http = yield* HttpClient.HttpClient
     const loading = Semaphore.makeUnsafe(1)
-    let providers: typeof ConfigV1.Info.Type.provider | undefined
+    let providers: (typeof RemoteResponse.Type)["config"]["provider"]
 
     const load = Effect.fn("OpencodePlugin.load")(function* () {
       const connection = yield* ctx.integration.connection.active("opencode")
@@ -73,7 +75,7 @@ export const OpencodePlugin = define<HttpClient.HttpClient | EventV2.Service | S
             if (config.modalities?.input !== undefined) model.capabilities.input = [...config.modalities.input]
             if (config.modalities?.output !== undefined) model.capabilities.output = [...config.modalities.output]
             const packageName = config.provider?.npm ?? item.npm
-            const lowerer = ConfigProviderOptionsV1.get(packageName)
+            const lowerer = ConfigProviderOptions.get(packageName)
             Object.assign(model.request.headers, config.headers)
             Object.assign(model.request.body, lowerer.request(withoutCredentials(config.options)))
             if (config.variants !== undefined) {
@@ -136,7 +138,7 @@ function withoutCredentials(body: Readonly<Record<string, unknown>> | undefined)
   return Object.fromEntries(Object.entries(body ?? {}).filter(([key]) => key !== "apiKey" && key !== "headers"))
 }
 
-function remoteCost(input: NonNullable<(typeof ConfigProviderV1.Model.Type)["cost"]>) {
+function remoteCost(input: NonNullable<(typeof ConfigUpgradeProvider.Model.Type)["cost"]>) {
   const base = {
     input: input.input,
     output: input.output,

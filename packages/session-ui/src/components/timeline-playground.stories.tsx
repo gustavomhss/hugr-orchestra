@@ -1,20 +1,20 @@
 // @ts-nocheck
 import { createSignal, createMemo, createEffect, on, For, Show, batch } from "solid-js"
 import { createStore, produce } from "solid-js/store"
-import type { SessionV1 } from "@orchestra/schema/session-v1"
+import type { Transcript } from "../transcript-model"
 import { DataProvider } from "../context/data"
 import { FileComponentProvider } from "@orchestra/ui/context/file"
 import { SessionTurn } from "./session-turn"
 
-type Message = typeof SessionV1.Info.Encoded
-type UserMessage = typeof SessionV1.User.Encoded
-type AssistantMessage = typeof SessionV1.Assistant.Encoded
-type Part = typeof SessionV1.Part.Encoded
-type TextPart = typeof SessionV1.TextPart.Encoded
-type ReasoningPart = typeof SessionV1.ReasoningPart.Encoded
-type ToolPart = typeof SessionV1.ToolPart.Encoded
-type FilePart = typeof SessionV1.FilePart.Encoded
-type AgentPart = typeof SessionV1.AgentPart.Encoded
+type Message = Transcript.Message
+type UserMessage = Transcript.UserMessage
+type AssistantMessage = Transcript.AssistantMessage
+type Part = Transcript.Part
+type TextPart = Transcript.TextPart
+type ReasoningPart = Transcript.ReasoningPart
+type ToolPart = Transcript.ToolPart
+type FilePart = Transcript.FilePart
+type AgentPart = Transcript.AgentPart
 
 // ---------------------------------------------------------------------------
 // ID helpers
@@ -1246,7 +1246,6 @@ function Playground() {
     session: [session()],
     agent: [{ name: "build" }, { name: "plan" }, { name: "explore" }, { name: "review" }],
     session_status: {},
-    session_diff: {},
     message: { [session().id]: state.messages },
     part: state.parts,
     provider: {

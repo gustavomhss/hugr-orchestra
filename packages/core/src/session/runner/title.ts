@@ -5,7 +5,7 @@ import { Effect, Stream } from "effect"
 import { AgentV2 } from "../../agent"
 import type { Database } from "../../database/database"
 import type { EventV2 } from "../../event"
-import { SessionLegacyRow } from "../legacy-row"
+import { SessionLifecycle } from "../lifecycle"
 import type { SessionSchema } from "../schema"
 import type { SessionStore } from "../store"
 import type { SessionSubagentModels } from "../subagent-models"
@@ -26,13 +26,13 @@ type Dependencies = {
 }
 
 /**
- * Names a root Session after its first prompt with the `title` agent, as V1 did. The new title is published as
+ * Names a root Session after its first prompt with the `title` agent. The new title is published as
  * `session.updated`. A Session that already has a title of its own, a child Session, or a second prompt is left alone.
  */
 export const make = (dependencies: Dependencies) =>
   Effect.fn("SessionTitle.name")(function* (sessionID: SessionSchema.ID) {
     const session = yield* dependencies.store.get(sessionID)
-    if (!session || session.parentID || !SessionLegacyRow.isDefaultTitle(session.title)) return
+    if (!session || session.parentID || !SessionLifecycle.isDefaultTitle(session.title)) return
     const users = (yield* dependencies.store.context(sessionID)).filter((message) => message.type === "user")
     if (users.length !== 1) return
     const agent = yield* dependencies.agents.get(AgentV2.ID.make("title"))
@@ -65,8 +65,8 @@ export const make = (dependencies: Dependencies) =>
     if (!line) return
     // The person may have renamed the Session while the title was generated.
     const current = yield* dependencies.store.get(sessionID)
-    if (!current || !SessionLegacyRow.isDefaultTitle(current.title)) return
-    yield* SessionLegacyRow.rename(dependencies.db, dependencies.events, {
+    if (!current || !SessionLifecycle.isDefaultTitle(current.title)) return
+    yield* SessionLifecycle.rename(dependencies.db, dependencies.events, {
       sessionID,
       title: line.length > TITLE_MAX_CHARS ? `${line.slice(0, TITLE_MAX_CHARS - 3)}...` : line,
     })

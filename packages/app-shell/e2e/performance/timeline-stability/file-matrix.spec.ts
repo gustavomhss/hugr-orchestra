@@ -7,7 +7,9 @@ import {
   visualPlan,
 } from "../../utils/visual-stability"
 import {
+  assistantID,
   assistantMessage,
+  loadedPartID,
   partUpdated,
   setupTimeline,
   textPart,
@@ -28,14 +30,14 @@ const profiles = [
 for (const profile of profiles) {
   test(`stabilizes ${profile.name} pending to completed`, async ({ page }, testInfo) => {
     const partID = `prt_file_matrix_${profiles.indexOf(profile)}`
-    const followingID = `prt_file_matrix_following_${profiles.indexOf(profile)}`
+    const followingID = loadedPartID(assistantID, "text")
     const timeline = await setupTimeline(page, {
       messages: [
         userMessage(),
         assistantMessage(
           [
             toolPart(partID, profile.tool, "pending", profile.input),
-            textPart(followingID, `Following ${profile.name}`),
+            textPart(`prt_file_matrix_following_${profiles.indexOf(profile)}`, `Following ${profile.name}`),
           ],
           { completed: false },
         ),

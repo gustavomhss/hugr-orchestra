@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import type { PermissionRequest, Project, QuestionRequest } from "@/v2-types"
+import type { PermissionRequest, QuestionRequest } from "@/v2-types"
 import type { Message, Part, Session } from "@/v2-wire"
 
 
@@ -17,6 +17,19 @@ const rootSession = (input: { id: string; parentID?: string; archived?: number }
       archived: input.archived,
     },
   }) as Session
+
+const created = (id: string, parentID?: string) => ({
+  type: "session.next.created",
+  // Wire JSON omits an absent parent; the schema rejects an explicit undefined.
+  properties: {
+    timestamp: 1, sessionID: id, projectID: "proj", ...(parentID ? { parentID } : {}), location: { directory: "/tmp" }, title: id,
+  },
+})
+
+const archived = (id: string) => ({
+  type: "session.next.archive.changed",
+  properties: { timestamp: 10, sessionID: id, archived: 10 },
+})
 
 const userMessage = (id: string, sessionID: string, created = 1) =>
   ({
@@ -47,6 +60,15 @@ const permissionRequest = (id: string, sessionID: string, title = id) =>
     always: [],
   }) as PermissionRequest
 
+const permissionAsked = (id: string, sessionID: string, action = id) => ({
+  id,
+  sessionID,
+  action,
+  resources: ["*"],
+  save: [],
+  metadata: {},
+})
+
 const questionRequest = (id: string, sessionID: string, title = id) =>
   ({
     id,
@@ -74,7 +96,6 @@ const baseState = (input: Partial<State> = {}) =>
     session: [],
     sessionTotal: 0,
     session_status: {},
-    session_diff: {},
     todo: {},
     permission: {},
     question: {},
@@ -85,94 +106,50 @@ const baseState = (input: Partial<State> = {}) =>
     message: {},
     session_message: {},
     part: {},
-    part_text_accum_delta: {},
     ...input,
   }) as State
 
 describe("applyGlobalEvent", () => {
-  test("upserts project.updated in sorted position", () => {
-    const project = [{ id: "a" }, { id: "c" }] as Project[]
-    let refreshCount = 0
-    applyGlobalEvent({
-      event: { type: "project.updated", properties: { id: "b" } },
-      project,
-      refresh: () => {
-        refreshCount += 1
-      },
-      setGlobalProject(next) {
-        if (typeof next === "function") next(project)
-      },
-    })
-
-    expect(project.map((x) => x.id)).toEqual(["a", "b", "c"])
-    expect(refreshCount).toBe(0)
-  })
-
-  test("handles global.disposed by triggering refresh", () => {
-    let refreshCount = 0
-    applyGlobalEvent({
-      event: { type: "global.disposed" },
-      project: [],
-      refresh: () => {
-        refreshCount += 1
-      },
-      setGlobalProject() {},
-    })
-
-    expect(refreshCount).toBe(1)
-  })
-
   test("handles server.connected by triggering refresh", () => {
     let refreshCount = 0
     applyGlobalEvent({
       event: { type: "server.connected" },
-      project: [],
       refresh: () => {
         refreshCount += 1
       },
-      setGlobalProject() {},
     })
 
     expect(refreshCount).toBe(1)
   })
+
+  test("ignores events the server does not publish", () => {
+    let refreshCount = 0
+    applyGlobalEvent({
+      event: { type: "session.next.moved" },
+      refresh: () => {
+        refreshCount += 1
+      },
+    })
+
+    expect(refreshCount).toBe(0)
+  })
 })
 
 describe("applyDirectoryEvent", () => {
-  test("initializes text delta accumulation from the current part text", () => {
-    const part = { ...textPart("part", "session", "message"), text: "existing" }
-    const [store, setStore] = createStore(baseState({ part: { message: [part] } }))
-
-    applyDirectoryEvent({
-      event: {
-        type: "message.part.delta",
-        properties: { messageID: "message", partID: "part", field: "text", delta: " appended" },
-      },
-      store,
-      setStore,
-      push() {},
-      directory: "/tmp",
-      loadLsp() {},
-    })
-
-    expect(store.part_text_accum_delta.part).toBe("existing appended")
-    expect((store.part.message?.[0] as { text: string }).text).toBe("existing appended")
-  })
-
   test("preserves a Home-specific retained session limit", () => {
     const [store, setStore] = createStore(
       baseState({
         limit: 1,
-        session: [rootSession({ id: "a" }), rootSession({ id: "b" }), rootSession({ id: "c" })],
+        session: [rootSession({ id: "ses_a" }), rootSession({ id: "ses_b" }), rootSession({ id: "ses_c" })],
       }),
     )
 
     applyDirectoryEvent({
-      event: { type: "session.created", properties: { info: rootSession({ id: "d" }) } },
+      event: created("ses_d"),
       store,
       setStore,
       push() {},
       directory: "/tmp",
-      loadLsp() {},
       retainedLimit: 3,
     })
 
@@ -182,30 +159,28 @@ describe("applyDirectoryEvent", () => {
   test("inserts root sessions in sorted order and updates sessionTotal", () => {
     const [store, setStore] = createStore(
       baseState({
-        session: [rootSession({ id: "b" })],
+        session: [rootSession({ id: "ses_b" })],
         sessionTotal: 1,
       }),
     )
 
     applyDirectoryEvent({
-      event: { type: "session.created", properties: { info: rootSession({ id: "a" }) } },
+      event: created("ses_a"),
       store,
       setStore,
       push() {},
       directory: "/tmp",
-      loadLsp() {},
     })
 
-    expect(store.session.map((x) => x.id)).toEqual(["a", "b"])
+    expect(store.session.map((x) => x.id)).toEqual(["ses_a", "ses_b"])
     expect(store.sessionTotal).toBe(2)
 
     applyDirectoryEvent({
-      event: { type: "session.created", properties: { info: rootSession({ id: "c", parentID: "a" }) } },
+      event: created("ses_c", "ses_a"),
       store,
       setStore,
       push() {},
       directory: "/tmp",
-      loadLsp() {},
     })
 
     expect(store.sessionTotal).toBe(2)
@@ -219,7 +194,6 @@ describe("applyDirectoryEvent", () => {
         sessionTotal: 2,
         message: { ses_1: [message] },
         part: { [message.id]: [textPart("prt_1", "ses_1", message.id)] },
-        session_diff: { ses_1: [] },
         todo: { ses_1: [] },
         permission: { ses_1: [] },
         question: { ses_1: [] },
@@ -228,19 +202,17 @@ describe("applyDirectoryEvent", () => {
     )
 
     applyDirectoryEvent({
-      event: { type: "session.updated", properties: { info: rootSession({ id: "ses_1", archived: 10 }) } },
+      event: archived("ses_1"),
       store,
       setStore,
       push() {},
       directory: "/tmp",
-      loadLsp() {},
     })
 
     expect(store.session.map((x) => x.id)).toEqual(["ses_2"])
     expect(store.sessionTotal).toBe(1)
     expect(store.message.ses_1).toBeUndefined()
     expect(store.part[message.id]).toBeUndefined()
-    expect(store.session_diff.ses_1).toBeUndefined()
     expect(store.todo.ses_1).toBeUndefined()
     expect(store.permission.ses_1).toBeUndefined()
     expect(store.question.ses_1).toBeUndefined()
@@ -251,12 +223,11 @@ describe("applyDirectoryEvent", () => {
     const [store, setStore] = createStore(baseState({ session: [], sessionTotal: 0 }))
 
     applyDirectoryEvent({
-      event: { type: "session.updated", properties: { info: rootSession({ id: "missing", archived: 10 }) } },
+      event: archived("ses_missing"),
       store,
       setStore,
       push() {},
       directory: "/tmp",
-      loadLsp() {},
     })
 
     expect(store.session).toEqual([])
@@ -265,8 +236,8 @@ describe("applyDirectoryEvent", () => {
 
   test("cleans session caches when deleted and decrements only root totals", () => {
     const cases = [
-      { info: rootSession({ id: "ses_1" }), expectedTotal: 1, current: false },
-      { info: rootSession({ id: "ses_2", parentID: "ses_1" }), expectedTotal: 2, current: true },
+      { info: rootSession({ id: "ses_1" }), expectedTotal: 1 },
+      { info: rootSession({ id: "ses_2", parentID: "ses_1" }), expectedTotal: 2 },
     ]
 
     for (const item of cases) {
@@ -281,8 +252,7 @@ describe("applyDirectoryEvent", () => {
           sessionTotal: 2,
           message: { [item.info.id]: [message] },
           part: { [message.id]: [textPart("prt_1", item.info.id, message.id)] },
-          session_diff: { [item.info.id]: [] },
-          todo: { [item.info.id]: [] },
+            todo: { [item.info.id]: [] },
           permission: { [item.info.id]: [] },
           question: { [item.info.id]: [] },
           session_status: { [item.info.id]: { type: "busy" } },
@@ -290,30 +260,25 @@ describe("applyDirectoryEvent", () => {
       )
 
       applyDirectoryEvent({
-        event: {
-          type: "session.deleted",
-          properties: item.current ? { sessionID: item.info.id } : { info: item.info },
-        },
+        event: { type: "session.next.deleted", properties: { timestamp: 2, sessionID: item.info.id } },
         store,
         setStore,
         push() {},
         directory: "/tmp",
-        loadLsp() {},
-      })
+        })
 
       expect(store.session.find((x) => x.id === item.info.id)).toBeUndefined()
       expect(store.sessionTotal).toBe(item.expectedTotal)
       expect(store.message[item.info.id]).toBeUndefined()
       expect(store.part[message.id]).toBeUndefined()
-      expect(store.session_diff[item.info.id]).toBeUndefined()
-      expect(store.todo[item.info.id]).toBeUndefined()
+        expect(store.todo[item.info.id]).toBeUndefined()
       expect(store.permission[item.info.id]).toBeUndefined()
       expect(store.question[item.info.id]).toBeUndefined()
       expect(store.session_status[item.info.id]).toBeUndefined()
     }
   })
 
-  test("cleans caches for trimmed sessions on session.created", () => {
+  test("cleans caches for trimmed sessions on session.next.created", () => {
     const dropped = rootSession({ id: "ses_b" })
     const kept = rootSession({ id: "ses_a" })
     const message = userMessage("msg_1", dropped.id)
@@ -324,7 +289,6 @@ describe("applyDirectoryEvent", () => {
         session: [dropped],
         message: { [dropped.id]: [message] },
         part: { [message.id]: [textPart("prt_1", dropped.id, message.id)] },
-        session_diff: { [dropped.id]: [] },
         todo: { [dropped.id]: [] },
         permission: { [dropped.id]: [] },
         question: { [dropped.id]: [] },
@@ -333,12 +297,11 @@ describe("applyDirectoryEvent", () => {
     )
 
     applyDirectoryEvent({
-      event: { type: "session.created", properties: { info: kept } },
+      event: created(kept.id),
       store,
       setStore,
       push() {},
       directory: "/tmp",
-      loadLsp() {},
       setSessionTodo(sessionID, value) {
         if (value !== undefined) return
         todos.push(sessionID)
@@ -348,7 +311,6 @@ describe("applyDirectoryEvent", () => {
     expect(store.session.map((x) => x.id)).toEqual([kept.id])
     expect(store.message[dropped.id]).toBeUndefined()
     expect(store.part[message.id]).toBeUndefined()
-    expect(store.session_diff[dropped.id]).toBeUndefined()
     expect(store.todo[dropped.id]).toBeUndefined()
     expect(store.permission[dropped.id]).toBeUndefined()
     expect(store.question[dropped.id]).toBeUndefined()
@@ -369,125 +331,6 @@ describe("applyDirectoryEvent", () => {
     expect(store.part.msg_1).toBeUndefined()
   })
 
-  test("upserts and removes messages while clearing orphaned parts", () => {
-    const sessionID = "ses_1"
-    const [store, setStore] = createStore(
-      baseState({
-        message: { [sessionID]: [userMessage("msg_z", sessionID, 1), userMessage("msg_b", sessionID, 3)] },
-        part: { msg_a: [textPart("prt_1", sessionID, "msg_a")] },
-      }),
-    )
-
-    applyDirectoryEvent({
-      event: { type: "message.updated", properties: { info: userMessage("msg_a", sessionID, 2) } },
-      store,
-      setStore,
-      push() {},
-      directory: "/tmp",
-      loadLsp() {},
-    })
-
-    expect(store.message[sessionID]?.map((x) => x.id)).toEqual(["msg_z", "msg_a", "msg_b"])
-
-    applyDirectoryEvent({
-      event: {
-        type: "message.updated",
-        properties: {
-          info: {
-            ...userMessage("msg_a", sessionID, 2),
-            role: "assistant",
-          } as Message,
-        },
-      },
-      store,
-      setStore,
-      push() {},
-      directory: "/tmp",
-      loadLsp() {},
-    })
-
-    expect(store.message[sessionID]?.find((x) => x.id === "msg_a")?.role).toBe("assistant")
-
-    applyDirectoryEvent({
-      event: { type: "message.removed", properties: { sessionID, messageID: "msg_a" } },
-      store,
-      setStore,
-      push() {},
-      directory: "/tmp",
-      loadLsp() {},
-    })
-
-    expect(store.message[sessionID]?.map((x) => x.id)).toEqual(["msg_z", "msg_b"])
-    expect(store.part.msg_a).toBeUndefined()
-  })
-
-  test("upserts and prunes message parts", () => {
-    const sessionID = "ses_1"
-    const messageID = "msg_1"
-    const [store, setStore] = createStore(
-      baseState({
-        part: { [messageID]: [textPart("prt_1", sessionID, messageID), textPart("prt_3", sessionID, messageID)] },
-      }),
-    )
-
-    applyDirectoryEvent({
-      event: { type: "message.part.updated", properties: { part: textPart("prt_2", sessionID, messageID) } },
-      store,
-      setStore,
-      push() {},
-      directory: "/tmp",
-      loadLsp() {},
-    })
-    expect(store.part[messageID]?.map((x) => x.id)).toEqual(["prt_1", "prt_2", "prt_3"])
-
-    applyDirectoryEvent({
-      event: {
-        type: "message.part.updated",
-        properties: {
-          part: {
-            ...textPart("prt_2", sessionID, messageID),
-            text: "changed",
-          } as Part,
-        },
-      },
-      store,
-      setStore,
-      push() {},
-      directory: "/tmp",
-      loadLsp() {},
-    })
-    const updated = store.part[messageID]?.find((x) => x.id === "prt_2")
-    expect(updated?.type).toBe("text")
-    if (updated?.type === "text") expect(updated.text).toBe("changed")
-
-    applyDirectoryEvent({
-      event: { type: "message.part.removed", properties: { messageID, partID: "prt_1" } },
-      store,
-      setStore,
-      push() {},
-      directory: "/tmp",
-      loadLsp() {},
-    })
-    applyDirectoryEvent({
-      event: { type: "message.part.removed", properties: { messageID, partID: "prt_2" } },
-      store,
-      setStore,
-      push() {},
-      directory: "/tmp",
-      loadLsp() {},
-    })
-    applyDirectoryEvent({
-      event: { type: "message.part.removed", properties: { messageID, partID: "prt_3" } },
-      store,
-      setStore,
-      push() {},
-      directory: "/tmp",
-      loadLsp() {},
-    })
-
-    expect(store.part[messageID]).toBeUndefined()
-  })
-
   test("tracks permission and question request lifecycles", () => {
     const sessionID = "ses_1"
     const [store, setStore] = createStore(
@@ -498,62 +341,56 @@ describe("applyDirectoryEvent", () => {
     )
 
     applyDirectoryEvent({
-      event: { type: "permission.asked", properties: permissionRequest("perm_2", sessionID) },
+      event: { type: "permission.v2.asked", properties: permissionAsked("perm_2", sessionID) },
       store,
       setStore,
       push() {},
       directory: "/tmp",
-      loadLsp() {},
     })
     expect(store.permission[sessionID]?.map((x) => x.id)).toEqual(["perm_1", "perm_2", "perm_3"])
 
     applyDirectoryEvent({
-      event: { type: "permission.asked", properties: permissionRequest("perm_2", sessionID, "updated") },
+      event: { type: "permission.v2.asked", properties: permissionAsked("perm_2", sessionID, "updated") },
       store,
       setStore,
       push() {},
       directory: "/tmp",
-      loadLsp() {},
     })
     expect(store.permission[sessionID]?.find((x) => x.id === "perm_2")?.permission).toBe("updated")
 
     applyDirectoryEvent({
-      event: { type: "permission.replied", properties: { sessionID, requestID: "perm_2" } },
+      event: { type: "permission.v2.replied", properties: { sessionID, requestID: "perm_2" } },
       store,
       setStore,
       push() {},
       directory: "/tmp",
-      loadLsp() {},
     })
     expect(store.permission[sessionID]?.map((x) => x.id)).toEqual(["perm_1", "perm_3"])
 
     applyDirectoryEvent({
-      event: { type: "question.asked", properties: questionRequest("q_2", sessionID) },
+      event: { type: "question.v2.asked", properties: questionRequest("q_2", sessionID) },
       store,
       setStore,
       push() {},
       directory: "/tmp",
-      loadLsp() {},
     })
     expect(store.question[sessionID]?.map((x) => x.id)).toEqual(["q_1", "q_2", "q_3"])
 
     applyDirectoryEvent({
-      event: { type: "question.asked", properties: questionRequest("q_2", sessionID, "updated") },
+      event: { type: "question.v2.asked", properties: questionRequest("q_2", sessionID, "updated") },
       store,
       setStore,
       push() {},
       directory: "/tmp",
-      loadLsp() {},
     })
     expect(store.question[sessionID]?.find((x) => x.id === "q_2")?.questions[0]?.header).toBe("updated")
 
     applyDirectoryEvent({
-      event: { type: "question.rejected", properties: { sessionID, requestID: "q_2" } },
+      event: { type: "question.v2.rejected", properties: { sessionID, requestID: "q_2" } },
       store,
       setStore,
       push() {},
       directory: "/tmp",
-      loadLsp() {},
     })
     expect(store.question[sessionID]?.map((x) => x.id)).toEqual(["q_1", "q_3"])
   })
@@ -570,7 +407,6 @@ describe("applyDirectoryEvent", () => {
       setStore,
       push() {},
       directory: "/tmp",
-      loadLsp() {},
       vcsCache: {
         store: cacheStore,
         setStore: setCacheStore,
@@ -580,40 +416,5 @@ describe("applyDirectoryEvent", () => {
 
     expect(store.vcs).toEqual({ branch: "feature/test", default_branch: "main" })
     expect(cacheStore.value).toEqual({ branch: "feature/test", default_branch: "main" })
-  })
-
-  test("routes disposal and lsp events to side-effect handlers", () => {
-    const [store, setStore] = createStore(baseState())
-    const pushes: string[] = []
-    let lspLoads = 0
-
-    applyDirectoryEvent({
-      event: { type: "server.instance.disposed" },
-      store,
-      setStore,
-      push(directory) {
-        pushes.push(directory)
-      },
-      directory: "/tmp",
-      loadLsp() {
-        lspLoads += 1
-      },
-    })
-
-    applyDirectoryEvent({
-      event: { type: "lsp.updated" },
-      store,
-      setStore,
-      push(directory) {
-        pushes.push(directory)
-      },
-      directory: "/tmp",
-      loadLsp() {
-        lspLoads += 1
-      },
-    })
-
-    expect(pushes).toEqual(["/tmp"])
-    expect(lspLoads).toBe(1)
   })
 })

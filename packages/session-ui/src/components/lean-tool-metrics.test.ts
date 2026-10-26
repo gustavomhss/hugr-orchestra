@@ -1,10 +1,10 @@
 import { expect, test } from "bun:test"
 import { createRequire } from "node:module"
 import type { LeanMetrics } from "../../../schema/src/lean-metrics"
-import type { SessionV1 } from "@orchestra/schema/session-v1"
+import type { Transcript } from "../transcript-model"
 
-type Session = typeof SessionV1.SessionInfo.Encoded
-type ToolPart = typeof SessionV1.ToolPart.Encoded
+type Session = Transcript.Session
+type ToolPart = Transcript.ToolPart
 
 // Keep browser conditions and HappyDOM isolated from the package's non-DOM tests.
 if (process.env.LEAN_TOOL_METRICS_DOM !== "1") {
@@ -195,7 +195,7 @@ if (process.env.LEAN_TOOL_METRICS_DOM !== "1") {
     }
     const dispose = render(() => createComponent(DataProvider, {
       get directory() { return directory() },
-      data: { get session() { return native.session }, session_status: {}, session_diff: {}, message: {}, part: {} },
+      data: { get session() { return native.session }, session_status: {}, message: {}, part: {} },
       get children() { return createComponent(PART_MAPPING.tool!, {
         get part() { return current() },
         message: { id: "msg_alpha", sessionID: "ses_alpha", role: "user", time: { created: 0 },

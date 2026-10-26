@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test"
-import type { SessionV1 } from "@orchestra/schema/session-v1"
+import type { Transcript } from "../transcript-model"
 import { partDefaultOpen } from "./part-default-open"
 
-type PartType = typeof SessionV1.Part.Encoded
+type PartType = Transcript.Part
 
 describe("partDefaultOpen", () => {
   test("keeps edited files expanded when enabled", () => {

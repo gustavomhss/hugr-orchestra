@@ -23,12 +23,14 @@
     "./operator": "./src/operator.ts",
     "./principal": "./src/principal.ts",
     "./routes": "./src/routes.ts",
+    "./web-ui": "./src/web-ui.ts",
     "./test/capability-connections-fixture": "./test/capability-connections-fixture.ts",
     "./test/capability-setup-http-fixture": "./test/capability-setup-http-fixture.ts",
     "./handlers/capability-connections": "./src/handlers/capability-connections.ts"
   },
   "scripts": {
     "test": "bun test --timeout 30000 --only-failures",
+    "test:httpapi": "bun run script/httpapi-exercise.ts --mode coverage --fail-on-missing --fail-on-skip && bun run script/httpapi-exercise.ts --mode auth --fail-on-missing --fail-on-skip && bun run script/httpapi-exercise.ts --mode effect --fail-on-missing --fail-on-skip",
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
@@ -41,6 +43,10 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@effect/platform-node": "catalog:",
+    "@orchestra/client": "workspace:*",
+    "@orchestra/httpapi-codegen": "workspace:*",
+    "@orchestra/plugin": "workspace:*",
     "@tsconfig/bun": "catalog:",
     "@types/bun": "catalog:",
     "@typescript/native-preview": "catalog:"

@@ -8,13 +8,14 @@ import { FileSystemHandler } from "./handlers/fs"
 import { VcsHandler } from "./handlers/vcs"
 import { CommandHandler } from "./handlers/command"
 import { McpHandler } from "./handlers/mcp"
-import { ClaudeCodeHandler } from "./handlers/claude-code"
 import { LspHandler } from "./handlers/lsp"
+import { FormatterHandler } from "./handlers/formatter"
 import { SkillHandler } from "./handlers/skill"
 import { BehaviorHandler } from "./handlers/behavior"
 import { EventHandler } from "./handlers/event"
 import { AgentHandler } from "./handlers/agent"
 import { HealthHandler } from "./handlers/health"
+import { InstallationHandler } from "./handlers/installation"
 import { PtyHandler } from "./handlers/pty"
 import { QuestionHandler } from "./handlers/question"
 import { ReferenceHandler } from "./handlers/reference"
@@ -51,6 +52,7 @@ import { CapabilitySchedulesHandler } from "./handlers/capability-schedules"
 
 export const handlers = Layer.mergeAll(
   HealthHandler,
+  InstallationHandler,
   LocationHandler,
   AgentHandler,
   SessionHandler,
@@ -65,6 +67,7 @@ export const handlers = Layer.mergeAll(
   CommandHandler,
   McpHandler,
   LspHandler,
+  FormatterHandler,
   SkillHandler,
   BehaviorHandler,
   EventHandler,
@@ -77,7 +80,6 @@ export const handlers = Layer.mergeAll(
   AtlasHandler,
   ConfigHandler,
   BoardHandler,
-  ClaudeCodeHandler,
   RelayDocumentHandler,
   RelayPublishHandler,
   RelayHookHandler,

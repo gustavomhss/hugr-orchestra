@@ -3,8 +3,8 @@ import { spawn, spawnSync } from "node:child_process"
 import { randomUUID } from "node:crypto"
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from "node:fs"
 import path from "node:path"
-import { adoptTree, control, identity, inventoryScope, kill9, matches, members, own, table, until, win, type Identity } from "../../../../native/omni/campaign/lib"
-import { WindowsInventory } from "../../../../native/omni/campaign/windows-inventory"
+import { adoptTree, control, identity, inventoryScope, kill9, matches, members, own, table, until, win, type Identity } from "@orchestra/omni-campaign/lib"
+import { WindowsInventory } from "@orchestra/omni-campaign/windows-inventory"
 import { digest, logs, provenance } from "./build"
 import { activate, controls, events, fixtures, type Report } from "./fixtures"
 import { emergency, observe, owned } from "./inventory"
@@ -63,9 +63,11 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic?: Diagnost
       if (state.error || app.exitCode !== null || app.signalCode !== null) throw new Error(`actual app startup failed: ${state.error}; ${state.output}`)
       return existsSync(scratch.report) ? JSON.parse(readFileSync(scratch.report, "utf8")) as Report : undefined
     })
-    if (!server.packaged || !server.versions.electron || server.db !== ":memory:" || server.home !== scratch.home || server.nonce !== scratch.trees.main.nonce ||
-      path.resolve(server.resources) !== path.resolve(manifest.resources) || !withoutMain && (server.main?.line !== scratch.trees.main.ready || !server.main.bytes) ||
-      !Number.isSafeInteger(server.utilityPID) || server.pid === server.utilityPID) throw new Error("actual packaged Electron/isolation/bytes/utility PID control failed")
+    const checks = { packaged: server.packaged, electron: !!server.versions.electron, db: server.db === ":memory:", home: server.home === scratch.home,
+      nonce: server.nonce === scratch.trees.main.nonce, resources: path.resolve(server.resources) === path.resolve(manifest.resources),
+      main: withoutMain || (server.main?.line === scratch.trees.main.ready && !!server.main.bytes),
+      utility: Number.isSafeInteger(server.utilityPID) && server.pid !== server.utilityPID }
+    if (!Object.values(checks).every(Boolean)) throw new Error(`actual packaged Electron/isolation/bytes/utility PID control failed: ${JSON.stringify({ checks, db: server.db, home: server.home, resources: server.resources, utilityPID: server.utilityPID })}`)
     logReport.userData = server.userData
     const rows = table()
     const main = identity(server.pid, rows)
@@ -133,7 +135,7 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic?: Diagnost
         !witnessed.some((event) => event.name === "utility-watchdog") && witnessed.some((event) => event.name === "utility-exit" && event.code === 0) && witnessed.some((event) => event.name === "quit" && event.code === 0) &&
         app.exitCode === 0 && app.signalCode === null && state.closed && state.exitedAt > started && state.exitedAt - started < boundMs
       evidence.orderly = orderly
-      if (!orderly) throw new Error("actual app.quit did not prove orderly code-zero exit without watchdog/forced kill")
+      if (!orderly) throw new Error(`actual app.quit did not prove orderly code-zero exit without watchdog/forced kill (exit ${JSON.stringify(evidence.exit)}, started ${started}, events ${witnessed.map((event) => event.name).join(",")})`)
     }
     if (!observed.pass || observed.zeroAtMs === undefined) throw new Error("actual desktop owned inventory not zero inside deadline")
     if (cell === "utility-kill") {

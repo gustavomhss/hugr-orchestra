@@ -128,7 +128,7 @@ describe("Config.updateGlobal", () => {
     ),
   )
 
-  it.live("serves saved permissions from a global file that still holds V1 keys", () =>
+  it.live("serves saved permissions from a global file that still holds legacy keys", () =>
     Effect.acquireRelease(
       Effect.promise(() => tmpdir()),
       (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
@@ -147,7 +147,7 @@ describe("Config.updateGlobal", () => {
           const rule = { action: "read", resource: "*.env", effect: "deny" } as const
           yield* Config.updateGlobal({ permissions: [rule] })
           expect((yield* Config.readGlobal()).permissions).toEqual([rule])
-          // The V1 rules migrate first, so the saved rule, matching later, wins.
+          // The legacy rules migrate first, so the saved rule, matching later, wins.
           expect(Config.latest(yield* config.entries(), "permissions")).toEqual([
             { action: "edit", resource: "*", effect: "ask" },
             rule,

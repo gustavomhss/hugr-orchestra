@@ -3,7 +3,7 @@ import { useRouteData } from "../../context/route"
 import { useSync } from "../../context/sync"
 import { useTheme } from "../../context/theme"
 import { SplitBorder } from "../../ui/border"
-import type { AssistantMessage } from "../../compat/schema"
+import { isAssistant } from "../../util/session-message"
 import { Locale } from "../../util/locale"
 import { useTerminalDimensions } from "@opentui/solid"
 import { useCommandShortcut, useOrchestraKeymap } from "../../keymap"
@@ -32,14 +32,14 @@ export function SubagentFooter() {
 
   const usage = createMemo(() => {
     const msg = messages()
-    const last = msg.findLast((item): item is AssistantMessage => item.role === "assistant" && item.tokens.output > 0)
-    if (!last) return
+    const last = msg.filter(isAssistant).findLast((item) => (item.tokens?.output ?? 0) > 0)
+    if (!last?.tokens) return
 
     const tokens =
       last.tokens.input + last.tokens.output + last.tokens.reasoning + last.tokens.cache.read + last.tokens.cache.write
     if (tokens <= 0) return
 
-    const model = sync.data.provider.find((item) => item.id === last.providerID)?.models[last.modelID]
+    const model = sync.data.provider.find((item) => item.id === last.model.providerID)?.models[last.model.id]
     const pct = model?.limit.context ? `${Math.round((tokens / model.limit.context) * 100)}%` : undefined
     const cost = session()?.cost ?? 0
 

@@ -1,17 +1,18 @@
 import { describe, expect } from "bun:test"
-import { Cause, Effect, Exit, Option, Schema } from "effect"
+import { Cause, DateTime, Effect, Exit, Option, Schema } from "effect"
 import { and, eq, sql } from "drizzle-orm"
 import path from "node:path"
 import { Research } from "@orchestra/schema/research"
 import { ResearchEvent } from "@orchestra/schema/research-event"
 import { Project } from "@orchestra/schema/project"
 import { SessionID } from "@orchestra/schema/session-id"
-import { SessionV1 } from "@orchestra/schema/session-v1"
+import { SessionEvent } from "@orchestra/schema/session-event"
 import { AbsolutePath } from "@orchestra/schema/schema"
 import { ResearchAllowance } from "@orchestra/core/research/allowance"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
 import { EventTable } from "@orchestra/core/event/sql"
+import { EventCompaction } from "../src/event/compaction"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { tmpdir } from "./fixture/tmpdir"
@@ -118,11 +119,12 @@ describe("native ResearchAllowance", () => {
       yield* Effect.forEach(Array.from({ length: admitted.providerLimit }, (_, index) => index),
         (index) => service.charge(admitted, "provider", `call:${index}`))
       const events = yield* EventV2.Service
-      const part = { id: SessionV1.PartID.ascending(), messageID: SessionV1.MessageID.ascending(),
-        sessionID: native.executionSessionID, type: "text" as const, text: "retained native projection" }
-      yield* events.publish(SessionV1.Event.PartUpdated, { sessionID: native.executionSessionID, part, time: 1 })
-      yield* events.publish(SessionV1.Event.PartUpdated, { sessionID: native.executionSessionID, part: { ...part, text: "updated projection" }, time: 2 })
-      yield* events.publish(SessionV1.Event.PartUpdated, { sessionID: native.executionSessionID, part, time: 3 }, { persist: false })
+      // Retained native Session rows share the aggregate with the allowance ledger.
+      const renamed = (title: string, millis: number) =>
+        ({ sessionID: native.executionSessionID, timestamp: DateTime.makeUnsafe(millis), title })
+      yield* events.publish(SessionEvent.Renamed, renamed("retained native projection", 1))
+      yield* events.publish(SessionEvent.Renamed, renamed("updated projection", 2))
+      yield* events.publish(SessionEvent.Renamed, renamed("retained native projection", 3), { persist: false })
       return admitted
     }).pipe(Effect.provide(layer()))
     yield* Effect.gen(function* () {
@@ -130,7 +132,13 @@ describe("native ResearchAllowance", () => {
       const database = yield* Database.Service
       expect(yield* service.bind(native, "dispatch")).toEqual(allowance)
       expect(yield* ledger(native.executionSessionID)).toHaveLength(27)
-      expect((yield* EventV2.compactSnapshotEvents(database.db)).removed).toBe(1)
+      // Snapshot maintenance as the retire-legacy-events migration does it: delete one retained row, record the marker.
+      const retained = yield* database.db.select({ id: EventTable.id }).from(EventTable).where(and(
+        eq(EventTable.aggregate_id, native.executionSessionID), eq(EventTable.type, EventV2.versionedType(SessionEvent.Renamed.type, 1)),
+      )).all().pipe(Effect.orDie)
+      expect(retained).toHaveLength(2)
+      yield* database.db.delete(EventTable).where(eq(EventTable.id, retained[0].id)).run().pipe(Effect.orDie)
+      yield* database.db.run(sql`INSERT OR REPLACE INTO data_migration (name, time_completed) VALUES (${EventCompaction.SNAPSHOT_COMPACTION_MARKER}, ${Date.now()})`).pipe(Effect.orDie)
       yield* service.charge(allowance, "provider", "call:0")
       expect(error(yield* Effect.exit(service.charge(allowance, "provider", "new-call")))?.code).toBe("budget_exhausted")
       expect(yield* ledger(native.executionSessionID)).toHaveLength(26)

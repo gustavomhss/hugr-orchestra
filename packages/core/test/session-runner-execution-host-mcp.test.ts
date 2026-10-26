@@ -18,7 +18,7 @@ import { Harness, sessionID } from "./session-runner-harness"
 // A configured MCP server's tools reach a hosted turn: the runner starts the Location's MCP servers before it
 // materializes the agent's tools, so an execution host such as Claude Code serves them with the Orchestra tools.
 
-const fixture = path.join(import.meta.dir, "..", "..", "..", "apps", "orchestra", "test", "fixture", "mcp-omni-stdio.ts")
+const fixture = path.join(import.meta.dir, "fixture", "mcp-omni-stdio.ts")
 const seen: string[][] = []
 
 const host: ExecutionHost.Interface = {

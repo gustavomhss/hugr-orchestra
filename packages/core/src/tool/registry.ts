@@ -19,6 +19,9 @@ import { Location } from "../location"
 import { Project } from "../project"
 import { EventV2 } from "../event"
 import { ToolSafetyOutput } from "../tool-safety-output"
+import { LeanOutput } from "./lean-output"
+import { LeanSummary } from "./lean-summary"
+import { ToolModelCapture } from "./model-capture"
 
 export type ExecuteInput = {
   readonly sessionID: SessionSchema.ID
@@ -120,9 +123,8 @@ const registryLayer = Layer.effect(
         projectID: location?.project.id,
         projectDirectory: location && Project.isRoot(location.project.directory) ? location.directory : location?.project.directory,
       }
-      return yield* safety.run(
-        invocation,
-        Effect.gen(function* () {
+      const acquire = safety.acquire
+      const settlement = Effect.gen(function* () {
           const attempted = yield* settle(registration.tool, input.call, {
             sessionID: input.sessionID,
             agent: input.agent,
@@ -143,16 +145,20 @@ const registryLayer = Layer.effect(
           const output = attempted.value
           yield* safety.inspect(output)
           const bounded = yield* resources.bound({ sessionID: input.sessionID, toolCallID: input.call.id, output })
+          // Lean selects the model view of a complete result only; a bounded result already points at its full file.
           const projected = bounded.outputPaths.length
             ? ToolSafetyOutput.nudge(bounded.output, bounded.outputPaths, yield* resources.limits())
-            : bounded.output
+            : location ? yield* lean(input, output, bounded.output, location) : bounded.output
           const result = ToolOutput.toResultValue(projected)
           if (result.type === "error")
             return bounded.outputPaths.length > 0 ? { result, outputPaths: bounded.outputPaths } : { result }
           return bounded.outputPaths.length > 0
             ? { result, output: projected, outputPaths: bounded.outputPaths }
             : { result, output: projected }
-        }),
+        })
+      return yield* safety.run(
+        invocation,
+        acquire ? acquire(invocation, settlement) : settlement,
         (observation) => events ? Effect.gen(function* () {
           yield* events.publish(SessionEvent.Tool.Progress, {
             timestamp: yield* DateTime.now,
@@ -171,6 +177,40 @@ const registryLayer = Layer.effect(
           Effect.succeed({ result: { type: "error" as const, value: error.message } }),
         ),
       )
+    })
+
+    // The earlier runtime's Lean projection over the settled view; the metadata reaches the tool part through LeanOutput.take.
+    const lean = Effect.fn("ToolRegistry.lean")(function* (
+      input: ExecuteInput,
+      native: ToolOutput,
+      approved: ToolOutput,
+      location: Location.Interface,
+    ) {
+      const owner = { sessionID: input.sessionID, callID: input.call.id }
+      const scope = { projectID: location.project.id, directory: location.directory }
+      const settings = yield* resources.lean(scope)
+      const limits = yield* resources.limits()
+      const result = yield* Effect.promise(() => LeanOutput.project({
+        output: approved,
+        binding: ToolModelCapture.bind(native, approved, owner),
+        owner,
+        tool: input.call.name,
+        args: typeof input.call.input === "object" && input.call.input !== null && !Array.isArray(input.call.input)
+          ? input.call.input as Record<string, unknown> : {},
+        enabled: settings.enabled,
+        unavailable: settings.unavailable,
+        items: settings.items,
+        limits,
+        // Discovery keeps exact research sources: no lossy summaries for it.
+        store: input.agent === "jimmy" ? undefined : LeanSummary.store(scope, settings.root),
+        telemetry: input.model ? {
+          owner: { projectID: scope.projectID, location: scope.directory, ...owner },
+          model: { provider: input.model.providerID, id: input.model.id },
+          ...(settings.profileID ? { orchestraProfile: settings.profileID } : {}),
+        } : undefined,
+      }))
+      if (result.lean) LeanOutput.offer(owner, { lean: result.lean })
+      return result.output
     })
 
     // The placement and profile a tool call of this Location gets, for a Session event.
@@ -270,9 +310,11 @@ const nativeLayer = Layer.unwrap(Effect.gen(function* () {
   return layer.pipe(Layer.provide(Layer.succeed(NativeBinding, { location, events })))
 }))
 
-function whollyDisabled(action: string, rules: PermissionV2.Ruleset) {
-  const rule = rules.findLast((rule) => Wildcard.match(action, rule.action))
-  return rule?.resource === "*" && rule.effect === "deny"
+function whollyDisabled(actions: string | ReadonlyArray<string>, rules: PermissionV2.Ruleset) {
+  return (typeof actions === "string" ? [actions] : actions).every((action) => {
+    const rule = rules.findLast((rule) => Wildcard.match(action, rule.action))
+    return rule?.resource === "*" && rule.effect === "deny"
+  })
 }
 
 export const node = makeLocationNode({

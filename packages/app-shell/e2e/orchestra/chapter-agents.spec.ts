@@ -231,8 +231,8 @@ test("an agent request retains its response state while a later refresh changes 
   }
 })
 
-test("current protocol agents retain configured model, steps and permission rules", async ({ page }) => {
-  await setup(page, { protocol: "v2" })
+test("agents retain configured model, steps and permission rules", async ({ page }) => {
+  await setup(page)
   await openAgents(page)
   const plan = card(page, "plan")
   await expect(plan.locator(".mx-badge bdi")).toHaveAttribute("title", "example/reasoner")
@@ -317,7 +317,6 @@ test("configure without a file writes only what changed and shows resolved patte
 
 test("configure seeds from the project file and keeps pattern rules it does not edit", async ({ page }) => {
   const mock = await setup(page, {
-    protocol: "v2",
     files: {
       plan: {
         path: `${directory}/.orchestra/agent/plan.md`,

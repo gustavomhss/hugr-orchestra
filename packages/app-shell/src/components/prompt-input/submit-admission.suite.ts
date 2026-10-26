@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { clearPending, pendingPolicy, pendingRules, togglePending } from "../draft-subagent-models"
+import { clearPending, pendingPolicy, togglePending } from "../draft-subagent-models"
 import { createRoot } from "solid-js"
 import { isServer } from "solid-js/web"
 import { ServerScope } from "@/utils/server-scope"
@@ -16,8 +16,7 @@ import {
   promotedDrafts,
   prompt,
   promptInputs,
-  projectCopyRequests,
-  savedRules,
+  worktreeCreateInputs,
   sentShell,
   sessionCreateInputs,
   state,
@@ -196,16 +195,16 @@ test("failed policy ACK retains draft/context/worktree/session; retry adopts sam
   expect(real.current()).toBe(contents)
   expect(real.context.items()).toBe(context)
   expect(pendingPolicy(key)).toEqual({ mode: "allowlist", models: [{ providerID: "provider", id: "model" }] })
-  expect(createdSessions).toEqual(["/repo/main/new"])
+  expect(createdSessions).toEqual(["/repo/main-workspaces/new"])
   expect(promoted).toEqual([])
   expect(sentShell).toEqual([])
   expect(state.worktreeResets).toBe(0)
   state.policyWrite = async () => {}
   await submit.handleSubmit(new Event("submit"))
-  expect(createdSessions).toEqual(["/repo/main/new"])
+  expect(createdSessions).toEqual(["/repo/main-workspaces/new"])
   expect(sentShell).toHaveLength(1)
   expect(sentShell[0]?.sessionID).toBe("session-1")
-  expect(promoted).toEqual([{ directory: "/repo/main/new", sessionID: "session-1" }])
+  expect(promoted).toEqual([{ directory: "/repo/main-workspaces/new", sessionID: "session-1" }])
   expect(state.worktreeResets).toBe(1)
   expect(pendingPolicy(key)).toEqual({ mode: "inherit" })
 })
@@ -276,32 +275,13 @@ describe("prompt admission and worktree selection", () => {
     gate.resolve()
     await Promise.all([first, second])
     expect(state.worktreeCreates).toBe(1)
-    expect(createdSessions).toEqual(["/repo/main/new"])
+    expect(worktreeCreateInputs).toEqual([
+      { projectID: "project", strategy: "git_worktree", directory: "/repo/main-workspaces", location: { directory: "/repo/main" } },
+    ])
+    expect(createdSessions).toEqual(["/repo/main-workspaces/new"])
     expect(promptInputs).toHaveLength(1)
     expect(promptInputs[0]).toMatchObject({ sessionID: "session-1", text: "first" })
     expect(draft.current()[0]).toMatchObject({ content: "later typing" })
-  })
-
-  test("creates a new workspace through the V2 project copy route and readies it", async () => {
-    projectCopyRequests.length = 0
-    const draft = createPromptState({ prompt: "first" })
-    const submit = createPromptSubmit({
-      ...submitInput(),
-      prompt: draft,
-      info: () => undefined,
-      newSessionWorktree: () => "create",
-    })
-    await submit.handleSubmit({ preventDefault: () => undefined } as Event)
-    expect(projectCopyRequests).toEqual([
-      {
-        projectID: "project",
-        strategy: "git_worktree",
-        directory: "/repo/main-workspaces",
-        name: expect.stringMatching(/^session-/),
-        location: { directory: "/repo/main" },
-      },
-    ])
-    expect(createdSessions.at(-1)).toBe("/repo/main/new")
   })
 
   test("reads the latest worktree accessor value per submit", async () => {

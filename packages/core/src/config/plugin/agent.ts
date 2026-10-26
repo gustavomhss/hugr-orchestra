@@ -11,8 +11,8 @@ import { ConfigAgent } from "../agent"
 import { ConfigMarkdown } from "../markdown"
 import { FSUtil } from "../../fs-util"
 import { ModelV2 } from "../../model"
-import { ConfigAgentV1 } from "../../v1/config/agent"
-import { ConfigMigrateV1 } from "../../v1/config/migrate"
+import { ConfigUpgradeAgent } from "../upgrade/agent"
+import { ConfigUpgrade } from "../upgrade/upgrade"
 import { Global } from "../../global"
 import { PermissionV2 } from "../../permission"
 import type { LocationMutation } from "../../location-mutation"
@@ -24,7 +24,7 @@ const legacySources = [
   { pattern: "{mode,modes}/*.md", primary: true },
 ] as const
 const decodeAgent = Schema.decodeUnknownOption(ConfigAgent.Info)
-const decodeLegacyAgent = Schema.decodeUnknownOption(ConfigAgentV1.Info)
+const decodeLegacyAgent = Schema.decodeUnknownOption(ConfigUpgradeAgent.Info)
 const decodeConfig = Schema.decodeUnknownOption(Config.Info)
 type PathAction =
   | LocationMutation.ExternalDirectoryAuthorization["action"]
@@ -32,6 +32,7 @@ type PathAction =
   | typeof EditTool.name
 const pathActions = ["external_directory", "read", "edit"] as const satisfies readonly PathAction[]
 const agentKeys = new Set([
+  "name",
   "model",
   "variant",
   "request",
@@ -116,6 +117,8 @@ export const Plugin = define({
                 Object.assign(agent.request.headers, item.request.headers ?? {})
                 Object.assign(agent.request.body, item.request.body ?? {})
               }
+              // Maestro's name is fixed: the app and other Sessions address the conductor by it.
+              if (item.name !== undefined && !maestro) agent.name = item.name
               if (item.system !== undefined) agent.system = item.system
               if (item.description !== undefined) agent.description = item.description
               if (item.engine !== undefined) agent.engine = item.engine
@@ -183,10 +186,10 @@ function decode(file: { directory: string; filepath: string; primary: boolean },
     legacy
       ? Option.map(
           decodeLegacyAgent(
-            { name, ...markdown.data, ...(body ? { prompt: body } : {}) },
+            { ...markdown.data, ...(body ? { prompt: body } : {}) },
             { errors: "all", propertyOrder: "original" },
           ),
-          ConfigMigrateV1.migrateAgent,
+          ConfigUpgrade.migrateAgent,
         )
       : decodeAgent({ ...markdown.data, ...(body ? { system: body } : {}) }, { errors: "all", propertyOrder: "original" }),
   )

@@ -6,7 +6,7 @@ import { createServer } from "node:http"
 import { cpSync, existsSync, readFileSync, appendFileSync, readdirSync, writeFileSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { fileTree, kill9, LOGS, markerArgument, matches, members, provider, supervised, supervisorsOf, sweep, until, verdict, type Identity } from "./lib.ts"
+import { fileTree, kill9, LOGS, markerArgument, matches, members, provider, supervised, supervisorsOf, sweep, until, verdict, writeConfig, type Identity } from "./lib.ts"
 import { api, evidence, finalSweep, finish, fixture, main, processTable, script, start } from "./protocol-fixtures.ts"
 
 export async function run(options: { mutation?: "legacy" } = {}) {
@@ -88,7 +88,7 @@ setInterval(() => {}, 1e9);
         send({ role: "assistant" })
         send(tool ? { tool_calls: [{ index: 0, id: `write_${drive.writes}`, type: "function", function: {
           // Windows CLI canonicalizes 8.3 TEMP paths; resolve the document inside its actual Location.
-          name: "write", arguments: JSON.stringify({ filePath: "b.ts", content: `export const b = ${drive.writes}\n` }),
+          name: "write", arguments: JSON.stringify({ path: "b.ts", content: `export const b = ${drive.writes}\n` }),
         } }] } : { content: "done" })
         send({}, tool ? "tool_calls" : "stop")
         response.end("data: [DONE]\n\n")
@@ -106,16 +106,25 @@ setInterval(() => {}, 1e9);
           initialization: { disableAutomaticTypingAcquisition: true, tsserver: { path: path.join(ts, "lib/tsserver.js") } } },
       },
     }
-    scratch.env.ORCHESTRA_CONFIG_CONTENT = JSON.stringify(config)
+    writeConfig(scratch.project, config)
     if (options.mutation) scratch.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER = "0"
-    const host = await start(scratch)
-    const call = api(host.url, scratch.project)
-    const session = await call<{ id: string }>("POST", "/session", {}, 120_000)
+    const state = { host: await start(scratch) }
+    const model = { providerID: "test", id: "test-model" }
+    let call = api(state.host.url, scratch.project)
+    const session = (await call<{ data: { id: string } }>("POST", "/api/session", { agent: "campaign", model }, 120_000)).data
+    // V2 has no instance-dispose route. A host stopped by SIGTERM disposes its runtime and every owned tree;
+    // the next admission is a fresh host on the same database.
+    const restart = async () => {
+      state.host.proc.kill("SIGTERM")
+      await until(20_000, "serve exit after SIGTERM", () => state.host.proc.exitCode !== null || state.host.proc.signalCode !== null ? true : undefined)
+      await until(8_000, "LSP tree gone after serve exit", async () => (await sweep(tree.nonce)).length === 0 ? true : undefined)
+      state.host = await start(scratch)
+      call = api(state.host.url, scratch.project)
+    }
     const trigger = async () => {
       drive.armed = true
-      const response = await call("POST", `/session/${session.id}/message`, {
-        agent: "campaign", model: { providerID: "test", modelID: "test-model" }, parts: [{ type: "text", text: "Write b.ts." }],
-      }, 120_000)
+      await call("POST", `/api/session/${session.id}/prompt`, { prompt: { text: "Write b.ts." } }, 120_000)
+      const response = await call("POST", `/api/session/${session.id}/wait`, {}, 120_000)
       appendFileSync(path.join(scratch.home, "prompt.responses.jsonl"), JSON.stringify(response) + "\n")
     }
     const rows = () => {
@@ -159,7 +168,7 @@ setInterval(() => {}, 1e9);
     await trigger()
     const initial = await live()
     handshakes.push({ ...handshake(initial.wrapperRow), tsservers: initial.tsservers.length })
-    const supervisor = supervisorsOf([host.pid])
+    const supervisor = supervisorsOf([state.host.pid])
     const initialOwner = supervisor[0]
     if (supervisor.length !== 1 || !initialOwner) throw new Error(`expected one process-owned supervisor, found ${supervisor.length}`)
     for (let cycle = 0; cycle < 20; cycle++) {
@@ -173,7 +182,7 @@ setInterval(() => {}, 1e9);
       // Crash Orchestra's actual LSP handle (the node/npx-equivalent wrapper), leaving its descendants to shutdown.
       if (!kill9(before.wrapperRow)) throw new Error("LSP crash injection failed")
       autoRecoveryStatus = await until(10_000, "dead cached LSP error status", async () => {
-        const status = await call<{ id: string; status: string }[]>("GET", "/lsp")
+        const status = (await call<{ data: { id: string; status: string }[] }>("GET", "/api/lsp")).data
         return status.some((entry) => entry.id === "campaign" && entry.status === "error") ? status : undefined
       })
       if (rows().some((row) => row.args?.includes(wrapper) && !matches(row, before.wrapperRow)))
@@ -183,7 +192,7 @@ setInterval(() => {}, 1e9);
       handshakes.push({ ...handshake(after.wrapperRow), tsservers: after.tsservers.length })
       automaticRestart = !matches(after.wrapperRow, before.wrapperRow)
       const oldLeft = after.current.filter((row) => before.current.some((old) => matches(old, row))).length
-      const owner = supervisorsOf([host.pid])
+      const owner = supervisorsOf([state.host.pid])
       const owned = owner[0]
       if (!automaticRestart || oldLeft !== 0 || owner.length !== 1 || !owned || !matches(owned, initialOwner))
         throw new Error("same-instance restart did not stop old tree, create fresh client, or preserve single supervisor")
@@ -192,14 +201,12 @@ setInterval(() => {}, 1e9);
         freshPID: after.wrapperRow.pid, supervisorPID: owned.pid })
     }
     const counts = cycles.map((cycle) => cycle.live)
-    await call("POST", "/instance/dispose", {}, 30_000)
-    await until(8_000, "final LSP tree gone", async () => (await sweep(tree.nonce)).length === 0 ? true : undefined)
+    await restart()
     // Twenty replacements plus initial client and fresh post-disposal admission = 22 real Node/TLS handshakes.
     await trigger()
     const fresh = await live()
     handshakes.push({ ...handshake(fresh.wrapperRow), tsservers: fresh.tsservers.length })
-    await call("POST", "/instance/dispose", {}, 30_000)
-    await until(8_000, "post-disposal fresh LSP tree gone", async () => (await sweep(tree.nonce)).length === 0 ? true : undefined)
+    await restart()
     pass = automaticRestart === true && cycles.length === 20 && new Set(counts).size === 1 &&
       cycles.every((cycle) => cycle.oldLeft === 0 && cycle.after === cycle.live) && handshakes.length === 22 &&
       new Set(handshakes.map((entry) => `${entry.pid}:${entry.startTime}`)).size === 22 &&

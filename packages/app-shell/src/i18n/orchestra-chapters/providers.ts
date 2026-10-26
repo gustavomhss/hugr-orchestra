@@ -18,7 +18,6 @@ export const PROVIDERS_COPY = {
   "orchestra.providers.models": "Models",
   "orchestra.providers.popular": "Popular providers",
   "orchestra.providers.popular.empty": "Every popular provider is already listed above.",
-  "orchestra.providers.note.custom": "OpenAI-compatible provider",
   "orchestra.providers.note.models": "Models available: {{count}}",
   "orchestra.providers.loading": "Loading providers…",
   "orchestra.providers.error": "Could not load providers for this profile.",

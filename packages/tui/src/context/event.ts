@@ -1,4 +1,4 @@
-import type { Event } from "../compat/schema"
+import type { Event } from "../types"
 import { useSDK } from "./sdk"
 
 type EventMetadata = {
@@ -11,10 +11,6 @@ export function useEvent() {
 
   function subscribe(handler: (event: Event, metadata: EventMetadata) => void) {
     return sdk.event.on("event", (event) => {
-      if (event.payload.type === "sync") {
-        return
-      }
-
       handler(event.payload, { directory: event.directory, workspace: event.workspace })
     })
   }

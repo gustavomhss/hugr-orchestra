@@ -48,7 +48,7 @@ cat > 'packages/core/src/session/README.md' <<'README_EOF'
 
 ## Public entry points and consumers
 
-- Consumers: server, apps/orchestra, apps/cli and sdk-next; other packages should import the entries.
+- Consumers: server, removed-v1, apps/cli and sdk-next; other packages should import the entries.
 
 ## Dependencies and boundaries
 

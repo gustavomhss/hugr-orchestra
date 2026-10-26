@@ -6,7 +6,7 @@
 // 1. Moves every tracked path whose name carries the old name (`git mv`), directories first.
 // 2. Rewrites tracked text files with the ordered rules below. Kept paths and protected strings come from
 //    script/rename-ledger.ts, the same ledger the repo-wide guard (packages/core/test/rename-guard.test.ts) reads.
-// 3. Regenerates what is generated: bun.lock, the v2 SDK, packages/sdk/openapi.json, the client and the Atlas bundles.
+// 3. Regenerates what is generated: bun.lock, the v2 SDK, the client and the Atlas bundles.
 // 4. Prints counts per rule and fails when a protected string changed or an unprotected old name is left.
 //
 // Running it again on its own output changes nothing. Running it on a branch that predates the rename renames that
@@ -57,7 +57,7 @@ const rules: Rule[] = [
 
 // Rewritten by their generators, never by rules.
 const GENERATED =
-  /^packages\/sdk\/js\/src\/v2\/gen\/|^packages\/sdk\/openapi\.json$|^packages\/client\/src\/generated(?:-effect)?\/|^(?:packages\/atlas-boundary|modules\/atlas\/boundary)\/src\/generated\//
+  /^packages\/client\/src\/generated(?:-effect)?\/|^(?:packages\/atlas-boundary|modules\/atlas\/boundary)\/src\/generated\//
 // yargs right-aligns the type column, so a longer name must eat the padding to keep the line width.
 const RIGHT_ALIGNED =
   /^packages\/(?:opencode|orchestra)\/test\/cli\/help\/__snapshots__\/help-snapshots\.test\.ts\.snap$/
@@ -332,8 +332,6 @@ function regenerate() {
   }
   // --ignore-scripts: `prepare` would run husky, which rewrites the shared core.hooksPath.
   step("bun.lock", ".", ["bun", "install", "--ignore-scripts"])
-  step("the v2 SDK", ".", ["bun", "./packages/sdk/js/script/build.ts"])
-  step("packages/sdk/openapi.json", "packages/orchestra", ["bun", "dev", "generate"], "../sdk/openapi.json")
   step("the client", "packages/client", ["bun", "run", "generate"])
   step("the Atlas bundles", existsSync(path.join(root, "modules/atlas/boundary")) ? "modules/atlas/boundary" : "packages/atlas-boundary", ["bun", "run", "generate"])
 }

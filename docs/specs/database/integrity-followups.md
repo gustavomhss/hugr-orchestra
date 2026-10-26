@@ -39,7 +39,7 @@ and replay order has to be proven parent-first.
 Orphan risk today:
 
 - `parent_id`: a child survives its parent if the parent is deleted by a path that does not recurse.
-  The V1 `SessionV1.Event.Deleted` projection deletes exactly one row.
+  The `session.next.deleted` projection deletes exactly one row.
 - `workspace_id`: a session keeps a workspace ID after that workspace row is deleted by any path other than
   `Workspace.remove`.
 

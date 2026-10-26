@@ -58,7 +58,7 @@ const plan = Effect.fn("SessionRevert.plan")(function* (input: BoundaryInput) {
 })
 
 /** Diffs what the assistant turns answering `messageID` changed, from the first start snapshot to the last end snapshot. */
-export const diff = Effect.fn("SessionRevert.diff")(function* (input: BoundaryInput) {
+export const diff = Effect.fn("SessionRevert.diff")(function* (input: BoundaryInput & { readonly context?: number }) {
   const db = (yield* Database.Service).db
   const boundary = yield* db
     .select({ seq: SessionMessageTable.seq })
@@ -106,7 +106,7 @@ export const diff = Effect.fn("SessionRevert.diff")(function* (input: BoundaryIn
   const to = snapshots.findLast((snapshot) => snapshot?.end)?.end
   if (!from || !to) return []
   const snapshot = yield* Snapshot.Service
-  return yield* snapshot.diff({ from: Snapshot.ID.make(from), to: Snapshot.ID.make(to) })
+  return yield* snapshot.diff({ from: Snapshot.ID.make(from), to: Snapshot.ID.make(to), context: input.context })
 })
 
 export const stage = Effect.fn("SessionRevert.stage")(function* (input: {

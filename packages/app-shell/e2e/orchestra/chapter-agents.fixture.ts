@@ -100,12 +100,8 @@ export async function openAgents(page: Page, ready = true) {
 
 function requestDirectory(request: Request) {
   const url = new URL(request.url())
-  const header = request.headers()["x-orchestra-directory"]
-  return (
-    url.searchParams.get("location[directory]") ??
-    url.searchParams.get("directory") ??
-    (header ? decodeURIComponent(header) : null)
-  )
+  // `directory` is the Session list filter, not a Location.
+  return url.searchParams.get("location[directory]") ?? url.searchParams.get("directory")
 }
 
 // The V2 catalog: connected providers list their models through `/api/model`.
@@ -130,7 +126,6 @@ export async function setup(
     wait?: Promise<void>
     waitOther?: Promise<void>
     response?: { state: string }
-    protocol?: "v2"
     models?: boolean
     files?: Record<string, AgentFile>
     // `html`: an older server answers unknown routes with its web app and status 200.
@@ -152,7 +147,7 @@ export async function setup(
     id: name,
     name,
     worktree,
-    // A project without an avatar color makes the V1 layout PATCH one in the background; already colored
+    // A project without an avatar color makes the layout PATCH one in the background; already colored
     // projects keep the specs' "sends nothing" oracles about the agent flows themselves.
     icon: { color: "mint" },
     vcs: "git",
@@ -199,7 +194,6 @@ export async function setup(
     { serverA, serverB, directory, otherDirectory, scheme: input.scheme ?? "dark" },
   )
   await mockOrchestraServer(page, {
-    protocol: input.protocol,
     eventRetry: 60_000,
     provider: input.models
       ? ({

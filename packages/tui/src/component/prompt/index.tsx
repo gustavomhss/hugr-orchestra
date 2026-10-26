@@ -14,7 +14,6 @@ import { registerOrchestraSpinner } from "../register-spinner"
 import path from "path"
 import { fileURLToPath } from "url"
 import { useLocal } from "../../context/local"
-import { Flag } from "@orchestra/core/flag/flag"
 import { tint, useTheme } from "../../context/theme"
 import { EmptyBorder, SplitBorder } from "../../ui/border"
 import { useTuiPaths, useTuiTerminalEnvironment } from "../../context/runtime"
@@ -37,7 +36,8 @@ import { usePromptStash } from "../../prompt/stash"
 import { DialogStash } from "../dialog-stash"
 import { type AutocompleteRef, Autocomplete } from "./autocomplete"
 import { useRenderer, useTerminalDimensions, type JSX } from "@opentui/solid"
-import type { AssistantMessage, FilePart, UserMessage } from "../../compat/schema"
+import type { SessionMessageAssistant } from "../../types"
+import type { TuiPromptFilePart } from "@orchestra/plugin/tui"
 import { Locale } from "../../util/locale"
 import { errorMessage } from "../../util/error"
 import { formatDuration } from "../../util/format"
@@ -49,11 +49,10 @@ import { useToast } from "../../ui/toast"
 import { useKV } from "../../context/kv"
 import { createFadeIn } from "../../util/signal"
 import { DialogSkill } from "../dialog-skill"
-import { DialogWorkspaceUnavailable } from "../dialog-workspace-unavailable"
 import { useArgs } from "../../context/args"
+import { Demo } from "../../context/demo-run"
 import { ORCHESTRA_BASE_MODE, useBindings, useCommandShortcut, useLeaderActive, useOrchestraKeymap } from "../../keymap"
 import { useTuiConfig } from "../../config"
-import { usePromptWorkspace } from "./workspace"
 import { usePromptMove } from "./move"
 import { readLocalAttachment } from "./local-attachment"
 import { useLocation } from "../../context/location"
@@ -208,7 +207,6 @@ export function Prompt(props: PromptProps) {
   })
   const editorContextLabelState = createMemo(() => editor.labelState())
   const [auto, setAuto] = createSignal<AutocompleteRef>()
-  const workspace = usePromptWorkspace(props.sessionID)
   const move = usePromptMove({ projectID: project.project, sessionID: () => props.sessionID })
   const [cursorVersion, setCursorVersion] = createSignal(0)
   const currentProviderLabel = createMemo(() => local.model.parsed().provider)
@@ -238,7 +236,7 @@ export function Prompt(props: PromptProps) {
   event.on("tui.prompt.append", (evt, { workspace }) => {
     if (workspace !== project.workspace.current()) return
     if (!input || input.isDestroyed) return
-    input.insertText(evt.properties.text)
+    input.insertText(evt.data.text)
     setTimeout(() => {
       // setTimeout is a workaround and needs to be addressed properly
       if (!input || input.isDestroyed) return
@@ -255,25 +253,29 @@ export function Prompt(props: PromptProps) {
     if (tuiConfig.cursor) input.cursorStyle = tuiConfig.cursor
   })
 
-  const lastUserMessage = createMemo(() => {
+  // V2 user messages carry no agent or model; the last assistant turn records which ones answered.
+  const lastTurn = createMemo(() => {
     if (!props.sessionID) return undefined
     const messages = sync.data.message[props.sessionID]
     if (!messages) return undefined
-    return messages.findLast((m): m is UserMessage => m.role === "user")
+    return messages.findLast((m): m is SessionMessageAssistant => m.type === "assistant")
   })
 
   const usage = createMemo(() => {
     if (!props.sessionID) return
     const session = sync.session.get(props.sessionID)
     const msg = sync.data.message[props.sessionID] ?? []
-    const last = msg.findLast((item): item is AssistantMessage => item.role === "assistant" && item.tokens.output > 0)
+    const last = msg.findLast(
+      (item): item is SessionMessageAssistant & { tokens: NonNullable<SessionMessageAssistant["tokens"]> } =>
+        item.type === "assistant" && (item.tokens?.output ?? 0) > 0,
+    )
     if (!last) return
 
     const tokens =
       last.tokens.input + last.tokens.output + last.tokens.reasoning + last.tokens.cache.read + last.tokens.cache.write
     if (tokens <= 0) return
 
-    const model = sync.data.provider.find((item) => item.id === last.providerID)?.models[last.modelID]
+    const model = sync.data.provider.find((item) => item.id === last.model.providerID)?.models[last.model.id]
     const pct = model?.limit.context ? `${Math.round((tokens / model.limit.context) * 100)}%` : undefined
     const cost = session?.cost ?? 0
     return {
@@ -313,7 +315,7 @@ export function Prompt(props: PromptProps) {
   let syncedSessionID: string | undefined
   createEffect(() => {
     const sessionID = props.sessionID
-    const msg = lastUserMessage()
+    const msg = lastTurn()
 
     if (sessionID !== syncedSessionID) {
       if (!sessionID || !msg) return
@@ -325,10 +327,8 @@ export function Prompt(props: PromptProps) {
       if (msg.agent && isPrimaryAgent) {
         // Keep command line --agent if specified.
         if (!args.agent) local.agent.set(msg.agent)
-        if (msg.model) {
-          local.model.set(msg.model)
-          local.model.variant.set(msg.model.variant)
-        }
+        local.model.set({ providerID: msg.model.providerID, modelID: msg.model.id })
+        local.model.variant.set(msg.model.variant)
       }
     }
   })
@@ -414,8 +414,8 @@ export function Prompt(props: PromptProps) {
           }, 5000)
 
           if (store.interrupt >= 2) {
-            void sdk.client.session.abort({
-              sessionID: props.sessionID,
+            void sdk.actions.interrupt(props.sessionID).catch((error) => {
+              toast.show({ title: "Failed to interrupt", message: errorMessage(error), variant: "error" })
             })
             setStore("interrupt", 0)
           }
@@ -534,17 +534,6 @@ export function Prompt(props: PromptProps) {
         },
       },
       {
-        title: "Warp",
-        desc: "Change the workspace for the session",
-        name: "workspace.set",
-        category: "Session",
-        enabled: Flag.ORCHESTRA_EXPERIMENTAL_WORKSPACES,
-        slashName: "warp",
-        run: () => {
-          workspace.open()
-        },
-      },
-      {
         title: "Move session",
         desc: "Move to another project dir",
         name: "session.move",
@@ -575,7 +564,6 @@ export function Prompt(props: PromptProps) {
       "prompt.stash.list",
       "prompt.skills",
       "session.interrupt",
-      "workspace.set",
       "session.move",
     ]),
   }))
@@ -946,8 +934,6 @@ export function Prompt(props: PromptProps) {
   }
 
   async function submitInner() {
-    workspace.clearNotice()
-
     // IME: double-defer may fire before onContentChange flushes the last
     // composed character (e.g. Korean hangul) to the store, so read
     // plainText directly and sync before any downstream reads.
@@ -956,7 +942,7 @@ export function Prompt(props: PromptProps) {
       syncExtmarksWithPromptParts()
     }
     if (props.disabled) return false
-    if (workspace.creating() || move.creating()) return false
+    if (move.creating()) return false
     if (auto()?.visible) return false
     if (!store.prompt.input) return false
     const agent = local.agent.current()
@@ -972,56 +958,33 @@ export function Prompt(props: PromptProps) {
       return false
     }
 
-    const workspaceSession = props.sessionID ? sync.session.get(props.sessionID) : undefined
-    const workspaceID = workspaceSession?.workspaceID
-    const workspaceStatus = workspaceID ? (project.workspace.status(workspaceID) ?? "error") : undefined
-    if (props.sessionID && workspaceID && workspaceStatus !== "connected") {
-      dialog.replace(() => (
-        <DialogWorkspaceUnavailable
-          onRestore={() => {
-            workspace.open()
-            return false
-          }}
-        />
-      ))
-      return false
-    }
-
     const variant = local.model.variant.current()
     let sessionID = props.sessionID
     let finishMoveProgress = false
     if (sessionID == null) {
-      const selectedWorkspace = workspace.selection()
-      const workspaceID = selectedWorkspace?.type === "existing" ? selectedWorkspace.workspaceID : undefined
-
       const directory = await move.getDirectory(store.prompt.input)
       if (move.pending() && !directory) return false
       finishMoveProgress = Boolean(move.progress())
 
-      const res = await sdk.client.session.create({
-        directory,
-        workspace: workspaceID,
-        agent: agentKey(agent),
-        model: {
-          providerID: selectedModel.providerID,
-          id: selectedModel.modelID,
-          variant,
-        },
-      })
-
-      if (res.error) {
-        if (finishMoveProgress) move.finishSubmit()
-        console.log("Creating a session failed:", res.error)
-
-        toast.show({
-          message: "Creating a session failed. Open console for more details.",
-          variant: "error",
+      const created = await sdk.actions
+        .create({
+          agent: agentKey(agent),
+          model: { providerID: selectedModel.providerID, modelID: selectedModel.modelID, variant },
+          directory,
         })
+        .catch((error: unknown) => {
+          if (finishMoveProgress) move.finishSubmit()
+          console.log("Creating a session failed:", error)
 
-        return true
-      }
+          toast.show({
+            message: "Creating a session failed. Open console for more details.",
+            variant: "error",
+          })
+          return undefined
+        })
+      if (!created) return true
 
-      sessionID = res.data.id
+      sessionID = created.id
     }
 
     const inputText = expandTrackedPastedText(
@@ -1040,33 +1003,24 @@ export function Prompt(props: PromptProps) {
     // Capture mode before it gets reset
     const currentMode = store.mode
     const editorSelection = editorContext()
-    const editorParts =
-      editorSelection && editor.labelState() === "pending"
-        ? [
-            {
-              type: "text" as const,
-              text: formatEditorContext(editorSelection),
-              synthetic: true,
-              metadata: {
-                kind: "editor_context",
-                source: editorSelection.source ?? "editor",
-                filePath: editorSelection.filePath,
-                ranges: editorSelection.ranges,
-              },
-            },
-          ]
-        : []
+    const editorText =
+      editorSelection && editor.labelState() === "pending" ? formatEditorContext(editorSelection) : undefined
 
-    if (store.mode === "shell") {
-      move.startSubmit()
-      void sdk.client.session.shell({
+    const demoCommand = args.mini && args.demo ? Demo.parse(inputText) : undefined
+    if (demoCommand) {
+      Demo.run(demoCommand, {
         sessionID,
+        text: inputText,
         agent: agentKey(agent),
-        model: {
-          providerID: selectedModel.providerID,
-          modelID: selectedModel.modelID,
-        },
-        command: inputText,
+        cwd: sdk.directory ?? process.cwd(),
+        sync,
+        sdk,
+        warn: (message) => toast.show({ message, variant: "warning" }),
+      })
+    } else if (store.mode === "shell") {
+      move.startSubmit()
+      void sdk.actions.shell({ sessionID, command: inputText }).catch((error) => {
+        toast.show({ title: "Failed to run shell command", message: errorMessage(error), variant: "error" })
       })
       setStore("mode", "normal")
     } else if (
@@ -1081,36 +1035,30 @@ export function Prompt(props: PromptProps) {
       const restOfInput = firstLineEnd === -1 ? "" : inputText.slice(firstLineEnd + 1)
       const args = firstLineArgs.join(" ") + (restOfInput ? "\n" + restOfInput : "")
 
-      void sdk.client.session.command({
-        sessionID,
-        command: command.slice(1),
-        arguments: args,
-        agent: agentKey(agent),
-        model: `${selectedModel.providerID}/${selectedModel.modelID}`,
-        variant,
-        parts: nonTextParts.filter((x) => x.type === "file"),
-      })
+      void sdk.actions
+        .command({
+          sessionID,
+          command: command.slice(1),
+          arguments: args,
+          agent: agentKey(agent),
+          model: { providerID: selectedModel.providerID, modelID: selectedModel.modelID, variant },
+          files: nonTextParts.filter((x) => x.type === "file"),
+        })
+        .catch((error) => {
+          toast.show({ title: "Failed to run command", message: errorMessage(error), variant: "error" })
+        })
     } else {
       move.startSubmit()
-      sdk.client.session
-        .prompt(
-          {
-            sessionID,
-            ...selectedModel,
-            agent: agentKey(agent),
-            model: selectedModel,
-            variant,
-            parts: [
-              ...editorParts,
-              {
-                type: "text",
-                text: inputText,
-              },
-              ...nonTextParts,
-            ],
-          },
-          { throwOnError: true },
-        )
+      sdk.actions
+        .prompt({
+          sessionID,
+          text: inputText,
+          context: editorText,
+          agent: agentKey(agent),
+          model: { providerID: selectedModel.providerID, modelID: selectedModel.modelID, variant },
+          files: nonTextParts.filter((part) => part.type === "file"),
+          agents: nonTextParts.filter((part) => part.type === "agent"),
+        })
         .catch((error) => {
           toast.show({
             title: "Failed to send prompt",
@@ -1118,7 +1066,7 @@ export function Prompt(props: PromptProps) {
             variant: "error",
           })
         })
-      if (editorParts.length > 0) editor.markSelectionSent()
+      if (editorText) editor.markSelectionSent()
     }
     history.append({
       ...store.prompt,
@@ -1134,7 +1082,7 @@ export function Prompt(props: PromptProps) {
 
     // temporary hack to make sure the message is sent
     if (!props.sessionID) {
-      if (editorParts.length > 0) editor.preserveSelectionFromNewSession()
+      if (editorText) editor.preserveSelectionFromNewSession()
       setTimeout(() => {
         route.navigate({
           type: "session",
@@ -1245,7 +1193,7 @@ export function Prompt(props: PromptProps) {
       typeId: promptPartTypeId,
     })
 
-    const part: Omit<FilePart, "id" | "messageID" | "sessionID"> = {
+    const part: TuiPromptFilePart = {
       type: "file" as const,
       mime: file.mime,
       filename: file.filename,
@@ -1321,7 +1269,7 @@ export function Prompt(props: PromptProps) {
   })
 
   const spinnerDef = createMemo(() => {
-    const active = status().type !== "idle" ? findAgent(local.agent.list(), lastUserMessage()?.agent) : undefined
+    const active = status().type !== "idle" ? findAgent(local.agent.list(), lastTurn()?.agent) : undefined
     const agent = active ?? local.agent.current()
     const color = agent ? local.agent.color(agentKey(agent)) : theme.border
     return {
@@ -1590,41 +1538,6 @@ export function Prompt(props: PromptProps) {
                   </span>
                 </text>
               </box>
-            </Match>
-            <Match when={workspace.notice()}>
-              {(notice) => (
-                <box paddingLeft={3}>
-                  <text fg={theme.accent}>{notice()}</text>
-                </box>
-              )}
-            </Match>
-            <Match when={workspace.label()}>
-              {(label) => (
-                <box paddingLeft={3} flexDirection="row" gap={1}>
-                  <Show when={workspace.creating()}>
-                    <Spinner color={theme.accent} />
-                  </Show>
-                  <text fg={workspace.creating() ? theme.accent : theme.text}>
-                    {(() => {
-                      const item = label()
-                      if (item.type === "new") {
-                        if (workspace.creating())
-                          return `Creating ${item.workspaceType}${".".repeat(workspace.creatingDots())}`
-                        return (
-                          <>
-                            Workspace <span style={{ fg: theme.textMuted }}>(new {item.workspaceType})</span>
-                          </>
-                        )
-                      }
-                      return (
-                        <>
-                          Workspace <span style={{ fg: theme.textMuted }}>{item.workspaceName}</span>
-                        </>
-                      )
-                    })()}
-                  </text>
-                </box>
-              )}
             </Match>
             <Match when={move.progress()}>
               {(progress) => (

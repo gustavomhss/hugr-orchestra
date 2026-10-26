@@ -9,7 +9,7 @@ import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { Api } from "../api"
 import { response } from "../location"
 
-// The version-control and activity answers V1 gave, read from git per request in the requested location.
+// The version-control and activity answers the earlier runtime gave, read from git per request in the requested location.
 export const VcsHandler = HttpApiBuilder.group(Api, "server.vcs", (handlers) =>
   Effect.gen(function* () {
     const git = yield* GitCli.Service

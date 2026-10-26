@@ -5,7 +5,7 @@ import { createStore } from "solid-js/store"
 import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
-import { useServerProtocol, useServerSDK } from "@/context/server-sdk"
+import { useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import type { ChapterPageProps } from "@/orchestra/chapter-route"
 import {
@@ -22,6 +22,7 @@ import {
 } from "@/utils/llm-behaviors"
 import { llmBehaviors } from "@/utils/llm-behaviors-store"
 import { pathKey } from "@/utils/path-key"
+import { errorStatus } from "./agents-roster"
 import { MxBadge, MxPage, MxToggle } from "./kit"
 import { BehaviorDialog, PluginIcon, RemoveDialog } from "./plugins-dialog"
 import "./plugins.css"
@@ -31,15 +32,13 @@ export default function PluginsPage(props: ChapterPageProps) {
   const global = useGlobal()
   const serverSDK = useServerSDK()
   const serverSync = useServerSync()
-  const protocol = useServerProtocol()
   const platform = usePlatform()
   const dialog = useDialog()
   // Same profile resolution as the composer, so a sandbox selection still edits its repository's behaviors.
   const directory = createMemo(() => behaviorProfileDirectory(serverSync().data.project, props.directory))
   const store = createMemo(() => llmBehaviors(platform, serverSDK().scope, directory()))
   const [state, setState] = createStore({ query: "" })
-  // A V1 prompt carries the behaviors itself. A V2 server keeps the profile's active set and applies it to every turn
-  // of the profile's sessions; until it accepts the set this page shows, enabled behaviors are saved, not active.
+  // The server keeps the profile's active set and applies it to every turn of the profile's sessions; until it accepts the set this page shows, enabled behaviors are saved, not active.
   const [server, setServer] = createSignal<"supported" | "unsupported" | "failed">()
   const applied = () => server() === "supported"
   const note = () => {
@@ -57,16 +56,18 @@ export default function PluginsPage(props: ChapterPageProps) {
     if (store().loading()) return
     const input = {
       location: { directory: directory() },
-      behaviorSetInput: { behaviors: behaviorInstructions(store().behaviors()) },
+      behaviors: behaviorInstructions(store().behaviors()),
     }
     const id = ++push.latest
     push.queue = push.queue.then(async () => {
-      const result = await serverSDK()
-        .client.v2.behavior.set(input, { throwOnError: false })
-        .catch(() => undefined)
+      const status = await serverSDK()
+        .orchestra.behaviors.set(input)
+        .then(
+          () => 200,
+          (error: unknown) => errorStatus(error),
+        )
       if (id !== push.latest) return
-      const status = result?.response?.status
-      if (result?.response?.ok) return void setServer("supported")
+      if (status === 200) return void setServer("supported")
       setServer(status === 404 || status === 405 || status === 501 ? "unsupported" : "failed")
     })
   })

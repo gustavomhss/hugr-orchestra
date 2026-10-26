@@ -2,7 +2,6 @@ import { expect, test } from "bun:test"
 import { createServer, type IncomingMessage } from "node:http"
 import type { LeanDashboard } from "@orchestra/schema/lean-dashboard"
 import { Orchestra } from "@orchestra/client"
-import { createSdkForServer } from "@/utils/server"
 import { createLeanAPI, LeanAPIError } from "./lean-api"
 
 const info: LeanDashboard.Info = {
@@ -22,7 +21,7 @@ async function endpoint(handle: (request: IncomingMessage) => { body: unknown; s
   // App preload installs browser Response globally; use Node's actual HTTP server boundary.
   const server = createServer(async (request, response) => {
     response.setHeader("access-control-allow-origin", "*")
-    response.setHeader("access-control-allow-headers", "authorization,content-type,x-orchestra-directory")
+    response.setHeader("access-control-allow-headers", "authorization,content-type")
     response.setHeader("access-control-allow-methods", "GET,PATCH,OPTIONS")
     if (request.method === "OPTIONS") { response.writeHead(204); response.end(); return }
     const result = await handle(request)
@@ -49,7 +48,7 @@ test("v2 reads the dashboard from the Location-scoped Orchestra route and unwrap
     return { body: { location, data: url.pathname.includes("history") ? history : info } }
   })
   const api = createLeanAPI(
-    { client: createSdkForServer({ server: { url: server.url } }), directory: "/repo one", protocol: Promise.resolve("v2") },
+    { directory: "/repo one" },
     Orchestra.make({ baseUrl: server.url }),
   )
   try {

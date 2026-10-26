@@ -6,11 +6,13 @@ import {
   stopVisualProbe,
   visualPlan,
 } from "../../utils/visual-stability"
-import { assistantMessage, setupTimeline, textPart, userMessage } from "./fixture"
+import { assistantID, assistantMessage, loadedPartID, setupTimeline, textPart, userMessage } from "./fixture"
 
 test("detects blanking caused by ancestor opacity", async ({ page }) => {
-  const partID = "prt_oracle_ancestor_opacity"
-  await setupTimeline(page, { messages: [userMessage(), assistantMessage([textPart(partID, "Visible content")])] })
+  const partID = loadedPartID(assistantID, "text")
+  await setupTimeline(page, {
+    messages: [userMessage(), assistantMessage([textPart("prt_oracle_ancestor_opacity", "Visible content")])],
+  })
   const row = page.locator(`[data-timeline-part-id="${partID}"]`).first()
   const regions = defineVisualRegions({
     content: { selector: `[data-timeline-part-id="${partID}"]` },
@@ -39,8 +41,10 @@ test("detects blanking caused by ancestor opacity", async ({ page }) => {
 })
 
 test("detects root opacity when probing descendant opacity", async ({ page }) => {
-  const partID = "prt_oracle_descendant_opacity"
-  await setupTimeline(page, { messages: [userMessage(), assistantMessage([textPart(partID, "Visible content")])] })
+  const partID = loadedPartID(assistantID, "text")
+  await setupTimeline(page, {
+    messages: [userMessage(), assistantMessage([textPart("prt_oracle_descendant_opacity", "Visible content")])],
+  })
   const row = page.locator(`[data-timeline-part-id="${partID}"]`).first()
   await row.evaluate((element) => {
     element.innerHTML = '<span data-probe-opacity="true">Visible content</span>'

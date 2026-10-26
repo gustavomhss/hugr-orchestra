@@ -5,7 +5,7 @@ import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { Project } from "@orchestra/schema/project"
 import { SessionID } from "@orchestra/schema/session-id"
 import { SessionMessage } from "@orchestra/schema/session-message"
-import { SessionV1 } from "@orchestra/schema/session-v1"
+import { SessionLegacyTranscript } from "../session/legacy-transcript"
 import { and, eq, sql } from "drizzle-orm"
 import { Effect, Schema } from "effect"
 import { isDeepStrictEqual } from "node:util"
@@ -75,7 +75,7 @@ export const require = Effect.fn("ResearchBinding.require")(function* (binding: 
   if (!isDeepStrictEqual(retained, binding))
     return yield* new Research.Error({ code: "binding_mismatch", message: "Research binding does not match retained placement" })
   const database = yield* Database.Service
-  // Both native runtimes share Session placement. V1 parts and V2 assistant content remain distinct projections.
+  // Both native runtimes share Session placement. Legacy parts and assistant message content remain distinct projections.
   const messages = yield* database.db.select().from(MessageTable).where(and(
     sql`${MessageTable.id} = ${context.assistantMessageID}`, eq(MessageTable.session_id, context.sessionID),
   )).all().pipe(Effect.orDie)
@@ -85,7 +85,7 @@ export const require = Effect.fn("ResearchBinding.require")(function* (binding: 
       sql`${PartTable.message_id} = ${context.assistantMessageID}`, eq(PartTable.session_id, context.sessionID),
     )).all().pipe(Effect.orDie)
     if (message.role === "assistant" && message.agent === "jimmy" && parts.some((part) => {
-      const tool = Schema.decodeUnknownOption(SessionV1.ToolPart)({ ...part.data, id: part.id, messageID: part.message_id, sessionID: part.session_id })
+      const tool = Schema.decodeUnknownOption(SessionLegacyTranscript.ToolPart)({ ...part.data, id: part.id, messageID: part.message_id, sessionID: part.session_id })
       return tool._tag === "Some" && tool.value.callID === context.toolCallID && tool.value.tool === frame.rootToolName
     }))
       return retained

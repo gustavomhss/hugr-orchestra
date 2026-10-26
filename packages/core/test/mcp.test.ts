@@ -1,4 +1,4 @@
-// The Location's MCP service: a stdio server from a V1-shaped profile config connects through omni, its tools join
+// The Location's MCP service: a stdio server from a legacy-shaped profile config connects through omni, its tools join
 // the Location's tool registry, its resources list and read, and its prompts become commands; disconnect removes them;
 // add and remove edit the profile's own config file; OAuth is refused for a local server and for one not configured.
 import fs from "fs/promises"
@@ -25,7 +25,7 @@ import { EventV2 } from "../src/event"
 import { ApplicationTools } from "../src/tool/application-tools"
 import { ToolRegistry } from "../src/tool/registry"
 
-const fixture = path.join(import.meta.dir, "..", "..", "..", "apps", "orchestra", "test", "fixture", "mcp-omni-stdio.ts")
+const fixture = path.join(import.meta.dir, "fixture", "mcp-omni-stdio.ts")
 
 const it = testEffect(
   AppNodeBuilder.build(
@@ -78,6 +78,11 @@ describe("Mcp", () => {
               })
               expect(yield* status("fixture")).toBe("connected")
               expect((yield* registry.materialize()).definition("fixture_probe")).toBeDefined()
+              expect(yield* mcp.tools()).toEqual({ fixture: ["probe"] })
+              // Config shows only type, command and url: the resolved server and the file's own entry, never its env.
+              const command = [process.execPath, fixture, "probe"]
+              expect(yield* mcp.config()).toEqual({ fixture: { type: "local", command } })
+              expect(yield* mcp.entries()).toEqual({ fixture: { type: "local", command } })
               expect(yield* mcp.resources()).toEqual({
                 resources: [{ server: "fixture", name: "fixture note", uri: "fixture://note", mimeType: "text/plain" }],
                 templates: [{ server: "fixture", name: "fixture notes", uriTemplate: "fixture://note/{id}" }],
@@ -111,6 +116,7 @@ describe("Mcp", () => {
               expect(yield* status("fixture")).toBe("disabled")
               expect((yield* registry.materialize()).definition("fixture_probe")).toBeUndefined()
               expect((yield* mcp.resources()).resources).toEqual([])
+              expect(yield* mcp.tools()).toEqual({})
 
               yield* mcp.add("saved", new ConfigMCP.Local({ type: "local", command: ["bun", "--version"], disabled: true }))
               expect(yield* status("saved")).toBe("disabled")

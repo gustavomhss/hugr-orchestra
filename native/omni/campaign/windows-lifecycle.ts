@@ -4,8 +4,8 @@ import { createServer, type Socket } from "node:net"
 import { spawn } from "node:child_process"
 import os from "node:os"
 import http from "node:http"
-import { PtyOmni } from "../../../packages/core/src/pty/omni.ts"
-import { adoptTree, cli, fakeLLM, identity, matches, members, sleep, table, until, verdict, win } from "./lib.ts"
+import { PtyOmni } from "@orchestra/core/pty/omni"
+import { adoptTree, cli, fakeLLM, identity, matches, members, SERVER_PASSWORD, sleep, table, until, verdict, win } from "./lib.ts"
 import type { Identity, Row, ToolCall } from "./lib.ts"
 import { deliveryEnv } from "./delivery-fixtures.ts"
 import { WindowsInventory } from "./windows-inventory.ts"
@@ -17,7 +17,7 @@ export function backgroundCommand(tree: { command: string; args: string[] }, rel
   return `$ErrorActionPreference='Stop'; $p=Start-Process -FilePath ${quote(tree.command)} -ArgumentList ${quote(args)} -NoNewWindow -PassThru; while (!(Test-Path -LiteralPath ${quote(release)})) { if ($p.HasExited) { throw 'background tree exited before release' }; Start-Sleep -Milliseconds 50 }; exit 0`
 }
 
-export async function consoleHost(env: Record<string, string>, project: string, target: "tui" | "serve" | { attach: string; sessionID: string } = "tui", args: string[] = [], inventory?: Awaited<ReturnType<typeof windowsInventory>>) {
+export async function consoleHost(env: Record<string, string>, project: string, target: "serve" | { attach: string; sessionID: string } = "serve", args: string[] = [], inventory?: Awaited<ReturnType<typeof windowsInventory>>) {
   if (!win || !process.env.CI) throw new Error("Windows lifecycle requires real Windows CI")
   const preparation = performance.now()
   const backend = await PtyOmni.load()
@@ -30,7 +30,7 @@ export async function consoleHost(env: Record<string, string>, project: string, 
     })
   })
   const preparationMs = performance.now() - preparation
-  const terminal = isolatedEnvironment(deliveryEnv(env), () => backend.spawn(cli(), ["--print-logs", "--log-level", "DEBUG", ...(typeof target === "object" ? ["attach", target.attach, "--dir", project, "--session", target.sessionID] : [...(target === "serve" ? ["serve"] : []), "--port", String(port), "--hostname", "127.0.0.1"]), ...args], {
+  const terminal = isolatedEnvironment(deliveryEnv(env), () => backend.spawn(cli(), [...(typeof target === "object" ? ["attach", target.attach, "--dir", project, "--session", target.sessionID] : [...(target === "serve" ? ["serve"] : []), "--port", String(port), "--hostname", "127.0.0.1"]), ...args], {
     // The real session sidebar auto-renders only above 120 columns; attachment proves its session title.
     name: "xterm-256color", cols: typeof target === "object" ? 160 : 120, rows: 40, cwd: project,
     env: { ...deliveryEnv(env), TERM: "xterm-256color", COLUMNS: typeof target === "object" ? "160" : "120", LINES: "40" },
@@ -48,7 +48,7 @@ export async function consoleHost(env: Record<string, string>, project: string, 
     adoptTree(env.ORCHESTRA_TEST_HOME!, env.ORCHESTRA_TEST_HOME!, [captured])
     await until(120_000, "compiled console HTTP readiness", async () => {
       if (state.exit) throw new Error(`console exited before readiness: ${JSON.stringify(state.exit)}; ${state.output.slice(-4000)}`)
-      return fetch(new URL("/global/health", url), { signal: AbortSignal.timeout(2000) })
+      return fetch(new URL("/api/health", url), { headers: { authorization: `Basic ${Buffer.from(`orchestra:${SERVER_PASSWORD}`).toString("base64")}` }, signal: AbortSignal.timeout(2000) })
         .then(async (response) => {
           const body: unknown = await response.json()
           return response.ok && typeof body === "object" && body !== null && "healthy" in body && body.healthy === true ? true : undefined
@@ -178,7 +178,7 @@ export function gracefulEvidence(target: "tui" | "serve", host: Awaited<ReturnTy
     events.every((event) => event.event === "cli.shutdown" && event.level === "DEBUG" && ["SIGINT", "SIGBREAK"].includes(event.signal) && Number.isFinite(event.elapsedMs)) &&
     events[0]!.status === "started" && events[1]!.status === "disposed"
   return { input, exit: host.state.exit, expectedExitCode, events, pass,
-    ...(!pass ? { blocker: "Windows Ctrl+C did not prove runtime disposal; owner required: apps/orchestra/src/cli/effect-cmd.ts (SIGINT/SIGBREAK shutdown handler)" } : {}) }
+    ...(!pass ? { blocker: "Windows Ctrl+C did not prove runtime disposal; owner required: apps/cli/src/commands/handlers/serve.ts (SIGINT/SIGBREAK shutdown handler)" } : {}) }
 }
 
 /** Exact pinned host must still own the console before injecting input. No signals or stop calls here. */

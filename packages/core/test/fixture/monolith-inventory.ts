@@ -4,7 +4,7 @@ import { tmpdir } from "./tmpdir"
 export async function inventoryFixture() {
   const fixture = await tmpdir()
   const files = {
-    "package.json": JSON.stringify({ name: "fixture", workspaces: { packages: ["packages/*", "packages/sdk/js", "packages/omni/bindings/node"] }, patchedDependencies: { "fix@1": "patches/fix.patch" } }),
+    "package.json": JSON.stringify({ name: "fixture", workspaces: { packages: ["packages/*", "packages/sdk/lib", "packages/omni/bindings/node"] }, patchedDependencies: { "fix@1": "patches/fix.patch" } }),
     "bun.lock": "bun fixture lock\n",
     "foundation/atlas/package.json": JSON.stringify({ name: "atlas", workspaces: ["packages/*"] }),
     "foundation/atlas/package-lock.json": "{}\n",
@@ -12,7 +12,7 @@ export async function inventoryFixture() {
     "packages/schema/package.json": JSON.stringify({ name: "@fixture/schema", exports: { ".": "./src/index.ts", "./v1": "./src/v1.ts" }, dependencies: { pinned: "file:./vendor/pinned.tgz" } }),
     "packages/schema/vendor/pinned.tgz": "pinned bytes\n",
     "packages/client/package.json": JSON.stringify({ name: "@fixture/client" }),
-    "packages/sdk/js/package.json": JSON.stringify({ name: "@fixture/sdk" }),
+    "packages/sdk/lib/package.json": JSON.stringify({ name: "@fixture/sdk" }),
     "packages/omni/bindings/node/package.json": JSON.stringify({ name: "binding", type: "commonjs", main: "index.js", types: "index.d.ts" }),
     "packages/omni/Cargo.toml": '[workspace]\nmembers = ["crates/*", "bindings/node"]\n',
     "packages/omni/Cargo.lock": "cargo fixture lock\n",

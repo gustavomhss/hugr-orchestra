@@ -128,7 +128,6 @@ async function mockServers(page: Page) {
     if (directory && directory !== current.directory) return json(route, { name: "InvalidDirectory" }, 500)
     if (url.pathname === "/global/event" || url.pathname === "/event" || url.pathname === "/api/event")
       return sse(route, url.origin === serverB && url.pathname === "/api/event")
-    if (url.pathname === "/global/health") return json(route, {}, 404)
     if (url.pathname === "/api/health") return json(route, { pid: 1, healthy: true })
     if (url.pathname === "/api/session/active") return json(route, { data: {} })
     if (url.pathname === "/api/session") return json(route, { data: [currentSession(current)], cursor: {} })
@@ -194,7 +193,7 @@ function sse(route: Route, busy: boolean) {
     status: 200,
     contentType: "text/event-stream",
     body: busy
-      ? 'data: {"id":"evt_busy","type":"session.status","data":{"sessionID":"ses_server_b","status":{"type":"busy"}}}\n\n'
+      ? 'data: {"id":"evt_busy","type":"session.step.started","data":{"sessionID":"ses_server_b","assistantMessageID":"msg_busy","agent":"build","model":{"id":"model","providerID":"provider"}}}\n\n'
       : ": ok\n\n",
   })
 }

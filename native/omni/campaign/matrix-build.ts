@@ -2,7 +2,7 @@
 import { createHash } from "node:crypto"
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
-import { cli, LOGS, ORCHESTRA, ROOT, win } from "./lib.ts"
+import { cli, CLI_APP, LOGS, ROOT, win } from "./lib.ts"
 
 export const digest = (file: string) => createHash("sha256").update(readFileSync(file)).digest("hex")
 
@@ -23,7 +23,7 @@ export async function prepare() {
   if (!nativeFiles.includes("native/omni/Cargo.lock") || !nativeFiles.some((file) => file.includes("crates/omni-supervisor/src/")))
     throw new Error("native provenance enumeration incomplete")
   const sources = tracked.filter((file) => /^packages\/(core|orchestra|server|protocol|schema|llm)\/(src\/|package\.json$)/.test(file))
-    .concat("bun.lock", "apps/orchestra/script/build.ts", ".github/actions/omni-binaries/action.yml")
+    .concat("bun.lock", "apps/cli/script/build.ts", ".github/actions/omni-binaries/action.yml")
   const sourceHashes = Object.fromEntries(sources.map((file) => [file, digest(path.join(ROOT, file))]))
   const nativeSourceHashes = Object.fromEntries(nativeFiles.map((file) => [file, digest(path.join(ROOT, file))]))
   const nativeSourceDigest = createHash("sha256").update(Buffer.concat(nativeFiles.map((file) => Buffer.from(nativeSourceHashes[file]!, "hex")))).digest("hex")
@@ -40,7 +40,7 @@ export async function prepare() {
   const buildAt = new Date().toISOString()
   process.env.OMNI_ARTIFACTS = path.dirname(artifacts)
   console.log("MATRIX_BUILD_START " + JSON.stringify({ sourceSHA, buildAt, nativeSourceDigest, addonSha256: digest(addon), supervisorSha256: digest(supervisor) }))
-  const build = await command([process.execPath, "script/build.ts", "--single", "--skip-install", "--skip-embed-web-ui"], ORCHESTRA)
+  const build = await command([process.execPath, "script/build.ts", "--single", "--skip-install"], CLI_APP)
   writeFileSync(path.join(LOGS, "matrix-build.log"), build)
   const bin = cli()
   if (digest(path.join(path.dirname(bin), "hugr_omni.node")) !== digest(addon) ||
@@ -69,8 +69,8 @@ export async function prepare() {
     // Absence stays a named red editor capability; never substitute a terminal-shaped fixture.
   }
   console.log("MATRIX_PROVENANCE " + JSON.stringify({ ...provenance, sourceHashes: {
-    "bun.lock": sourceHashes["bun.lock"], "apps/orchestra/src/lsp/client.ts": sourceHashes["apps/orchestra/src/lsp/client.ts"],
-    "apps/orchestra/src/lsp/lsp.ts": sourceHashes["apps/orchestra/src/lsp/lsp.ts"],
+    "bun.lock": sourceHashes["bun.lock"], "packages/core/src/lsp/client.ts": sourceHashes["packages/core/src/lsp/client.ts"],
+    "packages/core/src/lsp/lsp.ts": sourceHashes["packages/core/src/lsp/lsp.ts"],
   }, nativeSourceHashes: undefined, node: actualNode, nodeSha256: digest(actualNode.execPath) }))
   return provenance
 }

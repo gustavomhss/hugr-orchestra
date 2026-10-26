@@ -23,13 +23,13 @@ test("aliases follow captured package identities after a physical workspace move
   await using fixture = await inventoryFixture()
   const aliases = {
     client: { kind: "bun", scope: ".", name: "@fixture/client" },
-    "sdk/js": { kind: "bun", scope: ".", name: "@fixture/sdk" },
+    "sdk/lib": { kind: "bun", scope: ".", name: "@fixture/sdk" },
   } as const
   await mkdir(path.join(fixture.path, "apps"), { recursive: true })
   await rename(path.join(fixture.path, "packages/client"), path.join(fixture.path, "apps/frontend-kit"))
   await Bun.write(path.join(fixture.path, "package.json"), JSON.stringify({
     name: "fixture",
-    workspaces: { packages: ["apps/*", "packages/*", "packages/sdk/js", "packages/omni/bindings/node"] },
+    workspaces: { packages: ["apps/*", "packages/*", "packages/sdk/lib", "packages/omni/bindings/node"] },
     patchedDependencies: { "fix@1": "patches/fix.patch" },
   }))
   const inventory = await monolithInventory(fixture.path)
@@ -37,7 +37,7 @@ test("aliases follow captured package identities after a physical workspace move
   expect(client).toMatchObject({ path: "apps/frontend-kit", manifest: "apps/frontend-kit/package.json" })
   const resolver = ModuleResolver.make(inventory.modules, aliases)
   expect(resolver.resolve("client")).toBe(client)
-  expect(resolver.resolve("sdk/js")).toMatchObject({ path: "packages/sdk/js", manifest: "packages/sdk/js/package.json" })
+  expect(resolver.resolve("sdk/lib")).toMatchObject({ path: "packages/sdk/lib", manifest: "packages/sdk/lib/package.json" })
   expect(() => resolver.resolve("frontend-kit")).toThrow("MODULE_NOT_FOUND")
 })
 

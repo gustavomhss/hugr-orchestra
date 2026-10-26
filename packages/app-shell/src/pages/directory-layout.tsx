@@ -72,19 +72,19 @@ export function DirectoryDataProvider(
             (sdk) => (sessionID: string, artifact: { id: string; revision: number }, cursor?: string, signal?: AbortSignal) => {
               // A retained callback must never continue an old document on a newly selected server.
               if (serverSDK() !== sdk) return Promise.reject(new Error("Research artifact server changed"))
-              return sdk.client.v2.research
+              return sdk.orchestra.research
                 .artifact(
                   {
                     sessionID,
                     artifactID: artifact.id,
-                    revision: String(artifact.revision),
+                    revision: artifact.revision,
                     ...(cursor ? { cursor } : {}),
                   },
-                  { throwOnError: true, signal },
+                  { signal },
                 )
                 .then((response) => {
                   if (serverSDK() !== sdk) throw new Error("Research artifact server changed")
-                  return response.data
+                  return response
                 })
             }
           )(serverSDK())}

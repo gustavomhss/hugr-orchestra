@@ -15,7 +15,7 @@ import { TooltipV2 } from "@orchestra/ui/v2/tooltip-v2"
 import type { VcsFileDiff } from "@/v2-types"
 import type { SnapshotFileDiff } from "@/v2-wire"
 
-import type { FileDiffInfo } from "@/v2-legacy"
+import type { FileDiffInfo } from "@/session-types"
 import { useDialog } from "@orchestra/ui/context/dialog"
 
 import { normalizeFileTreeV2Path } from "@/components/file-tree-v2-model"

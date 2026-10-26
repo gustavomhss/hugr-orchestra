@@ -131,7 +131,7 @@ Run 4 totals: ubuntu 88 PASS / 1 FAIL, macOS 87 / 1, each Windows job 84 PASS / 
 Start: the host execs `hugr-omni-supervisor` lazily on its first spawn. Unix: `socketpair(AF_UNIX, SOCK_STREAM)`
 (CLOEXEC; SO_NOSIGPIPE / MSG_NOSIGNAL), supervisor end on its fd 0, own process group (`process_group(0)`, so a
 terminal Ctrl-C to the host's job does not reach it), args `--host-pid P --grace-ms G`. The supervisor closes every
-inherited fd ≥ 3, ignores SIGPIPE/SIGINT/SIGHUP, installs its SIGCHLD handler (replacing an inherited SIG_IGN), arms
+inherited fd ≥ 3, ignores SIGPIPE/SIGINT/SIGHUP/SIGTERM (a host that is itself a tree of an outer supervisor shares its session with this one; the outer graceful step must leave it alive to stop the trees the host started), installs its SIGCHLD handler (replacing an inherited SIG_IGN), arms
 host-death detection (Linux `pidfd_open(P)`, macOS kqueue `NOTE_EXIT`, both + `getppid()` polling), checks
 `getppid()==P`, then sends `Ready`. Windows: two anonymous pipes (supervisor stdin = requests, stdout = replies),
 `CreateProcessW` with `PROC_THREAD_ATTRIBUTE_HANDLE_LIST` = {2 pipe ends, an inheritable SYNCHRONIZE handle to the

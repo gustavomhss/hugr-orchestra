@@ -41,7 +41,7 @@ https://models.dev
 
 ### Running against a different directory
 
-By default, `bun dev` runs Orchestra in the `apps/orchestra` directory. To run it against a different directory or repository:
+By default, `bun dev` runs Orchestra in the `apps/cli` directory. To run it against a different directory or repository:
 
 ```bash
 bun dev <directory>
@@ -58,19 +58,20 @@ bun dev .
 To compile a standalone executable:
 
 ```bash
-./apps/orchestra/script/build.ts --single
+./apps/cli/script/build.ts --single
 ```
 
 Then run it with:
 
 ```bash
-./apps/orchestra/dist/orchestra-<platform>/bin/orchestra
+./apps/cli/dist/cli-<platform>/bin/orchestra
 ```
 
 Replace `<platform>` with your platform (e.g., `darwin-arm64`, `linux-x64`).
 
 - Core pieces:
-  - `apps/orchestra`: Orchestra core business logic & server.
+  - `apps/cli`: The Orchestra executable, daemon and command handlers.
+  - `packages/core`: Orchestra core business logic.
   - `packages/tui`: The TUI code, written in SolidJS with [opentui](https://github.com/sst/opentui)
   - `packages/app-shell`: The shared web UI components, written in SolidJS
   - `apps/web`: The browser bootstrap and development server
@@ -140,7 +141,7 @@ bun run --cwd apps/desktop package
 ```
 
 > [!NOTE]
-> After changing the public Protocol or Server `HttpApi`, run `bun run generate` from `packages/client`; do not edit `src/generated` or `src/generated-effect` by hand. The legacy JavaScript SDK is rebuilt separately with `./packages/sdk/js/script/build.ts`. [AGENTS.md](./AGENTS.md) is the reference for both commands, and CI runs `check:generated`, so a stale generated file fails the build.
+> After changing the public Protocol or Server `HttpApi`, run `bun run generate` from `packages/client`; do not edit `src/generated` or `src/generated-effect` by hand. [AGENTS.md](./AGENTS.md) is the reference for the command, and CI runs `check:generated`, so a stale generated file fails the build.
 
 > [!NOTE]
 > The repository ships no enforced commit hooks: `.husky` only holds what `husky` installs, so nothing runs on commit. Run the checks yourself before pushing.
@@ -159,9 +160,9 @@ Caveats:
 - If you want to run the Orchestra TUI and have breakpoints triggered in the server code, you might need to run `bun dev spawn` instead of
   the usual `bun dev`. This is because `bun dev` runs the server in a worker thread and breakpoints might not work there.
 - If `spawn` does not work for you, you can debug the server separately:
-  - Debug server: `bun run --inspect=ws://localhost:6499/ --cwd apps/orchestra ./src/index.ts serve --port 4096`,
+  - Debug server: `bun run --inspect=ws://localhost:6499/ --cwd apps/cli ./src/index.ts serve --port 4096`,
     then attach TUI with `orchestra attach http://localhost:4096`
-  - Debug TUI: `bun run --inspect=ws://localhost:6499/ --cwd apps/orchestra ./src/index.ts`
+  - Debug TUI: `bun run --inspect=ws://localhost:6499/ --cwd apps/cli ./src/index.ts`
 
 Other tips and tricks:
 

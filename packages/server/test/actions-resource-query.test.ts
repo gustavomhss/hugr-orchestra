@@ -7,7 +7,7 @@ import { ActionsApiError } from "@orchestra/protocol/groups/actions-common"
 import { Actions } from "@orchestra/schema/actions"
 import { Location } from "@orchestra/schema/location"
 import { Effect, Schema } from "effect"
-import { expectSpawn } from "../../core/test/fixture/omni-expect"
+import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { github, httpFixture, it, runID, workspaceID } from "./actions-http-fixture"
 
 const create = { remote: "origin", provider: github, projectPath: "acme/widgets" }

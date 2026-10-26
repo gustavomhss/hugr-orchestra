@@ -2,7 +2,7 @@ id = "migration-add-required-column"
 group = "dependencies"
 severity = "warn"
 on = "added-lines"
-paths = ["apps/orchestra/migration/**/*.sql", "packages/core/src/database/migration/**/*.ts"]
+paths = ["packages/core/src/database/migration/**/*.ts"]
 exclude = []
 # A DEFAULT anywhere on the line clears it; in a TS migration the identifiers carry escaped backticks.
 flags = "i"

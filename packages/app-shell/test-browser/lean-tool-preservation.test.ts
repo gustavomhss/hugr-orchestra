@@ -43,7 +43,7 @@ if (process.env.LEAN_WRAPPER_DOM !== "1") {
   function mount(current: ToolPart) {
     const host = document.createElement("div")
     document.body.append(host)
-    const data = { session: [session], message: { session: [message] }, part: { message: [current] }, session_status: {}, session_diff: {} }
+    const data = { session: [session], message: { session: [message] }, part: { message: [current] }, session_status: {} }
     const dispose = render(() => createComponent(PlatformProvider, {
       value: { platform: "web", openExternal() {}, async restart() {}, async notify() {} }, get children() {
         return createComponent(LanguageProvider, { locale: "en", get children() {

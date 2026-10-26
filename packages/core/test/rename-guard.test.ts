@@ -30,7 +30,6 @@ describe("rename guard", () => {
   test("shell relocation preserves upstream and fixture protections without exempting product copy", () => {
     for (const directory of ["packages/app", "packages/app-shell"]) {
       expect(kept(`${directory}/src/i18n/branding.test.ts`)).toBe(true)
-      expect(oldNames(`${directory}/src/context/sdk.ts`, 'import { OpenCodeClient } from "@opencode-ai/client"')).toEqual([])
       expect(oldNames(`${directory}/src/context/sdk.ts`, 'const name = "OpenCode"')).toEqual([
         `${directory}/src/context/sdk.ts:1: const name = "OpenCode"`,
       ])
@@ -84,9 +83,5 @@ describe("rename guard", () => {
     expect(oldNames("packages/x/src/a.ts", 'Bun.file("./fixtures/opencode-v2-openapi.json")')).toEqual([
       'packages/x/src/a.ts:1: Bun.file("./fixtures/opencode-v2-openapi.json")',
     ])
-  })
-
-  test("recorded HTTP cassettes stay covered by a kept path", () => {
-    expect(keptPaths.find((entry) => entry.path.test("apps/orchestra/test/fixtures/recordings/session/native-zen-tool-loop.json"))).toBeDefined()
   })
 })

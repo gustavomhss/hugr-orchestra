@@ -675,6 +675,36 @@ export namespace Task {
     },
   })
   export type Bound = typeof Bound.Type
+
+  // What a Task call added to the prompt it admits into its child (`promptID`), recorded before the prompt so every
+  // exact retry admits the same text: the dispatch call that resumed the child (`resumeRef`, the earlier runtime's resume marker) and a
+  // native Atlas seat's resume admission (the earlier runtime's admission part metadata). The event ID is derived from the child and the
+  // prompt, so one prompt records at most one. Durable only, not public.
+  export const ResumeAdmitted = Event.define({
+    type: "maestro.task.resume_admitted",
+    durable: { version: 1, aggregate: "executionSessionID" },
+    schema: {
+      executionSessionID: Schema.NonEmptyString,
+      promptID: Schema.NonEmptyString,
+      resumeRef: optional(Schema.NonEmptyString),
+      atlasResume: optional(
+        Schema.Struct({
+          schema: Schema.Literal("atlas-resume-admission-v1"),
+          key: Schema.Struct({
+            projectID: Schema.String,
+            memoryOwner: Schema.String,
+            logicalResumeID: Schema.String,
+            kind: Schema.Literals(["task", "pr"]),
+            id: Schema.String,
+          }),
+          residency: Schema.Literal("admitted"),
+          verdict: Schema.Struct({ ok: Schema.Boolean, ref: optional(Schema.Unknown), refusal: optional(Schema.String) }),
+          text: Schema.String,
+        }),
+      ),
+    },
+  })
+  export type ResumeAdmitted = typeof ResumeAdmitted.Type
 }
 
 export namespace WorkResult {
@@ -735,4 +765,4 @@ export const Definitions = Event.inventory(
 
 /** Maestro events stored and replayed by the host but never part of the public event surface. */
 export const DurableOnlyDefinitions = Event.inventory(Task.WorkflowReviewHeld, Task.WorkflowRebound,
-  Task.WorkflowReviewFindings)
+  Task.WorkflowReviewFindings, Task.ResumeAdmitted)

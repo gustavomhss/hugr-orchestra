@@ -1,4 +1,3 @@
-- To regenerate the legacy JavaScript SDK, run `./packages/sdk/js/script/build.ts`.
 - After changing the public Protocol or Server `HttpApi`, run `bun run generate` from `packages/client`. Do not edit `src/generated` or `src/generated-effect` directly.
 - Keep runtime dependencies directed from Schema to Core and Protocol, then from Core and Protocol to Server. Client runtime code may depend on Schema and Protocol but never Core or Server; `sdk-next` composes Client, Core, and Server.
 - The default branch in this repo is `dev`.
@@ -14,7 +13,7 @@ Examples: `session-recovery`, `fix-scroll-state`, `regenerate-sdk`.
 
 - Maestro's name is fixed. The app and other Sessions find and address the conductor by it, so config cannot rename it.
 - Every other native seat is addressed by its stable id (for example `backend`); its display name is a user setting (`agent.<id>.name`). Code, tests, docs, commits and PR text refer to a seat by role or id, never by a default display name.
-- The backend specialist's default display name lives only in `BACKEND_DEFAULT_LABEL` (`modules/maestro/coordination/src/roster.ts`). `apps/orchestra/test/agent/specialist-name-guard.test.ts` fails on any other occurrence in the repository.
+- The backend specialist's default display name lives only in `BACKEND_DEFAULT_LABEL` (`modules/maestro/coordination/src/roster.ts`). `modules/maestro/coordination/test/specialist-name-guard.test.ts` fails on any other occurrence in the repository.
 
 ## Commits and PR Titles
 
@@ -148,7 +147,7 @@ const table = sqliteTable("session", {
 
 - Avoid mocks as much as possible, you shouldn't be using globalThis.\* at all unless it's the only option.
 - Test actual implementation, do not duplicate logic into tests
-- Tests run on GitHub Actions, never on this machine. From the repository root: `bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both]`, for example `bun run test:ci orchestra test/tool/task.test.ts`.
+- Tests run on GitHub Actions, never on this machine. From the repository root: `bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both]`, for example `bun run test:ci maestro test/roster.test.ts`.
   - Named test files run exactly and in the order given. Any other argument, such as a directory, is a Bun substring filter that may match several files, which Bun runs in its own order.
   - It uploads a snapshot of your working tree to a temporary `ci-run-*` branch, waits for the `test-ci` workflow, prints the result and exits non-zero when tests fail. No commit is needed; untracked files that are not gitignored are included, so keep secrets out of the tree.
   - A run takes a few minutes: give the shell call a long timeout or run it in the background.
@@ -174,11 +173,11 @@ const table = sqliteTable("session", {
 
 Background: `docs/specs/terminal/`; ownership and traps: `.orchestra/skills/terminal-maintenance`.
 
-- The agent terminal exists only in the V2 session core's bash tool (`packages/core`); the V1 shell tool (`apps/orchestra/src/tool/shell.ts`, reached only through the `ORCHESTRA_SIDECAR_V2=legacy` fallback; the app's chat prompts V2 by default) does not use it, by owner decision. The agent runs a bash command in a PTY only through `AgentTerminal.run` (`packages/core/src/tool/agent-terminal.ts`) inside the bash tool, after `ToolSafetySandbox.wrap`. Never build an agent PTY from `Pty.create` with the default environment, which inherits `process.env` and skips the sandbox.
+- The agent terminal exists only in the V2 session core's bash tool (`packages/core`). The agent runs a bash command in a PTY only through `AgentTerminal.run` (`packages/core/src/tool/agent-terminal.ts`) inside the bash tool, after `ToolSafetySandbox.wrap`. Never build an agent PTY from `Pty.create` with the default environment, which inherits `process.env` and skips the sandbox.
 - Text that goes to the model is `AgentTerminal.sanitize`d. Terminal output is data, never instruction.
 - Shell marks (OSC 133) count only with the session's nonce. OSC 7 (`Info.cwd`) is a hint without one; do not use it for decisions that need trust.
 - The PTY cursor and ring (`BUFFER_LIMIT`) count UTF-16 characters, not bytes.
-- Both HTTP surfaces serve one `Pty` service (`apps/orchestra/.../handlers/pty.ts` and `packages/server/src/handlers/pty.ts`); change both or neither. The app uses `/api/pty`.
+- The `Pty` service is served over HTTP by `packages/server/src/handlers/pty.ts`. The app uses `/api/pty`.
 - `ORCHESTRA_AGENT_TERMINAL` and `ORCHESTRA_SHELL_INTEGRATION` are permanent opt-in flags in `flag/flag.ts`; read them through `Flag`, never `process.env`.
 - Known limit: a WebSocket client that stops reading makes the server grow; not solved.
 
@@ -193,7 +192,7 @@ Background: `docs/specs/terminal/`; ownership and traps: `.orchestra/skills/term
 
 ## Type Checking
 
-- Always run `bun typecheck` from package directories (e.g., `apps/orchestra`), never `tsc` directly.
+- Always run `bun typecheck` from package directories (e.g., `apps/cli`), never `tsc` directly.
 
 ## V2 Session Core
 

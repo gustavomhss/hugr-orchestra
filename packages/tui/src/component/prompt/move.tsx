@@ -33,26 +33,23 @@ export function usePromptMove(input: { projectID: () => string | undefined; sess
     setCreating(true)
     setProgress("Creating copy")
     try {
-      const generated = await sdk.client.experimental.projectCopy.generateName(
-        { projectID, context },
-        { throwOnError: true },
-      )
-      const result = await sdk.client.v2.projectCopy.create(
-        {
+      const generated = await sdk.api.projectCopies.generateName({
+        projectID,
+        location: { directory: sdk.directory },
+        context,
+      })
+      const directory = await sdk.api.projectCopies
+        .create({
           projectID,
           location: { directory: sdk.directory },
           strategy: "git_worktree",
           directory: path.join(paths.worktree, projectID.slice(0, 6)),
-          name: generated.data.name,
-        },
-        { throwOnError: true },
-      )
-      const directory = result.data?.directory
-      if (!directory) throw new Error("No project copy directory returned")
+          name: generated.name,
+        })
+        .then((result) => result.directory)
 
-      // Call a location-based route to make sure it's bootstrapped
-      // before moving on
-      await sdk.client.path.get({ directory }, { throwOnError: true })
+      // Resolve the Location once so it is bootstrapped before moving on.
+      await sdk.api.location.get({ location: { directory } })
 
       setProgress("Creating session")
       return directory
@@ -78,8 +75,8 @@ export function usePromptMove(input: { projectID: () => string | undefined; sess
           (session
             ? {
                 type: "directory",
-                directory: session.directory,
-                subdirectory: !!session.path,
+                directory: session.location.directory,
+                subdirectory: !!session.subpath,
               }
             : {
                 type: "directory",
@@ -105,19 +102,22 @@ export function usePromptMove(input: { projectID: () => string | undefined; sess
     const session = sync.session.get(sessionID)
     const messages = (sync.data.message[sessionID] ?? [])
       .slice(-6)
-      .map((message) =>
-        [
-          message.role + ":",
-          ...(sync.data.part[message.id] ?? []).flatMap((part) => (part.type === "text" ? [part.text] : [])),
-        ].join(" "),
-      )
+      .flatMap((message) => {
+        if (message.type === "user") return [`user: ${message.text}`]
+        if (message.type !== "assistant") return []
+        return [
+          ["assistant:", ...message.content.flatMap((part) => (part.type === "text" ? [part.text] : []))].join(" "),
+        ]
+      })
     return [session?.title, ...messages].filter(Boolean).join("\n") || undefined
   }
 
   async function moveExistingSession(sessionID: string, selection: MoveSessionSelection) {
     const session = sync.session.get(sessionID)
-    const status = await sdk.client.vcs.status({ directory: session?.directory }).catch(() => undefined)
-    const choice = status?.data?.length ? await DialogWorkspaceFileChanges.show(dialog, status.data) : "no"
+    const status = session
+      ? await sdk.api.vcs.status({ location: { directory: session.location.directory } }).catch(() => undefined)
+      : undefined
+    const choice = status?.data.length ? await DialogWorkspaceFileChanges.show(dialog, status.data) : "no"
     if (!choice) return
     dialog.clear()
     const directory = selection.type === "new" ? await create(sessionContext(sessionID)) : selection.directory
@@ -128,27 +128,9 @@ export function usePromptMove(input: { projectID: () => string | undefined; sess
     }
     setProgress("Moving session")
     try {
-      await sdk.client.experimental.controlPlane.moveSession(
-        {
-          sessionID,
-          destination: { directory },
-          moveChanges: choice === "yes",
-        },
-        { throwOnError: true },
-      )
-      await sdk.client.session
-        .promptAsync({
-          sessionID,
-          directory,
-          noReply: true,
-          parts: [
-            {
-              type: "text",
-              text: moveReminderText(directory),
-              synthetic: true,
-            },
-          ],
-        })
+      await sdk.api.sessions.move({ sessionID, location: { directory }, moveChanges: choice === "yes" })
+      await sdk.api.sessions
+        .synthetic({ sessionID, text: moveReminderText(directory), resume: false })
         .catch(() => undefined)
       dialog.clear()
     } catch (error) {

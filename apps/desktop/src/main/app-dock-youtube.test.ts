@@ -1,11 +1,9 @@
 import { spawn } from "node:child_process"
 import { mkdir, mkdtemp, copyFile, rm, access, readFile, writeFile } from "node:fs/promises"
-import { createServer as createNetServer } from "node:net"
 import { tmpdir } from "node:os"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { createRequire } from "node:module"
-import { randomUUID } from "node:crypto"
 
 type Case = { id: string; status: "pass"; detail: string }
 const required = ["Y01", "Y02", "Y03", "Y04"]
@@ -28,16 +26,6 @@ const skipReason = (): string | null => {
   return null
 }
 
-async function freePort() {
-  const server = createNetServer()
-  await new Promise<void>((ready) => server.listen(0, "127.0.0.1", () => ready()))
-  const address = server.address()
-  if (!address || typeof address === "string") throw new Error("fixture did not bind")
-  const port = address.port
-  await new Promise<void>((done) => server.close(() => done()))
-  return port
-}
-
 const isRecord = (value: unknown): value is Record<string, unknown> => !!value && typeof value === "object"
 
 const collect = (value: unknown, predicate: (node: Record<string, unknown>) => boolean, out: Record<string, unknown>[] = []) => {
@@ -57,12 +45,13 @@ async function child() {
   const { app, BrowserWindow } = electron
   const { createAppDock } = await import("./app-dock")
   const { handleDockRPC, registerAppDockBridge, registerAppDockWindow } = await import("./app-dock-rpc")
-  const { spawnLocalServer } = await import("./server")
+  const { startDockChannel } = await import("./dock-channel")
+  const { startOwnedServe } = await import("./owned-serve")
+  const { resolveCliBinary } = await import("./background-cli")
+  const { sidecarLaunchEnv } = await import("./server")
   if (!process.versions.electron) throw new Error("Electron child not started")
   app.commandLine.appendSwitch("ignore-certificate-errors")
   await app.whenReady()
-  const port = await freePort()
-  const password = randomUUID()
   const userDataPath = await mkdtemp(join(tmpdir(), "app-dock-youtube-userdata-"))
   const rawModel = process.env.APP_DOCK_YOUTUBE_MODEL
   check(typeof rawModel === "string", "APP_DOCK_YOUTUBE_MODEL must be provider/model")
@@ -83,92 +72,64 @@ async function child() {
   const win = new BrowserWindow({ width: 900, height: 700, show: true })
   win.show()
   registerAppDockWindow(win)
-  const sidecarPath = process.env.APP_DOCK_SIDECAR
-  check(sidecarPath, "APP_DOCK_SIDECAR not propagated to child")
-  const server = await spawnLocalServer("127.0.0.1", port, password, {
-    userDataPath,
-    sidecarPath,
-    onStderr: (message) => console.error(`SIDECAR: ${message}`),
-    onStdout: (message) => console.error(`SIDECAR-OUT: ${message}`),
-    onMessage: handleDockRPC,
-  })
+  // The V2 shape: main's Dock handlers sit behind the Dock channel, and the owned `orchestra serve` child dials it.
+  const logger = { log: () => {}, error: (message: string) => console.error(`SERVE: ${message}`) }
+  const dock = await startDockChannel({ onMessage: handleDockRPC })
+  const owned = await Promise.all([resolveCliBinary(logger), sidecarLaunchEnv(userDataPath)]).then(([binary, env]) =>
+    startOwnedServe({
+      logger,
+      command: [binary],
+      env: { ...env, ...dock.env },
+      write: (_stream, message) => console.error(`SERVE: ${message}`),
+    }),
+  )
   let outcome = 1
   try {
-    await server.health.wait
-    const url = `http://127.0.0.1:${port}`
-    const auth = Buffer.from(`orchestra:${password}`).toString("base64")
-    const headers = { authorization: `Basic ${auth}`, "content-type": "application/json" }
-    const query = `directory=${encodeURIComponent(userDataPath)}`
+    await owned.health.wait
+    const headers = {
+      authorization: `Basic ${Buffer.from(`${owned.username}:${owned.password}`).toString("base64")}`,
+      "content-type": "application/json",
+    }
+    const api = async (path: string, init: { method?: string; body?: unknown; timeout?: number } = {}) => {
+      const response = await fetch(`${owned.url}/api/session${path}`, {
+        method: init.method ?? "GET",
+        headers,
+        ...(init.body === undefined ? {} : { body: JSON.stringify(init.body) }),
+        signal: AbortSignal.timeout(init.timeout ?? 30_000),
+      })
+      const text = await response.text()
+      check(response.ok, `${init.method ?? "GET"} /api/session${path} failed with ${response.status}: ${text.slice(0, 300)}`)
+      return text ? (JSON.parse(text) as unknown) : undefined
+    }
 
-    const createResponse = await fetch(`${url}/session?${query}`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({}),
-      signal: AbortSignal.timeout(30_000),
-    })
-    check(createResponse.ok, `session create failed with ${createResponse.status}`)
-    const session: unknown = await createResponse.json()
-    check(!!session && typeof session === "object" && "id" in session, "session create returned no id")
-    const sessionID = session.id
-    check(typeof sessionID === "string" && sessionID.length > 0, "session create returned no id")
-    pass("Y01", "real sidecar created a live session")
+    const created = await api("", { method: "POST", body: { location: { directory: userDataPath } } })
+    check(isRecord(created) && isRecord(created.data) && typeof created.data.id === "string", "session create returned no id")
+    const sessionID = created.data.id
+    pass("Y01", "owned V2 serve created a live session")
+
+    await api(`/${sessionID}/model`, { method: "POST", body: { model: { providerID, id: modelID, variant: process.env.APP_DOCK_YOUTUBE_VARIANT } } })
+    pass("Y02", "live model selected on the session; dock_* tools are checked by the tool calls in Y03")
 
     const promptText =
-      "Your first action MUST be a dock_open tool call. Never answer from memory. Use only the dock_open, dock_read and dock_click tools. Open https://www.youtube.com/results?search_query=orchestra, read the page, click the first video result, then reply with that video's title. Do nothing else."
-    const toolListResponse = await fetch(
-      `${url}/experimental/tool?provider=${encodeURIComponent(providerID)}&model=${encodeURIComponent(modelID)}&${query}`,
-      { headers, signal: AbortSignal.timeout(30_000) },
-    )
-    check(toolListResponse.ok, `session tool list failed with ${toolListResponse.status}`)
-    const toolList: unknown = await toolListResponse.json()
-    check(
-      Array.isArray(toolList) &&
-        toolList.some((tool) => !!tool && typeof tool === "object" && "id" in tool && tool.id === "dock_open"),
-      "dock_open missing from session tool list for live model",
-    )
-    pass("Y02", "dock_* tools visible in session tool list for live model")
+      "Your first action MUST be a dock_open tool call. Never answer from memory. Use only the dock_open, dock_read and dock_click tools. Open https://www.youtube.com/results?search_query=orchestra, read the page, click the first video result, then reply with that video's title. Do nothing else. You control a live browser through tools and have no browsing knowledge after training: answering from memory is forbidden and scored as failure."
+    await api(`/${sessionID}/prompt`, { method: "POST", body: { prompt: { text: promptText, files: [] } } })
+    await api(`/${sessionID}/wait`, { method: "POST", timeout: 300_000 })
 
-    const promptResponse = await fetch(`${url}/session/${sessionID}/message?${query}`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        model: { providerID, modelID },
-        ...(process.env.APP_DOCK_YOUTUBE_VARIANT ? { variant: process.env.APP_DOCK_YOUTUBE_VARIANT } : {}),
-        system:
-          "You control a live browser through tools. You have no browsing knowledge after training. " +
-          "For ANY question about live web content you MUST call tools and read results before answering. " +
-          "Answering from memory is forbidden and will be scored as failure.",
-        parts: [{ type: "text", text: promptText }],
-      }),
-      signal: AbortSignal.timeout(300_000),
-    })
-    if (!promptResponse.ok) {
-      const messagesResponse = await fetch(`${url}/session/${sessionID}/message?${query}`, {
-        headers,
-        signal: AbortSignal.timeout(30_000),
-      })
-      const messagesBody = await messagesResponse.text()
-      throw new Error(
-        `session prompt failed with ${promptResponse.status}: ${(await promptResponse.text()).slice(0, 300)} | messages: ${messagesBody.slice(0, 800)}`,
-      )
-    }
-    const turn = await promptResponse.json()
-
-    console.error(`TURN-HEAD: ${JSON.stringify(turn).slice(0, 1500)}`)
-    const turnErrors = collect(turn, (node) => !!node.error).map((node) => JSON.stringify(node.error).slice(0, 300))
-    const toolCalls = collect(turn, (node) => node.type === "tool" && typeof node.tool === "string" && node.tool.startsWith("dock_"))
-    const allTools = collect(turn, (node) => node.type === "tool" && typeof node.tool === "string").map((node) => String(node.tool))
-    const modelTexts = collect(turn, (node) => node.type === "text" && typeof node.text === "string")
+    const history = await api(`/${sessionID}/history?after=0&limit=1000`)
+    console.error(`HISTORY-HEAD: ${JSON.stringify(history).slice(0, 1500)}`)
+    const turnErrors = collect(history, (node) => typeof node.type === "string" && node.type.endsWith(".failed")).map((node) => JSON.stringify(node).slice(0, 300))
+    const toolCalls = collect(history, (node) => node.type === "session.next.tool.called" && isRecord(node.data) && typeof node.data.tool === "string" && node.data.tool.startsWith("dock_"))
+    const allTools = collect(history, (node) => node.type === "session.next.tool.called").map((node) => JSON.stringify(node.data).slice(0, 80))
+    const modelTexts = collect(history, (node) => node.type === "session.next.text.ended" && isRecord(node.data) && typeof node.data.text === "string")
     const lastNode = modelTexts.length > 0 ? modelTexts[modelTexts.length - 1] : undefined
-    const lastText = !!lastNode && typeof lastNode.text === "string" ? lastNode.text : ""
+    const lastText = isRecord(lastNode?.data) && typeof lastNode.data.text === "string" ? lastNode.data.text : ""
     check(
       toolCalls.length > 0,
-      `live model turn invoked no dock_* tools (tools used: ${JSON.stringify(allTools.slice(0, 10))}; text: ${JSON.stringify(lastText.slice(0, 200))}; errors: ${JSON.stringify(turnErrors.slice(0, 2))})`,
+      `live model turn invoked no dock_* tools (calls: ${JSON.stringify(allTools.slice(0, 10))}; text: ${JSON.stringify(lastText.slice(0, 200))}; errors: ${JSON.stringify(turnErrors.slice(0, 2))})`,
     )
     pass("Y03", "live model invoked dock_* tools against YouTube")
 
-    const texts = collect(turn, (node) => node.type === "text" && typeof node.text === "string" && node.text.trim().length > 10)
-    check(texts.length > 0, "live model turn produced no final text")
+    check(lastText.trim().length > 10, "live model turn produced no final text")
     pass("Y04", "live model reported back with text")
 
     outcome = cases.length === required.length && required.every((id) => cases.some((item: Case) => item.id === id)) ? 0 : 1
@@ -176,7 +137,8 @@ async function child() {
     const report = { version: 1, cases }
     await mkdir(dirname(artifact), { recursive: true })
     await writeFile(artifact, JSON.stringify(report, null, 2))
-    await server.listener.stop()
+    await owned.listener.stop()
+    await dock.close()
     win.destroy()
     app.exit(outcome)
   }
@@ -204,8 +166,7 @@ async function parent() {
     check(result.success && result.outputs?.[0], "bundle failed")
     const built = result.outputs![0].path
     await access(built)
-    const sidecar = join(outMain, "sidecar.js")
-    await access(sidecar)
+    await mkdir(outMain, { recursive: true })
     const hosted = join(outMain, "app-dock-youtube.test.cjs")
     await copyFile(built, hosted)
     const electronModule = createRequire(join(process.cwd(), "package.json")).resolve("electron")
@@ -214,7 +175,6 @@ async function parent() {
     const env = {
       ...process.env,
       APP_DOCK_ARTIFACT_ROOT: root,
-      APP_DOCK_SIDECAR: sidecar,
       ELECTRON_DISABLE_SECURITY_WARNINGS: "true",
     }
     await rm(artifact, { force: true })

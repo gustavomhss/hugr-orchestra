@@ -83,25 +83,25 @@ test("uses the current server default model", () => {
   })
 })
 
-test("does not use legacy config when the current server has no default", () => {
+test("does not use the configured model when the server reports no default", () => {
   expect(resolveDefaultModel(null, "anthropic/claude")).toBeUndefined()
 })
 
-test("uses config for legacy servers", () => {
+test("uses the configured model while the catalog reports no default", () => {
   expect(resolveDefaultModel(undefined, "anthropic/claude")).toEqual({
     providerID: "anthropic",
     modelID: "claude",
   })
 })
 
-test("preserves nested model IDs in legacy defaults", () => {
+test("preserves nested model IDs in configured defaults", () => {
   expect(resolveDefaultModel(undefined, "openrouter/meta-llama/llama-3.3-70b-instruct:free")).toEqual({
     providerID: "openrouter",
     modelID: "meta-llama/llama-3.3-70b-instruct:free",
   })
 })
 
-test("ignores incomplete legacy defaults", () => {
+test("ignores incomplete configured defaults", () => {
   for (const value of ["openrouter", "/model", "openrouter/", ""]) {
     expect(resolveDefaultModel(undefined, value)).toBeUndefined()
   }

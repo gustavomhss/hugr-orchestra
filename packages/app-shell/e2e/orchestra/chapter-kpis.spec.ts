@@ -574,7 +574,6 @@ async function setup(
 ) {
   await page.clock.setFixedTime(now)
   await mockOrchestraServer(page, {
-    protocol: "v2",
     directory,
     project,
     sessions: records,
@@ -654,7 +653,6 @@ async function setup(
       return json(route, located(gitFor(Number(url.searchParams.get("since")), mode)))
     }
     if (url.origin !== serverB) return route.fallback()
-    if (url.pathname === "/global/health") return json(route, {}, 404)
     if (url.pathname === "/api/health") return json(route, { healthy: true, pid: 2 })
     if (["/api/event", "/event", "/global/event"].includes(url.pathname))
       return route.fulfill({ status: 200, contentType: "text/event-stream", body: ": ok\n\n" })

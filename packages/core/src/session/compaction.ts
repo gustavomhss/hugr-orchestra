@@ -1,15 +1,18 @@
 export * as SessionCompaction from "./compaction"
 
-import { LLM, LLMError, LLMEvent, Message, type LLMRequest, type Model } from "@orchestra/llm"
-import { DateTime, Effect, Stream } from "effect"
-import type { Config } from "../config"
-import type { EventV2 } from "../event"
+import { LLM, LLMClient, LLMError, LLMEvent, Message, type LLMRequest, type Model } from "@orchestra/llm"
+import { Context, DateTime, Effect, Layer, Stream } from "effect"
+import { Config } from "../config"
+import { makeLocationNode } from "../effect/app-node"
+import { llmClient } from "../effect/app-node-platform"
+import { EventV2 } from "../event"
 import { SessionEvent } from "./event"
 import { SessionMessage } from "./message"
 import { SessionSchema } from "./schema"
 import { Token } from "../util/token"
 import { SessionSubagentModels } from "./subagent-models"
 import { SessionRunnerModel } from "./runner/model"
+import type { ModelV2 } from "../model"
 
 const DEFAULT_BUFFER = 20_000
 const DEFAULT_KEEP_TOKENS = 8_000
@@ -56,7 +59,7 @@ When combining:
 - If a blocker has been resolved, update the summary to reflect that while keeping any details still needed to continue the work.
 - Update "Objective" and "Next Move" to reflect the current work state.`
 
-type Entry = {
+export type Entry = {
   readonly seq: number
   readonly message: SessionMessage.Message
 }
@@ -76,11 +79,25 @@ type Dependencies = {
   readonly subagentModels: SessionSubagentModels.Interface
 }
 
-type Input = {
+export type Input = {
   readonly sessionID: SessionSchema.ID
   readonly entries: readonly Entry[]
   readonly model: Model
   readonly request: LLMRequest
+}
+
+/**
+ * The prompt budget before compaction: the context window less the output reserve. A provider-stated `input` limit is a
+ * hard cap on the prompt itself and wins when it is the smaller (the earlier runtime's `usable`), less the buffer so the next step fits.
+ */
+export const usable = (
+  limits: { readonly input?: number } | undefined,
+  context: number,
+  output: number,
+  buffer: number,
+) => {
+  const window = context - Math.max(output, buffer)
+  return limits?.input !== undefined && limits.input > 0 ? Math.min(window, limits.input - buffer) : window
 }
 
 const estimate = (value: unknown) => Token.estimate(JSON.stringify(value))
@@ -252,7 +269,7 @@ export const make = (dependencies: Dependencies) => {
     const output = input.request.generation?.maxTokens ?? input.model.route.defaults.limits?.output ?? 0
     if (
       estimate({ system: input.request.system, messages: input.request.messages, tools: input.request.tools }) <=
-      context - Math.max(output, config.buffer)
+      usable(input.model.route.defaults.limits, context, output, config.buffer)
     )
       return false
     return yield* compactAfterOverflow(input)
@@ -263,3 +280,51 @@ export const make = (dependencies: Dependencies) => {
     compactAfterOverflow,
   }
 }
+
+/**
+ * Location-scoped compaction. A replacement keeps the summarizing hooks and may reshape what one provider turn sees
+ * (`transform`) or react to the usage a settled step reports (`afterStep`); neither may record Session events
+ * outside the summary events or fail the turn.
+ */
+export interface Interface {
+  readonly compact: (input: Input) => Effect.Effect<boolean, SessionSubagentModels.Error>
+  readonly compactIfNeeded: (input: Input) => Effect.Effect<boolean, SessionSubagentModels.Error>
+  readonly compactAfterOverflow: (input: Input) => Effect.Effect<boolean, SessionSubagentModels.Error>
+  /** The messages one provider-model turn sends; hosted engine turns receive their history unchanged. */
+  readonly transform: (input: {
+    readonly sessionID: SessionSchema.ID
+    readonly messages: readonly Message[]
+    readonly model: Model
+    /** The tools this turn offers, after the agent's permissions; a replacement may rely on one only if listed. */
+    readonly tools: LLMRequest["tools"]
+  }) => Effect.Effect<readonly Message[]>
+  /** Runs after a step settled with its token usage. */
+  readonly afterStep: (input: {
+    readonly sessionID: SessionSchema.ID
+    readonly tokens: EventV2.Data<typeof SessionEvent.Step.Ended>["tokens"]
+    readonly model: ModelV2.Ref | undefined
+    /** The context window the provider or host reported with the step, when it did. */
+    readonly contextWindow?: number
+  }) => Effect.Effect<void>
+}
+
+export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/SessionCompaction") {}
+
+export const node = makeLocationNode({
+  service: Service,
+  layer: Layer.effect(
+    Service,
+    Effect.gen(function* () {
+      const events = yield* EventV2.Service
+      const llm = yield* LLMClient.Service
+      const subagentModels = yield* SessionSubagentModels.Service
+      const config = yield* Config.Service
+      return Service.of({
+        ...make({ events, llm, subagentModels, config: yield* config.entries() }),
+        transform: (input) => Effect.succeed(input.messages),
+        afterStep: () => Effect.void,
+      })
+    }),
+  ),
+  deps: [EventV2.node, llmClient, SessionSubagentModels.node, Config.node],
+})

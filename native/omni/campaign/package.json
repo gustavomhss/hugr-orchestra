@@ -1,0 +1,17 @@
+{
+  "name": "@orchestra/omni-campaign",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "test": "ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 30000"
+  },
+  "dependencies": {
+    "@orchestra/core": "workspace:*",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:"
+  }
+}

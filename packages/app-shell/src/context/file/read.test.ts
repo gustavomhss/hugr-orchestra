@@ -4,7 +4,7 @@ import { readFileContent } from "./read"
 // The V2 server serves raw bytes; images keep them as base64 with a MIME type so the media viewers can preview them.
 const v2 = (bytes: Uint8Array) =>
   ({
-    protocol: Promise.resolve("v2"),
+    ready: Promise.resolve(),
     directory: "/repo",
     api: { file: { read: async () => bytes } },
   }) as unknown as Parameters<typeof readFileContent>[0]

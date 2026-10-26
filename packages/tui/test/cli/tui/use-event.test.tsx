@@ -1,7 +1,7 @@
 /** @jsxImportSource @opentui/solid */
 import { describe, expect, test } from "bun:test"
 import { testRender } from "@opentui/solid"
-import type { Event, GlobalEvent } from "@orchestra/sdk/v2"
+import type { Event, GlobalEvent } from "../../../src/types"
 import { onMount } from "solid-js"
 import { ProjectProvider, useProject } from "../../../src/context/project"
 import { SDKProvider } from "../../../src/context/sdk"
@@ -32,7 +32,7 @@ function vcs(branch: string): Event {
   return {
     id: `evt_vcs_${branch}`,
     type: "vcs.branch.updated",
-    properties: {
+    data: {
       branch,
     },
   }
@@ -42,7 +42,7 @@ function update(version: string): Event {
   return {
     id: `evt_update_${version}`,
     type: "installation.update-available",
-    properties: {
+    data: {
       version,
     },
   }

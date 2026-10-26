@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { draftSessionKey } from "@/components/prompt-input/draft-session"
-import { clearPending, pendingRules, togglePending } from "@/components/draft-subagent-models"
+import { clearPending, pendingPolicy, togglePending } from "@/components/draft-subagent-models"
 import { ServerScope } from "@/utils/server-scope"
 
 test("draft policy isolates source directory, draft and server; worktree handoff retains the original key", () => {
@@ -9,12 +9,9 @@ test("draft policy isolates source directory, draft and server; worktree handoff
   const second = draftSessionKey(ServerScope.local, "/repo", "two")
   const remote = draftSessionKey("remote" as ServerScope, "/repo", "one")
   togglePending(first, "provider", "selected")
-  expect(pendingRules(first)).toEqual([
-    { permission: "task", pattern: "*/*", action: "deny" },
-    { permission: "task", pattern: "provider/selected", action: "allow" },
-  ])
-  expect(pendingRules(worktree)).toEqual([])
-  expect(pendingRules(second)).toEqual([])
-  expect(pendingRules(remote)).toEqual([])
+  expect(pendingPolicy(first)).toEqual({ mode: "allowlist", models: [{ providerID: "provider", id: "selected" }] })
+  expect(pendingPolicy(worktree)).toEqual({ mode: "inherit" })
+  expect(pendingPolicy(second)).toEqual({ mode: "inherit" })
+  expect(pendingPolicy(remote)).toEqual({ mode: "inherit" })
   ;[first, worktree, second, remote].forEach((key) => clearPending(key))
 })

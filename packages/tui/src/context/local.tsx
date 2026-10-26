@@ -467,8 +467,8 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
         })
       }
 
-      event.on("session.deleted", (evt) => {
-        prune(evt.properties.info.id)
+      event.on("session.next.deleted", (evt) => {
+        prune(evt.data.sessionID)
       })
 
       return {
@@ -512,10 +512,10 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
         const status = sync.data.mcp[name]
         if (status?.status === "connected") {
           // Disable: disconnect the MCP
-          await sdk.client.mcp.disconnect({ name })
+          await sdk.api.mcp.disconnect({ server: name })
         } else {
           // Enable/Retry: connect the MCP (handles disabled, failed, and other states)
-          await sdk.client.mcp.connect({ name })
+          await sdk.api.mcp.connect({ server: name })
         }
       },
     }

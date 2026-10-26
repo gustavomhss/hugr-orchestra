@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import type { OpenCodeEvent } from "@/v2-legacy"
+import type { ClientEvent } from "@/session-types"
 import type { Session } from "@/v2-wire"
-import type { ServerApi, ServerSdk } from "@/utils/server"
+import type { ServerApi } from "@/utils/server"
 import { createServerSession } from "./server-session"
 
 type SessionApi = Pick<ServerApi["session"], "get" | "message">
@@ -17,19 +17,17 @@ const session = (id: string): Session => ({
   time: { created: 1, updated: 1 },
 })
 
-const client = {
-  session: {
-    get: async (input: { sessionID: string }) => ({ data: session(input.sessionID) }),
-    messages: async () => ({ data: [], response: { headers: new Headers() } }),
-    diff: async () => ({ data: [] }),
-    todo: async () => ({ data: [] }),
-  },
-} as unknown as ServerSdk
+const sessionApi = {
+  get: async (input: { sessionID: string }) => session(input.sessionID),
+} as unknown as SessionApi
+const emptyMessages = {
+  list: async () => ({ data: [], cursor: { previous: null, next: null } }),
+} as unknown as MessageApi
 
 // V2 parts follow the server's content order, never the sort order of their IDs.
 describe("server session part order", () => {
   test("keeps live V2 parts in content order when opaque call IDs sort before or after text", () => {
-    const store = createServerSession(client)
+    const store = createServerSession(sessionApi, emptyMessages, { todo: async () => [] })
     store.remember(session("child"))
     store.set("session_message", "child", [{ id: "msg_1_user", type: "user", text: "hello", time: { created: 1 } }])
     const data = [
@@ -52,7 +50,7 @@ describe("server session part order", () => {
         durable: { aggregateID: "child", seq: index + 1, version: 1 },
         location: { directory: "/repo" },
         data: { sessionID: "child", ...event.data },
-      } as unknown as OpenCodeEvent),
+      } as unknown as ClientEvent),
     )
 
     expect(store.data.part.msg_2_assistant?.map((part) => part.id)).toEqual([
@@ -81,7 +79,7 @@ describe("server session part order", () => {
     const messageApi = {
       list: async () => ({ data: [assistant, user], cursor: { previous: null, next: null } }),
     } as unknown as MessageApi
-    const store = createServerSession({} as ServerSdk, {} as SessionApi, messageApi)
+    const store = createServerSession({} as SessionApi, messageApi, { todo: async () => [] })
     store.remember(session("root"))
 
     await store.sync("root")

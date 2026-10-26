@@ -1,8 +1,9 @@
 import { expect, spyOn, test } from "bun:test"
-import type { Hooks, PluginInput, ToolContext } from "@orchestra/plugin"
+import type { Hooks, ToolContext } from "@orchestra/plugin"
 import { tool } from "@orchestra/plugin"
-import { AppDockPlugin, createAppDockHooks, scopeLinuxWorkspace } from "./app-dock"
-import { context, input, fakePort, host, page, control, field, nativeError, type Envelope, type Reply } from "./app-dock.fixture"
+import { createAppDockHooks } from "./app-dock"
+import { LINUX_PROMPT } from "./app-dock-linux"
+import { context, fakePort, host, page, control, field, nativeError, type Envelope, type Reply } from "./app-dock.fixture"
 
 test("dock_find pages native continuations itself and returns compact matches from the matching observation", async () => {
   const { hooks, calls } = host((_op, args) => args.cursor === undefined ? page([control("n:a", "Explorer")], "c1")
@@ -428,7 +429,7 @@ test("host agents' dock_* tools declare and describe only browser use; ui_* tool
   const text = (name: string) =>
     `${tools[name]!.description} ${JSON.stringify(tool.schema.toJSONSchema(tool.schema.object(tools[name]!.args)))}`
   const keys = (name: string) => Object.keys(tools[name]!.args).sort()
-  // dock_find and dock_action are hidden from every agent (scopeLinuxWorkspace); the other dock_* are the host agents'.
+  // dock_find and dock_action are hidden from every agent (AppDockTools.scope); the other dock_* are the host agents'.
   const browser = Object.keys(tools).filter((name) => name.startsWith("dock_") && name !== "dock_find" && name !== "dock_action")
   const linux = Object.keys(tools).filter((name) => name.startsWith("ui_"))
   expect([browser.length, linux.length]).toEqual([16, 11])
@@ -454,16 +455,11 @@ test("dock_* called by an agent addresses browser tabs; without an agent the leg
   expect(dock.calls.map((call) => call.args)).toEqual([{ world: "browser" }, {}])
 })
 
-// How the host's permission engine evaluates this scope is proven in apps/orchestra/test/plugin/linux-workspace-scope.test.ts.
-test("the Linux workspace is its own scope: host agents lose its tools, the linux agent holds only them", () => {
-  const config: { permission?: unknown; agent?: Record<string, Record<string, unknown>> } = {
-    permission: { "*": "allow", dock: "ask" }, agent: { linux: { model: "opencode/mimo" } } }
-  scopeLinuxWorkspace(config)
-  expect(config.agent!.linux).toMatchObject({ mode: "subagent", model: "opencode/mimo" })
+test("the linux agent's prompt keeps it in scope and ends in a report", () => {
   // The linux agent speaks as Orchestra's, never as the upstream product.
-  expect(config.agent!.linux!.prompt).toStartWith("You are the Linux workspace agent of HuGR Orchestra")
+  expect(LINUX_PROMPT).toStartWith("You are the Linux workspace agent of HuGR Orchestra")
   // Run 13: after the task the model ran its own "behavior proof", drove a native dialog with xdotool and killed VS Code.
-  const prompt = String(config.agent!.linux!.prompt)
+  const prompt = LINUX_PROMPT
   for (const rule of ["Do exactly the task. Verify it through the app's own state or the file the task names; do not run extra experiments",
     "Never close or kill app windows or processes unless the task asks for it.",
     "Operate what is on screen with ui_*, not linux_exec; xdotool, wmctrl and the like are not tools for UI work.",
@@ -475,9 +471,6 @@ test("the Linux workspace is its own scope: host agents lose its tools, the linu
   // It cannot ask anyone: a blocker ends in a report.
   expect(prompt).toContain("stop and report exactly what blocked you; you cannot ask the owner")
   expect(prompt).not.toContain("ask the user")
-  const plain: { permission?: unknown } = { permission: "ask" }
-  scopeLinuxWorkspace(plain)
-  expect(plain.permission).toEqual({ "*": "ask", "linux_*": "deny", "ui_*": "deny", dock_find: "deny", dock_action: "deny" })
 })
 
 test("ui_look maps the workspace, ui_enter zooms into a numbered region and ui_up leaves it, per session", async () => {

@@ -13,10 +13,12 @@ const builtIns = Layer.effectDiscard(
   Effect.gen(function* () {
     const location = yield* Location.Service
     const registry = yield* SystemContextRegistry.Service
+    // Outside a repository the project directory is the filesystem root; show the working directory and say there is no repository.
+    const root = location.vcs?.type === "git" ? location.project.directory : `${location.directory} (no git repository)`
     const environment = [
       "<env>",
       `  Working directory: ${location.directory}`,
-      `  Workspace root folder: ${location.project.directory}`,
+      `  Workspace root folder: ${root}`,
       `  Is directory a git repo: ${location.vcs?.type === "git" ? "yes" : "no"}`,
       `  Platform: ${process.platform}`,
       "</env>",

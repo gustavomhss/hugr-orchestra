@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import type { ModelListOutput } from "@/v2-wire"
-import type { SessionMessageAssistant } from "@/v2-legacy"
+import type { SessionMessageAssistant } from "@/session-types"
 
 import { normalizeProviderList } from "@/context/global-sync/utils"
 import { normalizeSessionMessages } from "@/utils/session-message"

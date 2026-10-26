@@ -1,9 +1,10 @@
 export * as AppDockTools from "./application-tools"
 
-import { Effect, JsonSchema, Layer, Schema, SchemaRepresentation } from "effect"
+import { Effect, JsonSchema, Layer, Schema, SchemaRepresentation, Stream } from "effect"
 import { tool, type Hooks, type ToolContext } from "@orchestra/plugin"
 import { AgentV2 } from "@orchestra/core/agent"
 import { makeGlobalNode, makeLocationNode } from "@orchestra/core/effect/app-node"
+import { EventV2 } from "@orchestra/core/event"
 import type { Host } from "@orchestra/core/host"
 import { LocationServiceMap } from "@orchestra/core/location-service-map"
 import { PermissionV2 } from "@orchestra/core/permission"
@@ -11,13 +12,14 @@ import { PluginV2 } from "@orchestra/core/plugin"
 import { SessionStore } from "@orchestra/core/session"
 import { ApplicationTools } from "@orchestra/core/tool/application-tools"
 import { Tool } from "@orchestra/core/tool/tool"
+import { SessionEvent } from "@orchestra/schema/session-event"
 import { createAppDockHooks } from "./app-dock"
 import { LINUX_DESCRIPTION, LINUX_PROMPT } from "./app-dock-linux"
 import { createLinuxWorkspaceHooks } from "./linux-workspace"
 import type { Transport } from "./transport"
 
 // K2: the Dock and Linux workspace tools on V2. The hook tools stay the single implementation; each runs here with a
-// V1-shaped context whose `ask` goes through the Session's own V2 permission queue.
+// Legacy-shaped context whose `ask` goes through the Session's own V2 permission queue.
 
 type Resolve = (context: Tool.Context) => Effect.Effect<{ readonly directory: string; readonly ask: ToolContext["ask"] }, Tool.Failure>
 
@@ -110,14 +112,37 @@ export function contribution(port: Transport): Host.Contribution {
         layer,
         deps: [ApplicationTools.node, SessionStore.node, LocationServiceMap.node],
       }),
+      reaper(port),
     ],
   }
 }
 
 /**
- * V1's `scopeLinuxWorkspace` on V2: the Linux workspace tools, and the Dock tools that act only on native controls,
- * belong to the `linux` subagent alone. Every other agent gets V1's global denials ahead of its own rules (so its own
- * rules still win, as agent permissions win over global ones in V1); the `linux` agent gets V1's exact ruleset.
+ * Closes a deleted Session's Linux workspace: the desktop aborts the Session's pending calls and stops the processes and
+ * terminals it owns. `SessionV2.remove` publishes `session.next.deleted` for the Session and each child it cascades to.
+ */
+export function reaper(port: Transport) {
+  return makeGlobalNode({
+    name: "app-dock/linux-reaper",
+    layer: Layer.effectDiscard(
+      Effect.gen(function* () {
+        const events = yield* EventV2.Service
+        yield* events.subscribe(SessionEvent.Deleted).pipe(
+          Stream.runForEach((event) =>
+            Effect.sync(() => port.postMessage({ type: "linux.session.close", sessionID: event.data.sessionID })),
+          ),
+          Effect.forkScoped({ startImmediately: true }),
+        )
+      }),
+    ),
+    deps: [EventV2.node],
+  })
+}
+
+/**
+ * The Linux workspace tools, and the Dock tools that act only on native controls, belong to the `linux` subagent alone.
+ * Every other agent gets these denials ahead of its own rules, so its own rules still win; the `linux` agent holds only
+ * the workspace tools.
  */
 export function scope(draft: AgentV2.Draft) {
   const linux = AgentV2.ID.make("linux")
@@ -136,7 +161,7 @@ export function scope(draft: AgentV2.Draft) {
     agent.description ??= LINUX_DESCRIPTION
     agent.mode = "subagent"
     // The `linux` and `dock` rules the owner configured (pushed onto every agent before this runs) survive as they are,
-    // so an ask or deny stays one; with none configured they default to allow, as V1 does.
+    // so an ask or deny stays one; with none configured they default to allow.
     const configured = (action: string) => {
       const rules = agent.permissions.filter((rule) => rule.action === action)
       return rules.length > 0 ? rules : [{ action, resource: "*", effect: "allow" as const }]

@@ -8,7 +8,7 @@ import { curlChannel } from "./fixture/distribution-native-curl"
 import { npmChannel } from "./fixture/distribution-native-npm"
 import { emergencyStop, stopServices } from "./fixture/distribution-native-proof"
 import { requireDistributionHost } from "./fixture/distribution-host"
-import { expectSpawn } from "../../../packages/core/test/fixture/omni-expect"
+import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 
 // Native qualification only. Hosted test-ci supplies installed build dependencies
 // and real native/omni/target/release companions through omni-binaries action.

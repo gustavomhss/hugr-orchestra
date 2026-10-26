@@ -42,7 +42,6 @@ export const electronMock = {
   session: { fromPartition: () => ({}) },
   shell: {},
   systemPreferences: {},
-  utilityProcess: {},
   webContents: {},
   webUtils: {},
 }

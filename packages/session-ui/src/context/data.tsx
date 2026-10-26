@@ -1,15 +1,12 @@
-import type { SessionV1 } from "@orchestra/schema/session-v1"
-import type { FileDiff } from "@orchestra/schema/file-diff"
+import type { Transcript } from "../transcript-model"
 import type { SessionStatusEvent } from "@orchestra/schema/session-status-event"
-import type { FileDiffInfo, Provider } from "../types"
+import type { Provider } from "../types"
 import { createSimpleContext } from "@orchestra/ui/context"
-import { PreloadMultiFileDiffResult } from "@pierre/diffs/ssr"
 import type { Capability } from "@orchestra/schema/capability"
 
-type Session = typeof SessionV1.SessionInfo.Encoded
-type Message = typeof SessionV1.Info.Encoded
-type Part = typeof SessionV1.Part.Encoded
-type SnapshotFileDiff = typeof FileDiff.Info.Encoded
+type Session = Transcript.Session
+type Message = Transcript.Message
+type Part = Transcript.Part
 type SessionStatus = typeof SessionStatusEvent.Info.Encoded
 
 export type NormalizedProviderListResponse = {
@@ -34,12 +31,6 @@ type Data = {
   session: Session[]
   session_status: {
     [sessionID: string]: SessionStatus
-  }
-  session_diff: {
-    [sessionID: string]: (SnapshotFileDiff | FileDiffInfo)[]
-  }
-  session_diff_preload?: {
-    [sessionID: string]: PreloadMultiFileDiffResult<any>[]
   }
   message: {
     [sessionID: string]: Message[]

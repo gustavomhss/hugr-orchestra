@@ -5,7 +5,7 @@ import type { Config } from "@/v2-wire"
 import type { Project } from "@/v2-types"
 import type { Session } from "@/v2-wire"
 
-import type { ServerApi, ServerSdk } from "@/utils/server"
+import type { ServerApi } from "@/utils/server"
 
 import type { CatalogApi } from "./bootstrap"
 import type { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
@@ -65,7 +65,6 @@ function directoryState() {
     session_working(id: string) {
       return this.session_status[id]?.type !== "idle"
     },
-    session_diff: {},
     todo: {},
     permission: {},
     question: {},
@@ -79,7 +78,6 @@ function directoryState() {
     message: {},
     session_message: {},
     part: {},
-    part_text_accum_delta: {},
   })
 }
 
@@ -95,16 +93,6 @@ function overlappingRun(state: ReturnType<typeof directoryState>, gate: Promise<
       project: [{ id: "project", worktree: "/project" } as Project],
       provider,
     },
-    sdk: {
-      app: { agents: async () => ({ data: [{ name: "maestro", mode: "primary" }] }) },
-      config: { get: () => gate.then(() => ({ data: { model: "anthropic/claude" } })) },
-      session: { status: () => gate.then(() => ({ data: {} })) },
-      vcs: { get: async () => ({ data: undefined }) },
-      permission: { list: async () => ({ data: [] }) },
-      question: { list: async () => ({ data: [] }) },
-      v2: { reference: { list: async () => ({ data: { data: [] } }) } },
-      provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
-    } as unknown as ServerSdk,
     api,
     readV2Config: () => gate.then(() => ({ model: "anthropic/claude" })),
     store: state[0],
@@ -114,7 +102,6 @@ function overlappingRun(state: ReturnType<typeof directoryState>, gate: Promise<
     loadActiveSessions: () => gate.then(() => ({})),
     translate: (key) => key,
     queryClient: new QueryClient(),
-    protocol: Promise.resolve("v2"),
   })
 }
 
@@ -137,7 +124,6 @@ describe("bootstrapDirectory", () => {
         project: [],
         provider,
       },
-      sdk: {} as unknown as ServerSdk,
       api: {
         agent: { list: fail },
         provider: { list: fail },
@@ -156,7 +142,6 @@ describe("bootstrapDirectory", () => {
       loadActiveSessions: fail,
       translate: (key) => key,
       queryClient: new QueryClient(),
-      protocol: Promise.resolve("v2"),
       onMissingDirectory: (directory) => missing.push(directory),
     })
 
@@ -166,7 +151,7 @@ describe("bootstrapDirectory", () => {
     expect(store.status).toBe("partial")
   })
 
-  test("skips legacy config while refreshing a v2 directory", async () => {
+  test("completes a directory refresh without a config reader", async () => {
     const [store, setStore] = directoryState()
 
     await bootstrapDirectory({
@@ -179,13 +164,6 @@ describe("bootstrapDirectory", () => {
         project: [{ id: "project", worktree: "/project" } as Project],
         provider,
       },
-      sdk: {
-        config: {
-          get: async () => {
-            throw new Error("legacy directory config should not be called")
-          },
-        },
-      } as unknown as ServerSdk,
       api,
       store,
       setStore,
@@ -194,7 +172,6 @@ describe("bootstrapDirectory", () => {
       loadActiveSessions: async () => ({}),
       translate: (key) => key,
       queryClient: new QueryClient(),
-      protocol: Promise.resolve("v2"),
     })
 
     expect(store.status).toBe("partial")
@@ -216,20 +193,6 @@ describe("bootstrapDirectory", () => {
           project: [{ id: "project", worktree: "/project" } as Project],
           provider,
         },
-        sdk: {
-          app: { agents },
-          config: { get: async () => ({ data: { model: "anthropic/claude" } }) },
-          session: { status: async () => ({ data: {} }) },
-          vcs: {
-            get: async () => {
-              throw new Error("vcs unavailable")
-            },
-          },
-          permission: { list: async () => ({ data: [] }) },
-          question: { list: async () => ({ data: [] }) },
-          v2: { reference: { list: async () => ({ data: { data: [] } }) } },
-          provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
-        } as unknown as ServerSdk,
         api: { ...api, agent: { list: agents } } as unknown as typeof api,
         readV2Config: async () => ({ model: "anthropic/claude" }),
         store,
@@ -239,7 +202,6 @@ describe("bootstrapDirectory", () => {
         loadActiveSessions: async () => ({}),
         translate: (key) => key,
         queryClient: new QueryClient(),
-        protocol: Promise.resolve("v2"),
       })
       expect(store.load).toEqual({ agent: "pending", config: "pending", session_status: "pending" })
       await new Promise((resolve) => setTimeout(resolve, 80))
@@ -258,49 +220,36 @@ describe("bootstrapDirectory", () => {
     expect(failed.load).toEqual({ agent: "failed", config: "ready", session_status: "ready" })
   })
 
-  test("records the v1 status read and the v2 active session seed, which stays out of the bootstrap outcome", async () => {
-    for (const protocol of ["v2"] as const) {
-      for (const outcome of ["ready", "failed"] as const) {
-        const read = Promise.withResolvers<{ data: {} }>()
-        const [store, setStore] = directoryState()
-        await bootstrapDirectory({
-          directory: "/project",
-          scope: ServerScope.local,
-          mcp: false,
-          global: {
-            config: {} satisfies Config,
-            path: { state: "", config: "", worktree: "/project", directory: "/project", home: "/home" },
-            project: [{ id: "project", worktree: "/project" } as Project],
-            provider,
-          },
-          sdk: {
-            app: { agents: async () => ({ data: [] }) },
-            config: { get: async () => ({ data: {} }) },
-            session: { status: () => read.promise },
-            vcs: { get: async () => ({ data: undefined }) },
-            permission: { list: async () => ({ data: [] }) },
-            question: { list: async () => ({ data: [] }) },
-            v2: { reference: { list: async () => ({ data: { data: [] } }) } },
-            provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
-          } as unknown as ServerSdk,
-          api,
-          store,
-          setStore,
-          vcsCache: { setStore() {} } as unknown as VcsCache,
-          loadSessions() {},
-          loadActiveSessions: () => read.promise,
-          translate: (key) => key,
-          queryClient: new QueryClient(),
-          protocol: Promise.resolve(protocol),
-        })
-        await new Promise((resolve) => setTimeout(resolve, 80))
-        expect(store.load.session_status).toBe("pending")
-        if (outcome === "ready") read.resolve({ data: {} })
-        if (outcome === "failed") read.reject(new Error("status unavailable"))
-        await new Promise((resolve) => setTimeout(resolve, 0))
-        expect([protocol, store.load.session_status]).toEqual([protocol, outcome])
-        if (protocol === "v2") expect(store.status).toBe("complete")
-      }
+  test("records the active session seed read, which stays out of the bootstrap outcome", async () => {
+    for (const outcome of ["ready", "failed"] as const) {
+      const read = Promise.withResolvers<{ data: {} }>()
+      const [store, setStore] = directoryState()
+      await bootstrapDirectory({
+        directory: "/project",
+        scope: ServerScope.local,
+        mcp: false,
+        global: {
+          config: {} satisfies Config,
+          path: { state: "", config: "", worktree: "/project", directory: "/project", home: "/home" },
+          project: [{ id: "project", worktree: "/project" } as Project],
+          provider,
+        },
+        api,
+        store,
+        setStore,
+        vcsCache: { setStore() {} } as unknown as VcsCache,
+        loadSessions() {},
+        loadActiveSessions: () => read.promise,
+        translate: (key) => key,
+        queryClient: new QueryClient(),
+      })
+      await new Promise((resolve) => setTimeout(resolve, 80))
+      expect(store.load.session_status).toBe("pending")
+      if (outcome === "ready") read.resolve({ data: {} })
+      if (outcome === "failed") read.reject(new Error("status unavailable"))
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(store.load.session_status).toBe(outcome)
+      expect(store.status).toBe("complete")
     }
   })
 
@@ -317,16 +266,6 @@ describe("bootstrapDirectory", () => {
           project: [{ id: "project", worktree: "/project" } as Project],
           provider,
         },
-        sdk: {
-          app: { agents: async () => ({ data: [{ name: "maestro", mode: "primary" }] }) },
-          config: { get: read },
-          session: { status: read },
-          vcs: { get: async () => ({ data: undefined }) },
-          permission: { list: async () => ({ data: [] }) },
-          question: { list: async () => ({ data: [] }) },
-          v2: { reference: { list: async () => ({ data: { data: [] } }) } },
-          provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
-        } as unknown as ServerSdk,
         api,
         readV2Config: () => read().then(() => ({ model: "anthropic/claude" })),
         store,
@@ -336,7 +275,6 @@ describe("bootstrapDirectory", () => {
         loadActiveSessions: () => read().then(() => ({})),
         translate: (key) => key,
         queryClient: new QueryClient(),
-        protocol: Promise.resolve("v2"),
       })
     const older = Promise.withResolvers<never>()
     await run(() => older.promise)
@@ -401,9 +339,16 @@ describe("bootstrapDirectory", () => {
       child: info("child", "root"),
       grandchild: info("grandchild", "child"),
     }
-    const session = createServerSession({
-      session: { get: async (input: { sessionID: string }) => ({ data: sessions[input.sessionID] }) },
-    } as unknown as ServerSdk)
+    const session = createServerSession(
+      {
+        get: async (input: { sessionID: string }) => sessions[input.sessionID],
+        message: async () => {
+          throw new Error("unexpected message read")
+        },
+      } as unknown as Pick<ServerApi["session"], "get" | "message">,
+      {} as ServerApi["message"],
+      { todo: async () => [] },
+    )
     const [store, setStore] = directoryState()
     const testApi = {
       ...api,
@@ -421,16 +366,6 @@ describe("bootstrapDirectory", () => {
         project: [{ id: "project", worktree: "/project" } as Project],
         provider,
       },
-      sdk: {
-        app: { agents: async () => ({ data: [] }) },
-        config: { get: async () => ({ data: {} }) },
-        session: { status: async () => ({ data: {} }) },
-        vcs: { get: async () => ({ data: undefined }) },
-        permission: { list: async () => ({ data: [{ id: "per_1", sessionID: "grandchild" }] }) },
-        question: { list: async () => ({ data: [{ id: "que_1", sessionID: "child" }] }) },
-        v2: { reference: { list: async () => ({ data: { data: [] } }) } },
-        provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
-      } as unknown as ServerSdk,
       api: testApi as unknown as typeof api,
       store,
       setStore,
@@ -440,7 +375,6 @@ describe("bootstrapDirectory", () => {
       translate: (key) => key,
       queryClient: new QueryClient(),
       session,
-      protocol: Promise.resolve("v2"),
     })
     await new Promise((resolve) => setTimeout(resolve, 80))
 
@@ -451,20 +385,8 @@ describe("bootstrapDirectory", () => {
 })
 
 describe("config queries", () => {
-  test("skips legacy global config for v2 servers", async () => {
-    const sdk = {
-      global: {
-        config: {
-          get: async () => {
-            throw new Error("legacy global config should not be called")
-          },
-        },
-      },
-    } as unknown as ServerSdk
-
-    const result = await new QueryClient().fetchQuery(
-      loadGlobalConfigQuery(ServerScope.local, sdk, Promise.resolve("v2")),
-    )
+  test("reads no global config without a config reader", async () => {
+    const result = await new QueryClient().fetchQuery(loadGlobalConfigQuery(ServerScope.local))
 
     expect(result).toEqual({})
   })

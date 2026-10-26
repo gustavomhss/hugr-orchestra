@@ -15,19 +15,22 @@ import { AbsolutePath } from "./schema"
 import { ConfigAgent } from "./config/agent"
 import { ConfigAttachments } from "./config/attachments"
 import { ConfigCompaction } from "./config/compaction"
+import { ConfigContinuity } from "./config/continuity"
 import { ConfigCommand } from "./config/command"
 import { ConfigExperimental } from "./config/experimental"
 import { ConfigFormatter } from "./config/formatter"
 import { ConfigLSP } from "./config/lsp"
+import { ConfigMaestro } from "@orchestra/schema/config-maestro"
 import { ConfigMCP } from "@orchestra/schema/config-mcp"
 import { ConfigPlugin } from "./config/plugin"
 import { ConfigProvider } from "./config/provider"
 import { ConfigReference } from "./config/reference"
 import { ConfigRelay } from "./config/relay"
+import { ConfigResearch } from "./config/research"
 import { ConfigToolOutput } from "./config/tool-output"
 import { ConfigWatcher } from "./config/watcher"
-import { ConfigV1 } from "./v1/config/config"
-import { ConfigMigrateV1 } from "./v1/config/migrate"
+import { ConfigUpgradeSource } from "./config/upgrade/source"
+import { ConfigUpgrade } from "./config/upgrade/upgrade"
 
 export class Info extends Schema.Class<Info>("Config.Info")({
   $schema: Schema.optional(Schema.String).annotate({
@@ -80,6 +83,9 @@ export class Info extends Schema.Class<Info>("Config.Info")({
   compaction: ConfigCompaction.Info.pipe(Schema.optional).annotate({
     description: "Conversation compaction behavior",
   }),
+  continuity: ConfigContinuity.Info.pipe(Schema.optional).annotate({
+    description: "Context continuity: tool-output masking and background summaries",
+  }),
   skills: Schema.String.pipe(Schema.Array, Schema.optional).annotate({
     description: "Additional paths or URLs to discover skills from",
   }),
@@ -97,6 +103,12 @@ export class Info extends Schema.Class<Info>("Config.Info")({
   }),
   experimental: ConfigExperimental.Experimental.pipe(Schema.optional),
   relay: ConfigRelay.Info.pipe(Schema.optional).annotate({ description: "Relay workflow and hook engine settings" }),
+  research: ConfigResearch.Info.pipe(Schema.optional).annotate({
+    description: "Resource caps of the discovery seat's research toolkit. A configured value can only lower its built-in cap.",
+  }),
+  maestro: ConfigMaestro.Info.pipe(Schema.optional).annotate({
+    description: "Project-bound static Atlas/Own context for governed Maestro work",
+  }),
   providers: Schema.Record(Schema.String, ConfigProvider.Info).pipe(Schema.optional),
 }) {}
 
@@ -142,7 +154,7 @@ const layer = Layer.effect(
     const names = ["orchestra.json", "orchestra.jsonc"]
     const decodeOptions = { errors: "all", onExcessProperty: "ignore", propertyOrder: "original" } as const
     const decodeInfo = Schema.decodeUnknownOption(Info, decodeOptions)
-    const decodeV1Info = Schema.decodeUnknownOption(ConfigV1.Info, decodeOptions)
+    const decodeOldInfo = Schema.decodeUnknownOption(ConfigUpgradeSource.Info, decodeOptions)
 
     const loadFile = Effect.fnUntraced(function* (filepath: string) {
       const text = yield* fs.readFileStringSafe(filepath)
@@ -153,10 +165,10 @@ const layer = Layer.effect(
       if (errors.length) return
 
       const info = Option.getOrUndefined(
-        ConfigMigrateV1.isV1(input)
-          ? decodeV1Info(input).pipe(
-              Option.map(ConfigMigrateV1.migrate),
-              // Settings write V2 `permissions` into a file that may still hold V1 keys; the V1 decode drops them.
+        ConfigUpgrade.needsUpgrade(input)
+          ? decodeOldInfo(input).pipe(
+              Option.map(ConfigUpgrade.migrate),
+              // Settings write current `permissions` into a file that may still hold old keys; the old-format decode drops them.
               Option.map((info) => {
                 const rules = [...(info.permissions ?? []), ...settings(text).permissions]
                 return { ...info, permissions: rules.length ? rules : undefined }
@@ -315,7 +327,7 @@ const globalDocument = Effect.fnUntraced(function* () {
 })
 
 // Disabled providers own the exact `provider.use` denials; other statements, such as an allowlist's `*` denial, stay.
-// A legacy `disabled_providers` list is rewritten too, since the V1 migration appends it after every policy.
+// A legacy `disabled_providers` list is rewritten too, since the config upgrade appends it after every policy.
 function providerEdits(text: string, disabled: ReadonlyArray<string>): [string[], unknown][] {
   const document = settings(text)
   return [

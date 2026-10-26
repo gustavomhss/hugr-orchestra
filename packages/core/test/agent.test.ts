@@ -5,6 +5,7 @@ import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { Location } from "@orchestra/core/location"
 import { AgentPlugin } from "@orchestra/core/plugin/agent"
 import { AgentPrompt } from "@orchestra/core/agent/prompt"
+import { PermissionV2 } from "@orchestra/core/permission"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { location } from "./fixture/location"
 import { testEffect } from "./lib/effect"
@@ -172,13 +173,46 @@ describe("AgentV2", () => {
         "title",
       ])
       expect(yield* agent.default()).toMatchObject({ id: "maestro", mode: "primary" })
-      for (const item of agents) {
-        expect(item.permissions.some((rule) => rule.action === "bash" && rule.effect !== "deny")).toBe(false)
+      for (const item of agents.filter((item) => item.id !== "explore")) {
+        expect(item.permissions.some((rule) => rule.action === "bash" && rule.effect === "allow")).toBe(false)
       }
     }),
   )
 
-  it.effect("gives built-in agents the prompts the V1 session path uses", () =>
+  it.effect("asks before Maestro or general publish work and before explore reads a .env file", () =>
+    Effect.gen(function* () {
+      const agent = yield* AgentV2.Service
+      yield* AgentPlugin.Plugin.effect(host({ agent: agentHost(agent) })).pipe(
+        Effect.provideService(
+          Location.Service,
+          Location.Service.of(location({ directory: AbsolutePath.make("/project") })),
+        ),
+      )
+      const rules = Object.fromEntries((yield* agent.all()).map((item) => [String(item.id), item.permissions]))
+      const decide = (id: string, action: string, resource: string) => PermissionV2.evaluate(action, resource, rules[id]).effect
+
+      expect(
+        ["maestro", "general"].flatMap((id) =>
+          ["git push origin dev", "git -C /project push", "gh pr create --fill", "gh pr merge 1", "gh release create v1", "ls"].map(
+            (command) => decide(id, "bash", command),
+          ),
+        ),
+      ).toEqual(["ask", "ask", "ask", "ask", "ask", "allow", "ask", "ask", "ask", "ask", "ask", "allow"])
+      expect(
+        ["/project/.env", "/project/.env.local", "/project/.env.example", "/project/src/a.ts"].map((file) =>
+          decide("explore", "read", file),
+        ),
+      ).toEqual(["ask", "ask", "allow", "allow"])
+      // Explore's shell is read-only by sandbox (tool/bash.ts); publishing stays denied outright.
+      expect(
+        ["ls", "git log -1", "git push origin dev", "git -C /project push", "gh pr create --fill", "gh pr merge 1", "gh release create v1"].map(
+          (command) => decide("explore", "bash", command),
+        ),
+      ).toEqual(["allow", "allow", "deny", "deny", "deny", "deny", "deny"])
+    }),
+  )
+
+  it.effect("gives built-in agents the prompts the legacy session path uses", () =>
     Effect.gen(function* () {
       const agent = yield* AgentV2.Service
       yield* AgentPlugin.Plugin.effect(host({ agent: agentHost(agent) })).pipe(

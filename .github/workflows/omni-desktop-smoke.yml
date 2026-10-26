@@ -77,7 +77,7 @@ jobs:
             chmod +x "$supervisor"
             [ -x "$supervisor" ] || { echo "::error::omni supervisor is not executable: $supervisor"; exit 1; }
           done
-          ORCHESTRA_VERSION="$(bun -p 'require("./apps/orchestra/package.json").version')"
+          ORCHESTRA_VERSION="$(bun -p 'require("./apps/cli/package.json").version')"
           export ORCHESTRA_VERSION
           targets="windows-x64-baseline linux-arm64 linux-x64-baseline"
           for target in $targets; do

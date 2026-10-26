@@ -1,5 +1,4 @@
 import { Orchestra } from "@orchestra/client"
-import { createOrchestraClient } from "../compat/sdk-v2-client"
 import type { ServerConnection } from "@/context/server"
 import type {
   RequestOptions,
@@ -26,38 +25,11 @@ export function authFromToken(token: string | null) {
   }
 }
 
-/**
- * The legacy SDK client: the app's HTTP client for the routes the current client does not expose (the generated
- * `v2` groups and the V1 compatibility surface). This is the app-shell's single boundary to that package.
- */
-export function createSdkForServer({
-  server,
-  ...config
-}: Omit<NonNullable<Parameters<typeof createOrchestraClient>[0]>, "baseUrl"> & {
-  server: ServerConnection.HttpBase
-}) {
-  const auth = (() => {
-    if (!server.password) return
-    return {
-      Authorization: `Basic ${authTokenFromCredentials({ username: server.username, password: server.password })}`,
-    }
-  })()
-
-  return createOrchestraClient({
-    ...config,
-    headers: {
-      ...(config.headers instanceof Headers ? Object.fromEntries(config.headers.entries()) : config.headers),
-      ...auth,
-    },
-    baseUrl: server.url,
-  })
-}
-
 export function createApiForServer(input: {
   server: ServerConnection.HttpBase
   fetch?: typeof globalThis.fetch
 }): ServerApi {
-  // The contract keeps the app's legacy view of the client's outputs, so the two sides are not assignable to
+  // The contract keeps the app's own view of the client's outputs, so the two sides are not assignable to
   // each other. `server-api-parity.ts` holds them to the same groups, methods and inputs instead.
   return buildServerApi(input) as unknown as ServerApi
 }
@@ -220,8 +192,6 @@ function buildServerApi(input: {
         orchestra.sessions.setSubagentModels(value, requestOptions),
       getPermission: (value: Parameters<typeof orchestra.sessions.getPermission>[0], requestOptions?: Parameters<typeof orchestra.sessions.getPermission>[1]) =>
         orchestra.sessions.getPermission(value, requestOptions),
-      setPermission: (value: Parameters<typeof orchestra.sessions.setPermission>[0], requestOptions?: Parameters<typeof orchestra.sessions.setPermission>[1]) =>
-        orchestra.sessions.setPermission(value, requestOptions),
       todo: (value: Parameters<typeof orchestra.sessions.todo>[0], requestOptions?: Parameters<typeof orchestra.sessions.todo>[1]) =>
         orchestra.sessions.todo(value, requestOptions),
       archive: (value: Parameters<typeof orchestra.sessions.archive>[0], requestOptions?: Parameters<typeof orchestra.sessions.archive>[1]) =>
@@ -401,11 +371,8 @@ function selectedModel(value: unknown, variant: unknown) {
   return { providerID: value.providerID, id, ...(typeof chosen === "string" ? { variant: chosen } : {}) }
 }
 
-/** The legacy-shaped view of the current API: the groups the app calls, in their legacy shape. */
+/** The app's view of the current API: the groups the app calls, in the shapes the app stores. */
 export type { ServerApi } from "@/server-api"
-
-/** The legacy SDK client: the app's HTTP client for the routes the current client does not expose. */
-export type ServerSdk = ReturnType<typeof createSdkForServer>
 
 /** The current server's HTTP client. */
 export type ServerClient = ReturnType<typeof Orchestra.make>

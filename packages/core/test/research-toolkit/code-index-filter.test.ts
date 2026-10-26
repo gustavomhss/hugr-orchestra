@@ -43,11 +43,11 @@ describe("code-index filter", () => {
     expect(CodeIndexFilter.select(["a.ts", "b.py"], new Set(["python"])).files).toEqual([{ path: "b.py", grammar: "python" }])
   })
 
-  test("every source file of apps/orchestra/src is selected or skipped with a reason, past any 200 cap", async () => {
+  test("every source file of packages/core/src is selected or skipped with a reason, past any 200 cap", async () => {
     const root = path.resolve(import.meta.dirname, "../../../..")
-    const all = await Array.fromAsync(new Bun.Glob("apps/orchestra/src/**/*").scan({ cwd: root, onlyFiles: true }))
+    const all = await Array.fromAsync(new Bun.Glob("packages/core/src/**/*").scan({ cwd: root, onlyFiles: true }))
     const paths = all.map((item) => item.replaceAll("\\", "/"))
-    const source = paths.filter((item) => /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|py|pyi)$/.test(item))
+    const source = paths.filter((item) => /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|py|pyi|go|rs)$/.test(item))
     const result = CodeIndexFilter.select(paths)
     expect(source.length).toBeGreaterThan(200)
     expect(result.files.length + result.skipped.length).toBe(source.length)

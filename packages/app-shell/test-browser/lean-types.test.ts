@@ -19,8 +19,8 @@ test("actual app and every Lean browser test file typecheck in one program", asy
   const files = [...new Bun.Glob("{lean-*,solid-dom}.ts").scanSync(import.meta.dir)]
   // Every file the per-file programs checked; a glob that stops matching cannot shrink the program unnoticed.
   expect(files).toEqual(expect.arrayContaining([
-    "lean-chapter-route.test.ts", "lean-controller.test.ts", "lean-dom.test-helper.ts", "lean-native-product.test-helper.ts",
-    "lean-native-product.test.ts", "lean-profile-view.test-helper.ts", "lean-profile-view.test.ts", "lean-tool-preservation.test.ts",
+    "lean-chapter-route.test.ts", "lean-controller.test.ts", "lean-dom.test-helper.ts",
+    "lean-profile-view.test-helper.ts", "lean-profile-view.test.ts", "lean-tool-preservation.test.ts",
     "solid-dom.ts",
   ]))
   const scratch = await mkdtemp(path.join(os.tmpdir(), "lean-types-"))
@@ -37,9 +37,9 @@ test("actual app and every Lean browser test file typecheck in one program", asy
   } finally { await rm(scratch, { recursive: true, force: true }) }
 }, 600000)
 
-test("combined Schema/Core/Orchestra/app/session-ui/ui types in CI", async () => {
-  for (const pkg of ["schema", "core", "orchestra", "app-shell", "session-ui", "ui"])
-    await typecheck(["typecheck"], pkg === "orchestra" ? path.resolve(app, "../../apps/orchestra") : path.resolve(app, "..", pkg))
+test("combined Schema/Core/app/session-ui/ui types in CI", async () => {
+  for (const pkg of ["schema", "core", "app-shell", "session-ui", "ui"])
+    await typecheck(["typecheck"], path.resolve(app, "..", pkg))
 }, 600000)
 
 test("app e2e types, including the Lean visual capture spec", async () => {

@@ -4,7 +4,7 @@ import { spawn } from "node:child_process"
 import { randomUUID, createHash } from "node:crypto"
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
-import { Omni } from "../../../packages/core/src/omni.ts"
+import { Omni } from "@orchestra/core/omni"
 import { cli, LOGS, until, verdict, win } from "./lib.ts"
 import { api, evidence, finish, fixture, main, processTable, start, type Fixture } from "./protocol-fixtures.ts"
 
@@ -261,10 +261,12 @@ finally:
     const call = api(host.url, scratch.project)
     const websocket = async (mode: "cooked" | "raw") => {
       const files = byteFixture(scratch, nonce, mode, `ws-${mode}`, cooked.files.termios)
-      const terminal = await call<{ id: string }>("POST", "/pty", { command: "python3", args: files.args, cols: 120, rows: 40 })
-      const url = new URL(`/pty/${terminal.id}/connect`, host.url)
+      const terminal = (await call<{ data: { id: string } }>("POST", "/api/pty", { command: "python3", args: files.args, cols: 120, rows: 40 })).data
+      const ticket = (await call<{ data: { ticket: string } }>("POST", `/api/pty/${terminal.id}/connect-token?location[directory]=${encodeURIComponent(scratch.project)}`, {})).data.ticket
+      const url = new URL(`/api/pty/${terminal.id}/connect`, host.url)
       url.protocol = "ws:"
-      url.searchParams.set("directory", scratch.project)
+      url.searchParams.set("location[directory]", scratch.project)
+      url.searchParams.set("ticket", ticket)
       url.searchParams.set("cursor", "0")
       const ws = new WebSocket(url)
       ws.binaryType = "arraybuffer"
@@ -294,7 +296,7 @@ finally:
         return observation(files, [], chunks, `ws-${mode}`)
       } finally {
         ws.close()
-        await call("DELETE", `/pty/${terminal.id}`).catch(() => undefined)
+        await call("DELETE", `/api/pty/${terminal.id}`).catch(() => undefined)
       }
     }
     const wsCooked = await websocket("cooked")

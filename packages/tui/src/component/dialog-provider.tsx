@@ -8,7 +8,7 @@ import { DialogPrompt } from "../ui/dialog-prompt"
 import { Link } from "../ui/link"
 import { useTheme } from "../context/theme"
 import { TextAttributes } from "@opentui/core"
-import type { ProviderAuthAuthorization, ProviderAuthMethod } from "../compat/schema"
+import type { ProviderAuthMethod } from "../types"
 import { DialogModel } from "./dialog-model"
 import { useToast } from "../ui/toast"
 import { useConnected } from "./use-connected"
@@ -136,12 +136,17 @@ export function createDialogProviderOptions() {
           category: provider.category,
           gutter: connected && onboarded() ? () => <text fg={theme.success}>✓</text> : undefined,
           async onSelect() {
-            const methods = sync.data.provider_auth[providerID] ?? [
-              {
-                type: "api",
-                label: "API key",
-              },
-            ]
+            const integration = await sdk.api.integrations
+              .get({ integrationID: providerID, location: { directory: sdk.directory } })
+              .catch(() => undefined)
+            const listed = (integration?.data?.methods ?? []).flatMap((method): AuthMethod[] => {
+              if (method.type === "oauth")
+                return [{ type: "oauth" as const, id: method.id, label: method.label, prompts: method.prompts }]
+              if (method.type === "key")
+                return [{ type: "api" as const, label: method.label ?? "API key", prompts: method.prompts }]
+              return []
+            })
+            const methods: AuthMethod[] = listed.length ? listed : [{ type: "api" as const, label: "API key", prompts: undefined }]
             let index: number | null = 0
             if (methods.length > 1) {
               index = await new Promise<number | null>((resolve) => {
@@ -173,12 +178,18 @@ export function createDialogProviderOptions() {
                 inputs = value
               }
 
-              const result = await sdk.client.provider.oauth.authorize({
-                providerID,
-                method: index,
-                inputs,
-              })
-              if (result.error) {
+              const result = await sdk.api.integrations
+                .connectOauth({
+                  integrationID: providerID,
+                  location: { directory: sdk.directory },
+                  methodID: method.id,
+                  inputs: inputs ?? {},
+                })
+                .then(
+                  (value) => ({ data: value.data, error: undefined }),
+                  (error: unknown) => ({ data: undefined, error }),
+                )
+              if (!result.data) {
                 toast.show({
                   variant: "error",
                   message: JSON.stringify(result.error),
@@ -186,24 +197,23 @@ export function createDialogProviderOptions() {
                 dialog.clear()
                 return
               }
-              if (result.data?.method === "code") {
+              const authorization = result.data
+              if (authorization.mode === "code") {
                 dialog.replace(() => (
-                  <CodeMethod providerID={providerID} title={method.label} index={index} authorization={result.data!} />
+                  <CodeMethod providerID={providerID} title={method.label} authorization={authorization} />
                 ))
               }
-              if (result.data?.method === "auto") {
+              if (authorization.mode === "auto") {
                 dialog.replace(() => (
-                  <AutoMethod providerID={providerID} title={method.label} index={index} authorization={result.data!} />
+                  <AutoMethod providerID={providerID} title={method.label} authorization={authorization} />
                 ))
               }
             }
             if (method.type === "api") {
-              let metadata: Record<string, string> | undefined
-              if (method.prompts?.length) {
-                const value = await PromptsMethod({ dialog, prompts: method.prompts })
-                if (!value) return
-                metadata = value
-              }
+              const metadata = method.prompts?.length
+                ? await PromptsMethod({ dialog, prompts: method.prompts })
+                : undefined
+              if (metadata === null) return
               return dialog.replace(() => (
                 <ApiMethod providerID={providerID} title={method.label} metadata={metadata} />
               ))
@@ -221,11 +231,16 @@ export function DialogProvider() {
   return <DialogSelect title="Connect a provider" options={options()} />
 }
 
+type AuthMethod =
+  | { type: "oauth"; id: string; label: string; prompts: ProviderAuthMethod["prompts"] }
+  | { type: "api"; label: string; prompts: ProviderAuthMethod["prompts"] }
+
+type OauthAttempt = { attemptID: string; url: string; instructions: string }
+
 interface AutoMethodProps {
-  index: number
   providerID: string
   title: string
-  authorization: ProviderAuthAuthorization
+  authorization: OauthAttempt
 }
 function AutoMethod(props: AutoMethodProps) {
   const { theme } = useTheme()
@@ -254,22 +269,12 @@ function AutoMethod(props: AutoMethodProps) {
   }))
 
   onMount(async () => {
-    const result = await sdk.client.provider.oauth.callback({
-      providerID: props.providerID,
-      method: props.index,
-    })
-    if (result.error) {
-      toast.show({
-        variant: "error",
-        message:
-          "name" in result.error && result.error.name === "ProviderAuthOauthCallbackFailed"
-            ? "OAuth authorization failed. Try /connect again."
-            : JSON.stringify(result.error),
-      })
+    const status = await waitForOauth(sdk, props.providerID, props.authorization.attemptID)
+    if (status !== "complete") {
+      toast.show({ variant: "error", message: "OAuth authorization failed. Try /connect again." })
       dialog.clear()
       return
     }
-    await sdk.client.instance.dispose()
     await sync.bootstrap()
     dialog.replace(() => <DialogModel providerID={props.providerID} />)
   })
@@ -297,10 +302,9 @@ function AutoMethod(props: AutoMethodProps) {
 }
 
 interface CodeMethodProps {
-  index: number
   title: string
   providerID: string
-  authorization: ProviderAuthAuthorization
+  authorization: OauthAttempt
 }
 function CodeMethod(props: CodeMethodProps) {
   const { theme } = useTheme()
@@ -314,13 +318,18 @@ function CodeMethod(props: CodeMethodProps) {
       title={props.title}
       placeholder="Authorization code"
       onConfirm={async (value) => {
-        const { error } = await sdk.client.provider.oauth.callback({
-          providerID: props.providerID,
-          method: props.index,
-          code: value,
-        })
-        if (!error) {
-          await sdk.client.instance.dispose()
+        const completed = await sdk.api.integrations
+          .oauthComplete({
+            integrationID: props.providerID,
+            attemptID: props.authorization.attemptID,
+            location: { directory: sdk.directory },
+            code: value,
+          })
+          .then(
+            () => true,
+            () => false,
+          )
+        if (completed) {
           await sync.bootstrap()
           dialog.replace(() => <DialogModel providerID={props.providerID} />)
           return
@@ -343,8 +352,8 @@ function CodeMethod(props: CodeMethodProps) {
 interface ApiMethodProps {
   providerID: string
   title: string
-  metadata?: Record<string, string>
   custom?: boolean
+  metadata?: Record<string, string>
 }
 function ApiMethod(props: ApiMethodProps) {
   const dialog = useDialog()
@@ -358,19 +367,21 @@ function ApiMethod(props: ApiMethodProps) {
       placeholder="API key"
       onConfirm={async (value) => {
         if (!value) return
-        const saved = await sdk.client.auth.set({
-          providerID: props.providerID,
-          auth: {
-            type: "api",
+        const saved = await sdk.api.integrations
+          .connectKey({
+            integrationID: props.providerID,
+            location: { directory: sdk.directory },
             key: value,
-            ...(props.metadata ? { metadata: props.metadata } : {}),
-          },
-        })
+            metadata: props.metadata,
+          })
+          .then(
+            () => ({ error: undefined }),
+            (error: unknown) => ({ error }),
+          )
         if (saved.error) {
           toast.show({ variant: "error", message: JSON.stringify(saved.error) })
           return
         }
-        await sdk.client.instance.dispose()
         await sync.bootstrap()
         if (props.custom && !sync.data.provider_next.all.some((provider) => provider.id === props.providerID)) {
           toast.show({
@@ -388,7 +399,7 @@ function ApiMethod(props: ApiMethodProps) {
 
 interface PromptsMethodProps {
   dialog: ReturnType<typeof useDialog>
-  prompts: NonNullable<ProviderAuthMethod["prompts"]>[number][]
+  prompts: readonly NonNullable<ProviderAuthMethod["prompts"]>[number][]
 }
 async function PromptsMethod(props: PromptsMethodProps) {
   const inputs: Record<string, string> = {}
@@ -434,4 +445,17 @@ async function PromptsMethod(props: PromptsMethodProps) {
     inputs[prompt.key] = value
   }
   return inputs
+}
+
+// V2 OAuth runs as a server attempt; the auto flow polls it until it settles, like the earlier runtime's blocking callback.
+async function waitForOauth(sdk: ReturnType<typeof useSDK>, integrationID: string, attemptID: string): Promise<string> {
+  const status = await sdk.api.integrations
+    .oauthStatus({ integrationID, attemptID, location: { directory: sdk.directory } })
+    .then(
+      (result) => result.data.status,
+      () => "failed",
+    )
+  if (status !== "pending") return status
+  await Bun.sleep(1000)
+  return waitForOauth(sdk, integrationID, attemptID)
 }

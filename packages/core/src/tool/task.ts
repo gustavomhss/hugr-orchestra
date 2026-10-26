@@ -3,9 +3,11 @@ export * as TaskTool from "./task"
 import { createHash } from "node:crypto"
 import { isDeepStrictEqual } from "node:util"
 import { ToolFailure } from "@orchestra/llm"
-import { Context, DateTime, Effect, Layer, Option, Schema } from "effect"
+import type { Permission } from "@orchestra/schema/permission"
+import { Context, DateTime, Effect, Fiber, Layer, Option, Schema } from "effect"
 import { AgentV2 } from "../agent"
 import { Catalog } from "../catalog"
+import { Config } from "../config"
 import { Database } from "../database/database"
 import { makeLocationNode, Node } from "../effect/app-node"
 import { LayerNode } from "../effect/layer-node"
@@ -23,6 +25,8 @@ import { SessionSchema } from "../session/schema"
 import { SessionStore } from "../session/store"
 import { SessionSubagentModels } from "../session/subagent-models"
 import { ToolRegistry } from "./registry"
+import { TaskBackground } from "./task-background"
+import { TaskGovernance } from "./task-governance"
 import { ToolText } from "./text"
 import { Tool } from "./tool"
 import { Tools } from "./tools"
@@ -35,7 +39,8 @@ export const Input = Schema.Struct({
   prompt: Schema.String.annotate({ description: "The complete instructions for the subagent" }),
   subagent_type: Schema.String.annotate({ description: "The stable ID of a visible subagent or all-mode agent" }),
   model: Schema.String.pipe(Schema.optional).annotate({ description: "Optional exact provider/model identity" }),
-  task_id: SessionSchema.ID.pipe(Schema.optional).annotate({ description: "An existing child Session to resume" }),
+  // A Location's TaskGovernance may resolve a logical task id; core resumes only a Session ID it owns.
+  task_id: Schema.String.pipe(Schema.optional).annotate({ description: "An existing child Session or task to resume" }),
 })
 
 export const Output = Schema.Struct({
@@ -47,6 +52,8 @@ export const Output = Schema.Struct({
   sessionId: SessionSchema.ID,
   parentSessionId: SessionSchema.ID,
   agentId: AgentV2.ID,
+  /** Structured result a Location's TaskGovernance derived from the child's reply. */
+  structured: Schema.Record(Schema.String, Schema.Unknown).pipe(Schema.optional),
 })
 
 export const description = ToolText.task
@@ -64,21 +71,34 @@ const layer = Layer.effectDiscard(
     const execution = yield* SessionExecution.Service
     const events = yield* EventV2.Service
     const policy = yield* SessionSubagentModels.Service
+    const governance = yield* TaskGovernance.Service
+    const config = yield* Config.Service
+    const background = yield* TaskBackground.Service
+    // Governance fields are recorded with the call, so the recorded input decodes with this same schema.
+    const taskInput = Schema.Struct({ ...Input.fields, ...governance.input })
+    const decodeCalled = Schema.decodeUnknownOption(taskInput)
     yield* tools.register({
       [name]: Tool.make({
         description,
-        input: Input,
+        input: taskInput,
         output: Output,
         toModelOutput: ({ output }) => [
           { type: "text", text: `task_id: ${output.sessionID}\n\n<task_result>\n${output.text}\n</task_result>` },
         ],
-        execute: (input, context) => Effect.gen(function* () {
-          yield* requireParent(store, location, context, input)
+        execute: (called, context) => Effect.gen(function* () {
+          const input = yield* Schema.decodeUnknownEffect(Input)(called).pipe(
+            Effect.mapError((error) => new ToolFailure({ message: `Invalid tool input: ${error.message}` })),
+          )
+          const parent = yield* requireParent(store, location, context, decodeCalled, called)
           const target = yield* requireTarget(agents, input.subagent_type)
-          const childID = input.task_id ?? SessionSchema.ID.make(`ses_${identity("task-child", context)}`)
+          const admission = yield* governance.admit({ parent, target, input: called, context })
+          const childID =
+            admission.childID ??
+            (input.task_id && Schema.is(SessionSchema.ID)(input.task_id) ? input.task_id : undefined) ??
+            taskChildID(context)
           const existing = yield* store.get(childID)
           if (input.task_id && !existing)
-            return yield* new ToolFailure({ message: `Task child not found: ${childID}` })
+            return yield* new ToolFailure({ message: `Task child not found: ${input.task_id}` })
           const model = yield* resolveModel(catalog, policy, context, target, input.model, existing)
           const revalidateTarget = Effect.fnUntraced(function* (child: SessionSchema.Info | undefined) {
             const current = yield* requireTarget(agents, input.subagent_type)
@@ -99,7 +119,7 @@ const layer = Layer.effectDiscard(
             source: { type: "tool", messageID: context.assistantMessageID, callID: context.toolCallID },
           })
           // Approval may wait while placement, ancestry, or the hard ceiling changes.
-          yield* requireParent(store, location, context, input)
+          yield* requireParent(store, location, context, decodeCalled, called)
           yield* policy.assertChild(context.sessionID, model)
           yield* revalidateTarget(existing)
           const child = yield* sessions.create({
@@ -111,6 +131,17 @@ const layer = Layer.effectDiscard(
           })
           const failure = requireChild(child, location, context, target.id, model)
           if (failure) return yield* failure
+          // A governance that binds rules starts from the inherited ones (see `TaskGovernance.Admission`).
+          const permissions = (
+            admission.permissions ??
+            inheritedPermissions(yield* store.permissions(context.sessionID), primaryTools(yield* config.entries()))
+          ).map((rule) => ({ action: rule.action, resource: rule.resource, effect: rule.effect }))
+          // Compared first so an exact retry records no second permission change.
+          if (!isDeepStrictEqual(permissions, yield* store.permissions(child.id)))
+            yield* sessions.setPermission({
+              sessionID: child.id,
+              permission: permissions.map((rule) => ({ permission: rule.action, pattern: rule.resource, action: rule.effect })),
+            })
           return yield* Effect.gen(function* () {
             yield* policy.assert(child.id, model)
             yield* events.publish(SessionEvent.Tool.Progress, {
@@ -126,13 +157,13 @@ const layer = Layer.effectDiscard(
               },
               content: [],
             })
-            const promptID = SessionMessage.ID.make(`msg_${identity("task-prompt", context, child.id)}`)
+            const promptID = taskPromptID(context, child.id)
             // Exact retries retain the delivery admitted by an earlier Task version.
             const recordedInput = yield* SessionInput.find(database.db, promptID)
             const admitted = yield* sessions.prompt({
               id: promptID,
               sessionID: child.id,
-              prompt: { text: input.prompt },
+              prompt: admission.prompt ?? { text: input.prompt },
               delivery: recordedInput?.delivery ?? "queue",
               resume: false,
             })
@@ -142,31 +173,60 @@ const layer = Layer.effectDiscard(
                 : completedReply(yield* sessions.messages({ sessionID: child.id, order: "asc" }), promptID)
             yield* policy.assert(child.id, model)
             yield* revalidateTarget(child)
-            yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
-              if (previous !== undefined) return
+            const handoff = (text: string) => ({
+              sessionID: child.id,
+              agent: target.id,
+              model: child.model,
+              text,
+              title: child.title,
+              sessionId: child.id,
+              parentSessionId: context.sessionID,
+              agentId: target.id,
+            })
+            if (admission.background) {
+              // Advisory: the admitted prompt is durable, so a lost wake leaves it for the next drain.
+              yield* execution.wake(child.id)
+              return handoff("Task started in the background")
+            }
+            const detached = yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
+              if (previous !== undefined) return false
               // This snapshot gates post-crash eligibility only; the coordinator decides cancellation ownership.
               const active = (yield* execution.active).has(child.id)
               if (!active && admitted.promotedSeq !== undefined && !input.task_id)
                 return yield* new ToolFailure({
                   message: `Task ${child.id} has unfinished promoted work; resume explicitly with task_id`,
                 })
-              yield* restore(execution.resume(child.id, { interruptOnCancel: true }))
+              // The drain outlives a move to the background; cancelling the Task before that still stops it.
+              // Starting immediately joins the drain that is active now: a deferred start could find it settled and
+              // force a second provider turn for an exact retry.
+              const drain = yield* Effect.forkDetach(execution.resume(child.id, { interruptOnCancel: true }), {
+                startImmediately: true,
+              })
+              return yield* restore(
+                Effect.raceFirst(
+                  Fiber.join(drain).pipe(Effect.as(false)),
+                  background.requested(context.sessionID).pipe(Effect.as(true)),
+                ),
+              ).pipe(Effect.onInterrupt(() => Fiber.interrupt(drain)))
             }))
+            if (detached) return handoff("Task moved to the background")
             const reply =
               previous ?? completedReply(yield* sessions.messages({ sessionID: child.id, order: "asc" }), promptID)
             if (reply === undefined)
               return yield* new ToolFailure({ message: `Task ${child.id} finished without a completed assistant reply` })
             if (reply.agent !== target.id)
               return yield* new ToolFailure({ message: `Task ${child.id} reply agent differs from the recorded child` })
+            const settled = yield* governance.settle({ child, reply, admission, context })
             return {
               sessionID: child.id,
               agent: target.id,
               model: child.model,
-              text: reply.content.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n"),
+              text: settled.text,
               title: child.title,
               sessionId: child.id,
               parentSessionId: context.sessionID,
               agentId: target.id,
+              ...(settled.structured === undefined ? {} : { structured: settled.structured }),
             }
           }).pipe(
             Effect.mapError((error) =>
@@ -203,6 +263,9 @@ export const node: LayerNode.Node<never, never, typeof Node.tags.values.location
     captureGlobal(SessionExecution.Service),
     EventV2.node,
     SessionSubagentModels.node,
+    TaskGovernance.node,
+    Config.node,
+    TaskBackground.node,
   ],
 })
 
@@ -290,7 +353,8 @@ const requireParent = Effect.fn("TaskTool.requireParent")(function* (
   store: SessionStore.Interface,
   location: Location.Interface,
   context: Tool.Context,
-  input: typeof Input.Type,
+  decodeCalled: (value: unknown) => Option.Option<{ readonly [key: string]: unknown }>,
+  input: { readonly [key: string]: unknown },
 ) {
   const parent = yield* store.get(context.sessionID)
   if (!parent) return yield* new ToolFailure({ message: `Task parent not found: ${context.sessionID}` })
@@ -307,10 +371,10 @@ const requireParent = Effect.fn("TaskTool.requireParent")(function* (
   const call = recorded.message.content.find(
     (part): part is SessionMessage.AssistantTool => part.type === "tool" && part.id === context.toolCallID && part.name === name,
   )
-  const called = call && call.state.status !== "pending" ? Schema.decodeUnknownOption(Input)(call.state.input) : Option.none()
+  const called = call && call.state.status !== "pending" ? decodeCalled(call.state.input) : Option.none()
   if (Option.isNone(called))
     return yield* new ToolFailure({ message: "Task invocation has no valid recorded called input" })
-  const childID = SessionSchema.ID.make(`ses_${identity("task-child", context)}`)
+  const childID = taskChildID(context)
   if (!isDeepStrictEqual(
     { ...called.value, task_id: called.value.task_id ?? childID },
     { ...input, task_id: input.task_id ?? childID },
@@ -354,7 +418,42 @@ function requireChild(
     return new ToolFailure({ message: `Task cannot change the recorded child model: ${child.id}` })
 }
 
-function completedReply(messages: ReadonlyArray<SessionMessage.Message>, promptID: SessionMessage.ID) {
+/**
+ * The rules every Task child inherits, as the earlier runtime derived them: the parent Session's deny and `external_directory` rules, so a
+ * child is never more permissive than its parent on a denied pattern, then a deny of each `experimental.primary_tools`
+ * tool, which only primary agents may use.
+ */
+export function inheritedPermissions(parent: Permission.Ruleset, primary: ReadonlyArray<string>): Permission.Ruleset {
+  const inherited = parent.filter((rule) => rule.action === "external_directory" || rule.effect === "deny")
+  return [
+    ...inherited,
+    ...primary
+      .map((action) => ({ action, resource: "*", effect: "deny" as const }))
+      .filter((deny) => !inherited.some((rule) => rule.action === deny.action && rule.resource === deny.resource && rule.effect === deny.effect)),
+  ]
+}
+
+/** The configured `experimental.primary_tools`, from the highest-priority document that sets it. */
+export function primaryTools(entries: ReadonlyArray<Config.Entry>) {
+  return (
+    entries
+      .filter((entry): entry is Config.Document => entry.type === "document")
+      .findLast((entry) => entry.info.experimental?.primary_tools !== undefined)?.info.experimental?.primary_tools ?? []
+  )
+}
+
+/** The child a Task call creates when neither `task_id` nor its governance names one; stable across exact retries. */
+export function taskChildID(context: Tool.Context) {
+  return SessionSchema.ID.make(`ses_${identity("task-child", context)}`)
+}
+
+/** The durable prompt a Task call admits into its child; a retry of the same call reuses it. */
+export function taskPromptID(context: Tool.Context, childID: SessionSchema.ID) {
+  return SessionMessage.ID.make(`msg_${identity("task-prompt", context, childID)}`)
+}
+
+/** The child's completed reply to `promptID`, or undefined while it is unfinished, failed or calling tools. */
+export function completedReply(messages: ReadonlyArray<SessionMessage.Message>, promptID: SessionMessage.ID) {
   const index = messages.findIndex((message) => message.id === promptID && message.type === "user")
   if (index < 0) return
   const following = messages.slice(index + 1)

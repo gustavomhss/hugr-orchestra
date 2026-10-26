@@ -12,6 +12,7 @@ import { Global } from "./global"
 import { LayerNode } from "./effect/layer-node"
 import { OutputInspector } from "./output-inspector"
 import type { RelayHook } from "@orchestra/schema/relay-hook"
+import type { ToolOutput, ToolResultValue } from "@orchestra/llm"
 import { ToolSafetyHooks } from "./tool-safety-hooks"
 
 /** Host-bound preferences, never decoded from tool arguments or inherited environment waivers. */
@@ -154,7 +155,7 @@ export class Denied extends Schema.TaggedErrorClass<Denied>()("ToolSafety.Denied
 }
 
 /**
- * The call whose hooks another ToolSafety.run of it enforces, so this run does not repeat them: an outer run, or for V1
+ * The call whose hooks another ToolSafety.run of it enforces, so this run does not repeat them: an outer run, or for the earlier runtime,
  * the session tools boundary inside the native host's wrapper, which a Promise boundary hides from it.
  */
 export const HookedCall = Context.Reference<string | undefined>("@orchestra/ToolSafety/HookedCall", {
@@ -326,6 +327,13 @@ export type Observation = {
   readonly shellSandbox?: ShellFact["shellSandbox"]
 }
 
+/** A settled native tool call as the registry returns it, after bounding and projection. */
+export type Settlement = {
+  readonly result: ToolResultValue
+  readonly output?: ToolOutput
+  readonly outputPaths?: ReadonlyArray<string>
+}
+
 export interface Interface {
   readonly before: (input: Invocation) => Effect.Effect<void, Denied>
   readonly inspect: (output: unknown) => Effect.Effect<void, Denied>
@@ -335,6 +343,11 @@ export interface Interface {
     observe: (observation: Observation) => Effect.Effect<void>,
     outcome?: (value: A) => "success" | "failure" | "cancelled",
   ) => Effect.Effect<A, E | Denied, R>
+  /**
+   * Wraps one native tool call's settlement inside `run`, for a host that retains what a call returned (the research
+   * seat's acquisition receipts). Absent, the settlement passes through.
+   */
+  readonly acquire?: <E, R>(input: Invocation, effect: Effect.Effect<Settlement, E, R>) => Effect.Effect<Settlement, E | Denied, R>
   /** Installed hooks on a Session event, over the profile loaded for it; only a `prompt` denial has an effect to stop. */
   readonly session: (input: SessionEvent) => Effect.Effect<ReadonlyArray<string>, Denied>
 }

@@ -33,7 +33,7 @@ export function useSessionArchive(input?: { server: ServerSDK; directory: string
   const { params } = useSessionKey()
   const frozen = input ? { source: sdk(), state: sync(), serverState: serverSync() } : undefined
   const origin = () => input?.server ?? serverSDK()
-  // Restore needs the V2 session routes: the V1 session update cannot clear time.archived. Offer Archive nowhere it could not be undone.
+  // Restore needs the session archive routes. Offer Archive nowhere it could not be undone.
   const restorable = () => archiveRouted(origin()) && !unsupported[origin().scope]
   const available = restorable
   const busy = (sessionID: string) => operations[ScopedKey.from(origin().scope, sessionID)] ?? false
@@ -85,7 +85,7 @@ export function useSessionArchive(input?: { server: ServerSDK; directory: string
 
     setOperations(key, true)
     await serverSDK.sessionManagement
-      .archive(sessionID, true, source.directory)
+      .archive(sessionID, true)
       .then(() => {
         const current = state.session.get(sessionID)
         if (
@@ -115,7 +115,6 @@ export function useSessionArchive(input?: { server: ServerSDK; directory: string
 
   const restore = async (sessionID: string, info?: AppSession) => {
     const serverSDK = origin()
-    const source = frozen?.source ?? sdk()
     const state = frozen?.state ?? sync()
     const serverState = frozen?.serverState ?? serverSync()
     const key = ScopedKey.from(serverSDK.scope, sessionID)
@@ -129,7 +128,7 @@ export function useSessionArchive(input?: { server: ServerSDK; directory: string
       return false
     }
     setOperations(key, true)
-    return serverSDK.sessionManagement.archive(sessionID, false, session.directory ?? input?.directory ?? source.directory)
+    return serverSDK.sessionManagement.archive(sessionID, false)
       .then(async () => {
         const current = serverState.session.get(sessionID)
         if (current?.time.archived !== undefined &&
@@ -137,7 +136,7 @@ export function useSessionArchive(input?: { server: ServerSDK; directory: string
         // A void ACK carries no archive revision. Read before projecting and respect remember's event fence.
         const restored = serverState.session.remember(await serverState.session.resolve(sessionID, { force: true }))
         if (restored.time.archived !== undefined) return false
-        serverState.homeSessions.apply({ type: "session.updated", properties: { sessionID, info: restored } })
+        serverState.homeSessions.apply({ type: "upsert", info: restored })
         state.set("session", (sessions) =>
           [...sessions.filter((item) => item.id !== sessionID), restored].sort((a, b) => a.id.localeCompare(b.id)),
         )
@@ -157,7 +156,7 @@ export function useSessionArchive(input?: { server: ServerSDK; directory: string
   return { archive, restore, available, restorable, busy, navigateAfterRemoval }
 }
 
-// The desktop sidecar reads as V1 but serves the V2 archive routes; its session management probes for them.
+// Archive routes exist once the server is ready; session management reports that before the SDK flag is read.
 function archiveRouted(server: ServerSDK) {
-  return server.protocolKind() === "v2" || server.sessionManagement.hasArchiveRoutes()
+  return !!server.isReady() || server.sessionManagement.hasArchiveRoutes()
 }

@@ -215,7 +215,7 @@ test("v2: Claude mode engine write and sign-in states", async ({ page }) => {
   const opened = () => page.evaluate(() => (window as unknown as { opened: string[] }).opened)
   await section.getByRole("button", { name: "Sign in to Claude" }).click()
   await expect(section.getByRole("status")).toHaveText("Waiting for your browser…")
-  expect(mock.calls.filter((call) => call.path === "/api/claude-code/login")).toHaveLength(1)
+  expect(mock.calls.filter((call) => call.path === "/api/provider/claude-code/login")).toHaveLength(1)
   expect(await opened()).toEqual([])
   await section.getByRole("button", { name: "Browser didn't open? Open the sign-in page" }).click()
   await expect.poll(opened).toEqual(["https://claude.example.test/login"])
@@ -228,7 +228,7 @@ test("v2: Claude mode engine write and sign-in states", async ({ page }) => {
   await section.getByLabel("Paste the code from the sign-in page").fill(" abc#state ")
   await submit.click()
   await expect(section.getByText("Signed in as me@example.com · Max")).toBeVisible()
-  expect(mock.calls.find((call) => call.path === "/api/claude-code/login/code")?.body).toEqual({
+  expect(mock.calls.find((call) => call.path === "/api/provider/claude-code/login/code")?.body).toEqual({
     code: "abc#state",
   })
   await expect(section.getByRole("button", { name: "Sign in to Claude" })).toHaveCount(0)
@@ -320,7 +320,6 @@ async function setup(page: Page, mock: Mock, scheme: "dark" | "light" = "dark") 
     }
     if (path === "/global/event" || path === "/event" || path === "/api/event")
       return route.fulfill({ status: 200, contentType: "text/event-stream", body: ": ok\n\n" })
-    if (path === "/global/health") return json(route, { healthy: true }, 404)
     if (path === "/api/health") return json(route, { healthy: true, version: "2", pid: 1 })
     if (path === "/api/config" && method === "PATCH") {
       const patch = JSON.parse(raw ?? "{}")
@@ -332,16 +331,16 @@ async function setup(page: Page, mock: Mock, scheme: "dark" | "light" = "dark") 
         disabledProviders: config.disabled_providers,
         agents: mock.engine ? { maestro: { engine: mock.engine } } : {},
       })
-    if (path === "/api/claude-code/account" && mock.claude)
+    if (path === "/api/provider/claude-code/account" && mock.claude)
       return json(
         route,
         mock.claude.signedIn ? { signedIn: true, email: "me@example.com", subscription: "Max" } : { signedIn: false },
       )
-    if (path === "/api/claude-code/login" && mock.claude)
+    if (path === "/api/provider/claude-code/login" && mock.claude)
       return mock.claude.loginError
-        ? json(route, { _tag: "ClaudeCodeLoginError", message: mock.claude.loginError }, 400)
+        ? json(route, { _tag: "ServiceUnavailableError", message: mock.claude.loginError }, 503)
         : json(route, { url: "https://claude.example.test/login" })
-    if (path === "/api/claude-code/login/code" && mock.claude) {
+    if (path === "/api/provider/claude-code/login/code" && mock.claude) {
       mock.claude.signedIn = true
       return json(route, true)
     }

@@ -25,11 +25,9 @@ on:
       - "packages/core/src/pty.ts"
       - "packages/core/src/pty/**"
       - "packages/core/test/fixture/process-tree.ts"
-      - "apps/orchestra/src/tool/shell.ts"
-      - "apps/orchestra/src/session/prompt.ts"
-      - "apps/orchestra/src/cli/cmd/debug/omni.ts"
-      - "apps/orchestra/src/cli/omni-entry.ts"
-      - "apps/orchestra/script/build.ts"
+      - "apps/cli/src/omni-entry.ts"
+      - "apps/cli/script/build.ts"
+      - "packages/core/src/tool/bash.ts"
       - "packages/core/src/omni.ts"
 
 concurrency:
@@ -59,11 +57,11 @@ jobs:
       - uses: ./.github/actions/omni-binaries
       - name: Build the real shipped CLI
         id: build
-        working-directory: apps/orchestra
+        working-directory: apps/cli
         run: |
           # --single takes the exact checkout binaries restored or built by omni-binaries.
           unset OMNI_ARTIFACTS
-          bun script/build.ts --single --skip-install --skip-embed-web-ui 2>&1 | tee ../../native/omni/campaign/logs/build.log
+          bun script/build.ts --single --skip-install 2>&1 | tee ../../native/omni/campaign/logs/build.log
       - name: Wait for the build's load to settle
         if: ${{ !cancelled() && steps.build.outcome == 'success' && runner.os != 'Windows' }}
         run: |

@@ -16,7 +16,7 @@ import { useCommandShortcut } from "../keymap"
 import { useProject } from "../context/project"
 import { Spinner } from "./spinner"
 import { DialogWorkspaceFileChanges } from "./dialog-workspace-file-changes"
-import type { ProjectDirectories } from "../compat/schema"
+import type { ProjectDirectories } from "../types"
 import { useRoute } from "../context/route"
 
 export type MoveSessionSelection = { type: "directory"; directory: string; subdirectory: boolean } | { type: "new" }
@@ -60,9 +60,9 @@ export function DialogMoveSession(props: DialogMoveSessionProps) {
   const [loadedProject] = createResource(
     () => (projectContext.project() === props.projectID ? undefined : props.projectID),
     (projectID) =>
-      sdk.client.project
-        .current({}, { throwOnError: true })
-        .then((result) => (result.data?.id === projectID ? result.data.worktree : undefined))
+      sdk.api.location
+        .get({ location: { directory: sdk.directory } })
+        .then((result) => (result.project.id === projectID ? result.project.directory : undefined))
         .catch(() => undefined),
   )
   const currentCheckout = createMemo(() => {
@@ -74,13 +74,10 @@ export function DialogMoveSession(props: DialogMoveSessionProps) {
     () => (props.initialRemoving ? undefined : props.projectID),
     async (projectID, info): Promise<ProjectDirectory[] | undefined> => {
       try {
-        await sdk.client.v2.projectCopy.refresh(
-          { projectID, location: { directory: sdk.directory } },
-          { throwOnError: true },
-        )
-        const directories = await sdk.client.project.directories({ projectID }, { throwOnError: true })
+        await sdk.api.projectCopies.refresh({ projectID, location: { directory: sdk.directory } })
+        const directories = await sdk.api.projects.directories({ projectID })
         setLoadError(undefined)
-        return directories.data ?? []
+        return directories as ProjectDirectory[]
       } catch (error) {
         setLoadError(error)
         // An initial load with no data surfaces the inline error view below. A
@@ -126,8 +123,8 @@ export function DialogMoveSession(props: DialogMoveSessionProps) {
     if (roots.length === 0) return [{ title: "No project directories found", value: undefined }]
 
     const subdirectories = sync.data.session
-      .filter((session) => session.projectID === props.projectID && session.path && ![".", "/"].includes(session.path))
-      .map((session) => session.directory)
+      .filter((session) => session.projectID === props.projectID && session.subpath && ![".", "/"].includes(session.subpath))
+      .map((session) => session.location.directory)
       .filter((directory) => !roots.some((root) => root.directory === directory))
       .filter((directory, index, directories) => directories.indexOf(directory) === index)
       .map((location) => ({
@@ -221,19 +218,22 @@ export function DialogMoveSession(props: DialogMoveSessionProps) {
     setToDelete(undefined)
     setRemoving(selected.directory)
     setWorking(true)
-    const result = await sdk.client.v2.projectCopy
+    const result = await sdk.api.projectCopies
       .remove({
         projectID: props.projectID,
         location: { directory: sdk.directory },
         directory: selected.directory,
         force: false,
       })
-      .catch((error) => ({ error }))
+      .then(
+        () => ({ error: undefined }),
+        (error: unknown) => ({ error }),
+      )
     if (result.error) {
       setRemoving(undefined)
       setWorking(false)
-      if ("data" in result.error && result.error.data.forceRequired) {
-        const status = await sdk.client.vcs.status({ directory: selected.directory }).catch(() => undefined)
+      if (forceRequired(result.error)) {
+        const status = await sdk.api.vcs.status({ location: { directory: selected.directory } }).catch(() => undefined)
         const choice = await DialogWorkspaceFileChanges.show(dialog, status?.data ?? [], {
           title: "Delete working copy?",
           message: "This working copy has file changes. Do you want to delete it anyway?",
@@ -243,14 +243,17 @@ export function DialogMoveSession(props: DialogMoveSessionProps) {
           return
         }
         reopen(selected.directory)
-        const forced = await sdk.client.v2.projectCopy
+        const forced = await sdk.api.projectCopies
           .remove({
             projectID: props.projectID,
             location: { directory: sdk.directory },
             directory: selected.directory,
             force: true,
           })
-          .catch((error) => ({ error }))
+          .then(
+            () => ({ error: undefined }),
+            (error: unknown) => ({ error }),
+          )
         if (forced.error) {
           toast.show({
             variant: "error",
@@ -350,4 +353,17 @@ function contains(root: string, directory: string) {
   if (root === directory) return true
   const relative = path.relative(root, directory)
   return relative && relative !== ".." && !relative.startsWith(".." + path.sep) && !path.isAbsolute(relative)
+}
+
+// A declared ProjectCopyError body marks a removal that needs force.
+function forceRequired(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "data" in error &&
+    typeof error.data === "object" &&
+    error.data !== null &&
+    "forceRequired" in error.data &&
+    error.data.forceRequired === true
+  )
 }

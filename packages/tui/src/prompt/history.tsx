@@ -1,28 +1,12 @@
 import path from "path"
 import { onMount } from "solid-js"
 import { createStore, produce, unwrap } from "solid-js/store"
-import type { AgentPart, FilePart, TextPart } from "../compat/schema"
+import type { TuiPromptInfo } from "@orchestra/plugin/tui"
 import { createSimpleContext } from "../context/helper"
 import { useTuiPaths } from "../context/runtime"
 import { appendText, readText, writeText } from "../util/persistence"
 
-export type PromptInfo = {
-  input: string
-  mode?: "normal" | "shell"
-  parts: (
-    | Omit<FilePart, "id" | "messageID" | "sessionID">
-    | Omit<AgentPart, "id" | "messageID" | "sessionID">
-    | (Omit<TextPart, "id" | "messageID" | "sessionID"> & {
-        source?: {
-          text: {
-            start: number
-            end: number
-            value: string
-          }
-        }
-      })
-  )[]
-}
+export type PromptInfo = TuiPromptInfo
 
 export const MAX_HISTORY_ENTRIES = 50
 

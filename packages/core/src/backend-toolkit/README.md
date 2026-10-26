@@ -7,7 +7,7 @@
 
 ## Public entry points and consumers
 
-- Consumers include `apps/orchestra/src/cli/cmd/toolkit.ts` and `apps/orchestra/src/maestro/atlas-memory.ts`.
+- Consumers include `apps/cli/src/commands/handlers/toolkit/` and `modules/maestro/coordination/src/v2/tools/atlas-memory.ts`.
 
 ## Dependencies and boundaries
 

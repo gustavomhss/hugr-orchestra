@@ -63,7 +63,6 @@ export function KpiDashboard(props: {
   const language = useLanguage()
   const navigate = useNavigate()
   const openModels = () => navigate("/orchestra/settings?section=models")
-  const client = props.sdk.createClient({ directory: props.directory })
   const [prefs, setPrefs, , ready] = persisted(
     Persist.serverWorkspace(props.sdk.scope, props.directory, "orchestra-home"),
     createStore({ period: "30d" as Period }),
@@ -117,13 +116,9 @@ export function KpiDashboard(props: {
     setRepository({ status: "loading" })
     setPulls({ status: "loading" })
     setState("expanded", false)
-    // The V2 server answers through its own routes; a V1 sidecar through the legacy SDK.
-    const v2 = Promise.resolve(true)
     const location = { directory: props.directory }
-    void cached("activity", period, async (abort) =>
-      (await v2)
-        ? current(props.sdk.orchestra.vcs.sessionActivity({ location, period }, { signal: abort }), parseActivity)
-        : outcome(client.session.activity({ directory: props.directory, period }, { signal: abort }), parseActivity),
+    void cached("activity", period, (abort) =>
+      current(props.sdk.orchestra.vcs.sessionActivity({ location, period }, { signal: abort }), parseActivity),
     ).then((result) => {
       if (!signal.aborted) setActivity(result)
     })
@@ -131,17 +126,15 @@ export function KpiDashboard(props: {
     const now = Date.now()
     const days = { "7d": 7, "30d": 30, "90d": 90, all: undefined }[period]
     const since = days === undefined ? 0 : now - (2 * days + 2) * 86_400_000
-    void cached("vcs", period, async (abort) =>
-      (await v2)
-        ? current(props.sdk.orchestra.vcs.activity({ location, since, until: now }, { signal: abort }), parseGit)
-        : outcome(client.vcs.activity({ directory: props.directory, since, until: now }, { signal: abort }), parseGit),
+    void cached("vcs", period, (abort) =>
+      current(props.sdk.orchestra.vcs.activity({ location, since, until: now }, { signal: abort }), parseGit),
     ).then((result) => {
       if (!signal.aborted) setRepository(result)
     })
     // Open pull requests are a count of now, the same for every period.
     void cached("pullRequests", "open", (abort) =>
       pullRequestCall(
-        client.v2.pullRequest.list({ location: { directory: props.directory } }, { signal: abort }),
+        props.sdk.orchestra.pullRequests.list({ location }, { signal: abort }),
         openPullRequests,
       ).then(
         (result): Outcome<OpenPullRequests> =>
@@ -150,12 +143,9 @@ export function KpiDashboard(props: {
     ).then((result) => {
       if (!signal.aborted) setPulls(result)
     })
-    void v2
-      .then((served) =>
-        served
-          ? props.sdk.orchestra.vcs.get({ location }, { signal }).then((result) => result.data.branch)
-          : client.vcs.get({ directory: props.directory }, { signal }).then((result) => result.data?.branch),
-      )
+    void props.sdk.orchestra.vcs
+      .get({ location }, { signal })
+      .then((result) => result.data.branch)
       .then((branch) => {
         if (!signal.aborted && typeof branch === "string") setState("branch", branch)
       })
@@ -670,17 +660,4 @@ async function current<T>(call: Promise<{ data: unknown }>, parse: (value: unkno
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null
-}
-
-// Maps a legacy SDK call to complete data, a missing endpoint, or an error. Malformed data is an error.
-async function outcome<T>(
-  call: Promise<{ data?: unknown; response?: Response }>,
-  parse: (value: unknown) => T | undefined,
-): Promise<Outcome<T>> {
-  const result = await call.catch(() => undefined)
-  const status = result?.response?.status
-  if (status !== undefined && [404, 405, 501].includes(status)) return { status: "unavailable" }
-  const data = result?.response?.ok ? parse(result.data) : undefined
-  if (!data) return { status: "error" }
-  return { status: "complete", data }
 }

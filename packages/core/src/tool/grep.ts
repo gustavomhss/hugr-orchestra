@@ -57,6 +57,8 @@ const layer = Layer.effectDiscard(
     const ripgrep = yield* Ripgrep.Service
     const location = yield* Location.Service
     const permission = yield* PermissionV2.Service
+    const text = (output: ModelOutput) =>
+      toModelOutput(output.map((match) => ({ ...match, entry: { ...match.entry, path: path.resolve(location.directory, match.entry.path) } })))
 
     yield* tools
       .register({
@@ -69,17 +71,13 @@ const layer = Layer.effectDiscard(
 - The result counts the matches and lists each matching line with its line number, grouped by file. \`limit\` caps the number of matches; without it, every match is listed.`,
           input: Input,
           output: Output,
-          toModelOutput: ({ output }) => [
-            {
-              type: "text",
-              text: toModelOutput(
-                output.map((match) => ({
-                  ...match,
-                  entry: { ...match.entry, path: path.resolve(location.directory, match.entry.path) },
-                })),
-              ),
-            },
-          ],
+          toModelOutput: ({ output }) => [{ type: "text", text: text(output) }],
+          // Native search results are attested for Lean 2.0; same-named application tools are not.
+          modelCapture: ({ output }) => ({
+            textIndex: 0,
+            observation: { source: "other", command: name, output: text(output), termination: { kind: "exited", code: 0 },
+              completeness: "complete", presentation: "unknown" },
+          }),
           execute: (input, context) =>
             Effect.gen(function* () {
               yield* permission.assert({

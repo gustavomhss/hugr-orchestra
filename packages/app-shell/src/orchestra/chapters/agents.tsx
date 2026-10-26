@@ -8,11 +8,12 @@ import { useLanguage } from "@/context/language"
 import { ServerConnection } from "@/context/server"
 import { useServerSync } from "@/context/server-sync"
 import { useSDK } from "@/context/sdk"
+import { ClientError } from "@orchestra/client"
 import { useTabs } from "@/context/tabs"
 import { directoryKey, normalizeAgentList } from "@/context/global-sync/utils"
 import type { ChapterPageProps } from "../chapter-route"
 import { AgentDialog } from "./agents-dialog"
-import { agentModels, agentRoster, agentUnavailable, restoreInput } from "./agents-roster"
+import { agentModels, agentRoster, agentUnavailable, errorStatus, restoreInput } from "./agents-roster"
 import { modelUnavailable } from "@/components/subagent-model-rules"
 import { AgentsRoster } from "./agents-view"
 import "./agents.css"
@@ -59,61 +60,26 @@ export default function Agents(props: ChapterPageProps) {
       [...(providers.isSuccess ? providers.data.all.values() : [])].filter((provider) => connected().has(provider.id)),
     ),
   )
-  const legacy = (directory = props.directory) => sdk().createClient({ directory, throwOnError: false })
-  const requestError = (result: { response?: Response; error?: unknown }) => {
-    const kind =
-      result.error && typeof result.error === "object" && "kind" in result.error ? result.error.kind : undefined
-    return new Error(language.t("orchestra.agents.error.save"), { cause: { status: result.response?.status, kind } })
-  }
   const unsupportedError = () => new Error(language.t("orchestra.agents.error.unsupported"), { cause: { status: 404 } })
-  // A server without the route can answer with its web app's HTML and status 200.
-  const unsupported = (response: Response | undefined) =>
-    !response?.headers.get("content-type")?.includes("application/json") ? unsupportedError() : undefined
-  // The SDK rejects a bare `text/html` answer (what a server's embedded web app sends) before this page can read
-  // the response, so that rejection means the same missing route.
-  const htmlRejected = (error: unknown): never => {
-    throw error instanceof Error && error.message.includes("Server responded with text/html")
-      ? unsupportedError()
-      : error
-  }
-  const working = async (directory: string) =>
-    Object.values((await legacy(directory).session.status()).data ?? {}).some((status) => status.type !== "idle")
-  // V1 keeps config per instance, and disposing it cancels that directory's running sessions.
-  const reloadLegacy = async (directory: string) => {
-    return true
-    if (await working(directory)) return false
-    await legacy(directory).instance.dispose()
-    return true
+  // The client rejects a declared failure with the server's body and an undeclared answer with a ClientError carrying
+  // its status. A 200 that is not JSON is a server's embedded web app answering a route it lacks.
+  const requestError = (error: unknown): never => {
+    if (error instanceof ClientError && error.reason === "UnsupportedContentType") throw unsupportedError()
+    const tag = error && typeof error === "object" && "_tag" in error ? error._tag : undefined
+    const status = error instanceof ClientError ? errorStatus(error) : tag === "ConflictError" ? 409 : tag === "InvalidRequestError" ? 400 : undefined
+    const kind = error && typeof error === "object" && "kind" in error ? error.kind : undefined
+    throw new Error(language.t("orchestra.agents.error.save"), { cause: { status, kind } })
   }
 
   // Agent files live in `<profile>/.orchestra/agent`; the server reloads its V2 agents after a write.
-  const load = async (name: string) => {
-    const result = await legacy()
-      .v2.agent.file.get({ agentID: name, location: { directory: props.directory } })
-      .catch(htmlRejected)
-    if (!result.data) throw requestError(result)
-    const missing = unsupported(result.response)
-    if (missing) throw missing
-    return result.data.data
-  }
+  const load = (name: string) =>
+    sdk()
+      .orchestra.agents.getFile({ agentID: name, location: { directory: props.directory } })
+      .then((result) => result.data, requestError)
   const save = async (name: string, input: AgentFileInput) => {
-    const directory = props.directory
-    const result = await legacy()
-      .v2.agent.file.update({
-        agentID: name,
-        location: { directory },
-        agentFileInput: input,
-      })
-      .catch(htmlRejected)
-    if (!result.data) throw requestError(result)
-    const missing = unsupported(result.response)
-    if (missing) throw missing
-    const path = result.data.data.path
-    if (false && !(await reloadLegacy(directory)))
-      return void setState("pending", {
-        directory,
-        path: path.startsWith(`${directory}/`) ? path.slice(directory.length + 1) : path,
-      })
+    await sdk()
+      .orchestra.agents.updateFile({ agentID: name, location: { directory: props.directory }, ...input })
+      .catch(requestError)
     await query.refetch()
   }
   const restore = (removed: { id: string; name: string }) => {
@@ -127,16 +93,6 @@ export default function Agents(props: ChapterPageProps) {
       .catch(() => setState("restoreFailed", true))
       .finally(() => setState("restoring", false))
   }
-  createEffect(() => {
-    const pending = state.pending
-    if (!pending || pending.directory !== props.directory) return
-    if (Object.values(sync()[0].session_status).some((status) => status && status.type !== "idle")) return
-    void reloadLegacy(pending.directory).then((done) => {
-      if (!done || state.pending !== pending) return
-      setState("pending", undefined)
-      void query.refetch()
-    })
-  })
   const availability = (agent: Agent) => {
     // Unknown until this profile's provider catalog has loaded.
     if (!providers.isSuccess) return

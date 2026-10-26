@@ -1,7 +1,7 @@
 /** @jsxImportSource @opentui/solid */
 import { expect, test } from "bun:test"
 import { testRender } from "@opentui/solid"
-import type { Event, GlobalEvent } from "@orchestra/sdk/v2"
+import type { Event, GlobalEvent } from "../../../src/types"
 import { onMount } from "solid-js"
 import { ProjectProvider } from "../../../src/context/project"
 import { SDKProvider } from "../../../src/context/sdk"
@@ -150,7 +150,7 @@ test("refreshes integrations after integration updates", async () => {
     expect(data.location.integration.list()).toEqual([])
     const before = { ...requests }
 
-    emitEvent(events, { id: "evt_integration", type: "integration.updated", properties: {} })
+    emitEvent(events, { id: "evt_integration", type: "integration.updated", data: {} })
     await wait(() => data.location.integration.list()?.length === 1)
     await wait(() => requests.model > before.model && requests.provider > before.provider)
     expect(data.location.integration.list()?.[0]).toMatchObject({ id: "openai", name: "OpenAI" })
@@ -188,7 +188,7 @@ test("refreshes effective catalog data after catalog updates", async () => {
   try {
     await wait(() => requests.model > 0 && requests.provider > 0)
     const before = { ...requests }
-    emitEvent(events, { id: "evt_catalog", type: "catalog.updated", properties: {} })
+    emitEvent(events, { id: "evt_catalog", type: "catalog.updated", data: {} })
     await wait(() => requests.model > before.model && requests.provider > before.provider)
   } finally {
     app.renderer.destroy()
@@ -233,7 +233,7 @@ test("refreshes references after updates", async () => {
   try {
     await mounted
     await wait(() => requests === 1)
-    emitEvent(events, { id: "evt_reference_1", type: "reference.updated", properties: {} })
+    emitEvent(events, { id: "evt_reference_1", type: "reference.updated", data: {} })
     await wait(() => data.location.reference.list()?.length === 1)
     expect(data.location.reference.list()?.[0]?.name).toBe("docs")
   } finally {
@@ -273,12 +273,12 @@ test("settles pending tools when a live failure arrives", async () => {
     emitEvent(events, {
       id: "evt_agent_1",
       type: "session.next.agent.switched",
-      properties: { sessionID: "session-1", messageID: "msg_agent_1", timestamp: 0, agent: "maestro" },
+      data: { sessionID: "session-1", messageID: "msg_agent_1", timestamp: 0, agent: "maestro" },
     })
     emitEvent(events, {
       id: "evt_model_1",
       type: "session.next.model.switched",
-      properties: {
+      data: {
         sessionID: "session-1",
         messageID: "msg_model_1",
         timestamp: 0,
@@ -288,7 +288,7 @@ test("settles pending tools when a live failure arrives", async () => {
     emitEvent(events, {
       id: "evt_step_started_1",
       type: "session.next.step.started",
-      properties: {
+      data: {
         sessionID: "session-1",
         assistantMessageID: "msg_explicit_assistant_9",
         timestamp: 1,
@@ -299,7 +299,7 @@ test("settles pending tools when a live failure arrives", async () => {
     emitEvent(events, {
       id: "evt_input_1",
       type: "session.next.tool.input.started",
-      properties: {
+      data: {
         sessionID: "session-1",
         assistantMessageID: "msg_explicit_assistant_9",
         timestamp: 2,
@@ -310,7 +310,7 @@ test("settles pending tools when a live failure arrives", async () => {
     emitEvent(events, {
       id: "evt_called_1",
       type: "session.next.tool.called",
-      properties: {
+      data: {
         sessionID: "session-1",
         timestamp: 2,
         assistantMessageID: "msg_explicit_assistant_9",
@@ -323,7 +323,7 @@ test("settles pending tools when a live failure arrives", async () => {
     emitEvent(events, {
       id: "evt_failed_1",
       type: "session.next.tool.failed",
-      properties: {
+      data: {
         sessionID: "session-1",
         timestamp: 3,
         assistantMessageID: "msg_explicit_assistant_9",
@@ -402,7 +402,7 @@ test("renders admitted prompts only after they become model-visible", async () =
     emitEvent(events, {
       id: "evt_admitted_1",
       type: "session.next.prompt.admitted",
-      properties: {
+      data: {
         sessionID: "session-1",
         messageID: "msg_user_1",
         timestamp: 0,
@@ -415,7 +415,7 @@ test("renders admitted prompts only after they become model-visible", async () =
     emitEvent(events, {
       id: "evt_prompted_1",
       type: "session.next.prompted",
-      properties: {
+      data: {
         sessionID: "session-1",
         messageID: "msg_user_1",
         timestamp: 0,
@@ -466,7 +466,7 @@ test("projects live context updates with their message ID", async () => {
     emitEvent(events, {
       id: "evt_context_1",
       type: "session.next.context.updated",
-      properties: {
+      data: {
         sessionID: "session-1",
         messageID: "msg_context_1",
         timestamp: 1,

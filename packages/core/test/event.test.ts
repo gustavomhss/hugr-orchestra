@@ -4,7 +4,7 @@ import { EventV2 } from "@orchestra/core/event"
 import { Event } from "@orchestra/schema/event"
 import { Session } from "@orchestra/schema/session"
 import { SessionEvent } from "@orchestra/schema/session-event"
-import { SessionV1 } from "@orchestra/schema/session-v1"
+import { ResearchEvent } from "@orchestra/schema/research-event"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -72,11 +72,10 @@ const VersionedMessage = EventV2.define({
   },
 })
 
-const DurableMessage = SessionV1.Event.MessageRemoved
-const durableData = (sessionID: Session.ID, text: string) => ({
-  sessionID,
-  messageID: SessionV1.MessageID.ascending(`msg_${text}`),
-})
+// Any manifest durable event works here; replay resolves types through the durable manifest only.
+const DurableMessage = ResearchEvent.AllowanceCharged
+const durableData = (sessionID: Session.ID, text: string) =>
+  ({ sessionID, dispatchCallID: `call_${text}`, operation: "test", kind: "tool" as const, amount: 1 })
 
 const it = testEffect(
   AppNodeBuilder.build(LayerNode.group([Database.node, EventV2.node, Location.node]), [[Location.node, locationLayer]]),

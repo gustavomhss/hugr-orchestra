@@ -4,7 +4,7 @@ import { chmod, copyFile, cp, lstat, mkdir, mkdtemp, readFile, readdir, realpath
 import { machine } from "node:os"
 import { join, resolve } from "node:path"
 import { Schema } from "effect"
-import { expectSpawn } from "../../../packages/core/test/fixture/omni-expect"
+import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { cli, command, nativeLibc, sandbox, sha256, successful, versions } from "./fixture/distribution-native"
 import { removeOwnedMuslContainers } from "./fixture/distribution-musl/cleanup"
 import type { MuslContainerLease } from "./fixture/distribution-musl/cleanup"
@@ -127,7 +127,9 @@ export async function runMuslQualification() {
   if (state.teardown) throw new Error("MUSL_GUEST_COMPLETED_AFTER_TEARDOWN_STARTED")
   await Bun.write(join(state.directory, "evidence/guest-process.json"), JSON.stringify(result, null, 2))
   console.info(result.stdout)
-  if (result.code !== 0) throw new Error(`MUSL_NATIVE_GUEST_FAILED: ${guest.image}; logs=${state.artifact}\n${result.stderr}`)
+  // The guest redirects its own output to bootstrap.log, so a failure carries that log tail.
+  if (result.code !== 0) throw new Error(`MUSL_NATIVE_GUEST_FAILED: ${guest.image}; logs=${state.artifact}\n${result.stderr}\n${
+    (await readFile(join(state.directory, "evidence/bootstrap.log"), "utf8").catch(() => "")).slice(-8000)}`)
   const qualified = Schema.decodeUnknownSync(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(Schema.Struct({
     target: Schema.String, sourceSHA: Schema.String, versions: Schema.Array(Schema.String), architecture: Schema.String,
     libc: Schema.Literal("musl"), channels: Schema.Array(Schema.String),

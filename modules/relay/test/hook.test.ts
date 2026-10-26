@@ -157,16 +157,16 @@ describe("graph walk", () => {
   const generated = install(
     "gen",
     "edit.before",
-    { c: when("path", "packages/sdk/js/src/generated/**"), b: block("Regenerate with build.ts"), a: allow() },
+    { c: when("path", "packages/sdk/lib/src/generated/**"), b: block("Regenerate with build.ts"), a: allow() },
     "t>c c>b c:1>a",
   )
 
   test("a condition takes Yes (port 0) when it matches and No (port 1) when it does not", () => {
     const edit = (path: string) => call("edit.before", { tool: "edit", paths: [path] })
-    expect(HookEvaluate.plan([generated], edit("packages/sdk/js/src/generated/types.gen.ts"))).toStrictEqual([
+    expect(HookEvaluate.plan([generated], edit("packages/sdk/lib/src/generated/types.gen.ts"))).toStrictEqual([
       { installID: "gen", nodeID: "b", action: "block", message: "Regenerate with build.ts" },
     ])
-    expect(HookEvaluate.plan([generated], edit("packages/sdk/js/src/index.ts"))).toStrictEqual([
+    expect(HookEvaluate.plan([generated], edit("packages/sdk/lib/src/index.ts"))).toStrictEqual([
       { installID: "gen", nodeID: "a", action: "allow", message: "" },
     ])
   })

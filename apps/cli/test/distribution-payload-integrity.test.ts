@@ -22,7 +22,7 @@ test("descriptor and archive inventory equal independently captured source bytes
   const files = source.filter((entry) => entry.kind === "file").sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0)
   expect(files.map((entry) => entry.path)).toEqual([
     "package.json", `bin/${tuple.executable}`, "bin/hugr_omni.node", `bin/${tuple.supervisor}`,
-    "bin/extra/note.txt", ...treeSitterPaths,
+    "bin/extra/note.txt", "bin/licenses/hugr-lean/LICENSE", "bin/licenses/hugr-lean/manifest.json", ...treeSitterPaths,
   ].sort())
   const manifest = await prepareDistribution(value.input)
   expect(manifest.files).toEqual(files.map((entry) => ({ path: entry.path, sha256: entry.sha256, executable: Boolean(entry.mode & 0o111) })))

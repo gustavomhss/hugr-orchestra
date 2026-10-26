@@ -1,20 +1,24 @@
 import { expect, mock, test } from "bun:test"
 import { createServer } from "node:http"
 import path from "node:path"
-import { Process } from "../../../apps/orchestra/src/util/process"
-import { Omni } from "../../core/src/omni"
-import { expectSpawn } from "../../core/test/fixture/omni-expect"
+import { Effect } from "effect"
+import { ChildProcess } from "effect/unstable/process"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { Omni } from "@orchestra/core/omni"
+import { AppProcess } from "@orchestra/core/process"
+import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import type { LeanDashboard } from "@orchestra/schema/lean-dashboard"
 import type { ServerConnection } from "@/context/server"
 import type { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 
 async function child(args: string[], env = process.env) {
   const before = Omni.snapshot()
-  const result = await Process.run([process.execPath, ...args], {
-    cwd: path.resolve(import.meta.dir, ".."), env, nothrow: true, deadline: 180000,
-  })
+  const result = await Effect.runPromise(AppProcess.Service.use((app) => app.run(
+    ChildProcess.make(process.execPath, args, { cwd: path.resolve(import.meta.dir, ".."), env }),
+    { timeout: 180_000 },
+  )).pipe(Effect.provide(LayerNode.compile(AppProcess.node))))
   const output = result.stdout.toString() + result.stderr.toString()
-  expect(result.code, output).toBe(0)
+  expect(result.exitCode, output).toBe(0)
   expect(output).toMatch(/\b[1-9]\d* pass\b/)
   expect(output).not.toMatch(/\b[1-9]\d* skip\b/)
   expect(Omni.snapshot().spawns).toBeGreaterThan(before.spawns)
@@ -33,8 +37,9 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
   const { createComponent, createStore, render } = await import("./lean-dom.test-helper")
   const { MemoryRouter, Route, createMemoryHistory } = await import("@solidjs/router")
   const { solidDom } = await import("./solid-dom")
-  const { Orchestra } = await import("@orchestra/client")
-  const { createSdkForServer }: typeof import("@/utils/server") = await import(solidDom("@/utils/server", import.meta.dir))
+  // The chapter's lean-api checks `instanceof ClientError` against its solidDom() copy of the client, so the fixture
+  // client must come from that same copy.
+  const { Orchestra }: typeof import("@orchestra/client") = await import(solidDom("@orchestra/client", import.meta.dir))
   const { ServerConnection }: typeof import("@/context/server") = await import(solidDom("@/context/server", import.meta.dir))
   const { ServerScope }: typeof import("@/utils/server-scope") = await import(solidDom("@/utils/server-scope", import.meta.dir))
   const { PlatformProvider }: typeof import("@/context/platform") = await import(solidDom("@/context/platform", import.meta.dir))
@@ -48,14 +53,11 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
     items: (["cargo", "pytest", "go"] as const).map((id) => ({ id, enabled: true,
       savings: { bytesSaved: bytes, tokensSaved: bytes / 4, calls: 1, tokenCalls: 1 } })),
   })
-  type Event = { name: string; details: { type: string } }
   async function nativeServer(bytes: number, name: string, supported = true) {
-    const protocol = "v2" as const
     const data = new Map<string, LeanDashboard.Info>()
     const provider: NormalizedProviderListResponse = { all: new Map(), connected: [], default: {} }
     const catalogs = new Map<string, { directory: string; provider_ready: boolean; provider: typeof provider }>()
     const requests: { method: string; directory: string; path: string; body?: LeanDashboard.Update }[] = []
-    const listeners = new Set<(event: Event) => void>()
     const gates = { read: undefined as Promise<void> | undefined, write: undefined as Promise<void> | undefined,
       history: undefined as Promise<void> | undefined }
     const server = createServer(async (request, response) => {
@@ -69,6 +71,8 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
       for await (const chunk of request) chunks.push(Buffer.from(chunk))
       const body: LeanDashboard.Update | undefined = request.method === "PATCH" ? JSON.parse(Buffer.concat(chunks).toString()) : undefined
       requests.push({ method: request.method!, directory, path: url.pathname, body })
+      // A server without the Lean routes answers an undeclared 404, which the chapter reads as unsupported.
+      if (!supported) { response.writeHead(404, { "content-type": "application/json" }); response.end("{}"); return }
       if (directory === "/one") await (body ? gates.write : url.pathname.includes("history") ? gates.history : gates.read)
       const saved = data.get(directory) ?? snapshot(directory, bytes)
       const updated = !body ? saved : body.itemID
@@ -81,7 +85,8 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
         exit: 0, time: 123, bytesSaved: bytes, tokensSaved: bytes / 4,
       }] }
       response.writeHead(200, { "content-type": "application/json" })
-      response.end(JSON.stringify({ location: { directory }, data: url.pathname.includes("history") ? history : updated }))
+      response.end(JSON.stringify({ location: { directory, project: { id: "same-git-project", directory } },
+        data: url.pathname.includes("history") ? history : updated }))
     })
     await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve))
     const address = server.address()
@@ -89,19 +94,15 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
     const connection: ServerConnection.Any = { type: "http", http: { url: `http://127.0.0.1:${address.port}` } }
     const scope = ServerScope.fromServerKey(ServerConnection.key(connection))
     return {
-      connection, data, requests, gates, listeners, catalogs,
+      connection, data, requests, gates, catalogs,
       projects: { list: () => [{ id: "same-git-project", name, worktree: "/one", sandboxes: ["/two"] }] },
       sync: { data: { provider }, child: (directory: string) => {
         const catalog = catalogs.get(directory) ?? { directory, provider_ready: true, provider }
         catalogs.set(directory, catalog)
         return [catalog] as const
       } },
-      sdk: { scope, protocol: Promise.resolve(protocol), protocolKind: () => protocol,
-        // A server without the V2 Lean route has no current client, which the chapter reads as unsupported.
-        orchestra: supported ? Orchestra.make({ baseUrl: connection.http.url }) : undefined,
-        ensureDirSdkContext: (directory: string) => ({ scope, directory, protocol: Promise.resolve(protocol),
-          client: createSdkForServer({ server: connection.http, directory, throwOnError: true }) }),
-        event: { listen: (listener: (event: Event) => void) => { listeners.add(listener); return () => { listeners.delete(listener) } } },
+      sdk: { scope, orchestra: Orchestra.make({ baseUrl: connection.http.url }),
+        ensureDirSdkContext: (directory: string) => ({ scope, directory }),
       },
       close: () => new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve())),
     }
@@ -126,8 +127,8 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
     }) }))
     mock.module(solidDom("../src/context/tabs", import.meta.dir), () => ({ useTabs: () => ({ addSessionTab: (value: typeof opened[number]) => value,
       select: (value: typeof opened[number]) => opened.push(value) }) }))
-    // The real SDK/Sync providers capture each route owner; protocol reads follow the selected fixture SDK.
-    const { ServerSDKProvider, useServerProtocol }: typeof import("@/context/server-sdk") = await import(
+    // The real SDK/Sync providers capture each route owner; Lean reads go through the selected fixture's Orchestra client.
+    const { ServerSDKProvider }: typeof import("@/context/server-sdk") = await import(
       solidDom("@/context/server-sdk", import.meta.dir)
     )
     const { OrchestraChapterRoute, chapterPages }: typeof import("@/orchestra/chapter-route") = await import(
@@ -135,7 +136,6 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
     )
     expect(typeof chapterPages.lean).toBe("function")
     expect(navigation.filter((item) => item.id === "lean")).toHaveLength(1)
-    const protocol = { read: undefined as ReturnType<typeof useServerProtocol> | undefined }
     const host = document.createElement("div")
     document.body.append(host)
     const history = createMemoryHistory()
@@ -146,7 +146,6 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
           return createComponent(ServerSDKProvider, {
             server: () => servers.find((server) => ServerConnection.key(server.connection) === selection.server)!.connection,
             get children() {
-              protocol.read = useServerProtocol()
               return createComponent(MemoryRouter, { history, get children() {
                 return createComponent(Route, { path: "/orchestra/:chapter", component: OrchestraChapterRoute })
               } })
@@ -165,7 +164,6 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
     const late = Promise.withResolvers<void>()
     try {
       await until(() => total() === "+800")
-      expect(protocol.read?.()).toBe("v2")
       expect(host.querySelector('[data-mx-page="orchestra-lean"]') !== null).toBe(true)
       expect(host.textContent).toContain("Native named profile")
       toggle("cargo").click()
@@ -196,7 +194,7 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
       await until(() => total() === "+3.91 KiB")
       expect(host.textContent).toContain("Remote named profile")
       two.data.set("/two", snapshot("/two", 4800, false))
-      two.listeners.forEach((listener) => listener({ name: "/two", details: { type: "config.updated" } }))
+      host.querySelector<HTMLButtonElement>(".lean-caption button")!.click()
       await until(() => total() === "+4.69 KiB")
       expect(host.textContent).toContain("Lean is off for this profile")
       two.data.set("/two", snapshot("/two", 5200))
@@ -205,13 +203,13 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
       select("directory", "/fallback-name")
       await until(() => host.textContent!.includes("Orchestra profile · fallback-name"))
       select("server", ServerConnection.key(unsupported.connection))
-      await until(() => protocol.read?.() === "v2" && total() === "Unavailable")
+      await until(() => total() === "Unavailable")
       // The empty state says Lean is unavailable; no error banner repeats it.
       expect(host.querySelector('[role="alert"]')).toBeNull()
       expect(host.querySelector('[role="switch"]')).toBeNull()
-      expect(unsupported.requests).toHaveLength(0)
-      expect(one.listeners.size).toBe(0)
-      expect(two.listeners.size).toBe(0)
+      expect(unsupported.requests.map((request) => [request.method, request.path, request.directory])).toEqual([
+        ["GET", "/api/lean", "/fallback-name"],
+      ])
       expect([...one.catalogs.keys()]).toEqual(["/one", "/two"])
       expect([...two.catalogs.keys()]).toEqual(["/two", "/fallback-name"])
       expect([...unsupported.catalogs.keys()]).toEqual(["/fallback-name"])

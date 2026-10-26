@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test"
 import type { SessionInfo } from "@/v2-types"
-import type { SessionMessageInfo } from "@/v2-legacy"
+import type { SessionMessageInfo } from "@/session-types"
 
 
-import { fetchSessionExport, type SessionExportApi, type SessionExportClient } from "./session-export"
+import { fetchSessionExport, type SessionExportApi } from "./session-export"
 
 const info: SessionInfo = {
   id: "ses_1",
@@ -35,15 +35,8 @@ const filler: SessionMessageInfo[] = Array.from({ length: 200 }, (_, index) => (
   time: { created: 0 },
 }))
 
-const legacy: SessionExportClient = {
-  session: {
-    get: () => Promise.reject(new Error("the V1 route is not asked on V2")),
-    messages: () => Promise.reject(new Error("the V1 route is not asked on V2")),
-  },
-}
-
 describe("fetchSessionExport", () => {
-  test("builds the V1 export shape from every page of the V2 message log", async () => {
+  test("builds the export shape from every page of the message log", async () => {
     const requests: unknown[] = []
     const api: SessionExportApi = {
       session: { get: async () => info },
@@ -56,7 +49,7 @@ describe("fetchSessionExport", () => {
         },
       },
     }
-    const data = await fetchSessionExport({ sessionID: "ses_1", client: legacy, api, protocol: Promise.resolve("v2") })
+    const data = await fetchSessionExport({ sessionID: "ses_1", api })
 
     expect(data.info).toMatchObject({ id: "ses_1", title: "Export me", directory: "/repo" })
     expect(data.messages.map((message) => [message.info.id, message.info.role])).toEqual([

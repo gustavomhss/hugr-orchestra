@@ -1,0 +1,217 @@
+import type { Orchestra } from "@orchestra/client"
+import type {
+  Agent,
+  Command,
+  Config,
+  FormatterStatus,
+  LspStatus,
+  McpStatus,
+  Provider,
+  Session,
+  SessionMessage,
+  SessionStatus,
+  SnapshotFileDiff,
+  Todo,
+  VcsInfo,
+} from "../types"
+
+type Client = ReturnType<typeof Orchestra.make>
+type Location = { directory?: string; workspace?: string }
+type V2Model = Awaited<ReturnType<Client["models"]["list"]>>["data"][number]
+
+// Reads the V2 catalog routes into the TUI store. Sessions and messages pass through as V2; providers, agents
+// and commands are mapped into the shapes the TUI plugin API exposes.
+export function createCatalog(client: Client) {
+  return {
+    async bootstrap(location: Location) {
+      const [providers, models, fallback, agents, config] = await Promise.all([
+        client.providers.list({ location }),
+        client.models.list({ location }),
+        client.models.default({ location }),
+        client.agents.list({ location }),
+        client.config.get(),
+      ])
+      const all = providers.data.map(
+        (provider): Provider => ({
+          id: provider.id,
+          name: provider.name,
+          source: "config",
+          env: [],
+          options: {},
+          models: Object.fromEntries(
+            models.data.filter((model) => model.providerID === provider.id).map((model) => [model.id, toModel(model)]),
+          ),
+        }),
+      )
+      const connected = all.filter((provider) => !providers.data.find((item) => item.id === provider.id)?.disabled)
+      // The earlier runtime picked each provider's default model by ranking; V2 names one default model, so the other providers
+      // fall back to their first model. The default model's provider goes first because the TUI falls back to
+      // the first provider when nothing else selects a model.
+      const defaults = Object.fromEntries(
+        connected.flatMap((provider) => {
+          const model =
+            fallback.data?.providerID === provider.id ? fallback.data.id : Object.keys(provider.models).at(0)
+          return model ? [[provider.id, model]] : []
+        }),
+      )
+      return {
+        provider: connected.toSorted(
+          (a, b) => Number(b.id === fallback.data?.providerID) - Number(a.id === fallback.data?.providerID),
+        ),
+        default: defaults,
+        next: { all, default: defaults, connected: connected.map((provider) => provider.id) },
+        agent: agents.data.map(
+          (agent): Agent => ({
+            id: agent.id,
+            name: agent.name ?? agent.id,
+            description: agent.description,
+            mode: agent.mode,
+            hidden: agent.hidden,
+            color: agent.color,
+            model: agent.model ? { modelID: agent.model.id, providerID: agent.model.providerID } : undefined,
+            variant: agent.model?.variant,
+          }),
+        ),
+        config: {
+          model: config.model,
+          shell: config.shell,
+          disabled_providers: [...config.disabledProviders],
+        } satisfies Config,
+      }
+    },
+    location: (location: Location) => client.location.get({ location }),
+    directories: (projectID: string) => client.projects.directories({ projectID }),
+    commands: (location: Location) =>
+      client.commands.list({ location }).then((result) =>
+        result.data.map(
+          (command): Command => ({
+            name: command.name,
+            description: command.description,
+            agent: command.agent,
+            model: command.model ? `${command.model.providerID}/${command.model.id}` : undefined,
+            template: command.template,
+            subtask: command.subtask,
+            hints: [],
+          }),
+        ),
+      ),
+    vcs: (location: Location) =>
+      client.vcs.get({ location }).then(
+        (result): VcsInfo => ({
+          branch: result.data.branch ?? undefined,
+          default_branch: result.data.default_branch ?? undefined,
+        }),
+      ),
+    lsp: (location: Location) =>
+      client["server.lsp"]
+        .status({ location })
+        .then((result): LspStatus[] => result.data.map((server) => ({ ...server }))),
+    formatter: (location: Location) =>
+      client["server.formatter"]
+        .status({ location })
+        .then((result): FormatterStatus[] =>
+          result.data.map((formatter) => ({ ...formatter, extensions: [...formatter.extensions] })),
+        ),
+    mcp: (location: Location) =>
+      client.mcp
+        .list({ location })
+        .then(
+          (result): Record<string, McpStatus> =>
+            Object.fromEntries(result.data.map((server) => [server.name, { ...server.status }])),
+        ),
+    // V2 lists sessions by project and subpath instead of the earlier runtime's `scope` and `path`, and has no start-time window.
+    // `roots` keeps top-level Sessions only, as the earlier runtime's `roots` query did; V2 filters it here.
+    sessions: (input: {
+      workspace?: string
+      project?: string
+      subpath?: string
+      search?: string
+      limit?: number
+      roots?: boolean
+    }) =>
+      client.sessions
+        .list({
+          workspace: input.workspace,
+          project: input.project,
+          subpath: input.subpath,
+          search: input.search,
+          limit: input.limit ?? 100,
+          order: "desc",
+        })
+        .then((result) =>
+          result.data
+            .map((session) => session as Session)
+            .filter((session) => !input.roots || !session.parentID)
+            .toSorted((a, b) => a.id.localeCompare(b.id)),
+        ),
+    session: (sessionID: string) => client.sessions.get({ sessionID }).then((session) => session as Session),
+    // Newest first, as V2 returns them; the store keeps them oldest first.
+    messages: (sessionID: string) =>
+      client.messages.list({ sessionID, limit: 100 }).then((result) => result.data as SessionMessage[]),
+    // V2 has no per-Session diff route. A Session's diff is the working-tree status of the files its steps
+    // changed, which matches the earlier runtime's diff while those changes are uncommitted.
+    diff: (location: Location, files: ReadonlySet<string>) =>
+      files.size === 0
+        ? Promise.resolve<SnapshotFileDiff[]>([])
+        : client.vcs
+            .status({ location })
+            .then((result): SnapshotFileDiff[] =>
+              result.data.filter((item) => files.has(item.file)).map((item) => ({ ...item })),
+            ),
+    todo: (sessionID: string) =>
+      client.sessions.todo({ sessionID }).then((todos): Todo[] => todos.map((todo) => ({ ...todo }))),
+    // V2 reports running Sessions only; every other Session is idle.
+    status: () =>
+      client.sessions
+        .active()
+        .then(
+          (active): Record<string, SessionStatus> =>
+            Object.fromEntries(Object.keys(active).map((sessionID) => [sessionID, { type: "busy" }])),
+        ),
+  }
+}
+
+function toModel(model: V2Model): Provider["models"][string] {
+  const cost = model.cost.find((item) => item.tier === undefined) ?? model.cost.at(0)
+  const input = new Set(model.capabilities.input)
+  const output = new Set(model.capabilities.output)
+  return {
+    id: model.id,
+    providerID: model.providerID,
+    api: { id: model.api.id, url: model.api.url ?? "", npm: model.api.type === "aisdk" ? model.api.package : "" },
+    name: model.name,
+    family: model.family,
+    capabilities: {
+      temperature: true,
+      reasoning: model.variants.length > 0,
+      attachment: [...input].some((kind) => kind !== "text"),
+      toolcall: model.capabilities.tools,
+      input: {
+        text: input.has("text"),
+        audio: input.has("audio"),
+        image: input.has("image"),
+        video: input.has("video"),
+        pdf: input.has("pdf"),
+      },
+      output: {
+        text: output.has("text"),
+        audio: output.has("audio"),
+        image: output.has("image"),
+        video: output.has("video"),
+        pdf: output.has("pdf"),
+      },
+      interleaved: false,
+    },
+    cost: {
+      input: cost?.input ?? 0,
+      output: cost?.output ?? 0,
+      cache: { read: cost?.cache.read ?? 0, write: cost?.cache.write ?? 0 },
+    },
+    limit: { ...model.limit },
+    status: model.status,
+    options: {},
+    headers: { ...model.request.headers },
+    release_date: new Date(model.time.released).toISOString().slice(0, 10),
+    variants: Object.fromEntries(model.variants.map((variant) => [variant.id, { ...variant.body }])),
+  }
+}

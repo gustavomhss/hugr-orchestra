@@ -273,7 +273,7 @@ describe("Relay hook Location recovery", () => {
           .where(eq(EventTable.aggregate_id, invalid.sessionID))
           .run()
           .pipe(Effect.orDie)
-        // Unversioned names are not durable V1 decisions eligible for this pass.
+        // Unversioned names are not durable legacy decisions eligible for this pass.
         const unversioned = yield* h.decide(yield* h.session(2))
         yield* h.db
           .update(EventTable)

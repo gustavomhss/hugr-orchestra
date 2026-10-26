@@ -6,7 +6,7 @@ import { Worktree } from "@/utils/worktree"
 import { clearPending, pendingPolicy, pendingSnapshot, togglePending } from "../draft-subagent-models"
 import { draftSessionKey } from "./draft-session"
 import {
-  behaviors, commands, createPromptSubmit, createdSessions, enabledAutoAccept, optimistic, optimisticRemovals,
+  commands, createPromptSubmit, createdSessions, enabledAutoAccept, optimistic, optimisticRemovals,
   policyWrites, promoted, promotedDrafts, promptInputs, removedSessions, sentCommands, sentShell, state, storedSessions,
   submitInput, policyFixture, sdkFor,
 } from "./submit-harness"
@@ -133,11 +133,9 @@ test("a first send whose policy write fails deletes the Session the server confi
 
 // A dispatched prompt may have been admitted before the failure, so its Session is never deleted: the retry is exact.
 test.each([
-  { name: "the server cannot be read", protocol: "v1", messageCount: undefined },
-  { name: "the server confirms it empty on v1", protocol: "v1", messageCount: 0 },
-  { name: "the server confirms it empty on v2", protocol: "v2", messageCount: 0 },
+  { name: "the server cannot be read", messageCount: undefined },
+  { name: "the server confirms it empty", messageCount: 0 },
 ])("failed first send keeps the Session as Empty session when $name, and the retry sends to it", async (probe) => {
-  state.protocol = probe.protocol
   state.messageCount = probe.messageCount
   const real = createPromptState({ prompt: "first turn" })
   state.sendHook = async () => { throw new Error("admission failed") }
@@ -162,7 +160,7 @@ test("failed first send leaves a Session that already holds a message alone", as
   expect(storedSessions["/repo/main"]).toEqual([expect.objectContaining({ id: "session-1", title: "New session 1" })])
 })
 
-test("failed exact retry reuses wire preparation, attachment bytes, optimistic part IDs and system", async () => {
+test("failed exact retry reuses wire preparation, attachment bytes and optimistic part IDs", async () => {
   const real = createPromptState()
   real.set([
     { type: "text", content: "retry ", start: 0, end: 6 },
@@ -171,27 +169,23 @@ test("failed exact retry reuses wire preparation, attachment bytes, optimistic p
     { type: "file", path: "capture.png", filename: "capture.png", mime: "image/png", url: "data:image/png;base64,aGk=", content: "", start: 22, end: 22 },
   ])
   real.context.add({ type: "file", path: "context.ts", comment: "check @other.ts", commentOrigin: "review" })
-  behaviors.system = "first prepared system"
   state.sendHook = async () => { throw new Error("prepared request failed") }
   const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined })
   expect(await submit.handleSubmit(new Event("submit"))).toBe(false)
-  const first = promptInputs[0] as { id: string; legacyParts: { id: string }[]; system?: string; files: { uri: string }[]; agents: unknown[] }
+  const first = promptInputs[0] as { id: string; files: { uri: string }[]; agents: unknown[] }
   const serialized = JSON.stringify(first)
-  expect(first.legacyParts).toEqual(expect.arrayContaining([
+  expect(optimistic[0]?.parts).toEqual(expect.arrayContaining([
     expect.objectContaining({ type: "text" }),
     expect.objectContaining({ type: "file" }),
     expect.objectContaining({ type: "agent" }),
   ]))
   expect(first.files).toContainEqual(expect.objectContaining({ uri: "data:image/png;base64,aGk=" }))
   expect(first.agents).toContainEqual(expect.objectContaining({ name: "backend" }))
-  expect(optimistic[0]?.parts.map((part) => part.id)).toEqual(first.legacyParts.map((part) => part.id))
   expect(optimisticRemovals).toContainEqual(expect.objectContaining({ messageID: first.id }))
-  behaviors.system = "later profile system"
   state.sendHook = async () => {}
   await submit.handleSubmit(new Event("submit"))
   expect(promptInputs).toHaveLength(2)
   expect(JSON.stringify(promptInputs[1])).toBe(serialized)
-  expect(first.system).toBe("first prepared system")
   expect(optimistic).toHaveLength(2)
   expect(optimistic[1]?.message.id).toBe(first.id)
   expect(optimistic[1]?.parts).toEqual(optimistic[0]?.parts)
@@ -206,7 +200,7 @@ test.each(["prompt", "policy", "model", "variant", "agent"])("editing %s after f
   state.sendHook = async () => { throw new Error("ambiguous admission") }
   const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key })
   expect(await submit.handleSubmit(new Event("submit"))).toBe(false)
-  const first = promptInputs[0] as { id: string; legacyParts: { id: string }[] }
+  const first = promptInputs[0] as { id: string }
   expect(first.id).toStartWith("msg_")
   if (edit === "prompt") real.set([{ type: "text", content: "edited action", start: 0, end: 13 }])
   if (edit === "policy") { clearPending(key); togglePending(key, "provider", "first-model", true) }
@@ -220,9 +214,8 @@ test.each(["prompt", "policy", "model", "variant", "agent"])("editing %s after f
   expect(promptInputs).toHaveLength(2)
   const second = promptInputs[1] as typeof first
   expect(second.id).not.toBe(first.id)
-  expect(second.legacyParts.map((part) => part.id)).not.toEqual(first.legacyParts.map((part) => part.id))
+  expect(optimistic[1]?.parts.map((part) => part.id)).not.toEqual(optimistic[0]?.parts.map((part) => part.id))
   expect(optimistic[1]?.message.id).toBe(second.id)
-  expect(optimistic[1]?.parts.map((part) => part.id)).toEqual(second.legacyParts.map((part) => part.id))
   if (edit === "prompt") expect(second).toMatchObject({ text: "edited action" })
   if (edit === "model") expect(second).toMatchObject({ model: { modelID: "edited-model" } })
   if (edit === "variant") expect(second).toMatchObject({ variant: "high" })
@@ -238,7 +231,7 @@ test("policy changed at a retry's worktree boundary rebinds wire and optimistic 
   state.sendHook = async () => { throw new Error("first prepared send failed") }
   const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key })
   expect(await submit.handleSubmit(new Event("submit"))).toBe(false)
-  const first = promptInputs[0] as { id: string; legacyParts: { id: string }[] }
+  const first = promptInputs[0] as { id: string }
   Worktree.pending(ServerScope.local, directory)
   expect(Worktree.get(ServerScope.local, directory)).toEqual({ status: "pending" })
   const entered = Promise.withResolvers<void>()
@@ -255,21 +248,25 @@ test("policy changed at a retry's worktree boundary rebinds wire and optimistic 
   expect(promptInputs).toHaveLength(2)
   const second = promptInputs[1] as typeof first
   expect(second.id).not.toBe(first.id)
-  expect(second.legacyParts.map((part) => part.id)).not.toEqual(first.legacyParts.map((part) => part.id))
+  expect(optimistic[1]?.parts.map((part) => part.id)).not.toEqual(optimistic[0]?.parts.map((part) => part.id))
   expect(optimistic[1]?.message.id).toBe(second.id)
-  expect(optimistic[1]?.parts.map((part) => part.id)).toEqual(second.legacyParts.map((part) => part.id))
   expect(optimistic[1]?.parts.every((part) => part.messageID === second.id)).toBe(true)
   expect(policyWrites.at(-1)?.policy).toEqual(latest.policy)
   expect(createdSessions).toEqual([directory])
   expect(pendingSnapshot(key).revision).toBe(0)
 })
 
-test("policy edit during request preparation gets latest ACK before actual dispatch", async () => {
+test("policy edit while the send waits at the policy barrier gets latest ACK before actual dispatch", async () => {
   const key = draftSessionKey(ServerScope.local, "/repo/main")
   togglePending(key, "provider", "model", true)
-  const entered = Promise.withResolvers<void>()
   const gate = Promise.withResolvers<void>()
-  state.behaviorHook = async () => { entered.resolve(); await gate.promise }
+  const entered = Promise.withResolvers<void>()
+  // Pause once, inside the first policy write, so the edit lands while the first ACK is still in flight.
+  state.policyWrite = async () => {
+    state.policyWrite = async () => {}
+    entered.resolve()
+    await gate.promise
+  }
   const submit = createPromptSubmit({ ...submitInput(), prompt: createPromptState({ prompt: "latest policy" }), info: () => undefined, pendingKey: () => key })
   const sending = submit.handleSubmit(new Event("submit"))
   await entered.promise

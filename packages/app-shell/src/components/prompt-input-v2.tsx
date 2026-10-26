@@ -24,10 +24,8 @@ import { type ImageAttachmentPart, usePrompt } from "@/context/prompt"
 import { usePlatform } from "@/context/platform"
 import { useSDK } from "@/context/sdk"
 import { useSync } from "@/context/sync"
-import { useProviders } from "@/hooks/use-providers"
 import { createDraftSessionState, useDraftSessionKey } from "./prompt-input/draft-session"
-import { effectiveModelState, hasModelScope } from "@/components/subagent-model-rules"
-import { useServerProtocol } from "@/context/server-sdk"
+import { useServerReady } from "@/context/server-sdk"
 import { createSessionTabs } from "@/pages/session/helpers"
 import { OrchestraComposeTools } from "@/pages/session/composer/orchestra-compose-tools"
 import { useSessionDelivery } from "@/pages/session/composer/delivery"
@@ -504,12 +502,10 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string; pending
   const dialog = useDialog()
   const language = useLanguage()
   const sdk = useSDK()
-  const sync = useSync()
-  const providers = useProviders(() => sdk().directory)
-  const protocol = useServerProtocol()
+  const ready = useServerReady()
   const draftSession = createDraftSessionState({ sessionID: () => props.sessionID, pendingKey: () => props.pendingKey })
   const unresolved = () => !!props.sessionID && (
-    protocol() === undefined || draftSession.loading() || !!draftSession.error() || !draftSession.policy()
+    !ready() || draftSession.loading() || !!draftSession.error() || !draftSession.policy()
   )
   const life = { active: true }
   onCleanup(() => { life.active = false })
@@ -518,30 +514,12 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string; pending
     return { sdk: sdkValue, directory: sdkValue.directory, sessionID: props.sessionID, pendingKey: draftSession.pendingKey() }
   })
 
-  const rules = () => {
-    const id = props.sessionID
-    if (!id) return []
-    const permission = sync().session.get(id)?.permission
-    return Array.isArray(permission) ? permission : []
-  }
   const label = () => {
-    if (props.sessionID && protocol() === undefined) return language.t("common.loading")
-    if (!props.sessionID || protocol() !== undefined) {
-      const current = draftSession.policy()
-      if (draftSession.error()) return language.t("dialog.subagentModels.saveFailed")
-      if (draftSession.loading() || !current) return language.t("common.loading")
-      return current.mode === "inherit" ? language.t("dialog.subagentModels.inherited") : `${current.models.length}`
-    }
-    const scoped = hasModelScope(rules())
-    if (!scoped) return language.t("session.tasks.models.all")
-    const allowed = providers
-      .connected()
-      .flatMap((provider) =>
-        Object.values(provider.models).filter(
-          (model) => effectiveModelState(rules(), provider.id, model.id) === "allow",
-        ),
-      ).length
-    return `${allowed}`
+    if (props.sessionID && !ready()) return language.t("common.loading")
+    const current = draftSession.policy()
+    if (draftSession.error()) return language.t("dialog.subagentModels.saveFailed")
+    if (draftSession.loading() || !current) return language.t("common.loading")
+    return current.mode === "inherit" ? language.t("dialog.subagentModels.inherited") : `${current.models.length}`
   }
   const open = async () => {
     const selection = source()
@@ -561,7 +539,7 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string; pending
         data-action="prompt-subagent-models"
         data-control-type="dialog"
         disabled={unresolved()}
-        aria-busy={!!props.sessionID && (protocol() === undefined || draftSession.loading()) || undefined}
+        aria-busy={!!props.sessionID && (!ready() || draftSession.loading()) || undefined}
         onClick={open}
       >
         <span class="truncate leading-4">
@@ -678,9 +656,7 @@ function openComment(
       })
     })
   }
-  const diffs = props.controls.session.id ? sync().data.session_diff[props.controls.session.id] : undefined
-  const review =
-    item.commentOrigin === "review" || (item.commentOrigin !== "file" && diffs?.some((diff) => diff.file === item.path))
+  const review = item.commentOrigin === "review"
   if (!props.controls.session.reviewPanel.opened()) props.controls.session.reviewPanel.open()
   if (review) {
     layout.fileTree.setTab("changes")

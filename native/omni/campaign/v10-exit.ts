@@ -3,7 +3,7 @@
 // Desktop V10 belongs to the lead's Electron harness.
 // Run: ORCHESTRA_LOCAL_TESTS=1 bun native/omni/campaign/v10-exit.ts
 import path from "node:path"
-import { BUN, ORCHESTRA, cleanup, cli, client, control, fakeLLM, fileTree, identity, isolated, matches, members, mentioning, provider, remaining, serve, table, until, verdict, win } from "./lib.ts"
+import { BUN, FIXTURES, cleanup, cli, client, control, fakeLLM, fileTree, identity, isolated, matches, members, mentioning, provider, remaining, serve, table, until, verdict, win, writeConfig } from "./lib.ts"
 
 export async function run() {
   if (win) return verdict("v10-exit", { target: "serve", pass: false, error: "Windows V10 needs a real console graceful-quit harness; SIGTERM there terminates instead of running Unix shutdown handlers" })
@@ -11,39 +11,35 @@ export async function run() {
   const tree = fileTree(scratch.home, 1)
   const lspNonce = `omni-lsp-${tree.nonce.slice(10)}`
   const mcpNonce = `omni-mcp-${tree.nonce.slice(10)}`
-  const llm = await fakeLLM([{ name: "write", args: { filePath: path.join(scratch.project, "b.ts"), content: "export const b = 2\n" } }])
+  const llm = await fakeLLM([{ name: "write", args: { path: path.join(scratch.project, "b.ts"), content: "export const b = 2\n" } }])
   const config = {
     formatter: false, share: "disabled", permission: { "*": "allow" }, model: "test/test-model", provider: provider(llm.url),
     agent: { maestro: { model: "test/test-model", permission: { "*": "allow" } } },
     lsp: {
       typescript: { disabled: true }, deno: { disabled: true }, eslint: { disabled: true }, oxlint: { disabled: true }, biome: { disabled: true },
-      campaign: { command: [BUN, path.join(ORCHESTRA, "test/fixture/lsp/fake-lsp-server.js"), lspNonce], extensions: [".ts"] },
+      campaign: { command: [BUN, path.join(FIXTURES, "lsp/fake-lsp-server.js"), lspNonce], extensions: [".ts"] },
     },
-    mcp: { campaign: { type: "local", command: [BUN, path.join(ORCHESTRA, "test/fixture/mcp-omni-stdio.ts"), mcpNonce], environment: { MCP_OMNI_TREE: JSON.stringify({ command: tree.command, args: tree.args }) }, timeout: 30_000 } },
+    mcp: { campaign: { type: "local", command: [BUN, path.join(FIXTURES, "mcp-omni-stdio.ts"), mcpNonce], environment: { MCP_OMNI_TREE: JSON.stringify({ command: tree.command, args: tree.args }) }, timeout: 30_000 } },
   }
   const steps: string[] = []
   const step = (line: string) => { steps.push(`${new Date().toISOString()} ${line}`); console.error(`[v10] ${line}`) }
   try {
-    const host = await serve(cli(), ["--print-logs", "--log-level", "DEBUG", "serve", "--port", "0", "--hostname", "127.0.0.1"], { ...scratch.env, ORCHESTRA_CONFIG_CONTENT: JSON.stringify(config) }, scratch.project)
+    writeConfig(scratch.project, config)
+    const host = await serve(cli(), ["serve", "--port", "0", "--hostname", "127.0.0.1"], scratch.env, scratch.project)
     const pinnedHost = host.identity ?? identity(host.pid)
     const api = client(host.url, scratch.project)
-    const session = await api.post("/session", {})
+    const session = await api.session()
     step(`host ${host.pid}; session ${session.id}; home ${scratch.home}`)
-    await api.post(`/session/${session.id}/prompt_async`, { agent: "maestro", model: { providerID: "test", modelID: "test-model" }, parts: [{ type: "text", text: "Write b.ts and finish." }] })
+    await api.prompt(session.id, "Write b.ts and finish.")
     const live = await until(90_000, "all exact LSP/MCP members protected", () => {
       const rows = table()
       const found = { lsp: control(lspNonce, 1, [pinnedHost], rows), mcp: control(mcpNonce, 1, [pinnedHost], rows), tree: control(tree.nonce, tree.size, [pinnedHost], rows) }
       return Object.values(found).every((found) => found.pass) ? found : undefined
     }).catch(async (error) => {
-      throw new Error(`${error}; state ${JSON.stringify({ lsp: mentioning(lspNonce), mcp: mentioning(mcpNonce), tree: await remaining(tree.nonce), messages: await api.get(`/session/${session.id}/message`) })}; host ${host.out()}`)
+      throw new Error(`${error}; state ${JSON.stringify({ lsp: mentioning(lspNonce), mcp: mentioning(mcpNonce), tree: await remaining(tree.nonce), history: await api.get(`/api/session/${session.id}/history`) })}; host ${host.out()}`)
     })
-    await until(30_000, "completed assistant turn before quit", async () => {
-      const messages = await api.get(`/session/${session.id}/message`) as { info: { role: string; finish?: string; error?: unknown } }[]
-      const failed = messages.find((message) => message.info.error)
-      if (failed) throw new Error(`assistant error: ${JSON.stringify(failed.info.error)}`)
-      return messages.some((message) => message.info.role === "assistant" && message.info.finish === "stop") ? true : undefined
-    })
-    const status = { lsp: await api.get("/lsp"), mcp: await api.get("/mcp") }
+    await api.idle(session.id)
+    const status = { lsp: await api.get("/api/lsp"), mcp: await api.get("/api/mcp") }
     const supervisors = [...new Map(Object.values(live).flatMap((found) => found.protectedMembers.flatMap((member) => member.supervisors)).map((pinned) => [pinned.pid, pinned])).values()]
     const retained = Object.values(live).flatMap((found) => [...found.fixtureIds, ...found.wrappers])
     if (supervisors.length === 0) throw new Error("positive control failed before quit")

@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test"
 import {
+  assistantID,
   assistantMessage,
   completedAssistantInfo,
+  loadedPartID,
   messageUpdated,
   partUpdated,
   setupTimeline,
@@ -30,12 +32,12 @@ test("groups singleton and separated context operations at correct boundaries", 
 })
 
 test("reducer-hardening: converges when idle arrives before final part and message completion", async ({ page }) => {
-  const textID = "prt_event_order_text"
-  const assistant = assistantMessage([textPart(textID, "Partial")], { completed: false })
+  const textID = loadedPartID(assistantID, "text")
+  const assistant = assistantMessage([textPart("prt_event_order_text", "Partial")], { completed: false })
   const timeline = await setupTimeline(page, { messages: [userMessage(), assistant] })
   await timeline.send(status("busy"), 100)
   await timeline.send(status("idle"), 100)
-  await timeline.send(partUpdated(textPart(textID, "Final after early idle")), 120)
+  await timeline.send(partUpdated(textPart("prt_event_order_text", "Final after early idle")), 120)
   await timeline.send(messageUpdated(completedAssistantInfo(assistant.info)), 250)
 
   await expect(page.locator('[data-timeline-row="Thinking"]')).toHaveCount(0)

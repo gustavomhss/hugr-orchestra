@@ -6,6 +6,7 @@ import { useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import { setMaestroEngine } from "@/orchestra/claude-mode-entry"
 import { showToast } from "@/utils/toast"
+import { readAccount, sendCode, startSignIn } from "./claude-mode-account"
 import { errorMessage } from "./providers-data"
 
 const POLL_MS = 2500
@@ -30,23 +31,22 @@ export function ClaudeModeSection() {
   })
   const engine = () =>
     state.engine ?? (sync().data.config.agent?.maestro?.engine === "claude-code" ? "claude-code" : "orchestra")
-  const claude = () => sdk().orchestra.claudeCode
-  // Sign-in failures arrive as a declared `ClaudeCodeLoginError` body; its message is Claude Code's own stderr.
+  const providers = () => sdk().orchestra.providers
+  // Sign-in failures arrive as `{ name, data: { message } }`; the message is Claude Code's own stderr.
   const failed = (error: unknown) =>
     language.t("orchestra.providers.claudeMode.failed", {
       message: errorMessage(error, language.t("common.requestFailed")),
     })
 
   const refresh = async () => {
-    const account = await claude()
-      .account()
-      .catch(() => undefined)
+    const result = await readAccount(providers())
     setState("loaded", true)
-    if (!account) return
-    setState("account", account)
-    if (account.signedIn) setState({ signing: false, url: undefined, code: "", error: undefined })
+    if (!result) return
+    setState("account", result)
+    if (result.signedIn) setState({ signing: false, url: undefined, code: "", error: undefined })
   }
   onMount(() => void refresh())
+  // The CLI stores the login itself, so the status is the only signal that a browser or pasted-code sign-in finished.
   createEffect(() => {
     if (!state.signing) return
     const timer = setInterval(() => void refresh(), POLL_MS)
@@ -68,11 +68,8 @@ export function ClaudeModeSection() {
 
   const signIn = async () => {
     setState({ signing: true, url: undefined, code: "", error: undefined })
-    const result = await claude()
-      .login()
-      .then((data) => ({ data, error: undefined }))
-      .catch((error: unknown) => ({ data: undefined, error }))
-    if (result.data) return setState("url", result.data.url)
+    const result = await startSignIn(providers())
+    if ("url" in result) return setState("url", result.url)
     setState({ signing: false, error: failed(result.error) })
   }
   const cancel = () => setState({ signing: false, url: undefined, code: "", error: undefined })
@@ -80,12 +77,9 @@ export function ClaudeModeSection() {
     const code = state.code.trim()
     if (!code || state.sending) return
     setState({ sending: true, error: undefined })
-    const result = await claude()
-      .loginCode({ code })
-      .then(() => ({ error: undefined }))
-      .catch((error: unknown) => ({ error }))
+    const result = await sendCode(providers(), code)
     setState("sending", false)
-    if (result.error) return setState("error", failed(result.error))
+    if ("error" in result) return setState("error", failed(result.error))
     setState("code", "")
     void refresh()
   }

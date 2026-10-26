@@ -9,7 +9,7 @@ export * as DesktopOmni from "./omni-process"
 import { EventEmitter, once } from "node:events"
 import { constants } from "node:os"
 import { PassThrough, type Readable, Writable } from "node:stream"
-import { omniSpawner } from "../../../../packages/core/src/flag/flag"
+import { omniSpawner } from "@orchestra/core/flag/flag"
 import { Omni } from "@orchestra/core/omni"
 
 // The binding's pipe child, through core's loader (no import of hugr-omni here, D-L2).
@@ -99,6 +99,7 @@ export interface Spawned {
   readonly stderr: Readable
   kill(signal?: NodeJS.Signals): boolean
   once(event: "error", listener: (error: Error) => void): unknown
+  once(event: "spawn", listener: () => void): unknown
   once(event: "exit" | "close", listener: (code: number | null, signal: NodeJS.Signals | null) => void): unknown
 }
 
@@ -108,6 +109,8 @@ export type SpawnOptions = {
   stdin?: "pipe" | "closed"
   output?: "pipe" | "ignore"
   signal?: AbortSignal
+  /** How long the tree gets to wind down once it is stopped, including when this process dies. */
+  graceMs?: number
 }
 
 /**
@@ -174,6 +177,7 @@ class OmniProcess extends EventEmitter {
           inheritEnv: false,
           env: environment(options.env),
           stdin: options.stdin ?? "pipe",
+          graceMs: options.graceMs,
           text: false,
           backpressure: true,
         }),

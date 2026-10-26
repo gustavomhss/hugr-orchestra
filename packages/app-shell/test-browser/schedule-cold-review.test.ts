@@ -2,14 +2,15 @@ import { expect, test } from "bun:test"
 import { createRoot } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createServerScheduleSource } from "../src/orchestra/chapters/schedule-server"
-import { createSdkForServer } from "../src/utils/server"
+import { Orchestra } from "@orchestra/client"
 import type { ScheduleTask } from "../src/orchestra/chapters/schedule-model"
 import { localInput } from "../src/orchestra/chapters/schedule-model"
 import { scheduleEditorFields } from "../src/orchestra/chapters/schedule"
 
-function fixture(tasks: ScheduleTask[] = []) {
+// `listed` is what the first list request answers: the Orchestra client sends it as soon as the source is created.
+function fixture(tasks: ScheduleTask[] = [], listed: Record<string, unknown>[] = []) {
   const requests: { method: string; path: string; body: Record<string, unknown> | undefined }[] = []
-  const reply = { list: { status: 200, data: { data: [] as Record<string, unknown>[] } as unknown }, creates: 0 }
+  const reply = { list: { status: 200, data: { data: listed } as unknown }, creates: 0 }
   const changed = Promise.withResolvers<void>()
   const transport = Object.assign(async (input: string | URL | Request, init?: RequestInit) => {
     const request = new Request(input, init)
@@ -27,11 +28,11 @@ function fixture(tasks: ScheduleTask[] = []) {
   }, { preconnect: fetch.preconnect })
   return createRoot((dispose) => {
     const [saved, setSaved] = createStore({ tasks })
-    const sdk = createSdkForServer({ server: { url: "http://schedule.test" }, fetch: transport })
+    const orchestra = Orchestra.make({ baseUrl: "http://schedule.test", fetch: transport })
     const callbacks: (() => void)[] = []
     const state = { unsupported: 0 }
     const source = createServerScheduleSource({ directory: "/repo", store: { saved, setSaved, ready: () => true, key: "cold-review" }, onUnsupported: () => state.unsupported++ }, {
-      language: { t: (key) => key }, api: () => sdk.v2.schedule, timezone: "America/New_York",
+      language: { t: (key) => key }, api: () => orchestra.schedules, timezone: "America/New_York",
       poll: (refresh) => { callbacks.push(refresh); return () => {} },
     })
     return { source, state, callbacks, saved, reply, changed, requests, dispose }
@@ -75,9 +76,8 @@ test("a failed read keeps the tasks already loaded and refresh recovers", async 
 })
 
 test("cold review: metadata-only schedule save omits timing fields and preserves the remote timezone contract", async () => {
-  const f = fixture()
   const next = Date.UTC(2031, 0, 15, 9, 30, 23, 456)
-  f.reply.list.data = { data: [{ id: "remote", name: "Original", prompt: "Work", cadence: "daily", next, timezone: "Asia/Tokyo", minute: 1110, enabled: true, runs: 0 }] }
+  const f = fixture([], [{ id: "remote", name: "Original", prompt: "Work", cadence: "daily", next, timezone: "Asia/Tokyo", minute: 1110, enabled: true, runs: 0 }])
   try {
     await until(() => f.source.status() === "ready")
     const form = new FormData()

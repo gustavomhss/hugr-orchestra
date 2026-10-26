@@ -17,23 +17,26 @@
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
+    "@agentclientprotocol/sdk": "0.21.0",
     "@effect/platform-node": "catalog:",
     "@orchestra/app-dock": "workspace:*",
     "@orchestra/client": "workspace:*",
+    "@orchestra/continuity": "workspace:*",
     "@orchestra/core": "workspace:*",
     "@orchestra/engine-claude-code": "workspace:*",
     "@orchestra/maestro": "workspace:*",
-    "@orchestra/sdk": "workspace:*",
     "@orchestra/server": "workspace:*",
     "@orchestra/tui": "workspace:*",
     "@opentui/core": "catalog:",
     "@opentui/solid": "catalog:",
+    "bonjour-service": "1.3.0",
     "@parcel/watcher": "2.5.1",
     "drizzle-orm": "catalog:",
     "effect": "catalog:",
     "solid-js": "catalog:"
   },
   "devDependencies": {
+    "@orchestra/omni-campaign": "workspace:*",
     "@orchestra/script": "workspace:*",
     "@tsconfig/bun": "catalog:",
     "@types/bun": "catalog:",

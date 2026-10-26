@@ -63,3 +63,16 @@ export const Rule = Schema.Struct({
 
 export const Ruleset = Schema.Array(Rule).annotate({ identifier: "PermissionV2.Ruleset" })
 export type Ruleset = typeof Ruleset.Type
+
+// A Session's stored permission overrides keep their original `{ permission, pattern, action }` shape; the identifiers
+// stay the public names generated clients already use.
+export const SessionAction = Schema.Literals(["allow", "deny", "ask"]).annotate({ identifier: "PermissionAction" })
+export type SessionAction = typeof SessionAction.Type
+
+export const SessionRule = Schema.Struct({ permission: Schema.String, pattern: Schema.String, action: SessionAction }).annotate({
+  identifier: "PermissionRule",
+})
+export type SessionRule = typeof SessionRule.Type
+
+export const SessionRuleset = Schema.Array(SessionRule).annotate({ identifier: "PermissionRuleset" })
+export type SessionRuleset = typeof SessionRuleset.Type

@@ -155,7 +155,7 @@ live("a session opened in a subdirectory is covered: ancestors up to the write r
       expect({ attack, exitCode: (yield* p.run(attack, { directory: sub })).exitCode }).not.toEqual({ attack, exitCode: 0 })
     }
     expect(yield* p.fs.readFileString(path.join(p.root, "orchestra.json"))).toBe("orig")
-    expect(["apps/orchestra.jsonc", "packages/app/orchestra.json", "packages/app/.orchestra", ".orchestra", "tui.json"].filter(p.present)).toEqual([])
+    expect(["packages/app/orchestra.json", "packages/app/.orchestra", ".orchestra", "tui.json"].filter(p.present)).toEqual([])
     expect((yield* p.run("echo ok > ../sibling.txt && echo ok > here.txt", { directory: sub })).exitCode).toBe(0)
   }), 240_000,
 )

@@ -158,6 +158,8 @@ export interface Interface extends State.Transformable<Draft> {
       readonly key: string
       /** User-facing label for the stored credential. */
       readonly label?: string
+      /** Extra data stored beside the secret, for example the env name of a well-known provider token. */
+      readonly metadata?: Record<string, unknown>
     }) => Effect.Effect<void, AuthorizationError>
     /** Starts a stateful OAuth attempt. */
     readonly oauth: (input: {
@@ -177,6 +179,11 @@ export interface Interface extends State.Transformable<Draft> {
     ) => Effect.Effect<void, Credential.InheritedError>
     /** Removes a stored credential connection. Inherited credentials are read-only. */
     readonly remove: (credentialID: Credential.ID) => Effect.Effect<void, Credential.InheritedError>
+    /**
+     * Removes every stored credential of one integration and returns how many it removed. Environment connections are
+     * not stored and stay. An inherited credential fails the call, since it cannot be removed here.
+     */
+    readonly disconnect: (integrationID: ID) => Effect.Effect<number, Credential.InheritedError>
   }
   readonly attempt: {
     /** Checks an attempt's authoritative integration owner, including retained terminal states. */
@@ -428,7 +435,7 @@ export const locationLayer = Layer.effect(
           yield* credentials.create({
             integrationID: input.integrationID,
             label: input.label,
-            value: Credential.Key.make({ type: "key", key: input.key }),
+            value: Credential.Key.make({ type: "key", key: input.key, metadata: input.metadata }),
           })
           yield* events.publish(Event.ConnectionUpdated, { integrationID: input.integrationID })
           yield* events.publish(Event.Updated, {})
@@ -488,6 +495,15 @@ export const locationLayer = Layer.effect(
             yield* events.publish(Event.ConnectionUpdated, { integrationID: credential.integrationID })
           }
           yield* events.publish(Event.Updated, {})
+        }),
+        disconnect: Effect.fn("Integration.connection.disconnect")(function* (integrationID) {
+          const stored = yield* credentials.list(integrationID)
+          yield* Effect.forEach(stored, (credential) => credentials.remove(credential.id), { discard: true })
+          if (stored.length > 0) {
+            yield* events.publish(Event.ConnectionUpdated, { integrationID })
+            yield* events.publish(Event.Updated, {})
+          }
+          return stored.length
         }),
       },
       attempt: {

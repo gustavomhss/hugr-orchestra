@@ -7,8 +7,10 @@ import {
   visualPlan,
 } from "../../utils/visual-stability"
 import {
+  assistantID,
   assistantMessage,
   directory,
+  loadedPartID,
   partUpdated,
   session,
   sessionID,
@@ -145,7 +147,7 @@ test.describe("timeline tool state stability", () => {
       },
       context: { selector: groupSelector, closest: '[data-timeline-row="AssistantPart"]' },
       following: {
-        selector: '[data-timeline-part-id="prt_ctx_following"]',
+        selector: `[data-timeline-part-id="${loadedPartID(assistantID, "text")}"]`,
         closest: '[data-timeline-row="AssistantPart"]',
       },
     })

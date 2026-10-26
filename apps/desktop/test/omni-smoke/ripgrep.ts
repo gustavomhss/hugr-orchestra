@@ -6,7 +6,7 @@
 import { mkdtemp, rename } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
-import { ROOT } from "../../../../native/omni/campaign/lib"
+import { ROOT } from "@orchestra/omni-campaign/lib"
 import { verifyPackagedCli } from "../../scripts/cli-packaging"
 import { nativeCliTarget, signatureCheck } from "../../src/main/cli-artifacts"
 import { installCliArtifact } from "../../src/main/cli-install"

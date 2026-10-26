@@ -3,8 +3,10 @@ import { mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import semver from "semver"
-import pkg from "../../../apps/orchestra/package.json" with { type: "json" }
 import { copiedWorkspaceFixture } from "../test/fixture/workspace"
+import { WorkspacePaths } from "./workspace-paths.ts"
+
+const pkg: { version: string } = await Bun.file(path.join(WorkspacePaths.make(import.meta.dir).module("cli"), "package.json")).json()
 
 async function load(options: { version?: string; channel?: string; bump?: string; source?: string; probe?: boolean; missingRegistry?: boolean } = {}) {
   // A copied module reads a real isolated owned manifest, including SemVer boundary fixtures.

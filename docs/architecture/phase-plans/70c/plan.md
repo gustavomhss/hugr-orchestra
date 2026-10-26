@@ -1,10 +1,12 @@
-# PLAN 70-C' (convergence card B1): product layers out of apps/orchestra
+# PLAN 70-C' (convergence card B1): product layers out of removed-v1
+
+> Status (2026-10-25): the V1 Session, Permission and Question schema contracts named below (`SessionV1`, `PermissionV1`, `QuestionV1`, `@orchestra/schema/v1/*`) have been deleted. Session lifecycle now uses `session.next.created`, `session.next.renamed` and `session.next.deleted`, and legacy rows are decoded privately by `packages/core/src/session/legacy-transcript.ts`. The measurements below describe the base SHA and are kept as a historical record.
 
 Base: `fork/dev` @ `4ce72fa6c7` (Merge #802). This is a read-only measurement of a `git archive` snapshot. Nothing was
 built, typechecked or tested.
 
 Scripts (scratchpad, so they can be re-run on the landed SHA in L0):
-- `scripts/edges.py` parses every import of `apps/orchestra/src` and classifies both ends with the registry domains.
+- `scripts/edges.py` parses every import of `removed-v1/src` and classifies both ends with the registry domains.
 - `m/movable2.txt` is the fixed point "file depends only on product files that can also move".
 - `m/r11-map.md` maps each R11 row to the card that closes it.
 
@@ -18,13 +20,13 @@ the ledger, 0 only in the parser, 0 unresolved specifiers.
 ## 0. The finding that reshapes B1
 
 **B1 as written cannot be delivered by moving files.** The convergence plan asks for one thing: move maestro,
-claude-code, continuity, janitor, app-dock and linux-workspace out of apps/orchestra so that `apps/cli serve` composes
+claude-code, continuity, janitor, app-dock and linux-workspace out of removed-v1 so that `apps/cli serve` composes
 the same host overrides. That rests on an assumption the measurement refutes:
 
 1. **The product runs inside the V1 engine.**
    - The desktop's v1 mode sends every prompt to legacy `POST /session/:id/prompt_async`
      (`packages/app-shell/src/utils/server-compat.ts:210`), and from there to V1 `SessionPrompt`
-     (`apps/orchestra/src/session/prompt.ts`).
+     (`removed-v1/src/session/prompt.ts`).
    - Maestro tools, the Claude Code engine (`ClaudeCode.Service`, used in prompt.ts:139) and continuity are wired into
      that loop.
    - `apps/cli serve` (`packages/server/src/routes.ts`) runs only SessionV2 and SessionRunner.
@@ -51,14 +53,14 @@ prerequisite of the desktop flip (B6).
 | Part | What it does | R11 rows | Who |
 |---|---|---|---|
 | **B1 (cards below)** | Moves the 56 engine-neutral files into 5 product packages. Freezes the host ports. Gives `apps/cli serve` a host-contribution seam and composes the V2-ready Arsenal native safety in it. Readies app-dock and janitor for V2. | **35 of 98 close** (C2 2, C3 2, C4 18, C5 7, C7 4, C8 2) | fleet: Haiku, Sonnet, Opus lead |
-| **B1-C (design track)** | Ports Maestro governance, the Claude Code engine and continuity onto the V2 Session core: engine adapter, task governance seam, roster as V2 agents, continuity on V2 compaction. The V1 glue left in apps/orchestra dies at B9. | the remaining **63** close at B1-C (V2 successor) plus B9 (deletion) | Opus design first, then cards |
-| ~~Invert in place~~ (rejected default) | Invert the 63 remaining V1 edges inside apps/orchestra with registration ports. This is throwaway work on code that B9 deletes, and it moves nothing: the inverted files still import V1 Session, Agent and Tool. | 63 | about 6 Sonnet cards if the owner wants R11 at 0 before B9 |
+| **B1-C (design track)** | Ports Maestro governance, the Claude Code engine and continuity onto the V2 Session core: engine adapter, task governance seam, roster as V2 agents, continuity on V2 compaction. The V1 glue left in removed-v1 dies at B9. | the remaining **63** close at B1-C (V2 successor) plus B9 (deletion) | Opus design first, then cards |
+| ~~Invert in place~~ (rejected default) | Invert the 63 remaining V1 edges inside removed-v1 with registration ports. This is throwaway work on code that B9 deletes, and it moves nothing: the inverted files still import V1 Session, Agent and Tool. | 63 | about 6 Sonnet cards if the owner wants R11 at 0 before B9 |
 
 **Owner decisions this creates** (defaults in bold):
 
 | ID | Decision | Default |
 |---|---|---|
-| D-C1 | Accept the split: B1 closes 35 rows, and the other 63 close by B1-C plus B9 | **yes**. The lead updates their ledger `reason` to "V1 glue; retires with apps/orchestra (B9); V2 successor in modules/<x> (B1-C)" |
+| D-C1 | Accept the split: B1 closes 35 rows, and the other 63 close by B1-C plus B9 | **yes**. The lead updates their ledger `reason` to "V1 glue; retires with removed-v1 (B9); V2 successor in modules/<x> (B1-C)" |
 | D-C2 | Claude Code engine on V2 versus the AGENTS rule "do not … delegate orchestration to an in-memory tool loop" | **Engine as an `@orchestra/llm` execution host.** One Claude Code turn is one `llm.stream(request)`. Its tool calls surface as `providerExecuted` events, which the runner already persists without local execution (`session/runner/llm.ts:271`). AGENTS.md gains one sentence naming this exception. The alternative is no Claude Code engine on V2, which drops the feature at the flip. |
 | D-C3 | B6 flip gate | **B6 waits for B1-C** (Maestro on Claude Code on V2), not only for B1 |
 | D-C4 | Optional strengthening R11b: a legacy package's platform-legacy domains may not import product-layer packages | **no**. The 35 moved rows become declared `app → product` package edges, listed in each module README, so nobody reads them as decoupling |
@@ -69,7 +71,7 @@ prerequisite of the desktop flip (B6).
 
 Counts are non-test `src` import statements. Symbols are named imports; `[type]` marks a type-only import.
 
-### 1.1 Product → apps/orchestra platform (forward edges)
+### 1.1 Product → removed-v1 platform (forward edges)
 
 | Product | Files / LOC | Imports into platform-legacy, by target domain (statements) |
 |---|---|---|
@@ -138,7 +140,7 @@ Product → product: claude-code → maestro 26 and → continuity 7; maestro �
 | `InstanceState` / `InstanceRef` | `Location` |
 | `LLM` V1 | `LLMClient` |
 
-### 1.2 apps/orchestra platform → product (reverse edges = the 98 R11 rows)
+### 1.2 removed-v1 platform → product (reverse edges = the 98 R11 rows)
 
 | Product target (file) | Importers (symbols) |
 |---|---|
@@ -222,7 +224,7 @@ Three of the files the fixed point marks as movable stay, because they need a V1
 | app-dock | `@orchestra/plugin` |
 | janitor | `@orchestra/core`, `effect` |
 | continuity | `@orchestra/core`, `effect`, `jsonc-parser@3.3.1` |
-| engine-claude-code | `@orchestra/core`, `effect`, `@anthropic-ai/claude-agent-sdk@0.3.289` (the same pin as `apps/orchestra/package.json`; `executable.ts` reads `SDK_VERSION` from its own `package.json`) |
+| engine-claude-code | `@orchestra/core`, `effect`, `@anthropic-ai/claude-agent-sdk@0.3.289` (the same pin as `removed-v1/package.json`; `executable.ts` reads `SDK_VERSION` from its own `package.json`) |
 | maestro | `@orchestra/core`, `@orchestra/schema`, `@orchestra/llm`, `@orchestra/atlas-boundary`, `@orchestra/maestro-arsenal`, `effect`, `drizzle-orm`, `gray-matter@4.0.3` |
 
 - **Every new package gets:**
@@ -233,7 +235,7 @@ Three of the files the fixed point marks as movable stay, because they need a V1
     spawns through omni (§5.1);
   - a README with the 7-heading scaffold plus the contract block.
 - **Consumers declare the new packages (R4):**
-  - `apps/orchestra/package.json` gets all five;
+  - `removed-v1/package.json` gets all five;
   - `apps/cli/package.json` gets `@orchestra/maestro` (K1).
 - **Workspaces:** append the 5 paths to root `package.json` `workspaces.packages` (the list is explicit for `modules/`).
 - **Lockfile window:** the lead updates `bun.lock` and the Nix FOD hash in `nix/hashes.json`. The exact Nix
@@ -366,9 +368,9 @@ function makeRoutes<AuthError, AuthServices>(
   `product → composition` is illegal. Their only dependencies are core and schema types plus `makeGlobalNode`.
 - **Importers to relink (8):**
   - `packages/server/src/{routes.ts, handlers/agent.ts, handlers/model.ts, handlers/provider.ts, handlers/pty.ts}`
-  - `apps/orchestra/src/server/routes/instance/httpapi/{server.ts, handlers/catalog.ts, handlers/agent-execution.ts}`
-  - `apps/orchestra/src/plugin/pty-environment.ts`
-  - tests `apps/orchestra/test/server/{agent-execution,httpapi-v2-agent-execution}.test.ts`,
+  - `removed-v1/src/server/routes/instance/httpapi/{server.ts, handlers/catalog.ts, handlers/agent-execution.ts}`
+  - `removed-v1/src/plugin/pty-environment.ts`
+  - tests `removed-v1/test/server/{agent-execution,httpapi-v2-agent-execution}.test.ts`,
     `test/claude-code/host/provider.test.ts`
 - **Exports.** Remove the three keys from `packages/server/package.json` (lines 9, 12 and 22). Add
   `./host/catalog-availability`, `./host/agent-execution` and `./host/pty-environment` to `packages/core/package.json`
@@ -379,8 +381,8 @@ function makeRoutes<AuthError, AuthServices>(
 
 | Item | Action | Why it is safe |
 |---|---|---|
-| `apps/orchestra/src/tool/truncation-dir.ts` (7 LOC; imports core `Global`, `FSUtil`) | `git mv` → `packages/core/src/tool/truncation-dir.ts`; core exports key `./tool/truncation-dir` | Pure path constant. Importers: `tool/{read,truncate}.ts`, `tool/shell/execution.ts`, `maestro/roster.ts`, tests `maestro/seat-scaffold`, `tool/shell-external-read`, `tool/shell-read-sandbox` |
-| `@/util/token` in `continuity/masking.ts` | retarget to `@orchestra/core/util/token` | `apps/orchestra/src/util/token.ts` is literally `export { Token, estimate } from "@orchestra/core/util/token"` |
+| `removed-v1/src/tool/truncation-dir.ts` (7 LOC; imports core `Global`, `FSUtil`) | `git mv` → `packages/core/src/tool/truncation-dir.ts`; core exports key `./tool/truncation-dir` | Pure path constant. Importers: `tool/{read,truncate}.ts`, `tool/shell/execution.ts`, `maestro/roster.ts`, tests `maestro/seat-scaffold`, `tool/shell-external-read`, `tool/shell-read-sandbox` |
+| `@/util/token` in `continuity/masking.ts` | retarget to `@orchestra/core/util/token` | `removed-v1/src/util/token.ts` is literally `export { Token, estimate } from "@orchestra/core/util/token"` |
 | `import type { SessionID } from "@/session/schema"` in `claude-code/host/{join,options}.ts` | retarget to `import type { SessionSchema } from "@orchestra/core/session/schema"` and use `SessionSchema.ID` | `session/schema.ts:6` defines `SessionID = SessionV2.ID`; type-only, no runtime change |
 | `@/id/id`, `session/schema.ts` (`MessageID.ascending`) | **not moved** | Moving them retargets the second monotonic counter (70-90 §9 item 7), which is a behavior change for its own PR. B1 avoids every file that needs it |
 
@@ -413,14 +415,14 @@ export const startJanitorLoop = Effect.fn("Janitor.start")(function* (
 ```
 
 - `GlobalBus` leaves the module.
-- The legacy sink in `apps/orchestra/src/server/server.ts:93` is
+- The legacy sink in `removed-v1/src/server/server.ts:93` is
   `(event) => Effect.sync(() => GlobalBus.emit("event", { directory: "global", payload: { type: EventType, properties: event } }))`.
 - The V2 sink (K3) publishes on the V2 global event stream that B3 adds.
 
 ### 2.7 PORT-6: `ArsenalNative` (modules/maestro/coordination; new `src/arsenal-native.ts`)
 
 - Move `makeV2ApprovalHost`, `nativeSafetyNode` and `nativeRegistryReplacements` verbatim from
-  `apps/orchestra/src/maestro/arsenal-approval.ts` (lines 60–143). They import only core.
+  `removed-v1/src/maestro/arsenal-approval.ts` (lines 60–143). They import only core.
 - Add:
 
   ```ts
@@ -452,11 +454,11 @@ Each server process builds **one** application root: one `SessionExecution` → 
 `Host.merge` rejects the reserved nodes. The two roots are never run against the same `orchestra.db` at once
 (convergence B.7). That constraint belongs to the B6 fallback, not to B1.
 
-| Contribution | Legacy root (`apps/orchestra/src/server/routes/instance/httpapi/server.ts` `createRoutes`, built with `AppNodeBuilderV1.build`) | `apps/cli serve` (`packages/server` `createRoutes({host})`, composed in new `apps/cli/src/host.ts`) |
+| Contribution | Legacy root (`removed-v1/src/server/routes/instance/httpapi/server.ts` `createRoutes`, built with `AppNodeBuilderV1.build`) | `apps/cli serve` (`packages/server` `createRoutes({host})`, composed in new `apps/cli/src/host.ts`) |
 |---|---|---|
 | Arsenal native safety (`ArsenalNative`) | after C6: `[...ArsenalNative.nativeRegistryReplacements]` in `app-node-builder-v1.ts` and `buildLocationServiceMap(...)`. Same behavior, new import. | **K1: `CliHost.contributions = [ArsenalNative.contribution]`**. New capability on V2. Unverified that every dependency of `MaestroArsenal.nativeSafetyNode` is in the V2 Location graph; K1's test proves it. |
 | `ArsenalBindings.node` (V1 glue) | stays (app group, line 274) | none: V1 |
-| `HostCatalog` (V1 Config + InstanceStore) | stays in apps/orchestra and imports `ClaudeCodeSDK` and `ClaudeHostProvider` from `@orchestra/engine-claude-code` | none until B1-C (`HostCatalogV2`) |
+| `HostCatalog` (V1 Config + InstanceStore) | stays in removed-v1 and imports `ClaudeCodeSDK` and `ClaudeHostProvider` from `@orchestra/engine-claude-code` | none until B1-C (`HostCatalogV2`) |
 | `HostAgentExecution` (V1 Agent registry) | stays | none: the V2 `AgentV2` registry already carries `engine` from config (`core/src/config/plugin/agent.ts:121`) |
 | `PluginPtyEnvironment` (V1 plugin `shell.env`) | stays | none until a V2 plugin hook exists |
 | Janitor | `server/server.ts:93` → `startJanitorLoop(state.scope, legacySink)` | K3 (after B3): `startJanitorLoop(scope, v2Sink)` in the serve handler |
@@ -519,36 +521,36 @@ export * as CliHost from "./host"
 
 ### 4.3 W1: moves (8 cards, file-disjoint, rolling dispatch, longest first: C4, C7, C6, C3, then the rest)
 
-| Card | Tier | `git mv` (from `apps/orchestra/` unless noted) → to | Card-local edits | Path pins the card fixes | Acceptance (static) and later test:ci |
+| Card | Tier | `git mv` (from `removed-v1/` unless noted) → to | Card-local edits | Path pins the card fixes | Acceptance (static) and later test:ci |
 |---|---|---|---|---|---|
 | **C1** truncation-dir down | H | `src/tool/truncation-dir.ts` → `packages/core/src/tool/truncation-dir.ts` | none | none | `move-relink --check`; later `test:ci orchestra test/tool/shell-external-read.test.ts test/tool/shell-read-sandbox.test.ts` |
 | **C2** app-dock | H | `src/plugin/{app-dock,app-dock-hints,app-dock-linux,app-dock-outline,linux-workspace,app-dock.fixture}.ts` and `src/plugin/{app-dock,app-dock-focus,app-dock-outline,app-dock-target,linux-workspace}.test.ts` → `modules/app-dock/src/` (same names, tests stay colocated) | new `src/transport.ts` (PORT-4); `app-dock.ts:10-13` and `linux-workspace.ts:5-8` type aliases → `import type { Transport } from "./transport"` (rename uses) | `apps/desktop/scripts/app-dock-native-proof.ts:19`, `apps/desktop/scripts/app-dock-workspace-proof.ts:196` (path strings), `apps/desktop/test/native/apps/app_probe.py:35` (comment), `modules/app-dock/README.md` | later `bun run test:ci app-dock` |
-| **C3** janitor | S | `src/janitor/{bootstrap,report-state,scan,scheduler,thresholds}.ts` and their 4 `.test.ts` files and `README.md` → `modules/janitor/src/` (README → `modules/janitor/README.md`, merged with the L1 skeleton) | PORT-5 in `bootstrap.ts` (remove the `GlobalBus` import; add the `sink` parameter); `bootstrap.test.ts` passes a recording sink; `apps/orchestra/src/server/server.ts:93` call site passes the legacy sink (this card owns that one line plus the `GlobalBus` import) | none found | later `bun run test:ci janitor`, `test:ci orchestra test/server/listener-plugin-policy.test.ts` (it composes the server; unverified that it touches janitor) |
-| **C4** maestro seats and roster | S | `src/maestro/{roster,route-grant,context-tool-plan,seat-skill-root,seat-skill-content,playbook-content}.ts` and `src/maestro/seats/*.ts` (10) → `modules/maestro/coordination/src/` (`seats/` kept); `src/agent/prompt/{archie,backend,billy,frankie,jimmy,lucy,patty,rosie}.txt` → `modules/maestro/coordination/src/seats/prompt/` | `seats/<id>.ts:1` → `import PROMPT from "./prompt/<id>.txt"` (8 lines); `seat-skill-root.ts:60` `new URL("../../playbooks", …)` → `new URL("../../../../apps/orchestra/playbooks", …)` plus a comment saying playbooks move in B1-C (see the build note below) | `apps/orchestra/test/agent/specialist-name-guard.test.ts:10` ALLOWED_FILE → `modules/maestro/coordination/src/roster.ts`; `AGENTS.md` line 17 path (lead applies); `apps/orchestra/script/seat.ts:22,25` and `seat-skills.ts:7` (comment); `apps/cli/script/packaged-skills.ts:1-2`; `apps/cli/test/fixture/distribution-native.ts:100-101`; tests `maestro/seat-scaffold.test.ts:20-29,85-87,128`, `seat-framework.test.ts:14,91-95,116`, `fixtures/second-seat-registry.ts:12,33`, `seat-skills-build.test.ts:176-177`, `seat-skill-root.test.ts:134,160`, `fixtures/seat-embedded-skills.ts:17`; `.github/scripts/archie-authoring-pair-initializer.ts:85-86`, `.github/scripts/maestro-authoring-run.ts:363` | later `test:ci orchestra test/agent/specialist-name-guard.test.ts test/agent/native-team.test.ts test/agent/native-seat-label.test.ts test/maestro/seat-framework.test.ts test/maestro/seat-scaffold.test.ts test/maestro/seat-skills-build.test.ts test/maestro/seat-skill-root.test.ts test/maestro/backend-seat-runtime.test.ts`; `test:ci cli` (distribution fixture, compiled lanes run on Actions) |
+| **C3** janitor | S | `src/janitor/{bootstrap,report-state,scan,scheduler,thresholds}.ts` and their 4 `.test.ts` files and `README.md` → `modules/janitor/src/` (README → `modules/janitor/README.md`, merged with the L1 skeleton) | PORT-5 in `bootstrap.ts` (remove the `GlobalBus` import; add the `sink` parameter); `bootstrap.test.ts` passes a recording sink; `removed-v1/src/server/server.ts:93` call site passes the legacy sink (this card owns that one line plus the `GlobalBus` import) | none found | later `bun run test:ci janitor`, `test:ci orchestra test/server/listener-plugin-policy.test.ts` (it composes the server; unverified that it touches janitor) |
+| **C4** maestro seats and roster | S | `src/maestro/{roster,route-grant,context-tool-plan,seat-skill-root,seat-skill-content,playbook-content}.ts` and `src/maestro/seats/*.ts` (10) → `modules/maestro/coordination/src/` (`seats/` kept); `src/agent/prompt/{archie,backend,billy,frankie,jimmy,lucy,patty,rosie}.txt` → `modules/maestro/coordination/src/seats/prompt/` | `seats/<id>.ts:1` → `import PROMPT from "./prompt/<id>.txt"` (8 lines); `seat-skill-root.ts:60` `new URL("../../playbooks", …)` → `new URL("../../../../removed-v1/playbooks", …)` plus a comment saying playbooks move in B1-C (see the build note below) | `removed-v1/test/agent/specialist-name-guard.test.ts:10` ALLOWED_FILE → `modules/maestro/coordination/src/roster.ts`; `AGENTS.md` line 17 path (lead applies); `removed-v1/script/seat.ts:22,25` and `seat-skills.ts:7` (comment); `apps/cli/script/packaged-skills.ts:1-2`; `apps/cli/test/fixture/distribution-native.ts:100-101`; tests `maestro/seat-scaffold.test.ts:20-29,85-87,128`, `seat-framework.test.ts:14,91-95,116`, `fixtures/second-seat-registry.ts:12,33`, `seat-skills-build.test.ts:176-177`, `seat-skill-root.test.ts:134,160`, `fixtures/seat-embedded-skills.ts:17`; `.github/scripts/archie-authoring-pair-initializer.ts:85-86`, `.github/scripts/maestro-authoring-run.ts:363` | later `test:ci orchestra test/agent/specialist-name-guard.test.ts test/agent/native-team.test.ts test/agent/native-seat-label.test.ts test/maestro/seat-framework.test.ts test/maestro/seat-scaffold.test.ts test/maestro/seat-skills-build.test.ts test/maestro/seat-skill-root.test.ts test/maestro/backend-seat-runtime.test.ts`; `test:ci cli` (distribution fixture, compiled lanes run on Actions) |
 | **C5** maestro core-neutral | H | `src/maestro/{ability-descriptors,ability-registry,admit-request,approval,arsenal-observations,arsenal-outcome,governed-task,lifecycle-fold,project-config,session-authority,task-hash,upstream-proposal,upstream-result,verification-plan,work-contract}.ts` → `modules/maestro/coordination/src/`; tests `test/maestro/{lifecycle-fold,governed-task,project-config,upstream-proposal,work-contract,ability-registry,task-hash,admit-request,approval,ability-descriptors,verification-plan}.test.ts` → `modules/maestro/coordination/test/` | `arsenal-observations.ts:28` `@orchestra/core/v1/session` → `./compat/core-v1-session` | `.github/scripts/archie-authoring-pair.ts:170`, `.github/scripts/maestro-authoring-run.ts:479` (both `upstream-result.ts`). **Overlap with C4 on `maestro-authoring-run.ts` → move every `.github/scripts` pin to P1.** | later `bun run test:ci maestro` |
-| **C6** arsenal native split | S | none (new file) | PORT-6: new `modules/maestro/coordination/src/arsenal-native.ts` (verbatim lines 60–143 of `arsenal-approval.ts` plus `contribution`); delete those lines from `apps/orchestra/src/maestro/arsenal-approval.ts`; delete `arsenal-bindings.ts:699-701` re-exports; edit `effect/app-node-builder-v1.ts:5,13` and `httpapi/server.ts:112,282` to import `ArsenalNative` | none | later `test:ci orchestra test/tool/maestro-native-approval.test.ts test/tool/maestro-native-bindings.test.ts test/maestro/arsenal-approval.test.ts test/maestro/arsenal-activation.test.ts test/server/httpapi-exercise` (unverified the last is a test dir) |
-| **C7** claude-code neutral | S (O reviews the gate diff) | `src/claude-code/{sdk,executable,transcript}.ts`, `src/claude-code/host/{admission,join,options,provider}.ts` → `modules/engine-adapters/claude-code/src/` (`host/` kept); `test/claude-code/preset-guard.test.ts` → `modules/engine-adapters/claude-code/test/` | `executable.ts:7` `"../../package.json"` → `"../package.json"`; `join.ts:9` and `options.ts:18` SessionID → `SessionSchema.ID` (type-only, §2.4); `transcript.ts:3` and `host/admission.ts:3` → `./compat/core-v1-session` (relative depth per file); `host/admission.ts:5` `@/continuity/alias` stays for the codemod (→ `@orchestra/continuity/alias`) | `apps/orchestra/test/claude-code/credential-access.test.ts:198,223,234`; `apps/desktop/src/main/candidate-repair.test.ts:141` (entrypoint becomes `../../modules/engine-adapters/claude-code/src/sdk.ts` relative to its `run(...)` cwd `apps/orchestra`); **`apps/orchestra/test/claude-code/mode-boundary.test.ts`**: `ADAPTER_EDGES` (lines 20-41), `INTERFACE` (lines 150-170) and the Claude-mode root must treat `@orchestra/engine-claude-code/*` as Claude mode. The guard must stay a strengthening: a planted normal-mode import of `@orchestra/engine-claude-code/host/provider` from a non-adapter file must still be flagged; add that case. `apps/orchestra/src/claude-code/README.md` + new module README | later `bun run test:ci engine-claude-code`; `test:ci orchestra test/claude-code/mode-boundary.test.ts test/claude-code/credential-access.test.ts test/claude-code/executable.test.ts test/claude-code/sdk-lifecycle.test.ts test/claude-code/sdk-packaging.test.ts test/claude-code/runtime-version.test.ts test/claude-code/host/options.test.ts test/claude-code/host/provider.test.ts`; `test:ci desktop src/main/candidate-repair.test.ts` |
+| **C6** arsenal native split | S | none (new file) | PORT-6: new `modules/maestro/coordination/src/arsenal-native.ts` (verbatim lines 60–143 of `arsenal-approval.ts` plus `contribution`); delete those lines from `removed-v1/src/maestro/arsenal-approval.ts`; delete `arsenal-bindings.ts:699-701` re-exports; edit `effect/app-node-builder-v1.ts:5,13` and `httpapi/server.ts:112,282` to import `ArsenalNative` | none | later `test:ci orchestra test/tool/maestro-native-approval.test.ts test/tool/maestro-native-bindings.test.ts test/maestro/arsenal-approval.test.ts test/maestro/arsenal-activation.test.ts test/server/httpapi-exercise` (unverified the last is a test dir) |
+| **C7** claude-code neutral | S (O reviews the gate diff) | `src/claude-code/{sdk,executable,transcript}.ts`, `src/claude-code/host/{admission,join,options,provider}.ts` → `modules/engine-adapters/claude-code/src/` (`host/` kept); `test/claude-code/preset-guard.test.ts` → `modules/engine-adapters/claude-code/test/` | `executable.ts:7` `"../../package.json"` → `"../package.json"`; `join.ts:9` and `options.ts:18` SessionID → `SessionSchema.ID` (type-only, §2.4); `transcript.ts:3` and `host/admission.ts:3` → `./compat/core-v1-session` (relative depth per file); `host/admission.ts:5` `@/continuity/alias` stays for the codemod (→ `@orchestra/continuity/alias`) | `removed-v1/test/claude-code/credential-access.test.ts:198,223,234`; `apps/desktop/src/main/candidate-repair.test.ts:141` (entrypoint becomes `../../modules/engine-adapters/claude-code/src/sdk.ts` relative to its `run(...)` cwd `removed-v1`); **`removed-v1/test/claude-code/mode-boundary.test.ts`**: `ADAPTER_EDGES` (lines 20-41), `INTERFACE` (lines 150-170) and the Claude-mode root must treat `@orchestra/engine-claude-code/*` as Claude mode. The guard must stay a strengthening: a planted normal-mode import of `@orchestra/engine-claude-code/host/provider` from a non-adapter file must still be flagged; add that case. `removed-v1/src/claude-code/README.md` + new module README | later `bun run test:ci engine-claude-code`; `test:ci orchestra test/claude-code/mode-boundary.test.ts test/claude-code/credential-access.test.ts test/claude-code/executable.test.ts test/claude-code/sdk-lifecycle.test.ts test/claude-code/sdk-packaging.test.ts test/claude-code/runtime-version.test.ts test/claude-code/host/options.test.ts test/claude-code/host/provider.test.ts`; `test:ci desktop src/main/candidate-repair.test.ts` |
 | **C8** continuity neutral | H | `src/continuity/{alias,archive-search,dry-transport,raw-payload,request-source,masking}.ts` → `modules/continuity/src/` | `masking.ts:4` `@/util/token` → `@orchestra/core/util/token`; the 4 `@orchestra/core/v1/session` type imports → `./compat/core-v1-session` | none found | later `test:ci orchestra test/continuity` (all 37 tests stay and are relinked) |
 
 **Build note (C4, unverified).** The compiled seat-skill embed `orchestra-seat-skills.gen.ts` is a Bun `files` entry
-of `apps/orchestra/script/build.ts:216-223` and `build-node.ts:65`, imported by bare specifier from
+of `removed-v1/script/build.ts:216-223` and `build-node.ts:65`, imported by bare specifier from
 `seat-skill-root.ts:19`. It is not proven that Bun resolves that virtual file for an importer outside the build's
 cwd. It is proven only by the distribution-bundle and desktop build lanes in the epic CI. If it fails, the fallback
-keeps `seat-skill-root.ts` in `apps/orchestra` and injects `roots` into roster: that becomes a Sonnet redo of C4.
+keeps `seat-skill-root.ts` in `removed-v1` and injects `roots` into roster: that becomes a Sonnet redo of C4.
 
 ### 4.4 Integration (lead, serial) and pins
 
 | Step | Tier | Content | Acceptance |
 |---|---|---|---|
-| **I1** | O | Merge order: C1 → C2 → C3 → C8 → C7 → C5 → C4 → C6. Then:<br>• `bun script/move-relink.ts --apply script/moves/*.json` (one commit, `refactor: relink moved product modules`)<br>• `bun script/explicit-exports.ts <alias> --write` for the 5 new packages, core and server<br>• registry `scaffoldReadmes`: add the 5 module READMEs and keep the apps/orchestra ones (they still describe the V1 glue)<br>• registry orchestra `domains` patterns: drop `src/plugin/app-dock*`, `src/plugin/linux-workspace*` and `src/janitor/` (now empty); keep the rest<br>• `logicalModules[app-dock].paths`: replace the two apps/orchestra globs with `modules/app-dock/src/*`<br>• `spawn-allowlist.json:65` key `apps/orchestra/src/claude-code/sdk.ts` → `modules/engine-adapters/claude-code/src/sdk.ts` (rename = remove plus add; the lead's call per AGENTS)<br>• `check:boundaries --prune` | `check:boundaries` strict exits 0; **R11 = 63**, every remaining row carrying the D-C1 reason; no new R1/R3/R4/R5/R7 rows; typecheck.yml **T2** green |
-| **P1** pins sweep | H | Fix every string pin `move-relink` printed that no card owned. Known: `.github/scripts/{archie-authoring-pair-initializer.ts:79-86, archie-authoring-pair.ts:170, maestro-authoring-run.ts:363-479, archie-host-acceptance.ts:481-483, archie-host-s14.ts:123}`. Only paths of moved files change; `write-roots`, `backend-result`, `logical-task`, `upstream-provenance` and `claude-code/tools.ts` stay put. Also `packages/schema/src/relay-arm.ts:262` (comment) and `apps/orchestra/script/maestro-wave1-restart.ts` (stays: `validation-record` does not move). | `move-relink --check` prints 0 pins |
+| **I1** | O | Merge order: C1 → C2 → C3 → C8 → C7 → C5 → C4 → C6. Then:<br>• `bun script/move-relink.ts --apply script/moves/*.json` (one commit, `refactor: relink moved product modules`)<br>• `bun script/explicit-exports.ts <alias> --write` for the 5 new packages, core and server<br>• registry `scaffoldReadmes`: add the 5 module READMEs and keep the removed-v1 ones (they still describe the V1 glue)<br>• registry orchestra `domains` patterns: drop `src/plugin/app-dock*`, `src/plugin/linux-workspace*` and `src/janitor/` (now empty); keep the rest<br>• `logicalModules[app-dock].paths`: replace the two removed-v1 globs with `modules/app-dock/src/*`<br>• `spawn-allowlist.json:65` key `removed-v1/src/claude-code/sdk.ts` → `modules/engine-adapters/claude-code/src/sdk.ts` (rename = remove plus add; the lead's call per AGENTS)<br>• `check:boundaries --prune` | `check:boundaries` strict exits 0; **R11 = 63**, every remaining row carrying the D-C1 reason; no new R1/R3/R4/R5/R7 rows; typecheck.yml **T2** green |
+| **P1** pins sweep | H | Fix every string pin `move-relink` printed that no card owned. Known: `.github/scripts/{archie-authoring-pair-initializer.ts:79-86, archie-authoring-pair.ts:170, maestro-authoring-run.ts:363-479, archie-host-acceptance.ts:481-483, archie-host-s14.ts:123}`. Only paths of moved files change; `write-roots`, `backend-result`, `logical-task`, `upstream-provenance` and `claude-code/tools.ts` stay put. Also `packages/schema/src/relay-arm.ts:262` (comment) and `removed-v1/script/maestro-wave1-restart.ts` (stays: `validation-record` does not move). | `move-relink --check` prints 0 pins |
 | **CI-B1** | lead | test:ci batches: the per-card lists above, merged per package (one `orchestra` run with the named files, one each of `maestro`, `engine-claude-code`, `janitor`, `app-dock`, `core`, `server`, `desktop`, `cli`), plus `script test/module-boundaries.test.ts` | all green |
 
 ### 4.5 W2: composition and V2 readiness
 
 | Card | Tier | Content | test:ci |
 |---|---|---|---|
-| **K1** cli serve host | S | New `apps/cli/src/host.ts` (§3); `serve.ts` passes `host`. New test `apps/cli/test/serve-host.test.ts`: build routes with `CliHost.contributions` through `createRoutes({ host })`, open a Location, and assert that the native `ToolSafety` replacement is active (it proves the Arsenal dependencies resolve in the V2 graph). Pattern: `apps/orchestra/test/tool/maestro-native-bindings.test.ts`. | `bun run test:ci cli test/serve-host.test.ts`; `bun run test:ci server` |
+| **K1** cli serve host | S | New `apps/cli/src/host.ts` (§3); `serve.ts` passes `host`. New test `apps/cli/test/serve-host.test.ts`: build routes with `CliHost.contributions` through `createRoutes({ host })`, open a Location, and assert that the native `ToolSafety` replacement is active (it proves the Arsenal dependencies resolve in the V2 graph). Pattern: `removed-v1/test/tool/maestro-native-bindings.test.ts`. | `bun run test:ci cli test/serve-host.test.ts`; `bun run test:ci server` |
 | **K2** Dock on ApplicationTools | S | `modules/app-dock/src/application-tools.ts`: `applicationTools(transport: Transport): Record<string, Tool.AnyTool>`, wrapping the hook tools of `createAppDockHooks`/`createLinuxWorkspaceHooks` as core `Tool`s, plus `contribution(transport)` registering them through a global node that calls `ApplicationTools.register`. Legacy keeps the V1 plugin. The transport comes from B4. | `bun run test:ci app-dock` |
 | **K3** janitor V2 sink | S | `modules/janitor/src/v2-sink.ts` publishing `janitor.report` on the V2 global stream; the serve handler starts the loop. **Blocked by B3** (global event route). | `bun run test:ci janitor`, `bun run test:ci cli` |
 | **K4** ledger and README record | H | Lead-approved: R11 `reason` text for the 63 open rows (D-C1); a `## Legacy edges` section in each module README listing the 35 converted `app → product` edges (from Appendix A) | `check:boundaries` strict |
@@ -558,12 +560,12 @@ keeps `seat-skill-root.ts` in `apps/orchestra` and injects `roots` into roster: 
 | Ledger | C1 | C2 | C3 | C4 | C5 | C6 | C7 | C8 | Who edits |
 |---|---|---|---|---|---|---|---|---|---|
 | `script/rename-ledger.ts` | none: it pins only `modules/relay` requirements (lines 30, 35) | – | – | – | – | – | – | – | – |
-| `godfile-waivers.json` | none: 0 product paths among 4 apps/orchestra entries (`provider.ts`, `prompt.ts`, `session.ts`, `test/tool/task.test.ts`) | – | – | – | – | – | – | – | – |
+| `godfile-waivers.json` | none: 0 product paths among 4 removed-v1 entries (`provider.ts`, `prompt.ts`, `session.ts`, `test/tool/task.test.ts`) | – | – | – | – | – | – | – | – |
 | `script/spawn-allowlist.json` | – | – | – | – | – | – | `:65` sdk.ts key | – | lead (I1) |
-| `script/archive-scopes.json` | none: readers `apps/orchestra/script/continuity-bench/v4.ts` and `specs/…` do not move | – | – | – | – | – | – | – | – |
-| omni-expect-guard | none: no moved test calls `expectSpawn`; all 7 that do (claude-code host tests) stay in apps/orchestra. L4 extends reach for B1-C. | | | | | | | | L4 |
+| `script/archive-scopes.json` | none: readers `removed-v1/script/continuity-bench/v4.ts` and `specs/…` do not move | – | – | – | – | – | – | – | – |
+| omni-expect-guard | none: no moved test calls `expectSpawn`; all 7 that do (claude-code host tests) stay in removed-v1. L4 extends reach for B1-C. | | | | | | | | L4 |
 | Nix filesets | registry-driven: `node_modules.nix:89` and `../modules` wholesale; the FOD hash changes once in L1 | | | | | | | | L1 |
-| test-ci selectors | new aliases are selectable (`script/test-ci-package.ts` resolves through the registry). `apps/orchestra/script/test-timings.json` keeps 294 product keys; stale keys are harmless (missing files are skipped and unknown files weigh the median, `test-shard.ts:28-33`). test.yml lanes `--filter=!orchestra` pick up new packages automatically. | | | | | | | | none |
+| test-ci selectors | new aliases are selectable (`script/test-ci-package.ts` resolves through the registry). `removed-v1/script/test-timings.json` keeps 294 product keys; stale keys are harmless (missing files are skipped and unknown files weigh the median, `test-shard.ts:28-33`). test.yml lanes `--filter=!orchestra` pick up new packages automatically. | | | | | | | | none |
 | turbo inputs | – | – | – | `turbo.json:94` add new path | – | – | – | – | L1 |
 | module registry and architecture | – | logicalModules | domains | – | – | – | – | – | I1 |
 | tests or scripts pinning paths | – | 3 | 0 | 14 | 2 (→ P1) | 0 | 4 + mode-boundary | 0 | card / P1 |
@@ -606,9 +608,9 @@ keeps `seat-skill-root.ts` in `apps/orchestra` and injects `roots` into roster: 
    - Fragile spots:
      - seat scaffolding tests copy `src/maestro/seats` into temporary trees (`seat-framework`, `second-seat-registry`);
      - `restart-proof`, `arsenal-lazy` and `arsenal-one-evaluator` spawn `bun test` with relative paths and stay in
-       apps/orchestra;
-     - `seat-skill-root.ts:60` gets a cross-package URL to `apps/orchestra/playbooks` until the playbooks move;
-     - `executable.ts` reads `SDK_VERSION` from its own `package.json`, so its pin must equal apps/orchestra's.
+       removed-v1;
+     - `seat-skill-root.ts:60` gets a cross-package URL to `removed-v1/playbooks` until the playbooks move;
+     - `executable.ts` reads `SDK_VERSION` from its own `package.json`, so its pin must equal removed-v1's.
        `test/claude-code/runtime-version.test.ts` should catch drift (unverified).
 5. **Windows.**
    - Moved tests leave the orchestra shards for the turbo "rest" lane (30-minute step; core alone took 1081 s on
@@ -648,7 +650,7 @@ counted inside B1, is the larger half.
 
 ## Appendix A: R11 row → closure (98 rows)
 
-| # | importer (`apps/orchestra/src/…`) | specifier | closes by |
+| # | importer (`removed-v1/src/…`) | specifier | closes by |
 |---|---|---|---|
 | 1 | agent/agent.ts | `@/maestro/roster` | C4 |
 | 2 | agent/agent.ts | `@/maestro/seat-skill-root` | C4 |

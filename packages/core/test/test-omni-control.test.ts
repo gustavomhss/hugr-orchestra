@@ -144,6 +144,7 @@ const mentions: Record<string, string> = {
   "packages/core/test/distribution-bundle-workflow.test.ts": "pins the native workflow's positive suite value and declared steps",
   "packages/core/test/fixture/distribution-bundle.ts": "records the scope a bundle run saw in its evidence",
   "packages/core/test/test-omni-control.test.ts": "this guard and its fixtures",
+  "native/omni/campaign/package.json": "the campaign package's test script declares the control, as its tests spawn through omni",
   "AGENTS.md": "documents the control",
 }
 
@@ -308,7 +309,7 @@ function inspectNativeAssignments(sources: Record<string, string>, guest: string
   const source = ts.createSourceFile(muslGuest, guest, ts.ScriptTarget.Latest, true)
   requireScope(source.statements.some((node) => {
     if (!ts.isImportDeclaration(node) || node.importClause?.isTypeOnly || !ts.isStringLiteral(node.moduleSpecifier) ||
-      node.moduleSpecifier.text !== "../../../../packages/core/test/fixture/omni-expect") return false
+      node.moduleSpecifier.text !== "@orchestra/core/test/fixture/omni-expect") return false
     const bindings = node.importClause?.namedBindings
     return bindings && ts.isNamedImports(bindings) && bindings.elements.some((binding) =>
       binding.name.text === "expectSpawn" && !binding.propertyName && !binding.isTypeOnly)

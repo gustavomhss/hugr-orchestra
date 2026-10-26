@@ -6,8 +6,8 @@ import { ServerScope } from "@/utils/server-scope"
 import { createSubmissionPolicy } from "./submission-policy"
 import type { SubagentModelPolicy } from "../subagent-model-rules"
 import {
-  acknowledgeDraftPolicy, createPromptSubmit, createdSessions, promptInputs, savedPolicies, savedRules,
-  policyWrites, legacyBaseline, legacySessionPermissions, policyFixture, serverFor, sdkFor, promoted,
+  acknowledgeDraftPolicy, createPromptSubmit, createdSessions, promptInputs, savedPolicies,
+  policyWrites, policyFixture, serverFor, sdkFor, promoted,
   state, submitInput, sentShell, promotedDrafts,
   storedSessions, canonicalPolicies,
 } from "./submit-harness"
@@ -39,10 +39,9 @@ test("deliberate retry follows its own retained failed barrier and obtains a fre
   void barrier.current.catch(() => {})
   const writes: SubagentModelPolicy[] = []
   const policy = createSubmissionPolicy({
-    key, sessionID: "same-session", protocol: Promise.resolve("v2"),
+    key, sessionID: "same-session",
     current: () => true, initialPolicy: { mode: "inherit" }, failedMessage: "bad receipt",
     admission: { policyWritten: true, failedWrite: { cause: failure, version: 1 } },
-    legacyWrite: async () => { throw new Error("unexpected V1 write") },
     management: {
       waitSubagentModels: () => barrier.current,
       subagentModelsWriteVersion: () => clock.version,

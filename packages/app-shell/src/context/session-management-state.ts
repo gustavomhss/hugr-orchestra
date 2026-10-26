@@ -59,22 +59,6 @@ export function eventSessionID(event: { type: string; properties?: unknown }) {
   const properties = event.properties
   if (!properties || typeof properties !== "object") return
   if ("sessionID" in properties && typeof properties.sessionID === "string") return properties.sessionID
-  if (
-    "info" in properties &&
-    properties.info &&
-    typeof properties.info === "object" &&
-    "sessionID" in properties.info &&
-    typeof properties.info.sessionID === "string"
-  )
-    return properties.info.sessionID
-  if (
-    "part" in properties &&
-    properties.part &&
-    typeof properties.part === "object" &&
-    "sessionID" in properties.part &&
-    typeof properties.part.sessionID === "string"
-  )
-    return properties.part.sessionID
 }
 
 export function projectSessionManagementEvent(

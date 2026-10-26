@@ -4,17 +4,17 @@ name: omni-cli-smoke
 # supervisor shipped next to it (D-L8), start it with omni on, let it hold a nonce tree, `kill -9` it, and require 0
 # nonce processes 8 s later. Runs by hand and on pull requests that touch the build scripts or omni.
 #
-# What runs the tree: no CLI subcommand on this branch keeps an omni tree alive (`debug omni`, WP3, starts one and
-# stops it at once). So the shipped executable runs a hold script as Bun (BUN_BE_BUN=1): the binary, its compiled
+# What runs the tree: the shipped executable runs a hold script as Bun (BUN_BE_BUN=1): the binary, its compiled
 # runtime, process.execPath and its realpath (reached through a symlink on Unix), the shipped addon and the shipped
 # supervisor are all the real ones; only the yargs layer is bypassed. The script fails unless the core loader took
-# both files from next to the binary. When `debug omni` exists, a second step requires it to print `nonce tree: ok`,
-# which covers the import of hugr-omni from inside the compiled bundle.
+# both files from next to the binary. A second step requires `debug omni` to print `nonce tree: ok`, which covers the
+# import of hugr-omni from inside the compiled bundle.
 on:
   workflow_dispatch:
   pull_request:
     paths:
-      - "apps/orchestra/script/**"
+      - "apps/cli/script/**"
+      - "apps/cli/src/omni-entry.ts"
       - "native/omni/**"
       - ".github/workflows/omni-cli-smoke.yml"
 
@@ -65,13 +65,13 @@ jobs:
           echo "OMNI_ARTIFACTS=$dir" >> "$GITHUB_ENV"
 
       - name: Build the CLI (--single)
-        working-directory: apps/orchestra
+        working-directory: apps/cli
         run: |
-          bun script/build.ts --single --skip-install --skip-embed-web-ui
+          bun script/build.ts --single --skip-install
           ls -l dist/*/bin
 
       - name: Crash smoke
-        working-directory: apps/orchestra
+        working-directory: apps/cli
         run: |
           mkdir -p .omni-cli-smoke
           # Run by the shipped binary as Bun: load omni through the core loader, start a 3-process nonce tree, hold it.
@@ -107,7 +107,7 @@ jobs:
             console.error(`::error::${message}`)
             process.exit(1)
           }
-          const targets = readdirSync("dist").filter((name) => name.startsWith("orchestra-"))
+          const targets = readdirSync("dist").filter((name) => name.startsWith("cli-"))
           if (targets.length !== 1) fail(`expected one built target in dist, found ${targets.join(", ")}`)
           const real = path.resolve("dist", targets[0], "bin", process.platform === "win32" ? "orchestra.exe" : "orchestra")
           const link = path.join(mkdtempSync(path.join(os.tmpdir(), "omni-cli-")), "orchestra")
@@ -152,7 +152,7 @@ jobs:
 
       # The shipped binary finds the addon and the supervisor next to itself, with no HUGR_OMNI_* to help it.
       - name: debug omni (in-bundle import)
-        working-directory: apps/orchestra
+        working-directory: apps/cli
         run: |
           bin=$(find dist -path '*/bin/orchestra' -o -path '*/bin/orchestra.exe' | head -1)
           [ -n "$bin" ] || { echo "::error::no built orchestra binary under dist"; exit 1; }

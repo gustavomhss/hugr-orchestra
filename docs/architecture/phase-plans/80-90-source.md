@@ -18,7 +18,7 @@
 |---|---|---|---|
 | A1 | One owner per route group and per command, recorded | 1 | §3 tables, registry `status/successor`, generated README block |
 | A2 | Explicit exports for `protocol`, `server`, `orchestra` (today `"./*"`) | 1 | W1-EXP-PROTOCOL/SERVER/ORCH |
-| A3 | Label `apps/orchestra` (incl. `src/server`, `src/cli`) as legacy-live | 1 | P2 registry |
+| A3 | Label `removed-v1` (incl. `src/server`, `src/cli`) as legacy-live | 1 | P2 registry |
 | A4 | Move the v1 server into `packages/server/src/compat/v1` | 3 | D14. Not possible before 70-G: it needs orchestra session/provider internals |
 | A5 | One server: desktop default sidecar switches to v2 | 3 | D14 |
 | A6 | One CLI: port 20 legacy-only commands; two packages ship a bin named `orchestra` | 3 | D14, D20 |
@@ -35,7 +35,7 @@
 | D2 | `core → relay` (9 src files), `core → maestro-arsenal` (2), `server → relay` (3) | 2 | D6; default needs **no** code change |
 | D3 | Reconcile the four Copilot implementations and two branded provider/model ID pairs | 3 | D18 |
 | D4 | Remove `effect-sqlite-node` (dead dependency) | 3 | D18 (needs a lockfile change) |
-| D5 | `apps/orchestra/src/id/id.ts` has its own monotonic counter (ordering hazard) | 3 | D18. A behavior fix, so its own PR |
+| D5 | `removed-v1/src/id/id.ts` has its own monotonic counter (ordering hazard) | 3 | D18. A behavior fix, so its own PR |
 | E1 | Rename-ledger K13 is red at the baseline; P11 scope needs to cover the new files | 1 | P1 |
 | E2 | Rename-guard stale check has no teeth for kept paths | 1 | W1-REN-TEETH |
 | E3 | Provider/model wire IDs, headers, User-Agent, `$schema` | 3 | D19 (keep) |
@@ -52,7 +52,7 @@
 ## 1. Measured facts (inputs to every decision)
 
 ### A. CLI and server
-- `apps/orchestra/src/{server,cli}`: 169 files.
+- `removed-v1/src/{server,cli}`: 169 files.
   - Legacy httpapi: 22 groups, 23 handlers, 9 middleware.
   - `server.ts:309-317` merges 7 route layers. One of them, `serverRoutes` (`:187-193`), is `HttpApiBuilder.layer(Api)` built from `@orchestra/server/api` + `@orchestra/server/handlers`.
   - **So the legacy server already mounts the whole `packages/server` `/api/*` surface.** At code level, `/api/*` is not duplicated.
@@ -66,7 +66,7 @@
   - `apps/cli` only: api, migrate, service (start|restart|status|stop|password).
   - Both, with two implementations: `$0` (TUI), `serve` (legacy server vs `@orchestra/server/routes`), `debug` (15 legacy subcommands vs 2 in cli).
 - **Consumers.**
-  - Desktop default sidecar is **v1 = legacy**: `index.ts:85`, `virtual:orchestra-server` → `apps/orchestra/dist/node/node.js`.
+  - Desktop default sidecar is **v1 = legacy**: `index.ts:85`, `virtual:orchestra-server` → `removed-v1/dist/node/node.js`.
   - Desktop v2 (`ORCHESTRA_SIDECAR_V2=1`) and WSL run the `apps/cli` binary, which runs `packages/server`.
   - `sdk-next` wraps `createEmbeddedRoutes()`. No code imports `sdk-next`.
 - **Who imports the `orchestra` package by name: nobody.** Its `"./*"` export is unused. It is consumed by path instead (`virtual:orchestra-server`, `apps/desktop/src/main/env.d.ts`, tests).
@@ -82,7 +82,7 @@
   | app-shell | 101 (context 26, pages 32, components 24, utils 9, orchestra 8, hooks 1, testing 1) |
   | session-ui | 14 |
   | tui | 26 |
-  | apps/orchestra (legacy) | 29 |
+  | removed-v1 (legacy) | 29 |
   | plugin | 13 |
   | core | 3 (types only) |
   | apps/cli | 1 |
@@ -106,19 +106,19 @@
 - **GitHub Copilot exists four times:**
   - `core/src/github-copilot` (24 files, 4522 lines, vendored AI-SDK wire layer; its README says "temporary")
   - `llm/src/providers/github-copilot.ts` (69 lines, used only inside llm)
-  - `apps/orchestra/src/plugin/github-copilot` (680 lines: auth, headers, model list)
+  - `removed-v1/src/plugin/github-copilot` (680 lines: auth, headers, model list)
   - `core/src/plugin/provider/github-copilot.ts` (52 lines)
 
   The Responses-API routing rule is written in all four places.
-- **IDs and catalogs.** `llm/src/schema/ids.ts` defines a second, incompatible pair of branded `ModelID`/`ProviderID`. `apps/orchestra/src/provider/provider.ts:1050,1067` duplicates the Model/Info structs.
+- **IDs and catalogs.** `llm/src/schema/ids.ts` defines a second, incompatible pair of branded `ModelID`/`ProviderID`. `removed-v1/src/provider/provider.ts:1050,1067` duplicates the Model/Info structs.
 - **SQLite.** `packages/effect-sqlite-node` is declared by core (`package.json:98`), but **no code imports it**. `core/src/database/sqlite.node.ts` is an altered fork (210 lines differ).
 - **Orchestra copies of core files.**
-  - `apps/orchestra/src/util/iife.ts` is byte-identical to core's (blob `ca9ae6c1…`).
-  - `apps/orchestra/src/id/id.ts` is a near-duplicate with its own counter.
+  - `removed-v1/src/util/iife.ts` is byte-identical to core's (blob `ca9ae6c1…`).
+  - `removed-v1/src/id/id.ts` is a near-duplicate with its own counter.
 
 ### E. "opencode" references
 - 366 files and 10,158 lines; 9,021 of those lines are in `specs/`. Ledger: `script/rename-ledger.ts` has 15 `keptPaths` and 61 `protectedStrings`; the gate is `packages/core/test/rename-guard.test.ts`.
-- **The gate is red at the baseline.** K13 (`rename-ledger.ts:55`, `^(?:packages\/[^/]+|tooling\/http-recorder)\/test\/fixtures\/recordings\/`) was not given an `apps/` alternative by `9329366f0e`. Three recordings under `apps/orchestra/test/fixtures/recordings/session/` now leave residue (8 lines after protected strings). K13 itself matches 43 files, none of which contains the token.
+- **The gate is red at the baseline.** K13 (`rename-ledger.ts:55`, `^(?:packages\/[^/]+|tooling\/http-recorder)\/test\/fixtures\/recordings\/`) was not given an `apps/` alternative by `9329366f0e`. Three recordings under `removed-v1/test/fixtures/recordings/session/` now leave residue (8 lines after protected strings). K13 itself matches 43 files, none of which contains the token.
 - **Teeth gap.** The stale check for kept paths only requires the path to match a tracked file, not a file that contains the token (`rename-guard.test.ts:56-62`).
 - **Kinds.** `@opencode-ai/*` 202 lines, URLs 128, `$schema` 86, headers 66, wire IDs 711, env vars 45, dot-dirs and XDG 395, legacy package paths 7,900, prose 48, fixtures 404, identifiers 34, other 139.
 - **The P11 vendored-client pattern is path-scoped** to `^packages\/(?:app(?:-shell)?|session-ui)\/|^bun\.lock$` (`rename-ledger.ts:101-106`). New files outside that scope must not contain the token.
@@ -185,21 +185,21 @@
 | D5 | 1 | "Folder-level modules with an index.ts public API" | **A folder module's entry is its existing sibling facade `<name>.ts`** (18 core folders). `index.ts` is created only for cohesive folders with external consumers and no facade: core `capability`, `control-plane`, `research` (3 files). Collection folders (`util`, `tool`, `effect`, `database`, `v1`, `installation`, `flag`, `id`, `oauth`, `share`, `github-copilot`) have one entry per file. Deep imports into cohesive modules from other packages go into the ledger and are not retargeted (D12). | 18 sibling facades already serve as entries. Moving them to `index.ts` means 18 file moves, rewriting relative imports inside them, and churning the path-keyed ledgers. A `util/index.ts` barrel would mix browser-safe and node-only helpers. | **yes**: the owner literally asked for `index.ts`. Alternative cost: 18 facade moves, one card each, plus the ledger updates. |
 | D6 | 2 | Platform → product-module edges (core → relay ×9, core → maestro-arsenal ×2, server → relay ×3) | **A (default): register `relay` and `maestro-arsenal` as `platformLibrary` modules.** The guard proves they import only foundation/native/library code (relay → schema; arsenal → schema, hugr-omni), so no cycle is possible. No code change.<br>**B: ports.** Arsenal is about 60 LOC (conditional card T2-ARSENAL-PORT). Relay is **not minimal**: the call sites are in `core/src/session.ts`, `session/runner/llm.ts` and `location-services.ts` (V2 session core), so it belongs to 70-C. | relay `package.json` deps: schema, effect. arsenal: schema, hugr-omni, MCP SDK. The comment in `core/src/tool/maestro-arsenal-omni.ts:7-9` says arsenal cannot depend on core. Plan §3: "Não inventar um port para apagar uma seta legítima". | **yes** (the owner's example named these edges) |
 | D7 | 1 | UI → core runtime | Use a **`browserSafe` allowlist** of 6 core subpaths (`util/path`, `util/encode`, `util/binary`, `util/retry`, `util/task-tool`, `util/array`). The guard requires each of these files to have no imports at all. Extracting `packages/util` (70-B) is optional and later. | Those six are the only core subpaths app-shell and session-ui import. Each file has 0 import lines and 0 `process.`/`Bun.` references. | no |
-| D8 | 1 | Legacy behind a clear facade | Each canonical package that uses the legacy SDK or the vendored client in non-test source gets **`<pkg>/src/compat/<facade>.ts`**, a one-line re-export. Source imports are rewritten to it. Tests are exempt. `apps/orchestra` is itself legacy and is exempt (legacy → legacy). | Plan §3: "Compatibilidade fica em `compat/` dentro do dono". The specifiers are named imports only. 187 files. | no (owner-visible) |
-| D9 | 1 | What is labelled legacy / vendored / unused | **Legacy:** `packages/sdk/js`; the vendored client tarball; `apps/orchestra` (**legacy-live**, the default desktop sidecar); `packages/core/src/v1`; `packages/app-shell/src/pages/layout.tsx`.<br>**Vendored:** `packages/core/src/github-copilot`.<br>**Unused:** `packages/effect-sqlite-node`.<br>**Duplicates noted:** `apps/orchestra/src/id/id.ts`, `apps/orchestra/src/util/{iife,lazy}.ts`.<br>ui v1 components are **current**, not legacy (see D17). | §1 A–D | no |
+| D8 | 1 | Legacy behind a clear facade | Each canonical package that uses the legacy SDK or the vendored client in non-test source gets **`<pkg>/src/compat/<facade>.ts`**, a one-line re-export. Source imports are rewritten to it. Tests are exempt. `removed-v1` is itself legacy and is exempt (legacy → legacy). | Plan §3: "Compatibilidade fica em `compat/` dentro do dono". The specifiers are named imports only. 187 files. | no (owner-visible) |
+| D9 | 1 | What is labelled legacy / vendored / unused | **Legacy:** `packages/sdk/js`; the vendored client tarball; `removed-v1` (**legacy-live**, the default desktop sidecar); `packages/core/src/v1`; `packages/app-shell/src/pages/layout.tsx`.<br>**Vendored:** `packages/core/src/github-copilot`.<br>**Unused:** `packages/effect-sqlite-node`.<br>**Duplicates noted:** `removed-v1/src/id/id.ts`, `removed-v1/src/util/{iife,lazy}.ts`.<br>ui v1 components are **current**, not legacy (see D17). | §1 A–D | no |
 | D10 | 1 | Undeclared workspace imports | Put them in the ledger. **No manifest dependency edits** in 80–90. | Adding a workspace dependency requires `bun install`, which rewrites `bun.lock` (forbidden on this Mac). `bun.lock` and every manifest are also Nix fingerprint inputs. | no |
 | D11 | 1 | CI wiring of the gate | Add one step, "Run module-boundary gate", to `.github/workflows/test.yml` after "Run spawn-import gate" (`matrix.part == 'packages'`). **Do not** add it to `distribution-bundle.yml`. | `packages/core/test/distribution-bundle-workflow.test.ts:209-212` pins that static job's exact step list. | no |
 | D12 | 1 | File moves in 80–90 | **None.** Legacy stays where it is, labelled in the registry. No deep-import retargets either: they change module evaluation order. Retargets are optional W4, after the milestone. | Moves churn path-keyed ledgers (`rename-ledger.ts`, `godfile-waivers.json` with 74 waivers, `spawn-allowlist.json`, `archive-scopes.json`) and Nix filesets. | no (owner-visible; the monolith-map table targets `packages/server/src/compat/v1`, which is deferred to 70-G) |
 | D13 | 1 | Rename guard at baseline | Fix K13 (add `apps/` to its path alternatives). Extend P11 `paths` to `^script/(module-architecture\|boundary-ledger)\.json$`. Name facades `vendored-client*`, never `opencode-*`. | §1 E | no |
-| D14 | 3 | One CLI / one server | **Keep both, labelled.**<br>- Owner of `/api/*` (25 groups): `packages/server` (canonical; contract `@orchestra/protocol/api`).<br>- Owner of the v1 route groups and the 20 legacy commands: `apps/orchestra` (legacy-live).<br>- Converging means switching the desktop default sidecar to v2 and porting the commands. That is a product campaign. | §1 A. The legacy server already embeds the canonical handlers. | **yes** |
+| D14 | 3 | One CLI / one server | **Keep both, labelled.**<br>- Owner of `/api/*` (25 groups): `packages/server` (canonical; contract `@orchestra/protocol/api`).<br>- Owner of the v1 route groups and the 20 legacy commands: `removed-v1` (legacy-live).<br>- Converging means switching the desktop default sidecar to v2 and porting the commands. That is a product campaign. | §1 A. The legacy server already embeds the canonical handlers. | **yes** |
 | D15 | 3 | One SDK generation, plugin API | **Keep, behind facades (D8).** Migrate per consumer later. The plugin API types are an external contract: changing them breaks third-party plugins. | §1 B | **yes** |
 | D16 | 3 | Legacy layout | **Converge, in a separate PR:** delete `layout.tsx` and the `newLayoutDesigns` branches (37 files), and fix the 2 unpinned e2e specs. It has been unreachable since 2026-09-14. | §1 C. Plan §10: removing a feature path needs authorization. | **yes** |
 | D17 | 3 | Freeze ui v1 components? | **No.** v1 is still the shell's base layer. Revisit after D16. | §1 C counts | **yes** |
 | D18 | 3 | Copilot ×4, llm IDs, effect-sqlite-node, orchestra `id/id.ts` | Copilot and llm IDs: keep, labelled. `effect-sqlite-node`: remove in a lockfile campaign. `id/id.ts`: a separate behavior fix soon. Two counters break cross-copy ID ordering within the same millisecond. | §1 D | **yes** |
 | D19 | 3 | "opencode" wire IDs, headers, User-Agent, `$schema`, prose | **Keep the contracts** (Zen provider id, OAuth client IDs, `x-opencode-project`, the "live probe" headers). Clean up prose and identifiers in a separate campaign. The memory note "no opencode anywhere" conflicts with the provider contracts, so the owner must pick the headers. | §1 E | **yes** |
-| D20 | 3 | Two packages ship bin `orchestra` | Record it. Resolve it together with D14. | `apps/orchestra/package.json` and `apps/cli/package.json` (`bin.orchestra`) | **yes** |
+| D20 | 3 | Two packages ship bin `orchestra` | Record it. Resolve it together with D14. | `removed-v1/package.json` and `apps/cli/package.json` (`bin.orchestra`) | **yes** |
 | D21 | 1 | README per module | Each registered package gets a **generated "Module contract" block** in its README, rendered from the registry only. The guard checks it for drift. The 8 missing READMEs are created as title, summary and block. Prose sections are 90-C. | Plan §4 | no |
-| D22 | 1 | `apps/orchestra/src/research` is missing from the monolith-map disposition table | Target owner: Core `research` (`packages/core/src/research`), WP 70-G. | Map §3 table | no |
+| D22 | 1 | `removed-v1/src/research` is missing from the monolith-map disposition table | Target owner: Core `research` (`packages/core/src/research`), WP 70-G. | Map §3 table | no |
 | D23 | – | Baseline | Cards start only after #738 (and #755) land. P0 re-measures. | §header | lead |
 | D24 | – | Parallelism | Up to 20 Haiku agents, for mechanical cards only. Typechecks are serialized at integration. | Plan §7 says "até seis executores simultâneos em mudanças complexas". These cards are not complex. | **yes** (confirm the deviation) |
 
@@ -366,11 +366,11 @@ Every entry needs a non-empty `reason`. Output: one line per violation, `RULE fi
 - **Cohesive, entry = index:** backend-toolkit, system-context (both exist); capability, control-plane, research (created in P2).
 - **Collection** (one entry per file): database, effect, flag, id, installation, oauth, share, tool, util. Also `v1` (status legacy) and `github-copilot` (status vendored).
 
-### 3.5 `apps/orchestra` internal modules (status legacy; `target` = monolith-map disposition, WP 70-G)
+### 3.5 `removed-v1` internal modules (status legacy; `target` = monolith-map disposition, WP 70-G)
 
 | Folder | Target owner |
 |---|---|
-| cli, `index.ts`, `temporary.ts` | `apps/orchestra` entry/bootstrap |
+| cli, `index.ts`, `temporary.ts` | `removed-v1` entry/bootstrap |
 | `node.ts` | public composition facade (export key `./node`) |
 | server | `packages/server` compat v1 plus canonical handlers |
 | session, storage, background | Core v1 Session/storage/jobs plus `modules/session-engine` |
@@ -548,14 +548,14 @@ Rules common to every card:
 
 | Card | alias / path | Expected wildcard line | Sanity size of `exports` (baseline) | Branch | Integration typecheck dirs |
 |---|---|---|---|---|---|
-| W1-EXP-CORE | core / packages/core | `0` | about 295 keys (5 kept + 287 demanded + 3 entries) | exports-core | packages/core, apps/orchestra, apps/cli, apps/desktop, packages/server, packages/sdk-next, packages/tui, packages/app-shell, packages/session-ui |
+| W1-EXP-CORE | core / packages/core | `0` | about 295 keys (5 kept + 287 demanded + 3 entries) | exports-core | packages/core, removed-v1, apps/cli, apps/desktop, packages/server, packages/sdk-next, packages/tui, packages/app-shell, packages/session-ui |
 | W1-EXP-SCHEMA | schema / packages/schema | `0` | 90 (`.` + 89 full) | exports-schema | packages/schema, packages/protocol, packages/core, modules/relay, packages/llm, packages/client, packages/app-shell |
 | W1-EXP-PROTOCOL | protocol / packages/protocol | `0` | 28 (full) | exports-protocol | packages/protocol, packages/server, packages/client |
 | W1-EXP-SERVER | server / packages/server | `0` | 15 | exports-server | packages/server, apps/cli, packages/sdk-next |
 | W1-EXP-RELAY | relay / modules/relay | `0` | 18 (`.` + 17) | exports-relay | modules/relay, packages/core, packages/server |
 | W1-EXP-SESSIONUI | session-ui / packages/session-ui | `1 ./v2/*.css` | about 32 | exports-session-ui | packages/session-ui, packages/app-shell |
 | W1-EXP-UI | ui / packages/ui | `4 ./fonts/* ./audio/* ./v2/*.css ./v2/styles/*` | about 159 | exports-ui | packages/ui, packages/session-ui, packages/app-shell, packages/tui |
-| W1-EXP-ORCH | orchestra / apps/orchestra | `0` | 1 (`./node`) | exports-orchestra | apps/orchestra |
+| W1-EXP-ORCH | orchestra / removed-v1 | `0` | 1 (`./node`) | exports-orchestra | removed-v1 |
 
 Commit for each card: `refactor(<scope>): declare explicit package exports`. The scope is the package name, for example `core`.
 
@@ -611,7 +611,7 @@ Commit: `refactor(<scope>): route legacy SDK imports through the compat facade`.
   - Old filter: `.filter((entry) => !tracked.some((file) => entry.path.test(file)))`.
   - New filter: `.filter((entry) => !tracked.some((file) => entry.path.test(file) && (/opencode/i.test(file) || /opencode/i.test(new TextDecoder("latin1").decode(readFileSync(path.join(root, file)))))))`.
   - Add `import { readFileSync } from "node:fs"` after the `node:path` import.
-- **Teeth.** Add a unit test: `expect(keptPaths.find((entry) => entry.path.test("apps/orchestra/test/fixtures/recordings/session/native-zen-tool-loop.json"))).toBeDefined()`.
+- **Teeth.** Add a unit test: `expect(keptPaths.find((entry) => entry.path.test("removed-v1/test/fixtures/recordings/session/native-zen-tool-loop.json"))).toBeDefined()`.
 - **Invariants:** the gate's reach only grows. Measured at baseline, all 15 kept entries keep at least one file that contains the token once P1 is in.
 - **Verify:** `bun run test:ci core test/rename-guard.test.ts`.
 - **Branch:** `rename-guard-teeth`.
@@ -643,9 +643,9 @@ Commit: `docs(<scope>): add generated module contract blocks`.
 
 ### 5.6 Conditional and optional cards (not in the estimate)
 - **T2-ARSENAL-PORT** (only if the owner picks D6-B).
-  - **Owns:** `packages/core/src/tool/maestro-arsenal-omni.ts`, `packages/core/src/tool/upstream-arsenal.ts`, `packages/core/package.json` (dependencies), `apps/orchestra/src/maestro/roster.ts`, `apps/cli/src/commands/handlers/debug/symbols.ts`.
+  - **Owns:** `packages/core/src/tool/maestro-arsenal-omni.ts`, `packages/core/src/tool/upstream-arsenal.ts`, `packages/core/package.json` (dependencies), `removed-v1/src/maestro/roster.ts`, `apps/cli/src/commands/handlers/debug/symbols.ts`.
   - **Change:** `loadArsenal(load: () => Promise<typeof import("@orchestra/maestro-arsenal")>)`. Composition passes `() => import("@orchestra/maestro-arsenal")`. Arsenal's `Descriptor`, `ProcessRequest` and `ProcessResult` types move behind a core-owned structural type.
-  - **Not purely mechanical:** it changes the boot wiring in 2 apps and needs `bun install` to drop the dependency. Lead-executed. test:ci: `apps/orchestra/test/maestro/*arsenal*` and `apps/orchestra/test/tool/upstream-arsenal.test.ts`.
+  - **Not purely mechanical:** it changes the boot wiring in 2 apps and needs `bun install` to drop the dependency. Lead-executed. test:ci: `removed-v1/test/maestro/*arsenal*` and `removed-v1/test/tool/upstream-arsenal.test.ts`.
 - **W4 deep-import retargets** (after the milestone, optional). Per importer package, rewrite R7 deep specifiers to the module entry when every imported name is re-exported by that entry.
   - This changes module evaluation order (TDZ/cycle risk, startup cost).
   - Pilot: relay (core 9 + server 3 files → `@orchestra/relay`) with the relay, tool-safety and session-runner test files via test:ci.
@@ -711,8 +711,8 @@ P0 baseline ─► P1 rename fix ─► P2 registry+index ─► P3 guard+seed+C
 15. **Barrel retargets change evaluation order** (TDZ in cyclic ESM, startup cost). That is why there are no deep-import retargets in this phase (W4 only).
 16. **Mac resources.** 20 agents each running `tsgo` on orchestra would exhaust memory. Cards never typecheck or install. Integration typechecks serially. Worktrees share the root `node_modules` through a symlink.
 17. **Windows CI.** The gate runs in the `packages` part on both OSes. Use `git ls-files -z` posix paths and do not assume LF in parsing (TS handles CRLF).
-18. **The legacy label is not "unsupported".** `apps/orchestra` is the default desktop sidecar (`apps/desktop/src/main/index.ts:85`). The registry note and README must say "live".
-19. **Known behavior hazard left open:** two monotonic ID counters (`apps/orchestra/src/id/id.ts` vs core via `@orchestra/schema/identifier`). Logged under D18, not fixed here.
+18. **The legacy label is not "unsupported".** `removed-v1` is the default desktop sidecar (`apps/desktop/src/main/index.ts:85`). The registry note and README must say "live".
+19. **Known behavior hazard left open:** two monotonic ID counters (`removed-v1/src/id/id.ts` vs core via `@orchestra/schema/identifier`). Logged under D18, not fixed here.
 20. **Deviation from the plan doc's "≤6 executors"** (restructure-plan §7) needs owner confirmation (D24).
 21. **The baseline drifts.** #738/#755 are not in `dev`, and the canonical checkout's `dev` ref is stale. P0 re-measures before dispatch, and seed counts are sanity ranges, not pins.
 
@@ -749,7 +749,7 @@ LEG() { git grep -lE "[\"'](@orchestra/sdk|@opencode-ai/client)(/[^\"']*)?[\"']"
 | ID | Command | Baseline expectation |
 |---|---|---|
 | A1 | `node -e 'for (const m of require("./script/module-registry.json").modules){const e=require("./"+m.path+"/package.json").exports;if(e&&typeof e==="object"){const w=Object.keys(e).filter(k=>k.includes("*"));if(w.length)console.log(m.alias,w.join(" "))}}'` | 8 lines: orchestra, core, protocol, schema, server, relay (each `./*`); session-ui (5 keys); ui (9 keys) |
-| A2 | `git ls-files apps/orchestra/src/server apps/orchestra/src/cli \| wc -l` | 169 |
+| A2 | `git ls-files removed-v1/src/server removed-v1/src/cli \| wc -l` | 169 |
 | A3 | `git grep -lE "[\"'](@orchestra/sdk)(/[^\"']*)?[\"']" -- '*.ts' '*.tsx' '*.js' '*.mjs' \| wc -l` | 270 |
 | A4 | `git grep -l '@opencode-ai/client' -- '*.ts' '*.tsx' \| wc -l` | 61 (58 importers plus the ledger, guard and fixture string literals) |
 | A5 | `LEG packages/app-shell/src \| wc -l` | 101 |
@@ -757,7 +757,7 @@ LEG() { git grep -lE "[\"'](@orchestra/sdk|@opencode-ai/client)(/[^\"']*)?[\"']"
 | A7 | `LEG packages/session-ui/src packages/tui/src packages/plugin/src packages/core/src apps/cli/src \| wc -l` | 57 (14 + 26 + 13 + 3 + 1) |
 | A8 | `git grep -c "" -- packages/app-shell/src/pages/layout.tsx; git grep -l newLayoutDesigns -- packages/app-shell/src \| wc -l` | 2367 ; 37 |
 | A9 | `git grep -lE "@orchestra/effect-sqlite-node['\"]" -- '*.ts' \| wc -l` | 0 |
-| A10 | `git grep -c -i opencode -- apps/orchestra/test/fixtures/recordings` | 3 files (1, 1, 8 lines) |
+| A10 | `git grep -c -i opencode -- removed-v1/test/fixtures/recordings` | 3 files (1, 1, 8 lines) |
 | A11 | `git grep -nE "@orchestra/(relay\|maestro-arsenal)" -- packages/core/src packages/server/src \| cut -d: -f1 \| sort -u \| wc -l` | 14 (core 11 incl. type-only, server 3) |
 | A12 | `for f in path encode binary retry task-tool array; do grep -cE '^\s*(import\|export .* from)' packages/core/src/util/$f.ts; done` | six `0` |
 

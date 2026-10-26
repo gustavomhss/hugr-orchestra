@@ -53,7 +53,7 @@ Generated bundles that expose Atlas to Orchestra.
 ## Public entry points and consumers
 
 - Export keys `.`, `./materialize`, `./native-header` and `./native-memory`; every target is in `modules/atlas/boundary/src/generated`.
-- Consumer: `apps/orchestra`.
+- Consumer: `removed-v1`.
 
 ## Dependencies and boundaries
 

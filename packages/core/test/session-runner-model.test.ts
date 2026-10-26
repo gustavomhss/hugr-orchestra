@@ -172,6 +172,35 @@ describe("SessionRunnerModel", () => {
     }),
   )
 
+  it.effect("carries the catalog model's input limit and price list onto the resolved model", () =>
+    Effect.gen(function* () {
+      const info = ModelV2.Info.make({
+        ...model({ type: "aisdk", package: "@ai-sdk/openai", url: "https://openai.example/v1" }),
+        limit: { context: 100, input: 80, output: 20 },
+        cost: [{ input: 3, output: 15, cache: { read: 0.3, write: 3.75 } }],
+      })
+      const resolved = yield* SessionRunnerModel.fromCatalogModel(info)
+
+      expect(resolved.route).toMatchObject({ defaults: { limits: { context: 100, input: 80, output: 20 } } })
+      expect(SessionRunnerModel.pricing(resolved)).toEqual(info.cost)
+    }),
+  )
+
+  it.effect("prices a step per million tokens, bills reasoning at the output rate and picks the tier by prompt size", () =>
+    Effect.sync(() => {
+      const list = [
+        { input: 3, output: 15, cache: { read: 0.3, write: 3.75 } },
+        { tier: { type: "context" as const, size: 200_000 }, input: 6, output: 22.5, cache: { read: 0.6, write: 7.5 } },
+      ]
+      const tokens = { input: 1000, output: 400, reasoning: 100, cache: { read: 2000, write: 0 } }
+
+      expect(SessionRunnerModel.cost(list, tokens)).toBeCloseTo((1000 * 3 + 500 * 15 + 2000 * 0.3) / 1e6, 10)
+      expect(SessionRunnerModel.cost([], tokens)).toBe(0)
+      const long = { ...tokens, input: 250_000 }
+      expect(SessionRunnerModel.cost(list, long)).toBeCloseTo((250_000 * 6 + 500 * 22.5 + 2000 * 0.6) / 1e6, 10)
+    }),
+  )
+
   it.effect("keeps catalog apiKey credentials out of provider JSON", () =>
     Effect.gen(function* () {
       const resolved = yield* SessionRunnerModel.fromCatalogModel(
@@ -459,7 +488,7 @@ describe("SessionRunnerModel", () => {
     }),
   )
 
-  it.effect("maps a native catalog model with an endpoint to the OpenAI-compatible chat route, as V1 did", () =>
+  it.effect("maps a native catalog model with an endpoint to the OpenAI-compatible chat route", () =>
     Effect.gen(function* () {
       const resolved = yield* SessionRunnerModel.fromCatalogModel(
         model({ type: "native", url: "https://native.example/v1", settings: {} }),

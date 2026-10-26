@@ -1,6 +1,6 @@
 import { describe, expect } from "bun:test"
 import path from "node:path"
-import { DateTime, Effect, Exit, Layer, Schema } from "effect"
+import { DateTime, Effect, Layer, Schema } from "effect"
 import { eq } from "drizzle-orm"
 import { Database } from "../src/database/database"
 import { AgentV2 } from "../src/agent"
@@ -19,7 +19,7 @@ import { MessageTable, PartTable, SessionMessageTable, SessionTable } from "../s
 import { Location } from "../src/location"
 import { WorkspaceV2 } from "../src/workspace"
 import { WorkspaceTable } from "../src/control-plane/workspace.sql"
-import { SessionV1 } from "../src/v1/session"
+import { SessionLegacyTranscript } from "../src/session/legacy-transcript"
 import { Project } from "../src/project"
 import { ProjectTable } from "../src/project/sql"
 import { AbsolutePath } from "../src/schema"
@@ -111,17 +111,25 @@ const observationFixture = Effect.fn("HostObservationTest.fixture")(function* (
   yield* events.publish(SessionEvent.Tool.Success, { ...base,
     structured: { title: "Original Task", output: "Background task started", retained: "current", metadata: retainedMetadata },
     content: [{ type: "text", text: "Original Task output" }], result: { original: true }, provider: { executed: false } })
+  // Legacy transcripts enter only as stored message/part rows; no durable event writes them any more.
+  const insertLegacyAssistant = (info: Schema.Schema.Type<typeof SessionLegacyTranscript.Assistant>) => {
+    const { id: _, sessionID: __, ...data } = Schema.encodeSync(SessionLegacyTranscript.Assistant)(info)
+    return database.db.insert(MessageTable).values({ id: info.id, session_id: info.sessionID, data }).run()
+  }
+  const insertLegacyPart = (part: Schema.Schema.Type<typeof SessionLegacyTranscript.ToolPart>) => {
+    const { id: _, messageID: __, sessionID: ___, ...data } = Schema.encodeSync(SessionLegacyTranscript.ToolPart)(part)
+    return database.db.insert(PartTable).values({ id: part.id, message_id: part.messageID, session_id: part.sessionID, data }).run()
+  }
   const original = legacyOriginal ? yield* Effect.gen(function* () {
-    yield* events.publish(SessionV1.Event.MessageUpdated, { sessionID: parentID,
-      info: SessionV1.Assistant.make({ id: SessionV1.MessageID.make(parentMessageID), sessionID: parentID,
-        role: "assistant", agent: "maestro", mode: "maestro", parentID: SessionV1.MessageID.make("msg_user"),
-        modelID: model.id, providerID: model.providerID, path: { cwd: "/project", root: "/project" },
-        time: { created: 1 }, cost: 0, tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } } }) })
-    const part = SessionV1.ToolPart.make({ id: SessionV1.PartID.make(`prt_observation_original_${view}`),
-      messageID: SessionV1.MessageID.make(parentMessageID), sessionID: parentID, type: "tool", tool: "task", callID: base.callID,
+    yield* insertLegacyAssistant(SessionLegacyTranscript.Assistant.make({ id: SessionLegacyTranscript.MessageID.make(parentMessageID), sessionID: parentID,
+      role: "assistant", agent: "maestro", mode: "maestro", parentID: SessionLegacyTranscript.MessageID.make("msg_user"),
+      modelID: model.id, providerID: model.providerID, path: { cwd: "/project", root: "/project" },
+      time: { created: 1 }, cost: 0, tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } } }))
+    const part = SessionLegacyTranscript.ToolPart.make({ id: SessionLegacyTranscript.PartID.make(`prt_observation_original_${view}`),
+      messageID: SessionLegacyTranscript.MessageID.make(parentMessageID), sessionID: parentID, type: "tool", tool: "task", callID: base.callID,
       state: { status: "completed", input: selectedInput, title: "Original Task", output: "Background task started",
         metadata: retainedMetadata, time: { start: 1, end: 1 } } })
-    yield* events.publish(SessionV1.Event.PartUpdated, { sessionID: parentID, time: 1, part })
+    yield* insertLegacyPart(part)
     return part
   }) : undefined
   if (view !== "legacy") {
@@ -132,12 +140,12 @@ const observationFixture = Effect.fn("HostObservationTest.fixture")(function* (
     yield* events.publish(SessionEvent.Step.Ended, { ...author, finish: "stop", cost: 0,
       tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } } })
   }
-  if (view !== "native") yield* events.publish(SessionV1.Event.MessageUpdated, { sessionID: childID,
-    info: SessionV1.Assistant.make({ id: SessionV1.MessageID.make(authorMessageID), sessionID: childID,
-      role: "assistant", agent: "archie", mode: "archie", parentID: SessionV1.MessageID.make("msg_user"),
-      modelID: model.id, providerID: model.providerID, path: { cwd: "/project", root: "/project" },
-      time: { created: 1, completed: 2 }, finish: "stop", cost: 0,
-      tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } } }) })
+  if (view !== "native") yield* insertLegacyAssistant(SessionLegacyTranscript.Assistant.make({
+    id: SessionLegacyTranscript.MessageID.make(authorMessageID), sessionID: childID,
+    role: "assistant", agent: "archie", mode: "archie", parentID: SessionLegacyTranscript.MessageID.make("msg_user"),
+    modelID: model.id, providerID: model.providerID, path: { cwd: "/project", root: "/project" },
+    time: { created: 1, completed: 2 }, finish: "stop", cost: 0,
+    tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } } }))
   const location = Location.Ref.make({ directory: AbsolutePath.make("/project") })
   const offer = (metadata: Record<string, unknown>, patch: Partial<SessionEvent.Tool.Progress["data"]> = {}, placement = location) =>
     events.publish(SessionEvent.Tool.Progress, { ...base, structured: { metadata }, content: [], ...patch }, { location: placement })
@@ -147,7 +155,7 @@ const observationFixture = Effect.fn("HostObservationTest.fixture")(function* (
     const message = Schema.decodeUnknownSync(SessionMessage.Message)({ ...row.data, id: row.id, type: row.type })
     return tool({ messages: [message] })
   })
-  return { database, events, parentID, childID, parentMessageID, authorMessageID, projectID, result, retainedMetadata, selectedInput, original, offer, read }
+  return { database, events, parentID, childID, parentMessageID, authorMessageID, projectID, result, retainedMetadata, selectedInput, original, insertLegacyPart, offer, read }
 })
 
 ;["native", "legacy", "dual"].forEach((view) => {
@@ -265,8 +273,8 @@ dbIt.live("available legacy original Task conflicts veto native observation befo
   const state = f.original.state
   const before = yield* f.read()
   const offered = { ...f.retainedMetadata, workResult: f.result }
-  const write = (part: Schema.Schema.Type<typeof SessionV1.ToolPart>) => {
-    const encoded = Schema.encodeSync(SessionV1.ToolPart)(part)
+  const write = (part: Schema.Schema.Type<typeof SessionLegacyTranscript.ToolPart>) => {
+    const encoded = Schema.encodeSync(SessionLegacyTranscript.ToolPart)(part)
     const { id: _, messageID: __, sessionID: ___, ...data } = encoded
     return f.database.db.update(PartTable).set({ data }).where(eq(PartTable.id, original.id)).run()
   }
@@ -282,27 +290,27 @@ dbIt.live("available legacy original Task conflicts veto native observation befo
       terminal: { reason: "interrupted", hostDetail: "Earlier retained interruption" } } } } },
     { ...original, state: { ...state, metadata: { ...state.metadata, interrupted: true } } },
     { ...original, state: { ...state, metadata: { ...state.metadata, upstreamSettlement: { conflicting: true } } } },
-    { ...original, state: SessionV1.ToolStateError.make({ status: "error", input: state.input,
+    { ...original, state: SessionLegacyTranscript.ToolStateError.make({ status: "error", input: state.input,
       error: "Actual retained Task error", metadata: state.metadata, time: { start: 1, end: 2 } }) },
   ]) {
     yield* write(part)
     yield* f.offer(offered)
     expect(yield* f.read()).toEqual(before)
   }
-  const malformed: Pick<SessionV1.ToolPart, "type" | "callID"> = { type: "tool", callID: original.callID }
+  const malformed: Pick<SessionLegacyTranscript.ToolPart, "type" | "callID"> = { type: "tool", callID: original.callID }
   yield* f.database.db.update(PartTable).set({ data: malformed }).where(eq(PartTable.id, original.id)).run()
   yield* f.offer(offered)
   expect(yield* f.read()).toEqual(before)
   yield* write(original)
   const owner = yield* f.database.db.select().from(MessageTable).where(eq(MessageTable.id, original.messageID)).get()
   if (!owner) throw new Error("Missing legacy original owner")
-  const info = Schema.decodeUnknownSync(SessionV1.Info)({ ...owner.data, id: owner.id, sessionID: owner.session_id })
+  const info = Schema.decodeUnknownSync(SessionLegacyTranscript.Info)({ ...owner.data, id: owner.id, sessionID: owner.session_id })
   if (info.role !== "assistant") throw new Error("Expected legacy original assistant")
-  const malformedOwner: Pick<SessionV1.Assistant, "role" | "agent" | "time"> = { role: "assistant", agent: "maestro", time: { created: info.time.created } }
+  const malformedOwner: Pick<SessionLegacyTranscript.Assistant, "role" | "agent" | "time"> = { role: "assistant", agent: "maestro", time: { created: info.time.created } }
   yield* f.database.db.update(MessageTable).set({ data: malformedOwner }).where(eq(MessageTable.id, owner.id)).run()
   yield* f.offer(offered)
   expect(yield* f.read()).toEqual(before)
-  const encoded = Schema.encodeSync(SessionV1.Assistant)({ ...info, agent: "archie" })
+  const encoded = Schema.encodeSync(SessionLegacyTranscript.Assistant)({ ...info, agent: "archie" })
   const { id: _, sessionID: __, ...data } = encoded
   yield* f.database.db.update(MessageTable).set({ data }).where(eq(MessageTable.id, owner.id)).run()
   yield* f.offer(offered)
@@ -311,15 +319,15 @@ dbIt.live("available legacy original Task conflicts veto native observation befo
   yield* f.offer(offered)
   expect(yield* f.read()).toEqual(before)
   yield* f.database.db.update(MessageTable).set({ session_id: owner.session_id }).where(eq(MessageTable.id, owner.id)).run()
-  const duplicate = { ...original, id: SessionV1.PartID.make("prt_observation_duplicate") }
-  yield* f.events.publish(SessionV1.Event.PartUpdated, { sessionID: f.parentID, time: 1, part: duplicate })
+  const duplicate = { ...original, id: SessionLegacyTranscript.PartID.make("prt_observation_duplicate") }
+  yield* f.insertLegacyPart(duplicate)
   yield* f.offer(offered)
   expect(yield* f.read()).toEqual(before)
-  yield* f.events.publish(SessionV1.Event.PartRemoved, { sessionID: f.parentID, messageID: original.messageID, partID: duplicate.id })
-  yield* f.events.publish(SessionV1.Event.PartRemoved, { sessionID: f.parentID, messageID: original.messageID, partID: original.id })
+  yield* f.database.db.delete(PartTable).where(eq(PartTable.id, duplicate.id)).run()
+  yield* f.database.db.delete(PartTable).where(eq(PartTable.id, original.id)).run()
   yield* f.offer(offered)
   expect(yield* f.read()).toEqual(before)
-  yield* f.events.publish(SessionV1.Event.PartUpdated, { sessionID: f.parentID, time: 1, part: original })
+  yield* f.insertLegacyPart(original)
   yield* f.offer(offered)
   const accepted = yield* f.read()
   expect(accepted).toEqual({ ...before, state: { ...before.state,
@@ -334,10 +342,10 @@ dbIt.live("stored returned-author completion, agent and role conflicts veto eith
   const before = yield* f.read()
   const offered = { ...f.retainedMetadata, workResult: f.result }
   const modern = yield* f.database.db.select().from(SessionMessageTable).where(eq(SessionMessageTable.id, f.authorMessageID)).get()
-  const legacy = yield* f.database.db.select().from(MessageTable).where(eq(MessageTable.id, SessionV1.MessageID.make(f.authorMessageID))).get()
+  const legacy = yield* f.database.db.select().from(MessageTable).where(eq(MessageTable.id, SessionLegacyTranscript.MessageID.make(f.authorMessageID))).get()
   if (!modern || !legacy) throw new Error("Expected both stored returned-author views")
   const author = Schema.decodeUnknownSync(SessionMessage.Message)({ ...modern.data, id: modern.id, type: modern.type })
-  const old = Schema.decodeUnknownSync(SessionV1.Info)({ ...legacy.data, id: legacy.id, sessionID: legacy.session_id })
+  const old = Schema.decodeUnknownSync(SessionLegacyTranscript.Info)({ ...legacy.data, id: legacy.id, sessionID: legacy.session_id })
   if (author.type !== "assistant" || old.role !== "assistant") throw new Error("Expected stored returned assistants")
   for (const message of [
     { ...author, time: { created: author.time.created } },
@@ -351,7 +359,7 @@ dbIt.live("stored returned-author completion, agent and role conflicts veto eith
     expect(yield* f.read()).toEqual(before)
     yield* f.database.db.update(SessionMessageTable).set({ type: modern.type, data: modern.data }).where(eq(SessionMessageTable.id, modern.id)).run()
   }
-  const user: Pick<SessionV1.User, "role" | "agent" | "model" | "time"> = { role: "user", agent: "archie",
+  const user: Pick<SessionLegacyTranscript.User, "role" | "agent" | "model" | "time"> = { role: "user", agent: "archie",
     model: { providerID: old.providerID, modelID: old.modelID }, time: { created: legacy.data.time.created } }
   for (const data of [
     { ...legacy.data, time: { created: legacy.data.time.created } },
@@ -426,6 +434,7 @@ dbIt.live("trusted serialized replay reconstructs the same eligible host-observa
   const child = yield* f.database.db.select().from(SessionTable).where(eq(SessionTable.id, f.childID)).get()
   const workspace = yield* f.database.db.select().from(WorkspaceTable).where(eq(WorkspaceTable.id, workspaceID)).get()
   const history = yield* f.database.db.select().from(EventTable).all()
+  const legacy = yield* f.database.db.select().from(MessageTable).all()
   if (!project || !parent || !child || !workspace) throw new Error("Missing live replay source facts")
   const tmp = yield* Effect.acquireRelease(Effect.promise(() => tmpdir()), (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()))
   const replayLayer = AppNodeBuilder.build(LayerNode.group([Database.node, EventV2.node, SessionProjector.node]),
@@ -436,6 +445,8 @@ dbIt.live("trusted serialized replay reconstructs the same eligible host-observa
     yield* database.db.insert(ProjectTable).values(project).run()
     yield* database.db.insert(WorkspaceTable).values(workspace).run()
     yield* database.db.insert(SessionTable).values([parent, child]).run()
+    // Stored legacy transcript rows are source facts, not replayed history.
+    if (legacy.length) yield* database.db.insert(MessageTable).values(legacy).run()
     const origins: boolean[] = []
     yield* events.project(SessionEvent.Tool.Progress, (_event, origin) => Effect.sync(() => { origins.push(origin.replay) }))
     for (const aggregateID of [f.childID, f.parentID]) {
@@ -451,111 +462,6 @@ dbIt.live("trusted serialized replay reconstructs the same eligible host-observa
   }).pipe(Effect.provide(Layer.fresh(replayLayer)))
 }))
 
-dbIt.effect("legacy durable projector preserves receipt, original input and terminal state against late metadata", () => Effect.gen(function* () {
-  const database = yield* Database.Service
-  const events = yield* EventV2.Service
-  yield* database.db.insert(ProjectTable).values({ id: Project.ID.global, worktree: AbsolutePath.make("/project"), sandboxes: [] }).run()
-  yield* database.db.insert(SessionTable).values({ id: sessionID, project_id: Project.ID.global, slug: "upstream",
-    directory: "/project", title: "upstream", version: "test" }).run()
-  yield* events.publish(SessionV1.Event.MessageUpdated, { sessionID, info: SessionV1.Assistant.make({
-    id: SessionV1.MessageID.make(messageID), sessionID, role: "assistant", agent: "maestro", mode: "maestro",
-    parentID: SessionV1.MessageID.make("msg_user"), modelID: ModelV2.ID.make("model"), providerID: ProviderV2.ID.make("provider"),
-    path: { cwd: "/project", root: "/project" }, time: { created: 1 }, cost: 0,
-    tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
-  }) })
-  const part = SessionV1.ToolPart.make({ id: SessionV1.PartID.make("prt_original"),
-    sessionID, messageID: SessionV1.MessageID.make(messageID), type: "tool", tool: "task", callID: "task-call",
-    metadata: { retainedProviderDetail: "latest" },
-    state: { status: "completed", input, output: "Background task started", title: "upstream",
-      metadata, time: { start: 1, end: 1 } },
-  })
-  yield* events.publish(SessionV1.Event.PartUpdated, { sessionID, time: 1, part: { ...part,
-    state: { status: "completed", input, output: "Background task started", title: "upstream",
-      metadata: { parentSessionId: sessionID, sessionId: "ses_child", background: true }, time: { start: 1, end: 1 } } } }, { persist: true })
-  yield* events.publish(SessionV1.Event.PartUpdated, { sessionID, time: 1, part }, { persist: true })
-  const read = () => Effect.gen(function* () {
-    const row = yield* database.db.select().from(PartTable).where(eq(PartTable.id, part.id)).get()
-    if (!row) throw new Error("Missing durable original Task part")
-    const current = Schema.decodeUnknownSync(SessionV1.Part)({ ...row.data, id: row.id,
-      messageID: row.message_id, sessionID: row.session_id })
-    if (current.type !== "tool") throw new Error("Missing durable Task")
-    return current
-  })
-  for (const state of [SessionV1.ToolStatePending.make({ status: "pending", input: {}, raw: "late" }),
-    SessionV1.ToolStateRunning.make({ status: "running", input: { ...input, prompt: "late mutated prompt" }, time: { start: 9 } })]) {
-    yield* events.publish(SessionV1.Event.PartUpdated, { sessionID, time: 9, part: { ...part, state, metadata: undefined } }, { persist: true })
-    expect(yield* read()).toEqual(part)
-  }
-  yield* events.publish(SessionV1.Event.PartUpdated, { sessionID, time: 1,
-    part: { ...part, state: { status: "running", input: { ...input, prompt: "late mutated prompt" },
-      metadata: { workResult: { terminal: { reason: "running" } } }, time: { start: 1 } } },
-  }, { persist: true })
-  const current = yield* read()
-  if (current.type !== "tool" || !("metadata" in current.state)) throw new Error("Missing durable Task metadata")
-  expect(current.state.status).toBe("completed")
-  expect(current.state.input).toEqual(input)
-  expect(current.state.metadata).toMatchObject({ upstreamSettlement: receipt, workResult, sessionId: "ses_child" })
-  yield* events.publish(SessionV1.Event.PartUpdated, { sessionID, time: 2, part: { ...part,
-    metadata: { newProviderDetail: "concurrent" }, state: { status: "error", input,
-      error: "Tool execution aborted", metadata: { interrupted: true, retainedFailureDetail: "latest" },
-      time: { start: 1, end: 2 } } } }, { persist: true })
-  const failed = yield* read()
-  expect(failed.state.status).toBe("error")
-  if (failed.state.status !== "error") throw new Error("Failure was not projected")
-  expect(failed.state.error).toBe("Tool execution aborted")
-  expect(failed.state.metadata).toMatchObject({ upstreamSettlement: receipt, interrupted: true })
-  for (const state of [SessionV1.ToolStatePending.make({ status: "pending", input: {}, raw: "stale" }),
-    SessionV1.ToolStateRunning.make({ status: "running", input: {}, time: { start: 99 } }),
-    SessionV1.ToolStateCompleted.make({ ...part.state, status: "completed", input: {}, output: "False finished",
-      title: "stale", metadata: { interrupted: false, unrelated: "new detail" }, time: { start: 99, end: 99 } }),
-    SessionV1.ToolStateError.make({ status: "error", input: {}, error: "Stale different failure", time: { start: 99, end: 99 } })]) {
-    yield* events.publish(SessionV1.Event.PartUpdated, { sessionID, time: 99,
-      part: { ...part, metadata: { otherProviderDetail: "new" }, state } }, { persist: true })
-    const retained = yield* read()
-    expect(retained.state.status).toBe("error")
-    if (retained.state.status !== "error") throw new Error("Stored failure was downgraded")
-    expect(retained.state.error).toBe(failed.state.error)
-    expect(retained.state.time).toEqual(failed.state.time)
-    expect(retained.state.input).toEqual(input)
-    expect(retained.state.metadata).toMatchObject({ upstreamSettlement: receipt, workResult,
-      interrupted: true, retainedFailureDetail: "latest" })
-    expect(retained.metadata).toMatchObject({ retainedProviderDetail: "latest", newProviderDetail: "concurrent", otherProviderDetail: "new" })
-  }
-  const unchanged = yield* read()
-  yield* events.publish(SessionV1.Event.PartUpdated, { sessionID, time: 99, part: unchanged }, { persist: true })
-  expect(yield* read()).toEqual(unchanged)
-  const conflict = yield* events.publish(SessionV1.Event.PartUpdated, { sessionID, time: 1,
-    part: { ...part, callID: "another-dispatch" } }, { persist: true }).pipe(Effect.exit)
-  expect(Exit.isFailure(conflict)).toBe(true)
-  // The private port acquired this completed snapshot before unrelated progress and interruption were projected.
-  const stale = SessionV1.ToolPart.make({ ...part, id: SessionV1.PartID.make("prt_first_install"), callID: "first-install-call",
-    metadata: { providerDetail: "stale snapshot" }, state: { status: "completed", input, output: "Background task started",
-      title: "stale title", metadata: { parentSessionId: sessionID, sessionId: "ses_child", background: true,
-      progressDetail: "stale snapshot" }, time: { start: 1, end: 1 } } })
-  if (stale.state.status !== "completed") throw new Error("First-install snapshot must be completed")
-  yield* events.publish(SessionV1.Event.PartUpdated, { sessionID, time: 1, part: stale }, { persist: true })
-  const latest = SessionV1.ToolPart.make({ ...stale, metadata: { providerDetail: "concurrent latest", unrelated: true },
-    state: { status: "error", input, error: "Actual concurrent interruption", time: { start: 1, end: 3 },
-      metadata: { parentSessionId: sessionID, sessionId: "ses_child", background: true, interrupted: true,
-        progressDetail: "concurrent latest", otherDetail: "retain" } } })
-  if (latest.state.status !== "error") throw new Error("First-install current state must be error")
-  yield* events.publish(SessionV1.Event.PartUpdated, { sessionID, time: 3, part: latest }, { persist: true })
-  const firstReceipt = { ...receipt, parentCallID: stale.callID }
-  for (const part of [{ ...stale, state: { ...stale.state,
-    metadata: { ...metadata, upstreamSettlement: { ...firstReceipt, parentCallID: "wrong-call" } } } },
-    { ...stale, state: { ...stale.state, input: { ...input, task_id: "ses_wrong" }, metadata: { ...metadata, upstreamSettlement: firstReceipt } } }]) {
-    const rejected = yield* events.publish(SessionV1.Event.PartUpdated, { sessionID, time: 4, part }, { persist: true }).pipe(Effect.exit)
-    expect(Exit.isFailure(rejected)).toBe(true)
-  }
-  yield* events.publish(SessionV1.Event.PartUpdated, { sessionID, time: 4, part: { ...stale,
-    state: { ...stale.state, metadata: { ...metadata, progressDetail: "stale snapshot", upstreamSettlement: firstReceipt } } } }, { persist: true })
-  const installedRow = yield* database.db.select().from(PartTable).where(eq(PartTable.id, stale.id)).get()
-  if (!installedRow) throw new Error("Missing first installed Task")
-  const installed = Schema.decodeUnknownSync(SessionV1.Part)({ ...installedRow.data, id: installedRow.id,
-    messageID: installedRow.message_id, sessionID: installedRow.session_id })
-  expect(installed).toEqual({ ...latest, state: { ...latest.state,
-    metadata: { ...latest.state.metadata, upstreamSettlement: firstReceipt, workResult } } })
-}))
 const success = (value: Record<string, unknown>) => SessionEvent.Tool.Success.make({
   id: EventV2.ID.make("evt_success"), type: SessionEvent.Tool.Success.type,
   data: { sessionID, assistantMessageID: messageID, callID: "task-call", timestamp, structured: value,

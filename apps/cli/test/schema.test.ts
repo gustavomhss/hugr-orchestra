@@ -76,8 +76,8 @@ test("owned generator emits the live V2 config schema from either working direct
     }
 
     // Use the existing MCP SDK's actual draft-2020-12 validator, without a new dependency.
-    const orchestra = createRequire(path.join(root, "apps/orchestra/package.json"))
-    const sdk = createRequire(orchestra.resolve("@modelcontextprotocol/sdk/client/index.js"))
+    const core = createRequire(path.join(root, "packages/core/package.json"))
+    const sdk = createRequire(core.resolve("@modelcontextprotocol/sdk/client/index.js"))
     const Ajv2020 = sdk("ajv/dist/2020.js").default
     const { JsonSchema } = await import("effect")
     const representative = {

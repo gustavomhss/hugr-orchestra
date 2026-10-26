@@ -16,8 +16,7 @@ await $`bun ./scripts/copy-metainfo.ts ${channel}`
 
 await stageClaude({
   directory: join(paths.desktop, "resources/claude-code"),
-  sdk: dirname(createRequire(join(paths.orchestra, "package.json")).resolve("@anthropic-ai/claude-agent-sdk")),
+  sdk: dirname(createRequire(join(paths.claudeCode, "package.json")).resolve("@anthropic-ai/claude-agent-sdk")),
 })
-await $`bun script/build-node.ts`.cwd(paths.orchestra)
 await stageOmni(channel)
 await buildCliToResources()

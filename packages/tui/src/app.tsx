@@ -48,7 +48,6 @@ import { DialogThemeList } from "./component/dialog-theme-list"
 import { DialogHelp } from "./ui/dialog-help"
 import { DialogAgent } from "./component/dialog-agent"
 import { DialogSessionList } from "./component/dialog-session-list"
-import { DialogWorkspaceList } from "./component/dialog-workspace-list"
 import { ThemeProvider, useTheme } from "./context/theme"
 import { Home } from "./routes/home"
 import { Session } from "./routes/session"
@@ -122,7 +121,6 @@ const appBindingCommands = [
   "theme.mode.lock",
   "help.show",
   "diff.open",
-  "workspace.list",
   "app.debug",
   "app.console",
   "app.heap_snapshot",
@@ -270,7 +268,9 @@ export const run = Effect.fn("Tui.run")(function* (input: TuiInput) {
                     >
                       <TuiStartupProvider
                         value={{
-                          initialRoute: process.env.ORCHESTRA_ROUTE ? JSON.parse(process.env.ORCHESTRA_ROUTE) : undefined,
+                          initialRoute: process.env.ORCHESTRA_ROUTE
+                            ? JSON.parse(process.env.ORCHESTRA_ROUTE)
+                            : undefined,
                           skipInitialLoading: Boolean(process.env.ORCHESTRA_FAST_BOOT),
                         }}
                       >
@@ -485,6 +485,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
           })
         local.model.set({ providerID, modelID }, { recent: true })
       }
+      if (args.variant) local.model.variant.set(args.variant)
       if (args.sessionID && !args.fork) {
         route.navigate({
           type: "session",
@@ -495,7 +496,10 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
   })
 
   async function forkSession(sessionID: string): Promise<void> {
-    const result = await sdk.client.session.fork({ sessionID }).catch((error: unknown) => ({ data: undefined, error }))
+    const result = await sdk.api.sessions.fork({ sessionID }).then(
+      (value) => ({ data: value, error: undefined }),
+      (error: unknown) => ({ data: undefined, error }),
+    )
     if (result.data?.id) return route.navigate({ type: "session", sessionID: result.data.id })
     const message = `${result.error ? errorMessage(result.error) : "no response"}. Confirm to retry, or run: orchestra --session ${sessionID} --fork`
     if (await DialogConfirm.show(dialog, "Failed to fork session", message, "dismiss")) return forkSession(sessionID)
@@ -540,13 +544,6 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
   )
 
   const connected = useConnected()
-  const currentWorktreeWorkspace = createMemo(() => {
-    const workspaceID = project.workspace.current()
-    if (!workspaceID) return
-    const workspace = project.workspace.get(workspaceID)
-    if (workspace?.type !== "worktree" || !workspace.directory) return
-    return workspace
-  })
   const appCommands = createMemo(() =>
     [
       {
@@ -581,31 +578,6 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
             type: "home",
           })
           dialog.clear()
-        },
-      },
-      {
-        name: "workspace.copy_path",
-        title: "Copy worktree path",
-        category: "Workspace",
-        enabled: () => currentWorktreeWorkspace() !== undefined,
-        run: async () => {
-          const workspace = currentWorktreeWorkspace()
-          if (!workspace?.directory) return
-          await clipboard
-            .write?.(workspace.directory)
-            .then(() => toast.show({ message: "Copied worktree path", variant: "info" }))
-            .catch(toast.error)
-          dialog.clear()
-        },
-      },
-      {
-        name: "workspace.list",
-        title: "Manage workspaces",
-        category: "Workspace",
-        hidden: !Flag.ORCHESTRA_EXPERIMENTAL_WORKSPACES,
-        slashName: "workspaces",
-        run: () => {
-          dialog.replace(() => <DialogWorkspaceList />)
         },
       },
       ...Array.from({ length: 9 }, (_, i) => ({
@@ -953,16 +925,16 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
 
   event.on("tui.command.execute", (evt, { workspace }) => {
     if (workspace !== project.workspace.current()) return
-    keymap.dispatchCommand(evt.properties.command)
+    keymap.dispatchCommand(evt.data.command)
   })
 
   event.on("tui.toast.show", (evt, { workspace }) => {
     if (workspace !== project.workspace.current()) return
     toast.show({
-      title: evt.properties.title,
-      message: evt.properties.message,
-      variant: evt.properties.variant,
-      duration: evt.properties.duration,
+      title: evt.data.title,
+      message: evt.data.message,
+      variant: evt.data.variant,
+      duration: evt.data.duration,
     })
   })
 
@@ -970,12 +942,12 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
     if (workspace !== project.workspace.current()) return
     route.navigate({
       type: "session",
-      sessionID: evt.properties.sessionID,
+      sessionID: evt.data.sessionID,
     })
   })
 
-  event.on("session.deleted", (evt) => {
-    if (route.data.type === "session" && route.data.sessionID === evt.properties.info.id) {
+  event.on("session.next.deleted", (evt) => {
+    if (route.data.type === "session" && route.data.sessionID === evt.data.sessionID) {
       route.navigate({ type: "home" })
       toast.show({
         variant: "info",
@@ -984,22 +956,18 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
     }
   })
 
-  event.on("session.error", (evt, { workspace }) => {
+  event.on("session.next.step.failed", (evt, { workspace }) => {
     if (workspace !== project.workspace.current()) return
-    const error = evt.properties.error
-    if (error && typeof error === "object" && error.name === "MessageAbortedError") return
-    const message = errorMessage(error)
-
     toast.show({
       variant: "error",
-      message,
+      message: errorMessage(evt.data.error),
       duration: 5000,
     })
   })
 
   event.on("installation.update-available", async (evt) => {
     console.log("installation.update-available", evt)
-    const version = evt.properties.version
+    const version = evt.data.version
 
     const skipped = kv.get("skipped_version")
     if (skipped && !isVersionGreater(version, skipped)) return
@@ -1024,9 +992,12 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
       duration: 30000,
     })
 
-    const result = await sdk.client.global.upgrade({ target: version })
+    const result = await sdk.api.installation.upgrade({ target: version }).then(
+      (result) => result,
+      () => undefined,
+    )
 
-    if (result.error || !result.data?.success) {
+    if (!result) {
       toast.show({
         variant: "error",
         title: "Update Failed",
@@ -1039,7 +1010,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
     await DialogAlert.show(
       dialog,
       "Update Complete",
-      `Successfully updated to Orchestra v${result.data.version}. Please restart the application.`,
+      `Successfully updated to Orchestra v${result.version}. Please restart the application.`,
     )
 
     void exit()

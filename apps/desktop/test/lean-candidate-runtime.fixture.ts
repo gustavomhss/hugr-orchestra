@@ -257,24 +257,25 @@ export async function launchCandidate(executable: string, root: string, recorder
     assert.ok(backend.password, "Own backend authentication is missing")
     async function request<T>(route: string, method = "GET", body?: unknown, directory = root): Promise<T> {
       const url = new URL(route, backend.url + "/")
-      url.searchParams.set("directory", directory)
+      url.searchParams.set("location[directory]", directory)
       const response = await fetch(url, { method, signal: AbortSignal.timeout(120000), headers: {
         authorization: `Basic ${Buffer.from(`${backend.username}:${backend.password}`).toString("base64")}`,
         "content-type": "application/json",
       }, body: body === undefined ? undefined : JSON.stringify(body) })
       const bytes = await response.text()
       if (!response.ok) throw new Error(`${method} ${route}: ${response.status}`, { cause: { privateResponse: bytes } })
+      // Routes that answer NoContent (config update, PTY removal) carry no body.
+      if (response.status === 204) return undefined as T
       try { return JSON.parse(bytes) as T }
       catch (error) { throw new Error(`${method} ${route}: invalid JSON`, { cause: { privateResponse: { bytes, error } } }) }
     }
-    assert.equal((await fetch(new URL("global/health", backend.url + "/"), { signal: AbortSignal.timeout(5000) })).status, 401,
+    assert.equal((await fetch(new URL("api/health", backend.url + "/"), { signal: AbortSignal.timeout(5000) })).status, 401,
       "Unauthenticated own backend must reject access")
-    assert.equal((await request<{ healthy: boolean }>("global/health")).healthy, true)
-    const paths = await request<{ home: string; state: string; config: string }>("path")
-    for (const [key, value] of Object.entries(paths).filter(([key]) => ["home", "state", "config"].includes(key))) inside(root, value, `backend path.${key}`)
-    const utilities = await bounded("actual sidecar child counter", application.evaluate(({ app }) =>
+    assert.equal((await request<{ healthy: boolean }>("api/health")).healthy, true)
+    // The candidate owns a V2 `orchestra serve` child; the retired utility-process sidecar must not start.
+    const utilities = await bounded("retired sidecar utility counter", application.evaluate(({ app }) =>
       app.getAppMetrics().filter((metric) => metric.type === "Utility" && metric.name === "Orchestra server").length))
-    assert.equal(utilities, 1, "Missing actual owned utility sidecar child")
+    assert.equal(utilities, 0, "The retired utility-process sidecar started")
     const marker = JSON.parse(await readFile(path.join(root, ".orchestra-lean-candidate.json"), "utf8"))
     assert.deepEqual(marker, { appId: appID, version: 1, root })
     return { application, page, backend, request, close, get diagnostics() { return [stdout.read(), stderr.read(), renderer.read()] }, root }

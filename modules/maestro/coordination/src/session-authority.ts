@@ -18,7 +18,7 @@ export type Result<A extends StoredSession = StoredSession> = Readonly<{
   ancestry: readonly SessionSchema.ID[]
 }>
 
-/** Share the same storage-backed traversal between V1 producers and consumers; neither supplies authority. */
+/** Share the same storage-backed traversal between legacy producers and consumers; neither supplies authority. */
 export function make<A extends StoredSession, E>(lookup: (id: SessionSchema.ID) => Effect.Effect<A | undefined, E>) {
   const chain = Effect.fn("SessionAuthority.chain")(function* (
     id: SessionSchema.ID,

@@ -4,7 +4,7 @@
 
 ## Escopo do agente em PTY: só o núcleo V2
 
-O runner de PTY vive no tool `bash` de `packages/core` (sessões V2). O chat do app já envia prompts pelo V2 por padrão (`/api/session/:id/prompt`, `SessionV2.prompt`, `SessionRunner`), com `Pty.node` no grafo da Location; com a flag ligada, o comando do agente ganha aba. O V1 (`SessionPrompt`, `apps/orchestra/src/tool/shell.ts`) só roda no fallback `ORCHESTRA_SIDECAR_V2=legacy`/`0` e não recebe o runner (decisão do dono em 2026-10-24: manter só o V2). Ver `v1-v2.md`.
+O runner de PTY vive no tool `bash` de `packages/core` (sessões V2). O chat do app já envia prompts pelo V2 por padrão (`/api/session/:id/prompt`, `SessionV2.prompt`, `SessionRunner`), com `Pty.node` no grafo da Location; com a flag ligada, o comando do agente ganha aba. O V1 (`SessionPrompt` e seu tool `shell`) foi removido e nunca recebeu o runner (decisão do dono em 2026-10-24: manter só o V2). Ver `v1-v2.md`.
 
 ## Entregue
 

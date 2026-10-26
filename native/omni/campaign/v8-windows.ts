@@ -4,8 +4,8 @@
 // The wrapper builds the actual CLI once on Windows using CI's restored release native artifacts.
 import { existsSync, mkdirSync, writeFileSync } from "node:fs"
 import path from "node:path"
-import type { OmniProc } from "../../../packages/core/src/pty/omni.ts"
-import { BUN, ROOT, adoptTree, cleanup, cli, fileTree, identity, isolated, kill9, members, remaining, supervised, table, until, win } from "./lib.ts"
+import type { OmniProc } from "@orchestra/core/pty/omni"
+import { BUN, ROOT, adoptTree, cleanup, cli, fileTree, identity, isolated, kill9, members, client, remaining, supervised, table, until, win, writeConfig } from "./lib.ts"
 import { appRuntime, authorized, deliveryEnv, effectModules, evidence, execute, record, startServer } from "./delivery-fixtures.ts"
 
 type Cell = { name: string; pass: boolean; [key: string]: unknown }
@@ -44,39 +44,24 @@ async function powershellBash(scratch: ReturnType<typeof isolated>, env: Record<
   const tree = fileTree(scratch.home, 1)
   const hosts: Awaited<ReturnType<typeof startServer>>[] = []
   try {
-    const server = await startServer(cli(), ["serve", "--port", "0", "--hostname", "127.0.0.1"], {
-      ...env, ORCHESTRA_CONFIG_CONTENT: JSON.stringify({ shell: "powershell.exe", formatter: false, lsp: false, plugin: [],
-        permission: { "*": "allow" }, share: "disabled" }),
-    }, scratch.project)
+    writeConfig(scratch.project, { shell: "powershell.exe", formatter: false, lsp: false, plugin: [], permission: { "*": "allow" }, share: "disabled" })
+    const server = await startServer(cli(), ["serve", "--port", "0", "--hostname", "127.0.0.1"], env, scratch.project)
     hosts.push(server)
-    const post = async (route: string, body: unknown) => {
-      const response = await fetch(new URL(route, server.url), { method: "POST", signal: AbortSignal.timeout(15_000),
-        headers: { "content-type": "application/json", "x-orchestra-directory": encodeURIComponent(scratch.project) },
-        body: JSON.stringify(body) })
-      if (!response.ok) throw new Error(`PowerShell bash ${route}: ${response.status} ${await response.text()}`)
-      return response.json()
-    }
-    const session = await post("/session", {}) as { id: string }
-    const pending = fetch(new URL(`/session/${session.id}/shell`, server.url), {
-      method: "POST", signal: AbortSignal.timeout(45_000),
-      headers: { "content-type": "application/json", "x-orchestra-directory": encodeURIComponent(scratch.project) },
-      body: JSON.stringify({ agent: "maestro", model: { providerID: "test", modelID: "test-model" }, command: `& ${tree.line}` }),
-    }).then(async (response) => ({ status: response.status, text: await response.text() }),
-      (error: unknown) => ({ status: 0, text: String(error) }))
+    const api = client(server.url, scratch.project)
+    const session = await api.session()
+    const pending = api.post(`/api/session/${session.id}/shell`, { command: `& ${tree.line}` })
+      .then(() => ({ status: 204 }), (error: unknown) => ({ status: 0, error: String(error) }))
     await until(25_000, "PowerShell bash nonce tree", async () => (await remaining(tree.nonce)) === tree.size ? true : undefined)
-    // Every record exists before the leaf's ready line has crossed its ancestors and the server's stream into the part;
-    // aborting on the records alone raced that line (run 38160151593). Abort once the user can see it.
-    await until(25_000, "PowerShell bash ready line in the running part", async () => {
-      const response = await fetch(new URL(`/session/${session.id}/message`, server.url), { signal: AbortSignal.timeout(5_000),
-        headers: { "x-orchestra-directory": encodeURIComponent(scratch.project) } })
-      return response.ok && (await response.text()).includes(tree.ready) ? true : undefined
-    })
+    // V2 records a shell command's output only when it ends (runner/llm.ts SessionEvent.Shell.Ended), and an interrupt
+    // records "User aborted the command" in its place, so the ready line is never observable while it runs. The owned
+    // records are the live signal; the interrupt result and the empty tree are the verdict.
     const control = supervised(tree.nonce)
-    await post(`/session/${session.id}/abort`, {})
+    await api.post(`/api/session/${session.id}/interrupt`)
     const result = await pending
     const left = await remaining(tree.nonce)
+    const text = JSON.stringify(await api.events(session.id))
     return { name: "powershell-bash", ...result, supervised: control, left,
-      pass: control && result.status === 200 && result.text.includes(tree.ready) && left === 0 }
+      pass: control && result.status === 204 && text.includes("User aborted the command") && left === 0 }
   } catch (error) {
     return { name: "powershell-bash", pass: false, error: String(error), server: hosts.map((host) => host.out()) }
   } finally {
@@ -92,9 +77,9 @@ async function host(home: string, project: string, tree: ReturnType<typeof fileT
   if (!win) throw new Error("V8 host requires Windows")
   adoptTree(home, tree.nonce, [identity(process.pid)])
   const { Effect, ChildProcess } = await effectModules()
-  const { AppProcess } = await import("../../../packages/core/src/process.ts")
-  const { Omni } = await import("../../../packages/core/src/omni.ts")
-  const { PtyOmni } = await import("../../../packages/core/src/pty/omni.ts")
+  const { AppProcess } = await import("@orchestra/core/process")
+  const { Omni } = await import("@orchestra/core/omni")
+  const { PtyOmni } = await import("@orchestra/core/pty/omni")
   const runtime = await appRuntime()
   const cells: Cell[] = []
   const terminal = { proc: undefined as OmniProc | undefined }

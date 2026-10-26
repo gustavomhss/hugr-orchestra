@@ -1,8 +1,8 @@
-import { toggleModelPolicy, type ModelRule, type SubagentModelPolicy } from "./subagent-model-rules"
+import { toggleModelPolicy, type SubagentModelPolicy } from "./subagent-model-rules"
 import { createStore } from "solid-js/store"
 
 /** Pending selections before a session exists. Callers supply an opaque scope key
-    (legacy callers may still use a directory), and own the flush/clear lifecycle. */
+    and own the flush/clear lifecycle. */
 const pending = new Map<string, { revision: number; policy: SubagentModelPolicy }>()
 
 const [state, setState] = createStore({ version: 0 })
@@ -58,15 +58,4 @@ export function pendingPolicy(key: string): SubagentModelPolicy {
 
 export function pendingSnapshot(key: string) {
   return { revision: pending.get(key)?.revision ?? 0, policy: pendingPolicy(key) }
-}
-
-/** Builds the rule batch for a fresh selection: deny-all baseline plus one
-    allow per selected model (server merges, last match wins). */
-export function pendingRules(directory: string): ModelRule[] {
-  const policy = pendingPolicy(directory)
-  if (policy.mode === "inherit") return []
-  return [
-    { permission: "task", pattern: "*/*", action: "deny" as const },
-    ...policy.models.map((model): ModelRule => ({ permission: "task", pattern: modelKey(model.providerID, model.id), action: "allow" })),
-  ]
 }

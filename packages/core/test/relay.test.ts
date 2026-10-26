@@ -25,8 +25,8 @@ import { Location } from "../src/location"
 import { Project } from "../src/project"
 import { Relay } from "../src/relay"
 import { AbsolutePath } from "../src/schema"
-import { ConfigV1 } from "../src/v1/config/config"
-import { ConfigMigrateV1 } from "../src/v1/config/migrate"
+import { ConfigUpgradeSource } from "../src/config/upgrade/source"
+import { ConfigUpgrade } from "../src/config/upgrade/upgrade"
 import { tmpdir } from "./fixture/tmpdir"
 import { testEffect } from "./lib/effect"
 
@@ -612,14 +612,14 @@ describe("Relay.Service", () => {
     }),
   )
 
-  it.effect("reads relay.judge from V2 and V1 config files", () =>
+  it.effect("reads relay.judge from V2 and legacy config files", () =>
     Effect.sync(() => {
       const relay = {
         judge: { backend: "api", model: "judge-model", apiKey: "k", votes: 3, maxContext: 1000, maxTokens: 10 },
       }
       expect(Schema.decodeUnknownSync(Config.Info)({ relay }).relay).toMatchObject(relay)
-      // A file with any V1 key is migrated, and the relay section survives it.
-      const migrated = ConfigMigrateV1.migrate(Schema.decodeUnknownSync(ConfigV1.Info)({ provider: {}, relay }))
+      // A file with any legacy key is migrated, and the relay section survives it.
+      const migrated = ConfigUpgrade.migrate(Schema.decodeUnknownSync(ConfigUpgradeSource.Info)({ provider: {}, relay }))
       expect(Schema.decodeUnknownSync(Config.Info)(migrated).relay).toMatchObject(relay)
       expect(() => Schema.decodeUnknownSync(Config.Info)({ relay: { judge: { backend: "cli" } } })).toThrow()
     }),

@@ -7,17 +7,17 @@
 - Keep contracts portable to browser and generated SDK consumers. The package runtime dependency is `effect`; do not add Core, Protocol, Server, filesystem, or host-runtime dependencies here.
 - Preserve dependency direction: Protocol depends on Schema, and Server depends on Protocol. Core and generated SDKs also consume canonical Schema contracts.
 - Define each contract and ID once. Reuse its exported schema value and brand; facades must re-export that exact value rather than create a second schema identity.
-- Current contracts use unversioned names (`Session`, `Permission`, `Question`). Compatibility contracts use explicit `V1` names and live under `src/v1/`; current code must not depend on that subtree.
+- Contracts use unversioned names (`Session`, `Permission`, `Question`). Schema holds no legacy contracts; old stored rows are decoded privately by the package that imports them.
 
 ## Imports and events
 
-The root entrypoint (`src/index.ts`) exports canonical domain namespaces and the schema helpers from `src/schema.ts`. Its current exports include `MaestroEvent` and `ResearchEvent`. Import other specialized event modules, infrastructure, manifests, and V1 contracts by their direct package entrypoint, for example `@orchestra/schema/session-event` or `@orchestra/schema/v1/session`.
+The root entrypoint (`src/index.ts`) exports canonical domain namespaces and the schema helpers from `src/schema.ts`. Its current exports include `MaestroEvent` and `ResearchEvent`. Import other specialized event modules, infrastructure, and manifests by their direct package entrypoint, for example `@orchestra/schema/session-event`.
 
-Use each domain's event entrypoint as the canonical definition. Specialized event modules such as `session-event`, `workspace-event`, `ide-event`, `lsp-event`, `mcp-event`, `tui-event`, `vcs-event`, and `worktree-event` are direct entrypoints; `maestro-event` and `research-event` are also available from the root. `event-manifest` and `durable-event-manifest` are explicit infrastructure entrypoints, not root-barrel exports. Keep V1-only and compatibility events out of current Protocol/SDK event surfaces unless a current-client need is documented.
+Use each domain's event entrypoint as the canonical definition. Specialized event modules such as `session-event`, `workspace-event`, `ide-event`, `lsp-event`, `mcp-event`, `tui-event`, `vcs-event`, and `worktree-event` are direct entrypoints; `maestro-event` and `research-event` are also available from the root. `event-manifest` and `durable-event-manifest` are explicit infrastructure entrypoints, not root-barrel exports.
 
 ## Consumers and checks
 
-Protocol builds HTTP API contracts from Schema; Server consumes Protocol. Client and SDK consumers use these public contracts and generated types. After changing a public Protocol or Server `HttpApi`, regenerate Client outputs from `packages/client` with `bun run generate`. The legacy JavaScript SDK generator is `./packages/sdk/js/script/build.ts` from the repository root. Do not edit generated output directly.
+Protocol builds HTTP API contracts from Schema; Server consumes Protocol. Client and SDK consumers use these public contracts and generated types. After changing a public Protocol or Server `HttpApi`, regenerate Client outputs from `packages/client` with `bun run generate`. Do not edit generated output directly.
 
 - Package typecheck: from `packages/schema`, run `bun typecheck` (`typecheck` is `tsgo --noEmit`).
 - Hosted tests: from the repository root, run `bun run test:ci schema [test files...]`; this uploads a working-tree snapshot to GitHub Actions. Tests are not run locally under repository policy.

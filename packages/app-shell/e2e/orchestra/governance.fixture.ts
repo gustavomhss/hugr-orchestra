@@ -130,7 +130,6 @@ export async function setupGovernance(
   page: Page,
   input: {
     scheme?: "dark" | "light"
-    protocol?: "v2"
     locale?: "en" | "ar"
     title?: string
     agents: (typeof build)[]
@@ -160,7 +159,6 @@ export async function setupGovernance(
   )
   await mockOrchestraServer(page, {
     directory,
-    protocol: input.protocol,
     eventRetry: 60_000,
     project: {
       id: projectID,

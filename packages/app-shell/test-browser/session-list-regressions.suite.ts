@@ -5,7 +5,8 @@ import { produce } from "solid-js/store"
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query"
 import { createGlobalEmitter } from "@solid-primitives/event-bus"
 import type { ServerEvent, ServerSDK } from "@/context/server-sdk"
-import { createApiForServer, createSdkForServer } from "@/utils/server"
+import { Orchestra } from "@orchestra/client"
+import { createApiForServer } from "@/utils/server"
 import { createCompatibleApi } from "@/utils/server-compat"
 import { solidDom } from "./solid-dom"
 
@@ -48,13 +49,12 @@ function fixture(origin = "https://pending-list.test") {
     return Response.json({ data: [] })
   }, { preconnect: fetch.preconnect })
   const http = { url: origin }
-  const protocol = Promise.resolve("v2" as const)
-  const client = createSdkForServer({ server: http, fetch: fetcher, throwOnError: true })
-  const api = createCompatibleApi({ protocol, current: createApiForServer({ server: http, fetch: fetcher }), legacy: () => client })
+  const currentApi = createApiForServer({ server: http, fetch: fetcher })
+  const api = createCompatibleApi({ current: currentApi })
   const emitter = createGlobalEmitter<Record<string, ServerEvent>>()
   const sdk = {
-    server: { type: "http", http }, scope: ServerScope.local, protocol, client, api,
-    createClient: () => client,
+    server: { type: "http", http }, scope: ServerScope.local, api, currentApi, ready: Promise.resolve(),
+    orchestra: Orchestra.make({ baseUrl: origin, fetch: fetcher }),
     event: { listen: emitter.listen.bind(emitter), start: async () => {} },
   } as unknown as ServerSDK
   const query = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
@@ -167,7 +167,7 @@ test("deletion clears archive metadata even before a directory store exists", as
   const ctx = fixture()
   const sync = await ctx.ready
   ctx.emit(20, 20, 2)
-  ctx.events.emit("/repo", { type: "session.deleted", properties: { sessionID: id } } as unknown as ServerEvent)
+  ctx.events.emit("/repo", { type: "session.next.deleted", properties: { timestamp: 25, sessionID: id } } as unknown as ServerEvent)
   const [store, setStore] = sync.child("/repo", { bootstrap: false })
   setStore("status", "partial")
   createDirSyncContext("/repo", sync, ctx.sdk).session.remember({
@@ -184,13 +184,9 @@ test("server index excludes an archived GET result for an existing visible row",
   createDirSyncContext("/repo", sync, ctx.sdk).session.remember({
     id, slug: id, projectID: "project", directory: "/repo", title: "Visible", version: "", time: { created: 1, updated: 1 },
   })
-  ctx.canonical.updated = 40
-  ctx.canonical.archived = 40
+  // The V2 server no longer publishes session.forked (0807e74887), so the archive event is what races the forced GET.
   const pending = sync.session.resolve(id, { force: true })
-  ctx.events.emit("/repo", {
-    type: "session.forked", properties: { sessionID: id },
-    current: { type: "session.forked", data: { sessionID: id }, created: 40 },
-  } as unknown as ServerEvent)
+  ctx.emit(40, 40, 2)
   await pending
   await Promise.resolve()
   expect(store.session).toEqual([])

@@ -1,10 +1,10 @@
-import type { SessionV1 } from "@orchestra/schema/session-v1"
+import type { Transcript } from "../transcript-model"
 import { HoverCard } from "@kobalte/core/hover-card"
 import { ComponentProps, For, Match, Show, createSignal, splitProps, Switch } from "solid-js"
 import { DiffChanges } from "@orchestra/ui/diff-changes"
 import { useI18n } from "@orchestra/ui/context/i18n"
 
-type UserMessage = typeof SessionV1.User.Encoded
+type UserMessage = Transcript.UserMessage
 
 export function MessageNav(
   props: ComponentProps<"ul"> & {

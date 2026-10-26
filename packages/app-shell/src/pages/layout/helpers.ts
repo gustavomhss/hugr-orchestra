@@ -101,7 +101,7 @@ export function projectForSession<T extends { id?: string; worktree: string; san
   return projectForDirectory(session.directory, projects)
 }
 
-// The project a directory is the root or a V1 sandbox of. A V2 project copy (a workspace) never appears in
+// The project a directory is the root or a sandbox of. A project copy (a workspace) never appears in
 // `sandboxes`, so on a miss `owner` supplies the project ID the server reported for the directory.
 export function projectForDirectory<T extends { id?: string; worktree: string; sandboxes?: string[] }>(
   directory: string,

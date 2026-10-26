@@ -9,7 +9,7 @@ import { ActionsApiError } from "@orchestra/protocol/groups/actions-common"
 import { Cause, Effect, Exit, Schema } from "effect"
 import { OpenApi } from "effect/unstable/httpapi"
 import { intent } from "../../core/test/actions/assembly-fixture"
-import { expectSpawn } from "../../core/test/fixture/omni-expect"
+import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { Api } from "../src/api"
 import { ServerAuth } from "../src/auth"
 import {
@@ -256,7 +256,7 @@ it.live("HTTP Orchestra auth remains distinct from flat provider authentication/
   Effect.gen(function* () {
     expectSpawn(import.meta.path)
     const f = yield* httpFixture()
-    const unauthenticated = f.connect({ "x-orchestra-directory": encodeURIComponent(f.core.directory) })
+    const unauthenticated = f.connect({})
     const error: unknown = yield* Effect.promise(() =>
       unauthenticated.actionsBindings.list().then(
         () => {

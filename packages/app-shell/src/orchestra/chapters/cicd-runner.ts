@@ -317,7 +317,7 @@ export function createPipelines(input: Input) {
       })
   }
 
-  // V1 reports a missing PTY only through its HTTP status, so read it without the throwing adapter.
+  // A missing PTY is an expected answer here, so read it and keep the failure as a state.
   async function inspect(ptyID: string): Promise<PtyState> {
     return input.sdk.api.pty
       .get({ ptyID, location: target })

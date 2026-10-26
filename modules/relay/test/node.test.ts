@@ -7,9 +7,8 @@ import { smoke } from "./node/smoke"
 
 // The desktop server runs the engine under Node, in an Electron utilityProcess (apps/desktop/src/main/server.ts;
 // Electron 42.3.3 ships Node 24.15.0). Node cannot load these sources as they are: relative imports carry no file
-// extension, which Node's ESM resolver requires. So the smoke entry is bundled the way apps/orchestra/script/
-// build-node.ts bundles the desktop server (Bun.build, target node, where `#sqlite` takes its `node` condition) and run
-// by the `node` on PATH. A missing or too old Node fails here; it never skips.
+// extension, which Node's ESM resolver requires. So the smoke entry is bundled with Bun.build for target node, where
+// `#sqlite` takes its `node` condition, and run by the `node` on PATH. A missing or too old Node fails here; it never skips.
 
 const root = mkdtempSync(path.join(os.tmpdir(), "relay-node-"))
 afterAll(() => rmSync(root, { recursive: true, force: true }))

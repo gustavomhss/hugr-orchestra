@@ -1,8 +1,8 @@
 import { expect } from "bun:test"
 import { Effect, Layer, Schema } from "effect"
 import { Config } from "@orchestra/core/config"
-import { ConfigV1 } from "@orchestra/core/v1/config/config"
-import { ConfigMigrateV1 } from "@orchestra/core/v1/config/migrate"
+import { ConfigUpgradeSource } from "@orchestra/core/config/upgrade/source"
+import { ConfigUpgrade } from "@orchestra/core/config/upgrade/upgrade"
 import { Policy } from "@orchestra/core/policy"
 import { Location } from "@orchestra/core/location"
 import { AbsolutePath } from "@orchestra/core/schema"
@@ -20,8 +20,8 @@ const it = testEffect(
   ),
 )
 
-const migrate = (input: typeof ConfigV1.Info.Type) =>
-  Schema.decodeUnknownSync(Config.Info)(ConfigMigrateV1.migrate(input))
+const migrate = (input: typeof ConfigUpgradeSource.Info.Type) =>
+  Schema.decodeUnknownSync(Config.Info)(ConfigUpgrade.migrate(input))
 
 it.effect("legacy allowlist and disabled providers retain restrictions and existing policy denials", () =>
   Effect.gen(function* () {

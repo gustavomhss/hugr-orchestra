@@ -10,12 +10,12 @@ Terminal UI used by the CLI.
 ## Public entry points and consumers
 
 - Explicit `exports` keys.
-- Consumers: `apps/cli` and `apps/orchestra` (`apps/orchestra/src/cli`, `apps/orchestra/src/config`, `apps/orchestra/src/plugin/tui`, `apps/orchestra/src/util`).
+- Consumers: `apps/cli`.
 
 ## Dependencies and boundaries
 
 - Layer `terminal-ui`: may use core (it runs in the backend process), plugin, schema, ui and client.
-- The legacy SDK is reached only through `packages/tui/src/compat`.
+- The TUI speaks only V2: Sessions, messages and events come from `@orchestra/client` and the types in `packages/tui/src/types.ts`.
 
 ## Assets, schemas and generated files
 

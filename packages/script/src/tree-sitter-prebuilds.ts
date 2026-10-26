@@ -5,7 +5,7 @@
 // The core `tree-sitter` package publishes no prebuilds at all; only its install script compiles a binding, which
 // --ignore-scripts installs (Nix, the release lanes) skip. Bun loads nothing but prebuilds/<os>-<arch>/tree-sitter.node
 // and node-gyp-build finds that file too, so packaging materializes it for the target.
-// Only the Desktop ships node_modules. A compiled CLI (apps/cli, apps/orchestra, nix/orchestra.nix) bundles
+// Only the Desktop ships node_modules. A compiled CLI (apps/cli, nix/orchestra.nix) bundles
 // maestro-arsenal, which loads tree-sitter through createRequire at runtime, and has no node_modules to resolve it
 // from: both builds ship the packages arsenal parses with in bin/tree-sitter/ (resolveTreeSitter, copyTreeSitter), and
 // arsenal loads them from beside realpath(execPath). A cross build takes another target's bundle from
@@ -275,7 +275,8 @@ function grammarPackages(root: string) {
     ...grammars(modules).map((dir) => path.join(dir, "node_modules")),
     ...workspace.entries.map((entry) => path.join(entry.path, "node_modules")),
   ]
-  return [...new Set(parents.flatMap(grammars).map((dir) => realpathSync(dir)))]
+  // existsSync follows links, so a dangling grammar symlink drops out before realpathSync would throw on it.
+  return [...new Set(parents.flatMap(grammars).filter((dir) => existsSync(dir)).map((dir) => realpathSync(dir)))]
     .filter((dir) => existsSync(path.join(dir, "package.json")))
     .sort()
 }

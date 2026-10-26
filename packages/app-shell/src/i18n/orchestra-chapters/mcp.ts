@@ -18,9 +18,6 @@ export const MCP_COPY = {
   "orchestra.mcp.registrationHint":
     "This server needs a registered OAuth client. Add oauth.clientId to its entry in {{file}}.",
   "orchestra.mcp.authWaiting": "Finish signing in in your browser…",
-  "orchestra.mcp.authBrowserFailed": "The server could not open a browser. Open this link to continue:",
-  "orchestra.mcp.authCopy": "Copy link",
-  "orchestra.mcp.authOpen": "Open link",
   "orchestra.mcp.configureTitle": "Configure {{name}}",
   "orchestra.mcp.editSubtitle":
     "Connect tools to this profile. Saving updates its project config and restarts its MCP servers.",

@@ -1,5 +1,5 @@
 import { useServerSync } from "@/context/server-sync"
-import { useServerProtocol, useServerSDK } from "@/context/server-sdk"
+import { useServerReady, useServerSDK } from "@/context/server-sdk"
 import { useLanguage } from "@/context/language"
 import { decode64 } from "@/utils/base64"
 import { useParams } from "@solidjs/router"
@@ -69,12 +69,12 @@ export function useProviders(directory?: Accessor<string | null | undefined>) {
 export function useProviderDiscovery(directory?: Accessor<string | null | undefined>) {
   const providers = useProviders(directory)
   const sdk = useServerSDK()
-  const protocol = useServerProtocol()
+  const ready = useServerReady()
   const integrations = createProviderResource(
     () => {
       const value = providers.directory()
       const client = sdk()
-      if (protocol() !== "v2" || value === undefined) return
+      if (!ready() || value === undefined) return
       return { directory: value, client, server: client.scope }
     },
     (input) =>
@@ -84,7 +84,7 @@ export function useProviderDiscovery(directory?: Accessor<string | null | undefi
   )
   return {
     all: () => (integrations.data() ?? []),
-    loading: () => !protocol() || providers.directory() === undefined || integrations.loading(),
+    loading: () => !ready() || providers.directory() === undefined || integrations.loading(),
     error: integrations.error,
     retry: integrations.retry,
   }

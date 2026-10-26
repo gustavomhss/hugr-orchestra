@@ -15,7 +15,7 @@ mockElectron({ session: { fromPartition: () => ({ setCertificateVerifyProc: () =
 const { OmniHost } = await import("./omni-host")
 
 test.skipIf(process.platform !== "win32")("the desktop server's sandboxed shell commands launch through its omni supervisor in AppContainer mode", async () => {
-  // spawnLocalServer forks the server's utilityProcess with this env; the server's loader then resolves its files.
+  // The owned `orchestra serve` child starts with this env; its loader then resolves its files.
   const env = OmniHost.sidecarEnv()
   expect(env.HUGR_OMNI_SUPERVISOR).toBeTruthy()
   expect(Omni.locate().supervisor).toBe(env.HUGR_OMNI_SUPERVISOR)

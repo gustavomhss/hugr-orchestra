@@ -1,11 +1,15 @@
 import { describe, expect, test } from "bun:test"
-import { Effect, Layer } from "effect"
+import { DateTime, Effect, Layer } from "effect"
 import { AgentV2 } from "@orchestra/core/agent"
+import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { EventV2 } from "@orchestra/core/event"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { PermissionV2 } from "@orchestra/core/permission"
 import { ApplicationTools } from "@orchestra/core/tool/application-tools"
 import { Tool } from "@orchestra/core/tool/tool"
+import { Session } from "@orchestra/schema/session"
+import { SessionEvent } from "@orchestra/schema/session-event"
 import { AppDockTools } from "./application-tools"
 import { fakePort, type Envelope } from "./app-dock.fixture"
 
@@ -53,7 +57,7 @@ describe("AppDockTools", () => {
     expect(JSON.stringify(output.content)).toContain("waited")
   })
 
-  test("scopes the Linux workspace tools to the linux subagent, as V1 does", () => {
+  test("scopes the Linux workspace tools to the linux subagent", () => {
     const agents = new Map([["build", { ...AgentV2.Info.empty(AgentV2.ID.make("build")), permissions: [] }]]) as Map<
       string,
       Parameters<Parameters<AgentV2.Draft["update"]>[1]>[0]
@@ -104,5 +108,35 @@ describe("AppDockTools", () => {
       expect(PermissionV2.evaluate("linux", "exec", agents.get("linux")!.permissions).effect).toBe("allow")
     }
   })
-})
 
+  test("asks the desktop to close a deleted Session's Linux workspace", async () => {
+    const f = fakePort()
+    const posted = Promise.withResolvers<void>()
+    f.port.postMessage = (message: unknown) => {
+      f.sent.push(message)
+      posted.resolve()
+    }
+    const sessionID = Session.ID.create()
+    const contribution = AppDockTools.contribution(f.port)
+    const reaper = contribution.nodes!.find((node) => node.name === "app-dock/linux-reaper")!
+    await Effect.runPromise(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const events = yield* EventV2.Service
+          yield* events.publish(SessionEvent.Deleted, {
+            sessionID,
+            timestamp: yield* DateTime.now,
+          })
+          yield* Effect.promise(() => posted.promise).pipe(Effect.timeout("5 seconds"))
+        }),
+      ).pipe(
+        Effect.provide(
+          AppNodeBuilder.build(LayerNode.group([reaper, EventV2.node]), [
+            [Database.node, Database.layerFromPath(":memory:")],
+          ]) as Layer.Layer<EventV2.Service>,
+        ),
+      ),
+    )
+    expect(f.sent).toEqual([{ type: "linux.session.close", sessionID }])
+  })
+})

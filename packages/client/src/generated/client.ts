@@ -67,6 +67,8 @@ import type {
   SessionsCommitOutput,
   SessionsContextInput,
   SessionsContextOutput,
+  SessionsBackgroundInput,
+  SessionsBackgroundOutput,
   SessionsHistoryInput,
   SessionsHistoryOutput,
   SessionsEventsInput,
@@ -89,10 +91,16 @@ import type {
   ProvidersListOutput,
   ProvidersGetInput,
   ProvidersGetOutput,
+  ProvidersClaudeCodeAccountOutput,
+  ProvidersClaudeCodeLoginOutput,
+  ProvidersClaudeCodeLoginCodeInput,
+  ProvidersClaudeCodeLoginCodeOutput,
   IntegrationsListInput,
   IntegrationsListOutput,
   IntegrationsGetInput,
   IntegrationsGetOutput,
+  IntegrationsDisconnectInput,
+  IntegrationsDisconnectOutput,
   IntegrationsConnectKeyInput,
   IntegrationsConnectKeyOutput,
   IntegrationsConnectOauthInput,
@@ -163,6 +171,8 @@ import type {
   McpConnectOutput,
   McpDisconnectInput,
   McpDisconnectOutput,
+  McpDebugInput,
+  McpDebugOutput,
   McpAuthStartInput,
   McpAuthStartOutput,
   McpAuthCallbackInput,
@@ -171,6 +181,8 @@ import type {
   McpAuthRemoveOutput,
   ServerLspStatusInput,
   ServerLspStatusOutput,
+  ServerFormatterStatusInput,
+  ServerFormatterStatusOutput,
   SkillsListInput,
   SkillsListOutput,
   SkillsSaveInput,
@@ -206,6 +218,8 @@ import type {
   ProjectCopiesRemoveOutput,
   ProjectCopiesRefreshInput,
   ProjectCopiesRefreshOutput,
+  ProjectCopiesGenerateNameInput,
+  ProjectCopiesGenerateNameOutput,
   ProjectsListOutput,
   ProjectsDirectoriesInput,
   ProjectsDirectoriesOutput,
@@ -296,10 +310,6 @@ import type {
   ServerBoardAcceptOutput,
   ServerBoardDeclineInput,
   ServerBoardDeclineOutput,
-  ClaudeCodeAccountOutput,
-  ClaudeCodeLoginOutput,
-  ClaudeCodeLoginCodeInput,
-  ClaudeCodeLoginCodeOutput,
   RelayDocumentsListInput,
   RelayDocumentsListOutput,
   RelayDocumentsCreateInput,
@@ -364,6 +374,8 @@ import type {
   RelayRunsAuditOutput,
   RelayRunsLedgerInput,
   RelayRunsLedgerOutput,
+  InstallationUpgradeInput,
+  InstallationUpgradeOutput,
   GuardrailRulesInput,
   GuardrailRulesOutput,
   GuardrailRunInput,
@@ -869,7 +881,7 @@ export function make(options: ClientOptions) {
           {
             method: "POST",
             path: `/api/session/${encodeURIComponent(input.sessionID)}/move`,
-            body: { location: input["location"] },
+            body: { location: input["location"], moveChanges: input["moveChanges"] },
             successStatus: 204,
             declaredStatuses: [404, 409, 400, 401],
             empty: true,
@@ -951,6 +963,7 @@ export function make(options: ClientOptions) {
           {
             method: "GET",
             path: `/api/session/${encodeURIComponent(input.sessionID)}/message/${encodeURIComponent(input.messageID)}/diff`,
+            query: { context: input["context"] },
             successStatus: 200,
             declaredStatuses: [404, 500, 400, 401],
             empty: false,
@@ -998,6 +1011,17 @@ export function make(options: ClientOptions) {
             path: `/api/session/${encodeURIComponent(input.sessionID)}/context`,
             successStatus: 200,
             declaredStatuses: [404, 500, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
+      background: (input: SessionsBackgroundInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: SessionsBackgroundOutput }>(
+          {
+            method: "POST",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/background`,
+            successStatus: 200,
+            declaredStatuses: [404, 400, 401],
             empty: false,
           },
           requestOptions,
@@ -1138,6 +1162,40 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ),
+      claudeCodeAccount: (requestOptions?: RequestOptions) =>
+        request<ProvidersClaudeCodeAccountOutput>(
+          {
+            method: "GET",
+            path: `/api/provider/claude-code/account`,
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      claudeCodeLogin: (requestOptions?: RequestOptions) =>
+        request<ProvidersClaudeCodeLoginOutput>(
+          {
+            method: "POST",
+            path: `/api/provider/claude-code/login`,
+            successStatus: 200,
+            declaredStatuses: [503, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      claudeCodeLoginCode: (input: ProvidersClaudeCodeLoginCodeInput, requestOptions?: RequestOptions) =>
+        request<ProvidersClaudeCodeLoginCodeOutput>(
+          {
+            method: "POST",
+            path: `/api/provider/claude-code/login/code`,
+            body: { code: input["code"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
     },
     integrations: {
       list: (input?: IntegrationsListInput, requestOptions?: RequestOptions) =>
@@ -1164,13 +1222,25 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ),
+      disconnect: (input: IntegrationsDisconnectInput, requestOptions?: RequestOptions) =>
+        request<IntegrationsDisconnectOutput>(
+          {
+            method: "DELETE",
+            path: `/api/integration/${encodeURIComponent(input.integrationID)}/connection`,
+            query: { location: input["location"] },
+            successStatus: 204,
+            declaredStatuses: [409, 400, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
       connectKey: (input: IntegrationsConnectKeyInput, requestOptions?: RequestOptions) =>
         request<IntegrationsConnectKeyOutput>(
           {
             method: "POST",
             path: `/api/integration/${encodeURIComponent(input.integrationID)}/connect/key`,
             query: { location: input["location"] },
-            body: { key: input["key"], label: input["label"] },
+            body: { key: input["key"], label: input["label"], metadata: input["metadata"] },
             successStatus: 204,
             declaredStatuses: [400, 401],
             empty: true,
@@ -1608,6 +1678,18 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ),
+      debug: (input: McpDebugInput, requestOptions?: RequestOptions) =>
+        request<McpDebugOutput>(
+          {
+            method: "GET",
+            path: `/api/mcp/${encodeURIComponent(input.server)}/debug`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [404, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
       authStart: (input: McpAuthStartInput, requestOptions?: RequestOptions) =>
         request<McpAuthStartOutput>(
           {
@@ -1652,6 +1734,20 @@ export function make(options: ClientOptions) {
           {
             method: "GET",
             path: `/api/lsp`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    "server.formatter": {
+      status: (input?: ServerFormatterStatusInput, requestOptions?: RequestOptions) =>
+        request<ServerFormatterStatusOutput>(
+          {
+            method: "GET",
+            path: `/api/formatter`,
             query: { location: input?.["location"] },
             successStatus: 200,
             declaredStatuses: [400, 401],
@@ -1897,6 +1993,19 @@ export function make(options: ClientOptions) {
             successStatus: 204,
             declaredStatuses: [400, 401],
             empty: true,
+          },
+          requestOptions,
+        ),
+      generateName: (input: ProjectCopiesGenerateNameInput, requestOptions?: RequestOptions) =>
+        request<ProjectCopiesGenerateNameOutput>(
+          {
+            method: "POST",
+            path: `/experimental/project/${encodeURIComponent(input.projectID)}/copy/generate-name`,
+            query: { location: input["location"] },
+            body: { context: input["context"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
           },
           requestOptions,
         ),
@@ -2494,42 +2603,6 @@ export function make(options: ClientOptions) {
           requestOptions,
         ),
     },
-    claudeCode: {
-      account: (requestOptions?: RequestOptions) =>
-        request<ClaudeCodeAccountOutput>(
-          {
-            method: "GET",
-            path: `/api/claude-code/account`,
-            successStatus: 200,
-            declaredStatuses: [401, 400],
-            empty: false,
-          },
-          requestOptions,
-        ),
-      login: (requestOptions?: RequestOptions) =>
-        request<ClaudeCodeLoginOutput>(
-          {
-            method: "POST",
-            path: `/api/claude-code/login`,
-            successStatus: 200,
-            declaredStatuses: [400, 401],
-            empty: false,
-          },
-          requestOptions,
-        ),
-      loginCode: (input: ClaudeCodeLoginCodeInput, requestOptions?: RequestOptions) =>
-        request<ClaudeCodeLoginCodeOutput>(
-          {
-            method: "POST",
-            path: `/api/claude-code/login/code`,
-            body: { code: input["code"] },
-            successStatus: 200,
-            declaredStatuses: [401, 400],
-            empty: false,
-          },
-          requestOptions,
-        ),
-    },
     relayDocuments: {
       list: (input?: RelayDocumentsListInput, requestOptions?: RequestOptions) =>
         request<RelayDocumentsListOutput>(
@@ -2967,6 +3040,20 @@ export function make(options: ClientOptions) {
             query: { location: input["location"], after: input["after"] },
             successStatus: 200,
             declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    installation: {
+      upgrade: (input: InstallationUpgradeInput, requestOptions?: RequestOptions) =>
+        request<InstallationUpgradeOutput>(
+          {
+            method: "POST",
+            path: `/api/installation/upgrade`,
+            body: { target: input["target"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
             empty: false,
           },
           requestOptions,

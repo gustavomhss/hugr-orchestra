@@ -4,10 +4,12 @@ import { createStore } from "solid-js/store"
 import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
+import { ClientError } from "@orchestra/client"
 import { useServerSDK } from "@/context/server-sdk"
 import { displayName } from "@/pages/layout/helpers"
 import { pathKey } from "@/utils/path-key"
 import type { ChapterPageProps } from "../chapter-route"
+import { errorStatus } from "./agents-roster"
 import { MxBadge, MxPage } from "./kit"
 import { SkillDialog, type SkillDialogState, type SkillSaveInput } from "./skills-dialog"
 import {
@@ -64,7 +66,7 @@ export default function Skills(props: ChapterPageProps) {
   })
 
   async function load() {
-    const entries = await serverSDK().protocol.then(async (protocol) => {
+    const entries = await serverSDK().ready.then(async () => {
       if (abort.signal.aborted) return []
       return (
         await serverSDK().currentApi.skill.list({ location: { directory: props.directory } }, { signal: abort.signal })
@@ -85,38 +87,40 @@ export default function Skills(props: ChapterPageProps) {
   }
 
   async function save(current: SkillDialogState, input: SkillSaveInput) {
-    const protocol = await serverSDK().protocol
-    // V2 goes through the legacy SDK's generated v2 group: the current API client does not expose the skill
-    // write routes yet.
-    const result = await sdk().client.v2.skill.save(
-      { location: { directory: props.directory }, skillV2SaveInput: input },
-      { throwOnError: false },
-    ).catch(() => undefined)
-    if (!result?.data) return writeFailure(result?.response?.status, result?.error)
-    const saved = "data" in result.data ? result.data.data : result.data
+    const result = await sdk()
+      .orchestra.skills.save({ location: { directory: props.directory }, ...input })
+      .then(
+        (saved) => ({ saved, error: undefined }),
+        (error: unknown) => ({ saved: undefined, error }),
+      )
+    if (!result.saved) return writeFailure(result.error)
     if (abort.signal.aborted) return
     close(current)
-    setState("pending", saved.location)
+    setState("pending", result.saved.data.location)
     await load().catch(() => refresh())
   }
 
   async function remove(current: SkillDialogState, skill: SkillEntry) {
-    const protocol = await serverSDK().protocol
-    const result = await sdk().client.v2.skill.remove(
-      { location: { directory: props.directory }, path: skill.location },
-      { throwOnError: false },
-    ).catch(() => undefined)
-    if (!result?.response?.ok) return writeFailure(result?.response?.status, result?.error)
+    const error = await sdk()
+      .orchestra.skills.remove({ location: { directory: props.directory }, path: skill.location })
+      .then(
+        () => undefined,
+        (error: unknown) => ({ error }),
+      )
+    if (error) return writeFailure(error.error)
     if (abort.signal.aborted) return
     close(current)
     setState("pending", undefined)
     await load().catch(() => refresh())
   }
 
-  function writeFailure(status: number | undefined, error: unknown) {
+  // An undeclared answer throws a ClientError with its status and no message worth showing.
+  function writeFailure(error: unknown) {
+    const status = errorStatus(error)
     if (status === 404 || status === 405 || status === 501) return language.t("orchestra.skills.writeUnavailable")
-    return skillErrorMessage(error) ?? language.t("orchestra.skills.writeFailed")
+    return (error instanceof ClientError ? undefined : skillErrorMessage(error)) ?? language.t("orchestra.skills.writeFailed")
   }
+
 
   onMount(refresh)
   onCleanup(() => abort.abort())

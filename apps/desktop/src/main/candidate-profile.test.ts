@@ -56,7 +56,7 @@ test("candidate defaults to own absolute profile and isolated Electron paths", (
   expect(f.paths.temp).toBe(p.tmp)
   expect(f.paths.documents).toBe(join(p.home, "Documents"))
   expect(f.paths.downloads).toBe(join(p.home, "Downloads"))
-  expect(process.env.ORCHESTRA_SIDECAR_V2).toBe("0")
+  expect(process.env.ORCHESTRA_SIDECAR).toBeUndefined()
 })
 
 test("rejects relative, home, production/dev/beta and symlink-alias roots before writes", () => {
@@ -121,19 +121,18 @@ test("candidate environment keeps toolchain PATH but excludes proxy/auth/token/t
   const source = { PATH: "/tool/bin", JAVA_HOME: "/tool/java", HTTP_PROXY: "http://host", HTTPS_PROXY: "http://host",
     ALL_PROXY: "http://host", NODE_OPTIONS: "--require host.js", ANTHROPIC_API_KEY: "synthetic", CLAUDE_CODE_OAUTH_TOKEN: "synthetic",
     GH_TOKEN: "synthetic", OTEL_EXPORTER_OTLP_ENDPOINT: "http://host", UNKNOWN: "keep?", HOME: "/host", XDG_STATE_HOME: "/host",
-    ORCHESTRA_DB: "/host/db", ORCHESTRA_INHERIT_CREDENTIALS: "1", ORCHESTRA_SIDECAR_V2: "1" }
+    ORCHESTRA_DB: "/host/db", ORCHESTRA_INHERIT_CREDENTIALS: "1", ORCHESTRA_SIDECAR: "shared" }
   const env = candidateEnvironment(p, source)
   expect(env.PATH).toBe(source.PATH)
   expect(env.JAVA_HOME).toBe(source.JAVA_HOME)
   for (const key of Object.keys(source).filter((key) => !["PATH", "JAVA_HOME", "HOME", "XDG_STATE_HOME", "ORCHESTRA_DB",
-    "ORCHESTRA_INHERIT_CREDENTIALS", "ORCHESTRA_SIDECAR_V2"].includes(key))) expect(env[key]).toBeUndefined()
+    "ORCHESTRA_INHERIT_CREDENTIALS"].includes(key))) expect(env[key]).toBeUndefined()
   expect([env.HOME, env.USERPROFILE, env.ORCHESTRA_TEST_HOME]).toEqual([p.home, p.home, p.home])
   expect([env.XDG_DATA_HOME, env.XDG_CONFIG_HOME, env.XDG_CACHE_HOME, env.XDG_STATE_HOME]).toEqual([p.data, p.config, p.cache, p.state])
   expect([env.TMPDIR, env.TMP, env.TEMP]).toEqual([p.tmp, p.tmp, p.tmp])
   expect(env.ORCHESTRA_DB).toBe(p.db)
   expect(env.ORCHESTRA_TEST_MANAGED_CONFIG_DIR).toBe(p.managed)
   expect(env.ORCHESTRA_INHERIT_CREDENTIALS).toBe("0")
-  expect(env.ORCHESTRA_SIDECAR_V2).toBe("0")
 })
 
 test("server blocks shell import/reintroduced secrets in candidate mode; normal mode still imports shell", () => {
@@ -142,7 +141,7 @@ test("server blocks shell import/reintroduced secrets in candidate mode; normal 
     import { mock } from "bun:test"; import assert from "node:assert/strict";
     let shellReads = 0;
     const { mockElectron } = await import("./electron-mock.fixture.ts");
-    mockElectron({ app: {}, utilityProcess: {}, BrowserWindow: {}, screen: {} });
+    mockElectron({ app: {}, BrowserWindow: {}, screen: {} });
     mock.module("./logging", () => ({ getLogger: () => ({}) }));
     mock.module("./store", () => ({ getStore: () => { throw Error("unexpected store read") } }));
     mock.module("./shell-env", () => ({ getUserShell: () => "synthetic-shell", loadShellEnv: () => {
@@ -151,42 +150,16 @@ test("server blocks shell import/reintroduced secrets in candidate mode; normal 
     const { preferAppEnv, createSidecarEnv } = await import("./server.ts");
     const p = ${JSON.stringify(p)};
     process.env.ANTHROPIC_API_KEY = "host-secret"; process.env.HTTP_PROXY = "http://host";
-    process.env.ORCHESTRA_SIDECAR_V2 = "1"; process.env.XDG_STATE_HOME = "/host/state";
+    process.env.ORCHESTRA_SIDECAR = "shared"; process.env.XDG_STATE_HOME = "/host/state";
     assert.equal(preferAppEnv(p.desktop, p), null); assert.equal(shellReads, 0);
     assert.equal(process.env.XDG_STATE_HOME, p.state); assert.equal(process.env.ANTHROPIC_API_KEY, undefined);
     process.env.GH_TOKEN = "late-secret"; process.env.HTTP_PROXY = "http://late";
     const env = createSidecarEnv(p); assert.equal(env.GH_TOKEN, undefined); assert.equal(env.HTTP_PROXY, undefined);
-    assert.equal(env.ORCHESTRA_SIDECAR_V2, "0"); assert.equal(env.ORCHESTRA_DB, p.db);
+    assert.equal(env.ORCHESTRA_SIDECAR, undefined); assert.equal(env.ORCHESTRA_DB, p.db);
     preferAppEnv("/normal"); assert.equal(shellReads, process.platform === "win32" ? 0 : 1);
     if (process.platform !== "win32") assert.equal(process.env.ANTHROPIC_API_KEY, "shell-secret");
     assert.equal(createSidecarEnv().GH_TOKEN, "late-secret");
     assert.equal(createSidecarEnv().ORCHESTRA_LEAN_CANDIDATE, undefined);
-  `, candidateEnvironment(p))
-})
-
-test("normal backend candidate environment and owned marker cannot bypass machine policy", () => {
-  const p = initializeCandidateProfile(fixture().app, true)!
-  run(resolve(import.meta.dir, "../../../orchestra"), `
-    import assert from "node:assert/strict"; import { mock } from "bun:test"; import fs from "node:fs";
-    let policyReads = 0;
-    Object.defineProperty(process, "platform", { value: "darwin" });
-    mock.module("fs", () => ({ ...fs, existsSync: (p) => p.includes("Managed Preferences") || fs.existsSync(p) }));
-    mock.module("./src/util/process", () => ({ Process: { run: async () => {
-      policyReads++; return { code: 0, stdout: Buffer.from('{"machine":true}') };
-    } } }));
-    process.env.ORCHESTRA_CANDIDATE_BUILD = "true";
-    const m = await import("./src/config/managed.ts");
-    assert.equal(m.managedConfigDir(), ${JSON.stringify(p.managed)});
-    assert.equal((await m.readManagedPreferences()).text, '{"machine":true}'); assert.equal(policyReads, 1);
-    process.env.ORCHESTRA_CANDIDATE_PROFILE_ROOT = "relative";
-    assert.equal(m.managedConfigDir(), ${JSON.stringify(p.managed)});
-    process.env.ORCHESTRA_CANDIDATE_PROFILE_ROOT = ${JSON.stringify(p.root)};
-    process.env.ORCHESTRA_TEST_MANAGED_CONFIG_DIR = "/host/managed";
-    assert.equal(m.managedConfigDir(), "/host/managed");
-    delete process.env.ORCHESTRA_LEAN_CANDIDATE;
-    assert.equal(m.managedConfigDir(), "/host/managed");
-    assert.equal((await m.readManagedPreferences()).text, '{"machine":true}'); assert.equal(policyReads, 2);
-    assert.equal(m.parseManagedPlist('{"PayloadUUID":"mdm","keep":true}'), '{"keep":true}');
   `, candidateEnvironment(p))
 })
 

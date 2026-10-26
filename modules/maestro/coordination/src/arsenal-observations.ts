@@ -23,17 +23,13 @@ import { SessionSchema, SessionStore } from "@orchestra/core/session"
 import { SessionMessage } from "@orchestra/schema/session-message"
 import { Snapshot } from "@orchestra/core/snapshot"
 import { Hash } from "@orchestra/core/util/hash"
-import { SessionV1 } from "./compat/core-v1-session"
 import { MaestroArsenal } from "@orchestra/core/tool/maestro-arsenal"
 
 export const MAX_OBSERVATIONS = 2048
 const MAX_EVENTS = 32_768
 const MAX_PRICING_BYTES = 16 * 1024 * 1024
 const patterns = [
-  "session.created",
-  "session.updated",
-  "message.updated",
-  "message.part.updated",
+  "session.next.created",
   "session.next.moved",
   "session.next.step",
   "session.next.tool",
@@ -309,7 +305,6 @@ export const node = makeGlobalNode({
 })
 
 function collect(rows: readonly Row[], input: Input) {
-  const assistants = new Map<string, ModelV2.Ref>()
   const steps = new Map<string, Step>()
   const calls = new Map<string, { tool: string; step: Step }>()
   const terminal = new Set<string>()
@@ -324,69 +319,13 @@ function collect(rows: readonly Row[], input: Input) {
   rows.forEach((row) => {
     if (row.data.sessionID !== input.sessionID) fail("OBSERVATION_EVENT_SESSION_MISMATCH")
     switch (row.type) {
-      case EventV2.versionedType(SessionV1.Event.Created.type, 1):
-      case EventV2.versionedType(SessionV1.Event.Updated.type, 1): {
-        const data = decode(SessionV1.Event.Created.data, row.data)
+      case EventV2.versionedType(SessionEvent.Created.type, 1): {
+        const data = decode(SessionEvent.Created.data, row.data)
         if (
-          data.info.id !== input.sessionID ||
-          data.info.projectID !== input.placement.projectID ||
-          path.resolve(data.info.directory) !== path.resolve(input.placement.directory)
+          data.projectID !== input.placement.projectID ||
+          path.resolve(data.location.directory) !== path.resolve(input.placement.directory)
         )
           fail("OBSERVATION_HISTORICAL_PLACEMENT_MISMATCH")
-        return
-      }
-      case EventV2.versionedType(SessionV1.Event.MessageUpdated.type, 1): {
-        const data = decode(SessionV1.Event.MessageUpdated.data, row.data)
-        if (data.info.sessionID !== input.sessionID) fail("OBSERVATION_MESSAGE_SESSION_MISMATCH")
-        if (data.info.role !== "assistant") return
-        if (path.resolve(data.info.path.cwd) !== path.resolve(input.placement.directory))
-          fail("OBSERVATION_ASSISTANT_PLACEMENT_MISMATCH")
-        assistants.set(data.info.id, ModelV2.Ref.make({ id: data.info.modelID, providerID: data.info.providerID }))
-        if (data.info.error) unavailable.add("USAGE_PROVIDER_STEP_FAILED")
-        return
-      }
-      case EventV2.versionedType(SessionV1.Event.PartUpdated.type, 1): {
-        const data = decode(SessionV1.Event.PartUpdated.data, row.data)
-        const part = data.part
-        if (part.sessionID !== input.sessionID) fail("OBSERVATION_PART_SESSION_MISMATCH")
-        if (part.type === "step-start") {
-          const model = assistants.get(part.messageID)
-          if (!model) fail("OBSERVATION_ASSISTANT_MODEL_MISSING")
-          steps.set(part.messageID, { model, snapshot: part.snapshot })
-          counts.providerSteps++
-          return
-        }
-        if (part.type === "step-finish") {
-          const key = `legacy-usage:${part.id}`
-          if (terminal.has(key)) return
-          const step = steps.get(part.messageID)
-          if (!step) fail("OBSERVATION_STEP_BINDING_MISSING")
-          step.settled = true
-          unavailable.add("USAGE_AVAILABILITY_NOT_CAPTURED")
-          terminal.add(key)
-          bound(usage.length)
-          return
-        }
-        if (part.type !== "tool") return
-        const key = `legacy-tool:${part.id}`
-        if (terminal.has(key)) return
-        if (part.state.status === "pending" || part.state.status === "running") {
-          const step = steps.get(part.messageID)
-          if (step && !calls.has(key)) calls.set(key, { tool: part.tool, step })
-          bound(calls.size)
-          return
-        }
-        const call = calls.get(key)
-        if (!call || call.tool !== part.tool) fail("OBSERVATION_TOOL_CALL_BINDING_MISSING")
-        const action = recordAction(
-          part.tool,
-          part.state.status === "completed" ? "succeeded" : "failed",
-          provenance(row, input, call.step.snapshot),
-        )
-        actions.push(action)
-        outcomes.set(`${part.messageID}:${part.callID}`, action)
-        terminal.add(key)
-        bound(actions.length)
         return
       }
       case EventV2.versionedType(SessionEvent.Moved.type, 1): {

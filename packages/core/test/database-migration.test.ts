@@ -4,7 +4,7 @@ import { fileURLToPath } from "url"
 import path from "path"
 import { SqliteClient } from "@effect/sql-sqlite-bun"
 import { EffectDrizzleSqlite } from "@orchestra/effect-drizzle-sqlite"
-import { Effect, Layer } from "effect"
+import { DateTime, Effect, Layer } from "effect"
 import { eq, inArray, sql } from "drizzle-orm"
 import { DatabaseMigration } from "@orchestra/core/database/migration"
 import { migrations } from "@orchestra/core/database/migration.gen"
@@ -30,7 +30,7 @@ import sessionMetadataMigration from "@orchestra/core/database/migration/2026051
 import type { SqlClient as SqlClientService } from "effect/unstable/sql/SqlClient"
 import { Database } from "@orchestra/core/database/database"
 import { SessionProjector } from "@orchestra/core/session/projector"
-import { SessionV1 } from "@orchestra/core/v1/session"
+import { SessionEvent } from "@orchestra/schema/session-event"
 import { tmpdir } from "./fixture/tmpdir"
 import { rethrow } from "./lib/rejection"
 
@@ -385,7 +385,7 @@ describe("DatabaseMigration", () => {
     )
   })
 
-  test("preserves canonical V1 state and restarts its event stream", async () => {
+  test("preserves canonical legacy state and restarts its event stream", async () => {
     await run(
       Effect.gen(function* () {
         const db = yield* makeDb
@@ -424,17 +424,10 @@ describe("DatabaseMigration", () => {
 
         const database = Layer.succeed(Database.Service, { db })
         yield* EventV2.Service.use((service) =>
-          service.publish(SessionV1.Event.Updated, {
+          service.publish(SessionEvent.Renamed, {
             sessionID: SessionSchema.ID.make("session"),
-            info: {
-              id: SessionSchema.ID.make("session"),
-              slug: "session",
-              projectID: ProjectV2.ID.global,
-              directory: "/project",
-              title: "After",
-              version: "test",
-              time: { created: 1, updated: 2 },
-            },
+            timestamp: DateTime.makeUnsafe(2),
+            title: "After",
           }),
         ).pipe(
           Effect.provide(
@@ -466,7 +459,7 @@ describe("DatabaseMigration", () => {
           sessionMessages: 0,
           contextEpochs: 0,
           seq: 0,
-          eventType: "session.updated.1",
+          eventType: "session.next.renamed.1",
         })
       }),
     )

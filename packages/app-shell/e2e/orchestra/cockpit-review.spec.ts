@@ -294,10 +294,25 @@ async function setup(page: Page, scheme: "dark" | "light" = "dark") {
   return (id: string, patch: Partial<ReturnType<typeof session>>) => {
     const index = sessions.findIndex((item) => item.id === id)
     if (index < 0) throw new Error(`Unknown fixture session ${id}`)
-    sessions[index] = { ...sessions[index], ...patch }
+    const info = { ...sessions[index], ...patch }
+    sessions[index] = info
+    // V2 has no whole-info update event; session.next.created upserts an indexed Session with every field.
     events.push({
       directory,
-      payload: { id: `evt_review_${++sequence.value}`, type: "session.updated", properties: { info: sessions[index] } },
+      payload: {
+        id: `evt_review_${++sequence.value}`,
+        type: "session.next.created",
+        properties: {
+          timestamp: info.time.updated,
+          sessionID: info.id,
+          projectID: info.projectID,
+          parentID: info.parentID,
+          location: { directory: info.directory },
+          title: info.title,
+          agent: info.agent,
+          model: info.model,
+        },
+      },
     })
   }
 }

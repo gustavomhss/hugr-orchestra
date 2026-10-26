@@ -93,7 +93,7 @@ data = {
 }
 # AGENTS.md: the backend seat's default display name may appear only in roster.ts; facts mined from the standalone
 # repository mention it, so the label is read from roster.ts and replaced by the seat id.
-label = re.search(r'BACKEND_DEFAULT_LABEL = "([^"]+)"', open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../../packages/orchestra/src/maestro/roster.ts')).read()).group(1)
+label = re.search(r'BACKEND_DEFAULT_LABEL = "([^"]+)"', open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../../modules/maestro/coordination/src/roster.ts')).read()).group(1)
 scrub = lambda text: re.sub(label, lambda m: 'Backend' if m.group(0)[0].isupper() else 'backend', text, flags=re.I)
 with open(OUT, 'w') as f:
     f.write('// Generated from the real Atlas-on-Atlas store (~/Documents/HuGR/atlas/.atlas) by extract.py.\n')

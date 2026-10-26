@@ -114,7 +114,7 @@ export interface Invocation {
 const MAX_DESCRIPTOR_BYTES = 32 * 1024
 const MAX_RECEIPTS = 256
 
-/** Shared discovery/execution boundary for V1, V2 and application registrations. */
+/** Shared discovery/execution boundary for legacy, V2 and application registrations. */
 export function makeHandlers<C extends Invocation>(resolve: (context: C) => Effect.Effect<Host, Tool.Failure>) {
   const receipts = new Map<string, string>()
   const key = (context: C, host: Host, name: string) =>
@@ -376,7 +376,7 @@ export const nativeRegistryReplacements = [
   [ToolRegistry.toolsNode, nativeToolsNode],
 ] as const
 
-/** Core leaves use `path`; F's shared V1 policy consumes the same resource as `filePath`. */
+/** Core leaves use `path`; F's shared legacy policy consumes the same resource as `filePath`. */
 export function nativeInvocation(input: ToolSafety.Invocation): ToolSafety.Invocation {
   if (
     !["read", "write", "edit", "multiedit"].includes(input.tool) ||
@@ -548,6 +548,15 @@ export interface Options {
     context: Tool.Context,
     operation: "audit" | "usage" | "status",
   ) => Effect.Effect<GovernanceEvidence, Tool.Failure>
+  /** The application's guard before a described capability runs, such as the Relay arm's Session binding. */
+  readonly beforeExecute?: (context: Tool.Context, name: string, args: unknown) => Effect.Effect<void, Tool.Failure>
+  /** The application's record of a successful capability result, such as the completion-arm token it observed. */
+  readonly afterExecute?: (
+    context: Tool.Context,
+    name: string,
+    args: unknown,
+    result: unknown,
+  ) => Effect.Effect<void, Tool.Failure>
 }
 
 /** Canonical application tool values; resolve Location services for each call at the host. */
@@ -625,8 +634,14 @@ export const registerScoped = Effect.fn("MaestroArsenal.registerScoped")(functio
             .pipe(Effect.mapError(() => new Tool.Failure({ message: "Arsenal permission denied." })))
         const host = { directory, stateDirectory: state, projectID: location.project.id, nativeMaestro, nativeUpstream, ask }
         const observe = options.observeGovernance
+        const before = options.beforeExecute
+        const after = options.afterExecute
         return {
           ...host,
+          ...(before ? { beforeExecute: (name: string, args: unknown) => before(context, name, args) } : {}),
+          ...(after
+            ? { afterExecute: (name: string, args: unknown, result: unknown) => after(context, name, args, result) }
+            : {}),
           outputBudget: outputs.limits,
           ...(observe
             ? { observeGovernance: (operation: "audit" | "usage" | "status") => observe(context, operation) }

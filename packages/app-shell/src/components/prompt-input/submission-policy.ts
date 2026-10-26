@@ -1,9 +1,8 @@
 import { batch, createComputed, createMemo, onCleanup } from "solid-js"
 import { pendingSnapshot } from "../draft-subagent-models"
-import { sameModelPolicy, type ModelRule, type SubagentModelPolicy } from "../subagent-model-rules"
+import { sameModelPolicy, type SubagentModelPolicy } from "../subagent-model-rules"
 import type { SessionManagement } from "@/utils/session-management"
 import { SessionManagementUnsupported } from "@/utils/session-management-errors"
-import type { ServerProtocol } from "@/utils/server-protocol"
 import { Worktree } from "@/utils/worktree"
 import type { ServerScope } from "@/utils/server-scope"
 import type { Message } from "@/v2-wire"
@@ -76,10 +75,8 @@ export async function acknowledgeDraftPolicy(input: {
 export function createSubmissionPolicy(input: {
   key: string
   sessionID: string
-  protocol: Promise<ServerProtocol>
   management: SubmissionManagement
-  legacyWrite: (permission: ModelRule[]) => Promise<unknown>
-  admission: { policyWritten?: boolean; legacyOverrideAcknowledged?: boolean; acknowledgedPolicy?: SubagentModelPolicy; failedWrite?: FailedPolicyWrite }
+  admission: { policyWritten?: boolean; acknowledgedPolicy?: SubagentModelPolicy; failedWrite?: FailedPolicyWrite }
   current: () => boolean
   initialPolicy?: SubagentModelPolicy
   failedMessage: string
@@ -100,31 +97,19 @@ export function createSubmissionPolicy(input: {
       wait: () => wait(signal),
       beforeWrite: () => wait(signal, failedWrite),
       write: async (policy) => {
-        const protocol = await waitForSubmission(input.protocol, signal)
-        if (!input.current() || signal.aborted) return policy
-        if (protocol === "v2") {
-          const write = input.management.setSubagentModels(input.sessionID, policy)
-          const version = input.management.subagentModelsWriteVersion?.(input.sessionID)
-          const acknowledged = await write.catch((cause: unknown) => {
-            input.admission.failedWrite = { cause, version }
-            throw cause
-          })
-          if (!sameModelPolicy(acknowledged, policy)) throw new Error(input.failedMessage)
-          expected.policy = acknowledged
-          input.admission.acknowledgedPolicy = acknowledged
-          input.admission.failedWrite = undefined
-          return acknowledged
-        }
-        if (policy.mode === "inherit") {
-          if (input.admission.legacyOverrideAcknowledged) throw new SessionManagementUnsupported()
-          return policy
-        }
-        await input.legacyWrite([
-          { permission: "task", pattern: "*/*", action: "deny" },
-          ...policy.models.map((model): ModelRule => ({ permission: "task", pattern: `${model.providerID}/${model.id}`, action: "allow" })),
-        ])
-        input.admission.legacyOverrideAcknowledged = true
-        return policy
+        signal.throwIfAborted()
+        if (!input.current()) return policy
+        const write = input.management.setSubagentModels(input.sessionID, policy)
+        const version = input.management.subagentModelsWriteVersion?.(input.sessionID)
+        const acknowledged = await write.catch((cause: unknown) => {
+          input.admission.failedWrite = { cause, version }
+          throw cause
+        })
+        if (!sameModelPolicy(acknowledged, policy)) throw new Error(input.failedMessage)
+        expected.policy = acknowledged
+        input.admission.acknowledgedPolicy = acknowledged
+        input.admission.failedWrite = undefined
+        return acknowledged
       },
     }),
   }
@@ -133,7 +118,6 @@ export function createSubmissionPolicy(input: {
 /** A canonical response is ready only across a stable per-Session SET generation. */
 export async function waitForSubagentPolicy(input: {
   sessionID: string
-  protocol: Promise<ServerProtocol>
   management: SubmissionManagement
   current: () => boolean
   signal: AbortSignal
@@ -142,7 +126,6 @@ export async function waitForSubagentPolicy(input: {
   retry?: FailedPolicyWrite
 }) {
   if (!input.current() || input.signal.aborted) return false
-  if ((await waitForSubmission(input.protocol, input.signal)) !== "v2") return input.current() && !input.signal.aborted
   const management = input.management
   if (!management.waitSubagentModels) throw new SessionManagementUnsupported()
   const join = () => waitForSubmission(management.waitSubagentModels!(input.sessionID), input.signal).catch((cause: unknown) => {
@@ -285,18 +268,15 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
     })),
   )
   if (!(await wait())) return false
-  const preparation = input.request?.preparation ?? {
-    ...buildRequestParts({
-      prompt: input.draft.prompt,
-      context: input.draft.context,
-      images: encodedImages,
-      text,
-      sessionID: input.draft.sessionID,
-      messageID,
-      sessionDirectory: input.draft.sessionDirectory,
-    }),
-    system: input.draft.system,
-  }
+  const preparation = input.request?.preparation ?? buildRequestParts({
+    prompt: input.draft.prompt,
+    context: input.draft.context,
+    images: encodedImages,
+    text,
+    sessionID: input.draft.sessionID,
+    messageID,
+    sessionDirectory: input.draft.sessionDirectory,
+  })
   if (input.request) input.request.preparation = preparation
   const prepared = { request: input.request, value: preparation }
 
@@ -347,7 +327,6 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
           request.preparation = {
             requestParts,
             optimisticParts: prepared.value.optimisticParts.map((part, index) => ({ ...part, id: requestParts[index].id, messageID: request.id })),
-            system: prepared.value.system,
           }
         }
         prepared.request = request
@@ -369,9 +348,7 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
         agent: input.draft.agent,
         model: input.draft.model,
         variant: input.draft.variant,
-        system: prepared.value.system,
         delivery: input.draft.delivery,
-        legacyParts: requestParts,
         text: requestParts.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n"),
         files: requestParts.flatMap((part) => {
           if (part.type !== "file") return []

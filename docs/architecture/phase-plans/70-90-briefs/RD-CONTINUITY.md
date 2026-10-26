@@ -32,21 +32,21 @@ SCOPED() { bun run check:boundaries --no-stale --json --scope "$@" 2>/dev/null |
 
 ## Owned files (exactly these, nothing else)
 
-- `apps/orchestra/src/continuity/README.md`
+- `removed-v1/src/continuity/README.md`
 
 ## Steps
 
 1. Create the file with this exact content (the quoted heredoc writes it byte for byte):
 
 ```bash
-cat > 'apps/orchestra/src/continuity/README.md' <<'README_EOF'
+cat > 'removed-v1/src/continuity/README.md' <<'README_EOF'
 # Continuity domain
 
 ## Purpose and ownership
 
 - Session continuity: admission, archive and archive search, checkpoints, checklist and review seals, fork, masking, transcripts and triggers.
-- Prompts: `apps/orchestra/src/continuity/prompt.txt` and `apps/orchestra/src/continuity/review-prompt.txt`.
-- Product-owned files outside this folder: `apps/orchestra/src/tool/context-compact.ts`, `apps/orchestra/src/tool/context-recall.ts`, `apps/orchestra/src/tool/context-recall-archive.ts`, `apps/orchestra/src/session/prompt-continuity.ts`.
+- Prompts: `removed-v1/src/continuity/prompt.txt` and `removed-v1/src/continuity/review-prompt.txt`.
+- Product-owned files outside this folder: `removed-v1/src/tool/context-compact.ts`, `removed-v1/src/tool/context-recall.ts`, `removed-v1/src/tool/context-recall-archive.ts`, `removed-v1/src/session/prompt-continuity.ts`.
 - Target: modules/continuity (a future path).
 
 ## Public entry points and consumers
@@ -61,7 +61,7 @@ cat > 'apps/orchestra/src/continuity/README.md' <<'README_EOF'
 
 ## Assets, schemas and generated files
 
-- `apps/orchestra/src/continuity/archive-format.ts` defines the on-disk archive format, a compatibility contract.
+- `removed-v1/src/continuity/archive-format.ts` defines the on-disk archive format, a compatibility contract.
 
 ## Persistence, identity and lifetime
 
@@ -80,7 +80,7 @@ README_EOF
 ## Commit and push
 
 ```bash
-git add 'apps/orchestra/src/continuity/README.md'
+git add 'removed-v1/src/continuity/README.md'
 git commit -m "docs(orchestra): add continuity domain README" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 git push fork ms-rd-continuity
 ```
@@ -89,9 +89,9 @@ Open no pull request.
 
 ## Acceptance (run after the commit; each must print the expected value)
 
-A1. `grep -c "^## " 'apps/orchestra/src/continuity/README.md'` -> prints `7`.
-A2. `grep -ci "open""code" 'apps/orchestra/src/continuity/README.md'` -> prints `0`.
-A3. `SCOPED apps/orchestra/src/continuity/README.md` -> prints `new=0 stale=1` (this also proves every backticked repository path in the file exists).
+A1. `grep -c "^## " 'removed-v1/src/continuity/README.md'` -> prints `7`.
+A2. `grep -ci "open""code" 'removed-v1/src/continuity/README.md'` -> prints `0`.
+A3. `SCOPED removed-v1/src/continuity/README.md` -> prints `new=0 stale=1` (this also proves every backticked repository path in the file exists).
 A4. `OWNED` prints exactly the owned files listed above, one per line, sorted.
 
 If an acceptance line fails, do not push a fix: report STOP with the exact output.

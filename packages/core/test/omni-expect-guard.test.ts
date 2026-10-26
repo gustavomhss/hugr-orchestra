@@ -50,7 +50,7 @@ const ledger: Record<string, string> = {
   "apps/cli/test/distribution-payload.test.ts":
     "its own Windows ABI test calls ArtifactNativeWindows' pure PE checks and spawns nothing; the spawning Windows controls it imports declare in fixture/artifact-native-windows-controls.ts",
   "apps/cli/test/export-artifacts.test.ts": cliArtifactFFI,
-  "packages/core/test/omni-campaign-inventory.test.ts":
+  "native/omni/campaign/test/omni-campaign-inventory.test.ts":
     "tests the omni campaign's process inventory; it reaches the surface only through native/omni/campaign helpers, and its own processes start through node:child_process",
   "packages/core/test/omni-loader.test.ts":
     "unit tests of the loader, the counters (which it takes back) and the verdict; its process-tree case spawns through node:child_process on purpose",
@@ -88,13 +88,10 @@ function guard(base: string, tracked: string[], exceptions: Record<string, strin
     !/\.test\.tsx?$/.test(file) && readFileSync(path.join(base, file), "utf8").includes("Omni.count(") && calls(file, counts))])
   if (surface.size === 1) problems.push("no source module calls Omni.count(\"spawns\"); the surface reading broke")
   const resolve = (from: string, specifier: string) => {
-    const pkg = from.split("/").slice(0, 2).join("/")
     const stems = [
       specifier.startsWith(".") ? path.posix.join(path.posix.dirname(from), specifier)
         : specifier.startsWith("@orchestra/core/") ? `packages/core/src/${specifier.slice("@orchestra/core/".length)}`
-          : pkg === "apps/orchestra" && specifier.startsWith("@/") ? `apps/orchestra/src/${specifier.slice(2)}`
-            : pkg === "apps/orchestra" && specifier.startsWith("@test/") ? `apps/orchestra/test/${specifier.slice(6)}`
-              : undefined,
+          : undefined,
       registered(specifier),
     ].flatMap((stem) => stem ?? [])
     return stems.flatMap((stem) => [stem, `${stem}.ts`, `${stem}.tsx`, `${stem}/index.ts`]).find((candidate) => set.has(candidate))
@@ -175,8 +172,8 @@ test("every test file that drives omni's spawn surface declares its spawning tes
   // The files reached before registered packages were (the declared ones, and every ledger entry, which must be
   // flagged to stand) are still reached: the reading engages the real tree and only ever grew.
   expect(result.flagged).toEqual(expect.arrayContaining([
-    "packages/core/test/tcp-proxy.test.ts", "apps/orchestra/test/util/process-omni.test.ts", "apps/cli/test/distribution-process.test.ts",
-    "apps/desktop/src/main/omni-process.test.ts", "apps/orchestra/test/mcp/omni-stdio.test.ts", ...Object.keys(ledger),
+    "packages/core/test/tcp-proxy.test.ts", "apps/cli/test/distribution-process.test.ts",
+    "apps/desktop/src/main/omni-process.test.ts", ...Object.keys(ledger),
   ]))
 })
 

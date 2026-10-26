@@ -478,7 +478,6 @@ export async function setupRelay(page: Page, input: { scheme?: "dark" | "light";
   )
   const time = { created: 1, updated: 1 }
   await mockOrchestraServer(page, {
-    protocol: "v2",
     eventRetry: 60_000,
     provider: { all: [], connected: [], default: {} },
     directory,

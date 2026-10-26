@@ -1,7 +1,7 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto"
 import { createServer, type Socket } from "node:net"
 
-// The Dock channel to the desktop-owned V2 `serve` child: a loopback WebSocket that stands in for the V1 sidecar's
+// The Dock channel to the desktop-owned V2 `serve` child: a loopback WebSocket that stands in for the retired utility-process sidecar's
 // utility port. One JSON message per text frame, in the utility port's shapes, so main's Dock handlers are reused
 // unchanged. Only a client holding this launch's token may connect, and no browser may: a request with an Origin is
 // refused. No electron import, so it runs under bun test.

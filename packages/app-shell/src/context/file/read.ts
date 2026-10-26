@@ -4,8 +4,8 @@ import type { useSDK } from "../sdk"
 
 type DirectorySDK = ReturnType<ReturnType<typeof useSDK>>
 
-// The V2 server lists location-relative entries and serves raw bytes; both are shaped back into the legacy
-// file models the tree and viewers render.
+// The server lists location-relative entries and serves raw bytes; both are shaped back into the file models the
+// tree and viewers render.
 export async function listFileNodes(sdk: DirectorySDK, path: string): Promise<FileNode[]> {
   const result = await sdk.api.file.list({ path, location: { directory: sdk.directory } })
   const root = sdk.directory.replace(/[\\/]+$/, "")
@@ -21,7 +21,7 @@ export async function listFileNodes(sdk: DirectorySDK, path: string): Promise<Fi
 export async function readFileContent(sdk: DirectorySDK, path: string): Promise<FileContent | undefined> {
   const bytes = await sdk.api.file.read({ path, location: { directory: sdk.directory } })
   const mimeType = MEDIA[path.slice(path.lastIndexOf(".") + 1).toLowerCase()]
-  // Images and audio keep their bytes as base64, as V1 serves them, so the media viewers can preview them. Other
+  // Images and audio keep their bytes as base64, so the media viewers can preview them. Other
   // content with a NUL byte is binary, which the viewers show without a body.
   if (mimeType && mimeType !== "image/svg+xml")
     return { type: "binary", content: base64(bytes), encoding: "base64", mimeType }

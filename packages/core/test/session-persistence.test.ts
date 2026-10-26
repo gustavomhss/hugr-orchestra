@@ -22,7 +22,6 @@ import { Prompt } from "@orchestra/core/session/prompt"
 import { SessionProjector } from "@orchestra/core/session/projector"
 import { SessionInputTable, SessionMessageTable } from "@orchestra/core/session/sql"
 import { SessionStore } from "@orchestra/core/session/store"
-import { SessionV1 } from "@orchestra/core/v1/session"
 import { PromptContext } from "@orchestra/schema/prompt-context"
 import { tmpdir } from "./fixture/tmpdir"
 import { testEffect } from "./lib/effect"
@@ -169,7 +168,7 @@ it.live("retains current-source Session state in a committed WAL snapshot and ac
       ])
       expect(state.admitted[1]).not.toHaveProperty("promotedSeq")
       expect(state.events.map((event) => [event.seq, event.type])).toEqual([
-        [0, EventV2.versionedType(SessionV1.Event.Created.type, 1)],
+        [0, EventV2.versionedType(SessionEvent.Created.type, 1)],
         [1, EventV2.versionedType(SessionEvent.PromptAdmitted.type, 1)],
         [2, EventV2.versionedType(SessionEvent.PromptAdmitted.type, 1)],
         [3, EventV2.versionedType(SessionEvent.PromptAdmitted.type, 1)],
@@ -193,7 +192,7 @@ it.live("retains current-source Session state in a committed WAL snapshot and ac
       expect(state.context).toEqual(state.transcript)
       expect(state.history.hasMore).toBe(false)
       expect(state.history.events.map((event) => [event.id, event.durable?.seq])).toEqual(
-        state.events.slice(1).map((event) => [event.id, event.seq]),
+        state.events.map((event) => [event.id, event.seq]),
       )
       expect(state.sequences).toMatchObject([{ aggregate_id: sessionID, seq: 5 }])
       // All commits finished; this sole connection stays open and quiescent throughout the copies. No racing writer.
@@ -263,7 +262,7 @@ it.live("retains current-source Session state in a committed WAL snapshot and ac
         expect(state.transcript).toEqual(seeded.transcript)
         expect(state.context).toEqual(seeded.context)
         expect(state.sequences).toMatchObject([{ aggregate_id: sessionID, seq: 6 }])
-        expect(state.history.events.map((event) => event.id)).toEqual(state.events.slice(1).map((event) => event.id))
+        expect(state.history.events.map((event) => event.id)).toEqual(state.events.map((event) => event.id))
         return state
       }))
       expect(yield* Effect.promise(() => Bun.file(`${filename}-wal`).exists())).toBe(false)

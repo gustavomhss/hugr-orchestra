@@ -235,6 +235,10 @@ export function update(adapter: Adapter, event: SessionEvent.Event) {
           }),
         )
       },
+      // Lifecycle events only touch the Session row, which the projector writes directly.
+      "session.next.created": () => Effect.void,
+      "session.next.renamed": () => Effect.void,
+      "session.next.deleted": () => Effect.void,
       "session.next.moved": () => Effect.void,
       // State changes replay through their durable events without adding transcript messages.
       "session.next.subagent.models.changed": () => Effect.void,
@@ -478,6 +482,7 @@ export function update(adapter: Adapter, event: SessionEvent.Event) {
                 content: [...event.data.content],
                 outputPaths: event.data.outputPaths ? [...event.data.outputPaths] : [],
                 result: event.data.result,
+                ...(event.data.metadata ? { metadata: { ...event.data.metadata } } : {}),
               }),
             )
           }
@@ -506,6 +511,7 @@ export function update(adapter: Adapter, event: SessionEvent.Event) {
                 structured: "structured" in match.state ? match.state.structured : {},
                 content: "content" in match.state ? match.state.content : [],
                 result: event.data.result,
+                ...(event.data.metadata ? { metadata: { ...event.data.metadata } } : {}),
               }),
             )
           }

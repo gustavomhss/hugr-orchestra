@@ -131,7 +131,7 @@ export function SessionContextTab() {
     { equals: same },
   )
 
-  const ctx = createMemo(() => getSessionContext(messages(), [...providers.all().values()], sync().data.part, info()?.metadata))
+  const ctx = createMemo(() => getSessionContext(messages(), [...providers.all().values()], info()?.metadata))
   const formatter = createMemo(() => createSessionContextFormatter(language.intl()))
 
   const cost = createMemo(() => {
@@ -140,7 +140,6 @@ export function SessionContextTab() {
         info()?.cost,
         params.id ? sync().data.message[params.id] : undefined,
         [...providers.all().values()],
-        sync().data.part,
         info()?.metadata,
       ),
     )
@@ -231,9 +230,7 @@ export function SessionContextTab() {
     try {
       const data = await fetchSessionExport({
         sessionID,
-        client: sdk().client,
         api: sdk().api as unknown as import("@/utils/session-export").SessionExportApi,
-        protocol: sdk().protocol,
       })
       const filename = sessionExportFilename(data.info)
       downloadSessionExport(filename, data)

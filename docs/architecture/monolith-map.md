@@ -33,7 +33,7 @@ As linhas são unidades lógicas. Um dataset pode não ter `package.json`; um m�
 | Caminho atual | Identidade / papel | Destino e observação |
 | --- | --- | --- |
 | `package.json` | `orchestra`, workspace/toolchain raiz | Raiz; distinguir do pacote homônimo na resolução |
-| `packages/orchestra` | `orchestra`; CLI/server legado e composição de produto | `apps/orchestra`; domínios extraídos depois, contratos preservados |
+| `packages/orchestra` | `orchestra`; CLI/server legado e composição de produto | `removed-v1`; domínios extraídos depois, contratos preservados |
 | `packages/cli` | `@orchestra/cli`; CLI/daemon V2 distribuído | `apps/cli`; ativo, não candidato automático a remoção |
 | `packages/app` | `@orchestra/app`; UI reutilizável + entrada web | `packages/app-shell` + `apps/web`; split qualificado, nome público inicial mantido |
 | `packages/desktop` | `@orchestra/desktop`; Electron + delivery | `apps/desktop`; Dock e infra separados por fronteiras reais |
@@ -127,7 +127,7 @@ Prefix da primeira coluna: `packages/orchestra/src/`. Os owners abaixo são lóg
 
 | Fonte | Owner/path final | Facade e WP de resolução |
 | --- | --- | --- |
-| `cli`, `index.ts`, `temporary.ts` | `apps/orchestra/src` entrada/bootstrap/composição | Comandos legados, Node facade e build assets preservados; 60-B, 70-G, 80-A |
+| `cli`, `index.ts`, `temporary.ts` | `removed-v1/src` entrada/bootstrap/composição | Comandos legados, Node facade e build assets preservados; 60-B, 70-G, 80-A |
 | `node.ts` | Facade pública de composição; implementations nos owners abaixo | Preserve Config/Server/bootstrap/Database exports; 70-F/G, 80-A/B |
 | `server` | `packages/server/src/compat/v1` + handlers canônicos | `/doc`, UI/static/lifecycle e auth/SSE preservados; 70-G, 80-A |
 | `session`, `storage`, `background` | Core `src/v1` Session/storage/jobs; orquestração legada em `modules/session-engine` | Model/store/history/platform helpers separados de SessionPrompt/Continuity/Claude wiring; Instance scope/#db preservados; corte 70-C antes de 70-D/G, 80-A |
@@ -257,7 +257,7 @@ O registry não substitui parsers/compilers/OS que conhecem a semântica. Novo g
 | --- | --- |
 | Session/Core | `test/session-create.test.ts`, `session-prompt`, `session-runner`, `session-run-coordinator`, `session-runner-recorded`, `location-layer`, `session-runner-tool-registry` |
 | Dados/config | Core `test/database-migration.test.ts`, `database-sqlite`, `credential-inherit`, `config/config`, `location-filesystem`, `project` |
-| APIs | Client `test/contract-identity.test.ts`, `import-boundaries`, `type-conformance`, `promise`, `effect`; sdk-next `embedded`/boundaries; schema compatibility/event/v1 |
+| APIs | Server `test/client-contract-identity.test.ts`, `import-boundaries`, `type-conformance`, `promise`, `effect`; sdk-next `embedded`/boundaries; schema compatibility/event/v1 |
 | Legacy HTTP/SDK | Orchestra `test/server/httpapi-public-openapi.test.ts`, query-schema-drift, authorization, SDK, sdk-v1-smoke, sdk-error-shape; `test:httpapi` |
 | Plugins | Core `test/plugin/sdk-runtime.test.ts`, `sdk-authority`; SDK/plugin export/consumer tests |
 | UI | App `test:unit`, `test:browser` (browser/solid conditions), `typecheck:e2e`, selected Playwright; session-ui/UI tests; TUI lifecycle/runtime/keymap; Storybook build |

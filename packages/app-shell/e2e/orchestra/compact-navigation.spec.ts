@@ -135,7 +135,7 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
 })
 
 test("V2 profile card counts agents and shows the branch only when the server reports one", async ({ page }) => {
-  await setupCompactNavigation(page, { protocol: "v2", selected: true })
+  await setupCompactNavigation(page, { selected: true })
   const vcs: string[] = []
   // `unroute` matches a predicate by reference, so the same function must remove the route below.
   const branchRoute = (url: URL) => url.pathname === "/api/vcs"

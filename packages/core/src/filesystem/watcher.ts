@@ -114,7 +114,7 @@ const layer = Layer.effect(
     const pendingSubscriptions = new Set<Promise<ParcelWatcher.AsyncSubscription>>()
     yield* Effect.addFinalizer(() => Effect.promise(() => closeSubscriptions(pendingSubscriptions)))
 
-    // A branch switch rewrites HEAD; `vcs.branch.updated` tells the app, as V1's HEAD watcher did.
+    // A branch switch rewrites HEAD; `vcs.branch.updated` tells the app, as the earlier runtime's HEAD watcher did.
     const head = { file: undefined as string | undefined, check: Effect.void as Effect.Effect<void> }
     const callback: ParcelWatcher.SubscribeCallback = (_error, updates) => {
       for (const update of updates) {

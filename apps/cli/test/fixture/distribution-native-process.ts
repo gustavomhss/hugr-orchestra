@@ -92,7 +92,7 @@ async function commandInvocation(args: string[]) {
   if (!args[0]) throw new Error("NATIVE_COMMAND_EMPTY")
   if (process.platform !== "win32") return { args: [args[0], ...args.slice(1)] as const, shell: false }
   if (args[0] === "npm" || /\.cjs$/i.test(args[0])) {
-    const { WindowsProcessQuery } = await import("../../../../packages/core/test/fixture/windows-process-query")
+    const { WindowsProcessQuery } = await import("@orchestra/core/test/fixture/windows-process-query")
     const node = WindowsProcessQuery.nodeExecutable()
     const script = args[0] === "npm" ? await realpath(join(dirname(node), "node_modules/npm/bin/npm-cli.js")) : args[0]
     return { args: [node, script, ...args.slice(1)] as const, shell: false }

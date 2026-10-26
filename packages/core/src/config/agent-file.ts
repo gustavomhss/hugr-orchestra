@@ -245,7 +245,7 @@ function same(data: Record<string, unknown>, key: string, value: unknown) {
   return key in data && JSON.stringify(data[key]) === JSON.stringify(value)
 }
 
-// Rules in effective order. `tools` comes first and `permission` assigns over it, as the V1 loader does;
+// Rules in effective order. `tools` comes first and `permission` assigns over it, as the earlier runtime's loader does;
 // a bare `permission: allow` means every tool.
 function rules(data: Record<string, unknown>) {
   const permission = data.permission

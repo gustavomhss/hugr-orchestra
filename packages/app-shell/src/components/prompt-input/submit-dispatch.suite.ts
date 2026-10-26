@@ -2,9 +2,8 @@ import { describe, expect, test } from "bun:test"
 import { createPromptState } from "@/context/prompt-state"
 import { Worktree } from "@/utils/worktree"
 import { ServerScope } from "@/utils/server-scope"
-import { createApiForServer, createSdkForServer } from "@/utils/server"
 import { createCompatibleApi } from "@/utils/server-compat"
-import { clearPending, pendingRules, togglePending } from "../draft-subagent-models"
+import { clearPending, togglePending } from "../draft-subagent-models"
 import type { FollowupDraft } from "./submit"
 import {
   clientFor,
@@ -15,9 +14,9 @@ import {
   optimisticRemovals,
   policyFixture,
   promoted,
-  preparations,
   promptInputs,
   sendFollowupDraft,
+  holdSendAfterClear,
   sdkReads,
   state,
   statusWrites,
@@ -136,15 +135,13 @@ test("a prompt a hook refused returns to the composer with the hook named, and t
 
 test("leaving the Session while a send waits returns the cleared prompt to the composer it came from", async () => {
   state.params.id = "session-1"
-  // Hold the send in its request preparation. A worktree barrier would leave /repo/main ready for the rest of the
+  // Hold the send at the policy barrier. A worktree barrier would leave /repo/main ready for the rest of the
   // suite, since a ready worktree cannot become pending again.
-  const waiting = deferred()
   const delayed = deferred()
-  state.behaviorHook = async () => waiting.resolve()
-  preparations.push(delayed)
+  const hold = holdSendAfterClear(delayed.promise)
   const real = createPromptState({ prompt: "keep this" })
-  const sending = createPromptSubmit({ ...submitInput(), prompt: real }).handleSubmit(new Event("submit"))
-  await waiting.promise
+  const sending = createPromptSubmit({ ...submitInput(), prompt: real, setPopover: hold.setPopover }).handleSubmit(new Event("submit"))
+  await hold.entered
   expect(real.current()[0]).toMatchObject({ content: "" })
   state.params.id = "session-2"
   delayed.resolve()
@@ -178,11 +175,11 @@ test.each(["prompt", "command", "shell", "handoff"])("existing Session %s fences
 
 describe("prompt dispatch and cancellation", () => {
 
-  test("Stop cancels every preflight, including delayed preparation, without deleting later jobs", async () => {
+  test("Stop cancels every preflight, including a delayed policy barrier, without deleting later jobs", async () => {
     state.params = { id: "session-1" }
     const delayed = Promise.withResolvers<void>()
-    preparations.push(delayed)
-    const submit = createPromptSubmit(submitInput())
+    const hold = holdSendAfterClear(delayed.promise)
+    const submit = createPromptSubmit({ ...submitInput(), setPopover: hold.setPopover })
     const event = { preventDefault: () => undefined } as Event
     const first = submit.handleSubmit(event)
     const second = submit.handleSubmit(event)
@@ -194,11 +191,11 @@ describe("prompt dispatch and cancellation", () => {
     expect(promptInputs).toHaveLength(1)
   })
 
-  test("canceled preparation cannot resurrect busy or optimistic content after it resolves", async () => {
+  test("a canceled send cannot resurrect busy or optimistic content after the policy barrier resolves", async () => {
     state.params = { id: "session-1" }
     const delayed = Promise.withResolvers<void>()
-    preparations.push(delayed)
-    const submit = createPromptSubmit(submitInput())
+    const hold = holdSendAfterClear(delayed.promise)
+    const submit = createPromptSubmit({ ...submitInput(), setPopover: hold.setPopover })
     const submitted = submit.handleSubmit({ preventDefault: () => undefined } as Event)
     await submit.abort()
     expect(statusWrites).toEqual([{ sessionID: "session-1", type: "idle" }])

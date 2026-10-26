@@ -5,10 +5,10 @@ import {
   type ModelPolicySnapshot,
   type SubagentModelPolicy,
 } from "@/components/subagent-model-rules"
-import { createSdkForServer } from "@/utils/server"
+import type { ServerApi } from "@/utils/server"
 import type { AppSession } from "@/utils/session"
 import { createServerSession } from "@/context/server-session"
-import { applyDirectoryEvent } from "@/context/global-sync/event-reducer"
+import { applyDirectoryEvent, upsertDirectorySession } from "@/context/global-sync/event-reducer"
 import type { State } from "@/context/global-sync/types"
 import { SESSION_MANAGEMENT_FENCE_LIMIT, sessionManagementFences } from "@/context/session-management-state"
 
@@ -133,19 +133,16 @@ test.each(["unknown ACK revision", "older timestamp"] as const)("ancestor remain
 function service() {
   const gate = Promise.withResolvers<void>()
   const requests: string[] = []
-  const client = createSdkForServer({
-    server: { url: "https://session-regression.test" },
-    throwOnError: true,
-    fetch: Object.assign(
-      async (input: RequestInfo | URL, init?: RequestInit) => {
-        requests.push(new URL(new Request(input, init).url).pathname)
-        await gate.promise
-        return Response.json(info())
-      },
-      { preconnect: fetch.preconnect },
-    ),
-  })
-  return { gate, requests, store: createServerSession(client) }
+  // A canonical V2 read carries the policy the events announced, but not the later archive change.
+  const sessionApi = {
+    get: async (input: { sessionID: string }) => {
+      requests.push(input.sessionID)
+      await gate.promise
+      return { ...info(), subagentModels: allow }
+    },
+    message: () => Promise.reject(new Error("message endpoint unused")),
+  } as unknown as Pick<ServerApi["session"], "get" | "message">
+  return { gate, requests, store: createServerSession(sessionApi, {} as ServerApi["message"], { todo: async () => [] }) }
 }
 
 test("retaining newer policy keeps latest activity timestamp and other snapshot times", () => {
@@ -163,12 +160,12 @@ test.each(["delete", "delete and recreate"] as const)("missing management recove
   ctx.store.apply(policy(allow, 20, 2))
   const pending = ctx.store.resolve(info().id)
   const projection = pending.then(ctx.store.remember).catch(() => undefined)
-  ctx.store.apply({ type: "session.deleted", properties: { sessionID: info().id } })
+  ctx.store.apply({ type: "session.next.deleted", properties: { timestamp: 25, sessionID: info().id } })
   if (phase === "delete and recreate") ctx.store.remember({ ...info(30), subagentModels: deny })
   ctx.gate.resolve()
   await projection
   await Promise.resolve()
-  expect(ctx.requests).toEqual([`/session/${info().id}`])
+  expect(ctx.requests).toEqual([info().id])
   expect(ctx.store.get(info().id)).toEqual(phase === "delete" ? undefined : { ...info(30), subagentModels: deny })
 })
 
@@ -186,6 +183,8 @@ test("cold concurrent management recovery preserves both fields from shared GET"
   expect(ctx.store.get(info().id)?.time.archived).toBe(30)
 })
 
+type Arrival = "read" | "created"
+
 function directory(empty = false) {
   const [store, setStore] = createStore({
     session: empty ? [] : [info()],
@@ -193,13 +192,13 @@ function directory(empty = false) {
     limit: 10,
     message: {},
     session_message: {},
-    session_diff: {},
+   
     todo: {},
     permission: {},
     question: {},
     session_status: {},
     part: {},
-    part_text_accum_delta: {},
+   
   } as State)
   const reloads: string[] = []
   const apply = (event: Parameters<typeof applyDirectoryEvent>[0]["event"], scope = "/repo") =>
@@ -209,27 +208,29 @@ function directory(empty = false) {
       setStore,
       directory: scope,
       push: (value) => reloads.push(value),
-      loadLsp() {},
     })
-  return { store, apply, reloads }
+  // A full row reaches the index from a canonical read, or from session.next.created when `created`.
+  const upsert = (row: AppSession, mode: Arrival = "read", scope = "/repo") =>
+    upsertDirectorySession({ store, setStore, directory: scope, push: (value) => reloads.push(value) }, row, mode === "created")
+  return { store, apply, upsert, reloads }
 }
 
-test.each(["session.updated", "session.created"])("archive tombstone blocks stale absent-row %s, accepts later restore", (type) => {
+test.each(["read", "created"] as const)("archive tombstone blocks stale absent-row %s, accepts later restore", (type) => {
   const ctx = directory()
   ctx.apply(archive(20, 20, 2))
   expect(ctx.store.session).toEqual([])
-  ctx.apply({ type, properties: { info: info(10) } })
+  ctx.upsert(info(10), type)
   expect(ctx.store.session).toEqual([])
   ctx.apply(archive(null, 20, 1))
-  ctx.apply({ type, properties: { info: info(20) } })
+  ctx.upsert(info(20), type)
   expect(ctx.store.session).toEqual([])
   ctx.apply(archive(null, 20, 3))
-  ctx.apply({ type: "session.updated", properties: { info: info(20) } })
+  ctx.upsert(info(20))
   expect(ctx.store.session[0]?.time.archived).toBeUndefined()
   expect(ctx.store.session[0]?.archiveRevision).toBe(3)
   expect(ctx.reloads).toEqual(["/repo"])
   ctx.apply(archive(21, 21, 4))
-  ctx.apply({ type: "session.updated", properties: { info: info(22) } })
+  ctx.upsert(info(22))
   expect(ctx.store.session[0]?.time.updated).toBe(22)
 })
 
@@ -237,28 +238,28 @@ test("archive tombstones stay scoped to server store and directory; deletion cle
   const ctx = directory()
   ctx.apply(archive(20, 20, 2))
   const other = directory()
-  other.apply({ type: "session.updated", properties: { info: info(10) } })
+  other.upsert(info(10))
   expect(other.store.session[0]?.time.archived).toBeUndefined()
-  ctx.apply({ type: "session.updated", properties: { info: info(10) } }, "/other")
+  ctx.upsert(info(10), "read", "/other")
   expect(ctx.store.session[0]?.time.archived).toBeUndefined()
-  ctx.apply({ type: "session.deleted", properties: { sessionID: info().id } })
-  ctx.apply({ type: "session.created", properties: { info: info(10) } })
+  ctx.apply({ type: "session.next.deleted", properties: { timestamp: 10, sessionID: info().id } })
+  ctx.upsert(info(10), "created")
   expect(ctx.store.session[0]?.time.archived).toBeUndefined()
 })
 
-test.each(["session.created", "session.updated"])("initially absent archive fences stale %s and admits a fresh restore", (type) => {
+test.each(["created", "read"] as const)("initially absent archive fences stale %s and admits a fresh restore", (type) => {
   const ctx = directory(true)
   ctx.apply(archive(20, 20, 2))
   const metadata = sessionManagementFences(ctx.store, "/repo").get(info().id)
   expect(metadata?.time).toEqual({ updated: 20, archived: 20 })
   expect(metadata).not.toHaveProperty("title")
-  ctx.apply({ type, properties: { info: info(10) } })
+  ctx.upsert(info(10), type)
   expect(ctx.store.session).toEqual([])
   ctx.apply(archive(null, 20, 1))
-  ctx.apply({ type, properties: { info: info(20) } })
+  ctx.upsert(info(20), type)
   expect(ctx.store.session).toEqual([])
   ctx.apply(archive(null, 20, 3))
-  ctx.apply({ type, properties: { info: { ...info(20), time: { created: 1, updated: 20, archived: 20 } } } })
+  ctx.upsert({ ...info(20), time: { created: 1, updated: 20, archived: 20 } }, type)
   expect(ctx.store.session[0]?.time.archived).toBeUndefined()
   expect(ctx.store.session[0]?.archiveRevision).toBe(3)
 })
@@ -278,9 +279,9 @@ test("archive fence cache bounds retention and preserves newest tombstone under 
   expect(fences.get("ses_0")).toBeUndefined()
   expect(fences.get("ses_1")?.archiveRevision).toBe(2)
   const latest = `ses_${SESSION_MANAGEMENT_FENCE_LIMIT}`
-  ctx.apply({ type: "session.updated", properties: { info: { ...info(10), id: latest } } })
+  ctx.upsert({ ...info(10), id: latest })
   expect(ctx.store.session.map((value) => value.id)).toEqual([info().id])
-  ctx.apply({ type: "session.updated", properties: { info: { ...info(30), id: latest } } })
+  ctx.upsert({ ...info(30), id: latest })
   expect(fences.get(latest)).toBeUndefined()
   expect(ctx.store.session.some((value) => value.id === latest)).toBe(true)
 })

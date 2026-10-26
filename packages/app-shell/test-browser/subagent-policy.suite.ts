@@ -49,7 +49,7 @@ test.each(["ltr", "rtl"] as const)("real picker DOM keeps an empty V2 draft deni
   document.body.append(host)
   const dispose = render(() => createComponent(Root, { open: true, get children() {
     return createComponent(SubagentModelPicker, {
-      directory: "/repo", pendingKey: key, providers: [provider], status: "success", protocol: "v2",
+      directory: "/repo", pendingKey: key, providers: [provider], status: "success",
       supported: true, rulesReady: true, readRules: () => [], writeRules: async () => [], onRetry() {},
     })
   } }), host)
@@ -79,7 +79,7 @@ test("real picker preserves unavailable V2 identities through another selection,
   document.body.append(host)
   const dispose = render(() => createComponent(Root, { open: true, get children() {
     return createComponent(SubagentModelPicker, {
-      sessionID: "ses_picker", directory: "/repo", providers: [provider], status: "success", protocol: "v2",
+      sessionID: "ses_picker", directory: "/repo", providers: [provider], status: "success",
       supported: true, rulesReady: true, readRules: () => [], writeRules: async () => [], onRetry() {},
       policy: { read: () => ({ policy: { mode: "allowlist", models: [{ providerID: "offline", id: "full/slash/model" }] }, timestamp: 1 }),
         write: async (policy) => { writes.push(policy); return policy } },

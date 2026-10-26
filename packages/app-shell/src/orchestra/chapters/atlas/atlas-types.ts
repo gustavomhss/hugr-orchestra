@@ -1,8 +1,8 @@
-import type { DirectorySDK } from "@/context/sdk"
+import type { JsonValue, Orchestra } from "@orchestra/client"
 
-// The Atlas wire types are the generated SDK's (D4). They are read off the `atlas` group of the generated client, so
+// The Atlas wire types are the generated client's (D4). They are read off the `atlas` group of `@orchestra/client`, so
 // they follow the HttpApi declarations (task A08) whatever schema identifiers those use. Never hand-write these shapes.
-type AtlasClient = DirectorySDK["client"]["atlas"]
+type AtlasClient = ReturnType<typeof Orchestra.make>["atlas"]
 export type AtlasCall =
   | "snapshot"
   | "reasoning"
@@ -25,10 +25,11 @@ export type AtlasCall =
   | "install"
   | "index"
   | "mine"
-// A call's 200 payload.
-export type AtlasOutput<K extends AtlasCall> = NonNullable<Awaited<ReturnType<AtlasClient[K]>>["data"]>
-// A call's parameters without the routing query; the transport adds the directory.
-export type AtlasInput<K extends AtlasCall> = Omit<NonNullable<Parameters<AtlasClient[K]>[0]>, "directory" | "workspace">
+// A call's 200 payload (the `data` of the Location envelope). The generated shapes are readonly; the views were written
+// against the mutable wire shapes and only read them, so the payload is exposed without the readonly modifiers.
+export type AtlasOutput<K extends AtlasCall> = Writable<NonNullable<Awaited<ReturnType<AtlasClient[K]>>["data"]>>
+// A call's parameters without the Location; the transport adds the directory.
+export type AtlasInput<K extends AtlasCall> = Omit<NonNullable<Parameters<AtlasClient[K]>[0]>, "location">
 // D3: the snapshot is extract.py's object minus `reasoning`; D5: an absent store answers { state: "empty" } instead.
 export type AtlasSnapshot = Exclude<AtlasOutput<"snapshot">, { state: "empty" }>
 export type AtlasSnapshotFact = AtlasSnapshot["facts"][number]
@@ -37,3 +38,7 @@ export type AtlasSnapshotFact = AtlasSnapshot["facts"][number]
 export type AtlasReview = Exclude<AtlasOutput<"review">, { state: "empty" }>
 export type AtlasInterviewQuestion = AtlasReview["interview"]["batch"][number]
 export type AtlasMemoryProposal = AtlasReview["memoryProposals"][number]
+
+// JsonValue is recursive, so mapping into it never ends (TS2589). The views read untyped JSON through atlas-wire's
+// unknown guards, so it is exposed as unknown, as the wire shapes typed it before the generated client.
+type Writable<T> = [JsonValue] extends [T] ? unknown : T extends object ? { -readonly [K in keyof T]: Writable<T[K]> } : T

@@ -373,9 +373,15 @@ export async function qualify(input: {
     expect(catalog.location.directory).toBe(AbsolutePath.make(input.box.cwd))
     expect(catalog.data.length).toBeGreaterThan(0)
     const root = join(input.box.namespace, skillIdentity(input.version, input.oracle))
-    const expected = input.oracle.catalog.map((skill) => ({
-      name: skill.name, description: skill.description, slash: skill.slash,
-      content: skill.content, location: AbsolutePath.make(join(root, skill.path)),
+    const playbookRoot = catalog.data.find((skill) => skill.name === input.oracle.playbooks[0]?.name)?.location
+      .slice(0, -`/${input.oracle.playbooks[0]?.path}`.length)
+    expect(playbookRoot).toMatch(/[\\/]maestro-skills[\\/][^\\/]+$/)
+    const expected = [
+      ...input.oracle.catalog.map((skill) => ({ skill, location: join(root, skill.path) })),
+      ...input.oracle.playbooks.map((skill) => ({ skill, location: join(playbookRoot ?? "", skill.path) })),
+    ].map((entry) => ({
+      name: entry.skill.name, description: entry.skill.description, slash: entry.skill.slash,
+      content: entry.skill.content, location: AbsolutePath.make(entry.location),
     })).toSorted((a, b) => a.name.localeCompare(b.name))
     expect(catalog.data.map((skill) => ({
       name: skill.name, description: skill.description, slash: skill.slash,

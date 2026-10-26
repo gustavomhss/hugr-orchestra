@@ -23,7 +23,7 @@ jobs:
         # ci-run-both-* (Linux and Windows) or ci-run-all-*. script/test-ci-request.ts maps the same names.
         # The dedicated Intel lane precedes the generic macOS prefix and records x64 measurement reach separately.
         # Extension: ci-run-linux-arm64-* selects only ubuntu-24.04-arm before the generic Linux fallback.
-        host: ${{ fromJSON(startsWith(github.ref_name, 'ci-run-macos-intel-') && '["macos-15-intel"]' || startsWith(github.ref_name, 'ci-run-all-') && '["ubuntu-latest","windows-latest","macos-14"]' || startsWith(github.ref_name, 'ci-run-both-') && '["ubuntu-latest","windows-latest"]' || startsWith(github.ref_name, 'ci-run-windows-') && '["windows-latest"]' || startsWith(github.ref_name, 'ci-run-macos-') && '["macos-14"]' || startsWith(github.ref_name, 'ci-run-linux-arm64-') && '["ubuntu-24.04-arm"]' || '["ubuntu-latest"]') }}
+        host: ${{ fromJSON(startsWith(github.ref_name, 'ci-run-macos-intel-') && '["macos-15-intel"]' || startsWith(github.ref_name, 'ci-run-all-') && '["ubuntu-24.04","windows-latest","macos-14"]' || startsWith(github.ref_name, 'ci-run-both-') && '["ubuntu-24.04","windows-latest"]' || startsWith(github.ref_name, 'ci-run-windows-') && '["windows-latest"]' || startsWith(github.ref_name, 'ci-run-macos-') && '["macos-14"]' || startsWith(github.ref_name, 'ci-run-linux-arm64-') && '["ubuntu-24.04-arm"]' || '["ubuntu-24.04"]') }}
     runs-on: ${{ matrix.host }}
     timeout-minutes: 45
     defaults:
@@ -130,37 +130,6 @@ jobs:
         run: |
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
-
-      - name: Resolve Jimmy desktop test selection
-        id: desktop-selection
-        if: steps.request.outputs.package == 'desktop' && steps.request.outputs.runner == 'bun'
-        run: |
-          bun --eval "$(cat <<'BUN'
-          import { appendFileSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-          import { desktopProof, desktopSelection } from './script/test-ci-desktop.ts'
-          // A snapshot or rerun cannot supply completion records for this execution.
-          for (const name of ['proof', 'typecheck']) rmSync(`test-ci-evidence/jimmy-desktop-${name}.json`, { force: true })
-          const request = JSON.parse(readFileSync('.ci-run.json', 'utf8'))
-          writeFileSync('test-ci-evidence/jimmy-desktop-selection.json', JSON.stringify(desktopSelection(request, request.directory)))
-          const proof = desktopProof(request, request.directory, { platform: process.platform, arch: process.arch })
-          appendFileSync(process.env.GITHUB_OUTPUT, `proof=${proof}\n`)
-          BUN
-          )"
-
-      # Repair: exact files, directory/filter matches and whole-package runs share one selector. Off the proof's
-      # platforms (Windows, Intel macOS) only a request naming the proof alone opts in, and then fails by name.
-      - name: Setup Jimmy desktop Electron runtime
-        if: steps.desktop-selection.outputs.proof == 'true'
-        run: |
-          set -euo pipefail
-          if [ "$RUNNER_OS" = Linux ]; then
-            sudo apt-get update
-            sudo apt-get install -y xvfb libgtk-3-0 libnss3 libasound2t64
-          fi
-          node -e "require(require('node:path').join(require('node:path').dirname(require.resolve('electron', {paths:[process.env.DIRECTORY]})), 'install.js'))"
-          echo "ORCHESTRA_JIMMY_DESKTOP_PROOF=1" >> "$GITHUB_ENV"
-        env:
-          DIRECTORY: ${{ steps.request.outputs.directory }}
 
       # Only allow-listed keys with plain values reach the environment; test-ci.ts validates before upload too.
       - name: Export requested environment
@@ -297,32 +266,6 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-      # Repair: a Bun/Electron harness that exits early must not pass without both completion records.
-      - name: Assert Jimmy desktop detecting evidence
-        id: jimmy-evidence
-        if: always() && steps.request.outputs.package == 'desktop' && steps.request.outputs.runner == 'bun'
-        run: |
-          bun --eval "$(cat <<'BUN'
-          import { appendFileSync, readFileSync } from 'node:fs'
-          import { desktopProof, requireDesktopEvidence } from './script/test-ci-desktop.ts'
-          const request = JSON.parse(readFileSync('.ci-run.json', 'utf8'))
-          const proof = desktopProof(request, request.directory,
-            { platform: process.platform, arch: process.arch })
-          if (requireDesktopEvidence(proof, 'test-ci-evidence', { sha: process.env.GITHUB_SHA,
-              runID: process.env.GITHUB_RUN_ID, platform: process.platform, arch: process.arch }))
-            appendFileSync(process.env.GITHUB_OUTPUT, 'proof=true\n')
-          BUN
-          )"
-
-      - name: Upload Jimmy desktop evidence
-        if: always() && steps.jimmy-evidence.outputs.proof == 'true'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: jimmy-desktop-${{ matrix.host }}-${{ github.run_attempt }}
-          if-no-files-found: error
-          retention-days: 7
-          path: test-ci-evidence/jimmy-desktop-*.json
-
       - name: Upload Playwright evidence
         if: always() && steps.request.outputs.runner == 'playwright'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -338,7 +281,7 @@ jobs:
   cleanup:
     needs: test
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:

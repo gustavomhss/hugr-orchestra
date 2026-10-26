@@ -11,7 +11,7 @@ import eventSeals from "../src/database/migration/20261002195730_event_seals"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Session } from "@orchestra/schema/session"
-import { SessionV1 } from "@orchestra/schema/session-v1"
+import { ResearchEvent } from "@orchestra/schema/research-event"
 import { testEffect } from "./lib/effect"
 
 const it = testEffect(AppNodeBuilder.build(LayerNode.group([Database.node, EventV2.node])))
@@ -54,10 +54,11 @@ it.live("new replay gets local seals; exact retry preserves all existing metadat
     const events = yield* EventV2.Service
     const database = yield* Database.Service
     const aggregateID = Session.ID.create()
-    const data = { sessionID: aggregateID, messageID: SessionV1.MessageID.ascending() }
-    const published = yield* events.publish(SessionV1.Event.MessageRemoved, data)
+    // Replay resolves types through the durable manifest, so this needs a manifest event with plain data.
+    const data = { sessionID: aggregateID, dispatchCallID: "call_retry", operation: "test", kind: "tool" as const, amount: 1 }
+    const published = yield* events.publish(ResearchEvent.AllowanceCharged, data)
     const original = yield* database.db.select().from(EventTable).where(eq(EventTable.id, published.id)).get()
-    const retry = { id: published.id, aggregateID, seq: 0, type: "message.removed.1", data }
+    const retry = { id: published.id, aggregateID, seq: 0, type: "research.allowance.charged.1", data }
     yield* events.replay(retry)
     expect(yield* database.db.select().from(EventTable).where(eq(EventTable.id, published.id)).get()).toEqual(original)
     yield* events.replay({ ...retry, id: EventV2.ID.create(), seq: 1 })

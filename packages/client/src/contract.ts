@@ -19,6 +19,7 @@ export const ClientApi = makeDefaultApi({
 
 export const groupNames = {
   "server.health": "health",
+  "server.installation": "installation",
   "server.location": "location",
   "server.agent": "agents",
   "server.session": "sessions",
@@ -44,7 +45,6 @@ export const groupNames = {
   "server.lean": "lean",
   "server.atlas": "atlas",
   "server.config": "config",
-  "server.claudeCode": "claudeCode",
   "server.relay.document": "relayDocuments",
   "server.relay.publish": "relayPublish",
   "server.relay.hook": "relayHooks",
@@ -63,6 +63,7 @@ export const groupNames = {
   "server.actionsTransfer": "actionsTransfers",
   "server.actionsSource": "actionsSource",
   "server.lsp": "server.lsp",
+  "server.formatter": "server.formatter",
   "server.board": "server.board",
   "server.capability.operator": "operator",
   "server.capability.connections": "connections",
@@ -91,6 +92,12 @@ export const endpointNames = {
   "integration.attempt.status": "attemptStatus",
   "integration.attempt.complete": "attemptComplete",
   "integration.attempt.cancel": "attemptCancel",
+  "integration.disconnect": "disconnect",
+  "provider.claudeCode.account": "claudeCodeAccount",
+  "provider.claudeCode.login": "claudeCodeLogin",
+  "provider.claudeCode.loginCode": "claudeCodeLoginCode",
+  "mcp.config": "config",
+  "mcp.tools": "tools",
   "mcp.resource.catalog": "resources",
   "mcp.auth.start": "authStart",
   "mcp.auth.callback": "authCallback",
@@ -107,5 +114,11 @@ export const endpointNames = {
 } as const
 
 // Raw transfers use the handwritten streaming adapter; JSON metadata/admission stay generated.
-export const omitEndpoints = new Set(["pty.connect", "pty.connectToken", "actions.transfer.read", "actions.transfer.upload", "capability.artifact.content",
-  "capability.content.read"])
+export const omitEndpoints = new Set([
+  "pty.connect",
+  "pty.connectToken",
+  "actions.transfer.read",
+  "actions.transfer.upload",
+  "capability.artifact.content",
+  "capability.content.read",
+])

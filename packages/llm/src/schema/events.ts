@@ -56,6 +56,10 @@ export class Usage extends Schema.Class<Usage>("LLM.Usage")({
   cacheWriteInputTokens: Schema.optional(Schema.Number),
   reasoningTokens: Schema.optional(Schema.Number),
   totalTokens: Schema.optional(Schema.Number),
+  /** Cost in USD the provider or host itself reported for these tokens; absent when the model's price list applies. */
+  cost: Schema.optional(Schema.Number),
+  /** The context window the provider or host reports for the model that answered. */
+  contextWindow: Schema.optional(Schema.Number),
   providerMetadata: Schema.optional(ProviderMetadata),
 }) {
   /**
@@ -206,6 +210,17 @@ export const ProviderErrorEvent = Schema.Struct({
 }).annotate({ identifier: "LLM.Event.ProviderError" })
 export type ProviderErrorEvent = Schema.Schema.Type<typeof ProviderErrorEvent>
 
+/**
+ * A superseded attempt: the content blocks and tool calls named here were emitted by an attempt the engine replaced
+ * (a refusal fallback, a retried answer) and must not stand in the transcript. Text and reasoning blocks are blanked;
+ * a tool call still unsettled is failed; one that already ran keeps its recorded outcome, since its effects happened.
+ */
+export const Retract = Schema.Struct({
+  type: Schema.tag("retract"),
+  ids: Schema.Array(Schema.String),
+}).annotate({ identifier: "LLM.Event.Retract" })
+export type Retract = Schema.Schema.Type<typeof Retract>
+
 const llmEventTagged = Schema.Union([
   StepStart,
   TextStart,
@@ -223,6 +238,7 @@ const llmEventTagged = Schema.Union([
   StepFinish,
   Finish,
   ProviderErrorEvent,
+  Retract,
 ]).pipe(Schema.toTaggedUnion("type"))
 
 type WithID<Event extends { readonly id: unknown }, ID> = Omit<Event, "type" | "id"> & { readonly id: ID | string }
@@ -273,6 +289,7 @@ export const LLMEvent = Object.assign(llmEventTagged, {
       usage: input.usage === undefined ? undefined : Usage.from(input.usage),
     }),
   providerError: ProviderErrorEvent.make,
+  retract: Retract.make,
   is: {
     stepStart: llmEventTagged.guards["step-start"],
     textStart: llmEventTagged.guards["text-start"],
@@ -290,6 +307,7 @@ export const LLMEvent = Object.assign(llmEventTagged, {
     stepFinish: llmEventTagged.guards["step-finish"],
     finish: llmEventTagged.guards.finish,
     providerError: llmEventTagged.guards["provider-error"],
+    retract: llmEventTagged.guards.retract,
   },
 })
 export type LLMEvent = Schema.Schema.Type<typeof llmEventTagged>

@@ -31,6 +31,7 @@ test("exposes every standard HTTP API group", () => {
     "commands",
     "mcp",
     "server.lsp",
+    "server.formatter",
     "skills",
     "behaviors",
     "events",
@@ -43,7 +44,6 @@ test("exposes every standard HTTP API group", () => {
     "atlas",
     "config",
     "server.board",
-    "claudeCode",
     "relayDocuments",
     "relayPublish",
     "relayHooks",
@@ -59,6 +59,7 @@ test("exposes every standard HTTP API group", () => {
     "actionsSource",
     "actionsTransfers",
     "relayRuns",
+    "installation",
     "guardrail",
     "meeting",
     "operator",
@@ -69,7 +70,7 @@ test("exposes every standard HTTP API group", () => {
   expect(Object.keys(client)).toEqual(groups)
   expect(
     Object.values(ClientApi.groups)
-      // A group whose every endpoint is omitted (streams, uploads) gets no client namespace.
+      // A group whose endpoints are all handwritten adapters gets no generated client group.
       .filter((group) => Object.keys(group.endpoints).some((name) => !omitEndpoints.has(name)))
       .map((group) => groupNames[group.identifier])
       .sort(),
@@ -81,6 +82,7 @@ test("exposes every standard HTTP API group", () => {
   expect(Object.keys(client.integrations)).toEqual([
     "list",
     "get",
+    "disconnect",
     "connectKey",
     "connectOauth",
     "oauthStatus",

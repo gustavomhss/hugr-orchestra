@@ -32,7 +32,7 @@ SCOPED() { bun run check:boundaries --no-stale --json --scope "$@" 2>/dev/null |
 
 - `apps/cli/README.md`
 - `apps/desktop/README.md`
-- `apps/orchestra/README.md`
+- `removed-v1/README.md`
 - `apps/web/README.md`
 - `modules/capability-assets/README.md`
 - `modules/maestro/arsenal/README.md`
@@ -72,7 +72,7 @@ A1. `bun run script/module-readme.ts app capability-assets cli client codemode c
 A2. `git diff "$BASE"..HEAD --numstat | awk '$2!=0'` -> prints nothing (only additions).
 A3. `git diff --numstat "$BASE"..HEAD | awk '{a+=$1;d+=$2} END {print a,d,NR}'` -> prints `304 0 21`.
 A4. `git diff "$BASE"..HEAD | grep '^+' | grep -ci "open""code"` -> prints `0`.
-A5. `SCOPED apps/cli/README.md apps/desktop/README.md apps/orchestra/README.md apps/web/README.md modules/capability-assets/README.md modules/maestro/arsenal/README.md modules/relay/README.md native/omni/bindings/node/README.md packages/app-shell/README.md packages/client/README.md packages/codemode/README.md packages/core/README.md packages/effect-drizzle-sqlite/README.md packages/llm/README.md packages/plugin/README.md packages/protocol/README.md packages/schema/README.md packages/sdk-next/README.md packages/server/README.md tooling/http-recorder/README.md tooling/httpapi-codegen/README.md` -> prints `new=0 stale=21`.
+A5. `SCOPED apps/cli/README.md apps/desktop/README.md removed-v1/README.md apps/web/README.md modules/capability-assets/README.md modules/maestro/arsenal/README.md modules/relay/README.md native/omni/bindings/node/README.md packages/app-shell/README.md packages/client/README.md packages/codemode/README.md packages/core/README.md packages/effect-drizzle-sqlite/README.md packages/llm/README.md packages/plugin/README.md packages/protocol/README.md packages/schema/README.md packages/sdk-next/README.md packages/server/README.md tooling/http-recorder/README.md tooling/httpapi-codegen/README.md` -> prints `new=0 stale=21`.
 A6. `OWNED` prints exactly the owned files listed above, one per line, sorted.
 
 If an acceptance line fails, do not push a fix: report STOP with the exact output.

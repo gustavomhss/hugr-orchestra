@@ -1,16 +1,15 @@
-import type { Agent, Config } from "@/v2-wire"
+import type { Agent } from "@/v2-wire"
 import type { ToolStateCompleted } from "@/v2-types"
 import type { AssistantMessage, Message, Part, ToolPart } from "@/v2-wire"
 
 import type { SessionMessageAssistantTool } from "@/v2-wire"
-import type { SessionMessageInfo } from "@/v2-legacy"
+import type { SessionMessageInfo } from "@/session-types"
 
 import type { State } from "@/context/global-sync/types"
-import type { ServerProtocol } from "@/utils/server-protocol"
 import { agentKey } from "@/context/agent-identity"
 
 // Session message APIs retain tool results, not a current Maestro read projection. Session history
-// exposes Session events; the legacy /sync/history dump is unscoped across aggregates. These are
+// exposes Session events. These are
 // historical observations, never an authorization chain. Tool inputs and model prose never count.
 export type GovernanceKind =
   | "admission"
@@ -166,11 +165,6 @@ export function maestroCapability(agents: readonly Agent[], read: State["load"][
   if (read === "ready" || agents.length > 0) return "unavailable"
   if (read === "failed") return "unknown"
   return "checking"
-}
-
-// Project config is only read from servers on the v1 protocol; elsewhere its absence says nothing.
-export function ownSource(_config: Config, _protocol: ServerProtocol | undefined, _read: State["load"]["config"]) {
-  return { state: "unknown" as const }
 }
 
 function approvalState(record: GovernanceRecord | undefined): ApprovalState {

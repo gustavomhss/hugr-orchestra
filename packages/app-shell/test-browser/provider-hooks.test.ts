@@ -7,7 +7,7 @@ import { base64Encode } from "@orchestra/core/util/encode"
 const [state, setState] = createStore({
   route: "/route",
   directory: undefined as string | null | undefined,
-  protocol: "v2" as "v2",
+  ready: true,
   server: "a" as "a" | "b",
 })
 const refreshed: Array<string | null | undefined> = []
@@ -52,7 +52,7 @@ const sync = {
 const contexts = {
   sync: { useServerSync: () => () => sync },
   sdk: {
-    useServerProtocol: () => () => state.protocol,
+    useServerReady: () => () => state.ready,
     useServerSDK: () => () => clients[state.server],
   },
   language: { useLanguage: () => ({ t: () => "Request failed" }) },
@@ -156,7 +156,7 @@ test("nested view refresh calls ServerSync owner API; explicit global and unreso
 })
 
 test("discovery includes disconnected integrations and waits for scope", async () => {
-  setState({ directory: undefined, protocol: "v2" })
+  setState({ directory: undefined, ready: true })
   discovered.length = 0
   const scope = createRoot((dispose) => ({ dispose, discovery: useProviderDiscovery(() => state.directory) }))
   try {
@@ -175,7 +175,7 @@ test("discovery includes disconnected integrations and waits for scope", async (
 })
 
 test("same-directory server switch captures each SDK and ignores a late previous-server reply", async () => {
-  setState({ directory: "/same", server: "a", protocol: "v2" })
+  setState({ directory: "/same", server: "a", ready: true })
   requestedServers.length = 0
   const a = Promise.withResolvers<{ data: Array<{ id: string; name: string }> }>()
   const b = Promise.withResolvers<{ data: Array<{ id: string; name: string }> }>()

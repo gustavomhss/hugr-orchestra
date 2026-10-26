@@ -1,6 +1,6 @@
 import { TextAttributes } from "@opentui/core"
 import { useKeyboard } from "@opentui/solid"
-import type { VcsFileStatus } from "../compat/schema"
+import type { VcsFileStatus } from "../types"
 import { createMemo, For } from "solid-js"
 import { createStore } from "solid-js/store"
 import { Locale } from "../util/locale"
@@ -25,7 +25,7 @@ function changeCountWidth(file: VcsFileStatus) {
 }
 
 export function DialogWorkspaceFileChanges(props: {
-  files: VcsFileStatus[]
+  files: readonly VcsFileStatus[]
   onSelect: (choice: WorkspaceFileChangesChoice) => void
   title?: string
   message?: string
@@ -132,7 +132,7 @@ export function DialogWorkspaceFileChanges(props: {
 
 DialogWorkspaceFileChanges.show = (
   dialog: DialogContext,
-  files: VcsFileStatus[],
+  files: readonly VcsFileStatus[],
   options?: { title?: string; message?: string },
 ) => {
   return new Promise<WorkspaceFileChangesChoice | undefined>((resolve) => {

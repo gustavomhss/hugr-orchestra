@@ -112,6 +112,9 @@ const externalCommandDirectories = Effect.fn("BashTool.externalCommandDirectorie
   return [...directories]
 })
 
+/** Agents whose shell may read but never write: their commands are confined by the sandbox with no write root. */
+const READ_ONLY_SHELL = new Set(["explore"])
+
 const layer = Layer.effectDiscard(
   Effect.gen(function* () {
     const tools = yield* Tools.Service
@@ -199,6 +202,19 @@ const layer = Layer.effectDiscard(
               if ((yield* fs.stat(target.canonical)).type !== "Directory")
                 return yield* Effect.fail(new Error(`Working directory is not a directory: ${target.canonical}`))
 
+              const project = yield* ToolSafety.RuntimeProfile
+              // A read-only agent's shell runs inside the OS sandbox with no write root; a host without one refuses the command.
+              const profile = context.agent && READ_ONLY_SHELL.has(context.agent)
+                ? {
+                    ...project,
+                    writeRoots: [],
+                    requireSandbox: true,
+                    sandbox: { ...project?.sandbox, enabled: true, scratch: true, unconfinedFallback: false },
+                  } satisfies ToolSafety.Profile
+                : project
+              // A background process outlives the call, so a profile that confines shells refuses it.
+              if (input.background && (profile?.requireSandbox || profile?.sandbox?.enabled || profile?.sandbox?.readRoots))
+                return yield* new ToolSafety.Denied({ reason: "background-process-sandbox-unbound" })
               const shell = configuredShell(yield* config.entries())
               const command = ChildProcess.make(input.command, [], {
                 cwd: target.canonical,
@@ -208,7 +224,6 @@ const layer = Layer.effectDiscard(
                 forceKillAfter: Duration.seconds(3),
               })
               const timeout = input.timeout ?? DEFAULT_TIMEOUT_MS
-              const profile = yield* ToolSafety.RuntimeProfile
               yield* ToolSafetyGit.before({ command: input.command, directory: location.directory,
                 projectDirectory: Project.isRoot(location.project.directory) ? location.directory : location.project.directory,
                 cwd: target.canonical, env: ToolSafetySandbox.environment(), managedPaths: profile?.managedPaths,
@@ -217,14 +232,17 @@ const layer = Layer.effectDiscard(
 
               if (input.background) {
                 if (Option.isNone(sessionProcess))
-                  return yield* Effect.fail(new Error("Session process registry is unavailable"))
+                  return yield* new ToolFailure({ message: "Session process registry is unavailable" })
                 // The same confinement and environment scrub as a foreground call, kept open for the process's life.
                 const launched = yield* sessionProcess.value.launch({
                   sessionID: context.sessionID,
                   command,
                   title: input.command,
                   prepare: (command) =>
-                    ToolSafetySandbox.wrap(command, { prepareParents: true }).pipe(Effect.provideService(FSUtil.Service, fs)),
+                    ToolSafetySandbox.wrap(command, { prepareParents: true }).pipe(
+                      Effect.provideService(FSUtil.Service, fs),
+                      Effect.provideService(ToolSafety.RuntimeProfile, profile),
+                    ),
                 })
                 return {
                   output: `Started background process ${launched.processID}.`,
@@ -236,7 +254,10 @@ const layer = Layer.effectDiscard(
 
               const result = yield* Effect.scoped(Effect.gen(function* () {
                 const inspector = OutputInspector.make()
-                const wrapped = yield* ToolSafetySandbox.wrap(command, { prepareParents: true }).pipe(Effect.provideService(FSUtil.Service, fs))
+                const wrapped = yield* ToolSafetySandbox.wrap(command, { prepareParents: true }).pipe(
+                  Effect.provideService(FSUtil.Service, fs),
+                  Effect.provideService(ToolSafety.RuntimeProfile, profile),
+                )
                 // Same confinement and inspection, but the command runs in a terminal tab the owner can see and answer.
                 if (wrapped._tag === "StandardCommand" && AgentTerminal.enabled(wrapped)) {
                   const ran = yield* AgentTerminal.run(pty, {
@@ -296,7 +317,7 @@ const layer = Layer.effectDiscard(
                 ...(warnings.length ? { warnings } : {}),
               }
                }).pipe(Effect.provideService(ToolSafety.NativeContext, { directory: location.directory, projectID: location.project.id }),
-                 Effect.mapError((error) => new ToolFailure({ message: error instanceof ToolSafety.Denied
+                 Effect.mapError((error) => error instanceof ToolFailure ? error : new ToolFailure({ message: error instanceof ToolSafety.Denied
                 ? error.message : `Unable to execute command: ${input.command}`,
                 ...(error instanceof ToolSafety.Denied ? { error } : {}),
               }))),

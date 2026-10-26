@@ -3,7 +3,7 @@ import { createHash } from "node:crypto"
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
 import { createRequire } from "node:module"
 import path from "node:path"
-import { ROOT, win } from "../../../../native/omni/campaign/lib"
+import { ROOT, win } from "@orchestra/omni-campaign/lib"
 
 export const logs = path.join(ROOT, "apps/desktop/.omni-desktop-evidence")
 export const digest = (file: string) => createHash("sha256").update(readFileSync(file)).digest("hex")
@@ -28,7 +28,7 @@ export async function build() {
   if (sourceSHA !== (process.env.DESKTOP_PR_HEAD || process.env.GITHUB_SHA) || dirty) throw new Error(`desktop source pin/clean checkout mismatch: ${sourceSHA}; ${dirty}`)
   if (git("merge-base", base, sourceSHA) !== base) throw new Error("desktop baseline not ancestor of exact checkout")
   const files = git("ls-files", "-z").split("\0").filter((file) => /^(apps\/|packages\/|modules\/|native\/|tooling\/|assets\/|script\/|patches\/|bun.lock$|package.json$|\.github\/actions\/)/.test(file))
-  if (!files.includes("apps/orchestra/script/build-node.ts") || !files.includes("native/omni/Cargo.lock") || !files.includes("modules/capability-assets/src/catalog.ts")) throw new Error("source manifest incomplete")
+  if (!files.includes("native/omni/Cargo.lock") || !files.includes("modules/capability-assets/src/catalog.ts")) throw new Error("source manifest incomplete")
   const sourceHashes = Object.fromEntries(files.map((file) => [file, digest(path.join(ROOT, file))]))
   const addon = process.env.HUGR_OMNI_ADDON
   const supervisor = process.env.HUGR_OMNI_SUPERVISOR
@@ -62,7 +62,7 @@ export async function build() {
   const asar = require("@electron/asar") as { extractFile(archive: string, file: string): Buffer }
   const walk = (dir: string): string[] => readdirSync(dir, { withFileTypes: true }).flatMap((entry) => entry.isDirectory() ? walk(path.join(dir, entry.name)) : [path.join(dir, entry.name)])
   const outputs = walk(path.join(desktop, "out"))
-  if (!outputs.some((file) => file.replaceAll("\\", "/").endsWith("/main/sidecar.js")) || !outputs.some((file) => file.replaceAll("\\", "/").endsWith("/main/index.js")) || !outputs.some((file) => file.endsWith(".wasm"))) throw new Error("actual Node/sidecar bundle assets incomplete")
+  if (!outputs.some((file) => file.replaceAll("\\", "/").endsWith("/main/index.js"))) throw new Error("actual main bundle assets incomplete")
   const bundleHashes = Object.fromEntries(outputs.map((file) => {
     const relative = path.relative(desktop, file).replaceAll("\\", "/")
     // asar walks path.sep, not URL separators, on Windows; manifest keys remain portable.

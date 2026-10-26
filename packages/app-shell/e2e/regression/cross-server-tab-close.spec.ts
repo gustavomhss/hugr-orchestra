@@ -115,7 +115,7 @@ test("V2 archive sends the supported request and disables unsupported servers wi
       await release.promise
       return route.fulfill({ status: 204 })
     }
-    // Older V2 deployments may omit this route; protocol version alone does not imply support.
+    // Older V2 deployments may omit this route; server version alone does not imply support.
     return json(route, { name: "NotFound", message: "Archive route not installed" }, 404)
   })
   await installReviewTabs(page)
@@ -168,7 +168,6 @@ async function mockReviewServers(
   diff: (origin: string, url: URL) => Promise<{ status: number; data: unknown[] }>,
 ) {
   await mockOrchestraServer(page, {
-    protocol: "v2",
     directory: "/shared/repo",
     project: { id: "review", worktree: "/shared/repo", vcs: "git", time: { created: 1, updated: 1 }, sandboxes: [] },
     sessions: [sessionA, sessionB].map((session) => ({ ...session, directory: "/shared/repo", projectID: "review" })),
@@ -324,9 +323,7 @@ test("desktop closing the last profile tab goes Home and preserves the other ser
   expect(
     requests.slice(mark).some((request) => {
       const url = new URL(request)
-      // V1 routes take `directory`; V2 routes take `location[directory]`.
-      const directory = url.searchParams.get("directory") ?? url.searchParams.get("location[directory]")
-      return url.origin === serverB && directory === sessionB.directory
+      return url.origin === serverB && url.searchParams.get("location[directory]") === sessionB.directory
     }),
   ).toBe(true)
 })
@@ -372,7 +369,6 @@ async function mockServers(page: Page, requests: string[]) {
     if (directory && directory !== current.directory) return json(route, { name: "InvalidDirectory" }, 500)
     if (url.pathname === "/global/event" || url.pathname === "/event" || url.pathname === "/api/event")
       return sse(route)
-    if (url.pathname === "/global/health") return json(route, {}, 404)
     if (url.pathname === "/api/health") return json(route, { pid: 1, healthy: true })
     if (url.pathname === "/api/session") return json(route, { data: [currentSession(current)], cursor: {} })
     if (url.pathname === "/api/session/active") return json(route, { data: {} })

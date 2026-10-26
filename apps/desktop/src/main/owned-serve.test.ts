@@ -1,11 +1,13 @@
 import { expect, test } from "bun:test"
-import { sidecarVersion } from "./owned-serve"
+import { sidecarMode } from "./owned-serve"
 
-test("the desktop runs its owned V2 serve child unless the one-release V1 fallback or the daemon is asked for", () => {
-  expect(sidecarVersion(undefined)).toBe("v2-owned")
-  expect(sidecarVersion("")).toBe("v2-owned")
-  expect(sidecarVersion("owned")).toBe("v2-owned")
-  expect(sidecarVersion("legacy")).toBe("v1")
-  expect(sidecarVersion("0")).toBe("v1")
-  expect(sidecarVersion("1")).toBe("v2")
+test("the desktop runs its owned serve child unless the shared daemon is asked for", () => {
+  expect(sidecarMode(undefined)).toBe("owned")
+  expect(sidecarMode("")).toBe("owned")
+  expect(sidecarMode("owned")).toBe("owned")
+  // Anything but "shared" starts the owned child, old selectors included.
+  expect(sidecarMode("legacy")).toBe("owned")
+  expect(sidecarMode("0")).toBe("owned")
+  expect(sidecarMode("1")).toBe("owned")
+  expect(sidecarMode("shared")).toBe("shared")
 })

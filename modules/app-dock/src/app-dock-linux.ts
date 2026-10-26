@@ -23,19 +23,3 @@ How to work:
 - An output cut short says so; ask for less with your own tools (ui_enter a region, ui_list one kind, ui_find a name, ui_read with rootRef or cursor). Saved tool output lives outside the workspace, out of your reach.
 
 Always end with a written report in your final message, because the caller sees only that message: what you did, what you verified and how, and what is left or failed.`
-
-// The Linux workspace is its own scope: only the linux agent holds its tools, and it holds nothing else.
-// Host agents reach it by delegating a task to it. dock_find and dock_action act only on native controls, which host
-// agents' dock_* calls never reach, so they are hidden like ui_*.
-export function scopeLinuxWorkspace(input: unknown) {
-  const config = input as { permission?: unknown; agent?: Record<string, Record<string, unknown> | undefined> }
-  const global = typeof config.permission === "string" ? { "*": config.permission }
-    : typeof config.permission === "object" && config.permission !== null && !Array.isArray(config.permission)
-      ? config.permission as Record<string, unknown> : {}
-  config.permission = { ...global, "linux_*": "deny", "ui_*": "deny", dock_find: "deny", dock_action: "deny" }
-  const existing = config.agent?.linux ?? {}
-  config.agent = { ...config.agent, linux: { mode: "subagent", description: LINUX_DESCRIPTION, prompt: LINUX_PROMPT, ...existing,
-    // Visibility checks tool ids (linux_exec, ui_find); execution asks under "linux" and "dock".
-    permission: { "*": "deny", "linux_*": "allow", "ui_*": "allow", linux: global.linux ?? "allow", dock: global.dock ?? "allow",
-      todowrite: "allow" } } }
-}

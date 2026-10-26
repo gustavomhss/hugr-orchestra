@@ -1,4 +1,6 @@
 import { SessionProcess } from "@orchestra/core/session-process"
+import { MoveSession } from "@orchestra/core/control-plane/move-session"
+import { TaskBackground } from "@orchestra/core/tool/task-background"
 import { expect } from "bun:test"
 import { NodeHttpServer, NodeServices } from "@effect/platform-node"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
@@ -27,7 +29,7 @@ import { SessionLocationMiddleware, sessionLocationLayer } from "../../server/sr
 import { schemaErrorLayer } from "../../server/src/middleware/schema-error"
 
 const services = AppNodeBuilder.build(
-  LayerNode.group([Database.node, LocationServiceMap.node, AppProcess.node, FSUtil.node, SessionV2.node, SessionExecution.node, SessionSubagentModels.node, SessionProcess.node]),
+  LayerNode.group([Database.node, LocationServiceMap.node, AppProcess.node, FSUtil.node, SessionV2.node, SessionExecution.node, SessionSubagentModels.node, SessionProcess.node, MoveSession.node, TaskBackground.node]),
   [[SessionExecution.node, SessionExecution.noopLayer]],
 )
 // Serve the actual Session group, handler and middleware over TCP; other API groups are outside this fixture.
@@ -101,6 +103,7 @@ it.live(
       const history = yield* request(`/api/session/${created.id}/history`)
       expect(yield* history.json).toMatchObject({
         data: [
+          { type: "session.next.created" },
           { type: "session.next.archive.changed", data: { archived: expect.any(Number) } },
           { type: "session.next.archive.changed", data: { archived: null } },
         ],

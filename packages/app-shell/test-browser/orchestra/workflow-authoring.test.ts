@@ -43,7 +43,8 @@ Bun.plugin({
 const load = (specifier: string) => import(`${Bun.resolveSync(specifier, import.meta.dir)}?workflow-authoring`)
 const { PlatformProvider }: typeof import("@/context/platform") = await load("@/context/platform")
 const { LanguageProvider }: typeof import("@/context/language") = await load("@/context/language")
-const { createSdkForServer }: typeof import("@/utils/server") = await load("@/utils/server")
+// Through the same loader as the Relay client, so its `ClientError` is the class the client checks against.
+const { Orchestra }: typeof import("@orchestra/client") = await load("@orchestra/client")
 const { createRelayClient, decodeDocument }: typeof import("@/orchestra/relay/client") = await load("@/orchestra/relay/client")
 const { CreateWorkflowDialog }: typeof import("@/orchestra/relay/create") = await load("@/orchestra/relay/create")
 const { WorkflowLibrary }: typeof import("@/orchestra/relay/library") = await load("@/orchestra/relay/library")
@@ -107,7 +108,7 @@ function setup(respond?: (request: Request) => Promise<Response>) {
     const body: RelayDocumentFields = await request.json()
     return Response.json({ location: { directory: "/repo" }, data: doc("saved", { ...body, tags: [] }) })
   }, { preconnect: fetch.preconnect })
-  const client = createRelayClient({ sdk: createSdkForServer({ server: { url: "http://localhost:4096" }, directory: "/repo", fetch: fetcher }), directory: "/repo" })
+  const client = createRelayClient({ orchestra: Orchestra.make({ baseUrl: "http://localhost:4096", fetch: fetcher }), directory: "/repo" })
   const source = {
     client, queryClient: () => queryClient, key,
     list: () => queryClient.getQueryData<RelayDocument[]>(key("documents")) ?? [],

@@ -174,9 +174,15 @@ export const httpFixture = Effect.fnUntraced(function* (
     (server) => Effect.promise(() => server.stop(true)),
   )
   const responses: { status: number; headers: Headers }[] = []
+  // Requests that name no Location use the fixture's directory, the way a client passes `location[directory]`.
+  const withLocation = (input: Parameters<typeof fetch>[0]) => {
+    const url = new URL(input instanceof Request ? input.url : input)
+    if (!url.searchParams.has("location[directory]")) url.searchParams.set("location[directory]", core.directory)
+    return input instanceof Request ? new Request(url, input) : url
+  }
   const trackedFetch = Object.assign(
     (input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) =>
-      fetch(input, init).then((response) => {
+      fetch(withLocation(input), init).then((response) => {
         responses.push({ status: response.status, headers: response.headers })
         return response
       }),
@@ -184,7 +190,6 @@ export const httpFixture = Effect.fnUntraced(function* (
   )
   const headers = {
     ...ServerAuth.headers({ username: "orchestra", password: "http-fixture-secret" }),
-    "x-orchestra-directory": encodeURIComponent(core.directory),
     "x-orchestra-workspace": workspaceID,
     "x-configured": "kept",
   }

@@ -17,8 +17,35 @@ import { SessionSchema } from "../schema"
 import { SessionSubagentModels } from "../subagent-models"
 
 const references = new WeakMap<Model, ModelV2.Ref>()
+const prices = new WeakMap<Model, ReadonlyArray<ModelV2.Cost>>()
 
 export const reference = (model: Model): ModelV2.Ref | undefined => references.get(model)
+
+/** The catalog price list of a model this module resolved; empty for an embedded resolver's own models. */
+export const pricing = (model: Model): ReadonlyArray<ModelV2.Cost> => prices.get(model) ?? []
+
+/**
+ * USD for one settled step under a price list (rates per million tokens). The tier whose context size the prompt
+ * exceeds, the largest such, replaces the base rate; reasoning tokens bill at the output rate, as the earlier runtime billed them.
+ */
+export const cost = (
+  list: ReadonlyArray<ModelV2.Cost>,
+  tokens: { readonly input: number; readonly output: number; readonly reasoning: number; readonly cache: { readonly read: number; readonly write: number } },
+) => {
+  const prompt = tokens.input + tokens.cache.read + tokens.cache.write
+  const tier = list
+    .filter((item) => item.tier !== undefined && prompt > item.tier.size)
+    .toSorted((a, b) => (b.tier?.size ?? 0) - (a.tier?.size ?? 0))[0]
+  const rate = tier ?? list.find((item) => item.tier === undefined)
+  if (!rate) return 0
+  const total =
+    (tokens.input * rate.input +
+      (tokens.output + tokens.reasoning) * rate.output +
+      tokens.cache.read * rate.cache.read +
+      tokens.cache.write * rate.cache.write) /
+    1_000_000
+  return Number.isFinite(total) ? Math.max(0, total) : 0
+}
 
 /** Captures catalog identity before transport/deployment lowering, including for embedded resolvers. */
 export const withReference = (model: Model, ref: ModelV2.Ref): Model => {
@@ -118,7 +145,11 @@ const withDefaults = (model: ModelV2.Info, route: AnyRoute, generation: Generati
     endpoint: model.api.url === undefined ? undefined : { baseURL: model.api.url },
     headers: model.request.headers,
     http: { body: httpBody },
-    limits: { context: model.limit.context, output: model.limit.output },
+    limits: {
+      context: model.limit.context,
+      ...(model.limit.input === undefined ? {} : { input: model.limit.input }),
+      output: model.limit.output,
+    },
     generation,
   })
 }
@@ -179,16 +210,16 @@ export const fromCatalogModel = (
       withDefaults(resolved, OpenAIResponses.route, generation.value)
         .with({ auth: key === undefined ? Auth.none : Auth.bearer(key) })
         .model({ id: resolved.api.id }),
-    ).pipe(Effect.map((value) => withReference(value, model)))
+    ).pipe(Effect.map((value) => withPrices(withReference(value, model), model)))
   }
   if (resolved.api.type === "aisdk" && resolved.api.package === "@ai-sdk/anthropic") {
     return Effect.succeed(
       withDefaults(resolved, AnthropicMessages.route, generation.value)
         .with({ auth: key === undefined ? Auth.none : Auth.header("x-api-key", key) })
         .model({ id: resolved.api.id }),
-    ).pipe(Effect.map((value) => withReference(value, model)))
+    ).pipe(Effect.map((value) => withPrices(withReference(value, model), model)))
   }
-  // A native model with an endpoint and no package speaks the OpenAI-compatible chat API, V1's default package.
+  // A native model with an endpoint and no package speaks the OpenAI-compatible chat API, the earlier runtime's default package.
   if (
     ((resolved.api.type === "aisdk" && resolved.api.package === "@ai-sdk/openai-compatible") ||
       resolved.api.type === "native") &&
@@ -198,7 +229,7 @@ export const fromCatalogModel = (
       withDefaults(resolved, OpenAICompatibleChat.route, generation.value)
         .with({ auth: key === undefined ? Auth.none : Auth.bearer(key) })
         .model({ id: resolved.api.id }),
-    ).pipe(Effect.map((value) => withReference(value, model)))
+    ).pipe(Effect.map((value) => withPrices(withReference(value, model), model)))
   }
   return Effect.fail(
     new UnsupportedApiError({
@@ -207,6 +238,11 @@ export const fromCatalogModel = (
       api: apiName(resolved),
     }),
   )
+}
+
+const withPrices = (value: Model, model: ModelV2.Info) => {
+  prices.set(value, model.cost)
+  return value
 }
 
 export const resolve = (session: SessionSchema.Info, model: ModelV2.Info, credential?: Credential.Value) =>

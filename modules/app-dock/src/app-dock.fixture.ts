@@ -1,8 +1,7 @@
-import type { Hooks, PluginInput, ToolContext } from "@orchestra/plugin"
+import type { Hooks, ToolContext } from "@orchestra/plugin"
 import { createAppDockHooks } from "./app-dock"
 
 export const context = { ask: async () => {}, abort: new AbortController().signal } as unknown as ToolContext
-export const input = {} as PluginInput
 
 export type FakePort = {
   postMessage(message: unknown): void

@@ -131,7 +131,7 @@ describe("file watcher invalidation", () => {
 
     invalidateFromWatcher(
       {
-        type: "project.updated",
+        type: "todo.updated",
         properties: {},
       },
       {

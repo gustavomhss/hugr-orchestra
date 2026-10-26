@@ -32,14 +32,14 @@ SCOPED() { bun run check:boundaries --no-stale --json --scope "$@" 2>/dev/null |
 
 ## Owned files (exactly these, nothing else)
 
-- `apps/orchestra/src/claude-code/README.md`
+- `removed-v1/src/claude-code/README.md`
 
 ## Steps
 
 1. Create the file with this exact content (the quoted heredoc writes it byte for byte):
 
 ```bash
-cat > 'apps/orchestra/src/claude-code/README.md' <<'README_EOF'
+cat > 'removed-v1/src/claude-code/README.md' <<'README_EOF'
 # Claude Code engine adapter domain
 
 ## Purpose and ownership
@@ -70,7 +70,7 @@ cat > 'apps/orchestra/src/claude-code/README.md' <<'README_EOF'
 
 ## Contracts and verification limits
 
-- `apps/orchestra/src/claude-code/sdk.ts` is listed in `script/spawn-allowlist.json`.
+- `removed-v1/src/claude-code/sdk.ts` is listed in `script/spawn-allowlist.json`.
 - The engine query keeps the `claude_code` preset.
 README_EOF
 ```
@@ -78,7 +78,7 @@ README_EOF
 ## Commit and push
 
 ```bash
-git add 'apps/orchestra/src/claude-code/README.md'
+git add 'removed-v1/src/claude-code/README.md'
 git commit -m "docs(orchestra): add claude-code domain README" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 git push fork ms-rd-claude
 ```
@@ -87,9 +87,9 @@ Open no pull request.
 
 ## Acceptance (run after the commit; each must print the expected value)
 
-A1. `grep -c "^## " 'apps/orchestra/src/claude-code/README.md'` -> prints `7`.
-A2. `grep -ci "open""code" 'apps/orchestra/src/claude-code/README.md'` -> prints `0`.
-A3. `SCOPED apps/orchestra/src/claude-code/README.md` -> prints `new=0 stale=1` (this also proves every backticked repository path in the file exists).
+A1. `grep -c "^## " 'removed-v1/src/claude-code/README.md'` -> prints `7`.
+A2. `grep -ci "open""code" 'removed-v1/src/claude-code/README.md'` -> prints `0`.
+A3. `SCOPED removed-v1/src/claude-code/README.md` -> prints `new=0 stale=1` (this also proves every backticked repository path in the file exists).
 A4. `OWNED` prints exactly the owned files listed above, one per line, sorted.
 
 If an acceptance line fails, do not push a fix: report STOP with the exact output.

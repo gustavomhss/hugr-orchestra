@@ -5,7 +5,7 @@ import { render } from "solid-js/web"
 import { Root } from "@kobalte/core/dialog"
 import type { Provider } from "@/v2-wire"
 
-import type { ModelPolicySnapshot, ModelRule, SubagentModelPolicy } from "@/components/subagent-model-rules"
+import type { ModelPolicySnapshot, SubagentModelPolicy } from "@/components/subagent-model-rules"
 import { subagentModels } from "@/i18n/frontend-recovery/subagent-models"
 import { DESKTOP_NATIVE_LOCALES } from "@/i18n/desktop-native"
 import { solidDom } from "./solid-dom"
@@ -56,10 +56,8 @@ function buttonFor(host: HTMLElement, text: string) {
   return button
 }
 
-test.each([
-  ["v1", "ltr"], ["v1", "rtl"], ["v2", "ltr"], ["v2", "rtl"],
-] as const)("real picker keeps empty %s drafts denied with populated or empty catalogs until explicit Inherit (%s)", async (protocol, direction) => {
-  const key = `policy-picker/${protocol}/${direction}`
+test.each(["ltr", "rtl"] as const)("real picker keeps empty drafts denied with populated or empty catalogs until explicit Inherit (%s)", async (direction) => {
+  const key = `policy-picker/${direction}`
   const [state, setState] = createStore<{ providers: Provider[]; status: "success" | "error" }>({ providers: [provider], status: "success" })
   const host = document.createElement("div")
   host.dir = direction
@@ -68,8 +66,8 @@ test.each([
     language.useLanguage().setDirection(direction)
     return createComponent(Root, { open: true, get children() {
       return createComponent(picker.SubagentModelPicker, {
-        directory: "/repo", pendingKey: key, get providers() { return state.providers }, get status() { return state.status }, protocol,
-        supported: true, rulesReady: true, readRules: () => [], writeRules: async () => [], onRetry() {},
+        directory: "/repo", pendingKey: key, get providers() { return state.providers }, get status() { return state.status },
+        supported: true, rulesReady: true, onRetry() {},
       })
     } })
   } }), host)
@@ -104,10 +102,8 @@ test.each([
   drafts.clearPending(key)
 })
 
-test.each([
-  ["v1", "ltr"], ["v1", "rtl"], ["v2", "ltr"], ["v2", "rtl"],
-] as const)("real picker Enter toggles focused second row despite a different search-active row (%s, %s)", async (protocol, direction) => {
-  const key = `policy-picker-focus/${protocol}/${direction}`
+test.each(["ltr", "rtl"] as const)("real picker Enter toggles focused second row despite a different search-active row (%s)", async (direction) => {
+  const key = `policy-picker-focus/${direction}`
   const second = { ...model, id: "team/model:second/v2", name: "Second model", api: { ...model.api, id: "team/model:second/v2" } }
   const host = document.createElement("div")
   host.dir = direction
@@ -117,8 +113,8 @@ test.each([
     return createComponent(Root, { open: true, get children() {
       return createComponent(picker.SubagentModelPicker, {
         directory: "/repo", pendingKey: key, providers: [{ ...provider, models: { [model.id]: model, [second.id]: second } }],
-        status: "success", protocol, supported: true, rulesReady: true,
-        readRules: () => [], writeRules: async () => [], onRetry() {},
+        status: "success", supported: true, rulesReady: true,
+        onRetry() {},
       })
     } })
   } }), host)
@@ -171,8 +167,8 @@ test("real picker preserves unavailable refs, waits for ACK and retries failed s
   const dispose = renderPicker(() => createComponent(language.LanguageProvider, { locale: "en", get children() {
     return createComponent(Root, { open: true, get children() {
       return createComponent(picker.SubagentModelPicker, {
-        sessionID: "ses_picker", directory: "/repo", providers: [provider], status: "success", protocol: "v2",
-        supported: true, rulesReady: true, readRules: () => [], writeRules: async () => [], onRetry() {},
+        sessionID: "ses_picker", directory: "/repo", providers: [provider], status: "success",
+        supported: true, rulesReady: true, onRetry() {},
         policy: {
           read: () => ({ policy: { mode: "allowlist", models: [{ providerID: "offline", id: "full/slash/model" }] }, timestamp: 1 }),
           write: async (policy) => {
@@ -217,9 +213,9 @@ test("real picker disables unresolved policy/catalog state and retries catalog f
   const dispose = renderPicker(() => createComponent(language.LanguageProvider, { locale: "en", get children() {
     return createComponent(Root, { open: true, get children() {
       return createComponent(picker.SubagentModelPicker, {
-        sessionID: "ses_loading", directory: "/repo", providers: [provider], protocol: "v2", supported: true,
+        sessionID: "ses_loading", directory: "/repo", providers: [provider], supported: true,
         get status() { return state.status }, get rulesReady() { return state.ready },
-        readRules: () => [], writeRules: async () => [], onRetry() { retries.count++ },
+        onRetry() { retries.count++ },
         policy: { read: () => ({ policy: { mode: "inherit" } }), write: async (policy) => policy },
       })
     } })
@@ -268,11 +264,11 @@ test("canonical read loading and rejection disable Inherit until a successful fr
       holder.policy = policy
       return createComponent(Root, { open: true, get children() {
         return createComponent(picker.SubagentModelPicker, {
-          sessionID: "ses_canonical_loading", directory: "/repo", providers: [provider], status: "success", protocol: "v2",
+          sessionID: "ses_canonical_loading", directory: "/repo", providers: [provider], status: "success",
           get supported() { return policy.state.refreshing || policy.state.error ? undefined : true },
           get rulesReady() { return !!policy.state.snapshot && !policy.state.refreshing && !policy.state.error },
           get loadFailed() { return !!policy.state.error },
-          readRules: () => [], writeRules: async () => [], policy: { read: policy.read, write: policy.write },
+          policy: { read: policy.read, write: policy.write },
           onRetry: () => { void policy.load().catch(() => {}) },
         })
       } })
@@ -315,10 +311,7 @@ test("confirmation failure proof covers all 61 configured non-English locale ove
   expect(DESKTOP_NATIVE_LOCALES).toHaveLength(62)
   expect(Object.keys(subagentModels).sort()).toEqual(DESKTOP_NATIVE_LOCALES.filter((locale) => locale !== "en").sort())
   Object.values(subagentModels).forEach((copy) => {
-    expect(Object.keys(copy).sort()).toEqual([
-      "dialog.subagentModels.inherited", "dialog.subagentModels.noneAllowed",
-      "dialog.subagentModels.saveFailed", "dialog.subagentModels.unsupported",
-    ])
+    expect(Object.keys(copy).sort()).toEqual(["dialog.subagentModels.inherited", "dialog.subagentModels.saveFailed"])
     expect(copy["dialog.subagentModels.saveFailed"].trim().length).toBeGreaterThan(0)
   })
 })
@@ -333,8 +326,8 @@ test.each(Object.entries(subagentModels))("picker confirmation failure uses loca
     language.useLanguage().setLocale(tag)
     return createComponent(Root, { open: true, get children() {
       return createComponent(picker.SubagentModelPicker, {
-        sessionID: "ses_localized_failure", directory: "/repo", providers: [provider], status: "success", protocol: "v2",
-        supported: true, rulesReady: true, readRules: () => [], writeRules: async () => [], onRetry() {},
+        sessionID: "ses_localized_failure", directory: "/repo", providers: [provider], status: "success",
+        supported: true, rulesReady: true, onRetry() {},
         policy: { read: () => ({ policy: { mode: "inherit" } }), write: async () => { throw new Error("confirmation GET failed after ACK") } },
       })
     } })
@@ -344,29 +337,6 @@ test.each(Object.entries(subagentModels))("picker confirmation failure uses loca
   await settle()
   expect(host.querySelector('[role="alert"]')?.textContent).toBe(copy["dialog.subagentModels.saveFailed"])
   expect(copy["dialog.subagentModels.saveFailed"]).not.toBe("Model permissions could not be confirmed. Try again.")
-  dispose()
-})
-
-test("real V1 session picker leaves last-matching ask unchecked and other allowed models checked", async () => {
-  const permission: ModelRule[] = [
-    { permission: "task", pattern: "*/*", action: "allow" },
-    { permission: "task", pattern: `router/${model.id}`, action: "ask" },
-  ]
-  const other = { ...model, id: "other", name: "Other allowed model" }
-  const host = document.createElement("div")
-  document.body.append(host)
-  const dispose = renderPicker(() => createComponent(language.LanguageProvider, { locale: "en", get children() {
-    return createComponent(Root, { open: true, get children() {
-      return createComponent(picker.SubagentModelPicker, {
-        sessionID: "ses_legacy_ask", directory: "/repo", status: "success", protocol: "v1", supported: true, rulesReady: true,
-        providers: [{ ...provider, models: { [model.id]: model, other } }],
-        readRules: () => permission, writeRules: async () => permission, onRetry() {},
-      })
-    } })
-  } }), host)
-  await settle()
-  expect(switchFor(host, model.name).checked).toBe(false)
-  expect(switchFor(host, other.name).checked).toBe(true)
   dispose()
 })
 
@@ -477,8 +447,8 @@ test.each(["ltr", "rtl"] as const)("real picker virtualizes full catalog and ret
     language.useLanguage().setDirection(direction)
     return createComponent(Root, { open: true, get children() {
       return createComponent(picker.SubagentModelPicker, {
-        directory: "/repo", pendingKey: key, providers: [{ ...provider, models }], status: "success", protocol: "v2",
-        supported: true, rulesReady: true, readRules: () => [], writeRules: async () => [], onRetry() {},
+        directory: "/repo", pendingKey: key, providers: [{ ...provider, models }], status: "success",
+        supported: true, rulesReady: true, onRetry() {},
       })
     } })
   } }), host)

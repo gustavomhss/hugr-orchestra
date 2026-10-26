@@ -2,7 +2,6 @@ import { spawn } from "node:child_process"
 import { execFileSync } from "node:child_process"
 import { mkdir, mkdtemp, copyFile, rm, access, readFile, writeFile } from "node:fs/promises"
 import { createServer as createHttpsServer } from "node:https"
-import { createServer as createNetServer } from "node:net"
 import type { IncomingMessage, ServerResponse } from "node:http"
 import { tmpdir } from "node:os"
 import { dirname, join, resolve } from "node:path"
@@ -11,7 +10,7 @@ import { createRequire } from "node:module"
 import { randomUUID } from "node:crypto"
 
 type Case = { id: string; status: "pass"; detail: string }
-const required = ["L01", "L02", "L03", "L04", "L05", "L06", "L07", "L08", "L09", "L10", "L11", "L12", "L15", "L16"]
+const required = ["L01", "L04", "L05", "L06", "L07", "L08", "L09", "L10", "L11", "L12", "L15", "L16"]
 const expectedCases = new Set([...required, "L13", "L14"])
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const root = resolve(scriptDir, "../..")
@@ -50,27 +49,19 @@ async function fixture() {
   return { base: `https://127.0.0.1:${address.port}`, close: () => new Promise<void>((done) => server.close(() => done())) }
 }
 
-async function freePort() {
-  const server = createNetServer()
-  await new Promise<void>((ready) => server.listen(0, "127.0.0.1", () => ready()))
-  const address = server.address()
-  const port = address.port
-  await new Promise<void>((done) => server.close(() => done()))
-  return port
-}
-
 async function child() {
   const electron = await import("electron")
   const { app, BrowserWindow } = electron
   const { createAppDock } = await import("./app-dock")
   const { handleDockRPC, registerAppDockBridge, registerAppDockWindow } = await import("./app-dock-rpc")
-  const { spawnLocalServer } = await import("./server")
+  const { startDockChannel } = await import("./dock-channel")
+  const { startOwnedServe } = await import("./owned-serve")
+  const { resolveCliBinary } = await import("./background-cli")
+  const { sidecarLaunchEnv } = await import("./server")
   if (!process.versions.electron) throw new Error("Electron child not started")
   app.commandLine.appendSwitch("ignore-certificate-errors")
   await app.whenReady()
   const site = await fixture()
-  const port = await freePort()
-  const password = randomUUID()
   const userDataPath = await mkdtemp(join(tmpdir(), "app-dock-live-userdata-"))
   Object.assign(process.env, {
     ORCHESTRA_CLIENT: "desktop",
@@ -83,36 +74,24 @@ async function child() {
   const win = new BrowserWindow({ width: 900, height: 700, show: true })
   win.show()
   registerAppDockWindow(win)
-  const sidecarPath = process.env.APP_DOCK_SIDECAR
-  check(sidecarPath, "APP_DOCK_SIDECAR not propagated to child")
-  const server = await spawnLocalServer("127.0.0.1", port, password, {
-    userDataPath,
-    sidecarPath,
-    onStderr: (message) => console.error(`SIDECAR: ${message}`),
-    onMessage: handleDockRPC,
-  })
+  // The V2 shape: main's Dock handlers sit behind the Dock channel, and the owned `orchestra serve` child dials it.
+  const logger = { log: () => {}, error: (message: string) => console.error(`SERVE: ${message}`) }
+  const dock = await startDockChannel({ onMessage: handleDockRPC })
+  const owned = await Promise.all([resolveCliBinary(logger), sidecarLaunchEnv(userDataPath)]).then(([binary, env]) =>
+    startOwnedServe({
+      logger,
+      command: [binary],
+      env: { ...env, ...dock.env },
+      write: (_stream, message) => console.error(`SERVE: ${message}`),
+    }),
+  )
   let outcome = 1
   try {
-    await server.health.wait
-    pass("L01", "real sidecar utility process booted and passed health")
+    await owned.health.wait
+    pass("L01", "owned V2 serve child booted and passed health with the Dock channel attached")
 
-    const url = `http://127.0.0.1:${port}`
-    const auth = Buffer.from(`orchestra:${password}`).toString("base64")
-    const idsResponse = await fetch(`${url}/experimental/tool/ids?directory=${encodeURIComponent(userDataPath)}`, {
-      headers: { authorization: `Basic ${auth}` },
-      signal: AbortSignal.timeout(10_000),
-    })
-    check(idsResponse.ok, `tool ids request failed with ${idsResponse.status}`)
-    const rawIds: unknown = await idsResponse.json()
-    const ids: string[] = Array.isArray(rawIds) ? rawIds.filter((id): id is string => typeof id === "string") : []
-    const expected = ["dock_list", "dock_read", "dock_click", "dock_type", "dock_navigate", "dock_go", "dock_open", "dock_close"]
-    const missing = expected.filter((id) => !ids.includes(id))
-    check(missing.length === 0, `dock tools missing from live server: ${missing.join(", ")}`)
-    pass("L02", "dock_* tools registered and served by the real sidecar")
-
-    const builtins = ["read", "edit", "bash", "list"].filter((id) => ids.includes(id))
-    check(builtins.length > 1, "expected familiar builtin tools absent")
-    pass("L03", "builtin tools coexist with dock_* in the live registry")
+    // The old L02 and L03 read the retired utility-process sidecar's tool-id listing. The V2 protocol has no tool-id endpoint, so dock_*
+    // registration is covered by the tool-registry tests and by the YouTube harness, which sees dock_* tool calls.
 
     const rpc = async (op: string, args: Record<string, unknown> = {}) =>
       new Promise<unknown>((resolveRPC, rejectRPC) => {
@@ -327,7 +306,8 @@ async function child() {
     const report = { version: 1, cases }
     await mkdir(dirname(artifact), { recursive: true })
     await writeFile(artifact, JSON.stringify(report, null, 2))
-    await server.listener.stop()
+    await owned.listener.stop()
+    await dock.close()
     win.destroy()
     await site.close()
     app.exit(outcome)
@@ -349,8 +329,7 @@ async function parent() {
     check(result.success && result.outputs?.[0], "bundle failed")
     const built = result.outputs![0].path
     await access(built)
-    const sidecar = join(outMain, "sidecar.js")
-    await access(sidecar)
+    await mkdir(outMain, { recursive: true })
     const hosted = join(outMain, "app-dock-live.test.cjs")
     await copyFile(built, hosted)
     const electronModule = createRequire(join(process.cwd(), "package.json")).resolve("electron")
@@ -359,7 +338,6 @@ async function parent() {
     const env = {
     ...process.env,
     APP_DOCK_ARTIFACT_ROOT: root,
-    APP_DOCK_SIDECAR: sidecar,
     ELECTRON_DISABLE_SECURITY_WARNINGS: "true",
   }
     await rm(artifact, { force: true })

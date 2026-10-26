@@ -91,7 +91,6 @@ export default function ActionsChapter(props: ChapterPageProps) {
   const language = useLanguage()
   const platform = usePlatform()
   const sdk = useServerSDK()
-  // Probe the native combined server surface even when the session SDK detected protocol v1.
   const api = createActionsAPI({ server: props.server, fetch: platform.fetch, directory: props.directory })
   const [query, setQuery] = useSearchParams()
   const [preferences, setPreferences, , ready] = persisted(

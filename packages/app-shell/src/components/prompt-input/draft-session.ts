@@ -68,7 +68,7 @@ export function createDraftSessionState(input: {
   return { pendingKey, ...useSubagentModelPolicy(input.sessionID, pendingKey) }
 }
 
-/** Canonical GETs, rather than delayed event projections, own V2 policy labels. */
+/** Canonical GETs, rather than delayed event projections, own policy labels. */
 export function useSubagentModelPolicy(sessionID: Accessor<string | undefined>, pendingKey: Accessor<string>) {
   const serverSDK = useServerSDK()
   const sync = useSync()
@@ -76,7 +76,7 @@ export function useSubagentModelPolicy(sessionID: Accessor<string | undefined>, 
     () => {
       const server = serverSDK()
       const id = sessionID()
-      if (!id || server.protocolKind() !== "v2") return
+      if (!id) return
       return { server, id, updated: sync().session.get(id)?.time.updated }
     },
     (source) => source.server.sessionManagement.readSubagentModels(source.id)

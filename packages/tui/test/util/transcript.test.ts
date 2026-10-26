@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { formatAssistantHeader, formatMessage, formatPart, formatTranscript } from "../../src/util/transcript"
-import type { AssistantMessage, Part, Provider, UserMessage } from "@orchestra/sdk/v2"
+import type { Provider, SessionMessage, SessionMessageAssistant, SessionMessageAssistantTool } from "../../src/types"
+
 
 const providers: Provider[] = [
   {
@@ -61,48 +62,63 @@ const providers: Provider[] = [
   },
 ]
 
+const assistant = (
+  id: string,
+  created: number,
+  content: SessionMessageAssistant["content"],
+  extra: Partial<SessionMessageAssistant> = {},
+): SessionMessageAssistant => ({
+  id,
+  type: "assistant",
+  agent: "maestro",
+  model: { id: "claude-sonnet-4-20250514", providerID: "anthropic" },
+  content,
+  cost: 0.001,
+  tokens: { input: 100, output: 50, reasoning: 0, cache: { read: 0, write: 0 } },
+  time: { created, completed: created + 5400 },
+  ...extra,
+})
+
+const user = (id: string, created: number, text: string): SessionMessage => ({
+  id,
+  type: "user",
+  text,
+  time: { created },
+})
+
+const tool = (state: SessionMessageAssistantTool["state"]): SessionMessageAssistantTool => ({
+  type: "tool",
+  id: "call_1",
+  name: "bash",
+  provider: { executed: false },
+  state,
+  time: { created: 1000 },
+})
+
 describe("transcript", () => {
   describe("formatAssistantHeader", () => {
-    const baseMsg: AssistantMessage = {
-      id: "msg_123",
-      sessionID: "ses_123",
-      role: "assistant",
-      agent: "maestro",
-      modelID: "claude-sonnet-4-20250514",
-      providerID: "anthropic",
-      mode: "",
-      parentID: "msg_parent",
-      path: { cwd: "/test", root: "/test" },
-      cost: 0.001,
-      tokens: { input: 100, output: 50, reasoning: 0, cache: { read: 0, write: 0 } },
-      time: { created: 1000000, completed: 1005400 },
-    }
+    const baseMsg = assistant("msg_123", 1000000, [])
 
     test("includes metadata when enabled", () => {
-      const result = formatAssistantHeader(baseMsg, true)
-      expect(result).toBe("## Assistant (Maestro · claude-sonnet-4-20250514 · 5.4s)\n\n")
+      expect(formatAssistantHeader(baseMsg, true)).toBe("## Assistant (Maestro · claude-sonnet-4-20250514 · 5.4s)\n\n")
     })
 
     test("uses model display name when available", () => {
-      const result = formatAssistantHeader(baseMsg, true, providers)
-      expect(result).toBe("## Assistant (Maestro · Claude Sonnet 4 · 5.4s)\n\n")
+      expect(formatAssistantHeader(baseMsg, true, providers)).toBe("## Assistant (Maestro · Claude Sonnet 4 · 5.4s)\n\n")
     })
 
     test("excludes metadata when disabled", () => {
-      const result = formatAssistantHeader(baseMsg, false)
-      expect(result).toBe("## Assistant\n\n")
+      expect(formatAssistantHeader(baseMsg, false)).toBe("## Assistant\n\n")
     })
 
     test("handles missing completed time", () => {
-      const msg = { ...baseMsg, time: { created: 1000000 } }
-      const result = formatAssistantHeader(msg as AssistantMessage, true)
-      expect(result).toBe("## Assistant (Maestro · claude-sonnet-4-20250514)\n\n")
+      expect(formatAssistantHeader({ ...baseMsg, time: { created: 1000000 } }, true)).toBe(
+        "## Assistant (Maestro · claude-sonnet-4-20250514)\n\n",
+      )
     })
 
     test("titlecases agent name", () => {
-      const msg = { ...baseMsg, agent: "reviewer" }
-      const result = formatAssistantHeader(msg, true)
-      expect(result).toContain("Reviewer")
+      expect(formatAssistantHeader({ ...baseMsg, agent: "reviewer" }, true)).toContain("Reviewer")
     })
   })
 
@@ -110,74 +126,29 @@ describe("transcript", () => {
     const options = { thinking: true, toolDetails: true, assistantMetadata: true }
 
     test("formats text part", () => {
-      const part: Part = {
-        id: "part_1",
-        sessionID: "ses_123",
-        messageID: "msg_123",
-        type: "text",
-        text: "Hello world",
-      }
-      const result = formatPart(part, options)
-      expect(result).toBe("Hello world\n\n")
-    })
-
-    test("skips synthetic text parts", () => {
-      const part: Part = {
-        id: "part_1",
-        sessionID: "ses_123",
-        messageID: "msg_123",
-        type: "text",
-        text: "Synthetic content",
-        synthetic: true,
-      }
-      const result = formatPart(part, options)
-      expect(result).toBe("")
+      expect(formatPart({ type: "text", id: "t1", text: "Hello world" }, options)).toBe("Hello world\n\n")
     })
 
     test("formats reasoning when thinking enabled", () => {
-      const part: Part = {
-        id: "part_1",
-        sessionID: "ses_123",
-        messageID: "msg_123",
-        type: "reasoning",
-        text: "Let me think...",
-        time: { start: 1000 },
-      }
-      const result = formatPart(part, options)
-      expect(result).toBe("_Thinking:_\n\nLet me think...\n\n")
+      const part = { type: "reasoning" as const, id: "r1", text: "Let me think...", time: { created: 1000 } }
+      expect(formatPart(part, options)).toBe("_Thinking:_\n\nLet me think...\n\n")
     })
 
     test("skips reasoning when thinking disabled", () => {
-      const part: Part = {
-        id: "part_1",
-        sessionID: "ses_123",
-        messageID: "msg_123",
-        type: "reasoning",
-        text: "Let me think...",
-        time: { start: 1000 },
-      }
-      const result = formatPart(part, { ...options, thinking: false })
-      expect(result).toBe("")
+      const part = { type: "reasoning" as const, id: "r1", text: "Let me think...", time: { created: 1000 } }
+      expect(formatPart(part, { ...options, thinking: false })).toBe("")
     })
 
     test("formats tool part with details", () => {
-      const part: Part = {
-        id: "part_1",
-        sessionID: "ses_123",
-        messageID: "msg_123",
-        type: "tool",
-        callID: "call_1",
-        tool: "bash",
-        state: {
+      const result = formatPart(
+        tool({
           status: "completed",
           input: { command: "ls" },
-          output: "file1.txt\nfile2.txt",
-          title: "List files",
-          metadata: {},
-          time: { start: 1000, end: 1100 },
-        },
-      }
-      const result = formatPart(part, options)
+          content: [{ type: "text", text: "file1.txt\nfile2.txt" }],
+          structured: { title: "List files" },
+        }),
+        options,
+      )
       expect(result).toContain("**Tool: bash**")
       expect(result).toContain("**Input:**")
       expect(result).toContain('"command": "ls"')
@@ -186,69 +157,46 @@ describe("transcript", () => {
     })
 
     test("formats tool output containing triple backticks without breaking markdown", () => {
-      const part: Part = {
-        id: "part_1",
-        sessionID: "ses_123",
-        messageID: "msg_123",
-        type: "tool",
-        callID: "call_1",
-        tool: "bash",
-        state: {
+      const result = formatPart(
+        tool({
           status: "completed",
           input: { command: "echo '```hello```'" },
-          output: "```hello```",
-          title: "Echo backticks",
-          metadata: {},
-          time: { start: 1000, end: 1100 },
-        },
-      }
-      const result = formatPart(part, options)
-      // The tool header should not be inside a code block
+          content: [{ type: "text", text: "```hello```" }],
+          structured: {},
+        }),
+        options,
+      )
       expect(result).toStartWith("**Tool: bash**\n")
-      // Input and output should each be in their own code blocks
       expect(result).toContain("**Input:**\n```json")
       expect(result).toContain("**Output:**\n```\n```hello```\n```")
     })
 
     test("formats tool part without details when disabled", () => {
-      const part: Part = {
-        id: "part_1",
-        sessionID: "ses_123",
-        messageID: "msg_123",
-        type: "tool",
-        callID: "call_1",
-        tool: "bash",
-        state: {
+      const result = formatPart(
+        tool({
           status: "completed",
           input: { command: "ls" },
-          output: "file1.txt",
-          title: "List files",
-          metadata: {},
-          time: { start: 1000, end: 1100 },
-        },
-      }
-      const result = formatPart(part, { ...options, toolDetails: false })
+          content: [{ type: "text", text: "file1.txt" }],
+          structured: {},
+        }),
+        { ...options, toolDetails: false },
+      )
       expect(result).toContain("**Tool: bash**")
       expect(result).not.toContain("**Input:**")
       expect(result).not.toContain("**Output:**")
     })
 
     test("formats tool error", () => {
-      const part: Part = {
-        id: "part_1",
-        sessionID: "ses_123",
-        messageID: "msg_123",
-        type: "tool",
-        callID: "call_1",
-        tool: "bash",
-        state: {
+      const result = formatPart(
+        tool({
           status: "error",
           input: { command: "invalid" },
-          error: "Command failed",
-          time: { start: 1000, end: 1100 },
-        },
-      }
-      const result = formatPart(part, options)
+          content: [],
+          structured: {},
+          error: { type: "unknown", message: "Command failed" },
+        }),
+        options,
+      )
       expect(result).toContain("**Error:**")
       expect(result).toContain("Command failed")
     })
@@ -258,88 +206,46 @@ describe("transcript", () => {
     const options = { thinking: true, toolDetails: true, assistantMetadata: true, providers }
 
     test("formats user message", () => {
-      const msg: UserMessage = {
-        id: "msg_123",
-        sessionID: "ses_123",
-        role: "user",
-        agent: "maestro",
-        model: { providerID: "anthropic", modelID: "claude-sonnet-4-20250514" },
-        time: { created: 1000000 },
-      }
-      const parts: Part[] = [{ id: "p1", sessionID: "ses_123", messageID: "msg_123", type: "text", text: "Hello" }]
-      const result = formatMessage(msg, parts, options)
+      const result = formatMessage(user("msg_123", 1000000, "Hello"), options)
       expect(result).toContain("## User")
       expect(result).toContain("Hello")
     })
 
-    test("formats assistant message with metadata", () => {
-      const msg: AssistantMessage = {
-        id: "msg_123",
-        sessionID: "ses_123",
-        role: "assistant",
-        agent: "maestro",
-        modelID: "claude-sonnet-4-20250514",
-        providerID: "anthropic",
-        mode: "",
-        parentID: "msg_parent",
-        path: { cwd: "/test", root: "/test" },
-        cost: 0.001,
-        tokens: { input: 100, output: 50, reasoning: 0, cache: { read: 0, write: 0 } },
-        time: { created: 1000000, completed: 1005400 },
+    test("skips host-injected synthetic messages", () => {
+      const message: SessionMessage = {
+        id: "msg_1",
+        type: "synthetic",
+        sessionID: "ses_1",
+        text: "Synthetic content",
+        time: { created: 1 },
       }
-      const parts: Part[] = [{ id: "p1", sessionID: "ses_123", messageID: "msg_123", type: "text", text: "Hi there" }]
-      const result = formatMessage(msg, parts, options)
+      expect(formatMessage(message, options)).toBe("")
+    })
+
+    test("formats assistant message with metadata", () => {
+      const result = formatMessage(
+        assistant("msg_123", 1000000, [{ type: "text", id: "t1", text: "Hi there" }]),
+        options,
+      )
       expect(result).toContain("## Assistant (Maestro · Claude Sonnet 4 · 5.4s)")
       expect(result).toContain("Hi there")
     })
   })
 
   describe("formatTranscript", () => {
+    const session = { id: "ses_abc123", title: "Test Session", time: { created: 1000000000000, updated: 1000000001000 } }
+
     test("formats complete transcript", () => {
-      const session = {
-        id: "ses_abc123",
-        title: "Test Session",
-        time: { created: 1000000000000, updated: 1000000001000 },
-      }
-      const messages = [
-        {
-          info: {
-            id: "msg_1",
-            sessionID: "ses_abc123",
-            role: "user" as const,
-            agent: "maestro",
-            model: { providerID: "anthropic", modelID: "claude-sonnet-4-20250514" },
-            time: { created: 1000000000000 },
-          },
-          parts: [{ id: "p1", sessionID: "ses_abc123", messageID: "msg_1", type: "text" as const, text: "Hello" }],
-        },
-        {
-          info: {
-            id: "msg_2",
-            sessionID: "ses_abc123",
-            role: "assistant" as const,
-            agent: "maestro",
-            modelID: "claude-sonnet-4-20250514",
-            providerID: "anthropic",
-            mode: "",
-            parentID: "msg_1",
-            path: { cwd: "/test", root: "/test" },
-            cost: 0.001,
-            tokens: { input: 100, output: 50, reasoning: 0, cache: { read: 0, write: 0 } },
+      const result = formatTranscript(
+        session,
+        [
+          user("msg_1", 1000000000000, "Hello"),
+          assistant("msg_2", 1000000000100, [{ type: "text", id: "t1", text: "Hi!" }], {
             time: { created: 1000000000100, completed: 1000000000600 },
-          },
-          parts: [{ id: "p2", sessionID: "ses_abc123", messageID: "msg_2", type: "text" as const, text: "Hi!" }],
-        },
-      ]
-      const options = {
-        thinking: false,
-        toolDetails: false,
-        assistantMetadata: true,
-        providers,
-      }
-
-      const result = formatTranscript(session, messages, options)
-
+          }),
+        ],
+        { thinking: false, toolDetails: false, assistantMetadata: true, providers },
+      )
       expect(result).toContain("# Test Session")
       expect(result).toContain("**Session ID:** ses_abc123")
       expect(result).toContain("## User")
@@ -349,98 +255,21 @@ describe("transcript", () => {
       expect(result).toContain("---")
     })
 
-    test("orders messages by creation time and preserves part order", () => {
-      const message = (id: string, created: number, parts: string[]) => ({
-        info: {
-          id,
-          sessionID: "ses_abc123",
-          role: "user" as const,
-          agent: "maestro",
-          model: { providerID: "anthropic", modelID: "claude" },
-          time: { created },
-        },
-        parts: parts.map((text, index) => ({
-          id: `part_${parts.length - index}`,
-          sessionID: "ses_abc123",
-          messageID: id,
-          type: "text" as const,
-          text,
-        })),
-      })
+    test("orders messages by creation time", () => {
       const result = formatTranscript(
         { id: "ses_abc123", title: "Order", time: { created: 1, updated: 2 } },
-        [message("msg_a", 30, ["third"]), message("msg_z", 10, ["first", "second"])],
+        [user("msg_a", 30, "second"), user("msg_z", 10, "first")],
         { thinking: false, toolDetails: false, assistantMetadata: false },
       )
-
       expect(result.indexOf("first")).toBeLessThan(result.indexOf("second"))
-      expect(result.indexOf("second")).toBeLessThan(result.indexOf("third"))
-    })
-
-    test("falls back to raw model id when provider data is missing", () => {
-      const session = {
-        id: "ses_abc123",
-        title: "Test Session",
-        time: { created: 1000000000000, updated: 1000000001000 },
-      }
-      const messages = [
-        {
-          info: {
-            id: "msg_1",
-            sessionID: "ses_abc123",
-            role: "assistant" as const,
-            agent: "maestro",
-            modelID: "claude-sonnet-4-20250514",
-            providerID: "anthropic",
-            mode: "",
-            parentID: "msg_0",
-            path: { cwd: "/test", root: "/test" },
-            cost: 0.001,
-            tokens: { input: 100, output: 50, reasoning: 0, cache: { read: 0, write: 0 } },
-            time: { created: 1000000000100, completed: 1000000000600 },
-          },
-          parts: [{ id: "p1", sessionID: "ses_abc123", messageID: "msg_1", type: "text" as const, text: "Response" }],
-        },
-      ]
-
-      const result = formatTranscript(session, messages, {
-        thinking: false,
-        toolDetails: false,
-        assistantMetadata: true,
-      })
-
-      expect(result).toContain("## Assistant (Maestro · claude-sonnet-4-20250514 · 0.5s)")
     })
 
     test("formats transcript without assistant metadata", () => {
-      const session = {
-        id: "ses_abc123",
-        title: "Test Session",
-        time: { created: 1000000000000, updated: 1000000001000 },
-      }
-      const messages = [
-        {
-          info: {
-            id: "msg_1",
-            sessionID: "ses_abc123",
-            role: "assistant" as const,
-            agent: "maestro",
-            modelID: "claude-sonnet-4-20250514",
-            providerID: "anthropic",
-            mode: "",
-            parentID: "msg_0",
-            path: { cwd: "/test", root: "/test" },
-            cost: 0.001,
-            tokens: { input: 100, output: 50, reasoning: 0, cache: { read: 0, write: 0 } },
-            time: { created: 1000000000100, completed: 1000000000600 },
-          },
-          parts: [{ id: "p1", sessionID: "ses_abc123", messageID: "msg_1", type: "text" as const, text: "Response" }],
-        },
-      ]
-      const options = { thinking: false, toolDetails: false, assistantMetadata: false }
-
-      const result = formatTranscript(session, messages, options)
-
+      const result = formatTranscript(
+        session,
+        [assistant("msg_2", 1000000000100, [{ type: "text", id: "t1", text: "Hi!" }])],
+        { thinking: false, toolDetails: false, assistantMetadata: false },
+      )
       expect(result).toContain("## Assistant\n\n")
       expect(result).not.toContain("Maestro")
       expect(result).not.toContain("claude-sonnet-4-20250514")

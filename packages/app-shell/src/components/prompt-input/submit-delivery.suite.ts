@@ -9,15 +9,9 @@ import { ServerScope } from "@/utils/server-scope"
 import { ServerConnection } from "@/context/server"
 import { queuedPromptSources } from "./queued-prompt"
 import {
-  behaviorReads,
-  behaviors,
-  clientFor,
   commands,
   createPromptSubmit,
-  events,
-  followupSystem,
   optimistic,
-  profileProjects,
   prompt,
   promptInputs,
   sendFollowupDraft,
@@ -174,83 +168,6 @@ describe("prompt delivery and model selection", () => {
       agents: [],
     })
     expect((promptInputs[0] as { id?: string }).id).toStartWith("msg_")
-    expect((promptInputs[0] as { legacyParts?: { id: string; type: string; text?: string }[] }).legacyParts).toEqual([
-      { id: expect.stringMatching(/^prt_/), type: "text", text: "ls" },
-    ])
-  })
-
-  test("reads the profile's LLM behaviors when each message is sent, after the input clears", async () => {
-    state.params = { id: "session-1" }
-    const submit = createPromptSubmit({
-      ...submitInput(),
-      setPopover: () => void events.push("clear input"),
-    })
-    const event = { preventDefault: () => undefined } as unknown as Event
-
-    behaviors.system = "## Caveman (intensity: ultra)"
-    await submit.handleSubmit(event)
-    await Bun.sleep(0)
-    behaviors.system = undefined
-    await submit.handleSubmit(event)
-    await Bun.sleep(0)
-
-    expect(events).toEqual(["clear input", "resolve behaviors", "clear input", "resolve behaviors"])
-    expect(behaviorReads).toEqual([
-      { scope: "local", directory: "/repo/main", projects: profileProjects },
-      { scope: "local", directory: "/repo/main", projects: profileProjects },
-    ])
-    expect(promptInputs).toHaveLength(2)
-    expect((promptInputs[0] as { system?: string }).system).toBe("## Caveman (intensity: ultra)")
-    expect((promptInputs[1] as { system?: string }).system).toBeUndefined()
-  })
-
-  test("a failing behavior read still sends the message, without behaviors", async () => {
-    state.params = { id: "session-1" }
-    behaviors.fail = true
-    await createPromptSubmit(submitInput()).handleSubmit({ preventDefault: () => undefined } as unknown as Event)
-    await Bun.sleep(0)
-
-    expect(promptInputs).toHaveLength(1)
-    expect(promptInputs[0]).toMatchObject({ sessionID: "session-1", text: "ls" })
-    expect((promptInputs[0] as { system?: string }).system).toBeUndefined()
-  })
-
-  test("a queued message stores no behaviors; they are read when it is sent", async () => {
-    state.params = { id: "session-1" }
-    behaviors.system = "## Caveman (intensity: lite)"
-    const queued: FollowupDraft[] = []
-    await createPromptSubmit({
-      ...submitInput(),
-      shouldQueue: () => true,
-      onQueue: (draft) => void queued.push(draft),
-    }).handleSubmit({ preventDefault: () => undefined } as unknown as Event)
-
-    expect(queued).toHaveLength(1)
-    expect(queued[0]).not.toHaveProperty("system")
-    expect(behaviorReads).toEqual([])
-    expect(promptInputs).toEqual([])
-
-    const sync = { data: { command: [] }, session: { optimistic: { add: () => {}, remove: () => {} } } }
-    const serverSync = { data: { project: profileProjects }, session: { set: () => {} } }
-    const send = (draft: FollowupDraft) =>
-      sendFollowupDraft({
-        api: clientFor("/repo/main").api.session as unknown as Parameters<typeof sendFollowupDraft>[0]["api"],
-        sync: sync as unknown as Parameters<typeof sendFollowupDraft>[0]["sync"],
-        serverSync: serverSync as unknown as Parameters<typeof sendFollowupDraft>[0]["serverSync"],
-        draft,
-      })
-    const system = await followupSystem(
-      { platform: "web" } as Parameters<typeof followupSystem>[0],
-      "local" as Parameters<typeof followupSystem>[1],
-      serverSync as unknown as Parameters<typeof followupSystem>[2],
-      "/repo/worktree-a",
-    )
-    await send({ ...queued[0]!, system })
-    await send(queued[0]!)
-
-    expect(behaviorReads).toEqual([{ scope: "local", directory: "/repo/worktree-a", projects: profileProjects }])
-    expect((promptInputs[0] as { system?: string }).system).toBe("## Caveman (intensity: lite)")
-    expect((promptInputs[1] as { system?: string }).system).toBeUndefined()
   })
 
   test("sends the composer's delivery choice with prompts and commands to an existing session", async () => {
@@ -281,7 +198,7 @@ describe("prompt delivery and model selection", () => {
     expect(promptInputs).toHaveLength(1)
     expect(promptInputs[0]).toMatchObject({ sessionID: "session-1", text: "ls", delivery: "queue" })
 
-    // Without a choice (a V1 server), no delivery field is sent at all.
+    // Without a choice, no delivery field is sent at all.
     state.promptValue = [{ type: "text", content: "ls", start: 0, end: 2 }]
     await submit(undefined).handleSubmit(event)
     await Bun.sleep(0)

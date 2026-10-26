@@ -1,7 +1,9 @@
-import { createOrchestraClient } from "../compat/sdk-v2"
-import type { GlobalEvent } from "../compat/schema"
-import { Flag } from "@orchestra/core/flag/flag"
+import { Orchestra } from "@orchestra/client"
+import { createSessionActions } from "./session-actions"
+import { createCatalog } from "./catalog"
+import type { GlobalEvent } from "../types"
 import { createSimpleContext } from "./helper"
+import { isDemoRequest } from "./demo"
 import { batch, createSignal, onCleanup, onMount } from "solid-js"
 
 export type EventSource = {
@@ -20,17 +22,10 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
     const abort = new AbortController()
     let sse: AbortController | undefined
 
-    function createSDK() {
-      return createOrchestraClient({
-        baseUrl: props.url,
-        signal: abort.signal,
-        directory: props.directory,
-        fetch: props.fetch,
-        headers: props.headers,
-      })
-    }
-
-    let sdk = createSDK()
+    // The V2 client serves session actions, the catalog the store bootstraps from, and the event stream.
+    const v2 = Orchestra.make({ baseUrl: props.url, fetch: props.fetch, headers: props.headers })
+    const actions = createSessionActions(v2)
+    const catalog = createCatalog(v2)
     // True while the event stream is down and being retried. Embedded event sources have no stream to observe.
     const [offline, setOffline] = createSignal(false)
 
@@ -90,25 +85,18 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
         while (true) {
           if (abort.signal.aborted || ctrl.signal.aborted) break
 
-          const events = await sdk.global
-            .event({ signal: ctrl.signal, sseMaxRetryAttempts: 0 })
-            .catch(() => undefined)
-
-          if (events) {
-            setOffline(false)
-            if (Flag.ORCHESTRA_EXPERIMENTAL_WORKSPACES) {
-              // Start syncing workspaces, it's important to do this after
-              // we've started listening to events
-              await sdk.sync.start().catch(() => {})
+          // The V2 stream carries native events; the store handlers still take the legacy GlobalEvent envelope.
+          await (async () => {
+            for await (const event of v2.events.subscribe({ signal: ctrl.signal })) {
+              if (ctrl.signal.aborted) break
+              setOffline(false)
+              handleEvent({
+                directory: event.location?.directory ?? props.directory ?? "",
+                workspace: event.location?.workspaceID,
+                payload: { id: event.id, type: event.type, data: event.data } as GlobalEvent["payload"],
+              })
             }
-
-            await (async () => {
-              for await (const event of events.stream) {
-                if (ctrl.signal.aborted) break
-                handleEvent(event)
-              }
-            })().catch(() => {})
-          }
+          })().catch(() => {})
           if (!abort.signal.aborted && !ctrl.signal.aborted) setOffline(true)
 
           if (timer) clearTimeout(timer)
@@ -127,15 +115,9 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
       if (props.events) {
         const unsub = await props.events.subscribe(handleEvent)
         onCleanup(unsub)
-
-        if (Flag.ORCHESTRA_EXPERIMENTAL_WORKSPACES) {
-          // Start syncing workspaces, it's important to do this after
-          // we've started listening to events
-          await sdk.sync.start().catch(() => {})
-        }
-      } else {
-        startSSE()
+        return
       }
+      startSSE()
     })
 
     onCleanup(() => {
@@ -145,10 +127,43 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
       handlers.clear()
     })
 
-    return {
-      get client() {
-        return sdk
+    // Replies to the requests the mini-mode demo made up are answered here instead of by the server.
+    const answerLocally = (type: string, data: Record<string, unknown>) =>
+      emitter.emit("event", {
+        directory: props.directory ?? "",
+        payload: { id: `demo_evt_${type}`, type, data },
+      } as GlobalEvent)
+    const api = {
+      ...v2,
+      permissions: {
+        ...v2.permissions,
+        reply: (input: Parameters<typeof v2.permissions.reply>[0], options?: Parameters<typeof v2.permissions.reply>[1]) =>
+          isDemoRequest(input.requestID)
+            ? Promise.resolve(
+                answerLocally("permission.v2.replied", { sessionID: input.sessionID, requestID: input.requestID, reply: input.reply }),
+              )
+            : v2.permissions.reply(input, options),
       },
+      questions: {
+        ...v2.questions,
+        reply: (input: Parameters<typeof v2.questions.reply>[0], options?: Parameters<typeof v2.questions.reply>[1]) =>
+          isDemoRequest(input.requestID)
+            ? Promise.resolve(
+                answerLocally("question.v2.replied", { sessionID: input.sessionID, requestID: input.requestID, answers: input.answers }),
+              )
+            : v2.questions.reply(input, options),
+        reject: (input: Parameters<typeof v2.questions.reject>[0], options?: Parameters<typeof v2.questions.reject>[1]) =>
+          isDemoRequest(input.requestID)
+            ? Promise.resolve(answerLocally("question.v2.rejected", { sessionID: input.sessionID, requestID: input.requestID }))
+            : v2.questions.reject(input, options),
+      },
+    }
+
+    return {
+      // The V2 Orchestra client.
+      api,
+      actions,
+      catalog,
       offline,
       directory: props.directory,
       event: emitter,

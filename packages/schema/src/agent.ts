@@ -19,6 +19,8 @@ export type Color = typeof Color.Type
 export interface Info extends Schema.Schema.Type<typeof Info> {}
 export const Info = Schema.Struct({
   id: ID,
+  /** Display label; the id stays the address. */
+  name: Schema.String.pipe(optional),
   engine: Schema.Literals(["orchestra", "claude-code"]).pipe(optional),
   model: Model.Ref.pipe(optional),
   request: Provider.Request,

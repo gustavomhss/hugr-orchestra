@@ -6,18 +6,18 @@
   "type": "module",
   "license": "MIT",
   "exports": {
-    "./alias": "./src/alias.ts",
     "./archive-search": "./src/archive-search.ts",
-    "./dry-transport": "./src/dry-transport.ts",
-    "./masking": "./src/masking.ts",
-    "./raw-payload": "./src/raw-payload.ts",
-    "./request-source": "./src/request-source.ts"
+    "./masking-rules": "./src/masking-rules.ts",
+    "./v2": "./src/v2/index.ts"
   },
   "scripts": {
-    "typecheck": "tsgo --noEmit"
+    "typecheck": "tsgo --noEmit",
+    "test": "bun test --timeout 30000"
   },
   "dependencies": {
     "@orchestra/core": "workspace:*",
+    "@orchestra/llm": "workspace:*",
+    "@orchestra/schema": "workspace:*",
     "effect": "catalog:",
     "jsonc-parser": "3.3.1"
   },

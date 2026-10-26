@@ -1,8 +1,0 @@
-Replace text in a file: `oldString` becomes `newString`.
-
-- Copy `oldString` from a current read of the file, with enough surrounding lines that it occurs once. An `oldString` found more than once fails unless `replaceAll` is set, which replaces every occurrence.
-- When `oldString` has no exact match, looser matches are tried: ignoring indentation and spacing, reading escapes such as `\n` as the characters they stand for, or taking a block of three or more lines whose first and last lines match and whose middle lines are only similar. The text found in the file is then replaced with `newString` as written, even where it differs from `oldString`.
-- The result says only that the edit was applied, so re-read the changed lines when `oldString` was not copied exactly from the current file.
-- When nothing matches closely enough, or the match is much larger than `oldString`, the edit fails; re-read the file before trying again.
-- An empty `oldString` creates a new file with `newString` as its content, and fails if the file exists.
-- The file keeps its line endings and any byte-order mark. A formatter the project configured may reformat it afterwards.

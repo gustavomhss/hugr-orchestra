@@ -1,6 +1,6 @@
 import type { ToolPart } from "@/v2-wire"
 
-import type { SessionMessageInfo } from "@/v2-legacy"
+import type { SessionMessageInfo } from "@/session-types"
 
 
 import {
@@ -46,7 +46,7 @@ export function isShellTool(tool: string) {
   return tool === "bash" || tool === "shell"
 }
 
-// Live V2 projection also indexes its synthetic assistant in the legacy source
+// The live projection also indexes its synthetic assistant in the message source
 // list. The raw shell already projects that assistant; emitting both duplicates
 // the same part/virtual row identity. Historical real assistants remain intact.
 export function withoutShellProjections(messages: SessionMessageInfo[]) {

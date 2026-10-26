@@ -20,7 +20,7 @@ bun dev
 ```
 
 The `predev` lifecycle installs Electron, copies channel-specific icons, builds
-the legacy Orchestra Node bundle, stages Omni, and builds/stages the V2 CLI
+stages Omni, and builds/stages the V2 CLI
 resources. Then `dev` starts Electron Vite. Icons use `ORCHESTRA_CHANNEL` or
 `dev`; `predev` always uses Omni's `dev` staging policy. Bundle channel/version
 stamping follows the build helpers rather than one shared preparation default.
@@ -32,8 +32,7 @@ bun run build
 bun run package
 ```
 
-`prebuild` prepares channel-specific icons and Linux metainfo, builds the legacy
-Node bundle, stages Omni, and builds/stages CLI resources before Electron Vite
+`prebuild` prepares channel-specific icons and Linux metainfo, stages Omni, and builds/stages CLI resources before Electron Vite
 builds the main, preload, and renderer outputs in `out/`. `package` runs
 electron-builder and writes distributables under `dist/`. Platform-specific
 scripts are `package:mac`, `package:win`, and `package:linux`.
@@ -46,15 +45,14 @@ when it crashes, and stops with the app (`src/main/owned-serve.ts`). It reaches 
 through a loopback channel (`src/main/dock-channel.ts`). On its first start it copies V1 transcripts from the shared
 database into V2 once.
 
-`ORCHESTRA_SIDECAR_V2` selects another server for the launch:
+`ORCHESTRA_SIDECAR` selects another server for the launch:
 
 | Value | Server |
 | --- | --- |
-| unset or `owned` | the desktop-owned V2 `orchestra serve` child (default) |
-| `legacy` (or `0`) | the V1 Node sidecar, kept for one release as the fallback, then removed |
-| `1` | the shared V2 background daemon managed through the CLI |
+| unset or `owned` | the desktop-owned `orchestra serve` child (default) |
+| `shared` | the shared background daemon managed through the CLI |
 
-The lean candidate profile pins the V1 fallback, since its acceptance proofs drive the Node sidecar.
+The lean candidate profile always uses the desktop-owned child.
 
 ## Persistent data
 

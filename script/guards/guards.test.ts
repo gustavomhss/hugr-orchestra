@@ -573,24 +573,23 @@ describe("runGuards", () => {
   test("the migration pack flags edits to shipped migrations and destructive SQL, and accepts a new safe migration", () => {
     const cwd = repo()
     cpSync(guardsDir, join(cwd, "script/guards"), { recursive: true })
-    const old = "apps/orchestra/migration/20260101000000_first/migration.sql"
-    write(cwd, old, "CREATE TABLE `a` (`id` text);\n")
-    write(cwd, "packages/core/src/database/migration/20260101000001_second.ts", "export default {}\n")
+    const old = "packages/core/src/database/migration/20260101000000_first.ts"
+    write(cwd, old, "export default {}\n")
     commit(cwd, "base")
     git(cwd, "checkout", "--quiet", "-b", "change")
     const ids = () =>
       runGuards({ cwd, baseRef: "main", approved: [] })
         .findings.map((finding) => `${finding.rule} ${finding.path}`)
         .sort()
-    write(cwd, "apps/orchestra/migration/20260201000000_safe/migration.sql", "ALTER TABLE `a` ADD `b` text;\nDROP INDEX `a_idx`;\n")
+    write(cwd, "packages/core/src/database/migration/20260201000000_safe.ts", "      yield* tx.run(`ALTER TABLE \\`a\\` ADD \\`b\\` text;`)\n      yield* tx.run(`DROP INDEX \\`a_idx\\`;`)\n")
     commit(cwd, "safe")
     expect(ids()).toEqual([])
-    write(cwd, old, "CREATE TABLE `a` (`id` text, `c` text);\n")
-    write(cwd, "apps/orchestra/migration/20260301000000_bad/migration.sql", "ALTER TABLE `a` DROP COLUMN `b`;\nALTER TABLE `a` ADD `d` text NOT NULL;\n")
+    write(cwd, old, "export default { changed: true }\n")
+    write(cwd, "packages/core/src/database/migration/20260301000000_bad.ts", "      yield* tx.run(`ALTER TABLE \\`a\\` DROP COLUMN \\`b\\`;`)\n      yield* tx.run(`ALTER TABLE \\`a\\` ADD \\`d\\` text NOT NULL;`)\n")
     commit(cwd, "bad")
     expect(ids()).toEqual([
-      "migration-add-required-column apps/orchestra/migration/20260301000000_bad/migration.sql",
-      "migration-destructive apps/orchestra/migration/20260301000000_bad/migration.sql",
+      "migration-add-required-column packages/core/src/database/migration/20260301000000_bad.ts",
+      "migration-destructive packages/core/src/database/migration/20260301000000_bad.ts",
       "migration-edited " + old,
     ])
   })

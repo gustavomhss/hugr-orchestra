@@ -254,7 +254,7 @@ const make = Effect.gen(function* () {
 
   const off = yield* events.listen((event) => {
     const data = event.data as { sessionID?: unknown }
-    if (event.type !== "session.deleted") return Effect.void
+    if (event.type !== "session.next.deleted") return Effect.void
     if (typeof data?.sessionID !== "string") return Effect.void
     return stopSession(data.sessionID).pipe(Effect.ignore)
   })

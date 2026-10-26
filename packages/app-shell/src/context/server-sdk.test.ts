@@ -1,14 +1,14 @@
 import { describe, expect, test } from "bun:test"
-import { adaptServerEvent, coalesceServerEvents, createServerProtocolPromise, enqueueServerEvent, resumeStreamAfterPageShow } from "./server-sdk"
-import type { OpenCodeEvent } from "@/v2-legacy"
+import { adaptServerEvent, coalesceServerEvents, createServerReadyPromise, resumeStreamAfterPageShow } from "./server-sdk"
+import type { ClientEvent } from "@/session-types"
 import type { Event } from "@/v2-wire"
 
-import { ServerProtocolUnresolvedError, type ServerProtocol } from "@/utils/server-protocol"
+import { ServerNotReadyError } from "@/utils/server-ready"
 import { createCompatibleApi } from "@/utils/server-compat"
 import { createApiForServer } from "@/utils/server"
 import { rejection } from "@/testing/rejection"
 
-describe("createServerProtocolPromise", () => {
+describe("createServerReadyPromise", () => {
   test("shares in-flight detection and retains a successful connection result", async () => {
     let probes = 0
     const listener = Bun.serve({
@@ -20,17 +20,17 @@ describe("createServerProtocolPromise", () => {
       },
     })
     try {
-      const protocol = createServerProtocolPromise({ url: listener.url.origin }, fetch)
-      expect(await Promise.all([protocol, protocol, protocol.then((kind) => kind)])).toEqual(["v2", "v2", "v2"])
-      expect(await protocol).toBe("v2")
+      const ready = createServerReadyPromise({ url: listener.url.origin }, fetch)
+      expect(await Promise.all([ready, ready, ready.then(() => "settled")])).toEqual([undefined, undefined, "settled"])
+      expect(await ready).toBeUndefined()
       expect(probes).toBe(1)
     } finally {
       listener.stop(true)
     }
   })
 
-  test("existing consumers recover a failed connection as v2", async () => {
-    const state = { ready: false, probes: 0, detected: undefined as ServerProtocol | undefined }
+  test("existing consumers recover a failed connection", async () => {
+    const state = { ready: false, probes: 0, detected: 0 }
     const paths: string[] = []
     const listener = Bun.serve({
       port: 0, hostname: "127.0.0.1",
@@ -47,22 +47,21 @@ describe("createServerProtocolPromise", () => {
     })
     try {
       const server = { url: listener.url.origin }
-      const protocol = createServerProtocolPromise(server, fetch, { attempts: 1 }, (value) => {
-        state.detected = value
+      const ready = createServerReadyPromise(server, fetch, { attempts: 1 }, () => {
+        state.detected++
       })
-      const chain = protocol.then((value) => value).then((value) => ({ kind: value }))
+      const chain = ready.then(() => ({ settled: true }))
       const api = createCompatibleApi({
-        protocol,
         current: createApiForServer({ server, fetch }),
       })
-      expect(await rejection(protocol)).toBeInstanceOf(ServerProtocolUnresolvedError)
-      expect(state.detected).toBeUndefined()
+      expect(await rejection(ready)).toBeInstanceOf(ServerNotReadyError)
+      expect(state.detected).toBe(0)
       expect(state.probes).toBe(3)
       state.ready = true
       expect(await api.project.list()).toEqual([])
-      expect(await chain).toEqual({ kind: "v2" })
-      expect(await protocol).toBe("v2")
-      expect(state.detected).toBe("v2")
+      expect(await chain).toEqual({ settled: true })
+      expect(await ready).toBeUndefined()
+      expect(state.detected).toBe(1)
       const probes = state.probes
       await api.project.list()
       expect(state.probes).toBe(probes)
@@ -87,13 +86,13 @@ describe("createServerProtocolPromise", () => {
     const abort = new AbortController()
     const reason = new DOMException("Connection disposed", "AbortError")
     try {
-      const protocol = createServerProtocolPromise({ url: listener.url.origin }, fetch, { signal: abort.signal })
-      const chain = protocol.then((kind) => kind)
+      const ready = createServerReadyPromise({ url: listener.url.origin }, fetch, { signal: abort.signal })
+      const chain = ready.then(() => undefined)
       const failed = rejection(chain)
       await reached.promise
       abort.abort(reason)
       expect(await failed).toBe(reason)
-      expect(await rejection(protocol)).toBe(reason)
+      expect(await rejection(ready)).toBe(reason)
       expect(probes).toBe(1)
     } finally {
       listener.stop(true)
@@ -114,181 +113,57 @@ describe("resumeStreamAfterPageShow", () => {
 })
 
 describe("adaptServerEvent", () => {
-  test("preserves V2 events while adapting permission requests for existing consumers", () => {
+  test("keeps V2 permission events under their V2 name with the event data as properties", () => {
     const current = {
       id: "evt_1",
       created: 1,
       type: "permission.v2.asked",
       data: { id: "perm_1", sessionID: "ses_1", action: "read", resources: ["src/**"] },
-    } as OpenCodeEvent
+    } as ClientEvent
 
     expect(adaptServerEvent(current)).toMatchObject({
-      type: "permission.asked",
-      properties: { id: "perm_1", sessionID: "ses_1", permission: "read", patterns: ["src/**"] },
+      type: "permission.v2.asked",
+      properties: { id: "perm_1", sessionID: "ses_1", action: "read", resources: ["src/**"] },
       current,
     })
   })
 })
 
 describe("coalesceServerEvents", () => {
-  const delta = (value: string, field = "text", partID = "part") => ({
-    directory: "/repo",
-    payload: {
-      type: "message.part.delta",
-      properties: { messageID: "msg", partID, field, delta: value },
-    } as Event,
-  })
-
-  test("merges adjacent deltas for the same field", () => {
-    const first = delta("hello ")
-    const second = delta("world")
-    first.payload.id = "first"
-    second.payload.id = "second"
-    const result = coalesceServerEvents([first, second])
-
-    expect(result).toHaveLength(1)
-    expect(result[0]?.payload).toMatchObject({ id: "second", properties: { delta: "hello world" } })
-  })
+  const textDelta = (id: string, value: string, ordinal = 0) =>
+    adaptServerEvent({
+      id,
+      created: 1,
+      type: "session.text.delta",
+      location: { directory: "/repo" },
+      data: { sessionID: "ses", assistantMessageID: "msg", ordinal, delta: value },
+    } as ClientEvent)
+  const queued = (payload: ReturnType<typeof adaptServerEvent>) => ({ directory: "/repo", payload })
 
   test("merges adjacent current text deltas", () => {
-    const current = (id: string, value: string) =>
-      adaptServerEvent({
-        id,
-        created: 1,
-        type: "session.text.delta",
-        location: { directory: "/repo" },
-        data: { sessionID: "ses", assistantMessageID: "msg", ordinal: 0, delta: value },
-      } as OpenCodeEvent)
-    const result = coalesceServerEvents([
-      { directory: "/repo", payload: current("evt_1", "hello ") },
-      { directory: "/repo", payload: current("evt_2", "world") },
-    ])
+    const result = coalesceServerEvents([queued(textDelta("evt_1", "hello ")), queued(textDelta("evt_2", "world"))])
 
     expect(result).toHaveLength(1)
     expect(result[0]?.payload.current).toMatchObject({ id: "evt_2", data: { delta: "hello world" } })
   })
 
-  test("preserves event boundaries and distinct fields", () => {
-    const status = {
-      directory: "/repo",
-      payload: { type: "session.status", properties: { sessionID: "ses", status: { type: "idle" } } } as Event,
-    }
-    const result = coalesceServerEvents([delta("a"), delta("b", "metadata"), status, delta("c")])
-
-    expect(result.map((event) => event.payload.type)).toEqual([
-      "message.part.delta",
-      "message.part.delta",
-      "session.status",
-      "message.part.delta",
+  test("preserves event boundaries and distinct ordinals", () => {
+    const boundary = queued(
+      adaptServerEvent({
+        id: "evt_end",
+        created: 1,
+        type: "session.text.ended",
+        location: { directory: "/repo" },
+        data: { sessionID: "ses", assistantMessageID: "msg", ordinal: 0, text: "ab" },
+      } as ClientEvent),
+    )
+    const result = coalesceServerEvents([
+      queued(textDelta("1", "a")),
+      queued(textDelta("2", "b", 1)),
+      boundary,
+      queued(textDelta("3", "c")),
     ])
-  })
 
-  test("preserves event ID order across interleaved deltas", () => {
-    const first = delta("a")
-    const other = delta("b", "text", "other")
-    const last = delta("c")
-    first.payload.id = "1"
-    other.payload.id = "2"
-    last.payload.id = "3"
-
-    const result = coalesceServerEvents([first, other, last])
-
-    expect(result.map((event) => event.payload.id)).toEqual(["1", "2", "3"])
-  })
-})
-
-describe("enqueueServerEvent", () => {
-  const partUpdated = (text: string) =>
-    ({
-      type: "message.part.updated",
-      properties: {
-        sessionID: "session",
-        part: { id: "part", sessionID: "session", messageID: "message", type: "text", text },
-      },
-    }) as Event
-
-  test("preserves part updates across message remove and re-add barriers", () => {
-    const events: Array<{ directory: string; payload: Event }> = []
-    const enqueue = (payload: Event) => enqueueServerEvent(events, { directory: "/repo", payload })
-
-    enqueue(partUpdated("old"))
-    enqueue({ type: "message.removed", properties: { sessionID: "session", messageID: "message" } } as Event)
-    enqueue({
-      type: "message.updated",
-      properties: {
-        sessionID: "session",
-        info: {
-          id: "message",
-          sessionID: "session",
-          role: "user",
-          time: { created: 1 },
-          agent: "build",
-          model: { providerID: "provider", modelID: "model" },
-        },
-      },
-    } as Event)
-    enqueue(partUpdated("new"))
-
-    expect(events.map((event) => event.payload.type)).toEqual([
-      "message.part.updated",
-      "message.removed",
-      "message.updated",
-      "message.part.updated",
-    ])
-  })
-
-  test("preserves deltas after a replacement snapshot", () => {
-    const events: Array<{ directory: string; payload: Event }> = []
-    const enqueue = (payload: Event) => enqueueServerEvent(events, { directory: "/repo", payload })
-
-    enqueue(partUpdated("a"))
-    enqueue(partUpdated("ab"))
-    enqueue({
-      type: "message.part.delta",
-      properties: { sessionID: "session", messageID: "message", partID: "part", field: "text", delta: "c" },
-    } as Event)
-
-    const result = coalesceServerEvents(events)
-    expect(result.map((event) => event.payload.type)).toEqual(["message.part.updated", "message.part.delta"])
-    expect(result[0]?.payload).toMatchObject({ properties: { part: { text: "ab" } } })
-    expect(result[1]?.payload).toMatchObject({ properties: { delta: "c" } })
-  })
-
-  test("preserves updates after session deletion", () => {
-    const events: Array<{ directory: string; payload: Event }> = []
-    const enqueue = (payload: Event) => enqueueServerEvent(events, { directory: "/repo", payload })
-
-    enqueue(partUpdated("old"))
-    enqueue({
-      type: "session.deleted",
-      properties: { sessionID: "session", info: { id: "session" } },
-    } as Event)
-    enqueue(partUpdated("new"))
-
-    expect(events.map((event) => event.payload.type)).toEqual([
-      "message.part.updated",
-      "session.deleted",
-      "message.part.updated",
-    ])
-  })
-
-  test("does not coalesce edge-triggered session statuses", () => {
-    const events: Array<{ directory: string; payload: Event }> = []
-    const enqueue = (status: "retry" | "busy") =>
-      enqueueServerEvent(events, {
-        directory: "/repo",
-        payload: {
-          type: "session.status",
-          properties: {
-            sessionID: "session",
-            status: status === "retry" ? { type: "retry", attempt: 1, message: "retry", next: 1 } : { type: "busy" },
-          },
-        } as Event,
-      })
-
-    enqueue("retry")
-    enqueue("busy")
-
-    expect(events).toHaveLength(2)
+    expect(result.map((event) => event.payload.id)).toEqual(["1", "2", "evt_end", "3"])
   })
 })

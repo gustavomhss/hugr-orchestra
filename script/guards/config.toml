@@ -4,10 +4,9 @@
 generated = [
   "packages/client/src/generated/**",
   "packages/client/src/generated-effect/**",
-  "packages/sdk/js/src/v2/gen/**",
   "modules/atlas/boundary/src/generated/**",
   "packages/app-shell/src/v2-wire.ts",
-  "packages/app-shell/src/v2-legacy*.ts",
+  "packages/app-shell/src/client-events.ts",
 ]
 
 # The engine's own rule samples contain the very text the rules look for.

@@ -102,7 +102,6 @@ test("Show in chat moves to the record's turn through the existing message hash"
   const errors: string[] = []
   page.on("pageerror", (error) => errors.push(error.message))
   await setupGovernance(page, {
-    protocol: "v2",
     agents: [build, maestro],
     config,
     messages: [],

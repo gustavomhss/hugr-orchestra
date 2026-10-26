@@ -111,12 +111,34 @@ const isTextualMime = (mime: string) =>
   mime.endsWith("+xml") ||
   mime === "application/javascript" ||
   mime === "application/x-javascript"
-const convert = (content: string, contentType: string, format: Format) => {
+export const convert = (content: string, contentType: string, format: Format) => {
   if (!contentType.includes("text/html")) return content
   if (format === "markdown") return convertHTMLToMarkdown(content)
   if (format === "text") return extractTextFromHTML(content)
   return content
 }
+
+/**
+ * The GET webfetch runs, without its permission: the final URL, its content type and the bounded received bytes.
+ * Research capture retains those bytes before it converts them, so it calls this under webfetch's own permission.
+ */
+export const fetch = (http: HttpClient.HttpClient, url: string, format: Format, timeout = DEFAULT_TIMEOUT_SECONDS) =>
+  Effect.gen(function* () {
+    yield* Effect.try({ try: () => assertHttpUrl(new URL(url)), catch: (error) => error })
+    const response = yield* execute(http, url, format).pipe(
+      Effect.catchIf(isCloudflareChallenge, () => execute(http, url, format, "orchestra")),
+    )
+    const contentType = response.headers["content-type"] || ""
+    const mime = mimeFrom(contentType)
+    if (isImageAttachment(mime)) return yield* Effect.fail(new Error(`Unsupported fetched image content type: ${mime}`))
+    if (!isTextualMime(mime)) return yield* Effect.fail(new Error(`Unsupported fetched file content type: ${mime}`))
+    return { url: response.request.url, contentType, body: yield* collectBody(response) }
+  }).pipe(
+    Effect.timeoutOrElse({
+      duration: Duration.seconds(timeout),
+      orElse: () => Effect.fail(new Error("Request timed out")),
+    }),
+  )
 
 const layer = Layer.effectDiscard(
   Effect.gen(function* () {
@@ -131,6 +153,12 @@ const layer = Layer.effectDiscard(
           input: Input,
           output: Output,
           toModelOutput: ({ output }) => [{ type: "text", text: output.output }],
+          // Native fetch results are attested for Lean 2.0; same-named application tools are not.
+          modelCapture: ({ output }) => ({
+            textIndex: 0,
+            observation: { source: "other", command: name, output: output.output, termination: { kind: "exited", code: 0 },
+              completeness: "complete", presentation: "unknown" },
+          }),
           execute: (input, context) =>
             Effect.gen(function* () {
               yield* Effect.try({
@@ -148,23 +176,7 @@ const layer = Layer.effectDiscard(
                 source: { type: "tool", messageID: context.assistantMessageID, callID: context.toolCallID },
               })
 
-              const { body, contentType } = yield* Effect.gen(function* () {
-                const response = yield* execute(http, input.url, input.format).pipe(
-                  Effect.catchIf(isCloudflareChallenge, () => execute(http, input.url, input.format, "orchestra")),
-                )
-                const contentType = response.headers["content-type"] || ""
-                const mime = mimeFrom(contentType)
-                if (isImageAttachment(mime))
-                  return yield* Effect.fail(new Error(`Unsupported fetched image content type: ${mime}`))
-                if (!isTextualMime(mime))
-                  return yield* Effect.fail(new Error(`Unsupported fetched file content type: ${mime}`))
-                return { body: yield* collectBody(response), contentType }
-              }).pipe(
-                Effect.timeoutOrElse({
-                  duration: Duration.seconds(input.timeout ?? DEFAULT_TIMEOUT_SECONDS),
-                  orElse: () => Effect.fail(new Error("Request timed out")),
-                }),
-              )
+              const { body, contentType } = yield* fetch(http, input.url, input.format, input.timeout)
               const content = new TextDecoder().decode(body)
               const output = yield* Effect.try({
                 try: () => convert(content, contentType, input.format),

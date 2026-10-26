@@ -57,7 +57,6 @@ export async function evidencePage(
   }
   const metadata = { exit: 0, truncated: false, ...input.metadata }
   await mockOrchestraServer(page, {
-    protocol: "v2",
     directory: root,
     project: { ...project(), worktree: root },
     provider: {

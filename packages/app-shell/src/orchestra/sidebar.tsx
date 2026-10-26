@@ -156,7 +156,7 @@ export function OrchestraSidebar(props: {
       return { queryKey: ["orchestra-profile-agents"], queryFn: skipToken }
     return global.ensureServerCtx(target.conn).sync.queryOptions.agents(directoryKey(target.directory))
   })
-  // Legacy servers answer GET /vcs; a server that does not (V2) leaves the branch off the card.
+  // A server that cannot answer the branch read leaves it off the card.
   const branch = useQuery(() => {
     const target = profile()
     const conn = target.conn

@@ -118,7 +118,7 @@ function lddOutput() {
   return `${result.stdout ?? ""}${result.stderr ?? ""}`
 }
 
-// Mirrors the host installer's probes (`install`, `apps/orchestra/bin/orchestra`): an unreadable probe is "no AVX2".
+// Mirrors the host installer's probes (`apps/cli/distribution/install.sh`): an unreadable probe is "no AVX2".
 function hasAvx2() {
   if (process.platform === "linux") {
     return existsSync("/proc/cpuinfo") && /(^|\s)avx2(\s|$)/i.test(readFileSync("/proc/cpuinfo", "utf8"))

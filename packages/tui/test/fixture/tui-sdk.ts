@@ -1,4 +1,4 @@
-import type { GlobalEvent } from "@orchestra/sdk/v2"
+import type { GlobalEvent } from "../../src/types"
 import type { EventSource } from "../../src/context/sdk"
 
 export const worktree = "/tmp/orchestra"
@@ -31,12 +31,10 @@ export function createEventSource() {
     emit(event: GlobalEvent) {
       if (!fn) throw new Error("event source not ready")
       fn(event)
-      if (!("properties" in event.payload)) return
       const chunk = new TextEncoder().encode(
         `data: ${JSON.stringify({
           ...event.payload,
           location: { directory: event.directory, workspaceID: event.workspace },
-          data: event.payload.properties,
         })}\n\n`,
       )
       if (stream) return stream.enqueue(chunk)
@@ -59,33 +57,31 @@ export function createEventSource() {
   }
 }
 
+// A V2 Session as `/api/session` routes return it.
+export function v2Session(input: { id: string; title?: string; directory?: string; subpath?: string }) {
+  return {
+    id: input.id,
+    projectID: "proj_test",
+    title: input.title ?? input.id,
+    cost: 0,
+    tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+    time: { created: 0, updated: 0 },
+    location: { directory: input.directory ?? directory },
+    subpath: input.subpath,
+  }
+}
+
 export type FetchHandler = (url: URL) => Response | Promise<Response> | undefined
 
 export function createFetch(override?: FetchHandler, events?: ReturnType<typeof createEventSource>) {
   const session = [] as URL[]
   const fetch = (async (input: RequestInfo | URL) => {
     const url = new URL(input instanceof Request ? input.url : String(input))
-    if (url.pathname === "/session") session.push(url)
+    if (url.pathname === "/api/session") session.push(url)
     const overridden = await override?.(url)
     if (overridden) return overridden
     if (url.pathname === "/api/event" && events) return events.response()
 
-    if (
-      [
-        "/agent",
-        "/command",
-        "/experimental/workspace",
-        "/experimental/workspace/status",
-        "/formatter",
-        "/lsp",
-      ].includes(url.pathname)
-    )
-      return json([])
-    if (["/config", "/experimental/resource", "/mcp", "/provider/auth", "/session/status"].includes(url.pathname))
-      return json({})
-    if (url.pathname === "/config/providers") return json({ providers: {}, default: {} })
-    if (url.pathname === "/experimental/capabilities") return json({ backgroundSubagents: false })
-    if (url.pathname === "/path") return json({ home: "", state: "", config: "", worktree, directory })
     if (url.pathname === "/api/location") return json({ directory, project: { id: "proj_test", directory: worktree } })
     if (
       ["/api/agent", "/api/model", "/api/provider", "/api/integration", "/api/command", "/api/skill"].includes(
@@ -96,12 +92,21 @@ export function createFetch(override?: FetchHandler, events?: ReturnType<typeof 
         location: { directory, project: { id: "proj_test", directory: worktree } },
         data: [],
       })
-    if (url.pathname === "/project/current") return json({ id: "proj_test" })
+    if (["/api/formatter", "/api/lsp", "/api/mcp"].includes(url.pathname))
+      return json({ location: { directory, project: { id: "proj_test", directory: worktree } }, data: [] })
+    if (url.pathname === "/api/model/default")
+      return json({ location: { directory, project: { id: "proj_test", directory: worktree } }, data: null })
+    if (url.pathname === "/api/vcs")
+      return json({
+        location: { directory, project: { id: "proj_test", directory: worktree } },
+        data: { branch: "main" },
+      })
+    if (url.pathname === "/api/config") return json({ disabledProviders: [] })
+    if (url.pathname === "/api/session") return json({ data: [], cursor: {} })
+    if (url.pathname === "/api/session/active") return json({ data: {} })
+    if (url.pathname === "/api/project/proj_test/directories") return json([])
     if (url.pathname === "/api/reference")
       return json({ location: { directory, project: { id: "proj_test", directory } }, data: [] })
-    if (url.pathname === "/provider") return json({ all: [], default: {}, connected: [] })
-    if (url.pathname === "/session") return json([])
-    if (url.pathname === "/vcs") return json({ branch: "main" })
     throw new Error(`unexpected request: ${url.pathname}`)
   }) as typeof globalThis.fetch
   return { fetch, session }

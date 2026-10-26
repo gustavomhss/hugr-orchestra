@@ -4,7 +4,7 @@
 //   own          — `OWN-SNAPSHOT.json` through `parseOwnSnapshot`, `.orchestra/skills/own/OWN-COVERAGE.json` through
 //                  `parseStaticOwnCoverage` (both `@atlas/retrieval`, the parsers Orchestra's own read relies on),
 //                  and the first 4 KB of every published `SKILL.md`. Read from the repository root, where
-//                  Orchestra's Atlas source reads them (packages/orchestra/src/maestro/atlas-source.ts).
+//                  Orchestra's Atlas source reads them.
 //   memory       — `.atlas/memory.jsonl` through the durable memory store (`../memory-store.ts`), grouped by member.
 //   orientation  — `.atlas/orientation.jsonl` through the durable orientation store (`../orientation-store.ts`).
 //   territories  — `TERRITORY-CATALOG.json` through `parseTerritoryCatalog` (`@atlas/index`).

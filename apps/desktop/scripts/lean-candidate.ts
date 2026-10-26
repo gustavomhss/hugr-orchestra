@@ -6,13 +6,12 @@ import { spawn } from "node:child_process"
 import { tmpdir } from "node:os"
 import { omniTargets } from "@orchestra/script/omni"
 import { RipgrepBundle } from "@orchestra/core/ripgrep/bundle"
-import { leanPin, sha256 } from "../../orchestra/script/lean-notices"
+import { leanNotices, leanOutput, leanPin, sha256 } from "./lean-notices"
 import { nativeCliTarget, signatureCheck } from "../src/main/cli-artifacts"
 
 const desktop = path.resolve(import.meta.dirname, "..")
 const root = path.resolve(desktop, "../..")
 const output = path.join(desktop, "dist-candidate")
-const backend = path.resolve(desktop, "../orchestra/dist/node")
 const manifestPath = path.join(output, "lean-candidate-build.json")
 const appRelativePath = "mac/HuGR Lean Candidate.app"
 const pty = "@lydell/node-pty-darwin-x64"
@@ -297,10 +296,10 @@ export async function candidate(action: string) {
     )
     await rm(manifestPath, { force: true })
     await rm(path.join(desktop, "out"), { recursive: true, force: true })
-    await rm(backend, { recursive: true, force: true })
+    await rm(leanOutput, { recursive: true, force: true })
     await command(["bun", "./scripts/copy-icons.ts", "prod"], env)
     await command(["bun", "./scripts/copy-metainfo.ts", "prod"], env)
-    await command(["bun", "script/build-node.ts", "--lean-candidate"], env, path.resolve(desktop, "../orchestra"))
+    await leanNotices(leanOutput)
     const omniBuild = omniSource()
     await command(["bun", "-e", 'await (await import("./scripts/stage-omni.ts")).stageOmni("prod")'],
       { ...env, OMNI_ARTIFACTS: omniBuild.directory })
@@ -326,27 +325,21 @@ export async function candidate(action: string) {
     } finally {
       await rm(cliOmni, { recursive: true, force: true })
     }
+    // beforePack also refuses a package without the pinned Claude Code asset, which the production prebuild stages.
+    await command(["bun", "-e", 'await (await import("./scripts/stage-claude.ts")).stageClaude()'], env)
     // buildCliToResources staged the pinned rg with the CLI; the record pins it, signature checked.
     const ripgrep = await ripgrepRecord(path.join(desktop, "resources", ripgrepDirectory))
     await command(["bun", "run", "electron-vite", "build", "--config", "electron.vite.candidate.config.ts"], viteEnv)
-    const materials = await verifyMaterials(path.join(backend, "licenses"))
+    const materials = await verifyMaterials(path.join(leanOutput, "licenses"))
     const renderer = await inventory(path.join(desktop, "out/renderer"))
     const main = await inventory(path.join(desktop, "out/main"))
     const preload = await inventory(path.join(desktop, "out/preload"))
     for (const [directory, file] of [
-      [backend, "node.js"], [path.join(desktop, "out/main"), "index.js"],
-      [path.join(desktop, "out/main"), "sidecar.js"], [path.join(desktop, "out/preload"), "index.js"],
+      [path.join(desktop, "out/main"), "index.js"], [path.join(desktop, "out/preload"), "index.js"],
       [path.join(desktop, "out/renderer"), "index.html"],
     ]) {
       if (!(await Bun.file(path.join(directory!, file!)).exists())) {
         throw new Error(`Missing candidate build output: ${directory}/${file}`)
-      }
-    }
-    const wasm = (await inventory(backend)).filter((item) => item.path.endsWith(".wasm"))
-    if (!wasm.length) throw new Error("Missing backend WASM sidecar material")
-    for (const file of wasm) {
-      if (!main.some((item) => item.path === `chunks/${file.path}` && item.sha256 === file.sha256)) {
-        throw new Error(`Missing/mismatched sidecar WASM: ${file.path}`)
       }
     }
     if (!renderer.some((item) => /\.woff2?$/.test(item.path))) throw new Error("Missing production renderer fonts")
@@ -354,7 +347,7 @@ export async function candidate(action: string) {
     await Bun.write(manifestPath, JSON.stringify({
       schemaVersion: 1, status: "built", accepted: false, ...source, appRelativePath,
       appId: "ai.hugr.orchestra.lean.candidate", productName: "HuGR Lean Candidate",
-      backend: await inventory(backend), renderer, main, preload, materials, runnerProbes,
+      renderer, main, preload, materials, runnerProbes,
       buildResources, omni, ripgrep, resources: await inventory(path.join(desktop, "resources")),
     }, null, 2) + "\n")
     return
@@ -366,7 +359,7 @@ export async function candidate(action: string) {
     }
   }
   for (const [key, directory] of [
-    ["backend", backend], ["renderer", path.join(desktop, "out/renderer")],
+    ["renderer", path.join(desktop, "out/renderer")],
     ["main", path.join(desktop, "out/main")], ["preload", path.join(desktop, "out/preload")],
     ["resources", path.join(desktop, "resources")],
   ]) {

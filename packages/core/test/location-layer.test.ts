@@ -127,6 +127,7 @@ describe("LocationServiceMap", () => {
             "glob",
             "grep",
             "image_create",
+            "lean_recall",
             "live_look",
             "process_cancel",
             "process_control",
@@ -148,7 +149,6 @@ describe("LocationServiceMap", () => {
             "webfetch",
             "websearch",
             "write",
-
           ])
           const allowedState = yield* update(allowed.path)
           expect(allowedState.providers.some((provider) => provider.id === ProviderV2.ID.make("test"))).toBe(true)
@@ -165,6 +165,7 @@ describe("LocationServiceMap", () => {
             "glob",
             "grep",
             "image_create",
+            "lean_recall",
             "live_look",
             "process_cancel",
             "process_control",

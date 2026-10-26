@@ -1,6 +1,6 @@
-import type { SessionV1 } from "@orchestra/schema/session-v1"
+import type { Transcript } from "../../../transcript-model"
 
-type FilePartSource = typeof SessionV1.FilePartSource.Encoded
+type FilePartSource = Transcript.FilePartSource
 
 type PromptInputV2PartBase = {
   content: string

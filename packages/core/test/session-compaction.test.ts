@@ -45,3 +45,12 @@ test("compaction describes tool media without embedding base64", () => {
   expect(serialized).toBe("Image read successfully\n[Attached image/png: pixel.png]")
   expect(serialized).not.toContain(base64)
 })
+
+test("usable context is the window minus the reserve, and an input cap lowers it", () => {
+  expect(SessionCompaction.usable(undefined, 200_000, 32_000, 20_000)).toBe(168_000)
+  expect(SessionCompaction.usable({}, 200_000, 8_000, 20_000)).toBe(180_000)
+  // The provider rejects a prompt above `input` even when the window is larger.
+  expect(SessionCompaction.usable({ input: 100_000 }, 200_000, 32_000, 20_000)).toBe(80_000)
+  // A cap above the window changes nothing.
+  expect(SessionCompaction.usable({ input: 500_000 }, 200_000, 32_000, 20_000)).toBe(168_000)
+})

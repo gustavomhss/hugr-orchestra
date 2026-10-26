@@ -1,16 +1,12 @@
-// App-shell legacy-type contract: stable names for the v2 wire. Later migration slices
-// rewrite compat import specifiers to this module; the underlying shapes keep the legacy
-// field names, so consumers recompile unchanged. `Mutable<typeof Schema.Encoded>` keeps
+// App-shell type contract: stable names for the wire. `Mutable<typeof Schema.Encoded>` keeps
 // the schema's encoded side but drops its readonly-ness; the adapted aliases below keep
-// the legacy (vendored opencode-ai-client 1.17.13) field shapes, which are authoritative
-// for those names.
+// the app's own field shapes, which are authoritative for those names.
 
 import type { AgentFile } from "@orchestra/schema/agent-file"
 import type { Command } from "@orchestra/schema/command"
 import type { FileDiff } from "@orchestra/schema/file-diff"
 import type { Lsp } from "@orchestra/schema"
 import type { Permission } from "@orchestra/schema/permission"
-import type { PermissionV1 } from "@orchestra/schema/v1/permission"
 import type { Question } from "@orchestra/schema/question"
 import type { Reference } from "@orchestra/schema/reference"
 import type { Revert } from "@orchestra/schema/revert"
@@ -19,25 +15,39 @@ import type { Session } from "@orchestra/schema/session"
 import type { SessionMessage } from "@orchestra/schema/session-message"
 import type { SessionStatusEvent } from "@orchestra/schema/session-status-event"
 import type { SessionTodo } from "@orchestra/schema/session-todo"
-import type { SessionV1 } from "@orchestra/schema/session-v1"
 import type { Vcs } from "@orchestra/schema/vcs"
+
+export type {
+  AgentPartInput,
+  AssistantMessage,
+  FilePart,
+  FilePartInput,
+  FilePartSource,
+  Message,
+  Part,
+  Session,
+  TextPart,
+  TextPartInput,
+  ToolPart,
+  ToolStateCompleted,
+  UserMessage,
+} from "@orchestra/session-ui/transcript-model"
 
 export type Mutable<T> = T extends readonly (infer U)[] ? Mutable<U>[] : T extends object ? { -readonly [K in keyof T]: Mutable<T[K]> } : T
 
-export type TextPart = Mutable<typeof SessionV1.TextPart.Encoded>
 export type ReferenceInfo = Mutable<typeof Reference.Info.Encoded>
-export type AgentPartInput = Mutable<typeof SessionV1.AgentPartInput.Encoded>
-export type FilePartInput = Mutable<typeof SessionV1.FilePartInput.Encoded>
-export type Part = Mutable<typeof SessionV1.Part.Encoded>
-export type TextPartInput = Mutable<typeof SessionV1.TextPartInput.Encoded>
-export type Session = Mutable<typeof SessionV1.SessionInfo.Encoded>
-export type Message = Mutable<typeof SessionV1.Info.Encoded>
-export type AssistantMessage = Mutable<typeof SessionV1.Assistant.Encoded>
-export type UserMessage = Mutable<typeof SessionV1.User.Encoded>
 export type LspStatus = Mutable<typeof Lsp.Status.Encoded>
 export type SessionV2Info = Mutable<typeof Session.Info.Encoded>
 export type CommandV2Info = Mutable<typeof Command.Info.Encoded>
-export type PermissionRequest = Mutable<typeof PermissionV1.Request.Encoded>
+export type PermissionRequest = {
+  id: string
+  sessionID: string
+  permission: string
+  patterns: string[]
+  metadata: { [key: string]: unknown }
+  always: string[]
+  tool?: { messageID: string; callID: string }
+}
 export type QuestionRequest = Mutable<typeof Question.Request.Encoded>
 export type SessionStatus = Mutable<typeof SessionStatusEvent.Info.Encoded>
 export type Todo = Mutable<typeof SessionTodo.Info.Encoded>
@@ -53,19 +63,15 @@ export type PermissionV2Request = Mutable<typeof Permission.Request.Encoded>
 export type FileDiff = Mutable<typeof Revert.FileDiff.Encoded>
 export type SessionMessageAssistant = Mutable<typeof SessionMessage.Assistant.Encoded>
 export type SessionMessageUser = Mutable<typeof SessionMessage.User.Encoded>
-export type FilePart = Mutable<typeof SessionV1.FilePart.Encoded>
-export type ToolPart = Mutable<typeof SessionV1.ToolPart.Encoded>
-export type ToolStateCompleted = Mutable<typeof SessionV1.ToolStateCompleted.Encoded>
 export type SnapshotFileDiff = Mutable<typeof FileDiff.Info.Encoded>
 export type VcsFileDiff = Mutable<typeof Vcs.FileDiff.Encoded>
 export type ScheduledTaskInfo = Mutable<typeof ScheduledTask.Info.Encoded>
-export type FilePartSource = Mutable<typeof SessionV1.FilePartSource.Encoded>
 export type AgentFileAction = Mutable<typeof AgentFile.Action.Encoded>
 export type AgentFileInfo = Mutable<typeof AgentFile.Info.Encoded>
 export type AgentFileInput = Mutable<typeof AgentFile.Input.Encoded>
 export type AgentFilePermission = Mutable<typeof AgentFile.Permission.Encoded>
 
-// --- Adapted aliases: legacy field shapes authoritative (vendored opencode-ai-client 1.17.13) ---
+// --- Adapted aliases: the app's field shapes are authoritative ---
 
 type MoneyUSD = number
 

@@ -175,7 +175,7 @@ export function SessionReviewFilePreviewV2(props: SessionReviewFilePreviewV2Prop
     if (focus.file !== props.file) {
       // The focused file has no mounted preview (e.g. not in the current diff
       // set); clear the focus anyway so it cannot hijack a later diff refresh.
-      // V1 clears unconditionally the same way.
+      // The earlier runtime clears unconditionally the same way.
       untrack(() => {
         const token = focusToken
         requestAnimationFrame(() => {

@@ -1,7 +1,7 @@
 import { afterEach, expect, test } from "bun:test"
 import {
-  connectedSubagentModels, createModelPolicyEditor, createModelRuleEditor, effectiveModelState, modelUnavailable, sameModelPolicy,
-  type ModelPolicySnapshot, type ModelRule, type SubagentModelPolicy,
+  connectedSubagentModels, createModelPolicyEditor, modelUnavailable, sameModelPolicy,
+  type ModelPolicySnapshot, type SubagentModelPolicy,
 } from "./subagent-model-rules"
 import type { Provider } from "@/v2-wire"
 
@@ -9,12 +9,23 @@ import { clearPending, pendingPolicy, pendingSelection, togglePending } from "./
 import { applySessionManagementEvent, mergeSessionManagementInfo, normalizeSessionInfo } from "@/utils/session"
 import { sessionManagementUnsupported } from "@/utils/session-management-errors"
 import { createServerSession } from "@/context/server-session"
-import { createSdkForServer } from "@/utils/server"
+import type { ServerApi } from "@/utils/server"
 import { parseHomeSessionIndex } from "@/context/global-sync/home-session-index"
 
 const key = "http://origin.test\u0000draft\u0000full/slash/draft"
 const first: SubagentModelPolicy = { mode: "allowlist", models: [{ providerID: "router", id: "team/model/v1" }] }
 afterEach(() => clearPending(key))
+
+// These tests project events only; any server read is a failure.
+const unread = async () => {
+  throw new Error("unexpected server read")
+}
+const unreadStore = () =>
+  createServerSession(
+    { get: unread, message: unread } as unknown as Pick<ServerApi["session"], "get" | "message">,
+    { list: unread } as unknown as ServerApi["message"],
+    { todo: unread },
+  )
 
 test("reading an untouched draft keeps inheritance; removing the last choice keeps explicit deny-all", () => {
   expect(pendingSelection(key).size).toBe(0)
@@ -27,7 +38,7 @@ test("reading an untouched draft keeps inheritance; removing the last choice kee
   expect(pendingPolicy(key)).toEqual({ mode: "inherit" })
 })
 
-test("V2 replaces full policies, retains unavailable selections, serializes writes and retries failed replacement", async () => {
+test("the server replaces full policies, retains unavailable selections, serializes writes and retries failed replacement", async () => {
   const gate = Promise.withResolvers<SubagentModelPolicy>()
   const writes: SubagentModelPolicy[] = []
   const editor = createModelPolicyEditor({
@@ -139,7 +150,7 @@ test("unsupported statuses stay distinct from auth, transport and server failure
 })
 
 test("actual server session store projects durable policy replacements and restores, including same-timestamp sequence order", () => {
-  const store = createServerSession(createSdkForServer({ server: { url: "https://unused.test" } }), { protocol: Promise.resolve("v2") })
+  const store = unreadStore()
   store.remember({ id: "ses_store", slug: "store", projectID: "project", directory: "/repo", title: "Store", version: "", time: { created: 1, updated: 1 } })
   store.apply({ type: "session.next.subagent.models.changed", properties: { sessionID: "ses_store", timestamp: 10, policy: first }, current: { durable: { seq: 2 } } })
   expect(store.get("ses_store")?.subagentModels).toEqual(first)
@@ -275,7 +286,7 @@ test("catalog keeps all supplied models and marks missing, deprecated and non-to
 })
 
 test("actual server store retains policy sequence over equal-time revisionless snapshots", () => {
-  const store = createServerSession(createSdkForServer({ server: { url: "https://unused.test" } }), { protocol: Promise.resolve("v2") })
+  const store = unreadStore()
   const info = {
     id: "ses_receipt", slug: "store", projectID: "project", directory: "/repo", title: "Store", version: "",
     time: { created: 1, updated: 1 }, permission: [{ permission: "task", pattern: "router/*", action: "allow" }],
@@ -287,32 +298,4 @@ test("actual server store retains policy sequence over equal-time revisionless s
   expect(store.get(info.id)?.subagentModels).toEqual({ mode: "allowlist", models: [] })
   expect(store.get(info.id)?.subagentModelsRevision).toBe(3)
   expect(store.get(info.id)?.permission).toEqual(info.permission)
-})
-
-test("V1 editor sends append batches and keeps latest ACK over a delayed strict-prefix snapshot", async () => {
-  const source: { live: ModelRule[]; acknowledged: ModelRule[] } = { live: [], acknowledged: [] }
-  const writes: ModelRule[][] = []
-  const editor = createModelRuleEditor({ read: () => source.live, write: async (batch) => {
-    writes.push(batch)
-    source.acknowledged = [...source.acknowledged, ...batch]
-    return source.acknowledged
-  } })
-  await editor.set("router", "first", true)
-  const first = editor.rules()
-  await editor.set("router", "second", true)
-  expect(writes).toEqual([
-    [{ permission: "task", pattern: "*/*", action: "deny" }, { permission: "task", pattern: "router/first", action: "allow" }],
-    [{ permission: "task", pattern: "router/second", action: "allow" }],
-  ])
-  source.live = first
-  expect(editor.rules()).toEqual(source.acknowledged)
-  source.live = [{ permission: "task", pattern: "other/*", action: "deny" }]
-  expect(editor.rules()).toEqual(source.live)
-})
-
-test("V1 last matching ask replaces an earlier allow instead of inheriting permission", () => {
-  expect(effectiveModelState([
-    { permission: "task", pattern: "*/*", action: "allow" },
-    { permission: "task", pattern: "router/*", action: "ask" },
-  ], "router", "team/model/v1")).toBe("ask")
 })

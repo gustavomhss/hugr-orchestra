@@ -20,7 +20,7 @@ import { Harness, sessionID } from "./session-runner-harness"
 // the prompt was promoted, recorded once as a synthetic message; mentioned images and PDFs ride on it as media. The
 // prompt keeps its URIs.
 
-const fixture = path.join(import.meta.dir, "..", "..", "..", "apps", "orchestra", "test", "fixture", "mcp-omni-stdio.ts")
+const fixture = path.join(import.meta.dir, "fixture", "mcp-omni-stdio.ts")
 const requests: LLMRequest[] = []
 
 const it = Harness.make({

@@ -72,15 +72,20 @@ export function make(input: {
   permissions?: Layer.Layer<PermissionV2.Service>
   /** Replaces the compaction-only config, for example to configure MCP servers. */
   config?: Layer.Layer<Config.Service>
+  /** Further node replacements, applied to the runner and to the application graph. */
+  replacements?: LayerNode.Replacements
   /** Real tool nodes (and what they need) added to the application graph, for a test that runs one end to end. */
   nodes?: ReadonlyArray<LayerNode.Node<unknown, unknown, any>>
-  /** The Location's working directory, "/project" unless a tool needs a real one. */
+  /** The Location's directory; default `/project`, which does not exist on disk. Sessions must be set up there too. */
   directory?: string
 }) {
   const directory = AbsolutePath.make(input.directory ?? "/project")
   const permissions = input.permissions ?? PermissionFixture.normalLayer
   const config = input.config ?? defaultConfig
-  const hosts: LayerNode.Replacements = input.hosts ? [[ExecutionHost.node, input.hosts]] : []
+  const extra: LayerNode.Replacements = [
+    ...(input.hosts ? [[ExecutionHost.node, input.hosts] as const] : []),
+    ...(input.replacements ?? []),
+  ]
   const echoNode = makeLocationNode({ name: "test/session-runner-tools", layer: input.echo, deps: [ToolRegistry.node] })
   const runnerLayer = AppNodeBuilder.build(node, [
     [Snapshot.node, Snapshot.noopLayer],
@@ -92,7 +97,7 @@ export function make(input: {
     [ReferenceGuidance.node, referenceGuidance],
     [PermissionV2.node, permissions],
     [Config.node, config],
-    ...hosts,
+    ...extra,
   ])
   const execution = Layer.effect(
     SessionExecution.Service,
@@ -147,7 +152,7 @@ export function make(input: {
         [Snapshot.node, Snapshot.noopLayer],
         [SessionExecution.node, execution],
         [Config.node, config],
-        ...hosts,
+        ...extra,
       ],
     ),
   )
@@ -179,16 +184,17 @@ export const insertSession = (id: SessionV2.ID, directory = "/project") =>
       .pipe(Effect.orDie)
   })
 
-export const setupAt = (directory: string) => Effect.gen(function* () {
-  const { db } = yield* Database.Service
-  yield* db
-    .insert(ProjectTable)
-    .values({ id: Project.ID.global, worktree: AbsolutePath.make(directory), sandboxes: [] })
-    .onConflictDoNothing()
-    .run()
-    .pipe(Effect.orDie)
-  yield* insertSession(sessionID, directory)
-})
+export const setupAt = (directory: string) =>
+  Effect.gen(function* () {
+    const { db } = yield* Database.Service
+    yield* db
+      .insert(ProjectTable)
+      .values({ id: Project.ID.global, worktree: AbsolutePath.make(directory), sandboxes: [] })
+      .onConflictDoNothing()
+      .run()
+      .pipe(Effect.orDie)
+    yield* insertSession(sessionID, directory)
+  })
 
 export const setup = setupAt("/project")
 

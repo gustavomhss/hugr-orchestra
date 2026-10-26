@@ -135,7 +135,7 @@ test("staged Edit uses translated feature copy through the shared i18n provider"
 function withData(children: () => JSX.Element) {
   return createComponent(DataProvider, {
     directory: "/workspace",
-    data: { session: [], session_status: {}, session_diff: {}, message: {}, part: {} },
+    data: { session: [], session_status: {}, message: {}, part: {} },
     get children() {
       return children()
     },

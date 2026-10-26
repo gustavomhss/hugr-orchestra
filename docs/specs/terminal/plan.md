@@ -42,13 +42,13 @@ Permanecem como estão: confinamento e paridade com o `bash`, spec e aprovação
 
 - O ring tem `BUFFER_LIMIT = 1024 * 1024 * 2` **em caracteres UTF-16**, não bytes, e o cursor também conta caracteres (`packages/core/src/pty.ts:20,262-290`) **[verificado]**. Qualquer protocolo novo define o cursor na mesma unidade.
 - **Correção**: a reconexão com cursor absoluto não corrompe estado enquanto o cliente continua conectado (`pty.ts:350-360`). O replay só começa no meio de uma sequência quando o ring estoura e o cursor do cliente fica abaixo de `bufferCursor` (é cortado para o início), ou num attach novo (`cursor: 0`) depois do estouro. A Fase 0 reproduz exatamente essas duas condições.
-- `subscriber.pending` só cresce **antes** de `activate()` (`pty.ts:277,363-372`); o crescimento ilimitado real é o `Queue.unbounded` do outbox, em `apps/orchestra/.../handlers/pty.ts:218` e `packages/server/src/handlers/pty.ts:179`.
-- As **duas superfícies de servidor existem**: `packages/server/src/handlers.ts:18,64` importa `PtyHandler` de `./handlers/pty` **[verificado]** e `apps/orchestra/.../handlers/pty.ts` é importado por `server.ts`. Os testes `httpapi-pty` e `httpapi-v2-pty` as cobrem separadamente.
+- `subscriber.pending` só cresce **antes** de `activate()` (`pty.ts:277,363-372`); o crescimento ilimitado real é o `Queue.unbounded` do outbox, no handler de PTY do V1 (removido) e em `packages/server/src/handlers/pty.ts:179`.
+- As **duas superfícies de servidor existem**: `packages/server/src/handlers.ts:18,64` importa `PtyHandler` de `./handlers/pty` **[verificado]** e o handler de PTY do V1 (removido) era importado pelo servidor V1. Os testes `httpapi-pty` e `httpapi-v2-pty` as cobrem separadamente.
 - **Gap de segurança verificado**: `Pty.create` monta o ambiente com `{...process.env, ...input.env}` sem limpar credenciais e sem sandbox (`pty.ts:216-220`) **[verificado]**. O `bash` usa `ToolSafetySandbox.wrap(...)` e `ToolSafetySandbox.environment()` (`bash.ts:210,223,235`), além de `permission.assert` por comando, checagem de diretório externo e `workdir` (`bash.ts:173-186`) **[verificado]**. Um PTY de agente construído sobre `Pty.create` como está **perderia** tudo isso.
 - `serialize.ts` **tem** teste (`addons/serialize.test.ts`), que importa `ghostty-web`; corrijo minha afirmação anterior. O que falta de fato é teste de reconexão, restore e eviction do ring.
 - `terminal.tsx` também importa `SerializeAddon`, `FitAddon` e `runtime-adapters`; trocar o emulador custa mais que um import. Os e2e `terminal-composer-focus.spec.ts` (linhas 112, 139) e `serialize.test.ts` estão acoplados ao `ghostty-web`.
 - Desktop: `apps/desktop/src/main/wsl/runtime.ts:126-130` cai para `@lydell/node-pty` quando omni está desligado, e `linux-workspace-omni.ts` está na allowlist com `@lydell/node-pty` (`script/spawn-allowlist.json:63,65`).
-- O CSP do servidor já tem `'wasm-unsafe-eval'` (`apps/orchestra/src/server/shared/ui.ts:9`). O CSP do renderer do desktop **não foi verificado**.
+- O CSP do servidor já tem `'wasm-unsafe-eval'` (`shared/ui.ts:9` do servidor V1, removido). O CSP do renderer do desktop **não foi verificado**.
 
 ## 3. Decisões de arquitetura
 
@@ -213,7 +213,7 @@ Mudanças visuais seguem a sessão "Orchestra visual handoff".
 ### Fase 7: integração com sessão, evidência e engines
 
 - `orchestra-evidence-terminal.tsx`: passa a poder mostrar o PTY do agente, não só a aba ativa do usuário, mantendo a regra de um renderizador por PTY.
-- Hook de plugin `pty-environment` (`apps/orchestra/src/plugin/pty-environment.ts`, `core/host/pty-environment.ts`, `CONTEXT.md:138`) revisado para o PTY do agente: plugin não pode reintroduzir credenciais no ambiente do agente.
+- Hook de plugin `pty-environment` (`plugin/pty-environment.ts` do V1, removido, `core/host/pty-environment.ts`, `CONTEXT.md:138`) revisado para o PTY do agente: plugin não pode reintroduzir credenciais no ambiente do agente.
 - `packages/schema/src/event-manifest.ts` e testes (`event-manifest.test.ts`, `contract-hygiene.test.ts`) atualizados se eventos mudarem.
 - **Engine `claude-code` (D-4)**: o caminho aprovado na Fase 4, ou a declaração de não suportado na UI e no doc, com teste do texto.
 - Rotas protocolo por Location e atribuição de sessão/agente com testes de autorização.
@@ -223,7 +223,7 @@ Mudanças visuais seguem a sessão "Orchestra visual handoff".
 ### Fase 8: endurecimento, remoção de legado e entrega
 
 **Remoção de legado** (só se D-6 aprovar). Lista completa, com um **gate de grep** que exige zero referências depois:
-`package.json:20,101,137` (postinstall `fix-node-pty`, catálogo), `packages/core/package.json:11,435,455`, `packages/core/script/fix-node-pty.ts`, `packages/core/src/pty/pty.bun.ts` e `pty.node.ts` (mapa `#pty`), `apps/desktop/package.json:45,72-77`, `apps/desktop/electron.vite.config.ts:19,64-67`, `spawn-allowlist.json:43-44,63,65`, `apps/desktop/src/main/wsl/runtime.ts:126-130`, `linux-workspace-omni.ts`, scripts Nix (`nix/scripts/prune-desktop-addons.py`, `verify-distribution.ts`), `apps/orchestra/script/build-node.ts` e os testes de pacote enxuto e de ativos implantados. Se D-6 reprovar, o fallback fica declarado e fora do caminho do agente.
+`package.json:20,101,137` (postinstall `fix-node-pty`, catálogo), `packages/core/package.json:11,435,455`, `packages/core/script/fix-node-pty.ts`, `packages/core/src/pty/pty.bun.ts` e `pty.node.ts` (mapa `#pty`), `apps/desktop/package.json:45,72-77`, `apps/desktop/electron.vite.config.ts:19,64-67`, `spawn-allowlist.json:43-44,63,65`, `apps/desktop/src/main/wsl/runtime.ts:126-130`, `linux-workspace-omni.ts`, scripts Nix (`nix/scripts/prune-desktop-addons.py`, `verify-distribution.ts`), o `script/build-node.ts` do V1 (removido) e os testes de pacote enxuto e de ativos implantados. Se D-6 reprovar, o fallback fica declarado e fora do caminho do agente.
 
 **Empacotamento**: o WASM do servidor entra no build do Bun, em `build-node.ts`, no teste de pacote enxuto, em `verify-distribution.ts` e no payload do CLI; teste automatizado de que o app desktop empacotado e o build web **carregam** o WASM do renderer sob o CSP real.
 

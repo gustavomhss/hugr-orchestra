@@ -21,16 +21,20 @@ export type PullRequestFailure = {
 
 export type PullRequestResult<T> = { data: T } | { failure: PullRequestFailure }
 
-// Reads a legacy SDK call made with `throwOnError: false`. Malformed data is an error, never a value.
+// Reads an Orchestra client call. A declared failure rejects with the server's body; an undeclared answer rejects
+// with a ClientError carrying its status. Malformed data is an error, never a value.
 export async function pullRequestCall<T>(
-  call: Promise<{ data?: unknown; error?: unknown; response?: Response }>,
+  call: Promise<{ data: unknown }>,
   parse: (data: unknown) => T | undefined,
 ): Promise<PullRequestResult<T>> {
-  const result = await call.catch(() => undefined)
-  const status = result?.response?.status
-  if (status !== undefined && [404, 405, 501].includes(status)) return { failure: { reason: "unavailable" } }
-  if (!result?.response?.ok) return { failure: hostFailure(result?.error) }
-  const data = parse(isRecord(result.data) ? result.data.data : undefined)
+  const result = await call.then(
+    (body) => ({ body, error: undefined }),
+    (error: unknown) => ({ body: undefined, error }),
+  )
+  const status = result.error instanceof Error && isRecord(result.error.cause) ? result.error.cause.status : undefined
+  if (typeof status === "number" && [404, 405, 501].includes(status)) return { failure: { reason: "unavailable" } }
+  if (!result.body) return { failure: hostFailure(result.error) }
+  const data = parse(result.body.data)
   return data === undefined ? { failure: { reason: "error" } } : { data }
 }
 
