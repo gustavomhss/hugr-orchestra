@@ -61,7 +61,9 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
       abort.abort()
       clearTimeout(timer)
     })
-    setStore({ detail: undefined, attempts: 0, missing: false, failed: false, receipt: undefined, unavailable: false })
+    setStore({ attempts: 0, missing: false, failed: false, unavailable: false })
+    setStore("detail", undefined)
+    setStore("receipt", undefined)
     setDismissed(new Set())
     if (!source) return
     const load = (attempts: number) =>

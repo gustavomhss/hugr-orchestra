@@ -22,7 +22,7 @@ import {
 const priya = { id: "p1", name: "Priya" }
 const dan = { id: "p2", name: "Dan" }
 
-const meeting = (input: Partial<Summary> & { counts?: Partial<Summary["counts"]> }): Summary => ({
+const meeting = (input: Omit<Partial<Summary>, "counts"> & { counts?: Partial<Summary["counts"]> }): Summary => ({
   id: "mtg_1",
   title: "Sync",
   startedAt: 1_000_000,

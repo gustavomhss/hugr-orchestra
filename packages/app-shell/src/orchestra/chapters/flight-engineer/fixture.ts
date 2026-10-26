@@ -272,8 +272,8 @@ const meetings: Meetings = {
     return detail(row, ready)
   },
   async rename(id, title) {
-    const row = rows.find((entry) => entry.id === id)
-    if (row) row.title = title
+    const index = rows.findIndex((entry) => entry.id === id)
+    if (index >= 0) rows[index] = { ...rows[index]!, title }
   },
   async remove(id): Promise<Receipt> {
     if (id === "mtg_live" && state.running) stub("running")
