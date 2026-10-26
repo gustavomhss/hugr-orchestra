@@ -1,5 +1,6 @@
 import { index, integer, primaryKey, real, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
 import type { Board } from "@orchestra/schema/board"
+import type { Credential } from "../credential"
 import { CredentialTable } from "../credential/sql"
 import { Timestamps } from "../database/schema.sql"
 import { ProjectTable } from "../project/sql"
@@ -179,7 +180,9 @@ export const BoardAttachmentTable = sqliteTable(
     mime: text(),
     size: integer(),
     path: text(),
-    credential_id: text().references(() => CredentialTable.id, { onDelete: "cascade" }),
+    credential_id: text()
+      .$type<Credential.ID>()
+      .references(() => CredentialTable.id, { onDelete: "cascade" }),
     ...Timestamps,
   },
   (table) => [index("board_attachment_issue_idx").on(table.issue_id)],
