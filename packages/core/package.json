@@ -116,6 +116,7 @@
     "./control-plane/workspace.sql": "./src/control-plane/workspace.sql.ts",
     "./board/board": "./src/board/board.ts",
     "./board/github": "./src/board/github.ts",
+    "./board/spend": "./src/board/spend.ts",
     "./board/sql": "./src/board/sql.ts",
     "./board/tools": "./src/board/tools.ts",
     "./credential": "./src/credential.ts",

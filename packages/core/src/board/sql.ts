@@ -26,6 +26,8 @@ export const BoardProjectTable = sqliteTable("board_project", {
   github_comments_etag: text(),
   github_since: integer(),
   github_synced_at: integer(),
+  // When the CI minutes were last fetched from GitHub Actions.
+  ci_synced_at: integer(),
   next_issue_number: integer().notNull(),
   next_epic_number: integer().notNull(),
   // Consecutive forecast evaluations with P50 past target_date; health turns at_risk at 2.
@@ -79,6 +81,10 @@ export const BoardIssueTable = sqliteTable(
     stage_entered_at: integer().notNull(),
     github_number: integer(),
     github_node_id: text(),
+    // Proof signals the agent reports: attempts out of 3, why it stopped, the guardrail rule that blocked it.
+    attempts: integer().notNull().default(0),
+    crash_reason: text(),
+    guardrail_rule: text(),
     // Mirrored fields changed since the last push to GitHub (slice B2 flushes these).
     github_dirty: integer({ mode: "boolean" }).notNull().default(false),
     ...Timestamps,
@@ -140,6 +146,8 @@ export const BoardQuestionTable = sqliteTable(
     options: text({ mode: "json" }).$type<ReadonlyArray<Board.Option>>().notNull(),
     recommended: text().notNull(),
     cost_of_waiting: text(),
+    // "budget" for the pre-emptive budget question Maestro raises from the forecast; null otherwise.
+    kind: text(),
     blocking: integer({ mode: "boolean" }).notNull(),
     status: text().$type<Board.QuestionStatus>().notNull(),
     answer_option: text(),
@@ -148,6 +156,61 @@ export const BoardQuestionTable = sqliteTable(
     ...Timestamps,
   },
   (table) => [index("board_question_project_idx").on(table.project_id, table.status)],
+)
+
+// One row per answered question; overturning an answer adds a row that supersedes the old one, which stays.
+export const BoardDecisionTable = sqliteTable(
+  "board_decision",
+  {
+    id: text().$type<Board.DecisionID>().primaryKey(),
+    project_id: text()
+      .$type<Board.ProjectID>()
+      .notNull()
+      .references(() => BoardProjectTable.id, { onDelete: "cascade" }),
+    issue_id: text()
+      .$type<Board.IssueID>()
+      .references(() => BoardIssueTable.id, { onDelete: "set null" }),
+    epic_id: text()
+      .$type<Board.EpicID>()
+      .references(() => BoardEpicTable.id, { onDelete: "set null" }),
+    question_id: text().$type<Board.QuestionID>().notNull(),
+    question: text().notNull(),
+    options: text({ mode: "json" }).$type<ReadonlyArray<Board.Option>>().notNull(),
+    recommended: text().notNull(),
+    chosen: text().notNull(),
+    chosen_text: text(),
+    answered_by: text().$type<Board.Actor>().notNull(),
+    answered_at: integer().notNull(),
+    outcome: text(),
+    outcome_at: integer(),
+    supersedes_id: text().$type<Board.DecisionID>(),
+    overturned_by_id: text().$type<Board.DecisionID>(),
+    ...Timestamps,
+  },
+  (table) => [index("board_decision_project_idx").on(table.project_id, table.answered_at)],
+)
+
+// GitHub Actions runs of a card's PR with the billable time, fetched on the poll and never per render.
+export const BoardCiRunTable = sqliteTable(
+  "board_ci_run",
+  {
+    run_id: integer().primaryKey(),
+    project_id: text()
+      .$type<Board.ProjectID>()
+      .notNull()
+      .references(() => BoardProjectTable.id, { onDelete: "cascade" }),
+    issue_id: text()
+      .$type<Board.IssueID>()
+      .notNull()
+      .references(() => BoardIssueTable.id, { onDelete: "cascade" }),
+    name: text().notNull(),
+    attempt: integer().notNull(),
+    // Billable milliseconds across runner kinds, and what they cost at GitHub's per-minute rates.
+    billable_ms: integer().notNull(),
+    cost_usd: real().notNull(),
+    ...Timestamps,
+  },
+  (table) => [index("board_ci_run_issue_idx").on(table.issue_id)],
 )
 
 export const BoardNoteTable = sqliteTable(
