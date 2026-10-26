@@ -568,7 +568,7 @@ function LiveSeatSection(props: { seat: LiveSeatPlatform }) {
     })
   }
   const toggleMeeting = () => run(state.latest?.running ? props.seat.stop() : startLiveMeeting(props.seat, language.t))
-  const saveKey = (value: string) => run(props.seat.setTranscriptionKey(value).then(() => setKey("")))
+  const saveKey = (value: string) => run(props.seat.setTranscriptionKey(value).then(() => void setKey("")))
   const setProtection = (enabled: boolean) => {
     mutate((current) => current && { ...current, protection: enabled })
     void props.seat.setContentProtection(enabled).catch(() => refetch())
