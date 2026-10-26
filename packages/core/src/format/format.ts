@@ -146,7 +146,7 @@ const layer = Layer.effect(
   }),
 )
 
-/** The built-in formatters with the config's overrides applied, matching the V1 Format service. */
+/** The built-in formatters with the config's overrides applied, matching the earlier runtime's Format service. */
 export function configured(config: Config.Info["formatter"]): Info[] {
   if (!config) return []
   const byName = Object.fromEntries(Object.values(builtIns).map((item) => [item.name, item]))
@@ -162,7 +162,7 @@ export function configured(config: Config.Info["formatter"]): Info[] {
     overrides
       .filter(([, item]) => !item.disabled)
       .map(([name, item]) => {
-        // V1 looks overrides up by the built-in's export name, not its formatter name.
+        // The earlier runtime looks overrides up by the built-in's export name, not its formatter name.
         const builtIn = builtIns[name] as Info | undefined
         const command = item.command
         return [

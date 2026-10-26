@@ -17,7 +17,7 @@ test("a review seat's floor denies by default and grants only its profile", () =
   expect(MaestroSeatsV2.floor(undefined)).toEqual([])
 })
 
-// V1's per-agent tool filter, as rules after the floor: each Maestro or Atlas Memory tool stays with its owners only.
+// The earlier runtime's per-agent tool filter, as rules after the floor: each Maestro or Atlas Memory tool stays with its owners only.
 const rulesOf = (id: string) => [...MaestroSeatsV2.floor(nativeProfiles[id]), ...MaestroSeatsV2.visibility(id)]
 const configured = [{ action: "*", resource: "*", effect: "allow" as const }]
 const effect = (id: string, action: string, resource = "*") =>
@@ -54,7 +54,7 @@ test("each seat keeps exactly its own Maestro and Atlas Memory tools", () => {
   expect(effect("backend", "skill", "maestro-governed")).toBe("deny")
 })
 
-// A seat's display label, as on V1: the label variable over `agent.<id>.name` over the roster default; an invalid label
+// A seat's display label, as on the earlier runtime: the label variable over `agent.<id>.name` over the roster default; an invalid label
 // keeps the default and names the problem.
 test("a seat's label comes from its variable, then configuration, else the default", () => {
   const others = [AgentV2.ID.make("general"), AgentV2.ID.make("lucy")].map((id) => ({ ...AgentV2.Info.empty(id) }))

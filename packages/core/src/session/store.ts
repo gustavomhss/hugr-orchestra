@@ -91,7 +91,7 @@ const layer = Layer.effect(
           .where(eq(SessionTable.id, sessionID))
           .get()
           .pipe(Effect.orDie)
-        // The column keeps V1 rule fields.
+        // The column keeps legacy rule fields.
         return (row?.permission ?? []).map((rule) => ({
           action: rule.permission,
           resource: rule.pattern,

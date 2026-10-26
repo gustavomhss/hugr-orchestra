@@ -46,7 +46,7 @@ describe("Format.status", () => {
         extensions: [".house"],
         enabled: true,
       })
-      // Disabling ruff disables uv too, as in V1.
+      // Disabling ruff disables uv too.
       expect(names).not.toContain("ruff")
       expect(names).not.toContain("uv")
       expect(names).not.toContain("gofmt")

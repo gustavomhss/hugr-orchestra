@@ -133,7 +133,7 @@ function makeRoutes<AuthError, AuthServices>(
     Layer.provide(ServerContentTicket.layer),
     Layer.provide(options.verifier ? Layer.succeed(ServerCapabilityVerification.Service, options.verifier) : ServerCapabilityVerification.layer),
     Layer.provide(serviceLayer),
-    // The desktop renderer (`oc://renderer`) calls a desktop-owned server cross-origin, as it does V1.
+    // The desktop renderer (`oc://renderer`) calls a desktop-owned server cross-origin, as the earlier runtime did.
     Layer.provide(corsLayer({ cors: options.cors })),
   )
   return Layer.merge(api, options.webRoot ? WebUi.layer(options.webRoot) : Layer.empty)

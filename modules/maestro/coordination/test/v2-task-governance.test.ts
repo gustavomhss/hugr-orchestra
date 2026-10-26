@@ -33,7 +33,7 @@ const resumeAdmitted = Effect.gen(function* () {
   return rows.map((row) => row.data as ResumeAdmissionV2.Recorded)
 })
 
-test("Task carries V1's governance fields, so a recorded V1 call decodes on V2", () =>
+test("Task carries legacy governance fields, so a recorded legacy call decodes on V2", () =>
   run(() =>
     Effect.gen(function* () {
       const governance = yield* TaskGovernance.Service
@@ -48,7 +48,7 @@ test("a plain Task to an agent that is not a seat delegates exactly as allowAll"
   run((directory) =>
     Effect.gen(function* () {
       expect(yield* admit({ directory, caller: "maestro", target: "general" })).toEqual({})
-      // jimmy-only and Atlas-only fields are ignored for other teammates, as on V1.
+      // jimmy-only and Atlas-only fields are ignored for other teammates.
       expect(yield* admit({ directory, caller: "maestro", target: "general", extra: { effort: "deep", memoryUnit: { kind: "task", id: "t" } } }))
         .toEqual({})
     }),
@@ -117,7 +117,7 @@ test("a Session bound to a workflow step neither starts a Task nor resumes as pl
     }),
   ))
 
-test("an Atlas seat's memoryUnit joins its resume admission to the prompt once, as V1 renders it", () =>
+test("an Atlas seat's memoryUnit joins its resume admission to the prompt once, as the earlier runtime renders it", () =>
   run((directory) =>
     Effect.gen(function* () {
       const parentID = yield* session({ directory, agent: "maestro" })

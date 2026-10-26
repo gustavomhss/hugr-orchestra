@@ -12,7 +12,7 @@ import { WriteRootsV2 } from "./write-roots"
 // foreground reply core Task already found completed. Not ported: worker evidence and owned-tool outcomes, whose V2
 // host records (BackendEvidence binding, HuGR outcome metadata) do not exist yet.
 
-// The worker-claim card the backend specialist ends its final message with; V1's `BackendResult.Card`, closed at every
+// The worker-claim card the backend specialist ends its final message with; the earlier runtime's `BackendResult.Card`, closed at every
 // level so excess properties fail the decode.
 const Card = Schema.Struct({
   outcome: Schema.Literals(["done", "blocked"]),
@@ -94,7 +94,7 @@ export function assemble(input: {
 }
 
 /**
- * V1's `WriteRoots.effective`: the bound roots ToolSafety enforces for the child, narrowed by the project profile and
+ * The earlier runtime's `WriteRoots.effective`: the bound roots ToolSafety enforces for the child, narrowed by the project profile and
  * made relative to the worktree. Undefined when the host bound none; empty means read-only.
  */
 export function effective(

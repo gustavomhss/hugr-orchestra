@@ -57,7 +57,7 @@ describe("AppDockTools", () => {
     expect(JSON.stringify(output.content)).toContain("waited")
   })
 
-  test("scopes the Linux workspace tools to the linux subagent, as V1 does", () => {
+  test("scopes the Linux workspace tools to the linux subagent", () => {
     const agents = new Map([["build", { ...AgentV2.Info.empty(AgentV2.ID.make("build")), permissions: [] }]]) as Map<
       string,
       Parameters<Parameters<AgentV2.Draft["update"]>[1]>[0]

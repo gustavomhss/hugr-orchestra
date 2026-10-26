@@ -272,10 +272,10 @@ export async function launchCandidate(executable: string, root: string, recorder
     assert.equal((await fetch(new URL("api/health", backend.url + "/"), { signal: AbortSignal.timeout(5000) })).status, 401,
       "Unauthenticated own backend must reject access")
     assert.equal((await request<{ healthy: boolean }>("api/health")).healthy, true)
-    // The candidate owns a V2 `orchestra serve` child; the retired V1 utility-process server must not start.
+    // The candidate owns a V2 `orchestra serve` child; the retired utility-process sidecar must not start.
     const utilities = await bounded("retired sidecar utility counter", application.evaluate(({ app }) =>
       app.getAppMetrics().filter((metric) => metric.type === "Utility" && metric.name === "Orchestra server").length))
-    assert.equal(utilities, 0, "The retired V1 utility sidecar started")
+    assert.equal(utilities, 0, "The retired utility-process sidecar started")
     const marker = JSON.parse(await readFile(path.join(root, ".orchestra-lean-candidate.json"), "utf8"))
     assert.deepEqual(marker, { appId: appID, version: 1, root })
     return { application, page, backend, request, close, get diagnostics() { return [stdout.read(), stderr.read(), renderer.read()] }, root }

@@ -31,7 +31,7 @@ export const affinity = (session: SessionSchema.Info) => ({
   },
 })
 
-// Match V1: declining a user prompt halts the loop instead of becoming model-facing tool output.
+// Declining a user prompt halts the loop instead of becoming model-facing tool output.
 export const isUserDeclined = (cause: Cause.Cause<unknown>) =>
   cause.reasons.some(
     (reason) =>
@@ -81,7 +81,7 @@ export const readMentions = Effect.fnUntraced(function* (
   }
 })
 
-// A person's `!` command, run as V1 ran it: in the Location, with the configured shell, outside the agent's
+// A person's `!` command, run as the earlier runtime ran it: in the Location, with the configured shell, outside the agent's
 // sandbox. An interrupt stops it and still records what it printed.
 export const shell = Effect.fn("SessionRunner.shell")(function* (
   deps: { readonly events: EventV2.Interface; readonly location: Location.Interface; readonly config: Config.Interface; readonly appProcess: AppProcess.Interface },

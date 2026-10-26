@@ -168,7 +168,7 @@ const toInfo = (row: typeof ProjectTable.$inferSelect): ProjectInfo.Info => ({
 })
 
 /**
- * Records a resolved project for the project list with its version control, as opening a directory did on V1, and
+ * Records a resolved project for the project list with its version control, as opening a directory did on the earlier runtime, and
  * announces a new project or a newly found repository with `project.updated`.
  */
 export const record = Effect.fn("Project.record")(function* (
@@ -222,7 +222,7 @@ export const update = Effect.fn("Project.update")(function* (
 })
 
 /**
- * Makes a folder a git repository with an empty first commit, as V1 did, so it has a project identity at once; without
+ * Makes a folder a git repository with an empty first commit, so it has a project identity at once; without
  * a configured git identity the commit is authored as Orchestra. Returns the recorded project.
  */
 export const initGit = Effect.fn("Project.initGit")(function* (

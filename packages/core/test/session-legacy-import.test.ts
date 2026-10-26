@@ -31,7 +31,7 @@ const it = testEffect(
 const location = Location.Ref.make({ directory: AbsolutePath.make("/project") })
 
 describe("SessionLegacyImport", () => {
-  it.live("copies a V1 transcript into V2 once and leaves the V1 rows alone", () =>
+  it.live("copies a legacy transcript into V2 once and leaves the legacy rows alone", () =>
     Effect.gen(function* () {
       const database = yield* Database.Service
       const session = yield* SessionV2.Service

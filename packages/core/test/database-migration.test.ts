@@ -386,7 +386,7 @@ describe("DatabaseMigration", () => {
     )
   })
 
-  test("preserves canonical V1 state and restarts its event stream", async () => {
+  test("preserves canonical legacy state and restarts its event stream", async () => {
     await run(
       Effect.gen(function* () {
         const db = yield* makeDb

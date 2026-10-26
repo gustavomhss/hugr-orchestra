@@ -77,7 +77,7 @@ import { SkillV2 } from "../../skill"
  *   - [ ] Bound provider retries and repeated identical tool calls.
  *
  * - Runtime context assembly
- *   - Track V1 runtime-context parity canonically in `docs/specs/v2/session.md`.
+ *   - Track runtime-context parity with the retired runtime canonically in `docs/specs/v2/session.md`.
  *
  * - One provider turn
  *   - [x] Translate every projected V2 Session message variant into canonical
@@ -190,7 +190,7 @@ const layer = Layer.effect(
       // Before agent selection and promotion: a refused turn leaves pending input pending.
       yield* governance.beforeTurn(session)
       const agent = yield* agents.select(session.agent)
-      // A Session's own permission rules, after its agent's as V1 merged them, so a Session rule wins over the agent's.
+      // A Session's own permission rules, after its agent's as the earlier runtime merged them, so a Session rule wins over the agent's.
       const effectiveRules = [
         ...(agent.info?.permissions.map((rule) => ({ ...rule })) ?? []),
         ...(yield* store.permissions(session.id)),
@@ -209,7 +209,7 @@ const layer = Layer.effect(
         }
         if (promoted > 0) {
           currentStep = 1
-          // Beside the turn, as V1 named a Session after its first prompt; a failed title leaves the default one.
+          // Beside the turn, as the earlier runtime named a Session after its first prompt; a failed title leaves the default one.
           yield* nameSession(session.id).pipe(
             Effect.catchCause((cause) =>
               Effect.logWarning("Session title generation failed", cause).pipe(
@@ -636,7 +636,7 @@ const layer = Layer.effect(
     })
 
     // A drain that fails outside a provider turn (no model, an unsupported API, a blocked context) would otherwise
-    // leave the person waiting with nothing on screen. It is recorded as a failed assistant step, as V1 recorded the
+    // leave the person waiting with nothing on screen. It is recorded as a failed assistant step, as the earlier runtime recorded the
     // error on the turn; a provider failure has already failed its own step.
     const recordFailure = Effect.fnUntraced(function* (sessionID: SessionSchema.ID, cause: Cause.Cause<unknown>) {
       if (Cause.hasInterruptsOnly(cause)) return

@@ -15,7 +15,7 @@ import { ProjectCopyError } from "@orchestra/protocol/groups/project-copy"
 export const ProjectCopyHandler = HttpApiBuilder.group(Api, "server.projectCopy", (handlers) =>
   Effect.gen(function* () {
     const client = yield* LLMClient.Service
-    // The Location's small model names the copy; any failure falls back to a random slug, as V1 did.
+    // The Location's small model names the copy; any failure falls back to a random slug.
     const generateName = Effect.fn("ProjectCopyHandler.generateName")(function* (context: string | undefined) {
       const text = context?.trim()
       if (!text) return Slug.create()

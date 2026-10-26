@@ -16,10 +16,10 @@ import { ResearchInquiry } from "./tools/inquiry"
 export const key = SystemContext.Key.make("maestro/research-inquiry")
 
 /**
- * The research seat's inquiry snapshot before every provider turn it takes (V1 `ResearchInquiry.turn` in
+ * The research seat's inquiry snapshot before every provider turn it takes (the earlier runtime's `ResearchInquiry.turn` in
  * `session/prompt.ts`): rebuilt from the dispatch ledger each turn, so it survives compaction, and admitted whole as the
  * update when it changes. Every other agent, and a research Session without a readable dispatch, gets nothing; a failed
- * read never fails the turn, as on V1.
+ * read never fails the turn.
  */
 const layer = Layer.effectDiscard(
   Effect.gen(function* () {

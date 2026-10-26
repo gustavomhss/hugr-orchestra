@@ -26,7 +26,7 @@ import { MaestroSeats } from "../seats-service"
 
 export const names = { recall: "atlas_memory_recall", emit: "atlas_memory_emit" } as const
 
-/** Where a call's receipt rides, as V1's tool metadata key: here the structured tool output. */
+/** Where a call's receipt rides, as the earlier runtime's tool metadata key: here the structured tool output. */
 export const RECEIPT_KEY = "atlasMemory"
 
 /**
@@ -251,7 +251,7 @@ const bind = Effect.fn("MaestroAtlasMemoryTools.bind")(function* (
 
 /**
  * The member's Memory bound to the execution worktree and one call of `execution.sessionID`. The tools bind their own
- * call; a resume admission binds the child Session to the dispatching Task call, as V1's `AtlasResume.admit` does.
+ * call; a resume admission binds the child Session to the dispatching Task call, as the earlier runtime's `AtlasResume.admit` does.
  */
 export const open = Effect.fn("MaestroAtlasMemoryTools.open")(function* (
   services: Pick<Services, "git" | "location">,

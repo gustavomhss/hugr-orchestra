@@ -1,7 +1,7 @@
 export * as Vcs from "./vcs"
 
 // Version-control views of a working directory: its changed files, their diffs against HEAD or the default branch's
-// merge base, and recent commit activity. Moved from V1 so the V2 server answers the same questions.
+// merge base, and recent commit activity. Moved from the retired runtime so the V2 server answers the same questions.
 
 import { Duration, Effect } from "effect"
 import { formatPatch, structuredPatch } from "diff"

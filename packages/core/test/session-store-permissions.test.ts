@@ -30,7 +30,7 @@ const insert = (id: SessionSchema.ID, permission?: (typeof SessionTable.$inferIn
   })
 
 describe("SessionStore.permissions", () => {
-  it.effect("maps the Session's recorded V1 rules to V2 rules in order", () => Effect.gen(function* () {
+  it.effect("maps the Session's recorded legacy rules to V2 rules in order", () => Effect.gen(function* () {
     yield* insert(SessionSchema.ID.make("ses_with_rules"), [
       { permission: "task", pattern: "worker", action: "allow" },
       { permission: "bash", pattern: "*", action: "deny" },

@@ -121,7 +121,7 @@ export const settle = (hooked: Hooked, succeeded: boolean) =>
 
 /**
  * `effect` failing with the `before` notes in the failure the model reads instead of a result: a refusal's detail, or
- * the message of an error the tool threw as it is (V1 tools die with their errors). An error of a subclass, such as a
+ * the message of an error the tool threw as it is (legacy tools die with their errors). An error of a subclass, such as a
  * rejected permission, keeps its type, which hosts act on; it and other typed failures keep their own words.
  */
 export const failing = <A, E, R>(
@@ -524,7 +524,7 @@ function relay(ambient: Context.Context<never>) {
 
 /**
  * Notes reach the model on the V2 registry's settlement, where the model reads its `result` and the Session records its
- * `output`, and on a V1 tool's text `output`. Any other value is returned as it is; its decisions are still recorded.
+ * `output`, and on a legacy tool's text `output`. Any other value is returned as it is; its decisions are still recorded.
  */
 function annotate<A>(value: A, notes: ReadonlyArray<string>): A {
   if (notes.length === 0) return value

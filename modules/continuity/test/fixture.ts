@@ -34,7 +34,7 @@ export const config = (info: unknown) => [
   new Config.Document({ type: "document", info: Schema.decodeUnknownSync(Config.Info)(info) }),
 ]
 
-/** The Session's archive directory, where the V1 format puts it. */
+/** The Session's archive directory, where the legacy format puts it. */
 export const archiveDirectory = (id: string) =>
   path.join(Global.Path.data, "continuity", ContinuityArchive.hash(id))
 

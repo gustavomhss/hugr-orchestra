@@ -90,7 +90,7 @@ async function child() {
     await owned.health.wait
     pass("L01", "owned V2 serve child booted and passed health with the Dock channel attached")
 
-    // The old L02 and L03 read the V1 sidecar's tool-id listing. The V2 protocol has no tool-id endpoint, so dock_*
+    // The old L02 and L03 read the retired utility-process sidecar's tool-id listing. The V2 protocol has no tool-id endpoint, so dock_*
     // registration is covered by the tool-registry tests and by the YouTube harness, which sees dock_* tool calls.
 
     const rpc = async (op: string, args: Record<string, unknown> = {}) =>

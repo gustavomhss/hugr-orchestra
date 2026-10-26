@@ -419,7 +419,7 @@ function requireChild(
 }
 
 /**
- * The rules every Task child inherits, as V1 derived them: the parent Session's deny and `external_directory` rules, so a
+ * The rules every Task child inherits, as the earlier runtime derived them: the parent Session's deny and `external_directory` rules, so a
  * child is never more permissive than its parent on a denied pattern, then a deny of each `experimental.primary_tools`
  * tool, which only primary agents may use.
  */

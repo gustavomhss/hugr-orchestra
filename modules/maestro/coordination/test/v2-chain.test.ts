@@ -38,7 +38,7 @@ import { MaestroReviewTools } from "../src/v2/tools/review"
 
 // The V2 governed chain end to end on a real verified Own fixture: admission, catalog, plan, context, validation, the
 // cold review in a `lucy` child Session, presentation, the owner's approval and the authorization grant, each step
-// writing the event V1 writes; refusals and a dirty-tree mutation probe record nothing new.
+// writing the event the earlier runtime writes; refusals and a dirty-tree mutation probe record nothing new.
 
 const projectID = Project.ID.make("prj_maestro_chain")
 const sessionID = SessionSchema.ID.make("ses_maestro_chain")
@@ -260,7 +260,7 @@ const promptJSON = (text: string, label: string) =>
       ?.slice(`${label} JSON: `.length) ?? "null",
   )
 
-test("the governed chain records V1's events end to end, refuses out of order and on a dirty tree", () =>
+test("the governed chain records the earlier runtime's events end to end, refuses out of order and on a dirty tree", () =>
   Effect.runPromise(
     Effect.gen(function* () {
       const database = yield* Database.Service

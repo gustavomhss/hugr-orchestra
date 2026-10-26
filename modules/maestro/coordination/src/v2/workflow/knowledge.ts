@@ -12,7 +12,7 @@ import { MaestroAtlasToolV2 } from "../tools/atlas"
 // `AtlasKnowledge.resolve`: a workflow publication
 // cites an anchor reference, and the host accepts it only when native Archie produced it through one completed
 // `atlas_context` call in the author Session and the same units still load unchanged from the Atlas source. V2 keeps one
-// message projection, so V1's legacy/modern projection cross-checks have nothing to compare here.
+// message projection, so the earlier runtime's legacy/modern projection cross-checks have nothing to compare here.
 
 export type Services = {
   readonly store: SessionStore.Interface
@@ -21,7 +21,7 @@ export type Services = {
 }
 
 /**
- * The anchor a reference names, or a `MaestroAtlasSourceV2.Held` with V1's reason; the workflow host reports it as
+ * The anchor a reference names, or a `MaestroAtlasSourceV2.Held` with the earlier runtime's reason; the workflow host reports it as
  * `WORKFLOW_KNOWLEDGE_${reason}`.
  */
 export const resolve = Effect.fn("WorkflowKnowledgeV2.resolve")(function* (

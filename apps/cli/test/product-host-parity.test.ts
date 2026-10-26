@@ -4,7 +4,7 @@ import { productHost } from "./fixture/product-host"
 
 // U9: every tool the Maestro prompt tells the model to call is registered in the composed V2 registry. A name held on
 // V2 still registers (it is refused at call time), so each must be present. V2's Claude Code host sends the agent's own
-// prompt and never `ClaudeHostOptions.append`, which only V1's host appends, so that text is not a V2 source.
+// prompt and never `ClaudeHostOptions.append`, which only the retired runtime's host appends, so that text is not a V2 source.
 
 const repo = path.resolve(import.meta.dir, "../../..")
 const prompt = await Bun.file(path.join(repo, "packages/core/src/agent/prompt/maestro.txt")).text()

@@ -128,7 +128,7 @@ export function tools(services: Services) {
           const research = yield* bound(names.capture, context)
           const source = { type: "tool" as const, messageID: context.assistantMessageID, callID: context.toolCallID }
           const before = yield* services.records.view(research.binding, { action: "corpus" }).pipe(Effect.catch(denied))
-          // V1 charges each retained representation under its own call before it admits the bytes.
+          // The earlier runtime charges each retained representation under its own call before it admits the bytes.
           const retain = (capture: ResearchRecords.CaptureInput) =>
             services.allowances
               .reserveBytes(
@@ -137,7 +137,7 @@ export function tools(services: Services) {
                 typeof capture.content === "string" ? Buffer.byteLength(capture.content, "utf8") : capture.content.byteLength,
               )
               .pipe(Effect.andThen(services.records.capture(research.binding, context, capture)), Effect.catch(denied))
-          // Read dedup (V1 `compact`): bytes already retained in this dispatch come back as their ref alone, and a
+          // Read dedup (the earlier runtime's `compact`): bytes already retained in this dispatch come back as their ref alone, and a
           // recaptured span whose bytes changed says so. A tool-output origin names its call, so equal bytes are its only
           // identity; a file or URL must also be the same one.
           const reply = (receipt: Research.SourceReceipt, content: string, span?: { basis: "original"; start: number; end: number }) => {
@@ -239,7 +239,7 @@ export function tools(services: Services) {
           if (start > Math.max(lines.length, 1))
             return yield* denied(new Research.Error({ code: "reference_invalid", message: `Line ${start} is out of range (${lines.length} lines)` }))
           const wanted = lines.slice(start - 1, input.end ?? lines.length)
-          // Bounded as V1's read page: at most its lines and bytes.
+          // Bounded as the earlier runtime's read page: at most its lines and bytes.
           const kept = wanted.slice(0, ReadToolFileSystem.MAX_READ_LINES).reduce<string[]>((page, line) =>
             Buffer.byteLength(page.join("") + line, "utf8") <= ReadToolFileSystem.MAX_READ_BYTES || page.length === 0 ? [...page, line] : page, [])
           const content = kept.join("")
@@ -268,7 +268,7 @@ export function tools(services: Services) {
         Effect.gen(function* () {
           const research = yield* bound(names.view, context)
           const page = (value: unknown) => ({ title: `Research ${input.action}`, output: JSON.stringify(value), research: value })
-          // V1 `shown`: an earlier completed call with the same input whose output is still in this Session's context
+          // The earlier runtime's `shown`: an earlier completed call with the same input whose output is still in this Session's context
           // (after the latest compaction and not pruned) returns its ref, never the immutable bytes again.
           const key = ResearchLedger.canonical(input)
           if (
@@ -476,7 +476,7 @@ export function tools(services: Services) {
             return yield* denied(
               new Research.Error({ code: "inquiry_state", message: `${input.hypothesis.id} is not an open hypothesis of this inquiry` }),
             )
-          // V1 `ResearchExecution.probe`: the dispatch's probe seconds bound the run, and whole seconds are charged after it.
+          // The earlier runtime's `ResearchExecution.probe`: the dispatch's probe seconds bound the run, and whole seconds are charged after it.
           const limit = allowance.probeSecondsLimit
           const used = (yield* ResearchLedger.dispatch(allowance).pipe(Effect.provideService(Database.Service, services.database), Effect.catch(denied))).reduce(
             (total, step) => (step.type === "research.allowance.charged" && step.data.kind === "probe" ? total + step.data.amount : total),
@@ -670,7 +670,7 @@ function lineBasis(receipt: Research.SourceReceipt) {
 }
 
 /**
- * A document's qualifying findings (V1 `ResearchQualifications.collect`): this Task's own exact finding admissions,
+ * A document's qualifying findings (the earlier runtime's `ResearchQualifications.collect`): this Task's own exact finding admissions,
  * never a project-wide explicit-ID reuse, bounded to what fits the reply.
  */
 export const qualify = Effect.fn("MaestroResearchTools.qualify")(function* (

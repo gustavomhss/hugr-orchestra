@@ -99,7 +99,7 @@ export const before = Effect.fn("WorkflowAdmissionV2.before")(function* (
 })
 
 /**
- * V1's verifyUpstream: the upstream attribution a v3 revision recorded still observes from stored host facts, the
+ * The earlier runtime's verifyUpstream: the upstream attribution a v3 revision recorded still observes from stored host facts, the
  * same in every field; the approval and every Task turn of a workflow plan run it.
  */
 export const upstream = Effect.fn("WorkflowAdmissionV2.upstream")(function* (
@@ -160,7 +160,7 @@ export const bound = (db: Database.Interface["db"], executionSessionID: string) 
   WorkflowRecordsV2.read(db, executionSessionID).pipe(Effect.mapError(held))
 
 /**
- * Every provider turn of a workflow-bound child, as V1's prepare checks it: the child still descends from the Session
+ * Every provider turn of a workflow-bound child, as the earlier runtime's prepare checks it: the child still descends from the Session
  * that approved its plan, keeps the logical Task the binding names and the approved write roots, and the plan's
  * upstream author still attributes it. The runner reads and revalidates the step itself on the same turn.
  */
@@ -184,7 +184,7 @@ export const turn = Effect.fn("WorkflowAdmissionV2.turn")(function* (
   )
 })
 
-// V1's continuation scope check: every file changed since the approved context's HEAD, tracked or not, lies inside an
+// The earlier runtime's continuation scope check: every file changed since the approved context's HEAD, tracked or not, lies inside an
 // approved write path.
 const scope = Effect.fn("WorkflowAdmissionV2.scope")(function* (
   services: Services & { readonly canonical: (id: string) => string },

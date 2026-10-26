@@ -11,9 +11,9 @@ import { TaskTool } from "@orchestra/core/tool/task"
 import type { Tool } from "@orchestra/core/tool/tool"
 
 // A background Task returns at once; when its child goes idle the parent receives the child's reply as a new prompt,
-// as V1's `TaskBackground` delivers it. The return prompt's id is derived from the call, so a repeated watch (or a
+// as the earlier runtime's `TaskBackground` delivers it. The return prompt's id is derived from the call, so a repeated watch (or a
 // retried Task call) admits the same durable input at most once. A delivery that keeps failing is retried a bounded
-// number of times (V1 reconciles once), then held: a durable notice in the parent's history names the task_id to resume.
+// number of times (the earlier runtime reconciles once), then held: a durable notice in the parent's history names the task_id to resume.
 
 /** Delivery attempts after the first, before the return is held. */
 export const RETRIES = 2

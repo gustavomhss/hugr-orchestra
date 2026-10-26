@@ -13,7 +13,7 @@ import { Effect, Layer } from "effect"
 import { MaestroAtlasHeaderV2 } from "../src/v2/atlas-header-source"
 import { MaestroSeats } from "../src/v2/seats-service"
 
-// The V2 running header renders V1's text byte for byte (goldens below are V1 `format` output for the same bound
+// The V2 running header renders the earlier runtime's text byte for byte (goldens below are the earlier runtime's `format` output for the same bound
 // header) and reaches only the Atlas Memory seats' turns.
 
 const facet = (state: "seeded" | "UN-SEEDED" | "drifted", content = "") => ({ content, grounding: [], state })
@@ -36,7 +36,7 @@ const states = {
 } as const
 
 describe("V2 Atlas header format", () => {
-  test("a complete header matches V1's bytes", () => {
+  test("a complete header matches the earlier runtime's bytes", () => {
     const bound: BoundHeader = {
       header: seeded,
       state: { ...states, rules: "complete" },
@@ -60,7 +60,7 @@ describe("V2 Atlas header format", () => {
     )
   })
 
-  test("partial rules, an empty store and a missing header keep V1's degraded forms", () => {
+  test("partial rules, an empty store and a missing header keep the earlier runtime's degraded forms", () => {
     const partial: BoundHeader = {
       header: { ...seeded, orientation: { goal: "", last: "", current: "", state: "" }, rules: [] },
       state: { ...states, rules: "partial" },

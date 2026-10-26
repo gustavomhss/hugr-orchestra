@@ -122,7 +122,7 @@ export const confine = Effect.fn("WriteRootsV2.confine")(function* (
  * The Location's ToolSafety, over the Arsenal's native one, narrowed to the write roots bound to the calling Session and,
  * for a native seat, confined as `confine` says. The Session's rules are read on every call, so a binding made while it
  * runs applies to its next tool call. A research child's tool call is also charged to its dispatch allowance, and its
- * web search sees only the dispatch's allowed domains (V1 provided both around the child run). Its source-acquiring
+ * web search sees only the dispatch's allowed domains (the earlier runtime provided both around the child run). Its source-acquiring
  * calls settle acquisition receipts (`SourceCaptureV2`).
  */
 export const safetyNode = {

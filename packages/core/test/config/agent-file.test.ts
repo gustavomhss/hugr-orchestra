@@ -11,7 +11,7 @@ const render = (existing: string | undefined, input: Parameters<typeof ConfigAge
 }
 
 describe("ConfigAgentFile", () => {
-  test("renders a file the V1 agent schema accepts and parses back to the same fields", () => {
+  test("renders a file the legacy agent schema accepts and parses back to the same fields", () => {
     const input = {
       description: 'Reviews: the "diff"',
       mode: "subagent" as const,

@@ -19,7 +19,7 @@ import { WorkflowReviewV2 } from "../workflow/review"
 import type { MaestroChainTools } from "./chain"
 
 // Validation and review receipts. Records are
-// written as V1 wrote them (same event types, ids, hashes and refusals) and read back through GovernanceRecordsV2.
+// written as the earlier runtime wrote them (same event types, ids, hashes and refusals) and read back through GovernanceRecordsV2.
 // Only the current roster and review-policy hash versions are written or accepted on a retry. A code-stage receipt
 // binds the workers' result tree from where the APPROVE plan review ended (WorkflowReviewV2).
 
@@ -41,7 +41,7 @@ export function reviewRejected(reason: string) {
   return new Tool.Failure({ message: `MaestroReviewRejected: ${reason}` })
 }
 
-/** V1's own canonical form: keys order by UTF-16 code unit, unlike GovernanceRecordsV2's locale order. */
+/** The earlier runtime's own canonical form: keys order by UTF-16 code unit, unlike GovernanceRecordsV2's locale order. */
 function stable(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(stable).join(",")}]`
   if (value && typeof value === "object") {
@@ -165,7 +165,7 @@ function requireText(value: string, reason: string) {
   return value.length > 0 ? Effect.succeed(value) : Effect.fail(validationRejected(reason))
 }
 
-/** Checks must be nonempty, well formed, unique and sorted by id, as V1 requires them. */
+/** Checks must be nonempty, well formed, unique and sorted by id. */
 const requireChecks = Effect.fnUntraced(function* (value: readonly Check[]) {
   const failed = (reason: string, detail?: string) => Effect.fail<{ reason: string; detail?: string }>({ reason, detail })
   if (value.length === 0) return yield* failed("empty-checks")
@@ -182,7 +182,7 @@ const requireChecks = Effect.fnUntraced(function* (value: readonly Check[]) {
 
 /**
  * The Session that records, bound to its project: the Session's Git root must be the project worktree or one of its
- * sandboxes, and contain the Session's directory. Fails with V1's rejection reason.
+ * sandboxes, and contain the Session's directory. Fails with the earlier runtime's rejection reason.
  */
 export const resolveSession = Effect.fn("MaestroReviewRecords.resolveSession")(function* (
   services: MaestroChainTools.Services,
@@ -256,7 +256,7 @@ export type ReviewInput = {
 }
 
 /**
- * A review receipt, recorded as V1 records it: once per validation for the plan stage, and once per result tree for
+ * A review receipt, recorded as the earlier runtime records it: once per validation for the plan stage, and once per result tree for
  * the code stage, which covers the workers' uncommitted result from the APPROVE plan review's head.
  */
 export const recordReview = Effect.fn("MaestroReviewRecords.recordReview")(function* (
@@ -460,7 +460,7 @@ const requireArtifact = Effect.fn("MaestroReviewRecords.requireArtifact")(functi
   }
 })
 
-/** The committed branch delta a plan review judges, read exactly as V1 reads it. */
+/** The committed branch delta a plan review judges, read exactly as the earlier runtime reads it. */
 export const diffArtifact = Effect.fn("MaestroReviewRecords.diffArtifact")(function* (
   git: GitCli.Interface,
   worktree: string,
@@ -519,7 +519,7 @@ function requireFindings(findings: ReviewInput["findings"], changedPaths: readon
   return Effect.succeed(findings.map((finding) => ({ path: finding.path, line: finding.line, message: finding.message })))
 }
 
-/** Whether `line` of `file` is an added line of the diff (V1's `CodeReview.hasAddedLine`). */
+/** Whether `line` of `file` is an added line of the diff (the earlier runtime's `CodeReview.hasAddedLine`). */
 function hasAddedLine(diff: string, file: string, line: number) {
   const walked = diff.split("\n").reduce<{ file?: string; line?: number; found: boolean }>(
     (state, value) => {
@@ -544,7 +544,7 @@ const FINDINGS_MAX_BYTES = 4096
 const FINDING_FIELD_MAX_CHARS = 500
 const FINDING_PATH_MAX_CHARS = 200
 
-/** V1's `CodeReview.renderFindings`: the durable record's findings, quoted and bounded. */
+/** The earlier runtime's `CodeReview.renderFindings`: the durable record's findings, quoted and bounded. */
 export function renderFindings(findings: ReadonlyArray<{ path: string; line: number; message: string }>) {
   if (findings.length === 0) return []
   const shown = findings

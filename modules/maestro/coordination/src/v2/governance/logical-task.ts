@@ -15,7 +15,7 @@ import { SessionAuthority } from "../../session-authority"
 import { GovernanceRecordsV2 } from "./records"
 
 // The logical task: the durable `tsk_` identity an execution
-// Session carries, and the resolution of a Task `task_id` to the child it resumes. The binding records are V1's.
+// Session carries, and the resolution of a Task `task_id` to the child it resumes. The binding records are the earlier runtime's.
 
 export type Binding = Schema.Schema.Type<typeof MaestroEvent.Task.Bound.data>
 export type Source = Binding["source"]

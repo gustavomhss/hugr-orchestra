@@ -4,7 +4,7 @@
  *   `TypeError: undefined is not an object (evaluating 'f.data.map')`
  * when entering a session whose messages endpoint returns a non-2xx.
  * The failure path is `sync.tsx#sync.session.sync` reading
- * the messages route result when it errors; V1 rendered the Session with no messages.
+ * the messages route result when it errors; the earlier runtime rendered the Session with no messages.
  */
 import { describe, expect, test } from "bun:test"
 import { tmpdir } from "../../../fixture/fixture"

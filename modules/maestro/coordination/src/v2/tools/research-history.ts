@@ -15,7 +15,7 @@ export const COMPARE_FILE_LIMIT = 100
 export type Retain = (capture: ResearchRecords.CaptureInput) => Effect.Effect<Research.SourceReceipt, Tool.Failure>
 
 /**
- * Git state in the bound worktree (V1 `research/history.ts`): the received Git output, then its structured projection
+ * Git state in the bound worktree (the earlier runtime's `research/history.ts`): the received Git output, then its structured projection
  * derived from it. Every path it names or projects passes the read gates a file capture passes.
  */
 export const history = Effect.fn("MaestroResearchTools.history")(function* (

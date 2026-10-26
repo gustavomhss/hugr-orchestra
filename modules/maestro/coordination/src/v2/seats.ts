@@ -86,7 +86,7 @@ const layer = Layer.effectDiscard(
 )
 
 /**
- * A native seat's display label, as on V1: its label variable (`HUGR_BACKEND_NAME`, `HUGR_UPSTREAM_NAME`), else
+ * A native seat's display label, as on the earlier runtime: its label variable (`HUGR_BACKEND_NAME`, `HUGR_UPSTREAM_NAME`), else
  * `agent.<id>.name`, else the roster default. The label is presentation only; the id stays the address. An invalid label
  * keeps the default and names the problem.
  */
@@ -135,7 +135,7 @@ export function floor(profile: Readonly<Record<string, RuleEffect | Readonly<Rec
 }
 
 /**
- * Which agents may use each Maestro and Atlas Memory tool (V1's per-agent tool filter). Every other agent is denied the
+ * Which agents may use each Maestro and Atlas Memory tool (the earlier runtime's per-agent tool filter). Every other agent is denied the
  * tool by rule, whether or not it is registered in this Location, and configuration cannot allow it back.
  */
 export const owners: readonly { readonly tools: readonly string[]; readonly agents: readonly string[] }[] = [

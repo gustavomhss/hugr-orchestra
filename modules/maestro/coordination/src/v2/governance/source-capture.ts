@@ -33,7 +33,7 @@ const RETAINED: ReadonlySet<string> = new Set(ResearchSeatTools.RETAINED)
 const DISPLAY_NOTICE =
   "Native tool display only; this receipt does not prove original-source completeness, absence, or runtime behavior."
 
-// A call's own captures, latest representation first: a derived representation is the source V1 kept for the attempt.
+// A call's own captures, latest representation first: a derived representation is the source the earlier runtime kept for the attempt.
 const REPRESENTATIONS = ["structured-json", "markdown", "html", "text", "received"] as const
 
 export function acquire(services: Services) {

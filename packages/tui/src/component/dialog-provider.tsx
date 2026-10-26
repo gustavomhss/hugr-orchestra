@@ -447,7 +447,7 @@ async function PromptsMethod(props: PromptsMethodProps) {
   return inputs
 }
 
-// V2 OAuth runs as a server attempt; the auto flow polls it until it settles, like V1's blocking callback.
+// V2 OAuth runs as a server attempt; the auto flow polls it until it settles, like the earlier runtime's blocking callback.
 async function waitForOauth(sdk: ReturnType<typeof useSDK>, integrationID: string, attemptID: string): Promise<string> {
   const status = await sdk.api.integrations
     .oauthStatus({ integrationID, attemptID, location: { directory: sdk.directory } })

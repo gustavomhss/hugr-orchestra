@@ -44,7 +44,7 @@ export type Coverage =
   | Effect.Success<ReturnType<typeof MaestroAtlasSourceV2.unit>>["coverage"]
   | { readonly state: "held" | "unavailable"; readonly reason: string }
 
-/** The host receipt of one call, V1's `metadata.atlasContext`: here the structured tool output. */
+/** The host receipt of one call, the earlier runtime's `metadata.atlasContext`: here the structured tool output. */
 export type Receipt = {
   readonly projectID: string | null
   readonly sourceIdentity: string | null
@@ -231,7 +231,7 @@ function unavailable(reason: string): Result {
 }
 
 /**
- * V1's `AtlasKnowledge.anchor` on V2: Archie's exact selection of verified Own units, bound to this native call by a
+ * The earlier runtime's `AtlasKnowledge.anchor` on V2: Archie's exact selection of verified Own units, bound to this native call by a
  * reference over the canonical payload. The call identity is the runner's, so no history lookup is needed.
  */
 const anchor = Effect.fn("MaestroAtlasToolV2.anchor")(function* (
@@ -259,7 +259,7 @@ const anchor = Effect.fn("MaestroAtlasToolV2.anchor")(function* (
 })
 
 /**
- * The exact verified Own units an anchor binds, as V1's `AtlasKnowledge.acquire` loads them for both anchoring and
+ * The exact verified Own units an anchor binds, as the earlier runtime's `AtlasKnowledge.acquire` loads them for both anchoring and
  * resolving: every unit from one unchanged source, complete and fresh, inside the Knowledge body budget; anything else
  * is a hold.
  */

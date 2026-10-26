@@ -2,7 +2,7 @@ export * as ContinuityMaskingRules from "./masking-rules"
 
 import { Token } from "@orchestra/core/util/token"
 
-// Masking rules shared by the V1 continuity service and the V2 strategy; no Session message types here.
+// Masking rules shared by the legacy continuity service and the V2 strategy; no Session message types here.
 
 /** Assistant steps, with everything after them, whose tool output always stays verbatim. */
 export const TAIL_STEPS = 5

@@ -35,7 +35,7 @@ const Manifest = Schema.Struct({
   sessionID: Schema.String.check(Schema.isPattern(SESSION)),
   references: Schema.Array(Reference),
 })
-// V2 owns only the masks; a V1 working-memory entry in the same file is kept as it is.
+// V2 owns only the masks; a legacy working-memory entry in the same file is kept as it is.
 const Memory = Schema.Struct({
   version: Schema.Literal(1),
   sessionID: Schema.String,

@@ -207,7 +207,7 @@ export const {
       )
     }
 
-    // Core still announces Session changes with the V1 Session shape, so its id is only a signal to read the V2 Session.
+    // Core still announces Session changes with the legacy Session shape, so its id is only a signal to read the V2 Session.
     function upsertSession(sessionID: string) {
       return sdk.catalog
         .session(sessionID)
@@ -504,7 +504,7 @@ export const {
           const task = (async () => {
             const [session, messages, todo] = await Promise.all([
               sdk.catalog.session(sessionID),
-              // V1 rendered a Session whose message route failed as empty instead of failing the sync.
+              // The earlier runtime rendered a Session whose message route failed as empty instead of failing the sync.
               sdk.catalog.messages(sessionID).catch(() => []),
               sdk.catalog.todo(sessionID),
             ])

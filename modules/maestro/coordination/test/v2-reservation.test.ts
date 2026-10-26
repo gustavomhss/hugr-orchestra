@@ -10,7 +10,7 @@ import { GovernanceDispatchV2 } from "../src/v2/governance/dispatch"
 import { GovernanceRecordsV2 } from "../src/v2/governance/records"
 import { admit, answered, event, governanceLayer, session, worktree } from "./fixture/v2-governance"
 
-// Authorized and governed dispatch on V2 against V1-format records: the write-once child each reservation names, its
+// Authorized and governed dispatch on V2 against legacy-format records: the write-once child each reservation names, its
 // replay on retry, the checks a reserved child must pass, and the gate before the child's first provider turn.
 
 const run = <A, E>(body: (directory: string) => Effect.Effect<A, E, Layer.Success<ReturnType<typeof governanceLayer>> | Scope.Scope>) =>
@@ -31,7 +31,7 @@ const AUTHORIZATION = "evt_authorization_fixture"
 const granted = EventV2.versionedType(MaestroEvent.Authorization.Granted.type, 1)
 const dispatchReserved = EventV2.versionedType(MaestroEvent.Dispatch.ReservedV2.type, 2)
 
-/** A V1 grant in `sessionID` routing `routedMemberID` to the fixture's Task intent (prompt "p", no model). */
+/** A legacy grant in `sessionID` routing `routedMemberID` to the fixture's Task intent (prompt "p", no model). */
 const grant = Effect.fn("ReservationTest.grant")(function* (input: {
   sessionID: SessionSchema.ID
   routedMemberID?: string
@@ -58,7 +58,7 @@ const grant = Effect.fn("ReservationTest.grant")(function* (input: {
   return parent
 })
 
-/** The V1 v2 dispatch reservation of the fixture grant, as an earlier dispatch wrote it. */
+/** The legacy v2 dispatch reservation of the fixture grant, as an earlier dispatch wrote it. */
 const reservation = Effect.fn("ReservationTest.reservation")(function* (
   parent: SessionSchema.Info,
   permission: ReadonlyArray<GovernanceDispatchV2.Rule> = [],

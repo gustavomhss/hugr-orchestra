@@ -16,13 +16,13 @@ import { ClaudeCodeTranscript } from "../transcript"
 import { ClaudeCodeAccountV2 } from "./account"
 
 export const ID = "claude-code"
-/** V1's `session.metadata` key (`host/session.ts`), so V1-era Claude-hosted sessions resume on V2. */
+/** The legacy `session.metadata` key (`host/session.ts`), so legacy Claude-hosted sessions resume on V2. */
 export const STATE_KEY = "claudeCode"
 /** The in-process MCP server that serves the Location's Orchestra tools to Claude Code. */
 export const MCP_SERVER = "orchestra"
 const MCP_PREFIX = `mcp__${MCP_SERVER}__`
 
-/** Orchestra tools Claude Code has as built-ins, or that belong to Orchestra's own loop: never served (as V1). */
+/** Orchestra tools Claude Code has as built-ins, or that belong to Orchestra's own loop: never served. */
 const UNSERVED = new Set([
   "bash", "read", "write", "edit", "apply_patch", "grep", "glob", "webfetch", "websearch", "todowrite",
   "question", "skill", "lsp", "invalid", "context_compact", "execute",
@@ -139,7 +139,7 @@ export const make = Effect.gen(function* () {
             ).catch((): PermissionResult => ({ behavior: "deny", message: UNCHECKED }))
           }
           // Claude Code skips `canUseTool` whenever a settings allow rule matches, while a PreToolUse deny wins in every
-          // permission mode: the hook is where Orchestra's permissions reach every call (V1 gate.ts, spike S7).
+          // permission mode: the hook is where Orchestra's permissions reach every call (the legacy gate.ts, spike S7).
           const gate: HookCallback = (input, _toolUseID, options) => {
             if (input.hook_event_name !== "PreToolUse") return Promise.resolve({})
             // The question needs the owner, so it is left to `canUseTool`, where its answers can be returned.
@@ -182,7 +182,7 @@ export const make = Effect.gen(function* () {
           // Steers that arrive while the query runs go into its input; the uuid says which one Claude Code consumed.
           const steered = new Map<string, string>()
           const consumed = new Set<string>()
-          // An assistant-level error (billing, rate limit, ...) fails the turn unless a later frame supersedes it (V1).
+          // An assistant-level error (billing, rate limit, ...) fails the turn unless a later frame supersedes it.
           const failure: { uuid?: string; message?: string } = {}
           const deliver = (sessionId: string) =>
             turn.state.update((value) => ({
@@ -518,7 +518,7 @@ function questions(input: Record<string, unknown>) {
   }))
 }
 
-/** The call as ToolSafety reads it, under Orchestra's tool name and argument names (V1 `gate.invocation`). */
+/** The call as ToolSafety reads it, under Orchestra's tool name and argument names (legacy `gate.invocation`). */
 function safetyCall(tool: string, input: Record<string, unknown>) {
   const text = (key: string) => (typeof input[key] === "string" ? input[key] : undefined)
   const file = text("file_path") ?? text("notebook_path")
@@ -556,7 +556,7 @@ function denial(error: { readonly _tag: string }) {
   return "Orchestra's permission rules deny this call."
 }
 
-/** Claude Code's session id for an Orchestra session: a name-based (v5) UUID, stable across restarts (as V1). */
+/** Claude Code's session id for an Orchestra session: a name-based (v5) UUID, stable across restarts. */
 export function claudeSessionID(sessionID: string) {
   const hash = createHash("sha1").update(NAMESPACE).update(sessionID).digest()
   hash[6] = (hash[6] & 0x0f) | 0x50

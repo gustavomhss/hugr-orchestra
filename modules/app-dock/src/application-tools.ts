@@ -19,7 +19,7 @@ import { createLinuxWorkspaceHooks } from "./linux-workspace"
 import type { Transport } from "./transport"
 
 // K2: the Dock and Linux workspace tools on V2. The hook tools stay the single implementation; each runs here with a
-// V1-shaped context whose `ask` goes through the Session's own V2 permission queue.
+// Legacy-shaped context whose `ask` goes through the Session's own V2 permission queue.
 
 type Resolve = (context: Tool.Context) => Effect.Effect<{ readonly directory: string; readonly ask: ToolContext["ask"] }, Tool.Failure>
 
@@ -161,7 +161,7 @@ export function scope(draft: AgentV2.Draft) {
     agent.description ??= LINUX_DESCRIPTION
     agent.mode = "subagent"
     // The `linux` and `dock` rules the owner configured (pushed onto every agent before this runs) survive as they are,
-    // so an ask or deny stays one; with none configured they default to allow, as V1 does.
+    // so an ask or deny stays one; with none configured they default to allow.
     const configured = (action: string) => {
       const rules = agent.permissions.filter((rule) => rule.action === action)
       return rules.length > 0 ? rules : [{ action, resource: "*", effect: "allow" as const }]

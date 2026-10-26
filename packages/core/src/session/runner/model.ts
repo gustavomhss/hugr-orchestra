@@ -26,7 +26,7 @@ export const pricing = (model: Model): ReadonlyArray<ModelV2.Cost> => prices.get
 
 /**
  * USD for one settled step under a price list (rates per million tokens). The tier whose context size the prompt
- * exceeds, the largest such, replaces the base rate; reasoning tokens bill at the output rate, as V1 billed them.
+ * exceeds, the largest such, replaces the base rate; reasoning tokens bill at the output rate, as the earlier runtime billed them.
  */
 export const cost = (
   list: ReadonlyArray<ModelV2.Cost>,
@@ -219,7 +219,7 @@ export const fromCatalogModel = (
         .model({ id: resolved.api.id }),
     ).pipe(Effect.map((value) => withPrices(withReference(value, model), model)))
   }
-  // A native model with an endpoint and no package speaks the OpenAI-compatible chat API, V1's default package.
+  // A native model with an endpoint and no package speaks the OpenAI-compatible chat API, the earlier runtime's default package.
   if (
     ((resolved.api.type === "aisdk" && resolved.api.package === "@ai-sdk/openai-compatible") ||
       resolved.api.type === "native") &&

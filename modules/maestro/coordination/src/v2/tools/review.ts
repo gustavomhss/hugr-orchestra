@@ -81,7 +81,7 @@ const ReviewInput = Schema.Struct({
   stage: Schema.optional(Schema.Literals(["plan", "code"])),
 })
 
-/** Validation, cold-review delegation and the review receipt, as V1 records them. */
+/** Validation, cold-review delegation and the review receipt, as the earlier runtime records them. */
 export function tools(input: {
   readonly services: MaestroChainTools.Services
   readonly gate: MaestroToolGate.Gate
@@ -261,7 +261,7 @@ export function tools(input: {
               resume: false,
             })
             .pipe(Effect.mapError((error) => new Tool.Failure({ message: `Review delegation prompt refused: ${error._tag}` })))
-          // V1 rechecks just before the provider runs; V2 rechecks just before the child's drain starts. The code stage
+          // The earlier runtime rechecks just before the provider runs; V2 rechecks just before the child's drain starts. The code stage
           // needs the workers' result to still be the exact tree under review.
           const current =
             planned && scope

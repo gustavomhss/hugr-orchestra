@@ -26,7 +26,7 @@ type Dependencies = {
 }
 
 /**
- * Names a root Session after its first prompt with the `title` agent, as V1 did. The new title is published as
+ * Names a root Session after its first prompt with the `title` agent. The new title is published as
  * `session.updated`. A Session that already has a title of its own, a child Session, or a second prompt is left alone.
  */
 export const make = (dependencies: Dependencies) =>

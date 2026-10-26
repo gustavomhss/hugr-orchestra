@@ -114,7 +114,7 @@ export interface Invocation {
 const MAX_DESCRIPTOR_BYTES = 32 * 1024
 const MAX_RECEIPTS = 256
 
-/** Shared discovery/execution boundary for V1, V2 and application registrations. */
+/** Shared discovery/execution boundary for legacy, V2 and application registrations. */
 export function makeHandlers<C extends Invocation>(resolve: (context: C) => Effect.Effect<Host, Tool.Failure>) {
   const receipts = new Map<string, string>()
   const key = (context: C, host: Host, name: string) =>
@@ -376,7 +376,7 @@ export const nativeRegistryReplacements = [
   [ToolRegistry.toolsNode, nativeToolsNode],
 ] as const
 
-/** Core leaves use `path`; F's shared V1 policy consumes the same resource as `filePath`. */
+/** Core leaves use `path`; F's shared legacy policy consumes the same resource as `filePath`. */
 export function nativeInvocation(input: ToolSafety.Invocation): ToolSafety.Invocation {
   if (
     !["read", "write", "edit", "multiedit"].includes(input.tool) ||

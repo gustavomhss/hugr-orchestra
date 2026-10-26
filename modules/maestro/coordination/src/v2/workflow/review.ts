@@ -146,7 +146,7 @@ export const verify = Effect.fn("WorkflowReviewV2.verify")(function* (
   }
 })
 
-// V1 accepts only these keys, with a string worktree and a path array; the rest is compared against the recomputation.
+// The earlier runtime accepts only these keys, with a string worktree and a path array; the rest is compared against the recomputation.
 const Artifact = Schema.Struct({
   baseSHA: Schema.optional(Schema.Unknown),
   headSHA: Schema.optional(Schema.Unknown),

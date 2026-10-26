@@ -28,7 +28,7 @@ import { WorkflowRecordsV2 } from "./records"
 import { WorkflowRelayV2 } from "./relay"
 import { WorkflowSettlementV2 } from "./settlement"
 
-// Workflow session host. V1
+// Workflow session host. The earlier runtime
 // built one host per armed receipt and kept it in memory; V2 keeps one stateless global host that resolves every call
 // from the durable binding: the authority Session that approved the plan, its arm and its Location's own Relay. The
 // runner reads it through RelayWorkflowSession, so every provider turn of a bound child reads its step here.
@@ -42,11 +42,11 @@ export interface Interface extends RelayWorkflowSession.Host {
    */
   readonly grade: (bound: Bound, settlement: RelayArm.WorkflowSettlement) => Effect.Effect<void, RelayWorkflowBinding.Held>
   /**
-   * Adopts a workflow Task's binding before its child runs (V1's WorkflowBinding.adopt): the approved plan must carry
+   * Adopts a workflow Task's binding before its child runs (the earlier runtime's WorkflowBinding.adopt): the approved plan must carry
    * the global acceptance checks and bind only checks this host runs; a first dispatch arms the plan's sprint for the
    * child, moving an arm a child that never ran still holds, and stores the binding; every call reads the current step,
    * and a parked arm holds until the owner releases it. A `continuation` that resumes a step held for a code review
-   * grades that hold first, as V1's authorized resume does.
+   * grades that hold first, as the earlier runtime's authorized resume does.
    */
   readonly admit: (bound: Bound, continuation: boolean) => Effect.Effect<void, RelayWorkflowBinding.Held>
 }
@@ -73,7 +73,7 @@ const layer = Layer.effect(
     const git = yield* GitCli.Service
     const fs = yield* FSUtil.Service
     const processes = yield* AppProcess.Service
-    // Without the process's execution service every child counts as running, so no arm moves (V1's Activity default).
+    // Without the process's execution service every child counts as running, so no arm moves (the earlier runtime's Activity default).
     const execution = yield* Effect.serviceOption(SessionExecution.Service)
 
     // The placement a binding names, opened in its authority Session's Location: the Relay that holds its arm, the
@@ -219,7 +219,7 @@ const layer = Layer.effect(
         }),
       )
 
-    // V1's moveArm: an arm still bound to another child moves here only when that child never ran a provider turn, and
+    // The earlier runtime's moveArm: an arm still bound to another child moves here only when that child never ran a provider turn, and
     // moves only forward. A move Relay made but Orchestra never recorded is recorded first, with this call as recorder.
     const moveArm = (
       relay: Relay.Interface,

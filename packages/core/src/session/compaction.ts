@@ -88,7 +88,7 @@ export type Input = {
 
 /**
  * The prompt budget before compaction: the context window less the output reserve. A provider-stated `input` limit is a
- * hard cap on the prompt itself and wins when it is the smaller (V1's `usable`), less the buffer so the next step fits.
+ * hard cap on the prompt itself and wins when it is the smaller (the earlier runtime's `usable`), less the buffer so the next step fits.
  */
 export const usable = (
   limits: { readonly input?: number } | undefined,

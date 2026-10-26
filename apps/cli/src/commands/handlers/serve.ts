@@ -75,15 +75,15 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
         // A desktop-owned child gets a per-launch password in env and never touches the daemon's password file.
         const password = process.env.ORCHESTRA_SERVER_PASSWORD || (yield* daemon.password())
         const root = yield* Effect.promise(() => webRoot())
-        // V1 transcripts on this database are copied to V2 before the server answers: a Session is eligible only
+        // Legacy transcripts on this database are copied to V2 before the server answers: a Session is eligible only
         // while it has no V2 message, so a prompt reaching an old Session first would skip its history forever.
         yield* Effect.gen(function* () {
           const database = yield* Database.Service
           const imported = yield* SessionV2.SessionLegacyImport.run(database.db)
-          if (imported > 0) console.log(`imported ${imported} V1 session transcripts`)
+          if (imported > 0) console.log(`imported ${imported} legacy session transcripts`)
         }).pipe(
           Effect.provide(AppNodeBuilder.build(LayerNode.group([Database.node]))),
-          Effect.catchCause((cause) => Effect.logError("V1 session import failed", cause)),
+          Effect.catchCause((cause) => Effect.logError("legacy session import failed", cause)),
         )
         const listening = yield* listen(input.hostname, input.port, password, hosts(), root, input.cors)
         const address = listening.address

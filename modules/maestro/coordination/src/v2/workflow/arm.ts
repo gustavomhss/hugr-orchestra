@@ -71,10 +71,10 @@ export const receipt = Effect.fn("WorkflowArmV2.receipt")(function* (
 })
 
 /**
- * The Arsenal execute guards for the Relay arm, as V1's native bindings keep them: a Session already bound to a
+ * The Arsenal execute guards for the Relay arm, as the earlier runtime's native bindings keep them: a Session already bound to a
  * workflow Task never changes its arm, an arm names its own Session, and every successful arm records its token as a
  * native completion-arm fact the workflow Task reads back as its receipt. A release names an arm this Session armed
- * natively, and only the owner's answer to the approval releases it (V1's ArsenalBindings.release).
+ * natively, and only the owner's answer to the approval releases it (the earlier runtime's ArsenalBindings.release).
  */
 export function hooks(input: {
   readonly database: Database.Interface

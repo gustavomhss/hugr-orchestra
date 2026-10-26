@@ -141,7 +141,7 @@ export const toolsLayer = (directory: string, entries: Config.Entry[] = []) =>
     ],
   )
 
-/** Inserts a Session row as the store reads it; `permission` keeps V1 rule fields, as the column does. */
+/** Inserts a Session row as the store reads it; `permission` keeps legacy rule fields, as the column does. */
 export const session = Effect.fn("GovernanceFixture.session")(function* (input: {
   readonly id?: SessionSchema.ID
   readonly directory: string

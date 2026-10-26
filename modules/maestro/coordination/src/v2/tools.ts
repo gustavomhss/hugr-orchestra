@@ -53,7 +53,7 @@ import { WorkflowRelayV2 } from "./workflow/relay"
  * also checks its caller itself. The Arsenal registers here only where the application has not bound it already: a
  * host that binds it as an application tool installs its runtime guard and governance observations there, and a
  * Location registration would shadow them. Without that host binding, governance audit, usage and status read the
- * actual host Session observations here, behind the same Session read permission V1 asks.
+ * actual host Session observations here, behind the same Session read permission the earlier runtime asks.
  */
 const layer = Layer.effectDiscard(
   Effect.gen(function* () {
@@ -93,7 +93,7 @@ const layer = Layer.effectDiscard(
         ...MaestroApprovalTools.tools({
           services,
           gate,
-          // V1's presentation of a workflow plan: its publication still materializes the approved bytes and its
+          // The earlier runtime's presentation of a workflow plan: its publication still materializes the approved bytes and its
           // upstream author still attributes it.
           verifyWorkflow: (session, planRevisionID) =>
             Effect.gen(function* () {

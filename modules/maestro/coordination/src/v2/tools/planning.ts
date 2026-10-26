@@ -145,7 +145,7 @@ export function tools(input: {
           if (!params.upstream && fields.some((field) => field.source === "upstream"))
             return yield* held("UPSTREAM_ATTRIBUTION_MISSING")
           const session = yield* MaestroChainTools.placement(services, context.sessionID)
-          // V1 observes the archie Task behind an upstream plan before it reads Atlas; this calling Session is always
+          // The earlier runtime observes the archie Task behind an upstream plan before it reads Atlas; this calling Session is always
           // the dispatch parent, never a payload field.
           const upstreamAttribution = params.upstream
             ? yield* UpstreamProvenanceV2.observe(services, {
@@ -248,7 +248,7 @@ export function tools(input: {
   }
 }
 
-/** V1's `recordContext(planRevisionID, sessionID, true)`: only a grounded plan revision takes a context. */
+/** The earlier runtime's `recordContext(planRevisionID, sessionID, true)`: only a grounded plan revision takes a context. */
 const recordContext = Effect.fn("MaestroPlanningTools.recordContext")(function* (
   services: MaestroChainTools.Services,
   planRevisionID: string,
@@ -317,7 +317,7 @@ const recordContext = Effect.fn("MaestroPlanningTools.recordContext")(function* 
 })
 
 /**
- * V1's `loadAtlasSkills`: the plan still compiles the same against a fresh read, each action loads the exact bytes it
+ * The earlier runtime's `loadAtlasSkills`: the plan still compiles the same against a fresh read, each action loads the exact bytes it
  * names, and the source is unchanged across the whole load.
  */
 const loadSkills = Effect.fn("MaestroPlanningTools.loadSkills")(function* (

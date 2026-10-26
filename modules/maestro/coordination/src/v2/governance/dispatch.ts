@@ -12,9 +12,9 @@ import { GovernanceRecordsV2 } from "./records"
 
 // Authorized dispatch. An
 // authorization reserves exactly one child Session, write-once, with the permission snapshot it runs under; the
-// reservation and its refusals are the V1 records and wording, so a dispatch reserved by V1 replays here unchanged.
+// reservation and its refusals are the earlier runtime's records and wording, so a dispatch reserved by it replays here unchanged.
 
-/** A permission rule as the reservation records it (V1 field names). */
+/** A permission rule as the reservation records it (the earlier runtime's field names). */
 export type Rule = { readonly permission: string; readonly pattern: string; readonly action: "allow" | "deny" | "ask" }
 
 export type Services = GovernanceEvidenceV2.Services & {

@@ -8,8 +8,8 @@ import { EventV2 } from "@orchestra/core/event"
 import { RelayWorkflowBinding } from "@orchestra/core/relay-workflow-binding"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 
-// Read-only governed-chain record readers. They read the V1 event rows as written, by id and versioned
-// type, and never write; a row of another type or shape reads as absent, as V1 reads it.
+// Read-only governed-chain record readers. They read the legacy event rows as written, by id and versioned
+// type, and never write; a row of another type or shape reads as absent.
 
 type Db = Database.Interface["db"]
 
@@ -80,7 +80,7 @@ export const readContext = Effect.fn("GovernanceRecordsV2.readContext")(function
 
 const decodeV3 = Schema.decodeUnknownOption(MaestroEvent.PlanRevision.RecordedV3.data)
 
-/** A v3 revision reads only when it decodes closed and its id and hash still bind its body, as V1 requires. */
+/** A v3 revision reads only when it decodes closed and its id and hash still bind its body. */
 export const readPlanRevision = Effect.fn("GovernanceRecordsV2.readPlanRevision")(function* (db: Db, id: string) {
   const found = yield* row(db, id)
   if (!found) return undefined
@@ -99,7 +99,7 @@ export const readPlanRevision = Effect.fn("GovernanceRecordsV2.readPlanRevision"
 })
 
 /**
- * The workflow-bound v3 revision a workflow Task runs, as V1's `readWorkflowRevision` reads it: anything but a v3 row
+ * The workflow-bound v3 revision a workflow Task runs, as the earlier runtime's `readWorkflowRevision` reads it: anything but a v3 row
  * of this id holds as missing, a body that does not decode closed or whose hash no longer binds it holds, a row whose
  * body names another id or Session holds, and a v3 revision without a workflow binding holds.
  */

@@ -10,7 +10,7 @@ import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { Api } from "../api"
 import { response } from "../location"
 
-// V1's Lean dashboard, read from the same collector and saved profile preferences in the requested Location. A profile
+// The earlier runtime's Lean dashboard, read from the same collector and saved profile preferences in the requested Location. A profile
 // without its own switch follows the Location config's `tool_output.lean.enabled`, which defaults to on.
 export const LeanHandler = HttpApiBuilder.group(Api, "server.lean", (handlers) =>
   Effect.gen(function* () {

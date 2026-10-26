@@ -53,7 +53,7 @@ function serve(routes: Record<string, unknown>) {
   return { urls, catalog: createCatalog(Orchestra.make({ baseUrl: "http://localhost:1", fetch })) }
 }
 
-test("bootstrap maps the V2 catalog into the V1 provider, agent and config stores", async () => {
+test("bootstrap maps the V2 catalog into the legacy provider, agent and config stores", async () => {
   const { catalog } = serve({
     "/api/provider": { location, data: [provider("p1"), provider("p2"), provider("off", true)] },
     "/api/model": {
@@ -121,7 +121,7 @@ test("bootstrap without a default model ranks no provider first and defaults eac
   expect(result.default).toEqual({ p1: "a", p2: "c" })
 })
 
-test("sessions lists by project and subpath and maps V2 Sessions to the V1 shape", async () => {
+test("sessions lists by project and subpath and maps V2 Sessions to the legacy shape", async () => {
   const { urls, catalog } = serve({ "/api/session": { data: [session("ses_b"), session("ses_a")], cursor: {} } })
   const sessions = await catalog.sessions({ workspace: "ws_1", project: "proj_1", subpath: "app" })
 

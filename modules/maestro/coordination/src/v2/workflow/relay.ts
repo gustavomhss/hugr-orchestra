@@ -21,7 +21,7 @@ export const ACCEPTANCE_CONTROLS = GLOBAL_ACCEPTANCE.map((name) => ({ id: name, 
 
 /**
  * The Relay of a V2 placement: the Location's own Relay service, which carries the authoring store root and the
- * workflow step session (`currentStep`, `transition`, `audit`). A Location that cannot open holds, as V1's host does.
+ * workflow step session (`currentStep`, `transition`, `audit`). A Location that cannot open holds.
  */
 export const relay = Effect.fn("WorkflowRelayV2.relay")(function* (placement: { readonly directory: string }) {
   const locations = yield* LocationServiceMap.Service

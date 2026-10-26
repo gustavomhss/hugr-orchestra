@@ -231,7 +231,7 @@ const loadSkill = Effect.fn("MaestroAtlasV2.loadSkill")(
     if (raw !== selected.content) return yield* held("skill-bytes-changed", [expected])
     const parsed = yield* Effect.try({ try: () => ConfigMarkdown.parse(raw), catch: normalize })
     if (parsed.data.name !== selected.skillName) return yield* held("skill-name-mismatch", [expected])
-    // V1 also requires the skill registry to serve these bytes. V2 discovers Own skills only under a project skill
+    // The earlier runtime also requires the skill registry to serve these bytes. V2 discovers Own skills only under a project skill
     // root, so the check binds a registered skill of this name to the verified file and refuses a shadowing one.
     const registered = (yield* services.skills.list()).find((skill) => skill.name === selected.skillName)
     if (registered) {

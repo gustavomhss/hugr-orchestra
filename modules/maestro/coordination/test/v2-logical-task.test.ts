@@ -107,7 +107,7 @@ test("ensure binds an execution Session once and refuses a different binding", (
     }),
   ))
 
-test("a binding V1 recorded under the immediate parent reads with the root as its authority", () =>
+test("a binding the earlier runtime recorded under the immediate parent reads with the root as its authority", () =>
   run((directory) =>
     Effect.gen(function* () {
       const logical = yield* services

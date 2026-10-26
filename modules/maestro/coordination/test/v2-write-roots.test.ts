@@ -39,7 +39,7 @@ test("a write-roots seat's child gets exactly its validated roots; without paths
         })
       expect(yield* admit({ directory, caller: "maestro", target: "backend" }))
         .toEqual({ permissions: [{ action: PERMISSION, resource: "*", effect: "deny" }] })
-      // Members without the capability ignore writePaths, as on V1.
+      // Members without the capability ignore writePaths.
       expect(yield* admit({ directory, caller: "maestro", target: "patty", extra: { writePaths: ["src"] } })).toEqual({})
     }),
   ))

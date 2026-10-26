@@ -1,5 +1,5 @@
 // The git command line the version-control views read: status, diffs, patches and history of a working directory.
-// Moved from V1 so the V2 server serves the same answers.
+// Moved from the retired runtime so the V2 server serves the same answers.
 
 import { makeGlobalNode } from "./effect/app-node"
 import { AppProcess } from "./process"

@@ -92,7 +92,7 @@ const layer = Layer.effect(
     }
 
     const projectModel = (model: ModelV2.Info, provider: ProviderV2.Info) => {
-      // As V1 resolved it: a model without its own package takes the provider's, and its own URL when it has one.
+      // A model without its own package takes the provider's, and its own URL when it has one.
       const api =
         model.api.type === "native" && Object.keys(model.api.settings).length === 0 && provider.api.type === "aisdk"
           ? { ...provider.api, id: model.api.id, url: model.api.url ?? provider.api.url }

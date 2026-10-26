@@ -32,7 +32,7 @@ type Services = {
 
 const decode = Schema.decodeUnknownSync(MaestroEvent.Task.ResumeAdmitted.data)
 
-/** F2.11: one logical resume per dispatching Session and Task call, as V1's `LogicalTask.resumeRef`. */
+/** F2.11: one logical resume per dispatching Session and Task call, as the earlier runtime's `LogicalTask.resumeRef`. */
 export function resumeRef(parentSessionID: string, callID: string) {
   return `${parentSessionID}/${callID}`
 }
@@ -40,7 +40,7 @@ export function resumeRef(parentSessionID: string, callID: string) {
 /**
  * Record what this Task call adds to the prompt `promptID` of its child, once: an exact retry reads the stored record,
  * so it admits the same text. A resumed child gets its resume marker; an Atlas seat dispatched with a unit gets the
- * fold of its latest admitted checkpoint, or a refusal, as V1 renders it. Nothing to add records nothing.
+ * fold of its latest admitted checkpoint, or a refusal, as the earlier runtime renders it. Nothing to add records nothing.
  */
 export const admit = Effect.fn("ResumeAdmissionV2.admit")(function* (
   services: Services,
@@ -95,7 +95,7 @@ export const read = Effect.fn("ResumeAdmissionV2.read")(function* (
 })
 
 /**
- * V1's `LogicalTask.readResumeRef` over the record: the resume marker of the child's prompt `promptID`, only when the
+ * The earlier runtime's `LogicalTask.readResumeRef` over the record: the resume marker of the child's prompt `promptID`, only when the
  * dispatching Session is the child's own parent.
  */
 export const readResumeRef = Effect.fn("ResumeAdmissionV2.readResumeRef")(function* (
@@ -130,7 +130,7 @@ export const admissions = Effect.fn("ResumeAdmissionV2.admissions")(function* (
   )
 })
 
-// V1 binds the child Session to the dispatching call; a Memory that cannot open or resolve is a refusal, never a throw.
+// The earlier runtime binds the child Session to the dispatching call; a Memory that cannot open or resolve is a refusal, never a throw.
 const atlas = Effect.fnUntraced(function* (
   services: Services,
   input: {
@@ -181,7 +181,7 @@ const atlas = Effect.fnUntraced(function* (
 })
 
 /**
- * V1's `AtlasResume.selectedRef` (F3 clause 16) over V2 history: the latest admitted emit receipt for the unit in the
+ * The earlier runtime's `AtlasResume.selectedRef` (F3 clause 16) over V2 history: the latest admitted emit receipt for the unit in the
  * child's own tool results names the checkpoint. Refused, unavailable and uncertain writes never advance it, nor does
  * an identical resubmission of a record an earlier receipt admitted. Without one, Atlas selects or refuses.
  */

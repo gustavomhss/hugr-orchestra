@@ -20,7 +20,7 @@ export const Entry = Schema.Struct({
 })
 export type Entry = Schema.Schema.Type<typeof Entry>
 
-/** One server as `write` stores it: the shape `orchestra mcp add` writes, which V2 config reads through its V1 migration. */
+/** One server as `write` stores it: the shape `orchestra mcp add` writes, which V2 config reads through its legacy migration. */
 export type Written = { readonly type: "local" | "remote"; readonly [key: string]: unknown }
 
 type Document = { file: string; text?: string; value?: unknown; errors: readonly ParseError[] }

@@ -179,7 +179,7 @@ const registryLayer = Layer.effect(
       )
     })
 
-    // V1 Lean projection over the settled view; the metadata reaches the tool part through LeanOutput.take.
+    // The earlier runtime's Lean projection over the settled view; the metadata reaches the tool part through LeanOutput.take.
     const lean = Effect.fn("ToolRegistry.lean")(function* (
       input: ExecuteInput,
       native: ToolOutput,

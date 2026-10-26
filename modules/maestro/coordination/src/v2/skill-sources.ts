@@ -7,7 +7,7 @@ import { PlaybookContent } from "../playbook-content"
 
 /**
  * Maestro's bundled playbooks (`SeatSkillRoot.playbooks`) as a skill source. It goes before every other source, so a
- * skill of the same name from anywhere else replaces a playbook, as in V1.
+ * skill of the same name from anywhere else replaces a playbook.
  */
 export function playbooks(root: string) {
   return (draft: SkillV2.Draft) =>

@@ -9,7 +9,7 @@ import { MaestroAtlasSourceV2 } from "../atlas-source"
 import type { GovernanceEvidenceV2 } from "../governance/evidence"
 
 // Shared pieces of the governed-chain tools (plan, context, validation, review, presentation, authorization): the
-// services they read and write through, and the V1 refusal texts the model reads.
+// services they read and write through, and the earlier runtime's refusal texts the model reads.
 
 export type Services = GovernanceEvidenceV2.Services & { readonly events: EventV2.Interface }
 
@@ -38,14 +38,14 @@ export const STALE_CONTEXT_NEXT_STEP =
 export const DIRTY_CONTEXT_NEXT_STEP =
   "The context was recorded with uncommitted or untracked changes; leave the tree clean, then record a new plan revision (change any field, such as methodVersion), rerun the checks, and record a new context and a new validation."
 
-/** V1's `AtlasContextHeld` refusal, as the tool failure the model reads. */
+/** The earlier runtime's `AtlasContextHeld` refusal, as the tool failure the model reads. */
 export function atlasHeld(reason: string, evidence: readonly string[]) {
   const held = `${reason}: ${evidence.join("; ")}`
   const next = nextSteps[reason]
   return new Tool.Failure({ message: next ? `${held}. ${next}` : held, metadata: { status: "HOLD", reason } })
 }
 
-/** An Atlas source hold becomes V1's refusal; every other failure stays as it is. */
+/** An Atlas source hold becomes the earlier runtime's refusal; every other failure stays as it is. */
 export function fromAtlas<A, R>(effect: Effect.Effect<A, MaestroAtlasSourceV2.Held | Tool.Failure, R>) {
   return effect.pipe(
     Effect.mapError((error) =>
@@ -54,7 +54,7 @@ export function fromAtlas<A, R>(effect: Effect.Effect<A, MaestroAtlasSourceV2.He
   )
 }
 
-/** The Session's placement for the Atlas source, or the V1 refusal a missing Session gets. */
+/** The Session's placement for the Atlas source, or the earlier runtime's refusal a missing Session gets. */
 export const placement = Effect.fn("MaestroChainTools.placement")(function* (
   services: Services,
   sessionID: Tool.Context["sessionID"],
@@ -66,7 +66,7 @@ export const placement = Effect.fn("MaestroChainTools.placement")(function* (
 
 export type ToolPlan = Schema.Schema.Type<typeof MaestroContext.ToolPlan>
 
-/** V1's context tool plan compiler; it reads the roster, which loads lazily. */
+/** The earlier runtime's context tool plan compiler; it reads the roster, which loads lazily. */
 export const compile = Effect.fn("MaestroChainTools.compile")(function* (input: {
   readonly session: { readonly id: string; readonly projectID: string }
   readonly revision: { readonly id: string; readonly hash: string }

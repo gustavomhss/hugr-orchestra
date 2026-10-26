@@ -155,7 +155,7 @@ export class Denied extends Schema.TaggedErrorClass<Denied>()("ToolSafety.Denied
 }
 
 /**
- * The call whose hooks another ToolSafety.run of it enforces, so this run does not repeat them: an outer run, or for V1
+ * The call whose hooks another ToolSafety.run of it enforces, so this run does not repeat them: an outer run, or for the earlier runtime,
  * the session tools boundary inside the native host's wrapper, which a Promise boundary hides from it.
  */
 export const HookedCall = Context.Reference<string | undefined>("@orchestra/ToolSafety/HookedCall", {

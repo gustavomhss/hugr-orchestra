@@ -6,7 +6,7 @@ import { Event } from "@orchestra/schema/event"
 import { Research } from "@orchestra/schema/research"
 import { WriteRootsV2 } from "./write-roots"
 
-// V1's Task fields, so a recorded call decodes the same way on both runtimes.
+// The earlier runtime's Task fields, so a recorded call decodes the same way on both runtimes.
 
 export const fields = {
   governed: Schema.optional(

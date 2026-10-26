@@ -101,7 +101,7 @@ export async function spawn(cmd: string, argsOrOpts?: string[] | Options, opts?:
     cwd: cfg.cwd,
     inheritEnv: false,
     env: cfg.env === null ? {} : Omni.childEnv(cfg.env ?? undefined),
-    // A language server speaks JSON-RPC over stdio, so every launch opens all three pipes, as V1's launcher did.
+    // A language server speaks JSON-RPC over stdio, so every launch opens all three pipes, as the earlier runtime's launcher did.
     stdin: "pipe",
     text: false,
     backpressure: true,

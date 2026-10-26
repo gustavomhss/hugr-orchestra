@@ -19,7 +19,7 @@ export type InvocationBinding = Readonly<{
 export type ToolContext = {
   sessionID: string
   messageID: string
-  /** Optional for legacy/non-V1 hosts; native V1 backend calls always carry both fields. */
+  /** Optional for legacy hosts; native backend calls always carry both fields. */
   readonly callID?: string
   readonly binding?: InvocationBinding
   /** Display label of the executing agent. Users can rename it, so never route or authorize on it. */

@@ -391,7 +391,7 @@ describe("V2 atlas_context output bound", () => {
   })
 })
 
-// V1's `AtlasKnowledge.resolve` on V2: a workflow publication's anchor reference resolves only to the anchor native
+// The earlier runtime's `AtlasKnowledge.resolve` on V2: a workflow publication's anchor reference resolves only to the anchor native
 // Archie produced through one completed atlas_context call in its own Session, with the same units still loading
 // unchanged from the source.
 describe("V2 workflow knowledge resolve", () => {

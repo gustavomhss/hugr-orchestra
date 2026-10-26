@@ -51,7 +51,7 @@ export const observe = Effect.fn("UpstreamProvenanceV2.observe")(function* (
   const seat = Seats.find("archie")
   if (!seat || seat.profileKey !== "upstream" || seat.workResult !== UpstreamResult.SCHEMA)
     return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_REGISTRY_MISMATCH", message: "Native archie upstream seat is unavailable or inconsistent" })
-  // V1 verifies a Claude Code Agent dispatch through evidence its host mirrors from in-process hooks; V2 records none.
+  // The earlier runtime verifies a Claude Code Agent dispatch through evidence its host mirrors from in-process hooks; V2 records none.
   if (input.dispatchKind === "claude-code-agent")
     return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PROPOSAL_UNAVAILABLE", message: "HOLD: V2 records no Claude Code Agent dispatch evidence to verify" })
 

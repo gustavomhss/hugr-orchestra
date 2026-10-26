@@ -48,7 +48,7 @@ const results = (messages: readonly Message[]) =>
   )
 
 describe("ContinuityStrategy settings", () => {
-  test("trigger, enabled and hard limit follow V1 rules", () => {
+  test("trigger, enabled and hard limit follow the legacy rules", () => {
     expect(ContinuityStrategy.settings([])).toEqual({ enabled: true, trigger: 0.4 })
     expect(ContinuityStrategy.settings(config({ continuity: { trigger: 0.5 } }))).toEqual({ enabled: true, trigger: 0.5 })
     expect(ContinuityStrategy.settings(config({ continuity: { trigger: 0.9 } })).trigger).toBe(0.4)
@@ -62,7 +62,7 @@ describe("ContinuityStrategy settings", () => {
 })
 
 describe("ContinuityStrategy.transform", () => {
-  test("masks old tool output over the hard limit and archives it in the V1 format", () =>
+  test("masks old tool output over the hard limit and archives it in the legacy format", () =>
     it(
       Effect.gen(function* () {
         const compaction = yield* strategy([])

@@ -1,7 +1,7 @@
 import { Option } from "effect"
 
 /**
- * The mini-mode choices around session history and demo mode, checked as V1 checked them: replay is on by default,
+ * The mini-mode choices around session history and demo mode: replay is on by default,
  * `--replay` alone is refused, and every other mini flag needs `--mini`.
  */
 export function miniOptions(input: {

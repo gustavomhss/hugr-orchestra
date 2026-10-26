@@ -23,8 +23,8 @@ export function createSessionActions(client: Client) {
         model: { providerID: input.model.providerID, id: input.model.modelID, variant: input.model.variant },
         location: input.directory ? { directory: input.directory, workspaceID: input.workspaceID } : undefined,
       }),
-    // V1 sent the agent and model with every prompt; V2 prompts run on the Session's selection, so select first.
-    // Editor context was a hidden synthetic part in V1; V2 admits it as a synthetic input that does not wake the
+    // The earlier runtime sent the agent and model with every prompt; V2 prompts run on the Session's selection, so select first.
+    // Editor context was a hidden synthetic part in the earlier runtime; V2 admits it as a synthetic input that does not wake the
     // Session, so the prompt that follows carries it into the same turn.
     async prompt(input: {
       sessionID: string

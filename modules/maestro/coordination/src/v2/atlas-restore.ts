@@ -13,7 +13,7 @@ import { MaestroSeats } from "./seats-service"
 export const key = SystemContext.Key.make("maestro/atlas-resume")
 
 /**
- * Where a resume admission rides, as in V1: a message's own metadata or a completed tool call's structured output. A V2
+ * Where a resume admission rides: a message's own metadata or a completed tool call's structured output. A V2
  * Task records it beside the prompt it admits (`ResumeAdmissionV2`), so it rides that prompt's message once promoted.
  */
 export const ADMISSION_KEY = "atlasResume"
@@ -42,7 +42,7 @@ export type Entry = {
 
 /**
  * Ruling M3-1 on V2: when a compaction leaves a native Atlas seat's admitted resume fold outside the kept history, the
- * host restores the same admission text, unchanged, as a System Context source of that seat's turns. V1 re-pushed it
+ * host restores the same admission text, unchanged, as a System Context source of that seat's turns. The earlier runtime re-pushed it
  * into a message; V2 compaction may record no Session events and is owned elsewhere, while the Context Epoch it starts
  * re-renders every source into the new baseline, so the restore composes with any compaction without touching it. The
  * restored copy stays resident while the fold is evicted and leaves when a newer admission is visible again.
@@ -90,7 +90,7 @@ const layer = Layer.effectDiscard(
 
 /**
  * The member's latest admitted fold in this project, as its restored copy, when every copy of it lies before the latest
- * compaction and none was restored into the history (V1's legacy restore).
+ * compaction and none was restored into the history (the legacy restore).
  */
 export function evicted(entries: readonly Entry[], member: string, projectID: string): Admission | undefined {
   const compaction = entries.findLast((entry) => entry.message.type === "compaction")?.seq ?? -Infinity

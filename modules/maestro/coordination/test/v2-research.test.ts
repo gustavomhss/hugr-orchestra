@@ -46,7 +46,7 @@ test("a Task to the research seat binds its dispatch: the call, the effort tier 
         { action: ResearchDispatchV2.PERMISSION, resource: "tier:focused", effect: "deny" },
         { action: ResearchDispatchV2.PERMISSION, resource: "domain:docs.python.org", effect: "deny" },
       ])
-      // Without effort the dispatch is quick and web search is unrestricted, as on V1.
+      // Without effort the dispatch is quick and web search is unrestricted.
       expect(ResearchDispatchV2.read((yield* admit({ directory, caller: "maestro", target: "jimmy" })).permissions ?? []))
         .toEqual({ callID: "call_governance_fixture", tier: "quick", domains: undefined })
       // Other teammates ignore the research fields and carry no dispatch.

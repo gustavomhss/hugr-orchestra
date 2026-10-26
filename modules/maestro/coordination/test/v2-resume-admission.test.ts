@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { ResumeAdmissionV2 } from "../src/v2/governance/resume-admission"
 import { MaestroAtlasMemoryTools } from "../src/v2/tools/atlas-memory"
 
-// V1's `AtlasResume.selectedRef` over V2 history: the latest admitted emit receipt of the unit names the checkpoint.
+// The earlier runtime's `AtlasResume.selectedRef` over V2 history: the latest admitted emit receipt of the unit names the checkpoint.
 
 const key = { projectID: "prj", memoryOwner: "backend", kind: "task", id: "t" } as const
 const emit = (input: { eventId: string; outcome?: string; reconciled?: boolean; owner?: string; taskId?: string }) => ({

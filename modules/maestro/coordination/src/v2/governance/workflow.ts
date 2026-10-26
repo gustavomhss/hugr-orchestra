@@ -9,7 +9,7 @@ import { EventV2 } from "@orchestra/core/event"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 
 /**
- * V1's workflow Task holds: a Session bound to a workflow step never starts a Task of its own, and a resumed child
+ * The earlier runtime's workflow Task holds: a Session bound to a workflow step never starts a Task of its own, and a resumed child
  * bound to a workflow continues only as that workflow's Task.
  */
 export const check = Effect.fn("WorkflowGateV2.check")(function* (

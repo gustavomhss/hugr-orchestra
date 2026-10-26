@@ -19,7 +19,7 @@ import { WriteRootsV2 } from "./write-roots"
 
 // The governed Task reservation. One approved
 // presentation reserves exactly one child Session, write-once, with the permission snapshot it runs under, and is
-// consumed once before that child's first provider turn. Records and refusals are V1's, so V1 reservations replay here.
+// consumed once before that child's first provider turn. Records and refusals are the earlier runtime's, so its reservations replay here.
 
 export type Services = {
   readonly db: Database.Interface["db"]

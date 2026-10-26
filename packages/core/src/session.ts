@@ -529,7 +529,7 @@ const layer = Layer.effect(
         const kept = rows.slice(0, reverted < 0 ? target : Math.min(target, reverted))
         const forked = yield* result.create({ location: source.location, agent: source.agent, model: source.model })
         yield* SessionLifecycle.rename(db, events, { sessionID: forked.id, title: forkedTitle(source.title) })
-        // As the V1 import does: copied rows take negative sequences below every event the fork will project.
+        // As the legacy import does: copied rows take negative sequences below every event the fork will project.
         yield* db
           .transaction(
             () =>

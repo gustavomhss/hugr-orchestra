@@ -677,8 +677,8 @@ export namespace Task {
   export type Bound = typeof Bound.Type
 
   // What a Task call added to the prompt it admits into its child (`promptID`), recorded before the prompt so every
-  // exact retry admits the same text: the dispatch call that resumed the child (`resumeRef`, V1's resume marker) and a
-  // native Atlas seat's resume admission (V1's admission part metadata). The event ID is derived from the child and the
+  // exact retry admits the same text: the dispatch call that resumed the child (`resumeRef`, the earlier runtime's resume marker) and a
+  // native Atlas seat's resume admission (the earlier runtime's admission part metadata). The event ID is derived from the child and the
   // prompt, so one prompt records at most one. Durable only, not public.
   export const ResumeAdmitted = Event.define({
     type: "maestro.task.resume_admitted",

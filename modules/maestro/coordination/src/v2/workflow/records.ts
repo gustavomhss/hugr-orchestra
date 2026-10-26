@@ -16,7 +16,7 @@ import { MaestroReviewRecords } from "../tools/review-records"
 
 // Durable workflow Task records: the binding a Task
 // stored for its execution Session, a settlement that held for a code review, the grade of a held reply, and the move of
-// an arm to the child that took it. Their ids are V1's, so a retried write records nothing new.
+// an arm to the child that took it. Their ids are the earlier runtime's, so a retried write records nothing new.
 
 type Db = Database.Interface["db"]
 type Services = { readonly db: Db; readonly events: EventV2.Interface }

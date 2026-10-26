@@ -123,7 +123,7 @@ export function tools(input: { readonly services: MaestroChainTools.Services; re
           const review = yield* MaestroReviewRecords.findReview(services, context.sessionID, validation.id)
           if (review?.verdict !== "APPROVE")
             return yield* new Tool.Failure({ message: "Approval presentation requires lucy APPROVE" })
-          // A workflow plan presents only while its publication still materializes the approved bytes (V1's revalidate).
+          // A workflow plan presents only while its publication still materializes the approved bytes (the earlier runtime's revalidate).
           const workflowBinding = plan.revision === "v3" ? plan.workflowBinding : undefined
           if (workflowBinding) yield* input.verifyWorkflow(session, plan.id)
           const validationHash = MaestroReviewRecords.hash(validation)
@@ -332,7 +332,7 @@ type PresentInput = Omit<ApprovalPresentation, "id" | "assistantMessageID" | "ac
   readonly memberID: string
 }
 
-/** Record one presentation once; an exact retry replays it unless the owner wrote since, as V1 does. */
+/** Record one presentation once; an exact retry replays it unless the owner wrote since. */
 export const presentApproval = Effect.fn("MaestroApprovalTools.present")(function* (
   services: MaestroChainTools.Services,
   input: PresentInput,
@@ -467,7 +467,7 @@ function authorizationRejected(reason: string) {
   })
 }
 
-/** Grant execution authority once from a current direct approval and a plan-stage APPROVE receipt, as V1 does. */
+/** Grant execution authority once from a current direct approval and a plan-stage APPROVE receipt. */
 export const grantAuthorization = Effect.fn("MaestroApprovalTools.grant")(function* (
   services: MaestroChainTools.Services,
   input: {

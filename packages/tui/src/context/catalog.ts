@@ -44,7 +44,7 @@ export function createCatalog(client: Client) {
         }),
       )
       const connected = all.filter((provider) => !providers.data.find((item) => item.id === provider.id)?.disabled)
-      // V1 picked each provider's default model by ranking; V2 names one default model, so the other providers
+      // The earlier runtime picked each provider's default model by ranking; V2 names one default model, so the other providers
       // fall back to their first model. The default model's provider goes first because the TUI falls back to
       // the first provider when nothing else selects a model.
       const defaults = Object.fromEntries(
@@ -119,8 +119,8 @@ export function createCatalog(client: Client) {
           (result): Record<string, McpStatus> =>
             Object.fromEntries(result.data.map((server) => [server.name, { ...server.status }])),
         ),
-    // V2 lists sessions by project and subpath instead of V1's `scope` and `path`, and has no start-time window.
-    // `roots` keeps top-level Sessions only, as V1's `roots` query did; V2 filters it here.
+    // V2 lists sessions by project and subpath instead of the earlier runtime's `scope` and `path`, and has no start-time window.
+    // `roots` keeps top-level Sessions only, as the earlier runtime's `roots` query did; V2 filters it here.
     sessions: (input: {
       workspace?: string
       project?: string
@@ -149,7 +149,7 @@ export function createCatalog(client: Client) {
     messages: (sessionID: string) =>
       client.messages.list({ sessionID, limit: 100 }).then((result) => result.data as SessionMessage[]),
     // V2 has no per-Session diff route. A Session's diff is the working-tree status of the files its steps
-    // changed, which matches V1's diff while those changes are uncommitted.
+    // changed, which matches the earlier runtime's diff while those changes are uncommitted.
     diff: (location: Location, files: ReadonlySet<string>) =>
       files.size === 0
         ? Promise.resolve<SnapshotFileDiff[]>([])

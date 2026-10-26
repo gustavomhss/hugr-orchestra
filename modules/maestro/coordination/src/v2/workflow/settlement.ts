@@ -375,7 +375,7 @@ const MAX_DIFF = 2 * 1024 * 1024
 const SHA = /^[a-f0-9]{40}(?:[a-f0-9]{24})?$/
 const PlanReference = Schema.Struct({ planRevisionID: Schema.optional(Schema.String) })
 
-// Bun's JUnit reporter as V1 reads it: every count is a bounded integer string, and absent counts never decode.
+// Bun's JUnit reporter as the earlier runtime reads it: every count is a bounded integer string, and absent counts never decode.
 const Count = Schema.NumberFromString.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0), Schema.isLessThanOrEqualTo(4096))
 const Case = Schema.Struct({
   "@name": Schema.NonEmptyString,

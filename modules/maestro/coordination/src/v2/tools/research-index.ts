@@ -15,7 +15,7 @@ export const RANGE_LINES = 40
 export const SHOWN_LINES = 320
 
 /**
- * The code index query (V1 `CodeIndexTools` Engine) over the real build path. Pack readiness is read per query, so a
+ * The code index query (the earlier runtime's `CodeIndexTools` Engine) over the real build path. Pack readiness is read per query, so a
  * pack installed after startup serves the next call, and config `research.limits` is read per query too.
  */
 export function index(services: Services, worktree: string, input: CodeIndex.CodeQuery) {
@@ -31,13 +31,13 @@ export function index(services: Services, worktree: string, input: CodeIndex.Cod
   }).pipe(Effect.provideService(AppProcess.Service, services.processes))
 }
 
-/** `ResearchToolkit.Caps` from config `research.limits`, which may only lower the owner caps (V1 `code-index.ts`). */
+/** `ResearchToolkit.Caps` from config `research.limits`, which may only lower the owner caps (the earlier runtime's `code-index.ts`). */
 export function caps(config: Config.Interface) {
   return config.entries().pipe(Effect.map((entries) => ResearchToolkit.caps(Config.latest(entries, "research")?.limits)))
 }
 
 /**
- * The code-index warm-up V1 starts with the tool registry (`registry.ts` `research.prewarm`): only where the research
+ * The code-index warm-up the earlier runtime starts with the tool registry (`registry.ts` `research.prewarm`): only where the research
  * seat exists and the worktree is a real one, and only on a platform that can confine the indexer. `prewarm` forks
  * detached and runs once per worktree per process.
  */

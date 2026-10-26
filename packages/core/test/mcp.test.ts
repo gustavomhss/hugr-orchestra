@@ -1,4 +1,4 @@
-// The Location's MCP service: a stdio server from a V1-shaped profile config connects through omni, its tools join
+// The Location's MCP service: a stdio server from a legacy-shaped profile config connects through omni, its tools join
 // the Location's tool registry, its resources list and read, and its prompts become commands; disconnect removes them;
 // add and remove edit the profile's own config file; OAuth is refused for a local server and for one not configured.
 import fs from "fs/promises"

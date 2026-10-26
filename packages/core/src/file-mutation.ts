@@ -70,7 +70,7 @@ export class Service extends Context.Service<Service, Interface>()("@orchestra/v
  * Writes go to the resolved canonical target and refuse a symlink swapped in after resolution instead of following
  * it, so a check made at resolve time still holds at write time.
  *
- * Every write runs the Location's configured formatters on the canonical target before the lock is released, as V1's
+ * Every write runs the Location's configured formatters on the canonical target before the lock is released, as the earlier runtime's
  * edit, write and apply_patch tools did.
  *
  * Serialize file changes by canonical target. Conditional writes compare and

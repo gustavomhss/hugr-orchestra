@@ -47,7 +47,7 @@ const decode = Schema.decodeUnknownOption(GovernanceInputV2.Input)
 const decodeReserved = Schema.decodeUnknownSync(MaestroEvent.Dispatch.ReservedV2.data)
 
 /**
- * Maestro's Task governance on V2, in V1's phase order: the caller seat's native profile, the phases whose host is not
+ * Maestro's Task governance on V2, in the earlier runtime's phase order: the caller seat's native profile, the phases whose host is not
  * on V2 yet (refused, never skipped), the workflow holds, logical-task resume, the authorized and governed
  * reservations with their write-once child, then a write-roots seat's bound scope over the parent's inherited rules as
  * the child's rules. Each reserved
@@ -101,14 +101,14 @@ export const make = Effect.gen(function* () {
           projectID: parent.projectID,
           memberID,
         })
-        // Every child starts from the rules core's TaskTool inherits from the parent (V1's childPermissions); a resumed
+        // Every child starts from the rules core's TaskTool inherits from the parent (the earlier runtime's childPermissions); a resumed
         // child keeps its own recorded rules. A reserved child is created by its reservation, so its rules are the
         // snapshot, which therefore must already hold the inherited rules.
         const base = !reserved && resumed
           ? yield* store.permissions(resumed.id)
           : TaskTool.inheritedPermissions(yield* store.permissions(parent.id), TaskTool.primaryTools(yield* config.entries()))
         const scoped = seat?.writeRoots ? yield* WriteRootsV2.bind(fs, location, input.writePaths, base) : base
-        // The research seat runs under the allowance this call binds (V1's ResearchExecution.enter); the child reads it
+        // The research seat runs under the allowance this call binds (the earlier runtime's ResearchExecution.enter); the child reads it
         // back on every provider turn and tool call, since fiber context does not reach the Session executor.
         const permissions = seat?.research
           ? ResearchDispatchV2.bind(scoped, {
@@ -140,7 +140,7 @@ export const make = Effect.gen(function* () {
             })
         const reservedID = governed?.childSessionID ?? authorized?.childSessionID
         const reservedChild = reservedID ? SessionSchema.ID.make(reservedID) : undefined
-        // An authorized workflow child that already holds its binding resumes its step (V1's continuation).
+        // An authorized workflow child that already holds its binding resumes its step (the earlier runtime's continuation).
         const continuation = workflow && reservedChild
           ? (yield* WorkflowAdmissionV2.bound(database.db, reservedChild)) !== undefined
           : false
@@ -282,7 +282,7 @@ export const make = Effect.gen(function* () {
           const card = UpstreamResult.parse(settled.text)
           return card ? { ...settled, structured: { upstreamResult: card } } : settled
         }
-        // V1's SeatWork.track: the seat's work result rides with the Task result, host facts included.
+        // The earlier runtime's SeatWork.track: the seat's work result rides with the Task result, host facts included.
         const authority = yield* SessionAuthority.make(store.get)(input.child.id, input.child.projectID).pipe(
           Effect.mapError((error) => new ToolFailure({ message: `Task binding denied: ${error.reason}` })),
         )
@@ -298,7 +298,7 @@ export const make = Effect.gen(function* () {
           directory: location.directory,
           worktree: location.vcs?.type === "git" ? location.project.directory : location.directory,
         })
-        // V1 reports the shell fact beside the roots: the worst one the child's commands met, else this host's status.
+        // The earlier runtime reports the shell fact beside the roots: the worst one the child's commands met, else this host's status.
         const shell = roots
           ? (ToolSafety.shellFact(input.child.id) ?? (yield* ToolSafetySandbox.status().pipe(Effect.provideService(FSUtil.Service, fs))))
           : undefined
@@ -347,7 +347,7 @@ export const make = Effect.gen(function* () {
   }
 
   // Before the dispatch child's first provider call its reservation must still replay with the child's own rules, and
-  // the recorded context must still describe the tree (V1's beforeModel revalidation).
+  // the recorded context must still describe the tree (the earlier runtime's beforeModel revalidation).
   function revalidateDispatch(childSessionID: string) {
     return Effect.gen(function* () {
       const row = yield* database.db

@@ -25,7 +25,7 @@ export async function resolveRoot(candidates: ReadonlyArray<string | undefined>)
 
 /**
  * Serves the built app-shell web UI from `root` for every GET the API does not claim. A path with no file falls back to
- * `index.html` so client-side routes load, as the V1 embedded UI did. The files are public: the API keeps its own auth.
+ * `index.html` so client-side routes load, as the earlier runtime's embedded UI did. The files are public: the API keeps its own auth.
  */
 export function layer(root: string) {
   const base = path.resolve(root)

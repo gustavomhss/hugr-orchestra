@@ -575,7 +575,7 @@ test("approval holds when the reply is not immediate or the presentation is no l
     }),
   ))
 
-test("chain steps without their evidence refuse with the V1 reasons and record nothing", () =>
+test("chain steps without their evidence refuse with the legacy reasons and record nothing", () =>
   run(
     Effect.gen(function* () {
       yield* setup

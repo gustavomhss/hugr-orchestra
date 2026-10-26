@@ -16,8 +16,8 @@ import { Database } from "../database/database"
 import { SessionMessage } from "./message"
 import { MessageTable, PartTable, SessionMessageTable, SessionTable } from "./sql"
 
-// V1 and V2 share the `session` table, but V1 keeps transcripts in `message`/`part` and V2 reads `session_message`.
-// This copies each V1 transcript into V2 once: only Sessions with V1 messages and no V2 message are touched, V1 rows
+// Legacy and V2 share the `session` table, but legacy keeps transcripts in `message`/`part` and V2 reads `session_message`.
+// This copies each legacy transcript into V2 once: only Sessions with legacy messages and no V2 message are touched, legacy rows
 // are never changed, and a rerun is a no-op. Imported rows take negative sequences, below every durable event
 // sequence a later V2 turn on the same Session will project. Subtask, compaction and patch parts and tool-result
 // attachments map onto their V2 shapes (user text and mentions, compaction messages, the assistant's snapshot).
@@ -26,7 +26,7 @@ const decode = Schema.decodeUnknownOption(SessionMessage.Message)
 const encode = Schema.encodeSync(SessionMessage.Message)
 
 /**
- * Imports every pending V1 transcript; returns how many Sessions actually gained V2 messages. A Session whose
+ * Imports every pending legacy transcript; returns how many Sessions actually gained V2 messages. A Session whose
  * messages all fail to decode stays pending (and is not counted), so it is retried, cheaply, on the next call.
  * Callers must finish this before anything can prompt a Session: eligibility is "no V2 message yet".
  */
@@ -140,8 +140,8 @@ function user(info: Extract<Info, { role: "user" }>, parts: ReadonlyArray<Part>,
 }
 
 /**
- * A V1 compaction is a user message with a compaction part answered by a summary assistant message. On V2 it is one
- * compaction message whose summary is that answer and whose recent context is the tail V1 kept verbatim; the summary
+ * A legacy compaction is a user message with a compaction part answered by a summary assistant message. On V2 it is one
+ * compaction message whose summary is that answer and whose recent context is the tail legacy kept verbatim; the summary
  * assistant is folded into it. A compaction that never produced a summary restores nothing.
  */
 function checkpoint(info: Extract<Info, { role: "user" }>, part: CompactionPart, rows: ReadonlyArray<Row>) {
@@ -208,7 +208,7 @@ function assistant(
 }
 
 /**
- * V1 records a turn's changes as patch parts (the step's start snapshot and the files it changed) between step parts
+ * The legacy runtime records a turn's changes as patch parts (the step's start snapshot and the files it changed) between step parts
  * that carry the snapshots; V2 keeps the same facts on the assistant's `snapshot`, with Location-relative files.
  */
 function snapshot(parts: ReadonlyArray<Part>, directory: string | undefined) {

@@ -420,7 +420,7 @@ export const dfmt: Info = {
   },
 }
 
-/** The built-in formatters by export name; config overrides look a built-in up by this key, as in V1. */
+/** The built-in formatters by export name; config overrides look a built-in up by this key. */
 export const builtIns: Record<string, Info> = { gofmt, mix, prettier, oxfmt, biome, zig, clang, ktlint, ruff, rlang, uvformat, rubocop, standardrb, htmlbeautifier, dart, ocamlformat, terraform, latexindent, gleam, shfmt, nixfmt, rustfmt, pint, ormolu, cljfmt, dfmt }
 
 // Every directory from `start` up to `stop` (inclusive) holding `target`, nearest first.

@@ -15,8 +15,8 @@ export const key = SystemContext.Key.make("maestro/atlas-header")
  * A native Atlas seat's running header (Awareness, Orientation and its own top-12 project rules) as one System Context
  * source of every provider turn the seat executes; other agents get nothing. Storage is the execution worktree's root.
  * The read never writes and never fails the turn: an unreadable or partial store renders the explicit degraded marker
- * V1 renders, which the charter tells the specialist to act on. A changed header is admitted whole as the update, so the
- * model always holds the current one, as V1's per-turn header did.
+ * The earlier runtime renders, which the charter tells the specialist to act on. A changed header is admitted whole as the update, so the
+ * model always holds the current one.
  */
 const layer = Layer.effectDiscard(
   Effect.gen(function* () {

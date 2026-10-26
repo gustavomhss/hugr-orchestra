@@ -2,7 +2,7 @@ export * as Mcp from "./mcp"
 
 // The Location's MCP servers: connects the configured servers, adds their tools to the Location's tool registry behind
 // V2 permissions, lists and reads their resources and prompts, and edits the profile's own config files. Remote servers
-// connect with the OAuth tokens V1 stored (`mcp-auth.json`); one without valid tokens reports `needs_auth` until a
+// connect with the OAuth tokens the earlier runtime stored (`mcp-auth.json`); one without valid tokens reports `needs_auth` until a
 // sign-in completes.
 
 import path from "node:path"
@@ -711,7 +711,7 @@ function unauthorized(error: Error) {
   return error.name === "UnauthorizedError" || /\b401\b|unauthorized/i.test(error.message)
 }
 
-// As V1: an OAuth failure needs a sign-in, unless the server cannot register a client and needs a configured client ID.
+// An OAuth failure needs a sign-in, unless the server cannot register a client and needs a configured client ID.
 function authStatus(error: Error, oauth: boolean): Mcp.Status | undefined {
   if (!unauthorized(error) && !(oauth && error.message.includes("OAuth"))) return undefined
   if (/registration|client_id/.test(error.message))

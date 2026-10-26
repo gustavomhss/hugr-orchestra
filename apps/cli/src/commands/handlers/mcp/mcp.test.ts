@@ -75,7 +75,7 @@ describe("mcp add", () => {
     })
   })
 
-  test("rejects combinations V1 rejected", () => {
+  test("rejects invalid flag combinations", () => {
     expect(() => parse({ env: [], header: [], command: [] })).toThrow("Provide either --url <url> or a command after --")
     expect(() => parse({ url: "https://x.example", env: [], header: [], command: ["a"] })).toThrow("Provide either")
     expect(() => parse({ url: "not a url", env: [], header: [], command: [] })).toThrow("Invalid URL: not a url")

@@ -212,7 +212,7 @@ describe("AgentV2", () => {
     }),
   )
 
-  it.effect("gives built-in agents the prompts the V1 session path uses", () =>
+  it.effect("gives built-in agents the prompts the legacy session path uses", () =>
     Effect.gen(function* () {
       const agent = yield* AgentV2.Service
       yield* AgentPlugin.Plugin.effect(host({ agent: agentHost(agent) })).pipe(

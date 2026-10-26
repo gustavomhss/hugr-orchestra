@@ -74,7 +74,7 @@ export const makeV2ApprovalHost = Effect.gen(function* () {
   }
 })
 
-/** Location construction never hoists V1 Session/Instance/Permission ownership into the Core map. */
+/** Location construction never hoists legacy Session/Instance/Permission ownership into the Core map. */
 export const nativeSafetyNode = {
   ...MaestroArsenal.nativeSafetyNode,
   implementation: Layer.unwrap(Effect.gen(function* () {

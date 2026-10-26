@@ -137,7 +137,7 @@ function toLLMMessage(message: SessionMessage.Message, model: Model): Message[] 
               type: "text" as const,
               text: `Hook reminder:\n${note}`,
             })),
-            // As V1: a mentioned agent (or a subtask command's agent) is the task tool's subagent for this request.
+            // A mentioned agent (or a subtask command's agent) is the task tool's subagent for this request.
             ...(message.agents ?? []).map((agent) => ({
               type: "text" as const,
               text: `Use the above message and context to generate a prompt and call the task tool with subagent: ${agent.name}`,

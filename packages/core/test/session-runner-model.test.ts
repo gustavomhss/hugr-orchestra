@@ -488,7 +488,7 @@ describe("SessionRunnerModel", () => {
     }),
   )
 
-  it.effect("maps a native catalog model with an endpoint to the OpenAI-compatible chat route, as V1 did", () =>
+  it.effect("maps a native catalog model with an endpoint to the OpenAI-compatible chat route", () =>
     Effect.gen(function* () {
       const resolved = yield* SessionRunnerModel.fromCatalogModel(
         model({ type: "native", url: "https://native.example/v1", settings: {} }),

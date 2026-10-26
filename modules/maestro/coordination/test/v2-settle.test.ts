@@ -100,7 +100,7 @@ const backendCard = {
 const backendReply = (value: unknown) =>
   ["Change applied.", "", "```backend-result", JSON.stringify(value), "```", ""].join("\n")
 
-test("a backend reply settles its work result with the card, the tree and the bound write roots (V1 SeatWork.track)", () =>
+test("a backend reply settles its work result with the card, the tree and the bound write roots (SeatWork.track)", () =>
   run((directory) =>
     Effect.gen(function* () {
       const text = backendReply(backendCard)
@@ -183,7 +183,7 @@ test("memory outcomes come from the execution Session's Atlas receipts, keyed by
   })
 })
 
-test("a research reply settles from the dispatch's closed inquiry card, never from its text (V1 DiscoveryResult)", () =>
+test("a research reply settles from the dispatch's closed inquiry card, never from its text (DiscoveryResult)", () =>
   run((directory) =>
     Effect.gen(function* () {
       const text = "The answer is in src/a.ts:1-3."
@@ -208,7 +208,7 @@ test("a research reply settles from the dispatch's closed inquiry card, never fr
     }),
   ))
 
-test("the shell fact rides beside the write roots and only there (V1 SeatWork.project)", () => {
+test("the shell fact rides beside the write roots and only there (SeatWork.project)", () => {
   const fact = { shellWrites: "unenforced", shellSandbox: { kind: "none", reason: "no-sandbox" } } as const
   const reply = SessionMessage.Assistant.make({
     id: SessionMessage.ID.make("msg_shell_reply"),

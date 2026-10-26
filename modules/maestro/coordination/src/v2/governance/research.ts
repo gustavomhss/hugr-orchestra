@@ -68,7 +68,7 @@ export const allowance = Effect.fn("ResearchDispatchV2.allowance")(function* (
     return yield* refuse("binding_missing", `${ResearchSeatTools.SEAT} runs only under its research dispatch allowance`)
   const task = yield* LogicalTaskV2.read(services, session.id)
   if (!task) return yield* refuse("binding_missing", "the research child has no logical Task binding")
-  // The allowance carries exactly the retained binding the records check on every write (V1 required the frame's
+  // The allowance carries exactly the retained binding the records check on every write (the earlier runtime required the frame's
   // binding to equal it), so the dispatch ledger, its records and its inquiry events share one scope.
   const binding = yield* ResearchBinding.resolve(session.id, session.projectID).pipe(
     Effect.provideService(Database.Service, { db: services.db }),
@@ -90,7 +90,7 @@ export const allowance = Effect.fn("ResearchDispatchV2.allowance")(function* (
   return { allowance: admitted, domains: dispatch.domains }
 })
 
-/** One provider turn of the research child, charged before it runs (V1 charged every provider invocation). */
+/** One provider turn of the research child, charged before it runs (the earlier runtime charged every provider invocation). */
 export const turn = Effect.fn("ResearchDispatchV2.turn")(function* (services: Services, session: SessionSchema.Info) {
   const admitted = yield* allowance(services, session)
   if (!admitted) return
