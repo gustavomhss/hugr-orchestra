@@ -1,5 +1,6 @@
 import { app, Menu, nativeImage, Tray } from "electron"
 
+import { sendDeepLinks } from "./ipc"
 import { elapsed } from "./live-elapsed"
 import type { LiveLoop } from "./live-loop"
 import { getLastFocusedWindow } from "./windows"
@@ -16,14 +17,12 @@ export function registerLiveTray(options: { loop: LiveLoop }) {
     last: undefined as { id: string; title: string } | undefined,
   }
 
-  const open = (path: string) => {
+  // The renderer routes in memory, so main navigates through the deep-link ingress; the shell owns `orchestra://live`.
+  const open = (url: string) => {
     const win = getLastFocusedWindow()
     if (!win) return
     revealWindow(win)
-    // Main has no navigation channel into the renderer; it routes on history changes.
-    void win.webContents.executeJavaScript(
-      `history.pushState({}, "", ${JSON.stringify(path)}); dispatchEvent(new PopStateEvent("popstate"))`,
-    )
+    sendDeepLinks(win, [url])
   }
 
   const render = () => {
@@ -36,8 +35,8 @@ export function registerLiveTray(options: { loop: LiveLoop }) {
         run.running
           ? { label: "Stop meeting", click: () => void options.loop.stop() }
           : { label: "Start meeting", click: () => void options.loop.start() },
-        { label: "Open", click: () => open("/orchestra/flight-engineer") },
-        ...(last ? [{ label: last.title, click: () => open(`/orchestra/flight-engineer/meetings/${last.id}`) }] : []),
+        { label: "Open", click: () => open("orchestra://live") },
+        ...(last ? [{ label: last.title, click: () => open(`orchestra://live?meeting=${encodeURIComponent(last.id)}`) }] : []),
       ]),
     )
   }
