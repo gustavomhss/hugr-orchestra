@@ -356,6 +356,7 @@
     "./session/store": "./src/session/store.ts",
     "./session/subagent-models": "./src/session/subagent-models.ts",
     "./session/meeting": "./src/session/meeting.ts",
+    "./session/meeting-consolidation": "./src/session/meeting-consolidation.ts",
     "./session/meeting-context": "./src/session/meeting-context.ts",
     "./session/meeting-memory.sql": "./src/session/meeting-memory.sql.ts",
     "./session/meeting.sql": "./src/session/meeting.sql.ts",
