@@ -54,24 +54,11 @@ import { sidecarMode, startOwnedServe } from "./owned-serve"
 import { startDockChannel } from "./dock-channel"
 import { readWslExpectedVersion } from "./cli-version"
 import { nativeT, setNativeTranslations } from "./native-translations"
-import { initializeCandidateProfile } from "./candidate-profile"
-import { getStore } from "./store"
-import { FIRST_LAUNCH_ONBOARDING_COMPLETE_KEY, OLD_LAYOUT_ELIGIBLE_KEY } from "./store-keys"
 import { OmniBoot } from "./omni-boot"
 import { OmniSmoke } from "./omni-smoke"
 import { createDeepLinkDelivery } from "./deep-links"
 import { registerLiveLoop } from "./live-loop"
 import { registerLiveOverlay } from "./live-overlay"
-
-const candidateProfile = (() => {
-  try {
-    return initializeCandidateProfile(app, import.meta.env.ORCHESTRA_LEAN_CANDIDATE === "1")
-  } catch (error) {
-    console.error("candidate-profile initialization failed", error)
-    app.exit(1)
-    throw error
-  }
-})()
 
 // These process names keep their inherited values: Electron names the macOS Keychain item that encrypts saved browser
 // data "<name> Safe Storage", so renaming them would sign the App Dock out of every site. Menus, window titles and
@@ -88,8 +75,7 @@ const APP_IDS: Record<string, string> = {
 }
 const TEST_ONBOARDING = process.env.ORCHESTRA_TEST_ONBOARDING === "1"
 // Default: a desktop-owned `orchestra serve` V2 child; "1" uses the shared background daemon. See apps/desktop/README.md.
-// A lean candidate always owns its server: its isolated profile must not reach the host's daemon.
-const SIDECAR_MODE = candidateProfile ? "owned" : sidecarMode(process.env.ORCHESTRA_SIDECAR)
+const SIDECAR_MODE = sidecarMode(process.env.ORCHESTRA_SIDECAR)
 const jsCallStackFeature = "DocumentPolicyIncludeJSCallStacksInCrashReports"
 
 let logger: ReturnType<typeof initLogging>
@@ -153,9 +139,9 @@ const main = Effect.gen(function* () {
 
   process.env.ORCHESTRA_DISABLE_EMBEDDED_WEB_UI = "true"
 
-  const appId = candidateProfile?.appId ?? (app.isPackaged ? APP_IDS[CHANNEL] : "ai.hugr.orchestra.dev")
+  const appId = app.isPackaged ? APP_IDS[CHANNEL] : "ai.hugr.orchestra.dev"
   const onboardingTestRoot = ((): string | undefined => {
-    if (candidateProfile || !TEST_ONBOARDING) return
+    if (!TEST_ONBOARDING) return
 
     const root = join(tmpdir(), `orchestra-onboarding-${randomUUID()}`)
     rmSync(root, { recursive: true, force: true })
@@ -170,18 +156,14 @@ const main = Effect.gen(function* () {
     process.env.XDG_STATE_HOME = join(root, "state")
     return root
   })()
-  app.setName(candidateProfile?.name ?? (app.isPackaged ? APP_NAMES[CHANNEL] : "HuGR Orchestra Dev"))
+  app.setName(app.isPackaged ? APP_NAMES[CHANNEL] : "HuGR Orchestra Dev")
   app.setAppUserModelId(appId)
   app.setPath(
     "userData",
-    candidateProfile?.desktop ??
-      (onboardingTestRoot ? join(onboardingTestRoot, "desktop") : join(app.getPath("appData"), appId)),
+    onboardingTestRoot ? join(onboardingTestRoot, "desktop") : join(app.getPath("appData"), appId),
   )
   if (onboardingTestRoot) app.setPath("sessionData", join(onboardingTestRoot, "session"))
-  if (candidateProfile) {
-    getStore().set(OLD_LAYOUT_ELIGIBLE_KEY, false)
-    getStore().set(FIRST_LAUNCH_ONBOARDING_COMPLETE_KEY, true)
-  } else initializeOldLayoutEligibility(app.getPath("userData"))
+  initializeOldLayoutEligibility(app.getPath("userData"))
   logger = initLogging()
   initCrashReporter()
   OmniBoot.setup()
@@ -251,7 +233,7 @@ const main = Effect.gen(function* () {
     return
   }
 
-  const shellEnv = preferAppEnv(app.getPath("userData"), candidateProfile)
+  const shellEnv = preferAppEnv(app.getPath("userData"))
 
   app.on("second-instance", (_event: Event, argv: string[]) => {
     const urls = argv.filter((arg: string) => arg.startsWith("orchestra://"))
@@ -327,7 +309,7 @@ const main = Effect.gen(function* () {
 
   yield* Effect.promise(() => app.whenReady())
 
-  if (!candidateProfile && !TEST_ONBOARDING) migrate()
+  if (!TEST_ONBOARDING) migrate()
   yield* Effect.promise(() => cleanupStoreFiles(app.getPath("userData"))).pipe(
     Effect.tap((result) =>
       Effect.sync(() => {
@@ -341,7 +323,7 @@ const main = Effect.gen(function* () {
       }),
     ),
   )
-  if (!candidateProfile) app.setAsDefaultProtocolClient("orchestra")
+  app.setAsDefaultProtocolClient("orchestra")
   registerRendererProtocol()
   const liveOverlay = registerLiveOverlay()
   app.once("will-quit", liveOverlay.destroy)
@@ -449,7 +431,7 @@ const main = Effect.gen(function* () {
       }),
     )
     const owned = yield* Effect.promise(() =>
-      Promise.all([resolveCliBinary(logger), sidecarLaunchEnv(app.getPath("userData"), candidateProfile)]).then(
+      Promise.all([resolveCliBinary(logger), sidecarLaunchEnv(app.getPath("userData"))]).then(
         ([binary, env]) =>
           startOwnedServe({
             logger,
