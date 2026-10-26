@@ -374,6 +374,16 @@ const layer = Layer.effect(
         Effect.provideService(FSUtil.Service, fs),
         Effect.mapError((error) => new ConfigError({ message: error.message })),
       )
+      // Adding a local command is an explicit user action, so the project is approved for restarts too.
+      if (server.type === "local") {
+        const trusted = (yield* Config.readGlobal().pipe(Effect.provideService(FSUtil.Service, fs), Effect.provideService(Global.Service, global)))
+          .trustedProjects
+        if (!trusted.some((root) => within(root, location.directory)))
+          yield* Config.updateGlobal({ trustedProjects: [...trusted, location.directory] }).pipe(
+            Effect.provideService(FSUtil.Service, fs),
+            Effect.provideService(Global.Service, global),
+          )
+      }
       added.set(name, server)
       removed.delete(name)
       yield* connect(name).pipe(Effect.ignore)

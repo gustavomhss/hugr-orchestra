@@ -9,6 +9,7 @@ import { Global } from "@orchestra/core/global"
 import { Location } from "@orchestra/core/location"
 import { LocationServiceMap } from "@orchestra/core/location-services"
 import { Mcp } from "@orchestra/core/mcp"
+import { ConfigMCP } from "@orchestra/schema/config-mcp"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { SessionExecution } from "@orchestra/core/session/execution"
 import { SessionExecutionLocal } from "@orchestra/core/session/execution/local"
@@ -98,6 +99,27 @@ describe("Mcp project trust", () => {
             Effect.scoped,
             Effect.provide(LocationServiceMap.Service.get(Location.Ref.make({ directory: AbsolutePath.make(dir.path) }))),
           )
+        }),
+      ),
+    ),
+  )
+
+  it.live("adding a local server approves the project in the global config, so it survives a restart", () =>
+    Effect.acquireRelease(
+      Effect.promise(() => tmpdir()),
+      (dir) => Effect.promise(() => dir[Symbol.asyncDispose]()),
+    ).pipe(
+      Effect.flatMap((dir) =>
+        Effect.gen(function* () {
+          yield* Effect.gen(function* () {
+            const mcp = yield* Mcp.Service
+            yield* mcp.add("saved", new ConfigMCP.Local({ type: "local", command: ["bun", "--version"], disabled: true }))
+          }).pipe(
+            Effect.scoped,
+            Effect.provide(LocationServiceMap.Service.get(Location.Ref.make({ directory: AbsolutePath.make(dir.path) }))),
+          )
+          const written = yield* Effect.promise(() => Bun.file(path.join(global.path, "orchestra.json")).json())
+          expect(written.trusted_projects).toContain(dir.path)
         }),
       ),
     ),

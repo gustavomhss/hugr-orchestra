@@ -326,6 +326,7 @@ export const readGlobal = Effect.fn("Config.readGlobal")(function* () {
     ],
     // In the document's order: a later matching rule wins, so reordering would change what the rules decide.
     permissions: document.permissions.flatMap((item) => Option.toArray(decodeRule(item))),
+    trustedProjects: document.trustedProjects.filter((item): item is string => typeof item === "string"),
   }
 })
 
@@ -372,6 +373,7 @@ function settings(text: string) {
     disabled: Array.isArray(root.disabled_providers) ? root.disabled_providers : [],
     hasDisabled: "disabled_providers" in root,
     permissions: Array.isArray(root.permissions) ? root.permissions : [],
+    trustedProjects: Array.isArray(root.trusted_projects) ? root.trusted_projects : [],
   }
 }
 
