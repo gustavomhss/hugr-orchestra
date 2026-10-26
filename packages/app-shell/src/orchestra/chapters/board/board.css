@@ -5,42 +5,14 @@
   container-type: inline-size;
 }
 
-/* Board materials. Lanes sit sunk into the content base; cards are opaque and raised above them, so the stage a card
-   is in reads from its lane, its stage marker and its stripe, never from transparency. */
-html[data-color-scheme] body .board-root {
-  --board-stage-backlog: #7f8c9b;
-  --board-stage-ready: #b3c1d0;
-  --board-stage-building: #8fbcf0;
-  --board-stage-review: #8acfc9;
-  --board-stage-shipped: #93cfa9;
-  --board-lane: linear-gradient(180deg, rgba(6, 11, 17, 0.62), rgba(6, 11, 17, 0.42));
-  --board-lane-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.42), inset 0 0 0 1px rgba(166, 189, 211, 0.07),
-    0 1px 0 rgba(255, 255, 255, 0.03);
-  --board-card: linear-gradient(180deg, #1d2834, #16202a);
-  --board-card-hover: linear-gradient(180deg, #223040, #1a2531);
-  --board-card-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 0 1px rgba(166, 189, 211, 0.1),
-    0 1px 1px rgba(0, 0, 0, 0.5), 0 3px 6px -1px rgba(0, 0, 0, 0.3), 0 12px 24px -10px rgba(0, 0, 0, 0.65);
-  --board-card-lift: inset 0 1px 0 rgba(255, 255, 255, 0.09), inset 0 0 0 1px rgba(166, 189, 211, 0.2),
-    0 1px 1px rgba(0, 0, 0, 0.5), 0 6px 12px -2px rgba(0, 0, 0, 0.35), 0 22px 40px -12px rgba(0, 0, 0, 0.75);
-  --board-panel: linear-gradient(180deg, #1b2531, #141d27);
-}
-
-html[data-color-scheme="light"] body .board-root {
-  --board-stage-backlog: #66717e;
-  --board-stage-ready: #4c5a6a;
-  --board-stage-building: #1f5f9e;
-  --board-stage-review: #0f6d68;
-  --board-stage-shipped: #1c6a42;
-  --board-lane: linear-gradient(180deg, rgba(222, 230, 238, 0.78), rgba(230, 236, 242, 0.6));
-  --board-lane-shadow: inset 0 1px 3px rgba(28, 46, 65, 0.1), inset 0 0 0 1px rgba(65, 86, 107, 0.09),
-    0 1px 0 rgba(255, 255, 255, 0.7);
-  --board-card: linear-gradient(180deg, #ffffff, #fbfcfd);
-  --board-card-hover: linear-gradient(180deg, #ffffff, #ffffff);
-  --board-card-shadow: inset 0 0 0 1px rgba(40, 60, 85, 0.1), 0 1px 1px rgba(28, 46, 65, 0.08),
-    0 3px 6px -1px rgba(28, 46, 65, 0.07), 0 12px 24px -12px rgba(28, 46, 65, 0.28);
-  --board-card-lift: inset 0 0 0 1px rgba(40, 60, 85, 0.18), 0 1px 1px rgba(28, 46, 65, 0.08),
-    0 6px 12px -2px rgba(28, 46, 65, 0.1), 0 22px 40px -14px rgba(28, 46, 65, 0.36);
-  --board-panel: linear-gradient(180deg, #ffffff, #f8fafc);
+/* Stage hues come from the kit's roles, so both schemes and every palette carry them. Lanes are quiet trays on the
+   content glass and cards use the kit card material; nothing on the board brings its own surface colour. */
+.board-root {
+  --board-stage-backlog: var(--orchestra-faint);
+  --board-stage-ready: var(--mx-dim);
+  --board-stage-building: var(--mx-blue);
+  --board-stage-review: color-mix(in srgb, var(--mx-blue) 45%, var(--mx-good));
+  --board-stage-shipped: var(--mx-good);
 }
 
 .board-root [data-stage="backlog"] {
@@ -64,11 +36,11 @@ html[data-color-scheme="light"] body .board-root {
 }
 
 .board-page {
-  inline-size: min(1320px, calc(100% - 48px));
+  inline-size: min(1320px, calc(100% - 72px));
   margin: 0 auto;
-  padding: 36px 0 64px;
+  padding: 52px 0 72px;
   display: grid;
-  gap: 18px;
+  gap: 20px;
   min-inline-size: 0;
 }
 
@@ -109,17 +81,19 @@ html[data-color-scheme="light"] body .board-root {
   margin: 0;
   color: var(--mx-strong);
   font-family: var(--mx-emphasis);
-  font-size: var(--orchestra-font-size-3xl);
+  font-size: var(--orchestra-font-size-4xl);
   font-weight: 600;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.035em;
   line-height: 1.2;
 }
 
 .board-eyebrow {
-  margin-block-end: 6px;
+  margin-block-end: 8px;
   color: var(--orchestra-muted);
+  font-family: var(--mx-emphasis);
   font-size: var(--orchestra-font-size-xs);
-  letter-spacing: 0.08em;
+  font-weight: 600;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
@@ -134,9 +108,9 @@ html[data-color-scheme="light"] body .board-root {
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  margin-block-start: 6px;
+  margin-block-start: 9px;
   color: var(--mx-dim);
-  font-size: var(--orchestra-font-size-sm);
+  font-size: var(--orchestra-font-size-md);
 }
 
 .board-dot {
@@ -189,9 +163,14 @@ html[data-color-scheme="light"] body .board-root {
   align-content: start;
   gap: 12px;
   padding: 18px 20px;
+  border: 1px solid var(--mx-line);
   border-radius: var(--orchestra-radius-lg);
-  background: var(--board-panel);
-  box-shadow: var(--board-card-shadow);
+  background: var(--mx-sheen), var(--mx-raised);
+  box-shadow: var(--mx-highlight), var(--mx-card-shadow);
+}
+
+.board-brief {
+  align-content: space-between;
 }
 
 .board-brief p,
@@ -264,24 +243,20 @@ html[data-color-scheme="light"] body .board-root {
   background: color-mix(in srgb, var(--stage) 40%, transparent);
 }
 
+.board-bar [data-stage="ready"],
+.board-legend [data-stage="ready"] i {
+  background: color-mix(in srgb, var(--stage) 60%, transparent);
+}
+
 .board-intake {
   color: var(--orchestra-muted);
 }
 
+/* The one warm element on the board: a faint wash and a warm rim, same card material underneath. */
 .board-ask {
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--orchestra-warm) 9%, transparent), transparent 70%),
-    var(--board-panel);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--orchestra-warm) 55%, transparent), var(--board-card-shadow);
-}
-
-.board-ask::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto;
-  block-size: 2px;
-  background: var(--orchestra-warm);
+  border-color: color-mix(in srgb, var(--orchestra-warm) 42%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--orchestra-warm) 7%, transparent), transparent 64px),
+    var(--mx-sheen), var(--mx-raised);
 }
 
 .board-ask-kicker {
@@ -361,51 +336,52 @@ html[data-color-scheme="light"] body .board-root {
 .board-col {
   position: relative;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto 1fr;
   align-content: start;
   gap: 10px;
   min-inline-size: 0;
   min-block-size: 440px;
-  padding: 12px 8px 10px;
-  border-radius: var(--orchestra-radius-lg);
-  background: var(--board-lane);
-  box-shadow: var(--board-lane-shadow);
+  padding: 6px 6px 8px;
+  border: 1px solid var(--mx-line);
+  border-radius: var(--orchestra-radius-xl);
+  background: var(--mx-soft);
 }
 
-/* The stage marker: a short bar of the stage's color along the lane's top edge. */
+/* The stage marker: a hairline of the stage's hue along the lane's top edge, inside the rim. */
 .board-col::before {
   content: "";
   position: absolute;
-  inset: 0 14px auto;
+  inset: -1px 18px auto;
   block-size: 2px;
   border-radius: 0 0 2px 2px;
   background: var(--stage);
-  box-shadow: 0 1px 6px color-mix(in srgb, var(--stage) 45%, transparent);
 }
 
 .board-col-head {
   display: flex;
   align-items: center;
   gap: 8px;
-  min-block-size: 28px;
-  padding: 0 6px 10px;
-  border-block-end: 1px solid var(--mx-line);
+  min-block-size: 36px;
+  padding: 4px 8px 2px;
   color: var(--mx-strong);
-  font-size: var(--orchestra-font-size-md);
+  font-size: var(--orchestra-font-size-sm);
 }
 
 .board-col-head .board-count {
   min-inline-size: 20px;
-  padding: 1px 6px;
-  border-radius: var(--orchestra-radius-full);
-  background: color-mix(in srgb, var(--stage) 14%, transparent);
-  color: var(--stage);
-  font-weight: 600;
+  padding: 0 6px;
+  border: 1px solid var(--mx-line);
+  border-radius: var(--orchestra-radius-sm);
+  color: var(--mx-dim);
+  font: 500 var(--orchestra-font-size-2xs)/16px var(--mx-sans);
   text-align: center;
 }
 
 .board-col-head b {
+  font-family: var(--mx-emphasis);
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .board-col-head em {
@@ -427,7 +403,7 @@ html[data-color-scheme="light"] body .board-root {
 .board-list {
   display: grid;
   align-content: start;
-  gap: 8px;
+  gap: 6px;
 }
 
 .board-ring {
@@ -468,39 +444,30 @@ html[data-color-scheme="light"] body .board-root {
   appearance: none;
   display: grid;
   gap: 8px;
+  box-sizing: border-box;
   inline-size: 100%;
   position: relative;
-  padding: 12px 12px 11px 14px;
-  border: 0;
-  border-radius: var(--orchestra-radius-md);
-  background: var(--board-card);
-  box-shadow: var(--board-card-shadow);
+  padding: 13px 14px 12px;
+  border: 1px solid var(--mx-line);
+  border-radius: var(--orchestra-radius-lg);
+  background: var(--mx-sheen), var(--mx-raised);
+  box-shadow: var(--mx-highlight), var(--mx-card-shadow);
   color: var(--orchestra-body);
   font: inherit;
   font-size: var(--orchestra-font-size-sm);
   text-align: start;
   cursor: pointer;
   transition:
-    background var(--orchestra-duration-fast) var(--orchestra-ease-out),
-    box-shadow var(--orchestra-duration-fast) var(--orchestra-ease-out);
+    border-color var(--orchestra-duration-base) var(--orchestra-ease-out),
+    box-shadow var(--orchestra-duration-base) var(--orchestra-ease-out);
 }
 
-/* The stage stripe on a card's leading edge. */
-.board-card::before {
-  content: "";
-  position: absolute;
-  inset-block: 12px;
-  inset-inline-start: 0;
-  inline-size: 2px;
-  border-radius: 0 2px 2px 0;
-  background: var(--stage, transparent);
-}
-
+/* Like .mx-card: hover firms the rim and lifts the shadow; nothing moves. */
 .board-card:hover,
 .board-project:hover,
 .board-open {
-  background: var(--board-card-hover);
-  box-shadow: var(--board-card-lift);
+  border-color: var(--mx-rim);
+  box-shadow: var(--mx-highlight), var(--mx-pop-shadow);
 }
 
 .board-card:focus-visible,
@@ -536,21 +503,25 @@ html[data-color-scheme="light"] body .board-root {
 .board-card-title,
 .board-row-title {
   color: var(--mx-strong);
+  font-family: var(--mx-emphasis);
   font-size: var(--orchestra-font-size-md);
+  font-weight: 500;
+  letter-spacing: -0.01em;
   line-height: 1.4;
 }
 
 .board-now {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  display: block;
   color: var(--mx-dim);
   font-size: var(--orchestra-font-size-xs);
 }
 
 .board-caret {
+  display: inline-block;
   inline-size: 5px;
   block-size: 11px;
+  margin-inline-start: 3px;
+  vertical-align: -1px;
   background: var(--mx-dim);
   animation: board-blink 1.1s steps(2, start) infinite;
 }
@@ -611,15 +582,14 @@ html[data-color-scheme="light"] body .board-root {
   background: var(--mx-bad);
 }
 
-.board-held,
-.board-held:hover {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--orchestra-warm) 8%, transparent), transparent 60%),
-    var(--board-card);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--orchestra-warm) 60%, transparent), var(--board-card-shadow);
+.board-held {
+  border-color: color-mix(in srgb, var(--orchestra-warm) 42%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--orchestra-warm) 7%, transparent), transparent 48px),
+    var(--mx-sheen), var(--mx-raised);
 }
 
-.board-held::before {
-  background: var(--orchestra-warm);
+.board-held:hover {
+  border-color: color-mix(in srgb, var(--orchestra-warm) 62%, transparent);
 }
 
 .board-held-note {
@@ -638,14 +608,16 @@ html[data-color-scheme="light"] body .board-root {
   align-items: start;
   gap: 8px;
   padding: 8px 10px;
+  border-color: transparent;
   background: transparent;
   box-shadow: none;
 }
 
 .board-row:hover,
 .board-row.board-open {
-  background: color-mix(in srgb, var(--mx-strong) 6%, transparent);
-  box-shadow: inset 0 0 0 1px var(--mx-line);
+  border-color: var(--mx-line);
+  background: var(--mx-sheen), var(--mx-raised);
+  box-shadow: var(--mx-highlight);
 }
 
 .board-row .board-ring {
@@ -1085,4 +1057,11 @@ html[data-color-scheme="light"] body .board-root {
 
 .board-full:focus {
   outline: none;
+}
+
+/* Lane hints only fit wide boards; a clipped hint reads as broken, so narrower boards drop them. */
+@container (inline-size < 1180px) {
+  .board-col-head em {
+    display: none;
+  }
 }
