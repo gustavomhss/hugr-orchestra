@@ -64,6 +64,7 @@ export const groupNames = {
   "server.actionsSource": "actionsSource",
   "server.lsp": "server.lsp",
   "server.formatter": "server.formatter",
+  "server.board": "server.board",
   "server.capability.operator": "operator",
   "server.capability.connections": "connections",
   "server.capability.artifacts": "artifacts",
