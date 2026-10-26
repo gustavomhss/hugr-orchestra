@@ -1,7 +1,7 @@
 import path from "path"
 import fs from "fs/promises"
 import { describe, expect } from "bun:test"
-import { Effect, Layer, Schema } from "effect"
+import { Cause, Effect, Exit, Layer, Schema } from "effect"
 import { FastCheck } from "effect/testing"
 import { Config } from "@orchestra/core/config"
 import { ConfigProvider } from "@orchestra/core/config/provider"
@@ -666,25 +666,28 @@ describe("Config", () => {
     ),
   )
 
-  it.live("ignores an invalid file while loading valid config values", () =>
+  it.live("fails loudly, naming the file, when a config file cannot be parsed or does not match the schema", () =>
     Effect.acquireRelease(
       Effect.promise(() => tmpdir()),
       (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
     ).pipe(
       Effect.flatMap((tmp) =>
         Effect.gen(function* () {
-          yield* Effect.promise(() =>
-            Promise.all([
-              fs.writeFile(path.join(tmp.path, "orchestra.json"), JSON.stringify({ $schema: "base" })),
-              fs.writeFile(path.join(tmp.path, "orchestra.jsonc"), "{ invalid"),
-            ]),
-          )
-          return yield* Effect.gen(function* () {
-            const config = yield* Config.Service
-            const documents = (yield* config.entries()).filter((entry) => entry.type === "document")
+          const opened = () =>
+            Effect.exit(Config.Service.pipe(Effect.flatMap((config) => config.entries()), Effect.provide(testLayer(tmp.path))))
+          const failure = (exit: Exit.Exit<unknown, unknown>) => (Exit.isFailure(exit) ? Cause.pretty(exit.cause) : "")
 
-            expect(documents.map((document) => document.info.$schema)).toEqual(["base"])
-          }).pipe(Effect.provide(testLayer(tmp.path)))
+          yield* Effect.promise(() => fs.writeFile(path.join(tmp.path, "orchestra.jsonc"), "{ invalid"))
+          const syntax = failure(yield* opened())
+          expect(syntax).toContain("orchestra.jsonc")
+
+          yield* Effect.promise(() => fs.writeFile(path.join(tmp.path, "orchestra.jsonc"), JSON.stringify({ model: 5 })))
+          const schema = failure(yield* opened())
+          expect(schema).toContain("orchestra.jsonc")
+          expect(schema).toContain("model")
+
+          yield* Effect.promise(() => fs.writeFile(path.join(tmp.path, "orchestra.jsonc"), JSON.stringify({ $schema: "base" })))
+          expect(Exit.isSuccess(yield* opened())).toBe(true)
         }),
       ),
     ),

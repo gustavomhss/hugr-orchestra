@@ -1,0 +1,1094 @@
+/* The board's other views (slice E2): projects overview, list, epic page and timeline. Tokens only. Rows, the table
+   and the timeline chart are the board's glass tile (see the selector list in board.css); everything inside them takes
+   depth from hairlines and fill steps, never another glass. Tints come from --mx-blue, the warm role only marks what
+   waits on the owner. */
+
+/* Segmented control, after the home range picker. */
+.board-segments {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--orchestra-border-muted);
+  border-radius: var(--orchestra-radius-sm);
+  background: var(--orchestra-surface);
+}
+
+.board-segments button {
+  appearance: none;
+  block-size: 26px;
+  padding: 0 11px;
+  border: 0;
+  border-radius: var(--orchestra-radius-xs);
+  background: transparent;
+  color: var(--orchestra-muted);
+  font: inherit;
+  font-size: var(--orchestra-font-size-xs);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.board-segments button:hover {
+  color: var(--orchestra-text);
+}
+
+.board-segments button[aria-pressed="true"] {
+  background: var(--orchestra-surface-active);
+  color: var(--orchestra-text);
+}
+
+.board-segments button:focus-visible,
+.board-filter:focus-visible,
+.board-table-row:focus-visible,
+.board-table-fold:focus-visible,
+.board-table-epic:focus-visible,
+.board-epic-item:focus-visible,
+.board-timeline-label:focus-visible,
+.board-timeline-epic-name:focus-visible,
+.board-overview-title:focus-visible {
+  outline: 2px solid var(--mx-rim);
+  outline-offset: 2px;
+}
+
+.board-chevron {
+  inline-size: 12px;
+  block-size: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform var(--orchestra-duration-base) var(--orchestra-ease-out);
+}
+
+[aria-expanded="false"] > .board-chevron {
+  transform: rotate(-90deg);
+}
+
+/* ---- Projects overview ---- */
+
+.board-overview {
+  display: grid;
+  gap: 14px;
+}
+
+.board-overview-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.board-overview-counts {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--orchestra-muted);
+  font-size: var(--orchestra-font-size-sm);
+}
+
+.board-overview-rows {
+  display: grid;
+  gap: 10px;
+}
+
+.board-overview-row {
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+}
+
+.board-overview-row[data-status="archived"] {
+  cursor: default;
+  opacity: 0.78;
+}
+
+.board-overview-name {
+  display: grid;
+  gap: 4px;
+  min-inline-size: 0;
+}
+
+.board-overview-title {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--orchestra-text);
+  font: inherit;
+  font-size: var(--orchestra-font-size-lg);
+  font-weight: 600;
+  text-align: start;
+  cursor: inherit;
+}
+
+.board-overview-goal {
+  margin: 0;
+  overflow: hidden;
+  color: var(--orchestra-muted);
+  font-size: var(--orchestra-font-size-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.board-overview-cell {
+  display: grid;
+  gap: 6px;
+  min-inline-size: 0;
+}
+
+.board-overview-figure {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  color: var(--orchestra-muted);
+  font-size: var(--orchestra-font-size-xs);
+}
+
+.board-overview-figure b {
+  color: var(--orchestra-text);
+  font-size: var(--orchestra-font-size-md);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.board-overview-cell > .board-overview-figure:first-child {
+  color: var(--orchestra-text);
+  font-size: var(--orchestra-font-size-sm);
+}
+
+.board-overview-figure[data-late="true"] .board-quiet {
+  color: var(--orchestra-warm);
+}
+
+.board-overview-cell .board-bar {
+  block-size: 4px;
+}
+
+.board-overview-end {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.board-overview-asks {
+  color: var(--orchestra-warm);
+  background: color-mix(in srgb, var(--orchestra-warm) 13%, transparent);
+  border-color: transparent;
+}
+
+/* The forecast window: a hairline scale, the P50–P85 cone in blue and the target as a tick. */
+.board-window {
+  position: relative;
+  display: block;
+  block-size: 6px;
+  border-radius: var(--orchestra-radius-full);
+  background: var(--mx-line);
+}
+
+.board-window-cone {
+  position: absolute;
+  inset-block: 0;
+  border-radius: var(--orchestra-radius-full);
+  background: linear-gradient(90deg, var(--mx-blue), color-mix(in srgb, var(--mx-blue) 25%, transparent));
+}
+
+.board-window[data-late="true"] .board-window-cone {
+  background: linear-gradient(90deg, var(--orchestra-warm), color-mix(in srgb, var(--orchestra-warm) 25%, transparent));
+}
+
+.board-window-target {
+  position: absolute;
+  inset-block: -3px;
+  inline-size: 2px;
+  margin-inline-start: -1px;
+  border-radius: var(--orchestra-radius-full);
+  background: var(--orchestra-text);
+}
+
+/* ---- List ---- */
+
+.board-table-view {
+  display: grid;
+  gap: 12px;
+}
+
+.board-table-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.board-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.board-filter {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  block-size: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--orchestra-border-muted);
+  border-radius: var(--orchestra-radius-full);
+  background: transparent;
+  color: var(--orchestra-muted);
+  font: inherit;
+  font-size: var(--orchestra-font-size-xs);
+  cursor: pointer;
+}
+
+.board-filter:hover {
+  color: var(--orchestra-text);
+  background: var(--orchestra-overlay-hover);
+}
+
+.board-filter[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--mx-blue) 45%, transparent);
+  background: color-mix(in srgb, var(--mx-blue) 14%, transparent);
+  color: var(--orchestra-text);
+}
+
+.board-filter[data-tone="warm"] .board-filter-count {
+  color: var(--orchestra-warm);
+}
+
+.board-filter .board-seat {
+  inline-size: 16px;
+  block-size: 16px;
+  font-size: var(--orchestra-font-size-2xs);
+}
+
+.board-filter-count {
+  color: var(--orchestra-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.board-table {
+  --board-table-columns: 104px minmax(0, 1fr) 40px 150px 44px 64px 56px;
+  display: grid;
+  padding: 4px 0;
+  border-radius: var(--orchestra-radius-xl);
+  /* Clip row hovers to the rounded tile but keep the 1px rim drawn over the border. */
+  overflow: clip;
+  overflow-clip-margin: 1px;
+}
+
+.board-table-head,
+.board-table-row {
+  display: grid;
+  grid-template-columns: var(--board-table-columns);
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+}
+
+.board-table-head {
+  block-size: 32px;
+  color: var(--orchestra-faint);
+  font-size: var(--orchestra-font-size-2xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.board-table-group + .board-table-group,
+.board-table-head + .board-table-group {
+  border-block-start: 1px solid var(--mx-line);
+}
+
+.board-table-group-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-block-size: 40px;
+  padding: 6px 16px;
+  background: color-mix(in srgb, var(--orchestra-surface) 60%, transparent);
+}
+
+.board-table-group-name {
+  color: var(--orchestra-text);
+  font-size: var(--orchestra-font-size-sm);
+  font-weight: 600;
+}
+
+.board-table-group-head .board-id {
+  color: var(--orchestra-muted);
+  font-size: var(--orchestra-font-size-xs);
+}
+
+.board-table-epic {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: var(--orchestra-font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.board-table-epic:hover {
+  color: var(--mx-blue);
+}
+
+.board-table-bar-mini {
+  inline-size: 96px;
+  block-size: 4px;
+}
+
+.board-table-done {
+  min-inline-size: 96px;
+  text-align: end;
+}
+
+.board-table-row {
+  appearance: none;
+  inline-size: 100%;
+  min-block-size: 42px;
+  border: 0;
+  border-block-start: 1px solid color-mix(in srgb, var(--mx-line) 60%, transparent);
+  background: transparent;
+  color: var(--orchestra-body);
+  font: inherit;
+  font-size: var(--orchestra-font-size-sm);
+  text-align: start;
+  cursor: pointer;
+}
+
+.board-table-row:hover {
+  background: var(--orchestra-overlay-hover);
+}
+
+.board-table-row.board-open {
+  background: color-mix(in srgb, var(--mx-blue) 10%, transparent);
+  box-shadow: inset 2px 0 0 var(--mx-blue);
+}
+
+.board-table-row[data-stage="shipped"] {
+  color: var(--orchestra-muted);
+}
+
+.board-table-id {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.board-table-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-inline-size: 0;
+}
+
+.board-table-name {
+  overflow: hidden;
+  color: var(--orchestra-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.board-table-row[data-stage="shipped"] .board-table-name {
+  color: var(--orchestra-muted);
+}
+
+.board-table-note,
+.board-table-asked {
+  flex-shrink: 0;
+  overflow: hidden;
+  max-inline-size: 45%;
+  color: var(--orchestra-muted);
+  font-size: var(--orchestra-font-size-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.board-table-asked {
+  color: var(--orchestra-warm);
+}
+
+.board-table-asked::before {
+  content: "";
+  display: inline-block;
+  inline-size: 5px;
+  block-size: 5px;
+  margin-inline-end: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  vertical-align: middle;
+}
+
+.board-table-seat {
+  display: inline-flex;
+}
+
+.board-table-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-inline-size: 0;
+}
+
+.board-table-progress .board-track {
+  max-inline-size: 72px;
+}
+
+.board-table-size {
+  display: inline-flex;
+}
+
+.board-table-row > .board-count {
+  font-variant-numeric: tabular-nums;
+}
+
+.board-table-fold {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  inline-size: 100%;
+  min-block-size: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-block-start: 1px solid color-mix(in srgb, var(--mx-line) 60%, transparent);
+  background: transparent;
+  color: var(--orchestra-muted);
+  font: inherit;
+  font-size: var(--orchestra-font-size-xs);
+  cursor: pointer;
+}
+
+.board-table-fold:hover {
+  color: var(--orchestra-text);
+  background: var(--orchestra-overlay-hover);
+}
+
+.board-table-empty {
+  margin: 0;
+  padding: 28px 16px;
+  text-align: center;
+}
+
+/* ---- Epic page ---- */
+
+.board-epic-page {
+  display: grid;
+  gap: 18px;
+}
+
+.board-epic-ref {
+  font-size: var(--orchestra-font-size-sm);
+}
+
+.board-epic-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 272px;
+  align-items: start;
+  gap: 18px;
+}
+
+.board-epic-main {
+  display: grid;
+  gap: 16px;
+  min-inline-size: 0;
+}
+
+.board-epic-stage {
+  display: grid;
+  gap: 8px;
+}
+
+.board-epic-stage-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--orchestra-muted);
+  font-size: var(--orchestra-font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.board-epic-stage-head .board-quiet {
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* The epic column is narrower than the list: the PR column goes, the fixed columns shrink, and the step note moves
+   under the title so the title reads in full. */
+.board-epic-stage .board-table {
+  --board-table-columns: 72px minmax(0, 1fr) 28px 112px 28px 56px;
+}
+
+.board-epic-stage .board-table-row {
+  gap: 10px;
+}
+
+.board-epic-stage .board-table-row > :nth-child(7) {
+  display: none;
+}
+
+.board-epic-stage .board-table-title {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.board-epic-stage .board-table-name {
+  overflow: visible;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.board-epic-stage .board-table-note,
+.board-epic-stage .board-table-asked {
+  max-inline-size: 100%;
+}
+
+.board-epic-stage .board-table-row:first-child,
+.board-epic-stage .board-table-fold:first-child {
+  border-block-start: 0;
+}
+
+.board-epic-rail {
+  display: grid;
+  gap: 12px;
+}
+
+.board-epic-rail .board-rail p {
+  margin: 0;
+}
+
+.board-epic-figure {
+  display: grid;
+  gap: 2px;
+  color: var(--orchestra-text);
+  font-size: var(--orchestra-font-size-2xl);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.board-epic-figure small {
+  color: var(--orchestra-muted);
+  font-size: var(--orchestra-font-size-xs);
+  font-weight: 400;
+}
+
+.board-epic-figure[data-late="true"] small {
+  color: var(--orchestra-warm);
+}
+
+.board-epic-pole {
+  color: var(--orchestra-body);
+  font-size: var(--orchestra-font-size-sm);
+}
+
+.board-epic-pole[data-sets="true"] {
+  color: var(--mx-blue);
+}
+
+.board-epic-list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.board-epic-item {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  inline-size: 100%;
+  padding: 8px 6px;
+  border: 0;
+  border-radius: var(--orchestra-radius-sm);
+  background: transparent;
+  color: var(--orchestra-body);
+  font: inherit;
+  font-size: var(--orchestra-font-size-sm);
+  text-align: start;
+  cursor: pointer;
+}
+
+.board-epic-item:hover:not(:disabled) {
+  background: var(--orchestra-overlay-hover);
+}
+
+.board-epic-item:disabled {
+  cursor: default;
+}
+
+.board-epic-item-title {
+  flex: 1;
+  min-inline-size: 0;
+  color: var(--orchestra-text);
+}
+
+.board-epic-ask {
+  box-shadow: inset 2px 0 0 var(--orchestra-warm);
+  border-radius: 0 var(--orchestra-radius-sm) var(--orchestra-radius-sm) 0;
+}
+
+.board-epic-calm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--orchestra-muted);
+  font-size: var(--orchestra-font-size-sm);
+}
+
+/* Cumulative lines: blue for what shipped (with a soft fill), a dashed hairline for scope. */
+.board-burnup {
+  display: block;
+  inline-size: 100%;
+  block-size: 72px;
+  overflow: visible;
+}
+
+.board-burnup-base {
+  stroke: var(--mx-line);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.board-burnup-line {
+  fill: none;
+  stroke-width: 1.75;
+  stroke-linejoin: round;
+}
+
+.board-burnup-line[data-tone="shipped"] {
+  stroke: var(--mx-blue);
+}
+
+.board-burnup-line[data-tone="scope"] {
+  stroke: var(--mx-dim);
+  stroke-dasharray: 4 3;
+}
+
+.board-burnup-fill {
+  fill: color-mix(in srgb, var(--mx-blue) 16%, transparent);
+  stroke: none;
+}
+
+/* The epic's ships: the burnup with a dot per ship, the scope at the top and the date span underneath. */
+.board-ships {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 8px;
+  row-gap: 4px;
+  padding-block-start: 4px;
+}
+
+.board-ships-top {
+  align-self: start;
+  color: var(--orchestra-muted);
+  font-size: var(--orchestra-font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.board-ships-plot {
+  position: relative;
+}
+
+.board-ships-dot {
+  position: absolute;
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: var(--orchestra-radius-full);
+  background: var(--mx-blue);
+  box-shadow: 0 0 0 2px var(--orchestra-surface);
+  transform: translate(-50%, -50%);
+}
+
+.board-ships-axis {
+  display: flex;
+  grid-column: 2;
+  justify-content: space-between;
+  color: var(--orchestra-muted);
+  font-size: var(--orchestra-font-size-xs);
+}
+
+.board-epic-ships-note {
+  color: var(--orchestra-text);
+  font-size: var(--orchestra-font-size-sm);
+}
+
+/* ---- Timeline ---- */
+
+.board-timeline {
+  --board-timeline-label: 240px;
+  display: grid;
+  gap: 12px;
+}
+
+.board-timeline-legend span {
+  color: var(--orchestra-muted);
+}
+
+.board-timeline-legend [data-tone="shipped"] i {
+  background: var(--mx-blue);
+}
+
+.board-timeline-legend [data-tone="left"] i {
+  background: color-mix(in srgb, var(--mx-blue) 35%, transparent);
+}
+
+.board-timeline-legend [data-tone="cone"] i {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--mx-blue) 30%, transparent), transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mx-blue) 30%, transparent);
+}
+
+.board-timeline-chart {
+  position: relative;
+  display: grid;
+  padding: 4px 0 10px;
+  border-radius: var(--orchestra-radius-xl);
+  overflow: clip;
+  overflow-clip-margin: 1px;
+}
+
+/* Rules, today and the target sit behind the rows, inside the track column only. */
+.board-timeline-lines {
+  position: absolute;
+  inset-block: 0;
+  inset-inline: calc(var(--board-timeline-label) + 16px) 24px;
+  pointer-events: none;
+}
+
+.board-timeline-rule,
+.board-timeline-today,
+.board-timeline-target {
+  position: absolute;
+  inset-block: 0;
+  inline-size: 1px;
+}
+
+.board-timeline-rule {
+  background: color-mix(in srgb, var(--mx-line) 70%, transparent);
+}
+
+.board-timeline-today {
+  background: var(--mx-blue);
+}
+
+.board-timeline-target {
+  border-inline-start: 1px dashed var(--orchestra-warm);
+}
+
+.board-timeline-today span,
+.board-timeline-target span {
+  position: absolute;
+  inset-block-end: 4px;
+  inset-inline-start: 4px;
+  padding: 1px 6px;
+  border-radius: var(--orchestra-radius-full);
+  font-size: var(--orchestra-font-size-2xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.board-timeline-today span {
+  background: color-mix(in srgb, var(--mx-blue) 18%, transparent);
+  color: var(--mx-blue);
+}
+
+.board-timeline-target span {
+  background: color-mix(in srgb, var(--orchestra-warm) 15%, transparent);
+  color: var(--orchestra-warm);
+}
+
+.board-timeline-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--board-timeline-label) minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  min-block-size: 44px;
+  padding: 0 24px 0 0;
+}
+
+.board-timeline-axis {
+  min-block-size: 40px;
+  border-block-end: 1px solid var(--mx-line);
+}
+
+.board-timeline-epic + .board-timeline-epic,
+.board-timeline-issue + .board-timeline-epic {
+  border-block-start: 1px solid color-mix(in srgb, var(--mx-line) 60%, transparent);
+}
+
+.board-timeline-issue {
+  min-block-size: 32px;
+}
+
+.board-timeline-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-inline-size: 0;
+  padding-inline-start: 12px;
+}
+
+.board-timeline-axis .board-timeline-label {
+  padding-inline-start: 16px;
+}
+
+button.board-timeline-label {
+  appearance: none;
+  block-size: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--orchestra-body);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+button.board-timeline-label:hover .board-timeline-issue-title {
+  color: var(--orchestra-text);
+}
+
+.board-timeline-sub {
+  padding-inline-start: 46px;
+  color: var(--orchestra-muted);
+  font-size: var(--orchestra-font-size-xs);
+}
+
+.board-timeline-toggle {
+  flex-shrink: 0;
+}
+
+.board-timeline-name {
+  display: grid;
+  gap: 1px;
+  min-inline-size: 0;
+}
+
+.board-timeline-name .board-quiet {
+  font-size: var(--orchestra-font-size-xs);
+}
+
+.board-timeline-epic-name {
+  appearance: none;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--orchestra-text);
+  font: inherit;
+  font-size: var(--orchestra-font-size-sm);
+  font-weight: 600;
+  text-align: start;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.board-timeline-epic-name:hover {
+  color: var(--mx-blue);
+}
+
+.board-timeline-issue-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.board-timeline-track {
+  position: relative;
+  block-size: 100%;
+  min-block-size: inherit;
+}
+
+.board-timeline-week {
+  position: absolute;
+  inset-block-start: 50%;
+  display: grid;
+  padding-inline-start: 6px;
+  color: var(--orchestra-faint);
+  font-size: var(--orchestra-font-size-2xs);
+  white-space: nowrap;
+  transform: translateY(-50%);
+}
+
+.board-timeline-week b {
+  color: var(--orchestra-muted);
+  font-size: var(--orchestra-font-size-xs);
+  font-weight: 600;
+}
+
+.board-timeline-bar {
+  position: absolute;
+  inset-block-start: 50%;
+  display: flex;
+  align-items: center;
+  block-size: 18px;
+  overflow: hidden;
+  border-radius: var(--orchestra-radius-sm);
+  transform: translateY(-50%);
+}
+
+.board-timeline-bar[data-size="thin"] {
+  block-size: 6px;
+  border-radius: var(--orchestra-radius-full);
+}
+
+.board-timeline-bar[data-tone="shipped"] {
+  background: var(--mx-blue);
+  color: var(--mx-primary-text);
+}
+
+.board-timeline-bar[data-tone="left"] {
+  background: color-mix(in srgb, var(--mx-blue) 30%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mx-blue) 40%, transparent);
+}
+
+.board-timeline-bar[data-tone="cone"] {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--mx-blue) 24%, transparent), transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mx-blue) 18%, transparent);
+}
+
+.board-timeline-bar[data-tone="active"] {
+  background: var(--stage, var(--mx-blue));
+}
+
+.board-timeline-bar span {
+  padding: 0 8px;
+  font-size: var(--orchestra-font-size-2xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.board-timeline-tag {
+  position: absolute;
+  inset-block-start: 50%;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-inline-start: 8px;
+  color: var(--orchestra-text);
+  font-size: var(--orchestra-font-size-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  transform: translateY(-50%);
+}
+
+.board-timeline-tag[data-tone="quiet"] {
+  color: var(--orchestra-muted);
+}
+
+.board-timeline-tag em {
+  padding: 1px 6px;
+  border-radius: var(--orchestra-radius-full);
+  background: color-mix(in srgb, var(--mx-blue) 16%, transparent);
+  color: var(--mx-blue);
+  font-size: var(--orchestra-font-size-2xs);
+  font-style: normal;
+  font-weight: 600;
+}
+
+.board-timeline-scope .board-burnup {
+  block-size: 96px;
+}
+
+.board-scope-log {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--orchestra-font-size-sm);
+}
+
+.board-scope-log li {
+  display: grid;
+  grid-template-columns: 56px 40px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 8px;
+  color: var(--orchestra-body);
+}
+
+.board-scope-log b {
+  color: var(--mx-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.board-scope-log b[data-grew="true"] {
+  color: var(--orchestra-warm);
+}
+
+/* Narrow boards stack the rail under the epic and drop the quieter list columns. */
+@container (max-width: 1000px) {
+  .board-epic-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .board-overview-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .board-table,
+  .board-epic-stage .board-table {
+    --board-table-columns: 96px minmax(0, 1fr) 32px 120px 52px;
+  }
+
+  .board-table-head > :nth-child(5),
+  .board-table-row > :nth-child(5),
+  .board-table-head > :nth-child(7),
+  .board-table-row > :nth-child(7) {
+    display: none;
+  }
+
+  .board-timeline {
+    --board-timeline-label: 180px;
+  }
+}
+
+@container (max-width: 640px) {
+  .board-overview-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .board-overview-end {
+    justify-content: flex-start;
+  }
+
+  .board-table,
+  .board-epic-stage .board-table {
+    --board-table-columns: minmax(0, 1fr) 32px 52px;
+  }
+
+  .board-table-head > :nth-child(1),
+  .board-table-row > :nth-child(1),
+  .board-table-head > :nth-child(4),
+  .board-table-row > :nth-child(4) {
+    display: none;
+  }
+
+  .board-table-bar-mini,
+  .board-table-done {
+    display: none;
+  }
+
+  .board-timeline {
+    --board-timeline-label: 120px;
+  }
+}
+
+/* The board's own sections stay mounted (and keep their state) while another view shows. */
+.board-top[hidden],
+.board-grid[hidden] {
+  display: none;
+}

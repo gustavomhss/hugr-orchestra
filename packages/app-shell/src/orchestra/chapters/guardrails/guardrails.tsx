@@ -1,4 +1,4 @@
-import { createEffect, createMemo, For, Match, on, onCleanup, onMount, Show, Switch, type JSX } from "solid-js"
+import { createEffect, createMemo, For, Match, on, onCleanup, Show, Switch, type JSX } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createGroupedVirtualizer } from "@/components/grouped-virtualizer"
 import { useLanguage } from "@/context/language"
@@ -23,7 +23,7 @@ import {
 } from "./model"
 import "./guardrails.css"
 
-type Source = Scenario | "live" | "running" | "disconnected"
+type Source = Scenario | "live" | "idle" | "running" | "disconnected"
 type View = "overview" | "rules" | "review"
 
 const views = ["overview", "rules", "review"] as const
@@ -41,7 +41,7 @@ export default function Guardrails(props: { directory: string; scenario?: Source
   const dev = Boolean(import.meta.env?.DEV)
   const [store, setStore] = createStore({
     view: "overview" as View,
-    source: props.scenario ?? ((dev ? "blocked" : "live") as Source),
+    source: props.scenario ?? ((dev ? "blocked" : "idle") as Source),
     live: undefined as Report | undefined,
     liveRules: undefined as readonly Rule[] | undefined,
     failure: undefined as string | undefined,
@@ -65,7 +65,7 @@ export default function Guardrails(props: { directory: string; scenario?: Source
 
   const report = createMemo(() => {
     if (store.source === "live") return store.live
-    if (store.source === "running" || store.source === "disconnected") return
+    if (store.source === "running" || store.source === "disconnected" || store.source === "idle") return
     return scenarios[store.source]
   })
   const result = createMemo(() => {
@@ -152,16 +152,14 @@ export default function Guardrails(props: { directory: string; scenario?: Source
   }
 
   const retry = () => {
-    if (store.source === "live" || store.source === "disconnected" || (store.source === "running" && checks.size))
+    if (store.source === "live" || store.source === "idle" || store.source === "disconnected" || (store.source === "running" && checks.size))
       return void check()
     const previous = store.source === "running" ? "blocked" : store.source
     setStore({ source: "running", selected: undefined, announce: "" })
     later(() => setStore("source", previous), 900)
   }
 
-  onMount(() => {
-    if (store.source === "live") void check()
-  })
+  // The check runs the repository's own script/guards code, so it starts only from the user's Run action.
 
   const choose = (key: string, focus: "row" | "detail" | "none") => {
     setStore("selected", key)
@@ -292,6 +290,15 @@ export default function Guardrails(props: { directory: string; scenario?: Source
         </section>
         <div class="gr-skeleton" aria-hidden="true">
           <For each={[0, 1, 2, 3]}>{() => <span />}</For>
+        </div>
+      </Match>
+      <Match when={store.source === "idle"}>
+        <div class="mx-empty">
+          <strong>{t("orchestra.guardrails.idle.title")}</strong>
+          <p>{t("orchestra.guardrails.idle.body")}</p>
+          <div class="gr-empty-actions">
+            <Retry />
+          </div>
         </div>
       </Match>
       <Match when={store.source === "disconnected"}>

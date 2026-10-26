@@ -25,6 +25,12 @@ export function readSkills(value: unknown): readonly SkillEntry[] {
   return Option.getOrThrowWith(decodeSkills(value), () => new Error("Skills response is malformed"))
 }
 
+/** Skills for agent use only declare `internal: true` in their frontmatter; the catalog does not list them. */
+export function isInternalSkill(skill: Pick<SkillEntry, "content">) {
+  const block = /^\uFEFF?---\r?\n([\s\S]*?)\r?\n---/.exec(skill.content)?.[1]
+  return !!block && /^internal:\s*(true|yes)\s*(#.*)?$/im.test(block)
+}
+
 export type SkillSource = "project" | "global" | "builtin"
 /** Mirrors the server's write rule: only the project's own skill folders change, never Atlas-governed skills. */
 export type SkillAccess = "edit" | "builtin" | "global" | "governed" | "fixed"

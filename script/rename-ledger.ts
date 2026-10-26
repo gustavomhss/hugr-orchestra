@@ -66,7 +66,7 @@ export const keptPaths: Kept[] = [
 // Strings that keep the old name wherever they appear (or only in `paths`).
 export const protectedStrings: Protected[] = [
   // Integrity
-  { pattern: /opencode:event-seal:v1/g, reason: "hashed into every stored event seal" },
+  { pattern: /opencode:event-seal:v1/g, reason: "legacy seal domain, still accepted when verifying stored event seals" },
 
   // Upstream project and hosted services Orchestra does not run
   {

@@ -1,11 +1,14 @@
 import { expect, test } from "bun:test"
 import type { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
+import { createRoot } from "solid-js"
 import {
+  createModelCatalog,
   resolveDefaultModel,
   selectProviderCatalog,
   settingsProviderDirectory,
   settingsProviderOwner,
 } from "./provider-catalog"
+import type { Provider } from "@/v2-wire"
 import type { ServerConnection } from "@/context/server"
 
 const catalog = (id: string): NormalizedProviderListResponse => ({
@@ -157,4 +160,24 @@ test("settings resolves the server and directory as one owner instead of combini
     server: b,
     directory: null,
   })
+})
+
+test("lists one model per provider and model ID", () => {
+  const provider = (id: string, models: string[]) =>
+    ({
+      id,
+      name: id,
+      models: Object.fromEntries(models.map((model, index) => [`${model}-${index}`, { id: model, name: model }])),
+    }) as unknown as Provider
+  const ids = createRoot((dispose) => {
+    const catalog = createModelCatalog(
+      () => [provider("opencode", ["big", "big"]), provider("opencode", ["big"]), provider("opencode-go", ["big"])],
+      () => [],
+    )
+    const result = catalog.list().map((model) => `${model.provider.id}:${model.id}`)
+    dispose()
+    return result
+  })
+
+  expect(ids).toEqual(["opencode:big", "opencode-go:big"])
 })

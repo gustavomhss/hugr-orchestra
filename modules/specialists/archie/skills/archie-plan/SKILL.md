@@ -1,6 +1,7 @@
 ---
 name: archie-plan
 description: Author or revise product, architecture, specifications, plans, decomposition and briefs from Maestro's bounded assignment. Keep small independent Tasks lightweight.
+internal: true
 ---
 
 # Upstream planning

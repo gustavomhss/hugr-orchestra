@@ -58,6 +58,8 @@ html[data-color-scheme="light"] .board-root {
    of a gradient over the flat border, so the edge brightens where light would hit it (as on the chrome glass). */
 .board-brief,
 .board-ask,
+.board-table,
+.board-timeline-chart,
 .board-card,
 .board-project,
 .board-row,
@@ -75,6 +77,8 @@ html[data-color-scheme="light"] .board-root {
 
 .board-brief::after,
 .board-ask::after,
+.board-table::after,
+.board-timeline-chart::after,
 .board-card::after,
 .board-project::after,
 .board-row::after,
