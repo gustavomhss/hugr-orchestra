@@ -3,7 +3,7 @@ import { setupCompactNavigation } from "./compact-navigation.fixture"
 
 test.use({ viewport: { width: 1672, height: 941 }, serviceWorkers: "block" })
 
-const wipItems = ["Agents", "MCP", "Actions", ".env", "Workspaces"]
+const wipItems = ["Projects", "Agents", "MCP", "Actions", ".env", "Workspaces"]
 const wipText = "Work in progress, revisit before production"
 
 test("collapse preserves names, focus, routes, profile and titlebar geometry across reload", async ({ page }) => {

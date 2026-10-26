@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { ClientApi, groupNames } from "../src/contract"
+import { ClientApi, groupNames, omitEndpoints } from "../src/contract"
 import {
   isConflictError,
   isInvalidRequestError,
@@ -42,6 +42,7 @@ test("exposes every standard HTTP API group", () => {
     "lean",
     "atlas",
     "config",
+    "server.board",
     "claudeCode",
     "relayDocuments",
     "relayPublish",
@@ -68,6 +69,8 @@ test("exposes every standard HTTP API group", () => {
   expect(Object.keys(client)).toEqual(groups)
   expect(
     Object.values(ClientApi.groups)
+      // A group whose every endpoint is omitted (streams, uploads) gets no client namespace.
+      .filter((group) => Object.keys(group.endpoints).some((name) => !omitEndpoints.has(name)))
       .map((group) => groupNames[group.identifier])
       .sort(),
   ).toEqual([...groups].sort())
