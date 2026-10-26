@@ -1,4 +1,5 @@
 import { SessionMeeting } from "@orchestra/core/session"
+import { MeetingHandoff } from "@orchestra/core/session/meeting-handoff"
 import { MeetingError } from "@orchestra/protocol/groups/meeting"
 import { Effect } from "effect"
 import { HttpApiBuilder, HttpApiSchema } from "effect/unstable/httpapi"
@@ -79,12 +80,16 @@ export const MeetingHandler = HttpApiBuilder.group(Api, "server.meeting", (handl
           }),
         ),
       )
-      // Handoff lands with the Maestro handoff package.
-      .handle("meeting.handoff", () => unavailable),
+      .handle("meeting.handoff", (ctx) =>
+        response(
+          Effect.gen(function* () {
+            const handoff = yield* MeetingHandoff.Service
+            return yield* handoff.handoff(ctx.payload).pipe(Effect.mapError(apiError))
+          }),
+        ),
+      ),
   ),
 )
-
-const unavailable = Effect.fail(new MeetingError({ name: "MeetingError", data: { reason: "unavailable" } }))
 
 function apiError(error: SessionMeeting.MeetingError) {
   return new MeetingError({ name: "MeetingError", data: { reason: error.reason } })

@@ -4,8 +4,8 @@ import type { Scenario } from "./types"
 
 // Meeting routes (V2 /api/meeting). The exercise database holds no meetings or Sessions, so each route answers its
 // typed MeetingError with the reason for that refusal, and the list is empty; the lifecycle is covered by core tests.
-// confirm and commitment answer missing_meeting and missing_item for unknown ids. Handoff answers "unavailable" until
-// the live seat handoff lands.
+// confirm and commitment answer missing_meeting and missing_item for unknown ids. Handoff answers missing_meeting for an
+// unknown meeting.
 function refused(reason: string) {
   return (body: unknown) => {
     object(body)
@@ -92,5 +92,5 @@ export const meetingScenarios: Scenario[] = [
       headers: { ...ctx.headers(), "content-type": "application/json" },
       body: { meetingID, itemIDs: [] },
     }))
-    .json(400, refused("unavailable"), "status"),
+    .json(400, refused("missing_meeting"), "status"),
 ]
