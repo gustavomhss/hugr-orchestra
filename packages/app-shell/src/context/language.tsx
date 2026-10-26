@@ -8,6 +8,7 @@ import { dict as en } from "@/i18n/en"
 import { dict as uiEn } from "@orchestra/ui/i18n/en"
 import { EDIT_REVIEW_COPY } from "@orchestra/ui/i18n/edit-review"
 import { ORCHESTRA_COPY } from "@/i18n/orchestra"
+import { BOARD_COPY_BR } from "@/i18n/orchestra-chapters/board"
 import { GUARDRAILS_COPY_BR } from "@/i18n/orchestra-chapters/guardrails"
 import {
   createDesktopNativeBundle,
@@ -42,6 +43,8 @@ type PluralKey =
   | `orchestra.atlas.${string}`
   // Guardrails word their counts with orchestra.guardrails.<name>.one / .other (i18n/orchestra-chapters/guardrails.ts).
   | `orchestra.guardrails.${string}`
+  // The Projects board words its counts with orchestra.board.<name>.one / .other (i18n/orchestra-chapters/board.ts).
+  | `orchestra.board.${string}`
 type Source = { dict: Record<string, string> }
 
 function cookie(locale: Locale) {
@@ -72,10 +75,10 @@ const loaders: Record<Exclude<Locale, "en">, () => Promise<Dictionary>> = {
   uk: () => merge(import("@/i18n/uk"), import("@orchestra/ui/i18n/uk"), import("@/i18n/lean/uk")),
   ar: () => merge(import("@/i18n/ar"), import("@orchestra/ui/i18n/ar"), import("@/i18n/lean/ar")),
   no: () => merge(import("@/i18n/no"), import("@orchestra/ui/i18n/no"), import("@/i18n/lean/no")),
-  // Orchestra copy is English-only in the parity-checked locale files; the Guardrails chapter's Portuguese rides on top here.
+  // Orchestra copy is English-only in the parity-checked locale files; the Guardrails and Projects chapters' Portuguese rides on top here.
   br: () =>
     merge(import("@/i18n/br"), import("@orchestra/ui/i18n/br"), import("@/i18n/lean/br")).then(
-      (dict) => ({ ...dict, ...GUARDRAILS_COPY_BR }) as Dictionary,
+      (dict) => ({ ...dict, ...GUARDRAILS_COPY_BR, ...BOARD_COPY_BR }) as Dictionary,
     ),
   th: () => merge(import("@/i18n/th"), import("@orchestra/ui/i18n/th"), import("@/i18n/lean/th")),
   bs: () => merge(import("@/i18n/bs"), import("@orchestra/ui/i18n/bs"), import("@/i18n/lean/bs")),

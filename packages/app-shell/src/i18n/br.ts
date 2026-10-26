@@ -678,7 +678,7 @@ export const dict = {
   "notification.session.error.fallbackDescription": "Ocorreu um erro",
   "home.recentProjects": "Projetos recentes",
   "home.title": "Início",
-  "home.projects": "Projetos",
+  "home.projects": "Repositórios",
   "home.project.add": "Adicionar projeto",
   "home.recentlyClosed": "Projetos fechados recentemente",
   "home.server.collapse": "Recolher projetos do servidor",

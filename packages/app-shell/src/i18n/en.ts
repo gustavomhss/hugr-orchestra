@@ -593,7 +593,7 @@ export const dict = {
 
   "home.recentProjects": "Recent projects",
   "home.title": "Home",
-  "home.projects": "Projects",
+  "home.projects": "Repositories",
   "home.project.add": "Add project",
   "home.recentlyClosed": "Recently closed",
   "home.server.collapse": "Collapse server projects",
