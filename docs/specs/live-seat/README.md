@@ -196,7 +196,7 @@ Sliced so packages 1–3 run in parallel; 4 needs 2; 5 needs 1, 3 and 4.
 The loop lives in `apps/desktop/src/main/live-loop.ts`; it departs from the design above in these places.
 
 - **Suggestions.** The first stage is local and free: only a "them" segment that carries a question mark, has at least four words and does not repeat the last one shows the suggestion card. The model is called only when the owner accepts, with queue delivery, and may still reply `[no-answer]`. There is no per-utterance model call.
-- **`live_look`.** The server-to-desktop path is deferred. Only the look hotkey or button attaches a frame to the prompt.
+- **`live_look`.** The core tool only checks the caller is `live` and asks for permission; the server holds no screen. The desktop sees the call as `session.next.tool.called` in the event stream it already follows, captures one frame and admits it with steer delivery as the seat's next input. The frame joins the reply in progress, and the idle that may come before it is held until the reply to the frame begins. With no meeting running nothing captures, and the seat's turn ends without a frame. Known limit: a reply to the frame that has no text at all leaves the request open until stop.
 - **Thinking and streaming.** Ask, look, a quick action and an accepted suggestion show the thinking view at once; text deltas stream into the answer and the session's idle status ends it. A reply that may still be `[no-answer]` is not streamed.
 - **Overlay exclusion.** The overlay is excluded from the frame by finding the window that loads the live page.
 - **After stop.** The meeting's event stream stays open until the next start, so the summary and the open-items hand-off can still land.
