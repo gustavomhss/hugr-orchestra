@@ -1,6 +1,6 @@
 import { release } from "node:os"
 import { BrowserWindow, shell } from "electron"
-import type { LiveRunState, LiveSource } from "@orchestra/app"
+import type { LiveRunState, LiveSource } from "@orchestra/app/live"
 
 import { isNoAnswer, LIVE_PROMPTS, NO_ANSWER, parseAnswer, parseStopSummary, worthSuggesting } from "./live-answer"
 import { readTranscriptionKey } from "./live-key"

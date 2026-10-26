@@ -1,5 +1,5 @@
 import { globalShortcut } from "electron"
-import type { LiveHotkey, LiveHotkeyAction, LiveSettings } from "@orchestra/app"
+import type { LiveHotkey, LiveHotkeyAction, LiveSettings } from "@orchestra/app/live"
 
 import { LIVE_OVERLAY_HOTKEYS, type LiveOverlayHotkey } from "./live-overlay-state"
 import { getStore } from "./store"

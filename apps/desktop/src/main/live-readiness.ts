@@ -1,6 +1,6 @@
 import { release } from "node:os"
 import { shell, systemPreferences } from "electron"
-import type { LivePermission, LiveReadiness, LiveSource } from "@orchestra/app"
+import type { LivePermission, LiveReadiness, LiveSource } from "@orchestra/app/live"
 
 import { hasTranscriptionKey } from "./live-key"
 

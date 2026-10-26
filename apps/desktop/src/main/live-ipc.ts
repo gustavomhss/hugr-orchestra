@@ -1,6 +1,6 @@
 import { BrowserWindow, ipcMain } from "electron"
 import type { IpcMainInvokeEvent } from "electron"
-import type { LiveHotkeyAction, LiveSource } from "@orchestra/app"
+import type { LiveHotkeyAction, LiveSource } from "@orchestra/app/live"
 
 import { hasTranscriptionKey, saveTranscriptionKey } from "./live-key"
 import type { LiveLoop } from "./live-loop"

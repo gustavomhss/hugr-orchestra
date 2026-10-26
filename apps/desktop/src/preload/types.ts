@@ -6,7 +6,7 @@ import type {
   LiveRunState,
   LiveSettings,
   LiveSource,
-} from "@orchestra/app"
+} from "@orchestra/app/live"
 import type { DesktopMenuAction } from "@orchestra/app/desktop-menu"
 import type { WslServersPlatform } from "@orchestra/app/wsl/types"
 import type { UpdaterState } from "@orchestra/app/updater"
