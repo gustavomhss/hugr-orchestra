@@ -9362,6 +9362,114 @@ export type GuardrailRunOutput = {
   }
 }
 
+export type MeetingStartInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly sessionID: { readonly sessionID: string; readonly title: string }["sessionID"]
+  readonly title: { readonly sessionID: string; readonly title: string }["title"]
+}
+
+export type MeetingStartOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly sessionID: string
+    readonly title: string
+    readonly timeStarted: number | "Infinity" | "-Infinity" | "NaN"
+    readonly timeEnded: number | "Infinity" | "-Infinity" | "NaN" | null
+  }
+}
+
+export type MeetingAppendInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly meetingID: {
+    readonly meetingID: string
+    readonly segments: ReadonlyArray<{
+      readonly id: string
+      readonly track: "me" | "them"
+      readonly text: string
+      readonly startMs: number
+      readonly endMs: number
+    }>
+  }["meetingID"]
+  readonly segments: {
+    readonly meetingID: string
+    readonly segments: ReadonlyArray<{
+      readonly id: string
+      readonly track: "me" | "them"
+      readonly text: string
+      readonly startMs: number
+      readonly endMs: number
+    }>
+  }["segments"]
+}
+
+export type MeetingAppendOutput = void
+
+export type MeetingStopInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly meetingID: { readonly meetingID: string }["meetingID"]
+}
+
+export type MeetingStopOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly sessionID: string
+    readonly title: string
+    readonly timeStarted: number | "Infinity" | "-Infinity" | "NaN"
+    readonly timeEnded: number | "Infinity" | "-Infinity" | "NaN" | null
+  }
+}
+
+export type MeetingReadInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly meetingID: string
+  }["location"]
+  readonly meetingID: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly meetingID: string
+  }["meetingID"]
+}
+
+export type MeetingReadOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly meeting: {
+      readonly id: string
+      readonly sessionID: string
+      readonly title: string
+      readonly timeStarted: number | "Infinity" | "-Infinity" | "NaN"
+      readonly timeEnded: number | "Infinity" | "-Infinity" | "NaN" | null
+    }
+    readonly segments: ReadonlyArray<{
+      readonly id: string
+      readonly track: "me" | "them"
+      readonly text: string
+      readonly startMs: number | "Infinity" | "-Infinity" | "NaN"
+      readonly endMs: number | "Infinity" | "-Infinity" | "NaN"
+    }>
+  }
+}
+
 export type OperatorInspectInput = {
   readonly location?: {
     readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
@@ -10021,6 +10129,8 @@ export {
   isActionsError,
   type GuardrailError,
   isGuardrailError,
+  type MeetingError,
+  isMeetingError,
   type ForbiddenError,
   isForbiddenError,
 } from "./errors"

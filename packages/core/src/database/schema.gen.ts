@@ -40,6 +40,28 @@ export default {
         );
       `)
       yield* tx.run(`
+        CREATE TABLE \`meeting_segment\` (
+          \`id\` text NOT NULL,
+          \`meeting_id\` text NOT NULL,
+          \`track\` text NOT NULL,
+          \`text\` text NOT NULL,
+          \`start_ms\` integer NOT NULL,
+          \`end_ms\` integer NOT NULL,
+          CONSTRAINT \`meeting_segment_pk\` PRIMARY KEY(\`meeting_id\`, \`id\`),
+          CONSTRAINT \`fk_meeting_segment_meeting_id_meeting_id_fk\` FOREIGN KEY (\`meeting_id\`) REFERENCES \`meeting\`(\`id\`) ON DELETE CASCADE
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`meeting\` (
+          \`id\` text PRIMARY KEY,
+          \`session_id\` text NOT NULL,
+          \`title\` text NOT NULL,
+          \`time_started\` integer NOT NULL,
+          \`time_ended\` integer,
+          CONSTRAINT \`fk_meeting_session_id_session_id_fk\` FOREIGN KEY (\`session_id\`) REFERENCES \`session\`(\`id\`) ON DELETE CASCADE
+        );
+      `)
+      yield* tx.run(`
         CREATE TABLE \`session_v1_prompt_admission\` (
           \`id\` text PRIMARY KEY,
           \`session_id\` text NOT NULL,
@@ -477,6 +499,10 @@ export default {
       yield* tx.run(
         `CREATE INDEX \`project_checkpoint_project_time_id_idx\` ON \`project_checkpoint\` (\`project_id\`,\`time_created\`,\`id\`);`,
       )
+      yield* tx.run(
+        `CREATE INDEX \`meeting_segment_meeting_start_idx\` ON \`meeting_segment\` (\`meeting_id\`,\`start_ms\`);`,
+      )
+      yield* tx.run(`CREATE INDEX \`meeting_session_idx\` ON \`meeting\` (\`session_id\`);`)
       yield* tx.run(
         `CREATE UNIQUE INDEX \`actions_operation_location_binding_client_idx\` ON \`actions_operation\` (\`location_key\`,\`binding_id\`,\`client_id\`);`,
       )
