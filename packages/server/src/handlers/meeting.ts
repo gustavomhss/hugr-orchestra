@@ -1,4 +1,4 @@
-import { SessionMeeting } from "@orchestra/core/session/meeting"
+import { SessionMeeting } from "@orchestra/core/session"
 import { MeetingError } from "@orchestra/protocol/groups/meeting"
 import { Effect } from "effect"
 import { HttpApiBuilder, HttpApiSchema } from "effect/unstable/httpapi"

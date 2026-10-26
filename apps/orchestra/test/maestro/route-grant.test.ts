@@ -8,7 +8,7 @@ describe("Maestro route grants", () => {
       .filter((member) => member.memberId !== "maestro")
       .map((member) => lookupRouteGrant(member.memberId))
 
-    expect(grants).toHaveLength(8)
+    expect(grants).toHaveLength(9)
     expect(grants).toEqual(
       roster
         .filter((member) => member.memberId !== "maestro")
