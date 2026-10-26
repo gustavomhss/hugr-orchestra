@@ -434,15 +434,14 @@ export const NoteInput = Schema.Struct({ body: Text }).annotate({ identifier: "B
 export type NoteInput = typeof NoteInput.Type
 
 // Files arrive base64-encoded in JSON; a secret's value goes straight to the credential store and is never echoed.
-export const AttachmentInput = Schema.Union([
-  Schema.Struct({
-    kind: Schema.Literals(["file", "image", "video", "doc"]),
-    name: Text,
-    mime: Schema.String.pipe(optional),
-    data: Schema.String,
-  }),
-  Schema.Struct({ kind: Schema.Literal("secret"), label: Text, value: Schema.String.check(Schema.isNonEmpty()) }),
-]).annotate({ identifier: "Board.AttachmentInput" })
+// A file carries base64 `data`; a secret carries `value` (stored only in the credential store) and `name` is its label.
+export const AttachmentInput = Schema.Struct({
+  kind: AttachmentKind,
+  name: Text,
+  mime: Schema.String.pipe(optional),
+  data: Schema.String.pipe(optional),
+  value: Schema.String.pipe(optional),
+}).annotate({ identifier: "Board.AttachmentInput" })
 export type AttachmentInput = typeof AttachmentInput.Type
 
 export const PauseInput = Schema.Struct({ reason: Schema.String.pipe(optional) }).annotate({

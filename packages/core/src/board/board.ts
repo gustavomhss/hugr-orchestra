@@ -1062,10 +1062,15 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv }) =>
         // A secret's value goes only to the credential store, inside the same transaction; the board keeps its label.
         attach: Effect.fn("Board.attach")(function* (key, number, input) {
           const id = Board.AttachmentID.create()
+          const content = input.kind === "secret" ? input.value : input.data
+          if (!content)
+            return yield* new RefusedError({
+              message: input.kind === "secret" ? "A secret needs a `value`." : "A file needs base64 `data`.",
+            })
           const file =
             input.kind === "secret"
               ? undefined
-              : { bytes: Buffer.from(input.data, "base64"), path: path.join(global.data, "board", id, path.basename(input.name)) }
+              : { bytes: Buffer.from(content, "base64"), path: path.join(global.data, "board", id, path.basename(input.name)) }
           const done = yield* write((tx) =>
             Effect.gen(function* () {
               const project = yield* loadProject(tx, key)
@@ -1073,12 +1078,12 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv }) =>
               if (input.kind === "secret") {
                 const credential = yield* credentials.create({
                   integrationID: Integration.ID.make("board"),
-                  label: input.label,
-                  value: { type: "key", key: input.value },
+                  label: input.name,
+                  value: { type: "key", key: content },
                 })
                 yield* tx
                   .insert(BoardAttachmentTable)
-                  .values({ id, issue_id: issue.id, kind: "secret", name: input.label, credential_id: credential.id })
+                  .values({ id, issue_id: issue.id, kind: "secret", name: input.name, credential_id: credential.id })
                   .run()
               }
               if (input.kind !== "secret" && file) {
@@ -1101,7 +1106,7 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv }) =>
                 issue: issue.id,
                 actor: "owner",
                 action: "attachment.add",
-                after: { id, kind: input.kind, name: input.kind === "secret" ? input.label : input.name },
+                after: { id, kind: input.kind, name: input.name },
               })
               return { result: { activity }, changed: changed(project.id, activity, issue.id) }
             }),
