@@ -314,7 +314,7 @@ describe("Board GitHub mirror", () => {
 
       yield* board.accept("INT", 1)
       yield* board.sync("INT")
-      expect(github.state.issues[0]?.labels).toEqual(["stage:backlog", "type:bug"])
+      expect(github.state.issues[0]?.labels).toEqual(["bug", "stage:backlog", "type:bug"])
       expect(github.state.issues[0]?.body).toContain("<!-- orchestra-board:INT-1 -->")
     }),
   )
