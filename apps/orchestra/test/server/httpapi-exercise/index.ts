@@ -35,6 +35,7 @@ import { integrationScenarios } from "./integration"
 import { mcpScenarios } from "./mcp"
 import { relayScenarios } from "./relay"
 import { guardrailScenarios } from "./guardrail"
+import { meetingScenarios } from "./meeting"
 import { runScenario } from "./runner"
 import { credentialScenarios } from "./credential"
 import { providerScenarios } from "./provider"
@@ -80,6 +81,7 @@ const scenarios: Scenario[] = [
   ...skillScenarios,
   ...relayScenarios,
   ...guardrailScenarios,
+  ...meetingScenarios,
   ...catalogScenarios,
   ...researchArtifactScenarios,
   ...actionsBindingScenarios,

@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "f193cfb5-2aaf-4009-bf7e-4937b2701ada",
+  "id": "6755afd4-0ba8-4966-8679-f4373433395d",
   "prevIds": [
-    "06358684-d468-4171-afa8-6eb7341dc6fc"
+    "f193cfb5-2aaf-4009-bf7e-4937b2701ada"
   ],
   "ddl": [
     {
@@ -16,6 +16,14 @@
     },
     {
       "name": "project_checkpoint",
+      "entityType": "tables"
+    },
+    {
+      "name": "meeting_segment",
+      "entityType": "tables"
+    },
+    {
+      "name": "meeting",
       "entityType": "tables"
     },
     {
@@ -337,6 +345,116 @@
       "name": "payload",
       "entityType": "columns",
       "table": "project_checkpoint"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "meeting_segment"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "meeting_id",
+      "entityType": "columns",
+      "table": "meeting_segment"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "track",
+      "entityType": "columns",
+      "table": "meeting_segment"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "text",
+      "entityType": "columns",
+      "table": "meeting_segment"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "start_ms",
+      "entityType": "columns",
+      "table": "meeting_segment"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "end_ms",
+      "entityType": "columns",
+      "table": "meeting_segment"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "meeting"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "session_id",
+      "entityType": "columns",
+      "table": "meeting"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "title",
+      "entityType": "columns",
+      "table": "meeting"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "time_started",
+      "entityType": "columns",
+      "table": "meeting"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "time_ended",
+      "entityType": "columns",
+      "table": "meeting"
     },
     {
       "type": "text",
@@ -3220,6 +3338,36 @@
     },
     {
       "columns": [
+        "meeting_id"
+      ],
+      "tableTo": "meeting",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_meeting_segment_meeting_id_meeting_id_fk",
+      "entityType": "fks",
+      "table": "meeting_segment"
+    },
+    {
+      "columns": [
+        "session_id"
+      ],
+      "tableTo": "session",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_meeting_session_id_session_id_fk",
+      "entityType": "fks",
+      "table": "meeting"
+    },
+    {
+      "columns": [
         "session_id"
       ],
       "tableTo": "session",
@@ -3569,6 +3717,16 @@
     },
     {
       "columns": [
+        "meeting_id",
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "meeting_segment_pk",
+      "entityType": "pks",
+      "table": "meeting_segment"
+    },
+    {
+      "columns": [
         "email",
         "url"
       ],
@@ -3665,6 +3823,15 @@
       "nameExplicit": false,
       "name": "project_checkpoint_pk",
       "table": "project_checkpoint",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "meeting_pk",
+      "table": "meeting",
       "entityType": "pks"
     },
     {
@@ -3895,6 +4062,38 @@
       "name": "project_checkpoint_project_time_id_idx",
       "entityType": "indexes",
       "table": "project_checkpoint"
+    },
+    {
+      "columns": [
+        {
+          "value": "meeting_id",
+          "isExpression": false
+        },
+        {
+          "value": "start_ms",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "meeting_segment_meeting_start_idx",
+      "entityType": "indexes",
+      "table": "meeting_segment"
+    },
+    {
+      "columns": [
+        {
+          "value": "session_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "meeting_session_idx",
+      "entityType": "indexes",
+      "table": "meeting"
     },
     {
       "columns": [
