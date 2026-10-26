@@ -20,7 +20,10 @@ const rootSession = (input: { id: string; parentID?: string; archived?: number }
 
 const created = (id: string, parentID?: string) => ({
   type: "session.next.created",
-  properties: { timestamp: 1, sessionID: id, projectID: "proj", parentID, location: { directory: "/tmp" }, title: id },
+  // Wire JSON omits an absent parent; the schema rejects an explicit undefined.
+  properties: {
+    timestamp: 1, sessionID: id, projectID: "proj", ...(parentID ? { parentID } : {}), location: { directory: "/tmp" }, title: id,
+  },
 })
 
 const archived = (id: string) => ({
