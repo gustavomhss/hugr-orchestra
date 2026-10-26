@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "62676bdc-70ed-43d5-9875-dcc0a8352be0",
+  "id": "4c48c7d7-dd07-4923-97b6-ebebb0895f79",
   "prevIds": [
-    "0819041b-ef42-40d9-bca8-f876babb4f73"
+    "62676bdc-70ed-43d5-9875-dcc0a8352be0"
   ],
   "ddl": [
     {
@@ -1735,6 +1735,16 @@
       "default": null,
       "generated": null,
       "name": "next_epic_number",
+      "entityType": "columns",
+      "table": "board_project"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "0",
+      "generated": null,
+      "name": "forecast_late_streak",
       "entityType": "columns",
       "table": "board_project"
     },

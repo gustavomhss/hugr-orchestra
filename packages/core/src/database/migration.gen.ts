@@ -59,5 +59,6 @@ export const migrations = (
     import("./migration/20261026011509_board"),
     import("./migration/20261026013700_retire_legacy_session_events"),
     import("./migration/20261026013755_drop_prompt_admission"),
+    import("./migration/20261026143218_board_forecast"),
   ])
 ).map((module) => module.default) satisfies DatabaseMigration.Migration[]
