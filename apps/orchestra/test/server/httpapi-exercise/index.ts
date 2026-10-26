@@ -34,6 +34,7 @@ import { coverageResult, parseOptions, routeKey, routeKeys, selectedScenarios } 
 import { integrationScenarios } from "./integration"
 import { mcpScenarios } from "./mcp"
 import { relayScenarios } from "./relay"
+import { boardScenarios } from "./board"
 import { guardrailScenarios } from "./guardrail"
 import { meetingScenarios } from "./meeting"
 import { runScenario } from "./runner"
@@ -82,6 +83,7 @@ const scenarios: Scenario[] = [
   ...relayScenarios,
   ...guardrailScenarios,
   ...meetingScenarios,
+  ...boardScenarios,
   ...catalogScenarios,
   ...researchArtifactScenarios,
   ...actionsBindingScenarios,
