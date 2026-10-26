@@ -1,4 +1,4 @@
-import { createMemo, For, Match, onCleanup, onMount, Show, Switch } from "solid-js"
+import { createMemo, createSignal, For, Match, onCleanup, onMount, Show, Switch } from "solid-js"
 import { createStore, reconcile } from "solid-js/store"
 import type { ServerBoardListOutput } from "@orchestra/client"
 import { useLanguage } from "@/context/language"
@@ -27,6 +27,8 @@ import {
   type Trail,
 } from "./model"
 import "./board.css"
+import { EpicPage, ListView, Overview, Timeline, ViewSwitch } from "./views"
+import type { View } from "./plan"
 
 type Summary = ServerBoardListOutput[number]
 type Channel = "list" | "board" | "page"
@@ -123,6 +125,14 @@ export default function Board() {
   }
   onCleanup(() => Object.values(channels).forEach((controller) => controller?.abort()))
   let root: HTMLDivElement | undefined
+  const [view, setView] = createSignal<View>("board")
+  const [epic, setEpic] = createSignal<number>()
+  // The epic page reads the project's snapshot; it shows only while that snapshot still holds the epic.
+  const opened = createMemo(() => {
+    const snapshot = store.snapshot
+    const found = snapshot?.epics.find((item) => item.number === epic())
+    return snapshot && found ? { snapshot, epic: found } : undefined
+  })
 
   const loadList = () => {
     const controller = begin("list")
@@ -1082,52 +1092,11 @@ export default function Board() {
               </Match>
               <Match when={store.projects}>
                 {(projects) => (
-                  <div class="board-projects">
-                    <For each={projects()}>
-                      {(summary) => (
-                        <button
-                          type="button"
-                          class="board-project"
-                          data-key={summary.project.key}
-                          onClick={() => openProject(summary.project.key)}
-                        >
-                          <span class="board-card-top">
-                            <span class="board-id">{summary.project.key}</span>
-                            <span class="board-health" data-health={summary.health}>
-                              <MxBadge tone={summary.health === "on_track" ? "good" : undefined}>{t(healthKey[summary.health])}</MxBadge>
-                            </span>
-                          </span>
-                          <span class="board-card-title">{summary.project.name}</span>
-                          <Show when={summary.project.goal}>
-                            <span class="board-quiet">{summary.project.goal}</span>
-                          </Show>
-                          <span class="board-bar" aria-hidden="true">
-                            <For each={columns.toReversed()}>
-                              {(stage) => (
-                                <Show when={(summary.stages[stage] ?? 0) > 0}>
-                                  <i data-stage={stage} style={{ "flex-grow": summary.stages[stage] }} />
-                                </Show>
-                              )}
-                            </For>
-                          </span>
-                          <span class="board-card-foot">
-                            <span>
-                              {t("orchestra.board.project.shipped", {
-                                shipped: summary.stages.shipped ?? 0,
-                                total: columns.reduce((sum, stage) => sum + (summary.stages[stage] ?? 0), 0),
-                              })}
-                            </span>
-                            <span class="board-spacer" />
-                            <Show when={summary.openQuestions > 0}>
-                              <span class="board-ask-count">
-                                {language.plural("orchestra.board.project.questions", summary.openQuestions)}
-                              </span>
-                            </Show>
-                          </span>
-                        </button>
-                      )}
-                    </For>
-                  </div>
+                  <Overview
+                    projects={projects()}
+                    onOpen={(key) => (setEpic(undefined), setView("board"), openProject(key))}
+                    onChanged={() => void loadList()}
+                  />
                 )}
               </Match>
             </Switch>
@@ -1136,11 +1105,21 @@ export default function Board() {
       >
         <section class="board-page" aria-labelledby="board-title">
           <nav class="board-crumb" aria-label={t("orchestra.board.crumb")}>
-            <button type="button" class="mx-link" onClick={closeProject}>
+            <button type="button" class="mx-link" onClick={() => (setEpic(undefined), closeProject())}>
               {t("orchestra.board.title")}
             </button>
             <span aria-hidden="true">/</span>
-            <span class="board-mono">{store.key}</span>
+            <Show when={opened()} fallback={<span class="board-mono">{store.key}</span>}>
+              {(open) => (
+                <>
+                  <button type="button" class="mx-link board-mono" onClick={() => setEpic(undefined)}>
+                    {store.key}
+                  </button>
+                  <span aria-hidden="true">/</span>
+                  <span>{open().epic.title}</span>
+                </>
+              )}
+            </Show>
           </nav>
           <Switch>
             <Match when={store.boardFailed && !store.snapshot}>
@@ -1158,6 +1137,26 @@ export default function Board() {
               <div class="board-full" role="region" tabindex="-1" aria-labelledby="board-detail-title">
                 <DetailState full />
               </div>
+            </Match>
+            <Match when={opened()}>
+              {(open) => (
+                <>
+                  <EpicPage
+                    snapshot={open().snapshot}
+                    epic={open().epic}
+                    focused={store.focused}
+                    peek={store.peek}
+                    onOpen={openPeek}
+                    onEpic={setEpic}
+                  />
+                  <Show when={store.peek}>
+                    <div class="board-scrim" aria-hidden="true" onClick={closePeek} />
+                    <aside class="board-peek" role="dialog" aria-labelledby="board-detail-title">
+                      <DetailState full={false} />
+                    </aside>
+                  </Show>
+                </>
+              )}
             </Match>
             <Match when={store.snapshot}>
               {(snapshot) => (
@@ -1189,6 +1188,7 @@ export default function Board() {
                       </div>
                     </div>
                     <div class="board-head-end">
+                      <ViewSwitch view={view()} onChange={setView} />
                       <Show when={crew().length > 0}>
                         <div class="board-crew">
                           <span class="board-stack">
@@ -1212,7 +1212,19 @@ export default function Board() {
                     )}
                   </Show>
 
-                  <div class="board-top">
+                  <Show when={view() === "list"}>
+                    <ListView
+                      snapshot={snapshot()}
+                      focused={store.focused}
+                      peek={store.peek}
+                      onOpen={openPeek}
+                      onEpic={setEpic}
+                    />
+                  </Show>
+                  <Show when={view() === "timeline"}>
+                    <Timeline snapshot={snapshot()} onOpen={openPeek} onEpic={setEpic} />
+                  </Show>
+                  <div class="board-top" hidden={view() !== "board"}>
                     <section class="board-brief" aria-label={t("orchestra.board.brief")}>
                       <Show when={snapshot().project.goal}>
                         <p>{snapshot().project.goal}</p>
@@ -1297,7 +1309,7 @@ export default function Board() {
                     </Show>
                   </div>
 
-                  <div class="board-grid" role="group" aria-label={t("orchestra.board.grid")}>
+                  <div class="board-grid" hidden={view() !== "board"} role="group" aria-label={t("orchestra.board.grid")}>
                     <For each={columns}>{(stage) => <Lane stage={stage} />}</For>
                   </div>
                   <Show when={store.boardFailed}>
