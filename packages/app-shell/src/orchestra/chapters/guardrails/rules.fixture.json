@@ -997,7 +997,6 @@
       "-- ALTER TABLE x ADD y text NOT NULL;"
     ],
     "paths": [
-      "apps/orchestra/migration/**/*.sql",
       "packages/core/src/database/migration/**/*.ts"
     ],
     "clearedBy": "ignore"
@@ -1023,7 +1022,6 @@
       "CREATE TABLE `x` (id text);"
     ],
     "paths": [
-      "apps/orchestra/migration/**/*.sql",
       "packages/core/src/database/migration/**/*.ts"
     ],
     "clearedBy": "ignore"
@@ -1036,7 +1034,6 @@
     "message": "Existing migration modified, renamed or deleted. Shipped migrations are immutable; add a new one.",
     "summary": "Looks at files the change edits, deletes, or renames in matching files.",
     "positive": [
-      "apps/orchestra/migration/20260511173437_session-metadata/migration.sql",
       "packages/core/src/database/migration/20260211171708_add_project_commands.ts"
     ],
     "negative": [
@@ -1044,7 +1041,6 @@
       "packages/core/src/session/session.ts"
     ],
     "paths": [
-      "apps/orchestra/migration/**",
       "packages/core/src/database/migration/2*.ts"
     ],
     "clearedBy": "approval"

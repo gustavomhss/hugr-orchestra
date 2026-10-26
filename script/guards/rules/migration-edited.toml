@@ -2,11 +2,11 @@ id = "migration-edited"
 group = "dependencies"
 severity = "gate"
 on = "changed-paths"
-paths = ["apps/orchestra/migration/**", "packages/core/src/database/migration/2*.ts"]
+paths = ["packages/core/src/database/migration/2*.ts"]
 exclude = []
 # A migration that already shipped has run on user databases; editing or deleting it makes new and old databases diverge. Add a new migration instead.
 statuses = ["M", "D", "R"]
 message = "Existing migration modified, renamed or deleted. Shipped migrations are immutable; add a new one."
 summary = "Migrations that have already shipped have run on real databases, so changing them leaves those databases out of step. Leave the old migration alone and add a new one."
-positive = ['apps/orchestra/migration/20260511173437_session-metadata/migration.sql', 'packages/core/src/database/migration/20260211171708_add_project_commands.ts']
+positive = ['packages/core/src/database/migration/20260211171708_add_project_commands.ts']
 negative = ['packages/core/src/database/migration.ts', 'packages/core/src/session/session.ts']

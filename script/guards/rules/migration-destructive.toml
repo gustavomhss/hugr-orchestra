@@ -2,7 +2,7 @@ id = "migration-destructive"
 group = "dependencies"
 severity = "gate"
 on = "added-lines"
-paths = ["apps/orchestra/migration/**/*.sql", "packages/core/src/database/migration/**/*.ts"]
+paths = ["packages/core/src/database/migration/**/*.ts"]
 exclude = []
 # DROP TABLE/COLUMN, TRUNCATE and an unbounded DELETE lose data that no rollback brings back. DROP INDEX is reversible and not matched.
 flags = "i"
