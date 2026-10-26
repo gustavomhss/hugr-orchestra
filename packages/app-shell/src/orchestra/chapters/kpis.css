@@ -6,6 +6,8 @@
   min-block-size: 0;
   block-size: 100%;
   overflow: auto;
+  /* The first fold ends in a fade, never a hard cut. */
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent);
   color: var(--orchestra-text);
   /* The app body is 13px/24px at weight 440; the mock's views inherit 16px/normal/400 in static Inter
      (kit.css "Mx Inter"). Weights 501-599 render as Medium plus synthetic bold, written below as

@@ -2,7 +2,8 @@ import type { LayoutRoute } from "../context/layout-route"
 
 // Sidebar destinations. Chapter IDs mark Orchestra rework proposals; a chapter opens a page
 // only once it registers one in chapterPages. `wip` marks screens the owner approved as they are
-// but wants revisited before production.
+// but wants revisited before production. The mark is for developers: `showWip` hides it in
+// production builds, while `isWip` stays the plain data lookup.
 export const navigation = [
   { id: "home", label: "home.title", chapter: undefined },
   { id: "chat", label: "orchestra.nav.chat", chapter: undefined },
@@ -45,6 +46,10 @@ const crumbs = {
 
 export function isWip(id: string) {
   return navigation.some((item) => item.id === id && "wip" in item && item.wip)
+}
+
+export function showWip(id: string) {
+  return import.meta.env.DEV && isWip(id)
 }
 
 export function breadcrumbLabel(route: LayoutRoute) {

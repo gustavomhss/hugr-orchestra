@@ -41,6 +41,8 @@ You must understand these ten facts. Every one of them changes what the interfac
 9. **Messages are the product copy.** Each rule's `message` says what is wrong and what to do. It is the whole error text. Use it as the finding's explanation, verbatim. If a message reads badly in the UI, the fix is to improve the rule's message (ask the Guardrail session), not to paraphrase it in the renderer.
 10. **Nothing runs on the author's behalf yet.** The engine does not auto-fix and does not post comments. The screen may show a finding and explain it; it may open the file at the line; it must not promise a one-click fix.
 
+The app does not run the guards when the view opens: the engine is the repository's own `script/guards` code, so it starts only when the user presses "Check again", and with a minimal environment (no API keys or tokens).
+
 ## 4. What each rule is made of (the fields the UI can show)
 
 | Field | Meaning | Example |

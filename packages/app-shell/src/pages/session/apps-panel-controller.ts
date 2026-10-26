@@ -131,6 +131,17 @@ const libraryEntries = (urls: string[]): Bookmark[] =>
   urls.filter(isHTTPS).map((url) => ({ url, title: new URL(url).hostname }))
 const message = (cause: unknown, fallback: string) => (cause instanceof Error ? cause.message : fallback)
 
+// A saved tab on the new-tab page is a placeholder, not something the user opened, and the same address
+// twice is a leftover duplicate: the Dock restores neither, so it opens empty instead of on search pages.
+export function restorable<T extends { url: string }>(saved: T[]) {
+  const seen = new Set<string>()
+  return saved.filter((tab) => {
+    if (!isHTTPS(tab.url) || new URL(tab.url).href === new URL(home).href || seen.has(tab.url)) return false
+    seen.add(tab.url)
+    return true
+  })
+}
+
 // A repository profile (server + project worktree) owns exactly one native App Dock profile, and
 // through it one persistent browser partition. The ID must match the desktop profile ID pattern.
 export function appDockProfile(server: string, directory: string) {
@@ -291,7 +302,7 @@ export function createAppDockController(api: AppDockAPI | undefined, t: Translat
     const profile = owner || snapshot.activeProfileID
     setState("profile", profile)
     const restored: Tab[] = []
-    for (const saved of (snapshot.tabs[profile] ?? []).filter((tab) => isHTTPS(tab.url))) {
+    for (const saved of restorable(snapshot.tabs[profile] ?? [])) {
       // Skip stale or unavailable URLs during restore.
       const opened = await dock.appDockOpen(saved.url, frame(), profile).catch(() => undefined)
       if (current !== generation) {

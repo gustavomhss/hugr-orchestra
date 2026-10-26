@@ -78,9 +78,13 @@ export function isHash(value: unknown): value is string {
   return typeof value === "string" && /^[a-f0-9]{64}$/.test(value)
 }
 
-export function hashRow(row: Row, previous: string) {
+const DOMAIN = "orchestra:event-seal:v1"
+// Rows sealed before the rename are hashed into the stored chain under this domain, so verification still accepts it.
+const LEGACY_DOMAIN = "opencode:event-seal:v1"
+
+export function hashRow(row: Row, previous: string, domain = DOMAIN) {
   return createHash("sha256")
-    .update(`opencode:event-seal:v1\n${previous}\n${canonicalRow(row)}`)
+    .update(`${domain}\n${previous}\n${canonicalRow(row)}`)
     .digest("hex")
 }
 
@@ -273,7 +277,8 @@ function verifyRows(
       fail("MALFORMED_SEAL")
       return
     }
-    if (hashRow(row, row.seal_prev) !== row.seal_hash) fail("HASH_MISMATCH")
+    if (hashRow(row, row.seal_prev) !== row.seal_hash && hashRow(row, row.seal_prev, LEGACY_DOMAIN) !== row.seal_hash)
+      fail("HASH_MISMATCH")
     const previous = index ? rows[index - 1] : predecessor
     if (row.seq === 0) {
       if (row.seal_prev !== GENESIS) fail("LINK_MISMATCH")

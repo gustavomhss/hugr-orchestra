@@ -5,6 +5,7 @@ import { Global } from "../global"
 import { Effect, Layer, Context, Option, Schema } from "effect"
 import { FSUtil } from "../fs-util"
 import { EffectFlock } from "../util/effect-flock"
+import { CredentialCipher } from "../credential/cipher"
 
 export const Tokens = Schema.Struct({
   accessToken: Schema.mutableKey(Schema.String),
@@ -32,7 +33,11 @@ export const Entry = Schema.Struct({
 export type Entry = Schema.Schema.Type<typeof Entry>
 
 const decodeAuthData = Schema.decodeUnknownOption(Schema.Record(Schema.String, Entry))
+const decodeAuthJson = Schema.decodeUnknownOption(Schema.fromJsonString(Schema.Record(Schema.String, Entry)))
 type AuthData = Record<string, Entry>
+
+/** The auth file is sealed under a key this process could not load. */
+class LockedError extends Schema.TaggedErrorClass<LockedError>()("McpAuthLockedError", {}) {}
 
 const filepath = path.join(Global.Path.data, "mcp-auth.json")
 const lockKey = `mcp-auth:${filepath}`
@@ -61,23 +66,67 @@ const layer = Layer.effect(
   Effect.gen(function* () {
     const fs = yield* FSUtil.Service
     const flock = yield* EffectFlock.Service
+    const cipher = yield* CredentialCipher.Service
 
+    const write = (data: AuthData) => fs.writeJson(filepath, cipher.seal(JSON.stringify(data)), 0o600)
+
+    // The file holds one sealed JSON string; a plain object is a file written before encryption, which is read and
+    // sealed in place. A file that cannot be parsed or decodes to the wrong shape is moved aside, never overwritten,
+    // so a later write cannot wipe every MCP login. A sealed file no loaded key opens (the keychain prompt was declined
+    // or timed out, so this process fell back to the key file) is left in place and the read fails, so no write
+    // replaces it. Any other read failure stops here instead of reading as empty.
     const read = Effect.fn("McpAuth.read")(function* () {
-      return yield* fs.readJson(filepath).pipe(
-        Effect.map((data): AuthData => Option.getOrElse(decodeAuthData(data), () => ({}) as AuthData) as AuthData),
-        Effect.catch(() => Effect.succeed({} as AuthData)),
+      const file = yield* fs.readJson(filepath).pipe(
+        Effect.map((json) => {
+          if (typeof json !== "string") return { legacy: true, locked: false, data: decodeAuthData(json) }
+          const plain = CredentialCipher.isSealed(json) ? cipher.open(json) : undefined
+          return {
+            legacy: false,
+            locked: CredentialCipher.isSealed(json) && plain === undefined,
+            data: Option.flatMap(Option.fromUndefinedOr(plain), decodeAuthJson),
+          }
+        }),
+        Effect.catchReason("PlatformError", "NotFound", () =>
+          Effect.succeed({ legacy: false, locked: false, data: Option.some<AuthData>({}) }),
+        ),
+        Effect.catchTag("FileSystemError", () =>
+          Effect.succeed({ legacy: false, locked: false, data: Option.none<AuthData>() }),
+        ),
       )
+      if (file.locked) {
+        yield* Effect.logError(
+          "mcp-auth.json is encrypted with a key this process could not load; it is left untouched. Restart Orchestra and allow the keychain prompt",
+          { path: filepath },
+        )
+        return yield* new LockedError()
+      }
+      if (Option.isNone(file.data)) {
+        const aside = `${filepath}.corrupt-${Date.now()}`
+        yield* fs.rename(filepath, aside)
+        yield* Effect.logError("mcp-auth.json could not be read and was moved aside; MCP servers need a new login", {
+          path: aside,
+        })
+        return {} as AuthData
+      }
+      const data: AuthData = { ...file.data.value }
+      if (file.legacy) yield* write(data)
+      return data
     })
 
     const all = Effect.fn("McpAuth.all")(function* () {
-      return yield* read().pipe(flock.withLock(lockKey), Effect.orDie)
+      // A locked file reads as no logins; writes still fail, so the file is never replaced.
+      return yield* read().pipe(
+        Effect.catchTag("McpAuthLockedError", () => Effect.succeed({} as AuthData)),
+        flock.withLock(lockKey),
+        Effect.orDie,
+      )
     })
 
     const mutate = Effect.fn("McpAuth.mutate")(function* (update: (data: AuthData) => AuthData | undefined) {
       yield* Effect.gen(function* () {
         const next = update(yield* read())
         if (!next) return
-        yield* fs.writeJson(filepath, next, 0o600).pipe(Effect.orDie)
+        yield* write(next).pipe(Effect.orDie)
       }).pipe(flock.withLock(lockKey), Effect.orDie)
     })
 
@@ -158,6 +207,6 @@ const layer = Layer.effect(
   }),
 )
 
-export const node = LayerNode.make({ service: Service, layer: layer, deps: [FSUtil.node, EffectFlock.node] })
+export const node = LayerNode.make({ service: Service, layer: layer, deps: [FSUtil.node, EffectFlock.node, CredentialCipher.node] })
 
 export * as McpAuth from "./auth"

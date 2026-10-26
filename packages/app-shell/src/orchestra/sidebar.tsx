@@ -19,7 +19,7 @@ import { tabKey, type SessionTab, type Tab, useTabs } from "@/context/tabs"
 import { HugrBrand } from "@/orchestra/brand"
 import { chapterPages } from "@/orchestra/chapter-route"
 import { FlightNavChip } from "@/orchestra/chapters/flight-engineer/entry"
-import { isWip, navigation } from "@/orchestra/navigation"
+import { navigation, showWip } from "@/orchestra/navigation"
 import { OrchestraNavigationToggle } from "@/orchestra/navigation-toggle"
 import { OrchestraNavigationTooltip } from "@/orchestra/navigation-tooltip"
 import { useAwaitingRuns } from "@/orchestra/relay/source"
@@ -209,7 +209,9 @@ export function OrchestraSidebar(props: {
       const directory = tabs.info[tabKey(tab)]?.directory
       return !!directory && directories.has(pathKey(directory))
     }
-    const current = tabs.store.find(matches)
+    // A remembered session tab can outlive its session (deleted, or from a server that was reset). Chat must
+    // not open it: drop the tab and fall through to the next match or a fresh draft.
+    const current = await openable(tabs.store.find(matches))
     if (current) return current
     // Restored tabs may not have directory metadata yet. Join the sync store's
     // existing info request before deciding that this repository needs a draft.
@@ -230,7 +232,22 @@ export function OrchestraSidebar(props: {
           }),
         ),
     )
-    return tabs.store.find(matches)
+    return openable(tabs.store.find(matches))
+
+    async function openable(tab: Tab | undefined): Promise<Tab | undefined> {
+      if (!tab || tab.type !== "session" || ctx.sync.session.peek(tab.sessionId)) return tab
+      const found = await ctx.sync.session.resolve(tab.sessionId).then(
+        () => true,
+        (cause: unknown) => {
+          if (isLocalSessionNotFoundError(cause, tab.sessionId) || isSessionNotFoundError(cause, tab.sessionId))
+            return false
+          throw cause
+        },
+      )
+      if (found) return matches(tab) ? tab : openable(tabs.store.find((item) => item !== tab && matches(item)))
+      tabs.removeSessionTab({ server: tab.server, sessionId: tab.sessionId })
+      return openable(tabs.store.find(matches))
+    }
   }
 
   async function selectProject(conn: ServerConnection.Any, project: LocalProject, draft = false) {
@@ -393,9 +410,9 @@ export function OrchestraSidebar(props: {
                 </Show>
                 {/* Expanded, a WIP row's tooltip carries the mark's meaning; the compact rail keeps names. */}
                 <OrchestraNavigationTooltip
-                  enabled={props.compact || isWip(item.id)}
+                  enabled={props.compact || showWip(item.id)}
                   value={
-                    !props.compact && isWip(item.id)
+                    !props.compact && showWip(item.id)
                       ? language.t("orchestra.shell.wip.description")
                       : item.chapter && !chapterPages[item.id]
                         ? `${language.t(item.label)} · ${language.t("orchestra.rework.pending")}`
@@ -408,7 +425,7 @@ export function OrchestraSidebar(props: {
                       class="orchestra-nav-button"
                       aria-label={language.t(item.label)}
                       aria-description={
-                        isWip(item.id)
+                        showWip(item.id)
                           ? language.t("orchestra.shell.wip.description")
                           : item.chapter && !chapterPages[item.id]
                             ? language.t("orchestra.rework.pending")
@@ -458,12 +475,12 @@ export function OrchestraSidebar(props: {
                         </span>
                       </Show>
                       {/* The WIP mark replaces the pending dot; an unbuilt WIP chapter keeps its pending dialog. */}
-                      <Show when={isWip(item.id)}>
+                      <Show when={showWip(item.id)}>
                         <span class="orchestra-wip-chip" data-slot="orchestra-nav-wip">
                           <span aria-hidden="true">{language.t("orchestra.shell.wip.chip")}</span>
                         </span>
                       </Show>
-                      <Show when={!isWip(item.id) && item.chapter && !chapterPages[item.id]}>
+                      <Show when={!showWip(item.id) && item.chapter && !chapterPages[item.id]}>
                         <span class="orchestra-pending-dot" aria-hidden="true" />
                         <span class="orchestra-sr-only">{language.t("orchestra.rework.pending")}</span>
                       </Show>

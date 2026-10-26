@@ -1,0 +1,20 @@
+# Security fixes come from Dependabot security updates (repo setting). Version
+# bumps stay weekly, grouped and capped so they never flood the PR queue.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 1
+    groups:
+      actions:
+        patterns: ["*"]
+  - package-ecosystem: bun
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 1
+    groups:
+      npm:
+        patterns: ["*"]

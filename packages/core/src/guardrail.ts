@@ -51,7 +51,8 @@ export const make = Effect.fn("Guardrail.make")(function* (input: { directory: s
       .run(
         ChildProcess.make(bun, [script, "--cwd", input.directory, ...args], {
           cwd: input.directory,
-          extendEnv: true,
+          env: engineEnv(input.env ?? process.env),
+          extendEnv: false,
           stdin: "ignore",
         }),
         { maxOutputBytes: 8 * 1024 * 1024, maxErrorBytes: 16 * 1024, timeout: `${SECONDS} seconds` },
@@ -88,6 +89,19 @@ export const layer = Layer.effect(
 )
 
 export const node = makeLocationNode({ service: Service, layer, deps: [Location.node, AppProcess.node] })
+
+// The engine is the checked repository's own code, so it never sees the server's secrets (API keys, tokens):
+// only what a process needs to start, plus the engine's own GUARDRAIL_* settings.
+const ENGINE_ENV = ["PATH", "HOME", "USERPROFILE", "TMPDIR", "TEMP", "TMP", "SystemRoot", "LANG", "LC_ALL"]
+
+function engineEnv(source: NodeJS.ProcessEnv) {
+  return Object.fromEntries(
+    Object.entries(source).filter(
+      (entry): entry is [string, string] =>
+        entry[1] !== undefined && (ENGINE_ENV.includes(entry[0]) || entry[0].startsWith("GUARDRAIL_")),
+    ),
+  )
+}
 
 function unreadable() {
   return new EngineError({ kind: "unreadable", message: "The guards engine did not return a readable report" })

@@ -182,6 +182,10 @@ Measured at 1920×1200 in the dev app. Spacing values sit on a 2px grid; most ga
 | Nav item | 31px tall, padding 0 10px, gap 11px, radius 6px, 13px text, 1px between items |
 | Nav icon | 16×16px |
 | Sidebar active item | gradient fill, 1px inset rim, 3×(row−16px) rounded accent pill inset 3px from the start edge (logical, so RTL follows) |
+| Sidebar list | scrolls between the fixed brand and profile card; 8px fade at the top edge, 16px at the bottom, never a hard cut. Padding moved from 16px bottom only to 8px top and 16px bottom, and the 2px top margin on the nav list is gone |
+| Home scroll area | 16px fade at the bottom edge, so cards under the fold at 1280×800 never end in a hard cut |
+| No-repository empty state | a chapter that needs git (Workspaces) shows a `.mx-empty` with a 32px `.mx-mark` branch icon in place of the generic dot, a title, one hint line and an "Open project" button; no action initializes a repository |
+| WIP chip and page seal | shown only in dev builds, through `showWip` (`import.meta.env.DEV`); production hides both while the `wip: true` flags stay. The isolated dev app shows them |
 | WIP chip (light) | `rgba(28,46,65,.05)` fill, ink `#4f3a14` |
 | Light chrome text | toolbar labels, sidebar and tab text `#333c48`, icons ≥3:1 on the brightest glass band |
 | Chapter column | `min(1020px, calc(100% - 72px))`, padding 52px top and 72px bottom |

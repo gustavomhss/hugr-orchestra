@@ -203,6 +203,11 @@
   outline: 2px solid var(--mx-blue);
   outline-offset: 1px;
 }
+.fe-setting-control .fe-input {
+  inline-size: clamp(12rem, 28vw, 20rem);
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
 .fe-title-input {
   inline-size: 100%;
   margin-block-start: 8px;
@@ -432,6 +437,14 @@
   color: var(--mx-dim);
   font-size: var(--orchestra-font-size-sm);
 }
+.fe-item-side {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
 .fe-item-actions,
 .fe-states {
   display: flex;
@@ -439,6 +452,17 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 12px;
+}
+/* Row actions show on hover or focus; they stay in the DOM and reachable by keyboard. Touch keeps them visible. */
+@media (hover: hover) {
+  .fe-item-actions {
+    opacity: 0;
+    transition: opacity var(--orchestra-duration-fast) var(--orchestra-ease-out);
+  }
+  .fe-item:hover .fe-item-actions,
+  .fe-item:focus-within .fe-item-actions {
+    opacity: 1;
+  }
 }
 .fe-states {
   gap: 2px;

@@ -14,6 +14,7 @@ import { MxBadge, MxPage } from "./kit"
 import { SkillDialog, type SkillDialogState, type SkillSaveInput } from "./skills-dialog"
 import {
   filterSkills,
+  isInternalSkill,
   readSkills,
   skillAccess,
   skillErrorMessage,
@@ -73,7 +74,7 @@ export default function Skills(props: ChapterPageProps) {
       ).data
     })
     if (abort.signal.aborted) return
-    setState({ skills: sortSkills(readSkills(entries), props.directory), status: "ready" })
+    setState({ skills: sortSkills(readSkills(entries).filter((skill) => !isInternalSkill(skill)), props.directory), status: "ready" })
   }
 
   function refresh() {

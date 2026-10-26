@@ -106,7 +106,9 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
   }
 
   const person = (proposalID: string, value: PersonVerdict) =>
-    run(props.meetings?.confirm(props.id, { people: [{ proposalID, verdict: value }] }).then(reload) ?? Promise.resolve())
+    run(
+      props.meetings?.confirm(props.id, { people: [{ proposalID, verdict: value }] }).then(reload) ?? Promise.resolve(),
+    )
 
   const state = (id: string, next: "accepted" | "done" | "dropped") =>
     run(props.meetings?.commitment(id, next).then(reload) ?? Promise.resolve())
@@ -164,16 +166,18 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
   const when = (time: number) =>
     new Intl.DateTimeFormat(language.intl(), { dateStyle: "medium", timeStyle: "short" }).format(time)
 
-  const row = (item: Item, extra?: JSX.Element, tag?: JSX.Element) => (
+  const row = (item: Item, extra?: JSX.Element, tag?: JSX.Element, trail?: string) => (
     <li class="fe-item" data-status={item.status}>
       <div class="fe-item-main">
         <p>{item.text}</p>
         <div class="fe-item-meta">
-          <span>{who(item.asserter)}</span>
+          <span>{trail ? `${who(item.asserter)} · ${trail}` : who(item.asserter)}</span>
           {tag}
           <Show when={item.status !== "claimed"}>
             <MxBadge tone={item.status === "confirmed" ? "good" : "bad"}>
-              {t(`orchestra.flightEngineer.detail.status.${item.status}` as "orchestra.flightEngineer.detail.status.confirmed")}
+              {t(
+                `orchestra.flightEngineer.detail.status.${item.status}` as "orchestra.flightEngineer.detail.status.confirmed",
+              )}
             </MxBadge>
           </Show>
           <Show when={item.sentToMaestro}>
@@ -183,7 +187,12 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
         <Show when={item.quote}>
           <blockquote class="fe-quote">
             <Show when={jumpable(item)} fallback={<span>{item.quote}</span>}>
-              <button type="button" class="fe-jump" onClick={() => jump(item)} title={t("orchestra.flightEngineer.detail.jump")}>
+              <button
+                type="button"
+                class="fe-jump"
+                onClick={() => jump(item)}
+                title={t("orchestra.flightEngineer.detail.jump")}
+              >
                 {item.quote}
               </button>
             </Show>
@@ -193,24 +202,26 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
           </blockquote>
         </Show>
       </div>
-      <div class="fe-item-actions">
+      <div class="fe-item-side">
         {extra}
-        <Show when={item.status === "claimed"}>
-          <button type="button" class="mx-link" onClick={() => void verdict(item.id, "confirmed")}>
-            {t("orchestra.flightEngineer.detail.confirm")}
+        <div class="fe-item-actions">
+          <Show when={item.status === "claimed"}>
+            <button type="button" class="mx-link" onClick={() => void verdict(item.id, "confirmed")}>
+              {t("orchestra.flightEngineer.detail.confirm")}
+            </button>
+            <button type="button" class="mx-link" onClick={() => void verdict(item.id, "disputed")}>
+              {t("orchestra.flightEngineer.detail.dispute")}
+            </button>
+          </Show>
+          <button type="button" class="mx-link" onClick={() => void verdict(item.id, "dismissed")}>
+            {t("orchestra.flightEngineer.detail.dismiss")}
           </button>
-          <button type="button" class="mx-link" onClick={() => void verdict(item.id, "disputed")}>
-            {t("orchestra.flightEngineer.detail.dispute")}
-          </button>
-        </Show>
-        <button type="button" class="mx-link" onClick={() => void verdict(item.id, "dismissed")}>
-          {t("orchestra.flightEngineer.detail.dismiss")}
-        </button>
-        <Show when={!item.sentToMaestro}>
-          <button type="button" class="mx-link" onClick={() => void handoff([item.id])}>
-            {t("orchestra.flightEngineer.detail.handoff")}
-          </button>
-        </Show>
+          <Show when={!item.sentToMaestro}>
+            <button type="button" class="mx-link" onClick={() => void handoff([item.id])}>
+              {t("orchestra.flightEngineer.detail.handoff")}
+            </button>
+          </Show>
+        </div>
       </div>
     </li>
   )
@@ -221,7 +232,10 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
       <Show when={items.length > 0}>
         <section class="mx-card fe-section">
           <h3>{title}</h3>
-          <Show when={list().length > 0} fallback={<p class="fe-empty">{t("orchestra.flightEngineer.detail.allHidden")}</p>}>
+          <Show
+            when={list().length > 0}
+            fallback={<p class="fe-empty">{t("orchestra.flightEngineer.detail.allHidden")}</p>}
+          >
             <ul class="fe-items">
               <For each={list()}>{render}</For>
             </ul>
@@ -239,7 +253,16 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
 
       <Show when={!store.receipt} fallback={<Erased receipt={store.receipt!} back={props.back} />}>
         <Show when={!store.missing} fallback={<Note tone="bad">{t("orchestra.flightEngineer.detail.missing")}</Note>}>
-          <Show when={store.detail} fallback={<Note tone={store.failed ? "bad" : undefined}>{store.failed ? t("orchestra.flightEngineer.detail.failed") : t("orchestra.flightEngineer.detail.loading")}</Note>}>
+          <Show
+            when={store.detail}
+            fallback={
+              <Note tone={store.failed ? "bad" : undefined}>
+                {store.failed
+                  ? t("orchestra.flightEngineer.detail.failed")
+                  : t("orchestra.flightEngineer.detail.loading")}
+              </Note>
+            }
+          >
             {(detail) => (
               <>
                 <header class="fe-detail-head">
@@ -272,7 +295,9 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
                       {" · "}
                       {language.plural("orchestra.flightEngineer.detail.answers", num(detail().summary.counts.answers))}
                       {" · "}
-                      {t(`orchestra.flightEngineer.detail.retention.${detail().summary.retention}` as "orchestra.flightEngineer.detail.retention.kept")}
+                      {t(
+                        `orchestra.flightEngineer.detail.retention.${detail().summary.retention}` as "orchestra.flightEngineer.detail.retention.kept",
+                      )}
                     </p>
                   </div>
                   <button type="button" class="mx-btn danger" onClick={openDelete}>
@@ -298,7 +323,9 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
                     <h3>{t("orchestra.flightEngineer.detail.summary")}</h3>
                     <p class="fe-summary">{detail().card.summary}</p>
                   </section>
-                  {section(t("orchestra.flightEngineer.detail.decisions"), detail().card.decisions, (item) => row(item))}
+                  {section(t("orchestra.flightEngineer.detail.decisions"), detail().card.decisions, (item) =>
+                    row(item),
+                  )}
                   {section(t("orchestra.flightEngineer.detail.commitments"), detail().card.commitments, (item) => {
                     const entry = detail().card.commitments.find((value) => value.id === item.id)!
                     return row(
@@ -306,32 +333,49 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
                       <div class="fe-states" role="group" aria-label={t("orchestra.flightEngineer.detail.state")}>
                         <For each={["accepted", "done", "dropped"] as const}>
                           {(next) => (
-                            <button type="button" aria-pressed={entry.state === next} onClick={() => void state(item.id, next)}>
-                              {t(`orchestra.flightEngineer.detail.state.${next}` as "orchestra.flightEngineer.detail.state.done")}
+                            <button
+                              type="button"
+                              aria-pressed={entry.state === next}
+                              onClick={() => void state(item.id, next)}
+                            >
+                              {t(
+                                `orchestra.flightEngineer.detail.state.${next}` as "orchestra.flightEngineer.detail.state.done",
+                              )}
                             </button>
                           )}
                         </For>
                       </div>,
                       <>
-                        <span>
-                          {t("orchestra.flightEngineer.detail.owner", { name: party(owner(entry)) })}
-                          {entry.due ? ` · ${t("orchestra.flightEngineer.detail.due", { date: entry.due })}` : ""}
-                        </span>
                         <Show when={hearsay(entry.asserter, entry.owner)}>
                           <MxBadge>{t("orchestra.flightEngineer.detail.hearsay")}</MxBadge>
                         </Show>
-                        <MxBadge tone={entry.state === "overdue" ? "bad" : entry.state === "done" ? "good" : undefined}>
-                          {t(`orchestra.flightEngineer.detail.state.${entry.state}` as "orchestra.flightEngineer.detail.state.done")}
-                        </MxBadge>
+                        {/* The segmented control already shows accepted, done and dropped; only states it cannot show get a chip. */}
+                        <Show when={entry.state !== "accepted" && entry.state !== "done" && entry.state !== "dropped"}>
+                          <MxBadge tone={entry.state === "overdue" ? "bad" : undefined}>
+                            {t(
+                              `orchestra.flightEngineer.detail.state.${entry.state}` as "orchestra.flightEngineer.detail.state.done",
+                            )}
+                          </MxBadge>
+                        </Show>
                       </>,
+                      [
+                        t("orchestra.flightEngineer.detail.owner", { name: party(owner(entry)) }),
+                        entry.due ? t("orchestra.flightEngineer.detail.due", { date: entry.due }) : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" · "),
                     )
                   })}
-                  {section(t("orchestra.flightEngineer.detail.questions"), detail().card.questions, (item) => row(item))}
+                  {section(t("orchestra.flightEngineer.detail.questions"), detail().card.questions, (item) =>
+                    row(item),
+                  )}
                   <Show when={detail().card.suggestions.length > 0}>
                     <For each={["owner", "maestro"] as const}>
                       {(target) =>
                         section(
-                          t(`orchestra.flightEngineer.detail.suggestions.${target}` as "orchestra.flightEngineer.detail.suggestions.owner"),
+                          t(
+                            `orchestra.flightEngineer.detail.suggestions.${target}` as "orchestra.flightEngineer.detail.suggestions.owner",
+                          ),
                           detail().card.suggestions.filter((item) => item.for === target),
                           (item) => row(item),
                         )
@@ -348,20 +392,35 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
                               <div class="fe-item-main">
                                 <p>
                                   {proposal.mergeWith
-                                    ? t("orchestra.flightEngineer.detail.people.merge", { name: proposal.name, other: proposal.mergeWith.name })
+                                    ? t("orchestra.flightEngineer.detail.people.merge", {
+                                        name: proposal.name,
+                                        other: proposal.mergeWith.name,
+                                      })
                                     : t("orchestra.flightEngineer.detail.people.new", { name: proposal.name })}
                                 </p>
                               </div>
                               <div class="fe-item-actions">
                                 <Show when={proposal.mergeWith}>
-                                  <button type="button" class="mx-link" onClick={() => void person(proposal.proposalID, "merge")}>
+                                  <button
+                                    type="button"
+                                    class="mx-link"
+                                    onClick={() => void person(proposal.proposalID, "merge")}
+                                  >
                                     {t("orchestra.flightEngineer.detail.people.mergeAction")}
                                   </button>
                                 </Show>
-                                <button type="button" class="mx-link" onClick={() => void person(proposal.proposalID, "new")}>
+                                <button
+                                  type="button"
+                                  class="mx-link"
+                                  onClick={() => void person(proposal.proposalID, "new")}
+                                >
                                   {t("orchestra.flightEngineer.detail.people.newAction")}
                                 </button>
-                                <button type="button" class="mx-link" onClick={() => void person(proposal.proposalID, "dismissed")}>
+                                <button
+                                  type="button"
+                                  class="mx-link"
+                                  onClick={() => void person(proposal.proposalID, "dismissed")}
+                                >
                                   {t("orchestra.flightEngineer.detail.dismiss")}
                                 </button>
                               </div>
@@ -376,7 +435,13 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
                       <button
                         type="button"
                         class="mx-btn"
-                        onClick={() => void handoff(detail().card.commitments.filter((item) => !item.sentToMaestro).map((item) => item.id))}
+                        onClick={() =>
+                          void handoff(
+                            detail()
+                              .card.commitments.filter((item) => !item.sentToMaestro)
+                              .map((item) => item.id),
+                          )
+                        }
                       >
                         {t("orchestra.flightEngineer.detail.handoffOpen")}
                       </button>
@@ -394,8 +459,18 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
 
                 <Show when={detail().card.status === "pending"}>
                   <section class="mx-card fe-section fe-pending" role="status">
-                    <h3>{t(stalled() ? "orchestra.flightEngineer.detail.slow" : "orchestra.flightEngineer.detail.pending")}</h3>
-                    <p>{t(stalled() ? "orchestra.flightEngineer.detail.slowBody" : "orchestra.flightEngineer.detail.pendingBody")}</p>
+                    <h3>
+                      {t(
+                        stalled() ? "orchestra.flightEngineer.detail.slow" : "orchestra.flightEngineer.detail.pending",
+                      )}
+                    </h3>
+                    <p>
+                      {t(
+                        stalled()
+                          ? "orchestra.flightEngineer.detail.slowBody"
+                          : "orchestra.flightEngineer.detail.pendingBody",
+                      )}
+                    </p>
                     <Show when={stalled()}>
                       <button type="button" class="mx-btn" onClick={() => void reload()}>
                         {t("orchestra.flightEngineer.detail.checkAgain")}
@@ -415,7 +490,12 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
                   <section class="mx-card fe-section">
                     <div class="mx-card-top">
                       <h3 class="mx-grow">{t("orchestra.flightEngineer.detail.transcript")}</h3>
-                      <button type="button" class="mx-link" aria-expanded={store.transcript} onClick={() => setStore("transcript", !store.transcript)}>
+                      <button
+                        type="button"
+                        class="mx-link"
+                        aria-expanded={store.transcript}
+                        onClick={() => setStore("transcript", !store.transcript)}
+                      >
                         {store.transcript
                           ? t("orchestra.flightEngineer.detail.hideTranscript")
                           : t("orchestra.flightEngineer.detail.showTranscript", { count: detail().segments.length })}
@@ -425,9 +505,19 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
                       <ol class="fe-transcript">
                         <For each={detail().segments}>
                           {(segment) => (
-                            <li id={`fe-seg-${segment.id}`} data-focus={store.focus === segment.id} data-track={segment.track}>
+                            <li
+                              id={`fe-seg-${segment.id}`}
+                              data-focus={store.focus === segment.id}
+                              data-track={segment.track}
+                            >
                               <small>{clock(num(segment.startMs))}</small>
-                              <strong>{t(segment.track === "me" ? "orchestra.flightEngineer.you" : "orchestra.flightEngineer.them")}</strong>
+                              <strong>
+                                {t(
+                                  segment.track === "me"
+                                    ? "orchestra.flightEngineer.you"
+                                    : "orchestra.flightEngineer.them",
+                                )}
+                              </strong>
                               <span>{segment.text}</span>
                             </li>
                           )}

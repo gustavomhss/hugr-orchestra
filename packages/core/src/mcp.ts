@@ -26,6 +26,7 @@ import { Context, Deferred, Duration, Effect, Exit, Layer, Schema, Scope } from 
 import { Config } from "./config"
 import { makeLocationNode } from "./effect/app-node"
 import { FSUtil } from "./fs-util"
+import { Global } from "./global"
 import { Location } from "./location"
 import { InstallationVersion } from "./installation/version"
 import { McpAuth } from "./mcp/auth"
@@ -127,6 +128,7 @@ const layer = Layer.effect(
     const tools = yield* Tools.Service
     const permission = yield* PermissionV2.Service
     const fs = yield* FSUtil.Service
+    const global = yield* Global.Service
     const auth = yield* McpAuth.Service
     const layerScope = yield* Scope.Scope
     const entries = new Map<string, Entry>()
@@ -139,9 +141,32 @@ const layer = Layer.effect(
     const configured = Effect.fnUntraced(function* () {
       const documents = (yield* config.entries()).filter((entry): entry is Config.Document => entry.type === "document")
       const servers = new Map(documents.flatMap((document) => Object.entries(document.info.mcp?.servers ?? {})))
-      for (const [name, server] of added) servers.set(name, server)
+      // A repository's own config is not the user's: its local servers are commands the repository chose to run.
+      // Only the user's global config can approve a project, and the document that wins a name decides its origin.
+      const inGlobal = (document: Config.Document) =>
+        document.path === undefined || within(global.config, document.path)
+      const approved = documents
+        .filter(inGlobal)
+        .flatMap((document) => document.info.trusted_projects ?? [])
+        .some((root) => within(root, location.directory))
+      // Later documents win a name, so the last document that declares it decides where the server comes from.
+      const unapproved = new Set(
+        approved
+          ? []
+          : Array.from(
+              new Map(
+                documents.flatMap((document) =>
+                  Object.keys(document.info.mcp?.servers ?? {}).map((name) => [name, !inGlobal(document)] as const),
+                ),
+              ),
+            ).flatMap(([name, fromProject]) => (fromProject ? [name] : [])),
+      )
+      for (const [name, server] of added) {
+        servers.set(name, server)
+        unapproved.delete(name)
+      }
       for (const name of removed) servers.delete(name)
-      return { servers, timeout: Config.latest(documents, "mcp")?.timeout }
+      return { servers, unapproved, timeout: Config.latest(documents, "mcp")?.timeout }
     })
 
     const entry = (name: string) => {
@@ -220,6 +245,12 @@ const layer = Layer.effect(
       yield* release(current)
       if (server.disabled) {
         current.status = { status: "disabled" }
+        return
+      }
+      if (server.type === "local" && found.unapproved.has(name)) {
+        current.status = failed(
+          `Not started: this project's config declares a local command for this server. Add "${location.directory}" to trusted_projects in your user config to approve it.`,
+        )
         return
       }
       const startup = server.timeout?.startup ?? found.timeout?.startup ?? DEFAULT_TIMEOUT
@@ -343,6 +374,16 @@ const layer = Layer.effect(
         Effect.provideService(FSUtil.Service, fs),
         Effect.mapError((error) => new ConfigError({ message: error.message })),
       )
+      // Adding a local command is an explicit user action, so the project is approved for restarts too.
+      if (server.type === "local") {
+        const trusted = (yield* Config.readGlobal().pipe(Effect.provideService(FSUtil.Service, fs), Effect.provideService(Global.Service, global)))
+          .trustedProjects
+        if (!trusted.some((root) => within(root, location.directory)))
+          yield* Config.updateGlobal({ trustedProjects: [...trusted, location.directory] }).pipe(
+            Effect.provideService(FSUtil.Service, fs),
+            Effect.provideService(Global.Service, global),
+          )
+      }
       added.set(name, server)
       removed.delete(name)
       yield* connect(name).pipe(Effect.ignore)
@@ -691,7 +732,7 @@ const layer = Layer.effect(
 export const node = makeLocationNode({
   service: Service,
   layer,
-  deps: [Config.node, Location.node, ToolRegistry.toolsNode, PermissionV2.node, FSUtil.node, McpAuth.node],
+  deps: [Config.node, Global.node, Location.node, ToolRegistry.toolsNode, PermissionV2.node, FSUtil.node, McpAuth.node],
 })
 
 function serverInfo(body: string) {
@@ -701,6 +742,12 @@ function serverInfo(body: string) {
   } catch {
     return undefined
   }
+}
+
+// Whether `target` is `root` or inside it.
+function within(root: string, target: string) {
+  const relative = path.relative(path.resolve(root), path.resolve(target))
+  return relative.split(path.sep)[0] !== ".." && !path.isAbsolute(relative)
 }
 
 function failed(error: string): Mcp.Status {

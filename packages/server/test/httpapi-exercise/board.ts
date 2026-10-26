@@ -45,6 +45,11 @@ export const boardScenarios: Scenario[] = [
   read("/api/board/{key}", "v2.board.get", { key }),
   read("/api/board/{key}/issue/{number}", "v2.board.issue", issue),
   read("/api/board/{key}/activity", "v2.board.activity", { key }),
+  read("/api/board/{key}/spend", "v2.board.spend", { key }),
+  read("/api/board/{key}/decisions", "v2.board.decisions", { key }),
+  read("/api/board/{key}/issue/{number}/proof", "v2.board.proof", issue),
+  write("/api/board/{key}/decision/{id}", "v2.board.decisionChange", { key, id: "bde_httpapi_missing" }, { option: "yes" }),
+  write("/api/board/{key}/settings", "v2.board.settings", { key }, { budget_usd: 50 }),
   write(
     "/api/board/{key}/question/{id}/answer",
     "v2.board.answer",

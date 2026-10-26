@@ -39,7 +39,7 @@ it.live("seals actual encoded rows using canonical JSON and links the previous r
     const canonical = `{"aggregate_id":${JSON.stringify(aggregateID)},"data":{"aggregateID":${JSON.stringify(aggregateID)},"value":{"a":[2,{"a":0,"b":1}]}},"id":${JSON.stringify(first.id)},"seq":0,"type":"test.sealed-row.1"}`
     expect(rows[0].seal_hash).toBe(
       createHash("sha256")
-        .update(`opencode:event-seal:v1\n${"0".repeat(64)}\n${canonical}`)
+        .update(`orchestra:event-seal:v1\n${"0".repeat(64)}\n${canonical}`)
         .digest("hex"),
     )
     expect(rows[0].seal_version).toBe(1)
@@ -99,7 +99,7 @@ it.live("deep valid JSON remains admissible and receives its exact canonical sea
     expect(JSON.stringify(row?.data.value)).toBe(source)
     const canonical = `{"aggregate_id":${JSON.stringify(aggregateID)},"data":{"aggregateID":${JSON.stringify(aggregateID)},"value":${source}},"id":${JSON.stringify(published.id)},"seq":0,"type":"test.sealed-row.1"}`
     expect(row?.seal_hash).toBe(
-      createHash("sha256").update(`opencode:event-seal:v1\n${EventSeal.GENESIS}\n${canonical}`).digest("hex"),
+      createHash("sha256").update(`orchestra:event-seal:v1\n${EventSeal.GENESIS}\n${canonical}`).digest("hex"),
     )
   }),
 )
@@ -124,7 +124,7 @@ it.live("seals the exact stored JSON when nested toJSON changes on each invocati
     expect(calls).toHaveLength(1)
     const canonical = `{"aggregate_id":${JSON.stringify(aggregateID)},"data":{"aggregateID":${JSON.stringify(aggregateID)},"value":{"tick":1}},"id":${JSON.stringify(published.id)},"seq":0,"type":"test.sealed-row.1"}`
     expect(row?.seal_hash).toBe(
-      createHash("sha256").update(`opencode:event-seal:v1\n${EventSeal.GENESIS}\n${canonical}`).digest("hex"),
+      createHash("sha256").update(`orchestra:event-seal:v1\n${EventSeal.GENESIS}\n${canonical}`).digest("hex"),
     )
   }),
 )
