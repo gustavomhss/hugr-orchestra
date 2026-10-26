@@ -10,7 +10,10 @@ import type { useFlight } from "./run"
 type Flight = ReturnType<typeof useFlight>
 
 const languages = ["auto", "en-US", "pt-BR", "es-ES", "fr-FR", "de-DE", "it-IT", "ja-JP", "ko-KR", "zh-CN"]
-const sources = ["microphone", "systemAudio"] as const satisfies readonly LiveSource[]
+const sources = [
+  { source: "microphone", label: "orchestra.flightEngineer.microphone" },
+  { source: "system-audio", label: "orchestra.flightEngineer.systemAudio" },
+] as const satisfies readonly { source: LiveSource; label: string }[]
 const actions = ["start-stop", "ask", "toggle-overlay", "toggle-captions"] as const satisfies readonly LiveHotkeyAction[]
 
 // Everything the seat remembers. The speech-to-text key is write-only: this screen can replace it or clear it, never show it.
@@ -162,14 +165,14 @@ export function FlightSettings(props: { flight: Flight }) {
           </div>
           <div class="fe-setting-control fe-stack">
             <For each={sources}>
-              {(source) => (
+              {(entry) => (
                 <label class="fe-switch">
-                  <span>{t(`orchestra.flightEngineer.${source}` as "orchestra.flightEngineer.microphone")}</span>
+                  <span>{t(entry.label)}</span>
                   <MxToggle
-                    label={t(`orchestra.flightEngineer.${source}` as "orchestra.flightEngineer.microphone")}
-                    checked={store.settings?.sources[source] ?? false}
+                    label={t(entry.label)}
+                    checked={store.settings?.sources[entry.source] ?? false}
                     disabled={!store.settings}
-                    onChange={(next) => void patch({ sources: { ...store.settings!.sources, [source]: next } })}
+                    onChange={(next) => void patch({ sources: { ...store.settings!.sources, [entry.source]: next } })}
                   />
                 </label>
               )}
