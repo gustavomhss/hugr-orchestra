@@ -12,7 +12,7 @@ import { PluginV2 } from "@orchestra/core/plugin"
 import { SessionStore } from "@orchestra/core/session"
 import { ApplicationTools } from "@orchestra/core/tool/application-tools"
 import { Tool } from "@orchestra/core/tool/tool"
-import { SessionV1 } from "@orchestra/schema/session-v1"
+import { SessionEvent } from "@orchestra/schema/session-event"
 import { createAppDockHooks } from "./app-dock"
 import { LINUX_DESCRIPTION, LINUX_PROMPT } from "./app-dock-linux"
 import { createLinuxWorkspaceHooks } from "./linux-workspace"
@@ -119,7 +119,7 @@ export function contribution(port: Transport): Host.Contribution {
 
 /**
  * Closes a deleted Session's Linux workspace: the desktop aborts the Session's pending calls and stops the processes and
- * terminals it owns. `SessionV2.remove` publishes `session.deleted` for the Session and each child it cascades to.
+ * terminals it owns. `SessionV2.remove` publishes `session.next.deleted` for the Session and each child it cascades to.
  */
 export function reaper(port: Transport) {
   return makeGlobalNode({
@@ -127,7 +127,7 @@ export function reaper(port: Transport) {
     layer: Layer.effectDiscard(
       Effect.gen(function* () {
         const events = yield* EventV2.Service
-        yield* events.subscribe(SessionV1.Event.Deleted).pipe(
+        yield* events.subscribe(SessionEvent.Deleted).pipe(
           Stream.runForEach((event) =>
             Effect.sync(() => port.postMessage({ type: "linux.session.close", sessionID: event.data.sessionID })),
           ),

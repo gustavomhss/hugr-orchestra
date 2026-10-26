@@ -14,10 +14,9 @@ import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { EventV2 } from "@orchestra/core/event"
 import type { ToolContext } from "@orchestra/plugin"
-import { Project } from "@orchestra/schema/project"
 import { Session } from "@orchestra/schema/session"
-import { SessionV1 } from "@orchestra/schema/session-v1"
-import { Effect, type Layer } from "effect"
+import { SessionEvent } from "@orchestra/schema/session-event"
+import { DateTime, Effect, type Layer } from "effect"
 
 const root = process.env.APP_DOCK_ACCESS_ROOT
 assert(root, "APP_DOCK_ACCESS_ROOT must select an existing owned workspace")
@@ -233,23 +232,15 @@ try {
           closed.resolve()
         }
       })
-      // The server's V2 deletion path: SessionV2.remove publishes `session.deleted` and the App Dock reaper forwards it.
+      // The server's V2 deletion path: SessionV2.remove publishes `session.next.deleted` and the App Dock reaper forwards it.
       const reaper = AppDockTools.contribution(port).nodes!.find((node) => node.name === "app-dock/linux-reaper")!
       await Effect.runPromise(
         Effect.scoped(
           Effect.gen(function* () {
             const events = yield* EventV2.Service
-            yield* events.publish(SessionV1.Event.Deleted, {
+            yield* events.publish(SessionEvent.Deleted, {
               sessionID: owner,
-              info: {
-                id: owner,
-                slug: "proof",
-                projectID: Project.ID.global,
-                directory: "/host-only",
-                title: "proof",
-                version: "0.0.0",
-                time: { created: 0, updated: 0 },
-              },
+              timestamp: yield* DateTime.now,
             })
             yield* Effect.promise(() => closed.promise).pipe(Effect.timeout("30 seconds"))
           }),
