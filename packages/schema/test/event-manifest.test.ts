@@ -6,7 +6,6 @@ import { RelayHook } from "../src/relay-hook"
 import { ResearchEvent } from "../src/research-event"
 import { SessionEvent } from "../src/session-event"
 import { SessionTodo } from "../src/session-todo"
-import { SessionV1 } from "../src/session-v1"
 import { VcsEvent } from "../src/vcs-event"
 import { WorkspaceEvent } from "../src/workspace-event"
 
@@ -17,13 +16,9 @@ const publicEventTypes = [
   "integration.connection.updated",
   "catalog.updated",
   "board.changed",
-  "session.created",
-  "session.updated",
-  "session.deleted",
-  "message.updated",
-  "message.removed",
-  "message.part.updated",
-  "message.part.removed",
+  "session.next.created",
+  "session.next.renamed",
+  "session.next.deleted",
   "session.next.agent.switched",
   "session.next.model.switched",
   "session.next.subagent.models.changed",
@@ -76,9 +71,6 @@ const publicEventTypes = [
   "maestro.task.bound",
   "maestro.task.workflow_bound",
   "maestro.work_result.decided",
-  "message.part.delta",
-  "session.diff",
-  "session.error",
   "installation.updated",
   "installation.update-available",
   "file.edited",
@@ -98,8 +90,6 @@ const publicEventTypes = [
   "relay.hook.decided",
   "todo.updated",
   "lsp.updated",
-  "permission.asked",
-  "permission.replied",
   "tui.prompt.append",
   "tui.command.execute",
   "tui.toast.show",
@@ -110,9 +100,6 @@ const publicEventTypes = [
   "project.updated",
   "session.status",
   "session.idle",
-  "question.asked",
-  "question.replied",
-  "question.rejected",
   "session.compacted",
   "vcs.branch.updated",
   "workspace.ready",
@@ -123,30 +110,39 @@ const publicEventTypes = [
   "server.connected",
 ]
 
+const retiredEventTypes = [
+  "session.created",
+  "session.updated",
+  "session.deleted",
+  "message.updated",
+  "message.removed",
+  "message.part.updated",
+  "message.part.removed",
+  "message.part.delta",
+  "session.diff",
+  "session.error",
+  "permission.asked",
+  "permission.replied",
+  "question.asked",
+  "question.replied",
+  "question.rejected",
+]
+
 describe("public event manifest", () => {
   test("owns the complete public event surface", () => {
-    expect(EventManifest.ServerDefinitions.length).toBe(90)
+    expect(EventManifest.ServerDefinitions.length).toBe(86)
     // The V2 server's HEAD watcher announces branch switches.
     expect(EventManifest.ServerDefinitions).toContain(VcsEvent.BranchUpdated)
-    expect(EventManifest.Definitions.length).toBe(118)
-    expect(SessionV1.Event.Definitions).toEqual([
-      SessionV1.Event.Created,
-      SessionV1.Event.Updated,
-      SessionV1.Event.Deleted,
-      SessionV1.Event.MessageUpdated,
-      SessionV1.Event.MessageRemoved,
-      SessionV1.Event.PartUpdated,
-      SessionV1.Event.PartRemoved,
-      SessionV1.Event.PartDelta,
-      SessionV1.Event.Diff,
-      SessionV1.Event.Error,
-    ])
+    expect(EventManifest.Definitions.length).toBe(106)
+    expect(EventManifest.Durable.get("session.next.created.1")).toBe(SessionEvent.Created)
+    expect(EventManifest.Durable.get("session.next.renamed.1")).toBe(SessionEvent.Renamed)
+    expect(EventManifest.Durable.get("session.next.deleted.1")).toBe(SessionEvent.Deleted)
     expectPublicTypes([...EventManifest.Latest.keys()])
     expectPublicTypes([...new Set(EventManifest.Definitions.map((event) => event.type))])
     expect(EventManifest.Latest.size).toBe(publicEventTypes.length)
     // Research's ten durable-only definitions are already canonical; the two Session settings events add two more,
     // and Maestro's durable-only workflow review hold, workflow rebind, review findings and resume admission four.
-    expect(EventManifest.Durable.size).toBe(79)
+    expect(EventManifest.Durable.size).toBe(75)
     expect(EventManifest.Durable.get("maestro.task.workflow_review_held.1")).toBe(MaestroEvent.Task.WorkflowReviewHeld)
     expect(EventManifest.Latest.has("maestro.task.workflow_review_held")).toBe(false)
     expect(EventManifest.Durable.get("maestro.task.workflow_rebound.1")).toBe(MaestroEvent.Task.WorkflowRebound)
@@ -244,13 +240,11 @@ describe("public event manifest", () => {
     expect(Reference.Event.Definitions).toEqual([Reference.Event.Updated])
     expect(EventManifest.Latest.has("ide.installed")).toBe(false)
     expect(IdeEvent.Definitions).toEqual([IdeEvent.Installed])
-    const legacyParts = EventManifest.Definitions.indexOf(SessionV1.Event.PartDelta)
-    expect(legacyParts).toBeGreaterThanOrEqual(0)
-    expect(EventManifest.Definitions.slice(legacyParts, legacyParts + 3)).toEqual([
-      SessionV1.Event.PartDelta,
-      SessionV1.Event.Diff,
-      SessionV1.Event.Error,
-    ])
+    // The retired session lifecycle and transcript events have no definition, public or durable.
+    expect(
+      EventManifest.Definitions.map((event) => event.type).filter((type) => retiredEventTypes.includes(type)),
+    ).toEqual([])
+    expect([...EventManifest.Durable.keys()].filter((type) => retiredEventTypes.some((retired) => type.startsWith(`${retired}.`)))).toEqual([])
     expect(EventManifest.Durable.has("session.next.step.ended.1")).toBe(false)
     expect(EventManifest.Durable.get("session.next.step.ended.2")).toBe(SessionEvent.Step.Ended)
     expect(EventManifest.Durable.get("maestro.plan_revision.recorded.1")).toBe(MaestroEvent.PlanRevision.Recorded)
