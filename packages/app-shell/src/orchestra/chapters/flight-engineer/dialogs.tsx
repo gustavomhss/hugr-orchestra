@@ -39,7 +39,7 @@ function Frame(props: { id: string; title: string; close: () => void; children: 
     <dialog
       ref={dialog}
       class="fe-modal"
-      tabindex="-1"
+      tabIndex={-1}
       aria-labelledby={props.id}
       onCancel={(event) => {
         event.preventDefault()
