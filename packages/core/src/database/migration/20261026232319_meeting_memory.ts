@@ -52,7 +52,9 @@ export default {
       yield* tx.run(`ALTER TABLE \`meeting\` ADD \`card_status\` text DEFAULT 'pending' NOT NULL;`)
       yield* tx.run(`ALTER TABLE \`meeting\` ADD \`card_error\` text;`)
       yield* tx.run(`ALTER TABLE \`meeting\` ADD \`card_summary\` text DEFAULT '' NOT NULL;`)
-      yield* tx.run(`PRAGMA foreign_keys=OFF;`)
+      // PRAGMA foreign_keys is a no-op inside the migration transaction, so dropping `meeting` would cascade into
+      // `meeting_segment`. Keep the segments aside and put them back after the rebuild.
+      yield* tx.run(`CREATE TABLE \`__meeting_segment_keep\` AS SELECT * FROM \`meeting_segment\`;`)
       yield* tx.run(`
         CREATE TABLE \`__new_meeting\` (
           \`id\` text PRIMARY KEY,
@@ -73,7 +75,8 @@ export default {
       )
       yield* tx.run(`DROP TABLE \`meeting\`;`)
       yield* tx.run(`ALTER TABLE \`__new_meeting\` RENAME TO \`meeting\`;`)
-      yield* tx.run(`PRAGMA foreign_keys=ON;`)
+      yield* tx.run(`INSERT INTO \`meeting_segment\` SELECT * FROM \`__meeting_segment_keep\`;`)
+      yield* tx.run(`DROP TABLE \`__meeting_segment_keep\`;`)
       yield* tx.run(`CREATE INDEX \`meeting_session_idx\` ON \`meeting\` (\`session_id\`);`)
       yield* tx.run(`CREATE INDEX \`meeting_item_meeting_idx\` ON \`meeting_item\` (\`meeting_id\`);`)
       yield* tx.run(`CREATE INDEX \`meeting_proposal_meeting_idx\` ON \`meeting_proposal\` (\`meeting_id\`);`)
