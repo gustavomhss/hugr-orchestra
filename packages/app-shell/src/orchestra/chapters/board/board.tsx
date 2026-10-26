@@ -342,7 +342,8 @@ export default function Board() {
     const target = event.target as HTMLElement
     if (target.closest("input, textarea, [contenteditable]")) return
     if (event.metaKey || event.ctrlKey || event.altKey) return
-    const top = questions()[0]
+    // Digits answer the top question only while the board view shows it.
+    const top = view() === "board" && !opened() ? questions()[0] : undefined
     const choice = /^[1-9]$/.test(key) && !store.peek ? top?.options[Number(key) - 1] : undefined
     if (top && choice) return (event.preventDefault(), void answer(top, choice.id))
     if (key === "ArrowDown" || key === "j") return (event.preventDefault(), move(step(refs(), current, 1)))
@@ -1083,12 +1084,6 @@ export default function Board() {
               </Match>
               <Match when={store.projects === undefined}>
                 <p class="board-quiet board-loading">{t("orchestra.board.loading")}</p>
-              </Match>
-              <Match when={store.projects?.length === 0}>
-                <div class="mx-empty">
-                  <strong>{t("orchestra.board.empty.title")}</strong>
-                  <p>{t("orchestra.board.empty.body")}</p>
-                </div>
               </Match>
               <Match when={store.projects}>
                 {(projects) => (

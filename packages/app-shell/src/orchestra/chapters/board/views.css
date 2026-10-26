@@ -488,7 +488,7 @@
 
 .board-epic-body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-columns: minmax(0, 1fr) 272px;
   align-items: start;
   gap: 18px;
 }
@@ -522,13 +522,35 @@
   text-transform: none;
 }
 
-/* The epic column is narrower than the list, so the fixed columns shrink to leave the title room. */
+/* The epic column is narrower than the list: the PR column goes, the fixed columns shrink, and the step note moves
+   under the title so the title reads in full. */
 .board-epic-stage .board-table {
-  --board-table-columns: 72px minmax(0, 1fr) 28px 112px 28px 56px 48px;
+  --board-table-columns: 72px minmax(0, 1fr) 28px 112px 28px 56px;
 }
 
 .board-epic-stage .board-table-row {
   gap: 10px;
+}
+
+.board-epic-stage .board-table-row > :nth-child(7) {
+  display: none;
+}
+
+.board-epic-stage .board-table-title {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.board-epic-stage .board-table-name {
+  overflow: visible;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.board-epic-stage .board-table-note,
+.board-epic-stage .board-table-asked {
+  max-inline-size: 100%;
 }
 
 .board-epic-stage .board-table-row:first-child,
@@ -658,6 +680,49 @@
 .board-burnup-fill {
   fill: color-mix(in srgb, var(--mx-blue) 16%, transparent);
   stroke: none;
+}
+
+/* The epic's ships: the burnup with a dot per ship, the scope at the top and the date span underneath. */
+.board-ships {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 8px;
+  row-gap: 4px;
+  padding-block-start: 4px;
+}
+
+.board-ships-top {
+  align-self: start;
+  color: var(--orchestra-muted);
+  font-size: var(--orchestra-font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.board-ships-plot {
+  position: relative;
+}
+
+.board-ships-dot {
+  position: absolute;
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: var(--orchestra-radius-full);
+  background: var(--mx-blue);
+  box-shadow: 0 0 0 2px var(--orchestra-surface);
+  transform: translate(-50%, -50%);
+}
+
+.board-ships-axis {
+  display: flex;
+  grid-column: 2;
+  justify-content: space-between;
+  color: var(--orchestra-muted);
+  font-size: var(--orchestra-font-size-xs);
+}
+
+.board-epic-ships-note {
+  color: var(--orchestra-text);
+  font-size: var(--orchestra-font-size-sm);
 }
 
 /* ---- Timeline ---- */

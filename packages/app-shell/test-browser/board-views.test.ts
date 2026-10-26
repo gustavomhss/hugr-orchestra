@@ -104,6 +104,9 @@ if (process.env.BOARD_VIEWS_DOM !== "1") {
   ]
   const archived = summary(project("OLD", "Old pilot", "archived"), { shipped: 3 })
   const writes: string[] = []
+  // Flipped by the test where every project is archived.
+  const live = { empty: false }
+  const local = (at: number) => new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(at)
   const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) {
     const url = new URL(request.url)
     if (request.method === "POST") {
@@ -111,7 +114,7 @@ if (process.env.BOARD_VIEWS_DOM !== "1") {
       return Response.json({ activity: `bac_${writes.length}` })
     }
     if (url.pathname === "/api/board")
-      return Response.json(url.searchParams.get("archived") === "true" ? [...listed, archived] : listed)
+      return Response.json(url.searchParams.get("archived") === "true" ? [...listed, archived] : live.empty ? [] : listed)
     if (url.pathname === "/api/board/LCH") return Response.json(snapshot)
     return new Response("not found", { status: 404 })
   } })
@@ -139,7 +142,7 @@ if (process.env.BOARD_VIEWS_DOM !== "1") {
   const button = (scope: ParentNode, label: string) =>
     [...scope.querySelectorAll<HTMLButtonElement>("button")].find((item) => text(item) === label)
 
-  const mount = async () => {
+  const mount = async (ready = '.board-overview-row[data-key="LCH"]') => {
     const host = document.createElement("div")
     document.body.appendChild(host)
     const dispose = render(() => createComponent(PlatformProvider, {
@@ -148,7 +151,7 @@ if (process.env.BOARD_VIEWS_DOM !== "1") {
         return createComponent(Board, {})
       } }) },
     }), host)
-    await until(() => !!host.querySelector('.board-overview-row[data-key="LCH"]'), host)
+    await until(() => !!host.querySelector(ready), host)
     const open = async (view: "List" | "Timeline") => {
       host.querySelector<HTMLElement>('.board-overview-row[data-key="LCH"]')!.click()
       await until(() => !!host.querySelector(".board-head-end .board-segments"), host)
@@ -179,6 +182,16 @@ if (process.env.BOARD_VIEWS_DOM !== "1") {
     expect([...view.host.querySelectorAll(".board-overview-row")].map((item) => item.getAttribute("data-key"))).toEqual(["OLD"])
     button(view.host.querySelector('.board-overview-row[data-key="OLD"]')!, "Unarchive")!.click()
     await until(() => writes.includes("/api/board/OLD/unarchive"), view.host)
+    view.done()
+  }, 20000)
+
+  test("with every project archived the overview says so and keeps the Archived filter", async () => {
+    live.empty = true
+    const view = await mount(".board-overview-bar")
+    expect(text(view.host.querySelector(".board-overview .mx-empty strong"))).toBe("No projects yet")
+    button(view.host.querySelector(".board-overview-bar .board-segments")!, "Archived")!.click()
+    await until(() => !!view.host.querySelector('.board-overview-row[data-key="OLD"]'), view.host)
+    live.empty = false
     view.done()
   }, 20000)
 
@@ -236,12 +249,20 @@ if (process.env.BOARD_VIEWS_DOM !== "1") {
     expect(text(page.querySelector('[aria-labelledby="board-epic-waits"] .board-epic-item'))).toContain("LCH-12")
     expect(text(page.querySelector(".board-epic-ask"))).toContain("Card or invoice first?")
     expect(page.querySelector(".board-epic-calm")).toBeNull()
-    expect(page.querySelector(".board-burnup")).not.toBeNull()
+    // One ship reads as a sentence, not a near-empty chart.
+    expect(page.querySelector(".board-burnup")).toBeNull()
+    expect(text(page.querySelector(".board-epic-ships-note"))).toBe(`Only LCH-6 has shipped so far, on ${local(now - 2 * day)}.`)
 
     // The crumb's project key leaves the epic and returns to the project in the view it was in.
     button(view.host.querySelector(".board-crumb")!, "LCH")!.click()
     await until(() => !view.host.querySelector(".board-epic-page"), view.host)
     expect(view.host.querySelector(".board-table-view")).not.toBeNull()
+
+    // Four ships draw the stepped line with a dot each.
+    button(view.host.querySelector(".board-table-view")!, "Accounts")!.click()
+    await until(() => !!view.host.querySelector(".board-ships"), view.host)
+    expect(view.host.querySelectorAll(".board-ships-dot").length).toBe(4)
+    expect(text(view.host.querySelector(".board-ships-axis"))).toBe(`${local(now - 9 * day)}Today`)
     view.done()
   }, 20000)
 
@@ -253,7 +274,8 @@ if (process.env.BOARD_VIEWS_DOM !== "1") {
     const weeks = [...chart.querySelectorAll(".board-timeline-week")].map((item) => text(item))
     expect(weeks.length).toBeGreaterThanOrEqual(3)
     weeks.forEach((label) => expect(label).toMatch(/week \d+$/))
-    expect(chart.querySelector(".board-timeline-target")).not.toBeNull()
+    // Target dates read in local time, like the board's header.
+    expect(text(chart.querySelector(".board-timeline-target"))).toContain(local(target))
     expect(chart.querySelector(".board-timeline-today")).not.toBeNull()
 
     const rows = [...chart.querySelectorAll(".board-timeline-epic")]
@@ -274,6 +296,15 @@ if (process.env.BOARD_VIEWS_DOM !== "1") {
     expect(text(scope.querySelector("h3 .board-count"))).toBe("3 of 12 shipped")
     expect(text(scope.querySelector(".board-scope-log b"))).toBe("+2")
     expect(text(scope.querySelector(".board-scope-log"))).toContain("Refunds joined after review")
+
+    // A digit never answers a question the view does not show; on the board, where it shows, it does.
+    const root = view.host.querySelector(".board-root")!
+    root.dispatchEvent(new KeyboardEvent("keydown", { key: "1", bubbles: true }))
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(writes.some((path) => path.endsWith("/answer"))).toBe(false)
+    button(view.host.querySelector(".board-head-end .board-segments")!, "Board")!.click()
+    root.dispatchEvent(new KeyboardEvent("keydown", { key: "1", bubbles: true }))
+    await until(() => writes.includes("/api/board/LCH/question/bq_8/answer"), view.host)
     view.done()
     server.stop(true)
   }, 20000)

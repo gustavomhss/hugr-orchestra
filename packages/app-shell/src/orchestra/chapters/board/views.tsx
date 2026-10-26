@@ -165,6 +165,13 @@ export function Overview(props: {
         <Match when={which() === "archived" && archived() === undefined}>
           <p class="board-quiet board-loading">{t("orchestra.board.overview.loadingArchived")}</p>
         </Match>
+        {/* With nothing live the bar stays, so archived projects remain one click away. */}
+        <Match when={which() !== "archived" && visible().length === 0}>
+          <div class="mx-empty">
+            <strong>{t("orchestra.board.empty.title")}</strong>
+            <p>{t("orchestra.board.empty.body")}</p>
+          </div>
+        </Match>
         <Match when={shown().length === 0}>
           <div class="mx-empty">
             <strong>
@@ -249,7 +256,7 @@ export function Overview(props: {
                           <Show when={summary.forecast.targetDate}>
                             {(target) => (
                               <span class="board-quiet">
-                                {t("orchestra.board.target", { date: utcDate(target(), language.intl()) })}
+                                {t("orchestra.board.target", { date: localDate(language, target()) })}
                               </span>
                             )}
                           </Show>
@@ -312,7 +319,7 @@ function Window(props: { p50: number; p85: number; late: boolean; target: number
         {range(props.p50, props.p85, language.intl())}
         <Show when={props.target}>
           {(target) => (
-            <span class="board-quiet">{t("orchestra.board.target", { date: utcDate(target(), language.intl()) })}</span>
+            <span class="board-quiet">{t("orchestra.board.target", { date: localDate(language, target()) })}</span>
           )}
         </Show>
       </span>
@@ -688,20 +695,31 @@ export function EpicPage(props: {
                   {t("orchestra.board.epic.since", { date: localDate(language, begun()) })}
                 </span>
               </h3>
-              <Show when={ships().length > 0} fallback={<p class="board-quiet">{t("orchestra.board.epic.noShips")}</p>}>
-                <Burnup
-                  from={begun()}
-                  to={Date.now()}
-                  top={plan().total}
-                  lines={[{ tone: "shipped", points: ships().map((point) => ({ at: point.at, value: point.count })) }]}
-                />
-                <p class="board-quiet">
+              <Switch>
+                <Match when={ships().length === 0}>
+                  <p class="board-quiet">{t("orchestra.board.epic.noShips")}</p>
+                </Match>
+                {/* One ship draws a single step; a sentence says the same thing honestly. */}
+                <Match when={ships().length === 1 && issues().find((issue) => issue.stage === "shipped")}>
+                  {(issue) => (
+                    <p class="board-epic-ships-note">
+                      {t("orchestra.board.epic.oneShip", {
+                        ref: issue().ref,
+                        date: localDate(language, issue().stageEnteredAt),
+                      })}
+                    </p>
+                  )}
+                </Match>
+                <Match when={true}>
+                  <Ships from={begun()} top={plan().total} ships={ships()} />
+                  <p class="board-quiet">
                   {t("orchestra.board.epic.chart", {
                     count: ships().length,
-                    date: localDate(language, ships().at(-1)?.at ?? Date.now()),
-                  })}
-                </p>
-              </Show>
+                      date: localDate(language, ships().at(-1)?.at ?? Date.now()),
+                    })}
+                  </p>
+                </Match>
+              </Switch>
             </section>
 
             <section class="board-rail" aria-labelledby="board-epic-waits">
@@ -842,7 +860,7 @@ export function Timeline(props: {
             <Show when={props.snapshot.forecast.targetDate}>
               {(target) => (
                 <i class="board-timeline-target" style={{ "inset-inline-start": at(target()) }}>
-                  <span>{t("orchestra.board.timeline.target", { date: utcDate(target(), language.intl()) })}</span>
+                  <span>{t("orchestra.board.timeline.target", { date: localDate(language, target()) })}</span>
                 </i>
               )}
             </Show>
@@ -1119,6 +1137,40 @@ function Burnup(props: {
         )}
       </For>
     </svg>
+  )
+}
+
+// The epic's ships as a stepped line with a dot per ship, from the first stage entry to today, with labelled ends.
+function Ships(props: { from: number; top: number; ships: readonly { at: number; count: number }[] }) {
+  const language = useLanguage()
+  const t = language.t
+  const now = Date.now()
+  const x = (at: number) => ((at - props.from) / Math.max(1, now - props.from)) * 100
+  const y = (count: number) => ((38 - (count / Math.max(1, props.top)) * 34) / 40) * 100
+  return (
+    <div class="board-ships">
+      <span class="board-ships-top">{props.top}</span>
+      <div class="board-ships-plot">
+        <Burnup
+          from={props.from}
+          to={now}
+          top={props.top}
+          lines={[{ tone: "shipped", points: props.ships.map((point) => ({ at: point.at, value: point.count })) }]}
+        />
+        <For each={props.ships}>
+          {(point) => (
+            <i
+              class="board-ships-dot"
+              style={{ "inset-inline-start": `${x(point.at)}%`, "inset-block-start": `${y(point.count)}%` }}
+            />
+          )}
+        </For>
+      </div>
+      <span class="board-ships-axis">
+        <span>{localDate(language, props.from)}</span>
+        <span>{t("orchestra.board.timeline.today")}</span>
+      </span>
+    </div>
   )
 }
 
