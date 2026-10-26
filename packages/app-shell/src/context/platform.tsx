@@ -9,6 +9,19 @@ import type { DraftStore } from "@/utils/draft-store"
 import type { NativeTitlebarFrame } from "../native-titlebar"
 export type { NativeTitlebarFrame } from "../native-titlebar"
 
+export type LiveSeatPlatform = {
+  start(title?: string): Promise<
+    { ok: true; meetingID: string } | { ok: false; reason: "running" | "no-key" | "server" | "capture" }
+  >
+  stop(): Promise<void>
+  running(): Promise<boolean>
+  // Write-only: the key is never read back; an empty key clears it.
+  hasTranscriptionKey(): Promise<boolean>
+  setTranscriptionKey(key: string): Promise<void>
+  getContentProtection(): Promise<boolean>
+  setContentProtection(enabled: boolean): Promise<void>
+}
+
 type PickerPaths = string | string[] | null
 type OpenDirectoryPickerOptions = { title?: string; multiple?: boolean }
 type OpenAttachmentPickerOptions = {
@@ -98,6 +111,9 @@ type PlatformBase = {
 
   /** Manage WSL sidecar servers (Electron on Windows only) */
   wslServers?: WslServersPlatform
+
+  /** Meetings with the live seat and its settings (desktop only) */
+  liveSeat?: LiveSeatPlatform
 
   /** Get the preferred display backend (desktop only) */
   getDisplayBackend?(): Promise<DisplayBackend | null> | DisplayBackend | null

@@ -15,6 +15,7 @@ import { OrchestraSidebar } from "@/orchestra/sidebar"
 import { createOrchestraNavigation } from "@/orchestra/compact-navigation"
 import { OrchestraNavigationToggle } from "@/orchestra/navigation-toggle"
 import { ShellNavigationCommands } from "@/orchestra/shell/navigation-commands"
+import { LiveSeatCommands } from "@/orchestra/live/commands"
 import { MobileNavigation } from "@/orchestra/shell/mobile-navigation"
 import { NewShellIngress } from "@/orchestra/shell/ingress"
 import { formatError } from "@/pages/error"
@@ -45,6 +46,7 @@ export default function NewLayout(props: ParentProps) {
   return (
     <>
       <ShellNavigationCommands />
+      <LiveSeatCommands />
       <NewShellIngress />
       {/* Desktop preferences load over IPC; wait so a collapsed window never paints expanded first. */}
       <Show when={navigation.ready()}>
