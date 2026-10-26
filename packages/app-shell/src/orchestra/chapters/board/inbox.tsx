@@ -32,7 +32,7 @@ export function Inbox(props: { onOpen: (key: string) => void; onClose: () => voi
     const current = new AbortController()
     controller = current
     const signal = current.signal
-    const list = await api().list({ signal }).catch(() => undefined)
+    const list = await api().list({}, { signal }).catch(() => undefined)
     if (signal.aborted) return
     if (!list) return setStore("failed", true)
     const snapshots = await Promise.allSettled(list.map((item) => api().get({ key: item.project.key }, { signal })))

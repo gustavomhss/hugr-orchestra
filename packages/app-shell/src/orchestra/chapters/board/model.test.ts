@@ -230,6 +230,9 @@ function snapshot(key: string, extra: Partial<Snapshot> = {}): Snapshot {
     issues: [],
     questions: [],
     cursor: null,
+    forecast: { shipped: 0, remaining: 0, targetDate: null, forecast: { kind: "done" } },
+    epicForecasts: [],
+    scope: [],
     ...extra,
   }
 }
