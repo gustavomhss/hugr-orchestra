@@ -1,9 +1,9 @@
 export * as Board from "./board"
 
 import path from "path"
-import { and, asc, desc, eq, gt, inArray, ne, sql } from "drizzle-orm"
+import { and, asc, desc, eq, gt, inArray, isNotNull, ne, sql } from "drizzle-orm"
 import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors"
-import { Clock, Context, Effect, Layer, Schema } from "effect"
+import { Clock, Context, Effect, Layer, Schedule, Schema } from "effect"
 import { SqlError } from "effect/unstable/sql/SqlError"
 import { Board } from "@orchestra/schema/board"
 import { Integration } from "@orchestra/schema/integration"
@@ -28,6 +28,7 @@ import {
   BoardQuestionTable,
   BoardStepTable,
 } from "./sql"
+import { BoardGithub } from "./github"
 
 // The board service enforces the contract's rules (docs/specs/projects-board/CONTRACT.md section 1). Every write runs
 // in one immediate transaction that also appends its activity row, then publishes `board.changed` after commit.
@@ -67,6 +68,8 @@ export interface Interface {
   readonly hold: (key: string, number: number, input: Board.HoldInput) => Effect.Effect<Board.OwnerResult, Error>
   readonly accept: (key: string, number: number) => Effect.Effect<Board.OwnerResult, Error>
   readonly decline: (key: string, number: number) => Effect.Effect<Board.OwnerResult, Error>
+  /** Pulls from GitHub, pushes dirty cards and reports the sync state; the manual retry and the 60 second poll. */
+  readonly sync: (key: string) => Effect.Effect<Board.GithubSync, Error>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/Board") {}
@@ -86,7 +89,8 @@ const UNDOABLE = ["issue.update", "issue.move", "steps.set", "epic.upsert", "que
 const ISSUE_COLUMNS = ["title", "body", "type", "epic_id", "estimate", "seat", "session_id", "branch", "pr_number", "stage", "position", "stage_entered_at"]
 const EPIC_COLUMNS = ["title", "goal", "position", "status"]
 
-export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv }) =>
+/** `gh` replaces the GitHub runner (tests inject recorded responses); `poll` starts the 60 second sync of every mirrored project. */
+export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly gh?: BoardGithub.Gh; readonly poll?: boolean }) =>
   Layer.effect(
     Service,
     Effect.gen(function* () {
@@ -98,11 +102,11 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv }) =>
       const db = database.db
       const cache = new Map<string, { readonly at: number; readonly trail: Board.Trail }>()
 
+      const quiet = <A, E>(work: (tx: Tx) => Effect.Effect<A, E>) =>
+        db.transaction(work, { behavior: "immediate" }).pipe(dieOnStorage)
+
       const write = <A extends { readonly changed: Changed }, E>(work: (tx: Tx) => Effect.Effect<A, E>) =>
-        db.transaction(work, { behavior: "immediate" }).pipe(
-          dieOnStorage,
-          Effect.tap((result) => events.publish(Board.Event.Changed, result.changed)),
-        )
+        quiet(work).pipe(Effect.tap((result) => events.publish(Board.Event.Changed, result.changed)))
 
       const reading = <A, E>(work: (tx: Tx) => Effect.Effect<A, E>) =>
         db.transaction(work).pipe(dieOnStorage)
@@ -518,6 +522,21 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv }) =>
             .where(eq(BoardIssueTable.id, issue))
             .run()
       })
+
+      const github = BoardGithub.make({
+        quiet: (work) => quiet(work).pipe(Effect.orDie),
+        publish: (changed) => events.publish(Board.Event.Changed, changed),
+        log,
+        gh: options.gh ?? BoardGithub.runner(proc, options.env),
+      })
+
+      if (options.poll)
+        yield* reading((tx) => tx.select({ key: BoardProjectTable.key }).from(BoardProjectTable).where(isNotNull(BoardProjectTable.github_repo)).all()).pipe(
+          Effect.flatMap((rows) => Effect.forEach(rows, (row) => github.sync(row.key))),
+          Effect.ignore,
+          Effect.repeat(Schedule.spaced("60 seconds")),
+          Effect.forkScoped,
+        )
 
       return Service.of({
         summaries: Effect.fn("Board.summaries")(function* () {
@@ -1200,6 +1219,13 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv }) =>
         decline: Effect.fn("Board.decline")(function* (key, number) {
           return yield* intake(key, number, "intake.decline", "cut")
         }),
+
+        sync: Effect.fn("Board.sync")(function* (key) {
+          const done = yield* github.sync(key)
+          if (done.status === "missing") return yield* new NotFoundError({ message: `There is no board project ${key}.` })
+          if (done.status === "off") return yield* new RefusedError({ message: `${key} has no GitHub repository to mirror.` })
+          return { state: done.state, error: done.error }
+        }),
       })
 
       function setProjectPause(key: string, paused: boolean, reason?: string) {
@@ -1279,7 +1305,7 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv }) =>
     }),
   )
 
-export const layer = layerWith({})
+export const layer = layerWith({ poll: true })
 
 export const node = makeGlobalNode({
   service: Service,

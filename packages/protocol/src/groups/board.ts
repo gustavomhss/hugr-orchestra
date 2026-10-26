@@ -113,6 +113,13 @@ export const BoardGroup = HttpApiGroup.make("server.board")
     }).annotateMerge(doc("resume", "Resume a project", "Let Maestro write to the project again.")),
   )
   .add(
+    HttpApiEndpoint.post("board.githubSync", "/api/board/:key/github/sync", {
+      params: project,
+      success: Board.GithubSync,
+      error: errors,
+    }).annotateMerge(doc("githubSync", "Sync with GitHub", "Retry the GitHub Issues mirror now and return its state.")),
+  )
+  .add(
     HttpApiEndpoint.post("board.pauseIssue", "/api/board/:key/issue/:number/pause", {
       params: issue,
       success: Board.OwnerResult,

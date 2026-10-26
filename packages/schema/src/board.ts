@@ -455,6 +455,12 @@ export type HoldInput = typeof HoldInput.Type
 export const OwnerResult = Schema.Struct({ activity: ActivityID }).annotate({ identifier: "Board.OwnerResult" })
 export type OwnerResult = typeof OwnerResult.Type
 
+/** The mirror's state after a manual sync: a fact, with the plain-words error when it is not `ok`. */
+export const GithubSync = Schema.Struct({ state: GithubState, error: Schema.NullOr(Schema.String) }).annotate({
+  identifier: "Board.GithubSync",
+})
+export type GithubSync = typeof GithubSync.Type
+
 // Carries no board content: the app refetches what it shows.
 const Changed = define({
   type: "board.changed",

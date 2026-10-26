@@ -180,6 +180,7 @@ Owner writes (actor `owner`, `reason` optional):
 | `POST /api/board/:key/issue/:number/note` | `{ body }` |
 | `POST /api/board/:key/issue/:number/attachment` | JSON `{ kind, name, mime?, data?, value? }`: a file carries base64 `data`; a secret carries `value` and `name` is its label. The value goes straight to `CredentialTable` and is never echoed |
 | `POST /api/board/:key/activity/:id/undo` | Rule 4 |
+| `POST /api/board/:key/github/sync` | The retry: one pull then push now, returns `{ state, error }` (the new `github_state`/`github_error`). Refused when the project has no `github_repo` |
 | `POST /api/board/:key/pause` and `/resume` | Project level; `{ reason? }` |
 | `POST /api/board/:key/issue/:number/pause` and `/resume` | Issue level |
 | `POST /api/board/:key/issue/:number/hold` | `{ hold: boolean }` |
@@ -247,3 +248,16 @@ Failure is shown as fact: signed out, rate limited or erroring sets `github_stat
   signed-out state.
 - C: app rendering of the canonical fixture (`MOCKS.md` data) and the `board.changed` refetch.
 - D: each owner write through the API, undo from the UI, pause blocks a Maestro write.
+
+As built in slice B2:
+
+- The mirror starts at the first sync: issues already on GitHub then are not imported, only ones changed after. Closed
+  issues, pull requests and issues carrying another board's marker are never imported.
+- The epic milestone is titled `<KEY>-E<n>: <title>`; its number is kept in `board_epic.github_milestone`. A milestone
+  rename is not synced.
+- Overwrites are detected while pulling, for mirrored cards that are not already dirty. A GitHub edit to a card with a
+  push pending is replaced without a `github.overwrite` row.
+- Issues and comments share one `since` cursor (`github_since`); each list keeps its own ETag. A 304 is an empty page.
+- A manual or polled sync is serialized per server. Failures are classified from `gh`'s exit code and stderr; token-like
+  text is redacted from `github_error` and nothing is logged.
+- The poll runs only in the server layer; tests inject the `gh` runner (`Board.layerWith({ gh, poll: false })`).
