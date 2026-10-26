@@ -25,8 +25,9 @@ import { MaestroWorkflowHostV2 } from "./workflow/host"
 export const pluginID = PluginV2.ID.make("maestro/seats")
 
 /**
- * Projects every native seat of the roster into the Location's V2 agents as a subagent with its charter and task-tool
- * description, and its native profile as the last rules, so configuration cannot widen it (findLast wins). Maestro itself
+ * Projects every native seat of the roster into the Location's V2 agents as a subagent (a direct seat as a primary
+ * agent) with its charter and task-tool description, and its native profile as the last rules, so configuration cannot
+ * widen it (findLast wins). Maestro itself
  * is core's default agent; configuration (`agent.<id>`) installed before this plugin keeps its prompt and description,
  * and the seat's engine, model and display label stay the owner's settings. Every agent then gets the `visibility`
  * denials, and Maestro its playbooks as skills.
@@ -67,7 +68,7 @@ const layer = Layer.effectDiscard(
                 agent.name = resolved.label
                 agent.system ??= roster?.renderPrompt(member, resolved.label)
                 agent.description ??= Seats.all[member.memberId].description
-                agent.mode = "subagent"
+                agent.mode = Seats.all[member.memberId].direct ? "primary" : "subagent"
                 agent.permissions.push(
                   ...floor(roster?.nativeProfiles[member.memberId]),
                   // A seat reads its own skill tree but never edits it; inside the Location it is ordinary source.

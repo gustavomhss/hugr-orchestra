@@ -397,6 +397,7 @@
     "./tool/task": "./src/tool/task.ts",
     "./tool/task-background": "./src/tool/task-background.ts",
     "./tool/task-governance": "./src/tool/task-governance.ts",
+    "./tool/team-message": "./src/tool/team-message.ts",
     "./tool/text": "./src/tool/text.ts",
     "./tool/todowrite": "./src/tool/todowrite.ts",
     "./tool/tool": "./src/tool/tool.ts",

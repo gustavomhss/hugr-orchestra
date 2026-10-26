@@ -18,12 +18,12 @@ import type { MaestroSeats } from "./seats-service"
 // The verified Atlas Own reader, over V2 services. Config comes from the Location's documents (`maestro.atlas`), Git from the process git command line, and
 // files through the Location's filesystem. Every failure is an explicit hold, never an absence claim.
 
-export type Owner = "backend" | "jimmy" | "archie"
+export type Owner = "backend" | "jimmy" | "archie" | "live"
 
 /** The Atlas Memory owner an agent is: a native seat of this Location whose seat definition carries Atlas Memory. */
 export function owner(id: string, seats: MaestroSeats.Interface): Owner | undefined {
   if (!seats.has(id) || Seats.all[id]?.atlasMemory !== true) return undefined
-  return id === "backend" || id === "jimmy" || id === "archie" ? id : undefined
+  return id === "backend" || id === "jimmy" || id === "archie" || id === "live" ? id : undefined
 }
 
 /** Atlas context reads (catalog, unit) also reach Maestro; anchor and the memory tools stay with the seats. */
