@@ -192,10 +192,14 @@ const layer = Layer.effectDiscard(
               if (previous !== undefined) return false
               // This snapshot gates post-crash eligibility only; the coordinator decides cancellation ownership.
               const active = (yield* execution.active).has(child.id)
-              if (!active && admitted.promotedSeq !== undefined && !input.task_id)
+              // The drain may have settled between the `previous` snapshot and this check; its reply is then final.
+              if (!active && admitted.promotedSeq !== undefined && !input.task_id) {
+                if (completedReply(yield* sessions.messages({ sessionID: child.id, order: "asc" }), promptID) !== undefined)
+                  return false
                 return yield* new ToolFailure({
                   message: `Task ${child.id} has unfinished promoted work; resume explicitly with task_id`,
                 })
+              }
               // The drain outlives a move to the background; cancelling the Task before that still stops it.
               // Starting immediately joins the drain that is active now: a deferred start could find it settled and
               // force a second provider turn for an exact retry.

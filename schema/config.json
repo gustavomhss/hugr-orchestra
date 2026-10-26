@@ -1146,6 +1146,13 @@
           "$ref": "#/$defs/ConfigV2.MCP",
           "description": "MCP server configuration"
         },
+        "trusted_projects": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Absolute paths of projects (or folders holding projects) whose own config may start local MCP servers. Honored only in the user's global config."
+        },
         "compaction": {
           "$ref": "#/$defs/ConfigV2.Compaction",
           "description": "Conversation compaction behavior"

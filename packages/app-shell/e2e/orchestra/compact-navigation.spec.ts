@@ -25,7 +25,8 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
   const rows = await sidebar
     .locator("#orchestra-navigation .orchestra-nav-button")
     .evaluateAll((items) => items.map((item) => item.getBoundingClientRect()).map((box) => [box.top, box.height]))
-  expect(rows[0][0]).toBeCloseTo(brand.y + brand.height + 2, 1)
+  // The list's 8px top padding (it fades under the brand) now rests the first row 8px below the brand.
+  expect(rows[0][0]).toBeCloseTo(brand.y + brand.height + 8, 1)
   expect(rows.map((row) => row[1])).toEqual(rows.map(() => 31))
   expect(rows[1][0] - rows[0][0]).toBeCloseTo(32, 1)
   // The mock server lists only Orchestra's native maestro agent.

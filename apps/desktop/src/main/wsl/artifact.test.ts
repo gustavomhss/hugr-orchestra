@@ -308,7 +308,8 @@ linuxGuestTest("real owned V2 CLI guest credential authenticates foreground serv
     const reader = server.stdout.getReader()
     const output = await Promise.race([reader.read(), Bun.sleep(20_000).then(() => { throw new Error("V2 startup timed out") })])
     const url = new TextDecoder().decode(output.value).match(/http:\/\/[^\s]+/)?.[0]
-    expect(url).toBeDefined()
+    if (!url) server.kill()
+    expect(url, `stdout: ${new TextDecoder().decode(output.value)}\nstderr: ${await new Response(server.stderr).text()}`).toBeDefined()
     expect(await checkWslAuthentication(url!, password)).toBe(true)
     expect((await stat(join(root, ".local/state/orchestra/password"))).mode & 0o777).toBe(0o600)
   } finally {
