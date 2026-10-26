@@ -17,6 +17,7 @@ import { HostAgentExecution } from "./handlers/agent-execution"
 import { ClaudeAccount } from "@orchestra/core/claude-account"
 import { ClaudeCodeAccount } from "@orchestra/engine-claude-code/v2/account"
 import { Credential } from "@orchestra/core/credential"
+import { Board } from "@orchestra/core/board/board"
 import { Workspace } from "@/control-plane/workspace"
 import { Env } from "@/env"
 import { EventV2Bridge } from "@/event-v2-bridge"
@@ -296,6 +297,7 @@ const app = LayerNode.group([
   PtyTicket.node,
   ArsenalBindings.node,
   ClaudeAccount.node,
+  Board.node,
 ])
 
 export function createRoutes(

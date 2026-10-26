@@ -6,27 +6,27 @@ import { mapClientError } from "./client-error"
 
 type RawClient = HttpApiClient.ForApi<typeof ClientApi>
 
-type Endpoint32_0Request = Parameters<RawClient["server.schedule"]["schedule.list"]>[0]
-type Endpoint32_0Input = { readonly location?: Endpoint32_0Request["query"]["location"] }
-const Endpoint32_0 = (raw: RawClient["server.schedule"]) => (input?: Endpoint32_0Input) =>
+type Endpoint33_0Request = Parameters<RawClient["server.schedule"]["schedule.list"]>[0]
+type Endpoint33_0Input = { readonly location?: Endpoint33_0Request["query"]["location"] }
+const Endpoint33_0 = (raw: RawClient["server.schedule"]) => (input?: Endpoint33_0Input) =>
   raw["schedule.list"]({
     query: { ...(input?.["location"] === undefined ? {} : { location: input?.["location"] }) },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint32_1Request = Parameters<RawClient["server.schedule"]["schedule.create"]>[0]
-type Endpoint32_1Input = {
-  readonly location?: Endpoint32_1Request["query"]["location"]
-  readonly id?: Endpoint32_1Request["payload"]["id"]
-  readonly name: Endpoint32_1Request["payload"]["name"]
-  readonly prompt: Endpoint32_1Request["payload"]["prompt"]
-  readonly cadence: Endpoint32_1Request["payload"]["cadence"]
-  readonly next: Endpoint32_1Request["payload"]["next"]
-  readonly timezone: Endpoint32_1Request["payload"]["timezone"]
-  readonly minute?: Endpoint32_1Request["payload"]["minute"]
-  readonly enabled?: Endpoint32_1Request["payload"]["enabled"]
-  readonly history?: Endpoint32_1Request["payload"]["history"]
+type Endpoint33_1Request = Parameters<RawClient["server.schedule"]["schedule.create"]>[0]
+type Endpoint33_1Input = {
+  readonly location?: Endpoint33_1Request["query"]["location"]
+  readonly id?: Endpoint33_1Request["payload"]["id"]
+  readonly name: Endpoint33_1Request["payload"]["name"]
+  readonly prompt: Endpoint33_1Request["payload"]["prompt"]
+  readonly cadence: Endpoint33_1Request["payload"]["cadence"]
+  readonly next: Endpoint33_1Request["payload"]["next"]
+  readonly timezone: Endpoint33_1Request["payload"]["timezone"]
+  readonly minute?: Endpoint33_1Request["payload"]["minute"]
+  readonly enabled?: Endpoint33_1Request["payload"]["enabled"]
+  readonly history?: Endpoint33_1Request["payload"]["history"]
 }
-const Endpoint32_1 = (raw: RawClient["server.schedule"]) => (input: Endpoint32_1Input) =>
+const Endpoint33_1 = (raw: RawClient["server.schedule"]) => (input: Endpoint33_1Input) =>
   raw["schedule.create"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
     payload: {
@@ -42,18 +42,18 @@ const Endpoint32_1 = (raw: RawClient["server.schedule"]) => (input: Endpoint32_1
     },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint32_2Request = Parameters<RawClient["server.schedule"]["schedule.update"]>[0]
-type Endpoint32_2Input = {
-  readonly scheduleID: Endpoint32_2Request["params"]["scheduleID"]
-  readonly location?: Endpoint32_2Request["query"]["location"]
-  readonly name?: Endpoint32_2Request["payload"]["name"]
-  readonly prompt?: Endpoint32_2Request["payload"]["prompt"]
-  readonly cadence?: Endpoint32_2Request["payload"]["cadence"]
-  readonly next?: Endpoint32_2Request["payload"]["next"]
-  readonly timezone?: Endpoint32_2Request["payload"]["timezone"]
-  readonly enabled?: Endpoint32_2Request["payload"]["enabled"]
+type Endpoint33_2Request = Parameters<RawClient["server.schedule"]["schedule.update"]>[0]
+type Endpoint33_2Input = {
+  readonly scheduleID: Endpoint33_2Request["params"]["scheduleID"]
+  readonly location?: Endpoint33_2Request["query"]["location"]
+  readonly name?: Endpoint33_2Request["payload"]["name"]
+  readonly prompt?: Endpoint33_2Request["payload"]["prompt"]
+  readonly cadence?: Endpoint33_2Request["payload"]["cadence"]
+  readonly next?: Endpoint33_2Request["payload"]["next"]
+  readonly timezone?: Endpoint33_2Request["payload"]["timezone"]
+  readonly enabled?: Endpoint33_2Request["payload"]["enabled"]
 }
-const Endpoint32_2 = (raw: RawClient["server.schedule"]) => (input: Endpoint32_2Input) =>
+const Endpoint33_2 = (raw: RawClient["server.schedule"]) => (input: Endpoint33_2Input) =>
   raw["schedule.update"]({
     params: { scheduleID: input["scheduleID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
@@ -67,32 +67,32 @@ const Endpoint32_2 = (raw: RawClient["server.schedule"]) => (input: Endpoint32_2
     },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint32_3Request = Parameters<RawClient["server.schedule"]["schedule.remove"]>[0]
-type Endpoint32_3Input = {
-  readonly scheduleID: Endpoint32_3Request["params"]["scheduleID"]
-  readonly location?: Endpoint32_3Request["query"]["location"]
+type Endpoint33_3Request = Parameters<RawClient["server.schedule"]["schedule.remove"]>[0]
+type Endpoint33_3Input = {
+  readonly scheduleID: Endpoint33_3Request["params"]["scheduleID"]
+  readonly location?: Endpoint33_3Request["query"]["location"]
 }
-const Endpoint32_3 = (raw: RawClient["server.schedule"]) => (input: Endpoint32_3Input) =>
+const Endpoint33_3 = (raw: RawClient["server.schedule"]) => (input: Endpoint33_3Input) =>
   raw["schedule.remove"]({
     params: { scheduleID: input["scheduleID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint32_4Request = Parameters<RawClient["server.schedule"]["schedule.run"]>[0]
-type Endpoint32_4Input = {
-  readonly scheduleID: Endpoint32_4Request["params"]["scheduleID"]
-  readonly location?: Endpoint32_4Request["query"]["location"]
+type Endpoint33_4Request = Parameters<RawClient["server.schedule"]["schedule.run"]>[0]
+type Endpoint33_4Input = {
+  readonly scheduleID: Endpoint33_4Request["params"]["scheduleID"]
+  readonly location?: Endpoint33_4Request["query"]["location"]
 }
-const Endpoint32_4 = (raw: RawClient["server.schedule"]) => (input: Endpoint32_4Input) =>
+const Endpoint33_4 = (raw: RawClient["server.schedule"]) => (input: Endpoint33_4Input) =>
   raw["schedule.run"]({
     params: { scheduleID: input["scheduleID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
   }).pipe(Effect.mapError(mapClientError))
 
-export const adaptGroup32 = (raw: RawClient["server.schedule"]) => ({
-  list: Endpoint32_0(raw),
-  create: Endpoint32_1(raw),
-  update: Endpoint32_2(raw),
-  remove: Endpoint32_3(raw),
-  run: Endpoint32_4(raw),
+export const adaptGroup33 = (raw: RawClient["server.schedule"]) => ({
+  list: Endpoint33_0(raw),
+  create: Endpoint33_1(raw),
+  update: Endpoint33_2(raw),
+  remove: Endpoint33_3(raw),
+  run: Endpoint33_4(raw),
 })

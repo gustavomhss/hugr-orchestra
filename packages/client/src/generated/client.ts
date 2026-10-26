@@ -265,6 +265,35 @@ import type {
   ConfigUpdateInput,
   ConfigUpdateOutput,
   ConfigShellsOutput,
+  ServerBoardListOutput,
+  ServerBoardGetInput,
+  ServerBoardGetOutput,
+  ServerBoardIssueInput,
+  ServerBoardIssueOutput,
+  ServerBoardActivityInput,
+  ServerBoardActivityOutput,
+  ServerBoardAnswerInput,
+  ServerBoardAnswerOutput,
+  ServerBoardNoteInput,
+  ServerBoardNoteOutput,
+  ServerBoardAttachInput,
+  ServerBoardAttachOutput,
+  ServerBoardUndoInput,
+  ServerBoardUndoOutput,
+  ServerBoardPauseInput,
+  ServerBoardPauseOutput,
+  ServerBoardResumeInput,
+  ServerBoardResumeOutput,
+  ServerBoardPauseIssueInput,
+  ServerBoardPauseIssueOutput,
+  ServerBoardResumeIssueInput,
+  ServerBoardResumeIssueOutput,
+  ServerBoardHoldInput,
+  ServerBoardHoldOutput,
+  ServerBoardAcceptInput,
+  ServerBoardAcceptOutput,
+  ServerBoardDeclineInput,
+  ServerBoardDeclineOutput,
   ClaudeCodeAccountOutput,
   ClaudeCodeLoginOutput,
   ClaudeCodeLoginCodeInput,
@@ -2276,6 +2305,179 @@ export function make(options: ClientOptions) {
       shells: (requestOptions?: RequestOptions) =>
         request<ConfigShellsOutput>(
           { method: "GET", path: `/api/config/shells`, successStatus: 200, declaredStatuses: [401, 400], empty: false },
+          requestOptions,
+        ),
+    },
+    "server.board": {
+      list: (requestOptions?: RequestOptions) =>
+        request<ServerBoardListOutput>(
+          { method: "GET", path: `/api/board`, successStatus: 200, declaredStatuses: [401, 400], empty: false },
+          requestOptions,
+        ),
+      get: (input: ServerBoardGetInput, requestOptions?: RequestOptions) =>
+        request<ServerBoardGetOutput>(
+          {
+            method: "GET",
+            path: `/api/board/${encodeURIComponent(input.key)}`,
+            successStatus: 200,
+            declaredStatuses: [404, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      issue: (input: ServerBoardIssueInput, requestOptions?: RequestOptions) =>
+        request<ServerBoardIssueOutput>(
+          {
+            method: "GET",
+            path: `/api/board/${encodeURIComponent(input.key)}/issue/${encodeURIComponent(input.number)}`,
+            successStatus: 200,
+            declaredStatuses: [404, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      activity: (input: ServerBoardActivityInput, requestOptions?: RequestOptions) =>
+        request<ServerBoardActivityOutput>(
+          {
+            method: "GET",
+            path: `/api/board/${encodeURIComponent(input.key)}/activity`,
+            query: { since: input["since"] },
+            successStatus: 200,
+            declaredStatuses: [404, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      answer: (input: ServerBoardAnswerInput, requestOptions?: RequestOptions) =>
+        request<ServerBoardAnswerOutput>(
+          {
+            method: "POST",
+            path: `/api/board/${encodeURIComponent(input.key)}/question/${encodeURIComponent(input.id)}/answer`,
+            body: { option: input["option"], text: input["text"] },
+            successStatus: 200,
+            declaredStatuses: [404, 409, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      note: (input: ServerBoardNoteInput, requestOptions?: RequestOptions) =>
+        request<ServerBoardNoteOutput>(
+          {
+            method: "POST",
+            path: `/api/board/${encodeURIComponent(input.key)}/issue/${encodeURIComponent(input.number)}/note`,
+            body: { body: input["body"] },
+            successStatus: 200,
+            declaredStatuses: [404, 409, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      attach: (input: ServerBoardAttachInput, requestOptions?: RequestOptions) =>
+        request<ServerBoardAttachOutput>(
+          {
+            method: "POST",
+            path: `/api/board/${encodeURIComponent(input.key)}/issue/${encodeURIComponent(input.number)}/attachment`,
+            body: {
+              kind: input["kind"],
+              name: input["name"],
+              mime: input["mime"],
+              data: input["data"],
+              value: input["value"],
+            },
+            successStatus: 200,
+            declaredStatuses: [404, 409, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      undo: (input: ServerBoardUndoInput, requestOptions?: RequestOptions) =>
+        request<ServerBoardUndoOutput>(
+          {
+            method: "POST",
+            path: `/api/board/${encodeURIComponent(input.key)}/activity/${encodeURIComponent(input.id)}/undo`,
+            successStatus: 200,
+            declaredStatuses: [404, 409, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      pause: (input: ServerBoardPauseInput, requestOptions?: RequestOptions) =>
+        request<ServerBoardPauseOutput>(
+          {
+            method: "POST",
+            path: `/api/board/${encodeURIComponent(input.key)}/pause`,
+            body: { reason: input["reason"] },
+            successStatus: 200,
+            declaredStatuses: [404, 409, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      resume: (input: ServerBoardResumeInput, requestOptions?: RequestOptions) =>
+        request<ServerBoardResumeOutput>(
+          {
+            method: "POST",
+            path: `/api/board/${encodeURIComponent(input.key)}/resume`,
+            successStatus: 200,
+            declaredStatuses: [404, 409, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      pauseIssue: (input: ServerBoardPauseIssueInput, requestOptions?: RequestOptions) =>
+        request<ServerBoardPauseIssueOutput>(
+          {
+            method: "POST",
+            path: `/api/board/${encodeURIComponent(input.key)}/issue/${encodeURIComponent(input.number)}/pause`,
+            successStatus: 200,
+            declaredStatuses: [404, 409, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      resumeIssue: (input: ServerBoardResumeIssueInput, requestOptions?: RequestOptions) =>
+        request<ServerBoardResumeIssueOutput>(
+          {
+            method: "POST",
+            path: `/api/board/${encodeURIComponent(input.key)}/issue/${encodeURIComponent(input.number)}/resume`,
+            successStatus: 200,
+            declaredStatuses: [404, 409, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      hold: (input: ServerBoardHoldInput, requestOptions?: RequestOptions) =>
+        request<ServerBoardHoldOutput>(
+          {
+            method: "POST",
+            path: `/api/board/${encodeURIComponent(input.key)}/issue/${encodeURIComponent(input.number)}/hold`,
+            body: { hold: input["hold"] },
+            successStatus: 200,
+            declaredStatuses: [404, 409, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      accept: (input: ServerBoardAcceptInput, requestOptions?: RequestOptions) =>
+        request<ServerBoardAcceptOutput>(
+          {
+            method: "POST",
+            path: `/api/board/${encodeURIComponent(input.key)}/intake/${encodeURIComponent(input.number)}/accept`,
+            successStatus: 200,
+            declaredStatuses: [404, 409, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      decline: (input: ServerBoardDeclineInput, requestOptions?: RequestOptions) =>
+        request<ServerBoardDeclineOutput>(
+          {
+            method: "POST",
+            path: `/api/board/${encodeURIComponent(input.key)}/intake/${encodeURIComponent(input.number)}/decline`,
+            successStatus: 200,
+            declaredStatuses: [404, 409, 401, 400],
+            empty: false,
+          },
           requestOptions,
         ),
     },
