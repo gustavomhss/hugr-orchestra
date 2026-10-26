@@ -63,6 +63,7 @@ export const groupNames = {
   "server.actionsTransfer": "actionsTransfers",
   "server.actionsSource": "actionsSource",
   "server.lsp": "server.lsp",
+  "server.board": "server.board",
   "server.capability.operator": "operator",
   "server.capability.connections": "connections",
   "server.capability.artifacts": "artifacts",
