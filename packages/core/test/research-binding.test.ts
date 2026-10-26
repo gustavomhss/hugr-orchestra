@@ -8,7 +8,7 @@ import { randomUUID } from "node:crypto"
 import { Research } from "@orchestra/schema/research"
 import { Project } from "@orchestra/schema/project"
 import { SessionID } from "@orchestra/schema/session-id"
-import { SessionV1 } from "@orchestra/schema/session-v1"
+import { SessionLegacyTranscript } from "../src/session/legacy-transcript"
 import { SessionMessage } from "@orchestra/schema/session-message"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { Agent } from "@orchestra/schema/agent"
@@ -63,16 +63,16 @@ export const researchFixture = <A, E>(run: (fixture: Fixture) => Effect.Effect<A
         taskId: `tsk_${randomUUID()}`, projectID, memberID: "jimmy", executionSessionID, authoritySessionID, source: "host",
       })
       const binding = yield* ResearchBinding.resolve(executionSessionID, projectID)
-      const assistant = SessionV1.Assistant.make({
-        id: SessionV1.MessageID.ascending(), sessionID: executionSessionID, role: "assistant", time: { created: 1 },
-        parentID: SessionV1.MessageID.ascending(), modelID: Model.ID.make("fixture"), providerID: Provider.ID.make("fixture"),
+      const assistant = SessionLegacyTranscript.Assistant.make({
+        id: SessionLegacyTranscript.MessageID.ascending(), sessionID: executionSessionID, role: "assistant", time: { created: 1 },
+        parentID: SessionLegacyTranscript.MessageID.ascending(), modelID: Model.ID.make("fixture"), providerID: Provider.ID.make("fixture"),
         mode: "jimmy", agent: "jimmy", path: { cwd: root, root }, cost: 0,
         tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
       })
       yield* database.db.insert(MessageTable).values({ id: assistant.id, session_id: executionSessionID, data: assistant }).run().pipe(Effect.orDie)
       const call = (callID: string = randomUUID()) => Effect.gen(function* () {
-        const part = SessionV1.ToolPart.make({
-          id: SessionV1.PartID.ascending(), sessionID: executionSessionID, messageID: assistant.id,
+        const part = SessionLegacyTranscript.ToolPart.make({
+          id: SessionLegacyTranscript.PartID.ascending(), sessionID: executionSessionID, messageID: assistant.id,
           type: "tool", callID, tool: "research_record", state: { status: "pending", input: {}, raw: "" },
         })
         yield* database.db.insert(PartTable).values({ id: part.id, session_id: executionSessionID, message_id: assistant.id, data: part }).run().pipe(Effect.orDie)

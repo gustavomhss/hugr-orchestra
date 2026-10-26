@@ -1,8 +1,9 @@
 import { expect } from "bun:test"
 import { Effect, Schema } from "effect"
-import { asc, eq } from "drizzle-orm"
+import { asc, eq, sql } from "drizzle-orm"
 import { EventV2 } from "@orchestra/core/event"
 import { EventSeal } from "@orchestra/core/event/seal"
+import { EventCompaction } from "../src/event/compaction"
 import { EventSequenceTable, EventTable } from "@orchestra/core/event/sql"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
@@ -175,20 +176,13 @@ it.live("sequence-only gap with valid recomputed hashes and links stays BROKEN",
 it.live("real snapshot compaction leaves physical middle gap UNKNOWN, retained corruption BROKEN", () =>
   Effect.gen(function* () {
     const f = yield* seed
-    const one = { ...f.rows[1], type: "message.updated.1", data: { info: { id: "same-message", text: "one" } } }
-    const firstSeal = EventSeal.sealRow(one, f.rows[0])
-    const two = { ...f.rows[2], type: "message.updated.1", data: { info: { id: "same-message", text: "two" } } }
-    yield* f.database.db
-      .update(EventTable)
-      .set({ type: one.type, data: one.data, ...firstSeal })
-      .where(eq(EventTable.id, one.id))
-      .run()
-    yield* f.database.db
-      .update(EventTable)
-      .set({ type: two.type, data: two.data, ...EventSeal.sealRow(two, firstSeal) })
-      .where(eq(EventTable.id, two.id))
-      .run()
-    expect((yield* EventV2.compactSnapshotEvents(f.database.db)).removed).toBe(1)
+    const one = f.rows[1]
+    const two = f.rows[2]
+    // Compaction as the retire-legacy-events migration does it: delete durable rows, then record the marker.
+    yield* f.database.db.delete(EventTable).where(eq(EventTable.id, one.id)).run()
+    yield* f.database.db.run(
+      sql`INSERT OR REPLACE INTO data_migration (name, time_completed) VALUES (${EventCompaction.SNAPSHOT_COMPACTION_MARKER}, ${Date.now()})`,
+    )
     expect(yield* f.database.db.select().from(EventTable).where(eq(EventTable.id, one.id)).get()).toBeUndefined()
     expect(yield* f.events.verifySealWindow(f.input)).toMatchObject({
       status: "UNKNOWN",
@@ -199,7 +193,7 @@ it.live("real snapshot compaction leaves physical middle gap UNKNOWN, retained c
     })
     yield* f.database.db
       .update(EventTable)
-      .set({ data: { info: { id: "same-message", text: "changed" } } })
+      .set({ data: { aggregateID: f.aggregateID, value: "changed" } })
       .where(eq(EventTable.id, two.id))
       .run()
     expect((yield* f.events.verifySealWindow(f.input)).status).toBe("BROKEN")

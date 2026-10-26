@@ -22,7 +22,6 @@ import { Prompt } from "@orchestra/core/session/prompt"
 import { SessionProjector } from "@orchestra/core/session/projector"
 import { SessionInputTable, SessionMessageTable } from "@orchestra/core/session/sql"
 import { SessionStore } from "@orchestra/core/session/store"
-import { SessionV1 } from "@orchestra/schema/session-v1"
 import { PromptContext } from "@orchestra/schema/prompt-context"
 import { tmpdir } from "./fixture/tmpdir"
 import { testEffect } from "./lib/effect"
@@ -169,7 +168,7 @@ it.live("retains current-source Session state in a committed WAL snapshot and ac
       ])
       expect(state.admitted[1]).not.toHaveProperty("promotedSeq")
       expect(state.events.map((event) => [event.seq, event.type])).toEqual([
-        [0, EventV2.versionedType(SessionV1.Event.Created.type, 1)],
+        [0, EventV2.versionedType(SessionEvent.Created.type, 1)],
         [1, EventV2.versionedType(SessionEvent.PromptAdmitted.type, 1)],
         [2, EventV2.versionedType(SessionEvent.PromptAdmitted.type, 1)],
         [3, EventV2.versionedType(SessionEvent.PromptAdmitted.type, 1)],

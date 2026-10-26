@@ -1,7 +1,7 @@
 import { describe, expect } from "bun:test"
-import { Effect, Layer } from "effect"
+import { DateTime, Effect, Layer } from "effect"
 import { EventV2 } from "@orchestra/core/event"
-import { SessionV1 } from "@orchestra/schema/session-v1"
+import { SessionEvent } from "@orchestra/schema/session-event"
 import { Database } from "@orchestra/core/database/database"
 import { Session } from "@orchestra/schema/session"
 import { EventSequenceTable, EventTable } from "@orchestra/core/event/sql"
@@ -24,24 +24,7 @@ const it = testEffect(
   AppNodeBuilder.build(LayerNode.group([Database.node, EventV2.node, Location.node]), [[Location.node, locationLayer]]),
 )
 
-const messageUpdated = (
-  sid: Session.ID,
-  mid: SessionV1.MessageID,
-): EventV2.Data<typeof SessionV1.Event.MessageUpdated> =>
-  ({
-    sessionID: sid,
-    info: {
-      role: "user",
-      sessionID: sid,
-      id: mid,
-      time: { created: 1 },
-      files: [],
-      agents: [],
-      text: "hello",
-      agent: "maestro",
-      model: { providerID: "openrouter", modelID: "test/model" },
-    },
-  }) as never
+const renamed = (sid: Session.ID) => ({ sessionID: sid, timestamp: DateTime.makeUnsafe(1), title: "renamed" })
 
 describe("EventV2.publish persist gate", () => {
   it.effect("persist:false skips the event log entirely", () =>
@@ -49,9 +32,8 @@ describe("EventV2.publish persist gate", () => {
       const events = yield* EventV2.Service
       const { db } = yield* Database.Service
       const sid = Session.ID.create()
-      const mid = SessionV1.MessageID.ascending()
 
-      const notified = yield* events.publish(SessionV1.Event.MessageUpdated, messageUpdated(sid, mid), {
+      const notified = yield* events.publish(SessionEvent.Renamed, renamed(sid), {
         persist: false,
       })
 
@@ -71,7 +53,7 @@ describe("EventV2.publish persist gate", () => {
       expect(eventRows).toHaveLength(0)
       expect(seqRows).toHaveLength(0)
       // Payload still delivered to the caller (and thus to PubSub/SSE).
-      expect(notified.type).toBe("message.updated")
+      expect(notified.type).toBe("session.next.renamed")
       expect(notified.durable).toBeUndefined()
     }),
   )
@@ -81,9 +63,8 @@ describe("EventV2.publish persist gate", () => {
       const events = yield* EventV2.Service
       const { db } = yield* Database.Service
       const sid = Session.ID.create()
-      const mid = SessionV1.MessageID.ascending()
 
-      yield* events.publish(SessionV1.Event.MessageUpdated, messageUpdated(sid, mid))
+      yield* events.publish(SessionEvent.Renamed, renamed(sid))
 
       const eventRows = yield* db
         .select()

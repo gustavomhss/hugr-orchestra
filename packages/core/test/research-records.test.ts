@@ -1,12 +1,13 @@
 import { describe, expect } from "bun:test"
-import { Cause, Effect, Exit, Layer, Schema } from "effect"
+import { Cause, DateTime, Effect, Exit, Layer, Schema } from "effect"
 import { and, eq, sql } from "drizzle-orm"
 import path from "node:path"
 import { Research } from "@orchestra/schema/research"
-import { SessionV1 } from "@orchestra/schema/session-v1"
+import { SessionEvent } from "@orchestra/schema/session-event"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
 import { EventTable } from "@orchestra/core/event/sql"
+import { EventCompaction } from "../src/event/compaction"
 import { ResearchRecords } from "@orchestra/core/research/records"
 import { ResearchArtifacts } from "@orchestra/core/research/artifacts"
 import { MessageTable } from "@orchestra/core/session/sql"
@@ -79,10 +80,12 @@ describe("research durable records", () => {
       const ref = { id: found.record.id, revision: 1 }
       const row = yield* database.db.select().from(MessageTable).where(sql`${MessageTable.id} = ${fixture.context.assistantMessageID}`).get().pipe(Effect.orDie)
       if (!row) throw new Error("Expected real assistant projection")
-      const assistant = Schema.decodeUnknownSync(SessionV1.Assistant)(row.data)
-      yield* events.publish(SessionV1.Event.MessageUpdated, { sessionID: fixture.binding.executionSessionID, info: assistant })
-      yield* events.publish(SessionV1.Event.MessageUpdated, { sessionID: fixture.binding.executionSessionID, info: { ...assistant, time: { created: 1, completed: 2 } } })
-      expect((yield* EventV2.compactSnapshotEvents(database.db)).removed).toBe(1)
+      // Snapshot maintenance as the retire-legacy-events migration does it: delete a retained Session row, record the marker.
+      const sessionID = fixture.binding.executionSessionID
+      const stale = yield* events.publish(SessionEvent.Renamed, { sessionID, timestamp: DateTime.makeUnsafe(1), title: "stale" })
+      yield* events.publish(SessionEvent.Renamed, { sessionID, timestamp: DateTime.makeUnsafe(2), title: "current" })
+      yield* database.db.delete(EventTable).where(eq(EventTable.id, stale.id)).run().pipe(Effect.orDie)
+      yield* database.db.run(sql`INSERT OR REPLACE INTO data_migration (name, time_completed) VALUES (${EventCompaction.SNAPSHOT_COMPACTION_MARKER}, ${Date.now()})`).pipe(Effect.orDie)
       expect(yield* records.view(fixture.binding, { action: "record", ref })).toEqual(found.record)
       const script = `
         import { Effect, Schema } from "effect"
@@ -133,7 +136,7 @@ describe("research durable records", () => {
       const records = yield* ResearchRecords.Service
       const events = yield* EventV2.Service
       const database = yield* Database.Service
-      const local = yield* events.publish(SessionV1.Event.MessageRemoved, { sessionID: fixture.binding.executionSessionID, messageID: SessionV1.MessageID.ascending() }, { persist: false })
+      const local = yield* events.publish(SessionEvent.Renamed, { sessionID: fixture.binding.executionSessionID, timestamp: DateTime.makeUnsafe(1), title: "local" }, { persist: false })
       expect(local.durable).toBeUndefined()
       const first = yield* callFrame(fixture.binding, fixture.context, records.record(fixture.binding, fixture.context, finding))
       const second = yield* callFrame(fixture.binding, fixture.context, records.record(fixture.binding, fixture.context, {
