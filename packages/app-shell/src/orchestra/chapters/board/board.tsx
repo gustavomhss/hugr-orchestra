@@ -4,6 +4,7 @@ import type { ServerBoardListOutput } from "@orchestra/client"
 import { useLanguage } from "@/context/language"
 import { useServerSDK } from "@/context/server-sdk"
 import { MxBadge, MxToggle } from "../kit"
+import { DecisionsPanel, MoneyPanel, ProofPanel, SettingsPanel, SpendChip } from "./money"
 import {
   age,
   across,
@@ -23,8 +24,11 @@ import {
   waitingOn,
   type Column,
   type Issue,
+  type Decision,
   type Page,
+  type Proof,
   type Snapshot,
+  type SpendReport,
   type Trail,
 } from "./model"
 import { actionKey, actorKey, healthKey, shippedKey, stageKey } from "./keys"
@@ -36,7 +40,7 @@ import { EpicPage, ListView, Overview, Timeline, ViewSwitch } from "./views"
 import type { View } from "./plan"
 
 type Summary = ServerBoardListOutput[number]
-type Channel = "list" | "board" | "page"
+type Channel = "list" | "board" | "page" | "spend" | "decisions" | "proof"
 
 // Shipped is a compact log; older rows fold into a count.
 const shippedShown = 6
@@ -71,6 +75,13 @@ export default function Board() {
     secret: undefined as { name: string; value: string } | undefined,
     drop: undefined as string | undefined,
     inbox: false,
+    spend: undefined as SpendReport | undefined,
+    spendFailed: false,
+    decisions: undefined as readonly Decision[] | undefined,
+    decisionsFailed: false,
+    proof: undefined as Proof | undefined,
+    panel: undefined as "money" | "decisions" | "settings" | undefined,
+    decisionFocus: undefined as string | undefined,
   })
   const channels: Partial<Record<Channel, AbortController>> = {}
   const begin = (name: Channel) => {
@@ -109,6 +120,8 @@ export default function Board() {
           if (controller.signal.aborted) return
           setStore("snapshot", reconcile(result, { key: "id" }))
           setStore({ boardFailed: false, fetchedAt: Date.now() })
+          void loadSpend(key)
+          if (store.panel === "decisions") void loadDecisions(key)
           // Review cards show CI from the live git trail, which only the issue page carries.
           const review = result.issues.filter((issue) => issue.stage === "review" && issue.prNumber !== null)
           const pages = await Promise.allSettled(
@@ -128,10 +141,67 @@ export default function Board() {
       )
   }
 
+  // Spend, decisions and proof are extra reads: a failure leaves the board as it was and never replaces it.
+  const loadSpend = (key: string) => {
+    const controller = begin("spend")
+    return api()
+      .spend({ key }, { signal: controller.signal })
+      .then(
+        (result) => !controller.signal.aborted && setStore({ spend: result, spendFailed: false }),
+        () => !controller.signal.aborted && setStore({ spendFailed: true }),
+      )
+  }
+  const loadDecisions = (key: string) => {
+    const controller = begin("decisions")
+    return api()
+      .decisions({ key }, { signal: controller.signal })
+      .then(
+        (result) => !controller.signal.aborted && setStore({ decisions: result, decisionsFailed: false }),
+        () => !controller.signal.aborted && setStore({ decisionsFailed: true }),
+      )
+  }
+  const loadProof = (ref: string) => {
+    const issue = store.snapshot?.issues.find((item) => item.ref === ref)
+    if (!issue || !store.key) return
+    const controller = begin("proof")
+    return api()
+      .proof({ key: store.key, number: String(issue.number) }, { signal: controller.signal })
+      .then(
+        (result) => !controller.signal.aborted && setStore({ proof: result }),
+        () => undefined,
+      )
+  }
+  const openPanel = (panel: "money" | "decisions" | "settings", focus?: string) => {
+    setStore({ panel, peek: undefined, full: false, decisionFocus: focus })
+    if (panel === "decisions" && store.key) void loadDecisions(store.key)
+  }
+  const closePanel = () => setStore({ panel: undefined, decisionFocus: undefined })
+  // Settings and overturns answer with the server's own words when it refuses; undefined means it went through.
+  const settle = (run: (key: string) => Promise<unknown>, failed: string) => {
+    const key = store.key
+    if (!key) return Promise.resolve(failed)
+    return run(key).then(
+      () => {
+        void loadBoard(key)
+        void loadList()
+        return undefined
+      },
+      (error: unknown) => refusal(error) ?? failed,
+    )
+  }
+  const saveSettings = (input: { target_date?: number | null; budget_usd?: number | null; reason?: string }) =>
+    settle((key) => api().settings({ key, ...input }), t("orchestra.settings.failed"))
+  const overturn = (id: string, option: string, text: string) =>
+    settle(
+      (key) => api().decisionChange({ key, id, option, text: text.trim() || undefined }),
+      t("orchestra.decisions.failed"),
+    )
+
   const loadPage = (ref: string) => {
     const issue = store.snapshot?.issues.find((item) => item.ref === ref)
     if (!issue || !store.key) return
     const controller = begin("page")
+    void loadProof(ref)
     return api()
       .issue({ key: store.key, number: String(issue.number) }, { signal: controller.signal })
       .then(
@@ -239,13 +309,16 @@ export default function Board() {
   )
 
   const openProject = (key: string) => {
-    setStore({ key, snapshot: undefined, boardFailed: false, trails: {}, focused: undefined, peek: undefined, full: false })
+    setStore({ key, spend: undefined, decisions: undefined, proof: undefined, panel: undefined, snapshot: undefined, boardFailed: false, trails: {}, focused: undefined, peek: undefined, full: false })
     void loadBoard(key)
   }
   const closeProject = () => {
     channels.board?.abort()
     channels.page?.abort()
-    setStore({ key: undefined, snapshot: undefined, peek: undefined, page: undefined, full: false })
+    channels.spend?.abort()
+    channels.decisions?.abort()
+    channels.proof?.abort()
+    setStore({ key: undefined, spend: undefined, decisions: undefined, proof: undefined, panel: undefined, snapshot: undefined, peek: undefined, page: undefined, full: false })
     void loadList()
   }
   const openPeek = (ref: string) => {
@@ -303,6 +376,8 @@ export default function Board() {
     if (!store.snapshot || store.inbox) return
     const key = event.key.length === 1 ? event.key.toLowerCase() : event.key
     const current = store.focused ?? store.peek
+    if (key === "Escape" && store.panel) return (event.preventDefault(), closePanel())
+    if (store.panel) return
     if (key === "Escape" && store.peek) return (event.preventDefault(), closePeek())
     // Typing a note or an answer never moves the board.
     const target = event.target as HTMLElement
@@ -700,6 +775,9 @@ export default function Board() {
                 {failure()}
               </p>
             )}
+          </Show>
+          <Show when={store.proof && store.proof.ref === issue().ref && store.proof}>
+            {(proof) => <ProofPanel proof={proof()} onDecision={(id) => openPanel("decisions", id)} />}
           </Show>
 
           <Show when={open().length > 0}>
@@ -1161,6 +1239,17 @@ export default function Board() {
                     </div>
                     <div class="board-head-end">
                       {needs()}
+                      <SpendChip
+                        spend={store.spend}
+                        paused={store.spend?.budget.state === "paused"}
+                        onOpen={() => openPanel("money")}
+                      />
+                      <button type="button" class="mx-btn" onClick={() => openPanel("decisions")}>
+                        {t("orchestra.decisions.open")}
+                      </button>
+                      <button type="button" class="mx-btn" onClick={() => openPanel("settings")}>
+                        {t("orchestra.settings.open")}
+                      </button>
                       <ViewSwitch view={view()} onChange={setView} />
                       <Show when={crew().length > 0}>
                         <div class="board-crew">
@@ -1311,6 +1400,39 @@ export default function Board() {
                       <DetailState full={false} />
                     </aside>
                   </Show>
+                  <Switch>
+                    <Match when={store.panel === "money" && store.spend}>
+                      {(spend) => (
+                        <MoneyPanel
+                          spend={spend()}
+                          failed={store.spendFailed}
+                          epicTitle={(number) => epics().get(number)}
+                          cardTitle={(number) => snapshot().issues.find((item) => item.number === number)?.title}
+                          onSettings={() => openPanel("settings")}
+                          onCard={(ref) => (closePanel(), openPeek(ref))}
+                          onClose={closePanel}
+                        />
+                      )}
+                    </Match>
+                    <Match when={store.panel === "decisions"}>
+                      <DecisionsPanel
+                        decisions={store.decisions}
+                        failed={store.decisionsFailed}
+                        focus={store.decisionFocus}
+                        cardRef={(number) => snapshot().issues.find((item) => item.number === number)?.ref}
+                        onOverturn={overturn}
+                        onClose={closePanel}
+                      />
+                    </Match>
+                    <Match when={store.panel === "settings"}>
+                      <SettingsPanel
+                        targetDate={snapshot().project.targetDate}
+                        budgetUsd={snapshot().project.budgetUsd}
+                        onSave={saveSettings}
+                        onClose={closePanel}
+                      />
+                    </Match>
+                  </Switch>
                 </>
               )}
             </Match>
