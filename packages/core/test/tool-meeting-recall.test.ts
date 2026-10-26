@@ -109,6 +109,7 @@ const seed = Effect.gen(function* () {
         state: "accepted",
       }),
       item("mtg_new", "itm_5", "commitment", "Draft the contract", { owner: "per_ana", state: "proposed" }),
+      item("mtg_old", "itm_6", "commitment", "Book the venue", { owner: "me", state: "done" }),
     ])
     .run()
     .pipe(Effect.orDie)
@@ -168,6 +169,10 @@ describe("MeetingRecallTool", () => {
       const mine = yield* executeTool(registry, call("live", MeetingRecallTool.commitmentsName, { direction: "mine" }))
       expect(mine.value).toContain("Send the deck")
       expect(mine.value).not.toContain("Draft the contract")
+      expect(mine.value).not.toContain("Book the venue")
+      const done = yield* executeTool(registry, call("live", MeetingRecallTool.commitmentsName, { state: "done" }))
+      expect(done.value).toContain("Book the venue")
+      expect(done.value).not.toContain("Send the deck")
       const theirs = yield* executeTool(
         registry,
         call("live", MeetingRecallTool.commitmentsName, { direction: "theirs" }),

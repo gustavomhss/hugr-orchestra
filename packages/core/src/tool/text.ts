@@ -29,7 +29,7 @@ Filter by words (query), a person's name or alias, a date range (since, until) o
 Label what you say from it as [From memory: person, date, "title"]. When nothing comes back, say nothing is stored; do not guess.`
 
 export const meetingCommitments = `List commitments from earlier meetings: what the owner owes (mine) and what others owe the owner (theirs). Read only.
-Filter by person, direction and state (proposed, accepted, done, overdue, dropped). Label what you say from it as [From memory: person, date, "title"].`
+Filter by person, direction and state. Only open commitments (proposed, accepted, overdue) come back unless you ask for done or dropped. Label what you say from it as [From memory: person, date, "title"].`
 
 export const answered = (
   questions: ReadonlyArray<{ readonly question: string }>,

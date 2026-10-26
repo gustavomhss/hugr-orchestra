@@ -50,7 +50,9 @@ export const CommitmentsInput = Schema.Struct({
   direction: Schema.optional(Schema.Literals(["mine", "theirs"])).annotate({
     description: "mine: the owner owes it. theirs: someone else owes it",
   }),
-  state: Schema.optional(Schema.Literals(["proposed", "accepted", "done", "overdue", "dropped"])),
+  state: Schema.optional(Schema.Literals(["open", "proposed", "accepted", "done", "overdue", "dropped"])).annotate({
+    description: "open (the default): proposed, accepted or overdue",
+  }),
 })
 
 export const CommitmentsOutput = Schema.Struct({
@@ -176,7 +178,9 @@ const layer = Layer.effectDiscard(
               const owner = sql`coalesce(${MeetingItemTable.owner}, 'me')`
               const found = yield* find(input.person, [
                 sql`${MeetingItemTable.kind} = 'commitment'`,
-                ...(input.state ? [sql`coalesce(${MeetingItemTable.state}, 'proposed') = ${input.state}`] : []),
+                (input.state ?? "open") === "open"
+                  ? sql`coalesce(${MeetingItemTable.state}, 'proposed') in ('proposed', 'accepted', 'overdue')`
+                  : sql`coalesce(${MeetingItemTable.state}, 'proposed') = ${input.state}`,
                 ...(input.direction === "mine" ? [sql`${owner} = 'me'`] : []),
                 ...(input.direction === "theirs" ? [sql`${owner} <> 'me'`] : []),
               ])
