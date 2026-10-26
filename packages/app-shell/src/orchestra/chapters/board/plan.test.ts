@@ -272,7 +272,8 @@ describe("timeline frame", () => {
   })
 
   test("a forecast range reads in UTC, so a midnight date never slips to the day before", () => {
-    expect(range(Date.UTC(2026, 10, 13), Date.UTC(2026, 10, 17), "en-US")).toBe("Nov 13\u2009–\u200917")
+    // ICU builds differ on the space around the dash (thin space on macOS, plain space on Linux).
+    expect(range(Date.UTC(2026, 10, 13), Date.UTC(2026, 10, 17), "en-US").replace(/\s/g, " ")).toBe("Nov 13 – 17")
     expect(range(Date.UTC(2026, 10, 13), Date.UTC(2026, 10, 13), "en-US")).toBe("Nov 13")
   })
 })
