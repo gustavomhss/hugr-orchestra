@@ -8,7 +8,7 @@ import type {
   LiveOverlaySource,
   LiveOverlayState,
   LiveOverlayView,
-} from "../main/live-overlay-state"
+} from "../../main/live-overlay-state"
 import "./live.css"
 
 // The live seat overlay. Main owns the state and pushes it whole; this window only draws it and reports clicks back.
