@@ -6,7 +6,7 @@ import { Meeting } from "@orchestra/schema/meeting"
 import type { Database } from "../database/database"
 import { Identifier } from "../util/identifier"
 import { MeetingSegmentTable, MeetingTable } from "./meeting.sql"
-import { commitmentOf, latest, peopleMap } from "./meeting-memory"
+import { card, commitmentOf, latest, peopleMap } from "./meeting-memory"
 import { MeetingItemTable, MeetingPersonTable, MeetingProposalTable } from "./meeting-memory.sql"
 
 // The owner's writes on the meeting card. Every write inserts a new revision or a new row; failures are plain reasons.
