@@ -6,6 +6,7 @@ import {
   LIVE_OVERLAY_MARGIN,
   pageAnswers,
   pushAnswer,
+  streamAnswer,
   windowHeight,
   windowWidth,
 } from "./live-overlay-state"
@@ -19,6 +20,19 @@ test("a new answer becomes the current page and paging stops at both ends", () =
   expect(pageAnswers(state, 1).answerIndex).toBe(2)
   expect(pageAnswers(pageAnswers(state, -1), -1).answerIndex).toBe(0)
   expect(pageAnswers(pageAnswers(pageAnswers(state, -1), -1), -1).answerIndex).toBe(0)
+})
+
+test("a streamed answer grows in place and pushing it ends the stream on the same page", () => {
+  const first = pushAnswer(initialState(true), answer("a"))
+  const streamed = [answer("b"), answer("bc")].reduce(streamAnswer, first)
+  expect(streamed.answers.map((item) => item.lead)).toEqual(["a", "bc"])
+  expect(streamed.answerIndex).toBe(1)
+  const paged = pageAnswers(streamed, -1)
+  const done = pushAnswer(paged, answer("bcd"))
+  expect(done.answers.map((item) => item.lead)).toEqual(["a", "bcd"])
+  expect(done.answers[1].streaming).toBeUndefined()
+  expect(done.answerIndex).toBe(0)
+  expect(pushAnswer(done, answer("e")).answers).toHaveLength(3)
 })
 
 test("paging with no answers leaves the view alone", () => {

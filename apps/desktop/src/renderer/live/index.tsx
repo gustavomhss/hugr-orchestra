@@ -17,6 +17,8 @@ import "./live.css"
 const copy = {
   label: "Live",
   listening: "Listening",
+  thinking: "Thinking…",
+  answering: "Answering…",
   answered: (seconds: string) => `Answered in ${seconds} s`,
   page: (index: number, total: number) => `${index} of ${total}`,
   ask: "Ask",
@@ -257,6 +259,27 @@ function Body(props: { view: LiveOverlayView; state: LiveOverlayState }) {
   return (
     <Switch>
       <Match when={props.view.kind === "answer" && answer()}>{(current) => <Answer answer={current()} />}</Match>
+      <Match when={props.view.kind === "thinking" && props.view}>
+        {(view) => (
+          <>
+            <div class="seam" />
+            <div class="sect">
+              <Show when={(view() as Extract<LiveOverlayView, { kind: "thinking" }>).question}>
+                {(question) => (
+                  <div class="q">
+                    <Icon id="ask" size="s14" />
+                    {question()}
+                  </div>
+                )}
+              </Show>
+              <p class="lead pending">
+                {copy.thinking}
+                <span class="caret" />
+              </p>
+            </div>
+          </>
+        )}
+      </Match>
       <Match when={props.view.kind === "quick"}>
         <div class="seam" />
         <Quick />
@@ -315,7 +338,12 @@ function Answer(props: { answer: LiveOverlayAnswer }) {
             {props.answer.question}
           </div>
         </Show>
-        <p class="lead">{props.answer.lead}</p>
+        <p class="lead">
+          {props.answer.lead}
+          <Show when={props.answer.streaming}>
+            <span class="caret" />
+          </Show>
+        </p>
         <ul class="pts">
           <For each={props.answer.points}>
             {(point) => (
@@ -337,18 +365,20 @@ function Answer(props: { answer: LiveOverlayAnswer }) {
           )}
         </For>
         <span class="flex" />
-        <button
-          class="ib"
-          title={copy.copy}
-          onClick={() =>
-            window.live.act({
-              kind: "copy",
-              text: [props.answer.lead, ...props.answer.points.map((point) => `- ${point.text}`)].join("\n"),
-            })
-          }
-        >
-          <Icon id="copy" />
-        </button>
+        <Show when={!props.answer.streaming}>
+          <button
+            class="ib"
+            title={copy.copy}
+            onClick={() =>
+              window.live.act({
+                kind: "copy",
+                text: [props.answer.lead, ...props.answer.points.map((point) => `- ${point.text}`)].join("\n"),
+              })
+            }
+          >
+            <Icon id="copy" />
+          </button>
+        </Show>
       </div>
     </>
   )
@@ -609,6 +639,8 @@ function status(state: LiveOverlayState) {
   if (error?.kind === "permission" && error.microphone === "denied") return copy.status.micOff
   if (error?.kind === "permission" && error.systemAudio === "denied") return copy.status.audioOff
   const answer = state.answers[state.answerIndex]
+  if (state.view.kind === "thinking") return copy.thinking
+  if (state.view.kind === "answer" && answer?.streaming) return copy.answering
   if (state.view.kind === "answer" && answer) return copy.answered((answer.latencyMs / 1000).toFixed(1))
   return copy.listening
 }

@@ -15,6 +15,7 @@ import {
   LIVE_OVERLAY_MOVE_STEP,
   pageAnswers,
   pushAnswer,
+  streamAnswer,
   windowHeight,
   windowWidth,
   type LiveOverlayAction,
@@ -245,7 +246,9 @@ export function registerLiveOverlay() {
     },
     show,
     hide,
+    // Stream with streamAnswer on each delta, then end with pushAnswer of the final answer.
     pushAnswer: (answer: LiveOverlayAnswer) => update(pushAnswer(state, answer)),
+    streamAnswer: (answer: LiveOverlayAnswer) => update(streamAnswer(state, answer)),
     setView: (view: LiveOverlayView) => update({ ...state, view }),
     setError: (error?: LiveOverlayError) => update({ ...state, error }),
     setContentProtection,
