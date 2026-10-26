@@ -64,7 +64,7 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
     setStore({ attempts: 0, missing: false, failed: false, unavailable: false })
     setStore("detail", undefined)
     setStore("receipt", undefined)
-    setDismissed(new Set())
+    setDismissed(new Set<string>())
     if (!source) return
     const load = (attempts: number) =>
       source
