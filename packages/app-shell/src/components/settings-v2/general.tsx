@@ -1,11 +1,12 @@
-import { Component, Show, createMemo, createResource } from "solid-js"
+import { Component, Show, createMemo, createResource, createSignal } from "solid-js"
 import { createMediaQuery } from "@solid-primitives/media"
 import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
 import { SelectV2 } from "@orchestra/ui/v2/select-v2"
 import { Switch } from "@orchestra/ui/v2/switch-v2"
 import { TextInputV2 } from "@orchestra/ui/v2/text-input-v2"
 import { useLanguage } from "@/context/language"
-import { usePlatform } from "@/context/platform"
+import { usePlatform, type LiveSeatPlatform } from "@/context/platform"
+import { startLiveMeeting } from "@/orchestra/live/commands"
 import { useUpdaterAction } from "../updater-action"
 import { useSettings } from "@/context/settings"
 import { SettingsListV2 } from "./parts/list"
@@ -542,8 +543,99 @@ export const SettingsGeneralV2: Component<{
 
         <DisplaySection />
 
+        <Show when={desktop() && platform.liveSeat}>{(seat) => <LiveSeatSection seat={seat()} />}</Show>
+
         <AdvancedSection />
       </div>
     </>
+  )
+}
+
+function LiveSeatSection(props: { seat: LiveSeatPlatform }) {
+  const language = useLanguage()
+  const [state, { mutate, refetch }] = createResource(() =>
+    Promise.all([props.seat.running(), props.seat.hasTranscriptionKey(), props.seat.getContentProtection()])
+      .then(([running, key, protection]) => ({ running, key, protection }))
+      .catch(() => ({ running: false, key: false, protection: true })),
+  )
+  const [key, setKey] = createSignal("")
+  const [busy, setBusy] = createSignal(false)
+  const run = (work: Promise<void>) => {
+    setBusy(true)
+    void work.finally(() => {
+      setBusy(false)
+      void refetch()
+    })
+  }
+  const toggleMeeting = () => run(state.latest?.running ? props.seat.stop() : startLiveMeeting(props.seat, language.t))
+  const saveKey = (value: string) => run(props.seat.setTranscriptionKey(value).then(() => void setKey("")))
+  const setProtection = (enabled: boolean) => {
+    mutate((current) => current && { ...current, protection: enabled })
+    void props.seat.setContentProtection(enabled).catch(() => refetch())
+  }
+
+  return (
+    <div class="settings-v2-section">
+      <h3 class="settings-v2-section-title">{language.t("settings.general.section.live")}</h3>
+
+      <SettingsListV2>
+        <SettingsRowV2
+          title={language.t("settings.live.meeting.title")}
+          description={language.t(
+            state.latest?.running ? "settings.live.meeting.running" : "settings.live.meeting.description",
+          )}
+        >
+          <ButtonV2 size="normal" variant="neutral" disabled={busy() || !state.latest} onClick={toggleMeeting}>
+            {language.t(state.latest?.running ? "live.command.stop" : "live.command.start")}
+          </ButtonV2>
+        </SettingsRowV2>
+
+        <SettingsRowV2
+          title={language.t("settings.live.key.title")}
+          description={language.t(state.latest?.key ? "settings.live.key.saved" : "settings.live.key.missing")}
+        >
+          <form
+            class="flex items-center gap-2"
+            data-action="settings-live-key"
+            onSubmit={(event) => {
+              event.preventDefault()
+              if (key().trim()) saveKey(key().trim())
+            }}
+          >
+            <TextInputV2
+              type="password"
+              appearance="base"
+              value={key()}
+              onInput={(event) => setKey(event.currentTarget.value)}
+              placeholder={language.t("settings.live.key.placeholder")}
+              spellcheck={false}
+              autocorrect="off"
+              autocomplete="off"
+              autocapitalize="off"
+              aria-label={language.t("settings.live.key.title")}
+            />
+            <ButtonV2 type="submit" size="normal" variant="neutral" disabled={busy() || !key().trim()}>
+              {language.t("settings.live.key.save")}
+            </ButtonV2>
+            <Show when={state.latest?.key}>
+              <ButtonV2 size="normal" variant="ghost" disabled={busy()} onClick={() => saveKey("")}>
+                {language.t("settings.live.key.remove")}
+              </ButtonV2>
+            </Show>
+          </form>
+        </SettingsRowV2>
+
+        <SettingsRowV2
+          title={language.t("settings.live.protection.title")}
+          description={language.t("settings.live.protection.description")}
+        >
+          <div data-action="settings-live-protection">
+            <Switch hideLabel checked={state.latest?.protection ?? true} onChange={setProtection}>
+              {language.t("settings.live.protection.title")}
+            </Switch>
+          </div>
+        </SettingsRowV2>
+      </SettingsListV2>
+    </div>
   )
 }
