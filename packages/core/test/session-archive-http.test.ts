@@ -103,6 +103,7 @@ it.live(
       const history = yield* request(`/api/session/${created.id}/history`)
       expect(yield* history.json).toMatchObject({
         data: [
+          { type: "session.next.created" },
           { type: "session.next.archive.changed", data: { archived: expect.any(Number) } },
           { type: "session.next.archive.changed", data: { archived: null } },
         ],

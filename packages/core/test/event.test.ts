@@ -74,13 +74,8 @@ const VersionedMessage = EventV2.define({
 
 // Any manifest durable event works here; replay resolves types through the durable manifest only.
 const DurableMessage = ResearchEvent.AllowanceCharged
-const durableData = (sessionID: Session.ID, text: string) => ({
-  sessionID,
-  dispatchCallID: `call_${text}`,
-  operation: "test",
-  kind: "tool" as const,
-  amount: 1,
-})
+const durableData = (sessionID: Session.ID, text: string) =>
+  ({ sessionID, dispatchCallID: `call_${text}`, operation: "test", kind: "tool" as const, amount: 1 })
 
 const it = testEffect(
   AppNodeBuilder.build(LayerNode.group([Database.node, EventV2.node, Location.node]), [[Location.node, locationLayer]]),

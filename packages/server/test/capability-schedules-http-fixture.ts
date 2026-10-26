@@ -22,6 +22,7 @@ import { SessionProjector } from "@orchestra/core/session/projector"
 import { SessionStore } from "@orchestra/core/session/store"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { TaskTool } from "@orchestra/core/tool/task"
+import { TeamMessageTool } from "@orchestra/core/tool/team-message"
 import { makeCapabilitySchedulesGroup } from "@orchestra/protocol/groups/capability-schedules"
 import type { Capability } from "@orchestra/schema/capability"
 import { AbsolutePath } from "@orchestra/schema/schema"
@@ -60,7 +61,7 @@ export function make() {
       const nodes = LayerNode.hoist(locationServices, Node.tags.values.global, [
         [ToolRegistry.node, ToolRegistry.nativeNode], [ToolRegistry.toolsNode, ToolRegistry.nativeToolsNode],
         // Task captures process-global Session services this focused host does not export.
-        [TaskTool.node, Layer.empty], [Location.node, Location.boundNode(ref)],
+        [TaskTool.node, Layer.empty], [TeamMessageTool.node, Layer.empty], [Location.node, Location.boundNode(ref)],
       ])
       return LayerNode.compile(nodes.node).pipe(Layer.fresh,
         Layer.provide(LayerNode.compile(nodes.hoisted, [[Database.node, databaseNode]])))

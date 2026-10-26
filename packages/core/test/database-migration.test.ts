@@ -18,7 +18,6 @@ import simplifyIntegrationCredentialsMigration from "@orchestra/core/database/mi
 import simplifySessionInputMigration from "@orchestra/core/database/migration/20260622202450_simplify_session_input"
 import promptContextMigration from "@orchestra/core/database/migration/20261008025417_prompt_context"
 import sessionListIndexesMigration from "@orchestra/core/database/migration/20261018031800_session_list_indexes"
-import retireLegacySessionEventsMigration from "../src/database/migration/20261026013700_retire_legacy_session_events"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { EventV2 } from "@orchestra/core/event"
@@ -462,60 +461,6 @@ describe("DatabaseMigration", () => {
           seq: 0,
           eventType: "session.next.renamed.1",
         })
-      }),
-    )
-  })
-
-  test("retires legacy Session event rows and records the compaction marker", async () => {
-    await run(
-      Effect.gen(function* () {
-        const db = yield* makeDb
-        yield* DatabaseMigration.apply(db)
-        const legacy = [
-          "session.created.1",
-          "session.updated.1",
-          "session.deleted.1",
-          "message.updated.1",
-          "message.removed.1",
-          "message.part.updated.1",
-          "message.part.removed.1",
-        ]
-        yield* db.run(sql`INSERT INTO event_sequence (aggregate_id, seq) VALUES ('session', ${legacy.length})`)
-        yield* Effect.forEach(legacy, (type, seq) =>
-          db.run(
-            sql`INSERT INTO event (id, aggregate_id, seq, type, data) VALUES (${`legacy_${seq}`}, 'session', ${seq}, ${type}, '{}')`,
-          ),
-        )
-        yield* db.run(
-          sql`INSERT INTO event (id, aggregate_id, seq, type, data) VALUES ('kept', 'session', ${legacy.length}, 'session.next.renamed.1', '{}')`,
-        )
-        yield* db.run(sql`DELETE FROM migration WHERE id = ${retireLegacySessionEventsMigration.id}`)
-        yield* DatabaseMigration.applyOnly(db, [retireLegacySessionEventsMigration])
-
-        expect(yield* db.all(sql`SELECT id, type FROM event ORDER BY seq`)).toEqual([
-          { id: "kept", type: "session.next.renamed.1" },
-        ])
-        expect(yield* db.all(sql`SELECT name FROM data_migration WHERE name = 'event_snapshot_compaction'`)).toEqual([
-          { name: "event_snapshot_compaction" },
-        ])
-      }),
-    )
-  })
-
-  test("records no compaction marker when no legacy Session event rows exist", async () => {
-    await run(
-      Effect.gen(function* () {
-        const db = yield* makeDb
-        yield* DatabaseMigration.apply(db)
-        yield* db.run(sql`INSERT INTO event_sequence (aggregate_id, seq) VALUES ('session', 0)`)
-        yield* db.run(
-          sql`INSERT INTO event (id, aggregate_id, seq, type, data) VALUES ('kept', 'session', 0, 'session.next.renamed.1', '{}')`,
-        )
-        yield* db.run(sql`DELETE FROM migration WHERE id = ${retireLegacySessionEventsMigration.id}`)
-        yield* DatabaseMigration.applyOnly(db, [retireLegacySessionEventsMigration])
-
-        expect(yield* db.all(sql`SELECT id FROM event`)).toEqual([{ id: "kept" }])
-        expect(yield* db.all(sql`SELECT name FROM data_migration WHERE name = 'event_snapshot_compaction'`)).toEqual([])
       }),
     )
   })

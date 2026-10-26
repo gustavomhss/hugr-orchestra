@@ -73,9 +73,9 @@ test("embedded client uses the real router and handlers", async () => {
         Effect.map(Option.getOrThrow),
       )
       const wakeContext = yield* orchestra.sessions.context({ sessionID })
-      const event = yield* orchestra.sessions
+      const events = yield* orchestra.sessions
         .events({ sessionID })
-        .pipe(Stream.take(1), Stream.runHead, Effect.map(Option.getOrUndefined))
+        .pipe(Stream.take(2), Stream.runCollect)
       const modelMessage = Option.fromNullishOr(context.find((message) => message.type === "model-switched")).pipe(
         Option.getOrThrow,
       )
@@ -109,7 +109,10 @@ test("embedded client uses the real router and handlers", async () => {
       expect(prompted.type).toBe("session.next.prompted")
       expect(wakeContext).toContainEqual(expect.objectContaining({ id: wake.id, type: "user" }))
       expect(context.some((message) => message.type === "model-switched")).toBe(true)
-      expect(event).toMatchObject({ type: "session.next.model.switched", durable: { seq: 1 } })
+      expect(Array.from(events)).toMatchObject([
+        { type: "session.next.created", durable: { seq: 0 } },
+        { type: "session.next.model.switched", durable: { seq: 1 } },
+      ])
       expect(message).toEqual(modelMessage)
       expect(missing.map((error) => error._tag)).toEqual([
         "SessionNotFoundError",
