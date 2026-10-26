@@ -50,7 +50,7 @@ runs:
       shell: bash
       run: |
         echo "bun=${{ runner.os }}-${{ runner.arch }}-bun-v3-${{ hashFiles('bun.lock') }}" >> "$GITHUB_OUTPUT"
-        echo "modules=${{ runner.os }}-${{ runner.arch }}-modules-v2-${{ hashFiles('bun.lock', 'patches/**', 'package.json') }}" >> "$GITHUB_OUTPUT"
+        echo "modules=${{ runner.os }}-${{ runner.arch }}-modules-v3-${{ hashFiles('bun.lock', 'patches/**', 'package.json') }}" >> "$GITHUB_OUTPUT"
 
     # Every platform reuses the installed tree: on Linux a restore takes about 15 s where `bun install` from Bun's
     # package cache took about 50 s, and Windows cannot reuse Bun's package cache at all (see the install step).
@@ -68,6 +68,7 @@ runs:
           modules/*/node_modules
           modules/*/*/node_modules
           tooling/*/node_modules
+          native/*/*/node_modules
         key: ${{ steps.keys.outputs.modules }}
 
     - name: Restore Bun dependencies
@@ -135,4 +136,5 @@ runs:
           modules/*/node_modules
           modules/*/*/node_modules
           tooling/*/node_modules
+          native/*/*/node_modules
         key: ${{ steps.keys.outputs.modules }}

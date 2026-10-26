@@ -1,6 +1,6 @@
 import { Board } from "@orchestra/schema/board"
 import { PositiveInt } from "@orchestra/schema/schema"
-import { Schema } from "effect"
+import { Schema, SchemaGetter } from "effect"
 import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/unstable/httpapi"
 
 export class BoardNotFoundError extends Schema.TaggedErrorClass<BoardNotFoundError>()(
@@ -20,14 +20,32 @@ const errors = [BoardNotFoundError, BoardRefusedError]
 const IssueNumber = Schema.NumberFromString.pipe(Schema.decodeTo(PositiveInt))
 const project = { key: Schema.String }
 const issue = { key: Schema.String, number: IssueNumber }
+const child = { ...issue, id: Schema.String }
 
 const doc = (identifier: string, summary: string, description: string) =>
   OpenApi.annotations({ identifier: `v2.board.${identifier}`, summary, description })
 
 export const BoardGroup = HttpApiGroup.make("server.board")
   .add(
-    HttpApiEndpoint.get("board.list", "/api/board", { success: Schema.Array(Board.Summary) }).annotateMerge(
-      doc("list", "List board projects", "Board projects with issue counts per stage, open questions, health and GitHub state."),
+    HttpApiEndpoint.get("board.list", "/api/board", {
+      query: Schema.Struct({
+        archived: Schema.Literals(["true", "false"])
+          .pipe(
+            Schema.decodeTo(Schema.Boolean, {
+              decode: SchemaGetter.transform((value) => value === "true"),
+              encode: SchemaGetter.transform((value) => (value ? ("true" as const) : ("false" as const))),
+            }),
+            Schema.optional,
+          )
+          .annotate({ description: "Include archived projects. Defaults to false." }),
+      }),
+      success: Schema.Array(Board.Summary),
+    }).annotateMerge(
+      doc(
+        "list",
+        "List board projects",
+        "Board projects with issue counts per stage, open questions, health, forecast and GitHub state.",
+      ),
     ),
   )
   .add(
@@ -35,7 +53,13 @@ export const BoardGroup = HttpApiGroup.make("server.board")
       params: project,
       success: Board.Snapshot,
       error: BoardNotFoundError,
-    }).annotateMerge(doc("get", "Read a board", "A board project's epics, issues with steps and open questions.")),
+    }).annotateMerge(
+      doc(
+        "get",
+        "Read a board",
+        "A board project's epics, issues with steps, open questions, project and epic forecasts and scope history.",
+      ),
+    ),
   )
   .add(
     HttpApiEndpoint.get("board.issue", "/api/board/:key/issue/:number", {
@@ -75,6 +99,23 @@ export const BoardGroup = HttpApiGroup.make("server.board")
     }).annotateMerge(doc("note", "Add a note", "Add an owner note to an issue.")),
   )
   .add(
+    HttpApiEndpoint.patch("board.noteEdit", "/api/board/:key/issue/:number/note/:id", {
+      params: child,
+      payload: Board.NoteInput,
+      success: Board.OwnerResult,
+      error: errors,
+    }).annotateMerge(doc("noteEdit", "Edit a note", "Edit one of the owner's notes; GitHub and Maestro notes are refused.")),
+  )
+  .add(
+    HttpApiEndpoint.delete("board.noteDelete", "/api/board/:key/issue/:number/note/:id", {
+      params: child,
+      success: Board.OwnerResult,
+      error: errors,
+    }).annotateMerge(
+      doc("noteDelete", "Delete a note", "Delete one of the owner's notes; GitHub and Maestro notes are refused."),
+    ),
+  )
+  .add(
     HttpApiEndpoint.post("board.attach", "/api/board/:key/issue/:number/attachment", {
       params: issue,
       payload: Board.AttachmentInput,
@@ -85,6 +126,19 @@ export const BoardGroup = HttpApiGroup.make("server.board")
         "attach",
         "Attach to an issue",
         "Attach a base64 file, or a secret whose value goes only to the credential store and is never returned.",
+      ),
+    ),
+  )
+  .add(
+    HttpApiEndpoint.delete("board.attachmentRemove", "/api/board/:key/issue/:number/attachment/:id", {
+      params: child,
+      success: Board.OwnerResult,
+      error: errors,
+    }).annotateMerge(
+      doc(
+        "attachmentRemove",
+        "Remove an attachment",
+        "Remove an attachment; a secret's credential is deleted with it and its value is never returned.",
       ),
     ),
   )
@@ -111,6 +165,22 @@ export const BoardGroup = HttpApiGroup.make("server.board")
       success: Board.OwnerResult,
       error: errors,
     }).annotateMerge(doc("resume", "Resume a project", "Let Maestro write to the project again.")),
+  )
+  .add(
+    HttpApiEndpoint.post("board.archive", "/api/board/:key/archive", {
+      params: project,
+      success: Board.OwnerResult,
+      error: errors,
+    }).annotateMerge(
+      doc("archive", "Archive a project", "Hide a shipped or paused project from the board list; refused otherwise."),
+    ),
+  )
+  .add(
+    HttpApiEndpoint.post("board.unarchive", "/api/board/:key/unarchive", {
+      params: project,
+      success: Board.OwnerResult,
+      error: errors,
+    }).annotateMerge(doc("unarchive", "Unarchive a project", "Bring an archived project back, paused.")),
   )
   .add(
     HttpApiEndpoint.post("board.githubSync", "/api/board/:key/github/sync", {

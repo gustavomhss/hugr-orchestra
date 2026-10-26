@@ -9,16 +9,25 @@ export const BoardHandler = HttpApiBuilder.group(Api, "server.board", (handlers)
     const board = yield* Board.Service
 
     return handlers
-      .handle("board.list", () => board.summaries())
+      .handle("board.list", (ctx) => board.summaries({ archived: ctx.query.archived }))
       .handle("board.get", (ctx) => board.snapshot(ctx.params.key).pipe(mapNotFound))
       .handle("board.issue", (ctx) => board.issuePage(ctx.params.key, ctx.params.number).pipe(mapNotFound))
       .handle("board.activity", (ctx) => board.activity(ctx.params.key, ctx.query.since).pipe(mapNotFound))
       .handle("board.answer", (ctx) => board.answer(ctx.params.key, ctx.params.id, ctx.payload).pipe(mapErrors))
       .handle("board.note", (ctx) => board.note(ctx.params.key, ctx.params.number, ctx.payload).pipe(mapErrors))
       .handle("board.attach", (ctx) => board.attach(ctx.params.key, ctx.params.number, ctx.payload).pipe(mapErrors))
+      .handle("board.noteEdit", (ctx) =>
+        board.editNote(ctx.params.key, ctx.params.number, ctx.params.id, ctx.payload).pipe(mapErrors),
+      )
+      .handle("board.noteDelete", (ctx) => board.deleteNote(ctx.params.key, ctx.params.number, ctx.params.id).pipe(mapErrors))
+      .handle("board.attachmentRemove", (ctx) =>
+        board.removeAttachment(ctx.params.key, ctx.params.number, ctx.params.id).pipe(mapErrors),
+      )
       .handle("board.undo", (ctx) => board.undo(ctx.params.key, ctx.params.id).pipe(mapErrors))
       .handle("board.pause", (ctx) => board.pause(ctx.params.key, ctx.payload).pipe(mapErrors))
       .handle("board.resume", (ctx) => board.resume(ctx.params.key).pipe(mapErrors))
+      .handle("board.archive", (ctx) => board.archive(ctx.params.key).pipe(mapErrors))
+      .handle("board.unarchive", (ctx) => board.unarchive(ctx.params.key).pipe(mapErrors))
       .handle("board.githubSync", (ctx) => board.sync(ctx.params.key).pipe(mapErrors))
       .handle("board.pauseIssue", (ctx) => board.pauseIssue(ctx.params.key, ctx.params.number).pipe(mapErrors))
       .handle("board.resumeIssue", (ctx) => board.resumeIssue(ctx.params.key, ctx.params.number).pipe(mapErrors))

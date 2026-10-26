@@ -1,5 +1,6 @@
 export * as Board from "./board"
 
+import fs from "fs/promises"
 import path from "path"
 import { and, asc, desc, eq, gt, inArray, isNotNull, ne, sql } from "drizzle-orm"
 import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors"
@@ -8,6 +9,7 @@ import { SqlError } from "effect/unstable/sql/SqlError"
 import { Board } from "@orchestra/schema/board"
 import { Integration } from "@orchestra/schema/integration"
 import { Credential } from "../credential"
+import { CredentialTable } from "../credential/sql"
 import { Database } from "../database/database"
 import { makeGlobalNode } from "../effect/app-node"
 import { EventV2 } from "../event"
@@ -28,6 +30,7 @@ import {
   BoardQuestionTable,
   BoardStepTable,
 } from "./sql"
+import { BoardForecast } from "./forecast"
 import { BoardGithub } from "./github"
 
 // The board service enforces the contract's rules (docs/specs/projects-board/CONTRACT.md section 1). Every write runs
@@ -46,7 +49,8 @@ export class RefusedError extends Schema.TaggedErrorClass<RefusedError>()("Board
 export type Error = NotFoundError | RefusedError
 
 export interface Interface {
-  readonly summaries: () => Effect.Effect<Board.Summary[]>
+  /** Archived projects are left out unless `archived` is true. */
+  readonly summaries: (options?: { readonly archived?: boolean }) => Effect.Effect<Board.Summary[]>
   readonly snapshot: (key: string) => Effect.Effect<Board.Snapshot, NotFoundError>
   readonly read: (input: Board.ReadInput) => Effect.Effect<Board.Read, NotFoundError>
   readonly issuePage: (key: string, number: number) => Effect.Effect<Board.IssuePage, NotFoundError>
@@ -60,9 +64,17 @@ export interface Interface {
   readonly answer: (key: string, id: string, input: Board.AnswerInput) => Effect.Effect<Board.OwnerResult, Error>
   readonly note: (key: string, number: number, input: Board.NoteInput) => Effect.Effect<Board.OwnerResult, Error>
   readonly attach: (key: string, number: number, input: Board.AttachmentInput) => Effect.Effect<Board.OwnerResult, Error>
+  /** Owner notes only; GitHub and Maestro notes stay as written. */
+  readonly editNote: (key: string, number: number, id: string, input: Board.NoteInput) => Effect.Effect<Board.OwnerResult, Error>
+  readonly deleteNote: (key: string, number: number, id: string) => Effect.Effect<Board.OwnerResult, Error>
+  /** A secret's credential row goes with it; a file's stored copy is removed after commit. */
+  readonly removeAttachment: (key: string, number: number, id: string) => Effect.Effect<Board.OwnerResult, Error>
   readonly undo: (key: string, id: string) => Effect.Effect<Board.OwnerResult, Error>
   readonly pause: (key: string, input: Board.PauseInput) => Effect.Effect<Board.OwnerResult, Error>
   readonly resume: (key: string) => Effect.Effect<Board.OwnerResult, Error>
+  /** Only a shipped or paused project; unarchive brings it back paused. */
+  readonly archive: (key: string) => Effect.Effect<Board.OwnerResult, Error>
+  readonly unarchive: (key: string) => Effect.Effect<Board.OwnerResult, Error>
   readonly pauseIssue: (key: string, number: number) => Effect.Effect<Board.OwnerResult, Error>
   readonly resumeIssue: (key: string, number: number) => Effect.Effect<Board.OwnerResult, Error>
   readonly hold: (key: string, number: number, input: Board.HoldInput) => Effect.Effect<Board.OwnerResult, Error>
@@ -105,8 +117,11 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
       const quiet = <A, E>(work: (tx: Tx) => Effect.Effect<A, E>) =>
         db.transaction(work, { behavior: "immediate" }).pipe(dieOnStorage)
 
+      // Every committed board write is one forecast evaluation of its project; GitHub mirror writes are not.
       const write = <A extends { readonly changed: Changed }, E>(work: (tx: Tx) => Effect.Effect<A, E>) =>
-        quiet(work).pipe(Effect.tap((result) => events.publish(Board.Event.Changed, result.changed)))
+        quiet((tx) => work(tx).pipe(Effect.tap((result) => evaluate(tx, result.changed.project)))).pipe(
+          Effect.tap((result) => events.publish(Board.Event.Changed, result.changed)),
+        )
 
       const reading = <A, E>(work: (tx: Tx) => Effect.Effect<A, E>) =>
         db.transaction(work).pipe(dieOnStorage)
@@ -285,6 +300,77 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
         )
       })
 
+      const forecastOf = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow) {
+        const issues = yield* tx
+          .select({
+            id: BoardIssueTable.id,
+            number: BoardIssueTable.number,
+            epic: BoardIssueTable.epic_id,
+            stage: BoardIssueTable.stage,
+            enteredAt: BoardIssueTable.stage_entered_at,
+            paused: BoardIssueTable.paused,
+          })
+          .from(BoardIssueTable)
+          .where(eq(BoardIssueTable.project_id, project.id))
+          .all()
+        const epics = yield* tx
+          .select()
+          .from(BoardEpicTable)
+          .where(and(eq(BoardEpicTable.project_id, project.id), ne(BoardEpicTable.status, "cut")))
+          .orderBy(asc(BoardEpicTable.position), asc(BoardEpicTable.number))
+          .all()
+        const known = yield* numbers(tx, project)
+        const blocked = yield* tx
+          .select({ issue: BoardQuestionTable.issue_id })
+          .from(BoardQuestionTable)
+          .where(
+            and(
+              eq(BoardQuestionTable.project_id, project.id),
+              eq(BoardQuestionTable.status, "open"),
+              eq(BoardQuestionTable.blocking, true),
+            ),
+          )
+          .all()
+        const upstream =
+          issues.length === 0
+            ? []
+            : yield* tx
+                .select({ issue: BoardDependencyTable.issue_id, key: BoardProjectTable.key, number: BoardIssueTable.number, stage: BoardIssueTable.stage })
+                .from(BoardDependencyTable)
+                .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardDependencyTable.depends_on_id))
+                .innerJoin(BoardProjectTable, eq(BoardProjectTable.id, BoardIssueTable.project_id))
+                .where(inArray(BoardDependencyTable.issue_id, issues.map((row) => row.id)))
+                .orderBy(asc(BoardProjectTable.key), asc(BoardIssueTable.number))
+                .all()
+        return BoardForecast.plan({
+          items: issues.map((row) => {
+            const dependency = upstream.find((item) => item.issue === row.id && item.stage !== "shipped" && item.stage !== "cut")
+            return {
+              epic: row.epic ? (known.epics.get(row.epic) ?? null) : null,
+              stage: row.stage,
+              enteredAt: row.enteredAt,
+              waitsOn: dependency
+                ? `${dependency.key}-${dependency.number}`
+                : row.paused || blocked.some((item) => item.issue === row.id)
+                  ? `${project.key}-${row.number}`
+                  : null,
+            }
+          }),
+          epics: epics.map((row) => ({ number: row.number, ref: `${project.key}-E${row.number}` })),
+          targetDate: project.target_date,
+          now: yield* Clock.currentTimeMillis,
+        })
+      })
+
+      // Persists how many evaluations in a row put P50 past the target date.
+      const evaluate = Effect.fnUntraced(function* (tx: Tx, id: string) {
+        const project = yield* tx.select().from(BoardProjectTable).where(eq(BoardProjectTable.id, id as Board.ProjectID)).get()
+        if (!project) return
+        const streak = BoardForecast.late((yield* forecastOf(tx, project)).project) ? project.forecast_late_streak + 1 : 0
+        if (streak !== project.forecast_late_streak)
+          yield* tx.update(BoardProjectTable).set({ forecast_late_streak: streak }).where(eq(BoardProjectTable.id, project.id)).run()
+      })
+
       const snapshotOf = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow) {
         const epics = yield* tx
           .select()
@@ -311,12 +397,22 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
           .orderBy(desc(BoardActivityTable.id))
           .limit(1)
           .get()
+        const history = yield* tx
+          .select({ issue: BoardActivityTable.issue_id, reason: BoardActivityTable.reason, after: BoardActivityTable.after, at: BoardActivityTable.time_created })
+          .from(BoardActivityTable)
+          .where(eq(BoardActivityTable.project_id, project.id))
+          .orderBy(asc(BoardActivityTable.id))
+          .all()
+        const forecast = yield* forecastOf(tx, project)
         return {
           project: toProject(project),
           epics: epics.map((row) => toEpic(project.key, row)),
           issues: yield* issueRecords(tx, project, issues),
           questions: yield* questionRecords(tx, project, questions),
           cursor: latest?.id ?? null,
+          forecast: forecast.project,
+          epicForecasts: forecast.epics,
+          scope: BoardForecast.scope(history),
         } satisfies Board.Snapshot
       })
 
@@ -377,6 +473,7 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
       })
 
       const requireActive = (project: ProjectRow, issue?: IssueRow): Effect.Effect<void, RefusedError> => {
+        if (project.status === "archived") return Effect.fail(archived(project))
         if (project.status === "paused")
           return Effect.fail(
             new RefusedError({
@@ -531,7 +628,13 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
       })
 
       if (options.poll)
-        yield* reading((tx) => tx.select({ key: BoardProjectTable.key }).from(BoardProjectTable).where(isNotNull(BoardProjectTable.github_repo)).all()).pipe(
+        yield* reading((tx) =>
+          tx
+            .select({ key: BoardProjectTable.key })
+            .from(BoardProjectTable)
+            .where(and(isNotNull(BoardProjectTable.github_repo), ne(BoardProjectTable.status, "archived")))
+            .all(),
+        ).pipe(
           Effect.flatMap((rows) => Effect.forEach(rows, (row) => github.sync(row.key))),
           Effect.ignore,
           Effect.repeat(Schedule.spaced("60 seconds")),
@@ -539,10 +642,15 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
         )
 
       return Service.of({
-        summaries: Effect.fn("Board.summaries")(function* () {
+        summaries: Effect.fn("Board.summaries")(function* (options) {
           return yield* reading((tx) =>
             Effect.gen(function* () {
-              const projects = yield* tx.select().from(BoardProjectTable).orderBy(asc(BoardProjectTable.key)).all()
+              const projects = yield* tx
+                .select()
+                .from(BoardProjectTable)
+                .where(options?.archived ? undefined : ne(BoardProjectTable.status, "archived"))
+                .orderBy(asc(BoardProjectTable.key))
+                .all()
               const stages = yield* tx
                 .select({ project: BoardIssueTable.project_id, stage: BoardIssueTable.stage, count: sql<number>`count(*)` })
                 .from(BoardIssueTable)
@@ -553,22 +661,27 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
                 .from(BoardQuestionTable)
                 .where(eq(BoardQuestionTable.status, "open"))
                 .all()
-              return projects.map((project): Board.Summary => {
-                const questions = open.filter((item) => item.project === project.id)
-                return {
-                  project: toProject(project),
-                  stages: Object.fromEntries(
-                    stages.filter((item) => item.project === project.id).map((item) => [item.stage, item.count]),
-                  ),
-                  openQuestions: questions.length,
-                  health:
-                    project.status === "paused"
-                      ? "paused"
-                      : questions.some((item) => item.blocking)
-                        ? "waiting_on_owner"
-                        : "on_track",
-                }
-              })
+              return yield* Effect.forEach(projects, (project) =>
+                Effect.gen(function* () {
+                  const questions = open.filter((item) => item.project === project.id)
+                  return {
+                    project: toProject(project),
+                    stages: Object.fromEntries(
+                      stages.filter((item) => item.project === project.id).map((item) => [item.stage, item.count]),
+                    ),
+                    openQuestions: questions.length,
+                    health:
+                      project.status === "paused"
+                        ? "paused"
+                        : project.forecast_late_streak >= 2
+                          ? "at_risk"
+                          : questions.some((item) => item.blocking)
+                            ? "waiting_on_owner"
+                            : "on_track",
+                    forecast: (yield* forecastOf(tx, project)).project,
+                  } satisfies Board.Summary
+                }),
+              )
             }),
           )
         }),
@@ -596,7 +709,9 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
                 .limit(100)
                 .all()
               const ordered = rows.toReversed()
-              const noteIDs = ordered.flatMap((row) => (row.action === "note.add" && row.after?.id ? [String(row.after.id) as Board.NoteID] : []))
+              const noteIDs = ordered.flatMap((row) =>
+                (row.action === "note.add" || row.action === "note.edit") && row.after?.id ? [String(row.after.id) as Board.NoteID] : [],
+              )
               const answerIDs = ordered.flatMap((row) =>
                 row.action === "question.answer" && row.after?.id ? [String(row.after.id) as Board.QuestionID] : [],
               )
@@ -972,6 +1087,7 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
           const done = yield* write((tx) =>
             Effect.gen(function* () {
               const project = yield* loadProject(tx, input.project)
+              if (project.status === "archived") return yield* archived(project)
               if (input.action === "withdraw") {
                 const question = yield* tx
                   .select()
@@ -1133,6 +1249,74 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
           return done.result
         }),
 
+        editNote: Effect.fn("Board.editNote")(function* (key, number, id, input) {
+          const done = yield* write((tx) =>
+            Effect.gen(function* () {
+              const found = yield* ownerNote(tx, key, number, id, "edited")
+              if (found.note.body === input.body) return yield* new RefusedError({ message: "That note already says this." })
+              yield* tx.update(BoardNoteTable).set({ body: input.body }).where(eq(BoardNoteTable.id, found.note.id)).run()
+              const activity = yield* log(tx, {
+                project: found.project.id,
+                issue: found.issue.id,
+                actor: "owner",
+                action: "note.edit",
+                before: { id: found.note.id, body: found.note.body },
+                after: { id: found.note.id, body: input.body },
+              })
+              return { result: { activity }, changed: changed(found.project.id, activity, found.issue.id) }
+            }),
+          )
+          return done.result
+        }),
+
+        deleteNote: Effect.fn("Board.deleteNote")(function* (key, number, id) {
+          const done = yield* write((tx) =>
+            Effect.gen(function* () {
+              const found = yield* ownerNote(tx, key, number, id, "deleted")
+              yield* tx.delete(BoardNoteTable).where(eq(BoardNoteTable.id, found.note.id)).run()
+              const activity = yield* log(tx, {
+                project: found.project.id,
+                issue: found.issue.id,
+                actor: "owner",
+                action: "note.delete",
+                before: { id: found.note.id, body: found.note.body },
+              })
+              return { result: { activity }, changed: changed(found.project.id, activity, found.issue.id) }
+            }),
+          )
+          return done.result
+        }),
+
+        // The activity row keeps the label only; a secret's value never leaves the credential store, which loses it here.
+        removeAttachment: Effect.fn("Board.removeAttachment")(function* (key, number, id) {
+          const done = yield* write((tx) =>
+            Effect.gen(function* () {
+              const project = yield* loadProject(tx, key)
+              const issue = yield* loadIssue(tx, project, number)
+              const attachment = yield* tx
+                .select()
+                .from(BoardAttachmentTable)
+                .where(and(eq(BoardAttachmentTable.id, id as Board.AttachmentID), eq(BoardAttachmentTable.issue_id, issue.id)))
+                .get()
+              if (!attachment) return yield* new NotFoundError({ message: `Attachment ${id} is not on ${key}-${number}.` })
+              yield* tx.delete(BoardAttachmentTable).where(eq(BoardAttachmentTable.id, attachment.id)).run()
+              if (attachment.credential_id)
+                yield* tx.delete(CredentialTable).where(eq(CredentialTable.id, attachment.credential_id)).run()
+              const activity = yield* log(tx, {
+                project: project.id,
+                issue: issue.id,
+                actor: "owner",
+                action: "attachment.remove",
+                before: { id: attachment.id, kind: attachment.kind, name: attachment.name },
+              })
+              return { result: { activity }, changed: changed(project.id, activity, issue.id), file: attachment.path }
+            }),
+          )
+          const file = done.file
+          if (file) yield* Effect.promise(() => fs.rm(path.dirname(file), { recursive: true, force: true }))
+          return done.result
+        }),
+
         undo: Effect.fn("Board.undo")(function* (key, id) {
           const done = yield* write((tx) =>
             Effect.gen(function* () {
@@ -1192,6 +1376,14 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
           return yield* setProjectPause(key, false)
         }),
 
+        archive: Effect.fn("Board.archive")(function* (key) {
+          return yield* setArchived(key, true)
+        }),
+
+        unarchive: Effect.fn("Board.unarchive")(function* (key) {
+          return yield* setArchived(key, false)
+        }),
+
         pauseIssue: Effect.fn("Board.pauseIssue")(function* (key, number) {
           return yield* ownerIssue(key, number, "pause.set", (issue) =>
             issue.paused ? `${key}-${number} is already paused.` : { paused: true },
@@ -1232,6 +1424,7 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
         return write((tx) =>
           Effect.gen(function* () {
             const project = yield* loadProject(tx, key)
+            if (project.status === "archived") return yield* archived(project)
             if ((project.status === "paused") === paused)
               return yield* new RefusedError({ message: `${key} is ${paused ? "already paused" : "not paused"}.` })
             const next = paused
@@ -1249,6 +1442,48 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
             return { result: { activity }, changed: changed(project.id, activity) }
           }),
         ).pipe(Effect.map((done) => done.result))
+      }
+
+      function setArchived(key: string, archive: boolean) {
+        return write((tx) =>
+          Effect.gen(function* () {
+            const project = yield* loadProject(tx, key)
+            if (archive && project.status !== "shipped" && project.status !== "paused")
+              return yield* new RefusedError({
+                message:
+                  project.status === "archived"
+                    ? `${key} is already archived.`
+                    : `${key} is ${project.status}; only a shipped or paused project can be archived.`,
+              })
+            if (!archive && project.status !== "archived") return yield* new RefusedError({ message: `${key} is not archived.` })
+            const next = archive ? ("archived" as const) : ("paused" as const)
+            yield* tx.update(BoardProjectTable).set({ status: next }).where(eq(BoardProjectTable.id, project.id)).run()
+            const activity = yield* log(tx, {
+              project: project.id,
+              actor: "owner",
+              action: "archive.set",
+              before: { status: project.status },
+              after: { status: next },
+            })
+            return { result: { activity }, changed: changed(project.id, activity) }
+          }),
+        ).pipe(Effect.map((done) => done.result))
+      }
+
+      function ownerNote(tx: Tx, key: string, number: number, id: string, verb: "edited" | "deleted") {
+        return Effect.gen(function* () {
+          const project = yield* loadProject(tx, key)
+          const issue = yield* loadIssue(tx, project, number)
+          const note = yield* tx
+            .select()
+            .from(BoardNoteTable)
+            .where(and(eq(BoardNoteTable.id, id as Board.NoteID), eq(BoardNoteTable.issue_id, issue.id)))
+            .get()
+          if (!note) return yield* new NotFoundError({ message: `Note ${id} is not on ${key}-${number}.` })
+          if (note.author !== "owner")
+            return yield* new RefusedError({ message: `Only your own notes can be ${verb}; GitHub and Maestro notes stay as written.` })
+          return { project, issue, note }
+        })
       }
 
       function ownerIssue(
@@ -1322,6 +1557,10 @@ function dieOnStorage<A, E, R>(effect: Effect.Effect<A, E, R>) {
       Effect.die,
     ),
   )
+}
+
+function archived(project: ProjectRow) {
+  return new RefusedError({ message: `${project.key} is archived; the owner unarchives it before anything changes.` })
 }
 
 function changed(project: string, activity: string, issue?: string | null): Changed {
