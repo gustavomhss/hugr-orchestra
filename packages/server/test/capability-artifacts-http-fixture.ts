@@ -18,6 +18,7 @@ import { ProjectTable } from "@orchestra/core/project/sql"
 import { SessionTable } from "@orchestra/core/session/sql"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { TaskTool } from "@orchestra/core/tool/task"
+import { TeamMessageTool } from "@orchestra/core/tool/team-message"
 import { CapabilityContentGroup, makeCapabilityArtifactsGroup } from "@orchestra/protocol/groups/capability-artifacts"
 import { Agent } from "@orchestra/schema/agent"
 import { Capability } from "@orchestra/schema/capability"
@@ -55,8 +56,8 @@ export function make(options: { ticketTtlMillis?: number } = {}) {
     const map = Layer.effect(LocationServiceMap.Service, LayerMap.make((ref: Location.Ref) => {
       const nodes = LayerNode.hoist(locationServices, Node.tags.values.global, [
         [ToolRegistry.node, ToolRegistry.nativeNode], [ToolRegistry.toolsNode, ToolRegistry.nativeToolsNode],
-        // Task captures process-global Session services this focused host does not export.
-        [TaskTool.node, Layer.empty], [Location.node, Location.boundNode(ref)],
+        // Task and team_message capture process-global Session services this focused host does not export.
+        [TaskTool.node, Layer.empty], [TeamMessageTool.node, Layer.empty], [Location.node, Location.boundNode(ref)],
       ])
       return LayerNode.compile(nodes.node).pipe(Layer.fresh,
         Layer.provide(LayerNode.compile(nodes.hoisted, [[Database.node, databaseNode]])))
