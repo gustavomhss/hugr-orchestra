@@ -44,7 +44,7 @@ export const peopleMap = (db: Db) =>
     )
 
 // A merged person resolves to the person it was merged into. The step bound stops a corrupt cycle.
-const canonical = (people: Map<string, PersonRow>, id: string) => {
+export const canonical = (people: Map<string, PersonRow>, id: string) => {
   const step = (current: string, left: number): string => {
     const next = people.get(current)?.merged_into
     return next && left > 0 ? step(next, left - 1) : current
@@ -52,12 +52,23 @@ const canonical = (people: Map<string, PersonRow>, id: string) => {
   return step(id, 16)
 }
 
+// Ids of every person whose id, name or alias matches, plus the people merged into them.
+export const personIDs = (people: Map<string, PersonRow>, query: string) => {
+  const wanted = query.toLowerCase()
+  const matched = new Set(
+    [...people.values()]
+      .filter((row) => row.id === query || [row.name, ...row.aliases].some((name) => name.toLowerCase().includes(wanted)))
+      .map((row) => canonical(people, row.id)),
+  )
+  return [...people.keys()].filter((id) => matched.has(canonical(people, id)))
+}
+
 const person = (people: Map<string, PersonRow>, id: string) => {
   const target = canonical(people, id)
   return { id: target, name: people.get(target)?.name ?? target }
 }
 
-const asserterOf = (people: Map<string, PersonRow>, code: string): Meeting.CardItem["asserter"] =>
+export const asserterOf = (people: Map<string, PersonRow>, code: string): Meeting.CardItem["asserter"] =>
   code === "me"
     ? "me"
     : code.startsWith("unknown:")
@@ -160,19 +171,8 @@ export const summaries = Effect.fn("MeetingMemory.summaries")(function* (db: Db,
 // Plain LIKE over titles and item text. Meeting ids sort newest first, so the cursor is the last id of the page.
 export const list = Effect.fn("MeetingMemory.list")(function* (db: Db, input: Meeting.ListQuery) {
   const people = yield* peopleMap(db)
-  const wanted = input.person?.toLowerCase()
-  const matched = new Set(
-    wanted === undefined
-      ? []
-      : [...people.values()]
-          .filter(
-            (row) =>
-              row.id === input.person || [row.name, ...row.aliases].some((name) => name.toLowerCase().includes(wanted)),
-          )
-          .map((row) => canonical(people, row.id)),
-  )
-  const ids = [...people.keys()].filter((id) => matched.has(canonical(people, id)))
-  if (wanted !== undefined && ids.length === 0) return { items: [], next: undefined }
+  const ids = input.person === undefined ? [] : personIDs(people, input.person)
+  if (input.person !== undefined && ids.length === 0) return { items: [], next: undefined }
   const limit = Math.min(input.limit ?? LIST_LIMIT, LIST_MAX)
   const rows = yield* db
     .select()
@@ -186,7 +186,7 @@ export const list = Effect.fn("MeetingMemory.list")(function* (db: Db, input: Me
               sql`exists (select 1 from meeting_item where meeting_id = ${MeetingTable.id} and ${contains(MeetingItemTable.text, input.query)})`,
             )
           : undefined,
-        wanted === undefined
+        input.person === undefined
           ? undefined
           : sql`exists (select 1 from meeting_item where meeting_id = ${MeetingTable.id} and (${inArray(MeetingItemTable.asserter, ids)} or ${inArray(MeetingItemTable.owner, ids)} or ${inArray(MeetingItemTable.counterparty, ids)}))`,
       ),
@@ -199,5 +199,5 @@ export const list = Effect.fn("MeetingMemory.list")(function* (db: Db, input: Me
   return { items: yield* summaries(db, page), next: rows.length > limit ? page.at(-1)?.id : undefined }
 })
 
-const contains = (column: AnyColumn, query: string) =>
+export const contains = (column: AnyColumn, query: string) =>
   sql`${column} like ${`%${query.replace(/[\\%_]/g, "\\$&")}%`} escape '\\'`

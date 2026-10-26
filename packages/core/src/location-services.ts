@@ -37,6 +37,7 @@ import { SessionCompaction } from "./session/compaction"
 import * as SessionRunnerLLM from "./session/runner/llm"
 import { SessionRunnerModel } from "./session/runner/model"
 import { SessionMeeting } from "./session/meeting"
+import { MeetingBriefing } from "./session/meeting-briefing"
 import { MeetingContext } from "./session/meeting-context"
 import { SessionTodo } from "./session/todo"
 import { SkillV2 } from "./skill"
@@ -88,6 +89,7 @@ export const locationServices = LayerNode.group([
   ReferenceGuidance.node,
   SessionTodo.node,
   SessionMeeting.node,
+  MeetingBriefing.node,
   MeetingContext.node,
   QuestionV2.node,
   ReadToolFileSystem.node,
