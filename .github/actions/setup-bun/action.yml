@@ -50,11 +50,14 @@ runs:
       shell: bash
       run: |
         echo "bun=${{ runner.os }}-${{ runner.arch }}-bun-v3-${{ hashFiles('bun.lock') }}" >> "$GITHUB_OUTPUT"
-        echo "modules=${{ runner.os }}-${{ runner.arch }}-modules-v3-${{ hashFiles('bun.lock', 'patches/**', 'package.json') }}" >> "$GITHUB_OUTPUT"
+        echo "modules=${{ runner.os }}-${{ runner.arch }}-modules-v4-${{ hashFiles('bun.lock', 'patches/**', 'package.json') }}" >> "$GITHUB_OUTPUT"
 
     # Every platform reuses the installed tree: on Linux a restore takes about 15 s where `bun install` from Bun's
     # package cache took about 50 s, and Windows cannot reuse Bun's package cache at all (see the install step).
     # The key covers everything that shapes node_modules; a partial tree from another lockfile is never restored.
+    # Every workspace directory must be listed (native/omni/bindings/node sits one level deeper than the others): a
+    # hit skips install, so an unlisted workspace restores without its links. Bump the modules key version whenever
+    # this list changes, so no entry saved with the old list is restored.
     - name: Restore node_modules
       id: modules-cache
       if: inputs.install-flags == ''
@@ -69,6 +72,7 @@ runs:
           modules/*/*/node_modules
           tooling/*/node_modules
           native/*/*/node_modules
+          native/*/*/*/node_modules
         key: ${{ steps.keys.outputs.modules }}
 
     - name: Restore Bun dependencies
@@ -137,4 +141,5 @@ runs:
           modules/*/*/node_modules
           tooling/*/node_modules
           native/*/*/node_modules
+          native/*/*/*/node_modules
         key: ${{ steps.keys.outputs.modules }}
