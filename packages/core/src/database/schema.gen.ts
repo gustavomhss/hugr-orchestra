@@ -40,6 +40,48 @@ export default {
         );
       `)
       yield* tx.run(`
+        CREATE TABLE \`meeting_item\` (
+          \`id\` text NOT NULL,
+          \`revision\` integer NOT NULL,
+          \`meeting_id\` text NOT NULL,
+          \`kind\` text NOT NULL,
+          \`text\` text NOT NULL,
+          \`quote\` text DEFAULT '' NOT NULL,
+          \`asserter\` text NOT NULL,
+          \`start_ms\` integer,
+          \`status\` text DEFAULT 'claimed' NOT NULL,
+          \`sent_to_maestro\` integer DEFAULT false NOT NULL,
+          \`owner\` text,
+          \`counterparty\` text,
+          \`due\` text,
+          \`state\` text,
+          \`for\` text,
+          \`created_at\` integer NOT NULL,
+          CONSTRAINT \`meeting_item_pk\` PRIMARY KEY(\`id\`, \`revision\`),
+          CONSTRAINT \`fk_meeting_item_meeting_id_meeting_id_fk\` FOREIGN KEY (\`meeting_id\`) REFERENCES \`meeting\`(\`id\`) ON DELETE CASCADE
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`meeting_person\` (
+          \`id\` text PRIMARY KEY,
+          \`name\` text NOT NULL,
+          \`aliases\` text DEFAULT '[]' NOT NULL,
+          \`merged_into\` text,
+          CONSTRAINT \`fk_meeting_person_merged_into_meeting_person_id_fk\` FOREIGN KEY (\`merged_into\`) REFERENCES \`meeting_person\`(\`id\`) ON DELETE SET NULL
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`meeting_proposal\` (
+          \`id\` text PRIMARY KEY,
+          \`meeting_id\` text NOT NULL,
+          \`name\` text NOT NULL,
+          \`merge_with\` text,
+          \`verdict\` text,
+          CONSTRAINT \`fk_meeting_proposal_meeting_id_meeting_id_fk\` FOREIGN KEY (\`meeting_id\`) REFERENCES \`meeting\`(\`id\`) ON DELETE CASCADE,
+          CONSTRAINT \`fk_meeting_proposal_merge_with_meeting_person_id_fk\` FOREIGN KEY (\`merge_with\`) REFERENCES \`meeting_person\`(\`id\`) ON DELETE SET NULL
+        );
+      `)
+      yield* tx.run(`
         CREATE TABLE \`meeting_segment\` (
           \`id\` text NOT NULL,
           \`meeting_id\` text NOT NULL,
@@ -54,11 +96,16 @@ export default {
       yield* tx.run(`
         CREATE TABLE \`meeting\` (
           \`id\` text PRIMARY KEY,
-          \`session_id\` text NOT NULL,
+          \`session_id\` text,
           \`title\` text NOT NULL,
           \`time_started\` integer NOT NULL,
           \`time_ended\` integer,
-          CONSTRAINT \`fk_meeting_session_id_session_id_fk\` FOREIGN KEY (\`session_id\`) REFERENCES \`session\`(\`id\`) ON DELETE CASCADE
+          \`retention\` text DEFAULT 'kept' NOT NULL,
+          \`consent\` text DEFAULT 'unknown' NOT NULL,
+          \`card_status\` text DEFAULT 'pending' NOT NULL,
+          \`card_error\` text,
+          \`card_summary\` text DEFAULT '' NOT NULL,
+          CONSTRAINT \`fk_meeting_session_id_session_id_fk\` FOREIGN KEY (\`session_id\`) REFERENCES \`session\`(\`id\`) ON DELETE SET NULL
         );
       `)
       yield* tx.run(`
@@ -650,6 +697,8 @@ export default {
       yield* tx.run(
         `CREATE INDEX \`project_checkpoint_project_time_id_idx\` ON \`project_checkpoint\` (\`project_id\`,\`time_created\`,\`id\`);`,
       )
+      yield* tx.run(`CREATE INDEX \`meeting_item_meeting_idx\` ON \`meeting_item\` (\`meeting_id\`);`)
+      yield* tx.run(`CREATE INDEX \`meeting_proposal_meeting_idx\` ON \`meeting_proposal\` (\`meeting_id\`);`)
       yield* tx.run(
         `CREATE INDEX \`meeting_segment_meeting_start_idx\` ON \`meeting_segment\` (\`meeting_id\`,\`start_ms\`);`,
       )
