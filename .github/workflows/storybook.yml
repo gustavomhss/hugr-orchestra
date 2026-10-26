@@ -7,6 +7,9 @@ on:
     types: [labeled]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   # Non-epic label events skip every job; give them their own group so they cannot cancel an epic run.
   group: ${{ (github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic') && format('{0}-{1}', github.workflow, github.event.pull_request.number || github.ref) || format('{0}-skip-{1}', github.workflow, github.run_id) }}
