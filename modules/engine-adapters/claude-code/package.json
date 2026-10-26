@@ -7,8 +7,6 @@
   "license": "MIT",
   "exports": {
     "./executable": "./src/executable.ts",
-    "./host/admission": "./src/host/admission.ts",
-    "./host/join": "./src/host/join.ts",
     "./host/options": "./src/host/options.ts",
     "./sdk": "./src/sdk.ts",
     "./transcript": "./src/transcript.ts",

@@ -6,13 +6,8 @@
   "type": "module",
   "license": "MIT",
   "exports": {
-    "./alias": "./src/alias.ts",
     "./archive-search": "./src/archive-search.ts",
-    "./dry-transport": "./src/dry-transport.ts",
-    "./masking": "./src/masking.ts",
     "./masking-rules": "./src/masking-rules.ts",
-    "./raw-payload": "./src/raw-payload.ts",
-    "./request-source": "./src/request-source.ts",
     "./v2": "./src/v2/index.ts"
   },
   "scripts": {

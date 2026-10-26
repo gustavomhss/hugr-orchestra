@@ -5,10 +5,10 @@ import type { SessionMessage } from "./message"
 import type { Prompt } from "./prompt"
 import type { SessionInput } from "./input"
 import type { Snapshot } from "../snapshot"
-import type { PermissionV1 } from "@orchestra/schema/permission-v1"
+import type { Permission } from "@orchestra/schema/permission"
 import { ProjectV2 } from "../project"
 import type { SessionSchema } from "./schema"
-import type { MessageID, PartID, SessionV1 } from "@orchestra/schema/session-v1"
+import type { SessionLegacyTranscript } from "./legacy-transcript"
 import { WorkspaceV2 } from "../workspace"
 import { Timestamps } from "../database/schema.sql"
 import type { SystemContext } from "../system-context/index"
@@ -17,8 +17,8 @@ import type { Revert } from "@orchestra/schema/revert"
 import type { PromptContext } from "@orchestra/schema/prompt-context"
 
 type SessionMessageData = Omit<(typeof SessionMessage.Message)["Encoded"], "type" | "id">
-type StoredMessageData = Omit<SessionV1.Info, "id" | "sessionID">
-type StoredPartData = Omit<SessionV1.Part, "id" | "sessionID" | "messageID">
+type StoredMessageData = Omit<SessionLegacyTranscript.Info, "id" | "sessionID">
+type StoredPartData = Omit<SessionLegacyTranscript.Part, "id" | "sessionID" | "messageID">
 
 export const SessionTable = sqliteTable(
   "session",
@@ -48,7 +48,7 @@ export const SessionTable = sqliteTable(
     tokens_cache_read: integer().notNull().default(0),
     tokens_cache_write: integer().notNull().default(0),
     revert: text({ mode: "json" }).$type<Revert.State>(),
-    permission: text({ mode: "json" }).$type<PermissionV1.Ruleset>(),
+    permission: text({ mode: "json" }).$type<Permission.SessionRuleset>(),
     agent: text(),
     model: text({ mode: "json" }).$type<{
       id: string
@@ -65,9 +65,9 @@ export const SessionTable = sqliteTable(
     index("session_project_idx").on(table.project_id),
     index("session_workspace_idx").on(table.workspace_id),
     index("session_parent_idx").on(table.parent_id),
-    // V1 Session.list: project_id = ? ORDER BY time_updated DESC LIMIT n.
+    // Session list by project: project_id = ? ORDER BY time_updated DESC LIMIT n.
     index("session_project_time_updated_idx").on(table.project_id, table.time_updated),
-    // V1 Session.listGlobal: time_archived IS NULL ORDER BY time_updated DESC, id DESC LIMIT n.
+    // Global Session list: time_archived IS NULL ORDER BY time_updated DESC, id DESC LIMIT n.
     index("session_time_archived_time_updated_id_idx").on(table.time_archived, table.time_updated, table.id),
     // V2 SessionArchive.list by project: project_id = ? AND time_archived IS NULL ORDER BY time_created, id.
     index("session_project_time_archived_time_created_id_idx").on(
@@ -82,7 +82,7 @@ export const SessionTable = sqliteTable(
 export const MessageTable = sqliteTable(
   "message",
   {
-    id: text().$type<MessageID>().primaryKey(),
+    id: text().$type<SessionLegacyTranscript.MessageID>().primaryKey(),
     session_id: text()
       .$type<SessionSchema.ID>()
       .notNull()
@@ -96,9 +96,9 @@ export const MessageTable = sqliteTable(
 export const PartTable = sqliteTable(
   "part",
   {
-    id: text().$type<PartID>().primaryKey(),
+    id: text().$type<SessionLegacyTranscript.PartID>().primaryKey(),
     message_id: text()
-      .$type<MessageID>()
+      .$type<SessionLegacyTranscript.MessageID>()
       .notNull()
       .references(() => MessageTable.id, { onDelete: "cascade" }),
     session_id: text().$type<SessionSchema.ID>().notNull(),

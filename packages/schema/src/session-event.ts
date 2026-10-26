@@ -14,7 +14,8 @@ import { SessionMessage } from "./session-message"
 import { Revert } from "./revert"
 import { PromptContext } from "./prompt-context"
 import { SessionSubagentModels } from "./session-subagent-models"
-import { PermissionV1 } from "./permission-v1"
+import { Permission } from "./permission"
+import { ProjectID } from "./project-id"
 
 export { FileAttachment }
 
@@ -55,6 +56,36 @@ const stepSettlementOptions = {
 export const UnknownError = SessionMessage.UnknownError
 export type UnknownError = SessionMessage.UnknownError
 
+export const Created = Event.define({
+  type: "session.next.created",
+  ...options,
+  schema: {
+    ...Base,
+    projectID: ProjectID,
+    parentID: SessionID.pipe(optional),
+    location: Location.Ref,
+    subdirectory: RelativePath.pipe(optional),
+    title: Schema.String,
+    agent: Schema.String.pipe(optional),
+    model: Model.Ref.pipe(optional),
+  },
+})
+export type Created = typeof Created.Type
+
+export const Renamed = Event.define({
+  type: "session.next.renamed",
+  ...options,
+  schema: { ...Base, title: Schema.String },
+})
+export type Renamed = typeof Renamed.Type
+
+export const Deleted = Event.define({
+  type: "session.next.deleted",
+  ...options,
+  schema: Base,
+})
+export type Deleted = typeof Deleted.Type
+
 export const AgentSwitched = Event.define({
   type: "session.next.agent.switched",
   ...options,
@@ -87,7 +118,7 @@ export type SubagentModelsChanged = typeof SubagentModelsChanged.Type
 export const PermissionChanged = Event.define({
   type: "session.next.permission.changed",
   ...options,
-  schema: { ...Base, permission: PermissionV1.Ruleset },
+  schema: { ...Base, permission: Permission.SessionRuleset },
 })
 export type PermissionChanged = typeof PermissionChanged.Type
 
@@ -478,6 +509,9 @@ export namespace RevertEvent {
 }
 
 export const DurableDefinitions = Event.inventory(
+  Created,
+  Renamed,
+  Deleted,
   AgentSwitched,
   ModelSwitched,
   SubagentModelsChanged,
@@ -512,6 +546,9 @@ export const DurableDefinitions = Event.inventory(
 )
 
 export const Definitions = Event.inventory(
+  Created,
+  Renamed,
+  Deleted,
   AgentSwitched,
   ModelSwitched,
   SubagentModelsChanged,

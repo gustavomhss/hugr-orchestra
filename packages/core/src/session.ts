@@ -18,9 +18,6 @@ import { SessionMessageTable, SessionTable } from "./session/sql"
 import { SessionSchema } from "./session/schema"
 import { AbsolutePath, PositiveInt, RelativePath } from "./schema"
 import { AgentV2 } from "./agent"
-import { SessionV1 } from "@orchestra/schema/session-v1"
-import { InstallationVersion } from "./installation/version"
-import { Slug } from "./util/slug"
 import path from "path"
 import { existsSync } from "fs"
 import { SessionRunner } from "./session/runner/index"
@@ -40,9 +37,9 @@ import { Global } from "./global"
 import type { ToolSafety } from "./tool-safety"
 import { SessionDurable } from "@orchestra/schema/durable-event-manifest"
 import { SessionArchive } from "./session/archive"
-import { SessionLegacyRow } from "./session/legacy-row"
+import { SessionLifecycle } from "./session/lifecycle"
 import { SessionSubagentModels } from "./session/subagent-models"
-import { PermissionV1 } from "@orchestra/schema/permission-v1"
+import type { Permission } from "@orchestra/schema/permission"
 
 export const RevertState = Revert.State
 export type RevertState = Revert.State
@@ -191,8 +188,8 @@ export interface Interface {
     sessionID: SessionSchema.ID
     model: ModelV2.Ref
   }) => Effect.Effect<void, NotFoundError>
-  readonly getPermission: (sessionID: SessionSchema.ID) => Effect.Effect<PermissionV1.Ruleset, NotFoundError>
-  readonly setPermission: (input: { sessionID: SessionSchema.ID; permission: PermissionV1.Ruleset }) => Effect.Effect<PermissionV1.Ruleset, NotFoundError>
+  readonly getPermission: (sessionID: SessionSchema.ID) => Effect.Effect<Permission.SessionRuleset, NotFoundError>
+  readonly setPermission: (input: { sessionID: SessionSchema.ID; permission: Permission.SessionRuleset }) => Effect.Effect<Permission.SessionRuleset, NotFoundError>
   readonly prompt: (input: {
     id?: SessionMessage.ID
     sessionID: SessionSchema.ID
@@ -363,31 +360,34 @@ const layer = Layer.effect(
         if (input.parentID) yield* result.get(input.parentID)
         const project = yield* projects.resolve(input.location.directory)
         yield* ProjectV2.record(db, events, project)
-        const now = Date.now()
-        const info = SessionV1.SessionInfo.make({
-          id: sessionID,
-          slug: Slug.create(),
-          version: InstallationVersion,
-          projectID: project.id,
-          parentID: input.parentID,
-          directory: input.location.directory,
-          path: path.relative(project.directory, input.location.directory).replaceAll("\\", "/"),
-          workspaceID: input.location.workspaceID ? WorkspaceV2.ID.make(input.location.workspaceID) : undefined,
-          title: `New session - ${new Date(now).toISOString()}`,
-          agent: input.agent,
-          model: input.model
-            ? {
-                id: ModelV2.ID.make(input.model.id),
-                providerID: input.model.providerID,
-                variant: input.model.variant,
-              }
-            : undefined,
-          cost: 0,
-          tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
-          time: { created: now, updated: now },
-        })
+        const timestamp = yield* DateTime.now
         const projected = yield* events
-          .publish(SessionV1.Event.Created, { sessionID, info }, { location: input.location })
+          .publish(
+            SessionEvent.Created,
+            {
+              sessionID,
+              timestamp,
+              projectID: project.id,
+              location: input.location,
+              subdirectory: RelativePath.make(
+                path.relative(project.directory, input.location.directory).replaceAll("\\", "/"),
+              ),
+              title: `New session - ${DateTime.formatIso(timestamp)}`,
+              // Optional event keys must be absent, not undefined, to encode.
+              ...(input.parentID ? { parentID: input.parentID } : {}),
+              ...(input.agent ? { agent: input.agent } : {}),
+              ...(input.model
+                ? {
+                    model: {
+                      id: ModelV2.ID.make(input.model.id),
+                      providerID: input.model.providerID,
+                      ...(input.model.variant ? { variant: input.model.variant } : {}),
+                    },
+                  }
+                : {}),
+            },
+            { location: input.location },
+          )
           .pipe(
             Effect.as({ type: "created" } as const),
             Effect.catchDefect((defect) => {
@@ -421,13 +421,13 @@ const layer = Layer.effect(
           return yield* new NotFoundError({ sessionID: input.sessionID })
       }),
       rename: Effect.fn("V2Session.rename")(function* (input) {
-        if (!(yield* SessionLegacyRow.rename(db, events, input)))
+        if (!(yield* SessionLifecycle.rename(db, events, input)))
           return yield* new NotFoundError({ sessionID: input.sessionID })
       }),
       remove: Effect.fn("V2Session.remove")(function* (sessionID) {
         yield* result.get(sessionID)
         yield* Effect.uninterruptible(execution.interrupt(sessionID))
-        if (!(yield* SessionLegacyRow.remove(db, events, sessionID))) return yield* new NotFoundError({ sessionID })
+        if (!(yield* SessionLifecycle.remove(db, events, sessionID))) return yield* new NotFoundError({ sessionID })
       }),
       list: (input) => SessionArchive.list(db, input),
       messages: Effect.fn("V2Session.messages")(function* (input) {
@@ -528,7 +528,7 @@ const layer = Layer.effect(
         const reverted = source.revert ? rows.findIndex((row) => row.id === source.revert?.messageID) : -1
         const kept = rows.slice(0, reverted < 0 ? target : Math.min(target, reverted))
         const forked = yield* result.create({ location: source.location, agent: source.agent, model: source.model })
-        yield* SessionLegacyRow.rename(db, events, { sessionID: forked.id, title: forkedTitle(source.title) })
+        yield* SessionLifecycle.rename(db, events, { sessionID: forked.id, title: forkedTitle(source.title) })
         // As the V1 import does: copied rows take negative sequences below every event the fork will project.
         yield* db
           .transaction(
