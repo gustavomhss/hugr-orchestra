@@ -5,6 +5,64 @@
   container-type: inline-size;
 }
 
+/* Board materials. Lanes sit sunk into the content base; cards are opaque and raised above them, so the stage a card
+   is in reads from its lane, its stage marker and its stripe, never from transparency. */
+html[data-color-scheme] body .board-root {
+  --board-stage-backlog: #7f8c9b;
+  --board-stage-ready: #b3c1d0;
+  --board-stage-building: #8fbcf0;
+  --board-stage-review: #8acfc9;
+  --board-stage-shipped: #93cfa9;
+  --board-lane: linear-gradient(180deg, rgba(6, 11, 17, 0.62), rgba(6, 11, 17, 0.42));
+  --board-lane-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.42), inset 0 0 0 1px rgba(166, 189, 211, 0.07),
+    0 1px 0 rgba(255, 255, 255, 0.03);
+  --board-card: linear-gradient(180deg, #1d2834, #16202a);
+  --board-card-hover: linear-gradient(180deg, #223040, #1a2531);
+  --board-card-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 0 1px rgba(166, 189, 211, 0.1),
+    0 1px 1px rgba(0, 0, 0, 0.5), 0 3px 6px -1px rgba(0, 0, 0, 0.3), 0 12px 24px -10px rgba(0, 0, 0, 0.65);
+  --board-card-lift: inset 0 1px 0 rgba(255, 255, 255, 0.09), inset 0 0 0 1px rgba(166, 189, 211, 0.2),
+    0 1px 1px rgba(0, 0, 0, 0.5), 0 6px 12px -2px rgba(0, 0, 0, 0.35), 0 22px 40px -12px rgba(0, 0, 0, 0.75);
+  --board-panel: linear-gradient(180deg, #1b2531, #141d27);
+}
+
+html[data-color-scheme="light"] body .board-root {
+  --board-stage-backlog: #66717e;
+  --board-stage-ready: #4c5a6a;
+  --board-stage-building: #1f5f9e;
+  --board-stage-review: #0f6d68;
+  --board-stage-shipped: #1c6a42;
+  --board-lane: linear-gradient(180deg, rgba(222, 230, 238, 0.78), rgba(230, 236, 242, 0.6));
+  --board-lane-shadow: inset 0 1px 3px rgba(28, 46, 65, 0.1), inset 0 0 0 1px rgba(65, 86, 107, 0.09),
+    0 1px 0 rgba(255, 255, 255, 0.7);
+  --board-card: linear-gradient(180deg, #ffffff, #fbfcfd);
+  --board-card-hover: linear-gradient(180deg, #ffffff, #ffffff);
+  --board-card-shadow: inset 0 0 0 1px rgba(40, 60, 85, 0.1), 0 1px 1px rgba(28, 46, 65, 0.08),
+    0 3px 6px -1px rgba(28, 46, 65, 0.07), 0 12px 24px -12px rgba(28, 46, 65, 0.28);
+  --board-card-lift: inset 0 0 0 1px rgba(40, 60, 85, 0.18), 0 1px 1px rgba(28, 46, 65, 0.08),
+    0 6px 12px -2px rgba(28, 46, 65, 0.1), 0 22px 40px -14px rgba(28, 46, 65, 0.36);
+  --board-panel: linear-gradient(180deg, #ffffff, #f8fafc);
+}
+
+.board-root [data-stage="backlog"] {
+  --stage: var(--board-stage-backlog);
+}
+
+.board-root [data-stage="ready"] {
+  --stage: var(--board-stage-ready);
+}
+
+.board-root [data-stage="building"] {
+  --stage: var(--board-stage-building);
+}
+
+.board-root [data-stage="review"] {
+  --stage: var(--board-stage-review);
+}
+
+.board-root [data-stage="shipped"] {
+  --stage: var(--board-stage-shipped);
+}
+
 .board-page {
   inline-size: min(1320px, calc(100% - 48px));
   margin: 0 auto;
@@ -130,10 +188,10 @@
   display: grid;
   align-content: start;
   gap: 12px;
-  padding: 16px 18px;
+  padding: 18px 20px;
   border-radius: var(--orchestra-radius-lg);
-  background: var(--mx-soft);
-  box-shadow: inset 0 0 0 1px var(--mx-line), var(--mx-highlight);
+  background: var(--board-panel);
+  box-shadow: var(--board-card-shadow);
 }
 
 .board-brief p,
@@ -196,22 +254,14 @@
 }
 
 /* Stage shades step from strong (shipped) to faint (backlog); colour stays neutral so the ask card is the one accent. */
-.board-bar [data-stage="shipped"],
-.board-legend [data-stage="shipped"] i {
-  background: var(--mx-strong);
+.board-bar [data-stage],
+.board-legend [data-stage] i {
+  background: var(--stage);
 }
-.board-bar [data-stage="review"],
-.board-legend [data-stage="review"] i {
-  background: var(--mx-dim);
-}
-.board-bar [data-stage="building"],
-.board-legend [data-stage="building"] i {
-  background: var(--orchestra-muted);
-  opacity: 0.7;
-}
-.board-bar [data-stage="ready"],
-.board-legend [data-stage="ready"] i {
-  background: var(--mx-rim);
+
+.board-bar [data-stage="backlog"],
+.board-legend [data-stage="backlog"] i {
+  background: color-mix(in srgb, var(--stage) 40%, transparent);
 }
 
 .board-intake {
@@ -219,7 +269,19 @@
 }
 
 .board-ask {
-  box-shadow: inset 0 0 0 1px var(--orchestra-warm), var(--mx-highlight);
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--orchestra-warm) 9%, transparent), transparent 70%),
+    var(--board-panel);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--orchestra-warm) 55%, transparent), var(--board-card-shadow);
+}
+
+.board-ask::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  block-size: 2px;
+  background: var(--orchestra-warm);
 }
 
 .board-ask-kicker {
@@ -293,13 +355,32 @@
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 12px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .board-col {
+  position: relative;
   display: grid;
-  gap: 8px;
+  grid-template-rows: auto 1fr;
+  align-content: start;
+  gap: 10px;
   min-inline-size: 0;
+  min-block-size: 440px;
+  padding: 12px 8px 10px;
+  border-radius: var(--orchestra-radius-lg);
+  background: var(--board-lane);
+  box-shadow: var(--board-lane-shadow);
+}
+
+/* The stage marker: a short bar of the stage's color along the lane's top edge. */
+.board-col::before {
+  content: "";
+  position: absolute;
+  inset: 0 14px auto;
+  block-size: 2px;
+  border-radius: 0 0 2px 2px;
+  background: var(--stage);
+  box-shadow: 0 1px 6px color-mix(in srgb, var(--stage) 45%, transparent);
 }
 
 .board-col-head {
@@ -307,9 +388,20 @@
   align-items: center;
   gap: 8px;
   min-block-size: 28px;
-  padding: 0 4px;
+  padding: 0 6px 10px;
+  border-block-end: 1px solid var(--mx-line);
   color: var(--mx-strong);
   font-size: var(--orchestra-font-size-md);
+}
+
+.board-col-head .board-count {
+  min-inline-size: 20px;
+  padding: 1px 6px;
+  border-radius: var(--orchestra-radius-full);
+  background: color-mix(in srgb, var(--stage) 14%, transparent);
+  color: var(--stage);
+  font-weight: 600;
+  text-align: center;
 }
 
 .board-col-head b {
@@ -317,6 +409,10 @@
 }
 
 .board-col-head em {
+  overflow: hidden;
+  min-inline-size: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   margin-inline-start: auto;
   color: var(--orchestra-muted);
   font-size: var(--orchestra-font-size-2xs);
@@ -330,6 +426,7 @@
 
 .board-list {
   display: grid;
+  align-content: start;
   gap: 8px;
 }
 
@@ -342,7 +439,7 @@
 }
 
 .board-ring-track {
-  stroke: var(--orchestra-muted);
+  stroke: var(--stage, var(--orchestra-muted));
   stroke-width: 1.4;
 }
 
@@ -351,17 +448,17 @@
 }
 
 .board-ring-fill {
-  stroke: var(--orchestra-muted);
+  stroke: var(--stage, var(--orchestra-muted));
   stroke-width: 3.6;
 }
 
 .board-ring-check {
-  stroke: var(--mx-strong);
+  stroke: var(--stage, var(--mx-strong));
   stroke-width: 1.5;
 }
 
 .board-ring[data-stage="shipped"] .board-ring-track {
-  stroke: var(--mx-strong);
+  stroke: var(--stage);
 }
 
 /* Cards */
@@ -372,24 +469,38 @@
   display: grid;
   gap: 8px;
   inline-size: 100%;
-  padding: 12px;
+  position: relative;
+  padding: 12px 12px 11px 14px;
   border: 0;
   border-radius: var(--orchestra-radius-md);
-  background: var(--mx-soft);
-  box-shadow: inset 0 0 0 1px var(--mx-line), var(--mx-highlight);
+  background: var(--board-card);
+  box-shadow: var(--board-card-shadow);
   color: var(--orchestra-body);
   font: inherit;
   font-size: var(--orchestra-font-size-sm);
   text-align: start;
   cursor: pointer;
-  transition: background var(--orchestra-duration-fast) var(--orchestra-ease-out);
+  transition:
+    background var(--orchestra-duration-fast) var(--orchestra-ease-out),
+    box-shadow var(--orchestra-duration-fast) var(--orchestra-ease-out);
+}
+
+/* The stage stripe on a card's leading edge. */
+.board-card::before {
+  content: "";
+  position: absolute;
+  inset-block: 12px;
+  inset-inline-start: 0;
+  inline-size: 2px;
+  border-radius: 0 2px 2px 0;
+  background: var(--stage, transparent);
 }
 
 .board-card:hover,
 .board-project:hover,
-.board-row:hover,
 .board-open {
-  background: var(--orchestra-overlay-hover);
+  background: var(--board-card-hover);
+  box-shadow: var(--board-card-lift);
 }
 
 .board-card:focus-visible,
@@ -487,10 +598,11 @@
 }
 
 .board-track [data-state="done"] {
-  background: var(--mx-dim);
+  background: color-mix(in srgb, var(--stage, var(--mx-dim)) 55%, transparent);
 }
 .board-track [data-state="active"] {
-  background: var(--mx-strong);
+  background: var(--stage, var(--mx-strong));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--stage, var(--mx-strong)) 30%, transparent);
 }
 .board-tick-run [data-state="pass"] {
   background: var(--mx-good);
@@ -499,8 +611,15 @@
   background: var(--mx-bad);
 }
 
-.board-held {
-  box-shadow: inset 0 0 0 1px var(--orchestra-warm), var(--mx-highlight);
+.board-held,
+.board-held:hover {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--orchestra-warm) 8%, transparent), transparent 60%),
+    var(--board-card);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--orchestra-warm) 60%, transparent), var(--board-card-shadow);
+}
+
+.board-held::before {
+  background: var(--orchestra-warm);
 }
 
 .board-held-note {
@@ -523,6 +642,16 @@
   box-shadow: none;
 }
 
+.board-row:hover,
+.board-row.board-open {
+  background: color-mix(in srgb, var(--mx-strong) 6%, transparent);
+  box-shadow: inset 0 0 0 1px var(--mx-line);
+}
+
+.board-row .board-ring {
+  margin-block-start: 2px;
+}
+
 .board-row[data-stage="backlog"] {
   grid-template-columns: minmax(0, 1fr);
 }
@@ -542,6 +671,7 @@
 
 .board-row-meta {
   display: flex;
+  white-space: nowrap;
   align-items: center;
   gap: 8px;
   color: var(--orchestra-muted);
