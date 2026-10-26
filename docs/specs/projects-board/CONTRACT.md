@@ -138,6 +138,20 @@ Exactly one of `path` and `credential_id` is set.
 Undoable actions: Maestro's `issue.update`, `issue.move`, `steps.set`, `epic.upsert`, `question.withdraw`, and every
 `github.overwrite`. Owner actions are reversed by the owner doing the opposite (resume, release hold), not by undo.
 
+As built in slice E1:
+
+- `board_project.forecast_late_streak` (integer, default 0) counts consecutive evaluations whose P50 lands past
+  `target_date`. Every committed board write evaluates once; time passing alone and GitHub mirror writes do not. Health
+  is `at_risk` only at a streak of 2 or more.
+- `board_project.status` `archived` is now reachable. Only a `shipped` or `paused` project archives; unarchive brings it back
+  `paused`. An archived project refuses Maestro writes, questions and pause/resume; owner notes and attachments still work.
+- New activity actions: `note.edit` and `note.delete` (before/after `{ id, body }`, owner notes only),
+  `attachment.remove` (before `{ id, kind, name }`; a secret's `CredentialTable` row is deleted in the same transaction,
+  and its value never appears), `archive.set` (before/after `{ status }`).
+- The forecast is computed on read, never stored: daily shipped throughput (`stage_entered_at` of shipped issues, from
+  the first ship day to today, zero days included) resampled in a seeded 1000-trial Monte Carlo, so the same board on
+  the same day gives the same dates. The scope history replays `after.stage` from `board_activity`.
+
 ## 4. Maestro tools
 
 Registered through `ApplicationTools` and granted only to the Maestro agent. Every write takes `reason` (non-empty) and
@@ -198,6 +212,24 @@ As built in slice B:
 - `github_state` starts as `off` until slice B2 turns the mirror on.
 - Moving to Shipped forces a fresh git trail read instead of the cached one.
 - Undo covers an allowlist of Maestro actions (section 3) and is the owner's only; no Maestro tool undoes.
+
+As built in slice E1:
+
+- `GET /api/board` hides archived projects unless `?archived=true`. Each summary gains `forecast` and `health` may be
+  `at_risk`.
+- `forecast` (project, also on `GET /api/board/:key`) is `{ shipped, remaining, targetDate, forecast }`, where
+  `forecast` is one of `{ kind: "done" }`, `{ kind: "waits", on: "KEY-N" }` (every remaining issue is blocked),
+  `{ kind: "insufficient", shipped, needed: 5 }` (fewer than 5 shipped issues), or
+  `{ kind: "dates", p50, p85, vsTarget: { p50, p85 } | null }` (epoch ms at UTC midnight; `vsTarget` in days, positive
+  is late).
+- The snapshot also carries `epicForecasts: [{ epic, ref, shipped, remaining, forecast, setsDate }]` in position order
+  (an epic's dates include the open epics before it; `setsDate` marks the one with the latest P85, the long pole) and
+  `scope: [{ at, scope, shipped, reason }]` (a point each time the scope total or shipped count changes; `reason` is the
+  activity's reason on scope steps).
+- Owner writes: `PATCH` and `DELETE /api/board/:key/issue/:number/note/:id` (owner notes only; GitHub and Maestro
+  notes are refused), `DELETE /api/board/:key/issue/:number/attachment/:id` (removes a secret's credential too),
+  `POST /api/board/:key/archive` and `/unarchive`. Each returns `{ activity }` and publishes `board.changed`; a write
+  that changes nothing is refused. Project delete is not built.
 
 
 ## 6. GitHub Issues mirror (slice B2)

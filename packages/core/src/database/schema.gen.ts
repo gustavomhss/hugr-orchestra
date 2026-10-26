@@ -240,6 +240,7 @@ export default {
           \`github_synced_at\` integer,
           \`next_issue_number\` integer NOT NULL,
           \`next_epic_number\` integer NOT NULL,
+          \`forecast_late_streak\` integer DEFAULT 0 NOT NULL,
           \`time_created\` integer NOT NULL,
           \`time_updated\` integer NOT NULL,
           CONSTRAINT \`fk_board_project_repo_project_id_project_id_fk\` FOREIGN KEY (\`repo_project_id\`) REFERENCES \`project\`(\`id\`) ON DELETE SET NULL

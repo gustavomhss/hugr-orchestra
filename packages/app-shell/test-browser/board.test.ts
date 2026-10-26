@@ -89,11 +89,12 @@ if (process.env.BOARD_DOM !== "1") {
       if (url.pathname === "/api/board/LCH/resume") state.paused = false
       return Response.json({ activity: `bac_${state.writes.length}` })
     }
+    const forecast = { shipped: 1, remaining: 3, targetDate: null, forecast: { kind: "insufficient", shipped: 1, needed: 5 } }
     if (url.pathname === "/api/board")
-      return Response.json([{ project, stages: { backlog: 1, ready: 1, building: 1, shipped: 1 }, openQuestions: state.asks.length, health: "on_track" }])
+      return Response.json([{ project, stages: { backlog: 1, ready: 1, building: 1, shipped: 1 }, openQuestions: state.asks.length, health: "on_track", forecast }])
     if (url.pathname === "/api/board/LCH") {
       state.gets++
-      return Response.json({ project, epics: [], issues: state.issues, questions: state.asks, cursor: null })
+      return Response.json({ project, epics: [], issues: state.issues, questions: state.asks, cursor: null, forecast, epicForecasts: [], scope: [] })
     }
     if (url.pathname === "/api/board/LCH/activity") return Response.json([])
     const match = url.pathname.match(/^\/api\/board\/LCH\/issue\/(\d+)$/)

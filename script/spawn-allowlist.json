@@ -47,7 +47,6 @@
     "apps/desktop/scripts/app-dock-native-proof-guest.ts": ["child_process"],
     "apps/desktop/scripts/app-dock-workspace-proof.ts": ["child_process"],
     "apps/desktop/scripts/install-electron.ts": ["child_process"],
-    "apps/desktop/scripts/lean-candidate.ts": ["child_process"],
     "apps/desktop/scripts/linux-runtime/index.ts": ["child_process"],
     "apps/desktop/scripts/linux-runtime/runtime.ts": ["child_process"],
     "apps/desktop/src/main/app-dock-linux-live.fixture.ts": ["child_process"],

@@ -1,5 +1,6 @@
 import { index, integer, primaryKey, real, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
 import type { Board } from "@orchestra/schema/board"
+import type { Credential } from "../credential"
 import { CredentialTable } from "../credential/sql"
 import { Timestamps } from "../database/schema.sql"
 import { ProjectTable } from "../project/sql"
@@ -27,6 +28,8 @@ export const BoardProjectTable = sqliteTable("board_project", {
   github_synced_at: integer(),
   next_issue_number: integer().notNull(),
   next_epic_number: integer().notNull(),
+  // Consecutive forecast evaluations with P50 past target_date; health turns at_risk at 2.
+  forecast_late_streak: integer().notNull().default(0),
   ...Timestamps,
 })
 
@@ -177,7 +180,9 @@ export const BoardAttachmentTable = sqliteTable(
     mime: text(),
     size: integer(),
     path: text(),
-    credential_id: text().references(() => CredentialTable.id, { onDelete: "cascade" }),
+    credential_id: text()
+      .$type<Credential.ID>()
+      .references(() => CredentialTable.id, { onDelete: "cascade" }),
     ...Timestamps,
   },
   (table) => [index("board_attachment_issue_idx").on(table.issue_id)],
