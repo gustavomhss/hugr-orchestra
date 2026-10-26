@@ -246,6 +246,14 @@ export type GuardrailError = {
 export const isGuardrailError = (value: unknown): value is GuardrailError =>
   typeof value === "object" && value !== null && "name" in value && value["name"] === "GuardrailError"
 
+export type MeetingError = {
+  readonly name: "MeetingError"
+  readonly data: { readonly reason: "missing_session" | "active" | "missing_meeting" | "ended" }
+}
+
+export const isMeetingError = (value: unknown): value is MeetingError =>
+  typeof value === "object" && value !== null && "name" in value && value["name"] === "MeetingError"
+
 export type ForbiddenError = { readonly _tag: "ForbiddenError"; readonly message: string }
 
 export const isForbiddenError = (value: unknown): value is ForbiddenError =>

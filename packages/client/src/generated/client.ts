@@ -366,6 +366,14 @@ import type {
   GuardrailRulesOutput,
   GuardrailRunInput,
   GuardrailRunOutput,
+  MeetingStartInput,
+  MeetingStartOutput,
+  MeetingAppendInput,
+  MeetingAppendOutput,
+  MeetingStopInput,
+  MeetingStopOutput,
+  MeetingReadInput,
+  MeetingReadOutput,
   OperatorInspectInput,
   OperatorInspectOutput,
   ConnectionsConnectInput,
@@ -2971,6 +2979,59 @@ export function make(options: ClientOptions) {
             path: `/api/guardrail/run`,
             query: { location: input?.["location"] },
             body: { base: input?.["base"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    meeting: {
+      start: (input: MeetingStartInput, requestOptions?: RequestOptions) =>
+        request<MeetingStartOutput>(
+          {
+            method: "POST",
+            path: `/api/meeting/start`,
+            query: { location: input["location"] },
+            body: { sessionID: input["sessionID"], title: input["title"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      append: (input: MeetingAppendInput, requestOptions?: RequestOptions) =>
+        request<MeetingAppendOutput>(
+          {
+            method: "POST",
+            path: `/api/meeting/segments`,
+            query: { location: input["location"] },
+            body: { meetingID: input["meetingID"], segments: input["segments"] },
+            successStatus: 204,
+            declaredStatuses: [400, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
+      stop: (input: MeetingStopInput, requestOptions?: RequestOptions) =>
+        request<MeetingStopOutput>(
+          {
+            method: "POST",
+            path: `/api/meeting/stop`,
+            query: { location: input["location"] },
+            body: { meetingID: input["meetingID"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      read: (input: MeetingReadInput, requestOptions?: RequestOptions) =>
+        request<MeetingReadOutput>(
+          {
+            method: "GET",
+            path: `/api/meeting`,
+            query: { location: input["location"], meetingID: input["meetingID"] },
             successStatus: 200,
             declaredStatuses: [400, 401],
             empty: false,

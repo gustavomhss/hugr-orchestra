@@ -2,7 +2,7 @@ import { Effect } from "effect"
 import type { DatabaseMigration } from "../migration"
 
 export default {
-  id: "20261026001154_board",
+  id: "20261026011509_board",
   up(tx) {
     return Effect.gen(function* () {
       yield* tx.run(`
