@@ -311,7 +311,6 @@ export default function Board() {
         <span class="board-card-top">
           <span class="board-id">{props.issue.ref}</span>
           <Show when={epic()}>{(title) => <span class="board-epic">{title()}</span>}</Show>
-          <Seat seat={props.issue.seat} />
         </span>
         <span class="board-card-title">{props.issue.title}</span>
         <Show when={props.issue.stage === "building" && !props.issue.paused && progress().now}>
@@ -344,6 +343,7 @@ export default function Board() {
           <Ticks trail={store.trails[props.issue.ref]} />
         </Show>
         <span class="board-card-foot">
+          <Seat seat={props.issue.seat} />
           <Show when={props.issue.prNumber}>{(pr) => <span class="board-mono">#{pr()}</span>}</Show>
           <For each={after()}>
             {(ref) => (
@@ -362,7 +362,6 @@ export default function Board() {
   }
 
   const Row = (props: { issue: Issue }) => {
-    const size = () => ({ s: 1, m: 2, l: 3 })[props.issue.estimate ?? "s"]
     const epic = () => (props.issue.epic === null ? undefined : epics().get(props.issue.epic))
     return (
       <button
@@ -385,7 +384,7 @@ export default function Board() {
             <Show when={props.issue.stage === "shipped" ? props.issue.seat : epic()}>{(text) => <span>{text()}</span>}</Show>
             <Show when={props.issue.stage === "backlog" && props.issue.estimate}>
               <span class="board-size" aria-label={t("orchestra.board.estimate", { size: (props.issue.estimate ?? "").toUpperCase() })}>
-                <For each={[1, 2, 3]}>{(index) => <i data-on={index <= size()} />}</For>
+                {(props.issue.estimate ?? "").toUpperCase()}
               </span>
             </Show>
           </span>
@@ -656,7 +655,7 @@ export default function Board() {
                   {(file) => (
                     <li data-kind={file.kind}>
                       {/* A secret's name is its label. Its value never reaches the app. */}
-                      <span class={file.kind === "secret" ? "board-mono" : undefined}>{file.name}</span>
+                      <span>{file.name}</span>
                       <span class="board-quiet">
                         {file.kind === "secret" ? t("orchestra.board.secret") : t(`orchestra.board.kind.${file.kind}`)}
                       </span>
@@ -840,12 +839,23 @@ export default function Board() {
                         >
                           <span class="board-card-top">
                             <span class="board-id">{summary.project.key}</span>
-                            <MxBadge tone={summary.health === "on_track" ? "good" : undefined}>{t(healthKey[summary.health])}</MxBadge>
+                            <span class="board-health" data-health={summary.health}>
+                              <MxBadge tone={summary.health === "on_track" ? "good" : undefined}>{t(healthKey[summary.health])}</MxBadge>
+                            </span>
                           </span>
                           <span class="board-card-title">{summary.project.name}</span>
                           <Show when={summary.project.goal}>
                             <span class="board-quiet">{summary.project.goal}</span>
                           </Show>
+                          <span class="board-bar" aria-hidden="true">
+                            <For each={columns.toReversed()}>
+                              {(stage) => (
+                                <Show when={(summary.stages[stage] ?? 0) > 0}>
+                                  <i data-stage={stage} style={{ "flex-grow": summary.stages[stage] }} />
+                                </Show>
+                              )}
+                            </For>
+                          </span>
                           <span class="board-card-foot">
                             <span>
                               {t("orchestra.board.project.shipped", {
@@ -910,9 +920,11 @@ export default function Board() {
                         <h1 id="board-title">{snapshot().project.name}</h1>
                         <Show when={store.projects?.find((item) => item.project.id === snapshot().project.id)}>
                           {(summary) => (
-                            <MxBadge tone={summary().health === "on_track" ? "good" : undefined}>
-                              {t(healthKey[summary().health])}
-                            </MxBadge>
+                            <span class="board-health" data-health={summary().health}>
+                              <MxBadge tone={summary().health === "on_track" ? "good" : undefined}>
+                                {t(healthKey[summary().health])}
+                              </MxBadge>
+                            </span>
                           )}
                         </Show>
                       </div>

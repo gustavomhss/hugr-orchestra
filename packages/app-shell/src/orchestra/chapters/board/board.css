@@ -59,7 +59,10 @@ html[data-color-scheme="light"] .board-root {
 .board-brief,
 .board-ask,
 .board-card,
-.board-project {
+.board-project,
+.board-row,
+.board-rail,
+.board-detail[data-full="true"] > .board-detail-main {
   position: relative;
   border: 1px solid var(--orchestra-glass-border);
   background: var(--board-glass);
@@ -71,7 +74,10 @@ html[data-color-scheme="light"] .board-root {
 .board-brief::after,
 .board-ask::after,
 .board-card::after,
-.board-project::after {
+.board-project::after,
+.board-row::after,
+.board-rail::after,
+.board-detail[data-full="true"] > .board-detail-main::after {
   content: "";
   position: absolute;
   inset: -1px;
@@ -215,11 +221,38 @@ html[data-color-scheme="light"] .board-root {
   block-size: 20px;
   flex: none;
   border-radius: var(--orchestra-radius-full);
-  background: var(--orchestra-surface);
-  box-shadow: inset 0 0 0 1px var(--mx-line);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--mx-blue) 34%, transparent),
+    color-mix(in srgb, var(--mx-blue) 16%, transparent)
+  );
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--mx-blue) 42%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--mx-strong) 22%, transparent);
   color: var(--mx-strong);
   font-size: var(--orchestra-font-size-2xs);
   font-weight: 600;
+}
+
+.board-stack .board-seat {
+  box-shadow:
+    0 0 0 2px var(--orchestra-surface),
+    inset 0 0 0 1px color-mix(in srgb, var(--mx-blue) 42%, transparent);
+}
+
+/* Waiting on the owner is the warm state, the same signal as the Ask. */
+.board-health[data-health="waiting_on_owner"] .mx-badge {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--orchestra-warm) 13%, transparent);
+  color: var(--orchestra-warm);
+}
+
+.board-health[data-health="waiting_on_owner"] .mx-badge::before {
+  content: "";
+  inline-size: 5px;
+  block-size: 5px;
+  border-radius: 50%;
+  background: currentColor;
 }
 
 /* Briefing */
@@ -258,10 +291,19 @@ html[data-color-scheme="light"] .board-root {
 }
 
 .board-percent {
-  margin-inline-end: 8px;
+  margin-inline-end: 10px;
   color: var(--mx-strong);
-  font-size: var(--orchestra-font-size-2xl);
+  font-family: var(--mx-emphasis);
+  font-size: var(--orchestra-font-size-4xl);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
+}
+
+.board-brief > p {
+  color: var(--mx-strong);
+  font-size: var(--orchestra-font-size-lg);
 }
 
 .board-bar {
@@ -414,18 +456,14 @@ html[data-color-scheme="light"] .board-root {
   padding: 6px 6px 8px;
   border: 1px solid transparent;
   border-radius: var(--orchestra-radius-xl);
-  background: var(--board-lane);
-  box-shadow: var(--board-lane-shadow);
-}
-
-/* The stage marker: a hairline of the stage's hue along the lane's top edge, inside the rim. */
-.board-col::before {
-  content: "";
-  position: absolute;
-  inset: -1px 18px auto;
-  block-size: 2px;
-  border-radius: 0 0 2px 2px;
-  background: var(--stage);
+  /* The stage marker: the lane's top edge takes the stage hue and follows its radius, and a faint wash of the same
+     hue fades down behind the header. */
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--stage) 13%, transparent), transparent 76px),
+    var(--board-lane);
+  box-shadow:
+    inset 0 2px 0 color-mix(in srgb, var(--stage) 72%, transparent),
+    var(--board-lane-shadow);
 }
 
 .board-col-head {
@@ -529,6 +567,18 @@ html[data-color-scheme="light"] .board-root {
     box-shadow var(--orchestra-duration-base) var(--orchestra-ease-out);
 }
 
+/* A project tile stands alone on the page, so it breathes more than a lane card and shows its stage mix. */
+.board-project {
+  gap: 10px;
+  padding: 16px 18px 14px;
+  border-radius: var(--orchestra-radius-xl);
+}
+
+.board-project .board-bar {
+  block-size: 4px;
+  margin-block-start: 2px;
+}
+
 /* Hover firms the rim and deepens the drop; nothing moves. */
 .board-card:hover,
 .board-project:hover,
@@ -563,9 +613,6 @@ html[data-color-scheme="light"] .board-root {
   flex: 1;
 }
 
-.board-card-top .board-seat {
-  margin-inline-start: auto;
-}
 
 .board-card-title,
 .board-row-title {
@@ -674,17 +721,13 @@ html[data-color-scheme="light"] .board-root {
   grid-template-columns: auto minmax(0, 1fr);
   align-items: start;
   gap: 8px;
-  padding: 8px 10px;
-  border: 1px solid transparent;
-  background: transparent;
-  box-shadow: none;
+  padding: 9px 11px;
 }
 
 .board-row:hover,
 .board-row.board-open {
-  border-color: var(--orchestra-glass-border);
-  background: var(--board-glass);
-  box-shadow: var(--board-card-shadow);
+  border-color: var(--mx-rim);
+  box-shadow: var(--board-card-lift);
 }
 
 .board-row .board-ring {
@@ -718,24 +761,21 @@ html[data-color-scheme="light"] .board-root {
 }
 
 .board-size {
-  display: inline-flex;
-  gap: 2px;
+  display: inline-grid;
+  place-items: center;
+  min-inline-size: 18px;
+  block-size: 16px;
   margin-inline-start: auto;
-}
-
-.board-size i {
-  inline-size: 8px;
-  block-size: 3px;
-  border-radius: var(--orchestra-radius-full);
-  background: var(--mx-line);
-}
-
-.board-size [data-on="true"] {
-  background: var(--mx-dim);
+  padding: 0 4px;
+  border-radius: var(--orchestra-radius-sm);
+  background: color-mix(in srgb, var(--mx-strong) 8%, transparent);
+  color: var(--mx-dim);
+  font: 600 var(--orchestra-font-size-2xs)/1 var(--mx-sans);
+  letter-spacing: 0.04em;
 }
 
 .board-day {
-  padding: 6px 10px 0;
+  padding: 4px 6px 0;
   color: var(--orchestra-muted);
   font-size: var(--orchestra-font-size-2xs);
   letter-spacing: 0.06em;
@@ -793,6 +833,12 @@ html[data-color-scheme="light"] .board-root {
 .board-detail[data-full="true"] {
   grid-template-columns: minmax(0, 1fr) 280px;
   align-items: start;
+}
+
+/* On the full page the issue reads as one sheet beside its rail; in the peek it already sits on float glass. */
+.board-detail[data-full="true"] > .board-detail-main {
+  padding: 24px 26px;
+  border-radius: var(--orchestra-radius-xl);
 }
 
 .board-detail-main {
@@ -940,11 +986,35 @@ html[data-color-scheme="light"] .board-root {
   font-size: var(--orchestra-font-size-sm);
 }
 
+.board-plan {
+  gap: 0;
+}
+
 .board-plan li {
+  position: relative;
   display: grid;
   grid-template-columns: 14px minmax(0, 1fr);
   gap: 10px;
+  padding-block-end: 10px;
   color: var(--orchestra-muted);
+}
+
+.board-plan li:last-child {
+  padding-block-end: 0;
+}
+
+/* The rail joins one step to the next; it is filled up to the last finished step. */
+.board-plan li:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  inset-block: 16px -2px;
+  inset-inline-start: 4.5px;
+  inline-size: 1px;
+  background: var(--mx-line);
+}
+
+.board-plan li[data-state="done"]::before {
+  background: color-mix(in srgb, var(--orchestra-success) 50%, transparent);
 }
 
 .board-plan li[data-state="active"] {
@@ -1063,10 +1133,8 @@ html[data-color-scheme="light"] .board-root {
 .board-rail {
   display: grid;
   gap: 12px;
-  padding: 16px;
-  border-radius: var(--orchestra-radius-lg);
-  background: var(--mx-soft);
-  box-shadow: inset 0 0 0 1px var(--mx-line);
+  padding: 18px;
+  border-radius: var(--orchestra-radius-xl);
 }
 
 .board-props {

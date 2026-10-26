@@ -50,7 +50,7 @@ export const BOARD_COPY = {
   "orchestra.board.col.empty": "Nothing here",
 
   "orchestra.board.seat": "Seat {{seat}}",
-  "orchestra.board.steps.of": "{{current}} of {{total}}",
+  "orchestra.board.steps.of": "Step {{current}} of {{total}}",
   "orchestra.board.steps.done": "{{done}} of {{total}} done",
   "orchestra.board.paused.answer": "Paused on your answer",
   "orchestra.board.paused.plain": "Paused",
@@ -197,7 +197,7 @@ export const BOARD_COPY_BR: Record<keyof typeof BOARD_COPY, string> = {
   "orchestra.board.col.empty": "Nada aqui",
 
   "orchestra.board.seat": "Assento {{seat}}",
-  "orchestra.board.steps.of": "{{current}} de {{total}}",
+  "orchestra.board.steps.of": "Passo {{current}} de {{total}}",
   "orchestra.board.steps.done": "{{done}} de {{total}} feitos",
   "orchestra.board.paused.answer": "Pausado na sua resposta",
   "orchestra.board.paused.plain": "Pausado",
