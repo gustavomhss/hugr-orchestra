@@ -27,6 +27,8 @@ export const BoardProjectTable = sqliteTable("board_project", {
   github_synced_at: integer(),
   next_issue_number: integer().notNull(),
   next_epic_number: integer().notNull(),
+  // Consecutive forecast evaluations with P50 past target_date; health turns at_risk at 2.
+  forecast_late_streak: integer().notNull().default(0),
   ...Timestamps,
 })
 

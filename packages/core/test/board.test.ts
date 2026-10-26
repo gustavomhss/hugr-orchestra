@@ -3,7 +3,7 @@ import fs from "fs/promises"
 import { mkdtempSync } from "fs"
 import { tmpdir } from "os"
 import path from "path"
-import { eq } from "drizzle-orm"
+import { and, eq } from "drizzle-orm"
 import { Effect, Exit, Schema, Stream } from "effect"
 import { Board } from "@orchestra/core/board/board"
 import {
@@ -13,9 +13,10 @@ import {
   BoardNoteTable,
   BoardProjectTable,
 } from "@orchestra/core/board/sql"
-import { IssueInput } from "@orchestra/schema/board"
+import { IssueInput, NoteID } from "@orchestra/schema/board"
 import { Integration } from "@orchestra/schema/integration"
 import { Credential } from "@orchestra/core/credential"
+import { CredentialTable } from "@orchestra/core/credential/sql"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { makeGlobalNode } from "@orchestra/core/effect/app-node"
@@ -40,6 +41,7 @@ const it = testEffect(
 )
 
 const SECRET = "sk-board-test-9f3c1e7d"
+const DAY = 86_400_000
 
 describe("Board", () => {
   it.live("rule 1: every Maestro write needs a non-empty reason and keeps it in the log", () =>
@@ -275,6 +277,204 @@ describe("Board", () => {
     }),
   )
 
+  it.live("forecast: dates come from shipped throughput, are the same on every read and the latest epic sets the date", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const today = Math.floor(Date.now() / DAY)
+      yield* board.project({ key: "FCT", name: "Forecast", target_date: (today + 2) * DAY, reason: "Start." })
+      yield* board.epic({ project: "FCT", title: "First", position: 1, reason: "Plan." })
+      yield* board.epic({ project: "FCT", title: "Second", position: 2, reason: "Plan." })
+      yield* Effect.forEach([1, 2, 3, 4, 5], (number) =>
+        Effect.gen(function* () {
+          yield* board.issue({ project: "FCT", title: `Done ${number}`, reason: "Plan." })
+          yield* board.move({ project: "FCT", number, stage: "shipped", reason: "Shipped without a PR." })
+        }),
+      )
+      yield* board.issue({ project: "FCT", title: "Open A", epic: 1, reason: "Plan." })
+      yield* board.issue({ project: "FCT", title: "Open B", epic: 2, reason: "Plan." })
+      yield* board.issue({ project: "FCT", title: "Open C", epic: 2, reason: "Plan." })
+      // One ship on each of the last five days: every resampled day ships exactly one issue.
+      yield* shippedOn("FCT", [1, 2, 3, 4, 5], (number) => (today - number + 1) * DAY + 3_600_000)
+
+      const snapshot = yield* board.snapshot("FCT")
+      expect(snapshot.forecast).toEqual({
+        shipped: 5,
+        remaining: 3,
+        targetDate: (today + 2) * DAY,
+        forecast: { kind: "dates", p50: (today + 3) * DAY, p85: (today + 3) * DAY, vsTarget: { p50: 1, p85: 1 } },
+      })
+      expect(snapshot.epicForecasts).toEqual([
+        {
+          epic: 1,
+          ref: "FCT-E1",
+          shipped: 0,
+          remaining: 1,
+          forecast: { kind: "dates", p50: (today + 1) * DAY, p85: (today + 1) * DAY, vsTarget: { p50: -1, p85: -1 } },
+          setsDate: false,
+        },
+        {
+          epic: 2,
+          ref: "FCT-E2",
+          shipped: 0,
+          remaining: 2,
+          forecast: { kind: "dates", p50: (today + 3) * DAY, p85: (today + 3) * DAY, vsTarget: { p50: 1, p85: 1 } },
+          setsDate: true,
+        },
+      ])
+      expect(snapshot.scope.at(-1)).toMatchObject({ scope: 8, shipped: 5 })
+      expect(snapshot.scope[0]).toMatchObject({ scope: 1, shipped: 0, reason: "Plan." })
+
+      // Uneven throughput goes through the seeded Monte Carlo and still gives the same dates on every read.
+      yield* shippedOn("FCT", [1, 2, 3, 4, 5], (number) => (today - number * 3) * DAY)
+      const first = (yield* board.snapshot("FCT")).forecast.forecast
+      const second = (yield* board.summaries()).find((item) => item.project.key === "FCT")?.forecast.forecast
+      expect(first.kind).toBe("dates")
+      expect(second).toEqual(first)
+      if (first.kind === "dates") expect(first.p85).toBeGreaterThanOrEqual(first.p50)
+    }),
+  )
+
+  it.live("forecast: fewer than 5 shipped is insufficient and an epic whose remaining work is blocked waits on it", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      yield* board.project({ key: "FEW", name: "Few", reason: "Start." })
+      yield* board.epic({ project: "FEW", title: "Only", reason: "Plan." })
+      yield* board.issue({ project: "FEW", title: "Done", epic: 1, reason: "Plan." })
+      yield* board.move({ project: "FEW", number: 1, stage: "shipped", reason: "Shipped without a PR." })
+      yield* board.issue({ project: "FEW", title: "Blocked", epic: 1, reason: "Plan." })
+      yield* board.issue({ project: "FEW", title: "Loose", reason: "Plan." })
+      expect((yield* board.snapshot("FEW")).forecast.forecast).toEqual({ kind: "insufficient", shipped: 1, needed: 5 })
+
+      yield* board.pauseIssue("FEW", 2)
+      const snapshot = yield* board.snapshot("FEW")
+      expect(snapshot.epicForecasts[0]?.forecast).toEqual({ kind: "waits", on: "FEW-2" })
+      expect(snapshot.forecast.forecast).toEqual({ kind: "insufficient", shipped: 1, needed: 5 })
+    }),
+  )
+
+  it.live("health turns at_risk only after two consecutive evaluations with P50 past the target date", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const today = Math.floor(Date.now() / DAY)
+      const health = () =>
+        board.summaries().pipe(Effect.map((list) => list.find((item) => item.project.key === "RSK")?.health))
+      yield* board.project({ key: "RSK", name: "Risk", reason: "Start." })
+      yield* Effect.forEach([1, 2, 3, 4, 5], (number) =>
+        Effect.gen(function* () {
+          yield* board.issue({ project: "RSK", title: `Done ${number}`, reason: "Plan." })
+          yield* board.move({ project: "RSK", number, stage: "shipped", reason: "Shipped without a PR." })
+        }),
+      )
+      yield* board.issue({ project: "RSK", title: "Open", reason: "Plan." })
+      expect(yield* health()).toBe("on_track")
+
+      yield* board.project({ key: "RSK", target_date: (today - 10) * DAY, reason: "The date moved in." })
+      expect(yield* health()).toBe("on_track")
+      yield* board.note("RSK", 6, { body: "Still on it." })
+      expect(yield* health()).toBe("at_risk")
+      yield* board.project({ key: "RSK", target_date: (today + 30) * DAY, reason: "The date moved out." })
+      expect(yield* health()).toBe("on_track")
+    }),
+  )
+
+  it.live("archive: only shipped or paused projects, hidden from the list, unarchive brings it back paused", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      yield* board.project({ key: "ARC", name: "Archive", reason: "Start." })
+      yield* board.issue({ project: "ARC", title: "Work", reason: "Plan." })
+
+      const active = yield* Effect.flip(board.archive("ARC"))
+      expect(active).toBeInstanceOf(Board.RefusedError)
+      expect(active.message).toBe("ARC is active; only a shipped or paused project can be archived.")
+      expect((yield* Effect.flip(board.unarchive("ARC"))).message).toBe("ARC is not archived.")
+
+      yield* board.pause("ARC", { reason: "Done for now." })
+      yield* board.archive("ARC")
+      expect((yield* Effect.flip(board.archive("ARC"))).message).toBe("ARC is already archived.")
+      expect((yield* board.summaries()).map((item) => item.project.key)).not.toContain("ARC")
+      expect((yield* board.summaries({ archived: true })).map((item) => item.project.key)).toContain("ARC")
+      expect((yield* Effect.flip(board.issue({ project: "ARC", title: "More", reason: "Plan." }))).message).toContain(
+        "archived",
+      )
+      expect((yield* Effect.flip(board.resume("ARC"))).message).toContain("archived")
+
+      yield* board.unarchive("ARC")
+      expect((yield* board.snapshot("ARC")).project.status).toBe("paused")
+      expect((yield* rows("ARC")).filter((row) => row.action === "archive.set").map((row) => [row.before, row.after])).toEqual([
+        [{ status: "paused" }, { status: "archived" }],
+        [{ status: "archived" }, { status: "paused" }],
+      ])
+    }),
+  )
+
+  it.live("owner notes: edit and delete the owner's own notes only, refusing a no-op edit", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const database = yield* Database.Service
+      yield* board.project({ key: "NTE", name: "Notes", reason: "Start." })
+      yield* board.issue({ project: "NTE", title: "Work", reason: "Plan." })
+      yield* board.note("NTE", 1, { body: "First draft." })
+      const issue = (yield* board.snapshot("NTE")).issues[0]!
+      yield* database.db
+        .insert(BoardNoteTable)
+        .values({ id: NoteID.make("bno_github_comment"), issue_id: issue.id, author: "github", body: "From GitHub.", time_updated: Date.now() })
+        .run()
+        .pipe(Effect.orDie)
+      const note = (yield* board.issuePage("NTE", 1)).notes.find((item) => item.author === "owner")!
+
+      yield* board.editNote("NTE", 1, note.id, { body: "Second draft." })
+      expect((yield* Effect.flip(board.editNote("NTE", 1, note.id, { body: "Second draft." }))).message).toBe(
+        "That note already says this.",
+      )
+      const github = yield* Effect.flip(board.editNote("NTE", 1, "bno_github_comment", { body: "Mine now." }))
+      expect(github).toBeInstanceOf(Board.RefusedError)
+      expect(yield* Effect.flip(board.deleteNote("NTE", 1, "bno_github_comment"))).toBeInstanceOf(Board.RefusedError)
+      expect(yield* Effect.flip(board.deleteNote("NTE", 1, "bno_missing"))).toBeInstanceOf(Board.NotFoundError)
+
+      yield* board.deleteNote("NTE", 1, note.id)
+      expect((yield* board.issuePage("NTE", 1)).notes.map((item) => item.body)).toEqual(["From GitHub."])
+      expect(
+        (yield* rows("NTE"))
+          .filter((row) => row.action.startsWith("note."))
+          .map((row) => [row.action, row.before, row.after]),
+      ).toEqual([
+        ["note.add", null, expect.anything()],
+        ["note.edit", { id: note.id, body: "First draft." }, { id: note.id, body: "Second draft." }],
+        ["note.delete", { id: note.id, body: "Second draft." }, null],
+      ])
+    }),
+  )
+
+  it.live("removing a secret attachment deletes its credential and never shows the value", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const events = yield* EventV2.Service
+      const database = yield* Database.Service
+      const seen: unknown[] = []
+      yield* events.all().pipe(
+        Stream.runForEach((event) => Effect.sync(() => seen.push(event))),
+        Effect.forkScoped,
+      )
+      yield* Effect.yieldNow
+      yield* board.project({ key: "RMV", name: "Remove", reason: "Start." })
+      yield* board.issue({ project: "RMV", title: "Deploy", reason: "Plan." })
+      yield* board.attach("RMV", 1, { kind: "secret", name: "Remove token", value: SECRET })
+      const attachment = (yield* board.issuePage("RMV", 1)).attachments[0]!
+      const credential = (yield* database.db.select().from(BoardAttachmentTable).where(eq(BoardAttachmentTable.id, attachment.id)).get().pipe(Effect.orDie))!
+        .credential_id!
+
+      const removed = yield* board.removeAttachment("RMV", 1, attachment.id)
+      expect((yield* board.issuePage("RMV", 1)).attachments).toEqual([])
+      expect(
+        yield* database.db.select().from(CredentialTable).where(eq(CredentialTable.id, credential)).all().pipe(Effect.orDie),
+      ).toEqual([])
+      expect(yield* Effect.flip(board.removeAttachment("RMV", 1, attachment.id))).toBeInstanceOf(Board.NotFoundError)
+      const logged = (yield* rows("RMV")).find((row) => row.action === "attachment.remove")
+      expect(logged).toMatchObject({ id: removed.activity, before: { id: attachment.id, kind: "secret", name: "Remove token" }, after: null })
+      expect(JSON.stringify([removed, yield* rows("RMV"), yield* board.snapshot("RMV"), seen])).not.toContain(SECRET)
+    }),
+  )
+
   it.live("reads the git trail live, keeps a good read briefly and reports signed out instead of stale data", () =>
     Effect.gen(function* () {
       const board = yield* Board.Service
@@ -303,6 +503,23 @@ describe("Board", () => {
     30_000,
   )
 })
+
+// Back-dates when each shipped issue shipped, the input the forecast's throughput reads.
+function shippedOn(key: string, numbers: number[], at: (number: number) => number) {
+  return Effect.gen(function* () {
+    const database = yield* Database.Service
+    const board = yield* Board.Service
+    const project = (yield* board.snapshot(key)).project
+    yield* Effect.forEach(numbers, (number) =>
+      database.db
+        .update(BoardIssueTable)
+        .set({ stage_entered_at: at(number) })
+        .where(and(eq(BoardIssueTable.project_id, project.id), eq(BoardIssueTable.number, number)))
+        .run()
+        .pipe(Effect.orDie),
+    )
+  })
+}
 
 function rows(key: string) {
   return Effect.gen(function* () {

@@ -114,18 +114,22 @@ export const Action = Schema.Literals([
   "question.withdraw",
   "question.answer",
   "note.add",
+  "note.edit",
+  "note.delete",
   "attachment.add",
+  "attachment.remove",
   "intake.accept",
   "intake.decline",
   "hold.set",
   "pause.set",
+  "archive.set",
   "github.overwrite",
   "github.state",
   "undo",
 ]).annotate({ identifier: "Board.Action" })
 export type Action = typeof Action.Type
 
-export const Health = Schema.Literals(["on_track", "waiting_on_owner", "paused"]).annotate({
+export const Health = Schema.Literals(["on_track", "at_risk", "waiting_on_owner", "paused"]).annotate({
   identifier: "Board.Health",
 })
 export type Health = typeof Health.Type
@@ -262,12 +266,59 @@ export const Activity = Schema.Struct({
   timeCreated: Schema.Finite,
 }).annotate({ identifier: "Board.Activity" })
 
+// When the remaining work should ship, from a seeded Monte Carlo over the daily shipped throughput. `waits` names the
+// issue an epic's remaining work is blocked on; `insufficient` means fewer than `needed` issues shipped so far.
+// Dates are UTC midnight epoch milliseconds.
+export const Forecast = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("done") }),
+  Schema.Struct({ kind: Schema.Literal("waits"), on: Schema.String }),
+  Schema.Struct({ kind: Schema.Literal("insufficient"), shipped: NonNegativeInt, needed: PositiveInt }),
+  Schema.Struct({
+    kind: Schema.Literal("dates"),
+    p50: Schema.Finite,
+    p85: Schema.Finite,
+    /** Whole days each date lands after the target; negative is early. Null without a target date. */
+    vsTarget: Schema.NullOr(Schema.Struct({ p50: Schema.Int, p85: Schema.Int })),
+  }),
+]).annotate({ identifier: "Board.Forecast" })
+export type Forecast = typeof Forecast.Type
+
+export interface ProjectForecast extends Schema.Schema.Type<typeof ProjectForecast> {}
+export const ProjectForecast = Schema.Struct({
+  shipped: NonNegativeInt,
+  remaining: NonNegativeInt,
+  targetDate: Schema.NullOr(Schema.Finite),
+  forecast: Forecast,
+}).annotate({ identifier: "Board.ProjectForecast" })
+
+// Epics forecast in position order, so an epic's dates include the open epics before it.
+export interface EpicForecast extends Schema.Schema.Type<typeof EpicForecast> {}
+export const EpicForecast = Schema.Struct({
+  epic: PositiveInt,
+  ref: Schema.String,
+  shipped: NonNegativeInt,
+  remaining: NonNegativeInt,
+  forecast: Forecast,
+  /** The long pole: the epic with the latest P85 sets the project date. */
+  setsDate: Schema.Boolean,
+}).annotate({ identifier: "Board.EpicForecast" })
+
+// One point each time the scope total or the shipped count changed; `reason` is the activity reason of a scope step.
+export interface ScopePoint extends Schema.Schema.Type<typeof ScopePoint> {}
+export const ScopePoint = Schema.Struct({
+  at: Schema.Finite,
+  scope: NonNegativeInt,
+  shipped: NonNegativeInt,
+  reason: Schema.NullOr(Schema.String),
+}).annotate({ identifier: "Board.ScopePoint" })
+
 export interface Summary extends Schema.Schema.Type<typeof Summary> {}
 export const Summary = Schema.Struct({
   project: Project,
   stages: Schema.Record(Schema.String, NonNegativeInt),
   openQuestions: NonNegativeInt,
   health: Health,
+  forecast: ProjectForecast,
 }).annotate({ identifier: "Board.Summary" })
 
 export interface Snapshot extends Schema.Schema.Type<typeof Snapshot> {}
@@ -278,6 +329,9 @@ export const Snapshot = Schema.Struct({
   questions: Schema.Array(Question),
   /** Newest activity id, to pass back as `since`. */
   cursor: Schema.NullOr(ActivityID),
+  forecast: ProjectForecast,
+  epicForecasts: Schema.Array(EpicForecast),
+  scope: Schema.Array(ScopePoint),
 }).annotate({ identifier: "Board.Snapshot" })
 
 // The git trail is read live and never stored. Signed out says so instead of showing stale data.
