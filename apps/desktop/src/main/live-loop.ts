@@ -1,6 +1,6 @@
 import { BrowserWindow, shell } from "electron"
 
-import { isNoAnswer, LIVE_PROMPTS, parseAnswer, parseStopSummary, worthSuggesting } from "./live-answer"
+import { isNoAnswer, LIVE_PROMPTS, NO_ANSWER, parseAnswer, parseStopSummary, worthSuggesting } from "./live-answer"
 import { readTranscriptionKey } from "./live-key"
 import type { MeetingServer } from "./live-meeting-client"
 import type { LiveOverlay } from "./live-overlay"
@@ -75,8 +75,26 @@ export function registerLiveLoop(options: {
       )
       return
     }
-    if (failed || request.kind === "notice" || request.dropped || isNoAnswer(request.text) || !request.text.trim()) return
+    if (request.kind === "notice") return
+    if (request.dropped) return restoreView()
+    // A failure keeps what already streamed; with nothing to show, the thinking view gives way.
+    if (isNoAnswer(request.text) || !request.text.trim()) return restoreView()
     overlay.pushAnswer(parseAnswer(request.text, { source: request.source, latencyMs, question: request.question }))
+  }
+
+  const restoreView = () => {
+    if (overlay.state().view.kind === "thinking")
+      overlay.setView(overlay.state().answers.length ? { kind: "answer" } : { kind: "idle" })
+  }
+
+  // Streams the answer as it arrives. A reply that may still turn out to be the no-answer token is held back.
+  const stream = (request: Request) => {
+    if ((request.kind !== "answer" && request.kind !== "suggestion") || request.dropped) return
+    const text = request.text.trim().toLowerCase()
+    if (!text || NO_ANSWER.startsWith(text) || isNoAnswer(text)) return
+    overlay.streamAnswer(
+      parseAnswer(request.text, { source: request.source, latencyMs: (request.firstAt ?? 0) - request.sentAt, question: request.question }),
+    )
   }
 
   const onSession = (meeting: Meeting, event: LiveSessionEvent) => {
@@ -85,13 +103,13 @@ export function registerLiveLoop(options: {
     if (event.kind === "delta") {
       request.firstAt ??= Date.now()
       request.text += event.delta
-      return
+      return stream(request)
     }
     // A turn can hold several text parts around tool calls; the last full part is the answer.
     if (event.kind === "text") {
       request.firstAt ??= Date.now()
       request.text = event.text
-      return
+      return stream(request)
     }
     settle(meeting, event.kind === "failed" ? event.message : undefined)
   }
@@ -128,6 +146,7 @@ export function registerLiveLoop(options: {
         return undefined
       })
     if (!frame) return
+    overlay.setView({ kind: "thinking", question })
     const text = question ? `${LIVE_PROMPTS.look}\n${question}` : LIVE_PROMPTS.look
     await send(
       meeting,
@@ -154,16 +173,18 @@ export function registerLiveLoop(options: {
     const running = meeting.senses !== undefined
     if (action.kind === "ask" && running) {
       const question = action.question?.trim() || undefined
-      // The bare hotkey or bar button also opens the field and quick actions while the answer comes.
-      if (!question) overlay.setView({ kind: "quick" })
+      overlay.setView({ kind: "thinking", question })
       return send(meeting, { kind: "answer", source: "heard", question }, { text: question ?? LIVE_PROMPTS.ask })
     }
     if (action.kind === "look" && running) return look(meeting)
-    if (action.kind === "quick" && running)
+    if (action.kind === "quick" && running) {
+      overlay.setView({ kind: "thinking" })
       return send(meeting, { kind: "answer", source: "heard" }, { text: LIVE_PROMPTS.quick[action.id] })
+    }
     if (action.kind === "suggestion") {
       overlay.setView(overlay.state().answers.length ? { kind: "answer" } : { kind: "idle" })
       if (!action.answer || !meeting.lastQuestion || !running) return
+      overlay.setView({ kind: "thinking", question: meeting.lastQuestion })
       return send(
         meeting,
         { kind: "suggestion", source: "heard", question: meeting.lastQuestion },
