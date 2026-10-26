@@ -1641,10 +1641,20 @@ textarea.board-input {
   gap: 4px;
   overflow-x: auto;
   margin: 0;
-  padding: 0;
+  padding: 0 24px 0 0;
   list-style: none;
   color: var(--orchestra-muted);
   font-size: var(--orchestra-font-size-xs);
+  scrollbar-width: none;
+  /* Long histories scroll sideways; the far edge fades instead of cutting an event in half. */
+  -webkit-mask-image: linear-gradient(to right, black 0, black calc(100% - 32px), transparent 100%);
+  mask-image: linear-gradient(to right, black 0, black calc(100% - 32px), transparent 100%);
+}
+
+.board-replay-events:dir(rtl) {
+  padding: 0 0 0 24px;
+  -webkit-mask-image: linear-gradient(to left, black 0, black calc(100% - 32px), transparent 100%);
+  mask-image: linear-gradient(to left, black 0, black calc(100% - 32px), transparent 100%);
 }
 
 .board-replay-events .board-option {

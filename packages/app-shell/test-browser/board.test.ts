@@ -27,7 +27,7 @@ if (process.env.BOARD_DOM !== "1") {
   const base = {
     id: "prj_launch", key: "LCH", name: "Launch", goal: "Ship the first public build", targetDate: null, budgetUsd: null,
     repoProjectID: null, githubRepo: null, status: "active", pausedReason: null, autoAcceptIntake: false,
-    githubState: "signed_out", githubError: null, githubSyncedAt: null,
+    githubState: "signed_out", githubError: "To get started with GitHub CLI, please run:  gh auth login", githubSyncedAt: null,
   }
   const issue = (number: number, stage: string, extra: Record<string, unknown> = {}) => ({
     id: `iss_${number}`, number, ref: `LCH-${number}`, epic: null, title: `Issue ${number}`, body: "", type: "feature", stage,
@@ -294,7 +294,11 @@ if (process.env.BOARD_DOM !== "1") {
     state.writes = []
     const card = view.host.querySelector<HTMLElement>('.board-intake-card[data-intake="LCH-5"]')!
     expect(card.textContent).toContain("Issue 5")
-    expect(view.host.querySelector(".board-intake-strip")?.textContent).toContain("GitHub not synced")
+    const strip = view.host.querySelector(".board-intake-strip")?.textContent
+    expect(strip).toContain("GitHub not synced")
+    // Our own words, never the gh CLI's stderr.
+    expect(strip).toContain("Run gh auth login to mirror issues.")
+    expect(view.host.textContent).not.toContain("To get started with GitHub CLI")
     const action = (text: string) => [...card.querySelectorAll<HTMLButtonElement>("button")].find((item) => item.textContent?.trim() === text)!
     action("Accept").click()
     await until(() => state.writes.length > 0, view.host)

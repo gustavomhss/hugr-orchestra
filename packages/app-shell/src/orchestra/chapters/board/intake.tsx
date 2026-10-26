@@ -61,10 +61,17 @@ export function Intake(props: {
           <p class="board-held-note" role="status">
             <b>{t("orchestra.board.trail.signedOut")}</b>
             {" · "}
-            {project().githubError ??
-              (project().githubSyncedAt === null
-                ? t("orchestra.board.intake.never")
-                : t("orchestra.board.intake.since", { date: date(project().githubSyncedAt ?? 0) }))}
+            {/* githubError is raw gh stderr; the owner reads our own words for each state instead. */}
+            {t(
+              project().githubState === "signed_out"
+                ? "orchestra.board.intake.signedOut"
+                : project().githubState === "rate_limited"
+                  ? "orchestra.board.intake.limited"
+                  : "orchestra.board.intake.failed",
+            )}
+            <Show when={project().githubSyncedAt}>
+              {(at) => <> {t("orchestra.board.intake.since", { date: date(at()) })}</>}
+            </Show>
           </p>
         </Show>
         <Show when={queue().themes.length > 0}>
