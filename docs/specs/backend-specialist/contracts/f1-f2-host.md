@@ -45,7 +45,7 @@ Owner rulings this draft applies and does not reopen: Maestro owns scope and per
   2. `ToolSafety` applies the Maestro- or user-bound scope on top (F2.14).
   3. The backend specialist implements no scope or permission enforcement of its own.
 
-  `PermissionV1.DeniedError` and `Tool safety HOLD: <reason>` reach the backend specialist as tool failures. The backend specialist reports them as blockers and never retries around them.
+  `PermissionV2.DeclinedError`, `PermissionV2.BlockedError` and `Tool safety HOLD: <reason>` reach the backend specialist as tool failures. The backend specialist reports them as blockers and never retries around them.
 
 **Stable-ID paths**
 

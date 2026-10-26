@@ -1,5 +1,7 @@
 # PLAN B1-C: Maestro, the Claude Code engine and continuity on the V2 Session core
 
+> Status (2026-10-25): the V1 Session, Permission and Question schema contracts named below (`SessionV1`, `PermissionV1`, `QuestionV1`, `@orchestra/schema/v1/*`) have been deleted. Session lifecycle now uses `session.next.created`, `session.next.renamed` and `session.next.deleted`, and legacy rows are decoded privately by `packages/core/src/session/legacy-transcript.ts`. The measurements below describe the base SHA and are kept as a historical record.
+
 Base: `origin/dev` @ `49759589af` (Merge #817), read from a `git archive` snapshot. Nothing was built, typechecked or
 tested. The local checkout (`dev` @ `e0a0278cb5`) predates the monolith layout and was not used. B1 (plan 70-C') has
 not landed: there is no `packages/core/src/host.ts`, no `modules/{engine-adapters,continuity}`, and `modules/maestro`

@@ -1,5 +1,7 @@
 # Product convergence plan: one client, one server, one CLI
 
+> Status (2026-10-25): the V1 Session, Permission and Question schema contracts named below (`SessionV1`, `PermissionV1`, `QuestionV1`, `@orchestra/schema/v1/*`) have been deleted. Session lifecycle now uses `session.next.created`, `session.next.renamed` and `session.next.deleted`, and legacy rows are decoded privately by `packages/core/src/session/legacy-transcript.ts`. The measurements below describe the base SHA and are kept as a historical record.
+
 Base: `fork/dev` @ `769b3b6e69` (Merge #809 scaffold-followups). Read-only measurement against a `git archive` snapshot;
 nothing was built, typechecked or tested. Counts come from scripts that parse import statements and count
 word-boundary references of each imported local name in the importing file ("uses" = references excluding the import

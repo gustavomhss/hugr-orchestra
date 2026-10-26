@@ -1,5 +1,7 @@
 # PLAN 70-C' (convergence card B1): product layers out of removed-v1
 
+> Status (2026-10-25): the V1 Session, Permission and Question schema contracts named below (`SessionV1`, `PermissionV1`, `QuestionV1`, `@orchestra/schema/v1/*`) have been deleted. Session lifecycle now uses `session.next.created`, `session.next.renamed` and `session.next.deleted`, and legacy rows are decoded privately by `packages/core/src/session/legacy-transcript.ts`. The measurements below describe the base SHA and are kept as a historical record.
+
 Base: `fork/dev` @ `4ce72fa6c7` (Merge #802). This is a read-only measurement of a `git archive` snapshot. Nothing was
 built, typechecked or tested.
 
