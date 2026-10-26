@@ -105,10 +105,10 @@ export async function startOwnedServe(options: {
   return { url, username: "orchestra", password, listener: { stop }, health: { wait: health } }
 }
 
-/** The server a launch uses, from `ORCHESTRA_SIDECAR_V2`: the owned V2 child unless "1" asks for the shared daemon. */
-export function sidecarVersion(value: string | undefined) {
-  if (value === "1") return "v2" as const
-  return "v2-owned" as const
+/** The server a launch uses, from `ORCHESTRA_SIDECAR`: the desktop-owned child unless "shared" asks for the shared daemon. */
+export function sidecarMode(value: string | undefined) {
+  if (value === "shared") return "shared" as const
+  return "owned" as const
 }
 
 async function healthy(url: string, password: string) {

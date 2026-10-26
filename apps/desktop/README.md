@@ -45,12 +45,12 @@ when it crashes, and stops with the app (`src/main/owned-serve.ts`). It reaches 
 through a loopback channel (`src/main/dock-channel.ts`). On its first start it copies V1 transcripts from the shared
 database into V2 once.
 
-`ORCHESTRA_SIDECAR_V2` selects another server for the launch:
+`ORCHESTRA_SIDECAR` selects another server for the launch:
 
 | Value | Server |
 | --- | --- |
-| unset or `owned` | the desktop-owned V2 `orchestra serve` child (default) |
-| `1` | the shared V2 background daemon managed through the CLI |
+| unset or `owned` | the desktop-owned `orchestra serve` child (default) |
+| `shared` | the shared background daemon managed through the CLI |
 
 The lean candidate profile always uses the desktop-owned child.
 

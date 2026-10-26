@@ -49,7 +49,7 @@ import { spawnWslSidecar } from "./wsl/sidecar"
 import { migrate } from "./migrate"
 import { cleanupStoreFiles } from "./store-cleanup"
 import { resolveCliBinary, startBackgroundCli } from "./background-cli"
-import { sidecarVersion, startOwnedServe } from "./owned-serve"
+import { sidecarMode, startOwnedServe } from "./owned-serve"
 import { startDockChannel } from "./dock-channel"
 import { readWslExpectedVersion } from "./cli-version"
 import { nativeT, setNativeTranslations } from "./native-translations"
@@ -86,7 +86,7 @@ const APP_IDS: Record<string, string> = {
 const TEST_ONBOARDING = process.env.ORCHESTRA_TEST_ONBOARDING === "1"
 // Default: a desktop-owned `orchestra serve` V2 child; "1" uses the shared background daemon. See apps/desktop/README.md.
 // A lean candidate always owns its server: its isolated profile must not reach the host's daemon.
-const SIDECAR_VERSION = candidateProfile ? "v2-owned" : sidecarVersion(process.env.ORCHESTRA_SIDECAR_V2)
+const SIDECAR_MODE = candidateProfile ? "owned" : sidecarMode(process.env.ORCHESTRA_SIDECAR)
 const jsCallStackFeature = "DocumentPolicyIncludeJSCallStacksInCrashReports"
 
 let logger: ReturnType<typeof initLogging>
@@ -398,13 +398,13 @@ const main = Effect.gen(function* () {
   )
 
   const loadingTask = yield* Effect.gen(function* () {
-    logger.log("sidecar connection started", { version: SIDECAR_VERSION })
+    logger.log("sidecar connection started", { mode: SIDECAR_MODE })
 
     ensureLoopbackNoProxy()
     useEnvProxy()
 
-    if (SIDECAR_VERSION === "v2") {
-      logger.log("spawning v2 sidecar")
+    if (SIDECAR_MODE === "shared") {
+      logger.log("starting shared background sidecar")
       const sidecar = yield* Effect.promise(() => startBackgroundCli(logger, shellEnv?.XDG_STATE_HOME))
       yield* Deferred.succeed(serverReady, {
         url: sidecar.url,
