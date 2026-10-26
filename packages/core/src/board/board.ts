@@ -480,8 +480,8 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
         const streak = BoardForecast.late(forecast.project) ? project.forecast_late_streak + 1 : 0
         if (streak !== project.forecast_late_streak)
           yield* tx.update(BoardProjectTable).set({ forecast_late_streak: streak }).where(eq(BoardProjectTable.id, project.id)).run()
-        if (project.budget_usd === null || project.status === "archived" || forecast.project.kind === "done") return undefined
-        const budget = (yield* spendOf(tx, project, forecast.project)).budget
+        if (project.budget_usd === null || project.status === "archived" || forecast.project.forecast.kind === "done") return undefined
+        const budget = (yield* spendOf(tx, project, forecast.project.forecast)).budget
         if (budget.forecastUsd === null || budget.forecastPercent === null || budget.forecastPercent < BoardSpend.QUESTION * 100) return undefined
         // One question per budget figure: raising the budget makes a new one possible, answering never re-asks.
         const kind = `budget:${project.budget_usd}`
@@ -922,7 +922,8 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
           return yield* reading((tx) =>
             Effect.gen(function* () {
               const project = yield* loadProject(tx, key)
-              return yield* spendOf(tx, project, (yield* forecastOf(tx, project)).project)
+              const forecast = yield* forecastOf(tx, project)
+              return yield* spendOf(tx, project, forecast.project.forecast)
             }),
           )
         }),
