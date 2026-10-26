@@ -860,6 +860,8 @@ export const dict = {
   "settings.live.key.placeholder": "Paste key",
   "settings.live.key.save": "Save",
   "settings.live.key.remove": "Remove",
+  "settings.live.key.failed": "Could not save the key",
+  "settings.live.key.keychain": "The system keychain is not available",
   "settings.live.protection.title": "Hide from screen sharing",
   "settings.live.protection.description": "Keep the overlay out of screen shares and recordings",
   "live.command.start": "Start meeting",

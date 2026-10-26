@@ -7,6 +7,7 @@ import { TextInputV2 } from "@orchestra/ui/v2/text-input-v2"
 import { useLanguage } from "@/context/language"
 import { usePlatform, type LiveSeatPlatform } from "@/context/platform"
 import { startLiveMeeting } from "@/orchestra/live/commands"
+import { showToast } from "@/utils/toast"
 import { useUpdaterAction } from "../updater-action"
 import { useSettings } from "@/context/settings"
 import { SettingsListV2 } from "./parts/list"
@@ -568,7 +569,19 @@ function LiveSeatSection(props: { seat: LiveSeatPlatform }) {
     })
   }
   const toggleMeeting = () => run(state.latest?.running ? props.seat.stop() : startLiveMeeting(props.seat, language.t))
-  const saveKey = (value: string) => run(props.seat.setTranscriptionKey(value).then(() => void setKey("")))
+  const saveKey = (value: string) =>
+    run(
+      props.seat
+        .setTranscriptionKey(value)
+        .then(() => void setKey(""))
+        .catch(() =>
+          showToast({
+            variant: "error",
+            title: language.t("settings.live.key.failed"),
+            description: language.t("settings.live.key.keychain"),
+          }),
+        ),
+    )
   const setProtection = (enabled: boolean) => {
     mutate((current) => current && { ...current, protection: enabled })
     void props.seat.setContentProtection(enabled).catch(() => refetch())
@@ -595,25 +608,27 @@ function LiveSeatSection(props: { seat: LiveSeatPlatform }) {
           description={language.t(state.latest?.key ? "settings.live.key.saved" : "settings.live.key.missing")}
         >
           <form
-            class="flex items-center gap-2"
+            class="flex w-80 items-center gap-2"
             data-action="settings-live-key"
             onSubmit={(event) => {
               event.preventDefault()
               if (key().trim()) saveKey(key().trim())
             }}
           >
-            <TextInputV2
-              type="password"
-              appearance="base"
-              value={key()}
-              onInput={(event) => setKey(event.currentTarget.value)}
-              placeholder={language.t("settings.live.key.placeholder")}
-              spellcheck={false}
-              autocorrect="off"
-              autocomplete="off"
-              autocapitalize="off"
-              aria-label={language.t("settings.live.key.title")}
-            />
+            <div class="min-w-0 flex-1">
+              <TextInputV2
+                type="password"
+                appearance="base"
+                value={key()}
+                onInput={(event) => setKey(event.currentTarget.value)}
+                placeholder={language.t("settings.live.key.placeholder")}
+                spellcheck={false}
+                autocorrect="off"
+                autocomplete="off"
+                autocapitalize="off"
+                aria-label={language.t("settings.live.key.title")}
+              />
+            </div>
             <ButtonV2 type="submit" size="normal" variant="neutral" disabled={busy() || !key().trim()}>
               {language.t("settings.live.key.save")}
             </ButtonV2>
