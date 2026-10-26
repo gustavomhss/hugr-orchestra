@@ -256,7 +256,7 @@ async function resolveSession(client: Client, options: Options, location: { dire
 
 /** Headless runs cannot answer questions, so whichever Session they prompt (new, continued, resumed or forked) denies them. */
 async function denyQuestions(client: Client, sessionID: string) {
-  const current = (await client.sessions.getPermission({ sessionID })).data
+  const current = (await client.sessions.getPermission({ sessionID }))
   if (current.some((rule) => rule.permission === "question" && rule.pattern === "*" && rule.action === "deny")) return
   // setPermission replaces the whole ruleset, so the Session's existing rules are kept and the deny goes last to win.
   await client.sessions.setPermission({
