@@ -115,7 +115,7 @@ const sessionMessageRows = Effect.fn("LeanProject.sessionMessageRows")(function*
     FROM ${SessionMessageTable}
     INNER JOIN ${SessionTable} ON ${SessionTable.id} = ${SessionMessageTable.session_id}
     INNER JOIN json_each(${SessionMessageTable.data}, '$.content') AS part
-    WHERE ${SessionTable.project_id} = ${scope.projectID} AND ${SessionTable.directory} = ${scope.directory}
+    WHERE ${SessionTable.project_id} = ${scope.projectID} AND ${SessionTable.directory} = ${sql.param(scope.directory, SessionTable.directory)}
       AND ${SessionMessageTable.type} = 'assistant'
       AND json_extract(part.value, '$.type') = 'tool' AND json_type(part.value, '$.state.metadata.lean') IS NOT NULL
     ORDER BY ${latest ? sql`time DESC, ${SessionMessageTable.seq} DESC, part.key DESC` : sql`${SessionMessageTable.seq} ASC, part.key ASC`}
