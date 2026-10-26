@@ -5,7 +5,7 @@ import type { NativeTitlebarFrame } from "@orchestra/app/native-titlebar"
 import oc2ThemeJson from "../../../../packages/ui/src/theme/themes/oc-2.json"
 import { randomUUID } from "node:crypto"
 import { rmSync } from "node:fs"
-import { app, BrowserWindow, dialog, net, nativeImage, nativeTheme, protocol, shell } from "electron"
+import { app, BrowserWindow, dialog, net, nativeImage, nativeTheme, protocol, shell, type Rectangle } from "electron"
 import { dirname, isAbsolute, join, relative, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import type { TitlebarTheme } from "../preload/types"
@@ -79,7 +79,7 @@ export function setAppQuitting(quitting = true) {
 
 export function setBackgroundColor(color: string) {
   backgroundColor = color
-  BrowserWindow.getAllWindows().forEach((win) => {
+  BrowserWindow.getAllWindows().filter(isMainWindow).forEach((win) => {
     win.setBackgroundColor(color)
     if (process.platform === "darwin") win.invalidateShadow()
   })
@@ -148,7 +148,7 @@ export function setTitlebarFrame(win: BrowserWindow, value: unknown) {
 
 export function setPinchZoomEnabled(enabled: boolean) {
   getStore().set(PINCH_ZOOM_ENABLED_KEY, enabled)
-  for (const win of BrowserWindow.getAllWindows()) {
+  for (const win of BrowserWindow.getAllWindows().filter(isMainWindow)) {
     pinchZoomEnabled.set(win, enabled)
     win.webContents.send("pinch-zoom-enabled-changed", enabled)
     if (!enabled && win.webContents.getZoomFactor() !== 1) win.webContents.setZoomFactor(1)
@@ -164,9 +164,14 @@ export function getWindowID(win: BrowserWindow) {
   return windowIDs.get(win)
 }
 
+// Main windows only: the live overlay is not one, and is never the window a menu command or a reopen targets.
+export function isMainWindow(win: BrowserWindow) {
+  return windowIDs.has(win)
+}
+
 export function getLastFocusedWindow() {
   const focused = BrowserWindow.getFocusedWindow()
-  if (focused) return focused
+  if (focused && isMainWindow(focused)) return focused
   const win = registry.lastFocused()
   if (!win || win.isDestroyed()) return null
   return win
@@ -250,6 +255,43 @@ export function createMainWindow(id: string = randomUUID(), splash = false) {
     win.show()
   })
 
+  return win
+}
+
+// The live seat overlay: a transparent, non-activating panel (macOS) that floats over a call without taking focus.
+// It shares the renderer protocol and the default Session with the main windows but none of their theme, zoom,
+// restore or unload handling.
+export function createLiveOverlayWindow(bounds: Rectangle) {
+  const win = new BrowserWindow({
+    ...bounds,
+    show: false,
+    ...(process.platform === "darwin" ? { type: "panel" } : {}),
+    frame: false,
+    transparent: true,
+    backgroundColor: "#00000000",
+    hasShadow: false,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    focusable: false,
+    skipTaskbar: true,
+    alwaysOnTop: true,
+    title: nativeT("desktop.menu.app"),
+    webPreferences: {
+      preload: join(root, "../preload/live.js"),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+      backgroundThrottling: false,
+    },
+  })
+  registerRendererPermissions(win.webContents.session, win.webContents, isRendererUrl)
+  win.webContents.setWindowOpenHandler(() => ({ action: "deny" }))
+  win.webContents.on("will-navigate", (event, url) => {
+    if (!isRendererUrl(url)) event.preventDefault()
+  })
+  loadWindow(win, "live/index.html")
   return win
 }
 

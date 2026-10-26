@@ -88,7 +88,11 @@ const require = __cjs_mod__.createRequire(import.meta.url);
   preload: {
     build: {
       rollupOptions: {
-        input: { index: "src/preload/index.ts", "live-capture": "src/preload/live-capture.ts" },
+        input: {
+          index: "src/preload/index.ts",
+          live: "src/preload/live.ts",
+          "live-capture": "src/preload/live-capture.ts",
+        },
         output: {
           format: "cjs",
           entryFileNames: "[name].js",
@@ -105,6 +109,7 @@ const require = __cjs_mod__.createRequire(import.meta.url);
       rollupOptions: {
         input: {
           main: "src/renderer/index.html",
+          live: "src/renderer/live/index.html",
         },
       },
     },
