@@ -7,7 +7,9 @@ import {
   visualPlan,
 } from "../../utils/visual-stability"
 import {
+  assistantID,
   assistantMessage,
+  loadedPartID,
   partUpdated,
   setupTimeline,
   shell,
@@ -20,13 +22,19 @@ import {
 for (const deviceScaleFactor of [1, 1.25]) {
   test(`keeps shell growth ordered at device scale ${deviceScaleFactor}`, async ({ page }, testInfo) => {
     const shellID = `prt_dpr_${String(deviceScaleFactor).replace(".", "_")}_01_shell`
-    const followingID = `prt_dpr_${String(deviceScaleFactor).replace(".", "_")}_02_following`
+    const followingID = loadedPartID(assistantID, "text")
     const timeline = await setupTimeline(page, {
       messages: [
         userMessage(),
-        assistantMessage([shell(shellID, "running"), textPart(followingID, "Following scaled shell")], {
-          completed: false,
-        }),
+        assistantMessage(
+          [
+            shell(shellID, "running"),
+            textPart(`prt_dpr_${String(deviceScaleFactor).replace(".", "_")}_02_following`, "Following scaled shell"),
+          ],
+          {
+            completed: false,
+          },
+        ),
       ],
       settings: { shellToolPartsExpanded: true },
       cpuRate: 4,
@@ -57,13 +65,16 @@ for (const reducedMotion of [true]) {
     page,
   }, testInfo) => {
     const shellID = `prt_motion_${reducedMotion}_01_shell`
-    const followingID = `prt_motion_${reducedMotion}_02_following`
+    const followingID = loadedPartID(assistantID, "text")
     const timeline = await setupTimeline(page, {
       messages: [
         userMessage(),
-        assistantMessage([shell(shellID, "running"), textPart(followingID, "Following motion profile")], {
-          completed: false,
-        }),
+        assistantMessage(
+          [shell(shellID, "running"), textPart(`prt_motion_${reducedMotion}_02_following`, "Following motion profile")],
+          {
+            completed: false,
+          },
+        ),
       ],
       settings: { shellToolPartsExpanded: true },
       reducedMotion,

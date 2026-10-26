@@ -76,22 +76,23 @@ test.describe("regression: session timeline context group resize", () => {
     })
     await startVisualProbe(page, regions)
     for (const [index, delay] of [120, 350, 80, 500].entries()) {
+      // Each running history tool settles through a V2 tool.success on its call.
       events.push({
         directory,
         payload: {
-          type: "message.part.updated",
+          type: "session.tool.success",
           properties: {
-            part: contextTool(
-              contextIDs[index]!,
-              id("msg_assistant", 10),
-              ["read", "glob", "grep", "list"][index]!,
-              [
-                { filePath: "src/recent-a.ts" },
-                { path: directory, pattern: "**/*.ts" },
-                { path: directory, pattern: "Explored" },
-                { path: "src" },
-              ][index]!,
-            ),
+            sessionID,
+            assistantMessageID: id("msg_assistant", 10),
+            callID: contextIDs[index]!,
+            content: [
+              {
+                type: "text",
+                text: `Completed ${["read", "glob", "grep", "list"][index]!}.\n${"detail line\n".repeat(8)}`,
+              },
+            ],
+            metadata: {},
+            executed: false,
           },
         },
       })

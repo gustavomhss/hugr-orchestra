@@ -10,7 +10,7 @@ import {
   assistantID,
   assistantMessage,
   completedAssistantInfo,
-  event,
+  loadedPartID,
   messageUpdated,
   partDelta,
   partUpdated,
@@ -22,35 +22,6 @@ import {
   userMessage,
 } from "./fixture"
 
-test("keeps unchanged siblings stable while a middle part is inserted and removed", async ({ page }, testInfo) => {
-  const firstID = "prt_mutation_01_first"
-  const middleID = "prt_mutation_02_middle"
-  const lastID = "prt_mutation_03_last"
-  const timeline = await setupTimeline(page, {
-    messages: [
-      userMessage(),
-      assistantMessage([textPart(firstID, "First stable row"), textPart(lastID, "Last stable row")], {
-        completed: false,
-      }),
-    ],
-    cpuRate: 4,
-  })
-  const regions = defineVisualRegions({
-    first: { selector: `[data-timeline-part-id="${firstID}"]`, closest: '[data-timeline-row="AssistantPart"]' },
-    last: { selector: `[data-timeline-part-id="${lastID}"]`, closest: '[data-timeline-row="AssistantPart"]' },
-  })
-  await startVisualProbe(page, regions)
-  await timeline.send(partUpdated(textPart(middleID, "Inserted middle row. ".repeat(12))), 350)
-  await expect(page.locator(`[data-timeline-part-id="${middleID}"]`)).toBeVisible()
-  await timeline.send(
-    event("message.part.removed", { sessionID: "ses_timeline_stability", messageID: assistantID, partID: middleID }),
-    500,
-  )
-  await expect(page.locator(`[data-timeline-part-id="${middleID}"]`)).toHaveCount(0)
-  const trace = await stopVisualProbe<keyof typeof regions>(page)
-  await reportVisualStability(testInfo, "middle-insert-remove", trace, stablePairPlan(regions, 1))
-})
-
 test("streams text through growth, canonical replacement, and completion", async ({ page }, testInfo) => {
   const textID = "prt_text_reconcile"
   const followingID = "prt_text_reconcile_following"
@@ -59,8 +30,14 @@ test("streams text through growth, canonical replacement, and completion", async
   })
   const timeline = await setupTimeline(page, { messages: [userMessage(), assistant], cpuRate: 4 })
   const regions = defineVisualRegions({
-    text: { selector: `[data-timeline-part-id="${textID}"]`, closest: '[data-timeline-row="AssistantPart"]' },
-    following: { selector: `[data-timeline-part-id="${followingID}"]`, closest: '[data-timeline-row="AssistantPart"]' },
+    text: {
+      selector: `[data-timeline-part-id="${loadedPartID(assistantID, "text", 0)}"]`,
+      closest: '[data-timeline-row="AssistantPart"]',
+    },
+    following: {
+      selector: `[data-timeline-part-id="${loadedPartID(assistantID, "text", 1)}"]`,
+      closest: '[data-timeline-row="AssistantPart"]',
+    },
   })
   await startVisualProbe(page, regions)
   await timeline.send(partDelta(textID, " streamed content"), 100)
@@ -107,8 +84,14 @@ test("inserts a completed question between stable rows", async ({ page }, testIn
   })
   await expect(page.locator(`[data-timeline-part-id="${questionID}"]`)).toHaveCount(0)
   const regions = defineVisualRegions({
-    first: { selector: `[data-timeline-part-id="${firstID}"]`, closest: '[data-timeline-row="AssistantPart"]' },
-    last: { selector: `[data-timeline-part-id="${lastID}"]`, closest: '[data-timeline-row="AssistantPart"]' },
+    first: {
+      selector: `[data-timeline-part-id="${loadedPartID(assistantID, "text", 0)}"]`,
+      closest: '[data-timeline-row="AssistantPart"]',
+    },
+    last: {
+      selector: `[data-timeline-part-id="${loadedPartID(assistantID, "text", 1)}"]`,
+      closest: '[data-timeline-row="AssistantPart"]',
+    },
   })
   await startVisualProbe(page, regions)
   await timeline.send(
@@ -169,10 +152,7 @@ test("updates retry attempts and long provider messages without remounting the r
     retry: { selector: '[data-timeline-row="Retry"]' },
   })
   await startVisualProbe(page, regions)
-  await timeline.send(
-    status("retry", 2, "A very long provider retry message ".repeat(8)),
-    300,
-  )
+  await timeline.send(status("retry", 2, "A very long provider retry message ".repeat(8)), 300)
   await timeline.send(status("retry", 3), 300)
   const trace = await stopVisualProbe<keyof typeof regions>(page)
   await reportVisualStability(
@@ -185,59 +165,6 @@ test("updates retry attempts and long provider messages without remounting the r
         { type: "required", regions: ["retry"] },
         { type: "unique", regions: ["retry"] },
         { type: "stable", regions: ["retry"] },
-        { type: "opacity", regions: "all" },
-        { type: "continuity", regions: "all" },
-        { type: "motion", regions: "all", maxPositionReversals: 0 },
-        { type: "label-stability", regions: "all" },
-      ],
-      { perMarker: true },
-    ),
-  )
-})
-
-test("reducer-hardening: removes a historical turn one message at a time without moving a visible lower anchor twice", async ({
-  page,
-}, testInfo) => {
-  const removeUserID = "msg_0500_remove_user"
-  const removeAssistantID = "msg_0501_remove_assistant"
-  const anchorUserID = "msg_2000_anchor_user"
-  const timeline = await setupTimeline(page, {
-    messages: [
-      userMessage(undefined, { id: removeUserID, created: 1690000000000 }),
-      assistantMessage([textPart("prt_remove_text", "Removed historical content. ".repeat(15))], {
-        id: removeAssistantID,
-        parentID: removeUserID,
-        created: 1690000001000,
-      }),
-      userMessage(undefined, { id: anchorUserID, created: 1700000000000 }),
-      assistantMessage([textPart("prt_anchor_text", "Visible anchor response")], {
-        id: "msg_2001_anchor_assistant",
-        parentID: anchorUserID,
-        created: 1700000001000,
-      }),
-    ],
-    cpuRate: 4,
-  })
-  const regions = defineVisualRegions({
-    anchor: { selector: `[data-timeline-row="UserMessage"][data-message-id="${anchorUserID}"]` },
-  })
-  await startVisualProbe(page, regions)
-  await timeline.send(
-    event("message.removed", { sessionID: "ses_timeline_stability", messageID: removeAssistantID }),
-    200,
-  )
-  await timeline.send(event("message.removed", { sessionID: "ses_timeline_stability", messageID: removeUserID }), 500)
-  const trace = await stopVisualProbe<keyof typeof regions>(page)
-  await reportVisualStability(
-    testInfo,
-    "historical-turn-remove",
-    trace,
-    visualPlan(
-      regions,
-      [
-        { type: "required", regions: ["anchor"] },
-        { type: "unique", regions: ["anchor"] },
-        { type: "stable", regions: ["anchor"] },
         { type: "opacity", regions: "all" },
         { type: "continuity", regions: "all" },
         { type: "motion", regions: "all", maxPositionReversals: 0 },

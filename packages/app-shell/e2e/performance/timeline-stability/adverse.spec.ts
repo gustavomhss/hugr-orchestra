@@ -7,7 +7,9 @@ import {
   visualPlan,
 } from "../../utils/visual-stability"
 import {
+  assistantID,
   assistantMessage,
+  loadedPartID,
   partUpdated,
   setupTimeline,
   shell,
@@ -111,12 +113,15 @@ test.describe("timeline adverse visual stability", () => {
 
   test("keeps narrow viewport rows ordered during long shell growth", async ({ page }, testInfo) => {
     const shellID = "prt_narrow_01_shell"
-    const followingID = "prt_narrow_02_following"
+    const followingID = loadedPartID(assistantID, "text")
     const timeline = await setupTimeline(page, {
       messages: [
         userMessage(),
         assistantMessage(
-          [shell(shellID, "running"), textPart(followingID, "A narrow following row that wraps across lines.")],
+          [
+            shell(shellID, "running"),
+            textPart("prt_narrow_02_following", "A narrow following row that wraps across lines."),
+          ],
           {
             completed: false,
           },
@@ -167,7 +172,7 @@ test.describe("timeline adverse visual stability", () => {
   test("keeps visible rows ordered while resizing desktop to narrow and back", async ({ page }, testInfo) => {
     const shellID = "prt_resize_01_shell"
     const contextIDs = ["prt_resize_02_read", "prt_resize_03_glob"]
-    const followingID = "prt_resize_04_following"
+    const followingID = loadedPartID(assistantID, "text")
     await setupTimeline(page, {
       messages: [
         userMessage(),
@@ -175,7 +180,7 @@ test.describe("timeline adverse visual stability", () => {
           shell(shellID, "completed", wideLines(15)),
           toolPart(contextIDs[0]!, "read", "completed", { filePath: "src/a.ts" }),
           toolPart(contextIDs[1]!, "glob", "completed", { path: ".", pattern: "**/*.ts" }),
-          textPart(followingID, "Following responsive timeline content that wraps on narrow screens."),
+          textPart("prt_resize_04_following", "Following responsive timeline content that wraps on narrow screens."),
         ]),
       ],
       settings: { shellToolPartsExpanded: true },

@@ -8,7 +8,8 @@ const sessionID = "ses_timeline_state_regression"
 const userMessageID = "msg_user_regression"
 const assistantMessageID = "msg_assistant_regression"
 const editPartID = "prt_0001_edit"
-const textPartID = "prt_9999_text"
+// V2 text has no part ID of its own: the timeline derives it from the message and the text ordinal.
+const textPartID = `${assistantMessageID}:text:0`
 const title = "Timeline collapse state regression"
 const model = { providerID: "opencode", modelID: "claude-opus-4-6", variant: "max" }
 
@@ -73,13 +74,14 @@ const editPart = {
   },
 }
 
-const streamedTextPart = {
-  id: textPartID,
-  sessionID,
-  messageID: assistantMessageID,
-  type: "text",
-  text: "Streaming added a later assistant text part.",
-}
+// A later assistant text part streams in as the V2 events that open and settle a new text slot.
+const streamedText = [
+  { type: "session.text.started", properties: { sessionID, assistantMessageID, ordinal: 0 } },
+  {
+    type: "session.text.ended",
+    properties: { sessionID, assistantMessageID, ordinal: 0, text: "Streaming added a later assistant text part." },
+  },
+].map((payload) => ({ directory, payload }))
 
 const assistantMessage = {
   info: {
@@ -119,13 +121,7 @@ test.describe("regression: session timeline local row state", () => {
     await wrapper.locator('[data-slot="collapsible-trigger"]').first().click()
     await expectExpanded(wrapper, false)
 
-    events.push({
-      directory,
-      payload: {
-        type: "message.part.updated",
-        properties: { part: streamedTextPart },
-      },
-    })
+    events.push(...streamedText)
 
     await expect(page.locator(`[data-timeline-part-id="${textPartID}"]`).first()).toBeVisible({ timeout: 10_000 })
 
@@ -151,13 +147,7 @@ test.describe("regression: session timeline local row state", () => {
     await expectAppVisible(file)
     await markDiffProbe(page)
 
-    events.push({
-      directory,
-      payload: {
-        type: "message.part.updated",
-        properties: { part: streamedTextPart },
-      },
-    })
+    events.push(...streamedText)
 
     await expect(page.locator(`[data-timeline-part-id="${textPartID}"]`).first()).toBeVisible({ timeout: 10_000 })
     const siblingProbe = await readDiffProbe(page)
@@ -171,13 +161,7 @@ test.describe("regression: session timeline local row state", () => {
     })
 
     await markDiffProbe(page)
-    events.push({
-      directory,
-      payload: {
-        type: "message.part.updated",
-        properties: { part: editPartWithAdditions(2) },
-      },
-    })
+    events.push(...editRerunWithAdditions(2))
 
     await expect(wrapper.locator('[data-slot="diff-changes-additions"]').filter({ hasText: "+2" }).first()).toBeVisible(
       { timeout: 10_000 },
@@ -362,20 +346,24 @@ async function readDiffProbe(page: Page) {
     })
 }
 
-function editPartWithAdditions(additions: number) {
-  return {
-    ...editPart,
-    state: {
-      ...editPart.state,
-      metadata: {
-        ...editPart.state.metadata,
-        filediff: {
-          ...editPart.state.metadata.filediff,
-          additions,
+// A settled edit only changes through a rerun: tool.called reopens the call and tool.success settles the new result.
+function editRerunWithAdditions(additions: number) {
+  const call = { sessionID, assistantMessageID, callID: editPartID }
+  return [
+    { type: "session.tool.called", properties: { ...call, input: editPart.state.input, executed: false } },
+    {
+      type: "session.tool.success",
+      properties: {
+        ...call,
+        content: [{ type: "text", text: editPart.state.output }],
+        metadata: {
+          ...editPart.state.metadata,
+          filediff: { ...editPart.state.metadata.filediff, additions },
         },
+        executed: false,
       },
     },
-  }
+  ].map((payload) => ({ directory, payload }))
 }
 
 function readExpanded(element: Element) {
@@ -399,7 +387,8 @@ async function mockServer(page: Page, events: EventPayload[], messages = [userMe
     provider: provider(),
     sessions: [session()],
     pageMessages: () => ({ items: messages }),
-    events: () => events.splice(0, 1),
+    // One response carries a whole V2 batch, so a rerun settles in one render instead of passing through running.
+    events: () => events.splice(0),
     eventRetry: 16,
   })
 }

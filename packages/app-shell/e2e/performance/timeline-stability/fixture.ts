@@ -3,7 +3,6 @@ import { Event } from "@orchestra/schema/event"
 import { SessionStatusEvent } from "@orchestra/schema/session-status-event"
 import type { AssistantMessage, Message, Part, Session, ToolPart, ToolState, UserMessage } from "@/v2-wire"
 
-
 import { expect, type Page } from "@playwright/test"
 import { Schema } from "effect"
 import { mockOrchestraServer } from "../../utils/mock-server"
@@ -23,27 +22,22 @@ export function loadedPartID(messageID: string, type: "text" | "reasoning", ordi
   return `${messageID}:${type}:${ordinal}`
 }
 
-type GlobalEvent = { directory: string; project?: string; workspace?: string; payload: import("@/v2-wire").Event }
-
-type TimelinePayload = Extract<
-  GlobalEvent["payload"],
-  {
-    type:
-      | "message.updated"
-      | "message.removed"
-      | "message.part.updated"
-      | "message.part.removed"
-  }
->
-
+// The app consumes the bundled V2 session events; the fixture names their ordinals and call IDs explicitly.
 const nativeTypes = [
   "session.step.started",
   "session.step.ended",
+  "session.step.failed",
   "session.retry.scheduled",
+  "session.text.started",
   "session.text.delta",
   "session.text.ended",
+  "session.reasoning.started",
+  "session.reasoning.ended",
+  "session.tool.input.started",
   "session.tool.called",
+  "session.tool.progress",
   "session.tool.success",
+  "session.tool.failed",
 ] as const
 type NativePayload = { id: string; type: (typeof nativeTypes)[number]; properties: Record<string, unknown> }
 
@@ -53,7 +47,12 @@ type DeepReadonly<Value> = Value extends readonly unknown[]
     ? { readonly [Key in keyof Value]: DeepReadonly<Value[Key]> }
     : Value
 
-export type TimelineEvent = DeepReadonly<Omit<GlobalEvent, "payload"> & { payload: TimelinePayload | NativePayload }>
+export type TimelineEvent = DeepReadonly<{
+  directory: string
+  project?: string
+  workspace?: string
+  payload: NativePayload
+}>
 export type EventPayload = TimelineEvent
 export type ToolStatus = ToolState["status"]
 export type TimelineMessage = { info: UserMessage; parts: Part[] } | { info: AssistantMessage; parts: Part[] }
@@ -78,11 +77,7 @@ type ToolOptions<State extends ToolStatus> = State extends "pending"
 
 const decodeOptions = { errors: "all", onExcessProperty: "error" } as const
 const decodeStatus = Schema.decodeUnknownSync(SessionStatusEvent.Info)
-const timelineEventSchema = Schema.Union([
-  eventSchema("message.updated"),
-  eventSchema("message.removed"),
-  eventSchema("message.part.updated"),
-  eventSchema("message.part.removed"),
+const decodeEvent = Schema.decodeUnknownSync(
   Schema.Struct({
     directory: Schema.String,
     payload: Schema.Struct({
@@ -91,9 +86,16 @@ const timelineEventSchema = Schema.Union([
       properties: Schema.Record(Schema.String, Schema.Unknown),
     }),
   }),
-])
-const decodeEvent = Schema.decodeUnknownSync(timelineEventSchema)
+)
 let eventSequence = 0
+// What the app already holds, so a part snapshot becomes only the V2 events that move it forward.
+// V2 addresses text and reasoning by per-message ordinal and tools by call ID; tool call IDs are the part IDs,
+// matching the history the mock server serves.
+const live = {
+  parts: new Map<string, { messageID: string; type: "text" | "reasoning"; ordinal: number }>(),
+  ordinals: new Map<string, number>(),
+  tools: new Map<string, { status: ToolStatus; input: string; state: string }>(),
+}
 
 export async function setupTimeline(
   page: Page,
@@ -116,6 +118,7 @@ export async function setupTimeline(
     ...(input.seedHistory ? historyMessages(18) : []),
     ...(input.messages ?? [userMessage(), assistantMessage()]),
   ])
+  seedLive(messages)
   const active = messages.findLast((message) => message.info.role === "assistant")
   const initialStatus = decodeStatus(
     active?.info.role === "assistant" && active.info.time.completed === undefined ? { type: "busy" } : { type: "idle" },
@@ -189,15 +192,19 @@ export async function setupTimeline(
 
   return {
     transport,
-    async send(event: TimelineEvent, delay = 0) {
-      const valid = validateTimelineEvent(event)
-      await transport.send(valid, { marker: describeEvent(valid) })
+    async send(event: TimelineEvent | readonly TimelineEvent[], delay = 0) {
+      for (const item of [event].flat()) {
+        const valid = validateTimelineEvent(item)
+        await transport.send(valid, { marker: describeEvent(valid) })
+      }
       if (delay) await page.waitForTimeout(delay)
     },
-    async sendAll(sequence: { event: TimelineEvent; delay: number }[]) {
+    async sendAll(sequence: { event: TimelineEvent | readonly TimelineEvent[]; delay: number }[]) {
       for (const item of sequence) {
-        const valid = validateTimelineEvent(item.event)
-        await transport.send(valid, { marker: describeEvent(valid) })
+        for (const event of [item.event].flat()) {
+          const valid = validateTimelineEvent(event)
+          await transport.send(valid, { marker: describeEvent(valid) })
+        }
         await page.waitForTimeout(item.delay)
       }
     },
@@ -225,30 +232,11 @@ export async function setupTimeline(
 }
 
 function describeEvent(event: EventPayload) {
-  if (event.payload.type === "message.part.updated") {
-    const part = event.payload.properties.part
-    return [
-      event.payload.type,
-      part.id,
-      part.type === "tool" ? part.tool : part.type,
-      part.type === "tool" ? part.state.status : undefined,
-    ]
-      .filter(Boolean)
-      .join(":")
-  }
-  if (event.payload.type === "session.retry.scheduled") return `${event.payload.type}:${event.payload.properties.attempt}`
+  const properties = event.payload.properties
+  if (event.payload.type === "session.retry.scheduled") return `${event.payload.type}:${properties.attempt}`
+  if (typeof properties.callID === "string") return `${event.payload.type}:${properties.callID}`
+  if (typeof properties.ordinal === "number") return `${event.payload.type}:${properties.ordinal}`
   return event.payload.type
-}
-
-export function event<const Type extends TimelinePayload["type"]>(
-  type: Type,
-  properties: Extract<TimelinePayload, { type: Type }>["properties"],
-): TimelineEvent
-export function event(type: TimelinePayload["type"], properties: TimelinePayload["properties"]): TimelineEvent {
-  return validateTimelineEvent({
-    directory,
-    payload: { id: `evt_timeline_${String(++eventSequence).padStart(4, "0")}`, type, properties },
-  })
 }
 
 function nativeEvent(type: NativePayload["type"], properties: Record<string, unknown>): TimelineEvent {
@@ -345,23 +333,84 @@ export function historyMessages(count: number): TimelineMessage[] {
   }).flat()
 }
 
-export function partUpdated(part: Part | PartSeed<"assistant">) {
-  const owned = "messageID" in part ? part : { ...part, sessionID, messageID: assistantID }
-  return event("message.part.updated", {
-    sessionID,
-    part: owned,
-    time: 1700000002000,
-  })
+// V2 never sends part snapshots. A snapshot becomes the events that bring the app's copy to it: a new text or
+// reasoning part starts at the next ordinal of its message, and a tool walks streaming, running, then a terminal
+// state. A running tool's title has no V2 event.
+export function partUpdated(part: Part | PartSeed<"assistant">): TimelineEvent[] {
+  const messageID = "messageID" in part ? part.messageID : assistantID
+  const base = { sessionID, assistantMessageID: messageID }
+  if (part.type === "text" || part.type === "reasoning") {
+    const known = live.parts.get(part.id)
+    const ordinal = known?.ordinal ?? registerPart(part.id, messageID, part.type)
+    return [
+      ...(known ? [] : [nativeEvent(`session.${part.type}.started`, { ...base, ordinal })]),
+      nativeEvent(`session.${part.type}.ended`, { ...base, ordinal, text: part.text }),
+    ]
+  }
+  if (part.type !== "tool") throw new Error(`Timeline fixture cannot stream a ${part.type} part`)
+  const previous = live.tools.get(part.id)
+  const callID = part.id
+  const next = toolEntry(part.state)
+  live.tools.set(part.id, next)
+  const started = previous ? [] : [nativeEvent("session.tool.input.started", { ...base, callID, name: part.tool })]
+  if (part.state.status === "pending") return started
+  const terminal = previous?.status === "completed" || previous?.status === "error"
+  // A settled tool ignores later results; repeating the same settled state is a no-op, as it is in the reducer.
+  if (terminal && previous?.state === next.state) return []
+  // tool.called applies in any state: it carries changed running arguments and reruns a settled call in place.
+  const called =
+    previous === undefined || previous.status === "pending" || terminal || previous.input !== next.input
+      ? [nativeEvent("session.tool.called", { ...base, callID, input: part.state.input, executed: false })]
+      : []
+  if (part.state.status === "running")
+    return [
+      ...started,
+      ...called,
+      ...(part.state.metadata && Object.keys(part.state.metadata).length > 0
+        ? [nativeEvent("session.tool.progress", { ...base, callID, metadata: part.state.metadata })]
+        : []),
+    ]
+  if (part.state.status === "error")
+    return [
+      ...started,
+      ...called,
+      nativeEvent("session.tool.failed", {
+        ...base,
+        callID,
+        error: { type: "ToolError", message: part.state.error },
+        metadata: part.state.metadata ?? {},
+        executed: false,
+      }),
+    ]
+  return [
+    ...started,
+    ...called,
+    nativeEvent("session.tool.success", {
+      ...base,
+      callID,
+      content: [{ type: "text", text: part.state.output }],
+      metadata: part.state.metadata,
+      executed: false,
+    }),
+  ]
 }
 
 // V2 text deltas address the assistant message and the text ordinal, not a part ID.
-export function partDelta(_partID: string, delta: string, messageID = assistantID) {
-  return nativeEvent("session.text.delta", { sessionID, assistantMessageID: messageID, ordinal: 0, delta })
+export function partDelta(partID: string, delta: string, messageID = assistantID) {
+  const known = live.parts.get(partID)
+  if (!known) throw new Error(`Timeline fixture has no streamed text part ${partID}`)
+  return nativeEvent("session.text.delta", { sessionID, assistantMessageID: messageID, ordinal: known.ordinal, delta })
 }
 
 // The V2 server never sends part snapshots: tool and text progress arrives as native events that rebuild the message.
 export function toolCalled(callID: string, input: Record<string, unknown>, messageID = assistantID) {
-  return nativeEvent("session.tool.called", { sessionID, assistantMessageID: messageID, callID, input, executed: false })
+  return nativeEvent("session.tool.called", {
+    sessionID,
+    assistantMessageID: messageID,
+    callID,
+    input,
+    executed: false,
+  })
 }
 
 export function toolSucceeded(
@@ -384,8 +433,25 @@ export function textEnded(text: string, ordinal = 0, messageID = assistantID) {
   return nativeEvent("session.text.ended", { sessionID, assistantMessageID: messageID, ordinal, text })
 }
 
-export function messageUpdated(info: Message) {
-  return event("message.updated", { sessionID, info })
+// An assistant snapshot becomes the step event that leads to it: failed with its error, ended once completed, or
+// started while it is still open.
+export function messageUpdated(info: AssistantMessage) {
+  const base = { sessionID, assistantMessageID: info.id }
+  if (info.error)
+    return nativeEvent("session.step.failed", {
+      ...base,
+      error: {
+        type: info.error.name,
+        message: "message" in info.error.data ? info.error.data.message : info.error.name,
+      },
+    })
+  if (info.time.completed !== undefined)
+    return nativeEvent("session.step.ended", { ...base, finish: "stop", cost: info.cost, tokens: info.tokens })
+  return nativeEvent("session.step.started", {
+    ...base,
+    agent: info.agent,
+    model: { id: info.modelID, providerID: info.providerID },
+  })
 }
 
 export function status(type: "busy" | "idle" | "retry", attempt = 1, message = "Rate limited") {
@@ -603,14 +669,29 @@ export function session(input: Partial<Session> = {}): Session {
   }
 }
 
-// The view-model payloads are typed by TimelinePayload; only the envelope is checked at runtime.
-function eventSchema<const Type extends TimelinePayload["type"]>(type: Type) {
-  return Schema.Struct({
-    directory: Schema.String,
-    project: Schema.optional(Schema.String),
-    workspace: Schema.optional(Schema.String),
-    payload: Schema.Struct({ id: Event.ID, type: Schema.Literal(type), properties: Schema.Record(Schema.String, Schema.Unknown) }),
-  })
+function seedLive(messages: readonly TimelineMessage[]) {
+  live.parts.clear()
+  live.ordinals.clear()
+  live.tools.clear()
+  messages
+    .filter((message) => message.info.role === "assistant")
+    .flatMap((message) => message.parts)
+    .forEach((part) => {
+      if (part.type === "text" || part.type === "reasoning") registerPart(part.id, part.messageID, part.type)
+      if (part.type === "tool") live.tools.set(part.id, toolEntry(part.state))
+    })
+}
+
+function toolEntry(state: ToolState) {
+  return { status: state.status, input: JSON.stringify(state.input), state: JSON.stringify(state) }
+}
+
+function registerPart(partID: string, messageID: string, type: "text" | "reasoning") {
+  const key = `${messageID}:${type}`
+  const ordinal = live.ordinals.get(key) ?? 0
+  live.ordinals.set(key, ordinal + 1)
+  live.parts.set(partID, { messageID, type, ordinal })
+  return ordinal
 }
 
 function provider() {

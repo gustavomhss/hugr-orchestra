@@ -8,8 +8,10 @@ import {
   visualPlan,
 } from "../../utils/visual-stability"
 import {
+  assistantID,
   assistantMessage,
   completedAssistantInfo,
+  loadedPartID,
   messageUpdated,
   partDelta,
   partUpdated,
@@ -27,10 +29,10 @@ test.describe("timeline visual lifecycle stability", () => {
     test.setTimeout(180_000)
     const ids = ["prt_parallel_01_empty", "prt_parallel_02_short", "prt_parallel_03_long"] as const
     const initial = ids.map((id) => shell(id, "running"))
-    const followingID = "prt_parallel_04_following"
-    const assistant = assistantMessage([...initial, textPart(followingID, "Following all parallel shells.")], {
-      completed: false,
-    })
+    const assistant = assistantMessage(
+      [...initial, textPart("prt_parallel_04_following", "Following all parallel shells.")],
+      { completed: false },
+    )
     const timeline = await setupTimeline(page, {
       messages: [userMessage(), assistant],
       settings: { shellToolPartsExpanded: true, showReasoningSummaries: true },
@@ -38,6 +40,7 @@ test.describe("timeline visual lifecycle stability", () => {
       eventRetry: 24,
       seedHistory: true,
     })
+    const followingID = loadedPartID(assistantID, "text", 0)
     await timeline.send(status("busy"), 150)
     for (const id of ids) await timeline.waitForPart(id)
     const scroller = page.locator(".scroll-view__viewport", {
@@ -96,8 +99,10 @@ test.describe("timeline visual lifecycle stability", () => {
   test("replaces thinking with streamed reasoning and text without a blank visible turn", async ({
     page,
   }, testInfo) => {
-    const reasoningID = "prt_reasoning_visible"
-    const textID = "prt_streamed_text"
+    const reasoningSeedID = "prt_reasoning_visible"
+    const textSeedID = "prt_streamed_text"
+    const reasoningID = loadedPartID(assistantID, "reasoning", 0)
+    const textID = loadedPartID(assistantID, "text", 0)
     const assistant = assistantMessage([], { completed: false })
     const timeline = await setupTimeline(page, {
       messages: [userMessage(), assistant],
@@ -116,15 +121,18 @@ test.describe("timeline visual lifecycle stability", () => {
       text: { selector: `[data-timeline-part-id="${textID}"]`, closest: '[data-timeline-row="AssistantPart"]' },
     })
     await startVisualProbe(page, regions)
-    await timeline.send(partUpdated(reasoningPart(reasoningID, "")), 100)
+    await timeline.send(partUpdated(reasoningPart(reasoningSeedID, "")), 100)
     await expect(page.locator(`[data-timeline-part-id="${reasoningID}"]`)).toHaveCount(0)
-    await timeline.send(partUpdated(reasoningPart(reasoningID, "## Planning\n\nChecking the visible timeline.")), 160)
+    await timeline.send(
+      partUpdated(reasoningPart(reasoningSeedID, "## Planning\n\nChecking the visible timeline.")),
+      160,
+    )
     await timeline.waitForPart(reasoningID)
     await expect(page.locator('[data-timeline-row="Thinking"]')).toHaveCount(0)
-    await timeline.send(partUpdated(textPart(textID, "Starting")), 100)
-    await timeline.send(partDelta(textID, " **stable"), 90)
-    await timeline.send(partDelta(textID, " output** with `code` and [a link"), 130)
-    await timeline.send(partDelta(textID, "](https://example.com)."), 220)
+    await timeline.send(partUpdated(textPart(textSeedID, "Starting")), 100)
+    await timeline.send(partDelta(textSeedID, " **stable"), 90)
+    await timeline.send(partDelta(textSeedID, " output** with `code` and [a link"), 130)
+    await timeline.send(partDelta(textSeedID, "](https://example.com)."), 220)
     await timeline.send(messageUpdated(completedAssistantInfo(assistant.info)), 120)
     await timeline.send(status("idle"), 500)
     const trace = await stopVisualProbe<keyof typeof regions>(page)

@@ -7,7 +7,9 @@ import {
   visualPlan,
 } from "../../utils/visual-stability"
 import {
+  assistantID,
   assistantMessage,
+  loadedPartID,
   partUpdated,
   setupTimeline,
   textPart,
@@ -18,7 +20,7 @@ import {
 
 test("adds patch files incrementally without resetting outer expansion", async ({ page }, testInfo) => {
   const patchID = "prt_incremental_01_patch"
-  const followingID = "prt_incremental_02_following"
+  const followingID = loadedPartID(assistantID, "text")
   const first = patchFile("src/a.ts", "update")
   const timeline = await setupTimeline(page, {
     messages: [
@@ -26,7 +28,7 @@ test("adds patch files incrementally without resetting outer expansion", async (
       assistantMessage(
         [
           toolPart(patchID, "apply_patch", "running", { files: [first.filePath] }, { metadata: { files: [first] } }),
-          textPart(followingID, "Following incremental patch"),
+          textPart("prt_incremental_02_following", "Following incremental patch"),
         ],
         { completed: false },
       ),

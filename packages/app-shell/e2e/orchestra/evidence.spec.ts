@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test"
 import { editor, evidenceFixture, evidencePage, runCard } from "./evidence.fixture"
-import { partUpdated, toolPart } from "../performance/timeline-stability/fixture"
 
 test.setTimeout(120_000)
 
@@ -81,7 +80,7 @@ test("evidence supports legacy tool parts and keeps incomplete or unknown output
     { command: "bun test", output, metadata: { exit: 0 } },
     { command: "bun test", output: "unrecognized reporter", metadata: { exit: 0, truncated: false } },
   ]) {
-    await timeline.send(partUpdated(toolPart("prt_evidence", "bash", "completed", { command: value.command }, value)))
+    await timeline.revise(value)
     const raw = page.locator('[data-timeline-part-id="prt_evidence"] [data-component="bash-output"]')
     await expect(raw).toContainText(value.output.trim())
     await expect(card).toHaveCount(0)
@@ -144,20 +143,11 @@ test("unknown exit and zero tests remain neutral", async ({ page }) => {
   const timeline = await evidencePage(page, { metadata: { exit: null } })
   await expect(runCard(page)).toHaveAttribute("data-state", "unconfirmed")
   await expect(runCard(page)).toContainText("Exit code not reported")
-  await timeline.send(
-    partUpdated(
-      toolPart(
-        "prt_evidence",
-        "bash",
-        "completed",
-        { command: "pytest" },
-        {
-          output: await evidenceFixture("pytest-zero"),
-          metadata: { exit: 5, truncated: false },
-        },
-      ),
-    ),
-  )
+  await timeline.revise({
+    command: "pytest",
+    output: await evidenceFixture("pytest-zero"),
+    metadata: { exit: 5, truncated: false },
+  })
   await expect(runCard(page, "pytest")).toHaveAttribute("data-state", "empty")
   await expect(runCard(page, "pytest")).toContainText("No tests ran")
 })

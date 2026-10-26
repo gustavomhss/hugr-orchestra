@@ -7,7 +7,9 @@ import {
   visualPlan,
 } from "../../utils/visual-stability"
 import {
+  assistantID,
   assistantMessage,
+  loadedPartID,
   partUpdated,
   session,
   sessionID,
@@ -56,14 +58,14 @@ test("adds a task child-session link without replacing the task row", async ({ p
 
 test("changes generic tool arguments without replacing the row", async ({ page }, testInfo) => {
   const toolID = "prt_generic_mutation"
-  const followingID = "prt_generic_mutation_following"
+  const followingID = loadedPartID(assistantID, "text")
   const timeline = await setupTimeline(page, {
     messages: [
       userMessage(),
       assistantMessage(
         [
           toolPart(toolID, "mcp_probe", "running", { target: "one", count: 1 }),
-          textPart(followingID, "Following generic tool"),
+          textPart("prt_generic_mutation_following", "Following generic tool"),
         ],
         { completed: false },
       ),

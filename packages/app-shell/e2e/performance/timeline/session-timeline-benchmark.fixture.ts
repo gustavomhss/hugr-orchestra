@@ -10,7 +10,8 @@ const sessionID = "ses_timeline_state_regression"
 const userMessageID = "msg_user_regression"
 const assistantMessageID = "msg_assistant_regression"
 const editPartID = "prt_0001_edit"
-export const textPartID = "prt_9999_text"
+// V2 text has no part ID of its own: the timeline derives it from the message and the text ordinal.
+export const textPartID = `${assistantMessageID}:text:0`
 const title = "Timeline collapse state regression"
 const model = { providerID: "opencode", modelID: "claude-opus-4-6", variant: "max" }
 
@@ -64,14 +65,6 @@ const editPart = {
     },
     time: { start: 1700000001000, end: 1700000002000 },
   },
-}
-
-const streamedTextPart = {
-  id: textPartID,
-  sessionID,
-  messageID: assistantMessageID,
-  type: "text",
-  text: "Streaming added a later assistant text part.",
 }
 
 const assistantMessage = {
@@ -134,11 +127,14 @@ export async function setupTimelineBenchmark(
     `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`,
   )
   if (server.origin !== mock.origin) {
-    await page.route((url) => url.origin === server.origin, (route) => {
-      const url = new URL(route.request().url())
-      url.host = mock.host
-      return route.fallback({ url: url.href })
-    })
+    await page.route(
+      (url) => url.origin === server.origin,
+      (route) => {
+        const url = new URL(route.request().url())
+        url.host = mock.host
+        return route.fallback({ url: url.href })
+      },
+    )
   }
   await page.addInitScript(() => {
     localStorage.setItem(
@@ -199,19 +195,22 @@ export async function setupTimelineBenchmark(
   }
 }
 
-export function buildInitialStreamEvent(deltaCount: number): EventPayload {
-  return {
-    directory,
-    payload: {
-      type: "message.part.updated",
-      properties: {
-        part: {
-          ...streamedTextPart,
-          text: `Streaming${streamChunk(0, deltaCount + 1)}\n\n\`\`\`ts\nconst initial = true\n\`\`\``,
+// The streamed text opens as a new V2 text slot after the history edit; its first delta carries the initial text.
+export function buildInitialStreamEvent(deltaCount: number): EventPayload[] {
+  const base = { sessionID, assistantMessageID, ordinal: 0 }
+  return [
+    { directory, payload: { type: "session.text.started", properties: base } },
+    {
+      directory,
+      payload: {
+        type: "session.text.delta",
+        properties: {
+          ...base,
+          delta: `Streaming${streamChunk(0, deltaCount + 1)}\n\n\`\`\`ts\nconst initial = true\n\`\`\``,
         },
       },
     },
-  }
+  ]
 }
 
 export function buildStreamDeltaEvents(deltaCount: number): EventPayload[] {

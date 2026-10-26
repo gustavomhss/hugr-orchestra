@@ -51,8 +51,9 @@ benchmark("performance: common streaming then retained research result", async (
   fixture.transport.enqueue(deltas)
   await page.waitForFunction(
     (index) =>
-      (window as Window & { __timelineStreamBenchmark?: { applied: { index: number }[] } })
-        .__timelineStreamBenchmark?.applied.some((value) => value.index === index),
+      (
+        window as Window & { __timelineStreamBenchmark?: { applied: { index: number }[] } }
+      ).__timelineStreamBenchmark?.applied.some((value) => value.index === index),
     deltaCount,
     { timeout: completionTimeoutMs },
   )
@@ -68,55 +69,75 @@ benchmark("performance: common streaming then retained research result", async (
   await profile.reset()
 
   // Identical admitted payload in both checkouts. The original has no result renderer/open action.
-  const document = researchDocument([
-    "# Benchmark retained document\n\n" + "Retained source text and bounded evidence.\n".repeat(300),
-    "## Evidence table\n\n| Source | Finding |\n| --- | --- |\n" + "| source | supported |\n".repeat(500),
-    "## Mixed text\n\nעברית العربية `src/report.ts`\n\n```ts\nconst answer = 42\n```\n\nDocument benchmark complete.\n",
-  ], {
-    directory: "C:/Orchestra/TimelineStateRegression",
-    projectID: "proj_timeline_state_regression",
-    authoritySessionID: "ses_timeline_state_regression",
-  })
+  const document = researchDocument(
+    [
+      "# Benchmark retained document\n\n" + "Retained source text and bounded evidence.\n".repeat(300),
+      "## Evidence table\n\n| Source | Finding |\n| --- | --- |\n" + "| source | supported |\n".repeat(500),
+      "## Mixed text\n\nעברית العربية `src/report.ts`\n\n```ts\nconst answer = 42\n```\n\nDocument benchmark complete.\n",
+    ],
+    {
+      directory: "C:/Orchestra/TimelineStateRegression",
+      projectID: "proj_timeline_state_regression",
+      authoritySessionID: "ses_timeline_state_regression",
+    },
+  )
   document.pages.forEach((value) => expect(Buffer.byteLength(value.text)).toBeLessThanOrEqual(16 * 1024))
   const workResult = researchEnvelope({
     answer: "## Benchmark qualified answer\n\n" + "Bounded answer with retained sources.\n\n".repeat(80),
     documents: [document.receipt],
   })
-  const publication = {
-    directory: "C:/Orchestra/TimelineStateRegression",
-    payload: {
-      type: "message.part.updated",
+  // The research task arrives as the V2 tool events that open, call and settle it on the streamed message.
+  const task = researchTask(workResult)
+  if (task.state.status !== "completed") throw new Error("Research benchmark publishes a completed task")
+  const call = {
+    sessionID: "ses_timeline_state_regression",
+    assistantMessageID: "msg_assistant_regression",
+    callID: task.id,
+  }
+  const publication = [
+    { type: "session.tool.input.started", properties: { ...call, name: task.tool } },
+    { type: "session.tool.called", properties: { ...call, input: task.state.input, executed: false } },
+    {
+      type: "session.tool.success",
       properties: {
-        part: { ...researchTask(workResult), sessionID: "ses_timeline_state_regression", messageID: "msg_assistant_regression" },
+        ...call,
+        content: [{ type: "text", text: task.state.output }],
+        metadata: task.state.metadata,
+        executed: false,
       },
     },
-  }
+  ].map((payload) => ({ directory: "C:/Orchestra/TimelineStateRegression", payload }))
   const requests = await mockResearchArtifacts(page, [document])
   const publicationStarted = performance.now()
   fixture.transport.enqueue(publication)
-  const task = page.locator(`[data-timeline-part-id="${researchPartID}"]`)
-  await expect(task.getByRole("link", { name: new RegExp(researchDescription) })).toBeVisible()
+  const taskRow = page.locator(`[data-timeline-part-id="${researchPartID}"]`)
+  await expect(taskRow.getByRole("link", { name: new RegExp(researchDescription) })).toBeVisible()
   const taskObservedMs = performance.now() - publicationStarted
-  const result = task.locator('[data-component="research-result"]')
-  const research = renderer === "legacy" ? null : await (async () => {
-    await expect(result.getByRole("heading", { name: "Benchmark qualified answer", exact: true })).toBeVisible()
-    await expect(result.getByText("Partial answer", { exact: true })).toBeVisible()
-    const resultObservedMs = performance.now() - publicationStarted
-    const openStarted = performance.now()
-    await result.getByRole("button", { name: document.receipt.title, exact: true }).click()
-    const region = result.getByRole("region", { name: document.receipt.title, exact: true })
-    await expect(region.getByRole("heading", { name: "Benchmark retained document", exact: true })).toBeVisible()
-    await expect(region.getByRole("table")).toHaveCount(1)
-    await expect(region.locator("pre code")).toHaveText("const answer = 42\n")
-    await expect(region.getByText("Document benchmark complete.", { exact: true })).toBeVisible()
-    await expect(result.getByRole("status")).toBeEmpty()
-    const documentObservedMs = performance.now() - openStarted
-    expect(requests.map((request) => request.cursor)).toEqual([null, "research-page-1", "research-page-2"])
-    expect(requests.every((request) => request.sessionID === researchSessionID && request.revision === "1")).toBe(true)
-    expect(Number.isFinite(resultObservedMs)).toBe(true)
-    expect(Number.isFinite(documentObservedMs)).toBe(true)
-    return { resultObservedMs, documentObservedMs, pages: requests.length, bytes: document.receipt.bytes }
-  })()
+  const result = taskRow.locator('[data-component="research-result"]')
+  const research =
+    renderer === "legacy"
+      ? null
+      : await (async () => {
+          await expect(result.getByRole("heading", { name: "Benchmark qualified answer", exact: true })).toBeVisible()
+          await expect(result.getByText("Partial answer", { exact: true })).toBeVisible()
+          const resultObservedMs = performance.now() - publicationStarted
+          const openStarted = performance.now()
+          await result.getByRole("button", { name: document.receipt.title, exact: true }).click()
+          const region = result.getByRole("region", { name: document.receipt.title, exact: true })
+          await expect(region.getByRole("heading", { name: "Benchmark retained document", exact: true })).toBeVisible()
+          await expect(region.getByRole("table")).toHaveCount(1)
+          await expect(region.locator("pre code")).toHaveText("const answer = 42\n")
+          await expect(region.getByText("Document benchmark complete.", { exact: true })).toBeVisible()
+          await expect(result.getByRole("status")).toBeEmpty()
+          const documentObservedMs = performance.now() - openStarted
+          expect(requests.map((request) => request.cursor)).toEqual([null, "research-page-1", "research-page-2"])
+          expect(requests.every((request) => request.sessionID === researchSessionID && request.revision === "1")).toBe(
+            true,
+          )
+          expect(Number.isFinite(resultObservedMs)).toBe(true)
+          expect(Number.isFinite(documentObservedMs)).toBe(true)
+          return { resultObservedMs, documentObservedMs, pages: requests.length, bytes: document.receipt.bytes }
+        })()
   if (renderer === "legacy") {
     await expect(result).toHaveCount(0)
     expect(requests).toEqual([])
@@ -136,7 +157,9 @@ benchmark("performance: common streaming then retained research result", async (
       profileVisual,
       minimal,
       researchCpuThrottle: 1,
-      workloadDigest: createHash("sha256").update(JSON.stringify({ publication, pages: document.pages })).digest("hex"),
+      workloadDigest: createHash("sha256")
+        .update(JSON.stringify({ publication, pages: document.pages }))
+        .digest("hex"),
       comparison: "commonStream comparable; research render/open unavailable on original baseline",
     },
   )
@@ -145,8 +168,15 @@ benchmark("performance: common streaming then retained research result", async (
 function benchmarkNumber(name: string, fallback: number, options: { minimum: number; integer: boolean }) {
   const raw = process.env[name] ?? String(fallback)
   const value = Number(raw)
-  if (!raw.trim() || !Number.isFinite(value) || value < options.minimum || (options.integer && !Number.isSafeInteger(value)))
-    throw new Error(`${name} must be a nonblank finite ${options.integer ? "safe integer" : "number"} >= ${options.minimum}`)
+  if (
+    !raw.trim() ||
+    !Number.isFinite(value) ||
+    value < options.minimum ||
+    (options.integer && !Number.isSafeInteger(value))
+  )
+    throw new Error(
+      `${name} must be a nonblank finite ${options.integer ? "safe integer" : "number"} >= ${options.minimum}`,
+    )
   return value
 }
 
