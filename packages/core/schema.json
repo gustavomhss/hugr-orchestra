@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "0819041b-ef42-40d9-bca8-f876babb4f73",
+  "id": "62676bdc-70ed-43d5-9875-dcc0a8352be0",
   "prevIds": [
-    "6755afd4-0ba8-4966-8679-f4373433395d"
+    "0819041b-ef42-40d9-bca8-f876babb4f73"
   ],
   "ddl": [
     {
@@ -24,10 +24,6 @@
     },
     {
       "name": "meeting",
-      "entityType": "tables"
-    },
-    {
-      "name": "session_v1_prompt_admission",
       "entityType": "tables"
     },
     {
@@ -491,56 +487,6 @@
       "name": "time_ended",
       "entityType": "columns",
       "table": "meeting"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "id",
-      "entityType": "columns",
-      "table": "session_v1_prompt_admission"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "session_id",
-      "entityType": "columns",
-      "table": "session_v1_prompt_admission"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "1",
-      "generated": null,
-      "name": "identity_version",
-      "entityType": "columns",
-      "table": "session_v1_prompt_admission"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "identity",
-      "entityType": "columns",
-      "table": "session_v1_prompt_admission"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "snapshot",
-      "entityType": "columns",
-      "table": "session_v1_prompt_admission"
     },
     {
       "type": "integer",
@@ -4494,21 +4440,6 @@
     },
     {
       "columns": [
-        "session_id"
-      ],
-      "tableTo": "session",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "fk_session_v1_prompt_admission_session_id_session_id_fk",
-      "entityType": "fks",
-      "table": "session_v1_prompt_admission"
-    },
-    {
-      "columns": [
         "active_account_id"
       ],
       "tableTo": "account",
@@ -5178,15 +5109,6 @@
       "nameExplicit": false,
       "name": "meeting_pk",
       "table": "meeting",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "session_v1_prompt_admission_pk",
-      "table": "session_v1_prompt_admission",
       "entityType": "pks"
     },
     {

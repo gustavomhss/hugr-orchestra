@@ -8,7 +8,6 @@ import { Database } from "./database/database"
 import { EventSequenceTable, EventTable } from "./event/sql"
 import { EventSeal } from "./event/seal"
 import { SNAPSHOT_COMPACTION_MARKER } from "./event/compaction"
-export { SNAPSHOT_TYPES, hasCompactedSnapshotEvents, compactSnapshotEvents } from "./event/compaction"
 export { SealWindowInput, SealWindowResult, SealWindowError } from "./event/seal"
 // Public through the event entry so product modules need no deep import (R7).
 export { EventSequenceTable, EventTable }

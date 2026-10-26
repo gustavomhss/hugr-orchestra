@@ -64,10 +64,6 @@ const db = Spec.make("db", {
       params: { sql: Argument.string("SQL query to execute").pipe(Argument.variadic({ min: 1 })) },
     }),
     Spec.make("path", { description: "Print the database path" }),
-    Spec.make("compact", {
-      description:
-        "Delete duplicate snapshot events from the event log (local use only; incompatible with experimental workspace sync)",
-    }),
   ],
 })
 

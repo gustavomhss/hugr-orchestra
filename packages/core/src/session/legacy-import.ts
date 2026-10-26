@@ -11,7 +11,7 @@ import type {
   PatchPart,
   SubtaskPart,
   ToolPart,
-} from "@orchestra/schema/session-v1"
+} from "./legacy-transcript"
 import { Database } from "../database/database"
 import { SessionMessage } from "./message"
 import { MessageTable, PartTable, SessionMessageTable, SessionTable } from "./sql"

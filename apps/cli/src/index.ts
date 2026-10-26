@@ -27,7 +27,6 @@ const Handlers = Runtime.handlers(Commands, {
   db: {
     query: () => import("./commands/handlers/db/query"),
     path: () => import("./commands/handlers/db/path"),
-    compact: () => import("./commands/handlers/db/compact"),
   },
   export: () => import("./commands/handlers/export"),
   import: () => import("./commands/handlers/import"),
