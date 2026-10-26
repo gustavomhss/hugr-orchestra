@@ -101,6 +101,12 @@ if (process.env.BOARD_MONEY_DOM !== "1") {
     if (url.pathname === "/api/board/LCH/spend") return Response.json(report(live.budget))
     if (url.pathname === "/api/board/LCH/decisions") return Response.json(decisions)
     if (url.pathname.endsWith("/proof")) return Response.json(proof)
+    const found = url.pathname.match(/^\/api\/board\/LCH\/issue\/(\d+)$/)
+    if (found)
+      return Response.json({
+        issue: snapshot.issues.find((item) => item.number === Number(found[1])), questions: [], notes: [], attachments: [],
+        activity: [], dependencies: { dependsOn: [], blocks: [] }, trail: { state: "signed_out", message: "Sign in to GitHub to see this trail" },
+      })
     return new Response("not found", { status: 404 })
   } })
 
