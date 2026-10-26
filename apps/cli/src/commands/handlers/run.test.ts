@@ -60,6 +60,8 @@ function stub(
         headers: { "content-type": "text/event-stream" },
       })
     if (route === "GET /permission/request") return Response.json({ location: {}, data: options.permissions ?? [] })
+    if (generic === "GET /session/:id/permission-rules")
+      return Response.json({ data: [{ permission: "bash", pattern: "*", action: "allow" }] })
     if (generic === "POST /session/:id/permission-rules") return Response.json({ data: [] })
     if (request.method !== "GET") return new Response(null, { status: 204 })
     return new Response("not found", { status: 404 })
@@ -189,6 +191,29 @@ describe("run", () => {
       expect(s.calls.some((call) => call.route === "POST /session/ses_1/prompt")).toBe(true)
     } finally {
       s.server.stop(true)
+    }
+  })
+
+  test("denies the question tool on the Session it prompts, keeping its existing rules, for every path", async () => {
+    const denied = [
+      { permission: "bash", pattern: "*", action: "allow" },
+      { permission: "question", pattern: "*", action: "deny" },
+    ]
+    const stream = [event(1, "session.next.prompted", { messageID: "msg_1" })]
+    const cases: Array<[Partial<Options>, string, unknown?]> = [
+      [{}, "ses_1"],
+      [{ continue: true }, "ses_1", { sessions: [session("ses_1")] }],
+      [{ session: "ses_1" }, "ses_1"],
+      [{ session: "ses_old", fork: true }, "ses_fork"],
+    ]
+    for (const [options, target, extra] of cases) {
+      const s = stub({ stream, ...(extra as object) })
+      try {
+        await exec(s.url, options)
+        expect(s.calls.find((call) => call.route === `POST /session/${target}/permission-rules`)?.body).toEqual({ permission: denied })
+      } finally {
+        s.server.stop(true)
+      }
     }
   })
 

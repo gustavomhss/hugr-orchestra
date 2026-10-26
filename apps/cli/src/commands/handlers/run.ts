@@ -147,6 +147,7 @@ export async function execute(client: Client, options: Options) {
   const location = options.directory ? { directory: options.directory } : undefined
   const sessionID = await resolveSession(client, options, location)
   if (!sessionID) return fail(options, "Session not found")
+  await denyQuestions(client, sessionID)
 
   const agent = await pickAgent(client, options.agent, location)
   const model = parseModel(options.model, options.variant)
@@ -250,9 +251,18 @@ async function resolveSession(client: Client, options: Options, location: { dire
   if (found) return found.id
   const created = await client.sessions.create({ location })
   if (options.title) await client.sessions.rename({ sessionID: created.id, title: options.title })
-  // Headless runs cannot answer questions.
-  await client.sessions.setPermission({ sessionID: created.id, permission: [{ permission: "question", pattern: "*", action: "deny" }] })
   return created.id
+}
+
+/** Headless runs cannot answer questions, so whichever Session they prompt (new, continued, resumed or forked) denies them. */
+async function denyQuestions(client: Client, sessionID: string) {
+  const current = (await client.sessions.getPermission({ sessionID })).data
+  if (current.some((rule) => rule.permission === "question" && rule.pattern === "*" && rule.action === "deny")) return
+  // setPermission replaces the whole ruleset, so the Session's existing rules are kept and the deny goes last to win.
+  await client.sessions.setPermission({
+    sessionID,
+    permission: [...current, { permission: "question", pattern: "*", action: "deny" }],
+  })
 }
 
 async function pickAgent(client: Client, name: string | undefined, location: { directory: string } | undefined) {
