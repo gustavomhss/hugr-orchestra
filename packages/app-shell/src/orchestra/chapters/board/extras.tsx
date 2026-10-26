@@ -139,9 +139,9 @@ export function ExtrasHeader(props: { extras: Extras; t: Translate }) {
   )
 }
 
-export function ExtrasProof(props: { extras: Extras; ref: string }) {
+export function ExtrasProof(props: { extras: Extras; cardRef: string }) {
   return (
-    <Show when={props.extras.state.proof && props.extras.state.proof.ref === props.ref && props.extras.state.proof}>
+    <Show when={props.extras.state.proof && props.extras.state.proof.ref === props.cardRef && props.extras.state.proof}>
       {(proof) => <ProofPanel proof={proof()} onDecision={(id) => props.extras.openPanel("decisions", id)} />}
     </Show>
   )

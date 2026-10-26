@@ -685,7 +685,7 @@ export default function Board() {
               </p>
             )}
           </Show>
-          <ExtrasProof extras={extras} ref={issue().ref} />
+          <ExtrasProof extras={extras} cardRef={issue().ref} />
 
           <Show when={open().length > 0}>
             <section class="board-sec">
