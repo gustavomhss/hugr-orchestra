@@ -55,7 +55,7 @@ describe("BoardTools", () => {
   it.live("refuses every seat other than Maestro", () =>
     Effect.gen(function* () {
       const registry = yield* ToolRegistry.Service
-      const refused = { type: "error", value: "The board tools belong to Maestro; ask Maestro to change the board." }
+      const refused = { type: "error", value: "The board tools belong to Maestro; ask Maestro to change the board." } as const
       expect(yield* call(registry, toolIdentity, "board_project", { key: "BTN", name: "Nope", reason: "Start." })).toEqual(refused)
       expect(yield* call(registry, toolIdentity, "board_read", { project: "BTN" })).toEqual(refused)
       const board = yield* Board.Service

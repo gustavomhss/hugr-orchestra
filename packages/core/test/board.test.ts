@@ -17,6 +17,7 @@ import { IssueInput } from "@orchestra/schema/board"
 import { Integration } from "@orchestra/schema/integration"
 import { Credential } from "@orchestra/core/credential"
 import { Database } from "@orchestra/core/database/database"
+import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { EventV2 } from "@orchestra/core/event"
 import { ProjectSchema } from "@orchestra/core/project/schema"
@@ -30,7 +31,7 @@ const bin = mkdtempSync(path.join(osTmpdir(), "orchestra-board-bin-"))
 const env = { PATH: bin, PATHEXT: process.env.PATHEXT ?? process.env.PathExt }
 
 const it = testEffect(
-  LayerNode.compile(LayerNode.group([Board.node, Database.node, EventV2.node, Credential.node]), [
+  AppNodeBuilder.build(LayerNode.group([Board.node, Database.node, EventV2.node, Credential.node]), [
     [Board.node, Board.layerWith({ env })],
   ]),
 )
