@@ -64,6 +64,7 @@ export { SessionActivity } from "./session/activity"
 export { LeanProfilePreferences } from "./session/lean-profile-preferences"
 export { LeanProject } from "./session/lean-project"
 export { SessionTodo } from "./session/todo"
+export { SessionMeeting } from "./session/meeting"
 
 const ListInputBase = {
   workspaceID: WorkspaceV2.ID.pipe(Schema.optional),
