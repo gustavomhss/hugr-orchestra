@@ -36,6 +36,9 @@ const decodeAuthData = Schema.decodeUnknownOption(Schema.Record(Schema.String, E
 const decodeAuthJson = Schema.decodeUnknownOption(Schema.fromJsonString(Schema.Record(Schema.String, Entry)))
 type AuthData = Record<string, Entry>
 
+/** The auth file is sealed under a key this process could not load. */
+class LockedError extends Schema.TaggedErrorClass<LockedError>()("McpAuthLockedError", {}) {}
+
 const filepath = path.join(Global.Path.data, "mcp-auth.json")
 const lockKey = `mcp-auth:${filepath}`
 
@@ -68,22 +71,35 @@ const layer = Layer.effect(
     const write = (data: AuthData) => fs.writeJson(filepath, cipher.seal(JSON.stringify(data)), 0o600)
 
     // The file holds one sealed JSON string; a plain object is a file written before encryption, which is read and
-    // sealed in place. A file that cannot be parsed, opened or decoded is moved aside, never overwritten, so a later
-    // write cannot wipe every MCP login. Any other read failure stops here instead of reading as empty.
+    // sealed in place. A file that cannot be parsed or decodes to the wrong shape is moved aside, never overwritten,
+    // so a later write cannot wipe every MCP login. A sealed file no loaded key opens (the keychain prompt was declined
+    // or timed out, so this process fell back to the key file) is left in place and the read fails, so no write
+    // replaces it. Any other read failure stops here instead of reading as empty.
     const read = Effect.fn("McpAuth.read")(function* () {
       const file = yield* fs.readJson(filepath).pipe(
-        Effect.map((json) => ({
-          legacy: typeof json !== "string",
-          data:
-            typeof json === "string"
-              ? Option.flatMap(Option.fromUndefinedOr(cipher.open(json)), decodeAuthJson)
-              : decodeAuthData(json),
-        })),
+        Effect.map((json) => {
+          if (typeof json !== "string") return { legacy: true, locked: false, data: decodeAuthData(json) }
+          const plain = CredentialCipher.isSealed(json) ? cipher.open(json) : undefined
+          return {
+            legacy: false,
+            locked: CredentialCipher.isSealed(json) && plain === undefined,
+            data: Option.flatMap(Option.fromUndefinedOr(plain), decodeAuthJson),
+          }
+        }),
         Effect.catchReason("PlatformError", "NotFound", () =>
-          Effect.succeed({ legacy: false, data: Option.some<AuthData>({}) }),
+          Effect.succeed({ legacy: false, locked: false, data: Option.some<AuthData>({}) }),
         ),
-        Effect.catchTag("FileSystemError", () => Effect.succeed({ legacy: false, data: Option.none<AuthData>() })),
+        Effect.catchTag("FileSystemError", () =>
+          Effect.succeed({ legacy: false, locked: false, data: Option.none<AuthData>() }),
+        ),
       )
+      if (file.locked) {
+        yield* Effect.logError(
+          "mcp-auth.json is encrypted with a key this process could not load; it is left untouched. Restart Orchestra and allow the keychain prompt",
+          { path: filepath },
+        )
+        return yield* new LockedError()
+      }
       if (Option.isNone(file.data)) {
         const aside = `${filepath}.corrupt-${Date.now()}`
         yield* fs.rename(filepath, aside)
@@ -98,7 +114,12 @@ const layer = Layer.effect(
     })
 
     const all = Effect.fn("McpAuth.all")(function* () {
-      return yield* read().pipe(flock.withLock(lockKey), Effect.orDie)
+      // A locked file reads as no logins; writes still fail, so the file is never replaced.
+      return yield* read().pipe(
+        Effect.catchTag("McpAuthLockedError", () => Effect.succeed({} as AuthData)),
+        flock.withLock(lockKey),
+        Effect.orDie,
+      )
     })
 
     const mutate = Effect.fn("McpAuth.mutate")(function* (update: (data: AuthData) => AuthData | undefined) {

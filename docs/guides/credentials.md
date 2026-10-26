@@ -28,7 +28,12 @@ If a stored secret cannot be decrypted (for example because the key was removed 
 logs an error for that credential and skips it. It never deletes or overwrites it, so restoring the key makes it readable
 again. Logging in again creates a new credential.
 
-If `mcp-auth.json` is damaged and cannot be read, Orchestra moves it aside to `mcp-auth.json.corrupt-<timestamp>`,
+On macOS an update can make the Keychain ask again whether Orchestra may use its key. If you decline that prompt or do
+not answer it within 10 seconds, Orchestra falls back to the key file for that run. Your stored credentials are skipped,
+not lost. `mcp-auth.json` is left in place: MCP servers show as logged out and new MCP logins fail rather than
+overwrite it. Restart Orchestra and allow the prompt to get everything back.
+
+If `mcp-auth.json` is damaged (it cannot be parsed, or its contents have the wrong shape), Orchestra moves it aside to `mcp-auth.json.corrupt-<timestamp>`,
 logs where it went, and starts with no MCP logins. The original file is kept for inspection; MCP servers need a new
 login.
 

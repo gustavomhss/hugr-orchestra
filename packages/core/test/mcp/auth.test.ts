@@ -1,10 +1,12 @@
 import { expect, test } from "bun:test"
 import { setTimeout as sleep } from "node:timers/promises"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
-import { Effect, Layer } from "effect"
+import { Effect, Exit, Layer } from "effect"
 import { systemError } from "effect/PlatformError"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { McpAuth } from "@orchestra/core/mcp/auth"
+import { CredentialCipher } from "@orchestra/core/credential/cipher"
+import { randomBytes } from "node:crypto"
 
 function authFile(initial = "") {
   let raw = initial
@@ -126,6 +128,26 @@ test("moves a corrupt auth file aside instead of overwriting it", async () => {
       expect([...file.aside.values()]).toEqual([corrupt])
       expect([...file.aside.keys()][0]).toMatch(/mcp-auth\.json\.corrupt-\d+$/)
       expect((yield* auth.get("linear"))?.tokens?.accessToken).toBe("fresh")
+    }),
+  )
+})
+
+test("leaves an auth file sealed under a key it cannot load in place and never overwrites it", async () => {
+  const sealed = JSON.stringify(
+    CredentialCipher.seal(JSON.stringify({ posthog: { tokens: { accessToken: "kept" } } }), randomBytes(32)),
+  )
+  const file = authFile(sealed)
+
+  await Effect.runPromise(
+    Effect.gen(function* () {
+      const auth = yield* authService(file.fsLayer)
+
+      expect(yield* auth.all()).toEqual({})
+      const write = yield* Effect.exit(auth.updateTokens("linear", { accessToken: "fresh" }))
+
+      expect(Exit.isFailure(write)).toBe(true)
+      expect(file.raw()).toBe(sealed)
+      expect(file.aside.size).toBe(0)
     }),
   )
 })
