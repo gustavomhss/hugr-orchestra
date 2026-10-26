@@ -1,6 +1,18 @@
 import { describe, expect, test } from "bun:test"
 import {
   across,
+  against,
+  budgetValue,
+  chain,
+  checkTick,
+  costliest,
+  dayInput,
+  dayValue,
+  fill,
+  proofChecks,
+  shares,
+  usd,
+
   answered,
   attachmentKind,
   canUndo,
@@ -23,6 +35,8 @@ import {
   ticks,
   waitingOn,
   waits,
+  type CardSpend,
+  type Decision,
   type Activity,
   type Issue,
   type Question,
@@ -342,5 +356,73 @@ describe("replay", () => {
       { from: start + 1000, to: start + 1000 + gapAfter },
     ])
     expect(gaps([], start, start + gapAfter - 1)).toEqual([])
+  })
+})
+
+describe("spend", () => {
+  const card = (issue: number, usd: number) => ({ issue, usd }) as CardSpend
+
+  test("the bar stops at the budget", () => {
+    expect([fill(null), fill(30), fill(120), fill(-4), fill(Number.NaN)]).toEqual([0, 30, 100, 0, 0])
+  })
+
+  test("cards sort by spend then number; models skip zeros", () => {
+    expect(costliest([card(2, 1), card(1, 1), card(3, 5)]).map((item) => item.issue)).toEqual([3, 1, 2])
+    expect(shares([{ model: "b", usd: 0 }, { model: "a", usd: 2 }, { model: "c", usd: 4 }]).map((row) => row.model)).toEqual(["c", "a"])
+  })
+
+  test("settings inputs", () => {
+    expect(dayInput(Date.UTC(2026, 10, 6))).toBe("2026-11-06")
+    expect(dayInput(null)).toBe("")
+    expect(dayValue("2026-11-06")).toBe(Date.UTC(2026, 10, 6, 12))
+    expect(dayValue("")).toBeNull()
+    expect(dayValue("nope")).toBeUndefined()
+    expect([budgetValue(""), budgetValue("$60"), budgetValue("12.5"), budgetValue("-1"), budgetValue("abc")]).toEqual([null, 60, 12.5, undefined, undefined])
+  })
+})
+
+describe("decisions", () => {
+  const decision = (id: string, date: number, extra: Partial<Decision> = {}) =>
+    ({ id, date, chosen: "a", recommended: "a", supersedes: null, overturnedBy: null, ...extra }) as Decision
+
+  test("newest first, with both versions linked", () => {
+    const rows = chain([
+      decision("old", 1, { overturnedBy: "new" }),
+      decision("new", 5, { supersedes: "old" }),
+      decision("mid", 3),
+    ])
+    expect(rows.map((row) => row.decision.id)).toEqual(["new", "mid", "old"])
+    expect(rows[0].replaces?.id).toBe("old")
+    expect(rows[2].replacedBy?.id).toBe("new")
+    expect(rows[1].replaces).toBeUndefined()
+  })
+
+  test("a link to a decision not in the log resolves to nothing", () => {
+    expect(chain([decision("a", 1, { overturnedBy: "gone" })])[0].replacedBy).toBeUndefined()
+  })
+
+  test("against means the owner chose another option than the recommended one", () => {
+    expect(against({ chosen: "b", recommended: "a" })).toBe(true)
+    expect(against({ chosen: "a", recommended: "a" })).toBe(false)
+    expect(against({ chosen: "a", recommended: "" })).toBe(false)
+  })
+})
+
+describe("proof", () => {
+  test("the failing check leads, the rest keep their order", () => {
+    const check = (name: string, conclusion: string) => ({ name, status: "completed", conclusion })
+    const ci = { checks: [check("lint", "success"), check("e2e", "failure"), check("unit", "success")], failing: "e2e" }
+    expect(proofChecks({ ci }).map((item) => item.name)).toEqual(["e2e", "lint", "unit"])
+    expect(proofChecks({ ci: null })).toEqual([])
+    expect(checkTick({ name: "e2e", status: "in_progress", conclusion: null })).toBe("run")
+    expect(checkTick(ci.checks[1])).toBe("fail")
+  })
+})
+
+describe("usd", () => {
+  test("whole dollars drop the cents, others keep both", () => {
+    expect(usd(18, "en")).toBe("$18")
+    expect(usd(2.4, "en")).toBe("$2.40")
+    expect(usd(0.8, "en")).toBe("$0.80")
   })
 })

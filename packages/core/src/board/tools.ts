@@ -2,6 +2,7 @@ export * as BoardTools from "./tools"
 
 import { Effect, Layer } from "effect"
 import {
+  DecisionOutcomeInput,
   EpicInput,
   IssueInput,
   MoveInput,
@@ -9,6 +10,7 @@ import {
   QuestionInput,
   Read,
   ReadInput,
+  SettingsToolInput,
   StepsInput,
   WriteResult,
 } from "@orchestra/schema/board"
@@ -51,7 +53,7 @@ export const node = makeGlobalNode({
           }),
           board_issue: Tool.make({
             description:
-              "Create an issue in Backlog (omit `number`; needs `title`) or update one by `number`, including linking its branch, PR, session and seat. `depends_on` replaces the list.",
+              "Create an issue in Backlog (omit `number`; needs `title`) or update one by `number`, including linking its branch, PR, session and seat, `attempts`, `crash_reason` and the `guardrail_rule` that blocked it. `depends_on` replaces the list.",
             input: IssueInput,
             output: WriteResult,
             execute: (input, context) => guard(context, board.issue(input)),
@@ -75,6 +77,21 @@ export const node = makeGlobalNode({
             input: QuestionInput,
             output: WriteResult,
             execute: (input, context) => guard(context, board.question(input)),
+          }),
+          board_settings: Tool.make({
+            description:
+              "Set a project's target date (epoch milliseconds) and budget in dollars. Omitted fields stay; null clears one. At 100% of the budget the board starts no new work.",
+            input: SettingsToolInput,
+            output: WriteResult,
+            execute: (input, context) =>
+              guard(context, board.settings(input.project, { target_date: input.target_date, budget_usd: input.budget_usd, reason: input.reason }, "maestro")),
+          }),
+          board_decision: Tool.make({
+            description:
+              "Record the outcome of an answered decision, by decision id or the answered question's id. Say what came of it; until then it reads \"applied, no result yet\".",
+            input: DecisionOutcomeInput,
+            output: WriteResult,
+            execute: (input, context) => guard(context, board.decisionOutcome(input)),
           }),
         })
         .pipe(Effect.orDie)

@@ -19,6 +19,7 @@ import { SETTINGS_COPY } from "./orchestra-chapters/settings"
 import { CHAT_COPY } from "./orchestra-chapters/chat"
 import { ATLAS_COPY } from "./orchestra-chapters/atlas"
 import { BOARD_COPY } from "./orchestra-chapters/board"
+import { BOARD_MONEY_COPY } from "./orchestra-chapters/board-money"
 import { BOARD_VIEWS_COPY } from "./orchestra-chapters/board-views"
 import { GUARDRAILS_COPY } from "./orchestra-chapters/guardrails"
 import { ActionsCopy } from "./actions"
@@ -395,6 +396,7 @@ export const ORCHESTRA_COPY = {
   ...GUARDRAILS_COPY,
   ...BOARD_COPY,
   ...BOARD_VIEWS_COPY,
+  ...BOARD_MONEY_COPY,
   // English-only Actions copy: other locales fall back to it until translated.
   ...ActionsCopy.dict,
   ...SESSION_RECOVERY_COPY,
