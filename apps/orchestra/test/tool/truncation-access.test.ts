@@ -259,6 +259,7 @@ it.instance(
         billy: "read",
         jimmy: "read",
         frankie: "read",
+        live: "read",
         // Bash and edit seats: external access to the directory would also let them run commands and edit there.
         backend: "narrow",
         archie: "narrow",
