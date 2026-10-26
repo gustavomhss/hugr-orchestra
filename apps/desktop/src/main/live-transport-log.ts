@@ -10,6 +10,11 @@ export type TransportEntry =
   | { event: "segment"; track: "me" | "them"; startMs: number; endMs: number; latencyMs: number }
   | { event: "append-failed"; reason: string; pending: number }
   | { event: "capture"; state: "started" | "restarted" | "stopped" | "failed"; reason?: string }
+  // The live loop: one line per answer with its time to first text, and its failures.
+  | { event: "answer"; kind: "answer" | "suggestion" | "stop" | "notice"; latencyMs: number; failed?: string }
+  | { event: "prompt-failed"; kind: "answer" | "suggestion" | "stop" | "notice"; reason: string }
+  | { event: "session-failed" | "senses-failed" | "senses-stop-failed" | "look-failed"; reason: string }
+  | { event: "stopped"; unsent?: number }
 
 export function transportLog(directory: string, meetingID: string) {
   const file = join(directory, `${meetingID}.jsonl`)

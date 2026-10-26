@@ -62,6 +62,7 @@ import { getStore } from "./store"
 import { FIRST_LAUNCH_ONBOARDING_COMPLETE_KEY, OLD_LAYOUT_ELIGIBLE_KEY } from "./store-keys"
 import { OmniBoot } from "./omni-boot"
 import { createDeepLinkDelivery } from "./deep-links"
+import { registerLiveLoop } from "./live-loop"
 import { registerLiveOverlay } from "./live-overlay"
 
 const candidateProfile = (() => {
@@ -359,7 +360,20 @@ const main = Effect.gen(function* () {
     checkForUpdates: () => void showUpdaterDialog(updater, true),
     relaunch,
   }
+  const liveLoop = registerLiveLoop({
+    overlay: liveOverlay,
+    server: () =>
+      Effect.runPromise(Deferred.await(serverReady)).then((ready) => ({
+        url: ready.url,
+        username: ready.username ?? undefined,
+        password: ready.password ?? undefined,
+      })),
+    logDirectory: join(app.getPath("userData"), "logs", "live"),
+    openSettings: () => menuDeps.trigger("settings.open"),
+  })
+  app.once("will-quit", liveLoop.destroy)
   shutdown.runtimeStop = registerIpcHandlers({
+    liveLoop,
     killSidecar: () => killSidecar(),
     relaunch,
     awaitInitialization: Effect.fnUntraced(

@@ -7,7 +7,7 @@ import { captureFrame } from "./live-frame"
 import { readTranscriptionKey } from "./live-key"
 import { meetingClient, type MeetingServer } from "./live-meeting-client"
 import { readPermissions, requestMicrophone, type SensePermissions, type SenseStatus } from "./live-permissions"
-import { segmenter, type Caption } from "./live-segmenter"
+import { segmenter, type Caption, type Segment } from "./live-segmenter"
 import { createTranscriber } from "./live-transcriber"
 import { transportLog } from "./live-transport-log"
 
@@ -17,6 +17,7 @@ import { transportLog } from "./live-transport-log"
 
 export type LiveSensesEvent =
   | { kind: "caption"; line: Caption }
+  | { kind: "segment"; segment: Segment }
   | { kind: "permissions"; permissions: SensePermissions }
   | {
       kind: "error"
@@ -77,6 +78,7 @@ export async function startSenses(options: {
         latencyMs: Date.now() - (meeting.timeStarted + segment.endMs),
       })
       client.append(meeting.id, { id: randomUUID(), ...segment })
+      options.onEvent({ kind: "segment", segment })
     },
   })
   const transcriber = createTranscriber({ engine: "deepgram", model: options.model ?? DEFAULT_MODEL, key }, (event) => {
