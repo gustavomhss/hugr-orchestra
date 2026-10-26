@@ -31,7 +31,6 @@ const Handlers = Runtime.handlers(Commands, {
   },
   export: () => import("./commands/handlers/export"),
   import: () => import("./commands/handlers/import"),
-  migrate: () => import("./commands/handlers/migrate"),
   service: {
     start: () => import("./commands/handlers/service/start"),
     restart: () => import("./commands/handlers/service/restart"),

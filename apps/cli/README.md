@@ -22,8 +22,6 @@ The command families currently defined in `commands.ts` are:
 
 - `api`: make an HTTP request to the running server.
 - `debug agents` and `debug symbols`: inspect agents and extract source symbols.
-- `migrate`: migrate v1 data to v2 (the current handler reports that no migrations
-  are available).
 - `service start`, `restart`, `status`, `stop`, and `password`: manage or inspect
   the background server and its credential.
 - `serve`: start the v2 API server; hostname defaults to `127.0.0.1`, and port
@@ -43,7 +41,7 @@ under the `orchestra` application directory, with `server.json` and `password`
 files. The password is retained across server restarts.
 
 Desktop runs the compiled CLI as its server: by default as its own `orchestra serve`
-child, or, with `ORCHESTRA_SIDECAR_V2=1`, as the shared background service, whose
+child, or, with `ORCHESTRA_SIDECAR=shared`, as the shared background service, whose
 artifact, status, start and password its main process manages through CLI commands.
 
 ## Development and packaging
