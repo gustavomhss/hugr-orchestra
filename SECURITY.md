@@ -22,6 +22,10 @@ The permission system exists as a UX feature to help users stay aware of what th
 
 Server mode is opt-in only. When enabled, set `ORCHESTRA_SERVER_PASSWORD` to require HTTP Basic Auth. Without this, the server runs unauthenticated (with a warning). It is the end user's responsibility to secure the server - any functionality it provides is not a vulnerability.
 
+### Credentials at Rest
+
+Provider credentials, integration tokens and MCP OAuth tokens are encrypted on disk with a key kept in the OS credential store, or in a 0600 key file when no store is available. See [docs/guides/credentials.md](docs/guides/credentials.md).
+
 ### Out of Scope
 
 | Category                        | Rationale                                                               |

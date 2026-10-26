@@ -3,7 +3,7 @@ export * as Credential from "./credential"
 import { closeSync, existsSync, openSync, readSync } from "fs"
 import { resolve } from "path"
 import { pathToFileURL } from "url"
-import { asc, eq, isNotNull } from "drizzle-orm"
+import { and, asc, eq, isNotNull, sql } from "drizzle-orm"
 import { Cause, Context, Effect, Layer, Option, Schema } from "effect"
 import { EffectDrizzleSqlite } from "@orchestra/effect-drizzle-sqlite"
 import { layer } from "#sqlite"
@@ -12,6 +12,7 @@ import { Integration } from "@orchestra/schema/integration"
 import { Database } from "./database/database"
 import { makeGlobalNode } from "./effect/app-node"
 import { Flag } from "./flag/flag"
+import { CredentialCipher } from "./credential/cipher"
 import { CredentialTable } from "./credential/sql"
 
 export const ID = Credential.ID
@@ -95,27 +96,36 @@ export const layerFrom = (release: string | undefined) =>
     Service,
     Effect.gen(function* () {
       const { db } = yield* Database.Service
-      const decode = Schema.decodeUnknownSync(Value)
-      const stored = (row: typeof CredentialTable.$inferSelect) => {
+      // Loads the key before any credential row is sealed or opened.
+      yield* CredentialCipher.Service
+      yield* sealLegacy(db).pipe(
+        Effect.catchCause((cause) =>
+          Effect.logError("could not encrypt plaintext credentials; they stay readable", {
+            reason: String(Cause.squash(cause)),
+          }),
+        ),
+      )
+      const decode = Schema.decodeUnknownOption(Value)
+      // A row that does not decode (in practice: sealed under a key this process cannot load) is reported and
+      // skipped, never deleted or overwritten.
+      const stored = Effect.fnUntraced(function* (row: typeof CredentialTable.$inferSelect) {
         if (!row.integration_id) return
-        return new Info({
-          id: row.id,
-          integrationID: row.integration_id,
-          label: row.label,
-          value: decode(row.value),
-        })
-      }
+        const value = decode(row.value)
+        if (Option.isNone(value)) {
+          yield* Effect.logError("stored credential cannot be decrypted; it is left untouched", { credentialID: row.id })
+          return
+        }
+        return new Info({ id: row.id, integrationID: row.integration_id, label: row.label, value: value.value })
+      })
       const own = Effect.fnUntraced(function* (integrationID?: Integration.ID) {
-        return (yield* db
+        const rows = yield* db
           .select()
           .from(CredentialTable)
           .where(integrationID ? eq(CredentialTable.integration_id, integrationID) : undefined)
           .orderBy(asc(CredentialTable.time_created))
           .all()
-          .pipe(Effect.orDie)).flatMap((row) => {
-          const credential = stored(row)
-          return credential ? [credential] : []
-        })
+          .pipe(Effect.orDie)
+        return (yield* Effect.forEach(rows, stored)).filter((credential): credential is Info => credential !== undefined)
       })
       // The release database's newest credential for every integration the
       // active database has no credential for.
@@ -129,7 +139,7 @@ export const layerFrom = (release: string | undefined) =>
       })
       const find = Effect.fnUntraced(function* (id: ID) {
         const row = yield* db.select().from(CredentialTable).where(eq(CredentialTable.id, id)).get().pipe(Effect.orDie)
-        if (row) return { credential: stored(row), inherited: false }
+        if (row) return { credential: yield* stored(row), inherited: false }
         return { credential: (yield* inherited(yield* own())).find((item) => item.id === id), inherited: true }
       })
 
@@ -191,9 +201,30 @@ export const layerFrom = (release: string | undefined) =>
         }),
       })
     }),
-  )
+  ).pipe(Layer.provide(CredentialCipher.layer))
 
 export const node = makeGlobalNode({ service: Service, layer: layerFrom(inheritedPath()), deps: [Database.node] })
+
+/**
+ * Seals every credential row still stored as plaintext. Reading a row opens it whichever form it has, and writing it
+ * back seals it. The time_updated guard leaves a row alone when another writer changed it in between.
+ */
+function sealLegacy(db: Database.Interface["db"]) {
+  return Effect.gen(function* () {
+    const legacy = yield* db
+      .select({ id: CredentialTable.id, value: CredentialTable.value, updated: CredentialTable.time_updated })
+      .from(CredentialTable)
+      .where(sql`${CredentialTable.value} NOT LIKE ${CredentialCipher.PREFIX + "%"}`)
+      .all()
+    yield* Effect.forEach(legacy, (row) =>
+      db
+        .update(CredentialTable)
+        .set({ value: row.value })
+        .where(and(eq(CredentialTable.id, row.id), eq(CredentialTable.time_updated, row.updated)))
+        .run(),
+    )
+  })
+}
 
 /**
  * Reads credentials from the release database without ever writing it: the
