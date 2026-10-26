@@ -1,7 +1,7 @@
 import { describe, expect } from "bun:test"
 import fs from "fs/promises"
 import { mkdtempSync } from "fs"
-import { tmpdir as osTmpdir } from "os"
+import { tmpdir } from "os"
 import path from "path"
 import { eq } from "drizzle-orm"
 import { Effect, Exit, Schema, Stream } from "effect"
@@ -18,8 +18,11 @@ import { Integration } from "@orchestra/schema/integration"
 import { Credential } from "@orchestra/core/credential"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { makeGlobalNode } from "@orchestra/core/effect/app-node"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { EventV2 } from "@orchestra/core/event"
+import { Global } from "@orchestra/core/global"
+import { AppProcess } from "@orchestra/core/process"
 import { ProjectSchema } from "@orchestra/core/project/schema"
 import { ProjectTable } from "@orchestra/core/project/sql"
 import { AbsolutePath } from "@orchestra/core/schema"
@@ -27,12 +30,12 @@ import { git } from "./fixture/git"
 import { testEffect } from "./lib/effect"
 
 // gh is a fake executable on a PATH that holds nothing else; each test writes the reply it needs before reading.
-const bin = mkdtempSync(path.join(osTmpdir(), "orchestra-board-bin-"))
+const bin = mkdtempSync(path.join(tmpdir(), "orchestra-board-bin-"))
 const env = { PATH: bin, PATHEXT: process.env.PATHEXT ?? process.env.PathExt }
 
 const it = testEffect(
   AppNodeBuilder.build(LayerNode.group([Board.node, Database.node, EventV2.node, Credential.node]), [
-    [Board.node, Board.layerWith({ env })],
+    [Board.node, makeGlobalNode({ service: Board.Service, layer: Board.layerWith({ env }), deps: [Database.node, EventV2.node, Credential.node, AppProcess.node, Global.node] })],
   ]),
 )
 
@@ -320,7 +323,7 @@ function rows(key: string) {
 function repository(name: string) {
   return Effect.gen(function* () {
     const directory = yield* Effect.promise(async () => {
-      const directory = await fs.realpath(await fs.mkdtemp(path.join(osTmpdir(), `orchestra-board-${name}-`)))
+      const directory = await fs.realpath(await fs.mkdtemp(path.join(tmpdir(), `orchestra-board-${name}-`)))
       await git(directory, "-c", "init.defaultBranch=main", "init")
       await git(directory, "remote", "add", "origin", "git@github.com:acme/widgets.git")
       return directory
