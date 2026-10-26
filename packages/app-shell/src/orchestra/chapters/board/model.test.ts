@@ -374,7 +374,7 @@ describe("spend", () => {
   test("settings inputs", () => {
     expect(dayInput(Date.UTC(2026, 10, 6))).toBe("2026-11-06")
     expect(dayInput(null)).toBe("")
-    expect(dayValue("2026-11-06")).toBe(Date.UTC(2026, 10, 6))
+    expect(dayValue("2026-11-06")).toBe(Date.UTC(2026, 10, 6, 12))
     expect(dayValue("")).toBeNull()
     expect(dayValue("nope")).toBeUndefined()
     expect([budgetValue(""), budgetValue("$60"), budgetValue("12.5"), budgetValue("-1"), budgetValue("abc")]).toEqual([null, 60, 12.5, undefined, undefined])

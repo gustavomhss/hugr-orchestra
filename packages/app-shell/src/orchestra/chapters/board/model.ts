@@ -337,9 +337,10 @@ export function dayInput(at: number | null | undefined) {
   return new Date(at).toISOString().slice(0, 10)
 }
 
+// Noon UTC, so the day reads the same in every timezone the header shows it in.
 export function dayValue(text: string) {
   if (!text) return null
-  const at = Date.parse(`${text}T00:00:00Z`)
+  const at = Date.parse(`${text}T12:00:00Z`)
   return Number.isNaN(at) ? undefined : at
 }
 
