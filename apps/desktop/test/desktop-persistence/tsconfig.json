@@ -1,7 +1,0 @@
-{
-  "extends": "../../tsconfig.json",
-  "compilerOptions": { "types": ["bun", "node", "electron"] },
-  "references": [],
-  "include": ["*.ts", "../omni-smoke/build.ts"],
-  "exclude": []
-}
