@@ -16,6 +16,8 @@
     "test:app-dock:e2e": "bun run src/main/app-dock-security.test.ts",
     "test:app-dock:tools": "bun run src/main/app-dock-tools.test.ts",
     "test:app-dock:rpc": "bun run src/main/app-dock-rpc.test.ts",
+    "test:app-dock:live": "bun run src/main/app-dock-live.test.ts",
+    "test:app-dock:youtube": "bun run src/main/app-dock-youtube.test.ts",
     "predev": "bun ./scripts/predev.ts",
     "install-electron": "bun ./scripts/install-electron.ts",
     "dev": "electron-vite dev",
