@@ -66,6 +66,19 @@ export const baseProfiles = Object.freeze({
     webfetch: "allow" as const,
     external_directory: Object.freeze({ "*": "deny", [path.join(TRUNCATION_DIR, "*")]: "allow" } as const),
   }),
+  // A seat the owner talks to directly (docs/specs/live-seat): it reads and looks things up, sees one screen frame on
+  // request and messages Maestro; it never edits, runs commands or dispatches.
+  direct: Object.freeze({
+    "*": "deny",
+    read: envRead("deny"),
+    glob: "allow",
+    grep: "allow",
+    websearch: "allow",
+    webfetch: "allow",
+    live_look: "allow",
+    team_message: "allow",
+    external_directory: Object.freeze({ "*": "deny", [path.join(TRUNCATION_DIR, "*")]: "allow" } as const),
+  } as const),
 } as const)
 
 type NativeProfile = Readonly<Record<string, "allow" | "deny" | Readonly<Record<string, "allow" | "deny">>>>
@@ -110,7 +123,8 @@ function seatProfile(seat: Seat): NativeProfile {
       skill: Object.freeze({ "*": "deny" as const, ...Object.fromEntries(seat.skills.map((name) => [name, "allow" as const])) }),
       external_directory: Object.freeze({
         ...(seat.profile === "review" ? baseProfiles.review.external_directory
-          : seat.profile === "discovery" ? baseProfiles.discovery.external_directory : { "*": "deny" as const }),
+          : seat.profile === "discovery" ? baseProfiles.discovery.external_directory
+          : seat.profile === "direct" ? baseProfiles.direct.external_directory : { "*": "deny" as const }),
         [path.join(root, "*")]: "allow" as const,
       }),
     } : {}),
@@ -170,7 +184,7 @@ export const roster = createRoster([
 
 function seatMember(seat: Seat): RosterMember {
   const labels: Readonly<Record<string, string>> = {
-    backend: BACKEND_DEFAULT_LABEL, archie: UPSTREAM_DEFAULT_LABEL, patty: "Patty", lucy: "Lucy", billy: "Billy", jimmy: "Jimmy", rosie: "Rosie", frankie: "Frankie",
+    backend: BACKEND_DEFAULT_LABEL, archie: UPSTREAM_DEFAULT_LABEL, patty: "Patty", lucy: "Lucy", billy: "Billy", jimmy: "Jimmy", rosie: "Rosie", frankie: "Frankie", live: "Live",
   }
   return {
     displayName: labels[seat.id] ?? seat.id,

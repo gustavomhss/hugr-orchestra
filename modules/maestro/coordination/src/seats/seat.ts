@@ -10,14 +10,14 @@ export type Seat = {
   readonly id: string
   readonly role: string
   readonly abilityClass: string
-  /** The charter's `Return card:` line; with `workResult`, also the tag of the fenced card the host parses. */
+  /** The charter's `Return card:` line; with `workResult`, also the tag of the fenced card the host parses. Empty for a direct seat. */
   readonly returnCard: string
   /** The charter's `Forbidden:` line, item by item. */
   readonly forbiddenActions: readonly string[]
   /** The charter, a label template (roster.ts `LABEL`). */
   readonly prompt: string
   /** The shared base profile (roster.ts `baseProfiles`) the seat's own grants extend. */
-  readonly profile: "execution" | "review" | "discovery"
+  readonly profile: "execution" | "review" | "discovery" | "direct"
   /** Optional stable profile projection, independent of agent routing and the shared permission base. */
   readonly profileKey?: string
   /** How the task tool lists the seat to Maestro: role, access and return, never the label. */
@@ -38,6 +38,11 @@ export type Seat = {
   readonly toolkit: boolean
   /** The research engine's seat: its tools come from @orchestra/core/research/seat-tools, and Claude mode dispatches it per tier. */
   readonly research?: boolean
+  /**
+   * The owner talks to the seat directly: it is a primary agent, the task tool never lists it, and it returns no card.
+   * Only `live` today (docs/specs/live-seat).
+   */
+  readonly direct?: boolean
 }
 
 export function define<const T extends Seat>(seat: T) {
@@ -47,8 +52,13 @@ export function define<const T extends Seat>(seat: T) {
     throw new Error(`Native seat role and description must be nonempty: ${seat.id}`)
   if (seat.profileKey !== undefined && (!/^[a-z]+(?:-[a-z]+)*$/.test(seat.profileKey) || reserved.has(seat.profileKey)))
     throw new Error(`Invalid native seat profile key: ${seat.profileKey}`)
-  if (seat.atlasMemory && seat.id !== "backend" && seat.id !== "jimmy" && seat.id !== "archie")
-    throw new Error(`Atlas Memory supports only backend, jimmy and archie owners: ${seat.id}`)
+  if (seat.atlasMemory && seat.id !== "backend" && seat.id !== "jimmy" && seat.id !== "archie" && seat.id !== "live")
+    throw new Error(`Atlas Memory supports only backend, jimmy, archie and live owners: ${seat.id}`)
+  if (seat.direct && seat.id !== "live") throw new Error(`Direct seats support only the live seat: ${seat.id}`)
+  if ((seat.direct === true) !== (seat.profile === "direct"))
+    throw new Error(`A direct seat and the direct profile go together: ${seat.id}`)
+  if (seat.direct && (seat.returnCard !== "" || seat.workResult !== undefined || seat.writeRoots || seat.strictResume))
+    throw new Error(`Direct seats return no card and take no task: ${seat.id}`)
   if (seat.toolkit && seat.id !== "backend")
     throw new Error(`The backend toolkit supports only the backend seat: ${seat.id}`)
   if (seat.research && seat.id !== "jimmy")
@@ -69,7 +79,7 @@ export function define<const T extends Seat>(seat: T) {
   return Object.freeze(seat)
 }
 
-const reserved = new Set(["maestro", "general", "explore", "build", "plan", "title", "summary", "compaction", "execution", "review", "seat", "index", "constructor", "con", "prn", "aux", "nul"])
+const reserved = new Set(["maestro", "general", "explore", "build", "plan", "title", "summary", "compaction", "execution", "review", "direct", "seat", "index", "constructor", "con", "prn", "aux", "nul"])
 
 export function validateInstalled(seat: Seat) {
   define(seat)

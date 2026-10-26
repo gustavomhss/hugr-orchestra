@@ -103,7 +103,7 @@ afterEach(async () => {
 
 it.instance("registers native team specialists with fixed profiles", () =>
   Effect.gen(function* () {
-    expect(roster.filter((member) => member.nativeProfile).map((member) => ({
+    expect(roster.filter((member) => member.nativeProfile && member.memberId !== "live").map((member) => ({
       id: member.memberId,
       profile: member.nativeProfile,
     }))).toEqual(nativeTeam.map((seat) => ({ id: seat.id, profile: seat.profile })))
@@ -315,6 +315,18 @@ it.instance("custom agents remain non-native rather than acquiring the upstream 
     expect(yield* agents.get("Custom Planner")).toBeUndefined()
   }),
   { config: { agent: { "custom-planner": { name: "Custom Planner", mode: "subagent", prompt: "Custom proposal prompt" } } } },
+)
+
+it.instance("the direct live seat is a primary agent the task tool cannot reach", () =>
+  Effect.gen(function* () {
+    const agent = yield* load((service) => service.get("live"))
+    expect(agent).toMatchObject({ id: "live", mode: "primary", native: true })
+    expect(agent.prompt).toContain("Return card: none.")
+    for (const tool of ["read", "glob", "grep", "websearch", "webfetch", "live_look", "team_message", "atlas_memory_recall", "atlas_memory_emit"])
+      expect(evaluate(agent, tool)).toBe("allow")
+    for (const tool of ["task", "edit", "bash", "skill", "external_directory"]) expect(evaluate(agent, tool)).toBe("deny")
+    expect(Permission.evaluate("read", ".env", agent.permission).action).toBe("deny")
+  }),
 )
 
 it.instance("native team seats cannot read .env files but can read .env.example", () =>

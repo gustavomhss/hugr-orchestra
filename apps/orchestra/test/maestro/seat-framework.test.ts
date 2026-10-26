@@ -43,7 +43,7 @@ describe("native seat framework", () => {
 
   test("unsupported ownership and malformed definitions fail before registration", () => {
     const backend = Seats.all.backend
-    expect(() => define({ ...backend, id: "sample-seat" })).toThrow("Atlas Memory supports only backend, jimmy and archie owners: sample-seat")
+    expect(() => define({ ...backend, id: "sample-seat" })).toThrow("Atlas Memory supports only backend, jimmy, archie and live owners: sample-seat")
     expect(() => define({ ...backend, id: "sample-seat", atlasMemory: false })).toThrow("The backend toolkit supports only the backend seat: sample-seat")
     expect(() => define({ ...backend, id: "../escape" })).toThrow("Invalid native seat id")
     expect(() => define({ ...backend, skills: ["foreign-work"] })).toThrow("Entry skills must be unique and seat-scoped")
@@ -58,7 +58,7 @@ describe("native seat framework", () => {
       expect(Seats.all[id].atlasMemory).toBe(true)
     }
     for (const seat of Object.values(Seats.all).filter((seat) => !["backend", "jimmy", "archie"].includes(seat.id))) {
-      expect(() => define({ ...seat, atlasMemory: true })).toThrow(`Atlas Memory supports only backend, jimmy and archie owners: ${seat.id}`)
+      expect(() => define({ ...seat, atlasMemory: true })).toThrow(`Atlas Memory supports only backend, jimmy, archie and live owners: ${seat.id}`)
     }
   })
 
