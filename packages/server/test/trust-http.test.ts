@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { realpathSync } from "fs"
 import fs from "fs/promises"
 import os from "os"
 import path from "path"
@@ -103,9 +104,7 @@ describe("trust routes", () => {
           const stored = JSON.parse(
             yield* Effect.promise(() => fs.readFile(path.join(directory, "orchestra.json"), "utf8")),
           ).trusted_projects
-          expect(yield* Effect.promise(() => Promise.all(stored.map((item: string) => fs.realpath.native(item))))).toEqual([
-            yield* Effect.promise(() => fs.realpath.native(project)),
-          ])
+          expect(stored.map((item: string) => realpathSync.native(item))).toEqual([realpathSync.native(project)])
           expect(applied).toEqual([project])
 
           expect(yield* listed(server.request)).toEqual(stored)
