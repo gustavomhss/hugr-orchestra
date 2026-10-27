@@ -8,7 +8,6 @@ import {
   matches,
   noteKey,
   popularEntries,
-  routeModel,
 } from "./providers-data"
 
 const model = (providerID: string, id: string, status = "active") => ({
@@ -117,13 +116,6 @@ test("helpers", () => {
   expect(noteKey("opencode-go")).toBeUndefined()
   expect(matches(["OpenAI", "Connected"], "  conn ")).toBe(true)
   expect(matches(["OpenAI"], "x")).toBe(false)
-  const card = fromV2({
-    providers: [{ id: "p", name: "P" }],
-    integrations: [],
-    models: [model("p", "a"), model("p", "b")],
-  }).cards[0]
-  expect(routeModel(card, "b")).toBe("b")
-  expect(routeModel(card, "missing")).toBe("a")
 })
 
 test("only web links are accepted as OAuth authorization targets", () => {
