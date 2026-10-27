@@ -174,7 +174,7 @@ test("switching panes hides and shows the same native tab, and its bounds follow
   await pane(dock, "Files").click()
   await railTab(page, "tasks").click()
   await expect(dock).toHaveCount(0)
-  await expect(row).toHaveText("DockPage /aWindow · Page ready")
+  await expect(row).toHaveText("MCP DockPage /aWindow · Page ready")
   await row.click()
   await expect(railTab(page, "apps")).toHaveAttribute("aria-selected", "true")
   await expect(pane(dock, "Browser")).toHaveAttribute("aria-selected", "true")
