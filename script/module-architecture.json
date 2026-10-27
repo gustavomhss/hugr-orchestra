@@ -117,7 +117,8 @@
       "summary": "Relay evaluates ordered work-package checklists at agent stop boundaries.",
       "exportsPolicy": "demanded",
       "sourceWildcards": {"./*": "./src/*.ts"},
-      "platformLibrary": true
+      "platformLibrary": true,
+      "importAllow": ["effect", "@orchestra/schema", "bun", "bun:", "node:"]
     },
     "maestro-arsenal": {
       "layer": "module",
@@ -475,6 +476,10 @@
   ],
   "productEdges": [],
   "relayContainment": { "package": "core", "specifier": "@orchestra/relay", "domains": ["relay", "tool-safety"] },
+  "bundleBoundaries": [
+    { "entry": "@orchestra/client", "forbid": ["effect", "@orchestra/schema", "@orchestra/protocol", "@orchestra/core", "@orchestra/server"] },
+    { "entry": "@orchestra/client/effect", "forbid": ["@orchestra/core", "@orchestra/server"] }
+  ],
   "logicalModules": [
     {
       "id": "app-dock",

@@ -1,0 +1,10 @@
+id = "arsenal-evaluator-file"
+group = "hygiene"
+severity = "gate"
+on = "changed-paths"
+paths = ["modules/maestro/arsenal/src/governance/completion-evaluation.ts"]
+exclude = []
+message = "This file is the removed Arsenal completion evaluator. Relay's arm is the only completion evaluator; do not bring the file back."
+summary = "The Arsenal completion evaluator file was removed when Relay's arm became the one judge of completion. Restoring it re-creates the second judge."
+positive = ["modules/maestro/arsenal/src/governance/completion-evaluation.ts"]
+negative = ["modules/maestro/arsenal/src/governance/completion.ts", "modules/relay/src/arm/evaluate.ts"]

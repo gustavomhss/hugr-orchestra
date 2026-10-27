@@ -11,6 +11,8 @@ export type Package = {
   layer: string; status: "canonical" | "legacy" | "unused"; owner: string; summary: string
   exportsPolicy: "full" | "demanded" | "none"; successor?: string; live?: string; entries?: string[]
   assetWildcards?: string[]; sourceWildcards?: Record<string, string>; browserSafe?: string[]; platformLibrary?: boolean; aliases?: Record<string, string>
+  // Specifier prefixes ("effect", "bun:") the package may import, and every runtime dependency must match. Absent means unrestricted.
+  importAllow?: string[]
   modules?: Module[]; domains?: Record<string, Domain>
 }
 export type Legacy = {
@@ -22,11 +24,12 @@ export type Architecture = {
   productEdges: [string, string][]; relayContainment: { package: string; specifier: string; domains: string[] }
   logicalModules: { id: string; paths: string[]; readme: string; target: string }[]
   assetModules: { id: string; path: string; target: string }[]; scaffoldReadmes: string[]
+  bundleBoundaries?: { entry: string; forbid: string[] }[]
 }
 type Dependencies = Record<string, string>
 export type Manifest = {
   name?: string; main?: string; exports?: unknown; dependencies?: Dependencies; devDependencies?: Dependencies
-  peerDependencies?: Dependencies; optionalDependencies?: Dependencies
+  peerDependencies?: Dependencies; optionalDependencies?: Dependencies; imports?: unknown
 }
 export type Member = { alias: string; name: string; path: string; spec: Package; manifest: Manifest; manifestText: string }
 export type Workspace = ReturnType<typeof loadWorkspace>
@@ -258,7 +261,7 @@ export function decodeArchitecture(value: unknown): Architecture {
     strings(["layer", "owner", "summary"].map((field) => spec[field]), `packages.${alias}`)
     oneOf(spec.status, ["canonical", "legacy", "unused"], `packages.${alias}.status`)
     oneOf(spec.exportsPolicy, ["full", "demanded", "none"], `packages.${alias}.exportsPolicy`)
-    ;["entries", "assetWildcards", "browserSafe"].forEach((field) => spec[field] === undefined || strings(spec[field], `packages.${alias}.${field}`))
+    ;["entries", "assetWildcards", "browserSafe", "importAllow"].forEach((field) => spec[field] === undefined || strings(spec[field], `packages.${alias}.${field}`))
     if (spec.sourceWildcards !== undefined)
       strings(Object.entries(object(spec.sourceWildcards, `packages.${alias}.sourceWildcards`)).flat(), `packages.${alias}.sourceWildcards`)
     Object.entries(spec.domains === undefined ? {} : object(spec.domains, `packages.${alias}.domains`)).forEach(([id, domain]) =>
@@ -280,5 +283,9 @@ export function decodeArchitecture(value: unknown): Architecture {
   strings(top.scaffoldReadmes, "scaffoldReadmes")
   list(top.logicalModules, "logicalModules").forEach((item, index) => strings(object(item, `logicalModules.${index}`).paths, `logicalModules.${index}`))
   list(top.assetModules, "assetModules").forEach((item, index) => strings([object(item, `assetModules.${index}`).path], `assetModules.${index}`))
+  list(top.bundleBoundaries ?? [], "bundleBoundaries").forEach((item, index) => {
+    const boundary = object(item, `bundleBoundaries.${index}`)
+    strings([boundary.entry, ...strings(boundary.forbid, `bundleBoundaries.${index}.forbid`)], `bundleBoundaries.${index}`)
+  })
   return value as Architecture
 }
