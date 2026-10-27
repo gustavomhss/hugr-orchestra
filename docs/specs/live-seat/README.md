@@ -212,6 +212,7 @@ The chapter lives in `packages/app-shell/src/orchestra/chapters/flight-engineer/
 - **Settings.** Speech-to-text key (shown only as "Saved", never its value), answer model, language, suggestions, screen-share exclusion and the rebindable hotkeys with a conflict check.
 - **Home card and sidebar chip.** Home shows a Flight Engineer card, and the sidebar entry shows the running timer.
 - **Deep links.** `orchestra://live` opens the chapter and `orchestra://live?meeting=<id>` opens that meeting (`parseLiveDeepLink` in `pages/layout/deep-links.ts`, routed by `NewShellIngress`). The live tray sends them.
+- **Tray icon.** `trayTemplate.png` and `trayTemplate@2x.png` (18 pt) in each channel folder of `apps/desktop/icons/`, copied to `resources/icons` with the other icons. It is the sidebar's microphone mark drawn as a macOS template image (black on transparent), so the menu bar tints it for light and dark; a running meeting adds `● mm:ss` as the tray title.
 
 Gates per package: change-scoped `bun run test:ci`, the typecheck workflow and `bun run check:guards --base origin/dev`. One full epic at the end.
 
