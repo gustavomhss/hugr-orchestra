@@ -1038,8 +1038,8 @@ export const dict = {
   "settings.permissions.tool.websearch.description": "Search the web",
   "settings.permissions.tool.external_directory.title": "External Directory",
   "settings.permissions.tool.external_directory.description": "Access files outside the project directory",
-  "settings.permissions.tool.doom_loop.title": "Doom Loop",
-  "settings.permissions.tool.doom_loop.description": "Detect repeated tool calls with identical input",
+  "settings.permissions.tool.doom_loop.title": "Stop repeating loops",
+  "settings.permissions.tool.doom_loop.description": "Stop the agent when it repeats a tool call with identical input",
 
   "session.delete.failed.title": "Failed to delete session",
   "session.delete.title": "Delete session",

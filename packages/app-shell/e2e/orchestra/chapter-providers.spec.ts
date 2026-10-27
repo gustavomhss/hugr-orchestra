@@ -74,7 +74,7 @@ test("v2: error and retry, server route, confirmed credential removal, key and p
   await setup(page, mock, "light")
   await openProviders(page)
   const chapter = page.locator('[data-chapter="providers"]')
-  await expect(chapter.getByRole("alert")).toContainText("Could not load providers for this profile.")
+  await expect(chapter.getByRole("alert")).toContainText("Could not load providers for this project.")
   await expect(chapter.locator(".mx-card")).toHaveCount(0)
   mock.failProviders = false
   await chapter.getByRole("button", { name: "Try again" }).click()

@@ -91,7 +91,7 @@ for (const scenario of cases) {
         await expect(tooltip).toBeHidden()
         await expect(mcp).toBeFocused()
 
-        const profile = sidebar.getByRole("button", { name: "Choose repository profile", exact: true })
+        const profile = sidebar.getByRole("button", { name: "Choose project", exact: true })
         await profile.focus()
         await page.keyboard.press("Enter")
         const menu = page.getByRole("menu")

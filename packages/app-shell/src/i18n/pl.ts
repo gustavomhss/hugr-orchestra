@@ -1027,7 +1027,7 @@ export const dict = {
   "settings.permissions.tool.external_directory.title": "Katalog zewnętrzny",
   "settings.permissions.tool.external_directory.description": "Dostęp do plików poza katalogiem projektu",
   "settings.permissions.tool.doom_loop.title": "Zapętlenie",
-  "settings.permissions.tool.doom_loop.description": "Wykrywanie powtarzających się wywołań narzędzi (doom loop)",
+  "settings.permissions.tool.doom_loop.description": "Wykrywanie powtarzających się wywołań narzędzi",
   "session.delete.failed.title": "Nie udało się usunąć sesji",
   "session.delete.title": "Usuń sesję",
   "session.delete.confirm": 'Usunąć sesję "{{name}}"?',

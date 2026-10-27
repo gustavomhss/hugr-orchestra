@@ -112,7 +112,7 @@ export const ATLAS_SHEETS_COPY = {
   "orchestra.atlas.sheets.reconcile.review": "Review them",
   "orchestra.atlas.sheets.mine.title": "Mine candidate facts",
   "orchestra.atlas.sheets.mine.text":
-    "Genesis picks the sites the most code depends on, asks the model about each one and checks every answer. What survives waits in Review as a candidate until you accept it.",
+    "History picks the sites the most code depends on, asks the model about each one and checks every answer. What survives waits in Review as a candidate until you accept it.",
   "orchestra.atlas.sheets.mine.model": "Model",
   "orchestra.atlas.sheets.mine.noModel": "No connected model. Connect a provider first.",
   "orchestra.atlas.sheets.mine.budget": "Sites",
@@ -379,7 +379,7 @@ export const ATLAS_SHEETS_COPY_BR: Record<keyof typeof ATLAS_SHEETS_COPY, string
   "orchestra.atlas.sheets.reconcile.review": "Revisá-los",
   "orchestra.atlas.sheets.mine.title": "Minerar fatos candidatos",
   "orchestra.atlas.sheets.mine.text":
-    "O Genesis escolhe os sites de que mais código depende, pergunta ao modelo sobre cada um e checa cada resposta. O que sobrevive espera em Revisão como candidato até você aceitar.",
+    "O Histórico escolhe os sites de que mais código depende, pergunta ao modelo sobre cada um e checa cada resposta. O que sobrevive espera em Revisão como candidato até você aceitar.",
   "orchestra.atlas.sheets.mine.model": "Modelo",
   "orchestra.atlas.sheets.mine.noModel": "Nenhum modelo conectado. Conecte um provedor primeiro.",
   "orchestra.atlas.sheets.mine.budget": "Sites",

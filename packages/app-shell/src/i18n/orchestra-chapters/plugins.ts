@@ -2,7 +2,7 @@
 export const PLUGINS_COPY = {
   "orchestra.plugins.title": "Plugins",
   "orchestra.plugins.eyebrow": "{{profile}} · Configuration",
-  "orchestra.plugins.description": "Shape how the LLM thinks and speaks. Each profile has its own behavior.",
+  "orchestra.plugins.description": "Shape how the LLM thinks and speaks. Each project has its own behavior.",
   "orchestra.plugins.add": "Add plugin",
   "orchestra.plugins.search": "Search plugins",
   "orchestra.plugins.searchLabel": "Search plugins",
@@ -20,21 +20,21 @@ export const PLUGINS_COPY = {
   "orchestra.plugins.configure": "Configure",
   "orchestra.plugins.enable": "Enable {{name}}",
   "orchestra.plugins.empty": "No LLM behaviors configured.",
-  "orchestra.plugins.emptyHint": "Add a behavior to shape how the LLM answers in this profile.",
+  "orchestra.plugins.emptyHint": "Add a behavior to shape how the LLM answers in this project.",
   "orchestra.plugins.loading": "Loading behaviors…",
   "orchestra.plugins.applied":
-    "Active behaviors are added to the system instructions of new chat messages in this profile (not slash commands or shell runs).",
+    "Active behaviors are added to the system instructions of new chat messages in this project (not slash commands or shell runs).",
   "orchestra.plugins.appliedServer":
-    "Active behaviors are kept on this server for this profile and apply to every turn of its chats, including chats already open.",
+    "Active behaviors are kept on this server for this project and apply to every turn of its chats, including chats already open.",
   "orchestra.plugins.notApplied":
-    "Saved for this profile. This server does not accept per-prompt instructions, so behaviors are not applied to turns yet.",
+    "Saved for this project. This server does not accept per-prompt instructions, so behaviors are not applied to turns yet.",
   "orchestra.plugins.syncFailed":
-    "Saved for this profile, but this server did not accept the latest change. Turns keep the behaviors it last accepted.",
+    "Saved for this project, but this server did not accept the latest change. Turns keep the behaviors it last accepted.",
   "orchestra.plugins.syncRetry": "Retry",
   "orchestra.plugins.dialog.configure": "Configure {{name}}",
   "orchestra.plugins.dialog.add": "Add plugin",
-  "orchestra.plugins.dialog.subtitle": "Active behaviors are added to new chat messages in this profile.",
-  "orchestra.plugins.dialog.subtitleSaved": "Behaviors are saved for this profile.",
+  "orchestra.plugins.dialog.subtitle": "Active behaviors are added to new chat messages in this project.",
+  "orchestra.plugins.dialog.subtitleSaved": "Behaviors are saved for this project.",
   "orchestra.plugins.field.name": "Name",
   "orchestra.plugins.field.description": "Description",
   "orchestra.plugins.field.intensity": "Intensity",
@@ -44,14 +44,14 @@ export const PLUGINS_COPY = {
   "orchestra.plugins.save": "Save",
   "orchestra.plugins.confirm": "Confirm",
   "orchestra.plugins.removeTitle": "Remove this item?",
-  "orchestra.plugins.removeSubtitle": "Its configuration is removed from this profile.",
+  "orchestra.plugins.removeSubtitle": "Its configuration is removed from this project.",
   "orchestra.plugins.removeNote": "This changes the configuration for {{profile}}.",
 }
 
 export const PLUGINS_COPY_BR: Record<keyof typeof PLUGINS_COPY, string> = {
   "orchestra.plugins.title": "Plugins",
   "orchestra.plugins.eyebrow": "{{profile}} · Configuração",
-  "orchestra.plugins.description": "Defina como o LLM pensa e fala. Cada perfil tem seu próprio comportamento.",
+  "orchestra.plugins.description": "Defina como o LLM pensa e fala. Cada projeto tem seu próprio comportamento.",
   "orchestra.plugins.add": "Adicionar plugin",
   "orchestra.plugins.search": "Buscar plugins",
   "orchestra.plugins.searchLabel": "Buscar plugins",
@@ -69,21 +69,21 @@ export const PLUGINS_COPY_BR: Record<keyof typeof PLUGINS_COPY, string> = {
   "orchestra.plugins.configure": "Configurar",
   "orchestra.plugins.enable": "Ativar {{name}}",
   "orchestra.plugins.empty": "Nenhum comportamento de LLM configurado.",
-  "orchestra.plugins.emptyHint": "Adicione um comportamento para definir como o LLM responde neste perfil.",
+  "orchestra.plugins.emptyHint": "Adicione um comportamento para definir como o LLM responde neste projeto.",
   "orchestra.plugins.loading": "Carregando comportamentos…",
   "orchestra.plugins.applied":
-    "Os comportamentos ativos são adicionados às instruções do sistema das novas mensagens do chat neste perfil (não aos comandos de barra nem às execuções de shell).",
+    "Os comportamentos ativos são adicionados às instruções do sistema das novas mensagens do chat neste projeto (não aos comandos de barra nem às execuções de shell).",
   "orchestra.plugins.appliedServer":
-    "Os comportamentos ativos ficam guardados neste servidor para este perfil e valem para todos os turnos dos seus chats, inclusive os chats já abertos.",
+    "Os comportamentos ativos ficam guardados neste servidor para este projeto e valem para todos os turnos dos seus chats, inclusive os chats já abertos.",
   "orchestra.plugins.notApplied":
-    "Salvo para este perfil. Este servidor não aceita instruções por prompt, então os comportamentos ainda não são aplicados aos turnos.",
+    "Salvo para este projeto. Este servidor não aceita instruções por prompt, então os comportamentos ainda não são aplicados aos turnos.",
   "orchestra.plugins.syncFailed":
-    "Salvo para este perfil, mas este servidor não aceitou a última alteração. Os turnos continuam com os comportamentos que ele aceitou por último.",
+    "Salvo para este projeto, mas este servidor não aceitou a última alteração. Os turnos continuam com os comportamentos que ele aceitou por último.",
   "orchestra.plugins.syncRetry": "Tentar de novo",
   "orchestra.plugins.dialog.configure": "Configurar {{name}}",
   "orchestra.plugins.dialog.add": "Adicionar plugin",
-  "orchestra.plugins.dialog.subtitle": "Os comportamentos ativos são adicionados às novas mensagens do chat neste perfil.",
-  "orchestra.plugins.dialog.subtitleSaved": "Os comportamentos estão salvos para este perfil.",
+  "orchestra.plugins.dialog.subtitle": "Os comportamentos ativos são adicionados às novas mensagens do chat neste projeto.",
+  "orchestra.plugins.dialog.subtitleSaved": "Os comportamentos estão salvos para este projeto.",
   "orchestra.plugins.field.name": "Nome",
   "orchestra.plugins.field.description": "Descrição",
   "orchestra.plugins.field.intensity": "Intensidade",
@@ -93,6 +93,6 @@ export const PLUGINS_COPY_BR: Record<keyof typeof PLUGINS_COPY, string> = {
   "orchestra.plugins.save": "Salvar",
   "orchestra.plugins.confirm": "Confirmar",
   "orchestra.plugins.removeTitle": "Remover este item?",
-  "orchestra.plugins.removeSubtitle": "A configuração dele é removida deste perfil.",
+  "orchestra.plugins.removeSubtitle": "A configuração dele é removida deste projeto.",
   "orchestra.plugins.removeNote": "Isso altera a configuração de {{profile}}.",
 }

@@ -129,7 +129,7 @@ test("cold review: unknown hook installations show loading/error/retry and never
   expect(state.writes).toEqual([])
   await page.unroute("**/api/relay/hook**")
   await page.locator('[data-hook-status="installs"]').getByRole("button", { name: "Try again" }).click()
-  await expect(page.getByRole("switch", { name: "Installed in this profile" })).toHaveAttribute("aria-checked", "true")
+  await expect(page.getByRole("switch", { name: "Installed in this project" })).toHaveAttribute("aria-checked", "true")
   await canvas(page).locator('.wf-node[data-id="b"] .wf-tile').dblclick()
   const name = details(page).getByRole("textbox", { name: "Name", exact: true })
   await name.fill("Block")

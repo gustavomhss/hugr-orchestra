@@ -118,7 +118,7 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.template.empty": "Empty canvas",
   "orchestra.workflows.template.toolsMissing": "Needs tools not available yet",
   "orchestra.workflows.template.toolsMissingTitle":
-    "This profile checks its work with Relay tools that are not available yet. It can be read and edited, but it cannot run.",
+    "This project checks its work with Relay tools that are not available yet. It can be read and edited, but it cannot run.",
   "orchestra.workflows.badge.published": "Published",
   "orchestra.workflows.badge.publishedPlain": "Published",
   "orchestra.workflows.badge.publishedAhead": "Published · unpublished changes",
@@ -214,7 +214,7 @@ export const WORKFLOWS_COPY = {
     "This removes the hook and uninstalls it from this project. Agent sessions stop running it.",
   "orchestra.workflows.editor.reloadDiscard": "Discard local changes and reload",
   "orchestra.workflows.drafts.full": "Unsaved draft limit reached",
-  "orchestra.workflows.drafts.resolve": "Save or resolve a retained draft below before opening another document. Your unsaved drafts are kept in this profile.",
+  "orchestra.workflows.drafts.resolve": "Save or resolve a retained draft below before opening another document. Your unsaved drafts are kept in this project.",
   "orchestra.workflows.drafts.reason.error": "Not saved",
   "orchestra.workflows.drafts.reason.conflict": "Changed elsewhere",
   "orchestra.workflows.drafts.reason.saving": "Saving…",
@@ -376,7 +376,7 @@ export const WORKFLOWS_COPY = {
     "Block and Ask need a “Before” event. By the time an “After” event fires, the action has already happened.",
   "orchestra.workflows.editor.more": "More actions",
   "orchestra.workflows.editor.missing": "Workflow not found",
-  "orchestra.workflows.editor.missingBody": "It was deleted, or it belongs to another profile.",
+  "orchestra.workflows.editor.missingBody": "It was deleted, or it belongs to another project.",
 
   "orchestra.workflows.canvas.label":
     "{{name}} canvas. Arrow keys move between steps, Enter opens details, N adds a step.",
@@ -793,7 +793,7 @@ export const WORKFLOWS_COPY_BR: Record<keyof typeof WORKFLOWS_COPY, string> = {
   "orchestra.workflows.template.empty": "Canvas vazio",
   "orchestra.workflows.template.toolsMissing": "Precisa de ferramentas que ainda não estão disponíveis",
   "orchestra.workflows.template.toolsMissingTitle":
-    "Este perfil verifica o trabalho com ferramentas do Relay que ainda não estão disponíveis. Dá para ler e editar, mas não pode ser executado.",
+    "Este projeto verifica o trabalho com ferramentas do Relay que ainda não estão disponíveis. Dá para ler e editar, mas não pode ser executado.",
   "orchestra.workflows.badge.published": "Publicado",
   "orchestra.workflows.badge.publishedPlain": "Publicado",
   "orchestra.workflows.badge.publishedAhead": "Publicado · alterações não publicadas",
@@ -891,7 +891,7 @@ export const WORKFLOWS_COPY_BR: Record<keyof typeof WORKFLOWS_COPY, string> = {
   "orchestra.workflows.editor.reloadDiscard": "Descartar alterações locais e recarregar",
   "orchestra.workflows.drafts.full": "Limite de rascunhos não salvos atingido",
   "orchestra.workflows.drafts.resolve":
-    "Salve ou resolva um rascunho retido abaixo antes de abrir outro documento. Seus rascunhos não salvos ficam guardados neste perfil.",
+    "Salve ou resolva um rascunho retido abaixo antes de abrir outro documento. Seus rascunhos não salvos ficam guardados neste projeto.",
   "orchestra.workflows.drafts.reason.error": "Não salvo",
   "orchestra.workflows.drafts.reason.conflict": "Alterado em outro lugar",
   "orchestra.workflows.drafts.reason.saving": "Salvando…",
@@ -1053,7 +1053,7 @@ export const WORKFLOWS_COPY_BR: Record<keyof typeof WORKFLOWS_COPY, string> = {
     "Bloquear e Perguntar precisam de um evento “Antes”. Quando um evento “Depois” dispara, a ação já aconteceu.",
   "orchestra.workflows.editor.more": "Mais ações",
   "orchestra.workflows.editor.missing": "Workflow não encontrado",
-  "orchestra.workflows.editor.missingBody": "Ele foi excluído ou pertence a outro perfil.",
+  "orchestra.workflows.editor.missingBody": "Ele foi excluído ou pertence a outro projeto.",
 
   "orchestra.workflows.canvas.label":
     "Canvas de {{name}}. As setas movem entre as etapas, Enter abre os detalhes, N adiciona uma etapa.",

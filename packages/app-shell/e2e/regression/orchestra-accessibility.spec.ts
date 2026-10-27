@@ -59,7 +59,7 @@ for (const scheme of ["dark", "light"] as const) {
       ...(await measureContrast(page, [ring("current-page focus ring", `${sidebar} .orchestra-nav-button`)])),
     )
 
-    const profile = nav.getByRole("button", { name: "Choose repository profile", exact: true })
+    const profile = nav.getByRole("button", { name: "Choose project", exact: true })
     const menu = page.locator(profileMenu)
     const project = page.getByRole("menuitemradio", { name: "Compact project", exact: true })
     await profile.focus()
@@ -122,7 +122,7 @@ test("Arabic RTL: sidebar keyboard order and profile focus return", async ({ pag
   const nav = page.locator(sidebar)
   await expect(nav.getByRole("button", { name: "Chat", exact: true })).toBeEnabled()
   await expectTabOrder(page, [sidebar], { trap: false })
-  const profile = nav.getByRole("button", { name: "Choose repository profile", exact: true })
+  const profile = nav.getByRole("button", { name: "Choose project", exact: true })
   const menu = page.locator(profileMenu)
   await profile.focus()
   await page.keyboard.press("Enter")

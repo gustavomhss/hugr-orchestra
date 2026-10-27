@@ -340,7 +340,7 @@ test("invalid UTF-8 import reports an error and preserves the current document",
     .getByLabel("Open .env", { exact: true })
     .setInputFiles({ name: "bad.env", mimeType: "text/plain", buffer: Buffer.from([0xff, 0xfe]) })
   await expect(page.getByRole("alert")).toHaveText(
-    "Could not read this file as UTF-8. Your previous draft is still available.",
+    "Could not read this file as text. Your previous draft is still available.",
   )
   expect(await bytes(page)).toEqual(Buffer.from(fixture))
 })

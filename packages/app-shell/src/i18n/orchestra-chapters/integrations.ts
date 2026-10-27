@@ -1,9 +1,9 @@
 export const INTEGRATIONS_COPY = {
   "orchestra.integrations.eyebrow": "{{profile}} · Configuration",
   "orchestra.integrations.title": "Integrations",
-  "orchestra.integrations.description": "Choose explicit accounts, targets, and session bindings for this profile.",
+  "orchestra.integrations.description": "Choose explicit accounts, targets, and session bindings for this project.",
   "orchestra.integrations.loading": "Loading integrations…",
-  "orchestra.integrations.empty": "No accounts are configured for this profile.",
+  "orchestra.integrations.empty": "No accounts are configured for this project.",
   "orchestra.integrations.connect": "Connect account",
   "orchestra.integrations.provider": "Provider",
   "orchestra.integrations.label": "Account label",
@@ -109,9 +109,9 @@ export const INTEGRATIONS_COPY = {
 export const INTEGRATIONS_COPY_BR: Record<keyof typeof INTEGRATIONS_COPY, string> = {
   "orchestra.integrations.eyebrow": "{{profile}} · Configuração",
   "orchestra.integrations.title": "Integrações",
-  "orchestra.integrations.description": "Escolha contas, destinos e vínculos de sessão explícitos para este perfil.",
+  "orchestra.integrations.description": "Escolha contas, destinos e vínculos de sessão explícitos para este projeto.",
   "orchestra.integrations.loading": "Carregando integrações…",
-  "orchestra.integrations.empty": "Nenhuma conta está configurada para este perfil.",
+  "orchestra.integrations.empty": "Nenhuma conta está configurada para este projeto.",
   "orchestra.integrations.connect": "Conectar conta",
   "orchestra.integrations.provider": "Provedor",
   "orchestra.integrations.label": "Rótulo da conta",

@@ -57,7 +57,7 @@ export const HOOKS_COPY = {
   "orchestra.hooks.publish.updateInstall": "Update the installed copy to this version",
   "orchestra.hooks.publish.updateInstallHint":
     "Without this, sessions keep enforcing the version that is installed now.",
-  "orchestra.hooks.delete.description": "Its versions are removed and it is uninstalled from this profile.",
+  "orchestra.hooks.delete.description": "Its versions are removed and it is uninstalled from this project.",
   "orchestra.hooks.empty.title": "No hooks in this project yet",
   "orchestra.hooks.empty.body": "A hook listens for one agent event and blocks, asks, allows or runs a check.",
   "orchestra.hooks.templates.meta": "Templates open as drafts",
@@ -91,7 +91,7 @@ export const HOOKS_COPY = {
   "orchestra.hooks.repair.backup": "Backup saved as {{file}}",
   "orchestra.hooks.test": "Test",
   "orchestra.hooks.editor.name": "Hook name",
-  "orchestra.hooks.editor.installLabel": "Installed in this profile",
+  "orchestra.hooks.editor.installLabel": "Installed in this project",
   "orchestra.hooks.editor.paused": "Paused",
   "orchestra.hooks.editor.missing": "Hook not found",
 
@@ -357,7 +357,7 @@ export const HOOKS_COPY_BR: Record<keyof typeof HOOKS_COPY, string> = {
   "orchestra.hooks.publish.updateInstall": "Atualizar a cópia instalada para esta versão",
   "orchestra.hooks.publish.updateInstallHint":
     "Sem isto, as sessões continuam aplicando a versão instalada agora.",
-  "orchestra.hooks.delete.description": "As versões dele são removidas e ele é desinstalado deste perfil.",
+  "orchestra.hooks.delete.description": "As versões dele são removidas e ele é desinstalado deste projeto.",
   "orchestra.hooks.empty.title": "Nenhum hook neste projeto ainda",
   "orchestra.hooks.empty.body": "Um hook escuta um evento de agente e bloqueia, pergunta, permite ou roda uma verificação.",
   "orchestra.hooks.templates.meta": "Modelos abrem como rascunhos",
@@ -391,7 +391,7 @@ export const HOOKS_COPY_BR: Record<keyof typeof HOOKS_COPY, string> = {
   "orchestra.hooks.repair.backup": "Backup salvo como {{file}}",
   "orchestra.hooks.test": "Testar",
   "orchestra.hooks.editor.name": "Nome do hook",
-  "orchestra.hooks.editor.installLabel": "Instalado neste perfil",
+  "orchestra.hooks.editor.installLabel": "Instalado neste projeto",
   "orchestra.hooks.editor.paused": "Pausado",
   "orchestra.hooks.editor.missing": "Hook não encontrado",
 

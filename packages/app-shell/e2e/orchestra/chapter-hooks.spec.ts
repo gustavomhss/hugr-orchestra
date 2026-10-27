@@ -162,7 +162,7 @@ test("hook canvas: Yes and No ports, Pass and Fail on a Run gate, and a test wal
   await expect(canvas(page).locator(".wf-node")).toHaveCount(4)
   await expect(canvas(page).locator(".wf-port-label")).toHaveText(["Yes", "No"])
   await expect(canvas(page).locator(".wf-banner")).toContainText("Installed in orchestra-canonical · v2 · Blocked")
-  await expect(page.getByRole("switch", { name: "Installed in this profile" })).toHaveAttribute("aria-checked", "true")
+  await expect(page.getByRole("switch", { name: "Installed in this project" })).toHaveAttribute("aria-checked", "true")
 
   await page.getByRole("button", { name: "Test", exact: true }).click()
   const dialog = page.getByRole("dialog", { name: "Test hook" })

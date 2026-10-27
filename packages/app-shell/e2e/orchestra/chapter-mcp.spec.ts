@@ -64,7 +64,7 @@ test("mixed statuses, search, connection target, refresh, keyboard, and themes",
   await expect(row(page, "broken").locator("p").first()).toHaveText(`bunx 'broken server' --token •••`)
   await expect(page.locator("[data-mx-page]")).not.toContainText("resolved-secret")
   await expect(page.locator("[data-mx-page]")).toContainText(
-    "Switches apply until the server restarts. Saving or removing a server restarts this profile's MCP servers.",
+    "Switches apply until the server restarts. Saving or removing a server restarts this project's MCP servers.",
   )
   await expect(row(page, "shared").locator(".mx-badge")).toHaveText(["Disconnected (until restart)"])
   await expect(row(page, "shared")).toContainText('set "enabled": false in its entry in orchestra.json')
@@ -155,7 +155,7 @@ test("loading, empty, inventory failure and retry", async ({ page }) => {
   await expect(page.getByRole("status")).toHaveText("Loading MCP servers…")
   gate.resolve()
   await expect(page.getByRole("status")).toHaveText(
-    "No MCP servers configured.Add a server to make its tools available to this profile.",
+    "No MCP servers configured.Add a server to make its tools available to this project.",
   )
   await expect(page.getByRole("button", { name: "Add MCP server" })).toBeVisible()
   // A fresh observer receives a real query failure, then Retry reloads the owning profile.
@@ -222,7 +222,7 @@ test("add validates the name and endpoint and writes the profile config", async 
   await page.getByRole("button", { name: "Add MCP server" }).click()
   const dialog = page.getByRole("dialog", { name: "Add MCP server" })
   await expect(dialog).toContainText(
-    "Connect tools to this profile. Saving updates its project config and restarts its MCP servers.",
+    "Connect tools to this project. Saving updates its project config and restarts its MCP servers.",
   )
   await dialog.getByLabel("Name").fill("shared")
   await dialog.getByLabel("Command or server URL").fill("bunx server")
@@ -280,7 +280,7 @@ test("configure prefills the raw profile entry, skips unedited saves, and remove
   // Defined outside the profile: nothing resolved is shown or copied.
   await row(page, "online").getByRole("button", { name: "Configure" }).click()
   const outside = page.getByRole("dialog", { name: "Configure online" })
-  await expect(outside).toContainText("This server is configured outside this profile.")
+  await expect(outside).toContainText("This server is configured outside this project.")
   await expect(outside.getByLabel("Command or server URL")).toHaveValue("")
   await outside.getByRole("button", { name: "Cancel" }).click()
 
@@ -440,7 +440,7 @@ for (const path of ["/api/mcp/config", "/api/mcp/entries"] as const) {
     await expect(dialog.getByRole("button", { name: "Save", exact: true })).toHaveCount(0)
     gate.resolve()
     await expect(dialog.getByRole("alert")).toHaveText("Could not load MCP configuration. Retry before editing.")
-    await expect(dialog).not.toContainText("This server is configured outside this profile.")
+    await expect(dialog).not.toContainText("This server is configured outside this project.")
     fault.fail = false
     await dialog.getByRole("button", { name: "Retry", exact: true }).click()
     await expect(dialog.getByLabel("Command or server URL")).toHaveValue(`bunx 'broken server' --token {env:TOKEN}`)
@@ -508,7 +508,7 @@ async function toggleConnection(page: Page, name: string) {
 }
 
 async function chooseProfile(page: Page, name: string) {
-  await page.getByRole("button", { name: "Choose repository profile" }).click()
+  await page.getByRole("button", { name: "Choose project" }).click()
   await page.getByRole("menuitemradio", { name, exact: true }).click()
   await expect(page.locator('[data-slot="orchestra-profile"]')).toContainText(name)
 }

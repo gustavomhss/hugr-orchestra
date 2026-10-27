@@ -179,7 +179,7 @@ test("tool permissions follow the server's rule order, save in place, roll back 
   await expect(radio("Bash", "Allow")).toHaveAttribute("aria-checked", "false")
   await expect(radio("Read", "Allow")).toHaveAttribute("aria-checked", "true")
   // No rule names doom loops, so the config's wildcard decides.
-  await expect(radio("Doom Loop", "Allow")).toHaveAttribute("aria-checked", "true")
+  await expect(radio("Stop repeating loops", "Allow")).toHaveAttribute("aria-checked", "true")
   // glob's Deny comes before the wildcard, which overrides it; the row explains instead of writing.
   await expect(radio("Glob", "Allow")).toHaveAttribute("aria-checked", "true")
   await expect(radio("Glob", "Deny")).toBeDisabled()

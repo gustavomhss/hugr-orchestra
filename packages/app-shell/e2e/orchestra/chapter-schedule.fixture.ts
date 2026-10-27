@@ -8,9 +8,9 @@ export const otherDirectory = "/repo/other"
 export const SESSION_ID = /^ses_[0-9a-f]{12}[0-9A-Za-z]{14}$/
 export const MESSAGE_ID = /^msg_[0-9a-f]{12}[0-9A-Za-z]{14}$/
 export const NOTE =
-  "Saved on the server for this profile · due tasks run on the server even while this page is closed; a run more than a day late, or overtaken by the next one, is marked Missed."
+  "Saved on the server for this project · due tasks run on the server even while this page is closed; a run more than a day late, or overtaken by the next one, is marked Missed."
 export const NOTE_DEVICE =
-  "Saved on this device for this profile · due tasks run only while this page is open; a run more than a day late, or overtaken by the next one, is marked Missed."
+  "Saved on this device for this project · due tasks run only while this page is open; a run more than a day late, or overtaken by the next one, is marked Missed."
 export const HOUR = 3_600_000
 export const DAY = 24 * HOUR
 export const SLOT = Date.parse("2031-01-15T09:30:00-05:00")

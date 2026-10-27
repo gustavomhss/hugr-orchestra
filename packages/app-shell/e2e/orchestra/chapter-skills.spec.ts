@@ -251,9 +251,9 @@ for (const state of ["empty", "error", "unavailable"] as const) {
     const chapter = page.locator('[data-chapter="skills"]')
     await expect(chapter.getByRole("status")).toHaveText(
       state === "empty"
-        ? "No skills are registered for this profile."
+        ? "No skills are registered for this project."
         : state === "error"
-          ? "Could not load skills for this profile."
+          ? "Could not load skills for this project."
           : "This server does not provide a skills catalog.",
     )
     await expect(chapter.locator(".skills-card, dialog")).toHaveCount(0)
@@ -271,7 +271,7 @@ test(`a malformed catalog is the page's own error, and retry recovers`, async ({
   await setup(page, { response })
   await openSkills(page)
   const chapter = page.locator('[data-chapter="skills"]')
-  await expect(chapter.getByRole("status")).toHaveText("Could not load skills for this profile. Skills response is malformed")
+  await expect(chapter.getByRole("status")).toHaveText("Could not load skills for this project. Skills response is malformed")
   await expect(page.getByText("Something went wrong")).toHaveCount(0)
   await expect(chapter.locator(".skills-card")).toHaveCount(0)
   response.raw = undefined
@@ -422,7 +422,7 @@ test(`audit: submitting skill draft freezes, failure retains it for retry`, asyn
 })
 
 async function chooseProfile(page: Page, name: string) {
-  await page.getByRole("button", { name: "Choose repository profile" }).click()
+  await page.getByRole("button", { name: "Choose project" }).click()
   await page.getByRole("menuitemradio", { name, exact: true }).click()
 }
 

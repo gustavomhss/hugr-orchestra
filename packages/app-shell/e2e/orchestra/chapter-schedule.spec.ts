@@ -406,7 +406,7 @@ test("edit keeps the task, dialogs dismiss without saving, and remove asks first
   await card.getByRole("button", { name: "Edit", exact: true }).click()
   await edit.getByRole("button", { name: "Remove task", exact: true }).click()
   const confirm = page.getByRole("dialog", { name: "Remove this item?" })
-  await expect(confirm).toContainText("Its configuration is removed from this profile.")
+  await expect(confirm).toContainText("Its configuration is removed from this project.")
   await expect(confirm).toContainText("This removes the task from Schedule repository.")
   await page.screenshot({ path: test.info().outputPath("dark-confirm.png") })
   await confirm.getByRole("button", { name: "Cancel", exact: true }).click()

@@ -350,7 +350,7 @@ async function setup(page: Page) {
 }
 
 async function selectProfile(page: Page, name: string) {
-  await page.getByRole("button", { name: "Choose repository profile", exact: true }).click()
+  await page.getByRole("button", { name: "Choose project", exact: true }).click()
   const profile = page.locator('[data-component="orchestra-profile-picker"]').getByRole("menuitemradio", { name, exact: true })
   await expect(profile).toHaveCount(1)
   await expect(profile).toBeEnabled()

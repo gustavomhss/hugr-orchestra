@@ -7,7 +7,7 @@ export const ATLAS_GENESIS_COPY = {
   "orchestra.atlas.genesis.stage.scan": "Read the repository",
   "orchestra.atlas.genesis.stage.scan.unit": "files in the index",
   "orchestra.atlas.genesis.stage.scan.what":
-    "Genesis walks the tree and loads <code>.atlas/index.scip</code>, the code index an outside indexer (scip-typescript) produced. From them it builds three axes: where things are, which territory they sit in, and what depends on what.",
+    "History walks the tree and loads <code>.atlas/index.scip</code>, the code index an outside indexer (scip-typescript) produced. From them it builds three axes: where things are, which territory they sit in, and what depends on what.",
   "orchestra.atlas.genesis.stage.scan.fact.1":
     "No index means no dependency edges: the dependency and count kinds then have nothing to prove against.",
   "orchestra.atlas.genesis.stage.scan.fact.2": "Deterministic: the same commit gives the same skeleton.",
@@ -78,7 +78,7 @@ export const ATLAS_GENESIS_COPY = {
   "orchestra.atlas.genesis.knob.enrich.on": "On",
   "orchestra.atlas.genesis.knob.proposals": "Proposals from",
   "orchestra.atlas.genesis.knob.proposals.help":
-    "Use claims an agent already wrote, a JSON file of site → claim, instead of calling the model. Runs hints only, one at a time, Kinds ignored; Genesis still checks every claim.",
+    "Use claims an agent already wrote, a JSON file of site → claim, instead of calling the model. Runs hints only, one at a time, Kinds ignored; History still checks every claim.",
   "orchestra.atlas.genesis.knob.proposals.model": "The model",
   "orchestra.atlas.genesis.knob.proposals.file": "An agent's file",
   "orchestra.atlas.genesis.knob.frontier": "Symbols in the fallback",
@@ -89,9 +89,9 @@ export const ATLAS_GENESIS_COPY = {
   "orchestra.atlas.genesis.knob.model": "Model",
   "orchestra.atlas.genesis.knob.model.help":
     "The command run for each site (<code>roles.propose</code>, 60 s timeout). Read from <code>~/.config/atlas/model.json</code> or <code>$XDG_CONFIG_HOME</code>; <code>ATLAS_MODEL_CONFIG</code> points elsewhere. A file inside the repository is refused.",
-  "orchestra.atlas.genesis.crumb": "Genesis",
+  "orchestra.atlas.genesis.crumb": "History",
   "orchestra.atlas.genesis.eyebrow": "Engine",
-  "orchestra.atlas.genesis.title": "Genesis",
+  "orchestra.atlas.genesis.title": "History",
   "orchestra.atlas.genesis.intro":
     "How Atlas learns a repository. <code>atlas mine</code> picks the places worth knowing, asks a model about each one, checks every answer with code, and stages what survives as suggestions. It never writes knowledge: <code>atlas promote</code> is the step that does, through the same door as any edit.",
   "orchestra.atlas.genesis.run": "Run atlas mine…",
@@ -180,7 +180,7 @@ export const ATLAS_GENESIS_COPY = {
   "orchestra.atlas.genesis.gap.claims.detail": "parsers never emit them",
   "orchestra.atlas.genesis.iv.title": "The ratification interview",
   "orchestra.atlas.genesis.iv.purpose":
-    "Genesis only writes suggestions. A rule (T1) or a core fact (T0) needs a person, and Atlas asks once: one batch of the questions that matter most, ranked by how much code depends on the answer.",
+    "History only writes suggestions. A rule (T1) or a core fact (T0) needs a person, and Atlas asks once: one batch of the questions that matter most, ranked by how much code depends on the answer.",
   "orchestra.atlas.genesis.iv.answered": "of {{n}} answered",
   "orchestra.atlas.genesis.iv.kind.owner": "Owner",
   "orchestra.atlas.genesis.iv.kind.owner.count": "Owner · {{n}}",
@@ -236,7 +236,7 @@ export const ATLAS_GENESIS_COPY_BR: Record<keyof typeof ATLAS_GENESIS_COPY, stri
   "orchestra.atlas.genesis.stage.scan": "Ler o repositório",
   "orchestra.atlas.genesis.stage.scan.unit": "arquivos no índice",
   "orchestra.atlas.genesis.stage.scan.what":
-    "O Genesis percorre a árvore e carrega <code>.atlas/index.scip</code>, o índice de código que um indexador externo (scip-typescript) produziu. A partir dele monta três eixos: onde as coisas estão, em qual território ficam e o que depende de quê.",
+    "O Histórico percorre a árvore e carrega <code>.atlas/index.scip</code>, o índice de código que um indexador externo (scip-typescript) produziu. A partir dele monta três eixos: onde as coisas estão, em qual território ficam e o que depende de quê.",
   "orchestra.atlas.genesis.stage.scan.fact.1":
     "Sem índice não há arestas de dependência: os tipos de dependência e de contagem então não têm o que provar.",
   "orchestra.atlas.genesis.stage.scan.fact.2": "Determinístico: o mesmo commit dá o mesmo esqueleto.",
@@ -307,7 +307,7 @@ export const ATLAS_GENESIS_COPY_BR: Record<keyof typeof ATLAS_GENESIS_COPY, stri
   "orchestra.atlas.genesis.knob.enrich.on": "Ligado",
   "orchestra.atlas.genesis.knob.proposals": "Propostas de",
   "orchestra.atlas.genesis.knob.proposals.help":
-    "Usa afirmações que um agente já escreveu, um arquivo JSON de site → afirmação, em vez de chamar o modelo. Roda só dicas, uma por vez, ignorando Tipos; o Genesis ainda checa cada afirmação.",
+    "Usa afirmações que um agente já escreveu, um arquivo JSON de site → afirmação, em vez de chamar o modelo. Roda só dicas, uma por vez, ignorando Tipos; o Histórico ainda checa cada afirmação.",
   "orchestra.atlas.genesis.knob.proposals.model": "O modelo",
   "orchestra.atlas.genesis.knob.proposals.file": "Um arquivo de agente",
   "orchestra.atlas.genesis.knob.frontier": "Símbolos no fallback",
@@ -318,9 +318,9 @@ export const ATLAS_GENESIS_COPY_BR: Record<keyof typeof ATLAS_GENESIS_COPY, stri
   "orchestra.atlas.genesis.knob.model": "Modelo",
   "orchestra.atlas.genesis.knob.model.help":
     "O comando executado para cada site (<code>roles.propose</code>, timeout de 60 s). Lido de <code>~/.config/atlas/model.json</code> ou <code>$XDG_CONFIG_HOME</code>; <code>ATLAS_MODEL_CONFIG</code> aponta para outro lugar. Um arquivo dentro do repositório é recusado.",
-  "orchestra.atlas.genesis.crumb": "Genesis",
+  "orchestra.atlas.genesis.crumb": "Histórico",
   "orchestra.atlas.genesis.eyebrow": "Motor",
-  "orchestra.atlas.genesis.title": "Genesis",
+  "orchestra.atlas.genesis.title": "Histórico",
   "orchestra.atlas.genesis.intro":
     "Como o Atlas aprende um repositório. <code>atlas mine</code> escolhe os lugares que valem a pena conhecer, pergunta a um modelo sobre cada um, checa cada resposta com código e coloca como sugestões o que sobrevive. Ele nunca escreve conhecimento: <code>atlas promote</code> é o passo que faz isso, pela mesma porta de qualquer edição.",
   "orchestra.atlas.genesis.run": "Executar atlas mine…",
@@ -410,7 +410,7 @@ export const ATLAS_GENESIS_COPY_BR: Record<keyof typeof ATLAS_GENESIS_COPY, stri
   "orchestra.atlas.genesis.gap.claims.detail": "os parsers nunca as emitem",
   "orchestra.atlas.genesis.iv.title": "A entrevista de ratificação",
   "orchestra.atlas.genesis.iv.purpose":
-    "O Genesis só escreve sugestões. Uma regra (T1) ou um fato central (T0) precisa de uma pessoa, e o Atlas pergunta uma vez: um lote com as perguntas que mais importam, ordenadas por quanto código depende da resposta.",
+    "O Histórico só escreve sugestões. Uma regra (T1) ou um fato central (T0) precisa de uma pessoa, e o Atlas pergunta uma vez: um lote com as perguntas que mais importam, ordenadas por quanto código depende da resposta.",
   "orchestra.atlas.genesis.iv.answered": "de {{n}} respondidas",
   "orchestra.atlas.genesis.iv.kind.owner": "Dono",
   "orchestra.atlas.genesis.iv.kind.owner.count": "Dono · {{n}}",
