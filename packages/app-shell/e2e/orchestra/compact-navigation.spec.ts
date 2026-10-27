@@ -136,7 +136,8 @@ test("V2 profile card counts agents and shows the branch only when the server re
 })
 
 test("production builds show no WIP mark on any chapter page", async ({ page }) => {
-  test.skip(test.info().config.metadata.bundle !== "production", "the development server shows WIP marks")
+  // The development server marks WIP chapters by design; only the production bundle must hide them.
+  if (test.info().config.metadata.bundle !== "production") return
   test.setTimeout(120_000)
   await setupCompactNavigation(page)
   await page.goto("/")

@@ -62,7 +62,7 @@ export function make() {
       const nodes = LayerNode.hoist(locationServices, Node.tags.values.global, [
         [ToolRegistry.node, ToolRegistry.nativeNode], [ToolRegistry.toolsNode, ToolRegistry.nativeToolsNode],
         // Task and team_message capture process-global Session services this focused host does not export.
-        [TaskTool.node, Layer.empty], [TeamMessageTool.node, Layer.empty], [MeetingHandoff.node, Layer.empty], [Location.node, Location.boundNode(ref)],
+        [TaskTool.node, Layer.empty], [TeamMessageTool.node, Layer.empty], [MeetingHandoff.node, Layer.succeed(MeetingHandoff.Service, { handoff: () => Effect.die("meeting handoff needs the process-global Session") })], [Location.node, Location.boundNode(ref)],
       ])
       return LayerNode.compile(nodes.node).pipe(Layer.fresh,
         Layer.provide(LayerNode.compile(nodes.hoisted, [[Database.node, databaseNode]])))
