@@ -34,7 +34,7 @@ it.live("non-Git Actions constructor boots without Git or provider CLI; requeste
         },
         Actions.OperationID.make("aop_missing"),
       ),
-      (effect) => fault(effect, "invalid_input"),
+      (effect) => fault(effect, "not_found"),
     )
     expect(f.resolutions).toEqual([])
     expect(f.requests).toEqual([])
