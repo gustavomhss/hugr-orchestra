@@ -21,11 +21,17 @@ import { registerAppDockWindow } from "./app-dock-rpc"
 import { requireTitlebarFrame, titlebarFramePosition } from "./titlebar-frame"
 import { registerRendererPermissions } from "./window-permissions"
 import { createWindowFlusher } from "./window-flush"
+import {
+  isRendererOrigin,
+  rendererCsp,
+  rendererCspReportOnly,
+  rendererDevUrl,
+  rendererHost,
+  rendererProtocol,
+} from "./renderer-origin"
 
 const root = dirname(fileURLToPath(import.meta.url))
 const rendererRoot = join(root, "../renderer")
-const rendererProtocol = "oc"
-const rendererHost = "renderer"
 const oc2Theme = oc2ThemeJson as DesktopTheme
 const oc2Background = {
   light: resolveThemeVariant(oc2Theme.light, false)["background-base"],
@@ -426,7 +432,7 @@ export function registerRendererProtocol() {
 }
 
 function loadWindow(win: BrowserWindow, html: string) {
-  const devUrl = process.env.ELECTRON_RENDERER_URL
+  const devUrl = rendererDevUrl(app.isPackaged, process.env.ELECTRON_RENDERER_URL)
   if (devUrl) {
     const url = new URL(html, devUrl)
     void win.loadURL(url.toString())
@@ -577,17 +583,16 @@ function addDocumentPolicy(response: Response, file: string) {
 function addRendererHeaders(value: string, headers: Record<string, any>) {
   upsertKeyValue(headers, "Access-Control-Allow-Origin", ["*"])
   upsertKeyValue(headers, "Access-Control-Allow-Headers", ["*"])
-  if (isRendererUrl(value, true)) upsertKeyValue(headers, documentPolicyHeader, [jsCallStacksDocumentPolicy])
+  if (!isRendererUrl(value, true)) return
+  upsertKeyValue(headers, documentPolicyHeader, [jsCallStacksDocumentPolicy])
+  upsertKeyValue(headers, "Content-Security-Policy", [rendererCsp])
+  upsertKeyValue(headers, "Content-Security-Policy-Report-Only", [rendererCspReportOnly])
 }
 
 function isRendererUrl(value?: string, html = false) {
   if (!value || !URL.canParse(value)) return false
-  const url = new URL(value)
-  if (html && !url.pathname.endsWith(".html")) return false
-  if (url.protocol === `${rendererProtocol}:` && url.host === rendererHost) return true
-  const devUrl = process.env.ELECTRON_RENDERER_URL
-  if (!devUrl || !URL.canParse(devUrl)) return false
-  return url.origin === new URL(devUrl).origin
+  if (html && !new URL(value).pathname.endsWith(".html")) return false
+  return isRendererOrigin(value, rendererDevUrl(app.isPackaged, process.env.ELECTRON_RENDERER_URL))
 }
 
 function wireZoom(win: BrowserWindow) {
