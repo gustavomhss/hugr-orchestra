@@ -157,8 +157,8 @@ test("create preserves a custom name when selecting a template and caches its sa
   })
   // The copy is the user's own workflow, so it drops the profile mark that lists templates.
   expect(created.meta.relay).not.toHaveProperty("profile")
-  // A template that cannot run is not offered.
-  expect(host.querySelector('[data-template="blocked"]')).toBeNull()
+  // A template that cannot run stays visible, marked unavailable, and cannot be picked.
+  expect(host.querySelector('[data-template="blocked"]')?.getAttribute("aria-disabled")).toBe("true")
 })
 
 test("create validates name, keeps inputs after refusal, locks pending submission, and retries once", async () => {
@@ -407,7 +407,7 @@ test("duplicate opens only after its saved document is in the library cache", as
   api.queryClient.setQueryData(api.key("documents"), [own()])
   const opened: string[] = []
   const host = mount(() => createComponent(WorkflowLibrary, {
-    ...api, route: { page: "library", kind: "workflow", tab: "list", create: false }, profile: "Test", close() {},
+    ...api, route: { page: "library", kind: "workflow", tab: "list", create: false }, profile: "Test", directory: "/repo", close() {},
     go(path) {
       expect(api.source.list().find((item) => item.id === "saved")?.name).toBe("Review workflow (copy)")
       opened.push(path)
@@ -469,7 +469,7 @@ test("the library lists only the user's workflows, and a failed refresh keeps th
     documents: { isSuccess: false, isPending: false, isError: true, error: new Error("502"), refetch() {} },
   } as unknown as RelaySource
   const host = mount(() => createComponent(WorkflowLibrary, {
-    source, route: { page: "library", kind: "workflow", tab: "list", create: false }, profile: "Test", go() {}, close() {},
+    source, route: { page: "library", kind: "workflow", tab: "list", create: false }, profile: "Test", directory: "/repo", go() {}, close() {},
   }))
   expect([...host.querySelectorAll("[data-document]")].map((row) => row.getAttribute("data-document"))).toEqual(["mine"])
   expect(host.textContent).toContain("Could not refresh the list")
@@ -750,7 +750,7 @@ for (const entry of ["create", "clone"]) {
     const host = mount(() => createComponent(Show, { get when() { return state.open }, get children() {
       return entry === "create"
         ? createComponent(CreateWorkflowDialog, { ...api, initial: "blank", onClose() {}, onCreated: (id) => opened.push(id) })
-        : createComponent(WorkflowLibrary, { ...api, route: { page: "library", kind: "workflow", tab: "list", create: false }, profile: "Test", close() {}, go: (path) => opened.push(path) })
+        : createComponent(WorkflowLibrary, { ...api, route: { page: "library", kind: "workflow", tab: "list", create: false }, profile: "Test", directory: "/repo", close() {}, go: (path) => opened.push(path) })
     } }))
     if (entry === "create") submit(host)
     if (entry === "clone") {
