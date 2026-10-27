@@ -1,6 +1,7 @@
 export * as Host from "./host"
 
 import { Layer } from "effect"
+import type { ClaudeCodeAccount } from "./claude-code-account"
 import type { Database } from "./database/database"
 import type { EventV2 } from "./event"
 import type { LayerNode } from "./effect/layer-node"
@@ -12,7 +13,11 @@ import { SessionV2 } from "./session"
 import { SessionExecution } from "./session/execution"
 
 /** Global services every composition root provides to a contribution's reference overrides. */
-export type ReferenceServices = Database.Service | EventV2.Service | LocationServiceMap.Service
+export type ReferenceServices =
+  | Database.Service
+  | EventV2.Service
+  | LocationServiceMap.Service
+  | ClaudeCodeAccount.Service
 
 /**
  * What a product module hands a composition root. A root applies all contributions once, to its single

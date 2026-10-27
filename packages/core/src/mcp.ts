@@ -24,6 +24,7 @@ import { ConfigMCP } from "@orchestra/schema/config-mcp"
 import { Mcp } from "@orchestra/schema/mcp"
 import { Context, Deferred, Duration, Effect, Exit, Layer, Schema, Scope } from "effect"
 import { Config } from "./config"
+import { ConfigTrust } from "./config/trust"
 import { makeLocationNode } from "./effect/app-node"
 import { FSUtil } from "./fs-util"
 import { Global } from "./global"
@@ -143,12 +144,8 @@ const layer = Layer.effect(
       const servers = new Map(documents.flatMap((document) => Object.entries(document.info.mcp?.servers ?? {})))
       // A repository's own config is not the user's: its local servers are commands the repository chose to run.
       // Only the user's global config can approve a project, and the document that wins a name decides its origin.
-      const inGlobal = (document: Config.Document) =>
-        document.path === undefined || within(global.config, document.path)
-      const approved = documents
-        .filter(inGlobal)
-        .flatMap((document) => document.info.trusted_projects ?? [])
-        .some((root) => within(root, location.directory))
+      const inGlobal = (document: Config.Document) => ConfigTrust.isUser(global.config, document)
+      const approved = ConfigTrust.isTrusted(documents, global.config, location.directory)
       // Later documents win a name, so the last document that declares it decides where the server comes from.
       const unapproved = new Set(
         approved
@@ -249,7 +246,7 @@ const layer = Layer.effect(
       }
       if (server.type === "local" && found.unapproved.has(name)) {
         current.status = failed(
-          `Not started: this project's config declares a local command for this server. Add "${location.directory}" to trusted_projects in your user config to approve it.`,
+          `Not started: this project's config declares a local command for this server. ${ConfigTrust.approveHint(location.directory)}`,
         )
         return
       }
@@ -388,7 +385,7 @@ const layer = Layer.effect(
       if (server.type === "local") {
         const trusted = (yield* Config.readGlobal().pipe(Effect.provideService(FSUtil.Service, fs), Effect.provideService(Global.Service, global)))
           .trustedProjects
-        if (!trusted.some((root) => within(root, location.directory)))
+        if (!trusted.some((root) => ConfigTrust.within(root, location.directory)))
           yield* Config.updateGlobal({ trustedProjects: [...trusted, location.directory] }).pipe(
             Effect.provideService(FSUtil.Service, fs),
             Effect.provideService(Global.Service, global),
@@ -759,12 +756,6 @@ function serverInfo(body: string) {
   } catch {
     return undefined
   }
-}
-
-// Whether `target` is `root` or inside it.
-function within(root: string, target: string) {
-  const relative = path.relative(path.resolve(root), path.resolve(target))
-  return relative.split(path.sep)[0] !== ".." && !path.isAbsolute(relative)
 }
 
 function failed(error: string): Mcp.Status {

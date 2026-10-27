@@ -20,7 +20,7 @@ The permission system exists as a UX feature to help users stay aware of what th
 
 ### Server Mode
 
-Server mode is opt-in only. When enabled, set `ORCHESTRA_SERVER_PASSWORD` to require HTTP Basic Auth. Without this, the server runs unauthenticated (with a warning). It is the end user's responsibility to secure the server - any functionality it provides is not a vulnerability.
+Server mode is opt-in only, and it always requires HTTP Basic Auth. `ORCHESTRA_SERVER_PASSWORD` sets that password; without it, `serve` uses the service password the daemon generates (32 random bytes) and saves in the state directory with mode 0600. It is the end user's responsibility to secure the server - any functionality it provides is not a vulnerability.
 
 ### Credentials at Rest
 

@@ -50,6 +50,8 @@ const layer = Layer.effect(
         from: "live",
         to: AgentV2.defaultID,
         text: message(meeting, rows, people),
+        // Handed items are notes for the owner's next conversation with Maestro, not work to start unasked.
+        resume: false,
       })
       // The owner chose to hand off: with no Maestro conversation in the project, open one to receive it.
       yield* send.pipe(
@@ -105,5 +107,6 @@ function message(
   return [
     `From the meeting "${meeting.title}" on ${date}, the owner chose these items for you:`,
     ...rows.map((row) => `- ${row.kind}: ${row.text} (${who(row.asserter)}) [meeting ${meeting.id} item ${row.id}]`),
+    "Keep them in mind and bring them up with the owner. Do not start work on any of them until the owner asks.",
   ].join("\n")
 }

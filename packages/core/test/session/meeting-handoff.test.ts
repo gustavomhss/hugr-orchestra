@@ -133,12 +133,14 @@ describe("MeetingHandoff", () => {
       expect(prompts).toHaveLength(1)
       expect(prompts[0]!.sessionID).toEqual(SessionV2.ID.make("ses_handoff_maestro"))
       expect(prompts[0]!.delivery).toBe("queue")
+      expect(prompts[0]!.resume).toBe(false)
       const text = prompts[0]!.prompt.text
       expect(text).toContain("<team_message from=\"live\">")
       expect(text).toContain("Planning")
       expect(text).toContain(`decision: decision text (Ana) [meeting ${meeting} item itm_decision]`)
       expect(text).toContain("question: question text (me)")
       expect(text).not.toContain("secret transcript quote")
+      expect(text).toContain("Do not start work on any of them until the owner asks.")
       const rows = yield* db.select().from(MeetingItemTable).where(eq(MeetingItemTable.id, "itm_decision")).all().pipe(Effect.orDie)
       expect(rows.map((row) => [row.revision, row.sent_to_maestro])).toEqual([
         [1, false],
