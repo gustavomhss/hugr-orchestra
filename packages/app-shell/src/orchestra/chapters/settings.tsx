@@ -30,7 +30,13 @@ export default function SettingsPage(props: ChapterPageProps) {
       fallback={
         <section class="mx-page orchestra-settings" data-mx-page="settings" aria-labelledby="orchestra-settings-title">
           <div class="inner">
-            <h1 id="orchestra-settings-title">{language.t("sidebar.settings")}</h1>
+            <header class="mx-heading">
+              <div>
+                <div class="mx-eyebrow">{language.t("orchestra.settings.eyebrow")}</div>
+                <h1 id="orchestra-settings-title">{language.t("orchestra.settings.title")}</h1>
+                <p>{language.t("orchestra.settings.subtitle")}</p>
+              </div>
+            </header>
             <div class="settings">
               <nav class="settings-nav" aria-label={language.t("orchestra.settings.sections")}>
                 <For each={SETTINGS_SECTIONS}>

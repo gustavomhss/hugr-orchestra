@@ -1,4 +1,4 @@
-/* Routed Settings view, ported 1:1 from the approved mock (app.html `#viewSettings`, `.mast.slim`,
+/* Routed Settings view, ported 1:1 from the approved mock (app.html `#viewSettings`; the heading uses the kit,
    `.settings*`, `.perm-*`, `.agent*`). Everything is scoped to the view root so the mock's short
    class names cannot leak. Light values follow the mock's `[data-scheme="light"]` overrides. */
 /* Type follows the kit (`.mx-page`): the mock's 501-599 weights render as Inter Medium with synthetic bold,
@@ -10,36 +10,9 @@ html[data-color-scheme="light"] body[data-new-layout] .orchestra-settings {
   --settings-hairline: rgba(70, 84, 98, 0.1);
 }
 .orchestra-settings .inner {
-  inline-size: min(1080px, calc(100% - 24px));
+  inline-size: min(1020px, calc(100% - 72px));
   margin: 0 auto;
   padding: 52px 0 72px;
-}
-.orchestra-settings .mast {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 28px;
-  margin-block-end: 22px;
-}
-.orchestra-settings .kicker {
-  color: var(--orchestra-faint);
-  font-size: var(--orchestra-font-size-xs);
-  font-family: var(--mx-emphasis);
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-.orchestra-settings .mast h1 {
-  margin: 9px 0 0;
-  color: var(--orchestra-text);
-  font-size: var(--orchestra-font-size-4xl);
-  line-height: 36px;
-  font-weight: 600;
-  letter-spacing: -0.035em;
-}
-.orchestra-settings .mast h1 span {
-  color: var(--orchestra-muted);
-  font-weight: 450;
 }
 
 .orchestra-settings .settings {

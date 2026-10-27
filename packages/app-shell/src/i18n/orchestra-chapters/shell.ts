@@ -46,3 +46,51 @@ export const SHELL_COPY = {
   "orchestra.shell.project.initGit.confirm": "Initialize git",
   "orchestra.shell.project.initGit.skip": "Add without git",
 }
+
+export const SHELL_COPY_BR: Record<keyof typeof SHELL_COPY, string> = {
+  "orchestra.shell.navigation": "Navegação",
+  "orchestra.shell.goHome": "Ir para o início",
+  "orchestra.shell.server.invalid": "Digite uma URL de servidor válida.",
+  "orchestra.shell.server.failed": "Não foi possível conectar. Verifique a URL do servidor e as credenciais.",
+  "orchestra.shell.server.lost": "Conexão com o servidor perdida. Tentando de novo…",
+  "orchestra.shell.server.retry": "Tentar agora",
+  "orchestra.shell.server.restart": "Reiniciar app",
+  "orchestra.shell.error.retry": "Tentar de novo",
+  "orchestra.shell.error.home": "Ir para o Início",
+  "orchestra.shell.update.download": "Baixar {{version}}",
+  "orchestra.shell.logs.exportFailed": "Não foi possível exportar os logs",
+  "orchestra.shell.picker.failed": "Não foi possível abrir o seletor de pastas",
+  "orchestra.shell.link.failed": "Não foi possível abrir o link",
+  "orchestra.shell.link.unsupported": "Este link não é compatível.",
+  "orchestra.shell.link.missingDirectory": "A pasta não foi encontrada: {{directory}}",
+  "orchestra.shell.draft.close.title": "Descartar este rascunho?",
+  "orchestra.shell.draft.close.description": "O texto e os anexos deste rascunho serão perdidos.",
+  "orchestra.shell.draft.close.confirm": "Descartar rascunho",
+  // The folder the desktop app creates in Documents on first launch.
+  "orchestra.shell.onboarding.defaultProject": "Default Project",
+  "orchestra.shell.settings.repository":
+    "Abra um projeto para gerenciar esta seção. Geral, Servidores e Atalhos funcionam sem um.",
+  // The reference names built-in views by their lowercase view key in the window breadcrumb.
+  "orchestra.shell.crumb.home": "início",
+  "orchestra.shell.crumb.agents": "agentes",
+  "orchestra.shell.crumb.dock": "dock",
+  "orchestra.shell.crumb.workspaces": "workspaces",
+  "orchestra.shell.crumb.settings": "configurações",
+  "orchestra.shell.crumb.plugins": "Plugins de LLM",
+  "orchestra.shell.wip.chip": "WIP",
+  "orchestra.shell.wip.description": "Trabalho em andamento, revisar antes da produção",
+  "orchestra.shell.wip.page": "WIP · revisar antes da produção",
+  "orchestra.shell.profile.agents.one": "{{count}} agente",
+  "orchestra.shell.profile.agents.other": "{{count}} agentes",
+  "orchestra.shell.project.close": "Fechar projeto",
+  "orchestra.shell.project.missing.title": "Pasta de {{project}} não encontrada",
+  "orchestra.shell.project.missing.description":
+    "{{directory}} não existe mais. Feche o projeto, ou restaure a pasta e reabra-a.",
+  "orchestra.shell.project.editUnsupported": "Este servidor não permite editar projetos.",
+  "orchestra.shell.project.addFailed": "Não foi possível adicionar o projeto",
+  "orchestra.shell.project.initGit.title": "Configurar git nesta pasta?",
+  "orchestra.shell.project.initGit.description":
+    "{{directory}} está vazia. Inicialize um repositório git com um primeiro commit vazio para que o Orchestra possa acompanhar as mudanças nela.",
+  "orchestra.shell.project.initGit.confirm": "Inicializar git",
+  "orchestra.shell.project.initGit.skip": "Adicionar sem git",
+}

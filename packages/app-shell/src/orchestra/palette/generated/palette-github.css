@@ -1636,15 +1636,6 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-mx-ki
   outline: 2px solid var(--orchestra-accent);
 }
 /* orchestra/chapters/agents.css */
-[data-orchestra-palette="github"] .agents-kicker {
-  color: var(--orchestra-muted);
-}
-[data-orchestra-palette="github"] .agents-mast h1 {
-  color: var(--orchestra-text);
-}
-[data-orchestra-palette="github"] .agents-mast h1 span {
-  color: var(--orchestra-muted);
-}
 [data-orchestra-palette="github"] .agent-top b {
   color: var(--orchestra-body);
 }
@@ -1789,19 +1780,6 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-mx-ki
   color: var(--mx-dim);
 }
 /* orchestra/chapters/workspaces.css */
-html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-new-layout] {
-  --mx-mast-kicker: #3d454f;
-  --mx-mast-title: #21262c;
-}
-[data-orchestra-palette="github"] .orchestra-workspaces .ws-kicker {
-  color: var(--mx-mast-kicker);
-}
-[data-orchestra-palette="github"] .orchestra-workspaces .ws-mast h1 {
-  color: var(--mx-mast-title);
-}
-[data-orchestra-palette="github"] .orchestra-workspaces .ws-mast h1 span {
-  color: var(--mx-dim);
-}
 [data-orchestra-palette="github"] .ws-icon {
   fill: none;
   stroke: currentColor;
@@ -1816,15 +1794,6 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-new-l
 /* components/settings-v2/view/settings-view.css */
 html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-new-layout] .orchestra-settings {
   --settings-hairline: rgba(110, 118, 127, 0.1);
-}
-[data-orchestra-palette="github"] .orchestra-settings .kicker {
-  color: var(--orchestra-faint);
-}
-[data-orchestra-palette="github"] .orchestra-settings .mast h1 {
-  color: var(--orchestra-text);
-}
-[data-orchestra-palette="github"] .orchestra-settings .mast h1 span {
-  color: var(--orchestra-muted);
 }
 [data-orchestra-palette="github"] .orchestra-settings .settings-nav button {
   border: 0;

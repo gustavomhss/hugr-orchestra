@@ -230,14 +230,11 @@ export default function Workspaces(props: ChapterPageProps) {
   return (
     <section class="mx-page orchestra-workspaces" aria-labelledby="workspaces-title" data-mx-page="workspaces">
       <div class="ws-inner">
-        <header class="ws-mast">
+        <header class="mx-heading">
           <div>
-            <div class="ws-kicker">{language.t("orchestra.workspaces.title")}</div>
-            <h1 id="workspaces-title">
-              {language.t("orchestra.workspaces.heading")}
-              <br />
-              <span>{language.t("orchestra.workspaces.headingAccent")}</span>
-            </h1>
+            <div class="mx-eyebrow">{language.t("orchestra.workspaces.title")}</div>
+            <h1 id="workspaces-title">{language.t("orchestra.workspaces.heading")}</h1>
+            <p>{language.t("orchestra.workspaces.headingAccent")}</p>
           </div>
         </header>
         <div class="mx-toolbar">

@@ -519,7 +519,8 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string; pending
     const current = draftSession.policy()
     if (draftSession.error()) return language.t("dialog.subagentModels.saveFailed")
     if (draftSession.loading() || !current) return language.t("common.loading")
-    return current.mode === "inherit" ? language.t("dialog.subagentModels.inherited") : `${current.models.length}`
+    // The full inherited sentence lives in the picker; the 28px chip names the mode in one word.
+    return current.mode === "inherit" ? language.t("common.default") : `${current.models.length}`
   }
   const open = async () => {
     const selection = source()

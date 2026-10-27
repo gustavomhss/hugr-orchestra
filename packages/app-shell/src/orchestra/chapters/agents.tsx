@@ -125,14 +125,11 @@ export default function Agents(props: ChapterPageProps) {
   return (
     <section class="mx-page orchestra-agents" aria-labelledby="agents-title">
       <div class="agents-inner">
-        <header class="agents-mast">
+        <header class="mx-heading">
           <div>
-            <div class="agents-kicker">{language.t("orchestra.agents.title")}</div>
-            <h1 id="agents-title">
-              {language.t("orchestra.agents.headline")}
-              <br />
-              <span>{language.t("orchestra.agents.headlineMuted")}</span>
-            </h1>
+            <div class="mx-eyebrow">{language.t("orchestra.agents.title")}</div>
+            <h1 id="agents-title">{language.t("orchestra.agents.headline")}</h1>
+            <p>{language.t("orchestra.agents.headlineMuted")}</p>
           </div>
           <button
             type="button"

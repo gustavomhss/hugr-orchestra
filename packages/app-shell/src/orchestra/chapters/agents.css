@@ -1,35 +1,8 @@
-/* Agents (mock `#viewAgents`): the slim masthead and roster cards that the shared kit does not cover. */
+/* Agents (mock `#viewAgents`): the roster cards that the shared kit does not cover. */
 .orchestra-agents .agents-inner {
   inline-size: min(1020px, calc(100% - 72px));
   margin: 0 auto;
   padding: 52px 0 72px;
-}
-.agents-mast {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 28px;
-  margin-block-end: 22px;
-}
-.agents-kicker {
-  color: var(--orchestra-muted);
-  font-size: var(--orchestra-font-size-xs);
-  font-family: var(--mx-emphasis);
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-.agents-mast h1 {
-  margin: 9px 0 0;
-  color: var(--orchestra-text);
-  font-size: var(--orchestra-font-size-4xl);
-  line-height: 36px;
-  font-weight: 600;
-  letter-spacing: -0.035em;
-}
-.agents-mast h1 span {
-  color: var(--orchestra-muted);
-  font-weight: 450;
 }
 .agents-grid {
   margin: 0;

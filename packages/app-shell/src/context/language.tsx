@@ -8,11 +8,7 @@ import { dict as en } from "@/i18n/en"
 import { dict as uiEn } from "@orchestra/ui/i18n/en"
 import { EDIT_REVIEW_COPY } from "@orchestra/ui/i18n/edit-review"
 import { ORCHESTRA_COPY } from "@/i18n/orchestra"
-import { BOARD_COPY_BR } from "@/i18n/orchestra-chapters/board"
-import { BOARD_MONEY_COPY_BR } from "@/i18n/orchestra-chapters/board-money"
-import { BOARD_VIEWS_COPY_BR } from "@/i18n/orchestra-chapters/board-views"
-import { FLIGHT_ENGINEER_COPY_BR } from "@/i18n/orchestra-chapters/flight-engineer"
-import { GUARDRAILS_COPY_BR } from "@/i18n/orchestra-chapters/guardrails"
+import { ORCHESTRA_COPY_BR } from "@/i18n/orchestra"
 import {
   createDesktopNativeBundle,
   DESKTOP_NATIVE_ENGLISH,
@@ -84,7 +80,7 @@ const loaders: Record<Exclude<Locale, "en">, () => Promise<Dictionary>> = {
   br: () =>
     merge(import("@/i18n/br"), import("@orchestra/ui/i18n/br"), import("@/i18n/lean/br")).then(
       (dict) =>
-        ({ ...dict, ...GUARDRAILS_COPY_BR, ...FLIGHT_ENGINEER_COPY_BR, ...BOARD_COPY_BR, ...BOARD_VIEWS_COPY_BR, ...BOARD_MONEY_COPY_BR }) as Dictionary,
+        ({ ...dict, ...ORCHESTRA_COPY_BR }) as Dictionary,
     ),
   th: () => merge(import("@/i18n/th"), import("@orchestra/ui/i18n/th"), import("@/i18n/lean/th")),
   bs: () => merge(import("@/i18n/bs"), import("@orchestra/ui/i18n/bs"), import("@/i18n/lean/bs")),

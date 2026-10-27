@@ -259,8 +259,8 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   overflow-y: auto;
   /* Rows scrolling under the brand or the profile card fade out instead of being cut; the padding lets the
      first and last rows rest clear of the fades. */
-  padding-block: 8px 16px;
-  mask-image: linear-gradient(to bottom, transparent, #000 8px, #000 calc(100% - 16px), transparent);
+  padding-block: 8px 28px;
+  mask-image: linear-gradient(to bottom, transparent, #000 8px, #000 calc(100% - 32px), transparent);
   scrollbar-width: thin;
   scrollbar-color: var(--glass-border) transparent;
 }
@@ -651,7 +651,9 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
    the pointer so the titlebar stays draggable around them. */
 .orchestra-shell > [data-slot="titlebar-v2"] [data-slot="orchestra-crumb-link"] {
   pointer-events: auto;
+  display: inline-block;
   max-inline-size: 100%;
+  vertical-align: bottom;
   padding: 0;
   border: 0;
   background: none;

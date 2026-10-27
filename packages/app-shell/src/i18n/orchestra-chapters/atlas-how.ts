@@ -55,3 +55,60 @@ export const ATLAS_HOW_COPY = {
   "orchestra.atlas.how.next": "Next: {{title}}",
   "orchestra.atlas.how.open": "Open the fact",
 }
+
+export const ATLAS_HOW_COPY_BR: Record<keyof typeof ATLAS_HOW_COPY, string> = {
+  "orchestra.atlas.how.crumb": "Como funciona",
+  "orchestra.atlas.how.eyebrow": "Como funciona",
+  "orchestra.atlas.how.title": "Siga um fato",
+  "orchestra.atlas.how.lead": "Uma frase real deste armazenamento, desde o momento em que o Genesis a propôs até o momento em que o código dela mudou.",
+  "orchestra.atlas.how.another": "Outro fato",
+  "orchestra.atlas.how.quote": "“{{claim}}”",
+  "orchestra.atlas.how.none": "Nenhum fato para seguir ainda.",
+  "orchestra.atlas.how.stop.learned": "Aprendido",
+  "orchestra.atlas.how.stop.checked": "Verificado",
+  "orchestra.atlas.how.stop.stored": "Armazenado",
+  "orchestra.atlas.how.stop.served": "Servido",
+  "orchestra.atlas.how.stop.watched": "Observado",
+  "orchestra.atlas.how.learned.line": "O Genesis visitou este arquivo e o modelo propôs uma frase sobre ele.",
+  "orchestra.atlas.how.learned.none": "Nenhum raciocínio armazenado.",
+  "orchestra.atlas.how.learned.answer": "A resposta inteira do modelo fica armazenada junto da afirmação (answerRef).",
+  "orchestra.atlas.how.checked.line":
+    "Antes de virar um fato, ela passou por quatro verificações, em ordem. A cadeia para na primeira que falhar.",
+  "orchestra.atlas.how.gate.shape": "Bem formado",
+  "orchestra.atlas.how.gate.shape.text": "Tem uma afirmação, um nível, um escopo e uma âncora válida.",
+  "orchestra.atlas.how.gate.truth": "Bate com o código",
+  "orchestra.atlas.how.gate.truth.text": "O código da âncora ainda gera o mesmo hash que a afirmação viu.",
+  "orchestra.atlas.how.gate.authz": "Permitido",
+  "orchestra.atlas.how.gate.authz.text": "Quem escreve pertence ao grupo {{scope}}.",
+  "orchestra.atlas.how.gate.ratify": "Aprovado",
+  "orchestra.atlas.how.gate.ratify.text": "A chave de aprovação de uma pessoa assina a gravação.",
+  "orchestra.atlas.how.stored.line":
+    "O Atlas armazena o fato pelo conteúdo, então o mesmo fato sempre tem o mesmo endereço, e nada é sobrescrito.",
+  "orchestra.atlas.how.layer.identity": "Identidade",
+  "orchestra.atlas.how.layer.identity.text":
+    "nodeKey = hash(anchor ‖ kind). O mesmo lugar e o mesmo tipo são o mesmo fato, não importa como foi escrito.",
+  "orchestra.atlas.how.layer.content": "Conteúdo",
+  "orchestra.atlas.how.layer.content.text":
+    "contentHash = BLAKE3 do fato, sem a fundamentação nem a atualidade. Reancorar nunca muda esse valor.",
+  "orchestra.atlas.how.layer.current": "Versão atual",
+  "orchestra.atlas.how.layer.current.text":
+    "A geração {{gen}} aponta a chave para esse conteúdo. Cada gravação publica uma nova geração; as últimas quatro ficam.",
+  "orchestra.atlas.how.layer.anchor": "Âncora",
+  "orchestra.atlas.how.layer.anchor.text": "O hash do código que a afirmação descreve, no commit {{rev}}.",
+  "orchestra.atlas.how.stored.note":
+    "{{n}} objetos no armazenamento: todos os fatos mais a resposta do modelo por trás deles. A exportação copia os objetos (atlas-okf.json); a importação os reexecuta pelas verificações.",
+  "orchestra.atlas.how.served.in": "Quando um agente pergunta sobre esta unidade, esta frase faz parte do briefing que ele recebe.",
+  "orchestra.atlas.how.served.out":
+    "O briefing desta unidade acabou o espaço antes desta frase; o agente a vê citada e pode puxá-la.",
+  "orchestra.atlas.how.served.note":
+    "Os briefings são montados sempre do mesmo jeito: primeiro os fatos aprovados, depois ponteiros para unidades menores, depois dicas, em 1.500 caracteres. Nada é descartado em silêncio.",
+  "orchestra.atlas.how.watched.moved":
+    "O código mudou: {{stat}} desde que o fato foi derivado. A âncora não gera mais o mesmo hash, então o Atlas marca como alterado e pede que você decida.",
+  "orchestra.atlas.how.watched.still": "O código dele não mudou desde que foi derivado, então continua valendo.",
+  "orchestra.atlas.how.watched.blast.one": "{{n}} arquivo importa este arquivo, então os fatos dele estão no raio de impacto.",
+  "orchestra.atlas.how.watched.blast.other": "{{n}} arquivos importam este arquivo, então os fatos deles estão no raio de impacto.",
+  "orchestra.atlas.how.review": "Revisar",
+  "orchestra.atlas.how.back": "Voltar",
+  "orchestra.atlas.how.next": "Próximo: {{title}}",
+  "orchestra.atlas.how.open": "Abrir o fato",
+}

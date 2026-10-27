@@ -81,3 +81,86 @@ export const CHAT_COPY = {
   "orchestra.chat.delivery.unsupported":
     "This server delivers every prompt as a steer; queueing needs a server that speaks the V2 protocol.",
 }
+
+export const CHAT_COPY_BR: Record<keyof typeof CHAT_COPY, string> = {
+  "orchestra.chat.you": "Você",
+  "orchestra.chat.review": "Revisão",
+  "orchestra.chat.apps": "Apps",
+  "orchestra.chat.filesChanged": "Arquivos alterados {{count}}",
+  "orchestra.chat.allFiles": "Todos os arquivos",
+  "orchestra.chat.exportDiff": "Exportar diff",
+  "orchestra.chat.exportDiffSkipped": "{{count}} arquivos listados não tinham texto de patch e ficaram de fora da exportação.",
+  "orchestra.chat.contextFiles": "Adicionar arquivos ao contexto",
+  "orchestra.chat.stop": "Parar",
+  "orchestra.chat.stop.failed": "Não foi possível parar a sessão. Ela pode continuar rodando no servidor.",
+  "orchestra.chat.loadFailed.title": "Não foi possível carregar esta sessão",
+  "orchestra.chat.loadFailed.description": "As mensagens não carregaram. Verifique a conexão com o servidor e tente de novo.",
+  "orchestra.chat.loadFailed.retry": "Tentar de novo",
+  "orchestra.chat.history.loadFailed": "Não foi possível carregar mensagens mais antigas",
+  "orchestra.chat.revert.draftKept.title": "Rascunho mantido",
+  "orchestra.chat.revert.draftKept.description":
+    "O compositor ainda tem o que você digitou, então a mensagem revertida não foi colocada nele. Ela aparece listada acima do compositor.",
+  "orchestra.chat.terminal.createFailed": "Não foi possível abrir um terminal",
+  "orchestra.chat.terminal.agentFinished": "Comando concluído",
+  "orchestra.chat.terminal.agentFailed": "Comando falhou (saída {{code}})",
+  "orchestra.chat.terminal.closeFailed": "Não foi possível fechar o terminal. Ele pode continuar rodando no servidor.",
+  "orchestra.chat.send.blockedByHook": "Bloqueado pelo hook “{{name}}”: {{message}}",
+  "orchestra.chat.send.emptySession": "Sessão vazia",
+  "orchestra.chat.send.openProviders": "Conecte um provedor",
+  "orchestra.chat.providerTip": "Conecte um provedor para começar",
+  "orchestra.chat.noConnection.description": "O chat precisa de um provedor conectado antes de começar.",
+  "orchestra.chat.placeholder": "Mensagem para o Orchestra…",
+  "orchestra.chat.menu.rename": "Renomear sessão",
+  "orchestra.chat.menu.export": "Exportar sessão",
+  "orchestra.chat.menu.archive": "Arquivar sessão",
+  "orchestra.chat.menu.delete": "Excluir sessão",
+  "orchestra.chat.archived.loading": "Carregando sessões arquivadas…",
+  "orchestra.chat.archived.restored": "Sessão restaurada",
+  "orchestra.chat.models.all": "Todos os modelos",
+  "orchestra.chat.models.count": "{{count}} modelos",
+  "orchestra.chat.model.noProvider": "Nenhum provedor está conectado ainda. Conecte um para escolher um modelo.",
+  "orchestra.chat.delivery.steer": "Direcionar",
+  "orchestra.chat.delivery.queue": "Enfileirar",
+  "orchestra.chat.delivery.steerHint":
+    "Direcionar: o próximo prompt entra no trabalho em andamento no próximo limite de turno. Selecione para enfileirar.",
+  "orchestra.chat.delivery.queueHint":
+    "Enfileirar: o próximo prompt espera até o trabalho em andamento parar. Selecione para direcionar.",
+  "orchestra.chat.pr.create": "Criar PR",
+  "orchestra.chat.pr.title": "Criar pull request",
+  "orchestra.chat.pr.description": "Abre o pull request com a CLI gh ou glab conectada neste servidor.",
+  "orchestra.chat.pr.previewTitle": "Prévia do pull request",
+  "orchestra.chat.pr.titleField": "Título",
+  "orchestra.chat.pr.from": "Branch de origem",
+  "orchestra.chat.pr.base": "Branch base",
+  "orchestra.chat.pr.body": "Descrição",
+  "orchestra.chat.pr.summary": "Resumo",
+  "orchestra.chat.pr.files": "Arquivos",
+  "orchestra.chat.pr.noFiles": "Nenhum arquivo alterado nesta visualização.",
+  "orchestra.chat.pr.submit": "Criar pull request",
+  "orchestra.chat.pr.creating": "Criando pull request…",
+  "orchestra.chat.pr.createdTitle": "Pull request criado",
+  "orchestra.chat.pr.created": "Aberto em",
+  "orchestra.chat.pr.cancel": "Cancelar",
+  "orchestra.chat.pr.done": "Fechar",
+  "orchestra.chat.pr.close": "Fechar diálogo",
+  "orchestra.chat.pr.download": "Baixar proposta",
+  "orchestra.chat.pr.reason.notInstalled":
+    "Nada foi enviado: {{cli}} não está instalado neste servidor. Baixe a proposta e abra o pull request pelo seu host.",
+  "orchestra.chat.pr.reason.notAuthenticated":
+    "Nada foi enviado: {{cli}} não está conectado neste servidor. Execute {{cli}} auth login lá, ou baixe a proposta.",
+  "orchestra.chat.pr.reason.noRemote":
+    "Nada foi enviado: este repositório não tem remoto no github.com nem no gitlab.com. Baixe a proposta e abra o pull request pelo seu host.",
+  "orchestra.chat.pr.reason.notPushed":
+    "Nada foi enviado: faça push de {{branch}} para {{remote}} primeiro, ou baixe a proposta.",
+  "orchestra.chat.pr.reason.noBranch":
+    "Nada foi enviado: o repositório não está em uma branch. Baixe a proposta e abra o pull request pelo seu host.",
+  "orchestra.chat.pr.reason.cliFailed":
+    "Nenhum endereço de pull request voltou: {{message}}. Verifique seu host antes de tentar de novo, ou baixe a proposta.",
+  "orchestra.chat.pr.reason.unavailable":
+    "Nada foi enviado: este servidor não consegue abrir pull requests. Baixe a proposta e abra o pull request pelo seu host.",
+  "orchestra.chat.pr.reason.unconfirmed":
+    "O Orchestra não conseguiu confirmar um pull request. Verifique seu host antes de tentar de novo, ou baixe a proposta.",
+  "orchestra.chat.delivery.queued": "Na fila: o prompt espera até o trabalho em andamento parar.",
+  "orchestra.chat.delivery.unsupported":
+    "Este servidor entrega todo prompt como direcionamento; enfileirar exige um servidor que fale o protocolo V2.",
+}

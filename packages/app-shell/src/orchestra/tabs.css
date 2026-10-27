@@ -129,8 +129,14 @@
     block-size: 20px;
   }
 
+  /* The branch gives way before the title: it shrinks with an ellipsis instead of pushing the title out. */
   [data-orchestra-tabs] [data-slot="tab-branch"] {
-    flex: none;
+    flex: 0 1 auto;
+    min-inline-size: 0;
+    max-inline-size: 45%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     color: var(--orchestra-branch-color);
     font-family: var(--orchestra-branch-font-family);
     font-size: var(--orchestra-branch-font-size);

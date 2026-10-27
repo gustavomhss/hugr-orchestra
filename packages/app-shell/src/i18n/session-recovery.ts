@@ -28,3 +28,18 @@ export function sessionRecoveryLanguage(language: ReturnType<typeof useLanguage>
     },
   }
 }
+
+export const SESSION_RECOVERY_COPY_BR: Record<keyof typeof SESSION_RECOVERY_COPY, string> = {
+  "common.retry": "Tentar de novo",
+  "session.archive.unavailable": "Arquivamento indisponível neste servidor",
+  "session.restore.unavailable": "Restauração indisponível neste servidor",
+  "session.restore.title": "Restaurar sessão",
+  "session.archived.title": "Sessões arquivadas",
+  "session.archived.description": "Restaure as sessões arquivadas neste diretório.",
+  "session.archived.empty": "Nenhuma sessão arquivada neste diretório.",
+  "session.archived.loadFailed": "Não foi possível carregar as sessões arquivadas.",
+  "session.subagentModels.loadFailed": "Não foi possível carregar os modelos de subagentes.",
+  "session.subagentModels.unsupported": "Modelos de subagentes indisponíveis neste servidor",
+  "session.subagentModels.denyAll": "Nenhum modelo permitido. A delegação para subagentes está desativada.",
+  "session.review.detailFailed": "Não foi possível carregar as alterações de {{file}}.",
+}

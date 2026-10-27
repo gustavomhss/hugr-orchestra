@@ -14,3 +14,17 @@ export const dict = {
   "orchestra.actions.scheduleProblem.invalid_input": "The workflow YAML could not be parsed.",
   "orchestra.actions.cacheUsage.listed": "The listed keys total {{size}}.",
 } as const
+
+export const dictBr: Record<keyof typeof dict, string> = {
+  "orchestra.actions.resources.failed": "Não foi possível carregar {{resource}}",
+  "orchestra.actions.resources.failedDetail": "A requisição ao provedor falhou. Verifique a conexão e o login e atualize.",
+  "orchestra.actions.cacheUsage.total": "O uso ativo é de {{size}} em {{count}} chaves de cache, conforme informado pelo provedor.",
+  "orchestra.actions.cacheUsage.totalOne": "O uso ativo é de {{size}} em 1 chave de cache, conforme informado pelo provedor.",
+  "orchestra.actions.scheduleUnreadable": "Não foi possível ler a origem do workflow",
+  "orchestra.actions.scheduleProblem.not_found": "O arquivo do workflow não está na branch padrão.",
+  "orchestra.actions.scheduleProblem.source_unresolved": "O provedor não confirmou este arquivo no commit da branch padrão.",
+  "orchestra.actions.scheduleProblem.source_conflict": "O arquivo mudou enquanto era lido.",
+  "orchestra.actions.scheduleProblem.metadata_truncated": "O provedor truncou a listagem de arquivos.",
+  "orchestra.actions.scheduleProblem.invalid_input": "Não foi possível interpretar o YAML do workflow.",
+  "orchestra.actions.cacheUsage.listed": "As chaves listadas somam {{size}}.",
+}

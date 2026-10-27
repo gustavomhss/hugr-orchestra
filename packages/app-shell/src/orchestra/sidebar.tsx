@@ -1,6 +1,6 @@
 import { DropdownMenu } from "@kobalte/core/dropdown-menu"
 import { useDialog } from "@orchestra/ui/context/dialog"
-import { Dialog, DialogBody, DialogHeader, DialogTitle, DialogTitleGroup } from "@orchestra/ui/v2/dialog-v2"
+import { Dialog, DialogBody, DialogHeader, DialogTitleGroup } from "@orchestra/ui/v2/dialog-v2"
 import { Icon } from "@orchestra/ui/v2/icon"
 import { ProjectAvatar } from "@orchestra/ui/v2/project-avatar-v2"
 import { useNavigate } from "@solidjs/router"
@@ -349,15 +349,17 @@ export function OrchestraSidebar(props: {
 
   function openPending(title: string, chapter: string) {
     void dialog.show(() => (
-      <Dialog class="orchestra-pending-dialog">
+      <Dialog fit class="orchestra-pending-dialog">
         <DialogHeader>
-          <DialogTitle>{language.t("orchestra.rework.title", { title })}</DialogTitle>
+          <DialogTitleGroup
+            title={language.t("orchestra.rework.title", { title })}
+            description={language.t("orchestra.rework.body", { title, chapter })}
+          />
         </DialogHeader>
         <DialogBody>
           <p class="orchestra-chapter-label">
             <bdi>{chapter}</bdi> · {language.t("orchestra.rework.pending")}
           </p>
-          <DialogTitleGroup description={language.t("orchestra.rework.body", { title, chapter })} />
         </DialogBody>
       </Dialog>
     ))
@@ -371,13 +373,13 @@ export function OrchestraSidebar(props: {
     )
       return command.trigger("maestro.governance")
     void dialog.show(() => (
-      <Dialog class="orchestra-pending-dialog">
+      <Dialog fit class="orchestra-pending-dialog">
         <DialogHeader>
-          <DialogTitle>{language.t("orchestra.governance.title")}</DialogTitle>
+          <DialogTitleGroup
+            title={language.t("orchestra.governance.title")}
+            description={language.t("orchestra.governance.noSession")}
+          />
         </DialogHeader>
-        <DialogBody>
-          <DialogTitleGroup description={language.t("orchestra.governance.noSession")} />
-        </DialogBody>
       </Dialog>
     ))
   }

@@ -369,13 +369,13 @@ html[data-color-scheme="light"] body[data-new-layout] {
   line-height: 1.6;
 }
 .wf-scope .wf-xlink a {
-  color: inherit;
+  color: var(--mx-blue);
   text-decoration: underline;
-  text-decoration-color: var(--mx-line);
+  text-decoration-color: color-mix(in srgb, var(--mx-blue) 40%, transparent);
   text-underline-offset: 3px;
 }
 .wf-scope .wf-xlink a:hover {
-  color: var(--mx-blue);
+  text-decoration-color: currentColor;
 }
 /* Retained drafts and a failed refresh sit above the list as one line with their actions. */
 .wf-scope .wf-retained {
