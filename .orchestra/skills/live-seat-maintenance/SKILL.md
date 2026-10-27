@@ -26,6 +26,9 @@ Read `live-seat-ownership` first for who owns what and the invariants. Spec: `do
 - `meeting_item` is keyed by `(id, revision)`. Changes insert a revision; reads take the latest. Never update a row in place.
 - Consolidation keeps one run per meeting with a process-global set; a second `start` is a no-op.
 - `team_message` delivery needs the shared `globalSessions` node from `tool/task.ts`; never create a second one.
+- The V2 server never publishes `session.status`. `live-session-client.ts` ends a reply on a `session.next.step.ended` whose finish is not `tool-calls`; waiting for an idle status leaves every request open, and Look and Stop then hang on Thinking.
+- After a `live_look` call the frame is often admitted before the looking turn's last step, which then answers `[no-answer]`. `live-loop.ts` treats a step as the reply to the frame only after that turn has gone idle; resetting on the first step after admission drops the real answer.
+- Run the isolated DEV app from Terminal.app (`open -a Terminal <script>.command`), so macOS grants the microphone to Terminal. Its DB is in memory: a restart drops the OpenRouter and speech-to-text keys.
 - An agent's commit can revert unrelated dev files when it was based on an old tree. Before any PR, check `git diff --stat origin/dev...HEAD` lists only your files.
 
 ## Gates

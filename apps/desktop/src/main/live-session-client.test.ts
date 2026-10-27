@@ -54,15 +54,16 @@ test("creates the live session and admits prompts with their delivery", async ()
   ])
 })
 
-test("follows this session's deltas, text and status across split frames", async () => {
+test("follows this session's steps, deltas and text across split frames; a tool-call step does not end the turn", async () => {
   const fake = fakeServer([
     frame("server.connected", {}),
     frame("session.next.text.delta", { sessionID: "other", delta: "no" }),
+    frame("session.next.step.started", { sessionID: "ses_live" }),
     frame("session.next.text.delta", { sessionID: "ses_live", delta: "**Yes" }),
     frame("session.next.text.delta", { sessionID: "ses_live", delta: ".**" }),
     frame("session.next.text.ended", { sessionID: "ses_live", text: "**Yes.**" }),
-    frame("session.status", { sessionID: "ses_live", status: { type: "busy" } }),
-    frame("session.status", { sessionID: "ses_live", status: { type: "idle" } }),
+    frame("session.next.step.ended", { sessionID: "ses_live", finish: "tool-calls" }),
+    frame("session.next.step.ended", { sessionID: "ses_live", finish: "stop" }),
   ])
   const events: LiveSessionEvent[] = []
   const abort = new AbortController()
@@ -76,10 +77,10 @@ test("follows this session's deltas, text and status across split frames", async
   )
   await done
   expect(events).toEqual([
+    { kind: "busy" },
     { kind: "delta", delta: "**Yes" },
     { kind: "delta", delta: ".**" },
     { kind: "text", text: "**Yes.**" },
-    { kind: "busy" },
     { kind: "idle" },
   ])
 })

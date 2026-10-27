@@ -80,9 +80,9 @@ export function parseFrame(frame: string, sessionID: string): LiveSessionEvent |
     const question = (body.input as { question?: unknown } | undefined)?.question
     return typeof question === "string" && question.trim() ? { kind: "look", question } : { kind: "look" }
   }
-  const status = (body.status as { type?: unknown } | undefined)?.type
-  if (event.type === "session.status" && status === "busy") return { kind: "busy" }
-  if (event.type === "session.status" && status === "idle") return { kind: "idle" }
+  // The V2 server sends no status events: a step start means busy, and a step that ends without tool calls ends the turn.
+  if (event.type === "session.next.step.started") return { kind: "busy" }
+  if (event.type === "session.next.step.ended" && body.finish !== "tool-calls") return { kind: "idle" }
 }
 
 const decodeJson = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)

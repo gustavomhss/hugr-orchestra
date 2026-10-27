@@ -65,6 +65,11 @@ const copy = {
     body: "Captions and answers are paused. The last 30 s of audio is kept and sent once you're back online; anything older isn't captioned.",
     recording: "Recording continues",
   },
+  answer: {
+    title: "Couldn't answer",
+    body: "The model returned an error before any text. Ask again, or pick another model in the live seat's settings.",
+    dismiss: "Dismiss",
+  },
   ended: "Meeting ended",
   minutes: (title: string, minutes: number) => `${title} · ${minutes} min`,
   pending: {
@@ -527,6 +532,21 @@ function ErrorNote(props: { error: LiveOverlayError; state: LiveOverlayState }) 
             <span class="meta">{copy.network.recording}</span>
           </div>
         </div>
+      </Match>
+      <Match when={props.error.kind === "answer" && props.error}>
+        {(error) => (
+          <div class="note">
+            <Icon id="x" />
+            <b>{copy.answer.title}</b>
+            <p>{copy.answer.body}</p>
+            <p class="meta">{(error() as Extract<LiveOverlayError, { kind: "answer" }>).reason.slice(0, 200)}</p>
+            <div class="act">
+              <button class="btn" onClick={() => window.live.act({ kind: "retry" })}>
+                {copy.answer.dismiss}
+              </button>
+            </div>
+          </div>
+        )}
       </Match>
     </Switch>
   )

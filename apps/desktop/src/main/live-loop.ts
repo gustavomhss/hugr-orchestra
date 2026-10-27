@@ -71,9 +71,14 @@ export function registerLiveLoop(options: {
   const send = async (meeting: Meeting, request: Omit<Request, "sentAt" | "text">, prompt: LivePrompt, queue = false) => {
     if (meeting.request && request.kind !== "notice") return
     meeting.request = { ...request, sentAt: Date.now(), text: "" }
+    if (overlay.state().error?.kind === "answer") overlay.setError(undefined)
     await meeting.client.prompt(meeting.sessionID, prompt, queue ? "queue" : "steer").catch((error) => {
       meeting.log.write({ event: "prompt-failed", kind: request.kind, reason: String(error) })
       meeting.request = undefined
+      // A transport, permission or hotkey note already explains more; the answer note never covers one.
+      if (request.kind === "notice" || overlay.state().error) return
+      overlay.setError({ kind: "answer", reason: String(error) })
+      restoreView()
     })
   }
 
@@ -91,7 +96,8 @@ export function registerLiveLoop(options: {
     }
     if (request.kind === "notice") return
     if (request.dropped) return restoreView()
-    // A failure keeps what already streamed; with nothing to show, the thinking view gives way.
+    // A failure keeps what already streamed; with nothing to show, the thinking view gives way to the reason.
+    if (failed && !request.text.trim() && !overlay.state().error) overlay.setError({ kind: "answer", reason: failed })
     if (isNoAnswer(request.text) || !request.text.trim()) return restoreView()
     overlay.pushAnswer(parseAnswer(request.text, { source: request.source, latencyMs, question: request.question }))
   }
@@ -118,13 +124,15 @@ export function registerLiveLoop(options: {
       return
     }
     if (!request) return
-    // The reply to the frame has begun: the text before the look was a preamble.
-    if (request.look?.framed && (event.kind === "delta" || event.kind === "text" || event.kind === "busy")) {
+    // The looking turn ended and the frame was admitted: the next step is the reply to the frame.
+    if (request.look?.framed && request.look.idled && (event.kind === "delta" || event.kind === "text" || event.kind === "busy")) {
       request.look = undefined
       request.text = ""
     }
     if (event.kind === "busy") return
-    if (event.kind === "idle" && request.look) {
+    // The frame can be admitted before the looking turn's last step, which then ends without text; it can also be
+    // promoted into that step, which then answers from it and settles here.
+    if (event.kind === "idle" && request.look && !(request.look.framed && request.text.trim() && !isNoAnswer(request.text))) {
       request.look.idled = true
       return
     }
@@ -189,7 +197,9 @@ export function registerLiveLoop(options: {
 
   // The seat looked in the middle of a reply: the frame joins that reply instead of starting a request.
   const lookFor = async (meeting: Meeting, request: Request, question?: string) => {
+    // The text before the look was a preamble.
     request.look = {}
+    request.text = ""
     request.source = "screen"
     const prompt = await capture(meeting, question)
     const admitted =
