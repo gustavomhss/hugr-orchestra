@@ -38,6 +38,7 @@ import * as SessionRunnerLLM from "./session/runner/llm"
 import { SessionRunnerModel } from "./session/runner/model"
 import { SessionMeeting } from "./session/meeting"
 import { MeetingBriefing } from "./session/meeting-briefing"
+import { MeetingConsolidation } from "./session/meeting-consolidation"
 import { MeetingContext } from "./session/meeting-context"
 import { SessionTodo } from "./session/todo"
 import { SkillV2 } from "./skill"
@@ -104,6 +105,7 @@ export const locationServices = LayerNode.group([
   TaskGovernance.node,
   SessionCompaction.node,
   SessionRunnerLLM.node,
+  MeetingConsolidation.node,
 ])
 
 export type LocationServices = LayerNode.Output<typeof locationServices>
