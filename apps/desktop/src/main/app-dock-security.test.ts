@@ -382,6 +382,8 @@ async function child() {
   const { registerIpcHandlers } = ipcModule
   const { createAppDock } = await import("./app-dock")
   registerIpcHandlers({
+    // Registration only subscribes to the live loop; no App Dock case starts a meeting.
+    liveLoop: { onRunState: () => () => {}, onLevels: () => () => {}, settings: { bind() {} } } as never,
     killSidecar() {},
     relaunch() {},
     awaitInitialization: async () => ({ serverUrl: site.base }),
@@ -1233,6 +1235,8 @@ async function restartChild(
   await app.whenReady()
   try {
     registerIpcHandlers({
+      // Registration only subscribes to the live loop; no App Dock case starts a meeting.
+      liveLoop: { onRunState: () => () => {}, onLevels: () => () => {}, settings: { bind() {} } } as never,
       killSidecar() {},
       relaunch() {},
       awaitInitialization: async () => ({ serverUrl: site }),

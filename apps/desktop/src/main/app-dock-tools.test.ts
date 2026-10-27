@@ -202,6 +202,8 @@ async function parent() {
     const env = { ...process.env, APP_DOCK_ARTIFACT_ROOT: artifactRoot, ELECTRON_DISABLE_SECURITY_WARNINGS: "true" }
     await rm(artifact, { force: true })
     const child = spawn(electron, [entry, "--app-dock-tools-child"], { stdio: ["ignore", "pipe", "pipe"], env })
+    child.stdout.pipe(process.stdout)
+    child.stderr.pipe(process.stderr)
     const exitResult = await new Promise<{ code: number | null }>((resolveProcess, reject) => {
       child.once("exit", (code) => resolveProcess({ code }))
       child.once("error", reject)
