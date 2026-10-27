@@ -85,6 +85,6 @@ test("an ods preview expands repeated cells and rows and drops trailing filler",
 test("csv keeps quoted delimiters and unknown or broken workbooks are not read", async () => {
   expect(await sheetRows("text/csv", new Blob(['a,"b,c"\n"say ""hi""",d\n']), 10)).toEqual([["a", "b,c"], ['say "hi"', "d"]])
   expect(await sheetRows("application/vnd.ms-excel", new Blob(["x"]), 10)).toBeUndefined()
-  expect(sheetRows(XLSX, new Blob(["not a zip"]), 10)).rejects.toThrow()
+  await expect(sheetRows(XLSX, new Blob(["not a zip"]), 10)).rejects.toThrow()
   expect(await sheetRows(XLSX, await zip({ "xl/workbook.xml": "<workbook/>" }), 10)).toBeUndefined()
 })

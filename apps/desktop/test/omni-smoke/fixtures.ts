@@ -23,7 +23,7 @@ export async function fixtures() {
   writeConfig(scratch.project, config)
   const report = path.join(scratch.home, "smoke.json")
   const env: Record<string, string> = { ...scratch.env, ORCHESTRA_TEST_ONBOARDING: "1",
-    ORCHESTRA_DB: ":memory:", ORCHESTRA_DISABLE_DEFAULT_PLUGINS: "1", ORCHESTRA_DESKTOP_OMNI_SMOKE: report,
+    ORCHESTRA_DB: ":memory:", ORCHESTRA_DESKTOP_OMNI_SMOKE: report,
     ORCHESTRA_DESKTOP_OMNI_SMOKE_NONCE: trees.main.nonce, ORCHESTRA_DESKTOP_OMNI_SMOKE_ARGV: JSON.stringify([trees.main.command, ...trees.main.args]) }
   delete env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER
   return { ...scratch, env, trees, lspNonce, mcpNonce, llm, report,
