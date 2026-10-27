@@ -149,7 +149,9 @@ test("shows a pending permission dock", async ({ page }) => {
   await expect(permission).toBeVisible()
   await expect(permission.getByText("git status")).toBeVisible()
   await expect(permission.getByText("git diff")).toBeVisible()
-  await expect(permission.locator('[data-slot="permission-footer-actions"] button')).toHaveCount(3)
+  await expect(permission.locator('[data-slot="permission-footer-actions"] button')).toHaveCount(2)
+  // "Allow in project" is offered only when the request carries a scope to remember; this one has none.
+  await expect(permission.getByRole("button", { name: "Deny" })).toBeVisible()
   await expect(page.locator('[data-component="session-composer"]')).toHaveCount(0)
 
   const reply = page.waitForRequest((request) => request.method() === "POST")

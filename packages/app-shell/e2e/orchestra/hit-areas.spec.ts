@@ -1,4 +1,5 @@
 import { expect, test, type Locator } from "@playwright/test"
+import { expandAdvanced } from "./compact-navigation.fixture"
 import { directory, sessionID, setupTimeline } from "../performance/timeline-stability/fixture"
 
 test.use({ viewport: { width: 1400, height: 900 }, serviceWorkers: "block" })
@@ -64,6 +65,7 @@ for (const scheme of ["dark", "light"] as const) {
     await expectTarget(page.locator('[data-slot="session-title-actions"]').getByRole("button", { name: "Review" }))
 
     // Plugins is a page now; its Add plugin dialog keeps the shared DialogHeader close control.
+    await expandAdvanced(page)
     await sidebar.getByRole("button", { name: /^Plugins/ }).click()
     await page.locator('[data-mx-page="orchestra-plugins"]').getByRole("button", { name: "Add plugin" }).click()
     const dialog = page.getByRole("dialog")
