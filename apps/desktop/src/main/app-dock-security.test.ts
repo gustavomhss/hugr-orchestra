@@ -130,8 +130,9 @@ async function parent() {
       await writeFile(registryPath, corruptRegistry)
       await runRestartStage("u25-corrupt")
       check((await readFile(registryPath, "utf8")) === corruptRegistry, "corrupt registry was modified")
-      await rm(restartUserData, { recursive: true, force: true })
-      await mkdir(restartUserData)
+      // Electron helper processes can still write into the directory as it is removed; retry, and tolerate it reappearing.
+      await rm(restartUserData, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 })
+      await mkdir(restartUserData, { recursive: true })
       await runRestartStage("u26-write")
       await runRestartStage("u26-read")
     } finally {
