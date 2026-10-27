@@ -1,3 +1,8 @@
+// The fixture is imported first: plugin modules import ../internal, which imports
+// the provider registry, which imports every plugin. Entering a single plugin module
+// before that chain has loaded hits a temporal-dead-zone error on its own import.
+import { PluginTestLayer } from "./fixture"
+import { testEffect } from "../lib/effect"
 import { AISDK } from "@orchestra/core/aisdk"
 import { describe, expect } from "bun:test"
 import { createAlibaba } from "@ai-sdk/alibaba"
@@ -16,8 +21,6 @@ import { TogetherAIPlugin } from "@orchestra/core/plugin/provider/togetherai"
 import { VenicePlugin } from "@orchestra/core/plugin/provider/venice"
 import { XAIPlugin } from "@orchestra/core/plugin/provider/xai"
 import { ProviderV2 } from "@orchestra/core/provider"
-import { testEffect } from "../lib/effect"
-import { PluginTestLayer } from "./fixture"
 
 const it = testEffect(PluginTestLayer)
 
