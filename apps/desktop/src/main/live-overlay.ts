@@ -234,8 +234,8 @@ export function registerLiveOverlay() {
 
   return {
     state: () => state,
-    start: (startedAt = Date.now()) => {
-      update({ ...initialState(state.contentProtection), startedAt })
+    start: (startedAt = Date.now(), suggestions = false) => {
+      update({ ...initialState(state.contentProtection), startedAt, suggestions })
       registerHotkeys()
       show()
     },

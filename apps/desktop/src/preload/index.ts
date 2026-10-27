@@ -203,6 +203,25 @@ const api: ElectronAPI = {
   getLiveMeetingRunning: () => ipcRenderer.invoke("get-live-meeting-running"),
   hasLiveTranscriptionKey: () => ipcRenderer.invoke("has-live-transcription-key"),
   setLiveTranscriptionKey: (key) => ipcRenderer.invoke("set-live-transcription-key", key),
+  getLiveReadiness: () => ipcRenderer.invoke("get-live-readiness"),
+  requestLivePermission: (source) => ipcRenderer.invoke("request-live-permission", source),
+  onLiveLevels: (cb) => {
+    const handler = (_: unknown, levels: Parameters<typeof cb>[0]) => cb(levels)
+    ipcRenderer.on("live-levels", handler)
+    return () => ipcRenderer.removeListener("live-levels", handler)
+  },
+  getLiveRunState: () => ipcRenderer.invoke("get-live-run-state"),
+  onLiveRunState: (cb) => {
+    const handler = (_: unknown, state: Parameters<typeof cb>[0]) => cb(state)
+    ipcRenderer.on("live-run-state-changed", handler)
+    return () => ipcRenderer.removeListener("live-run-state-changed", handler)
+  },
+  renameLiveMeeting: (meetingID, title) => ipcRenderer.invoke("rename-live-meeting", meetingID, title),
+  getLiveSettings: () => ipcRenderer.invoke("get-live-settings"),
+  setLiveSettings: (patch) => ipcRenderer.invoke("set-live-settings", patch),
+  getLiveHotkeys: () => ipcRenderer.invoke("get-live-hotkeys"),
+  setLiveHotkey: (action, accelerator) => ipcRenderer.invoke("set-live-hotkey", action, accelerator),
+  resetLiveHotkeys: () => ipcRenderer.invoke("reset-live-hotkeys"),
   getPinchZoomEnabled: () => ipcRenderer.invoke("get-pinch-zoom-enabled"),
   setPinchZoomEnabled: (enabled) => ipcRenderer.invoke("set-pinch-zoom-enabled", enabled),
   onPinchZoomEnabledChanged: (cb) => {

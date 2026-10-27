@@ -216,6 +216,25 @@ The chapter lives in `packages/app-shell/src/orchestra/chapters/flight-engineer/
 
 Gates per package: change-scoped `bun run test:ci`, the typecheck workflow and `bun run check:guards --base origin/dev`. One full epic at the end.
 
+### Package A as built (bridge)
+
+Files, all in `apps/desktop/src/main`: `live-ipc.ts` (every live IPC handler; `ipc.ts` only calls `registerLiveIpc`), `live-readiness.ts` (permissions, system audio availability, requests), `live-settings.ts` (settings and hotkeys in the desktop store), plus edits to `live-loop.ts`, `live-audio.ts` (`levelMeter`), `live-senses.ts`, `live-capture.ts`, `live-transcriber.ts`, `live-session-client.ts` and `live-meeting-client.ts`. The preload and renderer stubs are replaced by IPC calls.
+
+Decisions:
+
+- Run state and levels are broadcast to all windows (`live-run-state-changed`, `live-levels`). Levels are sampled at about 15 Hz and flow only while a meeting runs.
+- `start` returns `"permission"` when the microphone is denied. Denied or unavailable system audio starts the meeting with the microphone only; a source turned off in settings is not captured.
+- A meeting with no title is named "Meeting HH:MM". Rename goes through `PATCH /api/meeting` with `{meetingID, title}`.
+- The answer model setting is `provider/model` and is passed to the live Session at creation. The language setting is passed to the transcriber ("auto" is "multi").
+- System audio needs macOS 14.2 (Darwin 23.2). Its permission is the screen recording status; requesting it opens the Privacy pane because macOS has no prompt API for it.
+- Hotkeys: start-stop is held for good, toggle-captions only while a meeting runs. Refused registration is a "conflict", an unparsable accelerator is "invalid".
+
+Limits:
+
+- Changes to the ask and toggle-overlay hotkeys apply from the next meeting, because the overlay registers them at start.
+- No levels outside a meeting, so the settings screen cannot show a live microphone test before one starts.
+- The default microphone label is unknown to main (`microphone` is undefined in readiness) and answer model reachability is always "unknown".
+
 ## Open owner decisions
 
 - **D1 STT engine.** Default is a cloud streaming engine in v1 and local in v1.1. Flip if privacy outweighs latency for v1.

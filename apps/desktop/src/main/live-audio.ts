@@ -12,6 +12,8 @@ export const BYTES_PER_MS = (SAMPLE_RATE * CHANNELS * 2) / 1000
 const THEM_SPEAKING_RMS = 0.01
 const ECHO_HANGOVER_MS = 200
 
+const LEVEL_INTERVAL_MS = 66
+
 export type EchoGate = { silentUntilMs: number }
 
 export function echoGate(): EchoGate {
@@ -30,11 +32,22 @@ export function interleave(me: Float32Array, them: Float32Array, startMs: number
   return out
 }
 
-function rms(samples: Float32Array, frames: number) {
+export function rms(samples: Float32Array, frames: number) {
   if (frames === 0) return 0
   let sum = 0
   for (let i = 0; i < frames; i++) sum += samples[i] * samples[i]
   return Math.sqrt(sum / frames)
+}
+
+// Input levels for the settings screen and the meeting bar: the RMS of each track, handed on at most every 66 ms
+// (about 15 Hz). `nowMs` is a wall clock the caller supplies so the throttle can be tested.
+export function levelMeter(emit: (levels: { microphone: number; "system-audio": number }) => void) {
+  const state = { lastMs: -Infinity }
+  return (me: Float32Array, them: Float32Array, nowMs: number) => {
+    if (nowMs - state.lastMs < LEVEL_INTERVAL_MS) return
+    state.lastMs = nowMs
+    emit({ microphone: Math.min(1, rms(me, me.length)), "system-audio": Math.min(1, rms(them, them.length)) })
+  }
 }
 
 function pcm16(sample: number) {
