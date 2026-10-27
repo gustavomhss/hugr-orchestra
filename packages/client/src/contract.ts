@@ -45,6 +45,7 @@ export const groupNames = {
   "server.lean": "lean",
   "server.atlas": "atlas",
   "server.config": "config",
+  "server.trust": "server.trust",
   "server.relay.document": "relayDocuments",
   "server.relay.publish": "relayPublish",
   "server.relay.hook": "relayHooks",
