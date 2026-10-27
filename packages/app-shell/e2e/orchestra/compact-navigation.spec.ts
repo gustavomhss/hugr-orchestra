@@ -55,7 +55,9 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
   await expect(sidebar.getByRole("button", { name: "Home", exact: true })).toHaveCSS("height", "31px")
   await expect(sidebar.getByRole("button", { name: "Home", exact: true }).locator("svg")).toHaveCSS("width", "20px")
   await expect(sidebar.getByRole("img", { name: "HuGR", exact: true })).toHaveCSS("width", "32px")
-  await expect(sidebar.locator('[data-slot="orchestra-nav-wip"]')).toHaveCount(0)
+  // Development builds keep the WIP mark as a dot on the compact icon; production builds render none.
+  if (test.info().config.metadata.bundle === "production")
+    await expect(sidebar.locator('[data-slot="orchestra-nav-wip"]')).toHaveCount(0)
   await expect(sidebar.locator('[data-component="project-avatar-v2"]')).toHaveCSS("width", "30px")
   await sidebar.getByRole("button", { name: "MCP", exact: true }).hover()
   await expect(page.getByRole("tooltip", { name: "MCP", exact: true })).toBeVisible()
