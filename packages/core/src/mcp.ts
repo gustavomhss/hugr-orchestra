@@ -166,7 +166,12 @@ const layer = Layer.effect(
         unapproved.delete(name)
       }
       for (const name of removed) servers.delete(name)
-      return { servers, unapproved, timeout: Config.latest(documents, "mcp")?.timeout }
+      return {
+        servers,
+        unapproved,
+        // `timeout` resolves on its own: a project that only lists servers must not hide the global timeout.
+        timeout: Config.mcpTimeout(documents),
+      }
     })
 
     const entry = (name: string) => {

@@ -1,7 +1,8 @@
 export * as InstructionContext from "./instruction-context"
 
 import { Array, Effect, Layer, Schema } from "effect"
-import { isAbsolute, join, relative, sep } from "path"
+import { dirname, isAbsolute, join, relative, resolve, sep } from "path"
+import { Config } from "./config"
 import { FSUtil } from "./fs-util"
 import { Flag } from "./flag/flag"
 import { Global } from "./global"
@@ -22,6 +23,7 @@ const key = SystemContext.Key.make("core/instructions")
 const layer = Layer.effectDiscard(
   Effect.gen(function* () {
     const fs = yield* FSUtil.Service
+    const config = yield* Config.Service
     const global = yield* Global.Service
     const location = yield* Location.Service
     const registry = yield* SystemContextRegistry.Service
@@ -36,6 +38,30 @@ const layer = Layer.effectDiscard(
           `These instructions replace all previously loaded ambient instructions.\n\n${render(current)}`,
         removed: () => "Previously loaded instructions no longer apply.",
       })
+
+    // `instructions` lists local files, relative to the config file that names them. A project file may only name files
+    // inside the project: a cloned repository must not be able to pull arbitrary host files into the model context.
+    const configuredInstructions = Effect.gen(function* () {
+      const documents = (yield* config.entries()).filter((entry): entry is Config.Document => entry.type === "document")
+      const project = yield* fs.resolve(location.project.directory)
+      const resolved = yield* Effect.forEach(
+        documents.flatMap((document) =>
+          (document.info.instructions ?? []).map((entry) => ({ document, entry })),
+        ),
+        ({ document, entry }) =>
+          Effect.gen(function* () {
+            const base = dirname(document.path ?? global.config)
+            const target = yield* fs.resolve(
+              entry === "~" || entry.startsWith("~/") ? join(global.home, entry.slice(1)) : resolve(base, entry),
+            )
+            const isGlobal = !relative(global.config, base).startsWith("..") && !isAbsolute(relative(global.config, base))
+            const fromProject = relative(project, target)
+            const inside = fromProject !== ".." && !fromProject.startsWith(`..${sep}`) && !isAbsolute(fromProject)
+            return isGlobal || inside ? target : undefined
+          }),
+      )
+      return { paths: Array.dedupe(resolved.filter((item) => item !== undefined)), escaped: resolved.includes(undefined) }
+    })
 
     const observe = Effect.fn("InstructionContext.observe")(function* () {
       const start = yield* fs.resolve(location.directory)
@@ -55,7 +81,8 @@ const layer = Layer.effectDiscard(
           fs.resolve,
         ),
       )
-      const paths = Array.dedupe([yield* fs.resolve(join(global.config, "AGENTS.md")), ...discovered])
+      const configured = yield* configuredInstructions
+      const paths = Array.dedupe([yield* fs.resolve(join(global.config, "AGENTS.md")), ...discovered, ...configured.paths])
       const files = yield* Effect.forEach(
         paths,
         (path) =>
@@ -68,7 +95,8 @@ const layer = Layer.effectDiscard(
             ),
         { concurrency: "unbounded" },
       )
-      if (files.some((file, index) => file === undefined && discovered.has(paths[index])))
+      if (configured.escaped) return SystemContext.unavailable
+      if (files.some((file, index) => file === undefined && (discovered.has(paths[index]) || configured.paths.includes(paths[index]))))
         return SystemContext.unavailable
       return files.filter((file): file is File => file !== undefined)
     })
@@ -93,7 +121,7 @@ const layer = Layer.effectDiscard(
 export const node = makeLocationNode({
   name: "instruction-context",
   layer,
-  deps: [FSUtil.node, Global.node, Location.node, SystemContextRegistry.node],
+  deps: [Config.node, FSUtil.node, Global.node, Location.node, SystemContextRegistry.node],
 })
 
 function render(files: ReadonlyArray<File>) {

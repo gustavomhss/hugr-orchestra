@@ -420,6 +420,7 @@
     "./tool/webfetch": "./src/tool/webfetch.ts",
     "./tool/websearch": "./src/tool/websearch.ts",
     "./tool/write": "./src/tool/write.ts",
+    "./tui-config-files": "./src/tui-config-files.ts",
     "./util/array": "./src/util/array.ts",
     "./util/binary": "./src/util/binary.ts",
     "./util/effect-flock": "./src/util/effect-flock.ts",

@@ -208,7 +208,7 @@ const TIPS: Tip[] = [
     if (!items.length) return undefined
     return `Use ${items.map(shortcutText).join(" / ")} for parent/child sessions`
   },
-  "Create {highlight}orchestra.json{/highlight} for server settings, and {highlight}tui.json{/highlight} for TUI",
+  "Create {highlight}orchestra.json{/highlight} for server settings, and {highlight}tui.json{/highlight} (global or in the project) for TUI",
   "Place TUI settings in {highlight}~/.config/orchestra/tui.json{/highlight} for global config",
   "Add {highlight}$schema{/highlight} to your config for autocomplete in your editor",
   "Configure {highlight}model{/highlight} in config to set your default model",

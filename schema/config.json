@@ -1050,24 +1050,6 @@
           "type": "string",
           "description": "Default primary agent to use when no session agent is selected"
         },
-        "autoupdate": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "string",
-              "enum": [
-                "notify"
-              ]
-            }
-          ],
-          "description": "Automatically update or notify when a new version is available"
-        },
-        "username": {
-          "type": "string",
-          "description": "Username displayed in conversations and used for telemetry identity"
-        },
         "permissions": {
           "$ref": "#/$defs/PermissionV2.Ruleset",
           "description": "Ordered tool permission rules applied to agent tool use"
@@ -1180,7 +1162,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Additional paths or URLs supplying ambient instructions"
+          "description": "Additional local instruction files, relative to the config file that lists them. URLs are not supported. A project config may only name files inside the project."
         },
         "references": {
           "type": "object",

@@ -278,10 +278,8 @@ describe("Config", () => {
                 shell: "/bin/bash",
                 model: "anthropic/claude",
                 default_agent: "reviewer",
-                autoupdate: "notify",
                 share: "disabled",
                 enterprise: { url: "https://share.example.com" },
-                username: "test-user",
                 permissions: [
                   { action: "bash", resource: "*", effect: "ask" },
                   { action: "bash", resource: "git status", effect: "allow" },
@@ -364,10 +362,8 @@ describe("Config", () => {
             expect(documents[0]?.info.shell).toBe("/bin/bash")
             expect(documents[0]?.info.model).toBe("anthropic/claude")
             expect(documents[0]?.info.default_agent).toBe("reviewer")
-            expect(documents[0]?.info.autoupdate).toBe("notify")
             expect(Object.keys(documents[0]?.info ?? {})).not.toContain("share")
             expect(Object.keys(documents[0]?.info ?? {})).not.toContain("enterprise")
-            expect(documents[0]?.info.username).toBe("test-user")
             expect(documents[0]?.info.permissions).toEqual([
               { action: "bash", resource: "*", effect: "ask" },
               { action: "bash", resource: "git status", effect: "allow" },
@@ -797,5 +793,41 @@ describe("Config", () => {
         })
       }),
     ),
+  )
+
+  it.live("rejects remote URLs in instructions, naming the file", () =>
+    Effect.acquireRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ).pipe(
+      Effect.flatMap((tmp) =>
+        Effect.gen(function* () {
+          yield* Effect.promise(() =>
+            fs.writeFile(path.join(tmp.path, "orchestra.json"), JSON.stringify({ instructions: ["https://example.com/rules.md"] })),
+          )
+          const exit = yield* Effect.exit(
+            Config.Service.pipe(Effect.flatMap((config) => config.entries()), Effect.provide(testLayer(tmp.path))),
+          )
+          const message = Exit.isFailure(exit) ? Cause.pretty(exit.cause) : ""
+          expect(message).toContain("orchestra.json")
+          expect(message).toContain("remote URLs are not supported")
+        }),
+      ),
+    ),
+  )
+
+  it.live("resolves MCP timeouts per field across documents", () =>
+    Effect.sync(() => {
+      const document = (mcp: Config.Info["mcp"]) =>
+        new Config.Document({ type: "document", info: new Config.Info({ mcp }) })
+      expect(
+        Config.mcpTimeout([
+          document({ timeout: { startup: 5000, request: 60000 } }),
+          document({ servers: {} }),
+          document({ timeout: { request: 1000 } }),
+        ]),
+      ).toEqual({ startup: 5000, request: 1000 })
+      expect(Config.mcpTimeout([document({ servers: {} })])).toBeUndefined()
+    }),
   )
 })

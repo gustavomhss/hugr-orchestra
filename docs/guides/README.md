@@ -5,3 +5,4 @@
 - [Config errors](config-errors.md)
 - [Credentials](credentials.md)
 - [Skills: catalog visibility](skills.md)
+- [Instructions and TUI settings](instructions-and-tui.md)
