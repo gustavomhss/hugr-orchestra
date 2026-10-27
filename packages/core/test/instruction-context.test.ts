@@ -339,6 +339,9 @@ describe("InstructionContext", () => {
             await fs.mkdir(path.join(project, "docs"), { recursive: true })
             await fs.writeFile(path.join(global, "style.md"), "global style")
             await fs.writeFile(path.join(project, "docs", "rules.md"), "project rules")
+            await fs.mkdir(path.join(project, "extra"), { recursive: true })
+            await fs.writeFile(path.join(project, "extra", "b.md"), "extra b")
+            await fs.writeFile(path.join(project, "extra", "a.md"), "extra a")
             await fs.writeFile(outside, "secret")
           })
           const document = (file: string, instructions: string[]) =>
@@ -363,12 +366,14 @@ describe("InstructionContext", () => {
 
           const loaded = yield* load([
             document(path.join(global, "orchestra.json"), ["style.md"]),
-            document(path.join(project, "orchestra.json"), ["docs/rules.md"]),
+            document(path.join(project, "orchestra.json"), ["docs/rules.md", "extra/*.md"]),
           ])
           expect(loaded.baseline).toBe(
             [
               `Instructions from: ${path.join(global, "style.md")}\nglobal style`,
               `Instructions from: ${path.join(project, "docs", "rules.md")}\nproject rules`,
+              `Instructions from: ${path.join(project, "extra", "a.md")}\nextra a`,
+              `Instructions from: ${path.join(project, "extra", "b.md")}\nextra b`,
             ].join("\n\n"),
           )
 

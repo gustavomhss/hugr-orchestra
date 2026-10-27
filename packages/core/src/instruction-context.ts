@@ -1,7 +1,7 @@
 export * as InstructionContext from "./instruction-context"
 
 import { Array, Effect, Layer, Schema } from "effect"
-import { dirname, isAbsolute, join, relative, resolve, sep } from "path"
+import { dirname, isAbsolute, join, parse, relative, resolve, sep } from "path"
 import { Config } from "./config"
 import { FSUtil } from "./fs-util"
 import { Flag } from "./flag/flag"
@@ -44,23 +44,31 @@ const layer = Layer.effectDiscard(
     const configuredInstructions = Effect.gen(function* () {
       const documents = (yield* config.entries()).filter((entry): entry is Config.Document => entry.type === "document")
       const project = yield* fs.resolve(location.project.directory)
-      const resolved = yield* Effect.forEach(
-        documents.flatMap((document) =>
-          (document.info.instructions ?? []).map((entry) => ({ document, entry })),
-        ),
+      const resolved = (yield* Effect.forEach(
+        documents.flatMap((document) => (document.info.instructions ?? []).map((entry) => ({ document, entry }))),
         ({ document, entry }) =>
           Effect.gen(function* () {
             const base = dirname(document.path ?? global.config)
-            const target = yield* fs.resolve(
-              entry === "~" || entry.startsWith("~/") ? join(global.home, entry.slice(1)) : resolve(base, entry),
+            const isGlobal = contains(global.config, base)
+            const home = entry === "~" || entry.startsWith("~/")
+            const pattern = home ? join(global.home, entry.slice(1)) : resolve(base, entry)
+            // A glob names whatever matches now; a plain path stays listed so a missing file is reported, not skipped.
+            const targets = /[*?[{]/.test(entry)
+              ? yield* Effect.promise(() => Array.fromAsync(new Bun.Glob(relative(parse(pattern).root, pattern)).scan({ cwd: parse(pattern).root, absolute: true, onlyFiles: true, dot: true }))).pipe(
+                  Effect.map((matches) => matches.toSorted()),
+                  Effect.orElseSucceed(() => []),
+                )
+              : [pattern]
+            return yield* Effect.forEach(targets, (target) =>
+              fs.resolve(target).pipe(Effect.map((resolved) => ({ path: resolved, allowed: isGlobal || contains(project, resolved) }))),
             )
-            const isGlobal = !relative(global.config, base).startsWith("..") && !isAbsolute(relative(global.config, base))
-            const fromProject = relative(project, target)
-            const inside = fromProject !== ".." && !fromProject.startsWith(`..${sep}`) && !isAbsolute(fromProject)
-            return isGlobal || inside ? target : undefined
           }),
-      )
-      return { paths: Array.dedupe(resolved.filter((item) => item !== undefined)), escaped: resolved.includes(undefined) }
+      )).flat()
+      // A project instruction that escapes the project makes the whole context unavailable, so it fails closed.
+      return {
+        paths: Array.dedupe(resolved.filter((item) => item.allowed).map((item) => item.path)),
+        escaped: resolved.some((item) => !item.allowed),
+      }
     })
 
     const observe = Effect.fn("InstructionContext.observe")(function* () {
@@ -126,4 +134,9 @@ export const node = makeLocationNode({
 
 function render(files: ReadonlyArray<File>) {
   return files.map((file) => `Instructions from: ${file.path}\n${file.content}`).join("\n\n")
+}
+
+function contains(parent: string, child: string) {
+  const path = relative(parent, child)
+  return path === "" || (path !== ".." && !path.startsWith(`..${sep}`) && !isAbsolute(path))
 }

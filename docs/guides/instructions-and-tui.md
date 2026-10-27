@@ -11,7 +11,8 @@ List extra instruction files in `orchestra.json` and the model reads them with y
 - Paths are relative to the config file that lists them. `~/` means your home folder.
 - A config in your global folder can name any file. A project config can only name files inside the project; a path that leaves the project makes the instructions unavailable, and the session does not start on stale context.
 - A file that is missing is treated the same way.
-- URLs and globs are not supported. A URL in `instructions` is a config error that names the file.
+- Globs such as `docs/*.md` are supported and match the files that exist when the session opens.
+- URLs are not supported. A URL in `instructions` is a config error that names the file.
 
 ## `tui.json`
 

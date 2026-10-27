@@ -42,7 +42,7 @@ Configuration that introduces location-scoped project resources or discoverable 
 | `command`      | User-defined commands                   | remove   | Do not port as v2 config; named reusable user workflows belong to skills.                                 |
 | `skills`       | Additional skill locations              | redesign | Replace `{ paths?, urls? }` with a single array of local path or remote URL discovery sources.            |
 | `reference`    | Named git or local directory references | redesign | Rename to plural `references`; retain named local path and Git repository external-context entries.       |
-| `instructions` | Additional ambient instruction sources  | keep     | Implemented as an array of local file paths (relative to the listing config file) supplying automatically included context. Globs and URLs are not supported; a URL is a config error. |
+| `instructions` | Additional ambient instruction sources  | keep     | Implemented as an array of local file paths and globs (relative to the listing config file) supplying automatically included context. URLs are not supported; a URL is a config error. |
 
 V2 does not expose separate user-authored command configuration. Skills should cover named reusable prompt workflows, whether invoked directly by the user or loaded by an agent. Internal command routing and built-in commands may remain runtime concerns without creating a `command` or `commands` config field.
 

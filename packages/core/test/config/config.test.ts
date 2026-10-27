@@ -340,7 +340,7 @@ describe("Config", () => {
                   buffer: 10000,
                 },
                 skills: ["./skills", "~/shared-skills", "https://example.com/.well-known/skills/"],
-                instructions: ["CONTRIBUTING.md", ".cursor/rules/*.md", "https://example.com/shared-rules.md"],
+                instructions: ["CONTRIBUTING.md", ".cursor/rules/*.md"],
                 references: {
                   local: { path: "../library" },
                   sdk: { repository: "github.com/example/sdk", branch: "main" },
@@ -431,7 +431,6 @@ describe("Config", () => {
             expect(documents[0]?.info.instructions).toEqual([
               "CONTRIBUTING.md",
               ".cursor/rules/*.md",
-              "https://example.com/shared-rules.md",
             ])
             expect(documents[0]?.info.references).toEqual({
               local: { path: "../library" },
@@ -818,8 +817,7 @@ describe("Config", () => {
 
   it.live("resolves MCP timeouts per field across documents", () =>
     Effect.sync(() => {
-      const document = (mcp: Config.Info["mcp"]) =>
-        new Config.Document({ type: "document", info: new Config.Info({ mcp }) })
+      const document = (mcp: unknown) => Schema.decodeUnknownSync(Config.Document)({ type: "document", info: { mcp } })
       expect(
         Config.mcpTimeout([
           document({ timeout: { startup: 5000, request: 60000 } }),
