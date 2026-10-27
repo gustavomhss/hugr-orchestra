@@ -155,6 +155,15 @@ describe("ActionsBinding", () => {
     expect(f.calls).toHaveLength(1)
   }))
 
+  it.live("names a folder that is not a Git repository instead of rejecting the input", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const directory = path.join(f.root, "plain")
+    yield* f.filesystem.makeDirectory(directory)
+    const error = yield* f.open({ directory }).pipe(Effect.flip)
+    expect(error.kind).toBe("not_found")
+    expect(error.message).toBe("This folder is not a Git repository.")
+  }))
+
   it.live("rejects client-supplied ID/account/native identity and unknown policy secrets", () => Effect.gen(function* () {
     const f = yield* fixture()
     const service = yield* f.open()
