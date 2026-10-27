@@ -75,7 +75,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Setup Bun
@@ -83,23 +83,23 @@ jobs:
         with:
           install-flags: --frozen-lockfile --os="*" --cpu="*"
       # OMNI_ARTIFACTS=<dir>/<omni id>/ and TREE_SITTER_ARTIFACTS=<dir>/<os>-<arch>/, as the CLI build reads them.
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: omni-win32-x64-msvc
           path: ${{ runner.temp }}/omni-artifacts/win32-x64-msvc
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: omni-linux-x64-gnu
           path: ${{ runner.temp }}/omni-artifacts/linux-x64-gnu
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: omni-linux-arm64-gnu
           path: ${{ runner.temp }}/omni-artifacts/linux-arm64-gnu
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: tree-sitter-linux-arm64
           path: ${{ runner.temp }}/tree-sitter-artifacts/linux-arm64
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: tree-sitter-win32-x64
           path: ${{ runner.temp }}/tree-sitter-artifacts/win32-x64
@@ -136,7 +136,7 @@ jobs:
               cp "$bin/hugr_omni.node" "$bin/hugr-omni-supervisor" "windows-cli/omni-$target/"
             fi
           done
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: windows-cli
           path: windows-cli/
@@ -172,7 +172,7 @@ jobs:
       # sign=true: scripts/sign-windows.ps1 fails instead of skipping when signing is not configured.
       ORCHESTRA_REQUIRE_SIGNING: ${{ inputs.sign == true && '1' || '' }}
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -225,7 +225,7 @@ jobs:
 
       - name: The Windows bundle's CLIs from the Linux producer
         if: runner.os == 'Windows'
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: windows-cli
           path: ${{ runner.temp }}/windows-cli
@@ -344,7 +344,7 @@ jobs:
         if: always() && env.SIGN == 'true' && runner.os == 'macOS'
         run: security delete-keychain "$RUNNER_TEMP/orchestra-signing.keychain-db" || true
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: desktop-${{ matrix.os }}-${{ matrix.arch }}
           path: installers/
@@ -352,7 +352,7 @@ jobs:
           compression-level: 0
           retention-days: 14
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           # finalize-latest-yml.ts reads latest-yml-<rust target>/.
           name: latest-yml-${{ matrix.target }}
@@ -367,18 +367,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version-file: package.json
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: desktop-*
           merge-multiple: true
           path: ${{ runner.temp }}/dist
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: latest-yml-*
           path: ${{ runner.temp }}/latest-yml
@@ -398,7 +398,7 @@ jobs:
           done
           (cd "$LATEST_PAYLOAD_DIR" && sha256sum -- *.dmg *.zip *.exe *.AppImage *.deb *.rpm) > "$LATEST_YML_OUT/SHA256SUMS"
           cat "$LATEST_YML_OUT/SHA256SUMS"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-desktop-feed
           path: ${{ runner.temp }}/feed/
@@ -417,12 +417,12 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       SIGNED: ${{ inputs.sign == true }}
     steps:
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: desktop-*
           merge-multiple: true
           path: dist
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: release-desktop-feed
           path: feed

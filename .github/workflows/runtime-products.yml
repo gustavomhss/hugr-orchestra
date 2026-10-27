@@ -33,7 +33,7 @@ jobs:
           const data = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
           if (!data || typeof data !== "object" || Array.isArray(data) || Object.keys(data).length === 0) throw Error("MODELS_SNAPSHOT_EMPTY_OR_INVALID");
           await Bun.write("models-api.json", bytes);'
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: models-dev-snapshot
           path: models-api.json
@@ -64,7 +64,7 @@ jobs:
     env:
       TARGET: ${{ matrix.target }}
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
@@ -91,12 +91,12 @@ jobs:
       # runtime-proof.ts loads Desktop code that imports workspace packages, so it runs after the install.
       - name: Require matching native host and exact Bun
         run: bun apps/cli/script/runtime-proof.ts --target "$TARGET" --host
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
         with:
           name: models-dev-snapshot
           path: ${{ runner.temp }}/models-dev
       # OMNI_ARTIFACTS=<dir>/<omni id>/, as build.ts reads it.
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: omni-${{ matrix.omni }}
           path: ${{ runner.temp }}/omni-artifacts/${{ matrix.omni }}
@@ -133,7 +133,7 @@ jobs:
           exe=orchestra
           [[ "$TARGET" != windows-* ]] || exe=orchestra.exe
           bun apps/cli/script/ripgrep-proof.ts --target "$TARGET" --binary "$bin/$exe" --ripgrep "$bin/ripgrep" --mutate
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: runtime-proof-${{ matrix.target }}
           path: runtime-proof.json
@@ -148,7 +148,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
@@ -158,12 +158,12 @@ jobs:
         run: bun install --frozen-lockfile --ignore-scripts --os='*' --cpu='*'
       - name: Require native Linux producer
         run: bun apps/cli/script/runtime-proof.ts --target linux-x64-baseline --host
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
         with:
           name: models-dev-snapshot
           path: ${{ runner.temp }}/models-dev
       # TREE_SITTER_ARTIFACTS=<dir>/<os>-<arch>/, as build.ts reads it.
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: tree-sitter-win32-arm64
           path: ${{ runner.temp }}/tree-sitter-artifacts/win32-arm64
@@ -177,12 +177,12 @@ jobs:
           export ORCHESTRA_VERSION
           bun apps/cli/script/build.ts --skip-install --target windows-arm64
           bun apps/cli/script/export-artifacts.ts --dist apps/cli/dist --out windows-arm64-resources --version "$ORCHESTRA_VERSION" --target windows-arm64
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: windows-arm64-resources
           path: windows-arm64-resources/
           if-no-files-found: error
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: windows-arm64-ripgrep
           path: apps/cli/dist/cli-windows-arm64/bin/ripgrep/
@@ -196,7 +196,7 @@ jobs:
       run:
         shell: pwsh
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
@@ -208,7 +208,7 @@ jobs:
       # runtime-proof.ts loads Desktop code that imports workspace packages, so it runs after the install.
       - name: Require native Windows ARM64 Bun
         run: bun apps/cli/script/runtime-proof.ts --target windows-arm64 --host
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: windows-arm64-resources
           path: windows-arm64-resources
@@ -216,7 +216,7 @@ jobs:
         run: bun apps/cli/script/runtime-proof.ts --target windows-arm64 --resources windows-arm64-resources --report runtime-proof.json
       - name: Require the actual proof report and producer digest
         run: bun apps/cli/script/runtime-proof.ts --target windows-arm64 --resources windows-arm64-resources --report runtime-proof.json --check-report
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: windows-arm64-ripgrep
           path: windows-arm64-cli/ripgrep
@@ -226,7 +226,7 @@ jobs:
           Copy-Item windows-arm64-resources/orchestra-windows-arm64.exe windows-arm64-cli/orchestra.exe
           bun apps/cli/script/ripgrep-proof.ts --target windows-arm64 --binary windows-arm64-cli/orchestra.exe --ripgrep windows-arm64-cli/ripgrep --mutate
           if ($LASTEXITCODE -ne 0) { throw "ripgrep proof failed" }
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: runtime-proof-windows-arm64
           path: runtime-proof.json

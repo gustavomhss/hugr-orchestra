@@ -23,7 +23,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Initialize evidence
         run: mkdir -p native/omni/campaign/logs
       - uses: ./.github/actions/setup-bun
@@ -71,7 +71,7 @@ jobs:
           node -e 'require("node:fs").writeFileSync("native/omni/campaign/logs/scope.json", JSON.stringify({ os: process.platform, build: process.env.BUILD_OUTCOME, coverage: { V7: process.platform === "win32" ? "unrun" : "see-verdict", V8: process.platform === "win32" ? "see-verdict" : "not-applicable", V9: "see-verdict" }, wp10Complete: false }))'
       - name: Preserve evidence, including red and unrun cells
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: omni-delivery-${{ matrix.os }}
           path: native/omni/campaign/logs/
