@@ -4,4 +4,5 @@
 - [MCP project trust](mcp-project-trust.md)
 - [Config errors](config-errors.md)
 - [Credentials](credentials.md)
+- [Desktop startup errors](desktop-startup.md)
 - [Skills: catalog visibility](skills.md)
