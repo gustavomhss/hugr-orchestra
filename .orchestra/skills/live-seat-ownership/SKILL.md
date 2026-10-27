@@ -44,4 +44,4 @@ The live seat (id `live`) is the user's meeting copilot: it hears the call, answ
 
 - macOS only (14.2+ for system audio). Real audio runs need the packaged app or a dev run from the owner's own terminal (TCC attribution).
 - Consolidation has no retry; an interrupted card stays `failed`.
-- The tray icon asset and the `orchestra://live` route belong to the Interface session.
+- The tray icon asset (`apps/desktop/icons/<channel>/trayTemplate*.png`) and the `orchestra://live` route belong to the Interface session.
