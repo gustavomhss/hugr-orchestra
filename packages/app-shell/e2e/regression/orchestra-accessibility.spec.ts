@@ -546,14 +546,7 @@ async function expectDialogReturn(page: Page, trigger: Locator, buttons: string[
 // owner instead of recolored here, each with the ratio measured when it was recorded. The test fails if any
 // other target fails, if a recorded one starts passing (remove the entry with the token change), and if a
 // recorded one measures lower than its baseline beyond sampling noise.
-// The sidebar glass (--orchestra-glass-background, 0.44-0.58 alpha) lets the wallpaper's warm band through.
-const sidebarGlass = "on the sidebar glass over the wallpaper's warm band"
-const findings: Record<string, { ratio: number; cause: string }> = {
-  "sidebar-dark:nav label": { ratio: 3.82, cause: `--orchestra-sidebar-text ${sidebarGlass}` },
-  "sidebar-dark:chapter text": { ratio: 3.81, cause: `--orchestra-sidebar-text ${sidebarGlass}` },
-  "sidebar-dark:WIP mark": { ratio: 3.66, cause: `WIP mark ink ${sidebarGlass}` },
-  "sidebar-light:brand descriptor": { ratio: 4.23, cause: `brand descriptor ink ${sidebarGlass}` },
-}
+const findings: Record<string, { ratio: number; cause: string }> = {}
 
 async function report(results: ContrastResult[], name: string) {
   await writeFile(test.info().outputPath(`${name}-contrast.json`), JSON.stringify(results, null, 2))
