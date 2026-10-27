@@ -7,8 +7,10 @@ import path from "path"
 import { fileURLToPath, pathToFileURL } from "url"
 import { Config } from "../../config"
 import { FSUtil } from "../../fs-util"
+import { Global } from "../../global"
 import { Location } from "../../location"
 import { Npm } from "../../npm"
+import { ConfigTrust } from "../trust"
 import { define } from "../../plugin/internal"
 import { PluginPromise } from "../../plugin/promise"
 import { PluginSdkRuntime } from "../../plugin/sdk-runtime"
@@ -42,12 +44,19 @@ export const Plugin = define({
   effect: Effect.fn(function* (ctx) {
     const config = yield* Config.Service
     const fs = yield* FSUtil.Service
+    const global = yield* Global.Service
     const location = yield* Location.Service
     const npm = yield* Npm.Service
     yield* Effect.gen(function* () {
       const configured: { package: string; options?: Record<string, any> }[] = []
 
-      for (const entry of yield* config.entries()) {
+      const entries = yield* config.entries()
+      // A project's plugins are code the repository chose to run: they load only once the user trusts the project.
+      const allowed = ConfigTrust.runnable(entries, global.config, location.directory)
+      if (entries.some((entry) => !allowed.includes(entry) && (entry.type === "directory" || entry.info.plugins?.length)))
+        yield* Effect.logWarning(`Project plugins not loaded. ${ConfigTrust.approveHint(location.directory)}`)
+
+      for (const entry of allowed) {
         if (entry.type === "document") {
           const directory = entry.path ? path.dirname(entry.path) : location.directory
           for (const item of entry.info.plugins ?? []) {
