@@ -359,6 +359,7 @@
     "./session/meeting-briefing": "./src/session/meeting-briefing.ts",
     "./session/meeting-consolidation": "./src/session/meeting-consolidation.ts",
     "./session/meeting-context": "./src/session/meeting-context.ts",
+    "./session/meeting-handoff": "./src/session/meeting-handoff.ts",
     "./session/meeting-memory.sql": "./src/session/meeting-memory.sql.ts",
     "./session/meeting.sql": "./src/session/meeting.sql.ts",
     "./session/todo": "./src/session/todo.ts",

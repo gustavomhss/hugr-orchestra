@@ -40,6 +40,7 @@ import { SessionMeeting } from "./session/meeting"
 import { MeetingBriefing } from "./session/meeting-briefing"
 import { MeetingConsolidation } from "./session/meeting-consolidation"
 import { MeetingContext } from "./session/meeting-context"
+import { MeetingHandoff } from "./session/meeting-handoff"
 import { SessionTodo } from "./session/todo"
 import { SkillV2 } from "./skill"
 import { SkillGuidance } from "./skill/guidance"
@@ -92,6 +93,7 @@ export const locationServices = LayerNode.group([
   SessionMeeting.node,
   MeetingBriefing.node,
   MeetingContext.node,
+  MeetingHandoff.node,
   QuestionV2.node,
   ReadToolFileSystem.node,
   BuiltInTools.node,
