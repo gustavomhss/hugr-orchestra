@@ -619,7 +619,7 @@ export function buildNetworkScript(config: { blockUrls?: string[]; allowedOrigin
     state.requests++
     if (blocked(request.url, request.method)) {
       state.blocked++
-      return new Response("Blocked by App Dock", { status: 403 })
+      return new Response("Blocked by MCP Dock", { status: 403 })
     }
     return originalFetch.call(this, request)
   }
