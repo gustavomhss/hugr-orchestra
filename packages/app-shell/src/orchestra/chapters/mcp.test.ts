@@ -14,8 +14,10 @@ import {
   mcpEntry,
   mcpMatches,
   mcpNameValid,
+  mcpTransport,
   mcpUnchanged,
   parseCommand,
+  trustedDirectory,
 } from "./mcp-model"
 
 describe("MCP chapter actions", () => {
@@ -272,17 +274,32 @@ describe("MCP chapter model", () => {
   test("drafts come from the raw entry and an unedited save is detected", () => {
     const entry = { type: "local" as const, command: ["bunx", "my server", "--token", "{env:TOKEN}"] }
     const draft = mcpDraft(entry)
-    expect(draft).toEqual({ transport: "stdio", endpoint: `bunx 'my server' --token {env:TOKEN}` })
-    const result = mcpConfig(draft!.transport, draft!.endpoint)
+    expect(draft).toBe(`bunx 'my server' --token {env:TOKEN}`)
+    const result = mcpConfig(draft!)
     expect(result).toEqual({ config: entry })
     expect("config" in result && mcpUnchanged(entry, result.config)).toBe(true)
     expect(mcpUnchanged(entry, { type: "local", command: ["bunx", "my server"] })).toBe(false)
     expect(mcpUnchanged(entry, { type: "remote", url: "https://x.test" })).toBe(false)
     const remote = { type: "remote" as const, url: "https://x.test/?k={env:K}" }
-    expect(mcpDraft(remote)).toEqual({ transport: "http", endpoint: "https://x.test/?k={env:K}" })
+    expect(mcpDraft(remote)).toBe("https://x.test/?k={env:K}")
     expect(mcpUnchanged(remote, { type: "remote", url: "https://x.test/?k={env:K}" })).toBe(true)
     expect(mcpUnchanged(undefined, { type: "remote", url: "https://x.test" })).toBe(false)
     expect(mcpDraft({ enabled: false } as never)).toBeUndefined()
+  })
+
+  test("typed environment or headers count as an edit even when the endpoint is unchanged", () => {
+    const entry = { type: "local" as const, command: ["node", "server.js"] }
+    expect(mcpUnchanged(entry, { type: "local", command: ["node", "server.js"], environment: { A: "1" } })).toBe(false)
+    const remote = { type: "remote" as const, url: "https://x.test" }
+    expect(mcpUnchanged(remote, { type: "remote", url: "https://x.test", headers: { A: "1" } })).toBe(false)
+  })
+
+  test("a project is trusted when it or a parent folder is listed", () => {
+    expect(trustedDirectory(["/Users/me/work"], "/Users/me/work")).toBe(true)
+    expect(trustedDirectory(["/Users/me/work/"], "/Users/me/work/app")).toBe(true)
+    expect(trustedDirectory(["/Users/me/work"], "/Users/me/work-two")).toBe(false)
+    expect(trustedDirectory(["/Users/me/other"], "/Users/me/work")).toBe(false)
+    expect(trustedDirectory([], "/Users/me/work")).toBe(false)
   })
 
   test.each([
@@ -315,23 +332,51 @@ describe("MCP chapter model", () => {
     expect(mcpMatches(card, "stdio", "Connected")).toBe(false)
   })
 
-  test("http drafts need an http(s) URL", () => {
-    expect(mcpConfig("http", " https://mcp.example.test/docs ")).toEqual({
-      config: { type: "remote", url: "https://mcp.example.test/docs" },
-    })
-    expect(mcpConfig("http", "http://127.0.0.1:9000/mcp")).toEqual({
-      config: { type: "remote", url: "http://127.0.0.1:9000/mcp" },
-    })
-    for (const value of ["not a url", "mcp.example.test", "ftp://mcp.example.test", ""])
-      expect(mcpConfig("http", value)).toEqual({ error: "url" })
+  test("the typed endpoint decides the transport", () => {
+    expect(mcpTransport(" https://mcp.example.test/docs ")).toBe("http")
+    expect(mcpTransport("HTTP://127.0.0.1:9000/mcp")).toBe("http")
+    expect(mcpTransport("bunx @modelcontextprotocol/server-filesystem .")).toBe("stdio")
+    expect(mcpTransport("C:\\tools\\server.exe")).toBe("stdio")
+    expect(mcpTransport("")).toBe("stdio")
   })
 
-  test("stdio drafts split into a command array", () => {
-    expect(mcpConfig("stdio", "bunx @modelcontextprotocol/server-filesystem .")).toEqual({
+  test("a URL becomes a remote server and needs http(s)", () => {
+    expect(mcpConfig(" https://mcp.example.test/docs ")).toEqual({
+      config: { type: "remote", url: "https://mcp.example.test/docs" },
+    })
+    expect(mcpConfig("http://127.0.0.1:9000/mcp")).toEqual({
+      config: { type: "remote", url: "http://127.0.0.1:9000/mcp" },
+    })
+    for (const value of ["ftp://mcp.example.test", "https://"]) expect(mcpConfig(value)).toEqual({ error: "url" })
+  })
+
+  test("anything else becomes a local command", () => {
+    expect(mcpConfig("bunx @modelcontextprotocol/server-filesystem .")).toEqual({
       config: { type: "local", command: ["bunx", "@modelcontextprotocol/server-filesystem", "."] },
     })
-    expect(mcpConfig("stdio", "   ")).toEqual({ error: "command" })
-    expect(mcpConfig("stdio", 'node "unclosed')).toEqual({ error: "command" })
+    expect(mcpConfig("   ")).toEqual({ error: "command" })
+    expect(mcpConfig('node "unclosed')).toEqual({ error: "command" })
+  })
+
+  test("typed headers and environment go with their transport only", () => {
+    expect(mcpConfig("https://mcp.example.test", { headers: "Authorization: Bearer a:b\nX-Trace: 1" })).toEqual({
+      config: {
+        type: "remote",
+        url: "https://mcp.example.test",
+        headers: { Authorization: "Bearer a:b", "X-Trace": "1" },
+      },
+    })
+    expect(mcpConfig("https://mcp.example.test", { headers: "no separator" })).toEqual({ error: "headers" })
+    expect(mcpConfig("https://mcp.example.test", { environment: "TOKEN=x" })).toEqual({
+      config: { type: "remote", url: "https://mcp.example.test" },
+    })
+    expect(mcpConfig("node server.js", { environment: "TOKEN=abc=def\n\nMODE=" })).toEqual({
+      config: { type: "local", command: ["node", "server.js"], environment: { TOKEN: "abc=def", MODE: "" } },
+    })
+    expect(mcpConfig("node server.js", { environment: "=x" })).toEqual({ error: "environment" })
+    expect(mcpConfig("node server.js", { headers: "X-Trace: 1" })).toEqual({
+      config: { type: "local", command: ["node", "server.js"] },
+    })
   })
 
   test.each([

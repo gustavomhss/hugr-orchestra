@@ -1,10 +1,11 @@
 import type { McpServer } from "@/v2-wire"
-
-
+import { pathKey } from "@/utils/path-key"
 
 export type McpStatus = McpServer["status"]
 export type McpTransport = "stdio" | "http"
-export type McpServerConfig = { type: "local"; command: string[] } | { type: "remote"; url: string }
+export type McpServerConfig =
+  | { type: "local"; command: string[]; environment?: Record<string, string> }
+  | { type: "remote"; url: string; headers?: Record<string, string> }
 /** Only the fields the page shows or edits; anything else in a server's config never reaches it. */
 export type McpEntry = { type?: "local" | "remote"; command?: readonly string[]; url?: string }
 
@@ -95,16 +96,33 @@ function endpoint(entry: McpEntry | undefined): { transport: McpTransport; endpo
 }
 
 /** The draft the Configure dialog starts from: the raw file entry, never resolved values. */
-export function mcpDraft(entry: McpEntry | undefined): { transport: McpTransport; endpoint: string } | undefined {
-  if (entry?.type === "remote" && entry.url !== undefined) return { transport: "http", endpoint: entry.url }
-  if (entry?.type === "local" && entry.command) return { transport: "stdio", endpoint: formatCommand(entry.command) }
+export function mcpDraft(entry: McpEntry | undefined): string | undefined {
+  if (entry?.type === "remote" && entry.url !== undefined) return entry.url
+  if (entry?.type === "local" && entry.command) return formatCommand(entry.command)
 }
 
+// What the user typed decides the transport: a URL connects over HTTP, anything else is a local command.
+export function mcpTransport(endpoint: string): McpTransport {
+  return /^[a-z][a-z\d+.-]*:\/\//i.test(endpoint.trim()) ? "http" : "stdio"
+}
+
+// Whether a folder is, or sits inside, one of the folders the global config lists as trusted.
+export function trustedDirectory(roots: readonly string[], directory: string) {
+  const target = pathKey(directory)
+  return roots.some((root) => {
+    const base = pathKey(root)
+    return target === base || target.startsWith(`${base}/`)
+  })
+}
+
+// An unedited save writes nothing. Typed environment or headers always count as an edit.
 export function mcpUnchanged(entry: McpEntry | undefined, config: McpServerConfig) {
   if (!entry || entry.type !== config.type) return false
-  if (config.type === "remote") return entry.url === config.url
+  if (config.type === "remote") return entry.url === config.url && config.headers === undefined
   return (
-    entry.command?.length === config.command.length && config.command.every((part, i) => entry.command?.[i] === part)
+    config.environment === undefined &&
+    entry.command?.length === config.command.length &&
+    config.command.every((part, i) => entry.command?.[i] === part)
   )
 }
 
@@ -140,19 +158,43 @@ export function mcpMatches(card: McpCard, query: string, label: string) {
   return [card.name, card.endpoint, card.transport, label].some((part) => part?.toLowerCase().includes(needle))
 }
 
+/** The free-text fields of the dialog. Only the ones for the inferred transport are read. */
+export type McpFields = { environment?: string; headers?: string }
+
 /** Builds the config a draft describes, or names the field that blocks saving. */
 export function mcpConfig(
-  transport: McpTransport,
   endpoint: string,
-): { config: McpServerConfig } | { error: "url" | "command" } {
-  if (transport === "http") {
-    const url = URL.canParse(endpoint.trim()) ? new URL(endpoint.trim()) : undefined
-    if (!url || (url.protocol !== "http:" && url.protocol !== "https:")) return { error: "url" }
-    return { config: { type: "remote", url: endpoint.trim() } }
+  fields: McpFields = {},
+): { config: McpServerConfig } | { error: "url" | "command" | "environment" | "headers" } {
+  if (mcpTransport(endpoint) === "http") {
+    const url = endpoint.trim()
+    const parsed = URL.canParse(url) ? new URL(url) : undefined
+    if (!parsed || (parsed.protocol !== "http:" && parsed.protocol !== "https:")) return { error: "url" }
+    const headers = parseKeyValues(fields.headers, ":")
+    if (headers === null) return { error: "headers" }
+    return { config: { type: "remote", url, ...(headers ? { headers } : {}) } }
   }
   const command = parseCommand(endpoint)
   if (!command?.length) return { error: "command" }
-  return { config: { type: "local", command } }
+  const environment = parseKeyValues(fields.environment, "=")
+  if (environment === null) return { error: "environment" }
+  return { config: { type: "local", command, ...(environment ? { environment } : {}) } }
+}
+
+// `KEY=value` lines for the environment and `Name: value` lines for headers. Blank lines are skipped. An empty set
+// is undefined, so the save leaves the file's own set alone; a line without a name and separator makes it null.
+function parseKeyValues(text: string | undefined, separator: "=" | ":") {
+  const lines = (text ?? "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+  const pairs = lines.flatMap((line) => {
+    const index = line.indexOf(separator)
+    const key = index > 0 ? line.slice(0, index).trim() : ""
+    return key ? [[key, line.slice(index + 1).trim()] as const] : []
+  })
+  if (pairs.length !== lines.length) return null
+  return pairs.length ? Object.fromEntries(pairs) : undefined
 }
 
 // Shell-style splitting for a single command line: whitespace separates arguments, single and

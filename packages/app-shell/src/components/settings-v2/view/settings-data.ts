@@ -11,11 +11,21 @@ export const SETTINGS_SECTIONS = [
   "permissions",
   "agents",
   "mcp",
+  "trust",
 ] as const
 export type SettingsSection = (typeof SETTINGS_SECTIONS)[number]
 
+// The sections that read only server-wide state. With no project open, only these tabs are shown, so no tab
+// ends in "Open a project".
+export const GLOBAL_SETTINGS_SECTIONS = ["general", "shortcuts", "servers", "trust"] as const
+export type GlobalSettingsSection = (typeof GLOBAL_SETTINGS_SECTIONS)[number]
+
 export function settingsSection(value: unknown): SettingsSection {
   return SETTINGS_SECTIONS.find((item) => item === value) ?? "general"
+}
+
+export function globalSettingsSection(value: unknown): GlobalSettingsSection {
+  return GLOBAL_SETTINGS_SECTIONS.find((item) => item === value) ?? "general"
 }
 
 // The tools the mock lists, in its order.

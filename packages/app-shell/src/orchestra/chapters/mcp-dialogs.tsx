@@ -11,7 +11,7 @@ import {
   mcpDraft,
   mcpNameValid,
   type McpServerConfig,
-  type McpTransport,
+  mcpTransport,
   mcpUnchanged,
 } from "./mcp-model"
 
@@ -115,6 +115,13 @@ function McpDialog(props: {
   )
 }
 
+const invalidFields = {
+  url: "orchestra.mcp.invalidUrl",
+  command: "orchestra.mcp.invalidCommand",
+  environment: "orchestra.mcp.invalidEnvironment",
+  headers: "orchestra.mcp.invalidHeaders",
+} as const
+
 type McpEditProps = {
   card?: McpCard
   names: readonly string[]
@@ -193,24 +200,23 @@ function McpEditor(props: McpEditProps) {
   const initial = mcpDraft(card?.entry)
   const [draft, setDraft] = createStore({
     name: card?.name ?? "",
-    transport: initial?.transport ?? ("stdio" as McpTransport),
-    endpoint: initial?.endpoint ?? "",
+    endpoint: initial ?? "",
+    environment: "",
+    headers: "",
     error: card && "error" in card.status ? language.t("orchestra.mcp.lastError", { detail: card.status.error }) : "",
     busy: false,
     // Sessions the owner was warned about; Save then reads "Save anyway" and writes without asking again.
     running: 0,
   })
+  // The transport follows what was typed, so only the fields for it are shown.
+  const transport = () => (draft.endpoint.trim() ? mcpTransport(draft.endpoint) : undefined)
 
   async function submit(close: () => void) {
     const name = draft.name.trim()
     if (!mcpNameValid(name)) return setDraft("error", language.t("orchestra.mcp.invalidName"))
     if (!card && props.names.includes(name)) return setDraft("error", language.t("orchestra.mcp.duplicate"))
-    const result = mcpConfig(draft.transport, draft.endpoint)
-    if ("error" in result)
-      return setDraft(
-        "error",
-        language.t(result.error === "url" ? "orchestra.mcp.invalidUrl" : "orchestra.mcp.invalidCommand"),
-      )
+    const result = mcpConfig(draft.endpoint, { environment: draft.environment, headers: draft.headers })
+    if ("error" in result) return setDraft("error", language.t(invalidFields[result.error]))
     // Saving restarts every MCP server in the profile, so an unedited dialog writes nothing.
     if (card && mcpUnchanged(card.entry, result.config)) return close()
     setDraft({ busy: true, error: "" })
@@ -258,17 +264,6 @@ function McpEditor(props: McpEditProps) {
         />
       </label>
       <label class="mx-field">
-        <span>{language.t("orchestra.mcp.transport")}</span>
-        <select
-          name="transport"
-          value={draft.transport}
-          onChange={(event) => setDraft("transport", event.currentTarget.value === "http" ? "http" : "stdio")}
-        >
-          <option value="stdio">stdio</option>
-          <option value="http">http</option>
-        </select>
-      </label>
-      <label class="mx-field">
         <span>{language.t("orchestra.mcp.endpoint")}</span>
         <input
           name="endpoint"
@@ -278,6 +273,45 @@ function McpEditor(props: McpEditProps) {
           onInput={(event) => setDraft("endpoint", event.currentTarget.value)}
         />
       </label>
+      <p class="mx-note orchestra-mcp-dialog-note" role="note">
+        {language.t(
+          transport() === "http"
+            ? "orchestra.mcp.transportRemote"
+            : transport() === "stdio"
+              ? "orchestra.mcp.transportLocal"
+              : "orchestra.mcp.transportHint",
+        )}
+      </p>
+      <Show when={transport() === "stdio"}>
+        <label class="mx-field">
+          <span>{language.t("orchestra.mcp.environment")}</span>
+          <textarea
+            name="environment"
+            rows={3}
+            spellcheck={false}
+            value={draft.environment}
+            onInput={(event) => setDraft("environment", event.currentTarget.value)}
+          />
+        </label>
+        <p class="mx-note orchestra-mcp-dialog-note" role="note">
+          {language.t("orchestra.mcp.environmentHint")}
+        </p>
+      </Show>
+      <Show when={transport() === "http"}>
+        <label class="mx-field">
+          <span>{language.t("orchestra.mcp.headers")}</span>
+          <textarea
+            name="headers"
+            rows={3}
+            spellcheck={false}
+            value={draft.headers}
+            onInput={(event) => setDraft("headers", event.currentTarget.value)}
+          />
+        </label>
+        <p class="mx-note orchestra-mcp-dialog-note" role="note">
+          {language.t("orchestra.mcp.headersHint")}
+        </p>
+      </Show>
       <p class="mx-note orchestra-mcp-dialog-note" role="note">
         {language.t("orchestra.mcp.credentialsHint", { file: MCP_CONFIG_FILE })}
       </p>

@@ -29,10 +29,23 @@ export const MCP_COPY = {
   "orchestra.mcp.note":
     "Switches apply until the server restarts. Saving or removing a server restarts this profile's MCP servers.",
   "orchestra.mcp.name": "Name",
-  "orchestra.mcp.transport": "Transport",
   "orchestra.mcp.endpoint": "Command or server URL",
-  "orchestra.mcp.credentialsHint":
-    "Need environment variables, headers or an OAuth client? Add them to {{file}} after saving.",
+  "orchestra.mcp.transportRemote": "Connects over HTTP.",
+  "orchestra.mcp.transportLocal": "Runs as a local command.",
+  "orchestra.mcp.transportHint": "A URL connects over HTTP. Anything else runs as a local command.",
+  "orchestra.mcp.environment": "Environment (KEY=value, one per line)",
+  "orchestra.mcp.environmentHint":
+    "Values you enter replace the environment set in the config file. Leave empty to keep that set.",
+  "orchestra.mcp.invalidEnvironment": "Use KEY=value, one per line.",
+  "orchestra.mcp.headers": "Headers (Name: value, one per line)",
+  "orchestra.mcp.headersHint":
+    "Values you enter replace the headers set in the config file. Leave empty to keep that set.",
+  "orchestra.mcp.invalidHeaders": "Use Name: value, one per line.",
+  "orchestra.mcp.credentialsHint": "Need an OAuth client? Add it to {{file}} after saving.",
+  "orchestra.mcp.tryAgain": "Try again",
+  "orchestra.mcp.trustBanner":
+    "Local MCP servers in {{profile}} are blocked. Their commands come from this project's own config, so they stay off until you trust the project.",
+  "orchestra.mcp.trustProject": "Trust this project",
   "orchestra.mcp.remove": "Remove server",
   "orchestra.mcp.invalidUrl": "Enter a valid server URL.",
   "orchestra.mcp.invalidCommand": "Enter a valid command.",
@@ -89,10 +102,23 @@ export const MCP_COPY_BR: Record<keyof typeof MCP_COPY, string> = {
   "orchestra.mcp.note":
     "As trocas valem até o servidor reiniciar. Salvar ou remover um servidor reinicia os servidores MCP deste perfil.",
   "orchestra.mcp.name": "Nome",
-  "orchestra.mcp.transport": "Transporte",
   "orchestra.mcp.endpoint": "Comando ou URL do servidor",
-  "orchestra.mcp.credentialsHint":
-    "Precisa de variáveis de ambiente, headers ou um cliente OAuth? Adicione-os em {{file}} depois de salvar.",
+  "orchestra.mcp.transportRemote": "Conecta por HTTP.",
+  "orchestra.mcp.transportLocal": "Executa como comando local.",
+  "orchestra.mcp.transportHint": "Uma URL conecta por HTTP. Qualquer outra coisa roda como comando local.",
+  "orchestra.mcp.environment": "Ambiente (CHAVE=valor, uma por linha)",
+  "orchestra.mcp.environmentHint":
+    "Os valores digitados substituem o conjunto de variáveis do arquivo de configuração. Deixe vazio para mantê-lo.",
+  "orchestra.mcp.invalidEnvironment": "Use CHAVE=valor, uma por linha.",
+  "orchestra.mcp.headers": "Headers (Nome: valor, uma por linha)",
+  "orchestra.mcp.headersHint":
+    "Os valores digitados substituem o conjunto de headers do arquivo de configuração. Deixe vazio para mantê-lo.",
+  "orchestra.mcp.invalidHeaders": "Use Nome: valor, uma por linha.",
+  "orchestra.mcp.credentialsHint": "Precisa de um cliente OAuth? Adicione-o em {{file}} depois de salvar.",
+  "orchestra.mcp.tryAgain": "Tentar de novo",
+  "orchestra.mcp.trustBanner":
+    "Os servidores MCP locais de {{profile}} estão bloqueados. Os comandos vêm da configuração do próprio projeto, então ficam desligados até você confiar no projeto.",
+  "orchestra.mcp.trustProject": "Confiar neste projeto",
   "orchestra.mcp.remove": "Remover servidor",
   "orchestra.mcp.invalidUrl": "Digite uma URL de servidor válida.",
   "orchestra.mcp.invalidCommand": "Digite um comando válido.",

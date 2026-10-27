@@ -58,5 +58,12 @@ export function createMcpSource(input: {
     async remove(name: string) {
       await api().remove({ server: name, location })
     },
+    // Trusted project folders from the global config. Approving starts this project's blocked local servers.
+    async trusted(): Promise<readonly string[]> {
+      return input.serverSDK.orchestra["server.trust"].list()
+    },
+    async approveTrust() {
+      await input.serverSDK.orchestra["server.trust"].approve({ directory: input.directory })
+    },
   }
 }

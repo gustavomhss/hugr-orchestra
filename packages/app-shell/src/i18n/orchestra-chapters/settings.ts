@@ -77,6 +77,16 @@ export const SETTINGS_COPY = {
   "orchestra.settings.models.makeDefaultLabel": "Use {{model}} as the default model",
   "orchestra.settings.models.done": "Done",
   "orchestra.settings.scope.server": "Changes here apply to {{server}}.",
+  "orchestra.settings.trust.title": "Trusted projects",
+  "orchestra.settings.trust.description":
+    "A project's own local MCP servers, plugins and formatters run only in projects you trust. Revoking a project stops its running local MCP servers.",
+  "orchestra.settings.trust.empty":
+    "No trusted projects yet. A project's MCP page offers to trust it when its local servers are blocked.",
+  "orchestra.settings.trust.loading": "Loading trusted projects…",
+  "orchestra.settings.trust.loadFailed": "Could not load trusted projects.",
+  "orchestra.settings.trust.revoke": "Revoke",
+  "orchestra.settings.trust.revokeLabel": "Revoke trust for {{project}}",
+  "orchestra.settings.trust.revokeFailed": "Could not revoke trust.",
   "orchestra.settings.servers.remove.title": "Delete {{server}}?",
   "orchestra.settings.servers.remove.description":
     "This removes the saved connection, its password and the tabs open on it from this app.",
@@ -195,6 +205,16 @@ export const SETTINGS_COPY_BR: Record<keyof typeof SETTINGS_COPY, string> = {
   "orchestra.settings.models.makeDefaultLabel": "Usar {{model}} como modelo padrão",
   "orchestra.settings.models.done": "Concluído",
   "orchestra.settings.scope.server": "As mudanças aqui valem para {{server}}.",
+  "orchestra.settings.trust.title": "Projetos confiáveis",
+  "orchestra.settings.trust.description":
+    "Os servidores MCP locais, plugins e formatadores de um projeto só rodam em projetos em que você confia. Revogar um projeto interrompe os servidores MCP locais dele que estiverem rodando.",
+  "orchestra.settings.trust.empty":
+    "Nenhum projeto confiável ainda. A página MCP de um projeto oferece confiar nele quando os servidores locais estiverem bloqueados.",
+  "orchestra.settings.trust.loading": "Carregando projetos confiáveis…",
+  "orchestra.settings.trust.loadFailed": "Não foi possível carregar os projetos confiáveis.",
+  "orchestra.settings.trust.revoke": "Revogar",
+  "orchestra.settings.trust.revokeLabel": "Revogar a confiança em {{project}}",
+  "orchestra.settings.trust.revokeFailed": "Não foi possível revogar a confiança.",
   "orchestra.settings.servers.remove.title": "Excluir {{server}}?",
   "orchestra.settings.servers.remove.description":
     "Isto remove a conexão salva, a senha dela e as abas abertas nela neste app.",
