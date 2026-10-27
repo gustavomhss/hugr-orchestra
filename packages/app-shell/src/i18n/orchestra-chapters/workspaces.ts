@@ -42,6 +42,7 @@ export const WORKSPACES_COPY_BR: Record<keyof typeof WORKSPACES_COPY, string> = 
   "orchestra.workspaces.headingAccent": "Cada workspace é um worktree git com sua própria branch, para que os agentes não atrapalhem uns aos outros.",
   "orchestra.workspaces.new": "Novo workspace",
   "orchestra.workspaces.gitRequired": "Novos workspaces são worktrees do git, então este projeto precisa de um repositório git.",
+  "orchestra.noRepository.title": "Esta pasta não é um repositório git",
   "orchestra.workspaces.use": "Usar workspace",
   "orchestra.workspaces.configure": "Configurar",
   "orchestra.workspaces.active": "Ativo",
