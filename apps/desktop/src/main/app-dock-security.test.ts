@@ -17,7 +17,8 @@ import {
 
 const required = Array.from({ length: 33 }, (_, index) => `U${String(index + 1).padStart(2, "0")}`)
 const root = resolve(import.meta.dir, "../..")
-const artifact = join(process.env.APP_DOCK_ARTIFACT_ROOT ?? root, "artifacts/app-dock/s1.json")
+const artifactRoot = process.env.APP_DOCK_ARTIFACT_ROOT ?? root
+const artifact = join(artifactRoot, "artifacts/app-dock/s1.json")
 const schemes = ["http://127.0.0.1/", "file:///etc/passwd", "javascript:document.title='pwned'", "data:text/html,pwned"]
 const cacheableBody = `cacheable fixture${"x".repeat(1_000_000)}`
 type Case = { id: string; status: "pass"; detail: string }
@@ -47,6 +48,8 @@ async function parent() {
       target: "node",
       format: "cjs",
       external: ["electron", "node:sqlite"],
+      // Bun leaves import.meta.env in a CJS bundle, which Electron cannot load; electron-vite defines these for the app.
+      define: { "import.meta.env.ORCHESTRA_CHANNEL": '"dev"', "import.meta.env.ORCHESTRA_MAC_SIGNED": '"false"' },
       write: true,
     })
     output = result.outputs[0]?.path ?? ""
@@ -59,6 +62,8 @@ async function parent() {
           logs: result.logs.map(String),
         }),
       )
+    // A dependency still reads import.meta?.env, which define cannot reach and a CJS bundle cannot contain.
+    await writeFile(output, (await readFile(output, "utf8")).replaceAll(/import\.meta\??\.env/g, "({})"))
     try {
       await access(output)
     } catch {
@@ -72,8 +77,8 @@ async function parent() {
       )
     }
   }
-  const electronModule = createRequire(join(process.cwd(), "package.json")).resolve("electron")
-  const electron = join(dirname(electronModule), "dist/Electron.app/Contents/MacOS/Electron")
+  const electronDir = dirname(createRequire(join(process.cwd(), "package.json")).resolve("electron"))
+  const electron = join(electronDir, "dist", (await readFile(join(electronDir, "path.txt"), "utf8")).trim())
   await access(electron)
   const { ELECTRON_RUN_AS_NODE: _electronRunAsNode, NODE_OPTIONS, APP_DOCK_LOAD_ONLY: _loadOnly, ...env } = process.env
   const safeNodeOptions = NODE_OPTIONS?.includes("ELECTRON_RUN_AS_NODE") ? undefined : NODE_OPTIONS
@@ -103,10 +108,14 @@ async function parent() {
       child.stderr.on("data", (chunk) => {
         stderr += chunk
       })
+      console.error(`app-dock-restart:${stage}:start`)
+      // A stage that never exits (display, GPU or sandbox start-up) must fail with its output, not hang the run.
+      const stageTimeout = setTimeout(() => child.kill("SIGKILL"), 60_000)
       const result = await new Promise<{ code: number | null }>((resolve, reject) => {
         child.once("exit", (code) => resolve({ code }))
         child.once("error", reject)
       })
+      clearTimeout(stageTimeout)
       if (result.code !== 0 || !stdout.includes(`app-dock-restart:${stage}:pass`))
         throw new Error(JSON.stringify({ phase: "restart-stage-failure", stage, ...result, stdout, stderr }))
       restartStages.push(stage)
@@ -121,8 +130,9 @@ async function parent() {
       await writeFile(registryPath, corruptRegistry)
       await runRestartStage("u25-corrupt")
       check((await readFile(registryPath, "utf8")) === corruptRegistry, "corrupt registry was modified")
-      await rm(restartUserData, { recursive: true, force: true })
-      await mkdir(restartUserData)
+      // Electron helper processes can still write into the directory as it is removed; retry, and tolerate it reappearing.
+      await rm(restartUserData, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 })
+      await mkdir(restartUserData, { recursive: true })
       await runRestartStage("u26-write")
       await runRestartStage("u26-read")
     } finally {
@@ -142,7 +152,7 @@ async function parent() {
         ...(safeNodeOptions ? { NODE_OPTIONS: safeNodeOptions } : {}),
         ...(loadOnly ? { APP_DOCK_LOAD_ONLY: "1" } : {}),
         APP_DOCK_RESTART_CASES: restartStages.join(","),
-        APP_DOCK_ARTIFACT_ROOT: root,
+        APP_DOCK_ARTIFACT_ROOT: artifactRoot,
         ELECTRON_DISABLE_SECURITY_WARNINGS: "true",
       },
     },
@@ -155,6 +165,8 @@ async function parent() {
   child.stderr.on("data", (chunk) => {
     stderr += chunk
   })
+  // Stream the main child so a CI failure shows how far it got before the parent exits.
+  child.stderr.pipe(process.stderr)
   let timedOut = false
   const timeout = setTimeout(() => {
     timedOut = true
@@ -166,7 +178,7 @@ async function parent() {
   })
   clearTimeout(timeout)
   if (!startupOnly && !loadOnly && exitResult.code === 0) {
-    const reportPath = join(root, "artifacts/app-dock/s1.json")
+    const reportPath = artifact
     try {
       const report = JSON.parse(await readFile(reportPath, "utf8"))
       check(
@@ -189,7 +201,7 @@ async function parent() {
             typeof screenshot === "string" && screenshot.length > 0 && isAbsolute(screenshot),
             "Invalid MCP Dock screenshot path",
           )
-          check(resolve(screenshot).startsWith(`${root}/`), "MCP Dock screenshot escapes artifact root")
+          check(resolve(screenshot).startsWith(`${artifactRoot}/`), "MCP Dock screenshot escapes artifact root")
           const png = await readFile(screenshot)
           check(
             png.length > 8 && png.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
@@ -373,6 +385,8 @@ async function child() {
   const { registerIpcHandlers } = ipcModule
   const { createAppDock } = await import("./app-dock")
   registerIpcHandlers({
+    // Registration only subscribes to the live loop; no App Dock case starts a meeting.
+    liveLoop: { onRunState: () => () => {}, onLevels: () => () => {}, settings: { bind() {} } } as never,
     killSidecar() {},
     relaunch() {},
     awaitInitialization: async () => ({ serverUrl: site.base }),
@@ -430,8 +444,8 @@ async function child() {
     await readEvents()
     return events.length
   }
-  const waitEvent = (after: number, predicate: (event: any) => boolean, label: string) => {
-    const deadline = Date.now() + 5_000
+  const waitEvent = (after: number, predicate: (event: any) => boolean, label: string, timeout = 5_000) => {
+    const deadline = Date.now() + timeout
     return new Promise<any>((resolve, reject) => {
       const poll = async () => {
         await readEvents()
@@ -697,7 +711,9 @@ async function child() {
     const hidden = await tickerSample()
     if (!hidden) throw new Error("ticker disappeared while hidden")
     check(
-      hidden.count - beforeHide.count <= 1,
+      // An unthrottled 25 ms ticker adds about 12 ticks in this window; a throttled one adds one or two, depending on
+      // where the browser's one-second timer batch lands against the sample.
+      hidden.count - beforeHide.count <= 3,
       `hidden ticker was not throttled: ${beforeHide.count} -> ${hidden.count}`,
     )
     check(await execute("view:hidden-visibility", tickerContents, "document.hidden"), "detached MCP Dock view still reports visible document")
@@ -950,7 +966,9 @@ async function child() {
     check(crashedContents && unaffectedContents && crashedContents !== unaffectedContents, "U27 MCP Dock views missing")
     await execute("view:crash-storage-set", crashedContents, "localStorage.setItem('recovery', 'present')")
     const u27CrashStart = await eventCount()
-    crashedContents.forcefullyCrashRenderer()
+    // forcefullyCrashRenderer can leave the Linux/Xvfb renderer hung instead of gone; kill its OS process directly.
+    if (process.platform === "linux") process.kill(crashedContents.getOSProcessId(), "SIGKILL")
+    else crashedContents.forcefullyCrashRenderer()
     const crash = await waitEvent(
       u27CrashStart,
       (event) =>
@@ -1224,6 +1242,8 @@ async function restartChild(
   await app.whenReady()
   try {
     registerIpcHandlers({
+      // Registration only subscribes to the live loop; no App Dock case starts a meeting.
+      liveLoop: { onRunState: () => () => {}, onLevels: () => () => {}, settings: { bind() {} } } as never,
       killSidecar() {},
       relaunch() {},
       awaitInitialization: async () => ({ serverUrl: site }),

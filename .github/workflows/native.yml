@@ -137,3 +137,65 @@ jobs:
           APP_DOCK_RUNTIME_INTEGRATION: "1"
           APP_DOCK_RUNTIME_TEST_TMP: ${{ runner.temp }}/orchestra
         run: bun test --timeout 1200000 src/main/app-dock-runtime.test.ts
+
+  # The MCP Dock security, RPC and tools harnesses: each bundles and launches a real Electron against local fixtures
+  # (a local https server, no internet, no model) and writes its artifact JSON under APP_DOCK_ARTIFACT_ROOT. A failure
+  # sets a non-zero exit code. The live and YouTube harnesses need a model and the internet, so they stay manual.
+  app-dock:
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: apps/desktop
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Bun
+        uses: ./.github/actions/setup-bun
+
+      # Electron 42 ships its own installer rather than a postinstall step; predev runs the same script.
+      - name: Electron binary
+        run: bun run install-electron
+
+      # Electron runs under a virtual X display; the harnesses start it with the same xvfb-run wrapper as the native suites.
+      - name: Linux GUI display capability
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb
+
+      # Ubuntu 24.04 restricts unprivileged user namespaces through AppArmor, so Electron's Chromium sandbox
+      # cannot start and the harnesses fail before any MCP Dock code runs. Allowing user namespaces keeps the sandbox on.
+      - name: Chromium sandbox user namespaces
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+      - name: Artifact root
+        run: echo "APP_DOCK_ARTIFACT_ROOT=$RUNNER_TEMP/app-dock" >> "$GITHUB_ENV"
+
+      - name: Security harness
+        timeout-minutes: 10
+        env:
+          ELECTRON_ENABLE_LOGGING: "1"
+        run: xvfb-run -a bun run test:app-dock:e2e
+
+      - name: RPC harness
+        if: ${{ !cancelled() }}
+        timeout-minutes: 10
+        env:
+          ELECTRON_ENABLE_LOGGING: "1"
+        run: xvfb-run -a bun run test:app-dock:rpc
+
+      - name: Tools harness
+        if: ${{ !cancelled() }}
+        timeout-minutes: 10
+        env:
+          ELECTRON_ENABLE_LOGGING: "1"
+        run: xvfb-run -a bun run test:app-dock:tools
+
+      - name: Preserve MCP Dock artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: app-dock-artifacts-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/app-dock
+          if-no-files-found: ignore
+          retention-days: 7

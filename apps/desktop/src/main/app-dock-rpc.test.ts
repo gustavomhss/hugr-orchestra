@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process"
 import { execFileSync } from "node:child_process"
-import { mkdir, mkdtemp, rm, access, readFile, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, rm, access, readFile, writeFile, rename } from "node:fs/promises"
 import { createServer } from "node:https"
 import type { IncomingMessage, ServerResponse } from "node:http"
 import type { AddressInfo } from "node:net"
@@ -13,8 +13,15 @@ import { requireRPCProof } from "./app-dock-rpc-proof"
 type Case = { id: string; status: "pass"; detail: string }
 const required = ["R01", "R02", "R03", "R04", "R05", "R06", "R07", "R08", "R09", "R10", "R11", "R12", "R13", "M01"]
 const root = resolve(import.meta.dir, "../..")
-const artifact = join(process.env.APP_DOCK_ARTIFACT_ROOT ?? root, "artifacts/app-dock-rpc/s1.json")
+const artifactRoot = process.env.APP_DOCK_ARTIFACT_ROOT ?? root
+const artifact = join(artifactRoot, "artifacts/app-dock-rpc/s1.json")
 const cases: Case[] = []
+
+// The parent reads this file as soon as the child exits; a rename keeps it from ever seeing a partial write.
+const writeReport = async (report: unknown) => {
+  await writeFile(`${artifact}.tmp`, JSON.stringify(report, null, 2))
+  await rename(`${artifact}.tmp`, artifact)
+}
 
 const check = (condition: unknown, message: string) => {
   if (!condition) throw new Error(message)
@@ -192,12 +199,13 @@ async function child() {
     check(ignored === false, "non-dock message should be ignored")
     pass("M01", "non-dock message ignored")
 
+    // Electron quits when the last window is destroyed, which can end the process before an async write finishes.
+    await writeReport({ version: 1, electronVersion: process.versions.electron, cases })
     if (!win.isDestroyed()) win.destroy()
-    await writeFile(artifact, JSON.stringify({ version: 1, electronVersion: process.versions.electron, cases }, null, 2))
   } catch (error) {
     console.error(JSON.stringify({ phase: "app-dock-rpc-child-failure", error: String(error) }))
     await mkdir(dirname(artifact), { recursive: true })
-    await writeFile(artifact, JSON.stringify({ version: 1, electronVersion: process.versions.electron, cases, error: String(error) }, null, 2))
+    await writeReport({ version: 1, electronVersion: process.versions.electron, cases, error: String(error) })
     throw error
   } finally {
     resetAppDockRPC()
@@ -221,10 +229,10 @@ async function parent() {
     check(result.success && result.outputs?.[0], "bundle failed")
     const entry = join(dirname(result.outputs![0].path), "app-dock-rpc.test.cjs")
     await access(entry)
-    const electronModule = createRequire(join(process.cwd(), "package.json")).resolve("electron")
-    const electron = join(dirname(electronModule), "dist/Electron.app/Contents/MacOS/Electron")
+    const electronDir = dirname(createRequire(join(process.cwd(), "package.json")).resolve("electron"))
+    const electron = join(electronDir, "dist", (await readFile(join(electronDir, "path.txt"), "utf8")).trim())
     await access(electron)
-    const env = { ...process.env, APP_DOCK_ARTIFACT_ROOT: root, ELECTRON_DISABLE_SECURITY_WARNINGS: "true" }
+    const env = { ...process.env, APP_DOCK_ARTIFACT_ROOT: artifactRoot, ELECTRON_DISABLE_SECURITY_WARNINGS: "true" }
     await mkdir(dirname(artifact), { recursive: true })
     await rm(artifact, { force: true })
     const child = spawn(electron, [entry, "--app-dock-rpc-child"], { stdio: ["ignore", "pipe", "pipe"], env })

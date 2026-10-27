@@ -52,7 +52,7 @@ bun run test:app-dock:tools
 bun run test:app-dock:e2e
 ```
 
-The current desktop Electron harness launchers use the macOS executable path. Desktop typecheck excludes `src/**/*.test.ts`; running the named executable harness is a separate requirement. These commands establish existing browser/RPC behavior in their supported environment, not AT-SPI coverage.
+The native workflow's `app-dock` job (`.github/workflows/native.yml`) runs these three harnesses on Linux under `xvfb-run` with `APP_DOCK_ARTIFACT_ROOT` set to the runner temp directory, and uploads the artifact JSONs when a run fails. The harnesses find the Electron binary through the package's `path.txt`, so the same commands work on macOS and Linux. All three pass on ubuntu-latest, and the job stays `workflow_dispatch`/`epic` only, like the other native jobs. On Linux the security harness kills the crash target's renderer process directly, because `forcefullyCrashRenderer` leaves the Xvfb renderer hung instead of gone. `test:app-dock:live` and `test:app-dock:youtube` need a model and the internet and stay manual. Desktop typecheck excludes `src/**/*.test.ts`; running the named executable harness is a separate requirement. These commands establish existing browser/RPC behavior in their supported environment, not AT-SPI coverage.
 
 Existing commands, cwd `packages/orchestra`:
 

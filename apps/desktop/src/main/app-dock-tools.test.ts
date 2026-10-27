@@ -11,7 +11,8 @@ import { buildSnapshotScript, buildClickScript, buildTypeScript } from "./app-do
 type Case = { id: string; status: "pass"; detail: string }
 const required = ["T01", "T02", "T03", "T04", "T05", "T06", "T07", "T08"]
 const root = resolve(import.meta.dir, "../..")
-const artifact = join(process.env.APP_DOCK_ARTIFACT_ROOT ?? root, "artifacts/app-dock-tools/s1.json")
+const artifactRoot = process.env.APP_DOCK_ARTIFACT_ROOT ?? root
+const artifact = join(artifactRoot, "artifacts/app-dock-tools/s1.json")
 const cases: Case[] = []
 
 const check = (condition: unknown, message: string) => {
@@ -125,8 +126,8 @@ async function child() {
     const bio = await win.webContents.executeJavaScript("document.getElementById('bio').value")
     check(bio === "author bio", "textarea value not replaced")
 
-    const editableResult = await win.webContents.executeJavaScript(buildTypeScript(byRefName(again, "div"), "new note"))
-    check(editableResult && editableResult.ok === true, "contenteditable type reported failure")
+    const editableResult = await win.webContents.executeJavaScript(buildTypeScript(byRefName(again, "div", "textbox"), "new note"))
+    check(editableResult && editableResult.ok === true, `contenteditable type reported failure: ${JSON.stringify(editableResult)}`)
     const edited = await win.webContents.executeJavaScript("document.getElementById('editable').textContent")
     check(edited === "new note", "contenteditable text not set")
     pass("T06", "type handles textarea and contenteditable targets")
@@ -170,8 +171,9 @@ function isSnapshotWith(snapshot: unknown): boolean {
   )
 }
 
-function byRefName(snapshot: { items: Array<{ ref: number; tag: string }> }, tag: string): number {
-  const found = snapshot.items.find((item) => item.tag === tag)
+// The inferred #app wrapper is a div too, so a div target also has to name its role.
+function byRefName(snapshot: { items: Array<{ ref: number; tag: string; role?: string }> }, tag: string, role?: string): number {
+  const found = snapshot.items.find((item) => item.tag === tag && (role === undefined || item.role === role))
   check(found !== undefined, `no ${tag} in snapshot`)
   return found!.ref
 }
@@ -186,17 +188,23 @@ async function parent() {
       target: "node",
       format: "cjs",
       external: ["electron"],
+      // Bun leaves import.meta.env in a CJS bundle, which Electron cannot load; electron-vite defines these for the app.
+      define: { "import.meta.env.ORCHESTRA_CHANNEL": '"dev"', "import.meta.env.ORCHESTRA_MAC_SIGNED": '"false"' },
       write: true,
     })
     check(result.success && result.outputs[0], "bundle failed")
     const entry = join(outdirOf(result), "app-dock-tools.test.cjs")
     await access(entry)
-    const electronModule = createRequire(join(process.cwd(), "package.json")).resolve("electron")
-    const electron = join(dirname(electronModule), "dist/Electron.app/Contents/MacOS/Electron")
+    // A dependency still reads import.meta?.env, which define cannot reach and a CJS bundle cannot contain.
+    await writeFile(entry, (await readFile(entry, "utf8")).replaceAll(/import\.meta\??\.env/g, "({})"))
+    const electronDir = dirname(createRequire(join(process.cwd(), "package.json")).resolve("electron"))
+    const electron = join(electronDir, "dist", (await readFile(join(electronDir, "path.txt"), "utf8")).trim())
     await access(electron)
-    const env = { ...process.env, APP_DOCK_ARTIFACT_ROOT: root, ELECTRON_DISABLE_SECURITY_WARNINGS: "true" }
+    const env = { ...process.env, APP_DOCK_ARTIFACT_ROOT: artifactRoot, ELECTRON_DISABLE_SECURITY_WARNINGS: "true" }
     await rm(artifact, { force: true })
     const child = spawn(electron, [entry, "--app-dock-tools-child"], { stdio: ["ignore", "pipe", "pipe"], env })
+    child.stdout.pipe(process.stdout)
+    child.stderr.pipe(process.stderr)
     const exitResult = await new Promise<{ code: number | null }>((resolveProcess, reject) => {
       child.once("exit", (code) => resolveProcess({ code }))
       child.once("error", reject)

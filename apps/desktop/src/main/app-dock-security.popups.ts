@@ -85,12 +85,15 @@ export async function backgroundPopups(harness: PopupHarness) {
   check(attachedContents(ipcWin) === undefined, "U32 hide left a view attached")
   await u32Refused(u32FrontContents!, u32Front, `${harness.base}/popup-target?u32=hidden`)
   check(attachedContents(ipcWin) === undefined, "U32 popup attached a view while the Dock was hidden")
-  check(
-    !(await events(harness))
-      .slice(u32Start)
-      .some((event) => event.type === "tab-opened" || event.type === "tab-opened-background"),
-    "U32 a refused popup announced a tab",
-  )
+  const announced = (await events(harness))
+    .slice(u32Start)
+    // The two explicit opens above announce themselves too, and on slower hosts after u32Start; only a popup target counts.
+    .filter(
+      (event) =>
+        (event.type === "tab-opened" || event.type === "tab-opened-background") &&
+        String(event.payload.url).includes("/popup-target"),
+    )
+  check(announced.length === 0, `U32 a refused popup announced a tab: ${JSON.stringify(announced)}`)
 
   await invoke("app-dock-select", [identity(u32Front), harness.bounds])
   check(attached(ipcWin, u32FrontContents), "U32 selecting the front tab did not attach it")

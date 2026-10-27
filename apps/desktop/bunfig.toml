@@ -4,6 +4,8 @@ preload = ["../../script/test-guard.ts", "../../script/test-omni-control.ts"]
 pathIgnorePatterns = [
   # Standalone MCP Dock harnesses: they register no bun tests, and importing one bundles and launches a real
   # Electron and sets process.exitCode. They run with `bun run <file>` (package.json test:app-dock:*).
+  # The security, rpc and tools harnesses run in CI: the native workflow's app-dock job (.github/workflows/native.yml)
+  # runs them under xvfb-run. live and youtube need a model and the internet, so they stay manual.
   "src/main/app-dock-live.test.ts",
   "src/main/app-dock-rpc.test.ts",
   "src/main/app-dock-security.test.ts",
