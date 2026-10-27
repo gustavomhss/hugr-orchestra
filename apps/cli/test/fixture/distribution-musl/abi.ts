@@ -60,7 +60,8 @@ console.log(JSON.stringify({ libc, files }))`
       expect(sha256(await readFile(control.installed))).toBe(sha256(foreign))
       expect(() => requireElfLibc(control.installed, "musl")).toThrow("ELF_LIBC_MISMATCH")
       if (control.kind === "addon") {
-        const refused = await command([executable, "--version"], box, 15_000)
+        // --version skips the preflight (omni-preflight.ts); debug symbols may spawn, so it loads the addon first.
+        const refused = await command([executable, "debug", "symbols", join(box.cwd, "sample.ts")], box, 15_000)
         expect(refused.code).not.toBe(0)
         expect(refused.stderr).toContain("hugr-omni CLI preflight failed:")
       }
