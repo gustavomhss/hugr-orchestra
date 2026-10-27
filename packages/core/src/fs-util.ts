@@ -37,6 +37,8 @@ export namespace FSUtil {
     readonly readJson: (path: string) => Effect.Effect<unknown, Error>
     readonly writeJson: (path: string, data: unknown, mode?: number) => Effect.Effect<void, Error>
     readonly ensureDir: (path: string) => Effect.Effect<void, Error>
+    /** Writes through a temp file in the same directory and renames it over `path`, so readers never see a partial file. */
+    readonly writeAtomic: (path: string, content: string, mode?: number) => Effect.Effect<void, Error>
     readonly writeWithDirs: (path: string, content: string | Uint8Array, mode?: number) => Effect.Effect<void, Error>
     /** Write to a path already resolved to its real location, refusing any link found there at write time. */
     readonly writePhysical: (
@@ -114,10 +116,19 @@ export namespace FSUtil {
         })
       })
 
+      const writeAtomic = Effect.fn("FileSystem.writeAtomic")(function* (path: string, content: string, mode?: number) {
+        // Write to the real file when the path is a symlink, so the link survives the rename.
+        const target = yield* fs.realPath(path).pipe(Effect.catchReason("PlatformError", "NotFound", () => Effect.succeed(path)))
+        const temp = `${target}.${process.pid}.${Date.now()}.tmp`
+        yield* fs.writeFileString(temp, content).pipe(
+          Effect.andThen(mode ? fs.chmod(temp, mode) : Effect.void),
+          Effect.andThen(fs.rename(temp, target)),
+          Effect.tapError(() => fs.remove(temp, { force: true }).pipe(Effect.ignore)),
+        )
+      })
+
       const writeJson = Effect.fn("FileSystem.writeJson")(function* (path: string, data: unknown, mode?: number) {
-        const content = JSON.stringify(data, null, 2)
-        yield* fs.writeFileString(path, content)
-        if (mode) yield* fs.chmod(path, mode)
+        yield* writeAtomic(path, JSON.stringify(data, null, 2), mode)
       })
 
       const ensureDir = Effect.fn("FileSystem.ensureDir")(function* (path: string) {
@@ -232,6 +243,7 @@ export namespace FSUtil {
         resolve,
         readJson,
         writeJson,
+        writeAtomic,
         ensureDir,
         writeWithDirs,
         writePhysical,

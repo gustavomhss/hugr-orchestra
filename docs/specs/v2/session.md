@@ -203,6 +203,10 @@ resolve one path relative to the Location or a named project reference
 
 V2 `bash` uses the normal permission semantics: configured agent rules plus saved project approvals, with `ask` as the default when no rule matches. Bash is not sandboxed: the spawned shell runs with the host user's filesystem, process, and network authority. Structured external `workdir` resolution remains an enforced `external_directory` authority check. Best-effort scans of absolute command arguments produce advisory warnings only; they are not sandbox boundaries and do not request or enforce `external_directory` approval.
 
+V2 `grep` and `glob` resolve their `path` through `LocationMutation` like `read`: a relative path must stay inside the Location, and an absolute path outside it requires `external_directory` approval before the `grep`/`glob` permission is asked.
+
+An agent that sets no `steps` gets the default ceiling `DEFAULT_MAX_STEPS` (200 provider turns per user input, `packages/core/src/session/runner/max-steps.ts`). On the last step tools are disabled and the agent answers with text only; an explicit `steps` value always wins.
+
 The first V2 `apply_patch` leaf supports add, update, and delete hunks. It parses every hunk, resolves every mutation target, approves external directories, approves one edit batch, and preflights approved update/delete targets before committing operations sequentially. A later commit-time failure leaves earlier operations applied and returns an explicit partial-application report. Moves and atomic rollback remain separate follow-ups rather than implied behavior.
 
 ### Current Runner Follow-Ups

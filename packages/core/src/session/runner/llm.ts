@@ -53,7 +53,7 @@ import { ReadToolFileSystem } from "../../tool/read-filesystem"
 import { SessionDirectCommands } from "./direct-commands"
 import { hostedCall } from "./hosted-call"
 import { TurnTransitionError, continueAfterCompaction, continueAfterOverflowCompaction } from "./turn-transition"
-import { MAX_STEPS_PROMPT } from "./max-steps"
+import { DEFAULT_MAX_STEPS, MAX_STEPS_PROMPT } from "./max-steps"
 import { Snapshot } from "../../snapshot"
 import { makeLocationNode } from "../../effect/app-node"
 import { llmClient } from "../../effect/app-node-platform"
@@ -237,7 +237,7 @@ const layer = Layer.effect(
       if (workflow?.view.pending) return { needsContinuation: yield* RelayWorkflowSession.reconcile(workflow).pipe(
         Effect.provide(workflowContext), Effect.map((next) => next === true), Effect.orDie), step: currentStep }
       if (workflow?.view.state === "complete") return { needsContinuation: false, step: currentStep }
-      const isLastStep = agent.info?.steps !== undefined && currentStep >= agent.info.steps
+      const isLastStep = currentStep >= (agent.info?.steps ?? DEFAULT_MAX_STEPS)
       if (!isLastStep) yield* mcp.ready()
       const toolMaterialization = isLastStep ? undefined : yield* tools.materialize(effectiveRules)
       const promptCacheKey = /^ses_[0-9a-f]{64}$/.test(session.id) ? session.id.slice(4) : session.id

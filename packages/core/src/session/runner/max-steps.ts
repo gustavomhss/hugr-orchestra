@@ -1,3 +1,6 @@
+/** Provider turns per user input for an agent that sets no `steps`, so an unconfigured seat cannot loop on tools forever. */
+export const DEFAULT_MAX_STEPS = 200
+
 export const MAX_STEPS_PROMPT = `CRITICAL - MAXIMUM STEPS REACHED
 
 The maximum number of steps allowed for this task has been reached. Tools are disabled until next user input. Respond with text only.
