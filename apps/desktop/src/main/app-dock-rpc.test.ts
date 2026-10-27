@@ -199,8 +199,9 @@ async function child() {
     check(ignored === false, "non-dock message should be ignored")
     pass("M01", "non-dock message ignored")
 
-    if (!win.isDestroyed()) win.destroy()
+    // Electron quits when the last window is destroyed, which can end the process before an async write finishes.
     await writeReport({ version: 1, electronVersion: process.versions.electron, cases })
+    if (!win.isDestroyed()) win.destroy()
   } catch (error) {
     console.error(JSON.stringify({ phase: "app-dock-rpc-child-failure", error: String(error) }))
     await mkdir(dirname(artifact), { recursive: true })
