@@ -79,14 +79,15 @@ for (const exitCode of [0, 17]) {
     const chunks: Buffer[] = []
     const result = yield* command(box, run, true, { ...box.env, BUNDLE_WAIT_LOG: "1", BUNDLE_CHILD_EXIT: String(exitCode) }, box.cwd, (chunk) => {
       chunks.push(Buffer.from(chunk))
-      if (!Buffer.concat(chunks).toString().includes("tee:")) return
-      // Real tee reports its directory-open error before the fake child can finish.
+      // Real tee reports its directory-open error before the fake child can finish. GNU tee prefixes it with
+      // "tee:"; uutils tee (Ubuntu 26.04) does not, so match the path and error both print.
+      if (!Buffer.concat(chunks).toString().includes("run.log: Is a directory")) return
       if (!statSync(box.log, { throwIfNoEntry: false })?.isDirectory()) return
       rmSync(box.log, { recursive: true, force: true })
       writeFileSync(box.log, "")
     })
     requireExit(result, exitCode || 1, "BUNDLE_TEE_FAILURE_LOST")
-    check(result.stderr.toString().includes("tee:") && result.stderr.toString().includes("run.log"), "BUNDLE_TEE_FAILURE_UNOBSERVED")
+    check(result.stderr.toString().includes("run.log: Is a directory"), "BUNDLE_TEE_FAILURE_UNOBSERVED")
     check(yield* Effect.promise(() => Bun.file(box.capture).exists()), "BUNDLE_TEE_CHILD_NOT_COMPLETED")
     expect(yield* Effect.promise(() => Bun.file(box.log).text())).toMatch(/^omni control nonce: [0-9a-f]{32}\n$/)
   }))
