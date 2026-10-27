@@ -155,6 +155,10 @@ jobs:
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
 
+      # Electron 42 ships its own installer rather than a postinstall step; predev runs the same script.
+      - name: Electron binary
+        run: bun run install-electron
+
       # Electron runs under a virtual X display; the harnesses start it with the same xvfb-run wrapper as the native suites.
       - name: Linux GUI display capability
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb
