@@ -23,7 +23,8 @@ scheduler ou dados de exemplo; MVP honesto, sem controle simulado.
 | C05 Providers   | Adiado     | Painel de Settings existente continua sendo o destino                                                                                         | Página dedicada só duplicaria o painel                                                                    |
 | C06 Shortcuts   | Adiado     | Painel de Settings existente continua sendo o destino                                                                                         | Overrides por perfil                                                                                      |
 
-Chapters adiados mantêm o marcador "rework pendente" e o diálogo atual.
+Chapters adiados mantêm o marcador "rework pendente" e o diálogo atual. (Todos os chapters da
+sidebar já têm página registrada, então o diálogo "rework pendente" foi removido da sidebar.)
 
 ## Costura comum (congelada antes da onda 1)
 
@@ -33,9 +34,16 @@ Chapters adiados mantêm o marcador "rework pendente" e o diálogo atual.
   A página recebe `{ server, directory }` do perfil selecionado e roda dentro de
   `ServerSDKProvider`, `ServerSyncProvider` e `SDKProvider` desse perfil; sem perfil,
   a rota mostra o estado vazio. Troca de perfil remonta a página.
-- Sidebar: item com página registrada navega para a rota, perde o marcador pendente
-  e recebe `aria-current`; ao abrir, carrega o perfil atual para a seleção da Home.
-- Breadcrumb do titlebar usa o rótulo do item de navegação (`orchestra/navigation.ts`).
+- Sidebar: item com página registrada navega para a rota e recebe `aria-current`; ao abrir,
+  carrega o perfil atual para a seleção da Home.
+- Sidebar em grupos (`orchestra/navigation.ts`): cinco itens principais (Home, Chat, Board,
+  Agents, Actions), um grupo recolhível "Advanced" com o resto (Flight Engineer incluído) e
+  Settings por último. O grupo lembra se está aberto (`orchestra-navigation-advanced.v1`) e
+  abre sozinho quando a rota atual está dentro dele. Providers e Shortcuts saíram da sidebar:
+  Settings tem as duas seções, e as rotas `/orchestra/providers` e `/orchestra/shortcuts`
+  continuam abrindo a página.
+- Breadcrumb do titlebar usa o rótulo do item de navegação (`orchestra/navigation.ts`), em
+  Title Case; rótulos sem item usam as chaves `orchestra.shell.crumb.*`.
 
 ## Aceite comum de cada chapter
 

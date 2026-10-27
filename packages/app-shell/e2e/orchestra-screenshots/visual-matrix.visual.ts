@@ -2,7 +2,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { base64Encode } from "@orchestra/core/util/encode"
 import { expect, test, type Page } from "@playwright/test"
-import { setupCompactNavigation } from "../orchestra/compact-navigation.fixture"
+import { expandAdvanced, setupCompactNavigation } from "../orchestra/compact-navigation.fixture"
 import { evidenceFixture, evidencePage, runCard } from "../orchestra/evidence.fixture"
 import {
   build,
@@ -92,6 +92,7 @@ async function captureHome(page: Page, shot: Shot) {
     }
     await resize(page, viewport, viewport.rail === "hidden" ? "hidden" : "56px")
     if (viewport.rail === "hidden") await openRail(page)
+    await expandAdvanced(page)
     await sidebar.getByRole("button", { name: "MCP", exact: true }).hover()
     await expect(tooltip).toHaveCount(1)
     await expect(tooltip).toHaveAccessibleName("MCP")
@@ -179,10 +180,9 @@ async function captureGovernance(page: Page, shot: Shot) {
   for (const viewport of shot.viewports) {
     await resize(page, viewport, viewport.rail)
     if (viewport.rail === "hidden") await openRail(page)
-    await page
-      .locator('[data-component="orchestra-sidebar"]')
-      .getByRole("button", { name: "Maestro", exact: true })
-      .click()
+    const sidebar = page.locator('[data-component="orchestra-sidebar"]')
+    await expandAdvanced(page)
+    await sidebar.getByRole("button", { name: "Maestro", exact: true }).click()
     await expect(dialog).toBeVisible()
     await park(page)
     await expect(page.getByRole("tooltip")).toHaveCount(0)

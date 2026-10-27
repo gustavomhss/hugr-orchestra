@@ -26,7 +26,7 @@ For the `live` seat itself and for anyone driving it. Ownership and invariants: 
 - Stop ends capture and hotkeys at once. The card arrives when the model finishes: summary, decisions, commitments, questions, suggestions and new people to confirm.
 - A failed card shows its reason (`card_error`). It is not retried.
 - On the card the user confirms, disputes or dismisses items, marks commitments accepted, done or dropped, and confirms or merges proposed people.
-- "Send to Maestro" hands chosen items over as one queued message with ids, never the transcript. Maestro decides what to do.
+- "Send to Maestro" hands chosen items over as one queued message with ids, never the transcript. Maestro decides what to do. If the hand-off call fails, the detail shows "Could not send these items to Maestro. Try again." (not a load error); the items stay open and can be handed over again.
 - The follow-up draft is copy only. The seat sends nothing outside Orchestra.
 
 ## Deleting

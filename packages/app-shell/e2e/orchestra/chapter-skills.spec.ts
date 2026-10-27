@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Route } from "@playwright/test"
+import { expandAdvanced } from "./compact-navigation.fixture"
 
 const serverA = "http://127.0.0.1:4096"
 const serverB = "http://127.0.0.1:4097"
@@ -341,6 +342,7 @@ test(`profile ownership, same directory and a late response from A`, async ({ pa
 
 async function openSkills(page: Page) {
   await page.goto("/", { waitUntil: "domcontentloaded" })
+  await expandAdvanced(page)
   await page.locator(".orchestra-sidebar").getByRole("button", { name: "Skills", exact: true }).click()
   await expect(page).toHaveURL(/\/orchestra\/skills$/)
 }

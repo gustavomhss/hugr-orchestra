@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Route } from "@playwright/test"
+import { expandAdvanced } from "./compact-navigation.fixture"
 
 const serverA = "http://127.0.0.1:4096"
 const serverB = "http://127.0.0.1:4097"
@@ -311,6 +312,7 @@ test.fixme("Escape closes the dialog while a navigation tooltip still shows behi
   const mock = await setup(page)
   await openChapter(page)
   // The WIP row's tooltip is a Kobalte layer that also listens for Escape on the document.
+  await expandAdvanced(page)
   await page
     .locator('[data-component="orchestra-sidebar"]')
     .getByRole("button", { name: "Workspaces", exact: true })
@@ -447,6 +449,7 @@ async function openHome(page: Page) {
 
 async function openChapter(page: Page, load = true) {
   if (load) await openHome(page)
+  await expandAdvanced(page)
   await page
     .locator('[data-component="orchestra-sidebar"]')
     .getByRole("button", { name: "Workspaces", exact: true })

@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test"
 import { directory, setupTimeline } from "../performance/timeline-stability/fixture"
 import { mockOrchestraServer } from "../utils/mock-server"
+import { expandAdvanced } from "./compact-navigation.fixture"
 
 test.use({ viewport: { width: 1440, height: 900 }, serviceWorkers: "block", actionTimeout: 10_000 })
 test.setTimeout(120_000)
@@ -10,6 +11,7 @@ const chapter = (page: Page) => page.locator('[data-mx-page="orchestra-plugins"]
 const card = (page: Page, name: string) => chapter(page).locator("article.mx-card").filter({ hasText: name })
 
 async function openPlugins(page: Page) {
+  await expandAdvanced(page)
   await sidebar(page).getByRole("button", { name: "Plugins", exact: true }).click()
   await expect(page).toHaveURL(/\/orchestra\/plugins$/)
   await expect(chapter(page)).toBeVisible()

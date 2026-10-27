@@ -1,6 +1,6 @@
 import { DropdownMenu } from "@kobalte/core/dropdown-menu"
 import { useDialog } from "@orchestra/ui/context/dialog"
-import { Dialog, DialogBody, DialogHeader, DialogTitleGroup } from "@orchestra/ui/v2/dialog-v2"
+import { Dialog, DialogHeader, DialogTitleGroup } from "@orchestra/ui/v2/dialog-v2"
 import { Icon } from "@orchestra/ui/v2/icon"
 import { ProjectAvatar } from "@orchestra/ui/v2/project-avatar-v2"
 import { useNavigate } from "@solidjs/router"
@@ -19,7 +19,8 @@ import { tabKey, type SessionTab, type Tab, useTabs } from "@/context/tabs"
 import { HugrBrand } from "@/orchestra/brand"
 import { chapterPages } from "@/orchestra/chapter-route"
 import { FlightNavChip } from "@/orchestra/chapters/flight-engineer/entry"
-import { navigation, showWip } from "@/orchestra/navigation"
+import { createAdvancedNavigation } from "@/orchestra/compact-navigation"
+import { advancedNavigation, navigation, primaryNavigation, settingsNavigation, showWip } from "@/orchestra/navigation"
 import { OrchestraNavigationToggle } from "@/orchestra/navigation-toggle"
 import { OrchestraNavigationTooltip } from "@/orchestra/navigation-tooltip"
 import { useAwaitingRuns } from "@/orchestra/relay/source"
@@ -69,8 +70,10 @@ const icons = {
   dock: '<path d="M2.6 3.4h10.8v7.4H2.6zM2.6 5.8h10.8M5 12.6h6"/>',
   search: '<circle cx="7.1" cy="7.1" r="4.2"/><path d="m10.3 10.3 2.6 2.6"/>',
   workspaces: '<path d="M2.6 4.2h4.2l1.3 1.6h5.3v6.4H2.6z"/>',
-  providers: '<path d="M3 6a5 5 0 0 1 10 0M2 6h12v6H2V6ZM6 9h4"/>',
-  shortcuts: '<rect x="1" y="3" width="14" height="10" rx="2"/><path d="M4 6h.1M7 6h.1M10 6h.1M12 6h.1M4 9h.1M7 9h5"/>',
+  // The Advanced group: three dots, and a chevron that points the way the group will move.
+  advanced: '<circle cx="3.2" cy="8" r="1.3"/><circle cx="8" cy="8" r="1.3"/><circle cx="12.8" cy="8" r="1.3"/>',
+  chevronDown: '<path d="m4 6 4 4 4-4"/>',
+  chevronUp: '<path d="m4 10 4-4 4 4"/>',
   settings:
     '<circle cx="8" cy="8" r="2.3"/><path d="M8 1.9v1.6M8 12.5v1.6M14.1 8h-1.6M3.5 8H1.9M12.3 3.7l-1.1 1.1M4.8 11.2l-1.1 1.1M12.3 12.3l-1.1-1.1M4.8 4.8 3.7 3.7"/>',
 }
@@ -92,6 +95,7 @@ export function OrchestraSidebar(props: {
   const pickDirectory = useDirectoryPicker()
   const platform = usePlatform()
   const home = createHomeController()
+  const advanced = createAdvancedNavigation(platform)
   const [state, setState] = createStore({ profileOpen: false })
   let menuRef: HTMLDivElement | undefined
   const dismiss = createMenuDismissController(() => menuRef)
@@ -265,6 +269,7 @@ export function OrchestraSidebar(props: {
     )
     if (requests.disposed || requests.profile !== current || layout.route() !== route) return
     if ("cause" in result) {
+      if (global.servers.health[ServerConnection.key(conn)]?.healthy === false) return showServerUnavailable()
       showToast({
         title: language.t("common.requestFailed"),
         description: errorMessage(result.cause, language.t("common.requestFailed")),
@@ -323,6 +328,16 @@ export function OrchestraSidebar(props: {
     return false
   }
 
+  // A route inside the group keeps it open, whatever the saved preference says.
+  const advancedActive = () => advancedNavigation.some((item) => current(item.id))
+
+  function showServerUnavailable() {
+    showToast({
+      title: language.t("orchestra.shell.chat.serverDown.title"),
+      description: language.t("orchestra.shell.chat.serverDown.description"),
+    })
+  }
+
   function openChat() {
     const route = layout.route()
     if (route.type === "session" || route.type === "draft") return
@@ -335,6 +350,7 @@ export function OrchestraSidebar(props: {
       navigate("/orchestra/providers")
       return
     }
+    if (global.servers.health[ServerConnection.key(conn)]?.healthy === false) return showServerUnavailable()
     const ctx = global.ensureServerCtx(conn)
     const project =
       profile().project ??
@@ -345,24 +361,6 @@ export function OrchestraSidebar(props: {
       return
     }
     chooseProject(conn, true)
-  }
-
-  function openPending(title: string, chapter: string) {
-    void dialog.show(() => (
-      <Dialog fit class="orchestra-pending-dialog">
-        <DialogHeader>
-          <DialogTitleGroup
-            title={language.t("orchestra.rework.title", { title })}
-            description={language.t("orchestra.rework.body", { title, chapter })}
-          />
-        </DialogHeader>
-        <DialogBody>
-          <p class="orchestra-chapter-label">
-            <bdi>{chapter}</bdi> · {language.t("orchestra.rework.pending")}
-          </p>
-        </DialogBody>
-      </Dialog>
-    ))
   }
 
   function openMaestro() {
@@ -393,6 +391,70 @@ export function OrchestraSidebar(props: {
     })
   }
 
+  const advancedOpen = () => advanced.open() || advancedActive()
+
+  // One navigation row. Expanded, a WIP row's tooltip carries the mark's meaning; the compact rail keeps names.
+  function row(item: (typeof navigation)[number]) {
+    return (
+      <OrchestraNavigationTooltip
+        enabled={props.compact || showWip(item.id)}
+        value={
+          !props.compact && showWip(item.id)
+            ? language.t("orchestra.shell.wip.description")
+            : language.t(item.label)
+        }
+      >
+        {(Trigger) => (
+          <Trigger
+            type="button"
+            class="orchestra-nav-button"
+            aria-label={language.t(item.label)}
+            aria-description={showWip(item.id) ? language.t("orchestra.shell.wip.description") : undefined}
+            disabled={
+              (item.id === "search" && !command.options.some((option) => option.id === "command.palette")) ||
+              (item.id === "chat" && (!layout.ready() || !tabs.ready()))
+            }
+            aria-current={current(item.id) ? "page" : undefined}
+            onClick={() => {
+              props.onNavigate?.()
+              if (item.id === "home") return navigate("/")
+              if (item.id === "chat") return openChat()
+              if (item.id === "maestro") return openMaestro()
+              if (item.id === "search") return command.show()
+              if (chapterPages[item.id]) return openChapter(item.id)
+            }}
+          >
+            <svg class="orchestra-nav-icon" viewBox="0 0 16 16" aria-hidden="true" innerHTML={icons[item.id]} />
+            <span class="orchestra-nav-label">{language.t(item.label)}</span>
+            <Show when={item.id === "search"}>
+              <kbd>{command.keybind("command.palette")}</kbd>
+            </Show>
+            <Show when={item.id === "flight-engineer"}>
+              <FlightNavChip />
+            </Show>
+            <Show when={item.id === "workflows" && awaiting() > 0}>
+              <span
+                class="orchestra-attention-chip"
+                data-slot="orchestra-nav-attention"
+                title={language.t("orchestra.nav.workflows.awaiting", { count: awaiting() })}
+              >
+                <span aria-hidden="true">{awaiting()}</span>
+                <span class="orchestra-sr-only">
+                  {language.t("orchestra.nav.workflows.awaiting", { count: awaiting() })}
+                </span>
+              </span>
+            </Show>
+            <Show when={showWip(item.id)}>
+              <span class="orchestra-wip-chip" data-slot="orchestra-nav-wip">
+                <span aria-hidden="true">{language.t("orchestra.shell.wip.chip")}</span>
+              </span>
+            </Show>
+          </Trigger>
+        )}
+      </OrchestraNavigationTooltip>
+    )
+  }
+
   return (
     <aside data-component="orchestra-sidebar" class="orchestra-sidebar" aria-label={language.t("home.projects")}>
       <HugrBrand compact={props.compact} />
@@ -404,94 +466,40 @@ export function OrchestraSidebar(props: {
       />
       <div class="orchestra-navigation">
         <nav id="orchestra-navigation" class="orchestra-nav">
-          <For each={navigation}>
-            {(item) => (
-              <>
-                <Show when={item.id === "search"}>
-                  <div class="orchestra-nav-rule" />
-                </Show>
-                {/* Expanded, a WIP row's tooltip carries the mark's meaning; the compact rail keeps names. */}
-                <OrchestraNavigationTooltip
-                  enabled={props.compact || showWip(item.id)}
-                  value={
-                    !props.compact && showWip(item.id)
-                      ? language.t("orchestra.shell.wip.description")
-                      : item.chapter && !chapterPages[item.id]
-                        ? `${language.t(item.label)} · ${language.t("orchestra.rework.pending")}`
-                        : language.t(item.label)
-                  }
-                >
-                  {(Trigger) => (
-                    <Trigger
-                      type="button"
-                      class="orchestra-nav-button"
-                      aria-label={language.t(item.label)}
-                      aria-description={
-                        showWip(item.id)
-                          ? language.t("orchestra.shell.wip.description")
-                          : item.chapter && !chapterPages[item.id]
-                            ? language.t("orchestra.rework.pending")
-                            : undefined
-                      }
-                      disabled={
-                        (item.id === "search" && !command.options.some((option) => option.id === "command.palette")) ||
-                        (item.id === "chat" &&
-                          (!layout.ready() ||
-                            !tabs.ready() ||
-                            global.servers.health[profile().server]?.healthy === false))
-                      }
-                      aria-current={current(item.id) ? "page" : undefined}
-                      onClick={() => {
-                        props.onNavigate?.()
-                        if (item.id === "home") return navigate("/")
-                        if (item.id === "chat") return openChat()
-                        if (item.id === "maestro") return openMaestro()
-                        if (item.id === "search") return command.show()
-                        if (chapterPages[item.id]) return openChapter(item.id)
-                        if (item.chapter) openPending(language.t(item.label), item.chapter)
-                      }}
-                    >
-                      <svg
-                        class="orchestra-nav-icon"
-                        viewBox="0 0 16 16"
-                        aria-hidden="true"
-                        innerHTML={icons[item.id]}
-                      />
-                      <span class="orchestra-nav-label">{language.t(item.label)}</span>
-                      <Show when={item.id === "search"}>
-                        <kbd>{command.keybind("command.palette")}</kbd>
-                      </Show>
-                      <Show when={item.id === "flight-engineer"}>
-                        <FlightNavChip />
-                      </Show>
-                      <Show when={item.id === "workflows" && awaiting() > 0}>
-                        <span
-                          class="orchestra-attention-chip"
-                          data-slot="orchestra-nav-attention"
-                          title={language.t("orchestra.nav.workflows.awaiting", { count: awaiting() })}
-                        >
-                          <span aria-hidden="true">{awaiting()}</span>
-                          <span class="orchestra-sr-only">
-                            {language.t("orchestra.nav.workflows.awaiting", { count: awaiting() })}
-                          </span>
-                        </span>
-                      </Show>
-                      {/* The WIP mark replaces the pending dot; an unbuilt WIP chapter keeps its pending dialog. */}
-                      <Show when={showWip(item.id)}>
-                        <span class="orchestra-wip-chip" data-slot="orchestra-nav-wip">
-                          <span aria-hidden="true">{language.t("orchestra.shell.wip.chip")}</span>
-                        </span>
-                      </Show>
-                      <Show when={!showWip(item.id) && item.chapter && !chapterPages[item.id]}>
-                        <span class="orchestra-pending-dot" aria-hidden="true" />
-                        <span class="orchestra-sr-only">{language.t("orchestra.rework.pending")}</span>
-                      </Show>
-                    </Trigger>
-                  )}
-                </OrchestraNavigationTooltip>
-              </>
+          <For each={primaryNavigation}>{row}</For>
+          <div class="orchestra-nav-rule" />
+          <OrchestraNavigationTooltip enabled={props.compact} value={language.t("orchestra.shell.nav.advanced")}>
+            {(Trigger) => (
+              <Trigger
+                type="button"
+                class="orchestra-nav-button"
+                aria-label={language.t("orchestra.shell.nav.advanced")}
+                aria-expanded={advancedOpen()}
+                aria-controls="orchestra-advanced-navigation"
+                aria-disabled={advancedActive() || undefined}
+                onClick={() => {
+                  // The group cannot close under the active route: its item is the page on screen.
+                  if (!advancedActive()) advanced.toggle()
+                }}
+              >
+                <svg class="orchestra-nav-icon" viewBox="0 0 16 16" aria-hidden="true" innerHTML={icons.advanced} />
+                <span class="orchestra-nav-label">
+                  {language.t("orchestra.shell.nav.advanced")}
+                  <svg
+                    class="orchestra-nav-icon"
+                    viewBox="0 0 16 16"
+                    aria-hidden="true"
+                    innerHTML={advancedOpen() ? icons.chevronUp : icons.chevronDown}
+                  />
+                </span>
+              </Trigger>
             )}
-          </For>
+          </OrchestraNavigationTooltip>
+          <div id="orchestra-advanced-navigation" hidden={!advancedOpen()}>
+            <For each={advancedNavigation}>{row}</For>
+          </div>
+          <div class="orchestra-nav-rule" />
+          <For each={settingsNavigation}>{row}</For>
         </nav>
       </div>
       <div class="orchestra-sidebar-foot">

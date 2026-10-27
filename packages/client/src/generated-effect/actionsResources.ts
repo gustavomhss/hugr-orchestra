@@ -6,21 +6,21 @@ import { mapClientError } from "./client-error"
 
 type RawClient = HttpApiClient.ForApi<typeof ClientApi>
 
-type Endpoint40_0Request = Parameters<RawClient["server.actionsResource"]["actions.resource.list"]>[0]
-type Endpoint40_0Input = {
-  readonly bindingID: Endpoint40_0Request["params"]["bindingID"]
-  readonly location?: Endpoint40_0Request["query"]["location"]
-  readonly revision: Endpoint40_0Request["query"]["revision"]
-  readonly kind: Endpoint40_0Request["query"]["kind"]
-  readonly runID?: Endpoint40_0Request["query"]["runID"]
-  readonly resourceID?: Endpoint40_0Request["query"]["resourceID"]
-  readonly scope?: Endpoint40_0Request["query"]["scope"]
-  readonly ref?: Endpoint40_0Request["query"]["ref"]
-  readonly query?: Endpoint40_0Request["query"]["query"]
-  readonly cursor?: Endpoint40_0Request["query"]["cursor"]
-  readonly limit?: Endpoint40_0Request["query"]["limit"]
+type Endpoint41_0Request = Parameters<RawClient["server.actionsResource"]["actions.resource.list"]>[0]
+type Endpoint41_0Input = {
+  readonly bindingID: Endpoint41_0Request["params"]["bindingID"]
+  readonly location?: Endpoint41_0Request["query"]["location"]
+  readonly revision: Endpoint41_0Request["query"]["revision"]
+  readonly kind: Endpoint41_0Request["query"]["kind"]
+  readonly runID?: Endpoint41_0Request["query"]["runID"]
+  readonly resourceID?: Endpoint41_0Request["query"]["resourceID"]
+  readonly scope?: Endpoint41_0Request["query"]["scope"]
+  readonly ref?: Endpoint41_0Request["query"]["ref"]
+  readonly query?: Endpoint41_0Request["query"]["query"]
+  readonly cursor?: Endpoint41_0Request["query"]["cursor"]
+  readonly limit?: Endpoint41_0Request["query"]["limit"]
 }
-const Endpoint40_0 = (raw: RawClient["server.actionsResource"]) => (input: Endpoint40_0Input) =>
+const Endpoint41_0 = (raw: RawClient["server.actionsResource"]) => (input: Endpoint41_0Input) =>
   raw["actions.resource.list"]({
     params: { bindingID: input["bindingID"] },
     query: {
@@ -37,24 +37,24 @@ const Endpoint40_0 = (raw: RawClient["server.actionsResource"]) => (input: Endpo
     },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint40_1Request = Parameters<RawClient["server.actionsResource"]["actions.resource.command"]>[0]
-type Endpoint40_1Input = {
-  readonly bindingID: Endpoint40_1Request["params"]["bindingID"]
-  readonly resourceKind: Endpoint40_1Request["params"]["resourceKind"]
-  readonly action: Endpoint40_1Request["params"]["action"]
-  readonly location?: Endpoint40_1Request["query"]["location"]
-  readonly revision: Endpoint40_1Request["query"]["revision"]
-  readonly id: Endpoint40_1Request["payload"]["id"]
-  readonly input: Endpoint40_1Request["payload"]["input"]
+type Endpoint41_1Request = Parameters<RawClient["server.actionsResource"]["actions.resource.command"]>[0]
+type Endpoint41_1Input = {
+  readonly bindingID: Endpoint41_1Request["params"]["bindingID"]
+  readonly resourceKind: Endpoint41_1Request["params"]["resourceKind"]
+  readonly action: Endpoint41_1Request["params"]["action"]
+  readonly location?: Endpoint41_1Request["query"]["location"]
+  readonly revision: Endpoint41_1Request["query"]["revision"]
+  readonly id: Endpoint41_1Request["payload"]["id"]
+  readonly input: Endpoint41_1Request["payload"]["input"]
 }
-const Endpoint40_1 = (raw: RawClient["server.actionsResource"]) => (input: Endpoint40_1Input) =>
+const Endpoint41_1 = (raw: RawClient["server.actionsResource"]) => (input: Endpoint41_1Input) =>
   raw["actions.resource.command"]({
     params: { bindingID: input["bindingID"], resourceKind: input["resourceKind"], action: input["action"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
     payload: { id: input["id"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 
-export const adaptGroup40 = (raw: RawClient["server.actionsResource"]) => ({
-  list: Endpoint40_0(raw),
-  command: Endpoint40_1(raw),
+export const adaptGroup41 = (raw: RawClient["server.actionsResource"]) => ({
+  list: Endpoint41_0(raw),
+  command: Endpoint41_1(raw),
 })

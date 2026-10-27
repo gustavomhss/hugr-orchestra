@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test"
 import { setupRelay } from "./relay.fixture"
+import { expandAdvanced } from "./compact-navigation.fixture"
 
 test.use({ viewport: { width: 1440, height: 900 }, serviceWorkers: "block", locale: "en-US" })
 test.setTimeout(180_000)
@@ -14,6 +15,7 @@ for (const scheme of ["dark", "light"] as const) {
   }) => {
     await setupRelay(page, { scheme })
     await page.goto("/", { waitUntil: "domcontentloaded" })
+    await expandAdvanced(page)
     const hooks = sidebar(page).getByRole("button", { name: "Hooks", exact: true })
     await expect(hooks.locator('[data-slot="orchestra-nav-wip"]')).toHaveCount(0)
     await hooks.click()

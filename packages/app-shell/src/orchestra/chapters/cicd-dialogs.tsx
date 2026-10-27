@@ -182,7 +182,7 @@ export function PipelineDialog(props: {
   )
 }
 
-export function LogsDialog(props: { pipeline: Pipeline; log: string; onClose: () => void }) {
+export function LogsDialog(props: { pipeline: Pipeline; log: string; onAskMaestro: () => void; onClose: () => void }) {
   const language = useLanguage()
   let log!: HTMLPreElement
   // Follow live output while the run streams.
@@ -218,6 +218,11 @@ export function LogsDialog(props: { pipeline: Pipeline; log: string; onClose: ()
       >
         {language.t("orchestra.cicd.download")}
       </button>
+      <Show when={props.pipeline.status === "failed" || props.pipeline.status === "error"}>
+        <button type="button" class="mx-btn primary" onClick={props.onAskMaestro}>
+          {language.t("orchestra.cicd.askMaestro")}
+        </button>
+      </Show>
     </CicdDialog>
   )
 }

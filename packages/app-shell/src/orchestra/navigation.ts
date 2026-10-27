@@ -1,37 +1,42 @@
 import type { LayoutRoute } from "../context/layout-route"
 
-// Sidebar destinations. Chapter IDs mark Orchestra rework proposals; a chapter opens a page
-// only once it registers one in chapterPages. `wip` marks screens the owner approved as they are
-// but wants revisited before production. The mark is for developers: `showWip` hides it in
-// production builds, while `isWip` stays the plain data lookup.
-export const navigation = [
-  { id: "home", label: "home.title", chapter: undefined },
-  { id: "chat", label: "orchestra.nav.chat", chapter: undefined },
+// Sidebar destinations. The five primary items stay visible, Settings keeps the last place, and the entries
+// between them sit in one collapsible Advanced group. `wip` marks screens the owner approved as they are but wants
+// revisited before production. The mark is for developers: `showWip` hides it in production builds, while `isWip`
+// stays the plain data lookup. Every id here has a page in chapterPages, except maestro, which opens a dialog.
+export const primaryNavigation = [
+  { id: "home", label: "home.title" },
+  { id: "chat", label: "orchestra.nav.chat" },
   // The Projects board Maestro keeps (docs/specs/projects-board), read only for now.
-  { id: "board", label: "orchestra.nav.board", chapter: "C16", wip: true },
-  { id: "agents", label: "orchestra.nav.agents", chapter: "C11", wip: true },
-  // Session-relative governance (S20), opened as a dialog over the current session; not a route.
-  { id: "maestro", label: "orchestra.nav.maestro", chapter: undefined },
-  // Relay workflows sit next to Maestro, which runs them (owner decision, 2026-10-06).
-  { id: "flight-engineer", label: "orchestra.nav.flightEngineer", chapter: undefined },
-  { id: "workflows", label: "orchestra.nav.workflows", chapter: "C14" },
-  { id: "atlas", label: "orchestra.nav.atlas", chapter: undefined },
-  { id: "mcp", label: "orchestra.nav.mcp", chapter: "C01", wip: true },
-  { id: "integrations", label: "orchestra.integrations.title", chapter: "C15" },
-  { id: "skills", label: "orchestra.nav.skills", chapter: "C02" },
-  { id: "plugins", label: "orchestra.nav.plugins", chapter: "C03" },
-  { id: "hooks", label: "orchestra.nav.hooks", chapter: "C04" },
-  { id: "lean", label: "orchestra.nav.lean", chapter: undefined },
-  { id: "cicd", label: "orchestra.actions.title", chapter: "C07", wip: true },
-  { id: "schedule", label: "orchestra.nav.schedule", chapter: "C08" },
-  { id: "env", label: "orchestra.nav.env", chapter: "C09", wip: true },
-  { id: "dock", label: "orchestra.nav.dock", chapter: "C13" },
-  { id: "search", label: "orchestra.nav.search", chapter: undefined },
-  { id: "workspaces", label: "orchestra.nav.workspaces", chapter: "C12", wip: true },
-  { id: "providers", label: "settings.providers.title", chapter: "C05" },
-  { id: "shortcuts", label: "settings.tab.shortcuts", chapter: "C06" },
-  { id: "settings", label: "sidebar.settings", chapter: undefined },
+  { id: "board", label: "orchestra.nav.board", wip: true },
+  { id: "agents", label: "orchestra.nav.agents", wip: true },
+  // Named Checks in the UI once lane B5 renames the label; the id stays `cicd`.
+  { id: "cicd", label: "orchestra.actions.title", wip: true },
 ] as const
+
+export const advancedNavigation = [
+  // Session-relative governance (S20), opened as a dialog over the current session; not a route.
+  { id: "maestro", label: "orchestra.nav.maestro" },
+  // Relay workflows sit next to Maestro, which runs them (owner decision, 2026-10-06).
+  { id: "flight-engineer", label: "orchestra.nav.flightEngineer" },
+  { id: "workflows", label: "orchestra.nav.workflows" },
+  { id: "atlas", label: "orchestra.nav.atlas" },
+  { id: "mcp", label: "orchestra.nav.mcp", wip: true },
+  { id: "integrations", label: "orchestra.integrations.title" },
+  { id: "skills", label: "orchestra.nav.skills" },
+  { id: "plugins", label: "orchestra.nav.plugins" },
+  { id: "hooks", label: "orchestra.nav.hooks" },
+  { id: "lean", label: "orchestra.nav.lean" },
+  { id: "schedule", label: "orchestra.nav.schedule" },
+  { id: "env", label: "orchestra.nav.env", wip: true },
+  { id: "dock", label: "orchestra.nav.dock" },
+  { id: "workspaces", label: "orchestra.nav.workspaces", wip: true },
+  { id: "search", label: "orchestra.nav.search" },
+] as const
+
+export const settingsNavigation = [{ id: "settings", label: "sidebar.settings" }] as const
+
+export const navigation = [...primaryNavigation, ...advancedNavigation, ...settingsNavigation]
 
 // Capability pages without an entry here use their navigation label, as the reference does.
 const crumbs = {
@@ -42,6 +47,9 @@ const crumbs = {
   workspaces: "orchestra.shell.crumb.workspaces",
   plugins: "orchestra.shell.crumb.plugins",
   settings: "orchestra.shell.crumb.settings",
+  // Settings holds both pages now, but their routes still open (chat and provider prompts link there).
+  providers: "orchestra.shell.crumb.providers",
+  shortcuts: "orchestra.shell.crumb.shortcuts",
 } as const
 
 export function isWip(id: string) {

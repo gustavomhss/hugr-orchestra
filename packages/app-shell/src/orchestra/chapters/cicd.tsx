@@ -108,6 +108,16 @@ export default function Cicd(props: ChapterPageProps) {
     },
   )
   const kind = (path: string) => language.t(path === GITLAB_CI ? "orchestra.cicd.gitlab" : "orchestra.cicd.github")
+  // Opens a draft chat with the failure's last output; the user reads it and sends it.
+  const askMaestro = (id: string) => {
+    const item = pipelines.list().find((entry) => entry.id === id)
+    if (!item) return
+    const tail = pipelines.log(id).split("\n").slice(-40).join("\n")
+    void tabs.newDraft(
+      { server: ServerConnection.key(props.server), directory: props.directory },
+      language.t("orchestra.cicd.fixPrompt", { name: item.name, command: item.command, branch: item.branch, log: tail }),
+    )
+  }
   const cards = createMemo(() =>
     pipelines.list().filter((item) =>
       matches(
@@ -222,6 +232,12 @@ export default function Cicd(props: ChapterPageProps) {
                     <button type="button" class="mx-btn" onClick={() => setDialog({ type: "logs", id: item.id })}>
                       {language.t("orchestra.cicd.logs")}
                     </button>
+                    <Show when={item.status === "failed" || item.status === "error"}>
+                      {" "}
+                      <button type="button" class="mx-btn primary" onClick={() => askMaestro(item.id)}>
+                        {language.t("orchestra.cicd.askMaestro")}
+                      </button>
+                    </Show>
                   </div>
                   <button type="button" class="mx-btn" onClick={() => setDialog({ type: "edit", id: item.id })}>
                     {language.t("orchestra.cicd.edit")}
@@ -308,6 +324,7 @@ export default function Cicd(props: ChapterPageProps) {
             <LogsDialog
               pipeline={open().item}
               log={pipelines.log(open().item.id)}
+              onAskMaestro={() => askMaestro(open().item.id)}
               onClose={closeDialog(open().current)}
             />
           )}

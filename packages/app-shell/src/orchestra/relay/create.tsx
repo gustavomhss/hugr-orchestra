@@ -2,20 +2,13 @@ import { createUniqueId, For, Show } from "solid-js"
 import { useLocation } from "@solidjs/router"
 import { createStore } from "solid-js/store"
 import { rememberDocument } from "./cache"
-import { documentProfile, type RelayDocument } from "./client"
 import { createAction } from "./dialogs"
 import type { Flow } from "./graph"
-import { TemplateCard, templateName } from "./parts"
+import { TemplateCard } from "./parts"
 import { blankWorkflow, copyDocument, freeName } from "./presets"
 import type { RelaySource } from "./source"
+import { templateName, templates } from "./templates"
 import { RelayDialog, useRelayCopy } from "./ui"
-
-// Templates are the shipped profiles the server seeded that can run. They are offered here and nowhere else: the
-// library lists the user's own workflows. A profile that still needs tools that are not available is not offered.
-export const templates = (documents: RelayDocument[]) =>
-  documents
-    .filter((document) => documentProfile(document) !== undefined && document.runnable)
-    .toSorted((a, b) => a.name.localeCompare(b.name))
 
 export function CreateWorkflowDialog(props: {
   source: RelaySource
@@ -30,7 +23,7 @@ export function CreateWorkflowDialog(props: {
   // The default name is the template's, or "Blank workflow", numbered when a workflow already has it.
   const nameOf = (id: string) => {
     const source = props.source.list().find((item) => item.id === id)
-    const base = source ? templateName(copy, source) : copy.t("orchestra.workflows.create.blankName")
+    const base = source ? templateName(copy.t, source) : copy.t("orchestra.workflows.create.blankName")
     return freeName(
       props.source.list().map((item) => item.name),
       base,
@@ -57,6 +50,7 @@ export function CreateWorkflowDialog(props: {
     }
     const source = documents().find((item) => item.id === draft.pick)
     if (draft.pick !== "blank" && (!source || !source.runnable)) {
+      // Unavailable templates are shown with their reason and cannot be picked; this guards a stale pick.
       action.setError(copy.t("orchestra.workflows.create.templateUnavailable"))
       return
     }

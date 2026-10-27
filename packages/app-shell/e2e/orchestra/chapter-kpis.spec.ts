@@ -1,6 +1,7 @@
 import { expect, test, type Page, type Route } from "@playwright/test"
 import { readFile } from "node:fs/promises"
 import { mockOrchestraServer } from "../utils/mock-server"
+import { expandAdvanced } from "./compact-navigation.fixture"
 
 const serverA = "http://127.0.0.1:4096"
 const serverB = "http://127.0.0.1:4097"
@@ -443,6 +444,7 @@ test("opening a chapter right after choosing a profile replaces Home while activ
   await page.getByRole("menuitemradio", { name: "Recorded repo A" }).click()
   await expect(page.locator('[data-slot="orchestra-profile"]')).toContainText("Recorded repo A")
   await expect.poll(() => requests.length).toBe(1)
+  await expandAdvanced(page)
   await page.locator('[data-component="orchestra-sidebar"]').getByRole("button", { name: ".env", exact: true }).click()
   await expect(page).toHaveURL(/\/orchestra\/env$/)
   await expect(page.locator('[data-component="orchestra-chapter"][data-chapter="env"]')).toBeVisible()

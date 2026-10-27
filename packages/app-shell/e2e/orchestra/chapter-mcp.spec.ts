@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Response, type Route } from "@playwright/test"
+import { expandAdvanced } from "./compact-navigation.fixture"
 
 const serverA = "http://127.0.0.1:4096"
 const serverB = "http://127.0.0.1:4097"
@@ -514,6 +515,7 @@ async function chooseProfile(page: Page, name: string) {
 
 async function openChapter(page: Page, wait = true) {
   await chooseProfile(page, "Profile A")
+  await expandAdvanced(page)
   await page.locator('[data-component="orchestra-sidebar"]').getByRole("button", { name: "MCP", exact: true }).click()
   await expect(page).toHaveURL(/\/orchestra\/mcp$/)
   if (wait) await expect(row(page, "shared")).toBeVisible()

@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Route } from "@playwright/test"
+import { expandAdvanced } from "./compact-navigation.fixture"
 
 // The Atlas chapter against a fake server. The `/api/atlas/*` routes (D4) answer one small store, the one of
 // src/orchestra/chapters/atlas/atlas-model.fixture.ts; a server without them answers 404, so the chapter says so.
@@ -238,6 +239,7 @@ test("a server without the atlas routes says so", async ({ page }) => {
 
 async function openAtlas(page: Page) {
   await page.goto("/", { waitUntil: "domcontentloaded" })
+  await expandAdvanced(page)
   await page.locator(".orchestra-sidebar").getByRole("button", { name: "Atlas", exact: true }).click()
   await expect(page).toHaveURL(/\/orchestra\/atlas$/)
 }

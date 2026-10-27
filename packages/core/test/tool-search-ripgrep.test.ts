@@ -31,6 +31,7 @@ const permission = Layer.succeed(
     assert: (input) => Effect.sync(() => void asserted.push({ action: input.action, resources: input.resources })),
     ask: () => Effect.die("unused"),
     reply: () => Effect.die("unused"),
+    cancelSession: () => Effect.void,
     get: () => Effect.die("unused"),
     forSession: () => Effect.die("unused"),
     list: () => Effect.die("unused"),

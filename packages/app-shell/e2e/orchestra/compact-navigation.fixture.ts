@@ -1,5 +1,15 @@
-import type { Page } from "@playwright/test"
+import { expect, type Page } from "@playwright/test"
 import { mockOrchestraServer } from "../utils/mock-server"
+
+// Opens the sidebar's Advanced group unless it is already open. The choice then lasts for the rest of the tab, and a
+// route inside the group opens it on its own; call this before clicking any page that lives in the group.
+export async function expandAdvanced(page: Page) {
+  const toggle = page
+    .locator('[data-component="orchestra-sidebar"]')
+    .getByRole("button", { name: "Advanced", exact: true })
+  if ((await toggle.getAttribute("aria-expanded")) !== "true") await toggle.click()
+  await expect(toggle).toHaveAttribute("aria-expanded", "true")
+}
 
 export async function setupCompactNavigation(
   page: Page,

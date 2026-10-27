@@ -13,6 +13,8 @@ Guardrail checks the lines and paths your change adds against 73 rules (`docs/gu
 bun run check:guards --base origin/dev
 ```
 
+In the app, Guardrails is the first tab of **Checks** (the chapter formerly named Actions; the sidebar label and breadcrumb follow `orchestra.actions.title`). Checks has no other Guardrails entry point.
+
 - `--base <ref>` is the target branch; the engine compares against the merge-base. If it says it cannot resolve a merge-base, fetch the branch (`git fetch origin dev`) or pass another `--base`.
 - `--warn` reports gate findings without failing, to see everything first. Setup errors still fail.
 - `--cwd <repo>` runs against another checkout. `GUARDRAIL_APPROVED=<rule id>,<rule id>` simulates approvals.

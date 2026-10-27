@@ -121,6 +121,57 @@ function waitExplicit(input: PermissionV2.AssertInput) {
 }
 
 describe("PermissionV2", () => {
+  it.effect("interrupting a turn that waits on a permission clears the request and publishes a rejection", () =>
+    Effect.gen(function* () {
+      yield* setup([])
+      const events = yield* EventV2.Service
+      const replies: unknown[] = []
+      const unsubscribe = yield* events.listen((event) =>
+        Effect.sync(() => {
+          if (event.type === PermissionV2.Event.Replied.type) replies.push(event.data)
+        }),
+      )
+      yield* Effect.addFinalizer(() => unsubscribe)
+      const { service, fiber, request } = yield* waitForRequest()
+      expect((yield* service.forSession(request.sessionID)).map((item) => item.id)).toEqual([request.id])
+
+      yield* Fiber.interrupt(fiber)
+
+      expect(yield* service.list()).toEqual([])
+      expect(replies).toEqual([{ sessionID: request.sessionID, requestID: request.id, reply: "reject" }])
+      expect(yield* service.reply({ requestID: request.id, reply: "once" }).pipe(Effect.flip)).toEqual(
+        new PermissionV2.NotFoundError({ requestID: request.id }),
+      )
+    }),
+  )
+
+  it.effect("interrupting a turn that waits on explicit native intent clears the request", () =>
+    Effect.gen(function* () {
+      yield* setup([])
+      const { service, fiber, request } = yield* waitExplicit(assertion({ id: PermissionV2.ID.create("per_explicit_stop") }))
+
+      yield* Fiber.interrupt(fiber)
+
+      expect(yield* service.get(request.id)).toBeUndefined()
+      expect(yield* service.list()).toEqual([])
+    }),
+  )
+
+  it.effect("cancelSession rejects every open request of the Session and ends the waiting turn", () =>
+    Effect.gen(function* () {
+      yield* setup([])
+      const { service, fiber, request } = yield* waitForRequest()
+
+      yield* service.cancelSession(request.sessionID)
+
+      expect(yield* service.list()).toEqual([])
+      expect(yield* Fiber.await(fiber)).toMatchObject({ _tag: "Failure" })
+      expect(yield* service.reply({ requestID: request.id, reply: "once" }).pipe(Effect.flip)).toEqual(
+        new PermissionV2.NotFoundError({ requestID: request.id }),
+      )
+    }),
+  )
+
   it.effect("authorize queues and preserves plain rejection as a typed failure with cleanup", () =>
     Effect.gen(function* () {
       yield* setup([])

@@ -4,7 +4,10 @@ import { createEffect, createMemo, createUniqueId, For, lazy, Match, onCleanup, 
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
+import type { ActionKey } from "@/i18n/actions"
+import { ServerConnection } from "@/context/server"
 import { useServerSDK } from "@/context/server-sdk"
+import { useTabs } from "@/context/tabs"
 import { Persist, persisted } from "@/utils/persist"
 import type { ChapterPageProps } from "../chapter-route"
 import { setCrumbTrail } from "../crumbs"
@@ -157,6 +160,14 @@ function Workbench(props: ChapterPageProps & {
   const catalog = createMemo(() => state.workflows.value?.items.filter((item) => item.bindingID === state.binding?.id
     && `${item.name ?? ""} ${item.path}`.toLowerCase().includes(view.query.toLowerCase())).slice(0, 100) ?? [])
   const canCreate = createMemo(() => canRequest(state, "source.write"))
+  // Why "New workflow" is disabled, in words the user can act on. Undefined while it is enabled.
+  const createBlocked = createMemo((): ActionKey | undefined => {
+    if (canCreate()) return undefined
+    if (!state.binding) return "orchestra.actions.createBlocked.connect"
+    if (state.unsupported) return "orchestra.actions.createBlocked.unsupported"
+    if (state.capabilities.status === "idle" || state.capabilities.status === "loading") return "orchestra.actions.createBlocked.loading"
+    return "orchestra.actions.createBlocked.unavailable"
+  })
   const sourceTab = () => state.route.view === "source" || state.route.tab === "source"
   const tab = () => state.route.tab ?? (state.route.view === "workflow" ? "graph" : state.route.view === "job" ? "logs" : "jobs")
   const contextual = () => ["workflow", "run", "job", "source"].includes(state.route.view) || state.route.view === "runs" && Boolean(state.route.workflowID)
@@ -244,9 +255,10 @@ function Workbench(props: ChapterPageProps & {
           <Show when={!contextual()}><header class="mx-heading"><div><div class="mx-eyebrow">{props.t("orchestra.actions.eyebrow")}</div><h1>{props.t("orchestra.actions.title")}</h1><p>{props.t("orchestra.actions.description")}</p></div>
             <div class="heading-actions"><button type="button" class="mx-btn" disabled={state.submitting} onClick={() => void model.refresh()}>
               <Icon name="refresh" />{props.t("orchestra.actions.refresh")}</button>
-              <Show when={state.route.view === "library"}><button type="button" class="mx-btn primary" disabled={!canCreate()} onClick={() => model.dialog({ kind: "create-workflow" })}>
+              <Show when={state.route.view === "library"}><button type="button" class="mx-btn primary" disabled={!canCreate()} aria-describedby={createBlocked() ? `${ids}-create` : undefined} onClick={() => model.dialog({ kind: "create-workflow" })}>
                 <Icon name="plus" />{props.t(state.binding?.provider.kind === "gitlab" ? "orchestra.actions.createConfiguration" : "orchestra.actions.createWorkflow")}</button></Show></div>
           </header>
+          <Show when={state.route.view === "library" && createBlocked()}>{(key) => <p class="mx-note" id={`${ids}-create`}>{props.t(key())}</p>}</Show>
           <Show when={state.route.view !== "guardrails"}><div class="repo-strip"><label class="provider-label"><Icon name={state.binding?.provider.kind === "gitlab" ? "gitlab" : state.binding ? "github" : "workflow"} />
             <span>{props.t("orchestra.actions.provider")}</span><select aria-label={props.t("orchestra.actions.provider")} value={state.binding?.id ?? ""}
               disabled={state.submitting || state.bindings.status !== "ready"} onChange={(event) => {
@@ -263,14 +275,14 @@ function Workbench(props: ChapterPageProps & {
               <Icon name="settings" />{props.t("orchestra.actions.connect")}</button>
           </div></Show></Show>
           <Show when={!contextual()}><nav class="wf-tabs" role="tablist" aria-label={props.t("orchestra.actions.title")} onKeyDown={tabKeydown}>
-            <For each={[["library", "orchestra.actions.shell.workflows", "workflow"], ["runs", "orchestra.actions.shell.runs", "retry"],
-              ["guardrails", "orchestra.actions.guardrails", "shield"], ["resources", "orchestra.actions.resources", "box"], ["settings", "orchestra.actions.shell.settings", "settings"]] as const}>{(item) =>
+            <For each={[["guardrails", "orchestra.actions.guardrails", "shield"], ["library", "orchestra.actions.shell.workflows", "workflow"], ["runs", "orchestra.actions.shell.runs", "retry"],
+              ["resources", "orchestra.actions.resources", "box"], ["settings", "orchestra.actions.shell.settings", "settings"]] as const}>{(item) =>
               <button type="button" role="tab" class="wf-tab" aria-selected={state.route.view === item[0]} tabindex={state.route.view === item[0] ? 0 : -1}
                 onClick={() => model.navigate({ view: item[0] })}><Icon name={item[2]} />{props.t(item[1])}
                 <Show when={item[0] === "library" ? loaded(state.workflows) : item[0] === "runs" ? loaded(state.runs) : undefined}>{(count) =>
                   <span class="wf-count">{count()}</span>}</Show></button>}</For>
           </nav></Show>
-          <ContextActions model={model} t={props.t} />
+          <ContextActions model={model} t={props.t} server={props.server} directory={props.directory} />
           <Show when={state.commandError}>{(error) => <p class="mx-error" role="alert">{props.t(error().message)}</p>}</Show>
           <Show when={state.operation}><div class="provider-note" role="status"><strong>{props.t("orchestra.actions.receipt")}</strong>
             <code dir="ltr"> {state.operation?.id}</code> <span>{props.t(state.operation?.state === "accepted" ? "orchestra.actions.accepted"
@@ -307,17 +319,29 @@ function Workbench(props: ChapterPageProps & {
   </>
 }
 
-function ContextActions(props: ViewProps) {
+function ContextActions(props: ViewProps & Pick<ChapterPageProps, "server" | "directory">) {
   const state = props.model.state
+  const tabs = useTabs()
   const run = createMemo(() => state.run.status === "ready" && state.run.value && state.run.value.id === state.route.runID
     && state.run.value.bindingID === state.binding?.id ? state.run.value : undefined)
   const current = () => !state.route.attempt || state.route.attempt === run()?.attempt
   const allowed = (operation: string) => canRequest(state, operation)
-  // Workflow and run header controls live in the detail headers; only deployment review has no other home yet.
+  const failed = () => ["failure", "failed", "timed_out"].includes(run()?.conclusion ?? run()?.status ?? "")
+  // Opens a draft chat that names the failed run; the user reads it and sends it.
+  const askMaestro = () => {
+    const item = run()
+    if (!item) return
+    void tabs.newDraft({ server: ServerConnection.key(props.server), directory: props.directory },
+      props.t("orchestra.actions.fixRunPrompt", { name: item.name ?? item.workflowID, number: item.number ?? item.id, ref: item.ref ?? item.commit, commit: item.commit }))
+  }
+  // Workflow and run header controls live in the detail headers; deployment review and failed-run help have no other home yet.
   return <div class="heading-actions actions-context-actions">
     <Show when={run() && ["waiting", "manual"].includes(run()?.status ?? "")}><button type="button" class="mx-btn primary"
       disabled={!current() || !allowed("deployment.review")} onClick={() => { const item = run(); if (item) props.model.dialog({ kind: "approval", runID: item.id }) }}>
       {props.t("orchestra.actions.reviewDeployment")}</button></Show>
+    <Show when={failed()}><button type="button" class="mx-btn" onClick={() => props.model.navigate({ ...state.route, view: "run", tab: "logs" })}>
+      {props.t("orchestra.actions.viewLogs")}</button>
+      <button type="button" class="mx-btn primary" onClick={askMaestro}>{props.t("orchestra.actions.askMaestro")}</button></Show>
   </div>
 }
 
