@@ -1,5 +1,9 @@
 import { Show, type JSX } from "solid-js"
+import { useParams } from "@solidjs/router"
+import { Button } from "@orchestra/ui/button"
 import { useLanguage } from "@/context/language"
+import { useSDK } from "@/context/sdk"
+import { showToast } from "@/utils/toast"
 import { SessionPermissionDock } from "@/pages/session/composer/session-permission-dock"
 import { SessionQuestionDock } from "@/pages/session/composer/session-question-dock"
 import { SessionFollowupDock } from "@/pages/session/composer/session-followup-dock"
@@ -12,10 +16,26 @@ export function SessionComposerRegion(props: {
   promptInput: JSX.Element
 }) {
   const language = useLanguage()
+  const sdk = useSDK()
+  const params = useParams()
   const controller = props.controller
   const rolled = () => {
     const revert = controller.revert()
     return revert?.items.length ? revert : undefined
+  }
+  // The composer, and its Stop, is hidden while a permission or question waits. Stop stays here so a turn can always end.
+  const stop = () => {
+    const sessionID = params.id
+    if (!sessionID) return
+    sdk()
+      .api.session.interrupt({ sessionID })
+      .catch((error: unknown) =>
+        showToast({
+          variant: "error",
+          title: language.t("common.requestFailed"),
+          description: error instanceof Error ? error.message : String(error),
+        }),
+      )
   }
 
   return (
@@ -31,6 +51,14 @@ export function SessionComposerRegion(props: {
           "md:max-w-200 md:mx-auto 2xl:max-w-[1000px]": controller.centered(),
         }}
       >
+        <Show when={controller.state.blocked()}>
+          <div data-slot="session-dock-stop" class="flex justify-end pb-2">
+            <Button variant="ghost" size="small" data-action="prompt-stop-run" onClick={stop}>
+              {language.t("orchestra.chat.stop")}
+            </Button>
+          </div>
+        </Show>
+
         <Show when={controller.state.questionRequest()} keyed>
           {(request) => (
             <div data-slot="session-question-region">

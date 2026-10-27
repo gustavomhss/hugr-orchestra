@@ -70,6 +70,7 @@ const permission = Layer.succeed(
       }).pipe(Effect.andThen(allow ? Effect.void : Effect.fail(new PermissionV2.BlockedError({ rules: [] })))),
     ask: () => Effect.die("unused"),
     reply: () => Effect.die("unused"),
+    cancelSession: () => Effect.void,
     get: () => Effect.die("unused"),
     forSession: () => Effect.die("unused"),
     list: () => Effect.die("unused"),
