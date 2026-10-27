@@ -102,7 +102,7 @@ function base(): Tree {
           relay: { kind: "platform", patterns: ["src/relay.ts"] },
         },
       }),
-      relay: spec("module", { platformLibrary: true }),
+      relay: spec("module", { platformLibrary: true, importAllow: ["@fx/schema", "bun:", "node:"] }),
       sdk: spec("client", { status: "legacy", successor: "packages/schema" }),
       ui: spec("ui", { assetWildcards: ["./fonts/*"] }),
       app: spec("app", {
@@ -514,7 +514,6 @@ describe("module-boundary gate", () => {
 
   test("R14 keeps a package to its importAllow prefixes for sources, # imports and runtime dependencies", () => {
     const root = fixture((tree) => {
-      Object.assign(tree.architecture.packages.relay, { importAllow: ["@fx/schema", "bun:", "node:"] })
       tree.files["modules/relay/package.json"] = json({
         name: "@fx/relay",
         exports: { ".": "./src/index.ts" },
