@@ -1,17 +1,18 @@
 import { app, Menu, nativeImage, Tray } from "electron"
+import { join } from "node:path"
 
 import { sendDeepLinks } from "./ipc"
 import { elapsed } from "./live-elapsed"
 import type { LiveLoop } from "./live-loop"
-import { getLastFocusedWindow } from "./windows"
+import { getLastFocusedWindow, iconsDir } from "./windows"
 import { revealWindow } from "./window-state"
 
 // The menu-bar item for meetings: elapsed time while one runs, and the few actions that matter without the window.
 
 export function registerLiveTray(options: { loop: LiveLoop }) {
   if (process.platform !== "darwin") return { destroy: () => {} }
-  // The Interface session supplies the icon asset; until then the title text alone marks the item.
-  const tray = new Tray(nativeImage.createEmpty())
+  // The "Template" suffix makes macOS tint the icon for the menu bar; the @2x file beside it is picked up on its own.
+  const tray = new Tray(nativeImage.createFromPath(join(iconsDir(), "trayTemplate.png")))
   const state = {
     timer: undefined as ReturnType<typeof setInterval> | undefined,
     last: undefined as { id: string; title: string } | undefined,

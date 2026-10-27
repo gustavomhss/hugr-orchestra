@@ -89,7 +89,7 @@ export function getBackgroundColor(): string | undefined {
   return backgroundColor
 }
 
-function iconsDir() {
+export function iconsDir() {
   return app.isPackaged ? join(process.resourcesPath, "icons") : join(root, "../../resources/icons")
 }
 
