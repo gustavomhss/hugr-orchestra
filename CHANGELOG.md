@@ -6,6 +6,10 @@ All notable changes to HuGR Orchestra are recorded here. The format follows [Kee
 
 Changes since the last release go here.
 
+- Upgrade the command line and the desktop app to 0.3.0 together. Desktop 0.3.0 migrates the shared database and drops the `session_v1_prompt_admission` table, so a command line older than 0.3.0 (for example 0.2.1) can no longer use that database. Release both in the same window; do not run an older CLI beside the new desktop app.
+- The command line npm wrapper and every desktop installer now include the repository `LICENSE` and `NOTICE`.
+- The command line release publishes to npm before it creates the GitHub release, so a failed npm publish can be rerun.
+
 ## Releases
 
 Releases are versioned 0.x. The command line (`@humanguardrail/cli`) is tagged `v<version>` and the desktop app `desktop-v<version>` on [GitHub Releases](https://github.com/gustavomhss/hugr-orchestra/releases); each release's notes say whether it is signed.
