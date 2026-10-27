@@ -265,12 +265,22 @@ const layer = Layer.effect(
         current.status = opened.status
         return
       }
-      const listed = client.getServerCapabilities()?.tools ? yield* McpCatalog.defs(client, request) : []
+      const listed = client.getServerCapabilities()?.tools
+        ? yield* McpCatalog.tools(client, request).pipe(Effect.result)
+        : undefined
       if (current.generation !== generation) return yield* Effect.promise(() => client.close().catch(() => undefined))
+      if (listed?._tag === "Failure") {
+        yield* Effect.promise(() => client.close().catch(() => undefined))
+        current.status = failed(
+          McpStdio.failure(opened.transport, new Error(`Listing tools failed: ${messageOf(listed.failure)}`)),
+        )
+        return
+      }
+      const defs = listed?.success ?? []
       // Connected is reported only once the server's tools are in the registry.
       current.client = client
-      current.tools = yield* register(name, client, listed ?? [], request)
-      current.toolNames = (listed ?? []).map((def) => def.name)
+      current.tools = yield* register(name, client, defs, request)
+      current.toolNames = defs.map((def) => def.name)
       current.status = opened.status
       client.onclose = () => {
         if (current.client !== client) return
@@ -278,7 +288,7 @@ const layer = Layer.effect(
         current.client = undefined
         current.tools = undefined
         current.toolNames = undefined
-        current.status = { status: "failed", error: "Connection closed" }
+        current.status = failed(McpStdio.failure(opened.transport, new Error("Connection closed")))
         if (scope) Effect.runFork(Scope.close(scope, Exit.void))
       }
       if (!client.getServerCapabilities()?.tools) return
@@ -307,13 +317,13 @@ const layer = Layer.effect(
           log: (line) => Effect.runFork(Effect.logDebug("MCP stderr", { server: name, line })),
         })
         return yield* attach(transport, startup).pipe(
-          Effect.map((client) => ({ client, status: { status: "connected" } as Mcp.Status })),
+          Effect.map((client) => ({ client, transport, status: { status: "connected" } as Mcp.Status })),
           Effect.catch((error) =>
-            Effect.succeed({ client: undefined, status: failed(McpStdio.failure(transport, error)) }),
+            Effect.succeed({ client: undefined, transport, status: failed(McpStdio.failure(transport, error)) }),
           ),
         )
       }
-      if (!URL.canParse(server.url)) return { client: undefined, status: failed(`Invalid MCP URL for "${name}"`) }
+      if (!URL.canParse(server.url)) return { client: undefined, transport: undefined, status: failed(`Invalid MCP URL for "${name}"`) }
       const url = new URL(server.url)
       // Stored tokens authorize the connection; a server without them fails unauthorized instead of redirecting.
       const init = {
@@ -325,13 +335,13 @@ const layer = Layer.effect(
       const oauth = server.oauth !== false
       const streamable = yield* attach(new StreamableHTTPClientTransport(url, init), startup).pipe(Effect.result)
       if (streamable._tag === "Success")
-        return { client: streamable.success, status: { status: "connected" } as Mcp.Status }
+        return { client: streamable.success, transport: undefined, status: { status: "connected" } as Mcp.Status }
       const denied = authStatus(streamable.failure, oauth)
-      if (denied) return { client: undefined, status: denied }
+      if (denied) return { client: undefined, transport: undefined, status: denied }
       return yield* attach(new SSEClientTransport(url, init), startup).pipe(
-        Effect.map((client) => ({ client, status: { status: "connected" } as Mcp.Status })),
+        Effect.map((client) => ({ client, transport: undefined, status: { status: "connected" } as Mcp.Status })),
         Effect.catch((error) =>
-          Effect.succeed({ client: undefined, status: authStatus(error, oauth) ?? failed(error.message) }),
+          Effect.succeed({ client: undefined, transport: undefined, status: authStatus(error, oauth) ?? failed(error.message) }),
         ),
       )
     })
@@ -598,6 +608,13 @@ const layer = Layer.effect(
       if (!(yield* configured()).servers.has(name)) return yield* new NotFoundError({ name })
       yield* abandon(name)
       yield* auth.remove(name)
+      // The stored tokens are gone: drop the live connection and ask for a new sign-in (only OAuth servers have one).
+      const server = (yield* configured()).servers.get(name)
+      if (server?.type !== "remote" || server.oauth === false) return
+      const current = entry(name)
+      current.generation++
+      yield* release(current)
+      current.status = { status: "needs_auth" }
     })
 
     const debug = Effect.fn("Mcp.debug")(function* (name: string) {

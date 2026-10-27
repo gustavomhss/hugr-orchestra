@@ -112,6 +112,20 @@ describe("McpOAuthCallback.ensureRunning", () => {
     expect(await canConnect("::1", port)).toBe(false)
   })
 
+  test("fails fast, naming the port, when another program holds it", async () => {
+    const holder = createNetServer()
+    await new Promise<void>((resolve) => holder.listen(0, "127.0.0.1", resolve))
+    const port = (holder.address() as { port: number }).port
+    try {
+      await expect(McpOAuthCallback.ensureRunning(`http://127.0.0.1:${port}/custom/callback`)).rejects.toThrow(
+        `OAuth callback port ${port} is already in use`,
+      )
+      expect(McpOAuthCallback.isRunning()).toBe(false)
+    } finally {
+      holder.close()
+    }
+  })
+
   test("concurrent starts share one listener that stop() closes", async () => {
     const port = await getFreeLoopbackPort()
     const redirectUri = `http://127.0.0.1:${port}/custom/callback`
