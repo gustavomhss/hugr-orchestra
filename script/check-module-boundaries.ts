@@ -8,10 +8,13 @@
 // while script/boundary-ledger.json lists it with a reason that starts with the rule's decision id; a listed entry
 // that no longer occurs is stale and fails. Growth of the ledger itself is caught only with `--base <ref>`: then any
 // key, or any per-rule count, above the ledger at the merge-base with that ref fails. CI passes `--base origin/dev`.
+// R14 keeps a package to the import prefixes its `importAllow` lists (Relay: schema, effect, Bun, Node builtins), and
+// its runtime dependencies to the same list. R15 follows the value imports reachable from each `bundleBoundaries`
+// entry and fails at the import that reaches a forbidden package, so a re-export chain cannot hide it. No bundler runs.
 //
 // Not checked: specifiers that are not string literals, a createRequire result kept under a name other than
 // `require`, files under node_modules/, a package's own top-level dist/, modules/atlas/ (except modules/atlas/boundary/),
-// undeclared npm packages, and anything only a type checker, bundler or runtime resolver sees. Whether a README's prose
+// undeclared npm packages, and anything only a type checker or runtime resolver sees. Whether a README's prose
 // is any good is a human call; R8 checks only structure and existence.
 //
 // Usage: bun run script/check-module-boundaries.ts [--no-stale] [--scope <prefix>...] [--json] [--prune] [--seed] [--base <ref>]
@@ -167,6 +170,8 @@ export function check(workspace: Workspace, inScope: (file: string) => boolean) 
     ...browserSafeRule(workspace),
     ...wildcardRule(workspace),
     ...readmeRule(workspace, exists),
+    ...importAllowRule(workspace, inScope),
+    ...bundleRule(workspace, files, edges),
     ...edges.flatMap((edge) => edgeRules(workspace, files, edge)),
     ...parseErrors,
   ]
@@ -176,6 +181,75 @@ export function check(workspace: Workspace, inScope: (file: string) => boolean) 
     edges: edges.filter((edge) => edge.to !== undefined && edge.to !== edge.from).length,
     violations: unique.sort((a, b) => `${a.rule}|${a.file}|${a.specifier}`.localeCompare(`${b.rule}|${b.file}|${b.specifier}`)),
   }
+}
+
+function importAllowRule(workspace: Workspace, inScope: (file: string) => boolean): Violation[] {
+  return workspace.members.filter((member) => member.spec.importAllow !== undefined).flatMap((member) => {
+    const allow = member.spec.importAllow ?? []
+    const allowed = (specifier: string) =>
+      allow.some((prefix) => specifier === prefix || specifier.startsWith(`${prefix}/`) || (prefix.endsWith(":") && specifier.startsWith(prefix)))
+    const at = (file: string, specifier: string, message: string) => ({ rule: "R14", file, specifier, message })
+    const imports = member.manifest.imports as Record<string, unknown> | undefined
+    const local = (target: unknown): boolean =>
+      typeof target === "string"
+        ? !target.startsWith("/") && !path.posix.normalize(target).startsWith("../")
+        : typeof target === "object" && target !== null && Object.values(target).length > 0 && Object.values(target).every(local)
+    const files = workspace.files.filter((file) => file.startsWith(`${member.path}/`) && SOURCE.test(file) && inScope(file) && !/(^|\/)node_modules\//.test(file))
+    const sources = files.flatMap((file) =>
+      specifiersOf(file, readFileSync(path.join(workspace.root, file), "utf8")).found
+        .filter((item) => !item.specifier.startsWith("."))
+        .flatMap((item) => {
+          if (item.specifier.startsWith("#"))
+            return imports?.[item.specifier] !== undefined && local(imports[item.specifier])
+              ? []
+              : [at(file, item.specifier, `${item.specifier} is not a package-internal import`)]
+          return allowed(item.specifier) ? [] : [at(file, item.specifier, `${member.alias} may import only ${allow.join(", ")}`)]
+        }),
+    )
+    const dependencies = Object.keys(member.manifest.dependencies ?? {})
+      .filter((name) => !allowed(name))
+      .map((name) => at(`${member.path}/package.json`, name, `runtime dependency outside ${allow.join(", ")}`))
+    return [...sources, ...dependencies]
+  })
+}
+
+// Reachability over the resolved edges the per-file rules already use: from a bundle entry, follow every value import
+// (type-only edges are dropped by a bundle, so they do not count). An import of a forbidden package is reported where
+// it is written, so a re-export chain that ends in a forbidden package still fails at the file that holds the import.
+function bundleRule(workspace: Workspace, files: Set<string>, edges: Edge[]): Violation[] {
+  const valueEdges = new Map<string, Edge[]>()
+  edges.filter((edge) => !edge.typeOnly).forEach((edge) => valueEdges.set(edge.file, [...(valueEdges.get(edge.file) ?? []), edge]))
+  const failure = (specifier: string, message: string) => ({ rule: "R15", file: "script/module-architecture.json", specifier, message })
+  return (workspace.architecture.bundleBoundaries ?? []).flatMap((boundary) => {
+    const owner = workspace.members.find((member) => member.name === packageName(boundary.entry))
+    if (owner === undefined) return [failure(boundary.entry, `${packageName(boundary.entry)} is not a workspace package`)]
+    const entry = resolveEdge(workspace, files, owner, path.posix.join(owner.path, "index.ts"), { specifier: boundary.entry, kind: "import", typeOnly: false }).target
+    if (entry === undefined) return [failure(boundary.entry, `${boundary.entry} does not resolve to a file`)]
+    const reached = reachableFrom(entry, (file) => (valueEdges.get(file) ?? []).flatMap((edge) => (edge.target === undefined ? [] : [edge.target])))
+    return reached.flatMap((file) =>
+      (valueEdges.get(file) ?? []).flatMap((edge) => {
+        const forbidden = boundary.forbid.find((item) => item === edge.to?.name || item === packageName(edge.specifier))
+        return forbidden === undefined
+          ? []
+          : [{ rule: "R15", file: edge.file, specifier: edge.specifier, message: `${boundary.entry} reaches ${forbidden} through this import` }]
+      }),
+    )
+  })
+}
+
+function reachableFrom(entry: string, next: (file: string) => string[]) {
+  const seen = new Set<string>()
+  const visit = (file: string): void => {
+    if (seen.has(file)) return
+    seen.add(file)
+    next(file).forEach(visit)
+  }
+  visit(entry)
+  return [...seen]
+}
+
+function packageName(specifier: string) {
+  return specifier.startsWith("@") ? specifier.split("/").slice(0, 2).join("/") : (specifier.split("/")[0] ?? specifier)
 }
 
 function resolveEdge(workspace: Workspace, files: Set<string>, from: Member, file: string, item: { specifier: string; kind: string; typeOnly: boolean }): Edge {

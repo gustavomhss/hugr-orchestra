@@ -37,7 +37,7 @@ The example uses `resume: false`, so `sessions.prompt(...)` admits the input wit
 
 The host exposes the Client session and event APIs, including `sessions.events({ sessionID, after })` for durable replay followed by new durable events, `sessions.interrupt(...)` for execution owned by this host, and `sessions.message(...)` for one projected message. The entry point also exports the `Tool` namespace (`make`, `Failure`, and `RegistrationError`) and named client types and schemas such as `Session`, `Prompt`, `Location`, `Model`, and `OrchestraEvent`.
 
-Import from `@orchestra/sdk-next` only. Its public entry point intentionally bundles the Client, Core, and Server implementation; do not reach into package `src` paths or make Client depend on Core or Server. The bundle boundary is covered by `test/import-boundaries.test.ts`.
+Import from `@orchestra/sdk-next` only. Its public entry point intentionally bundles the Client, Core, and Server implementation; do not reach into package `src` paths or make Client depend on Core or Server. `test/import-boundaries.test.ts` proves the bundle still builds, and `bun run check:boundaries` (rule R15, `bundleBoundaries` in `script/module-architecture.json`) forbids imports that would cross the boundary.
 
 **Owning role:** SDK package maintainers own this API and README. Cross-package architecture, manifests, registries, and merge order remain with the integration lead.
 

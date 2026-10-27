@@ -102,7 +102,7 @@ function base(): Tree {
           relay: { kind: "platform", patterns: ["src/relay.ts"] },
         },
       }),
-      relay: spec("module", { platformLibrary: true }),
+      relay: spec("module", { platformLibrary: true, importAllow: ["@fx/schema", "bun:", "node:"] }),
       sdk: spec("client", { status: "legacy", successor: "packages/schema" }),
       ui: spec("ui", { assetWildcards: ["./fonts/*"] }),
       app: spec("app", {
@@ -510,5 +510,45 @@ describe("module-boundary gate", () => {
     })
     expect(found(root).map((item) => `${item.rule} ${item.file}`)).toEqual(["R13 packages/ui/src/broken.ts"])
     expect(gate(root).code).toBe(1)
+  })
+
+  test("R14 keeps a package to its importAllow prefixes for sources, # imports and runtime dependencies", () => {
+    const root = fixture((tree) => {
+      tree.files["modules/relay/package.json"] = json({
+        name: "@fx/relay",
+        exports: { ".": "./src/index.ts" },
+        imports: { "#store": { bun: "./src/store.ts" }, "#escape": "../../packages/core/src/session.ts" },
+        dependencies: { "@fx/schema": "workspace:*", "left-pad": "1.0.0" },
+      })
+      tree.files["modules/relay/src/store.ts"] = 'import { test } from "bun:test"\nexport const store = test\n'
+      tree.files["modules/relay/src/extra.ts"] = 'import { z } from "zod"\nimport { join } from "node:path"\nimport "#store"\nimport "#escape"\nimport "#missing"\nexport const e = [z, join]\n'
+    })
+    expect(found(root).filter((item) => item.rule === "R14").map((item) => `${item.file} ${item.specifier}`)).toEqual([
+      "modules/relay/package.json left-pad",
+      "modules/relay/src/extra.ts #escape",
+      "modules/relay/src/extra.ts #missing",
+      "modules/relay/src/extra.ts zod",
+    ])
+    expect(rules(root, "modules/relay/src/index.ts")).toEqual([])
+    expect(rules(root, "modules/relay/src/store.ts")).toEqual([])
+  })
+
+  test("R15 follows value imports from a bundle entry and fails where a forbidden package is reached", () => {
+    const planted = fixture((tree) => {
+      tree.architecture.bundleBoundaries = [{ entry: "@fx/relay", forbid: ["@fx/schema"] }]
+    })
+    expect(found(planted).filter((item) => item.rule === "R15").map((item) => `${item.file} ${item.specifier}`)).toEqual([
+      "modules/relay/src/index.ts @fx/schema",
+    ])
+    const clean = fixture((tree) => {
+      tree.architecture.bundleBoundaries = [{ entry: "@fx/relay", forbid: ["@fx/unused"] }]
+    })
+    expect(found(clean).filter((item) => item.rule === "R15")).toEqual([])
+    // A type-only import is erased from a bundle, so it does not reach the package.
+    const typed = fixture((tree) => {
+      tree.architecture.bundleBoundaries = [{ entry: "@fx/relay", forbid: ["@fx/sdk"] }]
+      tree.files["modules/relay/src/index.ts"] = 'import { a } from "@fx/schema"\nimport type { Client } from "@fx/sdk"\nexport const relay: Client | typeof a = a\n'
+    })
+    expect(found(typed).filter((item) => item.rule === "R15")).toEqual([])
   })
 })

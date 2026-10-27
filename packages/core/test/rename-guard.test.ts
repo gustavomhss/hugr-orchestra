@@ -1,7 +1,7 @@
 // Repo-wide guard for the opencode -> Orchestra rename. Every tracked text file, and every tracked path, must be free of
-// "opencode" in any case, except kept paths and protected strings from script/rename-ledger.ts, which the rename
-// codemod (script/rename-codemod.ts) reads too. It replaces the per-area checks that model-visible prompts and tool
-// descriptions never name the upstream product: those texts live in tracked files, so this guard covers them.
+// "opencode" in any case, except kept paths and protected strings from script/rename-ledger.ts. It replaces the per-area
+// checks that model-visible prompts and tool descriptions never name the upstream product: those texts live in tracked
+// files, so this guard covers them. It stays a test: it needs a whole-tree scan, which a changed-lines rule cannot do.
 import { describe, expect, test } from "bun:test"
 import path from "node:path"
 import { readFileSync } from "node:fs"

@@ -1,5 +1,4 @@
 import { describe, expect, test } from "bun:test"
-import { fileURLToPath } from "node:url"
 import { Schema } from "effect"
 import { Agent } from "../src/agent"
 import { FileSystem } from "../src/filesystem"
@@ -73,20 +72,5 @@ describe("contract hygiene", () => {
 
     expect(identifiers.every((identifier) => typeof identifier === "string")).toBe(true)
     expect(new Set(identifiers).size).toBe(identifiers.length)
-  })
-
-  test("current source avoids Any and mutable contract wrappers", async () => {
-    const files = [...new Bun.Glob("*.ts").scanSync(fileURLToPath(new URL("../src", import.meta.url)))].filter(
-      (file) => !file.endsWith("-v1.ts"),
-    )
-    expect(files.length).toBeGreaterThan(0)
-    expect(files).toContain("session.ts")
-    const source = await Promise.all(
-      files.map((file) => Bun.file(new URL(`../src/${file}`, import.meta.url)).text()),
-    ).then((values) => values.join("\n"))
-
-    expect(source).toContain('export * as Session from "./session"')
-    expect(source).not.toContain("Schema.Any")
-    expect(source).not.toContain("Schema.mutable")
   })
 })

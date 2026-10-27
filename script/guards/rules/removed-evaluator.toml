@@ -1,0 +1,20 @@
+id = "removed-evaluator"
+group = "hygiene"
+severity = "gate"
+on = "added-lines"
+# Scope is the set the retired Arsenal evaluator could live in: its playbooks, Arsenal, core, Relay and the Maestro specs.
+paths = [
+  "modules/maestro/coordination/playbooks/**/*.{ts,tsx,md,txt}",
+  "modules/maestro/arsenal/src/**/*.{ts,tsx,md,txt}",
+  "modules/maestro/arsenal/test/**/*.{ts,tsx,md,txt}",
+  "packages/core/src/**/*.{ts,tsx,md,txt}",
+  "modules/relay/src/**/*.{ts,tsx,md,txt}",
+  "docs/specs/hugr-maestro/**/*.{ts,tsx,md,txt}",
+]
+exclude = []
+# Relay's arm is the one completion evaluator (port plan section 6). The whole-word match leaves verifiedCompletion and longer identifiers alone.
+match = '\b(?:evaluateCompletion|runCompletion)\b'
+message = "evaluateCompletion and runCompletion were removed with the Arsenal evaluator. Use Relay's arm (modules/relay/src/arm) for completion."
+summary = "Maestro's Arsenal used to carry its own completion evaluator. Relay's arm is now the only one, so a name that brings the old evaluator back is a second judge of completion."
+positive = ["export function evaluateCompletion(input: Input) {", "  return runCompletion(context)", "const r = await runCompletion({ id })"]
+negative = ["const done = verifiedCompletion(input)", "export const evaluateCompletionTime = 1", "// the arm decides; there is no runCompletionQueue"]

@@ -1,0 +1,12 @@
+id = "plugin-legacy-sdk"
+group = "dependencies"
+severity = "gate"
+on = "added-lines"
+paths = ["packages/plugin/**/*.{ts,tsx,json}"]
+exclude = ["**/node_modules/**"]
+# The plugin package speaks only the current schema. The legacy SDK package and the V1 schema modules are gone from it.
+match = '''@orchestra/sdk|@orchestra/schema/(v1/|[\w-]+-v1["/])'''
+message = "Plugin code or manifest names the legacy SDK (@orchestra/sdk) or a V1 schema module. Import the current @orchestra/schema contract instead."
+summary = "The plugin package depends on the current schema only. A legacy SDK import or a V1 schema path pulls the retired contract back into the plugin."
+positive = ['import { Client } from "@orchestra/sdk"', '    "@orchestra/sdk": "workspace:*",', 'import { Event } from "@orchestra/schema/event-v1"', 'import x from "@orchestra/schema/v1/tool"']
+negative = ['import { Tool } from "@orchestra/schema/tool"', '    "@orchestra/schema": "workspace:*",', '// the legacy SDK was removed in the rename']
