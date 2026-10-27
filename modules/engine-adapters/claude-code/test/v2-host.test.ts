@@ -189,6 +189,33 @@ test("Orchestra tools are served over the in-process MCP server and settle throu
   expect(events.map((event) => event.type)).toEqual(["step-start", "step-finish"])
 })
 
+test("a cancelled Claude call interrupts the running Orchestra tool", async () => {
+  let started!: () => void
+  const running = new Promise<void>((resolve) => (started = resolve))
+  let stop!: () => void
+  const interrupted = new Promise<void>((resolve) => (stop = resolve))
+  const abort = new AbortController()
+  during = async (options) => {
+    const server = options.mcpServers?.orchestra as McpSdkServerConfigWithInstance
+    const [client, transport] = InMemoryTransport.createLinkedPair()
+    await server.instance.connect(transport)
+    const mcp = new Client({ name: "test", version: "0" })
+    await mcp.connect(client)
+    const call = mcp.callTool({ name: "slow", arguments: {} }, undefined, { signal: abort.signal }).catch(() => undefined)
+    await running
+    abort.abort()
+    await call
+    await interrupted
+    await mcp.close()
+  }
+  script = [done]
+  const tool = new ToolDefinition({ name: "slow", description: "slow", inputSchema: { type: "object", properties: {} } })
+  await collect(turnOf({
+    tools: [tool],
+    execute: () => Effect.sync(started).pipe(Effect.andThen(Effect.never), Effect.onInterrupt(() => Effect.sync(stop))),
+  }))
+})
+
 test("Claude Code's approvals become V2 permission checks: allowed runs, a deny refuses with the reason", async () => {
   const asked: unknown[] = []
   const decisions: unknown[] = []
