@@ -178,7 +178,7 @@ const fixtures = {
     }),
   },
   tabs: { useTabs: () => ({ store: [] }) },
-  router: { useParams: () => ({}), useNavigate: () => () => undefined },
+  router: { useParams: () => ({}), useLocation: () => ({}), useNavigate: () => () => undefined },
   toast: { showToast: () => undefined },
   unused: {
     SettingsGeneralV2: () => undefined,

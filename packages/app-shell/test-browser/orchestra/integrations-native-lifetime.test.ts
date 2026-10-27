@@ -127,7 +127,7 @@ for (const direction of ["ltr", "rtl"] as const) {
 }
 
 test("navigation and lazy chapter registration retain actual route contract", async () => {
-  expect(navigation.find((item) => item.id === "integrations")).toEqual({ id: "integrations", label: "orchestra.integrations.title", chapter: "C15" })
+  expect(navigation.find((item) => item.id === "integrations")).toEqual({ id: "integrations", label: "orchestra.integrations.title" })
   expect(isWip("integrations")).toBe(false)
   expect(breadcrumbLabel({ type: "chapter", chapter: "integrations" })).toBe("orchestra.integrations.title")
   const { chapterPages }: typeof import("../../src/orchestra/chapter-route") = await load("../../src/orchestra/chapter-route")

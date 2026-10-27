@@ -16,10 +16,10 @@ test("cold review: cached MCP readiness cannot initialize a dialog before its fr
     await request.promise
     await drain()
     expect(f.editor.ready()).toBe(true)
-    expect(mcpDraft(f.editor.state.snapshot?.entries?.docs)?.endpoint).toBe("fresh {env:TOKEN}")
+    expect(mcpDraft(f.editor.state.snapshot?.entries?.docs)).toBe("fresh {env:TOKEN}")
     f.setRead("error")
     expect(f.editor.ready()).toBe(true)
-    expect(mcpDraft(f.editor.state.snapshot?.entries?.docs)?.endpoint).toBe("fresh {env:TOKEN}")
+    expect(mcpDraft(f.editor.state.snapshot?.entries?.docs)).toBe("fresh {env:TOKEN}")
   } finally { f.dispose() }
 })
 
