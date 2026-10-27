@@ -107,3 +107,21 @@ test("file logger flattens nested objects", async () => {
   expect(line).toContain("session.id=session-1")
   expect(line).not.toContain("request={")
 })
+
+test("file logger creates an owner-only log and rotates one past the cap", async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "orchestra-log-test-"))
+  await using _ = {
+    async [Symbol.asyncDispose]() {
+      await fs.rm(dir, { recursive: true, force: true })
+    },
+  }
+  const file = path.join(dir, "orchestra.log")
+  await Bun.write(file, Buffer.alloc(10 * 1024 * 1024 + 1))
+  await fs.chmod(file, 0o644)
+
+  fileLogger(file, "run-a")
+
+  expect((await fs.stat(file)).size).toBe(0)
+  expect((await fs.stat(file + ".1")).size).toBe(10 * 1024 * 1024 + 1)
+  if (process.platform !== "win32") expect((await fs.stat(file)).mode & 0o777).toBe(0o600)
+})

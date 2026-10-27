@@ -6,3 +6,4 @@
 - [Credentials](credentials.md)
 - [Desktop startup errors](desktop-startup.md)
 - [Skills: catalog visibility](skills.md)
+- [Environment variables and logs](environment.md)

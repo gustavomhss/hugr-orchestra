@@ -24,7 +24,7 @@ import type * as Scope from "effect/Scope"
 import type * as ChildProcess from "effect/unstable/process/ChildProcess"
 import { ExitCode, makeHandle, ProcessId, type ChildProcessHandle } from "effect/unstable/process/ChildProcessSpawner"
 import path from "node:path"
-import { describe, kind, millis, stdinConfig, toError, toPlatformError, transduce } from "./child-process-common"
+import { describe, kind, millis, stdinConfig, summarize, toError, toPlatformError, transduce } from "./child-process-common"
 import { Omni } from "./omni"
 import { OmniAdoption } from "./omni-adoption"
 import { OmniBackground } from "./omni-background"
@@ -87,7 +87,7 @@ export const make = Effect.fnUntraced(function* (input: {
         description: `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=strict runs ${reason} nowhere: omni does not support it and strict never delegates to legacy (${describe(command)})`,
       })
     Omni.count("delegations")
-    yield* Effect.logDebug("omni delegation", { event: "omni.delegation", reason, command: describe(command) })
+    yield* Effect.logDebug("omni delegation", { event: "omni.delegation", reason, command: summarize(command) })
     return yield* input.legacy(command)
   })
   return spawn
@@ -183,7 +183,7 @@ const start = Effect.fnUntraced(function* (
           ignored: { stdout: kind(opts.stdout) === "ignore", stderr: kind(opts.stderr) === "ignore" },
           gap: (stream, bytes) =>
             log(
-              Effect.logWarning("omni gap", { event: "omni.gap", stream, bytes, policy, command: describe(command) }),
+              Effect.logWarning("omni gap", { event: "omni.gap", stream, bytes, policy, command: summarize(command) }),
             ),
           ended: () => {
             state.ended = true
@@ -200,14 +200,14 @@ const start = Effect.fnUntraced(function* (
         const adopting = Exit.isSuccess(result) && adoption._tag === "Some" && adoption.value.policy === "tool"
         output.close(adopting)
         if (adopting)
-          yield* Effect.logInfo("omni adoption", { event: "omni.adoption", pid: child.pid, command: describe(command) })
+          yield* Effect.logInfo("omni adoption", { event: "omni.adoption", pid: child.pid, command: summarize(command) })
         // Not adopted: stop here with the Effect-clock escalation; release()'s own stop is then a no-op.
         else yield* Effect.ignore(stop(child, opts.forceKillAfter, command))
         yield* OmniAdoption.release(child, result, { title: describe(command), graceMs })
       }).pipe(Effect.provide(context)),
   )
   Omni.count("spawns")
-  yield* Effect.logDebug("omni spawn", { event: "omni.spawn", pid: child.pid, command: describe(command) })
+  yield* Effect.logDebug("omni spawn", { event: "omni.spawn", pid: child.pid, command: summarize(command) })
 
   child.wait().then(
     (status) => {
@@ -310,7 +310,7 @@ export const collect = Effect.fnUntraced(function* (
 ) {
   const run = program(command)
   Omni.count("spawns")
-  yield* Effect.logDebug("omni spawn", { event: "omni.spawn", collect: true, command: describe(command) })
+  yield* Effect.logDebug("omni spawn", { event: "omni.spawn", collect: true, command: summarize(command) })
   const signal = options.signal
   const result = yield* Effect.tryPromise({
     try: (interrupt) =>
