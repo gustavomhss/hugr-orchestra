@@ -21,6 +21,8 @@ Only the global config counts. A `trusted_projects` entry in a project's own con
 
 `orchestra mcp add` with a local server writes the server to the project and adds the project to `trusted_projects` for you, since adding it is your decision.
 
+In the app, open the project's MCP page. When one of its local servers is blocked, a banner offers **Trust this project**. Approving it starts the blocked servers at once and refreshes the page. Settings > Trusted projects lists every approved folder with a **Revoke** button, and revoking stops that project's running local servers. Both use the same server routes described below.
+
 To approve a project through the server API, send its folder (an existing absolute path) to `POST /api/trust/approve` with the body `{ "directory": "/Users/you/work/my-project" }`. The server stores the folder's real path in your global config and starts the project's blocked local MCP servers at once, with no restart. `GET /api/trust` lists the approved folders, and `POST /api/trust/revoke` with the same body removes one. Revoking stops that project's running local MCP servers. A folder trusted only through a parent stays trusted, so revoke the parent instead. The server refuses a folder that does not exist, a file, a relative path and the filesystem root.
 
 To approve a project by hand, edit the global config (`orchestra.json` in your Orchestra config folder):
@@ -45,4 +47,4 @@ The server is listed with status `failed` and this error:
 Not started: this project's config declares a local command for this server. Add "<project folder>" to trusted_projects in your user config to approve it.
 ```
 
-Nothing was run. Approving the project starts the server without a restart. You can also connect it again by hand.
+Nothing was run. Approving the project starts the server without a restart. You can also connect it again by hand. On the MCP page the card has a **Try again** button for this, and the page's banner names the project.

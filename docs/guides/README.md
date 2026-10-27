@@ -1,6 +1,7 @@
 # User guides
 
 - [Database backups and restore](database-backups.md)
+- [Settings: global sections, trusted projects and MCP fields](settings.md)
 - [Project trust (MCP, plugins, formatter, LSP)](mcp-project-trust.md)
 - [MCP and CLI failures](mcp-and-cli-failures.md)
 - [Config errors](config-errors.md)

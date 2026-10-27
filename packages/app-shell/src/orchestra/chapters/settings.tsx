@@ -3,26 +3,22 @@ import type { ChapterPageProps } from "@/orchestra/chapter-route"
 import { For, Match, Show, Switch } from "solid-js"
 import { useSearchParams } from "@solidjs/router"
 import { useLanguage } from "@/context/language"
-import { createHomeController } from "@/pages/home/home-controller"
 import { SettingsGeneralV2 } from "@/components/settings-v2/general"
 import { SettingsServersV2 } from "@/components/settings-v2/servers"
 import { ShortcutsSection } from "@/components/settings-v2/view/shortcuts-section"
-import { SETTINGS_SECTIONS } from "@/components/settings-v2/view/settings-data"
+import { TrustedProjectsSection } from "@/components/settings-v2/view/trust-section"
+import { GLOBAL_SETTINGS_SECTIONS, globalSettingsSection } from "@/components/settings-v2/view/settings-data"
 
-// Routed Settings view (`/orchestra/settings?section=<id>`), registered in chapterPages by the shell.
+// Routed Settings view (`/orchestra/settings?section=<id>`), registered in chapterPages by the shell. With no project
+// open only the server-wide tabs are offered; the project tabs appear once a project is open (SettingsView).
 export default function SettingsPage(props: ChapterPageProps) {
   const language = useLanguage()
-  const home = createHomeController()
   const [params, setParams] = useSearchParams<{ section?: string }>()
   const labels = {
     general: "settings.tab.general",
     servers: "status.popover.tab.servers",
     shortcuts: "settings.tab.shortcuts",
-    permissions: "settings.permissions.title",
-    providers: "settings.providers.title",
-    models: "settings.models.title",
-    agents: "settings.agents.title",
-    mcp: "settings.mcp.title",
+    trust: "orchestra.settings.trust.title",
   } as const
   return (
     <Show
@@ -39,12 +35,12 @@ export default function SettingsPage(props: ChapterPageProps) {
             </header>
             <div class="settings">
               <nav class="settings-nav" aria-label={language.t("orchestra.settings.sections")}>
-                <For each={SETTINGS_SECTIONS}>
+                <For each={GLOBAL_SETTINGS_SECTIONS}>
                   {(item) => (
                     <button
                       type="button"
-                      classList={{ on: (params.section ?? "general") === item }}
-                      aria-current={(params.section ?? "general") === item ? "page" : undefined}
+                      classList={{ on: globalSettingsSection(params.section) === item }}
+                      aria-current={globalSettingsSection(params.section) === item ? "page" : undefined}
                       onClick={() => setParams({ section: item }, { replace: true })}
                     >
                       {language.t(labels[item])}
@@ -53,24 +49,18 @@ export default function SettingsPage(props: ChapterPageProps) {
                 </For>
               </nav>
               <div class="settings-body settings-inherited">
-                <Switch
-                  fallback={
-                    <div class="mx-empty" role="status">
-                      <p>{language.t("orchestra.shell.settings.repository")}</p>
-                      <button type="button" class="mx-btn primary" onClick={() => home.project.choose(props.server)}>
-                        {language.t("command.project.open")}
-                      </button>
-                    </div>
-                  }
-                >
-                  <Match when={!params.section || params.section === "general"}>
+                <Switch>
+                  <Match when={globalSettingsSection(params.section) === "general"}>
                     <SettingsGeneralV2 />
                   </Match>
-                  <Match when={params.section === "servers"}>
+                  <Match when={globalSettingsSection(params.section) === "servers"}>
                     <SettingsServersV2 />
                   </Match>
-                  <Match when={params.section === "shortcuts"}>
+                  <Match when={globalSettingsSection(params.section) === "shortcuts"}>
                     <ShortcutsSection />
+                  </Match>
+                  <Match when={globalSettingsSection(params.section) === "trust"}>
+                    <TrustedProjectsSection />
                   </Match>
                 </Switch>
               </div>

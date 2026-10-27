@@ -16,6 +16,7 @@ import { createDefaultModelController } from "../default-model"
 import { SettingsGeneralV2 } from "../general"
 import { SettingsServersV2 } from "../servers"
 import { AgentsSection, McpSection } from "./capabilities-section"
+import { TrustedProjectsSection } from "./trust-section"
 import {
   contextLabel,
   PERMISSION_ACTIONS,
@@ -44,6 +45,7 @@ const sectionLabels = {
   shortcuts: "settings.tab.shortcuts",
   general: "settings.tab.general",
   servers: "status.popover.tab.servers",
+  trust: "orchestra.settings.trust.title",
 } as const
 
 // The routed Settings view (mock `#settings`): a slim masthead, a section rail and one section body.
@@ -128,6 +130,9 @@ export function SettingsView(props: { server: ServerConnection.Any; directory: s
                     <SettingsServersV2 />
                   </div>
                 </SettingsSec>
+              </Match>
+              <Match when={section() === "trust"}>
+                <TrustedProjectsSection />
               </Match>
             </Switch>
           </div>

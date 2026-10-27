@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import {
   contextLabel,
+  GLOBAL_SETTINGS_SECTIONS,
+  globalSettingsSection,
   permissionAction,
   permissionLock,
   permissionRules,
@@ -19,6 +21,14 @@ describe("settings sections", () => {
 
   test("lists the dialog's tabs first, in the dialog's order", () => {
     expect(SETTINGS_SECTIONS.slice(0, 5)).toEqual(["general", "shortcuts", "servers", "providers", "models"])
+  })
+
+  test("with no project open, only server-wide sections are offered", () => {
+    expect(GLOBAL_SETTINGS_SECTIONS.every((item) => SETTINGS_SECTIONS.includes(item))).toBe(true)
+    expect(globalSettingsSection("trust")).toBe("trust")
+    expect(globalSettingsSection("mcp")).toBe("general")
+    expect(globalSettingsSection("providers")).toBe("general")
+    expect(globalSettingsSection(undefined)).toBe("general")
   })
 })
 

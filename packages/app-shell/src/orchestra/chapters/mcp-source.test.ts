@@ -62,3 +62,29 @@ test("tools list each connected server's tool names", async () => {
 test("a config write stops no sessions", async () => {
   expect(await source().mcp.working()).toBe(0)
 })
+
+test("trust reads the global list and approves this profile's folder", async () => {
+  const calls: unknown[] = []
+  const serverSDK = {
+    api: { mcp: {} },
+    orchestra: {
+      "server.trust": {
+        list: async () => {
+          calls.push(["list"])
+          return ["/Users/me/work"]
+        },
+        approve: async (input: unknown) => {
+          calls.push(["approve", input])
+        },
+      },
+    },
+  }
+  const mcp = createMcpSource({
+    directory: "/repo",
+    serverSDK: serverSDK as unknown as Parameters<typeof createMcpSource>[0]["serverSDK"],
+    open: () => {},
+  })
+  expect(await mcp.trusted()).toEqual(["/Users/me/work"])
+  await mcp.approveTrust()
+  expect(calls).toEqual([["list"], ["approve", { directory: "/repo" }]])
+})

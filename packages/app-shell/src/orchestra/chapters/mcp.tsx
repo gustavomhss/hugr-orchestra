@@ -14,7 +14,16 @@ import { pathKey } from "@/utils/path-key"
 import { MxBadge, MxPage, MxToggle } from "./kit"
 import { createMcpActions, createMcpAuth, mcpErrorDetail } from "./mcp-actions"
 import { McpEditDialog, McpRemoveDialog, McpToolsDialog } from "./mcp-dialogs"
-import { mcpAction, mcpBadges, type McpCard, mcpCards, MCP_CONFIG_FILE, mcpError, mcpMatches } from "./mcp-model"
+import {
+  mcpAction,
+  mcpBadges,
+  type McpCard,
+  mcpCards,
+  MCP_CONFIG_FILE,
+  mcpError,
+  mcpMatches,
+  trustedDirectory,
+} from "./mcp-model"
 import { createMcpSource } from "./mcp-source"
 import "./mcp.css"
 
@@ -66,6 +75,11 @@ export default function McpPage(props: ChapterPageProps) {
     () => ({ queryKey: [serverSDK().scope, key, "orchestra-mcp-tools"] as const, queryFn: source.tools, retry: false }),
     client,
   )
+  // Trust is global, so this list is not keyed by the profile.
+  const trust = useQuery(
+    () => ({ queryKey: [serverSDK().scope, "orchestra-trust"] as const, queryFn: source.trusted, retry: false }),
+    client,
+  )
   const refresh = () =>
     Promise.all([
       status.refetch(),
@@ -97,6 +111,26 @@ export default function McpPage(props: ChapterPageProps) {
     ),
   )
   const byName = createMemo(() => new Map(cards().map((card) => [card.name, card])))
+  // A local server from this project's own config stays blocked until the project is trusted. Its card reads
+  // failed, so the banner keys on that plus the trust list, not on the error text.
+  const blocked = createMemo(
+    () =>
+      trust.data !== undefined &&
+      !trustedDirectory(trust.data, props.directory) &&
+      cards().some((card) => card.entry?.type === "local" && card.status.status === "failed"),
+  )
+  const [trusting, setTrusting] = createStore({ busy: false, error: "" })
+  const trustProject = () => {
+    setTrusting({ busy: true, error: "" })
+    // Approving starts the blocked servers on the server, so MCP state is read again right after.
+    void source
+      .approveTrust()
+      .then(() => Promise.all([trust.refetch(), refresh()]))
+      .catch((error: unknown) =>
+        setTrusting({ error: mcpErrorDetail(error) ?? language.t("common.requestFailed") }),
+      )
+      .finally(() => setTrusting("busy", false))
+  }
   const label = (card: McpCard) => language.t(mcpBadges[card.status.status].label)
   // Rows are keyed by name so a status refresh updates cards in place instead of recreating them.
   const visible = createMemo(() =>
@@ -157,6 +191,17 @@ export default function McpPage(props: ChapterPageProps) {
           <bdi title={props.directory}>{profile()}</bdi>
         </MxBadge>
       </div>
+      <Show when={blocked()}>
+        <div class="mx-note orchestra-mcp-trust" role="status">
+          <p>{language.t("orchestra.mcp.trustBanner", { profile: profile() })}</p>
+          <button type="button" class="mx-btn primary" disabled={trusting.busy} onClick={() => trustProject()}>
+            {language.t("orchestra.mcp.trustProject")}
+          </button>
+          <Show when={trusting.error}>
+            {(detail) => <p role="alert">{language.t("orchestra.mcp.actionError", { detail: detail() })}</p>}
+          </Show>
+        </div>
+      </Show>
       <Switch>
         <Match when={status.isPending}>
           <div class="mx-empty" role="status">
@@ -273,6 +318,16 @@ export default function McpPage(props: ChapterPageProps) {
                               onClick={() => void toggle(card())}
                             >
                               {language.t("orchestra.mcp.authenticate")}
+                            </button>
+                          </Match>
+                          <Match when={card().status.status === "failed"}>
+                            <button
+                              type="button"
+                              class="mx-btn"
+                              disabled={!!actions.state.pending[name]}
+                              onClick={() => void toggle(card())}
+                            >
+                              {language.t("orchestra.mcp.tryAgain")}
                             </button>
                           </Match>
                           {/* A retry cannot register a client; the card points to the config instead. */}
