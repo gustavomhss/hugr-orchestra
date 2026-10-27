@@ -62,6 +62,8 @@ async function parent() {
           logs: result.logs.map(String),
         }),
       )
+    // A dependency still reads import.meta?.env, which define cannot reach and a CJS bundle cannot contain.
+    await writeFile(output, (await readFile(output, "utf8")).replaceAll(/import\.meta\??\.env/g, "({})"))
     try {
       await access(output)
     } catch {

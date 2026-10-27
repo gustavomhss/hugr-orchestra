@@ -194,6 +194,8 @@ async function parent() {
     check(result.success && result.outputs[0], "bundle failed")
     const entry = join(outdirOf(result), "app-dock-tools.test.cjs")
     await access(entry)
+    // A dependency still reads import.meta?.env, which define cannot reach and a CJS bundle cannot contain.
+    await writeFile(entry, (await readFile(entry, "utf8")).replaceAll(/import\.meta\??\.env/g, "({})"))
     const electronDir = dirname(createRequire(join(process.cwd(), "package.json")).resolve("electron"))
     const electron = join(electronDir, "dist", (await readFile(join(electronDir, "path.txt"), "utf8")).trim())
     await access(electron)
