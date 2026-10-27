@@ -1,6 +1,6 @@
 import { expect, test, type Page, type Route } from "@playwright/test"
 import { readFile } from "node:fs/promises"
-import { mockOrchestraServer } from "../utils/mock-server"
+import { currentSession, mockOrchestraServer } from "../utils/mock-server"
 import { expandAdvanced } from "./compact-navigation.fixture"
 
 const serverA = "http://127.0.0.1:4096"
@@ -578,7 +578,8 @@ async function setup(
   await mockOrchestraServer(page, {
     directory,
     project,
-    sessions: records,
+    // Home shows the KPIs only for a project that has sessions, so the second worktree has one too.
+    sessions: input.secondDirectory ? [...records, { ...session(8), directory: `${directory}-other` }] : records,
     provider: { all: [], connected: [], default: {} },
     pageMessages: () => ({ items: [] }),
     sessionStatus: { ses_recorded_001: { type: "busy" } },
@@ -660,7 +661,7 @@ async function setup(
       return route.fulfill({ status: 200, contentType: "text/event-stream", body: ": ok\n\n" })
     if (["/project", "/api/project"].includes(url.pathname))
       return json(route, [{ ...project, name: "Recorded repo B" }])
-    if (url.pathname === "/api/session") return json(route, { data: [], cursor: {} })
+    if (url.pathname === "/api/session") return json(route, { data: [currentSession(session(8), directory)], cursor: {} })
     if (url.pathname === "/api/session/active") return json(route, { data: {} })
     if (["/path", "/api/path"].includes(url.pathname))
       return json(route, { directory, worktree: directory, home: "/", config: directory, state: directory })
