@@ -934,6 +934,7 @@ export const dict = {
   "live.start.reason.no-key": "Tambah kunci tukar pertuturan kepada teks dalam Tetapan dahulu",
   "live.start.reason.server": "Pelayan tempatan tidak bertindak balas",
   "live.start.reason.capture": "Rakaman audio tidak dapat dimulakan. Semak kebenaran mikrofon dan rakaman skrin.",
+  "live.start.reason.permission": "Benarkan akses mikrofon dalam Tetapan Sistem dahulu",
   "settings.general.row.language.title": "Bahasa",
   "settings.general.row.language.description": "Tukar bahasa paparan untuk HuGR Orchestra",
   "settings.general.row.shell.title": "Shell terminal",

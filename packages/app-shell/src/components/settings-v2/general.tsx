@@ -6,7 +6,7 @@ import { Switch } from "@orchestra/ui/v2/switch-v2"
 import { TextInputV2 } from "@orchestra/ui/v2/text-input-v2"
 import { useLanguage } from "@/context/language"
 import { usePlatform, type LiveSeatPlatform } from "@/context/platform"
-import { startLiveMeeting } from "@/orchestra/live/commands"
+import { useFlight } from "@/orchestra/chapters/flight-engineer/run"
 import { showToast } from "@/utils/toast"
 import { useUpdaterAction } from "../updater-action"
 import { useSettings } from "@/context/settings"
@@ -568,7 +568,8 @@ function LiveSeatSection(props: { seat: LiveSeatPlatform }) {
       void refetch()
     })
   }
-  const toggleMeeting = () => run(state.latest?.running ? props.seat.stop() : startLiveMeeting(props.seat, language.t))
+  const flight = useFlight()
+  const toggleMeeting = () => (state.latest?.running ? run(props.seat.stop()) : flight.requestStart())
   const saveKey = (value: string) =>
     run(
       props.seat

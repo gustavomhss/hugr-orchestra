@@ -911,6 +911,7 @@ export const dict = {
   "live.start.reason.no-key": "เพิ่มคีย์แปลงเสียงเป็นข้อความในการตั้งค่าก่อน",
   "live.start.reason.server": "เซิร์ฟเวอร์ในเครื่องไม่ตอบสนอง",
   "live.start.reason.capture": "ไม่สามารถเริ่มการจับเสียงได้ โปรดตรวจสอบสิทธิ์ไมโครโฟนและการบันทึกหน้าจอ",
+  "live.start.reason.permission": "อนุญาตการเข้าถึงไมโครโฟนในการตั้งค่าระบบก่อน",
 
   "settings.general.row.language.title": "ภาษา",
   "settings.general.row.language.description": "เปลี่ยนภาษาที่แสดงสำหรับ HuGR Orchestra",

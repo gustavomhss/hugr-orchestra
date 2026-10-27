@@ -1,0 +1,266 @@
+/* Flight Engineer surfaces that live outside the chapter page: the modal host, the sidebar chip and the Home card.
+   Colors come from the kit and theme tokens; the dialog uses the float-glass material of the approved permission mock. */
+
+.fe-dot {
+  display: inline-block;
+  inline-size: 6px;
+  block-size: 6px;
+  flex: none;
+  border-radius: var(--orchestra-radius-full);
+  background: var(--mx-bad);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mx-bad) 25%, transparent);
+}
+
+.fe-live-chip {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  margin-inline-start: auto;
+  color: var(--mx-bad);
+  font-size: var(--orchestra-font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.fe-home {
+  margin-block-start: 32px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 18px 20px;
+  border: 1px solid var(--mx-line);
+  border-radius: var(--orchestra-radius-lg);
+  background: linear-gradient(180deg, var(--mx-sheen), transparent 56px), var(--mx-raised);
+  box-shadow: var(--mx-highlight), var(--mx-card-shadow);
+  color: var(--mx-dim);
+  font-family: var(--mx-sans);
+  font-size: var(--orchestra-font-size-md);
+  line-height: 20px;
+}
+.fe-home-text {
+  flex: 1;
+  min-inline-size: 0;
+}
+.fe-home-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.fe-home h2 {
+  margin: 2px 0 0;
+  overflow: hidden;
+  color: var(--mx-strong);
+  font-size: var(--orchestra-font-size-xl);
+  font-weight: 600;
+  line-height: 22px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fe-home p {
+  margin: 0;
+}
+.fe-home-time {
+  color: var(--mx-dim);
+  font-variant-numeric: tabular-nums;
+}
+.fe-home-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Keys are shared with the chapter: the caps sit in the same soft pill the overlay uses. */
+.fe-keys {
+  display: inline-flex;
+  gap: 3px;
+}
+.fe-keys kbd {
+  display: inline-block;
+  min-inline-size: 20px;
+  padding: 1px 6px;
+  border: 1px solid var(--mx-line);
+  border-radius: var(--orchestra-radius-xs);
+  background: var(--mx-soft);
+  color: var(--mx-dim);
+  font: 600 var(--orchestra-font-size-2xs) / 16px var(--mx-sans);
+  text-align: center;
+}
+
+/* Modal host: float glass over a scrim, never glass on glass (the page behind is covered by the scrim). */
+.fe-modal {
+  /* A global reset zeroes the margin the user agent uses to centre a modal dialog. */
+  margin: auto;
+  inset: 0;
+  inline-size: min(600px, calc(100vw - 48px));
+  max-block-size: calc(100vh - 64px);
+  padding: 28px 28px 22px;
+  overflow: auto;
+  border: 1px solid var(--orchestra-glass-border);
+  border-radius: var(--orchestra-radius-xl);
+  background: var(--orchestra-float-background);
+  backdrop-filter: var(--orchestra-float-filter);
+  color: var(--mx-dim);
+  font-family: var(--mx-sans);
+  font-size: var(--orchestra-font-size-md);
+  line-height: 20px;
+  box-shadow: var(--mx-highlight), var(--mx-shadow);
+}
+.fe-modal:focus {
+  outline: none;
+}
+.fe-modal::backdrop {
+  background: var(--orchestra-scrim);
+  backdrop-filter: var(--orchestra-scrim-filter);
+}
+.fe-modal > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.fe-modal h2 {
+  margin: 0;
+  color: var(--mx-strong);
+  font-size: var(--orchestra-font-size-2xl);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 28px;
+}
+.fe-modal .fe-glyph {
+  inline-size: 16px;
+  block-size: 16px;
+}
+.fe-modal-lead {
+  margin: 4px 0 0;
+  color: var(--mx-dim);
+}
+.fe-modal fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 18px 0 0;
+  padding: 0;
+  border: 0;
+}
+.fe-modal legend {
+  padding: 0;
+  margin-block-end: 8px;
+  color: var(--mx-strong);
+  font-weight: 500;
+}
+.fe-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--mx-line);
+  border-radius: var(--orchestra-radius-md);
+  background: var(--mx-soft);
+  cursor: pointer;
+}
+.fe-choice:has(input:checked) {
+  border-color: var(--mx-blue);
+}
+.fe-choice:has(input:focus-visible) {
+  outline: 2px solid var(--mx-blue);
+  outline-offset: 2px;
+}
+.fe-choice input {
+  flex: none;
+  inline-size: 16px;
+  block-size: 16px;
+  margin: 2px 0 0;
+  appearance: none;
+  border: 1.5px solid var(--mx-dim);
+  border-radius: 50%;
+  background: transparent;
+}
+.fe-choice input:checked {
+  border-color: var(--mx-blue);
+  background: radial-gradient(circle, var(--mx-blue) 0 4px, transparent 5px);
+}
+.fe-choice input:focus-visible {
+  outline: none;
+}
+.fe-choice strong {
+  display: block;
+  color: var(--mx-strong);
+  font-weight: 500;
+}
+.fe-choice small {
+  display: block;
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-sm);
+}
+.fe-modal > footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-block-start: 18px;
+}
+.fe-perms {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.fe-perms li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--mx-line);
+  border-radius: var(--orchestra-radius-lg);
+  background: linear-gradient(180deg, var(--mx-sheen), transparent 56px), var(--mx-raised);
+}
+.fe-perms li > .fe-glyph {
+  box-sizing: content-box;
+  padding: 8px;
+  border-radius: var(--orchestra-radius-md);
+  background: var(--mx-soft);
+  color: var(--mx-dim);
+}
+.fe-perms li > span:not(.mx-badge) {
+  flex: 1;
+}
+.fe-perms strong {
+  display: block;
+  color: var(--mx-strong);
+  font-size: var(--orchestra-font-size-lg);
+  font-weight: 500;
+}
+.fe-perms small {
+  display: block;
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-sm);
+}
+.fe-waiting {
+  margin: 14px 0 0;
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-sm);
+}
+.fe-modal .fe-note {
+  margin-block-start: 14px;
+}
+
+.fe-note {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--orchestra-radius-md);
+  background: var(--mx-soft);
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-sm);
+  line-height: 18px;
+}
+.fe-note[data-tone="bad"] {
+  color: var(--mx-bad);
+}

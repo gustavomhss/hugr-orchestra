@@ -863,6 +863,7 @@ export const dict = {
   "live.start.reason.no-key": "Ajoutez d'abord une clé de reconnaissance vocale dans les réglages",
   "live.start.reason.server": "Le serveur local n'a pas répondu",
   "live.start.reason.capture": "La capture audio n'a pas pu démarrer. Vérifiez les autorisations du microphone et de l'enregistrement d'écran.",
+  "live.start.reason.permission": "Autorisez d'abord l'accès au micro dans les Réglages Système",
   "settings.general.row.language.title": "Langue",
   "settings.general.row.language.description": "Changer la langue d'affichage de HuGR Orchestra",
   "settings.general.row.shell.title": "Interpréteur de commandes du terminal",

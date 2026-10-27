@@ -941,6 +941,7 @@ export const dict = {
   "live.start.reason.no-key": "Эхлээд Тохиргоонд яриаг текст болгох түлхүүр нэмнэ үү",
   "live.start.reason.server": "Орон нутгийн сервер хариу өгсөнгүй",
   "live.start.reason.capture": "Дуу бичлэг эхлүүлж чадсангүй. Микрофон болон дэлгэцийн бичлэгийн зөвшөөрлийг шалгана уу.",
+  "live.start.reason.permission": "Эхлээд Системийн тохиргоонд микрофоны хандалтыг зөвшөөрнө үү",
   "settings.general.row.language.title": "Хэл",
   "settings.general.row.language.description": "HuGR Orchestra-гийн дэлгэцийн хэлийг өөрчлөх",
   "settings.general.row.shell.title": "Терминал shell",

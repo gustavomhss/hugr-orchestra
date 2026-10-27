@@ -786,6 +786,7 @@ export const dict = {
   "live.start.reason.no-key": "Legg til en tale-til-tekst-nøkkel i Innstillinger først",
   "live.start.reason.server": "Den lokale serveren svarte ikke",
   "live.start.reason.capture": "Lydopptak kunne ikke starte. Sjekk tillatelser for mikrofon og skjermopptak.",
+  "live.start.reason.permission": "Gi først tilgang til mikrofonen i Systeminnstillinger",
 
   "settings.general.row.language.title": "Språk",
   "settings.general.row.language.description": "Endre visningsspråket for HuGR Orchestra",

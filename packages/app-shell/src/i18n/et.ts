@@ -934,6 +934,7 @@ export const dict = {
   "live.start.reason.no-key": "Lisa kõigepealt seadetes kõnest teksti võti",
   "live.start.reason.server": "Kohalik server ei vastanud",
   "live.start.reason.capture": "Heli salvestamine ei käivitunud. Kontrolli mikrofoni ja ekraanisalvestuse õigusi.",
+  "live.start.reason.permission": "Luba kõigepealt süsteemisätetes juurdepääs mikrofonile",
   "settings.general.row.language.title": "Keel",
   "settings.general.row.language.description": "Muutke rakenduse HuGR Orchestra kuvakeelt",
   "settings.general.row.shell.title": "Terminali shell",

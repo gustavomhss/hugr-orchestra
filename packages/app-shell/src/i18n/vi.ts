@@ -946,6 +946,7 @@ export const dict = {
   "live.start.reason.no-key": "Hãy thêm khóa chuyển giọng nói thành văn bản trong Cài đặt trước",
   "live.start.reason.server": "Máy chủ cục bộ không phản hồi",
   "live.start.reason.capture": "Không thể bắt đầu thu âm. Kiểm tra quyền micro và quyền ghi màn hình.",
+  "live.start.reason.permission": "Hãy cho phép truy cập micrô trong Cài đặt Hệ thống trước",
   "settings.general.row.language.title": "Ngôn ngữ",
   "settings.general.row.language.description": "Thay đổi ngôn ngữ hiển thị cho HuGR Orchestra",
   "settings.general.row.shell.title": "Shell terminal",

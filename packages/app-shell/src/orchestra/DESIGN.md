@@ -216,6 +216,9 @@ Measured at 1920×1200 in the dev app. Spacing values sit on a 2px grid; most ga
 - **Dialogs.** Float glass over the scrim, radius xl, title 2xl. The head carries `--mx-sheen`, the foot a
   `--mx-soft` wash, and the frame the highlight rim over `--mx-shadow`. The head's close icon is a 28px rounded
   square (radius sm, `--mx-dim`, `--mx-soft` on hover), so its focus ring is not a tight box around the glyph.
+- **Row actions.** In a dense list (Flight Engineer meeting detail) a row's text actions fade in on hover or
+  focus-within through opacity. They stay in the DOM and keyboard reachable, and stay visible on devices without
+  hover. A state chip never repeats the value a segmented control on the same row already shows.
 - **Focus.** A visible ring in `--orchestra-accent` on every interactive element (`hit-areas.spec.ts` pins it).
 - **Clipping.** Anything cut off gets a fade mask, never a hard edge.
 

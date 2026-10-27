@@ -213,7 +213,37 @@ Code: `packages/core/src/session/meeting-memory.sql.ts` (tables), `meeting-memor
 - **Privacy.** Local only, unsealed, no project column. `meeting.session_id` is nullable and set to null when the Session is deleted, so a meeting survives it; only deleting the meeting erases it. Search is plain SQL `LIKE` over titles and item text, with no FTS.
 - **Limits.** The card stays `pending` and empty until consolidation (package D) writes it. `answers` is 0 because the record does not store the seat's answers yet. A meeting whose Session was deleted reports the placeholder session id `ses_detached` in `Info`, since the frozen type has no empty case. Deleting a meeting removes its items and proposals; person rows are the user's address book and stay. The list `limit` is capped at 200. Handoff still answers `unavailable`. The meeting routes do not refuse non-loopback requests: the server has no check to reuse.
 
+### Screens as built
+
+The chapter lives in `packages/app-shell/src/orchestra/chapters/flight-engineer/` at `/orchestra/flight-engineer` and shows only in the desktop app.
+
+- **Meeting.** Idle shows the start card, a readiness list (microphone, system audio, speech-to-text key, answer model) and the hotkeys. A running meeting shows the timer, the audio level per track and the stop action. The transcript and answers stay in the overlay. The first start asks for consent, then for each missing permission.
+- **Past meetings** (`/meetings`, `/meetings/<id>`). The list searches on the server. The detail page shows the summary, decisions, commitments, open questions, suggestions, people proposals and the transcript, plus a delete action behind a confirm dialog. Row actions (Confirm, Dispute, Dismiss, Hand to Maestro) show on hover or focus. Server-side confirm, commitment state and hand-off are not wired yet and say "not available yet" inline.
+- **Settings.** Speech-to-text key (shown only as "Saved", never its value), answer model, language, suggestions, screen-share exclusion and the rebindable hotkeys with a conflict check.
+- **Home card and sidebar chip.** Home shows a Flight Engineer card, and the sidebar entry shows the running timer.
+- **Deep links.** `orchestra://live` opens the chapter and `orchestra://live?meeting=<id>` opens that meeting (`parseLiveDeepLink` in `pages/layout/deep-links.ts`, routed by `NewShellIngress`). The live tray sends them.
+- **Tray icon.** `trayTemplate.png` and `trayTemplate@2x.png` (18 pt) in each channel folder of `apps/desktop/icons/`, copied to `resources/icons` with the other icons. It is the sidebar's microphone mark drawn as a macOS template image (black on transparent), so the menu bar tints it for light and dark; a running meeting adds `● mm:ss` as the tray title.
+
 Gates per package: change-scoped `bun run test:ci`, the typecheck workflow and `bun run check:guards --base origin/dev`. One full epic at the end.
+
+### Package A as built (bridge)
+
+Files, all in `apps/desktop/src/main`: `live-ipc.ts` (every live IPC handler; `ipc.ts` only calls `registerLiveIpc`), `live-readiness.ts` (permissions, system audio availability, requests), `live-settings.ts` (settings and hotkeys in the desktop store), plus edits to `live-loop.ts`, `live-audio.ts` (`levelMeter`), `live-senses.ts`, `live-capture.ts`, `live-transcriber.ts`, `live-session-client.ts` and `live-meeting-client.ts`. The preload and renderer stubs are replaced by IPC calls.
+
+Decisions:
+
+- Run state and levels are broadcast to all windows (`live-run-state-changed`, `live-levels`). Levels are sampled at about 15 Hz and flow only while a meeting runs.
+- `start` returns `"permission"` when the microphone is denied. Denied or unavailable system audio starts the meeting with the microphone only; a source turned off in settings is not captured.
+- A meeting with no title is named "Meeting HH:MM". Rename goes through `PATCH /api/meeting` with `{meetingID, title}`.
+- The answer model setting is `provider/model` and is passed to the live Session at creation. The language setting is passed to the transcriber ("auto" is "multi").
+- System audio needs macOS 14.2 (Darwin 23.2). Its permission is the screen recording status; requesting it opens the Privacy pane because macOS has no prompt API for it.
+- Hotkeys: start-stop is held for good, toggle-captions only while a meeting runs. Refused registration is a "conflict", an unparsable accelerator is "invalid".
+
+Limits:
+
+- Changes to the ask and toggle-overlay hotkeys apply from the next meeting, because the overlay registers them at start.
+- No levels outside a meeting, so the settings screen cannot show a live microphone test before one starts.
+- The default microphone label is unknown to main (`microphone` is undefined in readiness) and answer model reachability is always "unknown".
 
 ## Open owner decisions
 

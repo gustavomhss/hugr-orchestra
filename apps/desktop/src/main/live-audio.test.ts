@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { BYTES_PER_MS, echoGate, interleave, ringBuffer } from "./live-audio"
+import { BYTES_PER_MS, echoGate, interleave, levelMeter, ringBuffer } from "./live-audio"
 
 const tone = (value: number, frames = 320) => new Float32Array(frames).fill(value)
 
@@ -28,5 +28,19 @@ describe("live audio", () => {
     ;[0, 20, 40, 60, 80, 100, 120].forEach((startMs) => ring.push(startMs, chunk()))
     expect(ring.startMs()).toBe(40)
     expect(ring.since(90).map((item) => item.startMs)).toEqual([80, 100, 120])
+  })
+})
+
+describe("live audio levels", () => {
+  test("emits the RMS of each source and throttles to about 15 Hz", () => {
+    const seen: { microphone: number; "system-audio": number }[] = []
+    const meter = levelMeter((levels) => seen.push(levels))
+    meter(tone(0.5), tone(0), 0)
+    meter(tone(0.5), tone(0), 20)
+    meter(tone(1), tone(0.25), 70)
+    expect(seen).toEqual([
+      { microphone: 0.5, "system-audio": 0 },
+      { microphone: 1, "system-audio": 0.25 },
+    ])
   })
 })

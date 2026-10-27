@@ -944,6 +944,7 @@ export const dict = {
   "live.start.reason.no-key": "Əvvəlcə Parametrlərdə nitqdən mətnə açar əlavə edin",
   "live.start.reason.server": "Yerli server cavab vermədi",
   "live.start.reason.capture": "Səs qeydi başlaya bilmədi. Mikrofon və ekran yazısı icazələrini yoxlayın.",
+  "live.start.reason.permission": "Əvvəlcə Sistem Ayarlarında mikrofona icazə verin",
   "settings.general.row.language.title": "Dil",
   "settings.general.row.language.description": "HuGR Orchestra üçün ekran dilini dəyişdirin",
   "settings.general.row.shell.title": "Terminal qabığı",

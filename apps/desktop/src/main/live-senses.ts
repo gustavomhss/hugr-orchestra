@@ -1,7 +1,7 @@
 import type { BrowserWindow } from "electron"
 import { randomUUID } from "node:crypto"
 
-import { SAMPLE_RATE, echoGate, interleave } from "./live-audio"
+import { SAMPLE_RATE, echoGate, interleave, levelMeter } from "./live-audio"
 import { startCapture } from "./live-capture"
 import { captureFrame } from "./live-frame"
 import { readTranscriptionKey } from "./live-key"
@@ -36,11 +36,20 @@ export async function startSenses(options: {
   title: string
   logDirectory: string
   model?: string
+  // A BCP-47 tag, or "auto" to let the engine follow the meeting's language.
+  language?: string
+  // The tracks to open; a track left out is never captured and raises no permission prompt.
+  sources?: { microphone: boolean; systemAudio: boolean }
+  onLevels?: (levels: { microphone: number; "system-audio": number }) => void
   onEvent: (event: LiveSensesEvent) => void
 }) {
+  const want = options.sources ?? { microphone: true, systemAudio: true }
   const key = readTranscriptionKey()
   if (!key) throw new Error("No speech-to-text key is set for the live seat.")
-  const senses = { microphone: (await requestMicrophone()) ? "granted" : "denied", systemAudio: "on-request" } as {
+  const senses = {
+    microphone: !want.microphone || (await requestMicrophone()) ? "granted" : "denied",
+    systemAudio: "on-request",
+  } as {
     microphone: SenseStatus
     systemAudio: SenseStatus
   }
@@ -65,6 +74,7 @@ export async function startSenses(options: {
   const log = transportLog(options.logDirectory, meeting.id)
   const clock = { ms: 0 }
   const gate = echoGate()
+  const meter = levelMeter((levels) => options.onLevels?.(levels))
 
   const cutter = segmenter({
     endOfSpeech: true,
@@ -81,7 +91,8 @@ export async function startSenses(options: {
       options.onEvent({ kind: "segment", segment })
     },
   })
-  const transcriber = createTranscriber({ engine: "deepgram", model: options.model ?? DEFAULT_MODEL, key }, (event) => {
+  const language = options.language === "auto" ? "multi" : options.language
+  const transcriber = createTranscriber({ engine: "deepgram", model: options.model ?? DEFAULT_MODEL, key, language }, (event) => {
     if (event.kind === "piece") return cutter.piece(event.piece, clock.ms)
     if (event.kind === "speech-end") return cutter.speechEnd(event.track)
     if (event.kind === "open") {
@@ -117,6 +128,7 @@ export async function startSenses(options: {
         senses.systemAudio = "granted"
         report()
       }
+      meter(me, them, Date.now())
       const startMs = clock.ms
       const pcm = interleave(me, them, startMs, gate)
       clock.ms += ((pcm.length / 2) * 1000) / SAMPLE_RATE
@@ -130,7 +142,7 @@ export async function startSenses(options: {
     state(state, reason) {
       log.write({ event: "capture", state, reason })
     },
-  }).catch(async (error) => {
+  }, want).catch(async (error) => {
     await transcriber.stop()
     await client.stop(meeting.id).catch(() => undefined)
     throw error
