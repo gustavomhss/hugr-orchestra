@@ -20,6 +20,7 @@ import { ProductHost } from "../../host"
 import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
 import { Runtime } from "../../framework/runtime"
 import { Daemon } from "../../services/daemon"
+import { addressInUse } from "./serve-port"
 import { ServeShutdown } from "./serve-shutdown"
 
 const SHUTDOWN_GRACE_MS = 2_000
@@ -109,7 +110,7 @@ function listen(hostname: string, port: Option.Option<number>, password: string,
   if (Option.isSome(port)) return bind(hostname, port.value, password, host, root, cors)
   const next = (port: number): ReturnType<typeof bind> =>
     bind(hostname, port, password, host, root, cors).pipe(
-      Effect.catch((error) => (port === 65_535 ? Effect.fail(error) : next(port + 1))),
+      Effect.catch((error) => (port === 65_535 || !addressInUse(error) ? Effect.fail(error) : next(port + 1))),
     )
   return next(4096)
 }

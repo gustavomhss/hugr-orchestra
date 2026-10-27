@@ -46,7 +46,8 @@ export default Runtime.handler(
     if (typeof files === "string") return yield* Effect.fail(new Error(files))
 
     const typed = input.message.map((arg) => (arg.includes(" ") ? `"${arg.replace(/"/g, '\\"')}"` : arg)).join(" ")
-    const piped = input.mini || process.stdin.isTTY ? undefined : yield* Effect.promise(() => Bun.stdin.text())
+    // With a message argument stdin is not read: an open pipe that never closes would block the command forever.
+    const piped = input.mini || process.stdin.isTTY || typed ? undefined : yield* Effect.promise(() => Bun.stdin.text())
     const message = !piped ? typed : !typed ? piped : typed + "\n" + piped
     const command = Option.getOrUndefined(input.command)
     if (message.trim().length === 0 && !command && !input.mini) return yield* Effect.fail(new Error("You must provide a message or a command"))

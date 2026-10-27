@@ -95,4 +95,22 @@ describe("DatabaseMigration backup and newer-schema guard", () => {
     const notes = await run(file, (db) => db.all(sql`SELECT body FROM note`))
     expect(notes).toEqual([{ body: "precious" }])
   })
+
+  test("two connections applying the same migration add its column once", async () => {
+    await using tmp = await tmpdir()
+    const file = path.join(tmp.path, "orchestra.db")
+    await seed(file, ["001_a"])
+    const addColumn: DatabaseMigration.Migration = {
+      id: "002_b",
+      up: (tx) => tx.run(sql`ALTER TABLE note ADD COLUMN extra text`).pipe(Effect.asVoid),
+    }
+
+    await Promise.all([
+      run(file, (db) => DatabaseMigration.applyOnly(db, [addNote("001_a"), addColumn])),
+      run(file, (db) => DatabaseMigration.applyOnly(db, [addNote("001_a"), addColumn])),
+    ])
+
+    const columns = await run(file, (db) => db.all<{ name: string }>(sql`SELECT name FROM pragma_table_info('note')`))
+    expect(columns.filter((column) => column.name === "extra")).toHaveLength(1)
+  })
 })

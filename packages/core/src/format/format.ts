@@ -5,6 +5,8 @@ import path from "path"
 import fs from "fs/promises"
 import { constants, type Stats } from "fs"
 import { Config } from "../config"
+import { ConfigTrust } from "../config/trust"
+import { Global } from "../global"
 import { makeLocationNode } from "../effect/app-node"
 import { FSUtil } from "../fs-util"
 import { Location } from "../location"
@@ -30,6 +32,7 @@ const layer = Layer.effect(
   Service,
   Effect.gen(function* () {
     const config = yield* Config.Service
+    const global = yield* Global.Service
     const location = yield* Location.Service
     const appProcess = yield* AppProcess.Service
     const runPromise = Effect.runPromiseWith(yield* Effect.context())
@@ -46,8 +49,20 @@ const layer = Layer.effect(
         ),
     }
 
+    // A project's formatter commands are code the repository chose to run: they apply only once the user trusts the project.
+    let warned = false
+    const entries = Effect.fnUntraced(function* () {
+      const all = yield* config.entries()
+      const allowed = ConfigTrust.runnable(all, global.config, location.directory)
+      if (!warned && all.some((entry) => !allowed.includes(entry) && entry.type === "document" && entry.info.formatter !== undefined)) {
+        warned = true
+        yield* Effect.logWarning(`Project formatter config ignored. ${ConfigTrust.approveHint(location.directory)}`)
+      }
+      return allowed
+    })
+
     const status = Effect.fn("Format.status")(function* () {
-      const formatters = configured(Config.latest(yield* config.entries(), "formatter"))
+      const formatters = configured(Config.latest(yield* entries(), "formatter"))
       return yield* Effect.forEach(formatters, (formatter) =>
         Effect.promise(() => formatter.enabled(context).catch(() => false as const)).pipe(
           Effect.map((command) => ({ name: formatter.name, extensions: formatter.extensions, enabled: command !== false })),
@@ -68,7 +83,7 @@ const layer = Layer.effect(
 
     const file = Effect.fn("Format.file")(function* (filepath: string) {
       const extension = path.extname(filepath)
-      const formatters = configured(Config.latest(yield* config.entries(), "formatter")).filter((item) =>
+      const formatters = configured(Config.latest(yield* entries(), "formatter")).filter((item) =>
         item.extensions.includes(extension),
       )
       const matched = (yield* Effect.forEach(formatters, (item) =>
@@ -204,5 +219,5 @@ async function writeBack(source: { file: string; stat: Stats }, output: Buffer) 
 export const node = makeLocationNode({
   service: Service,
   layer,
-  deps: [Config.node, Location.node, AppProcess.node],
+  deps: [Config.node, Global.node, Location.node, AppProcess.node],
 })

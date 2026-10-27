@@ -20,7 +20,7 @@ export async function fixture(name: string, config: Record<string, unknown> = {}
   const env = Object.fromEntries(Object.entries(scratch.env).filter(([key]) =>
     /^(PATH|PATHEXT|SYSTEMROOT|WINDIR|COMSPEC|COMPUTERNAME|OS|PROCESSOR_.*|NUMBER_OF_PROCESSORS|PSMODULEPATH|PROGRAMFILES(?:\(X86\))?|PROGRAMW6432|COMMONPROGRAMFILES(?:\(X86\))?|PROGRAMDATA|ALLUSERSPROFILE|APPDATA|LOCALAPPDATA|TEMP|TMP|TMPDIR|LANG|LC_.*|TERM|HOME|USERPROFILE|XDG_.*|ORCHESTRA_.*)$/i.test(key),
   ))
-  Object.assign(env, { ORCHESTRA_LOCAL_TESTS: "1", TERM: "xterm-256color", ORCHESTRA_DISABLE_DEFAULT_PLUGINS: "1" })
+  Object.assign(env, { ORCHESTRA_LOCAL_TESTS: "1", TERM: "xterm-256color" })
   // V2 serve answers only to its Basic credential; the campaign password is the only one in this environment.
   Object.assign(env, { ORCHESTRA_SERVER_PASSWORD: SERVER_PASSWORD, ORCHESTRA_LOG_LEVEL: "DEBUG" })
   // Asynchronous: Bun 1.3.14's Windows spawnSync measures its timeout from the previous synchronous spawn's clock

@@ -60,6 +60,8 @@ export class OmniStdioTransport implements Transport {
   async start() {
     if (this.child || this.done) throw new Error("OmniStdioTransport already started")
     const binding = await Omni.load()
+    // close() may have run while omni loaded; spawning now would leave a child nobody stops.
+    if (this.closing || this.done) throw new Error("OmniStdioTransport closed before start")
     // A missing command or a bad cwd throws here, so connect() rejects with omni's message.
     const child = binding.spawn(this.params.command, this.params.args ?? [], {
       cwd: this.params.cwd,

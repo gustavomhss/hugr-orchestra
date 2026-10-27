@@ -8,6 +8,8 @@ import path from "path"
 import { pathToFileURL, fileURLToPath } from "url"
 import * as LSPServer from "./server"
 import { Config } from "../config"
+import { ConfigTrust } from "../config/trust"
+import { Global } from "../global"
 import { confined, spawn as lspspawn } from "./launch"
 import { ToolSafetySandbox } from "../tool-safety-sandbox"
 import { Effect, Layer, Context, Schema } from "effect"
@@ -141,15 +143,25 @@ const layer = Layer.effect(
   Effect.gen(function* () {
     const config = yield* Config.Service
     const events = yield* EventV2.Service
+    const global = yield* Global.Service
     const location = yield* Location.Service
 
     const ctx = { directory: location.directory, worktree: location.project.directory, project: location.project }
 
     const flags = { experimentalLspTy: process.env.ORCHESTRA_EXPERIMENTAL_LSP_TY === "true", disableLspDownload: process.env.ORCHESTRA_DISABLE_LSP_DOWNLOAD === "true" }
 
+    // A project's LSP commands are code the repository chose to run: they apply only once the user trusts the project.
+    const entries = Effect.fnUntraced(function* () {
+      const all = yield* config.entries()
+      const allowed = ConfigTrust.runnable(all, global.config, location.directory)
+      if (all.some((entry) => !allowed.includes(entry) && entry.type === "document" && entry.info.lsp !== undefined))
+        yield* Effect.logWarning(`Project LSP config ignored. ${ConfigTrust.approveHint(location.directory)}`)
+      return allowed
+    })
+
     const state = yield* Effect.acquireRelease(
       Effect.gen(function* () {
-        const cfg = { lsp: Config.latest(yield* config.entries(), "lsp") }
+        const cfg = { lsp: Config.latest(yield* entries(), "lsp") }
 
         const servers: Record<string, LSPServer.Info> = {}
 
@@ -476,6 +488,6 @@ export const node = makeLocationNode({
   service: Service,
   // Server discovery failures surface per file; a broken LSP setup must not fail the Location.
   layer: layer.pipe(Layer.orDie),
-  deps: [Config.node, Location.node, EventV2.node],
+  deps: [Config.node, Global.node, Location.node, EventV2.node],
 })
 

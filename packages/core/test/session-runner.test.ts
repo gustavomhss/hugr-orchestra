@@ -1,4 +1,5 @@
 import { describe, expect } from "bun:test"
+import { DEFAULT_MAX_STEPS } from "@orchestra/core/session/runner/max-steps"
 import {
   LLMClient,
   LLMError,
@@ -2851,6 +2852,32 @@ describe("SessionRunnerLLM", () => {
           ],
         },
       ])
+    }),
+  )
+
+  it.effect("forces a text response at the default step ceiling when an agent sets no steps", () =>
+    Effect.gen(function* () {
+      yield* setup
+      const session = yield* SessionV2.Service
+      yield* session.prompt({ sessionID, prompt: Prompt.make({ text: "Loop forever" }), resume: false })
+
+      requests.length = 0
+      executions.length = 0
+      responses = Array.from({ length: DEFAULT_MAX_STEPS + 5 }, (_, index) => [
+        LLMEvent.stepStart({ index: 0 }),
+        LLMEvent.toolCall({ id: `call-loop-${index}`, name: "echo", input: { text: "again" } }),
+        LLMEvent.stepFinish({ index: 0, reason: "tool-calls" }),
+        LLMEvent.finish({ reason: "tool-calls" }),
+      ])
+
+      yield* session.resume(sessionID)
+
+      expect(requests).toHaveLength(DEFAULT_MAX_STEPS)
+      expect(requests.at(-1)?.toolChoice).toMatchObject({ type: "none" })
+      expect(requests.at(-1)?.messages.at(-1)).toMatchObject({
+        role: "assistant",
+        content: [{ type: "text", text: expect.stringContaining("MAXIMUM STEPS REACHED") }],
+      })
     }),
   )
 

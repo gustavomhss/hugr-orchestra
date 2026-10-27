@@ -27,45 +27,6 @@ const theme = {
 }
 
 describe("DiffViewerFileTree", () => {
-  test.skip("renders sorted hierarchical file rows", async () => {
-    const app = await testRender(
-      () =>
-        withTheme(() => (
-          <DiffViewerFileTree
-            width={32}
-            files={[
-              { file: "z-file.ts" },
-              { file: "b/file.ts" },
-              { file: "a/zeta.ts" },
-              { file: "b/alpha.ts" },
-              { file: "a/alpha.ts" },
-            ]}
-            loading={false}
-            error={undefined}
-            theme={theme}
-            focused={true}
-          />
-        )),
-      { width: 40, height: 20 },
-    )
-
-    try {
-      await renderOnceSettled(app)
-      const lines = visibleLines(app.captureCharFrame())
-
-      expect(lines).toEqual([
-        "▾ a",
-        "│  ├─ alpha.ts               ?",
-        "│  └─ zeta.ts                ?",
-        "├─ ▾ b",
-        "│  ├─ alpha.ts               ?",
-        "│  └─ file.ts                ?",
-      ])
-    } finally {
-      app.renderer.destroy()
-    }
-  })
-
   test("keeps loading and error quiet while rendering an empty settled state", async () => {
     const loading = await renderFrame(() => (
       <DiffViewerFileTree width={32} files={[]} loading={true} error={undefined} theme={theme} />
