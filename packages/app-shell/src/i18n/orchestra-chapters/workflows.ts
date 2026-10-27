@@ -97,7 +97,23 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.template.blank": "Start from scratch",
   "orchestra.workflows.template.blankBody": "An empty plan. Add your own steps and checks.",
   "orchestra.workflows.template.tddFeature": "Test-driven feature",
+  "orchestra.workflows.template.tddFeature.body":
+    "Builds a feature test first: a failing test, then the code that passes it, then a tidy-up. Each step must pass its checks before the next one starts.",
   "orchestra.workflows.template.wpExecute": "Build one work package",
+  "orchestra.workflows.template.wpExecute.body":
+    "Builds one work package test first, then tidies it, and marks it done only when its checks pass.",
+  "orchestra.workflows.template.design": "Design a product from an idea",
+  "orchestra.workflows.template.design.body":
+    "Turns a raw idea into a ratified product design, one gated step at a time.",
+  "orchestra.workflows.template.planning": "Plan from a frozen spec",
+  "orchestra.workflows.template.planning.body":
+    "Turns an approved spec into a buildable plan: frame the problem, split it into work packages, order them, then hand them out.",
+  "orchestra.workflows.template.research": "Research a question",
+  "orchestra.workflows.template.research.body":
+    "Weighs competing explanations and sources, and records how sure each conclusion is, so someone else could repeat the search.",
+  "orchestra.workflows.template.specDecompose": "Break a spec into work packages",
+  "orchestra.workflows.template.specDecompose.body":
+    "Turns a frozen intent into work packages through five gated phases.",
   "orchestra.workflows.template.copy": "A copy of this workflow, as a new draft.",
   "orchestra.workflows.template.empty": "Empty canvas",
   "orchestra.workflows.template.toolsMissing": "Needs tools not available yet",
@@ -251,6 +267,7 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.publish.acceptance":
     "The upstream seat adds the required final checks, a package verification and an independent review, to every plan made from this workflow.",
   "orchestra.workflows.useInChat.prompt": "Use the published workflow “{{name}}” (workflow id: {{id}}) for: ",
+  "orchestra.workflows.run.prompt": "Run workflow “{{name}}” (workflow id: {{id}}) for: ",
   "orchestra.workflows.unpublish.title": "Unpublish {{name}}?",
   "orchestra.workflows.unpublish.body":
     "Maestro stops using this workflow in chat. Runs already in progress finish on the version they started with. Your draft is kept, and you can publish it again.",
@@ -357,7 +374,6 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.editor.serverIssue.oneEvent": "A hook needs exactly one event.",
   "orchestra.workflows.editor.serverIssue.before":
     "Block and Ask need a “Before” event. By the time an “After” event fires, the action has already happened.",
-  "orchestra.workflows.editor.runTitle": "Run the published version (⌘↵)",
   "orchestra.workflows.editor.more": "More actions",
   "orchestra.workflows.editor.missing": "Workflow not found",
   "orchestra.workflows.editor.missingBody": "It was deleted, or it belongs to another profile.",
@@ -627,6 +643,7 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.receipt.reasonLabel": "Release reason (required)",
   "orchestra.workflows.receipt.reasonRequired": "A reason is required.",
   "orchestra.workflows.receipt.openSession": "Open session",
+  "orchestra.workflows.receipt.releaseInChat": "Release in chat",
   "orchestra.workflows.receipt.openStep": "Open step",
   "orchestra.workflows.receipt.release": "Release and re-check",
   "orchestra.workflows.receipt.stopped": "Stopped at {{step}}.",
@@ -755,7 +772,23 @@ export const WORKFLOWS_COPY_BR: Record<keyof typeof WORKFLOWS_COPY, string> = {
   "orchestra.workflows.template.blank": "Começar do zero",
   "orchestra.workflows.template.blankBody": "Um plano vazio. Adicione suas próprias etapas e verificações.",
   "orchestra.workflows.template.tddFeature": "Funcionalidade guiada por testes",
+  "orchestra.workflows.template.tddFeature.body":
+    "Constrói uma funcionalidade começando pelo teste: um teste que falha, depois o código que o faz passar, depois uma arrumação. Cada etapa precisa passar nas suas verificações antes da próxima.",
   "orchestra.workflows.template.wpExecute": "Construir um pacote de trabalho",
+  "orchestra.workflows.template.wpExecute.body":
+    "Constrói um pacote de trabalho primeiro com testes, depois o simplifica, e só o marca como pronto quando as verificações passam.",
+  "orchestra.workflows.template.design": "Desenhar um produto a partir de uma ideia",
+  "orchestra.workflows.template.design.body":
+    "Transforma uma ideia bruta em um desenho de produto validado, uma etapa com verificações por vez.",
+  "orchestra.workflows.template.planning": "Planejar a partir de uma especificação congelada",
+  "orchestra.workflows.template.planning.body":
+    "Transforma uma especificação aprovada em um plano executável: define o problema, divide em pacotes de trabalho, ordena e distribui.",
+  "orchestra.workflows.template.research": "Pesquisar uma pergunta",
+  "orchestra.workflows.template.research.body":
+    "Pesa explicações e fontes concorrentes e registra o grau de certeza de cada conclusão, para que outra pessoa possa repetir a busca.",
+  "orchestra.workflows.template.specDecompose": "Dividir uma especificação em pacotes de trabalho",
+  "orchestra.workflows.template.specDecompose.body":
+    "Transforma uma intenção congelada em pacotes de trabalho, por meio de cinco fases com verificações.",
   "orchestra.workflows.template.copy": "Uma cópia deste workflow, como novo rascunho.",
   "orchestra.workflows.template.empty": "Canvas vazio",
   "orchestra.workflows.template.toolsMissing": "Precisa de ferramentas que ainda não estão disponíveis",
@@ -911,6 +944,7 @@ export const WORKFLOWS_COPY_BR: Record<keyof typeof WORKFLOWS_COPY, string> = {
   "orchestra.workflows.publish.acceptance":
     "O assento upstream adiciona as verificações finais obrigatórias, uma verificação do pacote e uma revisão independente a todo plano feito a partir deste workflow.",
   "orchestra.workflows.useInChat.prompt": "Use o workflow publicado “{{name}}” (id do workflow: {{id}}) para: ",
+  "orchestra.workflows.run.prompt": "Execute o workflow “{{name}}” (id do workflow: {{id}}) para: ",
   "orchestra.workflows.unpublish.title": "Despublicar {{name}}?",
   "orchestra.workflows.unpublish.body":
     "O Maestro para de usar este workflow no chat. Execuções em andamento terminam na versão com que começaram. Seu rascunho é mantido, e você pode publicá-lo de novo.",
@@ -1017,7 +1051,6 @@ export const WORKFLOWS_COPY_BR: Record<keyof typeof WORKFLOWS_COPY, string> = {
   "orchestra.workflows.editor.serverIssue.oneEvent": "Um hook precisa de exatamente um evento.",
   "orchestra.workflows.editor.serverIssue.before":
     "Bloquear e Perguntar precisam de um evento “Antes”. Quando um evento “Depois” dispara, a ação já aconteceu.",
-  "orchestra.workflows.editor.runTitle": "Executar a versão publicada (⌘↵)",
   "orchestra.workflows.editor.more": "Mais ações",
   "orchestra.workflows.editor.missing": "Workflow não encontrado",
   "orchestra.workflows.editor.missingBody": "Ele foi excluído ou pertence a outro perfil.",
@@ -1294,6 +1327,7 @@ export const WORKFLOWS_COPY_BR: Record<keyof typeof WORKFLOWS_COPY, string> = {
   "orchestra.workflows.receipt.reasonLabel": "Motivo da liberação (obrigatório)",
   "orchestra.workflows.receipt.reasonRequired": "Um motivo é obrigatório.",
   "orchestra.workflows.receipt.openSession": "Abrir sessão",
+  "orchestra.workflows.receipt.releaseInChat": "Liberar no chat",
   "orchestra.workflows.receipt.openStep": "Abrir etapa",
   "orchestra.workflows.receipt.release": "Liberar e verificar de novo",
   "orchestra.workflows.receipt.stopped": "Parou em {{step}}.",

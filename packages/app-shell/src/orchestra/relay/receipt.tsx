@@ -168,10 +168,12 @@ export function Receipt(props: {
             </Show>
           </div>
           <div class="wf-wait-foot">
-            <Show when={sessionOf(props.run.position)}>
+            {/* No recorded session for the paused step means no link: the status stays, and Maestro is asked from Chat. */}
+            <Show when={!external() ? sessionOf(props.run.position) : undefined}>
               {(session) => (
                 <button type="button" class="mx-btn" onClick={() => props.onSession(session())}>
-                  {copy.t("orchestra.workflows.receipt.openSession")}
+                  <Ic name="next" />
+                  {copy.t("orchestra.workflows.receipt.releaseInChat")}
                 </button>
               )}
             </Show>

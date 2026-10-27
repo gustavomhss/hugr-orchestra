@@ -1,11 +1,13 @@
 import { createSignal, For, Show } from "solid-js"
-import { documentProfile, type RelayDocument, type RelayKind } from "./client"
+import type { RelayDocument, RelayKind } from "./client"
 import { profileDrafts } from "./drafts"
 import type { RelayRun } from "./runs"
 import { badgeTone, RUN_TONE, runHandle } from "./format"
-import { checkCount, type Flow, type Issue, nodeOf, START, steps } from "./graph"
+import { checkCount, type Flow, type Issue, nodeOf, steps } from "./graph"
+import { runBlockedBy } from "./chat"
 import { relayPath } from "./route"
 import type { RelaySource } from "./source"
+import { templateBody, templateName, templateReason } from "./templates"
 import { Ic, useRelayCopy } from "./ui"
 
 // The draft has edits Maestro does not see yet: it was published, and the draft moved on.
@@ -205,24 +207,23 @@ export function RetainedDrafts(props: { source: RelaySource; kind: RelayKind; go
   )
 }
 
-const PROFILE_NAMES = {
-  tdd_feature: "orchestra.workflows.template.tddFeature",
-  "wp-execute": "orchestra.workflows.template.wpExecute",
-} as const
-
-// A shipped profile's name for people. A profile without one keeps the name the server gave it.
-export function templateName(copy: ReturnType<typeof useRelayCopy>, document: RelayDocument) {
-  const profile = documentProfile(document)
-  const key =
-    profile && Object.hasOwn(PROFILE_NAMES, profile) ? PROFILE_NAMES[profile as keyof typeof PROFILE_NAMES] : undefined
-  return key ? copy.t(key) : document.name
-}
-
-// A seeded profile's objective without its "name vX — " prefix, which the card title already says.
-export function templateSummary(document: RelayDocument) {
-  const brief = document.nodes.find((node) => node.type === START)?.parameters.relayBrief
-  const text = typeof brief === "string" ? brief.replace(/^[\w-]+ v[\d.]+ — /, "") : ""
-  return text || document.description
+// Run for a published workflow. Maestro starts the run; the button only opens the chat that asks for it.
+export function RunButton(props: { document: RelayDocument; class?: string; onRun: () => void }) {
+  const copy = useRelayCopy()
+  const blocked = () => runBlockedBy(props.document)
+  return (
+    <button
+      type="button"
+      class={props.class ?? "mx-btn"}
+      aria-label={copy.t("orchestra.workflows.row.run", { name: props.document.name })}
+      title={copy.t(blocked() ?? "orchestra.workflows.row.runTitle")}
+      disabled={!!blocked()}
+      onClick={props.onRun}
+    >
+      <Ic name="play" />
+      {copy.t("orchestra.workflows.editor.run")}
+    </button>
+  )
 }
 
 export function TemplateCard(props: {
@@ -238,32 +239,41 @@ export function TemplateCard(props: {
   const copy = useRelayCopy()
   const document = () => props.documents.find((item) => item.id === props.id)
   const flow = () => props.flows.get(props.id)
+  // An unavailable template stays visible with its reason. It cannot be picked, so it is aria-disabled, not disabled.
+  const reason = () => (document() ? templateReason(copy.t, document()!) : undefined)
+  const off = () => !!props.disabled || !!reason()
   return (
     <button
       type="button"
       class="mx-card wf-tpl"
       role={props.radio ? "radio" : undefined}
       aria-checked={props.radio ? !!props.selected : undefined}
-      aria-disabled={props.disabled ? "true" : undefined}
+      aria-disabled={off() ? "true" : undefined}
       disabled={props.disabled}
       tabindex={props.radio ? (props.selected || props.tabstop ? 0 : -1) : undefined}
+      title={reason()}
       data-template={props.id}
-      onClick={() => !props.disabled && props.onPick(props.id)}
+      data-unavailable={reason() ? "" : undefined}
+      onClick={() => !off() && props.onPick(props.id)}
     >
       <div class="mx-card-top">
         <span class="mx-mark">
           <Ic name={props.id === "blank" ? "plus" : "workflows"} />
         </span>
-        <h3>{document() ? templateName(copy, document()!) : copy.t("orchestra.workflows.template.blank")}</h3>
+        <h3>{document() ? templateName(copy.t, document()!) : copy.t("orchestra.workflows.template.blank")}</h3>
       </div>
       <p>
         {document()
-          ? templateSummary(document()!) || copy.t("orchestra.workflows.template.copy")
+          ? templateBody(copy.t, document()!)
           : copy.t("orchestra.workflows.template.blankBody")}
       </p>
+      <Show when={reason()}>
+        {(text) => <small>{text()}</small>}
+      </Show>
       <Chain names={flow() ? phaseNames(flow()!) : [copy.t("orchestra.workflows.type.start")]} />
       <div class="mx-meta" style={{ "margin-top": "10px" }}>
-        <Show when={flow()} fallback={<span class="mx-badge">{copy.t("orchestra.workflows.template.empty")}</span>}>
+        <Show when={!reason()} fallback={<span class="mx-badge">{copy.t("orchestra.workflows.template.toolsMissing")}</span>}>
+          <Show when={flow()} fallback={<span class="mx-badge">{copy.t("orchestra.workflows.template.empty")}</span>}>
           {(current) => (
             <>
               <span class="mx-badge">
@@ -289,6 +299,7 @@ export function TemplateCard(props: {
               </span>
             </>
           )}
+          </Show>
         </Show>
       </div>
     </button>
