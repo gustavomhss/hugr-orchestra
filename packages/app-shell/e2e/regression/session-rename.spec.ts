@@ -122,12 +122,12 @@ test("renames and closes the session tab from its context menu", async ({ page }
   await renamed.click({ button: "right" })
   await page.getByRole("menuitem", { name: "Close tab", exact: true }).click()
   await expect(renamed).toBeHidden()
-  await page.getByRole("button", { name: "Home", exact: true }).click()
+  await page.locator(".orchestra-nav-button[aria-label=\"Home\"]").click()
   await expect(page.locator('[data-component="home-impact-row"]').filter({ hasText: "Renamed from tab" })).toBeVisible()
 })
 
 test("renames an inactive tab without switching sessions", async ({ page }) => {
-  await page.getByRole("button", { name: "Home", exact: true }).click()
+  await page.locator(".orchestra-nav-button[aria-label=\"Home\"]").click()
   await page.locator('[data-component="home-impact-row"]').filter({ hasText: fixture.expected.sourceTitle }).click()
   await expect(page.getByRole("heading", { name: fixture.expected.sourceTitle, exact: true })).toBeVisible()
   const tab = page.locator('[data-slot="titlebar-tabs"] a').filter({ hasText: fixture.expected.targetTitle })

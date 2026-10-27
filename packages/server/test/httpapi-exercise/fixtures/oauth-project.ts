@@ -3,6 +3,7 @@ import path from "node:path"
 // Keep admission inside the isolated project's source envelope and preserve the host Effect identity.
 export const oauthProject = {
   git: true,
+  trusted: true,
   config: { formatter: false as const, lsp: false as const, plugins: ["./oauth-compat.ts"] },
   init: async (directory: string) => {
     await Bun.write(
