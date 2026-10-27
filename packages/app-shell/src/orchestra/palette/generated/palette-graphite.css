@@ -2,84 +2,76 @@
 /* orchestra/theme.css */
 html[data-orchestra-palette="graphite"][data-color-scheme] body[data-new-layout] {
   --orchestra-text: #ededed;
-  --orchestra-body: #bebfc1;
-  --orchestra-muted: #bdbfc2;
-  --orchestra-faint: #bdbfc2;
-  --orchestra-accent: #b2c0cf;
-  --orchestra-warm: #cdbd98;
-  --orchestra-success: #acc5b6;
-  --orchestra-danger: #e5b3af;
-  --orchestra-shell-background: #131415;
-  --orchestra-shell-border: rgba(139, 141, 143, 0.25);
+  --orchestra-body: #babbbd;
+  --orchestra-muted: #a1a3a6;
+  --orchestra-faint: #a2a4a7;
+  --orchestra-accent: #a9b7c6;
+  --orchestra-warm: #c8b893;
+  --orchestra-success: #a3bcad;
+  --orchestra-danger: #d2a19e;
+  --orchestra-shell-background: #17181a;
+  --orchestra-shell-border: rgba(139, 141, 144, 0.25);
   --orchestra-shell-shadow: 0 32px 90px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.035);
-  --orchestra-toolbar-background: linear-gradient(180deg, rgba(28, 29, 31, 0.86), rgba(17, 18, 19, 0.8));
-  --orchestra-toolbar-border: rgba(145, 147, 150, 0.08);
+  --orchestra-toolbar-background: linear-gradient(180deg, rgba(32, 33, 35, 0.86), rgba(21, 22, 23, 0.8));
+  --orchestra-toolbar-border: rgba(146, 148, 151, 0.08);
   --orchestra-toolbar-highlight: inset 0 1px 0 rgba(218, 219, 220, 0.06);
   --orchestra-toolbar-drop: 0 6px 20px rgba(0, 0, 0, 0.22);
-  --orchestra-toolbar-label: #bdbfc2;
-  --orchestra-toolbar-brand: #bdbfc2;
-  --orchestra-toolbar-button: #bdbfc2;
-  --orchestra-workspace-overlay: linear-gradient(180deg, rgba(14, 15, 16, 0.39), rgba(14, 15, 16, 0.22) 42%, rgba(14, 15, 16, 0.43)),
-    radial-gradient(1100px 780px at 12% 4%, rgba(33, 34, 36, 0.32), transparent 68%);
+  --orchestra-toolbar-label: #96979a;
+  --orchestra-toolbar-brand: #a7a9ac;
+  --orchestra-toolbar-button: #95979a;
+  --orchestra-workspace-overlay: linear-gradient(180deg, rgba(15, 16, 17, 0.7), rgba(15, 16, 17, 0.58) 42%, rgba(15, 16, 17, 0.74)),
+    radial-gradient(1100px 780px at 12% 4%, rgba(37, 38, 40, 0.42), transparent 68%);
   --orchestra-glass-background: linear-gradient(
     180deg,
-    rgba(38, 40, 42, 0.44) 0%,
-    rgba(22, 23, 25, 0.52) 46%,
-    rgba(15, 16, 18, 0.58) 100%
+    rgba(36, 37, 39, 0.5) 0%,
+    rgba(22, 23, 25, 0.46) 46%,
+    rgba(16, 17, 19, 0.54) 100%
   );
-  --orchestra-glass-border: rgba(150, 151, 154, 0.1);
-  --orchestra-glass-rim: linear-gradient(
-    180deg,
-    rgba(230, 230, 231, 0.26) 0%,
-    rgba(230, 230, 231, 0.08) 28%,
-    rgba(230, 230, 231, 0.03) 70%,
-    rgba(230, 230, 231, 0.06) 100%
-  );
-  --orchestra-glass-sheen: radial-gradient(120% 60% at 0% 0%, rgba(218, 219, 220, 0.07), transparent 60%);
-  --orchestra-glass-shadow: inset 0 1px 0 rgba(218, 219, 220, 0.1), inset 0 -1px 0 rgba(0, 0, 0, 0.28), 0 1px 2px rgba(0, 0, 0, 0.36),
-    0 10px 30px rgba(0, 0, 0, 0.24);
-  --orchestra-float-background: linear-gradient(180deg, rgba(35, 36, 39, 0.72), rgba(23, 24, 26, 0.8));
+  --orchestra-glass-border: rgba(150, 152, 155, 0.16);
+  --orchestra-glass-shadow: inset 0 1px 0 rgba(218, 219, 220, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.4),
+    0 4px 12px rgba(0, 0, 0, 0.2);
+  --orchestra-float-background: linear-gradient(180deg, rgba(39, 40, 43, 0.72), rgba(27, 28, 30, 0.8));
   --orchestra-scrim: rgba(9, 10, 11, 0.42);
-  --orchestra-sidebar-text: #bdbfc2;
+  --orchestra-sidebar-text: #adafb2;
   --orchestra-sidebar-hover-background: rgba(255, 255, 255, 0.045);
   --orchestra-sidebar-hover-text: #eeeeee;
-  --orchestra-sidebar-active-background: linear-gradient(90deg, rgba(64, 73, 84, 0.58), rgba(49, 50, 53, 0.48));
+  --orchestra-sidebar-active-background: linear-gradient(90deg, rgba(64, 73, 84, 0.58), rgba(53, 54, 56, 0.48));
   --orchestra-sidebar-active-text: #eeeeee;
   --orchestra-sidebar-active-accent: #89a2bd;
   --orchestra-sidebar-active-highlight: rgba(255, 255, 255, 0.035);
   --orchestra-sidebar-active-rim: rgba(143, 159, 176, 0.14);
-  --orchestra-sidebar-icon: #bdbfc2;
+  --orchestra-sidebar-icon: #9ea0a3;
   --orchestra-sidebar-active-icon: #c9cacb;
   --orchestra-sidebar-key-background: rgba(11, 12, 13, 0.18);
-  --orchestra-sidebar-key-border: rgba(136, 138, 141, 0.24);
-  --orchestra-sidebar-key-text: #bdbfc1;
-  --orchestra-sidebar-rule: rgba(141, 143, 146, 0.16);
-  --orchestra-sidebar-profile-background: rgba(26, 27, 30, 0.6);
-  --orchestra-sidebar-profile-border: rgba(139, 140, 143, 0.21);
+  --orchestra-sidebar-key-border: rgba(137, 139, 142, 0.24);
+  --orchestra-sidebar-key-text: #a8aaac;
+  --orchestra-sidebar-rule: rgba(142, 144, 147, 0.16);
+  --orchestra-sidebar-profile-background: rgba(31, 32, 34, 0.6);
+  --orchestra-sidebar-profile-border: rgba(139, 141, 144, 0.21);
   --orchestra-sidebar-profile-hover-border: rgba(153, 155, 158, 0.32);
   --orchestra-sidebar-profile-shadow: inset 0 1px rgba(255, 255, 255, 0.04), 0 1px 2px rgba(0, 0, 0, 0.18);
   --orchestra-sidebar-profile-text: var(--orchestra-text);
-  --orchestra-sidebar-profile-muted: #bdbfc1;
-  --orchestra-sidebar-profile-chevron: #bdbfc2;
+  --orchestra-sidebar-profile-muted: #a8aaac;
+  --orchestra-sidebar-profile-chevron: #95979a;
   --orchestra-sidebar-profile-logo: #536a87;
   --orchestra-sidebar-profile-logo-text: #ffffff;
-  --orchestra-brand-descriptor: #bdbfc2;
-  --orchestra-sidebar-footer: #bcbfc2;
+  --orchestra-brand-descriptor: #a8aaad;
+  --orchestra-sidebar-footer: #a4a6a9;
   --orchestra-wip-text: var(--orchestra-warm);
   --orchestra-wip-background: var(--orchestra-overlay-hover);
-  --orchestra-tab-text: #bdbfc2;
+  --orchestra-tab-text: #95979a;
   --orchestra-tab-hover-background: rgba(165, 167, 170, 0.045);
-  --orchestra-tab-hover-text: #bdbfc1;
+  --orchestra-tab-hover-text: #adafb1;
   --orchestra-tab-active-text: #ddddde;
-  --orchestra-tab-icon: #bdbfc2;
-  --orchestra-branch-color: #ddba7a;
-  --orchestra-surface: rgba(38, 39, 41, 0.7);
-  --orchestra-surface-hover: rgba(50, 51, 53, 0.8);
+  --orchestra-tab-icon: #9ea0a3;
+  --orchestra-branch-color: #dbb878;
+  --orchestra-surface: rgba(41, 43, 45, 0.7);
+  --orchestra-surface-hover: rgba(53, 55, 57, 0.8);
   --orchestra-surface-active: rgba(78, 87, 98, 0.62);
-  --orchestra-surface-float: rgba(25, 26, 28, 0.97);
+  --orchestra-surface-float: rgba(29, 30, 32, 0.97);
   --orchestra-surface-float-shadow: 0 18px 44px rgba(0, 0, 0, 0.5);
-  --orchestra-border: rgba(153, 155, 158, 0.2);
-  --orchestra-border-muted: rgba(153, 155, 158, 0.14);
+  --orchestra-border: rgba(154, 156, 159, 0.2);
+  --orchestra-border-muted: rgba(154, 156, 159, 0.14);
   --orchestra-border-strong: rgba(160, 162, 165, 0.34);
   --orchestra-overlay-hover: rgba(255, 255, 255, 0.045);
   --orchestra-overlay-pressed: rgba(255, 255, 255, 0.08);
@@ -87,7 +79,7 @@ html[data-orchestra-palette="graphite"][data-color-scheme] body[data-new-layout]
   background: var(--orchestra-page-background);
 }
 html[data-orchestra-palette="graphite"][data-color-scheme][dir="rtl"] body[data-new-layout] {
-  --orchestra-sidebar-active-background: linear-gradient(270deg, rgba(64, 73, 84, 0.58), rgba(49, 50, 53, 0.48));
+  --orchestra-sidebar-active-background: linear-gradient(270deg, rgba(64, 73, 84, 0.58), rgba(53, 54, 56, 0.48));
 }
 html[data-orchestra-palette="graphite"][data-color-scheme]
   body[data-new-layout]
@@ -326,10 +318,10 @@ html[data-orchestra-palette="graphite"][data-color-scheme] body[data-new-layout]
     color: var(--orchestra-tab-hover-text);
   }
   [data-orchestra-palette="graphite"] [data-orchestra-tabs] [data-titlebar-tab]:is([data-state="pressed"], [data-editing="true"]) {
-    border-color: var(--orchestra-border);
-    background: var(--orchestra-surface-active);
+    border-color: var(--orchestra-glass-border);
+    background: var(--orchestra-grain), var(--orchestra-glass-sheen), var(--orchestra-glass-background);
     color: var(--orchestra-tab-active-text);
-    box-shadow: none;
+    box-shadow: var(--orchestra-glass-shadow);
   }
   [data-orchestra-palette="graphite"] #orchestra-session-tabs [data-titlebar-tab-link] {
     color: inherit;
@@ -394,64 +386,64 @@ html[data-orchestra-palette="graphite"][data-color-scheme] body[data-new-layout]
   [data-orchestra-palette="graphite"] body[data-new-layout] [data-session-layout="surface"] {
     --orchestra-session-background: linear-gradient(
         180deg,
-        rgba(28, 29, 31, 0.8) 0%,
-        rgba(20, 21, 22, 0.85) 50%,
-        rgba(16, 17, 19, 0.9) 100%
+        rgba(32, 33, 35, 0.8) 0%,
+        rgba(24, 25, 27, 0.85) 50%,
+        rgba(19, 20, 22, 0.9) 100%
       );
-    --orchestra-session-border: rgba(150, 151, 154, 0.14);
+    --orchestra-session-border: rgba(150, 152, 155, 0.14);
     --orchestra-session-shadow: inset 0 1px 0 rgba(218, 219, 220, 0.075), inset 0 -1px 0 rgba(0, 0, 0, 0.32), 0 1px 2px rgba(0, 0, 0, 0.42),
         0 4px 12px rgba(0, 0, 0, 0.22);
     --orchestra-session-heading: #e8e8e8;
     --orchestra-session-body: #b3b5b7;
-    --orchestra-session-secondary: #8a8c8f;
-    --orchestra-session-meta: #8a8c8e;
+    --orchestra-session-secondary: #898b8e;
+    --orchestra-session-meta: #848689;
     --orchestra-session-rule: rgba(151, 153, 156, 0.1);
     --orchestra-session-message-rule: rgba(151, 153, 156, 0.09);
-    --orchestra-evidence-background: linear-gradient(180deg, rgba(32, 33, 35, 0.66), rgba(24, 25, 27, 0.62));
-    --orchestra-evidence-solid: #18191b;
+    --orchestra-evidence-background: linear-gradient(180deg, rgba(36, 37, 39, 0.66), rgba(29, 30, 32, 0.62));
+    --orchestra-evidence-solid: #1d1e20;
     --orchestra-evidence-highlight: inset 0 1px 0 rgba(218, 219, 220, 0.05);
     --orchestra-evidence-shadow: var(--orchestra-evidence-highlight), 0 10px 24px rgba(0, 0, 0, 0.2);
-    --orchestra-evidence-heading: #919396;
+    --orchestra-evidence-heading: #929497;
     --orchestra-evidence-add: #90b294;
-    --orchestra-evidence-delete: #b77c76;
-    --orchestra-evidence-number: #5d5e61;
-    --orchestra-file-text: #959699;
+    --orchestra-evidence-delete: #b57a74;
+    --orchestra-evidence-number: #5f6163;
+    --orchestra-file-text: #95979a;
     --orchestra-file-add: #79aa8e;
-    --orchestra-file-delete: #c5757a;
-    --orchestra-file-active: linear-gradient(90deg, #28292b, #252628);
-    --orchestra-file-active-border: rgba(126, 128, 130, 0.12);
-    --orchestra-file-active-accent: #707275;
-    --orchestra-composer-background: linear-gradient(180deg, rgba(35, 36, 38, 0.82), rgba(25, 26, 28, 0.86));
-    --orchestra-composer-border: rgba(153, 155, 158, 0.18);
+    --orchestra-file-delete: #bf7075;
+    --orchestra-file-active: linear-gradient(90deg, #2c2d2f, #292a2c);
+    --orchestra-file-active-border: rgba(127, 129, 132, 0.12);
+    --orchestra-file-active-accent: #727476;
+    --orchestra-composer-background: linear-gradient(180deg, rgba(39, 40, 43, 0.82), rgba(29, 30, 32, 0.86));
+    --orchestra-composer-border: rgba(154, 156, 159, 0.18);
     --orchestra-composer-shadow: inset 0 1px 0 rgba(218, 219, 220, 0.06), 0 8px 22px rgba(0, 0, 0, 0.28);
     --orchestra-composer-text: #d6d7d8;
-    --orchestra-composer-placeholder: #8a8c8f;
-    --orchestra-composer-control: #9a9c9e;
+    --orchestra-composer-placeholder: #848688;
+    --orchestra-composer-control: #9a9c9f;
     --orchestra-send-background: linear-gradient(180deg, #617792, #4d6079);
     --orchestra-send-border: rgba(109, 126, 150, 0.5);
     --orchestra-send-shadow: 0 2px 8px rgba(77, 96, 121, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    --orchestra-apps-chrome: rgba(24, 25, 27, 0.55);
-    --orchestra-apps-host: rgba(24, 25, 27, 0.42);
-    --orchestra-rail-tab-text: #8a8c8f;
+    --orchestra-apps-chrome: rgba(29, 30, 32, 0.55);
+    --orchestra-apps-host: rgba(29, 30, 32, 0.42);
+    --orchestra-rail-tab-text: #848689;
     --orchestra-rail-tab-hover: #c6c7c8;
     --orchestra-rail-tab-hover-background: rgba(255, 255, 255, 0.05);
-    --orchestra-context-background: rgba(24, 25, 27, 0.42);
+    --orchestra-context-background: rgba(29, 30, 32, 0.42);
     --orchestra-context-border: rgba(151, 153, 156, 0.12);
-    --orchestra-rail-tab-active: rgba(50, 51, 54, 0.9);
+    --orchestra-rail-tab-active: rgba(54, 55, 57, 0.9);
     --orchestra-rail-tab-active-text: #e8e8e8;
     --orchestra-rail-tab-highlight: rgba(255, 255, 255, 0.05);
     --orchestra-rail-badge-background: rgba(255, 255, 255, 0.07);
-    --orchestra-rail-badge-text: #939598;
+    --orchestra-rail-badge-text: #949699;
     --orchestra-rail-badge-active-background: rgba(140, 154, 169, 0.22);
     --orchestra-rail-badge-active-text: #bcbec0;
-    --orchestra-card-background: linear-gradient(180deg, rgba(32, 33, 35, 0.7), rgba(24, 25, 27, 0.66));
-    --orchestra-task-mark-background: #202224;
+    --orchestra-card-background: linear-gradient(180deg, rgba(36, 37, 39, 0.7), rgba(29, 30, 32, 0.66));
+    --orchestra-task-mark-background: #242628;
     --orchestra-task-mark-border: rgba(147, 149, 152, 0.18);
-    --orchestra-task-mark-text: #8b8d90;
+    --orchestra-task-mark-text: #8c8d90;
     --orchestra-task-title: #ceced0;
-    --orchestra-task-meta: #8a8c8f;
+    --orchestra-task-meta: #858689;
     --orchestra-task-rule: rgba(151, 153, 156, 0.08);
-    --orchestra-permission-background: linear-gradient(180deg, rgba(46, 41, 31, 0.72), rgba(26, 27, 29, 0.8));
+    --orchestra-permission-background: linear-gradient(180deg, rgba(46, 41, 31, 0.72), rgba(30, 31, 33, 0.8));
     --orchestra-permission-border: rgba(194, 178, 141, 0.3);
     --orchestra-permission-rule: rgba(194, 178, 141, 0.16);
     --orchestra-permission-shadow: inset 0 1px 0 rgba(247, 234, 209, 0.07), 0 10px 26px rgba(0, 0, 0, 0.26);
@@ -462,15 +454,15 @@ html[data-orchestra-palette="graphite"][data-color-scheme] body[data-new-layout]
     --orchestra-permission-pattern-background: rgba(0, 0, 0, 0.22);
     --orchestra-permission-footer: rgba(0, 0, 0, 0.16);
     --orchestra-permission-icon: #d0b88c;
-    --orchestra-permission-deny: #949699;
-    --orchestra-permission-always-background: rgba(43, 45, 47, 0.8);
-    --orchestra-permission-always-border: rgba(153, 155, 158, 0.24);
+    --orchestra-permission-deny: #95979a;
+    --orchestra-permission-always-background: rgba(47, 48, 51, 0.8);
+    --orchestra-permission-always-border: rgba(154, 156, 159, 0.24);
     --orchestra-permission-always-text: #c1c2c4;
     background: transparent;
     color: var(--orchestra-body);
   }
   [data-orchestra-palette="graphite"] body[data-new-layout] [data-session-layout="surface"]:dir(rtl) {
-    --orchestra-file-active: linear-gradient(270deg, #28292b, #252628);
+    --orchestra-file-active: linear-gradient(270deg, #2c2d2f, #292a2c);
   }
   [data-orchestra-palette="graphite"] body[data-new-layout]
       [data-session-layout="surface"]
@@ -877,11 +869,11 @@ html[data-orchestra-palette="graphite"][data-color-scheme] body[data-new-layout]
 @media (min-width: 768px) {
   [data-orchestra-palette="graphite"] body[data-new-layout] [data-session-layout="surface"] {
     --orchestra-chat-who: #8c9aa9;
-    --orchestra-chat-button-border: rgba(153, 155, 158, 0.2);
-    --orchestra-chat-button-background: rgba(38, 39, 41, 0.7);
+    --orchestra-chat-button-border: rgba(154, 156, 159, 0.2);
+    --orchestra-chat-button-background: rgba(41, 43, 45, 0.7);
     --orchestra-chat-button-text: #bcbdbf;
     --orchestra-chat-button-hover-border: rgba(160, 162, 165, 0.34);
-    --orchestra-chat-button-hover-background: rgba(50, 51, 53, 0.8);
+    --orchestra-chat-button-hover-background: rgba(53, 55, 57, 0.8);
   }
   [data-orchestra-palette="graphite"] body[data-new-layout] [data-session-layout="surface"] [data-session-title] {
     background: transparent;
@@ -1232,20 +1224,20 @@ html[data-orchestra-palette="graphite"][data-color-scheme] body[data-new-layout]
 /* orchestra/chapters/kit.css */
 html[data-orchestra-palette="graphite"][data-color-scheme] body[data-new-layout],
 html[data-orchestra-palette="graphite"][data-color-scheme] body[data-mx-kit] {
-  --mx-line: rgba(157, 159, 162, 0.14);
+  --mx-line: rgba(158, 160, 163, 0.14);
   --mx-soft: rgba(164, 166, 169, 0.055);
-  --mx-raised: rgba(25, 26, 28, 0.55);
-  --mx-modal: #17181a;
-  --mx-dim: #bebfc2;
+  --mx-raised: rgba(29, 30, 32, 0.55);
+  --mx-modal: #1b1c1e;
+  --mx-dim: #afb0b3;
   --mx-strong: #dfe0e0;
-  --mx-blue: #b2c0cf;
-  --mx-good: #a6c6b2;
-  --mx-bad: #edb0aa;
+  --mx-blue: #a9b6c5;
+  --mx-good: #9dbda9;
+  --mx-bad: #d99d97;
   --mx-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.035);
   --mx-shadow: 0 30px 100px rgba(0, 0, 0, 0.36);
   --mx-pop-shadow: 0 14px 35px rgba(0, 0, 0, 0.24);
   --mx-backdrop: rgba(9, 10, 11, 0.55);
-  --mx-rim: rgba(157, 159, 162, 0.24);
+  --mx-rim: rgba(158, 160, 163, 0.24);
   --mx-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 56px);
   --mx-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 8px 22px -10px rgba(0, 0, 0, 0.32);
   --mx-primary: linear-gradient(180deg, #60758d, #50637a);
@@ -1937,23 +1929,23 @@ html[data-orchestra-palette="graphite"][data-color-scheme] body[data-new-layout]
   --zen-focus: var(--text-strong);
 }
 [data-orchestra-palette="graphite"] body[data-new-layout] :is(.zen-browser-shell, .zen-tab-menu) {
-  --zen-panel: rgba(24, 25, 27, 0.55);
-  --zen-page: rgba(24, 25, 27, 0.42);
+  --zen-panel: rgba(29, 30, 32, 0.55);
+  --zen-page: rgba(29, 30, 32, 0.42);
   --zen-text: #e0e0e1;
-  --zen-muted: #8a8c8e;
-  --zen-label: #8a8c8f;
+  --zen-muted: #858789;
+  --zen-label: #858689;
   --zen-hover: rgba(255, 255, 255, 0.06);
   --zen-ws-hover: rgba(255, 255, 255, 0.05);
   --zen-control-hover: rgba(255, 255, 255, 0.07);
   --zen-control-hover-text: #cfd0d1;
   --zen-active-control: #a6b2c1;
-  --zen-icon: rgba(14, 15, 17, 0.5);
-  --zen-input: rgba(14, 15, 17, 0.55);
-  --zen-field: rgba(14, 15, 17, 0.6);
+  --zen-icon: rgba(16, 17, 19, 0.5);
+  --zen-input: rgba(16, 17, 19, 0.55);
+  --zen-field: rgba(16, 17, 19, 0.6);
   --zen-field-text: #d8d8d9;
-  --zen-placeholder: #8a8c8f;
-  --zen-option: #18191b;
-  --zen-empty: #8a8c8e;
+  --zen-placeholder: #848689;
+  --zen-option: #1d1e20;
+  --zen-empty: #848689;
   --zen-empty-strong: #c3c4c6;
   --zen-error: rgba(181, 122, 116, 0.14);
   --zen-error-text: #cb9e98;
@@ -1961,15 +1953,15 @@ html[data-orchestra-palette="graphite"][data-color-scheme] body[data-new-layout]
   --zen-warn-text: #dbcdab;
   --zen-crash: rgba(181, 122, 116, 0.12);
   --zen-crash-icon: rgba(181, 122, 116, 0.2);
-  --zen-popover: rgba(22, 23, 25, 0.98);
-  --zen-popover-border: rgba(153, 155, 158, 0.18);
+  --zen-popover: rgba(26, 27, 29, 0.98);
+  --zen-popover-border: rgba(154, 156, 159, 0.18);
   --zen-popover-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
   --zen-find-shadow: none;
-  --zen-popover-title: #8a8b8e;
+  --zen-popover-title: #848689;
   --zen-popover-text: #b4b5b8;
-  --zen-popover-dim: #8a8b8e;
+  --zen-popover-dim: #848689;
   --zen-popover-hover: rgba(255, 255, 255, 0.06);
-  --zen-library-empty: #8a8b8e;
+  --zen-library-empty: #848689;
   --zen-focus: #a6b2c1;
 }
 [data-orchestra-palette="graphite"] .zen-dock-modes {
@@ -2482,13 +2474,13 @@ html[data-orchestra-palette="graphite"][data-color-scheme] body[data-new-layout]
 }
 /* code */
 [data-orchestra-palette="graphite"] body[data-new-layout] {
-  --background-stronger: #141517;
-  --color-background-stronger: #141517;
+  --background-stronger: #18191b;
+  --color-background-stronger: #18191b;
   --syntax-regexp: #a0a0a0;
-  --syntax-operator: #7e7e7e;
+  --syntax-operator: #818181;
   --syntax-variable: #ededed;
   --syntax-constant: #93e9f6;
-  --syntax-punctuation: #7e7e7e;
+  --syntax-punctuation: #818181;
   --syntax-object: #ededed;
   --syntax-success: #25ff18;
   --syntax-warning: #ffca76;

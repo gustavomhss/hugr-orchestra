@@ -3,11 +3,11 @@
   --swatch-background: #080c11;
   --swatch-glass: linear-gradient(
     180deg,
-    rgba(32, 44, 58, 0.44) 0%,
-    rgba(17, 24, 33, 0.52) 46%,
-    rgba(11, 16, 23, 0.58) 100%
+    rgba(26, 36, 48, 0.5) 0%,
+    rgba(13, 19, 26, 0.46) 46%,
+    rgba(10, 15, 21, 0.54) 100%
   );
-  --swatch-border: rgba(160, 179, 197, 0.1);
+  --swatch-border: rgba(160, 179, 197, 0.16);
   --swatch-text: #eef1f5;
   --swatch-muted: #b2c0cf;
   --swatch-accent: #9dc3e9;
@@ -16,11 +16,11 @@
   --swatch-background: #dfe3e8;
   --swatch-glass: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.57) 0%,
-    rgba(248, 250, 252, 0.49) 46%,
-    rgba(240, 244, 247, 0.59) 100%
+    rgba(255, 255, 255, 0.62) 0%,
+    rgba(248, 250, 252, 0.5) 46%,
+    rgba(240, 244, 247, 0.6) 100%
   );
-  --swatch-border: rgba(70, 84, 98, 0.12);
+  --swatch-border: rgba(70, 84, 98, 0.16);
   --swatch-text: #1a1f26;
   --swatch-muted: #343d48;
   --swatch-accent: #0c3e6c;
@@ -29,63 +29,63 @@
   --swatch-background: #0c0d0e;
   --swatch-glass: linear-gradient(
     180deg,
-    rgba(38, 40, 42, 0.44) 0%,
-    rgba(22, 23, 25, 0.52) 46%,
-    rgba(15, 16, 18, 0.58) 100%
+    rgba(36, 37, 39, 0.5) 0%,
+    rgba(22, 23, 25, 0.46) 46%,
+    rgba(16, 17, 19, 0.54) 100%
   );
-  --swatch-border: rgba(150, 151, 154, 0.1);
+  --swatch-border: rgba(150, 152, 155, 0.16);
   --swatch-text: #ededed;
-  --swatch-muted: #bdbfc2;
-  --swatch-accent: #b2c0cf;
+  --swatch-muted: #a1a3a6;
+  --swatch-accent: #a9b7c6;
 }
 [data-palette-swatch="gruvbox"] {
   --swatch-background: #282828;
   --swatch-glass: linear-gradient(
     180deg,
-    rgba(71, 69, 62, 0.44) 0%,
-    rgba(53, 52, 49, 0.52) 46%,
-    rgba(45, 44, 43, 0.58) 100%
+    rgba(63, 61, 57, 0.5) 0%,
+    rgba(48, 47, 45, 0.46) 46%,
+    rgba(43, 43, 42, 0.54) 100%
   );
-  --swatch-border: rgba(186, 174, 143, 0.1);
+  --swatch-border: rgba(186, 174, 143, 0.16);
   --swatch-text: #ebdbb2;
-  --swatch-muted: #e6d9b7;
-  --swatch-accent: #bee2d4;
+  --swatch-muted: #c5b897;
+  --swatch-accent: #92b5a7;
 }
 [data-palette-swatch="github"] {
   --swatch-background: #ffffff;
   --swatch-glass: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.57) 0%,
-    rgba(255, 255, 255, 0.49) 46%,
-    rgba(255, 255, 255, 0.59) 100%
+    rgba(255, 255, 255, 0.62) 0%,
+    rgba(255, 255, 255, 0.5) 46%,
+    rgba(255, 255, 255, 0.6) 100%
   );
-  --swatch-border: rgba(110, 118, 127, 0.12);
+  --swatch-border: rgba(110, 118, 127, 0.16);
   --swatch-text: #24292f;
-  --swatch-muted: #3d454f;
-  --swatch-accent: #00418f;
+  --swatch-muted: #48515b;
+  --swatch-accent: #004da7;
 }
 [data-palette-swatch="nord"] {
   --swatch-background: #2e3440;
   --swatch-glass: linear-gradient(
     180deg,
-    rgba(75, 81, 92, 0.44) 0%,
-    rgba(58, 64, 76, 0.52) 46%,
-    rgba(50, 56, 68, 0.58) 100%
+    rgba(68, 74, 85, 0.5) 0%,
+    rgba(53, 59, 71, 0.46) 46%,
+    rgba(49, 55, 67, 0.54) 100%
   );
-  --swatch-border: rgba(183, 187, 196, 0.1);
+  --swatch-border: rgba(183, 187, 196, 0.16);
   --swatch-text: #e5e9f0;
-  --swatch-muted: #e2e6ee;
-  --swatch-accent: #b7efff;
+  --swatch-muted: #c2c6ce;
+  --swatch-accent: #8ac2d2;
 }
 [data-palette-swatch="amoled"] {
   --swatch-background: #000000;
   --swatch-glass: linear-gradient(
     180deg,
-    rgba(38, 38, 38, 0.44) 0%,
-    rgba(17, 17, 17, 0.52) 46%,
-    rgba(1, 1, 1, 0.58) 100%
+    rgba(35, 35, 35, 0.5) 0%,
+    rgba(17, 17, 17, 0.46) 46%,
+    rgba(2, 2, 2, 0.54) 100%
   );
-  --swatch-border: rgba(190, 190, 190, 0.1);
+  --swatch-border: rgba(191, 191, 191, 0.16);
   --swatch-text: #ffffff;
   --swatch-muted: #cecece;
   --swatch-accent: #7fb3fd;
