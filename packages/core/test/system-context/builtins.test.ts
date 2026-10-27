@@ -1,6 +1,7 @@
 import { describe, expect } from "bun:test"
 import { Effect, Layer } from "effect"
 import * as TestClock from "effect/testing/TestClock"
+import { Config } from "@orchestra/core/config"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Location } from "@orchestra/core/location"
@@ -60,6 +61,8 @@ const itWithInstructions = testEffect(
   AppNodeBuilder.build(builtInsNode, [
     [Location.node, locationLayer],
     [FSUtil.node, instructionFS],
+    // The fake filesystem answers every read, so real config files would parse as AGENTS.md.
+    [Config.node, Layer.succeed(Config.Service, Config.Service.of({ entries: () => Effect.succeed([]) }))],
     [Global.node, Global.layerWith({ config: "/global" })],
   ]),
 )

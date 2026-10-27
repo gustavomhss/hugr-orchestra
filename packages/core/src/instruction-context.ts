@@ -54,7 +54,13 @@ const layer = Layer.effectDiscard(
             const pattern = home ? join(global.home, entry.slice(1)) : resolve(base, entry)
             // A glob names whatever matches now; a plain path stays listed so a missing file is reported, not skipped.
             const targets = /[*?[{]/.test(entry)
-              ? yield* Effect.promise(() => Array.fromAsync(new Bun.Glob(relative(parse(pattern).root, pattern)).scan({ cwd: parse(pattern).root, absolute: true, onlyFiles: true, dot: true }))).pipe(
+              ? yield* Effect.promise(async () => {
+                  const root = parse(pattern).root
+                  const matches: string[] = []
+                  for await (const match of new Bun.Glob(relative(root, pattern)).scan({ cwd: root, absolute: true, onlyFiles: true, dot: true }))
+                    matches.push(match)
+                  return matches
+                }).pipe(
                   Effect.map((matches) => matches.toSorted()),
                   Effect.orElseSucceed(() => []),
                 )
