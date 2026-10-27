@@ -55,9 +55,12 @@ const layer = Layer.effectDiscard(
             // A glob names whatever matches now; a plain path stays listed so a missing file is reported, not skipped.
             const targets = /[*?[{]/.test(entry)
               ? yield* Effect.promise(async () => {
-                  const root = parse(pattern).root
+                  // Scan from the deepest literal directory, never from the filesystem root.
+                  const segments = pattern.split(sep)
+                  const literal = segments.findIndex((segment) => /[*?[{]/.test(segment))
+                  const root = segments.slice(0, literal).join(sep) || parse(pattern).root
                   const matches: string[] = []
-                  for await (const match of new Bun.Glob(relative(root, pattern)).scan({ cwd: root, absolute: true, onlyFiles: true, dot: true }))
+                  for await (const match of new Bun.Glob(segments.slice(literal).join("/")).scan({ cwd: root, absolute: true, onlyFiles: true, dot: true }))
                     matches.push(match)
                   return matches
                 }).pipe(
