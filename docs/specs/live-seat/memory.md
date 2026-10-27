@@ -16,7 +16,7 @@ Code: `apps/desktop/src/main/live-tray.ts`, `live-elapsed.ts`; registered from `
 
 - While a meeting runs the title shows `● mm:ss`, refreshed every second; otherwise it is empty.
 - Menu: Start or Stop meeting, Open, and the last meeting's title.
-- The renderer routes in memory, so the tray navigates by sending `orchestra://live` and `orchestra://live?meeting=<id>` through the deep-link ingress (`sendDeepLinks`). The shell handles them; until it does, they show the unsupported-link toast.
+- The renderer routes in memory, so the tray navigates by sending `orchestra://live` and `orchestra://live?meeting=<id>` through the deep-link ingress (`sendDeepLinks`). The shell parses them in `parseLiveDeepLink` (`pages/layout/deep-links.ts`) and routes them in `orchestra/shell/ingress.tsx` before the server lookup.
 - Limit: the icon is empty until the Interface session supplies the asset.
 
 ## D: consolidation after stop
