@@ -139,6 +139,8 @@ describe("trust routes", () => {
           const project = yield* scratch()
           const applied: string[] = []
           const locations = yield* open(applied)
+          // An open location: its scope stays alive until the test ends.
+          yield* locations.contextEffect(Location.Ref.make({ directory: AbsolutePath.make(project) }))
           const server = yield* serve({ config: directory, locations: locations as unknown as Locations })
           yield* server.request("/api/trust/approve", { method: "POST", body: JSON.stringify({ directory: project }) })
 
