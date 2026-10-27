@@ -71,9 +71,14 @@ export function registerLiveLoop(options: {
   const send = async (meeting: Meeting, request: Omit<Request, "sentAt" | "text">, prompt: LivePrompt, queue = false) => {
     if (meeting.request && request.kind !== "notice") return
     meeting.request = { ...request, sentAt: Date.now(), text: "" }
+    if (overlay.state().error?.kind === "answer") overlay.setError(undefined)
     await meeting.client.prompt(meeting.sessionID, prompt, queue ? "queue" : "steer").catch((error) => {
       meeting.log.write({ event: "prompt-failed", kind: request.kind, reason: String(error) })
       meeting.request = undefined
+      // A transport, permission or hotkey note already explains more; the answer note never covers one.
+      if (request.kind === "notice" || overlay.state().error) return
+      overlay.setError({ kind: "answer", reason: String(error) })
+      restoreView()
     })
   }
 
@@ -91,7 +96,8 @@ export function registerLiveLoop(options: {
     }
     if (request.kind === "notice") return
     if (request.dropped) return restoreView()
-    // A failure keeps what already streamed; with nothing to show, the thinking view gives way.
+    // A failure keeps what already streamed; with nothing to show, the thinking view gives way to the reason.
+    if (failed && !request.text.trim() && !overlay.state().error) overlay.setError({ kind: "answer", reason: failed })
     if (isNoAnswer(request.text) || !request.text.trim()) return restoreView()
     overlay.pushAnswer(parseAnswer(request.text, { source: request.source, latencyMs, question: request.question }))
   }
