@@ -16,7 +16,7 @@ describe("breadcrumbLabel", () => {
     expect(crumb({ type: "chapter", chapter: "dock" })).toBe("MCP Dock")
     expect(crumb({ type: "chapter", chapter: "workspaces" })).toBe("Workspaces")
     expect(crumb({ type: "chapter", chapter: "settings" })).toBe("Settings")
-    expect(crumb({ type: "chapter", chapter: "actions" })).toBe("Actions")
+    expect(crumb({ type: "chapter", chapter: "actions" })).toBe("Checks")
   })
 
   test("names capability pages by their reference page title", () => {
@@ -30,7 +30,7 @@ describe("breadcrumbLabel", () => {
       "Plugins",
       "Workflows",
       "Hooks",
-      "Actions",
+      "Checks",
       "Schedule",
       ".env",
       "Providers",

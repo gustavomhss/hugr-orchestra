@@ -135,7 +135,7 @@ test("the pressed WIP item opens no tooltip that would take a dialog's Escape", 
   await page.locator(".orchestra-nav").getByRole("button", { name: "MCP", exact: true }).click()
   await page.clock.fastForward(450)
   await expect(page.getByRole("tooltip")).toHaveCount(0)
-  await page.locator(".orchestra-nav").getByRole("button", { name: "Actions", exact: true }).click()
+  await page.locator(".orchestra-nav").getByRole("button", { name: "Checks", exact: true }).click()
   await openLocalPipelines(page, serverA)
   const source = await openSource(page, ".github/workflows/ci.yml")
   await page.keyboard.press("Escape")

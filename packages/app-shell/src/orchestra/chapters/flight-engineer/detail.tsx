@@ -39,6 +39,7 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
     attempts: 0,
     missing: false,
     failed: false,
+    handoffFailed: false,
     refused: undefined as "unavailable" | "running" | "missing_meeting" | undefined,
     transcript: false,
     focus: undefined as string | undefined,
@@ -86,11 +87,13 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
   const hidden = createMemo(() => dismissed().size)
   const owner = (item: { owner: Party }) => item.owner
 
-  const run = async (work: Promise<unknown>) => {
-    setStore("refused", undefined)
+  // A handoff that fails says so; it must not read as a meeting that failed to load.
+  const run = async (work: Promise<unknown>, failure: "failed" | "handoffFailed" = "failed") => {
+    setStore({ refused: undefined, handoffFailed: false })
     await work.catch((error) => {
       const reason = refusal(error)
       if (reason !== "other") return setStore("refused", reason)
+      if (failure === "handoffFailed") return setStore("handoffFailed", true)
       setStore("failed", true)
     })
   }
@@ -120,6 +123,7 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
         setStore("sent", sent.length)
         return reload()
       }) ?? Promise.resolve(),
+      "handoffFailed",
     )
 
   const rename = async (title: string) => {
@@ -320,6 +324,9 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
                 </Show>
                 <Show when={store.failed}>
                   <Note tone="bad">{t("orchestra.flightEngineer.detail.failed")}</Note>
+                </Show>
+                <Show when={store.handoffFailed}>
+                  <Note tone="bad">{t("orchestra.flightEngineer.detail.handoffFailed")}</Note>
                 </Show>
                 <Show when={store.sent > 0}>
                   <Note>{language.plural("orchestra.flightEngineer.detail.sentCount", store.sent)}</Note>

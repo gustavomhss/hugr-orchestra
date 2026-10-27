@@ -225,10 +225,11 @@ test("the server runs due tasks while the page is open; the page shows what it r
   await expect(hourly.locator("p").nth(1)).toHaveText(/^Next: Jan 15, 2031, 10:30\sAM\s*America\/New_York · 1 run$/)
   await expect(hourly.locator(".mx-note")).toHaveText(/^Last: 1\/15\/2031, 9:30:01\sAM · Open session$/)
   await expect(weekly.locator("p").nth(1)).toHaveText(/^Next: Jan 22, 2031, 9:30\sAM\s*America\/New_York · 0 runs$/)
-  await expect(weekly.locator(".schedule-missed")).toHaveText([
-    /^Missed: Jan 8, 2031, 9:30\sAM$/,
-    /^Failed: 1\/15\/2031, 9:30:01\sAM · Session store is unavailable$/,
-  ])
+  await expect(weekly.locator(".schedule-missed")).toHaveText(/^Missed: Jan 8, 2031, 9:30\sAM$/)
+  await expect(weekly.locator(".mx-error p")).toHaveText(
+    /^The last run failed on 1\/15\/2031, 9:30:01\sAM\. Run it again, or edit the task if it keeps failing\.$/,
+  )
+  await expect(weekly.locator(".mx-error pre")).toHaveText("Session store is unavailable")
   await expect(weekly.getByRole("button", { name: "Open session", exact: true })).toHaveCount(0)
   await expect(page.locator(".mx-note").last()).toHaveText(NOTE)
   await page.screenshot({ path: test.info().outputPath("dark-server-runs.png") })

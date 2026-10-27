@@ -134,6 +134,9 @@ export const ORCHESTRA_COPY = {
   "orchestra.cicd.previewError": "Could not read this workflow.",
   "orchestra.cicd.previewUnavailable": "Workflow source is unavailable on this server.",
   "orchestra.cicd.discuss": "Discuss in Chat",
+  "orchestra.cicd.askMaestro": "Ask Maestro to fix",
+  "orchestra.cicd.fixPrompt":
+    'The pipeline "{{name}}" failed. It runs `{{command}}` on branch {{branch}}. Find the cause in the output below, fix it in this repository, and tell me what you changed.\n\n{{log}}',
   "orchestra.cicd.prompt":
     "Let's discuss the CI workflow at {{path}} in this repository. Explain its triggers and jobs, and suggest improvements.",
   "orchestra.nav.schedule": "Schedule",
@@ -510,6 +513,9 @@ export const ORCHESTRA_BASE_COPY_BR: Partial<Record<keyof typeof ORCHESTRA_COPY,
   "orchestra.cicd.previewError": "Não foi possível ler este workflow.",
   "orchestra.cicd.previewUnavailable": "A origem do workflow não está disponível neste servidor.",
   "orchestra.cicd.discuss": "Discutir no chat",
+  "orchestra.cicd.askMaestro": "Pedir ao Maestro para corrigir",
+  "orchestra.cicd.fixPrompt":
+    'O pipeline "{{name}}" falhou. Ele executa `{{command}}` na branch {{branch}}. Encontre a causa na saída abaixo, corrija neste repositório e me diga o que mudou.\n\n{{log}}',
   "orchestra.cicd.prompt": "Vamos discutir o workflow de CI em {{path}} neste repositório. Explique seus gatilhos e jobs e sugira melhorias.",
   "orchestra.nav.schedule": "Agendamento",
   "orchestra.nav.env": ".env",

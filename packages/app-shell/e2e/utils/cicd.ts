@@ -116,13 +116,13 @@ export async function mockPty(page: Page) {
 export async function openChapter(page: Page) {
   await page.goto("/")
   await chooseProfile(page, "Server A repository")
-  await page.locator(".orchestra-nav").getByRole("button", { name: "Actions", exact: true }).click()
+  await page.locator(".orchestra-nav").getByRole("button", { name: "Checks", exact: true }).click()
   await openLocalPipelines(page, serverA)
 }
 
 export async function openLocalPipelines(page: Page, server: string) {
   const local = page
-    .getByRole("complementary", { name: "Actions", exact: true })
+    .getByRole("complementary", { name: "Checks", exact: true })
     .getByRole("button", { name: "Local pipelines", exact: true })
   await local.click()
   await expect(local).toHaveAttribute("aria-current", "page")
