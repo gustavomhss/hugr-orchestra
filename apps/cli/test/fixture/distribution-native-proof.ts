@@ -224,7 +224,8 @@ async function companionFailures(launcher: string, payload: string, box: Sandbox
     try {
       if (kind === "missing") await rm(addon)
       if (kind === "corrupt") await writeFile(addon, "not a native addon")
-      const result = await command([launcher, "--version"], box, 15_000)
+      // --version, --help and db path skip the preflight (omni-preflight.ts), so probe with a command that may spawn.
+      const result = await command([launcher, "debug", "symbols", join(box.cwd, "sample.ts")], box, 15_000)
       expect(result.code).not.toBe(0)
       expect(result.stderr).toContain("hugr-omni CLI preflight failed:")
     } finally { await writeFile(addon, original); await chmod(addon, addonMode) }
