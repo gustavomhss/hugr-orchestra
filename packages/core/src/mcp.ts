@@ -375,7 +375,7 @@ const layer = Layer.effect(
       if (server.type === "local") {
         const trusted = (yield* Config.readGlobal().pipe(Effect.provideService(FSUtil.Service, fs), Effect.provideService(Global.Service, global)))
           .trustedProjects
-        if (!trusted.some((root) => within(root, location.directory)))
+        if (!trusted.some((root) => ConfigTrust.within(root, location.directory)))
           yield* Config.updateGlobal({ trustedProjects: [...trusted, location.directory] }).pipe(
             Effect.provideService(FSUtil.Service, fs),
             Effect.provideService(Global.Service, global),
