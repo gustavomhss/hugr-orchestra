@@ -926,6 +926,7 @@ export const dict = {
   "live.start.reason.no-key": "Önce Ayarlar'dan bir konuşmadan metne anahtarı ekleyin",
   "live.start.reason.server": "Yerel sunucu yanıt vermedi",
   "live.start.reason.capture": "Ses yakalama başlatılamadı. Mikrofon ve ekran kaydı izinlerini kontrol edin.",
+  "live.start.reason.permission": "Önce Sistem Ayarları'nda mikrofon erişimine izin verin",
 
   "settings.general.row.language.title": "Dil",
   "settings.general.row.language.description": "HuGR Orchestra'nın görünüm dilini değiştirin",

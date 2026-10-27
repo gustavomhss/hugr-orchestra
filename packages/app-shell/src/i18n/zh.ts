@@ -913,6 +913,7 @@ export const dict = {
   "live.start.reason.no-key": "请先在设置中添加语音转文字密钥",
   "live.start.reason.server": "本地服务器没有响应",
   "live.start.reason.capture": "无法开始音频采集。请检查麦克风和屏幕录制权限。",
+  "live.start.reason.permission": "请先在“系统设置”中允许使用麦克风",
   "settings.general.row.language.title": "语言",
   "settings.general.row.language.description": "更改 HuGR Orchestra 的显示语言",
   "settings.general.row.shell.title": "终端 Shell",

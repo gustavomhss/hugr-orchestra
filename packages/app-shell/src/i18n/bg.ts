@@ -942,6 +942,7 @@ export const dict = {
   "live.start.reason.no-key": "Първо добави ключ за реч към текст в настройките",
   "live.start.reason.server": "Локалният сървър не отговори",
   "live.start.reason.capture": "Не можа да започне записването на звук. Провери разрешенията за микрофон и запис на екрана.",
+  "live.start.reason.permission": "Първо разрешете достъп до микрофона в Системните настройки",
   "settings.general.row.language.title": "език",
   "settings.general.row.language.description": "Променете езика на интерфейса на HuGR Orchestra",
   "settings.general.row.shell.title": "Терминал shell",

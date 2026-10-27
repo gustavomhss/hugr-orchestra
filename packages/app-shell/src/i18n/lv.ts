@@ -941,6 +941,7 @@ export const dict = {
   "live.start.reason.no-key": "Vispirms iestatījumos pievienojiet runas pārveidošanas atslēgu",
   "live.start.reason.server": "Vietējais serveris neatbildēja",
   "live.start.reason.capture": "Neizdevās sākt audio ierakstīšanu. Pārbaudiet mikrofona un ekrāna ierakstīšanas atļaujas.",
+  "live.start.reason.permission": "Vispirms atļaujiet piekļuvi mikrofonam Sistēmas iestatījumos",
   "settings.general.row.language.title": "Valoda",
   "settings.general.row.language.description": "Mainīt HuGR Orchestra saskarnes valodu",
   "settings.general.row.shell.title": "Termināļa čaula",

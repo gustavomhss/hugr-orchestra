@@ -1,5 +1,5 @@
 import type { QueryClient } from "@tanstack/solid-query"
-import { createEffect, createMemo, createSignal, For, on, onCleanup, Show } from "solid-js"
+import { createEffect, createMemo, createSignal, For, on, onCleanup, Show, type JSX } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useNavigate } from "@solidjs/router"
 import { useLanguage } from "@/context/language"
@@ -58,6 +58,8 @@ export function KpiDashboard(props: {
   running: (sessionID: string) => boolean
   openSession: (sessionID: string) => void
   openProviders: () => void
+  // Extra card under the masthead (the Flight Engineer entry).
+  extra?: JSX.Element
   newSession: () => void
 }) {
   const language = useLanguage()
@@ -472,6 +474,7 @@ export function KpiDashboard(props: {
             </For>
           </div>
         </header>
+        {props.extra}
         <Show when={activity().status === "loading"}>
           <p class="orchestra-sr-only" role="status">
             {language.t("orchestra.home.loading")}

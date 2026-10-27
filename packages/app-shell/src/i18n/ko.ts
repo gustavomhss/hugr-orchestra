@@ -614,6 +614,7 @@ export const dict = {
   "live.start.reason.no-key": "먼저 설정에서 음성 인식 키를 추가하세요",
   "live.start.reason.server": "로컬 서버가 응답하지 않았습니다",
   "live.start.reason.capture": "오디오 캡처를 시작할 수 없습니다. 마이크 및 화면 녹화 권한을 확인하세요.",
+  "live.start.reason.permission": "먼저 시스템 설정에서 마이크 접근을 허용하세요",
   "settings.general.row.language.title": "언어",
   "settings.general.row.language.description": "HuGR Orchestra 표시 언어 변경",
   "settings.general.row.appearance.title": "모양",

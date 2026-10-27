@@ -945,6 +945,7 @@ export const dict = {
   "live.start.reason.no-key": "Előbb adj hozzá beszédfelismerési kulcsot a Beállításokban",
   "live.start.reason.server": "A helyi szerver nem válaszolt",
   "live.start.reason.capture": "A hangrögzítés nem indult el. Ellenőrizd a mikrofon és a képernyőfelvétel engedélyeit.",
+  "live.start.reason.permission": "Először engedélyezd a mikrofonhozzáférést a Rendszerbeállításokban",
   "settings.general.row.language.title": "Nyelv",
   "settings.general.row.language.description": "A HuGR Orchestra megjelenítési nyelvének módosítása",
   "settings.general.row.shell.title": "Terminál shellje",
