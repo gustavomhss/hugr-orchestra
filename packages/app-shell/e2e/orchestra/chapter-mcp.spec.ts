@@ -576,6 +576,8 @@ async function setup(page: Page, state: ReturnType<typeof fixture>) {
       })
     }
     if (path === "/api/health") return json(route, { pid: 1, healthy: true })
+    // The trust list the "Trust this project" banner reads; this project is trusted, so no banner shows.
+    if (path === "/api/trust") return json(route, [directory])
     if (path === "/project" || path === "/api/project") return json(route, [project])
     if (path === "/project/current") return json(route, project)
     if (path === "/api/project/current") return json(route, { id: project.id, directory })

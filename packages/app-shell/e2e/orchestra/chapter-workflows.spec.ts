@@ -33,17 +33,27 @@ for (const scheme of ["dark", "light"] as const) {
     const row = (name: string) => rows.filter({ has: page.getByText(name, { exact: true }) })
     await expect(row("Relay · tdd_feature").locator(".wf-badges .mx-badge")).toHaveText(["Published"])
     await expect(row("Relay · design").locator(".wf-badges .mx-badge")).toHaveText(["Not published"])
-    // Runs are hidden: no live runs, no last-run column, no waiting count and no run button on a row.
+    // Runs are hidden: no live runs, no last-run column and no waiting count. Run only opens a Maestro chat, and it is
+    // offered on a row only for the published version: a draft that was never published has it off, with the reason.
     await expect(view.locator(".wf-attn")).toHaveCount(0)
     await expect(row("Relay · tdd_feature").locator(".wf-last")).toHaveCount(0)
     await expect(sidebar(page).locator('[data-slot="orchestra-nav-attention"]')).toHaveCount(0)
-    for (const name of ["Relay · tdd_feature", "Relay · design"])
-      await expect(row(name).getByRole("button", { name: `Run ${name}` })).toHaveCount(0)
+    await expect(row("Relay · tdd_feature").getByRole("button", { name: "Run Relay · tdd_feature" })).toBeEnabled()
+    const blocked = row("Relay · design").getByRole("button", { name: "Run Relay · design" })
+    await expect(blocked).toBeDisabled()
+    await expect(blocked).toHaveAttribute("title", "Publish before running")
 
-    // Only a profile that can run is a template, under its own name.
+    // A profile that can run is a template under its own name. One whose tools are missing stays listed after it,
+    // marked unavailable, so the choice does not shrink silently.
     const templates = view.locator(".wf-tpl-grid .wf-tpl h3")
-    await expect(templates).toHaveText(["Start from scratch", "Build one work package"])
-    await expect(view.locator('.wf-tpl[aria-disabled="true"]')).toHaveCount(0)
+    await expect(templates).toHaveText([
+      "Start from scratch",
+      "Build one work package",
+      "Plan from a frozen spec",
+      "Research a question",
+      "Break a spec into work packages",
+    ])
+    await expect(view.locator('.wf-tpl[aria-disabled="true"]')).toHaveCount(3)
     await page.screenshot({ path: test.info().outputPath(`${scheme}-library.png`) })
 
     await view.getByRole("textbox", { name: "Search workflows" }).fill("TDD")
@@ -72,6 +82,10 @@ test("shipped profiles are templates only, so a project with none of its own sho
     "Start from scratch",
     "Test-driven feature",
     "Build one work package",
+    "Design a product from an idea",
+    "Plan from a frozen spec",
+    "Research a question",
+    "Break a spec into work packages",
   ])
   // The header button starts from scratch too, not from a template.
   await view.getByRole("button", { name: "New workflow", exact: true }).click()
@@ -177,15 +191,15 @@ test("outside git the library refuses new workflows and says why, even on the Ne
   await expect(view.locator(".wf-tpl-grid .wf-tpl").first()).toBeDisabled()
 })
 
-test("a template that can run is copied as the user's own workflow; one that cannot is not offered", async ({ page }) => {
+test("a template that can run is copied as the user's own workflow; one that cannot is listed as unavailable", async ({ page }) => {
   const state = await setupRelay(page)
   await page.goto("/orchestra/workflows/new")
   const dialog = page.getByRole("dialog", { name: "New workflow" })
   // Starting from scratch is the default, and a template shows under its own name.
   await expect(dialog.getByRole("radio", { name: /Start from scratch/ })).toHaveAttribute("aria-checked", "true")
   await expect(dialog.getByRole("radio", { name: /Relay · / })).toHaveCount(0)
-  // A profile whose tools are missing is not offered at all.
-  await expect(dialog.locator('[data-template="relay-design"]')).toHaveCount(0)
+  // A profile whose tools are missing stays visible but cannot be picked.
+  await expect(dialog.locator('[data-template="relay-design"]')).toHaveAttribute("aria-disabled", "true")
   await dialog.getByRole("radio", { name: /Build one work package/ }).click()
   await expect(dialog.getByRole("textbox", { name: "Name" })).toHaveValue("Build one work package")
   await dialog.getByRole("textbox", { name: "Name" }).fill("WP-07 Session recovery")

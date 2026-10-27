@@ -1,6 +1,7 @@
 import { base64Encode } from "@orchestra/core/util/encode"
 import { expect, test, type Page, type Route } from "@playwright/test"
 import { mockOrchestraServer } from "../utils/mock-server"
+import { expandAdvanced } from "./compact-navigation.fixture"
 
 const serverA = "http://127.0.0.1:4096"
 const serverB = "http://127.0.0.1:4097"
@@ -268,6 +269,7 @@ async function nav(page: Page, name: string) {
 }
 
 async function openDock(page: Page) {
+  await expandAdvanced(page)
   await nav(page, "MCP Dock")
   await expect(page).toHaveURL(/\/orchestra\/dock$/)
   // Like the mock, the page is the browser itself: its title is for assistive technology only, so it
