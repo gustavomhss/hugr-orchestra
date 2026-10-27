@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process"
 import { execFileSync } from "node:child_process"
-import { mkdir, mkdtemp, rm, access, readFile, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, rm, access, readFile, writeFile, rename } from "node:fs/promises"
 import { createServer } from "node:https"
 import type { IncomingMessage, ServerResponse } from "node:http"
 import type { AddressInfo } from "node:net"
@@ -16,6 +16,12 @@ const root = resolve(import.meta.dir, "../..")
 const artifactRoot = process.env.APP_DOCK_ARTIFACT_ROOT ?? root
 const artifact = join(artifactRoot, "artifacts/app-dock-rpc/s1.json")
 const cases: Case[] = []
+
+// The parent reads this file as soon as the child exits; a rename keeps it from ever seeing a partial write.
+const writeReport = async (report: unknown) => {
+  await writeFile(`${artifact}.tmp`, JSON.stringify(report, null, 2))
+  await rename(`${artifact}.tmp`, artifact)
+}
 
 const check = (condition: unknown, message: string) => {
   if (!condition) throw new Error(message)
@@ -194,11 +200,11 @@ async function child() {
     pass("M01", "non-dock message ignored")
 
     if (!win.isDestroyed()) win.destroy()
-    await writeFile(artifact, JSON.stringify({ version: 1, electronVersion: process.versions.electron, cases }, null, 2))
+    await writeReport({ version: 1, electronVersion: process.versions.electron, cases })
   } catch (error) {
     console.error(JSON.stringify({ phase: "app-dock-rpc-child-failure", error: String(error) }))
     await mkdir(dirname(artifact), { recursive: true })
-    await writeFile(artifact, JSON.stringify({ version: 1, electronVersion: process.versions.electron, cases, error: String(error) }, null, 2))
+    await writeReport({ version: 1, electronVersion: process.versions.electron, cases, error: String(error) })
     throw error
   } finally {
     resetAppDockRPC()

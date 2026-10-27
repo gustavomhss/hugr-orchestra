@@ -127,7 +127,7 @@ async function child() {
     check(bio === "author bio", "textarea value not replaced")
 
     const editableResult = await win.webContents.executeJavaScript(buildTypeScript(byRefName(again, "div"), "new note"))
-    check(editableResult && editableResult.ok === true, "contenteditable type reported failure")
+    check(editableResult && editableResult.ok === true, `contenteditable type reported failure: ${JSON.stringify(editableResult)}`)
     const edited = await win.webContents.executeJavaScript("document.getElementById('editable').textContent")
     check(edited === "new note", "contenteditable text not set")
     pass("T06", "type handles textarea and contenteditable targets")
