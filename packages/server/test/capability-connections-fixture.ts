@@ -15,6 +15,7 @@ import { locationServices } from "@orchestra/core/location-services"
 import { ProjectTable } from "@orchestra/core/project/sql"
 import { SessionTable } from "@orchestra/core/session/sql"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
+import { MeetingHandoff } from "@orchestra/core/session/meeting-handoff"
 import { TaskTool } from "@orchestra/core/tool/task"
 import { TeamMessageTool } from "@orchestra/core/tool/team-message"
 import { makeCapabilityConnectionsGroup } from "@orchestra/protocol/groups/capability-connections"
@@ -59,7 +60,7 @@ export function make(options: { password?: string } = {}) {
       const nodes = LayerNode.hoist(locationServices, Node.tags.values.global, [
         [ToolRegistry.node, ToolRegistry.nativeNode], [ToolRegistry.toolsNode, ToolRegistry.nativeToolsNode],
         // Task and team_message capture process-global Session services this focused host does not export.
-        [TaskTool.node, Layer.empty], [TeamMessageTool.node, Layer.empty], [Location.node, Location.boundNode(ref)],
+        [TaskTool.node, Layer.empty], [TeamMessageTool.node, Layer.empty], [MeetingHandoff.node, Layer.empty], [Location.node, Location.boundNode(ref)],
       ])
       return LayerNode.compile(nodes.node).pipe(Layer.fresh,
         Layer.provide(LayerNode.compile(nodes.hoisted, [[Database.node, databaseNode]])))

@@ -1,6 +1,4 @@
-import { SessionMeeting } from "@orchestra/core/session"
-import { MeetingConsolidation } from "@orchestra/core/session/meeting-consolidation"
-import { MeetingHandoff } from "@orchestra/core/session/meeting-handoff"
+import { MeetingConsolidation, SessionMeeting } from "@orchestra/core/session"
 import { MeetingError } from "@orchestra/protocol/groups/meeting"
 import { Effect } from "effect"
 import { HttpApiBuilder, HttpApiSchema } from "effect/unstable/httpapi"
@@ -88,7 +86,7 @@ export const MeetingHandler = HttpApiBuilder.group(Api, "server.meeting", (handl
       .handle("meeting.handoff", (ctx) =>
         response(
           Effect.gen(function* () {
-            const handoff = yield* MeetingHandoff.Service
+            const handoff = yield* SessionMeeting.HandoffService
             return yield* handoff.handoff(ctx.payload).pipe(Effect.mapError(apiError))
           }),
         ),
