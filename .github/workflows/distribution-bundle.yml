@@ -10,6 +10,15 @@ on:
         description: Run the hosted provider qualification lane
         type: boolean
         default: false
+  # release-cli calls this before publishing, so no release ships without a green bundle at its SHA.
+  workflow_call:
+    inputs:
+      provider:
+        type: boolean
+        default: false
+    secrets:
+      OPENROUTER_API_KEY:
+        required: false
 permissions:
   contents: read
 defaults:
