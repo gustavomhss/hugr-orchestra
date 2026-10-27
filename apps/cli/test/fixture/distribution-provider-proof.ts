@@ -132,6 +132,8 @@ export async function qualifyProvider(input: {
         expect(String(created.agent)).toBe("distribution-proof")
         expect(created.model).toMatchObject({ providerID: "distribution", id: model })
         expect(String(created.location.directory)).toBe(box.cwd)
+        // A Session with its own title skips the title agent's model call, so every captured request is the proof turn.
+        expect(await daemon.api("POST", `/api/session/${created.id}/rename`, { title: "distribution proof" })).toBeUndefined()
         const admitted = Schema.decodeUnknownSync(Schema.Struct({ data: SessionInput.Admitted }))(await daemon.api(
           "POST", `/api/session/${created.id}/prompt`, { prompt: { text: prompt }, delivery: "steer", resume: true },
         )).data

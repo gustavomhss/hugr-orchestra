@@ -31,32 +31,33 @@ const Receipt = Schema.Struct({
   }),
 })
 
-// Reviewed routing/composition bytes at 0001b09c39 plus dev e6c39ff72d's
-// SessionSubagentModels handlers/layer. Existing V2 execution edges are unchanged.
+// Reviewed routing/composition bytes at dev df5d604aa9 (re-reviewed 2026-10-27: the
+// ExecutionHost branch stays off without an agent engine, the bash sandbox still wraps
+// first, and the title agent's call is skipped because the proof names its Session).
 // Content hashes, not a syntax
 // approximation, bind dispatch semantics. Any changed route needs lead review
 // before its new source hash is admitted, even if all modules remain in a bundle.
 const bindings = {
-  "apps/cli/src/omni-entry.ts": "7bc97e5bd9ac4b37a4bf932301fa58c78badb72e",
-  "apps/cli/src/index.ts": "2331af83e5790cb11428570aa896632ff042eb01",
-  "apps/cli/src/framework/runtime.ts": "97247e4d6b813dcf33be4a38c85601da61b70a1a",
-  "apps/cli/src/framework/spec.ts": "3bb47e5e5edc99fc6422f62f3ad41febb209a3a9",
-  "apps/cli/src/commands/commands.ts": "c0e405368c00411378aa8fcab63fb607b8d14e3e",
-  "apps/cli/src/commands/handlers/api.ts": "cf00394cb902b88db9016a6c3b9392a1dc4342e2",
-  "apps/cli/src/commands/handlers/serve.ts": "8acf73620edbfcdbce680e4d82ed075988a9b585",
+  "apps/cli/src/omni-entry.ts": "3a328f28a5db6102f0f0707fd3ef7327780d5d30",
+  "apps/cli/src/index.ts": "65566f305c1e92cb1fdd2a50e942dbd1834551b6",
+  "apps/cli/src/framework/runtime.ts": "02d1d778896d87fd360a75f10d749342c0698ea1",
+  "apps/cli/src/framework/spec.ts": "c921de73756b0a6a005586d853b3f87760d3daa0",
+  "apps/cli/src/commands/commands.ts": "f60680a73c12d9fe0bef1b4ef6f56bc6cf0dcfcd",
+  "apps/cli/src/commands/handlers/api.ts": "992bf3688415a6c6cd0469955602344e376860d7",
+  "apps/cli/src/commands/handlers/serve.ts": "f11a2c92019d75847eac7b87d0b762cf944e7c93",
   "apps/cli/src/commands/handlers/service/start.ts": "0d6fbaada9fca59087cb9ca2c9837549a0dda0bf",
   "apps/cli/src/commands/handlers/service/password.ts": "6bf49d50d049ba7a26d97069955f0ed551137464",
   "apps/cli/src/commands/handlers/service/stop.ts": "8da9b04cffd5b2e8e893aecab117ff5140950caf",
   "apps/cli/src/commands/handlers/service/status.ts": "d409970e8bcd1b998473ce083d9f1b618ec5de75",
-  "apps/cli/src/services/daemon.ts": "c7374a8960ca825418676f7a86b792a3ce2b723b",
-  "packages/server/src/routes.ts": "5b37e6caeae0cbd1ef00f4549e7b42d90c78945c",
-  "packages/server/src/handlers/session.ts": "7b4886f3c2980d54b845c0b91ee213028caf6705",
-  "packages/core/src/session.ts": "ee09320406f19c18347c2904b4ed7cbc46d0b7a3",
-  "packages/core/src/session/execution/local.ts": "d874c40832a3571297e78e912c2ae137fb7acc12",
-  "packages/core/src/location-services.ts": "aa917b5a6092053b253890ec979c4f34bee9829b",
-  "packages/core/src/session/runner/llm.ts": "c12fb0c16eba526d27f5552b07d3952b2d430f73",
-  "packages/core/src/session/runner/model.ts": "6292fbc5d89963c7f6d7ba47ccbe8850bf31a3c3",
-  "packages/core/src/tool/bash.ts": "8618850dc6a0c215902f278f1338170d2b1d745a",
+  "apps/cli/src/services/daemon.ts": "c6b5124fd3b2ef67d387f96c0b04026e598fac3d",
+  "packages/server/src/routes.ts": "75b0f9753e4c879767ef186f5003519e2b681025",
+  "packages/server/src/handlers/session.ts": "1ce1cd359f5c9bbfc12122fad3d4439655a1e5bb",
+  "packages/core/src/session.ts": "402a192a69bcad6a4b08c695657e24ff5e335f93",
+  "packages/core/src/session/execution/local.ts": "e7b758462abfd388f937fb18b79f82f2733dffad",
+  "packages/core/src/location-services.ts": "c754426dde31acad2dbbfd96459b32624cfdd2e4",
+  "packages/core/src/session/runner/llm.ts": "aa5cfa24f2254771b55309da7cbe6fa7e60e7fe2",
+  "packages/core/src/session/runner/model.ts": "329158b19246bdacf2ec1fe67409e8707e94a6c8",
+  "packages/core/src/tool/bash.ts": "648692192b262905cc922deecaf9c1fa99a83f35",
 }
 
 // Bun 1.3.14 metafile imports retain original/erased records, not an authoritative
