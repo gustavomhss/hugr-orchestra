@@ -31,8 +31,13 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.agent-title {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  gap: 2px;
+}
 .agent-role {
-  margin-inline-start: auto;
   color: var(--orchestra-muted);
   font: var(--orchestra-font-size-xs) var(--mx-sans);
 }
@@ -56,8 +61,10 @@
 .agent .mx-card-foot {
   flex-wrap: wrap;
 }
-/* Takes the Open Chat slot on every card but Maestro's. It gets its own line so it never crowds Configure. */
+/* Takes the Open Chat slot on every card but Maestro's. It sits on its own line above the buttons, so Configure
+   rides the same bottom edge on every card. */
 .mx-card-foot .agents-note {
+  order: -1;
   flex: 1 1 100%;
   margin: 0;
   color: var(--mx-dim);
@@ -95,13 +102,26 @@
 .agents-close {
   flex: none;
 }
-/* The agent's picture stands on its own above the card's title, with no badge behind it. */
+/* The agent's picture leads the card's title row, with no badge behind it. An agent without one keeps the same
+   slot so every title starts at the same edge. */
 .agent-avatar {
   display: block;
-  inline-size: 80px;
-  block-size: 80px;
-  margin-inline: auto;
+  inline-size: 56px;
+  block-size: 56px;
+  flex: none;
   object-fit: contain;
+}
+.agent-avatar.mx-mark {
+  display: grid;
+}
+/* Descriptions hold exactly three lines so badges and buttons line up across a row; the full text is the
+   paragraph's title. */
+.agent .agent-desc {
+  display: -webkit-box;
+  min-block-size: calc(3lh);
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 .agents-avatar-current {
   display: flex;
