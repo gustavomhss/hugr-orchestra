@@ -80,6 +80,9 @@ function keys() {
 
 async function keychainKey() {
   if (typeof Bun === "undefined") throw new Error("The OS keychain needs the Bun runtime")
+  // Linux keychains are the Secret Service on the D-Bus session bus; without a bus (headless, CI, bare WSL) the
+  // native lookup can stall for a long time before it fails, so skip it and use the key file.
+  if (process.platform === "linux" && !process.env.DBUS_SESSION_BUS_ADDRESS) throw new Error("No Secret Service session bus")
   const stored = await Bun.secrets.get(KEYCHAIN)
   if (stored) return decodeKey(stored)
   await Bun.secrets.set({ ...KEYCHAIN, value: randomBytes(32).toString("base64") })

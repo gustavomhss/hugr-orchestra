@@ -171,7 +171,7 @@ test("lists one model per provider and model ID", () => {
     }) as unknown as Provider
   const ids = createRoot((dispose) => {
     const catalog = createModelCatalog(
-      () => [provider("opencode", ["big", "big"]), provider("opencode", ["big"]), provider("opencode-go", ["big"])],
+      () => [provider("alpha", ["big", "big"]), provider("alpha", ["big"]), provider("beta", ["big"])],
       () => [],
     )
     const result = catalog.list().map((model) => `${model.provider.id}:${model.id}`)
@@ -179,5 +179,5 @@ test("lists one model per provider and model ID", () => {
     return result
   })
 
-  expect(ids).toEqual(["opencode:big", "opencode-go:big"])
+  expect(ids).toEqual(["alpha:big", "beta:big"])
 })

@@ -76,13 +76,24 @@ if (process.env.GUARDRAILS_DOM !== "1") {
     }), host)
     const tab = (name: string) =>
       [...host.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find((item) => item.textContent?.startsWith(name))
-    return { host, tab, done: () => (dispose(), host.remove()) }
+    // The guards run the repository's own code, so the view opens idle and runs only from "Check again".
+    const check = () =>
+      [...host.querySelectorAll<HTMLButtonElement>(".mx-empty .mx-btn")].find((button) => button.textContent === "Check again")?.click()
+    return { host, tab, check, done: () => (dispose(), host.remove()) }
   }
 
   test("a blocked change leads to its first gate and the way forward its rule allows", async () => {
     state.run = "blocked"
+    state.runs = 0
     const view = mount()
+    // Opening the view never runs the guards.
+    await until(() => view.host.querySelector(".mx-empty strong")?.textContent === "Guards have not run yet", view.host)
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    expect(state.runs).toBe(0)
+    expect(view.host.querySelector(".gr-status")).toBeNull()
+    view.check()
     await until(() => !!view.host.querySelector('.gr-status[data-kind="blocked"]'), view.host)
+    expect(state.runs).toBe(1)
     expect(state.directories.every((query) => query.includes("work%2Fproject"))).toBe(true)
     // No fixture note in production: these findings came from the server.
     expect(view.host.querySelector(".mx-note")).toBeNull()
@@ -112,6 +123,8 @@ if (process.env.GUARDRAILS_DOM !== "1") {
   test("the Rules tab lists the server's rules, filters them and opens one", async () => {
     state.run = "clean"
     const view = mount()
+    await until(() => !!view.host.querySelector(".mx-empty .mx-btn"), view.host)
+    view.check()
     await until(() => !!view.host.querySelector('.gr-status[data-kind="clean"]'), view.host)
     view.tab("Rules")?.click()
     await until(() => view.host.querySelectorAll(".gr-rule").length === served.length, view.host)
@@ -139,6 +152,8 @@ if (process.env.GUARDRAILS_DOM !== "1") {
   test("an engine that cannot run reads as disconnected with its reason, and Check again reruns it", async () => {
     state.run = "no-engine"
     const view = mount()
+    await until(() => !!view.host.querySelector(".mx-empty .mx-btn"), view.host)
+    view.check()
     await until(() => !!view.host.querySelector(".gr-failure"), view.host)
     expect(view.host.querySelector(".mx-empty strong")?.textContent).toBe("The guards could not run on this project")
     expect(view.host.querySelector(".gr-failure")?.textContent).toBe("script/guards is missing in /work/project")

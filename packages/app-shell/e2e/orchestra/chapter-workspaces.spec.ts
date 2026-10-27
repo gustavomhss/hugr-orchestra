@@ -376,7 +376,7 @@ test("a project that is not a repository says why New workspace is unavailable",
   await expect(chapter).not.toContainText("needs a git repository")
 })
 
-test("reports error, unavailable and empty states and recovers", async ({ page }) => {
+test("reports error, unavailable and no-repository states and recovers", async ({ page }) => {
   const mock = await setup(page)
   await openHome(page)
   mock.state.status = 500
@@ -391,7 +391,12 @@ test("reports error, unavailable and empty states and recovers", async ({ page }
   mock.state.status = 200
   mock.state.empty = true
   await page.reload()
-  await expect(chapter.getByRole("status")).toHaveText("No workspaces were found for this repository.")
+  // The server lists no project for this folder, so there is no repository to list workspaces for. A listed project
+  // always carries its root, which makes this the only way the list is empty.
+  await expect(chapter.getByRole("status")).toContainText("This folder is not a git repository")
+  await expect(chapter.getByRole("status")).toContainText(
+    "New workspaces are git worktrees, so this project needs a git repository.",
+  )
   await expect(chapter.locator(".mx-card")).toHaveCount(0)
   await expect(chapter.getByRole("button", { name: "New workspace", exact: true })).toBeDisabled()
   mock.state.empty = false
