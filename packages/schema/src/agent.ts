@@ -16,6 +16,14 @@ export const Color = Schema.Union([
 ]).annotate({ identifier: "Agent.Color" })
 export type Color = typeof Color.Type
 
+// A bundled picture (`lib:<slug>`) or an uploaded raster image inlined as a data URL. SVG is refused: it can carry
+// script, and the app renders this value as an image source.
+export const Avatar = Schema.String.check(
+  Schema.isPattern(/^(lib:[a-z0-9][a-z0-9_-]{0,63}|data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2})$/),
+  Schema.isMaxLength(200_000),
+).annotate({ identifier: "Agent.Avatar" })
+export type Avatar = typeof Avatar.Type
+
 export interface Info extends Schema.Schema.Type<typeof Info> {}
 export const Info = Schema.Struct({
   id: ID,
@@ -29,6 +37,7 @@ export const Info = Schema.Struct({
   mode: Schema.Literals(["subagent", "primary", "all"]),
   hidden: Schema.Boolean,
   color: Color.pipe(optional),
+  avatar: Avatar.pipe(optional),
   steps: PositiveInt.pipe(optional),
   permissions: Permission.Ruleset,
 })

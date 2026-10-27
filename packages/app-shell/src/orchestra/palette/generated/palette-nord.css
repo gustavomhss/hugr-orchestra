@@ -1636,6 +1636,24 @@ html[data-orchestra-palette="nord"][data-color-scheme] body[data-mx-kit] {
 [data-orchestra-palette="nord"] .agents-fieldset {
   border: 0;
 }
+[data-orchestra-palette="nord"] .agents-avatar-image {
+  border: 1px solid var(--mx-line);
+  background: var(--mx-soft);
+}
+[data-orchestra-palette="nord"] .agents-avatar-upload:focus-within {
+  outline: 2px solid var(--mx-blue);
+}
+[data-orchestra-palette="nord"] .agents-avatar-pick {
+  border: 1px solid var(--mx-line);
+  background: var(--mx-soft);
+}
+[data-orchestra-palette="nord"] .agents-avatar-pick:has(input:checked) {
+  border-color: var(--mx-blue);
+  box-shadow: 0 0 0 1px var(--mx-blue);
+}
+[data-orchestra-palette="nord"] .agents-avatar-pick:has(input:focus-visible) {
+  outline: 2px solid var(--mx-blue);
+}
 /* orchestra/chapters/cicd.css */
 [data-orchestra-palette="nord"] .cicd-ic {
   fill: none;

@@ -95,6 +95,76 @@
 .agents-close {
   flex: none;
 }
+/* The card's mark slot shows the agent's picture when one resolves. */
+.agent-avatar {
+  padding: 0;
+  object-fit: cover;
+}
+.agents-avatar-current {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.agents-avatar-image {
+  inline-size: 48px;
+  block-size: 48px;
+  flex: none;
+  border: 1px solid var(--mx-line);
+  border-radius: var(--orchestra-radius-md);
+  background: var(--mx-soft);
+  object-fit: cover;
+}
+.agents-avatar-upload {
+  position: relative;
+}
+.agents-avatar-upload input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.agents-avatar-upload:focus-within {
+  outline: 2px solid var(--mx-blue);
+  outline-offset: 2px;
+}
+.agents-avatars {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+  gap: 6px;
+  max-block-size: 172px;
+  overflow-y: auto;
+}
+.agents-avatar-pick {
+  position: relative;
+  display: block;
+  aspect-ratio: 1;
+  border: 1px solid var(--mx-line);
+  border-radius: var(--orchestra-radius-md);
+  background: var(--mx-soft);
+  cursor: pointer;
+}
+.agents-avatar-pick input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.agents-avatar-pick img {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+}
+.agents-avatar-pick:has(input:checked) {
+  border-color: var(--mx-blue);
+  box-shadow: 0 0 0 1px var(--mx-blue);
+}
+.agents-avatar-pick:has(input:focus-visible) {
+  outline: 2px solid var(--mx-blue);
+  outline-offset: 2px;
+}
 .agents-dialog .mx-field,
 .agents-dialog .mx-fields,
 .agents-dialog .mx-grow {

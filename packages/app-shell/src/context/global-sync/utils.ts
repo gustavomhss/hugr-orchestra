@@ -23,6 +23,7 @@ export function normalizeAgentList(input: AgentListData | Agent[]): Agent[] {
     temperature: numeric(settings(agent).temperature),
     topP: numeric(settings(agent).topP),
     color: agent.color,
+    avatar: agent.avatar,
     permission: agent.permissions.map((rule) => ({
       permission: rule.action,
       pattern: rule.resource,

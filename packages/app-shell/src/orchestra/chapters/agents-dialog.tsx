@@ -4,8 +4,10 @@ import type { Agent } from "@/v2-wire"
 import type { AgentFileInfo, AgentFileInput } from "@/v2-types"
 import { useLanguage } from "@/context/language"
 import { agentKey } from "@/context/agent-identity"
+import { AVATAR_LIBRARY, avatarFromFile, avatarUrl } from "../avatars"
 import {
   AGENT_MODES,
+  agentAvatar,
   agentDraft,
   agentFileInput,
   agentFileTarget,
@@ -129,6 +131,16 @@ export function AgentDialog(props: {
     const action = props.agent && inheritedAction(props.agent.permission, tool, state.file?.permission?.[tool])
     if (!action) return language.t("orchestra.agents.choice.inherit")
     return language.t("orchestra.agents.choice.inheritValue", { action })
+  }
+  const avatarPreview = () =>
+    avatarUrl(props.agent ? agentAvatar({ ...props.agent, avatar: draft.avatar }) : draft.avatar)
+  const upload = (file: File | undefined) => {
+    if (!file) return
+    avatarFromFile(file).then((avatar) => {
+      if (!avatar) return setState("error", language.t("orchestra.agents.avatar.error"))
+      setState("error", "")
+      setDraft("avatar", avatar)
+    })
   }
   const knownModel = () => props.models.flatMap((group) => group.models).find((model) => model.value === draft.model)
   const modelsReady = () => !props.modelsStatus || props.modelsStatus === "success"
@@ -261,6 +273,62 @@ export function AgentDialog(props: {
                     {language.t("orchestra.agents.maestroLocked")}
                   </p>
                 </Show>
+                <div class="mx-field agents-avatar" role="group" aria-labelledby="agents-field-avatar">
+                  <span id="agents-field-avatar">{language.t("orchestra.agents.field.avatar")}</span>
+                  <div class="agents-avatar-current">
+                    <Show
+                      when={avatarPreview()}
+                      fallback={
+                        <span class="mx-mark agents-avatar-image">
+                          <svg class="agents-ic" viewBox="0 0 16 16" aria-hidden="true">
+                            <path d="m8 1 2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z" />
+                          </svg>
+                        </span>
+                      }
+                    >
+                      {(url) => <img class="agents-avatar-image" src={url()} alt="" />}
+                    </Show>
+                    <label class="mx-btn agents-avatar-upload">
+                      {language.t("orchestra.agents.avatar.upload")}
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        onChange={(event) => {
+                          upload(event.currentTarget.files?.[0])
+                          event.currentTarget.value = ""
+                        }}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      class="mx-btn"
+                      disabled={draft.avatar === ""}
+                      onClick={() => setDraft("avatar", "")}
+                    >
+                      {language.t("orchestra.agents.avatar.none")}
+                    </button>
+                  </div>
+                  <div class="agents-avatars" role="radiogroup" aria-label={language.t("orchestra.agents.avatar.library")}>
+                    <For each={AVATAR_LIBRARY}>
+                      {(item, index) => (
+                        <label class="agents-avatar-pick">
+                          <input
+                            type="radio"
+                            name="avatar"
+                            value={item.value}
+                            checked={draft.avatar === item.value}
+                            onChange={() => setDraft("avatar", item.value)}
+                          />
+                          <img
+                            src={item.url}
+                            alt={language.t("orchestra.agents.avatar.option", { index: index() + 1 })}
+                            loading="lazy"
+                          />
+                        </label>
+                      )}
+                    </For>
+                  </div>
+                </div>
                 <label class="mx-field">
                   <span id="agents-field-description">{language.t("orchestra.agents.field.description")}</span>
                   <input

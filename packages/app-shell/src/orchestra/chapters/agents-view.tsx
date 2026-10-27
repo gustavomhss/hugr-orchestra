@@ -3,7 +3,8 @@ import { createStore } from "solid-js/store"
 import type { Agent } from "@/v2-wire"
 import { useLanguage } from "@/context/language"
 import { agentKey } from "@/context/agent-identity"
-import { agentRoster } from "./agents-roster"
+import { agentAvatar, agentRoster } from "./agents-roster"
+import { avatarUrl } from "../avatars"
 import { MxBadge } from "./kit"
 
 const PAGE_SIZE = 24
@@ -73,11 +74,18 @@ export function AgentsRoster(props: {
                 aria-posinset={page() * PAGE_SIZE + index() + 1}
               >
                 <div class="agent-top mx-card-top">
-                  <span class="mx-mark">
-                    <svg class="agents-ic" viewBox="0 0 16 16" aria-hidden="true">
-                      <path d="m8 1 2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z" />
-                    </svg>
-                  </span>
+                  <Show
+                    when={avatarUrl(agentAvatar(item.agent))}
+                    fallback={
+                      <span class="mx-mark">
+                        <svg class="agents-ic" viewBox="0 0 16 16" aria-hidden="true">
+                          <path d="m8 1 2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z" />
+                        </svg>
+                      </span>
+                    }
+                  >
+                    {(url) => <img class="mx-mark agent-avatar" src={url()} alt="" />}
+                  </Show>
                   <b id={`agent-${agentKey(item.agent)}`}>
                     <bdi>{item.agent.name}</bdi>
                   </b>

@@ -18,3 +18,4 @@
 - [Live meetings: setup and use](live-meetings.md)
 - [Workflows: run, release and templates](workflows.md)
 - [Hooks: rules that watch what agents do](hooks.md)
+- [Agent avatars: pick or upload a picture](agent-avatars.md)

@@ -49,6 +49,7 @@ export type AgentDraft = {
   mode: AgentMode
   description: string
   model: string
+  avatar: string
   steps: string
   system: string
   permission: Record<PermissionTool, PermissionChoice>
@@ -67,6 +68,14 @@ export function agentRoster(agents: readonly Agent[]) {
       // The user talks only to Maestro; every other agent works through it.
       chat: agentKey(agent) === "maestro",
     }))
+}
+
+/**
+ * The picture an agent shows: its own choice, else the bundled portrait named after its id (`seat-<id>`), which
+ * exists only for native seats. Ids are unique, so a custom agent never takes a seat's portrait.
+ */
+export function agentAvatar(agent: Agent) {
+  return agent.avatar || `lib:seat-${agentKey(agent)}`
 }
 
 export function errorStatus(error: unknown) {
@@ -109,6 +118,7 @@ export function agentDraft(agent: Agent | undefined, file: AgentFileInfo | undef
     mode: isMaestro(agent) ? "primary" : (file?.mode ?? agent?.mode ?? "subagent"),
     description: file?.description ?? agent?.description ?? "",
     model: file?.model ?? "",
+    avatar: file?.avatar ?? agent?.avatar ?? "",
     steps: steps === undefined ? "" : String(steps),
     system: file?.system ?? agent?.prompt ?? "",
     permission: Object.fromEntries(
@@ -128,7 +138,7 @@ export function agentFileInput(
   agent: Agent | undefined,
 ): AgentFileInput {
   const resolved = agent ? agentDraft(agent, undefined) : undefined
-  const keep = (key: "mode" | "description" | "steps" | "system", value: string) =>
+  const keep = (key: "mode" | "description" | "avatar" | "steps" | "system", value: string) =>
     value !== "" && (file?.[key] !== undefined || !resolved || resolved[key].trim() !== value)
   const description = draft.description.trim()
   const steps = draft.steps.trim()
@@ -151,6 +161,7 @@ export function agentFileInput(
     ...(keep("description", description) ? { description } : {}),
     // The empty choice removes the file override. Any chosen model is explicit, even if it matches inheritance.
     ...(draft.model ? { model: draft.model } : {}),
+    ...(keep("avatar", draft.avatar) ? { avatar: draft.avatar } : {}),
     ...(keep("steps", steps) ? { steps: Number(steps) } : {}),
     ...(keep("system", system) ? { system } : {}),
     permission,
@@ -164,6 +175,7 @@ export function removeInput(file: AgentFileInfo | undefined): AgentFileInput {
     description: file?.description,
     mode: file?.mode,
     model: file?.model,
+    avatar: file?.avatar,
     steps: file?.steps,
     system: file?.system,
     permission: file?.permission,

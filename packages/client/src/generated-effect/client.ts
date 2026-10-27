@@ -60,6 +60,7 @@ type Endpoint2_2Input = {
   readonly description?: Endpoint2_2Request["payload"]["description"]
   readonly mode?: Endpoint2_2Request["payload"]["mode"]
   readonly model?: Endpoint2_2Request["payload"]["model"]
+  readonly avatar?: Endpoint2_2Request["payload"]["avatar"]
   readonly steps?: Endpoint2_2Request["payload"]["steps"]
   readonly system?: Endpoint2_2Request["payload"]["system"]
   readonly permission?: Endpoint2_2Request["payload"]["permission"]
@@ -74,6 +75,7 @@ const Endpoint2_2 = (raw: RawClient["server.agent"]) => (input: Endpoint2_2Input
       description: input["description"],
       mode: input["mode"],
       model: input["model"],
+      avatar: input["avatar"],
       steps: input["steps"],
       system: input["system"],
       permission: input["permission"],

@@ -97,6 +97,7 @@ export type Agent = {
   topP?: number
   temperature?: number
   color?: string
+  avatar?: string
   permission: PermissionRuleset
   model?: {
     modelID: string
@@ -175,6 +176,7 @@ export type AgentInfo = {
     mode: "subagent" | "primary" | "all";
     hidden: boolean;
     color?: AgentColor;
+    avatar?: string;
     steps?: number;
     permissions: PermissionV2Ruleset;
 };

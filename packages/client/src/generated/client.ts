@@ -679,6 +679,7 @@ export function make(options: ClientOptions) {
               description: input["description"],
               mode: input["mode"],
               model: input["model"],
+              avatar: input["avatar"],
               steps: input["steps"],
               system: input["system"],
               permission: input["permission"],
