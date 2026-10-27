@@ -1,22 +1,10 @@
-import { beforeAll, describe, expect, mock, test } from "bun:test"
+import { beforeAll, describe, expect, test } from "bun:test"
 import { createRoot } from "solid-js"
 import type { LineComment } from "./comments"
 
 let createCommentSessionForTest: typeof import("./comments").createCommentSessionForTest
 
 beforeAll(async () => {
-  mock.module("@solidjs/router", () => ({
-    useNavigate: () => () => undefined,
-    useParams: () => ({}),
-    useLocation: () => ({}),
-    useSearchParams: () => [{}, () => undefined],
-  }))
-  mock.module("@orchestra/ui/context", () => ({
-    createSimpleContext: () => ({
-      use: () => undefined,
-      provider: () => undefined,
-    }),
-  }))
   const mod = await import("./comments")
   createCommentSessionForTest = mod.createCommentSessionForTest
 })
