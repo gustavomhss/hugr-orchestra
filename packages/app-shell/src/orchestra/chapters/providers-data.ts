@@ -109,11 +109,6 @@ export function matches(parts: Array<string | undefined>, query: string) {
   return parts.join(" ").toLowerCase().includes(needle)
 }
 
-export function routeModel(card: ProviderCard, preferred: string | undefined) {
-  if (preferred && card.models.some((model) => model.id === preferred)) return preferred
-  return card.models[0]?.id
-}
-
 const decodeMethods = Schema.decodeUnknownOption(Schema.Array(Integration.Method))
 
 // The integration reply is untrusted: malformed sign-in methods fail its read, so the connect dialog falls back

@@ -51,10 +51,6 @@ type Deps = {
   getDefaultServerUrl: () => Promise<string | null> | string | null
   setDefaultServerUrl: (url: string | null) => Promise<void> | void
   isFirstLaunchOnboardingPending: () => Promise<boolean> | boolean
-  finishFirstLaunchOnboarding: (
-    createDefaultProject: boolean,
-    folderName?: string,
-  ) => Promise<string | null> | string | null
   confirmFirstLaunchOnboarding: () => Promise<void> | void
   isOldLayoutEligible: () => Promise<boolean> | boolean
   getDisplayBackend: () => Promise<string | null>
@@ -114,11 +110,6 @@ export function registerIpcHandlers(deps: Deps) {
     deps.setDefaultServerUrl(url),
   )
   handle("is-first-launch-onboarding-pending", () => deps.isFirstLaunchOnboardingPending())
-  handle(
-    "finish-first-launch-onboarding",
-    (_event: IpcMainInvokeEvent, createDefaultProject: boolean, folderName?: string) =>
-      deps.finishFirstLaunchOnboarding(createDefaultProject, typeof folderName === "string" ? folderName : undefined),
-  )
   handle("confirm-first-launch-onboarding", () => deps.confirmFirstLaunchOnboarding())
   handle("is-old-layout-eligible", () => deps.isOldLayoutEligible())
   handle("get-display-backend", () => deps.getDisplayBackend())

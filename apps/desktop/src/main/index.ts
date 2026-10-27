@@ -20,7 +20,6 @@ import { forwardInitializationFailure } from "./initialization"
 import { exportDebugLogs, initCrashReporter, initLogging, startNetLog, write as writeLog } from "./logging"
 import { createMenu } from "./menu"
 import {
-  finishFirstLaunchOnboarding,
   confirmFirstLaunchOnboarding,
   initializeOldLayoutEligibility,
   isFirstLaunchOnboardingPending,
@@ -383,7 +382,6 @@ const main = Effect.gen(function* () {
     getDefaultServerUrl: () => getDefaultServerUrl(),
     setDefaultServerUrl: (url) => setDefaultServerUrl(url),
     isFirstLaunchOnboardingPending,
-    finishFirstLaunchOnboarding,
     confirmFirstLaunchOnboarding,
     isOldLayoutEligible,
     getDisplayBackend: async () => null,
