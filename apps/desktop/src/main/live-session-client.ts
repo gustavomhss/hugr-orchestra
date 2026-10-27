@@ -14,6 +14,8 @@ export type LiveSessionEvent =
   | { kind: "idle" }
   // The seat asked for a frame through its `live_look` tool; only the desktop can capture one.
   | { kind: "look"; question?: string }
+  // A prompt with files reached the seat's history: the steps after it can see the frame.
+  | { kind: "framed" }
 
 export type LivePrompt = { text: string; files?: { uri: string; name?: string }[] }
 
@@ -79,6 +81,10 @@ export function parseFrame(frame: string, sessionID: string): LiveSessionEvent |
   if (event.type === "session.next.tool.called" && body.tool === "live_look") {
     const question = (body.input as { question?: unknown } | undefined)?.question
     return typeof question === "string" && question.trim() ? { kind: "look", question } : { kind: "look" }
+  }
+  if (event.type === "session.next.prompted") {
+    const files = (body.prompt as { files?: unknown } | undefined)?.files
+    return Array.isArray(files) && files.length ? { kind: "framed" } : undefined
   }
   // The V2 server sends no status events: a step start means busy, and a step that ends without tool calls ends the turn.
   if (event.type === "session.next.step.started") return { kind: "busy" }

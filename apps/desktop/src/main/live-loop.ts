@@ -26,9 +26,10 @@ type Request = {
   firstAt?: number
   text: string
   dropped?: boolean
-  // The seat's `live_look` call: the turn that asked waits for the frame. `framed` means the frame was admitted and
-  // the reply to it has not started; an idle seen while looking is held until then.
-  look?: { framed?: boolean; idled?: boolean }
+  // The seat's `live_look` call: the turn that asked waits for the frame. A steered frame is admitted at once but
+  // reaches the history only at a later step boundary, so steps before that reply blind: their text is not shown and
+  // an idle seen then is held.
+  look?: { idled?: boolean }
 }
 
 type Meeting = {
@@ -109,7 +110,7 @@ export function registerLiveLoop(options: {
 
   // Streams the answer as it arrives. A reply that may still turn out to be the no-answer token is held back.
   const stream = (request: Request) => {
-    if ((request.kind !== "answer" && request.kind !== "suggestion") || request.dropped) return
+    if ((request.kind !== "answer" && request.kind !== "suggestion") || request.dropped || request.look) return
     const text = request.text.trim().toLowerCase()
     if (!text || NO_ANSWER.startsWith(text) || isNoAnswer(text)) return
     overlay.streamAnswer(
@@ -124,15 +125,15 @@ export function registerLiveLoop(options: {
       return
     }
     if (!request) return
-    // The looking turn ended and the frame was admitted: the next step is the reply to the frame.
-    if (request.look?.framed && request.look.idled && (event.kind === "delta" || event.kind === "text" || event.kind === "busy")) {
+    // The frame is in the history: what follows is the reply to it.
+    if (event.kind === "framed") {
+      if (!request.look) return
       request.look = undefined
       request.text = ""
+      return
     }
     if (event.kind === "busy") return
-    // The frame can be admitted before the looking turn's last step, which then ends without text; it can also be
-    // promoted into that step, which then answers from it and settles here.
-    if (event.kind === "idle" && request.look && !(request.look.framed && request.text.trim() && !isNoAnswer(request.text))) {
+    if (event.kind === "idle" && request.look) {
       request.look.idled = true
       return
     }
@@ -211,11 +212,8 @@ export function registerLiveLoop(options: {
           return false
         },
       ))
-    if (meeting.request !== request || !request.look) return
-    if (admitted) {
-      request.look.framed = true
-      return
-    }
+    // Admitted frames clear the look when they reach the history, which may already have happened.
+    if (meeting.request !== request || !request.look || admitted) return
     const idled = request.look.idled
     request.look = undefined
     if (idled) settle(meeting)
