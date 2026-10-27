@@ -965,7 +965,9 @@ async function child() {
     check(crashedContents && unaffectedContents && crashedContents !== unaffectedContents, "U27 App Dock views missing")
     await execute("view:crash-storage-set", crashedContents, "localStorage.setItem('recovery', 'present')")
     const u27CrashStart = await eventCount()
-    crashedContents.forcefullyCrashRenderer()
+    // forcefullyCrashRenderer can leave the Linux/Xvfb renderer hung instead of gone; kill its OS process directly.
+    if (process.platform === "linux") process.kill(crashedContents.getOSProcessId(), "SIGKILL")
+    else crashedContents.forcefullyCrashRenderer()
     const crash = await waitEvent(
       u27CrashStart,
       (event) =>
@@ -973,8 +975,6 @@ async function child() {
         event.payload.identity.tabID === crashed.tabID &&
         event.payload.identity.generation === crashed.generation,
       "real selected renderer crash",
-      // forcefullyCrashRenderer hangs the renderer until Chromium's watchdog kills it, which takes longer on a loaded CI host.
-      30_000,
     )
     check(crash.payload.reason === "crashed" || crash.payload.reason === "killed", "unexpected renderer crash reason")
     check(
