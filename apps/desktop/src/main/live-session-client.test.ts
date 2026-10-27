@@ -101,3 +101,13 @@ test("the seat's live_look call becomes a look request with its question", () =>
   expect(called({})).toEqual({ kind: "look" })
   expect(called({ path: "a" }, "read")).toBeUndefined()
 })
+
+test("a prompt with files reaching the history marks the frame seen; one without files does not", () => {
+  const prompted = (prompt: Record<string, unknown>) =>
+    parseFrame(frame("session.next.prompted", { sessionID: "s", messageID: "m", prompt, delivery: "steer" }), "s")
+  expect(prompted({ text: "[On screen]", files: [{ uri: "data:image/jpeg;base64,AA", name: "screen.jpg" }] })).toEqual({
+    kind: "framed",
+  })
+  expect(prompted({ text: "hi" })).toBeUndefined()
+  expect(prompted({ text: "hi", files: [] })).toBeUndefined()
+})
