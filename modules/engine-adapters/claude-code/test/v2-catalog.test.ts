@@ -7,7 +7,7 @@ import { Location } from "@orchestra/core/location"
 import { LocationServiceMap } from "@orchestra/core/location-service-map"
 import type { ModelV2 } from "@orchestra/core/model"
 import type { ProviderV2 } from "@orchestra/core/provider"
-import { Effect, Layer } from "effect"
+import { type Context, Effect, Layer } from "effect"
 import { ClaudeCodeCatalog } from "../src/v2/catalog"
 
 // Claude mode lists Anthropic through the signed-in binary, with no API key and no ordinary connection.
@@ -37,7 +37,7 @@ function resolve(input: { info: object; signedIn?: boolean; catalog?: Catalog.In
       sendCode: () => Effect.succeed(false),
     }),
   )
-  const locations = Layer.succeed(LocationServiceMap.Service, { get: () => config } as unknown as LocationServiceMap.Interface)
+  const locations = Layer.succeed(LocationServiceMap.Service, { get: () => config } as unknown as Context.Service.Shape<typeof LocationServiceMap.Service>)
   const location = Layer.succeed(Location.Service, { directory: "/project" } as unknown as Location.Interface)
   return Effect.runPromise(
     Effect.gen(function* () {
@@ -46,7 +46,7 @@ function resolve(input: { info: object; signedIn?: boolean; catalog?: Catalog.In
       const preferred = yield* CatalogAvailability.DefaultModel
       return {
         providers: (yield* additional(target).pipe(Effect.provide(location))).map((item) => item.api.settings),
-        model: (yield* preferred(target).pipe(Effect.provide(location)))?.id,
+        model: (yield* preferred(target).pipe(Effect.provide(location)))?.id as string | undefined,
       }
     }).pipe(Effect.provide(ClaudeCodeCatalog.layer.pipe(Layer.provideMerge(Layer.mergeAll(locations, account))))),
   )
