@@ -8,6 +8,7 @@ import {
   isLocationNotFoundError,
   isSessionNotFoundError,
   parseReadableConfigInvalidError,
+  withServerReason,
 } from "./server-errors"
 
 function fill(text: string, vars?: Record<string, string | number>) {
@@ -241,5 +242,19 @@ describe("hookRefusal", () => {
     expect(hookRefusal(new Error("Session is busy"))).toBeUndefined()
     expect(hookRefusal({ name: "SessionBusyError", data: { hook: body.data.hook } })).toBeUndefined()
     expect(hookRefusal(undefined)).toBeUndefined()
+  })
+})
+
+describe("withServerReason", () => {
+  test("appends the server's own message to the generic text", () => {
+    expect(withServerReason("Could not save.", { _tag: "InvalidRequestError", message: "name is taken" })).toBe(
+      "Could not save. name is taken",
+    )
+    expect(withServerReason("Could not save.", new Error("disk full"))).toBe("Could not save. disk full")
+  })
+
+  test("keeps only the generic text when the error carries no message", () => {
+    expect(withServerReason("Could not save.", undefined)).toBe("Could not save.")
+    expect(withServerReason("Could not save.", {})).toBe("Could not save.")
   })
 })

@@ -248,7 +248,7 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.publish.budget": "retries per step: {{count}}",
   "orchestra.workflows.publish.acceptanceLabel": "Always added",
   "orchestra.workflows.publish.acceptance":
-    "Archie adds the required final checks, a package verification and an independent review, to every plan made from this workflow.",
+    "The upstream seat adds the required final checks, a package verification and an independent review, to every plan made from this workflow.",
   "orchestra.workflows.useInChat.prompt": "Use the published workflow “{{name}}” (workflow id: {{id}}) for: ",
   "orchestra.workflows.unpublish.title": "Unpublish {{name}}?",
   "orchestra.workflows.unpublish.body":
@@ -907,7 +907,7 @@ export const WORKFLOWS_COPY_BR: Record<keyof typeof WORKFLOWS_COPY, string> = {
   "orchestra.workflows.publish.budget": "novas tentativas por etapa: {{count}}",
   "orchestra.workflows.publish.acceptanceLabel": "Sempre adicionado",
   "orchestra.workflows.publish.acceptance":
-    "O Archie adiciona as verificações finais obrigatórias, uma verificação do pacote e uma revisão independente a todo plano feito a partir deste workflow.",
+    "O assento upstream adiciona as verificações finais obrigatórias, uma verificação do pacote e uma revisão independente a todo plano feito a partir deste workflow.",
   "orchestra.workflows.useInChat.prompt": "Use o workflow publicado “{{name}}” (id do workflow: {{id}}) para: ",
   "orchestra.workflows.unpublish.title": "Despublicar {{name}}?",
   "orchestra.workflows.unpublish.body":

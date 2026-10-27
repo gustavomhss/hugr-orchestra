@@ -344,16 +344,19 @@ export function createDirectorySearch(args: { sdk: ServerSDK; base: () => string
     if (existing) return existing
     const request = args.sdk.api.file
       .list({ location: { directory: key } })
-      .then((result) => result.data)
-      .catch(() => [])
-      .then((nodes) =>
-        nodes
+      .then((result) =>
+        result.data
           .filter((node) => node.type === "directory")
           .map((node) => {
             const relative = trimPickerPath(normalizePickerDrive(node.path))
             return { name: getFilename(relative), absolute: joinPickerPath(key, relative) }
           }),
       )
+      // A failed listing reads as empty for this call but is not cached, so the next keystroke retries it.
+      .catch(() => {
+        cache.delete(key)
+        return []
+      })
     cache.set(key, request)
     return request
   }

@@ -10,7 +10,7 @@ import type { MaestroSeats } from "../seats-service"
 import { MaestroAtlasToolV2 } from "../tools/atlas"
 
 // `AtlasKnowledge.resolve`: a workflow publication
-// cites an anchor reference, and the host accepts it only when native Archie produced it through one completed
+// cites an anchor reference, and the host accepts it only when the native upstream seat produced it through one completed
 // `atlas_context` call in the author Session and the same units still load unchanged from the Atlas source. V2 keeps one
 // message projection, so the earlier runtime's legacy/modern projection cross-checks have nothing to compare here.
 

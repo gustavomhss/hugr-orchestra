@@ -88,9 +88,15 @@ const layer = Layer.effect(
           const content = yield* fs.readFileStringSafe(filepath).pipe(Effect.catch(() => Effect.succeed(undefined)))
           if (!content) continue
           const markdown = ConfigMarkdown.parseOption(content)
-          if (!markdown) continue
+          if (!markdown) {
+            yield* Effect.logWarning(`Skipping skill file ${filepath}: its frontmatter could not be parsed`)
+            continue
+          }
           const frontmatter = decodeFrontmatter(markdown.data).valueOrUndefined
-          if (!frontmatter) continue
+          if (!frontmatter) {
+            yield* Effect.logWarning(`Skipping skill file ${filepath}: its frontmatter is not valid skill metadata`)
+            continue
+          }
           const name =
             frontmatter.name !== undefined
               ? frontmatter.name

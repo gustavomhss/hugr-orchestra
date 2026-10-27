@@ -135,7 +135,7 @@ describe("workflow inventory", () => {
         if (path === "") return [entry(".gitlab-ci.yml"), entry(".github", "directory")]
         throw new Error("UnexpectedStatus", { cause: { status: 500 } })
       }),
-    ).toEqual({ status: "error", paths: [] })
+    ).toMatchObject({ status: "error", paths: [], reason: { message: "UnexpectedStatus" } })
   })
 
   test("request failure is an error, never an empty inventory", async () => {
@@ -143,7 +143,7 @@ describe("workflow inventory", () => {
       await loadWorkflows(async () => {
         throw new Error("Network failure")
       }),
-    ).toEqual({ status: "error", paths: [] })
+    ).toMatchObject({ status: "error", paths: [], reason: { message: "Network failure" } })
   })
 
   test("missing API route is unavailable", async () => {

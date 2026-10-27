@@ -78,7 +78,7 @@ export function registerLiveLoop(options: {
       meeting.request = undefined
       // A transport, permission or hotkey note already explains more; the answer note never covers one.
       if (request.kind === "notice" || overlay.state().error) return
-      overlay.setError({ kind: "answer", reason: String(error) })
+      overlay.setError({ kind: "answer", reason: error instanceof Error && error.message ? error.message : String(error) })
       restoreView()
     })
   }

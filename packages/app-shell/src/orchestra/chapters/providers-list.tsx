@@ -1,9 +1,10 @@
 import { useDialog } from "@orchestra/ui/context/dialog"
-import { createMemo, createResource, createUniqueId, For, type JSX, onCleanup, Show } from "solid-js"
+import { createEffect, createMemo, createResource, createSignal, createUniqueId, For, type JSX, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { DialogConnectProvider, useProviderConnectController } from "@/components/dialog-connect-provider"
 import { useProviderDialogScope } from "@/components/settings-v2/provider-dialog-scope"
 import { useLanguage } from "@/context/language"
+import { withServerReason } from "@/utils/server-errors"
 import { type ServerConnection, serverName } from "@/context/server"
 import { useServerReady, useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
@@ -105,7 +106,14 @@ export function ProviderList(props: {
     const value = v2Data()
     return value ? fromV2(value) : undefined
   })
-  const failed = () => v2.state === "errored"
+  // A server that never becomes ready would leave the loading note up forever, so it becomes an error after a wait.
+  const [stalled, setStalled] = createSignal(false)
+  createEffect(() => {
+    if (ready()) return setStalled(false)
+    const timer = setTimeout(() => setStalled(true), 15_000)
+    onCleanup(() => clearTimeout(timer))
+  })
+  const failed = () => v2.state === "errored" || (!ready() && stalled())
   const profile = createMemo(() => {
     if (!props.directory) return serverName(props.server)
     const project = sync().data.project.find((item) => item.worktree === props.directory)
@@ -229,7 +237,11 @@ export function ProviderList(props: {
         </div>
         <Show when={failed()}>
           <div class="mx-error providers-message" role="alert">
-            <span>{language.t("orchestra.providers.error")}</span>
+            <span>
+              {ready()
+                ? withServerReason(language.t("orchestra.providers.error"), v2.error)
+                : language.t("orchestra.providers.notReady")}
+            </span>
             <button type="button" class="mx-btn" onClick={() => void v2Actions.refetch()}>
               {language.t("orchestra.providers.retry")}
             </button>

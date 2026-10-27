@@ -5,6 +5,7 @@ import type { Agent } from "@/v2-wire"
 import type { AgentFileInput } from "@/v2-types"
 import { getFilename } from "@orchestra/core/util/path"
 import { useLanguage } from "@/context/language"
+import { withServerReason } from "@/utils/server-errors"
 import { ServerConnection } from "@/context/server"
 import { useServerSync } from "@/context/server-sync"
 import { useSDK } from "@/context/sdk"
@@ -68,7 +69,7 @@ export default function Agents(props: ChapterPageProps) {
     const tag = error && typeof error === "object" && "_tag" in error ? error._tag : undefined
     const status = error instanceof ClientError ? errorStatus(error) : tag === "ConflictError" ? 409 : tag === "InvalidRequestError" ? 400 : undefined
     const kind = error && typeof error === "object" && "kind" in error ? error.kind : undefined
-    throw new Error(language.t("orchestra.agents.error.save"), { cause: { status, kind } })
+    throw new Error(withServerReason(language.t("orchestra.agents.error.save"), error), { cause: { status, kind } })
   }
 
   // Agent files live in `<profile>/.orchestra/agent`; the server reloads its V2 agents after a write.
