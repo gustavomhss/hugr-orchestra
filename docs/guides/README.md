@@ -10,5 +10,6 @@
 - [Skills: catalog visibility](skills.md)
 - [Instructions and TUI settings](instructions-and-tui.md)
 - [Permission and question requests](session-requests.md)
+- [Permissions and saved rules](permissions.md)
 - [Environment variables and logs](environment.md)
 - [Workflows: run, release and templates](workflows.md)

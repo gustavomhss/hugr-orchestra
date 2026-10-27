@@ -23,7 +23,8 @@ export function SessionComposerRegion(props: {
     const revert = controller.revert()
     return revert?.items.length ? revert : undefined
   }
-  // The composer, and its Stop, is hidden while a permission or question waits. Stop stays here so a turn can always end.
+  // The composer, and its Stop, is hidden while a permission or question waits. Stop stays here so a turn can always end;
+  // a waiting permission carries its own Stop in the dock, so this row only covers a question.
   const stop = () => {
     const sessionID = params.id
     if (!sessionID) return
@@ -51,7 +52,7 @@ export function SessionComposerRegion(props: {
           "md:max-w-200 md:mx-auto 2xl:max-w-[1000px]": controller.centered(),
         }}
       >
-        <Show when={controller.state.blocked()}>
+        <Show when={controller.state.blocked() && !controller.state.permissionRequest()}>
           <div data-slot="session-dock-stop" class="flex justify-end pb-2">
             <Button variant="ghost" size="small" data-action="prompt-stop-run" onClick={stop}>
               {language.t("orchestra.chat.stop")}
@@ -77,6 +78,7 @@ export function SessionComposerRegion(props: {
                   controller.onResponseSubmit()
                   controller.state.decide(response)
                 }}
+                onStop={stop}
               />
             </div>
           )}
