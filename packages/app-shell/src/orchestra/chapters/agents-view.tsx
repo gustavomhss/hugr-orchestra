@@ -73,18 +73,16 @@ export function AgentsRoster(props: {
                 aria-setsize={roster().length}
                 aria-posinset={page() * PAGE_SIZE + index() + 1}
               >
+                <Show when={avatarUrl(agentAvatar(item.agent))}>
+                  {(url) => <img class="agent-avatar" src={url()} alt="" />}
+                </Show>
                 <div class="agent-top mx-card-top">
-                  <Show
-                    when={avatarUrl(agentAvatar(item.agent))}
-                    fallback={
-                      <span class="mx-mark">
-                        <svg class="agents-ic" viewBox="0 0 16 16" aria-hidden="true">
-                          <path d="m8 1 2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z" />
-                        </svg>
-                      </span>
-                    }
-                  >
-                    {(url) => <img class="mx-mark agent-avatar" src={url()} alt="" />}
+                  <Show when={!avatarUrl(agentAvatar(item.agent))}>
+                    <span class="mx-mark">
+                      <svg class="agents-ic" viewBox="0 0 16 16" aria-hidden="true">
+                        <path d="m8 1 2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z" />
+                      </svg>
+                    </span>
                   </Show>
                   <b id={`agent-${agentKey(item.agent)}`}>
                     <bdi>{item.agent.name}</bdi>
