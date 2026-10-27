@@ -175,6 +175,84 @@ describe("i18n parity", () => {
     }
   })
 
+  test("pt-BR values differ from English except for an explicit allowlist of identical terms", async () => {
+    // Brand and tool names, keyboard keys, native language names, debug-bar labels, placeholders and loanwords that are
+    // standard Brazilian UI vocabulary. Anything else equal to English is an untranslated string.
+    const identicalPrefixes = [
+      "language.",
+      "sound.option.",
+      "session.header.open.app.",
+      "debugBar.",
+      "common.key.",
+      "model.provider.",
+      "settings.permissions.tool.",
+    ]
+    const identicalKeys = new Set([
+      "command.category.terminal",
+      "command.category.mcp",
+      "command.prompt.mode.shell",
+      "command.prompt.mode.normal",
+      "prompt.mode.shell",
+      "prompt.mode.normal",
+      "dialog.provider.group.popular",
+      "provider.custom.models.id.label",
+      "model.input.pdf",
+      "common.loading.ellipsis",
+      "appDock.linux.title",
+      "dialog.mcp.title",
+      "dialog.server.add.placeholder",
+      "dialog.server.add.namePlaceholder",
+      "wsl.server.label",
+      "wsl.onboarding.desktopVersion",
+      "error.chain.status",
+      "error.page.circular",
+      "session.tasks.kind.shell",
+      "session.tasks.stats.tokens",
+      "session.new.workspace.triggerLocal",
+      "status.popover.trigger",
+      "status.popover.tab.mcp",
+      "status.popover.tab.lsp",
+      "status.popover.tab.plugins",
+      "lsp.label.connected",
+      "terminal.title",
+      "terminal.title.numbered",
+      "app.name.desktop",
+      "settings.section.desktop",
+      "settings.desktop.section.wsl",
+      "settings.general.section.feed",
+      "settings.general.row.showTerminal.title",
+      "settings.mcp.title",
+      "ui.leanToolMetrics.status",
+      "ui.leanToolMetrics.milliseconds",
+      "ui.lineComment.label.suffix",
+      "ui.lineComment.editorLabel.suffix",
+      "ui.list.emptyWithFilter.suffix",
+      "ui.tool.glob",
+      "ui.tool.grep",
+      "ui.tool.shell",
+      "ui.message.duration.seconds",
+      "ui.message.duration.minutesSeconds",
+      "lean.page.category.lint",
+      "lean.page.item",
+    ])
+    for (const domain of [
+      { source: "./en.ts", target: "./br.ts" },
+      { source: "../../../ui/src/i18n/en.ts", target: "../../../ui/src/i18n/br.ts" },
+      { source: "./lean/en.ts", target: "./lean/br.ts" },
+    ]) {
+      const source = await dictionary(domain.source)
+      const target = await dictionary(domain.target)
+      const untranslated = Object.keys(target).filter(
+        (key) =>
+          target[key] === source[key] &&
+          /\p{L}/u.test(target[key]) &&
+          !identicalKeys.has(key) &&
+          !identicalPrefixes.some((prefix) => key.startsWith(prefix)),
+      )
+      expect({ target: domain.target, untranslated }).toEqual({ target: domain.target, untranslated: [] })
+    }
+  })
+
   test("changed-file summary keys preserve rendered English copy and localize complete phrases", async () => {
     const source = await dictionary("../../../ui/src/i18n/en.ts")
     expect(source["ui.sessionTurn.diffs.changed.one"].replace("{{count}}", "1")).toBe("1 Changed file")

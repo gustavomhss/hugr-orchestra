@@ -220,7 +220,7 @@ export const dict = {
   "common.attachment": "attachment",
 
   "appDock.linux.title": "Linux",
-  "appDock.contexts": "App Dock contexts",
+  "appDock.contexts": "MCP Dock contexts",
   "appDock.browser.title": "Browser",
   "appDock.browser.empty": "Enter a web address to open a browser tab.",
   "appDock.linux.workspace": "Linux workspace",
