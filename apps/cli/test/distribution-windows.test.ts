@@ -179,6 +179,15 @@ test("native Windows PE admission rejects wrong machine, PE32 and executable/DLL
   budget.check("complete PE controls")
 }, 180_000)
 
+// The generated child scripts poll for a marker the test writes. A marker that never appears must end the child with
+// an error after this deadline, not leave it polling until the test runner gives up on it.
+const CHILD_MARKER_WAIT_MS = 20_000
+const awaitMarker = (path: string) => `const markerDeadline=Date.now()+${CHILD_MARKER_WAIT_MS};
+while(!existsSync(${JSON.stringify(path)})) {
+  if(Date.now()>markerDeadline) throw new Error('marker never appeared: '+${JSON.stringify(path)});
+  await new Promise(resolve=>setTimeout(resolve,10));
+}`
+
 test("native Windows broker closes owned pwsh after forced reader death and absolute timeout", async () => {
   const identity = Schema.Struct({ pid: Schema.Int, startTime: Schema.String })
   const cleanup = Schema.Struct({
@@ -191,8 +200,8 @@ test("native Windows broker closes owned pwsh after forced reader death and abso
     const terminate = join(directory, "terminate")
     const reader = `
 import {existsSync} from 'node:fs';
-while(!existsSync(${JSON.stringify(marker)})) await new Promise(resolve=>setTimeout(resolve,10));
-while(!existsSync(${JSON.stringify(terminate)})) await new Promise(resolve=>setTimeout(resolve,10));
+${awaitMarker(marker)}
+${awaitMarker(terminate)}
 process.kill(process.pid,'SIGKILL');
 `
     const query = `$ErrorActionPreference='Stop'; $self=Get-CimInstance Win32_Process -Filter ('ProcessId='+$PID);
@@ -241,7 +250,7 @@ test("native Windows broker preserves split UTF-8 bytes from owned PowerShell pi
   const reader = `
 import {existsSync,readFileSync} from 'node:fs';
 const result=process.argv[1]+'.result';
-while(!existsSync(result)) await new Promise(resolve=>setTimeout(resolve,10));
+${awaitMarker(result)}
 console.log(readFileSync(result,'utf8'));
 `
   // Each actual one-byte write is separated so the first UTF-8 character must
