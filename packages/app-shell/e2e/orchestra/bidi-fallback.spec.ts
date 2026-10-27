@@ -2,7 +2,7 @@ import { base64Encode } from "@orchestra/core/util/encode"
 import { expect, test, type Page } from "@playwright/test"
 import { expectSessionTitle } from "../utils/waits"
 import { expectInOrder, expectStartAligned, expectTrailing, glyphs } from "./bidi"
-import { setupCompactNavigation } from "./compact-navigation.fixture"
+import { expandAdvanced, setupCompactNavigation } from "./compact-navigation.fixture"
 import { evidencePage, runCard } from "./evidence.fixture"
 import { dockCard, pane, parentID, parentTitle, railTab, server, setupCockpit } from "./session-cockpit.fixture"
 
@@ -28,6 +28,7 @@ for (const scenario of scenarios) {
     await page.evaluate(() => document.fonts.ready)
 
     const sidebar = page.locator('[data-component="orchestra-sidebar"]')
+    await expandAdvanced(page)
     const env = sidebar.getByRole("button", { name: ".env", exact: true })
     expectInOrder(await glyphs(env.locator(".orchestra-nav-label")), 0, 1)
 
@@ -151,10 +152,9 @@ for (const scenario of scenarios) {
     await page.goto("/")
     await page.locator('[data-slot="orchestra-profile"]').click()
     await page.getByRole("menuitemradio", { name: "Compact project", exact: true }).click()
-    await page
-      .locator('[data-component="orchestra-sidebar"]')
-      .getByRole("button", { name: ".env", exact: true })
-      .click()
+    const sidebar = page.locator('[data-component="orchestra-sidebar"]')
+    await expandAdvanced(page)
+    await sidebar.getByRole("button", { name: ".env", exact: true }).click()
     const env = page.locator('[data-component="env-page"]')
     await expect(env).toBeVisible()
     await expect(page.locator("html")).toHaveAttribute("dir", scenario.direction)

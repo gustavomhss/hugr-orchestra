@@ -9,17 +9,12 @@ export function createOrchestraNavigation(input: {
   constrained: () => boolean
   storage?: SyncStorage
 }) {
-  // Desktop windows read the preference over IPC; browser storage answers synchronously.
-  const [state, setState, , ready] =
-    input.platform.platform === "desktop" && input.platform.windowID
-      ? persisted(Persist.window("orchestra-navigation.v1"), createStore({ collapsed: false }), input.platform)
-      : ([
-          ...makePersisted(createStore({ collapsed: false }), {
-            name: "orchestra-navigation.v1",
-            storage: input.storage ?? windowNavigationStorage,
-          }),
-          () => true,
-        ] as const)
+  const [state, setState, , ready] = persistNavigation(
+    input.platform,
+    "orchestra-navigation.v1",
+    { collapsed: false },
+    input.storage,
+  )
 
   return {
     ready,
@@ -30,6 +25,28 @@ export function createOrchestraNavigation(input: {
       setState({ collapsed: state.collapsed !== true })
     },
   }
+}
+
+// The Advanced group's open or closed preference. It has its own key so the rail's collapse state is untouched.
+export function createAdvancedNavigation(platform: Platform) {
+  const [state, setState] = persistNavigation(platform, "orchestra-navigation-advanced.v1", { open: false })
+  return {
+    open: () => state.open === true,
+    toggle: () => setState({ open: state.open !== true }),
+  }
+}
+
+function persistNavigation<T extends object>(platform: Platform, name: string, initial: T, storage?: SyncStorage) {
+  // Desktop windows read the preference over IPC; browser storage answers synchronously.
+  return platform.platform === "desktop" && platform.windowID
+    ? persisted(Persist.window(name), createStore(initial), platform)
+    : ([
+        ...makePersisted(createStore(initial), {
+          name,
+          storage: storage ?? windowNavigationStorage,
+        }),
+        () => true,
+      ] as const)
 }
 
 // Browser previews use the window session, while desktop uses the host's window store.

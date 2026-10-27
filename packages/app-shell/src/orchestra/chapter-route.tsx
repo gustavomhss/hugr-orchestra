@@ -15,7 +15,7 @@ import { pathKey } from "@/utils/path-key"
 export type ChapterPageProps = { server: ServerConnection.Any; directory: string }
 
 // Implemented chapters register their page here (lazy). Navigation opens a page only for
-// registered chapters; every other chapter keeps its pending-rework dialog.
+// registered chapters.
 export const chapterPages: Partial<Record<string, Component<ChapterPageProps>>> = {
   "flight-engineer": lazy(() => import("./chapters/flight-engineer/flight-engineer")),
   lean: lazy(() => import("./chapters/lean")),

@@ -1,5 +1,5 @@
 import { expect, test, type Locator } from "@playwright/test"
-import { setupCompactNavigation } from "./compact-navigation.fixture"
+import { expandAdvanced, setupCompactNavigation } from "./compact-navigation.fixture"
 
 test.use({ viewport: { width: 1672, height: 941 }, serviceWorkers: "block" })
 
@@ -12,6 +12,8 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
   const sidebar = page.locator('[data-component="orchestra-sidebar"]')
   const header = page.locator('[data-slot="titlebar-v2"]')
   await expect(sidebar).toHaveCSS("width", "230px")
+  // The rows below include the Advanced group, so it opens first; the rows keep their 31px pitch.
+  await expandAdvanced(page)
   const frame = await header.boundingBox()
   const toggle = page.getByRole("button", { name: "Collapse sidebar", exact: true })
   const crumb = header.locator('[data-slot="orchestra-titlebar-breadcrumb"] > span')
@@ -146,6 +148,7 @@ test("production builds show no WIP mark on any chapter page", async ({ page }) 
   const sidebar = page.locator('[data-component="orchestra-sidebar"]')
   await sidebar.getByRole("button", { name: "Choose repository profile" }).click()
   await page.getByRole("menuitemradio", { name: "Compact project", exact: true }).click()
+  await expandAdvanced(page)
   for (const [name, chapter] of [
     ["Agents", "agents"],
     ["MCP", "mcp"],
@@ -162,6 +165,56 @@ test("production builds show no WIP mark on any chapter page", async ({ page }) 
     await expect(panel.locator("h1").first()).toBeVisible()
     await expect(page.locator('[data-slot="orchestra-wip"]'), name).toHaveCount(0)
   }
+})
+
+test("Advanced group keeps its choice across reload and opens for the page inside it", async ({ page }) => {
+  await setupCompactNavigation(page, { selected: true })
+  await page.goto("/")
+  const sidebar = page.locator('[data-component="orchestra-sidebar"]')
+  const toggle = sidebar.getByRole("button", { name: "Advanced", exact: true })
+  const mcp = sidebar.getByRole("button", { name: "MCP", exact: true })
+  await expect(toggle).toHaveAttribute("aria-expanded", "false")
+  await expect(mcp).toBeHidden()
+  await toggle.click()
+  await expect(mcp).toBeVisible()
+  await page.reload()
+  await expect(toggle).toHaveAttribute("aria-expanded", "true")
+  await toggle.click()
+  await expect(mcp).toBeHidden()
+  // A full load onto a page inside the group opens it, even though the saved choice is closed.
+  await page.goto("/orchestra/mcp")
+  await expect(toggle).toHaveAttribute("aria-expanded", "true")
+  await expect(toggle).toHaveAttribute("aria-disabled", "true")
+  await expect(mcp).toHaveAttribute("aria-current", "page")
+  // The open group cannot close under the page it holds.
+  await toggle.click()
+  await expect(toggle).toHaveAttribute("aria-expanded", "true")
+})
+
+test("Chat says what to do when the local server is not responding", async ({ page }) => {
+  await setupCompactNavigation(page, { selected: true })
+  await page.route(
+    (url) => url.origin === "http://127.0.0.1:4096" && url.pathname === "/api/health",
+    async (route) => {
+      const headers = {
+        "access-control-allow-origin": "*",
+        "access-control-allow-headers": "authorization, content-type",
+        "access-control-allow-methods": "GET, OPTIONS",
+      }
+      if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers })
+      await route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({ healthy: false }),
+        headers,
+      })
+    },
+  )
+  await page.goto("/")
+  await expect(page.getByText(/Lost connection to the server/)).toBeVisible()
+  await page.locator('[data-component="orchestra-sidebar"]').getByRole("button", { name: "Chat", exact: true }).click()
+  await expect(page.getByText("The local server is not responding", { exact: true })).toBeVisible()
+  await expect(page.locator('[data-component="prompt-input-v2"]')).toHaveCount(0)
 })
 
 // Every main view is one panel of the shared sidebar glass, one 6px gutter from the sidebar.
@@ -188,6 +241,7 @@ test("English RTL override preserves compact navigation geometry", { tag: "@deve
   await setupCompactNavigation(page, { scheme: "light" })
   await page.goto("/")
   const sidebar = page.locator('[data-component="orchestra-sidebar"]')
+  await expandAdvanced(page)
   await page.getByRole("button", { name: "Collapse sidebar", exact: true }).click()
   await expect(sidebar).toHaveCSS("width", "56px")
   await page.getByRole("button", { name: "DIR: LTR", exact: true }).click()

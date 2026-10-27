@@ -15,6 +15,7 @@ import {
   title,
 } from "./governance.fixture"
 import { expectStartAligned, expectTrailing, glyphs } from "./bidi"
+import { expandAdvanced } from "./compact-navigation.fixture"
 
 test.use({ viewport: { width: 1400, height: 900 }, serviceWorkers: "block" })
 test.setTimeout(120_000)
@@ -35,6 +36,7 @@ for (const scheme of ["dark", "light"] as const) {
     await expectSessionTitle(page, title)
     await expect(page.getByRole("dialog")).toHaveCount(0)
 
+    await expandAdvanced(page)
     const entry = page
       .locator('[data-component="orchestra-sidebar"]')
       .getByRole("button", { name: "Maestro", exact: true })
@@ -144,6 +146,7 @@ test("Show in chat moves to the record's turn through the existing message hash"
   })
   await page.goto(`/${base64Encode(directory)}/session/${sessionID}`)
   await expectSessionTitle(page, title)
+  await expandAdvanced(page)
   await page
     .locator('[data-component="orchestra-sidebar"]')
     .getByRole("button", { name: "Maestro", exact: true })
@@ -177,6 +180,7 @@ test("a server without Maestro is unavailable, and a pending question is not an 
   })
   await page.goto(`/${base64Encode(directory)}/session/${sessionID}`)
   await expectSessionTitle(page, title)
+  await expandAdvanced(page)
   await page
     .locator('[data-component="orchestra-sidebar"]')
     .getByRole("button", { name: "Maestro", exact: true })
@@ -216,6 +220,7 @@ for (const locale of ["en", "ar"] as const) {
     const composer = page.locator('[contenteditable="true"][data-component="prompt-input"]')
     await composer.fill("Keep my ordinary edit draft")
     await page.locator('[data-slot="titlebar-v2"]').getByRole("button", { name: "Expand sidebar", exact: true }).click()
+    await expandAdvanced(page)
     const entry = page
       .locator('[data-component="orchestra-sidebar"]')
       .getByRole("button", { name: "Maestro", exact: true })
@@ -246,6 +251,7 @@ for (const locale of ["en", "ar"] as const) {
 test("without an open session the entry explains how to reach governance", async ({ page }) => {
   await setupGovernance(page, { agents: [build, maestro], config, messages: [] })
   await page.goto("/")
+  await expandAdvanced(page)
   const entry = page
     .locator('[data-component="orchestra-sidebar"]')
     .getByRole("button", { name: "Maestro", exact: true })
@@ -266,6 +272,7 @@ test("route disposal closes governance when the session leaves for Home", async 
   })
   await page.goto(`/server/${base64Encode(server)}/session/${sessionID}`)
   await expectSessionTitle(page, title)
+  await expandAdvanced(page)
   await page
     .locator('[data-component="orchestra-sidebar"]')
     .getByRole("button", { name: "Maestro", exact: true })
@@ -285,6 +292,7 @@ test("route disposal closes governance when the session leaves for Home", async 
     page.locator('[data-component="orchestra-sidebar"]').getByRole("button", { name: "Home", exact: true }),
   ).toHaveAttribute("aria-current", "page")
   expect(documents).toHaveLength(1)
+  await expandAdvanced(page)
   await page
     .locator('[data-component="orchestra-sidebar"]')
     .getByRole("button", { name: "Maestro", exact: true })
@@ -308,6 +316,7 @@ test("cross-server remount closes old governance even when the session ID is reu
   })
   await page.goto(`/server/${base64Encode(server)}/session/${sessionID}`)
   await expectSessionTitle(page, title)
+  await expandAdvanced(page)
   const entry = page
     .locator('[data-component="orchestra-sidebar"]')
     .getByRole("button", { name: "Maestro", exact: true })

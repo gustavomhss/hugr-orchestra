@@ -53,6 +53,8 @@ S=<scratchpad>/devapp; cd apps/desktop && OMNI_ARTIFACTS=$S/omni XDG_DATA_HOME=$
 - `bun cdp.ts key Escape` sends a real key event. A synthetic `KeyboardEvent` does not close Kobalte dialogs.
 - **Navigate a chapter:** click the sidebar entry by its text:
   `[...document.querySelectorAll(".orchestra-sidebar a,.orchestra-sidebar button")].find(x=>x.textContent.trim().startsWith("Home")).click()`
+  Only the five primary entries (Home, Chat, Board, Agents, Actions) show by default. The rest, MCP, .env, Skills and
+  the like, sit under the "Advanced" toggle (`aria-expanded`). Click it first: the rows stay in the DOM but are `hidden` until it opens.
 - **Switch scheme for a screenshot:** `document.documentElement.dataset.colorScheme='light'`. This lasts until reload.
 - **Open the ⌘K palette:** dispatch `keydown` `{key:'k',metaKey:true}` on `document`.
 
