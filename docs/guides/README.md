@@ -6,4 +6,5 @@
 - [Config errors](config-errors.md)
 - [Credentials](credentials.md)
 - [Desktop startup errors](desktop-startup.md)
+- [App error messages](app-error-messages.md)
 - [Skills: catalog visibility](skills.md)
