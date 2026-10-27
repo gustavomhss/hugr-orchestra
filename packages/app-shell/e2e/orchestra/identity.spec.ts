@@ -11,21 +11,23 @@ import {
 import { setupIdentity } from "./identity.fixture"
 
 // Frozen glass material values (orchestra/theme.css), normalized by Chromium's computed-style engine.
-const grain = `url("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27160%27%20height=%27160%27%3E%3Cfilter%20id=%27n%27%3E%3CfeTurbulence%20type=%27fractalNoise%27%20baseFrequency=%27.85%27%20numOctaves=%272%27%20stitchTiles=%27stitch%27/%3E%3CfeColorMatrix%20values=%270%200%200%200%201%200%200%200%200%201%200%200%200%200%201%200%200%200%20.05%200%27/%3E%3C/filter%3E%3Crect%20width=%27100%25%27%20height=%27100%25%27%20filter=%27url%28%23n%29%27/%3E%3C/svg%3E")`
+// Grain and sheen are off (none), so they lead the background layers.
 const glass = {
   dark: {
-    backgroundImage: `${grain}, radial-gradient(120% 60% at 0% 0%, rgba(214, 231, 247, 0.07), rgba(0, 0, 0, 0) 60%), linear-gradient(rgba(32, 44, 58, 0.44) 0%, rgba(17, 24, 33, 0.52) 46%, rgba(11, 16, 23, 0.58) 100%)`,
-    backdropFilter: "blur(28px) brightness(0.84) saturate(1.5)",
-    borderTopColor: "rgba(160, 179, 197, 0.1)",
+    backgroundImage:
+      "none, none, linear-gradient(rgba(26, 36, 48, 0.5) 0%, rgba(13, 19, 26, 0.46) 46%, rgba(10, 15, 21, 0.54) 100%)",
+    backdropFilter: "blur(8px) brightness(0.74) saturate(0.9)",
+    borderTopColor: "rgba(160, 179, 197, 0.16)",
     boxShadow:
-      "rgba(214, 231, 247, 0.1) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.28) 0px -1px 0px 0px inset, rgba(0, 0, 0, 0.36) 0px 1px 2px 0px, rgba(0, 0, 0, 0.24) 0px 10px 30px 0px",
+      "rgba(214, 231, 247, 0.08) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.3) 0px -1px 0px 0px inset, rgba(0, 0, 0, 0.4) 0px 1px 2px 0px, rgba(0, 0, 0, 0.2) 0px 4px 12px 0px",
   },
   light: {
-    backgroundImage: `${grain}, radial-gradient(120% 60% at 0% 0%, rgba(255, 255, 255, 0.35), rgba(0, 0, 0, 0) 60%), linear-gradient(rgba(255, 255, 255, 0.57) 0%, rgba(248, 250, 252, 0.49) 46%, rgba(240, 244, 247, 0.59) 100%)`,
-    backdropFilter: "blur(28px) brightness(1.06) saturate(1.5)",
-    borderTopColor: "rgba(70, 84, 98, 0.12)",
+    backgroundImage:
+      "none, none, linear-gradient(rgba(255, 255, 255, 0.62) 0%, rgba(248, 250, 252, 0.5) 46%, rgba(240, 244, 247, 0.6) 100%)",
+    backdropFilter: "blur(16px) brightness(1.04) saturate(0.96)",
+    borderTopColor: "rgba(70, 84, 98, 0.16)",
     boxShadow:
-      "rgba(255, 255, 255, 0.9) 0px 1px 0px 0px inset, rgba(120, 136, 152, 0.12) 0px -1px 0px 0px inset, rgba(38, 50, 64, 0.12) 0px 1px 2px 0px, rgba(38, 50, 64, 0.1) 0px 10px 30px 0px",
+      "rgba(255, 255, 255, 0.95) 0px 1px 0px 0px inset, rgba(120, 136, 152, 0.14) 0px -1px 0px 0px inset, rgba(38, 50, 64, 0.14) 0px 1px 2px 0px, rgba(38, 50, 64, 0.08) 0px 4px 12px 0px",
   },
 }
 
@@ -116,7 +118,7 @@ for (const scheme of ["dark", "light"] as const) {
         "session strip spans remaining workspace",
       )
       for (const locator of [sidebar, tabs]) expectGlass(await readPlatedGlass(locator), glass[scheme])
-      await expectFlatTab(active)
+      await expectGlassTab(active, glass[scheme])
       await expect(sidebar).toHaveCSS("border-radius", "10px")
       await expect(tabs).toHaveCSS("border-radius", "10px")
 
@@ -259,12 +261,11 @@ test("graphite: a palette recolors the glass and keeps the frozen geometry, radi
   for (const locator of [sidebar, toolbar, tabs, active]) await expect(locator).toBeVisible()
   expectPixels((await readBox(sidebar)).width, 230, "sidebar width")
   expectPixels((await readBox(toolbar)).height, 45, "toolbar height")
-  await expectFlatTab(active)
+  await expectGlassTab(active, glass.dark)
   for (const value of [await readPlatedGlass(sidebar), await readPlatedGlass(tabs)]) {
     expect(value.backdropFilter, "palette keeps the glass blur").toBe(glass.dark.backdropFilter)
-    // The palette keeps the material layers (grain, sheen) and tints the base gradient beneath them.
-    expect(value.backgroundImage.startsWith(`${grain}, radial-gradient(`), "palette keeps the glass grain and sheen").toBe(true)
-    expect(value.backgroundImage, "palette tints the glass").toMatch(/\), linear-gradient\(.+\)$/)
+    // The palette keeps grain and sheen off and tints the base gradient.
+    expect(value.backgroundImage, "palette tints the glass").toMatch(/^none, none, linear-gradient\(.+\)$/)
     expect(value.backgroundImage, "palette tints the glass").not.toBe(glass.dark.backgroundImage)
     expect(value.borderTopColor, "palette tints the glass border").not.toBe(glass.dark.borderTopColor)
   }
@@ -390,11 +391,12 @@ async function readPlatedGlass(locator: Locator) {
   return { ...glass, backdropFilter: (await readGlass(plate)).backdropFilter }
 }
 
-// The strip is already glass, so the active tab is a fill step and a hairline, never a second blur plate (#1037).
-async function expectFlatTab(active: Locator) {
+// The active tab is a chrome glass plate inside the strip (owner, 2026-10-27).
+// Palettes may tint the shadow, so only its presence is checked.
+async function expectGlassTab(active: Locator, expected: (typeof glass)["dark"]) {
   const tab = await readGlass(active)
-  expect(tab.backdropFilter, "active tab draws no blur of its own").toBe("none")
-  expect(tab.boxShadow, "active tab draws no glass shadow").toBe("none")
+  expect(tab.backdropFilter, "active tab blurs like the chrome glass").toBe(expected.backdropFilter)
+  expect(tab.boxShadow, "active tab carries a glass shadow").not.toBe("none")
 }
 
 function expectGlass(actual: Awaited<ReturnType<typeof readGlass>>, expected: Awaited<ReturnType<typeof readGlass>>) {

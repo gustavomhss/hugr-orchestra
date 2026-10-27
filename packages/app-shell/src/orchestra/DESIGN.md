@@ -10,9 +10,9 @@ wins and this file is stale: fix it in the same change.
 
 ## 1. Principles
 
-1. **Glass that looks like real glass.** Wide blur, lifted saturation, a light-catching rim and grain. A narrow blur
-   that darkens and desaturates reads as tinted plastic.
-2. **The wallpaper stays visible.** Legibility comes from the glass tint, not from a veil over the workspace.
+1. **Quiet glass.** A narrow blur that darkens and slightly desaturates, with no rim, sheen or grain. The owner
+   judged the wide, saturated glass with a light-catching rim worse (2026-10-27); do not bring it back without them.
+2. **The wallpaper stays behind a veil.** A dark (or light) veil over the photograph keeps the chrome calm.
 3. **One saturated element per view:** the primary action. Everything else is quiet.
 4. **Tokens only.** A literal color, radius, size or duration appears only inside a token definition.
 5. **Contrast is measured, not eyeballed.** Text holds 4.5:1 and icons 3:1 on the glass over the photograph.
@@ -27,13 +27,15 @@ Sidebar, tab strip, toolbar, Home and chapter panels (`.orchestra-glass`, blur o
 
 | Token | Dark | Light |
 | --- | --- | --- |
-| `--orchestra-glass-filter` | `blur(28px) brightness(0.84) saturate(1.5)` | `blur(28px) brightness(1.06) saturate(1.5)` |
-| `--orchestra-glass-background` (tint) | `rgba(32,44,58,.44)` → `rgba(17,24,33,.52)` 46% → `rgba(11,16,23,.58)` | `rgba(255,255,255,.57)` → `rgba(248,250,252,.49)` 46% → `rgba(240,244,247,.59)` |
-| `--orchestra-glass-rim` (1px masked ring) | `rgba(226,238,250,.26)` top, `.08` at 28%, `.03` at 70%, `.06` bottom | white `.95` top, `.45` at 30%, `.2` at 70%, `.35` bottom |
-| `--orchestra-glass-sheen` | radial 120%×60% at top left, `rgba(214,231,247,.07)` | same shape, white `.35` |
-| `--orchestra-glass-border` | `rgba(160,179,197,.1)` | `rgba(70,84,98,.12)` |
-| `--orchestra-glass-shadow` | inset top highlight `.1`, inset bottom `rgba(0,0,0,.28)`, `0 1px 2px .36`, `0 10px 30px .24` | inset top white `.9`, inset bottom `.12`, `0 1px 2px .12`, `0 10px 30px .1` |
-| `--orchestra-grain` | SVG fractal noise, 160px tile, alpha `.05` | same |
+| `--orchestra-glass-filter` | `blur(8px) brightness(0.74) saturate(0.9)` | `blur(16px) brightness(1.04) saturate(0.96)` |
+| `--orchestra-glass-background` (tint) | `rgba(26,36,48,.5)` → `rgba(13,19,26,.46)` 46% → `rgba(10,15,21,.54)` | `rgba(255,255,255,.62)` → `rgba(248,250,252,.5)` 46% → `rgba(240,244,247,.6)` |
+| `--orchestra-glass-rim`, `--orchestra-glass-sheen` | `none` (the masked ring and the sheen layer stay wired) | same |
+| `--orchestra-glass-border` | `rgba(160,179,197,.16)` | `rgba(70,84,98,.16)` |
+| `--orchestra-glass-shadow` | inset top highlight `.08`, inset bottom `rgba(0,0,0,.3)`, `0 1px 2px .4`, `0 4px 12px .2` | inset top white `.95`, inset bottom `.14`, `0 1px 2px .14`, `0 4px 12px .08` |
+| `--orchestra-grain` | `none` | same |
+
+The toolbar blurs a flat `blur(20px)` under its own tint. Toolbar and tab text: dark `#7d8b9b` labels, `#81909f`
+tabs; light `#6b7480` labels, `#5f6874` tabs.
 
 The tint is a vertical gradient: lighter at the top where light lands, denser at the bottom where text sits.
 
@@ -54,8 +56,10 @@ through `--orchestra-scrim-filter`; no backdrop carries its own blur literal.
 
 ### 2.3 Content base
 
-Session panels, near-opaque for long reading (`--orchestra-session-*` in `session.css`). They keep the rim and grain;
-their blur comes from the fixed blurred wallpaper copy in `.orchestra-glass-layer`, not from their own filter.
+Session panels, near-opaque for long reading (`--orchestra-session-*` in `session.css`). Like the chrome they carry
+no rim, sheen or grain. Their blur comes from the fixed blurred wallpaper copy in `.orchestra-glass-layer`
+(`--orchestra-session-filter`: dark `blur(16px) brightness(0.58) saturate(0.86)`, light
+`blur(18px) brightness(1.02) saturate(0.98)`), not from their own filter.
 
 - Dark background: `rgba(22,31,41,.8)` → `rgba(15,21,29,.85)` 50% → `rgba(12,17,24,.9)`.
 - Text steps: heading `#e9eef3`, body `#c2ccd6`, secondary `#93a2b2`, meta `#7e90a2`.
@@ -63,10 +67,10 @@ their blur comes from the fixed blurred wallpaper copy in `.orchestra-glass-laye
 
 ### 2.4 Workspace overlay
 
-`--orchestra-workspace-overlay` is a light veil over the photograph, not a legibility layer.
+`--orchestra-workspace-overlay` is a veil over the photograph that keeps the chrome calm.
 
-- Dark: `rgba(9,14,20,.39)` → `.22` at 42% → `.43`, plus a radial `rgba(26,37,50,.32)` glow at the top left.
-- Light: `rgba(226,231,236,.35)` → `.18` at 42% → `rgba(222,228,234,.4)`, plus a radial white `.4` glow.
+- Dark: `rgba(9,14,20,.7)` → `.58` at 42% → `.74`, plus a radial `rgba(26,37,50,.42)` glow at the top left.
+- Light: `rgba(226,231,236,.5)` → `.34` at 42% → `rgba(222,228,234,.56)`, plus a radial white `.5` glow.
 
 ### 2.5 Performance
 
@@ -201,8 +205,7 @@ Measured at 1920×1200 in the dev app. Spacing values sit on a 2px grid; most ga
 - **Buttons.** Primary: `--mx-primary` fill, white text, one per view. Secondary: no fill until hover, then
   `--orchestra-surface-hover`. Destructive: `--orchestra-danger` text, fill only on confirm.
 - **Tabs.** The close button shows only on hover or for the active tab. A single seam between stacked surfaces.
-  The titlebar strip is already glass, so the active tab is a fill step (`--orchestra-surface-active`) and an
-  `--orchestra-border` hairline with no shadow, never a second blur plate.
+  The active tab is a chrome glass plate (glass tint, border, shadow and filter) inside the strip.
 - **Breadcrumb.** The window breadcrumb names built-in views in Title Case, the same words as the sidebar
   (Home, Agents, MCP Dock, Workspaces, Settings).
 - **Text areas.** `.mx-field textarea` uses the sans body at md, line height 1.6. Only text areas for code,
