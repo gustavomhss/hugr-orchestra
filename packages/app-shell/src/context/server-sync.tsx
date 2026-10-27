@@ -277,6 +277,7 @@ export function createServerSyncContextInner(
     owner,
     scope: serverSDK.scope,
     persist: persisted,
+    query: useQuery,
     isBooting: (directory) => booting.has(directory),
     isLoadingSessions: (directory) => sessionLoads.has(directory),
     onBootstrap: (directory) => {

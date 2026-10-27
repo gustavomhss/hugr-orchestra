@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, mock, test } from "bun:test"
+import { beforeAll, beforeEach, describe, expect, test } from "bun:test"
 import { ServerScope } from "./server-scope"
 
 type PersistTestingType = typeof import("./persist").PersistTesting
@@ -52,10 +52,6 @@ let Persist: PersistType
 let removePersisted: RemovePersistedType
 
 beforeAll(async () => {
-  mock.module("@/context/platform", () => ({
-    usePlatform: () => ({ platform: "web" }),
-  }))
-
   const mod = await import("./persist")
   persistTesting = mod.PersistTesting
   Persist = mod.Persist

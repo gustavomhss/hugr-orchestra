@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, beforeEach, describe, expect, mock, test } from "bun:test"
+import { afterEach, beforeAll, beforeEach, describe, expect, test } from "bun:test"
 import { createRoot } from "solid-js"
 import { createStore } from "solid-js/store"
 import type { Platform } from "@/context/platform"
@@ -15,13 +15,6 @@ const platform = {
 } satisfies Platform
 
 beforeAll(async () => {
-  // Bun cannot compile the context provider's JSX. The real persistence path
-  // must use the explicit platform instead of consulting that provider.
-  mock.module("@/context/platform", () => ({
-    usePlatform: () => {
-      throw new Error("Panel sizing must use the explicit platform")
-    },
-  }))
   const panel = await import("@/orchestra/panel-sizing")
   createOrchestraPanelSizing = panel.createOrchestraPanelSizing
 })

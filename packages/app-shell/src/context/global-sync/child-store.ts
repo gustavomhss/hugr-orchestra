@@ -14,7 +14,7 @@ import {
   type VcsCache,
 } from "./types"
 import { canDisposeDirectory, pickDirectoriesToEvict } from "./eviction"
-import { useQuery } from "@tanstack/solid-query"
+import type { useQuery } from "@tanstack/solid-query"
 import { QueryOptionsApi } from "../server-sync"
 import { directoryKey, type DirectoryKey } from "./utils"
 import { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
@@ -31,6 +31,7 @@ export function createChildStoreManager(input: {
   onDispose: (directory: string) => void
   translate: (key: string, vars?: Record<string, string | number>) => string
   queryOptions: QueryOptionsApi
+  query: typeof useQuery
   global: {
     provider: NormalizedProviderListResponse
   }
@@ -188,15 +189,15 @@ export function createChildStoreManager(input: {
           const [mcpEnabled, setMcpEnabled] = createSignal(false)
           const [instanceQueriesEnabled, setInstanceQueriesEnabled] = createSignal(false)
 
-          const pathQuery = useQuery(() => ({ ...input.queryOptions.path(key), enabled: instanceQueriesEnabled() }))
-          const mcpQuery = useQuery(() => ({ ...input.queryOptions.mcp(key), enabled: mcpEnabled() }))
-          const mcpResourceQuery = useQuery(() => ({ ...input.queryOptions.mcpResources(key), enabled: mcpEnabled() }))
-          const lspQuery = useQuery(() => ({ ...input.queryOptions.lsp(key), enabled: instanceQueriesEnabled() }))
-          const providerQuery = useQuery(() => ({
+          const pathQuery = input.query(() => ({ ...input.queryOptions.path(key), enabled: instanceQueriesEnabled() }))
+          const mcpQuery = input.query(() => ({ ...input.queryOptions.mcp(key), enabled: mcpEnabled() }))
+          const mcpResourceQuery = input.query(() => ({ ...input.queryOptions.mcpResources(key), enabled: mcpEnabled() }))
+          const lspQuery = input.query(() => ({ ...input.queryOptions.lsp(key), enabled: instanceQueriesEnabled() }))
+          const providerQuery = input.query(() => ({
             ...input.queryOptions.providers(key),
             enabled: instanceQueriesEnabled(),
           }))
-          const referenceQuery = useQuery(() => ({
+          const referenceQuery = input.query(() => ({
             ...input.queryOptions.references(key),
             enabled: instanceQueriesEnabled(),
           }))

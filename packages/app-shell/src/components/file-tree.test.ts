@@ -1,36 +1,10 @@
-import { beforeAll, describe, expect, mock, test } from "bun:test"
+import { beforeAll, describe, expect, test } from "bun:test"
 
 let shouldListRoot: typeof import("./file-tree").shouldListRoot
 let shouldListExpanded: typeof import("./file-tree").shouldListExpanded
 let dirsToExpand: typeof import("./file-tree").dirsToExpand
 
 beforeAll(async () => {
-  mock.module("@solidjs/router", () => ({
-    useNavigate: () => () => undefined,
-    useParams: () => ({}),
-    useLocation: () => ({}),
-    useSearchParams: () => [{}, () => undefined],
-  }))
-  mock.module("@/context/file", () => ({
-    useFile: () => ({
-      tree: {
-        state: () => undefined,
-        list: () => Promise.resolve(),
-        children: () => [],
-        expand: () => {},
-        collapse: () => {},
-      },
-    }),
-  }))
-  mock.module("@orchestra/ui/collapsible", () => ({
-    Collapsible: {
-      Trigger: (props: { children?: unknown }) => props.children,
-      Content: (props: { children?: unknown }) => props.children,
-    },
-  }))
-  mock.module("@orchestra/ui/file-icon", () => ({ FileIcon: () => null }))
-  mock.module("@orchestra/ui/icon", () => ({ Icon: () => null }))
-  mock.module("@orchestra/ui/tooltip", () => ({ Tooltip: (props: { children?: unknown }) => props.children }))
   const mod = await import("./file-tree")
   shouldListRoot = mod.shouldListRoot
   shouldListExpanded = mod.shouldListExpanded
