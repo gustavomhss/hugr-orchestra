@@ -13,7 +13,7 @@ test("actual chapter entry connects two explicit accounts through generated Clie
   const view = mountPage(host)
   cleanup.push(view.dispose)
   await idle(view.root)
-  expect(view.root.textContent).toContain("No accounts are configured for this profile.")
+  expect(view.root.textContent).toContain("No accounts are configured for this project.")
   await connect(view.root, "slack", "native-slack-key", "فريق Alpha")
   await connect(view.root, "discord", "native-discord-key")
   const rows = await host.inspect()
