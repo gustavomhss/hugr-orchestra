@@ -54,6 +54,20 @@ export const layer = (config: Config) =>
   Layer.succeed(
     Service,
     Service.of({
-      judge: (input) => (config.backend === "api" ? JudgeApi.judge(config, input) : JudgeStub.judge(input, config.stub)),
+      judge: (input) => (config.backend === "api" ? JudgeApi.judge(config, input) : unconfigured(config, input)),
     }),
+  )
+
+export const NOT_CONFIGURED =
+  'The relay judge is not configured (backend "stub"): set relay.judge.backend to "api" and relay.judge.apiKey in the Orchestra config to evaluate judge rules.'
+
+// The default backend is the stub, which never evaluates a criterion, so an unforced stub failure says the judge is not
+// configured instead of leaving a bare marker message. It stays a fail: an unconfigured judge never passes a rule.
+const unconfigured = (config: Config, input: Input) =>
+  JudgeStub.judge(input, config.stub).pipe(
+    Effect.map((response) =>
+      config.stub || response.verdict === "pass"
+        ? response
+        : { ...response, reason: `${response.reason}. ${NOT_CONFIGURED}` },
+    ),
   )

@@ -512,13 +512,13 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
     const match = sync.data.session
       .toSorted((a, b) => b.time.updated - a.time.updated)
       .find((x) => x.parentID === undefined)?.id
-    if (match) {
-      continued = true
-      if (args.fork) {
-        void forkSession(match)
-      } else {
-        route.navigate({ type: "session", sessionID: match })
-      }
+    continued = true
+    // The initial route is a placeholder session; with nothing to continue, leave it for the home screen.
+    if (!match) return route.navigate({ type: "home" })
+    if (args.fork) {
+      void forkSession(match)
+    } else {
+      route.navigate({ type: "session", sessionID: match })
     }
   })
 

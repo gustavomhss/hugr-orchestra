@@ -1,7 +1,7 @@
 import { Schema } from "effect"
 
 type Entry = { path: string; type: "file" | "directory" }
-export type WorkflowInventory = { status: "ready" | "empty" | "error" | "unavailable"; paths: string[] }
+export type WorkflowInventory = { status: "ready" | "empty" | "error" | "unavailable"; paths: string[]; reason?: unknown }
 
 export const GITLAB_CI = ".gitlab-ci.yml"
 export const TRIGGERS = ["manual", "push", "pullRequest"] as const
@@ -59,7 +59,7 @@ export async function loadWorkflows(list: (path: string) => Promise<readonly Ent
     const paths = [...gitlab, ...github]
     return { status: paths.length ? "ready" : "empty", paths }
   }
-  return inventory().catch((error: unknown) => ({ status: workflowFailure(error), paths: [] }))
+  return inventory().catch((error: unknown) => ({ status: workflowFailure(error), paths: [], reason: error }))
 }
 
 async function githubWorkflows(list: (path: string) => Promise<readonly Entry[]>) {

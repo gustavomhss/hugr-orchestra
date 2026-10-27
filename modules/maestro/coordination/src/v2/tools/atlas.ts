@@ -27,7 +27,7 @@ const Unit = Schema.Struct({
   action: Schema.Literal("unit"),
   unit: Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(256)),
 }).annotate(closed)
-// Native Archie only: anchors exact verified units to proposed work (see `anchor`).
+// Native upstream seat only: anchors exact verified units to proposed work (see `anchor`).
 const Anchor = Schema.Struct({
   action: Schema.Literal("anchor"),
   target: AtlasKnowledge.Target,
@@ -60,7 +60,7 @@ export type Result = { readonly title: string; readonly output: string; readonly
 export const Output = Schema.Struct({ title: Schema.String, output: Schema.String, atlasContext: Schema.Unknown })
 
 export const description =
-  'Read verified Atlas Knowledge/Own context: {"action":"catalog"} returns bounded unit/territory metadata, not bodies; {"action":"unit","unit":"exact ID"} loads complete, fresh, current verified bytes. Native Archie may anchor exact selected units to proposed work: {"action":"anchor","target":{"kind":"assignment|work-package","id":"work ID"},"units":["exact ID"]}. Return reference binds verified bodies to this actual call; no approval or Knowledge promotion. No nearest-name selection or owner/root arguments. Holds block only claims dependent on missing context.'
+  'Read verified Atlas Knowledge/Own context: {"action":"catalog"} returns bounded unit/territory metadata, not bodies; {"action":"unit","unit":"exact ID"} loads complete, fresh, current verified bytes. The upstream seat may anchor exact selected units to proposed work: {"action":"anchor","target":{"kind":"assignment|work-package","id":"work ID"},"units":["exact ID"]}. Return reference binds verified bodies to this actual call; no approval or Knowledge promotion. No nearest-name selection or owner/root arguments. Holds block only claims dependent on missing context.'
 
 const layer = Layer.effectDiscard(
   Effect.gen(function* () {
@@ -164,7 +164,7 @@ const layer = Layer.effectDiscard(
                       freshness: "FRESH" as const,
                       currentBlobsChecked: true,
                       truncated: false,
-                      note: "Exact selected Atlas Own bodies bound to this native Archie call.",
+                      note: "Exact selected Atlas Own bodies bound to this native upstream-seat call.",
                     },
                   },
                 } satisfies Result
@@ -231,7 +231,7 @@ function unavailable(reason: string): Result {
 }
 
 /**
- * The earlier runtime's `AtlasKnowledge.anchor` on V2: Archie's exact selection of verified Own units, bound to this native call by a
+ * The earlier runtime's `AtlasKnowledge.anchor` on V2: the upstream seat's exact selection of verified Own units, bound to this native call by a
  * reference over the canonical payload. The call identity is the runner's, so no history lookup is needed.
  */
 const anchor = Effect.fn("MaestroAtlasToolV2.anchor")(function* (

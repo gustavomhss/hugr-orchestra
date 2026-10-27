@@ -75,6 +75,7 @@ export const DialogSelectMcp: Component = () => {
               </div>
               <div onClick={(e) => e.stopPropagation()}>
                 <Switch
+                  aria-label={i.name}
                   checked={enabled()}
                   disabled={status() === "pending" || (toggle.isPending && toggle.variables === i.name)}
                   onChange={() => {

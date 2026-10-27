@@ -9,7 +9,7 @@ import { ServerConnection } from "@/context/server"
 import { useServerSDK } from "@/context/server-sdk"
 import type { ChapterPageProps } from "@/orchestra/chapter-route"
 import { setCrumbTrail } from "@/orchestra/crumbs"
-import { formatServerError } from "@/utils/server-errors"
+import { formatServerError, withServerReason } from "@/utils/server-errors"
 import "../kit.css"
 import "../../relay/relay.css"
 import "./atlas.css"
@@ -38,7 +38,10 @@ export default function AtlasPage(props: ChapterPageProps) {
   const route = createMemo(() => parseAtlasRoute(location.pathname, location.search))
   const controller = createAtlasController((error) => {
     if (error instanceof AtlasAPIError)
-      return { message: language.t("orchestra.atlas.frame.unavailable"), unavailable: error.reason === "unsupported" }
+      return {
+        message: withServerReason(language.t("orchestra.atlas.frame.unavailable"), error.cause),
+        unavailable: error.reason === "unsupported",
+      }
     return { message: formatServerError(error, language.t, language.t("error.chain.unknown")) }
   })
   void controller.select({

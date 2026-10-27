@@ -25,7 +25,7 @@ import { MaestroSeats } from "../src/v2/seats-service"
 import { MaestroAtlasToolV2 } from "../src/v2/tools/atlas"
 import { WorkflowKnowledgeV2 } from "../src/v2/workflow/knowledge"
 
-// V2 atlas_context against a real verified Own fixture: Maestro reads catalog and unit but never anchors, Archie anchors
+// V2 atlas_context against a real verified Own fixture: Maestro reads catalog and unit but never anchors, the upstream seat anchors
 // exact verified units, the Atlas Memory seats keep their reads, every other agent is refused by name, and every failure
 // is an explicit hold.
 
@@ -239,7 +239,7 @@ describe("V2 atlas_context", () => {
     ])
   })
 
-  test("only Archie anchors, binding exact verified bodies to its actual call", async () => {
+  test("only the upstream seat anchors, binding exact verified bodies to its actual call", async () => {
     reset()
     const anchor = { action: "anchor", target: { kind: "assignment", id: "work" }, units }
     expect((await call("maestro", anchor)).body).toEqual({ status: "unavailable", reason: "native-archie-required" })
@@ -392,7 +392,7 @@ describe("V2 atlas_context output bound", () => {
 })
 
 // The earlier runtime's `AtlasKnowledge.resolve` on V2: a workflow publication's anchor reference resolves only to the anchor native
-// Archie produced through one completed atlas_context call in its own Session, with the same units still loading
+// The upstream seat produced through one completed atlas_context call in its own Session, with the same units still loading
 // unchanged from the source.
 describe("V2 workflow knowledge resolve", () => {
   const atlasLayer = AppNodeBuilder.build(LayerNode.group([Config.node, GitCli.node, FSUtil.node, SkillV2.node]), [
@@ -479,7 +479,7 @@ describe("V2 workflow knowledge resolve", () => {
       }).pipe(Effect.provide(atlasLayer)),
     )
 
-  test("a native Archie anchor resolves; any change to its call, author or bytes holds", async () => {
+  test("a native upstream seat anchor resolves; any change to its call, author or bytes holds", async () => {
     reset()
     const archie = await call("archie", anchorInput)
     const bound = archie.receipt?.anchor as AtlasKnowledge.Anchor

@@ -21,6 +21,7 @@ import { useServerSync } from "@/context/server-sync"
 import { useTabs } from "@/context/tabs"
 import { displayName } from "@/pages/layout/helpers"
 import { pathKey } from "@/utils/path-key"
+import { withServerReason } from "@/utils/server-errors"
 import type { ChapterPageProps } from "../chapter-route"
 import { GITLAB_CI, loadWorkflows, workflowFailure } from "./cicd-data"
 import { CicdDialog, LogsDialog, PipelineDialog, PipelineMark } from "./cicd-dialogs"
@@ -243,13 +244,11 @@ export default function Cicd(props: ChapterPageProps) {
             <Match when={inventory()?.status !== "ready"}>
               <div class="mx-row">
                 <small class="mx-grow" role={inventory()?.status === "error" ? "alert" : "status"}>
-                  {language.t(
-                    inventory()?.status === "empty"
-                      ? "orchestra.cicd.empty"
-                      : inventory()?.status === "unavailable"
-                        ? "orchestra.cicd.unavailable"
-                        : "orchestra.cicd.error",
-                  )}
+                  {inventory()?.status === "error"
+                    ? withServerReason(language.t("orchestra.cicd.error"), inventory()?.reason)
+                    : language.t(
+                        inventory()?.status === "empty" ? "orchestra.cicd.empty" : "orchestra.cicd.unavailable",
+                      )}
                 </small>
                 <Show when={inventory()?.status === "error"}>
                   <button type="button" class="mx-btn" onClick={() => void actions.refetch()}>

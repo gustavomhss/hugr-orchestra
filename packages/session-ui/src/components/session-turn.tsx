@@ -436,7 +436,17 @@ export function SessionTurn(
                     </span>
                     <DiffChanges changes={diffs()} />
                     <Show when={overflow() > 0}>
-                      <span data-slot="session-turn-diffs-toggle" onClick={toggleAll}>
+                      <span
+                        data-slot="session-turn-diffs-toggle"
+                        role="button"
+                        tabindex={0}
+                        onClick={toggleAll}
+                        onKeyDown={(event) => {
+                          if (event.key !== "Enter" && event.key !== " ") return
+                          event.preventDefault()
+                          toggleAll()
+                        }}
+                      >
                         {showAll() ? i18n.t("ui.sessionTurn.diffs.showLess") : i18n.t("ui.sessionTurn.diffs.showAll")}
                       </span>
                     </Show>
@@ -509,7 +519,17 @@ export function SessionTurn(
                       </For>
                     </Accordion>
                     <Show when={!showAll() && overflow() > 0}>
-                      <div data-slot="session-turn-diffs-more" onClick={toggleAll}>
+                      <div
+                        data-slot="session-turn-diffs-more"
+                        role="button"
+                        tabindex={0}
+                        onClick={toggleAll}
+                        onKeyDown={(event) => {
+                          if (event.key !== "Enter" && event.key !== " ") return
+                          event.preventDefault()
+                          toggleAll()
+                        }}
+                      >
                         {i18n.t("ui.sessionTurn.diffs.more", { count: String(overflow()) })}
                       </div>
                     </Show>
