@@ -201,6 +201,7 @@ const withBash = <A, E, R>(options: {
       assert: () => options.failure === "permission" ? Effect.fail(new PermissionV2.BlockedError({ rules: [] })) : Effect.void,
       ask: () => Effect.die("unused permission ask"),
       reply: () => Effect.die("unused permission reply"),
+      cancelSession: () => Effect.void,
       get: () => Effect.die("unused permission get"),
       forSession: () => Effect.die("unused permission forSession"),
       list: () => Effect.die("unused permission list"),

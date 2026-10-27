@@ -29,6 +29,7 @@ const permission = Layer.succeed(
       ),
     ask: () => Effect.die("unused"),
     reply: () => Effect.die("unused"),
+    cancelSession: () => Effect.void,
     get: () => Effect.die("unused"),
     forSession: () => Effect.die("unused"),
     list: () => Effect.die("unused"),
@@ -42,6 +43,7 @@ const question = Layer.succeed(
         captured = input
       }).pipe(Effect.andThen(reject ? Effect.fail(new QuestionV2.RejectedError()) : Effect.succeed([["Build"], []]))),
     reply: () => Effect.die("unused"),
+    cancelSession: () => Effect.void,
     reject: () => Effect.die("unused"),
     list: () => Effect.die("unused"),
   }),

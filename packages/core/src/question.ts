@@ -57,6 +57,8 @@ export interface Interface {
   readonly ask: (input: AskInput) => Effect.Effect<ReadonlyArray<Answer>, RejectedError>
   readonly reply: (input: ReplyInput) => Effect.Effect<void, NotFoundError>
   readonly reject: (requestID: ID) => Effect.Effect<void, NotFoundError>
+  /** Rejects every open question of the Session; Stop calls it after the turn has been interrupted. */
+  readonly cancelSession: (sessionID: SessionSchema.ID) => Effect.Effect<void>
   readonly list: () => Effect.Effect<ReadonlyArray<Request>>
 }
 
@@ -98,7 +100,18 @@ const layer = Layer.effect(
           const request: Request = { id, ...input }
           pending.set(id, { request, deferred })
           return yield* events.publish(Event.Asked, request).pipe(
-            Effect.andThen(restore(Deferred.await(deferred))),
+            Effect.andThen(
+              restore(Deferred.await(deferred)).pipe(
+                // A turn interrupted while it waits (Stop) must still tell clients the request is gone.
+                Effect.onInterrupt(() =>
+                  Effect.suspend(() =>
+                    pending.delete(id)
+                      ? events.publish(Event.Rejected, { sessionID: request.sessionID, requestID: id })
+                      : Effect.void,
+                  ),
+                ),
+              ),
+            ),
             Effect.ensuring(
               Effect.sync(() => {
                 pending.delete(id)
@@ -140,11 +153,28 @@ const layer = Layer.effect(
       ),
     )
 
+    // Interrupting a Session rejects every open question of it, including any no fiber still waits on.
+    const cancelSession = Effect.fn("QuestionV2.cancelSession")((sessionID: SessionSchema.ID) =>
+      Effect.uninterruptible(
+        Effect.forEach(
+          Array.from(pending.values()).filter((item) => item.request.sessionID === sessionID),
+          (item) =>
+            Effect.suspend(() => {
+              if (!pending.delete(item.request.id)) return Effect.void
+              return events
+                .publish(Event.Rejected, { sessionID, requestID: item.request.id })
+                .pipe(Effect.andThen(Deferred.fail(item.deferred, new RejectedError())))
+            }),
+          { discard: true },
+        ),
+      ),
+    )
+
     const list = Effect.fn("QuestionV2.list")(function* () {
       return Array.from(pending.values(), (item) => item.request)
     })
 
-    return Service.of({ ask, reply, reject, list })
+    return Service.of({ ask, reply, reject, cancelSession, list })
   }),
 )
 
