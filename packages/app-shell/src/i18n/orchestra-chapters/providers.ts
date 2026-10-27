@@ -82,7 +82,6 @@ export const PROVIDERS_COPY_BR: Record<keyof typeof PROVIDERS_COPY, string> = {
   "orchestra.providers.models": "Modelos",
   "orchestra.providers.popular": "Provedores populares",
   "orchestra.providers.popular.empty": "Todos os provedores populares já estão listados acima.",
-  "orchestra.providers.note.custom": "Provedor compatível com OpenAI",
   "orchestra.providers.note.models": "Modelos disponíveis: {{count}}",
   "orchestra.providers.loading": "Carregando provedores…",
   "orchestra.providers.error": "Não foi possível carregar os provedores deste perfil.",

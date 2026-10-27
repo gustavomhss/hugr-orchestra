@@ -57,7 +57,6 @@ export const WORKSPACES_COPY_BR: Record<keyof typeof WORKSPACES_COPY, string> = 
   "orchestra.workspaces.field.branch": "Branch",
   "orchestra.workspaces.field.type": "Tipo",
   "orchestra.workspaces.field.serverDirectory": "Escolhido pelo servidor",
-  "orchestra.workspaces.field.newBranch": "Criada com o worktree",
   "orchestra.workspaces.field.detached": "HEAD destacado",
   "orchestra.workspaces.field.noBranch": "Sem branch",
   "orchestra.workspaces.field.unknownBranch": "Não informada por este servidor",
@@ -66,8 +65,6 @@ export const WORKSPACES_COPY_BR: Record<keyof typeof WORKSPACES_COPY, string> = 
   "orchestra.workspaces.external": "Este servidor não consegue remover este diretório. Remova-o com o git.",
   "orchestra.workspaces.confirm.title": "Excluir workspace?",
   "orchestra.workspaces.confirm.description": "Remove este worktree do git e os arquivos dele do disco.",
-  "orchestra.workspaces.confirm.note": "Alterações não commitadas em {{path}} serão perdidas.",
-  "orchestra.workspaces.confirm.branch": "A branch {{branch}} também é excluída; commits que não foram mesclados em outro lugar serão perdidos.",
   "orchestra.workspaces.confirm.guarded":
     "Se {{path}} tiver alterações não commitadas, você será perguntado de novo antes de descartá-las.",
   "orchestra.workspaces.confirm.action": "Confirmar",

@@ -78,9 +78,6 @@ export const MCP_COPY_BR: Record<keyof typeof MCP_COPY, string> = {
   "orchestra.mcp.registrationHint":
     "Este servidor precisa de um cliente OAuth registrado. Adicione oauth.clientId à entrada dele em {{file}}.",
   "orchestra.mcp.authWaiting": "Conclua o login no seu navegador…",
-  "orchestra.mcp.authBrowserFailed": "O servidor não conseguiu abrir um navegador. Abra este link para continuar:",
-  "orchestra.mcp.authCopy": "Copiar link",
-  "orchestra.mcp.authOpen": "Abrir link",
   "orchestra.mcp.configureTitle": "Configurar {{name}}",
   "orchestra.mcp.editSubtitle":
     "Conecte ferramentas a este perfil. Salvar atualiza a configuração do projeto e reinicia os servidores MCP dele.",
