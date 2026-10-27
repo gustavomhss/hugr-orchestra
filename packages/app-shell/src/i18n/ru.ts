@@ -924,6 +924,7 @@ export const dict = {
   "live.start.reason.no-key": "Сначала добавьте ключ распознавания речи в настройках",
   "live.start.reason.server": "Локальный сервер не ответил",
   "live.start.reason.capture": "Не удалось начать захват аудио. Проверьте разрешения на микрофон и запись экрана.",
+  "live.start.reason.permission": "Сначала разрешите доступ к микрофону в Системных настройках",
 
   "settings.general.row.language.title": "Язык",
   "settings.general.row.language.description": "Изменить язык отображения HuGR Orchestra",

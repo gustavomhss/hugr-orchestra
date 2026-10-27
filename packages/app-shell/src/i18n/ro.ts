@@ -942,6 +942,7 @@ export const dict = {
   "live.start.reason.no-key": "Adaugă mai întâi o cheie speech-to-text în Setări",
   "live.start.reason.server": "Serverul local nu a răspuns",
   "live.start.reason.capture": "Captura audio nu a putut porni. Verifică permisiunile pentru microfon și înregistrarea ecranului.",
+  "live.start.reason.permission": "Permite mai întâi accesul la microfon în Setările sistemului",
   "settings.general.row.language.title": "Limbă",
   "settings.general.row.language.description": "Schimbă limba de afișare pentru HuGR Orchestra",
   "settings.general.row.shell.title": "Shell terminal",

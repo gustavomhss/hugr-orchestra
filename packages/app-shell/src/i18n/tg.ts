@@ -939,6 +939,7 @@ export const dict = {
   "live.start.reason.no-key": "Аввал дар Танзимот калиди нутқ ба матнро илова кунед",
   "live.start.reason.server": "Сервери маҳаллӣ ҷавоб надод",
   "live.start.reason.capture": "Сабти аудио оғоз нашуд. Иҷозатҳои микрофон ва сабти экранро санҷед.",
+  "live.start.reason.permission": "Аввал дар Танзимоти система дастрасӣ ба микрофонро иҷозат диҳед",
   "settings.general.row.language.title": "Забон",
   "settings.general.row.language.description": "Забони намоиши HuGR Orchestra-ро иваз кунед",
   "settings.general.row.shell.title": "Терминал shell",

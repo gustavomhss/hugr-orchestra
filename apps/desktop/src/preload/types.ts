@@ -1,3 +1,12 @@
+import type {
+  LiveHotkey,
+  LiveHotkeyAction,
+  LivePermission,
+  LiveReadiness,
+  LiveRunState,
+  LiveSettings,
+  LiveSource,
+} from "@orchestra/app/live"
 import type { DesktopMenuAction } from "@orchestra/app/desktop-menu"
 import type { WslServersPlatform } from "@orchestra/app/wsl/types"
 import type { UpdaterState } from "@orchestra/app/updater"
@@ -221,12 +230,28 @@ export type ElectronAPI = import("@orchestra/app/app-dock-linux").AppDockLinuxAP
   // Starts a meeting with the live seat: capture, transcription and the overlay. Refused while one runs or with no key.
   startLiveMeeting: (
     title?: string,
-  ) => Promise<{ ok: true; meetingID: string } | { ok: false; reason: "running" | "no-key" | "server" | "capture" }>
+  ) => Promise<
+    { ok: true; meetingID: string } | { ok: false; reason: "running" | "no-key" | "server" | "capture" | "permission" }
+  >
   stopLiveMeeting: () => Promise<void>
   getLiveMeetingRunning: () => Promise<boolean>
   // The speech-to-text key is write-only from the renderer; an empty key clears it.
   hasLiveTranscriptionKey: () => Promise<boolean>
   setLiveTranscriptionKey: (key: string) => Promise<void>
+  getLiveReadiness: () => Promise<LiveReadiness>
+  requestLivePermission: (source: LiveSource) => Promise<LivePermission>
+  onLiveLevels: (cb: (levels: Record<LiveSource, number>) => void) => () => void
+  getLiveRunState: () => Promise<LiveRunState>
+  onLiveRunState: (cb: (state: LiveRunState) => void) => () => void
+  renameLiveMeeting: (meetingID: string, title: string) => Promise<void>
+  getLiveSettings: () => Promise<LiveSettings>
+  setLiveSettings: (patch: Partial<LiveSettings>) => Promise<LiveSettings>
+  getLiveHotkeys: () => Promise<LiveHotkey[]>
+  setLiveHotkey: (
+    action: LiveHotkeyAction,
+    accelerator: string,
+  ) => Promise<{ ok: true } | { ok: false; reason: "conflict" | "invalid" }>
+  resetLiveHotkeys: () => Promise<LiveHotkey[]>
   getPinchZoomEnabled: () => Promise<boolean>
   setPinchZoomEnabled: (enabled: boolean) => Promise<void>
   onPinchZoomEnabledChanged: (cb: (enabled: boolean) => void) => () => void

@@ -753,6 +753,7 @@ export const dict = {
   "live.start.reason.no-key": "Füge zuerst in den Einstellungen einen Speech-to-Text-Schlüssel hinzu",
   "live.start.reason.server": "Der lokale Server hat nicht geantwortet",
   "live.start.reason.capture": "Audioaufnahme konnte nicht starten. Prüfe die Berechtigungen für Mikrofon und Bildschirmaufnahme.",
+  "live.start.reason.permission": "Erlaube zuerst den Mikrofonzugriff in den Systemeinstellungen",
   "settings.general.row.language.title": "Sprache",
   "settings.general.row.language.description": "Die Anzeigesprache für HuGR Orchestra ändern",
   "settings.general.row.shell.title": "Terminal-Shell",

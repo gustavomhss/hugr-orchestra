@@ -22,8 +22,8 @@ const RECONNECT_MS = 1000
 export function sessionClient(server: MeetingServer) {
   const request = liveRequest(server)
   return {
-    async create() {
-      const body: { data: { id: string } } = await (await request.post("/api/session", { agent: "live" })).json()
+    async create(model?: { providerID: string; id: string }) {
+      const body: { data: { id: string } } = await (await request.post("/api/session", { agent: "live", model })).json()
       return body.data.id
     },
     async prompt(sessionID: string, prompt: LivePrompt, delivery: "steer" | "queue") {
