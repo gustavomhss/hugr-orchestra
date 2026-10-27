@@ -4,7 +4,7 @@
 import fs from "fs/promises"
 import os from "os"
 import path from "path"
-import { describe, expect } from "bun:test"
+import { describe, expect, test } from "bun:test"
 import { Effect } from "effect"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -13,6 +13,7 @@ import { Global } from "@orchestra/core/global"
 import { Location } from "@orchestra/core/location"
 import { CommandV2 } from "@orchestra/core/command"
 import { Mcp } from "@orchestra/core/mcp"
+import { McpStdio } from "@orchestra/core/mcp/stdio"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { ConfigMCP } from "@orchestra/schema/config-mcp"
 import { SessionV2 } from "@orchestra/core/session"
@@ -147,4 +148,57 @@ describe("Mcp", () => {
       ),
     30_000,
   )
+
+  it.live(
+    "reports a failed status, not a connected one with no tools, when tools/list fails",
+    () =>
+      Effect.acquireRelease(
+        Effect.promise(() => tmpdir()),
+        (dir) => Effect.promise(() => dir[Symbol.asyncDispose]()),
+      ).pipe(
+        Effect.flatMap((dir) =>
+          Effect.gen(function* () {
+            expectSpawn(import.meta.path)
+            yield* Effect.promise(() =>
+              Bun.write(
+                path.join(dir.path, "orchestra.json"),
+                JSON.stringify({
+                  mcp: {
+                    broken: {
+                      type: "local",
+                      command: [process.execPath, fixture, "probe"],
+                      environment: { MCP_OMNI_LIST_FAIL: "listing exploded" },
+                    },
+                  },
+                }),
+              ),
+            )
+            yield* Effect.gen(function* () {
+              const mcp = yield* Mcp.Service
+              const status = Effect.fn(function* () {
+                return (yield* mcp.list()).find((server) => server.name === "broken")?.status
+              })
+              for (let attempt = 0; attempt < 200 && (yield* status())?.status !== "failed"; attempt++)
+                yield* Effect.sleep("100 millis")
+              const found = yield* status()
+              expect(found?.status).toBe("failed")
+              expect(found?.status === "failed" ? found.error : "").toContain("listing exploded")
+              expect(yield* mcp.tools()).toEqual({})
+            }).pipe(
+              Effect.scoped,
+              Effect.provide(LocationServiceMap.Service.get(Location.Ref.make({ directory: AbsolutePath.make(dir.path) }))),
+            )
+          }),
+        ),
+      ),
+    30_000,
+  )
+})
+
+test("a stdio transport closed while omni loads never spawns", async () => {
+  const transport = new McpStdio.OmniStdioTransport({ command: process.execPath })
+  const starting = transport.start()
+  await transport.close()
+  await expect(starting).rejects.toThrow("closed before start")
+  expect(transport.pid).toBeNull()
 })

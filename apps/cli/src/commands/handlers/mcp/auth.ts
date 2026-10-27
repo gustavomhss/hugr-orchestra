@@ -12,13 +12,15 @@ export default Runtime.handler(
   Effect.fn("cli.mcp.auth")(function* (input) {
     const daemon = yield* Daemon.Service
     const client = yield* daemon.client()
-    yield* Effect.promise(() =>
-      authenticate(client, terminal, {
-        directory: process.cwd(),
-        name: Option.getOrUndefined(input.name),
-        say: (line) => process.stdout.write(line + EOL),
-      }),
-    )
+    yield* Effect.tryPromise({
+      try: () =>
+        authenticate(client, terminal, {
+          directory: process.cwd(),
+          name: Option.getOrUndefined(input.name),
+          say: (line) => process.stdout.write(line + EOL),
+        }),
+      catch: (cause) => (cause instanceof Error ? cause : new Error(String(cause))),
+    })
   }),
 )
 
