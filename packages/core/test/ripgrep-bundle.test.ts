@@ -385,9 +385,8 @@ describe("RipgrepBinary in a packaged build", () => {
     }),
   )
 
-  it.live("refuses a symlink in place of the shipped or the downloaded rg", () =>
+  it.live.skipIf(process.platform === "win32")("refuses a symlink in place of the shipped or the downloaded rg", () =>
     Effect.gen(function* () {
-      if (process.platform === "win32") return
       const tmp = yield* temporary
       const executable = RipgrepRelease.executable()
       const elsewhere = path.join(tmp.path, "elsewhere-rg")

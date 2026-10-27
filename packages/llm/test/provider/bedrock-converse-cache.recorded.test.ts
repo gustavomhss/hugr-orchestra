@@ -44,8 +44,8 @@ const recorded = recordedTests({
 describe("Bedrock Converse cache recorded", () => {
   recorded.effect.with("writes then reads cachePoint on identical second call", { tags: ["cache"] }, () =>
     Effect.gen(function* () {
-      const first = yield* LLMClient.generate(cacheRequest)
-      expect(first.usage?.cacheReadInputTokens ?? 0).toBeGreaterThanOrEqual(0)
+      // No cassette is recorded yet, so the cold call is not asserted here.
+      yield* LLMClient.generate(cacheRequest)
 
       const second = yield* LLMClient.generate(cacheRequest)
       expect(second.usage?.cacheReadInputTokens ?? 0).toBeGreaterThan(0)

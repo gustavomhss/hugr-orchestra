@@ -402,8 +402,7 @@ describe("util.flock", () => {
     expect(hit).toBe(true)
   })
 
-  test("fails clearly on unwritable lock roots", async () => {
-    if (process.platform === "win32") return
+  test.skipIf(process.platform === "win32")("fails clearly on unwritable lock roots", async () => {
 
     await using tmp = await tmpdir()
     const dir = path.join(tmp.path, "locks")

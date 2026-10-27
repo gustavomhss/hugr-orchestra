@@ -16,11 +16,13 @@ const cmd = (...args: string[]) => ChildProcess.make(NODE, args)
 
 const waitForFile = (file: string) =>
   Effect.promise(async () => {
+    const deadline = Date.now() + 10_000
     while (true) {
       try {
         return await fs.readFile(file, "utf8")
       } catch (error) {
         if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error
+        if (Date.now() > deadline) throw new Error(`file was not created within 10s: ${file}`)
         await new Promise<void>((resolve) => setTimeout(resolve, 10))
       }
     }

@@ -307,10 +307,9 @@ describe("util.effect-flock", () => {
     }),
   )
 
-  it.live(
+  it.live.skipIf(process.platform === "win32")(
     "fails on unwritable lock roots",
     Effect.gen(function* () {
-      if (process.platform === "win32") return
       const flock = yield* EffectFlock.Service
       const tmp = yield* Effect.promise(() => fs.mkdtemp(path.join(os.tmpdir(), "eflock-test-")))
       const dir = path.join(tmp, "locks")

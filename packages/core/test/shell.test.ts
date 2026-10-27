@@ -77,18 +77,16 @@ describe("shell", () => {
       })
     })
 
-    test("resolves /usr/bin/bash from env to Git Bash", async () => {
+    test.skipIf(!Shell.gitbash())("resolves /usr/bin/bash from env to Git Bash", async () => {
       const bash = Shell.gitbash()
-      if (!bash) return
       await withShell("/usr/bin/bash", async () => {
         expect(Shell.acceptable()).toBe(bash)
         expect(Shell.preferred()).toBe(bash)
       })
     })
 
-    test("resolves bare bash to Git Bash before PATH", async () => {
+    test.skipIf(!Shell.gitbash())("resolves bare bash to Git Bash before PATH", async () => {
       const bash = Shell.gitbash()
-      if (!bash) return
       expect(Shell.acceptable("bash")).toBe(bash)
       expect(Shell.preferred("bash")).toBe(bash)
       await withShell("bash", async () => {
@@ -97,9 +95,9 @@ describe("shell", () => {
       })
     })
 
-    test("resolves bare PowerShell shells", async () => {
+    test.skipIf(!(which("pwsh") || which("powershell")))("resolves bare PowerShell shells", async () => {
       const shell = which("pwsh") || which("powershell")
-      if (!shell) return
+      if (!shell) throw new Error("PowerShell is not on PATH; the skipIf above should have skipped this test")
       await withShell(path.win32.basename(shell), async () => {
         expect(Shell.preferred()).toBe(shell)
       })

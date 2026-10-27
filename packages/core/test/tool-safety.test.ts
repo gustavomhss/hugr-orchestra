@@ -85,9 +85,8 @@ describe("native tool safety", () => {
     }),
   )
 
-  it.live("physical write roots follow a dangling symlink to where a write would create the file", () =>
+  it.live.skipIf(process.platform === "win32")("physical write roots follow a dangling symlink to where a write would create the file", () =>
     Effect.gen(function* () {
-      if (process.platform === "win32") return
       const tmp = yield* Effect.acquireRelease(Effect.promise(() => tmpdir()), (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()))
       const fs = yield* FSUtil.Service
       const safety = yield* ToolSafety.Service

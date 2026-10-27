@@ -37,7 +37,8 @@ describe("OpenAI Responses cache recorded", () => {
   recorded.effect.with("reports cached_tokens on identical second call", { tags: ["cache"] }, () =>
     Effect.gen(function* () {
       const first = yield* LLMClient.generate(cacheRequest)
-      expect(first.usage?.cacheReadInputTokens ?? 0).toBeGreaterThanOrEqual(0)
+      // The cassette's cold call reports cached_tokens 0.
+      expect(first.usage?.cacheReadInputTokens ?? 0).toBe(0)
 
       const second = yield* LLMClient.generate(cacheRequest)
       expect(second.usage?.cacheReadInputTokens ?? 0).toBeGreaterThan(0)
