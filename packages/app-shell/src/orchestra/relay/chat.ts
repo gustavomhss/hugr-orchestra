@@ -1,3 +1,4 @@
+import { getOwner, runWithOwner } from "solid-js"
 import { useLayout } from "@/context/layout"
 import { useTabs } from "@/context/tabs"
 import type { RelayDocument } from "./client"
@@ -24,8 +25,13 @@ export function runBlockedBy(document: Pick<RelayDocument, "activeVersionId" | "
 
 // Opens a draft chat in the project with the workflow's prompt filled in. Every desktop session runs on Maestro.
 export function useWorkflowChat(directory: string, t: Translate) {
-  const tabs = useTabs()
-  const layout = useLayout()
+  // The contexts are read when the button is pressed, in the owner that rendered it, so a screen that never opens a chat
+  // does not need the tab and layout providers.
+  const owner = getOwner()
   return (kind: ChatKind, document: Pick<RelayDocument, "id" | "name">) =>
-    void tabs.newDraft({ server: layout.home.selection().server, directory }, workflowPrompt(t, kind, document))
+    runWithOwner(owner, () => {
+      const tabs = useTabs()
+      const layout = useLayout()
+      return void tabs.newDraft({ server: layout.home.selection().server, directory }, workflowPrompt(t, kind, document))
+    })
 }
