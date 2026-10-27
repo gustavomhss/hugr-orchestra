@@ -48,6 +48,8 @@ async function parent() {
       target: "node",
       format: "cjs",
       external: ["electron", "node:sqlite"],
+      // Bun leaves import.meta.env in a CJS bundle, which Electron cannot load; electron-vite defines these for the app.
+      define: { "import.meta.env.ORCHESTRA_CHANNEL": '"dev"', "import.meta.env.ORCHESTRA_MAC_SIGNED": '"false"' },
       write: true,
     })
     output = result.outputs[0]?.path ?? ""
