@@ -374,6 +374,19 @@ describe("SessionRunnerModel", () => {
     }),
   )
 
+  it.effect("maps catalog OpenRouter AI SDK models into the OpenAI-compatible chat route", () =>
+    Effect.gen(function* () {
+      const resolved = yield* SessionRunnerModel.fromCatalogModel(
+        model({ type: "aisdk", package: "@openrouter/ai-sdk-provider", url: "https://openrouter.ai/api/v1" }),
+      )
+
+      expect(resolved.route).toMatchObject({
+        id: "openai-compatible-chat",
+        endpoint: { baseURL: "https://openrouter.ai/api/v1" },
+      })
+    }),
+  )
+
   it.effect("maps catalog Anthropic AI SDK models into native routes", () =>
     Effect.gen(function* () {
       const resolved = yield* SessionRunnerModel.fromCatalogModel(
@@ -480,6 +493,14 @@ describe("SessionRunnerModel", () => {
         SessionRunnerModel.supported(
           model({ type: "aisdk", package: "@ai-sdk/google", url: "https://google.example/v1" }),
         ),
+      ).toBe(false)
+      expect(
+        SessionRunnerModel.supported(
+          model({ type: "aisdk", package: "@openrouter/ai-sdk-provider", url: "https://openrouter.ai/api/v1" }),
+        ),
+      ).toBe(true)
+      expect(
+        SessionRunnerModel.supported(model({ type: "aisdk", package: "@openrouter/ai-sdk-provider" })),
       ).toBe(false)
       expect(SessionRunnerModel.supported(model({ type: "native", settings: {} }))).toBe(false)
       expect(

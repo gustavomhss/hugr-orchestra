@@ -19,7 +19,7 @@ function fakeServer(failures: number) {
         directory: url.searchParams.get("location[directory]") ?? "",
         body,
       })
-      if (url.pathname === "/api/meeting/start") return Response.json({ id: "mtg_1", timeStarted: 1000 })
+      if (url.pathname === "/api/meeting/start") return Response.json({ data: { id: "mtg_1", timeStarted: 1000 } })
       if (url.pathname === "/api/meeting/segments" && state.failures-- > 0) return new Response("down", { status: 503 })
       return new Response(null, { status: 204 })
     },

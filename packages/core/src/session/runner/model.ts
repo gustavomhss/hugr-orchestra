@@ -219,12 +219,7 @@ export const fromCatalogModel = (
         .model({ id: resolved.api.id }),
     ).pipe(Effect.map((value) => withPrices(withReference(value, model), model)))
   }
-  // A native model with an endpoint and no package speaks the OpenAI-compatible chat API, the earlier runtime's default package.
-  if (
-    ((resolved.api.type === "aisdk" && resolved.api.package === "@ai-sdk/openai-compatible") ||
-      resolved.api.type === "native") &&
-    resolved.api.url
-  ) {
+  if (openAICompatible(resolved)) {
     return Effect.succeed(
       withDefaults(resolved, OpenAICompatibleChat.route, generation.value)
         .with({ auth: key === undefined ? Auth.none : Auth.bearer(key) })
@@ -254,11 +249,16 @@ export const resolve = (session: SessionSchema.Info, model: ModelV2.Info, creden
   )
 
 export const supported = (model: ModelV2.Info) =>
-  (model.api.type === "native" && model.api.url !== undefined) ||
-  (model.api.type === "aisdk" &&
-    (model.api.package === "@ai-sdk/openai" ||
-      model.api.package === "@ai-sdk/anthropic" ||
-      (model.api.package === "@ai-sdk/openai-compatible" && model.api.url !== undefined)))
+  openAICompatible(model) ||
+  (model.api.type === "aisdk" && (model.api.package === "@ai-sdk/openai" || model.api.package === "@ai-sdk/anthropic"))
+
+// A native model with an endpoint and no package speaks the OpenAI-compatible chat API, the earlier runtime's default
+// package. OpenRouter's own AI SDK package is a client for the same chat API.
+const openAICompatible = (model: ModelV2.Info) =>
+  model.api.url !== undefined &&
+  (model.api.type === "native" ||
+    model.api.package === "@ai-sdk/openai-compatible" ||
+    model.api.package === "@openrouter/ai-sdk-provider")
 
 /** Resolves models from the catalog belonging to the current Location runtime. */
 export const locationLayer = Layer.effect(

@@ -225,7 +225,10 @@ const main = Effect.gen(function* () {
   useEnvProxy()
   app.commandLine.appendSwitch("proxy-bypass-list", "<-loopback>")
   const features = app.commandLine.getSwitchValue("enable-features")
-  app.commandLine.appendSwitch("enable-features", features ? `${jsCallStackFeature},${features}` : jsCallStackFeature)
+  // The live seat's system audio is display-media loopback; on macOS Chromium serves it only through the Core Audio
+  // tap feature, and without it the loopback track ends as soon as it starts.
+  const ownFeatures = `${jsCallStackFeature},MacCatapLoopbackAudioForScreenShare`
+  app.commandLine.appendSwitch("enable-features", features ? `${ownFeatures},${features}` : ownFeatures)
   if (!app.isPackaged && !app.commandLine.hasSwitch("remote-debugging-port"))
     app.commandLine.appendSwitch("remote-debugging-port", "9222")
 
