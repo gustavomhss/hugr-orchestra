@@ -14,3 +14,9 @@
 - Do not retry state-changing actions. Retry idempotent readiness checks, then perform the action once and assert its outcome.
 - Keep action and assertion timeouts adaptive. Do not use short timeouts as readiness probes or rely on retries to hide flakes.
 - Assert exact outcomes and identities so stale state, duplicate rendering, and interactions with the wrong element cannot pass.
+
+## Suites Outside CI
+
+- `performance/` is a manual benchmark tool (`bun run test:bench`, see its README). It reports metrics without budgets, so it is not coverage; run it only when a decision needs the numbers.
+- `orchestra-screenshots/visual-matrix.visual.ts` captures a screenshot matrix for owner review (see `orchestra/INTEGRATION.md`). `lean-dashboard.visual.ts` is the one capture CI runs, through `test-browser/lean-dashboard-capture.test.ts`.
+- Do not add a one-off reproduction app under `e2e/`. Land the fix with a unit or regression test that runs in CI; a spec no runner picks up looks like coverage and checks nothing.
