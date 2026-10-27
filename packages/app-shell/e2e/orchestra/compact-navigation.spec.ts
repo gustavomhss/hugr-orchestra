@@ -34,7 +34,7 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
     "background-color",
     "rgb(44, 112, 189)",
   )
-  await expect(crumb.last()).toHaveText("home")
+  await expect(crumb.last()).toHaveText("Home")
   await expect(crumb.last()).toHaveCSS("font-size", "12px")
   // Production builds hide the WIP mark (`showWip`); WIP rows carry no chip and no description.
   // The development server shows both, so only the built bundle can prove they are absent.
@@ -89,9 +89,9 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
   await expect(sidebar.getByRole("button", { name: "Choose repository profile" })).toBeFocused()
   await sidebar.getByRole("button", { name: "Chat", exact: true }).click()
   await expect(page.locator('[data-component="prompt-input-v2"]')).toBeVisible()
-  // Session and draft pages carry the chapter breadcrumb too: home / project / session title.
-  await expect(crumb.nth(2)).toHaveText("home")
-  await expect(crumb.nth(2).getByRole("button", { name: "home", exact: true })).toBeVisible()
+  // Session and draft pages carry the chapter breadcrumb too: Home / project / session title.
+  await expect(crumb.nth(2)).toHaveText("Home")
+  await expect(crumb.nth(2).getByRole("button", { name: "Home", exact: true })).toBeVisible()
   await expect(crumb.nth(4).getByRole("button", { name: "Compact project", exact: true })).toBeVisible()
   await expect(crumb.last()).toHaveText("New session")
   expect((await header.boundingBox())!.height).toBe(frame!.height)

@@ -1,4 +1,5 @@
 import { ServerConnection, useLanguage, useServer, useSettings, useTabs } from "@orchestra/app"
+import { showToast } from "@orchestra/ui/toast"
 import { onMount } from "solid-js"
 
 export function DesktopFirstLaunchOnboarding(props: { initialUrl: string; onLoaded: () => void }) {
@@ -42,14 +43,16 @@ export function DesktopFirstLaunchOnboarding(props: { initialUrl: string; onLoad
         shouldTrigger,
         language.t("orchestra.shell.onboarding.defaultProject"),
       )
-      if (!shouldTrigger || !directory) return
+      if (!shouldTrigger || !directory) return window.api.confirmFirstLaunchOnboarding()
 
       console.info("[desktop-onboarding] starting first launch draft", { directory })
       server.projects.open(directory)
       server.projects.touch(directory)
       tabs.select(await tabs.newDraft({ server: server.key, directory }))
+      await window.api.confirmFirstLaunchOnboarding()
     } catch (error) {
       console.error("[desktop-onboarding] first launch onboarding failed", error)
+      showToast({ variant: "error", title: language.t("orchestra.shell.onboarding.failed") })
     }
   }
 

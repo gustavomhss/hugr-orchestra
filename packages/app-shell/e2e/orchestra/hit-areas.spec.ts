@@ -63,11 +63,11 @@ for (const scheme of ["dark", "light"] as const) {
     await expectTarget(openFile)
     await expectTarget(page.locator('[data-slot="session-title-actions"]').getByRole("button", { name: "Review" }))
 
-    // Plugins is a page now; its Add behavior dialog keeps the shared DialogHeader close control.
+    // Plugins is a page now; its Add plugin dialog keeps the shared DialogHeader close control.
     await sidebar.getByRole("button", { name: /^Plugins/ }).click()
-    await page.locator('[data-mx-page="orchestra-plugins"]').getByRole("button", { name: "Add behavior" }).click()
+    await page.locator('[data-mx-page="orchestra-plugins"]').getByRole("button", { name: "Add plugin" }).click()
     const dialog = page.getByRole("dialog")
-    await expect(dialog).toContainText("Add LLM behavior")
+    await expect(dialog).toContainText("Add plugin")
     const dialogClose = dialog
       .locator('[data-slot="dialog-header"]')
       .getByRole("button", { name: "Close", exact: true })

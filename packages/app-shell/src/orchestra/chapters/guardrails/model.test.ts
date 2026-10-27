@@ -8,6 +8,7 @@ import {
   groupFindings,
   groupRules,
   ignoreComment,
+  ruleName,
   splitPath,
   verdict,
 } from "./model"
@@ -102,6 +103,11 @@ describe("presentation helpers", () => {
     expect(excerptParts({ excerpt: "abc", match: [3, 1] })).toEqual({ before: "abc", match: "", after: "" })
     expect(excerptParts({ excerpt: "abc", match: null })).toEqual({ before: "abc", match: "", after: "" })
     expect(excerptParts({ excerpt: null, match: null })).toBeUndefined()
+  })
+
+  test("titles a rule with its id spoken as words", () => {
+    expect(ruleName("commit-title-format")).toBe("Commit title format")
+    expect(ruleName("no_ts_ignore")).toBe("No ts ignore")
   })
 
   test("builds the exact ignore comment and approval label", () => {

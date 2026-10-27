@@ -242,8 +242,8 @@ test("without the native bridge the Dock is unavailable and makes no Dock calls"
   // The browser chrome renders as in the mock; its page area says why no page can load, and no
   // control that needs the native browser is enabled.
   const area = page.locator(".orchestra-dock .zen-browser-host")
-  await expect(area.locator(".zen-empty-state strong")).toHaveText("Browser needs the desktop app.")
-  await expect(area.locator(".zen-empty-state span")).toHaveText("Native browser tabs are unavailable in web app.")
+  await expect(area.locator(".mx-empty strong")).toHaveText("Browser needs the desktop app.")
+  await expect(area.locator(".mx-empty p")).toHaveText("Native browser tabs are unavailable in web app.")
   await expect(area.getByRole("status")).toHaveCount(0)
   for (const name of ["Back", "Forward", "Reload", "Open", "+ New tab"])
     await expect(page.getByRole("button", { name, exact: true })).toBeDisabled()
@@ -286,7 +286,7 @@ async function openDock(page: Page) {
 async function expectNoTabs(page: Page) {
   const empty = page.locator(".orchestra-dock .zen-browser-host").getByRole("status")
   await expect(empty.locator("strong")).toHaveText("No tabs open.")
-  await expect(empty.locator("span")).toHaveText("Enter an address to start browsing.")
+  await expect(empty.locator("p")).toHaveText("Enter an address to start browsing.")
   await expect(page.locator(".orchestra-dock .zen-tab")).toHaveCount(0)
 }
 

@@ -286,7 +286,7 @@ export const ATLAS_SHEETS_COPY_BR: Record<keyof typeof ATLAS_SHEETS_COPY, string
   "orchestra.atlas.sheets.ratify.title": "Ratificar",
   "orchestra.atlas.sheets.ratify.t1": "Ratificada",
   "orchestra.atlas.sheets.ratify.t1.text": "Entra nos fatos ratificados da unidade, enviada antes das dicas.",
-  "orchestra.atlas.sheets.ratify.t0": "Core",
+  "orchestra.atlas.sheets.ratify.t0": "Central",
   "orchestra.atlas.sheets.ratify.t0.text": "Precisa estar certa. Exige o nome do ratificador; o Atlas não verifica quem digitou.",
   "orchestra.atlas.sheets.ratify.note": "Ratificar mantém só esta frase. Quem aprovou não é registrado.",
   "orchestra.atlas.sheets.ratify.confirm": "Ratificar",

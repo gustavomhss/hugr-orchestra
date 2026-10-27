@@ -21,6 +21,7 @@ import { exportDebugLogs, initCrashReporter, initLogging, startNetLog, write as 
 import { createMenu } from "./menu"
 import {
   finishFirstLaunchOnboarding,
+  confirmFirstLaunchOnboarding,
   initializeOldLayoutEligibility,
   isFirstLaunchOnboardingPending,
   isOldLayoutEligible,
@@ -375,6 +376,7 @@ const main = Effect.gen(function* () {
     setDefaultServerUrl: (url) => setDefaultServerUrl(url),
     isFirstLaunchOnboardingPending,
     finishFirstLaunchOnboarding,
+    confirmFirstLaunchOnboarding,
     isOldLayoutEligible,
     getDisplayBackend: async () => null,
     setDisplayBackend: async () => { throw new Error("Unsupported display backend setting") },

@@ -53,8 +53,13 @@ export async function finishFirstLaunchOnboarding(createDefaultProject: boolean,
     : null
   if (defaultProject) await mkdir(defaultProject, { recursive: true })
   const directory = defaultProject ? await realpath(defaultProject) : null
-
-  getStore().set(FIRST_LAUNCH_ONBOARDING_COMPLETE_KEY, true)
-  writeLog("onboarding", "first launch onboarding completed", { createDefaultProject, defaultProject: directory })
+  writeLog("onboarding", "first launch default project ready", { createDefaultProject, defaultProject: directory })
   return directory
+}
+
+// Called by the renderer once it has opened the first project. Until then onboarding stays pending, so a failure
+// while creating or opening the folder is retried on the next launch.
+export function confirmFirstLaunchOnboarding() {
+  getStore().set(FIRST_LAUNCH_ONBOARDING_COMPLETE_KEY, true)
+  writeLog("onboarding", "first launch onboarding completed")
 }

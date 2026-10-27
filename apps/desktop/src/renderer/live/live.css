@@ -156,6 +156,8 @@ body {
   font-size: var(--fs-sm);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
+  /* Dot, gap and padding plus five digits ("10:00"), so the clock rolling over a digit never moves the bar. */
+  min-inline-size: calc(5ch + 35px);
 }
 .dot {
   width: 8px;

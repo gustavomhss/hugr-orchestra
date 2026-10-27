@@ -510,7 +510,7 @@ export function KpiDashboard(props: {
                       </span>
                     )}
                   </Show>
-                  <span>{tile.note}</span>
+                  <span title={tile.note || undefined}>{tile.note}</span>
                 </div>
                 <div class="home-bars" aria-hidden="true">
                   <For each={tile.bars}>{(height) => <i style={{ height: `${height}%` }} />}</For>

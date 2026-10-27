@@ -27,7 +27,7 @@ for (const scheme of ["dark", "light"] as const) {
     const chapter = page.locator(".orchestra-workspaces")
     await expect(chapter.locator(".mx-eyebrow")).toHaveText("Workspaces")
     await expect(chapter.getByRole("heading", { level: 1 })).toHaveText("Where the work actually runs.")
-    await expect(chapter.locator(".mx-toolbar .mx-btn.primary")).toHaveText("New workspace")
+    await expect(chapter.locator(".mx-heading .mx-btn.primary")).toHaveText("New workspace")
     await expect(chapter.locator(".mx-toolbar .mx-badge")).toHaveText("Server A repository")
     await expect(chapter.locator(".mx-card")).toHaveCount(3)
     await expect(chapter.locator(".mx-card code")).toHaveText([root, ...sandboxes])

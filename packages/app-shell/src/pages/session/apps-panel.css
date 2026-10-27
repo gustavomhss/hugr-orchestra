@@ -142,36 +142,41 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   min-block-size: 0;
 }
 
+/* The kit's segmented control: one lit track, the selected segment raised inside it. */
 .zen-dock-modes {
   display: flex;
   flex: 0 0 auto;
-  gap: 6px;
-  padding: 6px;
-  border-block-end: 1px solid var(--border-weak);
+  gap: 2px;
+  margin: 6px;
+  padding: 2px;
+  border: 1px solid var(--mx-line, var(--border-weak));
+  border-radius: var(--orchestra-radius-sm);
+  background: var(--mx-soft, transparent);
 }
 
 .zen-dock-modes button {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
+  gap: 6px;
   flex: 1;
   min-inline-size: 0;
-  min-block-size: 34px;
+  min-block-size: 28px;
   padding-inline: 12px;
-  border: 1px solid transparent;
-  border-radius: var(--orchestra-radius-md);
-  color: var(--text-weak);
+  border: 0;
+  border-radius: var(--orchestra-radius-xs);
+  color: var(--mx-dim, var(--text-weak));
   background: transparent;
   font: inherit;
   font-size: var(--orchestra-font-size-sm);
   cursor: pointer;
+  transition: background var(--orchestra-duration-fast) var(--orchestra-ease-out);
 }
 
 .zen-dock-modes button.is-active {
-  color: var(--text-strong);
-  background: var(--surface-raised-stronger);
-  border-color: var(--border-strong);
+  color: var(--mx-strong, var(--text-strong));
+  background: var(--mx-raised, var(--surface-raised-stronger));
+  box-shadow: var(--mx-highlight, none);
   font-weight: 600;
 }
 
@@ -539,8 +544,29 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   font-size: var(--orchestra-font-size-sm);
 }
 
+/* Controls sit in groups: navigation, page tools, then actions, with a rule between groups. */
+.zen-tool-group {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+}
+
+.zen-tool-group + input,
+input + .zen-tool-group {
+  margin-inline: 4px;
+}
+
+.zen-tool-group:last-child {
+  padding-inline-start: 6px;
+  border-inline-start: 1px solid var(--mx-line, var(--border-weak));
+}
+
 .zen-nav-button,
 .zen-open-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   height: 28px;
   min-width: 28px;
   padding: 0 8px;
@@ -733,6 +759,10 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   overflow: hidden;
   border-radius: var(--zen-panel-radius);
   background: var(--zen-page);
+}
+
+.zen-browser-host > .mx-empty {
+  margin: auto;
 }
 
 /* The native browser's bounds. */

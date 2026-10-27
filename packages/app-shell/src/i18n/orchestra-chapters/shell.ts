@@ -20,15 +20,16 @@ export const SHELL_COPY = {
   "orchestra.shell.draft.close.confirm": "Discard draft",
   // The folder the desktop app creates in Documents on first launch.
   "orchestra.shell.onboarding.defaultProject": "Default Project",
+  "orchestra.shell.onboarding.failed": "Could not create the default project folder. We will try again next launch.",
   "orchestra.shell.settings.repository":
     "Open a project to manage this section. General, Servers, and Shortcuts work without one.",
-  // The reference names built-in views by their lowercase view key in the window breadcrumb.
-  "orchestra.shell.crumb.home": "home",
-  "orchestra.shell.crumb.agents": "agents",
-  "orchestra.shell.crumb.dock": "dock",
-  "orchestra.shell.crumb.workspaces": "workspaces",
-  "orchestra.shell.crumb.settings": "settings",
-  "orchestra.shell.crumb.plugins": "LLM Plugins",
+  // The window breadcrumb names built-in views in Title Case, matching the sidebar labels.
+  "orchestra.shell.crumb.home": "Home",
+  "orchestra.shell.crumb.agents": "Agents",
+  "orchestra.shell.crumb.dock": "MCP Dock",
+  "orchestra.shell.crumb.workspaces": "Workspaces",
+  "orchestra.shell.crumb.settings": "Settings",
+  "orchestra.shell.crumb.plugins": "Plugins",
   "orchestra.shell.wip.chip": "WIP",
   "orchestra.shell.wip.description": "Work in progress, revisit before production",
   "orchestra.shell.wip.page": "WIP · revisit before production",
@@ -67,16 +68,17 @@ export const SHELL_COPY_BR: Record<keyof typeof SHELL_COPY, string> = {
   "orchestra.shell.draft.close.description": "O texto e os anexos deste rascunho serão perdidos.",
   "orchestra.shell.draft.close.confirm": "Descartar rascunho",
   // The folder the desktop app creates in Documents on first launch.
-  "orchestra.shell.onboarding.defaultProject": "Default Project",
+  "orchestra.shell.onboarding.defaultProject": "Projeto padrão",
+  "orchestra.shell.onboarding.failed": "Não foi possível criar a pasta do projeto padrão. Tentaremos de novo na próxima abertura.",
   "orchestra.shell.settings.repository":
     "Abra um projeto para gerenciar esta seção. Geral, Servidores e Atalhos funcionam sem um.",
-  // The reference names built-in views by their lowercase view key in the window breadcrumb.
-  "orchestra.shell.crumb.home": "início",
-  "orchestra.shell.crumb.agents": "agentes",
-  "orchestra.shell.crumb.dock": "dock",
-  "orchestra.shell.crumb.workspaces": "workspaces",
-  "orchestra.shell.crumb.settings": "configurações",
-  "orchestra.shell.crumb.plugins": "Plugins de LLM",
+  // The window breadcrumb names built-in views in Title Case, matching the sidebar labels.
+  "orchestra.shell.crumb.home": "Início",
+  "orchestra.shell.crumb.agents": "Agentes",
+  "orchestra.shell.crumb.dock": "MCP Dock",
+  "orchestra.shell.crumb.workspaces": "Workspaces",
+  "orchestra.shell.crumb.settings": "Configurações",
+  "orchestra.shell.crumb.plugins": "Plugins",
   "orchestra.shell.wip.chip": "WIP",
   "orchestra.shell.wip.description": "Trabalho em andamento, revisar antes da produção",
   "orchestra.shell.wip.page": "WIP · revisar antes da produção",

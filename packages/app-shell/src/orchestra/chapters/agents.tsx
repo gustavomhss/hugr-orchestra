@@ -200,6 +200,11 @@ export default function Agents(props: ChapterPageProps) {
                 agents={query.data ?? []}
                 scope={getFilename(props.directory) || props.directory}
                 availability={availability}
+                modelName={(agent) =>
+                  agent.model && providers.isSuccess
+                    ? providers.data.all.get(agent.model.providerID)?.models[agent.model.modelID]?.name
+                    : undefined
+                }
                 onConfigure={(agent) => setState("editing", { agent })}
                 onChat={openChat}
                 opening={state.opening}

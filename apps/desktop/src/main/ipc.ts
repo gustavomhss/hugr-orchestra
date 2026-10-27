@@ -54,6 +54,7 @@ type Deps = {
     createDefaultProject: boolean,
     folderName?: string,
   ) => Promise<string | null> | string | null
+  confirmFirstLaunchOnboarding: () => Promise<void> | void
   isOldLayoutEligible: () => Promise<boolean> | boolean
   getDisplayBackend: () => Promise<string | null>
   setDisplayBackend: (backend: string | null) => Promise<void> | void
@@ -104,6 +105,7 @@ export function registerIpcHandlers(deps: Deps) {
     (_event: IpcMainInvokeEvent, createDefaultProject: boolean, folderName?: string) =>
       deps.finishFirstLaunchOnboarding(createDefaultProject, typeof folderName === "string" ? folderName : undefined),
   )
+  ipcMain.handle("confirm-first-launch-onboarding", () => deps.confirmFirstLaunchOnboarding())
   ipcMain.handle("is-old-layout-eligible", () => deps.isOldLayoutEligible())
   ipcMain.handle("get-display-backend", () => deps.getDisplayBackend())
   ipcMain.handle("set-display-backend", (_event: IpcMainInvokeEvent, backend: string | null) =>

@@ -25,7 +25,7 @@ if (process.env.GUARDRAILS_DOM !== "1") {
   const { rules, scenarios }: typeof import("@/orchestra/chapters/guardrails/fixture") = await import(
     solidDom("@/orchestra/chapters/guardrails/fixture", import.meta.dir)
   )
-  const { groupFindings }: typeof import("@/orchestra/chapters/guardrails/model") = await import(
+  const { groupFindings, ruleName }: typeof import("@/orchestra/chapters/guardrails/model") = await import(
     solidDom("@/orchestra/chapters/guardrails/model", import.meta.dir)
   )
 
@@ -105,7 +105,7 @@ if (process.env.GUARDRAILS_DOM !== "1") {
       .find((button) => button.textContent === "Go to the first")
       ?.click()
     await until(() => !!view.host.querySelector(".gr-detail-top h3"), view.host)
-    expect(view.host.querySelector(".gr-detail-top h3")?.textContent).toBe(first.rule)
+    expect(view.host.querySelector(".gr-detail-top h3")?.textContent).toBe(ruleName(first.rule))
     const clearedBy = served.find((rule) => rule.id === first.rule)?.clearedBy
     const lines = [...view.host.querySelectorAll(".gr-way .gr-copyline code")].map((code) => code.textContent)
     if (clearedBy === "fix") expect(lines).toEqual([])

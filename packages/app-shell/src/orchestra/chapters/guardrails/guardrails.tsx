@@ -16,6 +16,7 @@ import {
   groupFindings,
   groupRules,
   ignoreComment,
+  ruleName,
   splitPath,
   verdict,
   type Keyed,
@@ -232,7 +233,7 @@ export default function Guardrails(props: { directory: string; scenario?: Source
   const sentence = (finding: Finding) =>
     t(finding.line === null ? "orchestra.guardrails.sentence.file" : "orchestra.guardrails.sentence.line", {
       severity: severity(finding.severity),
-      rule: finding.rule,
+      rule: ruleName(finding.rule),
       path: finding.path,
       line: finding.line ?? 0,
       message: finding.message,
@@ -433,8 +434,9 @@ export default function Guardrails(props: { directory: string; scenario?: Source
           </button>
           <Chip severity={detail.finding.severity} />
           <h3 tabindex="-1" ref={(element) => (elements.detail = element)}>
-            <code>{detail.finding.rule}</code>
+            {ruleName(detail.finding.rule)}
           </h3>
+          <code class="gr-id" dir="ltr">{detail.finding.rule}</code>
           <p class="gr-detail-where">
             <Path value={detail.finding.path} />
             <span>
@@ -525,7 +527,8 @@ export default function Guardrails(props: { directory: string; scenario?: Source
               >
                 <span class="gr-fired-top">
                   <Chip severity={item.severity} />
-                  <code>{item.rule}</code>
+                  <span class="gr-name">{ruleName(item.rule)}</span>
+                  <code class="gr-id" dir="ltr">{item.rule}</code>
                   <span class="wf-count">{item.count}</span>
                 </span>
                 <small>{rule(item.rule)?.summary || rule(item.rule)?.message}</small>
@@ -587,7 +590,8 @@ export default function Guardrails(props: { directory: string; scenario?: Source
                                   >
                                     <span class="gr-row-top">
                                       <Chip severity={finding().severity} />
-                                      <code>{finding().rule}</code>
+                                      <span class="gr-name">{ruleName(finding().rule)}</span>
+                                      <code class="gr-id" dir="ltr">{finding().rule}</code>
                                       <span class="gr-row-line">
                                         {finding().line === null
                                           ? t("orchestra.guardrails.wholeFile")
@@ -626,8 +630,9 @@ export default function Guardrails(props: { directory: string; scenario?: Source
         </button>
         <Chip severity={panel.rule.severity} />
         <h3 tabindex="-1" ref={(element) => (elements.rule = element)}>
-          <code>{panel.rule.id}</code>
+          {ruleName(panel.rule.id)}
         </h3>
+        <code class="gr-id" dir="ltr">{panel.rule.id}</code>
         <p class="gr-detail-where">
           <span>{t(`orchestra.guardrails.group.${panel.rule.group}`)}</span>
           <span>{t(`orchestra.guardrails.kind.${panel.rule.kind}`)}</span>
@@ -761,7 +766,8 @@ export default function Guardrails(props: { directory: string; scenario?: Source
                             onClick={() => setStore("rule", item.id)}
                           >
                             <Chip severity={item.severity} />
-                            <code>{item.id}</code>
+                            <span class="gr-name">{ruleName(item.id)}</span>
+                            <code class="gr-id" dir="ltr">{item.id}</code>
                             <span>{item.message}</span>
                           </button>
                         </li>

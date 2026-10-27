@@ -42,7 +42,7 @@
 
 .orchestra-mcp-dialog::backdrop {
   background: var(--mx-backdrop);
-  backdrop-filter: blur(5px);
+  backdrop-filter: var(--orchestra-scrim-filter);
 }
 
 .orchestra-mcp-dialog form {

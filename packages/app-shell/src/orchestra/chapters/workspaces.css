@@ -6,7 +6,7 @@
 }
 /* The mock renders the path in the browser's default monospace at the paragraph size. */
 .orchestra-workspaces .mx-card code {
-  font-family: monospace;
+  font-family: var(--mx-mono);
   font-size: inherit;
   overflow-wrap: anywhere;
 }
@@ -34,7 +34,7 @@
 }
 .ws-dialog::backdrop {
   background: var(--mx-backdrop);
-  backdrop-filter: blur(5px);
+  backdrop-filter: var(--orchestra-scrim-filter);
 }
 .ws-dialog form {
   display: flex;

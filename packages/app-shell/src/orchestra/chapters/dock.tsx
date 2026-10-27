@@ -2,6 +2,7 @@ import { Match, Switch } from "solid-js"
 import { useLanguage } from "@/context/language"
 import { AppsPanel } from "@/pages/session/apps-panel"
 import { appDockController } from "@/pages/session/apps-panel-controller"
+import "./kit.css"
 import "./dock.css"
 
 // The Dock destination is another view of the window's App Dock: Chat's Apps tab and this page
@@ -20,22 +21,22 @@ export default function DockPage() {
         placeholder={
           <Switch>
             <Match when={dock.state.status === "loading"}>
-              <div class="zen-empty-state" role="status">
+              <div class="mx-empty" role="status">
                 <strong>{language.t("orchestra.dock.loading")}</strong>
               </div>
             </Match>
             <Match when={dock.state.status === "failed"}>
-              <div class="zen-empty-state" role="alert">
+              <div class="mx-empty" role="alert">
                 <strong>{language.t("orchestra.dock.loadFailed")}</strong>
-                <button class="zen-open-button" type="button" onClick={dock.retry}>
+                <button class="mx-btn" type="button" onClick={dock.retry}>
                   {language.t("orchestra.dock.retry")}
                 </button>
               </div>
             </Match>
             <Match when={dock.state.status === "ready" && dock.state.tabs.length === 0}>
-              <div class="zen-empty-state" role="status">
+              <div class="mx-empty" role="status">
                 <strong>{language.t("orchestra.dock.page.empty")}</strong>
-                <span>{language.t("orchestra.dock.page.emptyHint")}</span>
+                <p>{language.t("orchestra.dock.page.emptyHint")}</p>
               </div>
             </Match>
           </Switch>

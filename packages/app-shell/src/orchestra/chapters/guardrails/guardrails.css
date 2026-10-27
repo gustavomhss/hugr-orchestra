@@ -26,7 +26,7 @@
   gap: 6px;
   height: 30px;
   padding: 0 10px;
-  border-radius: 999px;
+  border-radius: var(--orchestra-radius-full);
   background: var(--mx-soft);
   box-shadow: inset 0 0 0 1px var(--mx-line);
   font-family: var(--mx-mono);
@@ -192,7 +192,7 @@
 
 .gr-status-copy h3 {
   margin: 0;
-  font: 600 18px/1.3 var(--mx-emphasis, inherit);
+  font: 600 var(--orchestra-font-size-xl)/1.3 var(--mx-emphasis, inherit);
   letter-spacing: -0.01em;
   color: var(--mx-strong);
 }
@@ -240,7 +240,7 @@
 
 .gr-stats dd {
   margin: 0;
-  font: 600 20px/1.1 var(--mx-emphasis, inherit);
+  font: 600 var(--orchestra-font-size-2xl)/1.1 var(--mx-emphasis, inherit);
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
   color: var(--mx-strong);
@@ -379,7 +379,6 @@
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--mx-strong) 4%, transparent), transparent),
     color-mix(in srgb, var(--mx-raised) 88%, transparent);
-  backdrop-filter: blur(12px) saturate(1.2);
   box-shadow: inset 0 -1px 0 var(--mx-line);
   font-size: var(--orchestra-font-size-xs);
   color: var(--mx-strong);
@@ -473,10 +472,27 @@
   min-width: 0;
 }
 
-.gr-row-top code {
-  font-family: var(--mx-mono);
-  font-size: var(--orchestra-font-size-xs);
+/* A rule leads with its plain name; the id is the file name, small and secondary. */
+.gr-name {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--orchestra-font-size-sm);
+  font-weight: 600;
   color: var(--mx-strong);
+}
+
+.gr-id {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--mx-mono);
+  font-size: var(--orchestra-font-size-2xs);
+  color: var(--mx-dim);
 }
 
 .gr-row-line {
@@ -507,7 +523,7 @@
   flex: none;
   height: 20px;
   padding: 0 8px 0 7px;
-  border-radius: 999px;
+  border-radius: var(--orchestra-radius-full);
   background: color-mix(in srgb, var(--gr-chip) 12%, transparent);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gr-chip) 28%, transparent);
   font-size: var(--orchestra-font-size-2xs);
@@ -530,7 +546,7 @@
 }
 
 .gr-chip[data-severity="gate"]::before {
-  border-radius: 2px;
+  border-radius: var(--orchestra-radius-xs);
   box-shadow: 0 0 6px color-mix(in srgb, var(--mx-bad) 70%, transparent);
 }
 
@@ -607,17 +623,6 @@
   min-width: 0;
 }
 
-.gr-fired-top code {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-family: var(--mx-mono);
-  font-size: var(--orchestra-font-size-xs);
-  color: var(--mx-strong);
-}
-
 .gr-fired-row small {
   display: -webkit-box;
   overflow: hidden;
@@ -667,7 +672,7 @@
   min-width: 18px;
   height: 18px;
   margin-inline-end: 4px;
-  border-radius: 4px;
+  border-radius: var(--orchestra-radius-xs);
   background: var(--mx-soft);
   box-shadow: inset 0 0 0 1px var(--mx-line), inset 0 -1px 0 var(--mx-line);
   font: 600 var(--orchestra-font-size-2xs) var(--mx-mono);
@@ -687,7 +692,7 @@
 .gr-detail-top h3 {
   margin: 0;
   max-width: 100%;
-  font: 600 16px/1.3 var(--mx-mono);
+  font: 600 var(--orchestra-font-size-xl)/1.3 var(--mx-sans);
   letter-spacing: -0.01em;
   color: var(--mx-strong);
   overflow-wrap: anywhere;
@@ -701,10 +706,6 @@
 .gr-detail-top h3:focus-visible {
   text-decoration: underline 1px color-mix(in srgb, var(--mx-blue) 70%, transparent);
   text-underline-offset: 4px;
-}
-
-.gr-detail-top h3 code {
-  font: inherit;
 }
 
 .gr-detail-where {
@@ -768,7 +769,7 @@
 
 .gr-excerpt mark {
   padding: 1px 2px;
-  border-radius: 3px;
+  border-radius: var(--orchestra-radius-xs);
   background: color-mix(in srgb, var(--mx-bad) 22%, transparent);
   box-shadow: inset 0 -1px 0 var(--mx-bad);
   color: inherit;
@@ -820,7 +821,7 @@
   place-items: center;
   width: 20px;
   height: 20px;
-  border-radius: 50%;
+  border-radius: var(--orchestra-radius-full);
   background: var(--mx-soft);
   box-shadow: inset 0 0 0 1px var(--mx-line);
   font-size: var(--orchestra-font-size-2xs);
@@ -1000,13 +1001,15 @@
   justify-self: start;
 }
 
-.gr-rule code {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-family: var(--mx-mono);
-  font-size: var(--orchestra-font-size-xs);
-  color: var(--mx-strong);
+.gr-rule .gr-chip {
+  grid-row: 1 / span 3;
+  align-self: start;
+}
+
+.gr-rule .gr-name,
+.gr-rule .gr-id {
+  grid-column: 2;
+  flex: none;
 }
 
 .gr-rule span:last-child {

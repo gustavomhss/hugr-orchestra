@@ -7,12 +7,22 @@ import { useSpring } from "@orchestra/ui/motion-spring"
 import { TextReveal } from "@orchestra/ui/text-reveal"
 import { TextStrikethrough } from "@orchestra/ui/text-strikethrough"
 import { createResizeObserver } from "@solid-primitives/resize-observer"
-import { Index, createEffect, createMemo } from "solid-js"
+import { Index, createEffect, createMemo, createSignal, onCleanup } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 
 const doneToken = "\u0000done\u0000"
 const totalToken = "\u0000total\u0000"
+
+// The spring and the row transitions are driven from script, so CSS cannot gate them; read the preference here.
+function createReducedMotion() {
+  const query = typeof matchMedia === "function" ? matchMedia("(prefers-reduced-motion: reduce)") : undefined
+  const [reduced, setReduced] = createSignal(query?.matches ?? false)
+  const update = () => setReduced(query?.matches ?? false)
+  query?.addEventListener("change", update)
+  onCleanup(() => query?.removeEventListener("change", update))
+  return reduced
+}
 
 function dot(status: Todo["status"]) {
   if (status !== "in_progress") return undefined
@@ -73,7 +83,8 @@ export function SessionTodoDock(props: {
   const collapse = useSpring(() => (props.collapsed ? 1 : 0), { visualDuration: 0.3, bounce: 0 })
   const dock = createMemo(() => Math.max(0, Math.min(1, props.dockProgress)))
   const shut = createMemo(() => 1 - dock())
-  const value = createMemo(() => Math.max(0, Math.min(1, collapse())))
+  const reduced = createReducedMotion()
+  const value = createMemo(() => Math.max(0, Math.min(1, reduced() ? (props.collapsed ? 1 : 0) : collapse())))
   const hide = createMemo(() => Math.max(value(), shut()))
   const off = createMemo(() => hide() > 0.98)
   const turn = createMemo(() => Math.max(0, Math.min(1, value())))
@@ -114,7 +125,7 @@ export function SessionTodoDock(props: {
           }}
         >
           <span
-            class="cursor-default inline-flex items-baseline shrink-0 overflow-visible font-[440] text-[13px] leading-5 tracking-[-0.04px] text-v2-text-text-muted"
+            class="cursor-default inline-flex items-baseline shrink-0 overflow-visible font-[440] text-[length:var(--orchestra-font-size-md)] leading-5 tracking-[-0.04px] text-v2-text-text-muted"
             aria-label={label()}
             style={{
               "--tool-motion-odometer-ms": "600ms",
@@ -146,7 +157,7 @@ export function SessionTodoDock(props: {
             }}
           >
             <TextReveal
-              class="cursor-default text-[13px] font-[440] leading-5 tracking-[-0.04px] text-v2-text-text-faint"
+              class="cursor-default text-[length:var(--orchestra-font-size-md)] font-[440] leading-5 tracking-[-0.04px] text-v2-text-text-faint"
               text={props.collapsed ? preview() : undefined}
               duration={600}
               travel={25}
@@ -197,6 +208,7 @@ export function SessionTodoDock(props: {
 }
 
 function TodoList(props: { todos: Todo[] }) {
+  const reduced = createReducedMotion()
   const [store, setStore] = createStore({
     stuck: false,
   })
@@ -222,7 +234,7 @@ function TodoList(props: { todos: Todo[] }) {
               style={{
                 "--checkbox-align": "flex-start",
                 "--checkbox-offset": "1px",
-                transition: "opacity 220ms var(--tool-motion-ease, cubic-bezier(0.22, 1, 0.36, 1))",
+                transition: reduced() ? "none" : "opacity 220ms var(--tool-motion-ease, cubic-bezier(0.22, 1, 0.36, 1))",
                 opacity: todo().status === "pending" ? "0.94" : "1",
               }}
             >
@@ -232,8 +244,9 @@ function TodoList(props: { todos: Todo[] }) {
                 class="text-14-regular min-w-0 break-words"
                 style={{
                   "line-height": "var(--line-height-normal)",
-                  transition:
-                    "color 220ms var(--tool-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)), opacity 220ms var(--tool-motion-ease, cubic-bezier(0.22, 1, 0.36, 1))",
+                  transition: reduced()
+                    ? "none"
+                    : "color 220ms var(--tool-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)), opacity 220ms var(--tool-motion-ease, cubic-bezier(0.22, 1, 0.36, 1))",
                   color:
                     todo().status === "completed" || todo().status === "cancelled"
                       ? "var(--text-weak)"
@@ -246,7 +259,7 @@ function TodoList(props: { todos: Todo[] }) {
         </Index>
       </div>
       <div
-        class="pointer-events-none absolute top-0 left-0 right-0 h-4 transition-opacity duration-150"
+        class="pointer-events-none absolute top-0 left-0 right-0 h-4 transition-opacity duration-150 motion-reduce:transition-none"
         style={{
           background: "linear-gradient(to bottom, var(--background-base), transparent)",
           opacity: store.stuck ? 1 : 0,

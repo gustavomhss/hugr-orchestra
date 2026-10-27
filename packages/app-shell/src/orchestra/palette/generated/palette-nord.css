@@ -326,10 +326,10 @@ html[data-orchestra-palette="nord"][data-color-scheme] body[data-new-layout] [da
     color: var(--orchestra-tab-hover-text);
   }
   [data-orchestra-palette="nord"] [data-orchestra-tabs] [data-titlebar-tab]:is([data-state="pressed"], [data-editing="true"]) {
-    border-color: var(--orchestra-glass-border);
-    background: var(--orchestra-grain), var(--orchestra-glass-sheen), var(--orchestra-glass-background);
+    border-color: var(--orchestra-border);
+    background: var(--orchestra-surface-active);
     color: var(--orchestra-tab-active-text);
-    box-shadow: var(--orchestra-glass-shadow);
+    box-shadow: none;
   }
   [data-orchestra-palette="nord"] #orchestra-session-tabs [data-titlebar-tab-link] {
     color: inherit;
@@ -1635,6 +1635,9 @@ html[data-orchestra-palette="nord"][data-color-scheme] body[data-mx-kit] {
   fill: none;
   stroke: currentColor;
 }
+[data-orchestra-palette="nord"] .mx-card-foot .agents-note {
+  color: var(--mx-dim);
+}
 [data-orchestra-palette="nord"] .agents-dialog::backdrop {
   background: var(--mx-backdrop);
 }
@@ -1970,17 +1973,18 @@ html[data-orchestra-palette="nord"][data-color-scheme] body[data-new-layout] .or
   --zen-focus: #88bbce;
 }
 [data-orchestra-palette="nord"] .zen-dock-modes {
-  border-block-end: 1px solid var(--border-weak);
+  border: 1px solid var(--mx-line, var(--border-weak));
+  background: var(--mx-soft, transparent);
 }
 [data-orchestra-palette="nord"] .zen-dock-modes button {
-  border: 1px solid transparent;
-  color: var(--text-weak);
+  border: 0;
+  color: var(--mx-dim, var(--text-weak));
   background: transparent;
 }
 [data-orchestra-palette="nord"] .zen-dock-modes button.is-active {
-  color: var(--text-strong);
-  background: var(--surface-raised-stronger);
-  border-color: var(--border-strong);
+  color: var(--mx-strong, var(--text-strong));
+  background: var(--mx-raised, var(--surface-raised-stronger));
+  box-shadow: var(--mx-highlight, none);
 }
 [data-orchestra-palette="nord"] .zen-dock-modes button:focus-visible,
 [data-orchestra-palette="nord"] .zen-window-picker:focus-visible {
@@ -2091,6 +2095,9 @@ html[data-orchestra-palette="nord"][data-color-scheme] body[data-new-layout] .or
   outline: 0;
   color: var(--zen-text);
   background: var(--zen-input);
+}
+[data-orchestra-palette="nord"] .zen-tool-group:last-child {
+  border-inline-start: 1px solid var(--mx-line, var(--border-weak));
 }
 [data-orchestra-palette="nord"] .zen-nav-button,
 [data-orchestra-palette="nord"] .zen-open-button {

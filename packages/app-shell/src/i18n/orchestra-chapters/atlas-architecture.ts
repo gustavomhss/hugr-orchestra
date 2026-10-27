@@ -369,7 +369,7 @@ export const ATLAS_ARCHITECTURE_COPY_BR: Record<keyof typeof ATLAS_ARCHITECTURE_
   "orchestra.atlas.architecture.chapter.overview": "Visão geral",
   "orchestra.atlas.architecture.chapter.write": "Escrever",
   "orchestra.atlas.architecture.chapter.read": "Ler",
-  "orchestra.atlas.architecture.chapter.store": "Store",
+  "orchestra.atlas.architecture.chapter.store": "Armazenamento",
   "orchestra.atlas.architecture.chapter.identity": "Identidade",
   "orchestra.atlas.architecture.chapter.packages": "Pacotes",
   "orchestra.atlas.architecture.chapter.portable": "Portável",

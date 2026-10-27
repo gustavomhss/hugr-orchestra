@@ -7,15 +7,15 @@ const copy: Record<string, string> = { ...dict, ...ORCHESTRA_COPY }
 const crumb = (route: Parameters<typeof breadcrumbLabel>[0]) => copy[breadcrumbLabel(route)]
 
 describe("breadcrumbLabel", () => {
-  test("names built-in views by their lowercase reference view key", () => {
-    expect(crumb({ type: "home" })).toBe("home")
-    expect(crumb({ type: "session", sessionId: "ses_1" })).toBe("home")
-    expect(crumb({ type: "draft", draftID: "draft_1" })).toBe("home")
-    expect(crumb({ type: "dir-new-sesssion", dir: "/repo", dirBase64: "L3JlcG8" })).toBe("home")
-    expect(crumb({ type: "chapter", chapter: "agents" })).toBe("agents")
-    expect(crumb({ type: "chapter", chapter: "dock" })).toBe("dock")
-    expect(crumb({ type: "chapter", chapter: "workspaces" })).toBe("workspaces")
-    expect(crumb({ type: "chapter", chapter: "settings" })).toBe("settings")
+  test("names built-in views in Title Case", () => {
+    expect(crumb({ type: "home" })).toBe("Home")
+    expect(crumb({ type: "session", sessionId: "ses_1" })).toBe("Home")
+    expect(crumb({ type: "draft", draftID: "draft_1" })).toBe("Home")
+    expect(crumb({ type: "dir-new-sesssion", dir: "/repo", dirBase64: "L3JlcG8" })).toBe("Home")
+    expect(crumb({ type: "chapter", chapter: "agents" })).toBe("Agents")
+    expect(crumb({ type: "chapter", chapter: "dock" })).toBe("MCP Dock")
+    expect(crumb({ type: "chapter", chapter: "workspaces" })).toBe("Workspaces")
+    expect(crumb({ type: "chapter", chapter: "settings" })).toBe("Settings")
     expect(crumb({ type: "chapter", chapter: "actions" })).toBe("Actions")
   })
 
@@ -27,7 +27,7 @@ describe("breadcrumbLabel", () => {
     ).toEqual([
       "MCP",
       "Skills",
-      "LLM Plugins",
+      "Plugins",
       "Workflows",
       "Hooks",
       "Actions",
@@ -39,7 +39,7 @@ describe("breadcrumbLabel", () => {
   })
 
   test("falls back to home for an unknown chapter and resolves every navigation chapter", () => {
-    expect(crumb({ type: "chapter", chapter: "missing" })).toBe("home")
+    expect(crumb({ type: "chapter", chapter: "missing" })).toBe("Home")
     for (const item of navigation.filter((entry) => entry.chapter))
       expect(crumb({ type: "chapter", chapter: item.id })).toBeString()
   })

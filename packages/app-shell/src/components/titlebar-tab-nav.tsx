@@ -311,7 +311,7 @@ export function TabNavItem(props: {
         />
         <Show when={branch()}>
           {(value) => (
-            <bdi data-slot="tab-branch" dir="ltr">
+            <bdi data-slot="tab-branch" dir="ltr" title={value()}>
               {value()}
             </bdi>
           )}
@@ -447,13 +447,14 @@ export function DraftTabItem(props: {
         <span
           data-titlebar-tab-title
           dir="auto"
+          title={props.title}
           class="min-w-0 flex-1 overflow-hidden text-clip whitespace-nowrap outline-none leading-4"
         >
           {props.title}
         </span>
         <Show when={props.branch}>
           {(branch) => (
-            <bdi data-slot="tab-branch" dir="ltr">
+            <bdi data-slot="tab-branch" dir="ltr" title={branch()}>
               {branch()}
             </bdi>
           )}

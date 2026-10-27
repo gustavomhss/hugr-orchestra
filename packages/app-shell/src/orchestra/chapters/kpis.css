@@ -160,9 +160,15 @@
   white-space: nowrap;
   overflow: hidden;
 }
+/* A long note wraps to two lines before it is cut; the full text is in the span's tooltip. */
 .home-kpi-foot > span:last-child {
+  display: -webkit-box;
+  min-inline-size: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 .home-delta {
   color: var(--orchestra-success);

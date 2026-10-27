@@ -1,3 +1,4 @@
+import { Icon } from "@orchestra/ui/icon"
 import { useLanguage } from "@/context/language"
 import type { AppDockController } from "./apps-panel-controller"
 import type { createLinuxMenuController } from "./linux-menu"
@@ -22,7 +23,7 @@ export function DockModes(props: Props & { compact?: boolean }) {
             class={linux() ? "is-active" : ""}
             onClick={() => (linux() ? props.dock.showBrowser() : void props.menu.run({ type: "open" }))}
           >
-            <span aria-hidden="true">▣</span>
+            <Icon name="console" size="small" />
             {language.t("appDock.linux.workspace")}
           </button>
         </div>
@@ -35,7 +36,7 @@ export function DockModes(props: Props & { compact?: boolean }) {
             class={!linux() ? "is-active" : ""}
             onClick={() => props.dock.showBrowser()}
           >
-            <span aria-hidden="true">◎</span>
+            <Icon name="window-cursor" size="small" />
             {language.t("appDock.browser.title")}
           </button>
           <button
@@ -46,7 +47,7 @@ export function DockModes(props: Props & { compact?: boolean }) {
             class={linux() ? "is-active" : ""}
             onClick={() => void props.menu.run({ type: "open" })}
           >
-            <span aria-hidden="true">▣</span>
+            <Icon name="console" size="small" />
             {language.t("appDock.linux.workspace")}
           </button>
         </div>

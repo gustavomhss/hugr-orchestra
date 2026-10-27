@@ -141,7 +141,7 @@ html[data-color-scheme="light"] body[data-new-layout] {
 }
 .wf-scope dialog.mx-dialog::backdrop {
   background: var(--mx-backdrop);
-  backdrop-filter: blur(5px);
+  backdrop-filter: var(--orchestra-scrim-filter);
 }
 .wf-scope .mx-dialog form {
   display: flex;
@@ -368,13 +368,13 @@ html[data-color-scheme="light"] body[data-new-layout] {
   font-size: var(--orchestra-font-size-sm);
   line-height: 1.6;
 }
-.wf-scope .wf-xlink a {
+.wf-scope .wf-xlink .mx-link {
   color: var(--mx-blue);
   text-decoration: underline;
   text-decoration-color: color-mix(in srgb, var(--mx-blue) 40%, transparent);
   text-underline-offset: 3px;
 }
-.wf-scope .wf-xlink a:hover {
+.wf-scope .wf-xlink .mx-link:hover {
   text-decoration-color: currentColor;
 }
 /* Retained drafts and a failed refresh sit above the list as one line with their actions. */
@@ -422,7 +422,7 @@ html[data-color-scheme="light"] body[data-new-layout] {
 }
 .mx-row small.wf-oneline {
   overflow: hidden;
-  font: 10px/15px var(--mx-mono);
+  font: var(--orchestra-font-size-2xs)/15px var(--mx-mono);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -437,7 +437,7 @@ html[data-color-scheme="light"] body[data-new-layout] {
   gap: 5px;
   margin: 0 0 14px;
   color: var(--mx-dim);
-  font: 10px/16px var(--mx-mono);
+  font: var(--orchestra-font-size-2xs)/16px var(--mx-mono);
 }
 .wf-chain i {
   font-style: normal;
@@ -612,7 +612,7 @@ html[data-color-scheme="light"] body[data-new-layout] {
 }
 .hk-order-n {
   color: var(--mx-dim);
-  font: 11px var(--mx-mono);
+  font: var(--orchestra-font-size-xs) var(--mx-mono);
 }
 .hk-order-name {
   flex: 1;
@@ -715,7 +715,7 @@ html[data-color-scheme="light"] .wf-editor {
   border-radius: var(--orchestra-radius-sm);
   background: transparent;
   color: var(--mx-strong);
-  font: 600 13px var(--mx-emphasis);
+  font: 600 var(--orchestra-font-size-md) var(--mx-emphasis);
   text-overflow: ellipsis;
 }
 .wf-name:hover {
@@ -783,7 +783,7 @@ html[data-color-scheme="light"] .wf-editor {
   border-radius: var(--orchestra-radius-sm);
   background: transparent;
   color: var(--mx-bad);
-  font: 10.5px var(--mx-mono);
+  font: var(--orchestra-font-size-2xs) var(--mx-mono);
   cursor: pointer;
 }
 .wf-issues:hover {
@@ -972,7 +972,7 @@ html[data-color-scheme="light"] .wf-editor {
 }
 .wf-port-label {
   fill: var(--mx-dim);
-  font: 10px var(--mx-sans);
+  font: var(--orchestra-font-size-2xs) var(--mx-sans);
 }
 .wf-group {
   position: absolute;
@@ -1005,7 +1005,7 @@ html[data-color-scheme="light"] .wf-editor {
 .wf-group-head small {
   flex: none;
   color: var(--mx-dim);
-  font: 10px var(--mx-mono);
+  font: var(--orchestra-font-size-2xs) var(--mx-mono);
   white-space: nowrap;
 }
 .wf-group-head .mx-link {
@@ -1021,7 +1021,7 @@ html[data-color-scheme="light"] .wf-editor {
   border-radius: var(--orchestra-radius-sm);
   background: var(--mx-modal);
   color: var(--mx-strong);
-  font: 600 11.5px var(--mx-emphasis);
+  font: 600 var(--orchestra-font-size-xs) var(--mx-emphasis);
   outline: 0;
 }
 /* A narrow phase box has no room for the buttons next to its name, so they open up on hover or focus; a wide one
@@ -1188,7 +1188,7 @@ html[data-color-scheme="light"] .wf-editor {
   margin-block-start: 2px;
   overflow: hidden;
   color: var(--mx-dim);
-  font: 9.5px/13px var(--mx-mono);
+  font: var(--orchestra-font-size-2xs)/13px var(--mx-mono);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   line-clamp: 2;
@@ -1469,7 +1469,7 @@ html[data-color-scheme="light"] .wf-editor {
   min-inline-size: 46px;
   justify-content: center;
   color: var(--mx-dim);
-  font: 10.5px var(--mx-mono);
+  font: var(--orchestra-font-size-2xs) var(--mx-mono);
 }
 .wf-rail {
   position: absolute;
@@ -1573,7 +1573,7 @@ html[data-color-scheme="light"] .wf-editor {
 .wf-drawer-head h2 {
   margin: 0;
   color: var(--mx-strong);
-  font: 600 14px var(--mx-emphasis);
+  font: 600 var(--orchestra-font-size-lg) var(--mx-emphasis);
   letter-spacing: -0.015em;
 }
 .wf-drawer-head p {
@@ -1653,7 +1653,7 @@ html[data-color-scheme="light"] .wf-editor {
 }
 .wf-pick strong {
   display: block;
-  font: 600 12px var(--mx-emphasis);
+  font: 600 var(--orchestra-font-size-sm) var(--mx-emphasis);
 }
 .wf-pick small {
   display: block;
@@ -1685,7 +1685,7 @@ html[data-color-scheme="light"] .wf-editor {
   position: absolute;
   inset: 0;
   background: var(--mx-backdrop);
-  backdrop-filter: blur(5px);
+  backdrop-filter: var(--orchestra-scrim-filter);
 }
 .wf-modal-layer > .mx-dialog {
   position: relative;
@@ -1694,25 +1694,6 @@ html[data-color-scheme="light"] .wf-editor {
 }
 .wf-canvas[data-readonly="true"] :is(.wf-rail, .wf-node-tools, .wf-stub, .wf-edge-tools, .wf-port, .wf-ctx) {
   display: none;
-}
-.wf-scrim {
-  position: absolute;
-  inset: 0;
-  z-index: 30;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-  background: var(--mx-backdrop);
-  backdrop-filter: blur(5px);
-  animation: wf-fade var(--orchestra-duration-fast) var(--orchestra-ease-out);
-}
-@keyframes wf-fade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
 }
 .wf-ndv {
   position: relative;
@@ -1823,7 +1804,7 @@ html[data-color-scheme="light"] .wf-editor {
 .wf-col-head h3 {
   margin: 0;
   color: var(--mx-dim);
-  font: 10px var(--mx-sans);
+  font: var(--orchestra-font-size-2xs) var(--mx-sans);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -1899,7 +1880,7 @@ html[data-color-scheme="light"] .wf-editor {
   align-items: center;
   gap: 8px;
   color: var(--mx-strong);
-  font: 11px var(--mx-mono);
+  font: var(--orchestra-font-size-xs) var(--mx-mono);
   overflow-wrap: anywhere;
 }
 .wf-check-top .mx-badge {
@@ -1908,7 +1889,7 @@ html[data-color-scheme="light"] .wf-editor {
 .wf-check pre {
   margin: 7px 0 0;
   color: var(--mx-dim);
-  font: 10.5px/1.55 var(--mx-mono);
+  font: var(--orchestra-font-size-2xs)/1.55 var(--mx-mono);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -1961,7 +1942,7 @@ html[data-color-scheme="light"] .wf-editor {
   border-radius: var(--orchestra-radius-sm);
   background: transparent;
   color: var(--mx-strong);
-  font: 11px/1.6 var(--mx-mono);
+  font: var(--orchestra-font-size-xs)/1.6 var(--mx-mono);
   outline: 0;
 }
 .wf-ctl-top input {
@@ -2004,7 +1985,7 @@ html[data-color-scheme="light"] .wf-editor {
   block-size: 28px;
   margin-block-end: 7px;
   padding: 0 9px;
-  font: 11.5px/1.5 var(--mx-sans);
+  font: var(--orchestra-font-size-xs)/1.5 var(--mx-sans);
 }
 .wf-ctl-params {
   margin-block-start: 8px;
@@ -2018,7 +1999,7 @@ html[data-color-scheme="light"] .wf-editor {
 }
 .wf-ctl-params code {
   color: var(--mx-strong);
-  font: 10.5px/1.5 var(--mx-mono);
+  font: var(--orchestra-font-size-2xs)/1.5 var(--mx-mono);
 }
 .wf-proto {
   margin-block-end: 8px;
@@ -2052,7 +2033,7 @@ html[data-color-scheme="light"] .wf-editor {
 .wf-proto > button small {
   margin-inline-start: auto;
   color: var(--mx-dim);
-  font: 10px var(--mx-mono);
+  font: var(--orchestra-font-size-2xs) var(--mx-mono);
 }
 .wf-proto > button .wf-ic {
   inline-size: 12px;
@@ -2073,7 +2054,7 @@ html[data-color-scheme="light"] .wf-editor {
   border-radius: var(--orchestra-radius-sm);
   background: transparent;
   color: var(--mx-strong);
-  font: 11.5px/1.65 var(--mx-mono);
+  font: var(--orchestra-font-size-md)/1.6 var(--mx-sans);
   outline: 0;
   resize: vertical;
 }
@@ -2109,7 +2090,7 @@ html[data-color-scheme="light"] .wf-editor {
   color: var(--mx-warm);
 }
 .wf-ndv .mx-field textarea.prose {
-  font: 12px/1.6 var(--mx-sans);
+  font: var(--orchestra-font-size-sm)/1.6 var(--mx-sans);
 }
 /* Without run data the parameters stand alone, in a dialog sized for one column. */
 .wf-ndv.single {
@@ -2190,12 +2171,12 @@ html[data-color-scheme="light"] .wf-editor {
   outline-offset: -2px;
 }
 .wf-run b {
-  font: 600 12px var(--mx-emphasis);
+  font: 600 var(--orchestra-font-size-sm) var(--mx-emphasis);
 }
 .wf-run em {
   font-style: normal;
   color: var(--mx-dim);
-  font: 10px var(--mx-mono);
+  font: var(--orchestra-font-size-2xs) var(--mx-mono);
 }
 .wf-run small {
   grid-column: 2 / 4;
@@ -2229,13 +2210,13 @@ html[data-color-scheme="light"] .wf-editor {
   gap: 10px;
   margin: 0;
   color: var(--mx-strong);
-  font: 600 20px var(--mx-emphasis);
+  font: 600 var(--orchestra-font-size-2xl) var(--mx-emphasis);
   letter-spacing: -0.025em;
 }
 .wf-rhead p {
   margin: 6px 0 0;
   color: var(--mx-dim);
-  font: 10.5px/1.6 var(--mx-mono);
+  font: var(--orchestra-font-size-2xs)/1.6 var(--mx-mono);
 }
 .wf-rhead-actions {
   display: flex;
@@ -2257,7 +2238,7 @@ html[data-color-scheme="light"] .wf-editor {
   padding: 11px 15px;
   border-block-end: 1px solid var(--wf-warm-rule);
   color: var(--wf-warm-title);
-  font: 600 13px var(--mx-emphasis);
+  font: 600 var(--orchestra-font-size-md) var(--mx-emphasis);
 }
 .wf-wait-head .wf-ic {
   color: var(--mx-warm);
@@ -2274,7 +2255,7 @@ html[data-color-scheme="light"] .wf-editor {
   border-radius: var(--orchestra-radius-sm);
   background: var(--wf-well);
   color: var(--mx-warm);
-  font: 11px var(--mx-mono);
+  font: var(--orchestra-font-size-xs) var(--mx-mono);
 }
 .wf-wait-body textarea {
   display: block;
@@ -2286,7 +2267,7 @@ html[data-color-scheme="light"] .wf-editor {
   border-radius: var(--orchestra-radius-sm);
   background: var(--wf-well-input);
   color: var(--mx-strong);
-  font: 12px/1.5 var(--mx-sans);
+  font: var(--orchestra-font-size-sm)/1.5 var(--mx-sans);
   outline: 0;
   resize: vertical;
 }
@@ -2344,7 +2325,7 @@ html[data-color-scheme="light"] .wf-editor {
   display: block;
   overflow: hidden;
   color: var(--mx-strong);
-  font: 600 11.5px var(--mx-emphasis);
+  font: 600 var(--orchestra-font-size-xs) var(--mx-emphasis);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -2376,11 +2357,11 @@ html[data-color-scheme="light"] .wf-editor {
 }
 .wf-steps .mx-row small {
   margin-block-start: 2px;
-  font: 10px var(--mx-mono);
+  font: var(--orchestra-font-size-2xs) var(--mx-mono);
 }
 .wf-steps .num {
   color: var(--mx-strong);
-  font: 11px var(--mx-mono);
+  font: var(--orchestra-font-size-xs) var(--mx-mono);
   text-align: end;
 }
 .wf-steps .num.warm {
@@ -2418,7 +2399,7 @@ html[data-color-scheme="light"] .wf-editor {
 }
 .wf-audit .mx-row span:last-child {
   color: var(--mx-strong);
-  font: 11px var(--mx-mono);
+  font: var(--orchestra-font-size-xs) var(--mx-mono);
 }
 .wf-keys {
   display: grid;
@@ -2442,7 +2423,7 @@ html[data-color-scheme="light"] .wf-editor {
   padding: 0 4px;
   border: 1px solid var(--orchestra-border);
   border-radius: var(--orchestra-radius-xs);
-  font: 10px var(--mx-mono);
+  font: var(--orchestra-font-size-2xs) var(--mx-mono);
   color: inherit;
 }
 .wf-mark-glyph svg {

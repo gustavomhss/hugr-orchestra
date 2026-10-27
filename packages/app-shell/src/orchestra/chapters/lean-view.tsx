@@ -261,7 +261,7 @@ function LeanItems(props: LeanViewProps) {
           </tbody>
         </table>
         <Show when={!rows().length}>
-          <p class="lean-empty" role="status">
+          <p class="mx-empty lean-empty" role="status">
             {language.t(props.data?.items.length ? "lean.page.noMatches" : "lean.page.empty")}
           </p>
         </Show>

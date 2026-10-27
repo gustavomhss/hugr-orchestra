@@ -104,6 +104,12 @@ export function ignoreComment(rule: string, reason: string) {
   return `guardrail-ignore: ${rule} ${reason}`
 }
 
+// The rule id is a file name ("commit-title-format"); the screen leads with the same words as a title.
+export function ruleName(id: string) {
+  const words = id.replace(/[-_]+/g, " ").trim()
+  return words.charAt(0).toUpperCase() + words.slice(1)
+}
+
 export function approvalLabel(rule: string) {
   return `guardrail-approved:${rule}`
 }

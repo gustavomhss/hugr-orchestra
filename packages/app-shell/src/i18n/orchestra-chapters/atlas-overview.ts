@@ -296,7 +296,7 @@ export const ATLAS_OVERVIEW_COPY_BR: Record<keyof typeof ATLAS_OVERVIEW_COPY, st
   "orchestra.atlas.overview.health.lang.rb": "Ruby",
   "orchestra.atlas.overview.health.memory": "Memória",
   "orchestra.atlas.overview.health.memory.line": "Legível · cada linha aceita",
-  "orchestra.atlas.overview.health.memory.store": "Store",
+  "orchestra.atlas.overview.health.memory.store": "Armazenamento",
   "orchestra.atlas.overview.health.memory.store.text": "<code>.atlas/memory.jsonl</code> em cada worktree, somente acréscimo",
   "orchestra.atlas.overview.health.memory.state": "Estado",
   "orchestra.atlas.overview.health.memory.complete": "completo",

@@ -128,9 +128,15 @@ export function ClaudeModeSection() {
         <div class="mx-row" data-providers-claude-account>
           <div class="mx-grow">
             <strong>{language.t("orchestra.providers.claudeMode.account")}</strong>
-            <Show when={state.account?.signedIn}>
-              <small>{account()}</small>
-            </Show>
+            <small>
+              {state.account?.signedIn
+                ? account()
+                : language.t(
+                    state.loaded
+                      ? "orchestra.providers.claudeMode.notConnected"
+                      : "orchestra.providers.claudeMode.checking",
+                  )}
+            </small>
             <Show when={state.signing}>
               <small role="status">{language.t("orchestra.providers.claudeMode.waiting")}</small>
             </Show>

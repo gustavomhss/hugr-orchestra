@@ -321,7 +321,7 @@
   cursor: pointer;
   transition: background var(--orchestra-duration-fast) var(--orchestra-ease-out);
 }
-.fe-table-row:last-child {
+.fe-table-item:last-child .fe-table-row {
   border-block-end: 0;
 }
 .fe-table-row:hover {
@@ -345,11 +345,6 @@
 .fe-num {
   font-variant-numeric: tabular-nums;
   text-align: end;
-}
-.fe-empty {
-  padding: 28px 18px;
-  color: var(--mx-dim);
-  text-align: center;
 }
 .fe-more {
   display: flex;

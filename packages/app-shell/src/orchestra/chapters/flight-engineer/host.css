@@ -92,52 +92,28 @@
   text-align: center;
 }
 
-/* Modal host: float glass over a scrim, never glass on glass (the page behind is covered by the scrim). */
-.fe-modal {
+/* Modal host: the kit's `.mx-dialog` (head, body, foot). Only the native-dialog centering lives here. */
+.mx-dialog.fe-modal:not([open]) {
+  display: none;
+}
+.mx-dialog.fe-modal {
   /* A global reset zeroes the margin the user agent uses to centre a modal dialog. */
   margin: auto;
   inset: 0;
   inline-size: min(600px, calc(100vw - 48px));
-  max-block-size: calc(100vh - 64px);
-  padding: 28px 28px 22px;
-  overflow: auto;
-  border: 1px solid var(--orchestra-glass-border);
-  border-radius: var(--orchestra-radius-xl);
-  background: var(--orchestra-float-background);
-  backdrop-filter: var(--orchestra-float-filter);
-  color: var(--mx-dim);
-  font-family: var(--mx-sans);
-  font-size: var(--orchestra-font-size-md);
-  line-height: 20px;
-  box-shadow: var(--mx-highlight), var(--mx-shadow);
 }
 .fe-modal:focus {
   outline: none;
 }
 .fe-modal::backdrop {
-  background: var(--orchestra-scrim);
-  backdrop-filter: var(--orchestra-scrim-filter);
-}
-.fe-modal > header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-.fe-modal h2 {
-  margin: 0;
-  color: var(--mx-strong);
-  font-size: var(--orchestra-font-size-2xl);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 28px;
+  background: var(--mx-backdrop);
 }
 .fe-modal .fe-glyph {
   inline-size: 16px;
   block-size: 16px;
 }
 .fe-modal-lead {
-  margin: 4px 0 0;
+  margin: 0;
   color: var(--mx-dim);
 }
 .fe-modal fieldset {
@@ -177,7 +153,7 @@
   block-size: 16px;
   margin: 2px 0 0;
   appearance: none;
-  border: 1.5px solid var(--mx-dim);
+  border: 2px solid var(--mx-dim);
   border-radius: 50%;
   background: transparent;
 }
@@ -197,13 +173,6 @@
   display: block;
   color: var(--mx-dim);
   font-size: var(--orchestra-font-size-sm);
-}
-.fe-modal > footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-block-start: 18px;
 }
 .fe-perms {
   display: flex;

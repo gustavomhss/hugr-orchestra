@@ -311,6 +311,8 @@ function LiveOverlay() {
                       <Icon id="stop" />
                     </button>
                   </div>
+                  <Body view={view()} state={current()} />
+                  {/* Below the body, not above it: a note that appears or counts down must not push the body down. */}
                   <Show when={current().error}>
                     {(error) => (
                       <>
@@ -319,7 +321,6 @@ function LiveOverlay() {
                       </>
                     )}
                   </Show>
-                  <Body view={view()} state={current()} />
                 </>
               }
             >
@@ -439,17 +440,18 @@ function Answer(props: { answer: LiveOverlayAnswer }) {
           </For>
         </ul>
       </div>
-      <div class="foot">
-        <For each={sources()}>
-          {(source) => (
-            <span class="chip">
-              <Icon id={sourceIcons[source]} size="s12" />
-              {copy.sources[source]}
-            </span>
-          )}
-        </For>
-        <span class="flex" />
-        <Show when={!props.answer.streaming}>
+      {/* Mounted once the stream ends: while it grows, the lead and points are the last things in the glass. */}
+      <Show when={!props.answer.streaming}>
+        <div class="foot">
+          <For each={sources()}>
+            {(source) => (
+              <span class="chip">
+                <Icon id={sourceIcons[source]} size="s12" />
+                {copy.sources[source]}
+              </span>
+            )}
+          </For>
+          <span class="flex" />
           <button
             class="ib"
             title={copy.copy}
@@ -462,8 +464,8 @@ function Answer(props: { answer: LiveOverlayAnswer }) {
           >
             <Icon id="copy" />
           </button>
-        </Show>
-      </div>
+        </div>
+      </Show>
     </>
   )
 }

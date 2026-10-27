@@ -13,7 +13,7 @@ export const setCrumbTrail = (items: Crumb[]) =>
     current.length === items.length && current.every((item, index) => item === items[index]) ? current : items,
   )
 
-// Set while a session or draft page is open: the leading "home" crumb then links back to Home.
+// Set while a session or draft page is open: the leading Home crumb then links back to Home.
 const [home, setHome] = createSignal<(() => void) | undefined>()
 
 // Session and draft pages place themselves under their project: "home / <project> / <session title>".
@@ -34,7 +34,7 @@ export function SessionCrumbs(props: { project?: Crumb; title: string }) {
 export function CrumbTrail(props: { label: string }) {
   return (
     <>
-      <span>
+      <span class="truncate" title={props.label}>
         <Show when={home()} fallback={props.label}>
           <button type="button" data-slot="orchestra-crumb-link" onClick={() => home()?.()}>
             {props.label}
