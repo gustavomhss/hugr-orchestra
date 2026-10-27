@@ -17,4 +17,6 @@ The ChatGPT browser sign-in uses port 1455 and fails with a clear message when i
 - `orchestra serve` without `--port` tries 4096 and up, moving on only when a port is taken. Any other bind error (for example a permission error) is reported.
 - `orchestra run "message"` does not read stdin when a message argument is given, so it no longer waits on an open pipe. Pipe the text with no message argument to use it as the message.
 - `orchestra api` prints the response body, then exits non-zero when the status is not 2xx.
+- `orchestra run --continue` with no earlier session in the directory prints `No earlier session to continue in <dir>; started a new session.` to stderr, then runs the prompt in a new session. Pass `--session <id>` to require an existing one.
+- A headless `orchestra run` that needs a permission cannot ask anyone. It prints `auto-rejecting. Pass --auto to allow it.` to stderr, rejects the request, and exits non-zero even when the agent finishes. Pass `--auto` to allow it. With `--format json` the warning is not printed; only the exit code reports it.
 - `orchestra mcp add`, `mcp auth`, `mcp logout` and `agent create` print a one-line error and exit non-zero instead of a stack dump.

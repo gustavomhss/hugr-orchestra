@@ -156,7 +156,7 @@ export async function execute(client: Client, options: Options) {
   if (agent) await client.sessions.switchAgent({ sessionID, agent })
   if (model) await client.sessions.switchModel({ sessionID, model })
 
-  const state = { started: false, failure: false, tools: new Map<string, string>() }
+  const state = { started: false, failure: false, blocked: false, tools: new Map<string, string>() }
 
   const out = (line: string) => process.stdout.write(line + EOL)
   const emit = (type: string, data: unknown) => {
@@ -221,8 +221,12 @@ export async function execute(client: Client, options: Options) {
     location,
     onEvent: render,
     onPermission: async (request) => {
-      if (!options.auto) warn(`! permission requested: ${request.action} (${request.resources.join(", ")}); auto-rejecting`)
-      return options.auto ? "once" : "reject"
+      if (options.auto) return "once"
+      // Nobody can answer a headless prompt, so the request is rejected and the run is reported as blocked.
+      state.blocked = true
+      const resources = request.resources.join(", ")
+      warn(`! permission requested: ${request.action} (${resources}); auto-rejecting. Pass --auto to allow it.`)
+      return "reject"
     },
     submit: () =>
       options.command
@@ -231,7 +235,7 @@ export async function execute(client: Client, options: Options) {
   }).catch((error: Error) => error)
   if (finished instanceof Error) return fail(options, finished.message || "Prompt was rejected")
   if (!finished) return fail(options, "The prompt was not processed")
-  return !state.failure
+  return !state.failure && !state.blocked
 }
 
 function fail(options: Options, message: string) {
@@ -250,6 +254,11 @@ async function resolveSession(client: Client, options: Options, location: { dire
   if (options.session && !found) return undefined
   if (found && options.fork) return (await client.sessions.fork({ sessionID: found.id })).id
   if (found) return found.id
+  // --continue with nothing to continue still starts a session; say so, since the user expected a resume.
+  if (options.continue) {
+    const where = location ? ` in ${location.directory}` : ""
+    process.stderr.write(`No earlier session to continue${where}; started a new session.` + EOL)
+  }
   const created = await client.sessions.create({ location })
   if (options.title) await client.sessions.rename({ sessionID: created.id, title: options.title })
   return created.id

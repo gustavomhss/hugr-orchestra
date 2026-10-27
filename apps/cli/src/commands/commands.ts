@@ -81,10 +81,16 @@ const run = Spec.make("run", {
   description: "Run Orchestra with a message",
   params: {
     message: Argument.string("message").pipe(Argument.withDescription("message to send"), Argument.variadic({ min: 0 })),
-    command: Flag.string("command").pipe(Flag.withDescription("the command to run, use message for args"), Flag.optional),
+    // Only the common flags show in `run --help`; the rest are hidden, not removed, and still work.
+    command: Flag.string("command").pipe(
+      Flag.withHidden,
+      Flag.withDescription("the command to run, use message for args"),
+      Flag.optional,
+    ),
     continue: Flag.boolean("continue").pipe(Flag.withAlias("c"), Flag.withDefault(false), Flag.withDescription("continue the last session")),
     session: Flag.string("session").pipe(Flag.withAlias("s"), Flag.withDescription("session id to continue"), Flag.optional),
     fork: Flag.boolean("fork").pipe(
+      Flag.withHidden,
       Flag.withDefault(false),
       Flag.withDescription("fork the session before continuing (requires --continue or --session)"),
     ),
@@ -100,55 +106,69 @@ const run = Spec.make("run", {
     ),
     file: Flag.string("file").pipe(Flag.withAlias("f"), Flag.withDescription("file(s) to attach to message"), Flag.atMost(100)),
     title: Flag.string("title").pipe(
+      Flag.withHidden,
       Flag.withDescription("title for the session (an empty value uses the truncated prompt)"),
       Flag.optional,
     ),
     attach: Flag.string("attach").pipe(
+      Flag.withHidden,
       Flag.withDescription("attach to a running Orchestra server (e.g., http://localhost:4096)"),
       Flag.optional,
     ),
     password: Flag.string("password").pipe(
+      Flag.withHidden,
       Flag.withAlias("p"),
       Flag.withDescription("basic auth password (defaults to ORCHESTRA_SERVER_PASSWORD)"),
       Flag.optional,
     ),
     username: Flag.string("username").pipe(
+      Flag.withHidden,
       Flag.withAlias("u"),
       Flag.withDescription("basic auth username (defaults to ORCHESTRA_SERVER_USERNAME or 'orchestra')"),
       Flag.optional,
     ),
     dir: Flag.string("dir").pipe(
+      Flag.withHidden,
       Flag.withDescription("directory to run in, path on remote server if attaching"),
       Flag.optional,
     ),
     variant: Flag.string("variant").pipe(
+      Flag.withHidden,
       Flag.withDescription("model variant (provider-specific reasoning effort, e.g., high, max, minimal)"),
       Flag.optional,
     ),
-    thinking: Flag.boolean("thinking").pipe(Flag.withDefault(false), Flag.withDescription("show thinking blocks")),
+    thinking: Flag.boolean("thinking").pipe(
+      Flag.withHidden,
+      Flag.withDefault(false),
+      Flag.withDescription("show thinking blocks"),
+    ),
     auto: Flag.boolean("auto").pipe(
       Flag.withDefault(false),
       Flag.withDescription("auto-approve permissions that are not explicitly denied (dangerous!)"),
     ),
     port: Flag.integer("port").pipe(
+      Flag.withHidden,
       Flag.withDescription("use the local server on this port, starting one there if none answers"),
       Flag.optional,
     ),
     mini: Flag.boolean("mini").pipe(
+      Flag.withHidden,
       Flag.withAlias("i"),
       Flag.withDefault(false),
       Flag.withDescription("open the minimal interactive TUI instead of printing the turn"),
     ),
-    replay: Flag.boolean("replay").pipe(Flag.withDefault(false), Flag.withDescription("not supported: replay is on by default")),
     "no-replay": Flag.boolean("no-replay").pipe(
+      Flag.withHidden,
       Flag.withDefault(false),
       Flag.withDescription("with --mini, do not replay the session history on resume"),
     ),
     "replay-limit": Flag.integer("replay-limit").pipe(
+      Flag.withHidden,
       Flag.withDescription("with --mini, show only the newest N messages of the session history"),
       Flag.optional,
     ),
     demo: Flag.boolean("demo").pipe(
+      Flag.withHidden,
       Flag.withDefault(false),
       Flag.withDescription("with --mini, enable the demo slash commands (/fmt, /permission, /question); pass one as the message to run it at once"),
     ),
@@ -156,7 +176,7 @@ const run = Spec.make("run", {
 })
 
 const attach = Spec.make("attach", {
-  description: "Attach to a running Orchestra server",
+  description: "Connect a client to a running Orchestra server",
   params: {
     url: Argument.string("url").pipe(Argument.withDescription("http://localhost:4096")),
     dir: Flag.string("dir").pipe(Flag.withDescription("directory to run in"), Flag.optional),
@@ -177,7 +197,6 @@ const attach = Spec.make("attach", {
       Flag.optional,
     ),
     mini: Flag.boolean("mini").pipe(Flag.withDefault(false), Flag.withDescription("start the minimal TUI layout")),
-    replay: Flag.boolean("replay").pipe(Flag.withDefault(false), Flag.withDescription("not supported: replay is on by default")),
     "no-replay": Flag.boolean("no-replay").pipe(
       Flag.withDefault(false),
       Flag.withDescription("with --mini, do not replay the session history on resume"),
@@ -313,6 +332,7 @@ const stats = Spec.make("stats", {
 
 const toolkit = Spec.make("toolkit", {
   description: "Manage the backend and research toolkit engines",
+  hidden: true,
   commands: [
     Spec.make("status", {
       description: "Show the state of every toolkit engine on this machine, and the research index shards of a worktree",
@@ -357,11 +377,12 @@ const plugin = Spec.make("plugin", {
 
 const acp = Spec.make("acp", {
   description: "Start the ACP (Agent Client Protocol) server on stdio",
+  hidden: true,
   params: { cwd: Flag.string("cwd").pipe(Flag.withDescription("working directory"), Flag.optional) },
 })
 
 const web = Spec.make("web", {
-  description: "Start the Orchestra server and open the web interface",
+  description: "Start the server and open the web interface in your browser (for people)",
   params: {
     hostname: Flag.string("hostname").pipe(Flag.withDefault("127.0.0.1"), Flag.withDescription("hostname to listen on")),
     port: Flag.integer("port").pipe(Flag.withDescription("port to listen on (default: the first free port from 4096)"), Flag.optional),
@@ -384,6 +405,7 @@ export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHE
   commands: [
     Spec.make("api", {
       description: "Make a request to the running server",
+      hidden: true,
       params: {
         request: Argument.string("operation | method path").pipe(
           Argument.withDescription("OpenAPI operation ID, or an HTTP method followed by a path"),
@@ -400,6 +422,7 @@ export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHE
     }),
     Spec.make("debug", {
       description: "Debugging and troubleshooting tools",
+      hidden: true,
       commands: [
         Spec.make("agents", { description: "List all agents" }),
         Spec.make("symbols", {
@@ -451,7 +474,7 @@ export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHE
       ],
     }),
     Spec.make("serve", {
-      description: "Start the API server",
+      description: "Start the API server for scripts and headless use",
       params: {
         hostname: Flag.string("hostname").pipe(Flag.withDefault("127.0.0.1")),
         port: Flag.integer("port").pipe(Flag.optional),

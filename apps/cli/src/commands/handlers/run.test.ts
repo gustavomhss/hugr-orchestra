@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { Effect, Option } from "effect"
 import { Orchestra } from "@orchestra/client"
 import { Daemon } from "../../services/daemon"
-import { clientUrl, fakeDaemon, stubServer, withCapturedStdout } from "./test-support"
+import { clientUrl, fakeDaemon, stubServer, withCapturedStderr, withCapturedStdout } from "./test-support"
 import run, { execute, miniArgs, type Options } from "./run"
 
 const base: Options = {
@@ -71,10 +71,13 @@ function stub(
 
 async function exec(url: string, options: Partial<Options>) {
   let ok: boolean | undefined
-  const out = await withCapturedStdout(async () => {
-    ok = await execute(Orchestra.make({ baseUrl: url }), { ...base, ...options })
+  let out = ""
+  const err = await withCapturedStderr(async () => {
+    out = await withCapturedStdout(async () => {
+      ok = await execute(Orchestra.make({ baseUrl: url }), { ...base, ...options })
+    })
   })
-  return { ok, out }
+  return { ok, out, err }
 }
 
 const forkInput = {
@@ -96,7 +99,6 @@ const forkInput = {
   thinking: false,
   auto: false,
   mini: false,
-  replay: false,
   "no-replay": false,
   "replay-limit": Option.none<number>(),
   demo: false,
@@ -187,7 +189,20 @@ describe("run", () => {
     try {
       const result = await exec(s.url, { continue: true })
       expect(result.ok).toBe(true)
+      expect(result.err).toBe("")
       expect(s.calls.some((call) => call.route === "POST /session")).toBe(false)
+      expect(s.calls.some((call) => call.route === "POST /session/ses_1/prompt")).toBe(true)
+    } finally {
+      s.server.stop(true)
+    }
+  })
+
+  test("--continue with no earlier session warns on stderr, then starts a new one", async () => {
+    const s = stub({ stream: [event(1, "session.next.prompted", { messageID: "msg_1" })] })
+    try {
+      const result = await exec(s.url, { continue: true })
+      expect(result.ok).toBe(true)
+      expect(result.err).toContain("No earlier session to continue in /work; started a new session.")
       expect(s.calls.some((call) => call.route === "POST /session/ses_1/prompt")).toBe(true)
     } finally {
       s.server.stop(true)
@@ -228,16 +243,20 @@ describe("run", () => {
     }
   })
 
-  test("rejects permission requests unless --auto, and answers with once under --auto", async () => {
+  test("rejects permission requests unless --auto, naming --auto and failing the run; --auto answers once", async () => {
     const request = { id: "per_1", sessionID: "ses_1", action: "bash", resources: ["ls"] }
     const events = [event(1, "session.next.prompted", { messageID: "msg_1" })]
     const denied = stub({ stream: events, permissions: [request], waitMs: 600 })
     const allowed = stub({ stream: events, permissions: [request], waitMs: 600 })
     try {
-      await exec(denied.url, {})
-      await exec(allowed.url, { auto: true })
+      const rejected = await exec(denied.url, {})
+      const granted = await exec(allowed.url, { auto: true })
       expect(denied.calls.find((call) => call.route.endsWith("/permission/per_1/reply"))?.body).toEqual({ reply: "reject" })
+      expect(rejected.ok).toBe(false)
+      expect(rejected.err).toContain("auto-rejecting. Pass --auto to allow it.")
       expect(allowed.calls.find((call) => call.route.endsWith("/permission/per_1/reply"))?.body).toEqual({ reply: "once" })
+      expect(granted.ok).toBe(true)
+      expect(granted.err).toBe("")
     } finally {
       denied.server.stop(true)
       allowed.server.stop(true)

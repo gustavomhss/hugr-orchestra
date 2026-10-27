@@ -3,6 +3,8 @@ import * as Command from "effect/unstable/cli/Command"
 type Options<Config extends Command.Command.Config, Commands extends ReadonlyArray<Any>> = {
   readonly description?: string
   readonly aliases?: ReadonlyArray<string>
+  /** Left out of parent help and completions; the command still runs. */
+  readonly hidden?: boolean
   readonly params?: Config
   readonly commands?: Commands
 }
@@ -27,7 +29,8 @@ export function make<
 >(name: Name, options: Options<Config, Commands> = {}) {
   const command = Command.make(name, options.params ?? ({} as Config))
   const described = options.description ? command.pipe(Command.withDescription(options.description)) : command
-  const spec = (options.aliases ?? []).reduce((current, alias) => current.pipe(Command.withAlias(alias)), described)
+  const aliased = (options.aliases ?? []).reduce((current, alias) => current.pipe(Command.withAlias(alias)), described)
+  const spec = options.hidden ? aliased.pipe(Command.withHidden) : aliased
   return {
     name,
     spec,
