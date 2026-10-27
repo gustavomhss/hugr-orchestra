@@ -3,6 +3,9 @@ import { FrontendRecovery } from "./frontend-recovery"
 export const dict = {
   ...FrontendRecovery.subagentModelsBase,
   ...FrontendRecovery.subagentModels.br,
+  "dialog.subagentModels.title": "Modelos de subagentes",
+  "dialog.subagentModels.description": "Escolha quais modelos os subagentes desta sessão podem usar.",
+  "dialog.subagentModels.hint": "Modelos desmarcados são negados aos subagentes desta sessão.",
   "desktop.menu.app": "HuGR Orchestra",
   "desktop.menu.about": "Sobre o HuGR Orchestra",
   "desktop.menu.hide": "Ocultar HuGR Orchestra",
