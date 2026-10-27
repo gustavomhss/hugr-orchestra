@@ -39,6 +39,7 @@ export const wrap = (from: string, text: string) =>
 
 // The recipient's current conversation: its most recently active top-level Session in this project. Queue delivery
 // never steers a turn the recipient is already running.
+// `resume: false` only admits the message: the recipient reads it on its next turn instead of being woken for it.
 export const deliver = Effect.fn("TeamMessage.deliver")(function* (input: {
   readonly db: Database.Interface["db"]
   readonly sessions: SessionV2.Interface
@@ -46,6 +47,7 @@ export const deliver = Effect.fn("TeamMessage.deliver")(function* (input: {
   readonly from: string
   readonly to: string
   readonly text: string
+  readonly resume?: boolean
 }) {
   const recipient = yield* input.db
     .select({ id: SessionTable.id })
@@ -67,7 +69,7 @@ export const deliver = Effect.fn("TeamMessage.deliver")(function* (input: {
     .pipe(Effect.orDie)
   if (!recipient) return yield* Effect.fail("no_conversation" as const)
   yield* input.sessions
-    .prompt({ sessionID: recipient.id, prompt: { text: wrap(input.from, input.text) }, delivery: "queue" })
+    .prompt({ sessionID: recipient.id, prompt: { text: wrap(input.from, input.text) }, delivery: "queue", resume: input.resume })
     .pipe(Effect.mapError(() => "rejected" as const))
   return recipient.id
 })
