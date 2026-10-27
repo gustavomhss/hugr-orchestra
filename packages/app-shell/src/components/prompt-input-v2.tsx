@@ -531,7 +531,11 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string; pending
   }
 
   return (
-    <TooltipV2 placement="top" gutter={4} value={<>{language.t("dialog.subagentModels.title")}</>}>
+    <TooltipV2
+      placement="top"
+      gutter={4}
+      value={<>{`${language.t("dialog.subagentModels.title")} · ${language.t("session.tasks.models.label", { count: label() })}`}</>}
+    >
       <ButtonV2
         variant="ghost-muted"
         size="normal"

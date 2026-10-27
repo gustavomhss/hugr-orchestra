@@ -1,6 +1,7 @@
 import { Show } from "solid-js"
 import { useLanguage } from "@/context/language"
 import type { AtlasFact, AtlasFactState, AtlasGate } from "../atlas-model"
+import { useAtlas } from "../atlas-context"
 import { seatName } from "./format"
 import { ATLAS_ICONS, type AtlasIconName } from "./icons"
 
@@ -192,9 +193,11 @@ export function OutcomeChip(props: { outcome: string; reconciled?: boolean }) {
   )
 }
 
+// Hover and keyboard focus show the tip; a click (or a tap, where there is no hover) shows the same words as a toast.
 export function Help(props: { text: string }) {
+  const atlas = useAtlas()
   return (
-    <button type="button" class="at-help" data-tip={props.text} aria-label={props.text}>
+    <button type="button" class="at-help" data-tip={props.text} aria-label={props.text} onClick={() => atlas.toast(props.text, "info")}>
       ?
     </button>
   )

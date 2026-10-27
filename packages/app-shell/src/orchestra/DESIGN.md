@@ -49,6 +49,9 @@ it and it is open briefly. Never make a floating layer opaque.
 | `--orchestra-scrim` | `rgba(5,9,14,.42)` | `rgba(40,52,66,.2)` |
 | `--orchestra-scrim-filter` | `blur(6px) saturate(1.1)` | same |
 
+Every backdrop (`dialog::backdrop`, palette and sheet scrims in Actions, Atlas, Relay and the chapters) blurs
+through `--orchestra-scrim-filter`; no backdrop carries its own blur literal.
+
 ### 2.3 Content base
 
 Session panels, near-opaque for long reading (`--orchestra-session-*` in `session.css`). They keep the rim and grain;
@@ -198,6 +201,17 @@ Measured at 1920×1200 in the dev app. Spacing values sit on a 2px grid; most ga
 - **Buttons.** Primary: `--mx-primary` fill, white text, one per view. Secondary: no fill until hover, then
   `--orchestra-surface-hover`. Destructive: `--orchestra-danger` text, fill only on confirm.
 - **Tabs.** The close button shows only on hover or for the active tab. A single seam between stacked surfaces.
+  The titlebar strip is already glass, so the active tab is a fill step (`--orchestra-surface-active`) and an
+  `--orchestra-border` hairline with no shadow, never a second blur plate.
+- **Breadcrumb.** The window breadcrumb names built-in views in Title Case, the same words as the sidebar
+  (Home, Agents, MCP Dock, Workspaces, Settings).
+- **Text areas.** `.mx-field textarea` uses the sans body at md, line height 1.6. Only text areas for code,
+  commands, JSON or env values (`spellcheck="false"`) switch to `--mx-mono` at sm, line height 1.65.
+- **Panel controls.** Browser and Linux panel toolbars (MCP Dock) use `@orchestra/ui/icon` icons at small size,
+  never Unicode arrows or box glyphs. Star toggles and the A-/A+ zoom stay text.
+- **Lean summary.** Four equal tiles (`repeat(4, minmax(0, 1fr))`, gap 24px, top aligned), each value 3xl in
+  `--mx-strong` with -0.04em tracking; no divider between tiles. Its empty state is `.mx-empty` stripped of its
+  well (no border, fill or shadow) because it already sits in a card.
 - **Cards.** No footer divider. Empty states never sit in a hero-number slot. `.mx-card` layers `--mx-sheen` over
   `--mx-raised`, with the highlight rim and `--mx-card-shadow` (a 1px contact shadow plus a soft 22px drop). Hover
   or focus inside firms the border to `--mx-rim` and swaps the drop for `--mx-pop-shadow`; cards never move.

@@ -95,7 +95,7 @@ export const CICD_COPY_BR: Record<keyof typeof CICD_COPY, string> = {
   "orchestra.cicd.trigger.manual": "Manual",
   "orchestra.cicd.trigger.push": "Em push",
   "orchestra.cicd.trigger.pullRequest": "Em pull request",
-  "orchestra.cicd.environment.preview": "Preview",
+  "orchestra.cicd.environment.preview": "Prévia",
   "orchestra.cicd.environment.staging": "Staging",
   "orchestra.cicd.environment.production": "Produção",
   "orchestra.cicd.deploy": "Deploy: {{environment}}",

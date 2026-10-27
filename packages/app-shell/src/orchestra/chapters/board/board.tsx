@@ -835,7 +835,7 @@ export default function Board() {
                   <div class="board-add">
                     <button
                       type="submit"
-                      class="mx-btn primary"
+                      class="mx-btn"
                       disabled={store.busy || !secret().name.trim() || !secret().value}
                     >
                       {t("orchestra.board.secret.save")}
@@ -1008,6 +1008,12 @@ export default function Board() {
           <button type="button" class="mx-btn" onClick={() => store.peek && loadPage(store.peek)}>
             {t("orchestra.board.retry")}
           </button>
+        </div>
+      </Match>
+      <Match when={store.snapshot && store.peek && !store.snapshot.issues.some((item) => item.ref === store.peek)}>
+        <div class="mx-empty">
+          <strong>{t("orchestra.board.issueMissing")}</strong>
+          <span>{t("orchestra.board.issueMissing.body")}</span>
         </div>
       </Match>
       <Match when={true}>

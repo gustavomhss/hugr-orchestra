@@ -1,6 +1,28 @@
 .integrations-screen {
   display: grid;
-  gap: 16px;
+  gap: 14px;
+  font-size: var(--orchestra-font-size-md);
+}
+/* The kit's note and section margins are for free-flowing pages; this grid spaces its own blocks. */
+.integrations-screen .mx-note,
+.integrations-screen .mx-section,
+.integrations-screen .mx-error {
+  margin: 0;
+}
+.integrations-screen .mx-note,
+.integrations-screen [role="status"] {
+  font-size: var(--orchestra-font-size-md);
+}
+.integrations-section {
+  display: grid;
+  gap: 14px;
+}
+.integrations-section > .mx-btn {
+  justify-self: start;
+}
+.integrations-list .mx-card ul {
+  margin: 0;
+  padding-inline-start: 18px;
 }
 .integrations-controls {
   display: flex;
@@ -11,6 +33,7 @@
 .integrations-list {
   display: grid;
   gap: 12px;
+  margin: 0;
   padding-inline-start: 0;
   list-style: none;
 }
@@ -34,10 +57,8 @@
   gap: 12px;
 }
 .integrations-auth {
-  padding-block: 12px;
-  padding-inline: 16px;
-  border: 1px solid var(--border-weak-base);
-  border-radius: 8px;
+  padding-block: 14px;
+  padding-inline: 18px;
 }
 .integrations-fields {
   margin: 0;
@@ -51,7 +72,7 @@
 .integrations-backdrop {
   position: fixed;
   inset: 0;
-  background: rgb(0 0 0 / 45%);
+  background: var(--mx-backdrop);
   z-index: 100;
 }
 .integrations-layer {

@@ -236,8 +236,6 @@ export default function Workspaces(props: ChapterPageProps) {
             <h1 id="workspaces-title">{language.t("orchestra.workspaces.heading")}</h1>
             <p>{language.t("orchestra.workspaces.headingAccent")}</p>
           </div>
-        </header>
-        <div class="mx-toolbar">
           <button
             type="button"
             class="mx-btn primary"
@@ -247,6 +245,8 @@ export default function Workspaces(props: ChapterPageProps) {
           >
             {language.t("orchestra.workspaces.new")}
           </button>
+        </header>
+        <div class="mx-toolbar">
           <Show when={state.project}>
             {(project) => (
               <MxBadge>

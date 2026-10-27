@@ -82,7 +82,7 @@ test("audit: plugins unmatched search explains the empty result and clearing res
   await openSession(page, "dark")
   await openPlugins(page)
   await expect(card(page, "Caveman")).toBeVisible()
-  const search = chapter(page).getByRole("textbox", { name: "Search LLM Plugins" })
+  const search = chapter(page).getByRole("textbox", { name: "Search plugins" })
   await search.fill("no-behavior-matches-this")
   await expect(chapter(page).getByRole("status")).toHaveText("No matching results")
   await expect(chapter(page).getByRole("article")).toHaveCount(0)
@@ -99,14 +99,14 @@ for (const scheme of ["dark", "light"] as const) {
     await openPlugins(page)
 
     const view = chapter(page)
-    await expect(view.getByRole("heading", { level: 1 })).toHaveText("LLM Plugins")
+    await expect(view.getByRole("heading", { level: 1 })).toHaveText("Plugins")
     await expect(view.locator(".mx-eyebrow")).toHaveText("timeline-stability · Configuration")
     await expect(view.locator(".mx-heading p")).toHaveText(
       "Shape how the LLM thinks and speaks. Each profile has its own behavior.",
     )
-    await expect(view.getByRole("textbox", { name: "Search LLM Plugins" })).toHaveAttribute(
+    await expect(view.getByRole("textbox", { name: "Search plugins" })).toHaveAttribute(
       "placeholder",
-      "Search LLM plugins",
+      "Search plugins",
     )
     await expect(view.locator(".mx-toolbar .mx-badge")).toHaveText("timeline-stability")
     // Mock geometry: 30px title, 280px grid tracks, 18px card padding.
@@ -137,8 +137,8 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(dialog).toHaveCount(0)
     await expect(caveman.locator(".mx-badge")).toHaveText(["LLM behavior", "ultra", "Active"])
 
-    await view.getByRole("button", { name: "Add behavior", exact: true }).click()
-    await expect(dialog.getByRole("heading", { name: "Add LLM behavior" })).toBeVisible()
+    await view.getByRole("button", { name: "Add plugin", exact: true }).click()
+    await expect(dialog.getByRole("heading", { name: "Add plugin" })).toBeVisible()
     await expect(dialog.getByLabel("Intensity")).toHaveCount(0)
     await expect(dialog.getByRole("button", { name: "Remove behavior" })).toHaveCount(0)
     await dialog.getByLabel("Name").fill("Reviewer")
@@ -149,16 +149,16 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(reviewer.locator(".mx-badge")).toHaveText(["LLM behavior", "custom", "Active"])
 
     // An enabled behavior without instructions sends nothing, so its card does not claim to be Active.
-    await view.getByRole("button", { name: "Add behavior", exact: true }).click()
+    await view.getByRole("button", { name: "Add plugin", exact: true }).click()
     await dialog.getByLabel("Name").fill("Blank")
     await dialog.getByLabel("Description").fill("Nothing yet.")
     await dialog.getByRole("button", { name: "Save", exact: true }).click()
     await expect(card(page, "Blank").locator(".mx-badge")).toHaveText(["LLM behavior", "custom", "No instructions"])
 
-    await view.getByRole("textbox", { name: "Search LLM Plugins" }).fill("evidence")
+    await view.getByRole("textbox", { name: "Search plugins" }).fill("evidence")
     await expect(view.locator("article.mx-card")).toHaveCount(1)
     await expect(reviewer).toBeVisible()
-    await view.getByRole("textbox", { name: "Search LLM Plugins" }).fill("")
+    await view.getByRole("textbox", { name: "Search plugins" }).fill("")
 
     await page.reload()
     await expect(chapter(page)).toBeVisible()

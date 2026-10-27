@@ -19,7 +19,8 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.description":
     "Reusable step-by-step plans for Maestro. Each step is done by an agent and must pass its checks before the next one starts. Publish a workflow, then ask Maestro to use it in chat.",
   "orchestra.workflows.xlink":
-    "For a rule that applies to every session, such as blocking edits to generated files, use Hooks.",
+    "For a rule that applies to every session, such as blocking edits to generated files, use ",
+  "orchestra.workflows.xlinkRuns": ". To review earlier runs, open ",
   "orchestra.workflows.scope": "Available to every agent session in {{project}} and its other checkouts.",
   "orchestra.workflows.scope.repositoryRequired":
     "Hooks and workflows need a git repository with at least one commit. This folder has no repository or no first commit yet, so they would apply to every such folder.",
@@ -672,7 +673,8 @@ export const WORKFLOWS_COPY_BR: Record<keyof typeof WORKFLOWS_COPY, string> = {
   "orchestra.workflows.description":
     "Planos reutilizáveis, passo a passo, para o Maestro. Cada etapa é feita por um agente e precisa passar nas suas verificações antes de a próxima começar. Publique um workflow e depois peça ao Maestro para usá-lo no chat.",
   "orchestra.workflows.xlink":
-    "Para uma regra que vale para todas as sessões, como bloquear edições em arquivos gerados, use Hooks.",
+    "Para uma regra que vale para todas as sessões, como bloquear edições em arquivos gerados, use ",
+  "orchestra.workflows.xlinkRuns": ". Para rever execuções anteriores, abra ",
   "orchestra.workflows.scope": "Disponível para todas as sessões de agente em {{project}} e nos seus outros checkouts.",
   "orchestra.workflows.scope.repositoryRequired":
     "Hooks e workflows precisam de um repositório git com pelo menos um commit. Esta pasta não tem repositório ou ainda não tem o primeiro commit, então eles valeriam para todas as pastas assim.",

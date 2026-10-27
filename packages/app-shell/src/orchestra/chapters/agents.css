@@ -5,6 +5,7 @@
   padding: 52px 0 72px;
 }
 .agents-grid {
+  align-items: stretch;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -48,10 +49,21 @@
 .agents-draft-error {
   margin-block-start: 15px;
 }
-/* Takes the Open Chat slot on every card but Maestro's, so it sits in the footer row. */
+/* Cards in a row share one height and every footer rides the bottom edge. */
+.agents-grid > .agent {
+  block-size: 100%;
+}
+.agent .mx-card-foot {
+  flex-wrap: wrap;
+}
+/* Takes the Open Chat slot on every card but Maestro's. It gets its own line so it never crowds Configure. */
 .mx-card-foot .agents-note {
+  flex: 1 1 100%;
   margin: 0;
-  text-align: end;
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-xs);
+  line-height: 1.5;
+  text-align: start;
 }
 
 /* The native modal dialog: the form scrolls its body between the fixed head and foot, as in the mock.
@@ -72,7 +84,7 @@
 }
 .agents-dialog::backdrop {
   background: var(--mx-backdrop);
-  backdrop-filter: blur(5px);
+  backdrop-filter: var(--orchestra-scrim-filter);
 }
 .agents-fieldset {
   min-inline-size: 0;

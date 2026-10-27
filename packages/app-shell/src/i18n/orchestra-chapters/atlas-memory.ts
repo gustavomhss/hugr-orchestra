@@ -174,7 +174,7 @@ export const ATLAS_MEMORY_COPY_BR: Record<keyof typeof ATLAS_MEMORY_COPY, string
   "orchestra.atlas.memory.kpi.proposals": "{{n}} propostas",
   "orchestra.atlas.memory.kpi.log": "Log de memória",
   "orchestra.atlas.memory.kpi.log.empty": "nenhuma entrada ainda",
-  "orchestra.atlas.memory.kpi.checkpoints": "Checkpoints",
+  "orchestra.atlas.memory.kpi.checkpoints": "Pontos de controle",
   "orchestra.atlas.memory.kpi.checkpoints.foot": "nenhum recusado",
   "orchestra.atlas.memory.dot.done": "{{n}} concluídas",
   "orchestra.atlas.memory.dot.paused": "{{n}} pausadas",

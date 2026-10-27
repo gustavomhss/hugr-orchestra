@@ -1,4 +1,5 @@
 import { createMediaQuery } from "@solid-primitives/media"
+import { Icon } from "@orchestra/ui/icon"
 import { createEffect, createMemo, on, onCleanup, onMount, Show, type JSX } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useGlobal } from "@/context/global"
@@ -22,6 +23,7 @@ import { DockModes, LinuxToolbar } from "./apps-panel-linux"
 import { tabButtonID, tabPanelID, TabStrip } from "./apps-panel-tab-button"
 import { TabMenu } from "./apps-panel-tab-menu"
 import { createLinuxMenuController, LinuxMenu } from "./linux-menu"
+import "@/orchestra/chapters/kit.css"
 import "./apps-panel.css"
 
 const sidebarCollapsedKey = "orchestra.app-dock.sidebar-collapsed"
@@ -73,6 +75,7 @@ export function AppsPanel(
     menu: undefined as { tab: Tab; x: number; y: number; rtl: boolean; invoker: HTMLButtonElement } | undefined,
     profileCreating: false,
     profileDraft: "",
+    addressEdited: false,
   })
   let findRequestID: number | undefined
   let root: HTMLDivElement | undefined
@@ -205,7 +208,9 @@ export function AppsPanel(
     const draft = props.draft
     return draft && draft.owner === state.owner && (draft.tab ? sameTab(draft.tab, state.active) : !state.active)
       ? draft.value
-      : state.url
+      : state.active || view.addressEdited
+        ? state.url
+        : ""
   }
   const activeCrashed = () => activeTab()?.crashed
   const bookmarked = () =>
@@ -270,7 +275,7 @@ export function AppsPanel(
               aria-pressed={view.sidebarCollapsed}
               onClick={toggleSidebar}
             >
-              ||
+              <Icon name="sidebar" size="small" />
             </button>
             {!activeLinux() && <span class="zen-workspace-indicator-dot" aria-hidden="true" />}
             {activeLinux() && !view.sidebarCollapsed && (
@@ -350,42 +355,50 @@ export function AppsPanel(
               event.preventDefault()
               dock.setURL(address())
               props.onDraftChange?.(undefined)
+              setView("addressEdited", false)
               void dock.launch()
             }}
           >
-            <button
-              class="zen-nav-button"
-              type="button"
-              aria-label={t("appDock.browser.back")}
-              disabled={!activeTab()?.canGoBack || !!activeCrashed() || !capability("appDockCommand")}
-              onClick={() => command("back")}
-            >
-              &#8592;
-            </button>
-            <button
-              class="zen-nav-button"
-              type="button"
-              aria-label={t("appDock.browser.forward")}
-              disabled={!activeTab()?.canGoForward || !!activeCrashed() || !capability("appDockCommand")}
-              onClick={() => command("forward")}
-            >
-              &#8594;
-            </button>
-            <button
-              class={`zen-nav-button zen-nav-extra ${bookmarked() ? "is-active" : ""}`}
-              type="button"
-              aria-label={t(bookmarked() ? "appDock.browser.bookmark.remove" : "appDock.browser.bookmark.add")}
-              disabled={!!activeCrashed()}
-              onClick={dock.toggleBookmark}
-            >
-              &#9733;
-            </button>
+            <div class="zen-tool-group">
+              <button
+                class="zen-nav-button"
+                type="button"
+                aria-label={t("appDock.browser.back")}
+                title={t("appDock.browser.back")}
+                disabled={!activeTab()?.canGoBack || !!activeCrashed() || !capability("appDockCommand")}
+                onClick={() => command("back")}
+              >
+                <Icon name="arrow-left" size="small" />
+              </button>
+              <button
+                class="zen-nav-button"
+                type="button"
+                aria-label={t("appDock.browser.forward")}
+                title={t("appDock.browser.forward")}
+                disabled={!activeTab()?.canGoForward || !!activeCrashed() || !capability("appDockCommand")}
+                onClick={() => command("forward")}
+              >
+                <Icon name="arrow-right" size="small" />
+              </button>
+              <button
+                class={`zen-nav-button zen-nav-extra ${bookmarked() ? "is-active" : ""}`}
+                type="button"
+                aria-label={t(bookmarked() ? "appDock.browser.bookmark.remove" : "appDock.browser.bookmark.add")}
+                title={t(bookmarked() ? "appDock.browser.bookmark.remove" : "appDock.browser.bookmark.add")}
+                disabled={!!activeCrashed()}
+                onClick={dock.toggleBookmark}
+              >
+                &#9733;
+              </button>
+            </div>
             <input
               ref={addressInput}
               value={address()}
               dir="ltr"
+              placeholder={t("appDock.browser.address.placeholder")}
               onInput={(event) => {
                 const value = event.currentTarget.value
+                setView("addressEdited", true)
                 if (props.onDraftChange) props.onDraftChange({ owner: state.owner, tab: state.active, value })
                 dock.setURL(value)
               }}
@@ -398,87 +411,100 @@ export function AppsPanel(
               aria-label={t("appDock.browser.address")}
               disabled={!!activeCrashed()}
             />
-            <button
-              class="zen-nav-button zen-nav-extra"
-              type="button"
-              aria-label={t("appDock.browser.bookmarks")}
-              onClick={() => toggleLibrary("bookmarks")}
-            >
-              &#9734;
-            </button>
-            <button
-              class="zen-nav-button zen-nav-extra"
-              type="button"
-              aria-label={t("appDock.browser.history")}
-              onClick={() => toggleLibrary("history")}
-            >
-              &#8986;
-            </button>
-            <button
-              class="zen-nav-button zen-nav-extra"
-              type="button"
-              aria-label={t("appDock.browser.find.label")}
-              disabled={!!activeCrashed()}
-              onClick={() => setView("findOpen", true)}
-            >
-              &#8981;
-            </button>
-            <button
-              class="zen-nav-button zen-nav-extra"
-              type="button"
-              aria-label={t("appDock.browser.zoomOut")}
-              disabled={!!activeCrashed()}
-              onClick={() => zoom(-0.1)}
-            >
-              A-
-            </button>
-            <button
-              class="zen-nav-button zen-nav-extra"
-              type="button"
-              aria-label={t("appDock.browser.zoomIn")}
-              disabled={!!activeCrashed()}
-              onClick={() => zoom(0.1)}
-            >
-              A+
-            </button>
-            <button
-              class="zen-nav-button zen-nav-extra"
-              type="button"
-              aria-label={t("appDock.browser.downloads")}
-              onClick={() => toggleLibrary("downloads")}
-            >
-              &#8595;
-            </button>
-            <button
-              class="zen-nav-button zen-nav-extra"
-              type="button"
-              aria-label={t(state.fullscreen ? "appDock.browser.fullscreen.exit" : "appDock.browser.fullscreen.enter")}
-              disabled={!!activeCrashed()}
-              onClick={toggleFullscreen}
-            >
-              {t(state.fullscreen ? "appDock.browser.fullscreen.exitShort" : "appDock.browser.fullscreen.enterShort")}
-            </button>
-            <button
-              class="zen-open-button"
-              type="button"
-              disabled={!state.active || !!activeCrashed() || !capability("appDockCommand")}
-              onClick={() => command("reload")}
-            >
-              {activeTab()?.loading ? t("common.loading") : t("appDock.browser.reload")}
-            </button>
-            <button class="zen-open-button" type="submit" disabled={!api || !ready() || !!activeCrashed()}>
-              {activeTab()?.loading ? t("common.loading") : t("common.open")}
-            </button>
-            {state.active && (
+            <div class="zen-tool-group">
               <button
-                class="zen-nav-button"
+                class="zen-nav-button zen-nav-extra"
                 type="button"
-                onClick={() => void dock.close()}
-                aria-label={t("appDock.browser.closeTab")}
+                aria-label={t("appDock.browser.bookmarks")}
+                title={t("appDock.browser.bookmarks")}
+                onClick={() => toggleLibrary("bookmarks")}
               >
-                x
+                &#9734;
               </button>
-            )}
+              <button
+                class="zen-nav-button zen-nav-extra"
+                type="button"
+                aria-label={t("appDock.browser.history")}
+                title={t("appDock.browser.history")}
+                onClick={() => toggleLibrary("history")}
+              >
+                <Icon name="reset" size="small" />
+              </button>
+              <button
+                class="zen-nav-button zen-nav-extra"
+                type="button"
+                aria-label={t("appDock.browser.find.label")}
+                title={t("appDock.browser.find.label")}
+                disabled={!!activeCrashed()}
+                onClick={() => setView("findOpen", true)}
+              >
+                <Icon name="magnifying-glass" size="small" />
+              </button>
+              <button
+                class="zen-nav-button zen-nav-extra"
+                type="button"
+                aria-label={t("appDock.browser.zoomOut")}
+                title={t("appDock.browser.zoomOut")}
+                disabled={!!activeCrashed()}
+                onClick={() => zoom(-0.1)}
+              >
+                A-
+              </button>
+              <button
+                class="zen-nav-button zen-nav-extra"
+                type="button"
+                aria-label={t("appDock.browser.zoomIn")}
+                title={t("appDock.browser.zoomIn")}
+                disabled={!!activeCrashed()}
+                onClick={() => zoom(0.1)}
+              >
+                A+
+              </button>
+              <button
+                class="zen-nav-button zen-nav-extra"
+                type="button"
+                aria-label={t("appDock.browser.downloads")}
+                title={t("appDock.browser.downloads")}
+                onClick={() => toggleLibrary("downloads")}
+              >
+                <Icon name="download" size="small" />
+              </button>
+              <button
+                class="zen-nav-button zen-nav-extra"
+                type="button"
+                aria-label={t(state.fullscreen ? "appDock.browser.fullscreen.exit" : "appDock.browser.fullscreen.enter")}
+                title={t(state.fullscreen ? "appDock.browser.fullscreen.exit" : "appDock.browser.fullscreen.enter")}
+                disabled={!!activeCrashed()}
+                onClick={toggleFullscreen}
+              >
+                {t(state.fullscreen ? "appDock.browser.fullscreen.exitShort" : "appDock.browser.fullscreen.enterShort")}
+              </button>
+            </div>
+            <div class="zen-tool-group">
+              <button
+                class="zen-open-button"
+                type="button"
+                title={t("appDock.browser.reload")}
+                disabled={!state.active || !!activeCrashed() || !capability("appDockCommand")}
+                onClick={() => command("reload")}
+              >
+                {activeTab()?.loading ? t("common.loading") : t("appDock.browser.reload")}
+              </button>
+              <button class="zen-open-button" type="submit" disabled={!api || !ready() || !!activeCrashed()}>
+                {activeTab()?.loading ? t("common.loading") : t("common.open")}
+              </button>
+              {state.active && (
+                <button
+                  class="zen-nav-button"
+                  type="button"
+                  onClick={() => void dock.close()}
+                  aria-label={t("appDock.browser.closeTab")}
+                  title={t("appDock.browser.closeTab")}
+                >
+                  x
+                </button>
+              )}
+            </div>
           </form>
           {state.error && (
             <div class="zen-error" role="alert" aria-live="assertive">
@@ -549,9 +575,9 @@ export function AppsPanel(
             {api ? (
               props.placeholder
             ) : (
-              <div class="zen-empty-state">
+              <div class="mx-empty">
                 <strong>{t("appDock.browser.unavailable.title")}</strong>
-                <span>{t("appDock.browser.unavailable.description")}</span>
+                <p>{t("appDock.browser.unavailable.description")}</p>
               </div>
             )}
             {/* The browser side with no page. Views that already report an empty Dock (the cockpit card,
@@ -561,9 +587,9 @@ export function AppsPanel(
               !state.active &&
               !activeLinux() &&
               (state.tabs.length > 0 || !(props.compact || "placeholder" in props)) && (
-                <div class="zen-empty-state">
+                <div class="mx-empty">
                   <strong>{t("appDock.browser.title")}</strong>
-                  <span>{t("appDock.browser.empty")}</span>
+                  <p>{t("appDock.browser.empty")}</p>
                 </div>
               )}
           </div>

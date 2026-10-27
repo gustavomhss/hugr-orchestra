@@ -55,12 +55,13 @@
 .actions-page .actions-context-head > div { min-inline-size: 0; }
 .actions-page .actions-context-head strong, .actions-page .actions-context-head small { display: block; overflow-wrap: anywhere; }
 .actions-page .actions-context-head strong { font-size: var(--orchestra-font-size-sm); }
+.actions-page .actions-context-head .context-path { overflow: hidden; overflow-wrap: normal; white-space: nowrap; text-overflow: ellipsis; direction: rtl; text-align: end; font-family: var(--mx-mono); }
 .actions-page .actions-context-head small { margin-block-start: 3px; color: var(--actions-dim); font-size: var(--orchestra-font-size-2xs); }
 .actions-page .context-group { margin-block-start: 18px; }
 .actions-page .context-label { padding: 0 8px 8px; color: var(--actions-dim); font-size: var(--orchestra-font-size-2xs); letter-spacing: .1em; text-transform: uppercase; }
 .actions-page .actions-nav-item { display: flex; align-items: center; gap: 8px; min-block-size: 33px; margin-block-end: 3px; padding: 7px 8px; border: 1px solid transparent; border-radius: var(--orchestra-radius-sm); color: var(--actions-dim); font-size: var(--orchestra-font-size-xs); text-decoration: none; }
 .actions-page .actions-nav-item:hover, .actions-page .actions-nav-item.selected { background: var(--mx-enabled, var(--actions-soft)); color: var(--actions-strong); }
-.actions-page .context-footer { display: flex; flex-direction: column; gap: 9px; margin-block-start: auto; padding: 20px 8px 0; color: var(--actions-dim); font-size: var(--orchestra-font-size-2xs); }
+.actions-page .context-footer { display: flex; flex-direction: column; gap: 9px; margin-block-start: auto; padding: 20px 8px 0; color: var(--actions-dim); font-size: var(--orchestra-font-size-xs); }
 .actions-page .search-wrap { position: relative; min-inline-size: 180px; max-inline-size: 430px; flex: 1; }
 .actions-page .search-wrap .actions-icon { position: absolute; inset-block-start: 9px; inset-inline-start: 10px; color: var(--actions-dim); }
 .actions-page input, .actions-page select, .actions-page textarea { min-inline-size: 0; border: 1px solid var(--actions-line); border-radius: var(--orchestra-radius-sm); background: var(--actions-raised); color: var(--actions-strong); }

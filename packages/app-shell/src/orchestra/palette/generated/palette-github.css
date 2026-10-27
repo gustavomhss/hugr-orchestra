@@ -332,10 +332,10 @@ html[data-orchestra-palette="github"][data-color-scheme] body[data-new-layout] [
     color: var(--orchestra-tab-hover-text);
   }
   [data-orchestra-palette="github"] [data-orchestra-tabs] [data-titlebar-tab]:is([data-state="pressed"], [data-editing="true"]) {
-    border-color: var(--orchestra-glass-border);
-    background: var(--orchestra-grain), var(--orchestra-glass-sheen), var(--orchestra-glass-background);
+    border-color: var(--orchestra-border);
+    background: var(--orchestra-surface-active);
     color: var(--orchestra-tab-active-text);
-    box-shadow: var(--orchestra-glass-shadow);
+    box-shadow: none;
   }
   [data-orchestra-palette="github"] #orchestra-session-tabs [data-titlebar-tab-link] {
     color: inherit;
@@ -1646,6 +1646,9 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-mx-ki
   fill: none;
   stroke: currentColor;
 }
+[data-orchestra-palette="github"] .mx-card-foot .agents-note {
+  color: var(--mx-dim);
+}
 [data-orchestra-palette="github"] .agents-dialog::backdrop {
   background: var(--mx-backdrop);
 }
@@ -1984,17 +1987,18 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-new-l
   --zen-focus: #78a4ff;
 }
 [data-orchestra-palette="github"] .zen-dock-modes {
-  border-block-end: 1px solid var(--border-weak);
+  border: 1px solid var(--mx-line, var(--border-weak));
+  background: var(--mx-soft, transparent);
 }
 [data-orchestra-palette="github"] .zen-dock-modes button {
-  border: 1px solid transparent;
-  color: var(--text-weak);
+  border: 0;
+  color: var(--mx-dim, var(--text-weak));
   background: transparent;
 }
 [data-orchestra-palette="github"] .zen-dock-modes button.is-active {
-  color: var(--text-strong);
-  background: var(--surface-raised-stronger);
-  border-color: var(--border-strong);
+  color: var(--mx-strong, var(--text-strong));
+  background: var(--mx-raised, var(--surface-raised-stronger));
+  box-shadow: var(--mx-highlight, none);
 }
 [data-orchestra-palette="github"] .zen-dock-modes button:focus-visible,
 [data-orchestra-palette="github"] .zen-window-picker:focus-visible {
@@ -2105,6 +2109,9 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-new-l
   outline: 0;
   color: var(--zen-text);
   background: var(--zen-input);
+}
+[data-orchestra-palette="github"] .zen-tool-group:last-child {
+  border-inline-start: 1px solid var(--mx-line, var(--border-weak));
 }
 [data-orchestra-palette="github"] .zen-nav-button,
 [data-orchestra-palette="github"] .zen-open-button {

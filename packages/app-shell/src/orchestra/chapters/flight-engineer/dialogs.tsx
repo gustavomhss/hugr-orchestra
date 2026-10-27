@@ -24,7 +24,13 @@ export function FlightEngineerHost() {
 }
 
 // A modal with the float-glass material of the approved permission mock. It closes on Escape and returns focus.
-function Frame(props: { id: string; title: string; close: () => void; children: import("solid-js").JSX.Element }) {
+function Frame(props: {
+  id: string
+  title: string
+  close: () => void
+  footer: import("solid-js").JSX.Element
+  children: import("solid-js").JSX.Element
+}) {
   const t = useLanguage().t
   let dialog: HTMLDialogElement | undefined
   createEffect(() => {
@@ -38,7 +44,7 @@ function Frame(props: { id: string; title: string; close: () => void; children: 
   return (
     <dialog
       ref={dialog}
-      class="fe-modal"
+      class="mx-dialog fe-modal"
       tabIndex={-1}
       aria-labelledby={props.id}
       onCancel={(event) => {
@@ -46,13 +52,14 @@ function Frame(props: { id: string; title: string; close: () => void; children: 
         props.close()
       }}
     >
-      <header>
+      <header class="mx-dialog-head">
         <h2 id={props.id}>{props.title}</h2>
         <button type="button" class="mx-link" aria-label={t("orchestra.flightEngineer.close")} onClick={props.close}>
           <Glyph name="close" />
         </button>
       </header>
-      {props.children}
+      <div class="mx-dialog-body">{props.children}</div>
+      <footer class="mx-dialog-foot">{props.footer}</footer>
     </dialog>
   )
 }
@@ -64,7 +71,29 @@ function Consent() {
   const [consent, setConsent] = createSignal<StartOptions["consent"] | undefined>()
   const [retention, setRetention] = createSignal<StartOptions["retention"]>("kept")
   return (
-    <Frame id="fe-consent-title" title={t("orchestra.flightEngineer.consent.title")} close={flight.closeDialog}>
+    <Frame
+      id="fe-consent-title"
+      title={t("orchestra.flightEngineer.consent.title")}
+      close={flight.closeDialog}
+      footer={
+        <>
+          <button type="button" class="mx-btn" onClick={flight.closeDialog}>
+            {t("orchestra.flightEngineer.cancel")}
+          </button>
+          <button
+            type="button"
+            class="mx-btn primary"
+            disabled={consent() === undefined || flight.store.starting}
+            onClick={() => {
+              const answer = consent()
+              if (answer) void flight.start({ consent: answer, retention: retention() })
+            }}
+          >
+            {t("orchestra.flightEngineer.consent.start")}
+          </button>
+        </>
+      }
+    >
       <p class="fe-modal-lead">{t("orchestra.flightEngineer.consent.body")}</p>
       <fieldset>
         <legend>{t("orchestra.flightEngineer.consent.question")}</legend>
@@ -94,22 +123,6 @@ function Consent() {
           )}
         </For>
       </fieldset>
-      <footer>
-        <button type="button" class="mx-btn" onClick={flight.closeDialog}>
-          {t("orchestra.flightEngineer.cancel")}
-        </button>
-        <button
-          type="button"
-          class="mx-btn primary"
-          disabled={consent() === undefined || flight.store.starting}
-          onClick={() => {
-            const answer = consent()
-            if (answer) void flight.start({ consent: answer, retention: retention() })
-          }}
-        >
-          {t("orchestra.flightEngineer.consent.start")}
-        </button>
-      </footer>
     </Frame>
   )
 }
@@ -124,7 +137,21 @@ function Permissions() {
     { source: "system-audio", name: "systemAudio", glyph: "speaker", state: () => readiness()?.permissions["system-audio"] },
   ] as const
   return (
-    <Frame id="fe-permissions-title" title={t("orchestra.flightEngineer.permissions.title")} close={flight.closeDialog}>
+    <Frame
+      id="fe-permissions-title"
+      title={t("orchestra.flightEngineer.permissions.title")}
+      close={flight.closeDialog}
+      footer={
+        <>
+          <button type="button" class="mx-btn" onClick={flight.closeDialog}>
+            {t("orchestra.flightEngineer.permissions.later")}
+          </button>
+          <button type="button" class="mx-btn primary" onClick={() => void flight.readiness()}>
+            {t("orchestra.flightEngineer.permissions.check")}
+          </button>
+        </>
+      }
+    >
       <p class="fe-modal-lead">{t("orchestra.flightEngineer.permissions.body")}</p>
       <ul class="fe-perms">
         <For each={rows}>
@@ -158,14 +185,6 @@ function Permissions() {
           {t("orchestra.flightEngineer.permissions.waiting")}
         </p>
       </Show>
-      <footer>
-        <button type="button" class="mx-btn" onClick={flight.closeDialog}>
-          {t("orchestra.flightEngineer.permissions.later")}
-        </button>
-        <button type="button" class="mx-btn primary" onClick={() => void flight.readiness()}>
-          {t("orchestra.flightEngineer.permissions.check")}
-        </button>
-      </footer>
     </Frame>
   )
 }

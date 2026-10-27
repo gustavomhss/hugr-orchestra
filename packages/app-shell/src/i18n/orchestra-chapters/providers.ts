@@ -58,6 +58,8 @@ export const PROVIDERS_COPY = {
   "orchestra.providers.claudeMode.signedIn": "Signed in as {{email}}",
   "orchestra.providers.claudeMode.signedInPlan": "Signed in as {{email}} · {{subscription}}",
   "orchestra.providers.claudeMode.signedInAnonymous": "Signed in",
+  "orchestra.providers.claudeMode.notConnected": "Not connected",
+  "orchestra.providers.claudeMode.checking": "Checking…",
   "orchestra.providers.claudeMode.failed": "Sign-in failed: {{message}}",
   "orchestra.providers.claudeMode.use": "Use your Claude subscription (Claude mode)",
   "orchestra.providers.custom.headersHint":
@@ -123,6 +125,8 @@ export const PROVIDERS_COPY_BR: Record<keyof typeof PROVIDERS_COPY, string> = {
   "orchestra.providers.claudeMode.signedIn": "Conectado como {{email}}",
   "orchestra.providers.claudeMode.signedInPlan": "Conectado como {{email}} · {{subscription}}",
   "orchestra.providers.claudeMode.signedInAnonymous": "Conectado",
+  "orchestra.providers.claudeMode.notConnected": "Não conectado",
+  "orchestra.providers.claudeMode.checking": "Verificando…",
   "orchestra.providers.claudeMode.failed": "Falha no login: {{message}}",
   "orchestra.providers.claudeMode.use": "Usar sua assinatura do Claude (modo Claude)",
   "orchestra.providers.custom.headersHint":

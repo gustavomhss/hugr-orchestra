@@ -1,4 +1,5 @@
 export const INTEGRATIONS_COPY = {
+  "orchestra.integrations.eyebrow": "{{profile}} · Configuration",
   "orchestra.integrations.title": "Integrations",
   "orchestra.integrations.description": "Choose explicit accounts, targets, and session bindings for this profile.",
   "orchestra.integrations.loading": "Loading integrations…",
@@ -106,6 +107,7 @@ export const INTEGRATIONS_COPY = {
 }
 
 export const INTEGRATIONS_COPY_BR: Record<keyof typeof INTEGRATIONS_COPY, string> = {
+  "orchestra.integrations.eyebrow": "{{profile}} · Configuração",
   "orchestra.integrations.title": "Integrações",
   "orchestra.integrations.description": "Escolha contas, destinos e vínculos de sessão explícitos para este perfil.",
   "orchestra.integrations.loading": "Carregando integrações…",

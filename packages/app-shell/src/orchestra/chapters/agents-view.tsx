@@ -12,6 +12,8 @@ export function AgentsRoster(props: {
   agents: readonly Agent[]
   availability: (agent: Agent) => { ok: boolean; title?: string; modelIssue?: boolean } | undefined
   scope: string
+  /** The catalog's display name for an agent's model, when this profile's catalog has loaded it. */
+  modelName?: (agent: Agent) => string | undefined
   onConfigure: (agent: Agent) => void
   onChat: () => void
   opening?: boolean
@@ -89,7 +91,9 @@ export function AgentsRoster(props: {
                         item.agent.model ? `${item.agent.model.providerID}/${item.agent.model.modelID}` : undefined
                       }
                     >
-                      {item.agent.model?.modelID ?? language.t("orchestra.agents.defaultModel")}
+                      {props.modelName?.(item.agent) ??
+                        item.agent.model?.modelID ??
+                        language.t("orchestra.agents.defaultModel")}
                     </bdi>
                   </MxBadge>
                   <MxBadge>{steps(item.agent)}</MxBadge>

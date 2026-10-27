@@ -567,7 +567,14 @@ html[data-color-scheme="light"] .mx-dialog {
   block-size: auto;
   min-block-size: 120px;
   resize: vertical;
-  font: 11.5px/1.65 var(--mx-mono);
+  font-size: var(--orchestra-font-size-md);
+  line-height: 1.6;
+}
+/* Code, commands, JSON and env values opt out of spellcheck, and only those get monospace. */
+.mx-field textarea[spellcheck="false"] {
+  font-family: var(--mx-mono);
+  font-size: var(--orchestra-font-size-sm);
+  line-height: 1.65;
 }
 .mx-field input:focus,
 .mx-field textarea:focus,

@@ -57,7 +57,7 @@
 }
 [data-component="dialog-overlay"]:has(+ [data-dialog-layer] .providers-dialog) {
   background: var(--mx-backdrop);
-  backdrop-filter: blur(5px);
+  backdrop-filter: var(--orchestra-scrim-filter);
 }
 
 /* Claude mode section (claude-mode.tsx), built from the shared kit table rows. */

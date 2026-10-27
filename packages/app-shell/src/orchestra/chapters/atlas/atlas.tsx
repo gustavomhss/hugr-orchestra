@@ -147,21 +147,21 @@ export default function AtlasPage(props: ChapterPageProps) {
           >
             <Match when={controller.state.unavailable}>
               <div class="at-page narrow">
-                <div class="at-held">
+                <div class="mx-empty at-held">
                   <span class="mx-mark">
                     <Icon name="atlas" />
                   </span>
-                  <h2>{language.t("orchestra.atlas.frame.unavailable")}</h2>
+                  <strong>{language.t("orchestra.atlas.frame.unavailable")}</strong>
                 </div>
               </div>
             </Match>
             <Match when={controller.state.empty}>
               <div class="at-page narrow">
-                <div class="at-held">
+                <div class="mx-empty at-held">
                   <span class="mx-mark">
                     <Icon name="atlas" />
                   </span>
-                  <h2>{language.t("orchestra.atlas.frame.empty.title")}</h2>
+                  <strong>{language.t("orchestra.atlas.frame.empty.title")}</strong>
                   <p>{language.t("orchestra.atlas.frame.empty.body")}</p>
                   <AtlasSetup />
                 </div>

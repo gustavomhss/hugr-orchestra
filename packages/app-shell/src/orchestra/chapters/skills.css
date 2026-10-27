@@ -46,7 +46,7 @@
 }
 .orchestra-skills-dialog::backdrop {
   background: var(--mx-backdrop);
-  backdrop-filter: blur(5px);
+  backdrop-filter: var(--orchestra-scrim-filter);
 }
 .orchestra-skills-dialog form {
   display: flex;

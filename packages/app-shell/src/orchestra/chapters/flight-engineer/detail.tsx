@@ -39,7 +39,7 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
     attempts: 0,
     missing: false,
     failed: false,
-    unavailable: false,
+    refused: undefined as "unavailable" | "running" | "missing_meeting" | undefined,
     transcript: false,
     focus: undefined as string | undefined,
     editing: false,
@@ -61,7 +61,7 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
       abort.abort()
       clearTimeout(timer)
     })
-    setStore({ attempts: 0, missing: false, failed: false, unavailable: false })
+    setStore({ attempts: 0, missing: false, failed: false, refused: undefined })
     setStore("detail", undefined)
     setStore("receipt", undefined)
     setDismissed(new Set<string>())
@@ -87,9 +87,10 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
   const owner = (item: { owner: Party }) => item.owner
 
   const run = async (work: Promise<unknown>) => {
-    setStore("unavailable", false)
+    setStore("refused", undefined)
     await work.catch((error) => {
-      if (refusal(error) === "unavailable") return setStore("unavailable", true)
+      const reason = refusal(error)
+      if (reason !== "other") return setStore("refused", reason)
       setStore("failed", true)
     })
   }
@@ -234,7 +235,7 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
           <h3>{title}</h3>
           <Show
             when={list().length > 0}
-            fallback={<p class="fe-empty">{t("orchestra.flightEngineer.detail.allHidden")}</p>}
+            fallback={<p class="mx-empty">{t("orchestra.flightEngineer.detail.allHidden")}</p>}
           >
             <ul class="fe-items">
               <For each={list()}>{render}</For>
@@ -308,8 +309,14 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
                 <Show when={detail().summary.retention === "ephemeral"}>
                   <Note>{t("orchestra.flightEngineer.detail.ephemeral")}</Note>
                 </Show>
-                <Show when={store.unavailable}>
-                  <Note>{t("orchestra.flightEngineer.detail.unavailable")}</Note>
+                <Show when={store.refused}>
+                  {(reason) => (
+                    <Note tone="bad">
+                      {t("orchestra.flightEngineer.detail.refused", {
+                        reason: t(`orchestra.flightEngineer.detail.refused.${reason()}` as "orchestra.flightEngineer.detail.refused.running"),
+                      })}
+                    </Note>
+                  )}
                 </Show>
                 <Show when={store.failed}>
                   <Note tone="bad">{t("orchestra.flightEngineer.detail.failed")}</Note>

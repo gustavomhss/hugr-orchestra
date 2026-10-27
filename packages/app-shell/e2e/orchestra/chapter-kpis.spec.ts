@@ -353,7 +353,7 @@ test("the pull request tile shows the host's open count, or why it cannot know i
     ["truncated", "240", "open on GitHub"],
     ["not_installed", "Not connected", "gh is not installed on this server"],
     ["not_authenticated", "Not connected", "glab is not signed in on this server"],
-    ["no_remote", "Not connected", "no github.com or gitlab.com remote"],
+    ["no_remote", "Not connected", "no GitHub or GitLab remote"],
     ["cli_failed", "Unavailable", "could not read pull requests"],
     ["missing", "Unavailable", "this server cannot read pull requests"],
     ["malformed", "Unavailable", "could not read pull requests"],

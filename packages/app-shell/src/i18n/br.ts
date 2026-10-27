@@ -316,6 +316,7 @@ export const dict = {
   "appDock.browser.bookmark.add": "Adicionar favorito",
   "appDock.browser.bookmark.remove": "Remover favorito",
   "appDock.browser.address": "Endereço",
+  "appDock.browser.address.placeholder": "Pesquise ou digite um endereço web",
   "appDock.browser.bookmarks": "Favoritos",
   "appDock.browser.history": "Histórico",
   "appDock.browser.find.label": "Localizar na página",

@@ -6,7 +6,7 @@ import { IntegrationsDialog, type IntegrationForm } from "./integrations-dialogs
 import { MxBadge, MxPage } from "./kit"
 import "./integrations.css"
 
-export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuthorize: (bearer: string) => void }) {
+export function IntegrationsScreen(props: { model: Model; basic: boolean; profile: string; onAuthorize: (bearer: string) => void }) {
   const language = useLanguage()
   const [state, setState] = createStore({
     form: undefined as IntegrationForm | undefined,
@@ -45,6 +45,8 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
   return (
     <MxPage
       id="orchestra-integrations"
+      // The kit's eyebrow is text; FSI/PDI isolate the profile name exactly as <bdi> does.
+      eyebrow={language.t("orchestra.integrations.eyebrow", { profile: `\u2068${props.profile}\u2069` })}
       title={language.t("orchestra.integrations.title")}
       description={language.t("orchestra.integrations.description")}
       action={
@@ -62,7 +64,7 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
         <p class="mx-note">{language.t("orchestra.integrations.supported")}</p>
         <Show when={props.model.state.hostAuthorization}>
           <form
-            class="integrations-auth"
+            class="integrations-auth mx-card"
             ref={(element) => {
               auth.current = element
             }}
@@ -75,7 +77,7 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
               props.onAuthorize(bearer)
             }}
           >
-            <h2>{language.t("orchestra.integrations.auth")}</h2>
+            <h2 class="mx-section">{language.t("orchestra.integrations.auth")}</h2>
             <label class="mx-field">
               <span>{language.t("orchestra.integrations.bearer")}</span>
               <input name="bearer" type="password" dir="ltr" required autocomplete="off" disabled={disabled()} />
@@ -102,7 +104,9 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
           </Show>
         </div>
         <Show when={props.model.state.status === "loading"}>
-          <p role="status">{language.t("orchestra.integrations.loading")}</p>
+          <p class="mx-empty" role="status">
+            {language.t("orchestra.integrations.loading")}
+          </p>
         </Show>
         <Show when={props.model.state.busy}>
           <div class="integrations-controls">
@@ -137,14 +141,9 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
             </p>
           )}
         </Show>
-        <Show when={props.model.state.status === "ready"}>
-          <p class="mx-note">{language.t("orchestra.integrations.live")}</p>
-          <Show when={!props.model.state.connections.length}>
-            <p role="status">{language.t("orchestra.integrations.empty")}</p>
-          </Show>
-        </Show>
         <h2
           id="integrations-accounts-title"
+          class="mx-section"
           tabindex={-1}
           ref={(element) => {
             focus.heading = element
@@ -152,6 +151,14 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
         >
           {language.t("orchestra.integrations.accounts")}
         </h2>
+        <Show when={props.model.state.status === "ready"}>
+          <p class="mx-note">{language.t("orchestra.integrations.live")}</p>
+          <Show when={!props.model.state.connections.length}>
+            <p class="mx-empty" role="status">
+              {language.t("orchestra.integrations.empty")}
+            </p>
+          </Show>
+        </Show>
         <ul class="integrations-list" aria-labelledby="integrations-accounts-title">
           <For each={state.accounts}>
             {(id) => {
@@ -199,8 +206,8 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
           </For>
         </ul>
         <Show when={props.model.state.connectionID}>
-          <section aria-labelledby="integrations-targets-title">
-            <h2 id="integrations-targets-title">{language.t("orchestra.integrations.targets")}</h2>
+          <section class="integrations-section" aria-labelledby="integrations-targets-title">
+            <h2 id="integrations-targets-title" class="mx-section">{language.t("orchestra.integrations.targets")}</h2>
             <div class="integrations-controls">
               <button
                 type="button"
@@ -220,14 +227,16 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
               </button>
             </div>
             <Show when={!props.model.state.targets.length && !disabled() && !props.model.state.failure}>
-              <p role="status">{language.t("orchestra.integrations.noTargets")}</p>
+              <p class="mx-empty" role="status">
+                {language.t("orchestra.integrations.noTargets")}
+              </p>
             </Show>
             <ul class="integrations-list">
               <For each={state.targets}>
                 {(id) => {
                   const item = () => props.model.state.targets.find((item) => item.target.id === id)
                   return (
-                    <li hidden={!item()}>
+                    <li class="mx-card" hidden={!item()}>
                       <button
                         type="button"
                         class="mx-btn integrations-select"
@@ -255,29 +264,33 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
                 {language.t("orchestra.integrations.more")}
               </button>
             </Show>
+            <Show when={props.model.state.targetID}>
+              <div class="integrations-controls">
+                <button
+                  type="button"
+                  class="mx-btn"
+                  disabled={disabled() || !target()}
+                  onClick={(event) => open("retarget", event.currentTarget)}
+                >
+                  {language.t("orchestra.integrations.retarget")}
+                </button>
+                <button
+                  type="button"
+                  class="mx-btn"
+                  disabled={disabled() || !target()}
+                  onClick={(event) => open("remove", event.currentTarget)}
+                >
+                  {language.t("orchestra.integrations.remove")}
+                </button>
+              </div>
+            </Show>
           </section>
         </Show>
         <Show when={props.model.state.targetID}>
-          <section aria-labelledby="integrations-bindings-title">
-            <div class="integrations-controls">
-              <button
-                type="button"
-                class="mx-btn"
-                disabled={disabled() || !target()}
-                onClick={(event) => open("retarget", event.currentTarget)}
-              >
-                {language.t("orchestra.integrations.retarget")}
-              </button>
-              <button
-                type="button"
-                class="mx-btn"
-                disabled={disabled() || !target()}
-                onClick={(event) => open("remove", event.currentTarget)}
-              >
-                {language.t("orchestra.integrations.remove")}
-              </button>
-            </div>
-            <h2 id="integrations-bindings-title">{language.t("orchestra.integrations.bindings")}</h2>
+          <section class="integrations-section" aria-labelledby="integrations-bindings-title">
+            <h2 id="integrations-bindings-title" class="mx-section">
+              {language.t("orchestra.integrations.bindings")}
+            </h2>
             <p class="mx-note">{language.t("orchestra.integrations.bindingHint")}</p>
             <button
               type="button"
@@ -288,7 +301,9 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
               {language.t("orchestra.integrations.bind")}
             </button>
             <Show when={!props.model.state.bindings.length && !disabled() && !props.model.state.failure}>
-              <p role="status">{language.t("orchestra.integrations.noBindings")}</p>
+              <p class="mx-empty" role="status">
+                {language.t("orchestra.integrations.noBindings")}
+              </p>
             </Show>
             <ul class="integrations-list">
               <For each={state.bindings}>

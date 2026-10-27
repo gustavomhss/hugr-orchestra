@@ -173,6 +173,7 @@ export type ElectronAPI = import("@orchestra/app/app-dock-linux").AppDockLinuxAP
   setDefaultServerUrl: (url: string | null) => Promise<void>
   isFirstLaunchOnboardingPending: () => Promise<boolean>
   finishFirstLaunchOnboarding: (createDefaultProject: boolean, folderName?: string) => Promise<string | null>
+  confirmFirstLaunchOnboarding: () => Promise<void>
   isOldLayoutEligible: () => Promise<boolean>
   getDisplayBackend: () => Promise<LinuxDisplayBackend | null>
   setDisplayBackend: (backend: LinuxDisplayBackend | null) => Promise<void>

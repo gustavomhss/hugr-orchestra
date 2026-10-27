@@ -189,12 +189,13 @@ function Workbench(props: ChapterPageProps & {
     <div class="actions-workbench">
       <aside class="actions-sidebar actions-context" aria-label={props.t("orchestra.actions.title")}>
         <header class="actions-context-head"><span class="mx-mark"><Icon name={state.binding?.provider.kind === "gitlab" ? "gitlab" : state.binding ? "github" : "workflow"} /></span>
-          <div><strong>{props.t(state.binding?.provider.kind === "gitlab" ? "orchestra.actions.gitlab" : state.binding ? "orchestra.actions.github" : "orchestra.actions.title")}</strong><small><bdi>{state.binding?.projectPath ?? props.directory}</bdi></small></div></header>
-        <div class="context-group" role="group" aria-labelledby={`${ids}-browse`}><div class="context-label" id={`${ids}-browse`}>{props.t("orchestra.actions.shell.browse")}</div>
+          <div><strong>{props.t(state.binding?.provider.kind === "gitlab" ? "orchestra.actions.gitlab" : state.binding ? "orchestra.actions.github" : "orchestra.actions.title")}</strong><small class="context-path" title={state.binding?.projectPath ?? props.directory}><bdi dir="ltr">{state.binding?.projectPath ?? props.directory}</bdi></small></div></header>
+        {/* The top tabs already open these three; the rail repeats them only once the tabs give way to a selection. */}
+        <Show when={contextual()}><div class="context-group" role="group" aria-labelledby={`${ids}-browse`}><div class="context-label" id={`${ids}-browse`}>{props.t("orchestra.actions.shell.browse")}</div>
           {nav(props.t("orchestra.actions.shell.allWorkflows"), () => ({ view: "library" }), "workflow", () => state.route.view === "library")}
           {nav(props.t("orchestra.actions.shell.allRuns"), () => ({ view: "runs" }), "retry", () => state.route.view === "runs" && !state.route.workflowID)}
           {nav(props.t("orchestra.actions.guardrails"), () => ({ view: "guardrails" }), "shield", () => state.route.view === "guardrails")}
-        </div>
+        </div></Show>
         <Show when={workflow()}>{(item) => <div class="context-selection">
           <strong><bdi>{item().name ?? item().id}</bdi></strong><small><bdi dir="ltr">{item().path}</bdi></small>
           {nav(props.t("orchestra.actions.graph"), () => ({ view: "workflow", workflowID: item().id, path: item().path, ref: state.route.runID ? undefined : state.route.ref, tab: "graph" }), "workflow", () => state.route.view === "workflow" && tab() === "graph")}
@@ -226,7 +227,7 @@ function Workbench(props: ChapterPageProps & {
         <div class="context-group context-project"><div class="context-label">{props.t("orchestra.actions.projectResources")}</div>
           <For each={resourceLinks}>{(item) => nav(props.t(item[1]), () => ({ view: "resources", resourceKind: item[0] }), item[2],
             () => state.route.view === "resources" && (state.route.resourceKind ?? "artifacts") === item[0])}</For>
-          {nav(props.t("orchestra.actions.settings"), () => ({ view: "settings" }), "settings", () => state.route.view === "settings")}
+          <Show when={contextual()}>{nav(props.t("orchestra.actions.settings"), () => ({ view: "settings" }), "settings", () => state.route.view === "settings")}</Show>
         </div>
         <footer class="context-footer">{nav(props.t("orchestra.actions.local"), () => ({ view: "local" }), "local", () => state.route.view === "local")}
           <small>{props.t("orchestra.actions.localHint")}</small></footer>
@@ -238,7 +239,7 @@ function Workbench(props: ChapterPageProps & {
             <Show when={workflow()}>{(item) => <><span aria-hidden="true"> / </span><button type="button" class="mx-link"
               onClick={() => model.navigate({ view: "workflow", workflowID: item().id })}><bdi>{item().name ?? item().id}</bdi></button></>}</Show>
             <Show when={run()}>{(item) => <><span aria-hidden="true"> / </span><button type="button" class="mx-link"
-              onClick={() => model.navigate({ view: "run", runID: item().id })}><bdi dir="ltr">{item().id}</bdi></button></>}</Show>
+              title={item().id} onClick={() => model.navigate({ view: "run", runID: item().id })}><bdi dir="ltr">{runLabel()}</bdi></button></>}</Show>
           </nav></Show>
           <Show when={!contextual()}><header class="mx-heading"><div><div class="mx-eyebrow">{props.t("orchestra.actions.eyebrow")}</div><h1>{props.t("orchestra.actions.title")}</h1><p>{props.t("orchestra.actions.description")}</p></div>
             <div class="heading-actions"><button type="button" class="mx-btn" disabled={state.submitting} onClick={() => void model.refresh()}>

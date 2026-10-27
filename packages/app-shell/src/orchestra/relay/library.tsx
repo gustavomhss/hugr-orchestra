@@ -155,24 +155,15 @@ export function WorkflowLibrary(props: Props) {
     >
       <p class="wf-xlink">
         <Show when={!props.shared}>{copy.t("orchestra.workflows.scope", { project: props.profile })} </Show>
-        <a
-          href={relayPath.library("hook")}
-          onClick={(event) => {
-            event.preventDefault()
-            props.go(relayPath.library("hook"))
-          }}
-        >
-          {copy.t("orchestra.workflows.xlink")}
-        </a>{" "}
-        <a
-          href={relayPath.runs("workflow")}
-          onClick={(event) => {
-            event.preventDefault()
-            props.go(relayPath.runs("workflow"))
-          }}
-        >
+        {copy.t("orchestra.workflows.xlink")}
+        <button type="button" class="mx-link" onClick={() => props.go(relayPath.library("hook"))}>
+          {copy.t("orchestra.hooks.title")}
+        </button>
+        {copy.t("orchestra.workflows.xlinkRuns")}
+        <button type="button" class="mx-link" onClick={() => props.go(relayPath.runs("workflow"))}>
           {copy.t("orchestra.palette.executions")}
-        </a>
+        </button>
+        .
       </p>
       <Show when={props.shared && props.route.tab !== "runs"}>
         <p class="wf-retained" role="status" data-slot="relay-repository-required">

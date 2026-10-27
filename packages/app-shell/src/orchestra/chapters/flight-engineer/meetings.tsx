@@ -103,31 +103,32 @@ export function MeetingList(props: { meetings: Meetings | undefined; flight: Ret
           <Show
             when={shown().length > 0}
             fallback={
-              <p class="fe-empty" role="status">
+              <p class="mx-empty" role="status">
                 {store.loading ? t("orchestra.flightEngineer.meetings.loading") : t("orchestra.flightEngineer.meetings.empty")}
               </p>
             }
           >
-            <div class="mx-table fe-table" role="table" aria-label={t("orchestra.flightEngineer.meetings.title")}>
-              <div class="fe-table-head" role="row">
-                <span role="columnheader">{t("orchestra.flightEngineer.meetings.col.meeting")}</span>
-                <span role="columnheader" />
-                <span role="columnheader">{t("orchestra.flightEngineer.meetings.col.length")}</span>
-                <span role="columnheader">{t("orchestra.flightEngineer.meetings.col.answers")}</span>
+            <div class="mx-table fe-table" role="list" aria-label={t("orchestra.flightEngineer.meetings.title")}>
+              <div class="fe-table-head" aria-hidden="true">
+                <span>{t("orchestra.flightEngineer.meetings.col.meeting")}</span>
+                <span />
+                <span>{t("orchestra.flightEngineer.meetings.col.length")}</span>
+                <span>{t("orchestra.flightEngineer.meetings.col.answers")}</span>
               </div>
               <For each={shown()}>
                 {(meeting) => {
                   const status = () => listStatus(meeting)
                   return (
-                    <button type="button" class="fe-table-row" role="row" onClick={() => props.open(meeting.id)}>
-                      <span class="fe-cell-main" role="cell">
+                    <div role="listitem" class="fe-table-item">
+                    <button type="button" class="fe-table-row" onClick={() => props.open(meeting.id)}>
+                      <span class="fe-cell-main">
                         <strong>{meeting.title}</strong>
                         <small>
                           {when(num(meeting.startedAt))}
                           {meeting.people.length > 0 ? ` · ${meeting.people.map((person) => person.name).join(", ")}` : ""}
                         </small>
                       </span>
-                      <span role="cell" class="fe-cell-badge">
+                      <span class="fe-cell-badge">
                         <Show when={status() === "recording"}>
                           <MxBadge tone="bad">{t("orchestra.flightEngineer.recording")}</MxBadge>
                         </Show>
@@ -138,7 +139,7 @@ export function MeetingList(props: { meetings: Meetings | undefined; flight: Ret
                           <MxBadge>{t("orchestra.flightEngineer.meetings.ended")}</MxBadge>
                         </Show>
                       </span>
-                      <span role="cell" class="fe-num">
+                      <span class="fe-num">
                         <Show
                           when={status() === "recording"}
                           fallback={t("orchestra.flightEngineer.minutes", { count: minutes(meeting) ?? 0 })}
@@ -146,8 +147,9 @@ export function MeetingList(props: { meetings: Meetings | undefined; flight: Ret
                           {props.flight.store.run.running ? clock(props.flight.elapsed()) : "—"}
                         </Show>
                       </span>
-                      <span role="cell" class="fe-num">{num(meeting.counts.answers)}</span>
+                      <span class="fe-num">{num(meeting.counts.answers)}</span>
                     </button>
+                    </div>
                   )
                 }}
               </For>
