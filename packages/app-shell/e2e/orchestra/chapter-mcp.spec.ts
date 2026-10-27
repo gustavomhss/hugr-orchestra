@@ -68,8 +68,9 @@ test("mixed statuses, search, connection target, refresh, keyboard, and themes",
   )
   await expect(row(page, "shared").locator(".mx-badge")).toHaveText(["Disconnected (until restart)"])
   await expect(row(page, "shared")).toContainText('set "enabled": false in its entry in orchestra.json')
-  // The switch shows a live connection: a failed server is off and switching it on retries.
-  await expect(row(page, "broken").getByRole("switch", { name: "Connect broken (until restart)" })).not.toBeChecked()
+  // A failed server offers Try again in place of the switch.
+  await expect(row(page, "broken").getByRole("button", { name: "Try again" })).toBeVisible()
+  await expect(row(page, "broken").getByRole("switch")).toHaveCount(0)
   // A retry cannot register an OAuth client, so the card points to the config instead of offering a switch.
   await expect(row(page, "registration").getByRole("switch")).toHaveCount(0)
   await expect(row(page, "registration")).toContainText("Add oauth.clientId to its entry in orchestra.json")
@@ -132,7 +133,7 @@ test("disconnect, retry and OAuth go through the shared toggle; failures stay on
   await row(page, "secured").getByRole("button", { name: "Authenticate" }).click()
   await expect(row(page, "secured").getByRole("switch")).toBeChecked()
   await expect(row(page, "secured").getByRole("alert")).toHaveCount(0)
-  await toggleConnection(page, "broken")
+  await row(page, "broken").getByRole("button", { name: "Try again" }).click()
   await expect(row(page, "broken")).toHaveAttribute("data-status", "connected")
   await expect(row(page, "broken").getByRole("switch")).toBeChecked()
   expect(posts(state).every((r) => r.url.startsWith(`${serverA}/`) && r.directory === directory)).toBe(true)
@@ -188,7 +189,6 @@ test("V2 lists, toggles, saves and removes through the current API", async ({ pa
   await page.getByRole("button", { name: "Add MCP server" }).click()
   const dialog = page.getByRole("dialog", { name: "Add MCP server" })
   await dialog.getByLabel("Name").fill("docs")
-  await dialog.getByLabel("Transport").selectOption("http")
   await dialog.getByLabel("Command or server URL").fill("https://mcp.example.test/docs")
   await dialog.getByRole("button", { name: "Save" }).click()
   await expect(row(page, "docs")).toBeVisible()
@@ -196,7 +196,6 @@ test("V2 lists, toggles, saves and removes through the current API", async ({ pa
   // Configure prefills the profile's own entry the server reports through GET /api/mcp/entries.
   await row(page, "docs").getByRole("button", { name: "Configure" }).click()
   const configure = page.getByRole("dialog", { name: "Configure docs" })
-  await expect(configure.getByLabel("Transport")).toHaveValue("http")
   await expect(configure.getByLabel("Command or server URL")).toHaveValue("https://mcp.example.test/docs")
   await expect(configure.getByLabel("Command or server URL")).toBeEditable()
   await configure.getByRole("button", { name: "Remove server" }).click()
@@ -234,8 +233,7 @@ test("add validates the name and endpoint and writes the profile config", async 
     await expect(dialog.getByRole("alert")).toHaveText("Enter a name. Names cannot be . or .. or contain / or \\.")
   }
   await dialog.getByLabel("Name").fill("docs")
-  await dialog.getByLabel("Transport").selectOption("http")
-  await dialog.getByLabel("Command or server URL").fill("not a url")
+  await dialog.getByLabel("Command or server URL").fill("https://")
   await dialog.getByRole("button", { name: "Save" }).click()
   await expect(dialog.getByRole("alert")).toHaveText("Enter a valid server URL.")
   await dialog.getByLabel("Command or server URL").fill("ftp://mcp.example.test/docs")
@@ -290,7 +288,6 @@ test("configure prefills the raw profile entry, skips unedited saves, and remove
   await expect(edit.getByRole("alert")).toHaveText("Last connection error: Connection refused by upstream")
   await expect(edit.getByLabel("Name")).toHaveValue("broken")
   await expect(edit.getByLabel("Name")).toHaveJSProperty("readOnly", true)
-  await expect(edit.getByLabel("Transport")).toHaveValue("stdio")
   await expect(edit.getByLabel("Command or server URL")).toHaveValue(`bunx 'broken server' --token {env:TOKEN}`)
   await expect(page.locator("dialog")).not.toContainText("resolved-secret")
   await edit.getByRole("button", { name: "Save" }).click()
