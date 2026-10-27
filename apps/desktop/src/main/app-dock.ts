@@ -50,6 +50,8 @@ export type AppDockEvent =
   | Readonly<{ type: "state"; payload: AppDockState }>
   | Readonly<{ type: "tab-opened" | "tab-opened-background"; payload: AppDockTab }>
   | Readonly<{ type: "tab-selected"; payload: AppDockIdentity }>
+  // The desktop closed an inactive tab itself to stay under the view limit; the renderer drops it.
+  | Readonly<{ type: "tab-evicted"; payload: AppDockIdentity }>
   | Readonly<{
       type: "tab-crashed"
       payload: { identity: AppDockIdentity; reason: "crashed" | "killed" | "oom" }
@@ -187,7 +189,10 @@ export function createAppDock(options: {
   const evictOldestInactive = (senderID?: number) => {
     for (const oldest of inactive.values()) {
       if (senderID === undefined || oldest.senderID === senderID) {
+        const record = tabs.get(oldest.senderID)?.get(oldest.tabID)
         remove(oldest.senderID, oldest.tabID)
+        // remove() reports to the Linux side only; without this the renderer keeps the evicted tab as a ghost.
+        if (record) record.notify(Object.freeze({ type: "tab-evicted", payload: identity(oldest.tabID, record.generation) }))
         return true
       }
     }

@@ -20,13 +20,15 @@ import { executeTool, toolIdentity } from "./lib/tool"
 
 // The grep and glob tools without ripgrep: the model sees why the search could not run, not only that it failed.
 
+const asserted: { action: string; resources: readonly string[] }[] = []
+
 const permission = Layer.succeed(
   PermissionV2.Service,
   PermissionV2.Service.of({
     evaluate: () => Effect.die("unused permission evaluation"),
     authorize: () => Effect.die("unused permission authorization"),
     askExplicit: () => Effect.die("unused"),
-    assert: () => Effect.void,
+    assert: (input) => Effect.sync(() => void asserted.push({ action: input.action, resources: input.resources })),
     ask: () => Effect.die("unused"),
     reply: () => Effect.die("unused"),
     get: () => Effect.die("unused"),
@@ -75,6 +77,31 @@ describe("grep and glob tools without ripgrep", () => {
       expect(glob).toMatchObject({ type: "error" })
       expect(String(glob.value)).toContain("Unable to find files matching **/*.ts: ")
       expect(String(glob.value)).toContain(RipgrepBinary.DISABLE_DOWNLOAD)
+    }),
+  )
+
+  it.effect("ask for external_directory approval before searching an absolute path outside the Location", () =>
+    Effect.gen(function* () {
+      const registry = yield* ToolRegistry.Service
+      const outside = path.join(os.tmpdir(), "orchestra-outside-search")
+      yield* Effect.forEach(
+        [
+          { name: GrepTool.name, input: { pattern: "needle", path: outside } },
+          { name: GlobTool.name, input: { pattern: "*.ts", path: outside } },
+        ],
+        (call) =>
+          Effect.gen(function* () {
+            asserted.length = 0
+            yield* executeTool(registry, {
+              sessionID,
+              ...toolIdentity,
+              call: { type: "tool-call", id: `call-${call.name}`, name: call.name, input: call.input },
+            })
+            expect(asserted.map((item) => item.action)).toEqual(["external_directory", call.name])
+            expect(asserted[0]?.resources[0]).toEndWith("/*")
+          }),
+        { discard: true },
+      )
     }),
   )
 })

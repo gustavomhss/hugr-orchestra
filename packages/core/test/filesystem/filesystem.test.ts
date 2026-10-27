@@ -10,6 +10,23 @@ const live = LayerNode.compile(LayerNode.group([FSUtil.node, LayerNodePlatform.f
 const { effect: it } = testEffect(live)
 
 describe("FSUtil", () => {
+  describe("writeJson", () => {
+    it(
+      "replaces the file whole and leaves no temp file behind",
+      Effect.gen(function* () {
+        const fs = yield* FSUtil.Service
+        const filesys = yield* FileSystem.FileSystem
+        const tmp = yield* filesys.makeTempDirectoryScoped()
+        const file = path.join(tmp, "auth.json")
+        yield* filesys.writeFileString(file, "old")
+        yield* fs.writeJson(file, { a: 1 }, 0o600)
+        expect(yield* fs.readJson(file)).toEqual({ a: 1 })
+        expect(yield* filesys.readDirectory(tmp)).toEqual(["auth.json"])
+        expect((yield* filesys.stat(file)).mode & 0o777).toBe(0o600)
+      }),
+    )
+  })
+
   describe("isDir", () => {
     it(
       "returns true for directories",

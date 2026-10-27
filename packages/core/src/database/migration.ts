@@ -26,8 +26,12 @@ export function apply(db: Database, input: Migration[] = migrations) {
       )
       if (tables.some((table) => table.name === "session")) return yield* applyExisting(db, input)
       if (tables.length > 0) return yield* Effect.die("Database is not empty and has no session table")
+      // IMMEDIATE takes the write lock up front, so a second process (CLI and desktop share one database file)
+      // waits here instead of both creating the schema; the check inside the lock sees what the first one did.
       yield* db.transaction((tx) =>
         Effect.gen(function* () {
+          const created = yield* tx.get(sql`SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'session'`)
+          if (created) return
           yield* schema.up(tx)
           yield* tx.run(
             sql`CREATE TABLE ${sql.identifier("migration")} (id TEXT PRIMARY KEY, time_completed INTEGER NOT NULL)`,
@@ -38,6 +42,7 @@ export function apply(db: Database, input: Migration[] = migrations) {
             ),
           )
         }),
+        { behavior: "immediate" },
       )
     }),
   )
@@ -144,13 +149,20 @@ export function applyOnly(db: Database, input: Migration[]) {
 
     for (const migration of input) {
       if (completed.has(migration.id)) continue
-      yield* db.transaction((tx) =>
-        Effect.gen(function* () {
-          yield* migration.up(tx)
-          yield* tx.run(
-            sql`INSERT INTO ${sql.identifier("migration")} (id, time_completed) VALUES (${migration.id}, ${Date.now()})`,
-          )
-        }),
+      // The semaphore only serialises this process. IMMEDIATE makes another process (CLI and desktop share the
+      // database file) wait for the write lock, and the journal is read again inside it, so a migration the other
+      // process just applied is skipped instead of failing on a duplicate column.
+      yield* db.transaction(
+        (tx) =>
+          Effect.gen(function* () {
+            const done = yield* tx.get(sql`SELECT id FROM ${sql.identifier("migration")} WHERE id = ${migration.id}`)
+            if (done) return
+            yield* migration.up(tx)
+            yield* tx.run(
+              sql`INSERT INTO ${sql.identifier("migration")} (id, time_completed) VALUES (${migration.id}, ${Date.now()})`,
+            )
+          }),
+        { behavior: "immediate" },
       )
     }
   })
