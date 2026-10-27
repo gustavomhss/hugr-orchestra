@@ -254,7 +254,8 @@ const layer = Layer.effect(
         ...(input.rows === undefined ? {} : { rows: clampSize(input.rows) }),
       }
       const backend = Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off" ? "legacy" : "omni"
-      yield* Effect.logInfo("creating session", { id, cmd: command, args, cwd, backend })
+      // Argv and cwd can carry secrets and private paths: log the executable and the argument count only.
+      yield* Effect.logInfo("creating session", { id, cmd: command.split(/[\\/]/).pop(), args: args.length, backend })
       const omni =
         backend === "omni"
           ? yield* Effect.gen(function* () {

@@ -1,4 +1,5 @@
 import { Formatter, Logger, type LogLevel } from "effect"
+import { chmodSync, closeSync, openSync, renameSync, statSync } from "fs"
 import path from "path"
 import { Global } from "../global"
 import { runID } from "./shared"
@@ -47,8 +48,19 @@ function format(input: unknown) {
 }
 
 export function fileLogger(file = path.join(Global.Path.log, "orchestra.log"), id: string = runID) {
+  prepare(file)
   // Do not set batchWindow to 0; it causes high idle CPU usage.
   return Logger.toFile(formatter(id), file, { flag: "a" })
+}
+
+// Logs can carry paths and prompts, so the file is owner-only. The previous log is kept as `.1` once the file passes the
+// cap, which bounds the log directory at twice the cap; the cap is checked when the logger starts.
+const MAX_LOG_BYTES = 10 * 1024 * 1024
+
+function prepare(file: string) {
+  if ((statSync(file, { throwIfNoEntry: false })?.size ?? 0) > MAX_LOG_BYTES) renameSync(file, file + ".1")
+  closeSync(openSync(file, "a", 0o600))
+  chmodSync(file, 0o600)
 }
 
 const stderrLogger = Logger.make((options) => process.stderr.write(formatter().log(options) + "\n"))

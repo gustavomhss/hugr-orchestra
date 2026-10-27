@@ -12,6 +12,8 @@ export default Runtime.handler(
   Effect.fn("cli.web")(function* (input) {
     if (!process.env.ORCHESTRA_SERVER_PASSWORD) process.stdout.write("!  ORCHESTRA_SERVER_PASSWORD is not set; the server uses the saved service password." + EOL)
     const hostname = input.mdns && input.hostname === "127.0.0.1" ? "0.0.0.0" : input.hostname
+    if (hostname !== "127.0.0.1" && hostname !== "localhost" && hostname !== "::1")
+      process.stdout.write(`!  The server listens on ${hostname} over plain HTTP: the password and everything you send travel unencrypted on your network. Use it only on a network you trust.` + EOL)
     return yield* serveForever({
       hostname,
       port: input.port,

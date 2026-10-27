@@ -64,6 +64,12 @@ export const describe = (command: ChildProcess.Command) =>
     .commands.map((x) => `${x.command} ${x.args.join(" ")}`)
     .join(" | ")
 
+/** For logs: argv can carry prompts and tokens, so only each executable's name and argument count. */
+export const summarize = (command: ChildProcess.Command) =>
+  flatten(command)
+    .commands.map((x) => `${x.command.split(/[\\/]/).pop()} (${x.args.length} args)`)
+    .join(" | ")
+
 export const toPlatformError = (
   method: string,
   err: NodeJS.ErrnoException,

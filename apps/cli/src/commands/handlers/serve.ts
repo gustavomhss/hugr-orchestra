@@ -75,6 +75,10 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
         const daemon = yield* Daemon.Service
         // A desktop-owned child gets a per-launch password in env and never touches the daemon's password file.
         const password = process.env.ORCHESTRA_SERVER_PASSWORD || (yield* daemon.password())
+        // The password is captured: drop it from the environment so no child (stdio MCP server, LSP, PTY, omni) inherits it.
+        // The server authenticates from the value passed to createRoutes, never from env.
+        delete process.env.ORCHESTRA_SERVER_PASSWORD
+        delete process.env.ORCHESTRA_SERVER_USERNAME
         const root = yield* Effect.promise(() => webRoot())
         // Legacy transcripts on this database are copied to V2 before the server answers: a Session is eligible only
         // while it has no V2 message, so a prompt reaching an old Session first would skip its history forever.
