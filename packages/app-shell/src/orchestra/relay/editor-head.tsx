@@ -2,7 +2,7 @@ import { createSignal, type JSX, onCleanup, onMount, Show } from "solid-js"
 import { showToast } from "@/utils/toast"
 import { type RelayDocument, type RelayKind, writeFailure } from "./client"
 import { useDraftScope } from "./drafts"
-import { HeadBadge } from "./parts"
+import { HeadBadge, RunButton } from "./parts"
 import { relayPath } from "./route"
 import { Ic, Menu, type MenuItem, useRelayCopy } from "./ui"
 
@@ -41,6 +41,7 @@ export function EditorHead(props: {
   onInstall: (next: boolean) => void
   onReload: () => void
   onRetry?: () => void
+  onRun?: () => void
   onUseInChat?: () => void
 }) {
   const copy = useRelayCopy()
@@ -231,6 +232,13 @@ export function EditorHead(props: {
             </span>
           }
         >
+          <Show when={published() && props.onRun}>
+            <RunButton
+              document={props.document}
+              class={props.canPublish ? "mx-btn" : "mx-btn primary"}
+              onRun={() => props.onRun?.()}
+            />
+          </Show>
           <Show when={published() && props.onUseInChat}>
             <button
               type="button"
