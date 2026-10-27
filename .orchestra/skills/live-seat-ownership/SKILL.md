@@ -26,7 +26,7 @@ The live seat (id `live`) is the user's meeting copilot: it hears the call, answ
 - Private to the user. Meeting data lives only in the local database: never git, Atlas, Relay, sync, telemetry or any remote. No code path may copy it out.
 - No encryption layer. The owner rejected it; FileVault covers rest. Do not add sealing or key paths.
 - Only `live` reads meeting memory: only its profile is granted the recall tools, and Maestro gets only what the user hands off.
-- The handoff carries items with ids, never transcript or quotes.
+- The handoff carries items with ids, never transcript or quotes. With no Maestro conversation in the project it opens one; it never fails for lack of one.
 - The live seat never writes Atlas knowledge or rules and never dispatches seats. It suggests; the user or Maestro decides.
 - Logs and transport logs carry ids, counts and timings, never text, quotes, names or keys.
 - Meetings survive Session deletion; only deleting the meeting erases it. Person rows stay as the user's address book.

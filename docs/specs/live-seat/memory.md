@@ -45,5 +45,6 @@ Code: `packages/core/src/tool/meeting-recall.ts`, `packages/core/src/session/mee
 Code: `packages/core/src/session/meeting-handoff.ts`, `POST /api/meeting/handoff`.
 
 - The user picks card items; they go to Maestro as one queued `team_message` from `live`, with meeting and item ids as provenance. No transcript and no quotes are sent.
+- The message goes to Maestro's most recently active top-level conversation in the project. With none, the handoff opens a new Maestro Session for it.
 - Dismissed items and suggestions meant for the owner are refused. Sent items get a new revision with `sent_to_maestro`.
 - Maestro decides what to do with them. The live seat never writes Atlas knowledge or rules.
