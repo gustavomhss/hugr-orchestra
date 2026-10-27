@@ -101,7 +101,9 @@ test("rtl canvas: a step dropped from the add panel lands where it was released"
   })
   await expect(page).toHaveURL(/\/node\/execute$/)
   const box = (await tile(page, "execute").boundingBox())!
+  const after = (await canvas(page).boundingBox())!
   // The step snaps to the 8-unit grid, which is at most 4px at this zoom; a mirrored drop would be over a hundred away.
-  expect(Math.abs(box.x + box.width / 2 - release.x)).toBeLessThan(8)
-  expect(Math.abs(box.y + box.height / 2 - release.y)).toBeLessThan(8)
+  // Opening the step can resize the header above the canvas, so measure from the canvas edge, not the viewport.
+  expect(Math.abs(box.x + box.width / 2 - after.x - (release.x - area.x))).toBeLessThan(8)
+  expect(Math.abs(box.y + box.height / 2 - after.y - (release.y - area.y))).toBeLessThan(8)
 })
