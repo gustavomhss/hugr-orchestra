@@ -168,8 +168,8 @@ export const ATLAS_OWNERSHIP_COPY = {
 }
 
 export const ATLAS_OWNERSHIP_COPY_BR: Record<keyof typeof ATLAS_OWNERSHIP_COPY, string> = {
-  "orchestra.atlas.ownership.crumb": "Propriedade",
-  "orchestra.atlas.ownership.eyebrow": "Motor · Propriedade",
+  "orchestra.atlas.ownership.crumb": "Titularidade",
+  "orchestra.atlas.ownership.eyebrow": "Motor · Titularidade",
   "orchestra.atlas.ownership.title": "Ownership, empacotado como skills",
   "orchestra.atlas.ownership.hero.what":
     "Para cada parte do código, o Atlas escreve um documento de ownership: <code>own_genesis</code>, <code>own_auth</code>, <code>own_billing</code>. Ele diz para que serve aquela parte, quais arquivos cobre, as regras que mantém, suas armadilhas e dicas, o que depende dela e onde ler a seguir. O código o compõe a partir de fatos do Atlas, sem modelo, sempre com os mesmos bytes.",

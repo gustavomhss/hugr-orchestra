@@ -121,3 +121,7 @@ Sign in to Claude in Settings › Claude mode, or run `claude auth login`, then 
 - Backend oracles (already on the branch): `packages/orchestra/test/claude-code/login.test.ts`,
   `packages/orchestra/test/claude-code/host/provider.test.ts`, and the HttpApi exercise
   `packages/orchestra/test/server/httpapi-exercise/provider.ts` (`bun run test:httpapi`).
+
+## Catalog in Claude mode
+
+With `agents.maestro.engine: "claude-code"` and Claude Code signed in, `modules/engine-adapters/claude-code/src/v2/catalog.ts` (the `engine-claude-code` host contribution `references`) provides `CatalogAvailability.AdditionalProviders` and `DefaultModel`. The provider and model lists then include Anthropic (`api.settings.executionHost: "claude-code"`) with no API key, and the default model is `agents.maestro.model` or `model` when it is an enabled `anthropic/...` model, else the first enabled Anthropic model. A disabled Anthropic provider, a signed-out binary or any other Maestro engine advertises nothing.

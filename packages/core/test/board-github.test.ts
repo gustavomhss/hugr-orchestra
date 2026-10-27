@@ -285,6 +285,7 @@ describe("Board GitHub mirror", () => {
       expect(github.state.issues[0]?.body).toBe(
         "Plan only.\n\n---\nTracked on the Orchestra board as SEC-1. <!-- orchestra-board:SEC-1 -->",
       )
+      expect(github.state.calls.length).toBeGreaterThan(0)
       for (const text of [SECRET, "NOTE-MARKER", "QUESTION-MARKER", "deploy key"]) expect(sent).not.toContain(text)
     }),
   )

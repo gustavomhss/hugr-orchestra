@@ -43,7 +43,7 @@ export async function startOwnedServe(options: {
     ORCHESTRA_SERVER_USERNAME: "orchestra",
     ORCHESTRA_SERVER_PASSWORD: password,
   }
-  const state = { child: undefined as DesktopOmni.Spawned | undefined, stopping: false, killed: false, failures: 0 }
+  const state = { child: undefined as DesktopOmni.Spawned | undefined, stopping: false, killed: false, failures: 0, closed: undefined as Promise<void> | undefined }
   const recent: string[] = []
   const write = (stream: "stdout" | "stderr", line: string) => {
     recent.push(line)
@@ -56,6 +56,8 @@ export async function startOwnedServe(options: {
     const args = [...options.command.slice(1), "serve", "--hostname", HOSTNAME, "--port", String(port)]
     const child = DesktopOmni.spawn(options.command[0], args, { env, stdin: "closed", graceMs: TREE_GRACE })
     state.child = child
+    // Created at launch so a stop that lands between "exit" and "close" still waits for the drain.
+    state.closed = new Promise<void>((resolve) => child.once("close", () => resolve()))
     // An omni child learns its pid asynchronously, so the witness waits for the spawn event.
     child.once("spawn", () => options.onSpawn?.(child.pid))
     forward(child.stdout, (line) => write("stdout", line.replaceAll(password, "[redacted]")))
@@ -98,10 +100,13 @@ export async function startOwnedServe(options: {
   const stop = async () => {
     state.stopping = true
     const child = state.child
-    if (!child) return
     // Wait for "close", not "exit": the omni child still drains its output and reaps its tree after the exit, and the app
-    // must not quit under that native work (on Windows it ends the process with a nonzero status).
-    const exited = new Promise<"exited">((resolve) => child.once("close", () => resolve("exited")))
+    // must not quit under that native work (on Windows it ends the process with a nonzero status). `state.child` is
+    // cleared on "exit", so the close promise is kept apart from it.
+    const closed = state.closed
+    if (!closed) return
+    if (!child) return void (await Promise.race([closed, delay(STOP_TIMEOUT)]))
+    const exited = closed.then(() => "exited" as const)
     // SIGTERM goes to the server alone. Stopping its whole omni tree would also end the supervisor the server relies on
     // to reap the shells and MCP servers its tools started, and they would outlive it. Windows has no SIGTERM, and its
     // job object ends the tree.

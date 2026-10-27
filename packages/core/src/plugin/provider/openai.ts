@@ -76,7 +76,17 @@ const browser = {
         response.writeHead(200, { "Content-Type": "text/html" }).end(OauthCallbackPage.success({ provider: "ChatGPT" }))
       })
       yield* Effect.callback<void, Error>((resume) => {
-        server.once("error", (error) => resume(Effect.fail(error)))
+        server.once("error", (error: NodeJS.ErrnoException) =>
+          resume(
+            Effect.fail(
+              error.code === "EADDRINUSE"
+                ? new Error(
+                    `Port ${callbackPort} is already in use, likely by another ChatGPT or Codex sign-in. Finish or close it, then try again.`,
+                  )
+                : error,
+            ),
+          ),
+        )
         server.listen(callbackPort, "localhost", () => resume(Effect.void))
       })
       yield* Effect.addFinalizer(() => Effect.sync(() => server.close()))

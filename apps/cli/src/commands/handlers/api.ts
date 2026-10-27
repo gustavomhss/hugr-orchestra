@@ -39,6 +39,8 @@ export default Runtime.handler(
     )
     const output = yield* Effect.promise(() => response.text())
     if (output) process.stdout.write(output + (output.endsWith(EOL) ? "" : EOL))
+    // The body is already printed; the failure makes the exit code non-zero.
+    if (!response.ok) return yield* Effect.fail(new Error(`HTTP ${response.status} ${response.statusText}`.trim()))
   }),
 )
 

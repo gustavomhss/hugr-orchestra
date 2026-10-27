@@ -13,7 +13,7 @@ import {
 // An MCP stdio server for the omni transport tests (packages/core/test/mcp.test.ts). It lists one tool per argument.
 // MCP_OMNI_TREE ({command, args}) starts a nonce tree below it; MCP_OMNI_STDERR writes that many bytes of stderr
 // lines before it serves; MCP_OMNI_FAIL_LINES writes that many numbered stderr lines and exits 1 instead of serving.
-// MCP_OMNI_RESOURCE (a URI) also offers that resource, whose text names it, and one template, plus a `greet` prompt
+// MCP_OMNI_LIST_FAIL (a message) makes tools/list fail with it. MCP_OMNI_RESOURCE (a URI) also offers that resource, whose text names it, and one template, plus a `greet` prompt
 // with one `name` argument.
 
 // Bun makes fd 2 non-blocking, so a writeSync that finds the pipe momentarily full throws EAGAIN and the fixture dies
@@ -64,8 +64,10 @@ if (resource) {
   )
 }
 server.setRequestHandler(ListToolsRequestSchema, () =>
-  Promise.resolve({
-    tools: process.argv.slice(2).map((name) => ({ name, inputSchema: { type: "object" as const, properties: {} } })),
-  }),
+  process.env.MCP_OMNI_LIST_FAIL
+    ? Promise.reject(new Error(process.env.MCP_OMNI_LIST_FAIL))
+    : Promise.resolve({
+        tools: process.argv.slice(2).map((name) => ({ name, inputSchema: { type: "object" as const, properties: {} } })),
+      }),
 )
 await server.connect(new StdioServerTransport())

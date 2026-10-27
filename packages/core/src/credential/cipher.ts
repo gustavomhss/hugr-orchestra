@@ -57,7 +57,10 @@ export const node = makeGlobalNode({ service: Service, layer, deps: [] })
 function load() {
   return Effect.gen(function* () {
     const file = Flag.ORCHESTRA_CREDENTIAL_KEY_FILE
-    if (file) return [fileKey(file)]
+    if (file) {
+      yield* Effect.promise(() => refuseNewKey(file))
+      return [fileKey(file)]
+    }
     const { Global } = yield* Effect.promise(() => import("../global"))
     const fallback = path.join(Global.Path.data, "credential.key")
     const keychain = yield* Effect.tryPromise(() => keychainKey()).pipe(Effect.timeout("10 seconds"), Effect.option)
@@ -66,8 +69,39 @@ function load() {
       "OS keychain unavailable: stored credentials are encrypted with a key file in the data directory, which is weaker",
       { path: fallback },
     )
+    yield* Effect.promise(() => refuseNewKey(fallback))
     return [fileKey(fallback)]
   })
+}
+
+/**
+ * A missing key file next to sealed data means the key was lost, not that this is a first start. Creating a new key
+ * would seal new rows under it while every old row stays unreadable, so stop and say what to restore.
+ */
+export async function refuseNewKey(file: string) {
+  if (existsSync(file)) return
+  const dir = path.dirname(file)
+  if (!(await hasSealedData(dir))) return
+  throw new Error(
+    `The credential key file ${file} is missing, but stored credentials in ${dir} are encrypted with it. Restore the key file or the OS keychain entry; a new key is not created because it could not open them.`,
+  )
+}
+
+async function hasSealedData(dir: string) {
+  const auth = path.join(dir, "mcp-auth.json")
+  if (existsSync(auth) && readFileSync(auth, "utf8").includes(`"${PREFIX}`)) return true
+  const db = path.join(dir, "orchestra.db")
+  if (!existsSync(db) || typeof Bun === "undefined") return false
+  const { Database } = await import("bun:sqlite")
+  const sqlite = new Database(db, { readonly: true })
+  try {
+    return sqlite.query("SELECT 1 FROM credential WHERE value LIKE ? LIMIT 1").get(`${PREFIX}%`) !== null
+  } catch {
+    // No credential table yet: nothing is sealed.
+    return false
+  } finally {
+    sqlite.close()
+  }
 }
 
 function keys() {

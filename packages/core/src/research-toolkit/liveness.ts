@@ -9,7 +9,7 @@ import { Effect } from "effect"
 export type Status = "LIVE" | "DEAD" | "LIKELY_HALLUCINATED" | "UNKNOWN"
 export type Result = { readonly url: string; readonly status: Status; readonly httpStatus?: number; readonly reason: string }
 
-export const USER_AGENT = "Orchestra-Jimmy-LinkCheck/1.0"
+export const USER_AGENT = "Orchestra-LinkCheck/1.0"
 export const Limits = Object.freeze({ timeoutMs: 8_000, redirects: 5, parallel: 8, freshMs: 24 * 60 * 60 * 1000 })
 
 export type Options = {

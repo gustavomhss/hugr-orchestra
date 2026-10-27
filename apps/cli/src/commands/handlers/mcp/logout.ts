@@ -12,7 +12,10 @@ export default Runtime.handler(
   Effect.fn("cli.mcp.logout")(function* (input) {
     const daemon = yield* Daemon.Service
     const client = yield* daemon.client()
-    const name = yield* Effect.promise(() => logout(client, terminal, process.cwd(), Option.getOrUndefined(input.name)))
+    const name = yield* Effect.tryPromise({
+      try: () => logout(client, terminal, process.cwd(), Option.getOrUndefined(input.name)),
+      catch: (cause) => (cause instanceof Error ? cause : new Error(String(cause))),
+    })
     process.stdout.write(`Removed OAuth credentials for ${name}` + EOL)
   }),
 )

@@ -40,8 +40,6 @@ export function isolated(name: string, config: Record<string, unknown>) {
     ORCHESTRA_DISABLE_AUTOCOMPACT: "1",
     ORCHESTRA_DISABLE_MODELS_FETCH: "1",
     ORCHESTRA_AUTH_CONTENT: "{}",
-    ORCHESTRA_DISABLE_CLAUDE_CODE: "1",
-    ORCHESTRA_DISABLE_EXTERNAL_SKILLS: "1",
     ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER ?? "1",
   })
   if (Object.keys(config).length) writeConfig(project, config)

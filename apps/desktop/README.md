@@ -60,6 +60,24 @@ belong to the desktop profile. `ORCHESTRA_DB` configures the Orchestra Core
 database used by the app/server process; it does not redirect or isolate the
 entire Electron profile, its settings, or other desktop state.
 
+## Security hardening
+
+- **Renderer origin.** A packaged build ignores `ELECTRON_RENDERER_URL`; only an unpackaged app loads the dev server
+  (`src/main/renderer-origin.ts`). The packaged window is always `oc://renderer`.
+- **IPC sender check.** Every handler registered in `src/main/ipc.ts` rejects an event whose `senderFrame` is not the
+  renderer's own origin, so a navigated or foreign-origin frame cannot reach files, stores or the sidecar. The live,
+  janitor and App Dock handlers register separately and validate their own senders.
+- **Content-Security-Policy.** Renderer HTML responses carry an enforced `object-src 'none'; base-uri 'self'` and a
+  full policy in `Content-Security-Policy-Report-Only`. Promote the report-only policy to enforced after watching the
+  packaged app's console for violations (remote servers, blob workers, wasm and inline styles are expected users).
+- **Electron fuses** (`electronFuses` in `electron-builder.config.ts`): `runAsNode`, `NODE_OPTIONS` and `--inspect`
+  are off and app code loads only from `app.asar`. The server is the bundled CLI binary, never this executable run as
+  Node. Embedded asar integrity is not enabled yet.
+- **`ORCHESTRA_TEST_ONBOARDING`** is honored in packaged builds on purpose: the hosted packaged omni smoke needs it.
+  It only moves state to a temp directory and an in-memory database.
+- **Shutdown.** SIGINT/SIGTERM just call `app.quit()`; `before-quit` flushes windows, then stops sidecars. Every
+  caller of `killSidecar` awaits one shared stop, and the owned server's stop waits for the child's `close`.
+
 ## Platform guides
 
 - [Linux runtime](docs/linux-runtime.md)

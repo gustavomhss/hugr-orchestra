@@ -399,7 +399,7 @@ export const ORCHESTRA_COPY = {
   ...BOARD_COPY,
   ...BOARD_VIEWS_COPY,
   ...BOARD_MONEY_COPY,
-  // English-only Actions copy: other locales fall back to it until translated.
+  // English base for every locale; Portuguese is layered on top through ORCHESTRA_COPY_BR (Actions: ActionsCopy.dictBr).
   ...ActionsCopy.dict,
   ...SESSION_RECOVERY_COPY,
   ...DESKTOP_RECOVERY_COPY,

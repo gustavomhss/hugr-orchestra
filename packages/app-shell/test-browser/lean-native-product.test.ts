@@ -107,8 +107,8 @@ function proof() {
     // 4. The shipped binary, serving.
     const env: Record<string, string> = { PATH: process.env.PATH!, HOME: scratch, USERPROFILE: scratch, ORCHESTRA_TEST_HOME: scratch,
       XDG_DATA_HOME: path.join(scratch, "data"), XDG_CACHE_HOME: path.join(scratch, "cache"), XDG_CONFIG_HOME: path.join(scratch, "config"), XDG_STATE_HOME: path.join(scratch, "state"),
-      ORCHESTRA_SERVER_PASSWORD: password, ORCHESTRA_INHERIT_CREDENTIALS: "0", ORCHESTRA_DISABLE_DEFAULT_PLUGINS: "true", ORCHESTRA_DISABLE_MODELS_FETCH: "true",
-      ORCHESTRA_DISABLE_AUTOUPDATE: "true", ORCHESTRA_DISABLE_EXTERNAL_SKILLS: "true", ORCHESTRA_DISABLE_CLAUDE_CODE: "true", ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: "true",
+      ORCHESTRA_SERVER_PASSWORD: password, ORCHESTRA_INHERIT_CREDENTIALS: "0", ORCHESTRA_DISABLE_MODELS_FETCH: "true",
+      ORCHESTRA_DISABLE_AUTOUPDATE: "true", ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: "true",
       ORCHESTRA_DISABLE_LSP_DOWNLOAD: "true", GOTOOLCHAIN: "local", GOPROXY: "off", GOSUMDB: "off", CGO_ENABLED: "0",
       GOCACHE: path.join(scratch, "go-cache"), GOPATH: path.join(scratch, "go"), TMPDIR: path.join(scratch, "tmp"), TMP: path.join(scratch, "tmp"), TEMP: path.join(scratch, "tmp"),
       ...(process.env.SystemRoot ? { SystemRoot: process.env.SystemRoot } : {}), ...(process.env.PATHEXT ? { PATHEXT: process.env.PATHEXT } : {}),

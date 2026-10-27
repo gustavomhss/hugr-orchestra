@@ -17,17 +17,19 @@ export default Runtime.handler(
   Effect.fn("cli.agent.create")(function* (input) {
     const daemon = yield* Daemon.Service
     const client = yield* daemon.client()
-    const file = yield* Effect.promise(() =>
-      createAgent(client, terminal, {
-        directory: Option.getOrElse(input.path, () => process.cwd()),
-        description: Option.getOrUndefined(input.description),
-        mode: Option.getOrUndefined(input.mode),
-        permissions: Option.getOrUndefined(input.permissions),
-        model: Option.getOrUndefined(input.model),
-        name: Option.getOrUndefined(input.name),
-        system: Option.getOrUndefined(input.system),
-      }),
-    )
+    const file = yield* Effect.tryPromise({
+      try: () =>
+        createAgent(client, terminal, {
+          directory: Option.getOrElse(input.path, () => process.cwd()),
+          description: Option.getOrUndefined(input.description),
+          mode: Option.getOrUndefined(input.mode),
+          permissions: Option.getOrUndefined(input.permissions),
+          model: Option.getOrUndefined(input.model),
+          name: Option.getOrUndefined(input.name),
+          system: Option.getOrUndefined(input.system),
+        }),
+      catch: (cause) => (cause instanceof Error ? cause : new Error(String(cause))),
+    })
     process.stdout.write(file + EOL)
   }),
 )

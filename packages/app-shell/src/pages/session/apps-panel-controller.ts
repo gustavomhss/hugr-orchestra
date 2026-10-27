@@ -64,6 +64,8 @@ type AppDockEvent =
   | { type: "tab-opened" | "tab-opened-background"; payload: { tabID: string; generation: number; url: string } }
   // The desktop selected a tab itself (an agent's dock tool or a Linux admission); the view follows it.
   | { type: "tab-selected"; payload: TabIdentity }
+  // The desktop closed an inactive tab to stay under its view limit; drop it here too.
+  | { type: "tab-evicted"; payload: TabIdentity }
   | { type: "tab-crashed"; payload: { identity: TabIdentity; reason: "crashed" | "killed" | "oom" } }
   | { type: "tab-recovered"; payload: { tabID: string; generation: number; url: string } }
   | { type: "download"; payload: Download }
@@ -350,6 +352,14 @@ export function createAppDockController(api: AppDockAPI | undefined, t: Translat
         if (!isLinux(tab.url)) bumpLinux()
         selection++
         setState({ active: identity(tab), url: tab.url, ...placement(tab) })
+        return
+      }
+      if (event.type === "tab-evicted") {
+        if (!state.tabs.some((tab) => sameTab(tab, event.payload))) return
+        navigations.delete(event.payload.tabID)
+        const remaining = state.tabs.filter((tab) => !sameTab(tab, event.payload))
+        setState("tabs", remaining)
+        if (state.status === "ready") void saveTabs(remaining)
         return
       }
       if (event.type === "tab-opened") {
