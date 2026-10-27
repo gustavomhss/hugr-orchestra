@@ -14,15 +14,17 @@ export default Runtime.handler(
   Effect.fn("cli.mcp.add")(function* (input) {
     const daemon = yield* Daemon.Service
     const client = yield* daemon.client()
-    const name = yield* Effect.promise(() =>
-      add(client, terminal, process.cwd(), {
-        name: Option.getOrUndefined(input.name),
-        url: Option.getOrUndefined(input.url),
-        env: input.env,
-        header: input.header,
-        command: input.command,
-      }),
-    )
+    const name = yield* Effect.tryPromise({
+      try: () =>
+        add(client, terminal, process.cwd(), {
+          name: Option.getOrUndefined(input.name),
+          url: Option.getOrUndefined(input.url),
+          env: input.env,
+          header: input.header,
+          command: input.command,
+        }),
+      catch: (cause) => (cause instanceof Error ? cause : new Error(String(cause))),
+    })
     process.stdout.write(`MCP server "${name}" added` + EOL)
   }),
 )
