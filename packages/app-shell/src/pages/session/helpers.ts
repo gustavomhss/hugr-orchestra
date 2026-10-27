@@ -182,7 +182,7 @@ export const createOpenSessionFileTab = (input: {
   }
 }
 
-// App Dock views only stay attached while Apps is the active tab, so the Tasks
+// MCP Dock views only stay attached while Apps is the active tab, so the Tasks
 // tab joins the strip without taking focus from an active Apps tab.
 export function planTasksTab(input: { active: string | undefined; all: readonly string[] }) {
   return {

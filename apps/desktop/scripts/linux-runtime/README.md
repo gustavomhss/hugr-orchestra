@@ -1,4 +1,4 @@
-# Linux App Dock performance proof
+# Linux MCP Dock performance proof
 
 Development probe, not a production installer or UI integration. It starts real
 Mousepad (GTK), FeatherPad (Qt), xterm and a native GTK measurement workload in

@@ -9,10 +9,10 @@ migration of 2026-10-01 and 2026-10-02 and are kept as history.
 - PR integration branch: `identity-integration`.
 - Integration worktree: `../_worktrees/identity-integration` (removed after the merge;
   the branch remains on the fork).
-- PR base: `fork/dev`, `da2b75aff12e21c9974ebc5be41ae138302de40b`, including native App Dock.
+- PR base: `fork/dev`, `da2b75aff12e21c9974ebc5be41ae138302de40b`, including native MCP Dock.
 - Published source: `orchestra-identity`, commit `9c535be9e98021b34500794bdc207199b120217a`.
   Its original benchmark base was `5e4bea3b519c04cebfb787e98dfa171f5771d25c`.
-  Only the identity delta was ported; the source branch's extra App Dock/RPC/CI
+  Only the identity delta was ported; the source branch's extra MCP Dock/RPC/CI
   ancestors are not included in this PR.
 - Approved reference: `/Users/gustavoschneiter/Downloads/orchestra-replica-static/app.html`,
   `mock-features.js`, `MOCK-GUIDE.md`, and `CHAPTERS.md`.
@@ -46,7 +46,7 @@ Use the measured reference, not an approximate redesign:
 - Running logo pulses `2.4s`; human wait bounces `1.15s` with impact/shadow;
   idle/error/interrupted static. Production respects reduced motion.
 - Preserve real session execution, admission, permissions, questions, tab memory,
-  virtualizer, filesystem, and native App Dock behavior. No mock fixtures in
+  virtualizer, filesystem, and native MCP Dock behavior. No mock fixtures in
   production and no heavy runtime dependencies for the skin.
 - RTL uses logical geometry; native window controls remain physical/native.
 

@@ -75,7 +75,7 @@ async function child() {
   }, 60_000)
   watchdog.unref()
   if (!process.env.APP_DOCK_ARTIFACT_ROOT || !isAbsolute(process.env.APP_DOCK_ARTIFACT_ROOT))
-    throw new Error("Invalid App Dock artifact root")
+    throw new Error("Invalid MCP Dock artifact root")
   const site = await fixture()
   const win = new BrowserWindow({
     show: false,

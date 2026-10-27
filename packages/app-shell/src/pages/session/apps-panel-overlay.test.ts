@@ -5,7 +5,7 @@ const mounted: Element[] = []
 
 afterEach(() => mounted.splice(0).forEach((element) => element.remove()))
 
-describe("App Dock overlay watch", () => {
+describe("MCP Dock overlay watch", () => {
   test("a portal overlay over the Dock covers it until the portal closes", async () => {
     const dock = fixture()
     dock.watch.sync()

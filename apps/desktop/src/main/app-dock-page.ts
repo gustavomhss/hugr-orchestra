@@ -33,21 +33,21 @@ export function createAppDockPage(ctx: AppDockContext): AppDockPageMethods & Thi
   return {
     async execute(senderID: number, tabID: string, script: string) {
       const record = ctx.tabs.get(senderID)?.get(tabID)
-      if (!record) throw new Error("Unknown App Dock tab")
+      if (!record) throw new Error("Unknown MCP Dock tab")
       const generation = record.generation
       let executionTimer: NodeJS.Timeout | undefined
       const execution = record.view.webContents.executeJavaScript(script).catch((error: unknown) => {
-        throw new Error(`App Dock page execution failed: ${error instanceof Error ? error.message : String(error)}`)
+        throw new Error(`MCP Dock page execution failed: ${error instanceof Error ? error.message : String(error)}`)
       })
       const value = await Promise.race([
         execution,
         new Promise<never>((_, reject) => {
-          executionTimer = setTimeout(() => reject(new Error("App Dock page execution timed out")), APP_DOCK_EXECUTION_TIMEOUT_MS)
+          executionTimer = setTimeout(() => reject(new Error("MCP Dock page execution timed out")), APP_DOCK_EXECUTION_TIMEOUT_MS)
         }),
       ]).finally(() => {
         if (executionTimer) clearTimeout(executionTimer)
       })
-      if (!ctx.isCurrent(senderID, tabID, generation)) throw new Error("App Dock tab changed during execution")
+      if (!ctx.isCurrent(senderID, tabID, generation)) throw new Error("MCP Dock tab changed during execution")
       return value
     },
     read(senderID: number, tabID: string, budget: number, maxText: number, shape?: { mode?: SnapshotMode; format?: SnapshotFormat; actionable?: boolean; visible?: boolean }) {
@@ -61,7 +61,7 @@ export function createAppDockPage(ctx: AppDockContext): AppDockPageMethods & Thi
         return this.execute(senderID, tabID, buildSnapshotScript({ budget, maxText, namespace: currentNamespace, ...shape })).then((value) => {
           if (ctx.refNamespaces.get(key) !== currentNamespace) {
             if (attempt === 0) return snapshot(1)
-            throw new Error("App Dock page changed during read")
+            throw new Error("MCP Dock page changed during read")
           }
           if (value && typeof value === "object" && "items" in value && Array.isArray(value.items) && "url" in value) {
             const targets = new Map<number, AppDockRefTarget>()
@@ -107,7 +107,7 @@ export function createAppDockPage(ctx: AppDockContext): AppDockPageMethods & Thi
     },
     find(senderID: number, tabID: string, text: string, forward: boolean, notify: (result: AppDockFindResult) => void) {
       const record = ctx.tabs.get(senderID)?.get(tabID)
-      if (!record) throw new Error("Unknown App Dock tab")
+      if (!record) throw new Error("Unknown MCP Dock tab")
       const query = text.trim()
       if (!query) throw new Error("Find text is required")
       let requestID = -1
@@ -131,31 +131,31 @@ export function createAppDockPage(ctx: AppDockContext): AppDockPageMethods & Thi
     },
     stopFind(senderID: number, tabID: string) {
       const record = ctx.tabs.get(senderID)?.get(tabID)
-      if (!record) throw new Error("Unknown App Dock tab")
+      if (!record) throw new Error("Unknown MCP Dock tab")
       record.view.webContents.stopFindInPage("clearSelection")
     },
     zoom(senderID: number, tabID: string, factor?: number) {
       const record = ctx.tabs.get(senderID)?.get(tabID)
-      if (!record) throw new Error("Unknown App Dock tab")
+      if (!record) throw new Error("Unknown MCP Dock tab")
       if (factor !== undefined) record.view.webContents.setZoomFactor(appDockZoom(factor))
       return record.view.webContents.getZoomFactor()
     },
     scroll(senderID: number, tabID: string, direction: "up" | "down" | "top" | "bottom", amount?: number) {
       const record = ctx.tabs.get(senderID)?.get(tabID)
-      if (!record) throw new Error("Unknown App Dock tab")
+      if (!record) throw new Error("Unknown MCP Dock tab")
       if (direction !== "up" && direction !== "down" && direction !== "top" && direction !== "bottom")
-        throw new Error("Invalid App Dock direction")
+        throw new Error("Invalid MCP Dock direction")
       ctx.refTargets.delete(`${senderID}:${tabID}`)
       return this.execute(senderID, tabID, buildScrollScript(direction, amount)) as Promise<{ ok: boolean; direction: string; amount: number; before: { x: number; y: number }; after: { x: number; y: number } }>
     },
     hover(senderID: number, tabID: string, ref: number) {
       const record = ctx.tabs.get(senderID)?.get(tabID)
-      if (!record) throw new Error("Unknown App Dock tab")
+      if (!record) throw new Error("Unknown MCP Dock tab")
       return this.execute(senderID, tabID, buildHoverScript(ref, ctx.refNamespaces.get(`${senderID}:${tabID}`) ?? 0))
     },
     drag(senderID: number, tabID: string, fromRef: number, toRef: number) {
       const record = ctx.tabs.get(senderID)?.get(tabID)
-      if (!record) throw new Error("Unknown App Dock tab")
+      if (!record) throw new Error("Unknown MCP Dock tab")
       return this.execute(senderID, tabID, buildDragScript(fromRef, toRef, ctx.refNamespaces.get(`${senderID}:${tabID}`) ?? 0))
     },
 
@@ -169,7 +169,7 @@ export function createAppDockPage(ctx: AppDockContext): AppDockPageMethods & Thi
    */
     storage(senderID: number, tabID: string, storage: "local" | "session", key: string): Promise<{ ok: boolean; storage: "local" | "session"; key: string; value: string | null }> {
       const record = ctx.tabs.get(senderID)?.get(tabID)
-      if (!record) throw new Error("Unknown App Dock tab")
+      if (!record) throw new Error("Unknown MCP Dock tab")
       return this.execute(senderID, tabID, buildStorageScript(storage, key)) as Promise<{ ok: boolean; storage: "local" | "session"; key: string; value: string | null }>
     },
   /**
@@ -181,7 +181,7 @@ export function createAppDockPage(ctx: AppDockContext): AppDockPageMethods & Thi
    */
     evaluate(senderID: number, tabID: string, script: string): Promise<{ ok: boolean; result: string }> {
       const record = ctx.tabs.get(senderID)?.get(tabID)
-      if (!record) throw new Error("Unknown App Dock tab")
+      if (!record) throw new Error("Unknown MCP Dock tab")
       return this.execute(senderID, tabID, buildEvaluateScript(script)) as Promise<{ ok: boolean; result: string }>
     },
   /**
@@ -193,20 +193,20 @@ export function createAppDockPage(ctx: AppDockContext): AppDockPageMethods & Thi
    */
     network(senderID: number, tabID: string, config: { blockUrls?: string[]; allowedOrigins?: string[]; blockMethods?: string[]; probeUrl?: string; probeMethod?: string }): Promise<{ ok: boolean; blocked: number; requests: number; interceptorReady: boolean }> {
       const record = ctx.tabs.get(senderID)?.get(tabID)
-      if (!record) throw new Error("Unknown App Dock tab")
+      if (!record) throw new Error("Unknown MCP Dock tab")
       return this.execute(senderID, tabID, buildNetworkScript(config)) as Promise<{ ok: boolean; blocked: number; requests: number; interceptorReady: boolean }>
     },
     async wait(senderID: number, tabID: string, milliseconds: number): Promise<{ ok: boolean; waitedMs: number }> {
       const record = ctx.tabs.get(senderID)?.get(tabID)
-      if (!record) throw new Error("Unknown App Dock tab")
+      if (!record) throw new Error("Unknown MCP Dock tab")
       await new Promise<void>((resolve) => setTimeout(resolve, milliseconds))
-      if (!ctx.isCurrent(senderID, tabID, record.generation)) throw new Error("App Dock tab changed during wait")
+      if (!ctx.isCurrent(senderID, tabID, record.generation)) throw new Error("MCP Dock tab changed during wait")
       return { ok: true, waitedMs: milliseconds }
     },
     async screenshot(senderID: number, tabID: string): Promise<{ mime: "image/png"; bytes: number; prefix: string; sha256: string; data: string }> {
       const record = ctx.tabs.get(senderID)?.get(tabID)
-      if (!record) throw new Error("Unknown App Dock tab")
-      if (record.win.isDestroyed()) throw new Error("App Dock screenshot unavailable: host window is destroyed")
+      if (!record) throw new Error("Unknown MCP Dock tab")
+      if (record.win.isDestroyed()) throw new Error("MCP Dock screenshot unavailable: host window is destroyed")
       if (!record.win.isVisible()) record.win.showInactive()
       const bounds = record.view.getBounds()
       let image
@@ -222,12 +222,12 @@ export function createAppDockPage(ctx: AppDockContext): AppDockPageMethods & Thi
           image = await record.win.capturePage()
         } catch (fallbackError) {
           throw new Error(
-            `App Dock screenshot unavailable: ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}. Keep dock window visible and retry.`,
+            `MCP Dock screenshot unavailable: ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}. Keep dock window visible and retry.`,
           )
         }
       }
       const png = image.toPNG()
-      if (png.length === 0) throw new Error("App Dock screenshot unavailable: capture returned empty PNG")
+      if (png.length === 0) throw new Error("MCP Dock screenshot unavailable: capture returned empty PNG")
       return {
         mime: "image/png",
         bytes: png.length,
@@ -238,7 +238,7 @@ export function createAppDockPage(ctx: AppDockContext): AppDockPageMethods & Thi
     },
     scrollTo(senderID: number, tabID: string, x: number, y: number): Promise<{ ok: boolean; x: number; y: number }> {
       const record = ctx.tabs.get(senderID)?.get(tabID)
-      if (!record) throw new Error("Unknown App Dock tab")
+      if (!record) throw new Error("Unknown MCP Dock tab")
       ctx.refTargets.delete(`${senderID}:${tabID}`)
       return this.execute(senderID, tabID, buildScrollToScript(x, y)) as Promise<{ ok: boolean; x: number; y: number }>
     },

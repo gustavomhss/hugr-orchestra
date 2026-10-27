@@ -8,7 +8,7 @@ like existing chapter pages. Switching profile remounts data, history and contro
 Scope derives from native instance project ID and canonical directory; server
 identity partitions requests/storage. Different profile directories remain distinct
 even for one Git project ID; the non-Git shared `global` ID never joins profiles.
-No App Dock profile or agent/seat nativeProfile is the dashboard owner.
+No MCP Dock profile or agent/seat nativeProfile is the dashboard owner.
 User clarified: every visible Orchestra interface belongs to the selected profile;
 changing it must show a different Lean screen with independent preferences/totals.
 

@@ -346,7 +346,7 @@ export const dict = {
   "appDock.browser.tab.closeOthers": "Close others",
   "appDock.browser.tab.closeRight": "Close right",
   "appDock.linux.title": "Linux",
-  "appDock.contexts": "زمینه‌های App Dock",
+  "appDock.contexts": "زمینه‌های MCP Dock",
   "appDock.browser.title": "مرورگر",
   "appDock.browser.empty": "برای باز کردن زبانهٔ مرورگر، یک نشانی وب وارد کنید.",
   "appDock.linux.workspace": "فضای کار Linux",

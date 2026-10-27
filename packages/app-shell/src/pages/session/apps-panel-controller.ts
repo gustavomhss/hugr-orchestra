@@ -144,7 +144,7 @@ export function restorable<T extends { url: string }>(saved: T[]) {
   })
 }
 
-// A repository profile (server + project worktree) owns exactly one native App Dock profile, and
+// A repository profile (server + project worktree) owns exactly one native MCP Dock profile, and
 // through it one persistent browser partition. The ID must match the desktop profile ID pattern.
 export function appDockProfile(server: string, directory: string) {
   const hash = [...new TextEncoder().encode(`${server}\0${pathKey(directory)}`)].reduce(

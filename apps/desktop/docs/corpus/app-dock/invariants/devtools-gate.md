@@ -3,7 +3,7 @@
 > Clauses: 3 | Unwanted: 3 | Witnesses: app-dock-security.test.ts:1162-1176
 
 ## Clauses
-- App Dock DevTools do not open without trusted development route *(measured: app-dock-security.test.ts:1162-1176)*
+- MCP Dock DevTools do not open without trusted development route *(measured: app-dock-security.test.ts:1162-1176)*
 - Ordinary user input (F12) does not open DevTools *(measured: app-dock-security.test.ts:1162-1176)*
 - Trusted developmentMode()=true allows openDevTools *(measured: app-dock-security.test.ts:1162-1176)*
 

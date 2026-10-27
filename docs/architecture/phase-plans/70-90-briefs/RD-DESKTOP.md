@@ -44,7 +44,7 @@ cat > 'apps/desktop/src/main/README.md' <<'README_EOF'
 
 ## Purpose and ownership
 
-- **App Dock** (logical module, target modules/app-dock (a future path)): `app-dock*`, `ipc-app-dock*` and `linux-workspace*` here, plus `removed-v1/src/plugin/app-dock*.ts`, `removed-v1/src/plugin/linux-workspace*.ts` and `packages/app-shell/src/app-dock-linux.ts`.
+- **MCP Dock** (logical module, target modules/app-dock (a future path)): `app-dock*`, `ipc-app-dock*` and `linux-workspace*` here, plus `removed-v1/src/plugin/app-dock*.ts`, `removed-v1/src/plugin/linux-workspace*.ts` and `packages/app-shell/src/app-dock-linux.ts`.
 - WSL (`wsl/`), Omni (`omni-*`), windows and menu, updater, stores and the draft store, the background CLI, and the janitor binding.
 
 ## Public entry points and consumers
@@ -72,7 +72,7 @@ cat > 'apps/desktop/src/main/README.md' <<'README_EOF'
 
 - `apps/desktop/src/main/app-dock-rpc.ts` and `apps/desktop/src/main/linux-workspace-rpc.ts` have different authorities: never unify them.
 - `apps/desktop/src/main/app-dock-runtime.ts`, `apps/desktop/src/main/app-dock-runtime-docker.ts`, `apps/desktop/src/main/linux-workspace-access.ts`, `apps/desktop/src/main/linux-workspace-omni.ts`, `apps/desktop/src/main/background-cli.ts` and `apps/desktop/src/main/shell-env.ts` are listed in `script/spawn-allowlist.json`.
-- `.github/workflows/native.yml` names App Dock paths, so do not move them.
+- `.github/workflows/native.yml` names MCP Dock paths, so do not move them.
 README_EOF
 ```
 

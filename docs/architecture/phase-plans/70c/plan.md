@@ -462,7 +462,7 @@ Each server process builds **one** application root: one `SessionExecution` → 
 | `HostAgentExecution` (V1 Agent registry) | stays | none: the V2 `AgentV2` registry already carries `engine` from config (`core/src/config/plugin/agent.ts:121`) |
 | `PluginPtyEnvironment` (V1 plugin `shell.env`) | stays | none until a V2 plugin hook exists |
 | Janitor | `server/server.ts:93` → `startJanitorLoop(state.scope, legacySink)` | K3 (after B3): `startJanitorLoop(scope, v2Sink)` in the serve handler |
-| App Dock / Linux workspace tools | V1 plugins via `plugin/index.ts:89` (gated by `ORCHESTRA_CLIENT=desktop`) | K2: `AppDock.applicationTools(transport)` registers on core `ApplicationTools` (global node). Wired when B4 provides the transport and the desktop child sets `ORCHESTRA_CLIENT=desktop`. |
+| MCP Dock / Linux workspace tools | V1 plugins via `plugin/index.ts:89` (gated by `ORCHESTRA_CLIENT=desktop`) | K2: `AppDock.applicationTools(transport)` registers on core `ApplicationTools` (global node). Wired when B4 provides the transport and the desktop child sets `ORCHESTRA_CLIENT=desktop`. |
 | Maestro, Claude Code engine, continuity | V1 `SessionPrompt` (unchanged) | B1-C |
 
 `apps/cli/src/host.ts` is the app's own composition list (layer `app`, which may import `product`):

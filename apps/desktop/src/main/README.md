@@ -2,7 +2,7 @@
 
 ## Purpose and ownership
 
-- **App Dock** (logical module, target modules/app-dock): `app-dock*`, `ipc-app-dock*` and `linux-workspace*` here, plus `modules/app-dock/src/*.ts` and `packages/app-shell/src/app-dock-linux.ts`.
+- **MCP Dock** (logical module, target modules/app-dock): `app-dock*`, `ipc-app-dock*` and `linux-workspace*` here, plus `modules/app-dock/src/*.ts` and `packages/app-shell/src/app-dock-linux.ts`.
 - WSL (`wsl/`), Omni (`omni-*`), windows and menu, updater, stores and the draft store, the background CLI, and the janitor binding.
 
 ## Public entry points and consumers
@@ -30,5 +30,5 @@
 
 - `apps/desktop/src/main/app-dock-rpc.ts` and `apps/desktop/src/main/linux-workspace-rpc.ts` have different authorities: never unify them.
 - `apps/desktop/src/main/app-dock-runtime.ts`, `apps/desktop/src/main/app-dock-runtime-docker.ts`, `apps/desktop/src/main/linux-workspace-access.ts`, `apps/desktop/src/main/linux-workspace-omni.ts`, `apps/desktop/src/main/background-cli.ts` and `apps/desktop/src/main/shell-env.ts` are listed in `script/spawn-allowlist.json`.
-- `.github/workflows/native.yml` names App Dock paths, so do not move them.
+- `.github/workflows/native.yml` names MCP Dock paths, so do not move them.
 - Desktop tests mock Electron only through `apps/desktop/src/main/electron-mock.fixture.ts`.

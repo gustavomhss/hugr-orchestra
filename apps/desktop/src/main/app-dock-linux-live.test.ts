@@ -81,7 +81,7 @@ async function parent() {
   const temporary = process.env.APP_DOCK_RUNTIME_TEST_TMP ?? join(tmpdir(), "orchestra")
   await mkdir(temporary, { recursive: true })
   const root = await mkdtemp(join(temporary, "orchestra-dock-linux-flow-"))
-  console.log(`Linux App Dock evidence and ownership metadata: ${root}`)
+  console.log(`Linux MCP Dock evidence and ownership metadata: ${root}`)
   try {
     const result = await Bun.build({
       entrypoints: [import.meta.path],
@@ -198,7 +198,7 @@ if (process.argv.includes(flag)) {
 } else {
   void import("bun:test").then(({ test }) => {
     test.skipIf(process.env.APP_DOCK_LINUX_INTEGRATION !== "1")(
-      "[integration: APP_DOCK_LINUX_INTEGRATION=1; actual Electron + Docker] Linux App Dock lifecycle",
+      "[integration: APP_DOCK_LINUX_INTEGRATION=1; actual Electron + Docker] Linux MCP Dock lifecycle",
       parent,
       600_000,
     )

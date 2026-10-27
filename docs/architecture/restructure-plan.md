@@ -329,7 +329,7 @@ Este marco pode relocar o entrypoint com facades provisórias. A declaração de
 | 70-B | Browser-safe helpers em `packages/util`, com facades compatíveis | Rotas/encoding/retry/path e bundles web equivalentes; UI sem backend runtime |
 | 70-C | Ports mínimos para hooks/registries de produto; composição no dono | Mesma ordem/autoridade/cancelamento; sem duas instâncias de coordinator/store |
 | 70-D | Maestro/Continuity e receitas/assets toolkit em módulos coesos | Seats/IDs/prompts/Atlas memory/Task/resume e aquisição Core preservados |
-| 70-E | App Dock com contracts + adapters Electron/Linux/native | Mesmos IPC/tools/permissions/profile fences/lifetimes e processos encerrados |
+| 70-E | MCP Dock com contracts + adapters Electron/Linux/native | Mesmos IPC/tools/permissions/profile fences/lifetimes e processos encerrados |
 | 70-F | Facades/exports explícitos e revisão de dependências | Superfície pública inventariada permanece compatível; runtime/type/dev separados |
 | 70-G | Disposição de todos os domínios legados de Orchestra | Tabela fonte → dono/path/README/facade/WP reconciliada; `removed-v1` contém somente entrada/composição/distribuição |
 
@@ -460,7 +460,7 @@ A tabela define os domínios de cobertura, não uma suíte completa por PR. Dura
 | Relay | TS/Node parity; Python oracle; goldens/ledgers/profile catalog/doc index | Paths/runtime/docs/fixture storage |
 | Lean | Pin/licenses, actual ShellTool capture, hooks/telemetry/preferences, saved/replayed selected text | Vendor/native adapter/session/package |
 | Omni | Cargo/clippy/fmt/API/conformance/QA, Node/Bun binding, pair/artifact/mirror | Native paths/build/runtime/delivery |
-| Desktop/native | Main/preload/renderer IPC, tools, process lifetime; artefato real e installer quando atingido | App Dock/WSL/resources/packaging |
+| Desktop/native | Main/preload/renderer IPC, tools, process lifetime; artefato real e installer quando atingido | MCP Dock/WSL/resources/packaging |
 | Nix | Eval e builds/closures no host correto; metadata/hashes remedidos | Workspace/lock/patch/fileset/packaging |
 
 ### Targets e ambientes

@@ -185,7 +185,7 @@ test("one tool-call deadline stops native paging and never dispatches after it",
   const stale = host(() => nativeError("cursor-stale"), { findDeadlineMs: 0 })
   expect(JSON.parse(String(await stale.hooks.tool.dock_find.execute({ name: "open" }, context)))).toMatchObject({ code: "cursor-stale" })
   expect(stale.calls).toHaveLength(1)
-  expect(() => createAppDockHooks(fakePort().port, { findDeadlineMs: 90001 })).toThrow("Invalid App Dock find deadline")
+  expect(() => createAppDockHooks(fakePort().port, { findDeadlineMs: 90001 })).toThrow("Invalid MCP Dock find deadline")
 })
 
 test("dock_find marks an early stop with more pages as an incomplete search", async () => {
@@ -299,8 +299,8 @@ test("native errors that have a known next step carry it as a hint", async () =>
   expect(JSON.parse(String(await plain.hooks.tool.dock_action.execute({ ref: "n:a", actionID: "a:n:a" }, context))))
     .not.toHaveProperty("hint")
   // A browser-scoped caller with no tab can open one itself; it is never sent to the Linux workspace.
-  const empty = host((): Reply => ({ ok: false, error: { message: "App Dock has no open tabs" } }))
-  expect(String(await empty.hooks.tool.dock_list.execute({}, context))).toBe("App Dock has no open tabs; open one with dock_open")
+  const empty = host((): Reply => ({ ok: false, error: { message: "MCP Dock has no open tabs" } }))
+  expect(String(await empty.hooks.tool.dock_list.execute({}, context))).toBe("MCP Dock has no open tabs; open one with dock_open")
   const browser = host(() => ({ ok: true, value: { url: "https://example.com", items: [] } }))
   expect(JSON.parse(String(await browser.hooks.tool.dock_keyboard.execute({ keys: "ctrl+c" }, context)))).toMatchObject({
     code: "unsupported-backend", hint: expect.stringContaining("operated by the linux agent; hand that work to it") })

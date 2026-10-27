@@ -346,7 +346,7 @@ export const dict = {
   "appDock.browser.tab.closeOthers": "Close others",
   "appDock.browser.tab.closeRight": "Close right",
   "appDock.linux.title": "Linux",
-  "appDock.contexts": "App Dock контексти",
+  "appDock.contexts": "MCP Dock контексти",
   "appDock.browser.title": "Прегледач",
   "appDock.browser.empty": "Унесите веб адресу да бисте отворили картицу прегледача.",
   "appDock.linux.workspace": "Linux радни простор",

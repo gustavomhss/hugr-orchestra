@@ -27,14 +27,14 @@ async function main() {
     callback(request.hostname === "127.0.0.1" && new X509Certificate(request.certificate.data).fingerprint256.toLowerCase() === process.env.APP_DOCK_PROOF_FINGERPRINT!.toLowerCase() ? 0 : -3)
   })
   const win = new BrowserWindow({ width: 1000, height: 720, webPreferences: { sandbox: true, contextIsolation: true } })
-  await win.loadURL("data:text/html,<title>Orchestra Linux App Dock proof</title>")
+  await win.loadURL("data:text/html,<title>Orchestra Linux MCP Dock proof</title>")
   const dock = createAppDock()
   const bounds = { x: 0, y: 0, width: 1000, height: 680 }
   const connect = new URL(process.env.APP_DOCK_PROOF_URL!)
   connect.pathname = "/connect.html"
   const tab = await dock.open(win.webContents.id, win, connect.toString(), bounds, () => {}, { storageKey })
   const view = win.contentView.children.find((child) => child instanceof WebContentsView)
-  if (!(view instanceof WebContentsView)) throw new Error("App Dock did not attach its real WebContentsView")
+  if (!(view instanceof WebContentsView)) throw new Error("MCP Dock did not attach its real WebContentsView")
   const contents = view.webContents
   win.show()
   win.focus()
@@ -45,7 +45,7 @@ async function main() {
   await Runtime.waitFor(async () => contents.executeJavaScript("typeof Utilities !== 'undefined' && !!Utilities.setSessionStorageValue").catch(() => false), "Xpra client configuration page")
   await contents.executeJavaScript(`Utilities.setSessionStorageValue("password", ${JSON.stringify(process.env.APP_DOCK_PROOF_PASSWORD!)})`)
   await contents.loadURL(process.env.APP_DOCK_PROOF_URL!)
-  await Runtime.waitFor(async () => contents.executeJavaScript(`typeof client !== "undefined" && client.connected && Object.values(client.id_to_window).some(w => w.title === "Orchestra GTK latency probe")`).catch(() => false), "native GTK window in App Dock")
+  await Runtime.waitFor(async () => contents.executeJavaScript(`typeof client !== "undefined" && client.connected && Object.values(client.id_to_window).some(w => w.title === "Orchestra GTK latency probe")`).catch(() => false), "native GTK window in MCP Dock")
   const windows = await contents.executeJavaScript(`Object.values(client.id_to_window).map(w => ({ id: w.wid, title: w.title, classes: w.metadata["class-instance"] }))`) as Array<{ id: number; title: string; classes: string[] }>
   if (!windows.some((window) => window.classes?.some((name) => /mousepad/i.test(name)))) throw new Error("Real Mousepad GTK window missing")
   if (!windows.some((window) => window.classes?.some((name) => /featherpad/i.test(name)))) throw new Error("Real FeatherPad Qt window missing")
@@ -175,7 +175,7 @@ async function main() {
   await focusProbe()
   const restored = await resources("restored-animation")
   await checkpoint("animation-measured", { resources: [visible, hidden, animated, hiddenAnimated, restored] })
-  if (restored.probeFrames < 50) throw new Error("Native animation did not resume after restoring App Dock")
+  if (restored.probeFrames < 50) throw new Error("Native animation did not resume after restoring MCP Dock")
   await contents.executeJavaScript(`Object.values(client.id_to_window).find(w => w.title === "Orchestra GTK latency probe").focus(); true`)
   contents.sendInputEvent({ type: "keyDown", keyCode: "B" })
   contents.sendInputEvent({ type: "keyUp", keyCode: "B" })
@@ -198,7 +198,7 @@ async function main() {
   const sorted = baseline.toSorted((a, b) => a - b)
   await writeFile(join(root, "report.json"), JSON.stringify({
     version: 1,
-    scope: "macOS x86_64, Linux amd64, real App Dock WebContentsView, GTK and Qt desktop apps; no Windows validation",
+    scope: "macOS x86_64, Linux amd64, real MCP Dock WebContentsView, GTK and Qt desktop apps; no Windows validation",
     metric: "key enqueue to verified native-app canvas update; excludes display scanout; offscreen=0 adds readback instrumentation",
     electron: process.versions.electron,
     settings: { encoding: process.env.APP_DOCK_PROOF_ENCODING ?? "auto", batchMinDelay: process.env.XPRA_BATCH_MIN_DELAY ?? "default", batchStartDelay: process.env.XPRA_BATCH_START_DELAY ?? "default" },

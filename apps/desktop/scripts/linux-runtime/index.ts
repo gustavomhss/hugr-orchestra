@@ -19,7 +19,7 @@ process.once("SIGTERM", interrupt)
 await Bun.write(join(directory, "ownership.json"), JSON.stringify({ name, label: "io.orchestra.app-dock=proof" }))
 try {
   const runtime = await Runtime.start(name, randomBytes(32).toString("hex"))
-  if (lifecycle.interrupted) throw new Error("Linux App Dock proof interrupted")
+  if (lifecycle.interrupted) throw new Error("Linux MCP Dock proof interrupted")
   const result = await Bun.build({
     entrypoints: [join(import.meta.dir, "host.ts")],
     outdir: directory,
@@ -29,7 +29,7 @@ try {
     external: ["electron"],
     write: true,
   })
-  if (!result.success || !result.outputs[0]) throw new Error("Linux App Dock proof bundle failed")
+  if (!result.success || !result.outputs[0]) throw new Error("Linux MCP Dock proof bundle failed")
   const electron = process.env.APP_DOCK_ELECTRON ?? join(
     dirname(createRequire(join(process.cwd(), "package.json")).resolve("electron")),
     process.platform === "darwin" ? "dist/Electron.app/Contents/MacOS/Electron" : process.platform === "win32" ? "dist/electron.exe" : "dist/electron",
@@ -50,7 +50,7 @@ try {
     child.once("error", reject)
     child.once("exit", resolve)
   })
-  if (exit !== 0) throw new Error(`Linux App Dock proof exited with ${exit}; diagnostics: ${directory}`)
+  if (exit !== 0) throw new Error(`Linux MCP Dock proof exited with ${exit}; diagnostics: ${directory}`)
   console.log(await Bun.file(join(directory, "report.json")).text())
   console.log(`Evidence: ${directory}`)
 } catch (error) {
@@ -61,4 +61,4 @@ try {
   process.off("SIGINT", interrupt)
   process.off("SIGTERM", interrupt)
 }
-if (errors.length) throw new AggregateError(errors, "Linux App Dock proof or cleanup failed")
+if (errors.length) throw new AggregateError(errors, "Linux MCP Dock proof or cleanup failed")

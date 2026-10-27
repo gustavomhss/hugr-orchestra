@@ -1,11 +1,11 @@
 # Linux workspace: CLI, files and terminals
 
-These entrypoints use the **same owned container and persistent home as App Dock**.
+These entrypoints use the **same owned container and persistent home as MCP Dock**.
 Commands run as `dock` (UID 10001), with the actual display/session D-Bus environment.
 `sudo -n` is available inside the guest for package/system work. There is no new
 container, image build, host-directory mount or dependency on a visible GUI tab.
 
-Open Linux in App Dock first. Access adopts an existing running workspace; it does
+Open Linux in MCP Dock first. Access adopts an existing running workspace; it does
 not provision or restart one when a command is submitted.
 
 ## CLI

@@ -11,7 +11,7 @@ import { mock } from "bun:test"
 
 // The desktop constructs these four Electron classes and reads no member off them, so a placeholder
 // constructor serves each of them. A plain function keeps the mock free of an empty class, and it stays
-// constructible and usable with instanceof, which the App Dock's view lookup relies on. They stay four
+// constructible and usable with instanceof, which the MCP Dock's view lookup relies on. They stay four
 // distinct constructors, so a mock instance of one is never an instance of another.
 function BrowserWindow() {}
 function Menu() {}

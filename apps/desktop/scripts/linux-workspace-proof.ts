@@ -232,7 +232,7 @@ try {
           closed.resolve()
         }
       })
-      // The server's V2 deletion path: SessionV2.remove publishes `session.next.deleted` and the App Dock reaper forwards it.
+      // The server's V2 deletion path: SessionV2.remove publishes `session.next.deleted` and the MCP Dock reaper forwards it.
       const reaper = AppDockTools.contribution(port).nodes!.find((node) => node.name === "app-dock/linux-reaper")!
       await Effect.runPromise(
         Effect.scoped(

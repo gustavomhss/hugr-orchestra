@@ -345,7 +345,7 @@ export const dict = {
   "appDock.browser.tab.closeOthers": "Close others",
   "appDock.browser.tab.closeRight": "Close right",
   "appDock.linux.title": "Linux",
-  "appDock.contexts": "App Dock-samanhangir",
+  "appDock.contexts": "MCP Dock-samanhangir",
   "appDock.browser.title": "Kagari",
   "appDock.browser.empty": "Skriva eina vevadressu fyri at opna eitt kagaraspjøld.",
   "appDock.linux.workspace": "Linux-Workspace",

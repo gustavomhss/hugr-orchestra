@@ -202,7 +202,7 @@ export function createAppDock(options: {
     inactive.size + (selected ? Number(active.has(senderID)) : 1) <= MAX_INACTIVE_TABS
   const ensureViewCapacity = (senderID: number, selected: boolean) => {
     while (!viewCapacity(senderID, selected)) {
-      if (!evictOldestInactive()) throw new Error("App Dock tab limit reached")
+      if (!evictOldestInactive()) throw new Error("MCP Dock tab limit reached")
     }
   }
   const open = async (
@@ -214,7 +214,7 @@ export function createAppDock(options: {
     profileStorage: ProfileStorage,
     placement?: Readonly<{ tabID: string; selected: boolean }>,
   ): Promise<AppDockTab> => {
-    if (!validBounds(bounds)) throw new Error("Invalid App Dock bounds")
+    if (!validBounds(bounds)) throw new Error("Invalid MCP Dock bounds")
     const id = placement?.tabID ?? randomUUID()
     const tabGeneration = ++generation
     refNamespaces.set(`${senderID}:${id}`, nextRefNamespace())
@@ -229,7 +229,7 @@ export function createAppDock(options: {
           payload: Object.freeze({ identity: tabIdentity, code: "blocked", url: address }),
         }),
       )
-      throw new Error("App Dock only supports HTTPS URLs")
+      throw new Error("MCP Dock only supports HTTPS URLs")
     }
     const { storageKey } = profileStorage
     const browserSession = sessions.open(storageKey)
@@ -349,12 +349,12 @@ export function createAppDock(options: {
           !isCurrent(senderID, id, tabGeneration) ||
           options.allowPopup?.(senderID, identity(id, tabGeneration), url) === false
         ) {
-          throw new Error("App Dock popup blocked")
+          throw new Error("MCP Dock popup blocked")
         }
         const popupURL = appDockURL(url)
         // A page can chain popups without a click, so a popup never evicts the user's tabs to make room:
         // at the view cap it is blocked instead.
-        if (!viewCapacity(senderID, true)) throw new Error("App Dock tab limit reached")
+        if (!viewCapacity(senderID, true)) throw new Error("MCP Dock tab limit reached")
         void open(senderID, win, popupURL, layoutBounds.get(senderID) ?? bounds, notify, profileStorage, {
           tabID: randomUUID(),
           selected: true,
@@ -457,7 +457,7 @@ export function createAppDock(options: {
       return () => removalListeners.delete(listener)
     },
     resize(senderID: number, tab: AppDockIdentity, bounds: DockBounds) {
-      if (!validBounds(bounds)) throw new Error("Invalid App Dock bounds")
+      if (!validBounds(bounds)) throw new Error("Invalid MCP Dock bounds")
       if (!usableBounds(bounds)) return
       const record = appDockAttached(tabs.get(senderID), active.get(senderID), tab)
       if (!record) return
@@ -469,7 +469,7 @@ export function createAppDock(options: {
       if (!appDockAttached(tabs.get(senderID), active.get(senderID), tab)) return
       fullscreen.releaseHidden(senderID)
       while (active.has(senderID) && inactive.size >= MAX_INACTIVE_TABS) {
-        if (!evictOldestInactive()) throw new Error("App Dock tab limit reached")
+        if (!evictOldestInactive()) throw new Error("MCP Dock tab limit reached")
       }
       for (const [tabID, record] of tabs.get(senderID) ?? []) {
         markInactive(senderID, tabID, record)
@@ -485,7 +485,7 @@ export function createAppDock(options: {
       if (tabID) tabs.get(senderID)?.get(tabID)?.view.setVisible(!value)
     },
     select(senderID: number, win: BrowserWindow, tab: AppDockIdentity, bounds: DockBounds) {
-      if (!validBounds(bounds)) throw new Error("Invalid App Dock bounds")
+      if (!validBounds(bounds)) throw new Error("Invalid MCP Dock bounds")
       const record = appDockShown(tabs.get(senderID), tab)
       if (!record) return
       const tabID = tab.tabID
@@ -510,7 +510,7 @@ export function createAppDock(options: {
     },
     activate(senderID: number, win: BrowserWindow, tabID: string) {
       const record = tabs.get(senderID)?.get(tabID)
-      if (!record) throw new Error("Unknown App Dock tab")
+      if (!record) throw new Error("Unknown MCP Dock tab")
       const remembered = layoutBounds.get(senderID) ?? lastLayoutBounds
       const rendered = [...(tabs.get(senderID)?.values() ?? [])]
         .map((item) => item.view.getBounds())
@@ -524,23 +524,23 @@ export function createAppDock(options: {
       }
       const bounds = (remembered && usableBounds(remembered) ? remembered : undefined) ?? rendered ??
         (usableBounds(fallback) ? fallback : undefined)
-      if (!bounds) throw new Error("App Dock host is not ready")
+      if (!bounds) throw new Error("MCP Dock host is not ready")
       this.select(senderID, win, identity(tabID, record.generation), bounds)
     },
     contents(senderID: number, tabID: string) {
       const record = tabs.get(senderID)?.get(tabID)
-      if (!record || record.view.webContents.isDestroyed()) throw new Error("Unknown App Dock tab")
+      if (!record || record.view.webContents.isDestroyed()) throw new Error("Unknown MCP Dock tab")
       return record.view.webContents
     },
     async recover(senderID: number, tabID: string) {
       const record = tabs.get(senderID)?.get(tabID)
-      if (!record) throw new Error("Unknown App Dock tab")
+      if (!record) throw new Error("Unknown MCP Dock tab")
       const url = record.view.webContents.getURL()
       let target: string
       try {
         target = appDockURL(url)
       } catch {
-        throw new Error("App Dock only supports HTTPS URLs")
+        throw new Error("MCP Dock only supports HTTPS URLs")
       }
       const bounds = record.view.getBounds()
       const selected = active.get(senderID) === tabID
@@ -566,9 +566,9 @@ export function createAppDock(options: {
     cancelDownload: sessions.cancelDownload,
     openDownload: sessions.openDownload,
     openDevTools(senderID: number, tabID: string) {
-      if (!developmentMode()) throw new Error("App Dock DevTools are disabled in production")
+      if (!developmentMode()) throw new Error("MCP Dock DevTools are disabled in production")
       const record = tabs.get(senderID)?.get(tabID)
-      if (!record) throw new Error("Unknown App Dock tab")
+      if (!record) throw new Error("Unknown MCP Dock tab")
       record.view.webContents.openDevTools({ mode: "detach" })
     },
     async deleteStorage(storageKey: string, _win?: BrowserWindow) {
@@ -595,13 +595,13 @@ export function createAppDock(options: {
     closeAll,
     closeTabs(senderID: number, tabID: string, scope: "others" | "right", order?: string[]) {
       const senderTabs = tabs.get(senderID)
-      if (!senderTabs) throw new Error("Unknown App Dock tab")
+      if (!senderTabs) throw new Error("Unknown MCP Dock tab")
       const targetRecord = senderTabs.get(tabID)
-      if (!targetRecord) throw new Error("Unknown App Dock tab")
+      if (!targetRecord) throw new Error("Unknown MCP Dock tab")
       const ids = [...senderTabs]
         .filter(([, record]) => record.storageKey === targetRecord.storageKey)
         .map(([id]) => id)
-      if (scope === "others" && order !== undefined) throw new Error("Invalid App Dock tab order")
+      if (scope === "others" && order !== undefined) throw new Error("Invalid MCP Dock tab order")
       if (
         order !== undefined &&
         (!Array.isArray(order) ||
@@ -610,7 +610,7 @@ export function createAppDock(options: {
           new Set(order).size !== order.length ||
           !ids.every((id) => order.includes(id)))
       ) {
-        throw new Error("Invalid App Dock tab order")
+        throw new Error("Invalid MCP Dock tab order")
       }
       const ordered = order ?? ids
       const target = ordered.indexOf(tabID)

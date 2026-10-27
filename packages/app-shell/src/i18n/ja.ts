@@ -351,7 +351,7 @@ export const dict = {
   "appDock.browser.tab.closeOthers": "Close others",
   "appDock.browser.tab.closeRight": "Close right",
   "appDock.linux.title": "Linux",
-  "appDock.contexts": "App Dockのコンテキスト",
+  "appDock.contexts": "MCP Dockのコンテキスト",
   "appDock.browser.title": "ブラウザー",
   "appDock.browser.empty": "Webアドレスを入力してブラウザータブを開きます。",
   "appDock.linux.workspace": "Linuxワークスペース",

@@ -46,7 +46,7 @@ captures below retain their separate source-branch provenance.
 
 Candidate app unit suite: 761 passed. Browser-condition suite: 51 passed.
 Final delivery E2E suite: 21 passed. App/E2E typechecks passed.
-Desktop typecheck, packaged native asset loading and position-only App Dock
+Desktop typecheck, packaged native asset loading and position-only MCP Dock
 resize bridge proofs are indexed in `VERIFICATION.md`.
 Candidate desktop main/preload/renderer build and five native geometry tests passed.
 The unchanged Godfile gate passes against `fork/dev`; locale dictionaries and
@@ -82,7 +82,7 @@ At delivery time the capability-screen chapters were pending, one at a time. Thi
 delivery added their marked navigation entries, not simulated production
 configuration/CI jobs. Wave 1 chapters later landed in #240; see Current status.
 Owner authorized the original commit + push on 2026-10-01, then a clean PR from
-`fork/identity-integration` against `dev`. Extra App Dock/RPC/CI ancestors are
+`fork/identity-integration` against `dev`. Extra MCP Dock/RPC/CI ancestors are
 excluded; the source branch remains published intact.
 Native caption alignment now follows actual toolbar geometry and the owning
 window's zoom, including hidden headers, RTL and fullscreen transitions.

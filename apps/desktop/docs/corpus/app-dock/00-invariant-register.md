@@ -1,4 +1,4 @@
-# App-Dock Subsystem Invariant Register
+# MCP Dock Subsystem Invariant Register
 
 > Brownfield corpus — lifted from shipped tests on `main`. Every clause states behaviour that is on `master` and measured by a named test. Paraphrase is not used; each requirement quotes its clause verbatim.
 
@@ -182,9 +182,9 @@
 ### webcontents-view-security: WebContentsView Security Policy
 
 **Clauses**
-- App Dock WebContentsView is created with sandbox:true *(measured: app-dock-security.test.ts:568-575)*
-- App Dock WebContentsView is created with contextIsolation:true *(measured: app-dock-security.test.ts:568-575)*
-- App Dock WebContentsView is created with nodeIntegration:false *(measured: app-dock-security.test.ts:568-575)*
+- MCP Dock WebContentsView is created with sandbox:true *(measured: app-dock-security.test.ts:568-575)*
+- MCP Dock WebContentsView is created with contextIsolation:true *(measured: app-dock-security.test.ts:568-575)*
+- MCP Dock WebContentsView is created with nodeIntegration:false *(measured: app-dock-security.test.ts:568-575)*
 
 **Unwanted**
 - WebContentsView has sandbox:false *(measured: app-dock-security.test.ts:568-575)*
@@ -196,7 +196,7 @@
 **Clauses**
 - Permission request is denied (state: denied) *(measured: app-dock-security.test.ts:577-601)*
 - Permission check returns denied *(measured: app-dock-security.test.ts:577-601)*
-- Permission denial emits App Dock UI state with identity and permission name *(measured: app-dock-security.test.ts:577-601)*
+- Permission denial emits MCP Dock UI state with identity and permission name *(measured: app-dock-security.test.ts:577-601)*
 - Permission event is cloneable and omits storage data *(measured: app-dock-security.test.ts:577-601)*
 
 **Unwanted**
@@ -253,8 +253,8 @@
 ### ipc-sender-validation: IPC Sender Validation
 
 **Clauses**
-- Malformed bounds are rejected with Invalid App Dock bounds *(measured: app-dock-security.test.ts:691-707)*
-- Subframe IPC sender is rejected with Invalid App Dock sender *(measured: app-dock-security.test.ts:691-707)*
+- Malformed bounds are rejected with Invalid MCP Dock bounds *(measured: app-dock-security.test.ts:691-707)*
+- Subframe IPC sender is rejected with Invalid MCP Dock sender *(measured: app-dock-security.test.ts:691-707)*
 
 **Unwanted**
 - Malformed bounds are accepted *(measured: app-dock-security.test.ts:691-707)*
@@ -263,8 +263,8 @@
 ### fullscreen-command-validation: Fullscreen and Command Validation
 
 **Clauses**
-- Non-boolean fullscreen state is rejected with Invalid App Dock fullscreen state *(measured: app-dock-security.test.ts:709-720)*
-- Invalid command enum is rejected with Invalid App Dock command *(measured: app-dock-security.test.ts:709-720)*
+- Non-boolean fullscreen state is rejected with Invalid MCP Dock fullscreen state *(measured: app-dock-security.test.ts:709-720)*
+- Invalid command enum is rejected with Invalid MCP Dock command *(measured: app-dock-security.test.ts:709-720)*
 
 **Unwanted**
 - Non-boolean fullscreen state is accepted *(measured: app-dock-security.test.ts:709-720)*
@@ -412,7 +412,7 @@
 ### devtools-gate: DevTools Gate
 
 **Clauses**
-- App Dock DevTools do not open without trusted development route *(measured: app-dock-security.test.ts:1162-1176)*
+- MCP Dock DevTools do not open without trusted development route *(measured: app-dock-security.test.ts:1162-1176)*
 - Ordinary user input (F12) does not open DevTools *(measured: app-dock-security.test.ts:1162-1176)*
 - Trusted developmentMode()=true allows openDevTools *(measured: app-dock-security.test.ts:1162-1176)*
 

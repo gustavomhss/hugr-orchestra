@@ -349,7 +349,7 @@ export const dict = {
   "appDock.browser.tab.closeOthers": "Close others",
   "appDock.browser.tab.closeRight": "Close right",
   "appDock.linux.title": "Linux",
-  "appDock.contexts": "App Dock ၏ အကြောင်းအရာများ",
+  "appDock.contexts": "MCP Dock ၏ အကြောင်းအရာများ",
   "appDock.browser.title": "ဘရောက်ဆာ",
   "appDock.browser.empty": "ဘရောက်ဆာတက်ဘ် ဖွင့်ရန် ဝဘ်လိပ်စာ ထည့်ပါ။",
   "appDock.linux.workspace": "Linux အလုပ်နေရာ",

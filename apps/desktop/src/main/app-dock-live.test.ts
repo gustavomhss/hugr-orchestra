@@ -103,12 +103,12 @@ async function child() {
            if (message.ok) {
              resolveRPC(message.value)
            } else {
-             rejectRPC(new Error(message.error?.message ?? "App Dock RPC failed"))
+             rejectRPC(new Error(message.error?.message ?? "MCP Dock RPC failed"))
            }
         })
         if (!handled) {
           clearTimeout(timer)
-          rejectRPC(new Error(`Unhandled App Dock RPC: ${op}`))
+          rejectRPC(new Error(`Unhandled MCP Dock RPC: ${op}`))
         }
       })
     const openedRaw = await rpc("open", { address: site.base })

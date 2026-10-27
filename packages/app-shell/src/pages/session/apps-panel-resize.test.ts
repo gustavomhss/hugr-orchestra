@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { bounds, createAppDockBoundsSync, type AppDockBoundsSnapshot, type Bounds } from "./apps-panel-resize"
 
-describe("App Dock bounds sync", () => {
+describe("MCP Dock bounds sync", () => {
   test("coalesces a burst and reads the latest native snapshot at frame delivery", () => {
     const dock = fixture()
     Array.from({ length: 100 }, () => dock.sync.request())
