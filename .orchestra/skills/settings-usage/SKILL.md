@@ -5,7 +5,7 @@ description: How to use Settings and the MCP page in the app — which sections 
 
 # Settings usage
 
-For people and agents driving the Settings screen and the MCP page. The trust rules themselves: `docs/guides/mcp-project-trust.md`. The screen guide: `docs/guides/settings.md`.
+For people and agents driving the Settings screen and the MCP page. The trust rules themselves: `docs/guides/mcp-project-trust.md`, which lists the on-screen paths first (first run, the MCP banner, Settings > Trusted projects) and the API and hand-edit paths after. New users: `docs/guides/getting-started.md`. The screen guide: `docs/guides/settings.md`.
 
 ## Sections
 

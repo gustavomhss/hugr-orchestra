@@ -11,23 +11,45 @@ When the project is not approved, the project's formatter and LSP settings are i
 
 Remote MCP servers (a URL), and anything declared in your own global config, are not affected.
 
-## trusted_projects
+Trust only folders you wrote or reviewed. Do not approve a project just to make a banner go away.
 
-`trusted_projects` is a list of absolute paths in your global config. A project is approved when its folder is one of the listed paths or inside one. Listing a parent folder approves every project under it.
+## Approve a project on screen
 
-Only the global config counts. A `trusted_projects` entry in a project's own config is ignored, so a repository cannot approve itself.
+1. **First run.** Home's first step chooses a folder and trusts it in one action. See [First run](first-run.md).
+2. **From a blocked server.** Open the project's MCP page. When one of its local servers is blocked, a banner offers **Trust this project**. Approving it starts the blocked servers at once and refreshes the page.
+3. **From the command line.** `orchestra mcp add` with a local server writes the server to the project and adds the project to the approved list for you, since adding it is your decision.
 
-## Approving a project
+Plugins and LSP servers of a project load when the session starts, so restart the session after approving or revoking a project that declares them.
 
-`orchestra mcp add` with a local server writes the server to the project and adds the project to `trusted_projects` for you, since adding it is your decision.
+## See and revoke approved projects
 
-On first launch, Home's first step chooses a folder and trusts it in one action. See [First run](first-run.md).
+Open Settings > Trusted projects. It lists every approved folder with a **Revoke** button. Revoking stops that project's running local MCP servers. A folder trusted only through a parent stays trusted, so revoke the parent instead.
 
-Later, open the project's MCP page. When one of its local servers is blocked, a banner offers **Trust this project**. Approving it starts the blocked servers at once and refreshes the page. Settings > Trusted projects lists every approved folder with a **Revoke** button, and revoking stops that project's running local servers. Both use the same server routes described below.
+## What a blocked project shows
 
-To approve a project through the server API, send its folder (an existing absolute path) to `POST /api/trust/approve` with the body `{ "directory": "/Users/you/work/my-project" }`. The server stores the folder's real path in your global config and starts the project's blocked local MCP servers at once, with no restart. `GET /api/trust` lists the approved folders, and `POST /api/trust/revoke` with the same body removes one. Revoking stops that project's running local MCP servers. A folder trusted only through a parent stays trusted, so revoke the parent instead. The server refuses a folder that does not exist, a file, a relative path and the filesystem root.
+Blocked project plugins, formatter and LSP config are skipped and the log carries a warning ending in `Add "<project folder>" to trusted_projects in your user config to approve it.` Approve the project as above, then restart the session so plugins and LSP servers load.
 
-To approve a project by hand, edit the global config (`orchestra.json` in your Orchestra config folder):
+A blocked MCP server is listed with status `failed` and this error:
+
+```
+Not started: this project's config declares a local command for this server. Add "<project folder>" to trusted_projects in your user config to approve it.
+```
+
+Nothing was run. Approving the project starts the server without a restart. You can also connect it again by hand: on the MCP page the card has a **Try again** button, and the page's banner names the project.
+
+## Alternative: the server API
+
+The screens above use these routes. All send and receive the folder as an existing absolute path.
+
+- `GET /api/trust` lists the approved folders.
+- `POST /api/trust/approve` with the body `{ "directory": "/Users/you/work/my-project" }` stores the folder's real path in your global config and starts the project's blocked local MCP servers at once, with no restart.
+- `POST /api/trust/revoke` with the same body removes it and stops that project's running local MCP servers.
+
+The server refuses a folder that does not exist, a file, a relative path and the filesystem root.
+
+## Alternative: edit the config by hand
+
+`trusted_projects` is a list of absolute paths in your global config (`orchestra.json` in your Orchestra config folder). A project is approved when its folder is one of the listed paths or inside one. Listing a parent folder approves every project under it.
 
 ```json
 {
@@ -35,18 +57,4 @@ To approve a project by hand, edit the global config (`orchestra.json` in your O
 }
 ```
 
-Plugins and LSP servers of a project load when the session starts, so restart the session after approving or revoking a project that declares them.
-
-## What a blocked project shows
-
-Blocked project plugins, formatter and LSP config are skipped and the log carries a warning ending in `Add "<project folder>" to trusted_projects in your user config to approve it.` Approve the project as above, then restart the session so plugins and LSP servers load.
-
-## What a blocked server shows
-
-The server is listed with status `failed` and this error:
-
-```
-Not started: this project's config declares a local command for this server. Add "<project folder>" to trusted_projects in your user config to approve it.
-```
-
-Nothing was run. Approving the project starts the server without a restart. You can also connect it again by hand. On the MCP page the card has a **Try again** button for this, and the page's banner names the project.
+Only the global config counts. A `trusted_projects` entry in a project's own config is ignored, so a repository cannot approve itself.
