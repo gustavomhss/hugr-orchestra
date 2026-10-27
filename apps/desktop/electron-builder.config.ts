@@ -186,6 +186,9 @@ const getBase = (appId: string): Configuration => ({
       to: "playbooks",
     },
     { from: "resources/cli", to: "cli" },
+    // The repository licence and notice ship in every installer, next to the app's own resources.
+    { from: path.join(rootDir, "LICENSE"), to: "LICENSE" },
+    { from: path.join(rootDir, "NOTICE"), to: "NOTICE" },
     // stage-claude.ts is the one writer for the executable, its receipt and the native package's required notices.
     {
       from: "resources/claude-code",
