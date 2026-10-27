@@ -44,60 +44,6 @@
     },
     {
       "rule": "R5",
-      "file": "apps/cli/test/fixture/distribution-provider-proof.ts",
-      "specifier": "../../../../packages/schema/src/agent",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/test/fixture/distribution-provider-proof.ts",
-      "specifier": "../../../../packages/schema/src/location",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/test/fixture/distribution-provider-proof.ts",
-      "specifier": "../../../../packages/schema/src/model",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/test/fixture/distribution-provider-proof.ts",
-      "specifier": "../../../../packages/schema/src/session",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/test/fixture/distribution-provider-proof.ts",
-      "specifier": "../../../../packages/schema/src/session-event",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/test/fixture/distribution-provider-proof.ts",
-      "specifier": "../../../../packages/schema/src/session-input",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/test/fixture/distribution-provider-proof.ts",
-      "specifier": "../../../../packages/schema/src/session-message",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/test/fixture/distribution-provider-tool-result.ts",
-      "specifier": "../../../../packages/schema/src/session-message",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/test/fixture/distribution-provider/tool-result.test.ts",
-      "specifier": "../../../../../packages/schema/src/session-message",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
       "file": "apps/desktop/electron.vite.config.ts",
       "specifier": "../../packages/script/src/workspace-paths.ts",
       "reason": "D8: relative import across a package root; retargets are deferred"

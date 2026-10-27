@@ -37,10 +37,10 @@ for (const pkg of ["core", "cli"] as const) {
 
 // Core Linux qualification observes dedicated native-host rows' emitted shell without running native builds/models.
 if (process.platform === "linux") {
-  for (const lane of ["musl", "provider"] as const) it.live(`ORCHESTRATION-ONLY ${lane}: dedicated row argv, timeout, log and control`, () => Effect.gen(function* () {
+  it.live("ORCHESTRATION-ONLY musl: dedicated row argv, timeout, log and control", () => Effect.gen(function* () {
     expectSpawn(import.meta.path)
-    const box = yield* fixture("cli", undefined, lane)
-    expect(box.row.files).toEqual([`./test/distribution-${lane}.test.ts`])
+    const box = yield* fixture("cli", undefined, "musl")
+    expect(box.row.files).toEqual(["./test/distribution-musl.test.ts"])
     yield* admit(box)
     yield* observe(box, run, 0)
   }))
@@ -216,7 +216,7 @@ function requirePrivateNonce(captured: typeof Capture.Type) {
 const observe = (box: Fixture, text: string, code: number) => Effect.gen(function* () {
   requireExit(yield* command(box, text, true, { ...box.env, BUNDLE_CHILD_EXIT: String(code) }, box.cwd), code, "BUNDLE_CHILD_EXIT_LOST")
   const captured = yield* capture(box)
-  expect(captured.argv).toEqual(["test", ...(box.row.package === "cli" ? ["--preload", "../../script/test-omni-control.ts"] : []), "--timeout", box.row.package === "cli" && box.row.platform === "linux" && box.row.files.some((file) => ["./test/distribution-provider.test.ts", "./test/distribution-musl.test.ts"].includes(file)) ? "4800000" : "30000", ...box.row.files])
+  expect(captured.argv).toEqual(["test", ...(box.row.package === "cli" ? ["--preload", "../../script/test-omni-control.ts"] : []), "--timeout", box.row.package === "cli" && box.row.platform === "linux" && box.row.files.includes("./test/distribution-musl.test.ts") ? "4800000" : "30000", ...box.row.files])
   expect(captured.githubActions).toBe("false")
   expect(captured.nonce).toMatch(/^[0-9a-f]{32}$/)
   requirePrivateNonce(captured)

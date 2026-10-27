@@ -3,22 +3,8 @@ on:
   push:
     branches: [distribution-bundle]
   workflow_dispatch:
-    inputs:
-      provider:
-        # Opt-in: the provider lane needs the owner's hosted-inference key and
-        # third-party quota, so it runs before a release, not in every bundle.
-        description: Run the hosted provider qualification lane
-        type: boolean
-        default: false
   # release-cli calls this before publishing, so no release ships without a green bundle at its SHA.
   workflow_call:
-    inputs:
-      provider:
-        type: boolean
-        default: false
-    secrets:
-      OPENROUTER_API_KEY:
-        required: false
 permissions:
   contents: read
 defaults:
@@ -50,7 +36,7 @@ jobs:
           GODFILE_BASE_REF: origin/dev
       - run: git diff --check origin/dev HEAD
   qualification:
-    name: &qualification-name qualification (${{ matrix.lane }}, ${{ matrix.package }}, ${{ matrix.host }})
+    name: qualification (${{ matrix.lane }}, ${{ matrix.package }}, ${{ matrix.host }})
     runs-on: ${{ matrix.host }}
     timeout-minutes: 90
     strategy:
@@ -120,17 +106,14 @@ jobs:
             cpu: ARM64
             platform: linux
             files: [./test/distribution-musl.test.ts]
-    env: &qualification-env
+    env:
       ROW: ${{ toJSON(matrix) }}
       PACKAGE: ${{ matrix.package }}
       # The CLI is an app (apps/cli); every other lane package is a library under packages/.
       PACKAGE_DIR: ${{ matrix.package == 'cli' && 'apps/cli' || format('packages/{0}', matrix.package) }}
       ORCHESTRA_OMNI_CONTROL: suite
       ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ matrix.platform == 'win32' && 'true' || 'false' }}
-      # Fail closed: the provider lane runs real hosted inference and must never
-      # fall back to a local, credential-free or scripted provider.
-      OPENROUTER_API_KEY: ${{ matrix.lane == 'provider' && secrets.OPENROUTER_API_KEY || '' }}
-    steps: &qualification-steps
+    steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - uses: ./.github/actions/setup-bun
       - name: Prepare native Windows Rust
@@ -143,16 +126,6 @@ jobs:
             "$RUNNER_TEMP/rustup-init.exe" -y --default-toolchain none --profile minimal
             printf '%s\n' "$USERPROFILE\.cargo\bin" >> "$GITHUB_PATH"
           fi
-      - name: Require hosted provider credential
-        if: matrix.lane == 'provider'
-        run: |
-          set -euo pipefail
-          # Fail closed and explicit: real hosted inference cannot degrade to a
-          # local, credential-free or scripted provider.
-          if [ -z "${OPENROUTER_API_KEY:-}" ]; then
-            echo "BUNDLE_PROVIDER_CREDENTIAL_MISSING" >&2
-            exit 1
-          fi
       - name: Assert native CPU and exact files
         run: |
           set -euo pipefail
@@ -162,7 +135,7 @@ jobs:
           import { validateRequest } from './script/test-ci-request.ts'
           // bundle-program:begin
           const row = JSON.parse(process.env.ROW)
-          if (!['regression', 'musl', 'provider'].includes(row.lane)) throw new Error('BUNDLE_LANE_INVALID')
+          if (!['regression', 'musl'].includes(row.lane)) throw new Error('BUNDLE_LANE_INVALID')
           const arch = { X64: 'x64', ARM64: 'arm64' }[row.cpu]
           const os = { linux: 'Linux', win32: 'Windows', darwin: 'macOS' }[row.platform]
           if (!arch || !os || process.arch !== arch || process.platform !== row.platform || process.env.RUNNER_ARCH !== row.cpu || process.env.RUNNER_OS !== os)
@@ -245,13 +218,6 @@ jobs:
           set -euo pipefail
           mkdir -p ../../../distribution-logs
           GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 120000 ./test/parser-bindings.test.ts ./test/onboard.test.ts 2>&1 | tee ../../../distribution-logs/parser-abi.log
-      - name: Prove localized proof oracles
-        if: matrix.lane == 'regression' && matrix.package == 'cli' && matrix.host == 'ubuntu-latest' && matrix.cpu == 'X64'
-        working-directory: apps/cli
-        run: |
-          set -euo pipefail
-          mkdir -p ../../distribution-logs
-          GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 30000 ./test/fixture/distribution-provider/compiler-edge.test.ts ./test/fixture/distribution-provider/tool-result.test.ts ./test/fixture/distribution-provider/capture-bytes.test.ts ./test/fixture/distribution-provider/provenance.test.ts 2>&1 | tee ../../distribution-logs/localized-oracles.log
       - name: Run tests
         working-directory: ${{ env.PACKAGE_DIR }}
         run: |
@@ -265,7 +231,7 @@ jobs:
           # Native compiler/model/guest work remains bounded by the 90-minute job.
           if [ "$PACKAGE" = cli ] && [ "$RUNNER_OS" = Linux ]; then
             for file in "${args[@]}"; do
-              case "$file" in ./test/distribution-provider.test.ts|./test/distribution-musl.test.ts) timeout=4800000 ;; esac
+              case "$file" in ./test/distribution-musl.test.ts) timeout=4800000 ;; esac
             done
           fi
           nonce=$(node -e "process.stdout.write(require('node:crypto').randomBytes(16).toString('hex'))")
@@ -299,23 +265,3 @@ jobs:
           path: distribution-logs
           if-no-files-found: error
           retention-days: 7
-  # Opt-in: hosted inference needs the owner's key and third-party quota, so this
-  # row runs only on dispatch with provider=true, with the qualification steps unchanged.
-  provider:
-    if: ${{ inputs.provider }}
-    name: *qualification-name
-    runs-on: ${{ matrix.host }}
-    timeout-minutes: 90
-    strategy:
-      fail-fast: false
-      max-parallel: 1
-      matrix:
-        include:
-          - lane: provider
-            package: cli
-            host: ubuntu-latest
-            cpu: X64
-            platform: linux
-            files: [./test/distribution-provider.test.ts]
-    env: *qualification-env
-    steps: *qualification-steps
