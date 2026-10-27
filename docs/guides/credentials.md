@@ -16,7 +16,8 @@ Secret Service (for example GNOME Keyring or KWallet) on Linux, and Credential M
 `ai.hugr.orchestra` / `credential-key`. Copying the database or `mcp-auth.json` to another machine does not copy the
 key, so the secrets in the copy cannot be read there.
 
-The desktop app's own live key is protected separately by Electron's safeStorage and is not covered here.
+The desktop app's own live key is protected separately by Electron's safeStorage and is not covered here; see
+[Live meetings](live-meetings.md).
 
 ## Upgrading from a version that stored plaintext
 

@@ -5,7 +5,7 @@ description: Who owns each piece of the live seat (meeting copilot), where its c
 
 # Live seat ownership
 
-The live seat (id `live`) is the user's meeting copilot: it hears the call, answers in an overlay, and remembers meetings, people and commitments. Design: `docs/specs/live-seat/README.md`; memory as built: `docs/specs/live-seat/memory.md`. How to change it: skill `live-seat-maintenance`. How to use it: skill `live-seat-usage`.
+The live seat (id `live`) is the user's meeting copilot: it hears the call, answers in an overlay, and remembers meetings, people and commitments. Design: `docs/specs/live-seat/README.md`; memory as built: `docs/specs/live-seat/memory.md`. How to change it: skill `live-seat-maintenance`. How to use it: skill `live-seat-usage`. User guide: `docs/guides/live-meetings.md`.
 
 ## Ownership
 
@@ -44,4 +44,5 @@ The live seat (id `live`) is the user's meeting copilot: it hears the call, answ
 
 - macOS only (14.2+ for system audio). Real audio runs need the packaged app or a dev run from the owner's own terminal (TCC attribution).
 - Consolidation has no retry; an interrupted card stays `failed`.
+- Screen-share hiding (`setContentProtection`) is verified only with Meet in Chrome on macOS 15.3; Zoom and Teams are not verified.
 - The tray icon asset (`apps/desktop/icons/<channel>/trayTemplate*.png`) and the `orchestra://live` route belong to the Interface session.
