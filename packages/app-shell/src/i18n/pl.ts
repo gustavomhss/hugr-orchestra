@@ -862,6 +862,7 @@ export const dict = {
   "live.start.reason.no-key": "Najpierw dodaj klucz zamiany mowy na tekst w Ustawieniach",
   "live.start.reason.server": "Lokalny serwer nie odpowiedział",
   "live.start.reason.capture": "Nie udało się uruchomić przechwytywania dźwięku. Sprawdź uprawnienia do mikrofonu i nagrywania ekranu.",
+  "live.start.reason.permission": "Najpierw zezwól na dostęp do mikrofonu w Ustawieniach systemu",
   "settings.general.row.language.title": "Język",
   "settings.general.row.language.description": "Zmień język wyświetlania aplikacji HuGR Orchestra",
   "settings.general.row.shell.title": "Powłoka terminala",

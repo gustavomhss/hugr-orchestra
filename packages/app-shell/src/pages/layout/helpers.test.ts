@@ -4,6 +4,7 @@ import {
   collectOpenProjectDeepLinks,
   drainPendingDeepLinks,
   parseDeepLink,
+  parseLiveDeepLink,
   parseNewSessionDeepLink,
 } from "./deep-links"
 import { Session } from "@/v2-wire"
@@ -93,6 +94,14 @@ describe("layout deep links", () => {
   test("ignores new-session deep links without directory", () => {
     expect(parseNewSessionDeepLink("orchestra://new-session")).toBeUndefined()
     expect(parseNewSessionDeepLink("orchestra://new-session?directory=")).toBeUndefined()
+  })
+
+  test("parses live deep links with an optional meeting", () => {
+    expect(parseLiveDeepLink("orchestra://live")).toEqual({})
+    expect(parseLiveDeepLink("orchestra://live?meeting=")).toEqual({})
+    expect(parseLiveDeepLink("orchestra://live?meeting=m%201")).toEqual({ meeting: "m 1" })
+    expect(parseLiveDeepLink("orchestra://open-project?directory=/a")).toBeUndefined()
+    expect(parseLiveDeepLink("https://live")).toBeUndefined()
   })
 
   test("collects only valid new-session deep links", () => {

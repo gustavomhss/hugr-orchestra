@@ -940,6 +940,7 @@ export const dict = {
   "live.start.reason.no-key": "Shto fillimisht një çelës të folurit në tekst te Cilësimet",
   "live.start.reason.server": "Serveri lokal nuk u përgjigj",
   "live.start.reason.capture": "Regjistrimi i audios nuk mundi të nisë. Kontrollo lejet e mikrofonit dhe të regjistrimit të ekranit.",
+  "live.start.reason.permission": "Fillimisht lejoni qasjen te mikrofoni te Cilësimet e Sistemit",
   "settings.general.row.language.title": "Gjuha",
   "settings.general.row.language.description": "Ndryshoni gjuhën e ekranit për HuGR Orchestra",
   "settings.general.row.shell.title": "Predha e terminalit",

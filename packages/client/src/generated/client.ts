@@ -301,6 +301,16 @@ import type {
   ServerBoardAttachmentRemoveOutput,
   ServerBoardUndoInput,
   ServerBoardUndoOutput,
+  ServerBoardSpendInput,
+  ServerBoardSpendOutput,
+  ServerBoardDecisionsInput,
+  ServerBoardDecisionsOutput,
+  ServerBoardDecisionChangeInput,
+  ServerBoardDecisionChangeOutput,
+  ServerBoardProofInput,
+  ServerBoardProofOutput,
+  ServerBoardSettingsInput,
+  ServerBoardSettingsOutput,
   ServerBoardPauseInput,
   ServerBoardPauseOutput,
   ServerBoardResumeInput,
@@ -2570,6 +2580,63 @@ export function make(options: ClientOptions) {
           {
             method: "POST",
             path: `/api/board/${encodeURIComponent(input.key)}/activity/${encodeURIComponent(input.id)}/undo`,
+            successStatus: 200,
+            declaredStatuses: [404, 409, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      spend: (input: ServerBoardSpendInput, requestOptions?: RequestOptions) =>
+        request<ServerBoardSpendOutput>(
+          {
+            method: "GET",
+            path: `/api/board/${encodeURIComponent(input.key)}/spend`,
+            successStatus: 200,
+            declaredStatuses: [404, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      decisions: (input: ServerBoardDecisionsInput, requestOptions?: RequestOptions) =>
+        request<ServerBoardDecisionsOutput>(
+          {
+            method: "GET",
+            path: `/api/board/${encodeURIComponent(input.key)}/decisions`,
+            successStatus: 200,
+            declaredStatuses: [404, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      decisionChange: (input: ServerBoardDecisionChangeInput, requestOptions?: RequestOptions) =>
+        request<ServerBoardDecisionChangeOutput>(
+          {
+            method: "POST",
+            path: `/api/board/${encodeURIComponent(input.key)}/decision/${encodeURIComponent(input.id)}`,
+            body: { option: input["option"], text: input["text"] },
+            successStatus: 200,
+            declaredStatuses: [404, 409, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      proof: (input: ServerBoardProofInput, requestOptions?: RequestOptions) =>
+        request<ServerBoardProofOutput>(
+          {
+            method: "GET",
+            path: `/api/board/${encodeURIComponent(input.key)}/issue/${encodeURIComponent(input.number)}/proof`,
+            successStatus: 200,
+            declaredStatuses: [404, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      settings: (input: ServerBoardSettingsInput, requestOptions?: RequestOptions) =>
+        request<ServerBoardSettingsOutput>(
+          {
+            method: "POST",
+            path: `/api/board/${encodeURIComponent(input.key)}/settings`,
+            body: { target_date: input["target_date"], budget_usd: input["budget_usd"], reason: input["reason"] },
             successStatus: 200,
             declaredStatuses: [404, 409, 401, 400],
             empty: false,

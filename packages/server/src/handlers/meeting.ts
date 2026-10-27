@@ -1,4 +1,6 @@
 import { SessionMeeting } from "@orchestra/core/session"
+import { MeetingConsolidation } from "@orchestra/core/session/meeting-consolidation"
+import { MeetingHandoff } from "@orchestra/core/session/meeting-handoff"
 import { MeetingError } from "@orchestra/protocol/groups/meeting"
 import { Effect } from "effect"
 import { HttpApiBuilder, HttpApiSchema } from "effect/unstable/httpapi"
@@ -27,7 +29,11 @@ export const MeetingHandler = HttpApiBuilder.group(Api, "server.meeting", (handl
         response(
           Effect.gen(function* () {
             const meeting = yield* SessionMeeting.Service
-            return yield* meeting.stop(ctx.payload).pipe(Effect.mapError(apiError))
+            const consolidation = yield* MeetingConsolidation.Service
+            const stopped = yield* meeting.stop(ctx.payload).pipe(Effect.mapError(apiError))
+            // The card is built in the background; stop answers before it is ready.
+            yield* consolidation.start(stopped.id)
+            return stopped
           }),
         ),
       )
@@ -63,14 +69,32 @@ export const MeetingHandler = HttpApiBuilder.group(Api, "server.meeting", (handl
           }),
         ),
       )
-      // The memory store behind these is not built yet; the routes are frozen so the screens can be built first.
-      .handle("meeting.confirm", () => unavailable)
-      .handle("meeting.commitment", () => unavailable)
-      .handle("meeting.handoff", () => unavailable),
+      .handle("meeting.confirm", (ctx) =>
+        response(
+          Effect.gen(function* () {
+            const meeting = yield* SessionMeeting.Service
+            return yield* meeting.confirm(ctx.payload).pipe(Effect.mapError(apiError))
+          }),
+        ),
+      )
+      .handle("meeting.commitment", (ctx) =>
+        response(
+          Effect.gen(function* () {
+            const meeting = yield* SessionMeeting.Service
+            return yield* meeting.commitment(ctx.payload).pipe(Effect.mapError(apiError))
+          }),
+        ),
+      )
+      .handle("meeting.handoff", (ctx) =>
+        response(
+          Effect.gen(function* () {
+            const handoff = yield* MeetingHandoff.Service
+            return yield* handoff.handoff(ctx.payload).pipe(Effect.mapError(apiError))
+          }),
+        ),
+      ),
   ),
 )
-
-const unavailable = Effect.fail(new MeetingError({ name: "MeetingError", data: { reason: "unavailable" } }))
 
 function apiError(error: SessionMeeting.MeetingError) {
   return new MeetingError({ name: "MeetingError", data: { reason: error.reason } })

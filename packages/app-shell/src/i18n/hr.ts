@@ -946,6 +946,7 @@ export const dict = {
   "live.start.reason.no-key": "Najprije dodaj ključ za pretvaranje govora u tekst u postavkama",
   "live.start.reason.server": "Lokalni poslužitelj nije odgovorio",
   "live.start.reason.capture": "Snimanje zvuka nije moglo započeti. Provjeri dopuštenja za mikrofon i snimanje zaslona.",
+  "live.start.reason.permission": "Prvo dopustite pristup mikrofonu u Postavkama sustava",
   "settings.general.row.language.title": "Jezik",
   "settings.general.row.language.description": "Promijenite jezik prikaza aplikacije HuGR Orchestra",
   "settings.general.row.shell.title": "Terminal školjka",

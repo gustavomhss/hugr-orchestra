@@ -305,10 +305,21 @@ linuxGuestTest("real owned V2 CLI guest credential authenticates foreground serv
   expect(password.length).toBeGreaterThan(20)
   const server = Bun.spawn(["bash", "-c", wslServeScript(executable, 0)], { env, stdout: "pipe", stderr: "pipe" })
   try {
+    // Startup may log (for example the key-file warning on a keychain-less runner) before it prints the listening URL.
     const reader = server.stdout.getReader()
-    const output = await Promise.race([reader.read(), Bun.sleep(20_000).then(() => { throw new Error("V2 startup timed out") })])
-    const url = new TextDecoder().decode(output.value).match(/http:\/\/[^\s]+/)?.[0]
-    expect(url).toBeDefined()
+    const decoder = new TextDecoder()
+    const deadline = Date.now() + 20_000
+    const read = async (text: string): Promise<string> => {
+      if (/http:\/\/[^\s]+/.test(text) || Date.now() > deadline) return text
+      const chunk = await Promise.race([reader.read(), Bun.sleep(deadline - Date.now()).then(() => ({ done: true, value: undefined }))])
+      if (chunk.done) return text
+      return read(text + decoder.decode(chunk.value, { stream: true }))
+    }
+    const stdout = await read("")
+    const url = stdout.match(/http:\/\/[^\s]+/)?.[0]
+    // stderr closes only once the server exits, so read it only after killing a server that never printed its URL.
+    if (!url) server.kill()
+    expect(url, url ? stdout : `stdout: ${stdout}\nstderr: ${await new Response(server.stderr).text()}`).toBeDefined()
     expect(await checkWslAuthentication(url!, password)).toBe(true)
     expect((await stat(join(root, ".local/state/orchestra/password"))).mode & 0o777).toBe(0o600)
   } finally {

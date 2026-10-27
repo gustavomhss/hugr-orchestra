@@ -923,6 +923,7 @@ export const dict = {
   "live.start.reason.no-key": "መጀመሪያ በቅንብሮች ውስጥ የንግግር-ወደ-ጽሑፍ ቁልፍ ያክሉ",
   "live.start.reason.server": "የአካባቢው አገልጋይ ምላሽ አልሰጠም",
   "live.start.reason.capture": "የድምፅ መቅረጽ መጀመር አልተቻለም። የማይክሮፎን እና የማያ ገጽ ቀረጻ ፈቃዶችን ያረጋግጡ።",
+  "live.start.reason.permission": "መጀመሪያ በስርዓት ቅንብሮች ውስጥ ማይክሮፎን መዳረሻን ፍቀዱ",
   "settings.general.row.language.title": "ቋንቋ",
   "settings.general.row.language.description": "የHuGR Orchestraን የማሳያ ቋንቋ ይቀይሩ",
   "settings.general.row.shell.title": "ተርሚናል ሼል",

@@ -41,7 +41,7 @@ login.
 
 Some systems have no usable credential store, for example a Linux server or container without a Secret Service, or a
 session where the store is locked and does not answer. In that case Orchestra keeps the key in `credential.key` in the
-data directory, readable only by your user (mode 0600), and logs a warning once. This is weaker: anyone who can read
+data directory, readable only by your user (mode 0600), and logs a warning once. On Linux without a D-Bus session bus (headless servers, CI, bare WSL) Orchestra does not try the store at all. This is weaker: anyone who can read
 your data directory can read both the key and the secrets. Protect that directory, or run Orchestra where a credential
 store is available. If the credential store becomes available later, secrets encrypted with the key file stay readable.
 

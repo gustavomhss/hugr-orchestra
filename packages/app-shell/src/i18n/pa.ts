@@ -942,6 +942,7 @@ export const dict = {
   "live.start.reason.no-key": "ਪਹਿਲਾਂ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਸਪੀਚ-ਟੂ-ਟੈਕਸਟ ਕੁੰਜੀ ਜੋੜੋ",
   "live.start.reason.server": "ਲੋਕਲ ਸਰਵਰ ਨੇ ਜਵਾਬ ਨਹੀਂ ਦਿੱਤਾ",
   "live.start.reason.capture": "ਆਡੀਓ ਕੈਪਚਰ ਸ਼ੁਰੂ ਨਹੀਂ ਹੋ ਸਕਿਆ। ਮਾਈਕ੍ਰੋਫ਼ੋਨ ਅਤੇ ਸਕ੍ਰੀਨ ਰਿਕਾਰਡਿੰਗ ਦੀਆਂ ਇਜਾਜ਼ਤਾਂ ਜਾਂਚੋ।",
+  "live.start.reason.permission": "ਪਹਿਲਾਂ ਸਿਸਟਮ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਮਾਈਕ੍ਰੋਫ਼ੋਨ ਦੀ ਪਹੁੰਚ ਦੀ ਆਗਿਆ ਦਿਓ",
   "settings.general.row.language.title": "بولی",
   "settings.general.row.language.description": "HuGR Orchestra لئی ڈسپلے دی بولی بدلو",
   "settings.general.row.shell.title": "شیل",

@@ -943,6 +943,7 @@ export const dict = {
   "live.start.reason.no-key": "Voeg eerst een spraak-naar-tekst-sleutel toe in Instellingen",
   "live.start.reason.server": "De lokale server reageerde niet",
   "live.start.reason.capture": "Audio-opname kon niet starten. Controleer de rechten voor microfoon en schermopname.",
+  "live.start.reason.permission": "Sta eerst microfoontoegang toe in Systeeminstellingen",
   "settings.general.row.language.title": "Taal",
   "settings.general.row.language.description": "Wijzig de weergavetaal voor HuGR Orchestra",
   "settings.general.row.shell.title": "Terminalshell",

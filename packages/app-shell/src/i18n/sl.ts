@@ -942,6 +942,7 @@ export const dict = {
   "live.start.reason.no-key": "Najprej dodajte ključ za pretvorbo govora v besedilo v nastavitvah",
   "live.start.reason.server": "Lokalni strežnik se ni odzval",
   "live.start.reason.capture": "Zajema zvoka ni bilo mogoče začeti. Preverite dovoljenja za mikrofon in snemanje zaslona.",
+  "live.start.reason.permission": "Najprej dovolite dostop do mikrofona v Sistemskih nastavitvah",
   "settings.general.row.language.title": "Jezik",
   "settings.general.row.language.description": "Spremenite jezik prikaza aplikacije HuGR Orchestra",
   "settings.general.row.shell.title": "Končna lupina",

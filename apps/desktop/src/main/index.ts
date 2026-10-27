@@ -58,6 +58,7 @@ import { OmniBoot } from "./omni-boot"
 import { OmniSmoke } from "./omni-smoke"
 import { createDeepLinkDelivery } from "./deep-links"
 import { registerLiveLoop } from "./live-loop"
+import { registerLiveTray } from "./live-tray"
 import { registerLiveOverlay } from "./live-overlay"
 
 // These process names keep their inherited values: Electron names the macOS Keychain item that encrypts saved browser
@@ -355,6 +356,7 @@ const main = Effect.gen(function* () {
     openSettings: () => menuDeps.trigger("settings.open"),
   })
   app.once("will-quit", liveLoop.destroy)
+  registerLiveTray({ loop: liveLoop })
   shutdown.runtimeStop = registerIpcHandlers({
     liveLoop,
     killSidecar: () => killSidecar(),

@@ -1,0 +1,144 @@
+<!doctype html><html lang="en" data-theme="dark"><head><meta charset="utf-8"><title>Flight Engineer — Permissions</title>
+<meta name="viewport" content="width=device-width"><style>
+:root,[data-theme=dark]{
+--text:#eef1f5;--body:#c7d0d9;--muted:#b2c0cf;--faint:#9fb2c4;--accent:#9dc3e9;--warm:#cfbd95;--success:#a6c8b7;--danger:#e7b3b0;
+--glass-bg:linear-gradient(180deg,rgba(32,44,58,.44),rgba(17,24,33,.52) 46%,rgba(11,16,23,.58));
+--glass-filter:blur(28px) brightness(.84) saturate(1.5);
+--rim:rgba(226,238,250,.22);--border:rgba(160,179,197,.1);
+--glass-shadow:inset 0 1px 0 rgba(255,255,255,.1),inset 0 -1px 0 rgba(0,0,0,.28),0 1px 2px rgba(0,0,0,.36),0 10px 30px rgba(0,0,0,.24);
+--float-bg:linear-gradient(180deg,rgba(30,40,53,.72),rgba(18,25,34,.8));--float-filter:blur(40px) brightness(.9) saturate(1.8);
+--scrim:rgba(5,9,14,.42);
+--overlay:linear-gradient(180deg,rgba(9,14,20,.39),rgba(9,14,20,.22) 42%,rgba(9,14,20,.43)),radial-gradient(circle at 0 0,rgba(26,37,50,.32),transparent 60%);
+--surface:rgba(32,43,55,.7);--surface-hover:rgba(44,58,73,.8);--surface-active:rgba(70,95,122,.62);
+--raised:rgba(19,28,38,.55);--soft:rgba(170,196,220,.055);--mx-rim:rgba(166,189,211,.24);--line:rgba(166,189,211,.14);
+--sheen:rgba(255,255,255,.03);--card-shadow:0 1px 2px rgba(0,0,0,.3),0 8px 22px rgba(0,0,0,.18);
+--primary:linear-gradient(180deg,#3f7ebc,#326ba5);--sb-active:linear-gradient(90deg,rgba(120,160,205,.2),rgba(120,160,205,.06));
+--track:rgba(170,196,220,.12);
+}
+[data-theme=light]{
+--text:#1a1f26;--body:#353d48;--muted:#343d48;--faint:#4a5563;--accent:#0c3e6c;--warm:#4d390f;--success:#164431;--danger:#5c302f;
+--glass-bg:linear-gradient(180deg,rgba(255,255,255,.57),rgba(248,250,252,.49) 46%,rgba(240,244,247,.59));
+--glass-filter:blur(28px) brightness(1.06) saturate(1.5);
+--rim:rgba(255,255,255,.9);--border:rgba(70,84,98,.12);
+--glass-shadow:inset 0 1px 0 rgba(255,255,255,.9),inset 0 -1px 0 rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.12),0 10px 30px rgba(0,0,0,.1);
+--float-bg:linear-gradient(180deg,rgba(255,255,255,.8),rgba(246,248,251,.86));--float-filter:blur(40px) brightness(1.08) saturate(1.8);
+--scrim:rgba(40,52,66,.2);
+--overlay:linear-gradient(180deg,rgba(226,231,236,.35),rgba(226,231,236,.18) 42%,rgba(222,228,234,.4)),radial-gradient(circle at 0 0,rgba(255,255,255,.4),transparent 60%);
+--surface:rgba(255,255,255,.7);--surface-hover:rgba(255,255,255,.9);--surface-active:rgba(190,210,230,.6);
+--raised:rgba(255,255,255,.63);--soft:rgba(28,46,65,.05);--mx-rim:rgba(65,86,107,.24);--line:rgba(65,86,107,.16);
+--sheen:rgba(255,255,255,.4);--card-shadow:0 1px 2px rgba(30,45,60,.1),0 8px 22px rgba(30,45,60,.08);
+--primary:linear-gradient(180deg,#3f7ebc,#326ba5);--sb-active:linear-gradient(90deg,rgba(40,90,150,.16),rgba(40,90,150,.05));
+--track:rgba(28,46,65,.1);
+}
+*{box-sizing:border-box;margin:0}
+html{background:#0b0f14}
+body{font:13px/20px Inter,-apple-system,"SF Pro Text",system-ui,sans-serif;color:var(--body);padding:24px;display:flex;flex-direction:column;gap:28px;align-items:center;width:1328px;-webkit-font-smoothing:antialiased}
+[data-theme=light] body,[data-theme=light]{background:#c9d0d8}
+.cap{align-self:flex-start;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:#aab8c6;display:flex;gap:16px;align-items:center;width:100%}
+[data-theme=light] .cap{color:#34404c}
+.cap button{margin-left:auto;font:inherit;letter-spacing:0;text-transform:none;border:1px solid rgba(160,179,197,.3);background:transparent;color:inherit;border-radius:6px;padding:2px 10px;cursor:pointer}
+.win{position:relative;width:1280px;height:800px;border-radius:16px;overflow:hidden;background:url(../../../../packages/app-shell/public/orchestra/mtn-src.jpg) center/cover;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.win:before{content:"";position:absolute;inset:0;background:var(--overlay)}
+.glass{position:absolute;border-radius:10px;background:var(--glass-bg);backdrop-filter:var(--glass-filter);box-shadow:var(--glass-shadow);border:1px solid var(--border)}
+.glass:after{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:linear-gradient(180deg,var(--rim),transparent 30%,transparent 70%,var(--rim));opacity:.55;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+.titlebar{position:absolute;left:0;right:0;top:0;height:36px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:var(--muted)}
+.titlebar b{font-weight:600;color:var(--text)}
+.lights{position:absolute;left:14px;display:flex;gap:7px}.lights i{width:11px;height:11px;border-radius:50%;background:rgba(160,179,197,.35)}
+.sidebar{left:12px;top:40px;bottom:12px;width:230px;padding:14px 10px 13px;display:flex;flex-direction:column}
+.brand{padding:2px 10px 16px;color:var(--text)}.brand b{font-size:18px;font-weight:700;letter-spacing:-.02em;display:block;line-height:22px}.brand span{font-size:10px;color:var(--faint)}
+.nav{display:flex;flex-direction:column;gap:1px}
+.nav a{height:31px;display:flex;align-items:center;gap:11px;padding:0 10px;border-radius:6px;color:var(--body);font-size:13px;position:relative;text-decoration:none}
+.nav a svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none;opacity:.85}
+.nav a.on{background:var(--sb-active);color:var(--text);box-shadow:inset 0 0 0 1px var(--border)}
+.nav a.on:before{content:"";position:absolute;left:3px;top:8px;bottom:8px;width:3px;border-radius:3px;background:var(--accent)}
+.nav .rec{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--danger);font-variant-numeric:tabular-nums}
+.chip{margin-left:auto;font-size:10px;font-weight:600;letter-spacing:.06em;padding:0 6px;border-radius:4px;background:var(--soft);color:var(--muted)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--danger);flex:none}
+.dot.live{box-shadow:0 0 0 3px color-mix(in srgb,var(--danger) 25%,transparent)}
+.ok{background:var(--success)}.warn{background:var(--warm)}
+.proj{margin-top:auto;display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:8px;background:var(--soft);color:var(--text);font-size:12px;line-height:16px}
+.av{width:22px;height:22px;border-radius:50%;background:var(--surface-active);color:var(--text);display:grid;place-items:center;font-size:11px;font-weight:600;flex:none}
+.main{left:248px;right:12px;top:40px;bottom:12px;overflow:hidden}
+.col{width:min(1020px,calc(100% - 72px));margin:0 auto;padding:44px 0 40px;position:relative}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:30px;line-height:38px;font-weight:600;letter-spacing:-.035em;color:var(--text)}
+.head{display:flex;align-items:flex-start;gap:16px}.head>div:first-child{flex:1}
+.sub{color:var(--faint);margin-top:2px}
+h2{font-size:16px;line-height:22px;font-weight:600;color:var(--text)}
+.btn{font:inherit;font-weight:500;height:32px;padding:0 14px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--text);display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.btn.primary{background:var(--primary);color:#fff;border-color:rgba(255,255,255,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 1px 2px rgba(0,0,0,.3)}
+.btn.quiet{background:transparent;border-color:transparent}
+.btn.danger{color:var(--danger)}
+.btn.lg{height:44px;padding:0 22px;font-size:14px;border-radius:8px}
+.btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.card{position:relative;border-radius:10px;padding:19px 20px 18px;background:linear-gradient(180deg,var(--sheen),transparent 56px),var(--raised);border:1px solid var(--line);box-shadow:var(--card-shadow)}
+.grid{display:grid;gap:12px}
+kbd{font:600 10px/16px Inter,system-ui,sans-serif;min-width:20px;text-align:center;padding:1px 6px;border-radius:4px;background:var(--soft);border:1px solid var(--line);color:var(--muted);display:inline-block}
+.keys{display:inline-flex;gap:3px}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;line-height:18px;padding:0 8px;border-radius:999px;font-weight:500}
+.badge:before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
+.badge.good{color:var(--success);background:color-mix(in srgb,var(--success) 9%,transparent)}
+.badge.warn{color:var(--warm);background:color-mix(in srgb,var(--warm) 9%,transparent)}
+.badge.bad{color:var(--danger);background:color-mix(in srgb,var(--danger) 9%,transparent)}
+.badge.mute{color:var(--muted);background:var(--soft)}
+.row{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row .t{flex:1;min-width:0}.row .t b{display:block;font-weight:500;color:var(--text);font-size:13px;line-height:18px}.row .t span{font-size:12px;color:var(--faint);line-height:18px;display:block}
+.ico{width:32px;height:32px;border-radius:8px;background:var(--soft);display:grid;place-items:center;color:var(--muted);flex:none}
+.ico svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.toggle{width:34px;height:20px;border-radius:999px;background:var(--track);position:relative;flex:none;border:1px solid var(--line)}
+.toggle:after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--muted);transition:none}
+.toggle.on{background:color-mix(in srgb,var(--accent) 38%,transparent);border-color:color-mix(in srgb,var(--accent) 50%,transparent)}
+.toggle.on:after{left:16px;background:var(--text)}
+.sel{height:30px;border-radius:6px;border:1px solid var(--line);background:var(--surface);padding:0 10px;display:inline-flex;align-items:center;gap:20px;color:var(--text);font-size:12px;min-width:200px;justify-content:space-between}
+.sel:after{content:"";width:6px;height:6px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(45deg) translate(-2px,-2px)}
+.meter{display:flex;gap:2px;align-items:flex-end;height:18px}.meter i{width:4px;border-radius:1px;background:var(--track)}.meter i.f{background:var(--muted)}
+.bar{height:4px;border-radius:4px;background:var(--track);overflow:hidden}.bar i{display:block;height:100%;background:var(--muted)}
+.tr{display:flex;flex-direction:column;gap:12px}
+.seg{display:grid;grid-template-columns:44px 1fr;gap:10px;font-size:13px;line-height:20px}
+.seg .who{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);padding-top:1px}
+.seg.me .who{color:var(--accent)}
+.seg.dim{opacity:.55}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px}
+.sugg{border-radius:8px;padding:12px 14px;background:var(--soft);border:1px solid var(--line)}
+.sugg .q{font-size:11px;color:var(--faint);margin-bottom:2px}.sugg p{color:var(--text)}
+.sugg .a{display:flex;gap:6px;margin-top:8px;align-items:center;font-size:11px;color:var(--faint)}
+.tabs{display:inline-flex;gap:2px;padding:3px;border-radius:6px;background:var(--soft);border:1px solid var(--line)}
+.tabs span{height:26px;padding:0 11px;border-radius:5px;font-size:11px;display:inline-flex;align-items:center;color:var(--muted)}.tabs span.on{background:var(--surface-hover);color:var(--text)}
+.input{height:30px;border-radius:6px;border:1px solid var(--line);background:var(--soft);padding:0 10px;display:inline-flex;align-items:center;color:var(--text);font-size:12px;min-width:200px}
+.float{position:absolute;border-radius:10px;background:var(--float-bg);backdrop-filter:var(--float-filter);box-shadow:var(--glass-shadow);border:1px solid var(--border)}
+.scrim{position:absolute;inset:0;background:var(--scrim);backdrop-filter:blur(6px) saturate(1.1)}
+.sep{height:1px;background:var(--line);margin:6px 0}
+.mi{display:flex;align-items:center;gap:10px;padding:0 10px;height:26px;border-radius:5px;font-size:13px;color:var(--text)}
+.mi .keys{margin-left:auto}.mi.sel2{background:var(--surface-active)}.mi.d{color:var(--faint)}
+.muted{color:var(--faint)}.t{color:var(--text)}
+</style></head><body>
+<div class="cap"><span>Flight Engineer / Permissions</span><button onclick="t()">Dark / Light</button></div><section style="width:1280px"><div class="cap"><span>Permission onboarding</span></div><div class="win" style="height:800px"><div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><b>Orchestra</b> / Flight Engineer</div><div class="glass sidebar"><div class="brand"><b>HuGR</b><span>Human Guardrail</span></div><nav class="nav"><a class=""><svg viewBox="0 0 16 16" class=""><path d="M3 8l5-5 5 5v6H3z"/></svg>Home</a><a class=""><svg viewBox="0 0 16 16" class=""><path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z"/></svg>Chat</a><a class=""><svg viewBox="0 0 16 16" class=""><rect x="2.5" y="2.5" width="11" height="11" rx="2"/><path d="M6 2.5v11"/></svg>Projects</a><a class=""><svg viewBox="0 0 16 16" class=""><circle cx="6" cy="6" r="2.2"/><path d="M2 13c.5-3 8-3 8 0M11 4.5a2 2 0 010 3.5M12.5 12c0-1.5-.8-2.3-1.8-2.7"/></svg>Agents</a><a class=""><svg viewBox="0 0 16 16" class=""><path d="M8 2l1.6 3.8L14 6.3l-3.2 2.7.9 4.2L8 10.7 4.3 13.2l.9-4.2L2 6.3l4.4-.5z"/></svg>Maestro</a><a class="on"><svg viewBox="0 0 16 16" class=""><rect x="6" y="1.8" width="4" height="7.4" rx="2"/><path d="M3.5 7.5a4.5 4.5 0 009 0M8 12v2.2M5.5 14.2h5"/></svg>Flight Engineer</a><a class=""><svg viewBox="0 0 16 16" class=""><circle cx="4" cy="4" r="1.6"/><circle cx="12" cy="8" r="1.6"/><circle cx="4" cy="12" r="1.6"/><path d="M5.6 4.4l5 3M5.6 11.6l5-3"/></svg>Workflows</a><a class=""><svg viewBox="0 0 16 16" class=""><path d="M5 2v4M11 2v4M3.5 6h9v3a4.5 4.5 0 01-9 0zM8 13.5V14"/></svg>MCP</a><a class=""><svg viewBox="0 0 16 16" class=""><path d="M8 2v3M8 11v3M2 8h3M11 8h3M4 4l2 2M10 10l2 2M12 4l-2 2M6 10l-2 2"/></svg>Skills</a><a class=""><svg viewBox="0 0 16 16" class=""><circle cx="7" cy="7" r="4"/><path d="M10 10l3.5 3.5"/></svg>Search</a></nav>
+<div class="proj"><span class="av">D</span><div>Default Project<div class="muted" style="font-size:11px">12 agents</div></div></div></div><div class="glass main" style=""><div class="col"><div class="head"><div><div class="eyebrow">Live meetings</div><h1>Flight Engineer</h1><div class="sub">Listens to your call, answers in a small overlay, and turns the meeting into work. Everything stays on this Mac.</div></div></div>
+<div class="grid" style="grid-template-columns:1.25fr 1fr;margin-top:28px">
+ <div class="card" style="display:flex;flex-direction:column;gap:18px;padding:28px 28px 26px;justify-content:center">
+  <div><div class="eyebrow">No meeting running</div><h2 style="font-size:20px;line-height:28px;margin-top:6px">Ready when your call is</h2><p class="muted" style="margin-top:4px;max-width:420px">Capture starts only when you press Start, and a recording indicator stays visible until you stop.</p></div>
+  <div style="display:flex;align-items:center;gap:16px"><span class="btn primary lg"><svg viewBox="0 0 16 16" class=""><path d="M5 3l8 5-8 5z"/></svg>Start meeting</span><span class="muted" style="display:flex;gap:8px;align-items:center">or press <span class="keys"><kbd>⌘</kbd><kbd>⇧</kbd><kbd>M</kbd></span></span></div>
+  <div class="muted" style="font-size:12px;display:flex;gap:8px;align-items:center">Content protection is on: the overlay stays out of your screen shares.</div>
+ </div>
+ <div class="card"><h2>Readiness</h2><div style="margin-top:6px">
+  <div class="row"><span class="ico"><svg viewBox="0 0 16 16" class=""><rect x="6" y="1.8" width="4" height="7.4" rx="2"/><path d="M3.5 7.5a4.5 4.5 0 009 0M8 12v2.2"/></svg></span><div class="t"><b>Microphone</b><span>Built-in Microphone</span></div><span class="badge good">Ready</span></div>
+  <div class="row"><span class="ico"><svg viewBox="0 0 16 16" class=""><rect x="2" y="3" width="12" height="8" rx="1.5"/><path d="M5.5 14h5M8 11v3"/></svg></span><div class="t"><b>System audio</b><span>Hears the other people on the call</span></div><span class="badge warn">Permission needed</span></div>
+  <div class="row"><span class="ico"><svg viewBox="0 0 16 16" class=""><circle cx="5" cy="8" r="2.5"/><path d="M7.5 8H14M12 8v2.5"/></svg></span><div class="t"><b>Speech-to-text key</b><span>Deepgram, stored in your Keychain</span></div><span class="badge good">Saved</span></div>
+  <div class="row"><span class="ico"><svg viewBox="0 0 16 16" class=""><rect x="4" y="4" width="8" height="8" rx="1.5"/><path d="M6.5 1.5v2.5M9.5 1.5v2.5M6.5 12v2.5M9.5 12v2.5M1.5 6.5H4M1.5 9.5H4M12 6.5h2.5M12 9.5h2.5"/></svg></span><div class="t"><b>Answer model</b><span>Claude Sonnet 5.5 · Anthropic</span></div><span class="badge good">Ready</span></div>
+ </div><div style="margin-top:6px;display:flex;gap:8px"><span class="btn">Grant system audio</span><span class="btn quiet">Open settings</span></div></div></div>
+<div class="card" style="margin-top:12px"><div style="display:flex;align-items:center;margin-bottom:4px"><h2 style="flex:1">While a meeting runs</h2></div>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:8px">
+ <div><div class="t">Ask</div><div class="muted" style="font-size:12px">Type or press <span class="keys"><kbd>⌘</kbd><kbd>↩</kbd></span> for a short answer from the transcript.</div></div>
+ <div><div class="t">Look</div><div class="muted" style="font-size:12px"><span class="keys"><kbd>⌘</kbd><kbd>⇧</kbd><kbd>↩</kbd></span> reads what is on your screen right now.</div></div>
+ <div><div class="t">Show or hide</div><div class="muted" style="font-size:12px"><span class="keys"><kbd>⌘</kbd><kbd>\</kbd></span> toggles the overlay without stopping capture.</div></div>
+ <div><div class="t">Stop</div><div class="muted" style="font-size:12px"><span class="keys"><kbd>⌘</kbd><kbd>⇧</kbd><kbd>.</kbd></span> ends capture and drafts a summary.</div></div></div></div></div></div><div class="scrim"></div><div class="float" style="left:50%;top:50%;transform:translate(-50%,-50%);width:600px;padding:28px 28px 22px;border-radius:16px">
+<div class="eyebrow">Before your first meeting</div><h1 style="font-size:20px;line-height:28px;letter-spacing:-.02em;margin-top:4px">Flight Engineer needs two permissions</h1>
+<p class="muted" style="margin-top:4px">macOS asks you once. Nothing is captured until you press Start meeting.</p>
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:18px">
+<div class="card" style="padding:16px 18px;display:flex;gap:14px;align-items:center"><span class="ico"><svg viewBox="0 0 16 16" class=""><rect x="6" y="1.8" width="4" height="7.4" rx="2"/><path d="M3.5 7.5a4.5 4.5 0 009 0M8 12v2.2"/></svg></span><div class="t" style="flex:1"><b style="font-weight:500;color:var(--text);font-size:14px;display:block">Microphone</b><span class="muted" style="font-size:12px;display:block">Hears your side of the call.</span></div><span class="badge good">Granted</span></div>
+<div class="card" style="padding:16px 18px;display:flex;gap:14px;align-items:center"><span class="ico"><svg viewBox="0 0 16 16" class=""><rect x="2" y="3" width="12" height="8" rx="1.5"/><path d="M5.5 14h5M8 11v3"/></svg></span><div class="t" style="flex:1"><b style="font-weight:500;color:var(--text);font-size:14px;display:block">Screen & System Audio Recording</b><span class="muted" style="font-size:12px;display:block">Hears the other people on the call. Orchestra does not record your screen unless you press Look.</span></div><span class="badge warn">Needed</span><span class="btn primary">Open System Settings</span></div></div>
+<div class="muted" style="font-size:12px;margin-top:14px;padding:10px 12px;border-radius:8px;background:var(--soft);display:flex;gap:10px"><span style="flex:none;color:var(--muted)"><svg viewBox="0 0 16 16" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.6;margin-top:3px"><path d="M8 1.8l5 2v4c0 3-2.2 5-5 6.2-2.8-1.2-5-3.2-5-6.2v-4z"/></svg></span><span>In System Settings, switch on <b class="t" style="font-weight:500">HuGR Orchestra</b> under Privacy &amp; Security, then come back. The installed app asks for these permissions itself. When you run a development build, macOS may list your terminal instead.</span></div>
+<div style="display:flex;align-items:center;margin-top:18px"><span class="muted" style="font-size:12px;flex:1;display:flex;gap:8px;align-items:center"><i class="dot warn"></i>Waiting for System Settings. This updates when you return.</span><span class="btn quiet">Later</span><span class="btn">Check again</span></div></div></div></section>
+<script>function t(){var r=document.documentElement;r.dataset.theme=r.dataset.theme==="dark"?"light":"dark"}
+if(location.hash.indexOf("light")>-1)document.documentElement.dataset.theme="light"</script></body></html>

@@ -934,6 +934,7 @@ export const dict = {
   "live.start.reason.no-key": "សូមបន្ថែមកូដបំលែងសំឡេងទៅជាអក្សរនៅក្នុងការកំណត់ជាមុនសិន",
   "live.start.reason.server": "ម៉ាស៊ីនមេក្នុងតំបន់មិនឆ្លើយតប",
   "live.start.reason.capture": "មិនអាចចាប់ផ្តើមថតសំឡេងបានទេ។ សូមពិនិត្យការអនុញ្ញាតម៉ាយក្រូហ្វូន និងការថតអេក្រង់។",
+  "live.start.reason.permission": "សូមអនុញ្ញាតការចូលប្រើមីក្រូហ្វូនក្នុងការកំណត់ប្រព័ន្ធជាមុនសិន",
   "settings.general.row.language.title": "ភាសា",
   "settings.general.row.language.description": "ប្តូរភាសាបង្ហាញសម្រាប់ HuGR Orchestra",
   "settings.general.row.shell.title": "សែលស្ថានីយ",

@@ -861,6 +861,7 @@ export const dict = {
   "live.start.reason.no-key": "Ouzhpennit un alc'hwez treuzskrivañ mammenn en Arventennoù a-raok",
   "live.start.reason.server": "N'eo ket respontet gant ar servijer lec'hel",
   "live.start.reason.capture": "N'hell ket ar sonadenn kregiñ. Gwiriit aotreoù ar micher hag ar rekordadur skramm.",
+  "live.start.reason.permission": "Aotreit tizhout ar mikro e Dibarzhioù ar reizhiad da gentañ",
   "settings.general.row.language.title": "Idioma",
   "settings.general.row.language.description": "Alterar o idioma de exibição do HuGR Orchestra",
   "settings.general.row.shell.title": "Shell do terminal",

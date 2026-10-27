@@ -1925,81 +1925,125 @@ type Endpoint28_10Input = {
 const Endpoint28_10 = (raw: RawClient["server.board"]) => (input: Endpoint28_10Input) =>
   raw["board.undo"]({ params: { key: input["key"], id: input["id"] } }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint28_11Request = Parameters<RawClient["server.board"]["board.pause"]>[0]
-type Endpoint28_11Input = {
-  readonly key: Endpoint28_11Request["params"]["key"]
-  readonly reason?: Endpoint28_11Request["payload"]["reason"]
-}
+type Endpoint28_11Request = Parameters<RawClient["server.board"]["board.spend"]>[0]
+type Endpoint28_11Input = { readonly key: Endpoint28_11Request["params"]["key"] }
 const Endpoint28_11 = (raw: RawClient["server.board"]) => (input: Endpoint28_11Input) =>
+  raw["board.spend"]({ params: { key: input["key"] } }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint28_12Request = Parameters<RawClient["server.board"]["board.decisions"]>[0]
+type Endpoint28_12Input = { readonly key: Endpoint28_12Request["params"]["key"] }
+const Endpoint28_12 = (raw: RawClient["server.board"]) => (input: Endpoint28_12Input) =>
+  raw["board.decisions"]({ params: { key: input["key"] } }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint28_13Request = Parameters<RawClient["server.board"]["board.decisionChange"]>[0]
+type Endpoint28_13Input = {
+  readonly key: Endpoint28_13Request["params"]["key"]
+  readonly id: Endpoint28_13Request["params"]["id"]
+  readonly option: Endpoint28_13Request["payload"]["option"]
+  readonly text?: Endpoint28_13Request["payload"]["text"]
+}
+const Endpoint28_13 = (raw: RawClient["server.board"]) => (input: Endpoint28_13Input) =>
+  raw["board.decisionChange"]({
+    params: { key: input["key"], id: input["id"] },
+    payload: { option: input["option"], text: input["text"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint28_14Request = Parameters<RawClient["server.board"]["board.proof"]>[0]
+type Endpoint28_14Input = {
+  readonly key: Endpoint28_14Request["params"]["key"]
+  readonly number: Endpoint28_14Request["params"]["number"]
+}
+const Endpoint28_14 = (raw: RawClient["server.board"]) => (input: Endpoint28_14Input) =>
+  raw["board.proof"]({ params: { key: input["key"], number: input["number"] } }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint28_15Request = Parameters<RawClient["server.board"]["board.settings"]>[0]
+type Endpoint28_15Input = {
+  readonly key: Endpoint28_15Request["params"]["key"]
+  readonly target_date?: Endpoint28_15Request["payload"]["target_date"]
+  readonly budget_usd?: Endpoint28_15Request["payload"]["budget_usd"]
+  readonly reason?: Endpoint28_15Request["payload"]["reason"]
+}
+const Endpoint28_15 = (raw: RawClient["server.board"]) => (input: Endpoint28_15Input) =>
+  raw["board.settings"]({
+    params: { key: input["key"] },
+    payload: { target_date: input["target_date"], budget_usd: input["budget_usd"], reason: input["reason"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint28_16Request = Parameters<RawClient["server.board"]["board.pause"]>[0]
+type Endpoint28_16Input = {
+  readonly key: Endpoint28_16Request["params"]["key"]
+  readonly reason?: Endpoint28_16Request["payload"]["reason"]
+}
+const Endpoint28_16 = (raw: RawClient["server.board"]) => (input: Endpoint28_16Input) =>
   raw["board.pause"]({ params: { key: input["key"] }, payload: { reason: input["reason"] } }).pipe(
     Effect.mapError(mapClientError),
   )
 
-type Endpoint28_12Request = Parameters<RawClient["server.board"]["board.resume"]>[0]
-type Endpoint28_12Input = { readonly key: Endpoint28_12Request["params"]["key"] }
-const Endpoint28_12 = (raw: RawClient["server.board"]) => (input: Endpoint28_12Input) =>
+type Endpoint28_17Request = Parameters<RawClient["server.board"]["board.resume"]>[0]
+type Endpoint28_17Input = { readonly key: Endpoint28_17Request["params"]["key"] }
+const Endpoint28_17 = (raw: RawClient["server.board"]) => (input: Endpoint28_17Input) =>
   raw["board.resume"]({ params: { key: input["key"] } }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint28_13Request = Parameters<RawClient["server.board"]["board.archive"]>[0]
-type Endpoint28_13Input = { readonly key: Endpoint28_13Request["params"]["key"] }
-const Endpoint28_13 = (raw: RawClient["server.board"]) => (input: Endpoint28_13Input) =>
+type Endpoint28_18Request = Parameters<RawClient["server.board"]["board.archive"]>[0]
+type Endpoint28_18Input = { readonly key: Endpoint28_18Request["params"]["key"] }
+const Endpoint28_18 = (raw: RawClient["server.board"]) => (input: Endpoint28_18Input) =>
   raw["board.archive"]({ params: { key: input["key"] } }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint28_14Request = Parameters<RawClient["server.board"]["board.unarchive"]>[0]
-type Endpoint28_14Input = { readonly key: Endpoint28_14Request["params"]["key"] }
-const Endpoint28_14 = (raw: RawClient["server.board"]) => (input: Endpoint28_14Input) =>
+type Endpoint28_19Request = Parameters<RawClient["server.board"]["board.unarchive"]>[0]
+type Endpoint28_19Input = { readonly key: Endpoint28_19Request["params"]["key"] }
+const Endpoint28_19 = (raw: RawClient["server.board"]) => (input: Endpoint28_19Input) =>
   raw["board.unarchive"]({ params: { key: input["key"] } }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint28_15Request = Parameters<RawClient["server.board"]["board.githubSync"]>[0]
-type Endpoint28_15Input = { readonly key: Endpoint28_15Request["params"]["key"] }
-const Endpoint28_15 = (raw: RawClient["server.board"]) => (input: Endpoint28_15Input) =>
+type Endpoint28_20Request = Parameters<RawClient["server.board"]["board.githubSync"]>[0]
+type Endpoint28_20Input = { readonly key: Endpoint28_20Request["params"]["key"] }
+const Endpoint28_20 = (raw: RawClient["server.board"]) => (input: Endpoint28_20Input) =>
   raw["board.githubSync"]({ params: { key: input["key"] } }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint28_16Request = Parameters<RawClient["server.board"]["board.pauseIssue"]>[0]
-type Endpoint28_16Input = {
-  readonly key: Endpoint28_16Request["params"]["key"]
-  readonly number: Endpoint28_16Request["params"]["number"]
+type Endpoint28_21Request = Parameters<RawClient["server.board"]["board.pauseIssue"]>[0]
+type Endpoint28_21Input = {
+  readonly key: Endpoint28_21Request["params"]["key"]
+  readonly number: Endpoint28_21Request["params"]["number"]
 }
-const Endpoint28_16 = (raw: RawClient["server.board"]) => (input: Endpoint28_16Input) =>
+const Endpoint28_21 = (raw: RawClient["server.board"]) => (input: Endpoint28_21Input) =>
   raw["board.pauseIssue"]({ params: { key: input["key"], number: input["number"] } }).pipe(
     Effect.mapError(mapClientError),
   )
 
-type Endpoint28_17Request = Parameters<RawClient["server.board"]["board.resumeIssue"]>[0]
-type Endpoint28_17Input = {
-  readonly key: Endpoint28_17Request["params"]["key"]
-  readonly number: Endpoint28_17Request["params"]["number"]
+type Endpoint28_22Request = Parameters<RawClient["server.board"]["board.resumeIssue"]>[0]
+type Endpoint28_22Input = {
+  readonly key: Endpoint28_22Request["params"]["key"]
+  readonly number: Endpoint28_22Request["params"]["number"]
 }
-const Endpoint28_17 = (raw: RawClient["server.board"]) => (input: Endpoint28_17Input) =>
+const Endpoint28_22 = (raw: RawClient["server.board"]) => (input: Endpoint28_22Input) =>
   raw["board.resumeIssue"]({ params: { key: input["key"], number: input["number"] } }).pipe(
     Effect.mapError(mapClientError),
   )
 
-type Endpoint28_18Request = Parameters<RawClient["server.board"]["board.hold"]>[0]
-type Endpoint28_18Input = {
-  readonly key: Endpoint28_18Request["params"]["key"]
-  readonly number: Endpoint28_18Request["params"]["number"]
-  readonly hold: Endpoint28_18Request["payload"]["hold"]
+type Endpoint28_23Request = Parameters<RawClient["server.board"]["board.hold"]>[0]
+type Endpoint28_23Input = {
+  readonly key: Endpoint28_23Request["params"]["key"]
+  readonly number: Endpoint28_23Request["params"]["number"]
+  readonly hold: Endpoint28_23Request["payload"]["hold"]
 }
-const Endpoint28_18 = (raw: RawClient["server.board"]) => (input: Endpoint28_18Input) =>
+const Endpoint28_23 = (raw: RawClient["server.board"]) => (input: Endpoint28_23Input) =>
   raw["board.hold"]({ params: { key: input["key"], number: input["number"] }, payload: { hold: input["hold"] } }).pipe(
     Effect.mapError(mapClientError),
   )
 
-type Endpoint28_19Request = Parameters<RawClient["server.board"]["board.accept"]>[0]
-type Endpoint28_19Input = {
-  readonly key: Endpoint28_19Request["params"]["key"]
-  readonly number: Endpoint28_19Request["params"]["number"]
+type Endpoint28_24Request = Parameters<RawClient["server.board"]["board.accept"]>[0]
+type Endpoint28_24Input = {
+  readonly key: Endpoint28_24Request["params"]["key"]
+  readonly number: Endpoint28_24Request["params"]["number"]
 }
-const Endpoint28_19 = (raw: RawClient["server.board"]) => (input: Endpoint28_19Input) =>
+const Endpoint28_24 = (raw: RawClient["server.board"]) => (input: Endpoint28_24Input) =>
   raw["board.accept"]({ params: { key: input["key"], number: input["number"] } }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint28_20Request = Parameters<RawClient["server.board"]["board.decline"]>[0]
-type Endpoint28_20Input = {
-  readonly key: Endpoint28_20Request["params"]["key"]
-  readonly number: Endpoint28_20Request["params"]["number"]
+type Endpoint28_25Request = Parameters<RawClient["server.board"]["board.decline"]>[0]
+type Endpoint28_25Input = {
+  readonly key: Endpoint28_25Request["params"]["key"]
+  readonly number: Endpoint28_25Request["params"]["number"]
 }
-const Endpoint28_20 = (raw: RawClient["server.board"]) => (input: Endpoint28_20Input) =>
+const Endpoint28_25 = (raw: RawClient["server.board"]) => (input: Endpoint28_25Input) =>
   raw["board.decline"]({ params: { key: input["key"], number: input["number"] } }).pipe(Effect.mapError(mapClientError))
 
 const adaptGroup28 = (raw: RawClient["server.board"]) => ({
@@ -2014,16 +2058,21 @@ const adaptGroup28 = (raw: RawClient["server.board"]) => ({
   attach: Endpoint28_8(raw),
   attachmentRemove: Endpoint28_9(raw),
   undo: Endpoint28_10(raw),
-  pause: Endpoint28_11(raw),
-  resume: Endpoint28_12(raw),
-  archive: Endpoint28_13(raw),
-  unarchive: Endpoint28_14(raw),
-  githubSync: Endpoint28_15(raw),
-  pauseIssue: Endpoint28_16(raw),
-  resumeIssue: Endpoint28_17(raw),
-  hold: Endpoint28_18(raw),
-  accept: Endpoint28_19(raw),
-  decline: Endpoint28_20(raw),
+  spend: Endpoint28_11(raw),
+  decisions: Endpoint28_12(raw),
+  decisionChange: Endpoint28_13(raw),
+  proof: Endpoint28_14(raw),
+  settings: Endpoint28_15(raw),
+  pause: Endpoint28_16(raw),
+  resume: Endpoint28_17(raw),
+  archive: Endpoint28_18(raw),
+  unarchive: Endpoint28_19(raw),
+  githubSync: Endpoint28_20(raw),
+  pauseIssue: Endpoint28_21(raw),
+  resumeIssue: Endpoint28_22(raw),
+  hold: Endpoint28_23(raw),
+  accept: Endpoint28_24(raw),
+  decline: Endpoint28_25(raw),
 })
 
 type Endpoint29_0Request = Parameters<RawClient["server.relay.document"]["relay.document.list"]>[0]

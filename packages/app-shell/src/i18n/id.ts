@@ -1009,6 +1009,7 @@ export const dict = {
   "live.start.reason.no-key": "Tambahkan kunci speech-to-text di Pengaturan terlebih dahulu",
   "live.start.reason.server": "Server lokal tidak merespons",
   "live.start.reason.capture": "Penangkapan audio tidak dapat dimulai. Periksa izin mikrofon dan perekaman layar.",
+  "live.start.reason.permission": "Izinkan akses mikrofon di Pengaturan Sistem terlebih dahulu",
 
   "settings.general.row.language.title": "Bahasa",
   "settings.general.row.language.description": "Ubah bahasa tampilan untuk HuGR Orchestra",

@@ -937,6 +937,7 @@ export const dict = {
   "live.start.reason.no-key": "Ilki Sazlamalarda sesden tekste açar goşuň",
   "live.start.reason.server": "Ýerli serwer jogap bermedi",
   "live.start.reason.capture": "Ses ýazgysy başlanyp bilinmedi. Mikrofon we ekran ýazgy rugsatlaryny barlaň.",
+  "live.start.reason.permission": "Ilki bilen Ulgam sazlamalarynda mikrofona girmäge rugsat beriň",
   "settings.general.row.language.title": "Dil",
   "settings.general.row.language.description": "HuGR Orchestra üçin displeý dilini üýtgediň",
   "settings.general.row.shell.title": "Terminal shell-i",

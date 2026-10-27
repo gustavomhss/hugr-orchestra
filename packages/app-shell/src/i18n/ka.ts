@@ -935,6 +935,7 @@ export const dict = {
   "live.start.reason.no-key": "ჯერ პარამეტრებში დაამატეთ მეტყველებიდან ტექსტში გასაღები",
   "live.start.reason.server": "ადგილობრივმა სერვერმა არ უპასუხა",
   "live.start.reason.capture": "აუდიოს ჩაწერა ვერ დაიწყო. შეამოწმეთ მიკროფონისა და ეკრანის ჩაწერის ნებართვები.",
+  "live.start.reason.permission": "ჯერ ნება დართეთ მიკროფონზე წვდომას სისტემის პარამეტრებში",
   "settings.general.row.language.title": "ენა",
   "settings.general.row.language.description": "შეცვალეთ HuGR Orchestra-ს ჩვენების ენა",
   "settings.general.row.shell.title": "ტერმინალის გარსი",

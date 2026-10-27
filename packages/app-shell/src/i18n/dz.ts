@@ -950,6 +950,7 @@ export const dict: Record<string, string> = {
   "live.start.reason.no-key": "སྔོན་ལ་སྒྲིག་འགོད་ནང་ཚིག་ནས་ཡིག་རི་ལྡེ་མིག་ཁ་སྣོན་ཅིག",
   "live.start.reason.server": "ས་གནས་ཀྱི་ཞབས་ཏོག་ཡངས་ཀྱིས་ལན་མ་བྱིན།",
   "live.start.reason.capture": "སྒྲ་བསྡུ་ལེན་ཚུགས་མ་ཐུབ། མའིཀྲོ་ཕོན་དང་ཤོག་ངོས་ཟིན་ཐོའི་ཆོག་ངོས་ལ་བལྟས།",
+  "live.start.reason.permission": "Allow microphone access in System Settings first",
   "settings.general.row.language.title": "སྐད༌ཡིག",
   "settings.general.row.language.description": "HuGR Orchestra གི་དོན་ལུ་ བཀྲམ་སྟོན་སྐད་ཡིག་བསྒྱུར་བཅོས་འབད།",
   "settings.general.row.shell.title": "ཊར་མི་ནཱལ་ Shell",

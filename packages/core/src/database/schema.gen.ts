@@ -40,6 +40,48 @@ export default {
         );
       `)
       yield* tx.run(`
+        CREATE TABLE \`meeting_item\` (
+          \`id\` text NOT NULL,
+          \`revision\` integer NOT NULL,
+          \`meeting_id\` text NOT NULL,
+          \`kind\` text NOT NULL,
+          \`text\` text NOT NULL,
+          \`quote\` text DEFAULT '' NOT NULL,
+          \`asserter\` text NOT NULL,
+          \`start_ms\` integer,
+          \`status\` text DEFAULT 'claimed' NOT NULL,
+          \`sent_to_maestro\` integer DEFAULT false NOT NULL,
+          \`owner\` text,
+          \`counterparty\` text,
+          \`due\` text,
+          \`state\` text,
+          \`for\` text,
+          \`created_at\` integer NOT NULL,
+          CONSTRAINT \`meeting_item_pk\` PRIMARY KEY(\`id\`, \`revision\`),
+          CONSTRAINT \`fk_meeting_item_meeting_id_meeting_id_fk\` FOREIGN KEY (\`meeting_id\`) REFERENCES \`meeting\`(\`id\`) ON DELETE CASCADE
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`meeting_person\` (
+          \`id\` text PRIMARY KEY,
+          \`name\` text NOT NULL,
+          \`aliases\` text DEFAULT '[]' NOT NULL,
+          \`merged_into\` text,
+          CONSTRAINT \`fk_meeting_person_merged_into_meeting_person_id_fk\` FOREIGN KEY (\`merged_into\`) REFERENCES \`meeting_person\`(\`id\`) ON DELETE SET NULL
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`meeting_proposal\` (
+          \`id\` text PRIMARY KEY,
+          \`meeting_id\` text NOT NULL,
+          \`name\` text NOT NULL,
+          \`merge_with\` text,
+          \`verdict\` text,
+          CONSTRAINT \`fk_meeting_proposal_meeting_id_meeting_id_fk\` FOREIGN KEY (\`meeting_id\`) REFERENCES \`meeting\`(\`id\`) ON DELETE CASCADE,
+          CONSTRAINT \`fk_meeting_proposal_merge_with_meeting_person_id_fk\` FOREIGN KEY (\`merge_with\`) REFERENCES \`meeting_person\`(\`id\`) ON DELETE SET NULL
+        );
+      `)
+      yield* tx.run(`
         CREATE TABLE \`meeting_segment\` (
           \`id\` text NOT NULL,
           \`meeting_id\` text NOT NULL,
@@ -54,11 +96,16 @@ export default {
       yield* tx.run(`
         CREATE TABLE \`meeting\` (
           \`id\` text PRIMARY KEY,
-          \`session_id\` text NOT NULL,
+          \`session_id\` text,
           \`title\` text NOT NULL,
           \`time_started\` integer NOT NULL,
           \`time_ended\` integer,
-          CONSTRAINT \`fk_meeting_session_id_session_id_fk\` FOREIGN KEY (\`session_id\`) REFERENCES \`session\`(\`id\`) ON DELETE CASCADE
+          \`retention\` text DEFAULT 'kept' NOT NULL,
+          \`consent\` text DEFAULT 'unknown' NOT NULL,
+          \`card_status\` text DEFAULT 'pending' NOT NULL,
+          \`card_error\` text,
+          \`card_summary\` text DEFAULT '' NOT NULL,
+          CONSTRAINT \`fk_meeting_session_id_session_id_fk\` FOREIGN KEY (\`session_id\`) REFERENCES \`session\`(\`id\`) ON DELETE SET NULL
         );
       `)
       yield* tx.run(`
@@ -154,6 +201,46 @@ export default {
         );
       `)
       yield* tx.run(`
+        CREATE TABLE \`board_ci_run\` (
+          \`run_id\` integer PRIMARY KEY,
+          \`project_id\` text NOT NULL,
+          \`issue_id\` text NOT NULL,
+          \`name\` text NOT NULL,
+          \`attempt\` integer NOT NULL,
+          \`billable_ms\` integer NOT NULL,
+          \`cost_usd\` real NOT NULL,
+          \`time_created\` integer NOT NULL,
+          \`time_updated\` integer NOT NULL,
+          CONSTRAINT \`fk_board_ci_run_project_id_board_project_id_fk\` FOREIGN KEY (\`project_id\`) REFERENCES \`board_project\`(\`id\`) ON DELETE CASCADE,
+          CONSTRAINT \`fk_board_ci_run_issue_id_board_issue_id_fk\` FOREIGN KEY (\`issue_id\`) REFERENCES \`board_issue\`(\`id\`) ON DELETE CASCADE
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`board_decision\` (
+          \`id\` text PRIMARY KEY,
+          \`project_id\` text NOT NULL,
+          \`issue_id\` text,
+          \`epic_id\` text,
+          \`question_id\` text NOT NULL,
+          \`question\` text NOT NULL,
+          \`options\` text NOT NULL,
+          \`recommended\` text NOT NULL,
+          \`chosen\` text NOT NULL,
+          \`chosen_text\` text,
+          \`answered_by\` text NOT NULL,
+          \`answered_at\` integer NOT NULL,
+          \`outcome\` text,
+          \`outcome_at\` integer,
+          \`supersedes_id\` text,
+          \`overturned_by_id\` text,
+          \`time_created\` integer NOT NULL,
+          \`time_updated\` integer NOT NULL,
+          CONSTRAINT \`fk_board_decision_project_id_board_project_id_fk\` FOREIGN KEY (\`project_id\`) REFERENCES \`board_project\`(\`id\`) ON DELETE CASCADE,
+          CONSTRAINT \`fk_board_decision_issue_id_board_issue_id_fk\` FOREIGN KEY (\`issue_id\`) REFERENCES \`board_issue\`(\`id\`) ON DELETE SET NULL,
+          CONSTRAINT \`fk_board_decision_epic_id_board_epic_id_fk\` FOREIGN KEY (\`epic_id\`) REFERENCES \`board_epic\`(\`id\`) ON DELETE SET NULL
+        );
+      `)
+      yield* tx.run(`
         CREATE TABLE \`board_dependency\` (
           \`issue_id\` text NOT NULL,
           \`depends_on_id\` text NOT NULL,
@@ -200,6 +287,9 @@ export default {
           \`stage_entered_at\` integer NOT NULL,
           \`github_number\` integer,
           \`github_node_id\` text,
+          \`attempts\` integer DEFAULT 0 NOT NULL,
+          \`crash_reason\` text,
+          \`guardrail_rule\` text,
           \`github_dirty\` integer DEFAULT false NOT NULL,
           \`time_created\` integer NOT NULL,
           \`time_updated\` integer NOT NULL,
@@ -238,6 +328,7 @@ export default {
           \`github_comments_etag\` text,
           \`github_since\` integer,
           \`github_synced_at\` integer,
+          \`ci_synced_at\` integer,
           \`next_issue_number\` integer NOT NULL,
           \`next_epic_number\` integer NOT NULL,
           \`forecast_late_streak\` integer DEFAULT 0 NOT NULL,
@@ -256,6 +347,7 @@ export default {
           \`options\` text NOT NULL,
           \`recommended\` text NOT NULL,
           \`cost_of_waiting\` text,
+          \`kind\` text,
           \`blocking\` integer NOT NULL,
           \`status\` text NOT NULL,
           \`answer_option\` text,
@@ -650,6 +742,8 @@ export default {
       yield* tx.run(
         `CREATE INDEX \`project_checkpoint_project_time_id_idx\` ON \`project_checkpoint\` (\`project_id\`,\`time_created\`,\`id\`);`,
       )
+      yield* tx.run(`CREATE INDEX \`meeting_item_meeting_idx\` ON \`meeting_item\` (\`meeting_id\`);`)
+      yield* tx.run(`CREATE INDEX \`meeting_proposal_meeting_idx\` ON \`meeting_proposal\` (\`meeting_id\`);`)
       yield* tx.run(
         `CREATE INDEX \`meeting_segment_meeting_start_idx\` ON \`meeting_segment\` (\`meeting_id\`,\`start_ms\`);`,
       )
@@ -665,6 +759,10 @@ export default {
       )
       yield* tx.run(`CREATE INDEX \`board_activity_project_idx\` ON \`board_activity\` (\`project_id\`,\`id\`);`)
       yield* tx.run(`CREATE INDEX \`board_attachment_issue_idx\` ON \`board_attachment\` (\`issue_id\`);`)
+      yield* tx.run(`CREATE INDEX \`board_ci_run_issue_idx\` ON \`board_ci_run\` (\`issue_id\`);`)
+      yield* tx.run(
+        `CREATE INDEX \`board_decision_project_idx\` ON \`board_decision\` (\`project_id\`,\`answered_at\`);`,
+      )
       yield* tx.run(`CREATE UNIQUE INDEX \`board_epic_number_idx\` ON \`board_epic\` (\`project_id\`,\`number\`);`)
       yield* tx.run(`CREATE UNIQUE INDEX \`board_issue_number_idx\` ON \`board_issue\` (\`project_id\`,\`number\`);`)
       yield* tx.run(

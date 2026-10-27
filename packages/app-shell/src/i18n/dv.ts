@@ -948,6 +948,7 @@ export const dict = {
   "live.start.reason.no-key": "ކުރިން ސެޓިންގްސްގައި އަޑު ލިޔުމުގެ ކީ އިތުރު ކުރޭ",
   "live.start.reason.server": "ލޯކަލް ސަރވަރު ޖަވާބު ނުދިނެވެ",
   "live.start.reason.capture": "އަޑު ކެޕްޗަރ ފަށަން ނޯކުރެވުނު. މައިކްރޯފޯނާއި ސްކްރީން ރެކޯޑިންގ ހައްގުތައް ބަލާ.",
+  "live.start.reason.permission": "Allow microphone access in System Settings first",
   "settings.general.row.language.title": "ބަސް",
   "settings.general.row.language.description": "HuGR Orchestra އަށް ޑިސްޕްލޭ ލޭންގުއޭޖް ބަދަލުކުރުން",
   "settings.general.row.shell.title": "ޓާމިނަލް ޝެލް އެވެ",

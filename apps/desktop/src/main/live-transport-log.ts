@@ -15,6 +15,9 @@ export type TransportEntry =
   | { event: "prompt-failed"; kind: "answer" | "suggestion" | "stop" | "notice"; reason: string }
   | { event: "session-failed" | "senses-failed" | "senses-stop-failed" | "look-failed"; reason: string }
   | { event: "stopped"; unsent?: number }
+  // The bridge: the meeting started on fewer sources than the owner asked for, and renames that did not reach the record.
+  | { event: "sources"; microphone: boolean; systemAudio: boolean }
+  | { event: "rename-failed"; reason: string }
 
 export function transportLog(directory: string, meetingID: string) {
   const file = join(directory, `${meetingID}.jsonl`)

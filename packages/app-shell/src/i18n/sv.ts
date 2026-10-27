@@ -941,6 +941,7 @@ export const dict = {
   "live.start.reason.no-key": "Lägg till en tal-till-text-nyckel i Inställningar först",
   "live.start.reason.server": "Den lokala servern svarade inte",
   "live.start.reason.capture": "Ljudinspelningen kunde inte starta. Kontrollera behörigheter för mikrofon och skärminspelning.",
+  "live.start.reason.permission": "Tillåt först mikrofonåtkomst i Systeminställningar",
   "settings.general.row.language.title": "Språk",
   "settings.general.row.language.description": "Ändra visningsspråket för HuGR Orchestra",
   "settings.general.row.shell.title": "Terminalskal",

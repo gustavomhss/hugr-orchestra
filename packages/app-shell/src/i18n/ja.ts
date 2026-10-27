@@ -848,6 +848,7 @@ export const dict = {
   "live.start.reason.no-key": "先に設定で音声認識キーを追加してください",
   "live.start.reason.server": "ローカルサーバーが応答しませんでした",
   "live.start.reason.capture": "音声キャプチャを開始できませんでした。マイクと画面収録の権限を確認してください。",
+  "live.start.reason.permission": "まずシステム設定でマイクへのアクセスを許可してください",
   "settings.general.row.language.title": "言語",
   "settings.general.row.language.description": "HuGR Orchestra の表示言語を変更します",
   "settings.general.row.shell.title": "ターミナルシェル",
