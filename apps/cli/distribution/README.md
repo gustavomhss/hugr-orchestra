@@ -44,7 +44,16 @@ sh apps/cli/distribution/install.sh \
   --rollback 1.18.27
 ```
 
-The initial installer supports native Linux/Darwin x64 and arm64, with explicit baseline x64 variants. Musl and Windows require separate installer qualification.
+`install.sh` accepts exactly these `--target` values. The target must match the host OS, CPU and libc:
+
+| `--target` | Host |
+| --- | --- |
+| `darwin-arm64` | macOS, arm64 |
+| `darwin-x64`, `darwin-x64-baseline` | macOS, x64 |
+| `linux-arm64`, `linux-arm64-musl` | Linux, arm64, glibc / musl |
+| `linux-x64`, `linux-x64-musl`, `linux-x64-baseline`, `linux-x64-baseline-musl` | Linux, x64, glibc / musl |
+
+Windows has no POSIX installer. The release workflow publishes `darwin-arm64`, `darwin-x64-baseline`, `linux-x64-baseline`, `linux-x64-baseline-musl`, `linux-arm64` and `linux-arm64-musl`; the other targets are accepted by the installer but not published by that workflow.
 
 ## npm packages
 
@@ -83,4 +92,13 @@ Without `publish` the run is a dry run: everything is uploaded as the `release-a
 | --- | --- |
 | `NPM_TOKEN` | npm automation token with publish rights on the `@humanguardrail` scope |
 
-Binaries are not code-signed or notarized in this release flow.
+With `sign=true`, the macOS and Windows build jobs sign every shipped executable before it is hashed, archived or packed, and notarize the macOS ones. The `release` environment must then also hold these secrets; the workflow stops before building if one is missing:
+
+| Secret | Use |
+| --- | --- |
+| `APPLE_CERTIFICATE_P12_BASE64`, `APPLE_CERTIFICATE_PASSWORD` | Developer ID Application certificate, imported into a temporary keychain |
+| `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID` | Apple notarization with `xcrun notarytool` |
+| `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` | Azure OIDC login for Windows signing |
+| `AZURE_TRUSTED_SIGNING_ENDPOINT`, `AZURE_TRUSTED_SIGNING_ACCOUNT_NAME`, `AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE` | Azure Trusted Signing (`script/sign-windows.ps1`) |
+
+Binaries are unsigned unless the release is dispatched with `sign=true`. A publish without it is allowed, but the workflow warns. npm and `install.sh` installs do not pass through the browser quarantine mark, so Gatekeeper and SmartScreen do not check them; a binary downloaded from the release page in a browser can trip them.
