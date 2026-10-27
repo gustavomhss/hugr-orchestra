@@ -124,13 +124,15 @@ export function registerLiveLoop(options: {
       return
     }
     if (!request) return
-    // The reply to the frame has begun: the text before the look was a preamble.
-    if (request.look?.framed && (event.kind === "delta" || event.kind === "text" || event.kind === "busy")) {
+    // The looking turn ended and the frame was admitted: the next step is the reply to the frame.
+    if (request.look?.framed && request.look.idled && (event.kind === "delta" || event.kind === "text" || event.kind === "busy")) {
       request.look = undefined
       request.text = ""
     }
     if (event.kind === "busy") return
-    if (event.kind === "idle" && request.look) {
+    // The frame can be admitted before the looking turn's last step, which then ends without text; it can also be
+    // promoted into that step, which then answers from it and settles here.
+    if (event.kind === "idle" && request.look && !(request.look.framed && request.text.trim() && !isNoAnswer(request.text))) {
       request.look.idled = true
       return
     }
@@ -195,7 +197,9 @@ export function registerLiveLoop(options: {
 
   // The seat looked in the middle of a reply: the frame joins that reply instead of starting a request.
   const lookFor = async (meeting: Meeting, request: Request, question?: string) => {
+    // The text before the look was a preamble.
     request.look = {}
+    request.text = ""
     request.source = "screen"
     const prompt = await capture(meeting, question)
     const admitted =
