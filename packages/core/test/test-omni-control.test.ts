@@ -160,7 +160,7 @@ const bundlePin = "packages/core/test/distribution-bundle-workflow.test.ts"
 // Focused qualification steps that run only their own declaring tests; every other step inherits the job's suite scope.
 const DECLARED_STEPS = [
   "Prove native POSIX ABI", "Prove source ABI producers", "Prove Desktop ABI consumer",
-  "Prove Schema ELF ABI", "Prove packaged parser ABI", "Prove localized proof oracles",
+  "Prove Schema ELF ABI", "Prove packaged parser ABI",
 ]
 const muslGuest = "apps/cli/test/fixture/distribution-musl-guest.test.ts"
 
