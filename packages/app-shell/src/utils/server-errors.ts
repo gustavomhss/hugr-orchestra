@@ -53,7 +53,7 @@ export function formatServerError(error: unknown, translate?: Translator, fallba
  */
 export function withServerReason(generic: string, error: unknown) {
   if (error instanceof ClientError) return generic
-  const reason = formatServerError(error, undefined, "")
+  const reason = formatServerError(error, undefined, generic)
   return reason && reason !== generic ? `${generic} ${reason}` : generic
 }
 

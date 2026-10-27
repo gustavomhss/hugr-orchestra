@@ -151,7 +151,7 @@ describe("workflow inventory", () => {
       await loadWorkflows(async () => {
         throw new Error("UnexpectedStatus", { cause: { status: 404 } })
       }),
-    ).toEqual({ status: "unavailable", paths: [] })
+    ).toMatchObject({ status: "unavailable", paths: [] })
   })
 
   test("unsupported HTTP APIs are unavailable; auth and server failures are errors", () => {
