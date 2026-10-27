@@ -67,14 +67,14 @@ export const SHELL_COPY_BR: Record<keyof typeof SHELL_COPY, string> = {
   "orchestra.shell.draft.close.description": "O texto e os anexos deste rascunho serão perdidos.",
   "orchestra.shell.draft.close.confirm": "Descartar rascunho",
   // The folder the desktop app creates in Documents on first launch.
-  "orchestra.shell.onboarding.defaultProject": "Default Project",
+  "orchestra.shell.onboarding.defaultProject": "Projeto padrão",
   "orchestra.shell.settings.repository":
     "Abra um projeto para gerenciar esta seção. Geral, Servidores e Atalhos funcionam sem um.",
   // The reference names built-in views by their lowercase view key in the window breadcrumb.
   "orchestra.shell.crumb.home": "início",
   "orchestra.shell.crumb.agents": "agentes",
-  "orchestra.shell.crumb.dock": "dock",
-  "orchestra.shell.crumb.workspaces": "workspaces",
+  "orchestra.shell.crumb.dock": "MCP Dock",
+  "orchestra.shell.crumb.workspaces": "espaços de trabalho",
   "orchestra.shell.crumb.settings": "configurações",
   "orchestra.shell.crumb.plugins": "Plugins de LLM",
   "orchestra.shell.wip.chip": "WIP",
