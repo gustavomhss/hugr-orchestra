@@ -10,7 +10,7 @@ not provision or restart one when a command is submitted.
 
 ## CLI
 
-From `packages/desktop`:
+From `apps/desktop`:
 
 The development CLI uses Bun to build its small runner and Node 22+ for I/O.
 Descriptors are inherited directly: this avoids observed Bun stdin truncation
