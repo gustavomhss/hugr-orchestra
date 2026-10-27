@@ -4,6 +4,8 @@ import type { ServerBoardListOutput } from "@orchestra/client"
 import { useLanguage } from "@/context/language"
 import { useServerSDK } from "@/context/server-sdk"
 import { MxBadge, MxToggle } from "../kit"
+import { encode, narrow, Ring, Seat } from "./parts"
+import { createBoardExtras, ExtrasHeader, ExtrasPanels, ExtrasProof } from "./extras"
 import {
   age,
   across,
@@ -12,7 +14,6 @@ import {
   columns,
   credential,
   group,
-  monogram,
   order,
   progress,
   refusal,
@@ -79,6 +80,14 @@ export default function Board() {
     channels[name] = controller
     return controller
   }
+  const extras = createBoardExtras({
+    api,
+    t,
+    key: () => store.key,
+    issue: (ref) => store.snapshot?.issues.find((item) => item.ref === ref),
+    refresh: (key) => (void loadBoard(key), void loadList()),
+    enter: () => setStore({ peek: undefined, full: false }),
+  })
   onCleanup(() => Object.values(channels).forEach((controller) => controller?.abort()))
   let root: HTMLDivElement | undefined
   const [view, setView] = createSignal<View>("board")
@@ -109,6 +118,7 @@ export default function Board() {
           if (controller.signal.aborted) return
           setStore("snapshot", reconcile(result, { key: "id" }))
           setStore({ boardFailed: false, fetchedAt: Date.now() })
+          extras.sync(key)
           // Review cards show CI from the live git trail, which only the issue page carries.
           const review = result.issues.filter((issue) => issue.stage === "review" && issue.prNumber !== null)
           const pages = await Promise.allSettled(
@@ -132,6 +142,7 @@ export default function Board() {
     const issue = store.snapshot?.issues.find((item) => item.ref === ref)
     if (!issue || !store.key) return
     const controller = begin("page")
+    void extras.loadProof(ref)
     return api()
       .issue({ key: store.key, number: String(issue.number) }, { signal: controller.signal })
       .then(
@@ -303,6 +314,8 @@ export default function Board() {
     if (!store.snapshot || store.inbox) return
     const key = event.key.length === 1 ? event.key.toLowerCase() : event.key
     const current = store.focused ?? store.peek
+    if (key === "Escape" && extras.state.panel) return (event.preventDefault(), extras.closePanel())
+    if (extras.state.panel) return
     if (key === "Escape" && store.peek) return (event.preventDefault(), closePeek())
     // Typing a note or an answer never moves the board.
     const target = event.target as HTMLElement
@@ -324,35 +337,6 @@ export default function Board() {
     openPeek(ref)
   }
   const tab = (ref: string) => (store.focused ? store.focused === ref : refs()[0] === ref) ? 0 : -1
-
-  const Seat = (props: { seat: string | null }) => (
-    <Show when={props.seat}>
-      {(seat) => (
-        <span class="board-seat" title={seat()} aria-label={t("orchestra.board.seat", { seat: seat() })}>
-          {monogram(seat())}
-        </span>
-      )}
-    </Show>
-  )
-
-  const Ring = (props: { stage: string }) => (
-    <svg class="board-ring" data-stage={props.stage} viewBox="0 0 14 14" aria-hidden="true">
-      <circle class="board-ring-track" cx="7" cy="7" r="5.6" />
-      <Show when={props.stage === "building" || props.stage === "review"}>
-        <circle
-          class="board-ring-fill"
-          cx="7"
-          cy="7"
-          r="1.8"
-          stroke-dasharray={props.stage === "building" ? "5.65 11.3" : "8.5 11.3"}
-          transform="rotate(-90 7 7)"
-        />
-      </Show>
-      <Show when={props.stage === "shipped"}>
-        <path class="board-ring-check" d="m4.4 7.2 1.8 1.8 3.6-3.8" />
-      </Show>
-    </svg>
-  )
 
   const Ticks = (props: { trail: Trail | undefined; compact?: boolean }) => (
     <Show when={props.trail && narrow(props.trail, "ok")}>
@@ -701,6 +685,7 @@ export default function Board() {
               </p>
             )}
           </Show>
+          <ExtrasProof extras={extras} cardRef={issue().ref} />
 
           <Show when={open().length > 0}>
             <section class="board-sec">
@@ -1161,6 +1146,7 @@ export default function Board() {
                     </div>
                     <div class="board-head-end">
                       {needs()}
+                      <ExtrasHeader extras={extras} t={t} />
                       <ViewSwitch view={view()} onChange={setView} />
                       <Show when={crew().length > 0}>
                         <div class="board-crew">
@@ -1311,6 +1297,12 @@ export default function Board() {
                       <DetailState full={false} />
                     </aside>
                   </Show>
+                  <ExtrasPanels
+                    extras={extras}
+                    snapshot={snapshot()}
+                    epicTitle={(number) => epics().get(number)}
+                    onCard={openPeek}
+                  />
                 </>
               )}
             </Match>
@@ -1319,17 +1311,4 @@ export default function Board() {
       </Show>
     </div>
   )
-}
-
-function narrow<S extends Trail["state"]>(trail: Trail, state: S) {
-  return trail.state === state ? (trail as Extract<Trail, { state: S }>) : undefined
-}
-
-function encode(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(String(reader.result).replace(/^data:[^,]*,/, ""))
-    reader.onerror = () => reject(reader.error)
-    reader.readAsDataURL(file)
-  })
 }

@@ -7,13 +7,18 @@ export const MeetingTable = sqliteTable(
   "meeting",
   {
     id: text().$type<Meeting.ID>().primaryKey(),
+    // Meetings belong to the user, not to the Session: deleting the Session keeps the meeting.
     session_id: text()
       .$type<SessionSchema.ID>()
-      .notNull()
-      .references(() => SessionTable.id, { onDelete: "cascade" }),
+      .references(() => SessionTable.id, { onDelete: "set null" }),
     title: text().notNull(),
     time_started: integer().notNull(),
     time_ended: integer(),
+    retention: text().$type<Meeting.Retention>().notNull().default("kept"),
+    consent: text().$type<Meeting.Consent>().notNull().default("unknown"),
+    card_status: text().$type<"pending" | "ready" | "failed">().notNull().default("pending"),
+    card_error: text(),
+    card_summary: text().notNull().default(""),
   },
   (table) => [index("meeting_session_idx").on(table.session_id)],
 )

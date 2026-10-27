@@ -947,6 +947,7 @@ export const dict = {
   "live.start.reason.no-key": "ဆက်တင်တွင် စကားမှ စာသားသို့ ကီးကို အရင်ထည့်ပါ",
   "live.start.reason.server": "ဒေသဆိုင်ရာ ဆာဗာက တုံ့ပြန်မှု မရှိပါ",
   "live.start.reason.capture": "အသံ ဖမ်းယူခြင်း စတင်၍ မရပါ။ မိုက်ခရိုဖုန်းနှင့် မျက်နှာပြင် ရိုက်ကူးခွင့်များကို စစ်ဆေးပါ။",
+  "live.start.reason.permission": "ဦးစွာ စနစ်ဆက်တင်များတွင် မိုက်ခရိုဖုန်းအသုံးပြုခွင့်ကို ခွင့်ပြုပါ",
   "settings.general.row.language.title": "ဘာသာစကား",
   "settings.general.row.language.description": "HuGR Orchestra အတွက် ဖော်ပြသည့် ဘာသာစကားကို ပြောင်းပါ။",
   "settings.general.row.shell.title": "Terminal Shell",

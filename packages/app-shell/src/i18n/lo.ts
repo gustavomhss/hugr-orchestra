@@ -932,6 +932,7 @@ export const dict = {
   "live.start.reason.no-key": "ກະລຸນາເພີ່ມກະແຈແປງສຽງເປັນຂໍ້ຄວາມໃນການຕັ້ງຄ່າກ່ອນ",
   "live.start.reason.server": "ເຊີບເວີໃນເຄື່ອງບໍ່ຕອບສະໜອງ",
   "live.start.reason.capture": "ບໍ່ສາມາດເລີ່ມບັນທຶກສຽງໄດ້. ກະລຸນາກວດສອບສິດການເຂົ້າເຖິງໄມໂຄຣໂຟນ ແລະການບັນທຶກໜ້າຈໍ.",
+  "live.start.reason.permission": "ອະນຸຍາດການເຂົ້າເຖິງໄມໂຄຣໂຟນໃນການຕັ້ງຄ່າລະບົບກ່ອນ",
   "settings.general.row.language.title": "ພາສາ",
   "settings.general.row.language.description": "ປ່ຽນພາສາສະແດງສໍາລັບ HuGR Orchestra",
   "settings.general.row.shell.title": "Shell ຂອງເທີມິນອນ",

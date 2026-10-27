@@ -1,4 +1,11 @@
-import type { ServerBoardActivityOutput, ServerBoardGetOutput, ServerBoardIssueOutput } from "@orchestra/client"
+import type {
+  ServerBoardActivityOutput,
+  ServerBoardDecisionsOutput,
+  ServerBoardGetOutput,
+  ServerBoardIssueOutput,
+  ServerBoardProofOutput,
+  ServerBoardSpendOutput,
+} from "@orchestra/client"
 
 export type Snapshot = ServerBoardGetOutput
 export type Issue = Snapshot["issues"][number]
@@ -9,6 +16,11 @@ export type Column = (typeof columns)[number]
 export type Tick = "pass" | "fail" | "run"
 export type Activity = ServerBoardActivityOutput[number]
 export type Question = Snapshot["questions"][number]
+export type SpendReport = ServerBoardSpendOutput
+export type CardSpend = SpendReport["cards"][number]
+export type Meter = SpendReport["project"]["models"]
+export type Decision = ServerBoardDecisionsOutput[number]
+export type Proof = ServerBoardProofOutput
 
 // The board shows five stages. Intake is only counted in the header and Cut lives on the issue page (MOCKS.md v5).
 export const columns = ["backlog", "ready", "building", "review", "shipped"] as const
@@ -271,4 +283,82 @@ export const gapAfter = 6 * 60 * 60 * 1000
 export function gaps(times: readonly number[], start: number, end: number) {
   const points = [start, ...times.filter((time) => time > start && time < end).sort((a, b) => a - b), end]
   return points.slice(1).flatMap((time, index) => (time - points[index] >= gapAfter ? [{ from: points[index], to: time }] : []))
+}
+
+// Spend. A meter is dollars or an honest "not metered" with its source; it is never shown as a zero.
+// The bar fills to the budget and stops there; the percent beside it may run past 100.
+export function fill(percent: number | null) {
+  if (percent === null || !Number.isFinite(percent)) return 0
+  return Math.min(100, Math.max(0, percent))
+}
+
+// Cards sorted by spend, most first, ties by number so the list never shuffles.
+export function costliest(cards: readonly CardSpend[]) {
+  return [...cards].sort((a, b) => b.usd - a.usd || a.issue - b.issue)
+}
+
+// Models and seats the report names, biggest first, skipping zeros.
+export function shares(rows: readonly { model: string; usd: number }[]) {
+  return rows.filter((row) => row.usd > 0).sort((a, b) => b.usd - a.usd || a.model.localeCompare(b.model))
+}
+
+// Decisions newest first. An overturned decision keeps its place and names the decision that replaced it, so the log
+// shows both versions; `replacedBy` and `replaces` resolve those links among the rows given.
+export function chain(decisions: readonly Decision[]) {
+  const byID = new Map(decisions.map((item) => [item.id, item]))
+  return [...decisions]
+    .sort((a, b) => b.date - a.date || a.id.localeCompare(b.id))
+    .map((item) => ({
+      decision: item,
+      replacedBy: item.overturnedBy ? byID.get(item.overturnedBy) : undefined,
+      replaces: item.supersedes ? byID.get(item.supersedes) : undefined,
+    }))
+}
+
+// Whether the owner took a different option than the recommended one.
+export function against(decision: Pick<Decision, "chosen" | "recommended">) {
+  return decision.recommended !== "" && decision.chosen !== decision.recommended
+}
+
+// The proof panel's check list: the failing check first, then the rest in the order GitHub reports them.
+export function proofChecks(proof: Pick<Proof, "ci">) {
+  const checks = proof.ci?.checks ?? []
+  const failing = proof.ci?.failing
+  return [...checks].sort((a, b) => Number(b.name === failing) - Number(a.name === failing))
+}
+
+export function checkTick(check: Check): Tick {
+  return ticks([check]).states[0]
+}
+
+// A due date typed in a date input is a calendar day; the board stores it as that day at UTC midnight.
+export function dayInput(at: number | null | undefined) {
+  if (at === null || at === undefined) return ""
+  return new Date(at).toISOString().slice(0, 10)
+}
+
+// Noon UTC, so the day reads the same in every timezone the header shows it in.
+export function dayValue(text: string) {
+  if (!text) return null
+  const at = Date.parse(`${text}T12:00:00Z`)
+  return Number.isNaN(at) ? undefined : at
+}
+
+// A budget typed in dollars: empty clears it, anything that is not a non-negative number is rejected.
+export function budgetValue(text: string) {
+  const trimmed = text.trim().replace(/^\$/, "")
+  if (!trimmed) return null
+  const value = Number(trimmed)
+  return Number.isFinite(value) && value >= 0 ? value : undefined
+}
+
+// Whole dollars stay whole ($18); anything with cents shows both ($2.40).
+export function usd(value: number, locale: string) {
+  const cents = Math.round(value * 100) % 100 !== 0
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: cents ? 2 : 0,
+    maximumFractionDigits: cents ? 2 : 0,
+  }).format(value)
 }

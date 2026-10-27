@@ -1,11 +1,14 @@
 export * as SessionMeeting from "./meeting"
 
-import { and, asc, desc, eq, gt, isNull, like } from "drizzle-orm"
+import { and, asc, desc, eq, isNull } from "drizzle-orm"
 import { Clock, Context, Effect, Layer, Schema } from "effect"
 import { Meeting } from "@orchestra/schema/meeting"
 import { Database } from "../database/database"
 import { makeLocationNode } from "../effect/app-node"
+import { MeetingMemory } from "./meeting-memory"
+import { MeetingVerdict } from "./meeting-verdict"
 import { MeetingSegmentTable, MeetingTable } from "./meeting.sql"
+import { SessionSchema } from "./schema"
 import { SessionTable } from "./sql"
 
 export class MeetingError extends Schema.TaggedErrorClass<MeetingError>()("SessionMeeting.MeetingError", {
@@ -28,6 +31,8 @@ export interface Interface {
   readonly rename: (input: Meeting.RenameInput) => Effect.Effect<Meeting.Summary, MeetingError>
   // Refused with "running" while the meeting runs.
   readonly remove: (input: Meeting.ReadQuery) => Effect.Effect<Meeting.DeleteReceipt, MeetingError>
+  readonly confirm: (input: Meeting.ConfirmInput) => Effect.Effect<Meeting.Card, MeetingError>
+  readonly commitment: (input: Meeting.CommitmentInput) => Effect.Effect<Meeting.Commitment, MeetingError>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/SessionMeeting") {}
@@ -35,44 +40,30 @@ export class Service extends Context.Service<Service, Interface>()("@orchestra/v
 // CONTRACT FROZEN ABOVE. Builder A implements `layer` and `node` below, modelled on ./todo.ts.
 
 const LIVE_TAIL = 50
-const LIST_LIMIT = 50
+
+// Meetings outlive their Session. The frozen Info type has no empty case, so a meeting whose Session was deleted
+// reports this placeholder id.
+const DETACHED = SessionSchema.ID.make("ses_detached")
 
 const meetingInfo = (row: typeof MeetingTable.$inferSelect): Meeting.Info => ({
   id: row.id,
-  sessionID: row.session_id,
+  sessionID: row.session_id ?? DETACHED,
   title: row.title,
   timeStarted: row.time_started,
   timeEnded: row.time_ended,
 })
 
-// Retention, consent, people and counts come with the Flight Engineer memory store; until then they are defaults.
-const summaryOf = (row: typeof MeetingTable.$inferSelect): Meeting.Summary => ({
-  id: row.id,
-  title: row.title,
-  startedAt: row.time_started,
-  endedAt: row.time_ended ?? undefined,
-  people: [],
-  retention: "kept",
-  consent: "unknown",
-  counts: { decisions: 0, commitments: 0, openCommitments: 0, answers: 0 },
-})
-
-// Consolidation is not built yet: a stopped meeting has an empty ready card.
-const cardOf = (row: typeof MeetingTable.$inferSelect): Meeting.Card => ({
-  status: row.time_ended === null ? "pending" : "ready",
-  summary: "",
-  decisions: [],
-  commitments: [],
-  questions: [],
-  suggestions: [],
-  newPeople: [],
-})
-
-const detailOf = (row: typeof MeetingTable.$inferSelect, segments: (typeof MeetingSegmentTable.$inferSelect)[]) => ({
-  meeting: meetingInfo(row),
-  segments: segments.map(segmentOf),
-  summary: summaryOf(row),
-  card: cardOf(row),
+const detailOf = Effect.fn("SessionMeeting.detailOf")(function* (
+  db: Database.Interface["db"],
+  row: typeof MeetingTable.$inferSelect,
+  segments: (typeof MeetingSegmentTable.$inferSelect)[],
+) {
+  return {
+    meeting: meetingInfo(row),
+    segments: segments.map(segmentOf),
+    summary: (yield* MeetingMemory.summaries(db, [row]))[0]!,
+    card: yield* MeetingMemory.card(db, row),
+  }
 })
 
 const segmentOf = (row: typeof MeetingSegmentTable.$inferSelect): Meeting.Segment => ({
@@ -116,9 +107,11 @@ const layer = Layer.effect(
         title: input.title,
         time_started: yield* Clock.currentTimeMillis,
         time_ended: null,
+        retention: input.retention ?? "kept",
+        consent: input.consent,
       }
       yield* db.insert(MeetingTable).values(row).run().pipe(Effect.orDie)
-      return meetingInfo(row)
+      return meetingInfo({ ...row, card_status: "pending", card_error: null, card_summary: "" })
     })
 
     const append = Effect.fn("SessionMeeting.append")(function* (input: Meeting.AppendInput) {
@@ -167,7 +160,7 @@ const layer = Layer.effect(
         .orderBy(asc(MeetingSegmentTable.start_ms))
         .all()
         .pipe(Effect.orDie)
-      return detailOf(meeting, segments)
+      return yield* detailOf(db, meeting, segments)
     })
 
     const active = Effect.fn("SessionMeeting.active")(function* (sessionID: Meeting.Info["sessionID"]) {
@@ -181,28 +174,10 @@ const layer = Layer.effect(
         .limit(LIVE_TAIL)
         .all()
         .pipe(Effect.orDie)
-      return detailOf(meeting, latest.toReversed())
+      return yield* detailOf(db, meeting, latest.toReversed())
     })
 
-    // Meeting ids sort newest first, so the cursor is the last id of the previous page.
-    const list = Effect.fn("SessionMeeting.list")(function* (input: Meeting.ListQuery) {
-      const limit = input.limit ?? LIST_LIMIT
-      const rows = yield* db
-        .select()
-        .from(MeetingTable)
-        .where(
-          and(
-            input.before ? gt(MeetingTable.id, input.before) : undefined,
-            input.query ? like(MeetingTable.title, `%${input.query}%`) : undefined,
-          ),
-        )
-        .orderBy(asc(MeetingTable.id))
-        .limit(limit + 1)
-        .all()
-        .pipe(Effect.orDie)
-      const page = rows.slice(0, limit)
-      return { items: page.map(summaryOf), next: rows.length > limit ? page.at(-1)?.id : undefined }
-    })
+    const list = (input: Meeting.ListQuery) => MeetingMemory.list(db, input)
 
     const rename = Effect.fn("SessionMeeting.rename")(function* (input: Meeting.RenameInput) {
       const meeting = yield* findMeeting(input.meetingID)
@@ -213,24 +188,28 @@ const layer = Layer.effect(
         .where(eq(MeetingTable.id, input.meetingID))
         .run()
         .pipe(Effect.orDie)
-      return summaryOf({ ...meeting, title: input.title })
+      return (yield* MeetingMemory.summaries(db, [{ ...meeting, title: input.title }]))[0]!
     })
 
     const remove = Effect.fn("SessionMeeting.remove")(function* (input: Meeting.ReadQuery) {
       const meeting = yield* findMeeting(input.meetingID)
       if (!meeting) return yield* new MeetingError({ reason: "missing_meeting" })
       if (meeting.time_ended === null) return yield* new MeetingError({ reason: "running" })
-      const segments = yield* db
-        .delete(MeetingSegmentTable)
-        .where(eq(MeetingSegmentTable.meeting_id, input.meetingID))
-        .returning({ id: MeetingSegmentTable.id })
-        .all()
-        .pipe(Effect.orDie)
-      yield* db.delete(MeetingTable).where(eq(MeetingTable.id, input.meetingID)).run().pipe(Effect.orDie)
-      return { segments: segments.length, claims: 0, commitments: 0, people: 0 }
+      return yield* MeetingVerdict.remove(db, input.meetingID)
     })
 
-    return Service.of({ start, append, stop, get, active, list, rename, remove })
+    const confirm = Effect.fn("SessionMeeting.confirm")(function* (input: Meeting.ConfirmInput) {
+      const meeting = yield* findMeeting(input.meetingID)
+      if (!meeting) return yield* new MeetingError({ reason: "missing_meeting" })
+      return yield* MeetingVerdict.confirm(db, meeting, input).pipe(
+        Effect.mapError((reason) => new MeetingError({ reason })),
+      )
+    })
+
+    const commitment = (input: Meeting.CommitmentInput) =>
+      MeetingVerdict.commitment(db, input).pipe(Effect.mapError((reason) => new MeetingError({ reason })))
+
+    return Service.of({ start, append, stop, get, active, list, rename, remove, confirm, commitment })
   }),
 )
 
