@@ -37,3 +37,11 @@ Read `live-seat-ownership` first for who owns what and the invariants. Spec: `do
 - Typecheck: `gh workflow run typecheck.yml --ref <branch>`. Never on the Mac.
 - `bun run check:guards --base origin/dev` before calling a change done.
 - A real audio run is the last step of a campaign, not of every change.
+- A user-visible change (setup, hotkeys, settings, permissions) also updates `docs/guides/live-meetings.md`.
+
+## Real Mac run
+
+- Launch an isolated DEV app from Terminal.app with a `.command` script that runs `electron-vite dev -- --remote-debugging-port=<port>` from `apps/desktop` with `ORCHESTRA_TEST_ONBOARDING=1`, piping output through `grep -v sk-or`. Pick a port no other session uses.
+- Drive it over CDP: the main window target matches `5173/index` (not `index.html`, which also matches the overlay); the overlay matches `live/index`. Main: `window.api.startLiveMeeting(title)`, `stopLiveMeeting()`. Overlay: `window.live.act({ kind: "ask", question })`, `window.live.state()`.
+- Keys go in only by the owner (a script the owner runs reads them and posts them through CDP). An agent never types, prints or passes a real key.
+- Stealth check: share the full screen in Meet and have the owner watch the share; `screencapture` alone shows the overlay hidden from captures, not from a given call app.
