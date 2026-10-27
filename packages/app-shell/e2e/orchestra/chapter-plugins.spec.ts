@@ -102,7 +102,7 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(view.getByRole("heading", { level: 1 })).toHaveText("Plugins")
     await expect(view.locator(".mx-eyebrow")).toHaveText("timeline-stability · Configuration")
     await expect(view.locator(".mx-heading p")).toHaveText(
-      "Shape how the LLM thinks and speaks. Each profile has its own behavior.",
+      "Shape how the LLM thinks and speaks. Each project has its own behavior.",
     )
     await expect(view.getByRole("textbox", { name: "Search plugins" })).toHaveAttribute(
       "placeholder",
@@ -119,7 +119,7 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(caveman.locator(".mx-badge")).toHaveText(["LLM behavior", "full", "Disabled"])
     await expect(toggle).toHaveAttribute("aria-checked", "false")
     await expect(view.locator('[data-slot="plugins-application"]')).toHaveText(
-      "Active behaviors are kept on this server for this profile and apply to every turn of its chats, including chats already open.",
+      "Active behaviors are kept on this server for this project and apply to every turn of its chats, including chats already open.",
     )
 
     await toggle.click()
@@ -129,7 +129,7 @@ for (const scheme of ["dark", "light"] as const) {
     await caveman.getByRole("button", { name: "Configure", exact: true }).click()
     const dialog = page.getByRole("dialog")
     await expect(dialog.getByRole("heading", { name: "Configure Caveman" })).toBeVisible()
-    await expect(dialog).toContainText("Active behaviors are added to new chat messages in this profile.")
+    await expect(dialog).toContainText("Active behaviors are added to new chat messages in this project.")
     await expect(page.locator('[data-slot="dialog-container"].plugins-dialog')).toHaveCSS("width", "680px")
     await expect(dialog.getByLabel("Intensity")).toHaveValue("full")
     await dialog.getByLabel("Intensity").selectOption("ultra")
@@ -234,7 +234,7 @@ test("V2 servers apply the profile's behaviors to turns without touching the pro
   await openPlugins(page)
   const note = chapter(page).locator('[data-slot="plugins-application"]')
   await expect(note).toHaveText(
-    "Active behaviors are kept on this server for this profile and apply to every turn of its chats, including chats already open.",
+    "Active behaviors are kept on this server for this project and apply to every turn of its chats, including chats already open.",
   )
   // Opening the page hands the server the set it shows: nothing is enabled on a new profile.
   await expect.poll(() => sets.at(-1)).toEqual({ directory, behaviors: [] })
@@ -251,7 +251,7 @@ test("V2 servers apply the profile's behaviors to turns without touching the pro
   expect(sets.at(-1)?.directory).toBe(directory)
   await caveman.getByRole("button", { name: "Configure", exact: true }).click()
   const dialog = page.getByRole("dialog")
-  await expect(dialog).toContainText("Active behaviors are added to new chat messages in this profile.")
+  await expect(dialog).toContainText("Active behaviors are added to new chat messages in this project.")
   await dialog.getByRole("button", { name: "Cancel", exact: true }).click()
   await expect(dialog).toHaveCount(0)
 
@@ -279,7 +279,7 @@ test("a failed behavior sync offers Retry that pushes the set again", async ({ p
   await note.getByRole("button", { name: "Retry", exact: true }).click()
   await expect.poll(() => sets.at(-1)).toEqual({ directory, behaviors: [] })
   await expect(note).toHaveText(
-    "Active behaviors are kept on this server for this profile and apply to every turn of its chats, including chats already open.",
+    "Active behaviors are kept on this server for this project and apply to every turn of its chats, including chats already open.",
   )
 })
 
@@ -291,7 +291,7 @@ test("V2 servers without the behavior route keep behaviors on the profile withou
   const sets = await serveBehaviors(page, 404)
   await openPlugins(page)
   await expect(chapter(page).locator('[data-slot="plugins-application"]')).toHaveText(
-    "Saved for this profile. This server does not accept per-prompt instructions, so behaviors are not applied to turns yet.",
+    "Saved for this project. This server does not accept per-prompt instructions, so behaviors are not applied to turns yet.",
   )
   const caveman = card(page, "Caveman")
   await caveman.getByRole("switch", { name: "Enable Caveman" }).click()
@@ -301,7 +301,7 @@ test("V2 servers without the behavior route keep behaviors on the profile withou
   await expect(chapter(page)).not.toContainText("Active")
   await caveman.getByRole("button", { name: "Configure", exact: true }).click()
   const dialog = page.getByRole("dialog")
-  await expect(dialog).toContainText("Behaviors are saved for this profile.")
+  await expect(dialog).toContainText("Behaviors are saved for this project.")
   await expect(dialog).not.toContainText("added to new chat messages")
   await dialog.getByRole("button", { name: "Cancel", exact: true }).click()
   await expect(dialog).toHaveCount(0)

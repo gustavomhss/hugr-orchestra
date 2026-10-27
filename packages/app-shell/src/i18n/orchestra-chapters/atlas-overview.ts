@@ -18,14 +18,14 @@ export const ATLAS_OVERVIEW_COPY = {
     "The facts and their versions. Content-addressed, so the same claim gets the same name on every machine.",
   "orchestra.atlas.overview.travel.index": "The code index, regenerated from the code at that commit.",
   "orchestra.atlas.overview.travel.staging":
-    "Suggestions waiting for review. Genesis mines them again; they are never committed, so nothing half-reviewed leaks into history.",
+    "Suggestions waiting for review. History mines them again; they are never committed, so nothing half-reviewed leaks into history.",
   "orchestra.atlas.overview.travel.step.pr": "Open a PR",
   "orchestra.atlas.overview.travel.step.pr.text": "Memories, policy and ownership skills change in the same diff as the code they describe.",
   "orchestra.atlas.overview.travel.step.merge": "Merge",
   "orchestra.atlas.overview.travel.step.merge.text": "Logs union line by line; ownership skills whose code changed hold until refreshed.",
   "orchestra.atlas.overview.travel.step.clone": "Clone anywhere",
   "orchestra.atlas.overview.travel.step.clone.text":
-    "Run Genesis: the index and store come back from the code; memory and ownership skills are already there.",
+    "Run History: the index and store come back from the code; memory and ownership skills are already there.",
   "orchestra.atlas.overview.travel.export":
     "To move a whole store in one piece, <code>atlas export</code> writes an <code>atlas-okf.json</code> bundle that imports into an empty store, all or nothing.",
   "orchestra.atlas.overview.travel.export.help":
@@ -154,7 +154,7 @@ export const ATLAS_OVERVIEW_COPY = {
   "orchestra.atlas.overview.learned": "Learned",
   "orchestra.atlas.overview.learned.title": "{{count}} claims",
   "orchestra.atlas.overview.learned.text":
-    "Genesis read {{files}} files and proposed a sentence for each place worth knowing. Every claim keeps the reasoning that produced it.",
+    "History read {{files}} files and proposed a sentence for each place worth knowing. Every claim keeps the reasoning that produced it.",
   "orchestra.atlas.overview.learned.foot": "{{accepted}} accepted · {{waiting}} waiting",
   "orchestra.atlas.overview.caught": "Caught",
   "orchestra.atlas.overview.caught.title.one": "{{n}} fact went stale",
@@ -192,14 +192,14 @@ export const ATLAS_OVERVIEW_COPY_BR: Record<keyof typeof ATLAS_OVERVIEW_COPY, st
     "Os fatos e as suas versões. Endereçados pelo conteúdo, então a mesma afirmação recebe o mesmo nome em cada máquina.",
   "orchestra.atlas.overview.travel.index": "O índice do código, regenerado a partir do código naquele commit.",
   "orchestra.atlas.overview.travel.staging":
-    "Sugestões aguardando revisão. O Genesis as minera de novo; elas nunca são commitadas, então nada meio revisado chega ao histórico.",
+    "Sugestões aguardando revisão. O Histórico as minera de novo; elas nunca são commitadas, então nada meio revisado chega ao histórico.",
   "orchestra.atlas.overview.travel.step.pr": "Abra um PR",
   "orchestra.atlas.overview.travel.step.pr.text": "Memórias, política e skills de ownership mudam no mesmo diff do código que descrevem.",
   "orchestra.atlas.overview.travel.step.merge": "Faça o merge",
   "orchestra.atlas.overview.travel.step.merge.text": "Os logs se unem linha a linha; skills de ownership cujo código mudou ficam retidas até serem atualizadas.",
   "orchestra.atlas.overview.travel.step.clone": "Clone em qualquer lugar",
   "orchestra.atlas.overview.travel.step.clone.text":
-    "Rode o Genesis: o índice e o store voltam a partir do código; a memória e as skills de ownership já estão lá.",
+    "Rode o Histórico: o índice e o store voltam a partir do código; a memória e as skills de ownership já estão lá.",
   "orchestra.atlas.overview.travel.export":
     "Para mover um store inteiro de uma vez, <code>atlas export</code> grava um pacote <code>atlas-okf.json</code> que é importado em um store vazio, tudo ou nada.",
   "orchestra.atlas.overview.travel.export.help":
@@ -328,7 +328,7 @@ export const ATLAS_OVERVIEW_COPY_BR: Record<keyof typeof ATLAS_OVERVIEW_COPY, st
   "orchestra.atlas.overview.learned": "Aprendido",
   "orchestra.atlas.overview.learned.title": "{{count}} afirmações",
   "orchestra.atlas.overview.learned.text":
-    "O Genesis leu {{files}} arquivos e propôs uma frase para cada lugar que vale conhecer. Cada afirmação guarda o raciocínio que a produziu.",
+    "O Histórico leu {{files}} arquivos e propôs uma frase para cada lugar que vale conhecer. Cada afirmação guarda o raciocínio que a produziu.",
   "orchestra.atlas.overview.learned.foot": "{{accepted}} aceitas · {{waiting}} aguardando",
   "orchestra.atlas.overview.caught": "Detectado",
   "orchestra.atlas.overview.caught.title.one": "{{n}} fato ficou desatualizado",

@@ -30,7 +30,7 @@ for (const scheme of ["dark", "light"] as const) {
     const offline = card(page, "review").locator(".mx-badge")
     await expect(offline).toHaveText(["solo", "Unlimited steps", "Provider not connected"])
     await expect(offline.last()).toHaveClass(/\bbad\b/)
-    await expect(offline.last()).toHaveAttribute("title", "offline is not connected in this profile.")
+    await expect(offline.last()).toHaveAttribute("title", "offline is not connected in this project.")
     await page.screenshot({ path: test.info().outputPath(`${scheme}.png`), fullPage: true })
     // Primary, subagent and all-mode agents alike work through Maestro.
     for (const name of ["plan", "research", "review", "build"]) {
@@ -141,7 +141,7 @@ test("switching profiles during an agent request isolates servers and directorie
     await openAgents(page, false)
     await expect(page.getByRole("status")).toContainText("Loading agents")
     await expect.poll(() => requests.some((request) => new URL(request.url).pathname === "/api/agent")).toBe(true)
-    await page.getByRole("button", { name: "Choose repository profile" }).click()
+    await page.getByRole("button", { name: "Choose project" }).click()
     await page.getByRole("menuitemradio", { name: "Boreal" }).click()
     await expect(page.getByRole("list", { name: "Configured agents" })).toContainText("boreal-agent")
     pending.release()
@@ -158,7 +158,7 @@ test("switching profiles during an agent request isolates servers and directorie
       .poll(() => requests.filter((request) => new URL(request.url).pathname === "/api/agent").length)
       .toBeGreaterThanOrEqual(2)
     await expect(page.getByRole("list", { name: "Configured agents" })).not.toContainText("Plans repository work")
-    await page.getByRole("button", { name: "Choose repository profile" }).click()
+    await page.getByRole("button", { name: "Choose project" }).click()
     await page.getByRole("menuitemradio", { name: "Other worktree" }).click()
     await expect(page.getByText("Loading agents…", { exact: true })).toBeVisible()
     await expect(page.getByRole("list", { name: "Configured agents" })).toHaveCount(0)
@@ -191,7 +191,7 @@ for (const state of ["empty", "error", "unavailable"] as const) {
     await expect(
       page.getByText(
         {
-          empty: "No visible agents are configured for this profile.",
+          empty: "No visible agents are configured for this project.",
           error: "Agents could not be loaded. Try refreshing.",
           unavailable: "This server does not provide an agents API.",
         }[state],
@@ -223,7 +223,7 @@ test("an agent request retains its response state while a later refresh changes 
       .getByRole("button", { name: "Agents", exact: true })
       .click()
     await expect(page).toHaveURL(/\/orchestra\/agents$/)
-    await expect(page.getByText("No visible agents are configured for this profile.", { exact: true })).toBeVisible()
+    await expect(page.getByText("No visible agents are configured for this project.", { exact: true })).toBeVisible()
     await page.getByRole("button", { name: "Refresh", exact: true }).click()
     await expect(page.getByRole("list", { name: "Configured agents" })).toContainText("Plans repository work")
   } finally {

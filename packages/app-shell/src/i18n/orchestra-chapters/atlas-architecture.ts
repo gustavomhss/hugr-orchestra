@@ -42,9 +42,9 @@ export const ATLAS_ARCHITECTURE_COPY = {
     "A map of every symbol and reference, built by scip-typescript. Atlas reads it to know what depends on what.",
   "orchestra.atlas.architecture.box.index.term": ".atlas/index.scip",
   "orchestra.atlas.architecture.box.author.title": "A writer",
-  "orchestra.atlas.architecture.box.author.sub": "Genesis, an agent or you",
+  "orchestra.atlas.architecture.box.author.sub": "History, an agent or you",
   "orchestra.atlas.architecture.box.author.what":
-    "Something proposes a fact: one sentence about one place in the code. Genesis can only propose.",
+    "Something proposes a fact: one sentence about one place in the code. History can only propose.",
   "orchestra.atlas.architecture.box.author.term": "atlas emit · atlas promote",
   "orchestra.atlas.architecture.box.door.title": "The door",
   "orchestra.atlas.architecture.box.door.sub": "4 checks, 16 gates",
@@ -66,7 +66,7 @@ export const ATLAS_ARCHITECTURE_COPY = {
   "orchestra.atlas.architecture.box.waiting.title": "Waiting",
   "orchestra.atlas.architecture.box.waiting.sub.one": "{{n}} suggestion",
   "orchestra.atlas.architecture.box.waiting.sub.other": "{{n}} suggestions",
-  "orchestra.atlas.architecture.box.waiting.what": "What Genesis proposed and nobody accepted yet. Agents never see it.",
+  "orchestra.atlas.architecture.box.waiting.what": "What History proposed and nobody accepted yet. Agents never see it.",
   "orchestra.atlas.architecture.box.waiting.term": "staging.{{stagingGen}}.json",
   "orchestra.atlas.architecture.box.check.title": "Still true?",
   "orchestra.atlas.architecture.box.check.sub": "checked on every read",
@@ -122,7 +122,7 @@ export const ATLAS_ARCHITECTURE_COPY = {
   "orchestra.atlas.architecture.who.retrieval": "retrieval",
   "orchestra.atlas.architecture.write.claim.title": "A claim arrives",
   "orchestra.atlas.architecture.write.claim.text":
-    "<code>atlas emit</code>, or the <code>atlas-emit</code> MCP tool, with the fact and the commit it was read at. Genesis writes nowhere but staging; <code>atlas promote</code> sends each staged row through this same door.",
+    "<code>atlas emit</code>, or the <code>atlas-emit</code> MCP tool, with the fact and the commit it was read at. History writes nowhere but staging; <code>atlas promote</code> sends each staged row through this same door.",
   "orchestra.atlas.architecture.write.handler.title": "One handler",
   "orchestra.atlas.architecture.write.handler.text":
     "A single pure handler routes it to one of three write doors: <b>emit</b> (facts), <b>link</b> (same-as) and <b>memory-emit</b>. Reads never reach a door.",
@@ -224,7 +224,7 @@ export const ATLAS_ARCHITECTURE_COPY = {
   "orchestra.atlas.architecture.file.index.what":
     "The code index produced by scip-typescript. Atlas reads it and never runs the indexer.",
   "orchestra.atlas.architecture.file.index.writer": "the indexer",
-  "orchestra.atlas.architecture.file.index.reader": "index, Genesis, check a claim",
+  "orchestra.atlas.architecture.file.index.reader": "index, History, check a claim",
   "orchestra.atlas.architecture.file.index.shape": "SCIP protobuf",
   "orchestra.atlas.architecture.file.memory.what":
     "Member memory: append-only, one event per line, travelling with the branch.",
@@ -292,7 +292,7 @@ export const ATLAS_ARCHITECTURE_COPY = {
   "orchestra.atlas.architecture.packages.nothing": "nothing",
   "orchestra.atlas.architecture.packages.theRing": "the ring",
   "orchestra.atlas.architecture.packages.note":
-    "Drawn from each package.json. The diagram in ARCHITECTURE.md is older: it shows two write doors (there are three) and Genesis above tools (it doesn't use them).",
+    "Drawn from each package.json. The diagram in ARCHITECTURE.md is older: it shows two write doors (there are three) and History above tools (it doesn't use them).",
   "orchestra.atlas.architecture.layer.contracts.what": "Shared types only: Hash, Tier, Freshness, Status, Pack, Tool.",
   "orchestra.atlas.architecture.layer.contracts.key.1": "Hash · SubtreeHash · NodeKey",
   "orchestra.atlas.architecture.layer.contracts.key.2": "Tier T0 / T1 / T2",
@@ -405,9 +405,9 @@ export const ATLAS_ARCHITECTURE_COPY_BR: Record<keyof typeof ATLAS_ARCHITECTURE_
     "Um mapa de cada símbolo e referência, gerado pelo scip-typescript. O Atlas o lê para saber o que depende de quê.",
   "orchestra.atlas.architecture.box.index.term": ".atlas/index.scip",
   "orchestra.atlas.architecture.box.author.title": "Um escritor",
-  "orchestra.atlas.architecture.box.author.sub": "o Genesis, um agente ou você",
+  "orchestra.atlas.architecture.box.author.sub": "o Histórico, um agente ou você",
   "orchestra.atlas.architecture.box.author.what":
-    "Algo propõe um fato: uma frase sobre um lugar do código. O Genesis só pode propor.",
+    "Algo propõe um fato: uma frase sobre um lugar do código. O Histórico só pode propor.",
   "orchestra.atlas.architecture.box.author.term": "atlas emit · atlas promote",
   "orchestra.atlas.architecture.box.door.title": "A porta",
   "orchestra.atlas.architecture.box.door.sub": "4 checagens, 16 portões",
@@ -429,7 +429,7 @@ export const ATLAS_ARCHITECTURE_COPY_BR: Record<keyof typeof ATLAS_ARCHITECTURE_
   "orchestra.atlas.architecture.box.waiting.title": "Aguardando",
   "orchestra.atlas.architecture.box.waiting.sub.one": "{{n}} sugestão",
   "orchestra.atlas.architecture.box.waiting.sub.other": "{{n}} sugestões",
-  "orchestra.atlas.architecture.box.waiting.what": "O que o Genesis propôs e ninguém aceitou ainda. Os agentes nunca veem.",
+  "orchestra.atlas.architecture.box.waiting.what": "O que o Histórico propôs e ninguém aceitou ainda. Os agentes nunca veem.",
   "orchestra.atlas.architecture.box.waiting.term": "staging.{{stagingGen}}.json",
   "orchestra.atlas.architecture.box.check.title": "Ainda verdadeiro?",
   "orchestra.atlas.architecture.box.check.sub": "checado a cada leitura",
@@ -485,7 +485,7 @@ export const ATLAS_ARCHITECTURE_COPY_BR: Record<keyof typeof ATLAS_ARCHITECTURE_
   "orchestra.atlas.architecture.who.retrieval": "recuperação",
   "orchestra.atlas.architecture.write.claim.title": "Chega uma afirmação",
   "orchestra.atlas.architecture.write.claim.text":
-    "<code>atlas emit</code>, ou a ferramenta MCP <code>atlas-emit</code>, com o fato e o commit em que foi lido. O Genesis só escreve no staging; <code>atlas promote</code> manda cada linha em staging por esta mesma porta.",
+    "<code>atlas emit</code>, ou a ferramenta MCP <code>atlas-emit</code>, com o fato e o commit em que foi lido. O Histórico só escreve no staging; <code>atlas promote</code> manda cada linha em staging por esta mesma porta.",
   "orchestra.atlas.architecture.write.handler.title": "Um único handler",
   "orchestra.atlas.architecture.write.handler.text":
     "Um único handler puro encaminha a escrita para uma de três portas: <b>emit</b> (fatos), <b>link</b> (same-as) e <b>memory-emit</b>. Leituras nunca chegam a uma porta.",
@@ -587,7 +587,7 @@ export const ATLAS_ARCHITECTURE_COPY_BR: Record<keyof typeof ATLAS_ARCHITECTURE_
   "orchestra.atlas.architecture.file.index.what":
     "O índice de código produzido pelo scip-typescript. O Atlas o lê e nunca roda o indexador.",
   "orchestra.atlas.architecture.file.index.writer": "o indexador",
-  "orchestra.atlas.architecture.file.index.reader": "índice, Genesis, checar uma afirmação",
+  "orchestra.atlas.architecture.file.index.reader": "índice, Histórico, checar uma afirmação",
   "orchestra.atlas.architecture.file.index.shape": "SCIP protobuf",
   "orchestra.atlas.architecture.file.memory.what":
     "Memória do membro: somente acréscimo, um evento por linha, viajando com o branch.",
@@ -655,7 +655,7 @@ export const ATLAS_ARCHITECTURE_COPY_BR: Record<keyof typeof ATLAS_ARCHITECTURE_
   "orchestra.atlas.architecture.packages.nothing": "nada",
   "orchestra.atlas.architecture.packages.theRing": "o anel",
   "orchestra.atlas.architecture.packages.note":
-    "Desenhado a partir de cada package.json. O diagrama em ARCHITECTURE.md está desatualizado: mostra duas portas de escrita (são três) e o Genesis acima de tools (ele não as usa).",
+    "Desenhado a partir de cada package.json. O diagrama em ARCHITECTURE.md está desatualizado: mostra duas portas de escrita (são três) e o Histórico acima de tools (ele não as usa).",
   "orchestra.atlas.architecture.layer.contracts.what": "Só tipos compartilhados: Hash, Tier, Freshness, Status, Pack, Tool.",
   "orchestra.atlas.architecture.layer.contracts.key.1": "Hash · SubtreeHash · NodeKey",
   "orchestra.atlas.architecture.layer.contracts.key.2": "Nível T0 / T1 / T2",

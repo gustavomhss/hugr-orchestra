@@ -8,9 +8,9 @@ export const SCHEDULE_COPY = {
   "orchestra.schedule.emptyHint": "Create a one-off or recurring task.",
   "orchestra.schedule.noMatches": "No scheduled tasks match your search.",
   "orchestra.schedule.note":
-    "Saved on the server for this profile · due tasks run on the server even while this page is closed; a run more than a day late, or overtaken by the next one, is marked Missed.",
+    "Saved on the server for this project · due tasks run on the server even while this page is closed; a run more than a day late, or overtaken by the next one, is marked Missed.",
   "orchestra.schedule.noteDevice":
-    "Saved on this device for this profile · due tasks run only while this page is open; a run more than a day late, or overtaken by the next one, is marked Missed.",
+    "Saved on this device for this project · due tasks run only while this page is open; a run more than a day late, or overtaken by the next one, is marked Missed.",
   "orchestra.schedule.loading": "Loading scheduled tasks…",
   "orchestra.schedule.loadError": "Could not load scheduled tasks from the server.",
   "orchestra.schedule.refreshError":
@@ -38,7 +38,7 @@ export const SCHEDULE_COPY = {
   "orchestra.schedule.removeError": "Could not remove {{name}}: {{detail}}",
   "orchestra.schedule.dialog.new": "Schedule task",
   "orchestra.schedule.dialog.edit": "Edit {{name}}",
-  "orchestra.schedule.dialog.subtitle": "Time is shown in your local timezone. Maestro runs the task in this profile.",
+  "orchestra.schedule.dialog.subtitle": "Time is shown in your local timezone. Maestro runs the task in this project.",
   "orchestra.schedule.dialog.close": "Close dialog",
   "orchestra.schedule.field.name": "Name",
   "orchestra.schedule.field.prompt": "What to run",
@@ -52,7 +52,7 @@ export const SCHEDULE_COPY = {
   "orchestra.schedule.error.date": "Choose a valid time.",
   "orchestra.schedule.error.past": "Choose a future time.",
   "orchestra.schedule.confirm.title": "Remove this item?",
-  "orchestra.schedule.confirm.subtitle": "Its configuration is removed from this profile.",
+  "orchestra.schedule.confirm.subtitle": "Its configuration is removed from this project.",
   "orchestra.schedule.confirm.detail": "This removes the task from {{profile}}.",
   "orchestra.schedule.confirm.submit": "Confirm",
   "orchestra.schedule.agents.title": "Created by agents",
@@ -101,9 +101,9 @@ export const SCHEDULE_COPY_BR: Record<keyof typeof SCHEDULE_COPY, string> = {
   "orchestra.schedule.emptyHint": "Crie uma tarefa única ou recorrente.",
   "orchestra.schedule.noMatches": "Nenhuma tarefa agendada corresponde à sua busca.",
   "orchestra.schedule.note":
-    "Salvo no servidor para este perfil · tarefas vencidas rodam no servidor mesmo com esta página fechada; uma execução com mais de um dia de atraso, ou ultrapassada pela próxima, é marcada como Perdida.",
+    "Salvo no servidor para este projeto · tarefas vencidas rodam no servidor mesmo com esta página fechada; uma execução com mais de um dia de atraso, ou ultrapassada pela próxima, é marcada como Perdida.",
   "orchestra.schedule.noteDevice":
-    "Salvo neste dispositivo para este perfil · tarefas vencidas rodam só enquanto esta página estiver aberta; uma execução com mais de um dia de atraso, ou ultrapassada pela próxima, é marcada como Perdida.",
+    "Salvo neste dispositivo para este projeto · tarefas vencidas rodam só enquanto esta página estiver aberta; uma execução com mais de um dia de atraso, ou ultrapassada pela próxima, é marcada como Perdida.",
   "orchestra.schedule.loading": "Carregando tarefas agendadas…",
   "orchestra.schedule.loadError": "Não foi possível carregar as tarefas agendadas do servidor.",
   "orchestra.schedule.refreshError":
@@ -131,7 +131,7 @@ export const SCHEDULE_COPY_BR: Record<keyof typeof SCHEDULE_COPY, string> = {
   "orchestra.schedule.removeError": "Não foi possível remover {{name}}: {{detail}}",
   "orchestra.schedule.dialog.new": "Agendar tarefa",
   "orchestra.schedule.dialog.edit": "Editar {{name}}",
-  "orchestra.schedule.dialog.subtitle": "O horário é mostrado no seu fuso horário local. O Maestro executa a tarefa neste perfil.",
+  "orchestra.schedule.dialog.subtitle": "O horário é mostrado no seu fuso horário local. O Maestro executa a tarefa neste projeto.",
   "orchestra.schedule.dialog.close": "Fechar diálogo",
   "orchestra.schedule.field.name": "Nome",
   "orchestra.schedule.field.prompt": "O que executar",
@@ -145,7 +145,7 @@ export const SCHEDULE_COPY_BR: Record<keyof typeof SCHEDULE_COPY, string> = {
   "orchestra.schedule.error.date": "Escolha um horário válido.",
   "orchestra.schedule.error.past": "Escolha um horário futuro.",
   "orchestra.schedule.confirm.title": "Remover este item?",
-  "orchestra.schedule.confirm.subtitle": "A configuração dele é removida deste perfil.",
+  "orchestra.schedule.confirm.subtitle": "A configuração dele é removida deste projeto.",
   "orchestra.schedule.confirm.detail": "Isto remove a tarefa de {{profile}}.",
   "orchestra.schedule.confirm.submit": "Confirmar",
   "orchestra.schedule.agents.title": "Criadas por agentes",

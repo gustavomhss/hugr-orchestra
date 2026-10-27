@@ -75,7 +75,7 @@ for (const scheme of ["dark", "light"] as const) {
       .locator('[data-component="orchestra-sidebar"]')
       .getByRole("button", { name: "Home", exact: true })
       .click()
-    await page.getByRole("button", { name: "Choose repository profile", exact: true }).click()
+    await page.getByRole("button", { name: "Choose project", exact: true }).click()
     await page.getByRole("menuitemradio").filter({ hasText: "Server B repository" }).click()
     await expect(page.locator("#orchestra-profile-name")).toHaveText("Server B repository")
     await openHomeDraft(page)
@@ -83,7 +83,7 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(workspaceTrigger(page, "Local")).toBeVisible()
 
     // A workspace the server no longer lists stops being the default after the screen reloads it.
-    await page.getByRole("button", { name: "Choose repository profile", exact: true }).click()
+    await page.getByRole("button", { name: "Choose project", exact: true }).click()
     await page.getByRole("menuitemradio").filter({ hasText: "Server A repository" }).click()
     // From a draft the switch opens Server A's own draft asynchronously; the chapter must open on that profile.
     await expect(page.locator("#orchestra-profile-name")).toHaveText("Server A repository")
@@ -113,7 +113,7 @@ test("rename stays local to the profile, survives reload and resets to the folde
     "Not reported by this server",
   )
   await expect(dialog.locator(".mx-dialog-head p")).toHaveText(
-    "Placement for this profile's work. New workspaces are git worktrees of this repository.",
+    "Placement for this project's work. New workspaces are git worktrees of this repository.",
   )
   await expect(dialog.getByRole("textbox", { name: "Directory", exact: true })).toHaveValue(sandboxes[1])
   await expect(dialog.getByRole("textbox", { name: "Directory", exact: true })).toHaveAttribute("readonly", "")
@@ -336,7 +336,7 @@ test("same paths on a second server remain isolated while a first-server respons
   await expect(chapter.getByRole("status")).toHaveText("Loading workspaces…")
   await expect(chapter.getByRole("button", { name: "New workspace", exact: true })).toBeDisabled()
   await expect.poll(() => mock.pending.length).toBeGreaterThan(0)
-  await page.getByRole("button", { name: "Choose repository profile", exact: true }).click()
+  await page.getByRole("button", { name: "Choose project", exact: true }).click()
   await page.getByRole("menuitemradio").filter({ hasText: "Server B repository" }).click()
   await expect(chapter.locator(".mx-card")).toHaveCount(2)
   await expect(chapter.locator(".mx-card code")).toHaveText([root, sandboxes[1]])

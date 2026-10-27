@@ -94,7 +94,7 @@ test("creates a session in a new project, connects OpenCode Go, and selects its 
   })
 
   await page.goto("/")
-  const profile = page.getByRole("button", { name: "Choose repository profile", exact: true })
+  const profile = page.getByRole("button", { name: "Choose project", exact: true })
   await expect(profile).toHaveCount(1)
   await expectAppVisible(profile)
   await expect(profile).toContainText("Choose a project")

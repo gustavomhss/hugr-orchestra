@@ -12,7 +12,7 @@ export const WORKSPACES_COPY = {
   "orchestra.workspaces.retry": "Try again",
   "orchestra.workspaces.dialog.configure": "Configure {{name}}",
   "orchestra.workspaces.dialog.description":
-    "Placement for this profile's work. New workspaces are git worktrees of this repository.",
+    "Placement for this project's work. New workspaces are git worktrees of this repository.",
   "orchestra.workspaces.dialog.close": "Close dialog",
   "orchestra.workspaces.field.name": "Name",
   "orchestra.workspaces.field.directory": "Directory",
@@ -50,7 +50,7 @@ export const WORKSPACES_COPY_BR: Record<keyof typeof WORKSPACES_COPY, string> = 
   "orchestra.workspaces.retry": "Tentar de novo",
   "orchestra.workspaces.dialog.configure": "Configurar {{name}}",
   "orchestra.workspaces.dialog.description":
-    "Local de execução do trabalho deste perfil. Novos workspaces são worktrees git deste repositório.",
+    "Local de execução do trabalho deste projeto. Novos workspaces são worktrees git deste repositório.",
   "orchestra.workspaces.dialog.close": "Fechar diálogo",
   "orchestra.workspaces.field.name": "Nome",
   "orchestra.workspaces.field.directory": "Diretório",

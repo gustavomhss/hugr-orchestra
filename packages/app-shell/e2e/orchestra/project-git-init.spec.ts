@@ -71,7 +71,7 @@ async function openMockedApp(page: Page, root: unknown[]) {
 }
 
 function profileButton(page: Page) {
-  return page.getByRole("button", { name: "Choose repository profile", exact: true })
+  return page.getByRole("button", { name: "Choose project", exact: true })
 }
 
 async function chooseFolder(page: Page) {

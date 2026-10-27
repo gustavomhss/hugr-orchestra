@@ -298,7 +298,7 @@ async function openAddress(page: Page, url: string) {
 }
 
 async function chooseProfile(page: Page, name: string) {
-  await page.getByRole("button", { name: "Choose repository profile" }).click()
+  await page.getByRole("button", { name: "Choose project" }).click()
   await page.getByRole("menuitemradio", { name, exact: true }).click()
   await expect(page.locator('[data-slot="orchestra-profile"]')).toContainText(name)
 }

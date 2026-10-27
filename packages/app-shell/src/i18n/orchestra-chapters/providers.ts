@@ -1,13 +1,13 @@
 // Copy owned by the providers screen. Add new keys here instead of i18n/orchestra.ts so screens merge without conflicts.
 export const PROVIDERS_COPY = {
   "orchestra.providers.eyebrow": "{{profile}} · Configuration",
-  "orchestra.providers.description": "Choose how this profile reaches its models.",
+  "orchestra.providers.description": "Choose how this project reaches its models.",
   "orchestra.providers.connect": "Connect provider",
   "orchestra.providers.search": "Search providers",
   "orchestra.providers.searchLabel": "Search Providers",
   "orchestra.providers.route": "Route for new turns",
   "orchestra.providers.route.placeholder": "Choose a connected provider",
-  "orchestra.providers.route.scope": "Saved in this server's config, so it applies to every profile on this server.",
+  "orchestra.providers.route.scope": "Saved in this server's config, so it applies to every project on this server.",
   "orchestra.providers.route.server": "This server routes new turns to {{provider}} from its own configuration.",
   "orchestra.providers.route.serverUnknown":
     "This server chooses the route for new turns from its own configuration; it cannot be changed here.",
@@ -20,7 +20,7 @@ export const PROVIDERS_COPY = {
   "orchestra.providers.popular.empty": "Every popular provider is already listed above.",
   "orchestra.providers.note.models": "Models available: {{count}}",
   "orchestra.providers.loading": "Loading providers…",
-  "orchestra.providers.error": "Could not load providers for this profile.",
+  "orchestra.providers.error": "Could not load providers for this project.",
   "orchestra.providers.notReady": "The server is not ready yet, so providers cannot load. Check that it is running.",
   "orchestra.providers.retry": "Try again",
   "orchestra.providers.noMatches": "No providers match your search.",
@@ -36,7 +36,7 @@ export const PROVIDERS_COPY = {
   "orchestra.providers.disconnectDialog.title": "Disconnect {{provider}}?",
   "orchestra.providers.disconnectDialog.description": "This removes the stored key or sign-in for {{provider}}.",
   "orchestra.providers.custom.description":
-    "Add an OpenAI-compatible endpoint. It is saved in this server's config, for every profile.",
+    "Add an OpenAI-compatible endpoint. It is saved in this server's config, for every project.",
   "orchestra.providers.custom.name": "Name",
   "orchestra.providers.custom.endpoint": "Base URL",
   "orchestra.providers.custom.model": "Model ID",
@@ -68,13 +68,13 @@ export const PROVIDERS_COPY = {
 
 export const PROVIDERS_COPY_BR: Record<keyof typeof PROVIDERS_COPY, string> = {
   "orchestra.providers.eyebrow": "{{profile}} · Configuração",
-  "orchestra.providers.description": "Escolha como este perfil acessa os modelos.",
+  "orchestra.providers.description": "Escolha como este projeto acessa os modelos.",
   "orchestra.providers.connect": "Conectar provedor",
   "orchestra.providers.search": "Buscar provedores",
   "orchestra.providers.searchLabel": "Buscar provedores",
   "orchestra.providers.route": "Rota para novos turnos",
   "orchestra.providers.route.placeholder": "Escolha um provedor conectado",
-  "orchestra.providers.route.scope": "Salvo na configuração deste servidor, então vale para todos os perfis deste servidor.",
+  "orchestra.providers.route.scope": "Salvo na configuração deste servidor, então vale para todos os projetos deste servidor.",
   "orchestra.providers.route.server": "Este servidor direciona os novos turnos para {{provider}} pela própria configuração.",
   "orchestra.providers.route.serverUnknown":
     "Este servidor escolhe a rota dos novos turnos pela própria configuração; ela não pode ser alterada aqui.",
@@ -87,7 +87,7 @@ export const PROVIDERS_COPY_BR: Record<keyof typeof PROVIDERS_COPY, string> = {
   "orchestra.providers.popular.empty": "Todos os provedores populares já estão listados acima.",
   "orchestra.providers.note.models": "Modelos disponíveis: {{count}}",
   "orchestra.providers.loading": "Carregando provedores…",
-  "orchestra.providers.error": "Não foi possível carregar os provedores deste perfil.",
+  "orchestra.providers.error": "Não foi possível carregar os provedores deste projeto.",
   "orchestra.providers.notReady": "O servidor ainda não está pronto, então os provedores não carregam. Verifique se ele está em execução.",
   "orchestra.providers.retry": "Tentar de novo",
   "orchestra.providers.noMatches": "Nenhum provedor corresponde à sua busca.",
@@ -103,7 +103,7 @@ export const PROVIDERS_COPY_BR: Record<keyof typeof PROVIDERS_COPY, string> = {
   "orchestra.providers.disconnectDialog.title": "Desconectar {{provider}}?",
   "orchestra.providers.disconnectDialog.description": "Isso remove a chave ou o login salvo para {{provider}}.",
   "orchestra.providers.custom.description":
-    "Adicione um endpoint compatível com OpenAI. Ele é salvo na configuração deste servidor, para todos os perfis.",
+    "Adicione um endpoint compatível com OpenAI. Ele é salvo na configuração deste servidor, para todos os projetos.",
   "orchestra.providers.custom.name": "Nome",
   "orchestra.providers.custom.endpoint": "URL base",
   "orchestra.providers.custom.model": "ID do modelo",
