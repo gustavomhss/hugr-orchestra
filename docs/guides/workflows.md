@@ -1,5 +1,7 @@
 # Workflows
 
+New to Orchestra? Start with [Getting started](getting-started.md).
+
 A workflow is a plan that Maestro follows step by step. An agent does each step, and the checks you define decide when a step passes and the next one may start. You author workflows in the **Workflows** page. Maestro starts and runs them.
 
 ## Maestro runs workflows
@@ -54,5 +56,5 @@ A failed run shows the step that stopped it and the reason. Open the step in the
 ## Limits
 
 - Human approval steps cannot run yet. Remove them before you publish.
-- Hooks are a different feature. A hook records what happens in a session and can ask before a command. A workflow is what gates a run. See the Hooks page.
+- Hooks are a different feature. A hook records what happens in a session and can ask before a command. A workflow is what gates a run. See [Hooks](hooks.md).
 - Runs are read in the app. Release, rerun and cancel happen in Maestro's chat.

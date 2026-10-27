@@ -5,7 +5,7 @@ description: How a person gets from first launch to their first Maestro chat - c
 
 # Onboarding usage
 
-For anyone driving or explaining the first run. The user guide is `docs/guides/first-run.md`; trust details are in `docs/guides/mcp-project-trust.md`.
+For anyone driving or explaining the first run. The user guide is `docs/guides/first-run.md`; trust details are in `docs/guides/mcp-project-trust.md`. The five-minute overview, which links every per-area guide, is `docs/guides/getting-started.md`. Keep it in step with this skill.
 
 ## The path
 
@@ -24,6 +24,13 @@ For anyone driving or explaining the first run. The user guide is `docs/guides/f
 ## Where Providers is
 
 The sidebar does not list Providers. Use the "Open Providers" link on the folder and model steps, or Settings. A "Back to your task" button shows when Providers was opened from a task.
+
+## After the first chat
+
+- The sidebar shows Home, Chat, Projects (the board), Agents and Checks. Everything else is in the collapsible Advanced group.
+- Screen words: Context savings (not Lean), Checks (not Actions), History (not Genesis), project (not profile). Use them when you explain the app.
+- Stop works while a permission or question is pending. The permission dock says what is asked.
+- The command palette has a "Getting started guide" entry that opens `docs/guides/getting-started.md`. The URL is `GETTING_STARTED_URL` in `orchestra/shell/navigation-commands.tsx`; change it there if the repository moves.
 
 ## Checking it by hand
 

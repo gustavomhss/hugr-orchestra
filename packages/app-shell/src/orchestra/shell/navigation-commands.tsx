@@ -6,6 +6,7 @@ import { useCommand } from "@/context/command"
 import { useGlobal } from "@/context/global"
 import { useLayout } from "@/context/layout"
 import { useLanguage } from "@/context/language"
+import { usePlatform } from "@/context/platform"
 import { SDKProvider } from "@/context/sdk"
 import { ServerConnection, useServer } from "@/context/server"
 import { ServerSDKProvider } from "@/context/server-sdk"
@@ -15,10 +16,14 @@ import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
 import { createHomeController } from "@/pages/home/home-controller"
 import { homeProjectDirectories, profileProject, projectForSession } from "@/pages/layout/helpers"
 
+// The guide the app points new users at; it lives in the repository next to the other user guides.
+const GETTING_STARTED_URL = "https://github.com/gustavomhss/hugr-orchestra/blob/dev/docs/guides/getting-started.md"
+
 // Commands belong to the shell lifetime, not either responsive sidebar mount.
 export function ShellNavigationCommands() {
   const command = useCommand()
   const language = useLanguage()
+  const platform = usePlatform()
   const layout = useLayout()
   const global = useGlobal()
   const server = useServer()
@@ -203,6 +208,14 @@ export function ShellNavigationCommands() {
       },
     ]
   })
+  command.register("orchestra.help", () => [
+    {
+      id: "help.gettingStarted",
+      title: language.t("orchestra.shell.gettingStarted"),
+      category: language.t("orchestra.shell.help"),
+      onSelect: () => platform.openExternal(GETTING_STARTED_URL),
+    },
+  ])
   command.register("orchestra.relay", () =>
     [
       {

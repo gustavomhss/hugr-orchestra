@@ -5,7 +5,7 @@ description: How workflows are used in the app — running one through Maestro's
 
 # Relay workflows usage
 
-For anyone using or guiding someone through the Workflows page. The user guide is `docs/guides/workflows.md`. Code: `packages/app-shell/src/orchestra/relay/`.
+For anyone using or guiding someone through the Workflows page. The user guides are `docs/guides/workflows.md` and, for hooks, `docs/guides/hooks.md`. New users start at `docs/guides/getting-started.md`. Code: `packages/app-shell/src/orchestra/relay/`.
 
 ## Running a workflow
 
@@ -32,3 +32,11 @@ For anyone using or guiding someone through the Workflows page. The user guide i
 ## Checking the UI copy
 
 - Run labels come from `orchestra.workflows.row.*` and `orchestra.workflows.editor.run`. Prompts come from `orchestra.workflows.run.prompt` and `orchestra.workflows.useInChat.prompt`. Tests: `chat.test.ts` and `templates.test.ts` in the relay folder.
+
+## Hooks
+
+- Hooks are a different feature from workflows: a hook watches one agent event and blocks, asks, reminds or records. It does not plan or gate a run. Workflows are what Maestro runs.
+- A hook goes draft, published, installed. The list row has **Publish and install**. The editor publishes first, then the install switch turns on. Publishing again does not change an installed copy until it is updated.
+- The four templates are Protect generated files, Ask before risky commands, Check at session stop and Remind on every edit. Check at session stop only records and starts with `bun typecheck`; tell users to change it. Gating a finish needs a workflow.
+- Scope is the whole project. Hooks cannot be imported. Activity does not store shell command or prompt text.
+- Copy: `packages/app-shell/src/i18n/orchestra-chapters/hooks.ts`. Templates: `orchestra/relay/presets.ts`.

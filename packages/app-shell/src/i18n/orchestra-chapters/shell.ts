@@ -2,6 +2,8 @@
 export const SHELL_COPY = {
   "orchestra.shell.navigation": "Navigation",
   "orchestra.shell.goHome": "Go home",
+  "orchestra.shell.gettingStarted": "Getting started guide",
+  "orchestra.shell.help": "Help",
   "orchestra.shell.server.invalid": "Enter a valid server URL.",
   "orchestra.shell.server.failed": "Could not connect. Check the server URL and credentials.",
   "orchestra.shell.server.lost": "Lost connection to the server. Retrying…",
@@ -58,6 +60,8 @@ export const SHELL_COPY = {
 export const SHELL_COPY_BR: Record<keyof typeof SHELL_COPY, string> = {
   "orchestra.shell.navigation": "Navegação",
   "orchestra.shell.goHome": "Ir para o início",
+  "orchestra.shell.gettingStarted": "Guia de primeiros passos",
+  "orchestra.shell.help": "Ajuda",
   "orchestra.shell.server.invalid": "Digite uma URL de servidor válida.",
   "orchestra.shell.server.failed": "Não foi possível conectar. Verifique a URL do servidor e as credenciais.",
   "orchestra.shell.server.lost": "Conexão com o servidor perdida. Tentando de novo…",

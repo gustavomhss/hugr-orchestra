@@ -1,5 +1,6 @@
 # User guides
 
+- [Getting started: your first five minutes](getting-started.md)
 - [First run: folder, trust, model](first-run.md)
 - [Database backups and restore](database-backups.md)
 - [Settings: global sections, trusted projects and MCP fields](settings.md)
@@ -15,3 +16,4 @@
 - [Permissions and saved rules](permissions.md)
 - [Environment variables and logs](environment.md)
 - [Workflows: run, release and templates](workflows.md)
+- [Hooks: rules that watch what agents do](hooks.md)
