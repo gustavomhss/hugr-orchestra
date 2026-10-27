@@ -6,17 +6,17 @@ import { mapClientError } from "./client-error"
 
 type RawClient = HttpApiClient.ForApi<typeof ClientApi>
 
-type Endpoint36_0Request = Parameters<RawClient["server.actionsWorkflow"]["actions.workflow.list"]>[0]
-type Endpoint36_0Input = {
-  readonly bindingID: Endpoint36_0Request["params"]["bindingID"]
-  readonly location?: Endpoint36_0Request["query"]["location"]
-  readonly revision: Endpoint36_0Request["query"]["revision"]
-  readonly cursor?: Endpoint36_0Request["query"]["cursor"]
-  readonly limit?: Endpoint36_0Request["query"]["limit"]
-  readonly query?: Endpoint36_0Request["query"]["query"]
-  readonly state?: Endpoint36_0Request["query"]["state"]
+type Endpoint37_0Request = Parameters<RawClient["server.actionsWorkflow"]["actions.workflow.list"]>[0]
+type Endpoint37_0Input = {
+  readonly bindingID: Endpoint37_0Request["params"]["bindingID"]
+  readonly location?: Endpoint37_0Request["query"]["location"]
+  readonly revision: Endpoint37_0Request["query"]["revision"]
+  readonly cursor?: Endpoint37_0Request["query"]["cursor"]
+  readonly limit?: Endpoint37_0Request["query"]["limit"]
+  readonly query?: Endpoint37_0Request["query"]["query"]
+  readonly state?: Endpoint37_0Request["query"]["state"]
 }
-const Endpoint36_0 = (raw: RawClient["server.actionsWorkflow"]) => (input: Endpoint36_0Input) =>
+const Endpoint37_0 = (raw: RawClient["server.actionsWorkflow"]) => (input: Endpoint37_0Input) =>
   raw["actions.workflow.list"]({
     params: { bindingID: input["bindingID"] },
     query: {
@@ -29,15 +29,15 @@ const Endpoint36_0 = (raw: RawClient["server.actionsWorkflow"]) => (input: Endpo
     },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint36_1Request = Parameters<RawClient["server.actionsWorkflow"]["actions.workflow.source"]>[0]
-type Endpoint36_1Input = {
-  readonly bindingID: Endpoint36_1Request["params"]["bindingID"]
-  readonly location?: Endpoint36_1Request["query"]["location"]
-  readonly revision: Endpoint36_1Request["query"]["revision"]
-  readonly path: Endpoint36_1Request["query"]["path"]
-  readonly ref: Endpoint36_1Request["query"]["ref"]
+type Endpoint37_1Request = Parameters<RawClient["server.actionsWorkflow"]["actions.workflow.source"]>[0]
+type Endpoint37_1Input = {
+  readonly bindingID: Endpoint37_1Request["params"]["bindingID"]
+  readonly location?: Endpoint37_1Request["query"]["location"]
+  readonly revision: Endpoint37_1Request["query"]["revision"]
+  readonly path: Endpoint37_1Request["query"]["path"]
+  readonly ref: Endpoint37_1Request["query"]["ref"]
 }
-const Endpoint36_1 = (raw: RawClient["server.actionsWorkflow"]) => (input: Endpoint36_1Input) =>
+const Endpoint37_1 = (raw: RawClient["server.actionsWorkflow"]) => (input: Endpoint37_1Input) =>
   raw["actions.workflow.source"]({
     params: { bindingID: input["bindingID"] },
     query: {
@@ -48,15 +48,15 @@ const Endpoint36_1 = (raw: RawClient["server.actionsWorkflow"]) => (input: Endpo
     },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint36_2Request = Parameters<RawClient["server.actionsWorkflow"]["actions.workflow.graph"]>[0]
-type Endpoint36_2Input = {
-  readonly bindingID: Endpoint36_2Request["params"]["bindingID"]
-  readonly location?: Endpoint36_2Request["query"]["location"]
-  readonly revision: Endpoint36_2Request["query"]["revision"]
-  readonly path: Endpoint36_2Request["query"]["path"]
-  readonly ref: Endpoint36_2Request["query"]["ref"]
+type Endpoint37_2Request = Parameters<RawClient["server.actionsWorkflow"]["actions.workflow.graph"]>[0]
+type Endpoint37_2Input = {
+  readonly bindingID: Endpoint37_2Request["params"]["bindingID"]
+  readonly location?: Endpoint37_2Request["query"]["location"]
+  readonly revision: Endpoint37_2Request["query"]["revision"]
+  readonly path: Endpoint37_2Request["query"]["path"]
+  readonly ref: Endpoint37_2Request["query"]["ref"]
 }
-const Endpoint36_2 = (raw: RawClient["server.actionsWorkflow"]) => (input: Endpoint36_2Input) =>
+const Endpoint37_2 = (raw: RawClient["server.actionsWorkflow"]) => (input: Endpoint37_2Input) =>
   raw["actions.workflow.graph"]({
     params: { bindingID: input["bindingID"] },
     query: {
@@ -67,42 +67,42 @@ const Endpoint36_2 = (raw: RawClient["server.actionsWorkflow"]) => (input: Endpo
     },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint36_3Request = Parameters<RawClient["server.actionsWorkflow"]["actions.workflow.dispatch"]>[0]
-type Endpoint36_3Input = {
-  readonly bindingID: Endpoint36_3Request["params"]["bindingID"]
-  readonly workflowID: Endpoint36_3Request["params"]["workflowID"]
-  readonly location?: Endpoint36_3Request["query"]["location"]
-  readonly revision: Endpoint36_3Request["query"]["revision"]
-  readonly id: Endpoint36_3Request["payload"]["id"]
-  readonly input: Endpoint36_3Request["payload"]["input"]
+type Endpoint37_3Request = Parameters<RawClient["server.actionsWorkflow"]["actions.workflow.dispatch"]>[0]
+type Endpoint37_3Input = {
+  readonly bindingID: Endpoint37_3Request["params"]["bindingID"]
+  readonly workflowID: Endpoint37_3Request["params"]["workflowID"]
+  readonly location?: Endpoint37_3Request["query"]["location"]
+  readonly revision: Endpoint37_3Request["query"]["revision"]
+  readonly id: Endpoint37_3Request["payload"]["id"]
+  readonly input: Endpoint37_3Request["payload"]["input"]
 }
-const Endpoint36_3 = (raw: RawClient["server.actionsWorkflow"]) => (input: Endpoint36_3Input) =>
+const Endpoint37_3 = (raw: RawClient["server.actionsWorkflow"]) => (input: Endpoint37_3Input) =>
   raw["actions.workflow.dispatch"]({
     params: { bindingID: input["bindingID"], workflowID: input["workflowID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
     payload: { id: input["id"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint36_4Request = Parameters<RawClient["server.actionsWorkflow"]["actions.workflow.state"]>[0]
-type Endpoint36_4Input = {
-  readonly bindingID: Endpoint36_4Request["params"]["bindingID"]
-  readonly workflowID: Endpoint36_4Request["params"]["workflowID"]
-  readonly location?: Endpoint36_4Request["query"]["location"]
-  readonly revision: Endpoint36_4Request["query"]["revision"]
-  readonly id: Endpoint36_4Request["payload"]["id"]
-  readonly input: Endpoint36_4Request["payload"]["input"]
+type Endpoint37_4Request = Parameters<RawClient["server.actionsWorkflow"]["actions.workflow.state"]>[0]
+type Endpoint37_4Input = {
+  readonly bindingID: Endpoint37_4Request["params"]["bindingID"]
+  readonly workflowID: Endpoint37_4Request["params"]["workflowID"]
+  readonly location?: Endpoint37_4Request["query"]["location"]
+  readonly revision: Endpoint37_4Request["query"]["revision"]
+  readonly id: Endpoint37_4Request["payload"]["id"]
+  readonly input: Endpoint37_4Request["payload"]["input"]
 }
-const Endpoint36_4 = (raw: RawClient["server.actionsWorkflow"]) => (input: Endpoint36_4Input) =>
+const Endpoint37_4 = (raw: RawClient["server.actionsWorkflow"]) => (input: Endpoint37_4Input) =>
   raw["actions.workflow.state"]({
     params: { bindingID: input["bindingID"], workflowID: input["workflowID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
     payload: { id: input["id"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 
-export const adaptGroup36 = (raw: RawClient["server.actionsWorkflow"]) => ({
-  list: Endpoint36_0(raw),
-  source: Endpoint36_1(raw),
-  graph: Endpoint36_2(raw),
-  dispatch: Endpoint36_3(raw),
-  state: Endpoint36_4(raw),
+export const adaptGroup37 = (raw: RawClient["server.actionsWorkflow"]) => ({
+  list: Endpoint37_0(raw),
+  source: Endpoint37_1(raw),
+  graph: Endpoint37_2(raw),
+  dispatch: Endpoint37_3(raw),
+  state: Endpoint37_4(raw),
 })

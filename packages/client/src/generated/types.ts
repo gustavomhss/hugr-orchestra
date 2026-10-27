@@ -5403,6 +5403,16 @@ export type ConfigShellsOutput = ReadonlyArray<{
   readonly acceptable: boolean
 }>
 
+export type ServerTrustListOutput = ReadonlyArray<string>
+
+export type ServerTrustApproveInput = { readonly directory: { readonly directory: string }["directory"] }
+
+export type ServerTrustApproveOutput = void
+
+export type ServerTrustRevokeInput = { readonly directory: { readonly directory: string }["directory"] }
+
+export type ServerTrustRevokeOutput = void
+
 export type ServerBoardListInput = { readonly archived?: { readonly archived?: boolean | undefined }["archived"] }
 
 export type ServerBoardListOutput = ReadonlyArray<{
