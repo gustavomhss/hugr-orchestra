@@ -4,17 +4,13 @@ import { miniOptions } from "./mini-options"
 import { miniArgs } from "./run"
 import { prepare } from "./attach"
 
-const base = { mini: true, replay: false, "no-replay": false, "replay-limit": Option.none<number>(), demo: false }
+const base = { mini: true, "no-replay": false, "replay-limit": Option.none<number>(), demo: false }
 
 describe("mini replay and demo flags", () => {
   test("--no-replay hides the history and is passed on", () => {
     expect(miniOptions({ ...base, "no-replay": true })).toEqual({ replay: false })
     expect(miniOptions(base)).toEqual({})
     expect(() => miniOptions({ ...base, mini: false, "no-replay": true })).toThrow("--no-replay requires --mini")
-  })
-
-  test("--replay alone is refused because replay is the default", () => {
-    expect(() => miniOptions({ ...base, replay: true })).toThrow("--replay is not supported; replay is enabled by default")
   })
 
   test("--replay-limit needs --mini and a positive integer", () => {

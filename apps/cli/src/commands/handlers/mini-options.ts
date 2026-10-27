@@ -2,16 +2,14 @@ import { Option } from "effect"
 
 /**
  * The mini-mode choices around session history and demo mode: replay is on by default,
- * `--replay` alone is refused, and every other mini flag needs `--mini`.
+ * and every mini flag needs `--mini`.
  */
 export function miniOptions(input: {
   readonly mini: boolean
-  readonly replay: boolean
   readonly "no-replay": boolean
   readonly "replay-limit": Option.Option<number>
   readonly demo?: boolean
 }) {
-  if (input.replay) throw new Error("--replay is not supported; replay is enabled by default")
   const limit = Option.getOrUndefined(input["replay-limit"])
   const unsupported = [
     ["--no-replay", input["no-replay"]],

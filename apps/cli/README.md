@@ -24,9 +24,14 @@ The command families currently defined in `commands.ts` are:
 - `debug agents` and `debug symbols`: inspect agents and extract source symbols.
 - `service start`, `restart`, `status`, `stop`, and `password`: manage or inspect
   the background server and its credential.
-- `serve`: start the v2 API server; hostname defaults to `127.0.0.1`, and port
-  selection starts at 4096 when omitted. `--register` publishes it to the service
-  registration file.
+- `web`: for people. Starts the server and opens the web interface in a browser.
+- `serve`: for scripts and headless use. Starts the v2 API server without a browser;
+  hostname defaults to `127.0.0.1`, and port selection starts at 4096 when omitted.
+  `--register` publishes it to the service registration file.
+- `attach <url>`: for clients connecting to a server that is already running.
+- `api`, `debug`, `acp` and `toolkit` are internal: they are hidden from the
+  top-level `--help` but still run when called by name. `run` shows its common
+  flags in `--help`; the others are hidden in the same way.
 
 Without a subcommand, the CLI obtains a Daemon transport, starts the background
 server when needed, and launches the TUI with that transport.

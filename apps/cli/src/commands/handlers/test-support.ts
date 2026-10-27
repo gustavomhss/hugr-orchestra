@@ -2,17 +2,25 @@ import { Effect } from "effect"
 import { Orchestra } from "@orchestra/client"
 import { Daemon } from "../../services/daemon"
 
-export async function withCapturedStdout(run: () => Promise<void>): Promise<string> {
-  const original = process.stdout.write
+export function withCapturedStdout(run: () => Promise<void>): Promise<string> {
+  return withCaptured(process.stdout, run)
+}
+
+export function withCapturedStderr(run: () => Promise<void>): Promise<string> {
+  return withCaptured(process.stderr, run)
+}
+
+async function withCaptured(stream: NodeJS.WriteStream, run: () => Promise<void>): Promise<string> {
+  const original = stream.write
   let out = ""
-  process.stdout.write = ((chunk: string | Uint8Array) => {
+  stream.write = ((chunk: string | Uint8Array) => {
     out += typeof chunk === "string" ? chunk : new TextDecoder().decode(chunk)
     return true
-  }) as typeof process.stdout.write
+  }) as typeof stream.write
   try {
     await run()
   } finally {
-    process.stdout.write = original
+    stream.write = original
   }
   return out
 }
