@@ -11,7 +11,8 @@ import { buildSnapshotScript, buildClickScript, buildTypeScript } from "./app-do
 type Case = { id: string; status: "pass"; detail: string }
 const required = ["T01", "T02", "T03", "T04", "T05", "T06", "T07", "T08"]
 const root = resolve(import.meta.dir, "../..")
-const artifact = join(process.env.APP_DOCK_ARTIFACT_ROOT ?? root, "artifacts/app-dock-tools/s1.json")
+const artifactRoot = process.env.APP_DOCK_ARTIFACT_ROOT ?? root
+const artifact = join(artifactRoot, "artifacts/app-dock-tools/s1.json")
 const cases: Case[] = []
 
 const check = (condition: unknown, message: string) => {
@@ -191,10 +192,10 @@ async function parent() {
     check(result.success && result.outputs[0], "bundle failed")
     const entry = join(outdirOf(result), "app-dock-tools.test.cjs")
     await access(entry)
-    const electronModule = createRequire(join(process.cwd(), "package.json")).resolve("electron")
-    const electron = join(dirname(electronModule), "dist/Electron.app/Contents/MacOS/Electron")
+    const electronDir = dirname(createRequire(join(process.cwd(), "package.json")).resolve("electron"))
+    const electron = join(electronDir, "dist", (await readFile(join(electronDir, "path.txt"), "utf8")).trim())
     await access(electron)
-    const env = { ...process.env, APP_DOCK_ARTIFACT_ROOT: root, ELECTRON_DISABLE_SECURITY_WARNINGS: "true" }
+    const env = { ...process.env, APP_DOCK_ARTIFACT_ROOT: artifactRoot, ELECTRON_DISABLE_SECURITY_WARNINGS: "true" }
     await rm(artifact, { force: true })
     const child = spawn(electron, [entry, "--app-dock-tools-child"], { stdio: ["ignore", "pipe", "pipe"], env })
     const exitResult = await new Promise<{ code: number | null }>((resolveProcess, reject) => {

@@ -17,7 +17,8 @@ import {
 
 const required = Array.from({ length: 33 }, (_, index) => `U${String(index + 1).padStart(2, "0")}`)
 const root = resolve(import.meta.dir, "../..")
-const artifact = join(process.env.APP_DOCK_ARTIFACT_ROOT ?? root, "artifacts/app-dock/s1.json")
+const artifactRoot = process.env.APP_DOCK_ARTIFACT_ROOT ?? root
+const artifact = join(artifactRoot, "artifacts/app-dock/s1.json")
 const schemes = ["http://127.0.0.1/", "file:///etc/passwd", "javascript:document.title='pwned'", "data:text/html,pwned"]
 const cacheableBody = `cacheable fixture${"x".repeat(1_000_000)}`
 type Case = { id: string; status: "pass"; detail: string }
@@ -72,8 +73,8 @@ async function parent() {
       )
     }
   }
-  const electronModule = createRequire(join(process.cwd(), "package.json")).resolve("electron")
-  const electron = join(dirname(electronModule), "dist/Electron.app/Contents/MacOS/Electron")
+  const electronDir = dirname(createRequire(join(process.cwd(), "package.json")).resolve("electron"))
+  const electron = join(electronDir, "dist", (await readFile(join(electronDir, "path.txt"), "utf8")).trim())
   await access(electron)
   const { ELECTRON_RUN_AS_NODE: _electronRunAsNode, NODE_OPTIONS, APP_DOCK_LOAD_ONLY: _loadOnly, ...env } = process.env
   const safeNodeOptions = NODE_OPTIONS?.includes("ELECTRON_RUN_AS_NODE") ? undefined : NODE_OPTIONS
@@ -142,7 +143,7 @@ async function parent() {
         ...(safeNodeOptions ? { NODE_OPTIONS: safeNodeOptions } : {}),
         ...(loadOnly ? { APP_DOCK_LOAD_ONLY: "1" } : {}),
         APP_DOCK_RESTART_CASES: restartStages.join(","),
-        APP_DOCK_ARTIFACT_ROOT: root,
+        APP_DOCK_ARTIFACT_ROOT: artifactRoot,
         ELECTRON_DISABLE_SECURITY_WARNINGS: "true",
       },
     },
@@ -166,7 +167,7 @@ async function parent() {
   })
   clearTimeout(timeout)
   if (!startupOnly && !loadOnly && exitResult.code === 0) {
-    const reportPath = join(root, "artifacts/app-dock/s1.json")
+    const reportPath = artifact
     try {
       const report = JSON.parse(await readFile(reportPath, "utf8"))
       check(
@@ -189,7 +190,7 @@ async function parent() {
             typeof screenshot === "string" && screenshot.length > 0 && isAbsolute(screenshot),
             "Invalid App Dock screenshot path",
           )
-          check(resolve(screenshot).startsWith(`${root}/`), "App Dock screenshot escapes artifact root")
+          check(resolve(screenshot).startsWith(`${artifactRoot}/`), "App Dock screenshot escapes artifact root")
           const png = await readFile(screenshot)
           check(
             png.length > 8 && png.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),

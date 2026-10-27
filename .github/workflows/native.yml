@@ -137,3 +137,46 @@ jobs:
           APP_DOCK_RUNTIME_INTEGRATION: "1"
           APP_DOCK_RUNTIME_TEST_TMP: ${{ runner.temp }}/orchestra
         run: bun test --timeout 1200000 src/main/app-dock-runtime.test.ts
+
+  # The App Dock security, RPC and tools harnesses: each bundles and launches a real Electron against local fixtures
+  # (a local https server, no internet, no model) and writes its artifact JSON under APP_DOCK_ARTIFACT_ROOT. A failure
+  # sets a non-zero exit code. The live and YouTube harnesses need a model and the internet, so they stay manual.
+  app-dock:
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: apps/desktop
+    env:
+      APP_DOCK_ARTIFACT_ROOT: ${{ runner.temp }}/app-dock
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Bun
+        uses: ./.github/actions/setup-bun
+
+      # Electron runs under a virtual X display; the harnesses start it with the same xvfb-run wrapper as the native suites.
+      - name: Linux GUI display capability
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb
+
+      - name: Security harness
+        run: xvfb-run -a bun run test:app-dock:e2e
+
+      - name: RPC harness
+        if: ${{ !cancelled() }}
+        run: xvfb-run -a bun run test:app-dock:rpc
+
+      - name: Tools harness
+        if: ${{ !cancelled() }}
+        run: xvfb-run -a bun run test:app-dock:tools
+
+      - name: Preserve App Dock artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: app-dock-artifacts-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/app-dock
+          if-no-files-found: ignore
+          retention-days: 7
