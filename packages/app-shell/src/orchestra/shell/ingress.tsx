@@ -10,6 +10,7 @@ import {
   collectOpenProjectDeepLinks,
   listenDeepLinks,
   parseDeepLink,
+  parseLiveDeepLink,
   parseNewSessionDeepLink,
 } from "@/pages/layout/deep-links"
 import { showToast } from "@/utils/toast"
@@ -25,7 +26,7 @@ export function NewShellIngress() {
     onCleanup(
       listenDeepLinks(window, (urls: string[]) => {
         urls
-          .filter((url) => !parseDeepLink(url) && !parseNewSessionDeepLink(url))
+          .filter((url) => !parseDeepLink(url) && !parseNewSessionDeepLink(url) && !parseLiveDeepLink(url))
           .forEach(() =>
             showToast({
               variant: "error",
@@ -33,6 +34,15 @@ export function NewShellIngress() {
               description: language.t("orchestra.shell.link.unsupported"),
             }),
           )
+        // The live screen needs no project, so it routes before the server lookup.
+        urls.map(parseLiveDeepLink).forEach((link) => {
+          if (!link) return
+          navigate(
+            link.meeting
+              ? `/orchestra/flight-engineer/meetings/${encodeURIComponent(link.meeting)}`
+              : "/orchestra/flight-engineer",
+          )
+        })
         // Native paths belong to the local server, never a selected remote profile.
         const conn =
           global.servers.list().find(ServerConnection.builtin) ?? global.servers.list().find(ServerConnection.local)

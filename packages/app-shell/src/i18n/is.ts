@@ -937,6 +937,7 @@ export const dict = {
   "live.start.reason.no-key": "Bættu fyrst við lykli fyrir tal í texta í stillingunum",
   "live.start.reason.server": "Staðbundni netþjónninn svaraði ekki",
   "live.start.reason.capture": "Hljóðupptaka gat ekki hafist. Athugaðu heimildir fyrir hljóðnema og skjáupptöku.",
+  "live.start.reason.permission": "Leyfðu fyrst aðgang að hljóðnema í Kerfisstillingum",
   "settings.general.row.language.title": "Tungumál",
   "settings.general.row.language.description": "Breyttu skjátungumálinu fyrir HuGR Orchestra",
   "settings.general.row.shell.title": "Skel skjáhermis",

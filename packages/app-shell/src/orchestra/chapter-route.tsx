@@ -17,6 +17,7 @@ export type ChapterPageProps = { server: ServerConnection.Any; directory: string
 // Implemented chapters register their page here (lazy). Navigation opens a page only for
 // registered chapters; every other chapter keeps its pending-rework dialog.
 export const chapterPages: Partial<Record<string, Component<ChapterPageProps>>> = {
+  "flight-engineer": lazy(() => import("./chapters/flight-engineer/flight-engineer")),
   lean: lazy(() => import("./chapters/lean")),
   mcp: lazy(() => import("./chapters/mcp")),
   skills: lazy(() => import("./chapters/skills")),
@@ -39,7 +40,7 @@ export const chapterPages: Partial<Record<string, Component<ChapterPageProps>>> 
 }
 
 // These chapters span the whole server, so they render without a project (with an empty directory).
-const serverWideChapters = ["settings", "providers", "shortcuts", "board"]
+const serverWideChapters = ["settings", "providers", "shortcuts", "board", "flight-engineer"]
 
 const ChapterEmpty = lazy(() => import("./chapter-empty"))
 

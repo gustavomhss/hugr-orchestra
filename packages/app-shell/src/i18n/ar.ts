@@ -860,6 +860,7 @@ export const dict = {
   "live.start.reason.no-key": "أضف مفتاح تحويل الكلام إلى نص في الإعدادات أولاً",
   "live.start.reason.server": "لم يستجب الخادم المحلي",
   "live.start.reason.capture": "تعذر بدء التقاط الصوت. تحقق من أذونات الميكروفون وتسجيل الشاشة.",
+  "live.start.reason.permission": "اسمح بالوصول إلى الميكروفون في إعدادات النظام أولاً",
   "settings.general.row.language.title": "اللغة",
   "settings.general.row.language.description": "تغيير لغة العرض لـ HuGR Orchestra",
   "settings.general.row.shell.title": "Shell المحطة الطرفية",

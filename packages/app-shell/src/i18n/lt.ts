@@ -950,6 +950,7 @@ export const dict = {
   "live.start.reason.no-key": "Pirmiausia nustatymuose pridėkite kalbos į tekstą raktą",
   "live.start.reason.server": "Vietinis serveris neatsakė",
   "live.start.reason.capture": "Nepavyko pradėti garso įrašymo. Patikrinkite mikrofono ir ekrano įrašymo leidimus.",
+  "live.start.reason.permission": "Pirmiausia leiskite prieigą prie mikrofono Sistemos nustatymuose",
   "settings.general.row.language.title": "Kalba",
   "settings.general.row.language.description": "Pakeiskite programos HuGR Orchestra rodymo kalbą",
   "settings.general.row.shell.title": "Terminalo apvalkalas",
