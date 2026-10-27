@@ -125,7 +125,10 @@ export async function qualifyProvider(input: {
         if (!configuredAgent) throw new Error("PROVIDER_LOCATION_PRIMARY_AGENT_UNAVAILABLE")
         expect(configuredAgent.mode).toBe("primary")
         expect(configuredAgent.steps).toBe(3)
-        expect(configuredAgent.permissions).toEqual([...config.permissions, ...config.agents["distribution-proof"].permissions])
+        const configuredRules = [...config.permissions, ...config.agents["distribution-proof"].permissions]
+        expect(configuredAgent.permissions.slice(0, configuredRules.length)).toEqual(configuredRules)
+        // Maestro appends denials of its own tools and playbooks to every other agent; they may only narrow.
+        expect(configuredAgent.permissions.slice(configuredRules.length).every((rule) => rule.effect === "deny")).toBe(true)
         const created = Schema.decodeUnknownSync(Schema.Struct({ data: Session.Info }))(await daemon.api("POST", "/api/session", {
           agent: "distribution-proof", model: { providerID: "distribution", id: model }, location: { directory: box.cwd },
         })).data
