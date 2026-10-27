@@ -1,5 +1,5 @@
 import { useDialog } from "@orchestra/ui/context/dialog"
-import { createEffect, createMemo, createResource, createSignal, createUniqueId, For, type JSX, onCleanup, Show } from "solid-js"
+import { createEffect, createMemo, createResource, createSignal, For, type JSX, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { DialogConnectProvider, useProviderConnectController } from "@/components/dialog-connect-provider"
 import { useProviderDialogScope } from "@/components/settings-v2/provider-dialog-scope"
@@ -9,7 +9,7 @@ import { type ServerConnection, serverName } from "@/context/server"
 import { useServerReady, useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import { loadDefaultModel } from "@/context/global-sync/bootstrap"
-import { refetchProviderResource, resolveDefaultModel } from "@/hooks/provider-catalog"
+import { refetchProviderResource } from "@/hooks/provider-catalog"
 import { popularProviders, useProviders } from "@/hooks/use-providers"
 import { displayName } from "@/pages/layout/helpers"
 import { showToast } from "@/utils/toast"
@@ -22,7 +22,6 @@ import {
   noteKey,
   popularEntries,
   type ProviderCard,
-  routeModel,
 } from "./providers-data"
 import { ProviderBrand, ProviderConfirmDialog } from "./providers-dialogs"
 import "./providers.css"
@@ -46,11 +45,8 @@ export function ProviderList(props: {
   const sync = useServerSync()
   const ready = useServerReady()
   const providers = useProviders(() => props.directory || null)
-  const child = props.directory ? sync().child(props.directory)[0] : undefined
   const scope = useProviderDialogScope(() => props.directory || null)
   const connector = useProviderConnectController({ onBack: props.onBack })
-  // The chapter and the Settings Providers tab can be mounted together, so the note's id must be unique.
-  const routeScope = createUniqueId()
   // V2 lists only available providers and has no default-model route on every server, so read the raw catalog here.
   const [v2, v2Actions] = createResource(
     () => (ready() ? { directory: props.directory, client: sdk(), server: sdk().scope } : undefined),
@@ -77,7 +73,6 @@ export function ProviderList(props: {
   )
   const [state, setState] = createStore({
     search: "",
-    route: undefined as string | undefined,
     busy: {} as Record<string, boolean>,
   })
 
@@ -130,13 +125,6 @@ export function ProviderList(props: {
     )
   })
   const routes = createMemo(() => (data()?.cards ?? []).filter((card) => card.connected && card.models.length))
-  // A pending choice shows only while its write is in flight; afterwards the select follows the reloaded
-  // directory config, which also reveals a project-level `model` that shadows the server-wide write.
-  const route = createMemo(() => {
-    if (state.route !== undefined) return state.route
-    const preferred = resolveDefaultModel(providers.defaultModel(), (child?.config ?? sync().data.config).model)
-    return routes().find((card) => card.id === preferred?.providerID)?.id ?? ""
-  })
   const serverRoute = createMemo(() => {
     const preferred = v2Data()?.preferred
     if (!preferred) return
@@ -147,11 +135,6 @@ export function ProviderList(props: {
     await providers.refresh()
     await refetchProviderResource(v2, v2Actions, () => language.t("common.requestFailed"))
   }
-  const requestFailed = (error: unknown) =>
-    showToast({
-      title: language.t("common.requestFailed"),
-      description: errorMessage(error, language.t("common.requestFailed")),
-    })
 
   // One connect flow everywhere: the full dialog, on a provider or on its picker. show() replaces a Settings
   // dialog under its original opener, so the scope keeps this list's server and directory.
@@ -203,17 +186,6 @@ export function ProviderList(props: {
       failed: language.t("common.requestFailed"),
     })
 
-  const chooseRoute = async (id: string) => {
-    const card = routes().find((item) => item.id === id)
-    const model = card && routeModel(card, providers.default()[card.id])
-    if (!card || !model) return
-    setState("route", card.id)
-    await sync()
-      .updateConfig({ model: `${card.id}/${model}` })
-      .catch(requestFailed)
-      .finally(() => setState("route", undefined))
-  }
-
   return props.children({
     profile,
     connect: (
@@ -253,46 +225,14 @@ export function ProviderList(props: {
           </p>
         </Show>
         <Show when={data()}>
-          <Show
-            when={false}
-            fallback={
-              <div class="providers-route">
-                <span class="providers-route-label">{language.t("orchestra.providers.route")}</span>
-                <p class="mx-note" data-providers-route-server>
-                  <Show when={serverRoute()} fallback={language.t("orchestra.providers.route.serverUnknown")}>
-                    {(provider) => language.t("orchestra.providers.route.server", { provider: provider() })}
-                  </Show>
-                </p>
-              </div>
-            }
-          >
-            <div class="providers-route">
-              <label class="mx-field">
-                <span>{language.t("orchestra.providers.route")}</span>
-                <select
-                  data-providers-route
-                  disabled={state.route !== undefined}
-                  aria-describedby={routeScope}
-                  onChange={(event) => void chooseRoute(event.currentTarget.value)}
-                >
-                  {/* Selection lives on the options: a select value set before its option exists is lost. */}
-                  <option value="" selected={route() === ""}>
-                    {language.t("orchestra.providers.route.placeholder")}
-                  </option>
-                  <For each={routes()}>
-                    {(card) => (
-                      <option value={card.id} selected={card.id === route()}>
-                        {card.name}
-                      </option>
-                    )}
-                  </For>
-                </select>
-              </label>
-              <p id={routeScope} class="mx-note">
-                {language.t("orchestra.providers.route.scope")}
-              </p>
-            </div>
-          </Show>
+          <div class="providers-route">
+            <span class="providers-route-label">{language.t("orchestra.providers.route")}</span>
+            <p class="mx-note" data-providers-route-server>
+              <Show when={serverRoute()} fallback={language.t("orchestra.providers.route.serverUnknown")}>
+                {(provider) => language.t("orchestra.providers.route.server", { provider: provider() })}
+              </Show>
+            </p>
+          </div>
           <ClaudeModeSection />
           <Show when={!cards().length && state.search.trim()}>
             <div class="mx-empty" role="status">

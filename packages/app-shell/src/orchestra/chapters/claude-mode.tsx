@@ -1,10 +1,11 @@
+import { useLocation, useNavigate } from "@solidjs/router"
 import { createEffect, onCleanup, onMount, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
 import { useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
-import { setMaestroEngine } from "@/orchestra/claude-mode-entry"
+import { type ClaudeModeIntent, setMaestroEngine } from "@/orchestra/claude-mode-entry"
 import { showToast } from "@/utils/toast"
 import { readAccount, sendCode, startSignIn } from "./claude-mode-account"
 import { errorMessage } from "./providers-data"
@@ -18,11 +19,17 @@ export function ClaudeModeSection() {
   const platform = usePlatform()
   const sdk = useServerSDK()
   const sync = useServerSync()
+  const navigate = useNavigate()
+  // Set when Claude mode was chosen while signed out: the engine switches only once sign-in succeeds.
+  const intent = useLocation().state as ClaudeModeIntent | undefined
+  let switched = false
   const [state, setState] = createStore({
     // A pending choice shows only while its write is in flight, like the route select.
     engine: undefined as "orchestra" | "claude-code" | undefined,
     account: undefined as { signedIn: boolean; email?: string; subscription?: string } | undefined,
     loaded: false,
+    // The status call failed: unknown, not signed out.
+    checkFailed: false,
     signing: false,
     url: undefined as string | undefined,
     code: "",
@@ -41,9 +48,21 @@ export function ClaudeModeSection() {
   const refresh = async () => {
     const result = await readAccount(providers())
     setState("loaded", true)
-    if (!result) return
-    setState("account", result)
-    if (result.signedIn) setState({ signing: false, url: undefined, code: "", error: undefined })
+    if (!result) return setState("checkFailed", true)
+    setState({ account: result, checkFailed: false })
+    if (!result.signedIn) return
+    setState({ signing: false, url: undefined, code: "", error: undefined })
+    // Sign-in succeeded: now switch the engine, then send the person back to the task they came from.
+    if (!intent?.engine || switched) return
+    switched = true
+    await setMaestroEngine(sync(), "claude-code")
+      .then(() => {
+        if (intent.returnTo) navigate(intent.returnTo)
+      })
+      .catch((error: unknown) => {
+        switched = false
+        showToast({ title: language.t("common.requestFailed"), description: errorMessage(error, language.t("common.requestFailed")) })
+      })
   }
   onMount(() => void refresh())
   // The CLI stores the login itself, so the status is the only signal that a browser or pasted-code sign-in finished.
@@ -119,7 +138,8 @@ export function ClaudeModeSection() {
               <option value="orchestra" selected={engine() === "orchestra"}>
                 {language.t("orchestra.providers.claudeMode.engine.orchestra")}
               </option>
-              <option value="claude-code" selected={engine() === "claude-code"}>
+              {/* Claude Code is offered only with a signed-in account, so Maestro never runs on a missing login. */}
+              <option value="claude-code" selected={engine() === "claude-code"} disabled={state.account?.signedIn !== true}>
                 {language.t("orchestra.providers.claudeMode.engine.claudeCode")}
               </option>
             </select>
@@ -132,16 +152,23 @@ export function ClaudeModeSection() {
               {state.account?.signedIn
                 ? account()
                 : language.t(
-                    state.loaded
-                      ? "orchestra.providers.claudeMode.notConnected"
-                      : "orchestra.providers.claudeMode.checking",
+                    state.checkFailed
+                      ? "orchestra.providers.claudeMode.checkFailed"
+                      : state.loaded
+                        ? "orchestra.providers.claudeMode.notConnected"
+                        : "orchestra.providers.claudeMode.checking",
                   )}
             </small>
             <Show when={state.signing}>
               <small role="status">{language.t("orchestra.providers.claudeMode.waiting")}</small>
             </Show>
           </div>
-          <Show when={state.loaded && !state.account?.signedIn && !state.signing}>
+          <Show when={state.checkFailed}>
+            <button type="button" class="mx-btn" onClick={() => void refresh()}>
+              {language.t("orchestra.providers.retry")}
+            </button>
+          </Show>
+          <Show when={state.loaded && !state.checkFailed && !state.account?.signedIn && !state.signing}>
             <button type="button" class="mx-btn primary" onClick={() => void signIn()}>
               {language.t("orchestra.providers.claudeMode.signIn")}
             </button>
