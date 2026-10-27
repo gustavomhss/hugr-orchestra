@@ -358,6 +358,16 @@ jobs:
         with:
           node-version: "22"
           registry-url: https://registry.npmjs.org
+      # npm first: a failed publish leaves no release or tag, so the plan guard lets the run be repeated.
+      # Platform packages first: the wrapper pins each one exactly in optionalDependencies.
+      - name: Publish npm packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          [ -n "${NODE_AUTH_TOKEN:-}" ] || { echo "RELEASE_NPM_TOKEN_MISSING" >&2; exit 1; }
+          for package in assembled/npm-packs/humanguardrail-cli-*-"$VERSION".tgz; do npm publish "$package" --access public --provenance; done
+          npm publish "assembled/npm-packs/humanguardrail-cli-$VERSION.tgz" --access public --provenance
       - name: Create the GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -369,12 +379,3 @@ jobs:
           gh release create "v$VERSION" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "Orchestra CLI $VERSION" \
             --notes "Install with \`npm install -g @humanguardrail/cli\` or \`install.sh\` with an archive and its SHA-256 from SHA256SUMS. $SIGNING_NOTE" \
             assembled/*.tar.gz assembled/SHA256SUMS assembled/install.sh
-      # Platform packages first: the wrapper pins each one exactly in optionalDependencies.
-      - name: Publish npm packages
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          set -euo pipefail
-          [ -n "${NODE_AUTH_TOKEN:-}" ] || { echo "RELEASE_NPM_TOKEN_MISSING" >&2; exit 1; }
-          for package in assembled/npm-packs/humanguardrail-cli-*-"$VERSION".tgz; do npm publish "$package" --access public --provenance; done
-          npm publish "assembled/npm-packs/humanguardrail-cli-$VERSION.tgz" --access public --provenance

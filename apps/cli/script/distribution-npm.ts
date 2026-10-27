@@ -110,9 +110,12 @@ export async function prepareNpmDistribution(input: { payloads: string[]; out: s
       bytes: Buffer.from(launcher.get("orchestra.cjs")!.bytes.toString("utf8").replace(/^#!([^\r\n]*)\r\n/, "#!$1\n")),
       executable: process.platform !== "win32",
     })
+    // The wrapper is the package people install and read, so it carries the repository licence and notice.
+    for (const notice of ["LICENSE", "NOTICE"])
+      expected.set(`cli/${notice}`, { bytes: Buffer.from(await Bun.file(resolve(import.meta.dirname, "../../..", notice)).bytes()), executable: false })
     expected.set("cli/package.json", { bytes: Buffer.from(JSON.stringify({
       name: "@humanguardrail/cli", version, type: "module", license: "MIT", repository: repository(),
-      bin: { orchestra: "./bin/orchestra.cjs" }, files: ["bin/orchestra.cjs"], engines: { node: ">=22" },
+      bin: { orchestra: "./bin/orchestra.cjs" }, files: ["bin/orchestra.cjs", "LICENSE", "NOTICE"], engines: { node: ">=22" },
       optionalDependencies: Object.fromEntries(targets.toSorted().map((target) => [`@humanguardrail/cli-${target}`, version])),
     }, null, 2)), executable: false })
     const requireSame = async () => {

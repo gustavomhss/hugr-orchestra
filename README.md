@@ -39,7 +39,7 @@ sh install.sh \
   --sha256 <digest>
 ```
 
-`install.sh` supports macOS and glibc Linux on x64 and arm64. It does not edit shell configuration. See the [distribution guide](apps/cli/distribution/README.md) for targets, updates and rollback.
+`install.sh` supports macOS and Linux on x64 and arm64, with glibc and musl Linux variants and baseline x64 builds. Windows is not covered by `install.sh`. It does not edit shell configuration. See the [distribution guide](apps/cli/distribution/README.md) for the valid `--target` names, updates and rollback.
 
 npm and `install.sh` installs never show a Gatekeeper or SmartScreen prompt, signed or not. A binary downloaded from the release page in a browser can.
 
@@ -69,13 +69,13 @@ bun install
 bun run dev:desktop
 ```
 
-This runs Desktop's `predev` step, which installs Electron, copies channel icons, builds the legacy server bundle, stages Omni, and builds/stages CLI resources before starting `electron-vite dev`. See the [Desktop guide](apps/desktop/README.md) for package-local commands and packaging inputs.
+This runs Desktop's `predev` step (`apps/desktop/scripts/predev.ts`), which installs Electron, copies the dev channel icons, stages Claude Code resources, stages Omni (borrowing a local or installed Omni build when `OMNI_ARTIFACTS` is unset), and builds/stages CLI resources before starting `electron-vite dev`. See the [Desktop guide](apps/desktop/README.md) for package-local commands and packaging inputs.
 
 A dev run uses configured user data. `ORCHESTRA_DB` selects the Core database; it does not isolate the entire Electron profile, settings, or draft store.
 
 ### Other entry points
 
-- `bun dev` runs the terminal UI and server from `apps/cli/src/index.ts`. `bun dev <directory>` runs it against another directory.
+- `bun dev` runs the terminal UI and server from `apps/cli/src/index.ts` in the current directory. To run it against another directory, `cd <directory>` first, then run it.
 - `bun run dev:web` runs the web UI from `apps/web`.
 - From `apps/cli`, `bun run dev` runs the V2 preview CLI; see its [guide](apps/cli/README.md) for daemon/API commands and compiled resources.
 - `./apps/cli/script/build.ts --single` compiles a standalone binary for your platform into `apps/cli/dist/cli-<platform>/bin/orchestra`.

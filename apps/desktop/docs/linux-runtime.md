@@ -1,8 +1,8 @@
-# Linux apps in App Dock
+# Linux apps in MCP Dock
 
 ## Use
 
-App Dock has separate **Browser** and **Linux workspace** contexts. Browser
+MCP Dock has separate **Browser** and **Linux workspace** contexts. Browser
 profiles, web tabs and the address bar belong to Browser. Linux shows installed
 desktop apps and an **Open windows** selector; choosing a running app restores
 and focuses its existing window, including a minimized window. New browser tabs
@@ -25,17 +25,17 @@ actual client compatibility instead of rejecting a recent build stamped `0.0.0`.
 Explicit version overrides remain unchanged.
 
 1. Start a local Linux Docker engine (Docker Desktop on macOS/Windows).
-2. Open the desktop's App Dock and select **Linux** in the sidebar.
+2. Open the desktop's MCP Dock and select **Linux** in the sidebar.
 3. Select **Install** and choose an official Linux `.deb` package matching the
    runtime architecture. Dependencies are installed inside the Linux workspace.
 4. Select the installed application in the Linux list. Its native desktop window
-   appears in App Dock. The terminal also supports normal Linux package tools.
+   appears in MCP Dock. The terminal also supports normal Linux package tools.
 
 First opening builds the bundled runtime image if absent; later openings reuse
 the same installed workspace. Closing a viewer disconnects graphics without
 deleting applications or files. Desktop quit awaits the owned container stop.
 
-Applications that open HTTPS links use the Browser context in App Dock. The
+Applications that open HTTPS links use the Browser context in MCP Dock. The
 workspace installs a hidden Gio browser handler that relays URLs to an
 authenticated listener bound to host loopback; a browser inside Linux is not
 needed for this flow. Slack authentication opens a web tab, and an associated
@@ -72,7 +72,7 @@ It cannot choose host paths or submit shell commands. Initial package picking
 supports `.deb`; the guest terminal remains available for native Linux package
 management. App enumeration and launching use Gio desktop application metadata.
 
-The Linux workspace is an App Dock tab identified by `appdock://linux`. This is
+The Linux workspace is an MCP Dock tab identified by `appdock://linux`. This is
 a presentation identity, not a navigable browser URL. The ordinary HTTPS URL
 guard remains the network admission boundary. Linux viewer endpoints, passwords
 and certificate material never enter the browser manifest or history.
@@ -160,7 +160,7 @@ The main process mounts the stock Xpra client in the existing sandboxed
 loopback certificate in the associated Chromium session. Browser profile IDs
 select Chromium storage only.
 
-App Dock visibility changes send Xpra `suspend` / `resume` protocol packets for
+MCP Dock visibility changes send Xpra `suspend` / `resume` protocol packets for
 the owned Linux view. Closing a view disconnects its client while guest work
 remains alive. Quitting/relaunching the desktop awaits runtime stop. Failed or
 abandoned startup must not leak an unowned container.

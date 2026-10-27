@@ -5,9 +5,9 @@ import { homedir, tmpdir } from "node:os"
 import { join } from "node:path"
 import { getCACertificates, setDefaultCACertificates } from "node:tls"
 import type { Event } from "electron"
-import { app, BrowserWindow } from "electron"
+import { app, BrowserWindow, dialog } from "electron"
 
-import { Deferred, Effect, Fiber } from "effect"
+import { Cause, Deferred, Effect, Exit, Fiber } from "effect"
 import contextMenu from "electron-context-menu"
 
 import type { ServerReadyData } from "../preload/types"
@@ -457,12 +457,12 @@ const main = Effect.gen(function* () {
       void wslServers.initialize().catch((error) => logger.error("wsl server initialization failed", error))
     }
 
-    yield* Effect.tryPromise(() => owned.health.wait).pipe(
-      Effect.catch((e) => Effect.sync(() => logger.error("owned serve health check failed", String(e)))),
-      Effect.ensuring(
-        Deferred.succeed(serverReady, { url: owned.url, username: owned.username, password: owned.password }),
-      ),
-    )
+    // A server that never came up fails initialization, so the renderer shows why instead of a dead URL.
+    yield* Effect.tryPromise({
+      try: () => owned.health.wait,
+      catch: (e) => (e instanceof Error ? e : new Error(String(e))),
+    }).pipe(Effect.tapError((e) => Effect.sync(() => logger.error("owned serve health check failed", e.message))))
+    yield* Deferred.succeed(serverReady, { url: owned.url, username: owned.username, password: owned.password })
     yield* Effect.promise(() => OmniBoot.report({ url: owned.url, username: owned.username, password: owned.password }, logger))
     logger.log("loading task finished")
   }).pipe(forwardInitializationFailure(serverReady), Effect.forkChild)
@@ -488,4 +488,14 @@ const main = Effect.gen(function* () {
   yield* Fiber.await(loadingTask)
 })
 
-Effect.runFork(main)
+// A failure before any window exists would otherwise leave a process with nothing on screen.
+Effect.runFork(main).addObserver((exit) => {
+  if (Exit.isSuccess(exit)) return
+  const reason = Cause.pretty(exit.cause)
+  writeLog("main", "desktop startup failed", { reason }, "error")
+  dialog.showErrorBox(
+    "HuGR Orchestra could not start",
+    `${reason.split("\n")[0]}\n\nLogs: ${join(app.getPath("userData"), "logs")}`,
+  )
+  app.exit(1)
+})

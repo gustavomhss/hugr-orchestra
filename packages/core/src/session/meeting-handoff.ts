@@ -3,6 +3,7 @@ export * as MeetingHandoff from "./meeting-handoff"
 import { and, eq, inArray } from "drizzle-orm"
 import { Effect, Layer } from "effect"
 import { Meeting } from "@orchestra/schema/meeting"
+import { AgentV2 } from "../agent"
 import { Database } from "../database/database"
 import { makeLocationNode } from "../effect/app-node"
 import { Location } from "../location"
@@ -42,14 +43,25 @@ const layer = Layer.effect(
       if (rows.length !== ids.length || !rows.every(allowed))
         return yield* new SessionMeeting.MeetingError({ reason: "missing_item" })
       const people = yield* peopleMap(database.db)
-      yield* deliver({
+      const send = deliver({
         db: database.db,
         sessions,
         projectID: location.project.id,
         from: "live",
-        to: "maestro",
+        to: AgentV2.defaultID,
         text: message(meeting, rows, people),
-      }).pipe(Effect.mapError(() => new SessionMeeting.MeetingError({ reason: "unavailable" })))
+      })
+      // The owner chose to hand off: with no Maestro conversation in the project, open one to receive it.
+      yield* send.pipe(
+        Effect.catchIf(
+          (reason) => reason === "no_conversation",
+          () =>
+            sessions
+              .create({ agent: AgentV2.defaultID, location: { directory: location.directory } })
+              .pipe(Effect.andThen(send)),
+        ),
+        Effect.mapError(() => new SessionMeeting.MeetingError({ reason: "unavailable" })),
+      )
       yield* database.db
         .transaction(() =>
           Effect.forEach(

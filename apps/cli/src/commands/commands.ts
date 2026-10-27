@@ -380,7 +380,7 @@ const web = Spec.make("web", {
 declare const ORCHESTRA_CLI_NAME: string | undefined
 
 export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHESTRA_CLI_NAME : "orchestra", {
-  description: "Orchestra 2.0 preview command line interface",
+  description: "HuGR Orchestra command line interface",
   commands: [
     Spec.make("api", {
       description: "Make a request to the running server",
@@ -451,7 +451,7 @@ export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHE
       ],
     }),
     Spec.make("serve", {
-      description: "Start the v2 API server",
+      description: "Start the API server",
       params: {
         hostname: Flag.string("hostname").pipe(Flag.withDefault("127.0.0.1")),
         port: Flag.integer("port").pipe(Flag.optional),

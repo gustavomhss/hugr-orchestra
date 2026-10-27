@@ -42,7 +42,10 @@ export const make = Effect.fn("ActionsBinding.make")(function* (input: {
     // POSIX filenames may end in CR: only LF terminates git output there. NUL-delimited config stays intact.
     return result.stdout.toString("utf8").replace(process.platform === "win32" ? /\r?\n$/ : /\n$/, "")
   })
-  const state = yield* ActionsState.make({ ...input, directory, repository: yield* git(["rev-parse", "--show-toplevel"]) })
+  const repository = yield* git(["rev-parse", "--show-toplevel"]).pipe(Effect.mapError((error) => error.kind === "invalid_input"
+    ? new ActionsError({ kind: "not_found", message: "This folder is not a Git repository." })
+    : error))
+  const state = yield* ActionsState.make({ ...input, directory, repository })
   const target = Effect.fnUntraced(function* (request: Actions.BindingInput) {
     const decoded = yield* Schema.decodeUnknownEffect(Actions.BindingInput, STRICT)(request).pipe(Effect.mapError(invalid))
     const provider = yield* checked(() => ActionsState.provider(decoded.provider))

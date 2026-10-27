@@ -41,19 +41,21 @@ https://models.dev
 
 ### Running against a different directory
 
-By default, `bun dev` runs Orchestra in the `apps/cli` directory. To run it against a different directory or repository:
+By default, `bun dev` runs Orchestra in the `apps/cli` directory. To run it against a different directory or repository, change into it first and run the command from there:
 
 ```bash
-bun dev <directory>
+cd <directory>
+bun dev
 ```
 
 To run Orchestra in the root of the orchestra repo itself:
 
 ```bash
-bun dev .
+cd <repo-root>
+bun dev
 ```
 
-### Building a "localcode"
+### Building HuGR Orchestra (the `orchestra` binary)
 
 To compile a standalone executable:
 
@@ -87,13 +89,13 @@ During development, `bun dev` is the local equivalent of the built `orchestra` c
 bun dev --help           # Show all available commands
 bun dev serve            # Start headless API server
 bun dev web              # Start server + open web interface
-bun dev <directory>      # Start TUI in specific directory
+cd <directory> && bun dev  # Start TUI in another directory
 
 # Production
 orchestra --help          # Show all available commands
 orchestra serve           # Start headless API server
 orchestra web             # Start server + open web interface
-orchestra <directory>     # Start TUI in specific directory
+cd <directory> && orchestra  # Start TUI in another directory
 ```
 
 ### Running the API Server
@@ -157,8 +159,8 @@ your debugger via that URL. Other methods can result in breakpoints being mapped
 
 Caveats:
 
-- If you want to run the Orchestra TUI and have breakpoints triggered in the server code, you might need to run `bun dev spawn` instead of
-  the usual `bun dev`. This is because `bun dev` runs the server in a worker thread and breakpoints might not work there.
+- If you want to run the Orchestra TUI and have breakpoints triggered in the server code, you might need to run the server and TUI
+  separately instead of `bun dev`. This is because `bun dev` runs the server in a worker thread and breakpoints might not work there.
 - If `spawn` does not work for you, you can debug the server separately:
   - Debug server: `bun run --inspect=ws://localhost:6499/ --cwd apps/cli ./src/index.ts serve --port 4096`,
     then attach TUI with `orchestra attach http://localhost:4096`

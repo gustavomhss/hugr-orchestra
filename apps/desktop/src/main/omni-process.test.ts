@@ -256,6 +256,26 @@ test.skipIf(!on)("owned serve: readiness, redaction, crash restart, SIGTERM stop
   expect(exits[1]).toEqual({ code: 0, signal: null, stopping: true })
 }, 30_000)
 
+test.skipIf(!on)("owned serve: a server that dies at start fails health with its last output", async () => {
+  expectSpawn(import.meta.path)
+  const dir = await mkdtemp(join(tmpdir(), "owned-serve-"))
+  await writeFile(join(dir, "serve.ts"), `console.error("cannot open database: disk full"); process.exit(2)`)
+  const owned = await startOwnedServe({
+    logger: { log: () => {}, error: () => {} },
+    command: [process.execPath, join(dir, "serve.ts")],
+    env: { PATH: process.env.PATH ?? "" },
+    write: () => {},
+  })
+  const failure = await owned.health.wait.then(
+    () => undefined,
+    (error: unknown) => error,
+  )
+  await owned.listener.stop()
+  expect(failure).toBeInstanceOf(Error)
+  expect((failure as Error).message).toContain("exited before its health check passed")
+  expect((failure as Error).message).toContain("cannot open database: disk full")
+}, 30_000)
+
 async function until(check: () => boolean | Promise<boolean>) {
   const deadline = Date.now() + 15_000
   while (!(await check())) {
