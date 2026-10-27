@@ -941,6 +941,7 @@ export const dict = {
   "live.start.reason.no-key": "Avval Sozlamalarda nutqni matnga aylantirish kalitini qo'shing",
   "live.start.reason.server": "Mahalliy server javob bermadi",
   "live.start.reason.capture": "Audio yozib olishni boshlab bo'lmadi. Mikrofon va ekran yozuvi ruxsatlarini tekshiring.",
+  "live.start.reason.permission": "Avval Tizim sozlamalarida mikrofonga ruxsat bering",
   "settings.general.row.language.title": "Til",
   "settings.general.row.language.description": "HuGR Orchestra uchun ekran tilini o'zgartiring",
   "settings.general.row.shell.title": "Terminal qobig'i",

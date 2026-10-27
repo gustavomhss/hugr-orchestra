@@ -942,6 +942,7 @@ export const dict = {
   "live.start.reason.no-key": "Նախ Կարգավորումներում ավելացրեք խոսքից տեքստի բանալի",
   "live.start.reason.server": "Տեղային սերվերը չպատասխանեց",
   "live.start.reason.capture": "Ձայնագրումը սկսել հնարավոր չեղավ։ Ստուգեք միկրոֆոնի և էկրանի ձայնագրման թույլտվությունները։",
+  "live.start.reason.permission": "Նախ թույլատրեք խոսափողի հասանելիությունը Համակարգի կարգավորումներում",
   "settings.general.row.language.title": "Լեզու",
   "settings.general.row.language.description": "Փոխել HuGR Orchestra-ի ցուցադրման լեզուն",
   "settings.general.row.shell.title": "Տերմինալի Shell",

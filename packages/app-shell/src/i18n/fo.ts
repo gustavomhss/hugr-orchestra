@@ -935,6 +935,7 @@ export const dict = {
   "live.start.reason.no-key": "Legg fyrst eina tekst-til-tal lykil inn í stillingar",
   "live.start.reason.server": "Staðbundi ambætarin svaraði ikki",
   "live.start.reason.capture": "Ljóðupptøkan kundi ikki byrjast. Eftirkann loyvi til míkrofon og skjámyndaupptøku.",
+  "live.start.reason.permission": "Loyv fyrst atgongd til mikrofonina í Skipanarstillingum",
   "settings.general.row.language.title": "Mál",
   "settings.general.row.language.description": "Broyt sýnismálið fyri HuGR Orchestra",
   "settings.general.row.shell.title": "Terminal-shell",

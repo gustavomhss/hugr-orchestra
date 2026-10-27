@@ -936,6 +936,7 @@ export const dict: Record<string, string> = {
   "live.start.reason.no-key": "पहिले सेटिङमा बोलीबाट पाठ कुञ्जी थप्नुहोस्",
   "live.start.reason.server": "स्थानीय सर्भरले प्रतिक्रिया दिएन",
   "live.start.reason.capture": "अडियो रेकर्डिङ सुरु गर्न सकिएन। माइक्रोफोन र स्क्रिन रेकर्डिङ अनुमति जाँच गर्नुहोस्।",
+  "live.start.reason.permission": "पहिले प्रणाली सेटिङमा माइक्रोफोन पहुँच अनुमति दिनुहोस्",
   "settings.general.row.language.title": "भाषा",
   "settings.general.row.language.description": "HuGR Orchestra को लागि प्रदर्शन भाषा परिवर्तन गर्नुहोस्",
   "settings.general.row.shell.title": "टर्मिनल शेल",

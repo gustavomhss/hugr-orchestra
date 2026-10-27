@@ -838,6 +838,7 @@ export const dict = {
   "live.start.reason.no-key": "Lisää ensin puheentunnistusavain asetuksissa",
   "live.start.reason.server": "Paikallinen palvelin ei vastannut",
   "live.start.reason.capture": "Äänen tallennus ei onnistunut. Tarkista mikrofonin ja näytön tallennuksen luvat.",
+  "live.start.reason.permission": "Salli ensin mikrofonin käyttö Järjestelmäasetuksissa",
   "settings.general.row.language.title": "Kieli",
   "settings.general.row.language.description": "Vaihda HuGR Orchestran näyttökieli",
   "settings.general.row.shell.title": "Terminaalin komentotulkki",

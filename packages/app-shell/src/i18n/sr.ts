@@ -940,6 +940,7 @@ export const dict = {
   "live.start.reason.no-key": "Prvo dodajte ključ za prepoznavanje govora u podešavanjima",
   "live.start.reason.server": "Lokalni server nije odgovorio",
   "live.start.reason.capture": "Snimanje zvuka nije moglo da počne. Proverite dozvole za mikrofon i snimanje ekrana.",
+  "live.start.reason.permission": "Прво дозволите приступ микрофону у Системским подешавањима",
   "settings.general.row.language.title": "Језик",
   "settings.general.row.language.description": "Промените језик приказа апликације HuGR Orchestra",
   "settings.general.row.shell.title": "Терминал shell",

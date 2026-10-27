@@ -7,6 +7,7 @@ import { ServerConnection } from "@/context/server"
 import { useTabs } from "@/context/tabs"
 import type { HomeController } from "@/pages/home/home-controller"
 import { displayName } from "@/pages/layout/helpers"
+import { HomeFlightCard } from "./flight-engineer/entry"
 import { KpiDashboard } from "./kpis"
 import { sessionTitle } from "@/utils/session-title"
 
@@ -68,6 +69,7 @@ export function OrchestraHome(props: { home: HomeController }) {
             title={(sessionID, fallback) => sessionTitle(owner.ctx.sync.session.peek(sessionID)?.title || fallback) ?? fallback}
             running={(sessionID) => (owner.ctx.sync.session.data.session_status[sessionID]?.type ?? "idle") !== "idle"}
             openProviders={() => navigate("/orchestra/providers")}
+            extra={<HomeFlightCard sdk={owner.ctx.sdk} directory={owner.directory} />}
             newSession={() => props.home.project.openProjectNewSession(owner.conn, owner.directory)}
             openSession={(sessionID) => {
               owner.ctx.projects.open(owner.directory)
