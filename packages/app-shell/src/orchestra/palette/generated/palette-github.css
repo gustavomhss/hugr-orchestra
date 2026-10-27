@@ -220,6 +220,12 @@ html[data-orchestra-palette="github"][data-color-scheme] body[data-new-layout] [
   color: var(--orchestra-sidebar-key-text);
   background: var(--orchestra-sidebar-key-background);
 }
+[data-orchestra-palette="github"] .orchestra-nav-group {
+  color: var(--orchestra-sidebar-footer);
+}
+[data-orchestra-palette="github"] .orchestra-nav-group-chevron {
+  color: inherit;
+}
 [data-orchestra-palette="github"] .orchestra-nav-rule {
   background: var(--orchestra-sidebar-rule);
 }
