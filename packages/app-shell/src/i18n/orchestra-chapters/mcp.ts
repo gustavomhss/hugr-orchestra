@@ -58,3 +58,63 @@ export const MCP_COPY = {
   "orchestra.mcp.removeRunningOne": "Removing restarts MCP for this project and stops 1 running session.",
   "orchestra.mcp.removeRunning": "Removing restarts MCP for this project and stops {{count}} running sessions.",
 }
+
+export const MCP_COPY_BR: Record<keyof typeof MCP_COPY, string> = {
+  "orchestra.mcp.eyebrow": "{{profile}} · Configuração",
+  "orchestra.mcp.add": "Adicionar servidor MCP",
+  "orchestra.mcp.searchPlaceholder": "Buscar MCP",
+  "orchestra.mcp.empty": "Nenhum servidor MCP configurado.",
+  "orchestra.mcp.emptyHint": "Adicione um servidor para disponibilizar as ferramentas dele para este perfil.",
+  "orchestra.mcp.error": "Erro",
+  "orchestra.mcp.disabled": "Desconectado (até reiniciar)",
+  "orchestra.mcp.needsAuth": "Precisa de autenticação",
+  "orchestra.mcp.toolCount": "{{count}} ferramentas",
+  "orchestra.mcp.toolCountOne": "1 ferramenta",
+  "orchestra.mcp.configure": "Configurar",
+  "orchestra.mcp.tools": "Ferramentas",
+  "orchestra.mcp.enable": "Conectar {{name}} (até reiniciar)",
+  "orchestra.mcp.offHint":
+    'As trocas feitas aqui valem até reiniciar. Para manter um servidor desligado, defina "enabled": false na entrada dele em {{file}}.',
+  "orchestra.mcp.registrationHint":
+    "Este servidor precisa de um cliente OAuth registrado. Adicione oauth.clientId à entrada dele em {{file}}.",
+  "orchestra.mcp.authWaiting": "Conclua o login no seu navegador…",
+  "orchestra.mcp.configureTitle": "Configurar {{name}}",
+  "orchestra.mcp.editSubtitle":
+    "Conecte ferramentas a este perfil. Salvar atualiza a configuração do projeto e reinicia os servidores MCP dele.",
+  "orchestra.mcp.configOutside":
+    "Este servidor está configurado fora deste perfil. Salvar adiciona a entrada própria do perfil para ele.",
+  "orchestra.mcp.configLoading": "Carregando configuração do MCP…",
+  "orchestra.mcp.configLoadFailed": "Não foi possível carregar a configuração do MCP. Tente de novo antes de editar.",
+  "orchestra.mcp.invalidName": "Digite um nome. Os nomes não podem ser . nem .. nem conter / ou \\.",
+  "orchestra.mcp.note":
+    "As trocas valem até o servidor reiniciar. Salvar ou remover um servidor reinicia os servidores MCP deste perfil.",
+  "orchestra.mcp.name": "Nome",
+  "orchestra.mcp.transport": "Transporte",
+  "orchestra.mcp.endpoint": "Comando ou URL do servidor",
+  "orchestra.mcp.credentialsHint":
+    "Precisa de variáveis de ambiente, headers ou um cliente OAuth? Adicione-os em {{file}} depois de salvar.",
+  "orchestra.mcp.remove": "Remover servidor",
+  "orchestra.mcp.invalidUrl": "Digite uma URL de servidor válida.",
+  "orchestra.mcp.invalidCommand": "Digite um comando válido.",
+  "orchestra.mcp.duplicate": "Já existe um servidor MCP com este nome.",
+  "orchestra.mcp.lastError": "Último erro de conexão: {{detail}}",
+  "orchestra.mcp.cancel": "Cancelar",
+  "orchestra.mcp.save": "Salvar",
+  "orchestra.mcp.saveAnyway": "Salvar mesmo assim",
+  "orchestra.mcp.saveRunningOne": "Salvar reinicia o MCP deste projeto e interrompe 1 sessão em execução. Salvar mesmo assim?",
+  "orchestra.mcp.saveRunning":
+    "Salvar reinicia o MCP deste projeto e interrompe {{count}} sessões em execução. Salvar mesmo assim?",
+  "orchestra.mcp.confirm": "Confirmar",
+  "orchestra.mcp.closeDialog": "Fechar diálogo",
+  "orchestra.mcp.toolsTitle": "Ferramentas de {{name}}",
+  "orchestra.mcp.toolAvailable": "Disponível quando este servidor estiver conectado",
+  "orchestra.mcp.toolsUnknown": "Conecte este servidor para listar as ferramentas dele.",
+  "orchestra.mcp.toolsLoading": "Carregando ferramentas do MCP…",
+  "orchestra.mcp.toolsLoadFailed": "Não foi possível carregar as ferramentas do MCP.",
+  "orchestra.mcp.toolsNone": "Este servidor não informa ferramentas.",
+  "orchestra.mcp.removeTitle": "Remover este item?",
+  "orchestra.mcp.removeSubtitle": "A configuração dele é removida deste perfil.",
+  "orchestra.mcp.removeNote": "Isso remove {{name}} da configuração do projeto de {{profile}}.",
+  "orchestra.mcp.removeRunningOne": "Remover reinicia o MCP deste projeto e interrompe 1 sessão em execução.",
+  "orchestra.mcp.removeRunning": "Remover reinicia o MCP deste projeto e interrompe {{count}} sessões em execução.",
+}

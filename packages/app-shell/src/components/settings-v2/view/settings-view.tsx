@@ -57,14 +57,11 @@ export function SettingsView(props: { server: ServerConnection.Any; directory: s
   return (
     <section class="mx-page orchestra-settings" aria-labelledby="orchestra-settings-title" data-mx-page="settings">
       <div class="inner">
-        <header class="mast slim">
+        <header class="mx-heading">
           <div>
-            <div class="kicker">{language.t("sidebar.settings")}</div>
-            <h1 id="orchestra-settings-title">
-              {language.t("orchestra.settings.title")}
-              <br />
-              <span>{language.t("orchestra.settings.subtitle")}</span>
-            </h1>
+            <div class="mx-eyebrow">{language.t("orchestra.settings.eyebrow")}</div>
+            <h1 id="orchestra-settings-title">{language.t("orchestra.settings.title")}</h1>
+            <p>{language.t("orchestra.settings.subtitle")}</p>
           </div>
         </header>
         <div class="settings">

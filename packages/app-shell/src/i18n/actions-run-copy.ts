@@ -23,3 +23,26 @@ export const dict = {
   "orchestra.actions.executionCountOne": "1 execution",
   "orchestra.actions.completedLog": "Completed job output · status updates separately",
 } as const
+
+export const dictBr: Record<keyof typeof dict, string> = {
+  "orchestra.actions.runNumber": "Execução {{id}}",
+  "orchestra.actions.runViews": "Visões da execução",
+  "orchestra.actions.attemptOption": "Tentativa {{number}}",
+  "orchestra.actions.historicalAttempt": "Execução histórica · somente leitura",
+  "orchestra.actions.rerunFailed": "Executar de novo os jobs que falharam",
+  "orchestra.actions.rerunAll": "Executar de novo todos os jobs",
+  "orchestra.actions.inspect": "Inspecionar",
+  "orchestra.actions.jobNeeds": "depende de {{jobs}}",
+  "orchestra.actions.noDependencies": "sem dependências",
+  "orchestra.actions.searchLog": "Buscar neste log…",
+  "orchestra.actions.downloadLog": "Baixar log",
+  "orchestra.actions.expiresRelative": "Expira {{when}}",
+  "orchestra.actions.enableWorkflow": "Ativar",
+  "orchestra.actions.disableWorkflow": "Desativar",
+  "orchestra.actions.runNumbered": "Execução #{{number}}",
+  "orchestra.actions.definitionCount": "{{count}} jobs",
+  "orchestra.actions.definitionCountOne": "1 job",
+  "orchestra.actions.executionCount": "{{count}} execuções",
+  "orchestra.actions.executionCountOne": "1 execução",
+  "orchestra.actions.completedLog": "Saída do job concluída · o status é atualizado separadamente",
+}

@@ -13,3 +13,16 @@ export const dict = {
   "orchestra.actions.newExecution": "New execution",
   "orchestra.actions.newExecution.detail": "Starting a run resolves the selected ref. Re-running an existing execution keeps its original source revision.",
 } as const
+
+export const dictBr: Record<keyof typeof dict, string> = {
+  "orchestra.actions.dispatchWorkflow": "Executar {{name}}",
+  "orchestra.actions.dispatchDetail.github": "Os inputs seguem a definição workflow_dispatch da ref selecionada.",
+  "orchestra.actions.dispatchDetail.gitlab": "A configuração de CI na ref selecionada define os jobs e as regras.",
+  "orchestra.actions.executionTarget": "Destino da execução",
+  "orchestra.actions.branchOrTag": "Branch ou tag",
+  "orchestra.actions.branchOrTagHint": "Uma nova execução usa a revisão de origem nesta ref.",
+  "orchestra.actions.runInputs": "Inputs da execução",
+  "orchestra.actions.noRunInputs": "Nenhum input está declarado nesta ref.",
+  "orchestra.actions.newExecution": "Nova execução",
+  "orchestra.actions.newExecution.detail": "Iniciar uma execução resolve a ref selecionada. Executar de novo uma execução existente mantém a revisão de origem original.",
+}

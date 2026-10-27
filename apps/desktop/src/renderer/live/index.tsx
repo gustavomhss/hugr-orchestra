@@ -12,9 +12,9 @@ import type {
 import "./live.css"
 
 // The live seat overlay. Main owns the state and pushes it whole; this window only draws it and reports clicks back.
-// Its copy is English-only for now and stays out of the desktop i18n dictionaries, which are checked against every
-// locale.
-const copy = {
+// Its copy lives here in English and Brazilian Portuguese, outside the desktop i18n dictionaries, which are checked
+// against every locale. The window has no app settings, so it follows the system language.
+const en = {
   label: "Live",
   listening: "Listening",
   thinking: "Thinking…",
@@ -89,6 +89,79 @@ const copy = {
   suggestion: { why: "Asked of you · clears when the topic moves on", dismiss: "Not now", answer: "Answer" },
   close: "Close",
 }
+
+const br: typeof en = {
+  label: "Ao vivo",
+  listening: "Ouvindo",
+  thinking: "Pensando…",
+  answering: "Respondendo…",
+  answered: (seconds) => `Respondido em ${seconds} s`,
+  page: (index, total) => `${index} de ${total}`,
+  ask: "Perguntar",
+  look: "Olhar",
+  move: "Mover",
+  captions: "Legendas",
+  suggestions: "Sugestões",
+  protected: "Oculto no compartilhamento de tela",
+  stop: "Encerrar reunião",
+  copy: "Copiar",
+  placeholder: "Pergunte sobre esta chamada…",
+  quick: { say: "O que devo dizer?", "follow-up": "Perguntas de acompanhamento", "fact-check": "Checar fatos", recap: "Resumo até agora" },
+  sources: { heard: "Ouvido na reunião", screen: "Na tela", memory: "Da memória" },
+  tracks: { me: "Eu", them: "Eles" },
+  status: {
+    micOff: "Microfone desligado · só eles",
+    audioOff: "Áudio da chamada desligado · só você",
+    sttPaused: "Legendas pausadas",
+    offline: (elapsed) => `Offline · ${elapsed}`,
+  },
+  permission: {
+    microphone: ["O Orchestra não pode usar o microfone", "Seu lado não tem legenda. O áudio deles ainda tem."],
+    systemAudio: ["O Orchestra não consegue ouvir o áudio da chamada", "O lado deles não tem legenda. O seu ainda tem."],
+    screen: ["O Orchestra não consegue ver a tela", "Olhar fica desligado até você permitir a gravação de tela. As legendas continuam."],
+    senses: { microphone: "Microfone", systemAudio: "Áudio do sistema", screen: "Tela" },
+    states: { granted: "Ligado", denied: "Sem permissão", "on-request": "Sob pedido" },
+    settings: "Abrir Ajustes do Sistema",
+  },
+  stt: {
+    title: (attempt) => `Reconectando à transcrição · tentativa ${attempt}`,
+    body: (watermark) =>
+      `O áudio dos últimos 30 s fica guardado e é reenviado quando a conexão voltar. As respostas usam a transcrição até ${watermark}.`,
+    next: (seconds) => `próxima tentativa em ${seconds} s`,
+    retry: "Tentar agora",
+  },
+  hotkey: {
+    title: "está em uso por outro app",
+    body: (name) => `${name} fica sem atalho até você escolher um novo. Os outros atalhos continuam funcionando.`,
+    change: "Trocar atalho",
+    names: { ask: "Perguntar", look: "Olhar", toggle: "Mostrar e ocultar", stop: "Encerrar", previous: "Paginação", next: "Paginação" },
+  },
+  network: {
+    title: "Sem rede",
+    body: "Legendas e respostas estão pausadas. Os últimos 30 s de áudio ficam guardados e são enviados quando você voltar a ficar online; o que for mais antigo fica sem legenda.",
+    recording: "A gravação continua",
+  },
+  ended: "Reunião encerrada",
+  minutes: (title, minutes) => `${title} · ${minutes} min`,
+  pending: {
+    off: "Captura e atalhos estão desligados.",
+    writing: "Escrevendo o resumo e um rascunho de acompanhamento…",
+    hint: "Costuma levar menos de 20 s. Pode fechar; ele chega na sessão do assento ao vivo.",
+  },
+  ready: {
+    saved: "Salvo na memória",
+    decisions: "Decisões",
+    openItems: "Itens em aberto",
+    followUp: "Rascunho de acompanhamento",
+    nothingSent: "Nada é enviado daqui.",
+    copyDraft: "Copiar rascunho",
+    send: (count) => `Enviar ${count} ${count === 1 ? "item em aberto" : "itens em aberto"} ao Maestro`,
+  },
+  suggestion: { why: "Perguntaram a você · some quando o assunto mudar", dismiss: "Agora não", answer: "Responder" },
+  close: "Fechar",
+}
+
+const copy = navigator.language.toLowerCase().startsWith("pt") ? br : en
 
 const sourceIcons: Record<LiveOverlaySource, string> = { heard: "ear", screen: "screen", memory: "memory" }
 const mac = navigator.userAgent.includes("Mac")

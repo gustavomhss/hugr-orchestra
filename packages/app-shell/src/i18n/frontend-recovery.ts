@@ -13,3 +13,8 @@ export const FRONTEND_RECOVERY_COPY = {
   "settings.general.row.janitor.description":
     "Show Janitor findings and notifications. Off by default; enable it when you want proactive maintenance advice.",
 } as const
+
+export const FRONTEND_RECOVERY_COPY_BR: Record<keyof typeof FRONTEND_RECOVERY_COPY, string> = {
+  "settings.general.row.janitor.title": "Assistente Janitor",
+  "settings.general.row.janitor.description": "Mostra os achados e notificações do Janitor. Desligado por padrão; ative quando quiser conselhos proativos de manutenção.",
+}

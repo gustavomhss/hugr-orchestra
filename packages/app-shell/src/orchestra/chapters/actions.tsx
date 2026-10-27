@@ -233,14 +233,14 @@ function Workbench(props: ChapterPageProps & {
       </aside>
       <main class="actions-main" aria-label={props.t("orchestra.actions.title")}>
         <div class="actions-library actions-entry-header" style={{ "padding-block-end": "0" }}>
-          <nav class="mx-eyebrow" aria-label={props.t("orchestra.actions.title")}>
+          <Show when={contextual()}><nav class="mx-eyebrow" aria-label={props.t("orchestra.actions.title")}>
             <button type="button" class="mx-link" onClick={() => model.navigate({ view: "library" })}>{props.t("orchestra.actions.title")}</button>
             <Show when={workflow()}>{(item) => <><span aria-hidden="true"> / </span><button type="button" class="mx-link"
               onClick={() => model.navigate({ view: "workflow", workflowID: item().id })}><bdi>{item().name ?? item().id}</bdi></button></>}</Show>
             <Show when={run()}>{(item) => <><span aria-hidden="true"> / </span><button type="button" class="mx-link"
               onClick={() => model.navigate({ view: "run", runID: item().id })}><bdi dir="ltr">{item().id}</bdi></button></>}</Show>
-          </nav>
-          <Show when={!contextual()}><header class="mx-heading"><div><h1>{props.t("orchestra.actions.title")}</h1><p>{props.t("orchestra.actions.description")}</p></div>
+          </nav></Show>
+          <Show when={!contextual()}><header class="mx-heading"><div><div class="mx-eyebrow">{props.t("orchestra.actions.eyebrow")}</div><h1>{props.t("orchestra.actions.title")}</h1><p>{props.t("orchestra.actions.description")}</p></div>
             <div class="heading-actions"><button type="button" class="mx-btn" disabled={state.submitting} onClick={() => void model.refresh()}>
               <Icon name="refresh" />{props.t("orchestra.actions.refresh")}</button>
               <Show when={state.route.view === "library"}><button type="button" class="mx-btn primary" disabled={!canCreate()} onClick={() => model.dialog({ kind: "create-workflow" })}>

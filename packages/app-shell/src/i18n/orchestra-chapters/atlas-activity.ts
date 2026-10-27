@@ -26,3 +26,31 @@ export const ATLAS_ACTIVITY_COPY = {
   "orchestra.atlas.activity.event.briefing": "{{name}} read the briefing for {{unit}}",
   "orchestra.atlas.activity.event.held": "{{name}} was held",
 }
+
+export const ATLAS_ACTIVITY_COPY_BR: Record<keyof typeof ATLAS_ACTIVITY_COPY, string> = {
+  "orchestra.atlas.activity.crumb": "Atividade",
+  "orchestra.atlas.activity.eyebrow": "Atlas",
+  "orchestra.atlas.activity.title": "Atividade",
+  "orchestra.atlas.activity.line": "O que os agentes leram do Atlas, o que salvaram e quando foram retidos.",
+  "orchestra.atlas.activity.show.all": "Todos",
+  "orchestra.atlas.activity.show.reads": "Leituras",
+  "orchestra.atlas.activity.show.memory": "Memória",
+  "orchestra.atlas.activity.show.holds": "Retenções",
+  "orchestra.atlas.activity.show.code": "Código",
+  "orchestra.atlas.activity.help":
+    "A partir dos recibos que o Orchestra guarda de cada chamada de ferramenta: atlasContext para leituras e retenções, atlasMemory e atlasResume para memória. Uma chamada retida devolve o motivo e a evidência; o próximo passo é o texto do próprio Orchestra. O próprio Atlas não guarda log de escrita.",
+  "orchestra.atlas.activity.empty": "Nada registrado ainda.",
+  "orchestra.atlas.activity.code.one": "O commit {{sha}} mudou {{n}} fato",
+  "orchestra.atlas.activity.code.other": "O commit {{sha}} mudou {{n}} fatos",
+  "orchestra.atlas.activity.onHold": "Retido",
+  "orchestra.atlas.activity.time": "{{day}} · {{clock}} UTC",
+  "orchestra.atlas.activity.event.saved": "{{name}} salvou um checkpoint",
+  "orchestra.atlas.activity.event.notSaved": "O checkpoint de {{name}} não foi salvo",
+  "orchestra.atlas.activity.event.resumed": "{{name}} foi retomado com o seu checkpoint",
+  "orchestra.atlas.activity.event.noCheckpoint": "A retomada de {{name}} não encontrou checkpoint",
+  "orchestra.atlas.activity.event.recalled": "{{name}} recuperou a memória da sua tarefa",
+  "orchestra.atlas.activity.event.froze": "{{name}} congelou {{count}} unidades para {{target}}",
+  "orchestra.atlas.activity.event.catalog": "{{name}} leu o catálogo de unidades",
+  "orchestra.atlas.activity.event.briefing": "{{name}} leu o briefing de {{unit}}",
+  "orchestra.atlas.activity.event.held": "{{name}} foi retido",
+}

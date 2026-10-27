@@ -1,45 +1,8 @@
-/* Workspaces keeps the mock's `.inner` + `.mast.slim` heading (app.html #viewWorkspaces); the body uses the kit.
-   The kit has no tokens for the mast's kicker and title, so they are declared once here with their light values. */
-html[data-color-scheme] body[data-new-layout] {
-  --mx-mast-kicker: #b0c4d5;
-  --mx-mast-title: #ebeff3;
-}
-html[data-color-scheme="light"] body[data-new-layout] {
-  --mx-mast-kicker: #333c47;
-  --mx-mast-title: #171c23;
-}
+/* Workspaces keeps the mock's `.inner` wrapper (app.html #viewWorkspaces); heading and body use the kit. */
 .orchestra-workspaces .ws-inner {
   inline-size: min(1020px, calc(100% - 72px));
   margin: 0 auto;
   padding: 52px 0 72px;
-}
-.orchestra-workspaces .ws-mast {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 28px;
-  margin-block-end: 22px;
-}
-.orchestra-workspaces .ws-kicker {
-  color: var(--mx-mast-kicker);
-  font-size: var(--orchestra-font-size-xs);
-  /* Mock weight 580, drawn as Medium plus synthetic bold (see kit.css). */
-  font-family: var(--mx-emphasis);
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-.orchestra-workspaces .ws-mast h1 {
-  margin: 9px 0 0;
-  color: var(--mx-mast-title);
-  font-size: var(--orchestra-font-size-4xl);
-  line-height: 36px;
-  font-weight: 600;
-  letter-spacing: -0.035em;
-}
-.orchestra-workspaces .ws-mast h1 span {
-  color: var(--mx-dim);
-  font-weight: 450;
 }
 /* The mock renders the path in the browser's default monospace at the paragraph size. */
 .orchestra-workspaces .mx-card code {

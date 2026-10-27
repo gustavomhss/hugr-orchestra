@@ -1,7 +1,7 @@
 // Copy owned by the workspaces screen. Add new keys here instead of i18n/orchestra.ts so screens merge without conflicts.
 export const WORKSPACES_COPY = {
-  "orchestra.workspaces.heading": "Where the work",
-  "orchestra.workspaces.headingAccent": "actually runs.",
+  "orchestra.workspaces.heading": "Where the work actually runs.",
+  "orchestra.workspaces.headingAccent": "Each workspace is a git worktree with its own branch, so agents never step on each other.",
   "orchestra.workspaces.new": "New workspace",
   "orchestra.workspaces.gitRequired": "New workspaces are git worktrees, so this project needs a git repository.",
   "orchestra.noRepository.title": "This folder is not a git repository",
@@ -35,4 +35,42 @@ export const WORKSPACES_COPY = {
   "orchestra.workspaces.force.description": "This workspace has uncommitted or untracked changes.",
   "orchestra.workspaces.force.note": "Deleting {{path}} now discards those changes permanently.",
   "orchestra.workspaces.force.action": "Delete anyway",
+}
+
+export const WORKSPACES_COPY_BR: Record<keyof typeof WORKSPACES_COPY, string> = {
+  "orchestra.workspaces.heading": "Onde o trabalho realmente roda.",
+  "orchestra.workspaces.headingAccent": "Cada workspace é um worktree git com sua própria branch, para que os agentes não atrapalhem uns aos outros.",
+  "orchestra.workspaces.new": "Novo workspace",
+  "orchestra.workspaces.gitRequired": "Novos workspaces são worktrees do git, então este projeto precisa de um repositório git.",
+  "orchestra.noRepository.title": "Esta pasta não é um repositório git",
+  "orchestra.workspaces.use": "Usar workspace",
+  "orchestra.workspaces.configure": "Configurar",
+  "orchestra.workspaces.active": "Ativo",
+  "orchestra.workspaces.idle": "Ocioso",
+  "orchestra.workspaces.retry": "Tentar de novo",
+  "orchestra.workspaces.dialog.configure": "Configurar {{name}}",
+  "orchestra.workspaces.dialog.description":
+    "Local de execução do trabalho deste perfil. Novos workspaces são worktrees git deste repositório.",
+  "orchestra.workspaces.dialog.close": "Fechar diálogo",
+  "orchestra.workspaces.field.name": "Nome",
+  "orchestra.workspaces.field.directory": "Diretório",
+  "orchestra.workspaces.field.parentDirectory": "Diretório pai",
+  "orchestra.workspaces.field.branch": "Branch",
+  "orchestra.workspaces.field.type": "Tipo",
+  "orchestra.workspaces.field.serverDirectory": "Escolhido pelo servidor",
+  "orchestra.workspaces.field.detached": "HEAD destacado",
+  "orchestra.workspaces.field.noBranch": "Sem branch",
+  "orchestra.workspaces.field.unknownBranch": "Não informada por este servidor",
+  "orchestra.workspaces.field.invalidDirectory": "Digite um diretório pai e um nome sem barras.",
+  "orchestra.workspaces.delete": "Excluir workspace",
+  "orchestra.workspaces.external": "Este servidor não consegue remover este diretório. Remova-o com o git.",
+  "orchestra.workspaces.confirm.title": "Excluir workspace?",
+  "orchestra.workspaces.confirm.description": "Remove este worktree do git e os arquivos dele do disco.",
+  "orchestra.workspaces.confirm.guarded":
+    "Se {{path}} tiver alterações não commitadas, você será perguntado de novo antes de descartá-las.",
+  "orchestra.workspaces.confirm.action": "Confirmar",
+  "orchestra.workspaces.force.title": "Descartar alterações não commitadas?",
+  "orchestra.workspaces.force.description": "Este workspace tem alterações não commitadas ou não rastreadas.",
+  "orchestra.workspaces.force.note": "Excluir {{path}} agora descarta essas alterações permanentemente.",
+  "orchestra.workspaces.force.action": "Excluir mesmo assim",
 }

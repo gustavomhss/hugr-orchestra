@@ -17,3 +17,22 @@ export const ENV_COPY = {
   "orchestra.env.dialog.confirm": "Confirm",
   "orchestra.env.dialog.close": "Close dialog",
 }
+
+export const ENV_COPY_BR: Record<keyof typeof ENV_COPY, string> = {
+  "orchestra.env.eyebrow": "{{profile}} · Configuração",
+  "orchestra.env.search": "Buscar no .env",
+  "orchestra.env.view": "Ver arquivo",
+  "orchestra.env.count.one": "{{count}} chave",
+  "orchestra.env.count.other": "{{count}} chaves",
+  "orchestra.env.emptyHint": "Abra um arquivo .env ou adicione uma chave para começar com uma lista vazia.",
+  "orchestra.env.noMatch": "Nenhuma chave corresponde à sua busca.",
+  "orchestra.env.dialog.add": "Adicionar variável de ambiente",
+  "orchestra.env.dialog.edit": "Editar {{key}}",
+  "orchestra.env.dialog.editHint": "Mantenha simples. As mudanças ficam nesta página; baixe para salvar o arquivo.",
+  "orchestra.env.dialog.preview": "{{profile}} · prévia atual",
+  "orchestra.env.dialog.remove": "Remover {{key}}?",
+  "orchestra.env.dialog.removeHint": "A chave é removida deste rascunho. Baixe para salvar o arquivo.",
+  "orchestra.env.dialog.removeNote": "Isso altera o rascunho do .env de {{profile}}.",
+  "orchestra.env.dialog.confirm": "Confirmar",
+  "orchestra.env.dialog.close": "Fechar diálogo",
+}

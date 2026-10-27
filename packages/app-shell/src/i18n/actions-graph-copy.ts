@@ -22,3 +22,25 @@ export const dict = {
   "orchestra.actions.graph.note.partial": "Some source details resolve only at run time",
   "orchestra.actions.graph.note.unresolved": "Some source details could not be resolved",
 } as const
+
+export const dictBr: Record<keyof typeof dict, string> = {
+  "orchestra.actions.graph.execution": "Grafo de execução",
+  "orchestra.actions.graph.configuration": "Grafo de configuração",
+  "orchestra.actions.graph.declaredNeeds": "Somente needs declarados",
+  "orchestra.actions.graph.matrixDisplay": "Exibição da matrix",
+  "orchestra.actions.graph.grouped": "Jobs agrupados",
+  "orchestra.actions.graph.expanded": "Execuções da matrix",
+  "orchestra.actions.graph.runs": "{{count}} execuções",
+  "orchestra.actions.graph.expand": "Mostrar as execuções da matrix {{name}}",
+  "orchestra.actions.graph.matrixRunner": "Runner da matrix",
+  "orchestra.actions.graph.note.matrixDynamic": "Os valores da matrix são resolvidos na execução",
+  "orchestra.actions.graph.note.reusable": "Os jobs de workflows reutilizáveis são resolvidos na execução",
+  "orchestra.actions.graph.note.needs": "Algumas dependências de jobs não puderam ser resolvidas",
+  "orchestra.actions.graph.note.triggers": "Os gatilhos do workflow estão ausentes ou são inválidos",
+  "orchestra.actions.graph.note.includes": "A configuração incluída não é resolvida aqui",
+  "orchestra.actions.graph.note.inputs": "Os valores dos inputs são resolvidos na execução",
+  "orchestra.actions.graph.note.limit": "A origem é grande demais para ser inspecionada por completo",
+  "orchestra.actions.graph.note.yaml": "Parte do YAML não pôde ser lida",
+  "orchestra.actions.graph.note.partial": "Alguns detalhes da origem só são resolvidos na execução",
+  "orchestra.actions.graph.note.unresolved": "Alguns detalhes da origem não puderam ser resolvidos",
+}

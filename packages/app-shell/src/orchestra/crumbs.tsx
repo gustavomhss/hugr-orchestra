@@ -45,7 +45,7 @@ export function CrumbTrail(props: { label: string }) {
         {(item) => (
           <>
             <span aria-hidden="true">/</span>
-            <span class="truncate" style={{ "max-width": "240px" }}>
+            <span class="truncate" style={{ "max-width": "240px" }} title={typeof item === "string" ? item : item.label}>
               {typeof item === "string" ? (
                 item
               ) : (

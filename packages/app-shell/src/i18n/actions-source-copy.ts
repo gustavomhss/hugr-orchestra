@@ -5,3 +5,8 @@ export const dict = {
   "orchestra.actions.sourceImmutable": "Fixed at the run's commit",
   "orchestra.actions.sourceTriggers": "Workflow triggers",
 } as const
+
+export const dictBr: Record<keyof typeof dict, string> = {
+  "orchestra.actions.sourceImmutable": "Fixo no commit da execução",
+  "orchestra.actions.sourceTriggers": "Gatilhos do workflow",
+}

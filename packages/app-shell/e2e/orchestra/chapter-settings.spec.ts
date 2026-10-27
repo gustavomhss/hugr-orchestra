@@ -37,8 +37,8 @@ test("the sidebar opens the routed view with the mock's masthead, sections and d
   await page.locator(".orchestra-sidebar").getByRole("button", { name: "Settings", exact: true }).click()
   await expect(page).toHaveURL(/\/orchestra\/settings(\?|$)/)
   const view = page.locator('[data-mx-page="settings"]')
-  await expect(view.locator(".kicker")).toHaveText("Settings")
-  await expect(view.locator("h1")).toHaveText(/^Control what\s*the agents may do\.$/)
+  await expect(view.locator(".mx-eyebrow")).toHaveText("Preferences")
+  await expect(view.locator("h1")).toHaveText("Settings")
   const nav = page.getByRole("navigation", { name: "Settings sections" }).getByRole("button")
   await expect(nav).toHaveText([
     "General",

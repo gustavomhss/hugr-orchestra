@@ -11,3 +11,14 @@ export const dict = {
   "orchestra.actions.shell.findWorkflow": "Find a workflow…",
   "orchestra.actions.shell.off": "off",
 } as const
+
+export const dictBr: Record<keyof typeof dict, string> = {
+  "orchestra.actions.shell.workflows": "Workflows",
+  "orchestra.actions.shell.runs": "Execuções",
+  "orchestra.actions.shell.settings": "Configurações",
+  "orchestra.actions.shell.browse": "Explorar",
+  "orchestra.actions.shell.allWorkflows": "Todos os workflows",
+  "orchestra.actions.shell.allRuns": "Todas as execuções",
+  "orchestra.actions.shell.findWorkflow": "Encontrar um workflow…",
+  "orchestra.actions.shell.off": "desligado",
+}

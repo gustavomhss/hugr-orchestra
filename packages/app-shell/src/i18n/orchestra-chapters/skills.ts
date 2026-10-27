@@ -36,3 +36,41 @@ export const SKILLS_COPY = {
   "orchestra.skills.writeFailed": "The server could not change this skill.",
   "orchestra.skills.writeUnavailable": "This server cannot change skill files.",
 }
+
+export const SKILLS_COPY_BR: Record<keyof typeof SKILLS_COPY, string> = {
+  "orchestra.skills.eyebrow": "{{profile}} · Configuração",
+  "orchestra.skills.add": "Adicionar skill",
+  "orchestra.skills.disabled": "Desativada",
+  "orchestra.skills.source.project": "Projeto",
+  "orchestra.skills.source.global": "Global",
+  "orchestra.skills.source.builtin": "Integrada",
+  "orchestra.skills.noDescription": "Sem descrição.",
+  "orchestra.skills.readOnly": "Leitura",
+  "orchestra.skills.toggle": "Ativar {{name}}",
+  "orchestra.skills.localNote":
+    "A disponibilidade é salva para este perfil neste app; os agentes ainda recebem todas as skills registradas.",
+  "orchestra.skills.notListed":
+    "Salvo em {{location}}. O servidor a lista depois que recarregar a configuração deste projeto.",
+  "orchestra.skills.reload": "Recarregar lista",
+  "orchestra.skills.dialog.add": "Adicionar skill",
+  "orchestra.skills.dialog.addDetail": "Salva como .orchestra/skills/<name>/SKILL.md no repositório deste perfil.",
+  "orchestra.skills.dialog.edit": "Editar {{name}}",
+  "orchestra.skills.dialog.read": "Ler {{name}}",
+  "orchestra.skills.dialog.builtin": "Integrada ao servidor. Somente leitura.",
+  "orchestra.skills.dialog.global": "Armazenada em {{location}}. Skills globais são somente leitura aqui.",
+  "orchestra.skills.dialog.governed": "Armazenada em {{location}}. Governada pelo Atlas, então é somente leitura.",
+  "orchestra.skills.dialog.fixed":
+    "Armazenada em {{location}}. Fora das pastas de skills deste projeto, então é somente leitura aqui.",
+  "orchestra.skills.dialog.close": "Fechar diálogo",
+  "orchestra.skills.dialog.cancel": "Cancelar",
+  "orchestra.skills.dialog.save": "Salvar",
+  "orchestra.skills.dialog.name": "Nome",
+  "orchestra.skills.dialog.description": "Descrição",
+  "orchestra.skills.dialog.remove": "Remover skill",
+  "orchestra.skills.remove.title": "Remover esta skill?",
+  "orchestra.skills.remove.detail": "Exclui {{location}}.",
+  "orchestra.skills.remove.note": "O arquivo é excluído do disco para todos os perfis que o carregam.",
+  "orchestra.skills.remove.confirm": "Confirmar",
+  "orchestra.skills.writeFailed": "O servidor não conseguiu alterar esta skill.",
+  "orchestra.skills.writeUnavailable": "Este servidor não consegue alterar arquivos de skills.",
+}

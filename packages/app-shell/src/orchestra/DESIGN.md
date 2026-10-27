@@ -213,6 +213,12 @@ Measured at 1920×1200 in the dev app. Spacing values sit on a 2px grid; most ga
   `.mx-toolbar` as `.mx-search` with a placeholder and the same text as `aria-label` (no visible label), the profile
   badge beside it. On WIP chapters the seal sits above the page and the page gives back its height (top padding
   14px), so the eyebrow lands at the same height (117px in the dev app) with or without it.
+  Chapters that build their own page (Settings, Workspaces, Agents, the CI/CD library) use the same kit markup:
+  `header.mx-heading` holding a `div` with `.mx-eyebrow`, the h1 and the sentence, then the action. The eyebrow
+  appears once per view: a breadcrumb shows only on contextual pages, never above a chapter's own eyebrow.
+- **Sidebar overflow.** The chapter list scrolls under a fade mask (8px top, 32px bottom) with matching block
+  padding, so no entry is clipped flat against the chrome. Composer chips (28px) name a mode in one word; the full
+  sentence lives in the picker.
 - **Dialogs.** Float glass over the scrim, radius xl, title 2xl. The head carries `--mx-sheen`, the foot a
   `--mx-soft` wash, and the frame the highlight rim over `--mx-shadow`. The head's close icon is a 28px rounded
   square (radius sm, `--mx-dim`, `--mx-soft` on hover), so its focus ring is not a tight box around the glyph.
