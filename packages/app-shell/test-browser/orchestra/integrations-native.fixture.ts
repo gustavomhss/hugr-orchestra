@@ -37,7 +37,7 @@ export async function startHost(mode: "basic" | "bearer" = "basic") {
     env: { ...process.env, ORCHESTRA_TEST_HOME: directory, ORCHESTRA_DB: join(directory, "proof.sqlite"),
       XDG_DATA_HOME: join(directory, "data"), XDG_CONFIG_HOME: join(directory, "config"),
       XDG_CACHE_HOME: join(directory, "cache"), XDG_STATE_HOME: join(directory, "state"),
-      ORCHESTRA_DISABLE_PROJECT_CONFIG: "1", ORCHESTRA_DISABLE_DEFAULT_PLUGINS: "1",
+      ORCHESTRA_DISABLE_PROJECT_CONFIG: "1",
       ORCHESTRA_DISABLE_MODELS_FETCH: "1", ORCHESTRA_TEST_CHANNEL: "test", TMPDIR: directory },
   })
   const stderr = new Response(child.stderr).text()
