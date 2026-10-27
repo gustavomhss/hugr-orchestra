@@ -224,6 +224,8 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
     if (path === "/api/vcs/diff") return json(route, { location: location(config), data: config.vcsDiff ?? [] })
     if (path === "/api/pty/shells") return json(route, { location: location(config), data: [] })
     if (path === "/api/config/shells") return json(route, [])
+    // The global trust list the MCP page and Settings read; the mock trusts nothing.
+    if (path === "/api/trust") return json(route, [])
     if (/^\/api\/pty\/[^/]+\/connect-token$/.test(path))
       return json(route, { location: location(config), data: { ticket: "e2e-ticket", expires_in: 60 } })
     if (emptyObject.has(path)) return json(route, {})

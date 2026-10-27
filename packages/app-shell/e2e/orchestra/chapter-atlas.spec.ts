@@ -168,8 +168,8 @@ test("every Atlas view renders the store", async ({ page }) => {
   await main.getByRole("button", { name: /^Code/ }).click()
   await expect(main).toContainText("Commit c0ffee1 changed 1 fact")
 
-  await rail.getByRole("link", { name: "Histórico" }).click()
-  await expect(main.locator("h1")).toHaveText("Histórico")
+  await rail.getByRole("link", { name: "History" }).click()
+  await expect(main.locator("h1")).toHaveText("History")
   await expect(main).toContainText("The ratification interview")
   await expect(main).toContainText("Who owns packages/a?")
   await expect(main).not.toContainText("New capability · R11")

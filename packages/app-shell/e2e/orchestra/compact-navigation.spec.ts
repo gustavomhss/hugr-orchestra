@@ -187,7 +187,8 @@ test("Advanced group keeps its choice across reload and opens for the page insid
   await expect(toggle).toHaveAttribute("aria-disabled", "true")
   await expect(mcp).toHaveAttribute("aria-current", "page")
   // The open group cannot close under the page it holds.
-  await toggle.click()
+  // The toggle is disabled there, so Playwright's own actionability wait would never end.
+  await toggle.click({ force: true })
   await expect(toggle).toHaveAttribute("aria-expanded", "true")
 })
 
