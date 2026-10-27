@@ -104,10 +104,14 @@ async function parent() {
       child.stderr.on("data", (chunk) => {
         stderr += chunk
       })
+      console.error(`app-dock-restart:${stage}:start`)
+      // A stage that never exits (display, GPU or sandbox start-up) must fail with its output, not hang the run.
+      const stageTimeout = setTimeout(() => child.kill("SIGKILL"), 60_000)
       const result = await new Promise<{ code: number | null }>((resolve, reject) => {
         child.once("exit", (code) => resolve({ code }))
         child.once("error", reject)
       })
+      clearTimeout(stageTimeout)
       if (result.code !== 0 || !stdout.includes(`app-dock-restart:${stage}:pass`))
         throw new Error(JSON.stringify({ phase: "restart-stage-failure", stage, ...result, stdout, stderr }))
       restartStages.push(stage)

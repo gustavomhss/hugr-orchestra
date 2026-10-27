@@ -144,7 +144,7 @@ jobs:
   app-dock:
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 40
     defaults:
       run:
         working-directory: apps/desktop
@@ -172,14 +172,23 @@ jobs:
         run: echo "APP_DOCK_ARTIFACT_ROOT=$RUNNER_TEMP/app-dock" >> "$GITHUB_ENV"
 
       - name: Security harness
+        timeout-minutes: 10
+        env:
+          ELECTRON_ENABLE_LOGGING: "1"
         run: xvfb-run -a bun run test:app-dock:e2e
 
       - name: RPC harness
         if: ${{ !cancelled() }}
+        timeout-minutes: 10
+        env:
+          ELECTRON_ENABLE_LOGGING: "1"
         run: xvfb-run -a bun run test:app-dock:rpc
 
       - name: Tools harness
         if: ${{ !cancelled() }}
+        timeout-minutes: 10
+        env:
+          ELECTRON_ENABLE_LOGGING: "1"
         run: xvfb-run -a bun run test:app-dock:tools
 
       - name: Preserve App Dock artifacts on failure
