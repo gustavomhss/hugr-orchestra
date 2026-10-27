@@ -1,6 +1,7 @@
 // A local MCP server declared by a project's own config is a command the repository chose to run. It does not start until
 // the user's global config approves the project; the status says why. A server in the user's global config is the user's own.
 import path from "path"
+import { realpath } from "fs/promises"
 import { describe, expect } from "bun:test"
 import { Effect } from "effect"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
@@ -69,7 +70,9 @@ describe("Mcp project trust", () => {
             expect(yield* Effect.promise(() => Bun.file(marker).exists())).toBe(false)
           }).pipe(
             Effect.scoped,
-            Effect.provide(LocationServiceMap.Service.get(Location.Ref.make({ directory: AbsolutePath.make(dir.path) }))),
+            Effect.provide(
+              LocationServiceMap.Service.get(Location.Ref.make({ directory: AbsolutePath.make(dir.path) })),
+            ),
           )
         }),
       ),
@@ -97,7 +100,9 @@ describe("Mcp project trust", () => {
             expect(yield* Effect.promise(() => Bun.file(marker).exists())).toBe(false)
           }).pipe(
             Effect.scoped,
-            Effect.provide(LocationServiceMap.Service.get(Location.Ref.make({ directory: AbsolutePath.make(dir.path) }))),
+            Effect.provide(
+              LocationServiceMap.Service.get(Location.Ref.make({ directory: AbsolutePath.make(dir.path) })),
+            ),
           )
         }),
       ),
@@ -113,13 +118,55 @@ describe("Mcp project trust", () => {
         Effect.gen(function* () {
           yield* Effect.gen(function* () {
             const mcp = yield* Mcp.Service
-            yield* mcp.add("saved", new ConfigMCP.Local({ type: "local", command: ["bun", "--version"], disabled: true }))
+            yield* mcp.add(
+              "saved",
+              new ConfigMCP.Local({ type: "local", command: ["bun", "--version"], disabled: true }),
+            )
           }).pipe(
             Effect.scoped,
-            Effect.provide(LocationServiceMap.Service.get(Location.Ref.make({ directory: AbsolutePath.make(dir.path) }))),
+            Effect.provide(
+              LocationServiceMap.Service.get(Location.Ref.make({ directory: AbsolutePath.make(dir.path) })),
+            ),
           )
           const written = yield* Effect.promise(() => Bun.file(path.join(global.path, "orchestra.json")).json())
           expect(written.trusted_projects).toContain(dir.path)
+        }),
+      ),
+    ),
+  )
+
+  it.live("approving a project starts its blocked server on applyTrust, without a restart", () =>
+    Effect.acquireRelease(
+      Effect.promise(() => tmpdir()),
+      (dir) => Effect.promise(() => dir[Symbol.asyncDispose]()),
+    ).pipe(
+      Effect.flatMap((dir) =>
+        Effect.gen(function* () {
+          const marker = path.join(dir.path, "started")
+          yield* Effect.promise(() =>
+            Bun.write(path.join(dir.path, "orchestra.json"), JSON.stringify({ mcp: { repo: server(marker) } })),
+          )
+          const real = yield* Effect.promise(() => realpath(dir.path))
+          yield* Effect.gen(function* () {
+            const mcp = yield* Mcp.Service
+            expect((yield* mcp.list())[0]?.status.status).toBe("failed")
+            expect(yield* Effect.promise(() => Bun.file(marker).exists())).toBe(false)
+
+            // The approval lands in the user's global config; the next connect reads it.
+            yield* Effect.promise(() =>
+              Bun.write(path.join(global.path, "orchestra.json"), JSON.stringify({ trusted_projects: [real] })),
+            )
+            yield* mcp.applyTrust()
+
+            expect(yield* Effect.promise(() => Bun.file(marker).exists())).toBe(true)
+            const status = (yield* mcp.list())[0]?.status
+            expect(status?.status === "failed" ? status.error : "").not.toContain("trusted_projects")
+          }).pipe(
+            Effect.scoped,
+            Effect.provide(
+              LocationServiceMap.Service.get(Location.Ref.make({ directory: AbsolutePath.make(dir.path) })),
+            ),
+          )
         }),
       ),
     ),

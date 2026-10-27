@@ -1,9 +1,7 @@
 import { useDialog } from "@orchestra/ui/context/dialog"
 import { useLocation } from "@solidjs/router"
 import { useCommand } from "@/context/command"
-import { useLayout } from "@/context/layout"
 import { useServerSDK } from "@/context/server-sdk"
-import { useTabs } from "@/context/tabs"
 import { showToast } from "@/utils/toast"
 import { modalActive } from "@/utils/modal-active"
 import { skipToken, useQuery } from "@tanstack/solid-query"
@@ -29,6 +27,7 @@ import { runVersion } from "./history"
 import { issueText } from "./parts"
 import { RunsUnavailable } from "./library"
 import { copyDocument } from "./presets"
+import { useWorkflowChat } from "./chat"
 import { layerBase, type RelayRoute, relayPath } from "./route"
 import { SERVER_ISSUES } from "./server-issues"
 import type { RelaySource } from "./source"
@@ -100,8 +99,6 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
   const copy = useRelayCopy()
   const dialogs = useDialog()
   const serverSDK = useServerSDK()
-  const tabs = useTabs()
-  const layout = useLayout()
   const duplication = createAction(useLocation())
   const exporting = createAction()
   const kind = props.route.kind
@@ -313,12 +310,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
     if (failed) installNotice(copy, "update", failed.error)
   }
 
-  // The chat opens as a draft in this project with the workflow named in the prompt; the owner finishes the sentence.
-  const useInChat = (item: RelayDocument) =>
-    void tabs.newDraft(
-      { server: layout.home.selection().server, directory: props.directory },
-      copy.t("orchestra.workflows.useInChat.prompt", { name: item.name, id: item.id }),
-    )
+  const openChat = useWorkflowChat(props.directory, copy.t)
 
   const unpublish = () => {
     draft.acquire()
@@ -564,7 +556,8 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
           queueMicrotask(() => api?.center(node))
         }}
         onPublish={() => void openPublish()}
-        onUseInChat={() => useInChat(base())}
+        onRun={() => openChat("run", base())}
+        onUseInChat={() => openChat("use", base())}
         onTest={() => setDialog("test")}
         onInstall={(next) => void setInstalled(next)}
         onReload={() => void reload()}
@@ -712,7 +705,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
               showToast({
                 variant: "success",
                 title: copy.t("orchestra.workflows.publish.done", { name: item.name }),
-                actions: [{ label: copy.t("orchestra.workflows.editor.useInChat"), onClick: () => useInChat(item) }],
+                actions: [{ label: copy.t("orchestra.workflows.editor.useInChat"), onClick: () => openChat("use", item) }],
               })
             }} />
         </Match>

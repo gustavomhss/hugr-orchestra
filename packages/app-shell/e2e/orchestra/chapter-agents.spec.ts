@@ -24,7 +24,7 @@ for (const scheme of ["dark", "light"] as const) {
     expect.soft(await plan.locator(".agent-role").textContent()).toBe("primary")
     // The card's first paragraph is the description; the Maestro-only note sits in its footer.
     expect.soft(await plan.locator("p").first().textContent()).toBe("Plans repository work")
-    await expect(plan.locator(".mx-badge")).toHaveText(["reasoner", "7 steps", "Available"])
+    await expect(plan.locator(".mx-badge")).toHaveText(["Reasoner", "7 steps", "Available"])
     await expect(plan.locator(".mx-badge bdi")).toHaveAttribute("title", "example/reasoner")
     await expect(card(page, "build").locator(".mx-badge")).toHaveText(["Default model", "Unlimited steps", "Available"])
     const offline = card(page, "review").locator(".mx-badge")

@@ -69,6 +69,11 @@ export interface Interface {
    * a process that opens Locations without running turns never spawns them.
    */
   readonly ready: () => Effect.Effect<void>
+  /**
+   * Re-applies project trust after an approval or revoke: servers that trust blocked start, and running local servers
+   * of a project that is no longer approved stop. Each server re-reads trust when it connects.
+   */
+  readonly applyTrust: () => Effect.Effect<void>
   readonly list: () => Effect.Effect<Mcp.Server[]>
   readonly connect: (name: string) => Effect.Effect<void, NotFoundError>
   readonly disconnect: (name: string) => Effect.Effect<void, NotFoundError>
@@ -138,6 +143,8 @@ const layer = Layer.effect(
     // Project config documents are read once per Location open; servers added or removed here overlay them.
     const added = new Map<string, ConfigMCP.Local | ConfigMCP.Remote>()
     const removed = new Set<string>()
+    // Local servers the last connect refused because the project was not approved; applyTrust retries them.
+    const blocked = new Set<string>()
 
     const configured = Effect.fnUntraced(function* () {
       const documents = (yield* config.entries()).filter((entry): entry is Config.Document => entry.type === "document")
@@ -246,15 +253,18 @@ const layer = Layer.effect(
       const generation = ++current.generation
       yield* release(current)
       if (server.disabled) {
+        blocked.delete(name)
         current.status = { status: "disabled" }
         return
       }
       if (server.type === "local" && found.unapproved.has(name)) {
+        blocked.add(name)
         current.status = failed(
           `Not started: this project's config declares a local command for this server. ${ConfigTrust.approveHint(location.directory)}`,
         )
         return
       }
+      blocked.delete(name)
       const startup = server.timeout?.startup ?? found.timeout?.startup ?? DEFAULT_TIMEOUT
       const request = server.timeout?.request ?? found.timeout?.request ?? DEFAULT_TIMEOUT
       const opened = yield* open(name, server, startup)
@@ -309,7 +319,11 @@ const layer = Layer.effect(
       )
     })
 
-    const open = Effect.fnUntraced(function* (name: string, server: ConfigMCP.Local | ConfigMCP.Remote, startup: number) {
+    const open = Effect.fnUntraced(function* (
+      name: string,
+      server: ConfigMCP.Local | ConfigMCP.Remote,
+      startup: number,
+    ) {
       if (server.type === "local") {
         const transport = new McpStdio.OmniStdioTransport({
           command: server.command[0] ?? "",
@@ -325,13 +339,16 @@ const layer = Layer.effect(
           ),
         )
       }
-      if (!URL.canParse(server.url)) return { client: undefined, transport: undefined, status: failed(`Invalid MCP URL for "${name}"`) }
+      if (!URL.canParse(server.url))
+        return { client: undefined, transport: undefined, status: failed(`Invalid MCP URL for "${name}"`) }
       const url = new URL(server.url)
       // Stored tokens authorize the connection; a server without them fails unauthorized instead of redirecting.
       const init = {
         ...(server.oauth === false
           ? {}
-          : { authProvider: new McpOAuthProvider(name, server.url, oauthConfig(server), { onRedirect: () => {} }, auth) }),
+          : {
+              authProvider: new McpOAuthProvider(name, server.url, oauthConfig(server), { onRedirect: () => {} }, auth),
+            }),
         ...(server.headers ? { requestInit: { headers: server.headers } } : {}),
       }
       const oauth = server.oauth !== false
@@ -343,7 +360,11 @@ const layer = Layer.effect(
       return yield* attach(new SSEClientTransport(url, init), startup).pipe(
         Effect.map((client) => ({ client, transport: undefined, status: { status: "connected" } as Mcp.Status })),
         Effect.catch((error) =>
-          Effect.succeed({ client: undefined, transport: undefined, status: authStatus(error, oauth) ?? failed(error.message) }),
+          Effect.succeed({
+            client: undefined,
+            transport: undefined,
+            status: authStatus(error, oauth) ?? failed(error.message),
+          }),
         ),
       )
     })
@@ -366,6 +387,7 @@ const layer = Layer.effect(
 
     const disconnect = Effect.fn("Mcp.disconnect")(function* (name: string) {
       if (!(yield* configured()).servers.has(name)) return yield* new NotFoundError({ name })
+      blocked.delete(name)
       const current = entry(name)
       current.generation++
       yield* release(current)
@@ -381,15 +403,18 @@ const layer = Layer.effect(
     })
 
     const add = Effect.fn("Mcp.add")(function* (name: string, server: ConfigMCP.Local | ConfigMCP.Remote) {
-      if (!McpProjectConfig.validName(name)) return yield* new ConfigError({ message: `Invalid MCP server name: ${name}` })
+      if (!McpProjectConfig.validName(name))
+        return yield* new ConfigError({ message: `Invalid MCP server name: ${name}` })
       yield* McpProjectConfig.write(location.directory, name, legacy(server)).pipe(
         Effect.provideService(FSUtil.Service, fs),
         Effect.mapError((error) => new ConfigError({ message: error.message })),
       )
       // Adding a local command is an explicit user action, so the project is approved for restarts too.
       if (server.type === "local") {
-        const trusted = (yield* Config.readGlobal().pipe(Effect.provideService(FSUtil.Service, fs), Effect.provideService(Global.Service, global)))
-          .trustedProjects
+        const trusted = (yield* Config.readGlobal().pipe(
+          Effect.provideService(FSUtil.Service, fs),
+          Effect.provideService(Global.Service, global),
+        )).trustedProjects
         if (!trusted.some((root) => ConfigTrust.within(root, location.directory)))
           yield* Config.updateGlobal({ trustedProjects: [...trusted, location.directory] }).pipe(
             Effect.provideService(FSUtil.Service, fs),
@@ -409,6 +434,7 @@ const layer = Layer.effect(
       if (files.length === 0 && !added.has(name)) return yield* new NotFoundError({ name })
       added.delete(name)
       removed.add(name)
+      blocked.delete(name)
       const current = entries.get(name)
       entries.delete(name)
       if (current) {
@@ -421,7 +447,9 @@ const layer = Layer.effect(
       return Object.fromEntries(
         Array.from((yield* configured()).servers, ([name, server]): [string, Mcp.Entry] => [
           name,
-          server.type === "local" ? { type: "local", command: [...server.command] } : { type: "remote", url: server.url },
+          server.type === "local"
+            ? { type: "local", command: [...server.command] }
+            : { type: "remote", url: server.url },
         ]),
       )
     })
@@ -451,7 +479,9 @@ const layer = Layer.effect(
         connected(),
         (item) =>
           Effect.all([
-            Effect.tryPromise(() => McpCatalog.resources(item.client, DEFAULT_TIMEOUT)).pipe(Effect.orElseSucceed(() => [])),
+            Effect.tryPromise(() => McpCatalog.resources(item.client, DEFAULT_TIMEOUT)).pipe(
+              Effect.orElseSucceed(() => []),
+            ),
             Effect.tryPromise(() => McpCatalog.resourceTemplates(item.client, DEFAULT_TIMEOUT)).pipe(
               Effect.orElseSucceed(() => []),
             ),
@@ -504,7 +534,11 @@ const layer = Layer.effect(
       return listed.flat()
     })
 
-    const getPrompt = Effect.fn("Mcp.getPrompt")(function* (server: string, name: string, args: Record<string, string>) {
+    const getPrompt = Effect.fn("Mcp.getPrompt")(function* (
+      server: string,
+      name: string,
+      args: Record<string, string>,
+    ) {
       yield* ready()
       const client = entries.get(server)?.client
       if (!client) return yield* new NotFoundError({ name: server })
@@ -622,7 +656,8 @@ const layer = Layer.effect(
     const debug = Effect.fn("Mcp.debug")(function* (name: string) {
       const server = (yield* configured()).servers.get(name)
       if (!server) return yield* new NotFoundError({ name })
-      if (server.type !== "remote") return yield* new ConfigError({ message: `MCP server ${name} is not a remote server` })
+      if (server.type !== "remote")
+        return yield* new ConfigError({ message: `MCP server ${name} is not a remote server` })
       const oauth = server.oauth !== false
       const stored = oauth ? yield* auth.get(name) : undefined
       const base = {
@@ -651,11 +686,19 @@ const layer = Layer.effect(
         try: () =>
           fetch(server.url, {
             method: "POST",
-            headers: { ...server.headers, "Content-Type": "application/json", Accept: "application/json, text/event-stream" },
+            headers: {
+              ...server.headers,
+              "Content-Type": "application/json",
+              Accept: "application/json, text/event-stream",
+            },
             body: JSON.stringify({
               jsonrpc: "2.0",
               method: "initialize",
-              params: { protocolVersion: LATEST_PROTOCOL_VERSION, capabilities: {}, clientInfo: { name: "orchestra-debug", version: InstallationVersion } },
+              params: {
+                protocolVersion: LATEST_PROTOCOL_VERSION,
+                capabilities: {},
+                clientInfo: { name: "orchestra-debug", version: InstallationVersion },
+              },
               id: 1,
             }),
             signal: AbortSignal.timeout(DEFAULT_TIMEOUT),
@@ -726,8 +769,19 @@ const layer = Layer.effect(
         )
       })
 
+    // A running local server stays only while its project is approved; connect re-reads trust, so it stops or starts here.
+    const applyTrust = Effect.fn("Mcp.applyTrust")(function* () {
+      const found = yield* configured()
+      const running = Array.from(entries).flatMap(([name, current]) =>
+        current.client && found.servers.get(name)?.type === "local" && found.unapproved.has(name) ? [name] : [],
+      )
+      const names = Array.from(new Set([...blocked, ...running]))
+      yield* Effect.forEach(names, (name) => connect(name).pipe(Effect.ignore), { discard: true })
+    })
+
     return Service.of({
       ready,
+      applyTrust,
       list,
       connect,
       disconnect,
@@ -809,9 +863,7 @@ function isObject(value: unknown): value is Record<string, unknown> {
 }
 
 function text(result: CallToolResult) {
-  return result.content
-    .flatMap((item) => (item.type === "text" && item.text.trim() ? [item.text] : []))
-    .join("\n\n")
+  return result.content.flatMap((item) => (item.type === "text" && item.text.trim() ? [item.text] : [])).join("\n\n")
 }
 
 function content(result: CallToolResult): ToolContent[] {

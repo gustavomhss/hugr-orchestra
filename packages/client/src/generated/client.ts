@@ -279,6 +279,11 @@ import type {
   ConfigUpdateInput,
   ConfigUpdateOutput,
   ConfigShellsOutput,
+  ServerTrustListOutput,
+  ServerTrustApproveInput,
+  ServerTrustApproveOutput,
+  ServerTrustRevokeInput,
+  ServerTrustRevokeOutput,
   ServerBoardListInput,
   ServerBoardListOutput,
   ServerBoardGetInput,
@@ -2449,6 +2454,37 @@ export function make(options: ClientOptions) {
       shells: (requestOptions?: RequestOptions) =>
         request<ConfigShellsOutput>(
           { method: "GET", path: `/api/config/shells`, successStatus: 200, declaredStatuses: [401, 400], empty: false },
+          requestOptions,
+        ),
+    },
+    "server.trust": {
+      list: (requestOptions?: RequestOptions) =>
+        request<ServerTrustListOutput>(
+          { method: "GET", path: `/api/trust`, successStatus: 200, declaredStatuses: [401, 400], empty: false },
+          requestOptions,
+        ),
+      approve: (input: ServerTrustApproveInput, requestOptions?: RequestOptions) =>
+        request<ServerTrustApproveOutput>(
+          {
+            method: "POST",
+            path: `/api/trust/approve`,
+            body: { directory: input["directory"] },
+            successStatus: 204,
+            declaredStatuses: [400, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
+      revoke: (input: ServerTrustRevokeInput, requestOptions?: RequestOptions) =>
+        request<ServerTrustRevokeOutput>(
+          {
+            method: "POST",
+            path: `/api/trust/revoke`,
+            body: { directory: input["directory"] },
+            successStatus: 204,
+            declaredStatuses: [401, 400],
+            empty: true,
+          },
           requestOptions,
         ),
     },

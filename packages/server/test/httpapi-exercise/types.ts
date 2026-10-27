@@ -15,6 +15,8 @@ export type ProjectOptions = {
   /** Written as the project's `orchestra.json`. */
   config?: JsonObjectLike
   init?: (directory: string) => Promise<void>
+  /** Listed in the isolated user config's `trusted_projects`, so its plugins, formatter and LSP may run. */
+  trusted?: boolean
 }
 export type OpenApiSpec = { paths?: Record<string, Partial<Record<OpenApiMethod, unknown>>> }
 export type JsonObject = Record<string, unknown>

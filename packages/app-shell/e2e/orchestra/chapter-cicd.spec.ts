@@ -14,6 +14,7 @@ import {
   source,
   workflowRows,
 } from "../utils/cicd"
+import { expandAdvanced } from "./compact-navigation.fixture"
 
 test.use({ viewport: { width: 1440, height: 900 } })
 
@@ -132,15 +133,17 @@ test("the pressed WIP item opens no tooltip that would take a dialog's Escape", 
   await setup(page)
   await openChapter(page)
   // Actions is no longer WIP; MCP still exercises cancellation of the pending hover tooltip.
+  await expandAdvanced(page)
   await page.locator(".orchestra-nav").getByRole("button", { name: "MCP", exact: true }).click()
   await page.clock.fastForward(450)
   await expect(page.getByRole("tooltip")).toHaveCount(0)
-  await page.locator(".orchestra-nav").getByRole("button", { name: "Actions", exact: true }).click()
+  await page.locator(".orchestra-nav").getByRole("button", { name: "Checks", exact: true }).click()
   await openLocalPipelines(page, serverA)
   const source = await openSource(page, ".github/workflows/ci.yml")
   await page.keyboard.press("Escape")
   await expect(source).toHaveCount(0)
   // Positive control: hovering a WIP item without pressing it still explains the mark.
+  await expandAdvanced(page)
   await page.locator(".orchestra-nav").getByRole("button", { name: "MCP", exact: true }).hover()
   await expect(
     page.getByRole("tooltip", { name: "Work in progress, revisit before production", exact: true }),

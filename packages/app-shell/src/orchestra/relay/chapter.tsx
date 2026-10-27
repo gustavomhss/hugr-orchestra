@@ -139,6 +139,7 @@ export function RelayChapter(props: ChapterPageProps & { kind: RelayKind }) {
           {props.kind === "workflow" ? (
               <WorkflowLibrary
                 source={source}
+                directory={props.directory}
                 route={library()!}
                 profile={profile()}
                 shared={shared()}

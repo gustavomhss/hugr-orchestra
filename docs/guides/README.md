@@ -9,5 +9,7 @@
 - [App error messages](app-error-messages.md)
 - [Skills: catalog visibility](skills.md)
 - [Instructions and TUI settings](instructions-and-tui.md)
+- [Permission and question requests](session-requests.md)
 - [Environment variables and logs](environment.md)
 - [Live meetings: setup and use](live-meetings.md)
+- [Workflows: run, release and templates](workflows.md)

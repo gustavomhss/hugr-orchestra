@@ -1,4 +1,4 @@
-import { expect } from "bun:test"
+import { expect, mock } from "bun:test"
 import { isolatedSolid } from "./integrations-solid.fixture"
 import { mkdir, mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
@@ -12,6 +12,10 @@ import type { CapabilityConnectionTable, CapabilityBindingTable, CapabilityTarge
 import type { CredentialTable } from "@orchestra/core/credential/sql"
 
 export const load = isolatedSolid("integrations-native")
+// The page only reads Global for the profile eyebrow; with no known project it falls back to the directory name.
+mock.module(`${Bun.resolveSync("../../src/context/global", import.meta.dir)}?integrations-native`, () => ({
+  useGlobal: () => ({ ensureServerCtx: () => ({ projects: { list: () => [] } }) }),
+}))
 const { default: IntegrationsPage }: typeof import("../../src/orchestra/chapters/integrations") = await load(
   "../../src/orchestra/chapters/integrations",
 )

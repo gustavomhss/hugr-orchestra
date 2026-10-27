@@ -108,6 +108,7 @@
     "./config/provider": "./src/config/provider.ts",
     "./config/provider-options": "./src/config/provider-options.ts",
     "./config/tool-output": "./src/config/tool-output.ts",
+    "./config/trust": "./src/config/trust.ts",
     "./config/upgrade/agent": "./src/config/upgrade/agent.ts",
     "./config/upgrade/lsp": "./src/config/upgrade/lsp.ts",
     "./config/upgrade/source": "./src/config/upgrade/source.ts",

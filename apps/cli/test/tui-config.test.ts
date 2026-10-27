@@ -40,8 +40,8 @@ describe("tui config files", () => {
 
   test("an invalid file fails naming it", async () => {
     await write("project/tui.json", "{ invalid")
-    await expect(load()).rejects.toThrow("project/tui.json")
+    await expect(load()).rejects.toThrow(path.join("project", "tui.json"))
     await write("project/tui.json", JSON.stringify({ leader_timeout: "slow" }))
-    await expect(load()).rejects.toThrow("project/tui.json")
+    await expect(load()).rejects.toThrow(path.join("project", "tui.json"))
   })
 })

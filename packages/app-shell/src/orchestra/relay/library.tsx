@@ -5,7 +5,7 @@ import { showToast } from "@/utils/toast"
 import { MxPage } from "../chapters/kit"
 import { documentProfile, type RelayDocument } from "./client"
 import { rememberDocument } from "./cache"
-import { CreateWorkflowDialog, templates } from "./create"
+import { CreateWorkflowDialog } from "./create"
 import { createAction, DeleteDialog, failure } from "./dialogs"
 import { ImportWorkflowDialog } from "./import-dialog"
 import { badgeTone, newestFirst, RUN_TONE, runHandle, span } from "./format"
@@ -14,6 +14,7 @@ import {
   phaseNames,
   RetainedDrafts,
   RunBadge,
+  RunButton,
   stateLabel,
   TemplateCard,
   unpublishedChanges,
@@ -24,10 +25,13 @@ import { type RelayRoute, relayPath } from "./route"
 import type { RelayRun, RelayRunStatus } from "./runs"
 import { Receipt } from "./receipt"
 import type { RelaySource } from "./source"
+import { templates } from "./templates"
+import { useWorkflowChat } from "./chat"
 import { Ic, Menu, type MenuItem, RelayDialog, useRelayCopy } from "./ui"
 
 type Props = {
   source: RelaySource
+  directory: string
   route: Extract<RelayRoute, { page: "library" }>
   profile: string
   // The folder is outside git: its workflows would be shared by every such folder, so nothing new is made here.
@@ -50,6 +54,7 @@ const STATES = {
 
 export function WorkflowLibrary(props: Props) {
   const copy = useRelayCopy()
+  const openChat = useWorkflowChat(props.directory, copy.t)
   const duplication = createAction(useLocation())
   const [view, setView] = props.view ?? createLibraryView()
   const [template, setTemplate] = createSignal<string>()
@@ -313,6 +318,7 @@ export function WorkflowLibrary(props: Props) {
                           </span>
                         </div>
                         <div class="wf-actions" onClick={(event) => event.stopPropagation()}>
+                          <RunButton document={document} onRun={() => openChat("run", document)} />
                           <button
                             type="button"
                             class="mx-btn icon"

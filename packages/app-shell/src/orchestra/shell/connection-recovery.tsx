@@ -1,12 +1,16 @@
 import { For, Show } from "solid-js"
 import { createStore } from "solid-js/store"
+import { Button } from "@orchestra/ui/button"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
 import { normalizeServerUrl, ServerConnection, useServer } from "@/context/server"
 import { useCheckServerHealth } from "@/utils/server-health"
 
 // Startup recovery has no router, Tabs, Command or server-scoped provider dependencies.
-export function ConnectionRecovery(props: { onServerSelected?: (key: ServerConnection.Key) => void }) {
+export function ConnectionRecovery(props: {
+  onRetry?: () => void
+  onServerSelected?: (key: ServerConnection.Key) => void
+}) {
   const server = useServer()
   const language = useLanguage()
   const platform = usePlatform()
@@ -21,8 +25,15 @@ export function ConnectionRecovery(props: { onServerSelected?: (key: ServerConne
     password: "",
     busy: false,
     error: "",
+    logsError: "",
   })
   const fields = ["url", "name", "username", "password"] as const
+  // Restarting the desktop app restarts its bundled server, so it only helps when the selected server is that one.
+  const restartable = () => platform.platform === "desktop" && ServerConnection.local(server.current)
+  const exportLogs = async () => {
+    setState("logsError", "")
+    await platform.exportDebugLogs?.().catch(() => setState("logsError", language.t("orchestra.shell.logs.exportFailed")))
+  }
   const edit = () => {
     const conn = server.current
     setState({
@@ -68,6 +79,26 @@ export function ConnectionRecovery(props: { onServerSelected?: (key: ServerConne
   }
   return (
     <section class="w-full max-w-sm shrink-0 flex flex-col gap-3" aria-label={language.t("status.popover.tab.servers")}>
+      <div class="flex flex-col gap-2 items-center">
+        <Button size="large" variant="primary" onClick={() => props.onRetry?.()}>
+          {language.t("orchestra.shell.error.retry")}
+        </Button>
+        <div class="flex gap-3 justify-center flex-wrap">
+          <Show when={platform.platform === "desktop" && platform.exportDebugLogs}>
+            <Button size="large" onClick={exportLogs}>
+              {language.t("orchestra.shell.logs.open")}
+            </Button>
+          </Show>
+          <Show when={restartable()}>
+            <Button size="large" onClick={() => void platform.restart()}>
+              {language.t("orchestra.shell.server.restartLocal")}
+            </Button>
+          </Show>
+        </div>
+        <Show when={state.logsError}>
+          <p role="alert">{state.logsError}</p>
+        </Show>
+      </div>
       <div class="flex gap-3 justify-center">
         <button
           type="button"

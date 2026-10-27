@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test"
 import { adopt, authoringSettlement, setupRelay } from "./relay.fixture"
+import { expandAdvanced } from "./compact-navigation.fixture"
 
 test.use({ viewport: { width: 1440, height: 900 }, serviceWorkers: "block", locale: "en-US" })
 test.setTimeout(120_000)
@@ -319,6 +320,7 @@ for (const queued of [false, true]) {
     if (queued) await details(page).getByRole("textbox", { name: "Instructions", exact: true }).fill("Queued local instructions")
     state.documents[index] = { ...version(state.documents[index], 3, "Remote v3 instructions"), name: "Known v3 workflow" }
     await page.keyboard.press("Escape")
+    await expandAdvanced(page)
     await page.locator(".orchestra-sidebar").getByRole("button", { name: "Hooks", exact: true }).click()
     await expect(page.locator('[data-mx-page="orchestra-hooks"] h1')).toHaveText("Hooks")
     await page.locator(".orchestra-sidebar").getByRole("button", { name: "Workflows", exact: true }).click()

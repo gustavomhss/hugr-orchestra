@@ -99,6 +99,8 @@ export interface Interface {
   /** Native host intent check. Configured deny wins; agent/saved allow cannot replace a live reply. */
   readonly askExplicit: (input: AssertInput) => EffectRuntime.Effect<void, Error | DeclinedError | SessionV2.NotFoundError>
   readonly reply: (input: ReplyInput) => EffectRuntime.Effect<void, NotFoundError>
+  /** Rejects every open request of the Session; Stop calls it after the turn has been interrupted. */
+  readonly cancelSession: (sessionID: SessionV2.ID) => EffectRuntime.Effect<void>
   readonly get: (id: ID) => EffectRuntime.Effect<Request | undefined>
   readonly forSession: (sessionID: SessionV2.ID) => EffectRuntime.Effect<ReadonlyArray<Request>>
   readonly list: () => EffectRuntime.Effect<ReadonlyArray<Request>>
@@ -194,6 +196,30 @@ const layer = Layer.effect(
         }),
       )
 
+    // Stop ends a request as rejected, so clients drop the dock and the waiting turn gets a typed refusal.
+    const cancel = (id: ID) =>
+      EffectRuntime.uninterruptible(
+        EffectRuntime.gen(function* () {
+          const existing = pending.get(id)
+          if (!existing) return
+          pending.delete(id)
+          yield* events.publish(Event.Replied, {
+            sessionID: existing.request.sessionID,
+            requestID: id,
+            reply: "reject",
+          })
+          yield* Deferred.fail(existing.deferred, new DeclinedError())
+        }),
+      )
+
+    // Interrupting a Session settles every open request of it, including any no fiber still waits on.
+    const cancelSession = EffectRuntime.fn("PermissionV2.cancelSession")(function* (sessionID: SessionV2.ID) {
+      const ids = Array.from(pending.values())
+        .filter((item) => item.request.sessionID === sessionID)
+        .map((item) => item.request.id)
+      yield* EffectRuntime.forEach(ids, cancel, { discard: true })
+    })
+
     const ask = EffectRuntime.fn("PermissionV2.ask")(function* (input: AssertInput) {
       const result = yield* evaluateInput(input)
       const value = request(input)
@@ -213,6 +239,7 @@ const layer = Layer.effect(
           if (result.effect === "allow") return
           const item = yield* create(request(input), input.agent)
           return yield* restore(Deferred.await(item.deferred)).pipe(
+            EffectRuntime.onInterrupt(() => cancel(item.request.id)),
             EffectRuntime.ensuring(
               EffectRuntime.sync(() => {
                 pending.delete(item.request.id)
@@ -234,6 +261,7 @@ const layer = Layer.effect(
           if (denied(input, rules)) return yield* new BlockedError({ rules: relevant(input, rules) })
           const item = yield* create(request(input, true), input.agent, true)
           return yield* restore(Deferred.await(item.deferred)).pipe(
+            EffectRuntime.onInterrupt(() => cancel(item.request.id)),
             EffectRuntime.ensuring(EffectRuntime.sync(() => pending.delete(item.request.id))),
           )
         }),
@@ -325,7 +353,7 @@ const layer = Layer.effect(
       evaluate: EffectRuntime.fn("PermissionV2.evaluate")((input: AssertInput) =>
         evaluateInput(input).pipe(EffectRuntime.map((result) => result.effect)),
       ),
-      ask, assert, authorize, askExplicit, reply, get, forSession, list,
+      ask, assert, authorize, askExplicit, reply, cancelSession, get, forSession, list,
     })
   }),
 )

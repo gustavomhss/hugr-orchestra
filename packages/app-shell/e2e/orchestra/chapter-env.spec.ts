@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test"
 import { readFile } from "node:fs/promises"
 import { mockOrchestraServer } from "../utils/mock-server"
+import { expandAdvanced } from "./compact-navigation.fixture"
 
 const serverA = "http://127.0.0.1:4096"
 const serverB = "http://127.0.0.1:4097"
@@ -98,6 +99,7 @@ async function setup(page: Page, scheme = "dark") {
   await page.goto("/")
   await page.locator('[data-slot="orchestra-profile"]').click()
   await page.getByRole("menuitemradio", { name: "Env A", exact: true }).click()
+  await expandAdvanced(page)
   await page.locator('[data-component="orchestra-sidebar"]').getByRole("button", { name: ".env", exact: true }).click()
   await expect(page.locator('[data-component="env-page"]')).toBeVisible()
   return requests

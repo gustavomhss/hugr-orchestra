@@ -64,7 +64,7 @@ export function ConnectionError(props: {
           </div>
         </div>
       </Show>
-      <ConnectionRecovery onServerSelected={props.onServerSelected} />
+      <ConnectionRecovery onRetry={props.onRetry} onServerSelected={props.onServerSelected} />
     </div>
   )
 }

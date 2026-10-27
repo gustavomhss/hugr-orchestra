@@ -662,10 +662,16 @@ const layer = Layer.effect(
       })
     })
 
+    // Stop interrupts the drain. The turn ends, so its open permission and question requests end with it.
     const run = (input: { readonly sessionID: SessionSchema.ID; readonly force: boolean }) =>
       drain(input).pipe(
         Effect.tapCause((cause) =>
           recordFailure(input.sessionID, cause).pipe(Effect.catchCause(() => Effect.void)),
+        ),
+        Effect.onInterrupt(() =>
+          permissions
+            .cancelSession(input.sessionID)
+            .pipe(Effect.andThen(questions.cancelSession(input.sessionID))),
         ),
       )
 

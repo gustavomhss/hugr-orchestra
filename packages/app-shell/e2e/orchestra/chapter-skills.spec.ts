@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Route } from "@playwright/test"
+import { expandAdvanced } from "./compact-navigation.fixture"
 
 const serverA = "http://127.0.0.1:4096"
 const serverB = "http://127.0.0.1:4097"
@@ -270,7 +271,7 @@ test(`a malformed catalog is the page's own error, and retry recovers`, async ({
   await setup(page, { response })
   await openSkills(page)
   const chapter = page.locator('[data-chapter="skills"]')
-  await expect(chapter.getByRole("status")).toHaveText("Could not load skills for this profile.")
+  await expect(chapter.getByRole("status")).toHaveText("Could not load skills for this profile. Skills response is malformed")
   await expect(page.getByText("Something went wrong")).toHaveCount(0)
   await expect(chapter.locator(".skills-card")).toHaveCount(0)
   response.raw = undefined
@@ -341,6 +342,7 @@ test(`profile ownership, same directory and a late response from A`, async ({ pa
 
 async function openSkills(page: Page) {
   await page.goto("/", { waitUntil: "domcontentloaded" })
+  await expandAdvanced(page)
   await page.locator(".orchestra-sidebar").getByRole("button", { name: "Skills", exact: true }).click()
   await expect(page).toHaveURL(/\/orchestra\/skills$/)
 }

@@ -264,8 +264,8 @@ async function expectSecretGone(page: Page) {
 }
 
 async function openProviders(page: Page) {
-  await page.goto("/", { waitUntil: "domcontentloaded" })
-  await page.locator(".orchestra-sidebar").getByRole("button", { name: "Providers", exact: true }).click()
+  // Providers left the sidebar; the deep link is the entry point this helper exercises.
+  await page.goto("/orchestra/providers", { waitUntil: "domcontentloaded" })
   await expect(page).toHaveURL(/\/orchestra\/providers$/)
 }
 

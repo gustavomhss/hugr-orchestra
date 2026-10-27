@@ -283,12 +283,19 @@ function ScheduleScreen(props: ChapterPageProps & { source: () => ScheduleSource
                   </Show>
                   <Show when={task.last?.outcome === "failed" && task.last}>
                     {(last) => (
-                      <p class="mx-note schedule-missed">
-                        {language.t("orchestra.schedule.failed", {
-                          date: new Date(last().time).toLocaleString(language.intl()),
-                          detail: last().error,
-                        })}
-                      </p>
+                      <div class="mx-error" role="status">
+                        <p>
+                          {language.t("orchestra.schedule.failed", {
+                            date: new Date(last().time).toLocaleString(language.intl()),
+                          })}
+                        </p>
+                        <details>
+                          <summary>{language.t("orchestra.schedule.failedDetails")}</summary>
+                          <pre class="mx-log" dir="ltr">
+                            {last().error}
+                          </pre>
+                        </details>
+                      </div>
                     )}
                   </Show>
                   <Show when={task.last?.outcome === "started" && task.last}>

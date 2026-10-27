@@ -78,7 +78,7 @@ export const useLanguage = () => ({ direction: () => state.direction, t: (key) =
   "orchestra.nav.expand": "Expand sidebar",
   "orchestra.nav.collapse": "Collapse sidebar",
 })[key] ?? key })
-export const useTheme = () => ({ mode: () => "dark", setColorScheme: () => {} })
+export const useTheme = () => ({ mode: () => "dark", colorScheme: () => "dark", setColorScheme: () => {} })
 export const useGlobal = () => ({ servers: { list: () => [] } })
 export const useServer = () => ({ key: "local" })
 export const ServerConnection = { key: (value) => value.key }
