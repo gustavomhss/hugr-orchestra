@@ -1,8 +1,8 @@
 import { createSimpleContext } from "@orchestra/ui/context"
 import { base64Encode } from "@orchestra/core/util/encode"
 import { useParams } from "@solidjs/router"
-import { batch, createEffect, createMemo, startTransition } from "solid-js"
-import { createStore } from "solid-js/store"
+import { type Accessor, batch, createEffect, createMemo, startTransition } from "solid-js"
+import { createStore, type SetStoreFunction, type Store } from "solid-js/store"
 import { useModels } from "@/context/models"
 import { useProviders } from "@/hooks/use-providers"
 import { resolveDefaultModel } from "@/hooks/provider-catalog"
@@ -23,7 +23,7 @@ type State = {
   variant?: string | null
 }
 
-type Saved = {
+export type Saved = {
   session: Record<string, State | undefined>
 }
 
@@ -65,20 +65,6 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
     const serverSDK = useServerSDK()
     const providers = useProviders(() => sdk().directory)
     const models = useModels()
-
-    const id = createMemo(() => params.id || undefined)
-    const connected = createMemo(() => new Set(providers.connected().map((item) => item.id)))
-
-    // The primary conversation uses Maestro's engine, never another seat's engine or host login.
-    const agent = {
-      current: () => sync().data.agent.find((item) => agentKey(item) === "maestro"),
-      key: () => {
-        const item = agent.current()
-        return item ? agentKey(item) : undefined
-      },
-    }
-    const engine = () => agent.current()?.engine ?? sync().data.config.agent?.maestro?.engine
-
     const [saved, setSaved, , savedReady] = persisted(
       {
         ...Persist.serverWorkspace(serverSDK().scope, sdk().directory, "model-selection", ["model-selection.v1"]),
@@ -88,276 +74,307 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
         session: {},
       }),
     )
+    return createLocal({ params, sdk, sync, serverSDK, providers, models, saved, setSaved, savedReady })
+  },
+})
 
-    const [store, setStore] = createStore<{
-      draft?: State
-      promoting?: State
-      last?: {
-        type: "agent" | "model" | "variant"
-        agent?: string
-        model?: ModelKey | null
-        variant?: string | null
-      }
-    }>({
-      draft: undefined,
-      last: undefined,
-    })
+type LocalDeps = {
+  params: ReturnType<typeof useParams>
+  sdk: ReturnType<typeof useSDK>
+  sync: ReturnType<typeof useSync>
+  serverSDK: ReturnType<typeof useServerSDK>
+  providers: ReturnType<typeof useProviders>
+  models: ReturnType<typeof useModels>
+  saved: Store<Saved>
+  setSaved: SetStoreFunction<Saved>
+  savedReady: Accessor<boolean>
+}
 
-    const validModel = (model: ModelKey) => {
-      const provider = providers.all().get(model.providerID)
-      return (
-        !!provider?.models[model.modelID] &&
-        connected().has(model.providerID) &&
-        modelSupportsExecution(model.providerID, provider, provider.models[model.modelID], engine())
-      )
+// Tests pass fakes straight into createLocal; init is the only place the real hooks and persisted state are wired.
+export function createLocal(deps: LocalDeps) {
+  const { params, sdk, sync, serverSDK, providers, models, saved, setSaved, savedReady } = deps
+
+  const id = createMemo(() => params.id || undefined)
+  const connected = createMemo(() => new Set(providers.connected().map((item) => item.id)))
+
+  // The primary conversation uses Maestro's engine, never another seat's engine or host login.
+  const agent = {
+    current: () => sync().data.agent.find((item) => agentKey(item) === "maestro"),
+    key: () => {
+      const item = agent.current()
+      return item ? agentKey(item) : undefined
+    },
+  }
+  const engine = () => agent.current()?.engine ?? sync().data.config.agent?.maestro?.engine
+
+  const [store, setStore] = createStore<{
+    draft?: State
+    promoting?: State
+    last?: {
+      type: "agent" | "model" | "variant"
+      agent?: string
+      model?: ModelKey | null
+      variant?: string | null
     }
+  }>({
+    draft: undefined,
+    last: undefined,
+  })
 
-    const firstModel = (...items: Array<() => ModelKey | undefined>) => {
-      for (const item of items) {
-        const model = item()
-        if (!model) continue
-        if (validModel(model)) return model
-      }
-    }
+  const validModel = (model: ModelKey) => {
+    const provider = providers.all().get(model.providerID)
+    return (
+      !!provider?.models[model.modelID] &&
+      connected().has(model.providerID) &&
+      modelSupportsExecution(model.providerID, provider, provider.models[model.modelID], engine())
+    )
+  }
 
-    const scope = createMemo<State | undefined>(() => {
-      const session = id()
-      if (!session) return store.draft ?? store.promoting
-      return saved.session[session] ?? handoff.get(handoffKey(serverSDK().scope, sdk().directory, session))
-    })
-
-    createEffect(() => {
-      const session = id()
-      if (!session) return
-
-      const key = handoffKey(serverSDK().scope, sdk().directory, session)
-      const next = handoff.get(key)
-      if (!next) return
-      if (saved.session[session] !== undefined) {
-        handoff.delete(key)
-        setStore("promoting", undefined)
-        return
-      }
-
-      setSaved("session", session, clone(next))
-      handoff.delete(key)
-      setStore("promoting", undefined)
-    })
-
-    const configuredModel = () => {
-      const model = resolveDefaultModel(providers.defaultModel(), sync().data.config.model)
-      if (!model) return
+  const firstModel = (...items: Array<() => ModelKey | undefined>) => {
+    for (const item of items) {
+      const model = item()
+      if (!model) continue
       if (validModel(model)) return model
     }
+  }
 
-    const recentModel = () => {
-      for (const item of models.recent.list()) {
-        if (validModel(item)) return item
-      }
+  const scope = createMemo<State | undefined>(() => {
+    const session = id()
+    if (!session) return store.draft ?? store.promoting
+    return saved.session[session] ?? handoff.get(handoffKey(serverSDK().scope, sdk().directory, session))
+  })
+
+  createEffect(() => {
+    const session = id()
+    if (!session) return
+
+    const key = handoffKey(serverSDK().scope, sdk().directory, session)
+    const next = handoff.get(key)
+    if (!next) return
+    if (saved.session[session] !== undefined) {
+      handoff.delete(key)
+      setStore("promoting", undefined)
+      return
     }
 
-    const defaultModel = () => {
-      const defaults = providers.default()
-      for (const provider of providers.connected()) {
-        const configured = defaults[provider.id]
-        if (configured) {
-          const model = { providerID: provider.id, modelID: configured }
-          if (validModel(model)) return model
-        }
+    setSaved("session", session, clone(next))
+    handoff.delete(key)
+    setStore("promoting", undefined)
+  })
 
-        const first = Object.values(provider.models).find((model) =>
-          validModel({ providerID: provider.id, modelID: model.id }),
-        )
-        if (!first) continue
-        const model = { providerID: provider.id, modelID: first.id }
+  const configuredModel = () => {
+    const model = resolveDefaultModel(providers.defaultModel(), sync().data.config.model)
+    if (!model) return
+    if (validModel(model)) return model
+  }
+
+  const recentModel = () => {
+    for (const item of models.recent.list()) {
+      if (validModel(item)) return item
+    }
+  }
+
+  const defaultModel = () => {
+    const defaults = providers.default()
+    for (const provider of providers.connected()) {
+      const configured = defaults[provider.id]
+      if (configured) {
+        const model = { providerID: provider.id, modelID: configured }
         if (validModel(model)) return model
       }
-    }
 
-    const fallback = createMemo<ModelKey | undefined>(() => configuredModel() ?? recentModel() ?? defaultModel())
-
-    const current = () => {
-      const item = firstModel(
-        () => scope()?.model,
-        () => agent.current()?.model,
-        fallback,
+      const first = Object.values(provider.models).find((model) =>
+        validModel({ providerID: provider.id, modelID: model.id }),
       )
+      if (!first) continue
+      const model = { providerID: provider.id, modelID: first.id }
+      if (validModel(model)) return model
+    }
+  }
+
+  const fallback = createMemo<ModelKey | undefined>(() => configuredModel() ?? recentModel() ?? defaultModel())
+
+  const current = () => {
+    const item = firstModel(
+      () => scope()?.model,
+      () => agent.current()?.model,
+      fallback,
+    )
+    if (!item) return
+    return models.find(item)
+  }
+
+  const configured = () => {
+    const item = agent.current()
+    const model = current()
+    if (!item || !model) return
+    return getConfiguredAgentVariant({
+      agent: { model: item.model, variant: item.variant },
+      model: { providerID: model.provider.id, modelID: model.id, variants: model.variants },
+    })
+  }
+
+  const selected = () => scope()?.variant
+
+  const snapshot = () => {
+    const model = current()
+    return {
+      agent: agent.key(),
+      model: model ? { providerID: model.provider.id, modelID: model.id } : undefined,
+      variant: selected(),
+    } satisfies State
+  }
+
+  const write = (next: Partial<State>) => {
+    const state = {
+      ...(scope() ?? { agent: agent.key() }),
+      ...next,
+    } satisfies State
+
+    const session = id()
+    if (session) {
+      setSaved("session", session, state)
+      return
+    }
+    setStore("draft", state)
+  }
+
+  const recent = createMemo(() => models.recent.list().filter(validModel).map(models.find).filter(Boolean))
+
+  const model = {
+    ready: models.ready,
+    current,
+    recent,
+    list: () => models.list().filter((model) => validModel({ providerID: model.provider.id, modelID: model.id })),
+    cycle(direction: 1 | -1) {
+      const items = recent()
+      const item = current()
       if (!item) return
-      return models.find(item)
-    }
 
-    const configured = () => {
-      const item = agent.current()
-      const model = current()
-      if (!item || !model) return
-      return getConfiguredAgentVariant({
-        agent: { model: item.model, variant: item.variant },
-        model: { providerID: model.provider.id, modelID: model.id, variants: model.variants },
-      })
-    }
+      const index = items.findIndex((entry) => entry?.provider.id === item.provider.id && entry?.id === item.id)
+      if (index === -1) return
 
-    const selected = () => scope()?.variant
+      let next = index + direction
+      if (next < 0) next = items.length - 1
+      if (next >= items.length) next = 0
 
-    const snapshot = () => {
-      const model = current()
-      return {
-        agent: agent.key(),
-        model: model ? { providerID: model.provider.id, modelID: model.id } : undefined,
-        variant: selected(),
-      } satisfies State
-    }
-
-    const write = (next: Partial<State>) => {
-      const state = {
-        ...(scope() ?? { agent: agent.key() }),
-        ...next,
-      } satisfies State
-
-      const session = id()
-      if (session) {
-        setSaved("session", session, state)
-        return
-      }
-      setStore("draft", state)
-    }
-
-    const recent = createMemo(() => models.recent.list().filter(validModel).map(models.find).filter(Boolean))
-
-    const model = {
-      ready: models.ready,
-      current,
-      recent,
-      list: () => models.list().filter((model) => validModel({ providerID: model.provider.id, modelID: model.id })),
-      cycle(direction: 1 | -1) {
-        const items = recent()
-        const item = current()
-        if (!item) return
-
-        const index = items.findIndex((entry) => entry?.provider.id === item.provider.id && entry?.id === item.id)
-        if (index === -1) return
-
-        let next = index + direction
-        if (next < 0) next = items.length - 1
-        if (next >= items.length) next = 0
-
-        const entry = items[next]
-        if (!entry) return
-        model.set({ providerID: entry.provider.id, modelID: entry.id })
+      const entry = items[next]
+      if (!entry) return
+      model.set({ providerID: entry.provider.id, modelID: entry.id })
+    },
+    set(item: ModelKey | undefined, options?: { recent?: boolean }) {
+      if (item && !validModel(item)) return
+      startTransition(() =>
+        batch(() => {
+          setStore("last", {
+            type: "model",
+            agent: agent.key(),
+            model: item ?? null,
+            variant: selected(),
+          })
+          write({ model: item })
+          if (!item) return
+          models.setVisibility(item, true)
+          if (!options?.recent) return
+          models.recent.push(item)
+        }),
+      )
+    },
+    visible(item: ModelKey) {
+      return models.visible(item)
+    },
+    setVisibility(item: ModelKey, visible: boolean) {
+      models.setVisibility(item, visible)
+    },
+    variant: {
+      configured,
+      selected,
+      current() {
+        const resolved = resolveModelVariant({
+          variants: this.list(),
+          selected: this.selected(),
+          configured: this.configured(),
+        })
+        if (resolved) return resolved
+        const model = current()
+        if (!model) return
+        const saved = models.variant.get({ providerID: model.provider.id, modelID: model.id })
+        if (saved && this.list().includes(saved)) return saved
       },
-      set(item: ModelKey | undefined, options?: { recent?: boolean }) {
-        if (item && !validModel(item)) return
+      list() {
+        const item = current()
+        if (!item?.variants) return []
+        return Object.keys(item.variants)
+      },
+      set(value: string | undefined) {
         startTransition(() =>
           batch(() => {
+            const model = current()
             setStore("last", {
-              type: "model",
+              type: "variant",
               agent: agent.key(),
-              model: item ?? null,
-              variant: selected(),
+              model: model ? { providerID: model.provider.id, modelID: model.id } : null,
+              variant: value ?? null,
             })
-            write({ model: item })
-            if (!item) return
-            models.setVisibility(item, true)
-            if (!options?.recent) return
-            models.recent.push(item)
+            write({ variant: value ?? null })
+            if (model) {
+              models.variant.set({ providerID: model.provider.id, modelID: model.id }, value ?? undefined)
+            }
           }),
         )
       },
-      visible(item: ModelKey) {
-        return models.visible(item)
-      },
-      setVisibility(item: ModelKey, visible: boolean) {
-        models.setVisibility(item, visible)
-      },
-      variant: {
-        configured,
-        selected,
-        current() {
-          const resolved = resolveModelVariant({
-            variants: this.list(),
+      cycle() {
+        const items = this.list()
+        if (items.length === 0) return
+        this.set(
+          cycleModelVariant({
+            variants: items,
             selected: this.selected(),
             configured: this.configured(),
-          })
-          if (resolved) return resolved
-          const model = current()
-          if (!model) return
-          const saved = models.variant.get({ providerID: model.provider.id, modelID: model.id })
-          if (saved && this.list().includes(saved)) return saved
-        },
-        list() {
-          const item = current()
-          if (!item?.variants) return []
-          return Object.keys(item.variants)
-        },
-        set(value: string | undefined) {
-          startTransition(() =>
-            batch(() => {
-              const model = current()
-              setStore("last", {
-                type: "variant",
-                agent: agent.key(),
-                model: model ? { providerID: model.provider.id, modelID: model.id } : null,
-                variant: value ?? null,
-              })
-              write({ variant: value ?? null })
-              if (model) {
-                models.variant.set({ providerID: model.provider.id, modelID: model.id }, value ?? undefined)
-              }
-            }),
-          )
-        },
-        cycle() {
-          const items = this.list()
-          if (items.length === 0) return
-          this.set(
-            cycleModelVariant({
-              variants: items,
-              selected: this.selected(),
-              configured: this.configured(),
-            }),
-          )
-        },
+          }),
+        )
       },
-    }
+    },
+  }
 
-    const result = {
-      slug: createMemo(() => base64Encode(sdk().directory)),
-      model,
-      agent,
-      session: {
-        ready: savedReady,
-        reset() {
-          setStore({ draft: undefined, promoting: undefined })
-        },
-        promote(dir: string, session: string, state?: State) {
-          const next = clone(state ?? snapshot())
-          if (!next) return
-          const key = handoffKey(serverSDK().scope, dir, session)
-          handoff.set(key, next)
-
-          if (dir === sdk().directory) {
-            setSaved("session", session, next)
-          }
-
-          setStore("promoting", next)
-          setStore("draft", undefined)
-        },
-        restore(msg: { sessionID: string; agent: string; model: ModelKey }) {
-          const session = id()
-          if (!session) return
-          if (msg.sessionID !== session) return
-          if (saved.session[session] !== undefined) return
-          if (handoff.has(handoffKey(serverSDK().scope, sdk().directory, session))) return
-
-          setSaved("session", session, {
-            agent: msg.agent,
-            model: msg.model,
-            variant: msg.model?.variant ?? null,
-          })
-        },
+  const result = {
+    slug: createMemo(() => base64Encode(sdk().directory)),
+    model,
+    agent,
+    session: {
+      ready: savedReady,
+      reset() {
+        setStore({ draft: undefined, promoting: undefined })
       },
-    }
-    return result
-  },
-})
+      promote(dir: string, session: string, state?: State) {
+        const next = clone(state ?? snapshot())
+        if (!next) return
+        const key = handoffKey(serverSDK().scope, dir, session)
+        handoff.set(key, next)
+
+        if (dir === sdk().directory) {
+          setSaved("session", session, next)
+        }
+
+        setStore("promoting", next)
+        setStore("draft", undefined)
+      },
+      restore(msg: { sessionID: string; agent: string; model: ModelKey }) {
+        const session = id()
+        if (!session) return
+        if (msg.sessionID !== session) return
+        if (saved.session[session] !== undefined) return
+        if (handoff.has(handoffKey(serverSDK().scope, sdk().directory, session))) return
+
+        setSaved("session", session, {
+          agent: msg.agent,
+          model: msg.model,
+          variant: msg.model?.variant ?? null,
+        })
+      },
+    },
+  }
+  return result
+}
 
 export type ModelSelection = ReturnType<typeof useLocal>["model"]

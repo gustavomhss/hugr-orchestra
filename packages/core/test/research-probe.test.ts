@@ -173,9 +173,8 @@ live("a second probe in the same dispatch waits, then fails busy", () =>
   }), 60_000,
 )
 
-it.live("a path outside the snapshot is refused before anything runs (J4.2)", () =>
+it.live.skipIf(process.platform === "win32")("a path outside the snapshot is refused before anything runs (J4.2)", () =>
   Effect.gen(function* () {
-    if (process.platform === "win32") return
     const dir = yield* repo
     const error = yield* ProbeRun.run({ snapshot: { kind: "worktree" }, runner: { kind: "typecheck", project: "../../etc/hosts" } }, context(dir.path)).pipe(Effect.flip)
     expect(error).toMatchObject({ code: "probe_denied" })

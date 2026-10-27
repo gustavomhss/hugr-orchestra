@@ -1,5 +1,4 @@
 import { expect } from "bun:test"
-import os from "node:os"
 import path from "node:path"
 import { createServer } from "node:net"
 import { rm, writeFile } from "node:fs/promises"
@@ -35,9 +34,19 @@ windows("developer runtimes run in a confined pwsh, which still writes only its 
     const workspace = yield* fs.makeTempDirectoryScoped({ prefix: "acr-" }).pipe(Effect.flatMap(fs.realPath))
     const pwsh = which.sync("pwsh")
     const bun = which.sync("bun")
-    // A secret beside the user's own files: home is never a toolchain folder, so nothing grants it.
-    const secret = path.join(os.homedir(), `orchestra-acr-secret-${process.pid}.txt`)
-    yield* Effect.acquireRelease(Effect.promise(() => writeFile(secret, "secret")), () => Effect.promise(() => rm(secret, { force: true })))
+    // A secret beside the user's own files in a test home (ORCHESTRA_TEST_HOME), never the real home: home is never a
+    // toolchain folder, so nothing grants it.
+    const home = yield* fs.makeTempDirectoryScoped({ prefix: "acr-home-" }).pipe(Effect.flatMap(fs.realPath))
+    const secret = path.join(home, "secret.txt")
+    yield* Effect.acquireRelease(Effect.sync(() => {
+      const previous = process.env.ORCHESTRA_TEST_HOME
+      process.env.ORCHESTRA_TEST_HOME = home
+      return previous
+    }), (previous) => Effect.sync(() => {
+      if (previous === undefined) delete process.env.ORCHESTRA_TEST_HOME
+      if (previous !== undefined) process.env.ORCHESTRA_TEST_HOME = previous
+    }))
+    yield* Effect.promise(() => writeFile(secret, "secret"))
     const counts = { connections: 0 }
     const server = createServer((socket) => { counts.connections++; socket.destroy() })
     const port = yield* Effect.acquireRelease(

@@ -5,7 +5,7 @@
 ## Clauses
 - Permission request is denied (state: denied) *(measured: app-dock-security.test.ts:577-601)*
 - Permission check returns denied *(measured: app-dock-security.test.ts:577-601)*
-- Permission denial emits App Dock UI state with identity and permission name *(measured: app-dock-security.test.ts:577-601)*
+- Permission denial emits MCP Dock UI state with identity and permission name *(measured: app-dock-security.test.ts:577-601)*
 - Permission event is cloneable and omits storage data *(measured: app-dock-security.test.ts:577-601)*
 
 ## Unwanted

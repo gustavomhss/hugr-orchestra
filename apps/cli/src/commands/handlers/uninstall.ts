@@ -52,30 +52,40 @@ export default Runtime.handler(
       }
     }
 
-    for (const target of targets.directories) {
-      if (target.keep) {
-        process.stdout.write(`Skipping ${target.label} (kept)` + EOL)
-        continue
-      }
-      if (!(yield* hasDirectory(target.path))) continue
-      yield* Effect.tryPromise(() => rm(target.path, { recursive: true, force: true }))
-      process.stdout.write(`Removed ${target.label}` + EOL)
-    }
+    yield* removeDirectories(targets.directories)
     if (targets.binary) process.stdout.write(`To finish removing the binary, run: rm "${targets.binary}"` + EOL)
   }),
 )
+
+export const removeDirectories = Effect.fn("cli.uninstall.remove")(function* (
+  directories: RemovalTargets["directories"],
+) {
+  for (const target of directories) {
+    if (target.keep) {
+      process.stdout.write(`Skipping ${target.label} (kept)` + EOL)
+      continue
+    }
+    if (!(yield* hasDirectory(target.path))) continue
+    yield* Effect.tryPromise(() => rm(target.path, { recursive: true, force: true }))
+    process.stdout.write(`Removed ${target.label}` + EOL)
+  }
+})
 
 interface RemovalTargets {
   readonly directories: ReadonlyArray<{ path: string; label: string; keep: boolean }>
   readonly binary: string | null
 }
 
-function removalTargets(input: { "keep-config": boolean; "keep-data": boolean }, method: Method): RemovalTargets {
+export function removalTargets(
+  input: { "keep-config": boolean; "keep-data": boolean },
+  method: Method,
+  paths: Pick<typeof Global.Path, "data" | "cache" | "config" | "state"> = Global.Path,
+): RemovalTargets {
   const directories = [
-    { path: Global.Path.data, label: "Data", keep: input["keep-data"] },
-    { path: Global.Path.cache, label: "Cache", keep: false },
-    { path: Global.Path.config, label: "Config", keep: input["keep-config"] },
-    { path: Global.Path.state, label: "State", keep: false },
+    { path: paths.data, label: "Data", keep: input["keep-data"] },
+    { path: paths.cache, label: "Cache", keep: false },
+    { path: paths.config, label: "Config", keep: input["keep-config"] },
+    { path: paths.state, label: "State", keep: false },
   ]
   return {
     directories,

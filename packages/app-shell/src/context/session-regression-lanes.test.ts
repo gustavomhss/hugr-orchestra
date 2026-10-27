@@ -1,24 +1,12 @@
 import { expect, test } from "bun:test"
 import path from "node:path"
-import ts from "typescript"
 
-test("session regression suites stay registered in executable browser discovery", async () => {
+// The browser lane discovers every test file under test-browser, so regression files need no registry.
+test("session regression tests are plain browser test files and the lane keeps its conditions", async () => {
   const directory = path.resolve(import.meta.dir, "../../test-browser")
-  const expected = Array.from(new Bun.Glob("session-*-regressions.suite.ts").scanSync(directory))
-    .map((file) => file.replace(/\.suite\.ts$/, ""))
-    .sort()
-  expect(expected.length).toBeGreaterThan(0)
-  const file = path.join(directory, "session-regressions.test.ts")
-  const source = ts.createSourceFile(file, await Bun.file(file).text(), ts.ScriptTarget.Latest, true)
-  const entries = source.statements.filter(ts.isVariableStatement)
-    .flatMap((statement) => Array.from(statement.declarationList.declarations))
-    .find((declaration) => declaration.name.getText(source) === "suites")?.initializer
-  if (!entries || !ts.isArrayLiteralExpression(entries)) throw new Error("Missing literal browser regression registry")
-  const registered = entries.elements.map((entry) => {
-    if (!ts.isStringLiteral(entry)) throw new Error("Nonliteral browser regression registry entry")
-    return entry.text
-  }).sort()
-  expect(registered).toEqual(expected)
+  const found = Array.from(new Bun.Glob("session-*-regressions.test.ts").scanSync(directory))
+  expect(found.length).toBeGreaterThan(0)
+  expect(Array.from(new Bun.Glob("session-*-regressions.suite.ts").scanSync(directory))).toEqual([])
   const manifest = await Bun.file(path.resolve(import.meta.dir, "../../package.json")).json()
   expect(manifest.scripts["test:browser"]).toContain("--conditions=browser")
   expect(manifest.scripts["test:browser"]).toContain("./test-browser")

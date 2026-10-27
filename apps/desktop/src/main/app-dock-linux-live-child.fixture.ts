@@ -54,7 +54,7 @@ export async function child() {
   const sender = win.webContents.id
   const bounds = { x: 0, y: 0, width: 900, height: 660 }
   const profile = { storageKey: randomUUID().replaceAll("-", "") }
-  await win.loadURL("data:text/html,<title>Linux App Dock functional test</title>")
+  await win.loadURL("data:text/html,<title>Linux MCP Dock functional test</title>")
     const ownerListeners = [win.listenerCount("show"), win.listenerCount("hide"), win.listenerCount("minimize"), win.listenerCount("restore"), win.listenerCount("resize")]
   try {
     // Cancel while real runtime.start() is pending; late startup must not admit a view.
@@ -236,7 +236,7 @@ base = Path('/tmp/orchestra-linux-flow-deb')
 (base / 'DEBIAN').mkdir(parents=True)
 (base / 'usr/share/applications').mkdir(parents=True)
 (base / 'usr/share/orchestra-linux-flow').mkdir(parents=True)
-(base / 'DEBIAN/control').write_text('Package: orchestra-linux-flow\nVersion: 1.0\nArchitecture: all\nMaintainer: Orchestra Test <test@example.invalid>\nDescription: Linux App Dock Gio fixture\n')
+(base / 'DEBIAN/control').write_text('Package: orchestra-linux-flow\nVersion: 1.0\nArchitecture: all\nMaintainer: Orchestra Test <test@example.invalid>\nDescription: Linux MCP Dock Gio fixture\n')
 (base / 'usr/share/applications/orchestra-linux-flow.desktop').write_text('[Desktop Entry]\nType=Application\nName=Orchestra Linux flow\nExec=/usr/bin/python3 "/usr/share/orchestra-linux-flow/launch probe.py" %% %U\nTerminal=false\n')
 (base / 'usr/share/orchestra-linux-flow/launch probe.py').write_text(${JSON.stringify(`import gi
 gi.require_version("Gtk", "3.0")

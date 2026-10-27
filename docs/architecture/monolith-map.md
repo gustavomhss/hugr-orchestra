@@ -203,7 +203,7 @@ Fontes de distinções importantes: `orchestra/src/background/job.ts:17–35` ma
 | Visual | `specs/orchestra-visual/handoff/archives`, logs/screenshots de campaign | Mock aprovado, receipts, manifests e `restore-evidence.ts`; hash + fresh restore |
 | Backend | `specs/backend-specialist/research`, delivery/session notes superseded | Acceptance/contracts atuais, obrigações e referências de testes |
 | Continuity | Experiment/review notes e benchmark outputs históricos | Gold/probes/scoring/harness, contratos de prefixo e operação |
-| Desktop | Briefs/recovery/plans encerrados | App Dock brownfield corpus, contract witnesses, active closeout |
+| Desktop | Briefs/recovery/plans encerrados | MCP Dock brownfield corpus, contract witnesses, active closeout |
 | Atlas | Campaign recut/WAVE/SESSION-STATE superseded | Requirement/WP acceptance links, reference docs, Own bundle e ledgers |
 | Omni | Campaign/HANDOFF seções históricas | PLAN/API/GUARANTEES/readme/skill parser inputs, conformance/QA e espelho |
 | Relay | `docs/roadmaps` e outras campanhas encerradas | `bin/gen-doc-index.py`/`check-docs.py` e pointers para contratos vigentes |

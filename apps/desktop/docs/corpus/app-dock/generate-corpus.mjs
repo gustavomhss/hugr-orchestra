@@ -177,9 +177,9 @@ const invariants = [
     id: "webcontents-view-security",
     title: "WebContentsView Security Policy",
     clauses: [
-      "App Dock WebContentsView is created with sandbox:true",
-      "App Dock WebContentsView is created with contextIsolation:true",
-      "App Dock WebContentsView is created with nodeIntegration:false"
+      "MCP Dock WebContentsView is created with sandbox:true",
+      "MCP Dock WebContentsView is created with contextIsolation:true",
+      "MCP Dock WebContentsView is created with nodeIntegration:false"
     ],
     unwanted: [
       "WebContentsView has sandbox:false",
@@ -194,7 +194,7 @@ const invariants = [
     clauses: [
       "Permission request is denied (state: denied)",
       "Permission check returns denied",
-      "Permission denial emits App Dock UI state with identity and permission name",
+      "Permission denial emits MCP Dock UI state with identity and permission name",
       "Permission event is cloneable and omits storage data"
     ],
     unwanted: [
@@ -266,8 +266,8 @@ const invariants = [
     id: "ipc-sender-validation",
     title: "IPC Sender Validation",
     clauses: [
-      "Malformed bounds are rejected with Invalid App Dock bounds",
-      "Subframe IPC sender is rejected with Invalid App Dock sender"
+      "Malformed bounds are rejected with Invalid MCP Dock bounds",
+      "Subframe IPC sender is rejected with Invalid MCP Dock sender"
     ],
     unwanted: [
       "Malformed bounds are accepted",
@@ -279,8 +279,8 @@ const invariants = [
     id: "fullscreen-command-validation",
     title: "Fullscreen and Command Validation",
     clauses: [
-      "Non-boolean fullscreen state is rejected with Invalid App Dock fullscreen state",
-      "Invalid command enum is rejected with Invalid App Dock command"
+      "Non-boolean fullscreen state is rejected with Invalid MCP Dock fullscreen state",
+      "Invalid command enum is rejected with Invalid MCP Dock command"
     ],
     unwanted: [
       "Non-boolean fullscreen state is accepted",
@@ -467,7 +467,7 @@ const invariants = [
     id: "devtools-gate",
     title: "DevTools Gate",
     clauses: [
-      "App Dock DevTools do not open without trusted development route",
+      "MCP Dock DevTools do not open without trusted development route",
       "Ordinary user input (F12) does not open DevTools",
       "Trusted developmentMode()=true allows openDevTools"
     ],
@@ -586,7 +586,7 @@ const invariants = [
 
 // Generate invariant register
 function genInvariantRegister() {
-  let md = "# App-Dock Subsystem Invariant Register\n\n";
+  let md = "# MCP Dock Subsystem Invariant Register\n\n";
   md += "> Brownfield corpus — lifted from shipped tests on `main`. Every clause states behaviour that is on `master` and measured by a named test. "
     + "Paraphrase is not used; each requirement quotes its clause verbatim.\n\n";
   md += `| Invariant | Title | Clauses | Unwanted | Witnesses |\n`;
@@ -615,7 +615,7 @@ function genInvariantRegister() {
 
 // Generate requirements (one per clause + one per unwanted)
 function genRequirements() {
-  let md = "# App-Dock Requirements\n\n";
+  let md = "# MCP Dock Requirements\n\n";
   md += "> Generated from invariant register. Each requirement is a plain `shall` sentence quoting its clause verbatim. "
     + "Each `unwanted` becomes an `If-then` refusal requirement.\n\n";
 
@@ -643,7 +643,7 @@ function genRequirements() {
 
 // Generate goldens
 function genGoldens() {
-  let md = "# App-Dock Goldens\n\n";
+  let md = "# MCP Dock Goldens\n\n";
   md += "> One golden per requirement, naming the shipped test as its witness. "
     + "Goldens are traceable: requirement → golden → test.\n\n";
 
@@ -671,7 +671,7 @@ function genGoldens() {
 
 // Generate work-package cards
 function genCards() {
-  let md = "# App-Dock Work-Package Cards\n\n";
+  let md = "# MCP Dock Work-Package Cards\n\n";
   md += "> One card per requirement and per golden. Cards are scheduled together — requirements without cards are orphans. "
     + "Traceability closes mechanically.\n\n";
 

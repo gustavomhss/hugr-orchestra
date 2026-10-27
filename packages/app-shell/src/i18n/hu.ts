@@ -350,7 +350,7 @@ export const dict = {
   "appDock.browser.tab.closeOthers": "Close others",
   "appDock.browser.tab.closeRight": "Close right",
   "appDock.linux.title": "Linux",
-  "appDock.contexts": "App Dock környezetek",
+  "appDock.contexts": "MCP Dock környezetek",
   "appDock.browser.title": "Böngésző",
   "appDock.browser.empty": "Adjon meg egy webcímet a böngészőlap megnyitásához.",
   "appDock.linux.workspace": "Linux-munkaterület",

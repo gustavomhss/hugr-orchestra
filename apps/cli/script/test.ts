@@ -7,10 +7,9 @@ const elsewhere = [
   "test/distribution-native.test.ts",
   // distribution-bundle.yml: actual Windows npm only.
   "test/distribution-windows.test.ts",
-  // distribution-bundle.yml: owned musl guests and actual provider inference only.
+  // distribution-bundle.yml: owned musl guests only.
   "test/distribution-musl.test.ts",
   "test/fixture/distribution-musl-guest.test.ts",
-  "test/distribution-provider.test.ts",
   // artifact-native.yml: needs ORCHESTRA_ARTIFACT_NATIVE_LANE on a Darwin, musl or glibc-with-musl host, and imports
   // the artifact suites below on that host.
   "test/artifact-native-lane.test.ts",

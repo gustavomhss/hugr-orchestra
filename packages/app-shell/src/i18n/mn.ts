@@ -348,7 +348,7 @@ export const dict = {
   "appDock.browser.tab.closeOthers": "Close others",
   "appDock.browser.tab.closeRight": "Close right",
   "appDock.linux.title": "Linux",
-  "appDock.contexts": "App Dock-ийн контекстүүд",
+  "appDock.contexts": "MCP Dock-ийн контекстүүд",
   "appDock.browser.title": "Хөтөч",
   "appDock.browser.empty": "Хөтчийн таб нээхийн тулд вэб хаяг оруулна уу.",
   "appDock.linux.workspace": "Linux ажлын талбар",

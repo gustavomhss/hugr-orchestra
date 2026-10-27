@@ -3,45 +3,45 @@ import type { DockBounds } from "./app-dock"
 
 export const appDockProfileID = (value: unknown) => {
   if (typeof value !== "string" || !/^[a-z0-9][a-z0-9-]{0,31}$/.test(value))
-    throw new Error("Invalid App Dock profile ID")
+    throw new Error("Invalid MCP Dock profile ID")
   return value
 }
 
 export const appDockID = (value: unknown, name: "tab" | "download") => {
-  if (typeof value !== "string" || value.length === 0) throw new Error(`Invalid App Dock ${name} ID`)
+  if (typeof value !== "string" || value.length === 0) throw new Error(`Invalid MCP Dock ${name} ID`)
   return value
 }
 
 export const appDockBounds = (value: unknown): DockBounds => {
-  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid App Dock bounds")
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid MCP Dock bounds")
   const bounds = value as Record<string, unknown>
   if (
     ![bounds.x, bounds.y, bounds.width, bounds.height].every(
       (item) => typeof item === "number" && Number.isFinite(item),
     )
   ) {
-    throw new Error("Invalid App Dock bounds")
+    throw new Error("Invalid MCP Dock bounds")
   }
   return bounds as DockBounds
 }
 
 const appDockEventRecord = (value: unknown) => {
-  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid App Dock event")
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid MCP Dock event")
   return value as Record<string, unknown>
 }
 
 const appDockEventString = (value: unknown) => {
-  if (typeof value !== "string") throw new Error("Invalid App Dock event")
+  if (typeof value !== "string") throw new Error("Invalid MCP Dock event")
   return value
 }
 
 const appDockEventNumber = (value: unknown) => {
-  if (typeof value !== "number" || !Number.isFinite(value)) throw new Error("Invalid App Dock event")
+  if (typeof value !== "number" || !Number.isFinite(value)) throw new Error("Invalid MCP Dock event")
   return value
 }
 
 const appDockEventBoolean = (value: unknown) => {
-  if (typeof value !== "boolean") throw new Error("Invalid App Dock event")
+  if (typeof value !== "boolean") throw new Error("Invalid MCP Dock event")
   return value
 }
 
@@ -55,7 +55,7 @@ const hasExactKeys = (value: Record<string, unknown>, keys: string[]) =>
 
 // Resize, Hide and Show name the tab and generation they target, so the desktop can drop stale ones.
 export const appDockTab = (value: unknown) => {
-  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid App Dock tab")
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid MCP Dock tab")
   const tab = value as Record<string, unknown>
   if (
     !hasExactKeys(tab, ["tabID", "generation"]) ||
@@ -65,7 +65,7 @@ export const appDockTab = (value: unknown) => {
     !Number.isSafeInteger(tab.generation) ||
     tab.generation < 1
   ) {
-    throw new Error("Invalid App Dock tab")
+    throw new Error("Invalid MCP Dock tab")
   }
   return { tabID: tab.tabID, generation: tab.generation }
 }
@@ -78,7 +78,7 @@ const appDockEventIdentity = (value: unknown) => {
     !Number.isSafeInteger(identity.generation) ||
     appDockEventNumber(identity.generation) < 1
   ) {
-    throw new Error("Invalid App Dock event")
+    throw new Error("Invalid MCP Dock event")
   }
   return { tabID: identity.tabID, generation: appDockEventNumber(identity.generation) }
 }
@@ -86,11 +86,11 @@ const appDockEventIdentity = (value: unknown) => {
 export const toCloneableAppDockEvent = (event: unknown): CloneableAppDockEvent => {
   const source = appDockEventRecord(event)
   const payload = appDockEventRecord(source.payload)
-  if (!hasExactKeys(source, ["type", "payload"])) throw new Error("Invalid App Dock event")
+  if (!hasExactKeys(source, ["type", "payload"])) throw new Error("Invalid MCP Dock event")
   if (source.type === "shortcut") {
-    if (!hasExactKeys(payload, ["identity", "command"])) throw new Error("Invalid App Dock event")
+    if (!hasExactKeys(payload, ["identity", "command"])) throw new Error("Invalid MCP Dock event")
     const command = payload.command
-    if (command !== "address" && command !== "new-tab" && command !== "close-tab") throw new Error("Invalid App Dock event")
+    if (command !== "address" && command !== "new-tab" && command !== "close-tab") throw new Error("Invalid MCP Dock event")
     return { type: "shortcut", payload: { identity: appDockTab(payload.identity), command } }
   }
   if (source.type === "state") {
@@ -100,7 +100,7 @@ export const toCloneableAppDockEvent = (event: unknown): CloneableAppDockEvent =
         hasExactKeys(payload, ["tabID", "generation", "url", "title", "favicon", "loading", "audible", "canGoBack", "canGoForward"])
       )
     ) {
-      throw new Error("Invalid App Dock event")
+      throw new Error("Invalid MCP Dock event")
     }
     const identity = appDockEventIdentity(payload)
     return {
@@ -126,7 +126,7 @@ export const toCloneableAppDockEvent = (event: unknown): CloneableAppDockEvent =
       appDockEventNumber(payload.generation) < 1 ||
       typeof payload.url !== "string"
     ) {
-      throw new Error("Invalid App Dock event")
+      throw new Error("Invalid MCP Dock event")
     }
     return {
       type: source.type,
@@ -138,28 +138,28 @@ export const toCloneableAppDockEvent = (event: unknown): CloneableAppDockEvent =
     }
   }
   if (source.type === "tab-selected") {
-    if (!hasExactKeys(payload, ["tabID", "generation"])) throw new Error("Invalid App Dock event")
+    if (!hasExactKeys(payload, ["tabID", "generation"])) throw new Error("Invalid MCP Dock event")
     return { type: "tab-selected", payload: appDockEventIdentity(payload) }
   }
   if (source.type === "tab-evicted") {
-    if (!hasExactKeys(payload, ["tabID", "generation"])) throw new Error("Invalid App Dock event")
+    if (!hasExactKeys(payload, ["tabID", "generation"])) throw new Error("Invalid MCP Dock event")
     return { type: "tab-evicted", payload: appDockEventIdentity(payload) }
   }
   if (source.type === "tab-crashed") {
-    if (!hasExactKeys(payload, ["identity", "reason"])) throw new Error("Invalid App Dock event")
+    if (!hasExactKeys(payload, ["identity", "reason"])) throw new Error("Invalid MCP Dock event")
     const identity = appDockEventIdentity(payload.identity)
     const reason = appDockEventString(payload.reason)
-    if (reason !== "crashed" && reason !== "killed" && reason !== "oom") throw new Error("Invalid App Dock event")
+    if (reason !== "crashed" && reason !== "killed" && reason !== "oom") throw new Error("Invalid MCP Dock event")
     return { type: "tab-crashed", payload: { identity: { ...identity }, reason } }
   }
   if (source.type === "tab-recovered") {
-    if (!hasExactKeys(payload, ["tabID", "generation", "url"])) throw new Error("Invalid App Dock event")
+    if (!hasExactKeys(payload, ["tabID", "generation", "url"])) throw new Error("Invalid MCP Dock event")
     const identity = appDockEventIdentity(payload)
     return { type: "tab-recovered", payload: { ...identity, url: appDockEventString(payload.url) } }
   }
   if (source.type === "download") {
     if (!hasExactKeys(payload, ["id", "tabID", "generation", "filename", "receivedBytes", "totalBytes", "state"]))
-      throw new Error("Invalid App Dock event")
+      throw new Error("Invalid MCP Dock event")
     const state = appDockEventString(payload.state)
     if (
       state !== "progressing" &&
@@ -168,7 +168,7 @@ export const toCloneableAppDockEvent = (event: unknown): CloneableAppDockEvent =
       state !== "cancelled" &&
       state !== "interrupted"
     ) {
-      throw new Error("Invalid App Dock event")
+      throw new Error("Invalid MCP Dock event")
     }
     const identity = appDockEventIdentity(payload)
     return {
@@ -184,14 +184,14 @@ export const toCloneableAppDockEvent = (event: unknown): CloneableAppDockEvent =
     }
   }
   if (source.type === "permission") {
-    if (!hasExactKeys(payload, ["identity", "permission", "state"])) throw new Error("Invalid App Dock event")
+    if (!hasExactKeys(payload, ["identity", "permission", "state"])) throw new Error("Invalid MCP Dock event")
     const identity = appDockEventIdentity(payload.identity)
     const permission = appDockEventString(payload.permission)
-    if (!/^[a-z-]{1,64}$/.test(permission) || payload.state !== "denied") throw new Error("Invalid App Dock event")
+    if (!/^[a-z-]{1,64}$/.test(permission) || payload.state !== "denied") throw new Error("Invalid MCP Dock event")
     return { type: "permission", payload: { identity: { ...identity }, permission, state: "denied" } }
   }
   if (source.type === "fullscreen") {
-    if (!hasExactKeys(payload, ["identity", "enabled"])) throw new Error("Invalid App Dock event")
+    if (!hasExactKeys(payload, ["identity", "enabled"])) throw new Error("Invalid MCP Dock event")
     const identity = appDockEventIdentity(payload.identity)
     return {
       type: "fullscreen",
@@ -204,10 +204,10 @@ export const toCloneableAppDockEvent = (event: unknown): CloneableAppDockEvent =
     }
   }
   if (source.type === "navigation-error") {
-    if (!hasExactKeys(payload, ["identity", "code", "url"])) throw new Error("Invalid App Dock event")
+    if (!hasExactKeys(payload, ["identity", "code", "url"])) throw new Error("Invalid MCP Dock event")
     const identity = appDockEventIdentity(payload.identity)
     const code = appDockEventString(payload.code)
-    if (code !== "blocked" && code !== "failed") throw new Error("Invalid App Dock event")
+    if (code !== "blocked" && code !== "failed") throw new Error("Invalid MCP Dock event")
     return {
       type: "navigation-error",
       payload: {
@@ -219,5 +219,5 @@ export const toCloneableAppDockEvent = (event: unknown): CloneableAppDockEvent =
       },
     }
   }
-  throw new Error("Unknown App Dock event")
+  throw new Error("Unknown MCP Dock event")
 }

@@ -600,8 +600,7 @@ describe("DatabaseMigration", () => {
     )
   })
 
-  test("maps native Windows paths through database columns", async () => {
-    if (process.platform !== "win32") return
+  test.skipIf(process.platform !== "win32")("maps native Windows paths through database columns", async () => {
     await run(
       Effect.gen(function* () {
         const db = yield* makeDb

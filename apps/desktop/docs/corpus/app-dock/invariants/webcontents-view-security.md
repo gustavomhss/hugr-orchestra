@@ -3,9 +3,9 @@
 > Clauses: 3 | Unwanted: 3 | Witnesses: app-dock-security.test.ts:568-575
 
 ## Clauses
-- App Dock WebContentsView is created with sandbox:true *(measured: app-dock-security.test.ts:568-575)*
-- App Dock WebContentsView is created with contextIsolation:true *(measured: app-dock-security.test.ts:568-575)*
-- App Dock WebContentsView is created with nodeIntegration:false *(measured: app-dock-security.test.ts:568-575)*
+- MCP Dock WebContentsView is created with sandbox:true *(measured: app-dock-security.test.ts:568-575)*
+- MCP Dock WebContentsView is created with contextIsolation:true *(measured: app-dock-security.test.ts:568-575)*
+- MCP Dock WebContentsView is created with nodeIntegration:false *(measured: app-dock-security.test.ts:568-575)*
 
 ## Unwanted
 - WebContentsView has sandbox:false *(measured: app-dock-security.test.ts:568-575)*

@@ -1,4 +1,4 @@
-// The popup scenarios of the App Dock native harness (app-dock-security.test.ts), which bundles this
+// The popup scenarios of the MCP Dock native harness (app-dock-security.test.ts), which bundles this
 // module and runs them inside its Electron child, and the window and wait primitives they share with it.
 type Frame = { executeJavaScript: (code: string) => Promise<any> }
 type Bounds = { x: number; y: number; width: number; height: number }
@@ -43,7 +43,7 @@ export async function backgroundPopups(harness: PopupHarness) {
   const u32OpenerContents = attachedContents(ipcWin)
   const u32Front: Tab = await invoke("app-dock-open", [harness.base, harness.bounds, u32Profile])
   const u32FrontContents = attachedContents(ipcWin)
-  check(u32OpenerContents && u32FrontContents && u32OpenerContents !== u32FrontContents, "U32 App Dock views missing")
+  check(u32OpenerContents && u32FrontContents && u32OpenerContents !== u32FrontContents, "U32 MCP Dock views missing")
   check(!attached(ipcWin, u32OpenerContents), "U32 opener is not a background tab")
   const u32Live = () =>
     JSON.stringify(

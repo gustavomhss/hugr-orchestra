@@ -42,7 +42,7 @@ describe("templates", () => {
 
   test("an unavailable template renders its reason", () => {
     expect(templateReason(t, shipped("design", { runnable: false }))).toBe(
-      "This profile checks its work with Relay tools that are not available yet. It can be read and edited, but it cannot run.",
+      "This project checks its work with Relay tools that are not available yet. It can be read and edited, but it cannot run.",
     )
   })
 

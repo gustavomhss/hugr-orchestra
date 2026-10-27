@@ -1,0 +1,14 @@
+id = "schema-any-mutable"
+group = "hygiene"
+severity = "gate"
+on = "added-lines"
+# Current contract source only. V1 modules (*-v1.ts) keep their old shapes and are exempt.
+paths = ["packages/schema/src/**/*.ts"]
+exclude = ["packages/schema/src/**/*-v1.ts"]
+skip_comments = ["//"]
+# Schema.Any accepts anything without a contract; Schema.mutable makes a wrapper that is not frozen, so the contract can change under a reader.
+match = '\bSchema\.(Any|mutable)\b'
+message = "Schema.Any and Schema.mutable are banned in current contract source. Declare the real schema, and keep contract values readonly."
+summary = "Schema.Any lets any value through and Schema.mutable lets readers change a contract value. Both weaken the public contract, so declare the real shape and keep it readonly."
+positive = ["export const Payload = Schema.Any", "const Items = Schema.mutable(Schema.Array(Item))", "  body: Schema.Any,"]
+negative = ["export const Payload = Schema.Struct({ id: Schema.String })", "const x = Schema.Anything", "const note = \"the Schema wrapper was replaced\""]

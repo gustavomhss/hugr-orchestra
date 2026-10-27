@@ -392,10 +392,9 @@ it.live("other native location does not acquire an absent foreign socket", () =>
   }),
 )
 
-it.live("unavailable process sandbox HOLDs without preparing parents", () =>
+it.live.skipIf(sandboxHost.shellWrites === "enforced" && sandboxHost.shellSandbox.kind !== "appcontainer")("unavailable process sandbox HOLDs without preparing parents", () =>
   Effect.gen(function* () {
     const f = yield* fixture
-    if (sandboxHost.shellWrites === "enforced" && sandboxHost.shellSandbox.kind !== "appcontainer") return
     const held = yield* Effect.flip(f.wrap("", { requireSandbox: true, writeRoots: ["unavailable/deep/out"] }))
     expect(held.reason).toMatch(/^(?:required-process-sandbox-unavailable|sandbox-platform-unavailable)$/)
     expect(yield* f.fs.exists(path.join(f.directory, "unavailable"))).toBe(false)

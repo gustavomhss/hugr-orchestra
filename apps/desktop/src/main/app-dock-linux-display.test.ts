@@ -3,7 +3,7 @@ import { AppDockLinuxDisplay } from "./app-dock-linux-display"
 
 const fit = (width: number, height: number) => AppDockLinuxDisplay.fit({ width, height }, AppDockLinuxDisplay.minimum)
 
-describe("Linux App Dock display floor", () => {
+describe("Linux MCP Dock display floor", () => {
   test("keeps the display at the floor for thumbnail and hidden viewers", () => {
     // Observed 2026-10-06: the cockpit Dock card (372x94) became the X display size.
     expect(fit(372, 94)).toEqual({ width: 1024, height: 768, scale: 94 / 768 })

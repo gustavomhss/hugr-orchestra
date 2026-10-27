@@ -186,7 +186,7 @@ export function SessionSidePanel(props: {
     wasOpen = open
     if (!open && !snoozed) {
       // Read the tab state before changing it: open() always activates its tab,
-      // which would detach an active App Dock and break the agent's dock tools.
+      // which would detach an active MCP Dock and break the agent's dock tools.
       const plan = untrack(() => planTasksTab({ active: tabs().active(), all: tabs().all() }))
       // Live work may take Review's place, never Apps, Context or a file the user is reading;
       // there Tasks only joins the strip.

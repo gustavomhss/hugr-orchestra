@@ -62,7 +62,7 @@ import { registerLiveTray } from "./live-tray"
 import { registerLiveOverlay } from "./live-overlay"
 
 // These process names keep their inherited values: Electron names the macOS Keychain item that encrypts saved browser
-// data "<name> Safe Storage", so renaming them would sign the App Dock out of every site. Menus, window titles and
+// data "<name> Safe Storage", so renaming them would sign the MCP Dock out of every site. Menus, window titles and
 // dialogs name "HuGR Orchestra" through the desktop.menu.* translations instead.
 const APP_NAMES: Record<string, string> = {
   dev: "HuGR Orchestra Dev",

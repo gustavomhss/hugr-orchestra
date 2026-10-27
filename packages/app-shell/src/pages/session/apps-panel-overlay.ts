@@ -1,4 +1,4 @@
-// The App Dock browser is a native view that paints above every HTML layer, so a dialog, popover,
+// The MCP Dock browser is a native view that paints above every HTML layer, so a dialog, popover,
 // menu or toast drawn over the Dock would sit behind the browser and never get its clicks. Kobalte
 // and Solid portals mount each open overlay in its own container directly under <body>, so watching
 // body's children sees every overlay primitive without each one opting in. Overlays drawn inside

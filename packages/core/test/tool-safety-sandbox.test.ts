@@ -6,7 +6,6 @@ import { Effect } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { LayerNode } from "../src/effect/layer-node"
 import { FSUtil } from "../src/fs-util"
-import { Global } from "../src/global"
 import { AppProcess } from "../src/process"
 import { ToolSafety } from "../src/tool-safety"
 import { ToolSafetySandbox } from "../src/tool-safety-sandbox"
@@ -330,14 +329,20 @@ test("home grants name exactly git's config files and what a rustup-proxied carg
     path.join(cargo, "registry", "src"), path.join(rustup, "settings.toml"), path.join(rustup, "toolchains"),
     path.join(xdg, "git", "attributes"), path.join(xdg, "git", "config"), path.join(xdg, "git", "ignore"),
   ].sort())
-  // Unset, the same entries come from each home, with ~/.gitconfig the only one directly in it.
+  // Unset, the same entries come from each home, with ~/.gitconfig the only one directly in it. The test home is pinned
+  // so the expected paths are concrete, not recomputed from the implementation's own home list.
+  const known = path.join(base, "home")
+  const previous = process.env.ORCHESTRA_TEST_HOME
+  process.env.ORCHESTRA_TEST_HOME = known
   const defaults = ToolSafetySandbox.homeGrants({}).map((grant) => grant.entry)
-  const homes = [...new Set([Global.Path.home, os.homedir()])]
-  expect(defaults.sort()).toEqual(
-    homes.flatMap((home) => [".gitconfig", ...["config", "ignore", "attributes"].map((name) => path.join(".config", "git", name)),
-      path.join(".rustup", "settings.toml"), path.join(".rustup", "toolchains"), path.join(".cargo", "bin"),
-      ...["index", "cache", "src"].map((name) => path.join(".cargo", "registry", name))].map((entry) => path.join(home, entry))).sort(),
-  )
+  if (previous === undefined) delete process.env.ORCHESTRA_TEST_HOME
+  if (previous !== undefined) process.env.ORCHESTRA_TEST_HOME = previous
+  const relative = [".gitconfig", path.join(".config", "git", "config"), path.join(".config", "git", "ignore"),
+    path.join(".config", "git", "attributes"), path.join(".rustup", "settings.toml"), path.join(".rustup", "toolchains"),
+    path.join(".cargo", "bin"), path.join(".cargo", "registry", "index"), path.join(".cargo", "registry", "cache"),
+    path.join(".cargo", "registry", "src")]
+  expect(defaults.filter((entry) => entry.startsWith(known + path.sep)).sort()).toEqual(relative.map((entry) => path.join(known, entry)).sort())
+  expect(defaults.filter((entry) => !entry.startsWith(known + path.sep)).sort()).toEqual(relative.map((entry) => path.join(os.homedir(), entry)).sort())
 })
 
 test("an environment home that is relative, a home or above one grants nothing", () => {

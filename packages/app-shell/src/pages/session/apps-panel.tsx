@@ -29,7 +29,7 @@ import "./apps-panel.css"
 const sidebarCollapsedKey = "orchestra.app-dock.sidebar-collapsed"
 export type DockAddressDraft = { owner?: string; tab?: TabIdentity; value: string }
 
-// A view of the window's App Dock. The live tabs belong to the controller and the repository
+// A view of the window's MCP Dock. The live tabs belong to the controller and the repository
 // profile in context, so unmounting this view hides the native browser instead of closing it.
 // The compact view is the cockpit's Dock card: tabs above the address bar and only the core controls.
 // A placeholder fills the page area while no native page covers it (loading, no tabs, a failed load).

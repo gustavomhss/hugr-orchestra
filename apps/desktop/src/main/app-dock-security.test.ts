@@ -186,26 +186,26 @@ async function parent() {
           typeof report.electronVersion === "string" &&
           Array.isArray(report.screenshots) &&
           report.screenshots.length > 0,
-        "Invalid App Dock artifact schema",
+        "Invalid MCP Dock artifact schema",
       )
       check(
         Array.isArray(report.cases) &&
           report.cases.length === required.length &&
           new Set(report.cases.map((item: Case) => item.id)).size === required.length &&
           required.every((id) => report.cases.some((item: Case) => item.id === id && item.status === "pass")),
-        "Invalid App Dock artifact cases",
+        "Invalid MCP Dock artifact cases",
       )
       await Promise.all(
         report.screenshots.map(async (screenshot: unknown) => {
           check(
             typeof screenshot === "string" && screenshot.length > 0 && isAbsolute(screenshot),
-            "Invalid App Dock screenshot path",
+            "Invalid MCP Dock screenshot path",
           )
-          check(resolve(screenshot).startsWith(`${artifactRoot}/`), "App Dock screenshot escapes artifact root")
+          check(resolve(screenshot).startsWith(`${artifactRoot}/`), "MCP Dock screenshot escapes artifact root")
           const png = await readFile(screenshot)
           check(
             png.length > 8 && png.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
-            "Invalid App Dock screenshot PNG",
+            "Invalid MCP Dock screenshot PNG",
           )
         }),
       )
@@ -362,7 +362,7 @@ async function child() {
   const restartStage = process.env.APP_DOCK_RESTART_STAGE
   if (restartStage) return restartChild(restartStage, app, BrowserWindow, webContents)
   if (!process.env.APP_DOCK_ARTIFACT_ROOT || !isAbsolute(process.env.APP_DOCK_ARTIFACT_ROOT))
-    throw new Error("Invalid App Dock artifact root")
+    throw new Error("Invalid MCP Dock artifact root")
   const childArtifact = join(process.env.APP_DOCK_ARTIFACT_ROOT, "artifacts/app-dock/s1.json")
   const ipcModule = await import("./ipc")
   app.commandLine.appendSwitch("ignore-certificate-errors")
@@ -376,7 +376,7 @@ async function child() {
     return
   }
   const watchdog = setTimeout(() => {
-    console.error("App Dock acceptance watchdog expired")
+    console.error("MCP Dock acceptance watchdog expired")
     app.exit(1)
   }, 150_000)
   const temp = await mkdtemp(join(tmpdir(), "app-dock-user-data-"))
@@ -408,7 +408,7 @@ async function child() {
     setNativeTranslations() {},
   })
   if (!process.env.APP_DOCK_TEST_PRELOAD || !isAbsolute(process.env.APP_DOCK_TEST_PRELOAD))
-    throw new Error("Invalid App Dock test preload")
+    throw new Error("Invalid MCP Dock test preload")
   const ipcWin = new BrowserWindow({
     show: false,
     webPreferences: {
@@ -473,7 +473,7 @@ async function child() {
   let completed = false
   try {
     const u01Start = await eventCount()
-    await Promise.all(schemes.map((url) => rejects(() => open(url), "App Dock only supports HTTPS URLs")))
+    await Promise.all(schemes.map((url) => rejects(() => open(url), "MCP Dock only supports HTTPS URLs")))
     await Promise.all(
       schemes.map((url) =>
         waitEvent(
@@ -488,7 +488,7 @@ async function child() {
     const tab = await open()
     const u02Start = await eventCount()
     await Promise.all(
-      schemes.map((url) => rejects(() => navigate(tab.tabID, url), "App Dock only supports HTTPS URLs")),
+      schemes.map((url) => rejects(() => navigate(tab.tabID, url), "MCP Dock only supports HTTPS URLs")),
     )
     await Promise.all(
       schemes.map((url) =>
@@ -538,11 +538,11 @@ async function child() {
     pass("U05", "real HTTPS redirect to HTTP blocked")
 
     const contents = viewContents()
-    check(contents, "App Dock did not create WebContentsView")
+    check(contents, "MCP Dock did not create WebContentsView")
     const preferences = contents.getLastWebPreferences()
     check(
       preferences.sandbox === true && preferences.contextIsolation === true && preferences.nodeIntegration === false,
-      "unsafe App Dock webPreferences",
+      "unsafe MCP Dock webPreferences",
     )
     pass("U06", "real view has sandbox/contextIsolation/nodeIntegration policy")
 
@@ -570,7 +570,7 @@ async function child() {
       Object.keys(permissionEvent.payload).length === 3 && !JSON.stringify(permissionEvent).includes(temp),
       "permission event exposes sensitive data",
     )
-    pass("U29", "permission denial emits cloneable App Dock UI state without storage data")
+    pass("U29", "permission denial emits cloneable MCP Dock UI state without storage data")
 
     await readEvents()
     const error = events.find((event) => event.type === "navigation-error")
@@ -588,10 +588,10 @@ async function child() {
     pass("U08", "typed state/error envelopes omit storage internals")
 
     void navigate(tab.tabID, `${site.base}/delayed`).catch(() => {})
-    await waitFor(() => contents.isLoading(), "delayed App Dock navigation")
+    await waitFor(() => contents.isLoading(), "delayed MCP Dock navigation")
     const u09CloseStart = await eventCount()
     await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tab", [tab.tabID])
-    check(contents.isDestroyed(), "closed App Dock view remains alive")
+    check(contents.isDestroyed(), "closed MCP Dock view remains alive")
     await new Promise<void>((resolve) => setTimeout(resolve, 750))
     check(
       !(await execute("event-read-after-close", ipcWin.webContents, "window.__appDockEvents"))
@@ -603,7 +603,7 @@ async function child() {
 
     const first = await open()
     const firstContents = viewContents()
-    check(firstContents, "App Dock did not create profile view")
+    check(firstContents, "MCP Dock did not create profile view")
     await waitFor(
       async () =>
         (await execute(
@@ -611,7 +611,7 @@ async function child() {
           firstContents,
           "document.readyState === 'complete' && location.origin === " + JSON.stringify(site.base),
         )) === true,
-      "App Dock cache fixture load",
+      "MCP Dock cache fixture load",
     )
     await execute("view:storage-set", firstContents, "localStorage.setItem('app-dock-e2e', 'present')")
     const u10Start = await eventCount()
@@ -632,9 +632,9 @@ async function child() {
     await site.downloadCancelled
     await rejects(
       () => invoke(ipcWin.webContents.mainFrame, "app-dock-cancel-download", [download.payload.id]),
-      "Unknown App Dock download",
+      "Unknown MCP Dock download",
     )
-    await rejects(() => open(site.base, profile), "App Dock profile is not active")
+    await rejects(() => open(site.base, profile), "MCP Dock profile is not active")
     const fresh = await open(site.base, "e2e-profile-fresh")
     const freshContents = viewContents()
     await waitFor(
@@ -644,7 +644,7 @@ async function child() {
           freshContents,
           "document.readyState === 'complete' && location.origin === " + JSON.stringify(site.base),
         )) === true,
-      "fresh App Dock storage fixture load",
+      "fresh MCP Dock storage fixture load",
     )
     check(
       (await execute("view:storage-get", freshContents, "localStorage.getItem('app-dock-e2e')")) === null,
@@ -662,11 +662,11 @@ async function child() {
     await installEventStore()
     await rejects(
       () => invoke(ipcWin.webContents.mainFrame, "app-dock-open", [site.base, { x: 0, y: 0, width: 0, height: 1 }]),
-      "Invalid App Dock bounds",
+      "Invalid MCP Dock bounds",
     )
     await rejects(
       () => invoke(ipcWin.webContents.mainFrame, "app-dock-open", [site.base, { x: 0, y: 0, width: "1", height: 1 }]),
-      "Invalid App Dock bounds",
+      "Invalid MCP Dock bounds",
     )
     pass("U11", "malformed bounds rejected")
 
@@ -674,27 +674,27 @@ async function child() {
     check(frame, "fixture did not create iframe")
     await rejects(
       () => invoke(frame, "app-dock-resize", [{ tabID: "subframe", generation: 1 }, bounds]),
-      "Invalid App Dock sender",
+      "Invalid MCP Dock sender",
     )
     pass("U12", "subframe IPC sender rejected")
 
     const ipcTab = await invoke(ipcWin.webContents.mainFrame, "app-dock-open", [site.base, bounds, "ipc-profile"])
     await rejects(
       () => invoke(ipcWin.webContents.mainFrame, "app-dock-fullscreen", [ipcTab.tabID, "true"]),
-      "Invalid App Dock fullscreen state",
+      "Invalid MCP Dock fullscreen state",
     )
     pass("U13", "non-boolean IPC fullscreen state rejected")
 
     await rejects(
       () => invoke(ipcWin.webContents.mainFrame, "app-dock-command", [ipcTab.tabID, "history-back"]),
-      "Invalid App Dock command",
+      "Invalid MCP Dock command",
     )
     pass("U15", "invalid IPC command enum rejected")
     ipcWin.show()
     check(ipcWin.isVisible(), "ticker owner window must be visible to exercise detached-view visibility")
     const ticker = await open(`${site.base}/ticker`, "e2e-profile-fresh")
     const tickerContents = viewContents()
-    check(attached(ipcWin, tickerContents), "open App Dock view is not attached")
+    check(attached(ipcWin, tickerContents), "open MCP Dock view is not attached")
     const tickerSample = async () => {
       const title = await execute("view:ticker-sample", tickerContents, "document.title")
       const match = /^tick-(\d+)-(\d+)$/.exec(title)
@@ -703,7 +703,7 @@ async function child() {
     }
     await waitFor(async () => (await tickerSample())?.count >= 2, "ticker startup")
     await invoke(ipcWin.webContents.mainFrame, "app-dock-hide", [identity(ticker)])
-    check(!attached(ipcWin, tickerContents), "hide leaves App Dock view attached")
+    check(!attached(ipcWin, tickerContents), "hide leaves MCP Dock view attached")
     await new Promise<void>((resolve) => setTimeout(resolve, 1_200))
     const beforeHide = await tickerSample()
     if (!beforeHide) throw new Error("ticker disappeared after hide")
@@ -716,9 +716,9 @@ async function child() {
       hidden.count - beforeHide.count <= 3,
       `hidden ticker was not throttled: ${beforeHide.count} -> ${hidden.count}`,
     )
-    check(await execute("view:hidden-visibility", tickerContents, "document.hidden"), "detached App Dock view still reports visible document")
+    check(await execute("view:hidden-visibility", tickerContents, "document.hidden"), "detached MCP Dock view still reports visible document")
     await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [identity(ticker), bounds])
-    check(attached(ipcWin, tickerContents), "select does not reattach hidden App Dock view")
+    check(attached(ipcWin, tickerContents), "select does not reattach hidden MCP Dock view")
     const resumedAt = performance.now()
     await waitFor(
       async () => (await tickerSample())?.count >= hidden.count + 3 && performance.now() - resumedAt <= 200,
@@ -786,18 +786,18 @@ async function child() {
     const closeCContents = viewContents()
     await rejects(
       () => invoke(ipcWin.webContents.mainFrame, "app-dock-close-tabs", [closeTarget.tabID, "invalid"]),
-      "Invalid App Dock close scope",
+      "Invalid MCP Dock close scope",
     )
     await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [identity(closeTarget), bounds])
     await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tabs", [closeTarget.tabID, "others"])
     check(!closeTargetContents.isDestroyed(), "close-tabs others destroyed target")
     await rejects(
       () => invoke(ipcWin.webContents.mainFrame, "app-dock-select", [identity(closeA), bounds]),
-      "Unknown App Dock tab",
+      "Unknown MCP Dock tab",
     )
     await rejects(
       () => invoke(ipcWin.webContents.mainFrame, "app-dock-select", [identity(closeC), bounds]),
-      "Unknown App Dock tab",
+      "Unknown MCP Dock tab",
     )
     const rightA = await open(site.base, "close-tabs-right-profile")
     const rightAContents = viewContents()
@@ -812,7 +812,7 @@ async function child() {
     await rejects(
       () =>
         invoke(ipcWin.webContents.mainFrame, "app-dock-close-tabs", [rightTarget.tabID, "right", visualOrder.slice(1)]),
-      "Invalid App Dock tab order",
+      "Invalid MCP Dock tab order",
     )
     await rejects(
       () =>
@@ -821,7 +821,7 @@ async function child() {
           "right",
           [...visualOrder.slice(0, 3), "foreign-tab"],
         ]),
-      "Invalid App Dock tab order",
+      "Invalid MCP Dock tab order",
     )
     await rejects(
       () =>
@@ -830,11 +830,11 @@ async function child() {
           "right",
           [rightA.tabID, rightC.tabID, rightTarget.tabID, rightTarget.tabID],
         ]),
-      "Invalid App Dock tab order",
+      "Invalid MCP Dock tab order",
     )
     await rejects(
       () => invoke(ipcWin.webContents.mainFrame, "app-dock-close-tabs", [rightTarget.tabID, "others", visualOrder]),
-      "Invalid App Dock tab order",
+      "Invalid MCP Dock tab order",
     )
     await invoke(ipcWin.webContents.mainFrame, "app-dock-close-tabs", [rightTarget.tabID, "right", visualOrder])
     await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [identity(rightTarget), bounds])
@@ -842,7 +842,7 @@ async function child() {
     await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [identity(rightC), bounds])
     await rejects(
       () => invoke(ipcWin.webContents.mainFrame, "app-dock-select", [identity(rightD), bounds]),
-      "Unknown App Dock tab",
+      "Unknown MCP Dock tab",
     )
     diagnostic("u20:right-verified")
     pass("U20", "real close-tabs validates complete visual order; closes only visual-right tab")
@@ -963,7 +963,7 @@ async function child() {
     const unaffectedContents = attachedContents(ipcWin)
     await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [identity(crashed), bounds])
     const crashedContents = attachedContents(ipcWin)
-    check(crashedContents && unaffectedContents && crashedContents !== unaffectedContents, "U27 App Dock views missing")
+    check(crashedContents && unaffectedContents && crashedContents !== unaffectedContents, "U27 MCP Dock views missing")
     await execute("view:crash-storage-set", crashedContents, "localStorage.setItem('recovery', 'present')")
     const u27CrashStart = await eventCount()
     // forcefullyCrashRenderer can leave the Linux/Xvfb renderer hung instead of gone; kill its OS process directly.
@@ -981,7 +981,7 @@ async function child() {
     check(
       !unaffectedContents.isDestroyed() &&
         (await execute("view:unaffected-url", unaffectedContents, "location.href")) === `${site.base}/ticker`,
-      "other App Dock tab changed after selected renderer crash",
+      "other MCP Dock tab changed after selected renderer crash",
     )
     const knownContents = new Set([crashedContents.id, unaffectedContents.id])
     const u27RecoverStart = await eventCount()
@@ -1000,7 +1000,7 @@ async function child() {
         .getAllWebContents()
         .find((item) => item !== ipcWin.webContents && !item.isDestroyed() && !knownContents.has(item.id))
       return recoveredContents !== undefined
-    }, "recovered App Dock WebContents")
+    }, "recovered MCP Dock WebContents")
     check(
       recovered.tabID === crashed.tabID &&
         recovered.generation > crashed.generation &&
@@ -1023,7 +1023,7 @@ async function child() {
       }),
       "old crashed generation emitted event after recovery",
     )
-    check(!unaffectedContents.isDestroyed(), "other App Dock tab changed during recovery")
+    check(!unaffectedContents.isDestroyed(), "other MCP Dock tab changed during recovery")
     // Resize, Hide and Select name the tab and generation they target; stale or malformed ones never land.
     const u31Moved = { x: 10, y: 20, width: 300, height: 200 }
     const u31At = (expected: typeof bounds) => {
@@ -1036,9 +1036,9 @@ async function child() {
       await invoke(ipcWin.webContents.mainFrame, "app-dock-hide", [stale])
     }
     check(u31At(bounds) && attached(ipcWin, recoveredContents), "stale resize or hide reached the attached view")
-    await rejects(() => invoke(ipcWin.webContents.mainFrame, "app-dock-resize", [u31Moved]), "Invalid App Dock tab")
+    await rejects(() => invoke(ipcWin.webContents.mainFrame, "app-dock-resize", [u31Moved]), "Invalid MCP Dock tab")
     for (const args of [[], [recovered]])
-      await rejects(() => invoke(ipcWin.webContents.mainFrame, "app-dock-hide", args), "Invalid App Dock tab")
+      await rejects(() => invoke(ipcWin.webContents.mainFrame, "app-dock-hide", args), "Invalid MCP Dock tab")
     await invoke(ipcWin.webContents.mainFrame, "app-dock-resize", [identity(recovered), u31Moved])
     await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [identity(crashed), bounds])
     check(u31At(u31Moved), "attached tab's resize did not apply, or an older generation's select did")
@@ -1068,7 +1068,7 @@ async function child() {
     const u28ActiveB = attachedContents(ipcWinB)
     await invoke(ipcWin.webContents.mainFrame, "app-dock-select", [identity(u28TabsA[0]!), bounds])
     const u28ActiveContents = attachedContents(ipcWin)
-    check(u28ActiveContents && u28ActiveB, "U28 active App Dock views missing")
+    check(u28ActiveContents && u28ActiveB, "U28 active MCP Dock views missing")
     await waitFor(
       async () =>
         (await execute("u28:active-a0", u28ActiveContents, "location.href")) === `${site.base}/ticker?capacity=a0` &&
@@ -1077,10 +1077,10 @@ async function child() {
     )
     const u28Extra = await open(`${site.base}/ticker?capacity=extra`, u28Profile)
     const u28ExtraContents = attachedContents(ipcWin)
-    check(u28ExtraContents, "U28 extra active App Dock view missing")
+    check(u28ExtraContents, "U28 extra active MCP Dock view missing")
     await rejects(
       () => invoke(ipcWinB.webContents.mainFrame, "app-dock-select", [identity(u28TabsB[0]!), bounds]),
-      "Unknown App Dock tab",
+      "Unknown MCP Dock tab",
     )
     check(
       attached(ipcWin, u28ExtraContents) &&
@@ -1171,10 +1171,10 @@ async function child() {
     const devProfile = { storageKey: "12345678-1234-4123-8123-123456789abc" }
     const devTab = await devDock.open(ipcWin.webContents.id, ipcWin, site.base, bounds, () => {}, devProfile)
     const devContents = attachedContents(ipcWin)
-    check(devContents && !devContents.isDevToolsOpened(), "App Dock DevTools opened without trusted route")
+    check(devContents && !devContents.isDevToolsOpened(), "MCP Dock DevTools opened without trusted route")
     devContents.sendInputEvent({ type: "keyDown", keyCode: "F12" })
     await new Promise<void>((resolve) => setTimeout(resolve, 100))
-    check(!devContents.isDevToolsOpened(), "ordinary App Dock user input opened DevTools")
+    check(!devContents.isDevToolsOpened(), "ordinary MCP Dock user input opened DevTools")
     await rejects(
       () => invoke(ipcWin.webContents.mainFrame, "app-dock-open-devtools", [devTab.tabID]),
       "No handler registered",
@@ -1189,7 +1189,7 @@ async function child() {
     })
     await rejects(
       () => productionDock.openDevTools(ipcWin.webContents.id, productionTab.tabID),
-      "App Dock DevTools are disabled in production",
+      "MCP Dock DevTools are disabled in production",
     )
     productionDock.close(ipcWin.webContents.id)
     pass(
@@ -1265,7 +1265,7 @@ async function restartChild(
       setNativeTranslations() {},
     })
   } catch (error) {
-    if (stage !== "u25-corrupt" || !String(error).includes("Invalid App Dock profile registry")) throw error
+    if (stage !== "u25-corrupt" || !String(error).includes("Invalid MCP Dock profile registry")) throw error
     console.log(`app-dock-restart:${stage}:pass`)
     app.exit(0)
     return
@@ -1280,7 +1280,7 @@ async function restartChild(
     )
   const bounds = { x: 0, y: 0, width: 400, height: 300 }
   const open = (profileID: string) => {
-    check(typeof site === "string", "Invalid restart App Dock address")
+    check(typeof site === "string", "Invalid restart MCP Dock address")
     return invoke("app-dock-open", [site, bounds, profileID])
   }
   const view = () =>
@@ -1296,7 +1296,7 @@ async function restartChild(
         .filter((item) => item !== win.webContents && !item.isDestroyed() && !excluded.includes(item.id))
         .at(-1)
     while (!current()) {
-      if (Date.now() > deadline) throw new Error("App Dock restart view missing")
+      if (Date.now() > deadline) throw new Error("MCP Dock restart view missing")
       await new Promise<void>((resolve) => setTimeout(resolve, 25))
     }
     return current()!
@@ -1326,10 +1326,10 @@ async function restartChild(
       await open("tombstone-profile")
       await invoke("app-dock-delete-profile", [{ profileID: "tombstone-profile" }])
     } else if (stage === "u24-read") {
-      await rejects(() => open("tombstone-profile"), "App Dock profile is not active")
+      await rejects(() => open("tombstone-profile"), "MCP Dock profile is not active")
       check(!view(), "deleted profile accessed old partition")
     } else if (stage === "u25-corrupt") {
-      await rejects(() => open("corrupt-profile"), "Invalid App Dock profile registry")
+      await rejects(() => open("corrupt-profile"), "Invalid MCP Dock profile registry")
       check(!view(), "corrupt registry rebound profile partition")
     } else if (stage === "u26-write") {
       await open("isolation-alpha")

@@ -10,7 +10,7 @@ export function createAppDockInput(ctx: AppDockContext): Pick<AppDockAPI, "click
       const record = ctx.tabs.get(senderID)?.get(tabID)
       const view = record?.view
       const win = record?.win
-      if (!view || !win) throw new Error("Unknown App Dock tab")
+      if (!view || !win) throw new Error("Unknown MCP Dock tab")
       const beforeURL = view.webContents.getURL()
       const key = `${senderID}:${tabID}`
       const refNamespaceAtStart = ctx.refNamespaces.get(key) ?? 0
@@ -209,7 +209,7 @@ export function createAppDockInput(ctx: AppDockContext): Pick<AppDockAPI, "click
       const focus = await this.execute(senderID, tabID, buildFocusScript(ref, namespace))
       if (!focus || typeof focus !== "object" || !("ok" in focus) || focus.ok !== true) return focus
       const view = ctx.tabs.get(senderID)?.get(tabID)?.view
-      if (!view) throw new Error("Unknown App Dock tab")
+      if (!view) throw new Error("Unknown MCP Dock tab")
       const domResult = await this.execute(senderID, tabID, buildTypeScript(ref, text, namespace))
       if (!domResult || typeof domResult !== "object" || !("ok" in domResult) || domResult.ok !== true) return domResult
       const observed = await this.execute(senderID, tabID, buildReadElementScript(ref, namespace))
@@ -221,10 +221,10 @@ export function createAppDockInput(ctx: AppDockContext): Pick<AppDockAPI, "click
     },
     clickAt(senderID: number, tabID: string, x: number, y: number) {
       const record = ctx.tabs.get(senderID)?.get(tabID)
-      if (!record) throw new Error("Unknown App Dock tab")
+      if (!record) throw new Error("Unknown MCP Dock tab")
       const bounds = record.view.getBounds()
       if (bounds.width <= 1 || bounds.height <= 1)
-        return Promise.resolve({ ok: false, error: "App Dock tab viewport is not ready; retry after layout", retryable: true })
+        return Promise.resolve({ ok: false, error: "MCP Dock tab viewport is not ready; retry after layout", retryable: true })
       const beforeURL = record.view.webContents.getURL()
       const key = `${senderID}:${tabID}`
       const refNamespaceAtStart = ctx.refNamespaces.get(key) ?? 0

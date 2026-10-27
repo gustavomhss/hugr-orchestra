@@ -187,12 +187,18 @@ test("Advanced group keeps its choice across reload and opens for the page insid
   await expect(toggle).toHaveAttribute("aria-disabled", "true")
   await expect(mcp).toHaveAttribute("aria-current", "page")
   // The open group cannot close under the page it holds.
-  await toggle.click()
+  // The toggle is disabled there, so Playwright's own actionability wait would never end.
+  await toggle.click({ force: true })
   await expect(toggle).toHaveAttribute("aria-expanded", "true")
 })
 
 test("Chat says what to do when the local server is not responding", async ({ page }) => {
+  test.setTimeout(60_000)
   await setupCompactNavigation(page, { selected: true })
+  // A server that is down at launch shows the full-page connection error instead; this is a server that stops later.
+  await page.goto("/")
+  const sidebar = page.locator('[data-component="orchestra-sidebar"]')
+  await expect(sidebar.getByRole("button", { name: "Chat", exact: true })).toBeVisible()
   await page.route(
     (url) => url.origin === "http://127.0.0.1:4096" && url.pathname === "/api/health",
     async (route) => {
@@ -210,9 +216,9 @@ test("Chat says what to do when the local server is not responding", async ({ pa
       })
     },
   )
-  await page.goto("/")
-  await expect(page.getByText(/Lost connection to the server/)).toBeVisible()
-  await page.locator('[data-component="orchestra-sidebar"]').getByRole("button", { name: "Chat", exact: true }).click()
+  // The next health poll (every 10 seconds) fails, and the banner waits 3 more seconds before it shows.
+  await expect(page.getByText(/Lost connection to the server/)).toBeVisible({ timeout: 25_000 })
+  await sidebar.getByRole("button", { name: "Chat", exact: true }).click()
   await expect(page.getByText("The local server is not responding", { exact: true })).toBeVisible()
   await expect(page.locator('[data-component="prompt-input-v2"]')).toHaveCount(0)
 })

@@ -15,7 +15,7 @@ afterEach(() => {
   directories.splice(0).forEach((directory) => rmSync(directory, { recursive: true, force: true }))
 })
 
-describe("App Dock profile registry", () => {
+describe("MCP Dock profile registry", () => {
   test("a stale manifest write conflicts after app-dock-open creates a repository profile", () => {
     const registry = AppDockProfileRegistry.load(userData())
     registry.ensureActive("default")

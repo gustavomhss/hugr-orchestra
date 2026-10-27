@@ -176,7 +176,7 @@ test("workspace pending makes timeout native unknown and cancels original UUID w
   await turn()
   const id = (f.sent[0] as Envelope).id
   f.deliver({ type: "dock.rpc.native-pending", id, backend: "linux-atspi", scopeKind: "workspace" })
-  expect(JSON.parse(String(await work))).toEqual({ backend: "linux-atspi", code: "transport-timeout", message: "App Dock read request timed out", outcome: "unknown", hint: busy })
+  expect(JSON.parse(String(await work))).toEqual({ backend: "linux-atspi", code: "transport-timeout", message: "MCP Dock read request timed out", outcome: "unknown", hint: busy })
   expect(f.sent[1]).toEqual({ type: "dock.rpc.cancel", id })
 })
 
@@ -285,7 +285,7 @@ test("browser dock_read forwards tree-shape args exactly and keeps browser error
   // The browser shape `mode` is not native input policy: a browser read timeout stays plain text and posts no cancel.
   const slow = fakePort()
   const timed = (createAppDockHooks(slow.port, { timeoutMs: 25 }) as Required<Hooks>).tool.dock_read.execute({ mode: "skeleton" }, context)
-  expect(await timed).toBe("App Dock read request timed out")
+  expect(await timed).toBe("MCP Dock read request timed out")
   await turn()
   expect(slow.sent.map((sent) => (sent as Envelope).type)).toEqual(["dock.rpc"])
 })
@@ -451,17 +451,17 @@ test("native outer timeout is conservative unknown plus original-ID cancellation
   await turn()
   const ids = f.sent.map((sent) => (sent as Envelope).id)
   f.deliver(admission(ids[0]))
-  expect(JSON.parse(await admitted as string)).toEqual({ backend: "linux-atspi", code: "transport-timeout", message: "App Dock wait request timed out", outcome: "unknown", target: admission(ids[0]).target, hint: busy })
-  expect(JSON.parse(await intent as string)).toEqual({ backend: "linux-atspi", code: "transport-timeout", message: "App Dock click request timed out", outcome: "unknown", hint: busy })
+  expect(JSON.parse(await admitted as string)).toEqual({ backend: "linux-atspi", code: "transport-timeout", message: "MCP Dock wait request timed out", outcome: "unknown", target: admission(ids[0]).target, hint: busy })
+  expect(JSON.parse(await intent as string)).toEqual({ backend: "linux-atspi", code: "transport-timeout", message: "MCP Dock click request timed out", outcome: "unknown", hint: busy })
   // A plain await, not expect().resolves: resolves waits by running a nested event loop, and on Windows Bun 1.3.14
   // cannot fire a timer from it while it is inside another timer's callbacks. Here it would run inside the drain
   // that timed out `intent`, so `browser`'s timer never fired and the whole test process spun forever.
-  expect(await browser).toBe("App Dock click request timed out")
+  expect(await browser).toBe("MCP Dock click request timed out")
   await turn()
   expect(f.sent.slice(3)).toEqual([{ type: "dock.rpc.cancel", id: ids[0] }, { type: "dock.rpc.cancel", id: ids[1] }])
   expect(remove.mock.calls.length).toBe(1)
   remove.mockRestore()
-  expect(() => createAppDockHooks(f.port, { timeoutMs: 0 })).toThrow("Invalid App Dock timeout")
+  expect(() => createAppDockHooks(f.port, { timeoutMs: 0 })).toThrow("Invalid MCP Dock timeout")
 })
 
 test("pending requests are bounded per port and settlement recovers admission capacity", async () => {
@@ -469,7 +469,7 @@ test("pending requests are bounded per port and settlement recovers admission ca
   const hooks = createAppDockHooks(f.port) as Required<Hooks>
   const work = Array.from({ length: 32 }, () => hooks.tool.dock_list.execute({}, context))
   await turn()
-  expect(await hooks.tool.dock_list.execute({}, context)).toBe("App Dock request capacity exhausted")
+  expect(await hooks.tool.dock_list.execute({}, context)).toBe("MCP Dock request capacity exhausted")
   expect(f.sent.length).toBe(32)
   f.sent.forEach((sent) => f.deliver({ type: "dock.rpc.result", id: (sent as Envelope).id, ok: true, value: "done" }))
   await Promise.all(work)

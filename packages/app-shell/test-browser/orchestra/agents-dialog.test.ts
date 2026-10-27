@@ -394,7 +394,7 @@ test("picker distinguishes loading, error, loaded-empty and explicitly denied mo
   expect(view.root.textContent).not.toContain("No connected models are available")
   view.setState({ status: "success", providers: [] })
   await new Promise((resolve) => setTimeout(resolve, 0))
-  expect(view.root.textContent).toContain("No connected models are available in this profile.")
+  expect(view.root.textContent).toContain("No connected models are available in this project.")
   expect(view.root.querySelector('[data-status="inherited"]')).toBeNull()
   view.setState({ rulesReady: false, policy: { mode: "inherit" } })
   expect(view.root.querySelector('[data-status="inherited"]')).toBeNull()

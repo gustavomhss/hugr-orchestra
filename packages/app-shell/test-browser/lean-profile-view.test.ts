@@ -37,7 +37,7 @@ if (process.env.LEAN_PROFILE_VIEW_DOM !== "1") {
     const screen = mount({ data })
     try {
       expect(!!screen.host.querySelector('[data-mx-page="orchestra-lean"]')).toBe(true)
-      expect(screen.host.querySelector("h1")?.textContent).toBe("Lean")
+      expect(screen.host.querySelector("h1")?.textContent).toBe("Context savings")
       expect(screen.host.textContent).toContain("Profile one")
       expect(screen.host.querySelectorAll("[data-lean-item]")).toHaveLength(37)
       expect([...screen.host.querySelectorAll("tbody bdi")].slice(0, 5).map((node) => node.textContent)).toEqual([
@@ -52,7 +52,7 @@ if (process.env.LEAN_PROFILE_VIEW_DOM !== "1") {
       for (const id of ["cargo", "go", "pytest", "jest", "vitest"] as const) {
         expect(screen.row(id).querySelector('[data-lean-value="bytes"]')?.textContent).toBe("0")
         expect(screen.row(id).querySelector('[data-lean-value="tokens"]')?.textContent).toBe("0")
-        expect(screen.switch(id).getAttribute("aria-label")).toContain("for this profile")
+        expect(screen.switch(id).getAttribute("aria-label")).toContain("for this project")
       }
       for (const id of ["jest", "vitest", "bun", "npm"] as const) {
         expect(screen.row(id).textContent).toContain("Summarized when large")
@@ -63,7 +63,7 @@ if (process.env.LEAN_PROFILE_VIEW_DOM !== "1") {
             : "No item-specific filter.",
         )
         expect(screen.host.querySelector(".lean-detail .lean-notice")?.textContent).toContain(
-          "With Lean enabled, output over 4 KiB is summarized; failure blocks from failed commands stay in full. Recover the complete original with lean_recall.",
+          "With context savings enabled, output over 4 KiB is summarized; failure blocks from failed commands stay in full. Recover the complete original with lean_recall.",
         )
       }
       screen.set("data", {
@@ -189,9 +189,9 @@ if (process.env.LEAN_PROFILE_VIEW_DOM !== "1") {
       expect(screen.host.querySelector('[data-lean-total="tokens"]')?.textContent).toBe("Unavailable")
       screen.set("error", undefined)
       screen.set("data", { ...info(), items: [] })
-      expect(screen.host.textContent).toContain("No Lean items are available for this profile.")
+      expect(screen.host.textContent).toContain("No context savings items are available for this project.")
       screen.set("data", { ...info(), enabled: false, complete: false })
-      expect(screen.host.textContent).toContain("Lean is off for this profile")
+      expect(screen.host.textContent).toContain("Context savings is off for this project")
       expect(screen.host.textContent).toContain("History is bounded")
       expect(screen.host.querySelector('[data-lean-total="bytes"]')?.textContent).toBe("+1 KiB")
     } finally {
@@ -206,7 +206,7 @@ if (process.env.LEAN_PROFILE_VIEW_DOM !== "1") {
       expect(screen.host.textContent).toContain("Bytes economizados")
       expect(screen.host.textContent).toContain("Tokens economizados estimados")
       expect(screen.row("vitest").textContent).toContain("Saídas grandes são resumidas")
-      expect(screen.switch("pytest").getAttribute("aria-label")).toBe("Ativar pytest neste perfil")
+      expect(screen.switch("pytest").getAttribute("aria-label")).toBe("Ativar pytest neste projeto")
       screen.set("data", { ...info(), savings: { ...info().savings, tokenCalls: 1 } })
       expect(screen.host.querySelector(".lean-summary [data-lean-coverage]")?.textContent).toBe(
         "Execuções com estimativa: 1/2",
@@ -253,7 +253,7 @@ if (process.env.LEAN_PROFILE_VIEW_DOM !== "1") {
       })
       const bytes = screen.host.querySelector('[data-lean-total="bytes"]')!
       expect(bytes.textContent).toBe("-1.25 MiB")
-      expect(bytes.getAttribute("title")).toBe("Exact UTF-8 bytes: -1,310,720")
+      expect(bytes.getAttribute("title")).toBe("Exact size: -1,310,720 bytes")
       expect(bytes.getAttribute("aria-label")).toBe(bytes.getAttribute("title"))
       expect(bytes.getAttribute("data-tone")).toBe("negative")
       expect(screen.host.querySelector('[data-lean-total="tokens"]')?.getAttribute("data-tone")).toBe("negative")

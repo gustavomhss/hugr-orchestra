@@ -5,7 +5,7 @@ import { appDockController } from "@/pages/session/apps-panel-controller"
 import "./kit.css"
 import "./dock.css"
 
-// The Dock destination is another view of the window's App Dock: Chat's Apps tab and this page
+// The Dock destination is another view of the window's MCP Dock: Chat's Apps tab and this page
 // attach to the same controller, so moving between them keeps the live tabs of this repository.
 // Without the desktop bridge the browser chrome still renders and its page area says so.
 export default function DockPage() {

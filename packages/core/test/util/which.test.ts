@@ -64,8 +64,7 @@ describe("util.which", () => {
     same(which("dupe", env([a, b].join(path.delimiter))), first)
   })
 
-  test("returns null for non-executable file on unix", async () => {
-    if (process.platform === "win32") return
+  test.skipIf(process.platform === "win32")("returns null for non-executable file on unix", async () => {
 
     await using tmp = await tmpdir()
     const bin = path.join(tmp.path, "bin")
@@ -75,8 +74,7 @@ describe("util.which", () => {
     expect(which("noexec", env(bin))).toBeNull()
   })
 
-  test("uses PATHEXT on windows", async () => {
-    if (process.platform !== "win32") return
+  test.skipIf(process.platform !== "win32")("uses PATHEXT on windows", async () => {
 
     await using tmp = await tmpdir()
     const bin = path.join(tmp.path, "bin")
@@ -87,8 +85,7 @@ describe("util.which", () => {
     expect(which("pathext", { PATH: bin, PATHEXT: ".CMD" })).toBe(file)
   })
 
-  test("uses Windows Path casing fallback", async () => {
-    if (process.platform !== "win32") return
+  test.skipIf(process.platform !== "win32")("uses Windows Path casing fallback", async () => {
 
     await using tmp = await tmpdir()
     const bin = path.join(tmp.path, "bin")

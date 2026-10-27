@@ -8,7 +8,7 @@ const MAX_PROGRESSING_DOWNLOADS_PER_PROFILE = 8
 const MAX_TERMINAL_DOWNLOADS_PER_SENDER = 20
 
 const storagePartition = (storageKey: string) => {
-  if (!/^[A-Za-z0-9_-]{16,128}$/.test(storageKey)) throw new Error("Invalid App Dock storage key")
+  if (!/^[A-Za-z0-9_-]{16,128}$/.test(storageKey)) throw new Error("Invalid MCP Dock storage key")
   return `persist:app-dock-${storageKey}`
 }
 
@@ -109,7 +109,7 @@ export function createAppDockSessions(ctx: AppDockContext) {
 
   return {
     open(storageKey: string) {
-      if (retiredStorageKeys.has(storageKey)) throw new Error("App Dock storage key is retired")
+      if (retiredStorageKeys.has(storageKey)) throw new Error("MCP Dock storage key is retired")
       const partition = storagePartition(storageKey)
       const browserSession = browserSessions.get(partition) ?? session.fromPartition(partition)
       browserSessions.set(partition, browserSession)
@@ -134,7 +134,7 @@ export function createAppDockSessions(ctx: AppDockContext) {
     },
     retire(storageKey: string) {
       storagePartition(storageKey)
-      if (retiredStorageKeys.has(storageKey)) throw new Error("App Dock storage key is retired")
+      if (retiredStorageKeys.has(storageKey)) throw new Error("MCP Dock storage key is retired")
       retiredStorageKeys.add(storageKey)
     },
     async clear(storageKey: string) {
@@ -166,13 +166,13 @@ export function createAppDockSessions(ctx: AppDockContext) {
     },
     cancelDownload(senderID: number, id: string) {
       const download = downloads.get(id)
-      if (!download || download.senderID !== senderID) throw new Error("Unknown App Dock download")
+      if (!download || download.senderID !== senderID) throw new Error("Unknown MCP Dock download")
       download.item.cancel()
     },
     openDownload(senderID: number, id: string) {
       const download = downloads.get(id)
       if (!download || download.senderID !== senderID || download.state.state !== "completed")
-        throw new Error("Unknown App Dock download")
+        throw new Error("Unknown MCP Dock download")
       return shell.openPath(download.item.getSavePath())
     },
   }

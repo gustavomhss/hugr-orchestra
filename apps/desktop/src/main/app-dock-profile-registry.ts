@@ -17,12 +17,12 @@ const maxURLLength = 2048
 const maxNameLength = 128
 
 const profileID = (value: string) => {
-  if (!/^[a-z0-9][a-z0-9-]{0,31}$/.test(value)) throw new Error("Invalid App Dock profile ID")
+  if (!/^[a-z0-9][a-z0-9-]{0,31}$/.test(value)) throw new Error("Invalid MCP Dock profile ID")
   return value
 }
 
-const registryError = () => new Error("Invalid App Dock profile registry")
-const manifestError = () => new Error("Invalid App Dock manifest")
+const registryError = () => new Error("Invalid MCP Dock profile registry")
+const manifestError = () => new Error("Invalid MCP Dock manifest")
 
 const writeJSON = (path: string, value: unknown) => {
   const directory = dirname(path)
@@ -200,7 +200,7 @@ export class AppDockProfileRegistry {
           manifestMissing = true
         } else if (error instanceof SyntaxError) {
           manifestMissing = true
-        } else if (error instanceof Error && error.message === "Invalid App Dock manifest") {
+        } else if (error instanceof Error && error.message === "Invalid MCP Dock manifest") {
           manifestMissing = true
         } else {
           throw error
@@ -238,8 +238,8 @@ export class AppDockProfileRegistry {
             history: [],
           },
         )
-      if (error instanceof Error && error.message === "Invalid App Dock profile ID") throw registryError()
-      if (error instanceof Error && error.message === "Invalid App Dock profile registry") throw error
+      if (error instanceof Error && error.message === "Invalid MCP Dock profile ID") throw registryError()
+      if (error instanceof Error && error.message === "Invalid MCP Dock profile registry") throw error
       throw registryError()
     }
   }
@@ -250,8 +250,8 @@ export class AppDockProfileRegistry {
       if (!this.#manifest.profiles.some((item) => item.id === id)) this.addManifestProfile(id)
       return Object.freeze({ storageKey: profile.storageKey })
     }
-    if (profile) throw new Error("App Dock profile is not active")
-    if (this.#manifest.profiles.length >= maxProfiles) throw new Error("App Dock profile limit reached")
+    if (profile) throw new Error("MCP Dock profile is not active")
+    if (this.#manifest.profiles.length >= maxProfiles) throw new Error("MCP Dock profile limit reached")
     const storageKey = randomUUID()
     this.write({ ...this.#registry.profiles, [id]: Object.freeze({ storageKey, status: "active" }) })
     this.addManifestProfile(id)
@@ -260,8 +260,8 @@ export class AppDockProfileRegistry {
 
   markDeleting(id: string): ProfileStorage {
     const profile = this.#registry.profiles[profileID(id)]
-    if (!profile) throw new Error("Unknown App Dock profile")
-    if (profile.status === "deleted") throw new Error("App Dock profile is not active")
+    if (!profile) throw new Error("Unknown MCP Dock profile")
+    if (profile.status === "deleted") throw new Error("MCP Dock profile is not active")
     if (profile.status === "active")
       this.write({ ...this.#registry.profiles, [id]: { ...profile, status: "deleting" } })
     return Object.freeze({ storageKey: profile.storageKey })
@@ -269,7 +269,7 @@ export class AppDockProfileRegistry {
 
   markDeleted(id: string) {
     const profile = this.#registry.profiles[profileID(id)]
-    if (!profile || profile.status !== "deleting") throw new Error("App Dock profile is not deleting")
+    if (!profile || profile.status !== "deleting") throw new Error("MCP Dock profile is not deleting")
     this.write({ ...this.#registry.profiles, [id]: { ...profile, status: "deleted" } })
     this.writeManifest({
       ...this.#manifest,
@@ -313,7 +313,7 @@ export class AppDockProfileRegistry {
   }
 
   private addManifestProfile(id: string) {
-    if (this.#manifest.profiles.length >= maxProfiles) throw new Error("App Dock profile limit reached")
+    if (this.#manifest.profiles.length >= maxProfiles) throw new Error("MCP Dock profile limit reached")
     // A renderer holding the previous revision must get a conflict and refetch, not a write
     // that fails validation because it lacks the profile created by app-dock-open.
     this.writeManifest({

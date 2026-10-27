@@ -85,11 +85,12 @@
   }
 
   [data-orchestra-tabs] [data-titlebar-tab]:is([data-state="pressed"], [data-editing="true"]) {
-    /* The strip is already glass: the active tab is a fill step and a hairline, never a second blur plate. */
-    border-color: var(--orchestra-border);
-    background: var(--orchestra-surface-active);
+    border-color: var(--orchestra-glass-border);
+    background: var(--orchestra-grain), var(--orchestra-glass-sheen), var(--orchestra-glass-background);
     color: var(--orchestra-tab-active-text);
-    box-shadow: none;
+    box-shadow: var(--orchestra-glass-shadow);
+    -webkit-backdrop-filter: var(--orchestra-glass-filter);
+    backdrop-filter: var(--orchestra-glass-filter);
   }
 
   /* Any selected decoration follows the tab's own box, never an oversized cap. */

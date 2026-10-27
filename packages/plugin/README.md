@@ -18,7 +18,7 @@ From this package directory, run `bun typecheck` to typecheck the package.
 
 ## Tool hooks
 
-There is no legacy server plugin: core's external plugin loader accepts only V2 modules, so write server behaviour, including tools, lifecycle, chat, permission and provider behaviour, as a V2 plugin. The root entrypoint keeps `Hooks`, whose one member is `tool`, for the in-repo App Dock tools that the product host registers as core Tools (`modules/app-dock/src/application-tools.ts`).
+There is no legacy server plugin: core's external plugin loader accepts only V2 modules, so write server behaviour, including tools, lifecycle, chat, permission and provider behaviour, as a V2 plugin. The root entrypoint keeps `Hooks`, whose one member is `tool`, for the in-repo MCP Dock tools that the product host registers as core Tools (`modules/app-dock/src/application-tools.ts`).
 
 ```ts
 import { tool, type Hooks } from "@orchestra/plugin"

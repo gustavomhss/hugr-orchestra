@@ -49,6 +49,7 @@ test("the sidebar opens the routed view with the mock's masthead, sections and d
     "Permissions",
     "Agents",
     "MCP",
+    "Trusted projects",
   ])
   await expect(nav.filter({ hasText: "General" })).toHaveAttribute("aria-current", "page")
   await nav.filter({ hasText: "Models" }).click()

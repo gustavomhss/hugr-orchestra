@@ -117,7 +117,8 @@
       "summary": "Relay evaluates ordered work-package checklists at agent stop boundaries.",
       "exportsPolicy": "demanded",
       "sourceWildcards": {"./*": "./src/*.ts"},
-      "platformLibrary": true
+      "platformLibrary": true,
+      "importAllow": ["effect", "@orchestra/schema", "bun", "bun:", "node:"]
     },
     "maestro-arsenal": {
       "layer": "module",
@@ -145,8 +146,8 @@
     "app-dock": {
       "layer": "product",
       "status": "canonical",
-      "owner": "App Dock maintainer",
-      "summary": "App Dock and Linux workspace tools that operate desktop apps over the Electron main channel.",
+      "owner": "MCP Dock maintainer",
+      "summary": "MCP Dock and Linux workspace tools that operate desktop apps over the Electron main channel.",
       "exportsPolicy": "demanded",
       "sourceWildcards": {"./*": "./src/*.ts"}
     },
@@ -194,7 +195,7 @@
         { "path": "src/account", "kind": "cohesive", "entries": ["src/account.ts"] },
         { "path": "src/actions", "kind": "cohesive", "entries": ["src/actions.ts"] },
         { "path": "src/agent", "kind": "cohesive", "entries": ["src/agent.ts"] },
-        { "path": "src/config", "kind": "cohesive", "entries": ["src/config.ts", "src/config/markdown.ts", "src/config/plugin-file.ts"] },
+        { "path": "src/config", "kind": "cohesive", "entries": ["src/config.ts", "src/config/markdown.ts", "src/config/plugin-file.ts", "src/config/trust.ts"] },
         { "path": "src/credential", "kind": "cohesive", "entries": ["src/credential.ts"] },
         { "path": "src/event", "kind": "cohesive", "entries": ["src/event.ts", "src/event/sql.ts"] },
         { "path": "src/filesystem", "kind": "cohesive", "entries": ["src/filesystem.ts"] },
@@ -475,6 +476,10 @@
   ],
   "productEdges": [],
   "relayContainment": { "package": "core", "specifier": "@orchestra/relay", "domains": ["relay", "tool-safety"] },
+  "bundleBoundaries": [
+    { "entry": "@orchestra/client", "forbid": ["effect", "@orchestra/schema", "@orchestra/protocol", "@orchestra/core", "@orchestra/server"] },
+    { "entry": "@orchestra/client/effect", "forbid": ["@orchestra/core", "@orchestra/server"] }
+  ],
   "logicalModules": [
     {
       "id": "app-dock",

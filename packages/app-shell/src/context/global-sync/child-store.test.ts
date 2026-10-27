@@ -1,12 +1,13 @@
-import { beforeAll, describe, expect, mock, test } from "bun:test"
+import { describe, expect, test } from "bun:test"
 import { createRoot, getOwner, type Owner } from "solid-js"
 import { createStore } from "solid-js/store"
 import type { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 import type { State } from "./types"
+import type { useQuery } from "@tanstack/solid-query"
 import type { QueryOptionsApi } from "../server-sync"
 import { ServerScope } from "@/utils/server-scope"
+import { createChildStoreManager } from "./child-store"
 
-let createChildStoreManager: typeof import("./child-store").createChildStoreManager
 const querySingles: Array<() => { queryKey?: unknown[]; enabled?: boolean }> = []
 const persist: typeof import("@/utils/persist").persisted = (_target, store) => [
   store[0],
@@ -50,27 +51,22 @@ function createOwner(callback: (owner: Owner) => void) {
   })
 }
 
-beforeAll(async () => {
-  mock.module("@tanstack/solid-query", () => ({
-    useQuery: (options: () => { queryKey?: unknown[]; enabled?: boolean }) => {
-      querySingles.push(options)
-      return {
-        get isLoading() {
-          return options().queryKey?.[1] === "path"
-        },
-        get data() {
-          if (options().queryKey?.[1] === "path") throw new Error("pending path data read")
-          if (options().queryKey?.[1] === "mcp") return options().enabled ? { demo: { status: "disabled" } } : undefined
-          if (options().queryKey?.[1] === "lsp") return []
-          if (options().queryKey?.[1] === "providers") return provider
-          return undefined
-        },
-      }
+// Records each query the manager creates; its answers stand in for the query client.
+const fakeQuery = ((options: () => { queryKey?: unknown[]; enabled?: boolean }) => {
+  querySingles.push(options)
+  return {
+    get isLoading() {
+      return options().queryKey?.[1] === "path"
     },
-  }))
-
-  createChildStoreManager = (await import("./child-store")).createChildStoreManager
-})
+    get data() {
+      if (options().queryKey?.[1] === "path") throw new Error("pending path data read")
+      if (options().queryKey?.[1] === "mcp") return options().enabled ? { demo: { status: "disabled" } } : undefined
+      if (options().queryKey?.[1] === "lsp") return []
+      if (options().queryKey?.[1] === "providers") return provider
+      return undefined
+    },
+  }
+}) as unknown as typeof useQuery
 
 describe("createChildStoreManager", () => {
   test("a ready empty project catalog never inherits global providers", () => {
@@ -93,6 +89,7 @@ describe("createChildStoreManager", () => {
         onDispose() {},
         translate: (key) => key,
         queryOptions: queryOptionsApi,
+        query: fakeQuery,
         global: { provider: global },
       })
       expect(global.all.has("other-project")).toBe(true)
@@ -122,6 +119,7 @@ describe("createChildStoreManager", () => {
       onDispose() {},
       translate: (key) => key,
       queryOptions: queryOptionsApi,
+      query: fakeQuery,
       global: { provider },
     })
 
@@ -155,6 +153,7 @@ describe("createChildStoreManager", () => {
         onDispose() {},
         translate: (key) => key,
         queryOptions: queryOptionsApi,
+        query: fakeQuery,
         global: { provider },
       })
     })
@@ -187,6 +186,7 @@ describe("createChildStoreManager", () => {
         onDispose() {},
         translate: (key) => key,
         queryOptions: queryOptionsApi,
+        query: fakeQuery,
         global: { provider },
       })
     })
@@ -222,6 +222,7 @@ describe("createChildStoreManager", () => {
         onDispose() {},
         translate: (key) => key,
         queryOptions: queryOptionsApi,
+        query: fakeQuery,
         global: { provider },
       })
     })
@@ -271,6 +272,7 @@ describe("createChildStoreManager", () => {
         onDispose() {},
         translate: (key) => key,
         queryOptions: queryOptionsApi,
+        query: fakeQuery,
         global: { provider },
       })
     })

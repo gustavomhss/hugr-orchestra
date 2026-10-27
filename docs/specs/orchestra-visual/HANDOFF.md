@@ -78,8 +78,8 @@ existe, não resetar o canônico e não modificar worktrees de outras campanhas.
 1. Mock aprovado e referência em `Downloads/orchestra-replica-static`.
 2. Migração original publicada em `orchestra-identity`, commit
    `9c535be9e98021b34500794bdc207199b120217a`, sobre `5e4bea3b51`.
-3. Auditoria encontrou 15 ancestors extras de App Dock/RPC/CI nessa branch.
-4. App Dock necessário já estava em `fork/dev`; não precisava desses ancestors.
+3. Auditoria encontrou 15 ancestors extras de MCP Dock/RPC/CI nessa branch.
+4. MCP Dock necessário já estava em `fork/dev`; não precisava desses ancestors.
 5. Apenas o delta da identidade foi portado para `identity-integration`.
 6. Quatro extrações respeitaram Godfile sem modificar o gate/waivers.
 7. Commit `791b3bc9d0` publicado no #239, com screenshots e checks locais.

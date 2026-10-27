@@ -288,7 +288,8 @@ test("bounded wait never steals another writer's lock or stage", () => isolated(
   await fs.mkdir(`${target}.stage-other`)
   await expect(PackagedSkills.materialize({ cache, version: "1", trees, lockTimeoutMs: 40 }))
     .rejects.toThrow("Timed out waiting for packaged skill lock")
-  expect(await fs.readdir(namespace)).toEqual([`${path.basename(target)}.lock`, `${path.basename(target)}.stage-other`])
+  // readdir order is filesystem-defined.
+  expect((await fs.readdir(namespace)).toSorted()).toEqual([`${path.basename(target)}.lock`, `${path.basename(target)}.stage-other`])
 }))
 
 test("canonicalizes cache and refuses a symlinked packaged-skills namespace", () => isolated(async (cache) => {

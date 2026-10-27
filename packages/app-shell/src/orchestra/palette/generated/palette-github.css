@@ -7,13 +7,13 @@ html[data-orchestra-palette="github"][data-color-scheme] body[data-new-layout] {
 }
 html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-new-layout] {
   --orchestra-text: #24292f;
-  --orchestra-body: #3d454f;
-  --orchestra-muted: #3d454f;
-  --orchestra-faint: #3d454e;
-  --orchestra-accent: #00418f;
-  --orchestra-warm: #5f3e00;
-  --orchestra-success: #00501c;
-  --orchestra-danger: #8e0015;
+  --orchestra-body: #48515b;
+  --orchestra-muted: #48515b;
+  --orchestra-faint: #49515b;
+  --orchestra-accent: #004da7;
+  --orchestra-warm: #6e4800;
+  --orchestra-success: #005e22;
+  --orchestra-danger: #a5001a;
   --orchestra-shell-background: #ffffff;
   --orchestra-shell-border: rgba(98, 107, 116, 0.22);
   --orchestra-shell-shadow: 0 32px 90px rgba(44, 50, 56, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.7);
@@ -21,31 +21,23 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-new-l
   --orchestra-toolbar-border: rgba(110, 118, 127, 0.12);
   --orchestra-toolbar-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.95);
   --orchestra-toolbar-drop: 0 6px 16px rgba(68, 75, 84, 0.09);
-  --orchestra-toolbar-label: #3d454f;
-  --orchestra-toolbar-brand: #3e454e;
-  --orchestra-toolbar-button: #3e454c;
-  --orchestra-workspace-overlay: linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.18) 42%, rgba(255, 255, 255, 0.4)),
-    radial-gradient(1100px 780px at 12% 4%, rgba(255, 255, 255, 0.4), transparent 68%);
+  --orchestra-toolbar-label: #4b5157;
+  --orchestra-toolbar-brand: #484f58;
+  --orchestra-toolbar-button: #4b5158;
+  --orchestra-workspace-overlay: linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.34) 42%, rgba(255, 255, 255, 0.56)),
+    radial-gradient(1100px 780px at 12% 4%, rgba(255, 255, 255, 0.5), transparent 68%);
   --orchestra-glass-background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.57) 0%,
-    rgba(255, 255, 255, 0.49) 46%,
-    rgba(255, 255, 255, 0.59) 100%
+    rgba(255, 255, 255, 0.62) 0%,
+    rgba(255, 255, 255, 0.5) 46%,
+    rgba(255, 255, 255, 0.6) 100%
   );
-  --orchestra-glass-border: rgba(110, 118, 127, 0.12);
-  --orchestra-glass-rim: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.95) 0%,
-    rgba(255, 255, 255, 0.45) 30%,
-    rgba(255, 255, 255, 0.2) 70%,
-    rgba(255, 255, 255, 0.35) 100%
-  );
-  --orchestra-glass-sheen: radial-gradient(120% 60% at 0% 0%, rgba(255, 255, 255, 0.35), transparent 60%);
-  --orchestra-glass-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -1px 0 rgba(162, 168, 173, 0.12), 0 1px 2px rgba(67, 75, 83, 0.12),
-    0 10px 30px rgba(67, 75, 83, 0.1);
+  --orchestra-glass-border: rgba(110, 118, 127, 0.16);
+  --orchestra-glass-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 0 rgba(162, 168, 173, 0.14), 0 1px 2px rgba(67, 75, 83, 0.14),
+    0 4px 12px rgba(67, 75, 83, 0.08);
   --orchestra-float-background: linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.86));
   --orchestra-scrim: rgba(71, 79, 87, 0.2);
-  --orchestra-sidebar-text: #3d454f;
+  --orchestra-sidebar-text: #48515b;
   --orchestra-sidebar-hover-background: rgba(255, 255, 255, 0.55);
   --orchestra-sidebar-hover-text: #20242a;
   --orchestra-sidebar-active-background: linear-gradient(90deg, rgba(156, 198, 255, 0.28), rgba(198, 223, 255, 0.18));
@@ -53,8 +45,8 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-new-l
   --orchestra-sidebar-active-accent: #65a7ff;
   --orchestra-sidebar-active-highlight: rgba(255, 255, 255, 0.6);
   --orchestra-sidebar-active-rim: rgba(101, 167, 255, 0.16);
-  --orchestra-sidebar-icon: #3e454d;
-  --orchestra-sidebar-active-icon: #0e37ad;
+  --orchestra-sidebar-icon: #4a5159;
+  --orchestra-sidebar-active-icon: #1945bb;
   --orchestra-sidebar-key-background: rgba(255, 255, 255, 0.4);
   --orchestra-sidebar-key-border: rgba(110, 118, 127, 0.2);
   --orchestra-sidebar-secondary: #7f868e;
@@ -66,18 +58,18 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-new-l
   --orchestra-sidebar-profile-shadow: inset 0 1px rgba(255, 255, 255, 0.8), 0 1px 2px rgba(68, 75, 84, 0.1);
   --orchestra-sidebar-profile-text: #2a3036;
   --orchestra-sidebar-profile-muted: var(--orchestra-sidebar-secondary);
-  --orchestra-sidebar-profile-chevron: #3e454c;
+  --orchestra-sidebar-profile-chevron: #4a5158;
   --orchestra-sidebar-profile-logo: #78a4ff;
   --orchestra-brand-descriptor: var(--orchestra-sidebar-secondary);
-  --orchestra-sidebar-footer: #3d454f;
-  --orchestra-wip-text: #613d00;
+  --orchestra-sidebar-footer: #48515b;
+  --orchestra-wip-text: #704700;
   --orchestra-wip-background: rgba(60, 67, 75, 0.05);
-  --orchestra-tab-text: #3d454f;
+  --orchestra-tab-text: #4b5158;
   --orchestra-tab-hover-background: rgba(77, 86, 95, 0.035);
-  --orchestra-tab-hover-text: #3d454f;
-  --orchestra-tab-active-text: #3d454d;
-  --orchestra-tab-icon: #3e454c;
-  --orchestra-branch-color: #633c00;
+  --orchestra-tab-hover-text: #48515b;
+  --orchestra-tab-active-text: #414951;
+  --orchestra-tab-icon: #4b5159;
+  --orchestra-branch-color: #734600;
   --orchestra-surface: rgba(255, 255, 255, 0.6);
   --orchestra-surface-hover: rgba(255, 255, 255, 0.9);
   --orchestra-surface-active: rgba(156, 198, 255, 0.28);
@@ -332,10 +324,10 @@ html[data-orchestra-palette="github"][data-color-scheme] body[data-new-layout] [
     color: var(--orchestra-tab-hover-text);
   }
   [data-orchestra-palette="github"] [data-orchestra-tabs] [data-titlebar-tab]:is([data-state="pressed"], [data-editing="true"]) {
-    border-color: var(--orchestra-border);
-    background: var(--orchestra-surface-active);
+    border-color: var(--orchestra-glass-border);
+    background: var(--orchestra-grain), var(--orchestra-glass-sheen), var(--orchestra-glass-background);
     color: var(--orchestra-tab-active-text);
-    box-shadow: none;
+    box-shadow: var(--orchestra-glass-shadow);
   }
   [data-orchestra-palette="github"] #orchestra-session-tabs [data-titlebar-tab-link] {
     color: inherit;
@@ -418,21 +410,21 @@ html[data-orchestra-palette="github"][data-color-scheme] body[data-new-layout] [
         0 4px 12px rgba(67, 75, 83, 0.08);
     --orchestra-session-heading: #1d2228;
     --orchestra-session-body: #626b74;
-    --orchestra-session-secondary: #646a72;
-    --orchestra-session-meta: #636a72;
+    --orchestra-session-secondary: #666d75;
+    --orchestra-session-meta: #666d75;
     --orchestra-session-rule: rgba(110, 118, 127, 0.12);
     --orchestra-session-message-rule: rgba(110, 118, 127, 0.1);
     --orchestra-evidence-background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.7));
     --orchestra-evidence-solid: #ffffff;
     --orchestra-evidence-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.85);
     --orchestra-evidence-shadow: var(--orchestra-evidence-highlight), 0 10px 24px rgba(68, 75, 84, 0.08);
-    --orchestra-evidence-heading: #636b72;
+    --orchestra-evidence-heading: #666d75;
     --orchestra-evidence-add: #66bd00;
-    --orchestra-evidence-delete: #c53223;
+    --orchestra-evidence-delete: #c83526;
     --orchestra-evidence-number: #aeb2b7;
-    --orchestra-file-text: #636b72;
-    --orchestra-file-add: #2c7900;
-    --orchestra-file-delete: #c53223;
+    --orchestra-file-text: #666d75;
+    --orchestra-file-add: #2d7c00;
+    --orchestra-file-delete: #c83526;
     --orchestra-file-active: linear-gradient(90deg, #ffffff, #ffffff);
     --orchestra-file-active-border: rgba(110, 118, 127, 0.12);
     --orchestra-file-active-accent: #6ca5e3;
@@ -440,39 +432,39 @@ html[data-orchestra-palette="github"][data-color-scheme] body[data-new-layout] [
     --orchestra-composer-border: rgba(110, 118, 127, 0.18);
     --orchestra-composer-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 8px 20px rgba(68, 75, 84, 0.08);
     --orchestra-composer-text: #24292f;
-    --orchestra-composer-placeholder: #646a72;
-    --orchestra-composer-control: #636b72;
+    --orchestra-composer-placeholder: #666d75;
+    --orchestra-composer-control: #666d75;
     --orchestra-send-background: linear-gradient(180deg, #a3c3ff, #7da7ff);
     --orchestra-apps-chrome: rgba(255, 255, 255, 0.62);
     --orchestra-apps-host: rgba(255, 255, 255, 0.5);
-    --orchestra-rail-tab-text: #646a71;
+    --orchestra-rail-tab-text: #666d74;
     --orchestra-rail-tab-hover: #333940;
     --orchestra-rail-tab-active: rgba(156, 198, 255, 0.22);
     --orchestra-rail-tab-active-text: #1e2329;
     --orchestra-rail-tab-highlight: rgba(255, 255, 255, 0.6);
     --orchestra-rail-badge-background: rgba(0, 0, 0, 0.06);
-    --orchestra-rail-badge-text: #636a72;
+    --orchestra-rail-badge-text: #666d75;
     --orchestra-rail-badge-active-background: rgba(161, 194, 255, 0.16);
-    --orchestra-rail-badge-active-text: #3d66c2;
+    --orchestra-rail-badge-active-text: #4068c5;
     --orchestra-card-background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.84));
     --orchestra-task-mark-background: #ffffff;
     --orchestra-task-mark-border: rgba(110, 118, 127, 0.16);
-    --orchestra-task-mark-text: #636a72;
+    --orchestra-task-mark-text: #666d75;
     --orchestra-task-title: #30363d;
-    --orchestra-task-meta: #646a72;
+    --orchestra-task-meta: #666d75;
     --orchestra-task-rule: rgba(110, 118, 127, 0.1);
     --orchestra-permission-background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.94));
     --orchestra-permission-border: rgba(255, 187, 95, 0.34);
     --orchestra-permission-rule: rgba(255, 187, 95, 0.18);
     --orchestra-permission-shadow: inset 0 1px 0 #ffffff, 0 10px 26px rgba(125, 99, 59, 0.1);
-    --orchestra-permission-title: #8b6226;
+    --orchestra-permission-title: #8d6528;
     --orchestra-permission-hint: #626b74;
-    --orchestra-permission-pattern: #8d6100;
+    --orchestra-permission-pattern: #916400;
     --orchestra-permission-pattern-border: rgba(255, 187, 95, 0.3);
     --orchestra-permission-pattern-background: rgba(255, 187, 95, 0.08);
     --orchestra-permission-footer: rgba(255, 187, 95, 0.05);
-    --orchestra-permission-icon: #8f6100;
-    --orchestra-permission-deny: #636b72;
+    --orchestra-permission-icon: #926300;
+    --orchestra-permission-deny: #666d75;
     --orchestra-permission-always-background: rgba(255, 255, 255, 0.8);
     --orchestra-permission-always-border: rgba(110, 118, 127, 0.24);
     --orchestra-permission-always-text: #5d6670;
@@ -884,7 +876,7 @@ html[data-orchestra-palette="github"][data-color-scheme] body[data-new-layout] [
 }
 @media (min-width: 768px) {
   html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-new-layout] [data-session-layout="surface"] {
-    --orchestra-chat-who: #1569c6;
+    --orchestra-chat-who: #186bc9;
     --orchestra-chat-button-border: rgba(110, 118, 127, 0.2);
     --orchestra-chat-button-background: rgba(255, 255, 255, 0.6);
     --orchestra-chat-button-text: #5d6670;
@@ -1249,11 +1241,11 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-mx-ki
   --mx-soft: rgba(92, 139, 213, 0.045);
   --mx-raised: rgba(255, 255, 255, 0.63);
   --mx-modal: #ffffff;
-  --mx-dim: #3d454f;
-  --mx-strong: #3e454e;
-  --mx-blue: #00418f;
-  --mx-good: #005011;
-  --mx-bad: #8c0b00;
+  --mx-dim: #48515b;
+  --mx-strong: #454c55;
+  --mx-blue: #004da7;
+  --mx-good: #005e15;
+  --mx-bad: #a30f00;
   --mx-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.7);
   --mx-shadow: 0 30px 100px rgba(60, 67, 75, 0.2);
   --mx-pop-shadow: 0 14px 35px rgba(60, 67, 75, 0.16);
@@ -1948,42 +1940,42 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-new-l
   --zen-focus: var(--text-strong);
 }
 [data-orchestra-palette="github"] body[data-new-layout] :is(.zen-browser-shell, .zen-tab-menu) {
-  --zen-placeholder: #646a71;
+  --zen-placeholder: #686d74;
 }
 html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .zen-tab-menu) {
   --zen-panel: rgba(255, 255, 255, 0.62);
   --zen-page: rgba(255, 255, 255, 0.5);
   --zen-text: #333940;
-  --zen-muted: #646a72;
-  --zen-label: #646a72;
+  --zen-muted: #666d75;
+  --zen-label: #676d75;
   --zen-hover: rgba(77, 86, 95, 0.06);
   --zen-ws-hover: rgba(77, 86, 95, 0.05);
   --zen-control-hover: rgba(77, 86, 95, 0.07);
   --zen-control-hover-text: #484f58;
-  --zen-active-control: #3d66c2;
+  --zen-active-control: #4068c5;
   --zen-icon: rgba(255, 255, 255, 0.75);
   --zen-input: rgba(255, 255, 255, 0.8);
   --zen-profile-input: rgba(255, 255, 255, 0.9);
   --zen-field: rgba(255, 255, 255, 0.95);
   --zen-field-text: #333940;
   --zen-option: #ffffff;
-  --zen-empty: #646a72;
+  --zen-empty: #666d75;
   --zen-empty-strong: #333940;
   --zen-error: rgba(255, 106, 86, 0.12);
-  --zen-error-text: #d50a00;
+  --zen-error-text: #da0a00;
   --zen-warn: rgba(228, 172, 84, 0.12);
-  --zen-warn-text: #8d6100;
+  --zen-warn-text: #916400;
   --zen-crash: rgba(255, 106, 86, 0.1);
   --zen-crash-icon: rgba(255, 106, 86, 0.14);
   --zen-popover: rgba(255, 255, 255, 0.99);
   --zen-popover-border: rgba(110, 118, 127, 0.18);
   --zen-popover-shadow: 0 16px 40px rgba(100, 109, 118, 0.18);
   --zen-find-shadow: 0 16px 40px rgba(100, 109, 118, 0.18);
-  --zen-popover-title: #646a72;
+  --zen-popover-title: #676d75;
   --zen-popover-text: #5d6670;
-  --zen-popover-dim: #646a72;
+  --zen-popover-dim: #666d75;
   --zen-popover-hover: rgba(77, 86, 95, 0.06);
-  --zen-library-empty: #646a72;
+  --zen-library-empty: #676d75;
   --zen-focus: #78a4ff;
 }
 [data-orchestra-palette="github"] .zen-dock-modes {

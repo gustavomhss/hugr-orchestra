@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { realpathSync } from "fs"
 import fs from "fs/promises"
 import os from "os"
 import path from "path"
@@ -98,15 +99,15 @@ describe("trust routes", () => {
             body: JSON.stringify({ directory: project }),
           })
           expect(approved.status).toBe(204)
-          const real = yield* Effect.promise(() => fs.realpath(project))
-          expect(
-            JSON.parse(yield* Effect.promise(() => fs.readFile(path.join(directory, "orchestra.json"), "utf8"))),
-          ).toEqual({
-            trusted_projects: [real],
-          })
+          // Windows temp paths come back as either the 8.3 short or the long form depending on the resolver, so compare
+          // what is stored by the folder it names, not by its spelling.
+          const stored = JSON.parse(
+            yield* Effect.promise(() => fs.readFile(path.join(directory, "orchestra.json"), "utf8")),
+          ).trusted_projects
+          expect(stored.map((item: string) => realpathSync.native(item))).toEqual([realpathSync.native(project)])
           expect(applied).toEqual([project])
 
-          expect(yield* listed(server.request)).toEqual([real])
+          expect(yield* listed(server.request)).toEqual(stored)
         }),
       ),
     ))

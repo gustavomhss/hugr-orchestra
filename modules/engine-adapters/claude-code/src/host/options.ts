@@ -181,7 +181,7 @@ function maestro(seats: Record<string, string>) {
       `- ${REVIEW_NOTICE}`,
       `- ${WORKFLOW_NOTICE}`,
       "- `mcp__orchestra__atlas_*` tools read and record Atlas project memory; `mcp__orchestra__dock_*` tools operate " +
-        "apps in the owner's App Dock.",
+        "apps in the owner's MCP Dock.",
       "- `mcp__orchestra__context_recall` brings back earlier work from this session after Claude Code compacted it.",
     ].join("\n"),
     "## Working with the owner",

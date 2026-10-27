@@ -14,7 +14,7 @@ const workflow = Schema.decodeUnknownSync(Schema.Struct({ jobs: Schema.Struct({ 
   strategy: Schema.Struct({ matrix: Schema.Struct({ include: Schema.Array(Row) }) }),
   steps: Schema.Array(Schema.Struct({ name: Schema.optional(Schema.String), run: Schema.optional(Schema.String),
     "working-directory": Schema.optional(Schema.String) })),
-}), provider: Schema.Struct({ strategy: Schema.Struct({ matrix: Schema.Struct({ include: Schema.Array(Row) }) }) }),
+}),
 }) }))(YAML.parse(await Bun.file(path.join(root, ".github/workflows/distribution-bundle.yml")).text()))
 
 export function check(value: unknown, name: string): asserts value {
@@ -41,7 +41,7 @@ export const run = shell("Run tests")
 export const control = shell("Require nonce-bound positive control", true)
 
 export const boundaries = ["Install native Deno", "Extract native Deno", "Prove native Windows Job handle closure",
-  "Prove native POSIX ABI", "Prove source ABI producers", "Prove Desktop ABI consumer", "Prove Schema ELF ABI", "Prove packaged parser ABI", "Prove localized proof oracles"].map((name) => ({ name, run: shell(name),
+  "Prove native POSIX ABI", "Prove source ABI producers", "Prove Desktop ABI consumer", "Prove Schema ELF ABI", "Prove packaged parser ABI"].map((name) => ({ name, run: shell(name),
     cwd: workflow.jobs.qualification.steps.find((step) => step.name === name)?.["working-directory"] ?? "." }))
 
 // Git Bash PATH entries use /c/...; ordinary command arguments retain native paths for Bun/Node.
@@ -50,9 +50,8 @@ function shellPath(file: string) {
   return process.platform === "win32" ? normalized.replace(/^([A-Za-z]):\//, (_, drive: string) => `/${drive.toLowerCase()}/`) : normalized
 }
 
-export const fixture = (pkg: "core" | "cli", files?: string[], lane: "regression" | "musl" | "provider" = "regression") => Effect.gen(function* () {
-  // The opt-in provider row runs as its own job with the qualification steps.
-  const selected = [...workflow.jobs.qualification.strategy.matrix.include, ...workflow.jobs.provider.strategy.matrix.include].filter((row) =>
+export const fixture = (pkg: "core" | "cli", files?: string[], lane: "regression" | "musl" = "regression") => Effect.gen(function* () {
+  const selected = workflow.jobs.qualification.strategy.matrix.include.filter((row) =>
     row.lane === lane && row.package === pkg && row.platform === process.platform && row.cpu === (process.arch === "x64" ? "X64" : "ARM64"))
   check(selected.length === 1 && selected[0], `BUNDLE_FIXTURE_NATIVE_ROW_MISSING_OR_REPEATED: ${lane}/${pkg}/${process.platform}/${process.arch}`)
   const row = { ...selected[0], files: files ?? [...selected[0].files] }
