@@ -36,7 +36,9 @@ for (const width of [390, 720, 768, 1440]) {
     // With no project open, Settings lists only the server-wide tabs; the project tabs appear with a project.
     await expect(nav.getByRole("button", { name: "Models", exact: true })).toHaveCount(0)
     await nav.getByRole("button", { name: "Trusted projects", exact: true }).click()
-    await expect(page.locator('[data-mx-page="settings"]').getByRole("heading", { name: "Trusted projects" })).toBeVisible()
+    await expect(
+      page.locator('[data-mx-page="settings"]').getByRole("heading", { name: "Trusted projects" }),
+    ).toBeVisible()
     await nav.getByRole("button", { name: "Servers", exact: true }).click()
     await expect(page.getByRole("button", { name: /Add server/i })).toBeVisible()
     await nav.getByRole("button", { name: "Shortcuts", exact: true }).click()
