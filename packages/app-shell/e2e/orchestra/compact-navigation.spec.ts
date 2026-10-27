@@ -3,7 +3,6 @@ import { setupCompactNavigation } from "./compact-navigation.fixture"
 
 test.use({ viewport: { width: 1672, height: 941 }, serviceWorkers: "block" })
 
-const wipItems = ["Projects", "Agents", "MCP", "Actions", ".env", "Workspaces"]
 const wipText = "Work in progress, revisit before production"
 
 test("collapse preserves names, focus, routes, profile and titlebar geometry across reload", async ({ page }) => {
@@ -37,33 +36,9 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
   )
   await expect(crumb.last()).toHaveText("home")
   await expect(crumb.last()).toHaveCSS("font-size", "12px")
-  // Exactly the five revisit-before-production screens carry the WIP mark, described to assistive tech.
-  const marked = sidebar
-    .locator(".orchestra-nav-button")
-    .filter({ has: page.locator('[data-slot="orchestra-nav-wip"]') })
-  expect(await marked.evaluateAll((items) => items.map((item) => item.getAttribute("aria-label")))).toEqual(wipItems)
-  for (const name of wipItems) {
-    const item = sidebar.getByRole("button", { name, exact: true })
-    await expect(item.locator('[data-slot="orchestra-nav-wip"]')).toHaveText("WIP")
-    await expect(item).toHaveAttribute("aria-description", wipText)
-    await expect(item.locator(".orchestra-pending-dot")).toHaveCount(0)
-  }
-  expect(
-    await sidebar
-      .locator(".orchestra-nav-button")
-      .evaluateAll(
-        (items, text) => items.filter((item) => item.getAttribute("aria-description") === text).length,
-        wipText,
-      ),
-  ).toBe(wipItems.length)
-  const chip = (await sidebar.locator('[data-slot="orchestra-nav-wip"]').first().boundingBox())!
-  expect(chip.x + chip.width, "the WIP mark fits the 230px row").toBeLessThanOrEqual(
-    (await sidebar.boundingBox())!.x + 230 - 10,
-  )
-  await sidebar.getByRole("button", { name: "MCP", exact: true }).hover()
-  await expect(page.getByRole("tooltip", { name: wipText, exact: true })).toBeVisible()
-  await page.mouse.move(900, 500)
-  await expect(page.getByRole("tooltip")).toHaveCount(0)
+  // Production builds hide the WIP mark (`showWip`); WIP rows carry no chip and no description.
+  await expect(sidebar.locator('[data-slot="orchestra-nav-wip"]')).toHaveCount(0)
+  await expect(sidebar.locator(`.orchestra-nav-button[aria-description="${wipText}"]`)).toHaveCount(0)
   await expectMainGlass(page.locator('[data-component="orchestra-home"]'))
   await toggle.focus()
   await page.keyboard.press("Enter")
@@ -77,10 +52,7 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
   await expect(sidebar.getByRole("button", { name: "Home", exact: true })).toHaveCSS("height", "31px")
   await expect(sidebar.getByRole("button", { name: "Home", exact: true }).locator("svg")).toHaveCSS("width", "20px")
   await expect(sidebar.getByRole("img", { name: "HuGR", exact: true })).toHaveCSS("width", "32px")
-  // The compact rail keeps the WIP mark as a dot on the icon.
-  await expect(
-    sidebar.getByRole("button", { name: "MCP", exact: true }).locator('[data-slot="orchestra-nav-wip"]'),
-  ).toHaveCSS("width", "5px")
+  await expect(sidebar.locator('[data-slot="orchestra-nav-wip"]')).toHaveCount(0)
   await expect(sidebar.locator('[data-component="project-avatar-v2"]')).toHaveCSS("width", "30px")
   await sidebar.getByRole("button", { name: "MCP", exact: true }).hover()
   await expect(page.getByRole("tooltip", { name: "MCP", exact: true })).toBeVisible()
@@ -160,43 +132,28 @@ test("V2 profile card counts agents and shows the branch only when the server re
   await expect(meta).toHaveText("1 agent · main")
 })
 
-test("WIP chapters mark their page above its content; other pages do not", async ({ page }) => {
+test("production builds show no WIP mark on any chapter page", async ({ page }) => {
   test.setTimeout(120_000)
   await setupCompactNavigation(page)
   await page.goto("/")
   const sidebar = page.locator('[data-component="orchestra-sidebar"]')
   await sidebar.getByRole("button", { name: "Choose repository profile" }).click()
   await page.getByRole("menuitemradio", { name: "Compact project", exact: true }).click()
-  const mark = page.locator('[data-slot="orchestra-wip"]')
-  for (const [name, chapter, wip] of [
-    ["Agents", "agents", true],
-    ["MCP", "mcp", true],
-    ["Actions", "cicd", true],
-    ["Workspaces", "workspaces", true],
-    ["Skills", "skills", false],
-    [".env", "env", true],
-    ["Dock", "dock", false],
+  for (const [name, chapter] of [
+    ["Agents", "agents"],
+    ["MCP", "mcp"],
+    ["Actions", "cicd"],
+    ["Workspaces", "workspaces"],
+    ["Skills", "skills"],
+    [".env", "env"],
+    ["Dock", "dock"],
   ] as const) {
     await sidebar.getByRole("button", { name, exact: true }).click()
     const panel = page.locator('[data-component="orchestra-chapter"]')
     // Judge the page that was opened, not the previous one still on screen.
     await expect(panel).toHaveAttribute("data-chapter", chapter)
     await expect(panel.locator("h1").first()).toBeVisible()
-    if (!wip) {
-      await expect(mark).toHaveCount(0)
-      continue
-    }
-    await expect(mark).toHaveText("WIP · revisit before production")
-    // Inside the glass panel's top-left, and above every heading and action of the page.
-    const box = (await mark.boundingBox())!
-    const frame = (await panel.boundingBox())!
-    expect(box.x - frame.x).toBeCloseTo(17, 0)
-    expect(box.y - frame.y).toBeCloseTo(15, 0)
-    const below = await panel.evaluate((element, bottom) => {
-      const content = [...element.querySelectorAll("h1, h2, button, [data-mx-page] header")]
-      return content.every((item) => item.getBoundingClientRect().top >= bottom)
-    }, box.y + box.height)
-    expect(below, `${name}: the mark sits above the page`).toBe(true)
+    await expect(page.locator('[data-slot="orchestra-wip"]'), name).toHaveCount(0)
   }
 })
 
