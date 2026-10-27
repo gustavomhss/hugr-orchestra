@@ -43,7 +43,7 @@ test("exposes every standard HTTP API group", () => {
     "lean",
     "atlas",
     "config",
-    "trust",
+    "server.trust",
     "server.board",
     "relayDocuments",
     "relayPublish",
