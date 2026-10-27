@@ -4,6 +4,7 @@ import { mockOrchestraServer } from "../utils/mock-server"
 import { expectSessionTitle } from "../utils/waits"
 import { installDockBridge } from "./session-cockpit-bridge"
 import { railTab } from "./session-cockpit.fixture"
+import { expandAdvanced } from "./compact-navigation.fixture"
 
 const directory = "/work/cockpit-review"
 const parent = "ses_review_parent"
@@ -61,6 +62,7 @@ test("compact Dock ignores the full Dock collapsed preference across reentry", a
   await setup(page)
   await openCockpit(page)
   const nav = page.locator('[data-component="orchestra-sidebar"]')
+  await expandAdvanced(page)
   await nav.getByRole("button", { name: "MCP Dock", exact: true }).click()
   const full = page.locator(".zen-browser-shell:not(.is-compact)")
   await expect(full.getByRole("button", { name: "Open", exact: true })).toBeEnabled()
@@ -84,6 +86,7 @@ test("compact Dock ignores the full Dock collapsed preference across reentry", a
   await expect(compact.locator(".zen-tab-title")).toBeVisible()
   await expect(compact.getByRole("button", { name: "+ New tab", exact: true })).toBeEnabled()
 
+  await expandAdvanced(page)
   await nav.getByRole("button", { name: "MCP Dock", exact: true }).click()
   await expect(full).toHaveClass(/is-sidebar-collapsed/)
   await expect(full.getByRole("button", { name: "Expand sidebar", exact: true })).toBeVisible()

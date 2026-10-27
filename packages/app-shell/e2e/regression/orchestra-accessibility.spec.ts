@@ -1,7 +1,7 @@
 import { writeFile } from "node:fs/promises"
 import { base64Encode } from "@orchestra/core/util/encode"
 import { expect, test, type Locator, type Page } from "@playwright/test"
-import { setupCompactNavigation } from "../orchestra/compact-navigation.fixture"
+import { expandAdvanced, setupCompactNavigation } from "../orchestra/compact-navigation.fixture"
 import { editor, evidencePage, runCard } from "../orchestra/evidence.fixture"
 import {
   build,
@@ -44,6 +44,8 @@ for (const scheme of ["dark", "light"] as const) {
     const nav = page.locator(sidebar)
     await expect(nav).toHaveCSS("width", "230px")
     await expect(nav.getByRole("button", { name: "Chat", exact: true })).toBeEnabled()
+    // Advanced holds the pages that were in the flat list, MCP included.
+    await expandAdvanced(page)
     // The mock server lists only Orchestra's native maestro agent.
     await expect(nav.locator(".orchestra-profile-text small")).toHaveText("1 agent · main")
     await expect(page.locator(home)).toHaveText(/\w/)
@@ -202,6 +204,7 @@ for (const scheme of ["dark", "light"] as const) {
     await setupGovernance(page, { scheme, agents: [build, maestro], config, messages: governedMessages() })
     await page.goto(`/${base64Encode(directory)}/session/${sessionID}`)
     await expectSessionTitle(page, title)
+    await expandAdvanced(page)
     const entry = page.locator(sidebar).getByRole("button", { name: "Maestro", exact: true })
     const governance = page.getByRole("dialog", { name: "Maestro governance" })
     await entry.focus()
@@ -245,6 +248,7 @@ test("Arabic RTL: governance focus trap and return", async ({ page }) => {
   await page.goto(`/${base64Encode(directory)}/session/${sessionID}`)
   await expectSessionTitle(page, title)
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl")
+  await expandAdvanced(page)
   const entry = page.locator(sidebar).getByRole("button", { name: "Maestro", exact: true })
   const governance = page.getByRole("dialog", { name: "Maestro governance" })
   await entry.focus()
@@ -342,6 +346,7 @@ test("reduced motion stills Orchestra transitions and animations", async ({ page
   await expect(railTab(page, "tasks")).toHaveAttribute("aria-selected", "true")
   const scopes = [sidebar, cockpit, "#orchestra-session-tabs"]
   const tooltip = '[data-component="tooltip-v2"]'
+  await expandAdvanced(page)
   const nav = page.locator(sidebar)
   const moving = (entries: Awaited<ReturnType<typeof motionInventory>>) =>
     entries.filter((entry) => entry.transition > 10 || entry.animation > 10)

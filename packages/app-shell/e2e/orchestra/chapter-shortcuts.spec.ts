@@ -27,7 +27,8 @@ test("edit captures a combination, rejects conflicts, fires the new binding inst
   await page.keyboard.press(`${keys.mod}+n`)
   await expect(page).toHaveURL(/\/new-session\?draftId=/)
   await expect(drafts).toHaveCount(1)
-  await page.locator(".orchestra-sidebar").getByRole("button", { name: "Shortcuts", exact: true }).click()
+  // Shortcuts left the sidebar (Settings holds it); the route itself still opens the page.
+  await page.goto("/orchestra/shortcuts", { waitUntil: "domcontentloaded" })
   await expect(page).toHaveURL(/\/orchestra\/shortcuts$/)
 
   const edit = row(page, "tab.new").getByRole("button", { name: "Edit New session shortcut" })
@@ -197,8 +198,8 @@ function keybinds(page: Page) {
 }
 
 async function openShortcuts(page: Page) {
-  await page.goto("/", { waitUntil: "domcontentloaded" })
-  await page.locator(".orchestra-sidebar").getByRole("button", { name: "Shortcuts", exact: true }).click()
+  // Shortcuts left the sidebar; the deep link is the entry point this helper exercises.
+  await page.goto("/orchestra/shortcuts", { waitUntil: "domcontentloaded" })
   await expect(page).toHaveURL(/\/orchestra\/shortcuts$/)
   return platformKeys(page)
 }

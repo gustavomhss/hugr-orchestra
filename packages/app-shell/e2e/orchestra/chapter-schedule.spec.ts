@@ -11,6 +11,7 @@ import {
   setup,
   SLOT,
 } from "./chapter-schedule.fixture"
+import { expandAdvanced } from "./compact-navigation.fixture"
 
 // Dates render in the browser's timezone and locale: New York proves the page does not use the host zone.
 test.use({
@@ -59,6 +60,7 @@ for (const scheme of ["dark", "light"] as const) {
   }) => {
     const api = await setup(page, { scheme })
     await page.goto("/", { waitUntil: "domcontentloaded" })
+    await expandAdvanced(page)
     await page.locator(".orchestra-sidebar").getByRole("button", { name: "Schedule", exact: true }).click()
     await expect(page).toHaveURL(/\/orchestra\/schedule$/)
     const view = page.locator('[data-mx-page="orchestra-schedule"]')

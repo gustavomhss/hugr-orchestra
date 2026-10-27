@@ -14,6 +14,7 @@ import {
   server,
   setupCockpit,
 } from "./session-cockpit.fixture"
+import { expandAdvanced } from "./compact-navigation.fixture"
 
 test.use({ viewport: { width: 1440, height: 900 }, serviceWorkers: "block" })
 test.setTimeout(120_000)
@@ -595,6 +596,7 @@ test.describe("Dock tab menu at the cockpit's geometry", () => {
       )
       await expectMenuAtTrigger(page, card, rtl)
 
+      await expandAdvanced(page)
       await page
         .locator('[data-component="orchestra-sidebar"]')
         .getByRole("button", { name: "MCP Dock", exact: true })

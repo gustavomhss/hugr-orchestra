@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test"
 import { adopt, directory, relayState, setupRelay } from "./relay.fixture"
+import { expandAdvanced } from "./compact-navigation.fixture"
 
 test.use({ viewport: { width: 1440, height: 900 }, serviceWorkers: "block", locale: "en-US" })
 test.setTimeout(180_000)
@@ -10,6 +11,7 @@ const canvas = (page: Page) => page.locator('[data-component="relay-canvas"]')
 
 async function openWorkflows(page: Page) {
   await page.goto("/", { waitUntil: "domcontentloaded" })
+  await expandAdvanced(page)
   await sidebar(page).getByRole("button", { name: "Workflows", exact: true }).click()
   await expect(page).toHaveURL(/\/orchestra\/workflows$/)
   await expect(page.locator('[data-mx-page="orchestra-workflows"] h1')).toHaveText("Workflows")
@@ -153,6 +155,7 @@ test("a server without the Relay routes says so on both chapters", async ({ page
   await expect(page.locator('[data-slot="relay-unsupported"]')).toHaveText(
     "This server does not support workflows yet.",
   )
+  await expandAdvanced(page)
   await sidebar(page).getByRole("button", { name: "Hooks", exact: true }).click()
   await expect(page.locator('[data-slot="relay-unsupported"]')).toHaveText("This server does not support hooks yet.")
 })
@@ -318,6 +321,7 @@ test("edit: a step added from the panel autosaves the loaded version with whole-
 test("the command palette reaches Workflows and Hooks from any page", async ({ page }) => {
   await setupRelay(page)
   await openWorkflows(page)
+  await expandAdvanced(page)
   await sidebar(page).getByRole("button", { name: "Search", exact: true }).click()
   await page.getByPlaceholder("Search commands and sessions").fill("Hooks")
   await page.getByRole("option", { name: /^Hooks/ }).click()
