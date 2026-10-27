@@ -69,7 +69,7 @@ export async function qualifyProvider(input: {
       const scriptDigest = sha256(await readFile(shell))
       expect(await absent(file)).toBe(true)
       const config = {
-        model: `distribution/${model}`, default_agent: "distribution-proof", snapshots: false, autoupdate: false,
+        model: `distribution/${model}`, default_agent: "distribution-proof", snapshots: false,
         shell: "/bin/sh", plugins: [], compaction: { auto: false, prune: false },
         permissions: [{ action: "*", resource: "*", effect: "deny" as const }],
         providers: { distribution: {
