@@ -9,7 +9,7 @@ Covers the permission and question docks above the composer. User-facing descrip
 
 ## What the person sees
 
-- A waiting permission or question replaces the composer with a dock. The Stop button stays visible above the dock.
+- A waiting permission or question replaces the composer with a dock. Stop stays visible: in the permission dock's footer, or above a question dock.
 - Stop calls `session.interrupt` for the session. It is always enabled while a request waits, and it is a no-op when the session is idle.
 
 ## What Stop does

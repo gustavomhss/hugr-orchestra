@@ -125,6 +125,13 @@ export const SETTINGS_COPY = {
     "Approve permission requests automatically in this session only. Other sessions are not affected.",
   "orchestra.settings.general.autoAccept.unavailable":
     "Open a session to turn this on. It applies to that session only.",
+  "orchestra.settings.savedPermissions.title": "Saved permissions",
+  "orchestra.settings.savedPermissions.description":
+    "Requests you allowed always in this project. Remove one to be asked again.",
+  "orchestra.settings.savedPermissions.empty": "Nothing is saved for this project yet.",
+  "orchestra.settings.savedPermissions.loading": "Loading saved permissions…",
+  "orchestra.settings.savedPermissions.loadFailed": "Could not load saved permissions.",
+  "orchestra.settings.savedPermissions.remove": "Remove",
 }
 
 export const SETTINGS_COPY_BR: Record<keyof typeof SETTINGS_COPY, string> = {
@@ -253,4 +260,11 @@ export const SETTINGS_COPY_BR: Record<keyof typeof SETTINGS_COPY, string> = {
     "Aprova automaticamente os pedidos de permissão só nesta sessão. As outras sessões não são afetadas.",
   "orchestra.settings.general.autoAccept.unavailable":
     "Abra uma sessão para ativar isto. Vale só para essa sessão.",
+  "orchestra.settings.savedPermissions.title": "Permissões salvas",
+  "orchestra.settings.savedPermissions.description":
+    "Pedidos que você liberou sempre neste projeto. Remova um para ser perguntado de novo.",
+  "orchestra.settings.savedPermissions.empty": "Nada foi salvo para este projeto ainda.",
+  "orchestra.settings.savedPermissions.loading": "Carregando permissões salvas…",
+  "orchestra.settings.savedPermissions.loadFailed": "Não foi possível carregar as permissões salvas.",
+  "orchestra.settings.savedPermissions.remove": "Remover",
 }

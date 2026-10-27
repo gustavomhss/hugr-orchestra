@@ -32,6 +32,7 @@ import {
 } from "./settings-data"
 
 type PermissionAction = (typeof PERMISSION_ACTIONS)[number]
+import { SavedPermissionsSection } from "./saved-permissions-section"
 import { SettingsSec } from "./settings-sec"
 import { ShortcutsSection } from "./shortcuts-section"
 import "./settings-view.css"
@@ -91,6 +92,7 @@ export function SettingsView(props: { server: ServerConnection.Any; directory: s
             <Switch>
               <Match when={section() === "permissions"}>
                 <PermissionsSection />
+                <SavedPermissionsSection />
               </Match>
               <Match when={section() === "providers"}>
                 <ProviderList server={props.server} directory={props.directory} onModels={() => open("models")}>

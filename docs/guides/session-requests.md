@@ -7,7 +7,7 @@ When an agent needs a decision, the composer is replaced by a dock above it:
 
 ## Stop works at any time
 
-While a permission or question dock is shown, a **Stop** button stays visible above it. Stop ends the turn:
+While a permission or question dock is shown, a **Stop** button stays visible: in the permission dock's footer, or above a question. Stop ends the turn:
 
 - The agent's current turn is interrupted, and the tool it was waiting on is not run.
 - Every open permission and question of that session is rejected, so nothing is approved by stopping.
