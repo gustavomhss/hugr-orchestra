@@ -1,5 +1,5 @@
 import { run } from "@orchestra/tui"
-import { TuiConfig } from "@orchestra/tui/config"
+import { loadTuiConfig } from "./tui-config"
 import { Effect } from "effect"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { Global } from "@orchestra/core/global"
@@ -24,15 +24,19 @@ export function runTui(
     directory?: string
   } = {},
 ) {
-  const config = TuiConfig.resolve({}, { terminalSuspend: false })
-  return run({
-    ...transport,
-    args: options.args ?? {},
-    directory: options.directory,
-    config,
-    pluginHost: {
-      async start() {},
-      async dispose() {},
-    },
-  }).pipe(Effect.provide(AppNodeBuilder.build(Global.node)))
+  return Effect.promise(() => loadTuiConfig(options.directory ?? process.cwd())).pipe(
+    Effect.flatMap((config) =>
+      run({
+        ...transport,
+        args: options.args ?? {},
+        directory: options.directory,
+        config,
+        pluginHost: {
+          async start() {},
+          async dispose() {},
+        },
+      }),
+    ),
+    Effect.provide(AppNodeBuilder.build(Global.node)),
+  )
 }

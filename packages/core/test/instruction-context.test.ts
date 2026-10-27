@@ -1,7 +1,8 @@
 import { describe, expect } from "bun:test"
-import { Effect, Layer } from "effect"
+import { Effect, Exit, Layer } from "effect"
 import fs from "fs/promises"
 import path from "path"
+import { Config } from "@orchestra/core/config"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { FSUtil } from "@orchestra/core/fs-util"
@@ -21,10 +22,12 @@ const instructionLayer = (input: {
   config: string
   locationServiceLayer: Layer.Layer<Location.Service>
   filesystemLayer?: Layer.Layer<FSUtil.Service>
+  entries?: Config.Entry[]
 }) =>
   AppNodeBuilder.build(LayerNode.group([SystemContextRegistry.node, InstructionContext.node]), [
     [Global.node, Global.layerWith({ config: input.config })],
     [Location.node, input.locationServiceLayer],
+    [Config.node, Layer.succeed(Config.Service, Config.Service.of({ entries: () => Effect.succeed(input.entries ?? []) }))],
     ...(input.filesystemLayer ? [[FSUtil.node, input.filesystemLayer] as const] : []),
   ])
 
@@ -319,5 +322,66 @@ describe("InstructionContext", () => {
 
       expect(scanned).toBe(false)
     }),
+  )
+
+  it.live("loads configured instruction files relative to the config file and keeps project files inside the project", () =>
+    Effect.acquireRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ).pipe(
+      Effect.flatMap((tmp) =>
+        Effect.gen(function* () {
+          const global = path.join(tmp.path, "global")
+          const project = path.join(tmp.path, "project")
+          const outside = path.join(tmp.path, "secret.md")
+          yield* Effect.promise(async () => {
+            await fs.mkdir(global, { recursive: true })
+            await fs.mkdir(path.join(project, "docs"), { recursive: true })
+            await fs.writeFile(path.join(global, "style.md"), "global style")
+            await fs.writeFile(path.join(project, "docs", "rules.md"), "project rules")
+            await fs.mkdir(path.join(project, "extra"), { recursive: true })
+            await fs.writeFile(path.join(project, "extra", "b.md"), "extra b")
+            await fs.writeFile(path.join(project, "extra", "a.md"), "extra a")
+            await fs.writeFile(outside, "secret")
+          })
+          const document = (file: string, instructions: string[]) =>
+            new Config.Document({ type: "document", path: file, info: new Config.Info({ instructions }) })
+          const load = (entries: Config.Entry[]) =>
+            SystemContextRegistry.Service.pipe(
+              Effect.flatMap((service) => service.load()),
+              Effect.flatMap(SystemContext.initialize),
+              Effect.provide(
+                instructionLayer({
+                  config: global,
+                  entries,
+                  locationServiceLayer: Layer.succeed(
+                    Location.Service,
+                    Location.Service.of(
+                      location({ directory: AbsolutePath.make(project) }, { projectDirectory: AbsolutePath.make(project) }),
+                    ),
+                  ),
+                }),
+              ),
+            )
+
+          const loaded = yield* load([
+            document(path.join(global, "orchestra.json"), ["style.md"]),
+            document(path.join(project, "orchestra.json"), ["docs/rules.md", "extra/*.md"]),
+          ])
+          expect(loaded.baseline).toBe(
+            [
+              `Instructions from: ${path.join(global, "style.md")}\nglobal style`,
+              `Instructions from: ${path.join(project, "docs", "rules.md")}\nproject rules`,
+              `Instructions from: ${path.join(project, "extra", "a.md")}\nextra a`,
+              `Instructions from: ${path.join(project, "extra", "b.md")}\nextra b`,
+            ].join("\n\n"),
+          )
+
+          // A project config cannot pull host files into the model context.
+          const escaped = yield* load([document(path.join(project, "orchestra.json"), ["../secret.md"])]).pipe(Effect.exit)
+          expect(Exit.isFailure(escaped)).toBe(true)
+        }),
+      ),
+    ),
   )
 })

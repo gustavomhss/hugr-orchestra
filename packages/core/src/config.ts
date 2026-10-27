@@ -45,14 +45,6 @@ export class Info extends Schema.Class<Info>("Config.Info")({
   default_agent: Schema.String.pipe(Schema.optional).annotate({
     description: "Default primary agent to use when no session agent is selected",
   }),
-  autoupdate: Schema.Union([Schema.Boolean, Schema.Literal("notify")])
-    .pipe(Schema.optional)
-    .annotate({
-      description: "Automatically update or notify when a new version is available",
-    }),
-  username: Schema.String.pipe(Schema.optional).annotate({
-    description: "Username displayed in conversations and used for telemetry identity",
-  }),
   permissions: Permission.Ruleset.pipe(Schema.optional).annotate({
     description: "Ordered tool permission rules applied to agent tool use",
   }),
@@ -97,7 +89,8 @@ export class Info extends Schema.Class<Info>("Config.Info")({
     description: "Named slash command definitions",
   }),
   instructions: Schema.String.pipe(Schema.Array, Schema.optional).annotate({
-    description: "Additional paths or URLs supplying ambient instructions",
+    description:
+      "Additional local instruction files, relative to the config file that lists them. URLs are not supported. A project config may only name files inside the project.",
   }),
   references: ConfigReference.Info.pipe(Schema.optional).annotate({
     description: "Named local directories or Git repositories available as external context",
@@ -133,6 +126,16 @@ export function latest<K extends keyof Info>(entries: readonly Entry[], key: K):
   return entries
     .filter((entry): entry is Document => entry.type === "document")
     .findLast((entry) => entry.info[key] !== undefined)?.info[key]
+}
+
+/** The MCP timeouts, each taken from the latest document that sets it, so a document that only lists servers does not hide them. */
+export function mcpTimeout(entries: readonly Entry[]) {
+  const timeouts = entries.flatMap((entry) => (entry.type === "document" && entry.info.mcp?.timeout ? [entry.info.mcp.timeout] : []))
+  if (timeouts.length === 0) return undefined
+  return timeouts.reduce((merged, timeout) => ({
+    ...merged,
+    ...Object.fromEntries(Object.entries(timeout).filter(([, value]) => value !== undefined)),
+  }))
 }
 
 /** A config file that exists but cannot be parsed or does not match the schema. Never skipped: the user would silently run on defaults. */
@@ -191,6 +194,12 @@ const layer = Layer.effect(
             )
           : decodeInfo(input)
       ).pipe(Effect.mapError((error) => new InvalidError({ path: filepath, message: `${filepath}: ${error.message}` })))
+      const remote = info.instructions?.find((entry) => /^[a-z][a-z0-9+.-]*:\/\//i.test(entry))
+      if (remote !== undefined)
+        return yield* new InvalidError({
+          path: filepath,
+          message: `${filepath}: instructions must be local file paths; remote URLs are not supported (${remote})`,
+        })
       return new Document({ type: "document", path: filepath, info })
     })
 

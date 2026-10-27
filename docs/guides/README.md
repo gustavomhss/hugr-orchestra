@@ -8,4 +8,5 @@
 - [Desktop startup errors](desktop-startup.md)
 - [App error messages](app-error-messages.md)
 - [Skills: catalog visibility](skills.md)
+- [Instructions and TUI settings](instructions-and-tui.md)
 - [Environment variables and logs](environment.md)

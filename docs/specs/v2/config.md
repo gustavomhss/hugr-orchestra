@@ -11,7 +11,7 @@ This document breaks the legacy configuration schema into small review groups. W
 
 ## Schema Scope
 
-Use one v2 config schema for now. Some fields, such as `autoupdate`, are intended for global/user configuration, but there is not yet enough benefit to enforce that with separate global and location schemas. Revisit this if more scope-sensitive fields survive the review.
+Use one v2 config schema for now. Some fields are intended for global/user configuration, but there is not yet enough benefit to enforce that with separate global and location schemas. Revisit this if more scope-sensitive fields survive the review.
 
 V2 core discovers config documents named `orchestra.json` or `orchestra.jsonc` in the global config directory, ancestor project directories, and `.orchestra` config directories. The legacy `config.json` filename is not supported in V2.
 
@@ -32,7 +32,6 @@ Settings that affect process startup, shell execution, or network serving. Revie
 | `shell`      | Default shell for terminal and shell tool execution | keep   | Port as effective config; shared shell choice is used throughout orchestra.     |
 | `logLevel`   | Intended logging level configuration                | remove | Do not port: no config consumer exists and logging initializes from CLI input. |
 | `server`     | Hostname, port, mDNS, and CORS settings             | remove | Do not port: location config is loaded after the server is already running.    |
-| `autoupdate` | Automatic update or notification behavior           | keep   | Global-only user preference; keep `true`, `false`, and `"notify"`.             |
 
 ## Group 3: Commands And Project Resources
 
@@ -43,7 +42,7 @@ Configuration that introduces location-scoped project resources or discoverable 
 | `command`      | User-defined commands                   | remove   | Do not port as v2 config; named reusable user workflows belong to skills.                                 |
 | `skills`       | Additional skill locations              | redesign | Replace `{ paths?, urls? }` with a single array of local path or remote URL discovery sources.            |
 | `reference`    | Named git or local directory references | redesign | Rename to plural `references`; retain named local path and Git repository external-context entries.       |
-| `instructions` | Additional ambient instruction sources  | keep     | Keep as one array of local paths, glob patterns, or remote URLs supplying automatically included context. |
+| `instructions` | Additional ambient instruction sources  | keep     | Implemented as an array of local file paths and globs (relative to the listing config file) supplying automatically included context. URLs are not supported; a URL is a config error. |
 
 V2 does not expose separate user-authored command configuration. Skills should cover named reusable prompt workflows, whether invoked directly by the user or loaded by an agent. Internal command routing and built-in commands may remain runtime concerns without creating a `command` or `commands` config field.
 
@@ -152,17 +151,15 @@ Settings affecting sharing behavior or user/account identity rather than model e
 | `share`      | Session sharing behavior                        | keep   | Keep `"manual" \| "auto" \| "disabled"`; it controls manual sharing permission and automatic sharing of new sessions.  |
 | `autoshare`  | Legacy automatic sharing flag                   | remove | Do not port deprecated alias; use `share: "auto"`.                                                                     |
 | `enterprise` | Enterprise URL configuration                    | keep   | Keep `{ url?: string }`; currently selects the legacy sharing service endpoint when no organization account is active. |
-| `username`   | Display username in conversations and telemetry | keep   | Keep string identity override; runtime may otherwise resolve an operating-system username.                             |
 
 Retain `share` as the single session-sharing setting. `"manual"` permits explicit sharing, `"auto"` shares newly created top-level sessions, and `"disabled"` prevents sharing. Legacy `autoshare: true` is only an alias for `share: "auto"`, so v2 does not expose it.
 
-Retain `enterprise.url` for legacy enterprise share hosting selection and `username` as a user-facing identity override. These remain separate from server authentication credentials; `username` identifies the user in conversation and telemetry behavior rather than HTTP basic-auth configuration.
+Retain `enterprise.url` for legacy enterprise share hosting selection. It stays separate from server authentication credentials. `autoupdate` and `username` were removed from the v2 schema because nothing read them; an old file that still sets them loads, and the keys are ignored.
 
 ```jsonc
 {
   "share": "disabled",
   "enterprise": { "url": "https://share.example.com" },
-  "username": "developer",
 }
 ```
 
