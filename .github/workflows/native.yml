@@ -163,6 +163,11 @@ jobs:
       - name: Linux GUI display capability
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb
 
+      # Ubuntu 24.04 restricts unprivileged user namespaces through AppArmor, so Electron's Chromium sandbox
+      # cannot start and the harnesses fail before any App Dock code runs. Allowing user namespaces keeps the sandbox on.
+      - name: Chromium sandbox user namespaces
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
       - name: Artifact root
         run: echo "APP_DOCK_ARTIFACT_ROOT=$RUNNER_TEMP/app-dock" >> "$GITHUB_ENV"
 
