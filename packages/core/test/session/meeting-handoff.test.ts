@@ -1,6 +1,7 @@
 import { describe, expect } from "bun:test"
 import { eq } from "drizzle-orm"
 import { DateTime, Effect, Layer } from "effect"
+import { AgentV2 } from "@orchestra/core/agent"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -171,7 +172,7 @@ describe("MeetingHandoff", () => {
       const result = yield* handoff.handoff({ meetingID: meeting, itemIDs: ["itm_decision"] })
 
       expect(result.sent).toEqual(["itm_decision"])
-      expect(created.map((input) => [input.agent, input.location.directory])).toEqual([["maestro", directory]])
+      expect(created).toEqual([{ agent: AgentV2.ID.make("maestro"), location: { directory } }])
       expect(prompts.map((input) => input.sessionID)).toEqual([SessionV2.ID.make("ses_handoff_opened")])
       const rows = yield* db.select().from(MeetingItemTable).where(eq(MeetingItemTable.id, "itm_decision")).all().pipe(Effect.orDie)
       expect(rows.map((row) => row.sent_to_maestro)).toEqual([false, true])
