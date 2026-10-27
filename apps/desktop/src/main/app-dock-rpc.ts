@@ -64,7 +64,7 @@ const isDockRPCRequest = (value: unknown): value is DockRPCRequest => {
 }
 
 const dockString = (value: unknown, name: string) => {
-  if (typeof value !== "string" || value.length === 0) throw new Error(`Invalid App Dock ${name}`)
+  if (typeof value !== "string" || value.length === 0) throw new Error(`Invalid MCP Dock ${name}`)
   return value
 }
 
@@ -76,24 +76,24 @@ const dockStringArrayArg = (args: Record<string, unknown>, name: string, default
 }
 
 const dockNumber = (value: unknown, name: string, min: number, max: number) => {
-  if (typeof value !== "number" || !Number.isFinite(value)) throw new Error(`Invalid App Dock ${name}`)
+  if (typeof value !== "number" || !Number.isFinite(value)) throw new Error(`Invalid MCP Dock ${name}`)
   return Math.max(min, Math.min(max, Math.round(value)))
 }
 
 const dockEnum = (value: unknown, name: string, allowed: string[]) => {
-  if (typeof value !== "string" || !allowed.includes(value)) throw new Error(`Invalid App Dock ${name}`)
+  if (typeof value !== "string" || !allowed.includes(value)) throw new Error(`Invalid MCP Dock ${name}`)
   return value
 }
 
 const dockBoolean = (value: unknown, name: string) => {
-  if (typeof value !== "boolean") throw new Error(`Invalid App Dock ${name}`)
+  if (typeof value !== "boolean") throw new Error(`Invalid MCP Dock ${name}`)
   return value
 }
 
 const browserReadShape = ["mode", "format", "actionable", "visible"]
 
 const dockRef = (value: unknown, name: string) => {
-  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 1) throw new Error(`Invalid App Dock ${name}`)
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 1) throw new Error(`Invalid MCP Dock ${name}`)
   return value
 }
 
@@ -403,7 +403,7 @@ export class AppDockRPC {
 
   private dockSender(): { senderID: number; win: BrowserWindow } {
     const win = this.dockWindow
-    if (!win || win.isDestroyed()) throw new Error("No window is available for App Dock")
+    if (!win || win.isDestroyed()) throw new Error("No window is available for MCP Dock")
     return { senderID: win.webContents.id, win }
   }
 
@@ -445,7 +445,7 @@ export class AppDockRPC {
 
   private async dispatch(op: string, args: Record<string, unknown>, request: RequestWork,
     admitted: () => void, pending: () => void): Promise<unknown> {
-    if (!this.appDock) throw new Error("App Dock bridge is not initialized")
+    if (!this.appDock) throw new Error("MCP Dock bridge is not initialized")
     const dock = this.appDock
     const { senderID, win } = this.dockSender()
 
@@ -558,7 +558,7 @@ export class AppDockRPC {
         const tabID = this.resolveTabID(dock, senderID, args)
         const command = dockString(args.command, "command")
         if (command !== "back" && command !== "forward" && command !== "reload")
-          throw new Error("Invalid App Dock command")
+          throw new Error("Invalid MCP Dock command")
         return dock.command(senderID, tabID, command)
       }
       case "open": {
@@ -599,10 +599,10 @@ export class AppDockRPC {
         const tabID = this.resolveTabID(dock, senderID, args)
         const direction = dockString(args.direction, "direction")
         if (direction !== "up" && direction !== "down" && direction !== "top" && direction !== "bottom")
-          throw new Error("Invalid App Dock direction")
+          throw new Error("Invalid MCP Dock direction")
         const amount = args.amount === undefined ? undefined : dockNumber(args.amount, "amount", 1, 10000)
         if (amount !== undefined && (direction === "top" || direction === "bottom"))
-          throw new Error("Invalid App Dock amount for scroll to edge")
+          throw new Error("Invalid MCP Dock amount for scroll to edge")
         return dock.scroll(senderID, tabID, direction, amount)
       }
       case "hover": {
@@ -631,7 +631,7 @@ export class AppDockRPC {
       case "storage": {
         const tabID = this.resolveTabID(dock, senderID, args)
         const storage = dockString(args.storage, "storage")
-        if (storage !== "local" && storage !== "session") throw new Error("Invalid App Dock storage")
+        if (storage !== "local" && storage !== "session") throw new Error("Invalid MCP Dock storage")
         const key = dockString(args.key, "key")
         return dock.storage(senderID, tabID, storage, key)
       }
@@ -654,7 +654,7 @@ export class AppDockRPC {
         const tabID = this.resolveTabID(dock, senderID, args)
         const milliseconds = args.milliseconds === undefined ? 100 : args.milliseconds
         if (typeof milliseconds !== "number" || !Number.isFinite(milliseconds) || milliseconds < 0 || milliseconds > 10_000)
-          throw new Error("Invalid App Dock milliseconds")
+          throw new Error("Invalid MCP Dock milliseconds")
         return dock.wait(senderID, tabID, milliseconds)
       }
       case "screenshot": {
@@ -664,12 +664,12 @@ export class AppDockRPC {
       case "keyboard": {
         const tabID = this.resolveTabID(dock, senderID, args)
         const type = dockString(args.type, "type")
-        if (type !== "keyDown" && type !== "keyUp") throw new Error("Invalid App Dock keyboard type")
+        if (type !== "keyDown" && type !== "keyUp") throw new Error("Invalid MCP Dock keyboard type")
         const key = dockString(args.key, "key")
         return dock.keyboard(senderID, tabID, type, key)
       }
       default:
-        throw new Error(`Unknown App Dock operation: ${op}`)
+        throw new Error(`Unknown MCP Dock operation: ${op}`)
     }
   }
 
@@ -681,15 +681,15 @@ export class AppDockRPC {
     if (world === "linux") {
       const workspace = all.find(linux)
       if (!workspace) throw new NativeDockProtocol.NativeError("not-ready",
-        "The Linux workspace is not open in the App Dock; stop and report that the owner must open Apps > Linux workspace")
+        "The Linux workspace is not open in the MCP Dock; stop and report that the owner must open Apps > Linux workspace")
       return workspace.tabID
     }
     const tabs = world === "browser" ? all.filter((tab) => !linux(tab)) : all
     const active = tabs.find((tab) => typeof tab === "object" && tab !== null && "active" in tab && tab.active === true)
     const target = active ?? tabs[0]
     if (!target && world === "browser" && all.length)
-      throw new Error("App Dock has no open browser tabs; open one with dock_open. Apps in the Linux workspace are operated by the linux agent, so hand that work to it")
-    if (!target) throw new Error("App Dock has no open tabs")
+      throw new Error("MCP Dock has no open browser tabs; open one with dock_open. Apps in the Linux workspace are operated by the linux agent, so hand that work to it")
+    if (!target) throw new Error("MCP Dock has no open tabs")
     return target.tabID
   }
 }
@@ -699,7 +699,7 @@ function dockBounds(win: BrowserWindow, value: unknown): DockBounds {
     const bounds = win.getContentBounds()
     return { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height }
   }
-  if (!value || typeof value !== "object") throw new Error("Invalid App Dock bounds")
+  if (!value || typeof value !== "object") throw new Error("Invalid MCP Dock bounds")
   const bounds = value as Partial<{ x: number; y: number; width: number; height: number }>
   const x = bounds.x ?? NaN
   const y = bounds.y ?? NaN
@@ -713,7 +713,7 @@ function dockBounds(win: BrowserWindow, value: unknown): DockBounds {
     width <= 0 ||
     height <= 0
   )
-    throw new Error("Invalid App Dock bounds")
+    throw new Error("Invalid MCP Dock bounds")
   return { x, y, width, height }
 }
 

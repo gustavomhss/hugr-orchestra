@@ -52,7 +52,7 @@ const routerFor = (port: Transport) => {
       return
     }
     const error = object(payload.error) ? payload.error : {}
-    const message = typeof error.message === "string" ? error.message : "App Dock request failed"
+    const message = typeof error.message === "string" ? error.message : "MCP Dock request failed"
     entry.finish(entry.native || error.backend === "linux-atspi"
       ? new NativeRPCError(typeof error.code === "string" ? error.code : "native-error", message,
         error.outcome === "not-dispatched" ? "not-dispatched" : "unknown", error.result, entry.target, cleanupEvidence(error.cleanup))
@@ -70,8 +70,8 @@ function request(port: Transport, op: string, args: Record<string, unknown>, sig
     // dock_read's mode is the browser tree shape; only action/type modes are native input policy.
     || ((op === "action" || op === "type") && args.mode !== undefined)
   if (router.size >= 32) return Promise.reject(native
-    ? new NativeRPCError("capacity", "App Dock request capacity exhausted", "not-dispatched")
-    : new Error("App Dock request capacity exhausted"))
+    ? new NativeRPCError("capacity", "MCP Dock request capacity exhausted", "not-dispatched")
+    : new Error("MCP Dock request capacity exhausted"))
   return new Promise((resolve, reject) => {
     const entry: Pending = {
       native, aborted: signal?.aborted ?? false,
@@ -99,8 +99,8 @@ function request(port: Transport, op: string, args: Record<string, unknown>, sig
     }
     const timer = setTimeout(() => {
       entry.finish(entry.native
-        ? new NativeRPCError("transport-timeout", `App Dock ${op} request timed out`, "unknown", undefined, entry.target)
-        : new Error(`App Dock ${op} request timed out`))
+        ? new NativeRPCError("transport-timeout", `MCP Dock ${op} request timed out`, "unknown", undefined, entry.target)
+        : new Error(`MCP Dock ${op} request timed out`))
       if (entry.native) entry.cancel()
     }, timeoutMs)
     router.set(id, entry)
@@ -291,10 +291,10 @@ function pick(scan: NativeScan, query: NativeQuery) {
 // findDeadlineMs is a test seam; production keeps the 90 s default.
 export function createAppDockHooks(port: Transport, config: { timeoutMs?: number; findDeadlineMs?: number } = {}): Hooks {
   const timeoutMs = config.timeoutMs ?? 15000
-  if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 15000) throw new Error("Invalid App Dock timeout")
+  if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 15000) throw new Error("Invalid MCP Dock timeout")
   const findDeadlineMs = config.findDeadlineMs ?? FIND_DEADLINE_MS
   if (!Number.isSafeInteger(findDeadlineMs) || findDeadlineMs < 0 || findDeadlineMs > FIND_DEADLINE_MS)
-    throw new Error("Invalid App Dock find deadline")
+    throw new Error("Invalid MCP Dock find deadline")
   // The world comes from the caller, never from the dock tab the user happens to have selected:
   // ui_* tools always address the Linux workspace, and dock_* called by an agent address browser tabs.
   const call = (context: ToolContext, op: string, args: Record<string, unknown>, clock?: Clock) => {
@@ -398,7 +398,7 @@ export function createAppDockHooks(port: Transport, config: { timeoutMs?: number
   const dock = {
       dock_list: tool({
         description:
-          "List the browser tabs in the App Dock with their tabID, url, title and whether each is loading, audible or active.",
+          "List the browser tabs in the MCP Dock with their tabID, url, title and whether each is loading, audible or active.",
         args: {},
         execute: (_args, context) => call(context, "list", {}).then(toJSON, toolError),
       }),

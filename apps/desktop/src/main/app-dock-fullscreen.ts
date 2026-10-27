@@ -151,7 +151,7 @@ export function createAppDockFullscreen(ctx: AppDockContext) {
     },
     async toggle(senderID: number, win: BrowserWindow, tabID: string, enabled: boolean) {
       const record = ctx.tabs.get(senderID)?.get(tabID)
-      if (!record) throw new Error("Unknown App Dock tab")
+      if (!record) throw new Error("Unknown MCP Dock tab")
       const epoch = bump(senderID)
       if (!enabled) {
         if (fullscreenOwner.get(senderID) === tabID) {
@@ -179,7 +179,7 @@ export function createAppDockFullscreen(ctx: AppDockContext) {
     },
     async keyboard(senderID: number, tabID: string, type: "keyDown" | "keyUp", key: string): Promise<{ ok: boolean; type: string; key: string; error?: string }> {
       const record = ctx.tabs.get(senderID)?.get(tabID)
-      if (!record) throw new Error("Unknown App Dock tab")
+      if (!record) throw new Error("Unknown MCP Dock tab")
       if (!record.win.isFocused()) record.win.focus()
       record.view.webContents.focus()
       const keyCode = appDockKeyCode(key)

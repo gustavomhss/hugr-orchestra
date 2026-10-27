@@ -1,7 +1,7 @@
 // Only browser-scoped callers meet this message: a Linux-scoped call reports the missing workspace instead.
 export function toolErrorMessage(error: unknown) {
   const message = error instanceof Error ? error.message : String(error)
-  return message === "App Dock has no open tabs" ? `${message}; open one with dock_open` : message
+  return message === "MCP Dock has no open tabs" ? `${message}; open one with dock_open` : message
 }
 const busy = "The app did not answer in time; it may be busy, e.g. showing a dialog an action opened. Look again (ui_look) before retrying an action: it may already have happened"
 // What the model can do next for codes that otherwise led unscripted runs into blind retries. Native codes reach

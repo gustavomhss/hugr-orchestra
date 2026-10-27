@@ -347,7 +347,7 @@ export const dict = {
   "appDock.browser.tab.closeOthers": "Close others",
   "appDock.browser.tab.closeRight": "Close right",
   "appDock.linux.title": "Linux",
-  "appDock.contexts": "Контекстҳои App Dock",
+  "appDock.contexts": "Контекстҳои MCP Dock",
   "appDock.browser.title": "Браузер",
   "appDock.browser.empty": "Барои кушодани варақаи браузер суроғаи вебро ворид кунед.",
   "appDock.linux.workspace": "Фазои кории Linux",

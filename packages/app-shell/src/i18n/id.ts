@@ -370,7 +370,7 @@ export const dict = {
   "appDock.browser.tab.closeOthers": "Close others",
   "appDock.browser.tab.closeRight": "Close right",
   "appDock.linux.title": "Linux",
-  "appDock.contexts": "Konteks App Dock",
+  "appDock.contexts": "Konteks MCP Dock",
   "appDock.browser.title": "Peramban",
   "appDock.browser.empty": "Masukkan alamat web untuk membuka tab peramban.",
   "appDock.linux.workspace": "Ruang kerja Linux",

@@ -80,7 +80,7 @@ export function contribution(port: Transport): Host.Contribution {
           applicationTools(port, (context) =>
             Effect.gen(function* () {
               const session = yield* sessions.get(context.sessionID)
-              if (!session) return yield* new Tool.Failure({ message: "App Dock session is unavailable." })
+              if (!session) return yield* new Tool.Failure({ message: "MCP Dock session is unavailable." })
               const permissions = yield* PermissionV2.Service.pipe(Effect.provide(locations.get(session.location)))
               return {
                 directory: session.location.directory,
@@ -97,7 +97,7 @@ export function contribution(port: Transport): Host.Contribution {
                     }),
                   ),
               }
-            }).pipe(Effect.mapError((error) => (error instanceof Tool.Failure ? error : new Tool.Failure({ message: "App Dock placement failed." })))),
+            }).pipe(Effect.mapError((error) => (error instanceof Tool.Failure ? error : new Tool.Failure({ message: "MCP Dock placement failed." })))),
           ),
         )
         .pipe(Effect.orDie)

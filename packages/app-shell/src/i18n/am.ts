@@ -345,7 +345,7 @@ export const dict = {
   "appDock.browser.tab.closeOthers": "Close others",
   "appDock.browser.tab.closeRight": "Close right",
   "appDock.linux.title": "Linux",
-  "appDock.contexts": "የApp Dock አውዶች",
+  "appDock.contexts": "የMCP Dock አውዶች",
   "appDock.browser.title": "አሳሽ",
   "appDock.browser.empty": "የአሳሽ ትር ለመክፈት የድር አድራሻ ያስገቡ።",
   "appDock.linux.workspace": "የLinux Workspace",

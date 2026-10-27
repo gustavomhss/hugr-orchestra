@@ -351,7 +351,7 @@ export const dict = {
   "appDock.browser.tab.closeOthers": "Close others",
   "appDock.browser.tab.closeRight": "Close right",
   "appDock.linux.title": "Linux",
-  "appDock.contexts": "App Dock kontekstai",
+  "appDock.contexts": "MCP Dock kontekstai",
   "appDock.browser.title": "Naršyklė",
   "appDock.browser.empty": "Įveskite žiniatinklio adresą, kad atidarytumėte naršyklės skirtuką.",
   "appDock.linux.workspace": "Linux darbo sritis",

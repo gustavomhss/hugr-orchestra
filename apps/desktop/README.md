@@ -41,7 +41,7 @@ scripts are `package:mac`, `package:win`, and `package:linux`.
 
 Each launch starts one local server for the app. By default it is a desktop-owned V2 `orchestra serve` child: the
 bundled CLI runs as a child of the main process on a loopback port with a per-launch password, restarts with backoff
-when it crashes, and stops with the app (`src/main/owned-serve.ts`). It reaches the main process's App Dock handlers
+when it crashes, and stops with the app (`src/main/owned-serve.ts`). It reaches the main process's MCP Dock handlers
 through a loopback channel (`src/main/dock-channel.ts`). On its first start it copies V1 transcripts from the shared
 database into V2 once.
 
@@ -66,7 +66,7 @@ entire Electron profile, its settings, or other desktop state.
   (`src/main/renderer-origin.ts`). The packaged window is always `oc://renderer`.
 - **IPC sender check.** Every handler registered in `src/main/ipc.ts` rejects an event whose `senderFrame` is not the
   renderer's own origin, so a navigated or foreign-origin frame cannot reach files, stores or the sidecar. The live,
-  janitor and App Dock handlers register separately and validate their own senders.
+  janitor and MCP Dock handlers register separately and validate their own senders.
 - **Content-Security-Policy.** Renderer HTML responses carry an enforced `object-src 'none'; base-uri 'self'` and a
   full policy in `Content-Security-Policy-Report-Only`. Promote the report-only policy to enforced after watching the
   packaged app's console for violations (remote servers, blob workers, wasm and inline styles are expected users).

@@ -1,4 +1,4 @@
-# App-Dock Goldens
+# MCP Dock Goldens
 
 > One golden per requirement, naming the shipped test as its witness. Goldens are traceable: requirement → golden → test.
 
@@ -390,17 +390,17 @@
 ## webcontents-view-security: WebContentsView Security Policy
 
 ### GOLDEN-074 (for REQ-074)
-**Requirement**: The system shall App Dock WebContentsView is created with sandbox:true.
+**Requirement**: The system shall MCP Dock WebContentsView is created with sandbox:true.
 
 **Witness**: app-dock-security.test.ts:568-575
 
 ### GOLDEN-075 (for REQ-075)
-**Requirement**: The system shall App Dock WebContentsView is created with contextIsolation:true.
+**Requirement**: The system shall MCP Dock WebContentsView is created with contextIsolation:true.
 
 **Witness**: app-dock-security.test.ts:568-575
 
 ### GOLDEN-076 (for REQ-076)
-**Requirement**: The system shall App Dock WebContentsView is created with nodeIntegration:false.
+**Requirement**: The system shall MCP Dock WebContentsView is created with nodeIntegration:false.
 
 **Witness**: app-dock-security.test.ts:568-575
 
@@ -432,7 +432,7 @@
 **Witness**: app-dock-security.test.ts:577-601
 
 ### GOLDEN-082 (for REQ-082)
-**Requirement**: The system shall Permission denial emits App Dock UI state with identity and permission name.
+**Requirement**: The system shall Permission denial emits MCP Dock UI state with identity and permission name.
 
 **Witness**: app-dock-security.test.ts:577-601
 
@@ -577,12 +577,12 @@
 ## ipc-sender-validation: IPC Sender Validation
 
 ### GOLDEN-109 (for REQ-109)
-**Requirement**: The system shall Malformed bounds are rejected with Invalid App Dock bounds.
+**Requirement**: The system shall Malformed bounds are rejected with Invalid MCP Dock bounds.
 
 **Witness**: app-dock-security.test.ts:691-707
 
 ### GOLDEN-110 (for REQ-110)
-**Requirement**: The system shall Subframe IPC sender is rejected with Invalid App Dock sender.
+**Requirement**: The system shall Subframe IPC sender is rejected with Invalid MCP Dock sender.
 
 **Witness**: app-dock-security.test.ts:691-707
 
@@ -599,12 +599,12 @@
 ## fullscreen-command-validation: Fullscreen and Command Validation
 
 ### GOLDEN-113 (for REQ-113)
-**Requirement**: The system shall Non-boolean fullscreen state is rejected with Invalid App Dock fullscreen state.
+**Requirement**: The system shall Non-boolean fullscreen state is rejected with Invalid MCP Dock fullscreen state.
 
 **Witness**: app-dock-security.test.ts:709-720
 
 ### GOLDEN-114 (for REQ-114)
-**Requirement**: The system shall Invalid command enum is rejected with Invalid App Dock command.
+**Requirement**: The system shall Invalid command enum is rejected with Invalid MCP Dock command.
 
 **Witness**: app-dock-security.test.ts:709-720
 
@@ -980,7 +980,7 @@
 ## devtools-gate: DevTools Gate
 
 ### GOLDEN-184 (for REQ-184)
-**Requirement**: The system shall App Dock DevTools do not open without trusted development route.
+**Requirement**: The system shall MCP Dock DevTools do not open without trusted development route.
 
 **Witness**: app-dock-security.test.ts:1162-1176
 

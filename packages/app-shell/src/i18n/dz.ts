@@ -350,7 +350,7 @@ export const dict: Record<string, string> = {
   "appDock.browser.tab.closeOthers": "Close others",
   "appDock.browser.tab.closeRight": "Close right",
   "appDock.linux.title": "Linux",
-  "appDock.contexts": "App Dock གི་སྐབས་དོན་ཚུ།",
+  "appDock.contexts": "MCP Dock གི་སྐབས་དོན་ཚུ།",
   "appDock.browser.title": "བརའུ་ཟར།",
   "appDock.browser.empty": "བརའུ་ཟར་ཊེབ་ཁ་ཕྱེ་ནིའི་དོན་ལུ་ ཝེབ་ཁ་བྱང་བཙུགས།",
   "appDock.linux.workspace": "Linux ལཱ་གི་ས་སྒོ།",

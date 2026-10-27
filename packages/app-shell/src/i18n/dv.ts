@@ -350,7 +350,7 @@ export const dict = {
   "appDock.browser.tab.closeOthers": "Close others",
   "appDock.browser.tab.closeRight": "Close right",
   "appDock.linux.title": "Linux",
-  "appDock.contexts": "App Dock ކޮންޓެކްސްޓްތައް",
+  "appDock.contexts": "MCP Dock ކޮންޓެކްސްޓްތައް",
   "appDock.browser.title": "ބްރައުޒަރު",
   "appDock.browser.empty": "ބްރައުޒަރު ޓެބެއް ހުޅުވުމަށް ވެބް އެޑްރެހެއް ލިޔުއްވާށެވެ.",
   "appDock.linux.workspace": "Linux ވޯކްސްޕޭސް",

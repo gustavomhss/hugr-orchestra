@@ -391,7 +391,7 @@ export const dict = {
   "appDock.browser.tab.closeOthers": "Close others",
   "appDock.browser.tab.closeRight": "Close right",
   "appDock.linux.title": "Linux",
-  "appDock.contexts": "App Dock 上下文",
+  "appDock.contexts": "MCP Dock 上下文",
   "appDock.browser.title": "浏览器",
   "appDock.browser.empty": "输入网址以打开浏览器标签页。",
   "appDock.linux.workspace": "Linux 工作区",

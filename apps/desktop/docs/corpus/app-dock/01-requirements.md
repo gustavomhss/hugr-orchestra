@@ -1,4 +1,4 @@
-# App-Dock Requirements
+# MCP Dock Requirements
 
 > Generated from invariant register. Each requirement is a plain `shall` sentence quoting its clause verbatim. Each `unwanted` becomes an `If-then` refusal requirement.
 
@@ -244,13 +244,13 @@ If the system HTTPS redirect to HTTP succeeds, then it **shall refuse** and retu
 ## webcontents-view-security: WebContentsView Security Policy
 
 ### REQ-074
-The system **shall** App Dock WebContentsView is created with sandbox:true. *(from invariant `webcontents-view-security`)*
+The system **shall** MCP Dock WebContentsView is created with sandbox:true. *(from invariant `webcontents-view-security`)*
 
 ### REQ-075
-The system **shall** App Dock WebContentsView is created with contextIsolation:true. *(from invariant `webcontents-view-security`)*
+The system **shall** MCP Dock WebContentsView is created with contextIsolation:true. *(from invariant `webcontents-view-security`)*
 
 ### REQ-076
-The system **shall** App Dock WebContentsView is created with nodeIntegration:false. *(from invariant `webcontents-view-security`)*
+The system **shall** MCP Dock WebContentsView is created with nodeIntegration:false. *(from invariant `webcontents-view-security`)*
 
 ### REQ-077
 If the system WebContentsView has sandbox:false, then it **shall refuse** and return an error. *(from invariant `webcontents-view-security` unwanted)*
@@ -270,7 +270,7 @@ The system **shall** Permission request is denied (state: denied). *(from invari
 The system **shall** Permission check returns denied. *(from invariant `permission-denial`)*
 
 ### REQ-082
-The system **shall** Permission denial emits App Dock UI state with identity and permission name. *(from invariant `permission-denial`)*
+The system **shall** Permission denial emits MCP Dock UI state with identity and permission name. *(from invariant `permission-denial`)*
 
 ### REQ-083
 The system **shall** Permission event is cloneable and omits storage data. *(from invariant `permission-denial`)*
@@ -361,10 +361,10 @@ If the system Fresh profile inherits deleted profile storage, then it **shall re
 ## ipc-sender-validation: IPC Sender Validation
 
 ### REQ-109
-The system **shall** Malformed bounds are rejected with Invalid App Dock bounds. *(from invariant `ipc-sender-validation`)*
+The system **shall** Malformed bounds are rejected with Invalid MCP Dock bounds. *(from invariant `ipc-sender-validation`)*
 
 ### REQ-110
-The system **shall** Subframe IPC sender is rejected with Invalid App Dock sender. *(from invariant `ipc-sender-validation`)*
+The system **shall** Subframe IPC sender is rejected with Invalid MCP Dock sender. *(from invariant `ipc-sender-validation`)*
 
 ### REQ-111
 If the system Malformed bounds are accepted, then it **shall refuse** and return an error. *(from invariant `ipc-sender-validation` unwanted)*
@@ -375,10 +375,10 @@ If the system Subframe IPC sender is accepted, then it **shall refuse** and retu
 ## fullscreen-command-validation: Fullscreen and Command Validation
 
 ### REQ-113
-The system **shall** Non-boolean fullscreen state is rejected with Invalid App Dock fullscreen state. *(from invariant `fullscreen-command-validation`)*
+The system **shall** Non-boolean fullscreen state is rejected with Invalid MCP Dock fullscreen state. *(from invariant `fullscreen-command-validation`)*
 
 ### REQ-114
-The system **shall** Invalid command enum is rejected with Invalid App Dock command. *(from invariant `fullscreen-command-validation`)*
+The system **shall** Invalid command enum is rejected with Invalid MCP Dock command. *(from invariant `fullscreen-command-validation`)*
 
 ### REQ-115
 If the system Non-boolean fullscreen state is accepted, then it **shall refuse** and return an error. *(from invariant `fullscreen-command-validation` unwanted)*
@@ -614,7 +614,7 @@ If the system Download events expose filesystem path, then it **shall refuse** a
 ## devtools-gate: DevTools Gate
 
 ### REQ-184
-The system **shall** App Dock DevTools do not open without trusted development route. *(from invariant `devtools-gate`)*
+The system **shall** MCP Dock DevTools do not open without trusted development route. *(from invariant `devtools-gate`)*
 
 ### REQ-185
 The system **shall** Ordinary user input (F12) does not open DevTools. *(from invariant `devtools-gate`)*

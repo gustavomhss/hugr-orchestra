@@ -370,7 +370,7 @@ export const dict = {
   "appDock.browser.tab.closeOthers": "Close others",
   "appDock.browser.tab.closeRight": "Close right",
   "appDock.linux.title": "Linux",
-  "appDock.contexts": "Contextos de App Dock",
+  "appDock.contexts": "Contextos de MCP Dock",
   "appDock.browser.title": "Navegador",
   "appDock.browser.empty": "Introduce una dirección web para abrir una pestaña del navegador.",
   "appDock.linux.workspace": "Espacio de trabajo Linux",

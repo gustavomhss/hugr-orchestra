@@ -455,7 +455,7 @@ function installDockBridge(partial: boolean) {
           if (revision !== manifest.revision) return { status: "conflict", manifest: structuredClone(manifest) }
           const ids = manifest.profiles.map((item) => item.id)
           if (value.profiles.length !== ids.length || Object.keys(value.tabs).some((id) => !ids.includes(id)))
-            throw new Error("Invalid App Dock manifest")
+            throw new Error("Invalid MCP Dock manifest")
           manifest = { ...structuredClone(value), revision: revision + 1 }
           return { status: "updated", manifest: structuredClone(manifest) }
         },

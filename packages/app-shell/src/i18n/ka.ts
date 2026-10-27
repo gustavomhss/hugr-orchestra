@@ -346,7 +346,7 @@ export const dict = {
   "appDock.browser.tab.closeOthers": "Close others",
   "appDock.browser.tab.closeRight": "Close right",
   "appDock.linux.title": "Linux",
-  "appDock.contexts": "App Dock-ის კონტექსტები",
+  "appDock.contexts": "MCP Dock-ის კონტექსტები",
   "appDock.browser.title": "ბრაუზერი",
   "appDock.browser.empty": "შეიყვანეთ ვებმისამართი ბრაუზერის ჩანართის გასახსნელად.",
   "appDock.linux.workspace": "Linux-ის სამუშაო სივრცე",

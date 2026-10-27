@@ -74,7 +74,7 @@ export function registerAppDockIpcHandlers() {
   const appDockSender = (event: IpcMainInvokeEvent) => {
     const win = BrowserWindow.fromWebContents(event.sender)
     if (!win || win.isDestroyed() || win.webContents !== event.sender || event.senderFrame !== event.sender.mainFrame)
-      throw new Error("Invalid App Dock sender")
+      throw new Error("Invalid MCP Dock sender")
     const senderID = event.sender.id
     if (!appDockDestroyHooks.has(senderID)) {
       appDockDestroyHooks.add(senderID)
@@ -167,7 +167,7 @@ export function registerAppDockIpcHandlers() {
     "app-dock-open",
     async (event: IpcMainInvokeEvent, address: unknown, bounds: unknown, profile: unknown = "default") => {
       const win = appDockSender(event)
-      if (typeof address !== "string") throw new Error("Invalid App Dock address")
+      if (typeof address !== "string") throw new Error("Invalid MCP Dock address")
       const profileID = appDockProfileID(profile)
       const profileStorage = appDockProfiles.ensureActive(profileID)
       let opened = false
@@ -219,7 +219,7 @@ export function registerAppDockIpcHandlers() {
   })
   ipcMain.handle("app-dock-occlude", (event: IpcMainInvokeEvent, occluded: unknown) => {
     appDockSender(event)
-    if (typeof occluded !== "boolean") throw new Error("Invalid App Dock occlusion")
+    if (typeof occluded !== "boolean") throw new Error("Invalid MCP Dock occlusion")
     appDock.occlude(event.sender.id, occluded)
   })
   ipcMain.handle("app-dock-close", (event: IpcMainInvokeEvent) => {
@@ -246,9 +246,9 @@ export function registerAppDockIpcHandlers() {
     (event: IpcMainInvokeEvent, tabID: unknown, scope: unknown, order?: unknown) => {
       appDockSender(event)
       const id = appDockID(tabID, "tab")
-      if (scope !== "others" && scope !== "right") throw new Error("Invalid App Dock close scope")
+      if (scope !== "others" && scope !== "right") throw new Error("Invalid MCP Dock close scope")
       if (order !== undefined && (!Array.isArray(order) || order.some((item) => typeof item !== "string")))
-        throw new Error("Invalid App Dock tab order")
+        throw new Error("Invalid MCP Dock tab order")
       browserDock.closeTabs(event.sender.id, id, scope, order)
     },
   )
@@ -263,18 +263,18 @@ export function registerAppDockIpcHandlers() {
   })
   ipcMain.handle("app-dock-navigate", (event: IpcMainInvokeEvent, tabID: unknown, address: unknown) => {
     appDockSender(event)
-    if (typeof address !== "string") throw new Error("Invalid App Dock address")
+    if (typeof address !== "string") throw new Error("Invalid MCP Dock address")
     return browserDock.navigate(event.sender.id, appDockID(tabID, "tab"), address)
   })
   ipcMain.handle("app-dock-command", (event: IpcMainInvokeEvent, tabID: unknown, command: unknown) => {
     appDockSender(event)
-    if (command !== "back" && command !== "forward" && command !== "reload") throw new Error("Invalid App Dock command")
+    if (command !== "back" && command !== "forward" && command !== "reload") throw new Error("Invalid MCP Dock command")
     return browserDock.command(event.sender.id, appDockID(tabID, "tab"), command)
   })
   ipcMain.handle("app-dock-find", (event: IpcMainInvokeEvent, tabID: unknown, text: unknown, forward: unknown) => {
     appDockSender(event)
-    if (typeof text !== "string") throw new Error("Invalid App Dock find text")
-    if (typeof forward !== "boolean") throw new Error("Invalid App Dock find direction")
+    if (typeof text !== "string") throw new Error("Invalid MCP Dock find text")
+    if (typeof forward !== "boolean") throw new Error("Invalid MCP Dock find direction")
     return browserDock.find(event.sender.id, appDockID(tabID, "tab"), text, forward, (result: AppDockFindResult) => {
       if (!event.sender.isDestroyed()) event.sender.send("app-dock-find-result", result)
     })
@@ -286,7 +286,7 @@ export function registerAppDockIpcHandlers() {
   ipcMain.handle("app-dock-zoom", (event: IpcMainInvokeEvent, tabID: unknown, factor?: unknown) => {
     appDockSender(event)
     if (factor !== undefined && (typeof factor !== "number" || !Number.isFinite(factor) || factor <= 0))
-      throw new Error("Invalid App Dock zoom")
+      throw new Error("Invalid MCP Dock zoom")
     return browserDock.zoom(event.sender.id, appDockID(tabID, "tab"), factor)
   })
   ipcMain.handle("app-dock-cancel-download", (event: IpcMainInvokeEvent, id: unknown) => {
@@ -299,7 +299,7 @@ export function registerAppDockIpcHandlers() {
   })
   ipcMain.handle("app-dock-fullscreen", (event: IpcMainInvokeEvent, tabID: unknown, enabled: unknown) => {
     const win = appDockSender(event)
-    if (typeof enabled !== "boolean") throw new Error("Invalid App Dock fullscreen state")
+    if (typeof enabled !== "boolean") throw new Error("Invalid MCP Dock fullscreen state")
     return appDock.fullscreen(event.sender.id, win, appDockID(tabID, "tab"), enabled)
   })
   ipcMain.handle("app-dock-get-manifest", (event: IpcMainInvokeEvent) => {
@@ -322,7 +322,7 @@ export function registerAppDockIpcHandlers() {
       Object.keys(payload).length !== 1 ||
       !("profileID" in payload)
     ) {
-      throw new Error("Invalid App Dock profile deletion")
+      throw new Error("Invalid MCP Dock profile deletion")
     }
     const profileID = appDockProfileID((payload as { profileID?: unknown }).profileID)
     const profileStorage = appDockProfiles.markDeleting(profileID)

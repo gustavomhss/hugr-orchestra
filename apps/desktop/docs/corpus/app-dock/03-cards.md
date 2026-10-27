@@ -1,4 +1,4 @@
-# App-Dock Work-Package Cards
+# MCP Dock Work-Package Cards
 
 > One card per requirement and per golden. Cards are scheduled together — requirements without cards are orphans. Traceability closes mechanically.
 
@@ -464,19 +464,19 @@
 
 ### WP-074 (covers REQ-074 + GOLDEN-074)
 **Invariant**: `webcontents-view-security`
-**Clause**: App Dock WebContentsView is created with sandbox:true
+**Clause**: MCP Dock WebContentsView is created with sandbox:true
 **Witness**: app-dock-security.test.ts:568-575
 **Status**: ready (test exists on main)
 
 ### WP-075 (covers REQ-075 + GOLDEN-075)
 **Invariant**: `webcontents-view-security`
-**Clause**: App Dock WebContentsView is created with contextIsolation:true
+**Clause**: MCP Dock WebContentsView is created with contextIsolation:true
 **Witness**: app-dock-security.test.ts:568-575
 **Status**: ready (test exists on main)
 
 ### WP-076 (covers REQ-076 + GOLDEN-076)
 **Invariant**: `webcontents-view-security`
-**Clause**: App Dock WebContentsView is created with nodeIntegration:false
+**Clause**: MCP Dock WebContentsView is created with nodeIntegration:false
 **Witness**: app-dock-security.test.ts:568-575
 **Status**: ready (test exists on main)
 
@@ -514,7 +514,7 @@
 
 ### WP-082 (covers REQ-082 + GOLDEN-082)
 **Invariant**: `permission-denial`
-**Clause**: Permission denial emits App Dock UI state with identity and permission name
+**Clause**: Permission denial emits MCP Dock UI state with identity and permission name
 **Witness**: app-dock-security.test.ts:577-601
 **Status**: ready (test exists on main)
 
@@ -686,13 +686,13 @@
 
 ### WP-109 (covers REQ-109 + GOLDEN-109)
 **Invariant**: `ipc-sender-validation`
-**Clause**: Malformed bounds are rejected with Invalid App Dock bounds
+**Clause**: Malformed bounds are rejected with Invalid MCP Dock bounds
 **Witness**: app-dock-security.test.ts:691-707
 **Status**: ready (test exists on main)
 
 ### WP-110 (covers REQ-110 + GOLDEN-110)
 **Invariant**: `ipc-sender-validation`
-**Clause**: Subframe IPC sender is rejected with Invalid App Dock sender
+**Clause**: Subframe IPC sender is rejected with Invalid MCP Dock sender
 **Witness**: app-dock-security.test.ts:691-707
 **Status**: ready (test exists on main)
 
@@ -712,13 +712,13 @@
 
 ### WP-113 (covers REQ-113 + GOLDEN-113)
 **Invariant**: `fullscreen-command-validation`
-**Clause**: Non-boolean fullscreen state is rejected with Invalid App Dock fullscreen state
+**Clause**: Non-boolean fullscreen state is rejected with Invalid MCP Dock fullscreen state
 **Witness**: app-dock-security.test.ts:709-720
 **Status**: ready (test exists on main)
 
 ### WP-114 (covers REQ-114 + GOLDEN-114)
 **Invariant**: `fullscreen-command-validation`
-**Clause**: Invalid command enum is rejected with Invalid App Dock command
+**Clause**: Invalid command enum is rejected with Invalid MCP Dock command
 **Witness**: app-dock-security.test.ts:709-720
 **Status**: ready (test exists on main)
 
@@ -1164,7 +1164,7 @@
 
 ### WP-184 (covers REQ-184 + GOLDEN-184)
 **Invariant**: `devtools-gate`
-**Clause**: App Dock DevTools do not open without trusted development route
+**Clause**: MCP Dock DevTools do not open without trusted development route
 **Witness**: app-dock-security.test.ts:1162-1176
 **Status**: ready (test exists on main)
 

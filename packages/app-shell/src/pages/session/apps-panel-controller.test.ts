@@ -21,7 +21,7 @@ describe("restorable tabs", () => {
   })
 })
 
-describe("App Dock controller", () => {
+describe("MCP Dock controller", () => {
   test("native shortcuts are delivered only for the visible current browser generation", async () => {
     const dock = fakeDock()
     const controller = createAppDockController(dock.api, translate)
@@ -523,7 +523,7 @@ describe("App Dock controller", () => {
   })
 })
 
-describe("App Dock controller with the Linux workspace", () => {
+describe("MCP Dock controller with the Linux workspace", () => {
   const workspace = (tabID: string, generation: number) => ({ tabID, generation, url: "appdock://linux" as const })
   const ready = async () => {
     const dock = fakeDock()
@@ -754,7 +754,7 @@ function fakeDock() {
       if (revision !== state.manifest.revision) return { status: "conflict", manifest: structuredClone(state.manifest) }
       const ids = state.manifest.profiles.map((item) => item.id)
       if (manifest.profiles.length !== ids.length || Object.keys(manifest.tabs).some((id) => !ids.includes(id)))
-        throw new Error("Invalid App Dock manifest")
+        throw new Error("Invalid MCP Dock manifest")
       state.manifest = { ...structuredClone(manifest), revision: revision + 1 }
       return { status: "updated", manifest: structuredClone(state.manifest) }
     },

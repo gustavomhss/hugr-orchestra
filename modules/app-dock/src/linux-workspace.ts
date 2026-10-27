@@ -5,9 +5,9 @@ import type { Transport } from "./transport"
 // What the agent can do about each workspace state; without it models retry blindly or reach for other tools.
 // Only the linux agent holds these tools, and it cannot ask the owner, so each hint ends in a report.
 const hints = {
-  "workspace-not-configured": "The Linux workspace was never set up; stop and report that the owner must open Apps > Linux workspace in the App Dock",
-  "workspace-not-running": "The Linux workspace is stopped; stop and report that the owner must open Apps > Linux workspace in the App Dock",
-  "workspace-unavailable": "The Linux workspace is not available in this app window; stop and report that the owner must open it in the App Dock",
+  "workspace-not-configured": "The Linux workspace was never set up; stop and report that the owner must open Apps > Linux workspace in the MCP Dock",
+  "workspace-not-running": "The Linux workspace is stopped; stop and report that the owner must open Apps > Linux workspace in the MCP Dock",
+  "workspace-unavailable": "The Linux workspace is not available in this app window; stop and report that the owner must open it in the MCP Dock",
 }
 
 const routers = new WeakMap<Transport, Map<string, { settle: (value: unknown, error?: string) => void }>>()
@@ -99,7 +99,7 @@ export function createLinuxWorkspaceHooks(port: Transport): Hooks {
     tool: {
       linux_exec: tool({
         description:
-          "Execute argv in the persistent Linux workspace used by App Dock. Returns stdout, stderr, exitCode, timeout/cancellation and truncation. Use ['/bin/bash','-lc',command] for shell syntax. This does not execute on the host. No automatic retry after cancellation or an unknown outcome.",
+          "Execute argv in the persistent Linux workspace used by MCP Dock. Returns stdout, stderr, exitCode, timeout/cancellation and truncation. Use ['/bin/bash','-lc',command] for shell syntax. This does not execute on the host. No automatic retry after cancellation or an unknown outcome.",
         args: {
           ...invocation,
           stdin: tool.schema.string().optional(),

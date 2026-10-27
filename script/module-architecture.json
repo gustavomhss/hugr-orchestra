@@ -146,8 +146,8 @@
     "app-dock": {
       "layer": "product",
       "status": "canonical",
-      "owner": "App Dock maintainer",
-      "summary": "App Dock and Linux workspace tools that operate desktop apps over the Electron main channel.",
+      "owner": "MCP Dock maintainer",
+      "summary": "MCP Dock and Linux workspace tools that operate desktop apps over the Electron main channel.",
       "exportsPolicy": "demanded",
       "sourceWildcards": {"./*": "./src/*.ts"}
     },

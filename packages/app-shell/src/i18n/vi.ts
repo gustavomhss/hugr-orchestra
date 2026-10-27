@@ -353,7 +353,7 @@ export const dict = {
   "appDock.browser.tab.closeOthers": "Close others",
   "appDock.browser.tab.closeRight": "Close right",
   "appDock.linux.title": "Linux",
-  "appDock.contexts": "Ngữ cảnh App Dock",
+  "appDock.contexts": "Ngữ cảnh MCP Dock",
   "appDock.browser.title": "Trình duyệt",
   "appDock.browser.empty": "Nhập địa chỉ web để mở tab trình duyệt.",
   "appDock.linux.workspace": "Không gian làm việc Linux",

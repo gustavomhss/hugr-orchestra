@@ -347,7 +347,7 @@ export const dict = {
   "appDock.browser.tab.closeOthers": "Close others",
   "appDock.browser.tab.closeRight": "Close right",
   "appDock.linux.title": "Linux",
-  "appDock.contexts": "Περιβάλλοντα του App Dock",
+  "appDock.contexts": "Περιβάλλοντα του MCP Dock",
   "appDock.browser.title": "Πρόγραμμα περιήγησης",
   "appDock.browser.empty": "Εισαγάγετε μια διεύθυνση ιστού για να ανοίξετε μια καρτέλα του προγράμματος περιήγησης.",
   "appDock.linux.workspace": "Χώρος εργασίας Linux",

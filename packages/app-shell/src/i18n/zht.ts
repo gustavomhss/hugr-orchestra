@@ -369,7 +369,7 @@ export const dict = {
   "appDock.browser.tab.closeOthers": "Close others",
   "appDock.browser.tab.closeRight": "Close right",
   "appDock.linux.title": "Linux",
-  "appDock.contexts": "App Dock 情境",
+  "appDock.contexts": "MCP Dock 情境",
   "appDock.browser.title": "瀏覽器",
   "appDock.browser.empty": "輸入網址即可開啟瀏覽器分頁。",
   "appDock.linux.workspace": "Linux 工作區",

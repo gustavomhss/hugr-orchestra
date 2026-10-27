@@ -346,7 +346,7 @@ export const dict: Record<string, string> = {
   "appDock.browser.tab.closeOthers": "Close others",
   "appDock.browser.tab.closeRight": "Close right",
   "appDock.linux.title": "Linux",
-  "appDock.contexts": "App Dock-এর প্রেক্ষাপট",
+  "appDock.contexts": "MCP Dock-এর প্রেক্ষাপট",
   "appDock.browser.title": "ব্রাউজার",
   "appDock.browser.empty": "ব্রাউজার ট্যাব খুলতে একটি ওয়েব ঠিকানা লিখুন।",
   "appDock.linux.workspace": "Linux ওয়ার্কস্পেস",

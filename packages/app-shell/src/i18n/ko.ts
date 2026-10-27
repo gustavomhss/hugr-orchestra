@@ -246,7 +246,7 @@ export const dict = {
   "appDock.browser.tab.closeOthers": "Close others",
   "appDock.browser.tab.closeRight": "Close right",
   "appDock.linux.title": "Linux",
-  "appDock.contexts": "App Dock 컨텍스트",
+  "appDock.contexts": "MCP Dock 컨텍스트",
   "appDock.browser.title": "브라우저",
   "appDock.browser.empty": "웹 주소를 입력하여 브라우저 탭을 여세요.",
   "appDock.linux.workspace": "Linux 작업 공간",

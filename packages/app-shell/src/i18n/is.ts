@@ -350,7 +350,7 @@ export const dict = {
   "appDock.browser.tab.closeOthers": "Close others",
   "appDock.browser.tab.closeRight": "Close right",
   "appDock.linux.title": "Linux",
-  "appDock.contexts": "App Dock-samhengi",
+  "appDock.contexts": "MCP Dock-samhengi",
   "appDock.browser.title": "Vafri",
   "appDock.browser.empty": "Sláðu inn vefslóð til að opna vafraflipa.",
   "appDock.linux.workspace": "Linux-vinnurými",
