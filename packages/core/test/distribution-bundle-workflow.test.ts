@@ -65,6 +65,7 @@ test("mutations of parsed real source fail by defect name", () => {
     ["BUNDLE_MATRIX", (value) => patchMatrix(value, (rows) => rows, {}, { lane: ["regression"] })],
     ["BUNDLE_PROVIDER_INPUT", (value) => ({ ...value, on: { ...value.on, workflow_dispatch: { inputs: { provider: { description: "Run the hosted provider qualification lane", type: "boolean", default: true } } } } })],
     ["BUNDLE_PROVIDER_INPUT", (value) => ({ ...value, on: { ...value.on, workflow_dispatch: null } })],
+    ["BUNDLE_RELEASE_CALL", (value) => ({ ...value, on: { ...value.on, workflow_call: { inputs: { provider: { type: "boolean", default: true } } } } })],
     ["BUNDLE_PROVIDER_OPT_IN", (value) => ({ ...value, jobs: { ...value.jobs, provider: { ...value.jobs.provider, if: undefined } } })],
     ["BUNDLE_PROVIDER_OPT_IN", (value) => ({ ...value, jobs: { ...value.jobs, provider: { ...value.jobs.provider, if: "${{ always() }}" } } })],
     ["BUNDLE_PROVIDER_OPT_IN", (value) => patchMatrix(value, (rows) => [...rows.slice(1), ...(value.jobs.provider?.strategy?.matrix.include ?? [])], {}, {}, () => value.jobs.qualification?.strategy?.matrix.include?.slice(0, 1) ?? [])],
@@ -127,12 +128,14 @@ test("root discovery coverage rejects omissions in both directions and accepts r
 
 function inspect(input: unknown, discovered = distribution) {
   const value = Schema.decodeUnknownSync(Workflow)(input)
-  check(value.name === "distribution-bundle" && Object.keys(value.on).toSorted().join() === "push,workflow_dispatch", "BUNDLE_TRIGGERS")
+  check(value.name === "distribution-bundle" && Object.keys(value.on).toSorted().join() === "push,workflow_call,workflow_dispatch", "BUNDLE_TRIGGERS")
   expect(value.on.push).toEqual({ branches: ["distribution-bundle"] })
   expect(value.permissions).toEqual({ contents: "read" })
   expect(Object.keys(value.jobs).toSorted()).toEqual(["provider", "qualification", "static"])
   // The provider row needs the owner's hosted key and third-party quota: dispatch opts in, nothing else does.
   check(JSON.stringify(value.on.workflow_dispatch) === JSON.stringify({ inputs: { provider: { description: "Run the hosted provider qualification lane", type: "boolean", default: false } } }), "BUNDLE_PROVIDER_INPUT")
+  // release-cli calls the bundle before publishing and passes provider: true; any other caller stays opted out.
+  check(JSON.stringify(value.on.workflow_call) === JSON.stringify({ inputs: { provider: { type: "boolean", default: false } }, secrets: { OPENROUTER_API_KEY: { required: false } } }), "BUNDLE_RELEASE_CALL")
   check(value.defaults.run.shell === "bash" && value.env.CI === "true", "BUNDLE_SHELL_CI")
   const job = value.jobs.qualification
   check(job?.strategy?.matrix.include?.length && job.strategy["fail-fast"] === false && job.strategy["max-parallel"] === 12, "BUNDLE_MATRIX")
