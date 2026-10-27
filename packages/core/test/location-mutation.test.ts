@@ -69,11 +69,10 @@ describe("LocationMutation", () => {
     ),
   )
 
-  it.live("rejects a prospective target below an escaping symlink ancestor", () =>
+  it.live.skipIf(process.platform === "win32")("rejects a prospective target below an escaping symlink ancestor", () =>
     withTmp((directory) => {
       const outside = `${directory}-outside`
       return Effect.gen(function* () {
-        if (process.platform === "win32") return
         yield* Effect.promise(async () => {
           await fs.mkdir(outside)
           await fs.symlink(outside, path.join(directory, "escape"))
@@ -87,11 +86,10 @@ describe("LocationMutation", () => {
     }),
   )
 
-  it.live("rejects a prospective target behind a dangling symlink that points outside", () =>
+  it.live.skipIf(process.platform === "win32")("rejects a prospective target behind a dangling symlink that points outside", () =>
     withTmp((directory) => {
       const outside = `${directory}-outside`
       return Effect.gen(function* () {
-        if (process.platform === "win32") return
         yield* Effect.promise(async () => {
           await fs.mkdir(outside)
           await fs.symlink(path.join(outside, "created.txt"), path.join(directory, "dangling.txt"))
@@ -108,10 +106,9 @@ describe("LocationMutation", () => {
     }),
   )
 
-  it.live("follows an in-location symlink using ordinary filesystem semantics", () =>
+  it.live.skipIf(process.platform === "win32")("follows an in-location symlink using ordinary filesystem semantics", () =>
     withTmp((directory) =>
       Effect.gen(function* () {
-        if (process.platform === "win32") return
         yield* Effect.promise(async () => {
           await fs.mkdir(path.join(directory, "actual"))
           await fs.symlink(path.join(directory, "actual"), path.join(directory, "linked"))

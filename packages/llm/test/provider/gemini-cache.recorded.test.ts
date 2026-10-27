@@ -35,14 +35,14 @@ const recorded = recordedTests({
 describe("Gemini cache recorded", () => {
   recorded.effect.with("reports cachedContentTokenCount on identical second call", { tags: ["cache"] }, () =>
     Effect.gen(function* () {
+      // The recorded cold call carries no cachedContentTokenCount, so there is
+      // no first-call cache-read line to assert.
       const first = yield* LLMClient.generate(cacheRequest)
-      expect(first.usage?.cacheReadInputTokens ?? 0).toBeGreaterThanOrEqual(0)
+      expect(first.usage?.inputTokens).toBeGreaterThan(0)
 
       const second = yield* LLMClient.generate(cacheRequest)
-      // Implicit caching is best-effort on Gemini's side; we assert the field
-      // is at least populated and non-negative. When re-recording, verify the
-      // cassette shows > 0 in the second response's usage.
-      expect(second.usage?.cacheReadInputTokens ?? 0).toBeGreaterThanOrEqual(0)
+      // The cassette reports cachedContentTokenCount 1100 on the second call.
+      expect(second.usage?.cacheReadInputTokens ?? 0).toBeGreaterThan(0)
     }),
   )
 })

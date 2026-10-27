@@ -40,11 +40,10 @@ describe("Anthropic Messages cache recorded", () => {
   recorded.effect.with("writes then reads cache_control on identical second call", { tags: ["cache"] }, () =>
     Effect.gen(function* () {
       const first = yield* LLMClient.generate(cacheRequest)
-      // The first call may write the cache (cacheWriteInputTokens > 0) or it
-      // may be a fresh miss (both fields 0) depending on whether the prefix is
-      // already warm on Anthropic's side. The assertion that matters is that
-      // the SECOND call reports a non-zero cache read.
-      expect(first.usage?.cacheReadInputTokens ?? 0).toBeGreaterThanOrEqual(0)
+      // The cassette's first call writes the prefix (cache_creation 5752) and
+      // reads nothing back.
+      expect(first.usage?.cacheWriteInputTokens ?? 0).toBeGreaterThan(0)
+      expect(first.usage?.cacheReadInputTokens ?? 0).toBe(0)
 
       const second = yield* LLMClient.generate(cacheRequest)
       expect(second.usage?.cacheReadInputTokens ?? 0).toBeGreaterThan(0)

@@ -554,8 +554,7 @@ test("a staged CLI held briefly after signing delays the rename into place inste
   if (process.platform === "win32") expect(performance.now() - start).toBeGreaterThanOrEqual(250)
 }, STAGING_TIMEOUT)
 
-test("a staged CLI held past the bound fails the rename and keeps the previous resources", async () => {
-  if (process.platform !== "win32") return
+test.skipIf(process.platform !== "win32")("a staged CLI held past the bound fails the rename and keeps the previous resources", async () => {
   const input = await fixture()
   await stageCliArtifacts(input)
   const before = await readFile(join(input.directory, "manifest.json"), "utf8")

@@ -232,10 +232,9 @@ describe("cross-spawn spawner", () => {
       }),
     )
 
-    fx.effect(
+    fx.effect.skipIf(process.platform === "win32")(
       "forceKillAfter escalates for stubborn processes",
       Effect.gen(function* () {
-        if (process.platform === "win32") return
 
         const started = Date.now()
         const exit = yield* Effect.exit(
@@ -278,10 +277,9 @@ describe("cross-spawn spawner", () => {
   })
 
   describe("Windows-specific", () => {
-    fx.effect(
+    fx.effect.skipIf(process.platform !== "win32")(
       "uses shell routing on Windows",
       Effect.gen(function* () {
-        if (process.platform !== "win32") return
 
         const out = yield* ChildProcessSpawner.ChildProcessSpawner.use((svc) =>
           svc.string(
@@ -296,10 +294,9 @@ describe("cross-spawn spawner", () => {
       }),
     )
 
-    fx.effect(
+    fx.effect.skipIf(process.platform !== "win32")(
       "runs cmd scripts with spaces on Windows without shell",
       Effect.gen(function* () {
-        if (process.platform !== "win32") return
 
         const tmp = yield* Effect.acquireRelease(
           Effect.promise(() => tmpdir()),
