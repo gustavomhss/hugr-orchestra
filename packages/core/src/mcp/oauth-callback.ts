@@ -123,17 +123,24 @@ export async function ensureRunning(redirectUri?: string): Promise<void> {
 }
 
 async function start(port: number, path: string) {
-  if (await isPortInUse(port)) return
+  // Fail now: nothing here would receive the browser's redirect, and the sign-in would wait for the 5 minute timeout.
+  if (await isPortInUse(port)) throw portInUse(port)
 
   currentPort = port
   currentPath = path
 
   const candidate = createServer(handleRequest)
   await new Promise<void>((resolve, reject) => {
-    candidate.on("error", reject)
+    candidate.on("error", (error: NodeJS.ErrnoException) => reject(error.code === "EADDRINUSE" ? portInUse(port) : error))
     candidate.listen(port, OAUTH_CALLBACK_HOST, () => resolve())
   })
   server = candidate
+}
+
+function portInUse(port: number) {
+  return new Error(
+    `OAuth callback port ${port} is already in use. Close the program using it, or set another port with oauth.callback_port in the server's MCP config.`,
+  )
 }
 
 export function waitForCallback(oauthState: string, mcpName?: string): Promise<string> {

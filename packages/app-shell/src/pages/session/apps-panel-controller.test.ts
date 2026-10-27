@@ -366,6 +366,22 @@ describe("App Dock controller", () => {
     ])
   })
 
+  test("an evicted tab leaves the strip", async () => {
+    const dock = fakeDock()
+    const controller = createAppDockController(dock.api, translate)
+    controller.attach(element(), profileA)
+    await until(() => controller.state.status === "ready")
+    controller.setURL("https://example.com/a")
+    await controller.launch()
+    await controller.openNewTab()
+    expect(controller.state.tabs).toHaveLength(2)
+
+    dock.emit({ type: "tab-evicted", payload: tab("tab-1", 1) })
+
+    expect(controller.state.tabs.map((item) => item.tabID)).toEqual(["tab-2"])
+    expect(controller.state.active?.tabID).toBe("tab-2")
+  })
+
   test("a late open reply preserves the newer selection and its detach identity", async () => {
     const dock = fakeDock()
     const controller = createAppDockController(dock.api, translate)

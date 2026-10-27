@@ -20,6 +20,12 @@ test("desktop recovery: Dock shortcuts accept only scoped supported chords and c
   expect(() => toCloneableAppDockEvent({ ...event, payload: { ...event.payload, command: "host-shell" } })).toThrow()
 })
 
+test("desktop recovery: an evicted-tab event reaches the renderer with its exact identity only", () => {
+  const event = { type: "tab-evicted", payload: { tabID: "tab", generation: 3 } }
+  expect(toCloneableAppDockEvent(event)).toEqual(event)
+  expect(() => toCloneableAppDockEvent({ ...event, payload: { ...event.payload, url: "https://x.test" } })).toThrow()
+})
+
 test("desktop recovery: shared Session accepts all registered renderers and rejects child views", () => {
   let request!: NonNullable<Parameters<Session["setPermissionRequestHandler"]>[0]>
   let check!: NonNullable<Parameters<Session["setPermissionCheckHandler"]>[0]>

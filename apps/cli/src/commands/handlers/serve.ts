@@ -20,6 +20,7 @@ import { ProductHost } from "../../host"
 import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
 import { Runtime } from "../../framework/runtime"
 import { Daemon } from "../../services/daemon"
+import { addressInUse } from "./serve-port"
 import { ServeShutdown } from "./serve-shutdown"
 
 const SHUTDOWN_GRACE_MS = 2_000
@@ -74,6 +75,10 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
         const daemon = yield* Daemon.Service
         // A desktop-owned child gets a per-launch password in env and never touches the daemon's password file.
         const password = process.env.ORCHESTRA_SERVER_PASSWORD || (yield* daemon.password())
+        // The password is captured: drop it from the environment so no child (stdio MCP server, LSP, PTY, omni) inherits it.
+        // The server authenticates from the value passed to createRoutes, never from env.
+        delete process.env.ORCHESTRA_SERVER_PASSWORD
+        delete process.env.ORCHESTRA_SERVER_USERNAME
         const root = yield* Effect.promise(() => webRoot())
         // Legacy transcripts on this database are copied to V2 before the server answers: a Session is eligible only
         // while it has no V2 message, so a prompt reaching an old Session first would skip its history forever.
@@ -109,7 +114,7 @@ function listen(hostname: string, port: Option.Option<number>, password: string,
   if (Option.isSome(port)) return bind(hostname, port.value, password, host, root, cors)
   const next = (port: number): ReturnType<typeof bind> =>
     bind(hostname, port, password, host, root, cors).pipe(
-      Effect.catch((error) => (port === 65_535 ? Effect.fail(error) : next(port + 1))),
+      Effect.catch((error) => (port === 65_535 || !addressInUse(error) ? Effect.fail(error) : next(port + 1))),
     )
   return next(4096)
 }

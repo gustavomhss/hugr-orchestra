@@ -399,7 +399,7 @@ export const ORCHESTRA_COPY = {
   ...BOARD_COPY,
   ...BOARD_VIEWS_COPY,
   ...BOARD_MONEY_COPY,
-  // English-only Actions copy: other locales fall back to it until translated.
+  // English base for every locale; Portuguese is layered on top through ORCHESTRA_COPY_BR (Actions: ActionsCopy.dictBr).
   ...ActionsCopy.dict,
   ...SESSION_RECOVERY_COPY,
   ...DESKTOP_RECOVERY_COPY,
@@ -513,7 +513,7 @@ export const ORCHESTRA_BASE_COPY_BR: Partial<Record<keyof typeof ORCHESTRA_COPY,
   "orchestra.cicd.prompt": "Vamos discutir o workflow de CI em {{path}} neste repositório. Explique seus gatilhos e jobs e sugira melhorias.",
   "orchestra.nav.schedule": "Agendamento",
   "orchestra.nav.env": ".env",
-  "orchestra.nav.dock": "Dock",
+  "orchestra.nav.dock": "MCP Dock",
   "orchestra.nav.workspaces": "Workspaces",
   "orchestra.nav.providers": "Provedores",
   "orchestra.nav.shortcuts": "Atalhos",

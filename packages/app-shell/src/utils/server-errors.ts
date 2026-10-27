@@ -1,3 +1,5 @@
+import { ClientError } from "@orchestra/client"
+
 export type ConfigInvalidError = {
   name: "ConfigInvalidError"
   data: {
@@ -43,6 +45,16 @@ export function formatServerError(error: unknown, translate?: Translator, fallba
   if (typeof error === "string" && error) return error
   if (fallback) return fallback
   return tr(translate, "error.chain.unknown", "Unknown error")
+}
+
+/**
+ * `generic` followed by the server's own reason, so a failure says what the server answered. A bare ClientError (an
+ * undeclared answer) carries no message worth showing, so it keeps only `generic`.
+ */
+export function withServerReason(generic: string, error: unknown) {
+  if (error instanceof ClientError) return generic
+  const reason = formatServerError(error, undefined, generic)
+  return reason && reason !== generic ? `${generic} ${reason}` : generic
 }
 
 function unwrapNamedError(error: unknown): unknown {

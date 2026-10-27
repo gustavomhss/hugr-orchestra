@@ -7,6 +7,7 @@ import { makeLocationNode } from "../effect/app-node"
 import { FileSystem } from "../filesystem"
 import { FSUtil } from "../fs-util"
 import { Location } from "../location"
+import { LocationMutation } from "../location-mutation"
 import { PermissionV2 } from "../permission"
 import { Ripgrep } from "../ripgrep"
 import { RelativePath } from "../schema"
@@ -57,6 +58,7 @@ const layer = Layer.effectDiscard(
     const ripgrep = yield* Ripgrep.Service
     const location = yield* Location.Service
     const permission = yield* PermissionV2.Service
+    const mutation = yield* LocationMutation.Service
     const text = (output: ModelOutput) =>
       toModelOutput(output.map((match) => ({ ...match, entry: { ...match.entry, path: path.resolve(location.directory, match.entry.path) } })))
 
@@ -80,6 +82,15 @@ const layer = Layer.effectDiscard(
           }),
           execute: (input, context) =>
             Effect.gen(function* () {
+              // Same boundary as read: a search root outside the Location needs external_directory approval first.
+              const external = (yield* mutation.resolve({ path: input.path ?? ".", kind: "directory" })).externalDirectory
+              if (external)
+                yield* permission.assert({
+                  ...LocationMutation.externalDirectoryPermission(external),
+                  sessionID: context.sessionID,
+                  agent: context.agent,
+                  source: { type: "tool", messageID: context.assistantMessageID, callID: context.toolCallID },
+                })
               yield* permission.assert({
                 action: name,
                 resources: [input.pattern],
@@ -146,5 +157,5 @@ const layer = Layer.effectDiscard(
 export const node = makeLocationNode({
   name: "tool/grep",
   layer,
-  deps: [ToolRegistry.node, FSUtil.node, Ripgrep.node, Location.node, PermissionV2.node],
+  deps: [ToolRegistry.node, FSUtil.node, Ripgrep.node, Location.node, LocationMutation.node, PermissionV2.node],
 })

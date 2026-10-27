@@ -311,7 +311,8 @@ export const updateGlobal = Effect.fn("Config.updateGlobal")(function* (patch: G
       applyEdits(text, modify(text, at, value, { formattingOptions: { insertSpaces: true, tabSize: 2 } })),
     text,
   )
-  yield* fs.writeWithDirs(target.file, next).pipe(Effect.orDie)
+  yield* fs.makeDirectory(path.dirname(target.file), { recursive: true }).pipe(Effect.orDie)
+  yield* fs.writeAtomic(target.file, next).pipe(Effect.orDie)
 })
 
 /** The settings `updateGlobal` writes, read back from the global config document. */

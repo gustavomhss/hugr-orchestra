@@ -1,1 +1,1 @@
-{"verdict": "fail", "reason": "stub: no context to inspect", "backend": "stub", "available": true}
+{"verdict": "fail", "reason": "stub: no context to inspect. The relay judge is not configured (backend \"stub\"): set relay.judge.backend to \"api\" and relay.judge.apiKey in the Orchestra config to evaluate judge rules.", "backend": "stub", "available": true}

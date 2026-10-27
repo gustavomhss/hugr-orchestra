@@ -20,7 +20,7 @@ The permission system exists as a UX feature to help users stay aware of what th
 
 ### Server Mode
 
-Server mode is opt-in only. When enabled, set `ORCHESTRA_SERVER_PASSWORD` to require HTTP Basic Auth. Without this, the server runs unauthenticated (with a warning). It is the end user's responsibility to secure the server - any functionality it provides is not a vulnerability.
+Server mode is opt-in only, and it always requires HTTP Basic Auth. `ORCHESTRA_SERVER_PASSWORD` sets that password; without it, `serve` uses the service password the daemon generates (32 random bytes) and saves in the state directory with mode 0600. The server removes `ORCHESTRA_SERVER_PASSWORD` and `ORCHESTRA_SERVER_USERNAME` from its own environment once it has read them, so processes it starts (MCP servers, language servers, terminals) cannot read them. `orchestra web --mdns` (or any non-loopback host) serves plain HTTP, so on a shared network the password travels unencrypted. Logs are written owner-only, and the desktop debug export redacts `auth_token` and `Authorization` values. It is the end user's responsibility to secure the server - any functionality it provides is not a vulnerability.
 
 ### Credentials at Rest
 

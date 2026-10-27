@@ -14,6 +14,7 @@ import { ClaudeHostOptions } from "../host/options"
 import { ClaudeCodeSDK } from "../sdk"
 import { ClaudeCodeTranscript } from "../transcript"
 import { ClaudeCodeAccountV2 } from "./account"
+import { ClaudeCodeCatalog } from "./catalog"
 
 export const ID = "claude-code"
 /** The legacy `session.metadata` key (`host/session.ts`), so legacy Claude-hosted sessions resume on V2. */
@@ -326,6 +327,8 @@ export const contribution: Host.Contribution = {
     // The app's Claude mode settings read the binary's sign-in and start its login through the server's account routes.
     [ClaudeCodeAccount.node, ClaudeCodeAccountV2.node],
   ],
+  // In Claude mode the model picker lists Anthropic's models even with no API key: Claude Code holds the login.
+  references: ClaudeCodeCatalog.layer,
 }
 
 type Tracker = {
@@ -456,11 +459,13 @@ function server(tools: ReadonlyArray<ToolDefinition>, callID: (name: string) => 
   mcp.instance.server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: tools.map((tool) => ({ name: tool.name, description: tool.description, inputSchema: { ...tool.inputSchema, type: "object" as const } })),
   }))
-  mcp.instance.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  mcp.instance.server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
     const tool = tools.find((item) => item.name === request.params.name)
     if (!tool) return { content: [{ type: "text" as const, text: `Orchestra tool ${request.params.name} is not available.` }], isError: true }
+    // A cancelled Claude turn aborts `extra.signal`; interrupting the run stops the Orchestra tool with it.
     const settlement = await Effect.runPromise(
       execute({ id: callID(tool.name), name: tool.name, input: request.params.arguments ?? {} }),
+      { signal: extra.signal },
     )
     return {
       content: [{ type: "text" as const, text: modelText(settlement.result) }],

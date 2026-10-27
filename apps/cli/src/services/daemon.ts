@@ -156,6 +156,7 @@ export const layer = Layer.effect(
           const daemon = spawn(process.execPath, [...(entrypoint ? [entrypoint] : []), ...args], {
             detached: true,
             stdio: "ignore",
+            windowsHide: true,
           })
           daemon.once("exit", (code, signal) => (child.exit = signal ? `signal=${signal}` : `code=${code}`))
           daemon.unref()

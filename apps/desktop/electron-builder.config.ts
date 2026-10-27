@@ -130,6 +130,15 @@ const getBase = (appId: string): Configuration => ({
   // Only prod embeds a feed (see getConfig). null (not omission) stops dev and beta builds from inferring a GitHub
   // feed from the git remote.
   publish: null,
+  // Electron fuses, flipped at pack time. The packaged app is never run as Node (the server is the bundled CLI binary,
+  // not this executable), takes no NODE_OPTIONS or --inspect, and loads app code only from app.asar (asar is on).
+  // Embedded asar integrity stays off: it needs per-platform signing order that cannot be checked without a release.
+  electronFuses: {
+    runAsNode: false,
+    enableNodeOptionsEnvironmentVariable: false,
+    enableNodeCliInspectArguments: false,
+    onlyLoadAppFromAsar: true,
+  },
   files: [
     "out/**/*",
     "resources/**/*",
@@ -186,6 +195,9 @@ const getBase = (appId: string): Configuration => ({
       to: "playbooks",
     },
     { from: "resources/cli", to: "cli" },
+    // The repository licence and notice ship in every installer, next to the app's own resources.
+    { from: path.join(rootDir, "LICENSE"), to: "LICENSE" },
+    { from: path.join(rootDir, "NOTICE"), to: "NOTICE" },
     // stage-claude.ts is the one writer for the executable, its receipt and the native package's required notices.
     {
       from: "resources/claude-code",

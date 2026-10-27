@@ -141,6 +141,10 @@ export const toCloneableAppDockEvent = (event: unknown): CloneableAppDockEvent =
     if (!hasExactKeys(payload, ["tabID", "generation"])) throw new Error("Invalid App Dock event")
     return { type: "tab-selected", payload: appDockEventIdentity(payload) }
   }
+  if (source.type === "tab-evicted") {
+    if (!hasExactKeys(payload, ["tabID", "generation"])) throw new Error("Invalid App Dock event")
+    return { type: "tab-evicted", payload: appDockEventIdentity(payload) }
+  }
   if (source.type === "tab-crashed") {
     if (!hasExactKeys(payload, ["identity", "reason"])) throw new Error("Invalid App Dock event")
     const identity = appDockEventIdentity(payload.identity)

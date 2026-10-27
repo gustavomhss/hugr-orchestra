@@ -38,7 +38,8 @@ export function Inbox(props: { onOpen: (key: string) => void; onClose: () => voi
     const snapshots = await Promise.allSettled(list.map((item) => api().get({ key: item.project.key }, { signal })))
     if (signal.aborted) return
     setStore("snapshots", reconcile(snapshots.flatMap((item) => (item.status === "fulfilled" ? [item.value] : []))))
-    setStore("failed", false)
+    // A project whose snapshot failed may hold open questions, so an empty inbox cannot read as "nothing waiting".
+    setStore("failed", snapshots.some((item) => item.status === "rejected"))
     const now = Date.now()
     const activity = await Promise.all(
       list.map(async (item) => {
@@ -159,7 +160,7 @@ export function Inbox(props: { onOpen: (key: string) => void; onClose: () => voi
       </Show>
       <div class="board-top board-inbox-body">
         <div class="board-inbox-list">
-          <Show when={store.failed && !store.snapshots}>
+          <Show when={store.failed}>
             <div class="mx-empty">
               <strong>{t("orchestra.board.listFailed")}</strong>
               <button type="button" class="mx-btn" onClick={() => void load()}>
@@ -170,7 +171,7 @@ export function Inbox(props: { onOpen: (key: string) => void; onClose: () => voi
           <Show when={!store.snapshots && !store.failed}>
             <p class="board-quiet board-loading">{t("orchestra.board.loading")}</p>
           </Show>
-          <Show when={store.snapshots && items().length === 0}>
+          <Show when={store.snapshots && !store.failed && items().length === 0}>
             <div class="mx-empty">
               <strong>{t("orchestra.board.inbox.clear")}</strong>
             </div>

@@ -248,7 +248,7 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.publish.budget": "retries per step: {{count}}",
   "orchestra.workflows.publish.acceptanceLabel": "Always added",
   "orchestra.workflows.publish.acceptance":
-    "Archie adds the required final checks, a package verification and an independent review, to every plan made from this workflow.",
+    "The upstream seat adds the required final checks, a package verification and an independent review, to every plan made from this workflow.",
   "orchestra.workflows.useInChat.prompt": "Use the published workflow “{{name}}” (workflow id: {{id}}) for: ",
   "orchestra.workflows.unpublish.title": "Unpublish {{name}}?",
   "orchestra.workflows.unpublish.body":
@@ -907,7 +907,7 @@ export const WORKFLOWS_COPY_BR: Record<keyof typeof WORKFLOWS_COPY, string> = {
   "orchestra.workflows.publish.budget": "novas tentativas por etapa: {{count}}",
   "orchestra.workflows.publish.acceptanceLabel": "Sempre adicionado",
   "orchestra.workflows.publish.acceptance":
-    "O Archie adiciona as verificações finais obrigatórias, uma verificação do pacote e uma revisão independente a todo plano feito a partir deste workflow.",
+    "O assento upstream adiciona as verificações finais obrigatórias, uma verificação do pacote e uma revisão independente a todo plano feito a partir deste workflow.",
   "orchestra.workflows.useInChat.prompt": "Use o workflow publicado “{{name}}” (id do workflow: {{id}}) para: ",
   "orchestra.workflows.unpublish.title": "Despublicar {{name}}?",
   "orchestra.workflows.unpublish.body":
@@ -1091,12 +1091,12 @@ export const WORKFLOWS_COPY_BR: Record<keyof typeof WORKFLOWS_COPY, string> = {
   "orchestra.workflows.group.work": "Trabalho",
   "orchestra.workflows.group.gates": "Gates",
   "orchestra.workflows.group.structure": "Estrutura",
-  "orchestra.workflows.type.start": "Start",
+  "orchestra.workflows.type.start": "Início",
   "orchestra.workflows.type.execute": "Etapa de agente",
   "orchestra.workflows.type.inject": "Fornecer contexto",
   "orchestra.workflows.type.review": "Revisão",
   "orchestra.workflows.type.human": "Aprovação humana",
-  "orchestra.workflows.type.gate": "Checkpoint",
+  "orchestra.workflows.type.gate": "Ponto de controle",
   "orchestra.workflows.type.phase": "Agrupar em fase",
   "orchestra.workflows.typeDesc.execute": "Um agente faz o trabalho. A etapa termina quando as verificações passam.",
   "orchestra.workflows.typeDesc.inject": "Entregue ao agente um arquivo ou uma nota antes da próxima etapa.",
@@ -1110,7 +1110,7 @@ export const WORKFLOWS_COPY_BR: Record<keyof typeof WORKFLOWS_COPY, string> = {
   "orchestra.workflows.newName.inject": "Fornecer contexto",
   "orchestra.workflows.newName.review": "Revisão",
   "orchestra.workflows.newName.human": "Aprovação humana",
-  "orchestra.workflows.newName.gate": "Checkpoint",
+  "orchestra.workflows.newName.gate": "Ponto de controle",
   "orchestra.workflows.newName.phase": "Nova fase",
 
   "orchestra.workflows.issue.loose": "{{name}} não está conectada à sequência.",

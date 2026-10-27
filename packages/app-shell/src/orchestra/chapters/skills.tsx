@@ -8,6 +8,7 @@ import { ClientError } from "@orchestra/client"
 import { useServerSDK } from "@/context/server-sdk"
 import { displayName } from "@/pages/layout/helpers"
 import { pathKey } from "@/utils/path-key"
+import { withServerReason } from "@/utils/server-errors"
 import type { ChapterPageProps } from "../chapter-route"
 import { errorStatus } from "./agents-roster"
 import { MxBadge, MxPage } from "./kit"
@@ -32,6 +33,7 @@ export default function Skills(props: ChapterPageProps) {
   const abort = new AbortController()
   const [state, setState] = createStore({
     status: "loading" as "loading" | "ready" | "error" | "unavailable",
+    cause: undefined as unknown,
     skills: [] as SkillEntry[],
     query: "",
     // A saved file the server has not listed yet (its configuration predates the skill folder).
@@ -60,7 +62,7 @@ export default function Skills(props: ChapterPageProps) {
   })
   const message = createMemo(() => {
     if (state.status === "loading") return language.t("orchestra.skills.loading")
-    if (state.status === "error") return language.t("orchestra.skills.error")
+    if (state.status === "error") return withServerReason(language.t("orchestra.skills.error"), state.cause)
     if (state.status === "unavailable") return language.t("orchestra.skills.unavailable")
     if (!state.skills.length) return language.t("orchestra.skills.empty")
     if (!filtered().length) return language.t("orchestra.skills.noMatches")
@@ -83,7 +85,7 @@ export default function Skills(props: ChapterPageProps) {
       if (abort.signal.aborted) return
       const cause = error instanceof Error ? error.cause : undefined
       const status = cause && typeof cause === "object" && "status" in cause ? cause.status : undefined
-      setState("status", status === 404 || status === 405 || status === 501 ? "unavailable" : "error")
+      setState({ status: status === 404 || status === 405 || status === 501 ? "unavailable" : "error", cause: error })
     })
   }
 

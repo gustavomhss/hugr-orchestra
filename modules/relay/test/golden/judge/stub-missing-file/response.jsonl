@@ -1,1 +1,1 @@
-{"verdict": "fail", "reason": "stub: RELAY_JUDGE_OK marker absent in absent.md", "backend": "stub", "available": true}
+{"verdict": "fail", "reason": "stub: RELAY_JUDGE_OK marker absent in absent.md. The relay judge is not configured (backend \"stub\"): set relay.judge.backend to \"api\" and relay.judge.apiKey in the Orchestra config to evaluate judge rules.", "backend": "stub", "available": true}

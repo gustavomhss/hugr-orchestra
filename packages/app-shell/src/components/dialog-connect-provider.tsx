@@ -300,6 +300,12 @@ function ProviderConnection(props: {
     timer.current = undefined
   })
 
+  // Releases the server's sign-in attempt (and the local port its listener holds); a finished attempt ignores it.
+  const cancelAttempt = (attemptID: string) =>
+    void serverSDK()
+      .api.integration.oauth.cancel({ integrationID: props.provider, attemptID, location: location() })
+      .catch(() => undefined)
+
   const provider = () => providers.all().get(props.provider) ?? { name: integration.data()?.name ?? props.provider }
   const fallback = createMemo<ConnectMethod[]>(() => [
     {
@@ -354,7 +360,7 @@ function ProviderConnection(props: {
           location: location(),
         })
         .then((x) => {
-          if (!alive.value) return
+          if (!alive.value) return cancelAttempt(x.data.attemptID)
           // Only a web link from the server becomes the authorization target.
           const url = authorizationURL(x.data.url)
           if (!url) {
@@ -747,6 +753,9 @@ function ProviderConnection(props: {
     const polling = { active: true }
     onCleanup(() => {
       polling.active = false
+      // Cancel, back and closing the dialog all end here; a completed attempt is already terminal and ignores this.
+      const attemptID = store.authorization?.attemptID
+      if (attemptID) cancelAttempt(attemptID)
       if (timer.current === undefined) return
       clearTimeout(timer.current)
       timer.current = undefined

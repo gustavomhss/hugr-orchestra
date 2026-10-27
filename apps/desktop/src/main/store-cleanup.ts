@@ -1,4 +1,5 @@
-import { readdir, readFile, rm, stat } from "node:fs/promises"
+import { readFileSync, rmSync, statSync } from "node:fs"
+import { readdir, readFile, stat } from "node:fs/promises"
 import { join } from "node:path"
 
 const EMPTY_STORE_MAX_BYTES = 128
@@ -51,12 +52,14 @@ export async function cleanupStoreFiles(userDataPath: string, now = Date.now()) 
     .slice(DRAFT_KEEP_RECENT)
     .forEach((candidate) => stale.add(candidate))
 
-  const deleted = await Promise.all(
-    [...stale].map(async (candidate) => {
-      await rm(candidate.path, { force: true })
-      return candidate.name
-    }),
-  )
+  // The scan above awaits, and a renderer store-set may rewrite a file meanwhile. Re-check and remove in one
+  // synchronous block so a file that changed since the scan is kept.
+  const deleted = [...stale].flatMap((candidate) => {
+    const current = statSync(candidate.path, { throwIfNoEntry: false })
+    if (!current?.isFile() || current.mtimeMs !== candidate.modified) return []
+    rmSync(candidate.path, { force: true })
+    return [candidate.name]
+  })
 
   return { scanned: candidates.length, deleted }
 }
@@ -65,11 +68,12 @@ export async function deleteStoreFileIfEmpty(userDataPath: string, name: string)
   if (!storeKind(name)) return false
 
   const file = join(userDataPath, name)
-  const stats = await stat(file).catch(() => undefined)
-  if (!stats?.isFile()) return false
-  if (!(await isEmptyStore(file, stats.size))) return false
+  // Check and remove without yielding: an await between them lets a store-set write land and then be deleted.
+  const stats = statSync(file, { throwIfNoEntry: false })
+  if (!stats?.isFile() || stats.size > EMPTY_STORE_MAX_BYTES) return false
+  if (!isEmptyContent(readFileSync(file, "utf8"))) return false
 
-  await rm(file, { force: true })
+  rmSync(file, { force: true })
   return true
 }
 
@@ -83,6 +87,10 @@ async function isEmptyStore(file: string, size: number) {
 
   const raw = await readFile(file, "utf8").catch(() => undefined)
   if (raw === undefined) return false
+  return isEmptyContent(raw)
+}
+
+function isEmptyContent(raw: string) {
   if (raw.trim() === "") return true
 
   try {

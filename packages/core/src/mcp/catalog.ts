@@ -31,8 +31,14 @@ export async function paginate<T, R extends { nextCursor?: string }>(
   throw new Error(`MCP list exceeded ${MAX_LIST_PAGES} pages`)
 }
 
+/** The server's tools, or undefined when listing fails (a list-changed refresh then keeps the previous set). */
 export function defs(client: Client, timeout?: number) {
   return listTools(client, timeout ?? DEFAULT_TIMEOUT).pipe(Effect.catch(() => Effect.void))
+}
+
+/** The server's tools; a listing failure stays a typed failure so the caller can report it. */
+export function tools(client: Client, timeout?: number) {
+  return listTools(client, timeout ?? DEFAULT_TIMEOUT)
 }
 
 export function fetch<T extends { name: string }>(

@@ -79,6 +79,7 @@ export type AppDockEvent =
     }
   | { type: "tab-opened" | "tab-opened-background"; payload: { tabID: string; generation: number; url: string } }
   | { type: "tab-selected"; payload: { tabID: string; generation: number } }
+  | { type: "tab-evicted"; payload: { tabID: string; generation: number } }
   | {
       type: "tab-crashed"
       payload: { identity: { tabID: string; generation: number }; reason: "crashed" | "killed" | "oom" }

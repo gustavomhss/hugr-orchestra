@@ -154,7 +154,17 @@ function Pick(props: { model: AtlasModel; unit: AtlasUnit; short: string }) {
       </div>
       <For each={briefing().adv.concat(briefing().inv).slice(0, 2)}>
         {(x) => (
-          <p class="at-pick-fact" onClick={() => atlas.go(atlasHref("fact", x.key))}>
+          <p
+            class="at-pick-fact"
+            role="link"
+            tabindex={0}
+            onClick={() => atlas.go(atlasHref("fact", x.key))}
+            onKeyDown={(event) => {
+              if (event.key !== "Enter" && event.key !== " ") return
+              event.preventDefault()
+              atlas.go(atlasHref("fact", x.key))
+            }}
+          >
             {language.t("orchestra.atlas.explore.quoted", {
               text: x.claim.length > 150 ? `${x.claim.slice(0, 150)}…` : x.claim,
             })}
