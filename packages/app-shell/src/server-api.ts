@@ -227,7 +227,7 @@ export type ServerApi = {
       list: (input?: ClientInput<"permissions", "listRequests">, requestOptions?: RequestOptions) => Promise<{ data: PermissionRequest[] }>
     }
     saved: {
-      list: (input?: ClientInput<"permissions", "listSaved">, requestOptions?: RequestOptions) => Promise<{ data: Array<{ id: string; name: string }> }>
+      list: (input?: ClientInput<"permissions", "listSaved">, requestOptions?: RequestOptions) => Promise<Array<{ id: string; projectID: string; action: string; resource: string }>>
       remove: (input: ClientInput<"permissions", "removeSaved">, requestOptions?: RequestOptions) => Promise<unknown>
     }
     create: (input: ClientInput<"permissions", "create">, requestOptions?: RequestOptions) => Promise<unknown>
