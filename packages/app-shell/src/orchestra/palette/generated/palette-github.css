@@ -117,7 +117,9 @@ html[data-orchestra-palette="github"][data-color-scheme] body[data-new-layout] [
   color: var(--orchestra-brand-descriptor);
 }
 @media (min-width: 768px) {
-  html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-new-layout] [data-slot="orchestra-theme-toggle"]:not(:hover) {
+  html[data-orchestra-palette="github"][data-color-scheme="light"]
+      body[data-new-layout]
+      :is([data-slot="orchestra-theme-toggle"], [data-slot="orchestra-caffeinate-toggle"]):not(:hover) {
     background: var(--orchestra-overlay-pressed);
   }
   html[data-orchestra-palette="github"][data-color-scheme] body[data-new-layout] .orchestra-shell {
@@ -362,17 +364,23 @@ html[data-orchestra-palette="github"][data-color-scheme] body[data-new-layout] [
   [data-orchestra-palette="github"] [data-slot="orchestra-titlebar-breadcrumb"] > :first-child {
     color: var(--orchestra-toolbar-brand);
   }
-  [data-orchestra-palette="github"] [data-slot="orchestra-theme-toggle"] {
+  [data-orchestra-palette="github"] [data-slot="orchestra-theme-toggle"],
+  [data-orchestra-palette="github"] [data-slot="orchestra-caffeinate-toggle"] {
     border: 0;
     background: transparent;
     color: var(--orchestra-toolbar-button);
   }
-  [data-orchestra-palette="github"] [data-slot="orchestra-theme-toggle"]:hover {
+  [data-orchestra-palette="github"] [data-slot="orchestra-theme-toggle"]:hover,
+  [data-orchestra-palette="github"] [data-slot="orchestra-caffeinate-toggle"]:hover {
     background: var(--orchestra-overlay-hover);
     color: var(--orchestra-body);
   }
-  [data-orchestra-palette="github"] [data-slot="orchestra-theme-toggle"]:focus-visible {
+  [data-orchestra-palette="github"] [data-slot="orchestra-theme-toggle"]:focus-visible,
+  [data-orchestra-palette="github"] [data-slot="orchestra-caffeinate-toggle"]:focus-visible {
     outline: 2px solid var(--orchestra-accent);
+  }
+  [data-orchestra-palette="github"] [data-slot="orchestra-caffeinate-toggle"][aria-checked="true"] {
+    color: var(--mx-bad);
   }
 }
 [data-orchestra-palette="github"] [data-slot="orchestra-model-logo"] {

@@ -4,6 +4,8 @@ export const SHELL_COPY = {
   "orchestra.shell.goHome": "Go home",
   "orchestra.shell.gettingStarted": "Getting started guide",
   "orchestra.shell.help": "Help",
+  "orchestra.shell.caffeinate.on": "Keep this computer awake",
+  "orchestra.shell.caffeinate.off": "Let this computer sleep",
   "orchestra.shell.server.invalid": "Enter a valid server URL.",
   "orchestra.shell.server.failed": "Could not connect. Check the server URL and credentials.",
   "orchestra.shell.server.lost": "Lost connection to the server. Retrying…",
@@ -58,6 +60,8 @@ export const SHELL_COPY = {
 }
 
 export const SHELL_COPY_BR: Record<keyof typeof SHELL_COPY, string> = {
+  "orchestra.shell.caffeinate.on": "Manter este computador acordado",
+  "orchestra.shell.caffeinate.off": "Deixar este computador dormir",
   "orchestra.shell.navigation": "Navegação",
   "orchestra.shell.goHome": "Ir para o início",
   "orchestra.shell.gettingStarted": "Guia de primeiros passos",

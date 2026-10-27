@@ -253,6 +253,9 @@ export type ElectronAPI = import("@orchestra/app/app-dock-linux").AppDockLinuxAP
     accelerator: string,
   ) => Promise<{ ok: true } | { ok: false; reason: "conflict" | "invalid" }>
   resetLiveHotkeys: () => Promise<LiveHotkey[]>
+  getCaffeinate: () => Promise<boolean>
+  setCaffeinate: (enabled: boolean) => Promise<void>
+  onCaffeinateChanged: (cb: (enabled: boolean) => void) => () => void
   getPinchZoomEnabled: () => Promise<boolean>
   setPinchZoomEnabled: (enabled: boolean) => Promise<void>
   onPinchZoomEnabledChanged: (cb: (enabled: boolean) => void) => () => void

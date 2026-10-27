@@ -31,6 +31,7 @@ import { initializationData, recoverRemoteServer } from "./initialization"
 import { DesktopFirstLaunchOnboarding } from "./onboarding"
 import { resetZoom, setPinchZoomEnabled, webviewZoom, zoomIn, zoomOut } from "./webview-zoom"
 import { windowFullscreen } from "./window-fullscreen"
+import { caffeinate, setCaffeinate } from "./caffeinate"
 import { createResponseDownloader } from "./response-download"
 import { availableStartupServer, readyWslConnections } from "./wsl/connections"
 import "./styles.css"
@@ -291,6 +292,10 @@ const createPlatform = (windowState: DesktopWindowState): Platform => {
     webviewZoom,
 
     windowFullscreen,
+
+    caffeinate,
+
+    setCaffeinate,
     setTitlebarFrame: (frame) => window.api.setTitlebarFrame(frame),
 
     getPinchZoomEnabled: () => window.api.getPinchZoomEnabled(),
