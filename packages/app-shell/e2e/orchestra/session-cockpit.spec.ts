@@ -174,7 +174,7 @@ test("switching panes hides and shows the same native tab, and its bounds follow
   await pane(dock, "Files").click()
   await railTab(page, "tasks").click()
   await expect(dock).toHaveCount(0)
-  await expect(row).toHaveText("DockPage /aWindow · Page ready")
+  await expect(row).toHaveText("MCP DockPage /aWindow · Page ready")
   await row.click()
   await expect(railTab(page, "apps")).toHaveAttribute("aria-selected", "true")
   await expect(pane(dock, "Browser")).toHaveAttribute("aria-selected", "true")
@@ -597,7 +597,7 @@ test.describe("Dock tab menu at the cockpit's geometry", () => {
 
       await page
         .locator('[data-component="orchestra-sidebar"]')
-        .getByRole("button", { name: "Dock", exact: true })
+        .getByRole("button", { name: "MCP Dock", exact: true })
         .click()
       await expect(page).toHaveURL(/\/orchestra\/dock$/)
       const dock = page.locator(".orchestra-dock")
