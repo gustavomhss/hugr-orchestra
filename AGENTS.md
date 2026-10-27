@@ -157,7 +157,6 @@ The release carries only what someone who installs and uses Orchestra needs. Mat
 
 - Avoid mocks as much as possible, you shouldn't be using globalThis.\* at all unless it's the only option.
 - Test actual implementation, do not duplicate logic into tests
-- A test that cannot run on this platform or host uses `test.skipIf(condition)` (in core, `it.effect.skipIf` / `it.live.skipIf` from `packages/core/test/lib/effect.ts`), never an early `return` that reports a pass. Polls carry a deadline, and tests write under a temp home, never the real one.
 - Tests run on GitHub Actions, never on this machine. From the repository root: `bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both]`, for example `bun run test:ci maestro test/roster.test.ts`.
   - Named test files run exactly and in the order given. Any other argument, such as a directory, is a Bun substring filter that may match several files, which Bun runs in its own order.
   - It uploads a snapshot of your working tree to a temporary `ci-run-*` branch, waits for the `test-ci` workflow, prints the result and exits non-zero when tests fail. No commit is needed; untracked files that are not gitignored are included, so keep secrets out of the tree.
