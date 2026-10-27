@@ -21,7 +21,7 @@ export function dockCard(page: Page) {
 }
 
 export function pane(dock: Locator, name: string) {
-  return dock.getByRole("tablist", { name: "Dock panes" }).getByRole("tab", { name, exact: true })
+  return dock.getByRole("tablist", { name: "MCP Dock panes" }).getByRole("tab", { name, exact: true })
 }
 
 // A rail tab by its value, so the locator holds in every locale.

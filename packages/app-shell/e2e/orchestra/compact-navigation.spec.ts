@@ -146,7 +146,7 @@ test("production builds show no WIP mark on any chapter page", async ({ page }) 
     ["Workspaces", "workspaces"],
     ["Skills", "skills"],
     [".env", "env"],
-    ["Dock", "dock"],
+    ["MCP Dock", "dock"],
   ] as const) {
     await sidebar.getByRole("button", { name, exact: true }).click()
     const panel = page.locator('[data-component="orchestra-chapter"]')

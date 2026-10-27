@@ -597,7 +597,7 @@ test.describe("Dock tab menu at the cockpit's geometry", () => {
 
       await page
         .locator('[data-component="orchestra-sidebar"]')
-        .getByRole("button", { name: "Dock", exact: true })
+        .getByRole("button", { name: "MCP Dock", exact: true })
         .click()
       await expect(page).toHaveURL(/\/orchestra\/dock$/)
       const dock = page.locator(".orchestra-dock")

@@ -223,7 +223,7 @@ test("loading, failure and retry are explicit", async ({ page }) => {
   await expect(page.getByRole("button", { name: "+ New tab", exact: true })).toBeDisabled()
   await page.evaluate(() => (window as unknown as { __dock: DockFake }).__dock.release.manifest?.())
   const failed = area.getByRole("alert")
-  await expect(failed.locator("strong")).toHaveText("Could not load the Dock.")
+  await expect(failed.locator("strong")).toHaveText("Could not load the MCP Dock.")
   await expect(page.locator(".orchestra-dock .zen-error")).toHaveText("Manifest unavailable")
   await expect(area.getByRole("status")).toHaveCount(0)
   await page.evaluate(() => {
@@ -268,13 +268,13 @@ async function nav(page: Page, name: string) {
 }
 
 async function openDock(page: Page) {
-  await nav(page, "Dock")
+  await nav(page, "MCP Dock")
   await expect(page).toHaveURL(/\/orchestra\/dock$/)
   // Like the mock, the page is the browser itself: its title is for assistive technology only, so it
   // stays in the accessibility tree but paints nothing.
-  const region = page.getByRole("region", { name: "Dock", exact: true })
+  const region = page.getByRole("region", { name: "MCP Dock", exact: true })
   await expect(region).toBeVisible()
-  const heading = region.getByRole("heading", { name: "Dock", exact: true, level: 1 })
+  const heading = region.getByRole("heading", { name: "MCP Dock", exact: true, level: 1 })
   await expect(heading).toHaveCount(1)
   const box = await heading.boundingBox()
   expect(box === null || (box.width <= 1 && box.height <= 1)).toBe(true)

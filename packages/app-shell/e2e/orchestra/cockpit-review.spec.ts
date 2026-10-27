@@ -61,7 +61,7 @@ test("compact Dock ignores the full Dock collapsed preference across reentry", a
   await setup(page)
   await openCockpit(page)
   const nav = page.locator('[data-component="orchestra-sidebar"]')
-  await nav.getByRole("button", { name: "Dock", exact: true }).click()
+  await nav.getByRole("button", { name: "MCP Dock", exact: true }).click()
   const full = page.locator(".zen-browser-shell:not(.is-compact)")
   await expect(full.getByRole("button", { name: "Open", exact: true })).toBeEnabled()
   await full.getByRole("textbox", { name: "Address" }).fill("https://example.com/a")
@@ -78,13 +78,13 @@ test("compact Dock ignores the full Dock collapsed preference across reentry", a
   await expect(compact.locator(".zen-tab-title")).toBeVisible()
   await expect(compact.getByRole("button", { name: "+ New tab", exact: true })).toBeVisible()
   await expect(compact).not.toHaveClass(/is-sidebar-collapsed/)
-  const dock = page.getByRole("region", { name: "Dock", exact: true })
+  const dock = page.getByRole("region", { name: "MCP Dock", exact: true })
   await dock.getByRole("tab", { name: "Files", exact: true }).click()
   await dock.getByRole("tab", { name: "Browser", exact: true }).click()
   await expect(compact.locator(".zen-tab-title")).toBeVisible()
   await expect(compact.getByRole("button", { name: "+ New tab", exact: true })).toBeEnabled()
 
-  await nav.getByRole("button", { name: "Dock", exact: true }).click()
+  await nav.getByRole("button", { name: "MCP Dock", exact: true }).click()
   await expect(full).toHaveClass(/is-sidebar-collapsed/)
   await expect(full.getByRole("button", { name: "Expand sidebar", exact: true })).toBeVisible()
   await expect(full.locator(".zen-tab-title")).toBeHidden()
@@ -97,7 +97,7 @@ for (const scheme of ["dark", "light"] as const) {
   test(`compact Dock ${scheme} uses Orchestra materials for selected, input and hover states`, async ({ page }) => {
     await setup(page, scheme)
     await openCockpit(page)
-    const dock = page.getByRole("region", { name: "Dock", exact: true })
+    const dock = page.getByRole("region", { name: "MCP Dock", exact: true })
     await expect(dock.getByRole("status")).toHaveText("No tabs open. Enter an address to start browsing.")
     const address = dock.getByRole("textbox", { name: "Address" })
     await address.fill("https://example.com/materials")
@@ -106,7 +106,7 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(selected.locator(".zen-tab-title")).toHaveText("Page /materials")
     await expectMaterial(selected, "--orchestra-file-active")
     await expectMaterial(address, "--orchestra-evidence-background")
-    await expectMaterial(dock.getByRole("tablist", { name: "Dock panes" }), "--orchestra-context-background")
+    await expectMaterial(dock.getByRole("tablist", { name: "MCP Dock panes" }), "--orchestra-context-background")
     await expectMaterial(dock.getByRole("tab", { name: "Browser", exact: true }), "--orchestra-file-active")
     const reload = dock.getByRole("button", { name: "Reload", exact: true })
     const bounds = await reload.boundingBox()
@@ -159,7 +159,7 @@ async function openTasks(page: Page) {
 async function openCockpit(page: Page) {
   await openTasks(page)
   await railTab(page, "apps").click()
-  await expect(page.getByRole("region", { name: "Dock", exact: true })).toBeVisible()
+  await expect(page.getByRole("region", { name: "MCP Dock", exact: true })).toBeVisible()
   await expect(page.locator('[data-component="tasks-panel"]')).toHaveCount(0)
 }
 
