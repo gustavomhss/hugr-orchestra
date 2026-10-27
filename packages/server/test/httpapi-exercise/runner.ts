@@ -1,6 +1,8 @@
 import { Cause, Duration, Effect } from "effect"
 import { tmpdir } from "@orchestra/core/test/fixture/tmpdir"
 import { $ } from "bun"
+import path from "path"
+import { exerciseConfigDirectory } from "./environment"
 import { basic, call, callAuthProbe, capture, locate, makeApp, type ExerciseApp } from "./backend"
 import { isRecord } from "./assertions"
 import type { ActiveScenario, Options, ProjectOptions, Result, Scenario, ScenarioContext, SeededContext } from "./types"
@@ -86,6 +88,9 @@ async function projectDirectory(project: ProjectOptions) {
     await $`git commit -q --allow-empty -m root`.cwd(dir.path).quiet()
   }
   if (project.config) await Bun.write(`${dir.path}/orchestra.json`, JSON.stringify(project.config))
+  // Only the user's own config can trust a project; Scenarios run one at a time, so each trusted one replaces it.
+  if (project.trusted)
+    await Bun.write(path.join(exerciseConfigDirectory, "orchestra.json"), JSON.stringify({ trusted_projects: [dir.path] }))
   await project.init?.(dir.path)
   return dir
 }

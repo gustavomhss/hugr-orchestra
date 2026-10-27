@@ -231,6 +231,7 @@ export const dict = {
   "appDock.browser.bookmark.add": "Add bookmark",
   "appDock.browser.bookmark.remove": "Remove bookmark",
   "appDock.browser.address": "Address",
+  "appDock.browser.address.placeholder": "Search or enter a web address",
   "appDock.browser.bookmarks": "Bookmarks",
   "appDock.browser.history": "History",
   "appDock.browser.find.label": "Find in page",

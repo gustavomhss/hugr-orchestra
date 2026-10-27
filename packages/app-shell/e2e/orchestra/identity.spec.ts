@@ -82,9 +82,9 @@ for (const scheme of ["dark", "light"] as const) {
       if (mutation === "workspace-gap")
         await sidebar.evaluate((element) => element.parentElement!.style.setProperty("gap", "7px", "important"))
       if (mutation === "glass")
-        await active.evaluate((element) =>
-          (element as HTMLElement).style.setProperty("backdrop-filter", "none", "important"),
-        )
+        await tabs
+          .locator("xpath=preceding-sibling::*[1][@data-glass-plate]")
+          .evaluate((element) => (element as HTMLElement).style.setProperty("backdrop-filter", "none", "important"))
 
       const sidebarBox = await readBox(sidebar)
       const toolbarBox = await readBox(toolbar)
@@ -116,7 +116,7 @@ for (const scheme of ["dark", "light"] as const) {
         "session strip spans remaining workspace",
       )
       for (const locator of [sidebar, tabs]) expectGlass(await readPlatedGlass(locator), glass[scheme])
-      expectGlass(await readGlass(active), glass[scheme])
+      await expectFlatTab(active)
       await expect(sidebar).toHaveCSS("border-radius", "10px")
       await expect(tabs).toHaveCSS("border-radius", "10px")
 
@@ -259,7 +259,8 @@ test("graphite: a palette recolors the glass and keeps the frozen geometry, radi
   for (const locator of [sidebar, toolbar, tabs, active]) await expect(locator).toBeVisible()
   expectPixels((await readBox(sidebar)).width, 230, "sidebar width")
   expectPixels((await readBox(toolbar)).height, 45, "toolbar height")
-  for (const value of [await readPlatedGlass(sidebar), await readPlatedGlass(tabs), await readGlass(active)]) {
+  await expectFlatTab(active)
+  for (const value of [await readPlatedGlass(sidebar), await readPlatedGlass(tabs)]) {
     expect(value.backdropFilter, "palette keeps the glass blur").toBe(glass.dark.backdropFilter)
     // The palette keeps the material layers (grain, sheen) and tints the base gradient beneath them.
     expect(value.backgroundImage.startsWith(`${grain}, radial-gradient(`), "palette keeps the glass grain and sheen").toBe(true)
@@ -387,6 +388,13 @@ async function readPlatedGlass(locator: Locator) {
   const glass = await readGlass(locator)
   expect(glass.backdropFilter, "plated glass keeps a no-op backdrop root").toBe("brightness(1)")
   return { ...glass, backdropFilter: (await readGlass(plate)).backdropFilter }
+}
+
+// The strip is already glass, so the active tab is a fill step and a hairline, never a second blur plate (#1037).
+async function expectFlatTab(active: Locator) {
+  const tab = await readGlass(active)
+  expect(tab.backdropFilter, "active tab draws no blur of its own").toBe("none")
+  expect(tab.boxShadow, "active tab draws no glass shadow").toBe("none")
 }
 
 function expectGlass(actual: Awaited<ReturnType<typeof readGlass>>, expected: Awaited<ReturnType<typeof readGlass>>) {

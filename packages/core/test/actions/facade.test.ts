@@ -19,7 +19,7 @@ it.live("non-Git Actions constructor boots without Git or provider CLI; requeste
     expect(Omni.snapshot().spawns).toBe(before)
     expect(yield* f.fs.readFileString(path.join(f.directory, githubPath))).toBe(f.text.github)
     expect(yield* f.database.db.select().from(ActionsOperationTable).all()).toEqual([])
-    yield* fault(defaults.bindings.list(), "invalid_input")
+    yield* fault(defaults.bindings.list(), "not_found")
     expect(Omni.snapshot().spawns).toBe(before + 1)
     const missing = { id: Actions.BindingID.make("ab_missing"), revision: 1 }
     yield* Effect.forEach(
@@ -34,7 +34,7 @@ it.live("non-Git Actions constructor boots without Git or provider CLI; requeste
         },
         Actions.OperationID.make("aop_missing"),
       ),
-      (effect) => fault(effect, "invalid_input"),
+      (effect) => fault(effect, "not_found"),
     )
     expect(f.resolutions).toEqual([])
     expect(f.requests).toEqual([])

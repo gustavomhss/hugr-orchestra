@@ -22,7 +22,8 @@ describe("FSUtil", () => {
         yield* fs.writeJson(file, { a: 1 }, 0o600)
         expect(yield* fs.readJson(file)).toEqual({ a: 1 })
         expect(yield* filesys.readDirectory(tmp)).toEqual(["auth.json"])
-        expect((yield* filesys.stat(file)).mode & 0o777).toBe(0o600)
+        // Windows has no POSIX permission bits.
+        if (process.platform !== "win32") expect((yield* filesys.stat(file)).mode & 0o777).toBe(0o600)
       }),
     )
   })

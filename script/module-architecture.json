@@ -243,7 +243,7 @@
         "config": {
           "kind": "platform",
           "entry": "src/config.ts",
-          "patterns": ["src/config/", "src/config.ts", "src/behavior.ts", "src/policy.ts", "src/flag/"]
+          "patterns": ["src/config/", "src/config.ts", "src/behavior.ts", "src/policy.ts", "src/flag/", "src/tui-config-files.ts"]
         },
         "permission": {
           "kind": "platform",
