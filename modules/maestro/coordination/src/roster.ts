@@ -76,6 +76,8 @@ export const baseProfiles = Object.freeze({
     websearch: "allow",
     webfetch: "allow",
     live_look: "allow",
+    meeting_recall: "allow",
+    meeting_commitments: "allow",
     team_message: "allow",
     external_directory: Object.freeze({ "*": "deny", [path.join(TRUNCATION_DIR, "*")]: "allow" } as const),
   } as const),

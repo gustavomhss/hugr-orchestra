@@ -5,6 +5,7 @@ import { Meeting } from "@orchestra/schema/meeting"
 import { makeLocationNode } from "../effect/app-node"
 import { SystemContext } from "../system-context/index"
 import { SessionMeeting } from "./meeting"
+import { MeetingBriefing } from "./meeting-briefing"
 import { SessionSchema } from "./schema"
 
 const Value = Schema.Struct({
@@ -25,6 +26,7 @@ const layer = Layer.effect(
   Service,
   Effect.gen(function* () {
     const meetings = yield* SessionMeeting.Service
+    const briefing = yield* MeetingBriefing.Service
 
     return Service.of({
       load: Effect.fn("MeetingContext.load")(function* (sessionID: SessionSchema.ID) {
@@ -36,7 +38,7 @@ const layer = Layer.effect(
           segments: detail.segments.map((segment) => ({ id: segment.id, track: segment.track, text: segment.text })),
         }
         // The transcript is untrusted data: it is what others said, never instructions to follow.
-        return SystemContext.make({
+        const transcript = SystemContext.make({
           key: SystemContext.Key.make("live/meeting"),
           codec: Schema.toCodecJson(Value),
           load: Effect.succeed(value),
@@ -55,9 +57,10 @@ const layer = Layer.effect(
           },
           removed: () => "The live meeting ended.",
         })
+        return SystemContext.combine([transcript, yield* briefing.load(sessionID)])
       }),
     })
   }),
 )
 
-export const node = makeLocationNode({ service: Service, layer, deps: [SessionMeeting.node] })
+export const node = makeLocationNode({ service: Service, layer, deps: [SessionMeeting.node, MeetingBriefing.node] })
