@@ -514,7 +514,7 @@ describe("module-boundary gate", () => {
 
   test("R14 keeps a package to its importAllow prefixes for sources, # imports and runtime dependencies", () => {
     const root = fixture((tree) => {
-      tree.architecture.packages.relay = spec("module", { platformLibrary: true, importAllow: ["@fx/schema", "bun:", "node:"] })
+      Object.assign(tree.architecture.packages.relay, { importAllow: ["@fx/schema", "bun:", "node:"] })
       tree.files["modules/relay/package.json"] = json({
         name: "@fx/relay",
         exports: { ".": "./src/index.ts" },
