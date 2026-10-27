@@ -63,9 +63,23 @@ export const MeetingHandler = HttpApiBuilder.group(Api, "server.meeting", (handl
           }),
         ),
       )
-      // The memory store behind these is not built yet; the routes are frozen so the screens can be built first.
-      .handle("meeting.confirm", () => unavailable)
-      .handle("meeting.commitment", () => unavailable)
+      .handle("meeting.confirm", (ctx) =>
+        response(
+          Effect.gen(function* () {
+            const meeting = yield* SessionMeeting.Service
+            return yield* meeting.confirm(ctx.payload).pipe(Effect.mapError(apiError))
+          }),
+        ),
+      )
+      .handle("meeting.commitment", (ctx) =>
+        response(
+          Effect.gen(function* () {
+            const meeting = yield* SessionMeeting.Service
+            return yield* meeting.commitment(ctx.payload).pipe(Effect.mapError(apiError))
+          }),
+        ),
+      )
+      // Handoff lands with the Maestro handoff package.
       .handle("meeting.handoff", () => unavailable),
   ),
 )

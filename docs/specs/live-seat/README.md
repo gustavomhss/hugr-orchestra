@@ -203,6 +203,16 @@ The loop lives in `apps/desktop/src/main/live-loop.ts`; it departs from the desi
 - **Start entry and key settings.** The preload exposes `startLiveMeeting`, `stopLiveMeeting`, `getLiveMeetingRunning`, `hasLiveTranscriptionKey` and `setLiveTranscriptionKey`; the screens that call them belong to the Interface session.
 - **Latency.** Every answer's time to first text is written to the meeting's transport log.
 
+### Package C as built (memory store)
+
+Code: `packages/core/src/session/meeting-memory.sql.ts` (tables), `meeting-memory.ts` (card, summaries, list), `meeting-verdict.ts` (confirm, commitment, delete); `meeting.ts` wires them into `SessionMeeting`. Migration `20261026232319_meeting_memory`.
+
+- **Tables.** `meeting` gains `retention`, `consent`, `card_status`, `card_error` and `card_summary`. New: `meeting_person` (`aliases` JSON, `merged_into`), `meeting_item` (one table for decisions, commitments, questions and suggestions) and `meeting_proposal` (people the consolidation proposes, with the owner's verdict).
+- **Revisions.** `meeting_item` is keyed by `(id, revision)`. A verdict or a commitment state change inserts the next revision; reads take each id's latest. There is no event table. A dismissed item leaves the card and stays in memory.
+- **People.** A merge inserts a person row whose `merged_into` points at the target and never rewrites the target; clearing `merged_into` undoes it. Nothing merges on its own. Items store a person id, `"me"` or `"unknown:N"` and resolve names on read.
+- **Privacy.** Local only, unsealed, no project column. `meeting.session_id` is nullable and set to null when the Session is deleted, so a meeting survives it; only deleting the meeting erases it. Search is plain SQL `LIKE` over titles and item text, with no FTS.
+- **Limits.** The card stays `pending` and empty until consolidation (package D) writes it. `answers` is 0 because the record does not store the seat's answers yet. A meeting whose Session was deleted reports the placeholder session id `ses_detached` in `Info`, since the frozen type has no empty case. Deleting a meeting removes its items and proposals; person rows are the user's address book and stay. The list `limit` is capped at 200. Handoff still answers `unavailable`. The meeting routes do not refuse non-loopback requests: the server has no check to reuse.
+
 ### Screens as built
 
 The chapter lives in `packages/app-shell/src/orchestra/chapters/flight-engineer/` at `/orchestra/flight-engineer` and shows only in the desktop app.

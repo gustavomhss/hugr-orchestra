@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "00e3e536-e026-4eef-ab22-55ee8f7ed937",
+  "id": "0f82e8b1-5524-40a1-ba69-c051d40b74a5",
   "prevIds": [
-    "4c48c7d7-dd07-4923-97b6-ebebb0895f79"
+    "00e3e536-e026-4eef-ab22-55ee8f7ed937"
   ],
   "ddl": [
     {
@@ -16,6 +16,18 @@
     },
     {
       "name": "project_checkpoint",
+      "entityType": "tables"
+    },
+    {
+      "name": "meeting_item",
+      "entityType": "tables"
+    },
+    {
+      "name": "meeting_person",
+      "entityType": "tables"
+    },
+    {
+      "name": "meeting_proposal",
       "entityType": "tables"
     },
     {
@@ -394,6 +406,256 @@
       "generated": null,
       "name": "id",
       "entityType": "columns",
+      "table": "meeting_item"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "revision",
+      "entityType": "columns",
+      "table": "meeting_item"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "meeting_id",
+      "entityType": "columns",
+      "table": "meeting_item"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "kind",
+      "entityType": "columns",
+      "table": "meeting_item"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "text",
+      "entityType": "columns",
+      "table": "meeting_item"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "''",
+      "generated": null,
+      "name": "quote",
+      "entityType": "columns",
+      "table": "meeting_item"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "asserter",
+      "entityType": "columns",
+      "table": "meeting_item"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "start_ms",
+      "entityType": "columns",
+      "table": "meeting_item"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "'claimed'",
+      "generated": null,
+      "name": "status",
+      "entityType": "columns",
+      "table": "meeting_item"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "false",
+      "generated": null,
+      "name": "sent_to_maestro",
+      "entityType": "columns",
+      "table": "meeting_item"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "owner",
+      "entityType": "columns",
+      "table": "meeting_item"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "counterparty",
+      "entityType": "columns",
+      "table": "meeting_item"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "due",
+      "entityType": "columns",
+      "table": "meeting_item"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "state",
+      "entityType": "columns",
+      "table": "meeting_item"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "for",
+      "entityType": "columns",
+      "table": "meeting_item"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "meeting_item"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "meeting_person"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "name",
+      "entityType": "columns",
+      "table": "meeting_person"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "'[]'",
+      "generated": null,
+      "name": "aliases",
+      "entityType": "columns",
+      "table": "meeting_person"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "merged_into",
+      "entityType": "columns",
+      "table": "meeting_person"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "meeting_proposal"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "meeting_id",
+      "entityType": "columns",
+      "table": "meeting_proposal"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "name",
+      "entityType": "columns",
+      "table": "meeting_proposal"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "merge_with",
+      "entityType": "columns",
+      "table": "meeting_proposal"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "verdict",
+      "entityType": "columns",
+      "table": "meeting_proposal"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
       "table": "meeting_segment"
     },
     {
@@ -458,7 +720,7 @@
     },
     {
       "type": "text",
-      "notNull": true,
+      "notNull": false,
       "autoincrement": false,
       "default": null,
       "generated": null,
@@ -493,6 +755,56 @@
       "default": null,
       "generated": null,
       "name": "time_ended",
+      "entityType": "columns",
+      "table": "meeting"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "'kept'",
+      "generated": null,
+      "name": "retention",
+      "entityType": "columns",
+      "table": "meeting"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "'unknown'",
+      "generated": null,
+      "name": "consent",
+      "entityType": "columns",
+      "table": "meeting"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "'pending'",
+      "generated": null,
+      "name": "card_status",
+      "entityType": "columns",
+      "table": "meeting"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "card_error",
+      "entityType": "columns",
+      "table": "meeting"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "''",
+      "generated": null,
+      "name": "card_summary",
       "entityType": "columns",
       "table": "meeting"
     },
@@ -4757,6 +5069,66 @@
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "nameExplicit": false,
+      "name": "fk_meeting_item_meeting_id_meeting_id_fk",
+      "entityType": "fks",
+      "table": "meeting_item"
+    },
+    {
+      "columns": [
+        "merged_into"
+      ],
+      "tableTo": "meeting_person",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "nameExplicit": false,
+      "name": "fk_meeting_person_merged_into_meeting_person_id_fk",
+      "entityType": "fks",
+      "table": "meeting_person"
+    },
+    {
+      "columns": [
+        "meeting_id"
+      ],
+      "tableTo": "meeting",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_meeting_proposal_meeting_id_meeting_id_fk",
+      "entityType": "fks",
+      "table": "meeting_proposal"
+    },
+    {
+      "columns": [
+        "merge_with"
+      ],
+      "tableTo": "meeting_person",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "nameExplicit": false,
+      "name": "fk_meeting_proposal_merge_with_meeting_person_id_fk",
+      "entityType": "fks",
+      "table": "meeting_proposal"
+    },
+    {
+      "columns": [
+        "meeting_id"
+      ],
+      "tableTo": "meeting",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
       "name": "fk_meeting_segment_meeting_id_meeting_id_fk",
       "entityType": "fks",
       "table": "meeting_segment"
@@ -4770,7 +5142,7 @@
         "id"
       ],
       "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
+      "onDelete": "SET NULL",
       "nameExplicit": false,
       "name": "fk_meeting_session_id_session_id_fk",
       "entityType": "fks",
@@ -5397,6 +5769,16 @@
     },
     {
       "columns": [
+        "id",
+        "revision"
+      ],
+      "nameExplicit": false,
+      "name": "meeting_item_pk",
+      "entityType": "pks",
+      "table": "meeting_item"
+    },
+    {
+      "columns": [
         "meeting_id",
         "id"
       ],
@@ -5513,6 +5895,24 @@
       "nameExplicit": false,
       "name": "project_checkpoint_pk",
       "table": "project_checkpoint",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "meeting_person_pk",
+      "table": "meeting_person",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "meeting_proposal_pk",
+      "table": "meeting_proposal",
       "entityType": "pks"
     },
     {
@@ -5833,6 +6233,34 @@
       "name": "project_checkpoint_project_time_id_idx",
       "entityType": "indexes",
       "table": "project_checkpoint"
+    },
+    {
+      "columns": [
+        {
+          "value": "meeting_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "meeting_item_meeting_idx",
+      "entityType": "indexes",
+      "table": "meeting_item"
+    },
+    {
+      "columns": [
+        {
+          "value": "meeting_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "meeting_proposal_meeting_idx",
+      "entityType": "indexes",
+      "table": "meeting_proposal"
     },
     {
       "columns": [
