@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { BACKEND_DEFAULT_LABEL, UPSTREAM_DEFAULT_LABEL, createRoster, lookupRosterMember, roster } from "@orchestra/maestro/roster"
+import { BACKEND_DEFAULT_LABEL, UPSTREAM_DEFAULT_LABEL, createRoster, lookupRosterMember, nativeProfiles, roster } from "@orchestra/maestro/roster"
 
 describe("Maestro roster", () => {
   test("declares exact ten contract seats in deterministic order", () => {
@@ -165,5 +165,17 @@ describe("Maestro roster", () => {
     expect(lookupRosterMember("archie", renamed)).toEqual({ status: "FOUND", member: renamed[0] })
     expect(renamed[0]?.nativeProfile).toBe("upstream")
     expect(lookupRosterMember("configured-planner", renamed)).toEqual({ status: "HOLD", reason: "unknown-member-id" })
+  })
+
+  test("only the live seat holds the meeting memory tools", () => {
+    const holders = (tool: string) =>
+      Object.entries(nativeProfiles)
+        .filter(([, profile]) => profile[tool] === "allow")
+        .map(([id]) => id)
+        .toSorted()
+
+    expect(holders("meeting_recall")).toEqual(["direct", "live"])
+    expect(holders("meeting_commitments")).toEqual(["direct", "live"])
+    expect(holders("live_look")).toEqual(["direct", "live"])
   })
 })

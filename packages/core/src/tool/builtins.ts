@@ -10,6 +10,7 @@ import { GlobTool } from "./glob"
 import { GrepTool } from "./grep"
 import { LeanRecallTool } from "./lean-recall"
 import { LiveLookTool } from "./live-look"
+import { MeetingRecallTool } from "./meeting-recall"
 import { QuestionTool } from "./question"
 import { ReadTool } from "./read"
 import { SkillTool } from "./skill"
@@ -47,6 +48,7 @@ export const node = makeLocationNode({
     GrepTool.node,
     LeanRecallTool.node,
     LiveLookTool.node,
+    MeetingRecallTool.node,
     QuestionTool.node,
     ReadTool.node,
     SkillTool.node,

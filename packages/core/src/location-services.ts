@@ -37,6 +37,8 @@ import { SessionCompaction } from "./session/compaction"
 import * as SessionRunnerLLM from "./session/runner/llm"
 import { SessionRunnerModel } from "./session/runner/model"
 import { SessionMeeting } from "./session/meeting"
+import { MeetingBriefing } from "./session/meeting-briefing"
+import { MeetingConsolidation } from "./session/meeting-consolidation"
 import { MeetingContext } from "./session/meeting-context"
 import { MeetingHandoff } from "./session/meeting-handoff"
 import { SessionTodo } from "./session/todo"
@@ -89,6 +91,7 @@ export const locationServices = LayerNode.group([
   ReferenceGuidance.node,
   SessionTodo.node,
   SessionMeeting.node,
+  MeetingBriefing.node,
   MeetingContext.node,
   MeetingHandoff.node,
   QuestionV2.node,
@@ -104,6 +107,7 @@ export const locationServices = LayerNode.group([
   TaskGovernance.node,
   SessionCompaction.node,
   SessionRunnerLLM.node,
+  MeetingConsolidation.node,
 ])
 
 export type LocationServices = LayerNode.Output<typeof locationServices>
