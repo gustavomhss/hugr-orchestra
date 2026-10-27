@@ -710,7 +710,9 @@ async function child() {
     const hidden = await tickerSample()
     if (!hidden) throw new Error("ticker disappeared while hidden")
     check(
-      hidden.count - beforeHide.count <= 1,
+      // An unthrottled 25 ms ticker adds about 12 ticks in this window; a throttled one adds one or two, depending on
+      // where the browser's one-second timer batch lands against the sample.
+      hidden.count - beforeHide.count <= 3,
       `hidden ticker was not throttled: ${beforeHide.count} -> ${hidden.count}`,
     )
     check(await execute("view:hidden-visibility", tickerContents, "document.hidden"), "detached App Dock view still reports visible document")

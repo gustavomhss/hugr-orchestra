@@ -126,7 +126,7 @@ async function child() {
     const bio = await win.webContents.executeJavaScript("document.getElementById('bio').value")
     check(bio === "author bio", "textarea value not replaced")
 
-    const editableResult = await win.webContents.executeJavaScript(buildTypeScript(byRefName(again, "div"), "new note"))
+    const editableResult = await win.webContents.executeJavaScript(buildTypeScript(byRefName(again, "div", "textbox"), "new note"))
     check(editableResult && editableResult.ok === true, `contenteditable type reported failure: ${JSON.stringify(editableResult)}`)
     const edited = await win.webContents.executeJavaScript("document.getElementById('editable').textContent")
     check(edited === "new note", "contenteditable text not set")
@@ -171,8 +171,9 @@ function isSnapshotWith(snapshot: unknown): boolean {
   )
 }
 
-function byRefName(snapshot: { items: Array<{ ref: number; tag: string }> }, tag: string): number {
-  const found = snapshot.items.find((item) => item.tag === tag)
+// The inferred #app wrapper is a div too, so a div target also has to name its role.
+function byRefName(snapshot: { items: Array<{ ref: number; tag: string; role?: string }> }, tag: string, role?: string): number {
+  const found = snapshot.items.find((item) => item.tag === tag && (role === undefined || item.role === role))
   check(found !== undefined, `no ${tag} in snapshot`)
   return found!.ref
 }
