@@ -141,6 +141,11 @@ const br: typeof en = {
     body: "Legendas e respostas estão pausadas. Os últimos 30 s de áudio ficam guardados e são enviados quando você voltar a ficar online; o que for mais antigo fica sem legenda.",
     recording: "A gravação continua",
   },
+  answer: {
+    title: "Não foi possível responder",
+    body: "O modelo retornou um erro antes de qualquer texto. Pergunte de novo ou escolha outro modelo nos ajustes do assento ao vivo.",
+    dismiss: "Dispensar",
+  },
   ended: "Reunião encerrada",
   minutes: (title, minutes) => `${title} · ${minutes} min`,
   pending: {
