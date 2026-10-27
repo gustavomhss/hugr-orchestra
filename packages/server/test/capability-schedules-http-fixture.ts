@@ -23,6 +23,7 @@ import { SessionStore } from "@orchestra/core/session/store"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { TaskTool } from "@orchestra/core/tool/task"
 import { TeamMessageTool } from "@orchestra/core/tool/team-message"
+import { MeetingHandoff } from "@orchestra/core/session/meeting-handoff"
 import { makeCapabilitySchedulesGroup } from "@orchestra/protocol/groups/capability-schedules"
 import type { Capability } from "@orchestra/schema/capability"
 import { AbsolutePath } from "@orchestra/schema/schema"
@@ -60,8 +61,8 @@ export function make() {
     const map = Layer.effect(LocationServiceMap.Service, LayerMap.make((ref: Location.Ref) => {
       const nodes = LayerNode.hoist(locationServices, Node.tags.values.global, [
         [ToolRegistry.node, ToolRegistry.nativeNode], [ToolRegistry.toolsNode, ToolRegistry.nativeToolsNode],
-        // Task and team_message capture process-global Session services this focused host does not export.
-        [TaskTool.node, Layer.empty], [TeamMessageTool.node, Layer.empty], [Location.node, Location.boundNode(ref)],
+        // Task, team_message and the meeting handoff capture process-global Session services this focused host does not export.
+        [TaskTool.node, Layer.empty], [TeamMessageTool.node, Layer.empty], [MeetingHandoff.node, Layer.succeed(MeetingHandoff.Service, { handoff: () => Effect.die("no handoff in a focused host") })], [Location.node, Location.boundNode(ref)],
       ])
       return LayerNode.compile(nodes.node).pipe(Layer.fresh,
         Layer.provide(LayerNode.compile(nodes.hoisted, [[Database.node, databaseNode]])))

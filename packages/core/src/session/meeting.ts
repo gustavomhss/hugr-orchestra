@@ -37,6 +37,14 @@ export interface Interface {
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/SessionMeeting") {}
 
+export interface HandoffInterface {
+  // Sends the chosen items to Maestro as one queued message and marks them sent. Never carries transcript or quotes.
+  readonly handoff: (input: Meeting.HandoffInput) => Effect.Effect<Meeting.HandoffResult, MeetingError>
+}
+
+// The tag lives here, next to the other meeting contracts, so callers need no import of the Session-dependent node.
+export class HandoffService extends Context.Service<HandoffService, HandoffInterface>()("@orchestra/v2/MeetingHandoff") {}
+
 // CONTRACT FROZEN ABOVE. Builder A implements `layer` and `node` below, modelled on ./todo.ts.
 
 const LIVE_TAIL = 50

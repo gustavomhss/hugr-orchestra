@@ -1,7 +1,7 @@
 export * as MeetingHandoff from "./meeting-handoff"
 
 import { and, eq, inArray } from "drizzle-orm"
-import { Context, Effect, Layer } from "effect"
+import { Effect, Layer } from "effect"
 import { Meeting } from "@orchestra/schema/meeting"
 import { Database } from "../database/database"
 import { makeLocationNode } from "../effect/app-node"
@@ -16,12 +16,7 @@ import { MeetingItemTable, MeetingPersonTable } from "./meeting-memory.sql"
 
 type ItemRow = typeof MeetingItemTable.$inferSelect
 
-export interface Interface {
-  // Sends the chosen items to Maestro as one queued message and marks them sent. Never carries transcript or quotes.
-  readonly handoff: (input: Meeting.HandoffInput) => Effect.Effect<Meeting.HandoffResult, SessionMeeting.MeetingError>
-}
-
-export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/MeetingHandoff") {}
+export const Service = SessionMeeting.HandoffService
 
 const layer = Layer.effect(
   Service,

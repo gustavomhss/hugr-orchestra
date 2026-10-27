@@ -164,7 +164,11 @@ const mac = navigator.userAgent.includes("Mac")
 function LiveOverlay() {
   const [state, setState] = createSignal<LiveOverlayState>()
   const [now, setNow] = createSignal(Date.now())
-  let glass: HTMLDivElement | undefined
+  // Main sizes the window to the glass, so the overlay grows downward with its content. The glass mounts only once
+  // the first state arrives, after onMount, so it is observed from its ref.
+  const observer = new ResizeObserver((entries) =>
+    entries.forEach((entry) => window.live.resize((entry.target as HTMLElement).offsetHeight)),
+  )
 
   onMount(() => {
     void window.live.state().then((initial) => initial && setState(initial))
@@ -172,9 +176,6 @@ function LiveOverlay() {
     const clock = setInterval(() => setNow(Date.now()), 1000)
     const escape = (event: KeyboardEvent) => event.key === "Escape" && window.live.releaseFocus()
     window.addEventListener("keydown", escape)
-    // Main sizes the window to the glass, so the overlay grows downward with its content.
-    const observer = new ResizeObserver(() => glass && window.live.resize(glass.offsetHeight))
-    if (glass) observer.observe(glass)
     onCleanup(() => {
       unsubscribe()
       clearInterval(clock)
@@ -199,7 +200,7 @@ function LiveOverlay() {
         const elapsed = () => clock(current().startedAt ? now() - current().startedAt! : 0)
         return (
           <div
-            ref={glass}
+            ref={(element) => observer.observe(element)}
             class="ov"
             data-moving={current().moving ? "" : undefined}
             onPointerEnter={() => window.live.interactive(true)}

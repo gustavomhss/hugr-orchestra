@@ -149,7 +149,7 @@ async function openTerminal(page: Page) {
   await expectSessionTitle(page, title)
   await page.getByRole("button", { name: "Toggle review" }).click()
   await page.locator('[data-slot="session-side-panel-tab-bar"]').getByRole("tab", { name: "Apps", exact: true }).click()
-  const dock = page.getByRole("region", { name: "Dock", exact: true })
+  const dock = page.getByRole("region", { name: "MCP Dock", exact: true })
   await dock.getByRole("tab", { name: "Terminal", exact: true }).click()
   await expect(dock.getByRole("button", { name: "New terminal", exact: true })).toBeEnabled()
   return dock

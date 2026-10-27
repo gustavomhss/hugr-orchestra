@@ -68,7 +68,7 @@ export const BOARD_MONEY_COPY = {
   "orchestra.decisions.card": "Card {{ref}}",
 
   "orchestra.settings.open": "Settings",
-  "orchestra.settings.projectTitle": "Project settings",
+  "orchestra.board.settings.title": "Project settings",
   "orchestra.settings.target": "Target date",
   "orchestra.settings.target.hint": "Maestro measures the forecast against this day.",
   "orchestra.settings.budget": "Budget (USD)",
@@ -174,7 +174,7 @@ export const BOARD_MONEY_COPY_BR: Record<keyof typeof BOARD_MONEY_COPY, string> 
   "orchestra.decisions.card": "Card {{ref}}",
 
   "orchestra.settings.open": "Ajustes",
-  "orchestra.settings.projectTitle": "Ajustes do projeto",
+  "orchestra.board.settings.title": "Ajustes do projeto",
   "orchestra.settings.target": "Data-alvo",
   "orchestra.settings.target.hint": "O Maestro mede a previsão contra este dia.",
   "orchestra.settings.budget": "Orçamento (USD)",

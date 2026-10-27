@@ -37,8 +37,11 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
   await expect(crumb.last()).toHaveText("home")
   await expect(crumb.last()).toHaveCSS("font-size", "12px")
   // Production builds hide the WIP mark (`showWip`); WIP rows carry no chip and no description.
-  await expect(sidebar.locator('[data-slot="orchestra-nav-wip"]')).toHaveCount(0)
-  await expect(sidebar.locator(`.orchestra-nav-button[aria-description="${wipText}"]`)).toHaveCount(0)
+  // The development server shows both, so only the built bundle can prove they are absent.
+  if (test.info().config.metadata.bundle === "production") {
+    await expect(sidebar.locator('[data-slot="orchestra-nav-wip"]')).toHaveCount(0)
+    await expect(sidebar.locator(`.orchestra-nav-button[aria-description="${wipText}"]`)).toHaveCount(0)
+  }
   await expectMainGlass(page.locator('[data-component="orchestra-home"]'))
   await toggle.focus()
   await page.keyboard.press("Enter")
@@ -133,6 +136,8 @@ test("V2 profile card counts agents and shows the branch only when the server re
 })
 
 test("production builds show no WIP mark on any chapter page", async ({ page }) => {
+  // The development server marks WIP chapters by design; only the production bundle must hide them.
+  if (test.info().config.metadata.bundle !== "production") return
   test.setTimeout(120_000)
   await setupCompactNavigation(page)
   await page.goto("/")
@@ -146,7 +151,7 @@ test("production builds show no WIP mark on any chapter page", async ({ page }) 
     ["Workspaces", "workspaces"],
     ["Skills", "skills"],
     [".env", "env"],
-    ["Dock", "dock"],
+    ["MCP Dock", "dock"],
   ] as const) {
     await sidebar.getByRole("button", { name, exact: true }).click()
     const panel = page.locator('[data-component="orchestra-chapter"]')

@@ -501,7 +501,7 @@ export function SettingsPanel(props: {
       .then((error) => (error ? setFailure(error) : setSaved(true)))
   }
   return (
-    <Sheet title={t("orchestra.settings.projectTitle")} onClose={props.onClose}>
+    <Sheet title={t("orchestra.board.settings.title")} onClose={props.onClose}>
       <form class="money-form money-settings" onSubmit={submit}>
         <label class="money-field">
           <span>{t("orchestra.settings.target")}</span>

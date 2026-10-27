@@ -10,6 +10,8 @@ export default defineConfig({
   testDir: ".",
   // The DebugBar these specs drive exists only in the dev server.
   grepInvert: /@development-only/,
+  // Specs read this to prove dev-only marks and controls are absent from the built bundle.
+  metadata: { ...config.metadata, bundle: "production" },
   outputDir: "./test-results",
   reporter: [["html", { outputFolder: "./playwright-report", open: "never" }], ["line"]],
   webServer: {
