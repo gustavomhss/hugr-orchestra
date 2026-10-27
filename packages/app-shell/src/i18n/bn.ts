@@ -338,6 +338,7 @@ export const dict: Record<string, string> = {
   "appDock.browser.download.cancelled": "Cancelled",
   "appDock.browser.download.interrupted": "Interrupted",
   "appDock.browser.tab.menu": "Actions for {{tab}}",
+  "appDock.browser.address.placeholder": "Search or enter a web address",
   "appDock.browser.tab.duplicate": "Duplicate",
   "appDock.browser.tab.pin": "Pin",
   "appDock.browser.tab.unpin": "Unpin",
