@@ -30,6 +30,16 @@ export const parseNewSessionDeepLink = (input: string) => {
   return { directory, prompt }
 }
 
+// The live tray opens the Flight Engineer, or one meeting when it names it.
+export const parseLiveDeepLink = (input: string) => {
+  const url = parseUrl(input)
+  if (!url) return
+  if (url.hostname !== "live") return
+  const meeting = url.searchParams.get("meeting") || undefined
+  if (!meeting) return {}
+  return { meeting }
+}
+
 export const collectOpenProjectDeepLinks = (urls: string[]) =>
   urls.map(parseDeepLink).filter((directory): directory is string => !!directory)
 

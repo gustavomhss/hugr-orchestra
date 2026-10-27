@@ -933,6 +933,7 @@ export const dict = {
   "live.start.reason.no-key": "ابتدا در تنظیمات یک کلید تبدیل گفتار به متن اضافه کن",
   "live.start.reason.server": "سرور محلی پاسخ نداد",
   "live.start.reason.capture": "ضبط صدا شروع نشد. مجوزهای میکروفون و ضبط صفحه را بررسی کن.",
+  "live.start.reason.permission": "ابتدا در تنظیمات سیستم اجازهٔ دسترسی به میکروفون را بدهید",
   "settings.general.row.language.title": "زبان",
   "settings.general.row.language.description": "زبان نمایش HuGR Orchestra را تغییر دهید",
   "settings.general.row.shell.title": "پوسته ترمینال",

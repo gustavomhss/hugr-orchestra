@@ -946,6 +946,7 @@ export const dict = {
   "live.start.reason.no-key": "Πρόσθεσε πρώτα κλειδί μετατροπής ομιλίας σε κείμενο στις Ρυθμίσεις",
   "live.start.reason.server": "Ο τοπικός διακομιστής δεν απάντησε",
   "live.start.reason.capture": "Δεν ήταν δυνατή η έναρξη λήψης ήχου. Έλεγξε τα δικαιώματα μικροφώνου και εγγραφής οθόνης.",
+  "live.start.reason.permission": "Επιτρέψτε πρώτα την πρόσβαση στο μικρόφωνο στις Ρυθμίσεις συστήματος",
   "settings.general.row.language.title": "Γλώσσα",
   "settings.general.row.language.description": "Αλλαγή της γλώσσας εμφάνισης για το HuGR Orchestra",
   "settings.general.row.shell.title": "Τερματικό κέλυφος",

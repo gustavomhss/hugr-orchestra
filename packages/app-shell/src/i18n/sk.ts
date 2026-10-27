@@ -940,6 +940,7 @@ export const dict = {
   "live.start.reason.no-key": "Najprv pridajte kľúč na prepis reči v nastaveniach",
   "live.start.reason.server": "Lokálny server neodpovedal",
   "live.start.reason.capture": "Nepodarilo sa spustiť zachytávanie zvuku. Skontrolujte povolenia pre mikrofón a nahrávanie obrazovky.",
+  "live.start.reason.permission": "Najprv povoľte prístup k mikrofónu v Nastaveniach systému",
   "settings.general.row.language.title": "Jazyk",
   "settings.general.row.language.description": "Zmeniť jazyk rozhrania aplikácie HuGR Orchestra",
   "settings.general.row.shell.title": "Terminálový shell",

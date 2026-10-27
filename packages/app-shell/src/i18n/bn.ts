@@ -934,6 +934,7 @@ export const dict: Record<string, string> = {
   "live.start.reason.no-key": "আগে সেটিংসে একটি স্পিচ-টু-টেক্সট কী যোগ করুন",
   "live.start.reason.server": "স্থানীয় সার্ভার সাড়া দেয়নি",
   "live.start.reason.capture": "অডিও ক্যাপচার শুরু করা যায়নি। মাইক্রোফোন ও স্ক্রিন রেকর্ডিং অনুমতি পরীক্ষা করুন।",
+  "live.start.reason.permission": "প্রথমে সিস্টেম সেটিংসে মাইক্রোফোনের অ্যাক্সেস দিন",
   "settings.general.row.language.title": "ভাষা",
   "settings.general.row.language.description": "HuGR Orchestra-এর জন্য প্রদর্শনের ভাষা পরিবর্তন করুন",
   "settings.general.row.shell.title": "টার্মিনাল শেল",

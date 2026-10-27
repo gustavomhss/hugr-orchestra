@@ -927,6 +927,7 @@ export const dict = {
   "live.start.reason.no-key": "Añade primero una clave de voz a texto en Ajustes",
   "live.start.reason.server": "El servidor local no respondió",
   "live.start.reason.capture": "No se pudo iniciar la captura de audio. Revisa los permisos de micrófono y grabación de pantalla.",
+  "live.start.reason.permission": "Permite primero el acceso al micrófono en Ajustes del Sistema",
 
   "settings.general.row.language.title": "Idioma",
   "settings.general.row.language.description": "Cambiar el idioma de visualización de HuGR Orchestra",

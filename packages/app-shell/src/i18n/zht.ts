@@ -907,6 +907,7 @@ export const dict = {
   "live.start.reason.no-key": "請先在設定中新增語音轉文字金鑰",
   "live.start.reason.server": "本機伺服器沒有回應",
   "live.start.reason.capture": "無法開始音訊擷取。請檢查麥克風與螢幕錄製權限。",
+  "live.start.reason.permission": "請先在「系統設定」中允許使用麥克風",
 
   "settings.general.row.language.title": "語言",
   "settings.general.row.language.description": "變更 HuGR Orchestra 的顯示語言",

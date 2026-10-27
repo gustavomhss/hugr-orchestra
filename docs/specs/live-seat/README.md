@@ -213,6 +213,16 @@ Code: `packages/core/src/session/meeting-memory.sql.ts` (tables), `meeting-memor
 - **Privacy.** Local only, unsealed, no project column. `meeting.session_id` is nullable and set to null when the Session is deleted, so a meeting survives it; only deleting the meeting erases it. Search is plain SQL `LIKE` over titles and item text, with no FTS.
 - **Limits.** The card stays `pending` and empty until consolidation (package D) writes it. `answers` is 0 because the record does not store the seat's answers yet. A meeting whose Session was deleted reports the placeholder session id `ses_detached` in `Info`, since the frozen type has no empty case. Deleting a meeting removes its items and proposals; person rows are the user's address book and stay. The list `limit` is capped at 200. Handoff still answers `unavailable`. The meeting routes do not refuse non-loopback requests: the server has no check to reuse.
 
+### Screens as built
+
+The chapter lives in `packages/app-shell/src/orchestra/chapters/flight-engineer/` at `/orchestra/flight-engineer` and shows only in the desktop app.
+
+- **Meeting.** Idle shows the start card, a readiness list (microphone, system audio, speech-to-text key, answer model) and the hotkeys. A running meeting shows the timer, the audio level per track and the stop action. The transcript and answers stay in the overlay. The first start asks for consent, then for each missing permission.
+- **Past meetings** (`/meetings`, `/meetings/<id>`). The list searches on the server. The detail page shows the summary, decisions, commitments, open questions, suggestions, people proposals and the transcript, plus a delete action behind a confirm dialog. Row actions (Confirm, Dispute, Dismiss, Hand to Maestro) show on hover or focus. Server-side confirm, commitment state and hand-off are not wired yet and say "not available yet" inline.
+- **Settings.** Speech-to-text key (shown only as "Saved", never its value), answer model, language, suggestions, screen-share exclusion and the rebindable hotkeys with a conflict check.
+- **Home card and sidebar chip.** Home shows a Flight Engineer card, and the sidebar entry shows the running timer.
+- **Deep links.** `orchestra://live` opens the chapter and `orchestra://live?meeting=<id>` opens that meeting (`parseLiveDeepLink` in `pages/layout/deep-links.ts`, routed by `NewShellIngress`). The live tray sends them.
+
 Gates per package: change-scoped `bun run test:ci`, the typecheck workflow and `bun run check:guards --base origin/dev`. One full epic at the end.
 
 ## Open owner decisions

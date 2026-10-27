@@ -944,6 +944,7 @@ export const dict = {
   "live.start.reason.no-key": "पहले सेटिंग्स में स्पीच-टू-टेक्स्ट कुंजी जोड़ें",
   "live.start.reason.server": "स्थानीय सर्वर ने जवाब नहीं दिया",
   "live.start.reason.capture": "ऑडियो कैप्चर शुरू नहीं हो सका। माइक्रोफ़ोन और स्क्रीन रिकॉर्डिंग की अनुमति जाँचें।",
+  "live.start.reason.permission": "पहले सिस्टम सेटिंग्स में माइक्रोफ़ोन की अनुमति दें",
   "settings.general.row.language.title": "भाषा",
   "settings.general.row.language.description": "HuGR Orchestra के लिए प्रदर्शन भाषा बदलें",
   "settings.general.row.shell.title": "टर्मिनल शेल",
