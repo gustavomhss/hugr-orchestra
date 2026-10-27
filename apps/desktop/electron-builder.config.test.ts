@@ -256,3 +256,16 @@ test("ORCHESTRA_DESKTOP_UNSIGNED=1 builds prod installers with no signing identi
   expect(typeof signed.win?.signtoolOptions?.sign).toBe("function")
   expect(signed.win?.signAndEditExecutable).toBeUndefined()
 })
+
+test("flips the Electron fuses that keep the packaged binary from running as Node", async () => {
+  const config = (await import("./electron-builder.config.ts?fuses=1")).default as Configuration
+
+  expect(config.electronFuses).toMatchObject({
+    runAsNode: false,
+    enableNodeOptionsEnvironmentVariable: false,
+    enableNodeCliInspectArguments: false,
+    onlyLoadAppFromAsar: true,
+  })
+  // onlyLoadAppFromAsar needs the app in an archive.
+  expect(config.asar).not.toBe(false)
+})

@@ -74,6 +74,8 @@ const APP_IDS: Record<string, string> = {
   beta: "ai.hugr.orchestra.beta",
   prod: "ai.hugr.orchestra",
 }
+// Deliberately honored in packaged builds: the hosted packaged omni smoke (test/omni-smoke/fixtures.ts) launches the
+// packaged app with it to get an isolated, onboarded profile. It only redirects state to a temp dir and an in-memory DB.
 const TEST_ONBOARDING = process.env.ORCHESTRA_TEST_ONBOARDING === "1"
 // Default: a desktop-owned `orchestra serve` V2 child; "1" uses the shared background daemon. See apps/desktop/README.md.
 const SIDECAR_MODE = sidecarMode(process.env.ORCHESTRA_SIDECAR)
@@ -81,6 +83,8 @@ const jsCallStackFeature = "DocumentPolicyIncludeJSCallStacksInCrashReports"
 
 let logger: ReturnType<typeof initLogging>
 let server: { stop: () => Promise<void> } | null = null
+// Every caller of killSidecar awaits the same stop, so none returns while the server still holds its port and database.
+let stopping: Promise<void> | undefined
 const startup = { windowsRestored: false }
 
 const deepLinks = createDeepLinkDelivery(process.argv, (target, urls) => {
@@ -104,10 +108,14 @@ function emitDeepLinks(urls: string[]) {
 }
 
 async function killSidecar() {
-  if (!server) return
+  if (stopping) return stopping
   const current = server
-  server = null
-  await current.stop()
+  if (!current) return
+  stopping = current.stop().finally(() => {
+    if (server === current) server = null
+    stopping = undefined
+  })
+  return stopping
 }
 
 function ensureLoopbackNoProxy() {
@@ -203,7 +211,7 @@ const main = Effect.gen(function* () {
   // Every quit path lets the windows save unsaved work (at most 3 s) before the sidecars stop.
   const relaunch = () => {
     setAppQuitting()
-    void flushWindows().then(stopSidecars).finally(() => {
+    void flushWindows().then(stopSidecars).catch((error: unknown) => logger.error("failed to stop sidecars", error)).finally(() => {
       app.relaunch()
       app.quit()
     })
@@ -304,8 +312,8 @@ const main = Effect.gen(function* () {
 
   for (const signal of ["SIGINT", "SIGTERM"] as const) {
     process.on(signal, () => {
-      setAppQuitting()
-      void stopSidecars().finally(() => app.quit())
+      // before-quit owns the order: flush the windows, then stop the sidecars.
+      app.quit()
     })
   }
 
