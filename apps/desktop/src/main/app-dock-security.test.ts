@@ -164,6 +164,8 @@ async function parent() {
   child.stderr.on("data", (chunk) => {
     stderr += chunk
   })
+  // Stream the main child so a CI failure shows how far it got before the parent exits.
+  child.stderr.pipe(process.stderr)
   let timedOut = false
   const timeout = setTimeout(() => {
     timedOut = true
