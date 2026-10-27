@@ -443,8 +443,8 @@ async function child() {
     await readEvents()
     return events.length
   }
-  const waitEvent = (after: number, predicate: (event: any) => boolean, label: string) => {
-    const deadline = Date.now() + 5_000
+  const waitEvent = (after: number, predicate: (event: any) => boolean, label: string, timeout = 5_000) => {
+    const deadline = Date.now() + timeout
     return new Promise<any>((resolve, reject) => {
       const poll = async () => {
         await readEvents()
@@ -973,6 +973,8 @@ async function child() {
         event.payload.identity.tabID === crashed.tabID &&
         event.payload.identity.generation === crashed.generation,
       "real selected renderer crash",
+      // forcefullyCrashRenderer hangs the renderer until Chromium's watchdog kills it, which takes longer on a loaded CI host.
+      30_000,
     )
     check(crash.payload.reason === "crashed" || crash.payload.reason === "killed", "unexpected renderer crash reason")
     check(
