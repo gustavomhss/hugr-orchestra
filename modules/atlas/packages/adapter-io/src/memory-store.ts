@@ -45,14 +45,18 @@ export interface DurableMemory {
 export function createDurableMemory(repoPath: string): DurableMemory {
   const dir = membersDir(repoPath)
 
-  return {
+  const durable: DurableMemory = {
     path: dir,
     read(): MemoryRead {
       const files = jsonlFiles(dir)
       // Only `<seat>/memory/` files: a seat's `knowledge/` logs hold other records.
       const memory = files.paths.filter((path) => path.slice(dir.length + 1).split(/[\\/]/)[1] === "memory")
       const raw = readDurableLogs([legacyLogPath(repoPath, "memory"), ...memory])
-      const base = { store: respawnFromRecord(raw.log), log: raw.log, rejected: raw.rejected + (files.unreadable ? 1 : 0) }
+      // Frecency counts logged waves, which are positions in this fold. Files fold in path order, so the order the
+      // records were appended in is the `seq` each append stamped; the sort is stable, so legacy and merged
+      // lines (all `seq` 0, or tied) keep their file order.
+      const log: EventLog = new Map([...raw.log].sort((a, b) => a[1].seq - b[1].seq))
+      const base = { store: respawnFromRecord(log), log, rejected: raw.rejected + (files.unreadable ? 1 : 0) }
       return raw.unreadable === true || files.unreadable === true ? { ...base, unreadable: true } : base
     },
     append(record: MemoryRecord): void {
@@ -60,7 +64,11 @@ export function createDurableMemory(repoPath: string): DurableMemory {
       // stays the sealed kernel one and this adapter mints no ids of its own.
       const [ev] = [...versioned([record]).values()]
       if (ev === undefined) return
-      createDurableLog(memberMemoryPath(repoPath, record)).append(ev)
+      // `seq` is a local ordering hint outside the event id (KERNEL-9a), so stamping it keeps the id and the
+      // dedup by id; it is what lets a read recover append order across the per-seat files.
+      const head = Math.max(0, ...[...durable.read().log.values()].map((e) => e.seq))
+      createDurableLog(memberMemoryPath(repoPath, record)).append({ ...ev, seq: head + 1 })
     },
   }
+  return durable
 }

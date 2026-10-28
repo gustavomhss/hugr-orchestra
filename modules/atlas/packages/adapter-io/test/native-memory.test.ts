@@ -250,6 +250,7 @@ describe("clause 15 — exact fold resolution", () => {
     })
     expect(mem.resolveFold({ kind: "task", id: "T1" })).toMatchObject({ refusal: "store-partial" })
 
+    rmSync(legacyLogPath(root, "memory")) // `tearLine` made it a file; a directory there is what cannot be read
     mkdirSync(legacyLogPath(root, "memory"))
     expect(mem.resolveFold({ kind: "task", id: "T1" }, w.ref)).toMatchObject({ refusal: "store-unavailable" })
   })

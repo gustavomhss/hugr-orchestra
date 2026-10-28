@@ -10,7 +10,7 @@
 //            candidate. There is no merged-PR check; the ratify door is where a person decides.
 //   missing  the row's bytes are not under `.atlas/blobs/`, or they do not hash to the row's `contentHash`.
 //
-// A line is considered only when its row differs from the projection's row at that key, so a replay after a
+// A line is considered only when its row differs from the projection's row at that key (ignoring the store's `derivedAt` stamp), so a replay after a
 // replay does nothing. Known limit: a staged candidate that ratify rejected is staged again on a later boot,
 // because nothing records the rejection in the logs yet.
 
@@ -47,7 +47,7 @@ export function replayKnowledge(
   const read = readKnowledge(repoPath)
   const projection = rehydrateProjection(disk)
   const pending = [...read.rows.values()].filter(
-    (e) => JSON.stringify(projection.current.get(e.row.nodeKey)) !== JSON.stringify(e.row),
+    (e) => !sameRow(projection.current.get(e.row.nodeKey), e.row),
   )
   const resolved = pending.filter((e) => restoreBlob(repoPath, disk, e))
   const proven = resolved.filter((e) => {
@@ -87,6 +87,17 @@ function restoreBlob(repoPath: string, disk: DiskStore, entry: KnowledgeEntry): 
   } catch {
     return false
   }
+}
+
+/**
+ * The store stamps `derivedAt` on a row it publishes (`freshness-watermark.ts`), after the log took the row from the
+ * decision, so the clone that wrote a row holds it with a stamp its own log line lacks. That row is already here.
+ */
+function sameRow(held: CurrentNode | undefined, logged: CurrentNode): boolean {
+  if (held === undefined) return false
+  const { derivedAt: _held, ...heldRest } = held
+  const { derivedAt: _logged, ...loggedRest } = logged
+  return JSON.stringify(heldRest) === JSON.stringify(loggedRest)
 }
 
 const withRows = (p: StoreProjection, entries: readonly KnowledgeEntry[]): StoreProjection => ({

@@ -31,6 +31,10 @@
     "./context": {
       "types": "./src/generated/context.d.ts",
       "default": "./src/generated/context.js"
+    },
+    "./record": {
+      "types": "./src/generated/record.d.ts",
+      "default": "./src/generated/record.js"
     }
   },
   "scripts": {

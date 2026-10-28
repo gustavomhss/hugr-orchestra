@@ -25,7 +25,8 @@ beforeEach(() => {
 })
 afterEach(() => rmSync(repo, { recursive: true, force: true }))
 
-const store = (name: string): DiskStore => createDiskStore(join(repo, name))
+// The sidecar sits beside the CAS directory (`dirname(casPath)`), so each checkout needs a folder of its own.
+const store = (name: string): DiskStore => createDiskStore(join(repo, name, "cas"))
 
 /** Put `fact` and commit one row naming it, as a door would. */
 function emit(s: DiskStore, nodeKey: string, fact: object, scope = "svc"): CurrentNode {

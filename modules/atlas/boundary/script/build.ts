@@ -19,6 +19,8 @@ await Promise.all(
       ["mine", "cli/src/surface-mine.ts"],
       // A session's committed context-continuity archive (repo-layout design §3), for the continuity module.
       ["context", "adapter-io/src/context-log.ts"],
+      // The PR record, the Attempt trailer and the GitHub PR writer (merge-queue spec §4.5), for the board host.
+      ["record", "persist/src/host-adapter.ts"],
     ] as const
   ).map(async ([name, file]) => {
     const entry = path.join(root, "modules/atlas/packages", file)
