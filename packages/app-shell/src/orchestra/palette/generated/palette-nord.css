@@ -6,6 +6,7 @@ html[data-orchestra-palette="nord"][data-color-scheme] body[data-new-layout] {
   --orchestra-muted: #c2c6ce;
   --orchestra-faint: #c2c7cf;
   --orchestra-accent: #8ac2d2;
+  --orchestra-aura: #4ab6d3;
   --orchestra-warm: #f2a68e;
   --orchestra-success: #a5c18e;
   --orchestra-danger: #ff9ea5;
@@ -134,12 +135,16 @@ html[data-orchestra-palette="nord"][data-color-scheme] body[data-new-layout] [da
           rgba(8, 12, 17, var(--orchestra-wallpaper-dim, 0))
         );
   }
-  html[data-orchestra-palette="nord"][data-color-scheme] body[data-new-layout] :is(.orchestra-glass, .orchestra-sidebar, .orchestra-session-tabs, [data-component="orchestra-home"]) {
+  html[data-orchestra-palette="nord"][data-color-scheme]
+      body[data-new-layout]
+      :is(.orchestra-glass, .orchestra-sidebar, .orchestra-session-tabs, [data-component="orchestra-home"]) {
     border: 1px solid var(--orchestra-glass-border);
     background: var(--orchestra-grain), var(--orchestra-glass-sheen), var(--orchestra-glass-background);
     box-shadow: var(--orchestra-glass-shadow);
   }
-  html[data-orchestra-palette="nord"][data-color-scheme] body[data-new-layout] :is(.orchestra-glass, .orchestra-sidebar, .orchestra-session-tabs, [data-component="orchestra-home"])::after {
+  html[data-orchestra-palette="nord"][data-color-scheme]
+      body[data-new-layout]
+      :is(.orchestra-glass, .orchestra-sidebar, .orchestra-session-tabs, [data-component="orchestra-home"])::after {
     background: var(--orchestra-glass-rim);
   }
   html[data-orchestra-palette="nord"][data-color-scheme] body[data-new-layout] .orchestra-toolbar-shadow > div {

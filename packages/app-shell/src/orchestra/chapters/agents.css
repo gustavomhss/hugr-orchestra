@@ -324,6 +324,28 @@
 .agent-hero-avatar.mx-mark {
   display: grid;
 }
+/* A working agent's picture glows along its own silhouette and breathes; reduced motion keeps the glow still. */
+.agent-avatar[data-working],
+.agent-hero-avatar[data-working] {
+  --agent-aura: color-mix(in srgb, var(--orchestra-aura) 75%, transparent);
+  filter: drop-shadow(0 0 2px var(--agent-aura)) drop-shadow(0 0 8px var(--agent-aura));
+  animation: agent-aura 2.4s ease-in-out infinite;
+}
+@keyframes agent-aura {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 1px var(--agent-aura)) drop-shadow(0 0 4px var(--agent-aura));
+  }
+  50% {
+    filter: drop-shadow(0 0 3px var(--agent-aura)) drop-shadow(0 0 12px var(--agent-aura));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .agent-avatar[data-working],
+  .agent-hero-avatar[data-working] {
+    animation: none;
+  }
+}
 .agent-hero-text {
   display: flex;
   min-inline-size: 0;

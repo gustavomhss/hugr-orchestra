@@ -15,6 +15,8 @@ import { ClaudeCodeSDK } from "../sdk"
 import { ClaudeCodeTranscript } from "../transcript"
 import { ClaudeCodeAccountV2 } from "./account"
 import { ClaudeCodeCatalog } from "./catalog"
+import { ClaudeCodeOutput } from "./output"
+import { ClaudeCodeRecord } from "./record"
 
 export const ID = "claude-code"
 /** The legacy `session.metadata` key (`host/session.ts`), so legacy Claude-hosted sessions resume on V2. */
@@ -310,7 +312,10 @@ export const make = Effect.gen(function* () {
             Effect.forkScoped,
           )
           const names = new Map<string, string>()
+          const created = new Map<string, ClaudeCodeRecord.ChecklistItem>()
           const todos = new Map<string, unknown>()
+          // Claude Code's task list outlives a turn, so the copy that fills the todo panel is kept in host state.
+          const checklist: ClaudeCodeRecord.Checklist = { items: ClaudeCodeRecord.items(state.checklist), changed: false }
           // Block ids by assistant message, for the retract a refusal fallback or a superseding reply asks for.
           const emitted = new Map<string, string[]>()
           // The iterator is pulled through a view without `return`: stopping at the result must not close the query.
@@ -339,7 +344,12 @@ export const make = Effect.gen(function* () {
                   yield* deliver(message.session_id)
                   live.keep = live.background > 0
                 }
-                return events(message, { names, todos, failure, emitted, model: turn.model?.id })
+                const settled = yield* ClaudeCodeOutput.settle(events(message, { names, todos, checklist, created, failure, emitted, model: turn.model?.id }), message, { todos, write: turn.todos, directory: turn.session.location.directory })
+                if (checklist.changed) {
+                  checklist.changed = false
+                  yield* turn.state.update((value) => ({ ...(ClaudeCodeTranscript.record(value) ? value : {}), checklist: checklist.items }))
+                }
+                return settled
               }),
             ),
             Stream.flatMap((items) => Stream.fromIterable(items)),
@@ -378,8 +388,12 @@ export const contribution: Host.Contribution = {
 
 type Tracker = {
   readonly names: Map<string, string>
-  /** Each TodoWrite call's list, recorded as its result so the todo widget shows the checklist. */
+  /** Each TodoWrite call's list, recorded as its result and the Session's todos so the widget and panel show it. */
   readonly todos: Map<string, unknown>
+  /** Claude Code's task list (TaskCreate, TaskUpdate), recorded as the todo list Orchestra's todo tool keeps. */
+  readonly checklist: ClaudeCodeRecord.Checklist
+  /** The entry each TaskCreate call added, which takes its id from the call's result. */
+  readonly created: Map<string, ClaudeCodeRecord.ChecklistItem>
   readonly failure: { uuid?: string; message?: string }
   /** Block and call ids emitted for each main-thread assistant message, so a superseded message can be retracted. */
   readonly emitted: Map<string, string[]>
@@ -419,9 +433,11 @@ function events(message: SDKMessage, tracker: Tracker): LLMEvent[] {
         ids.push(id)
         return [LLMEvent.reasoningStart({ id }), LLMEvent.reasoningDelta({ id, text: block.thinking }), LLMEvent.reasoningEnd({ id })]
       }
-      // Orchestra tools are recorded by the runner through `turn.execute`, never by the host.
-      if (block.type !== "tool_use" || block.name.startsWith(MCP_PREFIX)) return []
-      const call = shown(block.name, block.input)
+      // Orchestra tools are recorded by the runner through `turn.execute`, never by the host. A call left off the record
+      // has no name in `names`, so its result is left off too.
+      if (block.type !== "tool_use" || block.name.startsWith(MCP_PREFIX) || ClaudeCodeRecord.UNRECORDED.has(block.name)) return []
+      const listed = ClaudeCodeRecord.TASK_LIST_TOOLS.has(block.name) ? ClaudeCodeRecord.checklist(block.id, block.name, block.input, tracker.checklist, tracker.created) : undefined
+      const call = listed ? { name: "todowrite", input: { todos: listed }, todos: listed } : ClaudeCodeRecord.shown(block.name, block.input)
       names.set(block.id, call.name)
       if (call.name === "todowrite") tracker.todos.set(block.id, call.todos)
       ids.push(block.id)
@@ -436,6 +452,8 @@ function events(message: SDKMessage, tracker: Tracker): LLMEvent[] {
       if (block.type !== "tool_result") return []
       const name = names.get(block.tool_use_id)
       if (!name) return []
+      const added = tracker.created.get(block.tool_use_id)
+      if (added) ClaudeCodeRecord.assign(added, block.is_error === true, message.tool_use_result, tracker.checklist)
       const listed = tracker.todos.get(block.tool_use_id)
       const text = listed !== undefined && !block.is_error
         ? JSON.stringify({ todos: listed })
@@ -584,28 +602,6 @@ function safetyCall(tool: string, input: Record<string, unknown>) {
   if (tool === "Edit" || tool === "MultiEdit" || tool === "NotebookEdit") return { tool: "edit", args: { filePath: file } }
   if (tool === "Read") return { tool: "read", args: { filePath: file, limit: input.limit, offset: input.offset } }
   return { tool: PERMISSIONS[tool]?.action ?? tool.toLowerCase(), args: input }
-}
-
-/**
- * A built-in call as the Session records it: Orchestra's tool name and argument names, so the app shows the same
- * widget it shows for Orchestra's own tool. Only the record changes; Claude Code ran the call as it asked for it.
- */
-function shown(tool: string, raw: unknown) {
-  const input = (typeof raw === "object" && raw !== null ? raw : {}) as Record<string, unknown>
-  const file = input.file_path ?? input.notebook_path
-  if (tool === "Bash") return { name: "bash", input: { command: input.command, description: input.description } }
-  if (tool === "Read") return { name: "read", input: { filePath: file, offset: input.offset, limit: input.limit } }
-  if (tool === "Write") return { name: "write", input: { filePath: file, content: input.content } }
-  if (tool === "Edit")
-    return { name: "edit", input: { filePath: file, oldString: input.old_string, newString: input.new_string, replaceAll: input.replace_all } }
-  if (tool === "MultiEdit" || tool === "NotebookEdit") return { name: "edit", input: { filePath: file } }
-  if (tool === "Glob") return { name: "glob", input: { pattern: input.pattern, path: input.path } }
-  if (tool === "Grep") return { name: "grep", input: { pattern: input.pattern, path: input.path, include: input.glob } }
-  if (tool === "WebFetch") return { name: "webfetch", input: { url: input.url, prompt: input.prompt } }
-  if (tool === "WebSearch") return { name: "websearch", input: { query: input.query } }
-  if (tool === "TodoWrite") return { name: "todowrite", input: { todos: input.todos }, todos: input.todos }
-  if (tool === "Skill") return { name: "skill", input: { name: input.skill } }
-  return { name: tool, input: raw }
 }
 
 /** What Orchestra changes in the call's input: the sandboxed command, and the dispatch's domains for a web search. */

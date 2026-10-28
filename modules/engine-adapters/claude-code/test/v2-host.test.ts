@@ -57,7 +57,8 @@ const ports = {
   steers: Stream.empty,
   consumed: () => Effect.void,
   notify: () => Effect.void,
-} satisfies Pick<ExecutionHost.Turn, "question" | "memory" | "steers" | "consumed" | "notify">
+  todos: () => Effect.void,
+} satisfies Pick<ExecutionHost.Turn, "question" | "memory" | "steers" | "consumed" | "notify" | "todos">
 
 const turnOf = (input: Partial<ExecutionHost.Turn> = {}): ExecutionHost.Turn => ({
   session: { id: SessionSchema.ID.make("ses_host"), location: { directory: "/project" } } as unknown as SessionSchema.Info,
@@ -161,19 +162,22 @@ test("built-in calls are recorded under Orchestra's tool names, so the app shows
   const call = (id: string, name: string, input: Record<string, unknown>) =>
     frame({ type: "assistant", uuid: `a-${id}`, session_id: "claude-1", parent_tool_use_id: null,
       message: { content: [{ type: "tool_use", id, name, input }] } })
-  const result = (id: string, content: string) =>
-    frame({ type: "user", session_id: "claude-1", parent_tool_use_id: null,
+  const result = (id: string, content: string, toolUseResult?: unknown) =>
+    frame({ type: "user", session_id: "claude-1", parent_tool_use_id: null, tool_use_result: toolUseResult,
       message: { role: "user", content: [{ type: "tool_result", tool_use_id: id, content }] } })
+  const hunk = { oldStart: 1, oldLines: 2, newStart: 1, newLines: 2, lines: [" keep", "-a", "+b"] }
   script = [
     call("t1", "Read", { file_path: "/project/a.ts", offset: 2, limit: 10 }),
     call("t2", "Edit", { file_path: "/project/a.ts", old_string: "a", new_string: "b" }),
+    result("t2", "The file has been updated.", { filePath: "/project/a.ts", structuredPatch: [hunk] }),
     call("t3", "Grep", { pattern: "x", path: "src", glob: "*.ts" }),
     call("t4", "TodoWrite", { todos }),
     result("t4", "Todos have been modified successfully."),
     call("t6", "Skill", { skill: "release" }),
     done,
   ]
-  const events = await collect(turnOf())
+  const written: unknown[] = []
+  const events = await collect(turnOf({ todos: (list) => Effect.sync(() => void written.push(list)) }))
 
   expect(events.filter((event) => event.type === "tool-call")).toMatchObject([
     { name: "read", input: { filePath: "/project/a.ts", offset: 2, limit: 10 } },
@@ -182,10 +186,30 @@ test("built-in calls are recorded under Orchestra's tool names, so the app shows
     { name: "todowrite", input: { todos } },
     { name: "skill", input: { name: "release" } },
   ])
-  expect(events.find((event) => event.type === "tool-result")).toMatchObject({
-    name: "todowrite",
-    result: { type: "text", value: JSON.stringify({ todos }) },
-  })
+  // The edit carries the patch and counts Orchestra's edit tool records, under the project-relative path.
+  expect(events.filter((event) => event.type === "tool-result")).toMatchObject([
+    {
+      name: "edit",
+      output: {
+        structured: {
+          files: [{
+            file: "a.ts",
+            patch: ["Index: a.ts", "=".repeat(67), "--- a.ts", "+++ a.ts", "@@ -1,2 +1,2 @@", " keep", "-a", "+b", ""].join("\n"),
+            status: "modified",
+            additions: 1,
+            deletions: 1,
+          }],
+        },
+      },
+    },
+    {
+      name: "todowrite",
+      result: { type: "text", value: JSON.stringify({ todos }) },
+      output: { structured: { todos: [{ content: "Plan", status: "completed", priority: "medium" }] } },
+    },
+  ])
+  // The checklist becomes the Session's todo list, which the todo panel shows.
+  expect(written).toEqual([[{ content: "Plan", status: "completed", priority: "medium" }]])
 })
 
 test("Orchestra tools are served over the in-process MCP server and settle through the runner, never as host events", async () => {

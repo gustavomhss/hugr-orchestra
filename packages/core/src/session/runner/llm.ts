@@ -40,6 +40,7 @@ import { SessionInput } from "../input"
 import { SessionMessage } from "../message"
 import { SessionSchema } from "../schema"
 import { SessionStore } from "../store"
+import { SessionTodo } from "../todo"
 import { TodoTable } from "../sql"
 import { SessionSubagentModels } from "../subagent-models"
 import { INTERRUPTED_TURN, type RunError, Service } from "./index"
@@ -442,6 +443,7 @@ const layer = Layer.effect(
               steers,
               consumed: (id) => Effect.sync(() => void liveSteers.delete(id)),
               notify,
+              todos: (list) => SessionTodo.write(db, events, { sessionID: session.id, todos: list }),
               state: ExecutionHost.state(db, session.id, host.stateKey),
             })
           : Stream.die("SessionRunner: no provider for this turn")

@@ -6,6 +6,7 @@ html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-new-layout] 
   --orchestra-muted: #c5b897;
   --orchestra-faint: #c6b998;
   --orchestra-accent: #92b5a7;
+  --orchestra-aura: #5f9c87;
   --orchestra-warm: #fabd2f;
   --orchestra-success: #b8bb26;
   --orchestra-danger: #ff8d7b;
@@ -134,12 +135,16 @@ html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-new-layout] 
           rgba(8, 12, 17, var(--orchestra-wallpaper-dim, 0))
         );
   }
-  html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-new-layout] :is(.orchestra-glass, .orchestra-sidebar, .orchestra-session-tabs, [data-component="orchestra-home"]) {
+  html[data-orchestra-palette="gruvbox"][data-color-scheme]
+      body[data-new-layout]
+      :is(.orchestra-glass, .orchestra-sidebar, .orchestra-session-tabs, [data-component="orchestra-home"]) {
     border: 1px solid var(--orchestra-glass-border);
     background: var(--orchestra-grain), var(--orchestra-glass-sheen), var(--orchestra-glass-background);
     box-shadow: var(--orchestra-glass-shadow);
   }
-  html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-new-layout] :is(.orchestra-glass, .orchestra-sidebar, .orchestra-session-tabs, [data-component="orchestra-home"])::after {
+  html[data-orchestra-palette="gruvbox"][data-color-scheme]
+      body[data-new-layout]
+      :is(.orchestra-glass, .orchestra-sidebar, .orchestra-session-tabs, [data-component="orchestra-home"])::after {
     background: var(--orchestra-glass-rim);
   }
   html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-new-layout] .orchestra-toolbar-shadow > div {

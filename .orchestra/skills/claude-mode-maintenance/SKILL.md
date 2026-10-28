@@ -14,8 +14,10 @@ Design and decisions: `docs/specs/claude-mode/meta-harness.md`. User guide: `doc
 | Per-turn host (SDK query, hooks, gate) | `modules/engine-adapters/claude-code/src/v2/host.ts` |
 | Appended note, environment | `modules/engine-adapters/claude-code/src/host/options.ts` |
 | SDK seam and `claude_code` preset | `modules/engine-adapters/claude-code/src/sdk.ts` |
-| Turn shape (`context`, `authorize`), and which engine a Session runs on (`engineOf`) | `packages/core/src/session/runner/execution-host.ts` |
-| What the runner hands the host | `packages/core/src/session/runner/llm.ts` |
+| Turn shape (`context`, `authorize`, `todos`), and which engine a Session runs on (`engineOf`) | `packages/core/src/session/runner/execution-host.ts` |
+| What the runner hands the host (`notify`, `todos`) | `packages/core/src/session/runner/llm.ts` |
+| Built-in calls under Orchestra's names, task list as todos (`shown`, `checklist`) | `modules/engine-adapters/claude-code/src/v2/record.ts` |
+| Built-in results as Orchestra's tools record them (todo panel, edit diff) | `modules/engine-adapters/claude-code/src/v2/output.ts` |
 
 ## Invariants
 
@@ -33,11 +35,21 @@ Design and decisions: `docs/specs/claude-mode/meta-harness.md`. User guide: `doc
   which the catalog never sees (`resolveModel`'s `hosted` in `tool/task.ts`). A child on Orchestra's own loop still
   needs a connected provider.
 - A seat other than Maestro gets its own Orchestra prompt in the append (`turn.system` minus `turn.context`).
-- `shown` renames a built-in call for Orchestra's record only (Bash to `bash`, TodoWrite result as
+- `ClaudeCodeRecord.shown` renames a built-in call for Orchestra's record only (Bash to `bash`, TodoWrite result as
   `{"todos": [...]}`). Never apply it to what reaches Claude Code or to the permission gate, which keep Claude Code's names. A new widget field means a new mapping there, covered in `v2-host.test.ts`.
 - `ClaudeHostOptions.append` takes the served Orchestra tool names and writes a line only for a tool served: a line
   for an unserved tool sends the model after a failing call. `skill` is served (Claude Code's Skill tool does not
   know Orchestra's playbooks); `process_get`, `process_wait` and `process_cancel` are not.
+- `ClaudeCodeOutput.settle` gives a settled built-in the `output.structured` Orchestra's tool records: a TodoWrite
+  also calls `Turn.todos`, which writes the Session's todos (`SessionTodo.write`) so the todo panel shows them, with
+  priority `medium` since Claude Code has none; an Edit carries `files` built from the SDK's `tool_use_result.structuredPatch`
+  in `createTwoFilesPatch` form.
+- Claude Code builds with a task list send `TaskCreate`/`TaskUpdate` instead of TodoWrite. `ClaudeCodeRecord.checklist`
+  turns each into a `todowrite` holding the whole list; `assign` takes the task id from the TaskCreate result. The
+  list lives in host state (`checklist`) because an update in a later turn names an id from an earlier one: never keep
+  it only in turn memory.
+- `ClaudeCodeRecord.UNRECORDED` (`ToolSearch`) stays off the record, call and result; Claude Code still runs it. Add
+  a tool there only when it is Claude Code plumbing with no Orchestra widget.
 - Governed dispatch stays MCP: `mcp__orchestra__task`, `mcp__orchestra__maestro_request_review`.
 - Billing: never change prompts, headers or tools to influence how Anthropic classifies usage, and never probe it.
 

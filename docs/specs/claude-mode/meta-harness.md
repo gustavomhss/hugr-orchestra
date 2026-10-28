@@ -66,20 +66,24 @@ The parts of D-C2 that replaced the meta-harness shape are reversed:
    names only tools the session is served: `mcp__orchestra__skill` for playbooks, `board_read` at the start of a
    tracked turn, `process_control` for long-running commands, then the governed, Atlas, Dock and recall families.
 9. **Orchestra's record, Claude Code's call.** The Session records each built-in call under the Orchestra tool and
-   argument names the app's widgets read (`shown` in the host), so a Claude mode session looks like any other:
+   argument names the app's widgets read (`ClaudeCodeRecord.shown`, `src/v2/record.ts`), so a Claude mode session looks like any other:
    - `Bash`, `Read`, `Write`, `Edit` (`MultiEdit` and `NotebookEdit` as `edit` with the file only), `Glob`, `Grep`,
      `WebFetch`, `WebSearch`, `TodoWrite` and `Skill` become `bash`, `read`, `write`, `edit`, `glob`, `grep`,
      `webfetch`, `websearch`, `todowrite` and `skill`, with Orchestra's argument names (`filePath`, `oldString`, ...).
-   - A `TodoWrite` result is recorded as the list it wrote (`{"todos": [...]}`), which the todo widget renders.
+   - A `TodoWrite` result is recorded as the list it wrote (`{"todos": [...]}`), which the todo widget renders, and
+     replaces the todo list (the todo panel) of the Session it ran in.
+   - Claude Code builds that replaced `TodoWrite` with a task list (`TaskCreate`, `TaskUpdate`) are recorded the same
+     way: each call becomes a `todowrite` holding the whole list after it. The host keeps its copy of the list, with
+     Claude Code's task ids, in host state (`checklist`), so an update in a later turn still finds its entry.
+   - An `Edit` or `MultiEdit` result carries its patch and line counts, as Orchestra's edit tool records them.
    - Any other tool keeps its Claude Code name and input.
+   - `ToolSearch`, which only loads deferred tool schemas and has no Orchestra counterpart, is left off the record
+     with its result (`ClaudeCodeRecord.UNRECORDED`), so the session shows no row Orchestra's own engine would not.
 
    Only Orchestra's record changes, after Claude Code ran the call. The prompt, tools, inputs and results Claude Code
    sends to and receives from Claude are untouched, and the permission gate still reads Claude Code's own names.
 ## Not in scope (known limits)
 
-- Claude Code's todos are not written to the Session's todo list (the todo panel); the todo widget in the transcript
-  shows them.
-- An `edit` row has no diff metadata, so the edit widget shows the change from its input only.
 - The host still starts one Claude Code process per turn. A long-lived query per session would remove the resume
   start-up cost; it is not needed for correctness.
 
