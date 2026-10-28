@@ -530,10 +530,10 @@ export class AppDockRPC {
         if (appID.length > 512 || !appID.endsWith(".desktop") || /[\x00-\x1f/\\]/.test(appID))
           throw new Error("Invalid MCP Dock appID: pass an id from apps")
         // The launcher reports only "failed"; say what usually causes it.
-        await dock.linuxLaunch(senderID, appID).catch(() => {
+        const window = await dock.linuxLaunch(senderID, appID).catch(() => {
           throw new NativeDockProtocol.NativeError("launch-failed", `Could not open ${appID}: the Linux workspace must be the visible tab, and the id must come from apps`)
         })
-        return { launched: appID }
+        return { launched: appID, window }
       }
       case "activate": {
         const tabID = dockString(args.tabID, "tabID")

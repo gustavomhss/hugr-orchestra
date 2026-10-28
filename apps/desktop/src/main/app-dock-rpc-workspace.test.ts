@@ -601,6 +601,7 @@ test("workspace: apps and launch reach the Linux runtime, and a failed launch sa
     linuxLaunch: async (_senderID: number, appID: string) => {
       if (appID !== "xterm.desktop") throw new Error("failed")
       launched.push(appID)
+      return "focused" as const
     },
   })
   const call = (op: string, args: Record<string, unknown>) => new Promise<unknown>((resolve) =>
@@ -608,7 +609,7 @@ test("workspace: apps and launch reach the Linux runtime, and a failed launch sa
       if ((data as { type: string }).type === "dock.rpc.result") resolve(data)
     }))
   expect(await call("apps", {})).toMatchObject({ ok: true, value: [{ id: "xterm.desktop", name: "XTerm" }] })
-  expect(await call("launch", { appID: "xterm.desktop" })).toMatchObject({ ok: true, value: { launched: "xterm.desktop" } })
+  expect(await call("launch", { appID: "xterm.desktop" })).toMatchObject({ ok: true, value: { launched: "xterm.desktop", window: "focused" } })
   expect(await call("launch", { appID: "gedit.desktop" })).toMatchObject({ ok: false, error: { code: "launch-failed" } })
   expect(await call("launch", { appID: "../evil.desktop" })).toMatchObject({ ok: false })
   expect(launched).toEqual(["xterm.desktop"])

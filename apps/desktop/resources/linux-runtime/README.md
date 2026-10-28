@@ -9,7 +9,8 @@ Do not delete the container to implement a restart.
 The baseline is Ubuntu 24.04, Xpra `6.5.4-r0-1` (server, x11 and matching common
 packages), and HTML5 `21-r1-1`. APT verifies the Xpra repository with its bundled
 public signing key, using `Signed-By`; exact versions and APT preferences prevent
-silent baseline upgrades. The base starts only xterm. Gio enumerates visible
+silent baseline upgrades. The base starts only xterm, which exposes no accessibility
+tree; Mousepad ships as the text editor agents can read and drive. Gio enumerates visible
 DesktopAppInfo entries and launches them in the environment of an actual Xpra
 child, including its DISPLAY and session DBus address.
 

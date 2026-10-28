@@ -114,10 +114,15 @@ function serve(port: Transport, name: string, tab: Tab) {
     if (tool === "launch" && linux(tab)) {
       // An empty workspace has nothing to read yet; the launched app's window is then all that appeared.
       const before = state.last ?? await snap().catch((): Snapshot => ({ header: "Linux workspace", entries: [], complete: true }))
-      return change(async () => {
-        await request(port, "launch", { appID: String(args.id ?? "") }, AbortSignal.timeout(30_000), 30_000)
-        return `opened ${args.id}`
+      const result = await change(async () => {
+        const value = await request(port, "launch", { appID: String(args.id ?? "") }, AbortSignal.timeout(30_000), 30_000) as
+          { window?: string }
+        return value.window === "focused" ? `${args.id} was already open; brought its window forward` : `opened ${args.id}`
       }, before)
+      // A window without an accessibility tree (xterm, for example) leaves the outline empty; "no visible change" would
+      // send the model to wait for something that never comes.
+      if (state.last?.entries.length) return result
+      return `${result.split("\n")[0]}\nnothing in the workspace is readable yet. If look stays empty, this app exposes no accessibility tree and these tools cannot drive it: launch another app from apps`
     }
     throw new Error(`Unknown tool ${tool}`)
   }

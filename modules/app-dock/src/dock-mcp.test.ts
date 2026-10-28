@@ -125,4 +125,19 @@ describe("DockMcp", () => {
     expect(launched).toContain('"Save" [1]')
     await client.close()
   })
+
+  test("launch says when it only brought an open window forward, and when the window has nothing to read", async () => {
+    const d = dock((op, args) => {
+      if (op === "list") return { ok: true, value: tabs }
+      if (op === "launch") return { ok: true, value: { launched: args.appID, window: "focused" } }
+      if (op === "read") return { ok: false, error: { message: "Owned application has no nonempty accessible window proposal", backend: "linux-atspi", code: "not-ready", outcome: "not-dispatched" } }
+      return { ok: false, error: { message: `unexpected ${op}` } }
+    })
+    const client = await connect((await d.servers())[2]!)
+    const launched = text(await client.callTool({ name: "launch", arguments: { id: "debian-xterm.desktop" } }))
+    expect(launched).toStartWith("debian-xterm.desktop was already open; brought its window forward\n")
+    expect(launched).toContain("this app exposes no accessibility tree")
+    expect(launched).not.toContain("no visible change")
+    await client.close()
+  })
 })

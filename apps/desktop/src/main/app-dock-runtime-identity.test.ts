@@ -12,7 +12,7 @@ const exec = promisify(execFile)
 const enabled = process.env.APP_DOCK_RUNTIME_INTEGRATION === "1"
 const source = process.env.APP_DOCK_RUNTIME_TEST_SOURCE ?? resolve(import.meta.dir, "app-dock-runtime.ts")
 const mutation = process.env.APP_DOCK_RUNTIME_IDENTITY_MUTATION
-const image = process.env.APP_DOCK_RUNTIME_TEST_IMAGE ?? "orchestra-linux-eb889345-092c-462a-a613-5121e03dd16e:xpra-6.5.4-html5-21"
+const image = process.env.APP_DOCK_RUNTIME_TEST_IMAGE ?? "orchestra-linux-eb889345-092c-462a-a613-5121e03dd16e:xpra-6.5.4-html5-21-r2"
 const label = "io.orchestra.app-dock"
 const buildContext = resolve("resources/linux-runtime")
 

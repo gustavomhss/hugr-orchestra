@@ -7,7 +7,8 @@ export type NativeWorkspacePlacement = Readonly<{ runtimeID: string; runtimeEpoc
 export interface AppDockAPI {
   nativeWorkspace?(senderID: number, tabID: string): NativeWorkspacePlacement | undefined
   linuxApps?(): Promise<Array<{ id: string; name: string }>>
-  linuxLaunch?(senderID: number, appID: string): Promise<void>
+  // "focused" when the app already had a window, which the launch brings forward instead of opening another.
+  linuxLaunch?(senderID: number, appID: string): Promise<"opened" | "focused">
   onTabRemoved?(listener: (identity: Readonly<{ senderID: number; tabID: string; generation: number }>) => void): () => void
   open(senderID: number, win: BrowserWindow, address: string, bounds: DockBounds, notify: (event: AppDockEvent) => void, profileStorage: ProfileStorage, placement?: Readonly<{ tabID: string; selected: boolean }>): Promise<AppDockTab>
   resize(senderID: number, tab: AppDockIdentity, bounds: DockBounds): void

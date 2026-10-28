@@ -140,7 +140,7 @@ export const make = Effect.gen(function* () {
                     ...(seat ? { agent: seat } : {}),
                   }).pipe(
                     Effect.map((authorization): Decision => ({ allow: true, input: replacements(tool, authorization) })),
-                    Effect.catch((error) => Effect.succeed<Decision>({ allow: false, reason: denial(error) })),
+                    Effect.catch((error) => Effect.succeed<Decision>({ allow: false, reason: denial(error, asked !== undefined) })),
                   ),
                   { signal },
                 )
@@ -744,12 +744,14 @@ export function permission(tool: string, input: Record<string, unknown>, directo
   return { action: rule.action, resources: [outside ? value : relative] }
 }
 
-function denial(error: { readonly _tag: string }) {
+// Every reason names a next step: a bare refusal left small models ending the turn without a word.
+function denial(error: { readonly _tag: string }, delegated: boolean) {
   if ("feedback" in error && typeof error.feedback === "string") return error.feedback
   // ToolSafety's refusal names its reason, so the model can act on it.
   if (error._tag === "ToolSafety.Denied" && "message" in error && typeof error.message === "string") return error.message
   if (error._tag === "PermissionV2.DeclinedError") return "The owner declined this call."
-  return "Orchestra's permission rules deny this call."
+  if (delegated) return "This agent may not delegate this work. Do it yourself with the tools you hold."
+  return "Orchestra's permission rules deny this call. Continue with the tools you are allowed to use, or say what you need."
 }
 
 /** Claude Code's session id for an Orchestra session: a name-based (v5) UUID, stable across restarts. */

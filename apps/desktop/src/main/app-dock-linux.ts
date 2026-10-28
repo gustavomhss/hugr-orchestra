@@ -189,7 +189,7 @@ export function create(options: {
     const before = await windows(view)
     const matches = (window: DisplayWindow) => window.classes.some(value => app.classes.some(name => name.toLowerCase() === value.toLowerCase())) || window.title.toLowerCase().includes(app.name.toLowerCase())
     const existing = before.find(window => matches(window) && window.focused) ?? before.find(matches)
-    if (existing) return focus(view, existing.id)
+    if (existing) return focus(view, existing.id).then(() => "focused" as const)
     if (!view.visible || !current(view)) throw new RuntimeError("failed")
     await options.runtime.launch(appID)
     const deadline = Date.now() + 15_000
@@ -197,7 +197,7 @@ export function create(options: {
       if (!view.visible || !current(view)) throw new RuntimeError("failed")
       const next = await windows(view)
       const target = next.find(matches) ?? next.find(window => !before.some(previous => previous.id === window.id))
-      if (target) return focus(view, target.id)
+      if (target) return focus(view, target.id).then(() => "opened" as const)
       await new Promise(resolve => setTimeout(resolve, 100))
     }
     throw new RuntimeError("failed")
