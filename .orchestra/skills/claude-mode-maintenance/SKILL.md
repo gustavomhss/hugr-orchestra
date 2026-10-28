@@ -56,6 +56,9 @@ Design and decisions: `docs/specs/claude-mode/meta-harness.md`. User guide: `doc
   `Turn.seatTools[seat]`. The server serves `Turn.tools` plus `Turn.seatOnly` (tools only seats hold); a main-agent
   call of a seat-only tool is refused (`SEAT_ONLY`). Without `seatOnly`, a tool the main agent is denied never reaches
   any subagent.
+- `HOST_REACH` (`ListAgents`, `SendMessage`, `RemoteTrigger`, `PushNotification`) is refused before any permission
+  check: these built-ins reach other Claude sessions on the machine, the account's routines or the owner's phone.
+  When Claude Code adds a built-in that crosses the query's boundary, add it here.
 - A subagent's frames (`parent_tool_use_id` set) never reach the parent's stream: `mirror` records them in the child
   Session `Turn.child` opens for that task call (`packages/core/src/session/runner/host-ports.ts`), and `end` closes it on the
   call's result, or, for a backgrounded delegation (`mark`), on its `task_notification` in `follow`. The child's agent
@@ -63,6 +66,10 @@ Design and decisions: `docs/specs/claude-mode/meta-harness.md`. User guide: `doc
   assistant frame's. The child is never woken and its step costs 0. Its permissions come from `TaskPermission`, shared with
   the task tool; `tool/task.ts` cannot be imported by the runner (cycle through `SessionV2`).
 - Governed dispatch stays MCP: `mcp__orchestra__task`, `mcp__orchestra__maestro_request_review`.
+- Switching the engine in the app (`enableClaudeMode`, `setMaestroEngine`) goes through `updateConfig`. Its
+  `onSuccess` runs while the mutation is still pending, which pauses the refresh queue, so the open directories it
+  re-queues drain only on `queue.resume()` when `reload` settles (`packages/app-shell/src/context/server-sync.tsx`).
+  Without it the composer keeps Maestro's old engine and drops every `executionHost` model, leaving "Select model".
 - Billing: never change prompts, headers or tools to influence how Anthropic classifies usage, and never probe it.
 
 ## Testing
