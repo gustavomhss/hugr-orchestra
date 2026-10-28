@@ -4,6 +4,7 @@ import path from "node:path"
 import { isDeepStrictEqual } from "node:util"
 import { Effect, Option, Schema } from "effect"
 import { RelayArm } from "@orchestra/schema/relay-arm"
+import { RelaySprint } from "@orchestra/schema/relay-sprint"
 import { ArmLoad } from "@orchestra/relay/arm/load"
 import { ArmState } from "@orchestra/relay/arm/state"
 import { LedgerRead } from "@orchestra/relay/ledger/read"
@@ -15,6 +16,7 @@ export interface View extends RelayArm.WorkflowPosition {
   readonly wp: string
   readonly instructions: string
   readonly pending?: RelayArm.WorkflowCheckpoint
+  readonly tools?: RelaySprint.StepTools
 }
 
 // Pure view: no position migration, run-lock recovery, macro markers, entered_at or retry writes. In particular,
@@ -86,6 +88,7 @@ export const read = Effect.fn("RelayWorkflowCurrentStep.read")(function* (
     state: state === "escalated" ? "awaiting-human" : state,
     index, wp: wp.id,
     pending,
+    ...(wp.tools ? { tools: wp.tools } : {}),
     instructions: [macro, wp.instructions,
       wp.self_check?.length ? `Before finishing this step:\n${wp.self_check.map((item) => `- ${item}`).join("\n")}` : undefined,
       wp.kind === "review" ? "REVIEW: cold-read frozen artifacts. Their author cannot review them in this context." : undefined,

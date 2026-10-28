@@ -1,6 +1,7 @@
 ---
 name: frame-request
 description: Assess one Maestro request for runtime admission. Use for governed intake or when active work makes request intent ambiguous.
+internal: true
 ---
 
 # Frame Request

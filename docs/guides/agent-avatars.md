@@ -15,6 +15,12 @@ native or one you made, can take a picture from the library or one you upload.
 
 SVG files are refused, because an SVG can carry script.
 
+## While an agent works
+
+While any of an agent's sessions in the open folder is running, its picture on the card and on its screen glows in
+blue along the figure's outline and slowly brightens and dims. With the system's Reduce Motion setting on, the glow
+stays still.
+
 ## Where it is stored
 
 The choice is saved in the agent's file under `.orchestra/agent/<id>.md`, as the `avatar` key in its front matter:

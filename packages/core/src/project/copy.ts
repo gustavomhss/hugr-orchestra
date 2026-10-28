@@ -1,5 +1,6 @@
 export * as ProjectCopy from "./copy"
 
+import { eq } from "drizzle-orm"
 import { Context, Effect, Layer, Schema } from "effect"
 import path from "path"
 import { AbsolutePath } from "../schema"
@@ -8,6 +9,7 @@ import { Git } from "../git"
 import { makeLocationNode } from "../effect/app-node"
 import { Project } from "../project"
 import { ProjectDirectories } from "./directories"
+import { ProjectTable } from "./sql"
 import { makeGitWorktreeStrategy } from "./copy-strategies"
 import { Slug } from "../util/slug"
 import { EventV2 } from "../event"
@@ -180,8 +182,17 @@ const layer = Layer.effect(
 
     const source = Effect.fnUntraced(function* (input: AbsolutePath, projectID: Project.ID) {
       const sourceDirectory = yield* canonical(input)
-      if (!(yield* directories.contains({ projectID, directory: sourceDirectory })))
+      if (yield* directories.contains({ projectID, directory: sourceDirectory })) return sourceDirectory
+      // The project's own checkout is a source before anything has registered it; register it on first use.
+      const project = yield* db
+        .select({ worktree: ProjectTable.worktree })
+        .from(ProjectTable)
+        .where(eq(ProjectTable.id, projectID))
+        .get()
+        .pipe(Effect.orDie)
+      if (!project || (yield* fs.resolve(project.worktree)) !== sourceDirectory)
         return yield* new SourceDirectoryNotFoundError({ directory: sourceDirectory })
+      yield* changed(projectID, yield* directories.create({ projectID, directory: sourceDirectory }))
       return sourceDirectory
     })
 

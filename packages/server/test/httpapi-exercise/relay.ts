@@ -76,6 +76,30 @@ export const relayScenarios: Scenario[] = [
     .post(`${document}/check`, "v2.relay.document.check")
     .at((ctx) => ({ path: route(`${document}/check`, missing), headers: ctx.headers(), body: {} }))
     .json(403, refusal("RelayForbiddenError", "maestro-execution-required"), "status"),
+  http.protected
+    .post("/api/relay/preview", "v2.relay.document.preview")
+    .at((ctx) => ({ path: "/api/relay/preview", headers: ctx.headers(), body: { name: "HTTP API workflow" } }))
+    .json(
+      200,
+      locationData((value) => {
+        object(value)
+        array(value.findings)
+        check(value.judge === "stub" || value.judge === "api", "the preview should name the judge backend")
+      }),
+    ),
+  http.protected.get("/api/relay/commands", "v2.relay.document.commands").json(
+    200,
+    locationData((value) => {
+      object(value)
+      array(value.commands)
+      array(value.pytest)
+      check(value.trusted === false, "the exercise project is not trusted")
+    }),
+  ),
+  http.protected
+    .post("/api/relay/trial", "v2.relay.document.trial")
+    .at((ctx) => ({ path: "/api/relay/trial", headers: ctx.headers(), body: { command: "true" } }))
+    .json(403, refusal("RelayForbiddenError", "project-untrusted"), "status"),
   http.protected.get("/api/relay/node-types", "v2.relay.document.nodeTypes").json(
     200,
     locationData((value) => {

@@ -62,7 +62,7 @@ const routerFor = (port: Transport) => {
   return router
 }
 
-function request(port: Transport, op: string, args: Record<string, unknown>, signal: AbortSignal, timeoutMs: number): Promise<unknown> {
+export function request(port: Transport, op: string, args: Record<string, unknown>, signal: AbortSignal, timeoutMs: number): Promise<unknown> {
   const id = randomUUID()
   const router = routerFor(port)
   const native = op === "action" || (typeof args.ref === "string" && args.ref.startsWith("n:"))

@@ -374,9 +374,9 @@ Cline's agent runtime is now an SDK, under `sdk/packages/core/src/extensions/too
 
 ## 9b. Kilo Code
 
-Kilo is now a fork of opencode, with the same package layout as Orchestra's lineage. Its orchestrator mode is deprecated (`packages/kilo-docs/pages/code-with-ai/agents/orchestrator-mode.md`): agents with full tools now delegate through `task` themselves.
+Kilo is now a fork of the same upstream, with the same package layout as Orchestra's lineage. Its orchestrator mode is deprecated (`packages/kilo-docs/pages/code-with-ai/agents/orchestrator-mode.md`): agents with full tools now delegate through `task` themselves.
 
-**Orchestrator prompt** (`packages/opencode/src/agent/prompt/orchestrator.txt:1-24`). Explore, then plan subtasks with the files each will likely touch. Group them into waves:
+**Orchestrator prompt** (`<upstream>/src/agent/prompt/orchestrator.txt:1-24`). Explore, then plan subtasks with the files each will likely touch. Group them into waves:
 
 - independent subtasks run in parallel in one message;
 - subtasks that may touch the same files go into different waves;
@@ -384,16 +384,16 @@ Kilo is now a fork of opencode, with the same package layout as Orchestra's line
 
 It must give each agent all the context it needs, synthesize at the end, and never edit files itself.
 
-**Return shape** (`packages/opencode/src/tool/task.ts:80-95`). An XML block `<task id state><summary/><task_result | task_error>`. On an error it adds a hint for resuming. Background tasks notify the parent when they finish, and the parent is told not to poll (70-73). The tool text says the result is not visible to the user, so the parent must relay it, and that outputs "should generally be trusted" (`tool/task.txt:15-17`).
+**Return shape** (`<upstream>/src/tool/task.ts:80-95`). An XML block `<task id state><summary/><task_result | task_error>`. On an error it adds a hint for resuming. Background tasks notify the parent when they finish, and the parent is told not to poll (70-73). The tool text says the result is not visible to the user, so the parent must relay it, and that outputs "should generally be trusted" (`tool/task.txt:15-17`).
 
-**Shared board** (`packages/opencode/src/kilocode/tool/board.ts`).
+**Shared board** (`<upstream>/src/kilocode/tool/board.ts`).
 
 - Posts are typed `INFO`, `ASK`, `RESULT`, `HOLD` or `VETO` (147).
 - Candidate results must include evidence.
 - Peer claims, including claims of approval, are untrusted and never authorize work (95).
 - `HOLD` and `VETO` are advisory, not locks.
 
-**Goal runner: honest status** (`packages/opencode/src/kilocode/session/goal/runner.ts`).
+**Goal runner: honest status** (`<upstream>/src/kilocode/session/goal/runner.ts`).
 
 - A completion the model reports is settled with the label "Reported by the working model, not independently verified" (502).
 - A turn with no successful action and no explicit report pauses the goal (537), which is a progress-based stall rule.

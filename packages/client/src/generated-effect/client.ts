@@ -2265,52 +2265,98 @@ const Endpoint30_9 = (raw: RawClient["server.relay.document"]) => (input: Endpoi
     },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint30_10Request = Parameters<RawClient["server.relay.document"]["relay.document.nodeTypes"]>[0]
-type Endpoint30_10Input = { readonly location?: Endpoint30_10Request["query"]["location"] }
+type Endpoint30_10Request = Parameters<RawClient["server.relay.document"]["relay.document.preview"]>[0]
+type Endpoint30_10Input = {
+  readonly location?: Endpoint30_10Request["query"]["location"]
+  readonly name?: Endpoint30_10Request["payload"]["name"]
+  readonly description?: Endpoint30_10Request["payload"]["description"]
+  readonly nodes?: Endpoint30_10Request["payload"]["nodes"]
+  readonly connections?: Endpoint30_10Request["payload"]["connections"]
+  readonly nodeGroups?: Endpoint30_10Request["payload"]["nodeGroups"]
+  readonly tags?: Endpoint30_10Request["payload"]["tags"]
+  readonly meta?: Endpoint30_10Request["payload"]["meta"]
+  readonly isArchived?: Endpoint30_10Request["payload"]["isArchived"]
+}
 const Endpoint30_10 = (raw: RawClient["server.relay.document"]) => (input?: Endpoint30_10Input) =>
+  raw["relay.document.preview"]({
+    query: { ...(input?.["location"] === undefined ? {} : { location: input?.["location"] }) },
+    payload: {
+      name: input?.["name"],
+      description: input?.["description"],
+      nodes: input?.["nodes"],
+      connections: input?.["connections"],
+      nodeGroups: input?.["nodeGroups"],
+      tags: input?.["tags"],
+      meta: input?.["meta"],
+      isArchived: input?.["isArchived"],
+    },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint30_11Request = Parameters<RawClient["server.relay.document"]["relay.document.commands"]>[0]
+type Endpoint30_11Input = { readonly location?: Endpoint30_11Request["query"]["location"] }
+const Endpoint30_11 = (raw: RawClient["server.relay.document"]) => (input?: Endpoint30_11Input) =>
+  raw["relay.document.commands"]({
+    query: { ...(input?.["location"] === undefined ? {} : { location: input?.["location"] }) },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint30_12Request = Parameters<RawClient["server.relay.document"]["relay.document.trial"]>[0]
+type Endpoint30_12Input = {
+  readonly location?: Endpoint30_12Request["query"]["location"]
+  readonly command: Endpoint30_12Request["payload"]["command"]
+  readonly params?: Endpoint30_12Request["payload"]["params"]
+}
+const Endpoint30_12 = (raw: RawClient["server.relay.document"]) => (input: Endpoint30_12Input) =>
+  raw["relay.document.trial"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    payload: { command: input["command"], params: input["params"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint30_13Request = Parameters<RawClient["server.relay.document"]["relay.document.nodeTypes"]>[0]
+type Endpoint30_13Input = { readonly location?: Endpoint30_13Request["query"]["location"] }
+const Endpoint30_13 = (raw: RawClient["server.relay.document"]) => (input?: Endpoint30_13Input) =>
   raw["relay.document.nodeTypes"]({
     query: { ...(input?.["location"] === undefined ? {} : { location: input?.["location"] }) },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint30_11Request = Parameters<RawClient["server.relay.document"]["relay.scope.list"]>[0]
-type Endpoint30_11Input = { readonly location?: Endpoint30_11Request["query"]["location"] }
-const Endpoint30_11 = (raw: RawClient["server.relay.document"]) => (input?: Endpoint30_11Input) =>
+type Endpoint30_14Request = Parameters<RawClient["server.relay.document"]["relay.scope.list"]>[0]
+type Endpoint30_14Input = { readonly location?: Endpoint30_14Request["query"]["location"] }
+const Endpoint30_14 = (raw: RawClient["server.relay.document"]) => (input?: Endpoint30_14Input) =>
   raw["relay.scope.list"]({
     query: { ...(input?.["location"] === undefined ? {} : { location: input?.["location"] }) },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint30_12Request = Parameters<RawClient["server.relay.document"]["relay.scope.create"]>[0]
-type Endpoint30_12Input = {
-  readonly location?: Endpoint30_12Request["query"]["location"]
-  readonly name: Endpoint30_12Request["payload"]["name"]
-  readonly description?: Endpoint30_12Request["payload"]["description"]
+type Endpoint30_15Request = Parameters<RawClient["server.relay.document"]["relay.scope.create"]>[0]
+type Endpoint30_15Input = {
+  readonly location?: Endpoint30_15Request["query"]["location"]
+  readonly name: Endpoint30_15Request["payload"]["name"]
+  readonly description?: Endpoint30_15Request["payload"]["description"]
 }
-const Endpoint30_12 = (raw: RawClient["server.relay.document"]) => (input: Endpoint30_12Input) =>
+const Endpoint30_15 = (raw: RawClient["server.relay.document"]) => (input: Endpoint30_15Input) =>
   raw["relay.scope.create"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
     payload: { name: input["name"], description: input["description"] },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint30_13Request = Parameters<RawClient["server.relay.document"]["relay.scope.update"]>[0]
-type Endpoint30_13Input = {
-  readonly scopeID: Endpoint30_13Request["params"]["scopeID"]
-  readonly location?: Endpoint30_13Request["query"]["location"]
-  readonly name: Endpoint30_13Request["payload"]["name"]
-  readonly description?: Endpoint30_13Request["payload"]["description"]
+type Endpoint30_16Request = Parameters<RawClient["server.relay.document"]["relay.scope.update"]>[0]
+type Endpoint30_16Input = {
+  readonly scopeID: Endpoint30_16Request["params"]["scopeID"]
+  readonly location?: Endpoint30_16Request["query"]["location"]
+  readonly name: Endpoint30_16Request["payload"]["name"]
+  readonly description?: Endpoint30_16Request["payload"]["description"]
 }
-const Endpoint30_13 = (raw: RawClient["server.relay.document"]) => (input: Endpoint30_13Input) =>
+const Endpoint30_16 = (raw: RawClient["server.relay.document"]) => (input: Endpoint30_16Input) =>
   raw["relay.scope.update"]({
     params: { scopeID: input["scopeID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
     payload: { name: input["name"], description: input["description"] },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint30_14Request = Parameters<RawClient["server.relay.document"]["relay.scope.remove"]>[0]
-type Endpoint30_14Input = {
-  readonly scopeID: Endpoint30_14Request["params"]["scopeID"]
-  readonly location?: Endpoint30_14Request["query"]["location"]
+type Endpoint30_17Request = Parameters<RawClient["server.relay.document"]["relay.scope.remove"]>[0]
+type Endpoint30_17Input = {
+  readonly scopeID: Endpoint30_17Request["params"]["scopeID"]
+  readonly location?: Endpoint30_17Request["query"]["location"]
 }
-const Endpoint30_14 = (raw: RawClient["server.relay.document"]) => (input: Endpoint30_14Input) =>
+const Endpoint30_17 = (raw: RawClient["server.relay.document"]) => (input: Endpoint30_17Input) =>
   raw["relay.scope.remove"]({
     params: { scopeID: input["scopeID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
@@ -2327,11 +2373,14 @@ const adaptGroup30 = (raw: RawClient["server.relay.document"]) => ({
   sprint: Endpoint30_7(raw),
   definition: Endpoint30_8(raw),
   check: Endpoint30_9(raw),
-  nodeTypes: Endpoint30_10(raw),
-  listScopes: Endpoint30_11(raw),
-  createScope: Endpoint30_12(raw),
-  updateScope: Endpoint30_13(raw),
-  removeScope: Endpoint30_14(raw),
+  preview: Endpoint30_10(raw),
+  commands: Endpoint30_11(raw),
+  trial: Endpoint30_12(raw),
+  nodeTypes: Endpoint30_13(raw),
+  listScopes: Endpoint30_14(raw),
+  createScope: Endpoint30_15(raw),
+  updateScope: Endpoint30_16(raw),
+  removeScope: Endpoint30_17(raw),
 })
 
 type Endpoint31_0Request = Parameters<RawClient["server.relay.publish"]["relay.publish.publish"]>[0]

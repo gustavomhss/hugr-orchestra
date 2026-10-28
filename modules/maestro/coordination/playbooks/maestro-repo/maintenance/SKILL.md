@@ -1,6 +1,7 @@
 ---
 name: maestro-repo-maintenance
 description: Scoped Git hygiene, independent PR review, change-aware checks, and release preparation. Use before an authorized branch, PR, integration, release/tag, or when repository state drifts; this skill grants no publication authority.
+internal: true
 when: Before an authorized branch, PR, integration, release or tag, or when repository state drifts.
 not-when: Release, ruleset or policy proposals for adoption, which arsenal-operators covers.
 ---

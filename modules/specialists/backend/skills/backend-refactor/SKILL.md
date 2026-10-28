@@ -1,6 +1,7 @@
 ---
 name: backend-refactor
 description: "Procedure for an assigned structural change with behavior to preserve: a move, extraction or rename between supplied seams, a binding-aware rename, a syntax recipe over pre-decided occurrences, or an edit at a generated-code boundary. Load with backend-implement when the packet prescribes a refactor. Not for choosing the target structure, cleanup sweeps or changing behavior."
+internal: true
 ---
 
 # Backend refactor

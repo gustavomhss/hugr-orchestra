@@ -21,6 +21,7 @@ import { LedgerChain } from "@orchestra/relay/ledger/chain"
 import { LedgerRead } from "@orchestra/relay/ledger/read"
 import { Config } from "./config"
 import { ConfigRelay } from "./config/relay"
+import { ConfigTrust } from "./config/trust"
 import { makeLocationNode } from "./effect/app-node"
 import { FSUtil } from "./fs-util"
 import { Global } from "./global"
@@ -40,6 +41,10 @@ import { RelayWorkflowEvaluator } from "./relay-workflow-evaluator"
 // A check's process group is killed at its timeout: a hook's before-verify, and each check of a workflow gate.
 export const VERIFY_TIMEOUT = Duration.seconds(60)
 export const GATE_TIMEOUT = Duration.minutes(15)
+// "Test now" in the workflow editor: one command, cut at a minute.
+export const TRIAL_TIMEOUT = Duration.seconds(60)
+// The end of a trial's output, where a failing test or linter puts its summary.
+export const TRIAL_OUTPUT_BYTES = 32 * 1024
 
 export class Unavailable extends Schema.TaggedErrorClass<Unavailable>()("Relay.Unavailable", {
   reason: Schema.Literals(["project-invalid", "install-invalid", "data-acquisition", "key-acquisition"]),
@@ -77,6 +82,20 @@ export interface Verified {
   readonly ledgerSeq?: number
 }
 
+export interface Trial {
+  readonly exitCode: number
+  readonly output: string
+  // Whether the start of the output was cut to its last TRIAL_OUTPUT_BYTES.
+  readonly truncated: boolean
+  readonly durationMs: number
+  readonly timedOut: boolean
+}
+
+// A trial runs a command the project chose, so it needs the same approval as the project's MCP and plugin commands.
+export class Untrusted extends Schema.TaggedErrorClass<Untrusted>()("Relay.Untrusted", {
+  directory: Schema.String,
+}) {}
+
 export interface Interface {
   readonly paths: Paths
   readonly judge: JudgeConfig.Config
@@ -86,6 +105,14 @@ export interface Interface {
   readonly check: (
     input: Omit<GateCheck.Input, "stateDir">,
   ) => Effect.Effect<RelayArm.CheckOutcome, GateCheck.Busy | GateControl.PlanError>
+  // Whether the user approved this project's own commands (the gate on `trial`).
+  readonly trusted: Effect.Effect<boolean>
+  // "Test now": runs one check command in the project as a check would, and returns its output. It grades nothing,
+  // records nothing and cannot pass a step; only a trusted project may run one.
+  readonly trial: (input: {
+    readonly command: string
+    readonly params?: Readonly<Record<string, string>>
+  }) => Effect.Effect<Trial, Untrusted | GateShell.Unavailable>
   readonly create: (
     input: ArmCreate.Input,
   ) => Effect.Effect<"created" | "unchanged", ArmCreate.Conflict | ArmState.StateError | Unavailable>
@@ -365,10 +392,74 @@ const layer = Layer.effect(
       return true
     })
 
+    const trusted = config
+      .entries()
+      .pipe(Effect.map((entries) => ConfigTrust.isTrusted(entries, global.config, location.directory)))
+
+    const trial = Effect.fn("Relay.trial")(function* (input: {
+      readonly command: string
+      readonly params?: Readonly<Record<string, string>>
+    }) {
+      if (!(yield* trusted)) return yield* new Untrusted({ directory: location.directory })
+      const env = {
+        ...Object.fromEntries(Object.entries(input.params ?? {}).filter((entry) => !STARTUP.has(entry[0]))),
+        PATH: process.env.PATH ?? "/usr/bin:/bin",
+        HOME: global.home,
+      }
+      if (!(yield* Effect.promise(() => which("bash", { path: env.PATH, nothrow: true }))))
+        return yield* new GateShell.Unavailable({ reason: "missing" })
+      const argv = GateShell.argv(input.command)
+      const native = yield* ToolSafety.NativeContext
+      const command = yield* ToolSafetySandbox.wrap(
+        ChildProcess.make(argv[0], argv.slice(1), {
+          cwd: location.directory,
+          env,
+          extendEnv: false,
+          stdin: "ignore",
+          killSignal: "SIGKILL",
+        }),
+      ).pipe(
+        Effect.provideService(FSUtil.Service, fs),
+        Effect.provideService(ToolSafety.NativeContext, native ?? { directory: location.directory }),
+        Effect.mapError(() => new GateShell.Unavailable({ reason: "spawn" })),
+      )
+      // The capture keeps the start of the output; the summary is at the end, so the tail is kept here instead.
+      const tail = { chunks: [] as Uint8Array[], bytes: 0, cut: false }
+      const keep = (chunk: Uint8Array) => {
+        tail.chunks.push(chunk)
+        tail.bytes += chunk.byteLength
+        while (tail.bytes - tail.chunks[0]!.byteLength >= TRIAL_OUTPUT_BYTES) {
+          tail.bytes -= tail.chunks.shift()!.byteLength
+          tail.cut = true
+        }
+      }
+      const started = yield* Clock.currentTimeMillis
+      const result = yield* processes
+        .run(command, { combineOutput: true, maxOutputBytes: 0, inspect: keep })
+        .pipe(
+          Effect.map((done) => ({ exitCode: done.exitCode, timedOut: false })),
+          Effect.mapError(() => new GateShell.Unavailable({ reason: "spawn" })),
+          Effect.timeoutOrElse({
+            duration: TRIAL_TIMEOUT,
+            orElse: () => Effect.succeed({ exitCode: -1, timedOut: true }),
+          }),
+        )
+      const bytes = Buffer.concat(tail.chunks)
+      const cut = bytes.byteLength > TRIAL_OUTPUT_BYTES
+      return {
+        ...result,
+        output: bytes.subarray(cut ? bytes.byteLength - TRIAL_OUTPUT_BYTES : 0).toString("utf8"),
+        truncated: tail.cut || cut,
+        durationMs: (yield* Clock.currentTimeMillis) - started,
+      } satisfies Trial
+    }, Effect.scoped)
+
     return Service.of({
       paths,
       judge,
       verify,
+      trusted,
+      trial,
       check: Effect.fn("Relay.check")(function* (input: Omit<GateCheck.Input, "stateDir">) {
         return yield* GateCheck.check({ ...input, stateDir: undefined }).pipe(ports(GATE_TIMEOUT))
       }),

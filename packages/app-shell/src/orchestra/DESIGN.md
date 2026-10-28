@@ -105,6 +105,7 @@ Hairlines: `--orchestra-border-muted` `.14`, `--orchestra-border` `.2`, `--orche
 | `--orchestra-muted` | `#b2c0cf` | `#343d48` | labels, eyebrows |
 | `--orchestra-faint` | `#aec2d4` | `#363e48` | meta |
 | `--orchestra-accent` | `#9dc3e9` | `#0c3e6c` | links, focus, selection |
+| `--orchestra-aura` | `#6fb0f0` | `#3f8ee0` | glow around a working agent's picture (2.4s breath, still under reduced motion) |
 | `--orchestra-warm` | `#cfbd95` | `#4d390f` | warning |
 | `--orchestra-success` | `#a6c8b7` | `#164431` | success |
 | `--orchestra-danger` | `#e7b3b0` | `#5c302f` | error, destructive |

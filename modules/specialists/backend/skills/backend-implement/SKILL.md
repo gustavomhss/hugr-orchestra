@@ -1,6 +1,7 @@
 ---
 name: backend-implement
 description: "Common procedure for an assigned backend implementation packet: check the packet, select the change mode, implement inside the supplied design, run the named checks and return the backend-result card. Load before editing any assigned backend change. Not for investigation, diagnosis, design or review."
+internal: true
 ---
 
 # Backend implementation

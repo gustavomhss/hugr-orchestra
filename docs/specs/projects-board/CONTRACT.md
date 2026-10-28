@@ -160,13 +160,23 @@ link one before Review").
 
 | Tool | Input | Does |
 |---|---|---|
-| `board_read` | `project` key, optional `issue` number, optional `since` activity id | Snapshot: project, epics, issues with steps, open questions, owner notes and answers since `since`, attachment names (secret labels only), holds, pauses, GitHub state. The only way Maestro reads the board. |
+| `board_read` | `project` key, optional `issue` number, optional `since` activity id; without `project`, the list of projects (key, name, goal, status, GitHub repo) | Snapshot: project, epics, issues with steps, open questions, owner notes and answers since `since`, attachment names (secret labels only), holds, pauses, GitHub state. The only way Maestro reads the board. |
 | `board_project` | `key`, `name`, `goal`, `target_date`, `repo`, `github_repo`, `reason` | Create or update a project. |
 | `board_epic` | `project`, optional `number`, `title`, `goal`, `position`, `status`, `reason` | Create or update an epic. |
-| `board_issue` | `project`, optional `number`, `title`, `body`, `type`, `epic`, `estimate`, `seat`, `session`, `branch`, `pr`, `depends_on`, `reason` | Create (lands in Backlog) or update an issue, including linking branch, PR and session. |
+| `board_issue` | `project`, optional `number`, `title`, `body`, `type`, `epic`, `estimate`, `seat`, `session`, `branch`, `pr`, `depends_on`, `attempts`, `crash_reason`, `guardrail_rule`, `reason` | Create (lands in Backlog) or update an issue, including linking branch, PR and session. `depends_on` replaces the list. |
 | `board_move` | `project`, `number`, `stage`, optional `position`, `reason` | Move between stages. Enforces proof (rule 5), hold (6), pause (7). Moving out of `intake` is the owner's, not Maestro's. |
 | `board_steps` | `project`, `number`, `steps: [{ title, status, now? }]`, `reason` | Replace the step list. |
-| `board_question` | `project`, `issue?`, `epic?`, `action: ask` with `text`, `options`, `recommended`, `cost_of_waiting`, `blocking`; or `action: withdraw` with `id`; plus `reason` | Ask the owner or withdraw a question. |
+| `board_question` | `project`, `issue?`, `epic?`, `action: ask` with `text`, `options`, `recommended`, `cost_of_waiting`, `blocking`; or `action: withdraw` with `id`; plus `reason` | Ask the owner or withdraw a question. The only write allowed while the project is paused. |
+| `board_settings` | `project`, optional `target_date` (epoch ms), `budget_usd`, `reason`; `null` clears a field | Set the target date and budget. At 100% of the budget no card moves to Building. |
+| `board_decision` | `project`, `id` (the decision or the answered question), `outcome`, `reason` | Record what came of an answered decision; until then it reads "applied, no result yet". |
+
+The host also moves cards on facts, never by Maestro's hand:
+
+- `task` with `card: "KEY-N"` links the seat and Session on the card and moves it from Backlog or Ready to Building
+  (`modules/maestro/coordination/src/v2/governance.ts` `claim`).
+- A linked open PR moves Building to Review; a merged PR moves Building or Review to Shipped and clears `crash_reason`
+  (`packages/core/src/board/github.ts` `follow`). Paused cards and holds stay put; a closed or reopened PR raises a
+  question instead of a move. The move is logged with actor `github`.
 
 Maestro's prompt says only what the tools cannot: keep the board current as work moves, ask through `board_question`
 instead of chat when the answer changes the plan, and read `board_read` with `since` at the start of each turn.

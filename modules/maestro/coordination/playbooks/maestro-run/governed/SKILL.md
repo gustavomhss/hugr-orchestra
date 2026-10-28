@@ -1,6 +1,7 @@
 ---
 name: maestro-run-governed
 description: Run the governed approval chain from preconditions to verified dispatch, covering admission, grounding, validation, the cold review (`lucy`), owner approval, authorization and task. Use before the first governed tool call whenever the owner asks for a governed or auditable flow.
+internal: true
 when: The owner asks for a governed or auditable flow; load it before the first governed tool call.
 not-when: Normal work, which is the default.
 ---

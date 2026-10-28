@@ -51,6 +51,17 @@
       },
       "additionalProperties": false
     },
+    "Agent.Avatar": {
+      "type": "string",
+      "allOf": [
+        {
+          "pattern": "^(lib:[a-z0-9][a-z0-9_-]{0,63}|data:image\\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2})$"
+        },
+        {
+          "maxLength": 200000
+        }
+      ]
+    },
     "ConfigV2.Agent": {
       "type": "object",
       "properties": {
@@ -110,6 +121,9 @@
               ]
             }
           ]
+        },
+        "avatar": {
+          "$ref": "#/$defs/Agent.Avatar"
         },
         "steps": {
           "exclusiveMinimum": 0,

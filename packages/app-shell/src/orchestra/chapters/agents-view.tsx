@@ -19,6 +19,7 @@ export function AgentsRoster(props: {
   /** The catalog's display name for an agent's model, when this profile's catalog has loaded it. */
   modelName?: (agent: Agent) => string | undefined
   stats: (agent: Agent) => AgentStats
+  working?: (agent: Agent) => boolean
   onOpen: (agent: Agent) => void
   onChat: () => void
   opening?: boolean
@@ -77,7 +78,7 @@ export function AgentsRoster(props: {
                   aria-posinset={page() * PAGE_SIZE + index() + 1}
                 >
                   <div class="agent-top">
-                    <AgentPortrait agent={item.agent} class="agent-avatar" />
+                    <AgentPortrait agent={item.agent} class="agent-avatar" working={props.working?.(item.agent)} />
                     <div class="agent-title">
                       {/* The name is the card's one link: its hit area stretches over the whole card. */}
                       <button type="button" class="agent-open" id={id} onClick={() => props.onOpen(item.agent)}>
@@ -176,7 +177,7 @@ export function AgentsRoster(props: {
 }
 
 /** The agent's picture, or the star mark in the same slot when it has none. */
-export function AgentPortrait(props: { agent: Agent; avatar?: string; class: string }) {
+export function AgentPortrait(props: { agent: Agent; avatar?: string; class: string; working?: boolean }) {
   return (
     <Show
       when={avatarUrl(props.avatar ?? agentAvatar(props.agent))}
@@ -188,7 +189,7 @@ export function AgentPortrait(props: { agent: Agent; avatar?: string; class: str
         </span>
       }
     >
-      {(url) => <img class={props.class} src={url()} alt="" />}
+      {(url) => <img class={props.class} src={url()} alt="" data-working={props.working || undefined} />}
     </Show>
   )
 }

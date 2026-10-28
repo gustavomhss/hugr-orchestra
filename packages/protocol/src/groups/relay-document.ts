@@ -85,6 +85,54 @@ export const RelaySprintView = Schema.Struct({
   skillBindings: Schema.Array(Schema.Struct(Struct.omit(RelayAuthoring.SkillBinding.fields, ["content"]))),
 }).annotate({ identifier: "RelaySprintView" })
 
+/**
+ * The editor's live preview of an unsaved draft: the compiled sprint (what each agent receives) or why it does not
+ * compile, the lint findings keyed by step id (`wp`), and whether AI checks have a judge to grade them.
+ */
+export const RelayPreview = Schema.Struct({
+  sprint: Schema.NullOr(Sprint),
+  refusal: Schema.NullOr(Schema.Struct(refusal)),
+  skillBindings: Schema.Array(Schema.Struct(Struct.omit(RelayAuthoring.SkillBinding.fields, ["content"]))),
+  findings: Schema.Array(
+    Schema.Struct({
+      category: Schema.String,
+      severity: Schema.Literals(["error", "warn"]),
+      // null for a finding about the whole plan, such as its length.
+      wp: Schema.NullOr(Schema.String),
+      detail: Schema.String,
+    }),
+  ),
+  judge: Schema.Literals(["stub", "api"]),
+}).annotate({ identifier: "RelayPreview" })
+export type RelayPreview = typeof RelayPreview.Type
+
+export const RelayProjectCommands = Schema.Struct({
+  commands: Schema.Array(
+    Schema.Struct({
+      command: Schema.String,
+      source: Schema.String,
+      kind: Schema.Literals(["test", "lint", "typecheck", "format", "build"]),
+    }),
+  ),
+  pytest: Schema.Array(Schema.String),
+  trusted: Schema.Boolean,
+}).annotate({ identifier: "RelayProjectCommands" })
+export type RelayProjectCommands = typeof RelayProjectCommands.Type
+
+export const RelayTrialInput = Schema.Struct({
+  command: Schema.String,
+  params: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
+}).annotate({ identifier: "RelayTrialInput" })
+
+export const RelayTrial = Schema.Struct({
+  exitCode: Schema.Number,
+  output: Schema.String,
+  truncated: Schema.Boolean,
+  durationMs: Schema.Number,
+  timedOut: Schema.Boolean,
+}).annotate({ identifier: "RelayTrial" })
+export type RelayTrial = typeof RelayTrial.Type
+
 export const RelayExport = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("hook"), definition: RelayHook.V1 }),
   Schema.Struct({ kind: Schema.Literal("workflow"), definition: Sprint }),
@@ -268,6 +316,52 @@ export const RelayDocumentGroup = HttpApiGroup.make("server.relay.document")
           "v2.relay.document.check",
           "Check workflow step",
           "Public authoring cannot execute workflow checks. This endpoint returns 403 maestro-execution-required; executable workflow checks are owned by Maestro through its approved native binding.",
+        ),
+      ),
+  )
+  .add(
+    HttpApiEndpoint.post("relay.document.preview", "/api/relay/preview", {
+      query: LocationQuery,
+      payload: RelayDocumentCreate,
+      success: Location.response(RelayPreview),
+      error: RelayErrors,
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        docs(
+          "v2.relay.document.preview",
+          "Preview workflow draft",
+          "Compile an unsaved workflow draft without storing it: the sprint each agent receives, or why it does not compile, with lint findings per step and the judge backend.",
+        ),
+      ),
+  )
+  .add(
+    HttpApiEndpoint.get("relay.document.commands", "/api/relay/commands", {
+      query: LocationQuery,
+      success: Location.response(RelayProjectCommands),
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        docs(
+          "v2.relay.document.commands",
+          "Detect project check commands",
+          "The test, lint and typecheck commands the project's manifests declare (package.json, pyproject.toml, Cargo.toml, go.mod, Makefile), read without running anything, and whether the project is trusted to try one.",
+        ),
+      ),
+  )
+  .add(
+    HttpApiEndpoint.post("relay.document.trial", "/api/relay/trial", {
+      query: LocationQuery,
+      payload: RelayTrialInput,
+      success: Location.response(RelayTrial),
+      error: [...RelayErrors, RelayForbiddenError],
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        docs(
+          "v2.relay.document.trial",
+          "Try a check command",
+          "Run one check command in the project the way a check runs, for at most 60 seconds, and return the end of its output. It grades and records nothing. An untrusted project is a 403 project-untrusted.",
         ),
       ),
   )

@@ -8,13 +8,15 @@ import type { Database } from "../../database/database"
 import { makeLocationNode } from "../../effect/app-node"
 import type { ModelV2 } from "../../model"
 import type { PermissionV2 } from "../../permission"
+import { ProviderV2 } from "../../provider"
 import type { QuestionV2 } from "../../question"
 import type { ToolSafety } from "../../tool-safety"
 import type { ToolRegistry } from "../../tool/registry"
-import type { SkillV2 } from "../../skill"
 import type { SessionMessage } from "../message"
 import type { SessionSchema } from "../schema"
+import type { SessionTodo } from "../todo"
 import { SessionTable } from "../sql"
+import type { SessionStore } from "../store"
 
 /**
  * What the runner hands an execution host for one provider turn. An agent whose `engine` names a registered host runs
@@ -29,10 +31,6 @@ export interface Turn {
   readonly system: ReadonlyArray<string>
   /** The Context Epoch baseline and workflow instructions alone: `system` without the agent's own text. */
   readonly context: ReadonlyArray<string>
-  /** The agents this turn's agent may delegate to, as the task tool would accept them as targets. */
-  readonly seats: ReadonlyArray<AgentV2.Info>
-  /** The skills each seat in `seats` may load, by seat id, as Orchestra's skill tool would list them for that seat. */
-  readonly skills: Readonly<Record<string, ReadonlyArray<SkillV2.Info>>>
   /** Projected history the runner reloaded for this turn. */
   readonly history: ReadonlyArray<SessionMessage.Message>
   /** The agent's permission-filtered Orchestra tools, for the host to offer its engine. */
@@ -53,8 +51,6 @@ export interface Turn {
     readonly tool: string
     readonly action: string
     readonly resources: ReadonlyArray<string>
-    /** A seat from `seats` the call runs under, when the engine made it inside that seat's subagent. */
-    readonly agent?: AgentV2.ID
     /** The call as ToolSafety reads it: Orchestra's tool name (`bash`, `write`, `edit`, `read`, ...) and argument names. */
     readonly safety?: { readonly tool: string; readonly args: Readonly<Record<string, unknown>> }
   }) => Effect.Effect<Authorization, PermissionV2.Error | PermissionV2.DeclinedError | ToolSafety.Denied>
@@ -94,22 +90,10 @@ export interface Turn {
    */
   readonly notify: (input: { readonly id: string; readonly text: string }) => Effect.Effect<void>
   /**
-   * Opens the child Session that mirrors a subagent the engine ran for the parent's task call `callID`, the way
-   * Orchestra's task tool would have opened it: same parent, seat agent, inherited permissions and the delegated prompt
-   * as its user message. The call's progress names the child, so the task row links to it. The child is a record only:
-   * it is never woken, and its events come from the engine through `publish`. `finish` settles what is left open; its
-   * step carries no cost, which the parent's step already counts. Reopening the same call adopts the same child.
+   * Replaces the Session's todo list, as Orchestra's todowrite tool would: the todo panel shows it. For an engine that
+   * keeps its own checklist, called when the engine's own todo call succeeds.
    */
-  readonly child: (input: {
-    readonly callID: string
-    readonly agent: AgentV2.ID
-    readonly title: string
-    readonly prompt: string
-  }) => Effect.Effect<{
-    readonly id: SessionSchema.ID
-    readonly publish: (event: LLMEvent) => Effect.Effect<void>
-    readonly finish: Effect.Effect<void>
-  }>
+  readonly todos: (list: ReadonlyArray<SessionTodo.Info>) => Effect.Effect<void>
   /** The host's durable state, `session.metadata[host.stateKey]`. */
   readonly state: {
     readonly get: Effect.Effect<unknown>
@@ -159,6 +143,24 @@ export const of = (hosts: ReadonlyArray<Interface>) =>
   Service.of({ get: (engine) => hosts.find((host) => host.id === engine) })
 
 export const node = makeLocationNode({ service: Service, layer, deps: [] })
+
+/**
+ * A Session's engine: its agent's own, else the engine its parent Session ran on, so a seat a Claude-mode lead
+ * dispatches on a Claude model runs on Claude Code too. A child on another provider's model runs on Orchestra's
+ * own loop, as in normal mode. `orchestra` names no host.
+ */
+export function engineOf(agents: AgentV2.Interface, store: SessionStore.Interface) {
+  const of: (session: SessionSchema.Info) => Effect.Effect<string | undefined> = Effect.fn("ExecutionHost.engineOf")(
+    function* (session: SessionSchema.Info) {
+      const own = (yield* agents.select(session.agent)).info?.engine
+      if (own) return own === "orchestra" ? undefined : own
+      if (session.model && session.model.providerID !== ProviderV2.ID.anthropic) return undefined
+      const parent = session.parentID ? yield* store.get(session.parentID) : undefined
+      return parent ? yield* of(parent) : undefined
+    },
+  )
+  return of
+}
 
 /** Read-modify-write of one `session.metadata` key; other keys are kept. The Session's drain serializes writers. */
 export function state(db: Database.Interface["db"], sessionID: SessionSchema.ID, key: string): Turn["state"] {
