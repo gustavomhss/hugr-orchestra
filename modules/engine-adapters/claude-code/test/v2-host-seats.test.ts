@@ -40,6 +40,7 @@ const turnOf = (agent: string, input: Partial<ExecutionHost.Turn> = {}): Executi
   steers: Stream.empty,
   consumed: () => Effect.void,
   notify: () => Effect.void,
+  todos: () => Effect.void,
   state: { get: Effect.succeed(undefined), update: () => Effect.void },
   ...input,
 })
