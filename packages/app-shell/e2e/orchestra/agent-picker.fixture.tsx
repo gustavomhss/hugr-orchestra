@@ -63,6 +63,7 @@ function Fixture() {
     retries: 0,
     refreshed: false,
     editing: undefined as Agent | undefined,
+    opened: undefined as string | undefined,
     measurement: undefined as
       | { count: number; kind: string; milliseconds: number; rows: number; nodes: number }
       | undefined,
@@ -196,7 +197,8 @@ function Fixture() {
             agents={agents}
             scope="fixture"
             availability={() => ({ ok: true })}
-            onConfigure={(agent) => setState("editing", agent)}
+            stats={() => ({})}
+            onOpen={(agent) => setState("opened", agent.id)}
             onChat={() => {}}
           />
         </section>
@@ -223,6 +225,7 @@ function Fixture() {
         />
         <output data-testid="retries">{state.retries}</output>
       </Show>
+      <output data-testid="opened">{state.opened}</output>
       <output data-testid="writes">{JSON.stringify(state.writes)}</output>
       <output data-testid="pending">{JSON.stringify(pending())}</output>
       <output data-testid="measurement" data-ready={!!state.measurement}>

@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import type { Agent } from "@/v2-wire"
 
 import {
+  agentAvatar,
   agentDraft,
   agentFileInput,
   agentFileTarget,
@@ -240,6 +241,18 @@ describe("Agent editor", () => {
     expect(agentFileInput(agentDraft(plan, explicit), explicit, plan).model).toBe("openrouter/team/reasoner")
     draft.model = ""
     expect(agentFileInput(draft, explicit, plan).model).toBeUndefined()
+  })
+
+  test("an avatar is written only when chosen, and a seat without one shows its own portrait", () => {
+    expect(agentFileInput(agentDraft(plan, file), file, plan).avatar).toBeUndefined()
+    const picked = { ...agentDraft(plan, file), avatar: "lib:set2-07" }
+    expect(agentFileInput(picked, file, plan).avatar).toBe("lib:set2-07")
+    const chosen = { ...file, avatar: "lib:set2-07" }
+    expect(agentDraft(plan, chosen).avatar).toBe("lib:set2-07")
+    expect(removeInput(chosen).avatar).toBe("lib:set2-07")
+    expect(agentFileInput({ ...agentDraft(plan, chosen), avatar: "" }, chosen, plan).avatar).toBeUndefined()
+    expect(agentAvatar({ ...plan, id: "backend" })).toBe("lib:seat-backend")
+    expect(agentAvatar({ ...plan, id: "backend", avatar: "lib:nova" })).toBe("lib:nova")
   })
 
   test("Maestro identity and primary mode are fixed even if a draft is tampered with", () => {

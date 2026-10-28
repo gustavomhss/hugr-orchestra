@@ -42,6 +42,7 @@ const agentKeys = new Set([
   "mode",
   "hidden",
   "color",
+  "avatar",
   "steps",
   "disabled",
   "permissions",
@@ -125,6 +126,7 @@ export const Plugin = define({
               if (item.mode !== undefined && !maestro) agent.mode = item.mode
               if (item.hidden !== undefined) agent.hidden = item.hidden
               if (item.color !== undefined) agent.color = item.color
+              if (item.avatar !== undefined) agent.avatar = item.avatar
               if (item.steps !== undefined) agent.steps = item.steps
               if (item.permissions !== undefined) {
                 agent.permissions.push(...expandPermissions(item.permissions, global.home))

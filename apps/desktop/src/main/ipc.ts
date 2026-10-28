@@ -31,6 +31,7 @@ import { nativeT } from "./native-translations"
 import { registerAppDockIpcHandlers } from "./ipc-app-dock"
 import { registerResponseDownloadIpc } from "./response-download"
 import { setWindowZoom } from "./window-zoom"
+import { getCaffeinate, setCaffeinate } from "./caffeinate"
 import { openDesktopPath } from "./apps"
 import { registerLiveIpc } from "./live-ipc"
 import type { LiveLoop } from "./live-loop"
@@ -318,6 +319,10 @@ export function registerIpcHandlers(deps: Deps) {
     setWindowZoom(win, factor, () => updateTitlebar(win))
   })
   registerLiveIpc(deps.liveLoop)
+  handle("get-caffeinate", () => getCaffeinate())
+  handle("set-caffeinate", (_event: IpcMainInvokeEvent, enabled: boolean) => {
+    setCaffeinate(enabled)
+  })
   handle("get-pinch-zoom-enabled", () => getPinchZoomEnabled())
   handle("set-pinch-zoom-enabled", (_event: IpcMainInvokeEvent, enabled: boolean) => {
     setPinchZoomEnabled(enabled)

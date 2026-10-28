@@ -52,13 +52,52 @@ export type AgentsListOutput = {
     readonly mode: "subagent" | "primary" | "all"
     readonly hidden: boolean
     readonly color?: string | "primary" | "secondary" | "accent" | "success" | "warning" | "error" | "info"
+    readonly avatar?: string
     readonly steps?: number
+    readonly skills?: ReadonlyArray<{
+      readonly name: string
+      readonly description?: string
+      readonly references?: ReadonlyArray<{ readonly kind?: string; readonly family?: string; readonly title: string }>
+    }>
+    readonly toolkit?: "backend" | "research"
     readonly permissions: ReadonlyArray<{
       readonly action: string
       readonly resource: string
       readonly effect: "allow" | "deny" | "ask"
     }>
   }>
+}
+
+export type AgentsDetailInput = {
+  readonly agentID: { readonly agentID: string }["agentID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type AgentsDetailOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly tools: ReadonlyArray<{ readonly name: string; readonly description: string }>
+    readonly skills: ReadonlyArray<{
+      readonly name: string
+      readonly description?: string | null
+      readonly location: string
+    }>
+    readonly engines: ReadonlyArray<{
+      readonly id: string
+      readonly version: string
+      readonly license: string
+      readonly upstream: string
+      readonly role: "generator" | "check" | "indexer" | "oracle"
+      readonly input: string
+      readonly status: "absent" | "fetching" | "ready" | "failed" | "unsupported"
+    }>
+  }
 }
 
 export type AgentsGetFileInput = {
@@ -82,6 +121,7 @@ export type AgentsGetFileOutput = {
     readonly description?: string
     readonly mode?: "subagent" | "primary" | "all"
     readonly model?: string
+    readonly avatar?: string
     readonly steps?: number
     readonly system?: string
     readonly permission?: {
@@ -100,6 +140,7 @@ export type AgentsUpdateFileInput = {
     readonly description?: string
     readonly mode?: "subagent" | "primary" | "all"
     readonly model?: string
+    readonly avatar?: string
     readonly steps?: number
     readonly system?: string
     readonly permission?: {
@@ -112,6 +153,7 @@ export type AgentsUpdateFileInput = {
     readonly description?: string
     readonly mode?: "subagent" | "primary" | "all"
     readonly model?: string
+    readonly avatar?: string
     readonly steps?: number
     readonly system?: string
     readonly permission?: {
@@ -124,6 +166,7 @@ export type AgentsUpdateFileInput = {
     readonly description?: string
     readonly mode?: "subagent" | "primary" | "all"
     readonly model?: string
+    readonly avatar?: string
     readonly steps?: number
     readonly system?: string
     readonly permission?: {
@@ -132,10 +175,24 @@ export type AgentsUpdateFileInput = {
     readonly disable?: boolean
     readonly revision?: string
   }["model"]
+  readonly avatar?: {
+    readonly description?: string
+    readonly mode?: "subagent" | "primary" | "all"
+    readonly model?: string
+    readonly avatar?: string
+    readonly steps?: number
+    readonly system?: string
+    readonly permission?: {
+      readonly [x: string]: ("allow" | "ask" | "deny") | { readonly [x: string]: "allow" | "ask" | "deny" }
+    }
+    readonly disable?: boolean
+    readonly revision?: string
+  }["avatar"]
   readonly steps?: {
     readonly description?: string
     readonly mode?: "subagent" | "primary" | "all"
     readonly model?: string
+    readonly avatar?: string
     readonly steps?: number
     readonly system?: string
     readonly permission?: {
@@ -148,6 +205,7 @@ export type AgentsUpdateFileInput = {
     readonly description?: string
     readonly mode?: "subagent" | "primary" | "all"
     readonly model?: string
+    readonly avatar?: string
     readonly steps?: number
     readonly system?: string
     readonly permission?: {
@@ -160,6 +218,7 @@ export type AgentsUpdateFileInput = {
     readonly description?: string
     readonly mode?: "subagent" | "primary" | "all"
     readonly model?: string
+    readonly avatar?: string
     readonly steps?: number
     readonly system?: string
     readonly permission?: {
@@ -172,6 +231,7 @@ export type AgentsUpdateFileInput = {
     readonly description?: string
     readonly mode?: "subagent" | "primary" | "all"
     readonly model?: string
+    readonly avatar?: string
     readonly steps?: number
     readonly system?: string
     readonly permission?: {
@@ -184,6 +244,7 @@ export type AgentsUpdateFileInput = {
     readonly description?: string
     readonly mode?: "subagent" | "primary" | "all"
     readonly model?: string
+    readonly avatar?: string
     readonly steps?: number
     readonly system?: string
     readonly permission?: {
@@ -208,6 +269,7 @@ export type AgentsUpdateFileOutput = {
     readonly description?: string
     readonly mode?: "subagent" | "primary" | "all"
     readonly model?: string
+    readonly avatar?: string
     readonly steps?: number
     readonly system?: string
     readonly permission?: {

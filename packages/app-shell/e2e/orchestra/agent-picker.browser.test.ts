@@ -177,8 +177,8 @@ test("roster pagination and search keep stable agent identity with bounded DOM",
   )
   await page.getByRole("searchbox", { name: "Search agents" }).fill("seat-4999")
   await expect(roster.getByRole("listitem")).toHaveCount(1)
-  await roster.getByRole("button", { name: "Configure", exact: true }).click()
-  await expect(page.locator("dialog.agents-dialog").getByLabel("Name")).toHaveValue("Agent 04999")
+  await roster.getByRole("button", { name: "Agent 04999", exact: true }).click()
+  await expect(page.getByTestId("opened")).toHaveText("seat-4999")
 })
 
 test("shared dialog Escape restores openers across push, removal and show replacement", async ({ page }) => {
