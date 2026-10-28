@@ -112,8 +112,14 @@ as a whole list by `board_steps`, so the log keeps the full list in `before` and
 
 ### board_note
 
-`id`, `issue_id` (fk cascade), `author` (`owner` `maestro` or `github:<login>`), `body`, `github_comment_id` (null).
+`id`, `issue_id` (fk cascade), `kind`, `author` (`owner` `maestro` `github:<login>`, or a seat id on a thread row),
+`body`, `github_comment_id` (null).
 Notes are private to the board: they never go out to GitHub and never show to guests.
+
+`kind` is `note` for a person's note. The other kinds are the card's message thread, written only by the host when a
+Task is bound to the card: `brief` and `answer` (what the caller sent the seat), `question` (the seat stopped blocked),
+`return` (the seat's result), `review` and `rework` (the merge queue). Thread rows are read-only (`ownerNote` edit and
+delete refuse them) and stay out of `board_read`'s `since` news, which lists only `note` rows.
 
 ### board_attachment
 

@@ -445,6 +445,27 @@ describe("Board", () => {
     }),
   )
 
+  it.live("thread rows: the host records a card's messages read-only, beside notes and out of Maestro's news", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      yield* board.project({ key: "THR", name: "Thread", reason: "Start." })
+      yield* board.issue({ project: "THR", title: "Work", reason: "Plan." })
+      yield* board.thread({ key: "THR", number: 1, kind: "brief", author: "maestro", body: "Build it." })
+      yield* board.thread({ key: "THR", number: 1, kind: "return", author: "backend", body: "Built." })
+      yield* board.note("THR", 1, { body: "Looks right." })
+
+      const notes = (yield* board.issuePage("THR", 1)).notes
+      expect(notes.map((note) => [note.kind, note.author, note.body])).toEqual([
+        ["brief", "maestro", "Build it."],
+        ["return", "backend", "Built."],
+        ["note", "owner", "Looks right."],
+      ])
+      expect(yield* Effect.flip(board.editNote("THR", 1, notes[1]!.id, { body: "Mine now." }))).toBeInstanceOf(Board.RefusedError)
+      expect(yield* Effect.flip(board.deleteNote("THR", 1, notes[0]!.id))).toBeInstanceOf(Board.RefusedError)
+      expect((yield* board.read({ project: "THR" })).since.notes.map((note) => note.kind)).toEqual(["note"])
+    }),
+  )
+
   it.live("removing a secret attachment deletes its credential and never shows the value", () =>
     Effect.gen(function* () {
       const board = yield* Board.Service

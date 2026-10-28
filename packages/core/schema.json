@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "0f82e8b1-5524-40a1-ba69-c051d40b74a5",
+  "id": "7f3d5fd5-9469-4044-81dc-384e5b41362b",
   "prevIds": [
-    "00e3e536-e026-4eef-ab22-55ee8f7ed937"
+    "0f82e8b1-5524-40a1-ba69-c051d40b74a5"
   ],
   "ddl": [
     {
@@ -2115,6 +2115,16 @@
       "default": null,
       "generated": null,
       "name": "issue_id",
+      "entityType": "columns",
+      "table": "board_note"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "'note'",
+      "generated": null,
+      "name": "kind",
       "entityType": "columns",
       "table": "board_note"
     },

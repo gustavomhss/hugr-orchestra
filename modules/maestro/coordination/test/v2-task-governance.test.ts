@@ -56,7 +56,9 @@ test("a Task's card links the teammate and its Session and moves the card to Bui
       yield* board.issue({ project: "CRD", number: 2, pr: 4, reason: "PR is up." })
       yield* board.move({ project: "CRD", number: 2, stage: "review", reason: "PR is up." })
 
-      expect(yield* admit({ directory, caller: "maestro", target: "general", extra: { card: "CRD-1" } })).toEqual({})
+      expect(yield* admit({ directory, caller: "maestro", target: "general", extra: { card: "CRD-1" } })).toEqual({
+        receipt: { card: "CRD-1", seat: "general" },
+      })
       const card = (yield* board.snapshot("CRD")).issues[0]
       expect(card).toMatchObject({ stage: "building", seat: "general" })
       expect(card?.sessionID).toStartWith("ses_")

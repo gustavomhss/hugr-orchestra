@@ -301,6 +301,7 @@ export default {
         CREATE TABLE \`board_note\` (
           \`id\` text PRIMARY KEY,
           \`issue_id\` text NOT NULL,
+          \`kind\` text DEFAULT 'note' NOT NULL,
           \`author\` text NOT NULL,
           \`body\` text NOT NULL,
           \`github_comment_id\` integer,

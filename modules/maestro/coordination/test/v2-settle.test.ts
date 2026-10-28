@@ -2,6 +2,7 @@ import path from "node:path"
 import { expect, test } from "bun:test"
 import { DateTime, Effect, type Layer, type Scope } from "effect"
 import { AgentV2 } from "@orchestra/core/agent"
+import { Board } from "@orchestra/core/board/board"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { SessionSchema, SessionStore } from "@orchestra/core/session"
@@ -10,7 +11,7 @@ import { TaskGovernance } from "@orchestra/core/tool/task-governance"
 import { Seats } from "../src/seats"
 import { WorkResultV2 } from "../src/v2/governance/work-result"
 import { WriteRootsV2 } from "../src/v2/governance/write-roots"
-import { governanceLayer, session, worktree } from "./fixture/v2-governance"
+import { admit, governanceLayer, session, worktree } from "./fixture/v2-governance"
 
 const run = <A, E>(body: (directory: string) => Effect.Effect<A, E, Layer.Success<ReturnType<typeof governanceLayer>> | Scope.Scope>) =>
   Effect.runPromise(
@@ -38,6 +39,7 @@ const settle = (
   agent: string,
   text: string,
   permission?: { permission: string; pattern: string; action: "allow" | "deny" | "ask" }[],
+  admission: TaskGovernance.Admission = {},
 ) =>
   Effect.gen(function* () {
     const parentID = yield* session({ directory, agent: "maestro" })
@@ -56,7 +58,7 @@ const settle = (
         content: [SessionMessage.AssistantText.make({ type: "text", id: "text", text })],
         time: { created, completed: created },
       }),
-      admission: {},
+      admission,
       context: {
         sessionID: parentID,
         agent: AgentV2.ID.make("maestro"),
@@ -228,3 +230,30 @@ test("the shell fact rides beside the write roots and only there (SeatWork.proje
   expect(WorkResultV2.assemble({ ...base, writeRoots: ["src"], shell: fact })).toMatchObject({ writeRoots: ["src"], ...fact })
   expect(WorkResultV2.assemble({ ...base, shell: fact })).not.toHaveProperty("shellWrites")
 })
+
+test("a Task bound to a card puts the brief, the seat's question, the answer and the seat's return on its thread", () =>
+  run((directory) =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      yield* board.project({ key: "THR", name: "Thread", reason: "Start." })
+      yield* board.issue({ project: "THR", title: "Work", reason: "Plan." })
+      const call = { directory, caller: "maestro", target: "backend", extra: { card: "THR-1", prompt: "Build it." } }
+      const brief = yield* admit(call)
+      expect(brief.receipt).toEqual({ card: "THR-1", seat: "backend" })
+      // An exact retry finds its brief already last and writes nothing.
+      yield* admit(call)
+      const question = backendReply({ ...backendCard, outcome: "blocked" })
+      yield* settle(directory, "backend", question, undefined, brief)
+      const answer = yield* admit({ ...call, extra: { card: "THR-1", prompt: "Use the old API." } })
+      yield* settle(directory, "backend", backendReply(backendCard), undefined, answer)
+      // A Task without a card writes no row.
+      yield* settle(directory, "backend", backendReply(backendCard))
+
+      expect((yield* board.issuePage("THR", 1)).notes.map((note) => [note.kind, note.author, note.body])).toEqual([
+        ["brief", "maestro", "Build it."],
+        ["question", "backend", question],
+        ["answer", "maestro", "Use the old API."],
+        ["return", "backend", backendReply(backendCard)],
+      ])
+    }),
+  ))
