@@ -290,7 +290,7 @@ function repository(key: string, size = 2) {
       await commit(directory, "base")
       await git(directory, "remote", "add", "origin", pathToFileURL(remote).href)
       await git(directory, "push", "--quiet", "origin", "main")
-      return { root, directory, key, remote: { origin: remote, pulls: new Map<number, string>(), bodies: new Map<number, string>(), conclusion: "", seeded: [], baseRuns: "[]", calls: [] } }
+      return { root, directory, key, remote: { origin: remote, pulls: new Map<number, string>(), bodies: new Map<number, string>(), conclusion: "", seeded: [] as ReadonlyArray<string>, baseRuns: "[]", calls: [] } }
     })
     remotes.set(`acme/${key}`, made.remote)
     const database = yield* Database.Service
