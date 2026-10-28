@@ -1,7 +1,8 @@
 // @atlas/cli — src/migrate-layout-cli.ts  (`atlas migrate-layout`)
 //
 // The one-shot move of `.atlas/{memory,orientation,review}.jsonl` into the `.atlas/` tree (adapter-io
-// `migrateLayout`). It changes files only; committing them is the caller's step, like any other source change.
+// `migrateLayout`), plus the export of the local projection's rows to `.atlas/members/<seat>/knowledge/` with their
+// bytes under `.atlas/blobs/`. It changes files only; committing them is the caller's step, like any other source change.
 
 import { migrateLayout } from "@atlas/adapter-io"
 import type { CliVerdict } from "./render.js"
@@ -20,5 +21,6 @@ export function runMigrateLayout(repoPath: string): CliVerdict {
     `memory: ${moved.memory} line(s) moved to .atlas/members/<seat>/memory/`,
     `orientation: ${moved.orientation} line(s) moved to .atlas/project/orientation.jsonl`,
     `review: ${moved.review} line(s) moved to .atlas/project/review.jsonl`,
+    `knowledge: ${moved.knowledge} projection row(s) exported to .atlas/members/<seat>/knowledge/`,
   ])
 }

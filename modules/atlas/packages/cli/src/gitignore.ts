@@ -4,6 +4,7 @@ export {
   ATLAS_IGNORE_BLOCK,
   ATLAS_IGNORE_PATTERN,
   ATLAS_POLICY_NEGATION,
+  ATLAS_TREE_NEGATIONS,
   ensureAtlasIgnored,
 } from "@atlas/adapter-io"
 export type { IgnoreOutcome, IgnoreResult } from "@atlas/adapter-io"

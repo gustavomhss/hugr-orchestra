@@ -53,7 +53,7 @@ describe("migrateLayout", () => {
       review: readReview(repo).records,
     }
 
-    expect(migrateLayout(repo)).toEqual({ memory: 3, orientation: 1, review: 1, kept: 0 })
+    expect(migrateLayout(repo)).toEqual({ memory: 3, orientation: 1, review: 1, kept: 0, knowledge: 0 })
 
     expect(existsSync(legacyLogPath(repo, "memory"))).toBe(false)
     expect(existsSync(legacyLogPath(repo, "orientation"))).toBe(false)
@@ -79,11 +79,11 @@ describe("migrateLayout", () => {
   })
 
   it("is a no-op on a repository with nothing to move, and on a second run", () => {
-    expect(migrateLayout(repo)).toEqual({ memory: 0, orientation: 0, review: 0, kept: 0 })
+    expect(migrateLayout(repo)).toEqual({ memory: 0, orientation: 0, review: 0, kept: 0, knowledge: 0 })
     seedLegacy()
     migrateLayout(repo)
     const ids = [...createDurableMemory(repo).read().log.keys()].sort()
-    expect(migrateLayout(repo)).toEqual({ memory: 0, orientation: 0, review: 0, kept: 0 })
+    expect(migrateLayout(repo)).toEqual({ memory: 0, orientation: 0, review: 0, kept: 0, knowledge: 0 })
     expect([...createDurableMemory(repo).read().log.keys()].sort()).toEqual(ids)
   })
 })
