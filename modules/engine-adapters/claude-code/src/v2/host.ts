@@ -491,8 +491,9 @@ function events(message: SDKMessage, tracker: Tracker): LLMEvent[] {
         ids.push(id)
         return [LLMEvent.reasoningStart({ id }), LLMEvent.reasoningDelta({ id, text: block.thinking }), LLMEvent.reasoningEnd({ id })]
       }
-      // Orchestra tools are recorded by the runner through `turn.execute`, never by the host.
-      if (block.type !== "tool_use" || block.name.startsWith(MCP_PREFIX)) return []
+      // Orchestra tools are recorded by the runner through `turn.execute`, never by the host. A call left off the record
+      // has no name in `names`, so its result is left off too.
+      if (block.type !== "tool_use" || block.name.startsWith(MCP_PREFIX) || ClaudeCodeRecord.UNRECORDED.has(block.name)) return []
       const listed = ClaudeCodeRecord.TASK_LIST_TOOLS.has(block.name) ? ClaudeCodeRecord.checklist(block.id, block.name, block.input, tracker.checklist, tracker.created) : undefined
       const call = listed ? { name: "todowrite", input: { todos: listed }, todos: listed } : ClaudeCodeRecord.shown(block.name, block.input, tracker.seats)
       names.set(block.id, call.name)

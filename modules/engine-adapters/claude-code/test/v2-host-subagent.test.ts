@@ -316,7 +316,7 @@ test("Orchestra's tools are refused inside a subagent and kept off its tool list
   expect(calls.at(-1)?.options?.agents?.["orchestra:backend"]?.disallowedTools).toEqual(["mcp__orchestra__task"])
 })
 
-test("Claude Code's task list fills the todo panel as Orchestra's todo tool does, across turns", async () => {
+test("Claude Code's task list fills the todo panel as Orchestra's todo tool does, across turns; its tool lookup is not recorded", async () => {
   const call = (id: string, name: string, input: Record<string, unknown>) =>
     frame({ type: "assistant", uuid: `a-${id}`, session_id: "claude-1", parent_tool_use_id: null,
       message: { content: [{ type: "tool_use", id, name, input }] } })
@@ -331,6 +331,8 @@ test("Claude Code's task list fills the todo panel as Orchestra's todo tool does
   const written: unknown[] = []
   const todos = (list: unknown) => Effect.sync(() => void written.push(list))
   script = [
+    call("s1", "ToolSearch", { query: "select:TaskCreate,TaskUpdate", max_results: 2 }),
+    result("s1", "TaskCreate, TaskUpdate"),
     call("c1", "TaskCreate", { subject: "Plan", description: "Plan it" }),
     result("c1", "Task #1 created successfully: Plan", { task: { id: "1", subject: "Plan" } }),
     call("c2", "TaskCreate", { subject: "Build", description: "Build it" }),
@@ -341,6 +343,7 @@ test("Claude Code's task list fills the todo panel as Orchestra's todo tool does
   ]
   const first = await collect(turnOf({ state, todos }))
 
+  expect(first.some((event) => (event.type === "tool-call" || event.type === "tool-result") && event.id === "s1")).toBe(false)
   expect(first.filter((event) => event.type === "tool-call")).toMatchObject([
     { name: "todowrite", input: { todos: [{ content: "Plan", status: "pending" }] } },
     { name: "todowrite", input: { todos: [{ content: "Plan", status: "pending" }, { content: "Build", status: "pending" }] } },
