@@ -297,7 +297,9 @@ GitHub. The PR record's Lineage links the thread, and the Atlas logbook entry li
 
 Atlas is git-native (`modules/atlas/docs/explanation/versioning.md`): what agents know and remember travels with the
 code at every commit, branch and merge. The board travels the same way. Nothing here adds a second versioning
-mechanism; it uses Atlas's, and fills the parts Atlas has designed but not wired.
+mechanism; it uses Atlas's, and fills the parts Atlas has designed but not wired. The tree it all lives in is
+Atlas's [`.atlas/` layout](../../../modules/atlas/docs/design/repo-layout.md): one folder per seat, one per card, one
+file per subject, append-only logs plus the CAS.
 
 **Who owns what.**
 
@@ -310,21 +312,28 @@ mechanism; it uses Atlas's, and fills the parts Atlas has designed but not wired
 | Maestro | Judgment only: the record's fields (§4.5) and the queue order. Never writes a log, a trailer or a PR body | Projects Maestro runs |
 | Flight Engineer | Meetings, transcripts and their summaries | Personal to the user. Never in git, never in Atlas |
 
-**What goes to git.** Everything Atlas holds: Memory, Orientation, review, policy, and Knowledge. Today `.gitignore`
-keeps Atlas's knowledge store (`.atlas/cas` and its projection) out of git, against the design. Admitting it is an
-Atlas change, owned by Atlas, and a precondition of WP10, not part of it. The only thing that never goes to git is the
+**What goes to git.** Everything Atlas holds: Memory, Orientation, review, policy, Knowledge, card threads,
+attempts (model, tokens, cost, transcript and checkpoint for re-spawn) and each session's context-continuity archive
+(§9). Knowledge travels as per-file logs under `members/<seat>/knowledge/`, never as the projection: the projection is
+rebuilt by replaying the logs through Atlas's doors, and only facts that reached the protected branch by a merged PR
+keep their tier (layout §5), so the provenance tripwire still holds. That layout is an Atlas change, owned by Atlas,
+and a precondition of WP10, not part of it. The only thing that never goes to git is the
 Flight Engineer's output, which is the user's own. Secrets never go anywhere: Atlas's write scanner refuses them, and
 board attachments stay in `CredentialTable` with only their labels logged.
 
-**The board log.** The board gets its own log, `.atlas/board.jsonl`, in the pattern of `review.jsonl`: one
-content-keyed record per board write, the same `before` and `after` the `board_activity` row holds, card threads
-included (§4.6). It is admitted in `.gitignore` and merged by `union` in `.gitattributes`, like the other three logs.
+**The board log.** The board gets its own log, `.atlas/project/board.jsonl`, in the pattern of `review.jsonl`: one
+content-keyed record per board write, the same `before` and `after` the `board_activity` row holds. Each card's thread
+(§4.6) goes to `.atlas/cards/<KEY>/card.jsonl` and each attempt to `.atlas/cards/<KEY>/attempts/a<n>.jsonl`. All are
+merged by `union` in `.gitattributes`, like every Atlas log.
 Board state at any commit is the fold of that log. `board import` rebuilds the board from the tree in front of it.
 
 **When each part is written.**
 
-- **Seat Memory and Knowledge** are written by the seats into the card's worktree, and `land` commits the tracked
-  `.atlas` files with the card's paths. The write-set check allows them: they only append.
+- **Seat Memory, Knowledge and context archives** are written by the seats into their own
+  `.atlas/members/<seat>/` folder in the card's worktree, and `land` commits them with the card's paths. The write-set
+  check allows them: they only append.
+- **The attempt record** is written by the conveyor when the run ends, in the card's worktree, so it lands with the
+  card.
 - **The board log, logbook and Orientation** are written by the conveyor in one commit at the top of each bundle,
   `chore(queue): record <KEY>-B<n>`. It appends the board records since the previous bundle, one Atlas logbook entry
   per member (Atlas's `logbook` API, its first production caller), and an Orientation `milestone` event per member
@@ -338,14 +347,16 @@ What that gives:
 - **Check out a branch, get its project and its Atlas.** The tree carries Memory, Knowledge and the board log as they
   stood when that code was cut.
 - **Restore.** A lost disk loses nothing that has merged. The database holds only what happened since the last bundle.
-- **History.** `git log -p .atlas/board.jsonl` is the project's history beside the code.
+- **History.** `git log -p .atlas/project/board.jsonl` is the project's history beside the code.
+- **Re-spawn.** An attempt's checkpoint, transcript and context archive are in the tree, so any run can be replayed.
 
 **Open, for WP0.** Whether GitHub's server-side merge honors `merge=union`. If it does not, every Atlas log conflicts
-on concurrent appends, not only the board's, and the fix belongs to Atlas (its designed `orchestra-atlas` driver, or
-one file per writer), applied to all four logs at once. The conveyor's own bundles never race each other, because one
+on concurrent appends, and the fix belongs to Atlas (its designed `orchestra-atlas` driver). The layout keeps the
+risk small: most files have one writer, and attempts and sessions get new files. The conveyor's own bundles never race each other, because one
 bundle is in flight per conveyor.
 
-**Public repositories.** Notes, threads, question text and spend are left out of `board.jsonl` (§14, decision 7).
+**Public repositories.** Notes, threads, question text and spend are left out of `board.jsonl` and `card.jsonl`, and
+attempts, seat memory and context archives are redacted (§14, decision 7).
 The full rows stay in the app database.
 
 ## 5. CI: who triggers it and how a project configures it
@@ -623,6 +634,9 @@ The board holds state. Maestro's context holds judgment. That is the split `maes
   - a card whose real affected set left its planned `area` (§4.4).
 
   Everything else stays on the board, where `board_read` finds it.
+- What compaction archives (`context_recall`'s chunks) also travels in git, as the seat's
+  `.atlas/members/<seat>/context/<session>.jsonl` plus CAS chunks, linked to the card and attempt it served (§4.7). A
+  fresh clone can recall it and re-spawn from it.
 
 Example:
 
@@ -731,7 +745,7 @@ phase.
 | **4. Queue and green bundles** | `board_queue`, `board_dequeue` and their preconditions; pools; cut rules a–d; assembly; the bundle PR with `full.label`; merge on green; `onBaseMoved`; the card's affected set from `turbo` (§7.1), which `merge-if-disjoint` and the eject rerun use in phase 1 too; the PR record, host-opened PRs through Atlas's host adapter with its GitHub writer, Atlas's trailers plus `Attempt`, the bundle body (§4.5); `land` playbook Publish rewritten to "verify, write the record, then `board_queue`" | Three verified cards merge through one bundle and one full run; all three ship; each PR shows host-filled cost, checks and review records; a record with no Risk is refused at enqueue; the merged card has one logbook entry, inside its bundle |
 | **5. Red bundles** | Bundle size from the red rate; the four ledger numbers on the board; infrastructure rerun, base check and flake probe, isolation with in-bundle dependencies, halving, eject into rework, rebuild, dissolve, `board_flake` and the `board_bundle` verdict, base red (§6.8) | A seeded failing member is ejected with the right cause, and the rest merge on the rebuilt bundle; a seeded interaction is found by halving; a seeded red on base ejects no member |
 | **6. Recovery** | Restart reconcile for pools, bundles and snapshots | Kill the host between "bundle green" and "merge": on restart it merges once, with no duplicate bundle |
-| **10. Thread and board versions** | `board_note` `kind` and seat authors; the host writes thread rows from `task` calls, returns and review records (§4.6); `.atlas/board.jsonl` admitted and unioned like the other Atlas logs; the bundle's record commit with the board log, logbook and Orientation records; the `.atlas` files allowed in `land`'s write-set check, the public redaction and `board import` from a tree (§4.7) | A card's thread shows its brief, a seat question, the answer and the return without any agent posting; a checkout of an older merge imports the board as it stood then; deleting the local database and importing from `dev` restores every merged version |
+| **10. Thread and board versions** | `board_note` `kind` and seat authors; the host writes thread rows from `task` calls, returns and review records (§4.6); `.atlas/project/board.jsonl`, `cards/<KEY>/card.jsonl` and attempt files unioned like the other Atlas logs; the bundle's record commit with the board log, logbook and Orientation records; the `.atlas` files allowed in `land`'s write-set check, the public redaction and `board import` from a tree (§4.7) | A card's thread shows its brief, a seat question, the answer and the return without any agent posting; a checkout of an older merge imports the board as it stood then; deleting the local database and importing from `dev` restores every merged version |
 
 Order: 0, then 1 and 2 in parallel (disjoint write sets), then 3 and 4, then 5, then 6. WP10's thread half runs in parallel with 1 and 2; its record-commit half follows 4. WP1 ships first, alone if
 needed, because lost work is the costliest pain and it needs no queue.
