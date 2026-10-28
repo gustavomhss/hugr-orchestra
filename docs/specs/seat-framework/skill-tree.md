@@ -125,6 +125,7 @@ The ten playbooks become one tree, grouped by the moment of the work:
 
 ```
 frame-request          request intake (keeps its name: the app and other Sessions address it)
+maestro-orchestra      the map of Orchestra: which tool or seat does what
 maestro-plan           get a plan authored by archie, reviewed cold, adopted or returned
 maestro-run            loop, governed, verify
 maestro-repo           repo-maintenance, arsenal-operators
@@ -134,6 +135,9 @@ Maestro orchestrates and manages the work; it does not plan or implement. `maest
 holds only Maestro's side of planning (facts to hand over, the cold coverage review, adopt or return). Authoring
 lives in archie's `archie-plan` tree. The old `maestro-composer` playbook is gone: the composer plugin it described
 left with the V1 runtime, and backend gains composer guidance only when that tool returns through its own interface.
+`maestro-orchestra` is a single leaf: a table of the tools Maestro holds and the seats that hold the rest.
+`test/orchestra-map.test.ts` fails when a `maestro_*` or `board_*` tool Maestro is given is missing from it, or when it
+names one Maestro is not given.
 
 `PlaybookContent` applies the same tree rules as `SeatSkillContent`. Other agents stay denied every Maestro node, as
 they are denied playbooks today.
