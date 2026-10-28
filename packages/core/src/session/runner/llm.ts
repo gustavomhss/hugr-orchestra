@@ -1,14 +1,4 @@
-import {
-  LLM,
-  LLMClient,
-  LLMError,
-  LLMEvent,
-  Message,
-  SystemPart,
-  isContextOverflowFailure,
-  type ProviderErrorEvent,
-  type ToolCall,
-} from "@orchestra/llm"
+import { LLM, LLMClient, LLMError, LLMEvent, Message, SystemPart, isContextOverflowFailure, type ProviderErrorEvent, type ToolCall } from "@orchestra/llm"
 import { Cause, Context, DateTime, Effect, FiberSet, Layer, Option, Queue, Scope, Semaphore, Stream } from "effect"
 import { asc, eq } from "drizzle-orm"
 import { AgentV2 } from "../../agent"
@@ -251,15 +241,9 @@ const layer = Layer.effect(
           )
         : []
       const catalog = seats.length > 0 ? yield* skills.list() : []
-      const seatTools = toolMaterialization
-        ? Object.fromEntries(
-            yield* Effect.forEach(seats, (seat) =>
-              tools.materialize([...seat.permissions.map((rule) => ({ ...rule })), ...rulesOfSession]).pipe(
-                Effect.map((materialized) => [seat.id, materialized.definitions.map((definition) => definition.name)] as const),
-              ),
-            ),
-          )
-        : {}
+      const seatTools = Object.fromEntries(toolMaterialization ? yield* Effect.forEach(seats, (seat) =>
+        tools.materialize([...seat.permissions.map((rule) => ({ ...rule })), ...rulesOfSession]).pipe(
+          Effect.map((materialized) => [seat.id, materialized.definitions.map((definition) => definition.name)] as const))) : [])
       // Only provider-model turns pass through the compaction transform; a hosted engine receives its history as is.
       const messages = model
         ? yield* compaction.transform({
@@ -302,21 +286,11 @@ const layer = Layer.effect(
         withPublication(publisher.publish(event, outputPaths))
       let overflowFailure: ProviderErrorEvent | undefined
       yield* subagentModels.assert(session.id, modelRef)
-      const settle = (
-        call: ToolCall,
-        assistantMessageID: SessionMessage.ID,
-        materialization: ToolRegistry.Materialization,
-        actor: { readonly sessionID: SessionSchema.ID; readonly agentID: AgentV2.ID; readonly rules: PermissionV2.Ruleset } = { sessionID: session.id, agentID: agent.id, rules: effectiveRules },
-      ) =>
+      const settle = (call: ToolCall, assistantMessageID: SessionMessage.ID, materialization: ToolRegistry.Materialization, actor: { readonly sessionID: SessionSchema.ID; readonly agentID: AgentV2.ID; readonly rules: PermissionV2.Ruleset } = { sessionID: session.id, agentID: agent.id, rules: effectiveRules }) =>
         CapabilityInvocation.withContext(
           {
             issuer: "core",
-            owner: {
-              projectID: location.project.id,
-              location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }),
-              sessionID: actor.sessionID,
-              agentID: actor.agentID,
-            },
+            owner: { projectID: location.project.id, location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }), sessionID: actor.sessionID, agentID: actor.agentID },
             invocation: { sessionID: actor.sessionID, agentID: actor.agentID, assistantMessageID, callID: call.id },
             rootToolName: call.name,
             effectiveRules: actor.rules,
