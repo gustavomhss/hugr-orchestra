@@ -1,6 +1,6 @@
 ---
 name: onboarding-usage
-description: How a person gets from first launch to their first Maestro chat - choosing and trusting a folder, connecting Claude mode or an API key, the Home composer and when KPIs show, and returning to the task after setup
+description: How a person gets from first launch to their first Maestro chat - choosing and trusting a folder, connecting Claude mode or an API key in Providers, Home as the KPI dashboard, and returning to the task after setup
 ---
 
 # Onboarding usage
@@ -10,9 +10,8 @@ For anyone driving or explaining the first run. The user guide is `docs/guides/f
 ## The path
 
 1. Home with no project shows "Pick the folder Maestro works in". Choosing a folder trusts it and adds it as a project in one step. Nothing is created on disk without that choice.
-2. With a project and no connected model (and not skipped), Home shows "Connect a model to start": Claude subscription, a provider with an API key, or skip.
-3. Otherwise Home is the composer ("What should Maestro do?") with three example prompts that fill it. Sending starts a Maestro chat in that project.
-4. KPIs appear on Home only after the project has sessions.
+2. With a project, Home is that project's KPI dashboard, from the first launch on (owner, 2026-10-27: Home is never a second chat screen). A new chat starts from "Start a session" or the Chat entry.
+3. A model is connected in Providers: Claude subscription (Claude mode) or a provider with an API key.
 
 ## Claude mode
 
@@ -23,11 +22,11 @@ For anyone driving or explaining the first run. The user guide is `docs/guides/f
 
 ## Where Providers is
 
-The sidebar does not list Providers. Use the "Open Providers" link on the folder and model steps, or Settings. A "Back to your task" button shows when Providers was opened from a task.
+The sidebar does not list Providers. Use the "Open Providers" link on the folder step, or Settings. A "Back to your task" button shows when Providers was opened from a task.
 
 ## After the first chat
 
-- The sidebar shows Home, Chat, Projects (the board), Agents and Actions. Everything else is in the collapsible Advanced group.
+- The sidebar shows Home, Chat, Projects (the board), Agents and Actions. Everything else is in the collapsible More group.
 - Screen words: Context savings (not Lean), History (not Genesis), project (not profile). Use them when you explain the app.
 - Stop works while a permission or question is pending. The permission dock says what is asked.
 - The command palette has a "Getting started guide" entry that opens `docs/guides/getting-started.md`. The URL is `GETTING_STARTED_URL` in `orchestra/shell/navigation-commands.tsx`; change it there if the repository moves.
@@ -38,4 +37,4 @@ The sidebar does not list Providers. Use the "Open Providers" link on the folder
 - Pick a folder: the folder is trusted before it appears as a project. A refused trust shows an error and adds nothing.
 - Choose Claude mode while signed out: the engine in Providers stays on Orchestra until the sign-in finishes.
 
-Ownership and invariants: the Home composer lives in `packages/app-shell/src/orchestra/chapters/home-start.tsx`, its step rules in `home-start-state.ts`, and the Claude mode handoff in `claude-mode-entry.ts`.
+Ownership and invariants: the folder step lives in `packages/app-shell/src/orchestra/chapters/home-start.tsx`, Home itself in `kpis-home.tsx`, and the Claude mode handoff in `claude-mode-entry.ts`.

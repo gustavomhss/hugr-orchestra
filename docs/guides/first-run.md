@@ -1,20 +1,20 @@
 # First run: folder, trust, model
 
-On first launch Orchestra does not create a folder for you. Home asks for three things, in order, and each step appears only when it is needed.
+On first launch Orchestra does not create a folder for you. Getting started takes three things, in order.
 
 1. **Pick a folder.** Choose the project folder Maestro works in. Orchestra never creates one for you. If the folder is empty, Orchestra asks whether to make it a git repository.
 2. **Trust it.** The same button trusts the folder. Trusting lets Orchestra start the MCP servers, plugins, formatters and language servers that the folder declares in its own config. Trust only folders you wrote or reviewed. The folder is added as a project only after trust is saved.
-3. **Connect a model.** Use your Claude subscription (Claude mode) or connect a provider with an API key. Choosing Claude mode while signed out opens Providers and signs you in first. Maestro switches to Claude Code only after the sign-in succeeds. You can also skip this step and connect later.
+3. **Connect a model.** In Providers, use your Claude subscription (Claude mode) or connect a provider with an API key. Choosing Claude mode while signed out opens Providers and signs you in first. Maestro switches to Claude Code only after the sign-in succeeds.
 
-After a model is connected, Home is the Maestro composer: type a task, or use one of the three example prompts to fill it in, then press the send button to start a chat with Maestro in that project. Dashboard numbers appear on Home once the project has sessions.
+Once a project is open, Home is its dashboard: sessions, tasks, spend and checks. Start a chat with Maestro from "Start a session" on Home or from Chat in the sidebar.
 
 ## Going back to your task
 
-Connecting a model from a task (a session or Home) brings you back to that task when setup finishes. Opening Providers from elsewhere shows a "Back to your task" button when there is a task to return to.
+Connecting a model from a task brings you back to that task when setup finishes. Opening Providers from elsewhere shows a "Back to your task" button when there is a task to return to.
 
 ## Providers without a project
 
-Providers is always one click away, even with no project open: Home shows an "Open Providers" link on the folder step and on the model step. The sidebar does not list Providers.
+Providers is always one click away, even with no project open: Home shows an "Open Providers" link on the folder step. The sidebar does not list Providers.
 
 ## When something fails
 

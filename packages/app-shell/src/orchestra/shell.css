@@ -360,6 +360,27 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   white-space: nowrap;
 }
 
+/* The More group reads as a quiet section heading, not as one more page: no icon, small caps, chevron at the end. */
+.orchestra-nav-group {
+  block-size: 28px;
+  color: var(--orchestra-sidebar-footer);
+  font-size: var(--orchestra-font-size-2xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.orchestra-nav-group > .orchestra-nav-icon:first-child {
+  display: none;
+}
+
+.orchestra-nav-group-chevron {
+  inline-size: 12px;
+  block-size: 12px;
+  margin-inline-start: auto;
+  color: inherit;
+}
+
 .orchestra-nav-rule {
   block-size: 1px;
   margin-block: 13px;
@@ -769,6 +790,14 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   position: absolute;
   inset-inline-end: 4px;
   inset-block-start: 4px;
+}
+
+[data-navigation="compact"] .orchestra-nav-group > .orchestra-nav-icon:first-child {
+  display: block;
+}
+
+[data-navigation="compact"] .orchestra-nav-group-chevron {
+  display: none;
 }
 
 [data-navigation="compact"] .orchestra-nav-rule {

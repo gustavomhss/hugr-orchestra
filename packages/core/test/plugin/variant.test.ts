@@ -1,4 +1,4 @@
-import { describe, expect } from "bun:test"
+import { describe, expect, test } from "bun:test"
 import { Catalog } from "@orchestra/core/catalog"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -64,4 +64,35 @@ describe("VariantPlugin", () => {
       ])
     }),
   )
+
+  describe("generate", () => {
+    const levels = (pkg: string, id: string) =>
+      VariantPlugin.generate({ id, api: { id, type: "aisdk", package: pkg } }).map((variant) => variant.id)
+
+    test("names every Claude effort level on current models through output_config", () => {
+      expect(VariantPlugin.generate({ id: "claude-opus-5-5", api: { id: "claude-opus-5-5", type: "aisdk", package: "@ai-sdk/anthropic" } })).toEqual(
+        ["low", "medium", "high", "xhigh", "max"].map((id) => ({ id, headers: {}, body: { output_config: { effort: id } } })),
+      )
+      expect(levels("@ai-sdk/anthropic", "claude-sonnet-4-6")).toEqual(["low", "medium", "high", "max"])
+      expect(levels("@ai-sdk/anthropic", "claude-opus-4-5-20251101")).toEqual(["low", "medium", "high"])
+    })
+
+    test("offers no level a model would refuse", () => {
+      expect(levels("@ai-sdk/anthropic", "claude-sonnet-4-5")).toEqual([])
+      expect(levels("@ai-sdk/anthropic", "claude-3-5-haiku-20241022")).toEqual([])
+      expect(levels("@ai-sdk/openai", "gpt-4.1")).toEqual([])
+      expect(levels("@ai-sdk/openai-compatible", "claude-opus-5-5")).toEqual([])
+    })
+
+    test("names OpenAI reasoning efforts through the Responses reasoning field", () => {
+      expect(VariantPlugin.generate({ id: "gpt-5.2", api: { id: "gpt-5.2", type: "aisdk", package: "@ai-sdk/openai" } })).toEqual(
+        ["none", "low", "medium", "high", "xhigh"].map((id) => ({ id, headers: {}, body: { reasoning: { effort: id } } })),
+      )
+      expect(levels("@ai-sdk/openai", "gpt-5")).toEqual(["minimal", "low", "medium", "high"])
+      expect(levels("@ai-sdk/openai", "gpt-5.1")).toEqual(["none", "low", "medium", "high"])
+      expect(levels("@ai-sdk/openai", "gpt-5.1-codex")).toEqual(["low", "medium", "high"])
+      expect(levels("@ai-sdk/openai", "gpt-5-pro")).toEqual(["high"])
+      expect(levels("@ai-sdk/openai", "o3")).toEqual(["low", "medium", "high"])
+    })
+  })
 })
