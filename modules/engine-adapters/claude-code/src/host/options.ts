@@ -128,31 +128,46 @@ export function environment(env: Record<string, string | undefined>): Record<str
   return { ...Object.fromEntries(Object.entries(env).filter(([key]) => key !== "CLAUDE_CODE_ENTRYPOINT")), ...ENV_FLAGS }
 }
 
-// The research seat's tier is the agent Maestro names (J1.4); its web domains travel in a task grant (J1.9).
+// The research seat's tier is the agent Maestro names (J1.4).
 function research() {
   // The plugin agent names ClaudeHostPlugin.agents builds; options stays free of the plugin builder's imports.
   const [quick, focused, deep] = Research.Depth.literals.map((tier) => `\`orchestra:${ResearchSeatTools.SEAT}-${tier}\``)
   return `- Dispatch \`${ResearchSeatTools.SEAT}\` at the tier the question needs: ${quick} for one narrow lookup, ${focused} for ` +
     `a question across a few modules, ${deep} for a broad or high-stakes investigation. The tier sets its turn, tool and ` +
-    `time budget. To limit its web search to known domains, first call \`mcp__orchestra__task_grant\` with seat ` +
-    `"${ResearchSeatTools.SEAT}", writePaths [] and allowedDomains, then put \`grantID: <id>\` on its own line in the brief.`
+    `time budget.`
 }
 
-/** The text appended to Claude Code's preset for the main thread's seat. */
-export function append(seat: string, seats: Record<string, string>) {
-  if (seat === "maestro") return maestro(seats)
+/**
+ * The text appended to Claude Code's preset for the main thread's seat. `tools` are the Orchestra tools served to this
+ * session, by Orchestra name: the note names only those, since a tool the session does not hold would send the model
+ * after a call that fails. `unavailable` are seats that work only through Orchestra's tools, so Claude Code cannot run
+ * them as subagents.
+ */
+export function append(
+  seat: string,
+  seats: Record<string, string>,
+  tools: ReadonlyArray<string> = [],
+  unavailable: ReadonlyArray<string> = [],
+) {
+  if (seat === "maestro") return maestro(seats, tools, unavailable)
   return [
     `You are the \`${seat}\` seat of HuGR Orchestra, a desktop app for software work, working in this session as the`,
     "owner's main conversation. Orchestra shows your work to the owner and adds its own tools beside Claude Code's, under",
-    "the `mcp__orchestra__` prefix. For a long-running or background command (a dev server, a watcher, a long build or",
-    "test run) use `mcp__orchestra__process`, so the owner can follow its output live; use Bash for short commands.",
+    "the `mcp__orchestra__` prefix.",
+    ...(tools.includes("process_control") ? [PROCESS_NOTICE] : []),
   ].join(" ")
 }
 
-function maestro(seats: Record<string, string>) {
+const PROCESS_NOTICE =
+  "For a long-running command (a dev server, a watcher, a long build or test run) use " +
+  "`mcp__orchestra__process_control`, so the owner can follow its output live in the Processes panel; use Bash for short " +
+  "commands."
+
+function maestro(seats: Record<string, string>, tools: ReadonlyArray<string>, unavailable: ReadonlyArray<string>) {
   const names = Object.keys(seats).toSorted()
   const roster = names.length ? names.map((name) => `\`${name}\``).join(", ") : "none in this session"
   const foreground = names.filter((name) => FOREGROUND_SEATS.includes(seats[name] ?? ""))
+  const has = (prefix: string) => tools.some((tool) => tool.startsWith(prefix))
   return [
     "# Maestro on Claude Code",
     "You are Maestro, the conductor of HuGR Orchestra, a desktop app for software work. The owner talks to you. You " +
@@ -161,7 +176,12 @@ function maestro(seats: Record<string, string>) {
     "## Delegating to seats",
     [
       `- Orchestra's seats are subagents. Delegate with the \`Agent\` tool and \`subagent_type: "orchestra:<seat>"\`. ` +
-        `Seats in this session: ${roster}.`,
+        `Seats in this session: ${roster}. A seat holds only Claude Code's own tools, as its role allows; Orchestra's ` +
+        "tools stay yours.",
+      ...(unavailable.length
+        ? [`- Not available on Claude Code: ${unavailable.map((name) => `\`${name}\``).join(", ")}. Such a seat works ` +
+          "only through Orchestra's tools; tell the owner it needs Orchestra's own engine."]
+        : []),
       "- A seat sees only your brief. Give it the goal, what done looks like, the files and constraints that matter and " +
         "what to return.",
       ...(foreground.length
@@ -173,16 +193,28 @@ function maestro(seats: Record<string, string>) {
     ].join("\n"),
     "## Orchestra's tools",
     [
-      "Orchestra adds its own tools beside Claude Code's, under the `mcp__orchestra__` prefix:",
-      "- `mcp__orchestra__process` starts, tails and stops long-running or background commands such as dev servers, " +
-        "watchers and long builds or test runs. Use it for those, so the owner can follow their output live in the " +
-        "Processes panel; use Bash for short commands.",
-      "- `mcp__orchestra__maestro_*` tools run Orchestra's governed workflow: admission, plans, reviews and approvals.",
-      `- ${REVIEW_NOTICE}`,
-      `- ${WORKFLOW_NOTICE}`,
-      "- `mcp__orchestra__atlas_*` tools read and record Atlas project memory; `mcp__orchestra__dock_*` tools operate " +
-        "apps in the owner's MCP Dock.",
-      "- `mcp__orchestra__context_recall` brings back earlier work from this session after Claude Code compacted it.",
+      "Orchestra adds its own tools beside Claude Code's, under the `mcp__orchestra__` prefix. A tool named without the " +
+        "prefix in Orchestra's text, such as `board_read`, is `mcp__orchestra__board_read` here.",
+      ...(tools.includes("skill")
+        ? ["- Load Orchestra's playbooks and skills with `mcp__orchestra__skill`; Claude Code's own `Skill` tool does not " +
+          "know them. `maestro-orchestra` maps what Orchestra can do and which tool or seat does it: load it before " +
+          "you say Orchestra cannot do something."]
+        : []),
+      ...(has("board_")
+        ? ["- The Projects board is where tracked work lives: read it with `mcp__orchestra__board_read` at the start of " +
+          "every turn that touches tracked work, and keep each card's seat, Session, branch, PR and steps on it."]
+        : []),
+      ...(tools.includes("process_control") ? [`- ${PROCESS_NOTICE}`] : []),
+      ...(has("maestro_")
+        ? ["- `mcp__orchestra__maestro_*` tools run Orchestra's governed workflow: admission, plans, reviews and approvals."]
+        : []),
+      ...(tools.includes("maestro_request_review") ? [`- ${REVIEW_NOTICE}`] : []),
+      ...(tools.includes("task") ? [`- ${WORKFLOW_NOTICE}`] : []),
+      ...(has("atlas_") ? ["- `mcp__orchestra__atlas_*` tools read Atlas, the project's ownership and history."] : []),
+      ...(has("dock_") ? ["- `mcp__orchestra__dock_*` tools operate apps in the owner's MCP Dock."] : []),
+      ...(tools.includes("context_recall")
+        ? ["- `mcp__orchestra__context_recall` brings back earlier work from this session after Claude Code compacted it."]
+        : []),
     ].join("\n"),
     "## Working with the owner",
     [

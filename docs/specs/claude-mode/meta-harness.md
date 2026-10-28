@@ -58,7 +58,16 @@ The parts of D-C2 that replaced the meta-harness shape are reversed:
    tool called inside a subagent would run under the main agent's registry and permissions. The gate and
    `canUseTool` refuse such a call (`agent_id` / `agentID` set), and every subagent lists the Orchestra tools in
    `disallowedTools`.
-8. **Orchestra's record, Claude Code's call.** The Session records each built-in call under the Orchestra tool and
+   A seat also loses every built-in its own permissions deny on every resource (`ToolRegistry.whollyDisabled`, the
+   rule the registry uses to hide a tool): a review seat has no Bash, Write or Edit. A seat left with no built-in,
+   such as `linux`, works only through Orchestra's tools; it is not offered, and the Maestro note names it as
+   unavailable on Claude Code.
+8. **What is served.** Orchestra tools that duplicate a Claude Code built-in or belong to Orchestra's own loop are not
+   served (`UNSERVED`), and neither are `process_get`, `process_wait` and `process_cancel`, which read Orchestra's own
+   bash processes. `skill` is served: Claude Code's Skill tool does not know Orchestra's playbooks. The Maestro note
+   names only tools the session is served: `mcp__orchestra__skill` for playbooks, `board_read` at the start of a
+   tracked turn, `process_control` for long-running commands, then the governed, Atlas, Dock and recall families.
+9. **Orchestra's record, Claude Code's call.** The Session records each built-in call under the Orchestra tool and
    argument names the app's widgets read (`shown` in the host), so a Claude mode session looks like any other:
    - `Bash`, `Read`, `Write`, `Edit` (`MultiEdit` and `NotebookEdit` as `edit` with the file only), `Glob`, `Grep`,
      `WebFetch`, `WebSearch`, `TodoWrite` and `Skill` become `bash`, `read`, `write`, `edit`, `glob`, `grep`,

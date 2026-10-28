@@ -27,7 +27,11 @@ calls carry Orchestra's governance, so Maestro uses them instead of a plain suba
 - A subagent's run opens its own child session from the task row, as in any other mode. A background subagent that
   keeps working after Maestro's reply shows only what it did up to that reply.
 - Inside a subagent, Orchestra's own tools (such as governed dispatch, review recording or Atlas Memory) are not
-  available: they serve the main agent only. A seat's subagent still has its skills and Claude Code's own tools.
+  available: they serve the main agent only. A seat's subagent still has its skills and the Claude Code tools its
+  role allows; a review seat, for example, cannot run shell commands or edit files.
+- A seat that works only through Orchestra's tools, such as the Linux workspace seat, is not offered in Claude mode.
+  Maestro tells you when a request needs it.
+- Maestro loads Orchestra's playbooks through Orchestra's own skill tool, not Claude Code's Skill tool.
 - If Anthropic bills a turn as extra usage or refuses it, the app shows the provider's message. You can enable extra
   usage, use an API key, or pick another provider.
 

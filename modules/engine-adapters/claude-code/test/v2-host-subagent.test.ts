@@ -168,7 +168,7 @@ test("Orchestra's seats are Claude Code subagents: the Maestro note names them, 
   })
   expect(options?.agents?.["orchestra:docs"]).toMatchObject({ description: "Orchestra's `docs` seat.", model: "inherit" })
   expect(options?.agents?.["orchestra:jimmy-quick"]).toMatchObject({
-    description: "Research. Research tier quick: up to 24 turns.",
+    description: "Research. Research tier quick: up to 24 turns. On Claude Code it reads, searches the repository and searches the web; it keeps no research corpus.",
     maxTurns: 24,
     tools: ["Read", "Grep", "Glob", "WebSearch", "Skill"],
   })
@@ -184,6 +184,46 @@ test("Orchestra's seats are Claude Code subagents: the Maestro note names them, 
       "orchestra:docs": "docs",
     }),
   })
+})
+
+test("a seat holds only the built-ins its permissions allow; a seat with none is not offered, and the Maestro note says so", async () => {
+  script = [done]
+  const deny = { action: "*", resource: "*", effect: "deny" } as const
+  await collect(turnOf({
+    seats: [
+      seat("lucy", { permissions: [deny, ...["read", "glob", "grep"].map((action) => ({ action, resource: "*", effect: "allow" as const }))] }),
+      seat("linux", { permissions: [deny, { action: "linux_*", resource: "*", effect: "allow" }] }),
+    ],
+    tools: ["task", "skill", "board_read", "process_control", "process_get", "bash"].map(
+      (name) => new ToolDefinition({ name, description: name, inputSchema: { type: "object", properties: {} } }),
+    ),
+  }))
+
+  const options = calls.at(-1)?.options
+  expect(Object.keys(options?.agents ?? {})).toEqual(["orchestra:lucy"])
+  expect(options?.agents?.["orchestra:lucy"]?.disallowedTools).toEqual([
+    "mcp__orchestra__task", "mcp__orchestra__skill", "mcp__orchestra__board_read", "mcp__orchestra__process_control",
+    "Bash", "Write", "Edit", "MultiEdit", "NotebookEdit", "WebFetch", "WebSearch",
+  ])
+  // `process_get` reads Orchestra's own bash processes and `bash` is Claude Code's: neither is served.
+  expect(options?.systemPrompt).toEqual({
+    type: "preset",
+    preset: "claude_code",
+    append: ClaudeHostOptions.append("maestro", { "orchestra:lucy": "lucy" }, ["task", "skill", "board_read", "process_control"], ["linux"]),
+  })
+})
+
+test("the Maestro note names only the Orchestra tools the session is served", () => {
+  const bare = ClaudeHostOptions.append("maestro", {})
+  const full = ClaudeHostOptions.append("maestro", {}, ["skill", "board_read", "process_control", "context_recall"], ["linux"])
+  // Positive control: each line appears when its tool is served.
+  expect(full).toContain("`mcp__orchestra__skill`")
+  expect(full).toContain("`mcp__orchestra__board_read`")
+  expect(full).toContain("`mcp__orchestra__process_control`")
+  expect(full).toContain("Not available on Claude Code: `linux`")
+  for (const name of ["mcp__orchestra__skill", "mcp__orchestra__board_read", "mcp__orchestra__process_control", "Not available"])
+    expect(bare).not.toContain(name)
+  expect(full).not.toContain("task_grant")
 })
 
 test("a seat's skills are listed in its subagent prompt by file, for the subagent to read when the task matches", async () => {

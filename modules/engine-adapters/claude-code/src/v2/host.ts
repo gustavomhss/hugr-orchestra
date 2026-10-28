@@ -11,6 +11,7 @@ import { createHash, randomUUID } from "node:crypto"
 import path from "node:path"
 import { ClaudeCodeAccount } from "@orchestra/core/claude-code-account"
 import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
+import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { Research } from "@orchestra/schema/research"
 import { ClaudeHostOptions } from "../host/options"
 import { ClaudeCodeSDK } from "../sdk"
@@ -25,10 +26,14 @@ export const STATE_KEY = "claudeCode"
 export const MCP_SERVER = "orchestra"
 const MCP_PREFIX = `mcp__${MCP_SERVER}__`
 
-/** Orchestra tools Claude Code has as built-ins, or that belong to Orchestra's own loop: never served. */
+/**
+ * Orchestra tools Claude Code has as built-ins, or that belong to Orchestra's own loop: never served. `process_*` read
+ * Orchestra's own bash background processes, which Claude Code's Bash never starts. `skill` is served: Claude Code's
+ * own Skill tool does not know Orchestra's playbooks and seat skills.
+ */
 const UNSERVED = new Set([
   "bash", "read", "write", "edit", "apply_patch", "grep", "glob", "webfetch", "websearch", "todowrite",
-  "question", "skill", "lsp", "invalid", "context_compact", "execute",
+  "question", "lsp", "invalid", "context_compact", "execute", "process_get", "process_wait", "process_cancel",
 ])
 
 const EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const
@@ -236,7 +241,12 @@ export const make = Effect.gen(function* () {
             systemPrompt: {
               type: "preset",
               preset: "claude_code",
-              append: ClaudeHostOptions.append(turn.agent.id, Object.fromEntries(Object.entries(agents).map(([name, item]) => [name, item.seat]))),
+              append: ClaudeHostOptions.append(
+                turn.agent.id,
+                Object.fromEntries(Object.entries(agents).map(([name, item]) => [name, item.seat])),
+                served.map((tool) => tool.name),
+                turn.seats.filter((seat) => seat.system && !builtins(seat).length).map((seat) => seat.id),
+              ),
             },
             settingSources: ["project"],
             permissionMode: "default",
@@ -627,12 +637,16 @@ function inbox(first: SDKUserMessage, signal: AbortSignal, handed: (uuid: SDKUse
  * Orchestra's seats as Claude Code subagents `orchestra:<id>`; the research seat is one per tier, with its budget. A
  * seat's skills are listed in its prompt by file: the subagent reads one when the task matches, as Orchestra's skill
  * tool would load it. The turn's Orchestra tools (`orchestra`, by Claude Code name) are the main agent's and are kept
- * from every subagent.
+ * from every subagent, and so is each built-in the seat's permissions deny outright. A seat left with no built-in works
+ * only through Orchestra's tools, so it is not offered.
  */
 function subagents(seats: ExecutionHost.Turn["seats"], skills: ExecutionHost.Turn["skills"], orchestra: ReadonlyArray<string>) {
   return Object.fromEntries(
     seats.flatMap((seat): Array<readonly [string, { seat: typeof seat.id; definition: AgentDefinition }]> => {
       if (!seat.system) return []
+      const allowed = builtins(seat)
+      if (!allowed.length) return []
+      const denied = Object.keys(PERMISSIONS).filter((tool) => !allowed.includes(tool))
       const listed = skills[seat.id] ?? []
       const definition: AgentDefinition = {
         description: seat.description ?? `Orchestra's \`${seat.id}\` seat.`,
@@ -650,7 +664,7 @@ function subagents(seats: ExecutionHost.Turn["seats"], skills: ExecutionHost.Tur
         ].join("\n\n"),
         model: seat.model?.providerID === "anthropic" ? seat.model.id : "inherit",
         // Kept off the subagent's tool list; the gate refuses them inside a subagent all the same.
-        ...(orchestra.length > 0 ? { disallowedTools: [...orchestra] } : {}),
+        ...(orchestra.length + denied.length > 0 ? { disallowedTools: [...orchestra, ...denied] } : {}),
       }
       if (seat.id !== ResearchSeatTools.SEAT) return [[`${SEAT_PREFIX}${seat.id}`, { seat: seat.id, definition }]]
       return Research.Depth.literals.map((tier) => [
@@ -659,7 +673,7 @@ function subagents(seats: ExecutionHost.Turn["seats"], skills: ExecutionHost.Tur
           seat: seat.id,
           definition: {
             ...definition,
-            description: `${definition.description} Research tier ${tier}: up to ${Research.Tiers[tier].providerCalls} turns.`,
+            description: `${definition.description} Research tier ${tier}: up to ${Research.Tiers[tier].providerCalls} turns. On Claude Code it reads, searches the repository and searches the web; it keeps no research corpus.`,
             maxTurns: Research.Tiers[tier].providerCalls,
             tools: [...ResearchSeatTools.CLAUDE],
           },
@@ -667,6 +681,11 @@ function subagents(seats: ExecutionHost.Turn["seats"], skills: ExecutionHost.Tur
       ])
     }),
   )
+}
+
+/** The Claude Code built-ins a seat's permissions leave usable on some resource. */
+function builtins(seat: ExecutionHost.Turn["seats"][number]) {
+  return Object.keys(PERMISSIONS).filter((tool) => !ToolRegistry.whollyDisabled(PERMISSIONS[tool].action, seat.permissions))
 }
 
 /**

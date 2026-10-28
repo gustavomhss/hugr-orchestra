@@ -36,7 +36,12 @@ Design and decisions: `docs/specs/claude-mode/meta-harness.md`. User guide: `doc
   which keep Claude Code's names. A new widget field means a new mapping there, covered in `v2-host.test.ts`.
 - Orchestra MCP tools are refused inside a subagent (`MAIN_ONLY`, at the gate and in `canUseTool` via `agentID`) and
   listed in each subagent's `disallowedTools`: the MCP request carries no agent, so they would run under the main
-  agent's registry and permissions.
+  agent's registry and permissions. `subagents` also lists each built-in the seat's permissions wholly deny
+  (`ToolRegistry.whollyDisabled` over `PERMISSIONS`) and drops a seat with none left (`linux`); `append` names it as
+  unavailable.
+- `ClaudeHostOptions.append` takes the served Orchestra tool names and writes a line only for a tool served: a line
+  for an unserved tool sends the model after a failing call. `skill` is served (Claude Code's Skill tool does not
+  know Orchestra's playbooks); `process_get`, `process_wait` and `process_cancel` are not.
 - A subagent's frames (`parent_tool_use_id` set) never reach the parent's stream: `mirror` records them in the child
   Session `Turn.child` opens for that task call (`packages/core/src/session/runner/host-ports.ts`), and `close` ends it on the
   call's result. The child is never woken and its step costs 0. Its permissions come from `TaskPermission`, shared with
