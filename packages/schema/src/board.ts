@@ -847,15 +847,17 @@ export const BundleInput = Schema.Struct({
   project: Key,
   /** The bundle number, as in `KEY-B<n>`. */
   bundle: PositiveInt,
-  /** `merge` ships a flaky bundle as tested; `retry` cuts a flaky or paused bundle's cards into a new bundle. */
-  verdict: Schema.Literals(["merge", "retry"]),
+  /** `merge` ships a flaky bundle as tested; `retry` cuts a flaky or paused bundle's cards into a new bundle; `release` lets one held card of a dissolved bundle ride a bundle alone. */
+  verdict: Schema.Literals(["merge", "retry", "release"]),
+  /** The held card to release, by number; only for `release`. */
+  card: Schema.optional(PositiveInt),
   reason: Reason,
 }).annotate({ identifier: "Board.BundleInput" })
 export type BundleInput = typeof BundleInput.Type
 
 export const BundleResult = Schema.Struct({
   /** The bundle's status after the verdict: `accepted` merges on the next tick, `dissolved` or `infra` lets the queue cut again. */
-  status: Schema.Literals(["accepted", "dissolved", "infra"]),
+  status: Schema.Literals(["accepted", "dissolved", "infra", "released"]),
 }).annotate({ identifier: "Board.BundleResult" })
 export type BundleResult = typeof BundleResult.Type
 

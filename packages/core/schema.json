@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "47f1280a-e496-48d9-bed0-041cb5d1736f",
+  "id": "7fdc8a05-2738-4c51-8296-e2adfe88ee04",
   "prevIds": [
-    "0b5b57f7-32a7-445e-a1d3-4ad470b49ebc"
+    "47f1280a-e496-48d9-bed0-041cb5d1736f"
   ],
   "ddl": [
     {
@@ -1783,6 +1783,16 @@
       "table": "board_bundle"
     },
     {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "0",
+      "generated": null,
+      "name": "rebuilds",
+      "entityType": "columns",
+      "table": "board_bundle"
+    },
+    {
       "type": "text",
       "notNull": true,
       "autoincrement": false,
@@ -3219,6 +3229,16 @@
       "default": "false",
       "generated": null,
       "name": "flush",
+      "entityType": "columns",
+      "table": "board_queue"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "hold",
       "entityType": "columns",
       "table": "board_queue"
     },

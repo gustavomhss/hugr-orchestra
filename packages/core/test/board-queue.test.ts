@@ -554,6 +554,83 @@ describe("BoardQueue", () => {
     }),
   )
 
+  it.live("a member that fails F alone is ejected and the rest are rebuilt", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QIS", 3, undefined, "script")
+      yield* card(repo, "QIS", 1, "a.txt")
+      yield* card(repo, "QIS", 2, "fail.txt")
+      yield* card(repo, "QIS", 3, "c.txt")
+      yield* Effect.forEach([1, 2, 3], (number) => passed(repo, number), { discard: true })
+      yield* board.queue({ project: "QIS", number: 1, reason: "Verified." })
+      yield* board.queue({ project: "QIS", number: 2, reason: "Verified." })
+      yield* board.queue({ project: "QIS", number: 3, reason: "Verified.", flush: true })
+      repo.remote.conclusion = "SUCCESS"
+      repo.remote.seeded = ["card-2"]
+      repo.remote.log = GROUPED
+
+      yield* Effect.forEach(Array.from({ length: 12 }), () => board.queueTick(), { discard: true })
+      expect(yield* stage(repo, 2)).toBe("review")
+      expect((yield* bundleStatuses(repo))[0]).toBe("isolated")
+      expect(yield* stage(repo, 1)).not.toBe("review")
+      expect(yield* stage(repo, 3)).not.toBe("review")
+
+      repo.remote.seeded = []
+      yield* Effect.forEach(Array.from({ length: 4 }), () => board.queueTick(), { discard: true })
+      expect(yield* stage(repo, 1)).toBe("shipped")
+      expect(yield* stage(repo, 3)).toBe("shipped")
+    }),
+  )
+
+  it.live("halving finds the member whose addition turns the prefix red", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QIH", 3, undefined, "script")
+      yield* card(repo, "QIH", 1, "x.txt")
+      yield* card(repo, "QIH", 2, "y.txt")
+      yield* card(repo, "QIH", 3, "c.txt")
+      yield* Effect.forEach([1, 2, 3], (number) => passed(repo, number), { discard: true })
+      yield* board.queue({ project: "QIH", number: 1, reason: "Verified." })
+      yield* board.queue({ project: "QIH", number: 2, reason: "Verified." })
+      yield* board.queue({ project: "QIH", number: 3, reason: "Verified.", flush: true })
+      repo.remote.conclusion = "SUCCESS"
+      repo.remote.seeded = ["card-1", "card-2"]
+      repo.remote.log = GROUPED
+
+      yield* Effect.forEach(Array.from({ length: 12 }), () => board.queueTick(), { discard: true })
+      expect(yield* stage(repo, 2)).toBe("review")
+      expect(yield* stage(repo, 1)).not.toBe("review")
+    }),
+  )
+
+  it.live("a bundle red after two rebuilds dissolves and holds its cards until Maestro releases one", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QHD", 3, undefined, "script")
+      yield* card(repo, "QHD", 1, "a.txt")
+      yield* card(repo, "QHD", 2, "fail.txt")
+      yield* Effect.forEach([1, 2], (number) => passed(repo, number), { discard: true })
+      yield* board.queue({ project: "QHD", number: 1, reason: "Verified." })
+      yield* board.queue({ project: "QHD", number: 2, reason: "Verified.", flush: true })
+      repo.remote.conclusion = "SUCCESS"
+      repo.remote.seeded = ["card-2"]
+      repo.remote.log = GROUPED
+
+      yield* board.queueTick()
+      const database = yield* Database.Service
+      yield* database.db.update(BoardBundleTable).set({ rebuilds: 2 }).where(eq(BoardBundleTable.status, "open")).run().pipe(Effect.orDie)
+      yield* Effect.forEach(Array.from({ length: 12 }), () => board.queueTick(), { discard: true })
+      expect((yield* bundleStatuses(repo))[0]).toBe("dissolved")
+      expect(yield* stage(repo, 1)).toBe("queue")
+      expect(yield* stage(repo, 2)).toBe("queue")
+
+      expect(yield* board.bundle({ project: "QHD", bundle: 1, verdict: "release", card: 1, reason: "Try it alone." })).toEqual({ status: "released" })
+      const pulls = repo.remote.pulls.size
+      yield* board.queueTick()
+      expect(repo.remote.pulls.size).toBe(pulls + 1)
+    }),
+  )
+
   it.live("Maestro merges a flaky bundle as tested", () =>
     Effect.gen(function* () {
       const board = yield* Board.Service
@@ -671,7 +748,7 @@ function repository(key: string, size = 2, full?: object, scoped?: "script") {
       await git(root, "init", "--bare", remote)
       await git(root, "-c", "init.defaultBranch=main", "init", directory)
       await fs.mkdir(path.join(directory, ".orchestra"))
-      if (scoped) await fs.writeFile(script, `echo "$@" >> ${path.join(root, "runs.log")}\n[ -f fail.txt ] && exit 1\nexit 0\n`)
+      if (scoped) await fs.writeFile(script, `echo "$@" >> ${path.join(root, "runs.log")}\n[ -f fail.txt ] && exit 1\n[ -f x.txt ] && [ -f y.txt ] && exit 1\nexit 0\n`)
       await fs.writeFile(
         path.join(directory, ".orchestra", "ci.json"),
         JSON.stringify({ bundle: { size, waitMinutes: 600 }, merge: "merge", full, scoped: scoped ? { tests: `sh ${script} {package} {files}` } : undefined }),

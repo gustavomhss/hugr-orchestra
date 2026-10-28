@@ -67,5 +67,6 @@ export const migrations = (
     import("./migration/20261028202742_conflict_notices"),
     import("./migration/20261028204130_merge_queue"),
     import("./migration/20261028231723_board_flake"),
+    import("./migration/20261028234541_board_held"),
   ])
 ).map((module) => module.default) satisfies DatabaseMigration.Migration[]

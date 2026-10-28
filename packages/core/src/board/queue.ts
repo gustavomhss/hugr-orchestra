@@ -240,6 +240,25 @@ export function make(deps: Deps) {
       yield* Effect.logInfo(`integration: ${ref} ${input.verdict} by Maestro: ${input.reason}`)
       return { status: "accepted" as const }
     }
+    if (input.verdict === "release") {
+      if (bundle.status !== "dissolved" || input.card === undefined)
+        return yield* new RefusedError({ message: `${ref} is ${bundle.status}; release names a held card of a dissolved bundle.` })
+      const issue = issues.find((item) => item.number === input.card)
+      const held = issue
+        ? yield* deps.quiet((tx) =>
+            tx
+              .select()
+              .from(BoardQueueTable)
+              .where(and(eq(BoardQueueTable.issue_id, issue.id), eq(BoardQueueTable.hold, "held")))
+              .get(),
+          )
+        : undefined
+      if (!issue || !held) return yield* new RefusedError({ message: `${input.project}-${input.card} is not held in ${ref}.` })
+      yield* deps.quiet((tx) => tx.update(BoardQueueTable).set({ hold: "alone", flush: true }).where(eq(BoardQueueTable.issue_id, issue.id)).run())
+      yield* note(done.success.project, issue, `Maestro released this card from ${ref}: ${input.reason}. It rides a bundle alone next.`)
+      yield* Effect.logInfo(`integration: ${ref} ${input.verdict} by Maestro: ${input.reason}`)
+      return { status: "released" as const }
+    }
     if (bundle.status !== "flaky" && bundle.status !== "paused")
       return yield* new RefusedError({ message: `${ref} is ${bundle.status}; only a flaky or paused bundle retries.` })
     yield* deps.quiet((tx) =>
@@ -340,15 +359,17 @@ export function make(deps: Deps) {
         const lastMembers = last
           ? yield* tx.select().from(BoardBundleMemberTable).where(eq(BoardBundleMemberTable.bundle_id, last.id)).all()
           : []
-        return { cards, waits, attempts, open, settled: yield* BoardLedger.settled(tx, row.id), last: last && { status: last.status, base_sha: last.base_sha, members: lastMembers.length } }
+        return { cards, waits, attempts, open, settled: yield* BoardLedger.settled(tx, row.id), last: last && { status: last.status, base_sha: last.base_sha, members: lastMembers.length, rebuilds: last.rebuilds } }
       }),
     )
     if (queued.cards.length === 0) return
     if (queued.last?.status === "paused" || queued.last?.status === "flaky") return
     const full = size(queued.settled, contract.bundle)
+    const alone = queued.cards.find((card) => card.queue.hold === "alone")
     const split = (queued.last?.status === "red" && queued.last.members > 1) || queued.last?.status === "probing"
-    const cap = split && queued.last ? Math.max(1, Math.floor(queued.last.members / 2)) : full
+    const cap = alone ? 1 : split && queued.last ? Math.max(1, Math.floor(queued.last.members / 2)) : full
     const due =
+      alone !== undefined ||
       split ||
       queued.cards.length >= full ||
       queued.cards.some((card) => card.queue.flush) ||
@@ -368,8 +389,9 @@ export function make(deps: Deps) {
     const ejections: Array<{ readonly card: string; readonly cause: string }> = []
     const members = yield* Effect.gen(function* () {
       const taken: Array<{ readonly issue: IssueRow; readonly head: string }> = []
-      for (const card of queued.cards) {
+      for (const card of alone ? [alone] : queued.cards) {
         if (taken.length >= cap) break
+        if (card.queue.hold === "held") continue
         if (card.issue.hold_before_merge || card.issue.paused) continue
         const attempt = queued.attempts.find((item) => item.issue_id === card.issue.id)
         if (attempt?.conflict_base) continue
@@ -446,7 +468,7 @@ export function make(deps: Deps) {
         const id = Board.BundleID.create()
         yield* tx
           .insert(BoardBundleTable)
-          .values({ id, project_id: row.id, n, branch, pr_number: number, base_sha: tip, head_sha: bundleHead, tree_sha: tree, status: "open" })
+          .values({ id, project_id: row.id, n, branch, pr_number: number, base_sha: tip, head_sha: bundleHead, tree_sha: tree, status: "open", rebuilds: queued.last?.status === "isolated" ? queued.last.rebuilds + 1 : 0 })
           .run()
         yield* tx
           .insert(BoardBundleMemberTable)
@@ -454,7 +476,7 @@ export function make(deps: Deps) {
           .run()
         yield* tx
           .update(BoardQueueTable)
-          .set({ flush: false })
+          .set({ flush: false, hold: null })
           .where(inArray(BoardQueueTable.issue_id, members.map((member) => member.issue.id)))
           .run()
         return yield* Effect.forEach(members, (member) =>
@@ -519,6 +541,23 @@ export function make(deps: Deps) {
     return verdict === "pending" ? "unknown" : verdict
   })
 
+  /** Runs F's groups with the scoped command in `cwd`; true when every group passes. */
+  const runGroups = (cwd: string, template: string, branch: string, groups: ReadonlyArray<{ readonly package: string; readonly files: ReadonlyArray<string> }>) =>
+    Effect.forEach(groups, (group) =>
+      Effect.gen(function* () {
+        const argv = yield* BoardCi.command(template, group, branch).pipe(Effect.orElseSucceed(() => [] as string[]))
+        if (argv.length === 0) return false
+        const result = yield* deps.proc
+          .run(ChildProcess.make(which(argv[0] ?? "", deps.env ?? process.env) ?? argv[0] ?? "", argv.slice(1), { cwd, env: deps.env, extendEnv: true, stdin: "ignore" }), {
+            combineOutput: true,
+            maxOutputBytes: 16 * 1024 * 1024,
+            timeout: "90 minutes",
+          })
+          .pipe(Effect.result)
+        return result._tag === "Success" && result.success.exitCode === 0
+      }),
+    ).pipe(Effect.map((passes) => passes.every(Boolean)))
+
   /**
    * Section 6.3 step 2: runs F on base and on the bundle head in parallel. F belongs to base when it fails there twice;
    * three passes on the head make the bundle flaky; a head failure is code. Undefined when a checkout fails.
@@ -541,29 +580,14 @@ export function make(deps: Deps) {
     )
     const base = checkouts[0]
     const head = checkouts[1]
-    const run = (cwd: string) =>
-      Effect.forEach(groups, (group) =>
-        Effect.gen(function* () {
-          const argv = yield* BoardCi.command(template, group, bundle.branch).pipe(Effect.orElseSucceed(() => [] as string[]))
-          if (argv.length === 0) return false
-          const result = yield* deps.proc
-            .run(ChildProcess.make(which(argv[0] ?? "", deps.env ?? process.env) ?? argv[0] ?? "", argv.slice(1), { cwd, env: deps.env, extendEnv: true, stdin: "ignore" }), {
-              combineOutput: true,
-              maxOutputBytes: 16 * 1024 * 1024,
-              timeout: "90 minutes",
-            })
-            .pipe(Effect.result)
-          return result._tag === "Success" && result.success.exitCode === 0
-        }),
-      ).pipe(Effect.map((passes) => passes.every(Boolean)))
     const outcome =
       base && head
         ? yield* Effect.all(
             [
-              run(base).pipe(Effect.flatMap((pass) => (pass ? Effect.succeed(true) : run(base)))),
-              run(head).pipe(
-                Effect.flatMap((pass) => (pass ? run(head) : Effect.succeed(false))),
-                Effect.flatMap((pass) => (pass ? run(head) : Effect.succeed(false))),
+              runGroups(base, template, bundle.branch, groups).pipe(Effect.flatMap((pass) => (pass ? Effect.succeed(true) : runGroups(base, template, bundle.branch, groups)))),
+              runGroups(head, template, bundle.branch, groups).pipe(
+                Effect.flatMap((pass) => (pass ? runGroups(head, template, bundle.branch, groups) : Effect.succeed(false))),
+                Effect.flatMap((pass) => (pass ? runGroups(head, template, bundle.branch, groups) : Effect.succeed(false))),
               ),
             ],
             { concurrency: 2 },
@@ -572,6 +596,87 @@ export function make(deps: Deps) {
     yield* Effect.forEach(checkouts, (scratch) => (scratch ? git(directory, ["worktree", "remove", "--force", scratch]) : Effect.void), { discard: true })
     if (!outcome) return undefined
     return !outcome[0] ? ("base" as const) : outcome[1] ? ("flaky" as const) : ("code" as const)
+  })
+
+  /** Runs F on base plus `heads` merged in order; false when a merge conflicts or a group fails, undefined when the checkout fails. */
+  const tryOn = Effect.fnUntraced(function* (
+    directory: string,
+    template: string,
+    bundle: typeof BoardBundleTable.$inferSelect,
+    groups: ReadonlyArray<{ readonly package: string; readonly files: ReadonlyArray<string> }>,
+    heads: ReadonlyArray<string>,
+  ) {
+    const scratch = yield* Effect.promise(() => fs.mkdtemp(path.join(os.tmpdir(), `orchestra-isolate-${bundle.n}-`)))
+    const added = yield* git(directory, ["worktree", "add", "--quiet", "--detach", scratch, bundle.base_sha])
+    if (added.code !== 0) {
+      yield* Effect.promise(() => fs.rm(scratch, { recursive: true, force: true }))
+      return undefined
+    }
+    return yield* Effect.gen(function* () {
+      for (const head of heads) {
+        const merged = yield* git(scratch, [...AUTHOR, "merge", "--no-ff", "--quiet", "-m", "isolate", head])
+        if (merged.code !== 0) return false
+      }
+      return yield* runGroups(scratch, template, bundle.branch, groups)
+    }).pipe(Effect.ensuring(git(directory, ["worktree", "remove", "--force", scratch])))
+  })
+
+  /**
+   * Section 6.3 steps 3-6: the culprits of a code red whose failing tests F ran scoped. Each candidate runs alone on base
+   * with its in-bundle dependencies; when none fails alone, a binary search over the member prefixes finds the member
+   * whose addition turns red. Undefined when a checkout fails; an empty list means no culprit.
+   */
+  const isolate = Effect.fnUntraced(function* (
+    directory: string,
+    template: string,
+    bundle: typeof BoardBundleTable.$inferSelect,
+    groups: ReadonlyArray<{ readonly package: string; readonly files: ReadonlyArray<string> }>,
+    members: ReadonlyArray<{ issue: IssueRow; member: typeof BoardBundleMemberTable.$inferSelect }>,
+  ) {
+    const failing = groups.flatMap((group) => group.files)
+    const ids = members.map((item) => item.issue.id)
+    const links = yield* deps.quiet((tx) =>
+      tx
+        .select()
+        .from(BoardDependencyTable)
+        .where(and(inArray(BoardDependencyTable.issue_id, ids), inArray(BoardDependencyTable.depends_on_id, ids)))
+        .all(),
+    )
+    const diffs = yield* Effect.forEach(members, (item) =>
+      git(directory, ["diff", "--name-only", bundle.base_sha, item.member.head_sha]).pipe(
+        Effect.map((diff) => ({ item, touches: diff.out.split("\n").some((file) => failing.includes(file)) })),
+      ),
+    )
+    const touching = diffs.flatMap((entry) => (entry.touches ? [entry.item] : []))
+    const candidates = touching.length > 0 ? touching : members
+    // One at a time: concurrent `git worktree add` on one repository races on its lock files.
+    const singles = yield* Effect.forEach(
+      candidates,
+      (item) => {
+        const after = members.filter((dep) => links.some((link) => link.issue_id === item.issue.id && link.depends_on_id === dep.issue.id))
+        return tryOn(directory, template, bundle, groups, [...after.map((dep) => dep.member.head_sha), item.member.head_sha])
+      },
+      { concurrency: 1 },
+    )
+    if (singles.includes(undefined)) return undefined
+    const culprits = candidates.filter((_, index) => singles[index] === false)
+    if (culprits.length > 0) return culprits.map((item) => item.issue)
+    let lo = 1
+    let hi = members.length
+    while (lo < hi) {
+      const mid = Math.floor((lo + hi) / 2)
+      const prefix = yield* tryOn(directory, template, bundle, groups, members.slice(0, mid).map((item) => item.member.head_sha))
+      if (prefix === undefined) return undefined
+      if (prefix === false) hi = mid
+      if (prefix === true) lo = mid + 1
+    }
+    // The full prefix was never run by the search: when the search reaches it, it decides whether there is a culprit at all.
+    if (lo === members.length) {
+      const whole = yield* tryOn(directory, template, bundle, groups, members.map((item) => item.member.head_sha))
+      if (whole === undefined) return undefined
+      if (whole) return []
+    }
+    return members.slice(lo - 1, lo).map((item) => item.issue)
   })
 
   /** Runs the full gate on base itself: an empty commit on the red bundle's base, opened as a bundle with no members. */
@@ -701,6 +806,31 @@ export function make(deps: Deps) {
         )
         return yield* close(row, repo, bundle, `is red because ${contract.base} at ${sha10} is red`, "base-red")
       }
+      // Section 6.3 steps 3-6: a code red that ran scoped is searched with scoped runs, not halved through full gates.
+      if (scoped === "code" && members.length > 1 && contract.scoped.tests !== null) {
+        if (bundle.rebuilds >= 2) return yield* hold(row, repo, bundle, members, "went red after two rebuilds")
+        const culprits = yield* isolate(directory, contract.scoped.tests, bundle, found.groups, members)
+        if (culprits?.length === 0) return yield* hold(row, repo, bundle, members, "went red and halving found no culprit")
+        if (culprits) {
+          const fileList = found.groups.flatMap((group) => group.files).join(", ")
+          yield* eject(row, bundle, culprits, `Bundle ${row.key}-B${bundle.n} went red, and this card fails ${fileList} on ${contract.base} alone; it is back in Review.`, "failed its scoped tests alone")
+          const keys = culprits.map((issue) => `${row.key}-${issue.number}`).join(", ")
+          const rest = members.filter((item) => !culprits.some((culprit) => culprit.id === item.issue.id))
+          yield* deps.quiet((tx) =>
+            tx
+              .update(BoardQueueTable)
+              .set({ flush: true })
+              .where(inArray(BoardQueueTable.issue_id, rest.map((item) => item.issue.id)))
+              .run(),
+          )
+          yield* Effect.forEach(
+            rest,
+            (item) => note(row, item.issue, `Bundle ${row.key}-B${bundle.n} went red; ${keys} failed alone and left it, and the queue rebuilds it with this card.`),
+            { discard: true },
+          )
+          return yield* close(row, repo, bundle, `is red; ${keys} ejected, the queue rebuilds it`, "isolated")
+        }
+      }
       if (members.length > 1) {
         yield* Effect.forEach(
           members,
@@ -713,21 +843,7 @@ export function make(deps: Deps) {
         )
         return yield* close(row, repo, bundle, "is red; the queue splits it to find the cause", "red")
       }
-      const back = yield* deps.quiet((tx) =>
-        Effect.forEach(members, (item) =>
-          Effect.gen(function* () {
-            yield* insertNote(tx, row, item.issue, `Bundle ${row.key}-B${bundle.n} went red with only this card on ${contract.base} at ${sha10}; it is back in Review.${cause}`)
-            yield* tx
-              .update(BoardAttemptTable)
-              .set({ outcome: "ejected" })
-              .where(and(eq(BoardAttemptTable.issue_id, item.issue.id), isNull(BoardAttemptTable.outcome)))
-              .run()
-            yield* BoardSnapshot.dispatch(tx, item.issue, { cause: `ejected:${row.key}-B${bundle.n}` })
-            return yield* release(tx, row, item.issue, "github", "bundle.dissolve", "red alone on the full gate")
-          }),
-        ),
-      )
-      yield* Effect.forEach(back, deps.publish, { discard: true })
+      yield* eject(row, bundle, members.map((item) => item.issue), `Bundle ${row.key}-B${bundle.n} went red with only this card on ${contract.base} at ${sha10}; it is back in Review.${cause}`, "red alone on the full gate")
       return yield* close(row, repo, bundle, "is red", "red")
     }
     // Section 6.6: a member head that moved since assembly dequeues that member and the bundle is rebuilt.
@@ -899,6 +1015,49 @@ export function make(deps: Deps) {
     yield* deps.quiet((tx) => tx.update(BoardBundleTable).set({ status }).where(eq(BoardBundleTable.id, bundle.id)).run())
     if (bundle.pr_number)
       yield* deps.gh(["pr", "close", String(bundle.pr_number), "--repo", repo, "--delete-branch", "--comment", `Bundle ${row.key}-B${bundle.n} ${why}.`])
+  })
+
+  /** Gives each issue back to Review with `text` and releases its queue row; the caller decides the bundle's fate. */
+  const eject = Effect.fnUntraced(function* (row: ProjectRow, bundle: typeof BoardBundleTable.$inferSelect, issues: ReadonlyArray<IssueRow>, text: string, reason: string) {
+    const back = yield* deps.quiet((tx) =>
+      Effect.forEach(issues, (issue) =>
+        Effect.gen(function* () {
+          yield* insertNote(tx, row, issue, text)
+          yield* tx
+            .update(BoardAttemptTable)
+            .set({ outcome: "ejected" })
+            .where(and(eq(BoardAttemptTable.issue_id, issue.id), isNull(BoardAttemptTable.outcome)))
+            .run()
+          yield* BoardSnapshot.dispatch(tx, issue, { cause: `ejected:${row.key}-B${bundle.n}` })
+          return yield* release(tx, row, issue, "github", "bundle.dissolve", reason)
+        }),
+      ),
+    )
+    yield* Effect.forEach(back, deps.publish, { discard: true })
+  })
+
+  /** Section 6.3: a dissolved bundle's cards stay held until Maestro releases them one at a time with `board_bundle`. */
+  const hold = Effect.fnUntraced(function* (
+    row: ProjectRow,
+    repo: string,
+    bundle: typeof BoardBundleTable.$inferSelect,
+    members: ReadonlyArray<{ readonly member: typeof BoardBundleMemberTable.$inferSelect; readonly issue: IssueRow }>,
+    why: string,
+  ) {
+    yield* deps.quiet((tx) =>
+      tx
+        .update(BoardQueueTable)
+        .set({ hold: "held" })
+        .where(inArray(BoardQueueTable.issue_id, members.map((item) => item.issue.id)))
+        .run(),
+    )
+    yield* Effect.forEach(
+      members,
+      (item) => note(row, item.issue, `Bundle ${row.key}-B${bundle.n} ${why}; it dissolved and this card is held until Maestro releases it with board_bundle.`),
+      { discard: true },
+    )
+    yield* Effect.logWarning(`integration: ${row.key}-B${bundle.n} ${why}; its cards are held. Release them one at a time with board_bundle, dequeue a suspect, or send F to jimmy.`)
+    return yield* close(row, repo, bundle, why)
   })
 
   /** Section 6.4: a flaky bundle keeps its PR open and its members queued until Maestro merges or retries it. */
