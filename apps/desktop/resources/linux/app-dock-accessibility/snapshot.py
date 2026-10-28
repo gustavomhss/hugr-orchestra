@@ -137,7 +137,15 @@ def read(context, query):
             # Roots and mutation refs get full fresh ownership checks. Indexed
             # children prove their direct parent against this bounded live stack,
             # avoiding repeated /proc and whole-ancestry walks for every sibling.
-            record = fingerprint(context, handle, state["stack"][-1] if state["stack"] and not repeat else None)
+            try:
+                record = fingerprint(context, handle, state["stack"][-1] if state["stack"] and not repeat else None)
+            except BusError as error:
+                # GTK's file chooser exports children that name another parent;
+                # leave them (and their subtree) out instead of failing the read.
+                if error.code != "ancestry-changed":
+                    raise
+                _reason(result, "ancestry-changed")
+                continue
             if record["role"] == 33 and 25 not in record["states"] and state["stack"] and not repeat:
                 # GTK exports every language/menu entry even while its popup is
                 # closed. Do not materialize those unrelated hidden subtrees.
@@ -415,7 +423,12 @@ def _anchors(context, state, *, expanding=False):
             inherited = set(state["rootReasons"])
             for index, anchor in enumerate(chain):
                 within = chain[index - 1] if index and "count" in anchor else None
-                fresh = fingerprint(context, anchor, within)
+                try:
+                    fresh = fingerprint(context, anchor, within)
+                except BusError as error:
+                    if error.code != "ancestry-changed":
+                        raise
+                    raise BusError("cursor-stale", "Native continuation parent changed")
                 # Read-only continuation can compare a bounded full-name digest while
                 # mutation refs still reject the incomplete visible fingerprint.
                 if ((not fresh["fingerprintComplete"] and fresh["nameDigest"] is None)

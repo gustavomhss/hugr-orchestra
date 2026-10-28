@@ -129,7 +129,8 @@ function serve(port: Transport, name: string, tab: Tab) {
 
   async function act(args: Record<string, unknown>) {
     const before = state.last ?? await snap()
-    const entry = pick(before, args)
+    // Without ref, name or role the action goes to whatever has focus (keys, or typing into an unnamed editor).
+    const entry = args.ref === undefined && args.name === undefined && args.role === undefined ? undefined : pick(before, args)
     return change(() => app.act(entry, args), before)
   }
 
@@ -196,7 +197,7 @@ async function apps(port: Transport) {
 
 type App = {
   snapshot: () => Promise<Snapshot>
-  act: (entry: Entry, args: Record<string, unknown>) => Promise<string>
+  act: (entry: Entry | undefined, args: Record<string, unknown>) => Promise<string>
   navigate?: (args: Record<string, unknown>) => Promise<string>
 }
 
@@ -213,8 +214,9 @@ function browserApp(port: Transport, tab: Tab): App {
     },
     act: async (entry, args) => {
       const verb = String(args.do ?? "click")
-      if (verb === "click") return ok(await rpc("click", { ref: entry.ref }))
-      if (verb === "type") return ok(await rpc("type", { ref: entry.ref, text: String(args.text ?? "") }))
+      if (!entry && (verb === "click" || verb === "type")) return `Error: ${verb} needs the ref (or name and role) of the control`
+      if (verb === "click") return ok(await rpc("click", { ref: entry!.ref }))
+      if (verb === "type") return ok(await rpc("type", { ref: entry!.ref, text: String(args.text ?? "") }))
       if (verb === "scroll") return ok(await rpc("scroll", { direction: args.direction ?? "down" }))
       if (verb === "keys") {
         const key = String(args.keys ?? "")
@@ -268,9 +270,18 @@ function linuxApp(port: Transport): App {
   return {
     snapshot: () => serial(async () => linuxEntries(await readAll(port))),
     act: async (entry, args) => {
-      if (!entry.name) return "Error: that control has no name to locate it by; pick a named control or use keys"
-      const target = { name: entry.name, role: entry.role }
       const verb = String(args.do ?? "click")
+      // An unnamed control (an editor's text view) cannot be located by name; typing and keys reach it through focus.
+      if (!entry?.name) {
+        if (entry && !/\bfocused\b/.test(entry.label))
+          return `Error: that control has no name to locate it by and does not have focus; move focus into it (click a named neighbour, or keys Tab), then act with do ${verb === "click" ? "keys" : verb} and no ref`
+        if (verb === "type") return invoke("ui_type", { text: String(args.text ?? "") })
+        if (verb === "keys") return invoke("ui_keys", { keys: String(args.keys ?? "") })
+        if (verb === "scroll") return invoke("ui_keys", { keys: args.direction === "up" ? "Page_Up" : "Page_Down" })
+        if (verb === "click") return entry ? "Error: that control has no name to click it by; it already has focus, so type or send keys to it" : "Error: click needs the ref (or name and role) of the control"
+        return `Error: unknown do "${verb}"; use click, type, keys or scroll`
+      }
+      const target = { name: entry.name, role: entry.role }
       if (verb === "click") return invoke("ui_act", { target, ...(typeof args.action === "string" ? { action: args.action } : {}) })
       if (verb === "type") return invoke("ui_type", { target, text: String(args.text ?? "") })
       if (verb === "keys") return invoke("ui_keys", { target, keys: String(args.keys ?? "") })
@@ -412,7 +423,7 @@ function tools(where: string, workspace: boolean) {
     { name: "find", description: `Search ${where} by text and/or role. Each match shows where it sits (its last regions › the control) and its [ref].`,
       inputSchema: { type: "object", properties: { query: { type: "string", description: "Case-insensitive text in the role, name or value" },
         role: { type: "string", description: "Role such as button, link, textbox, push button, entry, menu item" } } } },
-    { name: "act", description: `Act on ${where} by ref (or by name and role) and get back what changed: focus, lines that appeared, went away or changed. do: click (default), type (replace a field's text), keys (e.g. Enter, Escape${workspace ? ", ctrl+s" : ""}), scroll.`,
+    { name: "act", description: `Act on ${where} by ref (or by name and role) and get back what changed: focus, lines that appeared, went away or changed. do: click (default), type (replace a field's text), keys (e.g. Enter, Escape${workspace ? ", ctrl+s" : ""}), scroll.${workspace ? " With no ref, type and keys go to the control that has focus, such as an editor's unnamed text view; type then adds the text at the cursor." : ""}`,
       inputSchema: { type: "object", properties: { ref, name: { type: "string" }, role: { type: "string" },
         do: { type: "string", enum: ["click", "type", "keys", "scroll"] }, text: { type: "string", description: "Text for do=type" },
         keys: { type: "string", description: workspace ? "Key combination for do=keys, e.g. Return, Escape, ctrl+comma" : "One key for do=keys, e.g. Enter, Tab, Escape, ArrowDown" },

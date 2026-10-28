@@ -102,6 +102,35 @@ describe("DockMcp", () => {
     await client.close()
   })
 
+  test("an editor's unnamed text view takes typing and keys through focus", async () => {
+    const editor = (focused: boolean) => page([
+      control("n:frame", "Untitled 1 - Mousepad", { role: 23, roleName: "frame", states: [1, 8], parentRef: null }),
+      { ...field("n:text", ""), role: 61, roleName: "text", states: focused ? [7, 8, 12, 24, 30] : [7, 8, 24, 30], parentRef: "n:frame" }])
+    const focus = { value: true }
+    const d = dock((op) => {
+      if (op === "list") return { ok: true, value: tabs }
+      if (op === "read") return editor(focus.value)
+      if (op === "type") return { ok: true, value: { method: "keyboard", postcondition: "verified" } }
+      if (op === "keyboard") return { ok: true, value: { method: "keys", dispatch: "acknowledged" } }
+      return { ok: false, error: { message: `unexpected ${op}` } }
+    })
+    const client = await connect((await d.servers())[2]!)
+    await client.callTool({ name: "look", arguments: {} })
+    const typed = await client.callTool({ name: "act", arguments: { ref: 2, do: "type", text: "hello" } })
+    expect(typed.isError).toBe(false)
+    expect(d.calls.find((call) => call.op === "type")?.args).toMatchObject({ ref: "n:text", text: "hello", mode: "keyboard", focused: true })
+    await client.callTool({ name: "act", arguments: { do: "keys", keys: "ctrl+s" } })
+    expect(d.calls.some((call) => call.op === "keyboard")).toBe(true)
+
+    // Not focused: the answer says how to get focus there, and nothing is sent.
+    focus.value = false
+    await client.callTool({ name: "look", arguments: {} })
+    const sent = d.calls.length
+    expect(text(await client.callTool({ name: "act", arguments: { ref: 2, do: "type", text: "x" } }))).toContain("move focus into it")
+    expect(d.calls.slice(sent).every((call) => call.op === "read")).toBe(true)
+    await client.close()
+  })
+
   test("an empty workspace says how to open an app, and launch opens one and shows its window", async () => {
     const opened = { value: false }
     const d = dock((op, args) => {
