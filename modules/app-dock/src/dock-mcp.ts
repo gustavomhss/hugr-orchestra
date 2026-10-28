@@ -384,7 +384,7 @@ function editable(items: TextItem[]) {
     const shape = `${item.roleName}|${item.name}`
     const index = counts.get(shape) ?? 0
     counts.set(shape, index + 1)
-    return [item, `${shape}#${index}`] as const
+    return [item, `${shape}#${index}` as string] as const
   }))
 }
 
