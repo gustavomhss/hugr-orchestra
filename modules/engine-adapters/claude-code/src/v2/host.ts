@@ -1,6 +1,6 @@
 export * as ClaudeCodeHost from "./host"
 
-import { createSdkMcpServer, type CanUseTool, type HookCallback, type PermissionResult, type SDKMessage, type SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
+import { createSdkMcpServer, type AgentDefinition, type CanUseTool, type HookCallback, type PermissionResult, type SDKMessage, type SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js"
 import type { Host } from "@orchestra/core/host"
 import { makeLocationNode } from "@orchestra/core/effect/app-node"
@@ -10,6 +10,8 @@ import { Duration, Effect, Layer, Stream } from "effect"
 import { createHash, randomUUID } from "node:crypto"
 import path from "node:path"
 import { ClaudeCodeAccount } from "@orchestra/core/claude-code-account"
+import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
+import { Research } from "@orchestra/schema/research"
 import { ClaudeHostOptions } from "../host/options"
 import { ClaudeCodeSDK } from "../sdk"
 import { ClaudeCodeTranscript } from "../transcript"
@@ -29,13 +31,13 @@ const UNSERVED = new Set([
   "question", "skill", "lsp", "invalid", "context_compact", "execute",
 ])
 
-/**
- * Claude Code's own subagent tool. Orchestra's `task` is served instead, so every delegation passes Task Governance;
- * a subagent Claude Code spawned itself would skip admission, reservation and settlement.
- */
 const EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const
+/** Claude Code's own subagent tool: Orchestra's seats are its subagents, and each call passes the `task` permission. */
 const SUBAGENT_TOOLS = new Set(["Agent", "Task"])
-const SUBAGENT_DENIAL = "Delegate through `mcp__orchestra__task`: Orchestra governs every delegation in this session."
+/** The prefix of a seat's subagent name, as the V1 `orchestra` plugin named them. */
+const SEAT_PREFIX = "orchestra:"
+/** Seat prompt text that describes Orchestra's own loop, and its Claude Code equivalent. */
+const LOOP_TEXT = [["the task delegation tool", "the Agent delegation tool"]] as const
 const QUESTION_DISMISSED = "The owner dismissed this question."
 /** A finished background task's process stays up this long waiting for the task to report; then it is let go. */
 const BACKGROUND_PATIENCE = Duration.minutes(30)
@@ -94,13 +96,18 @@ export const make = Effect.gen(function* () {
           // billing) leaves the prompt to be sent again.
           const progress = { handed: false, answered: false, resulted: false }
           const served = turn.tools.filter((tool) => !UNSERVED.has(tool.name))
+          const agents = subagents(turn.seats)
+          // The Context Epoch baseline and workflow instructions go in once per change, beside the prompt.
+          const contextText = turn.context.filter(Boolean).join("\n\n")
+          const contextHash = contextText ? createHash("sha256").update(contextText).digest("hex") : undefined
+          const context = { sent: false }
           // Claude Code's tool_use id for an Orchestra tool, learned at the gate; the MCP request does not carry it.
           const callIDs = new Map<string, string[]>()
           const learned = new Set<string>()
           // A call is settled once, whichever of the hook and `canUseTool` asks first: asking twice would ask the owner
           // twice and charge a dispatch twice.
           const decisions = new Map<string, Promise<Decision>>()
-          const decide = (tool: string, input: Record<string, unknown>, toolUseID: string, signal: AbortSignal) => {
+          const decide = (tool: string, input: Record<string, unknown>, toolUseID: string, signal: AbortSignal, agentType?: string) => {
             const known = decisions.get(toolUseID)
             if (known) return known
             // Never rejects: a defect, a throw or an abort in Orchestra's own check refuses the call (fail closed).
@@ -113,9 +120,17 @@ export const make = Effect.gen(function* () {
                   // The registry settles the Orchestra tool's own permissions when the runner executes it.
                   return { allow: true }
                 }
-                if (SUBAGENT_TOOLS.has(tool) && served.some((item) => item.name === "task")) return { allow: false, reason: SUBAGENT_DENIAL }
+                // A call made inside a seat's subagent is checked under that seat's own permission rules.
+                const seat = agentType ? agents[agentType]?.seat : undefined
+                const asked = SUBAGENT_TOOLS.has(tool) ? delegation(input, agents) : undefined
+                if (asked && "reason" in asked) return asked
                 return Effect.runPromise(
-                  turn.authorize({ callID: toolUseID, tool, ...permission(tool, input, turn.session.location.directory), safety: safetyCall(tool, input) }).pipe(
+                  turn.authorize({
+                    callID: toolUseID,
+                    tool,
+                    ...(asked ?? { ...permission(tool, input, turn.session.location.directory), safety: safetyCall(tool, input) }),
+                    ...(seat ? { agent: seat } : {}),
+                  }).pipe(
                     Effect.map((authorization): Decision => ({ allow: true, input: replacements(tool, authorization) })),
                     Effect.catch((error) => Effect.succeed<Decision>({ allow: false, reason: denial(error) })),
                   ),
@@ -147,7 +162,7 @@ export const make = Effect.gen(function* () {
             // The question needs the owner, so it is left to `canUseTool`, where its answers can be returned.
             if (input.tool_name === "AskUserQuestion") return Promise.resolve({})
             const args = ClaudeCodeTranscript.record(input.tool_input) ? input.tool_input : {}
-            return decide(input.tool_name, args, input.tool_use_id, options.signal).then((decision) => ({
+            return decide(input.tool_name, args, input.tool_use_id, options.signal, input.agent_type).then((decision) => ({
               hookSpecificOutput: decision.allow
                 ? {
                     hookEventName: "PreToolUse" as const,
@@ -163,14 +178,25 @@ export const make = Effect.gen(function* () {
               decision.allow ? { behavior: "allow" as const, updatedInput: { ...input, ...decision.input } } : { behavior: "deny" as const, message: decision.reason },
             )
           }
-          // What Orchestra keeps beyond Claude Code's own summary comes back right after a compaction; the summary
-          // itself is archived in the session. A failure here never fails the turn.
+          // Claude Code's documented channel for context beside a prompt. Sent when it changed since the Claude Code
+          // session last received it, once per turn.
+          const prompted: HookCallback = (input) => {
+            if (input.hook_event_name !== "UserPromptSubmit" || context.sent || !contextHash || contextHash === state.contextHash)
+              return Promise.resolve({})
+            context.sent = true
+            return Promise.resolve({ hookSpecificOutput: { hookEventName: "UserPromptSubmit" as const, additionalContext: contextText } })
+          }
+          // What Orchestra keeps beyond Claude Code's own summary comes back right after a compaction, with the context
+          // the summary may have dropped; the summary itself is archived in the session. A failure here never fails the turn.
           const recall: HookCallback = (input, _toolUseID, options) => {
             if (input.hook_event_name !== "SessionStart" || input.source !== "compact") return Promise.resolve({})
             return Effect.runPromise(turn.memory.recall, { signal: options.signal }).then(
-              (text) => (text ? { hookSpecificOutput: { hookEventName: "SessionStart" as const, additionalContext: text } } : {}),
-              () => ({}),
-            )
+              (text) => text,
+              () => undefined,
+            ).then((text) => {
+              const joined = [contextText, text].filter(Boolean).join("\n\n")
+              return joined ? { hookSpecificOutput: { hookEventName: "SessionStart" as const, additionalContext: joined } } : {}
+            })
           }
           const archive: HookCallback = (input, _toolUseID, options) => {
             if (input.hook_event_name !== "PostCompact") return Promise.resolve({})
@@ -191,6 +217,7 @@ export const make = Effect.gen(function* () {
               ...(ClaudeCodeTranscript.record(value) ? value : {}),
               sessionId,
               delivered: [...new Set([...delivered, ...pending.map((item) => item.id), ...consumed])],
+              ...(context.sent ? { contextHash } : {}),
             }))
           // The reasoning picker's level, when it is one Claude Code accepts.
           const effort = EFFORTS.find((level) => level === turn.model?.variant)
@@ -199,16 +226,25 @@ export const make = Effect.gen(function* () {
             ...(turn.model?.providerID === "anthropic" ? { model: turn.model.id } : {}),
             ...(effort ? { effort } : {}),
             ...(typeof state.sessionId === "string" ? { resume: state.sessionId } : { sessionId: claudeSessionID(turn.session.id) }),
-            // Claude mode appends to Claude Code's own prompt and never replaces it (AGENTS: claude_code preset).
-            systemPrompt: { type: "preset", preset: "claude_code", append: turn.system.join("\n\n") },
+            // Claude mode appends a short Orchestra note to Claude Code's own prompt and never replaces it (AGENTS:
+            // claude_code preset); the seat's full Orchestra prompt stays out of it.
+            systemPrompt: {
+              type: "preset",
+              preset: "claude_code",
+              append: ClaudeHostOptions.append(turn.agent.id, Object.fromEntries(Object.entries(agents).map(([name, item]) => [name, item.seat]))),
+            },
             settingSources: ["project"],
             permissionMode: "default",
             canUseTool,
             hooks: {
               PreToolUse: [{ hooks: [gate] }],
+              UserPromptSubmit: [{ hooks: [prompted] }],
               SessionStart: [{ matcher: "compact", hooks: [recall] }],
               PostCompact: [{ hooks: [archive] }],
             },
+            ...(Object.keys(agents).length
+              ? { agents: Object.fromEntries(Object.entries(agents).map(([name, item]) => [name, item.definition])) }
+              : {}),
             ...(served.length
               ? { mcpServers: { [MCP_SERVER]: server(served, (name) => callIDs.get(name)?.shift() ?? `orchestra_${randomUUID()}`, turn.execute) } }
               : {}),
@@ -240,7 +276,11 @@ export const make = Effect.gen(function* () {
                   ? turn.state.update((value) => {
                       const record = ClaudeCodeTranscript.record(value) ? value : {}
                       const prior = Array.isArray(record.delivered) ? record.delivered : []
-                      return { ...record, delivered: [...new Set([...prior, ...pending.map((item) => item.id), ...consumed])] }
+                      return {
+                        ...record,
+                        delivered: [...new Set([...prior, ...pending.map((item) => item.id), ...consumed])],
+                        ...(context.sent ? { contextHash } : {}),
+                      }
                     })
                   : Effect.void,
               )
@@ -513,6 +553,45 @@ function inbox(first: SDKUserMessage, signal: AbortSignal, handed: (uuid: SDKUse
       }
     })(),
   }
+}
+
+/** Orchestra's seats as Claude Code subagents `orchestra:<id>`; the research seat is one per tier, with its budget. */
+function subagents(seats: ExecutionHost.Turn["seats"]) {
+  return Object.fromEntries(
+    seats.flatMap((seat) => {
+      if (!seat.system) return []
+      const definition: AgentDefinition = {
+        description: seat.description ?? `Orchestra's \`${seat.id}\` seat.`,
+        prompt: LOOP_TEXT.reduce((text, [from, to]) => text.replaceAll(from, to), seat.system),
+        model: seat.model?.providerID === "anthropic" ? seat.model.id : "inherit",
+      }
+      if (seat.id !== ResearchSeatTools.SEAT) return [[`${SEAT_PREFIX}${seat.id}`, { seat: seat.id, definition }] as const]
+      return Research.Depth.literals.map((tier) => [
+        `${SEAT_PREFIX}${seat.id}-${tier}`,
+        {
+          seat: seat.id,
+          definition: {
+            ...definition,
+            description: `${definition.description} Research tier ${tier}: up to ${Research.Tiers[tier].providerCalls} turns.`,
+            maxTurns: Research.Tiers[tier].providerCalls,
+            tools: [...ResearchSeatTools.CLAUDE],
+          },
+        },
+      ] as const)
+    }),
+  )
+}
+
+/**
+ * An `Agent` call as the permission Orchestra's own task tool asks for: action `task` on the seat. A seat whose
+ * proposal is needed in the same turn is refused in the background.
+ */
+function delegation(input: Record<string, unknown>, agents: ReturnType<typeof subagents>) {
+  const type = typeof input.subagent_type === "string" ? input.subagent_type : "*"
+  const seat = agents[type]?.seat ?? type
+  if (input.run_in_background === true && ClaudeHostOptions.FOREGROUND_SEATS.includes(seat))
+    return { allow: false as const, reason: `Run \`${type}\` in the foreground: its result is needed in this turn.` }
+  return { action: "task", resources: [seat] }
 }
 
 /** AskUserQuestion's questions in Orchestra's question shape. */

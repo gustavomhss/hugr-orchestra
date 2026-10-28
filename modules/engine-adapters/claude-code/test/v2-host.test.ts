@@ -10,6 +10,7 @@ import { ToolSafety } from "@orchestra/core/tool-safety"
 import type { ExecutionHost } from "@orchestra/core/session/runner"
 import { Effect, Layer, Stream } from "effect"
 import { QuestionV2 } from "@orchestra/core/question"
+import { ClaudeHostOptions } from "../src/host/options"
 import { ClaudeCodeSDK } from "../src/sdk"
 import { ClaudeCodeHost, permission } from "../src/v2/host"
 
@@ -63,6 +64,8 @@ const turnOf = (input: Partial<ExecutionHost.Turn> = {}): ExecutionHost.Turn => 
   agent: AgentV2.Info.empty(AgentV2.ID.make("maestro")),
   model: undefined,
   system: [],
+  context: [],
+  seats: [],
   history: [user("msg_1", "Go")] as unknown as ExecutionHost.Turn["history"],
   tools: [],
   execute: () => Effect.die("unused"),
@@ -88,6 +91,8 @@ test("one SDK query is one turn: tool calls surface provider-executed and the ne
     agent: AgentV2.Info.empty(AgentV2.ID.make("maestro")),
     model: undefined,
     system: ["Maestro instructions", "Context"],
+    context: ["Context"],
+    seats: [],
     history: history as ExecutionHost.Turn["history"],
     tools: [],
     execute: () => Effect.die("unused"),
@@ -127,7 +132,8 @@ test("one SDK query is one turn: tool calls surface provider-executed and the ne
   expect(calls[0]?.options).toMatchObject({
     cwd: "/project",
     sessionId: ClaudeCodeHost.claudeSessionID("ses_host"),
-    systemPrompt: { type: "preset", preset: "claude_code", append: "Maestro instructions\n\nContext" },
+    // The short Maestro note, never the seat's full Orchestra prompt or the context.
+    systemPrompt: { type: "preset", preset: "claude_code", append: ClaudeHostOptions.append("maestro", {}) },
   })
   expect(calls[0]?.options?.resume).toBeUndefined()
   expect(first.map((event) => event.type)).toEqual([
@@ -242,13 +248,61 @@ test("Claude Code's approvals become V2 permission checks: allowed runs, a deny 
   ])
 })
 
-test("delegation goes through Orchestra's governed task: served over MCP, Claude Code's own subagent tool refused", async () => {
-  let listed: string[] = []
+const seat = (id: string, fields: Partial<AgentV2.Info> = {}) =>
+  ({ ...AgentV2.Info.empty(AgentV2.ID.make(id)), mode: "subagent", system: `You are ${id}. Use the task delegation tool.`, ...fields }) as AgentV2.Info
+
+test("Orchestra's seats are Claude Code subagents: the Maestro note names them, the research seat has one per tier", async () => {
+  script = [done]
+  await collect(turnOf({
+    seats: [
+      seat("backend", { description: "Backend work.", model: { id: "claude-opus-4", providerID: "anthropic" } as AgentV2.Info["model"] }),
+      seat("jimmy", { description: "Research." }),
+      seat("docs", { model: { id: "gpt-6", providerID: "openai" } as AgentV2.Info["model"] }),
+      // No prompt, no subagent.
+      seat("empty", { system: undefined }),
+    ],
+  }))
+
+  const options = calls.at(-1)?.options
+  expect(Object.keys(options?.agents ?? {}).toSorted()).toEqual([
+    "orchestra:backend", "orchestra:jimmy-deep", "orchestra:jimmy-focused", "orchestra:jimmy-quick", "orchestra:docs",
+  ])
+  expect(options?.agents?.["orchestra:backend"]).toEqual({
+    description: "Backend work.",
+    prompt: "You are backend. Use the Agent delegation tool.",
+    model: "claude-opus-4",
+  })
+  expect(options?.agents?.["orchestra:docs"]).toMatchObject({ description: "Orchestra's `docs` seat.", model: "inherit" })
+  expect(options?.agents?.["orchestra:jimmy-quick"]).toMatchObject({
+    description: "Research. Research tier quick: up to 24 turns.",
+    maxTurns: 24,
+    tools: ["Read", "Grep", "Glob", "WebSearch", "Skill"],
+  })
+  expect(options?.agents?.["orchestra:jimmy-deep"]).toMatchObject({ maxTurns: 96 })
+  expect(options?.systemPrompt).toEqual({
+    type: "preset",
+    preset: "claude_code",
+    append: ClaudeHostOptions.append("maestro", {
+      "orchestra:backend": "backend",
+      "orchestra:jimmy-quick": "jimmy",
+      "orchestra:jimmy-focused": "jimmy",
+      "orchestra:jimmy-deep": "jimmy",
+      "orchestra:docs": "docs",
+    }),
+  })
+})
+
+test("an Agent call asks Orchestra's task permission for the seat; a foreground seat is refused in the background", async () => {
+  const asked: unknown[] = []
   const decisions: unknown[] = []
+  let listed: string[] = []
   during = async (options) => {
     const signal = new AbortController().signal
-    decisions.push(await options.canUseTool?.("Agent", { prompt: "go" }, { signal, toolUseID: "tu-1", requestId: "r1" }))
-    decisions.push(await options.canUseTool?.("Task", { prompt: "go" }, { signal, toolUseID: "tu-2", requestId: "r2" }))
+    decisions.push(await options.canUseTool?.("Agent", { prompt: "go", subagent_type: "orchestra:jimmy-deep" }, { signal, toolUseID: "tu-1", requestId: "r1" }))
+    decisions.push(await options.canUseTool?.("Task", { prompt: "go", subagent_type: "general-purpose" }, { signal, toolUseID: "tu-2", requestId: "r2" }))
+    decisions.push(await options.canUseTool?.("Agent", { prompt: "go", subagent_type: "orchestra:backend", run_in_background: true }, { signal, toolUseID: "tu-3", requestId: "r3" }))
+    decisions.push(await options.canUseTool?.("Agent", { prompt: "go", subagent_type: "orchestra:backend" }, { signal, toolUseID: "tu-4", requestId: "r4" }))
+    // Governed dispatch (approved workflows) stays Orchestra's own task tool over MCP.
     const server = options.mcpServers?.orchestra as McpSdkServerConfigWithInstance
     const [client, transport] = InMemoryTransport.createLinkedPair()
     await server.instance.connect(transport)
@@ -259,13 +313,83 @@ test("delegation goes through Orchestra's governed task: served over MCP, Claude
   }
   script = [done]
   await collect(turnOf({
+    seats: [seat("backend"), seat("jimmy")],
     tools: [new ToolDefinition({ name: "task", description: "task", inputSchema: { type: "object", properties: {} } })],
-    authorize: () => Effect.die("a subagent call must not reach the permission check"),
+    authorize: (input) => Effect.sync(() => asked.push(input)).pipe(Effect.as({})),
   }))
 
   expect(listed).toEqual(["task"])
-  const denied = { behavior: "deny", message: "Delegate through `mcp__orchestra__task`: Orchestra governs every delegation in this session." }
-  expect(decisions).toEqual([denied, denied])
+  expect(asked).toEqual([
+    { callID: "tu-1", tool: "Agent", action: "task", resources: ["jimmy"] },
+    { callID: "tu-2", tool: "Task", action: "task", resources: ["general-purpose"] },
+    { callID: "tu-4", tool: "Agent", action: "task", resources: ["backend"] },
+  ])
+  expect(decisions[2]).toEqual({ behavior: "deny", message: "Run `orchestra:backend` in the foreground: its result is needed in this turn." })
+  expect(decisions[3]).toMatchObject({ behavior: "allow" })
+})
+
+test("a call made inside a seat's subagent is authorized under that seat", async () => {
+  const asked: unknown[] = []
+  during = async (options) => {
+    await options.hooks?.PreToolUse?.[0]?.hooks[0]?.(
+      { hook_event_name: "PreToolUse", tool_name: "Bash", tool_input: { command: "ls" }, tool_use_id: "tu-1", agent_id: "a1",
+        agent_type: "orchestra:backend", session_id: "claude-1", transcript_path: "", cwd: "/project" } as HookInput,
+      "tu-1",
+      { signal: new AbortController().signal },
+    )
+  }
+  script = [done]
+  await collect(turnOf({ seats: [seat("backend")], authorize: (input) => Effect.sync(() => asked.push(input)).pipe(Effect.as({})) }))
+
+  expect(asked).toEqual([
+    { callID: "tu-1", tool: "Bash", action: "bash", resources: ["ls"], safety: { tool: "bash", args: { command: "ls" } }, agent: "backend" },
+  ])
+})
+
+test("the context reaches Claude Code beside the prompt, once per change, and again after a compaction", async () => {
+  const stored: { value: unknown } = { value: undefined }
+  const state = {
+    get: Effect.sync(() => stored.value),
+    update: (fn: (value: unknown) => unknown) => Effect.sync(() => void (stored.value = fn(stored.value))),
+  }
+  const submitted: unknown[] = []
+  const signal = new AbortController().signal
+  const submit = (options: Options) =>
+    options.hooks?.UserPromptSubmit?.[0]?.hooks[0]?.(
+      { hook_event_name: "UserPromptSubmit", prompt: "Go", session_id: "claude-1", transcript_path: "", cwd: "/project" } as HookInput,
+      undefined,
+      { signal },
+    )
+  during = async (options) => {
+    submitted.push(await submit(options))
+    submitted.push(await submit(options))
+  }
+  script = [done]
+  await collect(turnOf({ context: ["Baseline"], state }))
+  await collect(turnOf({
+    context: ["Baseline"],
+    state,
+    history: [user("msg_1", "Go"), user("msg_2", "Next")] as unknown as ExecutionHost.Turn["history"],
+  }))
+
+  const context = { hookSpecificOutput: { hookEventName: "UserPromptSubmit", additionalContext: "Baseline" } }
+  expect(submitted).toEqual([context, {}, {}, {}])
+
+  const recalled: unknown[] = []
+  during = async (options) => {
+    recalled.push(await options.hooks?.SessionStart?.[0]?.hooks[0]?.(
+      { hook_event_name: "SessionStart", source: "compact", session_id: "claude-1", transcript_path: "", cwd: "/project" } as HookInput,
+      undefined,
+      { signal },
+    ))
+  }
+  await collect(turnOf({
+    context: ["Baseline"],
+    state,
+    memory: { recall: Effect.succeed("Todos"), archive: () => Effect.void },
+    history: [user("msg_3", "Again")] as unknown as ExecutionHost.Turn["history"],
+  }))
+  expect(recalled).toEqual([{ hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: "Baseline\n\nTodos" } }])
 })
 
 // Claude Code skips canUseTool when a settings allow rule matches, so the PreToolUse hook is the call's only sure check.
@@ -286,7 +410,7 @@ test("the PreToolUse gate settles every call through Orchestra, failing closed, 
     decisions.push(await pre(options, "Write", { file_path: "/project/a.ts" }, "tu-1"))
     decisions.push(await pre(options, "Bash", { command: "rm -rf /" }, "tu-2"))
     decisions.push(await pre(options, "Grep", { pattern: "boom" }, "tu-3"))
-    decisions.push(await pre(options, "Agent", { prompt: "go" }, "tu-4"))
+    decisions.push(await pre(options, "Agent", { prompt: "go", subagent_type: "orchestra:backend", run_in_background: true }, "tu-4"))
     decisions.push(await pre(options, "AskUserQuestion", { questions: [] }, "tu-5"))
     decisions.push(await pre(options, "mcp__orchestra__task", { prompt: "go" }, "tu-6"))
     // canUseTool after the hook already learned the call (both can run): the call id is not queued twice.
@@ -302,6 +426,7 @@ test("the PreToolUse gate settles every call through Orchestra, failing closed, 
   }
   script = [done]
   await collect(turnOf({
+    seats: [seat("backend")],
     tools: [new ToolDefinition({ name: "task", description: "task", inputSchema: { type: "object", properties: {} } })],
     execute: (call) => Effect.sync(() => executed.push(call.id)).pipe(Effect.as({ result: { type: "text" as const, value: "ok" } })),
     authorize: (input) =>
@@ -322,7 +447,7 @@ test("the PreToolUse gate settles every call through Orchestra, failing closed, 
     allowed,
     refused("Orchestra's permission rules deny this call."),
     refused("Orchestra could not check this call, so it is refused."),
-    refused("Delegate through `mcp__orchestra__task`: Orchestra governs every delegation in this session."),
+    refused("Run `orchestra:backend` in the foreground: its result is needed in this turn."),
     // The question needs the owner, so the hook leaves it to canUseTool.
     {},
     allowed,

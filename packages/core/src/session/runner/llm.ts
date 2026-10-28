@@ -241,9 +241,18 @@ const layer = Layer.effect(
       if (!isLastStep) yield* mcp.ready()
       const toolMaterialization = isLastStep ? undefined : yield* tools.materialize(effectiveRules)
       const promptCacheKey = /^ses_[0-9a-f]{64}$/.test(session.id) ? session.id.slice(4) : session.id
-      const systemText = [agent.info?.system, system.baseline, workflow?.view.instructions].filter(
+      const contextText = [system.baseline, workflow?.view.instructions].filter(
         (part): part is string => part !== undefined && part.length > 0,
       )
+      const systemText = [agent.info?.system, ...contextText].filter(
+        (part): part is string => part !== undefined && part.length > 0,
+      )
+      // The task tool's targets (`TaskTool.requireTarget`), offered to a hosted engine as its own subagents.
+      const seats = host
+        ? (yield* agents.all()).filter(
+            (item) => !item.hidden && item.mode !== "primary" && item.id !== AgentV2.defaultID && item.id !== agent.id,
+          )
+        : []
       // Only provider-model turns pass through the compaction transform; a hosted engine receives its history as is.
       const messages = model
         ? yield* compaction.transform({
@@ -328,10 +337,12 @@ const layer = Layer.effect(
       const scope = yield* Scope.Scope
       const authorize: ExecutionHost.Turn["authorize"] = (input) =>
         Effect.gen(function* () {
+          // A call made inside a seat's subagent runs under that seat's rules; any other agent id is ignored.
+          const actor = seats.find((item) => item.id === input.agent)?.id ?? agent.id
           yield* permissions
             .authorize({
               sessionID: session.id,
-              agent: agent.id,
+              agent: actor,
               action: input.action,
               resources: [...input.resources],
               metadata: { tool: input.tool, callID: input.callID },
@@ -345,7 +356,7 @@ const layer = Layer.effect(
               args: call.args,
               sessionID: session.id,
               callID: input.callID,
-              agent: agent.id,
+              agent: actor,
               directory: location.directory,
               projectID: location.project.id,
               projectDirectory: location.project.directory === "/" ? location.directory : location.project.directory,
@@ -432,6 +443,8 @@ const layer = Layer.effect(
               agent: agent.info,
               model: modelRef,
               system: systemText,
+              context: contextText,
+              seats,
               history: context,
               tools: toolMaterialization?.definitions ?? [],
               execute,

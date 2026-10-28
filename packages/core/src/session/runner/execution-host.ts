@@ -26,6 +26,10 @@ export interface Turn {
   readonly model: ModelV2.Ref | undefined
   /** Agent system text, the Context Epoch baseline and workflow instructions, in that order. */
   readonly system: ReadonlyArray<string>
+  /** The Context Epoch baseline and workflow instructions alone: `system` without the agent's own text. */
+  readonly context: ReadonlyArray<string>
+  /** The agents this turn's agent may delegate to, as the task tool would accept them as targets. */
+  readonly seats: ReadonlyArray<AgentV2.Info>
   /** Projected history the runner reloaded for this turn. */
   readonly history: ReadonlyArray<SessionMessage.Message>
   /** The agent's permission-filtered Orchestra tools, for the host to offer its engine. */
@@ -46,6 +50,8 @@ export interface Turn {
     readonly tool: string
     readonly action: string
     readonly resources: ReadonlyArray<string>
+    /** A seat from `seats` the call runs under, when the engine made it inside that seat's subagent. */
+    readonly agent?: AgentV2.ID
     /** The call as ToolSafety reads it: Orchestra's tool name (`bash`, `write`, `edit`, `read`, ...) and argument names. */
     readonly safety?: { readonly tool: string; readonly args: Readonly<Record<string, unknown>> }
   }) => Effect.Effect<Authorization, PermissionV2.Error | PermissionV2.DeclinedError | ToolSafety.Denied>
