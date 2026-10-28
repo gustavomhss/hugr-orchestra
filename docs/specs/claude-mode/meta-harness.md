@@ -50,13 +50,21 @@ The parts of D-C2 that replaced the meta-harness shape are reversed:
      call under that seat's permission rules (`Turn.authorize({ agent })`).
 5. **Governed paths stay MCP tools.** Approved Relay workflows still dispatch through `mcp__orchestra__task`, and
    governed review through `mcp__orchestra__maestro_request_review`. The appended Maestro text says so.
+6. **Seat skills by file.** `Turn.skills` carries, for each seat, the skills Orchestra's skill tool would list for it
+   (`SkillV2.available`). The subagent prompt ends with a `# Skills` block naming each skill's file, which the
+   subagent reads with Claude Code's Read tool. Seat entry skills (`<seat-id>-*`) are registered from
+   `SeatSkillRoot.roots` on V2 for every engine and denied to every agent but their seat.
+7. **Orchestra tools stay with the main agent.** An MCP request does not say which agent made it, so an Orchestra
+   tool called inside a subagent would run under the main agent's registry and permissions. The gate and
+   `canUseTool` refuse such a call (`agent_id` / `agentID` set), and every subagent lists the Orchestra tools in
+   `disallowedTools`.
 
 ## Not in scope (known limits)
 
 - A subagent's run is one collapsed `Agent` row in the Orchestra session. It has no child Session, transcript mirror or
   Task Governance dispatch reservation, as in V1 before its mirror landed.
-- Seat skills are not attached to the subagents yet.
-- Orchestra MCP tools called from inside a subagent are settled under the main agent's tool registry.
+- Orchestra's MCP tools are refused inside a subagent, so a seat's own Orchestra tools (for example review recording,
+  the research tools or Atlas Memory) are unavailable there. See decision 7.
 - The host still starts one Claude Code process per turn. A long-lived query per session would remove the resume
   start-up cost; it is not needed for correctness.
 

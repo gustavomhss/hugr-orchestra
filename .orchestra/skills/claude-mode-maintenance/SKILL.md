@@ -28,6 +28,12 @@ Design and decisions: `docs/specs/claude-mode/meta-harness.md`. User guide: `doc
   (`FOREGROUND_SEATS`) is refused with `run_in_background`.
 - A tool call inside a subagent (`agent_type` on the hook input) is authorized under that seat; the runner ignores an
   agent id that is not in `seats`.
+- `Turn.skills` holds each seat's skills as `SkillV2.available` lists them for that seat; `subagents` lists them by
+  file in the seat's prompt. Seat entry skills come from `SeatSkillRoot.roots` (`MaestroSkillSourcesV2.seats`) and
+  `MaestroSeatsV2.visibility` denies them to every other agent.
+- Orchestra MCP tools are refused inside a subagent (`MAIN_ONLY`, at the gate and in `canUseTool` via `agentID`) and
+  listed in each subagent's `disallowedTools`: the MCP request carries no agent, so they would run under the main
+  agent's registry and permissions.
 - Governed dispatch stays MCP: `mcp__orchestra__task`, `mcp__orchestra__maestro_request_review`.
 - Billing: never change prompts, headers or tools to influence how Anthropic classifies usage, and never probe it.
 

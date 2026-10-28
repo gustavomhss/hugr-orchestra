@@ -11,6 +11,7 @@ import type { PermissionV2 } from "../../permission"
 import type { QuestionV2 } from "../../question"
 import type { ToolSafety } from "../../tool-safety"
 import type { ToolRegistry } from "../../tool/registry"
+import type { SkillV2 } from "../../skill"
 import type { SessionMessage } from "../message"
 import type { SessionSchema } from "../schema"
 import { SessionTable } from "../sql"
@@ -30,6 +31,8 @@ export interface Turn {
   readonly context: ReadonlyArray<string>
   /** The agents this turn's agent may delegate to, as the task tool would accept them as targets. */
   readonly seats: ReadonlyArray<AgentV2.Info>
+  /** The skills each seat in `seats` may load, by seat id, as Orchestra's skill tool would list them for that seat. */
+  readonly skills: Readonly<Record<string, ReadonlyArray<SkillV2.Info>>>
   /** Projected history the runner reloaded for this turn. */
   readonly history: ReadonlyArray<SessionMessage.Message>
   /** The agent's permission-filtered Orchestra tools, for the host to offer its engine. */

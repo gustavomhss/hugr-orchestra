@@ -13,6 +13,8 @@ prompt, tools, context window and login, as it would in a terminal. Orchestra ad
   comes in three sizes, `orchestra:jimmy-quick`, `-focused` and `-deep`, each with its own turn budget.
 - **Orchestra's permissions.** Every tool call, including a delegation to a subagent, is checked against Orchestra's
   permission rules before it runs. A call made inside a seat's subagent is checked under that seat's rules.
+- **Seat skills.** A seat's subagent prompt lists the skills that seat may load, by file, so the subagent reads the
+  matching one with Claude Code's Read tool before it starts.
 
 ## What stays Orchestra's own
 
@@ -22,7 +24,8 @@ calls carry Orchestra's governance, so Maestro uses them instead of a plain suba
 ## Known limits
 
 - A subagent's run shows as one collapsed `Agent` row in the session, without its own child session.
-- Seat skills are not attached to the subagents yet.
+- Inside a subagent, Orchestra's own tools (such as governed dispatch, review recording or Atlas Memory) are not
+  available: they serve the main agent only. A seat's subagent still has its skills and Claude Code's own tools.
 - If Anthropic bills a turn as extra usage or refuses it, the app shows the provider's message. You can enable extra
   usage, use an API key, or pick another provider.
 

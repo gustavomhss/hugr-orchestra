@@ -253,6 +253,7 @@ const layer = Layer.effect(
             (item) => !item.hidden && item.mode !== "primary" && item.id !== AgentV2.defaultID && item.id !== agent.id,
           )
         : []
+      const catalog = seats.length > 0 ? yield* skills.list() : []
       // Only provider-model turns pass through the compaction transform; a hosted engine receives its history as is.
       const messages = model
         ? yield* compaction.transform({
@@ -445,6 +446,7 @@ const layer = Layer.effect(
               system: systemText,
               context: contextText,
               seats,
+              skills: Object.fromEntries(seats.map((seat) => [seat.id, SkillV2.available(catalog, seat)])),
               history: context,
               tools: toolMaterialization?.definitions ?? [],
               execute,

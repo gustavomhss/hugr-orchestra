@@ -5,6 +5,7 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
 import { ToolDefinition } from "@orchestra/llm"
 import { AgentV2 } from "@orchestra/core/agent"
 import { PermissionV2 } from "@orchestra/core/permission"
+import { AbsolutePath } from "@orchestra/core/schema"
 import { SessionSchema } from "@orchestra/core/session"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import type { ExecutionHost } from "@orchestra/core/session/runner"
@@ -66,6 +67,7 @@ const turnOf = (input: Partial<ExecutionHost.Turn> = {}): ExecutionHost.Turn => 
   system: [],
   context: [],
   seats: [],
+  skills: {},
   history: [user("msg_1", "Go")] as unknown as ExecutionHost.Turn["history"],
   tools: [],
   execute: () => Effect.die("unused"),
@@ -292,6 +294,35 @@ test("Orchestra's seats are Claude Code subagents: the Maestro note names them, 
   })
 })
 
+test("a seat's skills are listed in its subagent prompt by file, for the subagent to read when the task matches", async () => {
+  const skill = (name: string, description?: string) => ({
+    name,
+    description,
+    location: AbsolutePath.make(`/skills/${name}/SKILL.md`),
+    content: "",
+    mtime: 0,
+  })
+  script = [done]
+  await collect(turnOf({
+    seats: [seat("backend"), seat("docs")],
+    skills: { backend: [skill("backend-api", "Design an HTTP API."), skill("backend-check")], docs: [] },
+  }))
+
+  const agents = calls.at(-1)?.options?.agents
+  expect(agents?.["orchestra:backend"]?.prompt).toBe(
+    [
+      "You are backend. Use the Agent delegation tool.",
+      [
+        "# Skills",
+        "Each skill is a procedure for one kind of work. When the task matches one, read its file with the Read tool before you start, then follow it.",
+        "- `backend-api`, /skills/backend-api/SKILL.md: Design an HTTP API.",
+        "- `backend-check`, /skills/backend-check/SKILL.md",
+      ].join("\n"),
+    ].join("\n\n"),
+  )
+  expect(agents?.["orchestra:docs"]?.prompt).toBe("You are docs. Use the Agent delegation tool.")
+})
+
 test("an Agent call asks Orchestra's task permission for the seat; a foreground seat is refused in the background", async () => {
   const asked: unknown[] = []
   const decisions: unknown[] = []
@@ -454,6 +485,35 @@ test("the PreToolUse gate settles every call through Orchestra, failing closed, 
   ])
   expect(executed[0]).toBe("tu-6")
   expect(executed[1]).not.toBe("tu-6")
+})
+
+test("Orchestra's tools are refused inside a subagent and kept off its tool list", async () => {
+  const decisions: unknown[] = []
+  during = async (options) => {
+    const inside = (tool: string, id: string) =>
+      options.hooks?.PreToolUse?.[0]?.hooks[0]?.(
+        { hook_event_name: "PreToolUse", tool_name: tool, tool_input: { prompt: "go" }, tool_use_id: id, agent_id: "a1",
+          agent_type: "orchestra:backend", session_id: "claude-1", transcript_path: "", cwd: "/project" } as HookInput,
+        id,
+        { signal: new AbortController().signal },
+      )
+    decisions.push(await inside("mcp__orchestra__task", "tu-1"))
+    decisions.push(await options.canUseTool?.("mcp__orchestra__task", { prompt: "go" }, { signal: new AbortController().signal, toolUseID: "tu-2", requestId: "r2", agentID: "a1" }))
+    decisions.push(await pre(options, "mcp__orchestra__task", { prompt: "go" }, "tu-3"))
+  }
+  script = [done]
+  await collect(turnOf({
+    seats: [seat("backend")],
+    tools: [new ToolDefinition({ name: "task", description: "task", inputSchema: { type: "object", properties: {} } })],
+    authorize: () => Effect.succeed({}),
+  }))
+
+  expect(decisions).toEqual([
+    refused("Orchestra's tools serve the main agent only, not a subagent."),
+    { behavior: "deny", message: "Orchestra's tools serve the main agent only, not a subagent." },
+    allowed,
+  ])
+  expect(calls.at(-1)?.options.agents?.["orchestra:backend"]?.disallowedTools).toEqual(["mcp__orchestra__task"])
 })
 
 test("an assistant-level error fails the turn unless a later frame supersedes it", async () => {

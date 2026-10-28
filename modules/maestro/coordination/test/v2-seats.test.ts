@@ -54,6 +54,17 @@ test("each seat keeps exactly its own Maestro and Atlas Memory tools", () => {
   expect(effect("backend", "skill", "maestro-governed")).toBe("deny")
 })
 
+test("a seat's entry skills stay with that seat", () => {
+  expect(effect("backend", "skill", "backend-api")).toBe("allow")
+  expect(effect("archie", "skill", "archie-plan")).toBe("allow")
+  expect(effect("archie", "skill", "backend-api")).toBe("deny")
+  expect(effect("backend", "skill", "archie-plan")).toBe("deny")
+  for (const id of ["maestro", "general", "custom"]) {
+    expect(effect(id, "skill", "backend-api")).toBe("deny")
+    expect(effect(id, "skill", "archie-plan")).toBe("deny")
+  }
+})
+
 // A seat's display label, as on the earlier runtime: the label variable over `agent.<id>.name` over the roster default; an invalid label
 // keeps the default and names the problem.
 test("a seat's label comes from its variable, then configuration, else the default", () => {

@@ -42,6 +42,8 @@ const QUESTION_DISMISSED = "The owner dismissed this question."
 /** A finished background task's process stays up this long waiting for the task to report; then it is let go. */
 const BACKGROUND_PATIENCE = Duration.minutes(30)
 const UNCHECKED = "Orchestra could not check this call, so it is refused."
+/** Orchestra's tools in a turn are the main agent's, with its permissions: a subagent would act as that agent. */
+const MAIN_ONLY = "Orchestra's tools serve the main agent only, not a subagent."
 
 /** One gate decision, shared by the PreToolUse hook and `canUseTool` so both settle a call the same way. */
 type Decision =
@@ -96,7 +98,7 @@ export const make = Effect.gen(function* () {
           // billing) leaves the prompt to be sent again.
           const progress = { handed: false, answered: false, resulted: false }
           const served = turn.tools.filter((tool) => !UNSERVED.has(tool.name))
-          const agents = subagents(turn.seats)
+          const agents = subagents(turn.seats, turn.skills, served.map((tool) => `${MCP_PREFIX}${tool.name}`))
           // The Context Epoch baseline and workflow instructions go in once per change, beside the prompt.
           const contextText = turn.context.filter(Boolean).join("\n\n")
           const contextHash = contextText ? createHash("sha256").update(contextText).digest("hex") : undefined
@@ -107,6 +109,7 @@ export const make = Effect.gen(function* () {
           // A call is settled once, whichever of the hook and `canUseTool` asks first: asking twice would ask the owner
           // twice and charge a dispatch twice.
           const decisions = new Map<string, Promise<Decision>>()
+          // `agentType` is set only for a call made inside a subagent (`""` when its type is unknown).
           const decide = (tool: string, input: Record<string, unknown>, toolUseID: string, signal: AbortSignal, agentType?: string) => {
             const known = decisions.get(toolUseID)
             if (known) return known
@@ -114,6 +117,7 @@ export const make = Effect.gen(function* () {
             const made = Promise.resolve()
               .then((): Decision | Promise<Decision> => {
                 if (tool.startsWith(MCP_PREFIX)) {
+                  if (agentType !== undefined) return { allow: false, reason: MAIN_ONLY }
                   const name = tool.slice(MCP_PREFIX.length)
                   if (!learned.has(toolUseID)) callIDs.set(name, [...(callIDs.get(name) ?? []), toolUseID])
                   learned.add(toolUseID)
@@ -162,7 +166,8 @@ export const make = Effect.gen(function* () {
             // The question needs the owner, so it is left to `canUseTool`, where its answers can be returned.
             if (input.tool_name === "AskUserQuestion") return Promise.resolve({})
             const args = ClaudeCodeTranscript.record(input.tool_input) ? input.tool_input : {}
-            return decide(input.tool_name, args, input.tool_use_id, options.signal, input.agent_type).then((decision) => ({
+            const inside = input.agent_id === undefined ? undefined : (input.agent_type ?? "")
+            return decide(input.tool_name, args, input.tool_use_id, options.signal, inside).then((decision) => ({
               hookSpecificOutput: decision.allow
                 ? {
                     hookEventName: "PreToolUse" as const,
@@ -174,7 +179,7 @@ export const make = Effect.gen(function* () {
           }
           const canUseTool: CanUseTool = (tool, input, options) => {
             if (tool === "AskUserQuestion") return ask(input, options.toolUseID, options.signal)
-            return decide(tool, input, options.toolUseID, options.signal).then((decision) =>
+            return decide(tool, input, options.toolUseID, options.signal, options.agentID === undefined ? undefined : "").then((decision) =>
               decision.allow ? { behavior: "allow" as const, updatedInput: { ...input, ...decision.input } } : { behavior: "deny" as const, message: decision.reason },
             )
           }
@@ -555,15 +560,34 @@ function inbox(first: SDKUserMessage, signal: AbortSignal, handed: (uuid: SDKUse
   }
 }
 
-/** Orchestra's seats as Claude Code subagents `orchestra:<id>`; the research seat is one per tier, with its budget. */
-function subagents(seats: ExecutionHost.Turn["seats"]) {
+/**
+ * Orchestra's seats as Claude Code subagents `orchestra:<id>`; the research seat is one per tier, with its budget. A
+ * seat's skills are listed in its prompt by file: the subagent reads one when the task matches, as Orchestra's skill
+ * tool would load it. The turn's Orchestra tools (`orchestra`, by Claude Code name) are the main agent's and are kept
+ * from every subagent.
+ */
+function subagents(seats: ExecutionHost.Turn["seats"], skills: ExecutionHost.Turn["skills"], orchestra: ReadonlyArray<string>) {
   return Object.fromEntries(
     seats.flatMap((seat): Array<readonly [string, { seat: typeof seat.id; definition: AgentDefinition }]> => {
       if (!seat.system) return []
+      const listed = skills[seat.id] ?? []
       const definition: AgentDefinition = {
         description: seat.description ?? `Orchestra's \`${seat.id}\` seat.`,
-        prompt: LOOP_TEXT.reduce((text, [from, to]) => text.replaceAll(from, to), seat.system),
+        prompt: [
+          LOOP_TEXT.reduce((text, [from, to]) => text.replaceAll(from, to), seat.system),
+          ...(listed.length > 0
+            ? [
+                [
+                  "# Skills",
+                  "Each skill is a procedure for one kind of work. When the task matches one, read its file with the Read tool before you start, then follow it.",
+                  ...listed.map((skill) => `- \`${skill.name}\`, ${skill.location}${skill.description ? `: ${skill.description}` : ""}`),
+                ].join("\n"),
+              ]
+            : []),
+        ].join("\n\n"),
         model: seat.model?.providerID === "anthropic" ? seat.model.id : "inherit",
+        // Kept off the subagent's tool list; the gate refuses them inside a subagent all the same.
+        ...(orchestra.length > 0 ? { disallowedTools: [...orchestra] } : {}),
       }
       if (seat.id !== ResearchSeatTools.SEAT) return [[`${SEAT_PREFIX}${seat.id}`, { seat: seat.id, definition }]]
       return Research.Depth.literals.map((tier) => [
