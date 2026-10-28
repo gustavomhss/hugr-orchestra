@@ -28,9 +28,10 @@ function dock(respond: (op: string, args: Record<string, unknown>) => Reply) {
     const reply = respond(envelope.op, envelope.args)
     queueMicrotask(() => f.deliver({ type: "dock.rpc.result", id: envelope.id, ...reply }))
   }
+  const layer = DockMcp.layer(f.port)
   const servers = () => Effect.runPromise(McpProvided.Service.pipe(
     Effect.flatMap((service) => service.servers()),
-    Effect.provide(DockMcp.layer(f.port)),
+    Effect.provide(layer),
   ))
   return { calls, servers }
 }
@@ -83,7 +84,7 @@ describe("DockMcp", () => {
   test("look on the Linux workspace numbers its own lines", async () => {
     const d = dock((op) => {
       if (op === "list") return { ok: true, value: tabs }
-      if (op === "read") return page([control("n:1", "Save"), control("n:2", "Quit")])
+      if (op === "read") return page([control("n:1", "Save", { states: [8, 24, 30] }), control("n:2", "Quit", { states: [8, 24, 30] })])
       return { ok: false, error: { message: `unexpected ${op}` } }
     })
     const client = await connect((await d.servers())[2]!)
