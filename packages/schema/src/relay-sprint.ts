@@ -56,6 +56,16 @@ export const Dod = Schema.Struct({
 }).annotate({ identifier: "RelaySprint.Dod", ...preserve })
 export interface Dod extends Schema.Schema.Type<typeof Dod> {}
 
+// TS-only, additive: the tools a step's agent may use. A missing list leaves that family as the agent has it; a
+// present list allows only what it names, and `[]` allows none.
+export const StepTools = Schema.Struct({
+  // MCP server names, as the Location's MCP config keys them.
+  mcp: Schema.optionalKey(Schema.Array(Schema.String)),
+  // Bash command patterns, matched like permission rules (`*` crosses everything).
+  bash: Schema.optionalKey(Schema.Array(Schema.String)),
+}).annotate({ identifier: "RelaySprint.StepTools", ...preserve })
+export interface StepTools extends Schema.Schema.Type<typeof StepTools> {}
+
 export const WorkPackage = Schema.Struct({
   id: NonEmptyNulFree,
   title: Schema.optionalKey(Schema.String),
@@ -70,6 +80,7 @@ export const WorkPackage = Schema.Struct({
   // `inject` payload: `file` (relative to the workdir) wins over inline `text`.
   file: Schema.optionalKey(Schema.String),
   text: Schema.optionalKey(Schema.String),
+  tools: Schema.optionalKey(StepTools),
 }).annotate({ identifier: "RelaySprint.WorkPackage", ...preserve })
 export interface WorkPackage extends Schema.Schema.Type<typeof WorkPackage> {}
 

@@ -1,6 +1,7 @@
 ---
 name: maestro-run-verify
 description: Verify returned work, acceptance evidence, test teeth, and integration risk. Use for completion claims, independent review, PR review, or before an authorized integration or release; scope checks to the actual change.
+internal: true
 when: Completion claims, independent review, PR review, or before an authorized integration or release.
 not-when: Nothing has returned yet to check.
 ---

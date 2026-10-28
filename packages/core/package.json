@@ -291,6 +291,7 @@
     "./reference": "./src/reference.ts",
     "./reference/guidance": "./src/reference/guidance.ts",
     "./relay": "./src/relay.ts",
+    "./relay-commands": "./src/relay-commands.ts",
     "./relay-hook-install": "./src/relay-hook-install.ts",
     "./relay-hook-recovery": "./src/relay-hook-recovery.ts",
     "./relay-workflow-binding": "./src/relay-workflow-binding.ts",

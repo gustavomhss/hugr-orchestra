@@ -86,6 +86,7 @@ export const nodeTypes = (): ReadonlyArray<RelayAuthoring.NodeTypeDescriptor> =>
     },
     { name: "checklist", label: "Criteria to advance", type: "json", default: "[]" },
     { name: "knowledge", label: "Atlas knowledge references", type: "json", default: "[]" },
+    { name: "tools", label: "Tools", type: "json", default: "{}" },
   ]
   const context = [
     { name: "text", label: "Context", type: "text", default: "" },
@@ -197,6 +198,10 @@ export const compile = (
         const knowledge = knowledgeReferences(get(params, "knowledge", get(wp, "knowledge", [])), true)
         if (knowledge.length) wp.knowledge = knowledge
         if (!knowledge.length) delete wp.knowledge
+        // TS only (PARITY-EXCEPTIONS W7-7): the step's MCP servers and bash patterns.
+        const tools = stepTools(get(params, "tools", get(wp, "tools", {})))
+        if (Object.keys(tools).length) wp.tools = tools
+        if (!Object.keys(tools).length) delete wp.tools
         const macro = phased ? (grouped.get(node.id) ?? "") : get(params, "macro", "")
         if (truthy(macro)) wp.macro = text(macro, "Phase")
         if (!truthy(macro) && (phased || Object.hasOwn(params, "macro"))) delete wp.macro
@@ -272,6 +277,7 @@ export const project = (
             text: get(wp, "text", ""),
             file: get(wp, "file", ""),
             ...(knowledgeReferences(get(wp, "knowledge", [])).length ? { knowledge: dumps(wp.knowledge) } : {}),
+            ...(Object.keys(stepTools(get(wp, "tools", {}))).length ? { tools: dumps(wp.tools) } : {}),
           },
         }
       })
@@ -459,6 +465,17 @@ function knowledgeReferences(value: unknown, json = false) {
   )(json && typeof value === "string" ? strictJson(value) : value)
   if (Option.isNone(decoded)) return refuse("Knowledge must be a JSON list of at most 8 unique Atlas references")
   return decoded.value
+}
+
+function stepTools(value: unknown) {
+  const raw = typeof value === "string" ? strictJson(value) : value
+  const decoded = Schema.decodeUnknownOption(RelaySprint.StepTools)(raw)
+  if (!isObject(raw) || Option.isNone(decoded))
+    return refuse("Tools must be a JSON object with optional mcp and bash lists of names")
+  const lists = Object.entries(decoded.value).filter(([key]) => key === "mcp" || key === "bash")
+  if (lists.some(([, list]) => (list as ReadonlyArray<string>).some((item) => !item.trim())))
+    return refuse("A tool name or command pattern cannot be empty")
+  return Object.fromEntries(lists) as RelaySprint.StepTools
 }
 
 function validateKnowledge(plan: Loose) {

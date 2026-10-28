@@ -1,6 +1,7 @@
 ---
 name: maestro-plan
 description: Get a plan authored by archie, have its acceptance coverage reviewed cold, and adopt or return it. Use for substantial or multi-part work before dispatch; small tasks stay lightweight.
+internal: true
 ---
 
 # Planning
