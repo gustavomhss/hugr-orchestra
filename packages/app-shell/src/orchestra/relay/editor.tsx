@@ -7,7 +7,7 @@ import { modalActive } from "@/utils/modal-active"
 import { skipToken, useQuery } from "@tanstack/solid-query"
 import { createEffect, createMemo, createSignal, For, Match, on, onCleanup, onMount, Show, Switch } from "solid-js"
 import { MxPage } from "../chapters/kit"
-import { isInternalSkill, skillSource, sortSkills } from "../chapters/skills-data"
+import { isInternalSkill, readSkills, skillSource, sortSkills } from "../chapters/skills-data"
 import type { CanvasApi } from "./canvas"
 import { hookOutputs } from "./catalog"
 import { rememberDocument } from "./cache"
@@ -180,7 +180,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
           ? () =>
               serverSDK()
                 .currentApi.skill.list({ location: { directory: props.directory } })
-                .then((result) => result.data)
+                .then((result) => readSkills(result.data))
           : skipToken,
       retry: false,
       staleTime: 60_000,
