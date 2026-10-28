@@ -68,6 +68,7 @@ const turnOf = (input: Partial<ExecutionHost.Turn> = {}): ExecutionHost.Turn => 
   seats: [],
   skills: {},
   seatTools: {},
+  seatOnly: [],
   history: [user("msg_1", "Go")] as unknown as ExecutionHost.Turn["history"],
   tools: [],
   execute: () => Effect.die("unused"),
@@ -312,6 +313,7 @@ test("an Orchestra tool called inside a seat's subagent runs in its child Sessio
   const log: unknown[] = []
   const decisions: unknown[] = []
   const results: unknown[] = []
+  const served: string[] = []
   const seen: Options[] = []
   pump = async function* (input, options) {
     seen.push(options)
@@ -329,11 +331,19 @@ test("an Orchestra tool called inside a seat's subagent runs in its child Sessio
       )
     decisions.push(await inside("a1", "tu-1"))
     decisions.push(await inside("a9", "tu-2"))
+    // A tool only the seat holds is served for its subagent, and the main agent is refused it.
+    decisions.push(await options.hooks?.PreToolUse?.[0]?.hooks[0]?.(
+      { hook_event_name: "PreToolUse", tool_name: "mcp__orchestra__draft", tool_input: {}, tool_use_id: "tu-3",
+        session_id: "claude-1", transcript_path: "", cwd: "/project" } as HookInput,
+      "tu-3",
+      { signal: new AbortController().signal },
+    ))
     const server = options.mcpServers?.orchestra as McpSdkServerConfigWithInstance
     const [client, transport] = InMemoryTransport.createLinkedPair()
     await server.instance.connect(transport)
     const mcp = new Client({ name: "test", version: "0" })
     await mcp.connect(client)
+    served.push(...(await mcp.listTools()).tools.map((tool) => tool.name))
     results.push(await mcp.callTool({ name: "echo", arguments: {}, _meta: { "claudecode/toolUseId": "tu-1" } }))
     // An id the gate never allowed runs nowhere.
     results.push(await mcp.callTool({ name: "echo", arguments: {}, _meta: { "claudecode/toolUseId": "tu-2" } }))
@@ -345,7 +355,8 @@ test("an Orchestra tool called inside a seat's subagent runs in its child Sessio
     await collect(turnOf({
       seats: [seat("backend")],
       tools: ["task", "echo"].map((name) => new ToolDefinition({ name, description: name, inputSchema: { type: "object", properties: {} } })),
-      seatTools: { backend: ["echo"] },
+      seatTools: { backend: ["echo", "draft"] },
+      seatOnly: [new ToolDefinition({ name: "draft", description: "draft", inputSchema: { type: "object", properties: {} } })],
       child: childOf(log),
       execute: () => Effect.die("the main agent ran a subagent's call"),
       authorize: () => Effect.succeed({}),
@@ -354,7 +365,12 @@ test("an Orchestra tool called inside a seat's subagent runs in its child Sessio
     pump = undefined
   }
 
-  expect(decisions).toEqual([allowed, refused("Orchestra's tools serve the main agent and Orchestra's seats only.")])
+  expect(decisions).toEqual([
+    allowed,
+    refused("Orchestra's tools serve the main agent and Orchestra's seats only."),
+    refused("This Orchestra tool belongs to a seat: delegate the work to that seat."),
+  ])
+  expect(served.sort()).toEqual(["draft", "echo", "task"])
   expect(log).toContainEqual({ executed: { id: "tu-1", name: "echo", input: {} } })
   expect(results[0]).toMatchObject({ content: [{ type: "text", text: "in child" }] })
   expect(results[1]).toMatchObject({ isError: true })

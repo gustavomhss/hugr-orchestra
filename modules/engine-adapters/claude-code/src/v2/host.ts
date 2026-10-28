@@ -43,6 +43,7 @@ const BACKGROUND_PATIENCE = Duration.minutes(30)
 const UNCHECKED = "Orchestra could not check this call, so it is refused."
 /** A subagent other than a seat's would act as the main agent, with its permissions. */
 const MAIN_ONLY = "Orchestra's tools serve the main agent and Orchestra's seats only."
+const SEAT_ONLY = "This Orchestra tool belongs to a seat: delegate the work to that seat."
 /** Claude Code defers MCP tools behind this one; it only loads their schemas, so every call to it is allowed. */
 const TOOL_SEARCH = "ToolSearch"
 
@@ -96,7 +97,8 @@ export const make = Effect.gen(function* () {
           // stops or breaks before its result must not send it again. Only a result that answered nothing (signed out,
           // billing) leaves the prompt to be sent again.
           const progress = { handed: false, answered: false, resulted: false }
-          const served = turn.tools.filter((tool) => !UNSERVED.has(tool.name))
+          const served = [...turn.tools, ...turn.seatOnly].filter((tool) => !UNSERVED.has(tool.name))
+          const seatOnly = new Set(turn.seatOnly.map((tool) => tool.name))
           const agents = subagents(turn.seats, turn.skills, served.map((tool) => tool.name), turn.seatTools)
           // The Context Epoch baseline and workflow instructions go in once per change, beside the prompt.
           const contextText = turn.context.filter(Boolean).join("\n\n")
@@ -144,6 +146,7 @@ export const make = Effect.gen(function* () {
                     inside.set(toolUseID, { parent, name })
                     return { allow: true }
                   }
+                  if (seatOnly.has(name)) return { allow: false, reason: SEAT_ONLY }
                   if (!learned.has(toolUseID)) callIDs.set(name, [...(callIDs.get(name) ?? []), toolUseID])
                   learned.add(toolUseID)
                   // The registry settles the Orchestra tool's own permissions when the runner executes it.

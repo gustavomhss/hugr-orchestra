@@ -61,7 +61,9 @@ The parts of D-C2 that replaced the meta-harness shape are reversed:
    rules and the child's own, as inside Orchestra's task tool. The call is refused (fail closed) when the agent names
    no delegation, the delegation has no seat, the child has ended, the request names a call the gate never allowed,
    or, without `_meta`, a subagent's call of the same tool is pending. Each subagent lists in `disallowedTools` the
-   turn's Orchestra tools its seat may not call (`Turn.seatTools`).
+   turn's Orchestra tools its seat may not call (`Turn.seatTools`). A tool a seat holds and the main agent does not,
+   such as Archie's `archie_draft_workflow`, comes as `Turn.seatOnly`: it is served for the subagents, and the gate
+   refuses it to the main agent (`SEAT_ONLY`).
 8. **Orchestra's record, Claude Code's call.** The Session records each built-in call under the Orchestra tool and
    argument names the app's widgets read (`ClaudeCodeRecord.shown`, `src/v2/record.ts`), so a Claude mode session looks like any other:
    - `Bash`, `Read`, `Write`, `Edit` (`MultiEdit` and `NotebookEdit` as `edit` with the file only), `Glob`, `Grep`,

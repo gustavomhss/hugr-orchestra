@@ -15,7 +15,7 @@ Design and decisions: `docs/specs/claude-mode/meta-harness.md`. User guide: `doc
 | Appended note, foreground seats, environment | `modules/engine-adapters/claude-code/src/host/options.ts` |
 | SDK seam and `claude_code` preset | `modules/engine-adapters/claude-code/src/sdk.ts` |
 | Turn shape (`context`, `seats`, `authorize({ agent })`) | `packages/core/src/session/runner/execution-host.ts` |
-| What the runner hands the host (`seatTools`, the seat-scoped settle) | `packages/core/src/session/runner/llm.ts`; `notify`, `child` (with `execute`) and `todos` in `host-ports.ts` |
+| What the runner hands the host (`seatTools`, `seatOnly`, the seat-scoped settle) | `packages/core/src/session/runner/llm.ts`; `notify`, `child` (with `execute`) and `todos` in `host-ports.ts` |
 | Built-in calls under Orchestra's names, task list as todos (`shown`, `checklist`) | `modules/engine-adapters/claude-code/src/v2/record.ts` |
 | Built-in results as Orchestra's tools record them (todo panel, edit diff) | `modules/engine-adapters/claude-code/src/v2/output.ts` |
 | In-process MCP server and streaming input (`server`, `inbox`) | `modules/engine-adapters/claude-code/src/v2/channel.ts` |
@@ -53,7 +53,9 @@ Design and decisions: `docs/specs/claude-mode/meta-harness.md`. User guide: `doc
   id); the MCP request is matched by `_meta["claudecode/toolUseId"]`. Every unresolved case refuses (`MAIN_ONLY`): no
   delegation, no seat, child ended, an id the gate never allowed, or no `_meta` while a subagent call of that tool is
   pending. Never fall back to `turn.execute` for a subagent's call. `disallowedTools` keeps only the tools not in
-  `Turn.seatTools[seat]`.
+  `Turn.seatTools[seat]`. The server serves `Turn.tools` plus `Turn.seatOnly` (tools only seats hold); a main-agent
+  call of a seat-only tool is refused (`SEAT_ONLY`). Without `seatOnly`, a tool the main agent is denied never reaches
+  any subagent.
 - A subagent's frames (`parent_tool_use_id` set) never reach the parent's stream: `mirror` records them in the child
   Session `Turn.child` opens for that task call (`packages/core/src/session/runner/host-ports.ts`), and `end` closes it on the
   call's result, or, for a backgrounded delegation (`mark`), on its `task_notification` in `follow`. The child's agent

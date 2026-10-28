@@ -49,6 +49,8 @@ test("each seat keeps exactly its own Maestro and Atlas Memory tools", () => {
   expect(effect("archie", "maestro_arsenal_catalog")).toBe("allow")
   expect(effect("archie", "maestro_arsenal_execute", "not-an-authoring-operation")).toBe("deny")
   expect(effect("backend", "maestro_arsenal_catalog")).toBe("deny")
+  expect(effect("archie", "archie_draft_workflow")).toBe("allow")
+  for (const id of ["maestro", "lucy", "backend"]) expect(effect(id, "archie_draft_workflow")).toBe("deny")
   for (const id of ["backend", "jimmy", "archie"]) expect(effect(id, "atlas_memory_emit")).toBe("allow")
   for (const id of ["patty", "lucy", "rosie"]) expect(effect(id, "atlas_memory_recall")).toBe("deny")
   expect(effect("backend", "skill", "maestro-run-governed")).toBe("deny")
