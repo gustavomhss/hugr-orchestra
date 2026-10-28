@@ -582,7 +582,10 @@ export function PlanView(props: Props) {
         />
       </Show>
       </div>
-      <footer class="wf-plan-foot">{props.save}</footer>
+      {/* The Studio header already shows the save state. */}
+      <Show when={!studio}>
+        <footer class="wf-plan-foot">{props.save}</footer>
+      </Show>
     </div>
   )
 }

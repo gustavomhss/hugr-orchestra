@@ -783,7 +783,7 @@ html[data-color-scheme="light"] .wf-editor {
   border-radius: var(--orchestra-radius-sm);
   background: transparent;
   color: var(--mx-bad);
-  font: var(--orchestra-font-size-2xs) var(--mx-mono);
+  font: var(--orchestra-font-size-xs) var(--mx-sans);
   cursor: pointer;
 }
 .wf-issues:hover {
@@ -1599,6 +1599,10 @@ html[data-color-scheme="light"] .wf-editor {
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
+.wf-plan-picker-head .mx-btn:not(:hover, :focus-visible) {
+  border-color: transparent;
+  background: transparent;
+}
 .wf-pick {
   display: flex;
   inline-size: 100%;
@@ -1833,7 +1837,8 @@ html[data-color-scheme="light"] .wf-editor {
   padding: 0 8px;
 }
 .wf-mini-seg button[aria-pressed="true"],
-.wf-seg button[aria-pressed="true"] {
+.wf-seg button[aria-pressed="true"],
+.wf-seg button[aria-selected="true"] {
   background: var(--mx-enabled);
   color: var(--mx-strong);
 }
@@ -1923,7 +1928,7 @@ html[data-color-scheme="light"] .wf-editor {
   margin-block-end: 10px;
 }
 .wf-ctl {
-  padding: 11px 12px;
+  padding: 12px;
   border: 1px solid var(--mx-line);
   border-radius: var(--orchestra-radius-md);
   background: var(--mx-raised);
@@ -1933,7 +1938,7 @@ html[data-color-scheme="light"] .wf-editor {
   grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 10px;
-  margin-block-end: 9px;
+  margin-block-end: 10px;
 }
 .wf-ctl input,
 .wf-ctl textarea {
@@ -1945,6 +1950,10 @@ html[data-color-scheme="light"] .wf-editor {
   font: var(--orchestra-font-size-xs)/1.6 var(--mx-mono);
   outline: 0;
 }
+/* The AI criterion is plain words, not code. */
+.wf-ctl textarea {
+  font-family: var(--mx-sans);
+}
 .wf-ctl-top input {
   block-size: 28px;
   padding: 0 8px;
@@ -1952,10 +1961,10 @@ html[data-color-scheme="light"] .wf-editor {
 }
 .wf-ctl input.cmd {
   block-size: 32px;
-  padding: 0 9px;
+  padding: 0 10px;
 }
 .wf-ctl textarea {
-  padding: 7px 9px;
+  padding: 8px 10px;
   resize: vertical;
 }
 .wf-ctl input:focus,
@@ -1963,28 +1972,35 @@ html[data-color-scheme="light"] .wf-editor {
   border-color: var(--mx-blue);
 }
 .wf-ctl .gap {
-  margin-block-start: 7px;
+  margin-block-start: 8px;
 }
+/* Toggles on one line; the sentence that explains them wraps below instead of squeezing them. */
 .wf-ctl-foot {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 14px;
-  margin-block-start: 9px;
+  gap: 8px 14px;
+  margin-block-start: 10px;
   color: var(--mx-dim);
   font-size: var(--orchestra-font-size-xs);
+  line-height: 1.5;
 }
 .wf-ctl-foot label {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
+  white-space: nowrap;
+}
+.wf-ctl-foot > span {
+  flex-basis: 100%;
 }
 .wf-ctl .mx-error {
-  margin: 7px 0 0;
+  margin: 8px 0 0;
 }
 .wf-ctl input.prose {
   block-size: 28px;
-  margin-block-end: 7px;
-  padding: 0 9px;
+  margin-block-end: 8px;
+  padding: 0 10px;
   font: var(--orchestra-font-size-xs)/1.5 var(--mx-sans);
 }
 .wf-ctl-params {
@@ -2474,6 +2490,12 @@ html[data-color-scheme="light"] .wf-editor {
   background: var(--mx-modal);
   box-shadow: var(--mx-pop-shadow);
 }
+/* In the Studio the switch sits over the inspector column, so it stays flat: a fill step, no lifted shadow. */
+.wf-mode:has(.wf-studio) > .wf-viewbar {
+  padding: 3px;
+  background: var(--mx-soft);
+  box-shadow: none;
+}
 .wf-viewbar button {
   display: flex;
   align-items: center;
@@ -2704,6 +2726,14 @@ html[data-color-scheme="light"] .wf-editor {
 .wf-step-tools:focus-within {
   opacity: 1;
 }
+/* Row tools are quiet icons: no fill or hairline until the pointer is on one. */
+.wf-step-tools .mx-btn:not(.danger, :hover, :focus-visible) {
+  border-color: transparent;
+  background: transparent;
+}
+.wf-step-tools .mx-btn:disabled {
+  opacity: 0.35;
+}
 .wf-step-body {
   padding: 4px 16px 16px;
   border-block-start: 1px solid var(--mx-line);
@@ -2720,7 +2750,7 @@ html[data-color-scheme="light"] .wf-editor {
 .wf-plan-phase-kicker {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   color: var(--mx-blue);
   font: 600 var(--orchestra-font-size-xs) var(--mx-sans);
   letter-spacing: 0.04em;
@@ -2951,24 +2981,37 @@ html[data-color-scheme="light"] .wf-editor {
   white-space: nowrap;
 }
 /* Workflow Studio: outline, editor and inspector side by side. The editor column keeps its own scroll. */
+/* Columns follow the editor's own width, not the window's: the sidebar and a split view take from it. */
+.wf-studio {
+  container: wf-studio / inline-size;
+}
 .wf-studio-grid {
   display: grid;
   min-block-size: 0;
   flex: 1;
-  grid-template-columns: 232px minmax(0, 1fr) 320px;
+  grid-template-columns: clamp(184px, 20%, 232px) minmax(0, 1fr) clamp(272px, 28%, 320px);
+}
+/* The scrolling columns fade at both edges instead of cutting content flat. */
+.wf-studio-grid > .wf-plan-list,
+.wf-outline,
+.wf-inspector-body {
+  mask-image: linear-gradient(to bottom, transparent, #000 16px, #000 calc(100% - 24px), transparent);
 }
 .wf-studio-grid > .wf-plan-list {
   padding-block-start: 32px;
 }
-@media (max-width: 1180px) {
+@container wf-studio (max-width: 900px) {
   .wf-studio-grid {
-    grid-template-columns: 200px minmax(0, 1fr);
+    grid-template-columns: clamp(176px, 24%, 220px) minmax(0, 1fr);
+  }
+  .wf-studio-grid > .wf-plan-list {
+    padding-block-start: 56px;
   }
   .wf-inspector {
     display: none;
   }
 }
-@media (max-width: 860px) {
+@container wf-studio (max-width: 680px) {
   .wf-studio-grid {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -3087,13 +3130,15 @@ html[data-color-scheme="light"] .wf-editor {
   font-variant-numeric: tabular-nums;
 }
 .wf-outline-warn {
-  inline-size: 7px;
-  block-size: 7px;
-  border-radius: 50%;
-  background: var(--mx-warm);
+  display: inline-flex;
+  color: var(--mx-warm);
+}
+.wf-outline-warn .wf-ic {
+  inline-size: 13px;
+  block-size: 13px;
 }
 .wf-outline-warn.error {
-  background: var(--mx-bad);
+  color: var(--mx-bad);
 }
 .wf-outline-hint {
   margin: auto 0 0;
@@ -3107,12 +3152,34 @@ html[data-color-scheme="light"] .wf-editor {
   min-block-size: 0;
   flex-direction: column;
   gap: 12px;
-  padding: 16px 14px;
+  /* Clears the List/Canvas switch pinned to the editor's top right corner. */
+  padding: 56px 14px 0;
   border-inline-start: 1px solid var(--mx-line);
-  overflow-y: auto;
+  overflow: hidden;
 }
+/* Segmented control, full width: group padding 3px, segments 26px tall. */
 .wf-inspector-tabs {
-  align-self: flex-start;
+  display: flex;
+  padding: 3px;
+}
+.wf-inspector-tabs button {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  block-size: 26px;
+  padding: 0 10px;
+  border-radius: var(--orchestra-radius-xs);
+  white-space: nowrap;
+}
+.wf-inspector-tabs .wf-outline-count {
+  margin-inline-start: 6px;
+}
+.wf-inspector-body .mx-hint {
+  margin: 0;
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-xs);
+  line-height: 1.5;
 }
 .wf-inspector > p {
   margin: 0;
@@ -3181,18 +3248,22 @@ html[data-color-scheme="light"] .wf-editor {
 .wf-ready li:not(.done) .wf-ic {
   color: var(--mx-warm);
 }
+/* A finding is a status wash of its own color, like a status chip: no border, no accent stripe. */
 .wf-findings li {
   display: flex;
   flex-direction: column;
   gap: 6px;
   padding: 10px 12px;
-  border: 1px solid var(--mx-line);
-  border-inline-start: 3px solid var(--mx-warm);
   border-radius: var(--orchestra-radius-md);
-  background: var(--mx-raised);
+  background: color-mix(in srgb, var(--mx-warm) 9%, transparent);
+  color: var(--mx-strong);
 }
 .wf-findings li.error {
-  border-inline-start-color: var(--mx-bad);
+  background: color-mix(in srgb, var(--mx-bad) 9%, transparent);
+}
+.wf-findings li strong {
+  font-weight: 500;
+  line-height: 1.5;
 }
 .wf-findings li small {
   color: var(--mx-dim);
@@ -3201,13 +3272,17 @@ html[data-color-scheme="light"] .wf-editor {
 }
 .wf-findings li .mx-btn {
   align-self: flex-start;
+  min-block-size: 26px;
+}
+.wf-findings li .mx-btn:not(:hover) {
+  background: transparent;
 }
 .wf-ctl-warn {
   display: flex;
   align-items: flex-start;
-  gap: 7px;
+  gap: 6px;
   margin: 0 0 8px;
-  padding: 7px 9px;
+  padding: 8px 10px;
   border-radius: var(--orchestra-radius-sm);
   background: color-mix(in srgb, var(--mx-warm) 12%, transparent);
   color: var(--mx-strong);
@@ -3275,7 +3350,7 @@ html[data-color-scheme="light"] .wf-editor {
   min-block-size: 26px;
   padding: 2px 10px 2px 8px;
   border: 1px solid var(--mx-line);
-  border-radius: 999px;
+  border-radius: var(--orchestra-radius-full);
   background: var(--mx-raised);
   color: var(--mx-strong);
   font: inherit;
@@ -3301,8 +3376,12 @@ html[data-color-scheme="light"] .wf-editor {
 }
 .wf-inspector-body {
   display: flex;
+  min-block-size: 0;
+  flex: 1;
   flex-direction: column;
   gap: 10px;
+  padding-block: 2px 24px;
+  overflow-y: auto;
 }
 .wf-findings li > div {
   display: flex;

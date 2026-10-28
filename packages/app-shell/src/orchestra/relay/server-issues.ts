@@ -1,3 +1,4 @@
+import type { Issue } from "./graph"
 import type { useRelayCopy } from "./ui"
 
 type CopyKey = Parameters<ReturnType<typeof useRelayCopy>["t"]>[0]
@@ -30,6 +31,11 @@ export const SERVER_ISSUES: { match: RegExp; key: CopyKey; covered?: string[] }[
     key: "orchestra.workflows.editor.serverIssue.checks",
     covered: ["checklist-invalid"],
   },
+  {
+    match: /has no cmd, judge or host_check/,
+    key: "orchestra.workflows.editor.serverIssue.checkEmpty",
+    covered: ["check-empty"],
+  },
   { match: /no Relay implementation/, key: "orchestra.workflows.editor.serverIssue.unknownStep" },
   { match: /^Skill unavailable/, key: "orchestra.workflows.editor.serverIssue.skill", covered: ["skill-missing"] },
   { match: /retry budget must be/, key: "orchestra.workflows.editor.serverIssue.budget" },
@@ -45,3 +51,13 @@ export const SERVER_ISSUES: { match: RegExp; key: CopyKey; covered?: string[] }[
     covered: ["needs-before"],
   },
 ]
+
+// The issues to show: a server message is left out when a client issue already says the same thing.
+export function shownIssues(issues: Issue[]) {
+  const codes = new Set<string>(issues.map((issue) => issue.code))
+  return issues.filter(
+    (issue) =>
+      issue.code !== "server" ||
+      !SERVER_ISSUES.find((entry) => entry.match.test(issue.text))?.covered?.some((code) => codes.has(code)),
+  )
+}

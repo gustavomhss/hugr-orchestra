@@ -28,7 +28,7 @@ The editor has two views of the same workflow, switched at the top right. **List
 In List the editor has three columns. On the left, **Steps** lists every step in order, with phases as rails. Click one to open it, drag one to move it, or drop a file from Finder on the editor to add it as context. In the middle is the step you are editing. On the right, the inspector has two tabs:
 
 - **Agent receives** shows what the open step's agent gets at run time: its phase instructions, the context right before it, its instructions (and whether a skill replaces or adds to them), its self-check and its checks. It is built by the same compiler a run uses, so what you see is what the agent gets.
-- **Ready to publish** lists what stands between the draft and publishing: whether it compiles, any errors, steps without a check, and whether the AI judge is set up. Each problem names its step; **Fix** repairs it in one click where there is one obvious fix, and **Show** opens the step otherwise.
+- **Ready to publish** lists what stands between the draft and publishing: whether it compiles, any errors, steps without a check, and whether the AI judge is set up. Each problem names its step; **Fix** repairs it in one click where there is one obvious fix, and **Show** opens the step otherwise. An AI check alone does not gate a step: the list asks for at least one command check on every work step.
 
 Shortcuts: **N** adds a step after the open one, **⌥↑** and **⌥↓** move the open step, **⌘D** duplicates it, and **⌘K** finds a step or adds one by kind. They do nothing while you type in a field.
 

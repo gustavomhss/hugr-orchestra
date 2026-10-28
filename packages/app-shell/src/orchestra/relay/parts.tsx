@@ -6,6 +6,7 @@ import { badgeTone, RUN_TONE, runHandle } from "./format"
 import { checkCount, type Flow, type Issue, nodeOf, steps } from "./graph"
 import { runBlockedBy } from "./chat"
 import { relayPath } from "./route"
+import { SERVER_ISSUES } from "./server-issues"
 import type { RelaySource } from "./source"
 import { templateBody, templateName, templateReason } from "./templates"
 import { Ic, useRelayCopy } from "./ui"
@@ -307,7 +308,10 @@ export function TemplateCard(props: {
 }
 
 export function issueText(copy: ReturnType<typeof useRelayCopy>, flow: Flow, issue: Issue) {
-  if (issue.code === "server") return issue.text
+  if (issue.code === "server") {
+    const known = SERVER_ISSUES.find((entry) => entry.match.test(issue.text))
+    return known ? copy.t(known.key) : issue.text
+  }
   const name = "node" in issue ? (nodeOf(flow, issue.node)?.name ?? "") : ""
   return copy.t(`orchestra.workflows.issue.${issue.code}`, { name, ...("params" in issue ? issue.params : {}) })
 }

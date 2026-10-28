@@ -96,8 +96,13 @@ const packageRunner = Effect.fn("RelayCommands.packageRunner")(function* (direct
 const pytestFiles = (directory: string) =>
   Effect.promise(async () => {
     // The usual test roots only: a scan of the whole tree would walk virtualenvs and node_modules.
-    const files = await Array.fromAsync(
-      new Bun.Glob("{test_*.py,*_test.py,{test,tests,src}/**/{test_*,*_test}.py}").scan({ cwd: directory, onlyFiles: true }),
-    ).catch(() => [])
-    return files.toSorted().slice(0, PYTEST_FILES)
+    // One glob per root: Bun.Glob does not expand nested braces.
+    const files = await Promise.all(
+      ["", "test/**/", "tests/**/", "src/**/"].flatMap((root) =>
+        ["test_*.py", "*_test.py"].map((name) =>
+          Array.fromAsync(new Bun.Glob(root + name).scan({ cwd: directory, onlyFiles: true })).catch(() => []),
+        ),
+      ),
+    )
+    return [...new Set(files.flat())].toSorted().slice(0, PYTEST_FILES)
   })

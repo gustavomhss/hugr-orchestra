@@ -20,6 +20,8 @@ import {
   writeChecklist,
 } from "./graph"
 import { addNode, moveStep } from "./insert"
+import { issueText } from "./parts"
+import { shownIssues } from "./server-issues"
 import type { RelaySource } from "./source"
 import { Ic, NodeGlyph, useRelayCopy } from "./ui"
 
@@ -27,6 +29,8 @@ import { Ic, NodeGlyph, useRelayCopy } from "./ui"
 // commands the project declares, and a way to try one. Only the workflow editor provides it.
 type Studio = {
   preview: () => RelayPreview | undefined
+  // The last compile request failed; the inspector says so instead of waiting forever.
+  previewFailed: () => boolean
   commands: () => RelayProjectCommands | undefined
   trial: (command: string) => Promise<RelayTrial>
 }
@@ -84,6 +88,7 @@ export function StudioScope(props: {
           ? {
               // Read only on success: reading the data of a pending query suspends the shell and drops the focus.
               preview: () => (preview.isSuccess ? preview.data : undefined),
+              previewFailed: () => preview.isError,
               commands: () => (commands.isSuccess ? commands.data : undefined),
               trial: (command: string) => props.source.client.trial(command),
             }
@@ -298,11 +303,15 @@ export function Inspector(props: {
     const stop = before.findIndex((item) => item.kind !== "inject")
     return before.slice(0, stop < 0 ? before.length : stop).reverse()
   }
+  const issues = () => shownIssues(props.issues)
   const binding = () => preview()?.skillBindings.find((item) => item.wp === props.open)
-  const findings = () => preview()?.findings ?? []
-  const errors = () => findings().filter((finding) => finding.severity === "error").length + props.issues.length
+  // The editor's own issues name the same errors the compiler refuses on, in the user's words, so while there are any
+  // the compiler's raw errors stay out of the list.
+  const findings = () =>
+    (preview()?.findings ?? []).filter((finding) => !issues().length || finding.severity !== "error")
+  const errors = () => findings().filter((finding) => finding.severity === "error").length + issues().length
   const steps = () => chain(props.flow).filter((node) => node.type !== START)
-  const aiChecks = () => steps().some((node) => readChecklist(node).controls.some((control) => !!control.judge))
+  const aiChecks = () => steps().some((node) => readChecklist(node).controls.some((control) => control.judge !== undefined))
   const ready = () => [
     { key: "compiles", done: !!sprint() },
     { key: "noErrors", done: !errors() },
@@ -334,19 +343,30 @@ export function Inspector(props: {
         </button>
         <button type="button" role="tab" aria-selected={state.tab === "publish"} onClick={() => setState("tab", "publish")}>
           {copy.t("orchestra.workflows.studio.publish")}
-          <Show when={findings().length + props.issues.length}>
-            <span class="wf-outline-count">{findings().length + props.issues.length}</span>
+          <Show when={findings().length + issues().length}>
+            <span class="wf-outline-count">{findings().length + issues().length}</span>
           </Show>
         </button>
       </div>
       <Show when={state.tab === "receives"}>
         <div class="wf-inspector-body" role="tabpanel">
-          <Show when={preview()} fallback={<p class="mx-meta">{copy.t("orchestra.workflows.studio.compiling")}</p>}>
+          <Show
+            when={preview()}
+            fallback={
+              <p class="mx-meta" role="status">
+                {copy.t(
+                  studio?.previewFailed() ? "orchestra.workflows.studio.previewFailed" : "orchestra.workflows.studio.compiling",
+                )}
+              </p>
+            }
+          >
             <Show
               when={sprint()}
               fallback={
-                <p class="wf-note" role="status">
-                  {copy.t("orchestra.workflows.studio.refused", { reason: preview()?.refusal?.message ?? "" })}
+                <p class="mx-hint" role="status">
+                  {issues().length
+                    ? copy.t("orchestra.workflows.studio.blocked")
+                    : copy.t("orchestra.workflows.studio.refused", { reason: preview()?.refusal?.message ?? "" })}
                 </p>
               }
             >
@@ -466,8 +486,27 @@ export function Inspector(props: {
               )}
             </For>
           </ul>
-          <Show when={findings().length} fallback={<p class="mx-hint">{copy.t("orchestra.workflows.studio.clean")}</p>}>
+          <Show
+            when={findings().length + issues().length}
+            fallback={<p class="mx-hint">{copy.t("orchestra.workflows.studio.clean")}</p>}
+          >
             <ul class="wf-findings">
+              <For each={issues()}>
+                {(issue) => (
+                  <li class="error">
+                    <div>
+                      <strong>{issueText(copy, props.flow, issue)}</strong>
+                    </div>
+                    <Show when={issueNode(issue)}>
+                      {(node) => (
+                        <button type="button" class="mx-btn" onClick={() => props.onOpen(node())}>
+                          {copy.t("orchestra.workflows.studio.show")}
+                        </button>
+                      )}
+                    </Show>
+                  </li>
+                )}
+              </For>
               <For each={findings()}>
                 {(finding) => (
                   <li classList={{ error: finding.severity === "error" }}>
