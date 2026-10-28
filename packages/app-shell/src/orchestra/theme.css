@@ -47,6 +47,8 @@ html[data-color-scheme] body[data-new-layout] {
   --orchestra-muted: #b2c0cf;
   --orchestra-faint: #aec2d4;
   --orchestra-accent: #9dc3e9;
+  /* Glow around a working agent's picture; brighter than the accent so it reads as light, not shadow. */
+  --orchestra-aura: #6fb0f0;
   --orchestra-warm: #cfbd95;
   --orchestra-success: #a6c8b7;
   --orchestra-danger: #e7b3b0;
@@ -295,6 +297,7 @@ html[data-color-scheme="light"] body[data-new-layout] {
   --orchestra-muted: #343d48;
   --orchestra-faint: #363e48;
   --orchestra-accent: #0c3e6c;
+  --orchestra-aura: #3f8ee0;
   --orchestra-warm: #4d390f;
   --orchestra-success: #164431;
   --orchestra-danger: #5c302f;

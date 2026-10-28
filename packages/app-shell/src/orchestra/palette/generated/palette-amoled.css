@@ -6,6 +6,7 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] {
   --orchestra-muted: #cecece;
   --orchestra-faint: #cfcfcf;
   --orchestra-accent: #7fb3fd;
+  --orchestra-aura: #5097ff;
   --orchestra-warm: #ffea00;
   --orchestra-success: #00ff88;
   --orchestra-danger: #ff1744;

@@ -6,6 +6,7 @@ html[data-orchestra-palette="nord"][data-color-scheme] body[data-new-layout] {
   --orchestra-muted: #c2c6ce;
   --orchestra-faint: #c2c7cf;
   --orchestra-accent: #8ac2d2;
+  --orchestra-aura: #4ab6d3;
   --orchestra-warm: #f2a68e;
   --orchestra-success: #a5c18e;
   --orchestra-danger: #ff9ea5;
