@@ -368,9 +368,10 @@ export function AgentScreen(props: {
                   </label>
                   <div class="mx-fields agent-fields-3">
                     <label class="mx-field">
-                      <span>{language.t("orchestra.agents.mode")}</span>
+                      <span id="agents-field-mode">{language.t("orchestra.agents.mode")}</span>
                       <select
                         name="mode"
+                        aria-labelledby="agents-field-mode"
                         disabled={maestro}
                         aria-describedby={maestro ? "agents-maestro-note" : undefined}
                         onChange={(event) => setDraft("mode", AGENT_MODES[event.currentTarget.selectedIndex])}
@@ -385,9 +386,10 @@ export function AgentScreen(props: {
                       </select>
                     </label>
                     <label class="mx-field">
-                      <span>{language.t("orchestra.agents.model")}</span>
+                      <span id="agents-field-model">{language.t("orchestra.agents.model")}</span>
                       <select
                         name="model"
+                        aria-labelledby="agents-field-model"
                         aria-describedby={modelIssue() ? "agents-model-issue" : undefined}
                         onChange={(event) => setDraft("model", event.currentTarget.value)}
                       >
