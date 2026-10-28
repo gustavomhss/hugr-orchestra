@@ -249,18 +249,15 @@ Rules:
 - **Commits carry the key.** Maestro's commit uses the PR title as its subject and Intent as its body, with git
   trailers `Orchestra-Card: <KEY>` and `Orchestra-Attempt: a<n>`.
 
-**Rebuilding a change.** One source, three copies, each written by the host:
+**Rebuilding a change.** One source and four copies, each written by the host:
 
 | Copy | Holds | Rebuilds |
 |---|---|---|
-| Board record (source) | Everything, including spend and every attempt | The full story, in the app |
+| Board record (live source) | Everything, including spend and every attempt | The full story, in the app |
 | PR body on GitHub | Everything except spend | The story for a human reviewer, without the app |
 | Commit trailers | Card and attempt | The path from `git log` or `git blame` back to the PR and the card |
-| Atlas logbook entry, written by the host at merge | Intent, Decisions, Risk, Follow-ups, links to the PR and card | The "why" for any later agent, through Atlas recall |
-
-The logbook write needs the local Atlas store. When it is unavailable, the host retries on the next poll and shows one
-`<integration>` line after an hour. A missing logbook entry never blocks a merge, because the board and the PR already
-hold the record.
+| Atlas logbook entry, written into the bundle (§4.7) | Intent, Decisions, Risk, Follow-ups, links to the PR and card | The "why" for any later agent, through Atlas recall, on any clone |
+| Board files, written into the bundle (§4.7) | The record, the thread and the project state at the cut | Everything above, from the tree alone |
 
 The bundle PR is rendered from its members' records (§6.2). Its body has one line per member with title, intent and
 risk; the highest member risk; summed cost plus the bundle's own runs; the tested-on base and skew; and every
@@ -293,27 +290,44 @@ The board contract changes in two places: `board_note` gains `kind`, and its `au
 read-only, so the owner's edit and delete stay limited to the owner's own notes. Like every note, they never go to
 GitHub. The PR record's Lineage links the thread, and the Atlas logbook entry links it at merge.
 
-### 4.7 The board versioned with the code
+### 4.7 Atlas and the board travel with the code
 
-Every bundle carries the board as it was when the bundle was cut, so each merge on base points at one exact version of
-the project. Nearly everything this needs exists: every board write already appends a `board_activity` row with
-`before` and `after`.
+Atlas is already git-native. Its Memory logs (`.atlas/memory.jsonl`, `orientation.jsonl`, `review.jsonl`) are tracked,
+append-only and content-keyed, and they merge by `union` (`.gitattributes`). Its knowledge store is rebuilt from the
+code and never committed (`modules/atlas/docs/explanation/versioning.md`). So a branch already carries its own Atlas
+Memory, and a branch's Memory becomes canonical when it merges. The board gets the same model, and the conveyor makes
+both travel with every merge.
 
-- **Snapshot.** When the host cuts a bundle, it writes a commit on `refs/orchestra/board/<KEY>` holding `board.json`
-  (the project's full state) and `activity.jsonl` (the rows since the previous snapshot). The previous snapshot is its
-  parent, so the chain is the project's history.
-- **Link.** The bundle's merge commit carries the trailer `Orchestra-Board: <snapshot sha>`. From any commit on base,
-  `git log` finds the bundle, and the trailer gives the board as it stood.
-- **Restore.** `board import <ref>` rebuilds a project from a snapshot, by loading the state, or by replaying the
-  activity chain from the first snapshot. A lost disk no longer loses the board.
+**Atlas Memory rides the card.** A seat's Memory writes land in the card's worktree. `land` commits the tracked
+`.atlas` logs with the card's paths. The write-set check in `land` allows them, because they are not code and only
+append. They reach base through the bundle like any other line in the diff, so the remote is updated on every
+merge. WP0 confirms that the Memory store's root is the card's worktree and not the main checkout.
 
-The snapshot lives on a ref, not in the tree. A project file in the tree would change in every bundle, so every
-bundle would conflict with every other, and phase 2 lanes would serialize on it. A ref versions the board with the
-merges without touching the code.
+**The board rides the bundle.** When the host assembles a bundle, it adds one commit of its own,
+`chore(queue): record <KEY>-B<n>`, holding:
 
-A snapshot holds no secrets: secret attachments already live in `CredentialTable`, and only their labels are exported.
-The remote ref follows the GitHub rule when the repository is public: no notes, threads, questions or spend
-(§14, decision 7). A full snapshot is always written beside the database in the app data directory.
+- `.orchestra/board/<KEY>/B<n>.jsonl`: the `board_activity` rows since the previous bundle, including card threads
+  (§4.6). Each bundle writes a new file, so two bundles never touch the same file, and a server-side merge cannot
+  conflict whatever merge driver GitHub honors.
+- `.orchestra/board/<KEY>/B<n>.state.json`: the project's full state at the cut.
+- The Atlas logbook entry of every member (§4.5), appended to `.atlas/memory.jsonl`. The entry is written into the
+  bundle, never after the merge, so nothing but the conveyor writes to base.
+
+A rebuilt bundle rewrites this commit, so an ejected card leaves no entry. The board's state at any commit is the
+fold of every `B<n>.jsonl` under that tree, keyed by activity id, so a row present in two files counts once.
+
+What that gives:
+
+- **Check out a branch, get its project.** `board import` rebuilds the board from the tree in front of it: the
+  project as it stood when that code was cut. Atlas Memory is already in the same tree.
+- **Restore.** A lost disk loses nothing that has merged. The live database holds only what has happened since the
+  last bundle.
+- **History.** `git log .orchestra/board/<KEY>` is the project's history, version by version, beside the code.
+
+The local database stays the live store, as Atlas's local store is for Atlas. Git holds the versions. Secret
+attachments never leave `CredentialTable`; only their labels are exported. In a public repository, notes, threads,
+question text and spend are left out of the tracked files (§14, decision 7). The full rows then stay only in the
+app data directory, so a public project restores without them.
 
 ## 5. CI: who triggers it and how a project configures it
 
@@ -678,12 +692,12 @@ phase.
 | Kind | What | Ships | WP |
 |---|---|---|---|
 | Maestro tools | `ci_run`; `board_queue` (with `urgent` and `flush`); `board_dequeue`; `board_bundle` (flaky verdict: `merge` or `retry`, with a reason). `board_issue` gains `record` (§4.5). `board_read` also returns integration state, attempts, checks and the record. | yes | 2, 4, 5 |
-| Host, no tool | The conveyor in the board's poll loop; snapshot refs; the card thread and board snapshots (§4.6, §4.7); the `maestro/integration` source; tables `board_attempt`, `board_check`, `board_flake`, plus queue and bundle rows | yes | 1–8 |
-| Contracts | `.orchestra/ci.json` (§5.1, §7.4); the new rows and states in `docs/specs/projects-board/CONTRACT.md`, including `board_note` `kind` and the snapshot format | repo file, read at run time | 2, 4, 10 |
+| Host, no tool | The conveyor in the board's poll loop; snapshot refs; the card thread, and the bundle's record commit with board files and logbook entries (§4.6, §4.7); the `maestro/integration` source; tables `board_attempt`, `board_check`, `board_flake`, plus queue and bundle rows | yes | 1–8 |
+| Contracts | `.orchestra/ci.json` (§5.1, §7.4); the new rows and states in `docs/specs/projects-board/CONTRACT.md`, including `board_note` `kind` and the board file format | repo file, read at run time | 2, 4, 10 |
 | Playbooks | `maestro-lead` `land`: Publish becomes "verify, write the record, then `board_queue`", and its golden shows a record; `track`: `<integration>` lines and `Flaky:` citing `board_flake`; `maestro-plan`: the area overlap rule | yes | 4, 5, 9 |
 | Seat skill | `archie`'s plan skill: the `area` and `order` fields. `archie` gets no tool. | yes | 9 |
 | Guards | One new rule in `script/guards/rules`, `merge-outside-conveyor`: added code that merges a PR into a base branch (`gh pr merge` or the merge API) outside the conveyor module. The CI contract's own rules, such as `merge` being `merge`, are checked by its reader, which refuses an invalid file, not by a guard. Maestro writing integration state is impossible by type, since no such field exists (§4). | CI | 4 |
-| Templates | Fixed formats, each made by the host in one place: the PR record, the card PR body rendered from it, and the Atlas logbook entry written at merge (§4.5); the commit trailers; the bundle PR title and body (members, head SHAs, tested-on base, skew), `<integration>` lines, attempt `cause` strings, and the base-red fix card. `archie`'s plan template gains `area` and `order`. | yes | 4, 5, 9 |
+| Templates | Fixed formats, each made by the host in one place: the PR record, the card PR body rendered from it, and the Atlas logbook entry and the board files written into each bundle (§4.5, §4.7); the commit trailers; the bundle PR title and body (members, head SHAs, tested-on base, skew), `<integration>` lines, attempt `cause` strings, and the base-red fix card. `archie`'s plan template gains `area` and `order`. | yes | 4, 5, 9 |
 | Checklists | None new. Every precondition the host can check is a refusal, not a list item (§4.1). The judgment that remains already has one: `land`'s verification. The flaky verdict keeps its one rule: a merge names the cause or a card to find it (§6.4). | | |
 | Repo only | `conveyor-maintenance` and `conveyor-ownership` in `.orchestra/skills`; a guide in `docs/guides` | no | each WP updates them |
 
@@ -691,16 +705,16 @@ phase.
 
 | WP | Scope | Done when |
 |---|---|---|
-| **0. Spike** (no product code) | Prove on a scratch repo: merging a bundle PR with `--merge` marks member PRs merged; `gh workflow run --ref` works on a bundle branch; a temporary-index tree equals `test:ci`'s uploaded tree for the same worktree; pushing a hidden ref to GitHub works; `turbo --filter='...[A...B]' --dry=json` lists the affected packages for a commit range in this repository. | Five yes/no facts with command output, written into this spec |
+| **0. Spike** (no product code) | Prove on a scratch repo: merging a bundle PR with `--merge` marks member PRs merged; `gh workflow run --ref` works on a bundle branch; a temporary-index tree equals `test:ci`'s uploaded tree for the same worktree; pushing a hidden ref to GitHub works; `turbo --filter='...[A...B]' --dry=json` lists the affected packages for a commit range in this repository; a seat's Atlas Memory write lands in the card's worktree; two PRs that each append to `.atlas/memory.jsonl`, merged one after the other with `gh pr merge --merge`, do not conflict (GitHub's server merge honors `merge=union`). | Seven yes/no facts with command output, written into this spec |
 | **1. Ledger and push-early** | `board_attempt` with stored `writePaths`; snapshot refs on seat return and on the 10 min timer; the `local` and `pushed` states; the `maestro/integration` source with the dead-Session and missing-worktree lines; `track` playbook edits | Kill a seat mid-task: its card shows `pushed`, and its worktree is restored from the ref |
 | **2. CI facts** | `.orchestra/ci.json` reader and defaults; `ci_run`; `board_check` keyed by tree; the `scoped-green` and `scoped-red` states | A green scoped run stays valid after Maestro's commit with the same tree, and drops after an edit |
 | **3. Conflict notices** | Base-advance diff, matched against queued cards' write sets with `conflictVerdict`, then `merge-tree`; the `conflicts` state and its `<integration>` line | A merge that touches a card's write set notifies only that card; a merge outside it notifies none |
-| **4. Queue and green bundles** | `board_queue`, `board_dequeue` and their preconditions; pools; cut rules a–d; assembly; the bundle PR with `full.label`; merge on green; `onBaseMoved`; the card's affected set from `turbo` (§7.1), which `merge-if-disjoint` and the eject rerun use in phase 1 too; the PR record, host-opened PRs, commit trailers, the bundle body and the logbook entry at merge (§4.5); `land` playbook Publish rewritten to "verify, write the record, then `board_queue`" | Three verified cards merge through one bundle and one full run; all three ship; each PR shows host-filled cost, checks and review records; a record with no Risk is refused at enqueue; the merged card has one logbook entry |
+| **4. Queue and green bundles** | `board_queue`, `board_dequeue` and their preconditions; pools; cut rules a–d; assembly; the bundle PR with `full.label`; merge on green; `onBaseMoved`; the card's affected set from `turbo` (§7.1), which `merge-if-disjoint` and the eject rerun use in phase 1 too; the PR record, host-opened PRs, commit trailers, the bundle body (§4.5); `land` playbook Publish rewritten to "verify, write the record, then `board_queue`" | Three verified cards merge through one bundle and one full run; all three ship; each PR shows host-filled cost, checks and review records; a record with no Risk is refused at enqueue; the merged card has one logbook entry, inside its bundle |
 | **5. Red bundles** | Bundle size from the red rate; the four ledger numbers on the board; infrastructure rerun, base check and flake probe, isolation with in-bundle dependencies, halving, eject into rework, rebuild, dissolve, `board_flake` and the `board_bundle` verdict, base red (§6.8) | A seeded failing member is ejected with the right cause, and the rest merge on the rebuilt bundle; a seeded interaction is found by halving; a seeded red on base ejects no member |
 | **6. Recovery** | Restart reconcile for pools, bundles and snapshots | Kill the host between "bundle green" and "merge": on restart it merges once, with no duplicate bundle |
-| **10. Thread and board versions** | `board_note` `kind` and seat authors; the host writes thread rows from `task` calls, returns and review records (§4.6); board snapshots on the `refs/orchestra/board/<KEY>` chain, the `Orchestra-Board` trailer, the public redaction and `board import` (§4.7) | A card's thread shows its brief, a seat question, the answer and the return without any agent posting; deleting the local database and running `board import` from the latest ref restores the project |
+| **10. Thread and board versions** | `board_note` `kind` and seat authors; the host writes thread rows from `task` calls, returns and review records (§4.6); the bundle's record commit with board files and logbook entries, the `.atlas` logs allowed in `land`'s write-set check, the public redaction and `board import` from a tree (§4.7) | A card's thread shows its brief, a seat question, the answer and the return without any agent posting; a checkout of an older merge imports the board as it stood then; deleting the local database and importing from `dev` restores every merged version |
 
-Order: 0, then 1 and 2 in parallel (disjoint write sets), then 3 and 4, then 5, then 6. WP10's thread half runs in parallel with 1 and 2; its snapshot half follows 4. WP1 ships first, alone if
+Order: 0, then 1 and 2 in parallel (disjoint write sets), then 3 and 4, then 5, then 6. WP10's thread half runs in parallel with 1 and 2; its record-commit half follows 4. WP1 ships first, alone if
 needed, because lost work is the costliest pain and it needs no queue.
 
 **Phase 2: one conveyor per affected area.** It starts after phase 1 has run a real epic. WP7 and WP9 run in
@@ -728,5 +742,5 @@ parallel: WP9 touches only `archie`'s plan skill, `maestro-plan` and the enqueue
    repository, because epics already close often.
 6. **Model spend stays off GitHub** (§4.5). PRs show attempts, CI minutes and wall time; tokens and spend show only in
    the app. Recommended: yes, matching the board contract; a project may opt in later if its repository is private.
-7. **Board snapshots on a public remote are redacted** (§4.7): no notes, threads, questions or spend. A private
-   repository gets the full snapshot, and the full copy always stays in the app data directory. Recommended: yes.
+7. **Board files in a public repository are redacted** (§4.7): no notes, threads, question text or spend. A private
+   repository tracks everything except secrets. Recommended: yes.
