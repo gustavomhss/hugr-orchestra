@@ -368,7 +368,7 @@ export function state(
 }
 
 // Split on whitespace with no shell: `{files}` becomes one argument per file and `{package}` is filled in place.
-function command(template: string, input: Board.CiRunInput, ref: string) {
+export function command(template: string, input: { readonly package?: string; readonly files?: ReadonlyArray<string> }, ref: string) {
   if (template.includes("{package}") && !input.package)
     return Effect.fail(new RefusedError({ message: `The contract's scoped.tests needs \`package\` for ${ref}.` }))
   return Effect.succeed(
@@ -399,6 +399,22 @@ export function failing(colored: string) {
   const files = [...new Set([...bun, ...vitest, ...types])]
   if (files.length > 0) return files
   return [...output.matchAll(/^=== (.+): failure ===$/gm)].map((match) => match[1] ?? "").filter(Boolean)
+}
+
+// A turbo run prints each package's output between `##[group]<package>:test` and `##[endgroup]`; the bun test files
+// that failed inside a group belong to that package. Windows paths come back with forward slashes.
+export function packaged(colored: string) {
+  return colored
+    .replace(/\x1b\[[0-9;]*m/g, "")
+    .split(/^##\[group\]/m)
+    .slice(1)
+    .flatMap((section) => {
+      const name = section.match(/^(\S+):test\r?$/m)?.[1]
+      const files = failing(section.split(/^##\[endgroup\]/m)[0] ?? "")
+        .filter((file) => /\.test\.[cm]?[jt]sx?$/.test(file))
+        .map((file) => file.replaceAll("\\", "/"))
+      return name && files.length > 0 ? [{ package: name, files }] : []
+    })
 }
 
 function toCheck(row: typeof BoardCheckTable.$inferSelect): Board.Check {

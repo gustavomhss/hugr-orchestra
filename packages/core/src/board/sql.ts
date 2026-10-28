@@ -371,7 +371,7 @@ export const BoardBundleTable = sqliteTable(
     base_sha: text().notNull(),
     head_sha: text().notNull(),
     tree_sha: text().notNull(),
-    status: text().$type<"open" | "merged" | "dissolved" | "red" | "base-red" | "probing" | "probe-green" | "infra" | "paused">().notNull(),
+    status: text().$type<"open" | "merged" | "dissolved" | "red" | "base-red" | "probing" | "probe-green" | "infra" | "paused" | "flaky">().notNull(),
     merged_on: text(),
     ...Timestamps,
   },
@@ -394,4 +394,25 @@ export const BoardBundleMemberTable = sqliteTable(
     ...Timestamps,
   },
   (table) => [primaryKey({ columns: [table.bundle_id, table.issue_id] })],
+)
+
+// Section 6.4: a test that failed in a bundle and then passed three scoped reruns of its head. `count` grows each time
+// another bundle sees the same test go flaky; `bundle_id` is the latest one.
+export const BoardFlakeTable = sqliteTable(
+  "board_flake",
+  {
+    project_id: text()
+      .$type<Board.ProjectID>()
+      .notNull()
+      .references(() => BoardProjectTable.id, { onDelete: "cascade" }),
+    test: text().notNull(),
+    bundle_id: text()
+      .$type<Board.BundleID>()
+      .notNull()
+      .references(() => BoardBundleTable.id, { onDelete: "cascade" }),
+    first_seen: integer().notNull(),
+    count: integer().notNull(),
+    ...Timestamps,
+  },
+  (table) => [primaryKey({ columns: [table.project_id, table.test] })],
 )

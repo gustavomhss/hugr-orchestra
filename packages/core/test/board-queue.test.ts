@@ -13,6 +13,7 @@ import {
   BoardAttemptTable,
   BoardBundleTable,
   BoardCheckTable,
+  BoardFlakeTable,
   BoardIssueTable,
   BoardNoteTable,
   BoardProjectTable,
@@ -95,6 +96,9 @@ const gh = (args: ReadonlyArray<string>, stdin?: string) =>
   })
 
 const GREEN_BASE = JSON.stringify([{ name: "test", status: "COMPLETED", conclusion: "SUCCESS" }])
+
+// A unit job's log with one turbo package group: a bun test file that failed inside `@orchestra/ui:test`.
+const GROUPED = "##[group]@orchestra/ui:test\ntest\\a.test.ts:\r\n(fail) a > b [1.00ms]\r\n##[endgroup]\n"
 
 const contains = async (origin: string, branch: string, sha: string) =>
   (await Bun.$`git --git-dir ${origin} merge-base --is-ancestor refs/heads/${branch} ${sha}`.quiet().nothrow()).exitCode === 0
@@ -482,6 +486,71 @@ describe("BoardQueue", () => {
     }),
   )
 
+  it.live("a scoped rerun that fails on the head and passes on base ejects the card without probing base", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QSC", 1, undefined, "script")
+      yield* card(repo, "QSC", 1, "fail.txt")
+      yield* board.queue({ project: "QSC", number: 1, reason: "Verified." })
+      repo.remote.conclusion = "SUCCESS"
+      repo.remote.seeded = ["card-1"]
+      repo.remote.log = GROUPED
+
+      yield* Effect.forEach(Array.from({ length: 12 }), () => board.queueTick(), { discard: true })
+      expect(yield* stage(repo, 1)).toBe("review")
+      expect(yield* runs(repo)).toEqual(["@orchestra/ui test/a.test.ts", "@orchestra/ui test/a.test.ts"])
+      expect(repo.remote.pulls.size).toBe(2)
+    }),
+  )
+
+  it.live("a scoped rerun that fails twice on base blames base, not the card", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QSB", 1, undefined, "script")
+      yield* Effect.promise(async () => {
+        await fs.writeFile(path.join(repo.directory, "fail.txt"), "x\n")
+        await commit(repo.directory, "break")
+        await git(repo.directory, "push", "--quiet", "origin", "main")
+      })
+      yield* card(repo, "QSB", 1, "a.txt")
+      yield* board.queue({ project: "QSB", number: 1, reason: "Verified." })
+      repo.remote.conclusion = "SUCCESS"
+      repo.remote.seeded = ["card-1"]
+      repo.remote.log = GROUPED
+
+      yield* Effect.forEach(Array.from({ length: 12 }), () => board.queueTick(), { discard: true })
+      expect((yield* bundleStatuses(repo))[0]).toBe("base-red")
+      expect(yield* stage(repo, 1)).toBe("queue")
+      expect(yield* runs(repo)).toHaveLength(3)
+    }),
+  )
+
+  it.live("a red whose tests pass three scoped reruns of the head is flaky, kept open and recorded", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QSF", 1, undefined, "script")
+      yield* card(repo, "QSF", 1, "a.txt")
+      yield* board.queue({ project: "QSF", number: 1, reason: "Verified." })
+      repo.remote.conclusion = "SUCCESS"
+      repo.remote.seeded = ["card-1"]
+      repo.remote.log = GROUPED
+
+      yield* Effect.forEach(Array.from({ length: 12 }), () => board.queueTick(), { discard: true })
+      yield* Effect.forEach(Array.from({ length: 2 }), () => board.queueTick(), { discard: true })
+      expect(yield* bundleStatuses(repo)).toEqual(["flaky"])
+      expect(yield* stage(repo, 1)).toBe("queue")
+      expect(yield* runs(repo)).toHaveLength(4)
+      expect(repo.remote.calls.some((args) => args[0] === "pr" && args[1] === "close")).toBe(false)
+      const database = yield* Database.Service
+      const flakes = yield* database.db
+        .select({ test: BoardFlakeTable.test, count: BoardFlakeTable.count })
+        .from(BoardFlakeTable)
+        .all()
+        .pipe(Effect.orDie)
+      expect(flakes).toEqual([{ test: "test/a.test.ts", count: 1 }])
+    }),
+  )
+
   it.live("an infrastructure red twice pauses the queue until Maestro retries it", () =>
     Effect.gen(function* () {
       const board = yield* Board.Service
@@ -518,16 +587,21 @@ describe("BoardQueue", () => {
 type Repo = { readonly root: string; readonly directory: string; readonly key: string; readonly remote: Remote }
 
 // A repository on main with a contract that bundles two cards, pushed to a bare origin GitHub knows as acme/<key>.
-function repository(key: string, size = 2, full?: object) {
+function repository(key: string, size = 2, full?: object, scoped?: "script") {
   return Effect.gen(function* () {
     const made = yield* Effect.promise(async () => {
       const root = await fs.realpath(await fs.mkdtemp(path.join(tmpdir(), `orchestra-board-queue-${key}-`)))
       const directory = path.join(root, "repo")
       const remote = path.join(root, "origin.git")
+      const script = path.join(root, "scoped.sh")
       await git(root, "init", "--bare", remote)
       await git(root, "-c", "init.defaultBranch=main", "init", directory)
       await fs.mkdir(path.join(directory, ".orchestra"))
-      await fs.writeFile(path.join(directory, ".orchestra", "ci.json"), JSON.stringify({ bundle: { size, waitMinutes: 600 }, merge: "merge", full }))
+      if (scoped) await fs.writeFile(script, `echo "$@" >> ${path.join(root, "runs.log")}\n[ -f fail.txt ] && exit 1\nexit 0\n`)
+      await fs.writeFile(
+        path.join(directory, ".orchestra", "ci.json"),
+        JSON.stringify({ bundle: { size, waitMinutes: 600 }, merge: "merge", full, scoped: scoped ? { tests: `sh ${script} {package} {files}` } : undefined }),
+      )
       await commit(directory, "base")
       await git(directory, "remote", "add", "origin", pathToFileURL(remote).href)
       await git(directory, "push", "--quiet", "origin", "main")
@@ -637,6 +711,13 @@ function row(repo: Repo, number: number) {
     if (!found) return yield* Effect.die(`${repo.key}-${number} is not on the board.`)
     return found
   })
+}
+
+// The lines the scoped stand-in logged: one per run, with its package and files.
+function runs(repo: Repo) {
+  return Effect.promise(async () =>
+    (await fs.readFile(path.join(repo.root, "runs.log"), "utf8").catch(() => "")).split("\n").filter(Boolean),
+  )
 }
 
 async function commit(directory: string, message: string) {

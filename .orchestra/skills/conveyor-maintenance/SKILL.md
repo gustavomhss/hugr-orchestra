@@ -52,6 +52,7 @@ snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bund
 - `size()` reads the last 50 settled attempts (`merged` or `ejected`) for the bundle size; `infra` reruns once and `paused` (a second infra red) stops `cut`. Eject writes outcome `ejected` and opens the next attempt via `BoardSnapshot.dispatch`.
 - `failures()` reads job logs through `detailsUrl` with `gh api repos/<o>/<r>/actions/jobs/<id>/logs`, strips timestamps, and uses `BoardCi.failing`; `full.control` (`line` plus job-name prefixes) is the control-line infra rule and applies only to the jobs it names; `gating` matches `workflowName`.
 - `cut` reads the last closed bundle: after a `red` it cuts half its members (the cap); after `base-red` it waits until the base tip moves. A memberless bundle is a base probe: it closes `probe-green` or `base-red` and never merges; `cut` looks past a `probe-green` to the `probing` bundle before it.
+- `scope()` adds its scratch worktrees one at a time (concurrent `git worktree add` races on the lock), runs F in parallel and returns base, code or flaky; `BoardCi.packaged` maps failing bun files to their turbo group; `flaky()` writes the `board_flake` row (migration `20261028230000_board_flake`) and keeps the bundle open.
 - Write-set matching drops `:L` line ranges and matches patterns with `Bun.Glob`, like the arsenal's `conflictVerdict`.
 
 ## Gates

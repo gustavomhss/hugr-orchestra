@@ -3,7 +3,7 @@ export * as BoardQueue from "./queue"
 import fs from "fs/promises"
 import os from "os"
 import path from "path"
-import { and, asc, desc, eq, inArray, isNull, ne } from "drizzle-orm"
+import { and, asc, desc, eq, inArray, isNull, ne, sql } from "drizzle-orm"
 import { Clock, Effect, Option, Schema } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { Board } from "@orchestra/schema/board"
@@ -20,6 +20,7 @@ import {
   BoardCheckTable,
   BoardDependencyTable,
   BoardEpicTable,
+  BoardFlakeTable,
   BoardIssueTable,
   BoardNoteTable,
   BoardProjectTable,
@@ -33,7 +34,8 @@ import type { Changed, IssueRow, ProjectRow, Tx } from "./shared"
 // into or out of the `queue` stage: `board_queue` enqueues a verified Review card, and the tick cuts one bundle per
 // project, waits for its full gate, and pushes base to the tested head. A red bundle is halved until one card fails
 // alone and is ejected into a new attempt; infrastructure failures rerun once and then pause the queue; the size follows
-// the red rate; the failed jobs' logs give the failing files; flake probes and scoped F runs are a later package.
+// the red rate; the failed jobs' logs give the failing files; a red whose failing files are bun tests in package groups runs them scoped on base and on the bundle head (base
+// red, code red, or flaky); the flaky verdict tool is a later package.
 
 export interface Deps {
   readonly quiet: <A>(work: (tx: Tx) => Effect.Effect<A, unknown>) => Effect.Effect<A>
@@ -267,7 +269,7 @@ export function make(deps: Deps) {
       }),
     )
     if (queued.cards.length === 0) return
-    if (queued.last?.status === "paused") return
+    if (queued.last?.status === "paused" || queued.last?.status === "flaky") return
     const full = size(queued.settled, contract.bundle)
     const split = (queued.last?.status === "red" && queued.last.members > 1) || queued.last?.status === "probing"
     const cap = split && queued.last ? Math.max(1, Math.floor(queued.last.members / 2)) : full
@@ -396,7 +398,8 @@ export function make(deps: Deps) {
   })
 
   /**
-   * Section 6.3: the failing set F from the failed jobs' logs, and whether the red is infrastructure. A job counts as
+   * Section 6.3: the failing set F from the failed jobs' logs and the failing bun files of each turbo package group, and
+   * whether the red is infrastructure. A job counts as
    * infrastructure when it was cancelled, timed out or never started, or when its log has no failing file and lacks the
    * contract's control line, which only the jobs it names print; a job whose log cannot be read counts as code.
    */
@@ -404,17 +407,21 @@ export function make(deps: Deps) {
     const failed = gating(rollup, contract).filter((check) => check.done && FAILED.has(check.result))
     const read = yield* Effect.forEach(failed, (check) =>
       Effect.gen(function* () {
-        if (INFRA.has(check.result)) return { files: [] as string[], infra: true }
+        if (INFRA.has(check.result)) return { files: [] as string[], groups: [], infra: true }
         const job = check.url.match(/\/job\/(\d+)/)?.[1]
         const log = job ? yield* deps.gh(["api", `repos/${repo}/actions/jobs/${job}/logs`]) : undefined
         const text = log?.exitCode === 0 ? log.stdout.replace(/^\S+Z /gm, "") : ""
         const files = text ? BoardCi.failing(text) : []
         const control = contract.full.control
         const silent = control !== null && control.jobs.some((prefix) => check.name.startsWith(prefix)) && !text.includes(control.line)
-        return { files, infra: silent && text !== "" && files.length === 0 }
+        return { files, groups: text ? BoardCi.packaged(text) : [], infra: silent && text !== "" && files.length === 0 }
       }),
     )
-    return { files: [...new Set(read.flatMap((item) => item.files))], infra: read.length > 0 && read.every((item) => item.infra) }
+    return {
+      files: [...new Set(read.flatMap((item) => item.files))],
+      groups: read.flatMap((item) => item.groups),
+      infra: read.length > 0 && read.every((item) => item.infra),
+    }
   })
 
   /**
@@ -435,6 +442,61 @@ export function make(deps: Deps) {
     const runs = read.exitCode === 0 ? Option.getOrUndefined(decodeRuns(read.stdout)) : undefined
     const verdict = runs && runs.length > 0 ? judge(runs, contract) : "pending"
     return verdict === "pending" ? "unknown" : verdict
+  })
+
+  /**
+   * Section 6.3 step 2: runs F on base and on the bundle head in parallel. F belongs to base when it fails there twice;
+   * three passes on the head make the bundle flaky; a head failure is code. Undefined when a checkout fails.
+   */
+  const scope = Effect.fnUntraced(function* (
+    directory: string,
+    template: string,
+    bundle: typeof BoardBundleTable.$inferSelect,
+    groups: ReadonlyArray<{ readonly package: string; readonly files: ReadonlyArray<string> }>,
+  ) {
+    // Checkouts are added one at a time: concurrent `git worktree add` on one repository can race on its lock files.
+    const checkouts = yield* Effect.forEach([bundle.base_sha, bundle.head_sha], (sha) =>
+      Effect.gen(function* () {
+        const scratch = yield* Effect.promise(() => fs.mkdtemp(path.join(os.tmpdir(), `orchestra-scope-${bundle.n}-`)))
+        const added = yield* git(directory, ["worktree", "add", "--quiet", "--detach", scratch, sha])
+        if (added.code === 0) return scratch
+        yield* Effect.promise(() => fs.rm(scratch, { recursive: true, force: true }))
+        return undefined
+      }),
+    )
+    const base = checkouts[0]
+    const head = checkouts[1]
+    const run = (cwd: string) =>
+      Effect.forEach(groups, (group) =>
+        Effect.gen(function* () {
+          const argv = yield* BoardCi.command(template, group, bundle.branch).pipe(Effect.orElseSucceed(() => [] as string[]))
+          if (argv.length === 0) return false
+          const result = yield* deps.proc
+            .run(ChildProcess.make(which(argv[0] ?? "", deps.env ?? process.env) ?? argv[0] ?? "", argv.slice(1), { cwd, env: deps.env, extendEnv: true, stdin: "ignore" }), {
+              combineOutput: true,
+              maxOutputBytes: 16 * 1024 * 1024,
+              timeout: "90 minutes",
+            })
+            .pipe(Effect.result)
+          return result._tag === "Success" && result.success.exitCode === 0
+        }),
+      ).pipe(Effect.map((passes) => passes.every(Boolean)))
+    const outcome =
+      base && head
+        ? yield* Effect.all(
+            [
+              run(base).pipe(Effect.flatMap((pass) => (pass ? Effect.succeed(true) : run(base)))),
+              run(head).pipe(
+                Effect.flatMap((pass) => (pass ? run(head) : Effect.succeed(false))),
+                Effect.flatMap((pass) => (pass ? run(head) : Effect.succeed(false))),
+              ),
+            ],
+            { concurrency: 2 },
+          )
+        : undefined
+    yield* Effect.forEach(checkouts, (scratch) => (scratch ? git(directory, ["worktree", "remove", "--force", scratch]) : Effect.void), { discard: true })
+    if (!outcome) return undefined
+    return !outcome[0] ? ("base" as const) : outcome[1] ? ("flaky" as const) : ("code" as const)
   })
 
   /** Runs the full gate on base itself: an empty commit on the red bundle's base, opened as a bundle with no members. */
@@ -533,7 +595,14 @@ export function make(deps: Deps) {
         return yield* close(row, repo, bundle, "failed on infrastructure; the queue reruns it", "infra")
       }
       const sha10 = bundle.base_sha.slice(0, 10)
-      const based = yield* baseState(row, repo, bundle.base_sha, contract)
+      // F runs scoped only when every failing file is a bun test file under a package group; otherwise base is judged by its checks or a probe.
+      const runnable =
+        contract.scoped.tests !== null &&
+        found.groups.length > 0 &&
+        found.files.every((file) => found.groups.some((group) => group.files.includes(file.replaceAll("\\", "/"))))
+      const scoped = runnable && contract.scoped.tests !== null ? yield* scope(directory, contract.scoped.tests, bundle, found.groups) : undefined
+      if (scoped === "flaky") return yield* flaky(row, bundle, members.map((item) => item.issue), found.groups.flatMap((group) => group.files))
+      const based = scoped ? (scoped === "base" ? "red" : "green") : yield* baseState(row, repo, bundle.base_sha, contract)
       if (based === "unknown") {
         yield* Effect.forEach(
           members,
@@ -753,6 +822,32 @@ export function make(deps: Deps) {
     yield* deps.quiet((tx) => tx.update(BoardBundleTable).set({ status }).where(eq(BoardBundleTable.id, bundle.id)).run())
     if (bundle.pr_number)
       yield* deps.gh(["pr", "close", String(bundle.pr_number), "--repo", repo, "--delete-branch", "--comment", `Bundle ${row.key}-B${bundle.n} ${why}.`])
+  })
+
+  /** Section 6.4: a flaky bundle keeps its PR open and its members queued until Maestro merges or retries it. */
+  const flaky = Effect.fnUntraced(function* (row: ProjectRow, bundle: typeof BoardBundleTable.$inferSelect, issues: ReadonlyArray<IssueRow>, tests: ReadonlyArray<string>) {
+    const now = yield* Clock.currentTimeMillis
+    yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        yield* tx.update(BoardBundleTable).set({ status: "flaky" }).where(eq(BoardBundleTable.id, bundle.id)).run()
+        yield* Effect.forEach(
+          tests,
+          (test) =>
+            tx
+              .insert(BoardFlakeTable)
+              .values({ project_id: row.id, test, bundle_id: bundle.id, first_seen: now, count: 1 })
+              .onConflictDoUpdate({ target: [BoardFlakeTable.project_id, BoardFlakeTable.test], set: { bundle_id: bundle.id, count: sql`${BoardFlakeTable.count} + 1` } })
+              .run(),
+          { discard: true },
+        )
+      }),
+    )
+    yield* Effect.forEach(
+      issues,
+      (issue) => note(row, issue, `Bundle ${row.key}-B${bundle.n} went red, and ${tests.join(", ")} then passed three scoped reruns of its head: it is flaky. Maestro merges it or retries it; this card stays queued.`),
+      { discard: true },
+    )
+    yield* Effect.logWarning(`integration: ${row.key}-B${bundle.n} flaky: ${tests.join(", ")} failed, then passed on rerun. Merge or retry.`)
   })
 
   /** A queued card whose PR head moved since it queued goes back to Review: its new head is not verified. */
