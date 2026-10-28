@@ -35,6 +35,8 @@ const UNSERVED = new Set([
 const EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const
 /** Claude Code's own subagent tool: Orchestra's seats are its subagents, and each call passes the `task` permission. */
 const SUBAGENT_TOOLS = new Set(["Agent", "Task"])
+// Claude Code's task list tools, which took over from TodoWrite. They fill the todo panel as Orchestra's todo tool does.
+const TASK_LIST_TOOLS = new Set(["TaskCreate", "TaskUpdate"])
 /** The prefix of a seat's subagent name, as the V1 `orchestra` plugin named them. */
 const SEAT_PREFIX = "orchestra:"
 /** Seat prompt text that describes Orchestra's own loop, and its Claude Code equivalent. */
@@ -316,12 +318,15 @@ export const make = Effect.gen(function* () {
             Effect.forkScoped,
           )
           const names = new Map<string, string>()
+          const created = new Map<string, ChecklistItem>()
           const todos = new Map<string, unknown>()
           const tasks = new Map<string, Delegation>()
+          // Claude Code's task list outlives a turn, so the copy that fills the todo panel is kept in host state.
+          const checklist: Checklist = { items: items(state.checklist), changed: false }
           // The child Session mirroring each running subagent, opened on its first frame. A closed one takes no more.
           const children = new Map<string, Effect.Success<ReturnType<typeof turn.child>> & { readonly tracker: Tracker }>()
           const closed = new Set<string>()
-          const tracker = (): Tracker => ({ names: new Map(), todos: new Map(), tasks: new Map(), seats: agents, failure: {}, emitted: new Map(), model: undefined })
+          const tracker = (): Tracker => ({ names: new Map(), todos: new Map(), tasks: new Map(), checklist: { items: [], changed: false }, created: new Map(), seats: agents, failure: {}, emitted: new Map(), model: undefined })
           const mirror = (callID: string, message: SDKMessage & { readonly type: "assistant" | "user" }) =>
             Effect.gen(function* () {
               const task = tasks.get(callID)
@@ -389,7 +394,12 @@ export const make = Effect.gen(function* () {
                   yield* deliver(message.session_id)
                   live.keep = live.background > 0
                 }
-                return yield* ClaudeCodeOutput.settle(events(message, { names, todos, tasks, seats: agents, failure, emitted, model: turn.model?.id }), message, { todos, write: turn.todos, directory: turn.session.location.directory })
+                const settled = yield* ClaudeCodeOutput.settle(events(message, { names, todos, tasks, checklist, created, seats: agents, failure, emitted, model: turn.model?.id }), message, { todos, write: turn.todos, directory: turn.session.location.directory })
+                if (checklist.changed) {
+                  checklist.changed = false
+                  yield* turn.state.update((value) => ({ ...(ClaudeCodeTranscript.record(value) ? value : {}), checklist: checklist.items }))
+                }
+                return settled
               }),
             ),
             Stream.flatMap((items) => Stream.fromIterable(items)),
@@ -433,10 +443,17 @@ type Delegation = {
   readonly background: boolean
 }
 
+type ChecklistItem = { id: string; content: string; status: string }
+type Checklist = { items: ChecklistItem[]; changed: boolean }
+
 type Tracker = {
   readonly names: Map<string, string>
   /** Each TodoWrite call's list, recorded as its result and the Session's todos so the widget and panel show it. */
   readonly todos: Map<string, unknown>
+  /** Claude Code's task list (TaskCreate, TaskUpdate), recorded as the todo list Orchestra's todo tool keeps. */
+  readonly checklist: Checklist
+  /** The entry each TaskCreate call added, which takes its id from the call's result. */
+  readonly created: Map<string, ChecklistItem>
   /** Each delegation's seat and brief, to open the child Session that mirrors its subagent. */
   readonly tasks: Map<string, Delegation>
   /** The turn's seat subagents, to name a delegation's seat as Orchestra's task tool would. */
@@ -482,7 +499,8 @@ function events(message: SDKMessage, tracker: Tracker): LLMEvent[] {
       }
       // Orchestra tools are recorded by the runner through `turn.execute`, never by the host.
       if (block.type !== "tool_use" || block.name.startsWith(MCP_PREFIX)) return []
-      const call = shown(block.name, block.input, tracker.seats)
+      const listed = TASK_LIST_TOOLS.has(block.name) ? checklist(block.id, block.name, block.input, tracker) : undefined
+      const call = listed ? { name: "todowrite", input: { todos: listed }, todos: listed } : shown(block.name, block.input, tracker.seats)
       names.set(block.id, call.name)
       if (call.name === "todowrite") tracker.todos.set(block.id, call.todos)
       if ("task" in call && call.task) tracker.tasks.set(block.id, call.task)
@@ -498,6 +516,8 @@ function events(message: SDKMessage, tracker: Tracker): LLMEvent[] {
       if (block.type !== "tool_result") return []
       const name = names.get(block.tool_use_id)
       if (!name) return []
+      const added = tracker.created.get(block.tool_use_id)
+      if (added) assign(added, block.is_error === true, message.tool_use_result, tracker.checklist)
       const listed = tracker.todos.get(block.tool_use_id)
       const text = listed !== undefined && !block.is_error
         ? JSON.stringify({ todos: listed })
@@ -737,6 +757,46 @@ function shown(tool: string, raw: unknown, seats: ReturnType<typeof subagents>) 
       background: input.run_in_background === true,
     },
   }
+}
+
+/**
+ * Applies a TaskCreate or TaskUpdate call to the task list and returns the list as Orchestra's todo tool would write
+ * it. A created entry has no id until the call's result names it (`assign`).
+ */
+function checklist(id: string, tool: string, raw: unknown, tracker: Tracker) {
+  const input = ClaudeCodeTranscript.record(raw) ? raw : {}
+  const list = tracker.checklist
+  if (tool === "TaskCreate") {
+    const item = { id: "", content: typeof input.subject === "string" ? input.subject : "", status: "pending" }
+    list.items.push(item)
+    tracker.created.set(id, item)
+  }
+  const target = tool === "TaskUpdate" ? list.items.find((item) => item.id === String(input.taskId)) : undefined
+  if (target && input.status === "deleted") list.items.splice(list.items.indexOf(target), 1)
+  if (target && typeof input.status === "string" && input.status !== "deleted") target.status = input.status
+  if (target && typeof input.subject === "string") target.content = input.subject
+  list.changed = true
+  return list.items.map((item) => ({ content: item.content, status: item.status }))
+}
+
+/** Gives a created entry the id Claude Code assigned it, or drops it when the call failed. */
+function assign(item: ChecklistItem, failed: boolean, result: unknown, list: Checklist) {
+  const task = ClaudeCodeTranscript.record(result) && ClaudeCodeTranscript.record(result.task) ? result.task : undefined
+  const id = task && typeof task.id === "string" ? task.id : undefined
+  // A failed call drops its entry; an id Claude Code hands out again (a list it started over) drops the stale one.
+  list.items = list.items.filter((entry) => (entry === item ? !failed : id === undefined || entry.id !== id))
+  if (id) item.id = id
+  list.changed = true
+}
+
+/** The task list kept in host state. */
+function items(value: unknown): ChecklistItem[] {
+  if (!Array.isArray(value)) return []
+  return value.flatMap((item) =>
+    ClaudeCodeTranscript.record(item) && typeof item.id === "string" && typeof item.content === "string" && typeof item.status === "string"
+      ? [{ id: item.id, content: item.content, status: item.status }]
+      : [],
+  )
 }
 
 /** What Orchestra changes in the call's input: the sandboxed command, and the dispatch's domains for a web search. */

@@ -40,6 +40,10 @@ Design and decisions: `docs/specs/claude-mode/meta-harness.md`. User guide: `doc
   priority `medium` since Claude Code has none; an Edit carries `files` built from the SDK's `tool_use_result.structuredPatch`
   in `createTwoFilesPatch` form. A subagent's frames go through the same `settle`, so its TodoWrite writes the child
   Session's todos (the child handle's `todos`), never the parent's.
+- Claude Code builds with a task list send `TaskCreate`/`TaskUpdate` instead of TodoWrite. `checklist` in the host
+  turns each into a `todowrite` holding the whole list; `assign` takes the task id from the TaskCreate result. The
+  list lives in host state (`checklist`) because an update in a later turn names an id from an earlier one: never keep
+  it only in turn memory.
 - Orchestra MCP tools are refused inside a subagent (`MAIN_ONLY`, at the gate and in `canUseTool` via `agentID`) and
   listed in each subagent's `disallowedTools`: the MCP request carries no agent, so they would run under the main
   agent's registry and permissions.
