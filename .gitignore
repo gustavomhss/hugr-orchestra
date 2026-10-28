@@ -41,10 +41,11 @@ distribution-logs/
 
 # Atlas: the store (`.atlas/cas/`, `projection*.json`, `staging*.json`) is local derived state and Atlas refuses
 # to serve a committed one. Only the admin policy and the append-only logs and blobs under `project/`,
-# `members/` and `blobs/` travel (`modules/atlas/packages/adapter-io/src/layout.ts`).
+# `members/`, `cards/` and `blobs/` travel (`modules/atlas/packages/adapter-io/src/layout.ts`).
 /.atlas/*
 !/.atlas/project/
 !/.atlas/members/
 !/.atlas/blobs/
+!/.atlas/cards/
 !/.atlas/policy.json
 **/.atlas/staging*.json

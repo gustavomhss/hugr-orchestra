@@ -17,7 +17,9 @@ Design: `modules/atlas/docs/design/repo-layout.md` on branch `origin/atlas-repo-
 .atlas/members/<actor>/memory/pr/<prId>.jsonl        one PR's memory
 .atlas/members/<actor>/memory/logbook.jsonl          the logbook (only its author writes it)
 .atlas/members/<actor>/knowledge/<nodeKey[0:2]>.jsonl applied knowledge outcomes
-.atlas/blobs/<h[0:2]>/<h>                            CAS bytes a knowledge row names
+.atlas/blobs/<h[0:2]>/<h>                            CAS bytes a knowledge row names, and committed transcripts
+.atlas/cards/<CARD>/card.jsonl                       one card's status moves, thread messages, decisions, links
+.atlas/cards/<CARD>/attempts/a<n>.jsonl              one attempt's metering (bundle record commit)
 .atlas/cas/, .atlas/projection*.json, staging*.json  local derived state, never tracked
 ```
 
@@ -32,9 +34,13 @@ Design: `modules/atlas/docs/design/repo-layout.md` on branch `origin/atlas-repo-
 | Memory, orientation, review | `memory-store.ts`, `orientation-store.ts`, `review-log.ts` | Append to the tree, read legacy plus tree. No folder check and no replay: a memory line is served as read |
 | Knowledge log | `knowledge-log.ts` (`withKnowledgeLog`) | Wraps the store `compose.ts` builds; `wire.ts` takes it as `WireConfig.store`, so every CLI and MCP writer is logged. Each settled `commitProjection` appends one line per row it produced or changed and copies the row's CAS object to `blobs/` once. `ATLAS_CARD` and `ATLAS_ATTEMPT` fill the line's `source`. Staging is not logged, so `mine` output never reaches a clone |
 | Replay | `knowledge-replay.ts` (`replayKnowledge`), called from `compose.ts` on every command and MCP start | Runs only when provenance is `trusted`, silently skipped otherwise. Applies rows under the trust rule (skill `atlas-ownership`, Invariants) through the raw `commitProjection`, so replayed rows are not logged again; stages every other row, skipping one already staged with the same `contentHash`. A blob that is absent or does not hash to the row's `contentHash` counts as `missing`. Counts print to stderr only when one is non-zero or a folder is unreadable |
+| Card and attempt logs | `card-log.ts` (`appendCardEvent`, `appendAttempt`, `readCard`, `readAttempt`, `attemptNumbers`) | Written by the host, never a seat. Lines are kernel `Event`s keyed by `eventId`; a line whose payload names another card, or another attempt number, counts as `rejected`. Card events read in `(at, contentHash)` order; an attempt read keeps its latest line. `redact` keeps a message's or decision's `textHash` and drops its text, and drops an attempt's `costMicroUsd`. Nothing calls these yet; the merge-queue host does |
+| Attempt metering | `persist/src/metering.ts` (`meterAttempt`), type `AttemptMetering` | Adds seat, session, engine and integer `costMicroUsd` (`Math.round(costUsd * 1e6)`, omitted when not finite) to `Metering` |
+| Committed transcripts | `transcript-blobs.ts` (`createRepoTranscriptStore`) | Scrubs and hashes through persist's `createTranscriptStore`, then writes the scrubbed bytes to `blobs/` only when `commit` is set. `fetch` re-hashes and throws on an absent or edited blob |
+| Repo visibility | `repo-visibility.ts` (`repoVisibility`, `githubSlug`) | Reads `origin` with `runGit` and asks `api.github.com/repos/<slug>` (token from `GITHUB_TOKEN` or `GH_TOKEN`). `private:true` or a 404 answers private; anything else, including no remote, a non-GitHub host or a network error, answers public, so a doubt redacts instead of leaking |
 | One-shot move | `migrate-layout.ts`, CLI `atlas migrate-layout` | Copies original bytes into the tree, keeps an unroutable line in the legacy file, deletes a moved legacy file, and exports every local projection row not yet logged. It picks the actor itself: the scope's only actor, else `maestro` |
 | Merge | `.gitattributes` and `modules/atlas/.gitattributes` | Each has `.atlas/**/*.jsonl merge=union` for the `.atlas/` beside it |
-| Ignore | `.gitignore`, `modules/atlas/.gitignore`, `adapter-io/src/gitignore.ts` | All deny `.atlas/*` and re-admit `policy.json`, `project/`, `members/`, `blobs/`. Only the module file also re-admits the legacy single files, so a legacy `.atlas/memory.jsonl` at the repository root is ignored. `gitignore.ts` is the block `atlas init` writes into a user's repo, and appends missing negations to an older rule; it has no nested `staging*.json` line |
+| Ignore | `.gitignore`, `modules/atlas/.gitignore`, `adapter-io/src/gitignore.ts` | All deny `.atlas/*` and re-admit `policy.json`, `project/`, `members/`, `blobs/`, `cards/`. Only the module file also re-admits the legacy single files, so a legacy `.atlas/memory.jsonl` at the repository root is ignored. `gitignore.ts` is the block `atlas init` writes into a user's repo, and appends missing negations to an older rule; it has no nested `staging*.json` line |
 | Bundled copies | `modules/atlas/boundary/src/generated/*` | Rebuild with `bun modules/atlas/boundary/script/build.ts` after changing these sources |
 
 ## Provenance
@@ -67,8 +73,9 @@ Design: `modules/atlas/docs/design/repo-layout.md` on branch `origin/atlas-repo-
 - Design §5 drops a proven row that fails re-proof; the code stages it for ratify.
 - Design §5 replays committed `project` memory as a proposal and says replay runs the same gates as a live write; memory has no replay, and knowledge replay checks only seal, scope and re-proof.
 - The design puts the logbook in `members/maestro/`; the code writes `members/orch/`, because the folder follows the author.
-- Attempt, context and card files (design §3, §4), including `costMicroUsd`, are not built.
+- Card and attempt files (design §3) have writers and readers, but no host calls them yet. Context files are not built.
+- A 404 from the GitHub API answers private: GitHub hides a private repository from a caller without access, so a public one never 404s.
 
 ## Testing
 
-Atlas runs vitest, which `bun run test:ci` cannot reach (`TEST_PACKAGE_NOT_FOUND:atlas`). Its tests run in test.yml's atlas job (epic label or workflow dispatch). Files: `packages/adapter-io/test/knowledge-log.test.ts`, `migrate-layout.test.ts`, `memory-store.test.ts`, `native-memory-merge.test.ts` (a real `git merge` with the union attribute, plus a control without it), and `packages/cli/test/init-gitignore.test.ts`. Consumers outside the module (`maestro`, `app`) do run through `test:ci`.
+Atlas runs vitest, which `bun run test:ci` cannot reach (`TEST_PACKAGE_NOT_FOUND:atlas`). Its tests run in test.yml's atlas job (epic label or workflow dispatch). Files: `packages/adapter-io/test/knowledge-log.test.ts`, `migrate-layout.test.ts`, `memory-store.test.ts`, `card-log.test.ts` (cards, attempts, transcript blobs, visibility), `native-memory-merge.test.ts` (a real `git merge` with the union attribute, plus a control without it), and `packages/cli/test/init-gitignore.test.ts`. Consumers outside the module (`maestro`, `app`) do run through `test:ci`.

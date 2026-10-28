@@ -141,6 +141,11 @@ export {
 export { createDurableMemory } from "./memory-store.js"
 export {
   atlasDir,
+  attemptPath,
+  blobPath,
+  cardLogPath,
+  cardsDir,
+  contextLogPath,
   knowledgeShardPath,
   legacyLogPath,
   memberMemoryPath,
@@ -150,6 +155,13 @@ export {
 } from "./layout.js"
 export type { LegacyLog, ProjectLog } from "./layout.js"
 export { migrateLayout } from "./migrate-layout.js"
+// Repo-layout design §3 — the host-written card and attempt logs, the committed transcripts, and the public/private
+// answer that decides what they redact.
+export { appendAttempt, appendCardEvent, attemptNumbers, readAttempt, readCard } from "./card-log.js"
+export type { AttemptEntry, AttemptRead, CardEvent, CardEventInput, CardRead, ThreadKind } from "./card-log.js"
+export { createRepoTranscriptStore } from "./transcript-blobs.js"
+export { githubSlug, repoVisibility } from "./repo-visibility.js"
+export type { GetJson, Visibility } from "./repo-visibility.js"
 export type { LayoutMigration } from "./migrate-layout.js"
 export type { DurableMemory, MemoryRead } from "./memory-store.js"
 // D14 — the shared review log (`.atlas/project/review.jsonl`): holds, ratification proposals and decisions, interview answers
