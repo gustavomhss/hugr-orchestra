@@ -102,6 +102,15 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.template.wpExecute": "Build one work package",
   "orchestra.workflows.template.wpExecute.body":
     "Builds one work package test first, then tidies it, and marks it done only when its checks pass.",
+  "orchestra.workflows.template.bugfix": "Fix a bug with proof",
+  "orchestra.workflows.template.bugfix.body":
+    "A failing test reproduces the bug, the smallest root-cause fix turns it green, and a short note explains what was wrong. Judges reject a fix that only hides the symptom.",
+  "orchestra.workflows.template.safeRefactor": "Refactor safely",
+  "orchestra.workflows.template.safeRefactor.body":
+    "Writes down what must not change, pins it with tests against today's code, refactors, then proves every invariant still holds.",
+  "orchestra.workflows.template.featureLaunch": "Launch a feature end to end",
+  "orchestra.workflows.template.featureLaunch.body":
+    "Six phases from idea to pull request: explore, spec with numbered acceptance criteria, plan, build test first, polish, review and hand off. Every criterion is traced from spec to test to review.",
   "orchestra.workflows.template.design": "Design a product from an idea",
   "orchestra.workflows.template.design.body":
     "Turns a raw idea into a ratified product design, one gated step at a time.",
@@ -776,6 +785,15 @@ export const WORKFLOWS_COPY_BR: Record<keyof typeof WORKFLOWS_COPY, string> = {
   "orchestra.workflows.template.wpExecute": "Construir um pacote de trabalho",
   "orchestra.workflows.template.wpExecute.body":
     "Constrói um pacote de trabalho primeiro com testes, depois o simplifica, e só o marca como pronto quando as verificações passam.",
+  "orchestra.workflows.template.bugfix": "Corrigir um bug com prova",
+  "orchestra.workflows.template.bugfix.body":
+    "Um teste que falha reproduz o bug, a menor correção na causa raiz o deixa verde, e uma nota curta explica o que estava errado. Os juízes recusam uma correção que só esconde o sintoma.",
+  "orchestra.workflows.template.safeRefactor": "Refatorar com segurança",
+  "orchestra.workflows.template.safeRefactor.body":
+    "Escreve o que não pode mudar, fixa isso com testes sobre o código de hoje, refatora e depois prova que cada invariante continua valendo.",
+  "orchestra.workflows.template.featureLaunch": "Lançar uma funcionalidade de ponta a ponta",
+  "orchestra.workflows.template.featureLaunch.body":
+    "Seis fases da ideia ao pull request: explorar, especificar com critérios de aceite numerados, planejar, construir começando pelo teste, polir, revisar e entregar. Cada critério é rastreado da especificação ao teste e à revisão.",
   "orchestra.workflows.template.design": "Desenhar um produto a partir de uma ideia",
   "orchestra.workflows.template.design.body":
     "Transforma uma ideia bruta em um desenho de produto validado, uma etapa com verificações por vez.",

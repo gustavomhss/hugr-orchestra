@@ -46,12 +46,17 @@ Templates are the ready-made workflows that ship with the app. Each has a name a
 
 | Template | What it does | Status |
 | --- | --- | --- |
+| Fix a bug with proof | A failing test reproduces the bug, a root-cause fix turns it green, a short note explains it | Can run |
+| Refactor safely | Writes down the invariants, pins them with tests, refactors, then proves each one still holds | Can run |
+| Launch a feature end to end | Six phases and fifteen steps, from exploring the code to a pull request, with every acceptance criterion traced from spec to test to review | Can run |
 | Test-driven feature | Builds a feature test first, then the code that passes it | Can run |
 | Build one work package | Builds one work package test first, and marks it done only when its checks pass | Can run |
 | Design a product from an idea | Turns a raw idea into a ratified product design | Can be read and edited, cannot run yet |
 | Plan from a frozen spec | Turns an approved spec into an ordered plan of work packages | Can be read and edited, cannot run yet |
 | Research a question | Weighs competing explanations and sources | Can be read and edited, cannot run yet |
 | Break a spec into work packages | Splits a frozen intent into work packages | Can be read and edited, cannot run yet |
+
+The three example workflows (bugfix, safe refactor, feature launch) name their commands and paths as parameters: `test_cmd`, `lint_cmd`, `src_path`, `test_path`, `docs_path`, `notes_dir` and `base_ref`. Maestro lists them when it plans a run and asks you for any value it cannot read from the project. Their judges read the diff of each step, so a fix that only hides a symptom, a refactor that edits a pinned test or a test that asserts the bug does not pass.
 
 A template that cannot run shows its reason on the card ("This profile checks its work with Relay tools that are not available yet…"). You can open it and read it, but you cannot pick it for a new workflow. Run is off for it too.
 

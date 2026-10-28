@@ -241,12 +241,16 @@ export const layer = (dataDir: string, workspaceID: string) => Layer.effect(Serv
 // sha256 of the document as `json.dumps(sort_keys=True, ensure_ascii=False)` encodes it (PARITY-EXCEPTIONS W8-1).
 export const checksum = (document: unknown): string => createHash("sha256").update(dumps(document, true)).digest("hex")
 
-// Owner decision R8 (2026-10-06): the shipped profiles and whether each may run. The other four check their work with
-// Relay tool programs (`tools/*`) that are not ported yet; they are seeded so they can be read and edited.
+// Owner decision R8 (2026-10-06): the shipped profiles and whether each may run. The design, planning, research-v2 and
+// spec-decompose profiles check their work with Relay tool programs (`tools/*`) that are not ported yet; they are
+// seeded so they can be read and edited.
 export const PROFILES: ReadonlyMap<string, boolean> = new Map([
+  ["bugfix", true],
   ["design", false],
+  ["feature-launch", true],
   ["planning", false],
   ["research-v2", false],
+  ["safe-refactor", true],
   ["spec-decompose", false],
   ["tdd_feature", true],
   ["wp-execute", true],
