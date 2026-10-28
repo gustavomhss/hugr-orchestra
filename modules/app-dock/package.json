@@ -18,7 +18,7 @@
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.29.0",
+    "@modelcontextprotocol/sdk": "1.32.2",
     "@orchestra/core": "workspace:*",
     "@orchestra/plugin": "workspace:*",
     "@orchestra/schema": "workspace:*",
