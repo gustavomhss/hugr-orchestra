@@ -167,7 +167,7 @@ that reason. Either way, "what happened to LCH-58" is answered by one query, nev
 | Record every scoped and full check against a tree or commit | Choose the scoped tests that `ci_run` runs, from the card's Done when |
 | Derive every integration state | `board_queue` a verified card. This is the merge decision, and it needs the session's grant. |
 | Refuse `board_queue` when a precondition fails | `board_dequeue` with a reason, and mark a card `urgent` (front of the next bundle) |
-| Cut, assemble, run, attribute, eject and merge bundles | Give a flaky verdict: merge the bundle or retry it (§6.4) |
+| Cut, assemble, run, attribute, eject and merge bundles | Give a flaky verdict with `board_bundle`: merge the bundle or retry it (§6.4) |
 | Compute lanes from the affected graph (phase 2) | Route rework: same seat with the failing output, or `archie` when scope changes |
 | Detect base movement, overlap with write sets, and conflicts | Decide what to do when a bundle dissolves (§6.3 step 6) |
 | Reconcile all of this after a restart | Set or change the project's CI contract (§5), once per project |
@@ -557,6 +557,17 @@ Each package ships with its docs (`docs/guides`), the playbook edits it implies,
 skill updates. Each is gated by `test:ci` on its touched tests and a `typecheck.yml` dispatch. One epic covers each
 phase.
 
+**Surface.** No new protocol: the conveyor speaks through the board, its tools and one System Context source.
+
+| Kind | What | Ships | WP |
+|---|---|---|---|
+| Maestro tools | `ci_run`; `board_queue` (with `urgent` and `flush`); `board_dequeue`; `board_bundle` (flaky verdict: `merge` or `retry`, with a reason). `board_read` also returns integration state, attempts and checks. | yes | 2, 4, 5 |
+| Host, no tool | The conveyor in the board's poll loop; snapshot refs; the `maestro/integration` source; tables `board_attempt`, `board_check`, `board_flake`, plus queue and bundle rows | yes | 1–8 |
+| Contracts | `.orchestra/ci.json` (§5.1, §7.4); the new rows and states in `docs/specs/projects-board/CONTRACT.md` | repo file, read at run time | 2, 4 |
+| Playbooks | `maestro-lead` `land`: Publish becomes "verify, then `board_queue`"; `track`: `<integration>` lines and `Flaky:` citing `board_flake`; `maestro-plan`: the area overlap rule | yes | 4, 5, 9 |
+| Seat skill | `archie`'s plan skill: the `area` and `order` fields. `archie` gets no tool. | yes | 9 |
+| Repo only | `conveyor-maintenance` and `conveyor-ownership` in `.orchestra/skills`; a guide in `docs/guides` | no | each WP updates them |
+
 **Phase 1: one conveyor.**
 
 | WP | Scope | Done when |
@@ -566,7 +577,7 @@ phase.
 | **2. CI facts** | `.orchestra/ci.json` reader and defaults; `ci_run`; `board_check` keyed by tree; the `scoped-green` and `scoped-red` states | A green scoped run stays valid after Maestro's commit with the same tree, and drops after an edit |
 | **3. Conflict notices** | Base-advance diff, matched against queued cards' write sets with `conflictVerdict`, then `merge-tree`; the `conflicts` state and its `<integration>` line | A merge that touches a card's write set notifies only that card; a merge outside it notifies none |
 | **4. Queue and green bundles** | `board_queue`, `board_dequeue` and their preconditions; pools; cut rules a–d; assembly; the bundle PR with `full.label`; merge on green; `onBaseMoved`; the card's affected set from `turbo` (§7.1), which `merge-if-disjoint` and the eject rerun use in phase 1 too; `land` playbook Publish rewritten to "verify, then `board_queue`" | Three verified cards merge through one bundle and one full run; all three ship |
-| **5. Red bundles** | Bundle size from the red rate; the four ledger numbers on the board; infrastructure rerun, base check and flake probe, isolation with in-bundle dependencies, halving, eject into rework, rebuild, dissolve, `board_flake` and the flaky verdict, base red (§6.8) | A seeded failing member is ejected with the right cause, and the rest merge on the rebuilt bundle; a seeded interaction is found by halving; a seeded red on base ejects no member |
+| **5. Red bundles** | Bundle size from the red rate; the four ledger numbers on the board; infrastructure rerun, base check and flake probe, isolation with in-bundle dependencies, halving, eject into rework, rebuild, dissolve, `board_flake` and the `board_bundle` verdict, base red (§6.8) | A seeded failing member is ejected with the right cause, and the rest merge on the rebuilt bundle; a seeded interaction is found by halving; a seeded red on base ejects no member |
 | **6. Recovery** | Restart reconcile for pools, bundles and snapshots | Kill the host between "bundle green" and "merge": on restart it merges once, with no duplicate bundle |
 
 Order: 0, then 1 and 2 in parallel (disjoint write sets), then 3 and 4, then 5, then 6. WP1 ships first, alone if
