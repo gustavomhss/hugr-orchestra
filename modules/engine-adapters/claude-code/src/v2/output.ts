@@ -9,22 +9,22 @@ import path from "node:path"
 
 /**
  * Gives a built-in call's result the output Orchestra's own tool records, so its widget and panel show the same: a
- * TodoWrite replaces the Session's todo list, an Edit or MultiEdit carries its patch and line counts. Only the record
+ * TodoWrite replaces the todo list of the Session it ran in (`write`), an Edit or MultiEdit carries its patch and line counts. Only the record
  * changes; what Claude Code sent and received stays as it was.
  */
 export function settle(
   items: ReadonlyArray<LLMEvent>,
   message: SDKMessage,
-  input: { readonly todos: Map<string, unknown>; readonly turn: ExecutionHost.Turn },
+  input: { readonly todos: Map<string, unknown>; readonly write: ExecutionHost.Turn["todos"]; readonly directory: string },
 ) {
   return Effect.forEach(items, (event) => {
     if (!LLMEvent.is.toolResult(event) || event.result.type === "error") return Effect.succeed(event)
     const content = ToolOutput.fromResultValue(event.result)?.content ?? []
     if (event.name === "todowrite") {
       const todos = list(input.todos.get(event.id))
-      return input.turn.todos(todos).pipe(Effect.as(LLMEvent.toolResult({ ...event, output: { structured: { todos }, content } })))
+      return input.write(todos).pipe(Effect.as(LLMEvent.toolResult({ ...event, output: { structured: { todos }, content } })))
     }
-    const edited = event.name === "edit" && message.type === "user" ? diff(message.tool_use_result, input.turn.session.location.directory) : undefined
+    const edited = event.name === "edit" && message.type === "user" ? diff(message.tool_use_result, input.directory) : undefined
     return Effect.succeed(edited ? LLMEvent.toolResult({ ...event, output: { structured: { files: [edited] }, content } }) : event)
   })
 }

@@ -110,6 +110,8 @@ export interface Turn {
     readonly id: SessionSchema.ID
     readonly publish: (event: LLMEvent) => Effect.Effect<void>
     readonly finish: Effect.Effect<void>
+    /** `todos` for the child Session: a subagent's own checklist. */
+    readonly todos: (list: ReadonlyArray<SessionTodo.Info>) => Effect.Effect<void>
   }>
   /**
    * Replaces the Session's todo list, as Orchestra's todowrite tool would: the todo panel shows it. For an engine that

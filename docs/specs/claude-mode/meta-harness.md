@@ -64,7 +64,9 @@ The parts of D-C2 that replaced the meta-harness shape are reversed:
      `WebFetch`, `WebSearch`, `TodoWrite` and `Skill` become `bash`, `read`, `write`, `edit`, `glob`, `grep`,
      `webfetch`, `websearch`, `todowrite` and `skill`, with Orchestra's argument names (`filePath`, `oldString`, ...).
    - `Agent` and `Task` become `task`, with the seat id as `subagent_type`.
-   - A `TodoWrite` result is recorded as the list it wrote (`{"todos": [...]}`), which the todo widget renders.
+   - A `TodoWrite` result is recorded as the list it wrote (`{"todos": [...]}`), which the todo widget renders, and
+     replaces the todo list (the todo panel) of the Session it ran in: a subagent's goes to its child Session.
+   - An `Edit` or `MultiEdit` result carries its patch and line counts, as Orchestra's edit tool records them.
    - Any other tool keeps its Claude Code name and input.
 
    Only Orchestra's record changes, after Claude Code ran the call. The prompt, tools, inputs and results Claude Code
@@ -81,9 +83,6 @@ The parts of D-C2 that replaced the meta-harness shape are reversed:
   when the turn's stream ends. Mirrored subagents have no Task Governance dispatch reservation.
 - A subagent type that is not an Orchestra seat is recorded under the main agent's id; every child carries the parent
   turn's model.
-- Claude Code's todos are not written to the Session's todo list (the todo panel); the todo widget in the transcript
-  shows them.
-- An `edit` row has no diff metadata, so the edit widget shows the change from its input only.
 - Orchestra's MCP tools are refused inside a subagent, so a seat's own Orchestra tools (for example review recording,
   the research tools or Atlas Memory) are unavailable there. See decision 7.
 - The host still starts one Claude Code process per turn. A long-lived query per session would remove the resume

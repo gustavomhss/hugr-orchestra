@@ -38,7 +38,8 @@ Design and decisions: `docs/specs/claude-mode/meta-harness.md`. User guide: `doc
 - `ClaudeCodeOutput.settle` gives a settled built-in the `output.structured` Orchestra's tool records: a TodoWrite
   also calls `Turn.todos`, which writes the Session's todos (`SessionTodo.write`) so the todo panel shows them, with
   priority `medium` since Claude Code has none; an Edit carries `files` built from the SDK's `tool_use_result.structuredPatch`
-  in `createTwoFilesPatch` form. A subagent's TodoWrite does not write the child Session's todos (known limit).
+  in `createTwoFilesPatch` form. A subagent's frames go through the same `settle`, so its TodoWrite writes the child
+  Session's todos (the child handle's `todos`), never the parent's.
 - Orchestra MCP tools are refused inside a subagent (`MAIN_ONLY`, at the gate and in `canUseTool` via `agentID`) and
   listed in each subagent's `disallowedTools`: the MCP request carries no agent, so they would run under the main
   agent's registry and permissions.

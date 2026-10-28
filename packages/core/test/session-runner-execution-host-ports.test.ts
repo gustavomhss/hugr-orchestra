@@ -440,7 +440,7 @@ describe("SessionRunner execution host ports", () => {
       expect(assistant).toMatchObject({ type: "assistant", cost: expect.closeTo(0.0111, 8) })
     }),
   )
-  it.effect("child opens the subagent's Session under the parent's task call, records its events, and adds no cost", () =>
+  it.effect("child opens the subagent's Session under the parent's task call, records its events and todos, and adds no cost", () =>
     Effect.gen(function* () {
       const sessions = yield* hosted
       const opened: { id?: SessionSchema.ID; again?: SessionSchema.ID } = {}
@@ -455,6 +455,7 @@ describe("SessionRunner execution host ports", () => {
               const child = yield* turn.child({ callID: "agent-1", agent: AgentV2.defaultID, title: "Fix it", prompt: "go fix" })
               opened.id = child.id
               yield* Effect.forEach(answer("fixed"), child.publish, { discard: true })
+              yield* child.todos([{ content: "Fix", status: "completed", priority: "medium" }])
               yield* child.finish
               // Reopening the same call adopts the same child.
               opened.again = (yield* turn.child({ callID: "agent-1", agent: AgentV2.defaultID, title: "Fix it", prompt: "go fix" })).id
@@ -476,6 +477,9 @@ describe("SessionRunner execution host ports", () => {
       const messages = yield* sessions.messages({ sessionID: opened.id!, order: "asc" })
       expect(messages.filter((message) => message.type === "user").map((message) => message.text)).toEqual(["go fix"])
       expect(messages.find((message) => message.type === "assistant")).toMatchObject({ cost: 0 })
+      const { db } = yield* Database.Service
+      const todos = (yield* db.select().from(TodoTable).all().pipe(Effect.orDie)).map((row) => [row.session_id, row.content])
+      expect(todos).toEqual([[opened.id, "Fix"]])
       const parent = (yield* sessions.messages({ sessionID })).find((message) => message.type === "assistant")
       const task = parent?.type === "assistant" ? parent.content.find((part) => part.type === "tool") : undefined
       expect(task?.type === "tool" && task.state.status === "completed" ? task.state.metadata : undefined).toMatchObject({ sessionId: opened.id, parentSessionId: sessionID })

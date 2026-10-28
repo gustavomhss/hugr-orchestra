@@ -333,7 +333,8 @@ export const make = Effect.gen(function* () {
                 children.set(callID, entry)
                 return entry
               }))
-              yield* Effect.forEach(events({ ...message, parent_tool_use_id: null }, open.tracker), open.publish, { discard: true })
+              const settled = yield* ClaudeCodeOutput.settle(events({ ...message, parent_tool_use_id: null }, open.tracker), message, { todos: open.tracker.todos, write: open.todos, directory: turn.session.location.directory })
+              yield* Effect.forEach(settled, open.publish, { discard: true })
             })
           const close = (callID: string) =>
             Effect.gen(function* () {
@@ -388,7 +389,7 @@ export const make = Effect.gen(function* () {
                   yield* deliver(message.session_id)
                   live.keep = live.background > 0
                 }
-                return yield* ClaudeCodeOutput.settle(events(message, { names, todos, tasks, seats: agents, failure, emitted, model: turn.model?.id }), message, { todos, turn })
+                return yield* ClaudeCodeOutput.settle(events(message, { names, todos, tasks, seats: agents, failure, emitted, model: turn.model?.id }), message, { todos, write: turn.todos, directory: turn.session.location.directory })
               }),
             ),
             Stream.flatMap((items) => Stream.fromIterable(items)),

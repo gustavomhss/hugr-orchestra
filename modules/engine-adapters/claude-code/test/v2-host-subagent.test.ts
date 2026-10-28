@@ -55,7 +55,7 @@ const ports = {
   consumed: () => Effect.void,
   notify: () => Effect.void,
   todos: () => Effect.void,
-  child: () => Effect.succeed({ id: SessionSchema.ID.make("ses_child"), publish: () => Effect.void, finish: Effect.void }),
+  child: () => Effect.succeed({ id: SessionSchema.ID.make("ses_child"), publish: () => Effect.void, finish: Effect.void, todos: () => Effect.void }),
 } satisfies Pick<ExecutionHost.Turn, "question" | "memory" | "steers" | "consumed" | "notify" | "todos" | "child">
 
 const turnOf = (input: Partial<ExecutionHost.Turn> = {}): ExecutionHost.Turn => ({
@@ -84,7 +84,7 @@ const collect = (turn: ExecutionHost.Turn) =>
   ).then((events) => Array.from(events))
 const done = frame({ type: "result", subtype: "success", is_error: false, session_id: "claude-1", result: "", usage })
 
-test("a subagent's frames are recorded in the child Session of its task call, which ends with the call's result", async () => {
+test("a subagent's frames are recorded in the child Session of its task call, which ends with the call's result, and its checklist is the child's todos", async () => {
   const log: unknown[] = []
   const agentFrame = (uuid: string, parent: string | null, content: unknown[]) =>
     frame({ type: "assistant", uuid, session_id: "claude-1", parent_tool_use_id: parent, message: { content } })
@@ -95,7 +95,8 @@ test("a subagent's frames are recorded in the child Session of its task call, wh
     agentFrame("a1", null, [{ type: "tool_use", id: "t1", name: "Agent", input: { description: "Fix it", prompt: "go fix", subagent_type: "orchestra:backend" } }]),
     agentFrame("s1", "t1", [{ type: "text", text: "Looking" }, { type: "tool_use", id: "s-read", name: "Read", input: { file_path: "/project/a.ts" } }]),
     resultFrame("t1", "s-read", "a"),
-    agentFrame("s2", "t1", [{ type: "text", text: "Fixed" }]),
+    agentFrame("s2", "t1", [{ type: "text", text: "Fixed" }, { type: "tool_use", id: "s-todo", name: "TodoWrite", input: { todos: [{ content: "Fix", status: "completed", activeForm: "Fixing" }] } }]),
+    resultFrame("t1", "s-todo", "Todos have been modified successfully."),
     resultFrame(null, "t1", "Fixed"),
     // After its result, nothing more reaches the child.
     agentFrame("s3", "t1", [{ type: "text", text: "late" }]),
@@ -111,8 +112,10 @@ test("a subagent's frames are recorded in the child Session of its task call, wh
           id: SessionSchema.ID.make("ses_child"),
           publish: (event) => Effect.sync(() => void log.push({ mirrored: event })),
           finish: Effect.sync(() => void log.push("finish")),
+          todos: (list) => Effect.sync(() => void log.push({ childTodos: list })),
         }
       }),
+    todos: (list) => Effect.sync(() => void log.push({ parentTodos: list })),
   })
   await Effect.runPromise(
     ClaudeCodeHost.make.pipe(
@@ -131,10 +134,14 @@ test("a subagent's frames are recorded in the child Session of its task call, wh
   expect(log[opened]).toEqual({ child: { callID: "t1", agent: "backend", title: "Fix it", prompt: "go fix" } })
   const mirrored = log.flatMap((entry) => (typeof entry === "object" && entry !== null && "mirrored" in entry ? [entry.mirrored as { type: string }] : []))
   expect(mirrored.map((event) => event.type)).toEqual([
-    "step-start", "text-start", "text-delta", "text-end", "tool-call", "tool-result", "text-start", "text-delta", "text-end", "step-finish",
+    "step-start", "text-start", "text-delta", "text-end", "tool-call", "tool-result", "text-start", "text-delta", "text-end", "tool-call", "tool-result", "step-finish",
   ])
   expect(mirrored.find((event) => event.type === "tool-call")).toMatchObject({ name: "read", providerExecuted: true })
   expect(log.filter((entry) => entry === "finish")).toHaveLength(1)
+  // The subagent's checklist is the child's todo list, never the parent's.
+  expect(log.filter((entry) => typeof entry === "object" && entry !== null && ("childTodos" in entry || "parentTodos" in entry))).toEqual([
+    { childTodos: [{ content: "Fix", status: "completed", priority: "medium" }] },
+  ])
   // The parent keeps its own record: the task call and its result, never the subagent's text.
   const parentText = log.flatMap((entry) => {
     const event = (entry as { parent?: { type: string; text?: string } }).parent
