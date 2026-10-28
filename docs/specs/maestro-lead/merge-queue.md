@@ -138,8 +138,8 @@ queued | in-bundle --(PR head moved, hold set, PR closed, dependency ejected)-->
 any --(merge-tree conflict with base)--> conflicts                  [a notice, not a stage move]
 ```
 
-`board_queue` refuses unless the card is in Review with a PR, `scoped-green` on its PR head's tree, not `conflicts`,
-not paused, and every `depends_on` card is Shipped or queued ahead of it. `hold_before_merge` does not block
+`board_queue` refuses unless the card is in Review with a PR, has a complete record (§4.5), is `scoped-green` on its
+PR head's tree, not `conflicts`, not paused, and every `depends_on` card is Shipped or queued ahead of it. `hold_before_merge` does not block
 queueing; it blocks bundling, so the card waits in the queue until the owner releases it.
 
 ### 4.2 Rework identity
@@ -199,6 +199,72 @@ already catch file conflicts. They are built in phase 2, next to lanes (WP9).
 
 `archie` does not build bundles. Fixed bundles chosen at plan time would wait for their slowest member and break
 on the first ejection. `archie` owns the shape, and the host fills it with whatever is ready.
+
+### 4.5 The PR record
+
+Today `land` says only that a PR's description "carries the evidence and what was not covered", in free text. A
+reviewer cannot tell intent from guesswork, nobody can tell what a change cost, and a bundle cannot summarize its
+members. The fix is one record per card. The host renders it, so every PR in every project reads the same way, and
+the story of any change can be rebuilt without asking anyone.
+
+**What already exists, and is reused.** Read on `dev` for this design:
+
+| Exists | Trigger | Used here as |
+|---|---|---|
+| `maestro_record_validation` and `lucy`'s `maestro_record_review` (`modules/maestro/coordination/src/v2/tools/review.ts`): verdict `APPROVE`, `FIX_FIRST` or `REJECT`, with `path:line` findings | Maestro, and `lucy` when Maestro requests a review | Evidence. The host reads them; Maestro does not retype them. |
+| Atlas's `logbook`: one append-only entry per PR with `shipped`, `decisions`, `tradeoffs`, `risks`, `openThreads`, `links` (`modules/atlas/docs/reference/atlas-memory.md`) | Designed for the orchestrator, but nothing writes it today: Maestro has no Atlas Memory tools | The record's field set, and its permanent home after merge. |
+| Own units: `OWN-SNAPSHOT.json` maps source files to per-unit skills (role, invariants, gotchas) | Git-tracked; `atlas-guard.yml` checks it on PRs | "Read with" links in Change. Reading the snapshot needs no Atlas store. |
+| `atlas-worklist.yml` and `atlas repair` (manual, needs the store) | Push to `dev`; a maintainer | Unchanged. Stale Own units after a merge stay their job. |
+| Atlas's PR projection (`attachToPR`) | Modeled only; no adapter writes to GitHub | Not built twice. The board's renderer is the one that writes PRs. |
+
+Atlas writes no PR body, posts no PR comment and records no cost, so the record adds those and nothing else.
+
+**The record.** Seats never commit; Maestro commits and pushes in `land`. From WP4 on, Maestro no longer writes a PR
+body. It writes the record's judgment fields with `board_issue` (`record`). The host opens the PR from the record and
+rewrites the body whenever a fact changes, the same way the issue mirror works today.
+
+| Section | Written by | Content |
+|---|---|---|
+| Title | Maestro | The project's commit convention, for example `type(scope): summary`. The host refuses a title that breaks a convention the project declares. |
+| Intent | Maestro | Why the change exists, in the user's terms, in one to three sentences. The outcome, not the files. Atlas `shipped`. |
+| Change | Maestro, plus host facts | What changed, by area, and **where to start reading**: the one to three files or hunks that carry the logic. The host appends files and lines changed, the real affected packages, the plan's `area` when it differs, and the Own units whose sources the diff touches, each linked to its skill. |
+| Decisions | Maestro | Each choice a reviewer could question, with why. Roads not taken go here, with why not. Atlas `decisions` and `tradeoffs`. |
+| Evidence | Host, from records | Each Done when line with its command and result; the probe; the validation and cold review records, with verdict and findings and how each finding was closed; every check row on the PR's tree, with its run link; "used as the user would" or "unseen". |
+| Not covered | Maestro | Required. "Nothing" is allowed only with the reason it is complete. |
+| Risk | Maestro | `low`, `medium` or `high`; what breaks if the change is wrong and how anyone would notice; and how to undo it. "Revert the merge commit" is not enough when the change migrates data or touches config outside the repository. Atlas `risks`. |
+| Follow-ups | Maestro | Each a card key, or "none". Prose with no card is refused, so a follow-up cannot exist only in a PR body. Atlas `openThreads`. |
+| Cost | Host only | Attempts and their causes; CI runs and minutes; wall time from Ready to queued; model tokens and spend summed over every attempt's Sessions. |
+| Lineage | Host only | Card key and epic, `depends_on`, plan reference, seat ids, reviewer id. |
+| Integration | Host only | The integration state (§4), and the bundle and tested-on base once it has one. |
+
+Rules:
+
+- **Facts come from the host, never from prose.** Maestro cannot write Evidence, Cost, Lineage or Integration. A
+  check that has no row, or a review that has no record, is shown as missing. A record cannot overstate itself.
+- **`board_queue` refuses an incomplete record:** an empty Intent, Decisions, Not covered or Risk; a Risk with no
+  level; a follow-up with no card; a `FIX_FIRST` or `REJECT` review with a finding not closed. These are preconditions
+  in §4.1, not a checklist.
+- **Model spend stays on the board.** The board contract keeps spend out of GitHub, and project repositories may be
+  public. The PR shows attempts, CI minutes and wall time; tokens and spend show in the app (§14, decision 6).
+- **Commits carry the key.** Maestro's commit uses the PR title as its subject and Intent as its body, with git
+  trailers `Orchestra-Card: <KEY>` and `Orchestra-Attempt: a<n>`.
+
+**Rebuilding a change.** One source, three copies, each written by the host:
+
+| Copy | Holds | Rebuilds |
+|---|---|---|
+| Board record (source) | Everything, including spend and every attempt | The full story, in the app |
+| PR body on GitHub | Everything except spend | The story for a human reviewer, without the app |
+| Commit trailers | Card and attempt | The path from `git log` or `git blame` back to the PR and the card |
+| Atlas logbook entry, written by the host at merge | Intent, Decisions, Risk, Follow-ups, links to the PR and card | The "why" for any later agent, through Atlas recall |
+
+The logbook write needs the local Atlas store. When it is unavailable, the host retries on the next poll and shows one
+`<integration>` line after an hour. A missing logbook entry never blocks a merge, because the board and the PR already
+hold the record.
+
+The bundle PR is rendered from its members' records (§6.2). Its body has one line per member with title, intent and
+risk; the highest member risk; summed cost plus the bundle's own runs; the tested-on base and skew; and every
+ejection with its cause. Its merge commit lists members as `Orchestra-Card:` trailers.
 
 ## 5. CI: who triggers it and how a project configures it
 
@@ -283,7 +349,8 @@ each candidate with `git merge --no-ff <head>` on a scratch worktree, and skips 
   notice naming the member it collides with. If it collides with base itself, its state is `conflicts`.
 
 The host stops at `size` members, then pushes `bundle-<KEY>-<n>`, opens a PR into base titled
-`chore(queue): bundle <KEY>-B<n>`, lists members and their head SHAs in the body, and applies `full.label`. A bundle
+`chore(queue): bundle <KEY>-B<n>`, renders its body from the members' records with their head SHAs (§4.5), and
+applies `full.label`. A bundle
 spanning two projects on the same repository takes the first member's key, and its body lists every card.
 
 ### 6.3 On red
@@ -561,13 +628,13 @@ phase.
 
 | Kind | What | Ships | WP |
 |---|---|---|---|
-| Maestro tools | `ci_run`; `board_queue` (with `urgent` and `flush`); `board_dequeue`; `board_bundle` (flaky verdict: `merge` or `retry`, with a reason). `board_read` also returns integration state, attempts and checks. | yes | 2, 4, 5 |
+| Maestro tools | `ci_run`; `board_queue` (with `urgent` and `flush`); `board_dequeue`; `board_bundle` (flaky verdict: `merge` or `retry`, with a reason). `board_issue` gains `record` (§4.5). `board_read` also returns integration state, attempts, checks and the record. | yes | 2, 4, 5 |
 | Host, no tool | The conveyor in the board's poll loop; snapshot refs; the `maestro/integration` source; tables `board_attempt`, `board_check`, `board_flake`, plus queue and bundle rows | yes | 1–8 |
 | Contracts | `.orchestra/ci.json` (§5.1, §7.4); the new rows and states in `docs/specs/projects-board/CONTRACT.md` | repo file, read at run time | 2, 4 |
-| Playbooks | `maestro-lead` `land`: Publish becomes "verify, then `board_queue`"; `track`: `<integration>` lines and `Flaky:` citing `board_flake`; `maestro-plan`: the area overlap rule | yes | 4, 5, 9 |
+| Playbooks | `maestro-lead` `land`: Publish becomes "verify, write the record, then `board_queue`", and its golden shows a record; `track`: `<integration>` lines and `Flaky:` citing `board_flake`; `maestro-plan`: the area overlap rule | yes | 4, 5, 9 |
 | Seat skill | `archie`'s plan skill: the `area` and `order` fields. `archie` gets no tool. | yes | 9 |
 | Guards | One new rule in `script/guards/rules`, `merge-outside-conveyor`: added code that merges a PR into a base branch (`gh pr merge` or the merge API) outside the conveyor module. The CI contract's own rules, such as `merge` being `merge`, are checked by its reader, which refuses an invalid file, not by a guard. Maestro writing integration state is impossible by type, since no such field exists (§4). | CI | 4 |
-| Templates | Fixed formats, each made by the host in one place: the bundle PR title and body (members, head SHAs, tested-on base, skew), `<integration>` lines, attempt `cause` strings, and the base-red fix card. `archie`'s plan template gains `area` and `order`. | yes | 4, 5, 9 |
+| Templates | Fixed formats, each made by the host in one place: the PR record, the card PR body rendered from it, and the Atlas logbook entry written at merge (§4.5); the commit trailers; the bundle PR title and body (members, head SHAs, tested-on base, skew), `<integration>` lines, attempt `cause` strings, and the base-red fix card. `archie`'s plan template gains `area` and `order`. | yes | 4, 5, 9 |
 | Checklists | None new. Every precondition the host can check is a refusal, not a list item (§4.1). The judgment that remains already has one: `land`'s verification. The flaky verdict keeps its one rule: a merge names the cause or a card to find it (§6.4). | | |
 | Repo only | `conveyor-maintenance` and `conveyor-ownership` in `.orchestra/skills`; a guide in `docs/guides` | no | each WP updates them |
 
@@ -579,7 +646,7 @@ phase.
 | **1. Ledger and push-early** | `board_attempt` with stored `writePaths`; snapshot refs on seat return and on the 10 min timer; the `local` and `pushed` states; the `maestro/integration` source with the dead-Session and missing-worktree lines; `track` playbook edits | Kill a seat mid-task: its card shows `pushed`, and its worktree is restored from the ref |
 | **2. CI facts** | `.orchestra/ci.json` reader and defaults; `ci_run`; `board_check` keyed by tree; the `scoped-green` and `scoped-red` states | A green scoped run stays valid after Maestro's commit with the same tree, and drops after an edit |
 | **3. Conflict notices** | Base-advance diff, matched against queued cards' write sets with `conflictVerdict`, then `merge-tree`; the `conflicts` state and its `<integration>` line | A merge that touches a card's write set notifies only that card; a merge outside it notifies none |
-| **4. Queue and green bundles** | `board_queue`, `board_dequeue` and their preconditions; pools; cut rules a–d; assembly; the bundle PR with `full.label`; merge on green; `onBaseMoved`; the card's affected set from `turbo` (§7.1), which `merge-if-disjoint` and the eject rerun use in phase 1 too; `land` playbook Publish rewritten to "verify, then `board_queue`" | Three verified cards merge through one bundle and one full run; all three ship |
+| **4. Queue and green bundles** | `board_queue`, `board_dequeue` and their preconditions; pools; cut rules a–d; assembly; the bundle PR with `full.label`; merge on green; `onBaseMoved`; the card's affected set from `turbo` (§7.1), which `merge-if-disjoint` and the eject rerun use in phase 1 too; the PR record, host-opened PRs, commit trailers, the bundle body and the logbook entry at merge (§4.5); `land` playbook Publish rewritten to "verify, write the record, then `board_queue`" | Three verified cards merge through one bundle and one full run; all three ship; each PR shows host-filled cost, checks and review records; a record with no Risk is refused at enqueue; the merged card has one logbook entry |
 | **5. Red bundles** | Bundle size from the red rate; the four ledger numbers on the board; infrastructure rerun, base check and flake probe, isolation with in-bundle dependencies, halving, eject into rework, rebuild, dissolve, `board_flake` and the `board_bundle` verdict, base red (§6.8) | A seeded failing member is ejected with the right cause, and the rest merge on the rebuilt bundle; a seeded interaction is found by halving; a seeded red on base ejects no member |
 | **6. Recovery** | Restart reconcile for pools, bundles and snapshots | Kill the host between "bundle green" and "merge": on restart it merges once, with no duplicate bundle |
 
@@ -609,3 +676,5 @@ parallel: WP9 touches only `archie`'s plan skill, `maestro-plan` and the enqueue
 5. **Phase 2 trusts the affected graph between whole-suite runs** (§7.3). A break the graph misses is caught by the
    next epic bundle, and pauses only the lanes it touches. Recommended: yes, with no extra whole-suite runs (`fullEvery` 0) for this
    repository, because epics already close often.
+6. **Model spend stays off GitHub** (§4.5). PRs show attempts, CI minutes and wall time; tokens and spend show only in
+   the app. Recommended: yes, matching the board contract; a project may opt in later if its repository is private.
