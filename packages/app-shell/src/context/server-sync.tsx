@@ -605,6 +605,14 @@ export function createServerSyncContextInner(
       queryClient.invalidateQueries({
         predicate: (query) => query.queryKey[0] === serverSDK.scope && query.queryKey[2] === "providers",
       })
+      // Open directories keep their agent list and config from their own bootstrap, and the agent list is read
+      // through ensureQueryData. Drop it and re-bootstrap them so a changed engine reaches model selection at once.
+      queryClient.removeQueries({
+        predicate: (query) => query.queryKey[0] === serverSDK.scope && query.queryKey[2] === "agents",
+      })
+      for (const directory of Object.keys(children.children)) {
+        if (children.active(directory)) queue.push(directory)
+      }
     },
   }))
 

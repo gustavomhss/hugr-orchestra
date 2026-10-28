@@ -176,6 +176,10 @@ Eyebrow: `xs`, weight 600 via `--mx-emphasis`, tracking `0.1em`, uppercase, `--o
 Under `prefers-reduced-motion` both durations become 0ms. Infinite loops (spinners, pulses) keep their own timing.
 Dialogs and their overlay have no motion on purpose: `orchestra-accessibility.spec.ts` depends on it.
 
+The opening splash (`apps/desktop/src/renderer/splash`) is the only opening mark: the comet video, at most 960 CSS px
+wide (its 1920 px source at 2x), holds its last frame until the app mounts and then fades. Loading screens underneath
+are plain `bg-background-base` surfaces marked `data-app-loading`, never a second logo.
+
 ## 6. Layout and spacing
 
 Measured at 1920×1200 in the dev app. Spacing values sit on a 2px grid; most gaps are 2, 6, 10, 14 or 20.
@@ -185,7 +189,7 @@ Measured at 1920×1200 in the dev app. Spacing values sit on a 2px grid; most ga
 | Shell | inset 12px from the window, radius 16px |
 | Panel gutter | 6px between sidebar and main glass, and inside the shell |
 | Sidebar | 230px wide, padding 14px 10px 13px, radius 10px |
-| Brand block | padding 2px 10px 16px |
+| Brand block | centered, padding 4px 10px 16px. Lockup 120×40px: the HuGR symbol plus "uGR" (`hugr-lockup-*.svg`, the wordmark's H dropped because the symbol reads as one). Below it the product name "Orchestra", 10px weight 500, uppercase, tracked 0.6em to the lockup's ~110px ink width, with a −0.6em end margin so it stays centered. Compact navigation shows only the 32px symbol. The splash and error screens keep the full 121×32 wordmark |
 | Nav item | 31px tall, padding 0 10px, gap 11px, radius 6px, 13px text, 1px between items |
 | Nav icon | 16×16px |
 | Sidebar active item | gradient fill, 1px inset rim, 3×(row−16px) rounded accent pill inset 3px from the start edge (logical, so RTL follows) |

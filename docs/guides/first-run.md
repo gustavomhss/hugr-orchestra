@@ -4,7 +4,7 @@ On first launch Orchestra does not create a folder for you. Getting started take
 
 1. **Pick a folder.** Choose the project folder Maestro works in. Orchestra never creates one for you. If the folder is empty, Orchestra asks whether to make it a git repository.
 2. **Trust it.** The same button trusts the folder. Trusting lets Orchestra start the MCP servers, plugins, formatters and language servers that the folder declares in its own config. Trust only folders you wrote or reviewed. The folder is added as a project only after trust is saved.
-3. **Connect a model.** In Providers, use your Claude subscription (Claude mode) or connect a provider with an API key. Choosing Claude mode while signed out opens Providers and signs you in first. Maestro switches to Claude Code only after the sign-in succeeds.
+3. **Connect a model.** In Providers, use your Claude subscription (Claude mode) or connect a provider with an API key. Choosing Claude mode while signed out opens Providers and signs you in first. Maestro switches to Claude Code only after the sign-in succeeds. While Orchestra reads your Claude account the option shows a spinner; when the switch is done a "Claude mode is on" notice appears and the chat's model picker lists the Claude models at once, with no reload.
 
 Once a project is open, Home is its dashboard: sessions, tasks, spend and checks. Start a chat with Maestro from "Start a session" on Home or from Chat in the sidebar.
 

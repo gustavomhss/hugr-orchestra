@@ -3,7 +3,6 @@ export * as TaskTool from "./task"
 import { createHash } from "node:crypto"
 import { isDeepStrictEqual } from "node:util"
 import { ToolFailure } from "@orchestra/llm"
-import type { Permission } from "@orchestra/schema/permission"
 import { Context, DateTime, Effect, Fiber, Layer, Option, Schema } from "effect"
 import { AgentV2 } from "../agent"
 import { Catalog } from "../catalog"
@@ -30,6 +29,7 @@ import { TaskGovernance } from "./task-governance"
 import { ToolText } from "./text"
 import { Tool } from "./tool"
 import { Tools } from "./tools"
+import { inheritedPermissions, primaryTools } from "./task-permission"
 
 export const name = "task"
 const MAX_DEPTH = 8
@@ -422,29 +422,7 @@ function requireChild(
     return new ToolFailure({ message: `Task cannot change the recorded child model: ${child.id}` })
 }
 
-/**
- * The rules every Task child inherits, as the earlier runtime derived them: the parent Session's deny and `external_directory` rules, so a
- * child is never more permissive than its parent on a denied pattern, then a deny of each `experimental.primary_tools`
- * tool, which only primary agents may use.
- */
-export function inheritedPermissions(parent: Permission.Ruleset, primary: ReadonlyArray<string>): Permission.Ruleset {
-  const inherited = parent.filter((rule) => rule.action === "external_directory" || rule.effect === "deny")
-  return [
-    ...inherited,
-    ...primary
-      .map((action) => ({ action, resource: "*", effect: "deny" as const }))
-      .filter((deny) => !inherited.some((rule) => rule.action === deny.action && rule.resource === deny.resource && rule.effect === deny.effect)),
-  ]
-}
-
-/** The configured `experimental.primary_tools`, from the highest-priority document that sets it. */
-export function primaryTools(entries: ReadonlyArray<Config.Entry>) {
-  return (
-    entries
-      .filter((entry): entry is Config.Document => entry.type === "document")
-      .findLast((entry) => entry.info.experimental?.primary_tools !== undefined)?.info.experimental?.primary_tools ?? []
-  )
-}
+export { inheritedPermissions, primaryTools }
 
 /** The child a Task call creates when neither `task_id` nor its governance names one; stable across exact retries. */
 export function taskChildID(context: Tool.Context) {

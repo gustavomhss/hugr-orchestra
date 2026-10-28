@@ -234,14 +234,14 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   display: flex;
   flex-shrink: 0;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 2px;
-  padding-block: 2px 16px;
+  padding-block: 4px 16px;
   padding-inline: 10px;
 }
 
 .orchestra-sidebar > .orchestra-brand :is(svg, img) {
-  block-size: 32px;
+  block-size: 40px;
   inline-size: auto;
   max-inline-size: 100%;
 }

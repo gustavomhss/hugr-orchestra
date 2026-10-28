@@ -29,5 +29,15 @@ export function useClaudeMode(directory: () => string | null | undefined) {
       returnTo: location.pathname,
       close: () => dialog.close(),
       navigate: (path, intent) => navigate(path, { state: intent }),
-    }).catch(() => showToast({ title: language.t("common.requestFailed") }))
+    })
+      .then((enabled) => {
+        if (!enabled) return
+        showToast({
+          variant: "success",
+          icon: "circle-check",
+          title: language.t("orchestra.providers.claudeMode.enabled"),
+          description: language.t("orchestra.providers.claudeMode.enabled.description"),
+        })
+      })
+      .catch(() => showToast({ title: language.t("common.requestFailed") }))
 }

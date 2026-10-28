@@ -64,6 +64,8 @@ export const PROVIDERS_COPY = {
   "orchestra.providers.claudeMode.checking": "Checking…",
   "orchestra.providers.claudeMode.failed": "Sign-in failed: {{message}}",
   "orchestra.providers.claudeMode.use": "Use your Claude subscription (Claude mode)",
+  "orchestra.providers.claudeMode.enabled": "Claude mode is on",
+  "orchestra.providers.claudeMode.enabled.description": "Maestro now runs on Claude Code with your Claude subscription.",
   "orchestra.providers.custom.headersHint":
     "Headers are saved in your config file. Put secrets in the API key field, which is stored securely.",
 }
@@ -133,6 +135,8 @@ export const PROVIDERS_COPY_BR: Record<keyof typeof PROVIDERS_COPY, string> = {
   "orchestra.providers.claudeMode.checking": "Verificando…",
   "orchestra.providers.claudeMode.failed": "Falha no login: {{message}}",
   "orchestra.providers.claudeMode.use": "Usar sua assinatura do Claude (modo Claude)",
+  "orchestra.providers.claudeMode.enabled": "Modo Claude ativado",
+  "orchestra.providers.claudeMode.enabled.description": "O Maestro agora roda no Claude Code com a sua assinatura do Claude.",
   "orchestra.providers.custom.headersHint":
     "Os headers são salvos no seu arquivo de configuração. Coloque segredos no campo de chave de API, que é armazenada com segurança.",
 }

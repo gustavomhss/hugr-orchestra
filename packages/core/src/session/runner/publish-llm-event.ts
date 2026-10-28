@@ -420,7 +420,7 @@ export const createLLMEventPublisher = (events: EventV2.Interface, input: Input)
           executed: event.providerExecuted === true || tool.providerExecuted,
           ...(event.providerMetadata === undefined ? {} : { metadata: event.providerMetadata }),
         }
-        // Host metadata of an Orchestra settlement of this call, such as Lean measurements.
+        // Host metadata of this call: Lean measurements of an Orchestra settlement, or the child a hosted subagent ran in.
         const metadata = LeanOutput.take({ sessionID: input.sessionID, callID: event.id })
         if ("error" in result) {
           yield* events.publish(SessionEvent.Tool.Failed, {
