@@ -104,7 +104,7 @@ describe("DockMcp", () => {
 
   test("an editor's unnamed text view takes typing and keys through focus", async () => {
     const editor = (focused: boolean) => page([
-      control("n:frame", "Untitled 1 - Mousepad", { role: 23, roleName: "frame", states: [1, 8], parentRef: null }),
+      control("n:frame", "Untitled 1 - Mousepad", { role: 23, roleName: "frame", states: [1, 8, 30], parentRef: null }),
       { ...field("n:text", ""), role: 61, roleName: "text", states: focused ? [7, 8, 12, 24, 30] : [7, 8, 24, 30], parentRef: "n:frame" }])
     const focus = { value: true }
     const d = dock((op) => {
