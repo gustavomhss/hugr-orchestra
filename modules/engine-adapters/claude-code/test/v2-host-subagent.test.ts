@@ -12,7 +12,8 @@ import { ClaudeHostOptions } from "../src/host/options"
 import { ClaudeCodeSDK } from "../src/sdk"
 import { ClaudeCodeHost } from "../src/v2/host"
 
-// Claude Code subagents as Orchestra's seats, driven like v2-host.test.ts: scripted SDK frames, no Claude Code process.
+// Claude Code subagents as Orchestra's seats, and the todo lists Claude Code keeps, driven like v2-host.test.ts:
+// scripted SDK frames, no Claude Code process.
 
 const calls: { prompt: unknown; options: Options | undefined }[] = []
 // Frames, or frames built from the client uuid the host stamped on its prompt (Claude Code echoes it on its replies).
@@ -55,7 +56,7 @@ const ports = {
   consumed: () => Effect.void,
   notify: () => Effect.void,
   todos: () => Effect.void,
-  child: () => Effect.succeed({ id: SessionSchema.ID.make("ses_child"), publish: () => Effect.void, finish: Effect.void }),
+  child: () => Effect.succeed({ id: SessionSchema.ID.make("ses_child"), publish: () => Effect.void, finish: Effect.void, todos: () => Effect.void }),
 } satisfies Pick<ExecutionHost.Turn, "question" | "memory" | "steers" | "consumed" | "notify" | "todos" | "child">
 
 const turnOf = (input: Partial<ExecutionHost.Turn> = {}): ExecutionHost.Turn => ({
@@ -84,7 +85,7 @@ const collect = (turn: ExecutionHost.Turn) =>
   ).then((events) => Array.from(events))
 const done = frame({ type: "result", subtype: "success", is_error: false, session_id: "claude-1", result: "", usage })
 
-test("a subagent's frames are recorded in the child Session of its task call, which ends with the call's result", async () => {
+test("a subagent's frames are recorded in the child Session of its task call, which ends with the call's result, and its checklist is the child's todos", async () => {
   const log: unknown[] = []
   const agentFrame = (uuid: string, parent: string | null, content: unknown[]) =>
     frame({ type: "assistant", uuid, session_id: "claude-1", parent_tool_use_id: parent, message: { content } })
@@ -95,7 +96,8 @@ test("a subagent's frames are recorded in the child Session of its task call, wh
     agentFrame("a1", null, [{ type: "tool_use", id: "t1", name: "Agent", input: { description: "Fix it", prompt: "go fix", subagent_type: "orchestra:backend" } }]),
     agentFrame("s1", "t1", [{ type: "text", text: "Looking" }, { type: "tool_use", id: "s-read", name: "Read", input: { file_path: "/project/a.ts" } }]),
     resultFrame("t1", "s-read", "a"),
-    agentFrame("s2", "t1", [{ type: "text", text: "Fixed" }]),
+    agentFrame("s2", "t1", [{ type: "text", text: "Fixed" }, { type: "tool_use", id: "s-todo", name: "TodoWrite", input: { todos: [{ content: "Fix", status: "completed", activeForm: "Fixing" }] } }]),
+    resultFrame("t1", "s-todo", "Todos have been modified successfully."),
     resultFrame(null, "t1", "Fixed"),
     // After its result, nothing more reaches the child.
     agentFrame("s3", "t1", [{ type: "text", text: "late" }]),
@@ -111,8 +113,10 @@ test("a subagent's frames are recorded in the child Session of its task call, wh
           id: SessionSchema.ID.make("ses_child"),
           publish: (event) => Effect.sync(() => void log.push({ mirrored: event })),
           finish: Effect.sync(() => void log.push("finish")),
+          todos: (list) => Effect.sync(() => void log.push({ childTodos: list })),
         }
       }),
+    todos: (list) => Effect.sync(() => void log.push({ parentTodos: list })),
   })
   await Effect.runPromise(
     ClaudeCodeHost.make.pipe(
@@ -131,10 +135,14 @@ test("a subagent's frames are recorded in the child Session of its task call, wh
   expect(log[opened]).toEqual({ child: { callID: "t1", agent: "backend", title: "Fix it", prompt: "go fix" } })
   const mirrored = log.flatMap((entry) => (typeof entry === "object" && entry !== null && "mirrored" in entry ? [entry.mirrored as { type: string }] : []))
   expect(mirrored.map((event) => event.type)).toEqual([
-    "step-start", "text-start", "text-delta", "text-end", "tool-call", "tool-result", "text-start", "text-delta", "text-end", "step-finish",
+    "step-start", "text-start", "text-delta", "text-end", "tool-call", "tool-result", "text-start", "text-delta", "text-end", "tool-call", "tool-result", "step-finish",
   ])
   expect(mirrored.find((event) => event.type === "tool-call")).toMatchObject({ name: "read", providerExecuted: true })
   expect(log.filter((entry) => entry === "finish")).toHaveLength(1)
+  // The subagent's checklist is the child's todo list, never the parent's.
+  expect(log.filter((entry) => typeof entry === "object" && entry !== null && ("childTodos" in entry || "parentTodos" in entry))).toEqual([
+    { childTodos: [{ content: "Fix", status: "completed", priority: "medium" }] },
+  ])
   // The parent keeps its own record: the task call and its result, never the subagent's text.
   const parentText = log.flatMap((entry) => {
     const event = (entry as { parent?: { type: string; text?: string } }).parent
@@ -308,3 +316,49 @@ test("Orchestra's tools are refused inside a subagent and kept off its tool list
   expect(calls.at(-1)?.options?.agents?.["orchestra:backend"]?.disallowedTools).toEqual(["mcp__orchestra__task"])
 })
 
+test("Claude Code's task list fills the todo panel as Orchestra's todo tool does, across turns", async () => {
+  const call = (id: string, name: string, input: Record<string, unknown>) =>
+    frame({ type: "assistant", uuid: `a-${id}`, session_id: "claude-1", parent_tool_use_id: null,
+      message: { content: [{ type: "tool_use", id, name, input }] } })
+  const result = (id: string, content: string, toolUseResult?: unknown) =>
+    frame({ type: "user", session_id: "claude-1", parent_tool_use_id: null, tool_use_result: toolUseResult,
+      message: { role: "user", content: [{ type: "tool_result", tool_use_id: id, content }] } })
+  const stored: { value: unknown } = { value: undefined }
+  const state = {
+    get: Effect.sync(() => stored.value),
+    update: (fn: (value: unknown) => unknown) => Effect.sync(() => void (stored.value = fn(stored.value))),
+  }
+  const written: unknown[] = []
+  const todos = (list: unknown) => Effect.sync(() => void written.push(list))
+  script = [
+    call("c1", "TaskCreate", { subject: "Plan", description: "Plan it" }),
+    result("c1", "Task #1 created successfully: Plan", { task: { id: "1", subject: "Plan" } }),
+    call("c2", "TaskCreate", { subject: "Build", description: "Build it" }),
+    result("c2", "Task #2 created successfully: Build", { task: { id: "2", subject: "Build" } }),
+    call("u1", "TaskUpdate", { taskId: "1", status: "completed" }),
+    result("u1", "Updated task #1 status", { success: true, taskId: "1", updatedFields: ["status"] }),
+    done,
+  ]
+  const first = await collect(turnOf({ state, todos }))
+
+  expect(first.filter((event) => event.type === "tool-call")).toMatchObject([
+    { name: "todowrite", input: { todos: [{ content: "Plan", status: "pending" }] } },
+    { name: "todowrite", input: { todos: [{ content: "Plan", status: "pending" }, { content: "Build", status: "pending" }] } },
+    { name: "todowrite", input: { todos: [{ content: "Plan", status: "completed" }, { content: "Build", status: "pending" }] } },
+  ])
+  expect(written.at(-1)).toEqual([
+    { content: "Plan", status: "completed", priority: "medium" },
+    { content: "Build", status: "pending", priority: "medium" },
+  ])
+
+  // The next turn starts from the list the last one left, so an update by id still lands.
+  script = [
+    call("u2", "TaskUpdate", { taskId: "2", status: "completed" }),
+    result("u2", "Updated task #2 status", { success: true, taskId: "2", updatedFields: ["status"] }),
+    call("u3", "TaskUpdate", { taskId: "1", status: "deleted" }),
+    result("u3", "Updated task #1 deleted", { success: true, taskId: "1", updatedFields: ["deleted"] }),
+    done,
+  ]
+  await collect(turnOf({ state, todos, history: [user("msg_1", "Go"), user("msg_2", "Next")] as unknown as ExecutionHost.Turn["history"] }))
+  expect(written.at(-1)).toEqual([{ content: "Build", status: "completed", priority: "medium" }])
+})

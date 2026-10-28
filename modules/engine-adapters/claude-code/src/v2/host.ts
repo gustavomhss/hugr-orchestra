@@ -18,6 +18,7 @@ import { ClaudeCodeTranscript } from "../transcript"
 import { ClaudeCodeAccountV2 } from "./account"
 import { ClaudeCodeCatalog } from "./catalog"
 import { ClaudeCodeOutput } from "./output"
+import { ClaudeCodeRecord } from "./record"
 
 export const ID = "claude-code"
 /** The legacy `session.metadata` key (`host/session.ts`), so legacy Claude-hosted sessions resume on V2. */
@@ -33,8 +34,6 @@ const UNSERVED = new Set([
 ])
 
 const EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const
-/** Claude Code's own subagent tool: Orchestra's seats are its subagents, and each call passes the `task` permission. */
-const SUBAGENT_TOOLS = new Set(["Agent", "Task"])
 /** The prefix of a seat's subagent name, as the V1 `orchestra` plugin named them. */
 const SEAT_PREFIX = "orchestra:"
 /** Seat prompt text that describes Orchestra's own loop, and its Claude Code equivalent. */
@@ -127,7 +126,7 @@ export const make = Effect.gen(function* () {
                 }
                 // A call made inside a seat's subagent is checked under that seat's own permission rules.
                 const seat = agentType ? agents[agentType]?.seat : undefined
-                const asked = SUBAGENT_TOOLS.has(tool) ? delegation(input, agents) : undefined
+                const asked = ClaudeCodeRecord.SUBAGENT_TOOLS.has(tool) ? delegation(input, agents) : undefined
                 if (asked && "allow" in asked) return asked
                 return Effect.runPromise(
                   turn.authorize({
@@ -316,12 +315,15 @@ export const make = Effect.gen(function* () {
             Effect.forkScoped,
           )
           const names = new Map<string, string>()
+          const created = new Map<string, ClaudeCodeRecord.ChecklistItem>()
           const todos = new Map<string, unknown>()
           const tasks = new Map<string, Delegation>()
+          // Claude Code's task list outlives a turn, so the copy that fills the todo panel is kept in host state.
+          const checklist: ClaudeCodeRecord.Checklist = { items: ClaudeCodeRecord.items(state.checklist), changed: false }
           // The child Session mirroring each running subagent, opened on its first frame. A closed one takes no more.
           const children = new Map<string, Effect.Success<ReturnType<typeof turn.child>> & { readonly tracker: Tracker }>()
           const closed = new Set<string>()
-          const tracker = (): Tracker => ({ names: new Map(), todos: new Map(), tasks: new Map(), seats: agents, failure: {}, emitted: new Map(), model: undefined })
+          const tracker = (): Tracker => ({ names: new Map(), todos: new Map(), tasks: new Map(), checklist: { items: [], changed: false }, created: new Map(), seats: agents, failure: {}, emitted: new Map(), model: undefined })
           const mirror = (callID: string, message: SDKMessage & { readonly type: "assistant" | "user" }) =>
             Effect.gen(function* () {
               const task = tasks.get(callID)
@@ -333,7 +335,8 @@ export const make = Effect.gen(function* () {
                 children.set(callID, entry)
                 return entry
               }))
-              yield* Effect.forEach(events({ ...message, parent_tool_use_id: null }, open.tracker), open.publish, { discard: true })
+              const settled = yield* ClaudeCodeOutput.settle(events({ ...message, parent_tool_use_id: null }, open.tracker), message, { todos: open.tracker.todos, write: open.todos, directory: turn.session.location.directory })
+              yield* Effect.forEach(settled, open.publish, { discard: true })
             })
           const close = (callID: string) =>
             Effect.gen(function* () {
@@ -388,7 +391,12 @@ export const make = Effect.gen(function* () {
                   yield* deliver(message.session_id)
                   live.keep = live.background > 0
                 }
-                return yield* ClaudeCodeOutput.settle(events(message, { names, todos, tasks, seats: agents, failure, emitted, model: turn.model?.id }), message, { todos, turn })
+                const settled = yield* ClaudeCodeOutput.settle(events(message, { names, todos, tasks, checklist, created, seats: agents, failure, emitted, model: turn.model?.id }), message, { todos, write: turn.todos, directory: turn.session.location.directory })
+                if (checklist.changed) {
+                  checklist.changed = false
+                  yield* turn.state.update((value) => ({ ...(ClaudeCodeTranscript.record(value) ? value : {}), checklist: checklist.items }))
+                }
+                return settled
               }),
             ),
             Stream.flatMap((items) => Stream.fromIterable(items)),
@@ -436,6 +444,10 @@ type Tracker = {
   readonly names: Map<string, string>
   /** Each TodoWrite call's list, recorded as its result and the Session's todos so the widget and panel show it. */
   readonly todos: Map<string, unknown>
+  /** Claude Code's task list (TaskCreate, TaskUpdate), recorded as the todo list Orchestra's todo tool keeps. */
+  readonly checklist: ClaudeCodeRecord.Checklist
+  /** The entry each TaskCreate call added, which takes its id from the call's result. */
+  readonly created: Map<string, ClaudeCodeRecord.ChecklistItem>
   /** Each delegation's seat and brief, to open the child Session that mirrors its subagent. */
   readonly tasks: Map<string, Delegation>
   /** The turn's seat subagents, to name a delegation's seat as Orchestra's task tool would. */
@@ -481,7 +493,8 @@ function events(message: SDKMessage, tracker: Tracker): LLMEvent[] {
       }
       // Orchestra tools are recorded by the runner through `turn.execute`, never by the host.
       if (block.type !== "tool_use" || block.name.startsWith(MCP_PREFIX)) return []
-      const call = shown(block.name, block.input, tracker.seats)
+      const listed = ClaudeCodeRecord.TASK_LIST_TOOLS.has(block.name) ? ClaudeCodeRecord.checklist(block.id, block.name, block.input, tracker.checklist, tracker.created) : undefined
+      const call = listed ? { name: "todowrite", input: { todos: listed }, todos: listed } : ClaudeCodeRecord.shown(block.name, block.input, tracker.seats)
       names.set(block.id, call.name)
       if (call.name === "todowrite") tracker.todos.set(block.id, call.todos)
       if ("task" in call && call.task) tracker.tasks.set(block.id, call.task)
@@ -497,6 +510,8 @@ function events(message: SDKMessage, tracker: Tracker): LLMEvent[] {
       if (block.type !== "tool_result") return []
       const name = names.get(block.tool_use_id)
       if (!name) return []
+      const added = tracker.created.get(block.tool_use_id)
+      if (added) ClaudeCodeRecord.assign(added, block.is_error === true, message.tool_use_result, tracker.checklist)
       const listed = tracker.todos.get(block.tool_use_id)
       const text = listed !== undefined && !block.is_error
         ? JSON.stringify({ todos: listed })
@@ -703,39 +718,6 @@ function safetyCall(tool: string, input: Record<string, unknown>) {
   if (tool === "Edit" || tool === "MultiEdit" || tool === "NotebookEdit") return { tool: "edit", args: { filePath: file } }
   if (tool === "Read") return { tool: "read", args: { filePath: file, limit: input.limit, offset: input.offset } }
   return { tool: PERMISSIONS[tool]?.action ?? tool.toLowerCase(), args: input }
-}
-
-/**
- * A built-in call as the Session records it: Orchestra's tool name and argument names, so the app shows the same
- * widget it shows for Orchestra's own tool. Only the record changes; Claude Code ran the call as it asked for it.
- */
-function shown(tool: string, raw: unknown, seats: ReturnType<typeof subagents>) {
-  const input = (typeof raw === "object" && raw !== null ? raw : {}) as Record<string, unknown>
-  const file = input.file_path ?? input.notebook_path
-  if (tool === "Bash") return { name: "bash", input: { command: input.command, description: input.description } }
-  if (tool === "Read") return { name: "read", input: { filePath: file, offset: input.offset, limit: input.limit } }
-  if (tool === "Write") return { name: "write", input: { filePath: file, content: input.content } }
-  if (tool === "Edit")
-    return { name: "edit", input: { filePath: file, oldString: input.old_string, newString: input.new_string, replaceAll: input.replace_all } }
-  if (tool === "MultiEdit" || tool === "NotebookEdit") return { name: "edit", input: { filePath: file } }
-  if (tool === "Glob") return { name: "glob", input: { pattern: input.pattern, path: input.path } }
-  if (tool === "Grep") return { name: "grep", input: { pattern: input.pattern, path: input.path, include: input.glob } }
-  if (tool === "WebFetch") return { name: "webfetch", input: { url: input.url, prompt: input.prompt } }
-  if (tool === "WebSearch") return { name: "websearch", input: { query: input.query } }
-  if (tool === "TodoWrite") return { name: "todowrite", input: { todos: input.todos }, todos: input.todos }
-  if (tool === "Skill") return { name: "skill", input: { name: input.skill } }
-  if (!SUBAGENT_TOOLS.has(tool)) return { name: tool, input: raw }
-  const type = typeof input.subagent_type === "string" ? input.subagent_type : ""
-  return {
-    name: "task",
-    input: { description: input.description, prompt: input.prompt, subagent_type: seats[type]?.seat ?? type, background: input.run_in_background },
-    task: {
-      seat: seats[type]?.seat,
-      title: typeof input.description === "string" ? input.description : "",
-      prompt: typeof input.prompt === "string" ? input.prompt : "",
-      background: input.run_in_background === true,
-    },
-  }
 }
 
 /** What Orchestra changes in the call's input: the sandboxed command, and the dispatch's domains for a web search. */

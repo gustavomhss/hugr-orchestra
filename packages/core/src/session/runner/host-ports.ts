@@ -114,6 +114,7 @@ export function make(input: {
       const serial = Semaphore.makeUnsafe(1).withPermit
       return {
         id,
+        todos: (list: ReadonlyArray<SessionTodo.Info>) => SessionTodo.write(database.db, events, { sessionID: id, todos: list }),
         publish: (event: LLMEvent) => serial(mirror.publish(event, [])),
         finish: serial(
           Effect.gen(function* () {
