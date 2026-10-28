@@ -3,7 +3,8 @@ export * as Mcp from "./mcp"
 // The Location's MCP servers: connects the configured servers, adds their tools to the Location's tool registry behind
 // V2 permissions, lists and reads their resources and prompts, and edits the profile's own config files. Remote servers
 // connect with the OAuth tokens the earlier runtime stored (`mcp-auth.json`); one without valid tokens reports `needs_auth` until a
-// sign-in completes.
+// sign-in completes. Servers a product module serves in process (`McpProvided`) join the configured ones while they
+// exist; a configured server of the same name wins.
 
 import path from "node:path"
 import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js"
@@ -22,7 +23,7 @@ import {
 import { ToolFailure, type ToolContent } from "@orchestra/llm"
 import { ConfigMCP } from "@orchestra/schema/config-mcp"
 import { Mcp } from "@orchestra/schema/mcp"
-import { Context, Deferred, Duration, Effect, Exit, Layer, Schema, Scope } from "effect"
+import { Context, Deferred, Duration, Effect, Exit, Fiber, Layer, Schema, Scope, Semaphore } from "effect"
 import { Config } from "./config"
 import { ConfigTrust } from "./config/trust"
 import { makeLocationNode } from "./effect/app-node"
@@ -36,6 +37,7 @@ import { McpClient } from "./mcp/client"
 import { McpOAuthCallback } from "./mcp/oauth-callback"
 import { McpOAuthPendingProvider, McpOAuthProvider, OAUTH_CALLBACK_PATH } from "./mcp/oauth-provider"
 import { McpProjectConfig } from "./mcp/project-config"
+import { McpProvided } from "./mcp/provided"
 import { McpStdio } from "./mcp/stdio"
 import { PermissionV2 } from "./permission"
 import { ToolRegistry } from "./tool/registry"
@@ -66,7 +68,8 @@ export type Prompt = Awaited<ReturnType<typeof McpCatalog.prompts>>[number] & { 
 export interface Interface {
   /**
    * Starts the configured servers on first use and waits until each one connected or failed. Servers start lazily, so
-   * a process that opens Locations without running turns never spawns them.
+   * a process that opens Locations without running turns never spawns them. Each later call re-asks the provided
+   * servers and connects or drops them before it returns.
    */
   readonly ready: () => Effect.Effect<void>
   /**
@@ -126,6 +129,8 @@ type Entry = {
   generation: number
 }
 
+type Provided = { type: "provided"; server: McpProvided.Server; disabled?: undefined; timeout?: undefined }
+
 const layer = Layer.effect(
   Service,
   Effect.gen(function* () {
@@ -136,6 +141,7 @@ const layer = Layer.effect(
     const fs = yield* FSUtil.Service
     const global = yield* Global.Service
     const auth = yield* McpAuth.Service
+    const provider = yield* McpProvided.Service
     const layerScope = yield* Scope.Scope
     const entries = new Map<string, Entry>()
     // Sign-ins waiting for their authorization code, by server.
@@ -145,10 +151,14 @@ const layer = Layer.effect(
     const removed = new Set<string>()
     // Local servers the last connect refused because the project was not approved; applyTrust retries them.
     const blocked = new Set<string>()
+    // The provided servers of the last answer, by name.
+    const provided = new Map<string, McpProvided.Server>()
 
     const configured = Effect.fnUntraced(function* () {
       const documents = (yield* config.entries()).filter((entry): entry is Config.Document => entry.type === "document")
-      const servers = new Map(documents.flatMap((document) => Object.entries(document.info.mcp?.servers ?? {})))
+      const servers = new Map<string, ConfigMCP.Local | ConfigMCP.Remote | Provided>(
+        documents.flatMap((document) => Object.entries(document.info.mcp?.servers ?? {})),
+      )
       // A repository's own config is not the user's: its local servers are commands the repository chose to run.
       // Only the user's global config can approve a project, and the document that wins a name decides its origin.
       const inGlobal = (document: Config.Document) => ConfigTrust.isUser(global.config, document)
@@ -170,6 +180,7 @@ const layer = Layer.effect(
         unapproved.delete(name)
       }
       for (const name of removed) servers.delete(name)
+      for (const [name, server] of provided) if (!servers.has(name)) servers.set(name, { type: "provided", server })
       return {
         servers,
         unapproved,
@@ -321,9 +332,14 @@ const layer = Layer.effect(
 
     const open = Effect.fnUntraced(function* (
       name: string,
-      server: ConfigMCP.Local | ConfigMCP.Remote,
+      server: ConfigMCP.Local | ConfigMCP.Remote | Provided,
       startup: number,
     ) {
+      if (server.type === "provided")
+        return yield* attach(server.server.connect(), startup).pipe(
+          Effect.map((client) => ({ client, transport: undefined, status: { status: "connected" } as Mcp.Status })),
+          Effect.catch((error) => Effect.succeed({ client: undefined, transport: undefined, status: failed(error.message) })),
+        )
       if (server.type === "local") {
         const transport = new McpStdio.OmniStdioTransport({
           command: server.command[0] ?? "",
@@ -445,12 +461,11 @@ const layer = Layer.effect(
 
     const resolved = Effect.fn("Mcp.config")(function* () {
       return Object.fromEntries(
-        Array.from((yield* configured()).servers, ([name, server]): [string, Mcp.Entry] => [
-          name,
-          server.type === "local"
-            ? { type: "local", command: [...server.command] }
-            : { type: "remote", url: server.url },
-        ]),
+        Array.from((yield* configured()).servers).flatMap(([name, server]): [string, Mcp.Entry][] => {
+          if (server.type === "provided") return []
+          if (server.type === "local") return [[name, { type: "local", command: [...server.command] }]]
+          return [[name, { type: "remote", url: server.url }]]
+        }),
       )
     })
 
@@ -747,6 +762,49 @@ const layer = Layer.effect(
         Effect.forEach(entries.values(), (current) => release(current), { concurrency: "unbounded", discard: true }),
       ]).pipe(Effect.asVoid),
     )
+    // Takes the provider's answer: forgets the servers that are gone and keeps the new or changed ones.
+    const update = Effect.fnUntraced(function* () {
+      const listed = yield* provider.servers().pipe(Effect.orElseSucceed(() => undefined))
+      if (!listed) return { gone: [], changed: [] }
+      const names = new Set(listed.map((server) => server.name))
+      const gone = Array.from(provided.keys()).filter((name) => !names.has(name))
+      const changed = listed.filter((server) => provided.get(server.name)?.key !== server.key)
+      for (const name of gone) provided.delete(name)
+      for (const server of changed) provided.set(server.name, server)
+      return { gone, changed: changed.map((server) => server.name) }
+    })
+
+    // Disconnects provided servers that are gone and connects new or changed ones, so the next turn sees them.
+    const sync = Effect.fnUntraced(function* () {
+      const delta = yield* update()
+      const found = yield* configured()
+      // A gone name that a configured server also uses keeps the configured server's connection.
+      yield* Effect.forEach(
+        delta.gone.filter((name) => !found.servers.has(name)),
+        (name) =>
+          Effect.suspend(() => {
+            const current = entries.get(name)
+            entries.delete(name)
+            if (!current) return Effect.void
+            current.generation++
+            return release(current)
+          }),
+        { discard: true },
+      )
+      yield* Effect.forEach(
+        delta.changed.filter((name) => found.servers.get(name)?.type === "provided"),
+        (name) => connect(name).pipe(Effect.ignore),
+        { concurrency: "unbounded", discard: true },
+      )
+    })
+    const syncing = Semaphore.makeUnsafe(1)
+    // Runs in the Location's scope like the first start, so an interrupted turn never abandons a half connect.
+    const refresh = () =>
+      syncing.withPermit(sync()).pipe(
+        Effect.forkIn(layerScope, { startImmediately: true }),
+        Effect.flatMap(Fiber.join),
+      )
+
     const started = yield* Deferred.make<void>()
     let starting = false
     // The first caller forks the start into the Location's scope, so its interruption never abandons a half start.
@@ -754,9 +812,10 @@ const layer = Layer.effect(
     // drain woken by a prompt still reaches its provider turn before the prompt returns.
     const ready = () =>
       Effect.suspend(() => {
-        if (starting) return Deferred.await(started)
+        if (starting) return Deferred.await(started).pipe(Effect.andThen(refresh()))
         starting = true
-        return configured().pipe(
+        return update().pipe(
+          Effect.andThen(configured()),
           Effect.flatMap((found) =>
             Effect.forEach(found.servers.keys(), (name) => connect(name).pipe(Effect.ignore), {
               concurrency: "unbounded",
@@ -805,7 +864,16 @@ const layer = Layer.effect(
 export const node = makeLocationNode({
   service: Service,
   layer,
-  deps: [Config.node, Global.node, Location.node, ToolRegistry.toolsNode, PermissionV2.node, FSUtil.node, McpAuth.node],
+  deps: [
+    Config.node,
+    Global.node,
+    Location.node,
+    ToolRegistry.toolsNode,
+    PermissionV2.node,
+    FSUtil.node,
+    McpAuth.node,
+    McpProvided.node,
+  ],
 })
 
 function serverInfo(body: string) {

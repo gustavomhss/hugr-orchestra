@@ -201,6 +201,7 @@
     "./mcp/oauth-callback": "./src/mcp/oauth-callback.ts",
     "./mcp/oauth-provider": "./src/mcp/oauth-provider.ts",
     "./mcp/project-config": "./src/mcp/project-config.ts",
+    "./mcp/provided": "./src/mcp/provided.ts",
     "./mcp/stdio": "./src/mcp/stdio.ts",
     "./model": "./src/model.ts",
     "./models-dev": "./src/models-dev.ts",
