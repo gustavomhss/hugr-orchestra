@@ -93,6 +93,23 @@ export interface Turn {
    * Unlike everything else on a Turn it outlives the turn: the host may call it after its stream has ended.
    */
   readonly notify: (input: { readonly id: string; readonly text: string }) => Effect.Effect<void>
+  /**
+   * Opens the child Session that mirrors a subagent the engine ran for the parent's task call `callID`, the way
+   * Orchestra's task tool would have opened it: same parent, seat agent, inherited permissions and the delegated prompt
+   * as its user message. The call's progress names the child, so the task row links to it. The child is a record only:
+   * it is never woken, and its events come from the engine through `publish`. `finish` settles what is left open; its
+   * step carries no cost, which the parent's step already counts. Reopening the same call adopts the same child.
+   */
+  readonly child: (input: {
+    readonly callID: string
+    readonly agent: AgentV2.ID
+    readonly title: string
+    readonly prompt: string
+  }) => Effect.Effect<{
+    readonly id: SessionSchema.ID
+    readonly publish: (event: LLMEvent) => Effect.Effect<void>
+    readonly finish: Effect.Effect<void>
+  }>
   /** The host's durable state, `session.metadata[host.stateKey]`. */
   readonly state: {
     readonly get: Effect.Effect<unknown>

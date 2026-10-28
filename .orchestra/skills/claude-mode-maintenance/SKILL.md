@@ -37,6 +37,10 @@ Design and decisions: `docs/specs/claude-mode/meta-harness.md`. User guide: `doc
 - Orchestra MCP tools are refused inside a subagent (`MAIN_ONLY`, at the gate and in `canUseTool` via `agentID`) and
   listed in each subagent's `disallowedTools`: the MCP request carries no agent, so they would run under the main
   agent's registry and permissions.
+- A subagent's frames (`parent_tool_use_id` set) never reach the parent's stream: `mirror` records them in the child
+  Session `Turn.child` opens for that task call (`packages/core/src/session/runner/llm.ts`), and `close` ends it on the
+  call's result. The child is never woken and its step costs 0. Its permissions come from `TaskPermission`, shared with
+  the task tool; `tool/task.ts` cannot be imported by the runner (cycle through `SessionV2`).
 - Governed dispatch stays MCP: `mcp__orchestra__task`, `mcp__orchestra__maestro_request_review`.
 - Billing: never change prompts, headers or tools to influence how Anthropic classifies usage, and never probe it.
 

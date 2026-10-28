@@ -58,7 +58,8 @@ const ports = {
   steers: Stream.empty,
   consumed: () => Effect.void,
   notify: () => Effect.void,
-} satisfies Pick<ExecutionHost.Turn, "question" | "memory" | "steers" | "consumed" | "notify">
+  child: () => Effect.succeed({ id: SessionSchema.ID.make("ses_child"), publish: () => Effect.void, finish: Effect.void }),
+} satisfies Pick<ExecutionHost.Turn, "question" | "memory" | "steers" | "consumed" | "notify" | "child">
 
 const turnOf = (input: Partial<ExecutionHost.Turn> = {}): ExecutionHost.Turn => ({
   session: { id: SessionSchema.ID.make("ses_host"), location: { directory: "/project" } } as unknown as SessionSchema.Info,
@@ -194,6 +195,65 @@ test("built-in calls are recorded under Orchestra's tool names, so the app shows
     name: "todowrite",
     result: { type: "text", value: JSON.stringify({ todos }) },
   })
+})
+
+test("a subagent's frames are recorded in the child Session of its task call, which ends with the call's result", async () => {
+  const log: unknown[] = []
+  const agentFrame = (uuid: string, parent: string | null, content: unknown[]) =>
+    frame({ type: "assistant", uuid, session_id: "claude-1", parent_tool_use_id: parent, message: { content } })
+  const resultFrame = (parent: string | null, id: string, content: string) =>
+    frame({ type: "user", session_id: "claude-1", parent_tool_use_id: parent,
+      message: { role: "user", content: [{ type: "tool_result", tool_use_id: id, content }] } })
+  script = [
+    agentFrame("a1", null, [{ type: "tool_use", id: "t1", name: "Agent", input: { description: "Fix it", prompt: "go fix", subagent_type: "orchestra:backend" } }]),
+    agentFrame("s1", "t1", [{ type: "text", text: "Looking" }, { type: "tool_use", id: "s-read", name: "Read", input: { file_path: "/project/a.ts" } }]),
+    resultFrame("t1", "s-read", "a"),
+    agentFrame("s2", "t1", [{ type: "text", text: "Fixed" }]),
+    resultFrame(null, "t1", "Fixed"),
+    // After its result, nothing more reaches the child.
+    agentFrame("s3", "t1", [{ type: "text", text: "late" }]),
+    agentFrame("a2", null, [{ type: "text", text: "Done" }]),
+    done,
+  ]
+  const turn = turnOf({
+    seats: [seat("backend")],
+    child: (input) =>
+      Effect.sync(() => {
+        log.push({ child: input })
+        return {
+          id: SessionSchema.ID.make("ses_child"),
+          publish: (event) => Effect.sync(() => void log.push({ mirrored: event })),
+          finish: Effect.sync(() => void log.push("finish")),
+        }
+      }),
+  })
+  await Effect.runPromise(
+    ClaudeCodeHost.make.pipe(
+      Effect.flatMap((host) => Stream.runForEach(host.stream(turn), (event) => Effect.sync(() => void log.push({ parent: event })))),
+      Effect.provide(sdk),
+      Effect.provideService(ClaudeCodeSDK.Environment, {}),
+    ),
+  )
+
+  const at = (match: (entry: unknown) => boolean) => log.findIndex(match)
+  const parentCall = at((entry) => (entry as { parent?: { type: string } }).parent?.type === "tool-call")
+  const opened = at((entry) => typeof entry === "object" && entry !== null && "child" in entry)
+  // The task row exists before its child is linked to it.
+  expect(parentCall).toBeGreaterThanOrEqual(0)
+  expect(opened).toBeGreaterThan(parentCall)
+  expect(log[opened]).toEqual({ child: { callID: "t1", agent: "backend", title: "Fix it", prompt: "go fix" } })
+  const mirrored = log.flatMap((entry) => (typeof entry === "object" && entry !== null && "mirrored" in entry ? [entry.mirrored as { type: string }] : []))
+  expect(mirrored.map((event) => event.type)).toEqual([
+    "step-start", "text-start", "text-delta", "text-end", "tool-call", "tool-result", "text-start", "text-delta", "text-end", "step-finish",
+  ])
+  expect(mirrored.find((event) => event.type === "tool-call")).toMatchObject({ name: "read", providerExecuted: true })
+  expect(log.filter((entry) => entry === "finish")).toHaveLength(1)
+  // The parent keeps its own record: the task call and its result, never the subagent's text.
+  const parentText = log.flatMap((entry) => {
+    const event = (entry as { parent?: { type: string; text?: string } }).parent
+    return event?.type === "text-delta" ? [event.text] : []
+  })
+  expect(parentText).toEqual(["Done"])
 })
 
 test("Orchestra tools are served over the in-process MCP server and settle through the runner, never as host events", async () => {

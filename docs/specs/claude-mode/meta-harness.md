@@ -69,12 +69,18 @@ The parts of D-C2 that replaced the meta-harness shape are reversed:
 
    Only Orchestra's record changes, after Claude Code ran the call. The prompt, tools, inputs and results Claude Code
    sends to and receives from Claude are untouched, and the permission gate still reads Claude Code's own names.
+9. **Subagent runs in a child Session.** A subagent's frames carry its `Agent` call's id (`parent_tool_use_id`). The
+   host records them in a child Session the runner opens through `Turn.child`, as the task tool would: the parent
+   Session as parent, the seat as agent, the parent's inherited permissions and the delegated prompt as its user
+   message, with the task row's progress naming the child, so the row opens it. The child is a record only: it is
+   never woken and its step carries no cost, which the parent's step already counts. It ends with the call's result.
 
 ## Not in scope (known limits)
 
-- A subagent's run is one `task` row in the Orchestra session, with the subagent's final text as its result. Its own
-  tool calls are not mirrored into a child Session, and it has no Task Governance dispatch reservation, as in V1
-  before its mirror landed. Mirroring needs a runner capability to open and write a child Session.
+- A background subagent's frames that arrive after the turn's result are not mirrored; its child Session is closed
+  when the turn's stream ends. Mirrored subagents have no Task Governance dispatch reservation.
+- A subagent type that is not an Orchestra seat is recorded under the main agent's id; every child carries the parent
+  turn's model.
 - Claude Code's todos are not written to the Session's todo list (the todo panel); the todo widget in the transcript
   shows them.
 - An `edit` row has no diff metadata, so the edit widget shows the change from its input only.

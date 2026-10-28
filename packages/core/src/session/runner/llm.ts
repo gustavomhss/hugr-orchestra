@@ -10,6 +10,8 @@ import {
   type ToolCall,
 } from "@orchestra/llm"
 import { Cause, Context, DateTime, Effect, FiberSet, Layer, Option, Queue, Scope, Semaphore, Stream } from "effect"
+import { createHash } from "node:crypto"
+import path from "path"
 import { asc, eq } from "drizzle-orm"
 import { AgentV2 } from "../../agent"
 import { CapabilityInvocation } from "../../capability/invocation"
@@ -29,6 +31,7 @@ import { MeetingContext } from "../meeting-context"
 import { ToolRegistry } from "../../tool/registry"
 import { ToolSafety } from "../../tool-safety"
 import { TaskGovernance } from "../../tool/task-governance"
+import { TaskPermission } from "../../tool/task-permission"
 import { Mcp } from "../../mcp"
 import { ToolOutputStore } from "../../tool-output-store"
 import { SessionExecution } from "../execution"
@@ -61,6 +64,7 @@ import { RelayWorkflowSession } from "../../relay-workflow-session"
 import { FSUtil } from "../../fs-util"
 import { AppProcess } from "../../process"
 import { SkillV2 } from "../../skill"
+import { RelativePath } from "../../schema"
 
 /**
  * Runs one durable coding-agent Session until it settles.
@@ -436,6 +440,88 @@ const layer = Layer.effect(
         }).pipe(
           Effect.andThen(execution ? execution.wake(session.id) : Effect.void),
         )
+      const child: ExecutionHost.Turn["child"] = (input) =>
+        Effect.gen(function* () {
+          const hash = (domain: string) =>
+            createHash("sha256").update(JSON.stringify([domain, session.id, input.callID])).digest("hex")
+          const id = SessionSchema.ID.make(`ses_${hash("host-child")}`)
+          const childModel = {
+            id: model ? ModelV2.ID.make(model.id) : (modelRef?.id ?? ModelV2.ID.make("default")),
+            providerID: model ? ProviderV2.ID.make(model.provider) : (modelRef?.providerID ?? ProviderV2.ID.make("anthropic")),
+          }
+          if (!(yield* store.get(id))) {
+            const ref = Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID })
+            yield* events.publish(
+              SessionEvent.Created,
+              {
+                sessionID: id,
+                timestamp: yield* DateTime.now,
+                projectID: location.project.id,
+                location: ref,
+                subdirectory: RelativePath.make(
+                  path.relative(location.project.directory, location.directory).replaceAll("\\", "/"),
+                ),
+                title: input.title,
+                parentID: session.id,
+                agent: input.agent,
+                model: childModel,
+              },
+              { location: ref },
+            )
+            const rules = TaskPermission.inheritedPermissions(
+              yield* store.permissions(session.id),
+              TaskPermission.primaryTools(yield* config.entries()),
+            )
+            if (rules.length > 0)
+              yield* events.publish(SessionEvent.PermissionChanged, {
+                sessionID: id,
+                timestamp: yield* DateTime.now,
+                permission: rules.map((rule) => ({ permission: rule.action, pattern: rule.resource, action: rule.effect })),
+              })
+          }
+          yield* withPublication(
+            events.publish(SessionEvent.Tool.Progress, {
+              sessionID: session.id,
+              assistantMessageID: yield* publisher.assistantMessageID(input.callID),
+              callID: input.callID,
+              timestamp: yield* DateTime.now,
+              structured: { sessionId: id, parentSessionId: session.id, agentId: input.agent, title: input.title },
+              content: [],
+            }),
+          )
+          // Admitted and promoted at once, never woken: the engine already runs this prompt.
+          yield* SessionInput.admit(db, events, {
+            id: SessionMessage.ID.make(`msg_${hash("host-child-prompt")}`),
+            sessionID: id,
+            prompt: Prompt.make({ text: input.prompt }),
+            delivery: "steer",
+          })
+          yield* SessionInput.promoteSteers(db, events, id, yield* EventV2.latestSequence(db, id))
+          const mirror = createLLMEventPublisher(events, { sessionID: id, agent: input.agent, model: childModel })
+          const serial = Semaphore.makeUnsafe(1).withPermit
+          return {
+            id,
+            publish: (event: LLMEvent) => serial(mirror.publish(event, [])),
+            finish: serial(
+              Effect.gen(function* () {
+                yield* mirror.flush()
+                yield* mirror.failUnsettledTools("Subagent ended without a tool result")
+                const settlement = mirror.stepSettlement()
+                if (!settlement || mirror.hasProviderError()) return
+                yield* events.publish(SessionEvent.Step.Ended, {
+                  sessionID: id,
+                  timestamp: yield* DateTime.now,
+                  assistantMessageID: yield* mirror.startAssistant(),
+                  finish: settlement.finish,
+                  // The parent's step already carries what the engine billed for the subagent.
+                  cost: 0,
+                  tokens: settlement.tokens,
+                  usageKnown: settlement.usageKnown,
+                })
+              }),
+            ),
+          }
+        })
       const source = request
         ? llm.stream(request)
         : host && agent.info
@@ -456,6 +542,7 @@ const layer = Layer.effect(
               steers,
               consumed: (id) => Effect.sync(() => void liveSteers.delete(id)),
               notify,
+              child,
               state: ExecutionHost.state(db, session.id, host.stateKey),
             })
           : Stream.die("SessionRunner: no provider for this turn")

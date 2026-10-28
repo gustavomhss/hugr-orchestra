@@ -316,6 +316,35 @@ export const make = Effect.gen(function* () {
           )
           const names = new Map<string, string>()
           const todos = new Map<string, unknown>()
+          const tasks = new Map<string, Delegation>()
+          // The child Session mirroring each running subagent, opened on its first frame. A closed one takes no more.
+          const children = new Map<string, Effect.Success<ReturnType<typeof turn.child>> & { readonly tracker: Tracker }>()
+          const closed = new Set<string>()
+          const tracker = (): Tracker => ({ names: new Map(), todos: new Map(), tasks: new Map(), seats: agents, failure: {}, emitted: new Map(), model: undefined })
+          const mirror = (callID: string, message: SDKMessage & { readonly type: "assistant" | "user" }) =>
+            Effect.gen(function* () {
+              const task = tasks.get(callID)
+              if (!task || closed.has(callID)) return
+              const open = children.get(callID) ?? (yield* Effect.gen(function* () {
+                const child = yield* turn.child({ callID, agent: task.seat ?? turn.agent.id, title: task.title, prompt: task.prompt })
+                yield* child.publish(LLMEvent.stepStart({ index: 0 }))
+                const entry = { ...child, tracker: tracker() }
+                children.set(callID, entry)
+                return entry
+              }))
+              yield* Effect.forEach(events({ ...message, parent_tool_use_id: null }, open.tracker), open.publish, { discard: true })
+            })
+          const close = (callID: string) =>
+            Effect.gen(function* () {
+              closed.add(callID)
+              const open = children.get(callID)
+              if (!open) return
+              children.delete(callID)
+              yield* open.publish(LLMEvent.stepFinish({ index: 0, reason: "stop" }))
+              yield* open.finish
+            })
+          // What a stopped or failed turn leaves running is settled with it.
+          yield* Effect.addFinalizer(() => Effect.forEach([...children.keys()], close, { discard: true }))
           // Block ids by assistant message, for the retract a refusal fallback or a superseding reply asks for.
           const emitted = new Map<string, string[]>()
           // The iterator is pulled through a view without `return`: stopping at the result must not close the query.
@@ -325,7 +354,21 @@ export const make = Effect.gen(function* () {
             Stream.takeUntil((message) => message.type === "result"),
             Stream.mapEffect((message) =>
               Effect.gen(function* () {
-                if (message.type === "assistant" && message.parent_tool_use_id === null && !message.error)
+                // A subagent's frames are its child Session's, never the parent's.
+                if ((message.type === "assistant" || message.type === "user") && message.parent_tool_use_id !== null) {
+                  yield* mirror(message.parent_tool_use_id, message)
+                  return []
+                }
+                // A delegation's result ends its subagent, unless it runs in the background and reports later.
+                if (message.type === "user" && Array.isArray(message.message.content))
+                  yield* Effect.forEach(
+                    message.message.content.flatMap((block) =>
+                      block.type === "tool_result" && tasks.get(block.tool_use_id)?.background === false ? [block.tool_use_id] : [],
+                    ),
+                    close,
+                    { discard: true },
+                  )
+                if (message.type === "assistant" && !message.error)
                   progress.answered = true
                 if (message.type === "result") progress.resulted = true
                 if (message.type === "system" && message.subtype === "init")
@@ -344,7 +387,7 @@ export const make = Effect.gen(function* () {
                   yield* deliver(message.session_id)
                   live.keep = live.background > 0
                 }
-                return events(message, { names, todos, seats: agents, failure, emitted, model: turn.model?.id })
+                return events(message, { names, todos, tasks, seats: agents, failure, emitted, model: turn.model?.id })
               }),
             ),
             Stream.flatMap((items) => Stream.fromIterable(items)),
@@ -381,10 +424,19 @@ export const contribution: Host.Contribution = {
   references: ClaudeCodeCatalog.layer,
 }
 
+type Delegation = {
+  readonly seat: ReturnType<typeof subagents>[string]["seat"] | undefined
+  readonly title: string
+  readonly prompt: string
+  readonly background: boolean
+}
+
 type Tracker = {
   readonly names: Map<string, string>
   /** Each TodoWrite call's list, recorded as its result so the todo widget shows the checklist. */
   readonly todos: Map<string, unknown>
+  /** Each delegation's seat and brief, to open the child Session that mirrors its subagent. */
+  readonly tasks: Map<string, Delegation>
   /** The turn's seat subagents, to name a delegation's seat as Orchestra's task tool would. */
   readonly seats: ReturnType<typeof subagents>
   readonly failure: { uuid?: string; message?: string }
@@ -394,7 +446,7 @@ type Tracker = {
   readonly model: string | undefined
 }
 
-/** Maps one main-thread SDK frame to runner events; subagent frames stay inside their Agent call. */
+/** Maps one main-thread SDK frame to runner events; a subagent's frames go to its child Session (`mirror`). */
 function events(message: SDKMessage, tracker: Tracker): LLMEvent[] {
   const { names, failure, emitted } = tracker
   if (message.type === "assistant" && message.supersedes?.some((uuid) => uuid === failure.uuid)) failure.message = undefined
@@ -431,6 +483,7 @@ function events(message: SDKMessage, tracker: Tracker): LLMEvent[] {
       const call = shown(block.name, block.input, tracker.seats)
       names.set(block.id, call.name)
       if (call.name === "todowrite") tracker.todos.set(block.id, call.todos)
+      if ("task" in call) tracker.tasks.set(block.id, call.task)
       ids.push(block.id)
       return [LLMEvent.toolCall({ id: block.id, name: call.name, input: call.input, providerExecuted: true })]
     })
@@ -675,6 +728,12 @@ function shown(tool: string, raw: unknown, seats: ReturnType<typeof subagents>) 
   return {
     name: "task",
     input: { description: input.description, prompt: input.prompt, subagent_type: seats[type]?.seat ?? type, background: input.run_in_background },
+    task: {
+      seat: seats[type]?.seat,
+      title: typeof input.description === "string" ? input.description : "",
+      prompt: typeof input.prompt === "string" ? input.prompt : "",
+      background: input.run_in_background === true,
+    },
   }
 }
 
