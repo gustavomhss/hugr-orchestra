@@ -1,6 +1,6 @@
 ---
 name: atlas-usage
-description: How a contributor or agent reads and writes Atlas — the CLI commands and their arguments, ratifying committed knowledge, the Orchestra tools, merging and setup, and what surprises people
+description: Use when running or scripting Atlas from the CLI, MCP or the Orchestra tools. How a contributor or agent reads and writes Atlas — the CLI commands and their arguments, ratifying committed knowledge, the Orchestra tools, merging and setup, and what surprises people
 ---
 
 # Using Atlas
@@ -50,4 +50,5 @@ Every command acts on the working directory, so run it at the repository root. `
 - Without an actor every CLI write is denied, and with one it is committed (skill `atlas-ownership`, Identity).
 - `stale:true` or `emitted:false` is a signal to act on: `guidance.next` names the fix.
 - What you commit under `.atlas/` is a claim. A clone applies your knowledge row only under the trust rule (skill `atlas-ownership`); otherwise run `atlas promote` there.
+- On a public repository card, attempt and context files travel redacted (no free text, no spend) and transcripts are not committed; memory and knowledge rows are not redacted yet, so do not commit `.atlas/members/*/memory/` or `knowledge/` there.
 - `atlas: knowledge replay {...}` on stderr means some committed rows did not apply: `missing` is a blob not committed, `rejected` a torn or misfiled line, `unreadable` a folder Atlas could not read.
