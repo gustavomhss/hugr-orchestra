@@ -73,7 +73,7 @@ Distinguish supplied check statuses: `PASS` means actual cited check passed with
 
 ## Source method and limits
 
-Source pin: `abf7a72c77fcaeee1206400a8270b2581ae9839c`.
+Source pin: `abf7a72c77fcaeee1206400a8270b2581ae9839c`. The `maestro-plan` playbooks cited below exist only at that pin: their planning content moved into this tree.
 
 - maestro-plan-decompose (`modules/maestro/coordination/playbooks/maestro-plan/decompose/SKILL.md`), “Procedure” 1–7: five headings, baseline/coverage, responsibility slicing, dependencies vs conflicts, sizing and `partitionPlan` boundary.
 - Cold coverage review (`modules/maestro/coordination/playbooks/maestro-plan/decompose/suite-review/SKILL.md`): demand-only independent critique and uncertainty limits. Upstream authors the request/revision; host coordinates the reviewer and acceptance judgment.

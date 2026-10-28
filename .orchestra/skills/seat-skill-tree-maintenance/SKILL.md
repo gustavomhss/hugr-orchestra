@@ -13,7 +13,7 @@ Design: `docs/specs/seat-framework/skill-tree.md`. User view: `docs/guides/skill
   `modules/specialists/<id>/skills` for backend and archie, `packages/<id>-specialist/skills` for the others.
 - Shared roots (`team-*`, today `team-stack`) live once in `modules/specialists/team/skills` (`Seats.sharedSource()`).
   A seat that needs one lists it in its own `skills`.
-- Maestro's playbooks are a tree too, under `modules/maestro/coordination/playbooks`.
+- Maestro's playbooks are a tree too, under `modules/maestro/coordination/playbooks`. They hold orchestration and project management only: planning content goes to archie, implementation guidance to backend.
 - A release embeds every tree through `apps/cli/script/packaged-skills.ts`; `seat-skill-root.ts` extracts it to the
   cache at run time. Running from source reads the folders in place.
 

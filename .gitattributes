@@ -19,9 +19,6 @@ packages/app-shell/src/pages/session/orchestra-evidence-fixtures/** -text
 packages/*-specialist/skills/** text=auto eol=lf
 modules/specialists/*/skills/** text=auto eol=lf
 modules/maestro/coordination/src/seats/prompt/*.txt text eol=lf
-modules/maestro/coordination/playbooks/maestro-plan/decompose/SKILL.md text eol=lf
-modules/maestro/coordination/playbooks/maestro-plan/contract/SKILL.md text eol=lf
-modules/maestro/coordination/playbooks/maestro-plan/pack/SKILL.md text eol=lf
 # Generated Atlas boundary: the contract is its bytes. A CRLF checkout would also add a carriage return to the line
 # break inside a joined template literal, changing what the code produces, so Windows checkouts must not convert it.
 packages/atlas-boundary/src/generated/** -text

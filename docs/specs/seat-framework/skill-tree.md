@@ -125,11 +125,15 @@ The ten playbooks become one tree, grouped by the moment of the work:
 
 ```
 frame-request          request intake (keeps its name: the app and other Sessions address it)
-maestro-plan           decompose, contract, pack
+maestro-plan           get a plan authored by archie, reviewed cold, adopted or returned
 maestro-run            loop, governed, verify
 maestro-repo           repo-maintenance, arsenal-operators
-maestro-composer       FastAPI reuse through the composer plugin
 ```
+
+Maestro orchestrates and manages the work; it does not plan or implement. `maestro-plan` is therefore one leaf that
+holds only Maestro's side of planning (facts to hand over, the cold coverage review, adopt or return). Authoring
+lives in archie's `archie-plan` tree. The old `maestro-composer` playbook is gone: the composer plugin it described
+left with the V1 runtime, and backend gains composer guidance only when that tool returns through its own interface.
 
 `PlaybookContent` applies the same tree rules as `SeatSkillContent`. Other agents stay denied every Maestro node, as
 they are denied playbooks today.

@@ -56,7 +56,7 @@ Maestro reads compact returns first, then needed evidence, arranges independent 
 
 ## Source method and limits
 
-Source pin: `abf7a72c77fcaeee1206400a8270b2581ae9839c`.
+Source pin: `abf7a72c77fcaeee1206400a8270b2581ae9839c`. The `maestro-plan` playbooks cited below exist only at that pin: their planning content moved into this tree.
 
 - maestro-plan-pack (`modules/maestro/coordination/playbooks/maestro-plan/pack/SKILL.md`), “Procedure” 1–5/8, “Exact tool sequence and baseline check” and “Output schema”: bounded anchors/facts, context budget, compact returns and baseline/diff rules. Procedure 6–7's dispatch/arm/authority remain host work; unavailable source operations do not transfer.
 - maestro-plan-contract (`modules/maestro/coordination/playbooks/maestro-plan/contract/SKILL.md`), “Output schema”: exact bounded consumer anchors and source refresh.
