@@ -177,9 +177,10 @@ Seats never commit. The host commits on their behalf:
   - A card has its own folder.
   - An attempt and a session each get a new file.
 - **When two branches append to the same file,** union keeps both lines and the fold dedupes by hash.
-- **GitHub's own merge does not run custom drivers,** and whether it honors `merge=union` must be probed before
-  build step 1 lands. If it does not, the host merges locally (where `union` and later the `orchestra-atlas` driver
-  run) and fast-forwards the base branch to the tested commit, which is what the merge queue does anyway.
+- **GitHub's own merge runs no custom drivers and ignores `merge=union`.** The merge queue spike (#1114) proved it:
+  the server merge stops with a conflict on lines that union would keep. So the host merges locally, where `union`
+  and later the `orchestra-atlas` driver run, and fast-forwards the base branch to the tested commit. The merge
+  queue lands every bundle this way.
 - **The designed `orchestra-atlas` driver** (`merge.ts`, set-union then re-fold) replaces union once it is wired. The
   layout does not change.
 - **Blobs** are write-once and never conflict.
@@ -250,7 +251,6 @@ Notes for the one-shot `atlas migrate-layout` command:
 ## 8. Build order
 
 1. **Layout and union.**
-   - Probe GitHub's merge against `merge=union` (§4).
    - Add the path helpers, the `.gitattributes` rule and the `.gitignore` change.
    - Move memory (per seat), orientation and review into the tree.
    - Ship `atlas migrate-layout`.
