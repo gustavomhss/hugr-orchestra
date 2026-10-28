@@ -213,6 +213,12 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] [
   color: var(--orchestra-sidebar-key-text);
   background: var(--orchestra-sidebar-key-background);
 }
+[data-orchestra-palette="amoled"] .orchestra-nav-group {
+  color: var(--orchestra-sidebar-footer);
+}
+[data-orchestra-palette="amoled"] .orchestra-nav-group-chevron {
+  color: inherit;
+}
 [data-orchestra-palette="amoled"] .orchestra-nav-rule {
   background: var(--orchestra-sidebar-rule);
 }
