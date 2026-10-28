@@ -151,7 +151,9 @@ export function locate(roots: Node[], wanted: Handle) {
 export function line(node: Node) {
   const states = [has(node, 1) && "active", has(node, 12) && "focused", has(node, 4) && "checked", has(node, 23) && "selected",
     has(node, 10) && "expanded", has(node, 9) && "expandable", !has(node, 8) && interactive(node) && "disabled"].filter(Boolean)
-  return `${node.role}${node.name ? ` "${node.name}"` : ""}${node.keys ? ` keys=${node.keys}` : ""}${states.length ? ` [${states.join(", ")}]` : ""}`
+  // GTK pads menu item names with spaces where the accelerator column goes.
+  const name = node.name.trim()
+  return `${node.role}${name ? ` "${name}"` : ""}${node.keys ? ` keys=${node.keys}` : ""}${states.length ? ` [${states.join(", ")}]` : ""}`
 }
 
 function count(node: Node) {

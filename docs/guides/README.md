@@ -22,3 +22,4 @@
 - [The agent screen: prompt, tools, toolkit, skills, memory](agent-screen.md)
 - [Agent avatars: pick or upload a picture](agent-avatars.md)
 - [Keep the computer awake](keep-awake.md)
+- [MCP Dock: every open interface is an MCP server](mcp-dock-servers.md)
