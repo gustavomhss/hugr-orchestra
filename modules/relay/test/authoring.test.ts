@@ -83,7 +83,7 @@ function catalog(skills: Input["skills"]): AuthoringGraph.SkillResolver | undefi
         )
 }
 
-// Native additions to the frozen Python catalog: relay.hook.v1 actions and Atlas selection parameters.
+// Native additions to the frozen Python catalog: relay.hook.v1 actions, Atlas selection and step tool parameters.
 function additive(expected: unknown) {
   const catalogs = expected as {
     workflow: RelayAuthoring.NodeTypeDescriptor[]
@@ -101,6 +101,7 @@ function additive(expected: unknown) {
               type: "json",
               default: "[]",
             },
+            ...(parameter.name === "checklist" ? [{ name: "tools", label: "Tools", type: "json", default: "{}" }] : []),
           ]
         : []),
     ]),
@@ -344,7 +345,7 @@ describe("W7-7: a step names its tools", () => {
     const sprint = (result as { output: { sprint: RelaySprint.Sprint } }).output.sprint
     expect(sprint.work_packages[0]!.tools).toEqual({ mcp: ["github"], bash: ["git status", "bun test *"] })
     const projected = Effect.runSync(AuthoringGraph.project("Plan", sprint))
-    expect(JSON.parse(projected.nodes![0]!.parameters!.tools as string)).toEqual({
+    expect(JSON.parse(projected.nodes!.find((node) => node.type === "relay.execute")!.parameters!.tools as string)).toEqual({
       mcp: ["github"],
       bash: ["git status", "bun test *"],
     })
