@@ -334,7 +334,8 @@ export async function mockRelay(page: Page, state: RelayState) {
     if (url.searchParams.get("location[directory]") !== directory)
       return refuse(json, 400, "RelayInvalidError", "invalid-request", "Unknown location")
     const body = method === "GET" || method === "DELETE" ? undefined : (request.postDataJSON() as Json)
-    if (method !== "GET") state.writes.push({ method, path: url.pathname, body })
+    // A preview asks the judge about a draft and stores nothing, so it is not a write.
+    if (method !== "GET" && group !== "preview") state.writes.push({ method, path: url.pathname, body })
     const call = { method, id, action, extra, body }
     if (group === "run") return id ? missing() : json([])
     if (group === "node-types") return json(nodeTypes)
