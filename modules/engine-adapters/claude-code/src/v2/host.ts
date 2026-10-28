@@ -483,7 +483,7 @@ function events(message: SDKMessage, tracker: Tracker): LLMEvent[] {
       const call = shown(block.name, block.input, tracker.seats)
       names.set(block.id, call.name)
       if (call.name === "todowrite") tracker.todos.set(block.id, call.todos)
-      if ("task" in call) tracker.tasks.set(block.id, call.task)
+      if ("task" in call && call.task) tracker.tasks.set(block.id, call.task)
       ids.push(block.id)
       return [LLMEvent.toolCall({ id: block.id, name: call.name, input: call.input, providerExecuted: true })]
     })

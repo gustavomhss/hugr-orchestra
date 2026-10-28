@@ -34,6 +34,7 @@ import { TaskGovernance } from "../../tool/task-governance"
 import { TaskPermission } from "../../tool/task-permission"
 import { Mcp } from "../../mcp"
 import { ToolOutputStore } from "../../tool-output-store"
+import { LeanOutput } from "../../tool/lean-output"
 import { SessionExecution } from "../execution"
 import { Prompt } from "../prompt"
 import { SessionContextEpoch } from "../context-epoch"
@@ -489,6 +490,8 @@ const layer = Layer.effect(
               content: [],
             }),
           )
+          // The task row reads the child from the settled call's metadata, as Orchestra's task tool leaves it.
+          LeanOutput.offer({ sessionID: session.id, callID: input.callID }, { sessionId: id, parentSessionId: session.id, agentId: input.agent })
           // Admitted and promoted at once, never woken: the engine already runs this prompt.
           yield* SessionInput.admit(db, events, {
             id: SessionMessage.ID.make(`msg_${hash("host-child-prompt")}`),
