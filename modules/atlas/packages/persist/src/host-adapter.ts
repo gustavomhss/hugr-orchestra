@@ -317,11 +317,16 @@ export function readPrRecordRefs(body: string): readonly { readonly card: string
   )
 }
 
-/** The trailer block a card's commit ends with: Atlas's trailer keys plus `Attempt: a<n>`. Core appends it to the
- *  commit message it writes, so nothing amends a commit afterwards. */
-export function attemptTrailer(t: Trailer): string {
-  return serializeTrailer(t)
+/** The trailer block a card's commit ends with: `WP`, `Attempt: a<n>` and whichever other trailer keys the host
+ *  knows, in Atlas's key order. Core appends it to the commit message it writes, so nothing amends a commit
+ *  afterwards. A block without `Model`, `Gates`, `Verdict` and `TranscriptSha` names the attempt file, which holds
+ *  them, but `readCommit` does not read it as a dossier trailer. */
+export function attemptTrailer(t: Pick<Trailer, "WP"> & Partial<Trailer>): string {
+  return TRAILER_KEYS.flatMap((key) => (t[key] === undefined ? [] : [`${key}: ${t[key]}`])).join("\n")
 }
+
+/** The record port core's board binds (`Board.layerWith({ record })`): card body, bundle body, commit trailer. */
+export const recordPort = { pr: renderPrRecord, bundle: renderBundleRecord, trailer: attemptTrailer }
 
 /** The `WP:` lines a bundle's merge commit lists, one per member card. */
 export function bundleTrailer(cards: readonly string[]): string {
@@ -362,6 +367,7 @@ export function githubPrWriter(slug: string, opts: { readonly send?: SendJson } 
 }
 
 const RISK: readonly RiskLevel[] = ["low", "medium", "high"]
+const TRAILER_KEYS = ["WP", "Model", "Gates", "Verdict", "TranscriptSha", "Attempt"] as const
 
 function refsComment(refs: readonly { card: string; attempts: readonly number[] }[]): string {
   // A card key is free text, so `--` goes out as a JSON escape and the comment cannot end early.

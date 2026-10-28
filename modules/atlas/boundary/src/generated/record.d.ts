@@ -209,9 +209,17 @@ export declare function readPrRecordRefs(body: string): readonly {
 	readonly card: string;
 	readonly attempts: readonly number[];
 }[];
-/** The trailer block a card's commit ends with: Atlas's trailer keys plus `Attempt: a<n>`. Core appends it to the
- *  commit message it writes, so nothing amends a commit afterwards. */
-export declare function attemptTrailer(t: Trailer): string;
+/** The trailer block a card's commit ends with: `WP`, `Attempt: a<n>` and whichever other trailer keys the host
+ *  knows, in Atlas's key order. Core appends it to the commit message it writes, so nothing amends a commit
+ *  afterwards. A block without `Model`, `Gates`, `Verdict` and `TranscriptSha` names the attempt file, which holds
+ *  them, but `readCommit` does not read it as a dossier trailer. */
+export declare function attemptTrailer(t: Pick<Trailer, "WP"> & Partial<Trailer>): string;
+/** The record port core's board binds (`Board.layerWith({ record })`): card body, bundle body, commit trailer. */
+export declare const recordPort: {
+	pr: typeof renderPrRecord;
+	bundle: typeof renderBundleRecord;
+	trailer: typeof attemptTrailer;
+};
 /** The `WP:` lines a bundle's merge commit lists, one per member card. */
 export declare function bundleTrailer(cards: readonly string[]): string;
 /** The one HTTP call the writer makes, injectable so a test can answer it. Defaults to the global `fetch`. */

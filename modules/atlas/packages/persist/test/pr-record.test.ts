@@ -2,7 +2,7 @@
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { asHash } from "@atlas/kernel"
-import { attemptTrailer, bundleTrailer, githubPrWriter, readPrRecordRefs, renderBundleRecord, renderPrRecord } from "../src/host-adapter.js"
+import { attemptTrailer, bundleTrailer, recordPort, githubPrWriter, readPrRecordRefs, renderBundleRecord, renderPrRecord } from "../src/host-adapter.js"
 import type { PrRecord, SendJson } from "../src/host-adapter.js"
 
 const record: PrRecord = {
@@ -68,6 +68,8 @@ describe("trailers", () => {
     const trailer = attemptTrailer({ WP: "ORC-7", Model: "opus", Gates: "typecheck", Verdict: "pass", TranscriptSha: asHash("ab12"), Attempt: "a2" })
     expect(trailer).toContain("WP: ORC-7")
     expect(trailer).toContain("Attempt: a2")
+    expect(attemptTrailer({ WP: "ORC-7", Attempt: "a1" })).toBe("WP: ORC-7\nAttempt: a1")
+    expect(recordPort.trailer({ WP: "ORC-7", Attempt: "a1" })).toBe(attemptTrailer({ WP: "ORC-7", Attempt: "a1" }))
     expect(bundleTrailer(["ORC-7", "ORC-8"])).toBe("WP: ORC-7\nWP: ORC-8")
   })
 })
