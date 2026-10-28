@@ -58,7 +58,7 @@ Maestro's context yet (integration 11).
 Before resuming interrupted work, read the Session, the card's worktree, its git state and the check outputs. Keep
 only changes that are understood and in the write set.
 
-When a card merges, or the owner drops it, `git worktree remove <path>` and `git branch -D <card-key>`. A dropped
+When a card merges, or the owner drops it, `git worktree remove <path>` and, when it has one, `git branch -D <card-key>`. A dropped
 card with uncommitted work needs the owner's go-ahead before `--force`. Never use a repository-wide `reset --hard` or `clean -fd` to roll back.
 
 ## The board refuses

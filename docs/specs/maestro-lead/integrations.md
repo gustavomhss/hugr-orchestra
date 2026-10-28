@@ -5,7 +5,7 @@ value per cost.
 
 | # | Integration | Today | Change |
 |---|---|---|---|
-| 1 | `task` ↔ board | `task` input is `description`, `prompt`, `subagent_type`, `model?`, `task_id?`, `directory?` (`packages/core/src/tool/task.ts`); it never touches the board | Optional `issue`. The host links the child Session to the card, sets the seat and moves Ready to Building. A crash sets `crash_reason`. |
+| 1 | `task` ↔ board | `task` input is `description`, `prompt`, `subagent_type`, `model?`, `task_id?`, `directory?`, `worktree?` (`packages/core/src/tool/task.ts`); it never touches the board | Optional `issue`. The host links the child Session to the card, sets the seat and moves Ready to Building. A crash sets `crash_reason`. |
 | 2 | Move on facts | `board_move` checks the merge proof (`packages/core/src/board/github.ts`) | A linked PR moves its card to Review, and a merged PR moves it to Shipped, under the same proof. A revert flags the card; it does not move it. |
 | 3 | `board_note` | none | Maestro writes notes on a card and answers the owner's notes. Notes are mirrored to GitHub, so the working ledger stays out of them. |
 | 4 | Wake on owner action | `board_question` answers, hold releases and project resumes only write rows and activity (asked at `board.ts:1043`, answered at `:1078`); nothing prompts Maestro | Each of these admits a prompt to Maestro's Session and wakes it, through the admit-only `SessionV2.prompt` path. Until then the playbooks ask with `question` or tell the owner to message Maestro. |
@@ -20,7 +20,7 @@ value per cost.
 | 13 | Honest limits | The owner learns caps (agents, depth, budget) only when work hits them | `board_read` and the digest show the effective limits in force: agent cap, depth, budget left. |
 | 14 | Owner attention budget | none | The app counts owner questions per request and flags a second one, and flags any question whose `reversible` is yes and cost is low. |
 | 15 | Control vs owner messages | Seat results and owner messages arrive as the same kind of prompt | Seat returns, CI events and owner text are labelled by source in Maestro's Session, so a seat's text never reads as the owner's word. |
-| 16 | Card worktree (done in this change) | `task` had no directory input, so every child ran in the parent's directory | Optional `directory`: the absolute root of another git worktree of the same repository. Task checks it with `Project.resolve`, the child Session runs there, and write roots and settle use that worktree. Maestro creates the worktree; seats never do. |
+| 16 | Card worktree (done in this change) | `task` had no directory input, so every child ran in the parent's directory | Optional `directory`: the absolute root of another git worktree of the same repository. Task checks it with `Project.resolve`, the child Session runs there, and write roots and settle use that worktree. With `worktree: true`, the host makes a new worktree through `ProjectCopy` under the parent's root (`.worktrees`), so the app lists it, trust holds by path and Maestro may commit there; the result names its `directory`. An exact retry reuses the child's worktree. Seats never create worktrees. |
 
 What stays out:
 

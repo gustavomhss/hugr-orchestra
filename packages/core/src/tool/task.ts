@@ -17,6 +17,7 @@ import { Location } from "../location"
 import { ModelV2 } from "../model"
 import { PermissionV2 } from "../permission"
 import { Project } from "../project"
+import { ProjectCopy } from "../project/copy"
 import { AbsolutePath } from "../schema"
 import { SessionV2 } from "../session"
 import { SessionEvent } from "../session/event"
@@ -48,6 +49,9 @@ export const Input = Schema.Struct({
   directory: Schema.String.pipe(Schema.optional).annotate({
     description: "Absolute root of a git worktree of this repository for the child to work in; default this Session's directory",
   }),
+  worktree: Schema.Boolean.pipe(Schema.optional).annotate({
+    description: "Start the child in a new git worktree of this repository, named after description; the reply names its directory",
+  }),
 })
 
 export const Output = Schema.Struct({
@@ -59,6 +63,8 @@ export const Output = Schema.Struct({
   sessionId: SessionSchema.ID,
   parentSessionId: SessionSchema.ID,
   agentId: AgentV2.ID,
+  /** The child's worktree when it is not this Session's directory. */
+  directory: Schema.String.pipe(Schema.optional),
   /** Structured result a Location's TaskGovernance derived from the child's reply. */
   structured: Schema.Record(Schema.String, Schema.Unknown).pipe(Schema.optional),
 })
@@ -83,6 +89,7 @@ const layer = Layer.effectDiscard(
     const config = yield* Config.Service
     const background = yield* TaskBackground.Service
     const projects = yield* Project.Service
+    const copies = yield* ProjectCopy.Service
     // Governance fields are recorded with the call, so the recorded input decodes with this same schema.
     const taskInput = Schema.Struct({ ...Input.fields, ...governance.input })
     const decodeCalled = Schema.decodeUnknownOption(taskInput)
@@ -92,7 +99,10 @@ const layer = Layer.effectDiscard(
         input: taskInput,
         output: Output,
         toModelOutput: ({ output }) => [
-          { type: "text", text: `task_id: ${output.sessionID}\n\n<task_result>\n${output.text}\n</task_result>` },
+          {
+            type: "text",
+            text: `task_id: ${output.sessionID}${output.directory ? `\ndirectory: ${output.directory}` : ""}\n\n<task_result>\n${output.text}\n</task_result>`,
+          },
         ],
         execute: (called, context) => Effect.gen(function* () {
           const input = yield* Schema.decodeUnknownEffect(Input)(called).pipe(
@@ -100,7 +110,8 @@ const layer = Layer.effectDiscard(
           )
           const parent = yield* requireParent(store, location, context, decodeCalled, called)
           const target = yield* requireTarget(agents, input.subagent_type)
-          const placement = yield* requirePlacement(projects, fs, location, input.directory)
+          const directory = input.worktree ? yield* createWorktree(copies, fs, store, location, input, taskChildID(context)) : input.directory
+          const placement = yield* requirePlacement(projects, fs, location, directory)
           const admission = yield* governance.admit({ parent, target, input: called, context, location: placement })
           const childID =
             admission.childID ??
@@ -152,6 +163,7 @@ const layer = Layer.effectDiscard(
               sessionID: child.id,
               permission: permissions.map((rule) => ({ permission: rule.action, pattern: rule.resource, action: rule.effect })),
             })
+          const moved = placement.directory === location.directory ? {} : { directory: placement.directory }
           return yield* Effect.gen(function* () {
             yield* policy.assert(child.id, model)
             yield* events.publish(SessionEvent.Tool.Progress, {
@@ -192,6 +204,7 @@ const layer = Layer.effectDiscard(
               sessionId: child.id,
               parentSessionId: context.sessionID,
               agentId: target.id,
+              ...moved,
             })
             if (admission.background) {
               // Advisory: the admitted prompt is durable, so a lost wake leaves it for the next drain.
@@ -240,6 +253,7 @@ const layer = Layer.effectDiscard(
               sessionId: child.id,
               parentSessionId: context.sessionID,
               agentId: target.id,
+              ...moved,
               ...(settled.structured === undefined ? {} : { structured: settled.structured }),
             }
           }).pipe(
@@ -282,6 +296,7 @@ export const node: LayerNode.Node<never, never, typeof Node.tags.values.location
     TaskBackground.node,
     Project.node,
     FSUtil.node,
+    ProjectCopy.node,
   ],
 })
 
@@ -397,6 +412,39 @@ const requireParent = Effect.fn("TaskTool.requireParent")(function* (
   )) return yield* new ToolFailure({ message: "Task executor input conflicts with its recorded called input" })
   yield* requireDepth(store, parent)
   return parent
+})
+
+/**
+ * A new worktree goes under this root's `.worktrees`, so it stays inside the trusted folder and the parent may commit
+ * there; the copy is registered like one made in the app.
+ */
+const createWorktree = Effect.fn("TaskTool.createWorktree")(function* (
+  copies: ProjectCopy.Interface,
+  fs: FSUtil.Interface,
+  store: SessionStore.Interface,
+  location: Location.Interface,
+  input: typeof Input.Type,
+  childID: SessionSchema.ID,
+) {
+  if (input.directory !== undefined || input.task_id !== undefined)
+    return yield* new ToolFailure({ message: "Task worktree starts a new child only; resume a child with its directory" })
+  // An exact retry finds the child it already started and keeps that worktree.
+  const retried = yield* store.get(childID)
+  if (retried) return retried.location.directory
+  if (location.vcs?.type !== "git") return yield* new ToolFailure({ message: "Task worktree needs a git repository" })
+  const parent = path.join(location.project.directory, ".worktrees")
+  // An ignore-everything file keeps the copies out of this checkout's own status, whatever the project ignores.
+  yield* fs.writeWithDirs(path.join(parent, ".gitignore"), "*\n").pipe(Effect.orDie)
+  const copy = yield* copies
+    .create({
+      strategy: ProjectCopy.StrategyID.make("git_worktree"),
+      directory: AbsolutePath.make(parent),
+      name: ProjectCopy.nameFromReply(input.description),
+      projectID: location.project.id,
+      sourceDirectory: AbsolutePath.make(location.project.directory),
+    })
+    .pipe(Effect.mapError((error) => new ToolFailure({ message: `Task worktree not created: ${error._tag}` })))
+  return copy.directory
 })
 
 /**

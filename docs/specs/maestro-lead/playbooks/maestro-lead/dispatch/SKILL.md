@@ -18,6 +18,7 @@ Goal: <one line: the owner's outcome>
 Card: <KEY-N>
 Write only: <same paths as writePaths>
 Read first: <at most 5 paths>
+Setup: <the project's install command, when a new worktree needs it>
 Decided: <choices already made, each with its reason>
 Done when: <checks Maestro can run itself: a command and its expected output, test files, a diff property;
            and the line whose removal must make the test fail>
@@ -35,16 +36,15 @@ subsystem.
 When the request has a board project, find or create its card with `board_issue`, link the seat, and move it to
 Building. Without a project, track the work in the conversation and report it the same way.
 
-Maestro's own worktree is Maestro's alone: only its inline work edits it. A seat that writes works in a worktree
-Maestro makes for its card: after a fetch, `git worktree add -b <card-key> <path> origin/<base>` with `<path>` =
-`<parent of Maestro's worktree>/<card-key>`, then the project's install command in it. Trust goes by path: when
-that parent is not inside a trusted project folder, the seat runs without the repository's own MCP servers, plugins
-and formatters, so say so in the next report. `task` gets
-`directory: <path>`, also on every resume with `task_id`. `writePaths` are relative to that worktree.
-Read-only seats (`jimmy`, `lucy`, `explore`) get the card's worktree when they read its change, else none.
+Maestro's own worktree is Maestro's alone: only its inline work edits it. A seat that writes starts in a new
+worktree: call `task` with `worktree: true` and a `description` that starts with the card key. The host makes the
+worktree from Maestro's current commit, under Maestro's root, and lists it in the app; the result names its
+`directory`. Pass that `directory` with `task_id` on every resume, and to any later seat on the same card.
+`writePaths` are relative to that worktree. Read-only seats (`jimmy`, `lucy`, `explore`) get the card's worktree when
+they read its change, else none.
 
-Record the branch on the card with `board_issue`, and write `Worktree: <path>; Stall: 0` in the building step's
-`now` (not mirrored to GitHub). A redispatch reuses the same worktree and sets `attempts` to one more.
+Write `Worktree: <directory>; Stall: 0` in the building step's `now` (not mirrored to GitHub). A redispatch reuses
+the same worktree and sets `attempts` to one more.
 Call `task` with `background: true` and link the returned Session on the card at once. `archie` runs in the
 foreground: the host refuses a background `archie` task.
 

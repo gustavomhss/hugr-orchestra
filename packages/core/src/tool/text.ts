@@ -15,7 +15,7 @@ The child runs in this Location, or in directory when given, through the canonic
 Optional model is an exact provider/model identity; nested model IDs and virtual providers are preserved.
 Delegation requires the calling turn owner's task permission and every ancestor's hard model ceiling.
 Use task_id to continue an existing child of this Session or explicitly recover unfinished work.
-Use directory to run the child in another git worktree of this repository, named by its root; create the worktree first.
+Use worktree to start the child in a new git worktree of this repository; the result names its directory. Pass that directory, with task_id, on every resume, or to start another child in the same worktree.
 Calls without task_id are idempotent for the same recorded assistant and tool call. Maestro cannot be a target.`
 
 export const teamMessage = `Send a short message to a teammate on the Orchestra team: \`maestro\` from live, \`live\` from Maestro.

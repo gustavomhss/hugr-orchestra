@@ -29,8 +29,9 @@ For governed work, or when the project's instructions ask for more, load `maestr
 
 With the owner's grant for this session (or a request for this change), each card is its own pull request:
 
-1. In the card's worktree, commit the card's paths, push the card branch and open the pull request. Link it on the
-   card with `board_issue` and move the card to Review. The description carries the evidence and what was not
+1. In the card's worktree, `git -C <path> switch -c <card-key>` (the worktree starts detached), commit the card's
+   paths, push the branch and open the pull request. Link the branch and the PR on the card with `board_issue` and
+   move the card to Review. The description carries the evidence and what was not
    covered.
 2. Read the card with `board_read`. When `holdBeforeMerge` is set, only the owner releases it, and releasing it on the
    board does not wake Maestro. Ask with `question`, which keeps the run waiting, whether to merge once they release
