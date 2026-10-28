@@ -2509,6 +2509,10 @@ html[data-color-scheme="light"] .wf-editor {
   background: var(--mx-soft);
   box-shadow: none;
 }
+/* The canvas rail shares the top corner with the view toggle, so it starts below it. */
+.wf-mode .wf-rail {
+  inset-block-start: 56px;
+}
 .wf-viewbar button {
   display: flex;
   align-items: center;
