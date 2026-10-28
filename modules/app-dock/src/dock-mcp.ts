@@ -24,8 +24,9 @@ import type { Transport } from "./transport"
 type Tab = { tabID: string; generation?: number; url?: string; title?: string; scopeKind?: string }
 // One line of the outline. `key` identifies the same control across snapshots (the browser's stable ref, or the Linux
 // node's path by role, name and occurrence), so a diff can tell what appeared, went away or changed.
+// occurrence: which of several Linux controls with this exact name and role, in tree order, so a ref reaches its own.
 type Entry = { key: string; ref: number; line: string; label: string; depth: number; role: string; name: string;
-  parent?: number; target?: number }
+  parent?: number; target?: number; occurrence?: number }
 type Snapshot = { header: string; entries: Entry[]; text?: string; complete: boolean }
 
 const LOOK_LIMIT = 40_000
@@ -131,7 +132,7 @@ function serve(port: Transport, name: string, tab: Tab) {
     const before = state.last ?? await snap()
     // Without ref, name or role the action goes to whatever has focus (keys, or typing into an unnamed editor).
     const entry = args.ref === undefined && args.name === undefined && args.role === undefined ? undefined : pick(before, args)
-    return change(() => app.act(entry, args), before)
+    return change(() => app.act(entry, args, before), before)
   }
 
   // Runs the action, waits for the interface to settle and answers with what changed, so the model rarely needs to
@@ -197,7 +198,7 @@ async function apps(port: Transport) {
 
 type App = {
   snapshot: () => Promise<Snapshot>
-  act: (entry: Entry | undefined, args: Record<string, unknown>) => Promise<string>
+  act: (entry: Entry | undefined, args: Record<string, unknown>, snapshot: Snapshot) => Promise<string>
   navigate?: (args: Record<string, unknown>) => Promise<string>
 }
 
@@ -269,7 +270,7 @@ function linuxApp(port: Transport): App {
   }
   return {
     snapshot: () => serial(async () => linuxEntries(await readAll(port))),
-    act: async (entry, args) => {
+    act: async (entry, args, snapshot) => {
       const verb = String(args.do ?? "click")
       // An unnamed control (an editor's text view) cannot be located by name; typing and keys reach it through focus.
       if (!entry?.name) {
@@ -281,14 +282,33 @@ function linuxApp(port: Transport): App {
         if (verb === "click") return entry ? "Error: that control has no name to click it by; it already has focus, so type or send keys to it" : "Error: click needs the ref (or name and role) of the control"
         return `Error: unknown do "${verb}"; use click, type, keys or scroll`
       }
-      const target = { name: entry.name, role: entry.role }
-      if (verb === "click") return invoke("ui_act", { target, ...(typeof args.action === "string" ? { action: args.action } : {}) })
+      const target = { name: entry.name, role: entry.role, ...(entry.occurrence === undefined ? {} : { occurrence: entry.occurrence }) }
+      if (verb === "click") {
+        const click = () => invoke("ui_act", { target, ...(typeof args.action === "string" ? { action: args.action } : {}) })
+        const result = await click()
+        if (!result.includes('"menu-closed"')) return result
+        // A menu item reads in the tree while its menu is closed; open the menus that hold it, outermost first.
+        const menus = ancestors(snapshot, entry).filter((parent) => parent.role === "menu" && parent.name)
+        if (menus.length === 0) return result
+        for (const menu of menus) {
+          const opened = await invoke("ui_act", { target: { name: menu.name, role: menu.role,
+            ...(menu.occurrence === undefined ? {} : { occurrence: menu.occurrence }) } })
+          if (opened.startsWith("Error:")) return opened
+        }
+        return click()
+      }
       if (verb === "type") return invoke("ui_type", { target, text: String(args.text ?? "") })
       if (verb === "keys") return invoke("ui_keys", { target, keys: String(args.keys ?? "") })
       if (verb === "scroll") return invoke("ui_keys", { target, keys: args.direction === "up" ? "Page_Up" : "Page_Down" })
       return `Error: unknown do "${verb}"; use click, type, keys or scroll`
     },
   }
+}
+
+// Outermost first.
+function ancestors(snapshot: Snapshot, entry: Entry): Entry[] {
+  const parent = snapshot.entries.find((candidate) => candidate.ref === entry.parent)
+  return parent ? [...ancestors(snapshot, parent), parent] : []
 }
 
 // Reads of the workspace share one AT-SPI cursor; two at once would expire each other's cursor.
@@ -323,6 +343,9 @@ function linuxEntries(read: { items: AppDockOutline.Item[]; complete: boolean })
   // A node's key is its path of role, name and which same-shaped sibling it is, so a row inserted above it does not
   // make the whole list look changed.
   const seen = new Map<string, number>()
+  // Counted over the whole read, hidden controls included, the way ui_* count a target's occurrence.
+  const twins = Map.groupBy(read.items.flatMap((item) => [...new Set([item.name, AppDockOutline.keys(item.name).name])]
+    .map((name) => ({ item, key: `${AppDockOutline.role(item)}|${name.trim().toLowerCase()}` }))), (twin) => twin.key)
   // Unnamed, inert wrappers carry no meaning for a reader; their children move up a level. An editable node (an
   // editor's text view has no name and no actions) is a target, not a wrapper.
   const visit = (node: AppDockOutline.Node, depth: number, path: string, parent?: number) => {
@@ -336,7 +359,9 @@ function linuxEntries(read: { items: AppDockOutline.Item[]; complete: boolean })
     const key = `${shape}#${occurrence}`
     const ref = entries.length + 1
     const label = AppDockOutline.line(node)
-    entries.push({ key, ref, label, line: `${label} [${ref}]`, depth, role: node.role, name: node.name, parent })
+    const same = twins.get(`${node.role}|${node.name.trim().toLowerCase()}`) ?? []
+    entries.push({ key, ref, label, line: `${label} [${ref}]`, depth, role: node.role, name: node.name, parent,
+      ...(same.length > 1 ? { occurrence: same.findIndex((twin) => twin.item === node.item) } : {}) })
     node.children.forEach((child) => visit(child, depth + 1, key, ref))
   }
   roots.forEach((root) => visit(root, 0, ""))

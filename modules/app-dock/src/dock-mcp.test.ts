@@ -5,7 +5,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { Effect } from "effect"
 import { McpProvided } from "@orchestra/core/mcp/provided"
 import { DockMcp } from "./dock-mcp"
-import { control, fakePort, field, page, type Envelope, type Reply } from "./app-dock.fixture"
+import { control, fakePort, field, nativeError, page, type Envelope, type Reply } from "./app-dock.fixture"
 
 const tabs = [
   { tabID: "t1", generation: 1, url: "https://www.github.com/orchestra", title: "GitHub", active: true },
@@ -128,6 +128,45 @@ describe("DockMcp", () => {
     const sent = d.calls.length
     expect(text(await client.callTool({ name: "act", arguments: { ref: 2, do: "type", text: "x" } }))).toContain("move focus into it")
     expect(d.calls.slice(sent).every((call) => call.op === "read")).toBe(true)
+    await client.close()
+  })
+
+  test("a ref reaches its own control among several with the same name and role", async () => {
+    const d = dock((op) => {
+      if (op === "list") return { ok: true, value: tabs }
+      if (op === "read") return page([control("n:dialog", "Save File", { role: 16, roleName: "dialog", states: [1, 8, 30], parentRef: null }),
+        ...["n:s1", "n:s2", "n:s3"].map((ref) => control(ref, "Save", { states: [8, 24, 30], parentRef: "n:dialog" }))])
+      if (op === "action") return { ok: true, value: { dispatch: "acknowledged" } }
+      return { ok: false, error: { message: `unexpected ${op}` } }
+    })
+    const client = await connect((await d.servers())[2]!)
+    await client.callTool({ name: "look", arguments: {} })
+    const acted = await client.callTool({ name: "act", arguments: { ref: 4 } })
+    expect(acted.isError).toBe(false)
+    expect(d.calls.filter((call) => call.op === "action").map((call) => call.args.ref)).toEqual(["n:s3"])
+    await client.close()
+  })
+
+  test("acting on an item of a closed menu opens the menu first", async () => {
+    const opened = { value: false }
+    const d = dock((op, args) => {
+      if (op === "list") return { ok: true, value: tabs }
+      if (op === "read") return page([
+        control("n:frame", "Untitled 1 - Mousepad", { role: 23, roleName: "frame", states: [1, 8, 30], parentRef: null, actions: [] }),
+        control("n:file", "File", { role: 33, roleName: "menu", states: [8, 24, 30], parentRef: "n:frame" }),
+        control("n:saveas", "Save As...", { role: 35, roleName: "menu-item", states: [8, 24, 30], parentRef: "n:file" })])
+      if (op === "action" && args.ref === "n:file") {
+        opened.value = true
+        return { ok: true, value: { dispatch: "acknowledged" } }
+      }
+      if (op === "action") return opened.value ? { ok: true, value: { dispatch: "acknowledged" } } : nativeError("menu-closed")
+      return { ok: false, error: { message: `unexpected ${op}` } }
+    })
+    const client = await connect((await d.servers())[2]!)
+    expect(text(await client.callTool({ name: "look", arguments: {} }))).toContain('"Save As..." [3]')
+    const acted = await client.callTool({ name: "act", arguments: { ref: 3 } })
+    expect(acted.isError).toBe(false)
+    expect(d.calls.filter((call) => call.op === "action").map((call) => call.args.ref)).toEqual(["n:saveas", "n:file", "n:saveas"])
     await client.close()
   })
 
