@@ -1,6 +1,9 @@
 # Maestro as lead: study and proposal
 
-Status: research synthesis and proposal for the owner to decide. Nothing here is built.
+Status: research synthesis and proposal for the owner to decide. Built since (2026-10-28): proposal 1 as the `task` field
+`card` (not `issue`) with the claim to Building, proposal 2 (PR follow to Review and Shipped), the board lines in
+`maestro.txt` (`board_read` without `project` lists projects), the `<board-drift>` context block and the `maestro-orchestra`
+map playbook. The rest is still a proposal; the current state is in `.orchestra/skills/maestro-ownership`.
 Recorded: 2026-10-28. Baseline: `de5cc963c6` (`dev`).
 
 This study asks why Maestro feels raw as an orchestrator, project manager and team lead next to the backend specialist

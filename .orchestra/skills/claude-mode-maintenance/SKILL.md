@@ -7,6 +7,8 @@ description: Who owns Claude mode (Orchestra on Claude Code as a meta-harness), 
 
 Design and decisions: `docs/specs/claude-mode/meta-harness.md`. User guide: `docs/guides/claude-mode.md`.
 
+Maestro itself (prompt, roster, dispatch, board, playbooks): `maestro-ownership`, `maestro-usage`, `maestro-maintenance`.
+
 ## Ownership
 
 | Piece | Owner file |

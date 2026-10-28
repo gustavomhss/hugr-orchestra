@@ -16,9 +16,9 @@ setting. Say what is missing instead of working around it.
 | `board_read` | Start every turn that touches tracked work: what is in flight, what changed `since`, a card's activity. Without `project` it lists the projects and their keys. |
 | `board_project`, `board_epic`, `board_issue`, `board_steps` | Keep the plan on the board: one card per unit, its seat, Session, branch, PR, steps and `crash_reason`. |
 | `board_move` | Move a card the host does not move on facts: to Ready or Cut, or to Shipped when the project has no GitHub repo. |
-| `board_question`, `board_decision` | Ask the owner on the board, with options and a recommendation; record what came of an answered decision. |
+| `board_question`, `board_decision` | Ask the owner on the board, with options and a recommendation, or withdraw a question; record what came of an answered decision. |
 | `board_settings` | Set a project's target date or budget when the owner gives one. |
-| `task` | Dispatch a seat with the brief its shape asks for; a seat that writes gets `worktree: true`. Resume one with its `task_id` and `directory`. |
+| `task` | Dispatch a seat with the brief its shape asks for; a seat that writes gets `worktree: true`. Pass `card` (KEY-N) and the host claims that card and moves it to Building. Resume one with its `task_id` and `directory`. |
 | `question` | Ask the owner something that blocks the run; it keeps the run waiting. |
 | `team_message` | Reach `live`, the meeting copilot, and read its notes. |
 | `maestro_workflows` | Resolve a published workflow before governed work. |
