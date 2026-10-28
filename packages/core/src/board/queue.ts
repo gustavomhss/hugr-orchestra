@@ -29,8 +29,8 @@ import type { Changed, IssueRow, ProjectRow, Tx } from "./shared"
 
 // The merge queue (docs/specs/maestro-lead/merge-queue.md sections 6.1 to 6.6, phase 1). Only the host moves a card
 // into or out of the `queue` stage: `board_queue` enqueues a verified Review card, and the tick cuts one bundle per
-// project, waits for its full gate, and pushes base to the tested head. A red bundle sends its members back to Review;
-// the culprit search of section 6.3 is a later work package.
+// project, waits for its full gate, and pushes base to the tested head. A red bundle is halved until one card fails
+// alone and goes back to Review; flake probes, infra reruns and size-from-red-rate are a later package.
 
 export interface Deps {
   readonly quiet: <A>(work: (tx: Tx) => Effect.Effect<A, unknown>) => Effect.Effect<A>
@@ -58,6 +58,7 @@ const Rollup = Schema.Struct({
   ),
 })
 const decodeRollup = Schema.decodeUnknownOption(Schema.fromJsonString(Rollup))
+const decodeRuns = Schema.decodeUnknownOption(Schema.fromJsonString(Rollup.fields.statusCheckRollup))
 const Dry = Schema.Struct({ packages: Schema.Array(Schema.String) })
 const decodeDry = Schema.decodeUnknownOption(Schema.fromJsonString(Dry))
 
@@ -244,11 +245,23 @@ export function make(deps: Deps) {
               .where(and(inArray(BoardIssueTable.epic_id, epics), ne(BoardIssueTable.stage, "shipped"), ne(BoardIssueTable.stage, "cut")))
               .all()
           : []
-        return { cards, waits, attempts, open }
+        const last = yield* tx
+          .select()
+          .from(BoardBundleTable)
+          .where(and(eq(BoardBundleTable.project_id, row.id), ne(BoardBundleTable.status, "open")))
+          .orderBy(desc(BoardBundleTable.n))
+          .get()
+        const lastMembers = last
+          ? yield* tx.select().from(BoardBundleMemberTable).where(eq(BoardBundleMemberTable.bundle_id, last.id)).all()
+          : []
+        return { cards, waits, attempts, open, last: last && { status: last.status, base_sha: last.base_sha, members: lastMembers.length } }
       }),
     )
     if (queued.cards.length === 0) return
+    const split = queued.last?.status === "red" && queued.last.members > 1
+    const cap = split && queued.last ? Math.max(1, Math.floor(queued.last.members / 2)) : contract.bundle.size
     const due =
+      split ||
       queued.cards.length >= contract.bundle.size ||
       queued.cards.some((card) => card.queue.flush) ||
       now - Math.min(...queued.cards.map((card) => card.queue.queued_at)) >= contract.bundle.waitMinutes * 60_000 ||
@@ -260,6 +273,7 @@ export function make(deps: Deps) {
     yield* git(directory, ["fetch", "--quiet", "--no-tags", "origin", base])
     const tip = (yield* git(directory, ["rev-parse", "--verify", "--quiet", `refs/remotes/origin/${base}`])).out
     if (!tip) return
+    if (queued.last?.status === "base-red" && tip === queued.last.base_sha) return
     const scratch = yield* Effect.promise(() => fs.mkdtemp(path.join(os.tmpdir(), `orchestra-bundle-${row.key}-`)))
     const added = yield* git(directory, ["worktree", "add", "--quiet", "--detach", scratch, tip])
     if (added.code !== 0) return
@@ -267,7 +281,7 @@ export function make(deps: Deps) {
     const members = yield* Effect.gen(function* () {
       const taken: Array<{ readonly issue: IssueRow; readonly head: string }> = []
       for (const card of queued.cards) {
-        if (taken.length >= contract.bundle.size) break
+        if (taken.length >= cap) break
         if (card.issue.hold_before_merge || card.issue.paused) continue
         const attempt = queued.attempts.find((item) => item.issue_id === card.issue.id)
         if (attempt?.conflict_base) continue
@@ -370,6 +384,13 @@ export function make(deps: Deps) {
     yield* Effect.forEach(members, (member) => describe(row, member.issue.id, base), { discard: true })
   })
 
+  /** Whether the base commit's own checks are red: a red bundle is then no evidence against its members. */
+  const baseRed = Effect.fnUntraced(function* (repo: string, sha: string, contract: BoardCi.Contract) {
+    const read = yield* deps.gh(["api", `repos/${repo}/commits/${sha}/check-runs`, "--jq", "[.check_runs[] | {name, status: (.status | ascii_upcase), conclusion: ((.conclusion // \"\") | ascii_upcase)}]"])
+    const runs = read.exitCode === 0 ? Option.getOrUndefined(decodeRuns(read.stdout)) : undefined
+    return runs !== undefined && judge(runs, contract) === "red"
+  })
+
   /** The open bundle's next step: wait, merge when green, or give its members back when red. */
   const settle = Effect.fnUntraced(function* (
     row: ProjectRow,
@@ -395,16 +416,38 @@ export function make(deps: Deps) {
         .all(),
     )
     if (verdict === "red") {
+      const sha10 = bundle.base_sha.slice(0, 10)
+      if (yield* baseRed(repo, bundle.base_sha, contract)) {
+        yield* Effect.forEach(
+          members,
+          (item) =>
+            note(row, item.issue, `Bundle ${row.key}-B${bundle.n} went red, and so does ${contract.base} at ${sha10}; this card stays queued until ${contract.base} is green.`),
+          { discard: true },
+        )
+        return yield* close(row, repo, bundle, `is red because ${contract.base} at ${sha10} is red`, "base-red")
+      }
+      if (members.length > 1) {
+        yield* Effect.forEach(
+          members,
+          (item) => note(row, item.issue, `Bundle ${row.key}-B${bundle.n} went red on its full gate; the queue splits it to find the cause and this card stays queued.`),
+          { discard: true },
+        )
+        // Flush keeps the surviving half due next tick, even after its first half merges and the rest is below full size.
+        yield* deps.quiet((tx) =>
+          tx.update(BoardQueueTable).set({ flush: true }).where(inArray(BoardQueueTable.issue_id, members.map((item) => item.issue.id))).run(),
+        )
+        return yield* close(row, repo, bundle, "is red; the queue splits it to find the cause", "red")
+      }
       const back = yield* deps.quiet((tx) =>
         Effect.forEach(members, (item) =>
           Effect.gen(function* () {
-            yield* insertNote(tx, row, item.issue, `Bundle ${row.key}-B${bundle.n} went red on its full gate; this card is back in Review.`)
-            return yield* release(tx, row, item.issue, "github", "bundle.dissolve", `Bundle ${row.key}-B${bundle.n} is red.`)
+            yield* insertNote(tx, row, item.issue, `Bundle ${row.key}-B${bundle.n} went red with only this card on ${contract.base} at ${sha10}; it is back in Review.`)
+            return yield* release(tx, row, item.issue, "github", "bundle.dissolve", "red alone on the full gate")
           }),
         ),
       )
       yield* Effect.forEach(back, deps.publish, { discard: true })
-      return yield* close(row, repo, bundle, "red")
+      return yield* close(row, repo, bundle, "is red", "red")
     }
     // Section 6.6: a member head that moved since assembly dequeues that member and the bundle is rebuilt.
     const heads = yield* Effect.forEach(members, (item) =>
@@ -559,8 +602,14 @@ export function make(deps: Deps) {
     if (row.github_repo) yield* close(row, row.github_repo, bundle, "dissolved")
   })
 
-  const close = Effect.fnUntraced(function* (row: ProjectRow, repo: string, bundle: typeof BoardBundleTable.$inferSelect, why: string) {
-    yield* deps.quiet((tx) => tx.update(BoardBundleTable).set({ status: "dissolved" }).where(eq(BoardBundleTable.id, bundle.id)).run())
+  const close = Effect.fnUntraced(function* (
+    row: ProjectRow,
+    repo: string,
+    bundle: typeof BoardBundleTable.$inferSelect,
+    why: string,
+    status: "dissolved" | "red" | "base-red" = "dissolved",
+  ) {
+    yield* deps.quiet((tx) => tx.update(BoardBundleTable).set({ status }).where(eq(BoardBundleTable.id, bundle.id)).run())
     if (bundle.pr_number)
       yield* deps.gh(["pr", "close", String(bundle.pr_number), "--repo", repo, "--delete-branch", "--comment", `Bundle ${row.key}-B${bundle.n} ${why}.`])
   })

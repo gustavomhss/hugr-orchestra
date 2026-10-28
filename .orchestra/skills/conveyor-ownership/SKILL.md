@@ -66,7 +66,7 @@ it: skill `conveyor-maintenance`. User guide: `docs/guides/merge-queue.md`.
 - §14 is decided by the owner: bundles carry the `full.label` (`epic` here), `dev` uses `merge-if-disjoint`
   (`.orchestra/ci.json`), and the host merges a green bundle under the `board_queue` grant. With no contract,
   `onBaseMoved` defaults to `retest`.
-- Phase 1 has no bisection: a red bundle (cancelled checks count as red) returns every member to Review.
+- A red bundle (cancelled checks count as red) is `base-red` when its base commit's checks are red, else `red`; `red` halves the members until one card fails alone and goes back to Review (`bundle.dissolve`).
 - The pool is the project: one open bundle per board project.
 - The repository is public: attempts and snapshots carry structure and hashes only, never free text, spend or
   transcripts.

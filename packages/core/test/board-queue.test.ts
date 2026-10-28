@@ -3,11 +3,18 @@ import fs from "fs/promises"
 import { tmpdir } from "os"
 import path from "path"
 import { pathToFileURL } from "url"
-import { and, eq } from "drizzle-orm"
+import { and, asc, eq } from "drizzle-orm"
 import { Effect, Exit } from "effect"
 import { Board } from "@orchestra/core/board/board"
 import type { BoardRecord } from "@orchestra/core/board/record"
-import { BoardCheckTable, BoardIssueTable, BoardProjectTable, BoardQueueTable } from "@orchestra/core/board/sql"
+import {
+  BoardActivityTable,
+  BoardBundleTable,
+  BoardCheckTable,
+  BoardIssueTable,
+  BoardProjectTable,
+  BoardQueueTable,
+} from "@orchestra/core/board/sql"
 import { Credential } from "@orchestra/core/credential"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
@@ -25,11 +32,14 @@ import { git } from "./fixture/git"
 import { testEffect } from "./lib/effect"
 
 // GitHub is a fake keyed by repo name that reads PR heads from each test's bare origin; git itself is real.
+// `seeded` branches make a PR's full gate fail when every one of them is in its head; `baseRuns` is the base commit's check-runs.
 type Remote = {
   origin: string
   pulls: Map<number, string>
   bodies: Map<number, string>
   conclusion: string
+  seeded: ReadonlyArray<string>
+  baseRuns: string
   calls: Array<ReadonlyArray<string>>
 }
 const remotes = new Map<string, Remote>()
@@ -46,6 +56,7 @@ const gh = (args: ReadonlyArray<string>, stdin?: string) =>
       const branch = remote.pulls.get(Number(pull[1])) ?? ""
       return { exitCode: 0, stdout: JSON.stringify({ head: { sha: await sha(branch), ref: branch } }), stderr: "" }
     }
+    if (args[0] === "api" && args[1]?.endsWith("/check-runs")) return { exitCode: 0, stdout: remote.baseRuns, stderr: "" }
     if (args[0] === "pr" && args[1] === "create") {
       const number = 100 + remote.pulls.size
       remote.pulls.set(number, args[args.indexOf("--head") + 1] ?? "")
@@ -53,15 +64,20 @@ const gh = (args: ReadonlyArray<string>, stdin?: string) =>
       return { exitCode: 0, stdout: `https://github.com/${repo}/pull/${number}\n`, stderr: "" }
     }
     if (args[0] === "pr" && args[1] === "view") {
-      const done = remote.conclusion !== ""
-      const rollup = [{ name: "test", status: done ? "COMPLETED" : "IN_PROGRESS", conclusion: done ? remote.conclusion : null }]
       const headRefOid = await sha(remote.pulls.get(Number(args[2])) ?? "")
+      const seededRed = remote.seeded.length > 0 && (await Promise.all(remote.seeded.map((branch) => contains(remote.origin, branch, headRefOid)))).every(Boolean)
+      const conclusion = seededRed ? "FAILURE" : remote.conclusion
+      const done = conclusion !== ""
+      const rollup = [{ name: "test", status: done ? "COMPLETED" : "IN_PROGRESS", conclusion: done ? conclusion : null }]
       return { exitCode: 0, stdout: JSON.stringify({ headRefOid, statusCheckRollup: rollup }), stderr: "" }
     }
     if (args[0] === "pr" && args[1] === "edit") remote.bodies.set(Number(args[2]), stdin ?? "")
     if (args[0] === "api") return { exitCode: 1, stdout: "", stderr: "not found" }
     return { exitCode: 0, stdout: "", stderr: "" }
   })
+
+const contains = async (origin: string, branch: string, sha: string) =>
+  (await Bun.$`git --git-dir ${origin} merge-base --is-ancestor refs/heads/${branch} ${sha}`.quiet().nothrow()).exitCode === 0
 
 // Stands in for Atlas's renderer: the bodies are the records themselves, so the test reads what the host filled in.
 const RENDER: BoardRecord.Port = {
@@ -175,23 +191,63 @@ describe("BoardQueue", () => {
     }),
   )
 
-  it.live("a red bundle gives its cards back to Review and closes its PR", () =>
+  it.live("a red bundle is halved until the one card that fails alone goes back to Review", () =>
     Effect.gen(function* () {
       const board = yield* Board.Service
-      const repo = yield* repository("QRD")
+      const repo = yield* repository("QRD", 3)
       yield* card(repo, "QRD", 1, "a.txt")
+      yield* card(repo, "QRD", 2, "b.txt")
+      yield* card(repo, "QRD", 3, "c.txt")
+      yield* Effect.forEach([1, 2, 3], (number) => board.queue({ project: "QRD", number, flush: true, reason: "Verified." }), { discard: true })
+      repo.remote.conclusion = "SUCCESS"
+      repo.remote.seeded = ["card-3"]
 
-      yield* board.queue({ project: "QRD", number: 1, flush: true, reason: "Verified." })
+      yield* Effect.forEach(Array.from({ length: 12 }), () => board.queueTick(), { discard: true })
+      expect([yield* stage(repo, 1), yield* stage(repo, 2), yield* stage(repo, 3)]).toEqual(["shipped", "shipped", "review"])
+      expect(yield* queued(repo, 3)).toBeNull()
+      expect(yield* bundleStatuses(repo)).toEqual(["red", "merged", "red", "merged", "red"])
+      expect(yield* ejections(repo, 3)).toEqual(["red alone on the full gate"])
+    }),
+  )
+
+  it.live("a bundle that is red on its base waits for the base instead of blaming its cards", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QBR")
+      yield* card(repo, "QBR", 1, "a.txt")
+      yield* card(repo, "QBR", 2, "b.txt")
+      yield* board.queue({ project: "QBR", number: 1, reason: "Verified." })
+      yield* board.queue({ project: "QBR", number: 2, reason: "Verified." })
       yield* board.queueTick()
-      expect(repo.remote.pulls.get(101)).toBe("bundle-QRD-1")
-      const base = yield* origin(repo, "main")
+      expect(repo.remote.pulls.get(102)).toBe("bundle-QBR-1")
 
       repo.remote.conclusion = "FAILURE"
+      repo.remote.baseRuns = JSON.stringify([{ name: "test", status: "COMPLETED", conclusion: "FAILURE" }])
       yield* board.queueTick()
-      expect(yield* stage(repo, 1)).toBe("review")
-      expect(yield* queued(repo, 1)).toBeNull()
-      expect(yield* origin(repo, "main")).toBe(base)
-      expect(repo.remote.calls.some((args) => args[0] === "pr" && args[1] === "close" && args[2] === "101")).toBe(true)
+      expect([yield* stage(repo, 1), yield* stage(repo, 2)]).toEqual(["queue", "queue"])
+      expect(yield* bundleStatuses(repo)).toEqual(["base-red"])
+
+      yield* board.queueTick()
+      expect(repo.remote.pulls.size).toBe(3)
+      expect(yield* bundleStatuses(repo)).toEqual(["base-red"])
+    }),
+  )
+
+  it.live("a card that passes alone is shipped and the card that fails beside it is ejected", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QIX")
+      yield* card(repo, "QIX", 1, "a.txt")
+      yield* card(repo, "QIX", 2, "b.txt")
+      yield* board.queue({ project: "QIX", number: 1, reason: "Verified." })
+      yield* board.queue({ project: "QIX", number: 2, reason: "Verified." })
+      repo.remote.conclusion = "SUCCESS"
+      repo.remote.seeded = ["card-1", "card-2"]
+
+      yield* Effect.forEach(Array.from({ length: 8 }), () => board.queueTick(), { discard: true })
+      expect([yield* stage(repo, 1), yield* stage(repo, 2)]).toEqual(["shipped", "review"])
+      expect(yield* bundleStatuses(repo)).toEqual(["red", "merged", "red"])
+      expect(yield* ejections(repo, 2)).toEqual(["red alone on the full gate"])
     }),
   )
 
@@ -234,7 +290,7 @@ function repository(key: string, size = 2) {
       await commit(directory, "base")
       await git(directory, "remote", "add", "origin", pathToFileURL(remote).href)
       await git(directory, "push", "--quiet", "origin", "main")
-      return { root, directory, key, remote: { origin: remote, pulls: new Map<number, string>(), bodies: new Map<number, string>(), conclusion: "", calls: [] } }
+      return { root, directory, key, remote: { origin: remote, pulls: new Map<number, string>(), bodies: new Map<number, string>(), conclusion: "", seeded: [], baseRuns: "[]", calls: [] } }
     })
     remotes.set(`acme/${key}`, made.remote)
     const database = yield* Database.Service
@@ -277,6 +333,35 @@ function origin(repo: Repo, branch: string) {
 
 function stage(repo: Repo, number: number) {
   return row(repo, number).pipe(Effect.map((found) => found.issue.stage))
+}
+
+function bundleStatuses(repo: Repo) {
+  return Effect.gen(function* () {
+    const database = yield* Database.Service
+    const found = yield* database.db
+      .select({ status: BoardBundleTable.status })
+      .from(BoardBundleTable)
+      .innerJoin(BoardProjectTable, eq(BoardProjectTable.id, BoardBundleTable.project_id))
+      .where(eq(BoardProjectTable.key, repo.key))
+      .orderBy(asc(BoardBundleTable.n))
+      .all()
+      .pipe(Effect.orDie)
+    return found.map((item) => item.status)
+  })
+}
+
+function ejections(repo: Repo, number: number) {
+  return Effect.gen(function* () {
+    const found = yield* row(repo, number)
+    const database = yield* Database.Service
+    const activity = yield* database.db
+      .select({ reason: BoardActivityTable.reason })
+      .from(BoardActivityTable)
+      .where(and(eq(BoardActivityTable.issue_id, found.issue.id), eq(BoardActivityTable.action, "bundle.dissolve")))
+      .all()
+      .pipe(Effect.orDie)
+    return activity.map((item) => item.reason)
+  })
 }
 
 function queued(repo: Repo, number: number) {
