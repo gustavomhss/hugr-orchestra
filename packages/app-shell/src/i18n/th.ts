@@ -1079,9 +1079,8 @@ export const dict = {
   "settings.permissions.tool.websearch.description": "ค้นหาบนเว็บ",
   "settings.permissions.tool.external_directory.title": "ไดเรกทอรีภายนอก",
   "settings.permissions.tool.external_directory.description": "เข้าถึงไฟล์นอกไดเรกทอรีโปรเจกต์",
-  "settings.permissions.tool.doom_loop.title": "Doom Loop",
-  "settings.permissions.tool.doom_loop.description": "ตรวจจับการเรียกเครื่องมือซ้ำด้วยข้อมูลนำเข้าเหมือนกัน",
-
+  "settings.permissions.tool.doom_loop.title": "หยุดลูปที่วนซ้ำ",
+  "settings.permissions.tool.doom_loop.description": "หยุดเอเจนต์เมื่อเรียกใช้เครื่องมือซ้ำด้วยอินพุตเดิม",
   "session.delete.failed.title": "ไม่สามารถลบเซสชัน",
   "session.delete.title": "ลบเซสชัน",
   "session.delete.confirm": 'ลบเซสชัน "{{name}}" หรือไม่?',

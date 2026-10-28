@@ -1078,9 +1078,8 @@ export const dict = {
   "settings.permissions.tool.websearch.description": "搜索网页",
   "settings.permissions.tool.external_directory.title": "外部目录",
   "settings.permissions.tool.external_directory.description": "访问项目目录之外的文件",
-  "settings.permissions.tool.doom_loop.title": "死循环",
-  "settings.permissions.tool.doom_loop.description": "检测具有相同输入的重复工具调用",
-
+  "settings.permissions.tool.doom_loop.title": "停止重复循环",
+  "settings.permissions.tool.doom_loop.description": "当智能体以相同输入重复调用工具时停止它",
   "session.delete.failed.title": "删除会话失败",
   "session.delete.title": "删除会话",
   "session.delete.confirm": '删除会话 "{{name}}"？',

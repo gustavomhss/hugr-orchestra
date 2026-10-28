@@ -1113,9 +1113,9 @@ export const dict = {
   "settings.permissions.tool.websearch.description": "Ieškokite internete",
   "settings.permissions.tool.external_directory.title": "Išorinis katalogas",
   "settings.permissions.tool.external_directory.description": "Pasiekite failus už projekto katalogo ribų",
-  "settings.permissions.tool.doom_loop.title": "Doom Loop",
+  "settings.permissions.tool.doom_loop.title": "Stabdyti kartojimosi ciklus",
   "settings.permissions.tool.doom_loop.description":
-    "Aptikti pasikartojančius įrankių iškvietimus naudojant identišką įvestį",
+    "Sustabdyti agentą, kai jis kartoja įrankio iškvietimą su identiška įvestimi",
   "session.delete.failed.title": "Nepavyko ištrinti sesijos",
   "session.delete.title": "Ištrinti seansą",
   "session.delete.confirm": 'Ištrinti seansą "{{name}}"?',

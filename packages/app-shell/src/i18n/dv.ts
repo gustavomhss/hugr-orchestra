@@ -1115,8 +1115,8 @@ export const dict = {
   "settings.permissions.tool.external_directory.title": "އެކްސްޓަރނަލް ޑައިރެކްޓަރީ",
   "settings.permissions.tool.external_directory.description":
     "ޕްރޮޖެކްޓް ޑައިރެކްޓަރީން ބޭރުގައި ހުންނަ ފައިލްތަކަށް ވަދެވޭނެއެވެ",
-  "settings.permissions.tool.doom_loop.title": "ޑޫމް ލޫޕް އެވެ",
-  "settings.permissions.tool.doom_loop.description": "އެއްގޮތް އިންޕުޓެއް އެކުލެވޭ ތަކުރާރުކޮށް ޓޫލް ކޯލްތައް ހޯދުން",
+  "settings.permissions.tool.doom_loop.title": "ތަކުރާރު ލޫޕްތައް ހުއްޓުވާ",
+  "settings.permissions.tool.doom_loop.description": "އެއްގޮތް އިންޕުޓެއް ހުރި ޓޫލް ކޯލެއް ތަކުރާރުކުރާއިރު އެޖެންޓް ހުއްޓުވާ",
   "session.delete.failed.title": "ސެޝަން ޑިލީޓް ކުރަން ނާކާމިޔާބުވިއެވެ",
   "session.delete.title": "ސެޝަން ފުހެލުން",
   "session.delete.confirm": 'ސެޝަން "{{name}}" ފުހެލަންތަ؟',

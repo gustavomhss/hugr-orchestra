@@ -1109,9 +1109,9 @@ export const dict = {
   "settings.permissions.tool.websearch.description": "Търсете в мрежата",
   "settings.permissions.tool.external_directory.title": "Външен указател",
   "settings.permissions.tool.external_directory.description": "Достъп до файлове извън директорията на проекта",
-  "settings.permissions.tool.doom_loop.title": "Doom Loop",
+  "settings.permissions.tool.doom_loop.title": "Спиране на повтарящи се цикли",
   "settings.permissions.tool.doom_loop.description":
-    "Откриване на повтарящи се извиквания на инструменти с идентичен вход",
+    "Спира агента, когато повтаря извикване на инструмент с идентичен вход",
   "session.delete.failed.title": "Неуспешно изтриване на сесията",
   "session.delete.title": "Изтриване на сесия",
   "session.delete.confirm": "Да се ​​изтрие ли сесията „{{name}}“?",

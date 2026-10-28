@@ -1107,9 +1107,9 @@ export const dict = {
   "settings.permissions.tool.websearch.description": "Tìm kiếm trên web",
   "settings.permissions.tool.external_directory.title": "Thư mục bên ngoài",
   "settings.permissions.tool.external_directory.description": "Truy cập các tệp bên ngoài thư mục dự án",
-  "settings.permissions.tool.doom_loop.title": "Vòng lặp vô hạn",
+  "settings.permissions.tool.doom_loop.title": "Dừng vòng lặp lặp lại",
   "settings.permissions.tool.doom_loop.description":
-    "Phát hiện các lệnh gọi công cụ lặp lại với đầu vào giống hệt nhau",
+    "Dừng tác nhân khi nó lặp lại một lệnh gọi công cụ với cùng đầu vào",
   "session.delete.failed.title": "Không thể xóa phiên",
   "session.delete.title": "Xóa phiên",
   "session.delete.confirm": 'Xóa phiên "{{name}}"?',
