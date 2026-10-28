@@ -12,6 +12,7 @@ import {
   nodeOf,
   type Outputs,
   outputsOf,
+  phaseOf,
   readChecklist,
   START,
   steps,
@@ -228,4 +229,32 @@ export function addAlternative(flow: Flow, id: string) {
     ...(no ? [{ from: alternative.id, to: no.to, port: 1 }] : []),
   ]
   return { flow: { ...flow, nodes: [...flow.nodes, alternative], edges }, id: alternative.id }
+}
+
+// Moves a step one place along the sequence. At the edge of its phase it first crosses into the neighbouring phase
+// (or out of every phase) without changing places, so phases stay unbroken and one more press moves it on.
+export function moveStep(flow: Flow, id: string, direction: -1 | 1): Flow {
+  const order = chain(flow)
+  const at = order.findIndex((node) => node.id === id)
+  const other = order[at + direction]
+  if (at < 0 || !other || other.type === START || order[at].type === START) return flow
+  const own = phaseOf(flow, id)
+  const next = phaseOf(flow, other.id)
+  if (own !== next) {
+    const phases = flow.phases
+      .map((phase) => ({
+        ...phase,
+        nodeIds: phase === next ? [...phase.nodeIds, id] : phase.nodeIds.filter((member) => member !== id),
+      }))
+      .filter((phase) => phase.nodeIds.length)
+    return { ...flow, phases }
+  }
+  const ids = order.map((node) => node.id)
+  const swapped = ids.with(at, other.id).with(at + direction, id)
+  const links = new Set(ids.slice(1).map((to, index) => `${ids[index]}>${to}`))
+  const edges = flow.edges.filter((edge) => !links.has(`${edge.from}>${edge.to}`))
+  return {
+    ...flow,
+    edges: [...edges, ...swapped.slice(1).map((to, index) => ({ from: swapped[index], to, port: 0 }))],
+  }
 }

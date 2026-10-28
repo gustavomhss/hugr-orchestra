@@ -115,7 +115,7 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.template.specDecompose.body":
     "Turns a frozen intent into work packages through five gated phases.",
   "orchestra.workflows.template.copy": "A copy of this workflow, as a new draft.",
-  "orchestra.workflows.template.empty": "Empty canvas",
+  "orchestra.workflows.template.empty": "No steps yet",
   "orchestra.workflows.template.toolsMissing": "Needs tools not available yet",
   "orchestra.workflows.template.toolsMissingTitle":
     "This project checks its work with Relay tools that are not available yet. It can be read and edited, but it cannot run.",
@@ -669,6 +669,21 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.receipt.missing": "Run not found",
   "orchestra.workflows.receipt.runPublished": "Run the published version to see receipts, verdicts and audits here.",
   "orchestra.workflows.receipt.publishFirst": "Publish this workflow first. Runs use the published version.",
+  "orchestra.workflows.view.label": "View",
+  "orchestra.workflows.view.list": "List",
+  "orchestra.workflows.view.canvas": "Canvas",
+  "orchestra.workflows.plan.add": "Add step",
+  "orchestra.workflows.plan.addHere": "Add a step here",
+  "orchestra.workflows.plan.pick": "What should this step do?",
+  "orchestra.workflows.plan.cancel": "Cancel",
+  "orchestra.workflows.plan.noInstructions": "No instructions yet",
+  "orchestra.workflows.plan.noGoal": "No goal yet. Every step sees it.",
+  "orchestra.workflows.plan.moveUp": "Move {{name}} up",
+  "orchestra.workflows.plan.moveDown": "Move {{name}} down",
+  "orchestra.workflows.plan.phaseHere": "Start a phase with {{name}}",
+  "orchestra.workflows.plan.protocolHint": "Every step in this phase follows these instructions.",
+  "orchestra.workflows.plan.looseTitle": "Not in the sequence",
+  "orchestra.workflows.plan.looseHint": "These steps never run. Connect them on the canvas or delete them.",
 }
 
 export const WORKFLOWS_COPY_BR: Record<keyof typeof WORKFLOWS_COPY, string> = {
@@ -790,7 +805,7 @@ export const WORKFLOWS_COPY_BR: Record<keyof typeof WORKFLOWS_COPY, string> = {
   "orchestra.workflows.template.specDecompose.body":
     "Transforma uma intenção congelada em pacotes de trabalho, por meio de cinco fases com verificações.",
   "orchestra.workflows.template.copy": "Uma cópia deste workflow, como novo rascunho.",
-  "orchestra.workflows.template.empty": "Canvas vazio",
+  "orchestra.workflows.template.empty": "Nenhum passo ainda",
   "orchestra.workflows.template.toolsMissing": "Precisa de ferramentas que ainda não estão disponíveis",
   "orchestra.workflows.template.toolsMissingTitle":
     "Este projeto verifica o trabalho com ferramentas do Relay que ainda não estão disponíveis. Dá para ler e editar, mas não pode ser executado.",
@@ -1354,4 +1369,19 @@ export const WORKFLOWS_COPY_BR: Record<keyof typeof WORKFLOWS_COPY, string> = {
   "orchestra.workflows.receipt.missing": "Execução não encontrada",
   "orchestra.workflows.receipt.runPublished": "Execute a versão publicada para ver aqui os recibos, vereditos e auditorias.",
   "orchestra.workflows.receipt.publishFirst": "Publique este workflow primeiro. As execuções usam a versão publicada.",
+  "orchestra.workflows.view.label": "Visualização",
+  "orchestra.workflows.view.list": "Lista",
+  "orchestra.workflows.view.canvas": "Canvas",
+  "orchestra.workflows.plan.add": "Adicionar etapa",
+  "orchestra.workflows.plan.addHere": "Adicionar uma etapa aqui",
+  "orchestra.workflows.plan.pick": "O que esta etapa deve fazer?",
+  "orchestra.workflows.plan.cancel": "Cancelar",
+  "orchestra.workflows.plan.noInstructions": "Sem instruções ainda",
+  "orchestra.workflows.plan.noGoal": "Sem objetivo ainda. Todos os passos o veem.",
+  "orchestra.workflows.plan.moveUp": "Mover {{name}} para cima",
+  "orchestra.workflows.plan.moveDown": "Mover {{name}} para baixo",
+  "orchestra.workflows.plan.phaseHere": "Começar uma fase com {{name}}",
+  "orchestra.workflows.plan.protocolHint": "Toda etapa desta fase segue estas instruções.",
+  "orchestra.workflows.plan.looseTitle": "Fora da sequência",
+  "orchestra.workflows.plan.looseHint": "Estas etapas nunca rodam. Conecte no canvas ou exclua.",
 }

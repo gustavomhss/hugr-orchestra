@@ -13,6 +13,12 @@ For anyone using or guiding someone through the Workflows page. The user guides 
 - Only the published version runs. A workflow that is not published shows Run off with "Publish before running". A profile whose Relay tools are not available shows Run off with the tools reason.
 - To tell a user how to run a workflow, point them at the chat, not at a button that starts a run.
 
+## Editing
+
+- The editor opens in List (`plan.tsx` for workflows, `rule-view.tsx` for hooks); Canvas is the same flow drawn as a graph. Both edit one `Flow`, so a change in one shows in the other.
+- Workflow list: a collapsible Start card (goal, retries), then the steps in chain order with phases drawn as boxes. **+** between steps opens the step picker. Arrows call `moveStep` (`insert.ts`), which first crosses a phase edge and only then swaps places, so phases stay unbroken.
+- Hook list: When / If / Then. `readRule` (`rule.ts`) reads the graph as one rule (cases of conditions, then actions) and returns nothing when the wiring does not fit; the list then points the user to the canvas. `writeRule` writes the rule back as rows of nodes. Block and Require repair stay last.
+
 ## Releasing a paused run
 
 - A run in the `parked` state (a step waiting for a human) shows "Waiting for you at <step>" in its receipt, with **Release in chat**. That button opens the session of the paused step, where Maestro releases it.

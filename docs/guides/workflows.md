@@ -14,12 +14,16 @@ The app never starts a run itself. Run and Use in chat open a Maestro chat with 
 ## Your first workflow
 
 1. Open **Workflows** and choose **New workflow**. Pick a template, or start from scratch.
-2. Edit the steps and their checks in the editor. Autosave keeps your draft.
+2. Edit the steps in the editor. It opens in **List**: the steps top to bottom, each a card you open to edit in place. Click **+** between two steps to add one there, and pick what it does: an agent step, context, a review or a checkpoint. Use the arrows on a step to move it, and the Phase field to group it with its neighbours. Autosave keeps your draft.
 3. Fix anything listed under the issues count in the editor head. Publish when the count is clear.
 4. Click **Run** in the editor head or on the row. A chat opens with "Run workflow …" filled in. Add the goal after "for:" and send it.
 5. Watch the run in **Executions**, or in the chat.
 
 Use **Use in chat** instead of Run when you want to ask Maestro for something that uses the workflow, not a plain run. It fills in "Use the published workflow …" the same way.
+
+## List and canvas
+
+The editor has two views of the same workflow, switched at the top right. **List** is the plan as you read it: the Start card holds the goal every step sees and the retries, then each step in order. **Canvas** draws the same steps as nodes and wires, for when you want to see the shape or drag steps around. A change in one view shows in the other.
 
 ## Templates
 
@@ -50,7 +54,7 @@ A failed run shows the step that stopped it and the reason. Open the step in the
 
 - **Step**: one unit of work that an agent does.
 - **Check**: a command or review that must pass before the step is done. The check output is kept in the run's receipt.
-- **Phase**: a group of steps shown together in the canvas and the receipt.
+- **Phase**: a run of neighbouring steps that share instructions. The list draws it as a box around them, and the receipt groups them.
 - **Retry budget**: how many times a failed step may be tried again before the run waits for you.
 
 ## Limits

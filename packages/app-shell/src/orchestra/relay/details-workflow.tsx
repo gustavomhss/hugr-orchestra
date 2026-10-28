@@ -34,7 +34,7 @@ import { Ic, useRelayCopy } from "./ui"
 // The skill catalog as the editor has it: `names` is undefined until it has loaded, and `error` says it could not.
 export type Skills = { names: string[] | undefined; error: boolean; retry: () => void }
 
-type Props = {
+export type Props = {
   flow: Flow
   node: FlowNode
   run: RelayRun | undefined
@@ -46,6 +46,8 @@ type Props = {
   description: string
   save: JSX.Element
   readOnly?: boolean
+  // Shown inside a plan card instead of the details dialog: no column heading, no autofocus.
+  inline?: boolean
   onChange: (flow: Flow) => void
   onDescribe: (description: string) => void
   onNav: (id: string) => void
@@ -381,7 +383,7 @@ function StartOutput(props: Props & { title?: string }) {
   )
 }
 
-function Params(props: Props) {
+export function Params(props: Props) {
   const copy = useRelayCopy()
   const update = (parameters: Record<string, unknown>) =>
     props.onChange(updateNode(props.flow, props.node.id, { parameters: { ...props.node.parameters, ...parameters } }))
@@ -402,9 +404,11 @@ function Params(props: Props) {
   const unchecked = () => ["relay.execute", "relay.review"].includes(props.node.type) && !checklist().controls.length
   return (
     <>
-      <div class="wf-col-head">
-        <h3>{copy.t("orchestra.workflows.details.params")}</h3>
-      </div>
+      <Show when={!props.inline}>
+        <div class="wf-col-head">
+          <h3>{copy.t("orchestra.workflows.details.params")}</h3>
+        </div>
+      </Show>
       <Show when={props.node.type !== START} fallback={<StartParams {...props} />}>
         <For each={problems()}>
           {(text) => (
@@ -433,7 +437,9 @@ function Params(props: Props) {
             </select>
             <Show when={!choices().none && phaseOf(props.flow, props.node.id)}>
               {(phase) => (
-                <span class="mx-hint">{copy.t("orchestra.workflows.details.phaseMiddle", { phase: phase().name })}</span>
+                <span class="mx-hint">
+                  {copy.t("orchestra.workflows.details.phaseMiddle", { phase: phase().name })}
+                </span>
               )}
             </Show>
           </label>
@@ -467,7 +473,9 @@ function Params(props: Props) {
               value={String(props.node.parameters.instructions ?? "")}
               onInput={(event) => update({ instructions: event.currentTarget.value })}
             />
-            <Show when={props.node.type === "relay.execute" && !String(props.node.parameters.instructions ?? "").trim()}>
+            <Show
+              when={props.node.type === "relay.execute" && !String(props.node.parameters.instructions ?? "").trim()}
+            >
               <span class="mx-hint" role="status">
                 {copy.t("orchestra.workflows.details.instructionsEmpty")}
               </span>
@@ -590,7 +598,7 @@ function StartParams(props: Props) {
         <textarea
           class="prose"
           style={{ "min-height": "84px" }}
-          data-autofocus=""
+          data-autofocus={props.inline ? undefined : ""}
           value={String(props.node.parameters.relayBrief ?? "")}
           onInput={(event) => update({ relayBrief: event.currentTarget.value })}
         />
@@ -624,58 +632,64 @@ function StartParams(props: Props) {
           {copy.t("orchestra.workflows.details.budgetHint", { count: retryBudget(props.flow) })}
         </span>
       </label>
-      <div class="wf-field-row">
-        <span>{copy.t("orchestra.workflows.details.protocols")}</span>
-      </div>
-      <Show when={props.flow.phases.length} fallback={<Empty>{copy.t("orchestra.workflows.details.noPhases")}</Empty>}>
-        <Index each={props.flow.phases}>
-          {(phase) => {
-            const expanded = () => open().has(phase().id)
-            return (
-              <div class="wf-proto" classList={{ flash: props.focusPhase === phase().id }} data-proto={phase().id}>
-                <button
-                  type="button"
-                  aria-expanded={expanded()}
-                  onClick={() => {
-                    const next = new Set(open())
-                    if (expanded()) next.delete(phase().id)
-                    if (!expanded()) next.add(phase().id)
-                    setOpen(next)
-                  }}
-                >
-                  <Ic name="chevron" />
-                  <b>{phase().name}</b>
-                  <small>
-                    {phase().description
-                      ? copy.count(
-                          phase().description.split("\n").length,
-                          "orchestra.workflows.count.line.one",
-                          "orchestra.workflows.count.line.other",
-                        )
-                      : copy.t("orchestra.workflows.details.protocolEmpty")}
-                  </small>
-                </button>
-                <Show when={expanded()}>
-                  <PhaseNameField flow={props.flow} phase={phase()} onChange={props.onChange} />
-                  <textarea
-                    aria-label={copy.t("orchestra.workflows.details.protocolLabel", { phase: phase().name })}
-                    value={phase().description}
-                    onInput={(event) =>
-                      props.onChange(updatePhase(props.flow, phase().id, { description: event.currentTarget.value }))
-                    }
-                  />
-                </Show>
-              </div>
-            )
-          }}
-        </Index>
+      {/* The list view edits each phase's instructions in the phase itself. */}
+      <Show when={!props.inline}>
+        <div class="wf-field-row">
+          <span>{copy.t("orchestra.workflows.details.protocols")}</span>
+        </div>
+        <Show
+          when={props.flow.phases.length}
+          fallback={<Empty>{copy.t("orchestra.workflows.details.noPhases")}</Empty>}
+        >
+          <Index each={props.flow.phases}>
+            {(phase) => {
+              const expanded = () => open().has(phase().id)
+              return (
+                <div class="wf-proto" classList={{ flash: props.focusPhase === phase().id }} data-proto={phase().id}>
+                  <button
+                    type="button"
+                    aria-expanded={expanded()}
+                    onClick={() => {
+                      const next = new Set(open())
+                      if (expanded()) next.delete(phase().id)
+                      if (!expanded()) next.add(phase().id)
+                      setOpen(next)
+                    }}
+                  >
+                    <Ic name="chevron" />
+                    <b>{phase().name}</b>
+                    <small>
+                      {phase().description
+                        ? copy.count(
+                            phase().description.split("\n").length,
+                            "orchestra.workflows.count.line.one",
+                            "orchestra.workflows.count.line.other",
+                          )
+                        : copy.t("orchestra.workflows.details.protocolEmpty")}
+                    </small>
+                  </button>
+                  <Show when={expanded()}>
+                    <PhaseNameField flow={props.flow} phase={phase()} onChange={props.onChange} />
+                    <textarea
+                      aria-label={copy.t("orchestra.workflows.details.protocolLabel", { phase: phase().name })}
+                      value={phase().description}
+                      onInput={(event) =>
+                        props.onChange(updatePhase(props.flow, phase().id, { description: event.currentTarget.value }))
+                      }
+                    />
+                  </Show>
+                </div>
+              )
+            }}
+          </Index>
+        </Show>
       </Show>
     </>
   )
 }
 
 // Renames a phase as the user types; an empty or repeated name is shown as an error and never reaches the flow.
-function PhaseNameField(props: { flow: Flow; phase: FlowPhase; onChange: (flow: Flow) => void }) {
+export function PhaseNameField(props: { flow: Flow; phase: FlowPhase; onChange: (flow: Flow) => void }) {
   const copy = useRelayCopy()
   const id = createUniqueId()
   const [draft, setDraft] = createStore({ name: props.phase.name, error: "" as "" | "required" | "taken" | "lines" })
