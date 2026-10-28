@@ -216,8 +216,14 @@ keeps that rule unchanged and gives committed Knowledge a governed way in.
   - Transcripts, answers and continuity chunks are scrubbed before they are hashed (as `transcript-store.ts` `put`
     already does).
   - The repo's secret scanner runs on every PR, as it does for any file.
-- **Public repositories:** see §9. The owner rules whether `members/*/memory`, `members/*/context`,
-  `cards/*/attempts` and transcripts travel redacted, travel in full, or stay out on a public repo.
+- **Public repositories travel redacted** (owner ruling 2026-10-28). A private repository carries everything above.
+  A public one carries the structure and drops the bodies:
+  - `members/*/memory`, `members/*/context` and `cards/*/attempts` keep their rows: ids, links, model, timings and
+    content hashes. Free text (memory bodies, answers, notes) is left out of the row, and spend is left out
+    everywhere.
+  - Transcripts and continuity chunks stay in the local `blobs/` store and are never committed; the committed row
+    names them by hash. Re-spawn from a public clone therefore needs the original machine's blobs.
+  - Whether a repository is public is read from the remote host, not configured by the agent.
 
 ## 7. From today's files
 
@@ -266,12 +272,10 @@ Notes for the one-shot `atlas migrate-layout` command:
 
 ## 9. Open
 
-- **Public repositories (owner ruling needed).** "Everything travels in git" and redacting by default on public repos
-  pull in opposite directions. The choice is per repo: travel in full, travel redacted, or keep memory, context,
-  attempts and transcripts out.
 - **Transcript and archive size.**
   - Large transcripts and continuity chunks in `blobs/` grow the repo.
   - If that becomes a problem, the fallback is a partial clone or LFS for `blobs/` (`TranscriptRef.store`). The
     layout does not change.
-- **Signed commits for trust.** Whether to require them, so a committed non-proven fact can keep its tier (§5).
+- **Signed commits for trust.** Deferred by the owner (2026-10-28): not required now. Until then, a committed
+  non-proven fact comes back as a candidate (§5).
 - **Card keys.** The key format and where keys are minted come from the board (`docs/specs/projects-board`).
