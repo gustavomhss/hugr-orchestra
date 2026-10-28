@@ -142,7 +142,9 @@ def test_a_diff_control_sees_files_git_does_not_track_yet(tmp_path):
                 env = dict(base_env, **params)
                 r = subprocess.run(["bash", "-c", cmd], cwd=work, env=env,
                                    capture_output=True, text=True)
-                assert r.returncode == 0, (
+                # A `test -z` control asserts that nothing changed, so seeing the change means failing.
+                absence = cmd.startswith("test -z")
+                assert (r.returncode != 0) == absence, (
                     f"{profile.stem}:{wp['id']}:{c['id']} does not see an untracked change\n{cmd}")
                 checked += 1
     assert checked >= 4, f"expected the diff-based controls to be exercised, saw {checked}"
