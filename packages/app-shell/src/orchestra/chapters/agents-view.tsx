@@ -1,9 +1,17 @@
 import { createMemo, For, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import type { Agent } from "@/v2-wire"
+import type { AgentFileInfo } from "@/v2-types"
 import { useLanguage } from "@/context/language"
 import { agentKey } from "@/context/agent-identity"
-import { agentAvatar, agentRoster } from "./agents-roster"
+import {
+  agentAvatar,
+  agentRoster,
+  inheritedAction,
+  mcpPermission,
+  PERMISSION_TOOLS,
+  type PermissionChoice,
+} from "./agents-roster"
 import { avatarUrl } from "../avatars"
 import { MxBadge } from "./kit"
 
@@ -191,5 +199,65 @@ export function AgentPortrait(props: { agent: Agent; avatar?: string; class: str
     >
       {(url) => <img class={props.class} src={url()} alt="" data-working={props.working || undefined} />}
     </Show>
+  )
+}
+
+/** One permission select per built-in tool, then one per configured MCP server covering all its tools. */
+export function AgentToolPermissions(props: {
+  rules: Agent["permission"]
+  file: AgentFileInfo["permission"]
+  draft: Record<string, PermissionChoice>
+  servers: readonly string[]
+  onChange: (tool: string, choice: PermissionChoice) => void
+}) {
+  const language = useLanguage()
+  const rows = () => [
+    ...PERMISSION_TOOLS.map((tool) => ({ tool, label: language.t(`orchestra.agents.tool.${tool}`) })),
+    ...props.servers.map((server) => ({
+      tool: mcpPermission(server),
+      label: language.t("orchestra.agents.tool.mcp", { server }),
+    })),
+  ]
+  const inheritLabel = (tool: string) => {
+    const action = inheritedAction(props.rules, tool, props.file?.[tool])
+    if (!action) return language.t("orchestra.agents.choice.inherit")
+    return language.t("orchestra.agents.choice.inheritValue", { action })
+  }
+  return (
+    <div class="mx-table">
+      <For each={rows()}>
+        {(row) => (
+          <div class="mx-row">
+            <div class="mx-grow">
+              <strong id={`agents-tool-${row.tool}`}>
+                <bdi>{row.label}</bdi>
+              </strong>
+            </div>
+            <select
+              name={`perm-${row.tool}`}
+              class="mx-search"
+              aria-labelledby={`agents-tool-${row.tool}`}
+              onChange={(event) => props.onChange(row.tool, event.currentTarget.value as PermissionChoice)}
+            >
+              <option value="inherit" selected={props.draft[row.tool] === "inherit"}>
+                {inheritLabel(row.tool)}
+              </option>
+              <Show when={typeof props.file?.[row.tool] === "object"}>
+                <option value="custom" selected={props.draft[row.tool] === "custom"}>
+                  {language.t("orchestra.agents.choice.custom")}
+                </option>
+              </Show>
+              <For each={["allow", "ask", "deny"] as const}>
+                {(action) => (
+                  <option value={action} selected={props.draft[row.tool] === action}>
+                    {language.t(`orchestra.agents.action.${action}`)}
+                  </option>
+                )}
+              </For>
+            </select>
+          </div>
+        )}
+      </For>
+    </div>
   )
 }
