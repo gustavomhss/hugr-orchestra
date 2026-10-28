@@ -54,6 +54,8 @@ import { createVerifyFactLeg } from "./verify-fact-source.js"
 import { reverifyStore, makeScopeHasDocs, driftPairsOf, danglingOf } from "./reverify-store.js"
 import type { DocExists } from "./reverify-store.js"
 import { createDiskStore, rehydrateProjection } from "./store.js"
+import { withKnowledgeLog } from "./knowledge-log.js"
+import { replayKnowledge } from "./knowledge-replay.js"
 import { gitStoreProvenance } from "./store-provenance.js"
 import type { SidecarTrust } from "./store-provenance.js"
 import { buildReadAccess, trackedProvableAdvisory } from "./read-access.js"
@@ -237,17 +239,23 @@ export function composeRuntime(repoPath: string): ComposedRuntime {
   // `readAccess`, built below once `verifyFactLeg` (its oracle) exists.
   const provenance = gitStoreProvenance(repoPath)
   const trusted: SidecarTrust = () => provenance() === "trusted"
-  const store = createDiskStore(join(repoPath, CAS_REL), () => headSha(repoPath), trusted)
+  const disk = createDiskStore(join(repoPath, CAS_REL), () => headSha(repoPath), trusted)
+  // Every settled projection commit is also appended to this actor's committed knowledge log (`knowledge-log.ts`),
+  // so a fresh clone can rebuild the projection by replay below. The card and attempt come from the host.
+  const store = withKnowledgeLog(disk, {
+    repoPath,
+    seat: actor,
+    source: {
+      ...(process.env.ATLAS_CARD === undefined ? {} : { card: process.env.ATLAS_CARD }),
+      ...(process.env.ATLAS_ATTEMPT === undefined ? {} : { attempt: process.env.ATLAS_ATTEMPT }),
+    },
+  })
   // THE `draft` + `draftSupersede` COMPOSITION PLANNERS (WP-10.A2-a/b / ADR-0004, AUTHOR-6/7/9/10/13) — over
   // the SAME `groundingComputer` `anchors` rides (AUTHOR-1: one grounding seam), so a drafted fact's
   // `subtreeHash` is exactly the value the emit truth-gate will re-derive against, PLUS the `IncumbentPort`
   // (`@atlas/tools` `draft.ts`) built here over the SAME `store` the durable emit door and the `check`
   // dry-run leg (below) ride — never a second store, never a second occupancy notion.
   const draftLeg = createDraft(groundingComputer, buildDraftIncumbentPort(store))
-  // `driftPairs` carries each fact ALONGSIDE its own `CurrentNode` (`reverify` needs `node.primaryAnchor` for
-  // the anchor-binding check, #199); `driftFacts` is the same pairing's `.fact` projection — ONE store read.
-  const driftPairs = driftPairsOf(store)
-  const driftFacts = driftPairs.map((p) => p.fact)
   // THE SOUND-GENESIS PROVEN-FAMILY ORACLE, built ONCE and shared by BOTH `verifyFact` (the CLI's
   // `atlas verify-fact`) and `reverify` (`atlas verify-store`) below — the ONE production oracle, never a
   // duplicate that could drift from it.
@@ -264,6 +272,20 @@ export function composeRuntime(repoPath: string): ComposedRuntime {
   // needs only `rawTree` + `axes` (in hand), NEVER `readAccess.store`. Early build lets the `tracked-provable`
   // serve re-prove proven test-vacuities (#249); reused below so producer + BOTH replay sites scan ONE `testUnitsOf` (#186/N10).
   const tvFeed = buildTestVacuityFeed(rawTree, axes)
+  // REPLAY the committed knowledge logs into the local projection (`knowledge-replay.ts`): a proven fact whose seat
+  // owns its scope and that re-proves HERE is applied, everything else is staged for ratify. Only on a trusted
+  // store; before the drift readback, so drift sees the replayed rows.
+  if (provenance() === "trusted") {
+    const replayed = replayKnowledge(repoPath, disk, policy, (node, fact) =>
+      reverifyStore([{ node, fact }], verifyFactLeg, docExists, scopeHasDocs, tvFeed.replay).reProven === 1,
+    )
+    if (replayed.applied + replayed.staged + replayed.missing + replayed.rejected > 0 || replayed.refusal !== undefined)
+      console.error(`atlas: knowledge replay ${JSON.stringify(replayed)}`)
+  }
+  // `driftPairs` carries each fact ALONGSIDE its own `CurrentNode` (`reverify` needs `node.primaryAnchor` for
+  // the anchor-binding check, #199); `driftFacts` is the same pairing's `.fact` projection — ONE store read.
+  const driftPairs = driftPairsOf(store)
+  const driftFacts = driftPairs.map((p) => p.fact)
   // THE READ-SIDE ANSWER (TRAVEL-BY-REPROOF, `read-access.ts`): what every read leg below is allowed to see.
   // `trusted` ⇒ `store` verbatim, no new cost. `tracked-staging` ⇒ a refusal, unchanged in kind. `tracked-
   // provable` ⇒ a raw re-read filtered to the facts that replay `re-proven` against `verifyFactLeg` — the

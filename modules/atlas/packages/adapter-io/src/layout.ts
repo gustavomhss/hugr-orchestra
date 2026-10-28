@@ -9,6 +9,7 @@
 //   .atlas/members/<seat>/memory/pr/<prId>.jsonl         one PR's memory
 //   .atlas/members/<seat>/memory/logbook.jsonl           the logbook (only its author writes it)
 //   .atlas/members/<seat>/knowledge/<nodeKey[0:2]>.jsonl applied knowledge outcomes, sharded by node key
+//   .atlas/blobs/<h[0:2]>/<h>                            the CAS bytes each knowledge row names
 //
 // A file name is a SHARD HINT, never identity: every line still carries its own content id, and a read folds
 // every file of a kind by that id. So two ids that sanitize to the same segment, or a case-insensitive
@@ -44,6 +45,10 @@ export function memberMemoryPath(repoPath: string, record: MemoryRecord): string
 /** The shard one seat's knowledge outcome for `nodeKey` is appended to. */
 export const knowledgeShardPath = (repoPath: string, seat: string, nodeKey: string): string =>
   join(membersDir(repoPath), segment(seat), "knowledge", `${segment(nodeKey.slice(0, 2))}.jsonl`)
+
+/** The committed copy of one CAS object a knowledge row names, so a fresh clone can rebuild the row's bytes. */
+export const blobPath = (repoPath: string, contentHash: string): string =>
+  join(atlasDir(repoPath), "blobs", segment(contentHash.slice(0, 2)), segment(contentHash))
 
 /**
  * One safe path segment from an id the caller does not control. Percent-encoding removes `/` and `\`;

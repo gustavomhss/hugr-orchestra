@@ -22,11 +22,15 @@ No positional, no flag.
 | `.atlas/memory.jsonl` | split by each record's owner and kind: `.atlas/members/<seat>/memory/project.jsonl`, `logbook.jsonl`, `task/<taskId>.jsonl`, `pr/<prId>.jsonl` |
 | `.atlas/orientation.jsonl` | `.atlas/project/orientation.jsonl` |
 | `.atlas/review.jsonl` | `.atlas/project/review.jsonl` |
+| local projection (`.atlas/cas/`) | one knowledge line per row under `.atlas/members/<seat>/knowledge/`, with its bytes in `.atlas/blobs/` |
 
 - Each line is copied byte for byte, so every event keeps its id, and the old file is removed.
 - A memory line that names no owner and kind (a torn or hand-edited line) has no file to go to. It stays in
   `.atlas/memory.jsonl`, and the stores keep counting it as rejected, as before.
 - Running it again, or after a crash part way, is safe: a line found in both places is read once.
+- Each projection row goes to the seat that is the only actor of its scope in `.atlas/policy.json`, else to
+  `maestro`, marked `migrated`. A row already logged unchanged is skipped. A clone replays these rows under the
+  usual trust rule (see "Where the logs live" in `atlas-memory.md`), so most land as candidates for ratify.
 - It changes files only. Commit `.atlas` afterwards, like any other change.
 
 ## Output and exit codes
