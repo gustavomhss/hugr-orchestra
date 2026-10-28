@@ -37,6 +37,11 @@ builds the main, preload, and renderer outputs in `out/`. `package` runs
 electron-builder and writes distributables under `dist/`. Platform-specific
 scripts are `package:mac`, `package:win`, and `package:linux`.
 
+The server is the CLI binary staged in `resources/cli`, not the source: only the `predev` and `prebuild` lifecycles
+rebuild it. Calling `electron-vite dev`, `electron-vite build` or `bun run preview` directly reuses the binary already
+staged, so a change under `packages/` or `modules/` does not reach the app. After a server-side change, run `bun dev`
+or `bun run build` through bun so the lifecycle runs.
+
 ## Server
 
 Each launch starts one local server for the app. By default it is a desktop-owned V2 `orchestra serve` child: the

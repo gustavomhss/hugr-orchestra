@@ -60,6 +60,9 @@ The parts of D-C2 that replaced the meta-harness shape are reversed:
    what that seat may load, as in normal mode.
 7. **Permissions.** Every Claude Code call passes the PreToolUse gate and is authorized under the Session's own agent,
    which in a child Session is the seat.
+   The gate also refuses the Claude Code built-ins that reach outside the query (`HOST_REACH`: `ListAgents`,
+   `SendMessage`, `RemoteTrigger`, `PushNotification`). Claude Code would otherwise list and message the machine's
+   other Claude sessions, fire the account's cloud routines or notify the owner's phone from an Orchestra session.
 8. **What is served.** Orchestra tools that duplicate a Claude Code built-in or belong to Orchestra's own loop are not
    served (`UNSERVED`), and neither are `process_get`, `process_wait` and `process_cancel`, which read Orchestra's own
    bash processes. `skill` is served: Claude Code's Skill tool does not know Orchestra's playbooks. The Maestro note

@@ -53,7 +53,14 @@ Maestro itself (prompt, roster, dispatch, board, playbooks): `maestro-ownership`
   it only in turn memory.
 - `ClaudeCodeRecord.UNRECORDED` (`ToolSearch`) stays off the record, call and result; Claude Code still runs it. Add
   a tool there only when it is Claude Code plumbing with no Orchestra widget.
+- `HOST_REACH` (`ListAgents`, `SendMessage`, `RemoteTrigger`, `PushNotification`) is refused before any permission
+  check: these built-ins reach other Claude sessions on the machine, the account's routines or the owner's phone.
+  When Claude Code adds a built-in that crosses the query's boundary, add it here.
 - Governed dispatch stays MCP: `mcp__orchestra__task`, `mcp__orchestra__maestro_request_review`.
+- Switching the engine in the app (`enableClaudeMode`, `setMaestroEngine`) goes through `updateConfig`. Its
+  `onSuccess` runs while the mutation is still pending, which pauses the refresh queue, so the open directories it
+  re-queues drain only on `queue.resume()` when `reload` settles (`packages/app-shell/src/context/server-sync.tsx`).
+  Without it the composer keeps Maestro's old engine and drops every `executionHost` model, leaving "Select model".
 - Billing: never change prompts, headers or tools to influence how Anthropic classifies usage, and never probe it.
 
 ## Testing

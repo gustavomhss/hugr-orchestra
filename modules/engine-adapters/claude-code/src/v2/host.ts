@@ -48,6 +48,13 @@ const BACKGROUND_PATIENCE = Duration.minutes(30)
 const UNCHECKED = "Orchestra could not check this call, so it is refused."
 /** Claude Code defers MCP tools behind this one; it only loads their schemas, so every call to it is allowed. */
 const TOOL_SEARCH = "ToolSearch"
+/**
+ * Claude Code built-ins that reach past this query: other Claude sessions on the machine (`ListAgents`,
+ * `SendMessage`), the account's cloud routines (`RemoteTrigger`) and the owner's phone (`PushNotification`). An
+ * Orchestra session never sees or drives what lies outside it.
+ */
+const HOST_REACH = new Set(["ListAgents", "SendMessage", "RemoteTrigger", "PushNotification"])
+const OUTSIDE = "This Claude Code tool reaches outside the Orchestra session, so Orchestra refuses it."
 
 /** One gate decision, shared by the PreToolUse hook and `canUseTool` so both settle a call the same way. */
 type Decision =
@@ -121,6 +128,7 @@ export const make = Effect.gen(function* () {
                 if (SUBAGENT_TOOLS.includes(tool)) return { allow: false, reason: SUBAGENTS_REFUSED }
                 // An agent whose rules deny `*` still reaches the Orchestra tools it holds, which sit behind ToolSearch.
                 if (tool === TOOL_SEARCH) return { allow: true }
+                if (HOST_REACH.has(tool)) return { allow: false, reason: OUTSIDE }
                 if (tool.startsWith(MCP_PREFIX)) {
                   const name = tool.slice(MCP_PREFIX.length)
                   if (!learned.has(toolUseID)) callIDs.set(name, [...(callIDs.get(name) ?? []), toolUseID])
