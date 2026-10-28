@@ -27,7 +27,7 @@ Read Atlas before you change a scope, and write to it only through a door. Each 
 | `atlas memory-emit <entry.json>` | Write a project rule, task, PR or logbook entry. The kind comes from the entry's shape |
 | `atlas promote [nodeKey...]` | Ratify staged candidates, including committed knowledge a clone staged. CLI only. Needs `ATLAS_RATIFY_TOKEN`, and a T0 fact also a second token (`promote.md`). Held rows are skipped; a review line that fails to verify makes it refuse with exit 2 |
 
-Other CLI writers: `decide`, `transition`, `test-vacuity` and `derive-relations` write the store through the emit door; `hold`, `release`, `propose` and `answer` append to `review.jsonl`; `mine` writes staging only; `territory`, `own-export`, `repair` and `migrate-layout` write files, never the store. Every command also replays committed knowledge at boot, so even a read may change the local store.
+Other CLI writers: `decide`, `transition`, `test-vacuity` and `derive-relations` write the store through the emit door; `hold`, `release`, `propose` and `answer` append to `review.jsonl`; `mine` writes staging only; `territory`, `own-export`, `repair` and `migrate-layout` write files, never the store; `respawn` writes nothing. Every command also replays committed knowledge at boot, so even a read may change the local store.
 
 Every command acts on the working directory, so run it at the repository root. `atlas init <path>` also writes `.gitignore` in the working directory, not in `<path>`.
 
@@ -42,6 +42,7 @@ Every command acts on the working directory, so run it at the repository root. `
 - `atlas reconcile <mergeBase> [--accept-reground]` classifies drift since `<mergeBase>`. Exit 2 means semantic drift that needs review. `--accept-reground` only counts the mechanical part as accepted; it re-grounds nothing and never changes the exit code. It does not check that `<mergeBase>` really is the merge-base.
 - `atlas init <path>` plans the structural move-in and writes the `.gitignore` rule that keeps the store untracked and the logs tracked.
 - `atlas migrate-layout` moves old single-file logs into the `.atlas/` tree. Land it before other branches append to the old files.
+- `atlas respawn <CARD> a<n>` prints the brief a new run of that attempt starts from: the prior run, the seat's closing fold, the archived context and whether the transcript is committed. Exit 1 means the attempt is not recorded. It does not start the Session; the host does.
 
 ## Things that surprise people
 

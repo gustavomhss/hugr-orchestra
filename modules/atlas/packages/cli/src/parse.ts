@@ -123,6 +123,8 @@ export const ARITY: Record<Command, number> = {
   repair: 0,
   // `migrate-layout` takes NO positional: it moves the logs of the repository at cwd.
   "migrate-layout": 0,
+  // `respawn <CARD> a<n>` — the card and the attempt token; the runner refuses a malformed token.
+  respawn: 2,
 }
 
 // [ENTRY-CLI-5 clean-up] this used to be a HAND-TRANSCRIBED string literal — a second copy of `COMMANDS`

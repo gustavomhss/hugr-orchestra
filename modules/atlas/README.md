@@ -151,6 +151,7 @@ below, so the drift that produced this correction cannot recur silently.
 | `atlas own-export <unit...> --out <file>`                              | ops       | writes a reviewed Own snapshot built from the live store for the named units; names every non-FRESH fact   | [reference](./docs/reference/commands/own-export.md)         |
 | `atlas repair --worklist <file>`                                       | ops       | re-exports the worklist's stale Own units, materializes them, commits a branch and opens a PR              | [reference](./docs/reference/commands/repair.md)             |
 | `atlas migrate-layout`                                                 | ops       | moves the single-file `.atlas/` logs into the per-seat and project tree                                    | [reference](./docs/reference/commands/migrate-layout.md)     |
+| `atlas respawn <CARD> a<n>`                                            | ops       | prints the brief that re-spawns an attempt from the committed `.atlas/` record                             | [reference](./docs/reference/commands/respawn.md)            |
 
 <!-- command-table:end -->
 
@@ -215,14 +216,14 @@ the numbers on this page most likely to rot.
   so an identical input yields a byte-identical `Verdict` on the CLI and over MCP (TOOLS-3).
 - **Does NOT hold: surface parity.**
   <!-- transport-parity:begin -->
-  The CLI exposes **43** commands; MCP advertises **18** tools (6 governance + 10 read + 2 parallel-path).
+  The CLI exposes **44** commands; MCP advertises **18** tools (6 governance + 10 read + 2 parallel-path).
   The first two groups are `GOVERNANCE_SURFACE ∪ READ_SURFACE` (ADR-0006), both arrays in
   `packages/tools/src/handler.ts`. The third is `atlas-relations` (#99a) and `atlas-negations` (#99b),
   advertised through a documented path that deliberately leaves both surface constants untouched — so
   "MCP advertises the union" was never the whole truth, and this bullet asserted it for two campaigns.
-  **The remaining 25 commands are CLI-only and unreachable over MCP**: `mine`, `promote`, `own`,
+  **The remaining 26 commands are CLI-only and unreachable over MCP**: `mine`, `promote`, `own`,
   `transitions`, `transition`, `test-vacuities`, `test-vacuity`, `verify-fact`,
-  `verify-store`, `derive-relations`, `budget`, `territories`, `export`, `import`, `hold`, `release`, `propose`, `proposals`, `decide`, `interview`, `answer`, `territory`, `own-export`, `repair`, `migrate-layout`.
+  `verify-store`, `derive-relations`, `budget`, `territories`, `export`, `import`, `hold`, `release`, `propose`, `proposals`, `decide`, `interview`, `answer`, `territory`, `own-export`, `repair`, `migrate-layout`, `respawn`.
   <!-- transport-parity:end -->
   The writers among them publish through `atlas-emit` (ADR-0008 — an ordinary use of the existing door, not
   new surface), so no tool token exists for them.

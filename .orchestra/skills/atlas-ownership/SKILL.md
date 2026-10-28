@@ -17,6 +17,7 @@ Atlas is the project's grounded knowledge and memory: facts cited against a revi
 | Cards, attempts, transcripts | `adapter-io/src/card-log.ts`, `transcript-blobs.ts` | The only code that writes or reads `.atlas/cards/`; transcripts go to `blobs/` only on a private repository. Called by the host, never a seat |
 | Context continuity in git | `adapter-io/src/context-log.ts`, `modules/continuity/src/v2/archive.ts` (`exportTo`, `read`) | The only code that writes or reads `.atlas/members/<seat>/context/`; chunks go to `blobs/` only on a private repository. Exported by the host, never a seat |
 | Attempt trailer and PR record | `persist/src/host-adapter.ts` (`Trailer.Attempt`), `adapter-io/src/pr-record.ts` | The commit trailer names card and attempt; the PR body block only points back to the attempt files and drops spend on a public repository. Written by the host, never a seat |
+| Re-spawn brief | `adapter-io/src/respawn-brief.ts`, CLI `atlas respawn` | Built only from the committed `.atlas/` record and the seat's own memory; reads, never writes. The host starts the new V2 Session from it |
 | Repo visibility | `adapter-io/src/repo-visibility.ts` | The one answer to public or private, read from the remote host; any doubt answers public |
 | Composition | `adapter-io/src/compose.ts`, `wire.ts` | Builds the one logged store every door writes through, and runs replay at boot |
 | MCP doors | `modules/atlas/packages/tools/src/handler.ts`, `packages/mcp-server` | `WRITE_PATHS` is `atlas-emit`, `atlas-link` and `atlas-memory-emit`; only the first two write knowledge. Comments in `promote.ts` and `promote.md` that say two are stale |
@@ -53,6 +54,7 @@ Atlas is the project's grounded knowledge and memory: facts cited against a revi
 - Redaction on public repositories is built only for card, attempt and context files and transcripts. Memory rows still carry their bodies and CLI identities are emails, so do not commit `.atlas/members/` from a public repository yet.
 - Visibility is read only from GitHub; any other host answers public, so its card files travel redacted.
 - Committed memory is served as read, without replay.
+- `atlas respawn` prints a brief and names the Session to start; Atlas has no Orchestra dependency, so starting the V2 Session is the host's step, which is not built yet.
 - A committed context chunk is found by the reading agent's id, so a re-spawn under another seat does not see it; archive list and search read only the local archive.
 - A row a commit removes from the projection is not logged, so replay cannot remove it. No door removes a row today.
 - A candidate ratify rejected is staged again on the next boot; nothing records the rejection in the logs.

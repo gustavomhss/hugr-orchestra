@@ -114,6 +114,7 @@ describe("SCN-CLI-1a — every command maps to exactly one leg", () => {
       "own-export",
       "repair",
       "migrate-layout",
+      "respawn",
     ])
     expect(Object.keys(COMMAND_LEG).sort()).toEqual([...COMMANDS].sort())
     expect(COMMAND_LEG).toEqual({
@@ -186,6 +187,7 @@ describe("SCN-CLI-1a — every command maps to exactly one leg", () => {
       "own-export": "atlas-query", // OPS (R7) — writes a reviewed-snapshot file only; no knowledge write
       repair: "atlas-query", // OPS (R9) — writes the Own files and a git branch/PR; no knowledge write
       "migrate-layout": "atlas-query", // OPS — moves the single-file .atlas logs into the tree; no knowledge write
+      respawn: "atlas-query", // OPS — reads the committed record and prints a re-spawn brief; writes nothing
     })
     // teeth: a command bound to zero legs (totality) or two legs (uniqueness) — each key resolves to one string.
     for (const c of COMMANDS) {

@@ -18,7 +18,7 @@
 // forces the classification to be DECLARED rather than discovered by the next reviewer.
 //
 // ── DECLARED COUNTS (gate-checked; a drift here FAILS this gate) ────────────────────────────────────────
-//   declared-modules: 42 · dead-value-exports: 143 · type-reachable: 6
+//   declared-modules: 39 · dead-value-exports: 133 · type-reachable: 5
 //   These three are read back from THIS file and asserted against the measured tree at the foot of the run
 //   (see "THE HEADER STATES COUNTS, AND THIS CHECKS THEM"). No count is QUOTED anywhere else in this
 //   header — a quoted integer that nothing checks is exactly what rotted here (task #143); this one cannot.
@@ -137,15 +137,12 @@ const BUILTIN_LEDGER = {
 
   // ── @atlas/adapter-io — the outer ring, where a reader is most likely to assume "shipped". ────────────
   "packages/adapter-io/src/poke-file.ts": { values: 3, shipped: null, banner: true }, // the third transport; nothing constructs it (task #36)
-  // The committed card tree (repo-layout design §3): card and attempt logs, transcripts in `blobs/`, and the
-  // public-or-private answer that decides redaction. Their caller is the merge-queue host, which is not built yet,
-  // so nothing in this tree runs them but `card-log.test.ts`. 3 entries, dead-value-exports +8.
-  // `pr-record.ts` writes the Atlas record into the PR body (design §8 step 5) for the same host: +1 entry, +3. It
-  // imports the types of the other two, so both are type-reachable now (type-reachable 4 -> 6).
-  "packages/adapter-io/src/card-log.ts": { values: 5, types: true, shipped: null, banner: false },
+  // The committed card tree's writers (repo-layout design §3, §8 step 5): the public-or-private answer that decides
+  // redaction, and the Atlas record in the PR body. Their caller is the merge-queue host, which is not built yet.
+  // `card-log.ts` and `transcript-blobs.ts` are GONE from this ledger: `atlas respawn` (`respawn-brief.ts`) reads
+  // attempts and checks committed transcripts, so both moved dead -> live.
   "packages/adapter-io/src/pr-record.ts": { values: 3, shipped: null, banner: false },
   "packages/adapter-io/src/repo-visibility.ts": { values: 2, types: true, shipped: null, banner: false },
-  "packages/adapter-io/src/transcript-blobs.ts": { values: 1, shipped: null, banner: false },
   // F3 / A1 — the BOUND Memory composition (`createNativeMemory`, `storeStateOf`). Declared, not pre-wired, and  // for a different reason than the rest of this cluster: its consumer is a harness OUTSIDE this subtree
   // (Orchestra's backend specialist, through the installed boundary package, F3 work package A3), and the one in-tree
   // composition root (`compose.ts`) is precisely the route F3 clause 4 forbids it — `composeRuntime` resolves
@@ -223,7 +220,7 @@ const BUILTIN_LEDGER = {
   "packages/persist/src/diff.ts": { values: 4, shipped: null, banner: false },
   "packages/persist/src/merge.ts": { values: 8, shipped: null, banner: false },
   // 1 -> 2: `meterAttempt` joined `meter`. It adds the seat, session, engine and integer `costMicroUsd` an attempt
-  // file records (repo-layout design §3); its caller is the same unbuilt host as `card-log.ts` above.
+  // file records (repo-layout design §3); its caller is the unbuilt merge-queue host.
   "packages/persist/src/metering.ts": { values: 2, shipped: null, banner: false },
   "packages/persist/src/placement.ts": { values: 6, shipped: null, banner: false },
   "packages/persist/src/provenance.ts": { values: 2, shipped: null, banner: false },
@@ -294,9 +291,6 @@ const BUILTIN_LEDGER = {
   // `@orchestra/atlas-boundary` `./mine` entry, which `boundary/script/build.ts` bundles from this file (D39).
   // Shipped, but outside the analyser's reach, so it is ledgered rather than bannered as a specification artifact.
   "packages/cli/src/surface-mine.ts": { values: 2, shipped: "boundary/script/build.ts", banner: false },
-  // The committed context-continuity archive (repo-layout design §3). The continuity module reaches it only through the
-  // boundary's `./context` entry, so it is shipped but outside the analyser's reach, like `surface-mine.ts` above.
-  "packages/adapter-io/src/context-log.ts": { values: 4, shipped: "boundary/script/build.ts", banner: false },
   // #99b N2 landed: the N2 governed-emit door (`adapter-io/src/governed-emit-negation.ts`) now VALUE-IMPORTS
   // `negationKey` (mints an admitted negation's id AND an AbstainedRecord's address), so the row that tracked
   // it dead-until-wired went dead→live and was REMOVED here — the ledger keeping the N1→N2 transition on the
