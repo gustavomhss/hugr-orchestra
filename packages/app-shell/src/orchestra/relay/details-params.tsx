@@ -32,9 +32,6 @@ import {
 import { addNode } from "./insert"
 import { issueText } from "./parts"
 import { Ic, useRelayCopy } from "./ui"
-    </Switchable>
-  )
-}
 
 export function Params(props: Props) {
   const copy = useRelayCopy()

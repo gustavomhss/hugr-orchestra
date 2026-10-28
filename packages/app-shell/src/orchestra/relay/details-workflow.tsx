@@ -367,3 +367,6 @@ function StartOutput(props: Props & { title?: string }) {
           </span>
         </div>
       </Show>
+    </Switchable>
+  )
+}
