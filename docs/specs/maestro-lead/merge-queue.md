@@ -566,6 +566,9 @@ phase.
 | Contracts | `.orchestra/ci.json` (§5.1, §7.4); the new rows and states in `docs/specs/projects-board/CONTRACT.md` | repo file, read at run time | 2, 4 |
 | Playbooks | `maestro-lead` `land`: Publish becomes "verify, then `board_queue`"; `track`: `<integration>` lines and `Flaky:` citing `board_flake`; `maestro-plan`: the area overlap rule | yes | 4, 5, 9 |
 | Seat skill | `archie`'s plan skill: the `area` and `order` fields. `archie` gets no tool. | yes | 9 |
+| Guards | One new rule in `script/guards/rules`, `merge-outside-conveyor`: added code that merges a PR into a base branch (`gh pr merge` or the merge API) outside the conveyor module. The CI contract's own rules, such as `merge` being `merge`, are checked by its reader, which refuses an invalid file, not by a guard. Maestro writing integration state is impossible by type, since no such field exists (§4). | CI | 4 |
+| Templates | Fixed formats, each made by the host in one place: the bundle PR title and body (members, head SHAs, tested-on base, skew), `<integration>` lines, attempt `cause` strings, and the base-red fix card. `archie`'s plan template gains `area` and `order`. | yes | 4, 5, 9 |
+| Checklists | None new. Every precondition the host can check is a refusal, not a list item (§4.1). The judgment that remains already has one: `land`'s verification. The flaky verdict keeps its one rule: a merge names the cause or a card to find it (§6.4). | | |
 | Repo only | `conveyor-maintenance` and `conveyor-ownership` in `.orchestra/skills`; a guide in `docs/guides` | no | each WP updates them |
 
 **Phase 1: one conveyor.**
