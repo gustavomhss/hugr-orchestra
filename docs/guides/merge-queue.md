@@ -52,6 +52,13 @@ the push and the card stays `local`. If a seat dies, its work can be restored fr
 git fetch origin refs/orchestra/wip/KEY-1/a1 && git restore --source FETCH_HEAD --worktree -- .
 ```
 
+## After a crash
+
+If Maestro's host dies, the queue resumes from its rows: an open bundle is settled and a new one is cut when none is
+open. A bundle whose head is already in the base branch, because the host pushed it before it died, is recorded as
+merged and never pushed twice. A card whose worktree is gone comes back from its snapshot at the same path; with no
+snapshot, Maestro logs a drift line and leaves the card alone.
+
 ## When your base branch moves
 
 Once a minute Maestro fetches the base branch. When it has moved, Maestro looks only at the cards in Review whose

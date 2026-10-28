@@ -34,6 +34,8 @@ it: skill `conveyor-maintenance`. User guide: `docs/guides/merge-queue.md`.
   pushed to `refs/orchestra/wip/<KEY>-<n>/a<attempt>`.
 - The gitleaks scan fails closed: a hit or a scanner that cannot run blocks the push. `snapshot_sha` and
   `snapshot_tree` are written only after the push succeeds.
+- A gone worktree with a snapshot is re-created at its path (`restored`); with none it is a drift line (`missing`).
+- `settle` treats a bundle whose head is already an ancestor of base as merged: it writes the rows, never pushes again.
 - A new Session on a card opens the next attempt. The open one ends `failed` when the card had a crash reason, else
   `superseded`. `board_issue.attempts` follows the ledger.
 - Checks are keyed by tree, never by commit. The tree comes from a temporary index: the card's worktree and index are

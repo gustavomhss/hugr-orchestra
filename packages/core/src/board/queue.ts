@@ -531,18 +531,24 @@ export function make(deps: Deps) {
     yield* git(directory, ["fetch", "--quiet", "--no-tags", "origin", contract.base])
     const tip = (yield* git(directory, ["rev-parse", "--verify", "--quiet", `refs/remotes/origin/${contract.base}`])).out
     if (!tip) return
-    const landed =
-      tip === bundle.base_sha
+    // Section 8.5: a host that died after pushing base but before writing the rows finds the bundle already in base,
+    // so it only records the merge: no second push and no rebuilt bundle.
+    const already = tip !== bundle.base_sha && (yield* git(directory, ["merge-base", "--is-ancestor", bundle.head_sha, tip])).code === 0
+    const landed = already
+      ? { target: tip, on: null }
+      : tip === bundle.base_sha
         ? { target: bundle.head_sha, on: null }
         : yield* skew(directory, contract, bundle, tip, row)
     if (!landed) return yield* dissolve(row, bundle, `${contract.base} moved to ${tip.slice(0, 10)}; the bundle is rebuilt and retested.`)
-    const pushed = yield* git(directory, [
-      "push",
-      "--quiet",
-      `--force-with-lease=refs/heads/${contract.base}:${landed.on ?? bundle.base_sha}`,
-      "origin",
-      `${landed.target}:refs/heads/${contract.base}`,
-    ])
+    const pushed = already
+      ? { code: 0 }
+      : yield* git(directory, [
+          "push",
+          "--quiet",
+          `--force-with-lease=refs/heads/${contract.base}:${landed.on ?? bundle.base_sha}`,
+          "origin",
+          `${landed.target}:refs/heads/${contract.base}`,
+        ])
     if (pushed.code !== 0) return
     const shipped = yield* deps.quiet((tx) =>
       Effect.gen(function* () {

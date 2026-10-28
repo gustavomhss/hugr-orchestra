@@ -29,11 +29,15 @@ export interface Deps {
 
 export type Attempt = typeof BoardAttemptTable.$inferSelect
 
-/** What one snapshot did. `blocked` says why nothing was pushed; `missing` means the worktree is gone. */
+/**
+ * What one snapshot did. `blocked` says why nothing was pushed. `missing` means the worktree is gone with no snapshot
+ * to restore it from; `restored` means a gone worktree was re-created at its snapshot commit (spec 8.5).
+ */
 export type Result =
   | { readonly status: "pushed" | "unchanged"; readonly ref: string; readonly sha: string }
   | { readonly status: "blocked"; readonly ref: string; readonly reason: string }
   | { readonly status: "missing"; readonly ref: string; readonly worktree: string | null }
+  | { readonly status: "restored"; readonly ref: string; readonly worktree: string; readonly sha: string }
   | { readonly status: "none" }
 
 const IDENTITY = {
@@ -124,13 +128,29 @@ export function make(deps: Deps) {
     return found ?? null
   })
 
+  /** Re-creates a gone worktree detached at its snapshot commit, fetched from the snapshot remote. */
+  const restore = Effect.fnUntraced(function* (directory: string, project: ProjectRow, cwd: string, sha: string, ref: string) {
+    const remote = yield* deps.remote(directory, project).pipe(Effect.orElseSucceed(() => undefined))
+    if (!remote) return false
+    yield* git(directory, ["worktree", "prune"])
+    const fetched = yield* git(directory, ["fetch", "--quiet", "--no-tags", remote, ref])
+    if (fetched.code !== 0) return false
+    return (yield* git(directory, ["worktree", "add", "--detach", cwd, sha])).code === 0
+  })
+
   const push = Effect.fnUntraced(function* (issue: Board.IssueID) {
     const found = yield* find(issue)
     const attempt = found?.attempt
     if (!found || !attempt) return { status: "none" } satisfies Result
     const ref = `refs/orchestra/wip/${found.project.key}-${found.issue.number}/a${attempt.n}`
     const cwd = yield* locate(found.directory, found.issue, attempt)
-    if (!cwd || !existsSync(cwd)) return { status: "missing", ref, worktree: cwd } satisfies Result
+    if (!cwd || !existsSync(cwd)) {
+      const sha = attempt.snapshot_sha
+      if (cwd && sha && found.directory && (yield* restore(found.directory, found.project, cwd, sha, ref)))
+        return { status: "restored", ref, worktree: cwd, sha } satisfies Result
+      yield* Effect.logWarning(`drift: ${found.project.key}-${found.issue.number} worktree ${cwd ?? "(none)"} is gone and has no snapshot to restore`)
+      return { status: "missing", ref, worktree: cwd } satisfies Result
+    }
     const current = yield* tree(cwd)
     if (!current) return { status: "blocked", ref, reason: `could not read the tree of ${cwd}` } satisfies Result
     if (current === attempt.snapshot_tree && attempt.snapshot_sha)

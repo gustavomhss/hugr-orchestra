@@ -111,6 +111,22 @@ describe("BoardSnapshot", () => {
       expect(yield* board.pushState("SNL", 1)).toBe("local")
     }),
   )
+
+  it.live("a gone worktree with a snapshot is restored at its path", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const card = yield* repository("SNG")
+      yield* board.project({ key: "SNG", name: "Gone", repo: card.directory, reason: "Start." })
+      yield* board.issue({ project: "SNG", title: "Code", branch: "card-1", session: "ses_snapshot_gone", reason: "Plan." })
+
+      yield* write(card.worktree, "work.txt", "kept\n")
+      expect(yield* board.snapshotPush("SNG", 1)).toMatchObject({ status: "pushed", ref: "refs/orchestra/wip/SNG-1/a1" })
+      yield* Effect.promise(() => fs.rm(card.worktree, { recursive: true, force: true }))
+
+      expect(yield* board.snapshotPush("SNG", 1)).toMatchObject({ status: "restored", ref: "refs/orchestra/wip/SNG-1/a1", worktree: card.worktree })
+      expect(yield* Effect.promise(() => fs.readFile(path.join(card.worktree, "work.txt"), "utf8"))).toBe("kept\n")
+    }),
+  )
 })
 
 // A repository on main pushed to a bare origin, and a card worktree on branch card-1.

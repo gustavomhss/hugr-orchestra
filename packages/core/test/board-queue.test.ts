@@ -313,6 +313,37 @@ describe("BoardQueue", () => {
       expect(yield* stage(repo, 1)).toBe("review")
     }),
   )
+
+  it.live("a host that pushed base and died before writing the rows merges once on restart", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QCR", 2)
+      yield* card(repo, "QCR", 1, "a.txt")
+      yield* card(repo, "QCR", 2, "b.txt")
+      yield* board.queue({ project: "QCR", number: 1, reason: "Verified." })
+      yield* board.queue({ project: "QCR", number: 2, reason: "Verified." })
+      yield* board.queueTick()
+      expect(repo.remote.pulls.get(102)).toBe("bundle-QCR-1")
+      yield* board.queueTick()
+      repo.remote.conclusion = "SUCCESS"
+
+      const database = yield* Database.Service
+      const open = yield* database.db
+        .select({ head: BoardBundleTable.head_sha })
+        .from(BoardBundleTable)
+        .innerJoin(BoardProjectTable, eq(BoardProjectTable.id, BoardBundleTable.project_id))
+        .where(and(eq(BoardProjectTable.key, "QCR"), eq(BoardBundleTable.status, "open")))
+        .get()
+        .pipe(Effect.orDie)
+      if (!open) return yield* Effect.die("The bundle is not open.")
+      yield* Effect.promise(() => git(repo.directory, "push", "--quiet", "origin", `${open.head}:refs/heads/main`))
+
+      yield* board.queueTick()
+      expect([yield* stage(repo, 1), yield* stage(repo, 2)]).toEqual(["shipped", "shipped"])
+      expect(yield* bundleStatuses(repo)).toEqual(["merged"])
+      expect(yield* origin(repo, "main")).toBe(open.head)
+    }),
+  )
 })
 
 type Repo = { readonly root: string; readonly directory: string; readonly key: string; readonly remote: Remote }
