@@ -1,6 +1,6 @@
 # Native Relay proposal reference
 
-Schema source pin supplied by Relay: `c0fcf4f394`; inspected transfer baseline: `abf7a72c77fcaeee1206400a8270b2581ae9839c`, [packages/schema/src/relay-sprint.ts](../../../../schema/src/relay-sprint.ts). Exports include `RelaySprint.Sprint`, `WorkPackage` and `Control`. No schema-version field exists; `gen` stamps ledger generation, not author proposal version, proposal identity or approval.
+Schema source pin supplied by Relay: `c0fcf4f394`; inspected transfer baseline: `abf7a72c77fcaeee1206400a8270b2581ae9839c`, `packages/schema/src/relay-sprint.ts`. Exports include `RelaySprint.Sprint`, `WorkPackage` and `Control`. No schema-version field exists; `gen` stamps ledger generation, not author proposal version, proposal identity or approval.
 
 ## Author the native shape
 

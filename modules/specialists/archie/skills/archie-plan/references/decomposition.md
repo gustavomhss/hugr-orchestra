@@ -68,6 +68,6 @@ Distinguish supplied check statuses: `PASS` means actual cited check passed with
 
 Source pin: `abf7a72c77fcaeee1206400a8270b2581ae9839c`.
 
-- [maestro-decompose](../../../../../maestro/coordination/playbooks/maestro-decompose/SKILL.md), “Procedure” 1–7: five headings, baseline/coverage, responsibility slicing, dependencies vs conflicts, sizing and `partitionPlan` boundary.
-- [Cold coverage review](../../../../../maestro/coordination/playbooks/maestro-decompose/suite-review.md): demand-only independent critique and uncertainty limits. Upstream authors the request/revision; host coordinates the reviewer and acceptance judgment.
-- [Decomposition protocol](../../../../../foundation/atlas/docs/DECOMPOSITION-PROTOCOL.md), C/S4: lossless vertical epic splits and seam ownership. Its historical mandatory module/state-machine rules are not universal authoring rules; no source dispatch/acquisition powers transfer.
+- maestro-decompose (`modules/maestro/coordination/playbooks/maestro-decompose/SKILL.md`), “Procedure” 1–7: five headings, baseline/coverage, responsibility slicing, dependencies vs conflicts, sizing and `partitionPlan` boundary.
+- Cold coverage review (`modules/maestro/coordination/playbooks/maestro-decompose/suite-review.md`): demand-only independent critique and uncertainty limits. Upstream authors the request/revision; host coordinates the reviewer and acceptance judgment.
+- Decomposition protocol (`modules/atlas/docs/DECOMPOSITION-PROTOCOL.md`), C/S4: lossless vertical epic splits and seam ownership. Its historical mandatory module/state-machine rules are not universal authoring rules; no source dispatch/acquisition powers transfer.

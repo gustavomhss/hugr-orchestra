@@ -32,9 +32,12 @@ export function seats(roots: Readonly<Record<string, string>>) {
 
 /** A seat's skills belong to that seat: every other agent, Maestro included, is denied loading them. */
 export function foreign(id: string): PermissionV2.Ruleset {
+  const own = Seats.find(id)?.skills ?? []
   return Object.values(Seats.all)
     .filter((seat) => seat.id !== id)
-    .flatMap((seat) => seat.skills.map((name) => ({ action: "skill", resource: name, effect: "deny" as const })))
+    .flatMap((seat) => seat.skills.filter((name) => !own.includes(name)))
+    .flatMap((name) => [name, `${name}-*`])
+    .map((resource) => ({ action: "skill", resource, effect: "deny" as const }))
 }
 
 /** Playbooks are Maestro's procedures: every other agent is denied loading one, which also leaves it off their list. */

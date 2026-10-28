@@ -51,6 +51,6 @@ Maestro reads compact returns first, then needed evidence, arranges independent 
 
 Source pin: `abf7a72c77fcaeee1206400a8270b2581ae9839c`.
 
-- [maestro-pack](../../../../../maestro/coordination/playbooks/maestro-pack/SKILL.md), “Procedure” 1–5/8, “Exact tool sequence and baseline check” and “Output schema”: bounded anchors/facts, context budget, compact returns and baseline/diff rules. Procedure 6–7's dispatch/arm/authority remain host work; unavailable source operations do not transfer.
-- [maestro-contract](../../../../../maestro/coordination/playbooks/maestro-contract/SKILL.md), “Output schema”: exact bounded consumer anchors and source refresh.
-- [WP-card method](../../../../../foundation/atlas/docs/method/wp-template.md), “The driftless law” / “Two renders, one object” / “Honest limitation”: source-bound views and evidence pointers, without promising a resolver, independent acceptance or zero executor judgment.
+- maestro-pack (`modules/maestro/coordination/playbooks/maestro-pack/SKILL.md`), “Procedure” 1–5/8, “Exact tool sequence and baseline check” and “Output schema”: bounded anchors/facts, context budget, compact returns and baseline/diff rules. Procedure 6–7's dispatch/arm/authority remain host work; unavailable source operations do not transfer.
+- maestro-contract (`modules/maestro/coordination/playbooks/maestro-contract/SKILL.md`), “Output schema”: exact bounded consumer anchors and source refresh.
+- WP-card method (`modules/atlas/docs/method/wp-template.md`), “The driftless law” / “Two renders, one object” / “Honest limitation”: source-bound views and evidence pointers, without promising a resolver, independent acceptance or zero executor judgment.
