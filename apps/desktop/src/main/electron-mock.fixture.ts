@@ -38,6 +38,7 @@ export const electronMock = {
   nativeTheme: {},
   net: {},
   netLog: {},
+  powerSaveBlocker: {},
   protocol: {},
   safeStorage: {},
   screen: {},

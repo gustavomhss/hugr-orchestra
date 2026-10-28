@@ -490,6 +490,7 @@ const layer = Layer.effect(
               consumed: (id) => Effect.sync(() => void liveSteers.delete(id)),
               notify: ports.notify,
               child: ports.child,
+              todos: ports.todos,
               state: ExecutionHost.state(db, session.id, host.stateKey),
             })
           : Stream.die("SessionRunner: no provider for this turn")

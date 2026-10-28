@@ -147,6 +147,8 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
         },
         data: [],
       })
+    if (/^\/api\/agent\/[^/]+\/detail$/.test(path))
+      return json(route, { location: location(config), data: { tools: [], skills: [], engines: [] } })
     if (path === "/api/agent")
       return json(route, {
         location: location(config),
