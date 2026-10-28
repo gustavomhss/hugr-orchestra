@@ -49,7 +49,7 @@ export interface KnowledgeRead {
 export function appendKnowledge(repoPath: string, entry: KnowledgeEntry, blob: unknown): void {
   const event: Omit<Event, "id"> = {
     seq: 0,
-    nodeKey: entry.row.nodeKey as Event["nodeKey"],
+    nodeKey: entry.row.nodeKey as NonNullable<Event["nodeKey"]>,
     contentHash: entry.row.contentHash as Hash,
     fresh: true,
     supersedes: [],
@@ -100,7 +100,7 @@ export function withKnowledgeLog(
   return {
     ...store,
     commitProjection(decide) {
-      const seen: { before?: StoreProjection; next?: StoreProjection } = {}
+      const seen: { before?: StoreProjection; next?: StoreProjection | undefined } = {}
       const result = store.commitProjection((projection) => {
         const decision = decide(projection)
         seen.before = projection
