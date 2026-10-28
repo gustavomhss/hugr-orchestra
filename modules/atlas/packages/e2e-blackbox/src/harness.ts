@@ -7,7 +7,7 @@
 // no machine-specific path). Pure I/O plumbing — the stories own the assertions.
 
 import { execFileSync, spawnSync } from "node:child_process"
-import { appendFileSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { tmpdir } from "node:os"
 import { fileURLToPath } from "node:url"
@@ -158,19 +158,12 @@ export function makeFixtureRepo(spec: FixtureSpec): FixtureRepo {
   // COMMITTED projection carries rows no door ever saw, so it is not knowledge. That refusal is the product
   // behaving as designed; what was wrong was the fixture, which committed its store and then expected to
   // read it back. `index.scip` stays tracked deliberately — it is a build input, not the governed store.
-  writeFileSync(join(repoPath, ".gitignore"), ".atlas/*\n!.atlas/policy.json\n!.atlas/index.scip\n")
+  writeFileSync(join(repoPath, ".gitignore"), ".atlas/*\n!.atlas/policy.json\n!.atlas/index.scip\n!.atlas/project/\n!.atlas/members/\n!.atlas/blobs/\n!.atlas/cards/\n")
   git(repoPath, "init", "-q")
   git(repoPath, "config", "user.email", "e2e@atlas.local")
   git(repoPath, "config", "user.name", "atlas-e2e")
   git(repoPath, "add", "-A")
   git(repoPath, "commit", "-q", "-m", "genesis")
-  // The committed-tree negations `atlas init` installs (`adapter-io/src/gitignore.ts`) arrive in their own
-  // commit, not in genesis: four more genesis lines push its blame share past `BLAME_CONCENTRATION_MAX`
-  // (`genesis/src/rank.ts`), which reads the history as one mega-commit and skips the churn filter the
-  // history-frontier stories (s34) depend on.
-  appendFileSync(join(repoPath, ".gitignore"), "!.atlas/project/\n!.atlas/members/\n!.atlas/blobs/\n!.atlas/cards/\n")
-  git(repoPath, "add", "-A")
-  git(repoPath, "commit", "-q", "-m", "atlas tree")
 
   const sha = (): string => execFileSync("git", ["rev-parse", "HEAD"], { cwd: repoPath, encoding: "utf8" }).trim()
 

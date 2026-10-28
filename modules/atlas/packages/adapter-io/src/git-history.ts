@@ -101,6 +101,11 @@ const fileRef = (qualifiedPath: string): StructRef => ({
   subtreeHash: asSubtreeHash(nodeHashOfPath(qualifiedPath)),
 })
 
+/** Atlas's own paths: the governed store (`.atlas/**`) and the repo-root `.gitignore` that `atlas init`
+ *  writes its deny block into. They are Atlas's bookkeeping, not the user's code, so they are never a mining
+ *  site, never churn or coupling, and never blame. A commit touching ONLY these is a record commit. */
+const atlasOwned = (p: string): boolean => p === ".gitignore" || p.startsWith(".atlas/")
+
 /** One commit's mining record: its subject (SZZ) and the RAW paths it touched (churn + coupling basket). */
 interface CommitBasket {
   readonly subject: string
@@ -129,6 +134,15 @@ function commitBaskets(repo: string, rev: string): CommitBasket[] {
     else commits[commits.length - 1]?.files.push(rec)
   }
   return commits
+}
+
+/** The baskets that carry user history: Atlas-owned paths removed, record commits (all paths Atlas-owned)
+ *  dropped. A commit that touched nothing at all (empty commit, merge) stays, as before. */
+function userBaskets(repo: string, rev: string): CommitBasket[] {
+  return commitBaskets(repo, rev).flatMap((c) => {
+    const files = c.files.filter((f) => !atlasOwned(f))
+    return files.length === 0 && c.files.length > 0 ? [] : [{ subject: c.subject, files }]
+  })
 }
 
 /** A trivial per-key memo — `fn` runs at most once per distinct `key`, cached for the LIFETIME of the
@@ -170,7 +184,7 @@ export function createHistorySource(repoPath: string, rev: string): HistorySourc
 
   /** The RAW tracked path set at a rev — the identity domain every emitted site is drawn from. */
   const trackedAt = (repo: string, r: string): string[] =>
-    nulPaths(git(repo, ["ls-tree", "-r", "--name-only", "-z", r]))
+    nulPaths(git(repo, ["ls-tree", "-r", "--name-only", "-z", r])).filter((p) => !atlasOwned(p))
 
   // Keyed on the ACTUAL call args (`repo\0rev`), not the closed-over `repoPath`/`rev` — see the `memo` note.
   const rk = (repo: string, r: string): string => `${repo}\0${r}`
@@ -178,7 +192,10 @@ export function createHistorySource(repoPath: string, rev: string): HistorySourc
   const commitCountMemo = memo((k: string): number => {
     const [repo, r] = k.split("\0") as [string, string]
     const n = Number(git(repo, ["rev-list", "--count", r]).trim())
-    return Number.isFinite(n) ? n : 0
+    if (!Number.isFinite(n)) return 0
+    // Record commits (init's `.gitignore`, `.atlas/**` writes) are not user history: a repo whose only other
+    // commit is Atlas's own has no history to mine and takes the structural set.
+    return n - (commitBaskets(repo, r).length - userBaskets(repo, r).length)
   })
   const shallowMemo = memo(
     (repo: string): boolean => git(repo, ["rev-parse", "--is-shallow-repository"], "true").trim() === "true",
@@ -212,7 +229,7 @@ export function createHistorySource(repoPath: string, rev: string): HistorySourc
     const bump = (m: Map<string, number>, f: string): void => {
       m.set(f, (m.get(f) ?? 0) + 1)
     }
-    for (const commit of commitBaskets(repo, r)) {
+    for (const commit of userBaskets(repo, r)) {
       const basket = commit.files.filter((f) => tracked.has(f))
       for (const f of basket) {
         bump(churn, f)
@@ -243,7 +260,7 @@ export function createHistorySource(repoPath: string, rev: string): HistorySourc
     const co = new Set<string>()
     for (const sha of commitsTouching(qp)) {
       for (const f of nulPaths(git(repoPath, ["show", "--format=", "--name-only", "-z", sha]))) {
-        if (f !== qp) co.add(f)
+        if (f !== qp && !atlasOwned(f)) co.add(f)
       }
     }
     const coChanged = [...co].sort(byPath).map(fileRef)
