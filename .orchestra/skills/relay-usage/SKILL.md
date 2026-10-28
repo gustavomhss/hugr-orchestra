@@ -17,6 +17,11 @@ For anyone using or guiding someone through the Workflows page. The user guides 
 
 - The editor opens in List (`plan.tsx` for workflows, `rule-view.tsx` for hooks); Canvas is the same flow drawn as a graph. Both edit one `Flow`, so a change in one shows in the other.
 - Workflow list: a collapsible Start card (goal, retries), then the steps in chain order with phases drawn as boxes. **+** between steps opens the step picker. Arrows call `moveStep` (`insert.ts`), which first crosses a phase edge and only then swaps places, so phases stay unbroken.
+- Phases render as `.wf-plan-phase` blocks with a kicker, step count and the first line of their instructions (`NodeGroup.description`, compiled to the sprint macro's `instructions`).
+- Checks: **Add check** opens presets (`PRESETS` in `checks.tsx`). Presets start with an empty command plus a `<datalist>` of common commands; never seed a preset with `${test_cmd}`-style params, since `expandParams` leaves an unset name literal and the check fails. New ids come from `checkID(flow, node, preset)`.
+- Context: an Inject step is Text or File (`file` wins in the sprint, so choosing Text clears it). Execute and review steps list the Inject steps right before them and add new ones with `addNode` anchored on the predecessor, in the step's phase. The native picker is `platform.openAttachmentPickerDialog` with `extensions: []`; the path is stored relative to the project `directory`, and a file outside it is refused.
+- A Provide context card is summed up by its file or the first line of its text, not by instructions.
+- Typing must never lose focus. Two traps caused it: a `<For>` keyed by node object (every edit makes new nodes, so `plan.tsx` keys cards and phases by id), and reading `.data` of a solid-query with no data, which suspends the shell's `<Suspense>` and redraws the page. Options of `viewed`, `frozen` and `decisions` change on every 10-second runs poll, so the editor reads every query as `query.isSuccess ? query.data : fallback`.
 - Hook list: When / If / Then. `readRule` (`rule.ts`) reads the graph as one rule (cases of conditions, then actions) and returns nothing when the wiring does not fit; the list then points the user to the canvas. `writeRule` writes the rule back as rows of nodes. Block and Require repair stay last.
 
 ## Releasing a paused run

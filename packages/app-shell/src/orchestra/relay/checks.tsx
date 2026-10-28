@@ -8,11 +8,35 @@ import { Ic, useRelayCopy } from "./ui"
 // The `${name}` parameters the shipped templates use, each with a plain-words meaning in the copy file.
 const PARAMS = ["base_ref", "src_path", "test_path", "test_cmd", "lint_cmd", "wp_dir", "review_artifact"] as const
 
+// What "Add check" offers: the usual reasons a step is done, each a check of the right kind with a readable id. A
+// command preset starts empty on purpose: a run leaves an unset `${test_cmd}` literal, so a guessed parameter would
+// fail; the command field suggests common commands instead.
+const PRESETS = [
+  { key: "tests", control: { cmd: "" } },
+  { key: "lint", control: { cmd: "" } },
+  { key: "review", control: { judge: "", diff: true, blocking: true } },
+  { key: "judge", control: { judge: "", blocking: true } },
+  { key: "command", control: { cmd: "" } },
+] as const
+const SUGGESTIONS = [
+  "bun test",
+  "npm test",
+  "pnpm test",
+  "pytest",
+  "go test ./...",
+  "cargo test",
+  "bun typecheck",
+  "npx tsc --noEmit",
+  "npm run lint",
+  "ruff check .",
+  "cargo clippy -- -D warnings",
+]
+
 // The criteria a step must meet to advance. Commands always block; an AI check is advisory unless blocking.
 // `newID` names a new check; it must be unique across the whole workflow, not just this step.
 export function CheckList(props: {
   controls: Control[]
-  newID: () => string
+  newID: (name: string) => string
   onChange: (controls: Control[]) => void
 }) {
   const copy = useRelayCopy()
@@ -20,6 +44,24 @@ export function CheckList(props: {
   const [kept, setKept] = createStore<Record<string, { cmd?: string; judge?: string }>>({})
   // The check whose command field refused a multi-line paste.
   const [refused, setRefused] = createSignal<string>()
+  const [picking, setPicking] = createSignal(false)
+  let list: HTMLDivElement | undefined
+  const add = (preset: (typeof PRESETS)[number]) => {
+    const id = props.newID(preset.key)
+    setPicking(false)
+    props.onChange([
+      ...props.controls,
+      {
+        id,
+        ...preset.control,
+        ...(preset.key === "review" ? { judge: copy.t("orchestra.workflows.check.preset.reviewCriterion") } : {}),
+      },
+    ])
+    // The parent may redraw the list after the change, so the new check's first field is found once the frame settles.
+    requestAnimationFrame(() =>
+      list?.querySelector<HTMLElement>(`[data-check="${CSS.escape(id)}"] :is(textarea, input.cmd)`)?.focus(),
+    )
+  }
   const meaning = (name: string) => {
     const known = PARAMS.find((item) => item === name)
     return known ? copy.t(`orchestra.workflows.check.param.${known}`) : copy.t("orchestra.workflows.check.paramOther")
@@ -40,7 +82,7 @@ export function CheckList(props: {
   }
   return (
     <>
-      <div class="wf-ctl-list">
+      <div class="wf-ctl-list" ref={list}>
         <Index each={props.controls}>
           {(control, index) => {
             const judge = () =>
@@ -76,22 +118,13 @@ export function CheckList(props: {
                     <Ic name="trash" />
                   </button>
                 </div>
-                <Show when={!judge() || typeof control().assert === "string"}>
-                  <input
-                    class="prose"
-                    value={assert()}
-                    placeholder={copy.t("orchestra.workflows.check.assertPlaceholder")}
-                    aria-label={copy.t("orchestra.workflows.check.assert")}
-                    onInput={(event) => update(index, { assert: event.currentTarget.value })}
-                    onChange={(event) => !event.currentTarget.value && update(index, {}, "assert")}
-                  />
-                </Show>
                 <Show
                   when={judge()}
                   fallback={
                     <>
                       <input
                         class="cmd"
+                        list="wf-check-commands"
                         value={control().cmd ?? ""}
                         placeholder={copy.t("orchestra.workflows.check.commandPlaceholder")}
                         aria-label={copy.t("orchestra.workflows.check.command")}
@@ -114,6 +147,7 @@ export function CheckList(props: {
                 >
                   <textarea
                     rows="3"
+                    placeholder={copy.t("orchestra.workflows.check.criterionPlaceholder")}
                     value={control().judge ?? ""}
                     aria-label={copy.t("orchestra.workflows.check.criterion")}
                     onInput={(event) => update(index, { judge: event.currentTarget.value })}
@@ -141,6 +175,19 @@ export function CheckList(props: {
                       </For>
                     </ul>
                   </div>
+                </Show>
+                <Show when={!judge() || typeof control().assert === "string"}>
+                  <details class="wf-ctl-more" open={!!assert()}>
+                    <summary>{copy.t("orchestra.workflows.check.more")}</summary>
+                    <input
+                      class="prose"
+                      value={assert()}
+                      placeholder={copy.t("orchestra.workflows.check.assertPlaceholder")}
+                      aria-label={copy.t("orchestra.workflows.check.assert")}
+                      onInput={(event) => update(index, { assert: event.currentTarget.value })}
+                      onChange={(event) => !event.currentTarget.value && update(index, {}, "assert")}
+                    />
+                  </details>
                 </Show>
                 <div class="wf-ctl-foot">
                   <Show
@@ -192,14 +239,45 @@ export function CheckList(props: {
           }}
         </Index>
       </div>
-      <button
-        type="button"
-        class="mx-btn"
-        onClick={() => props.onChange([...props.controls, { id: props.newID(), cmd: "" }])}
+      <datalist id="wf-check-commands">
+        <For each={SUGGESTIONS}>{(command) => <option value={command} />}</For>
+      </datalist>
+      <Show
+        when={picking()}
+        fallback={
+          <button type="button" class="mx-btn" onClick={() => setPicking(true)}>
+            <Ic name="plus" />
+            {copy.t("orchestra.workflows.check.add")}
+          </button>
+        }
       >
-        <Ic name="plus" />
-        {copy.t("orchestra.workflows.check.add")}
-      </button>
+        <div class="wf-plan-picker" role="group" aria-label={copy.t("orchestra.workflows.check.pick")}>
+          <div class="wf-plan-picker-head">
+            <span>{copy.t("orchestra.workflows.check.pick")}</span>
+            <button type="button" class="mx-btn" onClick={() => setPicking(false)}>
+              {copy.t("orchestra.workflows.plan.cancel")}
+            </button>
+          </div>
+          <div class="wf-plan-kinds">
+            <For each={PRESETS}>
+              {(preset, index) => (
+                <button
+                  type="button"
+                  class="wf-pick"
+                  ref={(element) => index() === 0 && queueMicrotask(() => element.focus())}
+                  onClick={() => add(preset)}
+                  onKeyDown={(event) => event.key === "Escape" && (event.stopPropagation(), setPicking(false))}
+                >
+                  <span>
+                    <strong>{copy.t(`orchestra.workflows.check.preset.${preset.key}`)}</strong>
+                    <small>{copy.t(`orchestra.workflows.check.preset.${preset.key}Body`)}</small>
+                  </span>
+                </button>
+              )}
+            </For>
+          </div>
+        </div>
+      </Show>
     </>
   )
 }

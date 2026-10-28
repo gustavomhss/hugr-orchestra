@@ -2,6 +2,8 @@ import { createEffect, createSignal, createUniqueId, For, Index, type JSX, on, S
 import { createStore } from "solid-js/store"
 import type { RelayRun } from "./runs"
 import { workflowKey } from "./catalog"
+import { usePlatform } from "@/context/platform"
+import { showToast } from "@/utils/toast"
 import { CheckList } from "./checks"
 import { Empty, NodeDetails, NodeNameField, pasteOneLine, Rows, Switchable } from "./details"
 import { badgeTone, runHandle, span, STEP_TONE } from "./format"
@@ -28,8 +30,9 @@ import {
   updatePhase,
   writeChecklist,
 } from "./graph"
+import { addNode } from "./insert"
 import { issueText, phaseNames } from "./parts"
-import { Ic, useRelayCopy } from "./ui"
+import { Ic, NodeGlyph, useRelayCopy } from "./ui"
 
 // The skill catalog as the editor has it: `names` is undefined until it has loaded, and `error` says it could not.
 export type Skills = { names: string[] | undefined; error: boolean; retry: () => void }
@@ -48,6 +51,8 @@ export type Props = {
   readOnly?: boolean
   // Shown inside a plan card instead of the details dialog: no column heading, no autofocus.
   inline?: boolean
+  // The project folder: context files are picked inside it and kept relative to it.
+  directory?: string
   onChange: (flow: Flow) => void
   onDescribe: (description: string) => void
   onNav: (id: string) => void
@@ -402,6 +407,70 @@ export function Params(props: Props) {
   const skillGone = () => !!skill() && !!props.skills.names && !props.skills.names.includes(skill())
   const skillOptions = () => [...new Set([...(props.skills.names ?? []), skill()].filter(Boolean))]
   const unchecked = () => ["relay.execute", "relay.review"].includes(props.node.type) && !checklist().controls.length
+  const platform = usePlatform()
+  const file = () => String(props.node.parameters.file ?? "")
+  // File is the source once a path is set; an empty path stays in file mode only for the step that chose it.
+  const [fileFor, setFileFor] = createSignal<string>()
+  const fileMode = () => !!file() || fileFor() === props.node.id
+  const canPick = () => !!platform.openAttachmentPickerDialog && !!platform.getPathForFile && !!props.directory
+  // The run reads a context file relative to the project, so a file picked outside it cannot be used.
+  const pick = (done: (path: string) => void) =>
+    platform.openAttachmentPickerDialog?.(
+      { title: copy.t("orchestra.workflows.details.chooseFile"), extensions: [], defaultPath: props.directory },
+      async (picked) => {
+        const root = (props.directory ?? "").replace(/\\/g, "/").replace(/\/$/, "")
+        const path = (platform.getPathForFile?.(picked) ?? "").replace(/\\/g, "/")
+        if (!root || !path.startsWith(`${root}/`))
+          return showToast({ variant: "error", title: copy.t("orchestra.workflows.details.fileOutside") })
+        done(path.slice(root.length + 1))
+      },
+    )
+  const previous = () => {
+    const order = chain(props.flow)
+    return order[order.findIndex((node) => node.id === props.node.id) - 1]
+  }
+  // The Provide context steps right before this one: what the agent receives with it.
+  const attached = () => {
+    const order = chain(props.flow)
+    const at = order.findIndex((node) => node.id === props.node.id)
+    const before = order.slice(0, Math.max(0, at)).reverse()
+    const stop = before.findIndex((node) => node.type !== INJECT)
+    return before.slice(0, stop < 0 ? before.length : stop).reverse()
+  }
+  const attachLabel = (node: FlowNode) => {
+    const path = String(node.parameters.file ?? "")
+    if (path) return path.split("/").at(-1) ?? path
+    return (
+      String(node.parameters.text ?? "")
+        .trim()
+        .split("\n")[0] || node.name
+    )
+  }
+  // A new Provide context step goes right before this one, in its phase.
+  const attach = (parameters: Record<string, unknown>) => {
+    const before = previous()
+    if (!before) return
+    const added = addNode(
+      props.flow,
+      {
+        key: "inject",
+        type: INJECT,
+        name: copy.t("orchestra.workflows.newName.inject"),
+        anchor: { id: before.id, port: 0 },
+      },
+      undefined,
+    )
+    const filled = updateNode(added.flow, added.id, {
+      parameters: { ...nodeOf(added.flow, added.id)?.parameters, ...parameters },
+    })
+    const phase = phaseOf(props.flow, props.node.id)?.id
+    props.onChange(phase && phaseOf(filled, added.id)?.id !== phase ? setPhase(filled, added.id, phase) : filled)
+    return added.id
+  }
+  const attachText = () => {
+    const id = attach({})
+    if (id) props.onNav(id)
+  }
   return (
     <>
       <Show when={!props.inline}>
@@ -445,24 +514,90 @@ export function Params(props: Props) {
           </label>
         </div>
         <Show when={props.node.type === INJECT}>
-          <label class="mx-field">
+          <div class="mx-field">
             <span>{copy.t("orchestra.workflows.details.context")}</span>
-            <textarea
-              style={{ "min-height": "120px" }}
-              placeholder={copy.t("orchestra.workflows.details.contextHint")}
-              value={String(props.node.parameters.text ?? "")}
-              onInput={(event) => update({ text: event.currentTarget.value })}
-            />
-          </label>
-          <label class="mx-field">
-            <span>{copy.t("orchestra.workflows.details.contextFile")}</span>
-            <input
-              placeholder={copy.t("orchestra.workflows.details.contextFilePlaceholder")}
-              value={String(props.node.parameters.file ?? "")}
-              onInput={(event) => update({ file: event.currentTarget.value })}
-            />
-            <span class="mx-hint">{copy.t("orchestra.workflows.details.contextFileHint")}</span>
-          </label>
+            <div class="wf-seg" role="group" aria-label={copy.t("orchestra.workflows.details.context")}>
+              <button
+                type="button"
+                aria-pressed={!fileMode()}
+                onClick={() => {
+                  setFileFor(undefined)
+                  if (file()) update({ file: "" })
+                }}
+              >
+                {copy.t("orchestra.workflows.details.contextText")}
+              </button>
+              <button type="button" aria-pressed={fileMode()} onClick={() => setFileFor(props.node.id)}>
+                {copy.t("orchestra.workflows.details.contextFileOption")}
+              </button>
+            </div>
+          </div>
+          <Show
+            when={fileMode()}
+            fallback={
+              <label class="mx-field">
+                <span class="sr-only">{copy.t("orchestra.workflows.details.contextText")}</span>
+                <textarea
+                  style={{ "min-height": "120px" }}
+                  placeholder={copy.t("orchestra.workflows.details.contextHint")}
+                  value={String(props.node.parameters.text ?? "")}
+                  onInput={(event) => update({ text: event.currentTarget.value })}
+                />
+              </label>
+            }
+          >
+            <label class="mx-field">
+              <span class="sr-only">{copy.t("orchestra.workflows.details.contextFile")}</span>
+              <div class="wf-file-row">
+                <input
+                  placeholder={copy.t("orchestra.workflows.details.contextFilePlaceholder")}
+                  value={file()}
+                  onInput={(event) => update({ file: event.currentTarget.value, text: "" })}
+                />
+                <Show when={canPick()}>
+                  <button type="button" class="mx-btn" onClick={() => pick((path) => update({ file: path, text: "" }))}>
+                    <Ic name="open" />
+                    {copy.t("orchestra.workflows.details.chooseFile")}
+                  </button>
+                </Show>
+              </div>
+              <span class="mx-hint">{copy.t("orchestra.workflows.details.contextFileHint")}</span>
+            </label>
+          </Show>
+        </Show>
+        <Show when={["relay.execute", "relay.review"].includes(props.node.type) && previous()}>
+          <div class="mx-field">
+            <span>{copy.t("orchestra.workflows.details.attached")}</span>
+            <div class="wf-attach">
+              <For each={attached()}>
+                {(node) => (
+                  <button type="button" class="wf-attach-chip" onClick={() => props.onNav(node.id)}>
+                    <NodeGlyph name="inject" />
+                    <span>{attachLabel(node)}</span>
+                  </button>
+                )}
+              </For>
+              <Show when={!props.readOnly}>
+                <button type="button" class="mx-btn" onClick={() => attachText()}>
+                  <Ic name="plus" />
+                  {copy.t("orchestra.workflows.details.attachText")}
+                </button>
+                <Show when={canPick()}>
+                  <button type="button" class="mx-btn" onClick={() => pick((path) => attach({ file: path }))}>
+                    <Ic name="plus" />
+                    {copy.t("orchestra.workflows.details.attachFile")}
+                  </button>
+                </Show>
+              </Show>
+            </div>
+            <span class="mx-hint">
+              {copy.t(
+                attached().length
+                  ? "orchestra.workflows.details.attachedHint"
+                  : "orchestra.workflows.details.attachEmpty",
+              )}
+            </span>
+          </div>
         </Show>
         <Show when={props.node.type !== "relay.gate"}>
           <label class="mx-field">
@@ -565,7 +700,7 @@ export function Params(props: Props) {
         </Show>
         <CheckList
           controls={checklist().controls}
-          newID={() => checkID(props.flow, props.node.id)}
+          newID={(name) => checkID(props.flow, props.node.id, name)}
           onChange={(controls) => update({ checklist: writeChecklist(controls) })}
         />
         <Show when={props.node.type === "relay.gate"}>

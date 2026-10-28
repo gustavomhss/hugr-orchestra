@@ -94,7 +94,7 @@ export function CanvasTab(props: Props) {
   const [view, setView] = createStore({ mode: "list" as "list" | "canvas" })
   let api: CanvasApi | undefined
   const workflow = () => props.kind === "workflow"
-  const types = () => props.source.nodeTypes.data?.[props.kind]
+  const types = () => (props.source.nodeTypes.isSuccess ? props.source.nodeTypes.data[props.kind] : undefined)
   const issueNodes = createMemo(() => new Set(props.issues.flatMap((issue) => issueNode(issue) ?? [])))
   const base = () => layerBase(props.route)
   const step = (id: string) => props.run?.steps.find((item) => item.wp === id)
@@ -692,6 +692,7 @@ export function CanvasTab(props: Props) {
               readOnly={props.readOnly}
               issues={props.issues.map((issue) => issueText(copy, props.flow, issue))}
               skills={props.skills}
+              directory={props.directory}
               focusPhase={focusPhase()}
               description={props.description}
               save={save()}
@@ -755,6 +756,7 @@ export function CanvasTab(props: Props) {
             readOnly={editing()}
             issues={props.issues}
             skills={props.skills}
+            directory={props.directory}
             types={types()}
             description={props.description}
             open={props.route.node}

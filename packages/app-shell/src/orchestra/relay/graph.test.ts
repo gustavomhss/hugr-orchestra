@@ -420,6 +420,8 @@ describe("step configuration", () => {
     expect(checkID(flow, "a")).toBe("a_check_2")
     expect(checkID(flow, "b")).toBe("b_check_2")
     expect(checkID(flow, "d")).toBe("d_check_1")
+    // A preset names its check after what it does.
+    expect(checkID(flow, "a", "tests")).toBe("a_tests_1")
   })
 
   test("a phase split by a step outside it is flagged on that step", () => {

@@ -307,11 +307,11 @@ export function emptiedPhases(before: Flow, after: Flow) {
 }
 
 // Contract C1: `<node>_check_<n>`, n the smallest positive integer no check anywhere in the workflow uses yet.
-export function checkID(flow: Flow, nodeID: string) {
+export function checkID(flow: Flow, nodeID: string, name = "check") {
   const taken = new Set(flow.nodes.flatMap((node) => readChecklist(node).controls.map((control) => control.id)))
   return (
-    Array.from({ length: taken.size + 1 }, (_, index) => `${nodeID}_check_${index + 1}`).find((id) => !taken.has(id)) ??
-    `${nodeID}_check_${taken.size + 1}`
+    Array.from({ length: taken.size + 1 }, (_, index) => `${nodeID}_${name}_${index + 1}`).find((id) => !taken.has(id)) ??
+    `${nodeID}_${name}_${taken.size + 1}`
   )
 }
 

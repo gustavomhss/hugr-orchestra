@@ -2708,11 +2708,44 @@ html[data-color-scheme="light"] .wf-editor {
   padding: 4px 16px 16px;
   border-block-start: 1px solid var(--mx-line);
 }
+/* A phase reads as one block: its name, its instructions in a line, then its steps inside. */
 .wf-plan-phase {
   margin-block: 4px;
   padding: 0 10px 10px;
-  border: 1px dashed var(--mx-line);
+  border: 1px solid var(--mx-line);
+  border-inline-start: 2px solid var(--mx-blue);
   border-radius: var(--orchestra-radius-md);
+  background: var(--mx-soft);
+}
+.wf-plan-phase-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--mx-blue);
+  font: 600 var(--orchestra-font-size-xs) var(--mx-sans);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.wf-plan-phase-brief {
+  display: block;
+  inline-size: 100%;
+  margin-block-end: 10px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: none;
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-xs);
+  text-align: start;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.wf-plan-phase-brief.empty {
+  font-style: italic;
+}
+.wf-plan-phase-brief:hover {
+  color: var(--mx-strong);
 }
 .wf-plan-phase-head {
   display: flex;
@@ -2861,4 +2894,59 @@ html[data-color-scheme="light"] .wf-editor {
 }
 .wf-rule .wf-step + .wf-step {
   margin-block-start: 8px;
+}
+
+/* Less common check fields, folded under the check. */
+.wf-ctl-more summary {
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-xs);
+  cursor: pointer;
+}
+.wf-ctl-more[open] summary {
+  margin-block-end: 6px;
+}
+/* A context file: its path, and the native picker beside it. */
+.wf-file-row {
+  display: flex;
+  gap: 6px;
+}
+.wf-file-row input {
+  flex: 1;
+  min-inline-size: 0;
+}
+/* The context a step receives: its Provide context steps, and buttons to add text or a file. */
+.wf-attach {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.wf-attach-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-inline-size: 220px;
+  block-size: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--mx-line);
+  border-radius: var(--orchestra-radius-sm);
+  background: var(--mx-raised);
+  color: var(--mx-strong);
+  font-size: var(--orchestra-font-size-xs);
+  cursor: pointer;
+}
+.wf-attach-chip svg {
+  inline-size: 13px;
+  block-size: 13px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.wf-attach-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

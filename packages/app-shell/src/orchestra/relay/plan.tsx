@@ -8,10 +8,11 @@ import {
   chain,
   type Flow,
   type FlowNode,
-  type FlowPhase,
   type Issue,
+  INJECT,
   issueNode,
   layoutWorkflow,
+  nodeOf,
   phaseOf,
   readChecklist,
   removeNodes,
@@ -31,6 +32,7 @@ type Props = {
   readOnly?: boolean
   issues: Issue[]
   skills: Skills
+  directory?: string
   types: RelayNodeType[] | undefined
   description: string
   // The step whose card is open, from the URL; the add flag opens the kind picker at the end of the list.
@@ -46,7 +48,9 @@ type Props = {
 }
 
 // A stretch of the sequence: one phase, or the steps between phases.
-type Segment = { phase: FlowPhase | undefined; nodes: FlowNode[] }
+// Keyed by id, never by node object: every edit makes new node objects, and a card keyed by one would redraw and drop
+// the focus of the field being typed in.
+type Segment = { key: string; phase: string | undefined; ids: string[] }
 
 // The workflow as the ordered list it is: the start card, then every step in sequence, grouped by phase. Each card
 // opens in place, and a "+" between two cards inserts a step exactly there. Every structural change tidies the canvas
@@ -61,10 +65,10 @@ export function PlanView(props: Props) {
   const start = () => props.flow.nodes.find((node) => node.type === START)
   const segments = createMemo(() =>
     order().reduce<Segment[]>((acc, node) => {
-      const phase = phaseOf(props.flow, node.id)
+      const phase = phaseOf(props.flow, node.id)?.id
       const last = acc.at(-1)
-      if (last && last.phase === phase) return [...acc.slice(0, -1), { phase, nodes: [...last.nodes, node] }]
-      return [...acc, { phase, nodes: [node] }]
+      if (last && last.phase === phase) return [...acc.slice(0, -1), { ...last, ids: [...last.ids, node.id] }]
+      return [...acc, { key: phase ?? `steps:${node.id}`, phase, ids: [node.id] }]
     }, []),
   )
   const placed = createMemo(() => new Set(chain(props.flow).map((node) => node.id)))
@@ -169,124 +173,142 @@ export function PlanView(props: Props) {
     </Show>
   )
 
-  const card = (node: FlowNode, number: number | undefined) => {
-    const opened = () => props.open === node.id
-    const result = () => props.run?.steps.find((item) => item.wp === node.id)
-    const key = workflowKey(node.type)
-    const instructions = () =>
-      String(node.parameters.instructions ?? "")
-        .trim()
-        .split("\n")[0]
-    const checks = () => readChecklist(node).controls.length
-    const skill = () => String(node.parameters.skill ?? "")
-    const at = () => order().findIndex((item) => item.id === node.id)
-    return (
-      <article class="wf-step" classList={{ open: opened(), issue: flagged().has(node.id) }} data-step={node.id}>
-        <div class="wf-step-head">
-          <button
-            type="button"
-            class="wf-step-main"
-            aria-expanded={opened()}
-            onClick={() => props.onOpen(opened() ? undefined : node.id)}
+  const card = (id: string, numbered: boolean) => (
+    <Show when={nodeOf(props.flow, id)}>
+      {(node) => {
+        const opened = () => props.open === node().id
+        const result = () => props.run?.steps.find((item) => item.wp === node().id)
+        const key = () => workflowKey(node().type)
+        // A Provide context step is summed up by what it hands over, the file or the first line of its text.
+        const instructions = () =>
+          String(
+            (node().type === INJECT && (node().parameters.file || node().parameters.text)) ||
+              node().parameters.instructions ||
+              "",
+          )
+            .trim()
+            .split("\n")[0]
+        const checks = () => readChecklist(node()).controls.length
+        const skill = () => String(node().parameters.skill ?? "")
+        const at = () => order().findIndex((item) => item.id === node().id)
+        const number = () => (numbered ? at() + 1 : undefined)
+        return (
+          <article
+            class="wf-step"
+            classList={{ open: opened(), issue: flagged().has(node().id) }}
+            data-step={node().id}
           >
-            <Show when={number !== undefined}>
-              <span class="wf-step-n">{number}</span>
-            </Show>
-            <span class={`wf-pick-tile k-${nodeTone(node)}`}>
-              <NodeGlyph name={nodeGlyph(node)} />
-            </span>
-            <span class="wf-step-text">
-              <strong>{node.name}</strong>
-              <small>
-                {[
-                  key ? copy.t(`orchestra.workflows.type.${key}`) : node.type,
-                  checks()
-                    ? copy.count(
-                        checks(),
-                        "orchestra.workflows.count.check.one",
-                        "orchestra.workflows.count.check.other",
-                      )
-                    : undefined,
-                  skill() || undefined,
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </small>
-              <Show when={!opened()}>
-                <em classList={{ empty: !instructions() }}>
-                  {instructions() || copy.t("orchestra.workflows.plan.noInstructions")}
-                </em>
+            <div class="wf-step-head">
+              <button
+                type="button"
+                class="wf-step-main"
+                aria-expanded={opened()}
+                onClick={() => props.onOpen(opened() ? undefined : node().id)}
+              >
+                <Show when={number()}>
+                  <span class="wf-step-n">{number()}</span>
+                </Show>
+                <span class={`wf-pick-tile k-${nodeTone(node())}`}>
+                  <NodeGlyph name={nodeGlyph(node())} />
+                </span>
+                <span class="wf-step-text">
+                  <strong>{node().name}</strong>
+                  <small>
+                    {[
+                      key() ? copy.t(`orchestra.workflows.type.${key()}`) : node().type,
+                      checks()
+                        ? copy.count(
+                            checks(),
+                            "orchestra.workflows.count.check.one",
+                            "orchestra.workflows.count.check.other",
+                          )
+                        : undefined,
+                      skill() || undefined,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </small>
+                  <Show when={!opened()}>
+                    <em classList={{ empty: !instructions() }}>
+                      {instructions() || copy.t("orchestra.workflows.plan.noInstructions")}
+                    </em>
+                  </Show>
+                </span>
+                <Show when={flagged().has(node().id)}>
+                  <span
+                    class="wf-step-warn"
+                    title={copy.t("orchestra.workflows.canvas.hasIssue", { name: node().name })}
+                  >
+                    <Ic name="warn" />
+                  </span>
+                </Show>
+                <Show when={result()}>{(step) => <span class={`wf-dot ${STEP_TONE[step().status]}`} />}</Show>
+                <Ic name="chevron" class="wf-ic wf-step-chev" />
+              </button>
+              <Show when={!props.readOnly && numbered}>
+                <div class="wf-step-tools">
+                  <button
+                    type="button"
+                    class="mx-btn icon"
+                    aria-label={copy.t("orchestra.workflows.plan.moveUp", { name: node().name })}
+                    title={copy.t("orchestra.workflows.plan.moveUp", { name: node().name })}
+                    disabled={at() <= 0 && !phaseOf(props.flow, node().id)}
+                    onClick={() => change(moveStep(props.flow, node().id, -1))}
+                  >
+                    <Ic name="up" />
+                  </button>
+                  <button
+                    type="button"
+                    class="mx-btn icon"
+                    aria-label={copy.t("orchestra.workflows.plan.moveDown", { name: node().name })}
+                    title={copy.t("orchestra.workflows.plan.moveDown", { name: node().name })}
+                    disabled={at() >= order().length - 1 && !phaseOf(props.flow, node().id)}
+                    onClick={() => change(moveStep(props.flow, node().id, 1))}
+                  >
+                    <Ic name="down" />
+                  </button>
+                  <Show when={!phaseOf(props.flow, node().id)}>
+                    <button
+                      type="button"
+                      class="mx-btn icon"
+                      aria-label={copy.t("orchestra.workflows.plan.phaseHere", { name: node().name })}
+                      title={copy.t("orchestra.workflows.plan.phaseHere", { name: node().name })}
+                      onClick={() => group(node().id)}
+                    >
+                      <Ic name="group" />
+                    </button>
+                  </Show>
+                  <button
+                    type="button"
+                    class="mx-btn icon"
+                    aria-label={copy.t("orchestra.workflows.canvas.remove", { name: node().name })}
+                    title={copy.t("orchestra.workflows.canvas.remove", { name: node().name })}
+                    onClick={() => remove(node().id)}
+                  >
+                    <Ic name="trash" />
+                  </button>
+                </div>
               </Show>
-            </span>
-            <Show when={flagged().has(node.id)}>
-              <span class="wf-step-warn" title={copy.t("orchestra.workflows.canvas.hasIssue", { name: node.name })}>
-                <Ic name="warn" />
-              </span>
-            </Show>
-            <Show when={result()}>{(step) => <span class={`wf-dot ${STEP_TONE[step().status]}`} />}</Show>
-            <Ic name="chevron" class="wf-ic wf-step-chev" />
-          </button>
-          <Show when={!props.readOnly && number !== undefined}>
-            <div class="wf-step-tools">
-              <button
-                type="button"
-                class="mx-btn icon"
-                aria-label={copy.t("orchestra.workflows.plan.moveUp", { name: node.name })}
-                title={copy.t("orchestra.workflows.plan.moveUp", { name: node.name })}
-                disabled={at() <= 0 && !phaseOf(props.flow, node.id)}
-                onClick={() => change(moveStep(props.flow, node.id, -1))}
-              >
-                <Ic name="up" />
-              </button>
-              <button
-                type="button"
-                class="mx-btn icon"
-                aria-label={copy.t("orchestra.workflows.plan.moveDown", { name: node.name })}
-                title={copy.t("orchestra.workflows.plan.moveDown", { name: node.name })}
-                disabled={at() >= order().length - 1 && !phaseOf(props.flow, node.id)}
-                onClick={() => change(moveStep(props.flow, node.id, 1))}
-              >
-                <Ic name="down" />
-              </button>
-              <Show when={!phaseOf(props.flow, node.id)}>
-                <button
-                  type="button"
-                  class="mx-btn icon"
-                  aria-label={copy.t("orchestra.workflows.plan.phaseHere", { name: node.name })}
-                  title={copy.t("orchestra.workflows.plan.phaseHere", { name: node.name })}
-                  onClick={() => group(node.id)}
-                >
-                  <Ic name="group" />
-                </button>
-              </Show>
-              <button
-                type="button"
-                class="mx-btn icon"
-                aria-label={copy.t("orchestra.workflows.canvas.remove", { name: node.name })}
-                title={copy.t("orchestra.workflows.canvas.remove", { name: node.name })}
-                onClick={() => remove(node.id)}
-              >
-                <Ic name="trash" />
-              </button>
             </div>
-          </Show>
-        </div>
-        <Show when={opened()}>
-          <div class="wf-step-body">{details(node)}</div>
-        </Show>
-      </article>
-    )
-  }
-  const details = (node: FlowNode) => (
+            <Show when={opened()}>
+              <div class="wf-step-body">{details(node)}</div>
+            </Show>
+          </article>
+        )
+      }}
+    </Show>
+  )
+  const details = (node: () => FlowNode) => (
     <Params
       inline
       flow={props.flow}
-      node={node}
+      node={node()}
       run={props.run}
       frozen={props.frozen}
       readOnly={props.readOnly}
       issues={props.issues.map((issue) => issueText(copy, props.flow, issue))}
       skills={props.skills}
+      directory={props.directory}
       description={props.description}
       save={props.save}
       onChange={props.edit}
@@ -300,7 +322,6 @@ export function PlanView(props: Props) {
     String(start()?.parameters.relayBrief ?? "")
       .trim()
       .split("\n")[0]
-  const number = (node: FlowNode) => order().findIndex((item) => item.id === node.id) + 1
 
   return (
     <div class="wf-plan" data-component="relay-plan">
@@ -341,7 +362,7 @@ export function PlanView(props: Props) {
                 </button>
               </div>
               <Show when={props.open === node().id}>
-                <div class="wf-step-body">{details(node())}</div>
+                <div class="wf-step-body">{details(node)}</div>
               </Show>
             </article>
           )}
@@ -353,80 +374,100 @@ export function PlanView(props: Props) {
           </div>
         </Show>
         {inserter(start()?.id, undefined, !order().length)}
-        <For each={segments()}>
-          {(segment) => (
-            <Show
-              when={segment.phase}
-              fallback={
-                <For each={segment.nodes}>
-                  {(node) => (
-                    <>
-                      {card(node, number(node))}
-                      {inserter(node.id, undefined, node.id === end())}
-                    </>
-                  )}
-                </For>
-              }
-            >
-              {(phase) => (
-                <section class="wf-plan-phase" data-phase={phase().id}>
-                  <header class="wf-plan-phase-head">
-                    <Ic name="group" />
-                    <Show when={!props.readOnly} fallback={<b>{phase().name}</b>}>
-                      <PhaseNameField flow={props.flow} phase={phase()} onChange={props.edit} />
-                    </Show>
-                    <button
-                      type="button"
-                      class="mx-btn"
-                      aria-expanded={state.protocol === phase().id}
-                      onClick={() => setState("protocol", state.protocol === phase().id ? undefined : phase().id)}
-                    >
-                      {copy.t("orchestra.workflows.canvas.protocol")}
-                      <Show when={!phase().description}>
-                        <small>{copy.t("orchestra.workflows.details.protocolEmpty")}</small>
-                      </Show>
-                    </button>
-                    <Show when={!props.readOnly}>
-                      <button
-                        type="button"
-                        class="mx-btn icon"
-                        aria-label={copy.t("orchestra.workflows.canvas.removePhase", { name: phase().name })}
-                        title={copy.t("orchestra.workflows.canvas.removePhase", { name: phase().name })}
-                        onClick={() => change(ungroup(props.flow, phase().id))}
-                      >
-                        <Ic name="close" />
-                      </button>
-                    </Show>
-                  </header>
-                  <Show when={state.protocol === phase().id}>
-                    <label class="mx-field wf-plan-protocol">
-                      <span>{copy.t("orchestra.workflows.details.protocolLabel", { phase: phase().name })}</span>
-                      <textarea
-                        value={phase().description}
-                        readOnly={props.readOnly}
-                        onInput={(event) =>
-                          props.edit(updatePhase(props.flow, phase().id, { description: event.currentTarget.value }))
-                        }
-                      />
-                      <span class="mx-hint">{copy.t("orchestra.workflows.plan.protocolHint")}</span>
-                    </label>
-                  </Show>
-                  <For each={segment.nodes}>
-                    {(node, index) => (
+        <For each={segments().map((item) => item.key)}>
+          {(key) => {
+            const ids = () => segments().find((item) => item.key === key)?.ids ?? []
+            return (
+              <Show
+                when={phaseOf(props.flow, ids()[0] ?? "")}
+                fallback={
+                  <For each={ids()}>
+                    {(id) => (
                       <>
-                        {card(node, number(node))}
-                        {inserter(
-                          node.id,
-                          index() === segment.nodes.length - 1 ? phase().id : undefined,
-                          node.id === end(),
-                        )}
+                        {card(id, true)}
+                        {inserter(id, undefined, id === end())}
                       </>
                     )}
                   </For>
-                </section>
-              )}
-            </Show>
-          )}
+                }
+              >
+                {(phase) => (
+                  <section class="wf-plan-phase" data-phase={phase().id}>
+                    <header class="wf-plan-phase-head">
+                      <span class="wf-plan-phase-kicker">
+                        <Ic name="group" />
+                        {copy.t("orchestra.workflows.plan.phaseKicker")}
+                      </span>
+                      <Show when={!props.readOnly} fallback={<b>{phase().name}</b>}>
+                        <PhaseNameField flow={props.flow} phase={phase()} onChange={props.edit} />
+                      </Show>
+                      <span class="mx-meta">
+                        {copy.count(
+                          ids().length,
+                          "orchestra.workflows.count.step.one",
+                          "orchestra.workflows.count.step.other",
+                        )}
+                      </span>
+                      <button
+                        type="button"
+                        class="mx-btn"
+                        aria-expanded={state.protocol === phase().id}
+                        onClick={() => setState("protocol", state.protocol === phase().id ? undefined : phase().id)}
+                      >
+                        {copy.t("orchestra.workflows.canvas.protocol")}
+                        <Show when={!phase().description}>
+                          <small>{copy.t("orchestra.workflows.details.protocolEmpty")}</small>
+                        </Show>
+                      </button>
+                      <Show when={!props.readOnly}>
+                        <button
+                          type="button"
+                          class="mx-btn icon"
+                          aria-label={copy.t("orchestra.workflows.canvas.removePhase", { name: phase().name })}
+                          title={copy.t("orchestra.workflows.canvas.removePhase", { name: phase().name })}
+                          onClick={() => change(ungroup(props.flow, phase().id))}
+                        >
+                          <Ic name="close" />
+                        </button>
+                      </Show>
+                    </header>
+                    <Show when={state.protocol !== phase().id}>
+                      <button
+                        type="button"
+                        class="wf-plan-phase-brief"
+                        classList={{ empty: !phase().description.trim() }}
+                        onClick={() => setState("protocol", phase().id)}
+                      >
+                        {phase().description.trim().split("\n")[0] ||
+                          copy.t("orchestra.workflows.plan.phaseBriefEmpty")}
+                      </button>
+                    </Show>
+                    <Show when={state.protocol === phase().id}>
+                      <label class="mx-field wf-plan-protocol">
+                        <span>{copy.t("orchestra.workflows.details.protocolLabel", { phase: phase().name })}</span>
+                        <textarea
+                          value={phase().description}
+                          readOnly={props.readOnly}
+                          onInput={(event) =>
+                            props.edit(updatePhase(props.flow, phase().id, { description: event.currentTarget.value }))
+                          }
+                        />
+                        <span class="mx-hint">{copy.t("orchestra.workflows.plan.protocolHint")}</span>
+                      </label>
+                    </Show>
+                    <For each={ids()}>
+                      {(id, index) => (
+                        <>
+                          {card(id, true)}
+                          {inserter(id, index() === ids().length - 1 ? phase().id : undefined, id === end())}
+                        </>
+                      )}
+                    </For>
+                  </section>
+                )}
+              </Show>
+            )
+          }}
         </For>
         <Show when={outside().length}>
           <section class="wf-plan-loose">
@@ -434,7 +475,7 @@ export function PlanView(props: Props) {
               <strong>{copy.t("orchestra.workflows.plan.looseTitle")}</strong>
               <span>{copy.t("orchestra.workflows.plan.looseHint")}</span>
             </header>
-            <For each={outside()}>{(node) => card(node, undefined)}</For>
+            <For each={outside().map((node) => node.id)}>{(id) => card(id, false)}</For>
           </section>
         </Show>
       </div>
