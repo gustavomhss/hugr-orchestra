@@ -25,8 +25,10 @@ type Tab = { tabID: string; generation?: number; url?: string; title?: string; s
 // One line of the outline. `key` identifies the same control across snapshots (the browser's stable ref, or the Linux
 // node's path by role, name and occurrence), so a diff can tell what appeared, went away or changed.
 // occurrence: which of several Linux controls with this exact name and role, in tree order, so a ref reaches its own.
+// field: which editable Linux control with this role and name, in read order, so a text read finds its value.
 type Entry = { key: string; ref: number; line: string; label: string; depth: number; role: string; name: string;
-  parent?: number; target?: number; occurrence?: number }
+  parent?: number; target?: number; occurrence?: number; field?: string; value?: string }
+type TextItem = AppDockOutline.Item & { text?: string; textTruncated?: boolean; depth?: number }
 type Snapshot = { header: string; entries: Entry[]; text?: string; complete: boolean }
 
 const LOOK_LIMIT = 40_000
@@ -79,7 +81,7 @@ function serve(port: Transport, name: string, tab: Tab) {
   const server = new Server({ name, version: "1.0.0" }, { capabilities: { tools: {}, resources: {} } })
   // The last snapshot this server showed; refs in find/act answers point into it.
   const state: { last?: Snapshot } = {}
-  const snap = async () => (state.last = await app.snapshot())
+  const snap = async (fields = false) => (state.last = await app.snapshot(fields))
   const where = linux(tab) ? "the Linux workspace" : `the browser tab ${tab.title ? `"${tab.title}"` : ""} (${tab.url ?? ""})`
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: tools(where, linux(tab)) }))
@@ -107,7 +109,7 @@ function serve(port: Transport, name: string, tab: Tab) {
         ? `\n\n--- page text ---\n${text.slice(0, TEXT_LIMIT)}${text.length > TEXT_LIMIT ? `\n… text cut at ${TEXT_LIMIT} characters: find searches all of it` : ""}`
         : "")
     }
-    if (tool === "find") return find(await snap(), String(args.query ?? ""), typeof args.role === "string" ? args.role : undefined)
+    if (tool === "find") return find(await snap(Boolean(args.query)), String(args.query ?? ""), typeof args.role === "string" ? args.role : undefined)
     if (tool === "wait") return wait(args)
     if (tool === "act") return act(args)
     if (tool === "navigate" && !linux(tab)) return change(() => app.navigate!(args))
@@ -197,7 +199,8 @@ async function apps(port: Transport) {
 }
 
 type App = {
-  snapshot: () => Promise<Snapshot>
+  // fields: also read the text inside the Linux workspace's editable controls (an editor's content), for find.
+  snapshot: (fields?: boolean) => Promise<Snapshot>
   act: (entry: Entry | undefined, args: Record<string, unknown>, snapshot: Snapshot) => Promise<string>
   navigate?: (args: Record<string, unknown>) => Promise<string>
 }
@@ -269,7 +272,10 @@ function linuxApp(port: Transport): App {
     return failed ? `Error: ${text}` : text.slice(0, 600)
   }
   return {
-    snapshot: () => serial(async () => linuxEntries(await readAll(port))),
+    snapshot: (fields) => serial(async () => {
+      const snapshot = linuxEntries(await readAll(port))
+      return fields ? withFields(snapshot, await readAll(port, TEXT_LIMIT)) : snapshot
+    }),
     act: async (entry, args, snapshot) => {
       const verb = String(args.do ?? "click")
       // An unnamed control (an editor's text view) cannot be located by name; typing and keys reach it through focus.
@@ -319,11 +325,11 @@ function serial<T>(work: () => Promise<T>) {
   return next
 }
 
-async function readAll(port: Transport, restarts = 0): Promise<{ items: AppDockOutline.Item[]; complete: boolean }> {
-  const page = (cursor?: string) => request(port, "read", { world: "linux", budget: 500, maxText: 0, ...(cursor ? { cursor } : {}) },
-    AbortSignal.timeout(15_000), 15_000) as Promise<{ items?: AppDockOutline.Item[]; hasMore?: boolean; cursor?: string;
+async function readAll(port: Transport, maxText = 0, restarts = 0): Promise<{ items: TextItem[]; complete: boolean }> {
+  const page = (cursor?: string) => request(port, "read", { world: "linux", budget: 500, maxText, ...(cursor ? { cursor } : {}) },
+    AbortSignal.timeout(15_000), 15_000) as Promise<{ items?: TextItem[]; hasMore?: boolean; cursor?: string;
       coverage?: { complete?: boolean } }>
-  const collect = async (items: AppDockOutline.Item[], cursor: string | undefined, pages: number): Promise<{ items: AppDockOutline.Item[]; complete: boolean }> => {
+  const collect = async (items: TextItem[], cursor: string | undefined, pages: number): Promise<{ items: TextItem[]; complete: boolean }> => {
     const value = await page(cursor)
     const all = [...items, ...(value.items ?? [])]
     if (!value.hasMore || !value.cursor || pages >= 48) return { items: all, complete: value.coverage?.complete !== false && !value.hasMore }
@@ -331,18 +337,19 @@ async function readAll(port: Transport, restarts = 0): Promise<{ items: AppDockO
   }
   return collect([], undefined, 1).catch((error: unknown) => {
     if (restarts < 2 && typeof error === "object" && error !== null && (error as { code?: string }).code === "cursor-stale")
-      return readAll(port, restarts + 1)
+      return readAll(port, maxText, restarts + 1)
     throw error
   })
 }
 
-function linuxEntries(read: { items: AppDockOutline.Item[]; complete: boolean }): Snapshot {
+function linuxEntries(read: { items: TextItem[]; complete: boolean }): Snapshot {
   const roots = AppDockOutline.tree(read.items)
   const shown = new Set(AppDockOutline.visible(roots))
   const entries: Entry[] = []
   // A node's key is its path of role, name and which same-shaped sibling it is, so a row inserted above it does not
   // make the whole list look changed.
   const seen = new Map<string, number>()
+  const fields = editable(read.items)
   // Counted over the whole read, hidden controls included, the way ui_* count a target's occurrence.
   const twins = Map.groupBy(read.items.flatMap((item) => [...new Set([item.name, AppDockOutline.keys(item.name).name])]
     .map((name) => ({ item, key: `${AppDockOutline.role(item)}|${name.trim().toLowerCase()}` }))), (twin) => twin.key)
@@ -361,11 +368,38 @@ function linuxEntries(read: { items: AppDockOutline.Item[]; complete: boolean })
     const label = AppDockOutline.line(node)
     const same = twins.get(`${node.role}|${node.name.trim().toLowerCase()}`) ?? []
     entries.push({ key, ref, label, line: `${label} [${ref}]`, depth, role: node.role, name: node.name, parent,
-      ...(same.length > 1 ? { occurrence: same.findIndex((twin) => twin.item === node.item) } : {}) })
+      ...(same.length > 1 ? { occurrence: same.findIndex((twin) => twin.item === node.item) } : {}),
+      ...(fields.has(node.item) ? { field: fields.get(node.item) } : {}) })
     node.children.forEach((child) => visit(child, depth + 1, key, ref))
   }
   roots.forEach((root) => visit(root, 0, ""))
   return { header: "Linux workspace", entries, complete: read.complete }
+}
+
+// Editable controls other than password fields (role 40, whose text is never read), numbered per role and name in
+// read order: the structural read and the text read walk the tree in the same order.
+function editable(items: TextItem[]) {
+  const counts = new Map<string, number>()
+  return new Map(items.filter((item) => item.role !== 40 && item.states?.includes(7)).map((item) => {
+    const shape = `${item.roleName}|${item.name}`
+    const index = counts.get(shape) ?? 0
+    counts.set(shape, index + 1)
+    return [item, `${shape}#${index}`] as const
+  }))
+}
+
+// A text the helper cut at a page's text allowance goes on in the next page's first item, repeated without its parent
+// (a top-level item deeper than a window root); it joins the item it continues.
+function withFields(snapshot: Snapshot, read: { items: TextItem[] }): Snapshot {
+  const items = read.items.reduce<TextItem[]>((all, item) => {
+    const last = all.at(-1)
+    if (last && !item.parentRef && (item.depth ?? 0) > 0 && last.textTruncated && last.roleName === item.roleName && last.name === item.name)
+      return [...all.slice(0, -1), { ...last, text: (last.text ?? "") + (item.text ?? ""), textTruncated: item.textTruncated }]
+    return [...all, item]
+  }, [])
+  const values = new Map([...editable(items)].flatMap(([item, field]) => (item.text ? [[field, item.text] as const] : [])))
+  return { ...snapshot, entries: snapshot.entries.map((entry) =>
+    entry.field !== undefined && values.has(entry.field) ? { ...entry, value: values.get(entry.field) } : entry) }
 }
 
 function look(snapshot: Snapshot, scope?: number): string {
@@ -390,10 +424,19 @@ function find(snapshot: Snapshot, query: string, role?: string) {
     const parent = entry.parent === undefined ? undefined : byRef.get(entry.parent)
     return parent && left > 0 ? [...crumbs(parent, left - 1), parent.label] : []
   }
-  const matches = snapshot.entries.filter((entry) => (!wanted || entry.label.toLowerCase().includes(wanted))
+  const inside = (entry: Entry) => entry.value?.toLowerCase().indexOf(wanted) ?? -1
+  const matches = snapshot.entries.filter((entry) => (!wanted || entry.label.toLowerCase().includes(wanted) || inside(entry) >= 0)
     && (!role || entry.role.toLowerCase().includes(role.toLowerCase())))
   if (matches.length === 0) return `Nothing matches${query ? ` "${query}"` : ""}${role ? ` with role ${role}` : ""}.`
-  return [...matches.slice(0, 30).map((entry) => [...crumbs(entry), entry.line].join(" › ")),
+  // A match inside a field's text shows the words around it, on one line.
+  const excerpt = (entry: Entry) => {
+    const at = inside(entry)
+    if (!wanted || at < 0 || !entry.value) return ""
+    const start = Math.max(0, at - 30)
+    const end = Math.min(entry.value.length, at + wanted.length + 30)
+    return ` contains "${start > 0 ? "…" : ""}${entry.value.slice(start, end).replace(/\s+/g, " ")}${end < entry.value.length ? "…" : ""}"`
+  }
+  return [...matches.slice(0, 30).map((entry) => [...crumbs(entry), entry.line + excerpt(entry)].join(" › ")),
     matches.length > 30 && `… ${matches.length - 30} more; narrow the query or add a role`].filter(Boolean).join("\n")
 }
 
@@ -446,7 +489,7 @@ function tools(where: string, workspace: boolean) {
         scope: { ...ref, description: "Show only the subtree under one line: its [n] from your latest look or find (refs change when the page does)" },
         ...(workspace ? {} : { text: { type: "boolean", description: "Also return the page's visible text" } }) } } },
     { name: "find", description: `Search ${where} by text and/or role. Each match shows where it sits (its last regions › the control) and its [ref].`,
-      inputSchema: { type: "object", properties: { query: { type: "string", description: "Case-insensitive text in the role, name or value" },
+      inputSchema: { type: "object", properties: { query: { type: "string", description: workspace ? "Case-insensitive text in the role, name, or the text inside a field such as an editor's content" : "Case-insensitive text in the role, name or value" },
         role: { type: "string", description: "Role such as button, link, textbox, push button, entry, menu item" } } } },
     { name: "act", description: `Act on ${where} by ref (or by name and role) and get back what changed: focus, lines that appeared, went away or changed. do: click (default), type (replace a field's text), keys (e.g. Enter, Escape${workspace ? ", ctrl+s" : ""}), scroll.${workspace ? " With no ref, type and keys go to the control that has focus, such as an editor's unnamed text view; type then adds the text at the cursor." : ""}`,
       inputSchema: { type: "object", properties: { ref, name: { type: "string" }, role: { type: "string" },
