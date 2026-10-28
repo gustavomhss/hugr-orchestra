@@ -16,7 +16,6 @@ import {
   useLanguage,
 } from "@orchestra/app"
 import type { UpdaterState } from "@orchestra/app/updater"
-import { HugrSplash } from "@orchestra/app/orchestra/brand"
 import * as Sentry from "@sentry/solid"
 import type { AsyncStorage } from "@solid-primitives/storage"
 import { createMemoryHistory, MemoryRouter, type BaseRouterProps } from "@solidjs/router"
@@ -346,12 +345,9 @@ window.api.onMenuCommand((id) => {
 })
 listenForDeepLinks(window, window.api)
 
+// A plain surface: the comet splash covers loading in the windows that open with the app and leaves once this is gone.
 function LoadingSplash() {
-  return (
-    <div class="h-dvh w-screen flex flex-col items-center justify-center bg-background-base">
-      <HugrSplash class="opacity-50 animate-pulse" />
-    </div>
-  )
+  return <div class="h-dvh w-screen bg-background-base" data-app-loading />
 }
 
 function DesktopRoot(props: { windowState: DesktopWindowState }) {
