@@ -138,17 +138,18 @@ describe("DockMcp", () => {
     const d = dock((op, args) => {
       if (op === "list") return { ok: true, value: tabs }
       if (op !== "read") return { ok: false, error: { message: `unexpected ${op}` } }
-      if (!args.maxText) return page([frame, editor, secret])
-      // The editor's text runs past the first page and goes on, repeated without its parent, on the next.
-      if (args.cursor === undefined) return { ok: true, value: { items: [frame, { ...editor, text: "dear diary, hel", textTruncated: true }, { ...secret, text: "hunter2" }],
+      if (!args.maxText) return page([frame, secret, editor])
+      // The editor's text runs past the first page's text allowance, so it ends that page and goes on, repeated without
+      // its parent, on the next.
+      if (args.cursor === undefined) return { ok: true, value: { items: [frame, { ...secret, text: "hunter2" }, { ...editor, text: "dear diary, hel", textTruncated: true }],
         hasMore: true, cursor: "c1", coverage: { complete: true } } }
       return { ok: true, value: { items: [{ ...editor, parentRef: null, text: "lo world", textTruncated: false }], hasMore: false,
         coverage: { complete: true } } }
     })
     const client = await connect((await d.servers())[2]!)
     const found = text(await client.callTool({ name: "find", arguments: { query: "hello" } }))
-    expect(found).toStartWith('frame "Untitled 1 - Mousepad" › ')
-    expect(found).toEndWith('[2] contains "dear diary, hello world"')
+    expect(found).toStartWith('frame "Untitled 1 - Mousepad" [active] › ')
+    expect(found).toEndWith('[3] contains "dear diary, hello world"')
     // Even text a password field should never carry stays out of reach.
     expect(text(await client.callTool({ name: "find", arguments: { query: "hunter2" } }))).toBe('Nothing matches "hunter2".')
     // look stays one structural read without text.
