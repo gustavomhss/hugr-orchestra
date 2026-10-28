@@ -204,6 +204,7 @@
       "name": "@orchestra/continuity",
       "version": "0.0.0",
       "dependencies": {
+        "@orchestra/atlas-boundary": "workspace:*",
         "@orchestra/core": "workspace:*",
         "@orchestra/llm": "workspace:*",
         "@orchestra/schema": "workspace:*",

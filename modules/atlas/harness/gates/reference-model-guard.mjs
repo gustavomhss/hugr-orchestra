@@ -18,7 +18,7 @@
 // forces the classification to be DECLARED rather than discovered by the next reviewer.
 //
 // ── DECLARED COUNTS (gate-checked; a drift here FAILS this gate) ────────────────────────────────────────
-//   declared-modules: 40 · dead-value-exports: 136 · type-reachable: 4
+//   declared-modules: 41 · dead-value-exports: 140 · type-reachable: 4
 //   These three are read back from THIS file and asserted against the measured tree at the foot of the run
 //   (see "THE HEADER STATES COUNTS, AND THIS CHECKS THEM"). No count is QUOTED anywhere else in this
 //   header — a quoted integer that nothing checks is exactly what rotted here (task #143); this one cannot.
@@ -291,6 +291,9 @@ const BUILTIN_LEDGER = {
   // `@orchestra/atlas-boundary` `./mine` entry, which `boundary/script/build.ts` bundles from this file (D39).
   // Shipped, but outside the analyser's reach, so it is ledgered rather than bannered as a specification artifact.
   "packages/cli/src/surface-mine.ts": { values: 2, shipped: "boundary/script/build.ts", banner: false },
+  // The committed context-continuity archive (repo-layout design §3). The continuity module reaches it only through the
+  // boundary's `./context` entry, so it is shipped but outside the analyser's reach, like `surface-mine.ts` above.
+  "packages/adapter-io/src/context-log.ts": { values: 4, shipped: "boundary/script/build.ts", banner: false },
   // #99b N2 landed: the N2 governed-emit door (`adapter-io/src/governed-emit-negation.ts`) now VALUE-IMPORTS
   // `negationKey` (mints an admitted negation's id AND an AbstainedRecord's address), so the row that tracked
   // it dead-until-wired went dead→live and was REMOVED here — the ledger keeping the N1→N2 transition on the

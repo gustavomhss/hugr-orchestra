@@ -4,6 +4,7 @@ import { ToolFailure } from "@orchestra/llm"
 import { Effect, Layer, Schema } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import { makeLocationNode } from "@orchestra/core/effect/app-node"
+import { Location } from "@orchestra/core/location"
 import { PermissionV2 } from "@orchestra/core/permission"
 import { SessionHistory, type SessionMessage, SessionV2 } from "@orchestra/core/session"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
@@ -79,6 +80,9 @@ const layer = Layer.effectDiscard(
     const permission = yield* PermissionV2.Service
     const database = yield* Database.Service
     const state = yield* ContinuityStrategy.Service
+    const location = yield* Location.Service
+    // The committed `.atlas/` tree lives in the project directory when the Location is a git repository.
+    const root = location.vcs?.type === "git" ? location.project.directory : location.directory
     // The full stored history, compacted messages included: aliases and lookups never depend on the model's view.
     const history = (sessionID: SessionV2.ID) =>
       SessionHistory.loadAll(database.db, sessionID).pipe(
@@ -108,7 +112,8 @@ const layer = Layer.effectDiscard(
         if (!found) return { status: "unavailable", source: { reference }, reason: "missing" }
         return lookup(yield* history(context.sessionID), found.messageID, found.partID, input)
       }
-      if (reference !== undefined) return yield* archived(context.sessionID, reference, input)
+      if (reference !== undefined)
+        return yield* archived(context.sessionID, reference, input, { root, seat: context.agent })
       if (input.archive_query !== undefined) return yield* search(context.sessionID, input.archive_query, input)
       if (input.archive_list) return yield* listed(context.sessionID, input)
       if (input.query !== undefined) return query(yield* history(context.sessionID), input.query, input.limit)
@@ -143,7 +148,7 @@ const layer = Layer.effectDiscard(
 export const toolsNode = makeLocationNode({
   name: "continuity/tools",
   layer,
-  deps: [ToolRegistry.node, PermissionV2.node, Database.node, ContinuityStrategy.stateNode],
+  deps: [ToolRegistry.node, PermissionV2.node, Database.node, ContinuityStrategy.stateNode, Location.node],
 })
 
 /** One stored message (or one of its parts) as a paged JSON document. */
@@ -240,8 +245,15 @@ function fields(message: SessionMessage.Message): { field: string; text: string;
   })
 }
 
-const archived = Effect.fnUntraced(function* (sessionID: SessionV2.ID, reference: string, input: RecallInput) {
-  const chunk = yield* ContinuityArchive.read(sessionID, reference).pipe(Effect.catch(() => Effect.succeed(undefined)))
+const archived = Effect.fnUntraced(function* (
+  sessionID: SessionV2.ID,
+  reference: string,
+  input: RecallInput,
+  bundle: { readonly root: string; readonly seat: string },
+) {
+  const chunk = yield* ContinuityArchive.read(sessionID, reference, bundle).pipe(
+    Effect.catch(() => Effect.succeed(undefined)),
+  )
   if (!chunk) return { status: "unavailable", source: { reference }, reason: "missing" }
   return page(chunk.markdown, { source: { reference }, extent: "archived_markdown", bytes: chunk.bytes }, input)
 })

@@ -17,6 +17,8 @@ await Promise.all(
       ["surface", "adapter-io/src/surface/index.ts"],
       // The screen's Genesis mining (specs/atlas-ui/build D39): the CLI's governed pass, driven by the host's models.
       ["mine", "cli/src/surface-mine.ts"],
+      // A session's committed context-continuity archive (repo-layout design §3), for the continuity module.
+      ["context", "adapter-io/src/context-log.ts"],
     ] as const
   ).map(async ([name, file]) => {
     const entry = path.join(root, "modules/atlas/packages", file)
