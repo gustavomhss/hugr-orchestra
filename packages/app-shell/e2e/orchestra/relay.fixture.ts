@@ -473,6 +473,8 @@ export async function setupRelay(page: Page, input: { scheme?: "dark" | "light";
       localStorage.setItem("orchestra.global.dat:server", JSON.stringify({ list: [server], projects }))
       localStorage.setItem("orchestra.global.dat:layout", layout)
       localStorage.setItem(`orchestra.global.dat:${server}\0layout`, layout)
+      // These specs drive the canvas; the editor opens in the list until a view is chosen.
+      localStorage.setItem("orchestra.global.dat:relay.view", JSON.stringify({ mode: "canvas" }))
     },
     { server, directory, scheme: input.scheme ?? "dark" },
   )

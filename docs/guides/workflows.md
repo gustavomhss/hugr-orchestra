@@ -23,7 +23,7 @@ Use **Use in chat** instead of Run when you want to ask Maestro for something th
 
 ## List and canvas
 
-The editor has two views of the same workflow, switched at the top right. **List** is the plan as you read it: the **Goal and settings** card at the top holds the goal every step sees and the retries; it is not a step. Below it come the steps in order. **Canvas** draws the same steps as nodes and wires, for when you want to see the shape or drag steps around. A change in one view shows in the other.
+The editor has two views of the same workflow, switched at the top right. **List** is the plan as you read it: the **Goal and settings** card at the top holds the goal every step sees and the retries; it is not a step. Below it come the steps in order. **Canvas** draws the same steps as nodes and wires, for when you want to see the shape or drag steps around. A change in one view shows in the other. The editor opens in the view you used last.
 
 In List the editor has three columns. On the left, **Steps** lists every step in order, with phases as rails. Click one to open it, drag one to move it, or drop a file from Finder on the editor to attach it as context to the open step. In the middle is the step you are editing. On the right, the inspector has two tabs:
 

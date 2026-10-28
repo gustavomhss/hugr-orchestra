@@ -1,6 +1,7 @@
 import { createEffect, createMemo, createSignal, on, onCleanup, onMount, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { modalActive } from "@/utils/modal-active"
+import { Persist, persisted } from "@/utils/persist"
 import { showToast } from "@/utils/toast"
 import { type PanelEntry, AddPanel } from "./add-panel"
 import { canvasBanner } from "./canvas-banner"
@@ -92,8 +93,9 @@ export function CanvasTab(props: Props) {
   const [anchor, setAnchor] = createSignal<{ id: string; port: number }>()
   const [focusPhase, setFocusPhase] = createSignal<string>()
   const [confirming, setConfirming] = createSignal<{ ids: string[]; count: number }>()
-  // The list is where a document is written; the canvas shows the same graph drawn, for wiring a hook by hand.
-  const [view, setView] = createStore({ mode: "list" as "list" | "canvas" })
+  // The list is where a document is written; the canvas shows the same graph drawn, for wiring a hook by hand. The
+  // editor reopens in the view last chosen.
+  const [view, setView] = persisted(Persist.global("relay.view"), createStore({ mode: "list" as "list" | "canvas" }))
   let api: CanvasApi | undefined
   const workflow = () => props.kind === "workflow"
   const types = () => (props.source.nodeTypes.isSuccess ? props.source.nodeTypes.data[props.kind] : undefined)
