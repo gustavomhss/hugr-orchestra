@@ -112,8 +112,7 @@ function seatProfile(seat: Seat): NativeProfile {
   if (seat.skills.length > 0 && !root) throw new Error(`Missing native seat skill root: ${seat.id}`)
   return Object.freeze({
     ...baseProfiles[seat.profile],
-    // The HuGR Composer MCP server (`mcp.servers.hugr-composer`); config permissions decide which other agents see it.
-    ...(seat.id === "backend" ? { "hugr-composer_*": "allow" as const } : {}),
+    ...Object.fromEntries((seat.mcp ?? []).map((server) => [`${server}_*`, "allow" as const])),
     ...(seat.atlasMemory ? { atlas_context: "allow" as const, atlas_memory_recall: "allow" as const, atlas_memory_emit: "allow" as const } : {}),
     ...(seat.id === "archie" ? {
       atlas_context: "allow" as const,
