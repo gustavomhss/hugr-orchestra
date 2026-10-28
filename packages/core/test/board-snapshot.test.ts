@@ -120,11 +120,15 @@ describe("BoardSnapshot", () => {
       yield* board.issue({ project: "SNG", title: "Code", branch: "card-1", session: "ses_snapshot_gone", reason: "Plan." })
 
       yield* write(card.worktree, "work.txt", "kept\n")
+      yield* Effect.promise(() => fs.rm(path.join(card.worktree, "README.md")))
       expect(yield* board.snapshotPush("SNG", 1)).toMatchObject({ status: "pushed", ref: "refs/orchestra/wip/SNG-1/a1" })
       yield* Effect.promise(() => fs.rm(card.worktree, { recursive: true, force: true }))
 
       expect(yield* board.snapshotPush("SNG", 1)).toMatchObject({ status: "restored", ref: "refs/orchestra/wip/SNG-1/a1", worktree: card.worktree })
       expect(yield* Effect.promise(() => fs.readFile(path.join(card.worktree, "work.txt"), "utf8"))).toBe("kept\n")
+      expect(yield* run(card.worktree, "symbolic-ref", "HEAD")).toBe("refs/heads/card-1")
+      expect(yield* run(card.worktree, "rev-parse", "HEAD")).toBe(card.head)
+      expect((yield* run(card.worktree, "status", "--porcelain")).split("\n").map((line) => line.trim()).toSorted()).toEqual(["?? work.txt", "D README.md"])
     }),
   )
 })

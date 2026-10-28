@@ -128,14 +128,23 @@ export function make(deps: Deps) {
     return found ?? null
   })
 
-  /** Re-creates a gone worktree detached at its snapshot commit, fetched from the snapshot remote. */
-  const restore = Effect.fnUntraced(function* (directory: string, project: ProjectRow, cwd: string, sha: string, ref: string) {
+  /**
+   * Re-creates a gone worktree on the card's branch, then writes the snapshot's tree over its files only, so HEAD and
+   * index are the branch's again and the work in progress shows as uncommitted, as before the loss (section 8.1).
+   * The branch is checked out detached when another worktree holds it.
+   */
+  const restore = Effect.fnUntraced(function* (directory: string, project: ProjectRow, branch: string, cwd: string, sha: string, ref: string) {
     const remote = yield* deps.remote(directory, project).pipe(Effect.orElseSucceed(() => undefined))
     if (!remote) return false
     yield* git(directory, ["worktree", "prune"])
     const fetched = yield* git(directory, ["fetch", "--quiet", "--no-tags", remote, ref])
     if (fetched.code !== 0) return false
-    return (yield* git(directory, ["worktree", "add", "--detach", cwd, sha])).code === 0
+    const added =
+      (yield* git(directory, ["worktree", "add", cwd, branch])).code === 0 ||
+      (yield* git(directory, ["worktree", "add", "--detach", cwd, branch])).code === 0
+    if (!added) return false
+    // No-overlay restore also deletes the files the snapshot lacks.
+    return (yield* git(cwd, ["restore", `--source=${sha}`, "--worktree", "--", "."])).code === 0
   })
 
   const push = Effect.fnUntraced(function* (issue: Board.IssueID) {
@@ -146,7 +155,8 @@ export function make(deps: Deps) {
     const cwd = yield* locate(found.directory, found.issue, attempt)
     if (!cwd || !existsSync(cwd)) {
       const sha = attempt.snapshot_sha
-      if (cwd && sha && found.directory && (yield* restore(found.directory, found.project, cwd, sha, ref)))
+      const branch = found.issue.branch
+      if (cwd && sha && branch && found.directory && (yield* restore(found.directory, found.project, branch, cwd, sha, ref)))
         return { status: "restored", ref, worktree: cwd, sha } satisfies Result
       yield* Effect.logWarning(`drift: ${found.project.key}-${found.issue.number} worktree ${cwd ?? "(none)"} is gone and has no snapshot to restore`)
       return { status: "missing", ref, worktree: cwd } satisfies Result
