@@ -22,7 +22,8 @@ function isTrailer(value: unknown): value is Dossier["trailer"] {
     typeof trailer.Model === "string" &&
     typeof trailer.Gates === "string" &&
     typeof trailer.Verdict === "string" &&
-    typeof trailer.TranscriptSha === "string"
+    typeof trailer.TranscriptSha === "string" &&
+    (trailer.Attempt === undefined || typeof trailer.Attempt === "string")
   )
 }
 

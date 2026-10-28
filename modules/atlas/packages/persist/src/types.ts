@@ -26,6 +26,11 @@ export interface Trailer {
   readonly Gates: string
   readonly Verdict: string
   readonly TranscriptSha: Hash
+  /**
+   * The attempt that produced the commit, `a<n>` (repo-layout design §3): with `WP` naming the card it finds
+   * `.atlas/cards/<WP>/attempts/a<n>.jsonl`. Optional, so a trailer written before attempts existed still reads.
+   */
+  readonly Attempt?: string
 }
 
 /**

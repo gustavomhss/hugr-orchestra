@@ -68,6 +68,7 @@ function serializeTrailer(t: Trailer): string {
     `Gates: ${t.Gates}`,
     `Verdict: ${t.Verdict}`,
     `TranscriptSha: ${t.TranscriptSha}`,
+    ...(t.Attempt === undefined ? [] : [`Attempt: ${t.Attempt}`]),
   ].join("\n")
 }
 
@@ -79,7 +80,8 @@ function serializeNote(d: Dossier): string {
   return JSON.stringify(overlay)
 }
 
-/** Parse the RFC-822-ish trailer block back to a `Trailer`; a missing/blank line yields an empty field. */
+/** Parse the RFC-822-ish trailer block back to a `Trailer`; a missing/blank line yields an empty field, except
+ *  `Attempt`, which stays absent so a trailer written before attempts existed round-trips unchanged. */
 function parseTrailer(text: string): Trailer {
   const kv = new Map<string, string>()
   for (const line of text.split("\n")) {
@@ -92,6 +94,7 @@ function parseTrailer(text: string): Trailer {
     Gates: kv.get("Gates") ?? "",
     Verdict: kv.get("Verdict") ?? "",
     TranscriptSha: asHash(kv.get("TranscriptSha") ?? ""),
+    ...(kv.get("Attempt") === undefined ? {} : { Attempt: kv.get("Attempt") as string }),
   }
 }
 
