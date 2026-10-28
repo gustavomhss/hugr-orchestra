@@ -278,7 +278,7 @@ origin/dev`.
 ## Docs and skills
 
 - `docs/guides/agent-screen.md` and `docs/guides/skills.md` explain the Skill tree tab.
-- `.orchestra/skills/orchestra-maintenance` gets the tree rules and the steps to add a node.
+- `.orchestra/skills/seat-skill-tree-maintenance` holds the tree rules and the steps to add a node.
 - Both stay repo-only. The trees themselves ship, as seat skills do today.
 
 ## Cost and what this does not prove
