@@ -8,8 +8,9 @@ are the owner's: the queue explodes, rebases and conflicts pile up, and work is 
 
 It builds on the lead playbooks (`maestro-lead` `track` and `land`), the board contract
 (`docs/specs/projects-board/CONTRACT.md`) and the board-drift source
-(`modules/maestro/coordination/src/v2/board-drift-source.ts`). At the time of writing, these live on the
-`maestro-capabilities` branch.
+(`modules/maestro/coordination/src/v2/board-drift-source.ts`), the `maestro-orchestra` map, and `task` children in
+their own native worktree (`worktree: true`). At the time of writing, these are on the `maestro-capabilities` branch
+(PR #1106, not merged yet). This design builds on them and redoes none of them.
 
 ## 1. Today
 
@@ -58,6 +59,16 @@ rework goes. There are two gates, as in Mergify's "two-step CI" and as `AGENTS.m
 1. **Scoped gate, per card.** Change-scoped tests and a typecheck run on the card's own tree, before it may queue.
 2. **Full gate, per bundle.** The full suite (phase 1) or the area's suite (phase 2) runs once on base + N queued
    PRs. The bundle replaces the epic PR as the unit that carries the `epic` label.
+
+**No repeated work.** A run that cannot produce a new fact does not run. Every result is keyed by what it tested:
+a tree for a scoped check, and base plus member SHAs for a bundle. A result already on file is reused, never rerun.
+The spec applies this rule where it bites:
+- A scoped green carries over to the PR head when the tree is the same (§5.2).
+- An unchanged worktree pushes no snapshot (§8.1).
+- After an ejection, only the failing tests are rerun, not the whole suite (§6.3 step 5).
+- A flake probe and an infrastructure retry each run once.
+- `merge-if-disjoint` avoids a retest when base moved somewhere the bundle does not touch (§6.5).
+- Phase 2's whole-suite safety run is the epic run that already exists, not an extra run (§7.3).
 
 Why not merge first and revert on red, as Google's TAP does? Seats build on each other within minutes. A revert
 then takes down every card already built on the bad one, and the cost of a bad landing grows with team speed. Gating
@@ -205,7 +216,9 @@ PR". That keeps the `AGENTS.md` rule of one full run per epic, as long as a bund
 
 Because checks are keyed by tree, a green on the snapshot stays valid on the PR head when the commit Maestro makes
 in `land` has the same tree. Any edit after the check changes the tree, and the card drops back from
-`scoped-green` without anyone saying so.
+`scoped-green` without anyone saying so. The same key prevents repeats: `ci_run` on a tree that already has a
+result for the same command returns that result and starts nothing. The same goes for bundles: a rebuilt bundle whose
+base and member SHAs match a bundle already tested reuses its outcome.
 
 `board_ci_run` (billing) stays as it is. `board_check` is the pass or fail ledger next to it.
 
@@ -249,7 +262,9 @@ The failed jobs and their logs give the failing set F: test files, or file paths
    That takes ⌈log₂ N⌉ serial rounds.
 5. **Eject and rebuild.** Culprits leave the bundle: their attempt closes with `ejected` and a new attempt opens with
    the cause. Members whose `depends_on` includes a culprit go back to the queue, keeping their place. The host
-   rebuilds the bundle from the rest and runs the full gate once more.
+   rebuilds the bundle from the rest and reruns only F on it. Every other test already passed on a superset of
+   these members, so running it again proves nothing new. If F passes, the bundle merges. A test outside F that the
+   ejection could have affected is caught by the next bundle's full run.
 6. **Dissolve.** After two rebuilds of the same bundle, or when halving finds no culprit, the bundle dissolves. Every
    member goes back to the queue in its original order, and Maestro gets an `<integration>` line. It may dequeue a
    suspect or send F to `jimmy`.
@@ -321,8 +336,9 @@ and for this repository they are the root `package.json`, `bun.lock`, `turbo.jso
 ### 7.3 Safety net
 
 The affected graph is a model, and models miss things such as runtime coupling or a test that reads another
-package's files. The whole suite still runs on base as the epic run (once per epic, as today), and also after every
-K lane landings (contract `lanes.fullEvery`, default 20). If that run is red, the host finds the culprit among the
+package's files. The safety net is the epic run that already exists: the whole suite on base, once per epic. It adds
+no runs of its own. A project that lands without epics can set `lanes.fullEvery` to run it every K lane landings;
+the default is 0, which means off. If that run is red, the host finds the culprit among the
 landings since the last green with the same isolate-and-halve steps on base. It does not revert: it opens a fix card
 pinned to the front of the culprit's lane and pauses new cuts in that lane until the fix lands. Lanes that the red
 does not touch keep moving.
@@ -333,7 +349,7 @@ does not touch keep moving.
 "lanes": {
   "by": "turbo",
   "global": ["package.json", "bun.lock", "turbo.json", "tsconfig*.json", ".github/**", "script/**"],
-  "fullEvery": 20
+  "fullEvery": 0
 }
 ```
 
@@ -353,7 +369,8 @@ speed. Maestro's planning feeds this directly: cards that `archie` cuts by packa
    snapshot commit through a temporary index (`git add -A` against `GIT_INDEX_FILE`, then `write-tree` and
    `commit-tree` with the previous snapshot as parent). It pushes the commit to `refs/orchestra/wip/<KEY>/a<n>` on
    the project's push remote. The worktree, its index and its HEAD are untouched, so "seats never commit" still
-   holds. `.gitignore` applies. On a public repository the ref is as public as a PR branch.
+   holds. `.gitignore` applies. When the new tree equals the last snapshot's tree, nothing is written or pushed. On a
+   public repository the ref is as public as a PR branch.
 2. **Nothing disappears silently.** Ejection, a red check and dequeueing never close a PR or delete a branch. Only a
    merge or a card cut ends an attempt, and every end has an `outcome` row.
 3. **Every queue exit has a fact.** A card leaves the queue only by merge, ejection, or dequeue with a reason (from
@@ -488,7 +505,7 @@ needed, because lost work is the costliest pain and it needs no queue.
 | WP | Scope | Done when |
 |---|---|---|
 | **7. Lanes** | Affected set from `turbo` at enqueue; global paths; lanes as connected components; one bundle in flight per lane; the global barrier bundle; a `packages` dispatch input on `typecheck.yml` and `test.yml`; the `lanes` contract block | Two cards in disjoint packages land in parallel bundles, each running only its packages; a card touching `bun.lock` waits for both and runs the whole suite |
-| **8. Safety net** | The whole-suite run every `fullEvery` lane landings and per epic; culprit search on base; a fix card at the front of the lane; pausing only that lane | A seeded cross-package break that the affected graph misses is found by the safety run, and only its lane pauses |
+| **8. Safety net** | The epic run as the whole-suite check, with optional `fullEvery`; culprit search on base; a fix card at the front of the lane; pausing only that lane | A seeded cross-package break that the affected graph misses is found by the safety run, and only its lane pauses |
 
 ## 14. Owner decisions
 
@@ -502,5 +519,5 @@ needed, because lost work is the costliest pain and it needs no queue.
 4. **Snapshot refs are pushed to the public remote.** They are as public as a PR branch. Recommended: yes, since the
    alternative is work that lives only on one disk.
 5. **Phase 2 trusts the affected graph between whole-suite runs** (§7.3). A break the graph misses is caught by the
-   next safety run, at most `fullEvery` landings later, and pauses only its lane. Recommended: yes, with
-   `fullEvery` 20.
+   epic run, and pauses only its lane. Recommended: yes, with no extra whole-suite runs (`fullEvery` 0) for this
+   repository, because epics already close often.
