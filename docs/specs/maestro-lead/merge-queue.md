@@ -105,8 +105,27 @@ batching with a size and a wait time, removing the culprit rather than the batch
 
 ## 4. Board: integration states
 
-The seven stages stay as they are. Integration is a sub-state of Building and Review that **the host derives from
-facts on every poll and never stores as a typed field**. Neither Maestro nor the owner can write it.
+The queue is one kanban column on the Projects board, `Queue`, between Review and Shipped (owner decision,
+2026-10-28). There is no dedicated queue screen. A card enters the column when `board_queue` succeeds and leaves it by
+merge (Shipped), ejection (Building) or dequeue (Review). Only the host moves cards into or out of it. The board's
+`stage` vocabulary gains `queue` for this, and nothing else about the stages changes.
+
+Integration is a sub-state that **the host derives from facts on every poll and never stores as a typed field**.
+Neither Maestro nor the owner can write it. In the `Queue` column each card shows its integration state as a status:
+
+| Status on the card | Integration state |
+|---|---|
+| Waiting | `queued` |
+| Running B<n> | `in-bundle B<n>`, checks running |
+| Green | `bundle-green B<n>` |
+| Failed | bundle red, culprit not found yet (§6.3) |
+| Flaky | the bundle's flake verdict is waiting on Maestro (§6.4) |
+| Conflict | `conflicts` |
+| Held | `hold_before_merge` set |
+
+Building and Review cards show `local`, `pushed`, `scoped-red`, `scoped-green` and `conflicts` the same way. The visual
+design of the column and the statuses belongs to the Interface session; this spec fixes only the column, the moves and
+the vocabulary.
 
 | State | Stage | Derived from |
 |---|---|---|
@@ -114,11 +133,11 @@ facts on every poll and never stores as a typed field**. Neither Maestro nor the
 | `pushed` | Building | The worktree tree equals the tree of `refs/orchestra/wip/<KEY>/a<n>` on the remote. |
 | `scoped-red` | Building, Review | The latest scoped check on the card's current tree failed. |
 | `scoped-green` | Building, Review | Every scoped check the contract requires passed on the card's current tree (§5). |
-| `conflicts` | Building, Review | `git merge-tree --write-tree <base> <head>` reports a conflict. |
-| `queued` | Review | A queue row exists and its head SHA equals the PR's head SHA. |
-| `in-bundle B<n>` | Review | The card is a member of an open bundle whose recorded member SHA equals its PR head. |
-| `bundle-green B<n>` | Review | The bundle's full checks passed and the bundle PR is not merged yet. |
-| `ejected B<n>` | Review, then Building | The bundle attributed a failure to this card (§6.3). |
+| `conflicts` | Building, Review, Queue | `git merge-tree --write-tree <base> <head>` reports a conflict. |
+| `queued` | Queue | A queue row exists and its head SHA equals the PR's head SHA. |
+| `in-bundle B<n>` | Queue | The card is a member of an open bundle whose recorded member SHA equals its PR head. |
+| `bundle-green B<n>` | Queue | The bundle's full checks passed and the bundle PR is not merged yet. |
+| `ejected B<n>` | Queue, then Building | The bundle attributed a failure to this card (§6.3). |
 | `rework a<n>` | Building | An attempt row with a cause and no outcome yet (§4.2). |
 
 A merged bundle merges each member's head into base, so GitHub marks the member PRs merged, and the existing sync moves
@@ -129,12 +148,12 @@ each card to Shipped. Nothing new is needed for that last step.
 ```
 local --(seat return or 10 min timer: host pushes snapshot)--> pushed
 pushed --(ci_run scoped, green on this tree)--> scoped-green
-scoped-green --(Maestro: land verified, board_queue)--> queued      [host checks preconditions]
+scoped-green --(Maestro: land verified, board_queue)--> queued      [host checks preconditions; card moves Review to Queue]
 queued --(host cuts a bundle)--> in-bundle B<n>
 in-bundle --(full checks green)--> bundle-green --(host merges bundle PR)--> Shipped
 in-bundle --(attributed failure)--> ejected --> rework a<n+1> (Building)
 in-bundle --(bundle red, not attributed to this card)--> queued      [keeps its place]
-queued | in-bundle --(PR head moved, hold set, PR closed, dependency ejected)--> dequeued, with the fact as reason
+queued | in-bundle --(PR head moved, PR closed, dependency ejected)--> dequeued, with the fact as reason  [card back to Review]
 any --(merge-tree conflict with base)--> conflicts                  [a notice, not a stage move]
 ```
 
@@ -709,8 +728,8 @@ and per lane:
 - **A full run per PR.**
 - **Host rebasing or merging into a seat's worktree or branch.** The seat does it from the notice.
 - **Stacked-PR tooling.** Dependencies go through `depends_on` and queue order.
-- **New board stages or columns, and integration-state labels on GitHub.** The bundle PR is the GitHub-visible
-  record.
+- **A queue screen, more stages or columns than `Queue`, and integration-state labels on GitHub.** The bundle PR is
+  the GitHub-visible record.
 - **Webhooks, and a separate queue process.** The conveyor runs inside the board's poll loop.
 - **Letting Maestro write integration state.**
 
@@ -742,7 +761,7 @@ phase.
 | **1. Ledger and push-early** | `board_attempt` with stored `writePaths`; snapshot refs on seat return and on the 10 min timer; the `local` and `pushed` states; the `maestro/integration` source with the dead-Session and missing-worktree lines; `track` playbook edits | Kill a seat mid-task: its card shows `pushed`, and its worktree is restored from the ref |
 | **2. CI facts** | `.orchestra/ci.json` reader and defaults; `ci_run`; `board_check` keyed by tree; the `scoped-green` and `scoped-red` states | A green scoped run stays valid after Maestro's commit with the same tree, and drops after an edit |
 | **3. Conflict notices** | Base-advance diff, matched against queued cards' write sets with `conflictVerdict`, then `merge-tree`; the `conflicts` state and its `<integration>` line | A merge that touches a card's write set notifies only that card; a merge outside it notifies none |
-| **4. Queue and green bundles** | `board_queue`, `board_dequeue` and their preconditions; pools; cut rules a–d; assembly; the bundle PR with `full.label`; merge on green; `onBaseMoved`; the card's affected set from `turbo` (§7.1), which `merge-if-disjoint` and the eject rerun use in phase 1 too; the PR record, host-opened PRs through Atlas's host adapter with its GitHub writer, Atlas's trailers plus `Attempt`, the bundle body (§4.5); `land` playbook Publish rewritten to "verify, write the record, then `board_queue`" | Three verified cards merge through one bundle and one full run; all three ship; each PR shows host-filled cost, checks and review records; a record with no Risk is refused at enqueue; the merged card has one logbook entry, inside its bundle |
+| **4. Queue and green bundles** | The `queue` stage and the host's moves into and out of it, with the card statuses (visuals by the Interface session); `board_queue`, `board_dequeue` and their preconditions; pools; cut rules a–d; assembly; the bundle PR with `full.label`; merge on green; `onBaseMoved`; the card's affected set from `turbo` (§7.1), which `merge-if-disjoint` and the eject rerun use in phase 1 too; the PR record, host-opened PRs through Atlas's host adapter with its GitHub writer, Atlas's trailers plus `Attempt`, the bundle body (§4.5); `land` playbook Publish rewritten to "verify, write the record, then `board_queue`" | Three verified cards merge through one bundle and one full run; all three ship; each PR shows host-filled cost, checks and review records; a record with no Risk is refused at enqueue; the merged card has one logbook entry, inside its bundle |
 | **5. Red bundles** | Bundle size from the red rate; the four ledger numbers on the board; infrastructure rerun, base check and flake probe, isolation with in-bundle dependencies, halving, eject into rework, rebuild, dissolve, `board_flake` and the `board_bundle` verdict, base red (§6.8) | A seeded failing member is ejected with the right cause, and the rest merge on the rebuilt bundle; a seeded interaction is found by halving; a seeded red on base ejects no member |
 | **6. Recovery** | Restart reconcile for pools, bundles and snapshots | Kill the host between "bundle green" and "merge": on restart it merges once, with no duplicate bundle |
 | **10. Thread and board versions** | `board_note` `kind` and seat authors; the host writes thread rows from `task` calls, returns and review records (§4.6); `.atlas/project/board.jsonl`, `cards/<KEY>/card.jsonl` and attempt files unioned like the other Atlas logs; the bundle's record commit with the board log, logbook and Orientation records; the `.atlas` files allowed in `land`'s write-set check, the public redaction and `board import` from a tree (§4.7) | A card's thread shows its brief, a seat question, the answer and the return without any agent posting; a checkout of an older merge imports the board as it stood then; deleting the local database and importing from `dev` restores every merged version |
