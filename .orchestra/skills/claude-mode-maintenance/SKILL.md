@@ -14,8 +14,8 @@ Design and decisions: `docs/specs/claude-mode/meta-harness.md`. User guide: `doc
 | Per-turn host (SDK query, hooks, gate) | `modules/engine-adapters/claude-code/src/v2/host.ts` |
 | Appended note, environment | `modules/engine-adapters/claude-code/src/host/options.ts` |
 | SDK seam and `claude_code` preset | `modules/engine-adapters/claude-code/src/sdk.ts` |
-| Turn shape (`context`, `authorize`) | `packages/core/src/session/runner/execution-host.ts` |
-| What the runner hands the host, and which engine a Session runs on (`engineOf`) | `packages/core/src/session/runner/llm.ts` |
+| Turn shape (`context`, `authorize`), and which engine a Session runs on (`engineOf`) | `packages/core/src/session/runner/execution-host.ts` |
+| What the runner hands the host | `packages/core/src/session/runner/llm.ts` |
 
 ## Invariants
 
@@ -28,7 +28,10 @@ Design and decisions: `docs/specs/claude-mode/meta-harness.md`. User guide: `doc
 - Seats are dispatched through Orchestra's `task`, as in normal mode: a durable child Session. Never through Claude
   Code's `Agent`/`Task`, which are in `disallowedTools` and refused at the gate (`SUBAGENT_TOOLS`).
 - A child Session runs on `engineOf`: its agent's own `engine`, else Orchestra's loop for a non-Anthropic model, else
-  its parent's engine. `tool/task.ts` must not refuse claude-code seats.
+  its parent's engine. The runner and `tool/task.ts` share this one function; never decide the engine twice.
+- A hosted child's Anthropic models count as available without an API connection: the host holds the Claude sign-in,
+  which the catalog never sees (`resolveModel`'s `hosted` in `tool/task.ts`). A child on Orchestra's own loop still
+  needs a connected provider.
 - A seat other than Maestro gets its own Orchestra prompt in the append (`turn.system` minus `turn.context`).
 - `shown` renames a built-in call for Orchestra's record only (Bash to `bash`, TodoWrite result as
   `{"todos": [...]}`). Never apply it to what reaches Claude Code or to the permission gate, which keep Claude Code's names. A new widget field means a new mapping there, covered in `v2-host.test.ts`.

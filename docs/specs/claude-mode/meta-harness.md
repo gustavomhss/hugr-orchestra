@@ -38,10 +38,12 @@ The parts of D-C2 that replaced the meta-harness shape are reversed:
    host state). It is sent again after a compaction, alongside the recalled todos.
 3. **Seats through Orchestra's task (2026-10-28).** Claude mode delegates exactly as normal mode does. Maestro
    dispatches a seat with `mcp__orchestra__task`; the task tool opens a durable child Session, governed and admitted
-   as on Orchestra's own engine, which the app shows from the task row. The child runs on the engine `engineOf`
-   (`packages/core/src/session/runner/llm.ts`) picks: the seat's own `engine` when it names one, else Orchestra's own
-   loop when the child's model is not Anthropic's, else the parent Session's engine. So a seat a Claude-mode Maestro
-   dispatches on a Claude model runs on Claude Code. Claude Code's own `Agent` and `Task` tools are listed in
+   as on Orchestra's own engine, which the app shows from the task row. The child runs on the engine
+   `ExecutionHost.engineOf` (`packages/core/src/session/runner/execution-host.ts`) picks: the seat's own `engine` when
+   it names one, else Orchestra's own loop when the child's model is not Anthropic's, else the parent Session's engine.
+   So a seat a Claude-mode Maestro dispatches on a Claude model runs on Claude Code. The task tool asks the same
+   function before it picks the child's model: a hosted child may take any enabled Anthropic model, because Claude
+   Code holds the Claude sign-in and the catalog sees no Anthropic connection for it. Claude Code's own `Agent` and `Task` tools are listed in
    `disallowedTools` and refused at the PreToolUse gate (`SUBAGENT_TOOLS`), with a reason that names
    `mcp__orchestra__task`.
 

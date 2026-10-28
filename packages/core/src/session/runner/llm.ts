@@ -161,18 +161,7 @@ const layer = Layer.effect(
       return session
     })
 
-    // A Session's engine: its agent's own, else the engine its parent Session ran on, so a seat a Claude-mode lead
-    // dispatches on a Claude model runs on Claude Code too. A child on another provider's model runs on Orchestra's
-    // own loop, as in normal mode. `orchestra` names no host.
-    const engineOf: (session: SessionSchema.Info) => Effect.Effect<string | undefined> = Effect.fn("SessionRunner.engineOf")(
-      function* (session: SessionSchema.Info) {
-        const own = (yield* agents.select(session.agent)).info?.engine
-        if (own) return own === "orchestra" ? undefined : own
-        if (session.model && session.model.providerID !== ProviderV2.ID.anthropic) return undefined
-        const parent = session.parentID ? yield* store.get(session.parentID) : undefined
-        return parent ? yield* engineOf(parent) : undefined
-      },
-    )
+    const engineOf = ExecutionHost.engineOf(agents, store)
 
     const getContext = Effect.fn("SessionRunner.getContext")(function* (sessionID: SessionSchema.ID) {
       return yield* store.context(sessionID)
