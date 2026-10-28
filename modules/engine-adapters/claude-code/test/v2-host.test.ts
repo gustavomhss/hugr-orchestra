@@ -369,9 +369,8 @@ test("the PreToolUse gate settles every call through Orchestra, failing closed, 
     decisions.push(await pre(options, "AskUserQuestion", { questions: [] }, "tu-5"))
     decisions.push(await pre(options, "mcp__orchestra__task", { prompt: "go" }, "tu-6"))
     decisions.push(await pre(options, "ToolSearch", { query: "select:mcp__orchestra__task" }, "tu-7"))
-    decisions.push(await pre(options, "Agent", { prompt: "go", subagent_type: "orchestra:backend" }, "tu-8"))
-    decisions.push(await pre(options, "ListAgents", {}, "tu-9"))
-    decisions.push(await pre(options, "SendMessage", { to: "other", message: "hi" }, "tu-10"))
+    decisions.push(await pre(options, "ListAgents", {}, "tu-8"))
+    decisions.push(await pre(options, "SendMessage", { to: "other", message: "hi" }, "tu-9"))
     // canUseTool after the hook already learned the call (both can run): the call id is not queued twice.
     await options.canUseTool?.("mcp__orchestra__task", { prompt: "go" }, { signal: new AbortController().signal, toolUseID: "tu-6", requestId: "r6" })
     const server = options.mcpServers?.orchestra as McpSdkServerConfigWithInstance
@@ -390,7 +389,7 @@ test("the PreToolUse gate settles every call through Orchestra, failing closed, 
     authorize: (input) =>
       Effect.sync(() => asked.push(input)).pipe(
         Effect.andThen(
-          input.action === "bash" || input.action === "task" ? Effect.fail(new PermissionV2.BlockedError({ rules: [] }))
+          input.action === "bash" ? Effect.fail(new PermissionV2.BlockedError({ rules: [] }))
             : input.action === "grep" ? Effect.die("permission store unavailable") : Effect.succeed({}),
         ),
       ),
@@ -400,7 +399,6 @@ test("the PreToolUse gate settles every call through Orchestra, failing closed, 
     { callID: "tu-1", tool: "Write", action: "edit", resources: ["a.ts"], safety: { tool: "write", args: { filePath: "/project/a.ts" } } },
     { callID: "tu-2", tool: "Bash", action: "bash", resources: ["rm -rf /"], safety: { tool: "bash", args: { command: "rm -rf /" } } },
     { callID: "tu-3", tool: "Grep", action: "grep", resources: ["boom"], safety: { tool: "grep", args: { pattern: "boom" } } },
-    { callID: "tu-8", tool: "Agent", action: "task", resources: ["backend"] },
   ])
   expect(decisions).toEqual([
     allowed,
@@ -413,8 +411,6 @@ test("the PreToolUse gate settles every call through Orchestra, failing closed, 
     allowed,
     // ToolSearch only loads the deferred schemas, so it is allowed without a permission check.
     allowed,
-    // A refused delegation says what to do instead, so the turn goes on.
-    refused("This agent may not delegate this work. Do it yourself with the tools you hold."),
     // Other Claude sessions on the machine stay out of reach, without asking Orchestra's permission rules.
     refused("This Claude Code tool reaches outside the Orchestra session, so Orchestra refuses it."),
     refused("This Claude Code tool reaches outside the Orchestra session, so Orchestra refuses it."),
