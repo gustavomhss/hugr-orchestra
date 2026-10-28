@@ -14,10 +14,11 @@
   pointer-events: none;
 }
 
-/* The video's own background is near the page colour; the soft mask hides the seam at its edges. */
+/* The video's own background is near the page colour; the soft mask hides the seam at its edges. It never grows past
+   960 CSS px, its 1920 px source at 2x, so it stays sharp on Retina screens instead of being upscaled to the window. */
 .comet-splash video,
 .comet-splash img {
-  width: min(100vw, 177.78vh);
+  width: min(80vw, 128vh, 960px);
   aspect-ratio: 16 / 9;
   mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 70%, transparent 100%);
 }
