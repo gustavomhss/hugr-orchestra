@@ -2,6 +2,7 @@
 export const ENTRY_SKILLS = [
   "backend-api",
   "backend-check",
+  "backend-codegen",
   "backend-concurrency",
   "backend-data",
   "backend-implement",

@@ -47,12 +47,12 @@ HEAD must equal the baseline unless the packet declares an existing delta. A mis
 
 Pick one primary mode per deliverable from the packet's starting facts, not from its wording. Read the mode reference when its procedure matters:
 
-- [Feature](references/modes/feature.md): new specified behavior.
-- [Diagnosed repair](references/modes/repair.md): supplied cause, fix direction and regression case.
-- [Prescribed refactor](references/modes/refactor.md): structural change with behavior to preserve.
-- [Migration or compatibility change](references/modes/migration.md): a supplied phase between states or versions.
-- [Prescribed optimization](references/modes/optimization.md): a chosen technique with a comparable workload.
-- [Assigned tests](references/modes/tests.md): test implementation the packet assigns.
+- Feature (`backend-implement-feature`): new specified behavior.
+- Diagnosed repair (`backend-implement-repair`): supplied cause, fix direction and regression case.
+- Prescribed refactor (`backend-implement-refactor`): structural change with behavior to preserve.
+- Migration or compatibility change (`backend-implement-migration`): a supplied phase between states or versions.
+- Prescribed optimization (`backend-implement-optimization`): a chosen technique with a comparable workload.
+- Assigned tests (`backend-implement-tests`): test implementation the packet assigns.
 
 A packet may carry an implementation output and assigned tests; apply both in the supplied order. If the mode label contradicts the facts, such as a "refactor" that changes accepted inputs, return a `packet` blocker that quotes both.
 
@@ -62,8 +62,8 @@ A packet may carry an implementation output and assigned tests; apply both in th
 - Your choices: private helpers, idiomatic control flow, concrete SQL, DTO mapping, resource wrappers, fixture arrangement for assigned tests, ordinary parameters of project commands the packet names, and fixes for compile or test errors in lines you wrote. The caller does not need to prewrite SQL, line spans or a tool manual.
 - Not your choices: cross-owner architecture, public contract changes, policy, scope, and any edit outside the write paths. Each is a `packet` blocker.
 - Follow the conventions of the surrounding code and project instructions. Leave unrelated code and other people's changes alone.
-- Stack references: [Go](references/languages/go.md), [Python](references/languages/python.md), [JavaScript/TypeScript](references/languages/js-ts.md), [Ruby](references/languages/ruby.md), [PHP](references/languages/php.md). Read only the packet's language.
-- Before invoking a generator or owned tool, read its [exact recipe](references/recipes/external/index.md): pins, prerequisites and generation command. `--check` or `--verify` alone does not generate: produce the assigned artifact first, then run the check. Generate only affected artifacts; a skeleton is not completed behavior. Copy failure `error.code` into a `tool` blocker. Inspect partial or unknown effects before another mutating call; never replay blindly.
+- Stack references: Go (`team-stack-go`), Python (`team-stack-python`), JavaScript/TypeScript (`team-stack-js-ts`), Ruby (`team-stack-ruby`), PHP (`team-stack-php`). Read only the packet's language.
+- Before invoking a generator or owned tool, read its exact recipe (`backend-codegen`): pins, prerequisites and generation command. `--check` or `--verify` alone does not generate: produce the assigned artifact first, then run the check. Generate only affected artifacts; a skeleton is not completed behavior. Copy failure `error.code` into a `tool` blocker. Inspect partial or unknown effects before another mutating call; never replay blindly.
 
 ## 4. Run the checks
 

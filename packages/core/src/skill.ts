@@ -31,6 +31,30 @@ export type Info = Skill.Info
 export const available = (skills: ReadonlyArray<Info>, agent: AgentV2.Info) =>
   skills.filter((skill) => PermissionV2.evaluate("skill", skill.name, agent.permissions).effect !== "deny")
 
+/**
+ * A skill tree's nodes are skills too: a `SKILL.md` inside the directory of another listed `SKILL.md` is a node of that
+ * tree. It loads by name, but only through its parent's "Next level" index; it is never listed on its own.
+ */
+export const nested = (skills: ReadonlyArray<Info>, skill: Info) =>
+  skills.some(
+    (other) =>
+      other !== skill &&
+      path.basename(other.location) === "SKILL.md" &&
+      path.dirname(skill.location).startsWith(path.dirname(other.location) + path.sep),
+  )
+
+/** The direct children of a skill tree node, sorted by name. */
+export const children = (skills: ReadonlyArray<Info>, skill: Info) =>
+  path.basename(skill.location) !== "SKILL.md"
+    ? []
+    : skills
+        .filter(
+          (other) =>
+            path.basename(other.location) === "SKILL.md" &&
+            path.dirname(path.dirname(other.location)) === path.dirname(skill.location),
+        )
+        .toSorted((a, b) => a.name.localeCompare(b.name))
+
 const Frontmatter = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   description: Schema.String.pipe(Schema.optional),

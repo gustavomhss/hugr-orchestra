@@ -118,7 +118,7 @@ Hard rule: `errors` non-empty is **not** "no findings". It is a failed check. Ne
 
 ## 6. The screens
 
-Guardrails is the first tab of the Checks chapter (the Actions chapter, renamed in the UI; code path `orchestra/chapters/actions.tsx`, tab rendered from `orchestra/chapters/guardrails/guardrails.tsx`). It has no sidebar entry of its own. Label strings go through the i18n files like every other chapter; no hard-coded copy.
+Guardrails is the first tab of the Actions chapter (code path `orchestra/chapters/actions.tsx`, tab rendered from `orchestra/chapters/guardrails/guardrails.tsx`). It has no sidebar entry of its own. Label strings go through the i18n files like every other chapter; no hard-coded copy.
 
 ### 6.1 Overview (default)
 

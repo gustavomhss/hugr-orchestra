@@ -19,6 +19,7 @@ type MockAgent = {
   prompt?: string
   permission: { permission: string; pattern: string; action: string }[]
   options: Record<string, unknown>
+  skills?: { name: string; description?: string; when?: string; parent?: string }[]
 }
 // The server lists its default agent, maestro, first. The other names stand for any agent a profile defines.
 const agents: MockAgent[] = [
@@ -61,6 +62,16 @@ const agents: MockAgent[] = [
     native: true,
     permission: [],
     options: {},
+    // A seat's skill tree as the server sends it: depth first, each child naming its parent.
+    skills: [
+      { name: "research-survey", description: "Survey a dependency" },
+      {
+        name: "research-survey-licenses",
+        description: "Check license terms",
+        when: "the dependency ships under a license",
+        parent: "research-survey",
+      },
+    ],
   },
   {
     name: "review",
@@ -82,6 +93,32 @@ export function card(page: Page, name: string) {
 
 export function dialog(page: Page) {
   return page.locator("dialog.agents-dialog")
+}
+
+/** The agent page (`/orchestra/agents/<id>`) that a roster card opens. */
+export function screen(page: Page) {
+  return page.locator(".agent-screen")
+}
+
+export function saveBar(page: Page) {
+  return page.getByRole("region", { name: "Unsaved changes", exact: true })
+}
+
+export function tab(page: Page, name: string) {
+  return page.getByRole("tab", { name: new RegExp(`^${name}`) })
+}
+
+/** Opens an agent's page from its roster card; `loaded: false` returns without waiting for the agent file. */
+export async function openAgent(page: Page, name: string, loaded = true) {
+  await card(page, name).getByRole("button", { name, exact: true }).click()
+  await expect(page).toHaveURL(new RegExp(`/orchestra/agents/${name}$`))
+  await expect(screen(page).getByRole("heading", { level: 1, name, exact: true })).toBeVisible()
+  if (loaded) await expect(page.getByText("Loading configuration…", { exact: true })).toHaveCount(0)
+}
+
+/** Saves through the save bar, which only shows while the draft differs from the loaded file. */
+export async function saveChanges(page: Page) {
+  await saveBar(page).getByRole("button", { name: "Save", exact: true }).click()
 }
 
 export async function openAgents(page: Page, ready = true) {
@@ -237,8 +274,7 @@ export async function setup(
     if (url.pathname === "/api/provider")
       return json({ ...catalog, data: input.models ? [{ id: "example", name: "Example", settings: {} }] : [] })
     if (url.pathname === "/api/model") return json({ ...catalog, data: input.models ? catalogModels : [] })
-    if (url.pathname === "/api/model/default")
-      return json({ ...catalog, data: input.models ? catalogModels[0] : null })
+    if (url.pathname === "/api/model/default") return json({ ...catalog, data: input.models ? catalogModels[0] : null })
     const file = /^\/api\/agent\/([^/]+)\/file$/.exec(url.pathname)
     if (file) {
       if (input.fileApi === false) return json({ message: "Not found" }, 404)
@@ -304,6 +340,7 @@ export async function setup(
           steps: agent.steps,
           system: agent.prompt,
           model: agent.model ? { providerID: agent.model.providerID, id: agent.model.modelID } : undefined,
+          skills: agent.skills,
           permissions: agent.permission.map((rule) => ({
             action: rule.permission,
             resource: rule.pattern,

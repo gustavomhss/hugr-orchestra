@@ -2,7 +2,8 @@ export * as SkillTool from "./skill"
 
 import path from "path"
 import { ToolFailure } from "@orchestra/llm"
-import { Effect, Layer, Schema } from "effect"
+import { Effect, Layer, Option, Schema } from "effect"
+import { ConfigMarkdown } from "../config/markdown"
 import { makeLocationNode } from "../effect/app-node"
 import { FSUtil } from "../fs-util"
 import { SkillV2 } from "../skill"
@@ -27,7 +28,7 @@ export const Output = Schema.Struct({
 
 export const description = ToolText.skill
 
-export const toModelOutput = (skill: SkillV2.Info, files: ReadonlyArray<string>) => {
+export const toModelOutput = (skill: SkillV2.Info, files: ReadonlyArray<string>, next: ReadonlyArray<Node> = []) => {
   const directory = path.dirname(skill.location)
   return [
     `<skill_content name="${skill.name}">`,
@@ -35,6 +36,22 @@ export const toModelOutput = (skill: SkillV2.Info, files: ReadonlyArray<string>)
     "",
     skill.content.trim(),
     "",
+    ...(next.length === 0
+      ? []
+      : [
+          "## Next level",
+          "",
+          "Load the one node that covers the work with the skill tool, one level at a time. Stop at the first node that covers it.",
+          "",
+          ...next.map((node) =>
+            [
+              `- \`${node.name}\`: ${node.description ?? ""}`,
+              node.when ? ` When: ${node.when}` : "",
+              node.notWhen ? ` Not when: ${node.notWhen}` : "",
+            ].join(""),
+          ),
+          "",
+        ]),
     `Base directory for this skill: ${directory}`,
     "Relative paths in this skill (e.g., scripts/, reference/) are relative to this base directory.",
     "Note: file list is sampled.",
@@ -46,8 +63,29 @@ export const toModelOutput = (skill: SkillV2.Info, files: ReadonlyArray<string>)
   ].join("\n")
 }
 
-/** The skill's model-facing content with a sample of the files beside its `SKILL.md`. */
-export const load = Effect.fn("SkillTool.load")(function* (fs: FSUtil.Interface, skill: SkillV2.Info) {
+/** A child node as its parent's "Next level" index shows it. */
+export type Node = {
+  readonly name: string
+  readonly description?: string
+  readonly when?: string
+  readonly notWhen?: string
+}
+
+const Routing = Schema.Struct({
+  when: Schema.String.pipe(Schema.optional),
+  "not-when": Schema.String.pipe(Schema.optional),
+})
+const decodeRouting = Schema.decodeUnknownOption(Routing)
+
+/**
+ * The skill's model-facing content with a sample of the files beside its `SKILL.md` and, for a skill tree node, the
+ * "Next level" index of its `children` built from their frontmatter.
+ */
+export const load = Effect.fn("SkillTool.load")(function* (
+  fs: FSUtil.Interface,
+  skill: SkillV2.Info,
+  children: ReadonlyArray<SkillV2.Info> = [],
+) {
   const directory = path.dirname(skill.location)
   const files =
     path.basename(skill.location) === "SKILL.md"
@@ -56,7 +94,17 @@ export const load = Effect.fn("SkillTool.load")(function* (fs: FSUtil.Interface,
           .toSorted()
           .slice(0, FILE_LIMIT)
       : []
-  return toModelOutput(skill, files)
+  const next = yield* Effect.forEach(children, (child) =>
+    fs.readFileStringSafe(child.location).pipe(
+      Effect.catch(() => Effect.succeed(undefined)),
+      Effect.map((content) => {
+        const markdown = content === undefined ? undefined : ConfigMarkdown.parseOption(content)
+        const routing = markdown ? decodeRouting(markdown.data).pipe(Option.getOrUndefined) : undefined
+        return { name: child.name, description: child.description, when: routing?.when, notWhen: routing?.["not-when"] }
+      }),
+    ),
+  )
+  return toModelOutput(skill, files, next)
 })
 
 const unableToLoad = (name: string, error?: unknown) =>
@@ -92,7 +140,7 @@ const layer = Layer.effectDiscard(
                 return {
                   name: skill.name,
                   directory: path.dirname(skill.location),
-                  output: yield* load(fs, skill),
+                  output: yield* load(fs, skill, SkillV2.children(current, skill)),
                 }
               }).pipe(Effect.mapError((error) => unableToLoad(input.name, error)))
             }),

@@ -221,6 +221,13 @@ const api: ElectronAPI = {
   getLiveHotkeys: () => ipcRenderer.invoke("get-live-hotkeys"),
   setLiveHotkey: (action, accelerator) => ipcRenderer.invoke("set-live-hotkey", action, accelerator),
   resetLiveHotkeys: () => ipcRenderer.invoke("reset-live-hotkeys"),
+  getCaffeinate: () => ipcRenderer.invoke("get-caffeinate"),
+  setCaffeinate: (enabled) => ipcRenderer.invoke("set-caffeinate", enabled),
+  onCaffeinateChanged: (cb) => {
+    const handler = (_: unknown, enabled: boolean) => cb(enabled)
+    ipcRenderer.on("caffeinate-changed", handler)
+    return () => ipcRenderer.removeListener("caffeinate-changed", handler)
+  },
   getPinchZoomEnabled: () => ipcRenderer.invoke("get-pinch-zoom-enabled"),
   setPinchZoomEnabled: (enabled) => ipcRenderer.invoke("set-pinch-zoom-enabled", enabled),
   onPinchZoomEnabledChanged: (cb) => {

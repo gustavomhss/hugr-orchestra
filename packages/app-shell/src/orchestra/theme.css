@@ -456,11 +456,16 @@ html[data-color-scheme="light"] .orchestra-brand [data-slot="orchestra-brand-log
   display: block;
 }
 
+/* The product name is tracked out to the lockup's ink width (about 110px); the negative end margin cancels the
+   trailing letter space so the word stays centered under the mark. */
 .orchestra-brand [data-slot="orchestra-brand-descriptor"] {
+  margin-inline-end: -0.6em;
   color: var(--orchestra-brand-descriptor);
-  font-size: var(--orchestra-font-size-xs);
+  font-size: var(--orchestra-font-size-2xs);
+  font-weight: 500;
   line-height: 14px;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.6em;
+  text-transform: uppercase;
 }
 
 .orchestra-brand-splash {
@@ -496,7 +501,9 @@ html[data-color-scheme="light"] .orchestra-mark [data-slot="orchestra-brand-logo
     font-weight: 400;
   }
 
-  html[data-color-scheme="light"] body[data-new-layout] [data-slot="orchestra-theme-toggle"]:not(:hover) {
+  html[data-color-scheme="light"]
+    body[data-new-layout]
+    :is([data-slot="orchestra-theme-toggle"], [data-slot="orchestra-caffeinate-toggle"]):not(:hover) {
     background: var(--orchestra-overlay-pressed);
   }
   html[data-color-scheme] body[data-new-layout] .orchestra-shell {
@@ -551,7 +558,9 @@ html[data-color-scheme="light"] .orchestra-mark [data-slot="orchestra-brand-logo
     pointer-events: none;
   }
 
-  html[data-color-scheme] body[data-new-layout] :is(.orchestra-glass, .orchestra-sidebar, .orchestra-session-tabs, [data-component="orchestra-home"]) {
+  html[data-color-scheme]
+    body[data-new-layout]
+    :is(.orchestra-glass, .orchestra-sidebar, .orchestra-session-tabs, [data-component="orchestra-home"]) {
     position: relative;
     border: 1px solid var(--orchestra-glass-border);
     border-radius: var(--orchestra-radius-lg);
@@ -564,7 +573,9 @@ html[data-color-scheme="light"] .orchestra-mark [data-slot="orchestra-brand-logo
 
   /* The rim: a 1px ring masked out of a gradient, over the flat border, so the edge brightens where
    * light would hit it. It paints nothing inside the ring and takes no pointer events. */
-  html[data-color-scheme] body[data-new-layout] :is(.orchestra-glass, .orchestra-sidebar, .orchestra-session-tabs, [data-component="orchestra-home"])::after {
+  html[data-color-scheme]
+    body[data-new-layout]
+    :is(.orchestra-glass, .orchestra-sidebar, .orchestra-session-tabs, [data-component="orchestra-home"])::after {
     content: "";
     position: absolute;
     inset: 0;

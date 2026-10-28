@@ -33,7 +33,6 @@ import { Mcp } from "../../mcp"
 import { McpCatalog } from "../../mcp/catalog"
 import { ToolOutputStore } from "../../tool-output-store"
 import { SessionExecution } from "../execution"
-import { Prompt } from "../prompt"
 import { SessionContextEpoch } from "../context-epoch"
 import { SessionCompaction } from "../compaction"
 import { SessionEvent } from "../event"
@@ -47,6 +46,7 @@ import { SessionSubagentModels } from "../subagent-models"
 import { INTERRUPTED_TURN, type RunError, Service } from "./index"
 import { SessionRunnerModel } from "./model"
 import { createLLMEventPublisher } from "./publish-llm-event"
+import { HostPorts } from "./host-ports"
 import { ExecutionHost } from "./execution-host"
 import { toLLMMessages } from "./to-llm-message"
 import { SessionTitle } from "./title"
@@ -276,9 +276,15 @@ const layer = Layer.effect(
         ? undefined
         : yield* tools.materialize([...effectiveRules, ...stepTools.hidden])
       const promptCacheKey = /^ses_[0-9a-f]{64}$/.test(session.id) ? session.id.slice(4) : session.id
-      const systemText = [agent.info?.system, system.baseline, workflow?.view.instructions].filter(
-        (part): part is string => part !== undefined && part.length > 0,
-      )
+      const contextText = [system.baseline, workflow?.view.instructions].filter((part): part is string => !!part)
+      const systemText = agent.info?.system ? [agent.info.system, ...contextText] : contextText
+      // The task tool's targets (`TaskTool.requireTarget`), offered to a hosted engine as its own subagents.
+      const seats = host
+        ? (yield* agents.all()).filter(
+            (item) => !item.hidden && item.mode !== "primary" && item.id !== AgentV2.defaultID && item.id !== agent.id,
+          )
+        : []
+      const catalog = seats.length > 0 ? yield* skills.list() : []
       // Only provider-model turns pass through the compaction transform; a hosted engine receives its history as is.
       const messages = model
         ? yield* compaction.transform({
@@ -373,10 +379,12 @@ const layer = Layer.effect(
         Effect.gen(function* () {
           if (input.safety && stepTools.refuses(input.safety.tool, input.safety.args))
             return yield* new PermissionV2.BlockedError({ rules: stepTools.bash })
+          // A call made inside a seat's subagent runs under that seat's rules; any other agent id is ignored.
+          const actor = seats.find((item) => item.id === input.agent)?.id ?? agent.id
           yield* permissions
             .authorize({
               sessionID: session.id,
-              agent: agent.id,
+              agent: actor,
               action: input.action,
               resources: [...input.resources],
               metadata: { tool: input.tool, callID: input.callID },
@@ -390,7 +398,7 @@ const layer = Layer.effect(
               args: call.args,
               sessionID: session.id,
               callID: input.callID,
-              agent: agent.id,
+              agent: actor,
               directory: location.directory,
               projectID: location.project.id,
               projectDirectory: location.project.directory === "/" ? location.directory : location.project.directory,
@@ -460,15 +468,7 @@ const layer = Layer.effect(
         ),
         Stream.flatMap((items) => Stream.fromIterable(items)),
       )
-      const notify: ExecutionHost.Turn["notify"] = (input) =>
-        SessionInput.admit(db, events, {
-          id: SessionMessage.ID.make(input.id.startsWith("msg_") ? input.id : `msg_${input.id}`),
-          sessionID: session.id,
-          prompt: Prompt.make({ text: input.text }),
-          delivery: "steer",
-        }).pipe(
-          Effect.andThen(execution ? execution.wake(session.id) : Effect.void),
-        )
+      const ports = HostPorts.make({ events, store, location, config, database, session, model: modelRef, assistantMessageID: publisher.assistantMessageID, withPublication, execution })
       const source = request
         ? llm.stream(request)
         : host && agent.info
@@ -477,6 +477,9 @@ const layer = Layer.effect(
               agent: agent.info,
               model: modelRef,
               system: systemText,
+              context: contextText,
+              seats,
+              skills: Object.fromEntries(seats.map((seat) => [seat.id, SkillV2.available(catalog, seat)])),
               history: context,
               tools: toolMaterialization?.definitions ?? [],
               execute,
@@ -485,7 +488,8 @@ const layer = Layer.effect(
               memory,
               steers,
               consumed: (id) => Effect.sync(() => void liveSteers.delete(id)),
-              notify,
+              notify: ports.notify,
+              child: ports.child,
               state: ExecutionHost.state(db, session.id, host.stateKey),
             })
           : Stream.die("SessionRunner: no provider for this turn")

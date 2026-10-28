@@ -55,7 +55,7 @@ test("the engine select writes only agent.maestro.engine through sync.updateConf
 
 test("signed out: Claude mode leaves the engine alone and hands the switch to the Providers sign-in", async () => {
   const { calls, options } = fixture()
-  await enableClaudeMode(options)
+  expect(await enableClaudeMode(options)).toBe(false)
   expect(calls).toEqual([
     ["close"],
     ["setSelection", { server, directory: "/repo/session" }],
@@ -73,7 +73,7 @@ test("an account that cannot be read counts as signed out, so the engine stays p
 
 test("signed in: the engine switches at once, the dialog closes and the person stays on the task", async () => {
   const { calls, options } = fixture({ signedIn: true })
-  await enableClaudeMode(options)
+  expect(await enableClaudeMode(options)).toBe(true)
   expect(calls).toEqual([engineWrite, ["close"], ["setSelection", { server, directory: "/repo/session" }]])
 })
 

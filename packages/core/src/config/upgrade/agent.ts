@@ -1,6 +1,7 @@
 export * as ConfigUpgradeAgent from "./agent"
 
 import { Schema, SchemaGetter } from "effect"
+import { Agent } from "@orchestra/schema/agent"
 import { PositiveInt } from "../../schema"
 import { ConfigUpgradePermission } from "./permission"
 
@@ -31,6 +32,9 @@ const AgentSchema = Schema.StructWithRest(
     color: Schema.optional(Color).annotate({
       description: "Hex color code (e.g., #FF5733) or theme color (e.g., primary)",
     }),
+    avatar: Schema.optional(Agent.Avatar).annotate({
+      description: "Bundled picture (lib:<slug>) or an uploaded PNG, JPEG or WebP data URL",
+    }),
     steps: Schema.optional(PositiveInt).annotate({
       description: "Maximum number of agentic iterations before forcing text-only response",
     }),
@@ -54,6 +58,7 @@ const KNOWN_KEYS = new Set([
   "mode",
   "hidden",
   "color",
+  "avatar",
   "steps",
   "maxSteps",
   "options",

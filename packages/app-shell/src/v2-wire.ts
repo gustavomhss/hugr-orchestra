@@ -97,6 +97,7 @@ export type Agent = {
   topP?: number
   temperature?: number
   color?: string
+  avatar?: string
   permission: PermissionRuleset
   model?: {
     modelID: string
@@ -109,9 +110,17 @@ export type Agent = {
   }
   steps?: number
   engine?: "orchestra" | "claude-code"
+  /** The skill tree packaged with the agent itself, depth first; a child names its `parent`. */
+  skills?: readonly {
+    name: string
+    description?: string
+    when?: string
+    parent?: string
+  }[]
+  toolkit?: "backend" | "research"
 }
 
-export type AgentColor = string;
+export type AgentColor = string
 export type AgentConfig = {
   model?: string
   variant?: string
@@ -166,37 +175,41 @@ export type AgentConfig = {
 }
 
 export type AgentInfo = {
-    id: string;
-    name: string;
-    model?: ModelRef;
-    request: ProviderRequest;
-    system?: string;
-    description?: string;
-    mode: "subagent" | "primary" | "all";
-    hidden: boolean;
-    color?: AgentColor;
-    steps?: number;
-    permissions: PermissionV2Ruleset;
-};
+  id: string
+  name: string
+  model?: ModelRef
+  request: ProviderRequest
+  system?: string
+  description?: string
+  mode: "subagent" | "primary" | "all"
+  hidden: boolean
+  color?: AgentColor
+  avatar?: string
+  steps?: number
+  permissions: PermissionV2Ruleset
+  skills?: Agent["skills"]
+}
 export type AgentListInput = {
-    readonly location?: {
-        readonly location?: {
-            readonly directory?: string | undefined;
-            readonly workspace?: string | undefined;
-        } | undefined;
-    }["location"];
-};
+  readonly location?: {
+    readonly location?:
+      | {
+          readonly directory?: string | undefined
+          readonly workspace?: string | undefined
+        }
+      | undefined
+  }["location"]
+}
 export type AgentListOutput = {
-    location: {
-        directory: string;
-        workspaceID?: string;
-        project: {
-            id: string;
-            directory: string;
-        };
-    };
-    data: Array<AgentInfo>;
-};
+  location: {
+    directory: string
+    workspaceID?: string
+    project: {
+      id: string
+      directory: string
+    }
+  }
+  data: Array<AgentInfo>
+}
 export type AtlasKnowledgeAnchor = {
   reference: AtlasKnowledgeReference
   projectID: string
@@ -233,32 +246,34 @@ export type Command = {
 }
 
 export type CommandInfo = {
-    name: string;
-    template: string;
-    description?: string;
-    agent?: string;
-    model?: ModelRef;
-    subtask?: boolean;
-};
+  name: string
+  template: string
+  description?: string
+  agent?: string
+  model?: ModelRef
+  subtask?: boolean
+}
 export type CommandListInput = {
-    readonly location?: {
-        readonly location?: {
-            readonly directory?: string | undefined;
-            readonly workspace?: string | undefined;
-        } | undefined;
-    }["location"];
-};
+  readonly location?: {
+    readonly location?:
+      | {
+          readonly directory?: string | undefined
+          readonly workspace?: string | undefined
+        }
+      | undefined
+  }["location"]
+}
 export type CommandListOutput = {
-    location: {
-        directory: string;
-        workspaceID?: string;
-        project: {
-            id: string;
-            directory: string;
-        };
-    };
-    data: Array<CommandInfo>;
-};
+  location: {
+    directory: string
+    workspaceID?: string
+    project: {
+      id: string
+      directory: string
+    }
+  }
+  data: Array<CommandInfo>
+}
 export type Config = {
   $schema?: string
   shell?: string
@@ -1655,33 +1670,39 @@ export type ImageAttachmentConfig = {
 }
 
 export type IntegrationOauthConnectOutput = {
-    location: {
-        directory: string;
-        workspaceID?: string;
-        project: {
-            id: string;
-            directory: string;
-        };
-    };
-    data: {
-        attemptID: string;
-        url: string;
-        instructions: string;
-        mode: "auto" | "code";
-        time: {
-            created: number | "Infinity" | "-Infinity" | "NaN";
-            expires: number | "Infinity" | "-Infinity" | "NaN";
-        };
-    };
-};
+  location: {
+    directory: string
+    workspaceID?: string
+    project: {
+      id: string
+      directory: string
+    }
+  }
+  data: {
+    attemptID: string
+    url: string
+    instructions: string
+    mode: "auto" | "code"
+    time: {
+      created: number | "Infinity" | "-Infinity" | "NaN"
+      expires: number | "Infinity" | "-Infinity" | "NaN"
+    }
+  }
+}
 export type JsonSchema = {
   [key: string]: unknown
 }
 
-export type JsonValue = null | boolean | number | string | Array<JsonValue> | {
-    [key: string]: JsonValue;
-};
-export type LLMToolContent = ToolTextContent | ToolFileContent;
+export type JsonValue =
+  | null
+  | boolean
+  | number
+  | string
+  | Array<JsonValue>
+  | {
+      [key: string]: JsonValue
+    }
+export type LLMToolContent = ToolTextContent | ToolFileContent
 /**
  * @deprecated Always uses stretch layout.
  */
@@ -1804,24 +1825,26 @@ export type MaestroUpstreamAttributionV2 = {
 }
 
 export type McpListInput = {
-    readonly location?: {
-        readonly location?: {
-            readonly directory?: string | undefined;
-            readonly workspace?: string | undefined;
-        } | undefined;
-    }["location"];
-};
+  readonly location?: {
+    readonly location?:
+      | {
+          readonly directory?: string | undefined
+          readonly workspace?: string | undefined
+        }
+      | undefined
+  }["location"]
+}
 export type McpListOutput = {
-    location: {
-        directory: string;
-        workspaceID?: string;
-        project: {
-            id: string;
-            directory: string;
-        };
-    };
-    data: Array<McpServer>;
-};
+  location: {
+    directory: string
+    workspaceID?: string
+    project: {
+      id: string
+      directory: string
+    }
+  }
+  data: Array<McpServer>
+}
 export type McpLocalConfig = {
   /**
    * Type of MCP server connection
@@ -1871,67 +1894,75 @@ export type McpRemoteConfig = {
  * @deprecated Always uses stretch layout.
  */
 export type McpResource = {
-    server: string;
-    name: string;
-    uri: string;
-    description?: string;
-    mimeType?: string;
-};
+  server: string
+  name: string
+  uri: string
+  description?: string
+  mimeType?: string
+}
 export type McpResourceCatalog = {
-    resources: Array<McpResource>;
-    templates: Array<McpResourceTemplate>;
-};
+  resources: Array<McpResource>
+  templates: Array<McpResourceTemplate>
+}
 export type McpResourceCatalogInput = {
-    readonly location?: {
-        readonly location?: {
-            readonly directory?: string | undefined;
-            readonly workspace?: string | undefined;
-        } | undefined;
-    }["location"];
-};
+  readonly location?: {
+    readonly location?:
+      | {
+          readonly directory?: string | undefined
+          readonly workspace?: string | undefined
+        }
+      | undefined
+  }["location"]
+}
 export type McpResourceCatalogOutput = {
-    location: {
-        directory: string;
-        workspaceID?: string;
-        project: {
-            id: string;
-            directory: string;
-        };
-    };
-    data: McpResourceCatalog;
-};
+  location: {
+    directory: string
+    workspaceID?: string
+    project: {
+      id: string
+      directory: string
+    }
+  }
+  data: McpResourceCatalog
+}
 export type McpResourceTemplate = {
-    server: string;
-    name: string;
-    uriTemplate: string;
-    description?: string;
-    mimeType?: string;
-};
+  server: string
+  name: string
+  uriTemplate: string
+  description?: string
+  mimeType?: string
+}
 export type McpServer = {
-    name: string;
-    status: McpStatusConnected | McpStatusPending | McpStatusDisabled | McpStatusFailed | McpStatusNeedsAuth | McpStatusNeedsClientRegistration;
-    integrationID?: string;
-};
+  name: string
+  status:
+    | McpStatusConnected
+    | McpStatusPending
+    | McpStatusDisabled
+    | McpStatusFailed
+    | McpStatusNeedsAuth
+    | McpStatusNeedsClientRegistration
+  integrationID?: string
+}
 export type McpStatusConnected = {
-    status: "connected";
-};
+  status: "connected"
+}
 export type McpStatusDisabled = {
-    status: "disabled";
-};
+  status: "disabled"
+}
 export type McpStatusFailed = {
-    status: "failed";
-    error: string;
-};
+  status: "failed"
+  error: string
+}
 export type McpStatusNeedsAuth = {
-    status: "needs_auth";
-};
+  status: "needs_auth"
+}
 export type McpStatusNeedsClientRegistration = {
-    status: "needs_client_registration";
-    error: string;
-};
+  status: "needs_client_registration"
+  error: string
+}
 export type McpStatusPending = {
-    status: "pending";
-};
+  status: "pending"
+}
 export type Model = {
   id: string
   providerID: string
@@ -2016,79 +2047,79 @@ export type Model = {
 }
 
 export type ModelCapabilities = {
-    tools: boolean;
-    input: Array<string>;
-    output: Array<string>;
-};
+  tools: boolean
+  input: Array<string>
+  output: Array<string>
+}
 export type ModelCompatibility = {
-    reasoningField?: ModelReasoningField;
-};
+  reasoningField?: ModelReasoningField
+}
 export type ModelCost = {
-    tier?: {
-        type: "context";
-        size: number;
-    };
-    input: MoneyUSDPerMillionTokens;
-    output: MoneyUSDPerMillionTokens;
-    cache: {
-        read: MoneyUSDPerMillionTokens;
-        write: MoneyUSDPerMillionTokens;
-    };
-};
+  tier?: {
+    type: "context"
+    size: number
+  }
+  input: MoneyUSDPerMillionTokens
+  output: MoneyUSDPerMillionTokens
+  cache: {
+    read: MoneyUSDPerMillionTokens
+    write: MoneyUSDPerMillionTokens
+  }
+}
 export type ModelDefaultOutput = {
-    location: {
-        directory: string;
-        workspaceID?: string;
-        project: {
-            id: string;
-            directory: string;
-        };
-    };
-    data: ModelInfo | null;
-};
+  location: {
+    directory: string
+    workspaceID?: string
+    project: {
+      id: string
+      directory: string
+    }
+  }
+  data: ModelInfo | null
+}
 export type ModelInfo = {
-    id: string;
-    modelID: string;
-    providerID: string;
-    family?: string;
-    name: string;
-    compatibility?: ModelCompatibility;
-    package?: string;
-    settings?: {
-        [x: string]: JsonValue;
-    };
-    headers?: {
-        [x: string]: string;
-    };
-    body?: {
-        [x: string]: JsonValue;
-    };
-    capabilities: ModelCapabilities;
-    variants: Array<ModelVariant>;
-    time: {
-        released: number;
-    };
-    cost: Array<ModelCost>;
-    status: "alpha" | "beta" | "deprecated" | "active";
-    enabled: boolean;
-    limit: {
-        context: number;
-        input?: number;
-        output: number;
-    };
-};
+  id: string
+  modelID: string
+  providerID: string
+  family?: string
+  name: string
+  compatibility?: ModelCompatibility
+  package?: string
+  settings?: {
+    [x: string]: JsonValue
+  }
+  headers?: {
+    [x: string]: string
+  }
+  body?: {
+    [x: string]: JsonValue
+  }
+  capabilities: ModelCapabilities
+  variants: Array<ModelVariant>
+  time: {
+    released: number
+  }
+  cost: Array<ModelCost>
+  status: "alpha" | "beta" | "deprecated" | "active"
+  enabled: boolean
+  limit: {
+    context: number
+    input?: number
+    output: number
+  }
+}
 export type ModelListOutput = {
-    location: {
-        directory: string;
-        workspaceID?: string;
-        project: {
-            id: string;
-            directory: string;
-        };
-    };
-    data: Array<ModelInfo>;
-};
-export type ModelReasoningField = "reasoning" | "reasoning_content" | "reasoning_text" | (string & {});
+  location: {
+    directory: string
+    workspaceID?: string
+    project: {
+      id: string
+      directory: string
+    }
+  }
+  data: Array<ModelInfo>
+}
+export type ModelReasoningField = "reasoning" | "reasoning_content" | "reasoning_text" | (string & {})
 export type ModelRef = {
   id: string
   providerID: string
@@ -2096,18 +2127,18 @@ export type ModelRef = {
 }
 
 export type ModelVariant = {
-    id: string;
-    settings?: {
-        [x: string]: JsonValue;
-    };
-    headers?: {
-        [x: string]: string;
-    };
-    body?: {
-        [x: string]: JsonValue;
-    };
-};
-export type MoneyUSDPerMillionTokens = number;
+  id: string
+  settings?: {
+    [x: string]: JsonValue
+  }
+  headers?: {
+    [x: string]: string
+  }
+  body?: {
+    [x: string]: JsonValue
+  }
+}
+export type MoneyUSDPerMillionTokens = number
 export type OAuth = {
   type: "oauth"
   refresh: string
@@ -2164,15 +2195,15 @@ export type PermissionRuleConfig = PermissionActionConfig | PermissionObjectConf
 
 export type PermissionRuleset = Array<PermissionRule>
 
-export type PermissionV2Effect = "allow" | "deny" | "ask";
+export type PermissionV2Effect = "allow" | "deny" | "ask"
 export type PermissionV2Reply = "once" | "always" | "reject"
 
 export type PermissionV2Rule = {
-    action: string;
-    resource: string;
-    effect: PermissionV2Effect;
-};
-export type PermissionV2Ruleset = Array<PermissionV2Rule>;
+  action: string
+  resource: string
+  effect: PermissionV2Effect
+}
+export type PermissionV2Ruleset = Array<PermissionV2Rule>
 export type PermissionV2Source = {
   type: "tool"
   messageID: string
@@ -2182,18 +2213,20 @@ export type PermissionV2Source = {
 export type PolicyEffect = "allow" | "deny"
 
 export type ProjectCurrent = {
-    id: string;
-    directory: string;
-};
+  id: string
+  directory: string
+}
 export type ProjectCurrentInput = {
-    readonly location?: {
-        readonly location?: {
-            readonly directory?: string | undefined;
-            readonly workspace?: string | undefined;
-        } | undefined;
-    }["location"];
-};
-export type ProjectCurrentOutput = ProjectCurrent;
+  readonly location?: {
+    readonly location?:
+      | {
+          readonly directory?: string | undefined
+          readonly workspace?: string | undefined
+        }
+      | undefined
+  }["location"]
+}
+export type ProjectCurrentOutput = ProjectCurrent
 
 export type Prompt = {
   text: string
@@ -2375,16 +2408,16 @@ export type ProviderConfig = {
 }
 
 export type ProviderListOutput = {
-    location: {
-        directory: string;
-        workspaceID?: string;
-        project: {
-            id: string;
-            directory: string;
-        };
-    };
-    data: Array<ProviderV2Info>;
-};
+  location: {
+    directory: string
+    workspaceID?: string
+    project: {
+      id: string
+      directory: string
+    }
+  }
+  data: Array<ProviderV2Info>
+}
 export type ProviderListResponse = ProviderListResponses[keyof ProviderListResponses]
 
 export type ProviderListResponses = {
@@ -2401,33 +2434,33 @@ export type ProviderListResponses = {
 }
 
 export type ProviderRequest = {
-    settings: ProviderSettings;
-    headers: {
-        [x: string]: string;
-    };
-    body: {
-        [x: string]: JsonValue;
-    };
-};
+  settings: ProviderSettings
+  headers: {
+    [x: string]: string
+  }
+  body: {
+    [x: string]: JsonValue
+  }
+}
 export type ProviderSettings = {
-    [x: string]: JsonValue;
-};
+  [x: string]: JsonValue
+}
 export type ProviderV2Info = {
-    id: string;
-    integrationID?: string;
-    name: string;
-    disabled?: boolean;
-    package: string;
-    settings?: {
-        [x: string]: JsonValue;
-    };
-    headers?: {
-        [x: string]: string;
-    };
-    body?: {
-        [x: string]: JsonValue;
-    };
-};
+  id: string
+  integrationID?: string
+  name: string
+  disabled?: boolean
+  package: string
+  settings?: {
+    [x: string]: JsonValue
+  }
+  headers?: {
+    [x: string]: string
+  }
+  body?: {
+    [x: string]: JsonValue
+  }
+}
 export type Pty = {
   id: string
   title: string
@@ -2486,45 +2519,47 @@ export type QuestionV2Tool = {
 }
 
 export type ReferenceGitSource = {
-    type: "git";
-    repository: string;
-    branch?: string;
-    description?: string;
-    hidden?: boolean;
-};
+  type: "git"
+  repository: string
+  branch?: string
+  description?: string
+  hidden?: boolean
+}
 export type ReferenceInfo = {
-    name: string;
-    path: string;
-    description?: string;
-    hidden?: boolean;
-    source: ReferenceSource;
-};
+  name: string
+  path: string
+  description?: string
+  hidden?: boolean
+  source: ReferenceSource
+}
 export type ReferenceListInput = {
-    readonly location?: {
-        readonly location?: {
-            readonly directory?: string | undefined;
-            readonly workspace?: string | undefined;
-        } | undefined;
-    }["location"];
-};
+  readonly location?: {
+    readonly location?:
+      | {
+          readonly directory?: string | undefined
+          readonly workspace?: string | undefined
+        }
+      | undefined
+  }["location"]
+}
 export type ReferenceListOutput = {
-    location: {
-        directory: string;
-        workspaceID?: string;
-        project: {
-            id: string;
-            directory: string;
-        };
-    };
-    data: Array<ReferenceInfo>;
-};
+  location: {
+    directory: string
+    workspaceID?: string
+    project: {
+      id: string
+      directory: string
+    }
+  }
+  data: Array<ReferenceInfo>
+}
 export type ReferenceLocalSource = {
-    type: "local";
-    path: string;
-    description?: string;
-    hidden?: boolean;
-};
-export type ReferenceSource = ReferenceLocalSource | ReferenceGitSource;
+  type: "local"
+  path: string
+  description?: string
+  hidden?: boolean
+}
+export type ReferenceSource = ReferenceLocalSource | ReferenceGitSource
 export type RelayArmMaterialization = {
   schemaIdentifier: "RelaySprint.Sprint"
   digest: string
@@ -2586,489 +2621,493 @@ export type ServerConfig = {
 }
 
 export type SessionActive = {
-    type: "running";
-};
+  type: "running"
+}
 export type SessionActiveOutput = {
-    data: {
-        [x: string]: SessionActive;
-    };
-}["data"];
+  data: {
+    [x: string]: SessionActive
+  }
+}["data"]
 export type SessionCommandInput = {
-    readonly sessionID: {
-        readonly sessionID: string;
-    }["sessionID"];
-    readonly id?: {
-        readonly id?: string | null;
-        readonly command: string;
-        readonly arguments?: string | null;
-        readonly agent?: string | null;
-        readonly model?: {
-            readonly id: string;
-            readonly providerID: string;
-            readonly variant?: string;
-        } | null;
-        readonly files?: ReadonlyArray<{
-            readonly uri: string;
-            readonly name?: string;
-            readonly description?: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly agents?: ReadonlyArray<{
-            readonly name: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly delivery?: "steer" | "queue" | null;
-        readonly resume?: boolean | null;
-    }["id"];
-    readonly command: {
-        readonly id?: string | null;
-        readonly command: string;
-        readonly arguments?: string | null;
-        readonly agent?: string | null;
-        readonly model?: {
-            readonly id: string;
-            readonly providerID: string;
-            readonly variant?: string;
-        } | null;
-        readonly files?: ReadonlyArray<{
-            readonly uri: string;
-            readonly name?: string;
-            readonly description?: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly agents?: ReadonlyArray<{
-            readonly name: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly delivery?: "steer" | "queue" | null;
-        readonly resume?: boolean | null;
-    }["command"];
-    readonly arguments?: {
-        readonly id?: string | null;
-        readonly command: string;
-        readonly arguments?: string | null;
-        readonly agent?: string | null;
-        readonly model?: {
-            readonly id: string;
-            readonly providerID: string;
-            readonly variant?: string;
-        } | null;
-        readonly files?: ReadonlyArray<{
-            readonly uri: string;
-            readonly name?: string;
-            readonly description?: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly agents?: ReadonlyArray<{
-            readonly name: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly delivery?: "steer" | "queue" | null;
-        readonly resume?: boolean | null;
-    }["arguments"];
-    readonly agent?: {
-        readonly id?: string | null;
-        readonly command: string;
-        readonly arguments?: string | null;
-        readonly agent?: string | null;
-        readonly model?: {
-            readonly id: string;
-            readonly providerID: string;
-            readonly variant?: string;
-        } | null;
-        readonly files?: ReadonlyArray<{
-            readonly uri: string;
-            readonly name?: string;
-            readonly description?: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly agents?: ReadonlyArray<{
-            readonly name: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly delivery?: "steer" | "queue" | null;
-        readonly resume?: boolean | null;
-    }["agent"];
+  readonly sessionID: {
+    readonly sessionID: string
+  }["sessionID"]
+  readonly id?: {
+    readonly id?: string | null
+    readonly command: string
+    readonly arguments?: string | null
+    readonly agent?: string | null
     readonly model?: {
-        readonly id?: string | null;
-        readonly command: string;
-        readonly arguments?: string | null;
-        readonly agent?: string | null;
-        readonly model?: {
-            readonly id: string;
-            readonly providerID: string;
-            readonly variant?: string;
-        } | null;
-        readonly files?: ReadonlyArray<{
-            readonly uri: string;
-            readonly name?: string;
-            readonly description?: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly agents?: ReadonlyArray<{
-            readonly name: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly delivery?: "steer" | "queue" | null;
-        readonly resume?: boolean | null;
-    }["model"];
-    readonly files?: {
-        readonly id?: string | null;
-        readonly command: string;
-        readonly arguments?: string | null;
-        readonly agent?: string | null;
-        readonly model?: {
-            readonly id: string;
-            readonly providerID: string;
-            readonly variant?: string;
-        } | null;
-        readonly files?: ReadonlyArray<{
-            readonly uri: string;
-            readonly name?: string;
-            readonly description?: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly agents?: ReadonlyArray<{
-            readonly name: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly delivery?: "steer" | "queue" | null;
-        readonly resume?: boolean | null;
-    }["files"];
-    readonly agents?: {
-        readonly id?: string | null;
-        readonly command: string;
-        readonly arguments?: string | null;
-        readonly agent?: string | null;
-        readonly model?: {
-            readonly id: string;
-            readonly providerID: string;
-            readonly variant?: string;
-        } | null;
-        readonly files?: ReadonlyArray<{
-            readonly uri: string;
-            readonly name?: string;
-            readonly description?: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly agents?: ReadonlyArray<{
-            readonly name: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly delivery?: "steer" | "queue" | null;
-        readonly resume?: boolean | null;
-    }["agents"];
-    readonly delivery?: {
-        readonly id?: string | null;
-        readonly command: string;
-        readonly arguments?: string | null;
-        readonly agent?: string | null;
-        readonly model?: {
-            readonly id: string;
-            readonly providerID: string;
-            readonly variant?: string;
-        } | null;
-        readonly files?: ReadonlyArray<{
-            readonly uri: string;
-            readonly name?: string;
-            readonly description?: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly agents?: ReadonlyArray<{
-            readonly name: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly delivery?: "steer" | "queue" | null;
-        readonly resume?: boolean | null;
-    }["delivery"];
-    readonly resume?: {
-        readonly id?: string | null;
-        readonly command: string;
-        readonly arguments?: string | null;
-        readonly agent?: string | null;
-        readonly model?: {
-            readonly id: string;
-            readonly providerID: string;
-            readonly variant?: string;
-        } | null;
-        readonly files?: ReadonlyArray<{
-            readonly uri: string;
-            readonly name?: string;
-            readonly description?: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly agents?: ReadonlyArray<{
-            readonly name: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly delivery?: "steer" | "queue" | null;
-        readonly resume?: boolean | null;
-    }["resume"];
-};
+      readonly id: string
+      readonly providerID: string
+      readonly variant?: string
+    } | null
+    readonly files?: ReadonlyArray<{
+      readonly uri: string
+      readonly name?: string
+      readonly description?: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly agents?: ReadonlyArray<{
+      readonly name: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly delivery?: "steer" | "queue" | null
+    readonly resume?: boolean | null
+  }["id"]
+  readonly command: {
+    readonly id?: string | null
+    readonly command: string
+    readonly arguments?: string | null
+    readonly agent?: string | null
+    readonly model?: {
+      readonly id: string
+      readonly providerID: string
+      readonly variant?: string
+    } | null
+    readonly files?: ReadonlyArray<{
+      readonly uri: string
+      readonly name?: string
+      readonly description?: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly agents?: ReadonlyArray<{
+      readonly name: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly delivery?: "steer" | "queue" | null
+    readonly resume?: boolean | null
+  }["command"]
+  readonly arguments?: {
+    readonly id?: string | null
+    readonly command: string
+    readonly arguments?: string | null
+    readonly agent?: string | null
+    readonly model?: {
+      readonly id: string
+      readonly providerID: string
+      readonly variant?: string
+    } | null
+    readonly files?: ReadonlyArray<{
+      readonly uri: string
+      readonly name?: string
+      readonly description?: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly agents?: ReadonlyArray<{
+      readonly name: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly delivery?: "steer" | "queue" | null
+    readonly resume?: boolean | null
+  }["arguments"]
+  readonly agent?: {
+    readonly id?: string | null
+    readonly command: string
+    readonly arguments?: string | null
+    readonly agent?: string | null
+    readonly model?: {
+      readonly id: string
+      readonly providerID: string
+      readonly variant?: string
+    } | null
+    readonly files?: ReadonlyArray<{
+      readonly uri: string
+      readonly name?: string
+      readonly description?: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly agents?: ReadonlyArray<{
+      readonly name: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly delivery?: "steer" | "queue" | null
+    readonly resume?: boolean | null
+  }["agent"]
+  readonly model?: {
+    readonly id?: string | null
+    readonly command: string
+    readonly arguments?: string | null
+    readonly agent?: string | null
+    readonly model?: {
+      readonly id: string
+      readonly providerID: string
+      readonly variant?: string
+    } | null
+    readonly files?: ReadonlyArray<{
+      readonly uri: string
+      readonly name?: string
+      readonly description?: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly agents?: ReadonlyArray<{
+      readonly name: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly delivery?: "steer" | "queue" | null
+    readonly resume?: boolean | null
+  }["model"]
+  readonly files?: {
+    readonly id?: string | null
+    readonly command: string
+    readonly arguments?: string | null
+    readonly agent?: string | null
+    readonly model?: {
+      readonly id: string
+      readonly providerID: string
+      readonly variant?: string
+    } | null
+    readonly files?: ReadonlyArray<{
+      readonly uri: string
+      readonly name?: string
+      readonly description?: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly agents?: ReadonlyArray<{
+      readonly name: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly delivery?: "steer" | "queue" | null
+    readonly resume?: boolean | null
+  }["files"]
+  readonly agents?: {
+    readonly id?: string | null
+    readonly command: string
+    readonly arguments?: string | null
+    readonly agent?: string | null
+    readonly model?: {
+      readonly id: string
+      readonly providerID: string
+      readonly variant?: string
+    } | null
+    readonly files?: ReadonlyArray<{
+      readonly uri: string
+      readonly name?: string
+      readonly description?: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly agents?: ReadonlyArray<{
+      readonly name: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly delivery?: "steer" | "queue" | null
+    readonly resume?: boolean | null
+  }["agents"]
+  readonly delivery?: {
+    readonly id?: string | null
+    readonly command: string
+    readonly arguments?: string | null
+    readonly agent?: string | null
+    readonly model?: {
+      readonly id: string
+      readonly providerID: string
+      readonly variant?: string
+    } | null
+    readonly files?: ReadonlyArray<{
+      readonly uri: string
+      readonly name?: string
+      readonly description?: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly agents?: ReadonlyArray<{
+      readonly name: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly delivery?: "steer" | "queue" | null
+    readonly resume?: boolean | null
+  }["delivery"]
+  readonly resume?: {
+    readonly id?: string | null
+    readonly command: string
+    readonly arguments?: string | null
+    readonly agent?: string | null
+    readonly model?: {
+      readonly id: string
+      readonly providerID: string
+      readonly variant?: string
+    } | null
+    readonly files?: ReadonlyArray<{
+      readonly uri: string
+      readonly name?: string
+      readonly description?: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly agents?: ReadonlyArray<{
+      readonly name: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly delivery?: "steer" | "queue" | null
+    readonly resume?: boolean | null
+  }["resume"]
+}
 export type SessionCommandOutput = {
-    data: SessionPendingUser;
-}["data"];
+  data: SessionPendingUser
+}["data"]
 export type SessionCompactInput = {
-    readonly sessionID: {
-        readonly sessionID: string;
-    }["sessionID"];
-    readonly id?: {
-        readonly id?: string | undefined;
-    }["id"];
-};
+  readonly sessionID: {
+    readonly sessionID: string
+  }["sessionID"]
+  readonly id?: {
+    readonly id?: string | undefined
+  }["id"]
+}
 export type SessionCompactOutput = {
-    data: SessionPendingCompaction;
-}["data"];
+  data: SessionPendingCompaction
+}["data"]
 export type SessionErrorUnknown = {
   type: "unknown"
   message: string
 }
 
 export type SessionListInput = {
-    readonly workspace?: {
-        readonly workspace?: string | undefined;
-        readonly limit?: number | undefined;
-        readonly order?: "asc" | "desc" | undefined;
-        readonly search?: string | undefined;
-        readonly parentID?: string | null | undefined;
-        readonly directory?: string | undefined;
-        readonly project?: string | undefined;
-        readonly subpath?: string | undefined;
-        readonly cursor?: string | undefined;
-    }["workspace"];
-    readonly limit?: {
-        readonly workspace?: string | undefined;
-        readonly limit?: number | undefined;
-        readonly order?: "asc" | "desc" | undefined;
-        readonly search?: string | undefined;
-        readonly parentID?: string | null | undefined;
-        readonly directory?: string | undefined;
-        readonly project?: string | undefined;
-        readonly subpath?: string | undefined;
-        readonly cursor?: string | undefined;
-    }["limit"];
-    readonly order?: {
-        readonly workspace?: string | undefined;
-        readonly limit?: number | undefined;
-        readonly order?: "asc" | "desc" | undefined;
-        readonly search?: string | undefined;
-        readonly parentID?: string | null | undefined;
-        readonly directory?: string | undefined;
-        readonly project?: string | undefined;
-        readonly subpath?: string | undefined;
-        readonly cursor?: string | undefined;
-    }["order"];
-    readonly search?: {
-        readonly workspace?: string | undefined;
-        readonly limit?: number | undefined;
-        readonly order?: "asc" | "desc" | undefined;
-        readonly search?: string | undefined;
-        readonly parentID?: string | null | undefined;
-        readonly directory?: string | undefined;
-        readonly project?: string | undefined;
-        readonly subpath?: string | undefined;
-        readonly cursor?: string | undefined;
-    }["search"];
-    readonly parentID?: {
-        readonly workspace?: string | undefined;
-        readonly limit?: number | undefined;
-        readonly order?: "asc" | "desc" | undefined;
-        readonly search?: string | undefined;
-        readonly parentID?: string | null | undefined;
-        readonly directory?: string | undefined;
-        readonly project?: string | undefined;
-        readonly subpath?: string | undefined;
-        readonly cursor?: string | undefined;
-    }["parentID"];
-    readonly directory?: {
-        readonly workspace?: string | undefined;
-        readonly limit?: number | undefined;
-        readonly order?: "asc" | "desc" | undefined;
-        readonly search?: string | undefined;
-        readonly parentID?: string | null | undefined;
-        readonly directory?: string | undefined;
-        readonly project?: string | undefined;
-        readonly subpath?: string | undefined;
-        readonly cursor?: string | undefined;
-    }["directory"];
-    readonly project?: {
-        readonly workspace?: string | undefined;
-        readonly limit?: number | undefined;
-        readonly order?: "asc" | "desc" | undefined;
-        readonly search?: string | undefined;
-        readonly parentID?: string | null | undefined;
-        readonly directory?: string | undefined;
-        readonly project?: string | undefined;
-        readonly subpath?: string | undefined;
-        readonly cursor?: string | undefined;
-    }["project"];
-    readonly subpath?: {
-        readonly workspace?: string | undefined;
-        readonly limit?: number | undefined;
-        readonly order?: "asc" | "desc" | undefined;
-        readonly search?: string | undefined;
-        readonly parentID?: string | null | undefined;
-        readonly directory?: string | undefined;
-        readonly project?: string | undefined;
-        readonly subpath?: string | undefined;
-        readonly cursor?: string | undefined;
-    }["subpath"];
-    readonly cursor?: {
-        readonly workspace?: string | undefined;
-        readonly limit?: number | undefined;
-        readonly order?: "asc" | "desc" | undefined;
-        readonly search?: string | undefined;
-        readonly parentID?: string | null | undefined;
-        readonly directory?: string | undefined;
-        readonly project?: string | undefined;
-        readonly subpath?: string | undefined;
-        readonly cursor?: string | undefined;
-    }["cursor"];
-};
+  readonly workspace?: {
+    readonly workspace?: string | undefined
+    readonly limit?: number | undefined
+    readonly order?: "asc" | "desc" | undefined
+    readonly search?: string | undefined
+    readonly parentID?: string | null | undefined
+    readonly directory?: string | undefined
+    readonly project?: string | undefined
+    readonly subpath?: string | undefined
+    readonly cursor?: string | undefined
+  }["workspace"]
+  readonly limit?: {
+    readonly workspace?: string | undefined
+    readonly limit?: number | undefined
+    readonly order?: "asc" | "desc" | undefined
+    readonly search?: string | undefined
+    readonly parentID?: string | null | undefined
+    readonly directory?: string | undefined
+    readonly project?: string | undefined
+    readonly subpath?: string | undefined
+    readonly cursor?: string | undefined
+  }["limit"]
+  readonly order?: {
+    readonly workspace?: string | undefined
+    readonly limit?: number | undefined
+    readonly order?: "asc" | "desc" | undefined
+    readonly search?: string | undefined
+    readonly parentID?: string | null | undefined
+    readonly directory?: string | undefined
+    readonly project?: string | undefined
+    readonly subpath?: string | undefined
+    readonly cursor?: string | undefined
+  }["order"]
+  readonly search?: {
+    readonly workspace?: string | undefined
+    readonly limit?: number | undefined
+    readonly order?: "asc" | "desc" | undefined
+    readonly search?: string | undefined
+    readonly parentID?: string | null | undefined
+    readonly directory?: string | undefined
+    readonly project?: string | undefined
+    readonly subpath?: string | undefined
+    readonly cursor?: string | undefined
+  }["search"]
+  readonly parentID?: {
+    readonly workspace?: string | undefined
+    readonly limit?: number | undefined
+    readonly order?: "asc" | "desc" | undefined
+    readonly search?: string | undefined
+    readonly parentID?: string | null | undefined
+    readonly directory?: string | undefined
+    readonly project?: string | undefined
+    readonly subpath?: string | undefined
+    readonly cursor?: string | undefined
+  }["parentID"]
+  readonly directory?: {
+    readonly workspace?: string | undefined
+    readonly limit?: number | undefined
+    readonly order?: "asc" | "desc" | undefined
+    readonly search?: string | undefined
+    readonly parentID?: string | null | undefined
+    readonly directory?: string | undefined
+    readonly project?: string | undefined
+    readonly subpath?: string | undefined
+    readonly cursor?: string | undefined
+  }["directory"]
+  readonly project?: {
+    readonly workspace?: string | undefined
+    readonly limit?: number | undefined
+    readonly order?: "asc" | "desc" | undefined
+    readonly search?: string | undefined
+    readonly parentID?: string | null | undefined
+    readonly directory?: string | undefined
+    readonly project?: string | undefined
+    readonly subpath?: string | undefined
+    readonly cursor?: string | undefined
+  }["project"]
+  readonly subpath?: {
+    readonly workspace?: string | undefined
+    readonly limit?: number | undefined
+    readonly order?: "asc" | "desc" | undefined
+    readonly search?: string | undefined
+    readonly parentID?: string | null | undefined
+    readonly directory?: string | undefined
+    readonly project?: string | undefined
+    readonly subpath?: string | undefined
+    readonly cursor?: string | undefined
+  }["subpath"]
+  readonly cursor?: {
+    readonly workspace?: string | undefined
+    readonly limit?: number | undefined
+    readonly order?: "asc" | "desc" | undefined
+    readonly search?: string | undefined
+    readonly parentID?: string | null | undefined
+    readonly directory?: string | undefined
+    readonly project?: string | undefined
+    readonly subpath?: string | undefined
+    readonly cursor?: string | undefined
+  }["cursor"]
+}
 export type SessionMessageAssistantTool = {
-    type: "tool";
-    id: string;
-    name: string;
-    executed?: boolean;
-    providerState?: SessionMessageProviderState;
-    providerResultState?: SessionMessageProviderState;
-    state: SessionMessageToolStateStreaming | SessionMessageToolStateRunning | SessionMessageToolStateCompleted | SessionMessageToolStateError;
-    time: {
-        created: number;
-        ran?: number;
-        completed?: number;
-    };
-};
+  type: "tool"
+  id: string
+  name: string
+  executed?: boolean
+  providerState?: SessionMessageProviderState
+  providerResultState?: SessionMessageProviderState
+  state:
+    | SessionMessageToolStateStreaming
+    | SessionMessageToolStateRunning
+    | SessionMessageToolStateCompleted
+    | SessionMessageToolStateError
+  time: {
+    created: number
+    ran?: number
+    completed?: number
+  }
+}
 export type SessionMessageProviderState = {
-    [x: string]: JsonValue;
-};
+  [x: string]: JsonValue
+}
 export type SessionMessageShell = {
-    id: string;
-    metadata?: {
-        [x: string]: JsonValue;
-    };
-    time: {
-        created: number;
-        completed?: number;
-    };
-    type: "shell";
-    shellID: string;
-    command: string;
-    status: "running" | "exited" | "timeout" | "killed";
-    exit?: number | "Infinity" | "-Infinity" | "NaN";
-    output?: {
-        output: string;
-        cursor: number;
-        size: number;
-        truncated: boolean;
-    };
-};
+  id: string
+  metadata?: {
+    [x: string]: JsonValue
+  }
+  time: {
+    created: number
+    completed?: number
+  }
+  type: "shell"
+  shellID: string
+  command: string
+  status: "running" | "exited" | "timeout" | "killed"
+  exit?: number | "Infinity" | "-Infinity" | "NaN"
+  output?: {
+    output: string
+    cursor: number
+    size: number
+    truncated: boolean
+  }
+}
 export type SessionMessageToolStateCompleted = {
-    status: "completed";
-    input: {
-        [x: string]: JsonValue;
-    };
-    content: [LLMToolContent, ...Array<LLMToolContent>];
-    metadata?: {
-        [x: string]: JsonValue;
-    };
-};
+  status: "completed"
+  input: {
+    [x: string]: JsonValue
+  }
+  content: [LLMToolContent, ...Array<LLMToolContent>]
+  metadata?: {
+    [x: string]: JsonValue
+  }
+}
 export type SessionMessageToolStateError = {
-    status: "error";
-    input: {
-        [x: string]: JsonValue;
-    };
-    error: SessionStructuredError;
-    content?: [LLMToolContent, ...Array<LLMToolContent>];
-    metadata?: {
-        [x: string]: JsonValue;
-    };
-};
+  status: "error"
+  input: {
+    [x: string]: JsonValue
+  }
+  error: SessionStructuredError
+  content?: [LLMToolContent, ...Array<LLMToolContent>]
+  metadata?: {
+    [x: string]: JsonValue
+  }
+}
 export type SessionMessageToolStateRunning = {
-    status: "running";
-    input: {
-        [x: string]: JsonValue;
-    };
-    metadata: {
-        [x: string]: JsonValue;
-    };
-};
+  status: "running"
+  input: {
+    [x: string]: JsonValue
+  }
+  metadata: {
+    [x: string]: JsonValue
+  }
+}
 export type SessionMessageToolStateStreaming = {
-    status: "streaming";
-    input: string;
-};
+  status: "streaming"
+  input: string
+}
 export type SessionNextRetryError = {
   message: string
   statusCode?: number
@@ -3083,60 +3122,60 @@ export type SessionNextRetryError = {
 }
 
 export type SessionNotFoundError = {
-    readonly _tag: "SessionNotFoundError";
-    readonly sessionID: string;
-    readonly message: string;
-};
+  readonly _tag: "SessionNotFoundError"
+  readonly sessionID: string
+  readonly message: string
+}
 export type SessionPendingCompaction = {
-    admittedSeq: number;
-    id: string;
-    sessionID: string;
-    timeCreated: number;
-    type: "compaction";
-};
-export type SessionPendingMessage = SessionPendingUserMessage | SessionPendingSyntheticMessage;
+  admittedSeq: number
+  id: string
+  sessionID: string
+  timeCreated: number
+  type: "compaction"
+}
+export type SessionPendingMessage = SessionPendingUserMessage | SessionPendingSyntheticMessage
 export type SessionPendingSyntheticData1 = {
-    text: string;
-    description?: string;
-    metadata?: {
-        [x: string]: any;
-    };
-};
+  text: string
+  description?: string
+  metadata?: {
+    [x: string]: any
+  }
+}
 export type SessionPendingSyntheticMessage = {
-    type: "synthetic";
-    data: SessionPendingSyntheticData1;
-    delivery: "steer" | "queue";
-};
+  type: "synthetic"
+  data: SessionPendingSyntheticData1
+  delivery: "steer" | "queue"
+}
 export type SessionPendingUser = {
-    admittedSeq: number;
-    id: string;
-    sessionID: string;
-    timeCreated: number;
-    type: "user";
-    data: SessionPendingUserData;
-    delivery: "steer" | "queue";
-};
+  admittedSeq: number
+  id: string
+  sessionID: string
+  timeCreated: number
+  type: "user"
+  data: SessionPendingUserData
+  delivery: "steer" | "queue"
+}
 export type SessionPendingUserData = {
-    text: string;
-    files?: Array<PromptFileAttachment>;
-    agents?: Array<PromptAgentAttachment>;
-    metadata?: {
-        [x: string]: JsonValue;
-    };
-};
+  text: string
+  files?: Array<PromptFileAttachment>
+  agents?: Array<PromptAgentAttachment>
+  metadata?: {
+    [x: string]: JsonValue
+  }
+}
 export type SessionPendingUserData1 = {
-    text: string;
-    files?: Array<PromptFileAttachment>;
-    agents?: Array<PromptAgentAttachment>;
-    metadata?: {
-        [x: string]: any;
-    };
-};
+  text: string
+  files?: Array<PromptFileAttachment>
+  agents?: Array<PromptAgentAttachment>
+  metadata?: {
+    [x: string]: any
+  }
+}
 export type SessionPendingUserMessage = {
-    type: "user";
-    data: SessionPendingUserData1;
-    delivery: "steer" | "queue";
-};
+  type: "user"
+  data: SessionPendingUserData1
+  delivery: "steer" | "queue"
+}
 export type SessionProcess = {
   id: string
   pid: number
@@ -3154,216 +3193,216 @@ export type SessionProcessNode = {
 }
 
 export type SessionPromptInput = {
-    readonly sessionID: {
-        readonly sessionID: string;
-    }["sessionID"];
-    readonly id?: {
-        readonly id?: string | null;
-        readonly text: string;
-        readonly files?: ReadonlyArray<{
-            readonly uri: string;
-            readonly name?: string;
-            readonly description?: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly agents?: ReadonlyArray<{
-            readonly name: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly metadata?: {
-            readonly [x: string]: JsonValue;
-        };
-        readonly delivery?: "steer" | "queue" | null;
-        readonly resume?: boolean | null;
-    }["id"];
-    readonly text: {
-        readonly id?: string | null;
-        readonly text: string;
-        readonly files?: ReadonlyArray<{
-            readonly uri: string;
-            readonly name?: string;
-            readonly description?: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly agents?: ReadonlyArray<{
-            readonly name: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly metadata?: {
-            readonly [x: string]: JsonValue;
-        };
-        readonly delivery?: "steer" | "queue" | null;
-        readonly resume?: boolean | null;
-    }["text"];
-    readonly files?: {
-        readonly id?: string | null;
-        readonly text: string;
-        readonly files?: ReadonlyArray<{
-            readonly uri: string;
-            readonly name?: string;
-            readonly description?: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly agents?: ReadonlyArray<{
-            readonly name: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly metadata?: {
-            readonly [x: string]: JsonValue;
-        };
-        readonly delivery?: "steer" | "queue" | null;
-        readonly resume?: boolean | null;
-    }["files"];
-    readonly agents?: {
-        readonly id?: string | null;
-        readonly text: string;
-        readonly files?: ReadonlyArray<{
-            readonly uri: string;
-            readonly name?: string;
-            readonly description?: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly agents?: ReadonlyArray<{
-            readonly name: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly metadata?: {
-            readonly [x: string]: JsonValue;
-        };
-        readonly delivery?: "steer" | "queue" | null;
-        readonly resume?: boolean | null;
-    }["agents"];
+  readonly sessionID: {
+    readonly sessionID: string
+  }["sessionID"]
+  readonly id?: {
+    readonly id?: string | null
+    readonly text: string
+    readonly files?: ReadonlyArray<{
+      readonly uri: string
+      readonly name?: string
+      readonly description?: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly agents?: ReadonlyArray<{
+      readonly name: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
     readonly metadata?: {
-        readonly id?: string | null;
-        readonly text: string;
-        readonly files?: ReadonlyArray<{
-            readonly uri: string;
-            readonly name?: string;
-            readonly description?: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly agents?: ReadonlyArray<{
-            readonly name: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly metadata?: {
-            readonly [x: string]: JsonValue;
-        };
-        readonly delivery?: "steer" | "queue" | null;
-        readonly resume?: boolean | null;
-    }["metadata"];
-    readonly delivery?: {
-        readonly id?: string | null;
-        readonly text: string;
-        readonly files?: ReadonlyArray<{
-            readonly uri: string;
-            readonly name?: string;
-            readonly description?: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly agents?: ReadonlyArray<{
-            readonly name: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly metadata?: {
-            readonly [x: string]: JsonValue;
-        };
-        readonly delivery?: "steer" | "queue" | null;
-        readonly resume?: boolean | null;
-    }["delivery"];
-    readonly resume?: {
-        readonly id?: string | null;
-        readonly text: string;
-        readonly files?: ReadonlyArray<{
-            readonly uri: string;
-            readonly name?: string;
-            readonly description?: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly agents?: ReadonlyArray<{
-            readonly name: string;
-            readonly mention?: {
-                readonly start: number;
-                readonly end: number;
-                readonly text: string;
-            };
-        }>;
-        readonly metadata?: {
-            readonly [x: string]: JsonValue;
-        };
-        readonly delivery?: "steer" | "queue" | null;
-        readonly resume?: boolean | null;
-    }["resume"];
-};
+      readonly [x: string]: JsonValue
+    }
+    readonly delivery?: "steer" | "queue" | null
+    readonly resume?: boolean | null
+  }["id"]
+  readonly text: {
+    readonly id?: string | null
+    readonly text: string
+    readonly files?: ReadonlyArray<{
+      readonly uri: string
+      readonly name?: string
+      readonly description?: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly agents?: ReadonlyArray<{
+      readonly name: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly metadata?: {
+      readonly [x: string]: JsonValue
+    }
+    readonly delivery?: "steer" | "queue" | null
+    readonly resume?: boolean | null
+  }["text"]
+  readonly files?: {
+    readonly id?: string | null
+    readonly text: string
+    readonly files?: ReadonlyArray<{
+      readonly uri: string
+      readonly name?: string
+      readonly description?: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly agents?: ReadonlyArray<{
+      readonly name: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly metadata?: {
+      readonly [x: string]: JsonValue
+    }
+    readonly delivery?: "steer" | "queue" | null
+    readonly resume?: boolean | null
+  }["files"]
+  readonly agents?: {
+    readonly id?: string | null
+    readonly text: string
+    readonly files?: ReadonlyArray<{
+      readonly uri: string
+      readonly name?: string
+      readonly description?: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly agents?: ReadonlyArray<{
+      readonly name: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly metadata?: {
+      readonly [x: string]: JsonValue
+    }
+    readonly delivery?: "steer" | "queue" | null
+    readonly resume?: boolean | null
+  }["agents"]
+  readonly metadata?: {
+    readonly id?: string | null
+    readonly text: string
+    readonly files?: ReadonlyArray<{
+      readonly uri: string
+      readonly name?: string
+      readonly description?: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly agents?: ReadonlyArray<{
+      readonly name: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly metadata?: {
+      readonly [x: string]: JsonValue
+    }
+    readonly delivery?: "steer" | "queue" | null
+    readonly resume?: boolean | null
+  }["metadata"]
+  readonly delivery?: {
+    readonly id?: string | null
+    readonly text: string
+    readonly files?: ReadonlyArray<{
+      readonly uri: string
+      readonly name?: string
+      readonly description?: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly agents?: ReadonlyArray<{
+      readonly name: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly metadata?: {
+      readonly [x: string]: JsonValue
+    }
+    readonly delivery?: "steer" | "queue" | null
+    readonly resume?: boolean | null
+  }["delivery"]
+  readonly resume?: {
+    readonly id?: string | null
+    readonly text: string
+    readonly files?: ReadonlyArray<{
+      readonly uri: string
+      readonly name?: string
+      readonly description?: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly agents?: ReadonlyArray<{
+      readonly name: string
+      readonly mention?: {
+        readonly start: number
+        readonly end: number
+        readonly text: string
+      }
+    }>
+    readonly metadata?: {
+      readonly [x: string]: JsonValue
+    }
+    readonly delivery?: "steer" | "queue" | null
+    readonly resume?: boolean | null
+  }["resume"]
+}
 export type SessionPromptOutput = {
-    data: SessionPendingUser;
-}["data"];
+  data: SessionPendingUser
+}["data"]
 export type SessionShellInput = {
-    readonly sessionID: {
-        readonly sessionID: string;
-    }["sessionID"];
-    readonly id?: {
-        readonly id?: string | undefined;
-        readonly command: string;
-    }["id"];
-    readonly command: {
-        readonly id?: string | undefined;
-        readonly command: string;
-    }["command"];
-};
-export type SessionShellOutput = void;
+  readonly sessionID: {
+    readonly sessionID: string
+  }["sessionID"]
+  readonly id?: {
+    readonly id?: string | undefined
+    readonly command: string
+  }["id"]
+  readonly command: {
+    readonly id?: string | undefined
+    readonly command: string
+  }["command"]
+}
+export type SessionShellOutput = void
 export type SessionStatus =
   | {
       type: "idle"
@@ -3397,9 +3436,9 @@ export type SessionStepTokens = {
 }
 
 export type SessionStructuredError = {
-    type: string;
-    message: string;
-};
+  type: string
+  message: string
+}
 export type SessionSubagentModelsPolicy =
   | {
       mode: "inherit"
@@ -3461,15 +3500,15 @@ export type Todo = {
 }
 
 export type ToolFileContent = {
-    type: "file";
-    uri: string;
-    mime: string;
-    name?: string;
-};
+  type: "file"
+  uri: string
+  mime: string
+  name?: string
+}
 export type ToolTextContent = {
-    type: "text";
-    text: string;
-};
+  type: "text"
+  text: string
+}
 export type V2SessionListResponse = V2SessionListResponses[keyof V2SessionListResponses]
 
 export type V2SessionListResponses = {

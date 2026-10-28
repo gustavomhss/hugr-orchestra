@@ -6,6 +6,8 @@ import type {
   LocationPathsOutput,
   AgentsListInput,
   AgentsListOutput,
+  AgentsDetailInput,
+  AgentsDetailOutput,
   AgentsGetFileInput,
   AgentsGetFileOutput,
   AgentsUpdateFileInput,
@@ -663,6 +665,18 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ),
+      detail: (input: AgentsDetailInput, requestOptions?: RequestOptions) =>
+        request<AgentsDetailOutput>(
+          {
+            method: "GET",
+            path: `/api/agent/${encodeURIComponent(input.agentID)}/detail`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
       getFile: (input: AgentsGetFileInput, requestOptions?: RequestOptions) =>
         request<AgentsGetFileOutput>(
           {
@@ -685,6 +699,7 @@ export function make(options: ClientOptions) {
               description: input["description"],
               mode: input["mode"],
               model: input["model"],
+              avatar: input["avatar"],
               steps: input["steps"],
               system: input["system"],
               permission: input["permission"],

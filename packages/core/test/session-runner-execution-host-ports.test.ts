@@ -13,7 +13,7 @@ import { PermissionV2 } from "@orchestra/core/permission"
 import { AppProcess } from "@orchestra/core/process"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { QuestionV2 } from "@orchestra/core/question"
-import { SessionV2 } from "@orchestra/core/session"
+import { SessionSchema, SessionV2 } from "@orchestra/core/session"
 import { Prompt } from "@orchestra/core/session/prompt"
 import { ExecutionHost } from "@orchestra/core/session/runner"
 import { SessionRunnerModel } from "@orchestra/core/session/runner/model"
@@ -45,6 +45,8 @@ const questions: QuestionV2.AskInput[] = []
 let script: (turn: ExecutionHost.Turn) => Effect.Effect<ReadonlyArray<LLMEvent>> = () => Effect.succeed([])
 let provider: ((session: Parameters<SessionRunnerModel.Interface["resolve"]>[0]) => ReturnType<SessionRunnerModel.Interface["resolve"]>) | undefined
 let providerEvents: LLMEvent[] = []
+// Replaces the scripted events when a test must call a port between events of the same stream.
+let streamOf: ((turn: ExecutionHost.Turn) => Stream.Stream<LLMEvent>) | undefined
 
 const client = Layer.succeed(
   LLMClient.Service,
@@ -58,7 +60,8 @@ const client = Layer.succeed(
 const host: ExecutionHost.Interface = {
   id: "claude-code",
   stateKey: "claudeCode",
-  stream: (turn) => Stream.unwrap(script(turn).pipe(Effect.map((events) => Stream.fromIterable(events)))),
+  stream: (turn) =>
+    streamOf ? streamOf(turn) : Stream.unwrap(script(turn).pipe(Effect.map((events) => Stream.fromIterable(events)))),
 }
 
 // The Location's ToolSafety under the profile of the moment, reading the dispatch's domains as the Maestro Location does.
@@ -130,6 +133,7 @@ const hosted = Effect.gen(function* () {
   profile.current = undefined
   dispatch.domains = undefined
   provider = undefined
+  streamOf = undefined
   asked.length = 0
   questions.length = 0
   const agents = yield* AgentV2.Service
@@ -411,6 +415,47 @@ describe("SessionRunner execution host ports", () => {
       const assistant = (yield* sessions.messages({ sessionID })).find((message) => message.type === "assistant")
       // (1000 * 3 + 500 * 15 + 2000 * 0.3) / 1e6
       expect(assistant).toMatchObject({ type: "assistant", cost: expect.closeTo(0.0111, 8) })
+    }),
+  )
+  it.effect("child opens the subagent's Session under the parent's task call, records its events, and adds no cost", () =>
+    Effect.gen(function* () {
+      const sessions = yield* hosted
+      const opened: { id?: SessionSchema.ID; again?: SessionSchema.ID } = {}
+      streamOf = (turn) =>
+        Stream.concat(
+          Stream.fromIterable([
+            LLMEvent.stepStart({ index: 0 }),
+            LLMEvent.toolCall({ id: "agent-1", name: "task", input: { description: "Fix it", prompt: "go fix", subagent_type: "build" }, providerExecuted: true }),
+          ]),
+          Stream.fromEffect(
+            Effect.gen(function* () {
+              const child = yield* turn.child({ callID: "agent-1", agent: AgentV2.defaultID, title: "Fix it", prompt: "go fix" })
+              opened.id = child.id
+              yield* Effect.forEach(answer("fixed"), child.publish, { discard: true })
+              yield* child.finish
+              // Reopening the same call adopts the same child.
+              opened.again = (yield* turn.child({ callID: "agent-1", agent: AgentV2.defaultID, title: "Fix it", prompt: "go fix" })).id
+            }),
+          ).pipe(
+            Stream.drain,
+            Stream.concat(
+              Stream.fromIterable([
+                LLMEvent.toolResult({ id: "agent-1", name: "task", result: { type: "text", value: "fixed" }, providerExecuted: true }),
+                ...answer().slice(1),
+              ]),
+            ),
+          ),
+        )
+      yield* send(sessions, "go")
+
+      expect(opened.again).toBe(opened.id)
+      expect(yield* sessions.get(opened.id!)).toMatchObject({ parentID: sessionID, agent: AgentV2.defaultID, title: "Fix it" })
+      const messages = yield* sessions.messages({ sessionID: opened.id!, order: "asc" })
+      expect(messages.filter((message) => message.type === "user").map((message) => message.text)).toEqual(["go fix"])
+      expect(messages.find((message) => message.type === "assistant")).toMatchObject({ cost: 0 })
+      const parent = (yield* sessions.messages({ sessionID })).find((message) => message.type === "assistant")
+      const task = parent?.type === "assistant" ? parent.content.find((part) => part.type === "tool") : undefined
+      expect(task?.type === "tool" && task.state.status === "completed" ? task.state.metadata : undefined).toMatchObject({ sessionId: opened.id, parentSessionId: sessionID })
     }),
   )
 })

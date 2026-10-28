@@ -11,6 +11,7 @@ import type { PermissionV2 } from "../../permission"
 import type { QuestionV2 } from "../../question"
 import type { ToolSafety } from "../../tool-safety"
 import type { ToolRegistry } from "../../tool/registry"
+import type { SkillV2 } from "../../skill"
 import type { SessionMessage } from "../message"
 import type { SessionSchema } from "../schema"
 import { SessionTable } from "../sql"
@@ -26,6 +27,12 @@ export interface Turn {
   readonly model: ModelV2.Ref | undefined
   /** Agent system text, the Context Epoch baseline and workflow instructions, in that order. */
   readonly system: ReadonlyArray<string>
+  /** The Context Epoch baseline and workflow instructions alone: `system` without the agent's own text. */
+  readonly context: ReadonlyArray<string>
+  /** The agents this turn's agent may delegate to, as the task tool would accept them as targets. */
+  readonly seats: ReadonlyArray<AgentV2.Info>
+  /** The skills each seat in `seats` may load, by seat id, as Orchestra's skill tool would list them for that seat. */
+  readonly skills: Readonly<Record<string, ReadonlyArray<SkillV2.Info>>>
   /** Projected history the runner reloaded for this turn. */
   readonly history: ReadonlyArray<SessionMessage.Message>
   /** The agent's permission-filtered Orchestra tools, for the host to offer its engine. */
@@ -46,6 +53,8 @@ export interface Turn {
     readonly tool: string
     readonly action: string
     readonly resources: ReadonlyArray<string>
+    /** A seat from `seats` the call runs under, when the engine made it inside that seat's subagent. */
+    readonly agent?: AgentV2.ID
     /** The call as ToolSafety reads it: Orchestra's tool name (`bash`, `write`, `edit`, `read`, ...) and argument names. */
     readonly safety?: { readonly tool: string; readonly args: Readonly<Record<string, unknown>> }
   }) => Effect.Effect<Authorization, PermissionV2.Error | PermissionV2.DeclinedError | ToolSafety.Denied>
@@ -84,6 +93,23 @@ export interface Turn {
    * Unlike everything else on a Turn it outlives the turn: the host may call it after its stream has ended.
    */
   readonly notify: (input: { readonly id: string; readonly text: string }) => Effect.Effect<void>
+  /**
+   * Opens the child Session that mirrors a subagent the engine ran for the parent's task call `callID`, the way
+   * Orchestra's task tool would have opened it: same parent, seat agent, inherited permissions and the delegated prompt
+   * as its user message. The call's progress names the child, so the task row links to it. The child is a record only:
+   * it is never woken, and its events come from the engine through `publish`. `finish` settles what is left open; its
+   * step carries no cost, which the parent's step already counts. Reopening the same call adopts the same child.
+   */
+  readonly child: (input: {
+    readonly callID: string
+    readonly agent: AgentV2.ID
+    readonly title: string
+    readonly prompt: string
+  }) => Effect.Effect<{
+    readonly id: SessionSchema.ID
+    readonly publish: (event: LLMEvent) => Effect.Effect<void>
+    readonly finish: Effect.Effect<void>
+  }>
   /** The host's durable state, `session.metadata[host.stateKey]`. */
   readonly state: {
     readonly get: Effect.Effect<unknown>

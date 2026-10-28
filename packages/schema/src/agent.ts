@@ -16,6 +16,14 @@ export const Color = Schema.Union([
 ]).annotate({ identifier: "Agent.Color" })
 export type Color = typeof Color.Type
 
+// A bundled picture (`lib:<slug>`) or an uploaded raster image inlined as a data URL. SVG is refused: it can carry
+// script, and the app renders this value as an image source.
+export const Avatar = Schema.String.check(
+  Schema.isPattern(/^(lib:[a-z0-9][a-z0-9_-]{0,63}|data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2})$/),
+  Schema.isMaxLength(200_000),
+).annotate({ identifier: "Agent.Avatar" })
+export type Avatar = typeof Avatar.Type
+
 export interface Info extends Schema.Schema.Type<typeof Info> {}
 export const Info = Schema.Struct({
   id: ID,
@@ -29,7 +37,23 @@ export const Info = Schema.Struct({
   mode: Schema.Literals(["subagent", "primary", "all"]),
   hidden: Schema.Boolean,
   color: Color.pipe(optional),
+  avatar: Avatar.pipe(optional),
   steps: PositiveInt.pipe(optional),
+  /**
+   * The skill tree packaged with this agent, read from its own tree rather than the project's catalog. Each node is a
+   * directory with a `SKILL.md`, named by its path; nodes come depth first and a child names its `parent`.
+   */
+  skills: Schema.Array(
+    Schema.Struct({
+      name: Schema.String,
+      description: Schema.String.pipe(optional),
+      /** When to open the node; a root has none. */
+      when: Schema.String.pipe(optional),
+      parent: Schema.String.pipe(optional),
+    }),
+  ).pipe(optional),
+  /** The pinned engine set the agent's commands run with: the backend toolkit or the research toolkit. */
+  toolkit: Schema.Literals(["backend", "research"]).pipe(optional),
   permissions: Permission.Ruleset,
 })
   .annotate({ identifier: "AgentV2.Info" })

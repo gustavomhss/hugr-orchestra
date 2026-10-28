@@ -59,9 +59,30 @@ describe("seat skill packaging", () => {
   test.each([
     ["missing", { "cold-review/ref.md": "companion" }],
     ["foreign", { [entry]: valid, "foreign/SKILL.md": valid }],
-    ["duplicate", { [entry]: valid, "cold-review/nested/SKILL.md": valid }],
   ])("%s entry definition fails declared-entry validation", (_kind, files) => {
     expect(() => SeatSkillContent.validate("cold", files, skills)).toThrow("Seat entry skills differ from declared skills: cold")
+  })
+
+  test("a tree of named, routed nodes three levels deep with leaf references is valid", () => {
+    expect(() => SeatSkillContent.validate("cold", tree(), skills)).not.toThrow()
+  })
+
+  test.each([
+    ["an orphan directory", { "cold-review/a/x/loose.md": "x" }, "Orphan seat skill directory: cold/cold-review/a/x/loose.md"],
+    ["a node under an orphan", { "cold-review/z/y/SKILL.md": node("cold-review-z-y") }, "Orphan seat skill directory: cold/cold-review/z/y/SKILL.md"],
+    ["a wrong name", { "cold-review/a/SKILL.md": node("cold-review-other") }, "Seat skill name mismatch: cold/cold-review-a"],
+    ["a fourth level", { "cold-review/a/b/c/d/SKILL.md": node("cold-review-a-b-c-d") }, "Seat skill tree too deep: cold/cold-review-a-b-c-d"],
+    [
+      "an 11th child",
+      Object.fromEntries(Array.from({ length: 11 }, (_, index) => [`cold-review/k${"x".repeat(index)}/SKILL.md`, node(`cold-review-k${"x".repeat(index)}`)])),
+      "Too many seat skill children: cold/cold-review",
+    ],
+    ["a missing when", { "cold-review/a/SKILL.md": node("cold-review-a").replace("when: The change needs a.\n", "") }, "Missing seat skill routing: cold/cold-review-a"],
+    ["a missing not-when", { "cold-review/a/SKILL.md": node("cold-review-a").replace("not-when: Anything else.\n", "") }, "Missing seat skill routing: cold/cold-review-a"],
+    ["a sideways link", { "cold-review/a/b/SKILL.md": node("cold-review-a-b") + "See [c](../c/SKILL.md).\n" }, "Seat skill link escapes its node: cold/cold-review/a/b/SKILL.md"],
+    ["a link out of the tree", { [entry]: valid + "See [x](../../src/x.ts).\n" }, "Seat skill link escapes its node: cold/cold-review/SKILL.md"],
+  ])("a tree with %s fails", (_kind, files, error) => {
+    expect(() => SeatSkillContent.validate("cold", { ...tree(), ...files }, skills)).toThrow(error)
   })
 
   test.each([
@@ -112,7 +133,7 @@ describe("seat skill packaging", () => {
     const tree = kind === "missing maestro"
       ? Object.fromEntries(Object.entries(inventory.default).filter(([id]) => id !== "maestro"))
       : { ...inventory.default, maestro: kind === "missing companion"
-        ? Object.fromEntries(Object.entries(inventory.default.maestro).filter(([file]) => file !== "maestro-verify/review-checks.md"))
+        ? Object.fromEntries(Object.entries(inventory.default.maestro).filter(([file]) => file !== "maestro-run/verify/review-checks/SKILL.md"))
         : inventory.default.maestro }
     const result = await bundle(tmp.path, "bun", { [moduleName]: `export default ${JSON.stringify(tree)}` }, "backend",
       kind === "missing override" ? { ORCHESTRA_PLAYBOOKS_DIR: path.join(tmp.path, "absent") } : {})
@@ -238,4 +259,19 @@ async function git(cwd: string, args: string[]) {
   const child = Bun.spawn(["git", ...args], { cwd, stdout: "pipe", stderr: "pipe" })
   const [stdout, stderr, exit] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
   if (exit !== 0) throw new Error(`Git checkout proof failed (${exit}):\n${stdout}\n${stderr}`)
+}
+
+function node(name: string) {
+  return `---\nname: ${name}\ndescription: Node ${name}\nwhen: The change needs a.\nnot-when: Anything else.\n---\nBody.\n`
+}
+
+function tree(): Record<string, string> {
+  return {
+    [entry]: valid,
+    "cold-review/a/SKILL.md": node("cold-review-a"),
+    "cold-review/a/b/SKILL.md": node("cold-review-a-b") + "See [ref](references/ref.md#top) and [site](https://example.com).\n",
+    "cold-review/a/b/references/ref.md": "Reference.\n",
+    "cold-review/a/b/c/SKILL.md": node("cold-review-a-b-c"),
+    "cold-review/a/c/SKILL.md": node("cold-review-a-c"),
+  }
 }

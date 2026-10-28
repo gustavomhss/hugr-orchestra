@@ -6,6 +6,25 @@ import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/unstable/httpapi"
 import { ConflictError, InvalidRequestError, UnknownError } from "../errors"
 import { LocationQuery, locationQueryOpenApi } from "./location"
 
+const AgentDetail = Schema.Struct({
+  tools: Schema.Array(Schema.Struct({ name: Schema.String, description: Schema.String })),
+  skills: Schema.Array(
+    Schema.Struct({ name: Schema.String, description: Schema.String.pipe(Schema.optional), location: Schema.String }),
+  ),
+  /** The pinned command-line engines of the agent's toolkit, with their install state on this machine. */
+  engines: Schema.Array(
+    Schema.Struct({
+      id: Schema.String,
+      version: Schema.String,
+      license: Schema.String,
+      upstream: Schema.String,
+      role: Schema.Literals(["generator", "check", "indexer", "oracle"]),
+      input: Schema.String,
+      status: Schema.Literals(["absent", "fetching", "ready", "failed", "unsupported"]),
+    }),
+  ),
+}).annotate({ identifier: "AgentV2.Detail" })
+
 export const AgentGroup = HttpApiGroup.make("server.agent")
   .add(
     HttpApiEndpoint.get("agent.list", "/api/agent", {
@@ -18,6 +37,23 @@ export const AgentGroup = HttpApiGroup.make("server.agent")
           identifier: "v2.agent.list",
           summary: "List agents",
           description: "Retrieve currently registered agents.",
+        }),
+      ),
+  )
+  .add(
+    HttpApiEndpoint.get("agent.detail", "/api/agent/:agentID/detail", {
+      params: { agentID: Schema.String },
+      query: LocationQuery,
+      success: Location.response(AgentDetail),
+      error: [InvalidRequestError],
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        OpenApi.annotations({
+          identifier: "v2.agent.detail",
+          summary: "Get agent detail",
+          description:
+            "List the tools this agent's permissions advertise to the model and the catalog skills it may load. Skills packaged with the agent are on `Agent.Info.skills`.",
         }),
       ),
   )

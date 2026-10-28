@@ -491,6 +491,34 @@ export function Titlebar(props: {
           {(mount) => <Portal mount={mount}>{tabControls}</Portal>}
         </Show>
         <div class="flex-1" />
+        <Show when={!mobile() && platform.caffeinate}>
+          {(awake) => (
+            <button
+              type="button"
+              role="switch"
+              data-slot="orchestra-caffeinate-toggle"
+              aria-checked={awake()()}
+              aria-label={language.t("orchestra.shell.caffeinate.on")}
+              title={language.t(awake()() ? "orchestra.shell.caffeinate.off" : "orchestra.shell.caffeinate.on")}
+              onClick={() => void platform.setCaffeinate?.(!awake()())}
+            >
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 16 16"
+                width="16"
+                height="16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M2.5 7.5h8.5v2.8a3.2 3.2 0 0 1-3.2 3.2H5.7a3.2 3.2 0 0 1-3.2-3.2zM11 8.5h.9a1.7 1.7 0 0 1 0 3.4H11" />
+                <path data-steam d="M5.2 1.8c-.7.8.7 1.5 0 2.4M8.3 1.8c-.7.8.7 1.5 0 2.4" />
+              </svg>
+            </button>
+          )}
+        </Show>
         <Show when={!mobile()}>
           <button
             type="button"

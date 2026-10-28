@@ -10,7 +10,7 @@ export const primaryNavigation = [
   // The Projects board Maestro keeps (docs/specs/projects-board), read only for now.
   { id: "board", label: "orchestra.nav.board", wip: true },
   { id: "agents", label: "orchestra.nav.agents", wip: true },
-  // Named Checks in the UI once lane B5 renames the label; the id stays `cicd`.
+  // Named Actions in the UI (the owner reverted the Checks rename, 2026-10-27); the id stays `cicd`.
   { id: "cicd", label: "orchestra.actions.title", wip: true },
 ] as const
 

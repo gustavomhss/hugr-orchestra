@@ -10,7 +10,7 @@ import type { Mcp } from "../../mcp"
 import { PermissionV2 } from "../../permission"
 import { QuestionV2 } from "../../question"
 import type { AppProcess } from "../../process"
-import type { SkillV2 } from "../../skill"
+import { SkillV2 } from "../../skill"
 import { BashTool } from "../../tool/bash"
 import type { ReadToolFileSystem } from "../../tool/read-filesystem"
 import { SkillTool } from "../../tool/skill"
@@ -135,13 +135,14 @@ export const skill = Effect.fn("SessionRunner.skill")(function* (
     readonly skill: string
   },
 ) {
-  const found = (yield* deps.skills.list()).find((item) => item.name === input.skill)
+  const all = yield* deps.skills.list()
+  const found = all.find((item) => item.name === input.skill)
   if (!found) return false
   yield* deps.events.publish(SessionEvent.Synthetic, {
     sessionID: input.sessionID,
     messageID: SessionMessage.ID.create(),
     timestamp: yield* DateTime.now,
-    text: yield* SkillTool.load(deps.fs, found).pipe(Effect.orDie),
+    text: yield* SkillTool.load(deps.fs, found, SkillV2.children(all, found)).pipe(Effect.orDie),
   })
   return true
 })

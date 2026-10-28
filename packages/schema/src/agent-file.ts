@@ -1,6 +1,7 @@
 export * as AgentFile from "./agent-file"
 
 import { Schema } from "effect"
+import { Agent } from "./agent"
 import { optional, PositiveInt } from "./schema"
 
 export const Action = Schema.Literals(["allow", "ask", "deny"]).annotate({ identifier: "AgentFile.Action" })
@@ -18,6 +19,7 @@ const fields = {
   description: Schema.String.pipe(optional),
   mode: Schema.Literals(["subagent", "primary", "all"]).pipe(optional),
   model: Schema.String.pipe(optional),
+  avatar: Agent.Avatar.pipe(optional),
   steps: PositiveInt.pipe(optional),
   system: Schema.String.pipe(optional),
   permission: Schema.Record(Schema.String, Permission).pipe(optional),

@@ -39,7 +39,8 @@ Bun.plugin({
             : match
         },
       )
-      return { contents, loader: "ts" }
+      // `import.meta.glob` is Vite-only: the bundled avatar library is empty here.
+      return { contents: contents.replace(/import\.meta\.glob(<[^>]*>)?\([^)]*\)/g, "({})"), loader: "ts" }
     })
   },
 })
@@ -368,7 +369,10 @@ test("subagent row clicks, ArrowDown/Enter and accessible switches toggle each t
   expect(view.writes).toHaveLength(2)
   expect(view.writes[1]).toEqual({
     mode: "allowlist",
-    models: [{ providerID: "router", id: "team/Alpha" }, { providerID: "router", id: "team/Beta" }],
+    models: [
+      { providerID: "router", id: "team/Alpha" },
+      { providerID: "router", id: "team/Beta" },
+    ],
   })
   expect(switches()[1].checked).toBe(true)
 

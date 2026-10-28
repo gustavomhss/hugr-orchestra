@@ -14,6 +14,8 @@ export async function packagedSkills() {
         ] as const),
     ),
   )
+  const shared = Seats.shared()
+  if (shared.length > 0) Object.assign(trees, { team: await SeatSkillContent.read("team", Seats.sharedSource(), shared) })
   // Use the runtime admission rules too; an empty build or unextractable path is a build failure.
   PackagedSkills.digest(trees)
   return trees

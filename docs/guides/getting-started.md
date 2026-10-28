@@ -30,13 +30,13 @@ Press send. A chat opens with Maestro in your project. Maestro plans the work an
 
 **Projects** in the sidebar is the board. It shows what Maestro is building, stage by stage. Only Maestro moves cards, so ask Maestro in a chat to plan a project and it appears there. The board is read only.
 
-## 5. Look at Checks
+## 5. Look at Actions
 
-**Checks** shows what must pass before work counts as done, and the results. Open it to see why something stopped.
+**Actions** shows what must pass before work counts as done, and the results. Open it to see why something stopped.
 
 ## Where the rest is
 
-The sidebar keeps Home, Chat, Projects, Agents and Checks in view. Everything else is in the **More** group. Click it to open or close it.
+The sidebar keeps Home, Chat, Projects, Agents and Actions in view. Everything else is in the **More** group. Click it to open or close it.
 
 - **Workflows**: write a plan once and have Maestro run it. See [Workflows](workflows.md).
 - **Hooks**: rules that watch what agents do. See [Hooks](hooks.md).
