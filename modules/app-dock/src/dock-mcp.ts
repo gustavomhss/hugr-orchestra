@@ -28,6 +28,7 @@ type Entry = { key: string; ref: number; line: string; label: string; depth: num
 type Snapshot = { header: string; entries: Entry[]; text?: string; complete: boolean }
 
 const LOOK_LIMIT = 40_000
+const TEXT_LIMIT = 20_000
 const SETTLE_MS = 300
 
 export const node = (port: Transport) => makeGlobalNode({ service: McpProvided.Service, layer: layer(port), deps: [] })
@@ -98,7 +99,10 @@ function serve(port: Transport, name: string, tab: Tab) {
     if (tool === "look") {
       const snapshot = await snap()
       const scope = typeof args.scope === "number" ? args.scope : undefined
-      return look(snapshot, scope) + (args.text === true && snapshot.text ? `\n\n--- page text ---\n${snapshot.text}` : "")
+      const text = snapshot.text ?? ""
+      return look(snapshot, scope) + (args.text === true && text
+        ? `\n\n--- page text ---\n${text.slice(0, TEXT_LIMIT)}${text.length > TEXT_LIMIT ? `\n… text cut at ${TEXT_LIMIT} characters: find searches all of it` : ""}`
+        : "")
     }
     if (tool === "find") return find(await snap(), String(args.query ?? ""), typeof args.role === "string" ? args.role : undefined)
     if (tool === "wait") return wait(args)
@@ -270,10 +274,12 @@ function linuxEntries(read: { items: AppDockOutline.Item[]; complete: boolean })
   // A node's key is its path of role, name and which same-shaped sibling it is, so a row inserted above it does not
   // make the whole list look changed.
   const seen = new Map<string, number>()
-  // Unnamed, inert wrappers carry no meaning for a reader; their children move up a level.
+  // Unnamed, inert wrappers carry no meaning for a reader; their children move up a level. An editable node (an
+  // editor's text view has no name and no actions) is a target, not a wrapper.
   const visit = (node: AppDockOutline.Node, depth: number, path: string, parent?: number) => {
     if (!shown.has(node)) return
     const inert = !node.name && !(Array.isArray(node.item.actions) && node.item.actions.length > 0) && node.role !== "heading"
+      && !node.item.states?.includes(7)
     if (inert && node.parent) return node.children.forEach((child) => visit(child, depth, path, parent))
     const shape = `${path}/${node.role}|${node.name}`
     const occurrence = seen.get(shape) ?? 0
@@ -290,7 +296,8 @@ function linuxEntries(read: { items: AppDockOutline.Item[]; complete: boolean })
 
 function look(snapshot: Snapshot, scope?: number) {
   const start = scope === undefined ? 0 : snapshot.entries.findIndex((entry) => entry.ref === scope)
-  if (start < 0) return `Error: no line [${scope}] in the last outline; look again without scope`
+  // Models guess refs or reuse them after the page changed; the whole outline answers better than an error.
+  if (start < 0) return `no line [${scope}] in the current outline; here is all of it\n${look(snapshot)}`
   const base = snapshot.entries[start]?.depth ?? 0
   const end = scope === undefined ? snapshot.entries.length
     : snapshot.entries.findIndex((entry, index) => index > start && entry.depth <= base)
@@ -322,11 +329,11 @@ function pick(snapshot: Snapshot, args: Record<string, unknown>) {
     if (!entry) throw new Error(`no line [${args.ref}] in the last outline; look again`)
     return entry
   }
-  const name = typeof args.name === "string" ? args.name.toLowerCase() : ""
+  const name = typeof args.name === "string" ? args.name.trim().toLowerCase() : ""
   const role = typeof args.role === "string" ? args.role.toLowerCase() : ""
   const matches = snapshot.entries.filter((entry) => (!name || entry.name.toLowerCase().includes(name))
     && (!role || entry.role.toLowerCase().includes(role)))
-  const exact = matches.filter((entry) => entry.name.toLowerCase() === name)
+  const exact = matches.filter((entry) => entry.name.trim().toLowerCase() === name)
   const chosen = exact.length === 1 ? exact : matches
   if (chosen.length === 1) return chosen[0]!
   if (chosen.length === 0) throw new Error(`nothing matches name "${args.name ?? ""}"${role ? ` role ${role}` : ""}; use find`)
@@ -362,7 +369,7 @@ function tools(where: string, workspace: boolean) {
   return [
     { name: "look", description: `See ${where} without a screenshot: every visible control as an indented outline, one line per control — role, "name", states and its [ref]. Indentation is the hierarchy (window > region > control). Start here; after acting, act's own answer says what changed.`,
       inputSchema: { type: "object", properties: {
-        scope: { ...ref, description: "Show only the subtree under this line" },
+        scope: { ...ref, description: "Show only the subtree under one line: its [n] from your latest look or find (refs change when the page does)" },
         ...(workspace ? {} : { text: { type: "boolean", description: "Also return the page's visible text" } }) } } },
     { name: "find", description: `Search ${where} by text and/or role. Each match shows where it sits (its last regions › the control) and its [ref].`,
       inputSchema: { type: "object", properties: { query: { type: "string", description: "Case-insensitive text in the role, name or value" },

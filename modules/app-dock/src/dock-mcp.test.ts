@@ -5,7 +5,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { Effect } from "effect"
 import { McpProvided } from "@orchestra/core/mcp/provided"
 import { DockMcp } from "./dock-mcp"
-import { control, fakePort, page, type Envelope, type Reply } from "./app-dock.fixture"
+import { control, fakePort, field, page, type Envelope, type Reply } from "./app-dock.fixture"
 
 const tabs = [
   { tabID: "t1", generation: 1, url: "https://www.github.com/orchestra", title: "GitHub", active: true },
@@ -70,6 +70,10 @@ describe("DockMcp", () => {
     expect(text(await client.callTool({ name: "look", arguments: {} }))).toBe(
       'GitHub — https://github.com/orchestra\nform "Sign in" [1]\n  textbox "Email" [2]\n  button "Continue" [3]')
     expect(text(await client.callTool({ name: "find", arguments: { query: "continue" } }))).toBe('form "Sign in" › button "Continue" [3]')
+    // A guessed or stale scope answers with the whole outline instead of failing.
+    const guessed = await client.callTool({ name: "look", arguments: { scope: 8 } })
+    expect(guessed.isError).toBe(false)
+    expect(text(guessed)).toStartWith("no line [8] in the current outline; here is all of it\nGitHub — https://github.com/orchestra\n")
 
     const acted = text(await client.callTool({ name: "act", arguments: { name: "Continue", role: "button" } }))
     expect(d.calls.find((call) => call.op === "click")?.args).toMatchObject({ ref: 3, world: "browser", tabID: "t1" })
@@ -84,14 +88,16 @@ describe("DockMcp", () => {
   test("look on the Linux workspace numbers its own lines", async () => {
     const d = dock((op) => {
       if (op === "list") return { ok: true, value: tabs }
-      if (op === "read") return page([control("n:1", "Save", { states: [8, 24, 30] }), control("n:2", "Quit", { states: [8, 24, 30] })])
+      if (op === "read") return page([control("n:1", "Save", { states: [8, 24, 30] }), control("n:2", "Quit", { states: [8, 24, 30] }),
+        { ...field("n:3", ""), role: 61, roleName: "text", states: [7, 8, 24, 30] }])
       return { ok: false, error: { message: `unexpected ${op}` } }
     })
     const client = await connect((await d.servers())[2]!)
     expect((await client.listTools()).tools.map((tool) => tool.name)).toEqual(["look", "find", "act", "wait"])
     const outline = text(await client.callTool({ name: "look", arguments: {} }))
     expect(outline).toStartWith("Linux workspace\n")
-    expect(outline).toMatch(/"Save" \[1\]\n.*"Quit" \[2\]$/)
+    // The editor's unnamed text view stays: it is where typing goes.
+    expect(outline).toMatch(/"Save" \[1\]\n.*"Quit" \[2\]\ntext.* \[3\]$/)
     expect(d.calls.find((call) => call.op === "read")?.args).toMatchObject({ world: "linux", budget: 500 })
     await client.close()
   })
