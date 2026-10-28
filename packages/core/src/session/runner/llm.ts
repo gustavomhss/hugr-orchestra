@@ -331,9 +331,9 @@ const layer = Layer.effect(
         Effect.gen(function* () {
           const seat = seats.find((item) => item.id === input.agent)
           if (!seat || !toolMaterialization) return { result: { type: "error" as const, value: "Orchestra's tools serve Orchestra's seats only" } }
-          const rules = [...seat.permissions.map((rule) => ({ ...rule })), ...(yield* store.permissions(input.sessionID).pipe(Effect.orDie))]
+          const rules = [...seat.permissions.map((rule) => ({ ...rule })), ...(yield* store.permissions(input.sessionID))]
           return yield* settle(call, input.assistantMessageID, yield* tools.materialize(rules), { sessionID: input.sessionID, agentID: seat.id, rules })
-        })
+        }).pipe(Effect.orDie)
       // An Orchestra tool the host's engine invokes: recorded before side effects, settled through the registry like a
       // local call, persisted provider-executed so no continuation turn is scheduled for it.
       const execute: ExecutionHost.Turn["execute"] = (input) =>
