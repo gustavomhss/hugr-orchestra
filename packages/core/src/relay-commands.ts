@@ -82,7 +82,7 @@ function kindOf(name: string): Command["kind"] | undefined {
 }
 
 // The lockfile names the package manager; npm is the fallback every Node install has. Relay modules run under Node in
-// the desktop server, so they read files through `node:fs`, not Bun.
+// the desktop server, so they read files through `node:fs` rather than the Bun runtime.
 const packageRunner = Effect.fn("RelayCommands.packageRunner")(function* (directory: string) {
   const exists = (name: string) =>
     Effect.promise(() =>
