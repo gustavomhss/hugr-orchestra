@@ -6,6 +6,8 @@ import { ClaudeCodeTranscript } from "../transcript"
 export const SUBAGENT_TOOLS = new Set(["Agent", "Task"])
 // Claude Code's task list tools, which took over from TodoWrite. They fill the todo panel as Orchestra's todo tool does.
 export const TASK_LIST_TOOLS = new Set(["TaskCreate", "TaskUpdate"])
+// Claude Code's own plumbing with no Orchestra counterpart: it loads deferred tool schemas, so it stays off the record.
+export const UNRECORDED = new Set(["ToolSearch"])
 export type ChecklistItem = { id: string; content: string; status: string }
 export type Checklist = { items: ChecklistItem[]; changed: boolean }
 

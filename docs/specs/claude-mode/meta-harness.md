@@ -71,6 +71,8 @@ The parts of D-C2 that replaced the meta-harness shape are reversed:
      Claude Code's task ids, in host state (`checklist`), so an update in a later turn still finds its entry.
    - An `Edit` or `MultiEdit` result carries its patch and line counts, as Orchestra's edit tool records them.
    - Any other tool keeps its Claude Code name and input.
+   - `ToolSearch`, which only loads deferred tool schemas and has no Orchestra counterpart, is left off the record
+     with its result (`ClaudeCodeRecord.UNRECORDED`), so the session shows no row Orchestra's own engine would not.
 
    Only Orchestra's record changes, after Claude Code ran the call. The prompt, tools, inputs and results Claude Code
    sends to and receives from Claude are untouched, and the permission gate still reads Claude Code's own names.
