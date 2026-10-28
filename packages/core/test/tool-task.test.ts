@@ -88,7 +88,7 @@ const client = Layer.effect(LLMClient.Service, Effect.gen(function* () {
 
 // A lead whose engine names this host runs its Claude-model children on it, as Claude mode does.
 const host: ExecutionHost.Interface = {
-  id: "test-host",
+  id: "claude-code",
   stateKey: "testHost",
   stream: (turn) => Stream.make(
     LLMEvent.stepStart({ index: 0 }),
@@ -346,7 +346,7 @@ describe("TaskTool canonical delegation", () => {
     const model = `${sonnet.providerID}/${sonnet.id}`
     expect((yield* settleTool(f.registry, yield* record(f.parent.id, "unhosted", { model }))).result)
       .toMatchObject({ type: "error", value: expect.stringContaining("model unavailable") })
-    yield* f.agents.transform((draft) => draft.update(caller, (agent) => { agent.engine = host.id }))
+    yield* f.agents.transform((draft) => draft.update(caller, (agent) => { agent.engine = "claude-code" }))
     const output = result(yield* settleTool(f.registry, yield* record(f.parent.id, "hosted", { model })))
     expect(output.model).toMatchObject(sonnet)
     expect(output.text).toBe("hosted:hosted")
