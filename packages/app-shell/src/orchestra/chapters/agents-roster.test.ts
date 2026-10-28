@@ -11,6 +11,7 @@ import {
   draftError,
   inheritedAction,
   isMaestro,
+  mcpPermission,
   PERMISSION_TOOLS,
   removeInput,
   restoreInput,
@@ -131,6 +132,21 @@ describe("Agent editor", () => {
       ["question", "allow"],
       ["read", "ask"],
     ])
+  })
+
+  test("gives each configured MCP server one rule over all its tools, named as core names them", () => {
+    expect(mcpPermission("hugr-composer")).toBe("hugr-composer_*")
+    expect(mcpPermission("my server.v2")).toBe("my_server_v2_*")
+    const withServer = { ...file, permission: { "hugr-composer_*": "deny" as const } }
+    const draft = agentDraft(plan, withServer, ["hugr-composer", "docs"])
+    expect(Object.keys(draft.permission)).toEqual([...PERMISSION_TOOLS, "hugr-composer_*", "docs_*"])
+    expect(draft.permission["hugr-composer_*"]).toBe("deny")
+    draft.permission["hugr-composer_*"] = "allow"
+    draft.permission["docs_*"] = "deny"
+    expect(agentFileInput(draft, withServer, plan).permission).toEqual({ "hugr-composer_*": "allow", "docs_*": "deny" })
+    draft.permission["hugr-composer_*"] = "inherit"
+    expect(agentFileInput(draft, withServer, plan).permission).toEqual({ "docs_*": "deny" })
+    expect(agentFileInput(agentDraft(plan, withServer), withServer, plan).permission).toEqual({ "hugr-composer_*": "deny" })
   })
 
   test("never freezes a resolved value the file does not set; the file's own values stay editable", () => {

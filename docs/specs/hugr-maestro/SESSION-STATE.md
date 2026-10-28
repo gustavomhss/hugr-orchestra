@@ -1,5 +1,7 @@
 # Maestro V2 Session State
 
+Superseded: the current state of Maestro is in `.orchestra/skills/maestro-ownership`.
+
 Snapshot: 2026-09-25. Baseline: `fork/dev` at `102e763599` (`chore: generate`).
 
 This is the short operational snapshot. Read [ROADMAP.md](ROADMAP.md) for dependency order, work in progress, and cleanup rules. GitHub issues remain the acceptance-contract source of truth.

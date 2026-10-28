@@ -2,8 +2,6 @@ export * as ClaudeCodeRecord from "./record"
 
 import { ClaudeCodeTranscript } from "../transcript"
 
-/** Claude Code's own subagent tool: Orchestra's seats are its subagents, and each call passes the `task` permission. */
-export const SUBAGENT_TOOLS = new Set(["Agent", "Task"])
 // Claude Code's task list tools, which took over from TodoWrite. They fill the todo panel as Orchestra's todo tool does.
 export const TASK_LIST_TOOLS = new Set(["TaskCreate", "TaskUpdate"])
 // Claude Code's own plumbing with no Orchestra counterpart: it loads deferred tool schemas, so it stays off the record.
@@ -15,7 +13,7 @@ export type Checklist = { items: ChecklistItem[]; changed: boolean }
  * A built-in call as the Session records it: Orchestra's tool name and argument names, so the app shows the same
  * widget it shows for Orchestra's own tool. Only the record changes; Claude Code ran the call as it asked for it.
  */
-export function shown<Seat extends string>(tool: string, raw: unknown, seats: Readonly<Record<string, { readonly seat: Seat }>>) {
+export function shown(tool: string, raw: unknown) {
   const input = (typeof raw === "object" && raw !== null ? raw : {}) as Record<string, unknown>
   const file = input.file_path ?? input.notebook_path
   if (tool === "Bash") return { name: "bash", input: { command: input.command, description: input.description } }
@@ -30,18 +28,7 @@ export function shown<Seat extends string>(tool: string, raw: unknown, seats: Re
   if (tool === "WebSearch") return { name: "websearch", input: { query: input.query } }
   if (tool === "TodoWrite") return { name: "todowrite", input: { todos: input.todos }, todos: input.todos }
   if (tool === "Skill") return { name: "skill", input: { name: input.skill } }
-  if (!SUBAGENT_TOOLS.has(tool)) return { name: tool, input: raw }
-  const type = typeof input.subagent_type === "string" ? input.subagent_type : ""
-  return {
-    name: "task",
-    input: { description: input.description, prompt: input.prompt, subagent_type: seats[type]?.seat ?? type, background: input.run_in_background },
-    task: {
-      seat: seats[type]?.seat,
-      title: typeof input.description === "string" ? input.description : "",
-      prompt: typeof input.prompt === "string" ? input.prompt : "",
-      background: input.run_in_background === true,
-    },
-  }
+  return { name: tool, input: raw }
 }
 
 /**

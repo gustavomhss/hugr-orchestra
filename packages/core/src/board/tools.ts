@@ -2,14 +2,16 @@ export * as BoardTools from "./tools"
 
 import { Effect, Layer } from "effect"
 import {
+  CiRunInput,
+  CiRunResult,
   DecisionOutcomeInput,
   EpicInput,
   IssueInput,
   MoveInput,
   ProjectInput,
   QuestionInput,
-  Read,
-  ReadInput,
+  ReadToolInput,
+  ReadToolOutput,
   SettingsToolInput,
   StepsInput,
   WriteResult,
@@ -33,10 +35,28 @@ export const node = makeGlobalNode({
         .register({
           board_read: Tool.make({
             description:
-              "Read a board project: epics, issues with steps, open questions, what the owner did since `since` (notes, answers, undos, pauses, holds), attachment names and, with `issue`, that issue's page with its live git trail. Pass the returned `cursor` as `since` next time.",
-            input: ReadInput,
-            output: Read,
-            execute: (input, context) => guard(context, board.read(input)),
+              "Read a board project: epics, issues with steps, open questions, what the owner did since `since` (notes, answers, undos, pauses, holds), attachment names and, with `issue`, that issue's page with its live git trail. Pass the returned `cursor` as `since` next time. Without `project`, list the projects and their keys.",
+            input: ReadToolInput,
+            output: ReadToolOutput,
+            execute: (input, context) => {
+              const project = input.project
+              if (project === undefined)
+                return guard(
+                  context,
+                  board.summaries().pipe(
+                    Effect.map((summaries) => ({
+                      projects: summaries.map((summary) => ({
+                        key: summary.project.key,
+                        name: summary.project.name,
+                        goal: summary.project.goal,
+                        status: summary.project.status,
+                        githubRepo: summary.project.githubRepo,
+                      })),
+                    })),
+                  ),
+                )
+              return guard(context, board.read({ ...input, project }))
+            },
           }),
           board_project: Tool.make({
             description:
@@ -92,6 +112,13 @@ export const node = makeGlobalNode({
             input: DecisionOutcomeInput,
             output: WriteResult,
             execute: (input, context) => guard(context, board.decisionOutcome(input)),
+          }),
+          ci_run: Tool.make({
+            description:
+              "Run a card's scoped checks from .orchestra/ci.json on its worktree's current tree and report scoped-green, scoped-red or null. A tree that already has a result is not run again, so a commit that keeps the tree keeps its green. run: false only reports.",
+            input: CiRunInput,
+            output: CiRunResult,
+            execute: (input, context) => guard(context, board.ciRun(input)),
           }),
         })
         .pipe(Effect.orDie)

@@ -40,12 +40,13 @@ import { SessionInput } from "../input"
 import { SessionMessage } from "../message"
 import { SessionSchema } from "../schema"
 import { SessionStore } from "../store"
+import { SessionTodo } from "../todo"
 import { TodoTable } from "../sql"
 import { SessionSubagentModels } from "../subagent-models"
 import { INTERRUPTED_TURN, type RunError, Service } from "./index"
 import { SessionRunnerModel } from "./model"
 import { createLLMEventPublisher } from "./publish-llm-event"
-import { HostPorts } from "./host-ports"
+import { Prompt } from "../prompt"
 import { ExecutionHost } from "./execution-host"
 import { toLLMMessages } from "./to-llm-message"
 import { SessionTitle } from "./title"
@@ -162,6 +163,8 @@ const layer = Layer.effect(
       return session
     })
 
+    const engineOf = ExecutionHost.engineOf(agents, store)
+
     const getContext = Effect.fn("SessionRunner.getContext")(function* (sessionID: SessionSchema.ID) {
       return yield* store.context(sessionID)
     })
@@ -226,7 +229,7 @@ const layer = Layer.effect(
       const system =
         initialized ?? (yield* SessionContextEpoch.prepare(db, events, loadSystemContext(session.id, agent), session.id))
       // An agent whose engine names an execution host runs this provider turn through it (AGENTS "V2 Session Core").
-      const engine = agent.info?.engine === "orchestra" ? undefined : agent.info?.engine
+      const engine = yield* engineOf(session)
       const host = engine ? hosts.get(engine) : undefined
       if (engine && !host)
         return yield* Effect.die(new Error(`No execution host is registered for engine ${engine} (agent ${agent.id})`))
@@ -245,13 +248,6 @@ const layer = Layer.effect(
       const promptCacheKey = /^ses_[0-9a-f]{64}$/.test(session.id) ? session.id.slice(4) : session.id
       const contextText = [system.baseline, workflow?.view.instructions].filter((part): part is string => !!part)
       const systemText = agent.info?.system ? [agent.info.system, ...contextText] : contextText
-      // The task tool's targets (`TaskTool.requireTarget`), offered to a hosted engine as its own subagents.
-      const seats = host
-        ? (yield* agents.all()).filter(
-            (item) => !item.hidden && item.mode !== "primary" && item.id !== AgentV2.defaultID && item.id !== agent.id,
-          )
-        : []
-      const catalog = seats.length > 0 ? yield* skills.list() : []
       // Only provider-model turns pass through the compaction transform; a hosted engine receives its history as is.
       const messages = model
         ? yield* compaction.transform({
@@ -333,12 +329,10 @@ const layer = Layer.effect(
       const authorize: ExecutionHost.Turn["authorize"] = (input) =>
         Effect.gen(function* () {
           if (input.safety && stepTools.refuses(input.safety.tool, input.safety.args)) return yield* new PermissionV2.BlockedError({ rules: stepTools.bash })
-          // A call made inside a seat's subagent runs under that seat's rules; any other agent id is ignored.
-          const actor = seats.find((item) => item.id === input.agent)?.id ?? agent.id
           yield* permissions
             .authorize({
               sessionID: session.id,
-              agent: actor,
+              agent: agent.id,
               action: input.action,
               resources: [...input.resources],
               metadata: { tool: input.tool, callID: input.callID },
@@ -352,7 +346,7 @@ const layer = Layer.effect(
               args: call.args,
               sessionID: session.id,
               callID: input.callID,
-              agent: actor,
+              agent: agent.id,
               directory: location.directory,
               projectID: location.project.id,
               projectDirectory: location.project.directory === "/" ? location.directory : location.project.directory,
@@ -422,7 +416,14 @@ const layer = Layer.effect(
         ),
         Stream.flatMap((items) => Stream.fromIterable(items)),
       )
-      const ports = HostPorts.make({ events, store, location, config, database, session, model: modelRef, assistantMessageID: publisher.assistantMessageID, withPublication, execution })
+      // An event the host's engine sends on its own, after the turn: a steer prompt that wakes the Session.
+      const notify: ExecutionHost.Turn["notify"] = (event) =>
+        SessionInput.admit(db, events, {
+          id: SessionMessage.ID.make(event.id.startsWith("msg_") ? event.id : `msg_${event.id}`),
+          sessionID: session.id,
+          prompt: Prompt.make({ text: event.text }),
+          delivery: "steer",
+        }).pipe(Effect.andThen(execution ? execution.wake(session.id) : Effect.void))
       const source = request
         ? llm.stream(request)
         : host && agent.info
@@ -432,8 +433,6 @@ const layer = Layer.effect(
               model: modelRef,
               system: systemText,
               context: contextText,
-              seats,
-              skills: Object.fromEntries(seats.map((seat) => [seat.id, SkillV2.available(catalog, seat)])),
               history: context,
               tools: toolMaterialization?.definitions ?? [],
               execute,
@@ -442,9 +441,8 @@ const layer = Layer.effect(
               memory,
               steers,
               consumed: (id) => Effect.sync(() => void liveSteers.delete(id)),
-              notify: ports.notify,
-              child: ports.child,
-              todos: ports.todos,
+              notify,
+              todos: (list) => SessionTodo.write(db, events, { sessionID: session.id, todos: list }),
               state: ExecutionHost.state(db, session.id, host.stateKey),
             })
           : Stream.die("SessionRunner: no provider for this turn")

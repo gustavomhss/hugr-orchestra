@@ -1,33 +1,47 @@
 # Claude mode
 
-Claude mode runs Orchestra on top of Claude Code, signed in with your Claude subscription. Claude Code keeps its own
-prompt, tools, context window and login, as it would in a terminal. Orchestra adds to it the way a plugin does.
+Claude mode runs Orchestra on your Claude subscription. To you it is Orchestra as in any other mode: the same app,
+the same screens and widgets, the same Maestro, seats, board, workflows, permissions and skills. Only the way Orchestra
+reaches the model changes.
 
-## What Orchestra adds
+## Why Claude mode exists
 
-- **A short note on Claude Code's prompt.** Maestro's role, its seats, and the governed paths it must use. Claude
-  Code's own prompt is never replaced.
-- **Project context beside your message.** The project's context and the active workflow's instructions reach Claude
-  Code beside the prompt. They are sent again only when they change, and after Claude Code compacts the conversation.
-- **Seats as subagents.** Each Orchestra seat is a Claude Code subagent named `orchestra:<seat>`. The research seat
-  comes in three sizes, `orchestra:jimmy-quick`, `-focused` and `-deep`, each with its own turn budget.
-- **Orchestra's permissions.** Every tool call, including a delegation to a subagent, is checked against Orchestra's
-  permission rules before it runs. A call made inside a seat's subagent is checked under that seat's rules.
-- **Seat skills.** A seat's subagent prompt lists the skills that seat may load, by file, so the subagent reads the
-  matching one with Claude Code's Read tool before it starts.
+Anthropic lets a Claude subscription be used through Claude Code, not by other apps calling the model directly. Claude
+mode exists only to follow that rule, and it follows everything Anthropic defines for it:
 
-## What stays Orchestra's own
+- **Claude Code runs the model.** Every turn on a Claude model is a Claude Code turn, signed in with your Claude login.
+- **Claude Code's own prompt is kept.** Orchestra adds a short note after it and never replaces it.
+- **Anthropic's billing applies.** Anthropic decides how each turn is billed. Orchestra never changes its prompts,
+  tools or requests to influence that, and never tests it.
 
-Approved workflows dispatch through Orchestra's own task tool, and governed reviews through its review request. Those
-calls carry Orchestra's governance, so Maestro uses them instead of a plain subagent for that work.
+Claude mode is not meant to look or work differently. Anything that differs from normal mode, other than what the
+rules above require, is a defect.
+
+## What is the same as normal mode
+
+- **The interface.** Every screen, widget and panel is the same. A Claude Code tool call shows with Orchestra's usual
+  widget (shell, read, edit, todos, skill, ...).
+- **Delegation.** Maestro dispatches a seat with Orchestra's task tool, as in normal mode. Each dispatch is its own
+  Session, which you open from the task row and follow live. A seat on a Claude model runs on Claude Code too; a seat
+  on another provider's model runs as it would in normal mode.
+- **Seats.** Each seat works by its own Orchestra prompt and skills, under its own permissions.
+- **Permissions.** Every tool call is checked against Orchestra's permission rules before it runs.
+- **Workflows, reviews and the board.** Governed workflows, review requests, Atlas and the board use Orchestra's own
+  tools, exactly as in normal mode.
+- **Project context.** The project's context and the active workflow's instructions reach the model with your message.
+  They are sent again only when they change, and after the conversation is compacted.
+
+## What Claude Code requires
+
+These follow from Claude Code running the model. None of them changes what you see.
+
+- Claude Code's built-in tools do the reading, editing and shell work; Orchestra's own tools, such as the board, the
+  task tool and the skill tool, are offered to it beside them.
+- Claude Code's own subagent tool is not used. Seats are always Orchestra Sessions.
 
 ## Known limits
 
 - Claude Code's tool calls show with Orchestra's usual widgets (shell, read, edit, todos, task, ...).
-- A subagent's run opens its own child session from the task row, as in any other mode. A background subagent that
-  keeps working after Maestro's reply shows only what it did up to that reply.
-- Inside a subagent, Orchestra's own tools (such as governed dispatch, review recording or Atlas Memory) are not
-  available: they serve the main agent only. A seat's subagent still has its skills and Claude Code's own tools.
 - If Anthropic bills a turn as extra usage or refuses it, the app shows the provider's message. You can enable extra
   usage, use an API key, or pick another provider.
 

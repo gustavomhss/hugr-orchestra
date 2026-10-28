@@ -31,7 +31,8 @@ export default function Agents(props: ChapterPageProps) {
   const sdk = useSDK()
   const serverSync = useServerSync()
   // The chapter owns its catalog query. Full directory bootstrap would read /agent again in its owner cache.
-  const sync = () => serverSync().child(props.directory, { bootstrap: false })
+  // `mcp` keeps the configured MCP servers in the store, for the per-server rows of an agent's tool permissions.
+  const sync = () => serverSync().child(props.directory, { bootstrap: false, mcp: true })
   const tabs = useTabs()
   const providers = useQuery(() => serverSync().queryOptions.providers(directoryKey(props.directory)))
   const query = useQuery(() => {
@@ -313,6 +314,7 @@ export default function Agents(props: ChapterPageProps) {
                   working={working(agent())}
                   modelName={modelName(agent())}
                   detail={detail(agent())?.data}
+                  mcpServers={Object.keys(sync()[0].mcp)}
                   detailFailed={detail(agent())?.isError}
                   memory={memory(agent())}
                   memoryHref={atlasHref("memory", agentKey(agent()))}

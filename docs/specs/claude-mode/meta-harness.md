@@ -1,6 +1,6 @@
 # Claude mode as a meta-harness on the V2 Session core
 
-Status: decided 2026-10-27, implemented in `modules/engine-adapters/claude-code/src/v2/host.ts`.
+Status: decided 2026-10-27, delegation revised 2026-10-28, implemented in `modules/engine-adapters/claude-code/src/v2/host.ts`.
 
 ## Problem
 
@@ -29,43 +29,52 @@ D-C2 still stands in one respect: one Claude Code SDK turn per V2 provider turn,
 
 The parts of D-C2 that replaced the meta-harness shape are reversed:
 
-1. **Short append.** The preset append is `ClaudeHostOptions.append(agent, seats)`: the Maestro persona for Maestro,
-   or a short seat note for any other main seat. The seat's full Orchestra prompt is not appended.
+1. **Short append.** The preset append is `ClaudeHostOptions.append(agent, tools, own)`: the Maestro persona for
+   Maestro, or a short seat note and the seat's own prompt for any other seat (decision 4). The context is never
+   appended.
 2. **Context as hook context.** The Context Epoch baseline and the Relay workflow instructions (`Turn.context`) reach
    Claude Code as `additionalContext` from a `UserPromptSubmit` hook, the channel Claude Code documents for this. The
    text is sent only when its hash differs from the last one delivered to the Claude Code session (`contextHash` in
    host state). It is sent again after a compaction, alongside the recalled todos.
-3. **Seats as subagents.** `Turn.seats` lists the agents the task tool could target: visible, not primary, and neither
-   the default agent nor the main one. Each becomes an SDK `agents` entry `orchestra:<id>` with:
-   - the seat's description;
-   - its prompt, with "the task delegation tool" read as "the Agent delegation tool";
-   - its `anthropic` model, or `inherit` when it has none.
+3. **Seats through Orchestra's task (2026-10-28).** Claude mode delegates exactly as normal mode does. Maestro
+   dispatches a seat with `mcp__orchestra__task`; the task tool opens a durable child Session, governed and admitted
+   as on Orchestra's own engine, which the app shows from the task row. The child runs on the engine
+   `ExecutionHost.engineOf` (`packages/core/src/session/runner/execution-host.ts`) picks: the seat's own `engine` when
+   it names one, else Orchestra's own loop when the child's model is not Anthropic's, else the parent Session's engine.
+   So a seat a Claude-mode Maestro dispatches on a Claude model runs on Claude Code. The task tool asks the same
+   function before it picks the child's model: a hosted child may take any enabled Anthropic model, because Claude
+   Code holds the Claude sign-in and the catalog sees no Anthropic connection for it. Claude Code's own `Agent` and `Task` tools are listed in
+   `disallowedTools` and refused at the PreToolUse gate (`SUBAGENT_TOOLS`), with a reason that names
+   `mcp__orchestra__task`.
 
-   The research seat becomes one entry per tier (`orchestra:jimmy-<tier>`), each with that tier's `maxTurns` and the
-   research seat's Claude Code tools.
-4. **Delegation through `Agent`.** An `Agent` (or `Task`) call passes the PreToolUse gate as V2 permission action
-   `task`, with the seat id as its resource. That is the action and resource Orchestra's own task tool asks for.
-   - A seat that must stay in the foreground (`FOREGROUND_SEATS`) is refused with `run_in_background`.
-   - A tool call made inside a subagent carries `agent_type`. The gate maps it back to the seat and authorizes the
-     call under that seat's permission rules (`Turn.authorize({ agent })`).
-5. **Governed paths stay MCP tools.** Approved Relay workflows still dispatch through `mcp__orchestra__task`, and
-   governed review through `mcp__orchestra__maestro_request_review`. The appended Maestro text says so.
-6. **Seat skills by file.** `Turn.skills` carries, for each seat, the skills Orchestra's skill tool would list for it
-   (`SkillV2.available`). The subagent prompt ends with a `# Skills` block naming each skill's file, which the
-   subagent reads with Claude Code's Read tool. Seat entry skills (`<seat-id>-*`) are registered from
-   `SeatSkillRoot.roots` on V2 for every engine and denied to every agent but their seat.
-7. **Orchestra tools stay with the main agent.** An MCP request does not say which agent made it, so an Orchestra
-   tool called inside a subagent would run under the main agent's registry and permissions. The gate and
-   `canUseTool` refuse such a call (`agent_id` / `agentID` set), and every subagent lists the Orchestra tools in
-   `disallowedTools`.
-8. **Orchestra's record, Claude Code's call.** The Session records each built-in call under the Orchestra tool and
+   This replaces the 2026-10-27 shape, where seats were Claude Code subagents (`orchestra:<seat>`) mirrored into
+   record-only child Sessions. That shape differed from normal mode: subagent children were never woken, had no
+   governance reservation, could not use Orchestra's tools and lost frames after the turn. The owner's rule is that
+   Claude mode differs from normal mode only in how the model is reached.
+4. **A seat keeps its own prompt.** For a seat other than Maestro, `ClaudeHostOptions.append(seat, tools, own)` appends
+   a short seat note and the seat's own Orchestra prompt (`turn.system` without `turn.context`), still after the
+   `claude_code` preset. Maestro keeps its short note, which says to dispatch through `mcp__orchestra__task`.
+5. **Governed paths are the same tools.** Approved Relay workflows dispatch through `mcp__orchestra__task`, and
+   governed review goes through `mcp__orchestra__maestro_request_review`, as in normal mode.
+6. **Skills through Orchestra's skill tool.** Every seat loads its skills with `mcp__orchestra__skill`, which lists
+   what that seat may load, as in normal mode.
+7. **Permissions.** Every Claude Code call passes the PreToolUse gate and is authorized under the Session's own agent,
+   which in a child Session is the seat.
+   The gate also refuses the Claude Code built-ins that reach outside the query (`HOST_REACH`: `ListAgents`,
+   `SendMessage`, `RemoteTrigger`, `PushNotification`). Claude Code would otherwise list and message the machine's
+   other Claude sessions, fire the account's cloud routines or notify the owner's phone from an Orchestra session.
+8. **What is served.** Orchestra tools that duplicate a Claude Code built-in or belong to Orchestra's own loop are not
+   served (`UNSERVED`), and neither are `process_get`, `process_wait` and `process_cancel`, which read Orchestra's own
+   bash processes. `skill` is served: Claude Code's Skill tool does not know Orchestra's playbooks. The Maestro note
+   names only tools the session is served: `mcp__orchestra__skill` for playbooks, `board_read` at the start of a
+   tracked turn, `process_control` for long-running commands, then the governed, Atlas, Dock and recall families.
+9. **Orchestra's record, Claude Code's call.** The Session records each built-in call under the Orchestra tool and
    argument names the app's widgets read (`ClaudeCodeRecord.shown`, `src/v2/record.ts`), so a Claude mode session looks like any other:
    - `Bash`, `Read`, `Write`, `Edit` (`MultiEdit` and `NotebookEdit` as `edit` with the file only), `Glob`, `Grep`,
      `WebFetch`, `WebSearch`, `TodoWrite` and `Skill` become `bash`, `read`, `write`, `edit`, `glob`, `grep`,
      `webfetch`, `websearch`, `todowrite` and `skill`, with Orchestra's argument names (`filePath`, `oldString`, ...).
-   - `Agent` and `Task` become `task`, with the seat id as `subagent_type`.
    - A `TodoWrite` result is recorded as the list it wrote (`{"todos": [...]}`), which the todo widget renders, and
-     replaces the todo list (the todo panel) of the Session it ran in: a subagent's goes to its child Session.
+     replaces the todo list (the todo panel) of the Session it ran in.
    - Claude Code builds that replaced `TodoWrite` with a task list (`TaskCreate`, `TaskUpdate`) are recorded the same
      way: each call becomes a `todowrite` holding the whole list after it. The host keeps its copy of the list, with
      Claude Code's task ids, in host state (`checklist`), so an update in a later turn still finds its entry.
@@ -76,24 +85,18 @@ The parts of D-C2 that replaced the meta-harness shape are reversed:
 
    Only Orchestra's record changes, after Claude Code ran the call. The prompt, tools, inputs and results Claude Code
    sends to and receives from Claude are untouched, and the permission gate still reads Claude Code's own names.
-9. **Subagent runs in a child Session.** A subagent's frames carry its `Agent` call's id (`parent_tool_use_id`). The
-   host records them in a child Session the runner opens through `Turn.child`, as the task tool would: the parent
-   Session as parent, the seat as agent, the parent's inherited permissions and the delegated prompt as its user
-   message, with the task row's progress naming the child, so the row opens it. The child is a record only: it is
-   never woken and its step carries no cost, which the parent's step already counts. It ends with the call's result.
-
 ## Not in scope (known limits)
 
-- A background subagent's frames that arrive after the turn's result are not mirrored; its child Session is closed
-  when the turn's stream ends. Mirrored subagents have no Task Governance dispatch reservation.
-- A subagent type that is not an Orchestra seat is recorded under the main agent's id; every child carries the parent
-  turn's model.
-- Orchestra's MCP tools are refused inside a subagent, so a seat's own Orchestra tools (for example review recording,
-  the research tools or Atlas Memory) are unavailable there. See decision 7.
 - The host still starts one Claude Code process per turn. A long-lived query per session would remove the resume
   start-up cost; it is not needed for correctness.
 
 ## Billing rule
+
+Claude mode exists only because Anthropic allows a Claude subscription through Claude Code. It respects everything
+Anthropic defines: Claude Code runs the model, the `claude_code` preset is kept and only appended to, and Anthropic
+classifies and bills each turn. The interface, widgets and behavior are the same as normal mode; anything else that
+differs is a defect.
+
 
 This change restores the designed integration. Nothing in it is tuned to change how Anthropic classifies usage, and no
 probing of that classification is done. If a subscription turn is still billed as third-party usage, the app shows

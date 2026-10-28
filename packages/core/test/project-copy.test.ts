@@ -157,6 +157,51 @@ describe("ProjectCopy", () => {
   )
 
   it.live(
+    "registers the project checkout as a source on first use and rejects other directories",
+    () =>
+      Effect.gen(function* () {
+        const input = yield* setup()
+        yield* input.db
+          .delete(ProjectDirectoryTable)
+          .where(eq(ProjectDirectoryTable.project_id, input.projectID))
+          .run()
+          .pipe(Effect.orDie)
+        const copy = yield* ProjectCopy.Service
+        const temp = yield* Effect.promise(() => fs.realpath(path.dirname(input.root.path)))
+        const parent = abs(path.join(temp, path.basename(input.root.path) + "-copy-first"))
+        yield* Effect.addFinalizer(() =>
+          Effect.promise(() => fs.rm(parent, { recursive: true, force: true })).pipe(Effect.ignore),
+        )
+
+        const created = yield* copy.create({
+          projectID: input.projectID,
+          strategy: gitWorktree,
+          sourceDirectory: input.sourceDirectory,
+          directory: parent,
+          name: "copy",
+        })
+        expect(yield* stored(input.projectID)).toEqual(
+          [
+            { directory: input.sourceDirectory, strategy: null },
+            { directory: created.directory, strategy: "git_worktree" },
+          ].toSorted((a, b) => a.directory.localeCompare(b.directory)),
+        )
+
+        const error = yield* copy
+          .create({
+            projectID: input.projectID,
+            strategy: gitWorktree,
+            sourceDirectory: abs(temp),
+            directory: abs(`${parent}-other`),
+            name: "other",
+          })
+          .pipe(Effect.flip)
+        expect(error).toBeInstanceOf(ProjectCopy.SourceDirectoryNotFoundError)
+      }),
+    30_000,
+  )
+
+  it.live(
     "requires force to remove a dirty git worktree",
     () =>
       Effect.gen(function* () {

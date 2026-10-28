@@ -3,7 +3,7 @@ export * as PlaybookContent from "./playbook-content"
 import { SeatSkillContent } from "./seat-skill-content"
 
 // This is the required source inventory, independent of whatever a build happened to find on disk.
-export const names = ["frame-request", "maestro-plan", "maestro-repo", "maestro-run"] as const
+export const names = ["frame-request", "maestro-orchestra", "maestro-plan", "maestro-repo", "maestro-run"] as const
 
 export const files = [
   ...names.map((name) => `${name}/SKILL.md`),

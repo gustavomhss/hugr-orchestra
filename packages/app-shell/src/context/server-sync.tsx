@@ -4,7 +4,7 @@ import type { SessionStatus } from "@/v2-wire"
 
 import { showToast } from "@/utils/toast"
 import { getFilename } from "@orchestra/core/util/path"
-import { type Accessor, type ParentProps, batch, createMemo, getOwner, onCleanup, onMount, untrack } from "solid-js"
+import { type Accessor, type ParentProps, batch, createEffect, createMemo, getOwner, on, onCleanup, onMount, untrack } from "solid-js"
 import { createStore, produce, reconcile } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import type { InitError } from "../pages/error"
@@ -615,6 +615,17 @@ export function createServerSyncContextInner(
       }
     },
   }))
+  // A config update pauses the queue, and its onSuccess runs while the mutation is still pending, so the directories it
+  // queues would wait for an unrelated push. Drain them once it settles, so a changed engine reaches them at once.
+  createEffect(
+    on(
+      () => globalStore.reload,
+      (reload) => {
+        if (reload === undefined) queue.resume()
+      },
+      { defer: true },
+    ),
+  )
 
   return {
     data: globalStore,
