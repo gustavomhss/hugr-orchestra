@@ -69,7 +69,7 @@ for (const scheme of ["dark", "light"] as const) {
         await expect(locator).toBeVisible()
       }
       await expect(active.locator('[data-slot="tab-title"]')).toHaveText(title)
-      await expect(sidebar).toContainText("Human Guardrail")
+      await expect(sidebar.locator('[data-slot="orchestra-brand-descriptor"]')).toHaveText("Orchestra")
       await expect(profile).toContainText(project().name)
 
       if (mutation === "sidebar-width")
