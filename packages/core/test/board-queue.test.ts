@@ -19,6 +19,7 @@ import { AppProcess } from "@orchestra/core/process"
 import { ProjectSchema } from "@orchestra/core/project/schema"
 import { ProjectTable } from "@orchestra/core/project/sql"
 import { AbsolutePath } from "@orchestra/core/schema"
+import { CheckID } from "@orchestra/schema/board"
 import type { PrRecord } from "@orchestra/schema/board"
 import { git } from "./fixture/git"
 import { testEffect } from "./lib/effect"
@@ -62,6 +63,13 @@ const gh = (args: ReadonlyArray<string>, stdin?: string) =>
     return { exitCode: 0, stdout: "", stderr: "" }
   })
 
+// Stands in for Atlas's renderer: the bodies are the records themselves, so the test reads what the host filled in.
+const RENDER: BoardRecord.Port = {
+  pr: (record) => JSON.stringify(record),
+  bundle: (record) => JSON.stringify(record),
+  trailer: (trailer) => `WP: ${trailer.WP}\nAttempt: ${trailer.Attempt}`,
+}
+
 const it = testEffect(
   AppNodeBuilder.build(LayerNode.group([Board.node, Database.node, EventV2.node, Credential.node]), [
     [
@@ -74,13 +82,6 @@ const it = testEffect(
     ],
   ]),
 )
-
-// Stands in for Atlas's renderer: the bodies are the records themselves, so the test reads what the host filled in.
-const RENDER: BoardRecord.Port = {
-  pr: (record) => JSON.stringify(record),
-  bundle: (record) => JSON.stringify(record),
-  trailer: (trailer) => `WP: ${trailer.WP}\nAttempt: ${trailer.Attempt}`,
-}
 
 const RECORD = { intent: "Say hello.", decisions: "None worth noting.", not_covered: "Nothing.", risk: { level: "low" as const } }
 
@@ -96,7 +97,7 @@ describe("BoardQueue", () => {
       yield* database.db
         .insert(BoardCheckTable)
         .values({
-          id: Board.CheckID.create(),
+          id: CheckID.create(),
           issue_id: one.issue.id,
           attempt: 1,
           kind: "scoped",
