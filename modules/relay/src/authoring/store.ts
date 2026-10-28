@@ -270,7 +270,7 @@ export const PROFILES_DIRECTORY = path.join(import.meta.dirname, "..", "..", "pr
 
 // The compiled sprints of PROFILES, embedded at build time: the compiled CLI and the desktop sidecar run with no
 // profiles directory beside them, so reading PROFILES_DIRECTORY there seeds nothing.
-export const SHIPPED: ReadonlyMap<string, unknown> = new Map([
+export const SHIPPED: ReadonlyMap<string, unknown> = new Map<string, unknown>([
   ["bugfix", bugfix],
   ["design", design],
   ["feature-launch", featureLaunch],
