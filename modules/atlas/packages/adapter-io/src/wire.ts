@@ -164,6 +164,10 @@ export interface WireConfig {
    *  `store`, or irrelevant because `readRefusal` short-circuits first). Writes NEVER read this — `store`
    *  (built from `trusted`) is the only store `governedEmit`/`governedLink` ever touch. */
   readonly readStore?: DiskStore
+  /** The durable store both write doors ride. The composition root passes its knowledge-logging store
+   *  (`knowledge-log.ts`), so `atlas emit` and `atlas link` outcomes travel in git like promote's. ABSENT (a
+   *  bare WIRE assembly) ⇒ a plain `createDiskStore` over `casPath`, gated by `trusted`. */
+  readonly store?: DiskStore
   /** TRAVEL-BY-REPROOF — present ⇒ every read leg refuses BEFORE touching `readStore` (case 3
    *  `tracked-staging`, or the fail-closed leg of `tracked-provable`). ABSENT ⇒ no flat refusal: either
    *  `trusted` (case 1) or a successful `tracked-provable` filtered serve (case 2) — `readStore` alone
@@ -308,7 +312,7 @@ export function assembleHandler(config: WireConfig): WiredHandler {
   // `builtAt` at each persist; the query index (below) compares it to live HEAD to flag a behind-HEAD read.
   const currentHead = (): string | undefined => headSha(config.repoPath)
   // PROVENANCE: threaded from the composition root onto the ONE store both doors ride (see `WireConfig`).
-  const store = createDiskStore(config.casPath, currentHead, config.trusted)
+  const store = config.store ?? createDiskStore(config.casPath, currentHead, config.trusted)
   // TRAVEL-BY-REPROOF — the store every READ leg below uses. `config.readStore`, when supplied (the
   // composition root's `read-access.ts` decision), may be `store` verbatim (`trusted`) or a raw re-read
   // FILTERED to facts that replay `re-proven` (`tracked-provable`) — either way it is built ONCE, upstream,

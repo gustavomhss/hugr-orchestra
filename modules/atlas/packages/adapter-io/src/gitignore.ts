@@ -40,6 +40,9 @@ import { join } from "node:path"
  *  user who wrote `.atlas/` (the broken variant that swallows `policy.json`) is still told about it. */
 export const ATLAS_IGNORE_PATTERN = ".atlas/*"
 export const ATLAS_POLICY_NEGATION = "!.atlas/policy.json"
+/** The committed tree (`layout.ts`): shared logs, each seat's memory and knowledge logs, and the blobs those
+ *  knowledge rows name. Without these a deny-every-child rule drops every log a fresh clone replays from. */
+export const ATLAS_TREE_NEGATIONS = ["!.atlas/project/", "!.atlas/members/", "!.atlas/blobs/"] as const
 
 /** The block `atlas init` appends, comments included — the comments are the reason a later reader does not
  *  delete the two lines. Newline-terminated so an append can never join the previous line. */
@@ -52,9 +55,11 @@ export const ATLAS_IGNORE_BLOCK = [
   "# an emit turns Atlas off. `.atlas/staging.json` is worse in kind: unratified candidates.",
   "# Deny every child, then re-admit the one file that is genuinely source. `.atlas/*` (not `.atlas/`) is",
   "# load-bearing: git cannot re-include a path under an excluded DIRECTORY, so the negation below would be",
-  "# unreachable and `policy.json` would be silently dropped. The negation must come AFTER the pattern.",
+  "# unreachable and `policy.json` would be silently dropped. The negations must come AFTER the pattern.",
+  "# `project/`, `members/` and `blobs/` are the append-only logs and blobs Atlas replays on a fresh clone.",
   ATLAS_IGNORE_PATTERN,
   ATLAS_POLICY_NEGATION,
+  ...ATLAS_TREE_NEGATIONS,
   "",
 ].join("\n")
 
@@ -81,9 +86,9 @@ function hasLine(content: string, line: string): boolean {
  * Ensure `<repoPath>/.gitignore` denies the durable Atlas store. TOTAL — never throws.
  *
  * Four outcomes, all reported:
- *   · `already-present`   — both lines are there; nothing written (idempotent: re-running `init` is free).
- *   · `partial-repaired`  — the deny pattern was there but the policy negation was NOT, so `policy.json`
- *                           was being ignored too. Appends the missing negation only.
+ *   · `already-present`   — every line is there; nothing written (idempotent: re-running `init` is free).
+ *   · `partial-repaired`  — the deny pattern was there but a negation was NOT, so `policy.json` or the
+ *                           committed tree was being ignored too. Appends the missing negations only.
  *   · `installed`         — neither line was there; the whole commented block is APPENDED (never rewritten:
  *                           an existing `.gitignore` is the user's file, and this is additive).
  *   · `failed`            — the filesystem refused. Reported with the path so the user can add it by hand.
@@ -112,8 +117,8 @@ export function ensureAtlasIgnored(repoPath: string): IgnoreResult {
   }
 
   const denies = hasLine(content, ATLAS_IGNORE_PATTERN)
-  const readmits = hasLine(content, ATLAS_POLICY_NEGATION)
-  if (denies && readmits) {
+  const missing = [ATLAS_POLICY_NEGATION, ...ATLAS_TREE_NEGATIONS].filter((line) => !hasLine(content, line))
+  if (denies && missing.length === 0) {
     return {
       outcome: "already-present",
       path,
@@ -123,7 +128,7 @@ export function ensureAtlasIgnored(repoPath: string): IgnoreResult {
   // A `.gitignore` ending without a newline would otherwise glue the first appended line onto the last
   // existing one, producing a pattern that matches nothing and looks correct in a diff.
   const lead = content.length > 0 && !content.endsWith("\n") ? "\n" : ""
-  const block = denies ? `${lead}${ATLAS_POLICY_NEGATION}\n` : `${lead}${ATLAS_IGNORE_BLOCK}`
+  const block = denies ? `${lead}${missing.join("\n")}\n` : `${lead}${ATLAS_IGNORE_BLOCK}`
   try {
     appendFileSync(path, block, "utf8")
   } catch {
@@ -137,11 +142,11 @@ export function ensureAtlasIgnored(repoPath: string): IgnoreResult {
     ? {
         outcome: "partial-repaired",
         path,
-        note: `gitignore: added the missing '${ATLAS_POLICY_NEGATION}' to ${path} — the admin policy is source and must stay in git`,
+        note: `gitignore: added the missing ${missing.map((line) => `'${line}'`).join(", ")} to ${path} — the admin policy and the committed logs must stay in git`,
       }
     : {
         outcome: "installed",
         path,
-        note: `gitignore: added '${ATLAS_IGNORE_PATTERN}' (+ the policy.json exception) to ${path} — Atlas refuses a COMMITTED store, so this rule is what keeps it on`,
+        note: `gitignore: added '${ATLAS_IGNORE_PATTERN}' (+ the policy.json and committed-log exceptions) to ${path} — Atlas refuses a COMMITTED store, so this rule is what keeps it on`,
       }
 }

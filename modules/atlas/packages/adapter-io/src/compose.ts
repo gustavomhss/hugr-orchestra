@@ -411,6 +411,8 @@ export function composeRuntime(repoPath: string): ComposedRuntime {
     // actually read and write. Threading it only onto the store built above would guard doctor/reconcile
     // and leave both user-facing doors open.
     trusted,
+    // The logged store, so `atlas emit`/`atlas link` outcomes reach the committed knowledge log too.
+    store,
     // TRAVEL-BY-REPROOF — the read-side answer, THREADED so `wire.ts`'s query/node legs read the SAME
     // (possibly filtered) store `own`/`relations`/`negations`/`doctorSource` below read, never a second
     // independent decision. `readRefusal` ABSENT ⇒ `wire.ts` falls back to `trusted`-gated behaviour

@@ -1,49 +1,49 @@
 ---
 name: atlas-usage
-description: How a contributor or agent reads and writes Atlas through its doors — the CLI commands, the Orchestra tools, which tier a seat can reach, and what surprises people
+description: How a contributor or agent reads and writes Atlas — the CLI commands and their arguments, the Orchestra tools, merging and setup, and what surprises people
 ---
 
 # Using Atlas
 
-Read Atlas before you change a scope, and write to it only through a door. Command pages: `modules/atlas/docs/reference/commands/<command>.md`. Surface and transport: `modules/atlas/docs/reference/atlas-tools.md`. Memory: `modules/atlas/docs/reference/atlas-memory.md`. Ownership: skill `atlas-ownership`. Internals: skill `atlas-maintenance`.
+Read Atlas before you change a scope, and write to it only through a door. Each command has a page in `modules/atlas/docs/reference/commands/<command>.md`; check it for flags. Surface and transport: `modules/atlas/docs/reference/atlas-tools.md`. Memory: `modules/atlas/docs/reference/atlas-memory.md`. Owners and rulings: skill `atlas-ownership`. Internals: skill `atlas-maintenance`.
 
 ## Read
 
 | Command | Use it to |
 |---|---|
-| `atlas query <scope>` | Get the pack for a scope: governing facts, an advisory band and related nodes, flagged `stale` when an anchor drifted |
-| `atlas node <nodeAddr>` | Fetch one node by content address |
-| `atlas relate <scope>` | List the related-node set |
-| `own_<unit>` | Get the curated briefing for a crate, module, service or feature |
-| `atlas memory-recall [--owner] [--kind] [--task-id] [--pr-id]` | Read task, PR or logbook memory. No flag at all returns nothing |
-| `atlas doctor archive\|why-broken\|hot-set\|reground` | Inspect the archive, explain a broken fact, check the hot-set budget, plan a re-ground. Read-only |
-
-In Orchestra, a seat reads through `atlas_context` and `atlas_memory_recall` instead of the CLI.
+| `atlas query <scope> [--by scope\|dependency\|trigger]` | Get the pack for a scope: governing facts, an advisory band and related nodes, flagged `stale` when an anchor drifted |
+| `atlas node <addr>` | Fetch one node by its 64-hex content address (not a node key) |
+| `atlas relations <nodeKey> [out\|in\|both]` | List a node's relations |
+| `atlas own <scope>` | Get the curated briefing for a crate, module, service or feature. CLI only |
+| `atlas memory-recall [--owner <id>] [--kind task\|pr\|project\|logbook] [--task-id <id>] [--pr-id <id>]` | Read memory |
+| `atlas doctor archive\|why\|hotset\|reground\|cas\|index` | Inspect the archive, explain a fact, check the hot-set budget, plan a re-ground, check the CAS or the index |
 
 ## Write
 
 | Command | Use it to |
 |---|---|
 | `atlas emit <fact.json> --at <sha> [--replace]` | Write one grounded fact. The citation must re-derive at `<sha>` |
-| `atlas link <nodeKeyA> <nodeKeyB> [--retract]` | Assert, or retract, that two nodes name the same fact |
+| `atlas link <a> <b> [--retract]` | Assert, or retract, that two nodes name the same fact |
 | `atlas memory-emit <entry.json>` | Write a project rule, task, PR or logbook entry. The kind comes from the entry's shape |
 
-In Orchestra, a seat writes memory through `atlas_memory_emit`. The host fills in the owner; the model sends only the entry.
+Over MCP only `atlas-emit` and `atlas-link` write knowledge. The CLI also writes through `promote`, `decide`, `transition`, `test-vacuity`, `derive-relations`, `hold`, `release`, `propose`, `answer`, `mine`, `migrate-layout`, `territory`, `own-export` and `repair`. Any command can also apply committed knowledge at boot (replay), so do not assume a read command leaves the store unchanged.
+
+## In Orchestra
+
+- `atlas_context`: `{"action":"catalog"}` lists units; `{"action":"unit","unit":"<exact id>"}` loads one. Only the `archie` seat may use `anchor`.
+- `atlas_memory_recall`: returns only your own task and PR memory, never project rules, the logbook or another owner's records.
+- `atlas_memory_emit`: the host fills in the owner; the model sends only the entry. A project rule becomes a proposal for the steward, not a rule.
 
 ## Merge and setup
 
-- `atlas reconcile <mergeBase>` classifies drift since the merge-base. Exit 2 means semantic drift that needs review; `--accept-reground` re-grounds the mechanical part in one pass.
-- `atlas init <path>` does the structural move-in; `atlas migrate-layout` moves old single-file logs into the `.atlas/` tree once.
-
-## Which tier a seat reaches
-
-Push needs nothing: the orchestrator puts the pack in the brief. A seat spawned through the SDK in-process path gets the MCP tools. A Claude Code `.claude/agents` subagent does not get MCP, so it falls back to a file, a relay request, or the CLI (`atlas node <addr>`). Every tier returns the same node.
+- `atlas reconcile <mergeBase> [--accept-reground]` classifies drift since `<mergeBase>`. Exit 2 means semantic drift that needs review. `--accept-reground` only counts the mechanical part as accepted; it re-grounds nothing and never changes the exit code. It does not check that `<mergeBase>` really is the merge-base.
+- `atlas init <path>` plans the structural move-in and writes the `.gitignore` rule that keeps the store untracked and the logs tracked.
+- `atlas migrate-layout` moves old single-file logs into the `.atlas/` tree, once.
 
 ## Things that surprise people
 
 - A write that fails says which gate refused it. Fix the cause; never route around the door.
-- Your identity is `ATLAS_ACTOR`, else `git config user.email`. With neither set, every write is denied.
+- Your identity is `ATLAS_ACTOR`, else `git config user.email`. With neither set, every write is denied. Your logs land under `.atlas/members/<that identity>/`.
 - `stale:true` or `emitted:false` is a signal to act on: `guidance.next` names the fix.
 - What you commit under `.atlas/` is a claim. A fresh clone applies your knowledge row only if it carries `seal:'proven'` and re-proves there; otherwise it waits for ratify.
-- On a public repository, do not commit memory with free text yet: redaction is decided but not built.
-- Never commit `.atlas/cas/` or `.atlas/projection*.json`. A tracked store turns replay off.
+- Never commit `.atlas/cas/` or `.atlas/projection*.json`. A tracked store turns writes and replay off.

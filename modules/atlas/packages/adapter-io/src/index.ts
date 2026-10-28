@@ -358,6 +358,6 @@ export { buildOwnExport } from "./own-export.js"
 export type { OwnExport } from "./own-export.js"
 
 // D37 — the durable-store ignore rule `atlas init` and the surface's `install` both write (moved from @atlas/cli).
-export { ATLAS_IGNORE_BLOCK, ATLAS_IGNORE_PATTERN, ATLAS_POLICY_NEGATION, ensureAtlasIgnored } from "./gitignore.js"
+export { ATLAS_IGNORE_BLOCK, ATLAS_IGNORE_PATTERN, ATLAS_POLICY_NEGATION, ATLAS_TREE_NEGATIONS, ensureAtlasIgnored } from "./gitignore.js"
 export type { IgnoreOutcome, IgnoreResult } from "./gitignore.js"
 export { PROPOSE_TEMPLATE } from "./propose-template.js" // D39 — the advisory template as text, for the bundled mine

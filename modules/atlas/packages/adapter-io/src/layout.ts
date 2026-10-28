@@ -1,7 +1,7 @@
 // @atlas/adapter-io — src/layout.ts  (where every tracked Atlas log lives under `.atlas/`)
 //
 // The one place that turns a repo root and a record into a path. Every store asks here, so the tree in
-// `docs/design/repo-layout.md` §8 is written down once:
+// `docs/design/repo-layout.md` §2 (branch `atlas-repo-layout`) is written down once:
 //
 //   .atlas/project/{orientation,review}.jsonl            shared, owned by nobody
 //   .atlas/members/<seat>/memory/project.jsonl           one seat's project rules
