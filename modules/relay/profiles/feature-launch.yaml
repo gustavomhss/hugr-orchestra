@@ -1,0 +1,328 @@
+name: feature-launch
+version: 1.0.0
+description: Take a feature from a one-line request to a reviewed, documented change ready to merge. Six phases trace
+  every acceptance criterion from the spec through the plan and the tests to the final review.
+protected: false
+created_at: '2026-10-28T00:00:00Z'
+pipeline:
+- state_id: discover
+  name: Discover
+  description: Learn the code before deciding anything
+  max_iterations: 2
+  system_prompt: |
+    You are delivering one feature end to end. Every later phase builds on what you write here, so ground it in the
+    real code: name files, functions and existing patterns, never categories. Write all notes under ${notes_dir}.
+  sub_states:
+  - id: brief
+    type: inject
+    name: The feature request
+    description: What to build, in the requester's words
+    inject:
+      context: |
+        Feature: let users export a project as a zip archive from the project menu, with a progress bar and a way to
+        cancel. Exports over 500 MB warn first.
+  - id: explore
+    type: execute
+    name: Explore the code
+    description: |
+      Read the code the feature touches and write ${notes_dir}/01-context.md: the entry points, the files and
+      functions involved, the patterns the code already uses for similar features, the tests that cover the area,
+      and the constraints you found (performance, compatibility, security, data). Name at least three real paths.
+- state_id: specify
+  name: Specify
+  description: Decide what done means
+  max_iterations: 3
+  system_prompt: |
+    The spec is the contract for everything after it. Write it so a stranger could build and test the feature from it
+    alone, then attack it as a skeptical reviewer would, and fix what the attack finds before moving on.
+  sub_states:
+  - id: spec
+    type: execute
+    name: Write the spec
+    description: |
+      Write ${notes_dir}/02-spec.md with "## Goal" (the user problem in two or three sentences), "## Acceptance
+      criteria" (at least three, one per line as `AC1: ...`, each observable and testable), "## Out of scope",
+      "## Risks" (what could break, including edge cases and failure modes) and "## Open questions".
+  - id: challenge
+    type: review
+    name: Challenge the spec
+    description: |
+      Read the spec cold, as a reviewer who wants it to fail. Write ${notes_dir}/02-spec-review.md listing every
+      ambiguity, missing edge case, untestable criterion and hidden assumption you find, each with the fix you
+      propose. Then update the spec so each finding is resolved or moved to Open questions with a reason.
+  - id: checklist
+    type: checklist
+    name: Spec gate
+    description: The spec is complete and its criteria are numbered
+    criteria:
+    - spec_has_sections
+    - criteria_numbered
+- state_id: plan
+  name: Plan
+  description: Cut the work into reviewable slices
+  max_iterations: 3
+  system_prompt: |
+    Turn the spec into an ordered list of small slices. Each slice is one reviewable change that leaves the code
+    working. Every acceptance criterion must belong to a slice.
+  sub_states:
+  - id: slices
+    type: execute
+    name: Slice the work
+    description: |
+      Write ${notes_dir}/03-plan.md: an ordered list of slices, each with a title, the files it touches, the
+      acceptance criteria it delivers (by id) and how it will be tested. Put risky or foundational slices first. End
+      with "## Rollback" describing how to undo the change if it misbehaves after merge.
+- state_id: build
+  name: Build
+  description: Test first, then code, then the edges
+  max_iterations: 3
+  system_prompt: |
+    Build the plan test first. The tests are written from the spec, not from the code, and they name the criterion
+    they prove. Never change a test to make code pass; change the code.
+  sub_states:
+  - id: red
+    type: execute
+    name: Write failing tests
+    description: |
+      Write tests under ${test_path} for every acceptance criterion, naming its id (for example `AC2` in the test name
+      or a comment). Run ${test_cmd} and confirm the new tests fail because the feature is missing. Do not change
+      ${src_path} yet.
+  - id: green
+    type: execute
+    name: Make them pass
+    description: |
+      Implement the plan's slices in ${src_path}, in order, until ${test_cmd} is green. Follow the patterns recorded in
+      ${notes_dir}/01-context.md rather than inventing new ones.
+  - id: edges
+    type: execute
+    name: Harden the edges
+    description: |
+      Go through the Risks section of the spec and add a test under ${test_path} for each edge case and failure mode
+      it names: empty and oversized input, invalid state, concurrent use, errors from dependencies. Fix the code
+      where a new test fails.
+  - id: checklist
+    type: checklist
+    name: Build gate
+    description: Everything passes and every criterion has a test
+    criteria:
+    - suite_green
+    - lint_clean
+    - criteria_tested
+- state_id: polish
+  name: Polish
+  description: Leave the code better than you found it
+  max_iterations: 2
+  system_prompt: |
+    The feature works. Now make it easy to read and easy to use. Behaviour does not change in this phase: the suite
+    stays green after every edit.
+  sub_states:
+  - id: simplify
+    type: execute
+    name: Simplify
+    description: |
+      Reread your change in ${src_path} and simplify it: remove duplication and dead code, name things for what they
+      mean, and keep functions small. Keep ${test_cmd} green and ${lint_cmd} clean.
+  - id: document
+    type: execute
+    name: Document
+    description: |
+      Update the user-facing documentation under ${docs_path} so a user can discover and use the feature: what it
+      does, how to turn it on or call it, and its limits. Match the tone and structure of the existing docs.
+- state_id: ship
+  name: Ship
+  description: Review it like a stranger and hand it over
+  max_iterations: 2
+  system_prompt: |
+    Before you hand the change over, check it as the reviewer will. Every acceptance criterion needs evidence, and the
+    pull request description must let someone review the change without asking you anything.
+  sub_states:
+  - id: review
+    type: review
+    name: Final review
+    description: |
+      Read the spec, the plan, the tests and the code cold. Write ${notes_dir}/06-review.md with one line per
+      acceptance criterion (its id, met or not, and the test that proves it), then any defect, risk or follow-up you
+      found, each with its severity.
+  - id: handoff
+    type: execute
+    name: Write the pull request
+    description: |
+      Write ${notes_dir}/07-pull-request.md. Its first line is a conventional commit title such as
+      `feat(scope): summary`. Then "## Summary" (what and why), "## Testing" (what was run and what it proves) and
+      "## Risk and rollback" (from the plan).
+  - id: checklist
+    type: checklist
+    name: Ship gate
+    description: The change is green, documented and ready to review
+    criteria:
+    - suite_green_to_ship
+    - lint_clean_to_ship
+    - docs_changed
+criteria_map:
+  per_criterion:
+    spec_has_sections: for section in Goal "Acceptance criteria" "Out of scope" Risks "Open questions"; do grep -q "^##
+      $section" ${notes_dir}/02-spec.md || { echo "missing $section"; exit 1; }; done
+    criteria_numbered: test "$(grep -cE '^AC[0-9]+:' ${notes_dir}/02-spec.md)" -ge 3
+    suite_green: ${test_cmd}
+    lint_clean: ${lint_cmd}
+    suite_green_to_ship: ${test_cmd}
+    lint_clean_to_ship: ${lint_cmd}
+    criteria_tested: ids=$(grep -oE '^AC[0-9]+' ${notes_dir}/02-spec.md) || exit 1; for id in $ids; do grep -rqw "$id" ${test_path} || {
+      echo "$id has no test"; exit 1; }; done
+    docs_changed: git diff --name-only ${base_ref} -- ${docs_path} | grep -q . || git ls-files --others --exclude-standard
+      -- ${docs_path} | grep -q .
+  per_sub:
+    discover.explore:
+    - id: context-is-substantive
+      assert: the context note carries at least 150 words
+      cmd: test "$(wc -w < ${notes_dir}/01-context.md)" -ge 150
+    - id: context-names-real-files
+      assert: the context note names at least three paths that exist in the repository
+      cmd: test "$(grep -oE '[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)+' ${notes_dir}/01-context.md | sort -u | while read -r p; do
+        test -e "$p" && echo "$p"; done | wc -l)" -ge 3
+    - id: context-is-grounded
+      context:
+      - ${notes_dir}/01-context.md
+      judge: Does this note describe the actual code the feature touches — its entry points, the functions involved,
+        the existing patterns and the tests that cover it? FAIL if it is generic enough to fit any codebase or names
+        things that are not in the repository.
+      blocking: true
+    specify.spec:
+    - id: spec-is-substantive
+      assert: the spec carries at least 150 words
+      cmd: test "$(wc -w < ${notes_dir}/02-spec.md)" -ge 150
+    - id: criteria-are-testable
+      context:
+      - ${notes_dir}/01-context.md
+      - ${notes_dir}/02-spec.md
+      judge: Is every acceptance criterion in this spec observable and testable, and do the criteria together cover
+        the goal? FAIL if a criterion is vague ("works well", "is fast"), describes implementation instead of
+        behaviour, or if part of the goal has no criterion.
+      blocking: true
+    specify.challenge:
+    - id: review-is-substantive
+      assert: the spec review carries at least 100 words
+      cmd: test "$(wc -w < ${notes_dir}/02-spec-review.md)" -ge 100
+    - id: findings-are-resolved
+      context:
+      - ${notes_dir}/02-spec.md
+      - ${notes_dir}/02-spec-review.md
+      judge: Does this review raise at least two concrete findings about the spec, and does the spec now resolve each
+        one or record it under Open questions with a reason? FAIL if the review only praises the spec, if its findings
+        are generic, or if a finding is neither resolved nor recorded.
+      blocking: true
+    plan.slices:
+    - id: plan-has-rollback
+      assert: the plan ends with a Rollback section
+      cmd: grep -q '^## Rollback' ${notes_dir}/03-plan.md
+    - id: every-criterion-planned
+      assert: every acceptance criterion from the spec is delivered by a slice
+      cmd: ids=$(grep -oE '^AC[0-9]+' ${notes_dir}/02-spec.md) || exit 1; for id in $ids; do grep -qw "$id" ${notes_dir}/03-plan.md || {
+        echo "$id is in no slice"; exit 1; }; done
+    - id: slices-are-reviewable
+      context:
+      - ${notes_dir}/02-spec.md
+      - ${notes_dir}/03-plan.md
+      judge: Is each slice small enough to review on its own, does it name real files, and does the order put risky or
+        foundational work first? FAIL if a slice bundles unrelated changes, leaves the code broken, or names no files.
+      blocking: true
+    build.red:
+    - id: tests-added
+      assert: tests were added or changed
+      cmd: git diff --name-only ${base_ref} -- ${test_path} | grep -q . || git ls-files --others --exclude-standard
+        -- ${test_path} | grep -q .
+    - id: suite-is-red
+      assert: the suite fails because the feature is missing
+      cmd: '! ${test_cmd}'
+    - id: every-criterion-has-a-test
+      assert: every acceptance criterion id appears in the tests
+      cmd: ids=$(grep -oE '^AC[0-9]+' ${notes_dir}/02-spec.md) || exit 1; for id in $ids; do grep -rqw "$id" ${test_path} || { echo "$id
+        has no test"; exit 1; }; done
+    build.green:
+    - id: source-changed
+      assert: the source paths were changed
+      cmd: git diff --name-only ${base_ref} -- ${src_path} | grep -q . || git ls-files --others --exclude-standard
+        -- ${src_path} | grep -q .
+    - id: suite-is-green
+      assert: the suite passes
+      cmd: ${test_cmd}
+    - id: no-test-deleted
+      assert: no test file was deleted to get to green
+      cmd: '! git diff --diff-filter=D --name-only ${base_ref} -- ${test_path} | grep -q .'
+    - id: implements-the-plan
+      context:
+      - ${notes_dir}/03-plan.md
+      judge: Does this change implement the plan's slices using the patterns the code already has? FAIL if it
+        special-cases test inputs, weakens or skips a test, or adds behaviour the spec does not ask for.
+      diff: true
+      blocking: true
+    build.edges:
+    - id: suite-green-with-edges
+      assert: the suite passes with the edge-case tests
+      cmd: ${test_cmd}
+    - id: risks-are-tested
+      context:
+      - ${notes_dir}/02-spec.md
+      judge: Does this change add tests for the edge cases and failure modes the spec's Risks section names, and fix
+        the code where they failed? FAIL if a named risk has no test, or if the tests only repeat the happy path.
+      diff: true
+      blocking: true
+    polish.simplify:
+    - id: suite-green-after-simplify
+      assert: the suite still passes
+      cmd: ${test_cmd}
+    - id: lint-clean-after-simplify
+      assert: the linter passes
+      cmd: ${lint_cmd}
+    - id: behaviour-unchanged
+      judge: Does this change only simplify the code — removing duplication and dead code, improving names, splitting
+        long functions — without changing behaviour? FAIL if it changes a test's expectations, a public signature or
+        an output, or adds a feature.
+      diff: true
+      blocking: true
+    polish.document:
+    - id: docs-changed
+      assert: the documentation paths were changed
+      cmd: git diff --name-only ${base_ref} -- ${docs_path} | grep -q . || git ls-files --others --exclude-standard
+        -- ${docs_path} | grep -q .
+    - id: docs-teach-the-feature
+      context:
+      - ${notes_dir}/02-spec.md
+      judge: Would a user who reads only this documentation change know what the feature does, how to use it and what
+        its limits are? FAIL if it describes the implementation instead of the use, contradicts the spec, or leaves a
+        user-visible behaviour undocumented.
+      diff: true
+      blocking: true
+    ship.review:
+    - id: every-criterion-reviewed
+      assert: the review names every acceptance criterion id
+      cmd: ids=$(grep -oE '^AC[0-9]+' ${notes_dir}/02-spec.md) || exit 1; for id in $ids; do grep -qw "$id" ${notes_dir}/06-review.md || {
+        echo "$id is not reviewed"; exit 1; }; done
+    - id: final-review-is-substantive
+      assert: the review carries at least 120 words
+      cmd: test "$(wc -w < ${notes_dir}/06-review.md)" -ge 120
+    - id: review-shows-evidence
+      context:
+      - ${notes_dir}/02-spec.md
+      - ${notes_dir}/06-review.md
+      judge: Does this review back every acceptance criterion with a named test, and report defects or risks
+        specifically enough to act on? FAIL if a criterion is marked met without evidence, if a finding is generic, or
+        if it claims something the code does not show.
+      blocking: true
+    ship.handoff:
+    - id: conventional-title
+      assert: the description starts with a conventional commit title
+      cmd: >-
+        head -n 1 ${notes_dir}/07-pull-request.md | grep -qE '^(feat|fix|docs|chore|refactor|test|perf)(\([a-z0-9-]+\))?!?: .+'
+    - id: description-has-its-sections
+      assert: the description has Summary, Testing and Risk and rollback sections
+      cmd: for section in Summary Testing "Risk and rollback"; do grep -q "^## $section" ${notes_dir}/07-pull-request.md
+        || { echo "missing $section"; exit 1; }; done
+    - id: description-is-reviewable
+      context:
+      - ${notes_dir}/02-spec.md
+      - ${notes_dir}/07-pull-request.md
+      judge: Could a reviewer understand what this change does, why, how it was tested and how to roll it back from
+        this description alone? FAIL if it is vague, if it omits the testing that was run, or if it contradicts the
+        spec.
+      blocking: true

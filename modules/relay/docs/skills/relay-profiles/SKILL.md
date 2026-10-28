@@ -16,7 +16,7 @@ Read [ARM kind dispatch and review reminder](../../../bin/relay-arm-hook.sh) and
 
 ## Ownership
 Limit source work to the assigned subset of `bin/relay-profile.py` and `profiles/*.yaml`; route `bin/relay-spec.py` renderer/lint changes to [spec library](../relay-spec-library/SKILL.md).
-Treat `profiles/{planning,tdd_feature,wp-execute,spec-decompose,research-v2,design}.sprint.json` as generated data; regenerate instead of hand-editing.
+Treat `profiles/{planning,tdd_feature,wp-execute,spec-decompose,research-v2,design,bugfix,safe-refactor,feature-launch}.sprint.json` as generated data; regenerate instead of hand-editing.
 Coordinate changes to consumers `lib/relay-gate.sh`, `bin/relay-arm-hook.sh`, `bin/relay-gate`, and `benchmark/judge.py` with their owners.
 Keep [profile guide](../../../docs/profiles.md) and this skill aligned with compiler behavior.
 

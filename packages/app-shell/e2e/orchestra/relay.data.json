@@ -1,13 +1,16 @@
 {
   "profiles": {
+    "bugfix": { "published": null, "updated": 720 },
     "design": { "published": null, "updated": 8640 },
+    "feature-launch": { "published": null, "updated": 900 },
     "planning": { "published": null, "updated": 4320 },
     "research-v2": { "published": null, "updated": 11520 },
+    "safe-refactor": { "published": null, "updated": 1080 },
     "spec-decompose": { "published": null, "updated": 1560 },
     "tdd_feature": { "published": 1, "draft": 1, "updated": 3000 },
     "wp-execute": { "published": 3, "draft": 4, "updated": 9 }
   },
-  "runnable": ["tdd_feature", "wp-execute"],
+  "runnable": ["bugfix", "feature-launch", "safe-refactor", "tdd_feature", "wp-execute"],
   "hooks": [
     {
       "id": "protect-generated",
