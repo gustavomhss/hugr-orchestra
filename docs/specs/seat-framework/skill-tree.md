@@ -58,8 +58,29 @@ are required on every deeper node.
 
 ## Trees
 
-The trees move existing content. They write nothing new, except the short `when`/`not-when` lines and the summary at
-the top of each node.
+Every seat gets a tree, Maestro included. Where content exists (backend, `archie`, `jimmy`, Maestro's playbooks) the
+tree moves it and adds only the `when`/`not-when` lines and a short summary at the top of each node. The other six
+seats have no content today, so their trees are new writing, grounded in a named public reference and checked by
+the same rules.
+
+### Shared stack tree (`team-stack`)
+
+Language and framework knowledge is not owned by one seat. A FastAPI diff matters to the backend seat that writes it,
+the reviewer that reads it, and the security reviewer that hunts in it. Writing that knowledge once per seat would
+fork it, so it lives in one shared tree:
+
+```
+team-stack
+├─ python              fastapi, django, kubeflow, pydantic, sqlalchemy
+├─ go                  chi, pgx, sqlc
+├─ js-ts               express, fastify, solid, react, vue, svelte, tailwind
+├─ ruby                rails
+└─ php                 laravel
+```
+
+A leaf states facts about the stack (idioms, traps, versions, test tools) and never a seat's procedure. Each seat's
+own nodes say what to do with those facts. A seat opts in by listing `team-stack` among its roots. Today that is the
+backend, `patty`, `lucy` and `billy`.
 
 ### Backend seat
 
@@ -70,16 +91,12 @@ backend-data           query, transaction, migration-phase
 backend-concurrency    cancellation, jobs, retries, streams
 backend-refactor       scoped-transformation, syntax-vs-symbol
 backend-check          real-services, faults, http-fixtures, generated-inputs
-backend-stack
-├─ python              fastapi, django, kubeflow, pydantic, sqlalchemy
-├─ go                  chi, pgx, sqlc
-├─ js-ts               express, fastify
-├─ ruby                rails
-└─ php                 laravel
 backend-codegen        index plus one leaf per tool (buf, sqlc, orval, kiota, squawk, ast-grep, ...)
+team-stack             shared, see above
 ```
 
-The `cards` pages (app-auth, observability) go under `backend-api`. `continuity.md` stays in `backend-implement`.
+The current `languages`, `frameworks` and `libraries` pages move into `team-stack`. The `cards` pages (app-auth,
+observability) go under `backend-api`. `continuity.md` stays in `backend-implement`.
 
 There are 20 codegen tools, more than the 10-child limit, so `backend-codegen` groups them in one more level:
 
@@ -102,18 +119,103 @@ These pages are short and already one level deep, so they become leaves without 
 `jimmy-reference` splits into two roots, `jimmy-web-research` and `jimmy-calibration`, because they serve different
 moments: finding sources, and judging how sure a claim is.
 
-### Seats without skills
+### Maestro
 
-`billy`, `frankie`, `rosie`, `lucy`, `patty` and `live` have no skill content today, and this change writes none for
-them. Each one gets a tree when its own knowledge is written, under the same format and checks.
+The ten playbooks become one tree, grouped by the moment of the work:
+
+```
+frame-request          request intake (keeps its name: the app and other Sessions address it)
+maestro-plan           decompose, contract, pack
+maestro-run            loop, governed, verify
+maestro-repo           repo-maintenance, arsenal-operators
+maestro-composer       FastAPI reuse through the composer plugin
+```
+
+`PlaybookContent` applies the same tree rules as `SeatSkillContent`. Other agents stay denied every Maestro node, as
+they are denied playbooks today.
+
+### New trees
+
+These six seats have no content today. Each tree below is the branch plan. Its leaves are written from the public
+reference named on the root, cut down to what the seat acts on.
+
+**Code reviewer (`lucy`).** Reference: Google's engineering practices for code review.
+
+```
+lucy-review            procedure: read the diff cold, cite file:line, build the APPROVE/FIX_FIRST/REJECT card
+lucy-correctness       logic and edge cases, error paths, concurrency, resource lifetime
+lucy-tests             missing tests, tests without teeth, flaky patterns, mocks that hide the bug
+lucy-compat            public API and wire changes, migrations, config and flag defaults
+lucy-security          the first-pass checklist, and when to hand off to the security reviewer
+team-stack             shared
+```
+
+**Security reviewer (`billy`).** Reference: the OWASP ASVS, the OWASP Top 10 and the OWASP Top 10 for LLM
+applications.
+
+```
+billy-review           procedure: trust boundaries first, threat verdict, cited controls
+billy-access           authentication, authorization, tenancy, sessions and tokens
+billy-injection        sql, shell, path, template, ssrf, deserialization
+billy-secrets          secrets in code and logs, crypto use, data handling and retention
+billy-supply-chain     dependencies and lockfiles, CI and release pipelines
+billy-agents           tool permissions, sandboxes, untrusted text reaching a model, prompt injection
+team-stack             shared
+```
+
+**Process auditor (`frankie`).** Reference: the repository's own rules (AGENTS.md, Guardrail) plus SLSA provenance
+levels.
+
+```
+frankie-audit          procedure: claim, evidence, verdict
+frankie-evidence       receipts, which gate really ran, test teeth, local green versus CI green
+frankie-ledger         approval chains, event seals, governed dispatch records
+frankie-repo           branch, commit and PR rules, guard findings and their waivers
+```
+
+**Documentation (`rosie`).** Reference: Diátaxis (tutorial, how-to, reference, explanation).
+
+```
+rosie-docs             procedure: find the reader, make the smallest change, run checks
+rosie-kinds            tutorial, how-to, reference, explanation
+rosie-style            plain words, one idea per sentence, examples that run, i18n strings
+rosie-check            links, code samples, generated reference stays generated
+```
+
+**Frontend (`patty`).** Reference: WCAG 2.2 and the web platform docs on MDN.
+
+```
+patty-implement        procedure, and the sensory evidence the card needs
+patty-ui               components, state, forms, routing, data loading
+patty-style            css, tokens, layout, responsive, motion, dark mode
+patty-a11y             roles and names, keyboard, focus, contrast, reduced motion
+patty-check            playwright, visual snapshots, screenshots as evidence
+team-stack             shared (solid, react, vue, svelte, tailwind)
+```
+
+**Meeting copilot (`live`).** Reference: its own prompt. The tree holds the meeting kinds its answers depend on.
+
+```
+live-answer            answer format, sources (heard, on screen, memory), when to call live_look
+live-meetings          sales call, interview, standup, technical review, negotiation
+```
+
+### Content rule for the new trees
+
+A new leaf states what to do and how to check it, the way the backend leaves do. It is not a summary of its
+reference. A leaf that cannot name a check the seat runs or a fact the seat cites is cut. Each new tree lands as its
+own PR, and nothing new is benchmarked without the owner's permission.
 
 ## How it is wired
 
 ### Seat definition
 
-`Seat.skills` still lists **roots** only. The permission becomes `skill: { "*": deny, "<seat-id>-*": allow }`, so a
-seat can load any node of its own tree and nothing outside it. The prefix rule in `validate` already pins every name
-to the seat id.
+`Seat.skills` still lists **roots** only. The permission becomes `skill: { "*": deny, "<seat-id>-*": allow }`, plus
+`team-stack-*` for a seat that lists `team-stack`. A seat can load any node of its own tree and of the shared trees
+it opted into, and nothing else. The prefix rule in `validate` pins every name to the seat id or to `team-`.
+
+Shared trees live in `modules/specialists/team/skills` and are embedded once. Every seat with skills gets a tree
+directory, so `skillSource` stops special-casing `backend` and `archie`.
 
 ### Validation (`SeatSkillContent.validate`)
 
@@ -141,8 +243,8 @@ is a bug to fix before any tree work.
 `backend.txt` step 2 becomes: "Load `backend-implement`, then open the branches the packet needs, one level at a
 time. Stop at the first node that covers the work."
 
-The `archie` and `jimmy` prompts change their skill names the same way. The prompts no longer list deeper names. The
-tree is the list.
+Every seat prompt gets the same line with its own roots, and Maestro's prompt names its new playbook groups. The
+prompts no longer list deeper names. The tree is the list.
 
 ### Agent screen
 
@@ -190,7 +292,9 @@ origin/dev`.
 
 1. Check how V2 resolves seat skills, and fix it if seat roots are not registered.
 2. Validation and loader changes, with their tests.
-3. Move the backend tree's content, then the `archie` and `jimmy` trees.
-4. Prompt changes.
+3. Move existing content: the backend tree with `team-stack`, then `archie`, `jimmy` and Maestro's playbooks.
+4. Prompt changes for those seats.
 5. Agent screen Skill tree tab, then i18n, then e2e.
 6. Docs and the maintenance skill.
+7. Write the new trees, one PR per seat: `lucy`, `billy`, `patty`, `rosie`, `frankie`, `live`. Each PR includes that
+   seat's prompt line.
