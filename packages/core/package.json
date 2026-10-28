@@ -116,6 +116,7 @@
     "./control-plane/move-session": "./src/control-plane/move-session.ts",
     "./control-plane/workspace.sql": "./src/control-plane/workspace.sql.ts",
     "./board/board": "./src/board/board.ts",
+    "./board/ci": "./src/board/ci.ts",
     "./board/github": "./src/board/github.ts",
     "./board/queue": "./src/board/queue.ts",
     "./board/record": "./src/board/record.ts",
