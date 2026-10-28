@@ -64,6 +64,12 @@ export const DecisionID = Schema.String.pipe(
 )
 export type DecisionID = typeof DecisionID.Type
 
+export const BundleID = Schema.String.pipe(
+  Schema.brand("Board.BundleID"),
+  statics((schema) => ({ create: () => schema.make("bbu_" + ascending()) })),
+)
+export type BundleID = typeof BundleID.Type
+
 export const Key = Schema.String.check(Schema.isPattern(/^[A-Z]{2,6}$/)).annotate({ identifier: "Board.Key" })
 
 export const ProjectStatus = Schema.Literals(["active", "paused", "shipped", "archived"]).annotate({
@@ -82,8 +88,8 @@ export type EpicStatus = typeof EpicStatus.Type
 export const IssueType = Schema.Literals(["feature", "bug", "chore"]).annotate({ identifier: "Board.IssueType" })
 export type IssueType = typeof IssueType.Type
 
-// `intake` holds only GitHub-born issues waiting for the owner.
-export const Stage = Schema.Literals(["intake", "backlog", "ready", "building", "review", "shipped", "cut"]).annotate({
+// `intake` holds only GitHub-born issues waiting for the owner. Only the host moves a card into or out of `queue`.
+export const Stage = Schema.Literals(["intake", "backlog", "ready", "building", "review", "queue", "shipped", "cut"]).annotate({
   identifier: "Board.Stage",
 })
 export type Stage = typeof Stage.Type
@@ -132,6 +138,11 @@ export const Action = Schema.Literals([
   "github.overwrite",
   "github.state",
   "undo",
+  "queue.add",
+  "queue.remove",
+  "bundle.cut",
+  "bundle.merge",
+  "bundle.dissolve",
 ]).annotate({ identifier: "Board.Action" })
 export type Action = typeof Action.Type
 
@@ -181,6 +192,42 @@ export const Step = Schema.Struct({
   now: Schema.NullOr(Schema.String),
 }).annotate({ identifier: "Board.Step" })
 
+export const RiskLevel = Schema.Literals(["low", "medium", "high"]).annotate({ identifier: "Board.RiskLevel" })
+export type RiskLevel = typeof RiskLevel.Type
+
+/**
+ * The part of a card's PR record Maestro writes (docs/specs/maestro-lead/merge-queue.md section 4.5). The host adds
+ * Evidence, Cost, Lineage and Integration when it renders the PR body. `follow_ups` are card keys such as `LCH-12`.
+ */
+export interface PrRecord extends Schema.Schema.Type<typeof PrRecord> {}
+export const PrRecord = Schema.Struct({
+  intent: Schema.String.pipe(optional),
+  change: Schema.String.pipe(optional),
+  decisions: Schema.String.pipe(optional),
+  not_covered: Schema.String.pipe(optional),
+  risk: Schema.Struct({
+    level: RiskLevel.pipe(optional),
+    breaks: Schema.String.pipe(optional),
+    undo: Schema.String.pipe(optional),
+  }).pipe(optional),
+  follow_ups: Schema.Array(Schema.String).pipe(optional),
+}).annotate({ identifier: "Board.PrRecord" })
+
+// Derived from the queue and bundle rows, never stored.
+export const QueueStatus = Schema.Literals(["waiting", "running", "green", "conflict", "held"]).annotate({
+  identifier: "Board.QueueStatus",
+})
+export type QueueStatus = typeof QueueStatus.Type
+
+export interface QueueState extends Schema.Schema.Type<typeof QueueState> {}
+export const QueueState = Schema.Struct({
+  status: QueueStatus,
+  /** The bundle number, `B<n>`, once the card is cut into one. */
+  bundle: Schema.NullOr(PositiveInt),
+  urgent: Schema.Boolean,
+  queuedAt: Schema.Finite,
+}).annotate({ identifier: "Board.QueueState" })
+
 export interface Issue extends Schema.Schema.Type<typeof Issue> {}
 export const Issue = Schema.Struct({
   id: IssueID,
@@ -207,6 +254,8 @@ export const Issue = Schema.Struct({
   steps: Schema.Array(Step),
   /** Refs of the issues this one waits on, possibly in other projects. */
   dependsOn: Schema.Array(Schema.String),
+  /** Present while the card is in the queue stage. */
+  queue: Schema.NullOr(QueueState).pipe(optional),
 }).annotate({ identifier: "Board.Issue" })
 
 export interface Option extends Schema.Schema.Type<typeof Option> {}
@@ -494,6 +543,7 @@ export const IssuePage = Schema.Struct({
   activity: Schema.Array(Activity),
   dependencies: Schema.Struct({ dependsOn: Schema.Array(Schema.String), blocks: Schema.Array(Schema.String) }),
   trail: Trail,
+  record: Schema.NullOr(PrRecord).pipe(optional),
 }).annotate({ identifier: "Board.IssuePage" })
 
 // What `board_read` gives Maestro: the snapshot, what the owner did since `since`, attachment names and,
@@ -573,6 +623,8 @@ export const IssueInput = Schema.Struct({
   crash_reason: Schema.NullOr(Schema.String).pipe(optional),
   /** Id of the guardrail rule that blocked the card; null clears it. */
   guardrail_rule: Schema.NullOr(Schema.String).pipe(optional),
+  /** The PR record's Maestro fields, merged into the stored record field by field. */
+  record: PrRecord.pipe(optional),
   reason: Reason,
 }).annotate({ identifier: "Board.IssueInput" })
 export type IssueInput = typeof IssueInput.Type
@@ -585,6 +637,24 @@ export const MoveInput = Schema.Struct({
   reason: Reason,
 }).annotate({ identifier: "Board.MoveInput" })
 export type MoveInput = typeof MoveInput.Type
+
+export const QueueInput = Schema.Struct({
+  project: Key,
+  number: PositiveInt,
+  /** Goes to the front of the next bundle. */
+  urgent: Schema.Boolean.pipe(optional),
+  /** Cuts a bundle now instead of waiting for the size or the wait time. */
+  flush: Schema.Boolean.pipe(optional),
+  reason: Reason,
+}).annotate({ identifier: "Board.QueueInput" })
+export type QueueInput = typeof QueueInput.Type
+
+export const DequeueInput = Schema.Struct({
+  project: Key,
+  number: PositiveInt,
+  reason: Reason,
+}).annotate({ identifier: "Board.DequeueInput" })
+export type DequeueInput = typeof DequeueInput.Type
 
 export const StepsInput = Schema.Struct({
   project: Key,
@@ -748,6 +818,20 @@ export const CiRunResult = Schema.Struct({
   notes: Schema.Array(Schema.String),
 }).annotate({ identifier: "Board.CiRunResult" })
 export type CiRunResult = typeof CiRunResult.Type
+
+export const QueueResult = Schema.Struct({
+  /** The PR head the card queued at; the bundle merges exactly this commit. */
+  head: Schema.String,
+  tree: Schema.String,
+  state: ScopedState,
+}).annotate({ identifier: "Board.QueueResult" })
+export type QueueResult = typeof QueueResult.Type
+
+export const DequeueResult = Schema.Struct({
+  /** The open bundle the card was in, dissolved with its PR closed; its other members stay queued. */
+  dissolved: Schema.NullOr(PositiveInt),
+}).annotate({ identifier: "Board.DequeueResult" })
+export type DequeueResult = typeof DequeueResult.Type
 
 // Carries no board content: the app refetches what it shows.
 const Changed = define({

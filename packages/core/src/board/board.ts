@@ -2,7 +2,7 @@ export * as Board from "./board"
 
 import fs from "fs/promises"
 import path from "path"
-import { and, asc, desc, eq, gt, inArray, ne, sql } from "drizzle-orm"
+import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, ne, sql } from "drizzle-orm"
 import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors"
 import { Clock, Context, Effect, Layer, Schedule } from "effect"
 import { SqlError } from "effect/unstable/sql/SqlError"
@@ -24,11 +24,15 @@ import { AbsolutePath } from "../schema"
 import {
   BoardActivityTable,
   BoardAttachmentTable,
+  BoardAttemptTable,
+  BoardBundleMemberTable,
+  BoardBundleTable,
   BoardDependencyTable,
   BoardEpicTable,
   BoardIssueTable,
   BoardNoteTable,
   BoardProjectTable,
+  BoardQueueTable,
   BoardQuestionTable,
   BoardStepTable,
 } from "./sql"
@@ -44,6 +48,7 @@ import {
   archived,
   changed,
   diff,
+  endOf,
   forecastOf,
   gitRunner,
   loadEpic,
@@ -59,6 +64,7 @@ export { BudgetPausedError, NotFoundError, RefusedError }
 import { BoardCi } from "./ci"
 import { BoardConflicts } from "./conflicts"
 import { BoardGithub } from "./github"
+import { BoardQueue } from "./queue"
 import { BoardSnapshot } from "./snapshot"
 
 // The board service enforces the contract's rules (docs/specs/projects-board/CONTRACT.md section 1). Every write runs
@@ -124,6 +130,12 @@ export interface Interface {
   readonly pushState: (key: string, number: number) => Effect.Effect<Board.PushState, Error>
   /** Compares each project's base with where it stood last time and notes the cards a base advance touched. */
   readonly conflictSweep: () => Effect.Effect<ReadonlyArray<BoardConflicts.Notice>>
+  /** Queues a verified Review card: complete record, scoped-green PR head, nothing it depends on still open. */
+  readonly queue: (input: Board.QueueInput) => Effect.Effect<Board.QueueResult, Error>
+  /** Takes a queued card back to Review, dissolving the open bundle it is in. */
+  readonly dequeue: (input: Board.DequeueInput) => Effect.Effect<Board.DequeueResult, Error>
+  /** Settles each project's open bundle or cuts a new one; the poll runs it every minute. */
+  readonly queueTick: () => Effect.Effect<void>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/Board") {}
@@ -180,6 +192,24 @@ export const layerWith = (options: {
           .orderBy(asc(BoardStepTable.position))
           .all()
         const dependencies = yield* refs(tx, "depends", ids)
+        const queued = yield* tx.select().from(BoardQueueTable).where(inArray(BoardQueueTable.issue_id, ids)).all()
+        const cut = queued.length
+          ? yield* tx
+              .select({ issue: BoardBundleMemberTable.issue_id, n: BoardBundleTable.n })
+              .from(BoardBundleMemberTable)
+              .innerJoin(BoardBundleTable, eq(BoardBundleTable.id, BoardBundleMemberTable.bundle_id))
+              .where(and(inArray(BoardBundleMemberTable.issue_id, ids), eq(BoardBundleTable.status, "open")))
+              .all()
+          : []
+        const conflicted = queued.length
+          ? yield* tx
+              .select({ issue: BoardAttemptTable.issue_id })
+              .from(BoardAttemptTable)
+              .where(
+                and(inArray(BoardAttemptTable.issue_id, ids), isNull(BoardAttemptTable.outcome), isNotNull(BoardAttemptTable.conflict_base)),
+              )
+              .all()
+          : []
         return rows.map(
           (row): Board.Issue => ({
             id: row.id,
@@ -204,6 +234,12 @@ export const layerWith = (options: {
               .filter((step) => step.issue_id === row.id)
               .map((step) => ({ title: step.title, status: step.status, now: step.now })),
             dependsOn: dependencies.filter((item) => item.issue === row.id).map((item) => item.ref),
+            queue: queueState(
+              row,
+              queued.find((item) => item.issue_id === row.id),
+              cut.find((item) => item.issue === row.id)?.n,
+              conflicted.some((item) => item.issue === row.id),
+            ),
           }),
         )
       })
@@ -346,6 +382,7 @@ export const layerWith = (options: {
               directory: yield* worktree(tx, project),
               page: {
                 issue,
+                record: row.record,
                 questions: questions.map((item) => toQuestion(item, known)),
                 notes: notes.map((item) => toNote(item, number)),
                 attachments: attachments.map((item) => toAttachment(item, number)),
@@ -459,15 +496,6 @@ export const layerWith = (options: {
           .all()).map((step): Board.Step => ({ title: step.title, status: step.status, now: step.now }))
       })
 
-      const endOf = Effect.fnUntraced(function* (tx: Tx, project: Board.ProjectID, stage: Board.Stage) {
-        const row = yield* tx
-          .select({ position: sql<number | null>`max(${BoardIssueTable.position})` })
-          .from(BoardIssueTable)
-          .where(and(eq(BoardIssueTable.project_id, project), eq(BoardIssueTable.stage, stage)))
-          .get()
-        return (row?.position ?? 0) + 1
-      })
-
       const issueResult = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, id: Board.IssueID, activity: Board.ActivityID) {
         const row = yield* tx.select().from(BoardIssueTable).where(eq(BoardIssueTable.id, id)).get()
         const issue = row ? (yield* issueRecords(tx, project, [row]))[0] : undefined
@@ -552,8 +580,19 @@ export const layerWith = (options: {
         publish: (changed) => events.publish(Board.Event.Changed, changed),
       })
 
+      const queue = BoardQueue.make({
+        quiet: (work) => quiet(work).pipe(Effect.orDie),
+        proc,
+        env: options.env,
+        gh: options.gh ?? BoardGithub.runner(proc, options.env),
+        contract: ci.contract,
+        publish: (changed) => events.publish(Board.Event.Changed, changed),
+      })
+
       if (options.poll)
         yield* conflicts.sweep().pipe(Effect.ignore, Effect.repeat(Schedule.spaced("60 seconds")), Effect.forkScoped)
+
+      if (options.poll) yield* queue.tick().pipe(Effect.ignore, Effect.repeat(Schedule.spaced("60 seconds")), Effect.forkScoped)
 
       if (options.poll)
         yield* snapshots.sweep().pipe(Effect.ignore, Effect.repeat(Schedule.spaced("10 minutes")), Effect.forkScoped)
@@ -877,6 +916,7 @@ export const layerWith = (options: {
                   attempts: input.attempts ?? 0,
                   crash_reason: input.crash_reason ?? null,
                   guardrail_rule: input.guardrail_rule ?? null,
+                  record: input.record ?? null,
                   stage_entered_at: now,
                   github_dirty: project.github_repo !== null,
                 }
@@ -908,7 +948,19 @@ export const layerWith = (options: {
                 return yield* new RefusedError({
                   message: `${project.key}-${issue.number} is in Review, which needs its PR; move it out of Review before unlinking the PR.`,
                 })
-              const change = diff(issue, fields)
+              if (issue.stage === "queue" && ((input.pr !== undefined && input.pr !== issue.pr_number) || input.branch !== undefined))
+                return yield* new RefusedError({
+                  message: `${project.key}-${issue.number} is queued at its PR head; take it out with board_dequeue before changing its PR or branch.`,
+                })
+              // The record merges field by field so Maestro can fill it in over several calls; risk merges one level down.
+              const record = input.record
+                ? {
+                    ...issue.record,
+                    ...input.record,
+                    ...(input.record.risk ? { risk: { ...issue.record?.risk, ...input.record.risk } } : {}),
+                  }
+                : undefined
+              const change = diff(issue, { ...fields, record })
               const before = input.depends_on ? (yield* refs(tx, "depends", [issue.id])).map((item) => item.ref) : undefined
               // Compare as full refs so "12" and "LCH-12" are the same dependency.
               const wanted = input.depends_on
@@ -947,6 +999,8 @@ export const layerWith = (options: {
         move: Effect.fn("Board.move")(function* (input) {
           if (input.stage === "intake")
             return yield* new RefusedError({ message: "Intake holds only GitHub-born issues; Maestro cannot move an issue into it." })
+          if (input.stage === "queue")
+            return yield* new RefusedError({ message: "Only the host moves a card into Queue; verify it and call board_queue." })
           const ref = `${input.project}-${input.number}`
           // A Shipped move with a PR needs a live, uncached proof that the PR is merged, read before the write lock.
           const checked = yield* reading((tx) =>
@@ -967,6 +1021,8 @@ export const layerWith = (options: {
               yield* requireActive(project, issue)
               if (issue.stage === "intake")
                 return yield* new RefusedError({ message: `${ref} is in Intake; the owner accepts or declines it first.` })
+              if (issue.stage === "queue")
+                return yield* new RefusedError({ message: `${ref} is queued; take it out with board_dequeue first.` })
               if (input.stage === "review" && !issue.pr_number)
                 return yield* new RefusedError({ message: `${ref} has no PR; link one with board_issue before Review.` })
               if (input.stage === "shipped" && issue.hold_before_merge)
@@ -1410,6 +1466,18 @@ export const layerWith = (options: {
           return yield* conflicts.sweep()
         }),
 
+        queue: Effect.fn("Board.queue")(function* (input) {
+          return yield* queue.enqueue(input)
+        }),
+
+        dequeue: Effect.fn("Board.dequeue")(function* (input) {
+          return yield* queue.dequeue(input)
+        }),
+
+        queueTick: Effect.fn("Board.queueTick")(function* () {
+          return yield* queue.tick()
+        }),
+
         sync: Effect.fn("Board.sync")(function* (key) {
           const done = yield* github.sync(key)
           if (done.status === "missing") return yield* new NotFoundError({ message: `There is no board project ${key}.` })
@@ -1571,4 +1639,16 @@ function reaches(
   if (seen.has(from)) return false
   seen.add(from)
   return edges.filter((edge) => edge.issue_id === from).some((edge) => reaches(edges, edge.depends_on_id, to, seen))
+}
+
+/** The card's place in the merge queue, derived from the queue, bundle and attempt rows; null outside the queue. */
+function queueState(
+  row: IssueRow,
+  queued: typeof BoardQueueTable.$inferSelect | undefined,
+  bundle: number | undefined,
+  conflict: boolean,
+): Board.QueueState | null {
+  if (!queued) return null
+  const status = row.hold_before_merge ? "held" : conflict ? "conflict" : bundle ? "running" : "waiting"
+  return { status, bundle: bundle ?? null, urgent: queued.urgent, queuedAt: queued.queued_at }
 }

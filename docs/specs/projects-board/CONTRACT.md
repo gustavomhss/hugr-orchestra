@@ -69,7 +69,7 @@ All tables carry `Timestamps`. Ids are core ids with a board prefix. Enums are t
 | `number` | integer | unique with `project_id` |
 | `title`, `body` | text | body is Maestro's description, markdown |
 | `type` | `feature` `bug` `chore` | |
-| `stage` | `intake` `backlog` `ready` `building` `review` `shipped` `cut` | `intake` only for GitHub-born issues waiting for the owner |
+| `stage` | `intake` `backlog` `ready` `building` `review` `queue` `shipped` `cut` | `intake` only for GitHub-born issues waiting for the owner; only the host moves a card into or out of `queue` |
 | `position` | real | order inside the stage |
 | `estimate` | `s` `m` `l` null | |
 | `seat` | text null | agent id |
@@ -81,6 +81,7 @@ All tables carry `Timestamps`. Ids are core ids with a board prefix. Enums are t
 | `stage_entered_at` | integer | for aging and forecast |
 | `github_number`, `github_node_id` | null | mirror link |
 | `github_dirty` | integer bool | mirrored fields changed since the last push |
+| `record` | json null | the PR record's Maestro fields (merge-queue spec §4.5): `intent`, `decisions`, `not_covered`, `risk`, `follow_ups`; the host renders it into the PR body |
 
 Index `(project_id, stage, position)`.
 
@@ -163,6 +164,16 @@ or the workflow file), `tree_sha`, `commit_sha` (null), `outcome` (`pass` `fail`
 `(issue_id, tree_sha)`. Rows are keyed by tree; the card's `scoped-green` or `scoped-red` is derived on read and never
 stored.
 
+### board_queue, board_bundle, board_bundle_member
+
+The merge queue (merge-queue spec §6). `board_queue` has one row per card in `queue`: `issue_id` (pk), `project_id`,
+`head_sha` (the PR head the scoped checks passed on), `urgent`, `flush`, `queued_at`. `board_bundle` is one bundle PR:
+`id` (`bbu_`), `project_id`, `n` (unique per project, shown as `LCH-B3`), `branch`, `pr_number`, `base_sha`, `head_sha`,
+`tree_sha`, `status` (`open` `merged` `dissolved`), `merged_on` (the base tip it landed on when base moved, null
+otherwise). `board_bundle_member` links a bundle to its cards with the `head_sha` each was merged at and its `position`.
+A card's queue state (`waiting`, `running`, `conflict`, `held`) is derived on read. Activity actions: `queue.add`,
+`queue.remove`, `bundle.cut`, `bundle.merge`, `bundle.dissolve`.
+
 ## 4. Maestro tools
 
 Registered through `ApplicationTools` and granted only to the Maestro agent. Every write takes `reason` (non-empty) and
@@ -178,6 +189,8 @@ link one before Review").
 | `board_move` | `project`, `number`, `stage`, optional `position`, `reason` | Move between stages. Enforces proof (rule 5), hold (6), pause (7). Moving out of `intake` is the owner's, not Maestro's. |
 | `board_steps` | `project`, `number`, `steps: [{ title, status, now? }]`, `reason` | Replace the step list. |
 | `ci_run` | `project`, `issue`, optional `package`, `files`, `run` | Runs `.orchestra/ci.json`'s scoped checks on the card worktree's current tree, once per tree, and returns the tree, its checks and the scoped state. `run: false` only reports. |
+| `board_queue` | `project`, `number`, optional `urgent`, `flush`, `reason` | Puts a verified Review card in the merge queue. Refused without a PR, a complete record (Intent, Decisions, Not covered, Risk level), ready dependencies, or a scoped-green tree when the contract requires one. Returns the head, tree and scoped state it queued at. |
+| `board_dequeue` | `project`, `number`, `reason` | Takes a card out of the queue back to Review and dissolves the open bundle it was in. |
 | `board_question` | `project`, `issue?`, `epic?`, `action: ask` with `text`, `options`, `recommended`, `cost_of_waiting`, `blocking`; or `action: withdraw` with `id`; plus `reason` | Ask the owner or withdraw a question. |
 
 Maestro's prompt says only what the tools cannot: keep the board current as work moves, ask through `board_question`

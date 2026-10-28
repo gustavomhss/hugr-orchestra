@@ -89,6 +89,8 @@ export const BoardIssueTable = sqliteTable(
     guardrail_rule: text(),
     // Mirrored fields changed since the last push to GitHub (slice B2 flushes these).
     github_dirty: integer({ mode: "boolean" }).notNull().default(false),
+    // The PR record's Maestro fields (merge-queue spec section 4.5); the host renders it into the PR body.
+    record: text({ mode: "json" }).$type<Board.PrRecord>(),
     ...Timestamps,
   },
   (table) => [
@@ -330,4 +332,66 @@ export const BoardActivityTable = sqliteTable(
     ...Timestamps,
   },
   (table) => [index("board_activity_project_idx").on(table.project_id, table.id)],
+)
+
+// One row per card in the queue stage (merge-queue spec section 6). `head_sha` is the PR head the scoped checks passed on.
+export const BoardQueueTable = sqliteTable(
+  "board_queue",
+  {
+    issue_id: text()
+      .$type<Board.IssueID>()
+      .primaryKey()
+      .references(() => BoardIssueTable.id, { onDelete: "cascade" }),
+    project_id: text()
+      .$type<Board.ProjectID>()
+      .notNull()
+      .references(() => BoardProjectTable.id, { onDelete: "cascade" }),
+    head_sha: text().notNull(),
+    urgent: integer({ mode: "boolean" }).notNull().default(false),
+    flush: integer({ mode: "boolean" }).notNull().default(false),
+    queued_at: integer().notNull(),
+    ...Timestamps,
+  },
+  (table) => [index("board_queue_project_idx").on(table.project_id, table.queued_at)],
+)
+
+// A bundle PR: queued cards merged onto one base tip and tested together (section 6.2). `merged_on` is the base tip it
+// merged onto when that differs from `base_sha` (merge-if-disjoint).
+export const BoardBundleTable = sqliteTable(
+  "board_bundle",
+  {
+    id: text().$type<Board.BundleID>().primaryKey(),
+    project_id: text()
+      .$type<Board.ProjectID>()
+      .notNull()
+      .references(() => BoardProjectTable.id, { onDelete: "cascade" }),
+    n: integer().notNull(),
+    branch: text().notNull(),
+    pr_number: integer(),
+    base_sha: text().notNull(),
+    head_sha: text().notNull(),
+    tree_sha: text().notNull(),
+    status: text().$type<"open" | "merged" | "dissolved">().notNull(),
+    merged_on: text(),
+    ...Timestamps,
+  },
+  (table) => [uniqueIndex("board_bundle_number_idx").on(table.project_id, table.n)],
+)
+
+export const BoardBundleMemberTable = sqliteTable(
+  "board_bundle_member",
+  {
+    bundle_id: text()
+      .$type<Board.BundleID>()
+      .notNull()
+      .references(() => BoardBundleTable.id, { onDelete: "cascade" }),
+    issue_id: text()
+      .$type<Board.IssueID>()
+      .notNull()
+      .references(() => BoardIssueTable.id, { onDelete: "cascade" }),
+    head_sha: text().notNull(),
+    position: integer().notNull(),
+    ...Timestamps,
+  },
+  (table) => [primaryKey({ columns: [table.bundle_id, table.issue_id] })],
 )

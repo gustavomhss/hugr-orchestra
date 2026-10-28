@@ -16,6 +16,7 @@ import {
   BoardQuestionTable,
   BoardStepTable,
 } from "./sql"
+import { endOf } from "./shared"
 
 // The GitHub Issues mirror (docs/specs/projects-board/CONTRACT.md section 6). Transport is the signed-in `gh` CLI, so
 // there is no token here to store or log. Every call goes through an injected `Gh` runner, which tests replace with
@@ -600,12 +601,3 @@ export function unmirrored(text: string) {
 function redact(text: string) {
   return text.replace(/\b(gh[pousr]_[A-Za-z0-9_]{10,}|github_pat_[A-Za-z0-9_]{10,})/g, "[token]")
 }
-
-const endOf = Effect.fnUntraced(function* (tx: Tx, project: Board.ProjectID, stage: Board.Stage) {
-  const row = yield* tx
-    .select({ position: sql<number | null>`max(${BoardIssueTable.position})` })
-    .from(BoardIssueTable)
-    .where(and(eq(BoardIssueTable.project_id, project), eq(BoardIssueTable.stage, stage)))
-    .get()
-  return (row?.position ?? 0) + 1
-})

@@ -1,0 +1,755 @@
+export * as BoardQueue from "./queue"
+
+import fs from "fs/promises"
+import os from "os"
+import path from "path"
+import { and, asc, desc, eq, inArray, isNull, ne } from "drizzle-orm"
+import { Clock, Effect, Option, Schema } from "effect"
+import { ChildProcess } from "effect/unstable/process"
+import { Board } from "@orchestra/schema/board"
+import type { AppProcess } from "../process"
+import { which } from "../util/which"
+import { BoardCi } from "./ci"
+import type { BoardGithub } from "./github"
+import {
+  BoardAttemptTable,
+  BoardBundleMemberTable,
+  BoardBundleTable,
+  BoardCheckTable,
+  BoardDependencyTable,
+  BoardIssueTable,
+  BoardNoteTable,
+  BoardProjectTable,
+  BoardQueueTable,
+} from "./sql"
+import { changed, endOf, gitRunner, loadIssue, loadProject, log, RefusedError, worktree } from "./shared"
+import type { Changed, IssueRow, ProjectRow, Tx } from "./shared"
+
+// The merge queue (docs/specs/maestro-lead/merge-queue.md sections 6.1 to 6.6, phase 1). Only the host moves a card
+// into or out of the `queue` stage: `board_queue` enqueues a verified Review card, and the tick cuts one bundle per
+// project, waits for its full gate, and pushes base to the tested head. A red bundle sends its members back to Review;
+// the culprit search of section 6.3 is a later work package.
+
+export interface Deps {
+  readonly quiet: <A>(work: (tx: Tx) => Effect.Effect<A, unknown>) => Effect.Effect<A>
+  readonly proc: AppProcess.Interface
+  readonly env?: NodeJS.ProcessEnv
+  readonly gh: BoardGithub.Gh
+  readonly contract: (directory: string, project: ProjectRow) => Effect.Effect<BoardCi.Contract, { readonly message: string }>
+  readonly publish: (changed: Changed) => Effect.Effect<void>
+}
+
+const Pull = Schema.Struct({ head: Schema.Struct({ sha: Schema.String, ref: Schema.String }) })
+const decodePull = Schema.decodeUnknownOption(Schema.fromJsonString(Pull))
+const Rollup = Schema.Struct({
+  headRefOid: Schema.String,
+  statusCheckRollup: Schema.Array(
+    Schema.Struct({
+      name: Schema.optional(Schema.String),
+      context: Schema.optional(Schema.String),
+      status: Schema.optional(Schema.String),
+      conclusion: Schema.optional(Schema.NullOr(Schema.String)),
+      state: Schema.optional(Schema.String),
+    }),
+  ),
+})
+const decodeRollup = Schema.decodeUnknownOption(Schema.fromJsonString(Rollup))
+const Dry = Schema.Struct({ packages: Schema.Array(Schema.String) })
+const decodeDry = Schema.decodeUnknownOption(Schema.fromJsonString(Dry))
+
+const FAILED = new Set(["FAILURE", "TIMED_OUT", "CANCELLED", "STARTUP_FAILURE", "ACTION_REQUIRED", "ERROR"])
+const PASSED = new Set(["SUCCESS", "SKIPPED", "NEUTRAL"])
+const AUTHOR = ["-c", "user.name=Orchestra", "-c", "user.email=orchestra@users.noreply.github.com"]
+
+export function make(deps: Deps) {
+  const git = gitRunner(deps.proc, deps.env)
+
+  /** Reads a PR's head through the API, fetches it, and checks the fetched commit is that head. */
+  const head = Effect.fnUntraced(function* (directory: string, repo: string, pr: number) {
+    const pulled = yield* deps.gh(["api", `repos/${repo}/pulls/${pr}`])
+    const pull = pulled.exitCode === 0 ? Option.getOrUndefined(decodePull(pulled.stdout)) : undefined
+    if (!pull) return yield* new RefusedError({ message: `PR #${pr} could not be read: ${pulled.stderr.trim() || "no head"}.` })
+    yield* git(directory, ["fetch", "--quiet", "--no-tags", "origin", pull.head.ref])
+    const fetched = (yield* git(directory, ["rev-parse", "--verify", "--quiet", `${pull.head.sha}^{commit}`])).out
+    if (fetched !== pull.head.sha)
+      return yield* new RefusedError({ message: `PR #${pr}'s head ${pull.head.sha.slice(0, 10)} is not on origin/${pull.head.ref}.` })
+    return { sha: pull.head.sha, tree: (yield* git(directory, ["rev-parse", `${pull.head.sha}^{tree}`])).out }
+  })
+
+  const enqueue = Effect.fnUntraced(function* (input: Board.QueueInput) {
+    const ref = `${input.project}-${input.number}`
+    const found = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const project = yield* loadProject(tx, input.project)
+        const issue = yield* loadIssue(tx, project, input.number)
+        const attempt = yield* tx
+          .select()
+          .from(BoardAttemptTable)
+          .where(and(eq(BoardAttemptTable.issue_id, issue.id), isNull(BoardAttemptTable.outcome)))
+          .orderBy(desc(BoardAttemptTable.n))
+          .get()
+        const waits = yield* tx
+          .select({ number: BoardIssueTable.number, stage: BoardIssueTable.stage })
+          .from(BoardDependencyTable)
+          .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardDependencyTable.depends_on_id))
+          .where(eq(BoardDependencyTable.issue_id, issue.id))
+          .all()
+        return { project, issue, attempt, waits, directory: yield* worktree(tx, project) }
+      }).pipe(Effect.result),
+    )
+    if (found._tag === "Failure") return yield* found.failure
+    const { project, issue } = found.success
+    if (issue.stage !== "review") return yield* new RefusedError({ message: `${ref} is in ${issue.stage}; only a Review card is queued.` })
+    if (!issue.pr_number) return yield* new RefusedError({ message: `${ref} has no PR to queue.` })
+    if (!project.github_repo || !found.success.directory)
+      return yield* new RefusedError({ message: `${input.project} needs a linked repository and its GitHub repo before cards queue.` })
+    if (issue.paused) return yield* new RefusedError({ message: `${ref} is paused.` })
+    if (found.success.attempt?.conflict_base)
+      return yield* new RefusedError({
+        message: `${ref} conflicts with base in ${(found.success.attempt.conflict_files ?? []).join(", ")}; merge base in its worktree first.`,
+      })
+    const waiting = found.success.waits.filter((dep) => dep.stage !== "shipped" && dep.stage !== "queue")
+    if (waiting.length > 0)
+      return yield* new RefusedError({
+        message: `${ref} depends on ${waiting.map((dep) => `${input.project}-${dep.number}`).join(", ")}, which is neither shipped nor queued.`,
+      })
+    const missing = incomplete(issue.record)
+    if (missing.length > 0)
+      return yield* new RefusedError({ message: `${ref}'s PR record has no ${missing.join(", ")}; write it with board_issue first.` })
+    const follow = issue.record?.follow_ups ?? []
+    if (follow.length > 0) {
+      const known = yield* deps.quiet((tx) =>
+        tx.select({ number: BoardIssueTable.number }).from(BoardIssueTable).where(eq(BoardIssueTable.project_id, project.id)).all(),
+      )
+      const unknown = follow.filter((key) => !known.some((row) => key === `${input.project}-${row.number}`))
+      if (unknown.length > 0)
+        return yield* new RefusedError({ message: `${ref}'s follow-ups ${unknown.join(", ")} are not cards on ${input.project}.` })
+    }
+    const directory = found.success.directory
+    const contract = yield* deps.contract(directory, project).pipe(Effect.mapError((error) => new RefusedError({ message: error.message })))
+    const pr = yield* head(directory, project.github_repo, issue.pr_number)
+    const checks = yield* deps.quiet((tx) =>
+      tx
+        .select()
+        .from(BoardCheckTable)
+        .where(and(eq(BoardCheckTable.issue_id, issue.id), eq(BoardCheckTable.tree_sha, pr.tree)))
+        .all(),
+    )
+    const state = BoardCi.state(checks, contract)
+    if (state === "scoped-red") return yield* new RefusedError({ message: `${ref} is scoped-red on its PR head; fix it before queueing.` })
+    const required = contract.scoped.tests !== null || contract.scoped.workflows.length > 0
+    if (required && state !== "scoped-green")
+      return yield* new RefusedError({
+        message: `${ref} is not scoped-green on its PR head ${pr.sha.slice(0, 10)}; run ci_run on that tree first.`,
+      })
+    const now = yield* Clock.currentTimeMillis
+    const done = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const current = yield* loadIssue(tx, project, input.number)
+        if (current.stage !== "review" || current.pr_number !== issue.pr_number)
+          return yield* new RefusedError({ message: `${ref} changed while it was being checked; try again.` })
+        yield* tx
+          .insert(BoardQueueTable)
+          .values({ issue_id: issue.id, project_id: project.id, head_sha: pr.sha, urgent: input.urgent ?? false, flush: input.flush ?? false, queued_at: now })
+          .run()
+        const moved = yield* place(tx, project, current, "queue")
+        const activity = yield* log(tx, {
+          project: project.id,
+          issue: issue.id,
+          actor: "maestro",
+          action: "queue.add",
+          reason: input.reason,
+          before: moved.before,
+          after: { ...moved.after, head: pr.sha, urgent: input.urgent ?? false },
+        })
+        return changed(project.id, activity, issue.id)
+      }).pipe(Effect.result),
+    )
+    if (done._tag === "Failure") return yield* done.failure
+    yield* deps.publish(done.success)
+    yield* describe(project, issue.id)
+    return { head: pr.sha, tree: pr.tree, state }
+  })
+
+  const dequeue = Effect.fnUntraced(function* (input: Board.DequeueInput) {
+    const ref = `${input.project}-${input.number}`
+    const done = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const project = yield* loadProject(tx, input.project)
+        const issue = yield* loadIssue(tx, project, input.number)
+        if (issue.stage !== "queue") return yield* new RefusedError({ message: `${ref} is not queued.` })
+        const bundle = yield* openBundle(tx, project.id)
+        const member = bundle ? yield* isMember(tx, bundle.id, issue.id) : false
+        const back = yield* release(tx, project, issue, "maestro", "queue.remove", input.reason)
+        return { project, back, bundle: member ? bundle : undefined }
+      }).pipe(Effect.result),
+    )
+    if (done._tag === "Failure") return yield* done.failure
+    yield* deps.publish(done.success.back)
+    if (done.success.bundle) yield* dissolve(done.success.project, done.success.bundle, `${ref} left the queue.`)
+    return { dissolved: done.success.bundle?.n ?? null }
+  })
+
+  /** One pass over every active project: settle the open bundle, else cut a new one. The poll runs it every minute. */
+  const tick = Effect.fnUntraced(function* () {
+    const rows = yield* deps.quiet((tx) => tx.select().from(BoardProjectTable).where(ne(BoardProjectTable.status, "archived")).all())
+    yield* Effect.forEach(rows, (row) => project(row).pipe(Effect.ignore), { discard: true })
+  })
+
+  const project = Effect.fnUntraced(function* (row: ProjectRow) {
+    const directory = yield* deps.quiet((tx) => worktree(tx, row))
+    if (!directory || !row.github_repo) return
+    const contract = yield* deps.contract(directory, row)
+    const bundle = yield* deps.quiet((tx) => openBundle(tx, row.id))
+    if (bundle) return yield* settle(row, row.github_repo, directory, contract, bundle)
+    yield* cut(row, row.github_repo, directory, contract)
+  })
+
+  const cut = Effect.fnUntraced(function* (row: ProjectRow, repo: string, directory: string, contract: BoardCi.Contract) {
+    const now = yield* Clock.currentTimeMillis
+    const queued = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const cards = yield* tx
+          .select({ queue: BoardQueueTable, issue: BoardIssueTable })
+          .from(BoardQueueTable)
+          .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardQueueTable.issue_id))
+          .where(eq(BoardQueueTable.project_id, row.id))
+          .orderBy(desc(BoardQueueTable.urgent), asc(BoardQueueTable.queued_at))
+          .all()
+        const ids = cards.map((card) => card.issue.id)
+        const waits = ids.length
+          ? yield* tx
+              .select({ issue: BoardDependencyTable.issue_id, on: BoardDependencyTable.depends_on_id, stage: BoardIssueTable.stage })
+              .from(BoardDependencyTable)
+              .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardDependencyTable.depends_on_id))
+              .where(inArray(BoardDependencyTable.issue_id, ids))
+              .all()
+          : []
+        const attempts = ids.length
+          ? yield* tx
+              .select()
+              .from(BoardAttemptTable)
+              .where(and(inArray(BoardAttemptTable.issue_id, ids), isNull(BoardAttemptTable.outcome)))
+              .all()
+          : []
+        const epics = [...new Set(cards.map((card) => card.issue.epic_id).filter((id) => id !== null))]
+        const open = epics.length
+          ? yield* tx
+              .select({ epic: BoardIssueTable.epic_id, stage: BoardIssueTable.stage })
+              .from(BoardIssueTable)
+              .where(and(inArray(BoardIssueTable.epic_id, epics), ne(BoardIssueTable.stage, "shipped"), ne(BoardIssueTable.stage, "cut")))
+              .all()
+          : []
+        return { cards, waits, attempts, open }
+      }),
+    )
+    if (queued.cards.length === 0) return
+    const due =
+      queued.cards.length >= contract.bundle.size ||
+      queued.cards.some((card) => card.queue.flush) ||
+      now - Math.min(...queued.cards.map((card) => card.queue.queued_at)) >= contract.bundle.waitMinutes * 60_000 ||
+      queued.cards.some(
+        (card) => card.issue.epic_id !== null && queued.open.filter((item) => item.epic === card.issue.epic_id).every((item) => item.stage === "queue"),
+      )
+    if (!due) return
+    const base = contract.base
+    yield* git(directory, ["fetch", "--quiet", "--no-tags", "origin", base])
+    const tip = (yield* git(directory, ["rev-parse", "--verify", "--quiet", `refs/remotes/origin/${base}`])).out
+    if (!tip) return
+    const scratch = yield* Effect.promise(() => fs.mkdtemp(path.join(os.tmpdir(), `orchestra-bundle-${row.key}-`)))
+    const added = yield* git(directory, ["worktree", "add", "--quiet", "--detach", scratch, tip])
+    if (added.code !== 0) return
+    const members = yield* Effect.gen(function* () {
+      const taken: Array<{ readonly issue: IssueRow; readonly head: string }> = []
+      for (const card of queued.cards) {
+        if (taken.length >= contract.bundle.size) break
+        if (card.issue.hold_before_merge || card.issue.paused) continue
+        const attempt = queued.attempts.find((item) => item.issue_id === card.issue.id)
+        if (attempt?.conflict_base) continue
+        const ready = queued.waits
+          .filter((dep) => dep.issue === card.issue.id)
+          .every((dep) => dep.stage === "shipped" || taken.some((item) => item.issue.id === dep.on))
+        if (!ready) continue
+        const current = yield* head(directory, repo, card.issue.pr_number ?? 0).pipe(Effect.orElseSucceed(() => undefined))
+        if (current?.sha !== card.queue.head_sha) {
+          yield* moved(row, card.issue, current?.sha)
+          continue
+        }
+        const message = `Merge ${row.key}-${card.issue.number}: ${card.issue.title}\n\nWP: ${row.key}-${card.issue.number}\nAttempt: a${attempt?.n ?? 0}`
+        const merged = yield* git(scratch, [...AUTHOR, "merge", "--no-ff", "--quiet", "-m", message, card.queue.head_sha])
+        if (merged.code === 0) {
+          taken.push({ issue: card.issue, head: card.queue.head_sha })
+          continue
+        }
+        const files = (yield* git(scratch, ["diff", "--name-only", "--diff-filter=U"])).out.split("\n").filter(Boolean)
+        yield* git(scratch, ["merge", "--abort"])
+        yield* note(row, card.issue, `conflicts-with-queue: merging onto the bundle so far conflicts in ${files.join(", ") || "its changes"}; it stays queued.`)
+      }
+      return taken
+    })
+    const bundleHead = (yield* git(scratch, ["rev-parse", "HEAD"])).out
+    const tree = (yield* git(scratch, ["rev-parse", "HEAD^{tree}"])).out
+    yield* git(directory, ["worktree", "remove", "--force", scratch])
+    if (members.length === 0) return
+    const n = yield* deps.quiet((tx) =>
+      tx
+        .select({ n: BoardBundleTable.n })
+        .from(BoardBundleTable)
+        .where(eq(BoardBundleTable.project_id, row.id))
+        .orderBy(desc(BoardBundleTable.n))
+        .get()
+        .pipe(Effect.map((last) => (last?.n ?? 0) + 1)),
+    )
+    const branch = `bundle-${row.key}-${n}`
+    const pushed = yield* git(directory, ["push", "--quiet", "--force", "origin", `${bundleHead}:refs/heads/${branch}`])
+    if (pushed.code !== 0) return
+    const body = yield* deps.quiet((tx) => bundleBody(tx, row, n, tip, members))
+    const opened = yield* deps.gh(
+      [
+        "pr",
+        "create",
+        "--repo",
+        repo,
+        "--base",
+        base,
+        "--head",
+        branch,
+        "--title",
+        `chore(queue): bundle ${row.key}-B${n}`,
+        "--body-file",
+        "-",
+        ...(contract.full.label ? ["--label", contract.full.label] : []),
+      ],
+      body,
+    )
+    const number = Number(opened.stdout.match(/\/pull\/(\d+)/)?.[1] ?? 0) || null
+    const published = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const id = Board.BundleID.create()
+        yield* tx
+          .insert(BoardBundleTable)
+          .values({ id, project_id: row.id, n, branch, pr_number: number, base_sha: tip, head_sha: bundleHead, tree_sha: tree, status: "open" })
+          .run()
+        yield* tx
+          .insert(BoardBundleMemberTable)
+          .values(members.map((member, position) => ({ bundle_id: id, issue_id: member.issue.id, head_sha: member.head, position })))
+          .run()
+        yield* tx
+          .update(BoardQueueTable)
+          .set({ flush: false })
+          .where(inArray(BoardQueueTable.issue_id, members.map((member) => member.issue.id)))
+          .run()
+        return yield* Effect.forEach(members, (member) =>
+          log(tx, {
+            project: row.id,
+            issue: member.issue.id,
+            actor: "github",
+            action: "bundle.cut",
+            after: { bundle: n, pr: number, base: tip, head: bundleHead },
+          }).pipe(Effect.map((activity) => changed(row.id, activity, member.issue.id))),
+        )
+      }),
+    )
+    yield* Effect.forEach(published, deps.publish, { discard: true })
+    yield* Effect.forEach(members, (member) => describe(row, member.issue.id), { discard: true })
+  })
+
+  /** The open bundle's next step: wait, merge when green, or give its members back when red. */
+  const settle = Effect.fnUntraced(function* (
+    row: ProjectRow,
+    repo: string,
+    directory: string,
+    contract: BoardCi.Contract,
+    bundle: typeof BoardBundleTable.$inferSelect,
+  ) {
+    if (!bundle.pr_number) return yield* dissolve(row, bundle, "The bundle PR was not opened.")
+    const viewed = yield* deps.gh(["pr", "view", String(bundle.pr_number), "--repo", repo, "--json", "statusCheckRollup,headRefOid"])
+    const rollup = viewed.exitCode === 0 ? Option.getOrUndefined(decodeRollup(viewed.stdout)) : undefined
+    if (!rollup) return
+    if (rollup.headRefOid !== bundle.head_sha) return yield* dissolve(row, bundle, "Someone pushed to the bundle branch.")
+    const verdict = judge(rollup.statusCheckRollup, contract)
+    if (verdict === "pending") return
+    const members = yield* deps.quiet((tx) =>
+      tx
+        .select({ member: BoardBundleMemberTable, issue: BoardIssueTable })
+        .from(BoardBundleMemberTable)
+        .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardBundleMemberTable.issue_id))
+        .where(eq(BoardBundleMemberTable.bundle_id, bundle.id))
+        .orderBy(asc(BoardBundleMemberTable.position))
+        .all(),
+    )
+    if (verdict === "red") {
+      const back = yield* deps.quiet((tx) =>
+        Effect.forEach(members, (item) =>
+          Effect.gen(function* () {
+            yield* insertNote(tx, row, item.issue, `Bundle ${row.key}-B${bundle.n} went red on its full gate; this card is back in Review.`)
+            return yield* release(tx, row, item.issue, "github", "bundle.dissolve", `Bundle ${row.key}-B${bundle.n} is red.`)
+          }),
+        ),
+      )
+      yield* Effect.forEach(back, deps.publish, { discard: true })
+      return yield* close(row, repo, bundle, "red")
+    }
+    // Section 6.6: a member head that moved since assembly dequeues that member and the bundle is rebuilt.
+    const heads = yield* Effect.forEach(members, (item) =>
+      head(directory, repo, item.issue.pr_number ?? 0).pipe(
+        Effect.map((current) => ({ item, sha: current.sha as string | undefined })),
+        Effect.orElseSucceed(() => ({ item, sha: undefined })),
+      ),
+    )
+    const stale = heads.filter((entry) => entry.sha !== entry.item.member.head_sha)
+    if (stale.length > 0) {
+      yield* Effect.forEach(stale, (entry) => moved(row, entry.item.issue, entry.sha), { discard: true })
+      return yield* dissolve(row, bundle, `${stale.map((entry) => `${row.key}-${entry.item.issue.number}`).join(", ")} moved after assembly.`)
+    }
+    yield* git(directory, ["fetch", "--quiet", "--no-tags", "origin", contract.base])
+    const tip = (yield* git(directory, ["rev-parse", "--verify", "--quiet", `refs/remotes/origin/${contract.base}`])).out
+    if (!tip) return
+    const landed =
+      tip === bundle.base_sha
+        ? { target: bundle.head_sha, on: null }
+        : yield* skew(directory, contract, bundle, tip, row)
+    if (!landed) return yield* dissolve(row, bundle, `${contract.base} moved to ${tip.slice(0, 10)}; the bundle is rebuilt and retested.`)
+    const pushed = yield* git(directory, [
+      "push",
+      "--quiet",
+      `--force-with-lease=refs/heads/${contract.base}:${landed.on ?? bundle.base_sha}`,
+      "origin",
+      `${landed.target}:refs/heads/${contract.base}`,
+    ])
+    if (pushed.code !== 0) return
+    const shipped = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        yield* tx
+          .update(BoardBundleTable)
+          .set({ status: "merged", merged_on: landed.on })
+          .where(eq(BoardBundleTable.id, bundle.id))
+          .run()
+        return yield* Effect.forEach(members, (item) =>
+          Effect.gen(function* () {
+            yield* tx
+              .update(BoardAttemptTable)
+              .set({ outcome: "merged" })
+              .where(and(eq(BoardAttemptTable.issue_id, item.issue.id), isNull(BoardAttemptTable.outcome)))
+              .run()
+            yield* tx.delete(BoardQueueTable).where(eq(BoardQueueTable.issue_id, item.issue.id)).run()
+            const moving = yield* place(tx, row, item.issue, "shipped")
+            const activity = yield* log(tx, {
+              project: row.id,
+              issue: item.issue.id,
+              actor: "github",
+              action: "bundle.merge",
+              before: moving.before,
+              after: { ...moving.after, bundle: bundle.n, merged: landed.target, ...(landed.on ? { on: landed.on } : {}) },
+            })
+            return changed(row.id, activity, item.issue.id)
+          }),
+        )
+      }),
+    )
+    yield* Effect.forEach(shipped, deps.publish, { discard: true })
+    yield* git(directory, ["push", "--quiet", "origin", "--delete", bundle.branch])
+    // Snapshot refs go only once the merge is on the remote, and only for shipped cards.
+    yield* Effect.forEach(
+      members,
+      (item) =>
+        Effect.gen(function* () {
+          const remote = contract.snapshots.remote
+          const refs = (yield* git(directory, ["ls-remote", remote, `refs/orchestra/wip/${row.key}-${item.issue.number}/*`])).out
+            .split("\n")
+            .map((line) => line.split("\t")[1])
+            .filter((name): name is string => Boolean(name))
+          if (refs.length > 0) yield* git(directory, ["push", "--quiet", remote, "--delete", ...refs])
+          yield* describe(row, item.issue.id)
+        }),
+      { discard: true },
+    )
+  })
+
+  /**
+   * Section 6.5 `merge-if-disjoint`: the merge commit of the tested head onto the new tip, when the two merge clean and
+   * what moved base does not overlap what the bundle changed. Undefined means retest.
+   */
+  const skew = Effect.fnUntraced(function* (
+    directory: string,
+    contract: BoardCi.Contract,
+    bundle: typeof BoardBundleTable.$inferSelect,
+    tip: string,
+    row: ProjectRow,
+  ) {
+    if (contract.bundle.onBaseMoved !== "merge-if-disjoint") return undefined
+    const merged = yield* git(directory, ["merge-tree", "--write-tree", tip, bundle.head_sha])
+    if (merged.code !== 0) return undefined
+    const theirs = (yield* git(directory, ["diff", "--name-only", `${bundle.base_sha}..${tip}`])).out.split("\n").filter(Boolean)
+    const ours = (yield* git(directory, ["diff", "--name-only", `${bundle.base_sha}..${bundle.head_sha}`])).out.split("\n").filter(Boolean)
+    if (theirs.some((file) => ours.includes(file))) return undefined
+    const graph = (yield* git(directory, ["cat-file", "-e", `${tip}:turbo.json`])).code === 0
+    if (graph) {
+      const left = yield* affected(directory, bundle.base_sha, tip)
+      const right = yield* affected(directory, bundle.base_sha, bundle.head_sha)
+      if (!left || !right || left.some((name) => right.includes(name))) return undefined
+    }
+    const commit = yield* git(directory, [
+      ...AUTHOR,
+      "commit-tree",
+      merged.out.split("\n")[0] ?? "",
+      "-p",
+      tip,
+      "-p",
+      bundle.head_sha,
+      "-m",
+      `Merge bundle ${row.key}-B${bundle.n} onto ${contract.base}\n\nTested on ${bundle.base_sha}, merged on ${tip}.`,
+    ])
+    if (commit.code !== 0 || !commit.out) return undefined
+    return { target: commit.out, on: tip }
+  })
+
+  /** Section 7.1's affected set from `turbo`: the packages a commit range touches and every package that depends on them. */
+  const affected = Effect.fnUntraced(function* (directory: string, from: string, to: string) {
+    const bun = which("bun", deps.env ?? process.env)
+    if (!bun) return undefined
+    const result = yield* deps.proc
+      .run(
+        ChildProcess.make(bun, ["x", "turbo", "run", "typecheck", `--filter=...[${from}...${to}]`, "--dry=json"], {
+          cwd: directory,
+          env: { ...deps.env, TURBO_TELEMETRY_DISABLED: "1" },
+          extendEnv: true,
+          stdin: "ignore",
+        }),
+        { maxOutputBytes: 8 * 1024 * 1024, maxErrorBytes: 16 * 1024, timeout: "120 seconds" },
+      )
+      .pipe(Effect.orElseSucceed(() => undefined))
+    if (!result || result.exitCode !== 0) return undefined
+    return Option.getOrUndefined(decodeDry(result.stdout.toString("utf8")))?.packages
+  })
+
+  /** Closes the bundle PR and branch; its members stay queued and the next tick cuts again. */
+  const dissolve = Effect.fnUntraced(function* (row: ProjectRow, bundle: typeof BoardBundleTable.$inferSelect, reason: string) {
+    const published = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const members = yield* tx
+          .select({ issue: BoardBundleMemberTable.issue_id })
+          .from(BoardBundleMemberTable)
+          .where(eq(BoardBundleMemberTable.bundle_id, bundle.id))
+          .all()
+        return yield* Effect.forEach(members, (member) =>
+          log(tx, { project: row.id, issue: member.issue, actor: "github", action: "bundle.dissolve", reason, after: { bundle: bundle.n } }).pipe(
+            Effect.map((activity) => changed(row.id, activity, member.issue)),
+          ),
+        )
+      }),
+    )
+    yield* Effect.forEach(published, deps.publish, { discard: true })
+    if (row.github_repo) yield* close(row, row.github_repo, bundle, "dissolved")
+  })
+
+  const close = Effect.fnUntraced(function* (row: ProjectRow, repo: string, bundle: typeof BoardBundleTable.$inferSelect, why: string) {
+    yield* deps.quiet((tx) => tx.update(BoardBundleTable).set({ status: "dissolved" }).where(eq(BoardBundleTable.id, bundle.id)).run())
+    if (bundle.pr_number)
+      yield* deps.gh(["pr", "close", String(bundle.pr_number), "--repo", repo, "--delete-branch", "--comment", `Bundle ${row.key}-B${bundle.n} ${why}.`])
+  })
+
+  /** A queued card whose PR head moved since it queued goes back to Review: its new head is not verified. */
+  const moved = Effect.fnUntraced(function* (row: ProjectRow, issue: IssueRow, sha: string | undefined) {
+    const back = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const why = `The PR head moved${sha ? ` to ${sha.slice(0, 10)}` : ""} after it queued; verify it and queue it again.`
+        yield* insertNote(tx, row, issue, why)
+        return yield* release(tx, row, issue, "github", "queue.remove", why)
+      }),
+    )
+    yield* deps.publish(back)
+  })
+
+  const note = Effect.fnUntraced(function* (row: ProjectRow, issue: IssueRow, body: string) {
+    const done = yield* deps.quiet((tx) => insertNote(tx, row, issue, body))
+    yield* deps.publish(done)
+  })
+
+  /** Renders the card's PR body from its record plus the host's Evidence, Cost, Lineage and Integration sections. */
+  const describe = Effect.fnUntraced(function* (row: ProjectRow, issue: Board.IssueID) {
+    if (!row.github_repo) return
+    const now = yield* Clock.currentTimeMillis
+    const found = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const card = yield* tx.select().from(BoardIssueTable).where(eq(BoardIssueTable.id, issue)).get()
+        const checks = yield* tx.select().from(BoardCheckTable).where(eq(BoardCheckTable.issue_id, issue)).all()
+        const queued = yield* tx.select().from(BoardQueueTable).where(eq(BoardQueueTable.issue_id, issue)).get()
+        const bundles = yield* tx
+          .select({ n: BoardBundleTable.n, status: BoardBundleTable.status, pr: BoardBundleTable.pr_number, on: BoardBundleTable.merged_on })
+          .from(BoardBundleMemberTable)
+          .innerJoin(BoardBundleTable, eq(BoardBundleTable.id, BoardBundleMemberTable.bundle_id))
+          .where(eq(BoardBundleMemberTable.issue_id, issue))
+          .orderBy(asc(BoardBundleTable.n))
+          .all()
+        return { card, checks, queued, bundles }
+      }),
+    )
+    if (!found.card?.pr_number) return
+    yield* deps.gh(
+      ["pr", "edit", String(found.card.pr_number), "--repo", row.github_repo, "--body-file", "-"],
+      render({ key: row.key, now, ...found, card: found.card }),
+    )
+  })
+
+  return { enqueue, dequeue, tick }
+}
+
+export type Interface = ReturnType<typeof make>
+
+/** The record fields section 4.5 requires before a card queues. */
+export function incomplete(record: Board.PrRecord | null) {
+  const blank = (text: string | undefined) => !text?.trim()
+  return [
+    ...(blank(record?.intent) ? ["Intent"] : []),
+    ...(blank(record?.decisions) ? ["Decisions"] : []),
+    ...(blank(record?.not_covered) ? ["Not covered"] : []),
+    ...(record?.risk?.level ? [] : ["Risk level"]),
+  ]
+}
+
+/** `full.checks` names the checks that gate the bundle; with none named, every reported check must pass. */
+function judge(rollup: typeof Rollup.Type["statusCheckRollup"], contract: BoardCi.Contract) {
+  const checks = rollup.map((item) => ({
+    name: item.name ?? item.context ?? "",
+    done: item.state ? item.state !== "PENDING" && item.state !== "EXPECTED" : item.status === "COMPLETED",
+    result: item.conclusion ?? item.state ?? "",
+  }))
+  const gating = contract.full.checks.length > 0 ? checks.filter((check) => contract.full.checks.includes(check.name)) : checks
+  if (gating.some((check) => check.done && FAILED.has(check.result))) return "red"
+  if (contract.full.checks.some((name) => !gating.some((check) => check.name === name))) return "pending"
+  if (gating.length === 0) return contract.source === "no-ci" ? "green" : "pending"
+  return gating.every((check) => check.done && PASSED.has(check.result)) ? "green" : "pending"
+}
+
+const openBundle = Effect.fnUntraced(function* (tx: Tx, project: Board.ProjectID) {
+  return yield* tx
+    .select()
+    .from(BoardBundleTable)
+    .where(and(eq(BoardBundleTable.project_id, project), eq(BoardBundleTable.status, "open")))
+    .get()
+})
+
+const isMember = Effect.fnUntraced(function* (tx: Tx, bundle: Board.BundleID, issue: Board.IssueID) {
+  const row = yield* tx
+    .select({ issue: BoardBundleMemberTable.issue_id })
+    .from(BoardBundleMemberTable)
+    .where(and(eq(BoardBundleMemberTable.bundle_id, bundle), eq(BoardBundleMemberTable.issue_id, issue)))
+    .get()
+  return row !== undefined
+})
+
+/** Moves a card to the end of `stage`, the way `move` does, and returns what changed for the activity row. */
+const place = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, issue: IssueRow, stage: Board.Stage) {
+  const next = { stage, position: yield* endOf(tx, project.id, stage), stage_entered_at: yield* Clock.currentTimeMillis }
+  yield* tx
+    .update(BoardIssueTable)
+    .set({ ...next, ...(project.github_repo !== null ? { github_dirty: true } : {}) })
+    .where(eq(BoardIssueTable.id, issue.id))
+    .run()
+  return { before: { stage: issue.stage, position: issue.position, stage_entered_at: issue.stage_entered_at }, after: next }
+})
+
+/** Takes a card out of the queue and back to Review. */
+const release = Effect.fnUntraced(function* (
+  tx: Tx,
+  project: ProjectRow,
+  issue: IssueRow,
+  actor: Board.Actor,
+  action: Board.Action,
+  reason: string,
+) {
+  yield* tx.delete(BoardQueueTable).where(eq(BoardQueueTable.issue_id, issue.id)).run()
+  const current = (yield* tx.select().from(BoardIssueTable).where(eq(BoardIssueTable.id, issue.id)).get()) ?? issue
+  const moving = yield* place(tx, project, current, "review")
+  const activity = yield* log(tx, { project: project.id, issue: issue.id, actor, action, reason, before: moving.before, after: moving.after })
+  return changed(project.id, activity, issue.id)
+})
+
+const insertNote = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, issue: IssueRow, body: string) {
+  const id = Board.NoteID.create()
+  yield* tx.insert(BoardNoteTable).values({ id, issue_id: issue.id, author: "orchestra", body }).run()
+  const activity = yield* log(tx, { project: project.id, issue: issue.id, actor: "github", action: "note.add", after: { id } })
+  return changed(project.id, activity, issue.id)
+})
+
+const bundleBody = Effect.fnUntraced(function* (
+  tx: Tx,
+  row: ProjectRow,
+  n: number,
+  base: string,
+  members: ReadonlyArray<{ readonly issue: IssueRow; readonly head: string }>,
+) {
+  const lines = members.map((member) => {
+    const record = member.issue.record
+    const intent = record?.intent?.split("\n")[0]?.trim() ?? ""
+    return `| ${row.key}-${member.issue.number} | #${member.issue.pr_number} | \`${member.head.slice(0, 10)}\` | ${record?.risk?.level ?? ""} | ${intent.replaceAll("|", "\\|")} |`
+  })
+  return [
+    `Bundle ${row.key}-B${n}: ${members.length} card${members.length === 1 ? "" : "s"} on \`${base.slice(0, 10)}\`, assembled by Orchestra's merge queue.`,
+    "",
+    "| Card | PR | Head | Risk | Intent |",
+    "| --- | --- | --- | --- | --- |",
+    ...lines,
+    "",
+    "Orchestra merges this bundle by pushing base to its tested head once the full gate is green; do not merge it by hand.",
+  ].join("\n")
+})
+
+function render(input: {
+  readonly key: string
+  readonly now: number
+  readonly card: IssueRow
+  readonly checks: ReadonlyArray<typeof BoardCheckTable.$inferSelect>
+  readonly queued: typeof BoardQueueTable.$inferSelect | undefined
+  readonly bundles: ReadonlyArray<{ readonly n: number; readonly status: string; readonly pr: number | null; readonly on: string | null }>
+}) {
+  const record = input.card.record
+  const section = (title: string, text: string | undefined) => (text?.trim() ? [`## ${title}`, "", text.trim(), ""] : [])
+  const minutes = input.checks.reduce((sum, check) => sum + Math.max(0, (check.ended_at ?? check.started_at) - check.started_at), 0) / 60_000
+  const latest = input.checks.toSorted((a, b) => b.started_at - a.started_at).slice(0, 10)
+  const bundle = input.bundles.at(-1)
+  return [
+    ...section("Intent", record?.intent),
+    ...section("Change", record?.change),
+    ...section("Decisions", record?.decisions),
+    ...section("Not covered", record?.not_covered),
+    ...(record?.risk
+      ? [
+          "## Risk",
+          "",
+          `Level: ${record.risk.level ?? "unset"}`,
+          ...(record.risk.breaks?.trim() ? [`What could break: ${record.risk.breaks.trim()}`] : []),
+          ...(record.risk.undo?.trim() ? [`Undo: ${record.risk.undo.trim()}`] : []),
+          "",
+        ]
+      : []),
+    ...((record?.follow_ups ?? []).length > 0 ? ["## Follow-ups", "", ...(record?.follow_ups ?? []).map((key) => `- ${key}`), ""] : []),
+    "## Evidence",
+    "",
+    ...(latest.length > 0
+      ? latest.map((check) => `- ${check.kind} \`${check.command}\` on tree \`${check.tree_sha.slice(0, 10)}\`: ${check.outcome}${check.url ? ` (${check.url})` : ""}`)
+      : ["- No checks recorded."]),
+    "",
+    "## Cost",
+    "",
+    `- Attempts: ${input.card.attempts}`,
+    `- CI runs: ${input.checks.length}, ${Math.round(minutes)} min`,
+    `- Wall time: ${Math.round((input.now - input.card.time_created) / 3_600_000)} h`,
+    "",
+    "## Lineage",
+    "",
+    `- Card: ${input.key}-${input.card.number}`,
+    ...(input.queued ? [`- Queued head: \`${input.queued.head_sha.slice(0, 10)}\`${input.queued.urgent ? " (urgent)" : ""}`] : []),
+    "",
+    "## Integration",
+    "",
+    bundle
+      ? `- Bundle ${input.key}-B${bundle.n}${bundle.pr ? ` (#${bundle.pr})` : ""}: ${bundle.status}${bundle.on ? `, merged on \`${bundle.on.slice(0, 10)}\`` : ""}`
+      : input.queued
+        ? "- Queued, waiting for a bundle."
+        : "- Not queued.",
+    "",
+    "<sub>Rendered by Orchestra from the card's record. Edit the record with board_issue, not this body.</sub>",
+  ].join("\n")
+}

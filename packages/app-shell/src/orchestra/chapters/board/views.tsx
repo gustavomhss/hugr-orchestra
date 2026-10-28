@@ -40,6 +40,7 @@ const stageKey = {
   ready: "orchestra.board.stage.ready",
   building: "orchestra.board.stage.building",
   review: "orchestra.board.stage.review",
+  queue: "orchestra.board.stage.queue",
   shipped: "orchestra.board.stage.shipped",
   intake: "orchestra.board.stage.intake",
   cut: "orchestra.board.stage.cut",

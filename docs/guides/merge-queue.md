@@ -60,3 +60,28 @@ merges gets a note naming the touched files; a card that no longer merges gets a
 and is marked as conflicting. Maestro never rebases or merges into a seat's worktree: the seat merges the base branch
 on its next dispatch. A card marked as conflicting is checked again on every move, and gets a note when it merges
 clean again. Cards the move did not touch get nothing.
+
+## The queue
+
+When a card is verified, Maestro writes its PR record (intent, decisions, what is not covered, risk) and puts the card
+in the Queue column. Only Maestro's `board_queue` does that, and it refuses a card that has no PR, has an incomplete
+record, depends on cards that are not shipped or queued, conflicts with the base branch, or is not `scoped-green` when
+your contract names scoped checks. Maestro then fills the PR body from the record plus the facts it holds: checks,
+attempts and conflicts. Model cost is never written to GitHub.
+
+Queued cards are merged together into one bundle PR named `chore(queue): bundle KEY-B<n>` on a `bundle-KEY-<n>`
+branch, labelled with `full.label` so your full CI runs once for all of them. A bundle is cut when the queue reaches
+`bundle.size` cards, when a card was queued with `flush`, when the oldest card has waited `bundle.waitMinutes`, or when
+every remaining card of an epic is queued. Urgent cards go first.
+
+- **Green bundle.** Maestro checks that no member's PR moved since assembly, then pushes the tested bundle to the base
+  branch, so every member PR shows as merged and its card moves to Shipped. If the base branch moved meanwhile, the
+  bundle is retested, unless `onBaseMoved` is `merge-if-disjoint` and what moved does not overlap the bundle's files
+  or packages: then Maestro merges the tested bundle onto the new base without a second run.
+- **Red bundle.** The bundle PR is closed and every member goes back to Review with a note. Phase 1 does not yet
+  split a red bundle to find the failing card; Maestro queues the cards again after fixing it.
+- **A member pushed after assembly.** That card goes back to Review and the bundle is rebuilt without it.
+
+A card in the Queue column shows whether it is waiting, running in a bundle, held by your hold before merge, or held
+out by a conflict. To take a card out, ask Maestro: it uses `board_dequeue`, which also dissolves the bundle the card
+was in. Merge PRs of a board project only through the queue; a guard flags code that merges a PR outside it.

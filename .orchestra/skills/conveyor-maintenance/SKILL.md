@@ -6,7 +6,7 @@ description: How to change the merge queue (conveyor) safely — the CI contract
 # Conveyor maintenance
 
 Read `conveyor-ownership` first. Spec: `docs/specs/maestro-lead/merge-queue.md`, §5 for CI facts, §8 for attempts,
-snapshots and targeted rebase notices (§8.4).
+snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bundles and the PR record.
 
 ## Where a change goes
 
@@ -15,7 +15,11 @@ snapshots and targeted rebase notices (§8.4).
 - New check kind or outcome: `CheckKind` or `CheckOutcome` in `packages/schema/src/board.ts`, then `state` in `ci.ts`.
 - Attempt fields: `BoardAttemptTable` in `board/sql.ts`; who opens and ends attempts is `dispatch` and `follow` in
   `board/snapshot.ts`.
-- Which cards a base advance checks: `WATCHED` and the candidate query in `board/conflicts.ts` (WP4 adds `queue`).
+- Which cards a base advance checks: `WATCHED` and the candidate query in `board/conflicts.ts`.
+- Enqueue preconditions: `enqueue` in `board/queue.ts`; they are checked again inside the write transaction.
+- Cut rules and bundle order: `cut` in `board/queue.ts`. Landing and base moves: `settle` and `skew`.
+- PR record fields: `PrRecord` in `packages/schema/src/board.ts`, the completeness check `incomplete` and the body
+  renderer `describe` in `board/queue.ts`.
 - New column: `BoardCheckTable` in `board/sql.ts` (snake_case), then `bun run migration --name <name>` in
   `packages/core`.
 - Exposing checks over HTTP or in `board_read`: protocol group and handler, then `bun run generate` in
@@ -37,11 +41,16 @@ snapshots and targeted rebase notices (§8.4).
   `ci.json`.
 - `git merge-tree --write-tree` exits 0 clean and 1 on a conflict, listing the files after the tree line; above 1 the
   card gets no note for that advance.
+- Every `gh` call goes through the injected `Gh` (`Board.layerWith({ gh })`); tests fake GitHub there and run real git
+  against a bare origin.
+- A bundle branch is `bundle-<KEY>-<n>`, pushed with force; the base branch only with `--force-with-lease`.
+- `turbo` runs through `bun x turbo --dry=json` with a 120 s timeout; any failure means retest, never land.
+- The tick runs every 60 s in the board poll; it settles the open bundle before it cuts a new one.
 - Write-set matching drops `:L` line ranges and matches patterns with `Bun.Glob`, like the arsenal's `conflictVerdict`.
 
 ## Gates
 
-- Tests on Actions only: `bun run test:ci core test/board-ci.test.ts test/board-snapshot.test.ts test/board-conflicts.test.ts` (add `test/board.test.ts` and
+- Tests on Actions only: `bun run test:ci core test/board-ci.test.ts test/board-snapshot.test.ts test/board-conflicts.test.ts test/board-queue.test.ts` (add `test/board.test.ts` and
   `test/board-tools.test.ts` when board code moves).
 - Typecheck: `gh workflow run typecheck.yml --ref <branch>`. Never on the Mac.
 - `bun run check:guards --base origin/dev` before calling a change done.

@@ -10,7 +10,7 @@ const NEEDED = 5
 const TRIALS = 1000
 const HORIZON = 3650
 const SEED = 0x9e3779b9
-const OPEN: readonly Board.Stage[] = ["backlog", "ready", "building", "review"]
+const OPEN: readonly Board.Stage[] = ["backlog", "ready", "building", "review", "queue"]
 
 export type Item = {
   readonly epic: number | null

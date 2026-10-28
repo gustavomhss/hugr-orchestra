@@ -5,10 +5,14 @@ import {
   CiRunInput,
   CiRunResult,
   DecisionOutcomeInput,
+  DequeueInput,
+  DequeueResult,
   EpicInput,
   IssueInput,
   MoveInput,
   ProjectInput,
+  QueueInput,
+  QueueResult,
   QuestionInput,
   Read,
   ReadInput,
@@ -101,6 +105,20 @@ export const node = makeGlobalNode({
             input: CiRunInput,
             output: CiRunResult,
             execute: (input, context) => guard(context, board.ciRun(input)),
+          }),
+          board_queue: Tool.make({
+            description:
+              "Queue a verified Review card for merge. Needs its PR record (intent, decisions, not covered, risk level) written with board_issue, its PR head scoped-green, and every card it depends on shipped or queued. The host bundles queued cards, runs the full gate on the bundle and merges it; Maestro never merges.",
+            input: QueueInput,
+            output: QueueResult,
+            execute: (input, context) => guard(context, board.queue(input)),
+          }),
+          board_dequeue: Tool.make({
+            description:
+              "Take a queued card back to Review with a reason. An open bundle it is in is dissolved; the other members stay queued.",
+            input: DequeueInput,
+            output: DequeueResult,
+            execute: (input, context) => guard(context, board.dequeue(input)),
           }),
         })
         .pipe(Effect.orDie)

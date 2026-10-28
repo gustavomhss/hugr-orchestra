@@ -84,6 +84,21 @@ run tests on Actions with `bun run test:ci <package> <resolved-suite>` from the 
 `bun typecheck` from the package directory. Use `maestro-repo-maintenance` when an authorized Git/PR/release procedure is needed.
 Commands here inspect/verify; they do not implicitly authorize commit, push, PR, merge, or release.
 
+Publish a board card in this order: verify (scoped checks green on the PR head), write the record with
+`board_issue`, then `board_queue`. Never merge a board card's PR yourself; the host bundles queued cards, runs the
+full gate once and merges on green. `board_queue` refuses a card without a PR, a complete record or a green tree.
+The record is structure only; the repository may be public, so no spend, transcripts or secrets:
+
+```json
+{"intent": "Let a queued card leave the queue without a stage move.",
+ "decisions": "Dequeue dissolves the open bundle instead of rebuilding it in place.",
+ "not_covered": "Visual queue column; the Interface session owns it.",
+ "risk": {"level": "medium", "breaks": "A stale bundle could hold queued cards.", "undo": "Revert the PR; no migration."},
+ "follow_ups": ["LCH-61"]}
+```
+
+To pull a card back, `board_dequeue`; `board_move` never moves into or out of `queue`.
+
 ## Success / fail
 
 Success: actual requested work has verified acceptance, reconciliation, current evidence/decision pointers,
