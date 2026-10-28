@@ -15,7 +15,7 @@ Design and decisions: `docs/specs/claude-mode/meta-harness.md`. User guide: `doc
 | Appended note, foreground seats, environment | `modules/engine-adapters/claude-code/src/host/options.ts` |
 | SDK seam and `claude_code` preset | `modules/engine-adapters/claude-code/src/sdk.ts` |
 | Turn shape (`context`, `seats`, `authorize({ agent })`) | `packages/core/src/session/runner/execution-host.ts` |
-| What the runner hands the host | `packages/core/src/session/runner/llm.ts` |
+| What the runner hands the host | `packages/core/src/session/runner/llm.ts`; `notify` and `child` in `host-ports.ts` |
 
 ## Invariants
 
@@ -38,7 +38,7 @@ Design and decisions: `docs/specs/claude-mode/meta-harness.md`. User guide: `doc
   listed in each subagent's `disallowedTools`: the MCP request carries no agent, so they would run under the main
   agent's registry and permissions.
 - A subagent's frames (`parent_tool_use_id` set) never reach the parent's stream: `mirror` records them in the child
-  Session `Turn.child` opens for that task call (`packages/core/src/session/runner/llm.ts`), and `close` ends it on the
+  Session `Turn.child` opens for that task call (`packages/core/src/session/runner/host-ports.ts`), and `close` ends it on the
   call's result. The child is never woken and its step costs 0. Its permissions come from `TaskPermission`, shared with
   the task tool; `tool/task.ts` cannot be imported by the runner (cycle through `SessionV2`).
 - Governed dispatch stays MCP: `mcp__orchestra__task`, `mcp__orchestra__maestro_request_review`.
@@ -46,6 +46,6 @@ Design and decisions: `docs/specs/claude-mode/meta-harness.md`. User guide: `doc
 
 ## Testing
 
-- Host behavior: `bun run test:ci engine-claude-code test/v2-host.test.ts test/preset-guard.test.ts`.
+- Host behavior: `bun run test:ci engine-claude-code test/v2-host.test.ts test/v2-host-subagent.test.ts test/preset-guard.test.ts`.
 - Runner side: `bun run test:ci core test/session-runner-execution-host.test.ts`.
 - A real subscription turn needs the owner's Claude login; run it only in an isolated dev app.

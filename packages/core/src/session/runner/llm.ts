@@ -10,8 +10,6 @@ import {
   type ToolCall,
 } from "@orchestra/llm"
 import { Cause, Context, DateTime, Effect, FiberSet, Layer, Option, Queue, Scope, Semaphore, Stream } from "effect"
-import { createHash } from "node:crypto"
-import path from "path"
 import { asc, eq } from "drizzle-orm"
 import { AgentV2 } from "../../agent"
 import { CapabilityInvocation } from "../../capability/invocation"
@@ -31,12 +29,9 @@ import { MeetingContext } from "../meeting-context"
 import { ToolRegistry } from "../../tool/registry"
 import { ToolSafety } from "../../tool-safety"
 import { TaskGovernance } from "../../tool/task-governance"
-import { TaskPermission } from "../../tool/task-permission"
 import { Mcp } from "../../mcp"
 import { ToolOutputStore } from "../../tool-output-store"
-import { LeanOutput } from "../../tool/lean-output"
 import { SessionExecution } from "../execution"
-import { Prompt } from "../prompt"
 import { SessionContextEpoch } from "../context-epoch"
 import { SessionCompaction } from "../compaction"
 import { SessionEvent } from "../event"
@@ -50,6 +45,7 @@ import { SessionSubagentModels } from "../subagent-models"
 import { INTERRUPTED_TURN, type RunError, Service } from "./index"
 import { SessionRunnerModel } from "./model"
 import { createLLMEventPublisher } from "./publish-llm-event"
+import { HostPorts } from "./host-ports"
 import { ExecutionHost } from "./execution-host"
 import { toLLMMessages } from "./to-llm-message"
 import { SessionTitle } from "./title"
@@ -65,7 +61,6 @@ import { RelayWorkflowSession } from "../../relay-workflow-session"
 import { FSUtil } from "../../fs-util"
 import { AppProcess } from "../../process"
 import { SkillV2 } from "../../skill"
-import { RelativePath } from "../../schema"
 
 /**
  * Runs one durable coding-agent Session until it settles.
@@ -246,12 +241,8 @@ const layer = Layer.effect(
       if (!isLastStep) yield* mcp.ready()
       const toolMaterialization = isLastStep ? undefined : yield* tools.materialize(effectiveRules)
       const promptCacheKey = /^ses_[0-9a-f]{64}$/.test(session.id) ? session.id.slice(4) : session.id
-      const contextText = [system.baseline, workflow?.view.instructions].filter(
-        (part): part is string => part !== undefined && part.length > 0,
-      )
-      const systemText = [agent.info?.system, ...contextText].filter(
-        (part): part is string => part !== undefined && part.length > 0,
-      )
+      const contextText = [system.baseline, workflow?.view.instructions].filter((part): part is string => !!part)
+      const systemText = agent.info?.system ? [agent.info.system, ...contextText] : contextText
       // The task tool's targets (`TaskTool.requireTarget`), offered to a hosted engine as its own subagents.
       const seats = host
         ? (yield* agents.all()).filter(
@@ -432,99 +423,7 @@ const layer = Layer.effect(
         ),
         Stream.flatMap((items) => Stream.fromIterable(items)),
       )
-      const notify: ExecutionHost.Turn["notify"] = (input) =>
-        SessionInput.admit(db, events, {
-          id: SessionMessage.ID.make(input.id.startsWith("msg_") ? input.id : `msg_${input.id}`),
-          sessionID: session.id,
-          prompt: Prompt.make({ text: input.text }),
-          delivery: "steer",
-        }).pipe(
-          Effect.andThen(execution ? execution.wake(session.id) : Effect.void),
-        )
-      const child: ExecutionHost.Turn["child"] = (input) =>
-        Effect.gen(function* () {
-          const hash = (domain: string) =>
-            createHash("sha256").update(JSON.stringify([domain, session.id, input.callID])).digest("hex")
-          const id = SessionSchema.ID.make(`ses_${hash("host-child")}`)
-          const childModel = {
-            id: model ? ModelV2.ID.make(model.id) : (modelRef?.id ?? ModelV2.ID.make("default")),
-            providerID: model ? ProviderV2.ID.make(model.provider) : (modelRef?.providerID ?? ProviderV2.ID.make("anthropic")),
-          }
-          if (!(yield* store.get(id))) {
-            const ref = Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID })
-            yield* events.publish(
-              SessionEvent.Created,
-              {
-                sessionID: id,
-                timestamp: yield* DateTime.now,
-                projectID: location.project.id,
-                location: ref,
-                subdirectory: RelativePath.make(
-                  path.relative(location.project.directory, location.directory).replaceAll("\\", "/"),
-                ),
-                title: input.title,
-                parentID: session.id,
-                agent: input.agent,
-                model: childModel,
-              },
-              { location: ref },
-            )
-            const rules = TaskPermission.inheritedPermissions(
-              yield* store.permissions(session.id),
-              TaskPermission.primaryTools(yield* config.entries()),
-            )
-            if (rules.length > 0)
-              yield* events.publish(SessionEvent.PermissionChanged, {
-                sessionID: id,
-                timestamp: yield* DateTime.now,
-                permission: rules.map((rule) => ({ permission: rule.action, pattern: rule.resource, action: rule.effect })),
-              })
-          }
-          yield* withPublication(
-            events.publish(SessionEvent.Tool.Progress, {
-              sessionID: session.id,
-              assistantMessageID: yield* publisher.assistantMessageID(input.callID),
-              callID: input.callID,
-              timestamp: yield* DateTime.now,
-              structured: { sessionId: id, parentSessionId: session.id, agentId: input.agent, title: input.title },
-              content: [],
-            }),
-          )
-          // The task row reads the child from the settled call's metadata, as Orchestra's task tool leaves it.
-          LeanOutput.offer({ sessionID: session.id, callID: input.callID }, { sessionId: id, parentSessionId: session.id, agentId: input.agent })
-          // Admitted and promoted at once, never woken: the engine already runs this prompt.
-          yield* SessionInput.admit(db, events, {
-            id: SessionMessage.ID.make(`msg_${hash("host-child-prompt")}`),
-            sessionID: id,
-            prompt: Prompt.make({ text: input.prompt }),
-            delivery: "steer",
-          })
-          yield* SessionInput.promoteSteers(db, events, id, yield* EventV2.latestSequence(db, id))
-          const mirror = createLLMEventPublisher(events, { sessionID: id, agent: input.agent, model: childModel })
-          const serial = Semaphore.makeUnsafe(1).withPermit
-          return {
-            id,
-            publish: (event: LLMEvent) => serial(mirror.publish(event, [])),
-            finish: serial(
-              Effect.gen(function* () {
-                yield* mirror.flush()
-                yield* mirror.failUnsettledTools("Subagent ended without a tool result")
-                const settlement = mirror.stepSettlement()
-                if (!settlement || mirror.hasProviderError()) return
-                yield* events.publish(SessionEvent.Step.Ended, {
-                  sessionID: id,
-                  timestamp: yield* DateTime.now,
-                  assistantMessageID: yield* mirror.startAssistant(),
-                  finish: settlement.finish,
-                  // The parent's step already carries what the engine billed for the subagent.
-                  cost: 0,
-                  tokens: settlement.tokens,
-                  usageKnown: settlement.usageKnown,
-                })
-              }),
-            ),
-          }
-        })
+      const ports = yield* HostPorts.make({ session, model: modelRef, assistantMessageID: publisher.assistantMessageID, withPublication, execution })
       const source = request
         ? llm.stream(request)
         : host && agent.info
@@ -544,8 +443,8 @@ const layer = Layer.effect(
               memory,
               steers,
               consumed: (id) => Effect.sync(() => void liveSteers.delete(id)),
-              notify,
-              child,
+              notify: ports.notify,
+              child: ports.child,
               state: ExecutionHost.state(db, session.id, host.stateKey),
             })
           : Stream.die("SessionRunner: no provider for this turn")
