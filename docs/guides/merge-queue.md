@@ -90,8 +90,11 @@ every remaining card of an epic is queued. Urgent cards go first.
   checks, for example because it was merged outside the queue, Maestro runs the full gate on base alone first (a base
   probe: a bundle with no cards that never merges). If base is red, the bundle closes as `base-red`, its cards stay queued, and nothing is cut again until the base moves. Otherwise the bundle
   closes as `red` and its members stay queued, split in half: the first half is cut and gated again. A green half
-  merges; the rest is cut next. A card that is red alone goes back to Review with a note, and Maestro queues it again
-  after fixing it.
+  merges; the rest is cut next. A card that is red alone is ejected: its attempt closes `ejected`, a new attempt opens with
+  the cause, and the card goes back to Review with a note. Maestro queues it again after fixing it. A red made only of
+  cancelled, timed-out or never-started jobs is infrastructure: the bundle is rebuilt once with the same members, and a
+  second such red pauses the queue (`paused`) until Maestro retries it. After 50 settled cards the bundle size follows
+  the red rate.
 - **A member pushed after assembly.** That card goes back to Review and the bundle is rebuilt without it.
 
 A card in the Queue column shows whether it is waiting, running in a bundle, held by your hold before merge, or held

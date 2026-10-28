@@ -24,13 +24,15 @@ import {
   BoardProjectTable,
   BoardQueueTable,
 } from "./sql"
+import { BoardSnapshot } from "./snapshot"
 import { changed, endOf, gitRunner, loadIssue, loadProject, log, RefusedError, worktree } from "./shared"
 import type { Changed, IssueRow, ProjectRow, Tx } from "./shared"
 
 // The merge queue (docs/specs/maestro-lead/merge-queue.md sections 6.1 to 6.6, phase 1). Only the host moves a card
 // into or out of the `queue` stage: `board_queue` enqueues a verified Review card, and the tick cuts one bundle per
 // project, waits for its full gate, and pushes base to the tested head. A red bundle is halved until one card fails
-// alone and goes back to Review; flake probes, infra reruns and size-from-red-rate are a later package.
+// alone and is ejected into a new attempt; infrastructure failures rerun once and then pause the queue; the size follows
+// the red rate; flake probes and scoped F runs are a later package.
 
 export interface Deps {
   readonly quiet: <A>(work: (tx: Tx) => Effect.Effect<A, unknown>) => Effect.Effect<A>
@@ -64,6 +66,7 @@ const decodeDry = Schema.decodeUnknownOption(Schema.fromJsonString(Dry))
 
 const FAILED = new Set(["FAILURE", "TIMED_OUT", "CANCELLED", "STARTUP_FAILURE", "ACTION_REQUIRED", "ERROR"])
 const PASSED = new Set(["SUCCESS", "SKIPPED", "NEUTRAL"])
+const INFRA = new Set(["CANCELLED", "TIMED_OUT", "STARTUP_FAILURE"])
 const AUTHOR = ["-c", "user.name=Orchestra", "-c", "user.email=orchestra@users.noreply.github.com"]
 
 export function make(deps: Deps) {
@@ -257,15 +260,25 @@ export function make(deps: Deps) {
         const lastMembers = last
           ? yield* tx.select().from(BoardBundleMemberTable).where(eq(BoardBundleMemberTable.bundle_id, last.id)).all()
           : []
-        return { cards, waits, attempts, open, last: last && { status: last.status, base_sha: last.base_sha, members: lastMembers.length } }
+        const settled = yield* tx
+          .select({ outcome: BoardAttemptTable.outcome })
+          .from(BoardAttemptTable)
+          .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardAttemptTable.issue_id))
+          .where(and(eq(BoardIssueTable.project_id, row.id), inArray(BoardAttemptTable.outcome, ["merged", "ejected"])))
+          .orderBy(desc(BoardAttemptTable.time_updated))
+          .limit(50)
+          .all()
+        return { cards, waits, attempts, open, settled, last: last && { status: last.status, base_sha: last.base_sha, members: lastMembers.length } }
       }),
     )
     if (queued.cards.length === 0) return
+    if (queued.last?.status === "paused") return
+    const full = size(queued.settled.map((item) => item.outcome), contract.bundle)
     const split = (queued.last?.status === "red" && queued.last.members > 1) || queued.last?.status === "probing"
-    const cap = split && queued.last ? Math.max(1, Math.floor(queued.last.members / 2)) : contract.bundle.size
+    const cap = split && queued.last ? Math.max(1, Math.floor(queued.last.members / 2)) : full
     const due =
       split ||
-      queued.cards.length >= contract.bundle.size ||
+      queued.cards.length >= full ||
       queued.cards.some((card) => card.queue.flush) ||
       now - Math.min(...queued.cards.map((card) => card.queue.queued_at)) >= contract.bundle.waitMinutes * 60_000 ||
       queued.cards.some(
@@ -470,6 +483,37 @@ export function make(deps: Deps) {
     if (members.length === 0)
       return yield* close(row, repo, bundle, `probed ${contract.base} at ${bundle.base_sha.slice(0, 10)}`, verdict === "green" ? "probe-green" : "base-red")
     if (verdict === "red") {
+      const infraRed = infra(rollup.statusCheckRollup, contract)
+      const previous = infraRed
+        ? yield* deps.quiet((tx) =>
+            tx
+              .select({ status: BoardBundleTable.status })
+              .from(BoardBundleTable)
+              .where(and(eq(BoardBundleTable.project_id, row.id), ne(BoardBundleTable.status, "open"), ne(BoardBundleTable.id, bundle.id)))
+              .orderBy(desc(BoardBundleTable.n))
+              .get(),
+          )
+        : undefined
+      if (infraRed && previous?.status === "infra") {
+        yield* Effect.forEach(
+          members,
+          (item) => note(row, item.issue, `Bundle ${row.key}-B${bundle.n} failed on infrastructure twice; the ${row.key} queue is paused until Maestro retries it, and this card stays queued.`),
+          { discard: true },
+        )
+        yield* Effect.logWarning(`integration: ${row.key} queue paused, bundle ${row.key}-B${bundle.n} failed on infrastructure twice`)
+        return yield* close(row, repo, bundle, "failed on infrastructure twice; the queue is paused", "paused")
+      }
+      if (infraRed) {
+        yield* Effect.forEach(
+          members,
+          (item) => note(row, item.issue, `Bundle ${row.key}-B${bundle.n} failed on infrastructure, not code; the queue reruns it once and this card stays queued.`),
+          { discard: true },
+        )
+        yield* deps.quiet((tx) =>
+          tx.update(BoardQueueTable).set({ flush: true }).where(inArray(BoardQueueTable.issue_id, members.map((item) => item.issue.id))).run(),
+        )
+        return yield* close(row, repo, bundle, "failed on infrastructure; the queue reruns it", "infra")
+      }
       const sha10 = bundle.base_sha.slice(0, 10)
       const based = yield* baseState(row, repo, bundle.base_sha, contract)
       if (based === "unknown") {
@@ -509,6 +553,12 @@ export function make(deps: Deps) {
         Effect.forEach(members, (item) =>
           Effect.gen(function* () {
             yield* insertNote(tx, row, item.issue, `Bundle ${row.key}-B${bundle.n} went red with only this card on ${contract.base} at ${sha10}; it is back in Review.`)
+            yield* tx
+              .update(BoardAttemptTable)
+              .set({ outcome: "ejected" })
+              .where(and(eq(BoardAttemptTable.issue_id, item.issue.id), isNull(BoardAttemptTable.outcome)))
+              .run()
+            yield* BoardSnapshot.dispatch(tx, item.issue, { cause: `ejected:${row.key}-B${bundle.n}` })
             return yield* release(tx, row, item.issue, "github", "bundle.dissolve", "red alone on the full gate")
           }),
         ),
@@ -822,16 +872,35 @@ export function incomplete(record: Board.PrRecord | null) {
 
 /** `full.checks` names the checks that gate the bundle; with none named, every reported check must pass. */
 function judge(rollup: typeof Rollup.Type["statusCheckRollup"], contract: BoardCi.Contract) {
+  const gates = gating(rollup, contract)
+  if (gates.some((check) => check.done && FAILED.has(check.result))) return "red"
+  if (contract.full.checks.some((name) => !gates.some((check) => check.name === name))) return "pending"
+  if (gates.length === 0) return contract.source === "no-ci" ? "green" : "pending"
+  return gates.every((check) => check.done && PASSED.has(check.result)) ? "green" : "pending"
+}
+
+function gating(rollup: typeof Rollup.Type["statusCheckRollup"], contract: BoardCi.Contract) {
   const checks = rollup.map((item) => ({
     name: item.name ?? item.context ?? "",
     done: item.state ? item.state !== "PENDING" && item.state !== "EXPECTED" : item.status === "COMPLETED",
     result: item.conclusion ?? item.state ?? "",
   }))
-  const gating = contract.full.checks.length > 0 ? checks.filter((check) => contract.full.checks.includes(check.name)) : checks
-  if (gating.some((check) => check.done && FAILED.has(check.result))) return "red"
-  if (contract.full.checks.some((name) => !gating.some((check) => check.name === name))) return "pending"
-  if (gating.length === 0) return contract.source === "no-ci" ? "green" : "pending"
-  return gating.every((check) => check.done && PASSED.has(check.result)) ? "green" : "pending"
+  return contract.full.checks.length > 0 ? checks.filter((check) => contract.full.checks.includes(check.name)) : checks
+}
+
+/** Section 6.3 step 1: a red made only of cancelled, timed-out or never-started jobs is infrastructure, not code. */
+function infra(rollup: typeof Rollup.Type["statusCheckRollup"], contract: BoardCi.Contract) {
+  const failed = gating(rollup, contract).filter((check) => check.done && FAILED.has(check.result))
+  return failed.length > 0 && failed.every((check) => INFRA.has(check.result))
+}
+
+/** Section 6.3: once 50 bundled cards have settled, the size is the largest n with (1 - p)^n >= 0.75, p the share ejected. */
+export function size(outcomes: ReadonlyArray<string | null>, bundle: BoardCi.Contract["bundle"]) {
+  if (outcomes.length < 50) return bundle.size
+  const p = outcomes.filter((outcome) => outcome === "ejected").length / outcomes.length
+  if (p === 0) return bundle.max
+  if (p >= 1) return 1
+  return Math.min(bundle.max, Math.max(1, Math.floor(Math.log(0.75) / Math.log(1 - p))))
 }
 
 const openBundle = Effect.fnUntraced(function* (tx: Tx, project: Board.ProjectID) {

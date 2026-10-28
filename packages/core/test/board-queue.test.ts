@@ -1,14 +1,16 @@
-import { describe, expect } from "bun:test"
+import { describe, expect, test } from "bun:test"
 import fs from "fs/promises"
 import { tmpdir } from "os"
 import path from "path"
 import { pathToFileURL } from "url"
-import { and, asc, eq } from "drizzle-orm"
+import { and, asc, desc, eq } from "drizzle-orm"
 import { Effect, Exit } from "effect"
 import { Board } from "@orchestra/core/board/board"
+import { BoardQueue } from "@orchestra/core/board/queue"
 import type { BoardRecord } from "@orchestra/core/board/record"
 import {
   BoardActivityTable,
+  BoardAttemptTable,
   BoardBundleTable,
   BoardCheckTable,
   BoardIssueTable,
@@ -39,6 +41,8 @@ type Remote = {
   bodies: Map<number, string>
   conclusion: string
   seeded: ReadonlyArray<string>
+  /** Branches whose full gate comes back CANCELLED (infrastructure, not code). */
+  cancelled: ReadonlyArray<string>
   baseRuns: string
   calls: Array<ReadonlyArray<string>>
 }
@@ -66,7 +70,8 @@ const gh = (args: ReadonlyArray<string>, stdin?: string) =>
     if (args[0] === "pr" && args[1] === "view") {
       const headRefOid = await sha(remote.pulls.get(Number(args[2])) ?? "")
       const seededRed = remote.seeded.length > 0 && (await Promise.all(remote.seeded.map((branch) => contains(remote.origin, branch, headRefOid)))).every(Boolean)
-      const conclusion = seededRed ? "FAILURE" : remote.conclusion
+      const cancelled = remote.cancelled.includes(remote.pulls.get(Number(args[2])) ?? "")
+      const conclusion = seededRed ? "FAILURE" : cancelled ? "CANCELLED" : remote.conclusion
       const done = conclusion !== ""
       const rollup = [{ name: "test", status: done ? "COMPLETED" : "IN_PROGRESS", conclusion: done ? conclusion : null }]
       return { exitCode: 0, stdout: JSON.stringify({ headRefOid, statusCheckRollup: rollup }), stderr: "" }
@@ -200,6 +205,12 @@ describe("BoardQueue", () => {
       yield* card(repo, "QRD", 1, "a.txt")
       yield* card(repo, "QRD", 2, "b.txt")
       yield* card(repo, "QRD", 3, "c.txt")
+      const database = yield* Database.Service
+      yield* database.db
+        .insert(BoardAttemptTable)
+        .values({ issue_id: (yield* row(repo, 3)).issue.id, n: 1, write_paths: [] })
+        .run()
+        .pipe(Effect.orDie)
       yield* Effect.forEach([1, 2, 3], (number) => board.queue({ project: "QRD", number, flush: true, reason: "Verified." }), { discard: true })
       repo.remote.conclusion = "SUCCESS"
       repo.remote.seeded = ["card-3"]
@@ -209,6 +220,26 @@ describe("BoardQueue", () => {
       expect(yield* queued(repo, 3)).toBeNull()
       expect(yield* bundleStatuses(repo)).toEqual(["red", "merged", "red", "merged", "red"])
       expect(yield* ejections(repo, 3)).toEqual(["red alone on the full gate"])
+      const ejecting = yield* database.db
+        .select({ n: BoardBundleTable.n })
+        .from(BoardBundleTable)
+        .innerJoin(BoardProjectTable, eq(BoardProjectTable.id, BoardBundleTable.project_id))
+        .where(eq(BoardProjectTable.key, "QRD"))
+        .orderBy(desc(BoardBundleTable.n))
+        .get()
+        .pipe(Effect.orDie)
+      const attempts = yield* database.db
+        .select({ n: BoardAttemptTable.n, outcome: BoardAttemptTable.outcome, cause: BoardAttemptTable.cause })
+        .from(BoardAttemptTable)
+        .where(eq(BoardAttemptTable.issue_id, (yield* row(repo, 3)).issue.id))
+        .orderBy(asc(BoardAttemptTable.n))
+        .all()
+        .pipe(Effect.orDie)
+      expect(attempts.map((item) => [item.n, item.outcome])).toEqual([
+        [1, "ejected"],
+        [2, null],
+      ])
+      expect(attempts[1]?.cause).toBe(`ejected:QRD-B${ejecting?.n}`)
     }),
   )
 
@@ -344,6 +375,55 @@ describe("BoardQueue", () => {
       expect(yield* origin(repo, "main")).toBe(open.head)
     }),
   )
+
+  it.live("an infrastructure red reruns the bundle once and ships it when the rerun is green", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QIF")
+      yield* card(repo, "QIF", 1, "a.txt")
+      yield* card(repo, "QIF", 2, "b.txt")
+      yield* board.queue({ project: "QIF", number: 1, reason: "Verified." })
+      yield* board.queue({ project: "QIF", number: 2, reason: "Verified." })
+      repo.remote.conclusion = "SUCCESS"
+      repo.remote.cancelled = ["bundle-QIF-1"]
+
+      yield* Effect.forEach(Array.from({ length: 8 }), () => board.queueTick(), { discard: true })
+      expect([yield* stage(repo, 1), yield* stage(repo, 2)]).toEqual(["shipped", "shipped"])
+      expect(yield* bundleStatuses(repo)).toEqual(["infra", "merged"])
+    }),
+  )
+
+  it.live("an infrastructure red twice pauses the queue until Maestro retries it", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QIP")
+      yield* card(repo, "QIP", 1, "a.txt")
+      yield* card(repo, "QIP", 2, "b.txt")
+      yield* board.queue({ project: "QIP", number: 1, reason: "Verified." })
+      yield* board.queue({ project: "QIP", number: 2, reason: "Verified." })
+      repo.remote.conclusion = "SUCCESS"
+      repo.remote.cancelled = ["bundle-QIP-1", "bundle-QIP-2"]
+
+      yield* Effect.forEach(Array.from({ length: 8 }), () => board.queueTick(), { discard: true })
+      expect([yield* stage(repo, 1), yield* stage(repo, 2)]).toEqual(["queue", "queue"])
+      expect(yield* bundleStatuses(repo)).toEqual(["infra", "paused"])
+
+      const pulls = repo.remote.pulls.size
+      yield* board.queueTick()
+      expect(repo.remote.pulls.size).toBe(pulls)
+      expect(yield* bundleStatuses(repo)).toEqual(["infra", "paused"])
+    }),
+  )
+
+  test("the bundle size follows the red rate once 50 cards have settled", () => {
+    const bundle = { size: 4, max: 16, waitMinutes: 45, onBaseMoved: "retest" as const }
+    const outcomes = (outcome: string, count: number) => Array.from({ length: count }, () => outcome)
+    expect(BoardQueue.size(outcomes("merged", 49), bundle)).toBe(4)
+    expect(BoardQueue.size(outcomes("merged", 50), bundle)).toBe(16)
+    expect(BoardQueue.size([...outcomes("merged", 45), ...outcomes("ejected", 5)], bundle)).toBe(2)
+    expect(BoardQueue.size([...outcomes("merged", 48), ...outcomes("ejected", 2)], bundle)).toBe(7)
+    expect(BoardQueue.size(outcomes("ejected", 50), bundle)).toBe(1)
+  })
 })
 
 type Repo = { readonly root: string; readonly directory: string; readonly key: string; readonly remote: Remote }
@@ -362,7 +442,7 @@ function repository(key: string, size = 2) {
       await commit(directory, "base")
       await git(directory, "remote", "add", "origin", pathToFileURL(remote).href)
       await git(directory, "push", "--quiet", "origin", "main")
-      return { root, directory, key, remote: { origin: remote, pulls: new Map<number, string>(), bodies: new Map<number, string>(), conclusion: "", seeded: [] as ReadonlyArray<string>, baseRuns: GREEN_BASE, calls: [] } }
+      return { root, directory, key, remote: { origin: remote, pulls: new Map<number, string>(), bodies: new Map<number, string>(), conclusion: "", seeded: [] as ReadonlyArray<string>, cancelled: [] as ReadonlyArray<string>, baseRuns: GREEN_BASE, calls: [] } }
     })
     remotes.set(`acme/${key}`, made.remote)
     const database = yield* Database.Service
