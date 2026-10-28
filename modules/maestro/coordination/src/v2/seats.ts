@@ -64,7 +64,10 @@ const layer = Layer.effectDiscard(
     yield* plugins.wait(PluginV2.ID.make("config-agent"))
     yield* plugins.ensure(pluginID, () =>
       Effect.gen(function* () {
-        if (skillRoot) yield* skills.transform(MaestroSkillSourcesV2.playbooks(skillRoot.SeatSkillRoot.playbooks))
+        if (skillRoot) {
+          yield* skills.transform(MaestroSkillSourcesV2.playbooks(skillRoot.SeatSkillRoot.playbooks))
+          yield* skills.transform(MaestroSkillSourcesV2.seats(skillRoot.SeatSkillRoot.roots))
+        }
         yield* agents.transform(
           Effect.fn(function* (draft) {
             const members = roster ? roster.roster.filter((member) => seats.has(member.memberId)) : []
@@ -199,12 +202,18 @@ export const owners: readonly { readonly tools: readonly string[]; readonly agen
   },
 ]
 
-/** The rules denying an agent the tools it may not use and, unless it is Maestro, the playbooks. */
+/**
+ * The rules denying an agent the tools it may not use, every other seat's entry skills and, unless it is Maestro, the
+ * playbooks.
+ */
 export function visibility(id: string): PermissionV2.Ruleset {
   return [
     ...owners
       .filter((owner) => !owner.agents.includes(id))
       .flatMap((owner) => owner.tools.map((tool) => ({ action: tool, resource: "*", effect: "deny" as const }))),
+    ...Object.values(Seats.all)
+      .filter((seat) => seat.id !== id)
+      .flatMap((seat) => seat.skills.map((name) => ({ action: "skill", resource: name, effect: "deny" as const }))),
     ...(id === AgentV2.defaultID ? [] : MaestroSkillSourcesV2.denied),
   ]
 }

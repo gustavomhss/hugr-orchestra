@@ -14,6 +14,14 @@ export function playbooks(root: string) {
     draft.source(SkillV2.DirectorySource.make({ type: "directory", path: AbsolutePath.make(root) }), { first: true })
 }
 
+/** Each native seat's entry skills (`SeatSkillRoot.roots`) as skill sources; `MaestroSeatsV2.visibility` keeps them to their seat. */
+export function seats(roots: Readonly<Record<string, string>>) {
+  return (draft: SkillV2.Draft) =>
+    Object.values(roots).forEach((root) =>
+      draft.source(SkillV2.DirectorySource.make({ type: "directory", path: AbsolutePath.make(root) })),
+    )
+}
+
 /** Playbooks are Maestro's procedures: every other agent is denied loading one, which also leaves it off their list. */
 export const denied: PermissionV2.Ruleset = PlaybookContent.names.map((name) => ({
   action: "skill",

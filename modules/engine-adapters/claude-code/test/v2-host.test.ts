@@ -10,6 +10,7 @@ import { ToolSafety } from "@orchestra/core/tool-safety"
 import type { ExecutionHost } from "@orchestra/core/session/runner"
 import { Effect, Layer, Stream } from "effect"
 import { QuestionV2 } from "@orchestra/core/question"
+import { ClaudeHostOptions } from "../src/host/options"
 import { ClaudeCodeSDK } from "../src/sdk"
 import { ClaudeCodeHost, permission } from "../src/v2/host"
 
@@ -56,13 +57,17 @@ const ports = {
   steers: Stream.empty,
   consumed: () => Effect.void,
   notify: () => Effect.void,
-} satisfies Pick<ExecutionHost.Turn, "question" | "memory" | "steers" | "consumed" | "notify">
+  child: () => Effect.succeed({ id: SessionSchema.ID.make("ses_child"), publish: () => Effect.void, finish: Effect.void }),
+} satisfies Pick<ExecutionHost.Turn, "question" | "memory" | "steers" | "consumed" | "notify" | "child">
 
 const turnOf = (input: Partial<ExecutionHost.Turn> = {}): ExecutionHost.Turn => ({
   session: { id: SessionSchema.ID.make("ses_host"), location: { directory: "/project" } } as unknown as SessionSchema.Info,
   agent: AgentV2.Info.empty(AgentV2.ID.make("maestro")),
   model: undefined,
   system: [],
+  context: [],
+  seats: [],
+  skills: {},
   history: [user("msg_1", "Go")] as unknown as ExecutionHost.Turn["history"],
   tools: [],
   execute: () => Effect.die("unused"),
@@ -80,6 +85,8 @@ const collect = (turn: ExecutionHost.Turn) =>
     ),
   ).then((events) => Array.from(events))
 const done = frame({ type: "result", subtype: "success", is_error: false, session_id: "claude-1", result: "", usage })
+const seat = (id: string, fields: Partial<AgentV2.Info> = {}) =>
+  ({ ...AgentV2.Info.empty(AgentV2.ID.make(id)), mode: "subagent", system: `You are ${id}. Use the task delegation tool.`, ...fields }) as AgentV2.Info
 
 test("one SDK query is one turn: tool calls surface provider-executed and the next turn resumes with only new input", async () => {
   const stored: { value: unknown } = { value: undefined }
@@ -88,6 +95,9 @@ test("one SDK query is one turn: tool calls surface provider-executed and the ne
     agent: AgentV2.Info.empty(AgentV2.ID.make("maestro")),
     model: undefined,
     system: ["Maestro instructions", "Context"],
+    context: ["Context"],
+    seats: [],
+    skills: {},
     history: history as ExecutionHost.Turn["history"],
     tools: [],
     execute: () => Effect.die("unused"),
@@ -127,14 +137,15 @@ test("one SDK query is one turn: tool calls surface provider-executed and the ne
   expect(calls[0]?.options).toMatchObject({
     cwd: "/project",
     sessionId: ClaudeCodeHost.claudeSessionID("ses_host"),
-    systemPrompt: { type: "preset", preset: "claude_code", append: "Maestro instructions\n\nContext" },
+    // The short Maestro note, never the seat's full Orchestra prompt or the context.
+    systemPrompt: { type: "preset", preset: "claude_code", append: ClaudeHostOptions.append("maestro", {}) },
   })
   expect(calls[0]?.options?.resume).toBeUndefined()
   expect(first.map((event) => event.type)).toEqual([
     "step-start", "text-start", "text-delta", "text-end", "tool-call", "tool-result",
     "text-start", "text-delta", "text-end", "step-finish",
   ])
-  expect(first[4]).toMatchObject({ id: "tu1", name: "Bash", input: { command: "ls" }, providerExecuted: true })
+  expect(first[4]).toMatchObject({ id: "tu1", name: "bash", input: { command: "ls" }, providerExecuted: true })
   expect(first[5]).toMatchObject({ id: "tu1", result: { type: "text", value: "a.txt" }, providerExecuted: true })
   expect(first.at(-1)).toMatchObject({ reason: "stop", usage: { inputTokens: 16, outputTokens: 4 } })
   expect(stored.value).toEqual({ sessionId: "claude-1", delivered: ["msg_1"] })
@@ -151,6 +162,40 @@ test("one SDK query is one turn: tool calls surface provider-executed and the ne
   expect(second).toMatchObject([{ type: "step-start" }, { type: "provider-error", message: ClaudeCodeSDK.SIGNED_OUT }])
   // A failed turn delivers nothing, so the message is sent again next time.
   expect(stored.value).toEqual({ sessionId: "claude-1", delivered: ["msg_1"] })
+})
+
+test("built-in calls are recorded under Orchestra's tool names, so the app shows its usual widgets", async () => {
+  const todos = [{ content: "Plan", status: "completed", activeForm: "Planning" }]
+  const call = (id: string, name: string, input: Record<string, unknown>) =>
+    frame({ type: "assistant", uuid: `a-${id}`, session_id: "claude-1", parent_tool_use_id: null,
+      message: { content: [{ type: "tool_use", id, name, input }] } })
+  const result = (id: string, content: string) =>
+    frame({ type: "user", session_id: "claude-1", parent_tool_use_id: null,
+      message: { role: "user", content: [{ type: "tool_result", tool_use_id: id, content }] } })
+  script = [
+    call("t1", "Read", { file_path: "/project/a.ts", offset: 2, limit: 10 }),
+    call("t2", "Edit", { file_path: "/project/a.ts", old_string: "a", new_string: "b" }),
+    call("t3", "Grep", { pattern: "x", path: "src", glob: "*.ts" }),
+    call("t4", "TodoWrite", { todos }),
+    result("t4", "Todos have been modified successfully."),
+    call("t5", "Agent", { description: "Fix it", prompt: "go", subagent_type: "orchestra:backend" }),
+    call("t6", "Skill", { skill: "release" }),
+    done,
+  ]
+  const events = await collect(turnOf({ seats: [seat("backend")] }))
+
+  expect(events.filter((event) => event.type === "tool-call")).toMatchObject([
+    { name: "read", input: { filePath: "/project/a.ts", offset: 2, limit: 10 } },
+    { name: "edit", input: { filePath: "/project/a.ts", oldString: "a", newString: "b" } },
+    { name: "grep", input: { pattern: "x", path: "src", include: "*.ts" } },
+    { name: "todowrite", input: { todos } },
+    { name: "task", input: { description: "Fix it", prompt: "go", subagent_type: "backend" } },
+    { name: "skill", input: { name: "release" } },
+  ])
+  expect(events.find((event) => event.type === "tool-result")).toMatchObject({
+    name: "todowrite",
+    result: { type: "text", value: JSON.stringify({ todos }) },
+  })
 })
 
 test("Orchestra tools are served over the in-process MCP server and settle through the runner, never as host events", async () => {
@@ -242,30 +287,50 @@ test("Claude Code's approvals become V2 permission checks: allowed runs, a deny 
   ])
 })
 
-test("delegation goes through Orchestra's governed task: served over MCP, Claude Code's own subagent tool refused", async () => {
-  let listed: string[] = []
-  const decisions: unknown[] = []
+test("the context reaches Claude Code beside the prompt, once per change, and again after a compaction", async () => {
+  const stored: { value: unknown } = { value: undefined }
+  const state = {
+    get: Effect.sync(() => stored.value),
+    update: (fn: (value: unknown) => unknown) => Effect.sync(() => void (stored.value = fn(stored.value))),
+  }
+  const submitted: unknown[] = []
+  const signal = new AbortController().signal
+  const submit = (options: Options) =>
+    options.hooks?.UserPromptSubmit?.[0]?.hooks[0]?.(
+      { hook_event_name: "UserPromptSubmit", prompt: "Go", session_id: "claude-1", transcript_path: "", cwd: "/project" } as HookInput,
+      undefined,
+      { signal },
+    )
   during = async (options) => {
-    const signal = new AbortController().signal
-    decisions.push(await options.canUseTool?.("Agent", { prompt: "go" }, { signal, toolUseID: "tu-1", requestId: "r1" }))
-    decisions.push(await options.canUseTool?.("Task", { prompt: "go" }, { signal, toolUseID: "tu-2", requestId: "r2" }))
-    const server = options.mcpServers?.orchestra as McpSdkServerConfigWithInstance
-    const [client, transport] = InMemoryTransport.createLinkedPair()
-    await server.instance.connect(transport)
-    const mcp = new Client({ name: "test", version: "0" })
-    await mcp.connect(client)
-    listed = (await mcp.listTools()).tools.map((tool) => tool.name)
-    await mcp.close()
+    submitted.push(await submit(options))
+    submitted.push(await submit(options))
   }
   script = [done]
+  await collect(turnOf({ context: ["Baseline"], state }))
   await collect(turnOf({
-    tools: [new ToolDefinition({ name: "task", description: "task", inputSchema: { type: "object", properties: {} } })],
-    authorize: () => Effect.die("a subagent call must not reach the permission check"),
+    context: ["Baseline"],
+    state,
+    history: [user("msg_1", "Go"), user("msg_2", "Next")] as unknown as ExecutionHost.Turn["history"],
   }))
 
-  expect(listed).toEqual(["task"])
-  const denied = { behavior: "deny", message: "Delegate through `mcp__orchestra__task`: Orchestra governs every delegation in this session." }
-  expect(decisions).toEqual([denied, denied])
+  const context = { hookSpecificOutput: { hookEventName: "UserPromptSubmit", additionalContext: "Baseline" } }
+  expect(submitted).toEqual([context, {}, {}, {}])
+
+  const recalled: unknown[] = []
+  during = async (options) => {
+    recalled.push(await options.hooks?.SessionStart?.[0]?.hooks[0]?.(
+      { hook_event_name: "SessionStart", source: "compact", session_id: "claude-1", transcript_path: "", cwd: "/project" } as HookInput,
+      undefined,
+      { signal },
+    ))
+  }
+  await collect(turnOf({
+    context: ["Baseline"],
+    state,
+    memory: { recall: Effect.succeed("Todos"), archive: () => Effect.void },
+    history: [user("msg_3", "Again")] as unknown as ExecutionHost.Turn["history"],
+  }))
+  expect(recalled).toEqual([{ hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: "Baseline\n\nTodos" } }])
 })
 
 // Claude Code skips canUseTool when a settings allow rule matches, so the PreToolUse hook is the call's only sure check.
@@ -286,7 +351,7 @@ test("the PreToolUse gate settles every call through Orchestra, failing closed, 
     decisions.push(await pre(options, "Write", { file_path: "/project/a.ts" }, "tu-1"))
     decisions.push(await pre(options, "Bash", { command: "rm -rf /" }, "tu-2"))
     decisions.push(await pre(options, "Grep", { pattern: "boom" }, "tu-3"))
-    decisions.push(await pre(options, "Agent", { prompt: "go" }, "tu-4"))
+    decisions.push(await pre(options, "Agent", { prompt: "go", subagent_type: "orchestra:backend", run_in_background: true }, "tu-4"))
     decisions.push(await pre(options, "AskUserQuestion", { questions: [] }, "tu-5"))
     decisions.push(await pre(options, "mcp__orchestra__task", { prompt: "go" }, "tu-6"))
     // canUseTool after the hook already learned the call (both can run): the call id is not queued twice.
@@ -302,6 +367,7 @@ test("the PreToolUse gate settles every call through Orchestra, failing closed, 
   }
   script = [done]
   await collect(turnOf({
+    seats: [seat("backend")],
     tools: [new ToolDefinition({ name: "task", description: "task", inputSchema: { type: "object", properties: {} } })],
     execute: (call) => Effect.sync(() => executed.push(call.id)).pipe(Effect.as({ result: { type: "text" as const, value: "ok" } })),
     authorize: (input) =>
@@ -322,7 +388,7 @@ test("the PreToolUse gate settles every call through Orchestra, failing closed, 
     allowed,
     refused("Orchestra's permission rules deny this call."),
     refused("Orchestra could not check this call, so it is refused."),
-    refused("Delegate through `mcp__orchestra__task`: Orchestra governs every delegation in this session."),
+    refused("Run `orchestra:backend` in the foreground: its result is needed in this turn."),
     // The question needs the owner, so the hook leaves it to canUseTool.
     {},
     allowed,

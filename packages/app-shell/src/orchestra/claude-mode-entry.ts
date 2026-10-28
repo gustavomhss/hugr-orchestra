@@ -17,6 +17,7 @@ export function setMaestroEngine(sync: Config, engine: Engine) {
 // The entry point of the no-provider surfaces. The engine switches only when the account is already signed in;
 // otherwise the Providers page switches it after its sign-in succeeds, so a signed-out person never gets an engine
 // with no account behind it. The chapter page reads the Home profile, so give it one when none is selected yet.
+// Resolves true when the engine switched here, so the caller can confirm it.
 export async function enableClaudeMode(input: {
   sync: Config
   providers: ClaudeProviders
@@ -34,6 +35,7 @@ export async function enableClaudeMode(input: {
   if (input.directory && !input.home.selection().directory)
     input.home.setSelection({ server: input.server, directory: input.directory })
   // Already signed in: the engine is switched and the person stays on the task they started.
-  if (signedIn) return
+  if (signedIn) return true
   input.navigate(CLAUDE_MODE_PATH, { returnTo: input.returnTo, engine: true })
+  return false
 }

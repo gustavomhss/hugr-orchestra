@@ -170,7 +170,11 @@ function ProviderPickerV2(props: {
   onMount(() => search?.focus({ preventScroll: true }))
 
   const connect = (provider: string) => {
-    if (provider === CLAUDE_MODE_ID) return void claudeMode()
+    if (provider === CLAUDE_MODE_ID) {
+      // Reading the Claude account can take seconds; keep the row busy so the click visibly registered.
+      setStore("connecting", CLAUDE_MODE_ID)
+      return void claudeMode().finally(() => setStore("connecting", undefined))
+    }
     props.onPrepare?.()
     props.onSelect(provider)
   }
