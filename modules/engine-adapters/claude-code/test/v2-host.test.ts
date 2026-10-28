@@ -380,6 +380,7 @@ test("the PreToolUse gate settles every call through Orchestra, failing closed, 
     decisions.push(await pre(options, "Agent", { prompt: "go", subagent_type: "orchestra:backend", run_in_background: true }, "tu-4"))
     decisions.push(await pre(options, "AskUserQuestion", { questions: [] }, "tu-5"))
     decisions.push(await pre(options, "mcp__orchestra__task", { prompt: "go" }, "tu-6"))
+    decisions.push(await pre(options, "ToolSearch", { query: "select:mcp__orchestra__task" }, "tu-7"))
     // canUseTool after the hook already learned the call (both can run): the call id is not queued twice.
     await options.canUseTool?.("mcp__orchestra__task", { prompt: "go" }, { signal: new AbortController().signal, toolUseID: "tu-6", requestId: "r6" })
     const server = options.mcpServers?.orchestra as McpSdkServerConfigWithInstance
@@ -417,6 +418,8 @@ test("the PreToolUse gate settles every call through Orchestra, failing closed, 
     refused("Run `orchestra:backend` in the foreground: its result is needed in this turn."),
     // The question needs the owner, so the hook leaves it to canUseTool.
     {},
+    allowed,
+    // ToolSearch only loads the deferred schemas, so it is allowed without a permission check.
     allowed,
   ])
   expect(executed[0]).toBe("tu-6")

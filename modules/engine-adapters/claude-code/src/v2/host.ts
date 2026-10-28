@@ -30,10 +30,7 @@ export const MCP_SERVER = "orchestra"
 const MCP_PREFIX = `mcp__${MCP_SERVER}__`
 
 /** Orchestra tools Claude Code has as built-ins, or that belong to Orchestra's own loop: never served. */
-const UNSERVED = new Set([
-  "bash", "read", "write", "edit", "apply_patch", "grep", "glob", "webfetch", "websearch", "todowrite",
-  "question", "skill", "lsp", "invalid", "context_compact", "execute",
-])
+const UNSERVED = new Set(["bash", "read", "write", "edit", "apply_patch", "grep", "glob", "webfetch", "websearch", "todowrite", "question", "skill", "lsp", "invalid", "context_compact", "execute"])
 
 const EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const
 /** The prefix of a seat's subagent name, as the V1 `orchestra` plugin named them. */
@@ -44,13 +41,13 @@ const QUESTION_DISMISSED = "The owner dismissed this question."
 /** A finished background task's process stays up this long waiting for the task to report; then it is let go. */
 const BACKGROUND_PATIENCE = Duration.minutes(30)
 const UNCHECKED = "Orchestra could not check this call, so it is refused."
-/** Orchestra's tools in a turn are the main agent's, with its permissions: a subagent would act as that agent. */
+/** A subagent other than a seat's would act as the main agent, with its permissions. */
 const MAIN_ONLY = "Orchestra's tools serve the main agent and Orchestra's seats only."
+/** Claude Code defers MCP tools behind this one; it only loads their schemas, so every call to it is allowed. */
+const TOOL_SEARCH = "ToolSearch"
 
 /** One gate decision, shared by the PreToolUse hook and `canUseTool` so both settle a call the same way. */
-type Decision =
-  | { readonly allow: true; readonly input?: Record<string, unknown> }
-  | { readonly allow: false; readonly reason: string }
+type Decision = { readonly allow: true; readonly input?: Record<string, unknown> } | { readonly allow: false; readonly reason: string }
 
 /** How a Claude Code built-in maps to a V2 permission: its action and the input field that names the resource. */
 const PERMISSIONS: Readonly<Record<string, { action: string; field: string; path?: boolean }>> = {
@@ -136,6 +133,8 @@ export const make = Effect.gen(function* () {
             // Never rejects: a defect, a throw or an abort in Orchestra's own check refuses the call (fail closed).
             const made = Promise.resolve()
               .then((): Decision | Promise<Decision> => {
+                // An agent whose rules deny `*` still reaches the Orchestra tools it holds, which sit behind ToolSearch.
+                if (tool === TOOL_SEARCH) return { allow: true }
                 if (tool.startsWith(MCP_PREFIX)) {
                   const name = tool.slice(MCP_PREFIX.length)
                   if (agentType !== undefined) {

@@ -7,6 +7,7 @@ import { makeGlobalNode, makeLocationNode } from "@orchestra/core/effect/app-nod
 import { EventV2 } from "@orchestra/core/event"
 import type { Host } from "@orchestra/core/host"
 import { LocationServiceMap } from "@orchestra/core/location-service-map"
+import { McpProvided } from "@orchestra/core/mcp/provided"
 import { PermissionV2 } from "@orchestra/core/permission"
 import { PluginV2 } from "@orchestra/core/plugin"
 import { SessionStore } from "@orchestra/core/session"
@@ -15,6 +16,7 @@ import { Tool } from "@orchestra/core/tool/tool"
 import { SessionEvent } from "@orchestra/schema/session-event"
 import { createAppDockHooks } from "./app-dock"
 import { LINUX_DESCRIPTION, LINUX_PROMPT } from "./app-dock-linux"
+import { DockMcp } from "./dock-mcp"
 import { createLinuxWorkspaceHooks } from "./linux-workspace"
 import type { Transport } from "./transport"
 
@@ -114,6 +116,8 @@ export function contribution(port: Transport): Host.Contribution {
       }),
       reaper(port),
     ],
+    // Every interface open in the dock is also its own MCP server (DockMcp), for any agent and any engine.
+    replacements: [[McpProvided.node, DockMcp.node(port)]],
   }
 }
 
