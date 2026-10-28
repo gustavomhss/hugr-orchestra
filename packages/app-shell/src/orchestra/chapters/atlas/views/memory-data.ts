@@ -1,7 +1,7 @@
 import type { AtlasMember, AtlasMemberId, AtlasMemoryTask, AtlasModel } from "../atlas-model"
 import type { AtlasRoute } from "../atlas-route"
 
-// The memory pages (specs/atlas-ui/mock/views-memory.js) over the records of .atlas/memory.jsonl (D3b). Session
+// The memory pages (specs/atlas-ui/mock/views-memory.js) over the records of .atlas/members/*/memory/ (D3b). Session
 // transcripts are not served (D12), so a task is only its checkpoints: no calls, times or tokens.
 
 // What the member page hands its sections (memory.tsx, memory-project.tsx). Dismissed proposals live in the page.

@@ -121,6 +121,8 @@ export const ARITY: Record<Command, number> = {
   "own-export": 1,
   // `repair --worklist <file>` takes NO positional; the worklist file rides the valued flag (R9).
   repair: 0,
+  // `migrate-layout` takes NO positional: it moves the logs of the repository at cwd.
+  "migrate-layout": 0,
 }
 
 // [ENTRY-CLI-5 clean-up] this used to be a HAND-TRANSCRIBED string literal — a second copy of `COMMANDS`

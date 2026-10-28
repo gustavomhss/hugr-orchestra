@@ -1,7 +1,7 @@
 # `atlas answer`
 
 Answer one question of the [ratification interview](./interview.md). The answer is one record appended to the review
-log `.atlas/review.jsonl`, and the question drops out of the next batch. Answering a `tier` question with `T1` or `T0`
+log `.atlas/project/review.jsonl`, and the question drops out of the next batch. Answering a `tier` question with `T1` or `T0`
 also opens a proposal for that fact — the interview never ratifies anything itself; a person still decides it with
 [`atlas decide`](./decide.md).
 

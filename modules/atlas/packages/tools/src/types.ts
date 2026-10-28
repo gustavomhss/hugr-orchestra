@@ -31,7 +31,7 @@ export type { Hash, Pack, PackInvariant, Territory } from "@atlas/contracts"
  * [EXTENDED — WP-11.W8 / CAMPAIGN-11] `atlas-memory-emit` joins as a THIRD governed write door — the ONE
  * path a `MemoryEntry` reaches the durable per-seat memory log (`@atlas/memory` MEM-1..9), through the SEVEN
  * fail-closed gates `createMemoryEmit` composes (`packages/adapter-io/src/memory-emit.ts`). It is a NEW
- * `Tool`, not a reuse of `atlas-emit`'s door: the store it appends to (`.atlas/memory.jsonl`) is a
+ * `Tool`, not a reuse of `atlas-emit`'s door: the store it appends to (`.atlas/members/<seat>/memory/`) is a
  * SEPARATE durable log from the knowledge CAS `atlas-emit` writes, so ADR-0008's "an ordinary use of the
  * existing emit door" reasoning does not apply — this is genuinely new governed surface. `GOVERNANCE_SURFACE`
  * grows from five to SIX and `WRITE_PATHS` from two to three (ARCH-6/ARCH-7, ADR-0006 Decision 2: the surface

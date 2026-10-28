@@ -112,6 +112,24 @@ LogbookEntry = {
 Fixed sections only; prose _within_ a section, never a free-form dump. Per-section soft cap + hard
 per-entry cap. Append-only: a later entry **supersedes by link**, never by rewriting.
 
+### Where the logs live (`packages/adapter-io/src/layout.ts`)
+
+```
+.atlas/
+  project/orientation.jsonl          shared Orientation events
+  project/review.jsonl               shared review log (holds, proposals, decisions, answers)
+  members/<seat>/memory/project.jsonl            the seat's project rules
+  members/<seat>/memory/logbook.jsonl            logbook entries
+  members/<seat>/memory/task/<taskId>.jsonl      one file per task
+  members/<seat>/memory/pr/<prId>.jsonl          one file per PR
+```
+
+A file name is a shard hint, never identity: the fold is content-keyed over every file, and the legacy
+single files (`.atlas/memory.jsonl`, `orientation.jsonl`, `review.jsonl`) are still read first.
+`atlas migrate-layout` moves their lines into the tree byte for byte, so every event keeps its id. Every
+`.atlas/**/*.jsonl` merges by union (root `.gitattributes`); splitting by seat and task makes two
+branches rarely touch the same file at all.
+
 ## Invariants
 
 Emitted in clean ascending order. (Renumbered from the source spec's scrambled `M-8/M-9/M-10` tail.)

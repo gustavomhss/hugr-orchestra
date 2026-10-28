@@ -252,7 +252,7 @@ describe("atlas model: committed Own snapshot, memory and territories (D3b)", ()
     expect(model.memory.backend).toEqual({
       bound: true,
       tasks: [
-        { taskId: "t1", attempted: ["tried a"], failedWith: [], stoppedAt: "phase 2", lesson: "Read the brief.", ref: "", source: ".atlas/memory.jsonl" },
+        { taskId: "t1", attempted: ["tried a"], failedWith: [], stoppedAt: "phase 2", lesson: "Read the brief.", ref: "", source: ".atlas/members/backend/memory/task/" },
       ],
       prs: [{ prId: "7", title: "", decisions: ["a", "b"], reviewOutcomes: ["ok"], knowledgeDelta: [] }],
       rules: [{ rule: "Always run the gate.", scope: "packages/a", age: 5, grounding: "PR#1", from: "Always run the gate." }],

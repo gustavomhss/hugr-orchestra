@@ -1,11 +1,11 @@
-// @atlas/adapter-io — src/review-log.ts  (D14: the shared review log, `.atlas/review.jsonl`)
+// @atlas/adapter-io — src/review-log.ts  (D14: the shared review log, `.atlas/project/review.jsonl`)
 //
 // One append-only, content-keyed log for every human review act the Atlas screen and CLI record: a curator holding
 // or releasing a staged candidate (R2), a reviewer proposing a fact for T1/T0 and a person deciding it (R3), an
 // interview answer (R11), and a steward's memory proposal and decision (R1). Each act is ONE record; nothing is
 // edited or removed, and the current state — what is held, which proposals are open — is a FOLD over the records.
 //
-// The file is the durable-log primitive (`durable-log.ts`), exactly as `memory.jsonl` is: every line is a kernel
+// The file is the durable-log primitive (`durable-log.ts`), exactly as the memory logs are: every line is a kernel
 // `Event` whose `payload` is the record without its id and whose `contentHash` is the record id, so a torn or edited
 // line fails its own content-key check and is COUNTED (`rejected`), never folded in. It travels in git
 // (`.gitignore` re-admits it, `.gitattributes` merges it by union), so a hold made on one branch survives the merge.
@@ -14,10 +14,10 @@
 // so the same act repeated later is a second record and the fold decides by `at` (file order breaks a tie). Never
 // name a record field `status`, `grounding` or `freshness`: the kernel hash drops those keys (KERNEL-8).
 
-import { join } from "node:path"
 import { eventId, id } from "@atlas/kernel"
 import type { Event } from "@atlas/kernel"
-import { createDurableLog } from "./durable-log.js"
+import { createDurableLog, readDurableLogs } from "./durable-log.js"
+import { legacyLogPath, projectLogPath } from "./layout.js"
 
 export type ReviewTier = "T1" | "T0"
 
@@ -77,8 +77,9 @@ export interface ReviewFold {
   readonly memoryDecisions: readonly ReviewOf<"memory-decision">[]
 }
 
-/** The tracked log's path under a repo root. One file; nothing in it is ever replaced. */
-export const reviewLogPath = (repoPath: string): string => join(repoPath, ".atlas", "review.jsonl")
+/** The tracked log's path under a repo root. Nothing in it is ever replaced; the legacy `.atlas/review.jsonl`
+ *  is still read, first. */
+export const reviewLogPath = (repoPath: string): string => projectLogPath(repoPath, "review")
 
 /**
  * Append one review act and return it with its id. THROWS on an input that does not match its kind (an empty
@@ -97,7 +98,7 @@ export function appendReview(repoPath: string, input: ReviewInput): ReviewRecord
 
 /** Read every verifiable record, in file order. Total — a missing file is an empty log, not an error. */
 export function readReview(repoPath: string): ReviewRead {
-  const raw = createDurableLog(reviewLogPath(repoPath)).read()
+  const raw = readDurableLogs([legacyLogPath(repoPath, "review"), reviewLogPath(repoPath)])
   const events = [...raw.log.values()]
   const records = events.flatMap((ev): ReviewRecord[] => {
     const body = parseInput(ev.payload)
@@ -140,7 +141,7 @@ export function foldReview(records: readonly ReviewRecord[]): ReviewFold {
 
 /** The invariant line every review act reports, in the CLI and on the Atlas screen alike. */
 export const REVIEW_INVARIANT =
-  "REVIEW-LOG (D14): a review act is one appended, content-keyed record in .atlas/review.jsonl — nothing is edited or removed, and the current state is a fold over the records"
+  "REVIEW-LOG (D14): a review act is one appended, content-keyed record in .atlas/project/review.jsonl — nothing is edited or removed, and the current state is a fold over the records"
 
 /**
  * A review act a helper declined. `invalid`: the request itself is wrong (the CLI's exit 1). `governed`: the log or
