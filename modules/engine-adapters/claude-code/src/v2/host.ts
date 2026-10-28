@@ -33,6 +33,7 @@ const UNSERVED = new Set([
  * Claude Code's own subagent tool. Orchestra's `task` is served instead, so every delegation passes Task Governance;
  * a subagent Claude Code spawned itself would skip admission, reservation and settlement.
  */
+const EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const
 const SUBAGENT_TOOLS = new Set(["Agent", "Task"])
 const SUBAGENT_DENIAL = "Delegate through `mcp__orchestra__task`: Orchestra governs every delegation in this session."
 const QUESTION_DISMISSED = "The owner dismissed this question."
@@ -191,9 +192,12 @@ export const make = Effect.gen(function* () {
               sessionId,
               delivered: [...new Set([...delivered, ...pending.map((item) => item.id), ...consumed])],
             }))
+          // The reasoning picker's level, when it is one Claude Code accepts.
+          const effort = EFFORTS.find((level) => level === turn.model?.variant)
           const lifetime = ClaudeCodeSDK.processLifetime({
             cwd: turn.session.location.directory,
             ...(turn.model?.providerID === "anthropic" ? { model: turn.model.id } : {}),
+            ...(effort ? { effort } : {}),
             ...(typeof state.sessionId === "string" ? { resume: state.sessionId } : { sessionId: claudeSessionID(turn.session.id) }),
             // Claude mode appends to Claude Code's own prompt and never replaces it (AGENTS: claude_code preset).
             systemPrompt: { type: "preset", preset: "claude_code", append: turn.system.join("\n\n") },
