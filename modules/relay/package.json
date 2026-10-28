@@ -14,6 +14,7 @@
     "./audit": "./src/audit.ts",
     "./authoring/graph": "./src/authoring/graph.ts",
     "./authoring/hook": "./src/authoring/hook.ts",
+    "./authoring/lint": "./src/authoring/lint.ts",
     "./authoring/store": "./src/authoring/store.ts",
     "./gate/check": "./src/gate/check.ts",
     "./gate/control": "./src/gate/control.ts",

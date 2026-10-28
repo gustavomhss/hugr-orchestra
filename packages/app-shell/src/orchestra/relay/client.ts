@@ -2,6 +2,7 @@ import { ClientError } from "@orchestra/client"
 import type { RelayAuthoring } from "@orchestra/schema/relay-authoring"
 import type { RelayHook } from "@orchestra/schema/relay-hook"
 import type { RelayLedger } from "@orchestra/schema/relay-ledger"
+import type { RelaySprint } from "@orchestra/schema/relay-sprint"
 import type { ServerClient } from "@/utils/server"
 
 // The Relay authoring routes (`server.relay.document`, `server.relay.publish`, `server.relay.hook`), called through
@@ -44,6 +45,25 @@ export type RelayDocumentFields = {
   tags?: ReadonlyArray<RelayAuthoring.Tag>
   meta?: RelayAuthoring.Meta
 }
+
+/** The live preview of an unsaved draft (protocol `RelayPreview`). `wp` of a finding is the step id, or null for the whole plan. */
+export type RelayPreview = {
+  sprint: RelaySprint.Sprint | null
+  refusal: { code: string; message: string } | null
+  skillBindings: ReadonlyArray<Omit<RelayAuthoring.SkillBinding, "content">>
+  findings: ReadonlyArray<{ category: string; severity: "error" | "warn"; wp: string | null; detail: string }>
+  judge: "stub" | "api"
+}
+
+/** The check commands the project's manifests declare (protocol `RelayProjectCommands`). */
+export type RelayProjectCommands = {
+  commands: ReadonlyArray<{ command: string; source: string; kind: "test" | "lint" | "typecheck" | "format" | "build" }>
+  pytest: ReadonlyArray<string>
+  trusted: boolean
+}
+
+/** One "Test now" run (protocol `RelayTrial`). `output` is the end of the combined output. */
+export type RelayTrial = { exitCode: number; output: string; truncated: boolean; durationMs: number; timedOut: boolean }
 
 /** A refusal: the HTTP status and, from the Relay routes, `{_tag, code, message}`. */
 export class RelayError extends Error {
@@ -119,6 +139,12 @@ export function createRelayClient(input: { orchestra: ServerClient; directory: s
       ),
     remove: (documentID: string) => body<void>(documents.remove({ documentID, location }), true),
     definition: (documentID: string) => body<unknown>(documents.definition({ documentID, location })),
+    preview: (fields: RelayDocumentFields) =>
+      body<RelayPreview>(
+        documents.preview({ location, ...contract<Omit<Parameters<typeof documents.preview>[0] & {}, "location">>(fields) }),
+      ),
+    commands: () => body<RelayProjectCommands>(documents.commands({ location })),
+    trial: (command: string) => body<RelayTrial>(documents.trial({ location, command })),
     nodeTypes: () => body<{ workflow: RelayNodeType[]; hook: RelayNodeType[] }>(documents.nodeTypes({ location })),
     publish: async (document: RelayDocument) =>
       decodeDocument(

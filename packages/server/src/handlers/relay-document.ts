@@ -2,12 +2,14 @@ import { SkillV2 } from "@orchestra/core/skill"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Location } from "@orchestra/core/location"
 import { Relay } from "@orchestra/core/relay"
+import { RelayCommands } from "@orchestra/core/relay-commands"
 import { RelayHookInstall } from "@orchestra/core/relay-hook-install"
 import { RelayWorkflowBinding } from "@orchestra/core/relay-workflow-binding"
 import path from "path"
 import { RelayForbiddenError } from "@orchestra/protocol/groups/relay-document"
 import { AuthoringGraph } from "@orchestra/relay/authoring/graph"
 import { AuthoringHook } from "@orchestra/relay/authoring/hook"
+import { AuthoringLint } from "@orchestra/relay/authoring/lint"
 import { AuthoringStore } from "@orchestra/relay/authoring/store"
 import type { RelayAuthoring } from "@orchestra/schema/relay-authoring"
 import { Effect, Layer, Struct } from "effect"
@@ -158,6 +160,58 @@ export const RelayDocumentHandler = HttpApiBuilder.group(Api, "server.relay.docu
           new RelayForbiddenError({
             code: "maestro-execution-required",
             message: "Executable workflow checks are owned by Maestro.",
+          }),
+        ),
+      )
+      .handle("relay.document.preview", (ctx) =>
+        RelayDocuments.respond(
+          Effect.gen(function* () {
+            const skills = RelayDocuments.skills(yield* SkillV2.Service)
+            const relay = yield* Relay.Service
+            // A draft that does not compile is the usual case while editing: the refusal is the answer, not an error.
+            const compiled = yield* AuthoringGraph.compile(ctx.payload, skills).pipe(Effect.result)
+            const sprint = compiled._tag === "Success" ? compiled.success.sprint : null
+            return {
+              sprint,
+              refusal:
+                compiled._tag === "Failure" ? { code: compiled.failure.code, message: compiled.failure.message } : null,
+              skillBindings:
+                compiled._tag === "Success"
+                  ? compiled.success.bindings.map((binding) => Struct.omit(binding, ["content"]))
+                  : [],
+              findings: sprint ? AuthoringLint.lint(sprint) : [],
+              judge: relay.judge.backend,
+            }
+          }),
+        ),
+      )
+      .handle("relay.document.commands", () =>
+        response(
+          Effect.gen(function* () {
+            const relay = yield* Relay.Service
+            const location = yield* Location.Service
+            const detected = yield* RelayCommands.detect(location.directory)
+            return { ...detected, trusted: yield* relay.trusted }
+          }),
+        ),
+      )
+      .handle("relay.document.trial", (ctx) =>
+        RelayDocuments.respond(
+          Effect.gen(function* () {
+            const relay = yield* Relay.Service
+            return yield* relay.trial(ctx.payload).pipe(
+              Effect.catchTags({
+                "Relay.Untrusted": () =>
+                  Effect.fail(
+                    new RelayForbiddenError({
+                      code: "project-untrusted",
+                      message: "Trust this project before running its commands from the editor.",
+                    }),
+                  ),
+                "GateShell.Unavailable": (error) =>
+                  Effect.fail(RelayDocuments.refusal(`The check could not start (${error.reason}).`, 503, error.reason)),
+              }),
+            )
           }),
         ),
       )

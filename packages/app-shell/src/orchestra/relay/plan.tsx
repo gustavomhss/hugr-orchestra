@@ -1,4 +1,4 @@
-import { createEffect, createMemo, For, type JSX, on, Show } from "solid-js"
+import { createEffect, createMemo, For, type JSX, on, onCleanup, onMount, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import type { RelayNodeType } from "./client"
 import { nodeGlyph, nodeTone, WORKFLOW_ENTRIES, workflowKey } from "./catalog"
@@ -21,6 +21,10 @@ import {
   updatePhase,
 } from "./graph"
 import { addNode, freePhaseName, groupSelection, moveStep, ungroup } from "./insert"
+import { duplicateSteps } from "./clipboard"
+import { useCommand } from "@/context/command"
+import { modalActive } from "@/utils/modal-active"
+import { injectFile, Inspector, Outline, useDroppedPath, useStudio } from "./studio"
 import { issueText } from "./parts"
 import type { RelayRun } from "./runs"
 import { Ic, NodeGlyph, useRelayCopy } from "./ui"
@@ -116,6 +120,79 @@ export function PlanView(props: Props) {
     )
     if (grouped) change(grouped.flow)
   }
+
+  // The step a new one goes after: the open step, or the last one.
+  const anchor = () => (props.open && order().some((node) => node.id === props.open) ? props.open : end())
+  const studio = useStudio()
+  const dropped = useDroppedPath(() => props.directory)
+  const dropFile = (event: DragEvent) => {
+    if (props.readOnly || !event.dataTransfer?.types.includes("Files")) return
+    event.preventDefault()
+    const path = dropped(event)
+    if (!path) return
+    const placed = injectFile(
+      props.flow,
+      path,
+      copy.t("orchestra.workflows.newName.inject"),
+      props.open && props.open !== start()?.id ? props.open : undefined,
+    )
+    if (!placed) return
+    change(placed.flow)
+    props.onOpen(placed.id)
+  }
+
+  // N adds a step, Alt+arrows move the open step and Cmd+D duplicates it, whenever no text field has focus.
+  const keydown = (event: KeyboardEvent) => {
+    if (event.defaultPrevented || props.readOnly || modalActive()) return
+    const target = event.target instanceof HTMLElement ? event.target : undefined
+    if (target?.closest("input,textarea,select,[contenteditable],.wf-canvas")) return
+    const mod = event.metaKey || event.ctrlKey
+    const open = props.open && order().some((node) => node.id === props.open) ? props.open : undefined
+    if (!mod && !event.altKey && event.key.toLowerCase() === "n") {
+      event.preventDefault()
+      return setState("picker", anchor())
+    }
+    if (open && event.altKey && (event.key === "ArrowUp" || event.key === "ArrowDown")) {
+      event.preventDefault()
+      return change(moveStep(props.flow, open, event.key === "ArrowUp" ? -1 : 1))
+    }
+    if (open && mod && !event.altKey && event.key.toLowerCase() === "d") {
+      event.preventDefault()
+      const copied = duplicateSteps(props.flow, [open])
+      if (!copied) return
+      change(copied.flow)
+      props.onOpen(copied.ids.at(-1))
+    }
+  }
+  onMount(() => window.addEventListener("keydown", keydown))
+  onCleanup(() => window.removeEventListener("keydown", keydown))
+
+  // The palette finds any step by name and adds a step of any kind after the open one.
+  const command = useCommand()
+  command.register("relay.plan", () => {
+    const category = copy.t("orchestra.palette.relay")
+    return [
+      ...order().map((node) => ({
+        id: `relay.plan.go.${node.id}`,
+        title: copy.t("orchestra.workflows.studio.goTo", { name: node.name }),
+        category,
+        onSelect: () => props.onOpen(node.id),
+      })),
+      ...(props.readOnly
+        ? []
+        : WORKFLOW_ENTRIES.filter((entry) => entry.key !== "phase").map((entry) => ({
+            id: `relay.plan.add.${entry.key}`,
+            title: copy.t("orchestra.workflows.studio.addKind", {
+              kind: copy.t(`orchestra.workflows.type.${entry.key}`),
+            }),
+            category,
+            onSelect: () => {
+              const after = anchor()
+              if (after) add(entry.key, after, undefined)
+            },
+          }))),
+    ]
+  })
 
   const inserter = (after: string | undefined, phase: string | undefined, last?: boolean) => (
     <Show when={after && !props.readOnly}>
@@ -324,10 +401,25 @@ export function PlanView(props: Props) {
       .split("\n")[0]
 
   return (
-    <div class="wf-plan" data-component="relay-plan">
+    <div
+      class="wf-plan"
+      classList={{ "wf-studio": !!studio }}
+      data-component="relay-plan"
+      onDragOver={(event) => !props.readOnly && event.dataTransfer?.types.includes("Files") && event.preventDefault()}
+      onDrop={dropFile}
+    >
       <Show when={props.banner}>
         <div class="wf-plan-banner">{props.banner}</div>
       </Show>
+      <div class="wf-studio-grid">
+      <Outline
+        flow={props.flow}
+        open={props.open}
+        issues={props.issues}
+        readOnly={props.readOnly}
+        onOpen={props.onOpen}
+        edit={change}
+      />
       <div class="wf-plan-list">
         <Show when={start()}>
           {(node) => (
@@ -478,6 +570,17 @@ export function PlanView(props: Props) {
             <For each={outside().map((node) => node.id)}>{(id) => card(id, false)}</For>
           </section>
         </Show>
+      </div>
+      <Show when={studio}>
+        <Inspector
+          flow={props.flow}
+          open={props.open}
+          issues={props.issues}
+          readOnly={props.readOnly}
+          onOpen={props.onOpen}
+          edit={props.edit}
+        />
+      </Show>
       </div>
       <footer class="wf-plan-foot">{props.save}</footer>
     </div>

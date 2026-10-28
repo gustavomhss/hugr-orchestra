@@ -30,6 +30,7 @@ import { copyDocument } from "./presets"
 import { useWorkflowChat } from "./chat"
 import { layerBase, type RelayRoute, relayPath } from "./route"
 import { SERVER_ISSUES } from "./server-issues"
+import { StudioScope } from "./studio"
 import type { RelaySource } from "./source"
 import { Ic, type MenuItem, useRelayCopy } from "./ui"
 
@@ -679,6 +680,12 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
                 </div>
               </Match>
               <Match when={props.route.tab === "editor"}>
+                <StudioScope
+                  source={props.source}
+                  id={props.id}
+                  enabled={kind === "workflow" && !props.route.view}
+                  fields={() => ({ name: name(), description: description(), ...documentFields(flow()) })}
+                >
                 <CanvasTab
                   {...props}
                   kind={kind}
@@ -726,6 +733,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
                   onRetry={() => void flush()}
                   onReload={() => void reload()}
                 />
+                </StudioScope>
               </Match>
               <Match when={kind === "workflow" && props.source.runsState() !== "ready"}>
                 <div class="mx-page">

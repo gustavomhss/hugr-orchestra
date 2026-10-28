@@ -1,8 +1,11 @@
 import { createSignal, For, Index, Show } from "solid-js"
 import { createStore } from "solid-js/store"
+import type { RelayTrial } from "./client"
 import { pasteOneLine } from "./details"
+import { failure } from "./dialogs"
 import { checkParams } from "./format"
 import type { Control } from "./graph"
+import { useStudio } from "./studio"
 import { Ic, useRelayCopy } from "./ui"
 
 // The `${name}` parameters the shipped templates use, each with a plain-words meaning in the copy file.
@@ -40,6 +43,28 @@ export function CheckList(props: {
   onChange: (controls: Control[]) => void
 }) {
   const copy = useRelayCopy()
+  const studio = useStudio()
+  // The project's own commands lead the suggestions; the ones a check already runs are not offered again.
+  const detected = () => studio?.commands()?.commands ?? []
+  const offered = () => detected().filter((item) => !props.controls.some((control) => control.cmd === item.command))
+  const pytest = () =>
+    (studio?.commands()?.pytest ?? []).filter(
+      (file) => !props.controls.some((control) => control.cmd === `pytest -q ${file}`),
+    )
+  const suggestions = () => [...new Set([...detected().map((item) => item.command), ...SUGGESTIONS])]
+  // "Test now" results by check id. A result belongs to the command it ran, so editing the command hides it.
+  const [trials, setTrials] = createStore<
+    Record<string, { command: string; running: boolean; result?: RelayTrial; error?: string }>
+  >({})
+  const trial = (control: Control) => {
+    const command = control.cmd ?? ""
+    if (!studio || !command.trim()) return
+    setTrials(control.id, { command, running: true, result: undefined, error: undefined })
+    studio
+      .trial(command)
+      .then((result) => setTrials(control.id, { command, running: false, result }))
+      .catch((error) => setTrials(control.id, { command, running: false, error: failure(error) }))
+  }
   // The text of the kind a check was switched away from, so switching back does not lose it.
   const [kept, setKept] = createStore<Record<string, { cmd?: string; judge?: string }>>({})
   // The check whose command field refused a multi-line paste.
@@ -61,6 +86,20 @@ export function CheckList(props: {
     requestAnimationFrame(() =>
       list?.querySelector<HTMLElement>(`[data-check="${CSS.escape(id)}"] :is(textarea, input.cmd)`)?.focus(),
     )
+  }
+  // Several new checks at once: `newID` only sees the saved flow, so ids taken in this batch get a suffix.
+  const addCommands = (items: { name: string; cmd: string }[]) => {
+    const taken = new Set(props.controls.map((control) => control.id))
+    const added = items.map((item) => {
+      const base = props.newID(item.name)
+      const id = taken.has(base)
+        ? `${base}-${Array.from({ length: items.length + 1 }, (_, at) => at + 2).find((at) => !taken.has(`${base}-${at}`))}`
+        : base
+      taken.add(id)
+      return { id, cmd: item.cmd }
+    })
+    setPicking(false)
+    props.onChange([...props.controls, ...added])
   }
   const meaning = (name: string) => {
     const known = PARAMS.find((item) => item === name)
@@ -142,9 +181,81 @@ export function CheckList(props: {
                       <Show when={empty()}>
                         <p class="mx-error">{copy.t("orchestra.workflows.check.empty")}</p>
                       </Show>
+                      <Show when={studio}>
+                        {(() => {
+                          const shown = () =>
+                            trials[control().id]?.command === control().cmd ? trials[control().id] : undefined
+                          const blocked = () =>
+                            !studio?.commands()?.trusted
+                              ? copy.t("orchestra.workflows.check.trialUntrusted")
+                              : params().length
+                                ? copy.t("orchestra.workflows.check.trialParams")
+                                : undefined
+                          return (
+                            <div class="wf-trial">
+                              <div class="wf-trial-head">
+                                <button
+                                  type="button"
+                                  class="mx-btn"
+                                  disabled={!!blocked() || !control().cmd?.trim() || !!shown()?.running}
+                                  title={blocked()}
+                                  onClick={() => trial(control())}
+                                >
+                                  <Ic name="play" />
+                                  {shown()?.running
+                                    ? copy.t("orchestra.workflows.check.trialRunning")
+                                    : copy.t("orchestra.workflows.check.trial")}
+                                </button>
+                                <Show
+                                  when={shown()?.result}
+                                  fallback={<span class="wf-trial-note">{blocked() ?? copy.t("orchestra.workflows.check.trialHint")}</span>}
+                                >
+                                  {(result) => (
+                                    <span class="wf-trial-verdict" classList={{ pass: result().exitCode === 0 && !result().timedOut }}>
+                                      {result().timedOut
+                                        ? copy.t("orchestra.workflows.check.trialTimedOut")
+                                        : result().exitCode === 0
+                                          ? copy.t("orchestra.workflows.check.trialPass", {
+                                              seconds: (result().durationMs / 1000).toFixed(1),
+                                            })
+                                          : copy.t("orchestra.workflows.check.trialFail", {
+                                              code: String(result().exitCode),
+                                              seconds: (result().durationMs / 1000).toFixed(1),
+                                            })}
+                                    </span>
+                                  )}
+                                </Show>
+                              </div>
+                              <Show when={shown()?.error}>
+                                {(error) => (
+                                  <p class="mx-error" role="alert">
+                                    {copy.t("orchestra.workflows.check.trialError", { reason: error() })}
+                                  </p>
+                                )}
+                              </Show>
+                              <Show when={shown()?.result?.output}>
+                                <details class="wf-trial-output" open={shown()?.result?.exitCode !== 0}>
+                                  <summary>
+                                    {shown()?.result?.truncated
+                                      ? copy.t("orchestra.workflows.check.trialOutputTail")
+                                      : copy.t("orchestra.workflows.check.trialOutput")}
+                                  </summary>
+                                  <pre>{shown()?.result?.output}</pre>
+                                </details>
+                              </Show>
+                            </div>
+                          )
+                        })()}
+                      </Show>
                     </>
                   }
                 >
+                  <Show when={studio?.preview()?.judge === "stub"}>
+                    <p class="wf-ctl-warn" role="note">
+                      <Ic name="warn" />
+                      {copy.t("orchestra.workflows.check.judgeStub")}
+                    </p>
+                  </Show>
                   <textarea
                     rows="3"
                     placeholder={copy.t("orchestra.workflows.check.criterionPlaceholder")}
@@ -240,8 +351,46 @@ export function CheckList(props: {
         </Index>
       </div>
       <datalist id="wf-check-commands">
-        <For each={SUGGESTIONS}>{(command) => <option value={command} />}</For>
+        <For each={suggestions()}>{(command) => <option value={command} />}</For>
       </datalist>
+      <Show when={offered().length || pytest().length}>
+        <div class="wf-ctl-detected" role="group" aria-label={copy.t("orchestra.workflows.check.detected")}>
+          <span class="wf-col-kicker">{copy.t("orchestra.workflows.check.detected")}</span>
+          <div class="wf-ctl-chips">
+            <For each={offered()}>
+              {(item) => (
+                <button
+                  type="button"
+                  class="wf-chip"
+                  title={copy.t("orchestra.workflows.check.detectedFrom", { source: item.source })}
+                  onClick={() => addCommands([{ name: item.kind, cmd: item.command }])}
+                >
+                  <Ic name="plus" />
+                  <code>{item.command}</code>
+                  <small>{item.source}</small>
+                </button>
+              )}
+            </For>
+            <Show when={pytest().length > 1}>
+              <button
+                type="button"
+                class="wf-chip"
+                onClick={() =>
+                  addCommands(
+                    pytest().map((file) => ({
+                      name: file.replace(/\.py$/, "").split("/").pop() ?? "test",
+                      cmd: `pytest -q ${file}`,
+                    })),
+                  )
+                }
+              >
+                <Ic name="plus" />
+                {copy.t("orchestra.workflows.check.pytestEach", { count: String(pytest().length) })}
+              </button>
+            </Show>
+          </div>
+        </div>
+      </Show>
       <Show
         when={picking()}
         fallback={
