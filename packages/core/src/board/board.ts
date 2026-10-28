@@ -54,6 +54,7 @@ import {
 import type { ActivityRow, Changed, Fields, IssueRow, ProjectRow, QuestionRow, Tx } from "./shared"
 
 export { BudgetPausedError, NotFoundError, RefusedError }
+import { BoardCi } from "./ci"
 import { BoardGithub } from "./github"
 
 // The board service enforces the contract's rules (docs/specs/projects-board/CONTRACT.md section 1). Every write runs
@@ -111,6 +112,8 @@ export interface Interface {
   readonly decline: (key: string, number: number) => Effect.Effect<Board.OwnerResult, Error>
   /** Pulls from GitHub, pushes dirty cards and reports the sync state; the manual retry and the 60 second poll. */
   readonly sync: (key: string) => Effect.Effect<Board.GithubSync, Error>
+  /** Runs the card's scoped checks on its current tree, once per tree, and reports the derived scoped state. */
+  readonly ciRun: (input: Board.CiRunInput) => Effect.Effect<Board.CiRunResult, Error>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/Board") {}
@@ -504,6 +507,7 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
         log,
         gh: options.gh ?? BoardGithub.runner(proc, options.env),
       })
+      const ci = BoardCi.make({ quiet, proc, gh: options.gh ?? BoardGithub.runner(proc, options.env), env: options.env })
 
       if (options.poll)
         yield* reading((tx) =>
@@ -1335,6 +1339,10 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
 
         decline: Effect.fn("Board.decline")(function* (key, number) {
           return yield* intake(key, number, "intake.decline", "cut")
+        }),
+
+        ciRun: Effect.fn("Board.ciRun")(function* (input) {
+          return yield* ci.run(input)
         }),
 
         sync: Effect.fn("Board.sync")(function* (key) {
