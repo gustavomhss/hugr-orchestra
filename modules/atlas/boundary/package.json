@@ -27,6 +27,10 @@
     "./mine": {
       "types": "./src/generated/mine.d.ts",
       "default": "./src/generated/mine.js"
+    },
+    "./context": {
+      "types": "./src/generated/context.d.ts",
+      "default": "./src/generated/context.js"
     }
   },
   "scripts": {
