@@ -479,7 +479,7 @@ describe("SessionRunner execution host ports", () => {
       expect(messages.find((message) => message.type === "assistant")).toMatchObject({ cost: 0 })
       const { db } = yield* Database.Service
       const todos = (yield* db.select().from(TodoTable).all().pipe(Effect.orDie)).map((row) => [row.session_id, row.content])
-      expect(todos).toEqual([[opened.id, "Fix"]])
+      expect(todos).toEqual([[opened.id!, "Fix"]])
       const parent = (yield* sessions.messages({ sessionID })).find((message) => message.type === "assistant")
       const task = parent?.type === "assistant" ? parent.content.find((part) => part.type === "tool") : undefined
       expect(task?.type === "tool" && task.state.status === "completed" ? task.state.metadata : undefined).toMatchObject({ sessionId: opened.id, parentSessionId: sessionID })
