@@ -4,6 +4,7 @@ import type { NativeWorkspacePlacement } from "./app-dock-api"
 import { AppDockNative } from "./app-dock-native"
 import { NativeDockProtocol } from "./app-dock-native-protocol"
 import type { SnapshotFormat, SnapshotMode } from "./app-dock-browser"
+import { dockBoolean, dockEnum, dockNumber, dockRef, dockString, dockStringArrayArg } from "./app-dock-rpc-args"
 
 export type DockRPCReply = (message: unknown) => void
 
@@ -63,39 +64,7 @@ const isDockRPCRequest = (value: unknown): value is DockRPCRequest => {
   return true
 }
 
-const dockString = (value: unknown, name: string) => {
-  if (typeof value !== "string" || value.length === 0) throw new Error(`Invalid MCP Dock ${name}`)
-  return value
-}
-
-const dockStringArrayArg = (args: Record<string, unknown>, name: string, defaultValue: string[] = []) => {
-  const value = args[name]
-  if (Array.isArray(value)) return value
-  if (typeof value === "string" && value.length > 0) return [value]
-  return defaultValue
-}
-
-const dockNumber = (value: unknown, name: string, min: number, max: number) => {
-  if (typeof value !== "number" || !Number.isFinite(value)) throw new Error(`Invalid MCP Dock ${name}`)
-  return Math.max(min, Math.min(max, Math.round(value)))
-}
-
-const dockEnum = (value: unknown, name: string, allowed: string[]) => {
-  if (typeof value !== "string" || !allowed.includes(value)) throw new Error(`Invalid MCP Dock ${name}`)
-  return value
-}
-
-const dockBoolean = (value: unknown, name: string) => {
-  if (typeof value !== "boolean") throw new Error(`Invalid MCP Dock ${name}`)
-  return value
-}
-
 const browserReadShape = ["mode", "format", "actionable", "visible"]
-
-const dockRef = (value: unknown, name: string) => {
-  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 1) throw new Error(`Invalid MCP Dock ${name}`)
-  return value
-}
 
 export class AppDockRPC {
   private readonly native = new AppDockNative.NativeDock()
