@@ -430,7 +430,7 @@ function events(message: SDKMessage, tracker: Tracker): LLMEvent[] {
       if (block.type !== "tool_use" || block.name.startsWith(MCP_PREFIX)) return []
       const call = shown(block.name, block.input, tracker.seats)
       names.set(block.id, call.name)
-      if (call.name === "todowrite") tracker.todos.set(block.id, call.input.todos)
+      if (call.name === "todowrite") tracker.todos.set(block.id, call.todos)
       ids.push(block.id)
       return [LLMEvent.toolCall({ id: block.id, name: call.name, input: call.input, providerExecuted: true })]
     })
@@ -655,7 +655,8 @@ function safetyCall(tool: string, input: Record<string, unknown>) {
  * A built-in call as the Session records it: Orchestra's tool name and argument names, so the app shows the same
  * widget it shows for Orchestra's own tool. Only the record changes; Claude Code ran the call as it asked for it.
  */
-function shown(tool: string, input: Record<string, unknown>, seats: ReturnType<typeof subagents>) {
+function shown(tool: string, raw: unknown, seats: ReturnType<typeof subagents>) {
+  const input = (typeof raw === "object" && raw !== null ? raw : {}) as Record<string, unknown>
   const file = input.file_path ?? input.notebook_path
   if (tool === "Bash") return { name: "bash", input: { command: input.command, description: input.description } }
   if (tool === "Read") return { name: "read", input: { filePath: file, offset: input.offset, limit: input.limit } }
@@ -667,9 +668,9 @@ function shown(tool: string, input: Record<string, unknown>, seats: ReturnType<t
   if (tool === "Grep") return { name: "grep", input: { pattern: input.pattern, path: input.path, include: input.glob } }
   if (tool === "WebFetch") return { name: "webfetch", input: { url: input.url, prompt: input.prompt } }
   if (tool === "WebSearch") return { name: "websearch", input: { query: input.query } }
-  if (tool === "TodoWrite") return { name: "todowrite", input: { todos: input.todos } }
+  if (tool === "TodoWrite") return { name: "todowrite", input: { todos: input.todos }, todos: input.todos }
   if (tool === "Skill") return { name: "skill", input: { name: input.skill } }
-  if (!SUBAGENT_TOOLS.has(tool)) return { name: tool, input }
+  if (!SUBAGENT_TOOLS.has(tool)) return { name: tool, input: raw }
   const type = typeof input.subagent_type === "string" ? input.subagent_type : ""
   return {
     name: "task",
