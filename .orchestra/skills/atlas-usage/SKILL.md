@@ -25,13 +25,15 @@ Read Atlas before you change a scope, and write to it only through a door. Each 
 | `atlas emit <fact.json> --at <sha> [--replace]` | Write one grounded fact. The citation must re-derive at `<sha>` |
 | `atlas link <a> <b> [--retract]` | Assert, or retract, that two nodes name the same fact |
 | `atlas memory-emit <entry.json>` | Write a project rule, task, PR or logbook entry. The kind comes from the entry's shape |
-| `atlas promote [nodeKey...]` | Ratify staged candidates, including committed knowledge a fresh clone staged. Needs `ATLAS_RATIFY_TOKEN`; T0 rows need more (see `promote.md`) |
+| `atlas promote [nodeKey...]` | Ratify staged candidates, including committed knowledge a clone staged. CLI only. Needs `ATLAS_RATIFY_TOKEN`, and a T0 fact also a second token (`promote.md`). Held rows are skipped; a review line that fails to verify makes it refuse with exit 2 |
 
-The CLI also writes through `decide`, `transition`, `test-vacuity`, `derive-relations`, `hold`, `release`, `propose`, `answer`, `mine`, `migrate-layout`, `territory`, `own-export` and `repair`. Every command can also apply committed knowledge at boot (replay), so even a read may change the local store.
+Other CLI writers: `decide`, `transition`, `test-vacuity` and `derive-relations` write the store through the emit door; `hold`, `release`, `propose` and `answer` append to `review.jsonl`; `mine` writes staging only; `territory`, `own-export`, `repair` and `migrate-layout` write files, never the store. Every command also replays committed knowledge at boot, so even a read may change the local store.
+
+Every command acts on the working directory, so run it at the repository root. `atlas init <path>` also writes `.gitignore` in the working directory, not in `<path>`.
 
 ## In Orchestra
 
-- `atlas_context`: `{"action":"catalog"}` lists units; `{"action":"unit","unit":"<exact id>"}` loads one. Only the `archie` seat may use `anchor`.
+- `atlas_context`: `{"action":"catalog"}` lists units; `{"action":"unit","unit":"<exact id>"}` loads one.
 - `atlas_memory_recall`: returns only your own task and PR memory, never project rules, the logbook or another owner's records.
 - `atlas_memory_emit`: the host fills in the owner; the model sends only the entry. A project rule becomes a proposal for the steward, not a rule.
 
@@ -39,12 +41,12 @@ The CLI also writes through `decide`, `transition`, `test-vacuity`, `derive-rela
 
 - `atlas reconcile <mergeBase> [--accept-reground]` classifies drift since `<mergeBase>`. Exit 2 means semantic drift that needs review. `--accept-reground` only counts the mechanical part as accepted; it re-grounds nothing and never changes the exit code. It does not check that `<mergeBase>` really is the merge-base.
 - `atlas init <path>` plans the structural move-in and writes the `.gitignore` rule that keeps the store untracked and the logs tracked.
-- `atlas migrate-layout`, at the repository root, moves old single-file logs into the `.atlas/` tree. Land it before other branches append to the old files.
+- `atlas migrate-layout` moves old single-file logs into the `.atlas/` tree. Land it before other branches append to the old files.
 
 ## Things that surprise people
 
 - A write that fails says which gate refused it. Fix the cause; never route around the door.
-- With neither `ATLAS_ACTOR` nor `git config user.email` set, every CLI write is denied. With the email set, the email is committed.
+- Without an actor every CLI write is denied, and with one it is committed (skill `atlas-ownership`, Identity).
 - `stale:true` or `emitted:false` is a signal to act on: `guidance.next` names the fix.
-- What you commit under `.atlas/` is a claim. A fresh clone applies your knowledge row only if its blob is committed, it carries `seal:'proven'`, you are in its scope under that clone's policy, and it re-proves there. Otherwise run `atlas promote` there.
+- What you commit under `.atlas/` is a claim. A clone applies your knowledge row only under the trust rule (skill `atlas-ownership`); otherwise run `atlas promote` there.
 - `atlas: knowledge replay {...}` on stderr means some committed rows did not apply: `missing` is a blob not committed, `rejected` a torn or misfiled line, `unreadable` a folder Atlas could not read.

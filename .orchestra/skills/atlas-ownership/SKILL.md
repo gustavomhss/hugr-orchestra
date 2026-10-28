@@ -15,7 +15,7 @@ Atlas is the project's grounded knowledge and memory: facts cited against a revi
 | Local store and provenance | `adapter-io/src/store.ts`, `store-provenance.ts` | The CAS and projection stay local and untracked; provenance decides what a tracked store may serve |
 | Committed tree and replay | `adapter-io/src/layout.ts`, `knowledge-log.ts`, `knowledge-replay.ts`, `migrate-layout.ts` | The only code that writes or reads `.atlas/members/`, `project/` and `blobs/` |
 | Composition | `adapter-io/src/compose.ts`, `wire.ts` | Builds the one logged store every door writes through, and runs replay at boot |
-| MCP doors | `modules/atlas/packages/tools/src/handler.ts`, `packages/mcp-server` | `WRITE_PATHS` (`atlas-emit`, `atlas-link`) are the only MCP knowledge writers; `atlas-memory-emit` writes memory |
+| MCP doors | `modules/atlas/packages/tools/src/handler.ts`, `packages/mcp-server` | `WRITE_PATHS` is `atlas-emit`, `atlas-link` and `atlas-memory-emit`; only the first two write knowledge. Comments in `promote.ts` and `promote.md` that say two are stale |
 | CLI | `modules/atlas/packages/cli` | Has more writers than MCP (skill `atlas-usage`) |
 | Authorization | `.atlas/policy.json` `authz` | Admin-owned, tracked; decides who may write which scope |
 | Orchestra tools | `v2/tools/atlas.ts` (`atlas_context`), `v2/tools/atlas-memory.ts` (`atlas_memory_recall`, `atlas_memory_emit`), `v2/atlas-source.ts` | The host binds owner and storage; the model supplies only a unit or an entry |
@@ -24,15 +24,15 @@ Atlas is the project's grounded knowledge and memory: facts cited against a revi
 
 ## Identity
 
-- **Orchestra tools:** the memory owner is the seat id (`atlas-memory.ts` `memoryOwner`); the backend seat also reads its legacy owner's records, so its memory spans two folders.
-- **CLI and MCP:** `ATLAS_ACTOR`, else `git config user.email`; empty denies every write. That identity is committed as the folder name and in each knowledge line, so an email travels with the repository.
-- **`atlas migrate-layout`:** picks the actor itself (the scope's only actor, else `maestro`). It is an admin one-shot, not a door.
+- **Orchestra tools:** the memory owner is the seat id, decided by `v2/atlas-source.ts` `owner()`; the backend seat also reads its legacy owner's records, so its memory spans two folders.
+- **CLI and MCP:** `ATLAS_ACTOR`, else `git config user.email`. An empty actor, including `ATLAS_ACTOR=""` set explicitly, denies every write. That identity is committed as the folder name and in each knowledge line, so an email travels with the repository.
+- **`atlas migrate-layout`:** an admin one-shot that picks the actor itself (skill `atlas-maintenance`).
 - A model never chooses its identity, and `actorInScope` fails closed.
 
 ## Invariants
 
-- Every write goes through a door, except replay, which applies committed rows to the local store under the trust rule in skill `atlas-maintenance`. Nothing writes the store, the projection or a committed log by hand.
-- A committed knowledge line is a claim, never authority; only re-proof makes it a fact again. There is no merged-PR check.
+- Every write goes through a door, except replay. Nothing writes the store, the projection or a committed log by hand.
+- **Trust rule.** A committed knowledge line is a claim, never authority. Replay applies a row only when its blob is committed, its fact carries `seal:'proven'`, the line's actor is in the row's scope under the local policy, and it re-proves now; every other row is staged for ratify. Actor, scope and seal come from the line itself, so re-proof is the only real check. There is no merged-PR check.
 - The durable store stays untracked, and the `store-provenance.ts` tripwire is never loosened.
 - Continuity is scrubbed before it is hashed. Re-spawn uses `makeRespawn` plus V2 history.
 
@@ -47,7 +47,6 @@ Atlas is the project's grounded knowledge and memory: facts cited against a revi
 ## Known limits (declared, not bugs)
 
 - Redaction on public repositories is not built: memory rows still carry their bodies and CLI identities are emails, so do not commit `.atlas/members/` from a public repository yet.
-- Committed memory is served without replay or a folder check.
-- Replay trusts the actor and scope written in the line; only re-proof is checked.
+- Committed memory is served as read, without replay.
 - A row a commit removes from the projection is not logged, so replay cannot remove it. No door removes a row today.
 - A candidate ratify rejected is staged again on the next boot; nothing records the rejection in the logs.
