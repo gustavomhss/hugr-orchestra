@@ -97,7 +97,7 @@ export function exportContext(
     const payload = { session, event }
     const line: Omit<Event, "id"> = {
       seq: 0,
-      nodeKey: session as Event["nodeKey"],
+      nodeKey: session as NonNullable<Event["nodeKey"]>,
       contentHash: id(payload),
       fresh: true,
       supersedes: [],

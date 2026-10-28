@@ -127,7 +127,7 @@ function fileNames(dir: string): readonly string[] {
 function append(path: string, card: string, payload: object): void {
   const event: Omit<Event, "id"> = {
     seq: 0,
-    nodeKey: card as Event["nodeKey"],
+    nodeKey: card as NonNullable<Event["nodeKey"]>,
     contentHash: id(payload),
     fresh: true,
     supersedes: [],
