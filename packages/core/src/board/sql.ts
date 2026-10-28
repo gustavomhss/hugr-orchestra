@@ -239,6 +239,35 @@ export const BoardCheckTable = sqliteTable(
   (table) => [index("board_check_issue_tree_idx").on(table.issue_id, table.tree_sha)],
 )
 
+// One row per dispatch of a card (merge-queue spec section 4.2). The host writes it; `board_issue.attempts` is max(n).
+export const BoardAttemptTable = sqliteTable(
+  "board_attempt",
+  {
+    issue_id: text()
+      .$type<Board.IssueID>()
+      .notNull()
+      .references(() => BoardIssueTable.id, { onDelete: "cascade" }),
+    n: integer().notNull(),
+    seat: text(),
+    session_id: text(),
+    worktree: text(),
+    branch: text(),
+    pr_number: integer(),
+    // The Task's declared write set, matched against base advances (section 8.4).
+    write_paths: text({ mode: "json" }).$type<string[]>().notNull(),
+    // The last snapshot commit pushed to refs/orchestra/wip/<KEY>/a<n>, and its tree.
+    snapshot_sha: text(),
+    snapshot_tree: text(),
+    snapshot_at: integer(),
+    // Why the last snapshot was not pushed (a scanner hit, no scanner, a refused push); cleared by the next push.
+    snapshot_blocked: text(),
+    cause: text(),
+    outcome: text().$type<Board.AttemptOutcome>(),
+    ...Timestamps,
+  },
+  (table) => [primaryKey({ columns: [table.issue_id, table.n] })],
+)
+
 export const BoardNoteTable = sqliteTable(
   "board_note",
   {

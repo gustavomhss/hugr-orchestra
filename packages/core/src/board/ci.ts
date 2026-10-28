@@ -35,6 +35,8 @@ export type Contract = {
     readonly onBaseMoved: "merge-if-disjoint" | "retest"
   }
   readonly budget: { readonly jobs: number | null }
+  /** The remote snapshot refs go to; a private one keeps a public repository's work in progress private. */
+  readonly snapshots: { readonly remote: string }
   readonly merge: "merge"
   /** Where the contract came from: the file, or the default for a repository with or without required PR checks. */
   readonly source: "file" | "required-checks" | "no-ci"
@@ -56,6 +58,7 @@ const File = Schema.Struct({
     }),
   ),
   budget: Schema.optional(Schema.Struct({ jobs: Schema.optional(Positive) })),
+  snapshots: Schema.optional(Schema.Struct({ remote: Schema.optional(Schema.String) })),
   // Squash or rebase would rewrite member SHAs and GitHub would stop marking member PRs merged.
   merge: Schema.optional(Schema.Literal("merge")),
 })
@@ -112,6 +115,7 @@ export function make(deps: Deps) {
         onBaseMoved: file.bundle?.onBaseMoved ?? "retest",
       },
       budget: { jobs: file.budget?.jobs ?? null },
+      snapshots: { remote: file.snapshots?.remote ?? "origin" },
       merge: "merge",
       source: "file",
     } satisfies Contract
@@ -128,6 +132,7 @@ export function make(deps: Deps) {
       full: { label: null, checks: [] },
       bundle: { size: required ? 4 : 1, max: 16, waitMinutes: 45, onBaseMoved: "retest" },
       budget: { jobs: null },
+      snapshots: { remote: "origin" },
       merge: "merge",
       source: required ? "required-checks" : "no-ci",
     } satisfies Contract

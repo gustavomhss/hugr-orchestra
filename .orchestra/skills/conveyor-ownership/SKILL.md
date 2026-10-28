@@ -5,7 +5,8 @@ description: Who owns each piece of the merge queue (the conveyor), where its co
 
 # Conveyor ownership
 
-The conveyor takes a verified card to `dev`: CI facts per card, then the queue and green bundles. Design:
+The conveyor takes a verified card to `dev`: attempts and pushed work in progress, CI facts per card, then the queue
+and green bundles. Design:
 `docs/specs/maestro-lead/merge-queue.md`; spike evidence: `docs/specs/maestro-lead/merge-queue-spike.md`. How to change
 it: skill `conveyor-maintenance`. User guide: `docs/guides/merge-queue.md`.
 
@@ -17,11 +18,19 @@ it: skill `conveyor-maintenance`. User guide: `docs/guides/merge-queue.md`.
 | `board_check` table and migration | `packages/core/src/board/sql.ts` | conveyor |
 | CI contract reader, `ci_run`, scoped state | `packages/core/src/board/ci.ts` | conveyor |
 | `ci_run` tool | `packages/core/src/board/tools.ts` | conveyor; Maestro only |
+| Attempt ledger `board_attempt` (`AttemptOutcome`, `PushState`) | `packages/core/src/board/sql.ts`, `packages/schema/src/board.ts` | conveyor |
+| Attempts on dispatch, snapshot push, push state, 10 min sweep | `packages/core/src/board/snapshot.ts`, wired in `board.ts` | conveyor |
 | Billing ledger `board_ci_run` | `packages/core/src/board/github.ts`, `money.ts` | board; unchanged by the conveyor |
 | Queue visuals | `packages/app-shell` | Interface session |
 
 ## Invariants
 
+- A snapshot never touches the card's worktree, index or HEAD. It is a commit on the previous snapshot (else HEAD)
+  pushed to `refs/orchestra/wip/<KEY>-<n>/a<attempt>`.
+- The gitleaks scan fails closed: a hit or a scanner that cannot run blocks the push. `snapshot_sha` and
+  `snapshot_tree` are written only after the push succeeds.
+- A new Session on a card opens the next attempt. The open one ends `failed` when the card had a crash reason, else
+  `superseded`. `board_issue.attempts` follows the ledger.
 - Checks are keyed by tree, never by commit. The tree comes from a temporary index: the card's worktree and index are
   never touched.
 - The scoped state is derived from `board_check` on every read and never stored.
@@ -34,4 +43,6 @@ it: skill `conveyor-maintenance`. User guide: `docs/guides/merge-queue.md`.
 
 - §14 owner questions are open. Each "Recommended" answer is a config default, not a constant: `onBaseMoved`
   defaults to `retest`.
-- `board_read` does not show checks yet; WP4 adds them with the rest of the integration state.
+- The repository is public: attempts and snapshots carry structure and hashes only, never free text, spend or
+  transcripts.
+- `board_read` does not show checks or the push state yet; WP4 adds them with the rest of the integration state.

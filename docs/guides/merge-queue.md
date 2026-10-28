@@ -14,6 +14,7 @@ any other change.
   "full": { "label": "epic", "checks": ["typecheck", "test"] },
   "bundle": { "size": 8, "max": 16, "waitMinutes": 45, "onBaseMoved": "retest" },
   "budget": { "jobs": 20 },
+  "snapshots": { "remote": "origin" },
   "merge": "merge"
 }
 ```
@@ -22,6 +23,7 @@ any other change.
   shell: pipes and `&&` do not work, so point it at a script when you need more.
 - `scoped.workflows` are GitHub workflows Maestro dispatches on the card's pushed branch.
 - `merge` must be `merge`. Squash and rebase are refused, because they would stop GitHub from marking each PR merged.
+- `snapshots.remote` is the remote that receives work in progress (below). It defaults to `origin`.
 - Every other field is optional. `onBaseMoved` defaults to `retest`.
 
 With no file, Maestro uses the PR's own required checks when your base branch has them, and only its own verification
@@ -33,3 +35,19 @@ Each result is tied to the exact files it ran on (the tree), not to a commit. A 
 required check passed on its current files, and `scoped-red` when the latest run of any check failed. Committing the
 same files keeps the green; any edit drops it, and Maestro runs the checks again. Running the checks twice on the same
 files starts nothing new.
+
+## Work in progress is pushed early
+
+Every time Maestro sends a card to a seat it opens an attempt: the first dispatch is attempt 1, and each new Session on
+the card opens the next one. While an attempt is open, Maestro pushes the card's worktree every 10 minutes to
+`refs/orchestra/wip/<KEY>-<number>/a<attempt>` on `snapshots.remote`, uncommitted and untracked files included. It
+reads the files through a temporary index, so the worktree, its index and its branch stay as the seat left them. Each
+push builds on the previous one, and nothing is pushed when the files have not changed.
+
+A card is `pushed` when its worktree matches the last push and `local` when it has changes that are only on your
+machine. Before each push Maestro scans the new changes with gitleaks. A finding, or a scanner that cannot run, blocks
+the push and the card stays `local`. If a seat dies, its work can be restored from the ref:
+
+```bash
+git fetch origin refs/orchestra/wip/KEY-1/a1 && git restore --source FETCH_HEAD --worktree -- .
+```
