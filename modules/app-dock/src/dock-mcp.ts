@@ -294,7 +294,7 @@ function linuxEntries(read: { items: AppDockOutline.Item[]; complete: boolean })
   return { header: "Linux workspace", entries, complete: read.complete }
 }
 
-function look(snapshot: Snapshot, scope?: number) {
+function look(snapshot: Snapshot, scope?: number): string {
   const start = scope === undefined ? 0 : snapshot.entries.findIndex((entry) => entry.ref === scope)
   // Models guess refs or reuse them after the page changed; the whole outline answers better than an error.
   if (start < 0) return `no line [${scope}] in the current outline; here is all of it\n${look(snapshot)}`
