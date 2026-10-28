@@ -194,6 +194,10 @@ export default function Agents(props: ChapterPageProps) {
         : language.t("orchestra.agents.noProviderTitle"),
     }
   }
+  // An agent is working while any of its Sessions in this directory is not idle.
+  const working = (agent: Agent) =>
+    sync()[0].session.some((session) => session.agent === agentKey(agent) && sync()[0].session_working(session.id))
+
   const openChat = () => {
     setState({ opening: true, failed: false })
     void tabs
@@ -279,6 +283,7 @@ export default function Agents(props: ChapterPageProps) {
               availability={availability}
               modelName={modelName}
               stats={stats}
+              working={working}
               onOpen={(agent) => navigate(`/orchestra/agents/${encodeURIComponent(agentKey(agent))}`)}
               onChat={openChat}
               opening={state.opening}
@@ -305,6 +310,7 @@ export default function Agents(props: ChapterPageProps) {
                   modelsStatus={providers.status}
                   onRetryModels={() => void providers.refetch()}
                   status={availability(agent())}
+                  working={working(agent())}
                   modelName={modelName(agent())}
                   detail={detail(agent())?.data}
                   detailFailed={detail(agent())?.isError}

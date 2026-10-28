@@ -82,6 +82,7 @@ export function AgentScreen(props: {
   modelsStatus?: "pending" | "error" | "success"
   onRetryModels?: () => void
   status?: { ok: boolean; title?: string; modelIssue?: boolean }
+  working?: boolean
   modelName?: string
   detail?: AgentDetail
   detailFailed?: boolean
@@ -235,7 +236,7 @@ export function AgentScreen(props: {
         {language.t("orchestra.agents.back")}
       </button>
       <header class="agent-hero">
-        <AgentPortrait agent={props.agent} avatar={draft.avatar || undefined} class="agent-hero-avatar" />
+        <AgentPortrait agent={props.agent} avatar={draft.avatar || undefined} class="agent-hero-avatar" working={props.working} />
         <div class="agent-hero-text">
           <h1 id="agents-title">
             <bdi>{props.agent.name}</bdi>
