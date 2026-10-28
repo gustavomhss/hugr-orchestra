@@ -86,12 +86,13 @@ const it = testEffect(
 const RECORD = { intent: "Say hello.", decisions: "None worth noting.", not_covered: "Nothing.", risk: { level: "low" as const } }
 
 describe("BoardQueue", () => {
-  it.live("two verified cards bundle together and ship when the bundle's full gate is green", () =>
+  it.live("three verified cards bundle together, run the full gate once and ship when it is green", () =>
     Effect.gen(function* () {
       const board = yield* Board.Service
-      const repo = yield* repository("QOK")
+      const repo = yield* repository("QOK", 3)
       yield* card(repo, "QOK", 1, "a.txt")
       yield* card(repo, "QOK", 2, "b.txt")
+      yield* card(repo, "QOK", 3, "c.txt")
       const one = yield* row(repo, 1)
       const database = yield* Database.Service
       yield* database.db
@@ -113,14 +114,17 @@ describe("BoardQueue", () => {
 
       expect(yield* board.queue({ project: "QOK", number: 1, reason: "Verified." })).toMatchObject({ head: expect.any(String) })
       yield* board.queueTick()
-      expect(repo.remote.pulls.size).toBe(2)
-      expect(yield* stage(repo, 1)).toBe("queue")
-
       yield* board.queue({ project: "QOK", number: 2, reason: "Verified." })
       yield* board.queueTick()
-      expect(repo.remote.pulls.get(102)).toBe("bundle-QOK-1")
-      const opened: BoardRecord.BundleRecord = JSON.parse(repo.remote.bodies.get(102) ?? "")
-      expect(opened.members.map((member) => member.record.lineage.card)).toEqual(["QOK-1", "QOK-2"])
+      expect(repo.remote.pulls.size).toBe(3)
+      expect(yield* stage(repo, 1)).toBe("queue")
+
+      yield* board.queue({ project: "QOK", number: 3, reason: "Verified." })
+      yield* board.queueTick()
+      expect(repo.remote.pulls.get(103)).toBe("bundle-QOK-1")
+      expect(repo.remote.pulls.size).toBe(4)
+      const opened: BoardRecord.BundleRecord = JSON.parse(repo.remote.bodies.get(103) ?? "")
+      expect(opened.members.map((member) => member.record.lineage.card)).toEqual(["QOK-1", "QOK-2", "QOK-3"])
       const bundle = yield* origin(repo, "bundle-QOK-1")
 
       // Pending checks leave the bundle open.
@@ -129,7 +133,7 @@ describe("BoardQueue", () => {
 
       repo.remote.conclusion = "SUCCESS"
       yield* board.queueTick()
-      expect([yield* stage(repo, 1), yield* stage(repo, 2)]).toEqual(["shipped", "shipped"])
+      expect([yield* stage(repo, 1), yield* stage(repo, 2), yield* stage(repo, 3)]).toEqual(["shipped", "shipped", "shipped"])
       expect(yield* origin(repo, "main")).toBe(bundle)
       expect(yield* origin(repo, "bundle-QOK-1")).toBe("")
       expect(yield* queued(repo, 1)).toBeNull()
@@ -217,7 +221,7 @@ describe("BoardQueue", () => {
 type Repo = { readonly root: string; readonly directory: string; readonly key: string; readonly remote: Remote }
 
 // A repository on main with a contract that bundles two cards, pushed to a bare origin GitHub knows as acme/<key>.
-function repository(key: string) {
+function repository(key: string, size = 2) {
   return Effect.gen(function* () {
     const made = yield* Effect.promise(async () => {
       const root = await fs.realpath(await fs.mkdtemp(path.join(tmpdir(), `orchestra-board-queue-${key}-`)))
@@ -226,7 +230,7 @@ function repository(key: string) {
       await git(root, "init", "--bare", remote)
       await git(root, "-c", "init.defaultBranch=main", "init", directory)
       await fs.mkdir(path.join(directory, ".orchestra"))
-      await fs.writeFile(path.join(directory, ".orchestra", "ci.json"), JSON.stringify({ bundle: { size: 2, waitMinutes: 600 }, merge: "merge" }))
+      await fs.writeFile(path.join(directory, ".orchestra", "ci.json"), JSON.stringify({ bundle: { size, waitMinutes: 600 }, merge: "merge" }))
       await commit(directory, "base")
       await git(directory, "remote", "add", "origin", pathToFileURL(remote).href)
       await git(directory, "push", "--quiet", "origin", "main")
