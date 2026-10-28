@@ -11,6 +11,7 @@ import type { AppProcess } from "../process"
 import { which } from "../util/which"
 import { BoardCi } from "./ci"
 import type { BoardGithub } from "./github"
+import { BoardLedger } from "./ledger"
 import type { BoardRecord } from "./record"
 import {
   BoardAttemptTable,
@@ -260,20 +261,12 @@ export function make(deps: Deps) {
         const lastMembers = last
           ? yield* tx.select().from(BoardBundleMemberTable).where(eq(BoardBundleMemberTable.bundle_id, last.id)).all()
           : []
-        const settled = yield* tx
-          .select({ outcome: BoardAttemptTable.outcome })
-          .from(BoardAttemptTable)
-          .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardAttemptTable.issue_id))
-          .where(and(eq(BoardIssueTable.project_id, row.id), inArray(BoardAttemptTable.outcome, ["merged", "ejected"])))
-          .orderBy(desc(BoardAttemptTable.time_updated))
-          .limit(50)
-          .all()
-        return { cards, waits, attempts, open, settled, last: last && { status: last.status, base_sha: last.base_sha, members: lastMembers.length } }
+        return { cards, waits, attempts, open, settled: yield* BoardLedger.settled(tx, row.id), last: last && { status: last.status, base_sha: last.base_sha, members: lastMembers.length } }
       }),
     )
     if (queued.cards.length === 0) return
     if (queued.last?.status === "paused") return
-    const full = size(queued.settled.map((item) => item.outcome), contract.bundle)
+    const full = size(queued.settled, contract.bundle)
     const split = (queued.last?.status === "red" && queued.last.members > 1) || queued.last?.status === "probing"
     const cap = split && queued.last ? Math.max(1, Math.floor(queued.last.members / 2)) : full
     const due =

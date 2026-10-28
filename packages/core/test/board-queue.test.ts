@@ -178,7 +178,7 @@ describe("BoardQueue", () => {
       expect(ledger?.leadTime).toBeGreaterThanOrEqual(0)
       // The seed has no attempt rows: no settled attempt means no red rate, and no attempts means no rework.
       expect(ledger?.redRate).toBeNull()
-      expect(ledger?.reworkRate).toBe(0)
+      expect(ledger?.reworkRate).toBeNull()
     }),
   )
 

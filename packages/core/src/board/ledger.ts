@@ -34,14 +34,7 @@ export const of = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow) {
       ),
     )
     .all()
-  const settled = yield* tx
-    .select({ outcome: BoardAttemptTable.outcome })
-    .from(BoardAttemptTable)
-    .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardAttemptTable.issue_id))
-    .where(and(eq(BoardIssueTable.project_id, project.id), inArray(BoardAttemptTable.outcome, ["merged", "ejected"])))
-    .orderBy(desc(BoardAttemptTable.time_updated))
-    .limit(50)
-    .all()
+  const outcomes = yield* settled(tx, project.id)
   const shipped = yield* tx
     .select({ id: BoardIssueTable.id })
     .from(BoardIssueTable)
@@ -70,13 +63,26 @@ export const of = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow) {
       return passed.length === 0 ? [] : [merge.at - Math.min(...passed)]
     }),
   )
-  const ejected = settled.filter((row) => row.outcome === "ejected").length
+  const ejected = outcomes.filter((outcome) => outcome === "ejected").length
   return {
     queueWait,
-    redRate: settled.length === 0 ? null : ejected / settled.length,
-    reworkRate: shipped.length === 0 ? null : attempts.length / shipped.length,
+    redRate: outcomes.length === 0 ? null : ejected / outcomes.length,
+    reworkRate: attempts.length === 0 ? null : attempts.length / shipped.length,
     leadTime,
   } satisfies Board.Ledger
+})
+
+/** The outcomes of the project's last 50 settled attempts: the red rate and the bundle size both read them. */
+export const settled = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow["id"]) {
+  const rows = yield* tx
+    .select({ outcome: BoardAttemptTable.outcome })
+    .from(BoardAttemptTable)
+    .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardAttemptTable.issue_id))
+    .where(and(eq(BoardIssueTable.project_id, project), inArray(BoardAttemptTable.outcome, ["merged", "ejected"])))
+    .orderBy(desc(BoardAttemptTable.time_updated))
+    .limit(50)
+    .all()
+  return rows.map((row) => row.outcome)
 })
 
 function median(values: number[]) {
