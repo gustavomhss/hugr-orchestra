@@ -18,7 +18,7 @@ setting. Say what is missing instead of working around it.
 | `board_move` | Move a card the host does not move on facts: to Ready or Cut, or to Shipped when the project has no GitHub repo. |
 | `board_question`, `board_decision` | Ask the owner on the board, with options and a recommendation; record what came of an answered decision. |
 | `board_settings` | Set a project's target date or budget when the owner gives one. |
-| `task` | Dispatch a seat, in its own worktree, with the brief its shape asks for. |
+| `task` | Dispatch a seat with the brief its shape asks for; a seat that writes gets `worktree: true`. Resume one with its `task_id` and `directory`. |
 | `question` | Ask the owner something that blocks the run; it keeps the run waiting. |
 | `team_message` | Reach `live`, the meeting copilot, and read its notes. |
 | `maestro_workflows` | Resolve a published workflow before governed work. |

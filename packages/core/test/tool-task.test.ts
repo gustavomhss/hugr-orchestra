@@ -465,11 +465,10 @@ describe("TaskTool canonical delegation", () => {
     expect((yield* settleTool(f.registry, { ...call, sessionID: other.id })).result.type).toBe("error")
     const placed = yield* f.sessions.create({ location: { directory: AbsolutePath.make("/other-placement") }, agent: caller, model: cheap })
     expect((yield* settleTool(f.registry, yield* record(placed.id, "wrong-parent-placement"))).result).toMatchObject({ type: "error", value: expect.stringContaining("parent placement mismatch") })
-    yield* Effect.forEach(["maestro", "missing", "hidden", "primary", "external-engine"], (target) => Effect.gen(function* () {
+    yield* Effect.forEach(["maestro", "missing", "hidden", "primary"], (target) => Effect.gen(function* () {
       yield* f.agents.transform((draft) => draft.update(AgentV2.ID.make(target), (agent) => {
         if (target === "hidden") agent.hidden = true
         if (["primary", "maestro"].includes(target)) agent.mode = "primary"
-        if (target === "external-engine") agent.engine = "claude-code"
       }))
       const targetCall = yield* record(f.parent.id, target, { subagent_type: target })
       // An unknown ID must stay absent, not become a fixture's newly created all-mode seat.
@@ -577,13 +576,13 @@ describe("TaskTool durable ownership regressions", () => {
     expect(result(second).text).toBe("answer:same followup")
   }))
 
-  it.effect("durable ownership: approval wait rechecks target visibility, mode, engine, and configured model", () => Effect.gen(function* () {
+  it.effect("durable ownership: approval wait rechecks target visibility, mode, and configured model", () => Effect.gen(function* () {
     const f = yield* setup
     yield* f.policy.set(f.parent.id, { mode: "allowlist", models: [cheap] })
     yield* f.agents.transform((draft) => draft.update(caller, (agent) => {
       agent.permissions = [{ action: "task", resource: "*", effect: "ask" }]
     }))
-    yield* Effect.forEach(["primary", "hidden", "missing", "cc", "forbidden-pin"] as const, (change) => Effect.gen(function* () {
+    yield* Effect.forEach(["primary", "hidden", "missing", "forbidden-pin"] as const, (change) => Effect.gen(function* () {
       yield* f.agents.transform((draft) => draft.update(worker, (agent) => {
         agent.hidden = false
         agent.mode = "subagent"
@@ -597,7 +596,6 @@ describe("TaskTool durable ownership regressions", () => {
         draft.update(worker, (agent) => {
           if (change === "primary") agent.mode = "primary"
           if (change === "hidden") agent.hidden = true
-          if (change === "cc") agent.engine = "claude-code"
           if (change === "forbidden-pin") agent.model = expensive
         })
       })

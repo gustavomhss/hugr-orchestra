@@ -480,8 +480,6 @@ const requireTarget = Effect.fn("TaskTool.requireTarget")(function* (agents: Age
   const target = yield* agents.get(AgentV2.ID.make(id))
   if (!target || target.hidden || target.mode === "primary" || target.id === AgentV2.defaultID)
     return yield* new ToolFailure({ message: `Task target is not a visible subagent: ${id}` })
-  if (target.engine === "claude-code")
-    return yield* new ToolFailure({ message: `Task target requires an unsupported engine: ${target.id}` })
   return target
 })
 
