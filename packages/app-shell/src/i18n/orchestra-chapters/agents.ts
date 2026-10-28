@@ -68,7 +68,7 @@ export const AGENTS_COPY = {
   "orchestra.agents.error.save": "The agent could not be saved. Try again.",
   "orchestra.agents.error.load": "The agent configuration could not be loaded.",
   "orchestra.agents.error.conflict":
-    "The agent file changed on disk after it was opened. Close this dialog and open it again to edit the current version.",
+    "The agent file changed on disk after it was opened. Open the agent again to edit the current version.",
   "orchestra.agents.error.case": "An agent file with the same name in different letter case already exists.",
   "orchestra.agents.error.outside": "This project's agent folder resolves outside the project, so nothing was written.",
   "orchestra.agents.error.invalid": "{{path}} cannot be parsed, so it is shown read-only. Fix it by hand.",
@@ -239,7 +239,7 @@ export const AGENTS_COPY_BR: Record<keyof typeof AGENTS_COPY, string> = {
   "orchestra.agents.error.save": "Não foi possível salvar o agente. Tente de novo.",
   "orchestra.agents.error.load": "Não foi possível carregar a configuração do agente.",
   "orchestra.agents.error.conflict":
-    "O arquivo do agente mudou no disco depois de aberto. Feche este diálogo e abra de novo para editar a versão atual.",
+    "O arquivo do agente mudou no disco depois de aberto. Abra o agente de novo para editar a versão atual.",
   "orchestra.agents.error.case":
     "Já existe um arquivo de agente com o mesmo nome em outra combinação de maiúsculas e minúsculas.",
   "orchestra.agents.error.outside":
