@@ -39,7 +39,8 @@ back to its owner as a numbered rework attempt. The cards behind it keep moving.
 
 In plain words:
 
-1. Maestro plans so that seats work on different areas (this already happens through `writePaths` and `archie`).
+1. `archie` plans the integration shape: each card's area, what it waits on, and the order it lands in. Seats then
+   work on different areas by design, not by luck.
 2. Each card passes a quick test of what it touched.
 3. Passing cards wait on the conveyor. The host takes N at a time and runs the full test once for all of them.
 4. If it is green, all N land. If it is red, the host finds the bad card, takes it off, and the rest land.
@@ -54,8 +55,10 @@ It ships in two phases:
 
 Everything else is listed in §12 as later work, built only when the ledger shows it is needed.
 
-Maestro never computes conveyor state. It decides only what needs judgment: enqueue, flaky verdicts, and where
-rework goes. There are two gates, as in Mergify's "two-step CI" and as `AGENTS.md` already asks:
+Three owners, one decision each. `archie` decides the shape at plan time, because it holds the scoped context of
+the whole decomposition (§4.4). The host decides the timing at run time: which ready cards go in which bundle, and
+when. Maestro decides only what needs judgment during the run: enqueue, flaky verdicts, and where rework goes. It
+never assembles a bundle and never computes conveyor state. There are two gates, as in Mergify's "two-step CI" and as `AGENTS.md` already asks:
 
 1. **Scoped gate, per card.** Change-scoped tests and a typecheck run on the card's own tree, before it may queue.
 2. **Full gate, per bundle.** The full suite (phase 1) or the area's suite (phase 2) runs once on base + N queued
@@ -83,7 +86,7 @@ before the base keeps that cost at zero.
 | GitHub merge queue ([docs](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue)) | Groups of 1–100 PRs on `gh-readonly-queue/*` branches. Workflows need the `merge_group` trigger. | The failing or conflicting PR is removed and the temp branch rebuilt. Bisect is not described. | **No.** It is available only to organization-owned repositories, and this one is personal. It would also need `merge_group` in both workflows and would bypass the `epic` label. |
 | GitLab merge trains ([docs](https://docs.gitlab.com/ee/ci/pipelines/merge_trains.html)) | No batching. Each MR is tested on everything ahead of it, up to 20 parallel pipelines. | The MR is removed; pipelines behind it restart. | A full run per MR is the cost the owner rejected. |
 | Bors / "not rocket science rule" ([bors.tech](https://bors.tech/), [Hoare](https://graydon2.dreamwidth.org/1597.html)) | A staging branch is tested and the exact tested commit is fast-forwarded to base. | The batch fails as a unit. | We adopt the rule: base moves only to a tested result. The essay page refused our fetch (403); the rule is quoted from bors' summary. |
-| Zuul dependent pipeline ([docs](https://zuul-ci.org/docs/zuul/latest/gating.html)) | Speculative: each change tested on top of those ahead, all in parallel. | The failing change is removed and those behind it retested. The window starts at 20, grows by 1 per success and halves on failure. | We adopt the adaptive window for bundle size, later (§12). Speculative parallel futures are later work (§12). |
+| Zuul dependent pipeline ([docs](https://zuul-ci.org/docs/zuul/latest/gating.html)) | Speculative: each change tested on top of those ahead, all in parallel. | The failing change is removed and those behind it retested. The window starts at 20, grows by 1 per success and halves on failure. | We size bundles from the measured red rate instead of a feedback window (§6.3). Speculative parallel futures are later work (§12). |
 | Mergify ([batches](https://docs.mergify.com/merge-queue/batches)) | `batch_size` 1–128, `batch_max_wait_time`. | The batch is split into parts, tested in sequence; a single failing PR is removed. `batch_max_failure_resolution_attempts` caps the splitting. | Closest to this design. We add isolation first, because the failing tests are known and a scoped rerun of them is cheap. |
 | Prow Tide ([docs](https://docs.prow.k8s.io/docs/components/core/tide/)) | Batches per `org/repo:branch` pool, always tested against the latest base. | Falls back to merging single passing PRs. | We adopt the pool key (repository and base branch). |
 | Graphite ([blog](https://graphite.com/blog/merge-queue-batching)), Trunk ([docs](https://docs.trunk.io/merge-queue)) | Batching, parallel queues, anti-flake. | Graphite drops the whole batch; its bisect is "coming soon". Trunk's bisection is not confirmed from a page we could read. | Confirms that bisect matters: dropping a whole batch multiplies rework. |
@@ -93,6 +96,9 @@ before the base keeps that cost at zero.
 | Aviator affected targets ([docs](https://docs.aviator.co/mergequeue/concepts/affected-targets)) | Dynamic queues, one per set of affected targets. The team computes targets with tools such as `bazel-diff` or the Nx CLI. | Per queue | Phase 2 here, with `turbo` computing the targets. |
 | Uber, conflict analysis ([blog](https://www.uber.com/us/en/blog/slashing-ci-costs-at-uber/)) | Independent changes build at the same time. | Mainline stays green. | Reports 53% less CI and 37% less waiting. The same post says speculation aborted 40–65% of builds, which is why speculation stays in the later list. |
 | Google TAP, flake-aware culprit finding ([ICST 2023](https://hackthology.com/flake-aware-culprit-finding.html)) | Post-merge, with automatic rollback. | Bisection that models flakiness, since repeated reruns stop improving accuracy while cost keeps growing. | We reject post-merge rollback (§2). We keep the lesson: the culprit search treats flakes explicitly (§6.3 step 2). |
+
+None of these queues sees the plan: they meet changes only when they arrive. Here the planner shapes the work
+for the conveyor before any code exists (§4.4), and the queue checks the plan against what really arrived.
 
 What we take: the not-rocket-science rule (with one declared exception, §6.5), a queue per pool and later per area,
 batching with a size and a wait time, removing the culprit rather than the batch, and two-step CI.
@@ -165,6 +171,29 @@ that reason. Either way, "what happened to LCH-58" is answered by one query, nev
 | Compute lanes from the affected graph (phase 2) | Route rework: same seat with the failing output, or `archie` when scope changes |
 | Detect base movement, overlap with write sets, and conflicts | Decide what to do when a bundle dissolves (§6.3 step 6) |
 | Reconcile all of this after a restart | Set or change the project's CI contract (§5), once per project |
+
+### 4.4 What `archie` decides at plan time
+
+`archie` already authors the decomposition, and `maestro-plan` already returns a plan in which two slices write one
+file. The conveyor needs three more fields per card in the adopted plan:
+
+| Field | Meaning | Used by |
+|---|---|---|
+| `area` | The workspace packages the card is expected to affect, in the same terms as `turbo`'s affected set (§7.1) | The overlap check at plan review, and plan drift at enqueue |
+| `depends_on` | Cards whose code this card needs. It already exists on the board. | Assembly order and isolation (§6.2, §6.3) |
+| `order` | The plan's landing order among cards that share an area | Queue order: "earlier" in the cut rules (§7.2) means earlier in `order`, then earlier queued |
+
+Two rules make the fields bind:
+
+- **Plan review.** `maestro-plan` also returns a plan in which cards meant to run at the same time overlap in `area`
+  with no `depends_on` or `order` between them. Overlap is allowed when it is declared, because then it is a
+  sequence the queue follows instead of a collision it discovers.
+- **Plan drift.** At enqueue the host compares the card's real affected set with its `area`. A card that left its
+  area raises one `<integration>` line, and Maestro sends it to `archie` as a plan revision. The card still queues
+  under its real set, so drift never blocks a landing; it only stops the plan from silently going stale.
+
+`archie` does not build bundles. Fixed bundles chosen at plan time would wait for their slowest member and break
+on the first ejection. `archie` owns the shape, and the host fills it with whatever is ready.
 
 ## 5. CI: who triggers it and how a project configures it
 
@@ -275,7 +304,11 @@ The failed jobs and their logs give the failing set F: test files, or file paths
    member goes back to the queue in its original order, and Maestro gets an `<integration>` line. It may dequeue a
    suspect or send F to `jimmy`.
 
-`size` is fixed in phase 1. An adaptive window (Zuul) is later work (§12).
+**Bundle size.** `size` in the contract is the start value. Once the ledger holds 50 bundled cards, the host sets
+the size from the per-card red rate p, the share of bundled cards ejected over the last 50: the largest n with
+(1 − p)ⁿ ≥ 0.75, that is ⌊ln 0.75 / ln(1 − p)⌋, between 1 and `max`. That gives 8 at p = 3.5% and 2 at p = 10%, so
+about three bundles in four go green without a search. It is one formula over rows that already exist, with no
+feedback loop to tune.
 
 ### 6.4 Flakes
 
@@ -346,7 +379,8 @@ and for this repository they are the root `package.json`, `bun.lock`, `turbo.jso
 Lanes are not stored. Two rules decide, at every cut, which queued cards may go:
 
 1. A card may join a new bundle only when its affected set overlaps no bundle in flight.
-2. A card is never cut ahead of an earlier queued card whose affected set overlaps its own.
+2. A card is never cut ahead of an earlier card, by `order` and then by time queued (§4.4), whose affected set
+   overlaps its own.
 
 The cards that pass both rules are grouped into connected components of overlapping affected sets. Each component is
 a lane and cuts its own bundle with the phase 1 algorithm: assemble, run, isolate, halve, eject, merge. Lanes with
@@ -431,7 +465,8 @@ The board holds state. Maestro's context holds judgment. That is the split `maes
   - a conflict on a card in flight;
   - a dissolved bundle;
   - a paused pool;
-  - a card that is `local` with a dead Session.
+  - a card that is `local` with a dead Session;
+  - a card whose real affected set left its planned `area` (§4.4).
 
   Everything else stays on the board, where `board_read` finds it.
 
@@ -463,6 +498,7 @@ Example:
 | The host crashes mid-bundle | Restart | §8.5 reconcile |
 | Maestro's context is compacted | | §9: the board plus `<integration>` rebuild the picture |
 | GitHub is signed out or rate-limited | `github_state` | Pools pause and show the fact. Snapshots queue locally and push on recovery. |
+| A card leaves its planned area | Real affected set at enqueue differs from `area` | §4.4: a plan revision for `archie`; the card still queues |
 | The queue is full and old | The ledger: queue wait above 2 × D | Phase 2 lanes (§7). Within a lane, stacked speculation is the next lever (§12). |
 
 ## 11. Scale notes
@@ -479,16 +515,23 @@ Example:
 
 ## 12. Later, and not at all
 
-**Later.** Each item has a trigger in the ledger. Nothing is built before its trigger fires.
+**Ledger numbers.** The host computes four numbers from rows it already keeps and shows them on the board, per pool
+and per lane:
+
+- **Queue wait:** median time from `queued` to merged.
+- **Red rate:** share of bundled cards ejected (p, §6.3).
+- **Rework rate:** attempts per Shipped card.
+- **Lead time:** median time from `scoped-green` to Shipped.
+
+**Later.** Each item has a trigger on those numbers. Nothing is built before its trigger fires.
 
 | Item | Build it when |
 |---|---|
-| Adaptive bundle size (Zuul: +1 per green, halve on dissolve) | Bundles regularly dissolve, or regularly wait at a fixed size |
-| Speculative bundles stacked within a lane (Zuul, GitLab trains, SubmitQueue) | A lane's queue wait stays above 2 × its gate duration after phase 2 |
-| Flake quarantine and flake-aware bisection beyond one probe | `board_flake` shows the same test flaking across bundles |
+| Speculative bundles stacked within a lane (Zuul, GitLab trains, SubmitQueue) | A lane's queue wait stays above 2 × its gate duration for a week |
+| Flake quarantine and flake-aware bisection beyond one probe | The same test appears in `board_flake` in three bundles |
 | Test-impact selection finer than packages | A lane's filtered gate is still the bottleneck |
 | Preempting an in-flight bundle for an urgent card | An urgent card misses its window because a bundle was in flight |
-| Proactive rebase notices to cards that are not queued yet (§8.4) | Conflicts found at assembly cost more than one rework a day |
+| Proactive rebase notices to cards that are not queued yet (§8.4) | `conflict:` causes exceed one rework attempt a day |
 
 **Not at all.**
 
@@ -515,10 +558,10 @@ phase.
 |---|---|---|
 | **0. Spike** (no product code) | Prove on a scratch repo: merging a bundle PR with `--merge` marks member PRs merged; `gh workflow run --ref` works on a bundle branch; a temporary-index tree equals `test:ci`'s uploaded tree for the same worktree; pushing a hidden ref to GitHub works; `turbo --filter='...[A...B]' --dry=json` lists the affected packages for a commit range in this repository. | Five yes/no facts with command output, written into this spec |
 | **1. Ledger and push-early** | `board_attempt` with stored `writePaths`; snapshot refs on seat return and on the 10 min timer; the `local` and `pushed` states; the `maestro/integration` source with the dead-Session and missing-worktree lines; `track` playbook edits | Kill a seat mid-task: its card shows `pushed`, and its worktree is restored from the ref |
-| **2. CI facts** | `.orchestra/ci.json` reader and defaults; `ci_run`; `board_check` keyed by tree; the `scoped-green` and `scoped-red` states | A green scoped run stays valid after Maestro's commit with the same tree, and drops after an edit |
+| **2. CI facts** | `.orchestra/ci.json` reader and defaults; the `area` and `order` plan fields and the plan-review rule in `maestro-plan` and `archie`'s plan skill; `ci_run`; `board_check` keyed by tree; the `scoped-green` and `scoped-red` states | A green scoped run stays valid after Maestro's commit with the same tree, and drops after an edit |
 | **3. Conflict notices** | Base-advance diff, matched against queued cards' write sets with `conflictVerdict`, then `merge-tree`; the `conflicts` state and its `<integration>` line | A merge that touches a card's write set notifies only that card; a merge outside it notifies none |
 | **4. Queue and green bundles** | `board_queue`, `board_dequeue` and their preconditions; pools; cut rules a–d; assembly; the bundle PR with `full.label`; merge on green; `onBaseMoved`; the card's affected set from `turbo` (§7.1), which `merge-if-disjoint` and the eject rerun use in phase 1 too; `land` playbook Publish rewritten to "verify, then `board_queue`" | Three verified cards merge through one bundle and one full run; all three ship |
-| **5. Red bundles** | Infrastructure rerun, base check and flake probe, isolation with in-bundle dependencies, halving, eject into rework, rebuild, dissolve, `board_flake` and the flaky verdict, base red (§6.8) | A seeded failing member is ejected with the right cause, and the rest merge on the rebuilt bundle; a seeded interaction is found by halving; a seeded red on base ejects no member |
+| **5. Red bundles** | Bundle size from the red rate; the four ledger numbers on the board; infrastructure rerun, base check and flake probe, isolation with in-bundle dependencies, halving, eject into rework, rebuild, dissolve, `board_flake` and the flaky verdict, base red (§6.8) | A seeded failing member is ejected with the right cause, and the rest merge on the rebuilt bundle; a seeded interaction is found by halving; a seeded red on base ejects no member |
 | **6. Recovery** | Restart reconcile for pools, bundles and snapshots | Kill the host between "bundle green" and "merge": on restart it merges once, with no duplicate bundle |
 
 Order: 0, then 1 and 2 in parallel (disjoint write sets), then 3 and 4, then 5, then 6. WP1 ships first, alone if
@@ -528,7 +571,7 @@ needed, because lost work is the costliest pain and it needs no queue.
 
 | WP | Scope | Done when |
 |---|---|---|
-| **7. Lanes** | Global paths; the two cut rules and lanes as connected components; global cards; a `packages` dispatch input on `typecheck.yml` and `test.yml`; the `lanes` contract block | Two cards in disjoint packages land in parallel bundles, each running only its packages; a card touching `bun.lock` waits for both and runs the whole suite, and no card queued after it is cut first |
+| **7. Lanes** | Plan drift lines; global paths; the two cut rules and lanes as connected components; global cards; a `packages` dispatch input on `typecheck.yml` and `test.yml`; the `lanes` contract block | Two cards in disjoint packages land in parallel bundles, each running only its packages; a card touching `bun.lock` waits for both and runs the whole suite, and no card queued after it is cut first |
 | **8. Safety net** | The epic bundle always on the whole suite, with optional `fullEvery`; pausing only the lanes that overlap a base red | A seeded cross-package break that the affected graph misses is found by the safety run, and only its lane pauses |
 
 ## 14. Owner decisions
