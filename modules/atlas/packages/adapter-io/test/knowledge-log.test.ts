@@ -106,6 +106,19 @@ describe("replayKnowledge", () => {
     expect(replayKnowledge(repo, clone, policy, () => true)).toEqual({ applied: 0, staged: 0, missing: 2, rejected: 0 })
     expect(rehydrateProjection(clone)).toEqual(emptyStore())
   })
+
+  it("reports a knowledge folder it cannot read instead of an empty replay", () => {
+    mkdirSync(join(repo, ".atlas", "members", "backend"), { recursive: true })
+    // A file where the `knowledge/` folder should be: readdir fails with ENOTDIR, not ENOENT.
+    writeFileSync(join(repo, ".atlas", "members", "backend", "knowledge"), "")
+    expect(replayKnowledge(repo, store("b"), policy, () => true)).toEqual({
+      applied: 0,
+      staged: 0,
+      missing: 0,
+      rejected: 0,
+      unreadable: true,
+    })
+  })
 })
 
 describe("migrateLayout knowledge export", () => {

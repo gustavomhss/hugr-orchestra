@@ -33,6 +33,8 @@ export interface KnowledgeReplay {
   readonly missing: number
   /** Log lines that did not verify (torn, edited, or under another seat's folder). */
   readonly rejected: number
+  /** A knowledge folder or file could not be read, so some rows may not have been replayed. */
+  readonly unreadable?: true
   readonly refusal?: CommitRefusal
 }
 
@@ -67,6 +69,7 @@ export function replayKnowledge(
     staged: staged?.settled === true ? staged.out : 0,
     missing: pending.length - resolved.length,
     rejected: read.rejected,
+    ...(read.unreadable === true ? { unreadable: true as const } : {}),
   }
   return refusal === undefined ? counts : { ...counts, refusal }
 }

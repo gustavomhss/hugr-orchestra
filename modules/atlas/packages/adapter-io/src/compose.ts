@@ -279,7 +279,7 @@ export function composeRuntime(repoPath: string): ComposedRuntime {
     const replayed = replayKnowledge(repoPath, disk, policy, (node, fact) =>
       reverifyStore([{ node, fact }], verifyFactLeg, docExists, scopeHasDocs, tvFeed.replay).reProven === 1,
     )
-    if (replayed.applied + replayed.staged + replayed.missing + replayed.rejected > 0 || replayed.refusal !== undefined)
+    if (replayed.applied + replayed.staged + replayed.missing + replayed.rejected > 0 || replayed.unreadable === true || replayed.refusal !== undefined)
       console.error(`atlas: knowledge replay ${JSON.stringify(replayed)}`)
   }
   // `driftPairs` carries each fact ALONGSIDE its own `CurrentNode` (`reverify` needs `node.primaryAnchor` for

@@ -1,11 +1,11 @@
 ---
 name: atlas-usage
-description: How a contributor or agent reads and writes Atlas — the CLI commands and their arguments, the Orchestra tools, merging and setup, and what surprises people
+description: How a contributor or agent reads and writes Atlas — the CLI commands and their arguments, ratifying committed knowledge, the Orchestra tools, merging and setup, and what surprises people
 ---
 
 # Using Atlas
 
-Read Atlas before you change a scope, and write to it only through a door. Each command has a page in `modules/atlas/docs/reference/commands/<command>.md`; check it for flags. Surface and transport: `modules/atlas/docs/reference/atlas-tools.md`. Memory: `modules/atlas/docs/reference/atlas-memory.md`. Owners and rulings: skill `atlas-ownership`. Internals: skill `atlas-maintenance`.
+Read Atlas before you change a scope, and write to it only through a door. Each command has a page in `modules/atlas/docs/reference/commands/<command>.md`; check it for flags. Surface and transport: `modules/atlas/docs/reference/atlas-tools.md`. Memory: `modules/atlas/docs/reference/atlas-memory.md`. Identity, owners and rulings: skill `atlas-ownership`. Internals: skill `atlas-maintenance`.
 
 ## Read
 
@@ -13,7 +13,7 @@ Read Atlas before you change a scope, and write to it only through a door. Each 
 |---|---|
 | `atlas query <scope> [--by scope\|dependency\|trigger]` | Get the pack for a scope: governing facts, an advisory band and related nodes, flagged `stale` when an anchor drifted |
 | `atlas node <addr>` | Fetch one node by its 64-hex content address (not a node key) |
-| `atlas relations <nodeKey> [out\|in\|both]` | List a node's relations |
+| `atlas relations <unit> [out\|in\|both]` | List a unit's relations |
 | `atlas own <scope>` | Get the curated briefing for a crate, module, service or feature. CLI only |
 | `atlas memory-recall [--owner <id>] [--kind task\|pr\|project\|logbook] [--task-id <id>] [--pr-id <id>]` | Read memory |
 | `atlas doctor archive\|why\|hotset\|reground\|cas\|index` | Inspect the archive, explain a fact, check the hot-set budget, plan a re-ground, check the CAS or the index |
@@ -25,8 +25,9 @@ Read Atlas before you change a scope, and write to it only through a door. Each 
 | `atlas emit <fact.json> --at <sha> [--replace]` | Write one grounded fact. The citation must re-derive at `<sha>` |
 | `atlas link <a> <b> [--retract]` | Assert, or retract, that two nodes name the same fact |
 | `atlas memory-emit <entry.json>` | Write a project rule, task, PR or logbook entry. The kind comes from the entry's shape |
+| `atlas promote [nodeKey...]` | Ratify staged candidates, including committed knowledge a fresh clone staged. Needs `ATLAS_RATIFY_TOKEN`; T0 rows need more (see `promote.md`) |
 
-Over MCP only `atlas-emit` and `atlas-link` write knowledge. The CLI also writes through `promote`, `decide`, `transition`, `test-vacuity`, `derive-relations`, `hold`, `release`, `propose`, `answer`, `mine`, `migrate-layout`, `territory`, `own-export` and `repair`. Any command can also apply committed knowledge at boot (replay), so do not assume a read command leaves the store unchanged.
+The CLI also writes through `decide`, `transition`, `test-vacuity`, `derive-relations`, `hold`, `release`, `propose`, `answer`, `mine`, `migrate-layout`, `territory`, `own-export` and `repair`. Every command can also apply committed knowledge at boot (replay), so even a read may change the local store.
 
 ## In Orchestra
 
@@ -38,12 +39,12 @@ Over MCP only `atlas-emit` and `atlas-link` write knowledge. The CLI also writes
 
 - `atlas reconcile <mergeBase> [--accept-reground]` classifies drift since `<mergeBase>`. Exit 2 means semantic drift that needs review. `--accept-reground` only counts the mechanical part as accepted; it re-grounds nothing and never changes the exit code. It does not check that `<mergeBase>` really is the merge-base.
 - `atlas init <path>` plans the structural move-in and writes the `.gitignore` rule that keeps the store untracked and the logs tracked.
-- `atlas migrate-layout` moves old single-file logs into the `.atlas/` tree, once.
+- `atlas migrate-layout`, at the repository root, moves old single-file logs into the `.atlas/` tree. Land it before other branches append to the old files.
 
 ## Things that surprise people
 
 - A write that fails says which gate refused it. Fix the cause; never route around the door.
-- Your identity is `ATLAS_ACTOR`, else `git config user.email`. With neither set, every write is denied. Your logs land under `.atlas/members/<that identity>/`.
+- With neither `ATLAS_ACTOR` nor `git config user.email` set, every CLI write is denied. With the email set, the email is committed.
 - `stale:true` or `emitted:false` is a signal to act on: `guidance.next` names the fix.
-- What you commit under `.atlas/` is a claim. A fresh clone applies your knowledge row only if it carries `seal:'proven'` and re-proves there; otherwise it waits for ratify.
-- Never commit `.atlas/cas/` or `.atlas/projection*.json`. A tracked store turns writes and replay off.
+- What you commit under `.atlas/` is a claim. A fresh clone applies your knowledge row only if its blob is committed, it carries `seal:'proven'`, you are in its scope under that clone's policy, and it re-proves there. Otherwise run `atlas promote` there.
+- `atlas: knowledge replay {...}` on stderr means some committed rows did not apply: `missing` is a blob not committed, `rejected` a torn or misfiled line, `unreadable` a folder Atlas could not read.
