@@ -32,6 +32,22 @@ export function isInternalSkill(skill: Pick<SkillEntry, "internal">) {
   return skill.internal === true
 }
 
+/**
+ * The skills the catalog lists: neither internal nor a skill tree node. A node is a `SKILL.md` inside the folder of
+ * another listed `SKILL.md`; it loads only through its parent's index, the same rule as the server's `SkillV2.nested`.
+ */
+export function listedSkills(skills: readonly SkillEntry[]) {
+  const folders = skills
+    .map((skill) => slash(skill.location))
+    .filter((location) => location.endsWith("/SKILL.md"))
+    .map((location) => location.slice(0, -"SKILL.md".length))
+  return skills.filter((skill) => {
+    if (isInternalSkill(skill)) return false
+    const location = slash(skill.location)
+    return !folders.some((folder) => location !== `${folder}SKILL.md` && location.startsWith(folder))
+  })
+}
+
 export type SkillSource = "project" | "global" | "builtin"
 /** Mirrors the server's write rule: only the project's own skill folders change, never Atlas-governed skills. */
 export type SkillAccess = "edit" | "builtin" | "global" | "governed" | "fixed"

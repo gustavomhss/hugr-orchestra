@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { filterSkills, isInternalSkill, readSkills, skillAccess, skillErrorMessage, skillSource, sortSkills } from "./skills-data"
+import { filterSkills, isInternalSkill, listedSkills, readSkills, skillAccess, skillErrorMessage, skillSource, sortSkills } from "./skills-data"
 
 const skills = [
   { name: "Review", description: "Check boundaries", location: "/repo/review/SKILL.md", content: "  <b>review</b>\n" },
@@ -108,5 +108,23 @@ describe("internal skills", () => {
     expect(isInternalSkill({ internal: false })).toBe(false)
     expect(isInternalSkill({})).toBe(false)
     expect(readSkills([{ name: "a", location: "/a/SKILL.md", content: "body", internal: true }])[0]?.internal).toBe(true)
+  })
+})
+
+describe("listed skills", () => {
+  test("a skill tree lists its root, never its nodes or an internal skill", () => {
+    const skill = (name: string, location: string, internal?: boolean) => ({ name, location, content: "body", internal })
+    const listed = listedSkills([
+      skill("stack", "/seats/team/stack/SKILL.md"),
+      skill("stack-go", "/seats/team/stack/go/SKILL.md"),
+      skill("stack-go-chi", "/seats/team/stack/go/chi/SKILL.md"),
+      skill("plan", "/seats/archie/plan/SKILL.md", true),
+      skill("plan-briefs", "/seats/archie/plan/briefs/SKILL.md"),
+      skill("stacked", "/seats/team/stacked/SKILL.md"),
+      skill("legacy", "/skills/legacy.md"),
+      skill("win", "C:\\skills\\win\\SKILL.md"),
+      skill("win-node", "C:\\skills\\win\\node\\SKILL.md"),
+    ])
+    expect(listed.map((item) => item.name)).toEqual(["stack", "stacked", "legacy", "win"])
   })
 })

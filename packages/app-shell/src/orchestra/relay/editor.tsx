@@ -7,7 +7,7 @@ import { modalActive } from "@/utils/modal-active"
 import { skipToken, useQuery } from "@tanstack/solid-query"
 import { createEffect, createMemo, createSignal, For, Match, on, onCleanup, onMount, Show, Switch } from "solid-js"
 import { MxPage } from "../chapters/kit"
-import { isInternalSkill, readSkills, skillSource, sortSkills } from "../chapters/skills-data"
+import { listedSkills, readSkills, skillSource, sortSkills } from "../chapters/skills-data"
 import type { CanvasApi } from "./canvas"
 import { hookOutputs } from "./catalog"
 import { rememberDocument } from "./cache"
@@ -724,10 +724,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
                     names: skills.isSuccess ? skills.data.map((skill) => skill.name) : undefined,
                     // Agent-only skills still resolve for a step that names one, but the picker offers what the Skills page lists.
                     choices: skills.isSuccess
-                      ? sortSkills(
-                          skills.data.filter((skill) => !isInternalSkill(skill)),
-                          props.directory,
-                        ).map((skill) => ({
+                      ? sortSkills(listedSkills(skills.data), props.directory).map((skill) => ({
                           name: skill.name,
                           description: skill.description ?? undefined,
                           source: skillSource(skill.location, props.directory),
