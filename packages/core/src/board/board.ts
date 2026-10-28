@@ -507,7 +507,12 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
         log,
         gh: options.gh ?? BoardGithub.runner(proc, options.env),
       })
-      const ci = BoardCi.make({ quiet, proc, gh: options.gh ?? BoardGithub.runner(proc, options.env), env: options.env })
+      const ci = BoardCi.make({
+        quiet: (work) => quiet(work).pipe(Effect.orDie),
+        proc,
+        gh: options.gh ?? BoardGithub.runner(proc, options.env),
+        env: options.env,
+      })
 
       if (options.poll)
         yield* reading((tx) =>

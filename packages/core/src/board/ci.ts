@@ -18,7 +18,7 @@ import type { IssueRow, ProjectRow, Tx } from "./shared"
 // `board_check` ledger keyed by tree. The scoped state is derived from that ledger on every read and never stored.
 
 export interface Deps {
-  readonly quiet: <A, E>(work: (tx: Tx) => Effect.Effect<A, E>) => Effect.Effect<A, E>
+  readonly quiet: <A>(work: (tx: Tx) => Effect.Effect<A, unknown>) => Effect.Effect<A>
   readonly proc: AppProcess.Interface
   readonly gh: BoardGithub.Gh
   readonly env?: NodeJS.ProcessEnv
