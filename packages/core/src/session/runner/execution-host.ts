@@ -14,6 +14,7 @@ import type { ToolRegistry } from "../../tool/registry"
 import type { SkillV2 } from "../../skill"
 import type { SessionMessage } from "../message"
 import type { SessionSchema } from "../schema"
+import type { SessionTodo } from "../todo"
 import { SessionTable } from "../sql"
 
 /**
@@ -110,6 +111,11 @@ export interface Turn {
     readonly publish: (event: LLMEvent) => Effect.Effect<void>
     readonly finish: Effect.Effect<void>
   }>
+  /**
+   * Replaces the Session's todo list, as Orchestra's todowrite tool would: the todo panel shows it. For an engine that
+   * keeps its own checklist, called when the engine's own todo call succeeds.
+   */
+  readonly todos: (list: ReadonlyArray<SessionTodo.Info>) => Effect.Effect<void>
   /** The host's durable state, `session.metadata[host.stateKey]`. */
   readonly state: {
     readonly get: Effect.Effect<unknown>

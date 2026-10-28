@@ -15,7 +15,8 @@ Design and decisions: `docs/specs/claude-mode/meta-harness.md`. User guide: `doc
 | Appended note, foreground seats, environment | `modules/engine-adapters/claude-code/src/host/options.ts` |
 | SDK seam and `claude_code` preset | `modules/engine-adapters/claude-code/src/sdk.ts` |
 | Turn shape (`context`, `seats`, `authorize({ agent })`) | `packages/core/src/session/runner/execution-host.ts` |
-| What the runner hands the host | `packages/core/src/session/runner/llm.ts`; `notify` and `child` in `host-ports.ts` |
+| What the runner hands the host | `packages/core/src/session/runner/llm.ts`; `notify`, `child` and `todos` in `host-ports.ts` |
+| Built-in results as Orchestra's tools record them (todo panel, edit diff) | `modules/engine-adapters/claude-code/src/v2/output.ts` |
 
 ## Invariants
 
@@ -34,6 +35,10 @@ Design and decisions: `docs/specs/claude-mode/meta-harness.md`. User guide: `doc
 - `shown` renames a built-in call for Orchestra's record only (Bash to `bash`, Agent to `task` with the seat id,
   TodoWrite result as `{"todos": [...]}`). Never apply it to what reaches Claude Code or to the permission gate,
   which keep Claude Code's names. A new widget field means a new mapping there, covered in `v2-host.test.ts`.
+- `ClaudeCodeOutput.settle` gives a settled built-in the `output.structured` Orchestra's tool records: a TodoWrite
+  also calls `Turn.todos`, which writes the Session's todos (`SessionTodo.write`) so the todo panel shows them, with
+  priority `medium` since Claude Code has none; an Edit carries `files` built from the SDK's `tool_use_result.structuredPatch`
+  in `createTwoFilesPatch` form. A subagent's TodoWrite does not write the child Session's todos (known limit).
 - Orchestra MCP tools are refused inside a subagent (`MAIN_ONLY`, at the gate and in `canUseTool` via `agentID`) and
   listed in each subagent's `disallowedTools`: the MCP request carries no agent, so they would run under the main
   agent's registry and permissions.
@@ -47,5 +52,5 @@ Design and decisions: `docs/specs/claude-mode/meta-harness.md`. User guide: `doc
 ## Testing
 
 - Host behavior: `bun run test:ci engine-claude-code test/v2-host.test.ts test/v2-host-subagent.test.ts test/preset-guard.test.ts`.
-- Runner side: `bun run test:ci core test/session-runner-execution-host.test.ts`.
+- Runner side: `bun run test:ci core test/session-runner-execution-host.test.ts test/session-runner-execution-host-ports.test.ts`.
 - A real subscription turn needs the owner's Claude login; run it only in an isolated dev app.

@@ -318,6 +318,29 @@ describe("SessionRunner execution host ports", () => {
     }),
   )
 
+  it.effect("todos replaces the Session's todo list, as Orchestra's todowrite tool would", () =>
+    Effect.gen(function* () {
+      const sessions = yield* hosted
+      script = (turn) =>
+        Effect.gen(function* () {
+          yield* turn.todos([{ content: "old", status: "pending", priority: "medium" }])
+          yield* turn.todos([
+            { content: "Plan", status: "completed", priority: "medium" },
+            { content: "Build", status: "in_progress", priority: "medium" },
+          ])
+          return answer()
+        })
+      yield* send(sessions, "go")
+
+      const { db } = yield* Database.Service
+      const rows = yield* db.select().from(TodoTable).all().pipe(Effect.orDie)
+      expect(rows.filter((row) => row.session_id === sessionID).toSorted((a, b) => a.position - b.position).map((row) => [row.content, row.status, row.position])).toEqual([
+        ["Plan", "completed", 0],
+        ["Build", "in_progress", 1],
+      ])
+    }),
+  )
+
   it.effect("retract blanks a superseded attempt's text and fails its unsettled call, and leaves a call that ran", () =>
     Effect.gen(function* () {
       const sessions = yield* hosted

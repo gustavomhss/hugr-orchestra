@@ -17,6 +17,7 @@ import { ClaudeCodeSDK } from "../sdk"
 import { ClaudeCodeTranscript } from "../transcript"
 import { ClaudeCodeAccountV2 } from "./account"
 import { ClaudeCodeCatalog } from "./catalog"
+import { ClaudeCodeOutput } from "./output"
 
 export const ID = "claude-code"
 /** The legacy `session.metadata` key (`host/session.ts`), so legacy Claude-hosted sessions resume on V2. */
@@ -387,7 +388,7 @@ export const make = Effect.gen(function* () {
                   yield* deliver(message.session_id)
                   live.keep = live.background > 0
                 }
-                return events(message, { names, todos, tasks, seats: agents, failure, emitted, model: turn.model?.id })
+                return yield* ClaudeCodeOutput.settle(events(message, { names, todos, tasks, seats: agents, failure, emitted, model: turn.model?.id }), message, { todos, turn })
               }),
             ),
             Stream.flatMap((items) => Stream.fromIterable(items)),
@@ -433,7 +434,7 @@ type Delegation = {
 
 type Tracker = {
   readonly names: Map<string, string>
-  /** Each TodoWrite call's list, recorded as its result so the todo widget shows the checklist. */
+  /** Each TodoWrite call's list, recorded as its result and the Session's todos so the widget and panel show it. */
   readonly todos: Map<string, unknown>
   /** Each delegation's seat and brief, to open the child Session that mirrors its subagent. */
   readonly tasks: Map<string, Delegation>
