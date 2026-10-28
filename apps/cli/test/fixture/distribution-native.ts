@@ -104,6 +104,8 @@ export async function captureOracle() {
   const trees = Object.fromEntries(await Promise.all(Object.values(Seats.all)
     .filter((seat) => seat.skills.length > 0)
     .map(async (seat) => [seat.id, await SeatSkillContent.read(seat.id, Seats.skillSource(seat.id), seat.skills)] as const)))
+  if (Seats.shared().length > 0)
+    Object.assign(trees, { team: await SeatSkillContent.read("team", Seats.sharedSource(), Seats.shared()) })
   expect(await packagedSkills()).toEqual(trees)
   const files = Object.entries(trees).flatMap(([id, tree]) =>
     Object.entries(tree).map(([file, text]) => ({ path: `${id}/${file}`, bytes: Buffer.from(text, "utf8") })),

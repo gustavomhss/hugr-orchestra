@@ -76,7 +76,9 @@ test("every seat lists and loads its own skill tree, and no other agent sees it"
     Effect.scoped(
       Effect.gen(function* () {
         const skills = yield* SkillV2.Service
-        yield* skills.transform(MaestroSkillSourcesV2.seats(SeatSkillRoot.roots))
+        yield* skills.transform(
+          MaestroSkillSourcesV2.seats({ ...SeatSkillRoot.roots, ...(SeatSkillRoot.shared ? { team: SeatSkillRoot.shared } : {}) }),
+        )
         yield* skills.transform(MaestroSkillSourcesV2.playbooks(SeatSkillRoot.playbooks))
         return yield* skills.list()
       }),
@@ -94,12 +96,14 @@ test("every seat lists and loads its own skill tree, and no other agent sees it"
   for (const seat of owned) {
     for (const name of seat.skills)
       expect(byName.get(name)?.location).toBe(
-        AbsolutePath.make(path.join(SeatSkillRoot.roots[seat.id], name, "SKILL.md")),
+        AbsolutePath.make(
+          path.join(name.startsWith("team-") ? SeatSkillRoot.shared! : SeatSkillRoot.roots[seat.id], name, "SKILL.md"),
+        ),
       )
     const names = SkillV2.available(list, agent(seat.id)).map((skill) => skill.name)
     expect(names).toEqual(expect.arrayContaining([...seat.skills]))
     for (const other of owned.filter((item) => item.id !== seat.id))
-      for (const name of other.skills) expect(names).not.toContain(name)
+      for (const name of other.skills.filter((skill) => !seat.skills.includes(skill))) expect(names).not.toContain(name)
   }
   const maestro = SkillV2.available(list, agent("maestro")).map((skill) => skill.name)
   for (const seat of owned) for (const name of seat.skills) expect(maestro).not.toContain(name)

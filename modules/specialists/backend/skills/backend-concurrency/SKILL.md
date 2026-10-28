@@ -22,15 +22,15 @@ This skill adds lifetime obligations to `backend-implement`, which you load firs
 
 ## Select the reference
 
-- [Cancellation and completion](../backend-implement/references/lifetimes/cancellation.md)
-- [Streams, cursors and batches](../backend-implement/references/lifetimes/streams.md), including response bodies that outlive the handler.
-- [Job admission](../backend-implement/references/lifetimes/jobs.md)
-- [External retries and effect identity](../backend-implement/references/lifetimes/retries.md)
-- [Observability signals](../backend-implement/references/cards/observability.md), when the packet assigns logs, metrics or traces.
+- Cancellation and completion (`backend-concurrency-cancellation`)
+- Streams, cursors and batches (`backend-concurrency-streams`), including response bodies that outlive the handler.
+- Job admission (`backend-concurrency-jobs`)
+- External retries and effect identity (`backend-concurrency-retries`)
+- Observability signals (`backend-api-observability`), when the packet assigns logs, metrics or traces.
 
 Runtime APIs such as contexts, task scopes, `Send` bounds or thread-bound transactions live in the language and framework references your stack selects.
 
-Stack references: [Go](../backend-implement/references/languages/go.md), [Python](../backend-implement/references/languages/python.md), [JavaScript/TypeScript](../backend-implement/references/languages/js-ts.md), [Ruby](../backend-implement/references/languages/ruby.md), [PHP](../backend-implement/references/languages/php.md). Read only the packet's language.
+Stack references: Go (`team-stack-go`), Python (`team-stack-python`), JavaScript/TypeScript (`team-stack-js-ts`), Ruby (`team-stack-ruby`), PHP (`team-stack-php`). Read only the packet's language.
 
 ## Common procedure
 

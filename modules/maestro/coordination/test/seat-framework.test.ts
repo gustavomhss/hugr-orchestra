@@ -22,11 +22,17 @@ describe("native seat framework", () => {
       )
       if (seat.skills.length === 0) continue
       const root = Seats.skillSource(seat.id)
+      const own = seat.skills.filter((skill) => !skill.startsWith("team-"))
       const dirs = (await fs.readdir(root, { withFileTypes: true })).filter((entry) => entry.isDirectory()).map((entry) => entry.name).toSorted()
-      expect(dirs).toEqual(seat.skills.toSorted())
-      for (const skill of seat.skills) expect(matter(await Bun.file(path.join(root, skill, "SKILL.md")).text()).data.name).toBe(skill)
+      expect(dirs).toEqual(own.toSorted())
+      for (const skill of seat.skills)
+        expect(
+          matter(await Bun.file(path.join(skill.startsWith("team-") ? Seats.sharedSource() : root, skill, "SKILL.md")).text()).data.name,
+        ).toBe(skill)
     }
-    expect(Seats.all.backend.skills.toSorted()).toEqual(BackendToolkitManifest.ENTRY_SKILLS.toSorted())
+    expect(Seats.all.backend.skills.filter((skill) => !skill.startsWith("team-")).toSorted()).toEqual(
+      BackendToolkitManifest.ENTRY_SKILLS.toSorted(),
+    )
     expect(Seats.all.jimmy).toMatchObject({
       id: "jimmy",
       profile: "discovery",

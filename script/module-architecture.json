@@ -499,6 +499,7 @@
     { "id": "omni", "path": "native/omni", "target": "native/omni" },
     { "id": "specialist-backend", "path": "modules/specialists/backend", "target": "modules/specialists/backend" },
     { "id": "specialist-archie", "path": "modules/specialists/archie", "target": "modules/specialists/archie" },
+    { "id": "specialist-team", "path": "modules/specialists/team", "target": "modules/specialists/team" },
     { "id": "specialist-jimmy", "path": "packages/jimmy-specialist", "target": "modules/specialists/jimmy" }
   ],
   "scaffoldReadmes": [

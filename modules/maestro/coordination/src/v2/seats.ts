@@ -56,7 +56,13 @@ const layer = Layer.effectDiscard(
       yield* Effect.promise(() =>
         Promise.all(
           Object.entries(skillRoot?.SeatSkillRoot.roots ?? {}).map(
-            async ([id, root]) => [id, await SeatSkillContent.describe(root, Seats.all[id].skills)] as const,
+            async ([id, root]) => {
+              const skills = Seats.all[id].skills
+              const team = skills.filter((skill) => skill.startsWith("team-"))
+              const own = await SeatSkillContent.describe(root, skills.filter((skill) => !team.includes(skill)))
+              const shared = skillRoot?.SeatSkillRoot.shared
+              return [id, shared && team.length > 0 ? [...own, ...(await SeatSkillContent.describe(shared, team))] : own] as const
+            },
           ),
         ),
       ),
@@ -65,7 +71,11 @@ const layer = Layer.effectDiscard(
     yield* plugins.ensure(pluginID, () =>
       Effect.gen(function* () {
         if (skillRoot) {
-          yield* skills.transform(MaestroSkillSourcesV2.seats(skillRoot.SeatSkillRoot.roots))
+          yield* skills.transform(MaestroSkillSourcesV2.seats({
+              ...skillRoot.SeatSkillRoot.roots,
+              ...(skillRoot.SeatSkillRoot.shared ? { team: skillRoot.SeatSkillRoot.shared } : {}),
+            }),
+          )
           yield* skills.transform(MaestroSkillSourcesV2.playbooks(skillRoot.SeatSkillRoot.playbooks))
         }
         yield* agents.transform(
@@ -80,6 +90,9 @@ const layer = Layer.effectDiscard(
                 )
               draft.update(id, (agent) => {
                 const root = skillRoot?.SeatSkillRoot.roots[member.memberId]
+                const shared = Seats.all[member.memberId].skills.some((skill) => skill.startsWith("team-"))
+                  ? skillRoot?.SeatSkillRoot.shared
+                  : undefined
                 agent.name = resolved.label
                 agent.system ??= roster?.renderPrompt(member, resolved.label)
                 agent.description ??= Seats.all[member.memberId].description
@@ -93,7 +106,9 @@ const layer = Layer.effectDiscard(
                 agent.permissions.push(
                   ...floor(roster?.nativeProfiles[member.memberId]),
                   // A seat reads its own skill tree but never edits it; inside the Location it is ordinary source.
-                  ...(root ? [{ action: "edit", resource: path.join(root, "*"), effect: "deny" as const }] : []),
+                  ...[root, shared]
+                    .filter((dir) => dir !== undefined)
+                    .map((dir) => ({ action: "edit", resource: path.join(dir, "*"), effect: "deny" as const })),
                 )
               })
             }

@@ -132,6 +132,9 @@ function seatProfile(seat: Seat): NativeProfile {
           : seat.profile === "discovery" ? baseProfiles.discovery.external_directory
           : seat.profile === "direct" ? baseProfiles.direct.external_directory : { "*": "deny" as const }),
         [path.join(root, "*")]: "allow" as const,
+        ...(SeatSkillRoot.shared && seat.skills.some((skill) => skill.startsWith("team-"))
+          ? { [path.join(SeatSkillRoot.shared, "*")]: "allow" as const }
+          : {}),
       }),
     } : {}),
   })

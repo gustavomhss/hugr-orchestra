@@ -33,9 +33,11 @@ export function validate(id: string, files: Record<string, string>, skills?: rea
       throw new PackagingError(`Nonlossless UTF-8 seat skill content: ${id}/${file}`)
   })
   if (!skills) return
+  // A seat declares a shared root (`team-*`) like its own, but the root lives in the one `team` tree.
+  const declared = skills.filter((skill) => (id === "team") === skill.startsWith("team-"))
   if (
-    new Set(skills).size !== skills.length ||
-    skills.some(
+    new Set(declared).size !== declared.length ||
+    declared.some(
       (skill) =>
         (!skill.startsWith(`${id}-`) && !(id === "maestro" && skill === "frame-request")) ||
         !/^[a-z]+(?:-[a-z]+)*$/.test(skill),
@@ -46,7 +48,7 @@ export function validate(id: string, files: Record<string, string>, skills?: rea
     .filter((file) => path.posix.basename(file) === "SKILL.md")
     .map((file) => path.posix.dirname(file))
   const roots = nodes.filter((node) => !node.includes("/"))
-  if (JSON.stringify(roots.toSorted()) !== JSON.stringify(skills.toSorted()))
+  if (JSON.stringify(roots.toSorted()) !== JSON.stringify(declared.toSorted()))
     throw new PackagingError(`Seat entry skills differ from declared skills: ${id}`)
   // Every directory on a file's path is a node until a node's `references/` folder; anything else is an orphan.
   Object.keys(files).forEach((file) => {
