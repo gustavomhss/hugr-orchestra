@@ -3,7 +3,7 @@ import type { RelayDocument, RelayKind } from "./client"
 import { profileDrafts } from "./drafts"
 import type { RelayRun } from "./runs"
 import { badgeTone, RUN_TONE, runHandle } from "./format"
-import { checkCount, type Flow, type Issue, nodeOf, steps } from "./graph"
+import { checkCount, type Flow, type Issue, listedSteps, nodeOf, steps } from "./graph"
 import { runBlockedBy } from "./chat"
 import { relayPath } from "./route"
 import { SERVER_ISSUES } from "./server-issues"
@@ -286,7 +286,7 @@ export function TemplateCard(props: {
               </span>
               <span class="mx-badge">
                 {copy.count(
-                  steps(current()).length,
+                  listedSteps(current()).length,
                   "orchestra.workflows.count.step.one",
                   "orchestra.workflows.count.step.other",
                 )}

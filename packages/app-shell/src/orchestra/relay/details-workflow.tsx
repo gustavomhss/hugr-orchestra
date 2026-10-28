@@ -27,6 +27,7 @@ import {
   retryBudget,
   setPhase,
   START,
+  listedSteps,
   steps,
   updateNode,
   updatePhase,
@@ -356,7 +357,7 @@ function StartOutput(props: Props & { title?: string }) {
                 "orchestra.workflows.count.phase.other",
               ),
               copy.count(
-                steps(props.flow).length,
+                listedSteps(props.flow).length,
                 "orchestra.workflows.count.step.one",
                 "orchestra.workflows.count.step.other",
               ),
@@ -369,7 +370,7 @@ function StartOutput(props: Props & { title?: string }) {
           ],
           [
             copy.t("orchestra.workflows.details.firstStep"),
-            steps(props.flow)[0]?.name ?? copy.t("orchestra.workflows.details.none"),
+            listedSteps(props.flow)[0]?.name ?? copy.t("orchestra.workflows.details.none"),
           ],
         ]}
       />
