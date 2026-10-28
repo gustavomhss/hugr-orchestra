@@ -18,5 +18,6 @@
 - [Live meetings: setup and use](live-meetings.md)
 - [Workflows: run, release and templates](workflows.md)
 - [Hooks: rules that watch what agents do](hooks.md)
+- [The agent screen: prompt, tools, toolkit, skills, memory](agent-screen.md)
 - [Agent avatars: pick or upload a picture](agent-avatars.md)
 - [Keep the computer awake](keep-awake.md)

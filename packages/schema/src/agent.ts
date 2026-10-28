@@ -39,6 +39,23 @@ export const Info = Schema.Struct({
   color: Color.pipe(optional),
   avatar: Avatar.pipe(optional),
   steps: PositiveInt.pipe(optional),
+  /** Skills packaged with this agent, read from its own tree rather than the project's skill catalog. */
+  skills: Schema.Array(
+    Schema.Struct({
+      name: Schema.String,
+      description: Schema.String.pipe(optional),
+      /** The skill's reference files: `kind` and `family` are its folders under `references/` (`frameworks/python`). */
+      references: Schema.Array(
+        Schema.Struct({
+          kind: Schema.String.pipe(optional),
+          family: Schema.String.pipe(optional),
+          title: Schema.String,
+        }),
+      ).pipe(optional),
+    }),
+  ).pipe(optional),
+  /** The pinned engine set the agent's commands run with: the backend toolkit or the research toolkit. */
+  toolkit: Schema.Literals(["backend", "research"]).pipe(optional),
   permissions: Permission.Ruleset,
 })
   .annotate({ identifier: "AgentV2.Info" })

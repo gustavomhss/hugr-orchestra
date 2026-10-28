@@ -6,6 +6,8 @@ import type {
   LocationPathsOutput,
   AgentsListInput,
   AgentsListOutput,
+  AgentsDetailInput,
+  AgentsDetailOutput,
   AgentsGetFileInput,
   AgentsGetFileOutput,
   AgentsUpdateFileInput,
@@ -651,6 +653,18 @@ export function make(options: ClientOptions) {
             method: "GET",
             path: `/api/agent`,
             query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      detail: (input: AgentsDetailInput, requestOptions?: RequestOptions) =>
+        request<AgentsDetailOutput>(
+          {
+            method: "GET",
+            path: `/api/agent/${encodeURIComponent(input.agentID)}/detail`,
+            query: { location: input["location"] },
             successStatus: 200,
             declaredStatuses: [400, 401],
             empty: false,

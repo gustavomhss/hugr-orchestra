@@ -9,13 +9,17 @@ import { MxBadge } from "./kit"
 
 const PAGE_SIZE = 24
 
+/** What an agent can use and remembers; a count is undefined until its source answers. */
+export type AgentStats = { tools?: number; skills?: number; memories?: number }
+
 export function AgentsRoster(props: {
   agents: readonly Agent[]
   availability: (agent: Agent) => { ok: boolean; title?: string; modelIssue?: boolean } | undefined
   scope: string
   /** The catalog's display name for an agent's model, when this profile's catalog has loaded it. */
   modelName?: (agent: Agent) => string | undefined
-  onConfigure: (agent: Agent) => void
+  stats: (agent: Agent) => AgentStats
+  onOpen: (agent: Agent) => void
   onChat: () => void
   opening?: boolean
   chatReady?: boolean
@@ -35,11 +39,6 @@ export function AgentsRoster(props: {
   const pages = () => Math.max(1, Math.ceil(roster().length / PAGE_SIZE))
   const page = () => Math.min(state.page, pages() - 1)
   const visible = createMemo(() => roster().slice(page() * PAGE_SIZE, (page() + 1) * PAGE_SIZE))
-  const steps = (agent: Agent) => {
-    if (agent.steps === undefined) return language.t("orchestra.agents.stepsUnlimited")
-    if (agent.steps === 1) return language.t("orchestra.agents.stepsOne")
-    return language.t("orchestra.agents.stepsCount", { count: agent.steps })
-  }
   return (
     <div class="agents-roster">
       <div class="mx-toolbar">
@@ -66,79 +65,89 @@ export function AgentsRoster(props: {
       <Show when={roster().length} fallback={<p class="mx-empty">{language.t("orchestra.agents.noMatches")}</p>}>
         <ul class="mx-grid agents-grid" aria-label={language.t("orchestra.agents.roster")}>
           <For each={visible()}>
-            {(item, index) => (
-              <li
-                class="agent mx-card"
-                aria-labelledby={`agent-${agentKey(item.agent)}`}
-                aria-setsize={roster().length}
-                aria-posinset={page() * PAGE_SIZE + index() + 1}
-              >
-                <div class="agent-top mx-card-top">
-                  <Show
-                    when={avatarUrl(agentAvatar(item.agent))}
-                    fallback={
-                      <span class="mx-mark agent-avatar">
-                        <svg class="agents-ic" viewBox="0 0 16 16" aria-hidden="true">
-                          <path d="m8 1 2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z" />
-                        </svg>
+            {(item, index) => {
+              const id = `agent-${agentKey(item.agent)}`
+              const status = () => props.availability(item.agent)
+              const stats = () => props.stats(item.agent)
+              return (
+                <li
+                  class="agent mx-card"
+                  aria-labelledby={id}
+                  aria-setsize={roster().length}
+                  aria-posinset={page() * PAGE_SIZE + index() + 1}
+                >
+                  <div class="agent-top">
+                    <AgentPortrait agent={item.agent} class="agent-avatar" />
+                    <div class="agent-title">
+                      {/* The name is the card's one link: its hit area stretches over the whole card. */}
+                      <button type="button" class="agent-open" id={id} onClick={() => props.onOpen(item.agent)}>
+                        <bdi>{item.agent.name}</bdi>
+                      </button>
+                      <span class="agent-role">
+                        {language.t(
+                          item.agent.mode === "subagent"
+                            ? "orchestra.agents.kind.subagent"
+                            : "orchestra.agents.kind.primary",
+                        )}
                       </span>
-                    }
-                  >
-                    {(url) => <img class="agent-avatar" src={url()} alt="" />}
-                  </Show>
-                  <div class="agent-title">
-                    <b id={`agent-${agentKey(item.agent)}`}>
-                      <bdi>{item.agent.name}</bdi>
-                    </b>
-                    <span class="agent-role">{language.t(`orchestra.agents.mode.${item.agent.mode}`)}</span>
+                    </div>
+                    <Show when={status()}>
+                      {(status) => (
+                        <span
+                          class={status().ok ? "agent-status good" : "agent-status bad"}
+                          title={status().title ?? language.t("orchestra.agents.available")}
+                          role="img"
+                          aria-label={
+                            status().modelIssue
+                              ? status().title
+                              : language.t(
+                                  status().ok ? "orchestra.agents.available" : "orchestra.agents.providerMissing",
+                                )
+                          }
+                        />
+                      )}
+                    </Show>
                   </div>
-                </div>
-                <p class="agent-desc" title={item.agent.description}>
-                  {item.agent.description ?? language.t("orchestra.agents.noDescription")}
-                </p>
-                <div class="mx-meta">
-                  <MxBadge>
-                    <bdi
+                  <p class="agent-desc" title={item.agent.description}>
+                    {item.agent.description ?? language.t("orchestra.agents.noDescription")}
+                  </p>
+                  <dl class="agent-stats">
+                    <For each={["tools", "skills", "memories"] as const}>
+                      {(kind) => (
+                        <div>
+                          <dt>{language.t(`orchestra.agents.stat.${kind}`)}</dt>
+                          <dd>{stats()[kind] ?? "–"}</dd>
+                        </div>
+                      )}
+                    </For>
+                  </dl>
+                  <div class="agent-foot">
+                    <span
+                      class="agent-model"
                       title={
                         item.agent.model ? `${item.agent.model.providerID}/${item.agent.model.modelID}` : undefined
                       }
                     >
-                      {props.modelName?.(item.agent) ??
-                        item.agent.model?.modelID ??
-                        language.t("orchestra.agents.defaultModel")}
-                    </bdi>
-                  </MxBadge>
-                  <MxBadge>{steps(item.agent)}</MxBadge>
-                  <Show when={props.availability(item.agent)}>
-                    {(status) => (
-                      <span class={status().ok ? "mx-badge good" : "mx-badge bad"} title={status().title}>
-                        {status().modelIssue
-                          ? status().title
-                          : language.t(status().ok ? "orchestra.agents.available" : "orchestra.agents.providerMissing")}
-                      </span>
-                    )}
-                  </Show>
-                </div>
-                <footer class="mx-card-foot">
-                  <button type="button" class="mx-btn" onClick={() => props.onConfigure(item.agent)}>
-                    {language.t("orchestra.agents.configure")}
-                  </button>
-                  <Show
-                    when={item.chat}
-                    fallback={<p class="mx-note agents-note">{language.t("orchestra.agents.maestroOnly")}</p>}
-                  >
-                    <button
-                      type="button"
-                      class="mx-btn"
-                      disabled={props.opening || props.chatReady === false}
-                      onClick={props.onChat}
-                    >
-                      {language.t("orchestra.agents.openChat")}
-                    </button>
-                  </Show>
-                </footer>
-              </li>
-            )}
+                      <bdi>
+                        {props.modelName?.(item.agent) ??
+                          item.agent.model?.modelID ??
+                          language.t("orchestra.agents.defaultModel")}
+                      </bdi>
+                    </span>
+                    <Show when={item.chat}>
+                      <button
+                        type="button"
+                        class="mx-btn agent-chat"
+                        disabled={props.opening || props.chatReady === false}
+                        onClick={props.onChat}
+                      >
+                        {language.t("orchestra.agents.openChat")}
+                      </button>
+                    </Show>
+                  </div>
+                </li>
+              )
+            }}
           </For>
         </ul>
       </Show>
@@ -163,5 +172,23 @@ export function AgentsRoster(props: {
         </nav>
       </Show>
     </div>
+  )
+}
+
+/** The agent's picture, or the star mark in the same slot when it has none. */
+export function AgentPortrait(props: { agent: Agent; avatar?: string; class: string }) {
+  return (
+    <Show
+      when={avatarUrl(props.avatar ?? agentAvatar(props.agent))}
+      fallback={
+        <span class={`mx-mark ${props.class}`}>
+          <svg class="agents-ic" viewBox="0 0 16 16" aria-hidden="true">
+            <path d="m8 1 2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z" />
+          </svg>
+        </span>
+      }
+    >
+      {(url) => <img class={props.class} src={url()} alt="" />}
+    </Show>
   )
 }

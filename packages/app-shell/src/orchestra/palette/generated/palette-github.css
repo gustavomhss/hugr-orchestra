@@ -1636,18 +1636,12 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-mx-ki
   outline: 2px solid var(--orchestra-accent);
 }
 /* orchestra/chapters/agents.css */
-[data-orchestra-palette="github"] .agent-top b {
-  color: var(--orchestra-body);
-}
 [data-orchestra-palette="github"] .agent-role {
   color: var(--orchestra-muted);
 }
 [data-orchestra-palette="github"] .agents-ic {
   fill: none;
   stroke: currentColor;
-}
-[data-orchestra-palette="github"] .mx-card-foot .agents-note {
-  color: var(--mx-dim);
 }
 [data-orchestra-palette="github"] .agents-dialog::backdrop {
   background: var(--mx-backdrop);
@@ -1663,6 +1657,140 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-mx-ki
 }
 [data-orchestra-palette="github"] .agents-avatar-pick:has(input:focus-visible) {
   outline: 2px solid var(--mx-blue);
+}
+[data-orchestra-palette="github"] .agent-open {
+  border: 0;
+  background: transparent;
+  color: var(--mx-strong);
+}
+[data-orchestra-palette="github"] .agent:has(.agent-open:focus-visible) {
+  outline: 2px solid var(--mx-blue);
+}
+[data-orchestra-palette="github"] .agent-open:focus-visible {
+  outline: none;
+}
+[data-orchestra-palette="github"] .agent-status {
+  background: var(--mx-good);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mx-good) 18%, transparent);
+}
+[data-orchestra-palette="github"] .agent-status.bad {
+  background: var(--mx-bad);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mx-bad) 18%, transparent);
+}
+[data-orchestra-palette="github"] .agent-stats > div {
+  background: var(--mx-soft);
+}
+[data-orchestra-palette="github"] .agent-stats dt {
+  color: var(--mx-dim);
+}
+[data-orchestra-palette="github"] .agent-stats dd {
+  color: var(--mx-strong);
+}
+[data-orchestra-palette="github"] .agent-model {
+  color: var(--mx-dim);
+}
+[data-orchestra-palette="github"] .agent-hero-text h1 {
+  color: var(--mx-strong);
+}
+[data-orchestra-palette="github"] .agent-hero-desc {
+  color: var(--mx-dim);
+}
+[data-orchestra-palette="github"] .agent-tabs {
+  border-block-end: 1px solid var(--mx-line);
+}
+[data-orchestra-palette="github"] .agent-tabs button {
+  border: 0;
+  border-block-end: 2px solid transparent;
+  background: transparent;
+  color: var(--mx-dim);
+}
+[data-orchestra-palette="github"] .agent-tabs button:hover {
+  color: var(--mx-strong);
+}
+[data-orchestra-palette="github"] .agent-tabs button[aria-selected="true"] {
+  border-block-end-color: var(--mx-blue);
+  color: var(--mx-strong);
+}
+[data-orchestra-palette="github"] .agent-tabs button:focus-visible {
+  outline: 2px solid var(--mx-blue);
+}
+[data-orchestra-palette="github"] .agent-tab-count {
+  background: var(--mx-soft);
+  color: var(--mx-dim);
+}
+[data-orchestra-palette="github"] .agent-group {
+  border: 1px solid var(--mx-line);
+  background: var(--mx-raised);
+}
+[data-orchestra-palette="github"] .agent-danger {
+  border-color: color-mix(in srgb, var(--mx-bad) 30%, var(--mx-line));
+}
+[data-orchestra-palette="github"] .agent-remove {
+  color: var(--mx-bad);
+}
+[data-orchestra-palette="github"] textarea.agent-prompt {
+  border: 1px solid var(--mx-line);
+  background: var(--mx-raised);
+  color: var(--mx-strong);
+  outline: 0;
+}
+[data-orchestra-palette="github"] textarea.agent-prompt:focus {
+  border-color: var(--mx-blue);
+}
+[data-orchestra-palette="github"] .agent-prompt-foot {
+  color: var(--mx-dim);
+}
+[data-orchestra-palette="github"] .agent-list li {
+  border-block-start: 1px solid var(--mx-line);
+  color: var(--mx-dim);
+}
+[data-orchestra-palette="github"] .agent-list li:first-child {
+  border-block-start: 0;
+}
+[data-orchestra-palette="github"] .agent-list code {
+  color: var(--mx-strong);
+}
+[data-orchestra-palette="github"] .agent-list-tag {
+  border: 1px solid var(--mx-line);
+  color: var(--mx-dim);
+}
+[data-orchestra-palette="github"] .agent-list.agent-engines li > .agent-engine-state {
+  color: var(--mx-dim);
+}
+[data-orchestra-palette="github"] .agent-engine-state code {
+  color: var(--mx-dim);
+}
+[data-orchestra-palette="github"] .agent-engine-state::after {
+  background: var(--mx-line);
+}
+[data-orchestra-palette="github"] .agent-engine-state[data-status="ready"]::after {
+  background: var(--mx-good);
+}
+[data-orchestra-palette="github"] .agent-engine-state[data-status="failed"]::after {
+  background: var(--mx-bad);
+}
+[data-orchestra-palette="github"] .agent-knowledge h3 {
+  color: var(--mx-strong);
+}
+[data-orchestra-palette="github"] .agent-knowledge li {
+  border: 1px solid var(--mx-line);
+}
+[data-orchestra-palette="github"] .agent-knowledge li span {
+  color: var(--mx-dim);
+}
+[data-orchestra-palette="github"] .agent-memory-meta {
+  color: var(--mx-dim);
+}
+[data-orchestra-palette="github"] .agent-memory-meta code {
+  color: var(--mx-dim);
+}
+[data-orchestra-palette="github"] .agent-savebar {
+  border: 1px solid var(--mx-line);
+  background: var(--mx-modal);
+  box-shadow: var(--mx-pop-shadow);
+}
+[data-orchestra-palette="github"] .agent-savebar > :first-child {
+  color: var(--mx-dim);
 }
 /* orchestra/chapters/cicd.css */
 [data-orchestra-palette="github"] .cicd-ic {

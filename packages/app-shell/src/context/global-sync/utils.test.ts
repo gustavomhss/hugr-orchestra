@@ -29,7 +29,7 @@ describe("normalizeAgentList", () => {
     expect(result).toEqual([
       {
         id: "build",
-        name: "build",
+        name: "Build",
         description: undefined,
         mode: "primary",
         hidden: false,

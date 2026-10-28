@@ -13,6 +13,7 @@ import { SkillV2 } from "@orchestra/core/skill"
 import { ArsenalNative } from "../arsenal-native"
 import { MaestroGovernanceV2 } from "./governance"
 import { Seats } from "../seats"
+import { SeatSkillContent } from "../seat-skill-content"
 import { MaestroAtlasHeaderV2 } from "./atlas-header-source"
 import { MaestroAtlasRestoreV2 } from "./atlas-restore"
 import { MaestroResearchInquiryV2 } from "./research-inquiry-source"
@@ -43,13 +44,23 @@ const layer = Layer.effectDiscard(
     const agents = yield* AgentV2.Service
     const skills = yield* SkillV2.Service
     const seats = yield* MaestroSeats.Service
-    const loaded = yield* Effect.tryPromise(() => Promise.all([import("../roster"), import("../seat-skill-root")])).pipe(
-      Effect.option,
-    )
+    const loaded = yield* Effect.tryPromise(() =>
+      Promise.all([import("../roster"), import("../seat-skill-root")]),
+    ).pipe(Effect.option)
     if (loaded._tag === "None") yield* Effect.logWarning("native seats unavailable: the seat roster could not load")
     const modules = Option.getOrUndefined(loaded)
     const roster = modules?.[0]
     const skillRoot = modules?.[1]
+    // Read once: the trees are fixed for the life of the process.
+    const carried = new Map(
+      yield* Effect.promise(() =>
+        Promise.all(
+          Object.entries(skillRoot?.SeatSkillRoot.roots ?? {}).map(
+            async ([id, root]) => [id, await SeatSkillContent.describe(root, Seats.all[id].skills)] as const,
+          ),
+        ),
+      ),
+    )
     yield* plugins.wait(PluginV2.ID.make("config-agent"))
     yield* plugins.ensure(pluginID, () =>
       Effect.gen(function* () {
@@ -70,6 +81,12 @@ const layer = Layer.effectDiscard(
                 agent.system ??= roster?.renderPrompt(member, resolved.label)
                 agent.description ??= Seats.all[member.memberId].description
                 agent.mode = Seats.all[member.memberId].direct ? "primary" : "subagent"
+                agent.skills = carried.get(member.memberId)
+                agent.toolkit = Seats.all[member.memberId].toolkit
+                  ? "backend"
+                  : Seats.all[member.memberId].research
+                    ? "research"
+                    : undefined
                 agent.permissions.push(
                   ...floor(roster?.nativeProfiles[member.memberId]),
                   // A seat reads its own skill tree but never edits it; inside the Location it is ordinary source.
@@ -77,7 +94,9 @@ const layer = Layer.effectDiscard(
                 )
               })
             }
-            draft.list().forEach((agent) => draft.update(agent.id, (item) => item.permissions.push(...visibility(agent.id))))
+            draft
+              .list()
+              .forEach((agent) => draft.update(agent.id, (item) => item.permissions.push(...visibility(agent.id))))
           }),
         )
       }),
@@ -90,7 +109,12 @@ const layer = Layer.effectDiscard(
  * `agent.<id>.name`, else the roster default. The label is presentation only; the id stays the address. An invalid label
  * keeps the default and names the problem.
  */
-export function label(id: string, fallback: string, configured: string | undefined, others: ReadonlyArray<AgentV2.Info>) {
+export function label(
+  id: string,
+  fallback: string,
+  configured: string | undefined,
+  others: ReadonlyArray<AgentV2.Info>,
+) {
   const variable = Seats.find(id)?.labelEnv
   const value = variable ? process.env[variable] : undefined
   const source =
@@ -101,7 +125,10 @@ export function label(id: string, fallback: string, configured: string | undefin
         : undefined
   if (!source) return { label: fallback }
   const trimmed = source.value.trim()
-  const problem = labelProblem(trimmed, others.filter((agent) => agent.id !== id))
+  const problem = labelProblem(
+    trimmed,
+    others.filter((agent) => agent.id !== id),
+  )
   if (problem) return { label: fallback, path: source.path, problem }
   return { label: trimmed }
 }
@@ -126,7 +153,9 @@ function fold(value: string) {
 type RuleEffect = "allow" | "deny" | "ask"
 
 /** A roster profile (`{ action: effect | { resource: effect } }`) as V2 rules, in the profile's order. */
-export function floor(profile: Readonly<Record<string, RuleEffect | Readonly<Record<string, RuleEffect>>>> | undefined) {
+export function floor(
+  profile: Readonly<Record<string, RuleEffect | Readonly<Record<string, RuleEffect>>>> | undefined,
+) {
   return Object.entries(profile ?? {}).flatMap(([action, value]) =>
     typeof value === "string"
       ? [{ action, resource: "*", effect: value }]
@@ -156,12 +185,17 @@ export const owners: readonly { readonly tools: readonly string[]; readonly agen
     agents: [AgentV2.defaultID],
   },
   // The upstream seat's own floor limits it to the pure authoring operations.
-  { tools: ["maestro_arsenal_catalog", "maestro_arsenal_describe", "maestro_arsenal_execute"], agents: [AgentV2.defaultID, "archie"] },
+  {
+    tools: ["maestro_arsenal_catalog", "maestro_arsenal_describe", "maestro_arsenal_execute"],
+    agents: [AgentV2.defaultID, "archie"],
+  },
   { tools: ["maestro_record_review"], agents: ["lucy"] },
   { tools: Object.values(MaestroResearchTools.names), agents: [ResearchSeatTools.SEAT] },
   {
     tools: ["atlas_memory_recall", "atlas_memory_emit"],
-    agents: Object.values(Seats.all).filter((seat) => seat.atlasMemory).map((seat) => seat.id),
+    agents: Object.values(Seats.all)
+      .filter((seat) => seat.atlasMemory)
+      .map((seat) => seat.id),
   },
 ]
 
