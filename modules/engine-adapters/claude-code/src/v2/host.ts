@@ -44,6 +44,8 @@ const BACKGROUND_PATIENCE = Duration.minutes(30)
 const UNCHECKED = "Orchestra could not check this call, so it is refused."
 /** Orchestra's tools in a turn are the main agent's, with its permissions: a subagent would act as that agent. */
 const MAIN_ONLY = "Orchestra's tools serve the main agent only, not a subagent."
+/** Claude Code defers MCP tools behind this one; it only loads their schemas, so every call to it is allowed. */
+const TOOL_SEARCH = "ToolSearch"
 
 /** One gate decision, shared by the PreToolUse hook and `canUseTool` so both settle a call the same way. */
 type Decision =
@@ -116,6 +118,8 @@ export const make = Effect.gen(function* () {
             // Never rejects: a defect, a throw or an abort in Orchestra's own check refuses the call (fail closed).
             const made = Promise.resolve()
               .then((): Decision | Promise<Decision> => {
+                // An agent whose rules deny `*` still reaches the Orchestra tools it holds, which sit behind ToolSearch.
+                if (tool === TOOL_SEARCH) return { allow: true }
                 if (tool.startsWith(MCP_PREFIX)) {
                   if (agentType !== undefined) return { allow: false, reason: MAIN_ONLY }
                   const name = tool.slice(MCP_PREFIX.length)
