@@ -1,6 +1,6 @@
 # HuGR Composer: FastAPI building blocks for the backend seat
 
-HuGR Composer is an MCP server with a catalog of production FastAPI building blocks: auth, data, API, realtime, resiliency, observability, compliance, deployment and testing. It can also scaffold, compose, audit and verify a service. In Orchestra, only the backend seat can use it. Maestro, the other seats and your own agents cannot call its tools, whatever your permissions allow.
+HuGR Composer is an MCP server with a catalog of production FastAPI building blocks: auth, data, API, realtime, resiliency, observability, compliance, deployment and testing. It can also scaffold, compose, audit and verify a service. In Orchestra it is meant for the backend seat. That seat's permission profile allows its tools; for every other agent you decide with ordinary permission rules.
 
 ## Install
 
@@ -28,11 +28,12 @@ Add the server to your global config, `~/.config/orchestra/orchestra.json`:
         "timeout": { "request": 300000 }
       }
     }
-  }
+  },
+  "permissions": [{ "action": "hugr-composer_*", "resource": "*", "effect": "deny" }]
 }
 ```
 
-The server name must be `hugr-composer`. The backend seat is given exactly the tools whose names start with `hugr-composer_`, so a server under any other name stays closed to it. Composing a service can take a few minutes, which is why the request timeout is raised to five minutes.
+The server name must be `hugr-composer`: the backend seat is allowed exactly the tools whose names start with `hugr-composer_`. The `permissions` rule keeps those tools from Maestro and every other agent; the backend seat's own profile wins over it. Leave the rule out if you want other agents to use Composer too (see [Permissions](permissions.md)). Composing a service can take a few minutes, which is why the request timeout is raised to five minutes.
 
 Restart Orchestra to load the change. If you declare the server in a project's config instead, the project must be trusted first (see [Project trust](mcp-project-trust.md)).
 

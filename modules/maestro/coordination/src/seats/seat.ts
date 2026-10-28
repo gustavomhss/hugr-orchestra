@@ -45,9 +45,6 @@ export type Seat = {
   readonly direct?: boolean
 }
 
-/** The tools of the HuGR Composer MCP server, configured as `mcp.hugr-composer`: only the backend seat may use them. */
-export const COMPOSER_TOOLS = "hugr-composer_*"
-
 export function define<const T extends Seat>(seat: T) {
   if (!/^[a-z]+(?:-[a-z]+)*$/.test(seat.id) || reserved.has(seat.id))
     throw new Error(`Invalid native seat id: ${seat.id}`)

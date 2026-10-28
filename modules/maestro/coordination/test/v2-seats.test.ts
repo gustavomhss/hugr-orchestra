@@ -54,10 +54,11 @@ test("each seat keeps exactly its own Maestro and Atlas Memory tools", () => {
   expect(effect("backend", "skill", "maestro-run-governed")).toBe("deny")
 })
 
-test("only the backend seat uses HuGR Composer's tools, whatever configuration allows", () => {
-  expect(effect("backend", "hugr-composer_fastapi_meta_compose")).toBe("allow")
-  for (const id of ["maestro", "archie", "patty", "general", "custom"])
-    expect(effect(id, "hugr-composer_fastapi_meta_compose")).toBe("deny")
+test("the backend seat keeps HuGR Composer's tools over a configured deny, and no other server's", () => {
+  const denied = [...configured, { action: "hugr-composer_*", resource: "*", effect: "deny" as const }]
+  const tool = "hugr-composer_fastapi_meta_compose"
+  expect(PermissionV2.evaluate(tool, "*", denied, rulesOf("backend")).effect).toBe("allow")
+  for (const id of ["maestro", "patty", "general"]) expect(PermissionV2.evaluate(tool, "*", denied, rulesOf(id)).effect).toBe("deny")
   expect(effect("backend", "other-server_tool")).toBe("deny")
 })
 

@@ -13,7 +13,6 @@ import { SkillV2 } from "@orchestra/core/skill"
 import { ArsenalNative } from "../arsenal-native"
 import { MaestroGovernanceV2 } from "./governance"
 import { Seats } from "../seats"
-import { COMPOSER_TOOLS } from "../seats/seat"
 import { SeatSkillContent } from "../seat-skill-content"
 import { MaestroAtlasHeaderV2 } from "./atlas-header-source"
 import { MaestroAtlasRestoreV2 } from "./atlas-restore"
@@ -209,7 +208,6 @@ export const owners: readonly { readonly tools: readonly string[]; readonly agen
     agents: [AgentV2.defaultID, "archie"],
   },
   { tools: ["maestro_record_review"], agents: ["lucy"] },
-  { tools: [COMPOSER_TOOLS], agents: ["backend"] },
   { tools: Object.values(MaestroResearchTools.names), agents: [ResearchSeatTools.SEAT] },
   {
     tools: ["atlas_memory_recall", "atlas_memory_emit"],
