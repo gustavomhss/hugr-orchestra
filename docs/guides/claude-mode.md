@@ -23,7 +23,8 @@ calls carry Orchestra's governance, so Maestro uses them instead of a plain suba
 
 ## Known limits
 
-- A subagent's run shows as one collapsed `Agent` row in the session, without its own child session.
+- Claude Code's tool calls show with Orchestra's usual widgets (shell, read, edit, todos, task, ...).
+- A subagent's run shows as one task row with its final answer; its own tool calls do not open a child session yet.
 - Inside a subagent, Orchestra's own tools (such as governed dispatch, review recording or Atlas Memory) are not
   available: they serve the main agent only. A seat's subagent still has its skills and Claude Code's own tools.
 - If Anthropic bills a turn as extra usage or refuses it, the app shows the provider's message. You can enable extra

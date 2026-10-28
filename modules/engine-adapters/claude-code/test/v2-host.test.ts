@@ -143,7 +143,7 @@ test("one SDK query is one turn: tool calls surface provider-executed and the ne
     "step-start", "text-start", "text-delta", "text-end", "tool-call", "tool-result",
     "text-start", "text-delta", "text-end", "step-finish",
   ])
-  expect(first[4]).toMatchObject({ id: "tu1", name: "Bash", input: { command: "ls" }, providerExecuted: true })
+  expect(first[4]).toMatchObject({ id: "tu1", name: "bash", input: { command: "ls" }, providerExecuted: true })
   expect(first[5]).toMatchObject({ id: "tu1", result: { type: "text", value: "a.txt" }, providerExecuted: true })
   expect(first.at(-1)).toMatchObject({ reason: "stop", usage: { inputTokens: 16, outputTokens: 4 } })
   expect(stored.value).toEqual({ sessionId: "claude-1", delivered: ["msg_1"] })
@@ -160,6 +160,40 @@ test("one SDK query is one turn: tool calls surface provider-executed and the ne
   expect(second).toMatchObject([{ type: "step-start" }, { type: "provider-error", message: ClaudeCodeSDK.SIGNED_OUT }])
   // A failed turn delivers nothing, so the message is sent again next time.
   expect(stored.value).toEqual({ sessionId: "claude-1", delivered: ["msg_1"] })
+})
+
+test("built-in calls are recorded under Orchestra's tool names, so the app shows its usual widgets", async () => {
+  const todos = [{ content: "Plan", status: "completed", activeForm: "Planning" }]
+  const call = (id: string, name: string, input: Record<string, unknown>) =>
+    frame({ type: "assistant", uuid: `a-${id}`, session_id: "claude-1", parent_tool_use_id: null,
+      message: { content: [{ type: "tool_use", id, name, input }] } })
+  const result = (id: string, content: string) =>
+    frame({ type: "user", session_id: "claude-1", parent_tool_use_id: null,
+      message: { role: "user", content: [{ type: "tool_result", tool_use_id: id, content }] } })
+  script = [
+    call("t1", "Read", { file_path: "/project/a.ts", offset: 2, limit: 10 }),
+    call("t2", "Edit", { file_path: "/project/a.ts", old_string: "a", new_string: "b" }),
+    call("t3", "Grep", { pattern: "x", path: "src", glob: "*.ts" }),
+    call("t4", "TodoWrite", { todos }),
+    result("t4", "Todos have been modified successfully."),
+    call("t5", "Agent", { description: "Fix it", prompt: "go", subagent_type: "orchestra:backend" }),
+    call("t6", "Skill", { skill: "release" }),
+    done,
+  ]
+  const events = await collect(turnOf({ seats: [seat("backend")] }))
+
+  expect(events.filter((event) => event.type === "tool-call")).toMatchObject([
+    { name: "read", input: { filePath: "/project/a.ts", offset: 2, limit: 10 } },
+    { name: "edit", input: { filePath: "/project/a.ts", oldString: "a", newString: "b" } },
+    { name: "grep", input: { pattern: "x", path: "src", include: "*.ts" } },
+    { name: "todowrite", input: { todos } },
+    { name: "task", input: { description: "Fix it", prompt: "go", subagent_type: "backend" } },
+    { name: "skill", input: { name: "release" } },
+  ])
+  expect(events.find((event) => event.type === "tool-result")).toMatchObject({
+    name: "todowrite",
+    result: { type: "text", value: JSON.stringify({ todos }) },
+  })
 })
 
 test("Orchestra tools are served over the in-process MCP server and settle through the runner, never as host events", async () => {

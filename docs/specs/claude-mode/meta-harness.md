@@ -58,11 +58,26 @@ The parts of D-C2 that replaced the meta-harness shape are reversed:
    tool called inside a subagent would run under the main agent's registry and permissions. The gate and
    `canUseTool` refuse such a call (`agent_id` / `agentID` set), and every subagent lists the Orchestra tools in
    `disallowedTools`.
+8. **Orchestra's record, Claude Code's call.** The Session records each built-in call under the Orchestra tool and
+   argument names the app's widgets read (`shown` in the host), so a Claude mode session looks like any other:
+   - `Bash`, `Read`, `Write`, `Edit` (`MultiEdit` and `NotebookEdit` as `edit` with the file only), `Glob`, `Grep`,
+     `WebFetch`, `WebSearch`, `TodoWrite` and `Skill` become `bash`, `read`, `write`, `edit`, `glob`, `grep`,
+     `webfetch`, `websearch`, `todowrite` and `skill`, with Orchestra's argument names (`filePath`, `oldString`, ...).
+   - `Agent` and `Task` become `task`, with the seat id as `subagent_type`.
+   - A `TodoWrite` result is recorded as the list it wrote (`{"todos": [...]}`), which the todo widget renders.
+   - Any other tool keeps its Claude Code name and input.
+
+   Only Orchestra's record changes, after Claude Code ran the call. The prompt, tools, inputs and results Claude Code
+   sends to and receives from Claude are untouched, and the permission gate still reads Claude Code's own names.
 
 ## Not in scope (known limits)
 
-- A subagent's run is one collapsed `Agent` row in the Orchestra session. It has no child Session, transcript mirror or
-  Task Governance dispatch reservation, as in V1 before its mirror landed.
+- A subagent's run is one `task` row in the Orchestra session, with the subagent's final text as its result. Its own
+  tool calls are not mirrored into a child Session, and it has no Task Governance dispatch reservation, as in V1
+  before its mirror landed. Mirroring needs a runner capability to open and write a child Session.
+- Claude Code's todos are not written to the Session's todo list (the todo panel); the todo widget in the transcript
+  shows them.
+- An `edit` row has no diff metadata, so the edit widget shows the change from its input only.
 - Orchestra's MCP tools are refused inside a subagent, so a seat's own Orchestra tools (for example review recording,
   the research tools or Atlas Memory) are unavailable there. See decision 7.
 - The host still starts one Claude Code process per turn. A long-lived query per session would remove the resume

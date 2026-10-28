@@ -315,6 +315,7 @@ export const make = Effect.gen(function* () {
             Effect.forkScoped,
           )
           const names = new Map<string, string>()
+          const todos = new Map<string, unknown>()
           // Block ids by assistant message, for the retract a refusal fallback or a superseding reply asks for.
           const emitted = new Map<string, string[]>()
           // The iterator is pulled through a view without `return`: stopping at the result must not close the query.
@@ -343,7 +344,7 @@ export const make = Effect.gen(function* () {
                   yield* deliver(message.session_id)
                   live.keep = live.background > 0
                 }
-                return events(message, { names, failure, emitted, model: turn.model?.id })
+                return events(message, { names, todos, seats: agents, failure, emitted, model: turn.model?.id })
               }),
             ),
             Stream.flatMap((items) => Stream.fromIterable(items)),
@@ -382,6 +383,10 @@ export const contribution: Host.Contribution = {
 
 type Tracker = {
   readonly names: Map<string, string>
+  /** Each TodoWrite call's list, recorded as its result so the todo widget shows the checklist. */
+  readonly todos: Map<string, unknown>
+  /** The turn's seat subagents, to name a delegation's seat as Orchestra's task tool would. */
+  readonly seats: ReturnType<typeof subagents>
   readonly failure: { uuid?: string; message?: string }
   /** Block and call ids emitted for each main-thread assistant message, so a superseded message can be retracted. */
   readonly emitted: Map<string, string[]>
@@ -423,9 +428,11 @@ function events(message: SDKMessage, tracker: Tracker): LLMEvent[] {
       }
       // Orchestra tools are recorded by the runner through `turn.execute`, never by the host.
       if (block.type !== "tool_use" || block.name.startsWith(MCP_PREFIX)) return []
-      names.set(block.id, block.name)
+      const call = shown(block.name, block.input, tracker.seats)
+      names.set(block.id, call.name)
+      if (call.name === "todowrite") tracker.todos.set(block.id, call.input.todos)
       ids.push(block.id)
-      return [LLMEvent.toolCall({ id: block.id, name: block.name, input: block.input, providerExecuted: true })]
+      return [LLMEvent.toolCall({ id: block.id, name: call.name, input: call.input, providerExecuted: true })]
     })
     emitted.set(message.uuid, ids)
     return [...retract, ...blocks]
@@ -436,9 +443,12 @@ function events(message: SDKMessage, tracker: Tracker): LLMEvent[] {
       if (block.type !== "tool_result") return []
       const name = names.get(block.tool_use_id)
       if (!name) return []
-      const text = typeof block.content === "string"
-        ? block.content
-        : (block.content ?? []).flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n")
+      const listed = tracker.todos.get(block.tool_use_id)
+      const text = listed !== undefined && !block.is_error
+        ? JSON.stringify({ todos: listed })
+        : typeof block.content === "string"
+          ? block.content
+          : (block.content ?? []).flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n")
       return [LLMEvent.toolResult({
         id: block.tool_use_id,
         name,
@@ -639,6 +649,32 @@ function safetyCall(tool: string, input: Record<string, unknown>) {
   if (tool === "Edit" || tool === "MultiEdit" || tool === "NotebookEdit") return { tool: "edit", args: { filePath: file } }
   if (tool === "Read") return { tool: "read", args: { filePath: file, limit: input.limit, offset: input.offset } }
   return { tool: PERMISSIONS[tool]?.action ?? tool.toLowerCase(), args: input }
+}
+
+/**
+ * A built-in call as the Session records it: Orchestra's tool name and argument names, so the app shows the same
+ * widget it shows for Orchestra's own tool. Only the record changes; Claude Code ran the call as it asked for it.
+ */
+function shown(tool: string, input: Record<string, unknown>, seats: ReturnType<typeof subagents>) {
+  const file = input.file_path ?? input.notebook_path
+  if (tool === "Bash") return { name: "bash", input: { command: input.command, description: input.description } }
+  if (tool === "Read") return { name: "read", input: { filePath: file, offset: input.offset, limit: input.limit } }
+  if (tool === "Write") return { name: "write", input: { filePath: file, content: input.content } }
+  if (tool === "Edit")
+    return { name: "edit", input: { filePath: file, oldString: input.old_string, newString: input.new_string, replaceAll: input.replace_all } }
+  if (tool === "MultiEdit" || tool === "NotebookEdit") return { name: "edit", input: { filePath: file } }
+  if (tool === "Glob") return { name: "glob", input: { pattern: input.pattern, path: input.path } }
+  if (tool === "Grep") return { name: "grep", input: { pattern: input.pattern, path: input.path, include: input.glob } }
+  if (tool === "WebFetch") return { name: "webfetch", input: { url: input.url, prompt: input.prompt } }
+  if (tool === "WebSearch") return { name: "websearch", input: { query: input.query } }
+  if (tool === "TodoWrite") return { name: "todowrite", input: { todos: input.todos } }
+  if (tool === "Skill") return { name: "skill", input: { name: input.skill } }
+  if (!SUBAGENT_TOOLS.has(tool)) return { name: tool, input }
+  const type = typeof input.subagent_type === "string" ? input.subagent_type : ""
+  return {
+    name: "task",
+    input: { description: input.description, prompt: input.prompt, subagent_type: seats[type]?.seat ?? type, background: input.run_in_background },
+  }
 }
 
 /** What Orchestra changes in the call's input: the sandboxed command, and the dispatch's domains for a web search. */

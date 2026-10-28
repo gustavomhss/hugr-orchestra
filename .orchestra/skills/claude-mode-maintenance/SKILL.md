@@ -31,6 +31,9 @@ Design and decisions: `docs/specs/claude-mode/meta-harness.md`. User guide: `doc
 - `Turn.skills` holds each seat's skills as `SkillV2.available` lists them for that seat; `subagents` lists them by
   file in the seat's prompt. Seat entry skills come from `SeatSkillRoot.roots` (`MaestroSkillSourcesV2.seats`) and
   `MaestroSeatsV2.visibility` denies them to every other agent.
+- `shown` renames a built-in call for Orchestra's record only (Bash to `bash`, Agent to `task` with the seat id,
+  TodoWrite result as `{"todos": [...]}`). Never apply it to what reaches Claude Code or to the permission gate,
+  which keep Claude Code's names. A new widget field means a new mapping there, covered in `v2-host.test.ts`.
 - Orchestra MCP tools are refused inside a subagent (`MAIN_ONLY`, at the gate and in `canUseTool` via `agentID`) and
   listed in each subagent's `disallowedTools`: the MCP request carries no agent, so they would run under the main
   agent's registry and permissions.
