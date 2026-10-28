@@ -145,7 +145,7 @@ async function commit(directory: string, message: string) {
   await git(directory, "-c", "user.email=test@example.com", "-c", "user.name=Test", "commit", "--quiet", "-m", message)
 }
 
-function notes(issue: Board.IssueID) {
+function notes(issue: typeof BoardNoteTable.$inferSelect.issue_id) {
   return Effect.gen(function* () {
     const database = yield* Database.Service
     const rows = yield* database.db
@@ -159,7 +159,7 @@ function notes(issue: Board.IssueID) {
   })
 }
 
-function attempt(issue: Board.IssueID) {
+function attempt(issue: typeof BoardAttemptTable.$inferSelect.issue_id) {
   return Effect.gen(function* () {
     const database = yield* Database.Service
     const row = yield* database.db
