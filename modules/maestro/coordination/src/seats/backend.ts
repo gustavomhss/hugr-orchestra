@@ -38,4 +38,5 @@ export default define({
   strictResume: true,
   atlasMemory: true,
   toolkit: true,
+  mcp: ["hugr-composer"],
 })

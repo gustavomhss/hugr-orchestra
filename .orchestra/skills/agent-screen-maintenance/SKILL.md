@@ -24,6 +24,10 @@ User guide: `docs/guides/agent-screen.md`. Avatars: `agent-avatars-maintenance`.
   codegen has no recursive schemas. `agentSkills` in `agents-detail.tsx` rebuilds the tree from `parent` and appends
   catalog skills the seat does not own; `SkillNode` renders a node with children as `<details>`. Tree rules:
   `seat-skill-tree-maintenance`.
+- Tool permissions: `AgentToolPermissions` (`agents-view.tsx`) lists `PERMISSION_TOOLS`, then one row per configured MCP server. `agents.tsx` reads
+  the servers from the sync child created with `mcp: true`; `mcpPermission` in `agents-roster.ts` names the rule
+  `<server>_*`, sanitized the way core names MCP tools (`McpCatalog.toolName`). Client code cannot import core, so keep
+  the two in step. `agentFileInput` keeps any file rule the draft does not list.
 
 ## Invariants
 
