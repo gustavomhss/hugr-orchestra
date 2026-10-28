@@ -1,6 +1,6 @@
 # Archie specialist assets
 
-Authored skills for the stable native seat ID `archie`: `archie-plan`, `archie-work-package` and their
+Authored skills for the stable native seat ID `archie`: `archie-plan`, `archie-work-package`, `archie-workflow` and their
 complete reference trees. This is an asset module, not a separately published package.
 
 Orchestra's `Seats.skillSource("archie")` resolves `skills/` here. Existing Bun/Node embedding and the

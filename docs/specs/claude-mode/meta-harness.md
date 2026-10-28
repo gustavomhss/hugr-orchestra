@@ -54,10 +54,20 @@ The parts of D-C2 that replaced the meta-harness shape are reversed:
    (`SkillV2.available`). The subagent prompt ends with a `# Skills` block naming each skill's file, which the
    subagent reads with Claude Code's Read tool. Seat entry skills (`<seat-id>-*`) are registered from
    `SeatSkillRoot.roots` on V2 for every engine and denied to every agent but their seat.
-7. **Orchestra tools stay with the main agent.** An MCP request does not say which agent made it, so an Orchestra
-   tool called inside a subagent would run under the main agent's registry and permissions. The gate and
-   `canUseTool` refuse such a call (`agent_id` / `agentID` set), and every subagent lists the Orchestra tools in
-   `disallowedTools`.
+7. **A seat's Orchestra tools run in its child Session.** Claude Code names the call an MCP request runs in its
+   `_meta` (`claudecode/toolUseId`). When the gate allows an Orchestra tool inside a subagent (`agent_id` set), it
+   ties that tool_use id to the delegation whose task Claude Code started as that agent (`task_started`). The request
+   then runs through the child handle's `execute`: recorded in the child Session and settled there under the seat's
+   rules and the child's own, as inside Orchestra's task tool. The call is refused (fail closed) when the agent names
+   no delegation, the delegation has no seat, the child has ended, the request names a call the gate never allowed,
+   or, without `_meta`, a subagent's call of the same tool is pending. Each subagent lists in `disallowedTools` the
+   turn's Orchestra tools its seat may not call (`Turn.seatTools`). A tool a seat holds and the main agent does not,
+   such as Archie's `archie_draft_workflow`, comes as `Turn.seatOnly`: it is served for the subagents, and the gate
+   refuses it to the main agent (`SEAT_ONLY`).
+   The gate also refuses, to the main agent and every subagent, the Claude Code built-ins that reach outside the
+   query (`HOST_REACH`: `ListAgents`, `SendMessage`, `RemoteTrigger`, `PushNotification`). Claude Code would otherwise
+   list and message the machine's other Claude sessions, fire the account's cloud routines or notify the owner's phone
+   from an Orchestra session.
 8. **Orchestra's record, Claude Code's call.** The Session records each built-in call under the Orchestra tool and
    argument names the app's widgets read (`ClaudeCodeRecord.shown`, `src/v2/record.ts`), so a Claude mode session looks like any other:
    - `Bash`, `Read`, `Write`, `Edit` (`MultiEdit` and `NotebookEdit` as `edit` with the file only), `Glob`, `Grep`,
@@ -80,18 +90,21 @@ The parts of D-C2 that replaced the meta-harness shape are reversed:
    host records them in a child Session the runner opens through `Turn.child`, as the task tool would: the parent
    Session as parent, the seat as agent, the parent's inherited permissions and the delegated prompt as its user
    message, with the task row's progress naming the child, so the row opens it. The child is a record only: it is
-   never woken and its step carries no cost, which the parent's step already counts. It ends with the call's result.
+   never woken and its step carries no cost, which the parent's step already counts. It ends with the call's result;
+   a delegation Claude Code moved to the background (`is_backgrounded`) ends instead when its task reports
+   (`task_notification`), and its frames after the turn's result are still mirrored. A built-in subagent type runs as
+   the seat that does its work (`general-purpose` as `general`); the child runs on the model that answered in the
+   subagent, else the seat's.
 
 ## Not in scope (known limits)
 
-- A background subagent's frames that arrive after the turn's result are not mirrored; its child Session is closed
-  when the turn's stream ends. Mirrored subagents have no Task Governance dispatch reservation.
-- A subagent type that is not an Orchestra seat is recorded under the main agent's id; every child carries the parent
-  turn's model.
-- Orchestra's MCP tools are refused inside a subagent, so a seat's own Orchestra tools (for example review recording,
-  the research tools or Atlas Memory) are unavailable there. See decision 7.
-- The host still starts one Claude Code process per turn. A long-lived query per session would remove the resume
-  start-up cost; it is not needed for correctness.
+- Mirrored subagents have no Task Governance dispatch reservation.
+- A subagent type that is neither an Orchestra seat nor a built-in with a seat in the turn is recorded under the main
+  agent's id, and cannot call Orchestra's tools.
+- The host starts one Claude Code process per turn, resumed from its transcript. A long-lived query per Session would
+  only save that start-up; it is declined: every turn sets its own tools, MCP server, hooks, model and permission mode
+  from the Session, and one query kept across turns would have to change those mid-run, a seam the user could notice.
+  A query is kept past its turn only for background work, as today.
 
 ## Billing rule
 

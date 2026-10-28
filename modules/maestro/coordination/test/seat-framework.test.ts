@@ -76,7 +76,7 @@ describe("native seat framework", () => {
       profile: "execution",
       profileKey: "upstream",
       labelEnv: "HUGR_UPSTREAM_NAME",
-      skills: ["archie-plan", "archie-work-package"],
+      skills: ["archie-plan", "archie-work-package", "archie-workflow"],
       returnCard: "upstream-result",
       workResult: "upstream-work-result-v1",
       writeRoots: true,
@@ -85,7 +85,7 @@ describe("native seat framework", () => {
       toolkit: false,
     })
     expect(Seats.skillSource(upstream.id)).toBe(path.resolve(import.meta.dirname, "../../../../modules/specialists/archie/skills"))
-    expect(upstream.prompt).toContain("Load `archie-plan` for authoring and `archie-work-package`")
+    expect(upstream.prompt).toContain("Load `archie-plan` for authoring, `archie-work-package`")
     expect(define(upstream)).toBe(upstream)
     expect(() => define({ ...upstream, toolkit: true })).toThrow("The backend toolkit supports only the backend seat: archie")
   })

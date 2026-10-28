@@ -691,6 +691,57 @@ export const GithubSync = Schema.Struct({ state: GithubState, error: Schema.Null
 })
 export type GithubSync = typeof GithubSync.Type
 
+export const CheckID = Schema.String.pipe(
+  Schema.brand("Board.CheckID"),
+  statics((schema) => ({ create: () => schema.make("bck_" + ascending()) })),
+)
+export type CheckID = typeof CheckID.Type
+
+export const CheckKind = Schema.Literals(["scoped", "workflow", "full"])
+export type CheckKind = typeof CheckKind.Type
+export const CheckOutcome = Schema.Literals(["pass", "fail", "pending", "error"])
+export type CheckOutcome = typeof CheckOutcome.Type
+/** Derived from `board_check` on the card's current tree, never stored. Null: nothing required has a result there yet. */
+export const ScopedState = Schema.NullOr(Schema.Literals(["scoped-green", "scoped-red"]))
+export type ScopedState = typeof ScopedState.Type
+
+/** One pass or fail fact, keyed by the tree it ran on. `board_ci_run` keeps the billing next to it. */
+export const Check = Schema.Struct({
+  id: CheckID,
+  attempt: NonNegativeInt,
+  kind: CheckKind,
+  command: Schema.String,
+  treeSha: Schema.String,
+  commitSha: Schema.NullOr(Schema.String),
+  outcome: CheckOutcome,
+  url: Schema.NullOr(Schema.String),
+  failing: Schema.Array(Schema.String),
+  startedAt: Schema.Finite,
+  endedAt: Schema.NullOr(Schema.Finite),
+}).annotate({ identifier: "Board.Check" })
+export type Check = typeof Check.Type
+
+export const CiRunInput = Schema.Struct({
+  project: Key,
+  issue: PositiveInt,
+  /** Fills `{package}` in the contract's `scoped.tests`. */
+  package: Schema.String.pipe(optional),
+  /** Fills `{files}` in the contract's `scoped.tests`: the test files the Done when names. */
+  files: Schema.Array(Schema.String).pipe(optional),
+  /** False reports the checks and state on the current tree and starts nothing. */
+  run: Schema.Boolean.pipe(optional),
+}).annotate({ identifier: "Board.CiRunInput" })
+export type CiRunInput = typeof CiRunInput.Type
+
+export const CiRunResult = Schema.Struct({
+  tree: Schema.String,
+  state: ScopedState,
+  checks: Schema.Array(Check),
+  /** What the contract left out or could not do, in plain words. */
+  notes: Schema.Array(Schema.String),
+}).annotate({ identifier: "Board.CiRunResult" })
+export type CiRunResult = typeof CiRunResult.Type
+
 // Carries no board content: the app refetches what it shows.
 const Changed = define({
   type: "board.changed",

@@ -78,7 +78,9 @@ git worktree list --porcelain
 ```
 
 Resolve parameters in actual assigned worktree; inspect untracked paths separately.
-Run tests on Actions with `bun run test:ci <package> <resolved-suite>` from the repository root and
+For a board card, run its scoped checks with `ci_run` (package and files from the Done when): it follows the
+project's `.orchestra/ci.json`, keys results by tree and reruns nothing already settled on that tree. Otherwise
+run tests on Actions with `bun run test:ci <package> <resolved-suite>` from the repository root and
 `bun typecheck` from the package directory. Use `maestro-repo-maintenance` when an authorized Git/PR/release procedure is needed.
 Commands here inspect/verify; they do not implicitly authorize commit, push, PR, merge, or release.
 
