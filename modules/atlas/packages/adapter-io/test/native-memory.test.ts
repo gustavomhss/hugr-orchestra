@@ -10,7 +10,9 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { createNativeMemory, readBoundHeader } from "../src/native-memory.js"
 import type { AtlasBinding, BoundEntry } from "../src/native-memory.js"
-import { createDurableMemory, memoryLogPath } from "../src/memory-store.js"
+import { createDurableMemory } from "../src/memory-store.js"
+import { jsonlFiles } from "../src/durable-log.js"
+import { atlasDir, legacyLogPath } from "../src/layout.js"
 import { createMemoryRead } from "../src/memory-read.js"
 import { createAwarenessStore } from "../src/awareness-store.js"
 import { createDurableOrientation } from "../src/orientation-store.js"
@@ -75,11 +77,14 @@ function binding(over: Partial<AtlasBinding> = {}): AtlasBinding {
   }
 }
 
-const tearLine = () => appendFileSync(memoryLogPath(root), '{"id":"torn","payload":\n')
+// A read folds the legacy single file too, so a torn line there is as torn as one in a seat's file.
+const tearLine = () => appendFileSync(legacyLogPath(root, "memory"), '{"id":"torn","payload":\n')
 const physicalLines = () =>
-  readFileSync(memoryLogPath(root), "utf8")
-    .split("\n")
-    .filter((l) => l !== "").length
+  jsonlFiles(atlasDir(root)).paths.flatMap((path) =>
+    readFileSync(path, "utf8")
+      .split("\n")
+      .filter((l) => l !== ""),
+  ).length
 
 beforeEach(() => {
   root = mkdtempSync(join(tmpdir(), "atlas-native-"))
@@ -245,8 +250,7 @@ describe("clause 15 — exact fold resolution", () => {
     })
     expect(mem.resolveFold({ kind: "task", id: "T1" })).toMatchObject({ refusal: "store-partial" })
 
-    rmSync(memoryLogPath(root))
-    mkdirSync(memoryLogPath(root))
+    mkdirSync(legacyLogPath(root, "memory"))
     expect(mem.resolveFold({ kind: "task", id: "T1" }, w.ref)).toMatchObject({ refusal: "store-unavailable" })
   })
 })
@@ -283,7 +287,7 @@ describe("clauses 7, 8, 13 — store state is derived, never an empty-looking de
   })
 
   it("unavailable: an unreadable log yields no header and an unavailable recall, never complete-empty", () => {
-    mkdirSync(memoryLogPath(root), { recursive: true })
+    mkdirSync(legacyLogPath(root, "memory"), { recursive: true })
     const mem = createNativeMemory(binding())
     const h = mem.header(AW, OR)
     expect(h.state.rules).toBe("unavailable")
@@ -310,7 +314,7 @@ describe("clause 23 — write refusals pass through verbatim", () => {
   })
 
   it("store-unavailable refuses a project write when the log cannot be read", () => {
-    mkdirSync(memoryLogPath(root), { recursive: true })
+    mkdirSync(legacyLogPath(root, "memory"), { recursive: true })
     expect(createNativeMemory(binding()).write(proposal("never guess"))).toMatchObject({
       ok: false,
       refusal: "store-unavailable",
@@ -479,8 +483,7 @@ describe("readBoundHeader — the installed header read composes the root's own 
     expect(readBoundHeader(headerBinding({ legacyOwners: ["former"] })).header?.rules.map((r) => r.rule)).toEqual([
       "old rule",
     ])
-    rmSync(memoryLogPath(root))
-    mkdirSync(memoryLogPath(root))
+    mkdirSync(legacyLogPath(root, "memory"))
     const h = readBoundHeader(headerBinding())
     expect(h.state.rules).toBe("unavailable")
     expect(h.header).toBeUndefined()

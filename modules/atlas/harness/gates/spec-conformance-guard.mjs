@@ -28,7 +28,7 @@ const problems = []
 
 // ── (1) CODE-SURFACE PIN ────────────────────────────────────────────────────────────────────────
 // [EXTENDED — WP-11.W8 / CAMPAIGN-11] `atlas-memory-emit` joins `GOVERNANCE_SURFACE`/`WRITE_PATHS` as a
-// genuinely NEW governed write door — the durable per-seat memory log (`.atlas/memory.jsonl`) is a SEPARATE
+// genuinely NEW governed write door — the durable per-seat memory log (`.atlas/members/<seat>/memory/`) is a SEPARATE
 // store from the knowledge CAS `atlas-emit` writes, so ADR-0008's "ordinary use of the existing door"
 // reasoning does not apply here. Growth is licensed by ADR-0006 Decision 2 (GOVERNANCE_SURFACE is DERIVED
 // and BUDGETED — `advertised ≡ invocable ≡ Tool`, bounded at 30 — not a re-fixed count).

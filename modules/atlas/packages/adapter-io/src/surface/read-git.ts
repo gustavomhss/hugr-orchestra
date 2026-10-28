@@ -42,7 +42,7 @@ export function trackedStore(repoPath: string): AtlasTracked {
     cas: files.filter((file) => file.startsWith(".atlas/cas/")).length,
     staging: files.some((file) => STAGING_FILE.test(file)),
     policy: files.includes(".atlas/policy.json"),
-    memory: files.includes(".atlas/memory.jsonl"),
+    memory: files.some((file) => file === ".atlas/memory.jsonl" || /^\.atlas\/members\/[^/]+\/memory\//.test(file)),
   }
 }
 

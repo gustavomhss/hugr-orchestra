@@ -31,7 +31,7 @@ export interface AtlasOwnSnapshot {
 	/** Every `SKILL.md` under `.orchestra/skills/own/`, sorted by path. */
 	readonly skills: readonly AtlasOwnSkill[];
 }
-/** One `.atlas/memory.jsonl` record. */
+/** One memory record (`.atlas/members/<seat>/memory/`). */
 export interface AtlasMemoryRecord {
 	/** The log event id, the record's content key. */
 	readonly eventId: string;
@@ -50,7 +50,7 @@ export interface AtlasMemoryRecord {
 	/** The whole `MemoryEntry` (`@atlas/memory`). */
 	readonly entry: unknown;
 }
-/** One `.atlas/orientation.jsonl` event. */
+/** One `.atlas/project/orientation.jsonl` event. */
 export interface AtlasOrientationEvent {
 	readonly eventId: string;
 	readonly seq: number;
@@ -303,9 +303,9 @@ export interface AtlasSnapshot {
 	readonly children: Readonly<Record<string, readonly string[]>>;
 	/** D3b: the committed Own snapshot, coverage and published skills; null when `OWN-SNAPSHOT.json` is absent. */
 	readonly own: AtlasOwnSnapshot | null;
-	/** D3b: `.atlas/memory.jsonl` records by member, in log order; {} when the log is absent. */
+	/** D3b: memory records (`.atlas/members/<seat>/memory/`) by member, in fold order; {} when there are none. */
 	readonly memory: Readonly<Record<string, readonly AtlasMemoryRecord[]>>;
-	/** D3b: `.atlas/orientation.jsonl` events in log order; [] when the log is absent. */
+	/** D3b: `.atlas/project/orientation.jsonl` events in log order; [] when the log is absent. */
 	readonly orientation: readonly AtlasOrientationEvent[];
 	/** D3b: `TERRITORY-CATALOG.json` territories; [] when the file is absent or does not parse. */
 	readonly territories: readonly AtlasTerritory[];

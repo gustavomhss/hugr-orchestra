@@ -8,10 +8,12 @@
 // "the gate held".
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest"
-import { mkdtempSync, rmSync, existsSync, readFileSync } from "node:fs"
+import { mkdtempSync, rmSync, readFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { createDurableMemory, memoryLogPath } from "../src/memory-store.js"
+import { createDurableMemory } from "../src/memory-store.js"
+import { jsonlFiles } from "../src/durable-log.js"
+import { atlasDir } from "../src/layout.js"
 import { createMemoryEmit } from "../src/memory-emit.js"
 import type { MemoryEmitDeps } from "../src/memory-emit.js"
 import { MEMBER_TOK_CAP } from "@atlas/memory"
@@ -46,12 +48,11 @@ const logbook = (prId: string): MemoryEntry =>
 
 /** Lines actually on disk. The refusal tests assert this, not just the verdict. */
 const lines = (): string[] =>
-  existsSync(memoryLogPath(repo))
-    ? readFileSync(memoryLogPath(repo), "utf8")
-        .trim()
-        .split("\n")
-        .filter((l) => l.length > 0)
-    : []
+  jsonlFiles(atlasDir(repo)).paths.flatMap((path) =>
+    readFileSync(path, "utf8")
+      .split("\n")
+      .filter((l) => l.length > 0),
+  )
 
 beforeEach(() => {
   repo = mkdtempSync(join(tmpdir(), "atlas-memdoor-"))
@@ -140,13 +141,13 @@ describe("A29 / A30 — MEM-8, the logbook is a ledger", () => {
   it("refuses a SECOND entry for the same PR, and the first is untouched on disk", () => {
     const d = door({ actor: "orch" })
     expect(d.emit(logbook("PR-1")).ok).toBe(true)
-    const before = readFileSync(memoryLogPath(repo), "utf8")
+    const before = lines()
 
     const second = d.emit(logbook("PR-1"))
     expect(second.ok).toBe(false)
     expect((second as { refusal: string }).refusal).toBe("logbook-duplicate")
     // A30's structural half: the extant bytes are IDENTICAL, not merely "still there".
-    expect(readFileSync(memoryLogPath(repo), "utf8")).toBe(before)
+    expect(lines()).toEqual(before)
   })
 
   it("the one-per-PR guard survives a RESTART — the incumbent is read from disk", () => {

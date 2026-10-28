@@ -2,7 +2,7 @@
 
 Keep a staged candidate out of every `atlas promote` until someone releases it. Promotion reads the staging sidecar
 that [`mine`](./mine.md) writes; staging has no delete and no marker, so a hold is not written there. It is one record
-appended to the review log `.atlas/review.jsonl`, and every [`promote`](./promote.md) pass reads that log first and
+appended to the review log `.atlas/project/review.jsonl`, and every [`promote`](./promote.md) pass reads that log first and
 skips the held rows, printing each as `held <nodeKey>`.
 
 This page describes the **CLI** command `atlas hold`. It is CLI-only (not an MCP tool).
@@ -20,7 +20,7 @@ atlas hold <nodeKey> --by <actor>
 
 ## The review log
 
-`.atlas/review.jsonl` is append-only: one content-keyed record per line, never edited. The latest `hold` or `release`
+`.atlas/project/review.jsonl` is append-only: one content-keyed record per line, never edited. The latest `hold` or `release`
 for a nodeKey decides whether it is held. The file travels in git (`.gitignore` re-admits it and `.gitattributes`
 merges it by union), so a hold made on one branch survives the merge. If the log has a line that does not verify (torn
 or edited), `hold` and `promote` refuse (exit `2`) rather than act on a state that may be missing a record.

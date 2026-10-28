@@ -358,8 +358,8 @@ export function composeRuntime(repoPath: string): ComposedRuntime {
     resolveBySubtreeAt: revIndex.resolveBySubtreeAt,
   }
 
-  // WP-11.W8 / CAMPAIGN-11 — the durable MEMORY doors, over their OWN separate log (`.atlas/memory.jsonl`,
-  // `.atlas/orientation.jsonl` — NOT the knowledge CAS `store` above). D1: the owner is `actor`, the SAME
+  // WP-11.W8 / CAMPAIGN-11 — the durable MEMORY doors, over their OWN separate logs (`.atlas/members/*/memory/`,
+  // `.atlas/project/orientation.jsonl` — NOT the knowledge CAS `store` above). D1: the owner is `actor`, the SAME
   // env/git-resolved identity every other governed write door rides (KNOW-11) — this composition root
   // resolves it once and threads it here; no door downstream reads it from a fact/payload or accepts one
   // as a caller-supplied argument (that would reopen the confused-deputy hole D1/D3 closed).
@@ -578,7 +578,7 @@ export function composeRuntime(repoPath: string): ComposedRuntime {
       reverifyStore(driftPairs, verifyFactLeg, docExists, scopeHasDocs, tvLegs.replay, danglingOf(store)),
     // WP-11.W8 — the four CAMPAIGN-11 memory READ doors (`READ_SURFACE`, ADR-0005). Each rides the SAME
     // `memoryReadDoor`/`awarenessStore`/`orientationStore` built above — never a second store, never a
-    // second scan of `.atlas/memory.jsonl`. Bound onto `atlas-query` in `cli/src/map.ts`'s `COMMAND_LEG`
+    // second scan of the memory logs. Bound onto `atlas-query` in `cli/src/map.ts`'s `COMMAND_LEG`
     // (the SAME "second projection of a READ oracle" convention `doctor`/`node`/`anchors` already use —
     // `layer-guard.mjs`'s `boundReadDoor` kind (b)), not `Tool`s of their own: the write half
     // (`atlas-memory-emit`) is the `GOVERNANCE_SURFACE` member; these open no write path.

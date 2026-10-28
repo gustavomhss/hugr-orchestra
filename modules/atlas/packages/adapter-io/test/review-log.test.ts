@@ -29,7 +29,7 @@ describe("review-log", () => {
     expect(readReview(dir).records).toEqual([record])
     expect(readReview(dir).rejected).toBe(0)
     expect(existsSync(reviewLogPath(dir))).toBe(true)
-    expect(reviewLogPath(dir).endsWith(".atlas/review.jsonl")).toBe(true)
+    expect(reviewLogPath(dir)).toBe(join(dir, ".atlas", "project", "review.jsonl"))
   })
 
   it("dedupes an identical append", () => {

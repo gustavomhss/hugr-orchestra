@@ -16,6 +16,7 @@
 # beside it (`foundation/atlas/.atlas/` while Atlas is vendored into Orchestra). It stays because Atlas's own
 # merge suite copies it into its throwaway repository. A harness that stores Memory elsewhere must carry the
 # same two lines there: Orchestra's root `.gitattributes` does, for the `.atlas/` the backend specialist's binding writes.
-.atlas/memory.jsonl merge=union
-.atlas/orientation.jsonl merge=union
-.atlas/review.jsonl merge=union
+#
+# `**/*.jsonl` covers the legacy single files (`.atlas/{memory,orientation,review}.jsonl`) and the tree
+# (`.atlas/project/*.jsonl`, `.atlas/members/<seat>/{memory,knowledge}/**/*.jsonl`, `packages/adapter-io/src/layout.ts`).
+.atlas/**/*.jsonl merge=union

@@ -138,9 +138,21 @@ export {
 // (`compose.ts`). Exported so a downstream test (or a future composition root) can build the SAME doors
 // without reaching into adapter-io internals — the same discipline `createDiskStore`/`createGovernedEmit`
 // already follow.
-export { createDurableMemory, memoryLogPath } from "./memory-store.js"
+export { createDurableMemory } from "./memory-store.js"
+export {
+  atlasDir,
+  knowledgeShardPath,
+  legacyLogPath,
+  memberMemoryPath,
+  membersDir,
+  projectLogPath,
+  segment,
+} from "./layout.js"
+export type { LegacyLog, ProjectLog } from "./layout.js"
+export { migrateLayout } from "./migrate-layout.js"
+export type { LayoutMigration } from "./migrate-layout.js"
 export type { DurableMemory, MemoryRead } from "./memory-store.js"
-// D14 — the shared review log (`.atlas/review.jsonl`): holds, ratification proposals and decisions, interview answers
+// D14 — the shared review log (`.atlas/project/review.jsonl`): holds, ratification proposals and decisions, interview answers
 // and memory proposals, one appended content-keyed record each. Contract: specs/atlas-ui/build/tasks/B-L-API.md §1.
 export {
   appendReview,

@@ -22,7 +22,7 @@ atlas promote [nodeKey...]
   the one composed store, so no positional is a path.
 - **Held rows are always skipped.** A row held with [`atlas hold`](./hold.md) is never presented, even when named, and
   is printed as `held <nodeKey>`; [`atlas release`](./release.md) lets the next pass present it. The held set is the
-  review log `.atlas/review.jsonl`; if that log has a line that does not verify, the pass refuses (exit `2`) instead
+  review log `.atlas/project/review.jsonl`; if that log has a line that does not verify, the pass refuses (exit `2`) instead
   of risking a held row.
 - An unknown flag is still **silently ignored**, inheriting the parser's general behaviour (`atlas promote --force` runs
   the ordinary pass). (`link` is the one command that refuses unknown flags; this one does not.)
