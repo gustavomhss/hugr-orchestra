@@ -243,9 +243,14 @@ const layer = Layer.effect(
           )
         : []
       const catalog = seats.length > 0 ? yield* skills.list() : []
-      const seatTools = Object.fromEntries(toolMaterialization ? yield* Effect.forEach(seats, (seat) =>
+      const seatDefinitions = toolMaterialization ? yield* Effect.forEach(seats, (seat) =>
         tools.materialize([...seat.permissions.map((rule) => ({ ...rule })), ...rulesOfSession]).pipe(
-          Effect.map((materialized) => [seat.id, materialized.definitions.map((definition) => definition.name)] as const))) : [])
+          Effect.map((materialized) => [seat.id, materialized.definitions] as const))) : []
+      const seatTools = Object.fromEntries(seatDefinitions.map(([id, definitions]) => [id, definitions.map((definition) => definition.name)]))
+      // A tool only seats hold (Archie's draft tool, the research seat's tools) still has to reach the host to be served.
+      const seatOnly = [...new Map(seatDefinitions.flatMap(([, definitions]) => definitions)
+        .filter((definition) => !toolMaterialization?.definitions.some((own) => own.name === definition.name))
+        .map((definition) => [definition.name, definition])).values()]
       // Only provider-model turns pass through the compaction transform; a hosted engine receives its history as is.
       const messages = model
         ? yield* compaction.transform({
@@ -435,6 +440,7 @@ const layer = Layer.effect(
               history: context,
               tools: toolMaterialization?.definitions ?? [],
               seatTools,
+              seatOnly,
               execute,
               authorize,
               question: (input) => questions.ask({ sessionID: session.id, questions: input.questions }),

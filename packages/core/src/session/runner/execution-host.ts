@@ -40,6 +40,8 @@ export interface Turn {
   readonly tools: ReadonlyArray<ToolDefinition>
   /** The names of the Orchestra tools each seat in `seats` may call, by seat id, under the seat's and the Session's rules. */
   readonly seatTools: Readonly<Record<string, ReadonlyArray<string>>>
+  /** The Orchestra tools a seat in `seats` may call and the agent may not, for the host to offer the seats' subagents only. */
+  readonly seatOnly: ReadonlyArray<ToolDefinition>
   /**
    * Runs an Orchestra tool the engine invoked: the runner records the call (provider-executed, executor "orchestra"),
    * settles it through the Location registry and records the result. The host never emits these calls itself.
