@@ -32,8 +32,9 @@ allows merge commits.
 
 ## 2. Recommendation
 
-**A conveyor, not reverts.** Nothing reaches the base branch without passing the full gate, so no seat ever builds
-on code that later has to be reverted. A card that breaks the gate is taken off the conveyor before it lands and goes
+**A conveyor, not reverts.** A change reaches the base branch only after the gate has run on everything it can
+affect: the whole suite in phase 1, its affected packages in phase 2, and the whole suite again with every epic. No
+seat ever builds on code that later has to be reverted. A card that breaks the gate is taken off the conveyor before it lands and goes
 back to its owner as a numbered rework attempt. The cards behind it keep moving.
 
 In plain words:
@@ -65,7 +66,8 @@ a tree for a scoped check, and base plus member SHAs for a bundle. A result alre
 The spec applies this rule where it bites:
 - A scoped green carries over to the PR head when the tree is the same (§5.2).
 - An unchanged worktree pushes no snapshot (§8.1).
-- After an ejection, only the failing tests are rerun, not the whole suite (§6.3 step 5).
+- After an ejection, only what the ejection can change is rerun: the failing tests and the culprit's affected
+  packages (§6.3 step 5).
 - A flake probe and an infrastructure retry each run once.
 - `merge-if-disjoint` avoids a retest when base moved somewhere the bundle does not touch (§6.5).
 - Phase 2's whole-suite safety run is the epic run that already exists, not an extra run (§7.3).
@@ -234,6 +236,8 @@ the pool has no open bundle and at least one of these holds:
 - c. every open card of an epic is queued (the **epic bundle**);
 - d. Maestro calls `board_queue` with `flush`.
 
+An epic bundle always runs the whole suite, in phase 2 as well. That run is the safety net of §7.3.
+
 ### 6.2 Assemble
 
 Candidates are taken in queue order, `urgent` first, then by time queued. Starting from the base tip, the host adds
@@ -254,17 +258,19 @@ The failed jobs and their logs give the failing set F: test files, or file paths
 
 1. **Infrastructure.** A run cancelled, timed out or without the omni control line is not red. Rerun it once. A
    second infrastructure failure pauses the pool and raises an `<integration>` line.
-2. **Flake probe.** Rerun only F, scoped, on the bundle head. If it passes, the bundle becomes `flaky B<n>` (§6.4).
+2. **Base check and flake probe.** Rerun only F, scoped, on base and on the bundle head, in parallel. If F fails on
+   base, the red belongs to base, not to the bundle (§6.8). If F passes on the bundle head, the bundle becomes
+   `flaky B<n>` (§6.4).
 3. **Isolate.** For each member whose diff touches a path in F, or every member when none does, run F scoped on base
-   + that member alone. These runs go in parallel, at most `size` of them. Each member that fails alone is a culprit.
+   + that member and its `depends_on` members in this bundle. These runs go in parallel, at most `size` of them. Each member that fails alone is a culprit.
 4. **Halve.** If no member fails alone, the failure is an interaction. Run F on base + the first half of the members,
    then keep halving whichever prefix fails. The first member whose addition turns the prefix red is the culprit.
    That takes ⌈log₂ N⌉ serial rounds.
 5. **Eject and rebuild.** Culprits leave the bundle: their attempt closes with `ejected` and a new attempt opens with
    the cause. Members whose `depends_on` includes a culprit go back to the queue, keeping their place. The host
-   rebuilds the bundle from the rest and reruns only F on it. Every other test already passed on a superset of
-   these members, so running it again proves nothing new. If F passes, the bundle merges. A test outside F that the
-   ejection could have affected is caught by the next bundle's full run.
+   rebuilds the bundle from the rest and reruns only what the ejection can change: F, plus the full gate filtered to
+   the culprits' affected sets (§7.1). Every other check already passed on a superset of these members and cannot
+   change when they leave. If that passes, the bundle merges. A project with no workspace graph reruns the full gate.
 6. **Dissolve.** After two rebuilds of the same bundle, or when halving finds no culprit, the bundle dissolves. Every
    member goes back to the queue in its original order, and Maestro gets an `<integration>` line. It may dequeue a
    suspect or send F to `jimmy`.
@@ -288,8 +294,9 @@ holding them is not allowed. `onBaseMoved` decides:
 
 - `retest`: rebuild on Y and run the full gate again. This is the strict not-rocket-science rule.
 - `merge-if-disjoint` (this repository's setting): merge only when `git merge-tree` of Y and the bundle is clean and
-  no path changed in X..Y is in the bundle's diff. Otherwise retest. The bundle PR records the skew ("tested on X,
-  merged on Y"), and the next bundle's full run covers it.
+  the affected set of X..Y does not overlap the bundle's (§7.1). A project with no workspace graph compares changed
+  paths instead. Otherwise retest. The bundle PR records the skew ("tested on X, merged on Y"). A break that slips
+  through is a base red (§6.8).
 
 ### 6.6 Merge
 
@@ -306,6 +313,19 @@ Let D be the full gate's duration. With one bundle in flight, a bundle of 8 and 
 the pool merges about 8 / D × ¾ PRs per unit of time. At D = 30 min that is about 12 PRs an hour, and 16 with bundles
 of 16. That is phase 1's ceiling. Phase 2 lifts it by running one conveyor per independent area (§7).
 
+### 6.8 Base red
+
+Base can go red with no bundle at fault: a merge from outside the conveyor, a `merge-if-disjoint` skew, or a break
+the affected graph missed. The host learns it when F fails on base (§6.3 step 2) or when the whole suite fails on
+base (§7.3).
+
+- The bundle in flight is not blamed. Its members go back to the queue and keep their place.
+- The host finds the culprit commit with `git bisect run` of F between the last green whole-suite run and the base
+  tip. It never reverts.
+- It opens a fix card pinned to the front of the queue, naming the culprit commit and F, and raises one
+  `<integration>` line.
+- Until the fix lands, no bundle is cut whose affected set overlaps F's packages. In phase 1, no bundle is cut at all.
+
 ## 7. Phase 2: one conveyor per affected area
 
 One conveyor serializes every merge, including merges that cannot affect each other. Phase 2 splits the pool into
@@ -313,7 +333,7 @@ lanes by what a change can break, the way Aviator's affected targets and Uber's 
 
 ### 7.1 Lane key
 
-At enqueue, the host computes the card's **affected set**: the workspace packages its diff touches, plus every
+At enqueue, and again at every cut because base moves, the host computes the card's **affected set**: the workspace packages its diff touches, plus every
 package that depends on them. It takes them from `turbo` (`turbo run typecheck --filter='...[<base>...<head>]'
 --dry=json`, which lists affected tasks without running them).
 
@@ -323,25 +343,28 @@ and for this repository they are the root `package.json`, `bun.lock`, `turbo.jso
 
 ### 7.2 Lanes
 
-- Two queued cards are in the same lane when their affected sets overlap. Lanes are recomputed at every cut as the
-  connected components of that overlap.
-- Each lane runs the phase 1 algorithm unchanged: cut, assemble, run, isolate, halve, eject, merge. Each has at most
-  one bundle in flight. Lanes with disjoint affected sets run and land in parallel.
+Lanes are not stored. Two rules decide, at every cut, which queued cards may go:
+
+1. A card may join a new bundle only when its affected set overlaps no bundle in flight.
+2. A card is never cut ahead of an earlier queued card whose affected set overlaps its own.
+
+The cards that pass both rules are grouped into connected components of overlapping affected sets. Each component is
+a lane and cuts its own bundle with the phase 1 algorithm: assemble, run, isolate, halve, eject, merge. Lanes with
+disjoint affected sets run and land in parallel.
+
 - A lane's full gate runs only its affected packages: typecheck and tests filtered to the lane's affected set.
-- A card with a global path rides a **global bundle**. It is a barrier: it waits until no lane bundle is in flight,
-  runs the whole suite, and lands alone or with other global cards.
+- A card with a global path overlaps everything. Rule 2 holds every card queued behind it, so it cannot be starved:
+  once the bundles in flight land, it goes alone or with other global cards, on the whole suite.
 - A lane bundle lands with `merge-if-disjoint` against base (§6.5). Other lanes move base, but by construction they
   touch nothing in this lane's affected set.
 
 ### 7.3 Safety net
 
 The affected graph is a model, and models miss things such as runtime coupling or a test that reads another
-package's files. The safety net is the epic run that already exists: the whole suite on base, once per epic. It adds
-no runs of its own. A project that lands without epics can set `lanes.fullEvery` to run it every K lane landings;
-the default is 0, which means off. If that run is red, the host finds the culprit among the
-landings since the last green with the same isolate-and-halve steps on base. It does not revert: it opens a fix card
-pinned to the front of the culprit's lane and pauses new cuts in that lane until the fix lands. Lanes that the red
-does not touch keep moving.
+package's files. The safety net is the epic bundle, which always runs the whole suite (§6.1). The run that already
+closes every epic checks all of base, so the net adds no runs of its own. A project that lands without epics can set
+`lanes.fullEvery` to run the whole suite on base every K lane landings; the default is 0, which means off. A red
+there is a base red (§6.8): no revert, a fix card at the front, and only the lanes that overlap the failure pause.
 
 ### 7.4 Contract
 
@@ -434,6 +457,7 @@ Example:
 | A member's PR head moves in the bundle | Head SHA differs from the recorded one | The member is dequeued and the bundle rebuilt without it |
 | A member's PR is closed by a human | Poll | Dequeued with that fact. The board raises a question, as it does today for closed issues. |
 | Base moves under a bundle | Base SHA differs | §6.5 |
+| Base itself is red | F fails on base, or the whole suite fails on base | §6.8: no member is blamed, fix card at the front |
 | A dependency is ejected | Attempt rows | Dependents go back to queued, not to rework |
 | A hold is set while the card is bundled | Card read before merge | The member is dropped and the bundle rebuilt. The card waits in the queue. |
 | The host crashes mid-bundle | Restart | §8.5 reconcile |
@@ -493,8 +517,8 @@ phase.
 | **1. Ledger and push-early** | `board_attempt` with stored `writePaths`; snapshot refs on seat return and on the 10 min timer; the `local` and `pushed` states; the `maestro/integration` source with the dead-Session and missing-worktree lines; `track` playbook edits | Kill a seat mid-task: its card shows `pushed`, and its worktree is restored from the ref |
 | **2. CI facts** | `.orchestra/ci.json` reader and defaults; `ci_run`; `board_check` keyed by tree; the `scoped-green` and `scoped-red` states | A green scoped run stays valid after Maestro's commit with the same tree, and drops after an edit |
 | **3. Conflict notices** | Base-advance diff, matched against queued cards' write sets with `conflictVerdict`, then `merge-tree`; the `conflicts` state and its `<integration>` line | A merge that touches a card's write set notifies only that card; a merge outside it notifies none |
-| **4. Queue and green bundles** | `board_queue`, `board_dequeue` and their preconditions; pools; cut rules a–d; assembly; the bundle PR with `full.label`; merge on green; `onBaseMoved`; `land` playbook Publish rewritten to "verify, then `board_queue`" | Three verified cards merge through one bundle and one full run; all three ship |
-| **5. Red bundles** | Infrastructure rerun, flake probe, isolation, halving, eject into rework, rebuild, dissolve, `board_flake` and the flaky verdict | A seeded failing member is ejected with the right cause, and the rest merge on the rebuilt bundle; a seeded interaction is found by halving |
+| **4. Queue and green bundles** | `board_queue`, `board_dequeue` and their preconditions; pools; cut rules a–d; assembly; the bundle PR with `full.label`; merge on green; `onBaseMoved`; the card's affected set from `turbo` (§7.1), which `merge-if-disjoint` and the eject rerun use in phase 1 too; `land` playbook Publish rewritten to "verify, then `board_queue`" | Three verified cards merge through one bundle and one full run; all three ship |
+| **5. Red bundles** | Infrastructure rerun, base check and flake probe, isolation with in-bundle dependencies, halving, eject into rework, rebuild, dissolve, `board_flake` and the flaky verdict, base red (§6.8) | A seeded failing member is ejected with the right cause, and the rest merge on the rebuilt bundle; a seeded interaction is found by halving; a seeded red on base ejects no member |
 | **6. Recovery** | Restart reconcile for pools, bundles and snapshots | Kill the host between "bundle green" and "merge": on restart it merges once, with no duplicate bundle |
 
 Order: 0, then 1 and 2 in parallel (disjoint write sets), then 3 and 4, then 5, then 6. WP1 ships first, alone if
@@ -504,8 +528,8 @@ needed, because lost work is the costliest pain and it needs no queue.
 
 | WP | Scope | Done when |
 |---|---|---|
-| **7. Lanes** | Affected set from `turbo` at enqueue; global paths; lanes as connected components; one bundle in flight per lane; the global barrier bundle; a `packages` dispatch input on `typecheck.yml` and `test.yml`; the `lanes` contract block | Two cards in disjoint packages land in parallel bundles, each running only its packages; a card touching `bun.lock` waits for both and runs the whole suite |
-| **8. Safety net** | The epic run as the whole-suite check, with optional `fullEvery`; culprit search on base; a fix card at the front of the lane; pausing only that lane | A seeded cross-package break that the affected graph misses is found by the safety run, and only its lane pauses |
+| **7. Lanes** | Global paths; the two cut rules and lanes as connected components; global cards; a `packages` dispatch input on `typecheck.yml` and `test.yml`; the `lanes` contract block | Two cards in disjoint packages land in parallel bundles, each running only its packages; a card touching `bun.lock` waits for both and runs the whole suite, and no card queued after it is cut first |
+| **8. Safety net** | The epic bundle always on the whole suite, with optional `fullEvery`; pausing only the lanes that overlap a base red | A seeded cross-package break that the affected graph misses is found by the safety run, and only its lane pauses |
 
 ## 14. Owner decisions
 
@@ -519,5 +543,5 @@ needed, because lost work is the costliest pain and it needs no queue.
 4. **Snapshot refs are pushed to the public remote.** They are as public as a PR branch. Recommended: yes, since the
    alternative is work that lives only on one disk.
 5. **Phase 2 trusts the affected graph between whole-suite runs** (§7.3). A break the graph misses is caught by the
-   epic run, and pauses only its lane. Recommended: yes, with no extra whole-suite runs (`fullEvery` 0) for this
+   next epic bundle, and pauses only the lanes it touches. Recommended: yes, with no extra whole-suite runs (`fullEvery` 0) for this
    repository, because epics already close often.
