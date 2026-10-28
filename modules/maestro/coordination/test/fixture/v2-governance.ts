@@ -5,6 +5,7 @@ import path from "node:path"
 import { eq } from "drizzle-orm"
 import { Effect, Layer, Option } from "effect"
 import { AgentV2 } from "@orchestra/core/agent"
+import { Board } from "@orchestra/core/board/board"
 import { Config } from "@orchestra/core/config"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
@@ -62,7 +63,7 @@ export const governanceLayer = (
   entries: Config.Entry[] = [],
 ) =>
   AppNodeBuilder.build(
-    LayerNode.group([MaestroGovernanceV2.node, AgentV2.node, SessionStore.node, Database.node, FSUtil.node, EventV2.node]),
+    LayerNode.group([MaestroGovernanceV2.node, AgentV2.node, SessionStore.node, Database.node, FSUtil.node, EventV2.node, Board.node]),
     [
       ...placed(directory),
       [Config.node, Layer.mock(Config.Service, { entries: () => Effect.succeed(entries) })],

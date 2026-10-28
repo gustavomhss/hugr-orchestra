@@ -54,6 +54,22 @@ describe("BoardTools", () => {
     }),
   )
 
+  it.live("board_read without a project lists the projects and their keys", () =>
+    Effect.gen(function* () {
+      const registry = yield* ToolRegistry.Service
+      const board = yield* Board.Service
+      yield* board.project({ key: "BTP", name: "Listed", goal: "Find me.", reason: "Start." })
+      const listed = yield* call(registry, maestro, "board_read", {})
+      expect(listed.type).not.toBe("error")
+      expect(JSON.stringify(listed)).toContain('"key":"BTP"')
+      expect(JSON.stringify(listed)).toContain("Find me.")
+      expect(yield* call(registry, toolIdentity, "board_read", {})).toEqual({
+        type: "error",
+        value: "The board tools belong to Maestro; ask Maestro to change the board.",
+      })
+    }),
+  )
+
   it.live("refuses every seat other than Maestro", () =>
     Effect.gen(function* () {
       const registry = yield* ToolRegistry.Service

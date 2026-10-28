@@ -2,14 +2,10 @@ export * as ClaudeCodeRecord from "./record"
 
 import { ClaudeCodeTranscript } from "../transcript"
 
-/** Claude Code's own subagent tool: Orchestra's seats are its subagents, and each call passes the `task` permission. */
-export const SUBAGENT_TOOLS = new Set(["Agent", "Task"])
 // Claude Code's task list tools, which took over from TodoWrite. They fill the todo panel as Orchestra's todo tool does.
 export const TASK_LIST_TOOLS = new Set(["TaskCreate", "TaskUpdate"])
 // Claude Code's own plumbing with no Orchestra counterpart: it loads deferred tool schemas, so it stays off the record.
 export const UNRECORDED = new Set(["ToolSearch"])
-/** Claude Code's own subagent types, as the Orchestra seat that does the same work. */
-const BUILT_IN_SEATS: Readonly<Record<string, string>> = { "general-purpose": "general", Explore: "explore", Plan: "explore" }
 export type ChecklistItem = { id: string; content: string; status: string }
 export type Checklist = { items: ChecklistItem[]; changed: boolean }
 
@@ -17,7 +13,7 @@ export type Checklist = { items: ChecklistItem[]; changed: boolean }
  * A built-in call as the Session records it: Orchestra's tool name and argument names, so the app shows the same
  * widget it shows for Orchestra's own tool. Only the record changes; Claude Code ran the call as it asked for it.
  */
-export function shown<Seat extends string>(tool: string, raw: unknown, seats: Readonly<Record<string, { readonly seat: Seat }>>) {
+export function shown(tool: string, raw: unknown) {
   const input = (typeof raw === "object" && raw !== null ? raw : {}) as Record<string, unknown>
   const file = input.file_path ?? input.notebook_path
   if (tool === "Bash") return { name: "bash", input: { command: input.command, description: input.description } }
@@ -32,31 +28,7 @@ export function shown<Seat extends string>(tool: string, raw: unknown, seats: Re
   if (tool === "WebSearch") return { name: "websearch", input: { query: input.query } }
   if (tool === "TodoWrite") return { name: "todowrite", input: { todos: input.todos }, todos: input.todos }
   if (tool === "Skill") return { name: "skill", input: { name: input.skill } }
-  if (!SUBAGENT_TOOLS.has(tool)) return { name: tool, input: raw }
-  const type = typeof input.subagent_type === "string" ? input.subagent_type : ""
-  return {
-    name: "task",
-    input: { description: input.description, prompt: input.prompt, subagent_type: seat(type, seats) ?? type, background: input.run_in_background },
-    task: {
-      seat: seat(type, seats),
-      title: typeof input.description === "string" ? input.description : "",
-      prompt: typeof input.prompt === "string" ? input.prompt : "",
-      background: input.run_in_background === true,
-    },
-  }
-}
-
-/**
- * The seat a subagent type runs as: a seat's own subagent, else the seat that does the work of Claude Code's built-in
- * of that type, else `general`, when the turn has that seat.
- */
-export function seat<Seat extends string>(type: string, seats: Readonly<Record<string, { readonly seat: Seat }>>) {
-  const named = seats[type]?.seat
-  if (named) return named
-  // An unknown type (`""`) is never taken for the general seat.
-  if (!type) return undefined
-  const id = BUILT_IN_SEATS[type] ?? "general"
-  return Object.values(seats).find((item) => item.seat === id)?.seat
+  return { name: tool, input: raw }
 }
 
 /**

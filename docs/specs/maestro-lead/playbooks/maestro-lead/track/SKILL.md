@@ -23,6 +23,10 @@ Evidence: <the Done when commands Maestro ran, and their results>
 Flaky: <check, date, cause or "unknown">
 ```
 
+The host keeps the stage on facts: a `task` with `card` moves it to Building, an open PR to Review, a merge to
+Shipped. When a card's Session link stops matching the facts (a Building card with no Session, a Session that no
+longer exists), Maestro's turn carries a `<board-drift>` block: repair each line first, with the reason.
+
 Maestro sees a seat's work only when its `task` returns, and between returns through the board, the worktree and the
 project's checks. Anything else is unseen, and is reported as unseen.
 
@@ -33,7 +37,7 @@ error. Take 1 off, down to 0, when it shows progress. Write the count in the ste
 the fields it does not change. At 2, write the cause in
 `crash_reason`, then add the missing fact, reroute, or send the card back to `archie`. Never resend the same packet.
 `attempts` counts dispatches out of 3; it only goes up. Set `crash_reason` to null on the first return that shows
-progress, and always before the card moves to Review or Shipped.
+progress, and before the PR opens. The host clears it when the card ships.
 
 Maestro may add a missing fact or a failing output to a packet. Any change of choice, scope or write set goes back to
 `archie`.

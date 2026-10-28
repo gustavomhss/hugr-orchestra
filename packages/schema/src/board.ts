@@ -530,6 +530,26 @@ export const ReadInput = Schema.Struct({
 }).annotate({ identifier: "Board.ReadInput" })
 export type ReadInput = typeof ReadInput.Type
 
+// `board_read` without `project` lists the board's projects, so Maestro finds a key instead of guessing one.
+export const ReadToolInput = Schema.Struct({
+  ...ReadInput.fields,
+  project: Key.pipe(optional).annotate({ description: "Omit to list the board's projects and their keys." }),
+}).annotate({ identifier: "Board.ReadToolInput" })
+
+export const ProjectList = Schema.Struct({
+  projects: Schema.Array(
+    Schema.Struct({
+      key: Schema.String,
+      name: Schema.String,
+      goal: Schema.String,
+      status: ProjectStatus,
+      githubRepo: Schema.NullOr(Schema.String),
+    }),
+  ),
+}).annotate({ identifier: "Board.ProjectList" })
+
+export const ReadToolOutput = Schema.Union([Read, ProjectList]).annotate({ identifier: "Board.ReadToolOutput" })
+
 export const ProjectInput = Schema.Struct({
   key: Key,
   name: Text.pipe(optional),

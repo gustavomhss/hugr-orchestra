@@ -25,7 +25,7 @@ import { SessionEvent } from "@orchestra/core/session/event"
 import { SessionExecution } from "@orchestra/core/session/execution"
 import { SessionMessage } from "@orchestra/core/session/message"
 import { SessionRunCoordinator } from "@orchestra/core/session/run-coordinator"
-import { SessionRunner } from "@orchestra/core/session/runner"
+import { ExecutionHost, SessionRunner } from "@orchestra/core/session/runner"
 import { node } from "@orchestra/core/session/runner/llm"
 import { SessionInputTable, SessionTable } from "@orchestra/core/session/sql"
 import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
@@ -86,6 +86,19 @@ const client = Layer.effect(LLMClient.Service, Effect.gen(function* () {
   })
 })).pipe(Layer.provide(harnessLayer))
 
+// A lead whose engine names this host runs its Claude-model children on it, as Claude mode does.
+const host: ExecutionHost.Interface = {
+  id: "claude-code",
+  stateKey: "testHost",
+  stream: (turn) => Stream.make(
+    LLMEvent.stepStart({ index: 0 }),
+    LLMEvent.textStart({ id: "answer" }),
+    LLMEvent.textDelta({ id: "answer", text: `hosted:${turn.history.flatMap((message) => message.type === "user" ? [message.text] : []).at(-1)}` }),
+    LLMEvent.textEnd({ id: "answer" }),
+    LLMEvent.stepFinish({ index: 0, reason: "stop" }),
+  ),
+}
+
 // The production serialized coordinator owns the drain; binding waits until the real runner graph is built.
 const execution = Layer.effect(SessionExecution.Service, Effect.gen(function* () {
   const harness = yield* Harness
@@ -124,6 +137,7 @@ const it = testEffect(AppNodeBuilder.build(LayerNode.group([
     LayerMap.make((_ref: Location.Ref) =>
       Layer.effectContext<LocationServices, never, never>(Effect.die("Unexpected hook Location acquisition"))))],
   [SessionExecution.node, execution],
+  [ExecutionHost.node, Layer.succeed(ExecutionHost.Service, ExecutionHost.of([host]))],
   [LayerNodePlatform.llmClient, client],
   [Snapshot.node, Snapshot.noopLayer],
   [Config.node, Layer.succeed(Config.Service, { entries: () => Effect.succeed([]) })],
@@ -316,6 +330,29 @@ describe("TaskTool canonical delegation", () => {
     expect((yield* f.sessions.list()).filter((session) => session.parentID === f.parent.id)).toHaveLength(1)
   }))
 
+  it.effect("a hosted lead dispatches a Claude model that has no API connection; a lead on Orchestra cannot", () => Effect.gen(function* () {
+    const f = yield* setup
+    const sonnet = ModelV2.Ref.make({ providerID: ProviderV2.ID.anthropic, id: ModelV2.ID.make("claude-sonnet") })
+    yield* f.catalog.transform((draft) => {
+      // The Claude sign-in lives in the host, so the catalog sees no connection for Anthropic.
+      draft.provider.update(ProviderV2.ID.anthropic, (provider) => { provider.integrationID = Integration.ID.make("anthropic-signin") })
+      draft.model.update(sonnet.providerID, sonnet.id, (model) => {
+        model.enabled = true
+        model.status = "active"
+        model.api = { type: "aisdk", package: "@ai-sdk/anthropic", id: sonnet.id }
+        model.limit = { context: 100_000, output: 1_000 }
+      })
+    })
+    const model = `${sonnet.providerID}/${sonnet.id}`
+    expect((yield* settleTool(f.registry, yield* record(f.parent.id, "unhosted", { model }))).result)
+      .toMatchObject({ type: "error", value: expect.stringContaining("model unavailable") })
+    yield* f.agents.transform((draft) => draft.update(caller, (agent) => { agent.engine = "claude-code" }))
+    const output = result(yield* settleTool(f.registry, yield* record(f.parent.id, "hosted", { model })))
+    expect(output.model).toMatchObject(sonnet)
+    expect(output.text).toBe("hosted:hosted")
+    expect(f.harness.requests).toHaveLength(0)
+  }))
+
   it.effect("deny-all ceiling cannot be bypassed by saved task grants", () => Effect.gen(function* () {
     const f = yield* setup
     const saved = yield* PermissionSaved.Service
@@ -465,11 +502,10 @@ describe("TaskTool canonical delegation", () => {
     expect((yield* settleTool(f.registry, { ...call, sessionID: other.id })).result.type).toBe("error")
     const placed = yield* f.sessions.create({ location: { directory: AbsolutePath.make("/other-placement") }, agent: caller, model: cheap })
     expect((yield* settleTool(f.registry, yield* record(placed.id, "wrong-parent-placement"))).result).toMatchObject({ type: "error", value: expect.stringContaining("parent placement mismatch") })
-    yield* Effect.forEach(["maestro", "missing", "hidden", "primary", "external-engine"], (target) => Effect.gen(function* () {
+    yield* Effect.forEach(["maestro", "missing", "hidden", "primary"], (target) => Effect.gen(function* () {
       yield* f.agents.transform((draft) => draft.update(AgentV2.ID.make(target), (agent) => {
         if (target === "hidden") agent.hidden = true
         if (["primary", "maestro"].includes(target)) agent.mode = "primary"
-        if (target === "external-engine") agent.engine = "claude-code"
       }))
       const targetCall = yield* record(f.parent.id, target, { subagent_type: target })
       // An unknown ID must stay absent, not become a fixture's newly created all-mode seat.
@@ -577,13 +613,13 @@ describe("TaskTool durable ownership regressions", () => {
     expect(result(second).text).toBe("answer:same followup")
   }))
 
-  it.effect("durable ownership: approval wait rechecks target visibility, mode, engine, and configured model", () => Effect.gen(function* () {
+  it.effect("durable ownership: approval wait rechecks target visibility, mode, and configured model", () => Effect.gen(function* () {
     const f = yield* setup
     yield* f.policy.set(f.parent.id, { mode: "allowlist", models: [cheap] })
     yield* f.agents.transform((draft) => draft.update(caller, (agent) => {
       agent.permissions = [{ action: "task", resource: "*", effect: "ask" }]
     }))
-    yield* Effect.forEach(["primary", "hidden", "missing", "cc", "forbidden-pin"] as const, (change) => Effect.gen(function* () {
+    yield* Effect.forEach(["primary", "hidden", "missing", "forbidden-pin"] as const, (change) => Effect.gen(function* () {
       yield* f.agents.transform((draft) => draft.update(worker, (agent) => {
         agent.hidden = false
         agent.mode = "subagent"
@@ -597,7 +633,6 @@ describe("TaskTool durable ownership regressions", () => {
         draft.update(worker, (agent) => {
           if (change === "primary") agent.mode = "primary"
           if (change === "hidden") agent.hidden = true
-          if (change === "cc") agent.engine = "claude-code"
           if (change === "forbidden-pin") agent.model = expensive
         })
       })

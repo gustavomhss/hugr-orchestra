@@ -52,6 +52,10 @@ export const fields = {
   allowedDomains: Schema.optional(Domains).annotate({
     description: "jimmy only: lower-case host names its web search may return for this dispatch. Ignored for other teammates.",
   }),
+  card: Schema.optional(Schema.String.check(Schema.isPattern(/^[A-Z]{2,6}-[1-9]\d*$/))).annotate({
+    description:
+      "The board card this teammate builds, as KEY-N. The host links the teammate and its Session on the card and moves it from Backlog or Ready to Building.",
+  }),
   background: Schema.optional(Schema.Boolean).annotate({
     description: "Return at once while the teammate works; its result arrives as a new message.",
   }),

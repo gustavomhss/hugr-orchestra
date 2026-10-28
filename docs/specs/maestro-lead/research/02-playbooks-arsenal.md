@@ -151,7 +151,7 @@ Severity: **H** = contradicts the role boundary or the prompt; **M** = stale or 
 13. **M. Spec status.** `skill-tree.md:3` "proposal, waiting for approval" while `4522451d9b` and `37abd465e1` implement it.
 14. **M. Spec's Maestro section** says the V2 root registration must be checked first (`skill-tree.md:240-243`). `skill-sources.ts:22-31` now registers seat roots. I did not run the tests, so I cannot say the check passes end to end.
 15. **M. Duplicate inventory.** `playbook-content.ts:8-17` is a hand-kept list beside the tree; the spec says the tree rules replace hand lists (`skill-tree.md:226`).
-16. **L. Provenance.** `maintenance/SKILL.md:14,46` name "TechLead" in shipped text. Arsenal headers say "Adapted from TechLead" (`registry.ts:1`, `engine/descriptors.ts:2`). Related to the owner's "Orchestra is not opencode" rule (memory: `orchestra-not-opencode`). Repo-only vs shipped is not settled by the spec.
+16. **L. Provenance.** `maintenance/SKILL.md:14,46` name "TechLead" in shipped text. Arsenal headers say "Adapted from TechLead" (`registry.ts:1`, `engine/descriptors.ts:2`). Related to the owner's rule that nothing inherited from upstream stays. Repo-only vs shipped is not settled by the spec.
 17. **L. "Lead" voice.** Playbooks say "Lead owns scaffolding decisions" (`loop:14`) and "decisions return to lead" (`loop:15`), while the Maestro prompt addresses the agent as "you" and never uses "lead". Readers may not know who the lead is.
 
 ### Ceremony versus craft

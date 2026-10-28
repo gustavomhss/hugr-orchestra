@@ -17,6 +17,7 @@ import { Location } from "../location"
 import { ModelV2 } from "../model"
 import { PermissionV2 } from "../permission"
 import { Project } from "../project"
+import { ProviderV2 } from "../provider"
 import { ProjectCopy } from "../project/copy"
 import { AbsolutePath } from "../schema"
 import { SessionV2 } from "../session"
@@ -24,6 +25,7 @@ import { SessionEvent } from "../session/event"
 import { SessionExecution } from "../session/execution"
 import { SessionInput } from "../session/input"
 import { SessionMessage } from "../session/message"
+import { ExecutionHost } from "../session/runner/execution-host"
 import { SessionRunnerModel } from "../session/runner/model"
 import { SessionSchema } from "../session/schema"
 import { SessionStore } from "../session/store"
@@ -90,6 +92,7 @@ const layer = Layer.effectDiscard(
     const background = yield* TaskBackground.Service
     const projects = yield* Project.Service
     const copies = yield* ProjectCopy.Service
+    const engineOf = ExecutionHost.engineOf(agents, store)
     // Governance fields are recorded with the call, so the recorded input decodes with this same schema.
     const taskInput = Schema.Struct({ ...Input.fields, ...governance.input })
     const decodeCalled = Schema.decodeUnknownOption(taskInput)
@@ -120,10 +123,12 @@ const layer = Layer.effectDiscard(
           const existing = yield* store.get(childID)
           if (input.task_id && !existing)
             return yield* new ToolFailure({ message: `Task child not found: ${input.task_id}` })
-          const model = yield* resolveModel(catalog, policy, context, target, input.model, existing)
+          // As the runner decides: a seat that names no engine runs a Claude model on its lead's execution host.
+          const hosted = target.engine ? target.engine !== "orchestra" : (yield* engineOf(parent)) !== undefined
+          const model = yield* resolveModel(catalog, policy, context, target, input.model, existing, hosted)
           const revalidateTarget = Effect.fnUntraced(function* (child: SessionSchema.Info | undefined) {
             const current = yield* requireTarget(agents, input.subagent_type)
-            const selected = yield* resolveModel(catalog, policy, context, current, input.model, child)
+            const selected = yield* resolveModel(catalog, policy, context, current, input.model, child, hosted)
             if (!sameModel(selected, model))
               return yield* new ToolFailure({ message: `Task target model changed after authorization: ${target.id}` })
           })
@@ -325,12 +330,24 @@ const resolveModel = Effect.fn("TaskTool.resolveModel")(function* (
   target: AgentV2.Info,
   explicit: string | undefined,
   child: SessionSchema.Info | undefined,
+  hosted: boolean,
 ) {
   if (explicit !== undefined && (explicit.indexOf("/") <= 0 || explicit.endsWith("/")))
     return yield* new ToolFailure({ message: `Invalid task model identity: ${explicit}` })
   const parsed = explicit === undefined ? undefined : ModelV2.parse(explicit)
   const named = parsed ? { providerID: parsed.providerID, id: parsed.modelID } : target.model
-  const available = (yield* catalog.model.available()).filter(SessionRunnerModel.supported)
+  const listed = yield* catalog.model.available()
+  // An execution host holds its own sign-in, so a hosted child's Anthropic models need no API connection.
+  const anthropic = hosted ? yield* catalog.provider.get(ProviderV2.ID.anthropic) : undefined
+  const signedIn = anthropic && !anthropic.disabled
+    ? (yield* catalog.model.all()).filter(
+        (model) =>
+          model.providerID === ProviderV2.ID.anthropic &&
+          model.enabled &&
+          !listed.some((item) => item.providerID === model.providerID && item.id === model.id),
+      )
+    : []
+  const available = [...listed, ...signedIn].filter(SessionRunnerModel.supported)
   const ceilings = yield* policy.forChild(context.sessionID)
   const candidate = child?.model ?? named
   if (child && !child.model)
@@ -480,8 +497,6 @@ const requireTarget = Effect.fn("TaskTool.requireTarget")(function* (agents: Age
   const target = yield* agents.get(AgentV2.ID.make(id))
   if (!target || target.hidden || target.mode === "primary" || target.id === AgentV2.defaultID)
     return yield* new ToolFailure({ message: `Task target is not a visible subagent: ${id}` })
-  if (target.engine === "claude-code")
-    return yield* new ToolFailure({ message: `Task target requires an unsupported engine: ${target.id}` })
   return target
 })
 

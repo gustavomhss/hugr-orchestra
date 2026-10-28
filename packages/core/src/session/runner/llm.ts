@@ -1,4 +1,14 @@
-import { LLM, LLMClient, LLMError, LLMEvent, Message, SystemPart, isContextOverflowFailure, type ProviderErrorEvent, type ToolCall } from "@orchestra/llm"
+import {
+  LLM,
+  LLMClient,
+  LLMError,
+  LLMEvent,
+  Message,
+  SystemPart,
+  isContextOverflowFailure,
+  type ProviderErrorEvent,
+  type ToolCall,
+} from "@orchestra/llm"
 import { Cause, Context, DateTime, Effect, FiberSet, Layer, Option, Queue, Scope, Semaphore, Stream } from "effect"
 import { asc, eq } from "drizzle-orm"
 import { AgentV2 } from "../../agent"
@@ -30,12 +40,13 @@ import { SessionInput } from "../input"
 import { SessionMessage } from "../message"
 import { SessionSchema } from "../schema"
 import { SessionStore } from "../store"
+import { SessionTodo } from "../todo"
 import { TodoTable } from "../sql"
 import { SessionSubagentModels } from "../subagent-models"
 import { INTERRUPTED_TURN, type RunError, Service } from "./index"
 import { SessionRunnerModel } from "./model"
 import { createLLMEventPublisher } from "./publish-llm-event"
-import { HostPorts } from "./host-ports"
+import { Prompt } from "../prompt"
 import { ExecutionHost } from "./execution-host"
 import { toLLMMessages } from "./to-llm-message"
 import { SessionTitle } from "./title"
@@ -152,6 +163,8 @@ const layer = Layer.effect(
       return session
     })
 
+    const engineOf = ExecutionHost.engineOf(agents, store)
+
     const getContext = Effect.fn("SessionRunner.getContext")(function* (sessionID: SessionSchema.ID) {
       return yield* store.context(sessionID)
     })
@@ -182,10 +195,9 @@ const layer = Layer.effect(
       yield* governance.beforeTurn(session)
       const agent = yield* agents.select(session.agent)
       // A Session's own permission rules, after its agent's as the earlier runtime merged them, so a Session rule wins over the agent's.
-      const rulesOfSession = yield* store.permissions(session.id)
       const effectiveRules = [
         ...(agent.info?.permissions.map((rule) => ({ ...rule })) ?? []),
-        ...rulesOfSession,
+        ...(yield* store.permissions(session.id)),
       ]
       const initialized = yield* SessionContextEpoch.initialize(db, loadSystemContext(session.id, agent), session.id)
       const toolFibers = yield* FiberSet.make<void, ToolOutputStore.Error>()
@@ -217,7 +229,7 @@ const layer = Layer.effect(
       const system =
         initialized ?? (yield* SessionContextEpoch.prepare(db, events, loadSystemContext(session.id, agent), session.id))
       // An agent whose engine names an execution host runs this provider turn through it (AGENTS "V2 Session Core").
-      const engine = agent.info?.engine === "orchestra" ? undefined : agent.info?.engine
+      const engine = yield* engineOf(session)
       const host = engine ? hosts.get(engine) : undefined
       if (engine && !host)
         return yield* Effect.die(new Error(`No execution host is registered for engine ${engine} (agent ${agent.id})`))
@@ -236,21 +248,6 @@ const layer = Layer.effect(
       const promptCacheKey = /^ses_[0-9a-f]{64}$/.test(session.id) ? session.id.slice(4) : session.id
       const contextText = [system.baseline, workflow?.view.instructions].filter((part): part is string => !!part)
       const systemText = agent.info?.system ? [agent.info.system, ...contextText] : contextText
-      // The task tool's targets (`TaskTool.requireTarget`), offered to a hosted engine as its own subagents.
-      const seats = host
-        ? (yield* agents.all()).filter(
-            (item) => !item.hidden && item.mode !== "primary" && item.id !== AgentV2.defaultID && item.id !== agent.id,
-          )
-        : []
-      const catalog = seats.length > 0 ? yield* skills.list() : []
-      const seatDefinitions = toolMaterialization ? yield* Effect.forEach(seats, (seat) =>
-        tools.materialize([...seat.permissions.map((rule) => ({ ...rule })), ...rulesOfSession]).pipe(
-          Effect.map((materialized) => [seat.id, materialized.definitions] as const))) : []
-      const seatTools = Object.fromEntries(seatDefinitions.map(([id, definitions]) => [id, definitions.map((definition) => definition.name)]))
-      // A tool only seats hold (Archie's draft tool, the research seat's tools) still has to reach the host to be served.
-      const seatOnly = [...new Map(seatDefinitions.flatMap(([, definitions]) => definitions)
-        .filter((definition) => !toolMaterialization?.definitions.some((own) => own.name === definition.name))
-        .map((definition) => [definition.name, definition])).values()]
       // Only provider-model turns pass through the compaction transform; a hosted engine receives its history as is.
       const messages = model
         ? yield* compaction.transform({
@@ -289,28 +286,24 @@ const layer = Layer.effect(
         withPublication(publisher.publish(event, outputPaths))
       let overflowFailure: ProviderErrorEvent | undefined
       yield* subagentModels.assert(session.id, modelRef)
-      const settle = (call: ToolCall, assistantMessageID: SessionMessage.ID, materialization: ToolRegistry.Materialization, actor: { readonly sessionID: SessionSchema.ID; readonly agentID: AgentV2.ID; readonly rules: PermissionV2.Ruleset } = { sessionID: session.id, agentID: agent.id, rules: effectiveRules }) =>
+      const settle = (call: ToolCall, assistantMessageID: SessionMessage.ID, materialization: ToolRegistry.Materialization) =>
         stepTools.refuses(call.name, call.input) ? Effect.succeed(STEP_TOOL_REFUSAL) : CapabilityInvocation.withContext(
           {
             issuer: "core",
-            owner: { projectID: location.project.id, location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }), sessionID: actor.sessionID, agentID: actor.agentID },
-            invocation: { sessionID: actor.sessionID, agentID: actor.agentID, assistantMessageID, callID: call.id },
+            owner: {
+              projectID: location.project.id,
+              location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }),
+              sessionID: session.id,
+              agentID: agent.id,
+            },
+            invocation: { sessionID: session.id, agentID: agent.id, assistantMessageID, callID: call.id },
             rootToolName: call.name,
-            effectiveRules: actor.rules,
+            effectiveRules,
             // Core selection has configured permissions, not a separate native Permission floor.
             nativeDenyFloor: [],
           },
-          materialization.settle({ sessionID: actor.sessionID, agent: actor.agentID, model: modelRef, assistantMessageID, call }),
+          materialization.settle({ sessionID: session.id, agent: agent.id, model: modelRef, assistantMessageID, call }),
         ).pipe(Effect.catchTag("Capability.Failure", (error) => Effect.die(error)))
-      // An Orchestra tool a seat's subagent invokes settles in the subagent's child Session, under the seat's rules and that
-      // Session's own, as it would inside Orchestra's task tool. Anything but a seat in `seats` is refused.
-      const delegated: HostPorts.Settle = (call, input) =>
-        Effect.gen(function* () {
-          const seat = seats.find((item) => item.id === input.agent)
-          if (!seat || !toolMaterialization) return { result: { type: "error" as const, value: "Orchestra's tools serve Orchestra's seats only" } }
-          const rules = [...seat.permissions.map((rule) => ({ ...rule })), ...(yield* store.permissions(input.sessionID))]
-          return yield* settle(call, input.assistantMessageID, yield* tools.materialize(rules), { sessionID: input.sessionID, agentID: seat.id, rules })
-        }).pipe(Effect.orDie)
       // An Orchestra tool the host's engine invokes: recorded before side effects, settled through the registry like a
       // local call, persisted provider-executed so no continuation turn is scheduled for it.
       const execute: ExecutionHost.Turn["execute"] = (input) =>
@@ -336,12 +329,10 @@ const layer = Layer.effect(
       const authorize: ExecutionHost.Turn["authorize"] = (input) =>
         Effect.gen(function* () {
           if (input.safety && stepTools.refuses(input.safety.tool, input.safety.args)) return yield* new PermissionV2.BlockedError({ rules: stepTools.bash })
-          // A call made inside a seat's subagent runs under that seat's rules; any other agent id is ignored.
-          const actor = seats.find((item) => item.id === input.agent)?.id ?? agent.id
           yield* permissions
             .authorize({
               sessionID: session.id,
-              agent: actor,
+              agent: agent.id,
               action: input.action,
               resources: [...input.resources],
               metadata: { tool: input.tool, callID: input.callID },
@@ -355,7 +346,7 @@ const layer = Layer.effect(
               args: call.args,
               sessionID: session.id,
               callID: input.callID,
-              agent: actor,
+              agent: agent.id,
               directory: location.directory,
               projectID: location.project.id,
               projectDirectory: location.project.directory === "/" ? location.directory : location.project.directory,
@@ -425,7 +416,14 @@ const layer = Layer.effect(
         ),
         Stream.flatMap((items) => Stream.fromIterable(items)),
       )
-      const ports = HostPorts.make({ events, store, location, config, database, session, model: modelRef, assistantMessageID: publisher.assistantMessageID, withPublication, execution, settle: delegated })
+      // An event the host's engine sends on its own, after the turn: a steer prompt that wakes the Session.
+      const notify: ExecutionHost.Turn["notify"] = (event) =>
+        SessionInput.admit(db, events, {
+          id: SessionMessage.ID.make(event.id.startsWith("msg_") ? event.id : `msg_${event.id}`),
+          sessionID: session.id,
+          prompt: Prompt.make({ text: event.text }),
+          delivery: "steer",
+        }).pipe(Effect.andThen(execution ? execution.wake(session.id) : Effect.void))
       const source = request
         ? llm.stream(request)
         : host && agent.info
@@ -435,21 +433,16 @@ const layer = Layer.effect(
               model: modelRef,
               system: systemText,
               context: contextText,
-              seats,
-              skills: Object.fromEntries(seats.map((seat) => [seat.id, SkillV2.available(catalog, seat)])),
               history: context,
               tools: toolMaterialization?.definitions ?? [],
-              seatTools,
-              seatOnly,
               execute,
               authorize,
               question: (input) => questions.ask({ sessionID: session.id, questions: input.questions }),
               memory,
               steers,
               consumed: (id) => Effect.sync(() => void liveSteers.delete(id)),
-              notify: ports.notify,
-              child: ports.child,
-              todos: ports.todos,
+              notify,
+              todos: (list) => SessionTodo.write(db, events, { sessionID: session.id, todos: list }),
               state: ExecutionHost.state(db, session.id, host.stateKey),
             })
           : Stream.die("SessionRunner: no provider for this turn")
