@@ -1,6 +1,7 @@
 ---
 name: jimmy-calibration
 description: Optional calibration doctrine for the research seat. Load before you report that something is absent, unused or clean, give a count, or rely on a gate, test or CI result.
+internal: true
 ---
 
 # Calibrate the instrument before the claim

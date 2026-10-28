@@ -1,6 +1,7 @@
 ---
 name: maestro-repo-arsenal-operators
 description: Use when Maestro needs release, repository ruleset, or scoped policy proposals and the operator explicitly requests their adoption through existing native tools.
+internal: true
 when: The operator explicitly asks to adopt a release, repository ruleset or scoped policy proposal through native tools.
 not-when: Ordinary branch, PR or release hygiene, which maintenance covers.
 ---

@@ -4,7 +4,7 @@ import { formatKeybind } from "@/context/command"
 import type { RelayDocument } from "./client"
 import { deleteDocument } from "./drafts"
 import { rememberDocument } from "./cache"
-import { checkCount, type Flow, retryBudget, steps } from "./graph"
+import { checkCount, type Flow, listedSteps, retryBudget } from "./graph"
 import { installNotice } from "./hook-install"
 import { phaseNames } from "./parts"
 import type { RelaySource } from "./source"
@@ -139,7 +139,7 @@ export function PublishDialog(props: {
                 "orchestra.workflows.count.phase.other",
               ),
               copy.count(
-                steps(props.flow).length,
+                listedSteps(props.flow).length,
                 "orchestra.workflows.count.step.one",
                 "orchestra.workflows.count.step.other",
               ),
