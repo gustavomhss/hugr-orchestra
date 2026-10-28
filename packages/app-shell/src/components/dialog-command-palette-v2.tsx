@@ -33,9 +33,13 @@ function groups(entries: CommandPaletteEntry[]) {
   return Array.from(map.entries()).map(([category, entries]) => ({ category, entries }))
 }
 
+// The palette groups every command under one "Commands" heading, so the command's own category (for example
+// "Help") is only reachable through its option.
 function matchesEntry(entry: CommandPaletteEntry, query: string) {
   const value = query.toLowerCase()
-  return [entry.title, entry.description, entry.category].some((text) => text?.toLowerCase().includes(value))
+  return [entry.title, entry.description, entry.category, entry.option?.category].some((text) =>
+    text?.toLowerCase().includes(value),
+  )
 }
 
 export function DialogCommandPaletteV2(props: { onOpenFile?: (path: string) => void }) {
