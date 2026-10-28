@@ -61,7 +61,7 @@ def read(context, query):
         context.fence({root["owner"] for root in state["roots"]})
     result = {"backend": "linux-atspi", "scopeKind": scope_kind(binding), "observation": observation, "title": "", "items": [], "text": "",
               "truncated": False, "windows": [], "coverage": {"scope": "owned-controls-excluding-hidden-menu-subtrees", "complete": False,
-              "visited": 0, "calls": 0, "omittedHiddenMenus": 0, "reasons": list(state["partial"])}, "consistency": "non-atomic", "capabilities": {
+              "visited": 0, "calls": 0, "omittedHiddenMenus": 0, "omittedForeignChildren": 0, "reasons": list(state["partial"])}, "consistency": "non-atomic", "capabilities": {
               "read": {"supported": True, "reason": "bounded-live-traversal"},
               "mutation": {"supported": False, "reason": "per-item-capabilities; no-logical-dataset-identity"}}}
     for name in binding.get("unresponsive", ())[:8]:
@@ -142,9 +142,10 @@ def read(context, query):
             except BusError as error:
                 # GTK's file chooser exports children that name another parent;
                 # leave them (and their subtree) out instead of failing the read.
+                # They are never admitted, so the read stays complete.
                 if error.code != "ancestry-changed":
                     raise
-                _reason(result, "ancestry-changed")
+                result["coverage"]["omittedForeignChildren"] += 1
                 continue
             if record["role"] == 33 and 25 not in record["states"] and state["stack"] and not repeat:
                 # GTK exports every language/menu entry even while its popup is
@@ -152,7 +153,7 @@ def read(context, query):
                 result["coverage"]["omittedHiddenMenus"] += 1
                 continue
             if state["stack"] and not repeat and record["parent"] != (state["stack"][-1]["owner"], state["stack"][-1]["path"]):
-                _reason(result, "ancestry-changed")
+                result["coverage"]["omittedForeignChildren"] += 1
                 continue
             record["unstableReasons"] = sorted(set(record["unstableReasons"]) | set(inherited))
             record["unstable"] |= bool(record["unstableReasons"])

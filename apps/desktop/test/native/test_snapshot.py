@@ -864,7 +864,9 @@ class SnapshotTests(unittest.TestCase):
         self.service.change(WINDOW, children=[("", foreign)])
         skipped = self.read({"maxText": 0})
         self.assertNotIn("foreign sibling control", [item["name"] for item in skipped["items"]], "foreign-parent-never-admitted")
-        self.assertIn("ancestry-changed", skipped["coverage"]["reasons"], "foreign-parent-skip-is-reported")
+        self.assertEqual(1, skipped["coverage"]["omittedForeignChildren"], "foreign-parent-skip-is-reported")
+        # A child that is never admitted is not a lost candidate: acts still see a complete search.
+        self.assertTrue(skipped["coverage"]["complete"], "foreign-parent-skip-keeps-read-complete")
         self.service.change(WINDOW, children=[("", ENTRY)])
         valid = self.read({"maxText": 0})
         self.assertIn("entry", [item["name"] for item in valid["items"]], "owned-indexed-parent-positive-control")
