@@ -84,7 +84,8 @@ export function UninstallDialog(props: {
 export function OrderDialog(props: { source: RelaySource; name: (document: string) => string; onClose: () => void }) {
   const copy = useRelayCopy()
   const action = createAction()
-  const list = () => (props.source.installs.data ?? []).toSorted((a, b) => a.order - b.order)
+  const list = () =>
+    (props.source.installs.isSuccess ? props.source.installs.data : []).toSorted((a, b) => a.order - b.order)
   let rows!: HTMLOListElement
   const move = async (index: number, by: -1 | 1) => {
     const moved = list()[index]?.installID
