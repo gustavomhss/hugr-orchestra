@@ -213,6 +213,32 @@ export const BoardCiRunTable = sqliteTable(
   (table) => [index("board_ci_run_issue_idx").on(table.issue_id)],
 )
 
+// The pass or fail ledger (merge-queue spec section 5.2): one row per check, keyed by the tree it ran on, so a result
+// stays valid on any commit with the same tree and drops after an edit.
+export const BoardCheckTable = sqliteTable(
+  "board_check",
+  {
+    id: text().$type<Board.CheckID>().primaryKey(),
+    issue_id: text()
+      .$type<Board.IssueID>()
+      .notNull()
+      .references(() => BoardIssueTable.id, { onDelete: "cascade" }),
+    attempt: integer().notNull(),
+    kind: text().$type<Board.CheckKind>().notNull(),
+    // The scoped command after substitution, or the workflow file: same tree and same command is the same check.
+    command: text().notNull(),
+    tree_sha: text().notNull(),
+    commit_sha: text(),
+    outcome: text().$type<Board.CheckOutcome>().notNull(),
+    url: text(),
+    failing: text({ mode: "json" }).$type<string[]>().notNull(),
+    started_at: integer().notNull(),
+    ended_at: integer(),
+    ...Timestamps,
+  },
+  (table) => [index("board_check_issue_tree_idx").on(table.issue_id, table.tree_sha)],
+)
+
 export const BoardNoteTable = sqliteTable(
   "board_note",
   {

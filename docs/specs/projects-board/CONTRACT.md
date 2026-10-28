@@ -152,6 +152,17 @@ As built in slice E1:
   the first ship day to today, zero days included) resampled in a seeded 1000-trial Monte Carlo, so the same board on
   the same day gives the same dates. The scope history replays `after.stage` from `board_activity`.
 
+### board_check
+
+The pass or fail ledger of the merge queue (`docs/specs/maestro-lead/merge-queue.md` §5). `board_ci_run` stays the
+billing ledger.
+
+`id` (`bck_`), `issue_id` (fk cascade), `attempt`, `kind` (`scoped` `workflow` `full`), `command` (the scoped command
+or the workflow file), `tree_sha`, `commit_sha` (null), `outcome` (`pass` `fail` `pending` `error`), `url` (null),
+`failing` (json string[]: test files or check names), `started_at`, `ended_at` (null). Indexed on
+`(issue_id, tree_sha)`. Rows are keyed by tree; the card's `scoped-green` or `scoped-red` is derived on read and never
+stored.
+
 ## 4. Maestro tools
 
 Registered through `ApplicationTools` and granted only to the Maestro agent. Every write takes `reason` (non-empty) and
@@ -166,6 +177,7 @@ link one before Review").
 | `board_issue` | `project`, optional `number`, `title`, `body`, `type`, `epic`, `estimate`, `seat`, `session`, `branch`, `pr`, `depends_on`, `reason` | Create (lands in Backlog) or update an issue, including linking branch, PR and session. |
 | `board_move` | `project`, `number`, `stage`, optional `position`, `reason` | Move between stages. Enforces proof (rule 5), hold (6), pause (7). Moving out of `intake` is the owner's, not Maestro's. |
 | `board_steps` | `project`, `number`, `steps: [{ title, status, now? }]`, `reason` | Replace the step list. |
+| `ci_run` | `project`, `issue`, optional `package`, `files`, `run` | Runs `.orchestra/ci.json`'s scoped checks on the card worktree's current tree, once per tree, and returns the tree, its checks and the scoped state. `run: false` only reports. |
 | `board_question` | `project`, `issue?`, `epic?`, `action: ask` with `text`, `options`, `recommended`, `cost_of_waiting`, `blocking`; or `action: withdraw` with `id`; plus `reason` | Ask the owner or withdraw a question. |
 
 Maestro's prompt says only what the tools cannot: keep the board current as work moves, ask through `board_question`
@@ -268,6 +280,7 @@ Failure is shown as fact: signed out, rate limited or erroring sets `github_stat
 | Service (reads, writes, rules 1-8, undo, events) | `packages/core/src/board/board.ts` |
 | Maestro tools | `packages/core/src/board/tools.ts` |
 | GitHub mirror | `packages/core/src/board/github.ts` |
+| CI contract, `ci_run`, check ledger | `packages/core/src/board/ci.ts` |
 | Protocol group | `packages/protocol/src/groups/board.ts`, added in `api.ts` |
 | Handler | `packages/server/src/handlers/board.ts` |
 | Chapter | `packages/app-shell/src/orchestra/chapters/board/`, nav entry `board`, behind the WIP mark until slice C |
