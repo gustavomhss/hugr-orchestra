@@ -18,6 +18,7 @@ import {
   errorStatus,
   inheritedAction,
   isMaestro,
+  mcpPermission,
   PERMISSION_TOOLS,
   removeInput,
   type ModelGroup,
@@ -86,6 +87,8 @@ export function AgentScreen(props: {
   modelName?: string
   detail?: AgentDetail
   detailFailed?: boolean
+  /** Configured MCP servers in this project; each gets one permission row. */
+  mcpServers: readonly string[]
   memory: AgentMemoryState
   memoryHref: string
   load: (id: string) => Promise<AgentFileInfo>
@@ -136,8 +139,8 @@ export function AgentScreen(props: {
       // Agent files are keyed by the stable id; the display name is configurable.
       .load(agentKey(props.agent))
       .then((file) => {
-        setDraft(agentDraft(props.agent, file))
-        setState({ phase: "edit", file, baseline: JSON.stringify(agentDraft(props.agent, file)) })
+        setDraft(agentDraft(props.agent, file, props.mcpServers))
+        setState({ phase: "edit", file, baseline: JSON.stringify(agentDraft(props.agent, file, props.mcpServers)) })
       })
       .catch((error: unknown) =>
         setState({ phase: "edit", loadError: agentUnavailable(error) ? "unsupported" : "failed" }),
@@ -190,7 +193,14 @@ export function AgentScreen(props: {
     setState("error", "")
   }
 
-  const inheritLabel = (tool: (typeof PERMISSION_TOOLS)[number]) => {
+  const permissionRows = () => [
+    ...PERMISSION_TOOLS.map((tool) => ({ tool, label: language.t(`orchestra.agents.tool.${tool}`) })),
+    ...props.mcpServers.map((server) => ({
+      tool: mcpPermission(server),
+      label: language.t("orchestra.agents.tool.mcp", { server }),
+    })),
+  ]
+  const inheritLabel = (tool: string) => {
     const action = inheritedAction(props.agent.permission, tool, state.file?.permission?.[tool])
     if (!action) return language.t("orchestra.agents.choice.inherit")
     return language.t("orchestra.agents.choice.inheritValue", { action })
@@ -632,31 +642,33 @@ export function AgentScreen(props: {
                   <h2 class="mx-section">{language.t("orchestra.agents.toolPermissions")}</h2>
                   <p class="mx-note">{language.t("orchestra.agents.toolPermissionsNote")}</p>
                   <div class="mx-table">
-                    <For each={PERMISSION_TOOLS}>
-                      {(tool) => (
+                    <For each={permissionRows()}>
+                      {(row) => (
                         <div class="mx-row">
                           <div class="mx-grow">
-                            <strong id={`agents-tool-${tool}`}>{language.t(`orchestra.agents.tool.${tool}`)}</strong>
+                            <strong id={`agents-tool-${row.tool}`}>
+                              <bdi>{row.label}</bdi>
+                            </strong>
                           </div>
                           <select
-                            name={`perm-${tool}`}
+                            name={`perm-${row.tool}`}
                             class="mx-search"
-                            aria-labelledby={`agents-tool-${tool}`}
+                            aria-labelledby={`agents-tool-${row.tool}`}
                             onChange={(event) =>
-                              setDraft("permission", tool, event.currentTarget.value as PermissionChoice)
+                              setDraft("permission", row.tool, event.currentTarget.value as PermissionChoice)
                             }
                           >
-                            <option value="inherit" selected={draft.permission[tool] === "inherit"}>
-                              {inheritLabel(tool)}
+                            <option value="inherit" selected={draft.permission[row.tool] === "inherit"}>
+                              {inheritLabel(row.tool)}
                             </option>
-                            <Show when={typeof state.file?.permission?.[tool] === "object"}>
-                              <option value="custom" selected={draft.permission[tool] === "custom"}>
+                            <Show when={typeof state.file?.permission?.[row.tool] === "object"}>
+                              <option value="custom" selected={draft.permission[row.tool] === "custom"}>
                                 {language.t("orchestra.agents.choice.custom")}
                               </option>
                             </Show>
                             <For each={["allow", "ask", "deny"] as const}>
                               {(action) => (
-                                <option value={action} selected={draft.permission[tool] === action}>
+                                <option value={action} selected={draft.permission[row.tool] === action}>
                                   {language.t(`orchestra.agents.action.${action}`)}
                                 </option>
                               )}

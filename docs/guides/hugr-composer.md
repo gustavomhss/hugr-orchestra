@@ -33,7 +33,7 @@ Add the server to your global config, `~/.config/orchestra/orchestra.json`:
 }
 ```
 
-The server name must be `hugr-composer`: the backend seat is allowed exactly the tools whose names start with `hugr-composer_`. The `permissions` rule keeps those tools from Maestro and every other agent; the backend seat's own profile wins over it. Leave the rule out if you want other agents to use Composer too (see [Permissions](permissions.md)). Composing a service can take a few minutes, which is why the request timeout is raised to five minutes.
+The server name must be `hugr-composer`: the backend seat is allowed exactly the tools whose names start with `hugr-composer_`. The `permissions` rule keeps those tools from Maestro and every other agent; the backend seat's own profile wins over it. Leave the rule out if you want other agents to use Composer too (see [Permissions](permissions.md)), or open one agent's screen and set the **hugr-composer (MCP server)** row on its Tools tab to Allow (see [The agent screen](agent-screen.md)). Composing a service can take a few minutes, which is why the request timeout is raised to five minutes.
 
 Restart Orchestra to load the change. If you declare the server in a project's config instead, the project must be trusted first (see [Project trust](mcp-project-trust.md)).
 

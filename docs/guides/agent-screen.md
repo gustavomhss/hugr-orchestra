@@ -13,6 +13,8 @@ Click a card to open that agent's screen. **Agents** at the top takes you back t
 - **System prompt**: what the agent is told before every task. Edit it in place. An empty prompt, or **Reset to
   built-in**, brings back the prompt the agent ships with.
 - **Tools**: the tools the model sees in this project after permissions, and the permission rules you can change.
+  Besides the built-in tools, each MCP server configured in the project gets one row that covers all its tools,
+  saved as `<server>_*` in the agent's file. A native seat's own limits still apply over these rules.
 - **Toolkit**: what the agent brings of its own, beyond the shared tools.
   - **Command-line engines** are the pinned tools the agent runs from its own toolkit, such as code generators,
     checks and indexers. Each row shows what the engine reads, its role, its pinned version and whether it is
