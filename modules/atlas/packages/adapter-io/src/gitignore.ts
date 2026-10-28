@@ -41,8 +41,8 @@ import { join } from "node:path"
 export const ATLAS_IGNORE_PATTERN = ".atlas/*"
 export const ATLAS_POLICY_NEGATION = "!.atlas/policy.json"
 /** The committed tree (`layout.ts`): shared logs, each seat's memory and knowledge logs, and the blobs those
- *  knowledge rows name. Without these a deny-every-child rule drops every log a fresh clone replays from. */
-export const ATLAS_TREE_NEGATIONS = ["!.atlas/project/", "!.atlas/members/", "!.atlas/blobs/"] as const
+ *  knowledge rows name, and each card's host-written logs. Without these a deny-every-child rule drops every log a fresh clone replays from. */
+export const ATLAS_TREE_NEGATIONS = ["!.atlas/project/", "!.atlas/members/", "!.atlas/blobs/", "!.atlas/cards/"] as const
 
 /** The block `atlas init` appends, comments included — the comments are the reason a later reader does not
  *  delete the two lines. Newline-terminated so an append can never join the previous line. */
@@ -56,7 +56,7 @@ export const ATLAS_IGNORE_BLOCK = [
   "# Deny every child, then re-admit the one file that is genuinely source. `.atlas/*` (not `.atlas/`) is",
   "# load-bearing: git cannot re-include a path under an excluded DIRECTORY, so the negation below would be",
   "# unreachable and `policy.json` would be silently dropped. The negations must come AFTER the pattern.",
-  "# `project/`, `members/` and `blobs/` are the append-only logs and blobs Atlas replays on a fresh clone.",
+  "# `project/`, `members/`, `cards/` and `blobs/` are the append-only logs and blobs Atlas replays on a fresh clone.",
   ATLAS_IGNORE_PATTERN,
   ATLAS_POLICY_NEGATION,
   ...ATLAS_TREE_NEGATIONS,

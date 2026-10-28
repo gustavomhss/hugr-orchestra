@@ -99,6 +99,19 @@ export interface Metering {
 }
 
 /**
+ * One attempt at a card (`.atlas/cards/<CARD>/attempts/a<n>.jsonl`, repo-layout design §3): the WP metering plus
+ * who ran it and on what. `session` is the V2 Session the attempt ran in, `engine` the execution host (for example
+ * `claude-code`). Money is integer micro-USD because the canonical form refuses floats; it is absent on a public
+ * repository, where rows drop spend (design §6).
+ */
+export interface AttemptMetering extends Metering {
+  readonly seat: string
+  readonly session: string
+  readonly engine: string
+  readonly costMicroUsd?: number
+}
+
+/**
  * The projection rendered onto the host PR via the adapter (PERSIST-8). (atlas-persist:22)
  *
  * Only the field NAMES are frozen. `prId` is the host PR identifier (typed `string`).

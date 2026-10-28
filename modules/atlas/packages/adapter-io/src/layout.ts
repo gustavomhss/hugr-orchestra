@@ -9,7 +9,10 @@
 //   .atlas/members/<seat>/memory/pr/<prId>.jsonl         one PR's memory
 //   .atlas/members/<seat>/memory/logbook.jsonl           the logbook (only its author writes it)
 //   .atlas/members/<seat>/knowledge/<nodeKey[0:2]>.jsonl applied knowledge outcomes, sharded by node key
-//   .atlas/blobs/<h[0:2]>/<h>                            the CAS bytes each knowledge row names
+//   .atlas/members/<seat>/context/<session>.jsonl        one Session's continuity references and masks
+//   .atlas/cards/<CARD>/card.jsonl                       one card's status, messages, decisions and links
+//   .atlas/cards/<CARD>/attempts/a<n>.jsonl              one attempt's metering
+//   .atlas/blobs/<h[0:2]>/<h>                            the bytes a knowledge, transcript or context row names
 //
 // A file name is a SHARD HINT, never identity: every line still carries its own content id, and a read folds
 // every file of a kind by that id. So two ids that sanitize to the same segment, or a case-insensitive
@@ -45,6 +48,19 @@ export function memberMemoryPath(repoPath: string, record: MemoryRecord): string
 /** The shard one seat's knowledge outcome for `nodeKey` is appended to. */
 export const knowledgeShardPath = (repoPath: string, seat: string, nodeKey: string): string =>
   join(membersDir(repoPath), segment(seat), "knowledge", `${segment(nodeKey.slice(0, 2))}.jsonl`)
+
+/** One Session's continuity log: the archived chunk references and the mask changes, in order. */
+export const contextLogPath = (repoPath: string, seat: string, session: string): string =>
+  join(membersDir(repoPath), segment(seat), "context", `${segment(session)}.jsonl`)
+
+export const cardsDir = (repoPath: string): string => join(atlasDir(repoPath), "cards")
+
+/** One card's own log. `card` is the board key, `${project.key}-${number}`. */
+export const cardLogPath = (repoPath: string, card: string): string => join(cardsDir(repoPath), segment(card), "card.jsonl")
+
+/** Attempt `n` (1-based) at `card`. */
+export const attemptPath = (repoPath: string, card: string, n: number): string =>
+  join(cardsDir(repoPath), segment(card), "attempts", `a${n}.jsonl`)
 
 /** The committed copy of one CAS object a knowledge row names, so a fresh clone can rebuild the row's bytes. */
 export const blobPath = (repoPath: string, contentHash: string): string =>
