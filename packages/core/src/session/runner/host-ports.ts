@@ -1,9 +1,10 @@
 export * as HostPorts from "./host-ports"
 
-import type { LLMEvent } from "@orchestra/llm"
-import { DateTime, Effect, Semaphore } from "effect"
+import { LLMEvent, type ToolCall } from "@orchestra/llm"
+import { Cause, DateTime, Effect, Exit, Semaphore } from "effect"
 import { createHash } from "node:crypto"
 import path from "path"
+import type { AgentV2 } from "../../agent"
 import { Config } from "../../config"
 import { Database } from "../../database/database"
 import { EventV2 } from "../../event"
@@ -12,6 +13,7 @@ import { ModelV2 } from "../../model"
 import { ProviderV2 } from "../../provider"
 import { RelativePath } from "../../schema"
 import { LeanOutput } from "../../tool/lean-output"
+import type { ToolRegistry } from "../../tool/registry"
 import { TaskPermission } from "../../tool/task-permission"
 import { SessionEvent } from "../event"
 import { SessionInput } from "../input"
@@ -23,6 +25,11 @@ import { SessionTodo } from "../todo"
 import type { SessionExecution } from "../execution"
 import type { ExecutionHost } from "./execution-host"
 import { createLLMEventPublisher } from "./publish-llm-event"
+
+export type Settle = (
+  call: ToolCall,
+  input: { readonly sessionID: SessionSchema.ID; readonly agent: AgentV2.ID; readonly assistantMessageID: SessionMessage.ID },
+) => Effect.Effect<ToolRegistry.Settlement>
 
 /** `Turn.child`, `Turn.notify` and `Turn.todos` for one hosted turn of `session`; the parent's publisher names the task call's assistant message. */
 export function make(input: {
@@ -37,6 +44,8 @@ export function make(input: {
   readonly withPublication: Semaphore.Semaphore["withPermit"]
   /** The process-global execution, for the wake a host's own event asks for; absent where nothing drains Sessions. */
   readonly execution: SessionExecution.Interface | undefined
+  /** Settles a child's Orchestra tool call in that child Session, under its seat. */
+  readonly settle: Settle
 }) {
   const events = input.events
   const store = input.store
@@ -57,6 +66,7 @@ export function make(input: {
     }).pipe(Effect.andThen(input.execution ? input.execution.wake(session.id) : Effect.void))
   const child: ExecutionHost.Turn["child"] = (call) =>
     Effect.gen(function* () {
+      const used = call.model ?? model
       const hash = (domain: string) =>
         createHash("sha256").update(JSON.stringify([domain, session.id, call.callID])).digest("hex")
       const id = SessionSchema.ID.make(`ses_${hash("host-child")}`)
@@ -75,7 +85,7 @@ export function make(input: {
             title: call.title,
             parentID: session.id,
             agent: call.agent,
-            model,
+            model: used,
           },
           { location: ref },
         )
@@ -110,10 +120,29 @@ export function make(input: {
         delivery: "steer",
       })
       yield* SessionInput.promoteSteers(database.db, events, id, yield* EventV2.latestSequence(database.db, id))
-      const mirror = createLLMEventPublisher(events, { sessionID: id, agent: call.agent, model })
+      const mirror = createLLMEventPublisher(events, { sessionID: id, agent: call.agent, model: used })
       const serial = Semaphore.makeUnsafe(1).withPermit
       return {
         id,
+        execute: (request: { readonly id: string; readonly name: string; readonly input: unknown }) =>
+          Effect.gen(function* () {
+            const event = LLMEvent.toolCall({ ...request, providerExecuted: true, providerMetadata: { orchestra: { executor: "orchestra" } } })
+            yield* serial(mirror.publish(event, []))
+            const settled = yield* input
+              .settle(event, { sessionID: id, agent: call.agent, assistantMessageID: yield* mirror.assistantMessageID(event.id) })
+              .pipe(Effect.exit)
+            const failure = Exit.isSuccess(settled) ? undefined : Cause.squash(settled.cause)
+            const settlement: ToolRegistry.Settlement = Exit.isSuccess(settled)
+              ? settled.value
+              : { result: { type: "error", value: `Tool execution failed: ${failure instanceof Error ? failure.message : String(failure)}` } }
+            yield* serial(
+              mirror.publish(
+                LLMEvent.toolResult({ id: event.id, name: event.name, result: settlement.result, output: settlement.output, providerExecuted: true }),
+                settlement.outputPaths ?? [],
+              ),
+            )
+            return settlement
+          }),
         todos: (list: ReadonlyArray<SessionTodo.Info>) => SessionTodo.write(database.db, events, { sessionID: id, todos: list }),
         publish: (event: LLMEvent) => serial(mirror.publish(event, [])),
         finish: serial(

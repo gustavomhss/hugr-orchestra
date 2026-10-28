@@ -21,6 +21,10 @@ The app never starts a run itself. Run and Use in chat open a Maestro chat with 
 
 Use **Use in chat** instead of Run when you want to ask Maestro for something that uses the workflow, not a plain run. It fills in "Use the published workflow …" the same way.
 
+## Ask Maestro to draft one
+
+You can also describe the workflow you want in a Maestro chat, for example "make me a workflow that writes release notes and checks them". Maestro hands it to the planning seat, which designs the steps and their checks and saves the result as a draft in **Workflows**. A drafted workflow is never published or run for you: open it, review the steps, then publish it yourself. Drafting needs a project inside a git repository.
+
 ## List and canvas
 
 The editor has two views of the same workflow, switched at the top right. **List** is the plan as you read it: the **Goal and settings** card at the top holds the goal every step sees and the retries; it is not a step. Below it come the steps in order. **Canvas** draws the same steps as nodes and wires, for when you want to see the shape or drag steps around. A change in one view shows in the other. The editor opens in the view you used last.

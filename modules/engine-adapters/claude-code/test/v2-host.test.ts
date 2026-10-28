@@ -58,7 +58,7 @@ const ports = {
   consumed: () => Effect.void,
   notify: () => Effect.void,
   todos: () => Effect.void,
-  child: () => Effect.succeed({ id: SessionSchema.ID.make("ses_child"), publish: () => Effect.void, finish: Effect.void, todos: () => Effect.void }),
+  child: () => Effect.succeed({ id: SessionSchema.ID.make("ses_child"), publish: () => Effect.void, finish: Effect.void, todos: () => Effect.void, execute: () => Effect.succeed({ result: { type: "text", value: "" } }) }),
 } satisfies Pick<ExecutionHost.Turn, "question" | "memory" | "steers" | "consumed" | "notify" | "todos" | "child">
 
 const turnOf = (input: Partial<ExecutionHost.Turn> = {}): ExecutionHost.Turn => ({
@@ -69,6 +69,8 @@ const turnOf = (input: Partial<ExecutionHost.Turn> = {}): ExecutionHost.Turn => 
   context: [],
   seats: [],
   skills: {},
+  seatTools: {},
+  seatOnly: [],
   history: [user("msg_1", "Go")] as unknown as ExecutionHost.Turn["history"],
   tools: [],
   execute: () => Effect.die("unused"),
@@ -99,6 +101,8 @@ test("one SDK query is one turn: tool calls surface provider-executed and the ne
     context: ["Context"],
     seats: [],
     skills: {},
+    seatTools: {},
+    seatOnly: [],
     history: history as ExecutionHost.Turn["history"],
     tools: [],
     execute: () => Effect.die("unused"),
@@ -378,6 +382,9 @@ test("the PreToolUse gate settles every call through Orchestra, failing closed, 
     decisions.push(await pre(options, "Agent", { prompt: "go", subagent_type: "orchestra:backend", run_in_background: true }, "tu-4"))
     decisions.push(await pre(options, "AskUserQuestion", { questions: [] }, "tu-5"))
     decisions.push(await pre(options, "mcp__orchestra__task", { prompt: "go" }, "tu-6"))
+    decisions.push(await pre(options, "ToolSearch", { query: "select:mcp__orchestra__task" }, "tu-7"))
+    decisions.push(await pre(options, "ListAgents", {}, "tu-8"))
+    decisions.push(await pre(options, "SendMessage", { to: "other", message: "hi" }, "tu-9"))
     // canUseTool after the hook already learned the call (both can run): the call id is not queued twice.
     await options.canUseTool?.("mcp__orchestra__task", { prompt: "go" }, { signal: new AbortController().signal, toolUseID: "tu-6", requestId: "r6" })
     const server = options.mcpServers?.orchestra as McpSdkServerConfigWithInstance
@@ -416,6 +423,11 @@ test("the PreToolUse gate settles every call through Orchestra, failing closed, 
     // The question needs the owner, so the hook leaves it to canUseTool.
     {},
     allowed,
+    // ToolSearch only loads the deferred schemas, so it is allowed without a permission check.
+    allowed,
+    // Other Claude sessions on the machine stay out of reach, without asking Orchestra's permission rules.
+    refused("This Claude Code tool reaches outside the Orchestra session, so Orchestra refuses it."),
+    refused("This Claude Code tool reaches outside the Orchestra session, so Orchestra refuses it."),
   ])
   expect(executed[0]).toBe("tu-6")
   expect(executed[1]).not.toBe("tu-6")

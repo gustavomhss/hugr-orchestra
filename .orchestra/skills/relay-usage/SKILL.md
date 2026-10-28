@@ -12,6 +12,7 @@ For anyone using or guiding someone through the Workflows page. The user guides 
 - The app never starts a run. Run (library row, editor head) and Use in chat open a draft chat in the project. The prompt names the workflow and its id: `Run workflow “<name>” (workflow id: <id>) for: `. The user adds the goal and sends it. Maestro starts the run.
 - Only the published version runs. A workflow that is not published shows Run off with "Publish before running". A profile whose Relay tools are not available shows Run off with the tools reason.
 - To tell a user how to run a workflow, point them at the chat, not at a button that starts a run.
+- The upstream seat (`archie`) drafts workflows on request with `archie_draft_workflow` (`modules/maestro/coordination/src/v2/tools/workflow-draft.ts`), guided by its shipped `archie-workflow` skill. The tool lints the sprint, projects and compiles it and saves it unpublished in the calling Session's project, as the editor saves a draft. It refuses the global project (a folder outside git). Only the owner publishes.
 
 ## Editing
 

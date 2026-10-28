@@ -201,6 +201,25 @@ export default {
         );
       `)
       yield* tx.run(`
+        CREATE TABLE \`board_check\` (
+          \`id\` text PRIMARY KEY,
+          \`issue_id\` text NOT NULL,
+          \`attempt\` integer NOT NULL,
+          \`kind\` text NOT NULL,
+          \`command\` text NOT NULL,
+          \`tree_sha\` text NOT NULL,
+          \`commit_sha\` text,
+          \`outcome\` text NOT NULL,
+          \`url\` text,
+          \`failing\` text NOT NULL,
+          \`started_at\` integer NOT NULL,
+          \`ended_at\` integer,
+          \`time_created\` integer NOT NULL,
+          \`time_updated\` integer NOT NULL,
+          CONSTRAINT \`fk_board_check_issue_id_board_issue_id_fk\` FOREIGN KEY (\`issue_id\`) REFERENCES \`board_issue\`(\`id\`) ON DELETE CASCADE
+        );
+      `)
+      yield* tx.run(`
         CREATE TABLE \`board_ci_run\` (
           \`run_id\` integer PRIMARY KEY,
           \`project_id\` text NOT NULL,
@@ -759,6 +778,7 @@ export default {
       )
       yield* tx.run(`CREATE INDEX \`board_activity_project_idx\` ON \`board_activity\` (\`project_id\`,\`id\`);`)
       yield* tx.run(`CREATE INDEX \`board_attachment_issue_idx\` ON \`board_attachment\` (\`issue_id\`);`)
+      yield* tx.run(`CREATE INDEX \`board_check_issue_tree_idx\` ON \`board_check\` (\`issue_id\`,\`tree_sha\`);`)
       yield* tx.run(`CREATE INDEX \`board_ci_run_issue_idx\` ON \`board_ci_run\` (\`issue_id\`);`)
       yield* tx.run(
         `CREATE INDEX \`board_decision_project_idx\` ON \`board_decision\` (\`project_id\`,\`answered_at\`);`,

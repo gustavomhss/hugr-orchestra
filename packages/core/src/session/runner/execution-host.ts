@@ -38,6 +38,10 @@ export interface Turn {
   readonly history: ReadonlyArray<SessionMessage.Message>
   /** The agent's permission-filtered Orchestra tools, for the host to offer its engine. */
   readonly tools: ReadonlyArray<ToolDefinition>
+  /** The names of the Orchestra tools each seat in `seats` may call, by seat id, under the seat's and the Session's rules. */
+  readonly seatTools: Readonly<Record<string, ReadonlyArray<string>>>
+  /** The Orchestra tools a seat in `seats` may call and the agent may not, for the host to offer the seats' subagents only. */
+  readonly seatOnly: ReadonlyArray<ToolDefinition>
   /**
    * Runs an Orchestra tool the engine invoked: the runner records the call (provider-executed, executor "orchestra"),
    * settles it through the Location registry and records the result. The host never emits these calls itself.
@@ -106,12 +110,19 @@ export interface Turn {
     readonly agent: AgentV2.ID
     readonly title: string
     readonly prompt: string
+    /** The model the subagent runs on, when the engine knows it; the parent's model otherwise. */
+    readonly model?: ModelV2.Ref
   }) => Effect.Effect<{
     readonly id: SessionSchema.ID
     readonly publish: (event: LLMEvent) => Effect.Effect<void>
     readonly finish: Effect.Effect<void>
     /** `todos` for the child Session: a subagent's own checklist. */
     readonly todos: (list: ReadonlyArray<SessionTodo.Info>) => Effect.Effect<void>
+    /**
+     * `execute` for an Orchestra tool the subagent invokes: recorded in the child Session and settled there under the
+     * seat's rules and the child's own, as inside Orchestra's task tool. A child whose agent is not a seat refuses it.
+     */
+    readonly execute: Turn["execute"]
   }>
   /**
    * Replaces the Session's todo list, as Orchestra's todowrite tool would: the todo panel shows it. For an engine that
