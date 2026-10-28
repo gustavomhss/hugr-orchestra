@@ -190,7 +190,7 @@ async function capture(page: Page, name: string, manifest: unknown[], requests: 
   await expect(page.locator('[data-component="orchestra-sidebar"]')).toHaveCSS("width", "230px")
   await expect(page.locator('[data-slot="titlebar-v2"]')).toHaveCSS("height", "45px")
   await expect(page.getByRole("img", { name: "HuGR", exact: true })).toBeVisible()
-  await expect(page.getByRole("img", { name: "HuGR", exact: true })).toHaveCSS("width", "121px")
+  await expect(page.getByRole("img", { name: "HuGR", exact: true })).toHaveCSS("width", "119.688px")
   expect(await page.getByRole("img", { name: "HuGR", exact: true }).evaluate((image) => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0)
   await expect(lean.locator("h1")).toHaveCSS("font-family", /Mx Inter Medium/)
   await expect(lean.locator('[role="alert"]')).toHaveCount(0)

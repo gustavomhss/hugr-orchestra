@@ -76,13 +76,14 @@ for (const scheme of ["light", "dark"] as const) {
       await expect(mark).toBeVisible({ timeout: 60_000 })
       await expect(mark).toHaveAttribute(
         "src",
-        `/orchestra/hugr-horizontal-compact-${scheme === "light" ? "primary" : "inverse"}.svg`,
+        `/orchestra/hugr-lockup-${scheme === "light" ? "primary" : "inverse"}.svg`,
       )
       await expect
         .poll(() => mark.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0))
         .toBe(true)
-      await expect(mark).toHaveCSS("width", "121px")
-      await expect(mark).toHaveCSS("height", "32px")
+      // The 383×128 lockup drawn 40px tall.
+      await expect(mark).toHaveCSS("width", "119.688px")
+      await expect(mark).toHaveCSS("height", "40px")
     })
   }
 }
