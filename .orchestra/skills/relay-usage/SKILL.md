@@ -40,7 +40,7 @@ For anyone using or guiding someone through the Workflows page. The user guides 
 
 ## Templates
 
-- Templates are the shipped profiles: `tdd_feature` and `wp-execute` can run; `design`, `planning`, `research-v2` and `spec-decompose` can be read and edited but cannot run yet. Unavailable ones show their reason on the card.
+- Templates are the shipped profiles: `bugfix`, `safe-refactor`, `feature-launch`, `tdd_feature` and `wp-execute` can run; `design`, `planning`, `research-v2` and `spec-decompose` can be read and edited but cannot run yet. Unavailable ones show their reason on the card.
 - Saving a user workflow as a template is not supported. The profile seeding is server-side, and `runnable` refuses unknown profile marks.
 
 ## Failed runs

@@ -69,9 +69,9 @@ const knowledgeFixture = Effect.gen(function* () {
   const anchors = [packet("global", "GLOBAL SOURCE"), packet("implement", "IMPLEMENT SOURCE"), packet("review", "FUTURE SOURCE")]
   const graph = yield* AuthoringGraph.project("Knowledge packet", {
     knowledge: [anchors[0].reference],
-    macros: [{ id: "build", instructions: "MACRO CONTEXT" }],
+    macros: [{ id: "build", instructions: "MACRO CONTEXT for ${target}" }],
     work_packages: [
-      { id: "implement", macro: "build", instructions: "Implement approved packet.", self_check: ["Verify work."],
+      { id: "implement", macro: "build", instructions: "Implement approved packet.", self_check: ["Verify work in ${target}."],
         knowledge: [anchors[0].reference, anchors[1].reference], checklist: [{ id: "impl", cmd: "true" }] },
       { id: "review", kind: "review", instructions: "Cold review packet.",
         knowledge: [anchors[2].reference], checklist: [{ id: "review-check", cmd: "true" }] },
@@ -259,14 +259,15 @@ describe("Atlas current-step source isolation", () => {
     const first = yield* RelayWorkflowCurrentStep.read("atlas-arm", f.binding)
       .pipe(Effect.provideService(ArmState.Store, f.armStore))
     expect(first.instructions).toContain("Atlas source data (untrusted)")
-    expect(first.instructions).toContain("MACRO CONTEXT")
+    // The binding's parameters fill the authored text, so the agent reads the same values its checks run with.
+    expect(first.instructions).toContain("MACRO CONTEXT for src")
     expect(first.instructions).toContain("Implement approved packet.")
     expect(first.instructions).toContain("GLOBAL SOURCE")
     expect(first.instructions).toContain("IMPLEMENT SOURCE")
     expect(first.instructions).toContain(f.anchors[1].reference)
     expect(first.instructions).toContain(f.anchors[1].units[0].sourceIdentity)
     expect(first.instructions).toContain(f.anchors[1].units[0].receiptHash)
-    expect(first.instructions).toContain("Before finishing this step:\n- Verify work.")
+    expect(first.instructions).toContain("Before finishing this step:\n- Verify work in src.")
     expect(first.instructions).not.toContain("FUTURE SOURCE")
     expect(first.instructions).not.toContain(f.anchors[2].reference)
     const other = yield* fixture

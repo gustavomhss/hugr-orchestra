@@ -1,0 +1,181 @@
+{
+  "op": "roundtrip",
+  "name": "Relay · safe-refactor",
+  "sprint": {
+    "brief": "safe-refactor v1.0.0 — Reshape code without changing what it does. Write down the invariants, pin today's behaviour with tests, refactor in the open, then prove every invariant still holds.",
+    "gen": 0,
+    "retry_budget": 3,
+    "macros": [
+      {
+        "id": "understand",
+        "title": "Understand and pin",
+        "instructions": "A refactor changes the shape of code, never its behaviour. Before anything moves, you decide what must stay true\nand you pin it with tests that pass against today's code. Nothing under the source paths changes in this phase."
+      },
+      {
+        "id": "reshape",
+        "title": "Reshape",
+        "instructions": "Now move the code toward the target, following the steps in the plan. The pinned tests are the contract: change\nthe code until they pass, never the tests until the code passes. If an invariant turns out wrong, stop and say so\ninstead of rewriting its test."
+      }
+    ],
+    "work_packages": [
+      {
+        "id": "understand.map",
+        "macro": "understand",
+        "kind": "execute",
+        "title": "Map the code",
+        "instructions": "Read the code under ${src_path} and write ${notes_dir}/refactor.md with four sections:\n\"## Today\" (how the code is structured now and what makes it hard to change),\n\"## Target\" (the shape it should have and why that is better),\n\"## Steps\" (the moves that get there, each small enough to review on its own) and\n\"## Invariants\" (the behaviour that must not change, one per line as `INV1: ...`, `INV2: ...`, at least three).\nName real files and functions, not categories.",
+        "checklist": [
+          {
+            "id": "plan-has-its-sections",
+            "assert": "the plan has Today, Target, Steps and Invariants sections",
+            "cmd": "for section in Today Target Steps Invariants; do grep -q \"^## $section\" ${notes_dir}/refactor.md || exit 1; done",
+            "origin": "pe-profile:safe-refactor@1.0.0"
+          },
+          {
+            "id": "three-invariants",
+            "assert": "the plan lists at least three numbered invariants",
+            "cmd": "test \"$(grep -cE '^INV[0-9]+:' ${notes_dir}/refactor.md)\" -ge 3",
+            "origin": "pe-profile:safe-refactor@1.0.0"
+          },
+          {
+            "id": "plan-is-grounded",
+            "context": [
+              "${notes_dir}/refactor.md"
+            ],
+            "judge": "Is this plan grounded in the actual code — does it name real files and functions, describe a concrete target shape and list invariants a test can check? FAIL if any section is generic enough to fit any codebase, if an invariant is not observable behaviour, or if a step is too large to review on its own.",
+            "blocking": true,
+            "origin": "pe-profile:safe-refactor@1.0.0"
+          }
+        ]
+      },
+      {
+        "id": "understand.pin",
+        "macro": "understand",
+        "kind": "execute",
+        "title": "Pin current behaviour",
+        "instructions": "Write characterization tests under ${test_path} that pin each invariant against the current code, and name\nthe invariant each test covers (for example `INV2` in the test name or a comment). They must pass now. Do not\nchange ${src_path}.",
+        "checklist": [
+          {
+            "id": "tests-added",
+            "assert": "characterization tests were added or changed",
+            "cmd": "git diff --name-only ${base_ref} -- ${test_path} | grep -q . || git ls-files --others --exclude-standard -- ${test_path} | grep -q .",
+            "origin": "pe-profile:safe-refactor@1.0.0"
+          },
+          {
+            "id": "source-untouched",
+            "assert": "no source file changed while pinning",
+            "cmd": "test -z \"$(git diff --name-only ${base_ref} -- ${src_path})\" && test -z \"$(git ls-files --others --exclude-standard -- ${src_path})\"",
+            "origin": "pe-profile:safe-refactor@1.0.0"
+          },
+          {
+            "id": "pins-pass-today",
+            "assert": "the suite passes against today's code",
+            "cmd": "${test_cmd}",
+            "origin": "pe-profile:safe-refactor@1.0.0"
+          },
+          {
+            "id": "every-invariant-pinned",
+            "assert": "every invariant id from the plan appears in the tests",
+            "cmd": "ids=$(grep -oE '^INV[0-9]+' ${notes_dir}/refactor.md) || exit 1; for id in $ids; do grep -rqw \"$id\" ${test_path} || { echo \"$id is not pinned\"; exit 1; }; done",
+            "origin": "pe-profile:safe-refactor@1.0.0"
+          }
+        ]
+      },
+      {
+        "id": "reshape.refactor",
+        "macro": "reshape",
+        "kind": "execute",
+        "title": "Refactor",
+        "instructions": "Restructure ${src_path} as planned in ${notes_dir}/refactor.md. Keep public behaviour identical, keep ${test_cmd}\ngreen after each move and keep ${lint_cmd} clean.",
+        "checklist": [
+          {
+            "id": "source-changed",
+            "assert": "the source paths were changed",
+            "cmd": "git diff --name-only ${base_ref} -- ${src_path} | grep -q . || git ls-files --others --exclude-standard -- ${src_path} | grep -q .",
+            "origin": "pe-profile:safe-refactor@1.0.0"
+          },
+          {
+            "id": "suite-is-green",
+            "assert": "the pinned tests and the rest of the suite pass",
+            "cmd": "${test_cmd}",
+            "origin": "pe-profile:safe-refactor@1.0.0"
+          },
+          {
+            "id": "lint-is-clean",
+            "assert": "the linter passes",
+            "cmd": "${lint_cmd}",
+            "origin": "pe-profile:safe-refactor@1.0.0"
+          },
+          {
+            "id": "no-test-deleted",
+            "assert": "no test file was deleted",
+            "cmd": "! git diff --diff-filter=D --name-only ${base_ref} -- ${test_path} | grep -q .",
+            "origin": "pe-profile:safe-refactor@1.0.0"
+          },
+          {
+            "id": "behaviour-preserved",
+            "context": [
+              "${notes_dir}/refactor.md"
+            ],
+            "judge": "Does this change restructure the code toward the plan's target while keeping behaviour identical? FAIL if it edits, weakens or skips a pinned test, changes a public signature or output the invariants cover, or adds behaviour the plan does not mention.",
+            "diff": true,
+            "blocking": true,
+            "origin": "pe-profile:safe-refactor@1.0.0"
+          }
+        ]
+      },
+      {
+        "id": "reshape.prove",
+        "macro": "reshape",
+        "kind": "review",
+        "title": "Prove the invariants",
+        "instructions": "Read the plan, the pinned tests and the refactored code, then write ${notes_dir}/refactor-review.md: one line\nper invariant naming its id, whether it still holds and the test that shows it, then the steps from the plan\nthat were done, changed or dropped, and why.",
+        "checklist": [
+          {
+            "id": "every-invariant-reviewed",
+            "assert": "the review names every invariant id from the plan",
+            "cmd": "ids=$(grep -oE '^INV[0-9]+' ${notes_dir}/refactor.md) || exit 1; for id in $ids; do grep -qw \"$id\" ${notes_dir}/refactor-review.md || { echo \"$id is not reviewed\"; exit 1; }; done",
+            "origin": "pe-profile:safe-refactor@1.0.0"
+          },
+          {
+            "id": "review-is-substantive",
+            "assert": "the review carries at least 80 words",
+            "cmd": "test \"$(wc -w < ${notes_dir}/refactor-review.md)\" -ge 80",
+            "origin": "pe-profile:safe-refactor@1.0.0"
+          },
+          {
+            "id": "review-is-honest",
+            "context": [
+              "${notes_dir}/refactor.md",
+              "${notes_dir}/refactor-review.md"
+            ],
+            "judge": "Does this review check each invariant against a named test and account for every planned step? FAIL if it marks an invariant as holding without naming the test that shows it, skips a step from the plan, or claims something the code does not show.",
+            "blocking": true,
+            "origin": "pe-profile:safe-refactor@1.0.0"
+          }
+        ]
+      },
+      {
+        "id": "reshape.checklist",
+        "macro": "reshape",
+        "kind": "gate",
+        "title": "Refactor gate",
+        "instructions": "The refactor is done only when everything still passes",
+        "checklist": [
+          {
+            "id": "suite_green",
+            "assert": "suite_green",
+            "cmd": "${test_cmd}",
+            "origin": "pe-profile:safe-refactor@1.0.0"
+          },
+          {
+            "id": "lint_clean",
+            "assert": "lint_clean",
+            "cmd": "${lint_cmd}",
+            "origin": "pe-profile:safe-refactor@1.0.0"
+          }
+        ]
+      }
+    ]
+  }
+}
