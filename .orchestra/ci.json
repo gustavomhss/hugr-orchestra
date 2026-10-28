@@ -6,7 +6,8 @@
   },
   "full": {
     "label": "epic",
-    "checks": ["typecheck", "test"]
+    "checks": ["typecheck", "test"],
+    "control": "omni positive control:"
   },
   "bundle": { "size": 8, "max": 16, "waitMinutes": 45, "onBaseMoved": "merge-if-disjoint" },
   "budget": { "jobs": 20 },

@@ -27,7 +27,12 @@ export interface Deps {
 export type Contract = {
   readonly base: string
   readonly scoped: { readonly tests: string | null; readonly workflows: ReadonlyArray<string> }
-  readonly full: { readonly label: string | null; readonly checks: ReadonlyArray<string> }
+  readonly full: {
+    readonly label: string | null
+    readonly checks: ReadonlyArray<string>
+    /** A line every test job prints; a failed job whose log has no failing file and lacks it never ran its tests. */
+    readonly control: string | null
+  }
   readonly bundle: {
     readonly size: number
     readonly max: number
@@ -48,7 +53,13 @@ const File = Schema.Struct({
   scoped: Schema.optional(
     Schema.Struct({ tests: Schema.optional(Schema.NullOr(Schema.String)), workflows: Schema.optional(Schema.Array(Schema.String)) }),
   ),
-  full: Schema.optional(Schema.Struct({ label: Schema.optional(Schema.NullOr(Schema.String)), checks: Schema.optional(Schema.Array(Schema.String)) })),
+  full: Schema.optional(
+    Schema.Struct({
+      label: Schema.optional(Schema.NullOr(Schema.String)),
+      checks: Schema.optional(Schema.Array(Schema.String)),
+      control: Schema.optional(Schema.NullOr(Schema.String)),
+    }),
+  ),
   bundle: Schema.optional(
     Schema.Struct({
       size: Schema.optional(Positive),
@@ -107,7 +118,7 @@ export function make(deps: Deps) {
     return {
       base: file.base ?? base,
       scoped: { tests: file.scoped?.tests ?? null, workflows: file.scoped?.workflows ?? [] },
-      full: { label: file.full?.label ?? null, checks: file.full?.checks ?? [] },
+      full: { label: file.full?.label ?? null, checks: file.full?.checks ?? [], control: file.full?.control ?? null },
       bundle: {
         size: file.bundle?.size ?? 4,
         max: file.bundle?.max ?? 16,
@@ -129,7 +140,7 @@ export function make(deps: Deps) {
     return {
       base,
       scoped: { tests: null, workflows: [] },
-      full: { label: null, checks: [] },
+      full: { label: null, checks: [], control: null },
       bundle: { size: required ? 4 : 1, max: 16, waitMinutes: 45, onBaseMoved: "retest" },
       budget: { jobs: null },
       snapshots: { remote: "origin" },
@@ -368,9 +379,10 @@ function command(template: string, input: Board.CiRunInput, ref: string) {
   )
 }
 
-// Bun prints each test file as a header line and `(fail)` under it; test:ci prints a failed job as `=== name: failure ===`.
-function failing(output: string) {
-  const files = output
+// Bun prints each test file as a header line and `(fail)` under it; tsc and tsgo print each type error with its file path;
+// test:ci prints a failed job as `=== name: failure ===`.
+export function failing(output: string) {
+  const bun = output
     .split("\n")
     .reduce(
       (acc, line) => {
@@ -381,7 +393,9 @@ function failing(output: string) {
       },
       { file: undefined as string | undefined, found: new Set<string>() },
     ).found
-  if (files.size > 0) return [...files]
+  const types = output.split("\n").flatMap((line) => line.trim().match(/^(\S+\.[cm]?tsx?)(?:\(\d+,\d+\)|:\d+:\d+)(?::| -) error TS\d+/)?.[1] ?? [])
+  const files = [...new Set([...bun, ...types])]
+  if (files.length > 0) return files
   return [...output.matchAll(/^=== (.+): failure ===$/gm)].map((match) => match[1] ?? "").filter(Boolean)
 }
 

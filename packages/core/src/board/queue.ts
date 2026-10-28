@@ -33,7 +33,7 @@ import type { Changed, IssueRow, ProjectRow, Tx } from "./shared"
 // into or out of the `queue` stage: `board_queue` enqueues a verified Review card, and the tick cuts one bundle per
 // project, waits for its full gate, and pushes base to the tested head. A red bundle is halved until one card fails
 // alone and is ejected into a new attempt; infrastructure failures rerun once and then pause the queue; the size follows
-// the red rate; flake probes and scoped F runs are a later package.
+// the red rate; the failed jobs' logs give the failing files; flake probes and scoped F runs are a later package.
 
 export interface Deps {
   readonly quiet: <A>(work: (tx: Tx) => Effect.Effect<A, unknown>) => Effect.Effect<A>
@@ -57,6 +57,8 @@ const Rollup = Schema.Struct({
       status: Schema.optional(Schema.String),
       conclusion: Schema.optional(Schema.NullOr(Schema.String)),
       state: Schema.optional(Schema.String),
+      workflowName: Schema.optional(Schema.String),
+      detailsUrl: Schema.optional(Schema.String),
     }),
   ),
 })
@@ -394,6 +396,26 @@ export function make(deps: Deps) {
   })
 
   /**
+   * Section 6.3: the failing set F from the failed jobs' logs, and whether the red is infrastructure. A job counts as
+   * infrastructure when it was cancelled, timed out or never started, or when its log has no failing file and lacks the
+   * contract's control line; a job whose log cannot be read counts as code.
+   */
+  const failures = Effect.fnUntraced(function* (repo: string, rollup: typeof Rollup.Type["statusCheckRollup"], contract: BoardCi.Contract) {
+    const failed = gating(rollup, contract).filter((check) => check.done && FAILED.has(check.result))
+    const read = yield* Effect.forEach(failed, (check) =>
+      Effect.gen(function* () {
+        if (INFRA.has(check.result)) return { files: [] as string[], infra: true }
+        const job = check.url.match(/\/job\/(\d+)/)?.[1]
+        const log = job ? yield* deps.gh(["api", `repos/${repo}/actions/jobs/${job}/logs`]) : undefined
+        const text = log?.exitCode === 0 ? log.stdout.replace(/^\S+Z /gm, "") : ""
+        const files = text ? BoardCi.failing(text) : []
+        return { files, infra: contract.full.control !== null && text !== "" && files.length === 0 && !text.includes(contract.full.control) }
+      }),
+    )
+    return { files: [...new Set(read.flatMap((item) => item.files))], infra: read.length > 0 && read.every((item) => item.infra) }
+  })
+
+  /**
    * Whether base was green or red at `sha`: a base probe on that commit decides first, then the commit's own checks.
    * A base reached by an outside merge often has no runs; that is unknown, never green.
    */
@@ -476,8 +498,9 @@ export function make(deps: Deps) {
     if (members.length === 0)
       return yield* close(row, repo, bundle, `probed ${contract.base} at ${bundle.base_sha.slice(0, 10)}`, verdict === "green" ? "probe-green" : "base-red")
     if (verdict === "red") {
-      const infraRed = infra(rollup.statusCheckRollup, contract)
-      const previous = infraRed
+      const found = yield* failures(repo, rollup.statusCheckRollup, contract)
+      const cause = found.files.length > 0 ? ` Failing: ${found.files.join(", ")}.` : ""
+      const previous = found.infra
         ? yield* deps.quiet((tx) =>
             tx
               .select({ status: BoardBundleTable.status })
@@ -487,7 +510,7 @@ export function make(deps: Deps) {
               .get(),
           )
         : undefined
-      if (infraRed && previous?.status === "infra") {
+      if (found.infra && previous?.status === "infra") {
         yield* Effect.forEach(
           members,
           (item) => note(row, item.issue, `Bundle ${row.key}-B${bundle.n} failed on infrastructure twice; the ${row.key} queue is paused until Maestro retries it, and this card stays queued.`),
@@ -496,7 +519,7 @@ export function make(deps: Deps) {
         yield* Effect.logWarning(`integration: ${row.key} queue paused, bundle ${row.key}-B${bundle.n} failed on infrastructure twice`)
         return yield* close(row, repo, bundle, "failed on infrastructure twice; the queue is paused", "paused")
       }
-      if (infraRed) {
+      if (found.infra) {
         yield* Effect.forEach(
           members,
           (item) => note(row, item.issue, `Bundle ${row.key}-B${bundle.n} failed on infrastructure, not code; the queue reruns it once and this card stays queued.`),
@@ -533,7 +556,7 @@ export function make(deps: Deps) {
       if (members.length > 1) {
         yield* Effect.forEach(
           members,
-          (item) => note(row, item.issue, `Bundle ${row.key}-B${bundle.n} went red on its full gate; the queue splits it to find the cause and this card stays queued.`),
+          (item) => note(row, item.issue, `Bundle ${row.key}-B${bundle.n} went red on its full gate; the queue splits it to find the cause and this card stays queued.${cause}`),
           { discard: true },
         )
         // Flush keeps the surviving half due next tick, even after its first half merges and the rest is below full size.
@@ -545,7 +568,7 @@ export function make(deps: Deps) {
       const back = yield* deps.quiet((tx) =>
         Effect.forEach(members, (item) =>
           Effect.gen(function* () {
-            yield* insertNote(tx, row, item.issue, `Bundle ${row.key}-B${bundle.n} went red with only this card on ${contract.base} at ${sha10}; it is back in Review.`)
+            yield* insertNote(tx, row, item.issue, `Bundle ${row.key}-B${bundle.n} went red with only this card on ${contract.base} at ${sha10}; it is back in Review.${cause}`)
             yield* tx
               .update(BoardAttemptTable)
               .set({ outcome: "ejected" })
@@ -863,11 +886,11 @@ export function incomplete(record: Board.PrRecord | null) {
   ]
 }
 
-/** `full.checks` names the checks that gate the bundle; with none named, every reported check must pass. */
+/** `full.checks` names the checks that gate the bundle, matched by check or by the workflow that ran it; with none named, every reported check must pass. */
 function judge(rollup: typeof Rollup.Type["statusCheckRollup"], contract: BoardCi.Contract) {
   const gates = gating(rollup, contract)
   if (gates.some((check) => check.done && FAILED.has(check.result))) return "red"
-  if (contract.full.checks.some((name) => !gates.some((check) => check.name === name))) return "pending"
+  if (contract.full.checks.some((name) => !gates.some((check) => check.name === name || check.workflow === name))) return "pending"
   if (gates.length === 0) return contract.source === "no-ci" ? "green" : "pending"
   return gates.every((check) => check.done && PASSED.has(check.result)) ? "green" : "pending"
 }
@@ -877,14 +900,12 @@ function gating(rollup: typeof Rollup.Type["statusCheckRollup"], contract: Board
     name: item.name ?? item.context ?? "",
     done: item.state ? item.state !== "PENDING" && item.state !== "EXPECTED" : item.status === "COMPLETED",
     result: item.conclusion ?? item.state ?? "",
+    workflow: item.workflowName ?? "",
+    url: item.detailsUrl ?? "",
   }))
-  return contract.full.checks.length > 0 ? checks.filter((check) => contract.full.checks.includes(check.name)) : checks
-}
-
-/** Section 6.3 step 1: a red made only of cancelled, timed-out or never-started jobs is infrastructure, not code. */
-function infra(rollup: typeof Rollup.Type["statusCheckRollup"], contract: BoardCi.Contract) {
-  const failed = gating(rollup, contract).filter((check) => check.done && FAILED.has(check.result))
-  return failed.length > 0 && failed.every((check) => INFRA.has(check.result))
+  return contract.full.checks.length > 0
+    ? checks.filter((check) => contract.full.checks.includes(check.name) || contract.full.checks.includes(check.workflow))
+    : checks
 }
 
 /** Section 6.3: once 50 bundled cards have settled, the size is the largest n with (1 - p)^n >= 0.75, p the share ejected. */

@@ -14,6 +14,7 @@ import {
   BoardBundleTable,
   BoardCheckTable,
   BoardIssueTable,
+  BoardNoteTable,
   BoardProjectTable,
   BoardQueueTable,
 } from "@orchestra/core/board/sql"
@@ -43,6 +44,8 @@ type Remote = {
   seeded: ReadonlyArray<string>
   /** Branches whose full gate comes back CANCELLED (infrastructure, not code). */
   cancelled: ReadonlyArray<string>
+  /** The job log every failed job returns. */
+  log: string
   baseRuns: string
   calls: Array<ReadonlyArray<string>>
 }
@@ -73,10 +76,19 @@ const gh = (args: ReadonlyArray<string>, stdin?: string) =>
       const cancelled = remote.cancelled.includes(remote.pulls.get(Number(args[2])) ?? "")
       const conclusion = seededRed ? "FAILURE" : cancelled ? "CANCELLED" : remote.conclusion
       const done = conclusion !== ""
-      const rollup = [{ name: "test", status: done ? "COMPLETED" : "IN_PROGRESS", conclusion: done ? conclusion : null }]
+      const rollup = [
+        {
+          name: "unit (linux)",
+          status: done ? "COMPLETED" : "IN_PROGRESS",
+          conclusion: done ? conclusion : null,
+          workflowName: "test",
+          detailsUrl: `https://github.com/${repo}/actions/runs/1/job/${args[2]}`,
+        },
+      ]
       return { exitCode: 0, stdout: JSON.stringify({ headRefOid, statusCheckRollup: rollup }), stderr: "" }
     }
     if (args[0] === "pr" && args[1] === "edit") remote.bodies.set(Number(args[2]), stdin ?? "")
+    if (args[0] === "api" && /\/actions\/jobs\/\d+\/logs$/.test(args[1] ?? "")) return { exitCode: 0, stdout: remote.log, stderr: "" }
     if (args[0] === "api") return { exitCode: 1, stdout: "", stderr: "not found" }
     return { exitCode: 0, stdout: "", stderr: "" }
   })
@@ -251,6 +263,22 @@ describe("BoardQueue", () => {
     }),
   )
 
+  it.live("a red bundle names its failing files in the card's notes", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QFF", 1)
+      yield* card(repo, "QFF", 1, "a.txt")
+      yield* board.queue({ project: "QFF", number: 1, reason: "Verified." })
+      repo.remote.conclusion = "SUCCESS"
+      repo.remote.seeded = ["card-1"]
+      repo.remote.log = "2026-10-28T12:00:00.0000000Z test/a.test.ts:\n2026-10-28T12:00:00.0000000Z (fail) a > b [1.00ms]\n2026-10-28T12:00:00.0000000Z src/b.ts(3,5): error TS2322: x\n"
+
+      yield* Effect.forEach(Array.from({ length: 12 }), () => board.queueTick(), { discard: true })
+      expect(yield* stage(repo, 1)).toBe("review")
+      expect((yield* notes(repo, 1)).some((body) => body.includes("Failing: test/a.test.ts, src/b.ts."))).toBe(true)
+    }),
+  )
+
   it.live("a bundle that is red on its base waits for the base instead of blaming its cards", () =>
     Effect.gen(function* () {
       const board = yield* Board.Service
@@ -401,6 +429,38 @@ describe("BoardQueue", () => {
     }),
   )
 
+  it.live("a failed test job with no failing file and no control line is infrastructure through its workflow name", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QOM", 2, { checks: ["test"], control: "omni positive control:" })
+      yield* card(repo, "QOM", 1, "a.txt")
+      yield* card(repo, "QOM", 2, "b.txt")
+      yield* board.queue({ project: "QOM", number: 1, reason: "Verified." })
+      yield* board.queue({ project: "QOM", number: 2, reason: "Verified." })
+      repo.remote.conclusion = "FAILURE"
+      repo.remote.log = "setup failed\n"
+
+      yield* Effect.forEach(Array.from({ length: 8 }), () => board.queueTick(), { discard: true })
+      expect((yield* bundleStatuses(repo))[0]).toBe("infra")
+    }),
+  )
+
+  it.live("a failed test job that ran its tests is code, not infrastructure", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QOC", 2, { checks: ["test"], control: "omni positive control:" })
+      yield* card(repo, "QOC", 1, "a.txt")
+      yield* card(repo, "QOC", 2, "b.txt")
+      yield* board.queue({ project: "QOC", number: 1, reason: "Verified." })
+      yield* board.queue({ project: "QOC", number: 2, reason: "Verified." })
+      repo.remote.conclusion = "FAILURE"
+      repo.remote.log = "test/a.test.ts:\n(fail) a > b\nomni positive control: pass (x)\n"
+
+      yield* Effect.forEach(Array.from({ length: 8 }), () => board.queueTick(), { discard: true })
+      expect((yield* bundleStatuses(repo))[0]).toBe("red")
+    }),
+  )
+
   it.live("an infrastructure red twice pauses the queue until Maestro retries it", () =>
     Effect.gen(function* () {
       const board = yield* Board.Service
@@ -437,7 +497,7 @@ describe("BoardQueue", () => {
 type Repo = { readonly root: string; readonly directory: string; readonly key: string; readonly remote: Remote }
 
 // A repository on main with a contract that bundles two cards, pushed to a bare origin GitHub knows as acme/<key>.
-function repository(key: string, size = 2) {
+function repository(key: string, size = 2, full?: object) {
   return Effect.gen(function* () {
     const made = yield* Effect.promise(async () => {
       const root = await fs.realpath(await fs.mkdtemp(path.join(tmpdir(), `orchestra-board-queue-${key}-`)))
@@ -446,11 +506,11 @@ function repository(key: string, size = 2) {
       await git(root, "init", "--bare", remote)
       await git(root, "-c", "init.defaultBranch=main", "init", directory)
       await fs.mkdir(path.join(directory, ".orchestra"))
-      await fs.writeFile(path.join(directory, ".orchestra", "ci.json"), JSON.stringify({ bundle: { size, waitMinutes: 600 }, merge: "merge" }))
+      await fs.writeFile(path.join(directory, ".orchestra", "ci.json"), JSON.stringify({ bundle: { size, waitMinutes: 600 }, merge: "merge", full }))
       await commit(directory, "base")
       await git(directory, "remote", "add", "origin", pathToFileURL(remote).href)
       await git(directory, "push", "--quiet", "origin", "main")
-      return { root, directory, key, remote: { origin: remote, pulls: new Map<number, string>(), bodies: new Map<number, string>(), conclusion: "", seeded: [] as ReadonlyArray<string>, cancelled: [] as ReadonlyArray<string>, baseRuns: GREEN_BASE, calls: [] } }
+      return { root, directory, key, remote: { origin: remote, pulls: new Map<number, string>(), bodies: new Map<number, string>(), conclusion: "", seeded: [] as ReadonlyArray<string>, cancelled: [] as ReadonlyArray<string>, log: "", baseRuns: GREEN_BASE, calls: [] } }
     })
     remotes.set(`acme/${key}`, made.remote)
     const database = yield* Database.Service
@@ -521,6 +581,20 @@ function ejections(repo: Repo, number: number) {
       .all()
       .pipe(Effect.orDie)
     return activity.map((item) => item.reason)
+  })
+}
+
+function notes(repo: Repo, number: number) {
+  return Effect.gen(function* () {
+    const found = yield* row(repo, number)
+    const database = yield* Database.Service
+    const rows = yield* database.db
+      .select({ body: BoardNoteTable.body })
+      .from(BoardNoteTable)
+      .where(eq(BoardNoteTable.issue_id, found.issue.id))
+      .all()
+      .pipe(Effect.orDie)
+    return rows.map((item) => item.body)
   })
 }
 
