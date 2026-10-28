@@ -117,7 +117,7 @@ export default function Agents(props: ChapterPageProps) {
       memories: !records
         ? undefined
         : "records" in records
-          ? records.records.length
+          ? records.records?.length
           : records.missing === "empty"
             ? 0
             : undefined,
@@ -294,7 +294,7 @@ export default function Agents(props: ChapterPageProps) {
     <section class="mx-page orchestra-agents" aria-labelledby="agents-title">
       <div class="agents-inner">
         <Show when={selected() && selectedID()} keyed fallback={rosterView()}>
-          {() => (
+          {(_) => (
             <Show when={selected()}>
               {(agent) => (
                 <AgentScreen

@@ -186,6 +186,7 @@ export type AgentInfo = {
   avatar?: string
   steps?: number
   permissions: PermissionV2Ruleset
+  skills?: Agent["skills"]
 }
 export type AgentListInput = {
   readonly location?: {
