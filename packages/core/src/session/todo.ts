@@ -33,27 +33,7 @@ const layer = Layer.effect(
       readonly sessionID: SessionSchema.ID
       readonly todos: ReadonlyArray<Info>
     }) {
-      yield* db
-        .transaction((tx) =>
-          Effect.gen(function* () {
-            yield* tx.delete(TodoTable).where(eq(TodoTable.session_id, input.sessionID)).run()
-            if (input.todos.length === 0) return
-            yield* tx
-              .insert(TodoTable)
-              .values(
-                input.todos.map((todo, position) => ({
-                  session_id: input.sessionID,
-                  content: todo.content,
-                  status: todo.status,
-                  priority: todo.priority,
-                  position,
-                })),
-              )
-              .run()
-          }),
-        )
-        .pipe(Effect.orDie)
-      yield* events.publish(Event.Updated, input)
+      yield* write(db, events, input)
     })
 
     const get = Effect.fn("SessionTodo.get")(function* (sessionID: SessionSchema.ID) {
@@ -74,5 +54,36 @@ const layer = Layer.effect(
     return Service.of({ update, get })
   }),
 )
+
+/** Replaces the Session's todo list and announces it; for a caller that holds the services but not this one. */
+export function write(
+  db: Database.Interface["db"],
+  events: EventV2.Interface,
+  input: { readonly sessionID: SessionSchema.ID; readonly todos: ReadonlyArray<Info> },
+) {
+  return Effect.gen(function* () {
+    yield* db
+      .transaction((tx) =>
+        Effect.gen(function* () {
+          yield* tx.delete(TodoTable).where(eq(TodoTable.session_id, input.sessionID)).run()
+          if (input.todos.length === 0) return
+          yield* tx
+            .insert(TodoTable)
+            .values(
+              input.todos.map((todo, position) => ({
+                session_id: input.sessionID,
+                content: todo.content,
+                status: todo.status,
+                priority: todo.priority,
+                position,
+              })),
+            )
+            .run()
+        }),
+      )
+      .pipe(Effect.orDie)
+    yield* events.publish(Event.Updated, input)
+  })
+}
 
 export const node = makeLocationNode({ service: Service, layer, deps: [EventV2.node, Database.node] })

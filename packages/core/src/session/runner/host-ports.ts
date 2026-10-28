@@ -19,11 +19,12 @@ import { SessionMessage } from "../message"
 import { Prompt } from "../prompt"
 import { SessionSchema } from "../schema"
 import { SessionStore } from "../store"
+import { SessionTodo } from "../todo"
 import type { SessionExecution } from "../execution"
 import type { ExecutionHost } from "./execution-host"
 import { createLLMEventPublisher } from "./publish-llm-event"
 
-/** `Turn.child` and `Turn.notify` for one hosted turn of `session`; the parent's publisher names the task call's assistant message. */
+/** `Turn.child`, `Turn.notify` and `Turn.todos` for one hosted turn of `session`; the parent's publisher names the task call's assistant message. */
 export function make(input: {
   readonly events: EventV2.Interface
   readonly store: SessionStore.Interface
@@ -134,5 +135,6 @@ export function make(input: {
         ),
       }
     })
-  return { child, notify }
+  const todos: ExecutionHost.Turn["todos"] = (list) => SessionTodo.write(database.db, events, { sessionID: session.id, todos: list })
+  return { child, notify, todos }
 }
