@@ -64,6 +64,8 @@ type Props = EditorProps & {
   run: RelayRun | undefined
   runs: RelayRun[]
   skills: Skills
+  // The MCP servers the project configures, for a step to choose from; undefined until loaded.
+  servers: string[] | undefined
   decision: RelayDecision | undefined
   decisionKnown?: boolean
   decisionStatus?: HookQueryState
@@ -692,6 +694,7 @@ export function CanvasTab(props: Props) {
               readOnly={props.readOnly}
               issues={props.issues.map((issue) => issueText(copy, props.flow, issue))}
               skills={props.skills}
+              servers={props.servers}
               directory={props.directory}
               focusPhase={focusPhase()}
               description={props.description}
@@ -756,6 +759,7 @@ export function CanvasTab(props: Props) {
             readOnly={editing()}
             issues={props.issues}
             skills={props.skills}
+            servers={props.servers}
             directory={props.directory}
             types={types()}
             description={props.description}

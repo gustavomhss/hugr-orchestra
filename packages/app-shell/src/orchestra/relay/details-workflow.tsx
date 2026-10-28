@@ -23,6 +23,7 @@ import {
   phaseChoices,
   phaseOf,
   readChecklist,
+  readTools,
   removeNodes,
   retryBudget,
   setPhase,
@@ -54,6 +55,8 @@ export type Props = {
   frozen: Flow | undefined
   issues: string[]
   skills: Skills
+  // The MCP servers the project configures, for a step to choose from; undefined until loaded.
+  servers: string[] | undefined
   focusPhase?: string
   // The workflow's own description, edited on its Start step.
   description: string
@@ -424,6 +427,11 @@ export function Params(props: Props) {
       return items.length ? [{ source, items }] : []
     })
   const unchecked = () => ["relay.execute", "relay.review"].includes(props.node.type) && !checklist().controls.length
+  const tools = () => readTools(props.node)
+  // A server the step lists stays shown even when the project no longer configures it, so it can be cleared.
+  const serverChoices = () => [...new Set([...(props.servers ?? []), ...(tools().mcp ?? [])])].toSorted()
+  const setTools = (next: { mcp?: string[]; bash?: string[] }) =>
+    update({ tools: JSON.stringify(Object.fromEntries(Object.entries(next).filter((entry) => entry[1]))) })
   const picker = useProjectFile(() => props.directory)
   const previous = () => {
     const order = chain(props.flow)
@@ -630,6 +638,132 @@ export function Params(props: Props) {
                 </div>
               </div>
             </Show>
+          </div>
+        </Show>
+        <Show when={["relay.execute", "relay.review"].includes(props.node.type)}>
+          <div class="mx-fields">
+            <div class="mx-field">
+              <span>{copy.t("orchestra.workflows.details.mcp")}</span>
+              <div class="wf-seg" role="group" aria-label={copy.t("orchestra.workflows.details.mcp")}>
+                <button
+                  type="button"
+                  aria-pressed={!tools().mcp}
+                  onClick={() => setTools({ ...tools(), mcp: undefined })}
+                >
+                  {copy.t("orchestra.workflows.details.mcpAgent")}
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={!!tools().mcp}
+                  onClick={() => setTools({ ...tools(), mcp: tools().mcp ?? [] })}
+                >
+                  {copy.t("orchestra.workflows.details.toolsOnly")}
+                </button>
+              </div>
+              <Show
+                when={tools().mcp}
+                fallback={<span class="mx-hint">{copy.t("orchestra.workflows.details.mcpAgentHint")}</span>}
+              >
+                {(listed) => (
+                  <>
+                    <div class="wf-tools">
+                      <For each={serverChoices()}>
+                        {(server) => (
+                          <label>
+                            <button
+                              type="button"
+                              class="mx-toggle"
+                              role="switch"
+                              aria-checked={listed().includes(server)}
+                              aria-label={server}
+                              onClick={() =>
+                                setTools({
+                                  ...tools(),
+                                  mcp: listed().includes(server)
+                                    ? listed().filter((item) => item !== server)
+                                    : [...listed(), server].toSorted(),
+                                })
+                              }
+                            />
+                            <code>{server}</code>
+                            <Show when={props.servers && !props.servers.includes(server)}>
+                              <span class="mx-meta" style={{ color: "var(--mx-bad)" }}>
+                                {copy.t("orchestra.workflows.details.mcpMissing")}
+                              </span>
+                            </Show>
+                          </label>
+                        )}
+                      </For>
+                    </div>
+                    <Show when={!props.servers}>
+                      <span class="mx-hint" role="status">
+                        {copy.t("orchestra.workflows.details.mcpLoading")}
+                      </span>
+                    </Show>
+                    <span class="mx-hint">
+                      {copy.t(
+                        props.servers && !serverChoices().length
+                          ? "orchestra.workflows.details.mcpNone"
+                          : listed().length
+                            ? "orchestra.workflows.details.mcpOnlyHint"
+                            : "orchestra.workflows.details.mcpEmptyHint",
+                      )}
+                    </span>
+                  </>
+                )}
+              </Show>
+            </div>
+            <div class="mx-field">
+              <span>{copy.t("orchestra.workflows.details.bash")}</span>
+              <div class="wf-seg" role="group" aria-label={copy.t("orchestra.workflows.details.bash")}>
+                <button
+                  type="button"
+                  aria-pressed={!tools().bash}
+                  onClick={() => setTools({ ...tools(), bash: undefined })}
+                >
+                  {copy.t("orchestra.workflows.details.bashAgent")}
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={!!tools().bash}
+                  onClick={() => setTools({ ...tools(), bash: tools().bash ?? [] })}
+                >
+                  {copy.t("orchestra.workflows.details.toolsOnly")}
+                </button>
+              </div>
+              <Show
+                when={tools().bash}
+                fallback={<span class="mx-hint">{copy.t("orchestra.workflows.details.bashAgentHint")}</span>}
+              >
+                {(listed) => (
+                  <>
+                    <textarea
+                      spellcheck={false}
+                      style={{ "min-block-size": "84px" }}
+                      aria-label={copy.t("orchestra.workflows.details.bash")}
+                      placeholder={copy.t("orchestra.workflows.details.bashPlaceholder")}
+                      value={listed().join("\n")}
+                      onChange={(event) =>
+                        setTools({
+                          ...tools(),
+                          bash: event.currentTarget.value
+                            .split("\n")
+                            .map((line) => line.trim())
+                            .filter(Boolean),
+                        })
+                      }
+                    />
+                    <span class="mx-hint">
+                      {copy.t(
+                        listed().length
+                          ? "orchestra.workflows.details.bashOnlyHint"
+                          : "orchestra.workflows.details.bashEmptyHint",
+                      )}
+                    </span>
+                  </>
+                )}
+              </Show>
+            </div>
           </div>
         </Show>
         <div class="wf-field-row">

@@ -330,6 +330,40 @@ describe("W7-5: a control with no check is refused", () => {
   })
 })
 
+describe("W7-7: a step names its tools", () => {
+  const compiled = (tools: unknown) =>
+    settle(
+      AuthoringGraph.compile({
+        name: "Plan",
+        nodes: [{ id: "wp1", name: "A", type: "relay.execute", position: [0, 0], parameters: { tools } }],
+      }),
+    )
+
+  test("MCP servers and bash patterns compile onto the WP and project back", () => {
+    const result = compiled(JSON.stringify({ mcp: ["github"], bash: ["git status", "bun test *"] }))
+    const sprint = (result as { output: { sprint: RelaySprint.Sprint } }).output.sprint
+    expect(sprint.work_packages[0]!.tools).toEqual({ mcp: ["github"], bash: ["git status", "bun test *"] })
+    const projected = Effect.runSync(AuthoringGraph.project("Plan", sprint))
+    expect(JSON.parse(projected.nodes![0]!.parameters!.tools as string)).toEqual({
+      mcp: ["github"],
+      bash: ["git status", "bun test *"],
+    })
+  })
+
+  test("an empty list allows none and an empty object removes the field", () => {
+    const none = compiled(JSON.stringify({ mcp: [] })) as { output: { sprint: RelaySprint.Sprint } }
+    expect(none.output.sprint.work_packages[0]!.tools).toEqual({ mcp: [] })
+    const unchanged = compiled("{}") as { output: { sprint: RelaySprint.Sprint } }
+    expect(unchanged.output.sprint.work_packages[0]).not.toHaveProperty("tools")
+  })
+
+  test("anything else is refused", () => {
+    expect(compiled("[]")).toHaveProperty("refusal")
+    expect(compiled(JSON.stringify({ mcp: "github" }))).toHaveProperty("refusal")
+    expect(compiled(JSON.stringify({ bash: [" "] }))).toHaveProperty("refusal")
+  })
+})
+
 describe("W7-4: lint names a WP by text", () => {
   test("a WP ID that is not text is reported by its Python str()", () => {
     const findings = AuthoringLint.lint({ work_packages: [{ id: 5, checklist: [] }, { checklist: [] }] })

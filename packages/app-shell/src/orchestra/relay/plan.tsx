@@ -39,6 +39,8 @@ type Props = {
   readOnly?: boolean
   issues: Issue[]
   skills: Skills
+  // The MCP servers the project configures, for a step to choose from; undefined until loaded.
+  servers: string[] | undefined
   directory?: string
   types: RelayNodeType[] | undefined
   description: string
@@ -399,6 +401,7 @@ export function PlanView(props: Props) {
       readOnly={props.readOnly}
       issues={props.issues.map((issue) => issueText(copy, props.flow, issue))}
       skills={props.skills}
+      servers={props.servers}
       directory={props.directory}
       description={props.description}
       save={props.save}

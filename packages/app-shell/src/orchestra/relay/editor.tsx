@@ -187,6 +187,22 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
     }),
     props.source.queryClient,
   )
+  // The MCP servers the project configures, for a step that limits its agent to some of them.
+  const servers = useQuery(
+    () => ({
+      queryKey: props.source.key("mcp"),
+      queryFn:
+        kind === "workflow"
+          ? () =>
+              serverSDK()
+                .currentApi.mcp.list({ location: { directory: props.directory } })
+                .then((result) => result.data.map((server) => server.name).toSorted())
+          : skipToken,
+      retry: false,
+      staleTime: 60_000,
+    }),
+    props.source.queryClient,
+  )
   const found = createMemo(() =>
     issues(
       flow(),
@@ -720,6 +736,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
                     error: skills.isError,
                     retry: () => void skills.refetch(),
                   }}
+                  servers={servers.isSuccess ? servers.data : undefined}
                   decision={decisions.isSuccess ? decisions.data.toSorted((a, b) => b.seq - a.seq)[0] : undefined}
                   decisionKnown={props.source.installs.isSuccess && (!installed() || decisions.isSuccess)}
                   decisionStatus={

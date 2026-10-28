@@ -6135,6 +6135,7 @@ export type RelayDocumentsListOutput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -6214,6 +6215,7 @@ export type RelayDocumentsListOutput = {
               readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
               readonly file?: string
               readonly text?: string
+              readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
             }>
           }
           readonly names?: { readonly [x: string]: string }
@@ -6298,6 +6300,7 @@ export type RelayDocumentsCreateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -6368,6 +6371,7 @@ export type RelayDocumentsCreateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -6438,6 +6442,7 @@ export type RelayDocumentsCreateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -6508,6 +6513,7 @@ export type RelayDocumentsCreateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -6578,6 +6584,7 @@ export type RelayDocumentsCreateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -6648,6 +6655,7 @@ export type RelayDocumentsCreateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -6718,6 +6726,7 @@ export type RelayDocumentsCreateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -6788,6 +6797,7 @@ export type RelayDocumentsCreateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -6876,6 +6886,7 @@ export type RelayDocumentsCreateOutput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -6955,6 +6966,7 @@ export type RelayDocumentsCreateOutput = {
               readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
               readonly file?: string
               readonly text?: string
+              readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
             }>
           }
           readonly names?: { readonly [x: string]: string }
@@ -7058,6 +7070,7 @@ export type RelayDocumentsGetOutput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -7137,6 +7150,7 @@ export type RelayDocumentsGetOutput = {
               readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
               readonly file?: string
               readonly text?: string
+              readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
             }>
           }
           readonly names?: { readonly [x: string]: string }
@@ -7222,6 +7236,7 @@ export type RelayDocumentsUpdateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -7295,6 +7310,7 @@ export type RelayDocumentsUpdateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -7368,6 +7384,7 @@ export type RelayDocumentsUpdateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -7441,6 +7458,7 @@ export type RelayDocumentsUpdateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -7514,6 +7532,7 @@ export type RelayDocumentsUpdateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -7587,6 +7606,7 @@ export type RelayDocumentsUpdateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -7660,6 +7680,7 @@ export type RelayDocumentsUpdateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -7733,6 +7754,7 @@ export type RelayDocumentsUpdateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -7806,6 +7828,7 @@ export type RelayDocumentsUpdateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -7879,6 +7902,7 @@ export type RelayDocumentsUpdateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -7952,6 +7976,7 @@ export type RelayDocumentsUpdateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -8043,6 +8068,7 @@ export type RelayDocumentsUpdateOutput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -8122,6 +8148,7 @@ export type RelayDocumentsUpdateOutput = {
               readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
               readonly file?: string
               readonly text?: string
+              readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
             }>
           }
           readonly names?: { readonly [x: string]: string }
@@ -8228,6 +8255,7 @@ export type RelayDocumentsVersionsOutput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -8322,6 +8350,7 @@ export type RelayDocumentsVersionOutput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -8381,6 +8410,7 @@ export type RelayDocumentsSprintOutput = {
         readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
         readonly file?: string
         readonly text?: string
+        readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
       }>
     }
     readonly skillBindings: ReadonlyArray<{
@@ -8533,6 +8563,7 @@ export type RelayDocumentsDefinitionOutput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
       }
@@ -8652,6 +8683,7 @@ export type RelayDocumentsPreviewInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -8722,6 +8754,7 @@ export type RelayDocumentsPreviewInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -8792,6 +8825,7 @@ export type RelayDocumentsPreviewInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -8862,6 +8896,7 @@ export type RelayDocumentsPreviewInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -8932,6 +8967,7 @@ export type RelayDocumentsPreviewInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -9002,6 +9038,7 @@ export type RelayDocumentsPreviewInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -9072,6 +9109,7 @@ export type RelayDocumentsPreviewInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -9142,6 +9180,7 @@ export type RelayDocumentsPreviewInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -9190,6 +9229,7 @@ export type RelayDocumentsPreviewOutput = {
         readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
         readonly file?: string
         readonly text?: string
+        readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
       }>
     } | null
     readonly refusal: { readonly code: string; readonly message: string } | null
@@ -9468,6 +9508,7 @@ export type RelayPublishPublishOutput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -9547,6 +9588,7 @@ export type RelayPublishPublishOutput = {
               readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
               readonly file?: string
               readonly text?: string
+              readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
             }>
           }
           readonly names?: { readonly [x: string]: string }
@@ -9651,6 +9693,7 @@ export type RelayPublishUnpublishOutput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -9730,6 +9773,7 @@ export type RelayPublishUnpublishOutput = {
               readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
               readonly file?: string
               readonly text?: string
+              readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
             }>
           }
           readonly names?: { readonly [x: string]: string }

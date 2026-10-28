@@ -2108,6 +2108,19 @@ html[data-color-scheme="light"] .wf-editor {
 .wf-ndv .mx-field textarea.prose {
   font: var(--orchestra-font-size-sm)/1.6 var(--mx-sans);
 }
+/* A step's MCP servers, one switch each. */
+.wf-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.wf-tools label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--orchestra-font-size-sm);
+  color: var(--mx-strong);
+}
 /* Without run data the parameters stand alone, in a dialog sized for one column. */
 .wf-ndv.single {
   inline-size: min(760px, 100%);

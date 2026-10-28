@@ -18,6 +18,7 @@ import {
   listedSteps,
   phaseChoices,
   readChecklist,
+  readTools,
   RECORDED,
   removeNodes,
   setPhase,
@@ -360,6 +361,15 @@ describe("issues", () => {
         parameters: { checklist: [{ id: "a", cmd: "true" }] },
       }).controls,
     ).toHaveLength(1)
+  })
+
+  test("a step's tools read each family on its own", () => {
+    const step = (tools: unknown) => ({ id: "x", name: "x", type: "relay.execute", x: 0, y: 0, parameters: { tools } })
+    expect(readTools(step('{"mcp":["github"],"bash":[]}'))).toEqual({ mcp: ["github"], bash: [] })
+    expect(readTools(step({ mcp: "github", bash: ["git *"] }))).toEqual({ mcp: undefined, bash: ["git *"] })
+    expect(readTools(step("{oops"))).toEqual({})
+    expect(readTools(step("[]"))).toEqual({})
+    expect(readTools(step(undefined))).toEqual({})
   })
 })
 

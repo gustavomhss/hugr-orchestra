@@ -434,6 +434,35 @@ export function Inspector(props: {
                         </pre>
                       </section>
                     </Show>
+                    <Show when={item().tools}>
+                      {(tools) => (
+                        <section class="wf-recv">
+                          <h4>{copy.t("orchestra.workflows.studio.tools")}</h4>
+                          <ul>
+                            <Show when={tools().mcp}>
+                              {(mcp) => (
+                                <li>
+                                  {copy.t("orchestra.workflows.details.mcp")}:{" "}
+                                  <Show when={mcp().length} fallback={copy.t("orchestra.workflows.studio.toolsNone")}>
+                                    <code>{mcp().join(", ")}</code>
+                                  </Show>
+                                </li>
+                              )}
+                            </Show>
+                            <Show when={tools().bash}>
+                              {(bash) => (
+                                <li>
+                                  {copy.t("orchestra.workflows.details.bash")}:{" "}
+                                  <Show when={bash().length} fallback={copy.t("orchestra.workflows.studio.toolsNone")}>
+                                    <code>{bash().join(", ")}</code>
+                                  </Show>
+                                </li>
+                              )}
+                            </Show>
+                          </ul>
+                        </section>
+                      )}
+                    </Show>
                     <Show when={item().self_check?.length}>
                       <section class="wf-recv">
                         <h4>{copy.t("orchestra.workflows.studio.selfCheck")}</h4>

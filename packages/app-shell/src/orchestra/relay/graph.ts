@@ -197,6 +197,24 @@ export function readChecklist(node: FlowNode): { controls: Control[]; invalid: b
   return { controls, invalid: controls.length !== parsed.length }
 }
 
+// The MCP servers and bash patterns a step limits its agent to. Anything but a list of names leaves that family as the
+// agent has it; the compiler names a malformed value.
+export function readTools(node: FlowNode): { mcp?: string[]; bash?: string[] } {
+  const value = node.parameters.tools
+  const parsed: unknown = (() => {
+    if (typeof value !== "string") return value
+    try {
+      return JSON.parse(value)
+    } catch {
+      return undefined
+    }
+  })()
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return {}
+  const list = (item: unknown) =>
+    Array.isArray(item) && item.every((name): name is string => typeof name === "string") ? item : undefined
+  return { mcp: list(Reflect.get(parsed, "mcp")), bash: list(Reflect.get(parsed, "bash")) }
+}
+
 // Stored as a JSON string, the way the authoring service projects sprints.
 export const writeChecklist = (controls: Control[]) => JSON.stringify(controls, null, 2)
 
