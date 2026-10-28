@@ -11,6 +11,7 @@ import { pathKey } from "@/utils/path-key"
 import {
   appDockController,
   appDockProfile,
+  isLinux,
   sameTab,
   type AppDockAPI,
   type Bookmark,
@@ -145,6 +146,10 @@ export function AppsPanel(
     const windows = setInterval(() => {
       if (activeLinux() && !linuxMenu.store.busy) void dock.refreshWindows()
     }, 2000)
+    // Apps installed inside the workspace (a terminal, a package manager) reach the list without a Dock event too.
+    const apps = setInterval(() => {
+      if (activeLinux() && !linuxMenu.store.busy) void linuxMenu.refresh(true)
+    }, 10_000)
     const unsubscribeFind = api?.appDockFindResult?.((result) => {
       if (!activeLinux() && sameTab(result, state.active) && result.requestID === findRequestID)
         setView("findResult", result)
@@ -192,6 +197,7 @@ export function AppsPanel(
     window.addEventListener("focusin", onFocusIn)
     onCleanup(() => {
       clearInterval(windows)
+      clearInterval(apps)
       if (view.findOpen) closeFind()
       observer.disconnect()
       window.removeEventListener("resize", resize.request)
@@ -601,7 +607,7 @@ export function AppsPanel(
               rtl={view.menu.rtl}
               setElement={(element) => (menuElement = element)}
               onDismiss={() => closeMenu()}
-              canDuplicate={capability("appDockOpen") && !view.menu.tab.crashed}
+              canDuplicate={capability("appDockOpen") && !view.menu.tab.crashed && !isLinux(view.menu.tab.url)}
               canReload={capability("appDockCommand") && !view.menu.tab.crashed}
               canClose={capability("appDockCloseTab")}
               hasOthers={state.tabs.length > 1}

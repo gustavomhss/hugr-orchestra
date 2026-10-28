@@ -127,7 +127,9 @@ export function create(options: { context: string }): Backend {
       return proveWorkspace(found, metadata, () => volume(metadata))
     },
     ensureImage: async (metadata, custom) => {
-      const image = custom ?? `orchestra-linux-${metadata.owner}:xpra-6.5.4-html5-21`
+      // The tag names the baseline; change it with the Dockerfile so a new workspace builds the new image. An existing
+      // container keeps its own image and writable layer.
+      const image = custom ?? `orchestra-linux-${metadata.owner}:xpra-6.5.4-html5-21-r2`
       const existing = await inspect<{ Os: string; Config: { Labels: Record<string, string> | null } }>(
         metadata,
         "image",

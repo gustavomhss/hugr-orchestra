@@ -36,6 +36,8 @@ User guide: `docs/guides/mcp-dock-servers.md`.
 
 - `modules/app-dock/src/dock-mcp.test.ts` covers names, look/find/act on a browser tab, and the Linux outline, over a
   fake dock port and a real SDK `Client`.
+- Linux field text (an editor's content) is read only by `find` with a query and by a scoped `look`: a second read
+  with `maxText`, never for password fields (role 40). A plain `look` stays one structural read; the test pins that.
 - `packages/core/test/mcp-provided.test.ts` checks that provided servers join and leave the tool registry and that a
   new key reconnects.
 - Run them with `bun run test:ci app-dock src/dock-mcp.test.ts` and

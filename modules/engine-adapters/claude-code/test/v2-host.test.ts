@@ -297,7 +297,7 @@ test("Claude Code's approvals become V2 permission checks: allowed runs, a deny 
   ])
   expect(decisions).toEqual([
     { behavior: "allow", updatedInput: { file_path: "/project/src/a.ts" } },
-    { behavior: "deny", message: "Orchestra's permission rules deny this call." },
+    { behavior: "deny", message: "Orchestra's permission rules deny this call. Continue with the tools you are allowed to use, or say what you need." },
   ])
 })
 
@@ -402,7 +402,7 @@ test("the PreToolUse gate settles every call through Orchestra, failing closed, 
   ])
   expect(decisions).toEqual([
     allowed,
-    refused("Orchestra's permission rules deny this call."),
+    refused("Orchestra's permission rules deny this call. Continue with the tools you are allowed to use, or say what you need."),
     refused("Orchestra could not check this call, so it is refused."),
     // A seat runs as an Orchestra Session through `task`, never as a Claude Code subagent.
     refused("Dispatch a seat with `mcp__orchestra__task`: Orchestra runs it as its own Session."),

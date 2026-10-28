@@ -4,6 +4,7 @@ import type { NativeWorkspacePlacement } from "./app-dock-api"
 import { AppDockNative } from "./app-dock-native"
 import { NativeDockProtocol } from "./app-dock-native-protocol"
 import type { SnapshotFormat, SnapshotMode } from "./app-dock-browser"
+import { dockBoolean, dockEnum, dockNumber, dockRef, dockString, dockStringArrayArg } from "./app-dock-rpc-args"
 
 export type DockRPCReply = (message: unknown) => void
 
@@ -63,39 +64,7 @@ const isDockRPCRequest = (value: unknown): value is DockRPCRequest => {
   return true
 }
 
-const dockString = (value: unknown, name: string) => {
-  if (typeof value !== "string" || value.length === 0) throw new Error(`Invalid MCP Dock ${name}`)
-  return value
-}
-
-const dockStringArrayArg = (args: Record<string, unknown>, name: string, defaultValue: string[] = []) => {
-  const value = args[name]
-  if (Array.isArray(value)) return value
-  if (typeof value === "string" && value.length > 0) return [value]
-  return defaultValue
-}
-
-const dockNumber = (value: unknown, name: string, min: number, max: number) => {
-  if (typeof value !== "number" || !Number.isFinite(value)) throw new Error(`Invalid MCP Dock ${name}`)
-  return Math.max(min, Math.min(max, Math.round(value)))
-}
-
-const dockEnum = (value: unknown, name: string, allowed: string[]) => {
-  if (typeof value !== "string" || !allowed.includes(value)) throw new Error(`Invalid MCP Dock ${name}`)
-  return value
-}
-
-const dockBoolean = (value: unknown, name: string) => {
-  if (typeof value !== "boolean") throw new Error(`Invalid MCP Dock ${name}`)
-  return value
-}
-
 const browserReadShape = ["mode", "format", "actionable", "visible"]
-
-const dockRef = (value: unknown, name: string) => {
-  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 1) throw new Error(`Invalid MCP Dock ${name}`)
-  return value
-}
 
 export class AppDockRPC {
   private readonly native = new AppDockNative.NativeDock()
@@ -519,6 +488,21 @@ export class AppDockRPC {
         // A scoped caller lists only its own world: the browser side never sees the Linux workspace tab.
         if (world === undefined) return tabs
         return tabs.filter((tab) => ("scopeKind" in tab && tab.scopeKind === "workspace") === (world === "linux"))
+      }
+      case "apps": {
+        if (!dock.linuxApps) throw new NativeDockProtocol.NativeError("unsupported-operation", "No Linux workspace runtime")
+        return dock.linuxApps()
+      }
+      case "launch": {
+        if (!dock.linuxLaunch) throw new NativeDockProtocol.NativeError("unsupported-operation", "No Linux workspace runtime")
+        const appID = dockString(args.appID, "appID")
+        if (appID.length > 512 || !appID.endsWith(".desktop") || /[\x00-\x1f/\\]/.test(appID))
+          throw new Error("Invalid MCP Dock appID: pass an id from apps")
+        // The launcher reports only "failed"; say what usually causes it.
+        const window = await dock.linuxLaunch(senderID, appID).catch(() => {
+          throw new NativeDockProtocol.NativeError("launch-failed", `Could not open ${appID}: the Linux workspace must be the visible tab, and the id must come from apps`)
+        })
+        return { launched: appID, window }
       }
       case "activate": {
         const tabID = dockString(args.tabID, "tabID")

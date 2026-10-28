@@ -5,7 +5,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { Effect } from "effect"
 import { McpProvided } from "@orchestra/core/mcp/provided"
 import { DockMcp } from "./dock-mcp"
-import { control, fakePort, field, page, type Envelope, type Reply } from "./app-dock.fixture"
+import { control, fakePort, field, nativeError, page, type Envelope, type Reply } from "./app-dock.fixture"
 
 const tabs = [
   { tabID: "t1", generation: 1, url: "https://www.github.com/orchestra", title: "GitHub", active: true },
@@ -93,12 +93,152 @@ describe("DockMcp", () => {
       return { ok: false, error: { message: `unexpected ${op}` } }
     })
     const client = await connect((await d.servers())[2]!)
-    expect((await client.listTools()).tools.map((tool) => tool.name)).toEqual(["look", "find", "act", "wait"])
+    expect((await client.listTools()).tools.map((tool) => tool.name)).toEqual(["look", "find", "act", "wait", "apps", "launch"])
     const outline = text(await client.callTool({ name: "look", arguments: {} }))
     expect(outline).toStartWith("Linux workspace\n")
     // The editor's unnamed text view stays: it is where typing goes.
     expect(outline).toMatch(/"Save" \[1\]\n.*"Quit" \[2\]\ntext.* \[3\]$/)
     expect(d.calls.find((call) => call.op === "read")?.args).toMatchObject({ world: "linux", budget: 500 })
+    await client.close()
+  })
+
+  test("an editor's unnamed text view takes typing and keys through focus", async () => {
+    const editor = (focused: boolean) => page([
+      control("n:frame", "Untitled 1 - Mousepad", { role: 23, roleName: "frame", states: [1, 8, 30], parentRef: null }),
+      { ...field("n:text", ""), role: 61, roleName: "text", states: focused ? [7, 8, 12, 24, 30] : [7, 8, 24, 30], parentRef: "n:frame" }])
+    const focus = { value: true }
+    const d = dock((op) => {
+      if (op === "list") return { ok: true, value: tabs }
+      if (op === "read") return editor(focus.value)
+      if (op === "type") return { ok: true, value: { method: "keyboard", postcondition: "verified" } }
+      if (op === "keyboard") return { ok: true, value: { method: "keys", dispatch: "acknowledged" } }
+      return { ok: false, error: { message: `unexpected ${op}` } }
+    })
+    const client = await connect((await d.servers())[2]!)
+    await client.callTool({ name: "look", arguments: {} })
+    const typed = await client.callTool({ name: "act", arguments: { ref: 2, do: "type", text: "hello" } })
+    expect(typed.isError).toBe(false)
+    expect(d.calls.find((call) => call.op === "type")?.args).toMatchObject({ ref: "n:text", text: "hello", mode: "keyboard", focused: true })
+    await client.callTool({ name: "act", arguments: { do: "keys", keys: "ctrl+s" } })
+    expect(d.calls.some((call) => call.op === "keyboard")).toBe(true)
+
+    // Not focused: the answer says how to get focus there, and nothing is sent.
+    focus.value = false
+    await client.callTool({ name: "look", arguments: {} })
+    const sent = d.calls.length
+    expect(text(await client.callTool({ name: "act", arguments: { ref: 2, do: "type", text: "x" } }))).toContain("move focus into it")
+    expect(d.calls.slice(sent).every((call) => call.op === "read")).toBe(true)
+    await client.close()
+  })
+
+  test("find on the Linux workspace matches the text inside an editor, and never a password field's", async () => {
+    const frame = control("n:frame", "Untitled 1 - Mousepad", { role: 23, roleName: "frame", states: [1, 8, 30], parentRef: null })
+    const editor = { ...field("n:text", ""), role: 61, roleName: "text", states: [7, 8, 12, 24, 30], parentRef: "n:frame", depth: 1 }
+    const secret = { ...field("n:pw", "Password"), role: 40, roleName: "password text", parentRef: "n:frame", depth: 1 }
+    const d = dock((op, args) => {
+      if (op === "list") return { ok: true, value: tabs }
+      if (op !== "read") return { ok: false, error: { message: `unexpected ${op}` } }
+      if (!args.maxText) return page([frame, secret, editor])
+      // The editor's text runs past the first page's text allowance, so it ends that page and goes on, repeated without
+      // its parent, on the next.
+      if (args.cursor === undefined) return { ok: true, value: { items: [frame, { ...secret, text: "hunter2" }, { ...editor, text: "dear diary, hel", textTruncated: true }],
+        hasMore: true, cursor: "c1", coverage: { complete: true } } }
+      return { ok: true, value: { items: [{ ...editor, parentRef: null, text: "lo world", textTruncated: false }], hasMore: false,
+        coverage: { complete: true } } }
+    })
+    const client = await connect((await d.servers())[2]!)
+    const found = text(await client.callTool({ name: "find", arguments: { query: "hello" } }))
+    expect(found).toStartWith('frame "Untitled 1 - Mousepad" [active] › ')
+    expect(found).toEndWith('[3] contains "dear diary, hello world"')
+    // Even text a password field should never carry stays out of reach.
+    expect(text(await client.callTool({ name: "find", arguments: { query: "hunter2" } }))).toBe('Nothing matches "hunter2".')
+    // look stays one structural read without text.
+    const reads = d.calls.filter((call) => call.op === "read").length
+    await client.callTool({ name: "look", arguments: {} })
+    expect(d.calls.filter((call) => call.op === "read").slice(reads).map((call) => call.args.maxText)).toEqual([0])
+    // A look scoped to the editor shows its text, and a look scoped to the window shows it under the outline.
+    expect(text(await client.callTool({ name: "look", arguments: { scope: 3 } }))).toEndWith("[3]\n\n--- text in [3] ---\ndear diary, hello world")
+    const window = text(await client.callTool({ name: "look", arguments: { scope: 1 } }))
+    expect(window).toContain("--- text in [3] ---\ndear diary, hello world")
+    expect(window).not.toContain("hunter2")
+    await client.close()
+  })
+
+  test("a ref reaches its own control among several with the same name and role", async () => {
+    const d = dock((op) => {
+      if (op === "list") return { ok: true, value: tabs }
+      if (op === "read") return page([control("n:dialog", "Save File", { role: 16, roleName: "dialog", states: [1, 8, 30], parentRef: null }),
+        ...["n:s1", "n:s2", "n:s3"].map((ref) => control(ref, "Save", { states: [8, 24, 30], parentRef: "n:dialog" }))])
+      if (op === "action") return { ok: true, value: { dispatch: "acknowledged" } }
+      return { ok: false, error: { message: `unexpected ${op}` } }
+    })
+    const client = await connect((await d.servers())[2]!)
+    await client.callTool({ name: "look", arguments: {} })
+    const acted = await client.callTool({ name: "act", arguments: { ref: 4 } })
+    expect(acted.isError).toBe(false)
+    expect(d.calls.filter((call) => call.op === "action").map((call) => call.args.ref)).toEqual(["n:s3"])
+    await client.close()
+  })
+
+  test("acting on an item of a closed menu opens the menu first", async () => {
+    const opened = { value: false }
+    const d = dock((op, args) => {
+      if (op === "list") return { ok: true, value: tabs }
+      if (op === "read") return page([
+        control("n:frame", "Untitled 1 - Mousepad", { role: 23, roleName: "frame", states: [1, 8, 30], parentRef: null, actions: [] }),
+        control("n:file", "File", { role: 33, roleName: "menu", states: [8, 24, 30], parentRef: "n:frame" }),
+        control("n:saveas", "Save As...", { role: 35, roleName: "menu-item", states: [8, 24, 30], parentRef: "n:file" })])
+      if (op === "action" && args.ref === "n:file") {
+        opened.value = true
+        return { ok: true, value: { dispatch: "acknowledged" } }
+      }
+      if (op === "action") return opened.value ? { ok: true, value: { dispatch: "acknowledged" } } : nativeError("menu-closed")
+      return { ok: false, error: { message: `unexpected ${op}` } }
+    })
+    const client = await connect((await d.servers())[2]!)
+    expect(text(await client.callTool({ name: "look", arguments: {} }))).toContain('"Save As..." [3]')
+    const acted = await client.callTool({ name: "act", arguments: { ref: 3 } })
+    expect(acted.isError).toBe(false)
+    expect(d.calls.filter((call) => call.op === "action").map((call) => call.args.ref)).toEqual(["n:saveas", "n:file", "n:saveas"])
+    await client.close()
+  })
+
+  test("an empty workspace says how to open an app, and launch opens one and shows its window", async () => {
+    const opened = { value: false }
+    const d = dock((op, args) => {
+      if (op === "list") return { ok: true, value: tabs }
+      if (op === "apps") return { ok: true, value: [{ id: "org.gnome.TextEditor.desktop", name: "Text Editor" }] }
+      if (op === "launch") {
+        opened.value = args.appID === "org.gnome.TextEditor.desktop"
+        return { ok: true, value: { launched: args.appID } }
+      }
+      if (op === "read") return opened.value ? page([control("n:1", "Save", { states: [8, 24, 30] })])
+        : { ok: false, error: { message: "Owned application has no nonempty accessible window proposal", backend: "linux-atspi", code: "not-ready", outcome: "not-dispatched" } }
+      return { ok: false, error: { message: `unexpected ${op}` } }
+    })
+    const client = await connect((await d.servers())[2]!)
+    const empty = await client.callTool({ name: "look", arguments: {} })
+    expect(empty.isError).toBe(true)
+    expect(text(empty)).toContain("Open one with launch (ids from apps)")
+    expect(text(await client.callTool({ name: "apps", arguments: {} }))).toBe("Text Editor — id org.gnome.TextEditor.desktop")
+    const launched = text(await client.callTool({ name: "launch", arguments: { id: "org.gnome.TextEditor.desktop" } }))
+    expect(launched).toStartWith("opened org.gnome.TextEditor.desktop")
+    expect(launched).toContain('"Save" [1]')
+    await client.close()
+  })
+
+  test("launch says when it only brought an open window forward, and when the window has nothing to read", async () => {
+    const d = dock((op, args) => {
+      if (op === "list") return { ok: true, value: tabs }
+      if (op === "launch") return { ok: true, value: { launched: args.appID, window: "focused" } }
+      if (op === "read") return { ok: false, error: { message: "Owned application has no nonempty accessible window proposal", backend: "linux-atspi", code: "not-ready", outcome: "not-dispatched" } }
+      return { ok: false, error: { message: `unexpected ${op}` } }
+    })
+    const client = await connect((await d.servers())[2]!)
+    const launched = text(await client.callTool({ name: "launch", arguments: { id: "debian-xterm.desktop" } }))
+    expect(launched).toStartWith("debian-xterm.desktop was already open; brought its window forward\n")
+    expect(launched).toContain("this app exposes no accessibility tree")
+    expect(launched).not.toContain("no visible change")
     await client.close()
   })
 })

@@ -120,11 +120,12 @@ export function createLinuxMenuController(props: LinuxMenuOptions) {
     return () =>
       !disposed && !props.disabled && id === request && generation === props.generation() && profile === props.profile
   }
-  const refresh = () => {
+  // A background rescan (quiet) updates the list without showing it as loading.
+  const refresh = (quiet = false) => {
     if (disposed || props.disabled || !capability("appDockLinuxList")) return Promise.resolve()
     const current = guard()
     const id = ++listing
-    setStore("loading", true)
+    if (!quiet) setStore("loading", true)
     return props.api!.appDockLinuxList!()
       .then((state) => {
         if (current() && id === listing) setStore({ apps: state.apps, error: state.error })
