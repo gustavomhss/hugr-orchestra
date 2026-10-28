@@ -75,6 +75,11 @@ export function createRefreshQueue(input: QueueInput) {
   return {
     push,
     refresh,
+    // Pushes made while paused stay queued without a drain; the owner calls this when the pause ends.
+    resume() {
+      if (input.paused()) return
+      if (root || queued.size) schedule()
+    },
     clear(directory: string) {
       queued.delete(key(directory))
     },

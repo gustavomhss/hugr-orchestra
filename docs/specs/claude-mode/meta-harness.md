@@ -64,6 +64,10 @@ The parts of D-C2 that replaced the meta-harness shape are reversed:
    turn's Orchestra tools its seat may not call (`Turn.seatTools`). A tool a seat holds and the main agent does not,
    such as Archie's `archie_draft_workflow`, comes as `Turn.seatOnly`: it is served for the subagents, and the gate
    refuses it to the main agent (`SEAT_ONLY`).
+   The gate also refuses, to the main agent and every subagent, the Claude Code built-ins that reach outside the
+   query (`HOST_REACH`: `ListAgents`, `SendMessage`, `RemoteTrigger`, `PushNotification`). Claude Code would otherwise
+   list and message the machine's other Claude sessions, fire the account's cloud routines or notify the owner's phone
+   from an Orchestra session.
 8. **Orchestra's record, Claude Code's call.** The Session records each built-in call under the Orchestra tool and
    argument names the app's widgets read (`ClaudeCodeRecord.shown`, `src/v2/record.ts`), so a Claude mode session looks like any other:
    - `Bash`, `Read`, `Write`, `Edit` (`MultiEdit` and `NotebookEdit` as `edit` with the file only), `Glob`, `Grep`,

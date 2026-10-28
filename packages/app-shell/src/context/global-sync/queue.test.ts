@@ -43,4 +43,28 @@ describe("createRefreshQueue", () => {
     expect(calls).toEqual(["C:\\tmp\\demo"])
     queue.dispose()
   })
+
+  test("drains what was pushed while paused once resumed", async () => {
+    const calls: string[] = []
+    let paused = true
+    const queue = createRefreshQueue({
+      paused: () => paused,
+      key: directoryKey,
+      bootstrap: async () => {},
+      bootstrapInstance: (directory) => {
+        calls.push(directory)
+      },
+    })
+
+    queue.push("/repo")
+    await tick()
+    expect(calls).toEqual([])
+
+    paused = false
+    queue.resume()
+    await tick()
+
+    expect(calls).toEqual(["/repo"])
+    queue.dispose()
+  })
 })
