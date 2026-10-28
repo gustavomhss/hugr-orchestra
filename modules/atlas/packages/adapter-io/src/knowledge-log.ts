@@ -90,8 +90,13 @@ export function readKnowledge(repoPath: string): KnowledgeRead {
  */
 export function withKnowledgeLog(
   store: DiskStore,
-  opts: { readonly repoPath: string; readonly seat: string; readonly source: KnowledgeSource; readonly now?: () => string },
+  opts: { readonly repoPath: string; readonly seat: string; readonly source?: KnowledgeSource; readonly now?: () => string },
 ): DiskStore {
+  // The card and attempt come from the host, through `ATLAS_CARD` and `ATLAS_ATTEMPT`, unless the caller names them.
+  const source = opts.source ?? {
+    ...(process.env.ATLAS_CARD === undefined ? {} : { card: process.env.ATLAS_CARD }),
+    ...(process.env.ATLAS_ATTEMPT === undefined ? {} : { attempt: process.env.ATLAS_ATTEMPT }),
+  }
   return {
     ...store,
     commitProjection(decide) {
@@ -108,7 +113,7 @@ export function withKnowledgeLog(
       ;[...seen.next.current.values()]
         .filter((row) => JSON.stringify(before.current.get(row.nodeKey)) !== JSON.stringify(row))
         .forEach((row) =>
-          appendKnowledge(opts.repoPath, { seat: opts.seat, row, at, source: opts.source }, store.get(row.contentHash as Hash)),
+          appendKnowledge(opts.repoPath, { seat: opts.seat, row, at, source }, store.get(row.contentHash as Hash)),
         )
       return result
     },

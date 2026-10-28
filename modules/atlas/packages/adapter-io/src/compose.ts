@@ -51,13 +51,11 @@ import { createNegationLeg } from "./negation-source.js"
 import { createTransitionLeg, createTransitionProducer } from "./transition-source.js"
 import { buildTestVacuityFeed, buildTestVacuityLegs } from "./compose-test-vacuity.js"
 import { createVerifyFactLeg } from "./verify-fact-source.js"
-import { reverifyStore, makeScopeHasDocs, driftPairsOf, danglingOf } from "./reverify-store.js"
-import type { DocExists } from "./reverify-store.js"
+import { reverifyStore, makeScopeHasDocs, driftPairsOf, danglingOf, type DocExists } from "./reverify-store.js"
 import { createDiskStore, rehydrateProjection } from "./store.js"
 import { withKnowledgeLog } from "./knowledge-log.js"
 import { replayKnowledge } from "./knowledge-replay.js"
-import { gitStoreProvenance } from "./store-provenance.js"
-import type { SidecarTrust } from "./store-provenance.js"
+import { gitStoreProvenance, type SidecarTrust } from "./store-provenance.js"
 import { buildReadAccess, trackedProvableAdvisory } from "./read-access.js"
 import { assembleHandler, bindFreshnessOracle, edgeModelVersion } from "./wire.js"
 import type { WireConfig, WireSeams } from "./wire.js"
@@ -228,28 +226,15 @@ export function composeRuntime(repoPath: string): ComposedRuntime {
   //     `store.put`s the WHOLE `GroundedFact` (invariant 6), so `store.get(contentHash)` reads it back.
   const revIndex = createRevIndex(repoPath)
   // N11: the doctor/reconcile store stamps the same freshness watermark (HEAD at persist) as the handler's.
-  // PROVENANCE (the root the doors hang from): git is owned HERE, so the tripwire that asks whether the
-  // durable store is TRACKED — i.e. arrived by commit rather than through a door — is built here and
-  // injected, exactly as the N11 watermark is. One `git ls-files`, memoized for the life of the runtime.
-  //
-  // TRAVEL-BY-REPROOF (owner-authorized 2026-08-18): the question is now THREE-WAY, not two
-  // (`store-provenance.ts` `StoreProvenance`) — `trusted` below stays the BOOLEAN write-gate every existing
-  // caller (`store` itself, for writes) rides, byte-identical to before (`true` iff `provenance()` is
-  // `'trusted'`); the RICHER answer — what a READ may see for `tracked-staging` vs `tracked-provable` — is
-  // `readAccess`, built below once `verifyFactLeg` (its oracle) exists.
+  // PROVENANCE (the root the doors hang from): git is owned HERE, so the tripwire that asks whether the durable
+  // store is TRACKED (arrived by commit, not through a door) is built here and injected, like the N11 watermark.
+  // One `git ls-files`, memoized. TRAVEL-BY-REPROOF (owner-authorized 2026-08-18): the answer is THREE-WAY
+  // (`StoreProvenance`); `trusted` stays the BOOLEAN write-gate every caller rides, and what a READ may see for
+  // `tracked-staging` vs `tracked-provable` is `readAccess`, built below once `verifyFactLeg` (its oracle) exists.
   const provenance = gitStoreProvenance(repoPath)
   const trusted: SidecarTrust = () => provenance() === "trusted"
   const disk = createDiskStore(join(repoPath, CAS_REL), () => headSha(repoPath), trusted)
-  // Every settled projection commit is also appended to this actor's committed knowledge log (`knowledge-log.ts`),
-  // so a fresh clone can rebuild the projection by replay below. The card and attempt come from the host.
-  const store = withKnowledgeLog(disk, {
-    repoPath,
-    seat: actor,
-    source: {
-      ...(process.env.ATLAS_CARD === undefined ? {} : { card: process.env.ATLAS_CARD }),
-      ...(process.env.ATLAS_ATTEMPT === undefined ? {} : { attempt: process.env.ATLAS_ATTEMPT }),
-    },
-  })
+  const store = withKnowledgeLog(disk, { repoPath, seat: actor })
   // THE `draft` + `draftSupersede` COMPOSITION PLANNERS (WP-10.A2-a/b / ADR-0004, AUTHOR-6/7/9/10/13) — over
   // the SAME `groundingComputer` `anchors` rides (AUTHOR-1: one grounding seam), so a drafted fact's
   // `subtreeHash` is exactly the value the emit truth-gate will re-derive against, PLUS the `IncumbentPort`
@@ -272,16 +257,10 @@ export function composeRuntime(repoPath: string): ComposedRuntime {
   // needs only `rawTree` + `axes` (in hand), NEVER `readAccess.store`. Early build lets the `tracked-provable`
   // serve re-prove proven test-vacuities (#249); reused below so producer + BOTH replay sites scan ONE `testUnitsOf` (#186/N10).
   const tvFeed = buildTestVacuityFeed(rawTree, axes)
-  // REPLAY the committed knowledge logs into the local projection (`knowledge-replay.ts`): a proven fact whose seat
-  // owns its scope and that re-proves HERE is applied, everything else is staged for ratify. Only on a trusted
-  // store; before the drift readback, so drift sees the replayed rows.
-  if (provenance() === "trusted") {
-    const replayed = replayKnowledge(repoPath, disk, policy, (node, fact) =>
-      reverifyStore([{ node, fact }], verifyFactLeg, docExists, scopeHasDocs, tvFeed.replay).reProven === 1,
-    )
-    if (replayed.applied + replayed.staged + replayed.missing + replayed.rejected > 0 || replayed.unreadable === true || replayed.refusal !== undefined)
-      console.error(`atlas: knowledge replay ${JSON.stringify(replayed)}`)
-  }
+  // A clone REPLAYS the logged commits of `store` here (`knowledge-replay.ts`): trusted store only, before drift.
+  if (provenance() === "trusted")
+    replayKnowledge(repoPath, disk, policy, (node, fact) =>
+      reverifyStore([{ node, fact }], verifyFactLeg, docExists, scopeHasDocs, tvFeed.replay).reProven === 1)
   // `driftPairs` carries each fact ALONGSIDE its own `CurrentNode` (`reverify` needs `node.primaryAnchor` for
   // the anchor-binding check, #199); `driftFacts` is the same pairing's `.fact` projection — ONE store read.
   const driftPairs = driftPairsOf(store)
@@ -411,8 +390,7 @@ export function composeRuntime(repoPath: string): ComposedRuntime {
     // actually read and write. Threading it only onto the store built above would guard doctor/reconcile
     // and leave both user-facing doors open.
     trusted,
-    // The logged store, so `atlas emit`/`atlas link` outcomes reach the committed knowledge log too.
-    store,
+    store, // the logged store, so `atlas emit`/`atlas link` outcomes reach the knowledge log too
     // TRAVEL-BY-REPROOF — the read-side answer, THREADED so `wire.ts`'s query/node legs read the SAME
     // (possibly filtered) store `own`/`relations`/`negations`/`doctorSource` below read, never a second
     // independent decision. `readRefusal` ABSENT ⇒ `wire.ts` falls back to `trusted`-gated behaviour

@@ -71,7 +71,11 @@ export function replayKnowledge(
     rejected: read.rejected,
     ...(read.unreadable === true ? { unreadable: true as const } : {}),
   }
-  return refusal === undefined ? counts : { ...counts, refusal }
+  const result = refusal === undefined ? counts : { ...counts, refusal }
+  // Stderr only, so a command's stdout stays its answer; silent when nothing happened.
+  if (counts.applied + counts.staged + counts.missing + counts.rejected > 0 || read.unreadable === true || refusal !== undefined)
+    console.error(`atlas: knowledge replay ${JSON.stringify(result)}`)
+  return result
 }
 
 /** Put the row's committed bytes into the local CAS. False when they are absent or name another hash. */
