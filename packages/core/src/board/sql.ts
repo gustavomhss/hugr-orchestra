@@ -32,6 +32,8 @@ export const BoardProjectTable = sqliteTable("board_project", {
   next_epic_number: integer().notNull(),
   // Consecutive forecast evaluations with P50 past target_date; health turns at_risk at 2.
   forecast_late_streak: integer().notNull().default(0),
+  // Where the base branch stood at the last conflict sweep; a move from here is a base advance (section 8.4).
+  base_sha: text(),
   ...Timestamps,
 })
 
@@ -261,6 +263,9 @@ export const BoardAttemptTable = sqliteTable(
     snapshot_at: integer(),
     // Why the last snapshot was not pushed (a scanner hit, no scanner, a refused push); cleared by the next push.
     snapshot_blocked: text(),
+    // The base commit the card last failed to merge with, and the conflicting files; cleared when it merges clean.
+    conflict_base: text(),
+    conflict_files: text({ mode: "json" }).$type<string[]>(),
     cause: text(),
     outcome: text().$type<Board.AttemptOutcome>(),
     ...Timestamps,

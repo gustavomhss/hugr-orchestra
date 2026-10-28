@@ -10,7 +10,7 @@ import { ChildProcess } from "effect/unstable/process"
 import type { Board } from "@orchestra/schema/board"
 import type { AppProcess } from "../process"
 import { BoardAttemptTable, BoardIssueTable, BoardProjectTable } from "./sql"
-import { worktree } from "./shared"
+import { gitRunner, worktree } from "./shared"
 import type { Fields, IssueRow, ProjectRow, Tx } from "./shared"
 
 // Push early (docs/specs/maestro-lead/merge-queue.md section 8.1): the host writes a card's worktree to a snapshot
@@ -44,21 +44,7 @@ const IDENTITY = {
 }
 
 export function make(deps: Deps) {
-  const git = (cwd: string, args: ReadonlyArray<string>, env?: Record<string, string>) =>
-    deps.proc
-      .run(
-        ChildProcess.make("git", ["--no-optional-locks", "-C", cwd, "-c", "core.fsmonitor=false", ...args], {
-          cwd,
-          env: { ...deps.env, ...env },
-          extendEnv: true,
-          stdin: "ignore",
-        }),
-        { maxOutputBytes: 4 * 1024 * 1024, maxErrorBytes: 16 * 1024, timeout: "120 seconds" },
-      )
-      .pipe(
-        Effect.map((result) => ({ code: result.exitCode, out: result.stdout.toString("utf8").trim(), err: result.stderr.toString("utf8").trim() })),
-        Effect.catch((error) => Effect.succeed({ code: 1, out: "", err: error.message })),
-      )
+  const git = gitRunner(deps.proc, deps.env)
 
   /** The worktree's tree as it stands, written from a copy of its index so the real index stays untouched. */
   const tree = Effect.fnUntraced(function* (cwd: string) {

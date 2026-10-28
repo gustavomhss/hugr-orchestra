@@ -214,6 +214,8 @@ export default {
           \`snapshot_tree\` text,
           \`snapshot_at\` integer,
           \`snapshot_blocked\` text,
+          \`conflict_base\` text,
+          \`conflict_files\` text,
           \`cause\` text,
           \`outcome\` text,
           \`time_created\` integer NOT NULL,
@@ -373,6 +375,7 @@ export default {
           \`next_issue_number\` integer NOT NULL,
           \`next_epic_number\` integer NOT NULL,
           \`forecast_late_streak\` integer DEFAULT 0 NOT NULL,
+          \`base_sha\` text,
           \`time_created\` integer NOT NULL,
           \`time_updated\` integer NOT NULL,
           CONSTRAINT \`fk_board_project_repo_project_id_project_id_fk\` FOREIGN KEY (\`repo_project_id\`) REFERENCES \`project\`(\`id\`) ON DELETE SET NULL

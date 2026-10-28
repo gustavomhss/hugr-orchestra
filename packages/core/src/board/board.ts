@@ -45,6 +45,7 @@ import {
   changed,
   diff,
   forecastOf,
+  gitRunner,
   loadEpic,
   loadIssue,
   loadProject,
@@ -56,6 +57,7 @@ import type { ActivityRow, Changed, Fields, IssueRow, ProjectRow, QuestionRow, T
 
 export { BudgetPausedError, NotFoundError, RefusedError }
 import { BoardCi } from "./ci"
+import { BoardConflicts } from "./conflicts"
 import { BoardGithub } from "./github"
 import { BoardSnapshot } from "./snapshot"
 
@@ -120,6 +122,8 @@ export interface Interface {
   readonly snapshotPush: (key: string, number: number) => Effect.Effect<BoardSnapshot.Result, Error>
   /** Whether the card's work is on the remote; null with no open attempt or no worktree. */
   readonly pushState: (key: string, number: number) => Effect.Effect<Board.PushState, Error>
+  /** Compares each project's base with where it stood last time and notes the cards a base advance touched. */
+  readonly conflictSweep: () => Effect.Effect<ReadonlyArray<BoardConflicts.Notice>>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/Board") {}
@@ -540,6 +544,16 @@ export const layerWith = (options: {
         remote: (directory, project) => ci.contract(directory, project).pipe(Effect.map((contract) => contract.snapshots.remote)),
         env: options.env,
       })
+
+      const conflicts = BoardConflicts.make({
+        quiet: (work) => quiet(work).pipe(Effect.orDie),
+        git: gitRunner(proc, options.env),
+        base: (directory, project) => ci.contract(directory, project).pipe(Effect.map((contract) => contract.base)),
+        publish: (changed) => events.publish(Board.Event.Changed, changed),
+      })
+
+      if (options.poll)
+        yield* conflicts.sweep().pipe(Effect.ignore, Effect.repeat(Schedule.spaced("60 seconds")), Effect.forkScoped)
 
       if (options.poll)
         yield* snapshots.sweep().pipe(Effect.ignore, Effect.repeat(Schedule.spaced("10 minutes")), Effect.forkScoped)
@@ -1390,6 +1404,10 @@ export const layerWith = (options: {
         pushState: Effect.fn("Board.pushState")(function* (key, number) {
           const issue = yield* reading((tx) => loadProject(tx, key).pipe(Effect.flatMap((project) => loadIssue(tx, project, number))))
           return yield* snapshots.state(issue.id)
+        }),
+
+        conflictSweep: Effect.fn("Board.conflictSweep")(function* () {
+          return yield* conflicts.sweep()
         }),
 
         sync: Effect.fn("Board.sync")(function* (key) {

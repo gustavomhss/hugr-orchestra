@@ -51,3 +51,12 @@ the push and the card stays `local`. If a seat dies, its work can be restored fr
 ```bash
 git fetch origin refs/orchestra/wip/KEY-1/a1 && git restore --source FETCH_HEAD --worktree -- .
 ```
+
+## When your base branch moves
+
+Once a minute Maestro fetches the base branch. When it has moved, Maestro looks only at the cards in Review whose
+files the new commits touched, and checks each one with a trial merge that changes nothing on disk. A card that still
+merges gets a note naming the touched files; a card that no longer merges gets a note naming the conflicting files
+and is marked as conflicting. Maestro never rebases or merges into a seat's worktree: the seat merges the base branch
+on its next dispatch. A card marked as conflicting is checked again on every move, and gets a note when it merges
+clean again. Cards the move did not touch get nothing.

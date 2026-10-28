@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "67f0a24b-7055-4f77-bcd2-a40f9625384a",
+  "id": "4548d3a0-b915-427d-8568-b6b667ed1654",
   "prevIds": [
-    "3d26cefe-a2c9-4617-9aa5-54a50081690f"
+    "67f0a24b-7055-4f77-bcd2-a40f9625384a"
   ],
   "ddl": [
     {
@@ -1572,6 +1572,26 @@
       "autoincrement": false,
       "default": null,
       "generated": null,
+      "name": "conflict_base",
+      "entityType": "columns",
+      "table": "board_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "conflict_files",
+      "entityType": "columns",
+      "table": "board_attempt"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
       "name": "cause",
       "entityType": "columns",
       "table": "board_attempt"
@@ -2683,6 +2703,16 @@
       "default": "0",
       "generated": null,
       "name": "forecast_late_streak",
+      "entityType": "columns",
+      "table": "board_project"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "base_sha",
       "entityType": "columns",
       "table": "board_project"
     },
