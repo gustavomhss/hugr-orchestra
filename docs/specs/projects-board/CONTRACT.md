@@ -160,7 +160,7 @@ link one before Review").
 
 | Tool | Input | Does |
 |---|---|---|
-| `board_read` | `project` key, optional `issue` number, optional `since` activity id | Snapshot: project, epics, issues with steps, open questions, owner notes and answers since `since`, attachment names (secret labels only), holds, pauses, GitHub state. The only way Maestro reads the board. |
+| `board_read` | `project` key, optional `issue` number, optional `since` activity id; without `project`, the list of projects (key, name, goal, status, GitHub repo) | Snapshot: project, epics, issues with steps, open questions, owner notes and answers since `since`, attachment names (secret labels only), holds, pauses, GitHub state. The only way Maestro reads the board. |
 | `board_project` | `key`, `name`, `goal`, `target_date`, `repo`, `github_repo`, `reason` | Create or update a project. |
 | `board_epic` | `project`, optional `number`, `title`, `goal`, `position`, `status`, `reason` | Create or update an epic. |
 | `board_issue` | `project`, optional `number`, `title`, `body`, `type`, `epic`, `estimate`, `seat`, `session`, `branch`, `pr`, `depends_on`, `reason` | Create (lands in Backlog) or update an issue, including linking branch, PR and session. |

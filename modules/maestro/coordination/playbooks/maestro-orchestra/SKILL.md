@@ -13,7 +13,7 @@ setting. Say what is missing instead of working around it.
 
 | Tool | Use it to |
 |---|---|
-| `board_read` | Start every turn that touches tracked work: what is in flight, what changed `since`, a card's activity. |
+| `board_read` | Start every turn that touches tracked work: what is in flight, what changed `since`, a card's activity. Without `project` it lists the projects and their keys. |
 | `board_project`, `board_epic`, `board_issue`, `board_steps` | Keep the plan on the board: one card per unit, its seat, Session, branch, PR, steps and `crash_reason`. |
 | `board_move` | Move a card the host does not move on facts: to Ready or Cut, or to Shipped when the project has no GitHub repo. |
 | `board_question`, `board_decision` | Ask the owner on the board, with options and a recommendation; record what came of an answered decision. |
