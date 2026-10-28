@@ -153,37 +153,34 @@ export async function read(id: string, root: string, skills: readonly string[]) 
   return files
 }
 
-/** The name and description of each declared entry skill, for showing what a seat carries. */
+/** Each declared root and the nodes below it, depth first: a node is a directory with a `SKILL.md`, named by its path joined with `-`. */
 export async function describe(root: string, skills: readonly string[]) {
-  return Promise.all(
-    skills.map(async (skill) => {
-      const data = frontmatter(await fs.readFile(path.join(root, skill, "SKILL.md"), "utf8").catch(() => ""))
-      const description =
-        data && typeof data === "object" && "description" in data && typeof data.description === "string"
-          ? data.description
-          : undefined
-      return { name: skill, description, references: await references(path.join(root, skill, "references")) }
-    }),
-  )
+  return (await Promise.all(skills.map((skill) => nodes(path.join(root, skill), skill)))).flat()
 }
 
-async function references(dir: string) {
-  const files = await fs.readdir(dir, { recursive: true }).catch(() => [])
-  return Promise.all(
-    files
-      .filter((file) => file.endsWith(".md"))
+async function nodes(dir: string, name: string, parent?: string): Promise<Node[]> {
+  const data = frontmatter(await fs.readFile(path.join(dir, "SKILL.md"), "utf8").catch(() => ""))
+  const fields = data && typeof data === "object" ? Object.fromEntries(Object.entries(data)) : {}
+  const field = (key: string) => {
+    const value = fields[key]
+    return typeof value === "string" ? value : undefined
+  }
+  const entries = await fs.readdir(dir, { withFileTypes: true }).catch(() => [])
+  const children = await Promise.all(
+    entries
+      .filter((entry) => entry.isDirectory() && entry.name !== "references")
+      .map((entry) => entry.name)
       .toSorted()
-      .map(async (file) => {
-        const parts = file.split(path.sep)
-        const text = await fs.readFile(path.join(dir, file), "utf8")
-        return {
-          kind: parts.length > 1 ? parts[0] : undefined,
-          family: parts.length > 2 ? parts[1] : undefined,
-          title: text.match(/^# (.+)$/m)?.[1].trim() ?? path.basename(file, ".md"),
-        }
-      }),
+      .map(async (child) =>
+        (await fs.stat(path.join(dir, child, "SKILL.md")).catch(() => undefined))
+          ? nodes(path.join(dir, child), `${name}-${child}`, name)
+          : [],
+      ),
   )
+  return [{ name, description: field("description"), when: field("when"), parent }, ...children.flat()]
 }
+
+type Node = { name: string; description: string | undefined; when: string | undefined; parent: string | undefined }
 
 function frontmatter(text: string): unknown {
   // Use the runtime parser and its fallback, but bypass gray-matter's cache: it caches even failed parses, which can

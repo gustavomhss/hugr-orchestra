@@ -57,7 +57,8 @@ export type AgentsListOutput = {
     readonly skills?: ReadonlyArray<{
       readonly name: string
       readonly description?: string
-      readonly references?: ReadonlyArray<{ readonly kind?: string; readonly family?: string; readonly title: string }>
+      readonly when?: string
+      readonly parent?: string
     }>
     readonly toolkit?: "backend" | "research"
     readonly permissions: ReadonlyArray<{

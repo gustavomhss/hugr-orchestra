@@ -248,11 +248,12 @@ prompts no longer list deeper names. The tree is the list.
 
 ### Agent screen
 
-The Skills tab becomes **Skill tree**: "Skill tree" in English, "Árvore de skills" in pt-BR, and the usual i18n keys
-for every other locale.
+The Skills tab becomes **Skill tree**: "Skill tree" in English and "Árvore de skills" in pt-BR. The agents chapter
+carries only those two locales; the others fall back to English.
 
-- `SeatSkillContent.describe` returns nested nodes `{ name, description, when, children }` instead of a flat
-  `references` list.
+- `SeatSkillContent.describe` returns the tree as a flat, depth-first list of `{ name, description, when, parent }`
+  instead of a `references` list. The HttpApi codegen does not support recursive schemas, so the client rebuilds the
+  tree from `parent`.
 - The tab shows the tree collapsed to the roots. Each node expands to its children, and a leaf shows its description
   and `when` line.
 - Project and profile catalog skills appear below as their own flat group. They are not seat trees.
