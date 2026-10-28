@@ -95,6 +95,7 @@ test("one SDK query is one turn: tool calls surface provider-executed and the ne
     system: ["Maestro instructions", "Context"],
     context: ["Context"],
     seats: [],
+    skills: {},
     history: history as ExecutionHost.Turn["history"],
     tools: [],
     execute: () => Effect.die("unused"),
@@ -513,7 +514,7 @@ test("Orchestra's tools are refused inside a subagent and kept off its tool list
     { behavior: "deny", message: "Orchestra's tools serve the main agent only, not a subagent." },
     allowed,
   ])
-  expect(calls.at(-1)?.options.agents?.["orchestra:backend"]?.disallowedTools).toEqual(["mcp__orchestra__task"])
+  expect(calls.at(-1)?.options?.agents?.["orchestra:backend"]?.disallowedTools).toEqual(["mcp__orchestra__task"])
 })
 
 test("an assistant-level error fails the turn unless a later frame supersedes it", async () => {
