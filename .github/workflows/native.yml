@@ -129,8 +129,23 @@ jobs:
       - name: Omni binaries
         uses: ./.github/actions/omni-binaries
 
+      # The image installs xpra from xpra.org, so a cold build fails the job whenever that server is down. Layers come
+      # from the Actions cache instead and are rebuilt only when resources/linux-runtime changes. The builder becomes
+      # the default for `docker build` and loads by default, so the runtime's own build under test reuses its cache.
+      - name: Docker builder
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+        with:
+          install: true
+          driver-opts: default-load=true
+
       - name: Prewarm production Linux runtime image
-        run: docker build --progress=plain --tag orchestra-linux-prewarm:ci resources/linux-runtime
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: apps/desktop/resources/linux-runtime
+          tags: orchestra-linux-prewarm:ci
+          load: true
+          cache-from: type=gha,scope=linux-runtime
+          cache-to: type=gha,scope=linux-runtime,mode=max
 
       - name: Runtime cycle with real Docker
         env:
