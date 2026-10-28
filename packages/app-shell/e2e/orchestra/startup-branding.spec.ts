@@ -37,6 +37,9 @@ for (const scheme of ["light", "dark"] as const) {
               storeSet: async () => undefined,
               setNativeTranslations: async () => undefined,
               recordFatalRendererError: async () => undefined,
+              getCaffeinate: async () => false,
+              setCaffeinate: async () => undefined,
+              onCaffeinateChanged: () => () => undefined,
             },
           })
         },
