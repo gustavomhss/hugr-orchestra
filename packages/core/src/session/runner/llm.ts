@@ -423,7 +423,7 @@ const layer = Layer.effect(
         ),
         Stream.flatMap((items) => Stream.fromIterable(items)),
       )
-      const ports = yield* HostPorts.make({ session, model: modelRef, assistantMessageID: publisher.assistantMessageID, withPublication, execution })
+      const ports = HostPorts.make({ events, store, location, config, database, session, model: modelRef, assistantMessageID: publisher.assistantMessageID, withPublication, execution })
       const source = request
         ? llm.stream(request)
         : host && agent.info

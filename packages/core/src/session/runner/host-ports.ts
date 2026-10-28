@@ -24,7 +24,12 @@ import type { ExecutionHost } from "./execution-host"
 import { createLLMEventPublisher } from "./publish-llm-event"
 
 /** `Turn.child` and `Turn.notify` for one hosted turn of `session`; the parent's publisher names the task call's assistant message. */
-export const make = Effect.fn("HostPorts.make")(function* (input: {
+export function make(input: {
+  readonly events: EventV2.Interface
+  readonly store: SessionStore.Interface
+  readonly location: Location.Interface
+  readonly config: Config.Interface
+  readonly database: Database.Interface
   readonly session: SessionSchema.Info
   readonly model: ModelV2.Ref | undefined
   readonly assistantMessageID: ReturnType<typeof createLLMEventPublisher>["assistantMessageID"]
@@ -32,11 +37,11 @@ export const make = Effect.fn("HostPorts.make")(function* (input: {
   /** The process-global execution, for the wake a host's own event asks for; absent where nothing drains Sessions. */
   readonly execution: SessionExecution.Interface | undefined
 }) {
-  const events = yield* EventV2.Service
-  const store = yield* SessionStore.Service
-  const location = yield* Location.Service
-  const config = yield* Config.Service
-  const database = yield* Database.Service
+  const events = input.events
+  const store = input.store
+  const location = input.location
+  const config = input.config
+  const database = input.database
   const session = input.session
   const model = {
     id: input.model?.id ?? ModelV2.ID.make("default"),
@@ -130,4 +135,4 @@ export const make = Effect.fn("HostPorts.make")(function* (input: {
       }
     })
   return { child, notify }
-})
+}
