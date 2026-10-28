@@ -65,6 +65,7 @@ import { BoardCi } from "./ci"
 import { BoardConflicts } from "./conflicts"
 import { BoardGithub } from "./github"
 import { BoardQueue } from "./queue"
+import type { BoardRecord } from "./record"
 import { BoardSnapshot } from "./snapshot"
 
 // The board service enforces the contract's rules (docs/specs/projects-board/CONTRACT.md section 1). Every write runs
@@ -150,11 +151,13 @@ const EPIC_COLUMNS = ["title", "goal", "position", "status"]
 
 /**
  * `gh` replaces the GitHub runner (tests inject recorded responses); `scanner` replaces the toolkit's gitleaks; `poll`
- * starts the 60 second sync of every mirrored project and the 10 minute snapshot of every Building card.
+ * starts the 60 second sync of every mirrored project and the 10 minute snapshot of every Building card. `record` binds
+ * Atlas's PR record renderer for the merge queue.
  */
 export const layerWith = (options: {
   readonly env?: NodeJS.ProcessEnv
   readonly gh?: BoardGithub.Gh
+  readonly record?: BoardRecord.Port
   readonly scanner?: string
   readonly poll?: boolean
 }) =>
@@ -587,6 +590,7 @@ export const layerWith = (options: {
         gh: options.gh ?? BoardGithub.runner(proc, options.env),
         contract: ci.contract,
         publish: (changed) => events.publish(Board.Event.Changed, changed),
+        record: options.record,
       })
 
       if (options.poll)
@@ -1467,11 +1471,11 @@ export const layerWith = (options: {
         }),
 
         queue: Effect.fn("Board.queue")(function* (input) {
-          return yield* queue.enqueue(input)
+          return yield* queue.enqueue(input).pipe(dieOnStorage)
         }),
 
         dequeue: Effect.fn("Board.dequeue")(function* (input) {
-          return yield* queue.dequeue(input)
+          return yield* queue.dequeue(input).pipe(dieOnStorage)
         }),
 
         queueTick: Effect.fn("Board.queueTick")(function* () {

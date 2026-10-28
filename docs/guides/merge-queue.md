@@ -67,7 +67,8 @@ When a card is verified, Maestro writes its PR record (intent, decisions, what i
 in the Queue column. Only Maestro's `board_queue` does that, and it refuses a card that has no PR, has an incomplete
 record, depends on cards that are not shipped or queued, conflicts with the base branch, or is not `scoped-green` when
 your contract names scoped checks. Maestro then fills the PR body from the record plus the facts it holds: checks,
-attempts and conflicts. Model cost is never written to GitHub.
+attempts, diff size, CI runs and minutes, and where the card is in the queue. Model cost is never written to GitHub.
+The PR body is rendered by Atlas; without it, the PR body is left as Maestro wrote it.
 
 Queued cards are merged together into one bundle PR named `chore(queue): bundle KEY-B<n>` on a `bundle-KEY-<n>`
 branch, labelled with `full.label` so your full CI runs once for all of them. A bundle is cut when the queue reaches

@@ -11,12 +11,14 @@ import type { AppProcess } from "../process"
 import { which } from "../util/which"
 import { BoardCi } from "./ci"
 import type { BoardGithub } from "./github"
+import type { BoardRecord } from "./record"
 import {
   BoardAttemptTable,
   BoardBundleMemberTable,
   BoardBundleTable,
   BoardCheckTable,
   BoardDependencyTable,
+  BoardEpicTable,
   BoardIssueTable,
   BoardNoteTable,
   BoardProjectTable,
@@ -37,6 +39,8 @@ export interface Deps {
   readonly gh: BoardGithub.Gh
   readonly contract: (directory: string, project: ProjectRow) => Effect.Effect<BoardCi.Contract, { readonly message: string }>
   readonly publish: (changed: Changed) => Effect.Effect<void>
+  /** Atlas's record renderer and trailer writer; unbound until its adapter lands. */
+  readonly record?: BoardRecord.Port
 }
 
 const Pull = Schema.Struct({ head: Schema.Struct({ sha: Schema.String, ref: Schema.String }) })
@@ -167,7 +171,7 @@ export function make(deps: Deps) {
     )
     if (done._tag === "Failure") return yield* done.failure
     yield* deps.publish(done.success)
-    yield* describe(project, issue.id)
+    yield* describe(project, issue.id, contract.base)
     return { head: pr.sha, tree: pr.tree, state }
   })
 
@@ -259,6 +263,7 @@ export function make(deps: Deps) {
     const scratch = yield* Effect.promise(() => fs.mkdtemp(path.join(os.tmpdir(), `orchestra-bundle-${row.key}-`)))
     const added = yield* git(directory, ["worktree", "add", "--quiet", "--detach", scratch, tip])
     if (added.code !== 0) return
+    const ejections: Array<{ readonly card: string; readonly cause: string }> = []
     const members = yield* Effect.gen(function* () {
       const taken: Array<{ readonly issue: IssueRow; readonly head: string }> = []
       for (const card of queued.cards) {
@@ -271,11 +276,16 @@ export function make(deps: Deps) {
           .every((dep) => dep.stage === "shipped" || taken.some((item) => item.issue.id === dep.on))
         if (!ready) continue
         const current = yield* head(directory, repo, card.issue.pr_number ?? 0).pipe(Effect.orElseSucceed(() => undefined))
+        const key = `${row.key}-${card.issue.number}`
         if (current?.sha !== card.queue.head_sha) {
           yield* moved(row, card.issue, current?.sha)
+          ejections.push({ card: key, cause: "head moved after it queued" })
           continue
         }
-        const message = `Merge ${row.key}-${card.issue.number}: ${card.issue.title}\n\nWP: ${row.key}-${card.issue.number}\nAttempt: a${attempt?.n ?? 0}`
+        const message = [
+          `Merge ${key}: ${card.issue.title}`,
+          ...(deps.record ? ["", deps.record.trailer({ WP: key, Attempt: `a${attempt?.n ?? 0}` })] : []),
+        ].join("\n")
         const merged = yield* git(scratch, [...AUTHOR, "merge", "--no-ff", "--quiet", "-m", message, card.queue.head_sha])
         if (merged.code === 0) {
           taken.push({ issue: card.issue, head: card.queue.head_sha })
@@ -283,6 +293,7 @@ export function make(deps: Deps) {
         }
         const files = (yield* git(scratch, ["diff", "--name-only", "--diff-filter=U"])).out.split("\n").filter(Boolean)
         yield* git(scratch, ["merge", "--abort"])
+        ejections.push({ card: key, cause: "conflicts with the bundle" })
         yield* note(row, card.issue, `conflicts-with-queue: merging onto the bundle so far conflicts in ${files.join(", ") || "its changes"}; it stays queued.`)
       }
       return taken
@@ -303,7 +314,12 @@ export function make(deps: Deps) {
     const branch = `bundle-${row.key}-${n}`
     const pushed = yield* git(directory, ["push", "--quiet", "--force", "origin", `${bundleHead}:refs/heads/${branch}`])
     if (pushed.code !== 0) return
-    const body = yield* deps.quiet((tx) => bundleBody(tx, row, n, tip, members))
+    const records = deps.record
+      ? (yield* Effect.forEach(members, (member) => recordOf(row, member.issue.id, base))).filter((item) => item !== undefined)
+      : []
+    const body = deps.record
+      ? deps.record.bundle({ members: records, testedOn: tip, skew: 0, ciRuns: 0, ciMinutes: 0, ejections })
+      : `Bundle ${row.key}-B${n}, assembled by Orchestra's merge queue: ${members.map((member) => `${row.key}-${member.issue.number}`).join(", ")}.`
     const opened = yield* deps.gh(
       [
         "pr",
@@ -351,7 +367,7 @@ export function make(deps: Deps) {
       }),
     )
     yield* Effect.forEach(published, deps.publish, { discard: true })
-    yield* Effect.forEach(members, (member) => describe(row, member.issue.id), { discard: true })
+    yield* Effect.forEach(members, (member) => describe(row, member.issue.id, base), { discard: true })
   })
 
   /** The open bundle's next step: wait, merge when green, or give its members back when red. */
@@ -460,7 +476,7 @@ export function make(deps: Deps) {
             .map((line) => line.split("\t")[1])
             .filter((name): name is string => Boolean(name))
           if (refs.length > 0) yield* git(directory, ["push", "--quiet", remote, "--delete", ...refs])
-          yield* describe(row, item.issue.id)
+          yield* describe(row, item.issue.id, contract.base)
         }),
       { discard: true },
     )
@@ -566,30 +582,104 @@ export function make(deps: Deps) {
     yield* deps.publish(done)
   })
 
-  /** Renders the card's PR body from its record plus the host's Evidence, Cost, Lineage and Integration sections. */
-  const describe = Effect.fnUntraced(function* (row: ProjectRow, issue: Board.IssueID) {
-    if (!row.github_repo) return
+  /** Rewrites the card's PR body through the record port; unbound, the body stays as the seat wrote it. */
+  const describe = Effect.fnUntraced(function* (row: ProjectRow, issue: Board.IssueID, base: string) {
+    if (!deps.record || !row.github_repo) return
+    const found = yield* recordOf(row, issue, base)
+    if (!found?.pr) return
+    yield* deps.gh(["pr", "edit", String(found.pr), "--repo", row.github_repo, "--body-file", "-"], deps.record.pr(found.record))
+  })
+
+  /** The card's record as Atlas reads it: Maestro's fields plus the host's facts, checks, cost, lineage and integration. */
+  const recordOf = Effect.fnUntraced(function* (row: ProjectRow, issue: Board.IssueID, base: string) {
     const now = yield* Clock.currentTimeMillis
     const found = yield* deps.quiet((tx) =>
       Effect.gen(function* () {
         const card = yield* tx.select().from(BoardIssueTable).where(eq(BoardIssueTable.id, issue)).get()
         const checks = yield* tx.select().from(BoardCheckTable).where(eq(BoardCheckTable.issue_id, issue)).all()
+        const attempts = yield* tx.select().from(BoardAttemptTable).where(eq(BoardAttemptTable.issue_id, issue)).orderBy(asc(BoardAttemptTable.n)).all()
         const queued = yield* tx.select().from(BoardQueueTable).where(eq(BoardQueueTable.issue_id, issue)).get()
-        const bundles = yield* tx
-          .select({ n: BoardBundleTable.n, status: BoardBundleTable.status, pr: BoardBundleTable.pr_number, on: BoardBundleTable.merged_on })
+        const bundle = yield* tx
+          .select({ n: BoardBundleTable.n, status: BoardBundleTable.status, base: BoardBundleTable.base_sha, head: BoardBundleMemberTable.head_sha })
           .from(BoardBundleMemberTable)
           .innerJoin(BoardBundleTable, eq(BoardBundleTable.id, BoardBundleMemberTable.bundle_id))
           .where(eq(BoardBundleMemberTable.issue_id, issue))
-          .orderBy(asc(BoardBundleTable.n))
+          .orderBy(desc(BoardBundleTable.n))
+          .get()
+        const epic = card?.epic_id
+          ? yield* tx.select({ number: BoardEpicTable.number }).from(BoardEpicTable).where(eq(BoardEpicTable.id, card.epic_id)).get()
+          : undefined
+        const depends = yield* tx
+          .select({ number: BoardIssueTable.number })
+          .from(BoardDependencyTable)
+          .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardDependencyTable.depends_on_id))
+          .where(eq(BoardDependencyTable.issue_id, issue))
           .all()
-        return { card, checks, queued, bundles }
+        return { card, checks, attempts, queued, bundle, epic, depends, directory: yield* worktree(tx, row) }
       }),
     )
-    if (!found.card?.pr_number) return
-    yield* deps.gh(
-      ["pr", "edit", String(found.card.pr_number), "--repo", row.github_repo, "--body-file", "-"],
-      render({ key: row.key, now, ...found, card: found.card }),
-    )
+    const card = found.card
+    const record = card?.record
+    if (!card || !record?.risk?.level) return undefined
+    const head = found.bundle?.head ?? found.queued?.head_sha
+    // Against the bundle's base once bundled: after it ships, base already contains the card.
+    const numstat =
+      head && found.directory
+        ? (yield* git(found.directory, ["diff", "--numstat", `${found.bundle?.base ?? `refs/remotes/origin/${base}`}...${head}`])).out
+            .split("\n")
+            .filter(Boolean)
+            .map((line) => line.split("\t"))
+        : []
+    const state =
+      card.stage === "shipped" ? "merged" : found.bundle?.status === "open" ? "bundled" : found.queued ? "queued" : "not queued"
+    return {
+      pr: card.pr_number,
+      title: card.title,
+      head: head ?? "",
+      record: {
+        intent: record.intent ?? "",
+        change: { text: record.change ?? "", start: [] },
+        decisions: record.decisions?.trim() ? [record.decisions] : [],
+        notCovered: record.not_covered ?? "",
+        risk: { level: record.risk.level, breaks: record.risk.breaks ?? "", notice: "", undo: record.risk.undo ?? "" },
+        followUps: record.follow_ups ?? [],
+        facts: {
+          files: numstat.length,
+          added: numstat.reduce((sum, item) => sum + (Number(item[0]) || 0), 0),
+          removed: numstat.reduce((sum, item) => sum + (Number(item[1]) || 0), 0),
+          packages: [],
+          ownUnits: [],
+        },
+        evidence: {
+          doneWhen: [],
+          reviews: [],
+          checks: found.checks.map((check) => ({
+            name: `${check.kind} ${check.command}`,
+            state: check.outcome,
+            ...(check.url ? { url: check.url } : {}),
+          })),
+          used: "unseen",
+        },
+        cost: {
+          attempts: found.attempts.map((attempt) => ({ n: attempt.n, cause: attempt.cause ?? "" })),
+          ciRuns: found.checks.length,
+          ciMinutes: Math.round(
+            found.checks.reduce((sum, check) => sum + Math.max(0, (check.ended_at ?? check.started_at) - check.started_at), 0) / 60_000,
+          ),
+          wallMs: now - card.time_created,
+        },
+        lineage: {
+          card: `${row.key}-${card.number}`,
+          ...(found.epic ? { epic: `${row.key}-E${found.epic.number}` } : {}),
+          dependsOn: found.depends.map((dep) => `${row.key}-${dep.number}`),
+          seats: [...new Set(found.attempts.map((attempt) => attempt.seat).filter((seat) => seat !== null))],
+        },
+        integration: {
+          state,
+          ...(found.bundle ? { bundle: `${row.key}-B${found.bundle.n}`, testedOn: found.bundle.base } : {}),
+        },
+      } satisfies BoardRecord.PrRecord,
+    }
   })
 
   return { enqueue, dequeue, tick }
@@ -672,84 +762,3 @@ const insertNote = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, iss
   const activity = yield* log(tx, { project: project.id, issue: issue.id, actor: "github", action: "note.add", after: { id } })
   return changed(project.id, activity, issue.id)
 })
-
-const bundleBody = Effect.fnUntraced(function* (
-  tx: Tx,
-  row: ProjectRow,
-  n: number,
-  base: string,
-  members: ReadonlyArray<{ readonly issue: IssueRow; readonly head: string }>,
-) {
-  const lines = members.map((member) => {
-    const record = member.issue.record
-    const intent = record?.intent?.split("\n")[0]?.trim() ?? ""
-    return `| ${row.key}-${member.issue.number} | #${member.issue.pr_number} | \`${member.head.slice(0, 10)}\` | ${record?.risk?.level ?? ""} | ${intent.replaceAll("|", "\\|")} |`
-  })
-  return [
-    `Bundle ${row.key}-B${n}: ${members.length} card${members.length === 1 ? "" : "s"} on \`${base.slice(0, 10)}\`, assembled by Orchestra's merge queue.`,
-    "",
-    "| Card | PR | Head | Risk | Intent |",
-    "| --- | --- | --- | --- | --- |",
-    ...lines,
-    "",
-    "Orchestra merges this bundle by pushing base to its tested head once the full gate is green; do not merge it by hand.",
-  ].join("\n")
-})
-
-function render(input: {
-  readonly key: string
-  readonly now: number
-  readonly card: IssueRow
-  readonly checks: ReadonlyArray<typeof BoardCheckTable.$inferSelect>
-  readonly queued: typeof BoardQueueTable.$inferSelect | undefined
-  readonly bundles: ReadonlyArray<{ readonly n: number; readonly status: string; readonly pr: number | null; readonly on: string | null }>
-}) {
-  const record = input.card.record
-  const section = (title: string, text: string | undefined) => (text?.trim() ? [`## ${title}`, "", text.trim(), ""] : [])
-  const minutes = input.checks.reduce((sum, check) => sum + Math.max(0, (check.ended_at ?? check.started_at) - check.started_at), 0) / 60_000
-  const latest = input.checks.toSorted((a, b) => b.started_at - a.started_at).slice(0, 10)
-  const bundle = input.bundles.at(-1)
-  return [
-    ...section("Intent", record?.intent),
-    ...section("Change", record?.change),
-    ...section("Decisions", record?.decisions),
-    ...section("Not covered", record?.not_covered),
-    ...(record?.risk
-      ? [
-          "## Risk",
-          "",
-          `Level: ${record.risk.level ?? "unset"}`,
-          ...(record.risk.breaks?.trim() ? [`What could break: ${record.risk.breaks.trim()}`] : []),
-          ...(record.risk.undo?.trim() ? [`Undo: ${record.risk.undo.trim()}`] : []),
-          "",
-        ]
-      : []),
-    ...((record?.follow_ups ?? []).length > 0 ? ["## Follow-ups", "", ...(record?.follow_ups ?? []).map((key) => `- ${key}`), ""] : []),
-    "## Evidence",
-    "",
-    ...(latest.length > 0
-      ? latest.map((check) => `- ${check.kind} \`${check.command}\` on tree \`${check.tree_sha.slice(0, 10)}\`: ${check.outcome}${check.url ? ` (${check.url})` : ""}`)
-      : ["- No checks recorded."]),
-    "",
-    "## Cost",
-    "",
-    `- Attempts: ${input.card.attempts}`,
-    `- CI runs: ${input.checks.length}, ${Math.round(minutes)} min`,
-    `- Wall time: ${Math.round((input.now - input.card.time_created) / 3_600_000)} h`,
-    "",
-    "## Lineage",
-    "",
-    `- Card: ${input.key}-${input.card.number}`,
-    ...(input.queued ? [`- Queued head: \`${input.queued.head_sha.slice(0, 10)}\`${input.queued.urgent ? " (urgent)" : ""}`] : []),
-    "",
-    "## Integration",
-    "",
-    bundle
-      ? `- Bundle ${input.key}-B${bundle.n}${bundle.pr ? ` (#${bundle.pr})` : ""}: ${bundle.status}${bundle.on ? `, merged on \`${bundle.on.slice(0, 10)}\`` : ""}`
-      : input.queued
-        ? "- Queued, waiting for a bundle."
-        : "- Not queued.",
-    "",
-    "<sub>Rendered by Orchestra from the card's record. Edit the record with board_issue, not this body.</sub>",
-  ].join("\n")
-}

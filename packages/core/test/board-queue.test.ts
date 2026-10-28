@@ -6,7 +6,8 @@ import { pathToFileURL } from "url"
 import { and, eq } from "drizzle-orm"
 import { Effect, Exit } from "effect"
 import { Board } from "@orchestra/core/board/board"
-import { BoardIssueTable, BoardProjectTable, BoardQueueTable } from "@orchestra/core/board/sql"
+import type { BoardRecord } from "@orchestra/core/board/record"
+import { BoardCheckTable, BoardIssueTable, BoardProjectTable, BoardQueueTable } from "@orchestra/core/board/sql"
 import { Credential } from "@orchestra/core/credential"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
@@ -18,14 +19,21 @@ import { AppProcess } from "@orchestra/core/process"
 import { ProjectSchema } from "@orchestra/core/project/schema"
 import { ProjectTable } from "@orchestra/core/project/sql"
 import { AbsolutePath } from "@orchestra/core/schema"
+import type { PrRecord } from "@orchestra/schema/board"
 import { git } from "./fixture/git"
 import { testEffect } from "./lib/effect"
 
 // GitHub is a fake keyed by repo name that reads PR heads from each test's bare origin; git itself is real.
-type Remote = { origin: string; pulls: Map<number, string>; conclusion: string; calls: Array<ReadonlyArray<string>> }
+type Remote = {
+  origin: string
+  pulls: Map<number, string>
+  bodies: Map<number, string>
+  conclusion: string
+  calls: Array<ReadonlyArray<string>>
+}
 const remotes = new Map<string, Remote>()
 
-const gh = (args: ReadonlyArray<string>) =>
+const gh = (args: ReadonlyArray<string>, stdin?: string) =>
   Effect.promise(async () => {
     const repo = args[0] === "api" ? args[1]?.split("/").slice(1, 3).join("/") : args[args.indexOf("--repo") + 1]
     const remote = repo ? remotes.get(repo) : undefined
@@ -40,6 +48,7 @@ const gh = (args: ReadonlyArray<string>) =>
     if (args[0] === "pr" && args[1] === "create") {
       const number = 100 + remote.pulls.size
       remote.pulls.set(number, args[args.indexOf("--head") + 1] ?? "")
+      remote.bodies.set(number, stdin ?? "")
       return { exitCode: 0, stdout: `https://github.com/${repo}/pull/${number}\n`, stderr: "" }
     }
     if (args[0] === "pr" && args[1] === "view") {
@@ -48,6 +57,7 @@ const gh = (args: ReadonlyArray<string>) =>
       const headRefOid = await sha(remote.pulls.get(Number(args[2])) ?? "")
       return { exitCode: 0, stdout: JSON.stringify({ headRefOid, statusCheckRollup: rollup }), stderr: "" }
     }
+    if (args[0] === "pr" && args[1] === "edit") remote.bodies.set(Number(args[2]), stdin ?? "")
     if (args[0] === "api") return { exitCode: 1, stdout: "", stderr: "not found" }
     return { exitCode: 0, stdout: "", stderr: "" }
   })
@@ -58,12 +68,19 @@ const it = testEffect(
       Board.node,
       makeGlobalNode({
         service: Board.Service,
-        layer: Board.layerWith({ gh }),
+        layer: Board.layerWith({ gh, record: RENDER }),
         deps: [Database.node, EventV2.node, Credential.node, AppProcess.node, Global.node],
       }),
     ],
   ]),
 )
+
+// Stands in for Atlas's renderer: the bodies are the records themselves, so the test reads what the host filled in.
+const RENDER: BoardRecord.Port = {
+  pr: (record) => JSON.stringify(record),
+  bundle: (record) => JSON.stringify(record),
+  trailer: (trailer) => `WP: ${trailer.WP}\nAttempt: ${trailer.Attempt}`,
+}
 
 const RECORD = { intent: "Say hello.", decisions: "None worth noting.", not_covered: "Nothing.", risk: { level: "low" as const } }
 
@@ -74,6 +91,24 @@ describe("BoardQueue", () => {
       const repo = yield* repository("QOK")
       yield* card(repo, "QOK", 1, "a.txt")
       yield* card(repo, "QOK", 2, "b.txt")
+      const one = yield* row(repo, 1)
+      const database = yield* Database.Service
+      yield* database.db
+        .insert(BoardCheckTable)
+        .values({
+          id: Board.CheckID.create(),
+          issue_id: one.issue.id,
+          attempt: 1,
+          kind: "scoped",
+          command: "bun test a",
+          tree_sha: "0".repeat(40),
+          outcome: "pass",
+          failing: [],
+          started_at: 0,
+          ended_at: 120_000,
+        })
+        .run()
+        .pipe(Effect.orDie)
 
       expect(yield* board.queue({ project: "QOK", number: 1, reason: "Verified." })).toMatchObject({ head: expect.any(String) })
       yield* board.queueTick()
@@ -83,6 +118,8 @@ describe("BoardQueue", () => {
       yield* board.queue({ project: "QOK", number: 2, reason: "Verified." })
       yield* board.queueTick()
       expect(repo.remote.pulls.get(102)).toBe("bundle-QOK-1")
+      const opened: BoardRecord.BundleRecord = JSON.parse(repo.remote.bodies.get(102) ?? "")
+      expect(opened.members.map((member) => member.record.lineage.card)).toEqual(["QOK-1", "QOK-2"])
       const bundle = yield* origin(repo, "bundle-QOK-1")
 
       // Pending checks leave the bundle open.
@@ -95,6 +132,41 @@ describe("BoardQueue", () => {
       expect(yield* origin(repo, "main")).toBe(bundle)
       expect(yield* origin(repo, "bundle-QOK-1")).toBe("")
       expect(yield* queued(repo, 1)).toBeNull()
+      const shipped: BoardRecord.PrRecord = JSON.parse(repo.remote.bodies.get(1) ?? "")
+      expect(shipped).toMatchObject({
+        intent: "Say hello.",
+        facts: { files: 1, added: 1, removed: 0 },
+        evidence: { checks: [{ name: "scoped bun test a", state: "pass" }] },
+        cost: { ciRuns: 1, ciMinutes: 2 },
+        integration: { state: "merged", bundle: "QOK-B1" },
+      })
+      expect(yield* Effect.promise(() => Bun.$`git --git-dir ${repo.remote.origin} log --format=%B main`.quiet().text())).toContain(
+        "WP: QOK-1\nAttempt: a0",
+      )
+    }),
+  )
+
+  it.live("a card whose PR moves after assembly leaves the bundle and the queue", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QMV")
+      yield* card(repo, "QMV", 1, "a.txt")
+      yield* card(repo, "QMV", 2, "b.txt")
+      yield* board.queue({ project: "QMV", number: 1, reason: "Verified." })
+      yield* board.queue({ project: "QMV", number: 2, reason: "Verified." })
+      yield* board.queueTick()
+      expect(repo.remote.pulls.get(102)).toBe("bundle-QMV-1")
+
+      yield* Effect.promise(async () => {
+        const worktree = path.join(repo.root, "card-1")
+        await fs.writeFile(path.join(worktree, "a.txt"), "changed\n")
+        await commit(worktree, "late")
+        await git(worktree, "push", "--quiet", "origin", "card-1")
+      })
+      repo.remote.conclusion = "SUCCESS"
+      yield* board.queueTick()
+      expect([yield* stage(repo, 1), yield* stage(repo, 2)]).toEqual(["review", "queue"])
+      expect(repo.remote.calls.some((args) => args[0] === "pr" && args[1] === "close" && args[2] === "102")).toBe(true)
     }),
   )
 
@@ -157,7 +229,7 @@ function repository(key: string) {
       await commit(directory, "base")
       await git(directory, "remote", "add", "origin", pathToFileURL(remote).href)
       await git(directory, "push", "--quiet", "origin", "main")
-      return { root, directory, key, remote: { origin: remote, pulls: new Map<number, string>(), conclusion: "", calls: [] } }
+      return { root, directory, key, remote: { origin: remote, pulls: new Map<number, string>(), bodies: new Map<number, string>(), conclusion: "", calls: [] } }
     })
     remotes.set(`acme/${key}`, made.remote)
     const database = yield* Database.Service
@@ -173,7 +245,7 @@ function repository(key: string) {
 }
 
 // A Review card whose branch adds `file` and is open as PR `number`.
-function card(repo: Repo, key: string, number: number, file: string, record: Board.PrRecord = RECORD) {
+function card(repo: Repo, key: string, number: number, file: string, record: PrRecord = RECORD) {
   return Effect.gen(function* () {
     const branch = `card-${number}`
     yield* Effect.promise(async () => {

@@ -22,7 +22,7 @@ it: skill `conveyor-maintenance`. User guide: `docs/guides/merge-queue.md`.
 | Attempts on dispatch, snapshot push, push state, 10 min sweep | `packages/core/src/board/snapshot.ts`, wired in `board.ts` | conveyor |
 | Base-advance sweep, conflict notes, `conflict_base`/`conflict_files`, `board_project.base_sha` | `packages/core/src/board/conflicts.ts`, wired in `board.ts` | conveyor |
 | Queue stage, `board_queue`/`board_bundle`/`board_bundle_member`, `PrRecord` (`board_issue.record`) | `packages/core/src/board/sql.ts`, `packages/schema/src/board.ts` | conveyor |
-| Enqueue, dequeue, bundle cut, settle, merge-if-disjoint, PR body render, 60 s tick | `packages/core/src/board/queue.ts`, wired in `board.ts` | conveyor |
+| Enqueue, dequeue, bundle cut, settle, merge-if-disjoint, record facts and the record port, 60 s tick | `packages/core/src/board/queue.ts`, `record.ts`, wired in `board.ts` | conveyor |
 | `board_queue`, `board_dequeue` tools | `packages/core/src/board/tools.ts` | conveyor; Maestro only |
 | `merge-outside-conveyor` guard | `script/guards/rules/merge-outside-conveyor.toml` | conveyor |
 | Billing ledger `board_ci_run` | `packages/core/src/board/github.ts`, `money.ts` | board; unchanged by the conveyor |
@@ -57,6 +57,8 @@ it: skill `conveyor-maintenance`. User guide: `docs/guides/merge-queue.md`.
 - `merge-if-disjoint` lands without a retest only when the trial merge is clean, no file overlaps and the `turbo`
   affected sets are disjoint; any doubt (no `bun`, turbo error) is a retest.
 - The PR body carries structure, hashes and the record only. Model spend never goes to GitHub.
+- Core gathers record facts; Atlas renders bodies and commit trailers through `BoardRecord.Port`. Unbound, card
+  bodies stay as written, the bundle body is one fixed line and merge commits carry no trailer.
 - GitHub's server merge ignores `merge=union`; landing such paths takes a local merge and a fast-forward push.
 
 ## Decisions
