@@ -173,7 +173,8 @@ A new table, `board_attempt`, records one row per dispatch of a card:
 | `cause` | Why this attempt exists. Null for the first attempt. Otherwise one of `ejected:B<n>:<check>:<test or file>`, `review:<finding>`, `failed:<crash_reason>`, `conflict:<base sha>`. |
 | `outcome` | `merged`, `ejected`, `failed`, `superseded` or `cut`; null while open. |
 
-Rework keeps the card, its branch and its PR. The seat pushes fixes onto the same PR, and the queue sees a new head.
+Rework keeps the card, its branch and its PR. The seat fixes the work in its worktree, Maestro commits and pushes it in
+`land` onto the same PR, and the queue sees a new head.
 When the fix changes scope or write set, it goes to `archie`, which may open a new card. That card's `depends_on`
 links back to the original, and its first attempt's `cause` names `<KEY>#a<n>`. The original card is then cut with
 that reason. Either way, "what happened to LCH-58" is answered by one query, never by Maestro's memory.
@@ -318,7 +319,7 @@ Atlas is git-native (`modules/atlas/docs/explanation/versioning.md`): what agent
 code at every commit, branch and merge. The board travels the same way. Nothing here adds a second versioning
 mechanism; it uses Atlas's, and fills the parts Atlas has designed but not wired. The tree it all lives in is
 Atlas's [`.atlas/` layout](../../../modules/atlas/docs/design/repo-layout.md): one folder per seat, one per card, one
-file per subject, append-only logs plus the CAS.
+file per subject, append-only logs plus content-addressed blobs.
 
 **Who owns what.**
 
@@ -332,10 +333,12 @@ file per subject, append-only logs plus the CAS.
 | Flight Engineer | Meetings, transcripts and their summaries | Personal to the user. Never in git, never in Atlas |
 
 **What goes to git.** Everything Atlas holds: Memory, Orientation, review, policy, Knowledge, card threads,
-attempts (model, tokens, cost, transcript and checkpoint for re-spawn) and each session's context-continuity archive
-(§9). Knowledge travels as per-file logs under `members/<seat>/knowledge/`, never as the projection: the projection is
-rebuilt by replaying the logs through Atlas's doors, and only facts that reached the protected branch by a merged PR
-keep their tier (layout §5), so the provenance tripwire still holds. That layout is an Atlas change, owned by Atlas,
+attempts (model, tokens, cost and transcript for re-spawn) and each session's context-continuity archive (§9).
+Knowledge travels as logs of settled rows under `members/<seat>/knowledge/`, never as the projection, and bytes travel
+in `.atlas/blobs/`, never in the tripwire's `cas/`. The projection is rebuilt by replaying the logs through Atlas's
+doors: a `proven` fact that re-proves keeps its tier, and every other committed fact comes back as a candidate held
+for ratify (layout §5). So the provenance tripwire still holds, and an auto-merged bundle (§14, decision 3) never
+grants a fact its tier. That layout is an Atlas change, owned by Atlas,
 and a precondition of WP10, not part of it. The only thing that never goes to git is the
 Flight Engineer's output, which is the user's own. Secrets never go anywhere: Atlas's write scanner refuses them, and
 board attachments stay in `CredentialTable` with only their labels logged.
@@ -348,13 +351,13 @@ Board state at any commit is the fold of that log. `board import` rebuilds the b
 
 **When each part is written.**
 
-- **Seat Memory, Knowledge and context archives** are written by the seats into their own
-  `.atlas/members/<seat>/` folder in the card's worktree, and `land` commits them with the card's paths. The write-set
-  check allows them: they only append.
-- **The attempt record** is written by the conveyor when the run ends, in the card's worktree, so it lands with the
-  card.
-- **The board log, logbook and Orientation** are written by the conveyor in one commit at the top of each bundle,
-  `chore(queue): record <KEY>-B<n>`. It appends the board records since the previous bundle, one Atlas logbook entry
+- **Seat Memory and Knowledge** are written by the seats' doors into their own `.atlas/members/<seat>/` folder in the
+  card's worktree, and `land` commits them with the card's paths. The write-set check allows them: they only append.
+- **Attempts, context archives, transcripts and the board, logbook and Orientation records** are written by the host
+  in one commit at the top of each bundle, `chore(queue): record <KEY>-B<n>`. An attempt or an archive is complete only
+  after its run ends, and by then the card's commits are already in its PR, so they cannot ride with the card. The
+  record commit appends each member's attempt files and its sessions' archive events and blobs, the board records
+  since the previous bundle, one Atlas logbook entry
   per member (Atlas's `logbook` API, its first production caller), and an Orientation `milestone` event per member
   (Atlas's Orientation writer, also its first caller). The live board writes to the database only; git gets it at
   the cut, so a card's state changes never conflict with code in flight.
@@ -367,15 +370,17 @@ What that gives:
   stood when that code was cut.
 - **Restore.** A lost disk loses nothing that has merged. The database holds only what happened since the last bundle.
 - **History.** `git log -p .atlas/project/board.jsonl` is the project's history beside the code.
-- **Re-spawn.** An attempt's checkpoint, transcript and context archive are in the tree, so any run can be replayed.
+- **Re-spawn.** An attempt's transcript, its seat's memory and its session's context archive are in the tree, so any
+  run can be started again from its record (layout §3, Attempt).
 
-**Open, for WP0.** Whether GitHub's server-side merge honors `merge=union`. If it does not, every Atlas log conflicts
-on concurrent appends, and the fix belongs to Atlas (its designed `orchestra-atlas` driver). The layout keeps the
-risk small: most files have one writer, and attempts and sessions get new files. The conveyor's own bundles never race each other, because one
-bundle is in flight per conveyor.
+**Open, for WP0.** Whether GitHub's server-side merge honors `merge=union`. GitHub never runs custom drivers, so the
+`orchestra-atlas` driver cannot help there. If union is not honored, the host merges the bundle locally, where union
+and the driver run, and fast-forwards base to the tested commit (§6.6). The layout keeps the risk small: most files
+have one writer, and attempts and sessions get new files.
 
-**Public repositories.** Notes, threads, question text and spend are left out of `board.jsonl` and `card.jsonl`, and
-attempts, seat memory and context archives are redacted (§14, decision 7).
+**Public repositories.** Notes, threads, question text and spend are left out of `board.jsonl` and `card.jsonl`.
+Whether attempts, seat memory and context archives travel in full, redacted or not at all on a public repository is
+an open owner ruling (layout §9; §14, decision 7).
 The full rows stay in the app database.
 
 ## 5. CI: who triggers it and how a project configures it
@@ -397,14 +402,24 @@ through a PR like any other change.
     "checks": ["typecheck", "test"]
   },
   "bundle": { "size": 8, "max": 16, "waitMinutes": 45, "onBaseMoved": "merge-if-disjoint" },
+  "budget": { "jobs": 20 },
   "merge": "merge"
 }
 ```
 
 - `scoped.tests` is a command run in the card's worktree. Maestro supplies `{package}` and `{files}` from the Done when.
 - `scoped.workflows` are dispatched with `gh workflow run <file> --ref <card branch>`.
-- `full.label` is added to the bundle PR. `full.checks` are the check names that must pass on it. With no label,
-  the checks the PR triggers on its own are the full gate.
+- `full.label` is added to the bundle PR. The full gate is `full.checks` plus every other check the bundle PR
+  triggers on its own (here: guards, native, nix-eval, omni, storybook and `atlas-guard` where their paths match).
+  Nothing a member PR ran is carried over: every check runs again on the bundle head, because the bundle's tree is no
+  member's tree. With no label, the checks the PR triggers on its own are the full gate.
+- **Guardrail approvals.** A finding cleared with `guardrail-approved` on a member PR is cleared on the bundle only
+  when the bundle's finding is the same rule on the same lines. The host then copies the label onto the bundle PR with
+  a comment naming the member. Any other finding blocks the bundle.
+- `budget.jobs` caps the CI jobs the host keeps in flight across all its pools. This account runs at most 20 hosted
+  jobs at once (`test.yml`) and a full gate takes a large share of them, so the host counts each run's jobs before it
+  dispatches and waits when the next run would pass the cap. Isolation runs (§6.3) and lanes (§7) draw on the same
+  budget.
 - `merge` must be `merge`: squash or rebase would rewrite member SHAs, and GitHub would no longer mark member PRs
   merged.
 
@@ -431,8 +446,8 @@ PR". That keeps the `AGENTS.md` rule of one full run per epic, as long as a bund
 Because checks are keyed by tree, a green on the snapshot stays valid on the PR head when the commit Maestro makes
 in `land` has the same tree. Any edit after the check changes the tree, and the card drops back from
 `scoped-green` without anyone saying so. The same key prevents repeats: `ci_run` on a tree that already has a
-result for the same command returns that result and starts nothing. The same goes for bundles: a rebuilt bundle whose
-base and member SHAs match a bundle already tested reuses its outcome.
+result for the same command returns that result and starts nothing. The same goes for bundles: full-gate results
+are keyed by the bundle head's tree, so a rebuilt bundle whose tree matches one already tested reuses its outcome.
 
 `board_ci_run` (billing) stays as it is. `board_check` is the pass or fail ledger next to it.
 
@@ -469,11 +484,13 @@ spanning two projects on the same repository takes the first member's key, and i
 
 The failed jobs and their logs give the failing set F: test files, or file paths from typecheck errors.
 
-1. **Infrastructure.** A run cancelled, timed out or without the omni control line is not red. Rerun it once. A
-   second infrastructure failure pauses the pool and raises an `<integration>` line.
-2. **Base check and flake probe.** Rerun only F, scoped, on base and on the bundle head, in parallel. If F fails on
-   base, the red belongs to base, not to the bundle (§6.8). If F passes on the bundle head, the bundle becomes
-   `flaky B<n>` (§6.4).
+1. **Infrastructure.** A job that was cancelled, timed out or lost its runner is not red, and neither is a test job
+   that ended without the omni control line. A typecheck or guard failure is always code. Rerun the infrastructure
+   job once. A second infrastructure failure pauses the pool and raises an `<integration>` line.
+2. **Base check and flake probe.** "Run F" means `scoped.tests` on F's files for tests, and the typecheck workflow on
+   the packages that own F's paths for typecheck. Run F on base and on the bundle head, in parallel. F belongs to base
+   only when it fails on base twice (§6.8). If F passes on the bundle head, run it twice more there: three passes make
+   the bundle `flaky B<n>` (§6.4); any failure makes it red.
 3. **Isolate.** For each member whose diff touches a path in F, or every member when none does, run F scoped on base
    + that member and its `depends_on` members in this bundle. These runs go in parallel, at most `size` of them. Each member that fails alone is a culprit.
 4. **Halve.** If no member fails alone, the failure is an interaction. Run F on base + the first half of the members,
@@ -481,12 +498,13 @@ The failed jobs and their logs give the failing set F: test files, or file paths
    That takes ⌈log₂ N⌉ serial rounds.
 5. **Eject and rebuild.** Culprits leave the bundle: their attempt closes with `ejected` and a new attempt opens with
    the cause. Members whose `depends_on` includes a culprit go back to the queue, keeping their place. The host
-   rebuilds the bundle from the rest and reruns only what the ejection can change: F, plus the full gate filtered to
-   the culprits' affected sets (§7.1). Every other check already passed on a superset of these members and cannot
-   change when they leave. If that passes, the bundle merges. A project with no workspace graph reruns the full gate.
-6. **Dissolve.** After two rebuilds of the same bundle, or when halving finds no culprit, the bundle dissolves. Every
-   member goes back to the queue in its original order, and Maestro gets an `<integration>` line. It may dequeue a
-   suspect or send F to `jimmy`.
+   rebuilds the bundle from the rest and reruns the full gate on it. A filtered rerun would need the `packages`
+   dispatch input that only phase 2 adds (§7.4); until then, a rebuilt bundle whose tree was already tested reuses that
+   result (§5.2).
+6. **Dissolve.** After two rebuilds of the same bundle, or when halving finds no culprit, the bundle dissolves. Its
+   members are marked `held` and leave the cut until Maestro releases them, so the same bundle is never cut again in a
+   loop. Maestro gets an `<integration>` line and releases them one at a time, dequeues a suspect, or sends F to
+   `jimmy`. A released member rides a bundle alone first.
 
 **Bundle size.** `size` in the contract is the start value. Once the ledger holds 50 bundled cards, the host sets
 the size from the per-card red rate p, the share of bundled cards ejected over the last 50: the largest n with
@@ -517,7 +535,15 @@ holding them is not allowed. `onBaseMoved` decides:
 
 ### 6.6 Merge
 
-A green bundle merges with `gh pr merge --merge`, under the grant given with `board_queue`. Then:
+A green bundle merges under the grant given with `board_queue`. Right before it merges, the host:
+
+- re-reads every member PR's head through the API. A head that moved since the bundle was assembled dequeues that
+  member and rebuilds the bundle (§8.3);
+- compares base's tip with the `base.sha` stored on the bundle's full-gate run. A different tip is §6.5.
+
+Then it merges with `gh pr merge --merge --match-head-commit <tested head>`. Where GitHub's merge would not honor
+`merge=union` (§4.7), the host instead merges locally and pushes base as a fast-forward to the tested commit, which
+GitHub marks as merging every member PR. After the merge:
 
 - GitHub marks each member PR merged, and the existing sync ships the card.
 - The host closes each open attempt with `merged`.
@@ -541,7 +567,10 @@ base (§7.3).
   tip. It never reverts.
 - It opens a fix card pinned to the front of the queue, naming the culprit commit and F, and raises one
   `<integration>` line.
-- Until the fix lands, no bundle is cut whose affected set overlaps F's packages. In phase 1, no bundle is cut at all.
+- Until the fix lands, no bundle is cut whose affected set overlaps F's packages, except the fix card itself, which
+  rides a bundle alone and is judged only on F: it merges when F passes, even if other checks are red on base too.
+  In phase 1 no other bundle is cut at all. Without that exception the fix could never pass the full gate it is
+  fixing.
 
 ## 7. Phase 2: one conveyor per affected area
 
@@ -563,8 +592,9 @@ and for this repository they are the root `package.json`, `bun.lock`, `turbo.jso
 Lanes are not stored. Two rules decide, at every cut, which queued cards may go:
 
 1. A card may join a new bundle only when its affected set overlaps no bundle in flight.
-2. A card is never cut ahead of an earlier card, by `order` and then by time queued (§4.4), whose affected set
-   overlaps its own.
+2. A card is never cut ahead of an earlier bundleable card, by `order` and then by time queued (§4.4), whose
+   affected set overlaps its own. A card on hold, `held`, conflicting or waiting on an unshipped `depends_on` is not
+   bundleable, so it does not block its lane.
 
 The cards that pass both rules are grouped into connected components of overlapping affected sets. Each component is
 a lane and cuts its own bundle with the phase 1 algorithm: assemble, run, isolate, halve, eject, merge. Lanes with
@@ -600,8 +630,9 @@ a `packages` dispatch input, which is part of WP7.
 
 ### 7.5 Throughput
 
-Each lane gives phase 1's throughput, about 12–16 merges an hour at D = 30 min, and its filtered gate is usually
-shorter than D. Throughput then grows with the number of independent areas in flight, not with one conveyor's
+Each lane gives up to phase 1's throughput, about 12–16 merges an hour at D = 30 min, and its filtered gate is usually
+shorter than D. The job budget (§5.1) caps the total: with J jobs per gate run, at most ⌊`budget.jobs` / J⌋ lanes run
+at once, and the rest wait their turn. Throughput then grows with the number of independent areas in flight, not with one conveyor's
 speed. Maestro's planning feeds this directly: cards that `archie` cuts by package land in different lanes.
 
 ## 8. Invariants against lost work
@@ -610,21 +641,24 @@ speed. Maestro's planning feeds this directly: cards that `archie` cuts by packa
    snapshot commit through a temporary index (`git add -A` against `GIT_INDEX_FILE`, then `write-tree` and
    `commit-tree` with the previous snapshot as parent). It pushes the commit to `refs/orchestra/wip/<KEY>/a<n>` on
    the project's push remote. The worktree, its index and its HEAD are untouched, so "seats never commit" still
-   holds. `.gitignore` applies. When the new tree equals the last snapshot's tree, nothing is written or pushed. On a
-   public repository the ref is as public as a PR branch.
+   holds. `.gitignore` applies. When the new tree equals the last snapshot's tree, nothing is written or pushed.
+   Before a push, the host runs Atlas's write scanner over the changed files; a hit blocks the push and raises an
+   `<integration>` line. On a public repository the ref is as public as a PR branch, so snapshots go to a private
+   remote when the project names one (`snapshots.remote`), and to the public remote only after the scan.
 2. **Nothing disappears silently.** Ejection, a red check and dequeueing never close a PR or delete a branch. Only a
    merge or a card cut ends an attempt, and every end has an `outcome` row.
 3. **Every queue exit has a fact.** A card leaves the queue only by merge, ejection, or dequeue with a reason (from
    the host or from Maestro). An `in-bundle` card whose PR head moved is treated as dequeued by the host. It is never
-   merged at a SHA the bundle did not test.
+   merged at a SHA the bundle did not test: the host re-reads heads right before merging and merges with
+   `--match-head-commit` (§6.6), so a push between the read and the merge fails the merge instead of landing.
 4. **Targeted rebase notices.** When base advances, the host takes `git diff --name-only <old>..<new>` and compares
    it, with the arsenal's `conflictVerdict` semantics, to the declared write set of every queued card (phase 1;
    Building cards are later work, §12).
    `task`'s `writePaths` are stored on the attempt row. Only cards with an overlap get checked, with `git merge-tree`
    against their snapshot or PR head:
    - an overlap that merges clean is a quiet note on the card ("base touched src/x.ts; merges clean");
-   - a conflict is an `<integration>` line naming the files, and the seat merges base in its own worktree on its next
-     dispatch (`land` already says how).
+   - a conflict is an `<integration>` line naming the files; on its next dispatch the seat merges base in its own
+     worktree, and Maestro commits that in `land` (`land` already says how).
    No card is notified about a merge that does not touch its write set. The host never rebases or merges into a
    seat's worktree: a running seat may have uncommitted work there.
 5. **Recovery after a crash.** On start, the host reconciles each open pool: it reads every open bundle PR and its
@@ -654,7 +688,7 @@ The board holds state. Maestro's context holds judgment. That is the split `maes
 
   Everything else stays on the board, where `board_read` finds it.
 - What compaction archives (`context_recall`'s chunks) also travels in git, as the seat's
-  `.atlas/members/<seat>/context/<session>.jsonl` plus CAS chunks, linked to the card and attempt it served (§4.7). A
+  `.atlas/members/<seat>/context/<session>.jsonl` plus blobs under `.atlas/blobs/`, linked to the card through the attempt it served (§4.7). A
   fresh clone can recall it and re-spawn from it.
 
 Example:
@@ -675,8 +709,9 @@ Example:
 | A worktree is removed early | Missing path on poll | Restore it from the snapshot ref. With no snapshot, it is a drift line. |
 | A bundle is red because of code | Failed checks | §6.3: isolate, halve, eject, rebuild |
 | A bundle is red because of a flake | The scoped rerun passes | §6.4: Maestro's verdict |
-| CI infrastructure fails | Cancelled, timed out, or no omni control line | Rerun once, then pause the pool |
-| A member's PR head moves in the bundle | Head SHA differs from the recorded one | The member is dequeued and the bundle rebuilt without it |
+| CI infrastructure fails | Cancelled, timed out, runner lost, or a test job without the omni control line | Rerun once, then pause the pool |
+| A member's PR head moves in the bundle | Head SHA differs from the recorded one, read again right before merge | The member is dequeued and the bundle rebuilt without it |
+| A bundle dissolves | §6.3 step 6 | Members `held`; Maestro releases them one at a time |
 | A member's PR is closed by a human | Poll | Dequeued with that fact. The board raises a question, as it does today for closed issues. |
 | Base moves under a bundle | Base SHA differs | §6.5 |
 | Base itself is red | F fails on base, or the whole suite fails on base | §6.8: no member is blamed, fix card at the front |
@@ -715,7 +750,7 @@ and per lane:
 | Item | Build it when |
 |---|---|
 | Speculative bundles stacked within a lane (Zuul, GitLab trains, SubmitQueue) | A lane's queue wait stays above 2 × its gate duration for a week |
-| Flake quarantine and flake-aware bisection beyond one probe | The same test appears in `board_flake` in three bundles |
+| Flake quarantine and flake-aware bisection beyond the three-run probe | The same test appears in `board_flake` in three bundles |
 | Test-impact selection finer than packages | A lane's filtered gate is still the bottleneck |
 | Preempting an in-flight bundle for an urgent card | An urgent card misses its window because a bundle was in flight |
 | Proactive rebase notices to cards that are not queued yet (§8.4) | `conflict:` causes exceed one rework attempt a day |
@@ -761,12 +796,14 @@ phase.
 | **1. Ledger and push-early** | `board_attempt` with stored `writePaths`; snapshot refs on seat return and on the 10 min timer; the `local` and `pushed` states; the `maestro/integration` source with the dead-Session and missing-worktree lines; `track` playbook edits | Kill a seat mid-task: its card shows `pushed`, and its worktree is restored from the ref |
 | **2. CI facts** | `.orchestra/ci.json` reader and defaults; `ci_run`; `board_check` keyed by tree; the `scoped-green` and `scoped-red` states | A green scoped run stays valid after Maestro's commit with the same tree, and drops after an edit |
 | **3. Conflict notices** | Base-advance diff, matched against queued cards' write sets with `conflictVerdict`, then `merge-tree`; the `conflicts` state and its `<integration>` line | A merge that touches a card's write set notifies only that card; a merge outside it notifies none |
-| **4. Queue and green bundles** | The `queue` stage and the host's moves into and out of it, with the card statuses (visuals by the Interface session); `board_queue`, `board_dequeue` and their preconditions; pools; cut rules a–d; assembly; the bundle PR with `full.label`; merge on green; `onBaseMoved`; the card's affected set from `turbo` (§7.1), which `merge-if-disjoint` and the eject rerun use in phase 1 too; the PR record, host-opened PRs through Atlas's host adapter with its GitHub writer, Atlas's trailers plus `Attempt`, the bundle body (§4.5); `land` playbook Publish rewritten to "verify, write the record, then `board_queue`" | Three verified cards merge through one bundle and one full run; all three ship; each PR shows host-filled cost, checks and review records; a record with no Risk is refused at enqueue; the merged card has one logbook entry, inside its bundle |
+| **4. Queue and green bundles** | The `queue` stage and the host's moves into and out of it, with the card statuses (visuals by the Interface session); `board_queue`, `board_dequeue` and their preconditions; pools; cut rules a–d; assembly; the bundle PR with `full.label`; merge on green; `onBaseMoved`; the card's affected set from `turbo` (§7.1), which `merge-if-disjoint` and the eject rerun use in phase 1 too; the PR record, host-opened PRs through Atlas's host adapter with its GitHub writer, Atlas's trailers plus `Attempt`, the bundle body (§4.5); `land` playbook Publish rewritten to "verify, write the record, then `board_queue`" | Three verified cards merge through one bundle and one full run; all three ship; each PR shows host-filled cost, checks and review records; a record with no Risk is refused at enqueue; a member push between assembly and merge dequeues that member instead of landing it |
 | **5. Red bundles** | Bundle size from the red rate; the four ledger numbers on the board; infrastructure rerun, base check and flake probe, isolation with in-bundle dependencies, halving, eject into rework, rebuild, dissolve, `board_flake` and the `board_bundle` verdict, base red (§6.8) | A seeded failing member is ejected with the right cause, and the rest merge on the rebuilt bundle; a seeded interaction is found by halving; a seeded red on base ejects no member |
 | **6. Recovery** | Restart reconcile for pools, bundles and snapshots | Kill the host between "bundle green" and "merge": on restart it merges once, with no duplicate bundle |
-| **10. Thread and board versions** | `board_note` `kind` and seat authors; the host writes thread rows from `task` calls, returns and review records (§4.6); `.atlas/project/board.jsonl`, `cards/<KEY>/card.jsonl` and attempt files unioned like the other Atlas logs; the bundle's record commit with the board log, logbook and Orientation records; the `.atlas` files allowed in `land`'s write-set check, the public redaction and `board import` from a tree (§4.7) | A card's thread shows its brief, a seat question, the answer and the return without any agent posting; a checkout of an older merge imports the board as it stood then; deleting the local database and importing from `dev` restores every merged version |
+| **A. Atlas layout** (Atlas's own work, `modules/atlas/docs/design/repo-layout.md` §8) | The `.atlas/` tree, union rules, knowledge logs, blobs, attempts and continuity archives, built by Atlas | Layout build steps 1–4 merged |
+| **10. Thread and board versions** | `board_note` `kind` and seat authors; the host writes thread rows from `task` calls, returns and review records (§4.6); `.atlas/project/board.jsonl`, `cards/<KEY>/card.jsonl` and attempt files unioned like the other Atlas logs; the bundle's record commit with the board log, logbook and Orientation records; the `.atlas` files allowed in `land`'s write-set check, the public redaction and `board import` from a tree (§4.7) | A card's thread shows its brief, a seat question, the answer and the return without any agent posting; the merged card has one logbook entry and its attempt file, inside its bundle's record commit; a checkout of an older merge imports the board as it stood then; deleting the local database and importing from `dev` restores every merged version |
 
-Order: 0, then 1 and 2 in parallel (disjoint write sets), then 3 and 4, then 5, then 6. WP10's thread half runs in parallel with 1 and 2; its record-commit half follows 4. WP1 ships first, alone if
+Order: 0, then 1 and 2 in parallel (disjoint write sets), then 3 and 4, then 5, then 6. WP A runs in parallel from
+the start. WP10's thread half runs in parallel with 1 and 2; its record-commit half follows 4 and WP A. WP1 ships first, alone if
 needed, because lost work is the costliest pain and it needs no queue.
 
 **Phase 2: one conveyor per affected area.** It starts after phase 1 has run a real epic. WP7 and WP9 run in
@@ -786,13 +823,16 @@ parallel: WP9 touches only `archie`'s plan skill, `maestro-plan` and the enqueue
    other sessions merge into `dev` directly. Recommended: yes for this repository; `retest` stays the default for
    other projects.
 3. **The host merges a green bundle under the grant Maestro gave with `board_queue`,** with no further prompt per
-   bundle. Recommended: yes, because enqueue is the merge decision.
+   bundle. Recommended: yes, because enqueue is the merge decision. This merge is not a human review, so it never
+   counts as one for Atlas: committed Knowledge keeps its tier only by re-proving (§4.7).
 4. **Snapshot refs are pushed to the public remote.** They are as public as a PR branch. Recommended: yes, since the
    alternative is work that lives only on one disk.
 5. **Phase 2 trusts the affected graph between whole-suite runs** (§7.3). A break the graph misses is caught by the
-   next epic bundle, and pauses only the lanes it touches. Recommended: yes, with no extra whole-suite runs (`fullEvery` 0) for this
-   repository, because epics already close often.
+   next epic bundle, and pauses only the lanes it touches. Risk: an epic bundle waits for every card of the epic, so
+   while one card is in rework the net does not run; `fullEvery` is the remedy if that grows long. Recommended: yes,
+   with no extra whole-suite runs (`fullEvery` 0) for this repository, because epics already close often.
 6. **Model spend stays off GitHub** (§4.5). PRs show attempts, CI minutes and wall time; tokens and spend show only in
    the app. Recommended: yes, matching the board contract; a project may opt in later if its repository is private.
 7. **The board log in a public repository is redacted** (§4.7): no notes, threads, question text or spend. A private
-   repository tracks everything except secrets. Recommended: yes.
+   repository tracks everything except secrets. Recommended: yes. Whether attempts, seat memory and context archives
+   travel on a public repository is a separate ruling, asked in the Atlas layout (§9).
