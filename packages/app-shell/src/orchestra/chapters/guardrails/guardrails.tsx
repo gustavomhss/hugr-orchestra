@@ -737,23 +737,13 @@ export default function Guardrails(props: { directory: string; scenario?: Source
       <Show
         when={ruleCount()}
         fallback={
-          <Show
-            when={rules().length}
-            fallback={
-              <div class="mx-empty">
-                <strong>{t("orchestra.guardrails.rules.nothing")}</strong>
-                <p>{t("orchestra.guardrails.rules.nothingBody")}</p>
-              </div>
-            }
-          >
-            <div class="mx-empty">
-              <strong>{t("orchestra.guardrails.rules.none")}</strong>
-              <p>{t("orchestra.guardrails.rules.noneBody")}</p>
-              <button type="button" class="mx-btn" onClick={() => setStore("filter", { ...anyFilter })}>
-                {t("orchestra.guardrails.rules.clear")}
-              </button>
-            </div>
-          </Show>
+          <div class="mx-empty">
+            <strong>{t(rules().length ? "orchestra.guardrails.rules.none" : "orchestra.guardrails.rules.nothing")}</strong>
+            <p>{t(rules().length ? "orchestra.guardrails.rules.noneBody" : "orchestra.guardrails.rules.nothingBody")}</p>
+            <Show when={rules().length}>
+              <button type="button" class="mx-btn" onClick={() => setStore("filter", { ...anyFilter })}>{t("orchestra.guardrails.rules.clear")}</button>
+            </Show>
+          </div>
         }
       >
         <div class="gr-overview gr-rules" data-open={openRule() ? "" : undefined}>

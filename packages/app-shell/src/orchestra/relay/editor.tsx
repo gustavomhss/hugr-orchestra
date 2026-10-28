@@ -5,25 +5,33 @@ import { useServerSDK } from "@/context/server-sdk"
 import { showToast } from "@/utils/toast"
 import { modalActive } from "@/utils/modal-active"
 import { skipToken, useQuery } from "@tanstack/solid-query"
-import { createEffect, createMemo, createSignal, For, Match, on, onCleanup, onMount, Show, Switch } from "solid-js"
-import { MxPage } from "../chapters/kit"
+import { createEffect, createMemo, createSignal, Match, on, onCleanup, onMount, Show, Switch } from "solid-js"
 import { listedSkills, readSkills, skillSource, sortSkills } from "../chapters/skills-data"
 import type { CanvasApi } from "./canvas"
 import { hookOutputs } from "./catalog"
 import { rememberDocument } from "./cache"
 import { documentDiagnostics, type RelayDocument } from "./client"
 import type { RelayRun } from "./runs"
-import { ConfirmDialog, createAction, DeleteDialog, failure, PublishDialog, ShortcutsDialog } from "./dialogs"
+import { createAction, failure } from "./dialogs"
 import { EditorHead } from "./editor-head"
+import {
+  DocumentsError,
+  DraftsFull,
+  EditorDialogs,
+  type EditorDialog,
+  EditorMissing,
+  EditorNotices,
+  HistoryUnavailable,
+  type TestResult,
+} from "./editor-overlays"
 import { DraftScope, openDraft, profileDrafts } from "./drafts"
 import { CanvasTab } from "./editor-canvas"
 import { Executions } from "./executions"
 import { newestFirst, runHandle } from "./format"
 import { documentFields, emptiedPhases, type Flow, flowFromDocument, issueNode, issues, layoutWorkflow } from "./graph"
 import { workflowFile } from "./import"
-import { HookActivity, TestDialog } from "./hook-activity"
+import { HookActivity } from "./hook-activity"
 import { installNotice, refreshInstalls } from "./hook-install"
-import { HookQueryStatus } from "./hook-status"
 import { runVersion } from "./history"
 import { issueText } from "./parts"
 import { RunsUnavailable } from "./library"
@@ -33,7 +41,7 @@ import { layerBase, type RelayRoute, relayPath } from "./route"
 import { SERVER_ISSUES } from "./server-issues"
 import { StudioScope } from "./studio"
 import type { RelaySource } from "./source"
-import { Ic, type MenuItem, useRelayCopy } from "./ui"
+import { type MenuItem, useRelayCopy } from "./ui"
 
 export type EditorProps = {
   source: RelaySource
@@ -46,19 +54,11 @@ export type EditorProps = {
   crumbs: (items: string[]) => void
 }
 
-const DRAFT_REASON = {
-  error: "orchestra.workflows.drafts.reason.error",
-  conflict: "orchestra.workflows.drafts.reason.conflict",
-  saving: "orchestra.workflows.drafts.reason.saving",
-  saved: "orchestra.workflows.drafts.reason.unsaved",
-} as const
-
 export function Editor(props: EditorProps) {
   const copy = useRelayCopy()
   const document = () =>
     props.source.list().find((item) => item.id === props.route.id) ??
     profileDrafts(props.source).find((draft) => draft.state.base.id === props.route.id)?.state.base
-  const library = () => relayPath.library(props.route.kind)
   return (
     <Switch>
       <Match when={props.source.documents.isPending && !document()}>
@@ -67,29 +67,10 @@ export function Editor(props: EditorProps) {
         </p>
       </Match>
       <Match when={props.source.documents.isError && !document()}>
-        <div class="mx-page">
-          <p class="mx-error" role="alert">
-            {copy.t("orchestra.workflows.error", { reason: failure(props.source.documents.error) })}
-          </p>
-          <button type="button" class="mx-btn" onClick={() => void props.source.documents.refetch()}>
-            {copy.t("orchestra.workflows.retry")}
-          </button>
-        </div>
+        <DocumentsError source={props.source} />
       </Match>
       <Match when={!document()}>
-        <MxPage
-          id="orchestra-relay-missing"
-          title={copy.t(
-            props.route.kind === "workflow" ? "orchestra.workflows.editor.missing" : "orchestra.hooks.editor.missing",
-          )}
-          description={copy.t("orchestra.workflows.editor.missingBody")}
-        >
-          <button type="button" class="mx-btn" onClick={() => props.go(library())}>
-            {copy.t("orchestra.workflows.editor.back", {
-              name: copy.t(props.route.kind === "workflow" ? "orchestra.workflows.title" : "orchestra.hooks.title"),
-            })}
-          </button>
-        </MxPage>
+        <EditorMissing kind={props.route.kind} go={props.go} />
       </Match>
       <Match when={document()?.id} keyed>
         {(id) => <Frame {...props} id={id} initial={document()!} />}
@@ -108,31 +89,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
   const server = () => props.source.list().find((item) => item.id === props.id)
   const draft = openDraft(props.source, props.initial, kind)
   if (!draft)
-    return (
-      <MxPage
-        id="relay-drafts-full"
-        title={copy.t("orchestra.workflows.drafts.full")}
-        description={copy.t("orchestra.workflows.drafts.resolve")}
-      >
-        <For each={profileDrafts(props.source)}>
-          {(pending) => (
-            <button
-              type="button"
-              class="mx-btn"
-              onClick={() => props.go(relayPath.editor(pending.state.flow.kind, pending.state.base.id))}
-            >
-              {pending.state.name}
-              <small class="wf-draft-reason">{copy.t(DRAFT_REASON[pending.state.save.state])}</small>
-            </button>
-          )}
-        </For>
-        <button type="button" class="mx-btn" onClick={() => props.go(relayPath.library(kind))}>
-          {copy.t("orchestra.workflows.editor.back", {
-            name: copy.t(kind === "workflow" ? "orchestra.workflows.title" : "orchestra.hooks.title"),
-          })}
-        </button>
-      </MxPage>
-    )
+    return <DraftsFull source={props.source} kind={kind} go={props.go} />
   const base = () => draft.state.base
   const flow = () => draft.state.flow
   const name = () => draft.state.name
@@ -164,8 +121,8 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
   const reload = draft.reload
   onCleanup(draft.release)
   const [selected, setSelected] = createSignal<string[]>([])
-  const [dialog, setDialog] = createSignal<"publish" | "unpublish" | "revert" | "delete" | "keys" | "test">()
-  const [test, setTest] = createSignal<{ path: string[]; result: string; label: string }>()
+  const [dialog, setDialog] = createSignal<EditorDialog>()
+  const [test, setTest] = createSignal<TestResult>()
   const [install, setInstall] = createSignal(false)
   const outputs = () =>
     kind === "hook" ? hookOutputs(props.source.nodeTypes.isSuccess ? props.source.nodeTypes.data.hook : undefined) : {}
@@ -640,61 +597,26 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
         />
         <div class="wf-body">
           <Show when={noticed()}>
-            <div class="wf-notices">
-              <Show when={exporting.error()}>
-                {(message) => (
-                  <div class="wf-alert wf-notice" role="alert" data-slot="relay-export-error">
-                    <Ic name="warn" />
-                    <div>
-                      <strong>{copy.t("orchestra.workflows.export.failed")}</strong>
-                      <span>{plain(message())}</span>
-                    </div>
-                    <button
-                      type="button"
-                      class="mx-btn icon"
-                      aria-label={copy.t("orchestra.workflows.dialog.close")}
-                      title={copy.t("orchestra.workflows.dialog.close")}
-                      onClick={() => exporting.setError(undefined)}
-                    >
-                      <Ic name="close" />
-                    </button>
-                  </div>
-                )}
-              </Show>
-              <Show when={kind === "hook" && !props.source.installs.isSuccess}>
-                <HookQueryStatus kind="installs" query={props.source.installs} />
-              </Show>
-              <Show when={kind === "hook" && installed() && !decisions.isSuccess}>
-                <HookQueryStatus kind="activity" query={decisions} />
-              </Show>
-            </div>
+            <EditorNotices
+              kind={kind}
+              source={props.source}
+              exportError={exporting.error()}
+              installed={!!installed()}
+              decisionsReady={decisions.isSuccess}
+              decisions={decisions}
+              onDismissExport={() => exporting.setError(undefined)}
+              plain={plain}
+            />
           </Show>
           <div class="wf-stage">
             <Switch>
               <Match when={props.route.view && !frozenFlow()}>
-                <div class="mx-page" data-slot="relay-history-unavailable">
-                  <p role={viewed.isError || frozen.isError ? "alert" : "status"}>
-                    {copy.t(
-                      viewed.isError || frozen.isError
-                        ? "orchestra.workflows.history.error"
-                        : (!overlayRun() && viewed.isPending) || (overlayRun() && frozen.isPending)
-                          ? "orchestra.workflows.history.loading"
-                          : "orchestra.workflows.history.unavailable",
-                    )}
-                  </p>
-                  <Show when={viewed.isError || frozen.isError}>
-                    <button
-                      type="button"
-                      class="mx-btn"
-                      onClick={() => void (viewed.isError ? viewed.refetch() : frozen.refetch())}
-                    >
-                      {copy.t("orchestra.workflows.retry")}
-                    </button>
-                  </Show>
-                  <button type="button" class="mx-btn" onClick={() => props.go(relayPath.editor(kind, props.id))}>
-                    {copy.t("orchestra.workflows.history.back")}
-                  </button>
-                </div>
+                <HistoryUnavailable
+                  failed={viewed.isError || frozen.isError}
+                  loading={(!overlayRun() && viewed.isPending) || (!!overlayRun() && frozen.isPending)}
+                  onRetry={() => void (viewed.isError ? viewed.refetch() : frozen.refetch())}
+                  onBack={() => props.go(relayPath.editor(kind, props.id))}
+                />
               </Match>
               <Match when={props.route.tab === "editor"}>
                 <StudioScope
@@ -799,85 +721,26 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
             </Switch>
           </div>
         </div>
-        <Show when={emptying()}>
-          {(pending) => (
-            <ConfirmDialog
-              title={copy.t("orchestra.workflows.phaseEmpty.title", { name: pending().names })}
-              body={copy.t("orchestra.workflows.phaseEmpty.body")}
-              confirm={copy.t("orchestra.workflows.phaseEmpty.confirm")}
-              onConfirm={() => draft.edit(pending().flow)}
-              onClose={() => setEmptying(undefined)}
-            />
-          )}
-        </Show>
-        <Switch>
-          <Match when={dialog() === "publish"}>
-            <PublishDialog
-              document={base()}
-              flow={flow()}
-              source={props.source}
-              active={draft.active}
-              install={kind === "hook" ? installed()?.installID : undefined}
-              retain={() => {
-                draft.acquire()
-                return draft.release
-              }}
-              onClose={() => setDialog(undefined)}
-              onPublished={(item) => {
-                if (kind !== "workflow") return
-                showToast({
-                  variant: "success",
-                  title: copy.t("orchestra.workflows.publish.done", { name: item.name }),
-                  actions: [
-                    { label: copy.t("orchestra.workflows.editor.useInChat"), onClick: () => openChat("use", item) },
-                  ],
-                })
-              }}
-            />
-          </Match>
-          <Match when={dialog() === "unpublish"}>
-            <ConfirmDialog
-              title={copy.t("orchestra.workflows.unpublish.title", { name: name() })}
-              body={copy.t(kind === "hook" ? "orchestra.hooks.unpublish.body" : "orchestra.workflows.unpublish.body")}
-              confirm={copy.t("orchestra.workflows.unpublish.confirm")}
-              onConfirm={unpublish}
-              onClose={() => setDialog(undefined)}
-            />
-          </Match>
-          <Match when={dialog() === "revert"}>
-            <ConfirmDialog
-              title={copy.t("orchestra.workflows.revert.title", { name: name() })}
-              body={copy.t("orchestra.workflows.revert.body")}
-              confirm={copy.t("orchestra.workflows.revert.confirm")}
-              onConfirm={revert}
-              onClose={() => setDialog(undefined)}
-            />
-          </Match>
-          <Match when={dialog() === "delete"}>
-            <DeleteDialog
-              document={base()}
-              kind={kind}
-              source={props.source}
-              onClose={() => setDialog(undefined)}
-              onDeleted={() => props.go(relayPath.library(kind), true)}
-            />
-          </Match>
-          <Match when={dialog() === "keys"}>
-            <ShortcutsDialog onClose={() => setDialog(undefined)} />
-          </Match>
-          <Match when={dialog() === "test"}>
-            <TestDialog
-              flow={flow()}
-              types={props.source.nodeTypes.isSuccess ? props.source.nodeTypes.data.hook : undefined}
-              onClose={() => setDialog(undefined)}
-              onResult={(result) => {
-                setDialog(undefined)
-                setTest(result)
-                if (props.route.tab !== "editor") props.go(relayPath.editor(kind, props.id))
-              }}
-            />
-          </Match>
-        </Switch>
+        <EditorDialogs
+          kind={kind}
+          id={props.id}
+          source={props.source}
+          route={props.route}
+          go={props.go}
+          draft={draft}
+          document={base()}
+          flow={flow()}
+          name={name()}
+          dialog={dialog()}
+          emptying={emptying()}
+          installID={installed()?.installID}
+          openChat={openChat}
+          unpublish={unpublish}
+          revert={revert}
+          onDialog={(next) => setDialog(next)}
+          onEmptied={() => setEmptying(undefined)}
+          onTest={(result) => setTest(result)}
+        />
       </div>
     </DraftScope>
   )

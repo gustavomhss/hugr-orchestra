@@ -2,7 +2,8 @@ import { createEffect, createMemo, For, type JSX, on, onCleanup, onMount, Show }
 import { createStore } from "solid-js/store"
 import type { RelayNodeType } from "./client"
 import { nodeGlyph, nodeTone, WORKFLOW_ENTRIES, workflowKey } from "./catalog"
-import { Params, PhaseNameField, type Skills } from "./details-workflow"
+import { Params, PhaseNameField } from "./details-params"
+import type { Skills } from "./details-workflow"
 import { STEP_TONE } from "./format"
 import {
   chain,

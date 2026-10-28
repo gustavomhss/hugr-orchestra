@@ -30,7 +30,6 @@ import { ToolRegistry } from "../../tool/registry"
 import { ToolSafety } from "../../tool-safety"
 import { TaskGovernance } from "../../tool/task-governance"
 import { Mcp } from "../../mcp"
-import { McpCatalog } from "../../mcp/catalog"
 import { ToolOutputStore } from "../../tool-output-store"
 import { SessionExecution } from "../execution"
 import { SessionContextEpoch } from "../context-epoch"
@@ -53,14 +52,13 @@ import { SessionTitle } from "./title"
 import { ReadToolFileSystem } from "../../tool/read-filesystem"
 import { SessionDirectCommands } from "./direct-commands"
 import { hostedCall } from "./hosted-call"
+import { STEP_TOOL_REFUSAL, narrowStepTools } from "./step-tools"
 import { TurnTransitionError, continueAfterCompaction, continueAfterOverflowCompaction } from "./turn-transition"
 import { DEFAULT_MAX_STEPS, MAX_STEPS_PROMPT } from "./max-steps"
 import { Snapshot } from "../../snapshot"
 import { makeLocationNode } from "../../effect/app-node"
 import { llmClient } from "../../effect/app-node-platform"
 import { RelayWorkflowSession } from "../../relay-workflow-session"
-import { RelaySprint } from "@orchestra/schema/relay-sprint"
-import { Permission } from "@orchestra/schema/permission"
 import { FSUtil } from "../../fs-util"
 import { AppProcess } from "../../process"
 import { SkillV2 } from "../../skill"
@@ -154,35 +152,6 @@ const layer = Layer.effect(
     const compaction = yield* SessionCompaction.Service
     const db = database.db
     const nameSession = SessionTitle.make({ db, events, store, agents, models, subagentModels, llm })
-    // A workflow step narrows its agent's tools: `hidden` keeps denied MCP servers and an emptied bash out of the
-    // materialized definitions, and `refuses` checks every call, local or hosted, since bash and MCP permission checks
-    // read only the agent's rules. Listed patterns only narrow: an allowed command still passes the agent's own rules.
-    const workflowStepTools = Effect.fnUntraced(function* (step: RelaySprint.StepTools | undefined) {
-      const servers = step?.mcp ? yield* mcp.tools() : {}
-      const deniedMcp = new Set(
-        Object.entries(servers)
-          .filter(([server]) => !step?.mcp?.includes(server))
-          .flatMap(([server, names]) => names.map((name) => McpCatalog.toolName(server, name))),
-      )
-      const bash: Permission.Ruleset = step?.bash
-        ? [
-            { action: "bash", resource: "*", effect: "deny" },
-            ...step.bash.map((pattern) => ({ action: "bash", resource: pattern, effect: "allow" as const })),
-          ]
-        : []
-      return {
-        bash,
-        hidden: [
-          ...[...deniedMcp].map((name) => ({ action: name, resource: "*", effect: "deny" as const })),
-          ...(step?.bash?.length === 0 ? bash : []),
-        ],
-        refuses: (name: string, input: unknown) =>
-          deniedMcp.has(name) ||
-          (name === "bash" &&
-            bash.length > 0 &&
-            PermissionV2.evaluate("bash", commandOf(input), bash).effect === "deny"),
-      }
-    })
     const getSession = Effect.fn("SessionRunner.getSession")(function* (sessionID: SessionSchema.ID) {
       const session = yield* store.get(sessionID).pipe(
         Effect.catchDefect((cause) =>
@@ -271,10 +240,8 @@ const layer = Layer.effect(
       if (workflow?.view.state === "complete") return { needsContinuation: false, step: currentStep }
       const isLastStep = currentStep >= (agent.info?.steps ?? DEFAULT_MAX_STEPS)
       if (!isLastStep) yield* mcp.ready()
-      const stepTools = yield* workflowStepTools(workflow?.view.tools)
-      const toolMaterialization = isLastStep
-        ? undefined
-        : yield* tools.materialize([...effectiveRules, ...stepTools.hidden])
+      const stepTools = narrowStepTools(workflow?.view.tools, workflow?.view.tools?.mcp ? yield* mcp.tools() : {})
+      const toolMaterialization = isLastStep ? undefined : yield* tools.materialize([...effectiveRules, ...stepTools.hidden])
       const promptCacheKey = /^ses_[0-9a-f]{64}$/.test(session.id) ? session.id.slice(4) : session.id
       const contextText = [system.baseline, workflow?.view.instructions].filter((part): part is string => !!part)
       const systemText = agent.info?.system ? [agent.info.system, ...contextText] : contextText
@@ -297,11 +264,7 @@ const layer = Layer.effect(
       const request = model && LLM.request({
         model,
         http: {
-          headers: {
-            "x-session-affinity": session.id,
-            "X-Session-Id": session.id,
-            ...(session.parentID ? { "x-parent-session-id": session.parentID } : {}),
-          },
+          headers: { "x-session-affinity": session.id, "X-Session-Id": session.id, ...(session.parentID ? { "x-parent-session-id": session.parentID } : {}) },
         },
         providerOptions: { openai: { promptCacheKey } },
         system: systemText.map(SystemPart.make),
@@ -328,31 +291,23 @@ const layer = Layer.effect(
       let overflowFailure: ProviderErrorEvent | undefined
       yield* subagentModels.assert(session.id, modelRef)
       const settle = (call: ToolCall, assistantMessageID: SessionMessage.ID, materialization: ToolRegistry.Materialization) =>
-        stepTools.refuses(call.name, call.input)
-          ? Effect.succeed<ToolRegistry.Settlement>({ result: { type: "error", value: STEP_TOOL_REFUSAL } })
-          : CapabilityInvocation.withContext(
-              {
-                issuer: "core",
-                owner: {
-                  projectID: location.project.id,
-                  location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }),
-                  sessionID: session.id,
-                  agentID: agent.id,
-                },
-                invocation: { sessionID: session.id, agentID: agent.id, assistantMessageID, callID: call.id },
-                rootToolName: call.name,
-                effectiveRules,
-                // Core selection has configured permissions, not a separate native Permission floor.
-                nativeDenyFloor: [],
-              },
-              materialization.settle({
-                sessionID: session.id,
-                agent: agent.id,
-                model: modelRef,
-                assistantMessageID,
-                call,
-              }),
-            ).pipe(Effect.catchTag("Capability.Failure", (error) => Effect.die(error)))
+        stepTools.refuses(call.name, call.input) ? Effect.succeed(STEP_TOOL_REFUSAL) : CapabilityInvocation.withContext(
+          {
+            issuer: "core",
+            owner: {
+              projectID: location.project.id,
+              location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }),
+              sessionID: session.id,
+              agentID: agent.id,
+            },
+            invocation: { sessionID: session.id, agentID: agent.id, assistantMessageID, callID: call.id },
+            rootToolName: call.name,
+            effectiveRules,
+            // Core selection has configured permissions, not a separate native Permission floor.
+            nativeDenyFloor: [],
+          },
+          materialization.settle({ sessionID: session.id, agent: agent.id, model: modelRef, assistantMessageID, call }),
+        ).pipe(Effect.catchTag("Capability.Failure", (error) => Effect.die(error)))
       // An Orchestra tool the host's engine invokes: recorded before side effects, settled through the registry like a
       // local call, persisted provider-executed so no continuation turn is scheduled for it.
       const execute: ExecutionHost.Turn["execute"] = (input) =>
@@ -377,8 +332,7 @@ const layer = Layer.effect(
       const scope = yield* Scope.Scope
       const authorize: ExecutionHost.Turn["authorize"] = (input) =>
         Effect.gen(function* () {
-          if (input.safety && stepTools.refuses(input.safety.tool, input.safety.args))
-            return yield* new PermissionV2.BlockedError({ rules: stepTools.bash })
+          if (input.safety && stepTools.refuses(input.safety.tool, input.safety.args)) return yield* new PermissionV2.BlockedError({ rules: stepTools.bash })
           // A call made inside a seat's subagent runs under that seat's rules; any other agent id is ignored.
           const actor = seats.find((item) => item.id === input.agent)?.id ?? agent.id
           yield* permissions
@@ -808,12 +762,4 @@ export const node = makeLocationNode({
 
 function messageOf(failure: unknown) {
   return failure instanceof Error ? failure.message : String(failure)
-}
-
-const STEP_TOOL_REFUSAL = "This workflow step does not allow this tool or command"
-
-function commandOf(input: unknown) {
-  return typeof input === "object" && input !== null && "command" in input && typeof input.command === "string"
-    ? input.command
-    : ""
 }
