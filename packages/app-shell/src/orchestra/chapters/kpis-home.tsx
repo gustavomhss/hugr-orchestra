@@ -8,12 +8,12 @@ import { useTabs } from "@/context/tabs"
 import type { HomeController } from "@/pages/home/home-controller"
 import { displayName } from "@/pages/layout/helpers"
 import { HomeFlightCard } from "./flight-engineer/entry"
-import { HomeFolderStart, HomeProjectStart } from "./home-start"
+import { HomeFolderStart } from "./home-start"
 import { KpiDashboard } from "./kpis"
 import { sessionTitle } from "@/utils/session-title"
 
-// Home is the composer for the selected repository profile, with its KPI dashboard once the profile has sessions.
-// It remounts only when that profile changes, so a profile switch abandons the previous profile's reads.
+// Home is the selected repository profile's KPI dashboard. It remounts only when that profile changes,
+// so a profile switch abandons the previous profile's reads.
 export function OrchestraHome(props: { home: HomeController }) {
   const tabs = useTabs()
   const navigate = useNavigate()
@@ -33,33 +33,26 @@ export function OrchestraHome(props: { home: HomeController }) {
     <Show when={owner()} keyed fallback={<NoProjectHome home={props.home} />}>
       {(owner) => {
         const project = () => props.home.project.selected()
-        // The KPIs need sessions to count, so a new project shows only the composer until its first session.
-        const hasSessions = () => owner.ctx.sync.child(owner.directory, { bootstrap: false })[0].session.length > 0
         return (
-          <div class="flex min-h-0 flex-1 flex-col overflow-y-auto">
-            <HomeProjectStart home={props.home} directory={owner.directory} conn={owner.conn} />
-            <Show when={hasSessions()}>
-              <KpiDashboard
-                directory={owner.directory}
-                sdk={owner.ctx.sdk}
-                queryClient={owner.ctx.queryClient}
-                name={project() ? displayName(project()!) : getFilename(owner.directory)}
-                title={(sessionID, fallback) => sessionTitle(owner.ctx.sync.session.peek(sessionID)?.title || fallback) ?? fallback}
-                running={(sessionID) => (owner.ctx.sync.session.data.session_status[sessionID]?.type ?? "idle") !== "idle"}
-                openProviders={() => navigate("/orchestra/providers")}
-                extra={<HomeFlightCard sdk={owner.ctx.sdk} directory={owner.directory} />}
-                newSession={() => props.home.project.openProjectNewSession(owner.conn, owner.directory)}
-                openSession={(sessionID) => {
-                  owner.ctx.projects.open(owner.directory)
-                  owner.ctx.projects.touch(owner.directory)
-                  void startTransition(() => {
-                    const tab = tabs.addSessionTab({ server: ServerConnection.key(owner.conn), sessionId: sessionID })
-                    tabs.select(tab)
-                  })
-                }}
-              />
-            </Show>
-          </div>
+          <KpiDashboard
+            directory={owner.directory}
+            sdk={owner.ctx.sdk}
+            queryClient={owner.ctx.queryClient}
+            name={project() ? displayName(project()!) : getFilename(owner.directory)}
+            title={(sessionID, fallback) => sessionTitle(owner.ctx.sync.session.peek(sessionID)?.title || fallback) ?? fallback}
+            running={(sessionID) => (owner.ctx.sync.session.data.session_status[sessionID]?.type ?? "idle") !== "idle"}
+            openProviders={() => navigate("/orchestra/providers")}
+            extra={<HomeFlightCard sdk={owner.ctx.sdk} directory={owner.directory} />}
+            newSession={() => props.home.project.openProjectNewSession(owner.conn, owner.directory)}
+            openSession={(sessionID) => {
+              owner.ctx.projects.open(owner.directory)
+              owner.ctx.projects.touch(owner.directory)
+              void startTransition(() => {
+                const tab = tabs.addSessionTab({ server: ServerConnection.key(owner.conn), sessionId: sessionID })
+                tabs.select(tab)
+              })
+            }}
+          />
         )
       }}
     </Show>
