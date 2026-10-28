@@ -94,9 +94,10 @@ every remaining card of an epic is queued. Urgent cards go first.
   the cause, and the card goes back to Review with a note. Maestro queues it again after fixing it. A red made only of
   cancelled, timed-out or never-started jobs is infrastructure: the bundle is rebuilt once with the same members, and a
   second such red pauses the queue (`paused`) until Maestro retries it. After 50 settled cards the bundle size follows
-  the red rate. The failed jobs' logs name the failing files (bun `(fail)` files and TypeScript error paths) in the cards' notes; with
-  `full.control` set, a failed job whose log has no failing file and lacks that line counts as infrastructure, and a `full.checks`
-  name matches a check or the workflow that ran it.
+  the red rate. The failed jobs' logs name the failing files (bun `(fail)` files, vitest `FAIL` files and TypeScript error paths) in the
+  cards' notes. `full.control` names a line and the jobs (name prefixes) that always print it: such a job that failed with no
+  failing file and without the line never ran its tests and counts as infrastructure; any other job's failure is code unless
+  it was cancelled, timed out or never started. A `full.checks` name matches a check or the workflow that ran it.
 - **A member pushed after assembly.** That card goes back to Review and the bundle is rebuilt without it.
 
 A card in the Queue column shows whether it is waiting, running in a bundle, held by your hold before merge, or held

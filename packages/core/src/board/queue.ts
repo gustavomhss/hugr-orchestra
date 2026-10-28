@@ -398,7 +398,7 @@ export function make(deps: Deps) {
   /**
    * Section 6.3: the failing set F from the failed jobs' logs, and whether the red is infrastructure. A job counts as
    * infrastructure when it was cancelled, timed out or never started, or when its log has no failing file and lacks the
-   * contract's control line; a job whose log cannot be read counts as code.
+   * contract's control line, which only the jobs it names print; a job whose log cannot be read counts as code.
    */
   const failures = Effect.fnUntraced(function* (repo: string, rollup: typeof Rollup.Type["statusCheckRollup"], contract: BoardCi.Contract) {
     const failed = gating(rollup, contract).filter((check) => check.done && FAILED.has(check.result))
@@ -409,7 +409,9 @@ export function make(deps: Deps) {
         const log = job ? yield* deps.gh(["api", `repos/${repo}/actions/jobs/${job}/logs`]) : undefined
         const text = log?.exitCode === 0 ? log.stdout.replace(/^\S+Z /gm, "") : ""
         const files = text ? BoardCi.failing(text) : []
-        return { files, infra: contract.full.control !== null && text !== "" && files.length === 0 && !text.includes(contract.full.control) }
+        const control = contract.full.control
+        const silent = control !== null && control.jobs.some((prefix) => check.name.startsWith(prefix)) && !text.includes(control.line)
+        return { files, infra: silent && text !== "" && files.length === 0 }
       }),
     )
     return { files: [...new Set(read.flatMap((item) => item.files))], infra: read.length > 0 && read.every((item) => item.infra) }

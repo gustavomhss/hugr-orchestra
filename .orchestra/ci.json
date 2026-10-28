@@ -7,7 +7,7 @@
   "full": {
     "label": "epic",
     "checks": ["typecheck", "test"],
-    "control": "omni positive control:"
+    "control": { "line": "omni positive control:", "jobs": ["unit ("] }
   },
   "bundle": { "size": 8, "max": 16, "waitMinutes": 45, "onBaseMoved": "merge-if-disjoint" },
   "budget": { "jobs": 20 },

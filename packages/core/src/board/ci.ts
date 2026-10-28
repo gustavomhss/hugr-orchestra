@@ -30,8 +30,8 @@ export type Contract = {
   readonly full: {
     readonly label: string | null
     readonly checks: ReadonlyArray<string>
-    /** A line every test job prints; a failed job whose log has no failing file and lacks it never ran its tests. */
-    readonly control: string | null
+    /** A line the named jobs (name prefixes) always print; such a job that failed with no failing file and without it never ran its tests. */
+    readonly control: { readonly line: string; readonly jobs: ReadonlyArray<string> } | null
   }
   readonly bundle: {
     readonly size: number
@@ -57,7 +57,7 @@ const File = Schema.Struct({
     Schema.Struct({
       label: Schema.optional(Schema.NullOr(Schema.String)),
       checks: Schema.optional(Schema.Array(Schema.String)),
-      control: Schema.optional(Schema.NullOr(Schema.String)),
+      control: Schema.optional(Schema.NullOr(Schema.Struct({ line: Schema.String, jobs: Schema.Array(Schema.String) }))),
     }),
   ),
   bundle: Schema.optional(
@@ -379,9 +379,10 @@ function command(template: string, input: Board.CiRunInput, ref: string) {
   )
 }
 
-// Bun prints each test file as a header line and `(fail)` under it; tsc and tsgo print each type error with its file path;
-// test:ci prints a failed job as `=== name: failure ===`.
-export function failing(output: string) {
+// Bun prints each test file as a header line and `(fail)` under it; vitest prints `FAIL |project| <file> > <test>`; tsc and
+// tsgo print each type error with its file path; test:ci prints a failed job as `=== name: failure ===`. Colors are stripped.
+export function failing(colored: string) {
+  const output = colored.replace(/\x1b\[[0-9;]*m/g, "")
   const bun = output
     .split("\n")
     .reduce(
@@ -394,7 +395,8 @@ export function failing(output: string) {
       { file: undefined as string | undefined, found: new Set<string>() },
     ).found
   const types = output.split("\n").flatMap((line) => line.trim().match(/^(\S+\.[cm]?tsx?)(?:\(\d+,\d+\)|:\d+:\d+)(?::| -) error TS\d+/)?.[1] ?? [])
-  const files = [...new Set([...bun, ...types])]
+  const vitest = output.split("\n").flatMap((line) => line.trim().match(/^FAIL\s+(?:\|[^|]+\|\s+)?(\S+\.[cm]?[jt]sx?)\b/)?.[1] ?? [])
+  const files = [...new Set([...bun, ...vitest, ...types])]
   if (files.length > 0) return files
   return [...output.matchAll(/^=== (.+): failure ===$/gm)].map((match) => match[1] ?? "").filter(Boolean)
 }

@@ -71,7 +71,7 @@ it: skill `conveyor-maintenance`. User guide: `docs/guides/merge-queue.md`.
   `onBaseMoved` defaults to `retest`.
 - A red bundle (cancelled checks count as red) is `base-red` when its base commit's checks are red, else `red`; a base with no checks is unknown, never green, and gets a base probe (a memberless bundle on an empty commit) first; `red` halves the members until one card fails alone and goes back to Review (`bundle.dissolve`).
 - The bundle size follows the red rate of the last 50 settled attempts (`size()`); infrastructure reds (`infra`) rerun once, and a second one sets the project's bundle to `paused`, which holds the queue until Maestro retries it. Eject writes outcome `ejected` and opens the next attempt through `BoardSnapshot.dispatch`.
-- `failures()` reads job logs through `detailsUrl` with `gh api repos/<o>/<r>/actions/jobs/<id>/logs`, strips timestamps, and uses `BoardCi.failing`; `full.control` is the control-line infra rule; `gating` matches `workflowName`.
+- `failures()` reads job logs through `detailsUrl` with `gh api repos/<o>/<r>/actions/jobs/<id>/logs`, strips timestamps, and uses `BoardCi.failing`; `full.control` (`line` plus job-name prefixes) is the control-line infra rule and applies only to the jobs it names; `gating` matches `workflowName`.
 - The pool is the project: one open bundle per board project.
 - The repository is public: attempts and snapshots carry structure and hashes only, never free text, spend or
   transcripts.

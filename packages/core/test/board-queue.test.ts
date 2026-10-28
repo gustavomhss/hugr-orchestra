@@ -44,7 +44,8 @@ type Remote = {
   seeded: ReadonlyArray<string>
   /** Branches whose full gate comes back CANCELLED (infrastructure, not code). */
   cancelled: ReadonlyArray<string>
-  /** The job log every failed job returns. */
+  /** The name of the one gating job, and the log it returns when it fails. */
+  job: string
   log: string
   baseRuns: string
   calls: Array<ReadonlyArray<string>>
@@ -78,7 +79,7 @@ const gh = (args: ReadonlyArray<string>, stdin?: string) =>
       const done = conclusion !== ""
       const rollup = [
         {
-          name: "unit (linux)",
+          name: remote.job,
           status: done ? "COMPLETED" : "IN_PROGRESS",
           conclusion: done ? conclusion : null,
           workflowName: "test",
@@ -432,7 +433,7 @@ describe("BoardQueue", () => {
   it.live("a failed test job with no failing file and no control line is infrastructure through its workflow name", () =>
     Effect.gen(function* () {
       const board = yield* Board.Service
-      const repo = yield* repository("QOM", 2, { checks: ["test"], control: "omni positive control:" })
+      const repo = yield* repository("QOM", 2, { checks: ["test"], control: { line: "omni positive control:", jobs: ["unit ("] } })
       yield* card(repo, "QOM", 1, "a.txt")
       yield* card(repo, "QOM", 2, "b.txt")
       yield* board.queue({ project: "QOM", number: 1, reason: "Verified." })
@@ -448,7 +449,7 @@ describe("BoardQueue", () => {
   it.live("a failed test job that ran its tests is code, not infrastructure", () =>
     Effect.gen(function* () {
       const board = yield* Board.Service
-      const repo = yield* repository("QOC", 2, { checks: ["test"], control: "omni positive control:" })
+      const repo = yield* repository("QOC", 2, { checks: ["test"], control: { line: "omni positive control:", jobs: ["unit ("] } })
       yield* card(repo, "QOC", 1, "a.txt")
       yield* card(repo, "QOC", 2, "b.txt")
       yield* board.queue({ project: "QOC", number: 1, reason: "Verified." })
@@ -458,6 +459,26 @@ describe("BoardQueue", () => {
 
       yield* Effect.forEach(Array.from({ length: 8 }), () => board.queueTick(), { discard: true })
       expect((yield* bundleStatuses(repo))[0]).toBe("red")
+    }),
+  )
+
+  it.live("a failed job the control line does not cover is code, with its vitest files in F", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QAT", 2, { checks: ["test"], control: { line: "omni positive control:", jobs: ["unit ("] } })
+      yield* card(repo, "QAT", 1, "a.txt")
+      yield* card(repo, "QAT", 2, "b.txt")
+      yield* board.queue({ project: "QAT", number: 1, reason: "Verified." })
+      yield* board.queue({ project: "QAT", number: 2, reason: "Verified." })
+      repo.remote.conclusion = "FAILURE"
+      repo.remote.job = "atlas"
+      // A real atlas job's failing line: vitest, colored, and no omni control line anywhere in the log.
+      repo.remote.log =
+        "2026-10-28T22:36:49.2677971Z \x1b[31m\x1b[1m\x1b[7m FAIL \x1b[27m\x1b[22m\x1b[39m\x1b[33m|e2e-blackbox|\x1b[39m  packages/e2e-blackbox/test/s34-mine-history-frontier.blackbox.test.ts\x1b[2m > \x1b[22m#243 mines the frontier\n"
+
+      yield* Effect.forEach(Array.from({ length: 8 }), () => board.queueTick(), { discard: true })
+      expect((yield* bundleStatuses(repo))[0]).toBe("red")
+      expect((yield* notes(repo, 1)).some((body) => body.includes("Failing: packages/e2e-blackbox/test/s34-mine-history-frontier.blackbox.test.ts."))).toBe(true)
     }),
   )
 
@@ -510,7 +531,7 @@ function repository(key: string, size = 2, full?: object) {
       await commit(directory, "base")
       await git(directory, "remote", "add", "origin", pathToFileURL(remote).href)
       await git(directory, "push", "--quiet", "origin", "main")
-      return { root, directory, key, remote: { origin: remote, pulls: new Map<number, string>(), bodies: new Map<number, string>(), conclusion: "", seeded: [] as ReadonlyArray<string>, cancelled: [] as ReadonlyArray<string>, log: "", baseRuns: GREEN_BASE, calls: [] } }
+      return { root, directory, key, remote: { origin: remote, pulls: new Map<number, string>(), bodies: new Map<number, string>(), conclusion: "", seeded: [] as ReadonlyArray<string>, cancelled: [] as ReadonlyArray<string>, job: "unit (linux)", log: "", baseRuns: GREEN_BASE, calls: [] } }
     })
     remotes.set(`acme/${key}`, made.remote)
     const database = yield* Database.Service
