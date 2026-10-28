@@ -668,7 +668,15 @@ test("only the upstream seat drafts a workflow, and never into the global projec
     Effect.gen(function* () {
       yield* setup
       const sprint = JSON.stringify({ brief: "b", work_packages: [] })
-      expect((yield* call("maestro", "archie_draft_workflow", { name: "Notes", sprint })).result).toEqual({
+      const registry = yield* ToolRegistry.Service
+      // Visibility already hides the tool from Maestro; with every rule allowed, its own gate still refuses.
+      const unhidden = yield* (yield* registry.materialize(allow)).settle({
+        sessionID,
+        agent: AgentV2.ID.make("maestro"),
+        assistantMessageID: SessionMessage.ID.make("msg_calling"),
+        call: { type: "tool-call", id: "call", name: "archie_draft_workflow", input: { name: "Notes", sprint } },
+      })
+      expect(unhidden.result).toEqual({
         type: "error",
         value: "Drafting a workflow requires the upstream seat",
       })
