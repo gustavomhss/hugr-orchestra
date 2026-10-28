@@ -68,7 +68,7 @@ describe("AppDockTools", () => {
       default: () => undefined,
       remove: (id) => void agents.delete(id),
       update: (id, fn) => {
-        const agent = agents.get(id) ?? { ...AgentV2.Info.empty(id), permissions: [] }
+        const agent = agents.get(id) ?? { ...AgentV2.Info.empty(id), permissions: [], skills: undefined }
         agents.set(id, agent)
         fn(agent)
       },
@@ -99,7 +99,7 @@ describe("AppDockTools", () => {
         default: () => undefined,
         remove: (id) => void agents.delete(id),
         update: (id, fn) => {
-          const agent = agents.get(id) ?? { ...AgentV2.Info.empty(id), permissions: [] }
+          const agent = agents.get(id) ?? { ...AgentV2.Info.empty(id), permissions: [], skills: undefined }
           agents.set(id, agent)
           fn(agent)
         },
