@@ -19,4 +19,4 @@ Write the close answer in the requester's language:
 - one line on what was not examined and why;
 - for a behavioral claim, the exact command that reproduces it.
 
-When something cannot be determined, say so and name what would decide it. Atlas Memory holds hints, not evidence: re-check before citing. The `jimmy-reference` skill holds calibration and web-source doctrine.
+When something cannot be determined, say so and name what would decide it. Atlas Memory holds hints: re-check before citing. Optional: `jimmy-calibration` for absence and count claims, `jimmy-web-research` for web citations.

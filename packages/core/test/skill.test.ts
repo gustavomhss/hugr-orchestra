@@ -9,6 +9,7 @@ import { FSUtil } from "@orchestra/core/fs-util"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { SkillV2 } from "@orchestra/core/skill"
 import { SkillDiscovery } from "@orchestra/core/skill/discovery"
+import { SkillTool } from "@orchestra/core/tool/skill"
 import { tmpdir } from "./fixture/tmpdir"
 import { testEffect } from "./lib/effect"
 
@@ -24,7 +25,7 @@ const discovery = Layer.succeed(
   }),
 )
 const it = testEffect(
-  AppNodeBuilder.build(LayerNode.group([SkillV2.node, AgentV2.node]), [[SkillDiscovery.node, discovery]]),
+  AppNodeBuilder.build(LayerNode.group([SkillV2.node, AgentV2.node, FSUtil.node]), [[SkillDiscovery.node, discovery]]),
 )
 
 function write(directory: string, name: string, description: string) {
@@ -122,6 +123,59 @@ describe("SkillV2", () => {
           expect((yield* skill.list()).map((item) => item.name)).toEqual(["deploy"])
           expect(pulls).toBe(1)
           expect(SkillV2.available(yield* skill.list(), (yield* agents.get(AgentV2.ID.make("reviewer")))!)).toEqual([])
+        }),
+      ),
+    ),
+  )
+
+  it.live("lists only a skill tree's root and indexes each node's children when it loads", () =>
+    Effect.acquireRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ).pipe(
+      Effect.flatMap((tmp) =>
+        Effect.gen(function* () {
+          const node = (relative: string, extra = "") =>
+            fs
+              .mkdir(path.join(tmp.path, relative), { recursive: true })
+              .then(() =>
+                fs.writeFile(
+                  path.join(tmp.path, relative, "SKILL.md"),
+                  `---\nname: ${relative.replaceAll("/", "-")}\ndescription: About ${relative}\n${extra}---\n# ${relative}`,
+                ),
+              )
+          yield* Effect.promise(async () => {
+            await node("stack")
+            await node("stack/python", "when: Python code\nnot-when: Go code\n")
+            await node("stack/go")
+            await node("stack/python/fastapi")
+            await node("review")
+          })
+
+          const skill = yield* SkillV2.Service
+          yield* skill.transform((editor) => editor.source({ type: "directory", path: AbsolutePath.make(tmp.path) }))
+          const all = yield* skill.list()
+          const byName = (name: string) => all.find((item) => item.name === name)!
+
+          expect(
+            all
+              .filter((item) => !SkillV2.nested(all, item))
+              .map((item) => item.name)
+              .toSorted(),
+          ).toEqual(["review", "stack"])
+          expect(SkillV2.children(all, byName("stack")).map((item) => item.name)).toEqual(["stack-go", "stack-python"])
+          expect(SkillV2.children(all, byName("stack-python")).map((item) => item.name)).toEqual([
+            "stack-python-fastapi",
+          ])
+          expect(SkillV2.children(all, byName("review"))).toEqual([])
+
+          const fsutil = yield* FSUtil.Service
+          const root = yield* SkillTool.load(fsutil, byName("stack"), SkillV2.children(all, byName("stack")))
+          expect(root).toContain("## Next level")
+          expect(root).toContain("- `stack-go`: About stack/go")
+          expect(root).toContain("- `stack-python`: About stack/python When: Python code Not when: Go code")
+          expect(root).not.toContain("stack-python-fastapi`")
+          expect(yield* SkillTool.load(fsutil, byName("review"))).not.toContain("## Next level")
         }),
       ),
     ),

@@ -27,7 +27,7 @@ test("Maestro keeps its governance tools and playbooks but not a seat's tools", 
   expect(effect("maestro", "maestro_workflows")).toBe("allow")
   expect(effect("maestro", "maestro_record_result_decision")).toBe("allow")
   expect(effect("maestro", "maestro_arsenal_execute", "any")).toBe("allow")
-  expect(effect("maestro", "skill", "maestro-governed")).toBe("allow")
+  expect(effect("maestro", "skill", "maestro-run-governed")).toBe("allow")
   expect(effect("maestro", "maestro_record_review")).toBe("deny")
   expect(effect("maestro", "atlas_memory_recall")).toBe("deny")
   expect(effect("maestro", "bash", "ls")).toBe("allow")
@@ -51,7 +51,15 @@ test("each seat keeps exactly its own Maestro and Atlas Memory tools", () => {
   expect(effect("backend", "maestro_arsenal_catalog")).toBe("deny")
   for (const id of ["backend", "jimmy", "archie"]) expect(effect(id, "atlas_memory_emit")).toBe("allow")
   for (const id of ["patty", "lucy", "rosie"]) expect(effect(id, "atlas_memory_recall")).toBe("deny")
-  expect(effect("backend", "skill", "maestro-governed")).toBe("deny")
+  expect(effect("backend", "skill", "maestro-run-governed")).toBe("deny")
+})
+
+test("a seat loads any node below its own roots and no other seat's nodes", () => {
+  expect(effect("backend", "skill", "backend-implement")).toBe("allow")
+  expect(effect("backend", "skill", "backend-implement-stack-python-fastapi")).toBe("allow")
+  expect(effect("backend", "skill", "backend-implementation")).toBe("deny")
+  expect(effect("backend", "skill", "archie-plan-scope")).toBe("deny")
+  for (const id of ["archie", "maestro", "general"]) expect(effect(id, "skill", "backend-implement-stack-python")).toBe("deny")
 })
 
 test("a seat's entry skills stay with that seat", () => {

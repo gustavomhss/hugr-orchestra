@@ -7,12 +7,12 @@ description: "Procedure for an assigned structural change with behavior to prese
 
 This skill gives direct access to the refactor procedure of `backend-implement`, which you load first. It sits under your system prompt and never widens it. The packet decides scope, design, write paths and checks; where this skill and the packet disagree, follow the packet.
 
-The rules of the mode live in one place: read [prescribed refactor mode](../backend-implement/references/modes/refactor.md) before editing. This entry adds the transformation method.
+The rules of the mode live in one place: read prescribed refactor mode (`backend-implement-refactor`) before editing. This entry adds the transformation method.
 
 ## When this applies
 
 - Applies: the packet prescribes a structural change and the external behavior to preserve: wire format, data results and resource lifetimes.
-- Does not apply: choosing the architecture or the target seam; "clean up", "modernize everything" or a repository sweep; a framework major upgrade, which is a separate [migration or compatibility](../backend-implement/references/modes/migration.md) assignment.
+- Does not apply: choosing the architecture or the target seam; "clean up", "modernize everything" or a repository sweep; a framework major upgrade, which is a separate migration or compatibility (`backend-implement-migration`) assignment.
 - A "refactor" that changes accepted inputs or outputs is not preservation. Return a `packet` blocker that quotes both sides.
 
 ## Inputs beyond the common packet
@@ -27,12 +27,12 @@ Missing context is a `packet` blocker, never permission to look for more files.
 
 ## Select the reference
 
-- [Scoped transformation](../backend-implement/references/refactors/scoped-transformation.md): preview, scope check, bounded apply and rerun, including generated outputs.
-- [Syntax versus symbol](../backend-implement/references/refactors/syntax-vs-symbol.md): which edit method can prove which identity.
+- Scoped transformation (`backend-refactor-scoped-transformation`): preview, scope check, bounded apply and rerun, including generated outputs.
+- Syntax versus symbol (`backend-refactor-syntax-vs-symbol`): which edit method can prove which identity.
 
 Exact invocations of a selected engine live in its recipe; a recipe is used only when the packet selects that tool.
 
-Stack references: [Go](../backend-implement/references/languages/go.md), [Python](../backend-implement/references/languages/python.md), [JavaScript/TypeScript](../backend-implement/references/languages/js-ts.md), [Ruby](../backend-implement/references/languages/ruby.md), [PHP](../backend-implement/references/languages/php.md). Read only the packet's language.
+Stack references: Go (`team-stack-go`), Python (`team-stack-python`), JavaScript/TypeScript (`team-stack-js-ts`), Ruby (`team-stack-ruby`), PHP (`team-stack-php`). Read only the packet's language.
 
 ## Common procedure
 

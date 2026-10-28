@@ -1,20 +1,21 @@
 #!/usr/bin/env bun
 // Backend toolkit pack scaffold (ruling M6-1). From packages/core:
 //   bun script/toolkit-pack.ts add <id> --kind <binary|npm|pip|jar|go-source|cargo-source> --upstream <owner/repo|npm-name|pypi-name>
-//     --version <v> [--asset '<target>=<glob>' ...] [--role generator|check] [--input <text>] [--skill <entry-skill> ...]
+//     --version <v> --group <schema|sql|kube|code> [--asset '<target>=<glob>' ...] [--role generator|check] [--input <text>]
+//     [--skill <entry-skill> ...]
 //   bun script/toolkit-pack.ts bump <id> <version>
-//   bun script/toolkit-pack.ts index          (regenerate the recipe index only, e.g. after merging pack branches)
 //   bun script/toolkit-pack.ts skills         (derive the closed entry-skill type from packaged skill directories)
-// `add` writes packs/<id>.ts, a recipe stub with the card headings, the barrel import and entry. `binary` pins each
+// `add` writes packs/<id>.ts, a recipe node backend-codegen/<group>/<id>/SKILL.md with the card headings, the barrel
+// import and entry; the skill tool lists the group's engines from the nodes themselves. `binary` pins each
 // target to the GitHub release asset matching its --asset glob (sha256 from the release API's digest); `npm` reads
 // license, bin and dist.integrity from the registry and writes the lock with `npm install --package-lock-only`.
 // `bump` moves the version in the pack and its recipe and refills those pins the same way. Every pin it cannot fill
-// becomes TODO-PIN, which test/backend-toolkit-packs.test.ts rejects. Both commands regenerate the recipe index.
+// becomes TODO-PIN, which test/backend-toolkit-packs.test.ts rejects.
 // Then: check the entry layout against a downloaded sample, record the host `floor` that
 // `bun script/toolkit-floors.ts --engine <id>` prints, finish the recipe, run bun typecheck and the toolkit tests.
 
 import { $ } from "bun"
-import { mkdtemp, readFile, readdir, rm, writeFile } from "fs/promises"
+import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "fs/promises"
 import os from "os"
 import path from "path"
 import { parseArgs } from "util"
@@ -23,10 +24,7 @@ import type { Pack } from "../src/backend-toolkit/manifest"
 import { TARGETS } from "../src/backend-toolkit/target"
 
 const PACKS = path.join(import.meta.dir, "../src/backend-toolkit/packs")
-const RECIPES = path.join(
-  import.meta.dir,
-  "../../../modules/specialists/backend/skills/backend-implement/references/recipes/external",
-)
+const RECIPES = path.join(import.meta.dir, "../../../modules/specialists/backend/skills/backend-codegen")
 const SKILLS = (await readdir(path.resolve(import.meta.dir, "../../../modules/specialists/backend/skills"), { withFileTypes: true }))
   .filter((entry) => entry.isDirectory()).map((entry) => entry.name).toSorted()
 if (SKILLS.length === 0) throw new Error("No packaged backend entry skills")
@@ -47,13 +45,14 @@ const args = parseArgs({
     role: { type: "string" },
     input: { type: "string" },
     skill: { type: "string", multiple: true },
+    group: { type: "string" },
   },
 })
 const [command, id, bumped] = args.positionals
 
 const valid =
-  command === "skills" || command === "index" ||
-  (id && command === "add" && args.values.kind && args.values.upstream && args.values.version) ||
+  command === "skills" ||
+  (id && command === "add" && args.values.kind && args.values.upstream && args.values.version && args.values.group) ||
   (id && command === "bump" && bumped)
 if (!valid) {
   console.error("usage: see the header of script/toolkit-pack.ts")
@@ -72,7 +71,6 @@ await writeFile(path.resolve(import.meta.dir, "../src/backend-toolkit/entry-skil
 if (command === "skills") process.exit(0)
 if (command === "add") await add(id)
 if (command === "bump") await bump(id, bumped!)
-await writeIndex()
 
 async function add(id: string) {
   const kind = args.values.kind!
@@ -101,7 +99,10 @@ async function add(id: string) {
       "",
     ].join("\n"),
   )
-  await writeFile(path.join(RECIPES, `${id}.md`), recipe(id, version))
+  const group = args.values.group!
+  if (!(await Bun.file(path.join(RECIPES, group, "SKILL.md")).exists())) throw new Error(`Unknown codegen group: ${group}`)
+  await mkdir(path.join(RECIPES, group, id), { recursive: true })
+  await writeFile(path.join(RECIPES, group, id, "SKILL.md"), recipe(id, version, group, fit))
   const name = id.replace(/-([a-z0-9])/g, (_, letter: string) => letter.toUpperCase())
   const barrel = await readFile(path.join(PACKS, "index.ts"), "utf8")
   const imports = [...barrel.matchAll(/^import .*$/gm)].map((match) => match[0])
@@ -111,7 +112,7 @@ async function add(id: string) {
       .replace(imports.join("\n"), [...imports, `import ${name} from "./${id}"`].toSorted().join("\n"))
       .replace(/\n}\n*$/, `\n  [${name}.id]: ${name},\n}\n`),
   )
-  console.log(`wrote packs/${id}.ts, recipes/external/${id}.md and the barrel entry; fill every TODO-PIN`)
+  console.log(`wrote packs/${id}.ts, backend-codegen/${group}/${id}/SKILL.md and the barrel entry; fill every TODO-PIN`)
 }
 
 async function bump(id: string, version: string) {
@@ -136,8 +137,8 @@ async function bump(id: string, version: string) {
         text.replace(/"sha(256|512)-[A-Za-z0-9+/=]+"/g, '"sha256-TODO-PIN"')
   await writeFile(file, next)
   if (npm) await lock(id, packageName(pack), version)
-  const card = path.join(RECIPES, `${id}.md`)
-  if (pack.fit.skills.length)
+  const card = [...new Bun.Glob(`*/${id}/SKILL.md`).scanSync(RECIPES)].map((match) => path.join(RECIPES, match))[0]
+  if (card && pack.fit.skills.length)
     await writeFile(card, (await readFile(card, "utf8")).replaceAll(`\`${old}\``, `\`${version}\``))
   console.log(`bumped ${id} ${old} -> ${version}; review the diff and fill any TODO-PIN`)
   // The recorded host floor (F5.4) belongs to the bytes just pinned, so it is measured again unless a pin is still open.
@@ -299,8 +300,15 @@ function packageName(pack: Pack) {
   return Object.keys(JSON.parse(pack.install.packageJson).dependencies)[0]
 }
 
-function recipe(id: string, version: string) {
+function recipe(id: string, version: string, group: string, fit: { role: string; input: string }) {
   return [
+    "---",
+    `name: backend-codegen-${group}-${id}`,
+    `description: "${id}: ${fit.role}; input: ${fit.input}."`,
+    `when: "TODO-PIN: the packet assigns this engine's artifacts."`,
+    `not-when: "TODO-PIN"`,
+    "---",
+    "",
     `# ${id}`,
     "",
     "## Applicability",
@@ -332,38 +340,6 @@ function recipe(id: string, version: string) {
     "- TODO-PIN",
     "",
   ].join("\n")
-}
-
-/** The recipe index: one line per pack with a recipe, under each entry skill it serves. */
-async function writeIndex() {
-  const { ENGINES } = await import(path.join(PACKS, "index.ts"))
-  const packs: ReadonlyArray<Pack> = Object.values(ENGINES)
-  const groups = SKILLS.flatMap((skill) => {
-    const members = packs.filter((pack) => pack.fit.skills.some((name) => name === skill)).toSorted((a, b) => a.id.localeCompare(b.id))
-    if (!members.length) return []
-    return [
-      "",
-      `### ${skill}`,
-      "",
-      ...members.map((pack) => `- [${pack.id}](${pack.id}.md): ${pack.fit.role}; input: ${pack.fit.input}.`),
-    ]
-  })
-  await writeFile(
-    path.join(RECIPES, "index.md"),
-    [
-      "# Toolkit engine recipes",
-      "",
-      "<!-- Generated by packages/core/script/toolkit-pack.ts from the toolkit packs. Do not edit. -->",
-      "",
-      "## Applicability",
-      "",
-      "Read one recipe only when the packet assigns that engine's artifacts. Engines are grouped by the entry skill whose work they serve.",
-      "",
-      "## Tools and outputs",
-      ...groups,
-      "",
-    ].join("\n"),
-  )
 }
 
 function sri(digest: string) {

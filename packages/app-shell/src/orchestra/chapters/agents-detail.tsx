@@ -26,21 +26,6 @@ import {
 import { AgentPortrait } from "./agents-view"
 
 const TABS = ["overview", "prompt", "tools", "toolkit", "skills", "memory"] as const
-// Reference folders that name what the agent knows; any other folder follows in name order.
-const KNOWLEDGE = [
-  "frameworks",
-  "libraries",
-  "languages",
-  "protocols",
-  "data",
-  "lifetimes",
-  "modes",
-  "checks",
-  "cards",
-  "refactors",
-  "recipes",
-] as const
-const known = (kind: string): kind is (typeof KNOWLEDGE)[number] => KNOWLEDGE.some((item) => item === kind)
 type Tab = (typeof TABS)[number]
 
 export type AgentDetail = AgentsDetailOutput["data"]
@@ -48,43 +33,44 @@ export type AgentMemory = AtlasSnapshot["memory"][string]
 /** The agent's Atlas records: undefined while the snapshot loads, a reason when there is no store to read. */
 export type AgentMemoryState = { records: AgentMemory } | { missing: "empty" | "unsupported" | "error" } | undefined
 
-/** Seat skills come first; a catalog skill the seat already lists is not repeated. */
-/** The seat skills' reference files grouped by folder, known folders first; one title is listed once per folder. */
-export function agentKnowledge(agent: Agent) {
-  const groups = Map.groupBy(
-    (agent.skills ?? []).flatMap((skill) => skill.references ?? []),
-    (reference) => reference.kind ?? "",
+/**
+ * The seat's skill roots, each holding the nodes below it, then the catalog skills the seat does not already carry.
+ * Only the roots and catalog skills are listed to the agent; a child opens through its parent.
+ */
+export function agentSkills(agent: Agent, detail: AgentDetail | undefined): AgentSkill[] {
+  const tree = agent.skills ?? []
+  const below = Map.groupBy(
+    tree.filter((skill) => skill.parent !== undefined),
+    (skill) => skill.parent ?? "",
   )
-  const rank = (kind: string) => (known(kind) ? KNOWLEDGE.indexOf(kind) : KNOWLEDGE.length)
-  return [...groups]
-    .toSorted(([a], [b]) => rank(a) - rank(b) || a.localeCompare(b))
-    .map(([kind, references]) => ({
-      kind,
-      // Every recipe sits under recipes/external, so that folder name says nothing.
-      items: [
-        ...new Map(
-          references.map((item) => [
-            `${item.family ?? ""}/${item.title}`,
-            { title: item.title, family: item.family === "external" ? undefined : item.family },
-          ]),
-        ).values(),
-      ].toSorted((a, b) => (a.family ?? "").localeCompare(b.family ?? "") || a.title.localeCompare(b.title)),
-    }))
-}
-
-export function agentSkills(agent: Agent, detail: AgentDetail | undefined) {
-  const seat = (agent.skills ?? []).map((skill) => ({
+  const node = (skill: (typeof tree)[number]): AgentSkill => ({
     name: skill.name,
-    description: skill.description ?? undefined,
-    location: undefined as string | undefined,
-  }))
-  const names = new Set(seat.map((skill) => skill.name))
+    description: skill.description,
+    when: skill.when,
+    location: undefined,
+    children: (below.get(skill.name) ?? []).map(node),
+  })
+  const names = new Set(tree.map((skill) => skill.name))
   return [
-    ...seat,
+    ...tree.filter((skill) => skill.parent === undefined).map(node),
     ...(detail?.skills ?? [])
       .filter((skill) => !names.has(skill.name))
-      .map((skill) => ({ name: skill.name, description: skill.description ?? undefined, location: skill.location })),
+      .map((skill) => ({
+        name: skill.name,
+        description: skill.description ?? undefined,
+        when: undefined,
+        location: skill.location,
+        children: [],
+      })),
   ]
+}
+
+type AgentSkill = {
+  name: string
+  description: string | undefined
+  when: string | undefined
+  location: string | undefined
+  children: AgentSkill[]
 }
 
 // The page for one agent (`/orchestra/agents/<id>`): who it is, what it is told, what it can use and what it remembers.
@@ -129,7 +115,6 @@ export function AgentScreen(props: {
   const relative = (filepath: string) =>
     filepath.startsWith(`${props.directory}/`) ? filepath.slice(props.directory.length + 1) : filepath
   const skills = createMemo(() => agentSkills(props.agent, props.detail))
-  const knowledge = createMemo(() => agentKnowledge(props.agent))
   const memory = createMemo(() => {
     const memory = props.memory
     if (!memory || !("records" in memory)) return
@@ -139,9 +124,7 @@ export function AgentScreen(props: {
   const count = (tab: Tab) => {
     if (tab === "tools") return props.detail?.tools.length
     if (tab === "toolkit")
-      return props.detail
-        ? props.detail.engines.length + knowledge().reduce((total, group) => total + group.items.length, 0)
-        : undefined
+      return props.detail?.engines.length
     if (tab === "skills") return props.detail || props.agent.skills?.length ? skills().length : undefined
     if (tab === "memory") return memory()?.length
   }
@@ -726,39 +709,6 @@ export function AgentScreen(props: {
                     </Match>
                   </Switch>
                 </section>
-                <section class="agent-group">
-                  <div>
-                    <h2 class="mx-section">{language.t("orchestra.agents.toolkit.knowledge")}</h2>
-                    <p class="mx-note">{language.t("orchestra.agents.toolkit.knowledgeNote")}</p>
-                  </div>
-                  <Show
-                    when={knowledge().length}
-                    fallback={<p class="mx-empty">{language.t("orchestra.agents.toolkit.noKnowledge")}</p>}
-                  >
-                    <For each={knowledge()}>
-                      {(group) => (
-                        <div class="agent-knowledge">
-                          <h3>
-                            {known(group.kind)
-                              ? language.t(`orchestra.agents.toolkit.kind.${group.kind}`)
-                              : group.kind || language.t("orchestra.agents.toolkit.kind.general")}
-                            <span class="agent-tab-count">{group.items.length}</span>
-                          </h3>
-                          <ul>
-                            <For each={group.items}>
-                              {(item) => (
-                                <li>
-                                  {item.title}
-                                  <Show when={item.family}>{(family) => <span>{family()}</span>}</Show>
-                                </li>
-                              )}
-                            </For>
-                          </ul>
-                        </div>
-                      )}
-                    </For>
-                  </Show>
-                </section>
               </Match>
 
               <Match when={state.tab === "skills"}>
@@ -781,20 +731,8 @@ export function AgentScreen(props: {
                       </p>
                     }
                   >
-                    <ul class="agent-list">
-                      <For each={skills()}>
-                        {(skill) => (
-                          <li>
-                            <code>{skill.name}</code>
-                            <span>{skill.description ?? ""}</span>
-                            <span class="agent-list-tag">
-                              {language.t(
-                                skill.location ? "orchestra.agents.skills.catalog" : "orchestra.agents.skills.seat",
-                              )}
-                            </span>
-                          </li>
-                        )}
-                      </For>
+                    <ul class="agent-list agent-tree">
+                      <For each={skills()}>{(skill) => <SkillNode skill={skill} root />}</For>
                     </ul>
                   </Show>
                 </section>
@@ -906,5 +844,38 @@ export function AgentScreen(props: {
         </Show>
       </form>
     </div>
+  )
+}
+
+// A root or branch opens to the nodes below it, as the agent opens them one level at a time; a leaf says when it is opened.
+function SkillNode(props: { skill: AgentSkill; root?: boolean }) {
+  const language = useLanguage()
+  const row = () => (
+    <>
+      <code>{props.skill.name}</code>
+      <span>
+        {props.skill.description ?? ""}
+        <Show when={props.skill.when}>
+          {(when) => <small>{language.t("orchestra.agents.skills.when", { when: when() })}</small>}
+        </Show>
+      </span>
+      <span class={props.root ? "agent-list-tag" : "agent-tab-count"}>
+        {props.root
+          ? language.t(props.skill.location ? "orchestra.agents.skills.catalog" : "orchestra.agents.skills.seat")
+          : props.skill.children.length || ""}
+      </span>
+    </>
+  )
+  return (
+    <li>
+      <Show when={props.skill.children.length} fallback={row()}>
+        <details>
+          <summary>{row()}</summary>
+          <ul class="agent-list">
+            <For each={props.skill.children}>{(child) => <SkillNode skill={child} />}</For>
+          </ul>
+        </details>
+      </Show>
+    </li>
   )
 }

@@ -10,13 +10,20 @@ test("CLI build producer includes every canonical seat, entry and reference byte
   const trees = await packagedSkills()
   const seats = Object.values(Seats.all).filter((seat) => seat.skills.length > 0)
   expect(seats.length).toBeGreaterThan(0)
-  expect(Object.keys(trees).toSorted()).toEqual(seats.map((seat) => seat.id).toSorted())
-  for (const seat of seats) {
-    const expected = await SeatSkillContent.read(seat.id, Seats.skillSource(seat.id), seat.skills)
+  const shared = Seats.shared()
+  expect(Object.keys(trees).toSorted())
+    .toEqual([...seats.map((seat) => seat.id), ...(shared.length > 0 ? ["team"] : [])].toSorted())
+  const sources = [
+    ...seats.map((seat) => [seat.id, Seats.skillSource(seat.id), seat.skills.filter((skill) => !skill.startsWith("team-"))] as const),
+    ...(shared.length > 0 ? [["team", Seats.sharedSource(), shared] as const] : []),
+  ]
+  for (const [id, source, skills] of sources) {
+    const expected = await SeatSkillContent.read(id, source, skills)
     expect(Object.keys(expected).length).toBeGreaterThan(0)
-    expect(trees[seat.id]).toEqual(expected)
-    expect(Object.keys(trees[seat.id]).filter((file) => path.posix.basename(file) === "SKILL.md").toSorted())
-      .toEqual(seat.skills.map((skill) => `${skill}/SKILL.md`).toSorted())
+    expect(trees[id]).toEqual(expected)
+    // Every root is a node; nodes below a root are part of its tree.
+    expect(Object.keys(trees[id]).filter((file) => file.split("/").length === 2 && path.posix.basename(file) === "SKILL.md").toSorted())
+      .toEqual(skills.map((skill) => `${skill}/SKILL.md`).toSorted())
   }
   // Positive reference control: entry-only snapshots must not satisfy this proof.
   expect(Object.keys(trees.backend).filter((file) => file.includes("/references/")).length).toBeGreaterThan(0)
@@ -36,7 +43,7 @@ test("CLI build producer includes every canonical seat, entry and reference byte
     const compiled: typeof import("@orchestra/core/packaged-skills") = await import(module)
     expect(compiled.embedded()).toEqual(trees)
     const roots = await compiled.materialize({ cache, version: "closure-proof" })
-    expect(roots).toHaveLength(seats.length)
+    expect(roots).toHaveLength(sources.length)
     for (const root of roots) {
       for (const [file, text] of Object.entries(trees[path.basename(root)])) {
         expect(await fs.readFile(path.join(root, ...file.split("/")))).toEqual(Buffer.from(text, "utf8"))

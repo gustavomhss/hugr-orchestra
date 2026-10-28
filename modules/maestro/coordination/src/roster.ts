@@ -122,12 +122,19 @@ function seatProfile(seat: Seat): NativeProfile {
       })])),
     } : {}),
     ...(seat.skills.length > 0 ? {
-      skill: Object.freeze({ "*": "deny" as const, ...Object.fromEntries(seat.skills.map((name) => [name, "allow" as const])) }),
+      // A root opens its whole tree: every node below it is named `<root>-<path>`.
+      skill: Object.freeze({
+        "*": "deny" as const,
+        ...Object.fromEntries(seat.skills.flatMap((name) => [[name, "allow" as const], [`${name}-*`, "allow" as const]])),
+      }),
       external_directory: Object.freeze({
         ...(seat.profile === "review" ? baseProfiles.review.external_directory
           : seat.profile === "discovery" ? baseProfiles.discovery.external_directory
           : seat.profile === "direct" ? baseProfiles.direct.external_directory : { "*": "deny" as const }),
         [path.join(root, "*")]: "allow" as const,
+        ...(SeatSkillRoot.shared && seat.skills.some((skill) => skill.startsWith("team-"))
+          ? { [path.join(SeatSkillRoot.shared, "*")]: "allow" as const }
+          : {}),
       }),
     } : {}),
   })

@@ -17,10 +17,10 @@ Click a card to open that agent's screen. **Agents** at the top takes you back t
   - **Command-line engines** are the pinned tools the agent runs from its own toolkit, such as code generators,
     checks and indexers. Each row shows what the engine reads, its role, its pinned version and whether it is
     installed on this machine. An engine is fetched once per machine the first time the agent needs it.
-  - **What it knows** groups the reference guides its seat skills carry: frameworks, libraries, languages, protocols,
-    data access, and the agent's own working methods such as its checks and work modes.
-  - An agent with no toolkit of its own says so; its knowledge still shows when its skills carry guides.
-- **Skills**: seat skills that ship with the agent and catalog skills from this project and your profile.
+  - An agent with no toolkit of its own says so.
+- **Skill tree**: what the agent knows, as a tree. Each root its seat ships is a row you can open to the nodes below
+  it, one level at a time, the same way the agent opens them while it works. A deeper node shows **Opens when**: the
+  situation that makes the agent load it. Catalog skills from this project and your profile follow as plain rows.
 - **Memory**: what the agent has recorded in the project's Atlas, newest first, with a link to open it in Atlas.
 
 ## Saving

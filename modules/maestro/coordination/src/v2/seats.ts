@@ -32,7 +32,7 @@ export const pluginID = PluginV2.ID.make("maestro/seats")
  * widen it (findLast wins). Maestro itself
  * is core's default agent; configuration (`agent.<id>`) installed before this plugin keeps its prompt and description,
  * and the seat's engine, model and display label stay the owner's settings. Every agent then gets the `visibility`
- * denials, and Maestro its playbooks as skills.
+ * denials, every seat its own skill tree as skills, and Maestro its playbooks.
  *
  * The roster loads lazily: it materializes the seats' skill trees and the playbooks, which only an Orchestra build
  * packages. Where they are missing (the standalone CLI binary today) the seats and playbooks are skipped with a warning
@@ -56,7 +56,13 @@ const layer = Layer.effectDiscard(
       yield* Effect.promise(() =>
         Promise.all(
           Object.entries(skillRoot?.SeatSkillRoot.roots ?? {}).map(
-            async ([id, root]) => [id, await SeatSkillContent.describe(root, Seats.all[id].skills)] as const,
+            async ([id, root]) => {
+              const skills = Seats.all[id].skills
+              const team = skills.filter((skill) => skill.startsWith("team-"))
+              const own = await SeatSkillContent.describe(root, skills.filter((skill) => !team.includes(skill)))
+              const shared = skillRoot?.SeatSkillRoot.shared
+              return [id, shared && team.length > 0 ? [...own, ...(await SeatSkillContent.describe(shared, team))] : own] as const
+            },
           ),
         ),
       ),
@@ -65,8 +71,12 @@ const layer = Layer.effectDiscard(
     yield* plugins.ensure(pluginID, () =>
       Effect.gen(function* () {
         if (skillRoot) {
+          yield* skills.transform(MaestroSkillSourcesV2.seats({
+              ...skillRoot.SeatSkillRoot.roots,
+              ...(skillRoot.SeatSkillRoot.shared ? { team: skillRoot.SeatSkillRoot.shared } : {}),
+            }),
+          )
           yield* skills.transform(MaestroSkillSourcesV2.playbooks(skillRoot.SeatSkillRoot.playbooks))
-          yield* skills.transform(MaestroSkillSourcesV2.seats(skillRoot.SeatSkillRoot.roots))
         }
         yield* agents.transform(
           Effect.fn(function* (draft) {
@@ -80,6 +90,9 @@ const layer = Layer.effectDiscard(
                 )
               draft.update(id, (agent) => {
                 const root = skillRoot?.SeatSkillRoot.roots[member.memberId]
+                const shared = Seats.all[member.memberId].skills.some((skill) => skill.startsWith("team-"))
+                  ? skillRoot?.SeatSkillRoot.shared
+                  : undefined
                 agent.name = resolved.label
                 agent.system ??= roster?.renderPrompt(member, resolved.label)
                 agent.description ??= Seats.all[member.memberId].description
@@ -93,7 +106,9 @@ const layer = Layer.effectDiscard(
                 agent.permissions.push(
                   ...floor(roster?.nativeProfiles[member.memberId]),
                   // A seat reads its own skill tree but never edits it; inside the Location it is ordinary source.
-                  ...(root ? [{ action: "edit", resource: path.join(root, "*"), effect: "deny" as const }] : []),
+                  ...[root, shared]
+                    .filter((dir) => dir !== undefined)
+                    .map((dir) => ({ action: "edit", resource: path.join(dir, "*"), effect: "deny" as const })),
                 )
               })
             }
@@ -202,18 +217,13 @@ export const owners: readonly { readonly tools: readonly string[]; readonly agen
   },
 ]
 
-/**
- * The rules denying an agent the tools it may not use, every other seat's entry skills and, unless it is Maestro, the
- * playbooks.
- */
+/** The rules denying an agent the tools it may not use, other seats' skills and, unless it is Maestro, the playbooks. */
 export function visibility(id: string): PermissionV2.Ruleset {
   return [
     ...owners
       .filter((owner) => !owner.agents.includes(id))
       .flatMap((owner) => owner.tools.map((tool) => ({ action: tool, resource: "*", effect: "deny" as const }))),
-    ...Object.values(Seats.all)
-      .filter((seat) => seat.id !== id)
-      .flatMap((seat) => seat.skills.map((name) => ({ action: "skill", resource: name, effect: "deny" as const }))),
+    ...MaestroSkillSourcesV2.foreign(id),
     ...(id === AgentV2.defaultID ? [] : MaestroSkillSourcesV2.denied),
   ]
 }

@@ -39,19 +39,17 @@ export const Info = Schema.Struct({
   color: Color.pipe(optional),
   avatar: Avatar.pipe(optional),
   steps: PositiveInt.pipe(optional),
-  /** Skills packaged with this agent, read from its own tree rather than the project's skill catalog. */
+  /**
+   * The skill tree packaged with this agent, read from its own tree rather than the project's catalog. Each node is a
+   * directory with a `SKILL.md`, named by its path; nodes come depth first and a child names its `parent`.
+   */
   skills: Schema.Array(
     Schema.Struct({
       name: Schema.String,
       description: Schema.String.pipe(optional),
-      /** The skill's reference files: `kind` and `family` are its folders under `references/` (`frameworks/python`). */
-      references: Schema.Array(
-        Schema.Struct({
-          kind: Schema.String.pipe(optional),
-          family: Schema.String.pipe(optional),
-          title: Schema.String,
-        }),
-      ).pipe(optional),
+      /** When to open the node; a root has none. */
+      when: Schema.String.pipe(optional),
+      parent: Schema.String.pipe(optional),
     }),
   ).pipe(optional),
   /** The pinned engine set the agent's commands run with: the backend toolkit or the research toolkit. */

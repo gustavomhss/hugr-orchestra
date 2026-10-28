@@ -1775,14 +1775,14 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-mx-ki
 [data-orchestra-palette="github"] .agent-engine-state[data-status="failed"]::after {
   background: var(--mx-bad);
 }
-[data-orchestra-palette="github"] .agent-knowledge h3 {
-  color: var(--mx-strong);
-}
-[data-orchestra-palette="github"] .agent-knowledge li {
-  border: 1px solid var(--mx-line);
-}
-[data-orchestra-palette="github"] .agent-knowledge li span {
+[data-orchestra-palette="github"] .agent-tree summary code::before {
   color: var(--mx-dim);
+}
+[data-orchestra-palette="github"] .agent-tree summary:focus-visible {
+  outline: 2px solid var(--mx-blue);
+}
+[data-orchestra-palette="github"] .agent-tree details > .agent-list {
+  border-inline-start: 1px solid var(--mx-line);
 }
 [data-orchestra-palette="github"] .agent-memory-meta {
   color: var(--mx-dim);

@@ -1762,14 +1762,14 @@ html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-mx-kit] {
 [data-orchestra-palette="gruvbox"] .agent-engine-state[data-status="failed"]::after {
   background: var(--mx-bad);
 }
-[data-orchestra-palette="gruvbox"] .agent-knowledge h3 {
-  color: var(--mx-strong);
-}
-[data-orchestra-palette="gruvbox"] .agent-knowledge li {
-  border: 1px solid var(--mx-line);
-}
-[data-orchestra-palette="gruvbox"] .agent-knowledge li span {
+[data-orchestra-palette="gruvbox"] .agent-tree summary code::before {
   color: var(--mx-dim);
+}
+[data-orchestra-palette="gruvbox"] .agent-tree summary:focus-visible {
+  outline: 2px solid var(--mx-blue);
+}
+[data-orchestra-palette="gruvbox"] .agent-tree details > .agent-list {
+  border-inline-start: 1px solid var(--mx-line);
 }
 [data-orchestra-palette="gruvbox"] .agent-memory-meta {
   color: var(--mx-dim);

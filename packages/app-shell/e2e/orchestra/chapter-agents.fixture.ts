@@ -19,6 +19,7 @@ type MockAgent = {
   prompt?: string
   permission: { permission: string; pattern: string; action: string }[]
   options: Record<string, unknown>
+  skills?: { name: string; description?: string; when?: string; parent?: string }[]
 }
 // The server lists its default agent, maestro, first. The other names stand for any agent a profile defines.
 const agents: MockAgent[] = [
@@ -61,6 +62,16 @@ const agents: MockAgent[] = [
     native: true,
     permission: [],
     options: {},
+    // A seat's skill tree as the server sends it: depth first, each child naming its parent.
+    skills: [
+      { name: "research-survey", description: "Survey a dependency" },
+      {
+        name: "research-survey-licenses",
+        description: "Check license terms",
+        when: "the dependency ships under a license",
+        parent: "research-survey",
+      },
+    ],
   },
   {
     name: "review",
@@ -329,6 +340,7 @@ export async function setup(
           steps: agent.steps,
           system: agent.prompt,
           model: agent.model ? { providerID: agent.model.providerID, id: agent.model.modelID } : undefined,
+          skills: agent.skills,
           permissions: agent.permission.map((rule) => ({
             action: rule.permission,
             resource: rule.pattern,

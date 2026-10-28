@@ -499,7 +499,7 @@ textarea.agent-prompt:focus {
   white-space: nowrap;
 }
 /* Long tool descriptions stay three lines; the full text is in the title. */
-.agent-list li > span:not(.agent-list-tag) {
+.agent-list li > span:not(.agent-list-tag, .agent-tab-count) {
   display: -webkit-box;
   overflow: hidden;
   -webkit-box-orient: vertical;
@@ -545,34 +545,44 @@ textarea.agent-prompt:focus {
 .agent-engine-state[data-status="failed"]::after {
   background: var(--mx-bad);
 }
-.agent-knowledge h3 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 4px 0 8px;
-  color: var(--mx-strong);
-  font: 600 var(--orchestra-font-size-xs) var(--mx-sans);
+/* A node with children is a disclosure: its summary keeps the list row's columns and the branch indents below it. */
+.agent-tree li:has(> details) {
+  display: block;
 }
-.agent-knowledge ul {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 0;
-  padding: 0;
+.agent-tree summary {
+  display: grid;
+  grid-template-columns: minmax(140px, 220px) minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 14px;
+  cursor: pointer;
   list-style: none;
 }
-.agent-knowledge li {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 6px;
-  padding: 3px 9px;
-  border: 1px solid var(--mx-line);
-  border-radius: var(--orchestra-radius-sm);
-  font-size: var(--orchestra-font-size-xs);
+.agent-tree summary::-webkit-details-marker {
+  display: none;
 }
-.agent-knowledge li span {
+.agent-tree summary code::before {
+  content: "▸ ";
   color: var(--mx-dim);
+}
+.agent-tree details[open] > summary code::before {
+  content: "▾ ";
+}
+.agent-tree summary:focus-visible {
+  outline: 2px solid var(--mx-blue);
+  outline-offset: 2px;
+}
+.agent-tree details > .agent-list {
+  margin-block-start: 8px;
+  padding-inline-start: 16px;
+  border-inline-start: 1px solid var(--mx-line);
+}
+.agent-tree small {
+  display: block;
+  margin-block-start: 2px;
   font-size: var(--orchestra-font-size-2xs);
+}
+.agent-tree .agent-tab-count:empty {
+  visibility: hidden;
 }
 .agent-memory li {
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -625,6 +635,7 @@ textarea.agent-prompt:focus {
     grid-template-columns: minmax(0, 1fr);
   }
   .agent-list li,
+  .agent-tree summary,
   .agent-engines li,
   .agent-memory li {
     grid-template-columns: minmax(0, 1fr);

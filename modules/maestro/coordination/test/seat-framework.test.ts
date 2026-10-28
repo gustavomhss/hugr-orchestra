@@ -22,17 +22,23 @@ describe("native seat framework", () => {
       )
       if (seat.skills.length === 0) continue
       const root = Seats.skillSource(seat.id)
+      const own = seat.skills.filter((skill) => !skill.startsWith("team-"))
       const dirs = (await fs.readdir(root, { withFileTypes: true })).filter((entry) => entry.isDirectory()).map((entry) => entry.name).toSorted()
-      expect(dirs).toEqual(seat.skills.toSorted())
-      for (const skill of seat.skills) expect(matter(await Bun.file(path.join(root, skill, "SKILL.md")).text()).data.name).toBe(skill)
+      expect(dirs).toEqual(own.toSorted())
+      for (const skill of seat.skills)
+        expect(
+          matter(await Bun.file(path.join(skill.startsWith("team-") ? Seats.sharedSource() : root, skill, "SKILL.md")).text()).data.name,
+        ).toBe(skill)
     }
-    expect(Seats.all.backend.skills.toSorted()).toEqual(BackendToolkitManifest.ENTRY_SKILLS.toSorted())
+    expect(Seats.all.backend.skills.filter((skill) => !skill.startsWith("team-")).toSorted()).toEqual(
+      BackendToolkitManifest.ENTRY_SKILLS.toSorted(),
+    )
     expect(Seats.all.jimmy).toMatchObject({
       id: "jimmy",
       profile: "discovery",
       returnCard: "jimmy-result",
       workResult: "discovery-work-result-v1",
-      skills: ["jimmy-reference"],
+      skills: ["jimmy-calibration", "jimmy-web-research"],
       writeRoots: false,
       strictResume: true,
       atlasMemory: true,
@@ -79,7 +85,7 @@ describe("native seat framework", () => {
       toolkit: false,
     })
     expect(Seats.skillSource(upstream.id)).toBe(path.resolve(import.meta.dirname, "../../../../modules/specialists/archie/skills"))
-    expect(upstream.prompt).toContain("Load archie-plan for authoring and archie-work-package")
+    expect(upstream.prompt).toContain("Load `archie-plan` for authoring and `archie-work-package`")
     expect(define(upstream)).toBe(upstream)
     expect(() => define({ ...upstream, toolkit: true })).toThrow("The backend toolkit supports only the backend seat: archie")
   })

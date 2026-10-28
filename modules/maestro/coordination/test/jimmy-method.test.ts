@@ -7,7 +7,7 @@ import { tmpdir } from "./fixture/tmpdir"
 
 // JE-AC-M1 (specs/jimmy-engine/acceptance.md, method.md §2 and §4). The method lives in the host and the tools, so the
 // prompt stays short, never asks the model to write the card the host assembles from `inquiry close`, names only the
-// seat's own tools, and the seat ships one optional reference skill. Every check also runs on a mutated input, so a
+// seat's own tools, and the seat ships two optional reference roots. Every check also runs on a mutated input, so a
 // check that cannot fail does not pass.
 
 const prompt = Seats.all.jimmy.prompt
@@ -40,22 +40,22 @@ describe("JE-AC-M1 jimmy method", () => {
     expect(unknownTools(`${prompt} Use repo_symbols first.`)).toEqual(["repo_symbols"])
   })
 
-  test("the seat ships only the optional jimmy-reference skill, within its word caps", async () => {
+  test("the seat ships only its two optional roots, within their word caps", async () => {
     const root = Seats.skillSource("jimmy")
-    expect(Seats.all.jimmy.skills).toEqual(["jimmy-reference"])
-    expect(prompt).toContain("`jimmy-reference`")
-    expect(await entries(root)).toEqual(["jimmy-reference"])
-    const files = await entries(path.join(root, "jimmy-reference"))
-    expect(files).toEqual(["SKILL.md", "calibration.md", "web-research.md"])
-    // method.md §4: a one-paragraph index of at most 150 words and companions of at most 600 each.
-    const over = (await Promise.all(files.map(async (file) =>
-      ({ file, words: words(await Bun.file(path.join(root, "jimmy-reference", file)).text()) }))))
-      .filter((item) => item.words > (item.file === "SKILL.md" ? 150 : 600))
+    const roots = ["jimmy-calibration", "jimmy-web-research"]
+    expect(Seats.all.jimmy.skills).toEqual(roots)
+    for (const name of roots) expect(prompt).toContain(`\`${name}\``)
+    expect(await entries(root)).toEqual(roots)
+    expect(await Promise.all(roots.map((name) => entries(path.join(root, name))))).toEqual([["SKILL.md"], ["SKILL.md"]])
+    // method.md §4: each companion of at most 600 words.
+    const over = (await Promise.all(roots.map(async (name) =>
+      ({ name, words: words(await Bun.file(path.join(root, name, "SKILL.md")).text()) }))))
+      .filter((item) => item.words > 600)
     expect(over).toEqual([])
 
     await using tmp = await tmpdir()
-    await fs.mkdir(path.join(tmp.path, "jimmy-reference"))
+    await fs.mkdir(path.join(tmp.path, "jimmy-calibration"))
     await fs.mkdir(path.join(tmp.path, "jimmy-discovery"))
-    expect(await entries(tmp.path)).not.toEqual(["jimmy-reference"])
+    expect(await entries(tmp.path)).not.toEqual(roots)
   })
 })

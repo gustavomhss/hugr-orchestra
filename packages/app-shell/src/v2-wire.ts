@@ -110,11 +110,12 @@ export type Agent = {
   }
   steps?: number
   engine?: "orchestra" | "claude-code"
-  /** Skills packaged with the agent itself, outside the project's skill catalog. */
+  /** The skill tree packaged with the agent itself, depth first; a child names its `parent`. */
   skills?: readonly {
     name: string
     description?: string
-    references?: readonly { kind?: string; family?: string; title: string }[]
+    when?: string
+    parent?: string
   }[]
   toolkit?: "backend" | "research"
 }

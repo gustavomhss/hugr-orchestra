@@ -379,6 +379,21 @@ test("an agent page seeds from the project file and keeps pattern rules it does 
   expect(mock.disposed).toEqual([])
 })
 
+test("the skill tree tab lists a seat's roots and opens a root to the nodes below it", async ({ page }) => {
+  await setup(page)
+  await openAgents(page)
+  await openAgent(page, "research")
+  await tab(page, "Skill tree").click()
+  const tree = screen(page).locator(".agent-tree")
+  await expect(tree.locator(":scope > li")).toHaveCount(1)
+  const leaf = tree.getByText("research-survey-licenses", { exact: true })
+  await expect(leaf).toBeHidden()
+  await tree.getByText("research-survey", { exact: true }).click()
+  await expect(leaf).toBeVisible()
+  await expect(tree).toContainText("Check license terms")
+  await expect(tree).toContainText("Opens when: the dependency ships under a license")
+})
+
 test("Discard and Back drop the draft; remove keeps the definition and disables it", async ({ page }) => {
   const mock = await setup(page, {
     files: {

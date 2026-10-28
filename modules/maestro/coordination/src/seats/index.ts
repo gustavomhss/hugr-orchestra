@@ -13,7 +13,7 @@ import type { Seat } from "./seat"
 // seat-imports:end
 
 export type { Seat } from "./seat"
-export { skillSource } from "./seat"
+export { skillSource, sharedSource } from "./seat"
 
 // One import and one entry per seat, keyed by its id, in roster order; `script/seat.ts add` writes both.
 export const all: Readonly<Record<string, Seat>> = Object.freeze({
@@ -32,4 +32,9 @@ export const all: Readonly<Record<string, Seat>> = Object.freeze({
 /** The seat definition for an exact agent or member id; legacy ids are canonicalized by the caller. */
 export function find(id: string | undefined): Seat | undefined {
   return Object.values(all).find((seat) => seat.id === id)
+}
+
+/** The shared roots (`team-*`) some seat declares; they live once in the `team` tree (`sharedSource`). */
+export function shared() {
+  return [...new Set(Object.values(all).flatMap((seat) => seat.skills.filter((skill) => skill.startsWith("team-"))))]
 }
