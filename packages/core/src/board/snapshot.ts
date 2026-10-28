@@ -140,23 +140,24 @@ export function make(deps: Deps) {
 
   const push = Effect.fnUntraced(function* (issue: Board.IssueID) {
     const found = yield* find(issue)
-    if (!found?.attempt) return { status: "none" } satisfies Result
-    const ref = `refs/orchestra/wip/${found.project.key}-${found.issue.number}/a${found.attempt.n}`
-    const cwd = yield* locate(found.directory, found.issue, found.attempt)
+    const attempt = found?.attempt
+    if (!found || !attempt) return { status: "none" } satisfies Result
+    const ref = `refs/orchestra/wip/${found.project.key}-${found.issue.number}/a${attempt.n}`
+    const cwd = yield* locate(found.directory, found.issue, attempt)
     if (!cwd || !existsSync(cwd)) return { status: "missing", ref, worktree: cwd } satisfies Result
     const current = yield* tree(cwd)
     if (!current) return { status: "blocked", ref, reason: `could not read the tree of ${cwd}` } satisfies Result
-    if (current === found.attempt.snapshot_tree && found.attempt.snapshot_sha)
-      return { status: "unchanged", ref, sha: found.attempt.snapshot_sha } satisfies Result
+    if (current === attempt.snapshot_tree && attempt.snapshot_sha)
+      return { status: "unchanged", ref, sha: attempt.snapshot_sha } satisfies Result
     // The first snapshot's parent is the worktree's HEAD, so the scan and the push carry only the seat's change.
-    const parent = found.attempt.snapshot_sha ?? (yield* git(cwd, ["rev-parse", "HEAD"])).out
+    const parent = attempt.snapshot_sha ?? (yield* git(cwd, ["rev-parse", "HEAD"])).out
     const commit = yield* git(
       cwd,
-      ["commit-tree", current, ...(parent ? ["-p", parent] : []), "-m", `orchestra snapshot ${found.project.key}-${found.issue.number} a${found.attempt.n}`],
+      ["commit-tree", current, ...(parent ? ["-p", parent] : []), "-m", `orchestra snapshot ${found.project.key}-${found.issue.number} a${attempt.n}`],
       IDENTITY,
     )
     const blocked = (reason: string) =>
-      update(found.attempt, { snapshot_blocked: reason }).pipe(Effect.as({ status: "blocked", ref, reason } satisfies Result))
+      update(attempt, { snapshot_blocked: reason }).pipe(Effect.as({ status: "blocked", ref, reason } satisfies Result))
     if (commit.code !== 0) return yield* blocked(`could not write the snapshot commit: ${commit.err}`)
     const hit = yield* scan(cwd, parent ? `${parent}..${commit.out}` : commit.out)
     if (hit) return yield* blocked(hit)
@@ -164,7 +165,7 @@ export function make(deps: Deps) {
     if (remote._tag === "Failure") return yield* blocked(remote.failure.message)
     const pushed = yield* git(cwd, ["push", "--no-verify", "--force", remote.success, `${commit.out}:${ref}`])
     if (pushed.code !== 0) return yield* blocked(`the push to ${remote.success} failed: ${pushed.err.split("\n").at(-1)}`)
-    yield* update(found.attempt, {
+    yield* update(attempt, {
       snapshot_sha: commit.out,
       snapshot_tree: current,
       snapshot_at: yield* Clock.currentTimeMillis,
