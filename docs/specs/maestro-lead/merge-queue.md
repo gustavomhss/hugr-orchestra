@@ -379,8 +379,8 @@ and the driver run, and fast-forwards base to the tested commit (§6.6). The lay
 have one writer, and attempts and sessions get new files.
 
 **Public repositories.** Notes, threads, question text and spend are left out of `board.jsonl` and `card.jsonl`.
-Whether attempts, seat memory and context archives travel in full, redacted or not at all on a public repository is
-an open owner ruling (layout §9; §14, decision 7).
+On a public repository, attempts, seat memory and context archives travel redacted; on a private one they travel in
+full (owner ruling 2026-10-28, layout §9; §14, decision 7).
 The full rows stay in the app database.
 
 ## 5. CI: who triggers it and how a project configures it
@@ -817,22 +817,24 @@ parallel: WP9 touches only `archie`'s plan skill, `maestro-plan` and the enqueue
 
 ## 14. Owner decisions
 
+Decided by the owner on 2026-10-28: every recommendation below is accepted.
+
 1. **Bundles carry the `epic` label.** This turns "one full run per epic" into "one full run per bundle, and every
-   epic closes with one" (§5.1). Recommended: yes.
+   epic closes with one" (§5.1). Decided: yes.
 2. **`merge-if-disjoint` for `dev`** (§6.5). This is the one exception to the not-rocket-science rule, taken because
-   other sessions merge into `dev` directly. Recommended: yes for this repository; `retest` stays the default for
+   other sessions merge into `dev` directly. Decided: yes for this repository; `retest` stays the default for
    other projects.
 3. **The host merges a green bundle under the grant Maestro gave with `board_queue`,** with no further prompt per
-   bundle. Recommended: yes, because enqueue is the merge decision. This merge is not a human review, so it never
+   bundle. Decided: yes, because enqueue is the merge decision. This merge is not a human review, so it never
    counts as one for Atlas: committed Knowledge keeps its tier only by re-proving (§4.7).
-4. **Snapshot refs are pushed to the public remote.** They are as public as a PR branch. Recommended: yes, since the
+4. **Snapshot refs are pushed to the public remote.** They are as public as a PR branch. Decided: yes, since the
    alternative is work that lives only on one disk.
 5. **Phase 2 trusts the affected graph between whole-suite runs** (§7.3). A break the graph misses is caught by the
    next epic bundle, and pauses only the lanes it touches. Risk: an epic bundle waits for every card of the epic, so
-   while one card is in rework the net does not run; `fullEvery` is the remedy if that grows long. Recommended: yes,
+   while one card is in rework the net does not run; `fullEvery` is the remedy if that grows long. Decided: yes,
    with no extra whole-suite runs (`fullEvery` 0) for this repository, because epics already close often.
 6. **Model spend stays off GitHub** (§4.5). PRs show attempts, CI minutes and wall time; tokens and spend show only in
-   the app. Recommended: yes, matching the board contract; a project may opt in later if its repository is private.
+   the app. Decided: yes, matching the board contract; a project may opt in later if its repository is private.
 7. **The board log in a public repository is redacted** (§4.7): no notes, threads, question text or spend. A private
-   repository tracks everything except secrets. Recommended: yes. Whether attempts, seat memory and context archives
-   travel on a public repository is a separate ruling, asked in the Atlas layout (§9).
+   repository tracks everything except secrets. Decided: yes. On a public repository, attempts, seat memory and
+   context archives travel redacted (Atlas layout §9).
