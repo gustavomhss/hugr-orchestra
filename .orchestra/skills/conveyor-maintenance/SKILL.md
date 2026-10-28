@@ -59,3 +59,4 @@ snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bund
   `test/board-tools.test.ts` when board code moves).
 - Typecheck: `gh workflow run typecheck.yml --ref <branch>`. Never on the Mac.
 - `bun run check:guards --base origin/dev` before calling a change done.
+- `BoardLedger.of` computes `Board.Ledger` from activity, check and attempt rows; it is optional on `Board.Snapshot`; per-lane numbers are phase 2.

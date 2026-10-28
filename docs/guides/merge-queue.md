@@ -100,3 +100,7 @@ every remaining card of an epic is queued. Urgent cards go first.
 A card in the Queue column shows whether it is waiting, running in a bundle, held by your hold before merge, or held
 out by a conflict. To take a card out, ask Maestro: it uses `board_dequeue`, which also dissolves the bundle the card
 was in. Merge PRs of a board project only through the queue; a guard flags code that merges a PR outside it.
+
+## Numbers
+
+The board snapshot carries four numbers for the project's queue: queue wait (from a card joining the queue to its bundle merging), red rate (ejected share of the last 50 settled attempts), rework rate (attempts per shipped card) and lead time (from the first passing scoped check to the merge). Each is null until there is data for it.

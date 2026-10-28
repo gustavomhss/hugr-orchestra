@@ -376,6 +376,15 @@ export const Summary = Schema.Struct({
   forecast: ProjectForecast,
 }).annotate({ identifier: "Board.Summary" })
 
+// Section 12 of the merge-queue spec: the conveyor's numbers for the project's pool. Times are milliseconds; null means no data yet.
+export interface Ledger extends Schema.Schema.Type<typeof Ledger> {}
+export const Ledger = Schema.Struct({
+  queueWait: Schema.NullOr(Schema.Finite),
+  redRate: Schema.NullOr(Schema.Finite),
+  reworkRate: Schema.NullOr(Schema.Finite),
+  leadTime: Schema.NullOr(Schema.Finite),
+}).annotate({ identifier: "Board.Ledger" })
+
 export interface Snapshot extends Schema.Schema.Type<typeof Snapshot> {}
 export const Snapshot = Schema.Struct({
   project: Project,
@@ -387,6 +396,7 @@ export const Snapshot = Schema.Struct({
   forecast: ProjectForecast,
   epicForecasts: Schema.Array(EpicForecast),
   scope: Schema.Array(ScopePoint),
+  ledger: Ledger.pipe(optional),
 }).annotate({ identifier: "Board.Snapshot" })
 
 // The git trail is read live and never stored. Signed out says so instead of showing stale data.

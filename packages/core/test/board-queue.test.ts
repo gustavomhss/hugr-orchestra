@@ -171,6 +171,14 @@ describe("BoardQueue", () => {
       expect(yield* Effect.promise(() => Bun.$`git --git-dir ${repo.remote.origin} log --format=%B main`.quiet().text())).toContain(
         "WP: QOK-1\nAttempt: a0",
       )
+      const ledger = (yield* board.snapshot("QOK")).ledger
+      expect(typeof ledger?.queueWait).toBe("number")
+      expect(ledger?.queueWait).toBeGreaterThanOrEqual(0)
+      expect(typeof ledger?.leadTime).toBe("number")
+      expect(ledger?.leadTime).toBeGreaterThanOrEqual(0)
+      // The seed has no attempt rows: no settled attempt means no red rate, and no attempts means no rework.
+      expect(ledger?.redRate).toBeNull()
+      expect(ledger?.reworkRate).toBe(0)
     }),
   )
 

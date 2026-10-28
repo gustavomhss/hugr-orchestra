@@ -78,3 +78,4 @@ it: skill `conveyor-maintenance`. User guide: `docs/guides/merge-queue.md`.
 - The `<integration>` System Context line for conflicts waits for #1106's context sources.
 - `board_read` does not show checks or the push state yet; it shows the queue state through `issue.queue`.
 - The GitHub sync does not ship merged cards on its own; the queue ships them when it lands their bundle.
+- `BoardLedger.of` computes `Board.Ledger` from activity, check and attempt rows; it is optional on `Board.Snapshot`; per-lane numbers are phase 2.

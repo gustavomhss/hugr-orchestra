@@ -37,6 +37,7 @@ import {
   BoardStepTable,
 } from "./sql"
 import { BoardForecast } from "./forecast"
+import { BoardLedger } from "./ledger"
 import { BoardDecision } from "./decision"
 import { BoardMoney } from "./money"
 import { BoardProof } from "./proof"
@@ -341,6 +342,7 @@ export const layerWith = (options: {
           forecast: forecast.project,
           epicForecasts: forecast.epics,
           scope: BoardForecast.scope(history),
+          ledger: yield* BoardLedger.of(tx, project),
         } satisfies Board.Snapshot
       })
 
