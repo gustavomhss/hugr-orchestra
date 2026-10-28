@@ -30,13 +30,14 @@ For governed work, or when the project's instructions ask for more, load `maestr
 With the owner's grant for this session (or a request for this change), each card is its own pull request:
 
 1. In the card's worktree, `git -C <path> switch -c <card-key>` (the worktree starts detached), commit the card's
-   paths, push the branch and open the pull request. Link the branch and the PR on the card with `board_issue` and
-   move the card to Review. The description carries the evidence and what was not
-   covered.
+   paths, push the branch and open the pull request. Link the branch and the PR on the card with `board_issue`; the
+   host's GitHub sync then moves the card to Review while the PR is open, and to Shipped once it merges. The
+   description carries the evidence and what was not covered.
 2. Read the card with `board_read`. When `holdBeforeMerge` is set, only the owner releases it, and releasing it on the
    board does not wake Maestro. Ask with `question`, which keeps the run waiting, whether to merge once they release
-   it; on the answer, read the card again before merging. Otherwise merge when the project's required checks pass,
-   move the card to Shipped (the board refuses it until the merge is proven) and clean up its worktree (`track`).
+   it; on the answer, read the card again before merging. Otherwise merge when the project's required checks pass and
+   clean up its worktree (`track`). The sync ships the card; a project with no GitHub repo needs `board_move` to
+   Shipped, which the board refuses until the merge is proven.
 3. Cards that depend on it can now be dispatched, each in a new worktree from the updated base.
 
 Inline work that never gets a PR moves to Shipped with a `reason` that says how it was delivered. Without the grant,
@@ -63,7 +64,7 @@ Evidence: <project test command> test/reminders/schedule.test.ts passed.
 Not covered: real email delivery, because tests use the sender's fake transport.
 ```
 
-The card moved to Review with its PR, then to Shipped after the merge.
+The host moved the card to Review when the PR opened, and to Shipped after the merge.
 
 ## Counter-examples
 

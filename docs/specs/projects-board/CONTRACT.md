@@ -194,7 +194,7 @@ Owner writes (actor `owner`, `reason` optional):
 | `POST /api/board/:key/issue/:number/note` | `{ body }` |
 | `POST /api/board/:key/issue/:number/attachment` | JSON `{ kind, name, mime?, data?, value? }`: a file carries base64 `data`; a secret carries `value` and `name` is its label. The value goes straight to `CredentialTable` and is never echoed |
 | `POST /api/board/:key/activity/:id/undo` | Rule 4 |
-| `POST /api/board/:key/github/sync` | The retry: one pull then push now, returns `{ state, error }` (the new `github_state`/`github_error`). Refused when the project has no `github_repo` |
+| `POST /api/board/:key/github/sync` | The retry: one pull, PR follow and push now, returns `{ state, error }` (the new `github_state`/`github_error`). Refused when the project has no `github_repo` |
 | `POST /api/board/:key/pause` and `/resume` | Project level; `{ reason? }` |
 | `POST /api/board/:key/issue/:number/pause` and `/resume` | Issue level |
 | `POST /api/board/:key/issue/:number/hold` | `{ hold: boolean }` |
@@ -292,4 +292,8 @@ As built in slice B2:
 - Issues and comments share one `since` cursor (`github_since`); each list keeps its own ETag. A 304 is an empty page.
 - A manual or polled sync is serialized per server. Failures are classified from `gh`'s exit code and stderr; token-like
   text is redacted from `github_error` and nothing is logged.
+- Each sync follows the linked PR of every Building or Review card on an active project, between the pull and the push:
+  an open PR moves Building to Review, a merged PR moves the card to Shipped and clears `crash_reason`. The move is a
+  `github` actor row with the PR's fact as its reason. A paused card stays, a held card never ships, and an unreadable PR
+  leaves its card alone without failing the sync.
 - The poll runs only in the server layer; tests inject the `gh` runner (`Board.layerWith({ gh, poll: false })`).

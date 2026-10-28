@@ -3,6 +3,7 @@ import { ToolFailure } from "@orchestra/llm"
 import { Effect, Layer, type Scope } from "effect"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { eq } from "drizzle-orm"
+import { Board } from "@orchestra/core/board/board"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
 import { TaskGovernance } from "@orchestra/core/tool/task-governance"
@@ -38,9 +39,37 @@ test("Task carries legacy governance fields, so a recorded legacy call decodes o
     Effect.gen(function* () {
       const governance = yield* TaskGovernance.Service
       expect(Object.keys(governance.input).sort()).toEqual(
-        ["allowedDomains", "authorizationID", "background", "effort", "governed", "memoryUnit", "workflow", "writePaths"],
+        ["allowedDomains", "authorizationID", "background", "card", "effort", "governed", "memoryUnit", "workflow", "writePaths"],
       )
       expect(governance.input).toBe(GovernanceInputV2.fields)
+    }),
+  ))
+
+test("a Task's card links the teammate and its Session and moves the card to Building, once", () =>
+  run((directory) =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      yield* board.project({ key: "CRD", name: "Cards", reason: "Start." })
+      yield* board.issue({ project: "CRD", title: "Code", reason: "Plan." })
+      yield* board.issue({ project: "CRD", title: "Reviewed", reason: "Plan." })
+      yield* board.move({ project: "CRD", number: 2, stage: "building", reason: "Started." })
+      yield* board.issue({ project: "CRD", number: 2, pr: 4, reason: "PR is up." })
+      yield* board.move({ project: "CRD", number: 2, stage: "review", reason: "PR is up." })
+
+      expect(yield* admit({ directory, caller: "maestro", target: "general", extra: { card: "CRD-1" } })).toEqual({})
+      const card = (yield* board.snapshot("CRD")).issues[0]
+      expect(card).toMatchObject({ stage: "building", seat: "general" })
+      expect(card?.sessionID).toStartWith("ses_")
+      // An exact retry changes nothing; a card past Building keeps its stage.
+      yield* admit({ directory, caller: "maestro", target: "general", extra: { card: "CRD-1" } })
+      yield* admit({ directory, caller: "maestro", target: "general", extra: { card: "CRD-2" } })
+      expect((yield* board.snapshot("CRD")).issues.map((issue) => issue.stage)).toEqual(["building", "review"])
+      expect((yield* board.activity("CRD")).filter((row) => row.action === "issue.move")).toHaveLength(3)
+
+      expect(yield* refusal(admit({ directory, caller: "maestro", target: "general", extra: { card: "CRD-9" } })))
+        .toStartWith("Task denied: card CRD-9:")
+      expect(yield* refusal(admit({ directory, caller: "maestro", target: "general", extra: { card: "crd-1" } })))
+        .toBe("Task denied: governance-input-invalid")
     }),
   ))
 

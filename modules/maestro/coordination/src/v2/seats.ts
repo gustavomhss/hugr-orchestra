@@ -15,6 +15,7 @@ import { MaestroGovernanceV2 } from "./governance"
 import { Seats } from "../seats"
 import { SeatSkillContent } from "../seat-skill-content"
 import { MaestroAtlasHeaderV2 } from "./atlas-header-source"
+import { MaestroBoardDriftV2 } from "./board-drift-source"
 import { MaestroAtlasRestoreV2 } from "./atlas-restore"
 import { MaestroResearchInquiryV2 } from "./research-inquiry-source"
 import { MaestroSeats } from "./seats-service"
@@ -234,7 +235,7 @@ export const node = makeLocationNode({
   deps: [PluginV2.node, AgentV2.node, SkillV2.node, MaestroSeats.node],
 })
 
-/** Maestro on V2: native seats as agents, Maestro's native and Atlas tools, the Atlas header and resume, the research seat's inquiry snapshot, the Arsenal's native safety owner and Maestro's Task governance in every Location, plus the workflow completion host and Maestro's board tools. */
+/** Maestro on V2: native seats as agents, Maestro's native and Atlas tools, the Atlas header and resume, Maestro's board drift, the research seat's inquiry snapshot, the Arsenal's native safety owner and Maestro's Task governance in every Location, plus the workflow completion host and Maestro's board tools. */
 export const contribution: Host.Contribution = {
   id: "maestro",
   replacements: [...ArsenalNative.nativeRegistryReplacements, ...MaestroGovernanceV2.replacements],
@@ -245,6 +246,7 @@ export const contribution: Host.Contribution = {
     MaestroToolsV2.node,
     MaestroAtlasToolV2.node,
     MaestroAtlasHeaderV2.node,
+    MaestroBoardDriftV2.node,
     MaestroAtlasRestoreV2.node,
     MaestroResearchInquiryV2.node,
   ],

@@ -33,8 +33,10 @@ subsystem.
 
 ## The card
 
-When the request has a board project, find or create its card with `board_issue`, link the seat, and move it to
-Building. Without a project, track the work in the conversation and report it the same way.
+When the request has a board project, find or create its card with `board_issue` and pass its key as the `card`
+input of `task`. The host then links the seat and the child Session on the card and moves it from Backlog or Ready to
+Building; a card that is not on the board refuses the task. Without a project, track the work in the conversation and
+report it the same way.
 
 Maestro's own worktree is Maestro's alone: only its inline work edits it. A seat that writes starts in a new
 worktree: call `task` with `worktree: true` and a `description` that starts with the card key. The host makes the
@@ -45,8 +47,7 @@ they read its change, else none.
 
 Write `Worktree: <directory>; Stall: 0` in the building step's `now` (not mirrored to GitHub). A redispatch reuses
 the same worktree and sets `attempts` to one more.
-Call `task` with `background: true` and link the returned Session on the card at once. `archie` runs in the
-foreground: the host refuses a background `archie` task.
+Call `task` with `background: true`. `archie` runs in the foreground: the host refuses a background `archie` task.
 
 ## Checks before the call
 
