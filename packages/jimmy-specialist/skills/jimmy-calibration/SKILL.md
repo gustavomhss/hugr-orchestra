@@ -1,3 +1,8 @@
+---
+name: jimmy-calibration
+description: Optional calibration doctrine for the research seat. Load before you report that something is absent, unused or clean, give a count, or rely on a gate, test or CI result.
+---
+
 # Calibrate the instrument before the claim
 
 An empty or green result has two causes: nothing is there, or the instrument cannot see. They look the same until a control separates them.

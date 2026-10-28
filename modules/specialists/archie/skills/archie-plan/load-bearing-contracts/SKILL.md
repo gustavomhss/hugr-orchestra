@@ -1,3 +1,10 @@
+---
+name: archie-plan-load-bearing-contracts
+description: "Load-bearing contract authoring: the smallest exact seam between a producer and its consumers."
+when: "A public type or error, wire or event format, schema or migration shape crosses slice ownership and changing it would force a consumer to change."
+not-when: "Independent local edits with no consumer in another slice."
+---
+
 # Load-bearing contract authoring
 
 Read when a public type/error, wire/event format, schema or migration shape crosses current slice ownership and changing it would force a consumer to change. Independent local edits do not need a contract ceremony. Author the smallest exact seam; Maestro/owner decides adoption and revisions.

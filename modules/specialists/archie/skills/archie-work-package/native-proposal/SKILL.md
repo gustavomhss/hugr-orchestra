@@ -1,16 +1,23 @@
+---
+name: archie-work-package-native-proposal
+description: "Native Relay proposal reference: the work package shape to author."
+when: "Writing one native linear work package proposal for coordinated work or validated checkpoints."
+not-when: "Small independent Tasks, which stay lightweight."
+---
+
 # Native Relay proposal reference
 
 Schema source pin supplied by Relay: `c0fcf4f394`; inspected transfer baseline: `abf7a72c77fcaeee1206400a8270b2581ae9839c`, `packages/schema/src/relay-sprint.ts`. Exports include `RelaySprint.Sprint`, `WorkPackage` and `Control`. No schema-version field exists; `gen` stamps ledger generation, not author proposal version, proposal identity or approval.
 
 ## Author the native shape
 
-Exact field names, meanings and a valid example: [native field reference](native-fields.md). Read it before writing any key.
+Exact field names, meanings and a valid example: native field reference (`archie-work-package-native-fields`). Read it before writing any key.
 
 Map global context/criteria/coverage and source refs to `brief`; ordered step contracts to `work_packages`; each step's objective, exact read/write scope, inputs, outputs, inherited criteria/deltas, interface anchors and oracle references to `title`/`instructions`; proposed runtime controls to `checklist`. Keep one complete versioned artifact for host, not only the visible step or a diff. A macro groups context, not a second executor. WP/control IDs are nonempty and NUL-free; `host_check` has identifier syntax but that cannot prove registration or authorization.
 
-Use [decomposition](../../archie-plan/references/decomposition.md) for acceptance ownership/five exact headings, [contracts](../../archie-plan/references/load-bearing-contracts.md) for exact load-bearing sketches, and [briefs](../../archie-plan/references/briefs.md) for bounded materials/returns. These prose contracts belong in native text fields or referenced assigned artifacts, not a second execution DSL. `partitionPlan` is authoring material, not durable governed `PlanRevision`.
+Use decomposition (`archie-plan-decomposition`) for acceptance ownership/five exact headings, contracts (`archie-plan-load-bearing-contracts`) for exact load-bearing sketches, and briefs (`archie-plan-briefs`) for bounded materials/returns. These prose contracts belong in native text fields or referenced assigned artifacts, not a second execution DSL. `partitionPlan` is authoring material, not durable governed `PlanRevision`.
 
-Host supplies actual model/budget/placement, acquisition evidence and oracle bindings. Author proposes controls only using that evidence, within actual assignment; unresolved identifiers, commands/cwd, runner availability or coverage remain `UNKNOWN`: they block implementation, so record them as risks or next actions, and as card blockers only when they stop the proposal itself. `plan-to-gates` / `plan-to-policy` may generate proposal text under the [frozen authorized subset](../../archie-plan/SKILL.md#authorized-structural-helpers), not register checks, approve or enforce it.
+Host supplies actual model/budget/placement, acquisition evidence and oracle bindings. Author proposes controls only using that evidence, within actual assignment; unresolved identifiers, commands/cwd, runner availability or coverage remain `UNKNOWN`: they block implementation, so record them as risks or next actions, and as card blockers only when they stop the proposal itself. `plan-to-gates` / `plan-to-policy` may generate proposal text under the frozen authorized subset (`archie-plan`), not register checks, approve or enforce it.
 
 ## Structural inspection is a host helper
 

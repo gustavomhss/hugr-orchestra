@@ -6,7 +6,7 @@ import { RelaySprint } from "@orchestra/schema/relay-sprint"
 const doc = await Bun.file(
   path.resolve(
     import.meta.dirname,
-    "../../../../modules/specialists/archie/skills/archie-work-package/references/native-fields.md",
+    "../../../../modules/specialists/archie/skills/archie-work-package/native-fields/SKILL.md",
   ),
 ).text()
 

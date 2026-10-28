@@ -38,7 +38,7 @@ describe("native seat framework", () => {
       profile: "discovery",
       returnCard: "jimmy-result",
       workResult: "discovery-work-result-v1",
-      skills: ["jimmy-reference"],
+      skills: ["jimmy-calibration", "jimmy-web-research"],
       writeRoots: false,
       strictResume: true,
       atlasMemory: true,

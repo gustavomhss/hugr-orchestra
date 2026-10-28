@@ -1,3 +1,10 @@
+---
+name: archie-plan-decomposition
+description: "Decomposition and acceptance coverage: acceptance map, slices, dependencies and a proposed partition."
+when: "Substantial multi-part authoring, acceptance ownership, shared-write risk or a proposed parallel partition."
+not-when: "A small independent Task that fits one slice."
+---
+
 # Decomposition and acceptance coverage
 
 Read for substantial multi-part authoring, acceptance ownership, shared-write risks or a proposed parallel partition. Produce a proposal for Maestro's review/routing; do not dispatch, choose actual scheduling or certify acceptance.
@@ -37,13 +44,13 @@ Keep separate edge classes:
 - **Write-to-read dependency:** another slice changes material this slice consumes; record direction/freshness and required recheck, not a write conflict.
 - **Write conflict:** overlapping incompatible writes require sequencing, narrower ownership or re-slicing. Disjoint writes do not eliminate semantic/runtime conflicts.
 
-Use [load-bearing contracts](load-bearing-contracts.md) for cross-slice seams. Trace each acceptance item to its slice and check; expose orphan items, duplicated closure ownership, cycles, stale inputs and scope-creep slices. Shared acceptance may have contributors, but name one closure owner. Architecture forks become proposed choices/blockers for Maestro, never worker-created scope expansion.
+Use load-bearing contracts (`archie-plan-load-bearing-contracts`) for cross-slice seams. Trace each acceptance item to its slice and check; expose orphan items, duplicated closure ownership, cycles, stale inputs and scope-creep slices. Shared acceptance may have contributors, but name one closure owner. Architecture forks become proposed choices/blockers for Maestro, never worker-created scope expansion.
 
 Size by cohesive concepts, uncertainty, working-set size and review cost. Split oversized nodes; combine tiny tightly coupled nodes when handoff costs dominate. Recommend sequencing/parallel candidates based on actual edges, not a schedule. Host supplies actual model, budget, placement, provider limits and oracle runners; unknown metadata stays unknown.
 
 ## Pure operations and evidence
 
-Use [archie-plan's authorized sequence/subset](../SKILL.md#authorized-structural-helpers) only when installed and authorized:
+Use archie-plan's authorized sequence/subset (`archie-plan`) only when installed and authorized:
 
 | Operation | Authoring purpose | Evidence limit |
 | --- | --- | --- |

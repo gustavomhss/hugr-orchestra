@@ -1,3 +1,10 @@
+---
+name: archie-plan-briefs
+description: "Bounded brief authoring: executor-ready proposed briefs from a reviewed proposal or partition."
+when: "A reviewed proposal or partition must become executor briefs, or context pressure must be trimmed."
+not-when: "No executor will run the work: a small Task may use an inline brief."
+---
+
 # Bounded brief authoring
 
 Read to turn a reviewed input proposal/partition into executor-ready **proposed** briefs or to trim context pressure. No workers means no dispatch ceremony. A small Task may use an inline brief. Host supplies real assignment/model/budget/placement, permissions, oracles and lifecycle bindings; author does not dispatch or schedule.
@@ -10,7 +17,7 @@ Use goal/acceptance IDs, supplied current baseline/worktree/delta, exact writes/
 
 1. Pin supplied baseline and placement; label observed versus proposed placement. Extract exact target sites, relevant size/complexity, consumer sites, smallest useful verbatim patterns/anchors and source identities. Keep missing acquisition and partial maps visible. Do not ask an executor to rediscover scope or decide shared architecture.
 2. Consume `partitionPlan` as symbol/partition material, not durable `PlanRevision`. Under the authorized describe/execute sequence, `context-packer` / `plan-to-briefs` may structure packets and `enrich-plan` may attach proposed accountable metadata. Inspect outputs; generated briefs are neither dispatch receipts nor authority.
-3. Write exact targets, writes/reads, acceptance IDs, parent criteria/deltas, bounded patterns, forbidden scope, local implementation latitude, unresolved assumptions and return shape. Epic/WP/governed cards use the [five exact headings](decomposition.md#coverage-and-criteria), one to three lines each where sufficient; small Task criteria remain implicit. Newly discovered architectural forks go back to Maestro for revision.
+3. Write exact targets, writes/reads, acceptance IDs, parent criteria/deltas, bounded patterns, forbidden scope, local implementation latitude, unresolved assumptions and return shape. Epic/WP/governed cards use the five exact headings (`archie-plan-decomposition`), one to three lines each where sufficient; small Task criteria remain implicit. Newly discovered architectural forks go back to Maestro for revision.
 4. Carry governing facts the executor needs, with supplied fact IDs and source identities. Do not assume seats can load project skills or infer governing content from project names. Host-supplied T0/T1 facts are binding within their stated scope; T2 advisory facts are unratified proposals, labelled and placed last. Keep the smallest load-bearing set; name omitted context and why it is safe to omit. Go deeper only through actual supplied explicit drill pointers and read permissions.
 5. Resolve check commands, cwd, target paths, expected behavior and evidence location from supplied host/project facts. They must be available/copy-pasteable for that checkout, not generic placeholders. If unresolved, record missing runner/oracle/cwd as a blocker rather than fabricating a runnable check. Distinguish proposed check, actual baseline result and later acceptance evidence.
 6. Budget packet + working-set reads + reasoning + output + headroom against supplied actual model limits. Account for host whole-context pressure when supplied; trim repetition or re-slice before proposing model escalation. Predicted token/spend estimates are labelled estimates, not observed usage/charges. Unknown limits/prices remain `UNKNOWN`; no fixed model-brand budget.
@@ -37,7 +44,7 @@ host binding needed: permission/authority/completion needs, no invented receipts
 return: local status; baseline; changed paths; evidence refs; blockers; new decisions
 ```
 
-For governed work, cite host-supplied current scope/grounding/approval/authorization references without manufacturing or persisting them. A packet, generated policy or author hash cannot mint authorization. For a linear native WP, follow [archie-work-package](../../archie-work-package/SKILL.md); ordered steps remain in the same Session/logical task and host controls reveal.
+For governed work, cite host-supplied current scope/grounding/approval/authorization references without manufacturing or persisting them. A packet, generated policy or author hash cannot mint authorization. For a linear native WP, follow archie-work-package (`archie-work-package`); ordered steps remain in the same Session/logical task and host controls reveal.
 
 ## Evidence return design
 

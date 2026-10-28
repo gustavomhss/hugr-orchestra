@@ -1,3 +1,10 @@
+---
+name: archie-work-package-native-fields
+description: "Native Relay sprint field reference: the exact keys of RelaySprint.Sprint."
+when: "Writing or checking any key of a native work package proposal."
+not-when: "Choosing the method or shape: that is the native proposal node."
+---
+
 # Native Relay sprint field reference
 
 Exact keys of `RelaySprint.Sprint` (source: `packages/schema/src/relay-sprint.ts`, which you cannot read from the project). Use these names byte for byte. Unknown keys are preserved on disk but ignored by the runtime, so a misspelled or invented key (`command`, `kind` on a control, top-level `controls`, `objective`, `write_scope`, `read_scope`) silently does nothing. Put objective and read/write scope in `instructions`.

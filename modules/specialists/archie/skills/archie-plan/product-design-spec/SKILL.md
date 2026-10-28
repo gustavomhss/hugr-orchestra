@@ -1,10 +1,17 @@
+---
+name: archie-plan-product-design-spec
+description: "Product, design and specification authoring: value, behavior, architecture, a spec or a plan revision."
+when: "The assignment asks what or why, a technical design, a specification, a roadmap or a plan revision."
+not-when: "Only splitting accepted work into slices: that is decomposition."
+---
+
 # Product, design and specification authoring
 
 Read when the assignment asks what/why, technical design, a specification, a roadmap or a plan revision. This is an authoring procedure; ratification, durable records and authority remain with their actual owners.
 
 ## Inputs and source discipline
 
-Start with verbatim demand, supplied current scope/baseline, stakeholder constraints, observed behavior/source, existing requirements/design/acceptance and host evidence. Use the claim labels in [archie-plan](../SKILL.md). Cite each factual field to a bounded source identity; do not treat a design document's proposed tool or state machine as installed runtime.
+Start with verbatim demand, supplied current scope/baseline, stakeholder constraints, observed behavior/source, existing requirements/design/acceptance and host evidence. Use the claim labels in archie-plan (`archie-plan`). Cite each factual field to a bounded source identity; do not treat a design document's proposed tool or state machine as installed runtime.
 
 If behavior/design already exists, recover its clauses and acceptance first. Quote the source clause, retain its ID, mark derived requirements/scenarios, and expose contradictions instead of silently reconciling them. Observed implementation is evidence of what exists, not owner approval of what ought to exist. New behavior stays visibly proposed. Missing source, owner or a decision yielding incompatible outcomes becomes a blocker; ordinary local uncertainty may remain an explicit assumption.
 
@@ -20,7 +27,7 @@ If behavior/design already exists, recover its clauses and acceptance first. Quo
 
 Map each outcome/functional requirement to its mechanism/design parameter. Use a small coupling matrix when several outcomes share mechanisms: name where a change would force other parts to change. Every design choice cites an outcome, job-map step or risk it retires; unsupported choices remain questions or are removed.
 
-Draw boundaries around decisions most likely to change. Describe layers, ownership, data/control flow and failure/recovery behavior; distinguish supplied decisions from recommended ones. Sketch exact load-bearing seams using [contracts](load-bearing-contracts.md), not speculative future APIs or frozen private algorithms. Compare meaningful alternatives and explain rejection, tradeoffs, constraints and evidence limits.
+Draw boundaries around decisions most likely to change. Describe layers, ownership, data/control flow and failure/recovery behavior; distinguish supplied decisions from recommended ones. Sketch exact load-bearing seams using contracts (`archie-plan-load-bearing-contracts`), not speculative future APIs or frozen private algorithms. Compare meaningful alternatives and explain rejection, tradeoffs, constraints and evidence limits.
 
 For a non-obvious architecture decision, author an ADR proposal: title, status `proposed`, context, proposed decision, consequences, alternatives/reasons and sources. Do not edit an accepted ADR or label a new one accepted; propose a successor with a supersession link for the owner to decide.
 
@@ -30,7 +37,7 @@ For substantial specs, build a bounded register of normative clauses/behavioral 
 
 Derive a singular requirement per source clause; retain the exact quoted clause and a source link. Where EARS fits, use one `shall` per requirement with explicit trigger/precondition and outcome. A compound invariant may require several requirements sharing its ID. A source contradiction is a design defect to return, not license to author an unseen rule.
 
-Link each requirement to concrete happy-path and relevant negative/edge/recovery acceptance scenarios, then an existing or proposed oracle. Use Given/When/Then examples when they make behavior checkable. Reuse source acceptance; do not create a second independent-looking copy of the same logic. Keep bidirectional trace: demand/clause → requirement → acceptance → slice/step → evidence. A complete table is traceability, not proof that demand itself was fully captured; use [coverage critique](decomposition.md#coverage-and-criteria) for substantial work.
+Link each requirement to concrete happy-path and relevant negative/edge/recovery acceptance scenarios, then an existing or proposed oracle. Use Given/When/Then examples when they make behavior checkable. Reuse source acceptance; do not create a second independent-looking copy of the same logic. Keep bidirectional trace: demand/clause → requirement → acceptance → slice/step → evidence. A complete table is traceability, not proof that demand itself was fully captured; use coverage critique (`archie-plan-decomposition`) for substantial work.
 
 Choose a verification method proportional to the problem using host-supplied evidence: examples/contracts, exhaustive finite cases, PBT/reference models, or a formal model only when high-consequence failure, combinatorial state and affordable upkeep justify it. Propose the method/oracle and its limits; do not author tests or claim a model/compiler ran outside the assignment. Requirements, models and scenarios are derived views of the clause, not extra authority sources.
 
@@ -38,7 +45,7 @@ Choose a verification method proportional to the problem using host-supplied evi
 
 Use a lightweight Task for small independent changes. For a broad roadmap, group requirements into outcome-driven vertical epics with goal trace and explicit acceptance ownership. Split oversized epics into the fewest cohesive still-vertical children; the children must preserve the parent's requirement/acceptance set without orphans or accidental duplicate ownership. Story mapping, a small vertical release slice or a SPIDR split is a technique, not a compulsory artifact.
 
-Describe dependency-ordered Now/Next/Later horizons from explicit prerequisite edges, not invented dates or host scheduling. For implementation slices, follow [decomposition](decomposition.md): responsibility/module boundaries within the outcome, minimal seam contracts, shared-write exclusions, and local latitude. Do not copy Atlas-specific module counts, lexicographic tie-breaks or mandatory one-module rules into unrelated work.
+Describe dependency-ordered Now/Next/Later horizons from explicit prerequisite edges, not invented dates or host scheduling. For implementation slices, follow decomposition (`archie-plan-decomposition`): responsibility/module boundaries within the outcome, minimal seam contracts, shared-write exclusions, and local latitude. Do not copy Atlas-specific module counts, lexicographic tie-breaks or mandatory one-module rules into unrelated work.
 
 ## 5. Emit a complete versioned proposal
 
@@ -49,7 +56,7 @@ Use the project's existing artifact shape. Include:
 - Cohesive work units/dependencies, risks, assumptions and blockers with decision owner/unblock condition.
 - For successors: parent artifact/version, change source/reason and field-level diff **plus the full successor proposal**. Preserve prior bytes/artifacts; refresh source identities after drift. Previous approval does not travel to new bytes, scope or context.
 
-Keep five exact headings for an epic, WP or governed card as specified in [decomposition](decomposition.md#coverage-and-criteria); small Tasks keep criteria implicit. Author versions are not schema versions, durable `PlanRevision` IDs, publication or approval. Return a material decision question to Maestro with choices/consequences and required source; do not decide outside supplied authority or persist approval invalidation yourself.
+Keep five exact headings for an epic, WP or governed card as specified in decomposition (`archie-plan-decomposition`); small Tasks keep criteria implicit. Author versions are not schema versions, durable `PlanRevision` IDs, publication or approval. Return a material decision question to Maestro with choices/consequences and required source; do not decide outside supplied authority or persist approval invalidation yourself.
 
 ## Source method and limits
 
