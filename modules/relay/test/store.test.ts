@@ -568,6 +568,12 @@ describe("seeding", () => {
     ])
   })
 
+  test("the embedded sprints are the shipped profile files", async () => {
+    expect([...AuthoringStore.SHIPPED.keys()]).toEqual([...AuthoringStore.PROFILES.keys()])
+    for (const [name, sprint] of AuthoringStore.SHIPPED)
+      expect(sprint).toEqual(await Bun.file(path.join(AuthoringStore.PROFILES_DIRECTORY, name + ".sprint.json")).json())
+  })
+
   test("seeds each profile once, as Python projects it, marked with its profile", async () => {
     const dir = fresh()
     await run(

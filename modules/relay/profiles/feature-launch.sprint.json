@@ -39,10 +39,10 @@
       "id": "discover.brief",
       "macro": "discover",
       "kind": "inject",
-      "title": "How this workflow works",
-      "instructions": "The rules every phase follows",
+      "title": "The feature request",
+      "instructions": "What to build, in the requester's words",
       "file": "",
-      "text": "This workflow traces acceptance criteria end to end. The spec numbers them AC1, AC2, ... and every later\nartifact refers to them by id: the plan says which slice delivers each one, the tests name the criterion they\nprove, and the final review shows the evidence for each. A criterion that disappears along the way fails a\ncheck. Notes are Markdown files in the notes directory, numbered in the order they are written.\n",
+      "text": "Feature: let users export a project as a zip archive from the project menu, with a progress bar and a way to\ncancel. Exports over 500 MB warn first.\n",
       "checklist": []
     },
     {

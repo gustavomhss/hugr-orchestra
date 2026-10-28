@@ -58,6 +58,8 @@ Templates are the ready-made workflows that ship with the app. Each has a name a
 
 The three example workflows (bugfix, safe refactor, feature launch) name their commands and paths as parameters: `test_cmd`, `lint_cmd`, `src_path`, `test_path`, `docs_path`, `notes_dir` and `base_ref`. Maestro lists them when it plans a run and asks you for any value it cannot read from the project. Their judges read the diff of each step, so a fix that only hides a symptom, a refactor that edits a pinned test or a test that asserts the bug does not pass.
 
+A copy of a template starts with its context step empty, since what a template ships there is only a sample. In **Launch a feature end to end** that step is **The feature request**: write what to build there before you publish.
+
 A template that cannot run shows its reason on the card ("This profile checks its work with Relay tools that are not available yet…"). You can open it and read it, but you cannot pick it for a new workflow. Run is off for it too.
 
 Saving your own workflow as a template is not available yet. Your workflows stay in the library, and you can duplicate them.

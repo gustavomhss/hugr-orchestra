@@ -15,14 +15,12 @@ pipeline:
   sub_states:
   - id: brief
     type: inject
-    name: How this workflow works
-    description: The rules every phase follows
+    name: The feature request
+    description: What to build, in the requester's words
     inject:
       context: |
-        This workflow traces acceptance criteria end to end. The spec numbers them AC1, AC2, ... and every later
-        artifact refers to them by id: the plan says which slice delivers each one, the tests name the criterion they
-        prove, and the final review shows the evidence for each. A criterion that disappears along the way fails a
-        check. Notes are Markdown files in the notes directory, numbered in the order they are written.
+        Feature: let users export a project as a zip archive from the project menu, with a progress bar and a way to
+        cancel. Exports over 500 MB warn first.
   - id: explore
     type: execute
     name: Explore the code

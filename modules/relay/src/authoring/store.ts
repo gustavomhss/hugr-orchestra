@@ -10,6 +10,15 @@ import type { RelaySprint } from "@orchestra/schema/relay-sprint"
 import { RelayJson } from "../json"
 import { AuthoringGraph } from "./graph"
 import { connect } from "#sqlite"
+import bugfix from "../../profiles/bugfix.sprint.json"
+import design from "../../profiles/design.sprint.json"
+import featureLaunch from "../../profiles/feature-launch.sprint.json"
+import planning from "../../profiles/planning.sprint.json"
+import researchV2 from "../../profiles/research-v2.sprint.json"
+import safeRefactor from "../../profiles/safe-refactor.sprint.json"
+import specDecompose from "../../profiles/spec-decompose.sprint.json"
+import tddFeature from "../../profiles/tdd_feature.sprint.json"
+import wpExecute from "../../profiles/wp-execute.sprint.json"
 
 // Documents, versions and scopes in `authoring.sqlite3` (`#sqlite`; relay_authoring/store.py; WP8). The same tables
 // and row bodies as the Python store, so a Python-made database opens unchanged. Unlike Python, a save rewrites only the
@@ -256,24 +265,46 @@ export const PROFILES: ReadonlyMap<string, boolean> = new Map([
   ["wp-execute", true],
 ])
 
-// packages/relay/profiles.
+// modules/relay/profiles.
 export const PROFILES_DIRECTORY = path.join(import.meta.dirname, "..", "..", "profiles")
 
+// The compiled sprints of PROFILES, embedded at build time: the compiled CLI and the desktop sidecar run with no
+// profiles directory beside them, so reading PROFILES_DIRECTORY there seeds nothing.
+export const SHIPPED: ReadonlyMap<string, unknown> = new Map([
+  ["bugfix", bugfix],
+  ["design", design],
+  ["feature-launch", featureLaunch],
+  ["planning", planning],
+  ["research-v2", researchV2],
+  ["safe-refactor", safeRefactor],
+  ["spec-decompose", specDecompose],
+  ["tdd_feature", tddFeature],
+  ["wp-execute", wpExecute],
+])
+
 /**
- * `seed_profiles`: every `*.sprint.json` in the directory, projected as "Relay · <name>" and seeded as `relay-<name>`,
- * in file-name order. Each seeded document is marked with `meta.relay.profile`, which `runnable` reads.
+ * `seed_profiles`: every shipped sprint, or every `*.sprint.json` in `directory` when one is given, projected as
+ * "Relay · <name>" and seeded as `relay-<name>`, in file-name order. Each seeded document is marked with
+ * `meta.relay.profile`, which `runnable` reads.
  */
-export const seedProfiles = (
-  store: Interface,
-  directory = PROFILES_DIRECTORY,
-): Effect.Effect<void, AuthoringGraph.Refusal> =>
-  AuthoringGraph.refusing(Effect.sync(() => catalog(directory))).pipe(
+export const seedProfiles = (store: Interface, directory?: string): Effect.Effect<void, AuthoringGraph.Refusal> =>
+  AuthoringGraph.refusing(
+    Effect.sync(() =>
+      directory === undefined
+        ? [...SHIPPED.keys()].sort((left, right) => byCodePoint(left + SUFFIX, right + SUFFIX))
+        : catalog(directory),
+    ),
+  ).pipe(
     Effect.flatMap((names) =>
       Effect.forEach(
         names,
         (name) =>
-          Effect.promise(() => readFile(path.join(directory, name + SUFFIX))).pipe(
-            Effect.map((bytes) => decoder.decode(bytes)),
+          (directory === undefined
+            ? Effect.succeed(JSON.stringify(SHIPPED.get(name)))
+            : Effect.promise(() => readFile(path.join(directory, name + SUFFIX))).pipe(
+                Effect.map((bytes) => decoder.decode(bytes)),
+              )
+          ).pipe(
             Effect.flatMap(AuthoringGraph.loads),
             Effect.flatMap((sprint) => AuthoringGraph.project(`Relay · ${name}`, sprint as RelaySprint.Sprint)),
             Effect.flatMap((document) =>
