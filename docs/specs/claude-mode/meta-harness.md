@@ -59,7 +59,7 @@ The parts of D-C2 that replaced the meta-harness shape are reversed:
    `canUseTool` refuse such a call (`agent_id` / `agentID` set), and every subagent lists the Orchestra tools in
    `disallowedTools`.
 8. **Orchestra's record, Claude Code's call.** The Session records each built-in call under the Orchestra tool and
-   argument names the app's widgets read (`shown` in the host), so a Claude mode session looks like any other:
+   argument names the app's widgets read (`ClaudeCodeRecord.shown`, `src/v2/record.ts`), so a Claude mode session looks like any other:
    - `Bash`, `Read`, `Write`, `Edit` (`MultiEdit` and `NotebookEdit` as `edit` with the file only), `Glob`, `Grep`,
      `WebFetch`, `WebSearch`, `TodoWrite` and `Skill` become `bash`, `read`, `write`, `edit`, `glob`, `grep`,
      `webfetch`, `websearch`, `todowrite` and `skill`, with Orchestra's argument names (`filePath`, `oldString`, ...).

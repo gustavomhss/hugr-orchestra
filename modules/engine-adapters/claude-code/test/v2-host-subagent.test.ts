@@ -12,7 +12,8 @@ import { ClaudeHostOptions } from "../src/host/options"
 import { ClaudeCodeSDK } from "../src/sdk"
 import { ClaudeCodeHost } from "../src/v2/host"
 
-// Claude Code subagents as Orchestra's seats, driven like v2-host.test.ts: scripted SDK frames, no Claude Code process.
+// Claude Code subagents as Orchestra's seats, and the todo lists Claude Code keeps, driven like v2-host.test.ts:
+// scripted SDK frames, no Claude Code process.
 
 const calls: { prompt: unknown; options: Options | undefined }[] = []
 // Frames, or frames built from the client uuid the host stamped on its prompt (Claude Code echoes it on its replies).
@@ -315,3 +316,49 @@ test("Orchestra's tools are refused inside a subagent and kept off its tool list
   expect(calls.at(-1)?.options?.agents?.["orchestra:backend"]?.disallowedTools).toEqual(["mcp__orchestra__task"])
 })
 
+test("Claude Code's task list fills the todo panel as Orchestra's todo tool does, across turns", async () => {
+  const call = (id: string, name: string, input: Record<string, unknown>) =>
+    frame({ type: "assistant", uuid: `a-${id}`, session_id: "claude-1", parent_tool_use_id: null,
+      message: { content: [{ type: "tool_use", id, name, input }] } })
+  const result = (id: string, content: string, toolUseResult?: unknown) =>
+    frame({ type: "user", session_id: "claude-1", parent_tool_use_id: null, tool_use_result: toolUseResult,
+      message: { role: "user", content: [{ type: "tool_result", tool_use_id: id, content }] } })
+  const stored: { value: unknown } = { value: undefined }
+  const state = {
+    get: Effect.sync(() => stored.value),
+    update: (fn: (value: unknown) => unknown) => Effect.sync(() => void (stored.value = fn(stored.value))),
+  }
+  const written: unknown[] = []
+  const todos = (list: unknown) => Effect.sync(() => void written.push(list))
+  script = [
+    call("c1", "TaskCreate", { subject: "Plan", description: "Plan it" }),
+    result("c1", "Task #1 created successfully: Plan", { task: { id: "1", subject: "Plan" } }),
+    call("c2", "TaskCreate", { subject: "Build", description: "Build it" }),
+    result("c2", "Task #2 created successfully: Build", { task: { id: "2", subject: "Build" } }),
+    call("u1", "TaskUpdate", { taskId: "1", status: "completed" }),
+    result("u1", "Updated task #1 status", { success: true, taskId: "1", updatedFields: ["status"] }),
+    done,
+  ]
+  const first = await collect(turnOf({ state, todos }))
+
+  expect(first.filter((event) => event.type === "tool-call")).toMatchObject([
+    { name: "todowrite", input: { todos: [{ content: "Plan", status: "pending" }] } },
+    { name: "todowrite", input: { todos: [{ content: "Plan", status: "pending" }, { content: "Build", status: "pending" }] } },
+    { name: "todowrite", input: { todos: [{ content: "Plan", status: "completed" }, { content: "Build", status: "pending" }] } },
+  ])
+  expect(written.at(-1)).toEqual([
+    { content: "Plan", status: "completed", priority: "medium" },
+    { content: "Build", status: "pending", priority: "medium" },
+  ])
+
+  // The next turn starts from the list the last one left, so an update by id still lands.
+  script = [
+    call("u2", "TaskUpdate", { taskId: "2", status: "completed" }),
+    result("u2", "Updated task #2 status", { success: true, taskId: "2", updatedFields: ["status"] }),
+    call("u3", "TaskUpdate", { taskId: "1", status: "deleted" }),
+    result("u3", "Updated task #1 deleted", { success: true, taskId: "1", updatedFields: ["deleted"] }),
+    done,
+  ]
+  await collect(turnOf({ state, todos, history: [user("msg_1", "Go"), user("msg_2", "Next")] as unknown as ExecutionHost.Turn["history"] }))
+  expect(written.at(-1)).toEqual([{ content: "Build", status: "completed", priority: "medium" }])
+})
