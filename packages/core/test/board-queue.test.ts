@@ -491,6 +491,7 @@ describe("BoardQueue", () => {
       const board = yield* Board.Service
       const repo = yield* repository("QSC", 1, undefined, "script")
       yield* card(repo, "QSC", 1, "fail.txt")
+      yield* passed(repo, 1)
       yield* board.queue({ project: "QSC", number: 1, reason: "Verified." })
       repo.remote.conclusion = "SUCCESS"
       repo.remote.seeded = ["card-1"]
@@ -513,6 +514,7 @@ describe("BoardQueue", () => {
         await git(repo.directory, "push", "--quiet", "origin", "main")
       })
       yield* card(repo, "QSB", 1, "a.txt")
+      yield* passed(repo, 1)
       yield* board.queue({ project: "QSB", number: 1, reason: "Verified." })
       repo.remote.conclusion = "SUCCESS"
       repo.remote.seeded = ["card-1"]
@@ -530,6 +532,7 @@ describe("BoardQueue", () => {
       const board = yield* Board.Service
       const repo = yield* repository("QSF", 1, undefined, "script")
       yield* card(repo, "QSF", 1, "a.txt")
+      yield* passed(repo, 1)
       yield* board.queue({ project: "QSF", number: 1, reason: "Verified." })
       repo.remote.conclusion = "SUCCESS"
       repo.remote.seeded = ["card-1"]
@@ -710,6 +713,31 @@ function row(repo: Repo, number: number) {
       .pipe(Effect.orDie)
     if (!found) return yield* Effect.die(`${repo.key}-${number} is not on the board.`)
     return found
+  })
+}
+
+// A scoped pass on the card's head tree, which `queue` requires when the contract has `scoped.tests`.
+function passed(repo: Repo, number: number) {
+  return Effect.gen(function* () {
+    const tree = yield* Effect.promise(async () => (await Bun.$`git -C ${repo.directory} rev-parse card-${number}^{tree}`.quiet().text()).trim())
+    const found = yield* row(repo, number)
+    const database = yield* Database.Service
+    yield* database.db
+      .insert(BoardCheckTable)
+      .values({
+        id: CheckID.create(),
+        issue_id: found.issue.id,
+        attempt: 1,
+        kind: "scoped",
+        command: "bun test a",
+        tree_sha: tree,
+        outcome: "pass",
+        failing: [],
+        started_at: 0,
+        ended_at: 120_000,
+      })
+      .run()
+      .pipe(Effect.orDie)
   })
 }
 
