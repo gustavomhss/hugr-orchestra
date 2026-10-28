@@ -194,7 +194,8 @@ Two rules make the fields bind:
 
 The fields are optional, so the conveyor works before `archie` is changed. Without `area` there is no plan-review
 overlap check and no drift line, and lanes use only the real affected set. Without `order`, "earlier" means earlier
-queued. Adding the fields later changes nothing else (WP9).
+queued. The fields pay off only once lanes exist, because in phase 1 every card rides one conveyor and `writePaths`
+already catch file conflicts. They are built in phase 2, next to lanes (WP9).
 
 `archie` does not build bundles. Fixed bundles chosen at plan time would wait for their slowest member and break
 on the first ejection. `archie` owns the shape, and the host fills it with whatever is ready.
@@ -571,18 +572,14 @@ phase.
 Order: 0, then 1 and 2 in parallel (disjoint write sets), then 3 and 4, then 5, then 6. WP1 ships first, alone if
 needed, because lost work is the costliest pain and it needs no queue.
 
-**Phase 2: one conveyor per affected area.** It starts after phase 1 has run a real epic.
+**Phase 2: one conveyor per affected area.** It starts after phase 1 has run a real epic. WP7 and WP9 run in
+parallel: WP9 touches only `archie`'s plan skill, `maestro-plan` and the enqueue check, and WP7 is the host's lanes.
 
 | WP | Scope | Done when |
 |---|---|---|
-| **7. Lanes** | Global paths; the two cut rules and lanes as connected components; global cards; a `packages` dispatch input on `typecheck.yml` and `test.yml`; the `lanes` contract block | Two cards in disjoint packages land in parallel bundles, each running only its packages; a card touching `bun.lock` waits for both and runs the whole suite, and no card queued after it is cut first |
+| **7. Lanes** | Global paths; the two cut rules, reading `order` when a card has one, and lanes as connected components; global cards; a `packages` dispatch input on `typecheck.yml` and `test.yml`; the `lanes` contract block | Two cards in disjoint packages land in parallel bundles, each running only its packages; a card touching `bun.lock` waits for both and runs the whole suite, and no card queued after it is cut first |
 | **8. Safety net** | The epic bundle always on the whole suite, with optional `fullEvery`; pausing only the lanes that overlap a base red | A seeded cross-package break that the affected graph misses is found by the safety run, and only its lane pauses |
-
-**Then: `archie` fits the conveyor.** It comes last, because every package above works without it (§4.4).
-
-| WP | Scope | Done when |
-|---|---|---|
-| **9. Plan shape** | The `area` and `order` fields in `archie`'s plan skill and in the adopted plan; the overlap rule in `maestro-plan`; plan drift lines at enqueue; `order` in the cut rules | A plan with an undeclared area overlap is returned to `archie`; a card that leaves its area raises one drift line and still queues |
+| **9. Plan shape** | The `area` and `order` fields in `archie`'s plan skill and in the adopted plan; the overlap rule in `maestro-plan`; plan drift lines at enqueue | A plan with an undeclared area overlap is returned to `archie`; a card that leaves its area raises one drift line and still queues |
 
 ## 14. Owner decisions
 
