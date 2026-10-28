@@ -152,7 +152,7 @@ test("production builds show no WIP mark on any chapter page", async ({ page }) 
   for (const [name, chapter] of [
     ["Agents", "agents"],
     ["MCP", "mcp"],
-    ["Checks", "cicd"],
+    ["Actions", "cicd"],
     ["Workspaces", "workspaces"],
     ["Skills", "skills"],
     [".env", "env"],

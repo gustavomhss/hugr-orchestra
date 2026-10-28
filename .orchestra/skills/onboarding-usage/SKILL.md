@@ -27,8 +27,8 @@ The sidebar does not list Providers. Use the "Open Providers" link on the folder
 
 ## After the first chat
 
-- The sidebar shows Home, Chat, Projects (the board), Agents and Checks. Everything else is in the collapsible Advanced group.
-- Screen words: Context savings (not Lean), Checks (not Actions), History (not Genesis), project (not profile). Use them when you explain the app.
+- The sidebar shows Home, Chat, Projects (the board), Agents and Actions. Everything else is in the collapsible Advanced group.
+- Screen words: Context savings (not Lean), History (not Genesis), project (not profile). Use them when you explain the app.
 - Stop works while a permission or question is pending. The permission dock says what is asked.
 - The command palette has a "Getting started guide" entry that opens `docs/guides/getting-started.md`. The URL is `GETTING_STARTED_URL` in `orchestra/shell/navigation-commands.tsx`; change it there if the repository moves.
 
