@@ -1,7 +1,7 @@
 import path from "path"
 import { UpstreamArsenal } from "@orchestra/core/tool/upstream-arsenal"
 import { Seats, type Seat } from "./seats"
-import { validateInstalled } from "./seats/seat"
+import { COMPOSER_TOOLS, validateInstalled } from "./seats/seat"
 import { SeatSkillRoot } from "./seat-skill-root"
 import { TRUNCATION_DIR } from "@orchestra/core/tool/truncation-dir"
 import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
@@ -112,6 +112,7 @@ function seatProfile(seat: Seat): NativeProfile {
   if (seat.skills.length > 0 && !root) throw new Error(`Missing native seat skill root: ${seat.id}`)
   return Object.freeze({
     ...baseProfiles[seat.profile],
+    ...(seat.id === "backend" ? { [COMPOSER_TOOLS]: "allow" as const } : {}),
     ...(seat.atlasMemory ? { atlas_context: "allow" as const, atlas_memory_recall: "allow" as const, atlas_memory_emit: "allow" as const } : {}),
     ...(seat.id === "archie" ? {
       atlas_context: "allow" as const,
