@@ -136,6 +136,8 @@ export interface Interface {
   readonly queue: (input: Board.QueueInput) => Effect.Effect<Board.QueueResult, Error>
   /** Takes a queued card back to Review, dissolving the open bundle it is in. */
   readonly dequeue: (input: Board.DequeueInput) => Effect.Effect<Board.DequeueResult, Error>
+  /** Maestro's verdict on a flaky or paused bundle: merge it as tested, or retry its cards in a new bundle. */
+  readonly bundle: (input: Board.BundleInput) => Effect.Effect<Board.BundleResult, Error>
   /** Settles each project's open bundle or cuts a new one; the poll runs it every minute. */
   readonly queueTick: () => Effect.Effect<void>
 }
@@ -202,7 +204,7 @@ export const layerWith = (options: {
               .select({ issue: BoardBundleMemberTable.issue_id, n: BoardBundleTable.n })
               .from(BoardBundleMemberTable)
               .innerJoin(BoardBundleTable, eq(BoardBundleTable.id, BoardBundleMemberTable.bundle_id))
-              .where(and(inArray(BoardBundleMemberTable.issue_id, ids), eq(BoardBundleTable.status, "open")))
+              .where(and(inArray(BoardBundleMemberTable.issue_id, ids), inArray(BoardBundleTable.status, ["open", "accepted"])))
               .all()
           : []
         const conflicted = queued.length
@@ -1478,6 +1480,10 @@ export const layerWith = (options: {
 
         dequeue: Effect.fn("Board.dequeue")(function* (input) {
           return yield* queue.dequeue(input).pipe(dieOnStorage)
+        }),
+
+        bundle: Effect.fn("Board.bundle")(function* (input) {
+          return yield* queue.decide(input).pipe(dieOnStorage)
         }),
 
         queueTick: Effect.fn("Board.queueTick")(function* () {

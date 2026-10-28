@@ -17,6 +17,8 @@ snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bund
   `board/snapshot.ts`.
 - Which cards a base advance checks: `WATCHED` and the candidate query in `board/conflicts.ts`.
 - Enqueue preconditions: `enqueue` in `board/queue.ts`; they are checked again inside the write transaction.
+- Per-project `busy` set in `BoardQueue.make` keeps a project from settling twice when ticks overlap. `accepted` is the
+  only non-`open` bundle status that `openBundle` returns (a flaky bundle Maestro merged with `board_bundle`).
 - Cut rules and bundle order: `cut` in `board/queue.ts`. Landing and base moves: `settle` and `skew`. `settle` checks
   for an already-landed head (an ancestor of base) before it pushes; restore from a snapshot lives in `push` (`restored`).
 - PR record fields: `PrRecord` in `packages/schema/src/board.ts` (what Maestro writes), the completeness check

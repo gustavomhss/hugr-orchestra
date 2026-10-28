@@ -35,7 +35,8 @@ import type { Changed, IssueRow, ProjectRow, Tx } from "./shared"
 // project, waits for its full gate, and pushes base to the tested head. A red bundle is halved until one card fails
 // alone and is ejected into a new attempt; infrastructure failures rerun once and then pause the queue; the size follows
 // the red rate; the failed jobs' logs give the failing files; a red whose failing files are bun tests in package groups runs them scoped on base and on the bundle head (base
-// red, code red, or flaky); the flaky verdict tool is a later package.
+// red, code red, or flaky); Maestro merges or retries a flaky bundle, and retries a paused one, with `board_bundle`.
+// Projects settle concurrently, and a project still settling is skipped, never run twice.
 
 export interface Deps {
   readonly quiet: <A>(work: (tx: Tx) => Effect.Effect<A, unknown>) => Effect.Effect<A>
@@ -203,10 +204,84 @@ export function make(deps: Deps) {
     return { dissolved: done.success.bundle?.n ?? null }
   })
 
+  /** Section 6.4: Maestro's verdict on a flaky or paused bundle. */
+  const decide = Effect.fnUntraced(function* (input: Board.BundleInput) {
+    const ref = `${input.project}-B${input.bundle}`
+    const done = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const project = yield* loadProject(tx, input.project)
+        const bundle = yield* tx
+          .select()
+          .from(BoardBundleTable)
+          .where(and(eq(BoardBundleTable.project_id, project.id), eq(BoardBundleTable.n, input.bundle)))
+          .get()
+        if (!bundle) return yield* new RefusedError({ message: `${ref} is not a bundle.` })
+        const members = yield* tx
+          .select({ issue: BoardIssueTable })
+          .from(BoardBundleMemberTable)
+          .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardBundleMemberTable.issue_id))
+          .where(eq(BoardBundleMemberTable.bundle_id, bundle.id))
+          .orderBy(asc(BoardBundleMemberTable.position))
+          .all()
+        return { project, bundle, issues: members.map((member) => member.issue) }
+      }).pipe(Effect.result),
+    )
+    if (done._tag === "Failure") return yield* done.failure
+    const bundle = done.success.bundle
+    const issues = done.success.issues
+    if (input.verdict === "merge") {
+      if (bundle.status !== "flaky") return yield* new RefusedError({ message: `${ref} is ${bundle.status}; only a flaky bundle merges.` })
+      yield* deps.quiet((tx) => tx.update(BoardBundleTable).set({ status: "accepted" }).where(eq(BoardBundleTable.id, bundle.id)).run())
+      yield* Effect.forEach(
+        issues,
+        (issue) => note(done.success.project, issue, `Maestro accepted flaky bundle ${ref}: ${input.reason}. It merges as tested on the next tick.`),
+        { discard: true },
+      )
+      yield* Effect.logInfo(`integration: ${ref} ${input.verdict} by Maestro: ${input.reason}`)
+      return { status: "accepted" as const }
+    }
+    if (bundle.status !== "flaky" && bundle.status !== "paused")
+      return yield* new RefusedError({ message: `${ref} is ${bundle.status}; only a flaky or paused bundle retries.` })
+    yield* deps.quiet((tx) =>
+      tx
+        .update(BoardQueueTable)
+        .set({ flush: true })
+        .where(inArray(BoardQueueTable.issue_id, issues.map((issue) => issue.id)))
+        .run(),
+    )
+    yield* Effect.forEach(
+      issues,
+      (issue) => note(done.success.project, issue, `Maestro retried bundle ${ref}: ${input.reason}. The queue cuts its cards into a new bundle.`),
+      { discard: true },
+    )
+    if (bundle.status === "paused") {
+      yield* deps.quiet((tx) => tx.update(BoardBundleTable).set({ status: "infra" }).where(eq(BoardBundleTable.id, bundle.id)).run())
+      yield* Effect.logInfo(`integration: ${ref} ${input.verdict} by Maestro: ${input.reason}`)
+      return { status: "infra" as const }
+    }
+    const repo = done.success.project.github_repo
+    if (repo) yield* close(done.success.project, repo, bundle, `retried by Maestro: ${input.reason}`)
+    if (!repo) yield* deps.quiet((tx) => tx.update(BoardBundleTable).set({ status: "dissolved" }).where(eq(BoardBundleTable.id, bundle.id)).run())
+    yield* Effect.logInfo(`integration: ${ref} ${input.verdict} by Maestro: ${input.reason}`)
+    return { status: "dissolved" as const }
+  })
+
+  // Projects settle concurrently, and a project still settling (a scoped run can take minutes) is skipped, never run twice.
+  const busy = new Set<string>()
+
   /** One pass over every active project: settle the open bundle, else cut a new one. The poll runs it every minute. */
   const tick = Effect.fnUntraced(function* () {
     const rows = yield* deps.quiet((tx) => tx.select().from(BoardProjectTable).where(ne(BoardProjectTable.status, "archived")).all())
-    yield* Effect.forEach(rows, (row) => project(row).pipe(Effect.ignore), { discard: true })
+    yield* Effect.forEach(
+      rows,
+      (row) =>
+        Effect.gen(function* () {
+          if (busy.has(row.id)) return
+          busy.add(row.id)
+          yield* project(row).pipe(Effect.ignore, Effect.ensuring(Effect.sync(() => busy.delete(row.id))))
+        }),
+      { concurrency: "unbounded", discard: true },
+    )
   })
 
   const project = Effect.fnUntraced(function* (row: ProjectRow) {
@@ -547,8 +622,10 @@ export function make(deps: Deps) {
     const rollup = viewed.exitCode === 0 ? Option.getOrUndefined(decodeRollup(viewed.stdout)) : undefined
     if (!rollup) return
     if (rollup.headRefOid !== bundle.head_sha) return yield* dissolve(row, bundle, "Someone pushed to the bundle branch.")
-    const verdict = judge(rollup.statusCheckRollup, contract)
-    if (verdict === "pending") return
+    const judged = judge(rollup.statusCheckRollup, contract)
+    if (judged === "pending") return
+    // Section 6.4: Maestro accepted this flaky bundle, so its red gate ships as tested.
+    const verdict = bundle.status === "accepted" ? "green" : judged
     const members = yield* deps.quiet((tx) =>
       tx
         .select({ member: BoardBundleMemberTable, issue: BoardIssueTable })
@@ -967,7 +1044,7 @@ export function make(deps: Deps) {
     }
   })
 
-  return { enqueue, dequeue, tick }
+  return { enqueue, dequeue, decide, tick }
 }
 
 export type Interface = ReturnType<typeof make>
@@ -1018,7 +1095,7 @@ const openBundle = Effect.fnUntraced(function* (tx: Tx, project: Board.ProjectID
   return yield* tx
     .select()
     .from(BoardBundleTable)
-    .where(and(eq(BoardBundleTable.project_id, project), eq(BoardBundleTable.status, "open")))
+    .where(and(eq(BoardBundleTable.project_id, project), inArray(BoardBundleTable.status, ["open", "accepted"])))
     .get()
 })
 

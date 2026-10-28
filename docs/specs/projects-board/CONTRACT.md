@@ -191,6 +191,7 @@ link one before Review").
 | `ci_run` | `project`, `issue`, optional `package`, `files`, `run` | Runs `.orchestra/ci.json`'s scoped checks on the card worktree's current tree, once per tree, and returns the tree, its checks and the scoped state. `run: false` only reports. |
 | `board_queue` | `project`, `number`, optional `urgent`, `flush`, `reason` | Puts a verified Review card in the merge queue. Refused without a PR, a complete record (Intent, Decisions, Not covered, Risk level), ready dependencies, or a scoped-green tree when the contract requires one. Returns the head, tree and scoped state it queued at. |
 | `board_dequeue` | `project`, `number`, `reason` | Takes a card out of the queue back to Review and dissolves the open bundle it was in. |
+| `board_bundle` | `project`, `bundle`, `verdict` (`merge` \| `retry`), `reason` | Merges a flaky bundle as tested, or retries a flaky or paused bundle's cards in a new bundle. |
 | `board_question` | `project`, `issue?`, `epic?`, `action: ask` with `text`, `options`, `recommended`, `cost_of_waiting`, `blocking`; or `action: withdraw` with `id`; plus `reason` | Ask the owner or withdraw a question. |
 
 Maestro's prompt says only what the tools cannot: keep the board current as work moves, ask through `board_question`

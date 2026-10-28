@@ -23,7 +23,7 @@ it: skill `conveyor-maintenance`. User guide: `docs/guides/merge-queue.md`.
 | Base-advance sweep, conflict notes, `conflict_base`/`conflict_files`, `board_project.base_sha` | `packages/core/src/board/conflicts.ts`, wired in `board.ts` | conveyor |
 | Queue stage, `board_queue`/`board_bundle`/`board_bundle_member`, `PrRecord` (`board_issue.record`) | `packages/core/src/board/sql.ts`, `packages/schema/src/board.ts` | conveyor |
 | Enqueue, dequeue, bundle cut, settle, merge-if-disjoint, record facts and the record port, 60 s tick | `packages/core/src/board/queue.ts`, `record.ts`, wired in `board.ts` | conveyor |
-| `board_queue`, `board_dequeue` tools | `packages/core/src/board/tools.ts` | conveyor; Maestro only |
+| `board_queue`, `board_dequeue`, `board_bundle` tools | `packages/core/src/board/tools.ts` | conveyor; Maestro only |
 | `merge-outside-conveyor` guard | `script/guards/rules/merge-outside-conveyor.toml` | conveyor |
 | Billing ledger `board_ci_run` | `packages/core/src/board/github.ts`, `money.ts` | board; unchanged by the conveyor |
 | Queue visuals | `packages/app-shell` | Interface session |

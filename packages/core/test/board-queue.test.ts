@@ -554,6 +554,72 @@ describe("BoardQueue", () => {
     }),
   )
 
+  it.live("Maestro merges a flaky bundle as tested", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QVM", 1, undefined, "script")
+      yield* card(repo, "QVM", 1, "a.txt")
+      yield* passed(repo, 1)
+      yield* board.queue({ project: "QVM", number: 1, reason: "Verified." })
+      repo.remote.conclusion = "SUCCESS"
+      repo.remote.seeded = ["card-1"]
+      repo.remote.log = GROUPED
+
+      yield* Effect.forEach(Array.from({ length: 12 }), () => board.queueTick(), { discard: true })
+      yield* Effect.forEach(Array.from({ length: 2 }), () => board.queueTick(), { discard: true })
+      expect(yield* board.bundle({ project: "QVM", bundle: 1, verdict: "merge", reason: "Known flake." })).toEqual({ status: "accepted" })
+      yield* Effect.forEach(Array.from({ length: 4 }), () => board.queueTick(), { discard: true })
+      expect(yield* stage(repo, 1)).toBe("shipped")
+      expect(yield* bundleStatuses(repo)).toEqual(["merged"])
+    }),
+  )
+
+  it.live("Maestro retries a flaky bundle into a new one", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QVR", 1, undefined, "script")
+      yield* card(repo, "QVR", 1, "a.txt")
+      yield* passed(repo, 1)
+      yield* board.queue({ project: "QVR", number: 1, reason: "Verified." })
+      repo.remote.conclusion = "SUCCESS"
+      repo.remote.seeded = ["card-1"]
+      repo.remote.log = GROUPED
+
+      yield* Effect.forEach(Array.from({ length: 12 }), () => board.queueTick(), { discard: true })
+      yield* Effect.forEach(Array.from({ length: 2 }), () => board.queueTick(), { discard: true })
+      const pulls = repo.remote.pulls.size
+      expect(yield* board.bundle({ project: "QVR", bundle: 1, verdict: "retry", reason: "Rerun." })).toEqual({ status: "dissolved" })
+      yield* board.queueTick()
+      expect((yield* bundleStatuses(repo))[0]).toBe("dissolved")
+      expect(repo.remote.pulls.size).toBe(pulls + 1)
+      expect(yield* stage(repo, 1)).toBe("queue")
+    }),
+  )
+
+  it.live("a verdict on an open bundle is refused", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QVX")
+      yield* card(repo, "QVX", 1, "a.txt")
+      yield* board.queue({ project: "QVX", number: 1, reason: "Verified.", flush: true })
+      yield* board.queueTick()
+      const refused = yield* board.bundle({ project: "QVX", bundle: 1, verdict: "merge", reason: "x" }).pipe(Effect.flip)
+      expect(refused.message).toContain("only a flaky bundle merges")
+    }),
+  )
+
+  it.live("two ticks at once settle a project only once", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QLK", 1)
+      yield* card(repo, "QLK", 1, "a.txt")
+      yield* board.queue({ project: "QLK", number: 1, reason: "Verified.", flush: true })
+      yield* Effect.all([board.queueTick(), board.queueTick()], { concurrency: 2, discard: true })
+      expect(yield* bundleStatuses(repo)).toHaveLength(1)
+      expect(repo.remote.pulls.size).toBe(2)
+    }),
+  )
+
   it.live("an infrastructure red twice pauses the queue until Maestro retries it", () =>
     Effect.gen(function* () {
       const board = yield* Board.Service
@@ -573,6 +639,11 @@ describe("BoardQueue", () => {
       yield* board.queueTick()
       expect(repo.remote.pulls.size).toBe(pulls)
       expect(yield* bundleStatuses(repo)).toEqual(["infra", "paused"])
+
+      repo.remote.cancelled = []
+      expect(yield* board.bundle({ project: "QIP", bundle: 2, verdict: "retry", reason: "Runner back." })).toEqual({ status: "infra" })
+      yield* board.queueTick()
+      expect(repo.remote.pulls.size).toBe(pulls + 1)
     }),
   )
 

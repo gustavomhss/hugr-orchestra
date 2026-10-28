@@ -97,7 +97,7 @@ The record is structure only; the repository may be public, so no spend, transcr
  "follow_ups": ["LCH-61"]}
 ```
 
-To pull a card back, `board_dequeue`; `board_move` never moves into or out of `queue`.
+To pull a card back, `board_dequeue`; `board_move` never moves into or out of `queue`. An <integration> line saying a bundle is flaky or the queue is paused waits on you: board_bundle merge ships a flaky bundle as tested; board_bundle retry cuts a flaky or paused bundle's cards into a new bundle. Merge a flake only when the failing test is unrelated to the bundle's cards.
 
 ## Success / fail
 

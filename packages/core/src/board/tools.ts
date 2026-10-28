@@ -2,6 +2,8 @@ export * as BoardTools from "./tools"
 
 import { Effect, Layer } from "effect"
 import {
+  BundleInput,
+  BundleResult,
   CiRunInput,
   CiRunResult,
   DecisionOutcomeInput,
@@ -119,6 +121,13 @@ export const node = makeGlobalNode({
             input: DequeueInput,
             output: DequeueResult,
             execute: (input, context) => guard(context, board.dequeue(input)),
+          }),
+          board_bundle: Tool.make({
+            description:
+              "Decide a held bundle, by its number (KEY-B<n>). merge ships a flaky bundle as tested: its failing tests passed three scoped reruns. retry closes a flaky bundle, or releases a paused one, so the queue cuts its cards into a new bundle. Give the reason.",
+            input: BundleInput,
+            output: BundleResult,
+            execute: (input, context) => guard(context, board.bundle(input)),
           }),
         })
         .pipe(Effect.orDie)

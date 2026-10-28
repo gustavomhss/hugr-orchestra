@@ -100,6 +100,11 @@ every remaining card of an epic is queued. Urgent cards go first.
   it was cancelled, timed out or never started. A `full.checks` name matches a check or the workflow that ran it.
 - **A member pushed after assembly.** That card goes back to Review and the bundle is rebuilt without it.
 
+A flaky or paused bundle holds its project's queue until Maestro decides with `board_bundle`. `merge` ships a flaky
+bundle as tested, its red gate counted as passed; `retry` cuts a flaky bundle's cards into a new bundle, and for a paused
+queue it releases the pause once the runner is back. Projects settle at the same time, so one project's scoped reruns do
+not hold the others.
+
 A card in the Queue column shows whether it is waiting, running in a bundle, held by your hold before merge, or held
 out by a conflict. To take a card out, ask Maestro: it uses `board_dequeue`, which also dissolves the bundle the card
 was in. Merge PRs of a board project only through the queue; a guard flags code that merges a PR outside it.
