@@ -51,11 +51,11 @@ test("restored local profile loads agents and opens a draft through the mocked A
   // The mock server lists only Orchestra's native maestro agent.
   const roster = page.getByRole("list", { name: "Configured agents" })
   await expect(roster.getByRole("listitem")).toHaveCount(1)
-  await expect(roster.getByRole("listitem", { name: "maestro", exact: true })).toBeVisible()
+  await expect(roster.getByRole("listitem", { name: "Maestro", exact: true })).toBeVisible()
   expect(agents).toContain(server)
   expect(agents.filter((origin) => origin !== server)).toEqual([])
   await roster
-    .getByRole("listitem", { name: "maestro", exact: true })
+    .getByRole("listitem", { name: "Maestro", exact: true })
     .getByRole("button", { name: "Open Chat", exact: true })
     .click()
   await expect(page).toHaveURL(/\/new-session\?draftId=/)

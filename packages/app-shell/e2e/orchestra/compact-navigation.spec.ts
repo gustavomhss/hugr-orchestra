@@ -12,7 +12,7 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
   const sidebar = page.locator('[data-component="orchestra-sidebar"]')
   const header = page.locator('[data-slot="titlebar-v2"]')
   await expect(sidebar).toHaveCSS("width", "230px")
-  // The rows below include the Advanced group, so it opens first; the rows keep their 31px pitch.
+  // The rows below include the More group, so it opens first; the rows keep their 31px pitch.
   await expandAdvanced(page)
   const frame = await header.boundingBox()
   const toggle = page.getByRole("button", { name: "Collapse sidebar", exact: true })
@@ -23,12 +23,16 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
   const control = (await toggle.boundingBox())!
   expect(control.width).toBe(28)
   expect(control.y + control.height).toBeLessThanOrEqual(brand.y + brand.height)
-  const rows = await sidebar
-    .locator("#orchestra-navigation .orchestra-nav-button")
-    .evaluateAll((items) => items.map((item) => item.getBoundingClientRect()).map((box) => [box.top, box.height]))
+  const rows = await sidebar.locator("#orchestra-navigation .orchestra-nav-button").evaluateAll((items) =>
+    items.map((item) => {
+      const box = item.getBoundingClientRect()
+      return [box.top, box.height, item.classList.contains("orchestra-nav-group")] as const
+    }),
+  )
   // The list's 8px top padding (it fades under the brand) now rests the first row 8px below the brand.
   expect(rows[0][0]).toBeCloseTo(brand.y + brand.height + 8, 1)
-  expect(rows.map((row) => row[1])).toEqual(rows.map(() => 31))
+  // The More group heading is a quieter 28px row; every page row stays 31px.
+  expect(rows.map((row) => row[1])).toEqual(rows.map((row) => (row[2] ? 28 : 31)))
   expect(rows[1][0] - rows[0][0]).toBeCloseTo(32, 1)
   // The mock server lists only Orchestra's native maestro agent.
   await expect(sidebar.locator('[data-slot="orchestra-profile"] small')).toHaveText("1 agent · main")
@@ -167,11 +171,11 @@ test("production builds show no WIP mark on any chapter page", async ({ page }) 
   }
 })
 
-test("Advanced group keeps its choice across reload and opens for the page inside it", async ({ page }) => {
+test("More group keeps its choice across reload and opens for the page inside it", async ({ page }) => {
   await setupCompactNavigation(page, { selected: true })
   await page.goto("/")
   const sidebar = page.locator('[data-component="orchestra-sidebar"]')
-  const toggle = sidebar.getByRole("button", { name: "Advanced", exact: true })
+  const toggle = sidebar.getByRole("button", { name: "More", exact: true })
   const mcp = sidebar.getByRole("button", { name: "MCP", exact: true })
   await expect(toggle).toHaveAttribute("aria-expanded", "false")
   await expect(mcp).toBeHidden()
