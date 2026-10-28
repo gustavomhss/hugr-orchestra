@@ -1,5 +1,6 @@
 export * as RelayCommands from "./relay-commands"
 
+import { access, readdir, readFile } from "node:fs/promises"
 import path from "path"
 import { Effect, Option, Schema } from "effect"
 
@@ -23,11 +24,7 @@ const PYTEST_FILES = 200
 
 export const detect = Effect.fn("RelayCommands.detect")(function* (directory: string) {
   const read = (name: string) =>
-    Effect.promise(() =>
-      Bun.file(path.join(directory, name))
-        .text()
-        .catch(() => undefined),
-    )
+    Effect.promise(() => readFile(path.join(directory, name), "utf8").catch(() => undefined))
   const pkg = yield* read("package.json")
   const pyproject = yield* read("pyproject.toml")
   const cargo = yield* read("Cargo.toml")
@@ -84,10 +81,17 @@ function kindOf(name: string): Command["kind"] | undefined {
   return undefined
 }
 
-// The lockfile names the package manager; npm is the fallback every Node install has.
+// The lockfile names the package manager; npm is the fallback every Node install has. Relay modules run under Node in
+// the desktop server, so they read files through `node:fs`, not Bun.
 const packageRunner = Effect.fn("RelayCommands.packageRunner")(function* (directory: string) {
-  const exists = (name: string) => Effect.promise(() => Bun.file(path.join(directory, name)).exists())
-  if ((yield* exists("bun.lock")) || (yield* exists("bun.lockb"))) return "bun"
+  const exists = (name: string) =>
+    Effect.promise(() =>
+      access(path.join(directory, name)).then(
+        () => true,
+        () => false,
+      ),
+    )
+  if ((yield* exists("bun.lock")) || (yield* exists("bun.lockb"))) return `bun`
   if (yield* exists("pnpm-lock.yaml")) return "pnpm"
   if (yield* exists("yarn.lock")) return "yarn"
   return "npm"
@@ -95,14 +99,16 @@ const packageRunner = Effect.fn("RelayCommands.packageRunner")(function* (direct
 
 const pytestFiles = (directory: string) =>
   Effect.promise(async () => {
-    // The usual test roots only: a scan of the whole tree would walk virtualenvs and node_modules.
-    // One glob per root: Bun.Glob does not expand nested braces.
-    const files = await Promise.all(
-      ["", "test/**/", "tests/**/", "src/**/"].flatMap((root) =>
-        ["test_*.py", "*_test.py"].map((name) =>
-          Array.fromAsync(new Bun.Glob(root + name).scan({ cwd: directory, onlyFiles: true })).catch(() => []),
-        ),
+    // The project root and the usual test roots only: a scan of the whole tree would walk virtualenvs and node_modules.
+    const files = await Promise.all([
+      readdir(directory).catch(() => []),
+      ...["test", "tests", "src"].map((root) =>
+        readdir(path.join(directory, root), { recursive: true })
+          .then((names) => names.map((name) => path.posix.join(root, name.split(path.sep).join("/"))))
+          .catch(() => []),
       ),
-    )
-    return [...new Set(files.flat())].toSorted().slice(0, PYTEST_FILES)
+    ])
+    return [...new Set(files.flat().filter((file) => /^(test_.*|.*_test)\.py$/.test(path.posix.basename(file))))]
+      .toSorted()
+      .slice(0, PYTEST_FILES)
   })
