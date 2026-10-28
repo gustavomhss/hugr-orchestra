@@ -8,6 +8,8 @@ export const SUBAGENT_TOOLS = new Set(["Agent", "Task"])
 export const TASK_LIST_TOOLS = new Set(["TaskCreate", "TaskUpdate"])
 // Claude Code's own plumbing with no Orchestra counterpart: it loads deferred tool schemas, so it stays off the record.
 export const UNRECORDED = new Set(["ToolSearch"])
+/** Claude Code's own subagent types, as the Orchestra seat that does the same work. */
+const BUILT_IN_SEATS: Readonly<Record<string, string>> = { "general-purpose": "general", Explore: "explore", Plan: "explore" }
 export type ChecklistItem = { id: string; content: string; status: string }
 export type Checklist = { items: ChecklistItem[]; changed: boolean }
 
@@ -34,14 +36,27 @@ export function shown<Seat extends string>(tool: string, raw: unknown, seats: Re
   const type = typeof input.subagent_type === "string" ? input.subagent_type : ""
   return {
     name: "task",
-    input: { description: input.description, prompt: input.prompt, subagent_type: seats[type]?.seat ?? type, background: input.run_in_background },
+    input: { description: input.description, prompt: input.prompt, subagent_type: seat(type, seats) ?? type, background: input.run_in_background },
     task: {
-      seat: seats[type]?.seat,
+      seat: seat(type, seats),
       title: typeof input.description === "string" ? input.description : "",
       prompt: typeof input.prompt === "string" ? input.prompt : "",
       background: input.run_in_background === true,
     },
   }
+}
+
+/**
+ * The seat a subagent type runs as: a seat's own subagent, else the seat that does the work of Claude Code's built-in
+ * of that type, else `general`, when the turn has that seat.
+ */
+export function seat<Seat extends string>(type: string, seats: Readonly<Record<string, { readonly seat: Seat }>>) {
+  const named = seats[type]?.seat
+  if (named) return named
+  // An unknown type (`""`) is never taken for the general seat.
+  if (!type) return undefined
+  const id = BUILT_IN_SEATS[type] ?? "general"
+  return Object.values(seats).find((item) => item.seat === id)?.seat
 }
 
 /**

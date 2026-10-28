@@ -1,15 +1,16 @@
 export * as ClaudeCodeHost from "./host"
 
-import { createSdkMcpServer, type AgentDefinition, type CanUseTool, type HookCallback, type PermissionResult, type SDKMessage, type SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
-import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js"
+import type { AgentDefinition, CanUseTool, HookCallback, PermissionResult, SDKMessage } from "@anthropic-ai/claude-agent-sdk"
 import type { Host } from "@orchestra/core/host"
 import { makeLocationNode } from "@orchestra/core/effect/app-node"
 import { ExecutionHost } from "@orchestra/core/session/runner"
-import { LLMEvent, type ToolContent, type ToolDefinition, type ToolResultValue } from "@orchestra/llm"
+import { LLMEvent } from "@orchestra/llm"
 import { Duration, Effect, Layer, Stream } from "effect"
 import { createHash, randomUUID } from "node:crypto"
 import path from "node:path"
 import { ClaudeCodeAccount } from "@orchestra/core/claude-code-account"
+import { ModelV2 } from "@orchestra/core/model"
+import { ProviderV2 } from "@orchestra/core/provider"
 import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
 import { Research } from "@orchestra/schema/research"
 import { ClaudeHostOptions } from "../host/options"
@@ -17,6 +18,7 @@ import { ClaudeCodeSDK } from "../sdk"
 import { ClaudeCodeTranscript } from "../transcript"
 import { ClaudeCodeAccountV2 } from "./account"
 import { ClaudeCodeCatalog } from "./catalog"
+import { ClaudeCodeChannel } from "./channel"
 import { ClaudeCodeOutput } from "./output"
 import { ClaudeCodeRecord } from "./record"
 
@@ -43,7 +45,7 @@ const QUESTION_DISMISSED = "The owner dismissed this question."
 const BACKGROUND_PATIENCE = Duration.minutes(30)
 const UNCHECKED = "Orchestra could not check this call, so it is refused."
 /** Orchestra's tools in a turn are the main agent's, with its permissions: a subagent would act as that agent. */
-const MAIN_ONLY = "Orchestra's tools serve the main agent only, not a subagent."
+const MAIN_ONLY = "Orchestra's tools serve the main agent and Orchestra's seats only."
 
 /** One gate decision, shared by the PreToolUse hook and `canUseTool` so both settle a call the same way. */
 type Decision =
@@ -98,34 +100,58 @@ export const make = Effect.gen(function* () {
           // billing) leaves the prompt to be sent again.
           const progress = { handed: false, answered: false, resulted: false }
           const served = turn.tools.filter((tool) => !UNSERVED.has(tool.name))
-          const agents = subagents(turn.seats, turn.skills, served.map((tool) => `${MCP_PREFIX}${tool.name}`))
+          const agents = subagents(turn.seats, turn.skills, served.map((tool) => tool.name), turn.seatTools)
           // The Context Epoch baseline and workflow instructions go in once per change, beside the prompt.
           const contextText = turn.context.filter(Boolean).join("\n\n")
           const contextHash = contextText ? createHash("sha256").update(contextText).digest("hex") : undefined
           const context = { sent: false }
-          // Claude Code's tool_use id for an Orchestra tool, learned at the gate; the MCP request does not carry it.
+          // Main-agent Orchestra calls learned at the gate, in order per tool: the fallback when an MCP request has no `_meta` id.
           const callIDs = new Map<string, string[]>()
           const learned = new Set<string>()
+          // A seat's subagent calling an Orchestra tool: its tool_use id to the delegation's call, whose child settles it.
+          const inside = new Map<string, { readonly parent: string; readonly name: string }>()
+          const callID = (name: string, toolUseID: string | undefined) => {
+            if (toolUseID) {
+              callIDs.set(name, (callIDs.get(name) ?? []).filter((id) => id !== toolUseID))
+              return learned.has(toolUseID) || inside.has(toolUseID) ? toolUseID : undefined
+            }
+            // Without the id, a subagent's pending call of the same tool makes the order ambiguous: refuse.
+            if ([...inside.values()].some((call) => call.name === name)) return undefined
+            return callIDs.get(name)?.shift() ?? `orchestra_${randomUUID()}`
+          }
+          const delegated: ExecutionHost.Turn["execute"] = (call) => {
+            const within = inside.get(call.id)
+            if (!within) return turn.execute(call)
+            inside.delete(call.id)
+            const ended = { result: { type: "error" as const, value: "The subagent's delegation has ended." } }
+            return open(within.parent).pipe(Effect.flatMap((child) => (child ? child.execute(call) : Effect.succeed(ended))))
+          }
           // A call is settled once, whichever of the hook and `canUseTool` asks first: asking twice would ask the owner
           // twice and charge a dispatch twice.
           const decisions = new Map<string, Promise<Decision>>()
           // `agentType` is set only for a call made inside a subagent (`""` when its type is unknown).
-          const decide = (tool: string, input: Record<string, unknown>, toolUseID: string, signal: AbortSignal, agentType?: string) => {
+          const decide = (tool: string, input: Record<string, unknown>, toolUseID: string, signal: AbortSignal, agentType?: string, agentID?: string) => {
             const known = decisions.get(toolUseID)
             if (known) return known
             // Never rejects: a defect, a throw or an abort in Orchestra's own check refuses the call (fail closed).
             const made = Promise.resolve()
               .then((): Decision | Promise<Decision> => {
                 if (tool.startsWith(MCP_PREFIX)) {
-                  if (agentType !== undefined) return { allow: false, reason: MAIN_ONLY }
                   const name = tool.slice(MCP_PREFIX.length)
+                  if (agentType !== undefined) {
+                    // Claude Code's task id is the subagent's agent id; the delegation it names must be a seat's.
+                    const parent = agentID === undefined ? undefined : started.get(agentID)
+                    if (!parent || tasks.get(parent)?.seat === undefined) return { allow: false, reason: MAIN_ONLY }
+                    inside.set(toolUseID, { parent, name })
+                    return { allow: true }
+                  }
                   if (!learned.has(toolUseID)) callIDs.set(name, [...(callIDs.get(name) ?? []), toolUseID])
                   learned.add(toolUseID)
                   // The registry settles the Orchestra tool's own permissions when the runner executes it.
                   return { allow: true }
                 }
                 // A call made inside a seat's subagent is checked under that seat's own permission rules.
-                const seat = agentType ? agents[agentType]?.seat : undefined
+                const seat = agentType === undefined ? undefined : ClaudeCodeRecord.seat(agentType, agents)
                 const asked = ClaudeCodeRecord.SUBAGENT_TOOLS.has(tool) ? delegation(input, agents) : undefined
                 if (asked && "allow" in asked) return asked
                 return Effect.runPromise(
@@ -166,8 +192,8 @@ export const make = Effect.gen(function* () {
             // The question needs the owner, so it is left to `canUseTool`, where its answers can be returned.
             if (input.tool_name === "AskUserQuestion") return Promise.resolve({})
             const args = ClaudeCodeTranscript.record(input.tool_input) ? input.tool_input : {}
-            const inside = input.agent_id === undefined ? undefined : (input.agent_type ?? "")
-            return decide(input.tool_name, args, input.tool_use_id, options.signal, inside).then((decision) => ({
+            const agentType = input.agent_id === undefined ? undefined : (input.agent_type ?? "")
+            return decide(input.tool_name, args, input.tool_use_id, options.signal, agentType, input.agent_id).then((decision) => ({
               hookSpecificOutput: decision.allow
                 ? {
                     hookEventName: "PreToolUse" as const,
@@ -179,7 +205,7 @@ export const make = Effect.gen(function* () {
           }
           const canUseTool: CanUseTool = (tool, input, options) => {
             if (tool === "AskUserQuestion") return ask(input, options.toolUseID, options.signal)
-            return decide(tool, input, options.toolUseID, options.signal, options.agentID === undefined ? undefined : "").then((decision) =>
+            return decide(tool, input, options.toolUseID, options.signal, options.agentID === undefined ? undefined : "", options.agentID).then((decision) =>
               decision.allow ? { behavior: "allow" as const, updatedInput: { ...input, ...decision.input } } : { behavior: "deny" as const, message: decision.reason },
             )
           }
@@ -251,13 +277,13 @@ export const make = Effect.gen(function* () {
               ? { agents: Object.fromEntries(Object.entries(agents).map(([name, item]) => [name, item.definition])) }
               : {}),
             ...(served.length
-              ? { mcpServers: { [MCP_SERVER]: server(served, (name) => callIDs.get(name)?.shift() ?? `orchestra_${randomUUID()}`, turn.execute) } }
+              ? { mcpServers: { [MCP_SERVER]: ClaudeCodeChannel.server(MCP_SERVER, served, callID, delegated) } }
               : {}),
             env: ClaudeHostOptions.environment(env),
             abortController: abort,
           })
           // The SDK asks for the next input message only after it wrote the previous one to Claude Code.
-          const channel = inbox(user(prompt, sent), abort.signal, (uuid) => {
+          const channel = ClaudeCodeChannel.inbox(ClaudeCodeChannel.user(prompt, sent), abort.signal, (uuid) => {
             if (uuid === sent) progress.handed = true
           })
           // Background work Claude Code still has running when the turn's result arrives keeps the process up.
@@ -291,12 +317,13 @@ export const make = Effect.gen(function* () {
               )
               if (!live.keep) return Effect.promise(close).pipe(Effect.andThen(settle))
               tails.set(turn.session.id, entry)
+              // A background subagent's child Session stays open while the process waits for it, and ends with it.
               return settle.pipe(
                 Effect.andThen(
-                  follow(opened[Symbol.asyncIterator](), live, turn).pipe(
+                  follow(opened[Symbol.asyncIterator](), live, turn, { mirror, end, mark }).pipe(
                     Effect.timeout(BACKGROUND_PATIENCE),
                     Effect.ignore,
-                    Effect.andThen(Effect.promise(close)),
+                    Effect.ensuring(Effect.forEach([...children.keys()], end, { discard: true }).pipe(Effect.andThen(Effect.promise(close)))),
                     Effect.forkDetach,
                   ),
                 ),
@@ -309,7 +336,7 @@ export const make = Effect.gen(function* () {
               Effect.sync(() => {
                 const uuid = randomUUID()
                 steered.set(uuid, steer.id)
-                channel.push(user(steer.text, uuid))
+                channel.push(ClaudeCodeChannel.user(steer.text, uuid))
               }),
             ),
             Effect.forkScoped,
@@ -318,27 +345,54 @@ export const make = Effect.gen(function* () {
           const created = new Map<string, ClaudeCodeRecord.ChecklistItem>()
           const todos = new Map<string, unknown>()
           const tasks = new Map<string, Delegation>()
+          // Claude Code's task id for each delegation's call, to find the call a later task update names.
+          const started = new Map<string, string>()
           // Claude Code's task list outlives a turn, so the copy that fills the todo panel is kept in host state.
           const checklist: ClaudeCodeRecord.Checklist = { items: ClaudeCodeRecord.items(state.checklist), changed: false }
           // The child Session mirroring each running subagent, opened on its first frame. A closed one takes no more.
           const children = new Map<string, Effect.Success<ReturnType<typeof turn.child>> & { readonly tracker: Tracker }>()
           const closed = new Set<string>()
           const tracker = (): Tracker => ({ names: new Map(), todos: new Map(), tasks: new Map(), checklist: { items: [], changed: false }, created: new Map(), seats: agents, failure: {}, emitted: new Map(), model: undefined })
-          const mirror = (callID: string, message: SDKMessage & { readonly type: "assistant" | "user" }) =>
+          // The child runs on the model that answered in the subagent, else its seat's model, else the turn's.
+          const open = (callID: string, model?: string) =>
             Effect.gen(function* () {
               const task = tasks.get(callID)
-              if (!task || closed.has(callID)) return
-              const open = children.get(callID) ?? (yield* Effect.gen(function* () {
-                const child = yield* turn.child({ callID, agent: task.seat ?? turn.agent.id, title: task.title, prompt: task.prompt })
-                yield* child.publish(LLMEvent.stepStart({ index: 0 }))
-                const entry = { ...child, tracker: tracker() }
-                children.set(callID, entry)
-                return entry
-              }))
-              const settled = yield* ClaudeCodeOutput.settle(events({ ...message, parent_tool_use_id: null }, open.tracker), message, { todos: open.tracker.todos, write: open.todos, directory: turn.session.location.directory })
-              yield* Effect.forEach(settled, open.publish, { discard: true })
+              if (!task || closed.has(callID)) return undefined
+              const known = children.get(callID)
+              if (known) return known
+              const defined = Object.values(agents).find((item) => item.seat === task.seat)?.definition.model
+              const name = model ?? (defined === "inherit" ? undefined : defined)
+              const child = yield* turn.child({
+                callID,
+                agent: task.seat ?? turn.agent.id,
+                title: task.title,
+                prompt: task.prompt,
+                ...(name ? { model: { id: ModelV2.ID.make(name), providerID: ProviderV2.ID.anthropic } } : {}),
+              })
+              yield* child.publish(LLMEvent.stepStart({ index: 0 }))
+              const entry = { ...child, tracker: tracker() }
+              children.set(callID, entry)
+              return entry
             })
-          const close = (callID: string) =>
+          const mirror = (callID: string, message: SDKMessage & { readonly type: "assistant" | "user" }) =>
+            Effect.gen(function* () {
+              // The subagent's own prompt comes first; the child opens on its first reply, which names its model.
+              if (message.type === "user" && !children.has(callID)) return
+              const child = yield* open(callID, message.type === "assistant" ? message.message.model : undefined)
+              if (!child) return
+              const settled = yield* ClaudeCodeOutput.settle(events({ ...message, parent_tool_use_id: null }, child.tracker), message, { todos: child.tracker.todos, write: child.todos, directory: turn.session.location.directory })
+              yield* Effect.forEach(settled, child.publish, { discard: true })
+            })
+          // Claude Code can move a running delegation to the background; its result then no longer ends the subagent.
+          const mark = (message: SDKMessage) => {
+            if (message.type !== "system") return
+            const callID = message.subtype === "task_started" && message.is_backgrounded ? message.tool_use_id
+              : message.subtype === "task_updated" && message.patch.is_backgrounded ? started.get(message.task_id) : undefined
+            if (message.subtype === "task_started" && message.tool_use_id) started.set(message.task_id, message.tool_use_id)
+            const task = callID ? tasks.get(callID) : undefined
+            if (callID && task) tasks.set(callID, { ...task, background: true })
+          }
+          const end = (callID: string) =>
             Effect.gen(function* () {
               closed.add(callID)
               const open = children.get(callID)
@@ -348,7 +402,10 @@ export const make = Effect.gen(function* () {
               yield* open.finish
             })
           // What a stopped or failed turn leaves running is settled with it.
-          yield* Effect.addFinalizer(() => Effect.forEach([...children.keys()], close, { discard: true }))
+          // A background subagent that outlives the turn stays open: `follow` mirrors and ends it.
+          yield* Effect.addFinalizer(() =>
+            Effect.forEach([...children.keys()].filter((id) => !live.keep || tasks.get(id)?.background !== true), end, { discard: true }),
+          )
           // Block ids by assistant message, for the retract a refusal fallback or a superseding reply asks for.
           const emitted = new Map<string, string[]>()
           // The iterator is pulled through a view without `return`: stopping at the result must not close the query.
@@ -363,13 +420,13 @@ export const make = Effect.gen(function* () {
                   yield* mirror(message.parent_tool_use_id, message)
                   return []
                 }
-                // A delegation's result ends its subagent, unless it runs in the background and reports later.
+                mark(message)
+                // A delegation's result ends its subagent. A background one reports later: its child opens before the
+                // result is recorded, so the task row links to it, and stays open for the frames still to come.
                 if (message.type === "user" && Array.isArray(message.message.content))
                   yield* Effect.forEach(
-                    message.message.content.flatMap((block) =>
-                      block.type === "tool_result" && tasks.get(block.tool_use_id)?.background === false ? [block.tool_use_id] : [],
-                    ),
-                    close,
+                    message.message.content.flatMap((block) => (block.type === "tool_result" && tasks.has(block.tool_use_id) ? [block.tool_use_id] : [])),
+                    (id) => (tasks.get(id)?.background ? Effect.asVoid(open(id)) : end(id)),
                     { discard: true },
                   )
                 if (message.type === "assistant" && !message.error)
@@ -563,15 +620,28 @@ function contextWindow(usage: Record<string, { readonly contextWindow: number; r
  * a steer prompt, so the model hears of it (the turn that answers resumes this Claude Code session, which first
  * closes this process). Reads until the work is gone, the query ends, or the host stops waiting.
  */
-function follow(iterator: AsyncIterator<SDKMessage>, live: { background: number }, turn: ExecutionHost.Turn) {
+function follow(
+  iterator: AsyncIterator<SDKMessage>,
+  live: { background: number },
+  turn: ExecutionHost.Turn,
+  subagent: {
+    readonly mirror: (callID: string, message: SDKMessage & { readonly type: "assistant" | "user" }) => Effect.Effect<void>
+    readonly end: (callID: string) => Effect.Effect<void>
+    readonly mark: (message: SDKMessage) => void
+  },
+) {
   return Effect.gen(function* () {
     while (live.background > 0) {
       const next = yield* Effect.promise(() => iterator.next())
       if (next.done) return
       const message = next.value
+      subagent.mark(message)
+      if ((message.type === "assistant" || message.type === "user") && message.parent_tool_use_id !== null)
+        yield* subagent.mirror(message.parent_tool_use_id, message)
       if (message.type === "system" && message.subtype === "background_tasks_changed")
         live.background = message.tasks.filter((task) => !task.ambient).length
       if (message.type === "system" && message.subtype === "task_notification") {
+        if (message.tool_use_id) yield* subagent.end(message.tool_use_id)
         yield* turn.notify({
           id: `msg_${turn.session.id}_task_${message.task_id}_${message.status}`,
           text: `Background task ${message.task_id} ${message.status}: ${message.summary}\nOutput: ${message.output_file}`,
@@ -582,75 +652,18 @@ function follow(iterator: AsyncIterator<SDKMessage>, live: { background: number 
   })
 }
 
-/** The `orchestra` MCP server: lists the served tools and settles each call through the runner. */
-function server(tools: ReadonlyArray<ToolDefinition>, callID: (name: string) => string, execute: ExecutionHost.Turn["execute"]) {
-  const mcp = createSdkMcpServer({ name: MCP_SERVER, tools: [] })
-  mcp.instance.server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: tools.map((tool) => ({ name: tool.name, description: tool.description, inputSchema: { ...tool.inputSchema, type: "object" as const } })),
-  }))
-  mcp.instance.server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
-    const tool = tools.find((item) => item.name === request.params.name)
-    if (!tool) return { content: [{ type: "text" as const, text: `Orchestra tool ${request.params.name} is not available.` }], isError: true }
-    // A cancelled Claude turn aborts `extra.signal`; interrupting the run stops the Orchestra tool with it.
-    const settlement = await Effect.runPromise(
-      execute({ id: callID(tool.name), name: tool.name, input: request.params.arguments ?? {} }),
-      { signal: extra.signal },
-    )
-    return {
-      content: [{ type: "text" as const, text: modelText(settlement.result) }],
-      ...(settlement.result.type === "error" ? { isError: true } : {}),
-    }
-  })
-  return mcp
-}
-
-function modelText(result: ToolResultValue) {
-  if (result.type === "content") return result.value.flatMap((part: ToolContent) => (part.type === "text" ? [part.text] : [])).join("\n")
-  return typeof result.value === "string" ? result.value : JSON.stringify(result.value)
-}
-
-function user(text: string, uuid: SDKUserMessage["uuid"]): SDKUserMessage {
-  return { type: "user", message: { role: "user", content: text }, parent_tool_use_id: null, uuid }
-}
-
-/** The query's streaming input: the turn's prompt first, then whatever is pushed while it runs, until aborted. */
-function inbox(first: SDKUserMessage, signal: AbortSignal, handed: (uuid: SDKUserMessage["uuid"]) => void) {
-  const queue = [first]
-  let wake: (() => void) | undefined
-  return {
-    push: (message: SDKUserMessage) => {
-      queue.push(message)
-      wake?.()
-    },
-    messages: (async function* (): AsyncGenerator<SDKUserMessage> {
-      while (!signal.aborted) {
-        const next = queue.shift()
-        if (next) {
-          yield next
-          handed(next.uuid)
-          continue
-        }
-        await new Promise<void>((resolve) => {
-          wake = resolve
-          signal.addEventListener("abort", () => resolve(), { once: true })
-        })
-        wake = undefined
-      }
-    })(),
-  }
-}
-
 /**
  * Orchestra's seats as Claude Code subagents `orchestra:<id>`; the research seat is one per tier, with its budget. A
  * seat's skills are listed in its prompt by file: the subagent reads one when the task matches, as Orchestra's skill
- * tool would load it. The turn's Orchestra tools (`orchestra`, by Claude Code name) are the main agent's and are kept
- * from every subagent.
+ * tool would load it. Of the turn's Orchestra tools (`orchestra`), a subagent keeps those its seat may call
+ * (`seatTools`); the rest are kept off its tool list.
  */
-function subagents(seats: ExecutionHost.Turn["seats"], skills: ExecutionHost.Turn["skills"], orchestra: ReadonlyArray<string>) {
+function subagents(seats: ExecutionHost.Turn["seats"], skills: ExecutionHost.Turn["skills"], orchestra: ReadonlyArray<string>, seatTools: ExecutionHost.Turn["seatTools"]) {
   return Object.fromEntries(
     seats.flatMap((seat): Array<readonly [string, { seat: typeof seat.id; definition: AgentDefinition }]> => {
       if (!seat.system) return []
       const listed = skills[seat.id] ?? []
+      const kept = orchestra.filter((name) => !seatTools[seat.id]?.includes(name)).map((name) => `${MCP_PREFIX}${name}`)
       const definition: AgentDefinition = {
         description: seat.description ?? `Orchestra's \`${seat.id}\` seat.`,
         prompt: [
@@ -666,8 +679,8 @@ function subagents(seats: ExecutionHost.Turn["seats"], skills: ExecutionHost.Tur
             : []),
         ].join("\n\n"),
         model: seat.model?.providerID === "anthropic" ? seat.model.id : "inherit",
-        // Kept off the subagent's tool list; the gate refuses them inside a subagent all the same.
-        ...(orchestra.length > 0 ? { disallowedTools: [...orchestra] } : {}),
+        // Tools the seat may not call; the child's registry refuses them all the same.
+        ...(kept.length > 0 ? { disallowedTools: kept } : {}),
       }
       if (seat.id !== ResearchSeatTools.SEAT) return [[`${SEAT_PREFIX}${seat.id}`, { seat: seat.id, definition }]]
       return Research.Depth.literals.map((tier) => [
@@ -692,7 +705,7 @@ function subagents(seats: ExecutionHost.Turn["seats"], skills: ExecutionHost.Tur
  */
 function delegation(input: Record<string, unknown>, agents: ReturnType<typeof subagents>): Decision | { action: string; resources: string[] } {
   const type = typeof input.subagent_type === "string" ? input.subagent_type : "*"
-  const seat = agents[type]?.seat ?? type
+  const seat = ClaudeCodeRecord.seat(type, agents) ?? type
   if (input.run_in_background === true && ClaudeHostOptions.FOREGROUND_SEATS.includes(seat))
     return { allow: false, reason: `Run \`${type}\` in the foreground: its result is needed in this turn.` }
   return { action: "task", resources: [seat] }

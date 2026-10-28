@@ -58,7 +58,7 @@ const ports = {
   consumed: () => Effect.void,
   notify: () => Effect.void,
   todos: () => Effect.void,
-  child: () => Effect.succeed({ id: SessionSchema.ID.make("ses_child"), publish: () => Effect.void, finish: Effect.void, todos: () => Effect.void }),
+  child: () => Effect.succeed({ id: SessionSchema.ID.make("ses_child"), publish: () => Effect.void, finish: Effect.void, todos: () => Effect.void, execute: () => Effect.succeed({ result: { type: "text", value: "" } }) }),
 } satisfies Pick<ExecutionHost.Turn, "question" | "memory" | "steers" | "consumed" | "notify" | "todos" | "child">
 
 const turnOf = (input: Partial<ExecutionHost.Turn> = {}): ExecutionHost.Turn => ({
@@ -69,6 +69,7 @@ const turnOf = (input: Partial<ExecutionHost.Turn> = {}): ExecutionHost.Turn => 
   context: [],
   seats: [],
   skills: {},
+  seatTools: {},
   history: [user("msg_1", "Go")] as unknown as ExecutionHost.Turn["history"],
   tools: [],
   execute: () => Effect.die("unused"),
@@ -99,6 +100,7 @@ test("one SDK query is one turn: tool calls surface provider-executed and the ne
     context: ["Context"],
     seats: [],
     skills: {},
+    seatTools: {},
     history: history as ExecutionHost.Turn["history"],
     tools: [],
     execute: () => Effect.die("unused"),
