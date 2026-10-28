@@ -265,7 +265,7 @@ test("Orchestra's seats are Claude Code subagents: the Maestro note names them, 
 
   const options = calls.at(-1)?.options
   expect(Object.keys(options?.agents ?? {}).toSorted()).toEqual([
-    "orchestra:backend", "orchestra:jimmy-deep", "orchestra:jimmy-focused", "orchestra:jimmy-quick", "orchestra:docs",
+    "orchestra:backend", "orchestra:docs", "orchestra:jimmy-deep", "orchestra:jimmy-focused", "orchestra:jimmy-quick",
   ])
   expect(options?.agents?.["orchestra:backend"]).toEqual({
     description: "Backend work.",
