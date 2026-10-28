@@ -76,6 +76,8 @@ const gh = (args: ReadonlyArray<string>, stdin?: string) =>
     return { exitCode: 0, stdout: "", stderr: "" }
   })
 
+const GREEN_BASE = JSON.stringify([{ name: "test", status: "COMPLETED", conclusion: "SUCCESS" }])
+
 const contains = async (origin: string, branch: string, sha: string) =>
   (await Bun.$`git --git-dir ${origin} merge-base --is-ancestor refs/heads/${branch} ${sha}`.quiet().nothrow()).exitCode === 0
 
@@ -233,6 +235,45 @@ describe("BoardQueue", () => {
     }),
   )
 
+  it.live("a red bundle on a base with no checks probes base, and a red probe ejects no member", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QBU")
+      yield* card(repo, "QBU", 1, "a.txt")
+      yield* card(repo, "QBU", 2, "b.txt")
+      yield* board.queue({ project: "QBU", number: 1, reason: "Verified." })
+      yield* board.queue({ project: "QBU", number: 2, reason: "Verified." })
+      repo.remote.conclusion = "SUCCESS"
+      repo.remote.seeded = ["main"]
+      repo.remote.baseRuns = "[]"
+
+      yield* Effect.forEach(Array.from({ length: 4 }), () => board.queueTick(), { discard: true })
+      expect([yield* stage(repo, 1), yield* stage(repo, 2)]).toEqual(["queue", "queue"])
+      expect(yield* bundleStatuses(repo)).toEqual(["probing", "base-red"])
+      expect(yield* ejections(repo, 1)).toEqual([])
+      expect(yield* ejections(repo, 2)).toEqual([])
+    }),
+  )
+
+  it.live("a probe that finds base green lets the queue halve the red bundle", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QBG")
+      yield* card(repo, "QBG", 1, "a.txt")
+      yield* card(repo, "QBG", 2, "b.txt")
+      yield* board.queue({ project: "QBG", number: 1, reason: "Verified." })
+      yield* board.queue({ project: "QBG", number: 2, reason: "Verified." })
+      repo.remote.conclusion = "SUCCESS"
+      repo.remote.seeded = ["card-2"]
+      repo.remote.baseRuns = "[]"
+
+      yield* Effect.forEach(Array.from({ length: 12 }), () => board.queueTick(), { discard: true })
+      expect([yield* stage(repo, 1), yield* stage(repo, 2)]).toEqual(["shipped", "review"])
+      expect(yield* bundleStatuses(repo)).toEqual(["probing", "probe-green", "merged", "probing", "probe-green", "red"])
+      expect(yield* ejections(repo, 2)).toEqual(["red alone on the full gate"])
+    }),
+  )
+
   it.live("a card that passes alone is shipped and the card that fails beside it is ejected", () =>
     Effect.gen(function* () {
       const board = yield* Board.Service
@@ -290,7 +331,7 @@ function repository(key: string, size = 2) {
       await commit(directory, "base")
       await git(directory, "remote", "add", "origin", pathToFileURL(remote).href)
       await git(directory, "push", "--quiet", "origin", "main")
-      return { root, directory, key, remote: { origin: remote, pulls: new Map<number, string>(), bodies: new Map<number, string>(), conclusion: "", seeded: [] as ReadonlyArray<string>, baseRuns: "[]", calls: [] } }
+      return { root, directory, key, remote: { origin: remote, pulls: new Map<number, string>(), bodies: new Map<number, string>(), conclusion: "", seeded: [] as ReadonlyArray<string>, baseRuns: GREEN_BASE, calls: [] } }
     })
     remotes.set(`acme/${key}`, made.remote)
     const database = yield* Database.Service

@@ -79,8 +79,9 @@ every remaining card of an epic is queued. Urgent cards go first.
   branch, so every member PR shows as merged and its card moves to Shipped. If the base branch moved meanwhile, the
   bundle is retested, unless `onBaseMoved` is `merge-if-disjoint` and what moved does not overlap the bundle's files
   or packages: then Maestro merges the tested bundle onto the new base without a second run.
-- **Red bundle.** Maestro first reads the checks of the base commit the bundle was cut on. If they are red, the bundle
-  closes as `base-red`, its cards stay queued, and nothing is cut again until the base moves. Otherwise the bundle
+- **Red bundle.** Maestro first reads the checks of the base commit the bundle was cut on. When that commit has no
+  checks, for example because it was merged outside the queue, Maestro runs the full gate on base alone first (a base
+  probe: a bundle with no cards that never merges). If base is red, the bundle closes as `base-red`, its cards stay queued, and nothing is cut again until the base moves. Otherwise the bundle
   closes as `red` and its members stay queued, split in half: the first half is cut and gated again. A green half
   merges; the rest is cut next. A card that is red alone goes back to Review with a note, and Maestro queues it again
   after fixing it.

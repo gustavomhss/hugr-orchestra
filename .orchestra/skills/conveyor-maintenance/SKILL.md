@@ -48,7 +48,7 @@ snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bund
 - A bundle branch is `bundle-<KEY>-<n>`, pushed with force; the base branch only with `--force-with-lease`.
 - `turbo` runs through `bun x turbo --dry=json` with a 120 s timeout; any failure means retest, never land.
 - The tick runs every 60 s in the board poll; it settles the open bundle before it cuts a new one.
-- `cut` reads the last closed bundle: after a `red` it cuts half its members (the cap); after `base-red` it waits until the base tip moves.
+- `cut` reads the last closed bundle: after a `red` it cuts half its members (the cap); after `base-red` it waits until the base tip moves. A memberless bundle is a base probe: it closes `probe-green` or `base-red` and never merges; `cut` looks past a `probe-green` to the `probing` bundle before it.
 - Write-set matching drops `:L` line ranges and matches patterns with `Bun.Glob`, like the arsenal's `conflictVerdict`.
 
 ## Gates

@@ -371,7 +371,7 @@ export const BoardBundleTable = sqliteTable(
     base_sha: text().notNull(),
     head_sha: text().notNull(),
     tree_sha: text().notNull(),
-    status: text().$type<"open" | "merged" | "dissolved" | "red" | "base-red">().notNull(),
+    status: text().$type<"open" | "merged" | "dissolved" | "red" | "base-red" | "probing" | "probe-green">().notNull(),
     merged_on: text(),
     ...Timestamps,
   },

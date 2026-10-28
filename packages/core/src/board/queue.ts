@@ -245,12 +245,15 @@ export function make(deps: Deps) {
               .where(and(inArray(BoardIssueTable.epic_id, epics), ne(BoardIssueTable.stage, "shipped"), ne(BoardIssueTable.stage, "cut")))
               .all()
           : []
-        const last = yield* tx
+        // A green base probe only clears base: the red bundle it was probing for still decides the next cut.
+        const closed = yield* tx
           .select()
           .from(BoardBundleTable)
           .where(and(eq(BoardBundleTable.project_id, row.id), ne(BoardBundleTable.status, "open")))
           .orderBy(desc(BoardBundleTable.n))
-          .get()
+          .limit(2)
+          .all()
+        const last = closed[0]?.status === "probe-green" ? closed[1] : closed[0]
         const lastMembers = last
           ? yield* tx.select().from(BoardBundleMemberTable).where(eq(BoardBundleMemberTable.bundle_id, last.id)).all()
           : []
@@ -258,7 +261,7 @@ export function make(deps: Deps) {
       }),
     )
     if (queued.cards.length === 0) return
-    const split = queued.last?.status === "red" && queued.last.members > 1
+    const split = (queued.last?.status === "red" && queued.last.members > 1) || queued.last?.status === "probing"
     const cap = split && queued.last ? Math.max(1, Math.floor(queued.last.members / 2)) : contract.bundle.size
     const due =
       split ||
@@ -384,11 +387,59 @@ export function make(deps: Deps) {
     yield* Effect.forEach(members, (member) => describe(row, member.issue.id, base), { discard: true })
   })
 
-  /** Whether the base commit's own checks are red: a red bundle is then no evidence against its members. */
-  const baseRed = Effect.fnUntraced(function* (repo: string, sha: string, contract: BoardCi.Contract) {
+  /**
+   * Whether base was green or red at `sha`: a base probe on that commit decides first, then the commit's own checks.
+   * A base reached by an outside merge often has no runs; that is unknown, never green.
+   */
+  const baseState = Effect.fnUntraced(function* (row: ProjectRow, repo: string, sha: string, contract: BoardCi.Contract) {
+    const probed = yield* deps.quiet((tx) =>
+      tx
+        .select({ status: BoardBundleTable.status })
+        .from(BoardBundleTable)
+        .where(and(eq(BoardBundleTable.project_id, row.id), eq(BoardBundleTable.base_sha, sha), inArray(BoardBundleTable.status, ["probe-green", "base-red"])))
+        .orderBy(desc(BoardBundleTable.n))
+        .get(),
+    )
+    if (probed) return probed.status === "probe-green" ? "green" : "red"
     const read = yield* deps.gh(["api", `repos/${repo}/commits/${sha}/check-runs`, "--jq", "[.check_runs[] | {name, status: (.status | ascii_upcase), conclusion: ((.conclusion // \"\") | ascii_upcase)}]"])
     const runs = read.exitCode === 0 ? Option.getOrUndefined(decodeRuns(read.stdout)) : undefined
-    return runs !== undefined && judge(runs, contract) === "red"
+    const verdict = runs && runs.length > 0 ? judge(runs, contract) : "pending"
+    return verdict === "pending" ? "unknown" : verdict
+  })
+
+  /** Runs the full gate on base itself: an empty commit on the red bundle's base, opened as a bundle with no members. */
+  const probe = Effect.fnUntraced(function* (row: ProjectRow, repo: string, directory: string, contract: BoardCi.Contract, red: typeof BoardBundleTable.$inferSelect) {
+    const head = (yield* git(directory, [...AUTHOR, "commit-tree", `${red.base_sha}^{tree}`, "-p", red.base_sha, "-m", "chore(queue): base probe"])).out
+    if (!head) return
+    const n = red.n + 1
+    const branch = `bundle-${row.key}-${n}`
+    const pushed = yield* git(directory, ["push", "--quiet", "--force", "origin", `${head}:refs/heads/${branch}`])
+    if (pushed.code !== 0) return
+    const opened = yield* deps.gh(
+      [
+        "pr",
+        "create",
+        "--repo",
+        repo,
+        "--base",
+        contract.base,
+        "--head",
+        branch,
+        "--title",
+        `chore(queue): base probe ${row.key}-B${n}`,
+        "--body-file",
+        "-",
+        ...(contract.full.label ? ["--label", contract.full.label] : []),
+      ],
+      `Bundle ${row.key}-B${red.n} went red and ${contract.base} at ${red.base_sha.slice(0, 10)} has no checks; this runs the full gate on ${contract.base} alone.`,
+    )
+    const number = Number(opened.stdout.match(/\/pull\/(\d+)/)?.[1] ?? 0) || null
+    yield* deps.quiet((tx) =>
+      tx
+        .insert(BoardBundleTable)
+        .values({ id: Board.BundleID.create(), project_id: row.id, n, branch, pr_number: number, base_sha: red.base_sha, head_sha: head, tree_sha: "", status: "open" })
+        .run(),
+    )
   })
 
   /** The open bundle's next step: wait, merge when green, or give its members back when red. */
@@ -415,9 +466,25 @@ export function make(deps: Deps) {
         .orderBy(asc(BoardBundleMemberTable.position))
         .all(),
     )
+    // A bundle with no members is a base probe: it never merges, it only says whether base is green.
+    if (members.length === 0)
+      return yield* close(row, repo, bundle, `probed ${contract.base} at ${bundle.base_sha.slice(0, 10)}`, verdict === "green" ? "probe-green" : "base-red")
     if (verdict === "red") {
       const sha10 = bundle.base_sha.slice(0, 10)
-      if (yield* baseRed(repo, bundle.base_sha, contract)) {
+      const based = yield* baseState(row, repo, bundle.base_sha, contract)
+      if (based === "unknown") {
+        yield* Effect.forEach(
+          members,
+          (item) => note(row, item.issue, `Bundle ${row.key}-B${bundle.n} went red and ${contract.base} at ${sha10} has no checks; the queue tests ${contract.base} alone first and this card stays queued.`),
+          { discard: true },
+        )
+        yield* deps.quiet((tx) =>
+          tx.update(BoardQueueTable).set({ flush: true }).where(inArray(BoardQueueTable.issue_id, members.map((item) => item.issue.id))).run(),
+        )
+        yield* close(row, repo, bundle, `is red; the queue tests ${contract.base} alone first`, "probing")
+        return yield* probe(row, repo, directory, contract, bundle)
+      }
+      if (based === "red") {
         yield* Effect.forEach(
           members,
           (item) =>
@@ -607,7 +674,7 @@ export function make(deps: Deps) {
     repo: string,
     bundle: typeof BoardBundleTable.$inferSelect,
     why: string,
-    status: "dissolved" | "red" | "base-red" = "dissolved",
+    status: typeof BoardBundleTable.$inferSelect.status = "dissolved",
   ) {
     yield* deps.quiet((tx) => tx.update(BoardBundleTable).set({ status }).where(eq(BoardBundleTable.id, bundle.id)).run())
     if (bundle.pr_number)
