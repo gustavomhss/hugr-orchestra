@@ -123,7 +123,7 @@ export const make = Effect.gen(function* () {
                 // A call made inside a seat's subagent is checked under that seat's own permission rules.
                 const seat = agentType ? agents[agentType]?.seat : undefined
                 const asked = SUBAGENT_TOOLS.has(tool) ? delegation(input, agents) : undefined
-                if (asked && "reason" in asked) return asked
+                if (asked && "allow" in asked) return asked
                 return Effect.runPromise(
                   turn.authorize({
                     callID: toolUseID,
@@ -558,14 +558,14 @@ function inbox(first: SDKUserMessage, signal: AbortSignal, handed: (uuid: SDKUse
 /** Orchestra's seats as Claude Code subagents `orchestra:<id>`; the research seat is one per tier, with its budget. */
 function subagents(seats: ExecutionHost.Turn["seats"]) {
   return Object.fromEntries(
-    seats.flatMap((seat) => {
+    seats.flatMap((seat): Array<readonly [string, { seat: typeof seat.id; definition: AgentDefinition }]> => {
       if (!seat.system) return []
       const definition: AgentDefinition = {
         description: seat.description ?? `Orchestra's \`${seat.id}\` seat.`,
         prompt: LOOP_TEXT.reduce((text, [from, to]) => text.replaceAll(from, to), seat.system),
         model: seat.model?.providerID === "anthropic" ? seat.model.id : "inherit",
       }
-      if (seat.id !== ResearchSeatTools.SEAT) return [[`${SEAT_PREFIX}${seat.id}`, { seat: seat.id, definition }] as const]
+      if (seat.id !== ResearchSeatTools.SEAT) return [[`${SEAT_PREFIX}${seat.id}`, { seat: seat.id, definition }]]
       return Research.Depth.literals.map((tier) => [
         `${SEAT_PREFIX}${seat.id}-${tier}`,
         {
@@ -577,7 +577,7 @@ function subagents(seats: ExecutionHost.Turn["seats"]) {
             tools: [...ResearchSeatTools.CLAUDE],
           },
         },
-      ] as const)
+      ])
     }),
   )
 }
@@ -586,11 +586,11 @@ function subagents(seats: ExecutionHost.Turn["seats"]) {
  * An `Agent` call as the permission Orchestra's own task tool asks for: action `task` on the seat. A seat whose
  * proposal is needed in the same turn is refused in the background.
  */
-function delegation(input: Record<string, unknown>, agents: ReturnType<typeof subagents>) {
+function delegation(input: Record<string, unknown>, agents: ReturnType<typeof subagents>): Decision | { action: string; resources: string[] } {
   const type = typeof input.subagent_type === "string" ? input.subagent_type : "*"
   const seat = agents[type]?.seat ?? type
   if (input.run_in_background === true && ClaudeHostOptions.FOREGROUND_SEATS.includes(seat))
-    return { allow: false as const, reason: `Run \`${type}\` in the foreground: its result is needed in this turn.` }
+    return { allow: false, reason: `Run \`${type}\` in the foreground: its result is needed in this turn.` }
   return { action: "task", resources: [seat] }
 }
 
