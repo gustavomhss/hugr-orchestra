@@ -181,9 +181,33 @@ export function create(options: {
     if (!applied || !current(view)) throw new RuntimeError("failed")
     view.contents!.focus()
   }
+  const launch = async (senderID: number, appID: string) => {
+    const view = [...views.values()].find(view => view.senderID === senderID && view.visible && current(view))
+    if (!view) throw new RuntimeError("failed")
+    const app = await options.runtime.application(appID)
+    if (!view.visible || !current(view)) throw new RuntimeError("failed")
+    const before = await windows(view)
+    const matches = (window: DisplayWindow) => window.classes.some(value => app.classes.some(name => name.toLowerCase() === value.toLowerCase())) || window.title.toLowerCase().includes(app.name.toLowerCase())
+    const existing = before.find(window => matches(window) && window.focused) ?? before.find(matches)
+    if (existing) return focus(view, existing.id).then(() => "focused" as const)
+    if (!view.visible || !current(view)) throw new RuntimeError("failed")
+    await options.runtime.launch(appID)
+    const deadline = Date.now() + 15_000
+    while (Date.now() < deadline) {
+      if (!view.visible || !current(view)) throw new RuntimeError("failed")
+      const next = await windows(view)
+      const target = next.find(matches) ?? next.find(window => !before.some(previous => previous.id === window.id))
+      if (target) return focus(view, target.id).then(() => "opened" as const)
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+    throw new RuntimeError("failed")
+  }
   // Renderer controls and the RPC bridge must share this browser-facing boundary.
   const browser: AppDockAPI = {
     ...options.dock,
+    // The workspace's own MCP server lists and opens apps the way the Linux menu does.
+    linuxApps: async () => (await options.runtime.state()).apps,
+    linuxLaunch: launch,
     nativeWorkspace(senderID, tabID) {
       const view = [...views.values()].find((view) => view.senderID === senderID && view.tabID === tabID)
       if (!view) return undefined
@@ -537,6 +561,14 @@ export function create(options: {
         requireView()
         // Keep the view inactive, but let the stock client's worker/auth timers run normally.
         view.contents!.setBackgroundThrottling(false)
+        // A dropped stock client keeps retrying on its own; stop it first so the server never holds a stale client
+        // beside the fresh one, which leaves new windows unmapped.
+        if (!initialNavigation)
+          await view.contents!.executeJavaScript(`(() => {
+            if (location.origin !== ${JSON.stringify(view.origin)} || location.pathname !== "/index.html" || typeof client === "undefined") return;
+            client.reconnect = false;
+            client.close();
+          })()`).catch(() => undefined)
         if (!initialNavigation && (view.contents!.getURL() !== connect || view.contents!.isLoadingMainFrame()))
           await bounded(view.contents!.loadURL(connect), deadline, "Linux connection page")
         // The stock connect page clears saved parameters after its settings XHR finishes.
@@ -635,27 +667,7 @@ export function create(options: {
       if (!view) throw new RuntimeError("failed")
       await focus(view, windowID)
     },
-    async launch(senderID: number, appID: string) {
-      const view = [...views.values()].find(view => view.senderID === senderID && view.visible && current(view))
-      if (!view) throw new RuntimeError("failed")
-      const app = await options.runtime.application(appID)
-      if (!view.visible || !current(view)) throw new RuntimeError("failed")
-      const before = await windows(view)
-      const matches = (window: DisplayWindow) => window.classes.some(value => app.classes.some(name => name.toLowerCase() === value.toLowerCase())) || window.title.toLowerCase().includes(app.name.toLowerCase())
-      const existing = before.find(window => matches(window) && window.focused) ?? before.find(matches)
-      if (existing) return focus(view, existing.id)
-      if (!view.visible || !current(view)) throw new RuntimeError("failed")
-      await options.runtime.launch(appID)
-      const deadline = Date.now() + 15_000
-      while (Date.now() < deadline) {
-        if (!view.visible || !current(view)) throw new RuntimeError("failed")
-        const next = await windows(view)
-        const target = next.find(matches) ?? next.find(window => !before.some(previous => previous.id === window.id))
-        if (target) return focus(view, target.id)
-        await new Promise(resolve => setTimeout(resolve, 100))
-      }
-      throw new RuntimeError("failed")
-    },
+    launch,
     visibility,
     popupOpened(senderID: number, parent: AppDockIdentity, tab: AppDockTab) {
       const inherited = authTabs.get(`${senderID}:${parent.tabID}`)

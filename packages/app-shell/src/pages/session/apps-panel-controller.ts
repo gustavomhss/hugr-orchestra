@@ -402,7 +402,7 @@ export function createAppDockController(api: AppDockAPI | undefined, t: Translat
           setState("tabs", (tabs) =>
             tabs.map((tab) => (sameTab(tab, crashed) ? { ...tab, ...recovered, crashed: undefined } : tab)),
           )
-          if (wasActive) setState({ active: identity(recovered), url: recovered.url })
+          if (wasActive) setState({ active: identity(recovered), url: recovered.url, ...placement(recovered) })
           if (sameTab(state.recovering, crashed)) setState("recovering", undefined)
         })
         // Recovery can attach before its event arrives, after a Hide named the old generation.
@@ -572,7 +572,8 @@ export function createAppDockController(api: AppDockAPI | undefined, t: Translat
     async launch() {
       const current = activeTab()
       if (!current) return open(state.url)
-      if (!dock || !host) return
+      // The Linux workspace has no address to navigate; its own menu opens apps.
+      if (!dock || !host || isLinux(current.url)) return
       const url = state.url
       const owner = generation
       const request = {}
@@ -590,7 +591,7 @@ export function createAppDockController(api: AppDockAPI | undefined, t: Translat
       void saveTabs(tabs)
     },
     openNewTab: () => open(home),
-    duplicate: (tab: Tab) => open(tab.url, t("orchestra.dock.tab.duplicateFailed")),
+    duplicate: (tab: Tab) => (isLinux(tab.url) ? undefined : open(tab.url, t("orchestra.dock.tab.duplicateFailed"))),
     openLibraryItem(entry: Bookmark) {
       setState("url", entry.url)
       return open(entry.url)
@@ -646,7 +647,7 @@ export function createAppDockController(api: AppDockAPI | undefined, t: Translat
       if (remaining.some((item) => sameTab(item, state.active))) return
       const next = remaining.at(-1)
       selection++
-      setState({ active: next && identity(next), url: next?.url ?? home })
+      setState({ active: next && identity(next), url: next?.url ?? home, ...(next && placement(next)) })
       await show(next, current)
     },
     select,

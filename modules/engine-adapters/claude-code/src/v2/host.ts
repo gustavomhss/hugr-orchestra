@@ -635,12 +635,13 @@ export function permission(tool: string, input: Record<string, unknown>, directo
   return { action: rule.action, resources: [outside ? value : relative] }
 }
 
+// Every reason names a next step: a bare refusal left small models ending the turn without a word.
 function denial(error: { readonly _tag: string }) {
   if ("feedback" in error && typeof error.feedback === "string") return error.feedback
   // ToolSafety's refusal names its reason, so the model can act on it.
   if (error._tag === "ToolSafety.Denied" && "message" in error && typeof error.message === "string") return error.message
   if (error._tag === "PermissionV2.DeclinedError") return "The owner declined this call."
-  return "Orchestra's permission rules deny this call."
+  return "Orchestra's permission rules deny this call. Continue with the tools you are allowed to use, or say what you need."
 }
 
 /** Claude Code's session id for an Orchestra session: a name-based (v5) UUID, stable across restarts. */
