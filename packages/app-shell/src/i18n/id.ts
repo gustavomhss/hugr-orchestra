@@ -1181,8 +1181,8 @@ export const dict = {
   "settings.permissions.tool.websearch.description": "Cari di web",
   "settings.permissions.tool.external_directory.title": "Direktori Eksternal",
   "settings.permissions.tool.external_directory.description": "Akses berkas di luar direktori proyek",
-  "settings.permissions.tool.doom_loop.title": "Doom Loop",
-  "settings.permissions.tool.doom_loop.description": "Deteksi panggilan alat berulang dengan masukan yang identik",
+  "settings.permissions.tool.doom_loop.title": "Hentikan perulangan berulang",
+  "settings.permissions.tool.doom_loop.description": "Hentikan agen saat mengulang panggilan alat dengan masukan yang identik",
 
   "session.delete.failed.title": "Gagal menghapus sesi",
   "session.delete.title": "Hapus sesi",

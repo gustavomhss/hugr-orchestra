@@ -1113,9 +1113,9 @@ export const dict = {
   "settings.permissions.tool.websearch.description": "ဝဘ်ကို ရှာပါ။",
   "settings.permissions.tool.external_directory.title": "ပြင်ပလမ်းညွှန်",
   "settings.permissions.tool.external_directory.description": "ပရောဂျက်လမ်းညွှန်မှ ဖိုင်များကို ဝင်ရောက်ကြည့်ရှုပါ။",
-  "settings.permissions.tool.doom_loop.title": "Doom Loop",
+  "settings.permissions.tool.doom_loop.title": "ထပ်ခါထပ်ခါ ကွင်းဆက်များကို ရပ်ရန်",
   "settings.permissions.tool.doom_loop.description":
-    "တူညီသောထည့်သွင်းမှုဖြင့် ထပ်ခါတလဲလဲ ကိရိယာခေါ်ဆိုမှုများကို ရှာဖွေပါ။",
+    "အေးဂျင့်သည် တူညီသော အဝင်ဖြင့် ကိရိယာခေါ်ဆိုမှုကို ထပ်လုပ်လျှင် ရပ်ပါ",
   "session.delete.failed.title": "စက်ရှင်ကို ဖျက်၍မရပါ။",
   "session.delete.title": "စက်ရှင်ကို ဖျက်ပါ။",
   "session.delete.confirm": 'စက်ရှင် "{{name}}" ကို ဖျက်မလား။',

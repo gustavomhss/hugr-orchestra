@@ -1102,8 +1102,8 @@ export const dict = {
   "settings.permissions.tool.external_directory.title": "باہرلی ڈائریکٹری",
   "settings.permissions.tool.external_directory.description":
     "پروجیکٹ ڈائریکٹری توں باہر دیاں فائلاں تک رسائی حاصل کرو",
-  "settings.permissions.tool.doom_loop.title": "ڈوم لوپ",
-  "settings.permissions.tool.doom_loop.description": "اکو جئے ان پٹ دے نال بار بار ٹول کالاں دا پتہ لاو",
+  "settings.permissions.tool.doom_loop.title": "ਦੁਹਰਾਉਣ ਵਾਲੇ ਲੂਪ ਰੋਕੋ",
+  "settings.permissions.tool.doom_loop.description": "ਜਦੋਂ ਏਜੰਟ ਇੱਕੋ ਇਨਪੁੱਟ ਨਾਲ ਟੂਲ ਕਾਲ ਦੁਹਰਾਏ ਤਾਂ ਉਸਨੂੰ ਰੋਕੋ",
   "session.delete.failed.title": "سیشن نو مٹان اچ ناکام رہیا",
   "session.delete.title": "سیشن مٹاؤ",
   "session.delete.confirm": 'سیشن "{{name}}" نوں مٹا دیو؟',

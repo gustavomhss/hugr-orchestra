@@ -1116,9 +1116,9 @@ export const dict: Record<string, string> = {
   "settings.permissions.tool.websearch.description": "ཝེབ་འཚོལ་ཞིབ།",
   "settings.permissions.tool.external_directory.title": "ཕྱིའི་སྣོད་ཐོ།",
   "settings.permissions.tool.external_directory.description": "ལས་འགུལ་སྣོད་ཐོའི་ཕྱི་ཁར་ཡིག་སྣོད་ཚུ་འཛུལ་སྤྱོད་འབད།",
-  "settings.permissions.tool.doom_loop.title": "Doom Loop།",
+  "settings.permissions.tool.doom_loop.title": "བསྐྱར་ལོག་འཁོར་ལམ་བཀག།",
   "settings.permissions.tool.doom_loop.description":
-    "ཅོག་འཐདཔ་ཨིན་པུཊི་གཅིག་ཁར་ ལག་ཆས་འབོད་བརྡ་ཚུ་ཡང་བསྐྱར་སྐྱོན་འཛིན་འབད།",
+    "ཨེ་ཇེན་ཊི་གིས་ ཨིན་པུཊི་གཅིག་ཁར་ ལག་ཆས་འབོད་བརྡ་ཡང་བསྐྱར་འབད་བའི་སྐབས་ བཀག",
   "session.delete.failed.title": "ལཱ་ཡུན་བཏོན་གཏང་ནི་ལུ་འཐུས་ཤོར་འབྱུང་ཡོདཔ།",
   "session.delete.title": "ལཱ་ཡུན་བཏོན་གཏང་།",
   "session.delete.confirm": 'ལཱ་ཡུན་ "{{name}}" བཏོན་གཏང་ནི་ཨིན་ན?',

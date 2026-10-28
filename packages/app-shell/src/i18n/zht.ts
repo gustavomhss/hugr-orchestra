@@ -1072,9 +1072,8 @@ export const dict = {
   "settings.permissions.tool.websearch.description": "搜尋網頁",
   "settings.permissions.tool.external_directory.title": "外部目錄",
   "settings.permissions.tool.external_directory.description": "存取專案目錄之外的檔案",
-  "settings.permissions.tool.doom_loop.title": "Doom Loop",
-  "settings.permissions.tool.doom_loop.description": "偵測具有相同輸入的重複工具呼叫",
-
+  "settings.permissions.tool.doom_loop.title": "停止重複迴圈",
+  "settings.permissions.tool.doom_loop.description": "當代理以相同輸入重複呼叫工具時停止它",
   "session.delete.failed.title": "刪除工作階段失敗",
   "session.delete.title": "刪除工作階段",
   "session.delete.confirm": "要刪除工作階段「{{name}}」嗎？",

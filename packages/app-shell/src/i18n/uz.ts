@@ -1105,9 +1105,9 @@ export const dict = {
   "settings.permissions.tool.websearch.description": "Internetda qidiring",
   "settings.permissions.tool.external_directory.title": "Tashqi katalog",
   "settings.permissions.tool.external_directory.description": "Loyiha katalogidan tashqaridagi fayllarga kirish",
-  "settings.permissions.tool.doom_loop.title": "Doom Loop",
+  "settings.permissions.tool.doom_loop.title": "Takrorlanuvchi sikllarni toʻxtatish",
   "settings.permissions.tool.doom_loop.description":
-    "Bir xil kirish bilan takrorlangan asboblar qo'ng'iroqlarini aniqlang",
+    "Agent bir xil kirish bilan vosita chaqiruvini takrorlasa, uni toʻxtatish",
   "session.delete.failed.title": "Seansni oʻchirib boʻlmadi",
   "session.delete.title": "Seansni o'chirish",
   "session.delete.confirm": '"{{name}}" seansi o‘chirilsinmi?',

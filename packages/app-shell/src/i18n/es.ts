@@ -1100,8 +1100,8 @@ export const dict = {
   "settings.permissions.tool.websearch.description": "Buscar en la web",
   "settings.permissions.tool.external_directory.title": "Directorio externo",
   "settings.permissions.tool.external_directory.description": "Acceder a archivos fuera del directorio del proyecto",
-  "settings.permissions.tool.doom_loop.title": "Bucle infinito",
-  "settings.permissions.tool.doom_loop.description": "Detectar llamadas a herramientas repetidas con entrada idéntica",
+  "settings.permissions.tool.doom_loop.title": "Detener bucles repetitivos",
+  "settings.permissions.tool.doom_loop.description": "Detiene al agente cuando repite una llamada a una herramienta con la misma entrada",
 
   "session.delete.failed.title": "Fallo al eliminar sesión",
   "session.delete.title": "Eliminar sesión",
