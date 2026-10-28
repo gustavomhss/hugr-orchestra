@@ -156,6 +156,11 @@ describe("DockMcp", () => {
     const reads = d.calls.filter((call) => call.op === "read").length
     await client.callTool({ name: "look", arguments: {} })
     expect(d.calls.filter((call) => call.op === "read").slice(reads).map((call) => call.args.maxText)).toEqual([0])
+    // A look scoped to the editor shows its text, and a look scoped to the window shows it under the outline.
+    expect(text(await client.callTool({ name: "look", arguments: { scope: 3 } }))).toEndWith("[3]\n\n--- text in [3] ---\ndear diary, hello world")
+    const window = text(await client.callTool({ name: "look", arguments: { scope: 1 } }))
+    expect(window).toContain("--- text in [3] ---\ndear diary, hello world")
+    expect(window).not.toContain("hunter2")
     await client.close()
   })
 

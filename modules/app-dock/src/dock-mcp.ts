@@ -102,8 +102,10 @@ function serve(port: Transport, name: string, tab: Tab) {
 
   async function run(tool: string, args: Record<string, unknown>) {
     if (tool === "look") {
-      const snapshot = await snap()
       const scope = typeof args.scope === "number" ? args.scope : undefined
+      // A scoped look also reads the text inside the fields it shows (an editor's content); the whole outline stays one
+      // structural read.
+      const snapshot = await snap(linux(tab) && scope !== undefined)
       const text = snapshot.text ?? ""
       return look(snapshot, scope) + (args.text === true && text
         ? `\n\n--- page text ---\n${text.slice(0, TEXT_LIMIT)}${text.length > TEXT_LIMIT ? `\n… text cut at ${TEXT_LIMIT} characters: find searches all of it` : ""}`
@@ -412,8 +414,11 @@ function look(snapshot: Snapshot, scope?: number): string {
   const lines = snapshot.entries.slice(start, end < 0 ? undefined : end).map((entry) => `${"  ".repeat(entry.depth - base)}${entry.line}`)
   const body = lines.reduce((text, line) => (text.length + line.length < LOOK_LIMIT ? `${text}${line}\n` : text), "")
   const cut = body.split("\n").length - 1 < lines.length
+  const values = snapshot.entries.slice(start, end < 0 ? undefined : end).flatMap((entry) => entry.value ? [`--- text in [${entry.ref}] ---\n${entry.value}`] : [])
+  const text = values.join("\n")
   return [snapshot.header, body.trimEnd(),
     cut && `… outline cut at ${LOOK_LIMIT} characters: look with scope=<ref> of a region to see the rest`,
+    text && `\n${text.slice(0, TEXT_LIMIT)}${text.length > TEXT_LIMIT ? `\n… text cut at ${TEXT_LIMIT} characters: find searches all of it` : ""}`,
     !snapshot.complete && "(the interface reported a partial tree; some of it may be missing)"].filter(Boolean).join("\n")
 }
 
@@ -486,7 +491,9 @@ function tools(where: string, workspace: boolean) {
   return [
     { name: "look", description: `See ${where} without a screenshot: every visible control as an indented outline, one line per control — role, "name", states and its [ref]. Indentation is the hierarchy (window > region > control). Start here; after acting, act's own answer says what changed.`,
       inputSchema: { type: "object", properties: {
-        scope: { ...ref, description: "Show only the subtree under one line: its [n] from your latest look or find (refs change when the page does)" },
+        scope: { ...ref, description: workspace
+          ? "Show only the subtree under one line, with the text inside its fields (an editor's content): its [n] from your latest look or find (refs change when the page does)"
+          : "Show only the subtree under one line: its [n] from your latest look or find (refs change when the page does)" },
         ...(workspace ? {} : { text: { type: "boolean", description: "Also return the page's visible text" } }) } } },
     { name: "find", description: `Search ${where} by text and/or role. Each match shows where it sits (its last regions › the control) and its [ref].`,
       inputSchema: { type: "object", properties: { query: { type: "string", description: workspace ? "Case-insensitive text in the role, name, or the text inside a field such as an editor's content" : "Case-insensitive text in the role, name or value" },
