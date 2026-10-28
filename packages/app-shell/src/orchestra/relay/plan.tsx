@@ -6,16 +6,19 @@ import { Params, PhaseNameField, type Skills } from "./details-workflow"
 import { STEP_TONE } from "./format"
 import {
   chain,
+  contextOf,
   type Flow,
   type FlowNode,
   type Issue,
   INJECT,
   issueNode,
   layoutWorkflow,
+  listedSteps,
   nodeOf,
   phaseOf,
   readChecklist,
   removeNodes,
+  retryBudget,
   setPhase,
   START,
   updatePhase,
@@ -56,6 +59,9 @@ type Props = {
 // the focus of the field being typed in.
 type Segment = { key: string; phase: string | undefined; ids: string[] }
 
+// What the "+" offers. Context is not a step of its own: it is attached inside the step that receives it.
+const STEP_ENTRIES = WORKFLOW_ENTRIES.filter((entry) => entry.key !== "phase" && entry.key !== "inject")
+
 // The workflow as the ordered list it is: the start card, then every step in sequence, grouped by phase. Each card
 // opens in place, and a "+" between two cards inserts a step exactly there. Every structural change tidies the canvas
 // layout, so switching to the canvas shows the same order.
@@ -65,7 +71,7 @@ export function PlanView(props: Props) {
     picker: undefined as string | undefined,
     protocol: undefined as string | undefined,
   })
-  const order = createMemo(() => chain(props.flow).filter((node) => node.type !== START))
+  const order = createMemo(() => listedSteps(props.flow))
   const start = () => props.flow.nodes.find((node) => node.type === START)
   const segments = createMemo(() =>
     order().reduce<Segment[]>((acc, node) => {
@@ -78,6 +84,9 @@ export function PlanView(props: Props) {
   const placed = createMemo(() => new Set(chain(props.flow).map((node) => node.id)))
   const outside = () => props.flow.nodes.filter((node) => !placed().has(node.id))
   const flagged = createMemo(() => new Set(props.issues.flatMap((issue) => issueNode(issue) ?? [])))
+  // A problem in a step's context shows on the step, where the context is edited.
+  const flaggedStep = (id: string) =>
+    flagged().has(id) || contextOf(props.flow, id).some((node) => flagged().has(node.id))
   const change = (flow: Flow) => props.edit(layoutWorkflow(flow))
   const end = () => order().at(-1)?.id ?? start()?.id
 
@@ -94,7 +103,7 @@ export function PlanView(props: Props) {
   )
 
   const add = (key: string, after: string, phase: string | undefined) => {
-    const entry = WORKFLOW_ENTRIES.find((item) => item.key === key)
+    const entry = STEP_ENTRIES.find((item) => item.key === key)
     if (!entry) return
     const added = addNode(
       props.flow,
@@ -110,7 +119,7 @@ export function PlanView(props: Props) {
   }
   const remove = (id: string) => {
     if (props.open === id) props.onOpen(undefined)
-    change(removeNodes(props.flow, [id]))
+    change(removeNodes(props.flow, [...contextOf(props.flow, id).map((node) => node.id), id]))
   }
   const group = (id: string) => {
     const grouped = groupSelection(
@@ -130,15 +139,12 @@ export function PlanView(props: Props) {
     event.preventDefault()
     const path = dropped(event)
     if (!path) return
-    const placed = injectFile(
-      props.flow,
-      path,
-      copy.t("orchestra.workflows.newName.inject"),
-      props.open && props.open !== start()?.id ? props.open : undefined,
-    )
+    // The file goes to the open step, or the last one.
+    const step = props.open && order().some((node) => node.id === props.open) ? props.open : order().at(-1)?.id
+    const placed = injectFile(props.flow, path, copy.t("orchestra.workflows.newName.inject"), step)
     if (!placed) return
     change(placed.flow)
-    props.onOpen(placed.id)
+    props.onOpen(step ?? placed.id)
   }
 
   // N adds a step, Alt+arrows move the open step and Cmd+D duplicates it, whenever no text field has focus.
@@ -158,7 +164,7 @@ export function PlanView(props: Props) {
     }
     if (open && mod && !event.altKey && event.key.toLowerCase() === "d") {
       event.preventDefault()
-      const copied = duplicateSteps(props.flow, [open])
+      const copied = duplicateSteps(props.flow, [...contextOf(props.flow, open).map((node) => node.id), open])
       if (!copied) return
       change(copied.flow)
       props.onOpen(copied.ids.at(-1))
@@ -180,7 +186,7 @@ export function PlanView(props: Props) {
       })),
       ...(props.readOnly
         ? []
-        : WORKFLOW_ENTRIES.filter((entry) => entry.key !== "phase").map((entry) => ({
+        : STEP_ENTRIES.map((entry) => ({
             id: `relay.plan.add.${entry.key}`,
             title: copy.t("orchestra.workflows.studio.addKind", {
               kind: copy.t(`orchestra.workflows.type.${entry.key}`),
@@ -223,7 +229,7 @@ export function PlanView(props: Props) {
             </button>
           </div>
           <div class="wf-plan-kinds">
-            <For each={WORKFLOW_ENTRIES.filter((entry) => entry.key !== "phase")}>
+            <For each={STEP_ENTRIES}>
               {(entry, index) => (
                 <button
                   type="button"
@@ -256,7 +262,7 @@ export function PlanView(props: Props) {
         const opened = () => props.open === node().id
         const result = () => props.run?.steps.find((item) => item.wp === node().id)
         const key = () => workflowKey(node().type)
-        // A Provide context step is summed up by what it hands over, the file or the first line of its text.
+        // Context with no step after it is summed up by what it hands over, the file or the first line of its text.
         const instructions = () =>
           String(
             (node().type === INJECT && (node().parameters.file || node().parameters.text)) ||
@@ -266,13 +272,14 @@ export function PlanView(props: Props) {
             .trim()
             .split("\n")[0]
         const checks = () => readChecklist(node()).controls.length
+        const context = () => contextOf(props.flow, node().id).length
         const skill = () => String(node().parameters.skill ?? "")
         const at = () => order().findIndex((item) => item.id === node().id)
         const number = () => (numbered ? at() + 1 : undefined)
         return (
           <article
             class="wf-step"
-            classList={{ open: opened(), issue: flagged().has(node().id) }}
+            classList={{ open: opened(), issue: flaggedStep(node().id) }}
             data-step={node().id}
           >
             <div class="wf-step-head">
@@ -300,6 +307,13 @@ export function PlanView(props: Props) {
                             "orchestra.workflows.count.check.other",
                           )
                         : undefined,
+                      context()
+                        ? copy.count(
+                            context(),
+                            "orchestra.workflows.count.context.one",
+                            "orchestra.workflows.count.context.other",
+                          )
+                        : undefined,
                       skill() || undefined,
                     ]
                       .filter(Boolean)
@@ -311,7 +325,7 @@ export function PlanView(props: Props) {
                     </em>
                   </Show>
                 </span>
-                <Show when={flagged().has(node().id)}>
+                <Show when={flaggedStep(node().id)}>
                   <span
                     class="wf-step-warn"
                     title={copy.t("orchestra.workflows.canvas.hasIssue", { name: node().name })}
@@ -423,8 +437,9 @@ export function PlanView(props: Props) {
       <div class="wf-plan-list">
         <Show when={start()}>
           {(node) => (
+            // The goal and the settings every step shares, above the steps and not one of them.
             <article
-              class="wf-step"
+              class="wf-step wf-goal"
               classList={{ open: props.open === node().id, issue: flagged().has(node().id) }}
               data-step={node().id}
             >
@@ -435,12 +450,14 @@ export function PlanView(props: Props) {
                   aria-expanded={props.open === node().id}
                   onClick={() => props.onOpen(props.open === node().id ? undefined : node().id)}
                 >
-                  <span class={`wf-pick-tile k-${nodeTone(node())}`}>
-                    <NodeGlyph name={nodeGlyph(node())} />
-                  </span>
                   <span class="wf-step-text">
-                    <strong>{node().name}</strong>
-                    <small>{copy.t("orchestra.workflows.details.startKind")}</small>
+                    <strong>{copy.t("orchestra.workflows.plan.goalTitle")}</strong>
+                    <small>
+                      {[
+                        copy.t("orchestra.workflows.details.budget"),
+                        copy.t("orchestra.workflows.details.budgetValue", { count: retryBudget(props.flow) }),
+                      ].join(" · ")}
+                    </small>
                     <Show when={props.open !== node().id}>
                       <em classList={{ empty: !goal() }}>{goal() || copy.t("orchestra.workflows.plan.noGoal")}</em>
                     </Show>

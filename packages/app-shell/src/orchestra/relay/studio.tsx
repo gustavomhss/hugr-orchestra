@@ -7,10 +7,12 @@ import type { RelayDocumentFields, RelayPreview, RelayProjectCommands, RelayTria
 import { nodeGlyph, nodeTone } from "./catalog"
 import {
   chain,
+  contextOf,
   type Flow,
   INJECT,
   issueNode,
   type Issue,
+  listedSteps,
   nodeOf,
   phaseOf,
   readChecklist,
@@ -135,11 +137,11 @@ const STEP_DRAG = "application/x-relay-step"
 
 // Moves a step to the place of another by repeated single moves, so phases stay unbroken the way the arrows keep them.
 export function moveTo(flow: Flow, id: string, target: string) {
-  const index = (current: Flow, of: string) => chain(current).findIndex((node) => node.id === of)
+  const index = (current: Flow, of: string) => listedSteps(current).findIndex((node) => node.id === of)
   const goal = index(flow, target)
   const direction = goal < index(flow, id) ? -1 : 1
   // Each move either crosses a phase edge or swaps one place, so twice the length bounds it.
-  return Array.from({ length: chain(flow).length * 2 }).reduce<Flow>(
+  return Array.from({ length: listedSteps(flow).length * 2 }).reduce<Flow>(
     (current) => (index(current, id) === goal ? current : moveStep(current, id, direction)),
     flow,
   )
@@ -158,7 +160,7 @@ export function Outline(props: {
   const copy = useRelayCopy()
   const studio = useStudio()
   const [drag, setDrag] = createStore({ id: undefined as string | undefined, over: undefined as string | undefined })
-  const order = createMemo(() => chain(props.flow))
+  const order = createMemo(() => listedSteps(props.flow))
   const flagged = createMemo(
     () =>
       new Set([
@@ -166,6 +168,9 @@ export function Outline(props: {
         ...(studio?.preview()?.findings ?? []).flatMap((finding) => finding.wp ?? []),
       ]),
   )
+  // A problem in a step's context shows on the step, where the context is edited.
+  const flaggedStep = (id: string) =>
+    flagged().has(id) || contextOf(props.flow, id).some((node) => flagged().has(node.id))
   const rows = createMemo(() =>
     order().map((node, index) => ({
       id: node.id,
@@ -241,7 +246,7 @@ export function Outline(props: {
                             {checks()}
                           </span>
                         </Show>
-                        <Show when={flagged().has(id)}>
+                        <Show when={flaggedStep(id)}>
                           <span class="wf-outline-warn" title={copy.t("orchestra.workflows.canvas.hasIssue", { name: found().name })}>
                             <Ic name="warn" />
                           </span>
@@ -296,7 +301,7 @@ export function Inspector(props: {
     const id = wp()?.macro
     return id ? sprint()?.macros?.find((item) => item.id === id) : undefined
   }
-  // The Provide context steps right before this one hand their file or text over with it.
+  // The context attached to this step hands its file or text over with it.
   const context = () => {
     const at = packages().findIndex((item) => item.id === props.open)
     const before = packages().slice(0, Math.max(0, at)).reverse()

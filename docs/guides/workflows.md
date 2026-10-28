@@ -14,7 +14,7 @@ The app never starts a run itself. Run and Use in chat open a Maestro chat with 
 ## Your first workflow
 
 1. Open **Workflows** and choose **New workflow**. Pick a template, or start from scratch.
-2. Edit the steps in the editor. It opens in **List**: the steps top to bottom, each a card you open to edit in place. Click **+** between two steps to add one there, and pick what it does: an agent step, context, a review or a checkpoint. Use the arrows on a step to move it, and the Phase field to group it with its neighbours. Autosave keeps your draft.
+2. Edit the steps in the editor. It opens in **List**: the steps top to bottom, each a card you open to edit in place. Click **+** between two steps to add one there, and pick what it does: an agent step, a review or a checkpoint. Use the arrows on a step to move it, and the Phase field to group it with its neighbours. Autosave keeps your draft.
 3. Fix anything listed under the issues count in the editor head. Publish when the count is clear.
 4. Click **Run** in the editor head or on the row. A chat opens with "Run workflow …" filled in. Add the goal after "for:" and send it.
 5. Watch the run in **Executions**, or in the chat.
@@ -23,9 +23,9 @@ Use **Use in chat** instead of Run when you want to ask Maestro for something th
 
 ## List and canvas
 
-The editor has two views of the same workflow, switched at the top right. **List** is the plan as you read it: the Start card holds the goal every step sees and the retries, then each step in order. **Canvas** draws the same steps as nodes and wires, for when you want to see the shape or drag steps around. A change in one view shows in the other.
+The editor has two views of the same workflow, switched at the top right. **List** is the plan as you read it: the **Goal and settings** card at the top holds the goal every step sees and the retries; it is not a step. Below it come the steps in order. **Canvas** draws the same steps as nodes and wires, for when you want to see the shape or drag steps around. A change in one view shows in the other.
 
-In List the editor has three columns. On the left, **Steps** lists every step in order, with phases as rails. Click one to open it, drag one to move it, or drop a file from Finder on the editor to add it as context. In the middle is the step you are editing. On the right, the inspector has two tabs:
+In List the editor has three columns. On the left, **Steps** lists every step in order, with phases as rails. Click one to open it, drag one to move it, or drop a file from Finder on the editor to attach it as context to the open step. In the middle is the step you are editing. On the right, the inspector has two tabs:
 
 - **Agent receives** shows what the open step's agent gets at run time: its phase instructions, the context right before it, its instructions (and whether a skill replaces or adds to them), its self-check and its checks. It is built by the same compiler a run uses, so what you see is what the agent gets.
 - **Ready to publish** lists what stands between the draft and publishing: whether it compiles, any errors, steps without a check, and whether the AI judge is set up. Each problem names its step; **Fix** repairs it in one click where there is one obvious fix, and **Show** opens the step otherwise. An AI check alone does not gate a step: the list asks for at least one command check on every work step.
@@ -36,7 +36,7 @@ Shortcuts: **N** adds a step after the open one, **⌥↑** and **⌥↓** move 
 
 - **Phases.** A phase is a block of steps with one set of instructions. Every step inside it follows them, on top of its own. Group a step with the group button on its card, name the phase in its header, and click the line under the name to write its instructions.
 - **Checks.** Click **Add check** on a step and pick what it should prove: run the tests, lint or typecheck, an AI review of the changes, an AI check you describe in words, or any command. Command checks suggest common commands as you type, starting with the ones your project declares. **Suggested for this project** shows the test, lint, typecheck and format commands found in `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod` or the `Makefile`; click one to add it as a check. A Python project with several test files also gets **One check per test file**, which adds a `pytest -q <file>` check for each. A command passes when it exits 0. **Test now** runs the command once in the project, for up to 60 seconds, and shows whether it passed, how long it took and its output; it needs a trusted project and a command with no `${...}` parameters left. An AI check warns you when the AI judge is not set up (`relay.judge`), because a run would not really judge it. **More options** holds the plain-words note on what the check proves.
-- **Context.** An agent or review step shows its **Context**: the text and files the agent reads before it starts. Click **Text** to write a note, or **File** to pick a file from the project folder. Each one is a Provide context step right before the step, so you can open it, edit it or move it like any other. A file must be inside the project, and its path is kept relative to it.
+- **Context.** Context is not a step: it is part of the step that receives it. An agent or review step shows its **Context**, the text and files the agent receives with it. Click **Text** to write a note, or **File** to pick a file from the project folder, and edit or remove each one in place. Moving the step moves its context with it. A file must be inside the project, and its path is kept relative to it.
 
 ## Templates
 

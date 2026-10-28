@@ -7,6 +7,7 @@ import {
   CONDITION,
   conditionFields,
   connect,
+  contextOf,
   documentFields,
   emptiedPhases,
   type Flow,
@@ -14,6 +15,7 @@ import {
   insertNode,
   issues,
   layoutWorkflow,
+  listedSteps,
   phaseChoices,
   readChecklist,
   RECORDED,
@@ -393,6 +395,15 @@ describe("step configuration", () => {
     ])
     expect(issues(retype(flow, "b", "relay.inject", { text: "Read the spec." }))).toEqual([])
     expect(issues(retype(flow, "b", "relay.inject", { file: "docs/brief.md" }))).toEqual([])
+  })
+
+  test("context belongs to the step after it: only trailing context is listed, and flagged", () => {
+    const attached = retype(linear(), "b", "relay.inject", { text: "Read the spec." })
+    expect(contextOf(attached, "c").map((item) => item.id)).toEqual(["b"])
+    expect(listedSteps(attached).map((item) => item.id)).toEqual(["a", "c", "d"])
+    const trailing = retype(linear(), "d", "relay.inject", { text: "Read the spec." })
+    expect(listedSteps(trailing).map((item) => item.id)).toEqual(["a", "b", "c", "d"])
+    expect(issues(trailing)).toEqual([{ code: "context-alone", node: "d" }])
   })
 
   test("a step naming a skill the catalog lacks is flagged once the catalog has loaded", () => {

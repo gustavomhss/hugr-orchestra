@@ -38,7 +38,7 @@ export type Control = {
 
 export type Issue =
   | { code: "loose" | "branches" | "gate-empty" | "check-empty" | "checklist-invalid"; node: string }
-  | { code: "inject-empty" | "human-unsupported"; node: string }
+  | { code: "inject-empty" | "context-alone" | "human-unsupported"; node: string }
   | { code: "check-duplicate"; node: string; params: { id: string; other: string } }
   | { code: "check-repeated"; node: string; params: { id: string } }
   | { code: "phase-gap"; node: string; params: { phase: string } }
@@ -163,6 +163,22 @@ export function chain(flow: Flow) {
 
 export const steps = (flow: Flow) => chain(flow).filter((node) => node.type !== START)
 
+// The steps as the editor lists and counts them. A Provide context node is not a step: it hands its text or file to
+// the step after it, so it shows inside that step. One with no step after it stays listed, where it can be removed.
+export function listedSteps(flow: Flow) {
+  const order = steps(flow)
+  const last = order.findLastIndex((node) => node.type !== INJECT)
+  return order.filter((node, index) => node.type !== INJECT || index > last)
+}
+
+// The Provide context nodes right before step `id`, in order: what the agent receives with it.
+export function contextOf(flow: Flow, id: string) {
+  const order = chain(flow)
+  const before = order.slice(0, Math.max(0, order.findIndex((node) => node.id === id))).reverse()
+  const stop = before.findIndex((node) => node.type !== INJECT)
+  return before.slice(0, stop < 0 ? before.length : stop).reverse()
+}
+
 export function readChecklist(node: FlowNode): { controls: Control[]; invalid: boolean } {
   const value = node.parameters.checklist
   const parsed: unknown = (() => {
@@ -217,7 +233,7 @@ function workflowIssues(flow: Flow, skills: string[] | undefined): Issue[] {
         ? [{ code: "check-empty", node: node.id }]
         : []
     })
-  const empty: Issue[] = steps(flow).length ? [] : [{ code: "no-steps" }]
+  const empty: Issue[] = steps(flow).some((node) => node.type !== INJECT) ? [] : [{ code: "no-steps" }]
   // Maestro cannot run a human step; documents made before it left the panel may still hold one.
   const unsupported = flow.nodes
     .filter((node) => node.type === HUMAN)
@@ -229,6 +245,10 @@ function workflowIssues(flow: Flow, skills: string[] | undefined): Issue[] {
         node.type === INJECT && !String(node.parameters.text ?? "").trim() && !String(node.parameters.file ?? "").trim(),
     )
     .map((node): Issue => ({ code: "inject-empty", node: node.id }))
+  // Context goes to the step after it; with none, the run hands it to nothing.
+  const alone = listedSteps(flow)
+    .filter((node) => node.type === INJECT)
+    .map((node): Issue => ({ code: "context-alone", node: node.id }))
   const gone = flow.nodes.flatMap((node): Issue[] => {
     const skill = String(node.parameters.skill ?? "")
     return skill && skills && !skills.includes(skill)
@@ -242,6 +262,7 @@ function workflowIssues(flow: Flow, skills: string[] | undefined): Issue[] {
     ...checks,
     ...unsupported,
     ...contexts,
+    ...alone,
     ...gone,
     ...duplicateChecks(order),
     ...phaseGaps(flow),

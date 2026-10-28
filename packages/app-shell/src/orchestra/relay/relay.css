@@ -2652,6 +2652,10 @@ html[data-color-scheme="light"] .wf-editor {
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
   gap: 4px;
 }
+/* The goal and settings sit apart from the steps: same card, quieter fill, no number. */
+.wf-step.wf-goal {
+  background: var(--mx-soft);
+}
 .wf-step.issue {
   border-color: var(--wf-warm-line);
 }
@@ -2944,41 +2948,29 @@ html[data-color-scheme="light"] .wf-editor {
   flex: 1;
   min-inline-size: 0;
 }
-/* The context a step receives: its Provide context steps, and buttons to add text or a file. */
+/* The context a step receives, edited in place: each piece is a note or a project file. */
 .wf-attach {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
 }
-.wf-attach-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  max-inline-size: 220px;
-  block-size: 24px;
-  padding: 0 8px;
+.wf-context {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
   border: 1px solid var(--mx-line);
-  border-radius: var(--orchestra-radius-sm);
-  background: var(--mx-raised);
-  color: var(--mx-strong);
-  font-size: var(--orchestra-font-size-xs);
-  cursor: pointer;
+  border-radius: var(--orchestra-radius-md);
+  background: var(--mx-soft);
 }
-.wf-attach-chip svg {
-  inline-size: 13px;
-  block-size: 13px;
-  flex: none;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.6;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.wf-context-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
-.wf-attach-chip span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.wf-context .mx-field {
+  margin: 0;
 }
 /* Workflow Studio: outline, editor and inspector side by side. The editor column keeps its own scroll. */
 /* Columns follow the editor's own width, not the window's: the sidebar and a split view take from it. */

@@ -7,6 +7,7 @@ import {
   type Flow,
   type FlowNode,
   HOOK_OUTPUTS,
+  INJECT,
   insertNode,
   isEntry,
   nodeOf,
@@ -232,25 +233,38 @@ export function addAlternative(flow: Flow, id: string) {
 }
 
 // Moves a step one place along the sequence. At the edge of its phase it first crosses into the neighbouring phase
-// (or out of every phase) without changing places, so phases stay unbroken and one more press moves it on.
+// (or out of every phase) without changing places, so phases stay unbroken and one more press moves it on. The
+// context attached to a step moves with it, and the step passes its neighbour together with the neighbour's context.
 export function moveStep(flow: Flow, id: string, direction: -1 | 1): Flow {
   const order = chain(flow)
-  const at = order.findIndex((node) => node.id === id)
-  const other = order[at + direction]
-  if (at < 0 || !other || other.type === START || order[at].type === START) return flow
-  const own = phaseOf(flow, id)
-  const next = phaseOf(flow, other.id)
+  const units = order
+    .filter((node) => node.type !== START)
+    .reduce<FlowNode[][]>((acc, node) => {
+      const last = acc.at(-1)
+      if (last && last.at(-1)?.type === INJECT) return [...acc.slice(0, -1), [...last, node]]
+      return [...acc, [node]]
+    }, [])
+  const at = units.findIndex((unit) => unit.some((node) => node.id === id))
+  const other = units[at + direction]
+  if (at < 0 || !other) return flow
+  const moved = units[at].map((node) => node.id)
+  const own = phaseOf(flow, moved.at(-1)!)
+  const next = phaseOf(flow, other.at(-1)!.id)
   if (own !== next) {
     const phases = flow.phases
       .map((phase) => ({
         ...phase,
-        nodeIds: phase === next ? [...phase.nodeIds, id] : phase.nodeIds.filter((member) => member !== id),
+        nodeIds:
+          phase === next
+            ? [...phase.nodeIds, ...moved]
+            : phase.nodeIds.filter((member) => !moved.includes(member)),
       }))
       .filter((phase) => phase.nodeIds.length)
     return { ...flow, phases }
   }
   const ids = order.map((node) => node.id)
-  const swapped = ids.with(at, other.id).with(at + direction, id)
+  const head = order[0]?.type === START ? [order[0].id] : []
+  const swapped = [...head, ...units.with(at, other).with(at + direction, units[at]).flat().map((node) => node.id)]
   const links = new Set(ids.slice(1).map((to, index) => `${ids[index]}>${to}`))
   const edges = flow.edges.filter((edge) => !links.has(`${edge.from}>${edge.to}`))
   return {

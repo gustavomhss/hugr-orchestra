@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { CONDITION, chain, type Flow, readChecklist, START, TRIGGER } from "./graph"
+import { CONDITION, chain, type Flow, INJECT, readChecklist, START, TRIGGER } from "./graph"
 import {
   addAlternative,
   addNode,
@@ -354,5 +354,21 @@ describe("moving steps", () => {
     const left = moveStep({ ...base, phases: [{ ...base.phases[0], nodeIds: ["b"] }] }, "b", -1)
     expect(order(left)).toEqual(["start", "a", "b"])
     expect(left.phases).toEqual([])
+  })
+
+  test("a step moves with the context it receives", () => {
+    const base = flow()
+    const attached: Flow = {
+      ...base,
+      nodes: [...base.nodes, { id: "ctx", name: "Ctx", type: INJECT, x: 0, y: 0, parameters: { text: "Spec" } }],
+      edges: [
+        { from: "start", to: "a", port: 0 },
+        { from: "a", to: "ctx", port: 0 },
+        { from: "ctx", to: "b", port: 0 },
+      ],
+      phases: [{ ...base.phases[0], nodeIds: ["a", "ctx", "b"] }],
+    }
+    expect(order(moveStep(attached, "b", -1))).toEqual(["start", "ctx", "b", "a"])
+    expect(order(moveStep(attached, "a", 1))).toEqual(["start", "ctx", "b", "a"])
   })
 })
