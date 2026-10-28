@@ -82,6 +82,8 @@ passes, as Kilo labels it.
 - `maestro-run/governed` stays as it is.
 - `maestro-plan` stays a Maestro playbook. `intake` routes an epic through it: `archie` authors, a cold review checks
   coverage, Maestro adopts.
+- `maestro-orchestra` is new: the map of what Orchestra can do and which tool or seat does it, so Maestro checks it
+  before saying Orchestra cannot do something. `test/orchestra-map.test.ts` keeps its Maestro and board rows exact.
 - Shipped text names no repository's commands, releases or CI cadence; goldens use `<project test command>` and
   invented products.
 

@@ -5,6 +5,7 @@ import { ToolFailure } from "@orchestra/llm"
 import { and, eq, sql } from "drizzle-orm"
 import { Effect, Layer, Option, Schema } from "effect"
 import { AgentV2 } from "@orchestra/core/agent"
+import { Board } from "@orchestra/core/board/board"
 import { Config } from "@orchestra/core/config"
 import { Database } from "@orchestra/core/database/database"
 import { makeLocationNode } from "@orchestra/core/effect/app-node"
@@ -66,6 +67,7 @@ export const make = Effect.gen(function* () {
   const skills = yield* SkillV2.Service
   const allowances = yield* ResearchAllowance.Service
   const records = yield* ResearchRecords.Service
+  const board = yield* Board.Service
   const sessions = yield* GovernanceBackgroundV2.Sessions
   const host = yield* MaestroWorkflowHostV2.Capture
   const background = yield* GovernanceBackgroundV2.make(events)
@@ -163,6 +165,7 @@ export const make = Effect.gen(function* () {
           : yield* GovernanceDispatchV2.groundedSkills(services, input.authorizationID)
         // The child core's Task prompts: the governance's, the resumed one, or core's own for this call.
         const child = childID ?? resumed?.id ?? TaskTool.taskChildID(admission.context)
+        if (input.card) yield* claim(input.card, child, memberID)
         const atlasOwner = input.memoryUnit ? MaestroAtlasSourceV2.owner(memberID, seats) : undefined
         const added = yield* ResumeAdmissionV2.admit(
           { db: database.db, events, git, location },
@@ -211,6 +214,21 @@ export const make = Effect.gen(function* () {
           ...(seat?.writeRoots || seat?.research || reserved ? { permissions } : {}),
           ...(text.length > 1 ? { prompt: { text: text.join("\n\n") } } : {}),
           ...(input.background === true ? { background: true } : {}),
+        }
+
+        // The card follows the dispatch, so Maestro's board never waits on Maestro remembering to write it.
+        function claim(card: string, session: string, seat: string) {
+          const at = card.indexOf("-")
+          const project = card.slice(0, at)
+          const number = Number(card.slice(at + 1))
+          return Effect.gen(function* () {
+            const issue = (yield* board.snapshot(project)).issues.find((item) => item.number === number)
+            if (!issue) return yield* new ToolFailure({ message: `${card} is not on the board.` })
+            if (issue.seat !== seat || issue.sessionID !== session)
+              yield* board.issue({ project, number, seat, session, reason: `Dispatched to ${seat}.` })
+            if (issue.stage === "backlog" || issue.stage === "ready")
+              yield* board.move({ project, number, stage: "building", reason: `Dispatched to ${seat}.` })
+          }).pipe(Effect.mapError((error) => new ToolFailure({ message: `Task denied: card ${card}: ${error.message}` })))
         }
 
         function authorize(authorizationID: string) {
@@ -395,6 +413,7 @@ export const node = makeLocationNode({
     SkillV2.node,
     ResearchAllowance.node,
     ResearchRecords.node,
+    Board.node,
     GovernanceBackgroundV2.sessionsNode,
     MaestroWorkflowHostV2.captureNode,
   ],
