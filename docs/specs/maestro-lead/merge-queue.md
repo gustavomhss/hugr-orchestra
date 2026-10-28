@@ -192,6 +192,10 @@ Two rules make the fields bind:
   area raises one `<integration>` line, and Maestro sends it to `archie` as a plan revision. The card still queues
   under its real set, so drift never blocks a landing; it only stops the plan from silently going stale.
 
+The fields are optional, so the conveyor works before `archie` is changed. Without `area` there is no plan-review
+overlap check and no drift line, and lanes use only the real affected set. Without `order`, "earlier" means earlier
+queued. Adding the fields later changes nothing else (WP9).
+
 `archie` does not build bundles. Fixed bundles chosen at plan time would wait for their slowest member and break
 on the first ejection. `archie` owns the shape, and the host fills it with whatever is ready.
 
@@ -558,7 +562,7 @@ phase.
 |---|---|---|
 | **0. Spike** (no product code) | Prove on a scratch repo: merging a bundle PR with `--merge` marks member PRs merged; `gh workflow run --ref` works on a bundle branch; a temporary-index tree equals `test:ci`'s uploaded tree for the same worktree; pushing a hidden ref to GitHub works; `turbo --filter='...[A...B]' --dry=json` lists the affected packages for a commit range in this repository. | Five yes/no facts with command output, written into this spec |
 | **1. Ledger and push-early** | `board_attempt` with stored `writePaths`; snapshot refs on seat return and on the 10 min timer; the `local` and `pushed` states; the `maestro/integration` source with the dead-Session and missing-worktree lines; `track` playbook edits | Kill a seat mid-task: its card shows `pushed`, and its worktree is restored from the ref |
-| **2. CI facts** | `.orchestra/ci.json` reader and defaults; the `area` and `order` plan fields and the plan-review rule in `maestro-plan` and `archie`'s plan skill; `ci_run`; `board_check` keyed by tree; the `scoped-green` and `scoped-red` states | A green scoped run stays valid after Maestro's commit with the same tree, and drops after an edit |
+| **2. CI facts** | `.orchestra/ci.json` reader and defaults; `ci_run`; `board_check` keyed by tree; the `scoped-green` and `scoped-red` states | A green scoped run stays valid after Maestro's commit with the same tree, and drops after an edit |
 | **3. Conflict notices** | Base-advance diff, matched against queued cards' write sets with `conflictVerdict`, then `merge-tree`; the `conflicts` state and its `<integration>` line | A merge that touches a card's write set notifies only that card; a merge outside it notifies none |
 | **4. Queue and green bundles** | `board_queue`, `board_dequeue` and their preconditions; pools; cut rules a–d; assembly; the bundle PR with `full.label`; merge on green; `onBaseMoved`; the card's affected set from `turbo` (§7.1), which `merge-if-disjoint` and the eject rerun use in phase 1 too; `land` playbook Publish rewritten to "verify, then `board_queue`" | Three verified cards merge through one bundle and one full run; all three ship |
 | **5. Red bundles** | Bundle size from the red rate; the four ledger numbers on the board; infrastructure rerun, base check and flake probe, isolation with in-bundle dependencies, halving, eject into rework, rebuild, dissolve, `board_flake` and the flaky verdict, base red (§6.8) | A seeded failing member is ejected with the right cause, and the rest merge on the rebuilt bundle; a seeded interaction is found by halving; a seeded red on base ejects no member |
@@ -571,8 +575,14 @@ needed, because lost work is the costliest pain and it needs no queue.
 
 | WP | Scope | Done when |
 |---|---|---|
-| **7. Lanes** | Plan drift lines; global paths; the two cut rules and lanes as connected components; global cards; a `packages` dispatch input on `typecheck.yml` and `test.yml`; the `lanes` contract block | Two cards in disjoint packages land in parallel bundles, each running only its packages; a card touching `bun.lock` waits for both and runs the whole suite, and no card queued after it is cut first |
+| **7. Lanes** | Global paths; the two cut rules and lanes as connected components; global cards; a `packages` dispatch input on `typecheck.yml` and `test.yml`; the `lanes` contract block | Two cards in disjoint packages land in parallel bundles, each running only its packages; a card touching `bun.lock` waits for both and runs the whole suite, and no card queued after it is cut first |
 | **8. Safety net** | The epic bundle always on the whole suite, with optional `fullEvery`; pausing only the lanes that overlap a base red | A seeded cross-package break that the affected graph misses is found by the safety run, and only its lane pauses |
+
+**Then: `archie` fits the conveyor.** It comes last, because every package above works without it (§4.4).
+
+| WP | Scope | Done when |
+|---|---|---|
+| **9. Plan shape** | The `area` and `order` fields in `archie`'s plan skill and in the adopted plan; the overlap rule in `maestro-plan`; plan drift lines at enqueue; `order` in the cut rules | A plan with an undeclared area overlap is returned to `archie`; a card that leaves its area raises one drift line and still queues |
 
 ## 14. Owner decisions
 
