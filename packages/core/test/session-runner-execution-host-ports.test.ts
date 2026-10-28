@@ -443,7 +443,7 @@ describe("SessionRunner execution host ports", () => {
   it.effect("child opens the subagent's Session under the parent's task call, records its events and todos, and adds no cost", () =>
     Effect.gen(function* () {
       const sessions = yield* hosted
-      const opened: { id?: SessionSchema.ID; again?: SessionSchema.ID } = {}
+      const opened: { id?: SessionSchema.ID; again?: SessionSchema.ID; refused?: unknown } = {}
       streamOf = (turn) =>
         Stream.concat(
           Stream.fromIterable([
@@ -456,6 +456,8 @@ describe("SessionRunner execution host ports", () => {
               opened.id = child.id
               yield* Effect.forEach(answer("fixed"), child.publish, { discard: true })
               yield* child.todos([{ content: "Fix", status: "completed", priority: "medium" }])
+              // The child's agent is not one of the turn's seats: Orchestra's tools refuse it.
+              opened.refused = (yield* child.execute({ id: "child-read", name: "read", input: {} })).result
               yield* child.finish
               // Reopening the same call adopts the same child.
               opened.again = (yield* turn.child({ callID: "agent-1", agent: AgentV2.defaultID, title: "Fix it", prompt: "go fix" })).id
@@ -473,6 +475,7 @@ describe("SessionRunner execution host ports", () => {
       yield* send(sessions, "go")
 
       expect(opened.again).toBe(opened.id)
+      expect(opened.refused).toEqual({ type: "error", value: "Orchestra's tools serve Orchestra's seats only" })
       expect(yield* sessions.get(opened.id!)).toMatchObject({ parentID: sessionID, agent: AgentV2.defaultID, title: "Fix it" })
       const messages = yield* sessions.messages({ sessionID: opened.id!, order: "asc" })
       expect(messages.filter((message) => message.type === "user").map((message) => message.text)).toEqual(["go fix"])

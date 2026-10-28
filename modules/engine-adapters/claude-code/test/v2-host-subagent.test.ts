@@ -56,7 +56,7 @@ const ports = {
   consumed: () => Effect.void,
   notify: () => Effect.void,
   todos: () => Effect.void,
-  child: () => Effect.succeed({ id: SessionSchema.ID.make("ses_child"), publish: () => Effect.void, finish: Effect.void, todos: () => Effect.void }),
+  child: () => Effect.succeed({ id: SessionSchema.ID.make("ses_child"), publish: () => Effect.void, finish: Effect.void, todos: () => Effect.void, execute: () => Effect.succeed({ result: { type: "text", value: "" } }) }),
 } satisfies Pick<ExecutionHost.Turn, "question" | "memory" | "steers" | "consumed" | "notify" | "todos" | "child">
 
 const turnOf = (input: Partial<ExecutionHost.Turn> = {}): ExecutionHost.Turn => ({
@@ -67,6 +67,7 @@ const turnOf = (input: Partial<ExecutionHost.Turn> = {}): ExecutionHost.Turn => 
   context: [],
   seats: [],
   skills: {},
+  seatTools: {},
   history: [user("msg_1", "Go")] as unknown as ExecutionHost.Turn["history"],
   tools: [],
   execute: () => Effect.die("unused"),
@@ -114,6 +115,7 @@ test("a subagent's frames are recorded in the child Session of its task call, wh
           publish: (event) => Effect.sync(() => void log.push({ mirrored: event })),
           finish: Effect.sync(() => void log.push("finish")),
           todos: (list) => Effect.sync(() => void log.push({ childTodos: list })),
+          execute: () => Effect.die("unused"),
         }
       }),
     todos: (list) => Effect.sync(() => void log.push({ parentTodos: list })),
@@ -287,33 +289,117 @@ const pre = (options: Options, tool: string, input: Record<string, unknown>, id:
 const allowed = { hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "allow" } }
 const refused = (reason: string) => ({ hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: reason } })
 
-test("Orchestra's tools are refused inside a subagent and kept off its tool list", async () => {
+const agentFrame = (uuid: string, parent: string | null, content: unknown[], model?: string) =>
+  frame({ type: "assistant", uuid, session_id: "claude-1", parent_tool_use_id: parent, message: { content, ...(model ? { model } : {}) } })
+const resultFrame = (parent: string | null, id: string, content: string) =>
+  frame({ type: "user", session_id: "claude-1", parent_tool_use_id: parent, message: { role: "user", content: [{ type: "tool_result", tool_use_id: id, content }] } })
+const delegate = (id: string, type: string, extra: Record<string, unknown> = {}) =>
+  agentFrame(`a-${id}`, null, [{ type: "tool_use", id, name: "Agent", input: { description: "Fix it", prompt: "go fix", subagent_type: type, ...extra } }])
+const childOf = (log: unknown[]): ExecutionHost.Turn["child"] => (input) =>
+  Effect.sync(() => {
+    log.push({ child: input })
+    return {
+      id: SessionSchema.ID.make("ses_child"),
+      publish: (event) => Effect.sync(() => void log.push({ mirrored: event.type })),
+      finish: Effect.sync(() => void log.push("finish")),
+      todos: () => Effect.void,
+      execute: (call) => Effect.sync(() => void log.push({ executed: call })).pipe(Effect.as({ result: { type: "text" as const, value: "in child" } })),
+    }
+  })
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+test("an Orchestra tool called inside a seat's subagent runs in its child Session; any other subagent is refused", async () => {
+  const log: unknown[] = []
   const decisions: unknown[] = []
-  during = async (options) => {
-    const inside = (tool: string, id: string) =>
+  const results: unknown[] = []
+  const seen: Options[] = []
+  pump = async function* (input, options) {
+    seen.push(options)
+    await input[Symbol.asyncIterator]().next()
+    yield delegate("t1", "orchestra:backend")
+    yield frame({ type: "system", subtype: "task_started", task_id: "a1", tool_use_id: "t1", description: "Fix it" })
+    // Lets the host take both frames before the subagent calls.
+    await sleep(20)
+    const inside = (agent: string, id: string) =>
       options.hooks?.PreToolUse?.[0]?.hooks[0]?.(
-        { hook_event_name: "PreToolUse", tool_name: tool, tool_input: { prompt: "go" }, tool_use_id: id, agent_id: "a1",
+        { hook_event_name: "PreToolUse", tool_name: "mcp__orchestra__echo", tool_input: {}, tool_use_id: id, agent_id: agent,
           agent_type: "orchestra:backend", session_id: "claude-1", transcript_path: "", cwd: "/project" } as HookInput,
         id,
         { signal: new AbortController().signal },
       )
-    decisions.push(await inside("mcp__orchestra__task", "tu-1"))
-    decisions.push(await options.canUseTool?.("mcp__orchestra__task", { prompt: "go" }, { signal: new AbortController().signal, toolUseID: "tu-2", requestId: "r2", agentID: "a1" }))
-    decisions.push(await pre(options, "mcp__orchestra__task", { prompt: "go" }, "tu-3"))
+    decisions.push(await inside("a1", "tu-1"))
+    decisions.push(await inside("a9", "tu-2"))
+    const server = options.mcpServers?.orchestra as McpSdkServerConfigWithInstance
+    const [client, transport] = InMemoryTransport.createLinkedPair()
+    await server.instance.connect(transport)
+    const mcp = new Client({ name: "test", version: "0" })
+    await mcp.connect(client)
+    results.push(await mcp.callTool({ name: "echo", arguments: {}, _meta: { "claudecode/toolUseId": "tu-1" } }))
+    // An id the gate never allowed runs nowhere.
+    results.push(await mcp.callTool({ name: "echo", arguments: {}, _meta: { "claudecode/toolUseId": "tu-2" } }))
+    await mcp.close()
+    yield resultFrame(null, "t1", "Fixed")
+    yield done
   }
-  script = [done]
-  await collect(turnOf({
-    seats: [seat("backend")],
-    tools: [new ToolDefinition({ name: "task", description: "task", inputSchema: { type: "object", properties: {} } })],
-    authorize: () => Effect.succeed({}),
-  }))
+  try {
+    await collect(turnOf({
+      seats: [seat("backend")],
+      tools: ["task", "echo"].map((name) => new ToolDefinition({ name, description: name, inputSchema: { type: "object", properties: {} } })),
+      seatTools: { backend: ["echo"] },
+      child: childOf(log),
+      execute: () => Effect.die("the main agent ran a subagent's call"),
+      authorize: () => Effect.succeed({}),
+    }))
+  } finally {
+    pump = undefined
+  }
 
-  expect(decisions).toEqual([
-    refused("Orchestra's tools serve the main agent only, not a subagent."),
-    { behavior: "deny", message: "Orchestra's tools serve the main agent only, not a subagent." },
-    allowed,
-  ])
-  expect(calls.at(-1)?.options?.agents?.["orchestra:backend"]?.disallowedTools).toEqual(["mcp__orchestra__task"])
+  expect(decisions).toEqual([allowed, refused("Orchestra's tools serve the main agent and Orchestra's seats only.")])
+  expect(log).toContainEqual({ executed: { id: "tu-1", name: "echo", input: {} } })
+  expect(results[0]).toMatchObject({ content: [{ type: "text", text: "in child" }] })
+  expect(results[1]).toMatchObject({ isError: true })
+  // Only what the seat may call stays on its tool list.
+  expect(seen[0]?.agents?.["orchestra:backend"]?.disallowedTools).toEqual(["mcp__orchestra__task"])
+})
+
+test("a built-in subagent type runs as the seat that does its work, on the model that answered in it", async () => {
+  const log: unknown[] = []
+  script = [
+    delegate("t1", "general-purpose"),
+    agentFrame("s1", "t1", [{ type: "text", text: "Working" }], "claude-haiku-4"),
+    resultFrame(null, "t1", "Done"),
+    done,
+  ]
+  await collect(turnOf({ seats: [seat("general")], child: childOf(log), authorize: () => Effect.succeed({}) }))
+
+  expect(log[0]).toEqual({ child: { callID: "t1", agent: "general", title: "Fix it", prompt: "go fix", model: { id: "claude-haiku-4", providerID: "anthropic" } } })
+})
+
+test("a background subagent's child stays open past the turn and ends when its task reports", async () => {
+  const log: unknown[] = []
+  pump = async function* (input) {
+    await input[Symbol.asyncIterator]().next()
+    yield delegate("t1", "orchestra:docs", { run_in_background: true })
+    yield frame({ type: "system", subtype: "task_started", task_id: "a1", tool_use_id: "t1", description: "Fix it", is_backgrounded: true })
+    yield agentFrame("s1", "t1", [{ type: "text", text: "Working" }])
+    yield resultFrame(null, "t1", "Async agent launched")
+    yield frame({ type: "system", subtype: "background_tasks_changed", tasks: [{ task_id: "a1", task_type: "local_agent", description: "Fix it" }] })
+    yield done
+    log.push("turn over")
+    yield agentFrame("s2", "t1", [{ type: "text", text: "Fixed" }])
+    yield frame({ type: "system", subtype: "task_notification", task_id: "a1", tool_use_id: "t1", status: "completed", summary: "fixed", output_file: "/tmp/a1.out" })
+  }
+  try {
+    await collect(turnOf({ seats: [seat("docs")], child: childOf(log), authorize: () => Effect.succeed({}), notify: () => Effect.void }))
+    for (let waited = 0; !log.includes("finish") && waited < 100; waited++) await sleep(20)
+  } finally {
+    pump = undefined
+  }
+
+  // The placeholder result neither ends the child nor stops the mirror: the late frames land before it finishes.
+  const finished = log.indexOf("finish")
+  expect(finished).toBeGreaterThan(log.indexOf("turn over"))
+  expect(log.slice(log.indexOf("turn over"), finished)).toEqual(["turn over", { mirrored: "text-start" }, { mirrored: "text-delta" }, { mirrored: "text-end" }, { mirrored: "step-finish" }])
 })
 
 test("Claude Code's task list fills the todo panel as Orchestra's todo tool does, across turns; its tool lookup is not recorded", async () => {
