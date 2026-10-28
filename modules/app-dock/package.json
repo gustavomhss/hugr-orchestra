@@ -9,6 +9,7 @@
     "./app-dock": "./src/app-dock.ts",
     "./app-dock-linux": "./src/app-dock-linux.ts",
     "./application-tools": "./src/application-tools.ts",
+    "./dock-mcp": "./src/dock-mcp.ts",
     "./linux-workspace": "./src/linux-workspace.ts",
     "./socket-transport": "./src/socket-transport.ts"
   },
@@ -17,6 +18,7 @@
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "1.29.0",
     "@orchestra/core": "workspace:*",
     "@orchestra/plugin": "workspace:*",
     "@orchestra/schema": "workspace:*",

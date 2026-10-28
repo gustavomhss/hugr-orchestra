@@ -1,6 +1,7 @@
 ---
 name: backend-codegen
 description: "Exact recipes for the pinned generator and check engines the backend toolkit ships: pins, prerequisites, commands and outcomes. Load with backend-implement before invoking a generator or a toolkit check the packet assigns. Not for choosing a tool or fetching one the toolkit does not ship."
+internal: true
 ---
 
 # Backend codegen

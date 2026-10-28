@@ -83,7 +83,7 @@ function catalog(skills: Input["skills"]): AuthoringGraph.SkillResolver | undefi
         )
 }
 
-// Native additions to the frozen Python catalog: relay.hook.v1 actions and Atlas selection parameters.
+// Native additions to the frozen Python catalog: relay.hook.v1 actions, Atlas selection and step tool parameters.
 function additive(expected: unknown) {
   const catalogs = expected as {
     workflow: RelayAuthoring.NodeTypeDescriptor[]
@@ -101,6 +101,7 @@ function additive(expected: unknown) {
               type: "json",
               default: "[]",
             },
+            ...(parameter.name === "checklist" ? [{ name: "tools", label: "Tools", type: "json", default: "{}" }] : []),
           ]
         : []),
     ]),
@@ -327,6 +328,40 @@ describe("W7-5: a control with no check is refused", () => {
     expect(compiled({ id: "wp1-test", cmd: null })).toHaveProperty("refusal")
     expect(compiled({ id: "wp1-test", cmd: "" })).toHaveProperty("refusal")
     expect(compiled({ id: "wp1-test", judge: "" })).toHaveProperty("refusal")
+  })
+})
+
+describe("W7-7: a step names its tools", () => {
+  const compiled = (tools: unknown) =>
+    settle(
+      AuthoringGraph.compile({
+        name: "Plan",
+        nodes: [{ id: "wp1", name: "A", type: "relay.execute", position: [0, 0], parameters: { tools } }],
+      }),
+    )
+
+  test("MCP servers and bash patterns compile onto the WP and project back", () => {
+    const result = compiled(JSON.stringify({ mcp: ["github"], bash: ["git status", "bun test *"] }))
+    const sprint = (result as { output: { sprint: RelaySprint.Sprint } }).output.sprint
+    expect(sprint.work_packages[0]!.tools).toEqual({ mcp: ["github"], bash: ["git status", "bun test *"] })
+    const projected = Effect.runSync(AuthoringGraph.project("Plan", sprint))
+    expect(JSON.parse(projected.nodes!.find((node) => node.type === "relay.execute")!.parameters!.tools as string)).toEqual({
+      mcp: ["github"],
+      bash: ["git status", "bun test *"],
+    })
+  })
+
+  test("an empty list allows none and an empty object removes the field", () => {
+    const none = compiled(JSON.stringify({ mcp: [] })) as { output: { sprint: RelaySprint.Sprint } }
+    expect(none.output.sprint.work_packages[0]!.tools).toEqual({ mcp: [] })
+    const unchanged = compiled("{}") as { output: { sprint: RelaySprint.Sprint } }
+    expect(unchanged.output.sprint.work_packages[0]).not.toHaveProperty("tools")
+  })
+
+  test("anything else is refused", () => {
+    expect(compiled("[]")).toHaveProperty("refusal")
+    expect(compiled(JSON.stringify({ mcp: "github" }))).toHaveProperty("refusal")
+    expect(compiled(JSON.stringify({ bash: [" "] }))).toHaveProperty("refusal")
   })
 })
 

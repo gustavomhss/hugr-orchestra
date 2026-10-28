@@ -6,6 +6,7 @@ export type SkillEntry = {
   location: string
   content: string
   mtime?: number | null
+  internal?: boolean | null
 }
 
 const decodeSkills = Schema.decodeUnknownOption(
@@ -16,6 +17,7 @@ const decodeSkills = Schema.decodeUnknownOption(
       location: Schema.String,
       content: Schema.String,
       mtime: Schema.optional(Schema.NullOr(Schema.Number)),
+      internal: Schema.optional(Schema.NullOr(Schema.Boolean)),
     }),
   ),
 )
@@ -25,10 +27,25 @@ export function readSkills(value: unknown): readonly SkillEntry[] {
   return Option.getOrThrowWith(decodeSkills(value), () => new Error("Skills response is malformed"))
 }
 
-/** Skills for agent use only declare `internal: true` in their frontmatter; the catalog does not list them. */
-export function isInternalSkill(skill: Pick<SkillEntry, "content">) {
-  const block = /^\uFEFF?---\r?\n([\s\S]*?)\r?\n---/.exec(skill.content)?.[1]
-  return !!block && /^internal:\s*(true|yes)\s*(#.*)?$/im.test(block)
+/** Skills for agent use only declare `internal: true` in their frontmatter; the server reports it and the catalog does not list them. */
+export function isInternalSkill(skill: Pick<SkillEntry, "internal">) {
+  return skill.internal === true
+}
+
+/**
+ * The skills the catalog lists: neither internal nor a skill tree node. A node is a `SKILL.md` inside the folder of
+ * another listed `SKILL.md`; it loads only through its parent's index, the same rule as the server's `SkillV2.nested`.
+ */
+export function listedSkills(skills: readonly SkillEntry[]) {
+  const folders = skills
+    .map((skill) => slash(skill.location))
+    .filter((location) => location.endsWith("/SKILL.md"))
+    .map((location) => location.slice(0, -"SKILL.md".length))
+  return skills.filter((skill) => {
+    if (isInternalSkill(skill)) return false
+    const location = slash(skill.location)
+    return !folders.some((folder) => location !== `${folder}SKILL.md` && location.startsWith(folder))
+  })
 }
 
 export type SkillSource = "project" | "global" | "builtin"

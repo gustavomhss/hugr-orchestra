@@ -1,6 +1,15 @@
 import { describe, expect, test } from "bun:test"
-import { CONDITION, chain, type Flow, readChecklist, START, TRIGGER } from "./graph"
-import { addAlternative, addNode, defaultAnchor, freePhaseName, groupBlock, groupSelection, ungroup } from "./insert"
+import { CONDITION, chain, type Flow, INJECT, readChecklist, START, TRIGGER } from "./graph"
+import {
+  addAlternative,
+  addNode,
+  defaultAnchor,
+  freePhaseName,
+  groupBlock,
+  groupSelection,
+  moveStep,
+  ungroup,
+} from "./insert"
 import { hookPresets } from "./presets"
 
 const flow = (): Flow => ({
@@ -319,5 +328,47 @@ describe("hook presets", () => {
     const patterns = ask.nodes.filter((node) => node.type === CONDITION).map((node) => node.parameters.pattern)
     expect(patterns).toEqual(["git push *", "rm -rf *"])
     expect(patterns.some((pattern) => String(pattern).includes("|"))).toBe(false)
+  })
+})
+
+describe("moving steps", () => {
+  const order = (value: Flow) => chain(value).map((node) => node.id)
+
+  test("a step swaps with its neighbour inside a phase and never passes the start", () => {
+    expect(order(moveStep(flow(), "b", -1))).toEqual(["start", "b", "a"])
+    expect(moveStep(flow(), "a", -1)).toEqual(flow())
+    expect(moveStep(flow(), "b", 1)).toEqual(flow())
+  })
+
+  test("at the edge of a phase a step first joins the next phase without changing places", () => {
+    const base = flow()
+    const outside: Flow = {
+      ...base,
+      nodes: [...base.nodes, { id: "c", name: "C", type: "relay.execute", x: 512, y: 132, parameters: {} }],
+      edges: [...base.edges, { from: "b", to: "c", port: 0 }],
+    }
+    const joined = moveStep(outside, "c", -1)
+    expect(order(joined)).toEqual(["start", "a", "b", "c"])
+    expect(joined.phases[0].nodeIds).toEqual(["a", "b", "c"])
+    // Leaving the phase the other way keeps the place too, and the emptied phase goes away.
+    const left = moveStep({ ...base, phases: [{ ...base.phases[0], nodeIds: ["b"] }] }, "b", -1)
+    expect(order(left)).toEqual(["start", "a", "b"])
+    expect(left.phases).toEqual([])
+  })
+
+  test("a step moves with the context it receives", () => {
+    const base = flow()
+    const attached: Flow = {
+      ...base,
+      nodes: [...base.nodes, { id: "ctx", name: "Ctx", type: INJECT, x: 0, y: 0, parameters: { text: "Spec" } }],
+      edges: [
+        { from: "start", to: "a", port: 0 },
+        { from: "a", to: "ctx", port: 0 },
+        { from: "ctx", to: "b", port: 0 },
+      ],
+      phases: [{ ...base.phases[0], nodeIds: ["a", "ctx", "b"] }],
+    }
+    expect(order(moveStep(attached, "b", -1))).toEqual(["start", "ctx", "b", "a"])
+    expect(order(moveStep(attached, "a", 1))).toEqual(["start", "ctx", "b", "a"])
   })
 })

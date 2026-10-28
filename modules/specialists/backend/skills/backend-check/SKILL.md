@@ -1,6 +1,7 @@
 ---
 name: backend-check
 description: "Procedure for assigned test implementation and for checks that need a specialized fixture: real databases and services, prescribed transport faults, HTTP boundary fixtures, schema-derived, property or stateful inputs, and streaming or concurrency cases. Load with backend-implement when the packet assigns tests or a named check needs such a fixture. Not for ordinary checks, and never for writing tests the packet does not assign."
+internal: true
 ---
 
 # Backend checks and assigned tests

@@ -27,6 +27,10 @@ export const ICON = {
   upload: '<path d="M8 13V5.5M4.8 8.7 8 5.5l3.2 3.2M3 3h10"/>',
   check: '<path d="m3.5 8.3 2.8 2.8 6.2-6.6"/>',
   history: '<path d="M2.8 8a5.2 5.2 0 1 0 1.6-3.8M2.8 2.8v2.6h2.6M8 5.2V8l2 1.4"/>',
+  up: '<path d="m3.5 10 4.5-4.5 4.5 4.5"/>',
+  down: '<path d="m3.5 6 4.5 4.5 4.5-4.5"/>',
+  list: '<path d="M6 4h7.5M6 8h7.5M6 12h7.5M2.6 4h.1M2.6 8h.1M2.6 12h.1" />',
+  group: '<rect x="2" y="3" width="12" height="10" rx="2" stroke-dasharray="2.2 1.8"/>',
 }
 
 // 24-unit canvas glyphs: thin line marks centred in the node tiles.

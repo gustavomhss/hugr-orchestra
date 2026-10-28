@@ -1,6 +1,7 @@
 ---
 name: jimmy-web-research
 description: Optional web-source doctrine for the research seat. Load before you cite an external document, paper, benchmark or version fact.
+internal: true
 ---
 
 # Web and literature sources

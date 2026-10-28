@@ -80,6 +80,8 @@ type Props = {
   onClose: () => void
   onTest: () => void
   onAddCondition: (id: string) => void
+  // Shown inside a rule row, which carries the heading and the name itself.
+  inline?: boolean
 }
 
 export function HookDetails(props: Props) {
@@ -96,12 +98,28 @@ export function HookDetails(props: Props) {
       kind={kind()}
       previous={props.flow.nodes[index() - 1]}
       next={props.flow.nodes[index() + 1]}
-      input={<Show when={!props.decisionStatus && props.installed !== false} fallback={<DecisionStatus {...props} />}><Input {...props} /></Show>}
-      params={<>
-        <Show when={props.testResult}>{(result) => <p class="mx-note" role="status">{result()}</p>}</Show>
-        <Params {...props} />
-      </>}
-      output={<Show when={!props.decisionStatus && props.installed !== false} fallback={<DecisionStatus {...props} />}><Output {...props} /></Show>}
+      input={
+        <Show when={!props.decisionStatus && props.installed !== false} fallback={<DecisionStatus {...props} />}>
+          <Input {...props} />
+        </Show>
+      }
+      params={
+        <>
+          <Show when={props.testResult}>
+            {(result) => (
+              <p class="mx-note" role="status">
+                {result()}
+              </p>
+            )}
+          </Show>
+          <HookParams {...props} />
+        </>
+      }
+      output={
+        <Show when={!props.decisionStatus && props.installed !== false} fallback={<DecisionStatus {...props} />}>
+          <Output {...props} />
+        </Show>
+      }
       save={props.save}
       readOnly={props.readOnly}
       actions={
@@ -237,7 +255,7 @@ const PATTERN_HINTS = {
   event: "orchestra.hooks.details.patternEvent",
 } as const
 
-function Params(props: Props) {
+export function HookParams(props: Props) {
   const copy = useRelayCopy()
   const update = (parameters: Record<string, unknown>) =>
     props.onChange(updateNode(props.flow, props.node.id, { parameters: { ...props.node.parameters, ...parameters } }))
@@ -276,9 +294,11 @@ function Params(props: Props) {
   }
   return (
     <>
-      <div class="wf-col-head">
-        <h3>{copy.t("orchestra.workflows.details.params")}</h3>
-      </div>
+      <Show when={!props.inline}>
+        <div class="wf-col-head">
+          <h3>{copy.t("orchestra.workflows.details.params")}</h3>
+        </div>
+      </Show>
       <For each={props.issues}>
         {(issue) => (
           <div class="wf-alert">
@@ -287,7 +307,9 @@ function Params(props: Props) {
           </div>
         )}
       </For>
-      <NodeNameField flow={props.flow} node={props.node} onChange={props.onChange} />
+      <Show when={!props.inline}>
+        <NodeNameField flow={props.flow} node={props.node} onChange={props.onChange} />
+      </Show>
       <Show when={props.node.type === TRIGGER}>
         <label class="mx-field">
           <span>{copy.t("orchestra.hooks.details.event")}</span>

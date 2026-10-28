@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { filterSkills, isInternalSkill, readSkills, skillAccess, skillErrorMessage, skillSource, sortSkills } from "./skills-data"
+import { filterSkills, isInternalSkill, listedSkills, readSkills, skillAccess, skillErrorMessage, skillSource, sortSkills } from "./skills-data"
 
 const skills = [
   { name: "Review", description: "Check boundaries", location: "/repo/review/SKILL.md", content: "  <b>review</b>\n" },
@@ -103,11 +103,28 @@ describe("skills reply", () => {
 })
 
 describe("internal skills", () => {
-  test("only a frontmatter internal flag hides a skill", () => {
-    expect(isInternalSkill({ content: "---\nname: a\ninternal: true\n---\nbody" })).toBe(true)
-    expect(isInternalSkill({ content: "---\r\nname: a\r\ninternal: true\r\n---\r\nbody" })).toBe(true)
-    expect(isInternalSkill({ content: "---\nname: a\ninternal: false\n---\nbody" })).toBe(false)
-    expect(isInternalSkill({ content: "---\nname: a\n---\ninternal: true" })).toBe(false)
-    expect(isInternalSkill({ content: "internal: true" })).toBe(false)
+  test("only the internal flag the server reports hides a skill", () => {
+    expect(isInternalSkill({ internal: true })).toBe(true)
+    expect(isInternalSkill({ internal: false })).toBe(false)
+    expect(isInternalSkill({})).toBe(false)
+    expect(readSkills([{ name: "a", location: "/a/SKILL.md", content: "body", internal: true }])[0]?.internal).toBe(true)
+  })
+})
+
+describe("listed skills", () => {
+  test("a skill tree lists its root, never its nodes or an internal skill", () => {
+    const skill = (name: string, location: string, internal?: boolean) => ({ name, location, content: "body", internal })
+    const listed = listedSkills([
+      skill("stack", "/seats/team/stack/SKILL.md"),
+      skill("stack-go", "/seats/team/stack/go/SKILL.md"),
+      skill("stack-go-chi", "/seats/team/stack/go/chi/SKILL.md"),
+      skill("plan", "/seats/archie/plan/SKILL.md", true),
+      skill("plan-briefs", "/seats/archie/plan/briefs/SKILL.md"),
+      skill("stacked", "/seats/team/stacked/SKILL.md"),
+      skill("legacy", "/skills/legacy.md"),
+      skill("win", "C:\\skills\\win\\SKILL.md"),
+      skill("win-node", "C:\\skills\\win\\node\\SKILL.md"),
+    ])
+    expect(listed.map((item) => item.name)).toEqual(["stack", "stacked", "legacy", "win"])
   })
 })

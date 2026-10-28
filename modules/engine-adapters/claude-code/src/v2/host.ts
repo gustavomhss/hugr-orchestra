@@ -46,6 +46,8 @@ const QUESTION_DISMISSED = "The owner dismissed this question."
 /** A finished background task's process stays up this long waiting for the task to report; then it is let go. */
 const BACKGROUND_PATIENCE = Duration.minutes(30)
 const UNCHECKED = "Orchestra could not check this call, so it is refused."
+/** Claude Code defers MCP tools behind this one; it only loads their schemas, so every call to it is allowed. */
+const TOOL_SEARCH = "ToolSearch"
 
 /** One gate decision, shared by the PreToolUse hook and `canUseTool` so both settle a call the same way. */
 type Decision =
@@ -117,6 +119,8 @@ export const make = Effect.gen(function* () {
             const made = Promise.resolve()
               .then((): Decision | Promise<Decision> => {
                 if (SUBAGENT_TOOLS.includes(tool)) return { allow: false, reason: SUBAGENTS_REFUSED }
+                // An agent whose rules deny `*` still reaches the Orchestra tools it holds, which sit behind ToolSearch.
+                if (tool === TOOL_SEARCH) return { allow: true }
                 if (tool.startsWith(MCP_PREFIX)) {
                   const name = tool.slice(MCP_PREFIX.length)
                   if (!learned.has(toolUseID)) callIDs.set(name, [...(callIDs.get(name) ?? []), toolUseID])

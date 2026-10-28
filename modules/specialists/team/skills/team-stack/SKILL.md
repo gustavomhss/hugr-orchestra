@@ -1,6 +1,7 @@
 ---
 name: team-stack
 description: "Language, framework and library facts for the stack the assigned code uses: frozen versions, idioms, traps and test tools. Open the language first, then the framework or library the component uses. Not for choosing a stack or raising a version."
+internal: true
 ---
 
 # Stack

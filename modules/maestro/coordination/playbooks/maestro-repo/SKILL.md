@@ -1,6 +1,7 @@
 ---
 name: maestro-repo
 description: Repository hygiene, independent PR review, release preparation, and release, ruleset or policy proposals. Use before an authorized branch, PR, release or tag; it grants no publication authority.
+internal: true
 ---
 
 # Repository

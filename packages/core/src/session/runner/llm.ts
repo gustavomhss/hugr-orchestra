@@ -53,6 +53,7 @@ import { SessionTitle } from "./title"
 import { ReadToolFileSystem } from "../../tool/read-filesystem"
 import { SessionDirectCommands } from "./direct-commands"
 import { hostedCall } from "./hosted-call"
+import { STEP_TOOL_REFUSAL, narrowStepTools } from "./step-tools"
 import { TurnTransitionError, continueAfterCompaction, continueAfterOverflowCompaction } from "./turn-transition"
 import { DEFAULT_MAX_STEPS, MAX_STEPS_PROMPT } from "./max-steps"
 import { Snapshot } from "../../snapshot"
@@ -242,7 +243,8 @@ const layer = Layer.effect(
       if (workflow?.view.state === "complete") return { needsContinuation: false, step: currentStep }
       const isLastStep = currentStep >= (agent.info?.steps ?? DEFAULT_MAX_STEPS)
       if (!isLastStep) yield* mcp.ready()
-      const toolMaterialization = isLastStep ? undefined : yield* tools.materialize(effectiveRules)
+      const stepTools = narrowStepTools(workflow?.view.tools, workflow?.view.tools?.mcp ? yield* mcp.tools() : {})
+      const toolMaterialization = isLastStep ? undefined : yield* tools.materialize([...effectiveRules, ...stepTools.hidden])
       const promptCacheKey = /^ses_[0-9a-f]{64}$/.test(session.id) ? session.id.slice(4) : session.id
       const contextText = [system.baseline, workflow?.view.instructions].filter((part): part is string => !!part)
       const systemText = agent.info?.system ? [agent.info.system, ...contextText] : contextText
@@ -258,11 +260,7 @@ const layer = Layer.effect(
       const request = model && LLM.request({
         model,
         http: {
-          headers: {
-            "x-session-affinity": session.id,
-            "X-Session-Id": session.id,
-            ...(session.parentID ? { "x-parent-session-id": session.parentID } : {}),
-          },
+          headers: { "x-session-affinity": session.id, "X-Session-Id": session.id, ...(session.parentID ? { "x-parent-session-id": session.parentID } : {}) },
         },
         providerOptions: { openai: { promptCacheKey } },
         system: systemText.map(SystemPart.make),
@@ -289,7 +287,7 @@ const layer = Layer.effect(
       let overflowFailure: ProviderErrorEvent | undefined
       yield* subagentModels.assert(session.id, modelRef)
       const settle = (call: ToolCall, assistantMessageID: SessionMessage.ID, materialization: ToolRegistry.Materialization) =>
-        CapabilityInvocation.withContext(
+        stepTools.refuses(call.name, call.input) ? Effect.succeed(STEP_TOOL_REFUSAL) : CapabilityInvocation.withContext(
           {
             issuer: "core",
             owner: {
@@ -330,6 +328,7 @@ const layer = Layer.effect(
       const scope = yield* Scope.Scope
       const authorize: ExecutionHost.Turn["authorize"] = (input) =>
         Effect.gen(function* () {
+          if (input.safety && stepTools.refuses(input.safety.tool, input.safety.args)) return yield* new PermissionV2.BlockedError({ rules: stepTools.bash })
           yield* permissions
             .authorize({
               sessionID: session.id,

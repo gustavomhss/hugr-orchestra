@@ -59,6 +59,8 @@ const Frontmatter = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   description: Schema.String.pipe(Schema.optional),
   slash: Schema.Boolean.pipe(Schema.optional),
+  // Unknown, not Boolean: YAML reads `internal: yes` as a string, and a bad value must not drop the skill.
+  internal: Schema.Unknown.pipe(Schema.optional),
 })
 const decodeFrontmatter = Schema.decodeUnknownOption(Frontmatter)
 
@@ -132,6 +134,7 @@ const layer = Layer.effect(
             name,
             description: frontmatter.description,
             slash: frontmatter.slash,
+            ...(frontmatter.internal === true || frontmatter.internal === "yes" ? { internal: true } : {}),
             location: AbsolutePath.make(filepath),
             content: markdown.content,
             mtime: yield* SkillFile.modified(filepath).pipe(Effect.provideService(FSUtil.Service, fs)),
