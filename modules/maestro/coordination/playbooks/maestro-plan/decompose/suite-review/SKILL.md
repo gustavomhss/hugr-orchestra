@@ -1,3 +1,9 @@
+---
+name: maestro-plan-decompose-suite-review
+description: Cold acceptance coverage review.
+when: A cold reviewer must judge whether acceptance items cover the demand.
+not-when: Small work, or a review of code rather than of acceptance items.
+---
 # Cold acceptance coverage review
 
 Use for substantial demand-to-suite judgment. Independent reviewer sees only verbatim demand and

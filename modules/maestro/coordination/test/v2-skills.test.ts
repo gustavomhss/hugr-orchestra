@@ -58,8 +58,8 @@ test("Maestro lists every playbook, a same-name skill from another source wins, 
   const byName = new Map(result.list.map((skill) => [skill.name, skill]))
   for (const name of PlaybookContent.names) expect(byName.has(name)).toBe(true)
   expect(byName.get("frame-request")?.description).toBe("Other frame-request")
-  expect(byName.get("maestro-governed")?.location).toBe(
-    AbsolutePath.make(path.join(SeatSkillRoot.playbooks, "maestro-governed", "SKILL.md")),
+  expect(byName.get("maestro-run-governed")?.location).toBe(
+    AbsolutePath.make(path.join(SeatSkillRoot.playbooks, "maestro-run", "governed", "SKILL.md")),
   )
 
   const maestro = SkillV2.available(result.list, agent("maestro")).map((skill) => skill.name)

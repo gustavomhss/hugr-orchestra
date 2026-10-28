@@ -41,8 +41,6 @@ export function foreign(id: string): PermissionV2.Ruleset {
 }
 
 /** Playbooks are Maestro's procedures: every other agent is denied loading one, which also leaves it off their list. */
-export const denied: PermissionV2.Ruleset = PlaybookContent.names.map((name) => ({
-  action: "skill",
-  resource: name,
-  effect: "deny",
-}))
+export const denied: PermissionV2.Ruleset = PlaybookContent.names
+  .flatMap((name) => [name, `${name}-*`])
+  .map((resource) => ({ action: "skill", resource, effect: "deny" as const }))

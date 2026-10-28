@@ -133,7 +133,7 @@ describe("seat skill packaging", () => {
     const tree = kind === "missing maestro"
       ? Object.fromEntries(Object.entries(inventory.default).filter(([id]) => id !== "maestro"))
       : { ...inventory.default, maestro: kind === "missing companion"
-        ? Object.fromEntries(Object.entries(inventory.default.maestro).filter(([file]) => file !== "maestro-verify/review-checks.md"))
+        ? Object.fromEntries(Object.entries(inventory.default.maestro).filter(([file]) => file !== "maestro-run/verify/review-checks/SKILL.md"))
         : inventory.default.maestro }
     const result = await bundle(tmp.path, "bun", { [moduleName]: `export default ${JSON.stringify(tree)}` }, "backend",
       kind === "missing override" ? { ORCHESTRA_PLAYBOOKS_DIR: path.join(tmp.path, "absent") } : {})

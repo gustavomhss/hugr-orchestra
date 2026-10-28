@@ -1,3 +1,9 @@
+---
+name: maestro-repo-maintenance-reviewer-brief
+description: Independent cold code review.
+when: Briefing an independent cold code reviewer on a bounded diff.
+not-when: Reviewing acceptance coverage rather than code.
+---
 # Independent cold code review
 
 Select an available independent review channel under native permissions. No new team role is defined here.

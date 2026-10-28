@@ -126,7 +126,9 @@ export async function captureOracle() {
   const playbooks = parse(Object.entries(await PlaybookContent.read(
     join(import.meta.dirname, "../../../../modules/maestro/coordination/playbooks"),
   )).map(([path, text]) => ({ path, text })))
-  expect(playbooks.map((skill) => skill.name).toSorted()).toEqual([...PlaybookContent.names])
+  expect(playbooks.map((skill) => skill.name).toSorted()).toEqual(
+    PlaybookContent.files.map((file) => file.split("/").slice(0, -1).join("-")).toSorted(),
+  )
   return {
     trees, files, catalog, playbooks, digest: PackagedSkills.digest(trees),
     directories: [...new Set(files.flatMap((file) => file.path.split("/").slice(0, -1)

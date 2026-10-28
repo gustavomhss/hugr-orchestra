@@ -1,6 +1,8 @@
 ---
-name: maestro-pack
+name: maestro-plan-pack
 description: Coordinate upstream-authored briefs, bind actual dispatch facts and inspect compact returns. Use before delegation or when evidence/context pressure needs bounded recovery.
+when: Before delegating, or when evidence or context pressure needs bounded recovery.
+not-when: You do the work yourself, without a brief.
 ---
 
 # Maestro Pack

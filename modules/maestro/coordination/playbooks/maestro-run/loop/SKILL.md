@@ -1,6 +1,8 @@
 ---
-name: maestro-loop
+name: maestro-run-loop
 description: Drive ready work, verify returns, recover interruptions, and integrate approved deltas. Use after slices and briefs exist, for dependent execution, failed handoffs, or selective recovery; small work follows a direct inspect/edit/verify loop.
+when: Slices and briefs exist: dependent execution, failed handoffs or selective recovery.
+not-when: Small work that follows a direct inspect, edit and verify loop.
 ---
 
 # Maestro Loop
@@ -37,7 +39,7 @@ Current static `own_*` facts dominate maps; stale/held/missing Own context means
    Worker return is not `sealed`: verification-green plus lead review supports that event.
    `merged` requires an actual authorized integration receipt. Missing/unreadable ledger is UNKNOWN/FAIL,
    never an empty completed wave. Empty scheduler input is valid only when explicitly supplied and valid.
-5. Load `maestro-verify` for returned evidence. Recheck baseline ancestry, full delta/dirty state,
+5. Load `maestro-run-verify` for returned evidence. Recheck baseline ancestry, full delta/dirty state,
    main-worktree leakage, current conflicts, shared seam, and exact check outcomes before integration.
    An off-baseline branch is HOLD: inspect full delta and extract only understood, owned changes with
    authority; never blindly merge or assume cherry-picking added files makes it safe.

@@ -1,6 +1,8 @@
 ---
-name: maestro-contract
+name: maestro-plan-contract
 description: Coordinate upstream shared-contract authoring, implementation scaffolds and seam verification. Use when one work unit consumes another or a shared boundary requires coordinated changes.
+when: One work unit consumes another, or a shared boundary needs coordinated changes.
+not-when: The slices share no type, signature or seam.
 ---
 
 # Maestro Contract

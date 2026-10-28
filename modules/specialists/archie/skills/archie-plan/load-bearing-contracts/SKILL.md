@@ -52,6 +52,6 @@ Return `FAIL` for cited signature drift/consumer compile error/behavioral mismat
 
 Source pin: `abf7a72c77fcaeee1206400a8270b2581ae9839c`.
 
-- maestro-contract (`modules/maestro/coordination/playbooks/maestro-contract/SKILL.md`), “Procedure” 1–6, “Success / fail” and “Output schema”: minimal load-bearing surface, exact source-bound anchors, real seam evidence, stub honesty and drift handoff. Upstream receives authoring procedures, not source scaffold/edit/compiler/governance powers.
-- maestro-decompose (`modules/maestro/coordination/playbooks/maestro-decompose/SKILL.md`), “Procedure” 4: write-to-read edges are dependencies; shared writes need re-slicing/sequencing.
+- maestro-plan-contract (`modules/maestro/coordination/playbooks/maestro-plan/contract/SKILL.md`), “Procedure” 1–6, “Success / fail” and “Output schema”: minimal load-bearing surface, exact source-bound anchors, real seam evidence, stub honesty and drift handoff. Upstream receives authoring procedures, not source scaffold/edit/compiler/governance powers.
+- maestro-plan-decompose (`modules/maestro/coordination/playbooks/maestro-plan/decompose/SKILL.md`), “Procedure” 4: write-to-read edges are dependencies; shared writes need re-slicing/sequencing.
 - WP-card method (`modules/atlas/docs/method/wp-template.md`), “The driftless law” and “Honest limitation”: pointer/source identity and provenance are useful; neither hashes nor exact sketches prove correctness. Its promised resolver/attestations and zero-decision framing are not runtime guarantees here.

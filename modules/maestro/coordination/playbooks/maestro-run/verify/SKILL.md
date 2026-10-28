@@ -1,6 +1,8 @@
 ---
-name: maestro-verify
+name: maestro-run-verify
 description: Verify returned work, acceptance evidence, test teeth, and integration risk. Use for completion claims, independent review, PR review, or before an authorized integration or release; scope checks to the actual change.
+when: Completion claims, independent review, PR review, or before an authorized integration or release.
+not-when: Nothing has returned yet to check.
 ---
 
 # Maestro Verify
@@ -31,7 +33,7 @@ Current static `own_*` facts dominate maps/search; stale/held Own evidence means
    no clone of implementation as oracle. Calibrate absence/count claims against a known positive control.
 4. For substantial acceptance/review, use an independent cold reviewer. Give diff and frozen spec/invariants,
    not author transcript or rationale. Keep each review slice cognitively bounded; re-slice when too large.
-   See [review-checks.md](review-checks.md) for L0–L10 and V1–V4 coverage. Missing independent review stays UNKNOWN.
+   See [review checks](review-checks/SKILL.md) for L0–L10 and V1–V4 coverage. Missing independent review stays UNKNOWN.
    Author cannot grade their own work as independent. Lead reads findings and signs off; review is not approval.
 5. Inspect invariant/security/migration risk, public docs/decision records, scope creep, bypasses,
    suppression additions, skipped tests, secret exposure, and configuration-specific failures.

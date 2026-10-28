@@ -1,6 +1,8 @@
 ---
 name: maestro-repo-maintenance
 description: Scoped Git hygiene, independent PR review, change-aware checks, and release preparation. Use before an authorized branch, PR, integration, release/tag, or when repository state drifts; this skill grants no publication authority.
+when: Before an authorized branch, PR, integration, release or tag, or when repository state drifts.
+not-when: Release, ruleset or policy proposals for adoption, which arsenal-operators covers.
 ---
 
 # Maestro Repository Maintenance
@@ -26,7 +28,7 @@ For canonical ownership, current static `own_*` facts dominate maps; stale or he
 2. Match procedure to change. Small covered patch uses scoped checks; substantial/risky delta needs
    independent cold review. Choose review slices by cohesive responsibility and cognitive load, not fixed
    source-brand model/LOC constants. Minimize WIP and long-lived branches without inventing deadlines.
-3. For independent review use [reviewer-brief.md](reviewer-brief.md). Reviewer gets diff + spec, never
+3. For independent review use [reviewer brief](reviewer-brief/SKILL.md). Reviewer gets diff + spec, never
    author transcript. Findings are advisory; lead retains judgment and native approval requirements.
    AI PR tooling is not the sole gate. If review cannot run, report UNKNOWN instead of self-certifying it.
 4. Scope CI toward changed domains; ambiguous harness/dependency/global changes require broader checks.

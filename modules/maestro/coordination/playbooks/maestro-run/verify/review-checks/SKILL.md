@@ -1,3 +1,9 @@
+---
+name: maestro-run-verify-review-checks
+description: Change-scoped review matrix.
+when: You need the change-scoped review matrix, level by level.
+not-when: A small change whose one check is obvious.
+---
 # Change-scoped review matrix
 
 Each applicable check records PASS, FAIL, or UNKNOWN plus evidence; NOT-APPLICABLE requires a reason.

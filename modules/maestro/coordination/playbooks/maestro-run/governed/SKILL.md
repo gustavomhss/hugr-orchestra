@@ -1,6 +1,8 @@
 ---
-name: maestro-governed
+name: maestro-run-governed
 description: Run the governed approval chain from preconditions to verified dispatch, covering admission, grounding, validation, the cold review (`lucy`), owner approval, authorization and task. Use before the first governed tool call whenever the owner asks for a governed or auditable flow.
+when: The owner asks for a governed or auditable flow; load it before the first governed tool call.
+not-when: Normal work, which is the default.
 ---
 
 # Maestro Governed
@@ -78,7 +80,7 @@ Check these before admission. Any failure is a HOLD to report, never a reason to
     `awaiting-human`: stop, report the gate, the last findings and the hold to the owner, and do not resume, retry or
     request a release. On `REJECT`, do not resume (it holds with `WORKFLOW_CODE_REVIEW_REJECTED`): report the findings to the owner; fixing
     them needs a new plan round (Fix-and-review loop). Never commit the workers' result before the workflow completes.
-    Then verify with `maestro-verify`.
+    Then verify with `maestro-run-verify`.
 
 If a synthetic user message (a background-task result or the compaction "Continue...") lands after a presentation,
 present again with a new `methodVersion`.
