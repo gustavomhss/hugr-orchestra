@@ -2,6 +2,7 @@ export * as McpProjectConfig from "./project-config"
 
 import path from "path"
 import { Effect, Schema } from "effect"
+import type { ConfigMCP } from "@orchestra/schema/config-mcp"
 import { KeyedMutex } from "../effect/keyed-mutex"
 import { applyEdits, modify, parse, parseTree, type ParseError, printParseErrorCode } from "jsonc-parser"
 import { FSUtil } from "../fs-util"
@@ -217,4 +218,23 @@ function select(value: unknown): Entry {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+/** A V2 config server in the shape `write` stores. */
+export function written(server: ConfigMCP.Local | ConfigMCP.Remote): Written {
+  const enabled = server.disabled === undefined ? {} : { enabled: !server.disabled }
+  if (server.type === "local")
+    return {
+      type: "local",
+      command: [...server.command],
+      ...(server.cwd === undefined ? {} : { cwd: server.cwd }),
+      ...(server.environment === undefined ? {} : { environment: server.environment }),
+      ...enabled,
+    }
+  return {
+    type: "remote",
+    url: server.url,
+    ...(server.headers === undefined ? {} : { headers: server.headers }),
+    ...enabled,
+  }
 }

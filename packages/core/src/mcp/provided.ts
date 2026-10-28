@@ -24,6 +24,22 @@ export interface Interface {
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/McpProvided") {}
 
+/** Keeps the last answer of `servers` by name and says which names left and which are new or changed since. */
+export function tracker(service: Interface) {
+  const current = new Map<string, Server>()
+  const update = Effect.fnUntraced(function* () {
+    const listed = yield* service.servers().pipe(Effect.orElseSucceed(() => undefined))
+    if (!listed) return { gone: [], changed: [] }
+    const names = new Set(listed.map((server) => server.name))
+    const gone = Array.from(current.keys()).filter((name) => !names.has(name))
+    const changed = listed.filter((server) => current.get(server.name)?.key !== server.key)
+    for (const name of gone) current.delete(name)
+    for (const server of changed) current.set(server.name, server)
+    return { gone, changed: changed.map((server) => server.name) }
+  })
+  return { current, update }
+}
+
 export const layer = Layer.succeed(Service, Service.of({ servers: () => Effect.succeed([]) }))
 
 /** A product serves its servers by replacing this node (Host.Contribution.replacements). */

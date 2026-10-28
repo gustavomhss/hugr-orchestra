@@ -16,11 +16,10 @@ import {
   CallToolResultSchema,
   LATEST_PROTOCOL_VERSION,
   ToolListChangedNotificationSchema,
-  type CallToolResult,
   type ListToolsResult,
   type ReadResourceResult,
 } from "@modelcontextprotocol/sdk/types.js"
-import { ToolFailure, type ToolContent } from "@orchestra/llm"
+import { ToolFailure } from "@orchestra/llm"
 import { ConfigMCP } from "@orchestra/schema/config-mcp"
 import { Mcp } from "@orchestra/schema/mcp"
 import { Context, Deferred, Duration, Effect, Exit, Fiber, Layer, Schema, Scope, Semaphore } from "effect"
@@ -35,7 +34,14 @@ import { McpAuth } from "./mcp/auth"
 import { McpCatalog } from "./mcp/catalog"
 import { McpClient } from "./mcp/client"
 import { McpOAuthCallback } from "./mcp/oauth-callback"
-import { McpOAuthPendingProvider, McpOAuthProvider, OAUTH_CALLBACK_PATH } from "./mcp/oauth-provider"
+import {
+  authStatus,
+  McpOAuthPendingProvider,
+  McpOAuthProvider,
+  OAUTH_CALLBACK_PATH,
+  oauthConfig,
+  unauthorized,
+} from "./mcp/oauth-provider"
 import { McpProjectConfig } from "./mcp/project-config"
 import { McpProvided } from "./mcp/provided"
 import { McpStdio } from "./mcp/stdio"
@@ -141,7 +147,6 @@ const layer = Layer.effect(
     const fs = yield* FSUtil.Service
     const global = yield* Global.Service
     const auth = yield* McpAuth.Service
-    const provider = yield* McpProvided.Service
     const layerScope = yield* Scope.Scope
     const entries = new Map<string, Entry>()
     // Sign-ins waiting for their authorization code, by server.
@@ -151,8 +156,7 @@ const layer = Layer.effect(
     const removed = new Set<string>()
     // Local servers the last connect refused because the project was not approved; applyTrust retries them.
     const blocked = new Set<string>()
-    // The provided servers of the last answer, by name.
-    const provided = new Map<string, McpProvided.Server>()
+    const provided = McpProvided.tracker(yield* McpProvided.Service)
 
     const configured = Effect.fnUntraced(function* () {
       const documents = (yield* config.entries()).filter((entry): entry is Config.Document => entry.type === "document")
@@ -180,7 +184,7 @@ const layer = Layer.effect(
         unapproved.delete(name)
       }
       for (const name of removed) servers.delete(name)
-      for (const [name, server] of provided) if (!servers.has(name)) servers.set(name, { type: "provided", server })
+      for (const [name, server] of provided.current) if (!servers.has(name)) servers.set(name, { type: "provided", server })
       return {
         servers,
         unapproved,
@@ -251,8 +255,9 @@ const layer = Layer.effect(
                 { signal, timeout, resetTimeoutOnProgress: true, onprogress: () => {} },
               ),
             )
-            if (result.isError) return yield* Effect.fail(new Error(text(result) || "MCP tool returned an error"))
-            return { structured: result.structuredContent ?? {}, content: content(result) }
+            if (result.isError)
+              return yield* Effect.fail(new Error(McpCatalog.resultText(result) || "MCP tool returned an error"))
+            return { structured: result.structuredContent ?? {}, content: McpCatalog.resultContent(result) }
           }).pipe(Effect.mapError((error) => new ToolFailure({ message: error.message }))),
       })
 
@@ -421,7 +426,7 @@ const layer = Layer.effect(
     const add = Effect.fn("Mcp.add")(function* (name: string, server: ConfigMCP.Local | ConfigMCP.Remote) {
       if (!McpProjectConfig.validName(name))
         return yield* new ConfigError({ message: `Invalid MCP server name: ${name}` })
-      yield* McpProjectConfig.write(location.directory, name, legacy(server)).pipe(
+      yield* McpProjectConfig.write(location.directory, name, McpProjectConfig.written(server)).pipe(
         Effect.provideService(FSUtil.Service, fs),
         Effect.mapError((error) => new ConfigError({ message: error.message })),
       )
@@ -506,13 +511,13 @@ const layer = Layer.effect(
                 server: item.server,
                 name: resource.name,
                 uri: resource.uri,
-                ...described(resource),
+                ...McpCatalog.described(resource),
               })),
               templates: templates.map((template) => ({
                 server: item.server,
                 name: template.name,
                 uriTemplate: template.uriTemplate,
-                ...described(template),
+                ...McpCatalog.described(template),
               })),
             })),
           ),
@@ -762,21 +767,9 @@ const layer = Layer.effect(
         Effect.forEach(entries.values(), (current) => release(current), { concurrency: "unbounded", discard: true }),
       ]).pipe(Effect.asVoid),
     )
-    // Takes the provider's answer: forgets the servers that are gone and keeps the new or changed ones.
-    const update = Effect.fnUntraced(function* () {
-      const listed = yield* provider.servers().pipe(Effect.orElseSucceed(() => undefined))
-      if (!listed) return { gone: [], changed: [] }
-      const names = new Set(listed.map((server) => server.name))
-      const gone = Array.from(provided.keys()).filter((name) => !names.has(name))
-      const changed = listed.filter((server) => provided.get(server.name)?.key !== server.key)
-      for (const name of gone) provided.delete(name)
-      for (const server of changed) provided.set(server.name, server)
-      return { gone, changed: changed.map((server) => server.name) }
-    })
-
     // Disconnects provided servers that are gone and connects new or changed ones, so the next turn sees them.
     const sync = Effect.fnUntraced(function* () {
-      const delta = yield* update()
+      const delta = yield* provided.update()
       const found = yield* configured()
       // A gone name that a configured server also uses keeps the configured server's connection.
       yield* Effect.forEach(
@@ -814,7 +807,7 @@ const layer = Layer.effect(
       Effect.suspend(() => {
         if (starting) return Deferred.await(started).pipe(Effect.andThen(refresh()))
         starting = true
-        return update().pipe(
+        return provided.update().pipe(
           Effect.andThen(configured()),
           Effect.flatMap((found) =>
             Effect.forEach(found.servers.keys(), (name) => connect(name).pipe(Effect.ignore), {
@@ -889,76 +882,10 @@ function failed(error: string): Mcp.Status {
   return { status: "failed", error }
 }
 
-function unauthorized(error: Error) {
-  return error.name === "UnauthorizedError" || /\b401\b|unauthorized/i.test(error.message)
-}
-
-// An OAuth failure needs a sign-in, unless the server cannot register a client and needs a configured client ID.
-function authStatus(error: Error, oauth: boolean): Mcp.Status | undefined {
-  if (!unauthorized(error) && !(oauth && error.message.includes("OAuth"))) return undefined
-  if (/registration|client_id/.test(error.message))
-    return {
-      status: "needs_client_registration",
-      error: "The server does not support dynamic client registration. Set oauth.client_id in its MCP config.",
-    }
-  return { status: "needs_auth" }
-}
-
-function oauthConfig(server: ConfigMCP.Remote) {
-  const oauth = server.oauth === false ? undefined : server.oauth
-  return {
-    clientId: oauth?.client_id,
-    clientSecret: oauth?.client_secret,
-    scope: oauth?.scope,
-    callbackPort: oauth?.callback_port,
-    redirectUri: oauth?.redirect_uri,
-  }
-}
-
-function described(item: { description?: string; mimeType?: string }) {
-  return {
-    ...(item.description === undefined ? {} : { description: item.description }),
-    ...(item.mimeType === undefined ? {} : { mimeType: item.mimeType }),
-  }
-}
-
 function messageOf(error: unknown) {
   return error instanceof Error ? error.message : String(error)
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
-}
-
-function text(result: CallToolResult) {
-  return result.content.flatMap((item) => (item.type === "text" && item.text.trim() ? [item.text] : [])).join("\n\n")
-}
-
-function content(result: CallToolResult): ToolContent[] {
-  if (result.content.length === 0 && result.structuredContent !== undefined)
-    return [{ type: "text", text: JSON.stringify(result.structuredContent) }]
-  return result.content.map((item): ToolContent => {
-    if (item.type === "text") return { type: "text", text: item.text }
-    if (item.type === "image" || item.type === "audio")
-      return { type: "file", uri: `data:${item.mimeType};base64,${item.data}`, mime: item.mimeType }
-    return { type: "text", text: JSON.stringify(item) }
-  })
-}
-
-function legacy(server: ConfigMCP.Local | ConfigMCP.Remote): McpProjectConfig.Written {
-  const enabled = server.disabled === undefined ? {} : { enabled: !server.disabled }
-  if (server.type === "local")
-    return {
-      type: "local",
-      command: [...server.command],
-      ...(server.cwd === undefined ? {} : { cwd: server.cwd }),
-      ...(server.environment === undefined ? {} : { environment: server.environment }),
-      ...enabled,
-    }
-  return {
-    type: "remote",
-    url: server.url,
-    ...(server.headers === undefined ? {} : { headers: server.headers }),
-    ...enabled,
-  }
 }
