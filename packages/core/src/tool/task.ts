@@ -1,6 +1,7 @@
 export * as TaskTool from "./task"
 
 import { createHash } from "node:crypto"
+import path from "node:path"
 import { isDeepStrictEqual } from "node:util"
 import { ToolFailure } from "@orchestra/llm"
 import { Context, DateTime, Effect, Fiber, Layer, Option, Schema } from "effect"
@@ -8,12 +9,15 @@ import { AgentV2 } from "../agent"
 import { Catalog } from "../catalog"
 import { Config } from "../config"
 import { Database } from "../database/database"
+import { FSUtil } from "../fs-util"
 import { makeLocationNode, Node } from "../effect/app-node"
 import { LayerNode } from "../effect/layer-node"
 import { EventV2 } from "../event"
 import { Location } from "../location"
 import { ModelV2 } from "../model"
 import { PermissionV2 } from "../permission"
+import { Project } from "../project"
+import { AbsolutePath } from "../schema"
 import { SessionV2 } from "../session"
 import { SessionEvent } from "../session/event"
 import { SessionExecution } from "../session/execution"
@@ -41,6 +45,9 @@ export const Input = Schema.Struct({
   model: Schema.String.pipe(Schema.optional).annotate({ description: "Optional exact provider/model identity" }),
   // A Location's TaskGovernance may resolve a logical task id; core resumes only a Session ID it owns.
   task_id: Schema.String.pipe(Schema.optional).annotate({ description: "An existing child Session or task to resume" }),
+  directory: Schema.String.pipe(Schema.optional).annotate({
+    description: "Absolute root of a git worktree of this repository for the child to work in; default this Session's directory",
+  }),
 })
 
 export const Output = Schema.Struct({
@@ -62,6 +69,7 @@ const layer = Layer.effectDiscard(
   Effect.gen(function* () {
     const tools = yield* Tools.Service
     const location = yield* Location.Service
+    const fs = yield* FSUtil.Service
     const agents = yield* AgentV2.Service
     const catalog = yield* Catalog.Service
     const database = yield* Database.Service
@@ -74,6 +82,7 @@ const layer = Layer.effectDiscard(
     const governance = yield* TaskGovernance.Service
     const config = yield* Config.Service
     const background = yield* TaskBackground.Service
+    const projects = yield* Project.Service
     // Governance fields are recorded with the call, so the recorded input decodes with this same schema.
     const taskInput = Schema.Struct({ ...Input.fields, ...governance.input })
     const decodeCalled = Schema.decodeUnknownOption(taskInput)
@@ -91,7 +100,8 @@ const layer = Layer.effectDiscard(
           )
           const parent = yield* requireParent(store, location, context, decodeCalled, called)
           const target = yield* requireTarget(agents, input.subagent_type)
-          const admission = yield* governance.admit({ parent, target, input: called, context })
+          const placement = yield* requirePlacement(projects, fs, location, input.directory)
+          const admission = yield* governance.admit({ parent, target, input: called, context, location: placement })
           const childID =
             admission.childID ??
             (input.task_id && Schema.is(SessionSchema.ID)(input.task_id) ? input.task_id : undefined) ??
@@ -107,7 +117,7 @@ const layer = Layer.effectDiscard(
               return yield* new ToolFailure({ message: `Task target model changed after authorization: ${target.id}` })
           })
           if (existing) {
-            const failure = requireChild(existing, location, context, target.id, model)
+            const failure = requireChild(existing, placement, context, target.id, model)
             if (failure) return yield* failure
           }
           yield* policy.assertChild(context.sessionID, model)
@@ -127,9 +137,9 @@ const layer = Layer.effectDiscard(
             parentID: context.sessionID,
             agent: target.id,
             model,
-            location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }),
+            location: Location.Ref.make({ directory: placement.directory, workspaceID: placement.workspaceID }),
           })
-          const failure = requireChild(child, location, context, target.id, model)
+          const failure = requireChild(child, placement, context, target.id, model)
           if (failure) return yield* failure
           // A governance that binds rules starts from the inherited ones (see `TaskGovernance.Admission`).
           const permissions = (
@@ -270,6 +280,8 @@ export const node: LayerNode.Node<never, never, typeof Node.tags.values.location
     TaskGovernance.node,
     Config.node,
     TaskBackground.node,
+    Project.node,
+    FSUtil.node,
   ],
 })
 
@@ -350,7 +362,7 @@ const sameModel = (left: ModelV2.Ref | undefined, right: ModelV2.Ref | undefined
   left?.id === right?.id &&
   (left?.variant ?? "default") === (right?.variant ?? "default")
 
-const samePlacement = (session: SessionSchema.Info, location: Location.Interface) =>
+const samePlacement = (session: SessionSchema.Info, location: Location.Info) =>
   session.location.directory === location.directory && session.location.workspaceID === location.workspaceID
 
 const requireParent = Effect.fn("TaskTool.requireParent")(function* (
@@ -387,6 +399,35 @@ const requireParent = Effect.fn("TaskTool.requireParent")(function* (
   return parent
 })
 
+/**
+ * Where the child works: this Location, or another worktree of the same git repository named by its root. The worktree
+ * keeps this Location's workspace, and a resumed child must have been created there.
+ */
+const requirePlacement = Effect.fn("TaskTool.requirePlacement")(function* (
+  projects: Project.Interface,
+  fs: FSUtil.Interface,
+  location: Location.Interface,
+  directory: string | undefined,
+) {
+  if (directory === undefined || directory === location.directory) return location
+  if (!path.isAbsolute(directory)) return yield* new ToolFailure({ message: `Task directory is not absolute: ${directory}` })
+  // git reports real paths, so a worktree reached through a symlink (macOS /tmp) compares by its real path.
+  const absolute = AbsolutePath.make(
+    yield* fs.realPath(directory).pipe(Effect.catch(() => Effect.succeed(directory))),
+  )
+  const resolved = yield* projects.resolve(absolute)
+  if (location.vcs?.type !== "git" || resolved.vcs?.store !== location.vcs.store)
+    return yield* new ToolFailure({ message: `Task directory is not a worktree of this repository: ${directory}` })
+  if (resolved.directory !== absolute)
+    return yield* new ToolFailure({ message: `Task directory is not a worktree root: ${directory}` })
+  return {
+    directory: absolute,
+    workspaceID: location.workspaceID,
+    project: { id: location.project.id, directory: resolved.directory },
+    vcs: resolved.vcs,
+  } satisfies Location.Interface
+})
+
 const requireTarget = Effect.fn("TaskTool.requireTarget")(function* (agents: AgentV2.Interface, id: string) {
   const target = yield* agents.get(AgentV2.ID.make(id))
   if (!target || target.hidden || target.mode === "primary" || target.id === AgentV2.defaultID)
@@ -411,13 +452,15 @@ const requireDepth = Effect.fn("TaskTool.requireDepth")(function* (
 
 function requireChild(
   child: SessionSchema.Info,
-  location: Location.Interface,
+  location: Location.Info,
   context: Tool.Context,
   agent: AgentV2.ID,
   model: ModelV2.Ref,
 ) {
   if (child.parentID !== context.sessionID || child.agent !== agent || !samePlacement(child, location))
-    return new ToolFailure({ message: `Task child parent, agent, or placement mismatch: ${child.id}` })
+    return new ToolFailure({
+      message: `Task child parent, agent, or placement mismatch: ${child.id} runs in ${child.location.directory}; resume it with that directory`,
+    })
   if (!sameModel(child.model, model))
     return new ToolFailure({ message: `Task cannot change the recorded child model: ${child.id}` })
 }

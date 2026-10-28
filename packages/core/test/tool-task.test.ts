@@ -386,6 +386,16 @@ describe("TaskTool canonical delegation", () => {
     expect(f.harness.requests).toHaveLength(2)
   }))
 
+  it.effect("runs a child only in this directory or another worktree root of the same repository", () => Effect.gen(function* () {
+    const f = yield* setup
+    const same = result(yield* settleTool(f.registry, yield* record(f.parent.id, "same-directory", { directory })))
+    expect((yield* f.sessions.get(same.sessionID)).location.directory).toBe(directory)
+    expect((yield* settleTool(f.registry, yield* record(f.parent.id, "relative", { directory: "worktree" }))).result).toMatchObject({ type: "error", value: expect.stringContaining("not absolute") })
+    // The fixture Location has no git repository, so no other directory shares it.
+    expect((yield* settleTool(f.registry, yield* record(f.parent.id, "foreign-tree", { directory: "/elsewhere" }))).result).toMatchObject({ type: "error", value: expect.stringContaining("not a worktree of this repository") })
+    expect((yield* f.sessions.list()).filter((session) => session.parentID === f.parent.id)).toHaveLength(1)
+  }))
+
   it.effect("same-call active retry joins one drain; sibling tasks run independently", () => Effect.gen(function* () {
     const f = yield* setup
     const left = yield* gate

@@ -107,7 +107,7 @@ export const make = Effect.gen(function* () {
         const base = !reserved && resumed
           ? yield* store.permissions(resumed.id)
           : TaskTool.inheritedPermissions(yield* store.permissions(parent.id), TaskTool.primaryTools(yield* config.entries()))
-        const scoped = seat?.writeRoots ? yield* WriteRootsV2.bind(fs, location, input.writePaths, base) : base
+        const scoped = seat?.writeRoots ? yield* WriteRootsV2.bind(fs, admission.location ?? location, input.writePaths, base) : base
         // The research seat runs under the allowance this call binds (the earlier runtime's ResearchExecution.enter); the child reads it
         // back on every provider turn and tool call, since fiber context does not reach the Session executor.
         const permissions = seat?.research
@@ -295,8 +295,11 @@ export const make = Effect.gen(function* () {
           .entries(input.child.id)
           .pipe(Effect.mapError((error) => new ToolFailure({ message: error.message, error })))
         const roots = WorkResultV2.effective(WriteRootsV2.read(yield* store.permissions(input.child.id)), project, {
-          directory: location.directory,
-          worktree: location.vcs?.type === "git" ? location.project.directory : location.directory,
+          // A child Task placed in another worktree works at that worktree's root.
+          directory: input.child.location.directory,
+          worktree: input.child.location.directory !== location.directory
+            ? input.child.location.directory
+            : location.vcs?.type === "git" ? location.project.directory : location.directory,
         })
         // The earlier runtime reports the shell fact beside the roots: the worst one the child's commands met, else this host's status.
         const shell = roots
