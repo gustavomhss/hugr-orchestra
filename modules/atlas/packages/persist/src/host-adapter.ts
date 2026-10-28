@@ -94,7 +94,7 @@ function parseTrailer(text: string): Trailer {
     Gates: kv.get("Gates") ?? "",
     Verdict: kv.get("Verdict") ?? "",
     TranscriptSha: asHash(kv.get("TranscriptSha") ?? ""),
-    ...(kv.has("Attempt") ? { Attempt: kv.get("Attempt") } : {}),
+    ...(kv.get("Attempt") === undefined ? {} : { Attempt: kv.get("Attempt") as string }),
   }
 }
 
