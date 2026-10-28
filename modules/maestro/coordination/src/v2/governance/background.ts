@@ -2,6 +2,7 @@ export * as GovernanceBackgroundV2 from "./background"
 
 import { createHash } from "node:crypto"
 import { Cause, Context, DateTime, Effect, Layer, Option, Schedule, Scope } from "effect"
+import type { Board } from "@orchestra/core/board/board"
 import { Node } from "@orchestra/core/effect/app-node"
 import type { EventV2 } from "@orchestra/core/event"
 import { SessionSchema, SessionV2 } from "@orchestra/core/session"
@@ -9,6 +10,7 @@ import { SessionEvent } from "@orchestra/schema/session-event"
 import { SessionMessage } from "@orchestra/schema/session-message"
 import { TaskTool } from "@orchestra/core/tool/task"
 import type { Tool } from "@orchestra/core/tool/tool"
+import { GovernanceThreadV2 } from "./thread"
 
 // A background Task returns at once; when its child goes idle the parent receives the child's reply as a new prompt,
 // as the earlier runtime's `TaskBackground` delivers it. The return prompt's id is derived from the call, so a repeated watch (or a
@@ -35,6 +37,9 @@ export type Watch = {
   readonly childID: SessionSchema.ID
   readonly description: string
   readonly promptID: SessionMessage.ID
+  /** The card the Task is bound to and the seat it went to: the reply also goes on that card's thread. */
+  readonly card?: string
+  readonly seat?: string
 }
 
 export function watch(input: {
@@ -42,12 +47,15 @@ export function watch(input: {
   childID: SessionSchema.ID
   description: string
   context: Tool.Context
+  card?: string
+  seat?: string
 }): Watch {
   return {
     parentID: input.parentID,
     childID: input.childID,
     description: input.description,
     promptID: TaskTool.taskPromptID(input.context, input.childID),
+    ...(input.card && input.seat ? { card: input.card, seat: input.seat } : {}),
   }
 }
 
@@ -55,7 +63,11 @@ export function watch(input: {
  * Wait for the child to go idle, then deliver its reply (or its failure) to the parent once. A lost watcher (a host
  * restart) leaves the child's reply in its own Session, readable by resuming it with its task_id.
  */
-export const deliver = Effect.fn("GovernanceBackgroundV2.deliver")(function* (sessions: SessionV2.Interface, input: Watch) {
+export const deliver = Effect.fn("GovernanceBackgroundV2.deliver")(function* (
+  sessions: SessionV2.Interface,
+  board: Board.Interface,
+  input: Watch,
+) {
   yield* sessions.wait(input.childID)
   const reply = TaskTool.completedReply(
     yield* sessions.messages({ sessionID: input.childID, order: "asc" }),
@@ -73,6 +85,10 @@ export const deliver = Effect.fn("GovernanceBackgroundV2.deliver")(function* (se
     "</task_result>",
   ].join("\n")
   yield* sessions.prompt({ id: returnID(input), sessionID: input.parentID, prompt: { text } })
+  // Written after the return prompt lands, so a retried delivery never records the row twice. A background reply has no
+  // work result here, so it is always a `return`; a seat that asks from the background asks in its return.
+  if (input.card && input.seat && result !== undefined)
+    yield* GovernanceThreadV2.reply(board, { card: input.card, seat: input.seat, blocked: false, body: result })
 })
 
 /**
@@ -107,7 +123,7 @@ export const hold = Effect.fn("GovernanceBackgroundV2.hold")(function* (
 })
 
 /** Watches registered background children; each child is watched at most once per process. */
-export const make = Effect.fnUntraced(function* (events: EventV2.Interface) {
+export const make = Effect.fnUntraced(function* (events: EventV2.Interface, board: Board.Interface) {
   const scope = yield* Scope.Scope
   const registered = new Map<string, Watch>()
   const started = new Set<string>()
@@ -119,7 +135,7 @@ export const make = Effect.fnUntraced(function* (events: EventV2.Interface) {
         const input = registered.get(childID)
         if (!input || started.has(childID)) return
         started.add(childID)
-        yield* deliver(sessions, input).pipe(
+        yield* deliver(sessions, board, input).pipe(
           // Every cause but a shutdown is retried; an exact retry reconciles the same durable return.
           Effect.sandbox,
           Effect.retry({ times: RETRIES, schedule: Schedule.exponential("100 millis"), while: (cause) => !Cause.hasInterrupts(cause) }),

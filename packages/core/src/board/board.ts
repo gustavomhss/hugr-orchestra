@@ -92,6 +92,14 @@ export interface Interface {
     actor: "owner" | "maestro",
   ) => Effect.Effect<Board.OwnerResult, Error>
   readonly note: (key: string, number: number, input: Board.NoteInput) => Effect.Effect<Board.OwnerResult, Error>
+  /** The host records a message that passed for a card (merge-queue §4.6). Thread rows are read-only and never go to GitHub. */
+  readonly thread: (input: {
+    readonly key: string
+    readonly number: number
+    readonly kind: Exclude<Board.NoteKind, "note">
+    readonly author: string
+    readonly body: string
+  }) => Effect.Effect<void, Error>
   readonly attach: (key: string, number: number, input: Board.AttachmentInput) => Effect.Effect<Board.OwnerResult, Error>
   /** Owner notes only; GitHub and Maestro notes stay as written. */
   readonly editNote: (key: string, number: number, id: string, input: Board.NoteInput) => Effect.Effect<Board.OwnerResult, Error>
@@ -1117,6 +1125,29 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
             }),
           )
           return done.result
+        }),
+
+        // Activity is Maestro's, so a thread row never comes back to Maestro as news in `board_read`'s `since`.
+        thread: Effect.fn("Board.thread")(function* (input) {
+          yield* write((tx) =>
+            Effect.gen(function* () {
+              const project = yield* loadProject(tx, input.key)
+              const issue = yield* loadIssue(tx, project, input.number)
+              const id = Board.NoteID.create()
+              yield* tx
+                .insert(BoardNoteTable)
+                .values({ id, issue_id: issue.id, kind: input.kind, author: input.author, body: input.body })
+                .run()
+              const activity = yield* log(tx, {
+                project: project.id,
+                issue: issue.id,
+                actor: "maestro",
+                action: "note.add",
+                after: { id, kind: input.kind, author: input.author },
+              })
+              return { result: undefined, changed: changed(project.id, activity, issue.id) }
+            }),
+          )
         }),
 
         // A secret's value goes only to the credential store, inside the same transaction; the board keeps its label.

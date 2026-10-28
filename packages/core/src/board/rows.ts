@@ -88,7 +88,7 @@ export function toDecision(row: DecisionRow, known: { readonly issues: Map<strin
 }
 
 export function toNote(row: typeof BoardNoteTable.$inferSelect, issue: number): Board.Note {
-  return { id: row.id, issue, author: row.author, body: row.body, timeCreated: row.time_created }
+  return { id: row.id, issue, kind: row.kind, author: row.author, body: row.body, timeCreated: row.time_created }
 }
 
 // Never the stored path or credential id.

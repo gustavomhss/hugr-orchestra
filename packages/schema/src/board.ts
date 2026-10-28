@@ -106,6 +106,12 @@ export const AttachmentKind = Schema.Literals(["file", "image", "video", "doc", 
 })
 export type AttachmentKind = typeof AttachmentKind.Type
 
+// `note` is a person's note; every other kind is a thread row the host writes as a message passes (merge-queue §4.6).
+export const NoteKind = Schema.Literals(["note", "brief", "question", "answer", "return", "review", "rework"]).annotate({
+  identifier: "Board.NoteKind",
+})
+export type NoteKind = typeof NoteKind.Type
+
 export const Actor = Schema.Literals(["maestro", "owner", "github"]).annotate({ identifier: "Board.Actor" })
 export type Actor = typeof Actor.Type
 
@@ -237,7 +243,8 @@ export interface Note extends Schema.Schema.Type<typeof Note> {}
 export const Note = Schema.Struct({
   id: NoteID,
   issue: PositiveInt,
-  /** `owner`, `maestro` or `github:<login>`. */
+  kind: NoteKind,
+  /** `owner`, `maestro`, `github:<login>` or, on a thread row, a seat id or `host`. */
   author: Schema.String,
   body: Schema.String,
   timeCreated: Schema.Finite,

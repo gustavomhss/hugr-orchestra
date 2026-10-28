@@ -221,6 +221,7 @@ export const BoardNoteTable = sqliteTable(
       .$type<Board.IssueID>()
       .notNull()
       .references(() => BoardIssueTable.id, { onDelete: "cascade" }),
+    kind: text().$type<Board.NoteKind>().notNull().default("note"),
     author: text().notNull(),
     body: text().notNull(),
     github_comment_id: integer(),

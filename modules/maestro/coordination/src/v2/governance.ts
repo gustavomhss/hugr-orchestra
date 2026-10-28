@@ -32,6 +32,7 @@ import { GovernanceDispatchV2 } from "./governance/dispatch"
 import { GovernanceInputV2 } from "./governance/input"
 import { LogicalTaskV2 } from "./governance/logical-task"
 import { GovernanceRecordsV2 } from "./governance/records"
+import { GovernanceThreadV2 } from "./governance/thread"
 import { GovernanceReservationV2 } from "./governance/reservation"
 import { ResearchDispatchV2 } from "./governance/research"
 import { UnsupportedV2 } from "./governance/unsupported"
@@ -46,6 +47,10 @@ import { MaestroWorkflowHostV2 } from "./workflow/host"
 
 const decode = Schema.decodeUnknownOption(GovernanceInputV2.Input)
 const decodeReserved = Schema.decodeUnknownSync(MaestroEvent.Dispatch.ReservedV2.data)
+// A seat that stopped blocked asked a question; its work result says so (`WorkResultV2.assemble`).
+const isBlocked = Schema.is(
+  Schema.Struct({ [WorkResultV2.KEY]: Schema.Struct({ terminal: Schema.Struct({ reason: Schema.Literal("blocked") }) }) }),
+)
 
 /**
  * Maestro's Task governance on V2, in the earlier runtime's phase order: the caller seat's native profile, the phases whose host is not
@@ -70,7 +75,7 @@ export const make = Effect.gen(function* () {
   const board = yield* Board.Service
   const sessions = yield* GovernanceBackgroundV2.Sessions
   const host = yield* MaestroWorkflowHostV2.Capture
-  const background = yield* GovernanceBackgroundV2.make(events)
+  const background = yield* GovernanceBackgroundV2.make(events, board)
   // The roster loads lazily (see `seats.ts`); where it cannot load no agent is a seat, so no profile is read.
   const roster = yield* Effect.tryPromise(() => import("../roster")).pipe(Effect.option)
   const profiles = roster._tag === "Some" ? roster.value.nativeProfiles : {}
@@ -206,14 +211,20 @@ export const make = Effect.gen(function* () {
               childID: child,
               description: input.description,
               context: admission.context,
+              ...(input.card ? { card: input.card, seat: memberID } : {}),
             }),
           )
         }
+        if (input.card)
+          yield* GovernanceThreadV2.brief(board, { card: input.card, from: canonical(caller), seat: memberID, body: input.prompt }).pipe(
+            Effect.mapError((error) => new ToolFailure({ message: `Task denied: card ${input.card}: ${error.message}` })),
+          )
         return {
           ...(childID ? { childID } : {}),
           ...(seat?.writeRoots || seat?.research || reserved ? { permissions } : {}),
           ...(text.length > 1 ? { prompt: { text: text.join("\n\n") } } : {}),
           ...(input.background === true ? { background: true } : {}),
+          ...(input.card ? { receipt: { card: input.card, seat: memberID } } : {}),
         }
 
         // The card follows the dispatch, so Maestro's board never waits on Maestro remembering to write it.
@@ -342,7 +353,18 @@ export const make = Effect.gen(function* () {
         // The research seat's result comes from the dispatch's closed inquiry card, never from the worker's text.
         const discovery = yield* DiscoveryResultV2.assemble({ records, database }, workResult, input.child)
         return { ...settled, text: DiscoveryResultV2.report(settled.text, discovery), structured: { [WorkResultV2.KEY]: discovery } }
-      }),
+      }).pipe(
+        // The reply goes on the card's thread once the result is built, so a refused settlement records nothing.
+        Effect.tap((settled) => {
+          const receipt = input.admission.receipt
+          if (!GovernanceThreadV2.isReceipt(receipt)) return Effect.void
+          return GovernanceThreadV2.reply(board, {
+            ...receipt,
+            blocked: isBlocked(settled.structured),
+            body: settled.text,
+          })
+        }),
+      ),
   })
 
   // A child's first provider turn: its reservation is revalidated or consumed, and a strict-resume seat binds its task.
