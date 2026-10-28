@@ -373,10 +373,10 @@ What that gives:
 - **Re-spawn.** An attempt's transcript, its seat's memory and its session's context archive are in the tree, so any
   run can be started again from its record (layout §3, Attempt).
 
-**Open, for WP0.** Whether GitHub's server-side merge honors `merge=union`. GitHub never runs custom drivers, so the
-`orchestra-atlas` driver cannot help there. If union is not honored, the host merges the bundle locally, where union
-and the driver run, and fast-forwards base to the tested commit (§6.6). The layout keeps the risk small: most files
-have one writer, and attempts and sessions get new files.
+**Union needs a local merge.** WP0 (#1114) showed that GitHub's server-side merge ignores `merge=union`, and GitHub
+never runs custom drivers either. So the host assembles every bundle locally, where union and later the
+`orchestra-atlas` driver run, and lands it by fast-forwarding base to the tested commit (§6.6). The layout keeps
+conflicts rare anyway: most files have one writer, and attempts and sessions get new files.
 
 **Public repositories.** Notes, threads, question text and spend are left out of `board.jsonl` and `card.jsonl`.
 On a public repository, attempts, seat memory and context archives travel redacted; on a private one they travel in
@@ -541,9 +541,10 @@ A green bundle merges under the grant given with `board_queue`. Right before it 
   member and rebuilds the bundle (§8.3);
 - compares base's tip with the `base.sha` stored on the bundle's full-gate run. A different tip is §6.5.
 
-Then it merges with `gh pr merge --merge --match-head-commit <tested head>`. Where GitHub's merge would not honor
-`merge=union` (§4.7), the host instead merges locally and pushes base as a fast-forward to the tested commit, which
-GitHub marks as merging every member PR. After the merge:
+Then it pushes base as a fast-forward to the tested bundle head, with `--force-with-lease` set to the stored
+`base.sha` so a base that moved fails the push instead of landing. GitHub marks the bundle PR and every member PR
+merged, because their heads are now in base (WP0, #1114). It never uses GitHub's merge button: that merge ignores
+`merge=union` (§4.7). After the merge:
 
 - GitHub marks each member PR merged, and the existing sync ships the card.
 - The host closes each open attempt with `merged`.
@@ -649,8 +650,8 @@ speed. Maestro's planning feeds this directly: cards that `archie` cuts by packa
    merge or a card cut ends an attempt, and every end has an `outcome` row.
 3. **Every queue exit has a fact.** A card leaves the queue only by merge, ejection, or dequeue with a reason (from
    the host or from Maestro). An `in-bundle` card whose PR head moved is treated as dequeued by the host. It is never
-   merged at a SHA the bundle did not test: the host re-reads heads right before merging and merges with
-   `--match-head-commit` (§6.6), so a push between the read and the merge fails the merge instead of landing.
+   merged at a SHA the bundle did not test: base only fast-forwards to the tested bundle head (§6.6), and a member
+   whose head moved after the bundle was assembled is not in that commit, so its PR stays open.
 4. **Targeted rebase notices.** When base advances, the host takes `git diff --name-only <old>..<new>` and compares
    it, with the arsenal's `conflictVerdict` semantics, to the declared write set of every queued card (phase 1;
    Building cards are later work, §12).
