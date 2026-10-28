@@ -43,7 +43,7 @@ export function readRule(flow: Flow): Rule | undefined {
 // The flow the rule describes: its nodes laid out in rows (the trigger, one row per case, the actions after the
 // longest case) and wired as the rule reads. Nodes the rule no longer names are dropped.
 export function writeRule(flow: Flow, rule: Rule): Flow {
-  const at = new Map<string, [number, number]>([
+  const at = new Map<string, readonly [number, number]>([
     ...(rule.trigger ? [[rule.trigger, [120, 200]] as const] : []),
     ...rule.cases.flatMap((conditions, row) =>
       conditions.map((id, column) => [id, [320 + 200 * column, 200 + 160 * row]] as const),
