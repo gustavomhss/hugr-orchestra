@@ -397,6 +397,7 @@ test("the PreToolUse gate settles every call through Orchestra, failing closed, 
   expect(executed[1]).not.toBe("tu-6")
 })
 
+test("an assistant-level error fails the turn unless a later frame supersedes it", async () => {
   const stored: { value: unknown } = { value: undefined }
   const state = { get: Effect.sync(() => stored.value), update: (fn: (value: unknown) => unknown) => Effect.sync(() => void (stored.value = fn(stored.value))) }
   script = [
