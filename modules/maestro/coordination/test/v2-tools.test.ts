@@ -45,6 +45,7 @@ const governance = [
 ]
 const arsenal = Object.values(MaestroArsenal.names)
 const memory = ["atlas_memory_recall", "atlas_memory_emit"]
+const drafting = ["archie_draft_workflow"]
 const research = [
   "research_capture",
   "research_view",
@@ -219,13 +220,13 @@ test("Maestro sees its tools and the Arsenal, each seat only its own, every othe
         registry.materialize(rulesOf(id)).pipe(Effect.map((item) => item.definitions.map((tool) => tool.name).sort()))
       expect(yield* visible("maestro")).toEqual([...governance, ...arsenal].sort())
       expect(yield* visible("lucy")).toEqual(["maestro_record_review"])
-      expect(yield* visible("archie")).toEqual([...arsenal, ...memory].sort())
+      expect(yield* visible("archie")).toEqual([...arsenal, ...memory, ...drafting].sort())
       expect(yield* visible("backend")).toEqual([...memory].sort())
       expect(yield* visible("jimmy")).toEqual([...memory, ...research].sort())
       for (const id of ["general", "explore", "custom"]) expect(yield* visible(id)).toEqual([])
       // Everything is registered: unfiltered materialization lists every tool.
       expect((yield* registry.materialize()).definitions.map((tool) => tool.name).sort()).toEqual(
-        [...governance, ...arsenal, "maestro_record_review", ...memory, ...research].sort(),
+        [...governance, ...arsenal, "maestro_record_review", ...memory, ...research, ...drafting].sort(),
       )
     }),
   ))
@@ -659,5 +660,30 @@ test("the workflow catalog reads the calling Location's own Relay publication an
       // A query names what it resolved, so an unknown id is an empty match, not an error.
       const queried = yield* call("maestro", "maestro_workflows", { workflow: "wf_missing" })
       expect(JSON.parse(String(queried.result.value))).toEqual({ projectID: location.project.id, workflows: [], unavailable: [] })
+    }),
+  ))
+
+test("only the upstream seat drafts a workflow, and never into the global project", () =>
+  run(
+    Effect.gen(function* () {
+      yield* setup
+      const sprint = JSON.stringify({ brief: "b", work_packages: [] })
+      const registry = yield* ToolRegistry.Service
+      // Visibility already hides the tool from Maestro; with every rule allowed, its own gate still refuses.
+      const unhidden = yield* (yield* registry.materialize(allow)).settle({
+        sessionID,
+        agent: AgentV2.ID.make("maestro"),
+        assistantMessageID: SessionMessage.ID.make("msg_calling"),
+        call: { type: "tool-call", id: "call", name: "archie_draft_workflow", input: { name: "Notes", sprint } },
+      })
+      expect(unhidden.result).toEqual({
+        type: "error",
+        value: "Drafting a workflow requires the upstream seat",
+      })
+      // The test Location sits outside git, so its project is the global one every such folder shares.
+      expect((yield* call("archie", "archie_draft_workflow", { name: "Notes", sprint })).result).toEqual({
+        type: "error",
+        value: "Workflows need a git repository; this folder is not one.",
+      })
     }),
   ))

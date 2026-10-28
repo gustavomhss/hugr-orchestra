@@ -44,6 +44,7 @@ import { MaestroPlanningTools } from "./tools/planning"
 import { MaestroResearchTools } from "./tools/research"
 import { MaestroResultTools } from "./tools/result"
 import { MaestroReviewTools } from "./tools/review"
+import { MaestroWorkflowDraftTools } from "./tools/workflow-draft"
 import { MaestroWorkflowTools } from "./tools/workflows"
 import { WorkflowArmV2 } from "./workflow/arm"
 import { WorkflowRelayV2 } from "./workflow/relay"
@@ -116,6 +117,7 @@ const layer = Layer.effectDiscard(
         }),
         ...MaestroResultTools.tools({ gate }),
         ...MaestroWorkflowTools.tools({ services, gate, publication }),
+        ...MaestroWorkflowDraftTools.tools({ services, gate, relay, publication }),
         ...MaestroAtlasMemoryTools.tools({ agents, seats, permission, git, location }),
         ...MaestroResearchTools.tools({
           db: database.db,

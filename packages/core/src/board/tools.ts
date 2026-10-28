@@ -2,6 +2,8 @@ export * as BoardTools from "./tools"
 
 import { Effect, Layer } from "effect"
 import {
+  CiRunInput,
+  CiRunResult,
   DecisionOutcomeInput,
   EpicInput,
   IssueInput,
@@ -110,6 +112,13 @@ export const node = makeGlobalNode({
             input: DecisionOutcomeInput,
             output: WriteResult,
             execute: (input, context) => guard(context, board.decisionOutcome(input)),
+          }),
+          ci_run: Tool.make({
+            description:
+              "Run a card's scoped checks from .orchestra/ci.json on its worktree's current tree and report scoped-green, scoped-red or null. A tree that already has a result is not run again, so a commit that keeps the tree keeps its green. run: false only reports.",
+            input: CiRunInput,
+            output: CiRunResult,
+            execute: (input, context) => guard(context, board.ciRun(input)),
           }),
         })
         .pipe(Effect.orDie)

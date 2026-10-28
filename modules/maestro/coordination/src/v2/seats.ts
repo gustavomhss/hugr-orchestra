@@ -208,6 +208,7 @@ export const owners: readonly { readonly tools: readonly string[]; readonly agen
     tools: ["maestro_arsenal_catalog", "maestro_arsenal_describe", "maestro_arsenal_execute"],
     agents: [AgentV2.defaultID, "archie"],
   },
+  { tools: ["archie_draft_workflow"], agents: ["archie"] },
   { tools: ["maestro_record_review"], agents: ["lucy"] },
   { tools: Object.values(MaestroResearchTools.names), agents: [ResearchSeatTools.SEAT] },
   {

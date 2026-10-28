@@ -20,6 +20,7 @@ Maestro itself (prompt, roster, dispatch, board, playbooks): `maestro-ownership`
 | What the runner hands the host (`notify`, `todos`) | `packages/core/src/session/runner/llm.ts` |
 | Built-in calls under Orchestra's names, task list as todos (`shown`, `checklist`) | `modules/engine-adapters/claude-code/src/v2/record.ts` |
 | Built-in results as Orchestra's tools record them (todo panel, edit diff) | `modules/engine-adapters/claude-code/src/v2/output.ts` |
+| In-process MCP server and streaming input (`server`, `inbox`) | `modules/engine-adapters/claude-code/src/v2/host.ts` |
 
 ## Invariants
 

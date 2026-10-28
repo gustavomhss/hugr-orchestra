@@ -41,6 +41,7 @@ These follow from Claude Code running the model. None of them changes what you s
 
 ## Known limits
 
+- Claude Code's tool calls show with Orchestra's usual widgets (shell, read, edit, todos, task, ...).
 - If Anthropic bills a turn as extra usage or refuses it, the app shows the provider's message. You can enable extra
   usage, use an API key, or pick another provider.
 

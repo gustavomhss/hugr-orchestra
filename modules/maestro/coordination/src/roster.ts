@@ -115,6 +115,7 @@ function seatProfile(seat: Seat): NativeProfile {
     ...(seat.atlasMemory ? { atlas_context: "allow" as const, atlas_memory_recall: "allow" as const, atlas_memory_emit: "allow" as const } : {}),
     ...(seat.id === "archie" ? {
       atlas_context: "allow" as const,
+      archie_draft_workflow: "allow" as const,
       maestro_arsenal_catalog: "allow" as const,
       ...Object.fromEntries(["maestro_arsenal_describe", "maestro_arsenal_execute"].map((name) => [name, Object.freeze({
         "*": "deny" as const,
