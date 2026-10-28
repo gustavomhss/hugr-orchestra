@@ -68,7 +68,7 @@ describe("seat skill packaging", () => {
   })
 
   test.each([
-    ["an orphan directory", { "cold-review/a/b/loose.md": "x" }, "Orphan seat skill directory: cold/cold-review/a/b/loose.md"],
+    ["an orphan directory", { "cold-review/a/x/loose.md": "x" }, "Orphan seat skill directory: cold/cold-review/a/x/loose.md"],
     ["a node under an orphan", { "cold-review/z/y/SKILL.md": node("cold-review-z-y") }, "Orphan seat skill directory: cold/cold-review/z/y/SKILL.md"],
     ["a wrong name", { "cold-review/a/SKILL.md": node("cold-review-other") }, "Seat skill name mismatch: cold/cold-review-a"],
     ["a fourth level", { "cold-review/a/b/c/d/SKILL.md": node("cold-review-a-b-c-d") }, "Seat skill tree too deep: cold/cold-review-a-b-c-d"],
