@@ -93,12 +93,36 @@ describe("DockMcp", () => {
       return { ok: false, error: { message: `unexpected ${op}` } }
     })
     const client = await connect((await d.servers())[2]!)
-    expect((await client.listTools()).tools.map((tool) => tool.name)).toEqual(["look", "find", "act", "wait"])
+    expect((await client.listTools()).tools.map((tool) => tool.name)).toEqual(["look", "find", "act", "wait", "apps", "launch"])
     const outline = text(await client.callTool({ name: "look", arguments: {} }))
     expect(outline).toStartWith("Linux workspace\n")
     // The editor's unnamed text view stays: it is where typing goes.
     expect(outline).toMatch(/"Save" \[1\]\n.*"Quit" \[2\]\ntext.* \[3\]$/)
     expect(d.calls.find((call) => call.op === "read")?.args).toMatchObject({ world: "linux", budget: 500 })
+    await client.close()
+  })
+
+  test("an empty workspace says how to open an app, and launch opens one and shows its window", async () => {
+    const opened = { value: false }
+    const d = dock((op, args) => {
+      if (op === "list") return { ok: true, value: tabs }
+      if (op === "apps") return { ok: true, value: [{ id: "org.gnome.TextEditor.desktop", name: "Text Editor" }] }
+      if (op === "launch") {
+        opened.value = args.appID === "org.gnome.TextEditor.desktop"
+        return { ok: true, value: { launched: args.appID } }
+      }
+      if (op === "read") return opened.value ? page([control("n:1", "Save", { states: [8, 24, 30] })])
+        : { ok: false, error: { message: "Owned application has no nonempty accessible window proposal", backend: "linux-atspi", code: "not-ready", outcome: "not-dispatched" } }
+      return { ok: false, error: { message: `unexpected ${op}` } }
+    })
+    const client = await connect((await d.servers())[2]!)
+    const empty = await client.callTool({ name: "look", arguments: {} })
+    expect(empty.isError).toBe(true)
+    expect(text(empty)).toContain("Open one with launch (ids from apps)")
+    expect(text(await client.callTool({ name: "apps", arguments: {} }))).toBe("Text Editor — id org.gnome.TextEditor.desktop")
+    const launched = text(await client.callTool({ name: "launch", arguments: { id: "org.gnome.TextEditor.desktop" } }))
+    expect(launched).toStartWith("opened org.gnome.TextEditor.desktop")
+    expect(launched).toContain('"Save" [1]')
     await client.close()
   })
 })

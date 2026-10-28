@@ -17,6 +17,7 @@ import { makeGlobalNode } from "@orchestra/core/effect/app-node"
 import { McpProvided } from "@orchestra/core/mcp/provided"
 import { Effect, Layer, Option, Schema } from "effect"
 import { createAppDockHooks, request } from "./app-dock"
+import { AppDockHints } from "./app-dock-hints"
 import { AppDockOutline } from "./app-dock-outline"
 import type { Transport } from "./transport"
 
@@ -30,6 +31,7 @@ type Snapshot = { header: string; entries: Entry[]; text?: string; complete: boo
 const LOOK_LIMIT = 40_000
 const TEXT_LIMIT = 20_000
 const SETTLE_MS = 300
+const ACT_MS = 20_000
 
 export const node = (port: Transport) => makeGlobalNode({ service: McpProvided.Service, layer: layer(port), deps: [] })
 
@@ -89,7 +91,7 @@ function serve(port: Transport, name: string, tab: Tab) {
   }))
   server.setRequestHandler(CallToolRequestSchema, async (call) => {
     const args = (call.params.arguments ?? {}) as Record<string, unknown>
-    const text = await run(call.params.name, args).catch((error: unknown) => `Error: ${error instanceof Error ? error.message : String(error)}`)
+    const text = await run(call.params.name, args).catch(failure)
     return { content: [{ type: "text", text }], isError: text.startsWith("Error:") }
   })
   void server.connect(side)
@@ -108,6 +110,15 @@ function serve(port: Transport, name: string, tab: Tab) {
     if (tool === "wait") return wait(args)
     if (tool === "act") return act(args)
     if (tool === "navigate" && !linux(tab)) return change(() => app.navigate!(args))
+    if (tool === "apps" && linux(tab)) return apps(port)
+    if (tool === "launch" && linux(tab)) {
+      // An empty workspace has nothing to read yet; the launched app's window is then all that appeared.
+      const before = state.last ?? await snap().catch((): Snapshot => ({ header: "Linux workspace", entries: [], complete: true }))
+      return change(async () => {
+        await request(port, "launch", { appID: String(args.id ?? "") }, AbortSignal.timeout(30_000), 30_000)
+        return `opened ${args.id}`
+      }, before)
+    }
     throw new Error(`Unknown tool ${tool}`)
   }
 
@@ -132,7 +143,8 @@ function serve(port: Transport, name: string, tab: Tab) {
     const rounds = linux(tab) ? 2 : 4
     const step = async (previous: Snapshot, left: number): Promise<Snapshot> => {
       await Bun.sleep(SETTLE_MS)
-      const next = await app.snapshot()
+      // A window that just opened may not expose its tree yet; keep the last good read and try again.
+      const next = await app.snapshot().catch(() => previous)
       if (left <= 1 || (next !== previous && same(next, previous) && !same(next, before))) return next
       return step(next, left - 1)
     }
@@ -157,6 +169,24 @@ function serve(port: Transport, name: string, tab: Tab) {
     }
     return poll()
   }
+}
+
+// A native failure carries a code; the hint for it says what to do next, so the model does not retry blind. Here
+// "not-ready" means the workspace has no app window with an accessibility tree, which these servers can fix.
+function failure(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error)
+  const code = typeof error === "object" && error !== null && typeof (error as { code?: unknown }).code === "string"
+    ? (error as { code: string }).code : undefined
+  const hint = code === "not-ready"
+    ? "No app window is open in the Linux workspace yet. Open one with launch (ids from apps), then look again; if it stays empty, the app exposes no accessibility tree"
+    : code === undefined ? undefined : AppDockHints.hintFor(code)
+  return `Error: ${message}${hint ? `. ${hint}` : ""}`
+}
+
+async function apps(port: Transport) {
+  const list = await request(port, "apps", {}, AbortSignal.timeout(10_000), 10_000) as { id: string; name: string }[]
+  if (list.length === 0) return "No apps are installed in the Linux workspace."
+  return list.map((app) => `${app.name} — id ${app.id}`).join("\n")
 }
 
 type App = {
@@ -217,10 +247,13 @@ function browserEntries(items: BrowserItem[]) {
 // the target {name, role} the ui_* verbs locate afresh.
 function linuxApp(port: Transport): App {
   const hooks = createAppDockHooks(port).tool!
-  const context = { sessionID: "dock-mcp", messageID: "dock-mcp", agent: "", agentID: "", directory: "", worktree: "",
-    abort: new AbortController().signal, metadata: () => {}, ask: () => Promise.resolve() } as unknown as ToolContext
   const invoke = async (tool: string, args: Record<string, unknown>) => {
-    const result = await hooks[tool]!.execute(args as never, context)
+    const context = { sessionID: "dock-mcp", messageID: "dock-mcp", agent: "", agentID: "", directory: "", worktree: "",
+      abort: AbortSignal.timeout(ACT_MS), metadata: () => {}, ask: () => Promise.resolve() } as unknown as ToolContext
+    // A frozen app or a wedged display must answer, not leave the model waiting on a call that never returns.
+    const result = await Promise.race([hooks[tool]!.execute(args as never, context), Bun.sleep(ACT_MS).then(() => undefined)])
+    if (result === undefined)
+      return `Error: the workspace gave no answer in ${ACT_MS / 1000}s; the app may be frozen or its window gone. look shows the current state.`
     const text = typeof result === "string" ? result : result.output
     // ui_* answer a failure as JSON carrying code and outcome (see toolError in app-dock.ts).
     const parsed = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(text))
@@ -382,7 +415,12 @@ function tools(where: string, workspace: boolean) {
         ...(workspace ? { action: { type: "string", description: "Action name when the control has several, e.g. press, activate" } } : {}) } } },
     { name: "wait", description: `Wait until text appears in ${where} (or goes away, with gone=true), up to timeoutMs (default 5000, at most 15000).`,
       inputSchema: { type: "object", properties: { text: { type: "string" }, gone: { type: "boolean" }, timeoutMs: { type: "integer" } }, required: ["text"] } },
-    ...(workspace ? [] : [{ name: "navigate", description: `Open an address in ${where}, or go back, forward or reload; answers with what changed.`,
+    ...(workspace ? [
+      { name: "apps", description: "List the apps installed in the Linux workspace, each with the id launch takes.",
+        inputSchema: { type: "object", properties: {} } },
+      { name: "launch", description: "Open an app in the Linux workspace (or bring its window forward if it is already open) and get back what changed. Take the id from apps.",
+        inputSchema: { type: "object", properties: { id: { type: "string", description: "An id from apps, e.g. org.gnome.TextEditor.desktop" } }, required: ["id"] } },
+    ] : [{ name: "navigate", description: `Open an address in ${where}, or go back, forward or reload; answers with what changed.`,
       inputSchema: { type: "object", properties: { address: { type: "string", description: "https:// URL, bare domain or search words" },
         command: { type: "string", enum: ["back", "forward", "reload"] } } } }]),
   ]

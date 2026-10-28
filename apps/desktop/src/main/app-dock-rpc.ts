@@ -520,6 +520,21 @@ export class AppDockRPC {
         if (world === undefined) return tabs
         return tabs.filter((tab) => ("scopeKind" in tab && tab.scopeKind === "workspace") === (world === "linux"))
       }
+      case "apps": {
+        if (!dock.linuxApps) throw new NativeDockProtocol.NativeError("unsupported-operation", "No Linux workspace runtime")
+        return dock.linuxApps()
+      }
+      case "launch": {
+        if (!dock.linuxLaunch) throw new NativeDockProtocol.NativeError("unsupported-operation", "No Linux workspace runtime")
+        const appID = dockString(args.appID, "appID")
+        if (appID.length > 512 || !appID.endsWith(".desktop") || /[\x00-\x1f/\\]/.test(appID))
+          throw new Error("Invalid MCP Dock appID: pass an id from apps")
+        // The launcher reports only "failed"; say what usually causes it.
+        await dock.linuxLaunch(senderID, appID).catch(() => {
+          throw new NativeDockProtocol.NativeError("launch-failed", `Could not open ${appID}: the Linux workspace must be the visible tab, and the id must come from apps`)
+        })
+        return { launched: appID }
+      }
       case "activate": {
         const tabID = dockString(args.tabID, "tabID")
         dock.activate(senderID, win, tabID)
