@@ -11,6 +11,7 @@ import { SkillV2 } from "@orchestra/core/skill"
 import { SkillDiscovery } from "@orchestra/core/skill/discovery"
 import { PlaybookContent } from "../src/playbook-content"
 import { SeatSkillRoot } from "../src/seat-skill-root"
+import { Seats } from "../src/seats"
 import { MaestroSeatsV2 } from "../src/v2/seats"
 import { MaestroSkillSourcesV2 } from "../src/v2/skill-sources"
 
@@ -26,7 +27,10 @@ test("Maestro lists every playbook, a same-name skill from another source wins, 
   await Promise.all(
     ["frame-request", "my-skill"].map(async (name) => {
       await fs.mkdir(path.join(other, name))
-      await fs.writeFile(path.join(other, name, "SKILL.md"), `---\nname: ${name}\ndescription: Other ${name}\n---\n# ${name}`)
+      await fs.writeFile(
+        path.join(other, name, "SKILL.md"),
+        `---\nname: ${name}\ndescription: Other ${name}\n---\n# ${name}`,
+      )
     }),
   )
   const result = await Effect.runPromise(
@@ -40,7 +44,9 @@ test("Maestro lists every playbook, a same-name skill from another source wins, 
       }),
     ).pipe(
       Effect.provide(
-        AppNodeBuilder.build(LayerNode.group([SkillV2.node]), [[SkillDiscovery.node, discovery]]) as Layer.Layer<SkillV2.Service>,
+        AppNodeBuilder.build(LayerNode.group([SkillV2.node]), [
+          [SkillDiscovery.node, discovery],
+        ]) as Layer.Layer<SkillV2.Service>,
       ),
     ),
   ).finally(() => fs.rm(other, { recursive: true, force: true }))
@@ -63,4 +69,38 @@ test("Maestro lists every playbook, a same-name skill from another source wins, 
     expect(names).toContain("my-skill")
     for (const name of PlaybookContent.names) expect(names).not.toContain(name)
   }
+})
+
+test("every seat lists and loads its own skill tree, and no other agent sees it", async () => {
+  const list = await Effect.runPromise(
+    Effect.scoped(
+      Effect.gen(function* () {
+        const skills = yield* SkillV2.Service
+        yield* skills.transform(MaestroSkillSourcesV2.seats(SeatSkillRoot.roots))
+        yield* skills.transform(MaestroSkillSourcesV2.playbooks(SeatSkillRoot.playbooks))
+        return yield* skills.list()
+      }),
+    ).pipe(
+      Effect.provide(
+        AppNodeBuilder.build(LayerNode.group([SkillV2.node]), [
+          [SkillDiscovery.node, discovery],
+        ]) as Layer.Layer<SkillV2.Service>,
+      ),
+    ),
+  )
+  const byName = new Map(list.map((skill) => [skill.name, skill]))
+  const owned = Object.values(Seats.all).filter((seat) => seat.skills.length > 0)
+  expect(owned.map((seat) => seat.id)).toEqual(expect.arrayContaining(["backend", "archie", "jimmy"]))
+  for (const seat of owned) {
+    for (const name of seat.skills)
+      expect(byName.get(name)?.location).toBe(
+        AbsolutePath.make(path.join(SeatSkillRoot.roots[seat.id], name, "SKILL.md")),
+      )
+    const names = SkillV2.available(list, agent(seat.id)).map((skill) => skill.name)
+    expect(names).toEqual(expect.arrayContaining([...seat.skills]))
+    for (const other of owned.filter((item) => item.id !== seat.id))
+      for (const name of other.skills) expect(names).not.toContain(name)
+  }
+  const maestro = SkillV2.available(list, agent("maestro")).map((skill) => skill.name)
+  for (const seat of owned) for (const name of seat.skills) expect(maestro).not.toContain(name)
 })

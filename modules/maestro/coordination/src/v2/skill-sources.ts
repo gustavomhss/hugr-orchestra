@@ -4,6 +4,7 @@ import type { PermissionV2 } from "@orchestra/core/permission"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { SkillV2 } from "@orchestra/core/skill"
 import { PlaybookContent } from "../playbook-content"
+import { Seats } from "../seats"
 
 /**
  * Maestro's bundled playbooks (`SeatSkillRoot.playbooks`) as a skill source. It goes before every other source, so a
@@ -12,6 +13,28 @@ import { PlaybookContent } from "../playbook-content"
 export function playbooks(root: string) {
   return (draft: SkillV2.Draft) =>
     draft.source(SkillV2.DirectorySource.make({ type: "directory", path: AbsolutePath.make(root) }), { first: true })
+}
+
+/**
+ * Every native seat's skill tree (`SeatSkillRoot.roots`) as a skill source, so the `skill` tool can load a seat's own
+ * skills. Like the playbooks they go first: a same-name skill from configuration replaces one.
+ */
+export function seats(roots: Readonly<Record<string, string>>) {
+  return (draft: SkillV2.Draft) =>
+    Object.values(roots)
+      .toReversed()
+      .forEach((root) =>
+        draft.source(SkillV2.DirectorySource.make({ type: "directory", path: AbsolutePath.make(root) }), {
+          first: true,
+        }),
+      )
+}
+
+/** A seat's skills belong to that seat: every other agent, Maestro included, is denied loading them. */
+export function foreign(id: string): PermissionV2.Ruleset {
+  return Object.values(Seats.all)
+    .filter((seat) => seat.id !== id)
+    .flatMap((seat) => seat.skills.map((name) => ({ action: "skill", resource: name, effect: "deny" as const })))
 }
 
 /** Playbooks are Maestro's procedures: every other agent is denied loading one, which also leaves it off their list. */

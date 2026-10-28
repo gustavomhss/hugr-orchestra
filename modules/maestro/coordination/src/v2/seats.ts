@@ -32,7 +32,7 @@ export const pluginID = PluginV2.ID.make("maestro/seats")
  * widen it (findLast wins). Maestro itself
  * is core's default agent; configuration (`agent.<id>`) installed before this plugin keeps its prompt and description,
  * and the seat's engine, model and display label stay the owner's settings. Every agent then gets the `visibility`
- * denials, and Maestro its playbooks as skills.
+ * denials, every seat its own skill tree as skills, and Maestro its playbooks.
  *
  * The roster loads lazily: it materializes the seats' skill trees and the playbooks, which only an Orchestra build
  * packages. Where they are missing (the standalone CLI binary today) the seats and playbooks are skipped with a warning
@@ -64,7 +64,10 @@ const layer = Layer.effectDiscard(
     yield* plugins.wait(PluginV2.ID.make("config-agent"))
     yield* plugins.ensure(pluginID, () =>
       Effect.gen(function* () {
-        if (skillRoot) yield* skills.transform(MaestroSkillSourcesV2.playbooks(skillRoot.SeatSkillRoot.playbooks))
+        if (skillRoot) {
+          yield* skills.transform(MaestroSkillSourcesV2.seats(skillRoot.SeatSkillRoot.roots))
+          yield* skills.transform(MaestroSkillSourcesV2.playbooks(skillRoot.SeatSkillRoot.playbooks))
+        }
         yield* agents.transform(
           Effect.fn(function* (draft) {
             const members = roster ? roster.roster.filter((member) => seats.has(member.memberId)) : []
@@ -199,12 +202,13 @@ export const owners: readonly { readonly tools: readonly string[]; readonly agen
   },
 ]
 
-/** The rules denying an agent the tools it may not use and, unless it is Maestro, the playbooks. */
+/** The rules denying an agent the tools it may not use, other seats' skills and, unless it is Maestro, the playbooks. */
 export function visibility(id: string): PermissionV2.Ruleset {
   return [
     ...owners
       .filter((owner) => !owner.agents.includes(id))
       .flatMap((owner) => owner.tools.map((tool) => ({ action: tool, resource: "*", effect: "deny" as const }))),
+    ...MaestroSkillSourcesV2.foreign(id),
     ...(id === AgentV2.defaultID ? [] : MaestroSkillSourcesV2.denied),
   ]
 }
