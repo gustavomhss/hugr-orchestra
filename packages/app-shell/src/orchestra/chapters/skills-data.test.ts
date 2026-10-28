@@ -103,11 +103,10 @@ describe("skills reply", () => {
 })
 
 describe("internal skills", () => {
-  test("only a frontmatter internal flag hides a skill", () => {
-    expect(isInternalSkill({ content: "---\nname: a\ninternal: true\n---\nbody" })).toBe(true)
-    expect(isInternalSkill({ content: "---\r\nname: a\r\ninternal: true\r\n---\r\nbody" })).toBe(true)
-    expect(isInternalSkill({ content: "---\nname: a\ninternal: false\n---\nbody" })).toBe(false)
-    expect(isInternalSkill({ content: "---\nname: a\n---\ninternal: true" })).toBe(false)
-    expect(isInternalSkill({ content: "internal: true" })).toBe(false)
+  test("only the internal flag the server reports hides a skill", () => {
+    expect(isInternalSkill({ internal: true })).toBe(true)
+    expect(isInternalSkill({ internal: false })).toBe(false)
+    expect(isInternalSkill({})).toBe(false)
+    expect(readSkills([{ name: "a", location: "/a/SKILL.md", content: "body", internal: true }])[0]?.internal).toBe(true)
   })
 })

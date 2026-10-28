@@ -14,6 +14,6 @@ internal: true
 ---
 ```
 
-- `internal: true` (or `yes`) hides the skill from the Skills chapter only. Agents still discover and load it as before.
+- `internal: true` (or `yes`) hides the skill from the Skills chapter and from a workflow step's skill list. Agents still discover and load it as before, and a step that already names it still runs.
 - The core skill loader ignores the key, so no other change is needed.
-- Built-in examples: `archie-plan` and `archie-work-package`.
+- Built-in examples: every specialist seat's skills (`archie-*`, `backend-*`, `jimmy-reference`) and Maestro's playbooks (`maestro-*`, `frame-request`).

@@ -21,6 +21,8 @@ export const Info = Schema.Struct({
   name: Schema.String,
   description: Schema.String.pipe(optional),
   slash: Schema.Boolean.pipe(optional),
+  /** Set by `internal: true` in the frontmatter: the skill is for agents only, so user-facing pickers leave it out. */
+  internal: Schema.Boolean.pipe(optional),
   location: AbsolutePath,
   content: Schema.String,
   /** Last modification time (ms) of the skill file, for optimistic concurrency on save. */

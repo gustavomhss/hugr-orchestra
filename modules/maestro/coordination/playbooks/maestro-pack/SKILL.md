@@ -1,6 +1,7 @@
 ---
 name: maestro-pack
 description: Coordinate upstream-authored briefs, bind actual dispatch facts and inspect compact returns. Use before delegation or when evidence/context pressure needs bounded recovery.
+internal: true
 ---
 
 # Maestro Pack

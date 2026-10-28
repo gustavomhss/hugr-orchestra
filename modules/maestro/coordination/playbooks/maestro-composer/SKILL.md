@@ -1,6 +1,7 @@
 ---
 name: maestro-composer
 description: Reuse FastAPI primitives and recipes through existing HuGRComposerPlugin. Use when FastAPI infrastructure reuse, composition, or project scaffolding is relevant; discover narrowly and validate generated code in the actual project.
+internal: true
 ---
 
 # Maestro Composer

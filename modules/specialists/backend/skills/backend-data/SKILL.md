@@ -1,6 +1,7 @@
 ---
 name: backend-data
 description: "Data obligations for an assigned backend change: a query or write with its result mapping, writes bound to a supplied transaction, a persistence mapping, or one assigned schema or data migration phase. Load with backend-implement when the packet changes how data is read, written or transitioned. Not for choosing persistence design, isolation, a migration plan or rollout."
+internal: true
 ---
 
 # Backend data

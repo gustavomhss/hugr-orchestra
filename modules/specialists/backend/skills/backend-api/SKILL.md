@@ -1,6 +1,7 @@
 ---
 name: backend-api
 description: "API boundary obligations for an assigned backend change: an endpoint, handler, RPC method, resolver, event stream, upload or webhook route, binary codec or external client built against a supplied contract. Load with backend-implement when the packet changes a request, response or wire boundary. Not for choosing a transport, designing a public API or diagnosing a broken endpoint."
+internal: true
 ---
 
 # Backend API boundary

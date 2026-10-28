@@ -36,9 +36,16 @@ import {
 import { addNode } from "./insert"
 import { issueText, phaseNames } from "./parts"
 import { Ic, useRelayCopy } from "./ui"
+import type { SkillSource } from "../chapters/skills-data"
 
-// The skill catalog as the editor has it: `names` is undefined until it has loaded, and `error` says it could not.
-export type Skills = { names: string[] | undefined; error: boolean; retry: () => void }
+// The skill catalog as the editor has it: `names` is every skill a step can resolve and `choices` the ones the picker
+// offers, in Skills page order; both are undefined until it has loaded, and `error` says it could not.
+export type Skills = {
+  names: string[] | undefined
+  choices: { name: string; description?: string; source: SkillSource }[] | undefined
+  error: boolean
+  retry: () => void
+}
 
 export type Props = {
   flow: Flow
@@ -408,7 +415,14 @@ export function Params(props: Props) {
   const skill = () => String(props.node.parameters.skill ?? "")
   // Only a loaded catalog can say a skill is gone; until then the name is taken at its word.
   const skillGone = () => !!skill() && !!props.skills.names && !props.skills.names.includes(skill())
-  const skillOptions = () => [...new Set([...(props.skills.names ?? []), skill()].filter(Boolean))]
+  const chosen = () => props.skills.choices?.find((item) => item.name === skill())
+  // A step may name a skill the picker does not offer (agent-only, or gone); it stays selectable so the value shows.
+  const unlisted = () => (skill() && !chosen() ? skill() : undefined)
+  const skillGroups = () =>
+    (["project", "global", "builtin"] as const).flatMap((source) => {
+      const items = (props.skills.choices ?? []).filter((item) => item.source === source)
+      return items.length ? [{ source, items }] : []
+    })
   const unchecked = () => ["relay.execute", "relay.review"].includes(props.node.type) && !checklist().controls.length
   const picker = useProjectFile(() => props.directory)
   const previous = () => {
@@ -555,13 +569,18 @@ export function Params(props: Props) {
               <span>{copy.t("orchestra.workflows.details.skill")}</span>
               <select value={skill()} onChange={(event) => update({ skill: event.currentTarget.value })}>
                 <option value="">{copy.t("orchestra.workflows.details.noSkill")}</option>
-                <For each={skillOptions()}>
+                <Show when={unlisted()}>
                   {(name) => (
-                    <option value={name}>
-                      {skillGone() && name === skill()
-                        ? copy.t("orchestra.workflows.details.skillMissing", { skill: name })
-                        : name}
+                    <option value={name()}>
+                      {skillGone() ? copy.t("orchestra.workflows.details.skillMissing", { skill: name() }) : name()}
                     </option>
+                  )}
+                </Show>
+                <For each={skillGroups()}>
+                  {(group) => (
+                    <optgroup label={copy.t(`orchestra.skills.source.${group.source}`)}>
+                      <For each={group.items}>{(item) => <option value={item.name}>{item.name}</option>}</For>
+                    </optgroup>
                   )}
                 </For>
               </select>
@@ -582,6 +601,9 @@ export function Params(props: Props) {
                 <span class="mx-hint" role="alert" style={{ color: "var(--mx-bad)" }}>
                   {copy.t("orchestra.workflows.details.skillMissingHint", { skill: skill() })}
                 </span>
+              </Show>
+              <Show when={chosen()?.description}>
+                {(description) => <span class="mx-hint">{description()}</span>}
               </Show>
               <Show when={skill() && !skillGone()}>
                 <span class="mx-hint">{copy.t("orchestra.workflows.details.skillLive")}</span>

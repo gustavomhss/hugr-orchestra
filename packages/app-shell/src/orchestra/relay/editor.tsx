@@ -7,6 +7,7 @@ import { modalActive } from "@/utils/modal-active"
 import { skipToken, useQuery } from "@tanstack/solid-query"
 import { createEffect, createMemo, createSignal, For, Match, on, onCleanup, onMount, Show, Switch } from "solid-js"
 import { MxPage } from "../chapters/kit"
+import { isInternalSkill, skillSource, sortSkills } from "../chapters/skills-data"
 import type { CanvasApi } from "./canvas"
 import { hookOutputs } from "./catalog"
 import { rememberDocument } from "./cache"
@@ -179,7 +180,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
           ? () =>
               serverSDK()
                 .currentApi.skill.list({ location: { directory: props.directory } })
-                .then((result) => result.data.map((skill) => skill.name))
+                .then((result) => result.data)
           : skipToken,
       retry: false,
       staleTime: 60_000,
@@ -190,7 +191,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
     issues(
       flow(),
       [...(unrunnable() ? [copy.t("orchestra.workflows.editor.notRunnable")] : []), ...documentDiagnostics(base())],
-      skills.isSuccess ? skills.data : undefined,
+      skills.isSuccess ? skills.data.map((skill) => skill.name) : undefined,
     ),
   )
   const issueList = () => {
@@ -704,7 +705,18 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
                   run={overlayRun()}
                   runs={runs()}
                   skills={{
-                    names: skills.isSuccess ? skills.data : undefined,
+                    names: skills.isSuccess ? skills.data.map((skill) => skill.name) : undefined,
+                    // Agent-only skills still resolve for a step that names one, but the picker offers what the Skills page lists.
+                    choices: skills.isSuccess
+                      ? sortSkills(
+                          skills.data.filter((skill) => !isInternalSkill(skill)),
+                          props.directory,
+                        ).map((skill) => ({
+                          name: skill.name,
+                          description: skill.description ?? undefined,
+                          source: skillSource(skill.location, props.directory),
+                        }))
+                      : undefined,
                     error: skills.isError,
                     retry: () => void skills.refetch(),
                   }}

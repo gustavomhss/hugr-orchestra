@@ -1,6 +1,7 @@
 ---
 name: maestro-arsenal-operators
 description: Use when Maestro needs release, repository ruleset, or scoped policy proposals and the operator explicitly requests their adoption through existing native tools.
+internal: true
 ---
 
 # Maestro Arsenal operator adoption

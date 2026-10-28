@@ -1,6 +1,7 @@
 ---
 name: maestro-governed
 description: Run the governed approval chain from preconditions to verified dispatch, covering admission, grounding, validation, the cold review (`lucy`), owner approval, authorization and task. Use before the first governed tool call whenever the owner asks for a governed or auditable flow.
+internal: true
 ---
 
 # Maestro Governed

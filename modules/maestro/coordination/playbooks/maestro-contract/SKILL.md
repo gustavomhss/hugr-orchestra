@@ -1,6 +1,7 @@
 ---
 name: maestro-contract
 description: Coordinate upstream shared-contract authoring, implementation scaffolds and seam verification. Use when one work unit consumes another or a shared boundary requires coordinated changes.
+internal: true
 ---
 
 # Maestro Contract

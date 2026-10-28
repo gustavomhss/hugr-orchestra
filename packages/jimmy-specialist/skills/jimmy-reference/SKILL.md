@@ -1,6 +1,7 @@
 ---
 name: jimmy-reference
 description: Optional doctrine for the research seat. Load only when a claim of absence, a count, a test or CI result, or a web source needs it.
+internal: true
 ---
 
 # Research reference

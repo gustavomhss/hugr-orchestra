@@ -1,6 +1,7 @@
 ---
 name: backend-concurrency
 description: "Lifetime obligations for an assigned backend change: task and resource ownership, cancellation and completion, bounded streams and workers, job admission, external retries with effect identity, and assigned observability signals. Load with backend-implement when the packet assigns lifetime, admission, retry or backpressure behavior. Not for choosing delivery guarantees, a queue, a retry policy or a throughput strategy."
+internal: true
 ---
 
 # Backend concurrency and lifetimes

@@ -1,6 +1,7 @@
 ---
 name: maestro-decompose
 description: Coordinate upstream acceptance coverage, decomposition review and adoption. Use for substantial multi-part work or before deciding whether to dispatch parallel slices; small Tasks stay lightweight.
+internal: true
 ---
 
 # Maestro Decompose

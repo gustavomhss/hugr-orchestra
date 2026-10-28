@@ -3392,6 +3392,7 @@ export type SkillsListOutput = {
     readonly name: string
     readonly description?: string
     readonly slash?: boolean
+    readonly internal?: boolean
     readonly location: string
     readonly content: string
     readonly mtime?: number
@@ -3449,6 +3450,7 @@ export type SkillsSaveOutput = {
     readonly name: string
     readonly description?: string
     readonly slash?: boolean
+    readonly internal?: boolean
     readonly location: string
     readonly content: string
     readonly mtime?: number

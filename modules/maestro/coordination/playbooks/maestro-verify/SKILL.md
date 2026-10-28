@@ -1,6 +1,7 @@
 ---
 name: maestro-verify
 description: Verify returned work, acceptance evidence, test teeth, and integration risk. Use for completion claims, independent review, PR review, or before an authorized integration or release; scope checks to the actual change.
+internal: true
 ---
 
 # Maestro Verify

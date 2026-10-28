@@ -1,6 +1,7 @@
 ---
 name: maestro-loop
 description: Drive ready work, verify returns, recover interruptions, and integrate approved deltas. Use after slices and briefs exist, for dependent execution, failed handoffs, or selective recovery; small work follows a direct inspect/edit/verify loop.
+internal: true
 ---
 
 # Maestro Loop
