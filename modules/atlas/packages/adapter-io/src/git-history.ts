@@ -25,6 +25,7 @@ import type { StructRef } from "@atlas/contracts"
 import type { HistorySource, MinedSignals } from "@atlas/genesis"
 import { nodeHashOfPath } from "@atlas/index"
 import { asSubtreeHash } from "@atlas/kernel"
+import { ATLAS_IGNORE_BLOCK } from "./gitignore.js"
 import { runGit } from "./run-git.js"
 
 /** All git I/O flows through the ONE shared no-shell seam (#74), absorbed so this module is TOTAL: a bad
@@ -101,13 +102,15 @@ const fileRef = (qualifiedPath: string): StructRef => ({
   subtreeHash: asSubtreeHash(nodeHashOfPath(qualifiedPath)),
 })
 
-/** Atlas's own paths: the governed store (`.atlas/**`) and the repo-root `.gitignore` that `atlas init`
- *  writes its deny block into. They are Atlas's bookkeeping, not the user's code, so they are never a mining
- *  site, never churn or coupling, and never blame. A commit touching ONLY these is a record commit. */
-const atlasOwned = (p: string): boolean => p === ".gitignore" || p.startsWith(".atlas/")
+/** What Atlas itself wrote: the governed store (`.atlas/**`) and the rule lines `atlas init` appends to the
+ *  repo-root `.gitignore`. They are Atlas's bookkeeping, not the user's code, so they are never a mining
+ *  site, churn, coupling or blame. The user's OWN `.gitignore` lines are user code and count as usual. */
+const atlasStore = (p: string): boolean => p.startsWith(".atlas/")
+const ATLAS_RULES = new Set(ATLAS_IGNORE_BLOCK.split("\n").filter((l) => l.length > 0))
 
 /** One commit's mining record: its subject (SZZ) and the RAW paths it touched (churn + coupling basket). */
 interface CommitBasket {
+  readonly sha: string
   readonly subject: string
   readonly files: readonly string[]
 }
@@ -125,24 +128,36 @@ const BASKET_HEADER = /^([0-9a-f]{40})\x1f([\s\S]*)$/
  */
 function commitBaskets(repo: string, rev: string): CommitBasket[] {
   const out = git(repo, ["log", "--format=%H%x1f%s", "--name-only", "-z", rev])
-  const commits: Array<{ subject: string; files: string[] }> = []
+  const commits: Array<{ sha: string; subject: string; files: string[] }> = []
   for (const raw of out.split("\0")) {
     const rec = raw.replace(/^\n+/, "")
     if (rec.length === 0) continue
     const header = BASKET_HEADER.exec(rec)
-    if (header !== null) commits.push({ subject: header[2] ?? "", files: [] })
+    if (header !== null) commits.push({ sha: header[1] ?? "", subject: header[2] ?? "", files: [] })
     else commits[commits.length - 1]?.files.push(rec)
   }
   return commits
 }
 
-/** The baskets that carry user history: Atlas-owned paths removed, record commits (all paths Atlas-owned)
- *  dropped. A commit that touched nothing at all (empty commit, merge) stays, as before. */
+/** The baskets that carry user history: `.atlas/**` paths removed, a `.gitignore` touch removed when every
+ *  line it changed is one `atlas init` wrote, and record commits (nothing left) dropped. A commit that
+ *  touched nothing at all (empty commit, merge) stays, as before. */
 function userBaskets(repo: string, rev: string): CommitBasket[] {
   return commitBaskets(repo, rev).flatMap((c) => {
-    const files = c.files.filter((f) => !atlasOwned(f))
-    return files.length === 0 && c.files.length > 0 ? [] : [{ subject: c.subject, files }]
+    const files = c.files.filter((f) => !atlasStore(f) && !(f === ".gitignore" && atlasRulesOnly(repo, c.sha)))
+    return files.length === 0 && c.files.length > 0 ? [] : [{ ...c, files }]
   })
+}
+
+/** True when the commit's `.gitignore` diff adds or removes only lines Atlas wrote (blank lines ignored). */
+function atlasRulesOnly(repo: string, sha: string): boolean {
+  const diff = git(repo, ["show", "--format=", "--unified=0", sha, "--", ".gitignore"])
+  const changed = diff
+    .split("\n")
+    .filter((l) => /^[+-]/.test(l) && !l.startsWith("+++") && !l.startsWith("---"))
+    .map((l) => l.slice(1))
+    .filter((l) => l.length > 0)
+  return changed.length > 0 && changed.every((l) => ATLAS_RULES.has(l))
 }
 
 /** A trivial per-key memo — `fn` runs at most once per distinct `key`, cached for the LIFETIME of the
@@ -184,7 +199,7 @@ export function createHistorySource(repoPath: string, rev: string): HistorySourc
 
   /** The RAW tracked path set at a rev — the identity domain every emitted site is drawn from. */
   const trackedAt = (repo: string, r: string): string[] =>
-    nulPaths(git(repo, ["ls-tree", "-r", "--name-only", "-z", r])).filter((p) => !atlasOwned(p))
+    nulPaths(git(repo, ["ls-tree", "-r", "--name-only", "-z", r])).filter((p) => !atlasStore(p))
 
   // Keyed on the ACTUAL call args (`repo\0rev`), not the closed-over `repoPath`/`rev` — see the `memo` note.
   const rk = (repo: string, r: string): string => `${repo}\0${r}`
@@ -208,11 +223,17 @@ export function createHistorySource(repoPath: string, rev: string): HistorySourc
     const header = /^([0-9a-f]{40}) \d+ \d+/ // porcelain line-block header = <sha> <orig> <final> [n]
     for (const f of files) {
       const blame = git(repo, ["blame", "--line-porcelain", r, "--", f])
+      let sha: string | undefined
       for (const line of blame.split("\n")) {
-        const sha = header.exec(line)?.[1]
-        if (sha !== undefined) {
-          perCommit.set(sha, (perCommit.get(sha) ?? 0) + 1)
-          total += 1
+        const h = header.exec(line)?.[1]
+        if (h !== undefined) sha = h
+        // The tab-prefixed record is the line's content; a rule `atlas init` wrote is not user code.
+        else if (line.startsWith("\t") && sha !== undefined) {
+          if (!(f === ".gitignore" && ATLAS_RULES.has(line.slice(1)))) {
+            perCommit.set(sha, (perCommit.get(sha) ?? 0) + 1)
+            total += 1
+          }
+          sha = undefined
         }
       }
     }
@@ -260,7 +281,7 @@ export function createHistorySource(repoPath: string, rev: string): HistorySourc
     const co = new Set<string>()
     for (const sha of commitsTouching(qp)) {
       for (const f of nulPaths(git(repoPath, ["show", "--format=", "--name-only", "-z", sha]))) {
-        if (f !== qp && !atlasOwned(f)) co.add(f)
+        if (f !== qp && !atlasStore(f)) co.add(f)
       }
     }
     const coChanged = [...co].sort(byPath).map(fileRef)
