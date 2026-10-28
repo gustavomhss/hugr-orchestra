@@ -165,6 +165,8 @@ export type { ContextArchive, ContextEvent, ContextRead, ContextReference } from
 export { githubSlug, repoVisibility } from "./repo-visibility.js"
 export { readPrRecord, withPrRecord, writeGithubPrRecord } from "./pr-record.js"
 export type { AttemptRef, SendJson } from "./pr-record.js"
+export { respawnBrief } from "./respawn-brief.js"
+export type { RespawnBrief } from "./respawn-brief.js"
 export type { GetJson, Visibility } from "./repo-visibility.js"
 export type { LayoutMigration } from "./migrate-layout.js"
 export type { DurableMemory, MemoryRead } from "./memory-store.js"

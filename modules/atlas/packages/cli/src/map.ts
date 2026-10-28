@@ -110,6 +110,7 @@ export const COMMANDS = [
   "own-export",
   "repair",
   "migrate-layout",
+  "respawn",
 ] as const
 export type Command = (typeof COMMANDS)[number]
 
@@ -260,6 +261,7 @@ export const COMMAND_LEG: Record<Command, Leg> = {
   //                       history, never the store, so it binds a READ leg (the `export` precedent).
   "migrate-layout": "atlas-query", // OPS: moves the single-file .atlas logs into the tree; it writes those files,
   //                                  never the knowledge store, so it binds a READ leg (the `export` precedent).
+  respawn: "atlas-query", // OPS: reads the committed .atlas record and prints a re-spawn brief; it writes nothing.
 }
 
 export type Authority = "read" | "write"
