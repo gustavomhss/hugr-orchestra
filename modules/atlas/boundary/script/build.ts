@@ -21,6 +21,9 @@ await Promise.all(
       ["context", "adapter-io/src/context-log.ts"],
       // The PR record, the Attempt trailer and the GitHub PR writer (merge-queue spec §4.5), for the board host.
       ["record", "persist/src/host-adapter.ts"],
+      // The record commit's writers (merge-queue spec §4.7): card, attempt, board, logbook and milestone, each redacted
+      // on a public repository.
+      ["record-log", "adapter-io/src/record-log.ts"],
     ] as const
   ).map(async ([name, file]) => {
     const entry = path.join(root, "modules/atlas/packages", file)
