@@ -58,6 +58,7 @@ grounded (the docs dogfood the Atlas: reference is pinned to `source@sha` and dr
 - [design/atlas.md](./design/atlas.md) — the product design (working-backwards prose)
 - [design/authoring.md](./design/authoring.md) — the authoring surface: Define · Frame · Structure · Ratify
 - [design/authoring-surface-study.md](./design/authoring-surface-study.md) — the functional-surface catalog behind it (L0–L3 + the six lenses)
+- [design/repo-layout.md](./design/repo-layout.md) — the `.atlas/` tree that travels in git: knowledge, memory, cards, attempts, context archives (design, not built)
 - [spec/atlas.md](./spec/atlas.md) · [spec/memory.md](./spec/memory.md) — the **transitional normative
   source** the `reference/` files currently ground to (completeness verified; content-complete in
   `reference/`). Retires when the atlas **code** lands and reference re-grounds to `source@sha`.
