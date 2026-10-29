@@ -91,7 +91,9 @@ attempts, diff size, CI runs and minutes, and where the card is in the queue. Mo
 The PR body is rendered by Atlas; without it, the PR body is left as Maestro wrote it.
 
 Queued cards are merged together into one bundle PR named `chore(queue): bundle KEY-B<n>` on a `bundle-KEY-<n>`
-branch, labelled with `full.label` so your full CI runs once for all of them. A bundle is cut when the queue reaches
+branch, labelled with `full.label` so your full CI runs once for all of them. A bundle PR also carries every
+`guardrail-approved` or `guardrail-approved:<rule>` label its cards' PRs have, so a guard approval given to a card
+still holds when its change lands in the bundle. A bundle is cut when the queue reaches
 `bundle.size` cards, when a card was queued with `flush`, when the oldest card has waited `bundle.waitMinutes`, or when
 every remaining card of an epic is queued. Urgent cards go first.
 
@@ -140,6 +142,7 @@ that depends on them). Cards whose packages overlap share a lane; cards that sha
 each lane is cut into its own bundle. A lane bundle is not labelled with `full.label`: Maestro dispatches each workflow
 in `workflows` on the bundle branch with a `packages` input that lists the lane's packages, so only those packages are
 typechecked and tested. Your workflows need a `packages` `workflow_dispatch` input and should filter on it.
+Maestro asks turbo about the card merged onto the base branch, so the branch your project folder has checked out does not matter.
 
 - A card never jumps the queue. It is cut only when no bundle in flight touches its packages and no earlier card that
   shares a package with it is still waiting.

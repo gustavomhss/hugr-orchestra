@@ -41,6 +41,8 @@ type Remote = {
   calls: Array<ReadonlyArray<string>>
   /** Lane gates started with `gh workflow run`; each run's one job concludes with `conclusion`, or fails when its commit holds every `seeded` branch. */
   dispatches: Array<{ id: number; workflow: string; branch: string; sha: string; createdAt: string }>
+  /** Labels on a PR, by number. */
+  labels: Map<number, ReadonlyArray<string>>
 }
 const remotes = new Map<string, Remote>()
 
@@ -54,7 +56,8 @@ const gh = (args: ReadonlyArray<string>, stdin?: string) =>
     const pull = args[0] === "api" ? args[1]?.match(/\/pulls\/(\d+)$/) : null
     if (pull) {
       const branch = remote.pulls.get(Number(pull[1])) ?? ""
-      return { exitCode: 0, stdout: JSON.stringify({ head: { sha: await sha(branch), ref: branch } }), stderr: "" }
+      const labels = (remote.labels.get(Number(pull[1])) ?? []).map((name) => ({ name }))
+      return { exitCode: 0, stdout: JSON.stringify({ head: { sha: await sha(branch), ref: branch }, labels }), stderr: "" }
     }
     if (args[0] === "api" && args[1]?.endsWith("/check-runs")) return { exitCode: 0, stdout: remote.baseRuns, stderr: "" }
     if (args[0] === "pr" && args[1] === "create") {
@@ -144,13 +147,16 @@ const build = (env?: NodeJS.ProcessEnv) =>
 export const it = build()
 
 // A `bun` on PATH that answers turbo's dry run with whatever `affected.json` holds, so a test picks the affected set without a workspace.
+// It writes the parents of the commit it ran on and that commit's files to `turbo-head.txt`, so a test sees which tree
+// turbo read the workspace graph from.
 const turbo = syncDir()
 export const AFFECTED = path.join(turbo, "affected.json")
+export const TURBO_HEAD = path.join(turbo, "turbo-head.txt")
 export const itTurbo = build({ ...process.env, PATH: `${turbo}${path.delimiter}${process.env.PATH ?? ""}` })
 
 function syncDir() {
   const dir = mkdtempSync(path.join(tmpdir(), "orchestra-board-turbo-"))
-  writeFileSync(path.join(dir, "bun"), `#!/bin/sh\ncat "$(dirname "$0")/affected.json"\n`, { mode: 0o755 })
+  writeFileSync(path.join(dir, "bun"), `#!/bin/sh\ngit rev-parse HEAD^1 HEAD^2 > "$(dirname "$0")/turbo-head.txt"\ngit ls-files >> "$(dirname "$0")/turbo-head.txt"\ncat "$(dirname "$0")/affected.json"\n`, { mode: 0o755 })
   return dir
 }
 
@@ -209,7 +215,7 @@ export function repository(key: string, size = 2, full?: object, scoped?: "scrip
       await commit(directory, "base")
       await git(directory, "remote", "add", "origin", pathToFileURL(remote).href)
       await git(directory, "push", "--quiet", "origin", "main")
-      return { root, directory, key, remote: { origin: remote, pulls: new Map<number, string>(), bodies: new Map<number, string>(), conclusion: "", seeded: [] as ReadonlyArray<string>, cancelled: [] as ReadonlyArray<string>, job: "unit (linux)", log: "", baseRuns: GREEN_BASE, calls: [] as Remote["calls"], dispatches: [] as Remote["dispatches"] } }
+      return { root, directory, key, remote: { origin: remote, pulls: new Map<number, string>(), bodies: new Map<number, string>(), conclusion: "", seeded: [] as ReadonlyArray<string>, cancelled: [] as ReadonlyArray<string>, job: "unit (linux)", log: "", baseRuns: GREEN_BASE, calls: [] as Remote["calls"], dispatches: [] as Remote["dispatches"], labels: new Map<number, ReadonlyArray<string>>() } }
     })
     remotes.set(`acme/${key}`, made.remote)
     const database = yield* Database.Service
