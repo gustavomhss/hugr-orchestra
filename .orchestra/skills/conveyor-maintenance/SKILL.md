@@ -72,8 +72,20 @@ snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bund
 - workflow_dispatch runs never show in a PR's status rollup: a lane bundle's checks come from `gh run list` and
   `gh run view` on its branch and head (`dispatchRollup`). A lane bundle gets no `full.label`, or the full suite would
   run too.
-- Invariants to keep: phase 1 is unchanged without `lanes`; a global card goes alone; rule 2 never starves a card.
-  `test/board-lanes.test.ts` covers all three.
+- Invariants to keep: phase 1 is unchanged without `lanes`; a global card goes alone; rule 2 never starves a card;
+  the epic bundle always runs the whole suite; a safety red pauses only overlapping lanes; `fullEvery` 0 is off.
+  `test/board-lanes.test.ts` covers them.
+- Safety net (spec §7.3): `spread` counts merged lane bundles (non-null `packages`) since the last whole-suite point (a
+  merged bundle with `packages` null, or a closed memberless bundle) from a left join on member position 0, and starts
+  `probe(..., tip, body, [])` when the count reaches `fullEvery`. `packages: []` overlaps nothing, and `dispatched`
+  sends it through the lane workflows with no `-f packages`, which run every package. A memberless bundle with
+  `packages` set that goes red runs `safety` in `queue-settle.ts`: infra closes `infra`, F that passes on base closes
+  `probe-green`, F red on base bisects, opens the fix card and closes `base-red` with `failing`; any other red closes
+  `base-red` without `failing`, which falls back to phase 1 for the whole project.
+- Narrowed base red: `spread` reads the latest bundle with `failing` whose fix card is neither shipped nor cut, adds
+  F's package names to the lanes flight, and cuts the fix card through `cut(..., lane, broken)` alone; only a
+  `base-red` at the tip without `failing` takes the phase 1 fallback. `bisect` starts from the last green whole-suite
+  point, never a lane bundle.
 - `size()` reads the last 50 settled attempts (`merged` or `ejected`) for the bundle size; `infra` reruns once and `paused` (a second infra red) stops `cut`. Eject writes outcome `ejected` and opens the next attempt via `BoardSnapshot.dispatch`.
 - `failures()` reads job logs through `detailsUrl` with `gh api repos/<o>/<r>/actions/jobs/<id>/logs`, strips timestamps, and uses `BoardCi.failing`; `full.control` (`line` plus job-name prefixes) is the control-line infra rule and applies only to the jobs it names; `gating` matches `workflowName`.
 - `cut` reads the last closed bundle: after a `red` it cuts half its members (the cap); after `base-red` it waits until the base tip moves. A memberless bundle is a base probe: it closes `probe-green` or `base-red` and never merges; `cut` looks past a `probe-green` to the `probing` bundle before it.
