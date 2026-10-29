@@ -23,12 +23,23 @@ it: skill `conveyor-maintenance`. User guide: `docs/guides/merge-queue.md`.
 | Base-advance sweep, conflict notes, `conflict_base`/`conflict_files`, `board_project.base_sha` | `packages/core/src/board/conflicts.ts`, wired in `board.ts` | conveyor |
 | Queue stage, `board_queue`/`board_bundle`/`board_bundle_member`, `PrRecord` (`board_issue.record`) | `packages/core/src/board/sql.ts`, `packages/schema/src/board.ts` | conveyor |
 | Enqueue, dequeue, bundle cut, settle, merge-if-disjoint, record facts and the record port, 60 s tick | `packages/core/src/board/queue.ts`, `record.ts`, wired in `board.ts` | conveyor |
+| Lanes: the pure cut rules (`lanes`, `earlier`, `global`, `capacity`) | `packages/core/src/board/queue-lanes.ts`; `spread` in `queue.ts` | conveyor |
+| Lane gate: the `packages` `workflow_dispatch` input | `.github/workflows/typecheck.yml`, `test.yml` | conveyor |
 | `board_queue`, `board_dequeue`, `board_bundle` tools | `packages/core/src/board/tools.ts` | conveyor; Maestro only |
 | `merge-outside-conveyor` guard | `script/guards/rules/merge-outside-conveyor.toml` | conveyor |
 | Billing ledger `board_ci_run` | `packages/core/src/board/github.ts`, `money.ts` | board; unchanged by the conveyor |
 | Queue visuals | `packages/app-shell` | Interface session |
 
 ## Invariants
+
+- Without `lanes` in the contract (or without `turbo.json` on base) the queue is phase 1, unchanged: one bundle at a
+  time, labelled with `full.label`.
+- A global card (a `lanes.global` path, or no affected set) goes alone or only with other global cards, and runs the
+  whole suite with `full.label`.
+- Rule 2 never starves a card: no card is cut ahead of an earlier bundleable card it overlaps, so a waiting global card
+  holds everything queued behind it until the lanes in flight land.
+- A lane bundle always lands through `merge-if-disjoint`. The record logs under `.atlas/` are left out of its path
+  overlap check because every bundle appends to them and they merge by union.
 
 - A snapshot never touches the card's worktree, index or HEAD. It is a commit on the previous snapshot (else HEAD)
   pushed to `refs/orchestra/wip/<KEY>-<n>/a<attempt>`.
@@ -75,7 +86,12 @@ it: skill `conveyor-maintenance`. User guide: `docs/guides/merge-queue.md`.
 - The bundle size follows the red rate of the last 50 settled attempts (`size()`); infrastructure reds (`infra`) rerun once, and a second one sets the project's bundle to `paused`, which holds the queue until Maestro retries it. Eject writes outcome `ejected` and opens the next attempt through `BoardSnapshot.dispatch`.
 - `failures()` reads job logs through `detailsUrl` with `gh api repos/<o>/<r>/actions/jobs/<id>/logs`, strips timestamps, and uses `BoardCi.failing`; `full.control` (`line` plus job-name prefixes) is the control-line infra rule and applies only to the jobs it names; `gating` matches `workflowName`.
 - A red whose failing files are bun tests in turbo package groups is judged by `scope()` (base, code or flaky), not by base's checks; a `flaky` bundle keeps its PR open and is recorded in `board_flake` (migration `20261028230000_board_flake`).
-- The pool is the project: one open bundle per board project.
+- The pool is the project: one open bundle per board project, unless the contract has `lanes`; then one open bundle
+  per lane, at most `floor(budget.jobs / lanes.jobs)` in flight.
+- Lanes are recomputed from turbo's affected sets at every cut and never stored; only a bundle's `packages` is.
+  A card whose affected set cannot be read counts as global.
+- A lane bundle is gated by `gh workflow run` with `-f packages=...` instead of `full.label`, and settles from the
+  dispatched runs (`dispatchRollup`); its red split looks only at closed bundles that share its cards.
 - The repository is public: attempts and snapshots carry structure and hashes only, never free text, spend or
   transcripts.
 - Conflict notes are authored `orchestra` and name files and short shas only.

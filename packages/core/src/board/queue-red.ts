@@ -17,7 +17,7 @@ import {
 } from "./sql"
 import { changed, endOf, log } from "./shared"
 import type { IssueRow, ProjectRow } from "./shared"
-import { AUTHOR, decodeRuns, FAILED, gating, INFRA, judge } from "./queue-shared"
+import { AUTHOR, decodeRuns, FAILED, gating, INFRA, judge, nextBundle } from "./queue-shared"
 import type { Context, Rollup } from "./queue-shared"
 import type { makeRecord } from "./queue-record"
 
@@ -342,7 +342,7 @@ export function makeRed(ctx: Context & Pick<ReturnType<typeof makeRecord>, "note
   const probe = Effect.fnUntraced(function* (row: ProjectRow, repo: string, directory: string, contract: BoardCi.Contract, red: typeof BoardBundleTable.$inferSelect) {
     const head = (yield* git(directory, [...AUTHOR, "commit-tree", `${red.base_sha}^{tree}`, "-p", red.base_sha, "-m", "chore(queue): base probe"])).out
     if (!head) return
-    const n = red.n + 1
+    const n = yield* deps.quiet((tx) => nextBundle(tx, row.id))
     const branch = `bundle-${row.key}-${n}`
     const pushed = yield* git(directory, ["push", "--quiet", "--force", "origin", `${head}:refs/heads/${branch}`])
     if (pushed.code !== 0) return

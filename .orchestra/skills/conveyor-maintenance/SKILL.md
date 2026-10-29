@@ -26,6 +26,9 @@ snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bund
 - Enqueue preconditions: `enqueue` in `board/queue.ts`; they are checked again inside the write transaction.
 - Per-project `busy` set in `BoardQueue.make` keeps a project from settling twice when ticks overlap. `accepted` is the
   only non-`open` bundle status that `openBundle` returns (a flaky bundle Maestro merged with `board_bundle`).
+- Lane rules (spec §7.2): the pure `lanes` in `board/queue-lanes.ts`; `spread` in `board/queue.ts` builds each card's
+  affected set and cuts one bundle per lane through `cut(..., lane)`. The lane gate's workflows read the `packages`
+  input in `.github/workflows/typecheck.yml` and `test.yml`.
 - Cut rules and bundle order: `cut` in `board/queue.ts`. Landing and base moves: `settle` and `skew`. `settle` checks
   for an already-landed head (an ancestor of base) before it pushes; restore from a snapshot lives in `push` (`restored`).
 - PR record fields: `PrRecord` in `packages/schema/src/board.ts` (what Maestro writes), the completeness check
@@ -64,7 +67,13 @@ snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bund
   against a bare origin.
 - A bundle branch is `bundle-<KEY>-<n>`, pushed with force; the base branch only with `--force-with-lease`.
 - `turbo` runs through `bun x turbo --dry=json` with a 120 s timeout; any failure means retest, never land.
-- The tick runs every 60 s in the board poll; it settles the open bundle before it cuts a new one.
+- The tick runs every 60 s in the board poll; it settles the open bundle before it cuts a new one. With lanes it
+  settles every open bundle, then cuts lanes in the same tick.
+- workflow_dispatch runs never show in a PR's status rollup: a lane bundle's checks come from `gh run list` and
+  `gh run view` on its branch and head (`dispatchRollup`). A lane bundle gets no `full.label`, or the full suite would
+  run too.
+- Invariants to keep: phase 1 is unchanged without `lanes`; a global card goes alone; rule 2 never starves a card.
+  `test/board-lanes.test.ts` covers all three.
 - `size()` reads the last 50 settled attempts (`merged` or `ejected`) for the bundle size; `infra` reruns once and `paused` (a second infra red) stops `cut`. Eject writes outcome `ejected` and opens the next attempt via `BoardSnapshot.dispatch`.
 - `failures()` reads job logs through `detailsUrl` with `gh api repos/<o>/<r>/actions/jobs/<id>/logs`, strips timestamps, and uses `BoardCi.failing`; `full.control` (`line` plus job-name prefixes) is the control-line infra rule and applies only to the jobs it names; `gating` matches `workflowName`.
 - `cut` reads the last closed bundle: after a `red` it cuts half its members (the cap); after `base-red` it waits until the base tip moves. A memberless bundle is a base probe: it closes `probe-green` or `base-red` and never merges; `cut` looks past a `probe-green` to the `probing` bundle before it.
@@ -76,7 +85,7 @@ snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bund
 
 ## Gates
 
-- Tests on Actions only: `bun run test:ci core test/board-ci.test.ts test/board-snapshot.test.ts test/board-conflicts.test.ts test/board-queue.test.ts` (add `test/board.test.ts` and
+- Tests on Actions only: `bun run test:ci core test/board-ci.test.ts test/board-snapshot.test.ts test/board-conflicts.test.ts test/board-queue.test.ts test/board-lanes.test.ts` (add `test/board.test.ts` and
   `test/board-tools.test.ts` when board code moves).
 - Typecheck: `gh workflow run typecheck.yml --ref <branch>`. Never on the Mac.
 - `bun run check:guards --base origin/dev` before calling a change done.

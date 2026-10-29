@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "drizzle-orm"
+import { and, asc, desc, eq, inArray } from "drizzle-orm"
 import { Clock, Effect, Option, Schema } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { Board } from "@orchestra/schema/board"
@@ -21,6 +21,8 @@ export interface Deps {
   readonly publish: (changed: Changed) => Effect.Effect<void>
   /** Atlas's record renderer and trailer writer; `Board.layer` binds it, tests may leave it unbound. */
   readonly record?: BoardRecord.Port
+  /** Replaces `turbo`'s affected set; tests bind it so they need no installed workspace. */
+  readonly affected?: (directory: string, from: string, to: string) => Effect.Effect<ReadonlyArray<string> | undefined>
 }
 
 /** What every queue module shares: the injected dependencies and the git runner built from them. */
@@ -74,6 +76,7 @@ const decodeDry = Schema.decodeUnknownOption(Schema.fromJsonString(Dry))
 
 /** Section 7.1's affected set from `turbo`: the packages a commit range touches and every package that depends on them. */
 export const affected = Effect.fnUntraced(function* (deps: Deps, directory: string, from: string, to: string) {
+  if (deps.affected) return yield* deps.affected(directory, from, to)
   const bun = which("bun", deps.env ?? process.env)
   if (!bun) return undefined
   const result = yield* deps.proc
@@ -91,12 +94,66 @@ export const affected = Effect.fnUntraced(function* (deps: Deps, directory: stri
   return Option.getOrUndefined(decodeDry(result.stdout.toString("utf8")))?.packages
 })
 
-export const openBundle = Effect.fnUntraced(function* (tx: Tx, project: Board.ProjectID) {
+/** The project's bundles in flight, oldest first: one in phase 1, one per lane in phase 2. */
+export const openBundles = Effect.fnUntraced(function* (tx: Tx, project: Board.ProjectID) {
   return yield* tx
     .select()
     .from(BoardBundleTable)
     .where(and(eq(BoardBundleTable.project_id, project), inArray(BoardBundleTable.status, ["open", "accepted"])))
+    .orderBy(asc(BoardBundleTable.n))
+    .all()
+})
+
+/** The next bundle number of the project; lanes cut several bundles, so it is never derived from one bundle. */
+export const nextBundle = Effect.fnUntraced(function* (tx: Tx, project: Board.ProjectID) {
+  const last = yield* tx
+    .select({ n: BoardBundleTable.n })
+    .from(BoardBundleTable)
+    .where(eq(BoardBundleTable.project_id, project))
+    .orderBy(desc(BoardBundleTable.n))
     .get()
+  return (last?.n ?? 0) + 1
+})
+
+/** A lane bundle's gate dispatches the lane workflows with its packages instead of applying the full label. */
+export function dispatched(bundle: { readonly packages: ReadonlyArray<string> | null }, contract: BoardCi.Contract) {
+  return bundle.packages !== null && (contract.lanes?.workflows.length ?? 0) > 0
+}
+
+const Runs = Schema.Array(Schema.Struct({ databaseId: Schema.Number, workflowName: Schema.String, headSha: Schema.String, createdAt: Schema.String }))
+const decodeDispatches = Schema.decodeUnknownOption(Schema.fromJsonString(Runs))
+const Jobs = Schema.Struct({
+  jobs: Schema.Array(Schema.Struct({ name: Schema.String, status: Schema.String, conclusion: Schema.NullOr(Schema.String), url: Schema.String })),
+})
+const decodeJobs = Schema.decodeUnknownOption(Schema.fromJsonString(Jobs))
+
+/**
+ * A lane bundle's checks in rollup shape. A workflow_dispatch run never shows in its PR's status rollup, so the jobs
+ * come from the newest dispatched run of each workflow on the bundle head.
+ */
+export const dispatchRollup = Effect.fnUntraced(function* (deps: Deps, repo: string, branch: string, head: string) {
+  const listed = yield* deps.gh([
+    "run", "list", "--repo", repo, "--branch", branch, "--event", "workflow_dispatch",
+    "--json", "databaseId,workflowName,headSha,createdAt", "--limit", "20",
+  ])
+  const runs = Option.getOrElse(decodeDispatches(listed.exitCode === 0 ? listed.stdout : ""), () => [])
+    .filter((run) => run.headSha === head)
+    .toSorted((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
+  const latest = runs.filter((run, index) => runs.findIndex((other) => other.workflowName === run.workflowName) === index)
+  const jobs = yield* Effect.forEach(latest, (run) =>
+    deps.gh(["run", "view", String(run.databaseId), "--repo", repo, "--json", "jobs"]).pipe(
+      Effect.map((viewed) =>
+        Option.getOrElse(decodeJobs(viewed.exitCode === 0 ? viewed.stdout : ""), () => ({ jobs: [] })).jobs.map((job) => ({
+          name: job.name,
+          workflowName: run.workflowName,
+          status: job.status.toUpperCase(),
+          conclusion: job.conclusion ? job.conclusion.toUpperCase() : null,
+          detailsUrl: job.url,
+        })),
+      ),
+    ),
+  )
+  return jobs.flat()
 })
 
 export const isMember = Effect.fnUntraced(function* (tx: Tx, bundle: Board.BundleID, issue: Board.IssueID) {

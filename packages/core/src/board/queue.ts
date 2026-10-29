@@ -3,7 +3,7 @@ export * as BoardQueue from "./queue"
 import fs from "fs/promises"
 import os from "os"
 import path from "path"
-import { and, asc, desc, eq, inArray, isNull, ne } from "drizzle-orm"
+import { and, asc, desc, eq, inArray, isNull, ne, notInArray } from "drizzle-orm"
 import { Clock, Effect } from "effect"
 import { Board } from "@orchestra/schema/board"
 import { BoardCi } from "./ci"
@@ -20,9 +20,11 @@ import {
 } from "./sql"
 import { changed, gitRunner, loadIssue, loadProject, log, RefusedError, worktree } from "./shared"
 import type { IssueRow, ProjectRow } from "./shared"
-import { AUTHOR, isMember, openBundle, place, release } from "./queue-shared"
+import { affected, AUTHOR, dispatched, isMember, nextBundle, openBundles, place, release } from "./queue-shared"
 import type { Deps } from "./queue-shared"
 import { drift } from "./queue-drift"
+import { capacity, global, lanes } from "./queue-lanes"
+import type { Lane } from "./queue-lanes"
 import { makeRecord } from "./queue-record"
 import { makeRed } from "./queue-red"
 import { makeSettle } from "./queue-settle"
@@ -35,7 +37,8 @@ export type { Deps } from "./queue-shared"
 // alone and is ejected into a new attempt; infrastructure failures rerun once and then pause the queue; the size follows
 // the red rate; the failed jobs' logs give the failing files; a red whose failing files are bun tests in package groups runs them scoped on base and on the bundle head (base
 // red, code red, or flaky); Maestro merges or retries a flaky bundle, and retries a paused one, with `board_bundle`.
-// Projects settle concurrently, and a project still settling is skipped, never run twice.
+// Projects settle concurrently, and a project still settling is skipped, never run twice. With `lanes` in the contract
+// (section 7, phase 2) a project cuts one bundle per lane of disjoint affected packages and runs them side by side.
 
 export function make(deps: Deps) {
   const git = gitRunner(deps.proc, deps.env)
@@ -171,10 +174,10 @@ export function make(deps: Deps) {
         const project = yield* loadProject(tx, input.project)
         const issue = yield* loadIssue(tx, project, input.number)
         if (issue.stage !== "queue") return yield* new RefusedError({ message: `${ref} is not queued.` })
-        const bundle = yield* openBundle(tx, project.id)
-        const member = bundle ? yield* isMember(tx, bundle.id, issue.id) : false
+        const open = yield* openBundles(tx, project.id)
+        const members = yield* Effect.forEach(open, (bundle) => isMember(tx, bundle.id, issue.id))
         const back = yield* release(tx, project, issue, "maestro", "queue.remove", input.reason)
-        return { project, back, bundle: member ? bundle : undefined }
+        return { project, back, bundle: open.find((_, index) => members[index]) }
       }).pipe(Effect.result),
     )
     if (done._tag === "Failure") return yield* done.failure
@@ -267,7 +270,7 @@ export function make(deps: Deps) {
   // Projects settle concurrently, and a project still settling (a scoped run can take minutes) is skipped, never run twice.
   const busy = new Set<string>()
 
-  /** One pass over every active project: settle the open bundle, else cut a new one. The poll runs it every minute. */
+  /** One pass over every active project: settle the open bundles, then cut. The poll runs it every minute. */
   const tick = Effect.fnUntraced(function* () {
     const rows = yield* deps.quiet((tx) => tx.select().from(BoardProjectTable).where(ne(BoardProjectTable.status, "archived")).all())
     yield* Effect.forEach(
@@ -285,23 +288,141 @@ export function make(deps: Deps) {
   const project = Effect.fnUntraced(function* (row: ProjectRow) {
     const directory = yield* deps.quiet((tx) => worktree(tx, row))
     if (!directory || !row.github_repo) return
+    const repo = row.github_repo
     const contract = yield* deps.contract(directory, row)
-    const bundle = yield* deps.quiet((tx) => openBundle(tx, row.id))
-    if (bundle) return yield* settle(row, row.github_repo, directory, contract, bundle)
-    yield* cut(row, row.github_repo, directory, contract)
+    const open = yield* deps.quiet((tx) => openBundles(tx, row.id))
+    yield* Effect.forEach(open, (bundle) => settle(row, repo, directory, contract, bundle), { discard: true })
+    if (contract.lanes) return yield* spread(row, repo, directory, contract, contract.lanes)
+    if (open.length > 0) return
+    yield* cut(row, repo, directory, contract)
   })
 
-  const cut = Effect.fnUntraced(function* (row: ProjectRow, repo: string, directory: string, contract: BoardCi.Contract) {
+  /**
+   * Section 7.2: the queued cards that may go, grouped into lanes, each cut into its own bundle beside the bundles in
+   * flight. Affected sets are recomputed against the current tip at every cut. A repository with no workspace graph,
+   * a paused or flaky bundle, and a red base keep the whole project on phase 1's single conveyor.
+   */
+  const spread = Effect.fnUntraced(function* (
+    row: ProjectRow,
+    repo: string,
+    directory: string,
+    contract: BoardCi.Contract,
+    config: NonNullable<BoardCi.Contract["lanes"]>,
+  ) {
+    yield* git(directory, ["fetch", "--quiet", "--no-tags", "origin", contract.base])
+    const tip = (yield* git(directory, ["rev-parse", "--verify", "--quiet", `refs/remotes/origin/${contract.base}`])).out
+    if (!tip) return
+    const found = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const open = yield* openBundles(tx, row.id)
+        const members = open.length
+          ? yield* tx
+              .select({ issue: BoardBundleMemberTable.issue_id })
+              .from(BoardBundleMemberTable)
+              .where(inArray(BoardBundleMemberTable.bundle_id, open.map((bundle) => bundle.id)))
+              .all()
+          : []
+        const stopped = yield* tx
+          .select({ id: BoardBundleTable.id })
+          .from(BoardBundleTable)
+          .where(and(eq(BoardBundleTable.project_id, row.id), inArray(BoardBundleTable.status, ["paused", "flaky"])))
+          .get()
+        const closed = yield* tx
+          .select()
+          .from(BoardBundleTable)
+          .where(and(eq(BoardBundleTable.project_id, row.id), notInArray(BoardBundleTable.status, ["open", "accepted", "probe-green"])))
+          .orderBy(desc(BoardBundleTable.n))
+          .get()
+        const cards = yield* tx
+          .select({ queue: BoardQueueTable, issue: BoardIssueTable })
+          .from(BoardQueueTable)
+          .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardQueueTable.issue_id))
+          .where(eq(BoardQueueTable.project_id, row.id))
+          .all()
+        const ids = cards.map((card) => card.issue.id)
+        const waits = ids.length
+          ? yield* tx
+              .select({ issue: BoardDependencyTable.issue_id, stage: BoardIssueTable.stage })
+              .from(BoardDependencyTable)
+              .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardDependencyTable.depends_on_id))
+              .where(inArray(BoardDependencyTable.issue_id, ids))
+              .all()
+          : []
+        const attempts = ids.length
+          ? yield* tx
+              .select()
+              .from(BoardAttemptTable)
+              .where(and(inArray(BoardAttemptTable.issue_id, ids), isNull(BoardAttemptTable.outcome)))
+              .all()
+          : []
+        return {
+          open,
+          stopped: stopped !== undefined,
+          baseRed: closed?.status === "base-red" && closed.base_sha === tip,
+          cards: cards.filter((card) => !members.some((member) => member.issue === card.issue.id)),
+          waits,
+          attempts,
+        }
+      }),
+    )
+    if (found.stopped) return
+    const graph = (yield* git(directory, ["cat-file", "-e", `${tip}:turbo.json`])).code === 0
+    if (!graph || found.baseRed) {
+      if (found.open.length > 0) return
+      return yield* cut(row, repo, directory, contract)
+    }
+    const cards = yield* Effect.forEach(found.cards, (card) =>
+      Effect.gen(function* () {
+        const bundleable =
+          card.queue.hold !== "held" &&
+          !card.issue.hold_before_merge &&
+          !card.issue.paused &&
+          !found.attempts.some((item) => item.issue_id === card.issue.id && item.conflict_base) &&
+          found.waits.filter((dep) => dep.issue === card.issue.id).every((dep) => dep.stage === "shipped")
+        const shape = { id: card.issue.id, bundleable, urgent: card.queue.urgent, order: card.issue.order, queuedAt: card.queue.queued_at }
+        if (!bundleable) return { ...shape, affected: [] }
+        // The queued head is fetched only when this clone lacks it; a head that moved goes back to Review, as in `cut`.
+        const present = (yield* git(directory, ["cat-file", "-e", `${card.queue.head_sha}^{commit}`])).code === 0
+        const current = present ? undefined : yield* head(directory, repo, card.issue.pr_number ?? 0).pipe(Effect.orElseSucceed(() => undefined))
+        if (!present && current?.sha !== card.queue.head_sha) {
+          yield* moved(row, card.issue, current?.sha)
+          return undefined
+        }
+        const files = (yield* git(directory, ["diff", "--name-only", `${tip}...${card.queue.head_sha}`])).out.split("\n").filter(Boolean)
+        if (global(files, config.global)) return { ...shape, affected: null }
+        return { ...shape, affected: (yield* affected(deps, directory, tip, card.queue.head_sha)) ?? null }
+      }),
+    )
+    const room = capacity(contract.budget.jobs, config.jobs) - found.open.length
+    const going = lanes(
+      cards.filter((card) => card !== undefined),
+      found.open.map((bundle) => bundle.packages),
+      room,
+    )
+    yield* Effect.forEach(going, (lane) => cut(row, repo, directory, contract, lane), { discard: true })
+  })
+
+  /** Phase 1's cut (section 6.1); with a lane, only that lane's cards, in the lane's order, and its own last bundle. */
+  const cut = Effect.fnUntraced(function* (
+    row: ProjectRow,
+    repo: string,
+    directory: string,
+    contract: BoardCi.Contract,
+    lane?: Lane<Board.IssueID>,
+  ) {
     const now = yield* Clock.currentTimeMillis
     const queued = yield* deps.quiet((tx) =>
       Effect.gen(function* () {
-        const cards = yield* tx
+        const all = yield* tx
           .select({ queue: BoardQueueTable, issue: BoardIssueTable })
           .from(BoardQueueTable)
           .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardQueueTable.issue_id))
           .where(eq(BoardQueueTable.project_id, row.id))
           .orderBy(desc(BoardQueueTable.urgent), asc(BoardQueueTable.queued_at))
           .all()
+        const cards = lane
+          ? lane.ids.flatMap((id) => all.filter((card) => card.issue.id === id))
+          : all
         const ids = cards.map((card) => card.issue.id)
         const waits = ids.length
           ? yield* tx
@@ -326,14 +447,32 @@ export function make(deps: Deps) {
               .where(and(inArray(BoardIssueTable.epic_id, epics), ne(BoardIssueTable.stage, "shipped"), ne(BoardIssueTable.stage, "cut")))
               .all()
           : []
-        // A green base probe only clears base: the red bundle it was probing for still decides the next cut.
-        const closed = yield* tx
-          .select()
-          .from(BoardBundleTable)
-          .where(and(eq(BoardBundleTable.project_id, row.id), ne(BoardBundleTable.status, "open")))
-          .orderBy(desc(BoardBundleTable.n))
-          .limit(2)
-          .all()
+        // A green base probe only clears base: the red bundle it was probing for still decides the next cut. A lane's last
+        // bundles are the closed ones that share a card with it, so a red in one lane splits only that lane.
+        const closed = lane
+          ? (yield* tx
+              .select({ bundle: BoardBundleTable })
+              .from(BoardBundleTable)
+              .innerJoin(BoardBundleMemberTable, eq(BoardBundleMemberTable.bundle_id, BoardBundleTable.id))
+              .where(
+                and(
+                  eq(BoardBundleTable.project_id, row.id),
+                  notInArray(BoardBundleTable.status, ["open", "accepted"]),
+                  inArray(BoardBundleMemberTable.issue_id, lane.ids),
+                ),
+              )
+              .orderBy(desc(BoardBundleTable.n))
+              .all())
+              .map((item) => item.bundle)
+              .filter((bundle, index, list) => list.findIndex((other) => other.id === bundle.id) === index)
+              .slice(0, 2)
+          : yield* tx
+              .select()
+              .from(BoardBundleTable)
+              .where(and(eq(BoardBundleTable.project_id, row.id), ne(BoardBundleTable.status, "open")))
+              .orderBy(desc(BoardBundleTable.n))
+              .limit(2)
+              .all()
         const last = closed[0]?.status === "probe-green" ? closed[1] : closed[0]
         const lastMembers = last
           ? yield* tx.select().from(BoardBundleMemberTable).where(eq(BoardBundleMemberTable.bundle_id, last.id)).all()
@@ -405,21 +544,14 @@ export function make(deps: Deps) {
       }
       return taken
     })
-    const n = yield* deps.quiet((tx) =>
-      tx
-        .select({ n: BoardBundleTable.n })
-        .from(BoardBundleTable)
-        .where(eq(BoardBundleTable.project_id, row.id))
-        .orderBy(desc(BoardBundleTable.n))
-        .get()
-        .pipe(Effect.map((last) => (last?.n ?? 0) + 1)),
-    )
+    const n = yield* deps.quiet((tx) => nextBundle(tx, row.id))
     if (members.length > 0) yield* recordBundle(row, scratch, members.map((member) => member.issue), `${row.key}-B${n}`)
     const bundleHead = (yield* git(scratch, ["rev-parse", "HEAD"])).out
     const tree = (yield* git(scratch, ["rev-parse", "HEAD^{tree}"])).out
     yield* git(directory, ["worktree", "remove", "--force", scratch])
     if (members.length === 0) return
     const branch = `bundle-${row.key}-${n}`
+    const lanePackages = lane?.packages && dispatched({ packages: lane.packages }, contract) ? lane.packages : null
     const pushed = yield* git(directory, ["push", "--quiet", "--force", "origin", `${bundleHead}:refs/heads/${branch}`])
     if (pushed.code !== 0) return
     const records = deps.record
@@ -442,11 +574,18 @@ export function make(deps: Deps) {
         `chore(queue): bundle ${row.key}-B${n}`,
         "--body-file",
         "-",
-        ...(contract.full.label ? ["--label", contract.full.label] : []),
+        ...(contract.full.label && !lanePackages ? ["--label", contract.full.label] : []),
       ],
       body,
     )
     const number = Number(opened.stdout.match(/\/pull\/(\d+)/)?.[1] ?? 0) || null
+    // Section 7.2: a lane's full gate runs only its packages, dispatched by hand: a label would start the whole suite.
+    if (lanePackages)
+      yield* Effect.forEach(
+        contract.lanes?.workflows ?? [],
+        (workflow) => deps.gh(["workflow", "run", workflow, "--repo", repo, "--ref", branch, "-f", `packages=${lanePackages.join(",")}`]),
+        { discard: true },
+      )
     const published = yield* deps.quiet((tx) =>
       Effect.gen(function* () {
         const id = Board.BundleID.create()
@@ -465,6 +604,7 @@ export function make(deps: Deps) {
             rebuilds: queued.last?.status === "isolated" ? queued.last.rebuilds + 1 : 0,
             failing: fix ? queued.last?.failing ?? null : null,
             fix_issue_id: fix ? fix.issue.id : null,
+            packages: lane?.packages ?? null,
           })
           .run()
         yield* tx

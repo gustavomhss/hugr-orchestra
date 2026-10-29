@@ -6,6 +6,13 @@ on:
   pull_request:
     types: [labeled]
   workflow_dispatch:
+    inputs:
+      # The merge queue's lane gate (docs/specs/maestro-lead/merge-queue.md section 7.2): a lane bundle dispatches this
+      # workflow with its affected packages. Empty checks every package.
+      packages:
+        description: Comma-separated workspace packages to typecheck (a merge queue lane); empty checks every package
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -35,4 +42,8 @@ jobs:
         # Standard private runners have 2 vCPUs and ~8 GB RAM. tsgo already uses every core, and the
         # largest package alone peaks near 5 GB, so Turbo's default 10 parallel tasks exhaust memory
         # and the runner is shut down. Serial checks peak below 6 GB and finish faster than pairs.
-        run: bun turbo typecheck --concurrency=1
+        run: |
+          mapfile -t lane < <(tr ', ' '\n\n' <<< "$PACKAGES" | sed '/^$/d' | sort -u)
+          bun turbo typecheck --concurrency=1 ${lane[0]:+"${lane[@]/#/--filter=}"}
+        env:
+          PACKAGES: ${{ inputs.packages }}

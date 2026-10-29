@@ -15,6 +15,12 @@ on:
         description: Run every test, replaying no Turbo cache and skipping no recorded pass (measures cold lane times)
         type: boolean
         default: false
+      # The merge queue's lane gate (docs/specs/maestro-lead/merge-queue.md section 7.2): a lane bundle dispatches this
+      # workflow with its affected packages, and unit tests run only those. Empty runs everything, as before.
+      packages:
+        description: Comma-separated workspace packages to unit-test (a merge queue lane); empty tests every package
+        type: string
+        default: ""
 
 concurrency:
   # Non-epic label events skip every job; give them their own group so they cannot cancel an epic run.
@@ -55,9 +61,15 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          PACKAGES: ${{ inputs.packages }}
         run: |
           set -euo pipefail
           if [ "${{ github.event_name }}" != "pull_request" ]; then
+            # A lane dispatch runs Atlas only when its packages include Atlas.
+            if [ -n "$PACKAGES" ] && [[ ",$PACKAGES," != *",atlas,"* && ",$PACKAGES," != *",@orchestra/atlas-boundary,"* ]]; then
+              echo "changed=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
             echo "changed=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -75,7 +87,7 @@ jobs:
     timeout-minutes: 20
     needs: atlas-scope
     # Atlas guards cover its vendor subtree; a failed scope detector fails this workflow rather than skipping it.
-    if: github.event_name != 'pull_request' || needs.atlas-scope.outputs.changed == 'true'
+    if: (github.event_name != 'pull_request' && inputs.packages == '') || needs.atlas-scope.outputs.changed == 'true'
     defaults:
       run:
         working-directory: modules/atlas
@@ -323,6 +335,15 @@ jobs:
             echo "shard $PART selects: $selected"
             [ -n "$selected" ] || { echo "::error::shard $PART selects no test task"; exit 1; }
           fi
+          # A lane dispatch tests only its packages that this shard selects; a shard with none of them has nothing to run.
+          if [ -n "$PACKAGES" ]; then
+            shard=$(bun turbo test --dry=json "${filters[@]}" | jq -r '.tasks[]? | select(.task == "test" and ((.command // "") != "<NONEXISTENT>")) | .package' | sort -u)
+            wanted=$(tr ', ' '\n\n' <<< "$PACKAGES" | sed '/^$/d' | sort -u)
+            mapfile -t lane < <(comm -12 <(printf '%s\n' "$shard") <(printf '%s\n' "$wanted"))
+            [ -n "${lane[0]:-}" ] || { echo "shard $PART has no package of this lane"; exit 0; }
+            echo "shard $PART tests lane packages: ${lane[*]}"
+            filters=("${lane[@]/#/--filter=}")
+          fi
           # Cold embedded startup on Windows and contract generation on Linux exceeded unchanged deadlines
           # when sharing the runner with another runtime suite. Keep every package and per-test budget.
           concurrency=1
@@ -333,6 +354,7 @@ jobs:
         env:
           FILTERS: ${{ matrix.filters }}
           PART: ${{ matrix.part }}
+          PACKAGES: ${{ inputs.packages }}
           ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
 
       # Saved even when a package failed: Turbo records only passing tasks, so re-labeling the PR replays them
@@ -383,7 +405,7 @@ jobs:
       # Legacy rollback: the same native binaries, with omni turned off for these two suites only. They run even when
       # a package failed above, as they did in a job of their own.
       - name: Real AppProcess default and legacy backend selection
-        if: ${{ !cancelled() && matrix.part == 'rest' }}
+        if: ${{ !cancelled() && matrix.part == 'rest' && (inputs.packages == '' || contains(format(',{0},', inputs.packages), ',@orchestra/core,')) }}
         working-directory: packages/core
         run: bun test test/omni-default-mode.test.ts test/effect/cross-spawn-spawner.test.ts --timeout 30000
         env:
@@ -391,7 +413,8 @@ jobs:
           ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: "true"
 
   e2e:
-    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
+    # A lane dispatch runs e2e only when its packages include the app shell.
+    if: (github.event_name == 'workflow_dispatch' && (inputs.packages == '' || contains(format(',{0},', inputs.packages), ',@orchestra/app,'))) || github.event.label.name == 'epic'
     name: e2e (${{ matrix.settings.name }} ${{ matrix.shard }}/3)
     strategy:
       fail-fast: false

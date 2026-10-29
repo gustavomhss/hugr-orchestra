@@ -164,6 +164,8 @@ export const layerWith = (options: {
   readonly record?: BoardRecord.Port
   readonly scanner?: ReadonlyArray<string>
   readonly poll?: boolean
+  /** Replaces the merge queue's `turbo` affected set; tests bind it so they need no installed workspace. */
+  readonly affected?: BoardQueue.Deps["affected"]
 }) =>
   Layer.effect(
     Service,
@@ -602,6 +604,7 @@ export const layerWith = (options: {
         contract: ci.contract,
         publish: (changed) => events.publish(Board.Event.Changed, changed),
         record: options.record,
+        affected: options.affected,
       })
 
       if (options.poll)

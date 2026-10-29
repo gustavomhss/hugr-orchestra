@@ -11,7 +11,7 @@ import {
 import { BoardSnapshot } from "./snapshot"
 import { changed, log } from "./shared"
 import type { IssueRow, ProjectRow } from "./shared"
-import { AUTHOR, affected, decodeRollup, insertNote, judge, place, release } from "./queue-shared"
+import { AUTHOR, affected, decodeRollup, dispatched, dispatchRollup, insertNote, judge, place, release } from "./queue-shared"
 import type { Context } from "./queue-shared"
 import type { makeRecord } from "./queue-record"
 import type { makeRed } from "./queue-red"
@@ -48,9 +48,12 @@ export function makeSettle(
   ) {
     if (!bundle.pr_number) return yield* dissolve(row, bundle, "The bundle PR was not opened.")
     const viewed = yield* deps.gh(["pr", "view", String(bundle.pr_number), "--repo", repo, "--json", "statusCheckRollup,headRefOid"])
-    const rollup = viewed.exitCode === 0 ? Option.getOrUndefined(decodeRollup(viewed.stdout)) : undefined
-    if (!rollup) return
-    if (rollup.headRefOid !== bundle.head_sha) return yield* dissolve(row, bundle, "Someone pushed to the bundle branch.")
+    const viewedRollup = viewed.exitCode === 0 ? Option.getOrUndefined(decodeRollup(viewed.stdout)) : undefined
+    if (!viewedRollup) return
+    if (viewedRollup.headRefOid !== bundle.head_sha) return yield* dissolve(row, bundle, "Someone pushed to the bundle branch.")
+    const rollup = dispatched(bundle, contract)
+      ? { ...viewedRollup, statusCheckRollup: yield* dispatchRollup(deps, repo, bundle.branch, bundle.head_sha) }
+      : viewedRollup
     const judged = judge(rollup.statusCheckRollup, contract)
     if (judged === "pending") return
     // Section 6.8: the fix card rides alone and is judged only on F, so a gate red elsewhere on base does not block it.
@@ -283,7 +286,9 @@ export function makeSettle(
 
   /**
    * Section 6.5 `merge-if-disjoint`: the merge commit of the tested head onto the new tip, when the two merge clean and
-   * what moved base does not overlap what the bundle changed. Undefined means retest.
+   * what moved base does not overlap what the bundle changed. Undefined means retest. A lane bundle always takes this
+   * path (section 7.3): lanes in flight are disjoint by construction, so retesting every lane behind the first to land
+   * would serialize them again.
    */
   const skew = Effect.fnUntraced(function* (
     directory: string,
@@ -292,11 +297,17 @@ export function makeSettle(
     tip: string,
     row: ProjectRow,
   ) {
-    if (contract.bundle.onBaseMoved !== "merge-if-disjoint") return undefined
+    if (contract.bundle.onBaseMoved !== "merge-if-disjoint" && bundle.packages === null) return undefined
     const merged = yield* git(directory, ["merge-tree", "--write-tree", tip, bundle.head_sha])
     if (merged.code !== 0) return undefined
-    const theirs = (yield* git(directory, ["diff", "--name-only", `${bundle.base_sha}..${tip}`])).out.split("\n").filter(Boolean)
-    const ours = (yield* git(directory, ["diff", "--name-only", `${bundle.base_sha}..${bundle.head_sha}`])).out.split("\n").filter(Boolean)
+    // Every bundle's record commit appends to the union-merged logs under `.atlas/`, so two lanes always share those
+    // paths; a clean merge-tree already proves they combine, and they hold no code.
+    const paths = (range: string) =>
+      git(directory, ["diff", "--name-only", range]).pipe(
+        Effect.map((diffed) => diffed.out.split("\n").filter((file) => file && !file.startsWith(".atlas/"))),
+      )
+    const theirs = yield* paths(`${bundle.base_sha}..${tip}`)
+    const ours = yield* paths(`${bundle.base_sha}..${bundle.head_sha}`)
     if (theirs.some((file) => ours.includes(file))) return undefined
     const graph = (yield* git(directory, ["cat-file", "-e", `${tip}:turbo.json`])).code === 0
     if (graph) {

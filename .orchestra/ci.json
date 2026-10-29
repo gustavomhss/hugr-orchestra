@@ -11,5 +11,12 @@
   },
   "bundle": { "size": 8, "max": 16, "waitMinutes": 45, "onBaseMoved": "merge-if-disjoint" },
   "budget": { "jobs": 20 },
+  "lanes": {
+    "by": "turbo",
+    "global": ["package.json", "bun.lock", "turbo.json", "tsconfig*.json", ".github/**", "script/**"],
+    "fullEvery": 0,
+    "jobs": 10,
+    "workflows": ["typecheck.yml", "test.yml"]
+  },
   "merge": "merge"
 }
