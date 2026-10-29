@@ -1357,7 +1357,12 @@ export function make(deps: Deps) {
         })
       issues.forEach((issue) => {
         const key = `${row.key}-${issue.number}`
-        const seen = new Set(readCard(scratch, key).events.flatMap((event) => (event.kind === "message" ? [`${event.at} ${event.thread} ${event.from}`] : [])))
+        // readCard's events omit text, which collapses the union; narrow on the fields themselves.
+        const seen = new Set(
+          readCard(scratch, key).events.flatMap((event) =>
+            "thread" in event && "from" in event ? [`${event.at} ${event.thread} ${event.from}`] : [],
+          ),
+        )
         found.notes
           .filter((note) => note.issue_id === issue.id)
           .forEach((note) => {
