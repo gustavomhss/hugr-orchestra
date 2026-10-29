@@ -40,6 +40,21 @@ export type Contract = {
     readonly onBaseMoved: "merge-if-disjoint" | "retest"
   }
   readonly budget: { readonly jobs: number | null }
+  /**
+   * Lanes (merge-queue spec section 7): cards whose turbo affected sets do not overlap land in parallel bundles that
+   * run only their packages. Null, or no `turbo.json` on the base, keeps one bundle at a time.
+   */
+  readonly lanes: {
+    readonly by: "turbo"
+    /** Globs whose change has no lane: such a card overlaps everything and runs the whole suite alone. */
+    readonly global: ReadonlyArray<string>
+    /** Every Nth lane bundle runs the whole suite anyway; 0 never. */
+    readonly fullEvery: number
+    /** Jobs one lane bundle's gate uses; with `budget.jobs` it caps lanes in flight. Null leaves them uncapped. */
+    readonly jobs: number | null
+    /** The workflows a lane bundle dispatches with a `packages` input instead of applying the full label. */
+    readonly workflows: ReadonlyArray<string>
+  } | null
   /** The remote snapshot refs go to; a private one keeps a public repository's work in progress private. */
   readonly snapshots: { readonly remote: string }
   readonly merge: "merge"
@@ -69,6 +84,15 @@ const File = Schema.Struct({
     }),
   ),
   budget: Schema.optional(Schema.Struct({ jobs: Schema.optional(Positive) })),
+  lanes: Schema.optional(
+    Schema.Struct({
+      by: Schema.Literal("turbo"),
+      global: Schema.optional(Schema.Array(Schema.String)),
+      fullEvery: Schema.optional(Schema.Int.check(Schema.isGreaterThanOrEqualTo(0))),
+      jobs: Schema.optional(Positive),
+      workflows: Schema.optional(Schema.Array(Schema.String)),
+    }),
+  ),
   snapshots: Schema.optional(Schema.Struct({ remote: Schema.optional(Schema.String) })),
   // Squash or rebase would rewrite member SHAs and GitHub would stop marking member PRs merged.
   merge: Schema.optional(Schema.Literal("merge")),
@@ -126,6 +150,15 @@ export function make(deps: Deps) {
         onBaseMoved: file.bundle?.onBaseMoved ?? "retest",
       },
       budget: { jobs: file.budget?.jobs ?? null },
+      lanes: file.lanes
+        ? {
+            by: "turbo",
+            global: file.lanes.global ?? [],
+            fullEvery: file.lanes.fullEvery ?? 0,
+            jobs: file.lanes.jobs ?? null,
+            workflows: file.lanes.workflows ?? [],
+          }
+        : null,
       snapshots: { remote: file.snapshots?.remote ?? "origin" },
       merge: "merge",
       source: "file",
@@ -143,6 +176,7 @@ export function make(deps: Deps) {
       full: { label: null, checks: [], control: null },
       bundle: { size: required ? 4 : 1, max: 16, waitMinutes: 45, onBaseMoved: "retest" },
       budget: { jobs: null },
+      lanes: null,
       snapshots: { remote: "origin" },
       merge: "merge",
       source: required ? "required-checks" : "no-ci",
