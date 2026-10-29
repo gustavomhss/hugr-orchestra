@@ -191,7 +191,9 @@ The merge queue (merge-queue spec §6). `board_queue` has one row per card in `q
 `head_sha` (the PR head the scoped checks passed on), `urgent`, `flush`, `queued_at`. `board_bundle` is one bundle PR:
 `id` (`bbu_`), `project_id`, `n` (unique per project, shown as `LCH-B3`), `branch`, `pr_number`, `base_sha`, `head_sha`,
 `tree_sha`, `status` (`open` `merged` `dissolved`), `merged_on` (the base tip it landed on when base moved, null
-otherwise). `board_bundle_member` links a bundle to its cards with the `head_sha` each was merged at and its `position`.
+otherwise), `packages` (json, a lane bundle's affected packages, merge-queue spec §7; null for a bundle that runs the
+whole suite). With `lanes` in the CI contract a project can have several `open` bundles at once, one per lane.
+`board_bundle_member` links a bundle to its cards with the `head_sha` each was merged at and its `position`.
 A card's queue state (`waiting`, `running`, `conflict`, `held`) is derived on read. Activity actions: `queue.add`,
 `queue.remove`, `bundle.cut`, `bundle.merge`, `bundle.dissolve`.
 

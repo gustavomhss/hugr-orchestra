@@ -25,6 +25,7 @@ any other change.
 - `merge` must be `merge`. Squash and rebase are refused, because they would stop GitHub from marking each PR merged.
 - `snapshots.remote` is the remote that receives work in progress (below). It defaults to `origin`.
 - Every other field is optional. `onBaseMoved` defaults to `retest`.
+- `lanes` turns on parallel bundles (see [Lanes](#lanes)). Leave it out to keep one bundle at a time.
 
 With no file, Maestro uses the PR's own required checks when your base branch has them, and only its own verification
 otherwise.
@@ -108,6 +109,37 @@ not hold the others.
 A card in the Queue column shows whether it is waiting, running in a bundle, held by your hold before merge, or held
 out by a conflict. To take a card out, ask Maestro: it uses `board_dequeue`, which also dissolves the bundle the card
 was in. Merge PRs of a board project only through the queue; a guard flags code that merges a PR outside it.
+
+## Lanes
+
+A project with a `turbo.json` on its base branch can land unrelated work side by side. Add a `lanes` block:
+
+```json
+"lanes": {
+  "by": "turbo",
+  "global": ["package.json", "bun.lock", "turbo.json", ".github/workflows/**"],
+  "jobs": 10,
+  "workflows": ["typecheck.yml", "test.yml"]
+}
+```
+
+At every cut Maestro asks turbo which packages each queued card affects (the packages it changes and every package
+that depends on them). Cards whose packages overlap share a lane; cards that share nothing get separate lanes, and
+each lane is cut into its own bundle. A lane bundle is not labelled with `full.label`: Maestro dispatches each workflow
+in `workflows` on the bundle branch with a `packages` input that lists the lane's packages, so only those packages are
+typechecked and tested. Your workflows need a `packages` `workflow_dispatch` input and should filter on it.
+
+- A card never jumps the queue. It is cut only when no bundle in flight touches its packages and no earlier card that
+  shares a package with it is still waiting.
+- A card that changes a `global` path overlaps everything. It waits for the bundles in flight to land, then goes alone
+  (or with other global cards) on the whole suite, with `full.label`. Every card queued behind it waits for it.
+- A lane bundle lands with `merge-if-disjoint`, whatever `onBaseMoved` says: the other lanes moved base, but they
+  touch none of its packages.
+- `jobs` is how many CI jobs one lane's gate uses. With `budget.jobs` it caps the lanes in flight at
+  `budget.jobs / jobs`.
+- `fullEvery` is read but not used yet.
+- A paused or flaky bundle, or a red base, holds every lane of the project until Maestro decides; a red base falls
+  back to one bundle at a time until base moves.
 
 ## Card thread
 
