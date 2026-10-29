@@ -26,9 +26,9 @@ Press send. A chat opens with Maestro in your project. Maestro plans the work an
 - To change how hard the model thinks, pick a reasoning level beside the model in the composer. The list shows only the levels that model accepts; models without levels show no picker.
 - To return to a chat, open **Chat** in the sidebar.
 
-## 4. Watch the work on Projects
+## 4. Watch the work on Project Board
 
-**Projects** in the sidebar is the board. It shows what Maestro is building, stage by stage. Only Maestro moves cards, so ask Maestro in a chat to plan a project and it appears there. The board is read only.
+**Project Board** in the sidebar shows what Maestro is building, stage by stage. Only Maestro moves cards, so ask Maestro in a chat to plan a project and it appears there. The board is read only.
 
 ## 5. Look at Actions
 
@@ -36,7 +36,7 @@ Press send. A chat opens with Maestro in your project. Maestro plans the work an
 
 ## Where the rest is
 
-The sidebar keeps Home, Chat, Projects, Agents and Actions in view. Everything else is in the **More** group. Click it to open or close it.
+The sidebar keeps Home, Chat, Project Board, Agents and Actions in view. Everything else is in the **More** group. Click it to open or close it.
 
 - **Workflows**: write a plan once and have Maestro run it. See [Workflows](workflows.md).
 - **Hooks**: rules that watch what agents do. See [Hooks](hooks.md).

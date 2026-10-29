@@ -23,7 +23,7 @@ so a change here is a change to both and goes through this file first.
 
 ## 2. Names
 
-- Code namespace `Board`, chapter id `board`, UI label "Projects". "Project" in the rest of the code stays the git repo
+- Code namespace `Board`, chapter id `board`, UI label "Project Board". "Project" in the rest of the code stays the git repo
   (`ProjectTable`), so board types are always `Board.Project`, `Board.Epic`, `Board.Issue`, never bare `Project`.
 - A board project has a short uppercase `key` (`LCH`). Issues are numbered per project and shown as `LCH-58`; epics as
   `LCH-E1`. Numbers are never reused, including after a cut.

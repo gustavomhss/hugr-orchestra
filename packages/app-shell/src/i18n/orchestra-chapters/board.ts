@@ -1,8 +1,8 @@
 // Copy owned by the Projects board. Add new keys here instead of i18n/orchestra.ts so screens merge without conflicts.
 // Issue titles, steps, notes, questions and reasons come from Maestro and are shown verbatim.
 export const BOARD_COPY = {
-  "orchestra.nav.board": "Projects",
-  "orchestra.board.title": "Projects",
+  "orchestra.nav.board": "Project Board",
+  "orchestra.board.title": "Project Board",
   "orchestra.board.description": "What Maestro is building, stage by stage. Only Maestro moves cards.",
   "orchestra.board.loading": "Loading…",
   "orchestra.board.loadingIssue": "Loading issue…",
@@ -235,8 +235,8 @@ export const BOARD_COPY = {
 }
 
 export const BOARD_COPY_BR: Record<keyof typeof BOARD_COPY, string> = {
-  "orchestra.nav.board": "Projetos",
-  "orchestra.board.title": "Projetos",
+  "orchestra.nav.board": "Quadro de Projetos",
+  "orchestra.board.title": "Quadro de Projetos",
   "orchestra.board.description": "O que o Maestro está construindo, etapa por etapa. Só o Maestro move os cards.",
   "orchestra.board.loading": "Carregando…",
   "orchestra.board.loadingIssue": "Carregando a issue…",
