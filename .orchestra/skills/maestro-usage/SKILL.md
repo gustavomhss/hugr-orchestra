@@ -62,6 +62,7 @@ crash_reason, guardrail_rule), `board_steps` (one active step, `now` is the live
 ## Merge queue
 
 1. `ci_run` runs the card's scoped checks from `.orchestra/ci.json` (read from the base branch) on its worktree tree.
+   A docs-only card needs no `package`: it records `none: no workspace package affected` as its scoped check.
 2. Maestro writes the PR record with `board_issue` (intent, decisions, not covered, risk level), then `board_queue`
    (`urgent`, `flush`). It refuses without a PR, a complete record, ready dependencies, a clean merge with base and a
    `scoped-green` head.

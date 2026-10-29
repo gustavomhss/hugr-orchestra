@@ -19,6 +19,9 @@ import { AbsolutePath } from "@orchestra/core/schema"
 import { git } from "./fixture/git"
 import { testEffect } from "./lib/effect"
 
+// What turbo would report as the card's affected packages; a test sets it before it runs ci_run.
+let touched: ReadonlyArray<string> | undefined = []
+
 // The scoped command is a real script in the card's worktree: it passes while the file `verdict` reads "pass".
 const it = testEffect(
   AppNodeBuilder.build(LayerNode.group([Board.node, Database.node, EventV2.node, Credential.node]), [
@@ -26,7 +29,7 @@ const it = testEffect(
       Board.node,
       makeGlobalNode({
         service: Board.Service,
-        layer: Board.layerWith({}),
+        layer: Board.layerWith({ affected: () => Effect.sync(() => touched) }),
         deps: [Database.node, EventV2.node, Credential.node, AppProcess.node, Global.node],
       }),
     ],
@@ -78,6 +81,44 @@ describe("BoardCi", () => {
       expect(result.state).toBeNull()
       expect(result.checks).toEqual([])
       expect(result.notes.join(" ")).toContain("land's verification only")
+    }),
+  )
+
+  it.live("a card that changes no workspace package records an explicit none check instead of needing package", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const card = yield* repository("CID", {
+        scoped: { tests: "bun run test:ci {package} {files}", workflows: [] },
+        lanes: { by: "turbo", global: ["package.json"] },
+        merge: "merge",
+      })
+      yield* board.project({ key: "CID", name: "Docs", repo: card.directory, reason: "Start." })
+      yield* board.issue({ project: "CID", title: "Docs", branch: "card-1", reason: "Plan." })
+      yield* write(card.worktree, "guide.md", "# Guide\n")
+
+      touched = ["//"]
+      const green = yield* board.ciRun({ project: "CID", issue: 1 })
+      expect(green.state).toBe("scoped-green")
+      expect(green.checks).toEqual([expect.objectContaining({ kind: "scoped", command: BoardCi.UNTOUCHED, outcome: "pass", treeSha: green.tree })])
+      expect(green.notes.join(" ")).toContain("nothing to test")
+      const again = yield* board.ciRun({ project: "CID", issue: 1 })
+      expect(again.checks.map((check) => check.id)).toEqual(green.checks.map((check) => check.id))
+
+      touched = ["@orchestra/core"]
+      yield* write(card.worktree, "guide.md", "# Guide, edited\n")
+      const code = yield* board.ciRun({ project: "CID", issue: 1 }).pipe(Effect.exit)
+      expect(JSON.stringify(code)).toContain("it changes @orchestra/core")
+
+      touched = []
+      yield* write(card.worktree, "package.json", "{}\n")
+      const global = yield* board.ciRun({ project: "CID", issue: 1 }).pipe(Effect.exit)
+      expect(JSON.stringify(global)).toContain("it changes the whole repository")
+
+      touched = undefined
+      yield* Effect.promise(() => fs.rm(path.join(card.worktree, "package.json")))
+      const unknown = yield* board.ciRun({ project: "CID", issue: 1 }).pipe(Effect.exit)
+      expect(JSON.stringify(unknown)).toContain("turbo could not tell")
+      touched = []
     }),
   )
 

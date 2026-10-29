@@ -760,7 +760,10 @@ export type GithubSync = typeof GithubSync.Type
 export const CiRunInput = Schema.Struct({
   project: Key,
   issue: PositiveInt,
-  /** Fills `{package}` in the contract's `scoped.tests`. */
+  /**
+   * Fills `{package}` in the contract's `scoped.tests`. Omitted for a card that changes no workspace package, which then
+   * records an explicit `none: no workspace package affected` check instead of running tests.
+   */
   package: Schema.String.pipe(optional),
   /** Fills `{files}` in the contract's `scoped.tests`: the test files the Done when names. */
   files: Schema.Array(Schema.String).pipe(optional),
