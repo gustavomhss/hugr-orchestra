@@ -30,6 +30,9 @@ Maestro is the only agent that writes the Projects board. Cards move in two ways
   Building. When the card's pull request opens, it moves to Review; when the pull request merges, it moves to Shipped.
   This needs the project's GitHub repository set.
 - **By Maestro, with a reason.** Moving a card to Ready or Cut, or to Shipped when the project has no GitHub repository.
+- **Through the merge queue.** When Maestro has verified a card, it puts the card in the Queue column. Orchestra
+  tests queued cards together and merges them when they pass; each card then moves to Shipped. A card that fails goes
+  back to Review with a note. See [Checks and the merge queue](merge-queue.md).
 
 Only you move a card out of Intake, and only you archive a project. A paused project takes no board changes except questions, a hold on a card keeps
 it from shipping, and a spent budget starts no new work. Questions that change the plan appear on the board with options and Maestro's

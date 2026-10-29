@@ -22,6 +22,7 @@ Read `maestro-ownership` first (map, invariants, owner decisions). Runtime behav
   `board/tools.ts`, the `board_*` row in `docs/specs/projects-board/CONTRACT.md` and in the `maestro-orchestra` map.
   Wire changes: `packages/protocol/src/groups/board.ts`, `packages/server/src/handlers/board.ts`, then `bun run generate`
   from `packages/client`; tell the Interface session first.
+- Merge queue (CI facts, snapshots, queue, bundles, record, import): `conveyor-maintenance`.
 - A fact the host should move a card on: next to `claim` (`v2/governance.ts`) or `follow` (`board/github.ts`), never as a
   prompt instruction.
 - New or renamed playbook: the folder under `modules/maestro/coordination/playbooks/` and its entry in
@@ -51,6 +52,18 @@ Read `maestro-ownership` first (map, invariants, owner decisions). Runtime behav
 - `task` with `worktree` and `directory` or `task_id` is an error by design; do not "fix" it by ignoring one.
 - `board_read` drops Maestro's own writes from the activity feed; a test that expects them sees nothing.
 - `board_move` to Shipped with a PR runs a live GitHub merged check: tests use the board's GitHub fixture, never the network.
+- `board_move` refuses `queue` both ways; only `board_queue`, `board_dequeue` and the host move a card in or out.
+- A file above 750 lines (`HARD_LIMIT_LOC`, `script/godfile.ts`) fails the epic, not the scoped run. Split before the
+  epic (as `queue.ts` became `queue-red`, `queue-settle`, `queue-record` and `queue-shared`); a waiver is only for a
+  file that was already over the limit.
+- On the Windows runner `core.autocrlf` is on: a fixture repository that compares files after checkout sets
+  `git config core.autocrlf false` (`windows-test-portability`).
+
+## Landing by hand
+
+Until this repository lands through its own queue, a hand merge waits for green runs on the PR's head SHA
+(`gh run list --commit <head sha>`), never for the PR's rolled-up status: the rollup can read green while the last
+commit's runs are still going (#1142). Land a stack through its top PR.
 
 ## Gates
 
@@ -64,6 +77,7 @@ Tests run only through `bun run test:ci` on Actions; typecheck through the `type
 | `task` tool | `bun run test:ci core test/tool-task.test.ts test/tool-task-cold.test.ts test/tool-task-governance.test.ts test/task-governance.test.ts` |
 | Board | `bun run test:ci core test/board.test.ts test/board-tools.test.ts test/board-github.test.ts test/board-budget.test.ts test/board-spend.test.ts` |
 | Prompt, upstream name | `bun run test:ci core test/agent.test.ts test/rename-guard.test.ts` |
+| Merge queue | `bun run test:ci core test/board-ci.test.ts test/board-snapshot.test.ts test/board-conflicts.test.ts test/board-queue.test.ts test/board-queue-red.test.ts test/board-queue-scoped.test.ts test/board-tree.test.ts` |
 | Claude mode | `bun run test:ci engine-claude-code test/v2-host.test.ts test/v2-host-seats.test.ts test/preset-guard.test.ts` |
 
 The full suite runs once per epic (the `epic` label on the epic PR), not per change.

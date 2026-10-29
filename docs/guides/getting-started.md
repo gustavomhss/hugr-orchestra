@@ -45,7 +45,7 @@ The sidebar keeps Home, Chat, Projects, Agents and Actions in view. Everything e
 - **Context savings**: how much context Orchestra saved you.
 - **Atlas**: the project's knowledge, with a **History** view of how it changed.
 
-You can open this guide from the command palette. Search for "Getting started guide".
+You can open this guide from the command palette (⌘K): search for "help" or "Getting started guide".
 
 ## On the command line
 
