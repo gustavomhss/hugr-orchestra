@@ -121,7 +121,7 @@ export const node = makeGlobalNode({
           }),
           ci_run: Tool.make({
             description:
-              "Run a card's scoped checks from .orchestra/ci.json on its worktree's current tree and report scoped-green, scoped-red or null. A tree that already has a result is not run again, so a commit that keeps the tree keeps its green. run: false only reports.",
+              "Run a card's scoped checks from .orchestra/ci.json on its worktree's current tree and report scoped-green, scoped-red or null. A tree that already has a result is not run again, so a commit that keeps the tree keeps its green. When scoped.tests takes {package} and none is given, a card that changes no workspace package (docs only) records an explicit passing `none: no workspace package affected` check instead of running tests, and a card that changes packages is refused with their names. run: false only reports.",
             input: CiRunInput,
             output: CiRunResult,
             execute: (input, context) => guard(context, board.ciRun(input)),
