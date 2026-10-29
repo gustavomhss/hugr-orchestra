@@ -45,9 +45,11 @@ snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bund
 - Workflow rows carry the pushed branch's tree, so they count toward the state only when the worktree matches what
   was pushed.
 - `ci_run` waits for `scoped.tests`; with `test:ci` that is minutes.
-- gitleaks comes from `BackendToolkit.ensure`; tests pass a fake through `Board.layerWith({ scanner })`. The scan exits
-  0 clean, 1 on a finding, anything else could not run.
-- An attempt with no stored worktree is located by `git worktree list` on the card's branch, then saved.
+- gitleaks comes from `BackendToolkit.ensure`; tests pass a fake through `Board.layerWith({ scanner })`. The scanner is
+  a command (executable plus leading arguments), so a test fake is a `.ts` file run as `[process.execPath, fake]`, which
+  spawns on Windows too. The scan exits 0 clean, 1 on a finding, anything else could not run.
+- An attempt with no stored worktree is located by `git worktree list` on the card's branch, then saved. git lists
+  Windows paths with forward slashes, so the path goes through `path.resolve` before it is compared or stored.
 - `snapshots.remote` is read through `ci.contract`; with no `ci.json` that costs a `gh api` call per card per sweep.
 - The conflict sweep reads `base` through `ci.contract` too: one `gh api` call per project per minute without
   `ci.json`.
