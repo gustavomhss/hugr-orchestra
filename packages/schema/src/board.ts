@@ -549,6 +549,10 @@ export const Proof = Schema.Struct({
   decidedBy: Schema.NullOr(Decision),
 }).annotate({ identifier: "Board.Proof" })
 
+/** Whether the card's work is on the remote: `local` until the worktree's tree equals the last pushed snapshot. */
+export const PushState = Schema.NullOr(Schema.Literals(["local", "pushed"]))
+export type PushState = typeof PushState.Type
+
 export interface IssuePage extends Schema.Schema.Type<typeof IssuePage> {}
 export const IssuePage = Schema.Struct({
   issue: Issue,
@@ -559,6 +563,8 @@ export const IssuePage = Schema.Struct({
   dependencies: Schema.Struct({ dependsOn: Schema.Array(Schema.String), blocks: Schema.Array(Schema.String) }),
   trail: Trail,
   record: Schema.NullOr(PrRecord).pipe(optional),
+  /** Null when the card has no open attempt or its worktree cannot be read. */
+  pushState: PushState.pipe(optional),
 }).annotate({ identifier: "Board.IssuePage" })
 
 // What `board_read` gives Maestro: the snapshot, what the owner did since `since`, attachment names and,
@@ -813,9 +819,6 @@ export type ScopedState = typeof ScopedState.Type
 /** How an attempt ended; null while it is open. Only a merge or a cut ends a card's last attempt. */
 export const AttemptOutcome = Schema.Literals(["merged", "ejected", "failed", "superseded", "cut"])
 export type AttemptOutcome = typeof AttemptOutcome.Type
-/** Whether the card's work is on the remote: `local` until the worktree's tree equals the last pushed snapshot. */
-export const PushState = Schema.NullOr(Schema.Literals(["local", "pushed"]))
-export type PushState = typeof PushState.Type
 
 /** One pass or fail fact, keyed by the tree it ran on. `board_ci_run` keeps the billing next to it. */
 export const Check = Schema.Struct({

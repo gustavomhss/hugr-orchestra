@@ -5788,6 +5788,7 @@ export type ServerBoardIssueOutput = {
     readonly risk?: { readonly level?: "low" | "medium" | "high"; readonly breaks?: string; readonly undo?: string }
     readonly follow_ups?: ReadonlyArray<string>
   } | null
+  readonly pushState?: "local" | "pushed" | null
 }
 
 export type ServerBoardActivityInput = {

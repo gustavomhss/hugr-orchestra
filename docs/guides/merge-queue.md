@@ -45,7 +45,7 @@ reads the files through a temporary index, so the worktree, its index and its br
 push builds on the previous one, and nothing is pushed when the files have not changed.
 
 A card is `pushed` when its worktree matches the last push and `local` when it has changes that are only on your
-machine. Before each push Maestro scans the new changes with gitleaks. A finding, or a scanner that cannot run, blocks
+machine; the card page and `board_read` show which. Before each push Maestro scans the new changes with gitleaks. A finding, or a scanner that cannot run, blocks
 the push and the card stays `local`. If a seat dies, its work can be restored from the ref:
 
 ```bash

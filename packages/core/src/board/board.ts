@@ -403,7 +403,11 @@ export const layerWith = (options: {
             }
           }),
         )
-        return { ...loaded.page, trail: yield* trail(loaded.row, loaded.directory, false) } satisfies Board.IssuePage
+        return {
+          ...loaded.page,
+          trail: yield* trail(loaded.row, loaded.directory, false),
+          pushState: yield* snapshots.state(loaded.row.id).pipe(Effect.orElseSucceed(() => null)),
+        } satisfies Board.IssuePage
       })
 
       // The plain-language summary of a guardrail rule from the checkout's own engine; null when it cannot be read.
