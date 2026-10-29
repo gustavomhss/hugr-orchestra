@@ -116,6 +116,13 @@ worker asked, the answer, the return, review requests and verdicts, and a rework
 Thread notes are read-only; you can add your own notes, but only Maestro and the host write the thread. Notes stay on
 the board and never go to GitHub.
 
+## Record commit
+
+Each bundle ends with a `chore(queue): record <KEY>-B<n>` commit that writes the project's Atlas record: the board log
+since the last record (`.atlas/project/board.jsonl`), each member's thread and attempts (`cards/<KEY>/`), one logbook
+entry per member and an Orientation milestone per member. A rebuilt bundle starts again from the base branch, so an
+ejected card leaves no logbook entry. On a public repository, free text is redacted.
+
 ## Numbers
 
 The board snapshot carries four numbers for the project's queue: queue wait (from a card joining the queue to its bundle merging), red rate (ejected share of the last 50 settled attempts), rework rate (attempts per shipped card) and lead time (from the first passing scoped check to the merge). Each is null until there is data for it.

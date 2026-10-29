@@ -1,19 +1,33 @@
 export * as BoardQueue from "./queue"
 
+import { createHash } from "crypto"
 import fs from "fs/promises"
 import os from "os"
 import path from "path"
 import { and, asc, desc, eq, inArray, isNull, ne, sql } from "drizzle-orm"
 import { Clock, Effect, Option, Schema } from "effect"
 import { ChildProcess } from "effect/unstable/process"
+import {
+  appendAttempt,
+  appendBoardEvent,
+  appendCardEvent,
+  appendLogbookEntry,
+  appendMilestone,
+  attemptNumbers,
+  readBoard,
+  readCard,
+  repoVisibility,
+} from "@orchestra/atlas-boundary/record-log"
 import { Board } from "@orchestra/schema/board"
 import type { AppProcess } from "../process"
+import { PartTable, SessionTable } from "../session/sql"
 import { which } from "../util/which"
 import { BoardCi } from "./ci"
 import type { BoardGithub } from "./github"
 import { BoardLedger } from "./ledger"
 import type { BoardRecord } from "./record"
 import {
+  BoardActivityTable,
   BoardAttemptTable,
   BoardBundleMemberTable,
   BoardBundleTable,
@@ -426,10 +440,6 @@ export function make(deps: Deps) {
       }
       return taken
     })
-    const bundleHead = (yield* git(scratch, ["rev-parse", "HEAD"])).out
-    const tree = (yield* git(scratch, ["rev-parse", "HEAD^{tree}"])).out
-    yield* git(directory, ["worktree", "remove", "--force", scratch])
-    if (members.length === 0) return
     const n = yield* deps.quiet((tx) =>
       tx
         .select({ n: BoardBundleTable.n })
@@ -439,6 +449,11 @@ export function make(deps: Deps) {
         .get()
         .pipe(Effect.map((last) => (last?.n ?? 0) + 1)),
     )
+    if (members.length > 0) yield* recordBundle(row, scratch, members.map((member) => member.issue), `${row.key}-B${n}`)
+    const bundleHead = (yield* git(scratch, ["rev-parse", "HEAD"])).out
+    const tree = (yield* git(scratch, ["rev-parse", "HEAD^{tree}"])).out
+    yield* git(directory, ["worktree", "remove", "--force", scratch])
+    if (members.length === 0) return
     const branch = `bundle-${row.key}-${n}`
     const pushed = yield* git(directory, ["push", "--quiet", "--force", "origin", `${bundleHead}:refs/heads/${branch}`])
     if (pushed.code !== 0) return
@@ -1273,6 +1288,142 @@ export function make(deps: Deps) {
     yield* deps.gh(["pr", "edit", String(found.pr), "--repo", row.github_repo, "--body-file", "-"], deps.record.pr(found.record))
   })
 
+  /**
+   * Section 4.7: the commit on top of a bundle that carries the board log since the tree's last record, and each
+   * member's thread, attempts, logbook entry and Orientation milestone, all through Atlas's writers. The bundle is
+   * assembled from base's tip on every rebuild, so an ejected card leaves nothing behind.
+   */
+  const recordBundle = Effect.fnUntraced(function* (row: ProjectRow, scratch: string, issues: ReadonlyArray<IssueRow>, label: string) {
+    const now = yield* Clock.currentTimeMillis
+    // An unknown visibility is treated as public, so free text never reaches a tree that might be.
+    const redact = (yield* Effect.tryPromise(() => repoVisibility(scratch)).pipe(Effect.orElseSucceed(() => "public"))) === "public"
+    const ids = issues.map((issue) => issue.id)
+    const found = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const attempts = yield* tx.select().from(BoardAttemptTable).where(inArray(BoardAttemptTable.issue_id, ids)).all()
+        const sessions = attempts.flatMap((attempt) => (attempt.session_id ? [attempt.session_id as (typeof SessionTable.$inferSelect)["id"]] : []))
+        return {
+          attempts,
+          activity: yield* tx
+            .select()
+            .from(BoardActivityTable)
+            .where(eq(BoardActivityTable.project_id, row.id))
+            .orderBy(asc(BoardActivityTable.time_created), asc(BoardActivityTable.id))
+            .all(),
+          numbers: yield* tx.select({ id: BoardIssueTable.id, number: BoardIssueTable.number }).from(BoardIssueTable).where(eq(BoardIssueTable.project_id, row.id)).all(),
+          notes: yield* tx
+            .select()
+            .from(BoardNoteTable)
+            .where(inArray(BoardNoteTable.issue_id, ids))
+            .orderBy(asc(BoardNoteTable.time_created), asc(BoardNoteTable.id))
+            .all(),
+          checks: yield* tx.select().from(BoardCheckTable).where(inArray(BoardCheckTable.issue_id, ids)).all(),
+          sessions: sessions.length ? yield* tx.select().from(SessionTable).where(inArray(SessionTable.id, sessions)).all() : [],
+          parts: sessions.length
+            ? yield* tx
+                .select({ session: PartTable.session_id, id: PartTable.id, data: PartTable.data })
+                .from(PartTable)
+                .where(inArray(PartTable.session_id, sessions))
+                .orderBy(asc(PartTable.id))
+                .all()
+            : [],
+        }
+      }),
+    )
+    const iso = (ms: number) => new Date(ms).toISOString()
+    const keyOf = (issue: Board.IssueID) => found.numbers.find((item) => item.id === issue)?.number
+    yield* Effect.sync(() => {
+      const written = new Set(readBoard(scratch).events.map((event) => event.activity))
+      found.activity
+        .filter((item) => !written.has(item.id))
+        .forEach((item) => {
+          const number = item.issue_id ? keyOf(item.issue_id) : undefined
+          appendBoardEvent(
+            scratch,
+            {
+              activity: item.id,
+              project: row.key,
+              ...(number ? { issue: `${row.key}-${number}` } : {}),
+              actor: item.actor,
+              action: item.action,
+              at: iso(item.time_created),
+              ...(item.before ? { before: structure(item.before) } : {}),
+              ...(item.after ? { after: structure(item.after) } : {}),
+              ...(item.undoes ? { undoes: item.undoes } : {}),
+              text: prose(item),
+            },
+            { redact },
+          )
+        })
+      issues.forEach((issue) => {
+        const key = `${row.key}-${issue.number}`
+        const seen = new Set(readCard(scratch, key).events.flatMap((event) => (event.kind === "message" ? [`${event.at} ${event.thread} ${event.from}`] : [])))
+        found.notes
+          .filter((note) => note.issue_id === issue.id)
+          .forEach((note) => {
+            const at = iso(note.time_created)
+            if (!note.kind || seen.has(`${at} ${note.kind} ${note.author}`)) return
+            appendCardEvent(scratch, key, { kind: "message", thread: note.kind, from: note.author, text: note.body, at }, { redact })
+          })
+        const own = found.attempts.filter((attempt) => attempt.issue_id === issue.id)
+        const recorded = new Set(attemptNumbers(scratch, key))
+        const last = Math.max(0, ...own.map((attempt) => attempt.n))
+        own
+          .filter((attempt) => !recorded.has(attempt.n))
+          .forEach((attempt) => {
+            const session = found.sessions.find((item) => item.id === attempt.session_id)
+            if (!session) return
+            const parts = found.parts.filter((part) => part.session === session.id)
+            appendAttempt(
+              scratch,
+              key,
+              attempt.n,
+              {
+                seat: attempt.seat ?? "",
+                session: session.id,
+                engine: session.model?.providerID ?? "",
+                model: session.model?.id ?? "",
+                tokensIn: session.tokens_input,
+                tokensOut: session.tokens_output + session.tokens_reasoning,
+                tokensCache: session.tokens_cache_read + session.tokens_cache_write,
+                toolUses: parts.filter((part) => part.data.type === "tool").length,
+                wallTime: session.time_updated - session.time_created,
+                retries: 0,
+                reworks: attempt.n - 1,
+                gates: found.checks.filter((check) => check.issue_id === issue.id).map((check) => `${check.kind} ${check.command}`),
+                verdict: attempt.n === last ? "landed" : "reworked",
+                // The digest of the stored transcript parts; the transcript itself travels with the session archive.
+                transcriptSha: createHash("sha256").update(JSON.stringify(parts)).digest("hex") as Parameters<typeof appendAttempt>[3]["transcriptSha"],
+                costMicroUsd: Math.round(session.cost * 1_000_000),
+              },
+              { redact, at: iso(session.time_updated) },
+            )
+          })
+        const record = issue.record
+        if (!issue.pr_number || !record) return
+        appendLogbookEntry(
+          scratch,
+          {
+            prId: String(issue.pr_number),
+            at: iso(now),
+            territories: [],
+            shipped: record.change?.trim() || record.intent?.trim() || issue.title,
+            decisions: record.decisions ?? "",
+            tradeoffs: record.not_covered ?? "",
+            risks: [record.risk?.level, record.risk?.breaks, record.risk?.undo && `Undo: ${record.risk.undo}`].filter(Boolean).join(". "),
+            openThreads: record.follow_ups?.length ? record.follow_ups.join(", ") : "None.",
+            links: [key],
+          },
+          { redact },
+        )
+        appendMilestone(scratch, { card: key, pr: issue.pr_number })
+      })
+    })
+    yield* git(scratch, ["add", "--", ".atlas"])
+    if ((yield* git(scratch, ["diff", "--cached", "--quiet"])).code === 0) return
+    yield* git(scratch, [...AUTHOR, "commit", "--quiet", "-m", `chore(queue): record ${label}`])
+  })
+
   /** The card's record as Atlas reads it: Maestro's fields plus the host's facts, checks, cost, lineage and integration. */
   const recordOf = Effect.fnUntraced(function* (row: ProjectRow, issue: Board.IssueID, base: string) {
     const now = yield* Clock.currentTimeMillis
@@ -1462,3 +1613,25 @@ const insertNote = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, iss
   const activity = yield* log(tx, { project: project.id, issue: issue.id, actor: "github", action: "note.add", after: { id } })
   return changed(project.id, activity, issue.id)
 })
+
+// Free text a board write may hold; the board log keeps it out of `before` and `after` so a public tree can drop it.
+const PROSE = ["description", "body", "reason", "text", "question", "answer", "record", "cause"]
+
+function structure(value: Record<string, unknown>) {
+  return Object.fromEntries(Object.entries(value).filter((entry) => !PROSE.includes(entry[0])))
+}
+
+function prose(item: { reason: string | null; before: Record<string, unknown> | null; after: Record<string, unknown> | null }) {
+  const sides = [
+    ["before", item.before],
+    ["after", item.after],
+  ] as const
+  return Object.fromEntries([
+    ...(item.reason ? [["reason", item.reason]] : []),
+    ...sides.flatMap((side) =>
+      Object.entries(side[1] ?? {})
+        .filter((entry) => PROSE.includes(entry[0]))
+        .map((entry) => [`${side[0]}.${entry[0]}`, typeof entry[1] === "string" ? entry[1] : JSON.stringify(entry[1])]),
+    ),
+  ])
+}

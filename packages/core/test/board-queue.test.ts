@@ -166,6 +166,15 @@ describe("BoardQueue", () => {
       const opened: BoardRecord.BundleRecord = JSON.parse(repo.remote.bodies.get(103) ?? "")
       expect(opened.members.map((member) => member.record.lineage.card)).toEqual(["QOK-1", "QOK-2", "QOK-3"])
       const bundle = yield* origin(repo, "bundle-QOK-1")
+      // Section 4.7: the record commit tops the bundle with the board log, and one logbook entry and one milestone per
+      // member; a local remote reads as public, so the free text is dropped.
+      const tree = (...args: string[]) => Effect.promise(() => Bun.$`git --git-dir ${repo.remote.origin} ${args}`.quiet().text())
+      expect((yield* tree("log", "-1", "--format=%s", bundle)).trim()).toBe("chore(queue): record QOK-B1")
+      expect((yield* tree("show", `${bundle}:.atlas/members/orch/memory/logbook.jsonl`)).trim().split("\n")).toHaveLength(3)
+      expect(yield* tree("show", `${bundle}:.atlas/project/orientation.jsonl`)).toContain("QOK-2")
+      const boardLog = yield* tree("show", `${bundle}:.atlas/project/board.jsonl`)
+      expect(boardLog).toContain("QOK-3")
+      expect(boardLog).not.toContain("Verified.")
 
       // Pending checks leave the bundle open.
       yield* board.queueTick()
