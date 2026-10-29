@@ -40,6 +40,7 @@ import {
   BoardQueueTable,
 } from "./sql"
 import { BoardSnapshot } from "./snapshot"
+import { BoardTree } from "./tree"
 import { changed, endOf, gitRunner, loadIssue, loadProject, log, RefusedError, worktree } from "./shared"
 import type { Changed, IssueRow, ProjectRow, Tx } from "./shared"
 
@@ -781,6 +782,8 @@ export function make(deps: Deps) {
         const project = yield* tx.select().from(BoardProjectTable).where(eq(BoardProjectTable.id, row.id)).get()
         if (!project) return yield* Effect.die(`${row.key} has no project row to file its fix card in.`)
         const id = Board.IssueID.create()
+        const position = yield* endOf(tx, row.id, "backlog")
+        const entered = yield* Clock.currentTimeMillis
         yield* tx
           .insert(BoardIssueTable)
           .values({
@@ -792,7 +795,7 @@ export function make(deps: Deps) {
             type: "bug",
             epic_id: null,
             stage: "backlog",
-            position: yield* endOf(tx, row.id, "backlog"),
+            position,
             estimate: null,
             seat: null,
             session_id: null,
@@ -802,7 +805,7 @@ export function make(deps: Deps) {
             crash_reason: null,
             guardrail_rule: null,
             record: null,
-            stage_entered_at: yield* Clock.currentTimeMillis,
+            stage_entered_at: entered,
             github_dirty: project.github_repo !== null,
           })
           .run()
@@ -817,7 +820,15 @@ export function make(deps: Deps) {
           actor: "github",
           action: "issue.create",
           reason: "base is red",
-          after: { number: project.next_issue_number, title, type: "bug", stage: "backlog" },
+          after: {
+            number: project.next_issue_number,
+            title,
+            body,
+            type: "bug",
+            stage: "backlog",
+            position,
+            stage_entered_at: entered,
+          },
         })
         return { id, changed: changed(row.id, activity, id) }
       }),
@@ -1338,22 +1349,7 @@ export function make(deps: Deps) {
         .filter((item) => !written.has(item.id))
         .forEach((item) => {
           const number = item.issue_id ? keyOf(item.issue_id) : undefined
-          appendBoardEvent(
-            scratch,
-            {
-              activity: item.id,
-              project: row.key,
-              ...(number ? { issue: `${row.key}-${number}` } : {}),
-              actor: item.actor,
-              action: item.action,
-              at: iso(item.time_created),
-              ...(item.before ? { before: structure(item.before) } : {}),
-              ...(item.after ? { after: structure(item.after) } : {}),
-              ...(item.undoes ? { undoes: item.undoes } : {}),
-              text: prose(item),
-            },
-            { redact },
-          )
+          appendBoardEvent(scratch, BoardTree.event(row.key, number ? `${row.key}-${number}` : undefined, item), { redact })
         })
       issues.forEach((issue) => {
         const key = `${row.key}-${issue.number}`
@@ -1615,28 +1611,6 @@ const release = Effect.fnUntraced(function* (
 const insertNote = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, issue: IssueRow, body: string) {
   const id = Board.NoteID.create()
   yield* tx.insert(BoardNoteTable).values({ id, issue_id: issue.id, author: "orchestra", body }).run()
-  const activity = yield* log(tx, { project: project.id, issue: issue.id, actor: "github", action: "note.add", after: { id } })
+  const activity = yield* log(tx, { project: project.id, issue: issue.id, actor: "github", action: "note.add", after: { id, author: "orchestra", body } })
   return changed(project.id, activity, issue.id)
 })
-
-// Free text a board write may hold; the board log keeps it out of `before` and `after` so a public tree can drop it.
-const PROSE = ["description", "body", "reason", "text", "question", "answer", "record", "cause"]
-
-function structure(value: Record<string, unknown>) {
-  return Object.fromEntries(Object.entries(value).filter((entry) => !PROSE.includes(entry[0])))
-}
-
-function prose(item: { reason: string | null; before: Record<string, unknown> | null; after: Record<string, unknown> | null }) {
-  const sides = [
-    ["before", item.before],
-    ["after", item.after],
-  ] as const
-  return Object.fromEntries([
-    ...(item.reason ? [["reason", item.reason]] : []),
-    ...sides.flatMap((side) =>
-      Object.entries(side[1] ?? {})
-        .filter((entry) => PROSE.includes(entry[0]))
-        .map((entry) => [`${side[0]}.${entry[0]}`, typeof entry[1] === "string" ? entry[1] : JSON.stringify(entry[1])]),
-    ),
-  ])
-}

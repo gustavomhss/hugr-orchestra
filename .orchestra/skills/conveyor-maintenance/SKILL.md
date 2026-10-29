@@ -64,6 +64,7 @@ snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bund
 - Section 6.8: a base-red bundle sets `culprit`, `failing` and `fix_issue_id` (migration `20261029070552_board_base_fix`). `cut` reads them from the last closed bundle and cuts only its fix card while base stays put; a fix bundle that stays red closes `base-red` with the same fields, so the wait holds. `fixCard` reuses an unshipped fix card.
 - `scope()` adds its scratch worktrees one at a time (concurrent `git worktree add` races on the lock), runs F in parallel and returns base, code or flaky; `BoardCi.packaged` maps failing bun files to their turbo group; `flaky()` writes the `board_flake` row (migration `20261028230000_board_flake`) and keeps the bundle open.
 - `isolate` runs its scoped checkouts one at a time because of the worktree lock. Bundle `rebuilds` counts consecutive `isolated` reds. A queue row's `hold` (`held`, `alone`) is cleared when the card is cut.
+- `board/tree.ts` owns export (`BoardTree.event`, called by the record commit) and import (`BoardTree.restore`). One applier per `Board.Action` in `APPLIERS`; a new action needs a new applier (the `Record<Board.Action, ...>` type forces it) and a structure field in its activity `after`. Unknown actions fail with `BoardTree.UnknownActionError`.
 - Write-set matching drops `:L` line ranges and matches patterns with `Bun.Glob`, like the arsenal's `conflictVerdict`.
 
 ## Gates

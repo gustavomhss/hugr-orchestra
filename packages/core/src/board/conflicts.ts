@@ -113,7 +113,7 @@ export function make(deps: Deps) {
         : `${at} touched ${notice.touched.join(", ")}; merges clean.`
     const id = Board.NoteID.create()
     yield* tx.insert(BoardNoteTable).values({ id, issue_id: notice.issue, author: "orchestra", body }).run()
-    const activity = yield* log(tx, { project: row.id, issue: notice.issue, actor: "github", action: "note.add", after: { id } })
+    const activity = yield* log(tx, { project: row.id, issue: notice.issue, actor: "github", action: "note.add", after: { id, author: "orchestra", body } })
     return changed(row.id, activity, notice.issue)
   })
 

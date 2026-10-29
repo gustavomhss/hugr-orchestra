@@ -143,6 +143,23 @@ Exactly one of `path` and `credential_id` is set.
 Undoable actions: Maestro's `issue.update`, `issue.move`, `steps.set`, `epic.upsert`, `question.withdraw`, and every
 `github.overwrite`. Owner actions are reversed by the owner doing the opposite (resume, release hold), not by undo.
 
+Import from the record tree (`board/tree.ts`, `BoardTree.restore`): the record commit writes every activity row to
+`.atlas/project/board.jsonl` through `BoardTree.event`, and the import replays it into an empty board, ordered by
+`at` with the activity id breaking ties (ids are minted in order within a millisecond). Each action has exactly one
+applier; an action without one fails with `BoardTree.UnknownActionError`, never a silent skip.
+
+- Restored: `board_project`, `board_epic`, `board_issue`, `board_step`, `board_dependency`, `board_question`, `board_decision`,
+  `board_note` (plain notes) and `board_activity` (including `undone_by`).
+- Re-derived, left empty: `board_queue`, `board_bundle`, `board_bundle_member`, `board_attempt`, `board_check`, `board_ci_run`,
+  `board_flake` and the GitHub sync state. Git, GitHub and `.atlas/cards/*/attempts` already hold them, so logging them
+  would add weight without adding reconstruction. `github.overwrite`, `github.state` and `bundle.cut` replay as no-ops.
+- Not logged on purpose: attachments (`board_attachment`; `attachment.add`/`remove` replay as no-ops), so their bytes and secrets never
+  enter the log. Thread notes (non-null `kind`) live in `cards/<KEY>/` and are not imported into `board_note`.
+- `question.answer`: an `after.outcome` updates the decision's outcome; otherwise it answers the question and inserts
+  the decision `after.decision`, which supersedes the standing decision of that question.
+- Prose (descriptions, bodies, reasons, answers and the like) travels in the event's `text`. A public tree keeps only
+  `textHash`: prose comes back empty and the activity `reason` reads `[redacted <hash>]`.
+
 As built in slice E1:
 
 - `board_project.forecast_late_streak` (integer, default 0) counts consecutive evaluations whose P50 lands past

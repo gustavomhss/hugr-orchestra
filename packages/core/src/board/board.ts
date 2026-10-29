@@ -945,7 +945,24 @@ export const layerWith = (options: {
                   action: "issue.create",
                   reason: input.reason,
                   after: {
-                    ...pick(row, ["number", "title", "body", "type", "epic_id", "stage", "estimate", "seat", "session_id", "branch", "pr_number"]),
+                    ...pick(row, [
+                      "number",
+                      "title",
+                      "body",
+                      "type",
+                      "epic_id",
+                      "stage",
+                      "position",
+                      "estimate",
+                      "seat",
+                      "session_id",
+                      "branch",
+                      "pr_number",
+                      "stage_entered_at",
+                      "crash_reason",
+                      "guardrail_rule",
+                      "record",
+                    ]),
                     ...(input.depends_on ? { depends_on: input.depends_on } : {}),
                   },
                 })
@@ -1169,7 +1186,16 @@ export const layerWith = (options: {
                 actor: "maestro",
                 action: "question.ask",
                 reason: input.reason,
-                after: { id, text: input.text, blocking: input.blocking ?? false },
+                after: {
+                  id,
+                  epic_id: epic,
+                  text: input.text,
+                  options: input.options,
+                  recommended: input.recommended,
+                  cost_of_waiting: input.cost_of_waiting ?? null,
+                  blocking: input.blocking ?? false,
+                  kind: null,
+                },
               })
               return { result: { activity }, changed: changed(project.id, activity, issue) }
             }),
@@ -1198,14 +1224,20 @@ export const layerWith = (options: {
                 .set({ status: "answered", answer_option: input.option, answer_text: input.text ?? null, answered_at: now })
                 .where(eq(BoardQuestionTable.id, question.id))
                 .run()
-              yield* BoardDecision.record(tx, project, question, input, now)
+              const decision = yield* BoardDecision.record(tx, project, question, input, now)
               const activity = yield* log(tx, {
                 project: project.id,
                 issue: question.issue_id,
                 actor: "owner",
                 action: "question.answer",
                 before: { id: question.id, status: "open" },
-                after: { id: question.id, status: "answered", answer_option: input.option, answer_text: input.text ?? null },
+                after: {
+                  id: question.id,
+                  status: "answered",
+                  answer_option: input.option,
+                  answer_text: input.text ?? null,
+                  decision,
+                },
               })
               return { result: { activity }, changed: changed(project.id, activity, question.issue_id) }
             }),
@@ -1232,7 +1264,13 @@ export const layerWith = (options: {
               const issue = yield* loadIssue(tx, project, number)
               const id = Board.NoteID.create()
               yield* tx.insert(BoardNoteTable).values({ id, issue_id: issue.id, author: "owner", body: input.body }).run()
-              const activity = yield* log(tx, { project: project.id, issue: issue.id, actor: "owner", action: "note.add", after: { id } })
+              const activity = yield* log(tx, {
+                project: project.id,
+                issue: issue.id,
+                actor: "owner",
+                action: "note.add",
+                after: { id, author: "owner", body: input.body },
+              })
               return { result: { activity }, changed: changed(project.id, activity, issue.id) }
             }),
           )

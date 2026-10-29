@@ -123,6 +123,23 @@ since the last record (`.atlas/project/board.jsonl`), each member's thread and a
 entry per member and an Orientation milestone per member. A rebuilt bundle starts again from the base branch, so an
 ejected card leaves no logbook entry. On a public repository, free text is redacted.
 
+### Rebuilding the board from the record
+
+The board log in the record is enough to rebuild a project's board in an empty database: projects, epics, cards,
+steps, dependencies, questions, decisions, owner and Maestro notes, and the activity log itself. The import replays the
+log in time order, one rule per action, and stops with a named error on any action it does not know rather than
+skipping it.
+
+Some things are not in the log on purpose:
+
+- The queue, bundles, attempts, checks, CI runs, flakes and GitHub sync state are rebuilt from git, GitHub and the
+  card records, so the import leaves them empty.
+- Card threads live in `cards/<KEY>/`, not in the board log.
+- Attachments are never logged. Their bytes and any secret stay on the machine that added them.
+
+On a public repository the log carries no free text, so the import rebuilds the structure with empty text and marks
+each redacted reason with the hash of the text it replaced.
+
 ## Numbers
 
 The board snapshot carries four numbers for the project's queue: queue wait (from a card joining the queue to its bundle merging), red rate (ejected share of the last 50 settled attempts), rework rate (attempts per shipped card) and lead time (from the first passing scoped check to the merge). Each is null until there is data for it.

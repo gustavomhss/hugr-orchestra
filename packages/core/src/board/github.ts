@@ -418,7 +418,16 @@ export function make(deps: Deps) {
       actor: "github",
       action: "issue.create",
       reason: `Opened on GitHub as #${item.number} by ${item.user?.login ?? "someone"}.`,
-      after: { number, title: row.title, body: row.body, type: row.type, stage },
+      after: {
+        number,
+        title: row.title,
+        body: row.body,
+        type: row.type,
+        stage,
+        position: row.position,
+        stage_entered_at: row.stage_entered_at,
+        github_number: row.github_number,
+      },
     })
     return { project: project.id, issue: id, activity } as Changed
   })
@@ -464,6 +473,10 @@ export function make(deps: Deps) {
         .get()
       if (!open) {
         const id = Board.QuestionID.create()
+        const options = [
+          { id: "keep", label: "Keep the board's stage", consequence: "The next push puts the GitHub issue back the way the board has it." },
+          { id: "follow", label: "Follow GitHub", consequence: "Move the card to match GitHub, then the two agree." },
+        ]
         yield* tx
           .insert(BoardQuestionTable)
           .values({
@@ -471,10 +484,7 @@ export function make(deps: Deps) {
             project_id: project.id,
             issue_id: issue.id,
             text: asked,
-            options: [
-              { id: "keep", label: "Keep the board's stage", consequence: "The next push puts the GitHub issue back the way the board has it." },
-              { id: "follow", label: "Follow GitHub", consequence: "Move the card to match GitHub, then the two agree." },
-            ],
+            options,
             recommended: "keep",
             cost_of_waiting: null,
             blocking: false,
@@ -487,7 +497,16 @@ export function make(deps: Deps) {
           actor: "github",
           action: "question.ask",
           reason: `GitHub #${item.number} was ${said}; the board does not apply that on its own.`,
-          after: { id, text: asked, blocking: false },
+          after: {
+            id,
+            epic_id: null,
+            text: asked,
+            options,
+            recommended: "keep",
+            cost_of_waiting: null,
+            blocking: false,
+            kind: null,
+          },
         })
       }
       // The next push restores the board's state unless the plan changes first.
@@ -511,7 +530,7 @@ export function make(deps: Deps) {
         const id = Board.NoteID.create()
         const author = `github:${item.user?.login ?? "unknown"}`
         yield* tx.insert(BoardNoteTable).values({ id, issue_id: issue.id, author, body: item.body, github_comment_id: item.id }).run()
-        const activity = yield* deps.log(tx, { project: project.id, issue: issue.id, actor: "github", action: "note.add", after: { id, author } })
+        const activity = yield* deps.log(tx, { project: project.id, issue: issue.id, actor: "github", action: "note.add", after: { id, author, body: item.body } })
         return { project: project.id, issue: issue.id, activity } as Changed
       }),
     )

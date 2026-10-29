@@ -120,6 +120,7 @@
     "./board/github": "./src/board/github.ts",
     "./board/queue": "./src/board/queue.ts",
     "./board/record": "./src/board/record.ts",
+    "./board/tree": "./src/board/tree.ts",
     "./board/spend": "./src/board/spend.ts",
     "./board/sql": "./src/board/sql.ts",
     "./board/thread": "./src/board/thread.ts",
