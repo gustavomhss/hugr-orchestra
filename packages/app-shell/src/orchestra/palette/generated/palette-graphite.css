@@ -152,6 +152,18 @@ html[data-orchestra-palette="graphite"][data-color-scheme] body[data-new-layout]
   }
 }
 /* orchestra/shell.css */
+[data-orchestra-palette="graphite"] body[data-new-layout] [data-component="button-v2"][data-variant="contrast"] {
+  background-image: none;
+  background-color: var(--v2-background-bg-contrast);
+  text-shadow: none;
+  box-shadow: none;
+}
+[data-orchestra-palette="graphite"] body[data-new-layout] [data-component="button-v2"][data-variant="contrast"]:is(:hover, [data-state="hover"]):not(:disabled) {
+  background-image: linear-gradient(var(--v2-overlay-simple-overlay-contrast-hover), var(--v2-overlay-simple-overlay-contrast-hover));
+}
+[data-orchestra-palette="graphite"] body[data-new-layout] [data-component="button-v2"][data-variant="contrast"]:is(:active, [data-state="pressed"]):not(:disabled) {
+  background-image: linear-gradient(var(--v2-overlay-simple-overlay-contrast-pressed), var(--v2-overlay-simple-overlay-contrast-pressed));
+}
 [data-orchestra-palette="graphite"] body[data-new-layout] [data-slot="dialog-close-button"]:active {
   background: var(--orchestra-overlay-pressed);
 }
@@ -1250,14 +1262,12 @@ html[data-orchestra-palette="graphite"][data-color-scheme] body[data-mx-kit] {
   --mx-blue: #a9b6c5;
   --mx-good: #9dbda9;
   --mx-bad: #d99d97;
-  --mx-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.035);
   --mx-shadow: 0 30px 100px rgba(0, 0, 0, 0.36);
   --mx-pop-shadow: 0 14px 35px rgba(0, 0, 0, 0.24);
   --mx-backdrop: rgba(9, 10, 11, 0.55);
   --mx-rim: rgba(158, 160, 163, 0.24);
-  --mx-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 56px);
   --mx-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 8px 22px -10px rgba(0, 0, 0, 0.32);
-  --mx-primary: linear-gradient(180deg, #60758d, #50637a);
+  --mx-primary: #576b83;
   --mx-primary-text: #ffffff;
   --mx-enabled: rgba(107, 125, 141, 0.22);
 }
@@ -1281,7 +1291,7 @@ html[data-orchestra-palette="graphite"][data-color-scheme] body[data-mx-kit] {
 }
 [data-orchestra-palette="graphite"] .mx-card {
   border: 1px solid var(--mx-line);
-  background: var(--mx-sheen), var(--mx-raised);
+  background: var(--mx-raised);
   box-shadow: var(--mx-highlight), var(--mx-card-shadow);
 }
 [data-orchestra-palette="graphite"] .mx-card:hover,
@@ -1430,7 +1440,6 @@ html[data-orchestra-palette="graphite"][data-color-scheme] body[data-mx-kit] {
 }
 [data-orchestra-palette="graphite"] .mx-dialog-head {
   border-block-end: 1px solid var(--mx-line);
-  background: var(--mx-sheen);
 }
 [data-orchestra-palette="graphite"] .mx-dialog-head p {
   color: var(--mx-dim);

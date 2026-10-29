@@ -14,14 +14,14 @@ html[data-color-scheme] body[data-mx-kit] {
   --mx-blue: #9dc2e8;
   --mx-good: #9ecab3;
   --mx-bad: #eeafa9;
-  --mx-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  /* Quiet glass: surfaces carry no top glint (owner decision); the token stays so box-shadow lists keep one shape. */
+  --mx-highlight: 0 0 transparent;
   --mx-shadow: 0 30px 100px rgba(0, 0, 0, 0.36);
   --mx-pop-shadow: 0 14px 35px rgba(0, 0, 0, 0.24);
   --mx-backdrop: rgba(3, 9, 16, 0.55);
   --mx-rim: rgba(166, 189, 211, 0.24);
-  --mx-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 56px);
   --mx-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 8px 22px -10px rgba(0, 0, 0, 0.32);
-  --mx-primary: linear-gradient(180deg, #3f7ebc, #326ba5);
+  --mx-primary: #3873b0;
   --mx-primary-text: #fff;
   --mx-enabled: rgba(84, 135, 178, 0.22);
   --mx-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -41,12 +41,11 @@ html[data-color-scheme="light"] body[data-mx-kit] {
   --mx-blue: #003e72;
   --mx-good: #00472c;
   --mx-bad: #72211b;
-  --mx-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  --mx-highlight: 0 0 transparent;
   --mx-shadow: 0 30px 100px rgba(28, 46, 65, 0.2);
   --mx-pop-shadow: 0 14px 35px rgba(28, 46, 65, 0.16);
   --mx-backdrop: rgba(28, 43, 59, 0.3);
   --mx-rim: rgba(65, 86, 107, 0.24);
-  --mx-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0) 56px);
   --mx-card-shadow: 0 1px 2px rgba(28, 46, 65, 0.06), 0 8px 22px -10px rgba(28, 46, 65, 0.16);
   --mx-enabled: rgba(84, 135, 178, 0.16);
 }
@@ -145,7 +144,7 @@ html[data-color-scheme="light"] .mx-dialog {
   padding: 18px;
   border: 1px solid var(--mx-line);
   border-radius: var(--orchestra-radius-lg);
-  background: var(--mx-sheen), var(--mx-raised);
+  background: var(--mx-raised);
   box-shadow: var(--mx-highlight), var(--mx-card-shadow);
   transition:
     border-color var(--orchestra-duration-base) var(--orchestra-ease-out),
@@ -482,7 +481,6 @@ html[data-color-scheme="light"] .mx-dialog {
   gap: 20px;
   padding: 22px 24px 18px;
   border-block-end: 1px solid var(--mx-line);
-  background: var(--mx-sheen);
 }
 .mx-dialog-head h2 {
   margin: 0;

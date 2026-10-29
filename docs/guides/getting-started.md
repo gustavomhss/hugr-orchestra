@@ -36,7 +36,7 @@ Press send. A chat opens with Maestro in your project. Maestro plans the work an
 
 ## Where the rest is
 
-The sidebar keeps Home, Chat, Project Board, Agents and Actions in view. Everything else is in the **More** group. Click it to open or close it.
+The sidebar keeps Home, Chat, Project Board, Agents and Actions in view. Everything else is in the **Extensions** group. Click it to open or close it.
 
 - **Workflows**: write a plan once and have Maestro run it. See [Workflows](workflows.md).
 - **Hooks**: rules that watch what agents do. See [Hooks](hooks.md).

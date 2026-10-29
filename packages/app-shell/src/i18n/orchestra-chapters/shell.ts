@@ -38,7 +38,7 @@ export const SHELL_COPY = {
   "orchestra.shell.crumb.plugins": "Plugins",
   "orchestra.shell.crumb.providers": "Providers",
   "orchestra.shell.crumb.shortcuts": "Shortcuts",
-  "orchestra.shell.nav.advanced": "More",
+  "orchestra.shell.nav.advanced": "Extensions",
   "orchestra.shell.chat.serverDown.title": "The local server is not responding",
   "orchestra.shell.chat.serverDown.description": "Wait for the local server to start, then try Chat again.",
   "orchestra.shell.wip.chip": "WIP",

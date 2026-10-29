@@ -68,7 +68,7 @@
 .gr-rule-list,
 .gr-review .mx-table {
   border: 1px solid var(--mx-line);
-  background: var(--mx-sheen), var(--mx-raised);
+  background: var(--mx-raised);
   box-shadow: var(--mx-highlight), var(--mx-card-shadow);
   transition:
     border-color var(--orchestra-duration-base) var(--orchestra-ease-out),
@@ -85,7 +85,7 @@
 
 /* A segmented control: the chosen view is a small raised key, not the tab strip's underline. */
 .gr-root .gr-views .wf-tab[aria-selected="true"] {
-  background: var(--mx-sheen), var(--mx-raised);
+  background: var(--mx-raised);
   box-shadow: var(--mx-highlight), inset 0 0 0 1px var(--mx-line), var(--mx-card-shadow);
   color: var(--mx-strong);
 }
@@ -147,7 +147,6 @@
   border-radius: var(--orchestra-radius-lg);
   background:
     radial-gradient(130% 160% at 0% 0%, color-mix(in srgb, var(--gr-tone) 14%, transparent), transparent 58%),
-    var(--mx-sheen),
     var(--mx-raised);
 }
 
@@ -648,7 +647,7 @@
   width: 40px;
   height: 40px;
   border-radius: var(--orchestra-radius-md);
-  background: var(--mx-sheen), var(--mx-soft);
+  background: var(--mx-soft);
   box-shadow: var(--mx-highlight), inset 0 0 0 1px var(--mx-line);
   color: var(--mx-dim);
 }

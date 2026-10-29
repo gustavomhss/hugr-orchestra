@@ -111,6 +111,23 @@ body[data-new-layout]
   transform: translate(-50%, -50%);
 }
 
+/* Quiet glass: the contrast button is a flat fill, without the inherited top glint, white
+   ring and text shadow (owner decision). Hover and press lay a flat overlay on the fill. */
+body[data-new-layout] [data-component="button-v2"][data-variant="contrast"] {
+  background-image: none;
+  background-color: var(--v2-background-bg-contrast);
+  text-shadow: none;
+  box-shadow: none;
+}
+
+body[data-new-layout] [data-component="button-v2"][data-variant="contrast"]:is(:hover, [data-state="hover"]):not(:disabled) {
+  background-image: linear-gradient(var(--v2-overlay-simple-overlay-contrast-hover), var(--v2-overlay-simple-overlay-contrast-hover));
+}
+
+body[data-new-layout] [data-component="button-v2"][data-variant="contrast"]:is(:active, [data-state="pressed"]):not(:disabled) {
+  background-image: linear-gradient(var(--v2-overlay-simple-overlay-contrast-pressed), var(--v2-overlay-simple-overlay-contrast-pressed));
+}
+
 body[data-new-layout] [data-slot="dialog-close-button"]:active {
   background: var(--orchestra-overlay-pressed);
 }
