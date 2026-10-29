@@ -20,6 +20,7 @@ it: skill `conveyor-maintenance`. User guide: `docs/guides/merge-queue.md`.
 | `ci_run` tool | `packages/core/src/board/tools.ts` | conveyor; Maestro only |
 | Attempt ledger `board_attempt` (`AttemptOutcome`, `PushState`) | `packages/core/src/board/sql.ts`, `packages/schema/src/board.ts` | conveyor |
 | Attempts on dispatch, snapshot push, push state, 10 min sweep | `packages/core/src/board/snapshot.ts`, wired in `board.ts` | conveyor |
+| Base-advance sweep, conflict notes, `conflict_base`/`conflict_files`, `board_project.base_sha` | `packages/core/src/board/conflicts.ts`, wired in `board.ts` | conveyor |
 | Billing ledger `board_ci_run` | `packages/core/src/board/github.ts`, `money.ts` | board; unchanged by the conveyor |
 | Queue visuals | `packages/app-shell` | Interface session |
 
@@ -37,6 +38,10 @@ it: skill `conveyor-maintenance`. User guide: `docs/guides/merge-queue.md`.
 - A pass or fail on the same tree and command is never run again. An `error` row (could not start) is retried.
 - `.orchestra/ci.json` is read from the base branch, never the card's branch. `merge` other than `merge` is refused.
 - `test:ci` keys its upload by the tree plus `.ci-run.json`; `board_check` keeps the snapshot tree from before that file.
+- The host never rebases or merges into a seat's worktree. A base advance only runs `git merge-tree` and writes a
+  note; the seat merges base on its next dispatch.
+- Only cards whose write set (declared paths plus the card's real diff from base) the advance touched are checked,
+  plus cards that conflicted before. The first sighting of a base only records `base_sha`.
 - GitHub's server merge ignores `merge=union`; landing such paths takes a local merge and a fast-forward push.
 
 ## Decisions
@@ -45,4 +50,6 @@ it: skill `conveyor-maintenance`. User guide: `docs/guides/merge-queue.md`.
   defaults to `retest`.
 - The repository is public: attempts and snapshots carry structure and hashes only, never free text, spend or
   transcripts.
+- Conflict notes are authored `orchestra` and name files and short shas only.
+- The `<integration>` System Context line for conflicts waits for #1106's context sources.
 - `board_read` does not show checks or the push state yet; WP4 adds them with the rest of the integration state.
