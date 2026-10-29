@@ -79,7 +79,7 @@ export const node = makeGlobalNode({
           }),
           board_issue: Tool.make({
             description:
-              "Create an issue in Backlog (omit `number`; needs `title`) or update one by `number`, including linking its branch, PR, session and seat, `attempts`, `crash_reason` and the `guardrail_rule` that blocked it. `depends_on` replaces the list.",
+              "Create an issue in Backlog (omit `number`; needs `title`) or update one by `number`, including linking its branch, PR, session and seat, `attempts`, `crash_reason` and the `guardrail_rule` that blocked it. `depends_on` replaces the list. `area` (the workspace packages the card should affect, as turbo names them) and `order` (landing order among cards sharing an area) come from archie's plan; null clears.",
             input: IssueInput,
             output: WriteResult,
             execute: (input, context) => guard(context, board.issue(input)),

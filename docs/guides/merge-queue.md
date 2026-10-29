@@ -52,6 +52,18 @@ the push and the card stays `local`. If a seat dies, its work can be restored fr
 git fetch origin refs/orchestra/wip/KEY-1/a1 && git restore --source FETCH_HEAD --worktree -- .
 ```
 
+## Plan shape and drift
+
+`archie`'s plan gives each card three optional fields: `area` (the workspace packages the card should affect, named as
+`turbo` names them), `depends_on` (cards whose code it needs) and `order` (its landing order among cards that share an
+area). Maestro reviews the plan before adopting it: cards meant to run at the same time that overlap in `area`, with no
+`depends_on` or `order` between them, go back to `archie`. An overlap that is declared is a sequence the queue follows.
+
+When a card is queued, the host compares its real affected set with its `area`. If the card affects packages outside
+it, the host adds one note to the card and one `integration` line, and Maestro sends the card to `archie` as a plan
+revision. The card still queues: drift never holds a landing. With no `area`, or with no `turbo` in the project, there
+is nothing to compare and no line. Set both fields with `board_issue`; null clears them.
+
 ## After a crash
 
 If Maestro's host dies, the queue resumes from its rows: an open bundle is settled and a new one is cut when none is
