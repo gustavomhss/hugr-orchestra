@@ -212,10 +212,14 @@ jobs:
           - { name: linux, host: ubuntu-24.04, part: packages-libs, label: "other packages, godfile", repo_gates: true,
               filters: "--filter=!@orchestra/core --filter=!@orchestra/app --filter=!@orchestra/cli --filter=!@orchestra/server --filter=!@orchestra/sdk-next --filter=!@orchestra/client --filter=!@orchestra/tui --filter=!@orchestra/session-ui" }
           - { name: linux, host: ubuntu-24.04, part: gates, label: "httpapi, relay" }
-          - { name: windows, host: windows-latest, part: core-1, label: "core 1/4", shard: "1/4", filters: "--filter=@orchestra/core" }
-          - { name: windows, host: windows-latest, part: core-2, label: "core 2/4", shard: "2/4", filters: "--filter=@orchestra/core" }
-          - { name: windows, host: windows-latest, part: core-3, label: "core 3/4", shard: "3/4", filters: "--filter=@orchestra/core" }
-          - { name: windows, host: windows-latest, part: core-4, label: "core 4/4", shard: "4/4", filters: "--filter=@orchestra/core" }
+          - { name: windows, host: windows-latest, part: core-1, label: "core 1/8", shard: "1/8", filters: "--filter=@orchestra/core" }
+          - { name: windows, host: windows-latest, part: core-2, label: "core 2/8", shard: "2/8", filters: "--filter=@orchestra/core" }
+          - { name: windows, host: windows-latest, part: core-3, label: "core 3/8", shard: "3/8", filters: "--filter=@orchestra/core" }
+          - { name: windows, host: windows-latest, part: core-4, label: "core 4/8", shard: "4/8", filters: "--filter=@orchestra/core" }
+          - { name: windows, host: windows-latest, part: core-5, label: "core 5/8", shard: "5/8", filters: "--filter=@orchestra/core" }
+          - { name: windows, host: windows-latest, part: core-6, label: "core 6/8", shard: "6/8", filters: "--filter=@orchestra/core" }
+          - { name: windows, host: windows-latest, part: core-7, label: "core 7/8", shard: "7/8", filters: "--filter=@orchestra/core" }
+          - { name: windows, host: windows-latest, part: core-8, label: "core 8/8", shard: "8/8", filters: "--filter=@orchestra/core" }
           # httpapi-codegen is a build-time generator whose tests pin POSIX paths, so it runs on Linux only.
           - { name: windows, host: windows-latest, part: rest, label: "other packages, legacy rollback",
               filters: "--filter=!@orchestra/core --filter=!@orchestra/httpapi-codegen" }
@@ -347,7 +351,7 @@ jobs:
             echo "shard $PART tests lane packages: ${lane[*]}"
             filters=("${lane[@]/#/--filter=}")
           fi
-          # Windows core runs 22-31 min as one job, so it splits into four: shard i/n takes every n-th test file from i.
+          # Windows core runs 22-31 min as one job, so it splits into eight: shard i/n takes every n-th test file from i.
           if [ -n "$SHARD" ]; then
             if [ -n "$PACKAGES" ] && ! tr ', ' '\n\n' <<< "$PACKAGES" | grep -qx '@orchestra/core'; then echo "shard $PART has no package of this lane"; exit 0; fi
             cd packages/core
