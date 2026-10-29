@@ -35,6 +35,11 @@ snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bund
   `incomplete`, and `recordOf` in `board/queue.ts` (host facts). Rendering is Atlas's: core calls the
   `BoardRecord.Port` in `board/record.ts`, bound through `Board.layerWith({ record })`. Its types mirror Atlas's
   `PrRecord`/`BundleRecord`/`Trailer`; change both sides together. Never add a renderer in core.
+- Plan shape (spec §4.4): `area` and `order` are `board_issue` columns, written by `board_issue` (`board.ts`) and
+  replayed by `tree.ts`. The enqueue drift check is `drift` in `board/queue-drift.ts`, one call in `enqueue`. It only
+  writes a note and an `integration` line; it never refuses. The overlap rule at plan review is prose in
+  `maestro-plan`, and `archie-plan` decomposition owns the fields. The drift test stands in `bun` on PATH
+  (`itTurbo` in `test/fixture/board-queue.ts`), so it skips on Windows.
 - New column: `BoardCheckTable` in `board/sql.ts` (snake_case), then `bun run migration --name <name>` in
   `packages/core`.
 - Exposing checks over HTTP or in `board_read`: protocol group and handler, then `bun run generate` in

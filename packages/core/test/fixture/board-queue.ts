@@ -1,3 +1,4 @@
+import { mkdtempSync, writeFileSync } from "fs"
 import fs from "fs/promises"
 import { tmpdir } from "os"
 import path from "path"
@@ -123,18 +124,32 @@ const RENDER: BoardRecord.Port = {
   trailer: (trailer) => `WP: ${trailer.WP}\nAttempt: ${trailer.Attempt}`,
 }
 
-export const it = testEffect(
-  AppNodeBuilder.build(LayerNode.group([Board.node, Database.node, EventV2.node, Credential.node]), [
-    [
-      Board.node,
-      makeGlobalNode({
-        service: Board.Service,
-        layer: Board.layerWith({ gh, record: RENDER }),
-        deps: [Database.node, EventV2.node, Credential.node, AppProcess.node, Global.node],
-      }),
-    ],
-  ]),
-)
+const build = (env?: NodeJS.ProcessEnv) =>
+  testEffect(
+    AppNodeBuilder.build(LayerNode.group([Board.node, Database.node, EventV2.node, Credential.node]), [
+      [
+        Board.node,
+        makeGlobalNode({
+          service: Board.Service,
+          layer: Board.layerWith({ gh, record: RENDER, env }),
+          deps: [Database.node, EventV2.node, Credential.node, AppProcess.node, Global.node],
+        }),
+      ],
+    ]),
+  )
+
+export const it = build()
+
+// A `bun` on PATH that answers turbo's dry run with whatever `affected.json` holds, so a test picks the affected set without a workspace.
+const turbo = syncDir()
+export const AFFECTED = path.join(turbo, "affected.json")
+export const itTurbo = build({ ...process.env, PATH: `${turbo}${path.delimiter}${process.env.PATH ?? ""}` })
+
+function syncDir() {
+  const dir = mkdtempSync(path.join(tmpdir(), "orchestra-board-turbo-"))
+  writeFileSync(path.join(dir, "bun"), `#!/bin/sh\ncat "$(dirname "$0")/affected.json"\n`, { mode: 0o755 })
+  return dir
+}
 
 // The queue with lanes: `affected` stands in for turbo, mapping every changed `packages/<name>/` path to `<name>`.
 export const laneIt = testEffect(

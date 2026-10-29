@@ -44,6 +44,8 @@ Keep separate edge classes:
 - **Write-to-read dependency:** another slice changes material this slice consumes; record direction/freshness and required recheck, not a write conflict.
 - **Write conflict:** overlapping incompatible writes require sequencing, narrower ownership or re-slicing. Disjoint writes do not eliminate semantic/runtime conflicts.
 
+Give each card its plan shape for the merge queue: `area`, the workspace packages the card is expected to affect, named as `turbo` names them (its affected set includes the packages that depend on the ones the card edits); `depends_on`, the cards whose code it needs; and `order`, its landing order among cards that share an area. Cards meant to run at the same time either do not overlap in `area`, or declare `depends_on` or `order` between them. An overlap that is declared is a sequence the queue follows; an undeclared one is a collision it only finds later. All three are optional when the work is one small card, and Maestro carries them onto the board when it adopts the plan.
+
 Use load-bearing contracts (`archie-plan-load-bearing-contracts`) for cross-slice seams. Trace each acceptance item to its slice and check; expose orphan items, duplicated closure ownership, cycles, stale inputs and scope-creep slices. Shared acceptance may have contributors, but name one closure owner. Architecture forks become proposed choices/blockers for Maestro, never worker-created scope expansion.
 
 Size by cohesive concepts, uncertainty, working-set size and review cost. Split oversized nodes; combine tiny tightly coupled nodes when handoff costs dominate. Recommend sequencing/parallel candidates based on actual edges, not a schedule. Host supplies actual model, budget, placement, provider limits and oracle runners; unknown metadata stays unknown.
@@ -67,9 +69,9 @@ Explicit governed mode still needs host native admission, verified catalog scope
 
 ## Proposed output and stop conditions
 
-Return baseline/source refs and evidence coverage; acceptance map `{id, demandRef, oracleRef, baselineStatus, judgedOwner, closureOwner}`; parent criteria refs; coverage-review request/findings; optional `partitionPlan` pointer; slices/read-write sets/latitude; typed dependency and conflict edges; named diagnostics; proposed ordering/options; assumptions and blockers.
+Return baseline/source refs and evidence coverage; acceptance map `{id, demandRef, oracleRef, baselineStatus, judgedOwner, closureOwner}`; parent criteria refs; coverage-review request/findings; optional `partitionPlan` pointer; slices/read-write sets/latitude; typed dependency and conflict edges; per card `area`, `depends_on` and `order`; named diagnostics; proposed ordering/options; assumptions and blockers.
 
-Distinguish supplied check statuses: `PASS` means actual cited check passed within its stated reach; `FAIL` means actual failure; `HOLD` means missing/stale governed state; `UNKNOWN` means missing acquisition/oracle/review/tool. None certifies overall author acceptance. Return unresolved cycles, conflicts, missing ownership or material decisions for revision before host execution.
+Distinguish supplied check statuses: `PASS` means actual cited check passed within its stated reach; `FAIL` means actual failure; `HOLD` means missing/stale governed state; `UNKNOWN` means missing acquisition/oracle/review/tool. None certifies overall author acceptance. A drift note from Maestro (a card left its planned `area`) is a plan revision: update `area` and, where the new overlap is real, `depends_on` or `order`. Return unresolved cycles, conflicts, missing ownership or material decisions for revision before host execution.
 
 ## Source method and limits
 

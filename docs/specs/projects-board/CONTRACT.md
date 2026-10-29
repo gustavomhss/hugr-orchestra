@@ -82,6 +82,8 @@ All tables carry `Timestamps`. Ids are core ids with a board prefix. Enums are t
 | `github_number`, `github_node_id` | null | mirror link |
 | `github_dirty` | integer bool | mirrored fields changed since the last push |
 | `record` | json null | the PR record's Maestro fields (merge-queue spec §4.5): `intent`, `decisions`, `not_covered`, `risk`, `follow_ups`; the host renders it into the PR body |
+| `area` | json null | workspace packages the plan expects the card to affect, as `turbo` names them (merge-queue spec §4.4); null when the plan did not say. Enqueue compares it with the real affected set. |
+| `order` | integer null | the plan's landing order among cards that share an area; null when the plan did not say |
 
 Index `(project_id, stage, position)`.
 
@@ -208,7 +210,7 @@ link one before Review").
 | `board_read` | `project` key, optional `issue` number, optional `since` activity id; without `project`, the list of projects (key, name, goal, status, GitHub repo) | Snapshot: project, epics, issues with steps, open questions, owner notes and answers since `since`, attachment names (secret labels only), holds, pauses, GitHub state; with `issue`, the issue page and its `pushState` (`local`, `pushed`, or null with no open attempt). The only way Maestro reads the board. |
 | `board_project` | `key`, `name`, `goal`, `target_date`, `repo`, `github_repo`, `reason` | Create or update a project. |
 | `board_epic` | `project`, optional `number`, `title`, `goal`, `position`, `status`, `reason` | Create or update an epic. |
-| `board_issue` | `project`, optional `number`, `title`, `body`, `type`, `epic`, `estimate`, `seat`, `session`, `branch`, `pr`, `depends_on`, `attempts`, `crash_reason`, `guardrail_rule`, `reason` | Create (lands in Backlog) or update an issue, including linking branch, PR and session. `depends_on` replaces the list. |
+| `board_issue` | `project`, optional `number`, `title`, `body`, `type`, `epic`, `estimate`, `seat`, `session`, `branch`, `pr`, `depends_on`, `attempts`, `crash_reason`, `guardrail_rule`, `area`, `order`, `reason` | Create (lands in Backlog) or update an issue, including linking branch, PR and session. `depends_on` replaces the list; `area` replaces the package list and `order` the landing order, and null clears either. |
 | `board_move` | `project`, `number`, `stage`, optional `position`, `reason` | Move between stages. Enforces proof (rule 5), hold (6), pause (7). Moving out of `intake` is the owner's, not Maestro's. |
 | `board_steps` | `project`, `number`, `steps: [{ title, status, now? }]`, `reason` | Replace the step list. |
 | `ci_run` | `project`, `issue`, optional `package`, `files`, `run` | Runs `.orchestra/ci.json`'s scoped checks on the card worktree's current tree, once per tree, and returns the tree, its checks and the scoped state. `run: false` only reports. |

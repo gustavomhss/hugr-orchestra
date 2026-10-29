@@ -150,7 +150,7 @@ const TRAIL_MS = 30_000
 // Fields GitHub mirrors (slice B2); changing one marks the issue for the next push.
 const MIRRORED = ["title", "body", "type", "epic_id", "stage", "steps"]
 const UNDOABLE = ["issue.update", "issue.move", "steps.set", "epic.upsert", "question.withdraw"]
-const ISSUE_COLUMNS = ["title", "body", "type", "epic_id", "estimate", "seat", "session_id", "branch", "pr_number", "stage", "position", "stage_entered_at", "attempts", "crash_reason", "guardrail_rule"]
+const ISSUE_COLUMNS = ["title", "body", "type", "epic_id", "estimate", "seat", "session_id", "branch", "pr_number", "stage", "position", "stage_entered_at", "attempts", "crash_reason", "guardrail_rule", "area", "order"]
 const EPIC_COLUMNS = ["title", "goal", "position", "status"]
 
 /**
@@ -243,6 +243,8 @@ export const layerWith = (options: {
               .filter((step) => step.issue_id === row.id)
               .map((step) => ({ title: step.title, status: step.status, now: step.now })),
             dependsOn: dependencies.filter((item) => item.issue === row.id).map((item) => item.ref),
+            area: row.area,
+            order: row.order,
             queue: queueState(
               row,
               queued.find((item) => item.issue_id === row.id),
@@ -910,6 +912,8 @@ export const layerWith = (options: {
                 attempts: input.attempts,
                 crash_reason: input.crash_reason,
                 guardrail_rule: input.guardrail_rule,
+                area: input.area,
+                order: input.order,
               }
               if (input.number === undefined) {
                 if (!input.title) return yield* new RefusedError({ message: "A new issue needs a title." })
@@ -932,6 +936,8 @@ export const layerWith = (options: {
                   attempts: input.attempts ?? 0,
                   crash_reason: input.crash_reason ?? null,
                   guardrail_rule: input.guardrail_rule ?? null,
+                  area: input.area ?? null,
+                  order: input.order ?? null,
                   record: input.record ?? null,
                   stage_entered_at: now,
                   github_dirty: project.github_repo !== null,
@@ -968,6 +974,8 @@ export const layerWith = (options: {
                       "stage_entered_at",
                       "crash_reason",
                       "guardrail_rule",
+                      "area",
+                      "order",
                       "record",
                     ]),
                     ...(input.depends_on ? { depends_on: input.depends_on } : {}),

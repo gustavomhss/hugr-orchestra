@@ -70,6 +70,8 @@ it: skill `conveyor-maintenance`. User guide: `docs/guides/merge-queue.md`.
   so a concurrent push to base fails the land instead of being overwritten.
 - `merge-if-disjoint` lands without a retest only when the trial merge is clean, no file overlaps and the `turbo`
   affected sets are disjoint; any doubt (no `bun`, turbo error) is a retest.
+- Plan drift never blocks a landing: a card whose real affected set left its `area` queues anyway and raises one note
+  and one `integration` line. `area` and `order` are optional everywhere; without them nothing is checked.
 - The PR body carries structure, hashes and the record only. Model spend never goes to GitHub.
 - Core gathers record facts; Atlas renders bodies and commit trailers through `BoardRecord.Port`. Unbound, card
   bodies stay as written, the bundle body is one fixed line and merge commits carry no trailer.
