@@ -36,6 +36,10 @@ Design: `docs/specs/maestro-lead/merge-queue.md`.
 gate is the `epic` label (`typecheck`, `test`) with the omni control line on `unit (` jobs; bundles of 8 (max 16, 45 min
 wait); `merge-if-disjoint` when `dev` moves.
 
+This repository lands through its own queue. Its host is the owner's desktop app built from `dev`, so it carries the
+queue before a release does, and Maestro there runs on `claude-code`. Nothing lands while that app is closed. A hand
+merge (`maestro-maintenance`, Landing) is then the fallback, not the rule.
+
 ## When a bundle goes red
 
 | Cause the host finds | What happens | Maestro's part |
@@ -56,6 +60,5 @@ wait); `merge-if-disjoint` when `dev` moves.
 
 ## Not in the queue (yet)
 
-- This repository still lands by hand; dogfooding the queue on Orchestra itself has not started.
 - `BoardTree.restore` (rebuild the board from `.atlas/project/board.jsonl`) has no tool or CLI.
 - Per-lane numbers (spec §7) are not built; bundles keep one sequence per project.

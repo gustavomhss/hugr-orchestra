@@ -59,11 +59,14 @@ Read `maestro-ownership` first (map, invariants, owner decisions). Runtime behav
 - On the Windows runner `core.autocrlf` is on: a fixture repository that compares files after checkout sets
   `git config core.autocrlf false` (`windows-test-portability`).
 
-## Landing by hand
+## Landing
 
-Until this repository lands through its own queue, a hand merge waits for green runs on the PR's head SHA
-(`gh run list --commit <head sha>`), never for the PR's rolled-up status: the rollup can read green while the last
-commit's runs are still going (#1142). Land a stack through its top PR.
+This repository lands through its own merge queue (`conveyor-usage`). A card's PR reaches `dev` in a bundle that the
+host merges after the full gate. It does not land by `gh pr merge`.
+
+A hand merge is the fallback for when the queue host is down or the queue is broken. It waits for green runs on the
+PR's head SHA (`gh run list --commit <head sha>`), never for the PR's rolled-up status: the rollup can read green while
+the last commit's runs are still going (#1142). Land a stack through its top PR.
 
 ## Gates
 
