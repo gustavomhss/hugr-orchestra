@@ -158,7 +158,7 @@ export function tools(input: {
       execute: (params, context) =>
         Effect.gen(function* () {
           yield* input.gate(context, AgentV2.defaultID, "Review delegation requires Maestro")
-          const card = params.card ? yield* BoardThread.card(services.db, params.card) : undefined
+          const card = params.card ? yield* BoardThread.card(services.db, params.card).pipe(Effect.orDie) : undefined
           if (params.card && !card) return yield* new Tool.Failure({ message: `Card ${params.card} is not on the board` })
           const validation = yield* GovernanceRecordsV2.readValidation(services.db, params.validationRecordID)
           if (
@@ -176,7 +176,7 @@ export function tools(input: {
           if (card)
             yield* BoardThread.write(services.db, {
               id: `bno_review_${params.validationRecordID}_${stage}`, issue: card.id, kind: "review", author: "maestro", body: `Review requested (${stage}).`,
-            })
+            }).pipe(Effect.orDie)
           if (Option.isNone(input.sessions) || Option.isNone(input.execution))
             return yield* MaestroToolGate.hold(
               "session-execution-unavailable",
@@ -295,7 +295,7 @@ export function tools(input: {
               "\n",
             )
             if (card)
-              yield* BoardThread.write(services.db, { id: `bno_verdict_${review.id}`, issue: card.id, kind: "review", author: "lucy", body: verdict })
+              yield* BoardThread.write(services.db, { id: `bno_verdict_${review.id}`, issue: card.id, kind: "review", author: "lucy", body: verdict }).pipe(Effect.orDie)
             return verdict
           }
           const messages = yield* sessions
