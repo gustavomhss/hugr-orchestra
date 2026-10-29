@@ -3,7 +3,7 @@ export * as BoardQueue from "./queue"
 import fs from "fs/promises"
 import os from "os"
 import path from "path"
-import { and, asc, desc, eq, inArray, isNull, ne, notInArray } from "drizzle-orm"
+import { and, asc, desc, eq, inArray, isNotNull, isNull, ne, notInArray } from "drizzle-orm"
 import { Clock, Effect } from "effect"
 import { Board } from "@orchestra/schema/board"
 import { BoardCi } from "./ci"
@@ -70,6 +70,7 @@ export function make(deps: Deps) {
   const settle = settlement.settle
   const dissolve = settlement.dissolve
   const close = settlement.close
+  const probe = red.probe
 
   const enqueue = Effect.fnUntraced(function* (input: Board.QueueInput) {
     const ref = `${input.project}-${input.number}`
@@ -300,7 +301,10 @@ export function make(deps: Deps) {
   /**
    * Section 7.2: the queued cards that may go, grouped into lanes, each cut into its own bundle beside the bundles in
    * flight. Affected sets are recomputed against the current tip at every cut. A repository with no workspace graph,
-   * a paused or flaky bundle, and a red base keep the whole project on phase 1's single conveyor.
+   * a paused or flaky bundle, and a red base with no failing tests keep the whole project on phase 1's single conveyor.
+   * Section 7.3: a closed epic is cut as one global lane, so the epic bundle runs the whole suite; every `fullEvery`
+   * lane landings a safety run tests the whole suite on base; and a base red with failing tests F pauses only the lanes
+   * that touch F's packages while its fix card rides alone.
    */
   const spread = Effect.fnUntraced(function* (
     row: ProjectRow,
@@ -355,13 +359,46 @@ export function make(deps: Deps) {
               .where(and(inArray(BoardAttemptTable.issue_id, ids), isNull(BoardAttemptTable.outcome)))
               .all()
           : []
+        const epics = [...new Set(cards.map((card) => card.issue.epic_id).filter((id) => id !== null))]
+        const epicOpen = epics.length
+          ? yield* tx
+              .select({ epic: BoardIssueTable.epic_id, stage: BoardIssueTable.stage })
+              .from(BoardIssueTable)
+              .where(and(inArray(BoardIssueTable.epic_id, epics), notInArray(BoardIssueTable.stage, ["shipped", "cut"])))
+              .all()
+          : []
+        // The base red still open: the latest bundle whose fix card has neither shipped nor been cut.
+        const active = yield* tx
+          .select({ failing: BoardBundleTable.failing, fix_issue_id: BoardBundleTable.fix_issue_id })
+          .from(BoardBundleTable)
+          .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardBundleTable.fix_issue_id))
+          .where(and(eq(BoardBundleTable.project_id, row.id), isNotNull(BoardBundleTable.failing), notInArray(BoardIssueTable.stage, ["shipped", "cut"])))
+          .orderBy(desc(BoardBundleTable.n))
+          .get()
+        // Landings are counted from the bundle rows: a bundle with no first member is a base probe or a safety run.
+        const history =
+          config.fullEvery > 0
+            ? yield* tx
+                .select({ status: BoardBundleTable.status, packages: BoardBundleTable.packages, member: BoardBundleMemberTable.issue_id })
+                .from(BoardBundleTable)
+                .leftJoin(
+                  BoardBundleMemberTable,
+                  and(eq(BoardBundleMemberTable.bundle_id, BoardBundleTable.id), eq(BoardBundleMemberTable.position, 0)),
+                )
+                .where(eq(BoardBundleTable.project_id, row.id))
+                .orderBy(desc(BoardBundleTable.n))
+                .all()
+            : []
         return {
           open,
           stopped: stopped !== undefined,
-          baseRed: closed?.status === "base-red" && closed.base_sha === tip,
+          baseRed: closed?.status === "base-red" && closed.base_sha === tip && !closed.failing,
           cards: cards.filter((card) => !members.some((member) => member.issue === card.issue.id)),
           waits,
           attempts,
+          epicOpen,
+          red: active?.failing && active.fix_issue_id ? { failing: active.failing, fix_issue_id: active.fix_issue_id } : undefined,
+          history,
         }
       }),
     )
@@ -381,6 +418,9 @@ export function make(deps: Deps) {
           found.waits.filter((dep) => dep.issue === card.issue.id).every((dep) => dep.stage === "shipped")
         const shape = { id: card.issue.id, bundleable, urgent: card.queue.urgent, order: card.issue.order, queuedAt: card.queue.queued_at }
         if (!bundleable) return { ...shape, affected: [] }
+        // Section 6.1 rule c: the bundle that closes an epic runs the whole suite, whatever its cards touch.
+        const closing = card.issue.epic_id !== null && found.epicOpen.filter((item) => item.epic === card.issue.epic_id).every((item) => item.stage === "queue")
+        if (closing) return { ...shape, affected: null }
         // The queued head is fetched only when this clone lacks it; a head that moved goes back to Review, as in `cut`.
         const present = (yield* git(directory, ["cat-file", "-e", `${card.queue.head_sha}^{commit}`])).code === 0
         const current = present ? undefined : yield* head(directory, repo, card.issue.pr_number ?? 0).pipe(Effect.orElseSucceed(() => undefined))
@@ -393,22 +433,49 @@ export function make(deps: Deps) {
         return { ...shape, affected: (yield* affected(deps, directory, tip, card.queue.head_sha)) ?? null }
       }),
     )
-    const room = capacity(contract.budget.jobs, config.jobs) - found.open.length
+    // Section 7.3: the whole suite runs on base after every `fullEvery` lane landings since it last ran (0 is off).
+    const since = found.history.findIndex((bundle) =>
+      bundle.member === null ? bundle.status !== "open" && bundle.status !== "dissolved" : bundle.status === "merged" && bundle.packages === null,
+    )
+    const landings = found.history
+      .slice(0, since === -1 ? undefined : since)
+      .filter((bundle) => bundle.member !== null && bundle.status === "merged" && bundle.packages !== null).length
+    const safety = config.fullEvery > 0 && landings >= config.fullEvery && !found.history.some((bundle) => bundle.member === null && bundle.status === "open")
+    if (safety)
+      yield* probe(
+        row,
+        repo,
+        directory,
+        contract,
+        tip,
+        `Safety run: ${landings} lane bundles landed since ${contract.base} last ran the whole suite; this runs it on ${contract.base} at ${tip.slice(0, 10)}.`,
+        [],
+      )
+    const shaped = cards.filter((card) => card !== undefined)
+    const broken = found.red
+    // The fix card rides alone in its own lane; F's packages count as in flight, so overlapping lanes wait behind it.
+    const fix = broken ? shaped.find((card) => card.id === broken.fix_issue_id && card.bundleable) : undefined
+    const room = capacity(contract.budget.jobs, config.jobs) - found.open.length - (safety ? 1 : 0) - (fix ? 1 : 0)
+    if (fix) yield* cut(row, repo, directory, contract, { ids: [fix.id], packages: fix.affected }, broken)
     const going = lanes(
-      cards.filter((card) => card !== undefined),
-      found.open.map((bundle) => bundle.packages),
+      shaped.filter((card) => card.id !== broken?.fix_issue_id),
+      [...found.open.map((bundle) => bundle.packages), ...(broken ? [broken.failing.map((group) => group.package)] : [])],
       room,
     )
     yield* Effect.forEach(going, (lane) => cut(row, repo, directory, contract, lane), { discard: true })
   })
 
-  /** Phase 1's cut (section 6.1); with a lane, only that lane's cards, in the lane's order, and its own last bundle. */
+  /**
+   * Phase 1's cut (section 6.1); with a lane, only that lane's cards, in the lane's order, and its own last bundle. With
+   * `broken`, the lane is the fix card of that base red, cut now and judged only on its failing tests.
+   */
   const cut = Effect.fnUntraced(function* (
     row: ProjectRow,
     repo: string,
     directory: string,
     contract: BoardCi.Contract,
     lane?: Lane<Board.IssueID>,
+    broken?: Pick<typeof BoardBundleTable.$inferSelect, "failing" | "fix_issue_id">,
   ) {
     const now = yield* Clock.currentTimeMillis
     const queued = yield* deps.quiet((tx) =>
@@ -488,6 +555,7 @@ export function make(deps: Deps) {
     const cap = alone ? 1 : split && queued.last ? Math.max(1, Math.floor(queued.last.members / 2)) : full
     const due =
       alone !== undefined ||
+      broken !== undefined ||
       queued.last?.status === "base-red" ||
       split ||
       queued.cards.length >= full ||
@@ -501,9 +569,13 @@ export function make(deps: Deps) {
     yield* git(directory, ["fetch", "--quiet", "--no-tags", "origin", base])
     const tip = (yield* git(directory, ["rev-parse", "--verify", "--quiet", `refs/remotes/origin/${base}`])).out
     if (!tip) return
-    // Section 6.8 phase 1: while base stays red, only its fix card is cut, alone.
-    const fixing = queued.last?.status === "base-red" && tip === queued.last.base_sha
-    const fix = fixing ? queued.cards.find((card) => card.issue.id === queued.last?.fix) : undefined
+    // Section 6.8 phase 1: while base stays red, only its fix card is cut, alone. With lanes, `spread` hands the fix card in.
+    const fixing = lane
+      ? broken
+      : queued.last?.status === "base-red" && tip === queued.last.base_sha
+        ? { failing: queued.last.failing, fix_issue_id: queued.last.fix }
+        : undefined
+    const fix = fixing ? queued.cards.find((card) => card.issue.id === fixing.fix_issue_id) : undefined
     if (fixing && !fix) return
     const scratch = yield* Effect.promise(() => fs.mkdtemp(path.join(os.tmpdir(), `orchestra-bundle-${row.key}-`)))
     const added = yield* git(directory, ["worktree", "add", "--quiet", "--detach", scratch, tip])
@@ -602,7 +674,7 @@ export function make(deps: Deps) {
             tree_sha: tree,
             status: "open",
             rebuilds: queued.last?.status === "isolated" ? queued.last.rebuilds + 1 : 0,
-            failing: fix ? queued.last?.failing ?? null : null,
+            failing: fix ? fixing?.failing ?? null : null,
             fix_issue_id: fix ? fix.issue.id : null,
             packages: lane?.packages ?? null,
           })

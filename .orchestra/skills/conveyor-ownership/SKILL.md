@@ -38,6 +38,13 @@ it: skill `conveyor-maintenance`. User guide: `docs/guides/merge-queue.md`.
   whole suite with `full.label`.
 - Rule 2 never starves a card: no card is cut ahead of an earlier bundleable card it overlaps, so a waiting global card
   holds everything queued behind it until the lanes in flight land.
+- The epic bundle always runs the whole suite: a card whose epic has every open card queued gets no affected set, so it
+  is cut as a global lane with `full.label`.
+- `lanes.fullEvery` 0 is off and never starts a safety run. K above 0 starts one (a memberless bundle with `packages`
+  `[]`, dispatched with no package filter) after K lane landings since the last whole-suite run, counted from bundle
+  rows.
+- A safety red pauses only the lanes that overlap F's packages: F counts as in flight for the lane rules until its fix
+  card ships or is cut; the fix card rides alone; disjoint lanes keep cutting. There is no revert.
 - A lane bundle always lands through `merge-if-disjoint`. The record logs under `.atlas/` are left out of its path
   overlap check because every bundle appends to them and they merge by union.
 

@@ -39,7 +39,7 @@ type Remote = {
   log: string
   baseRuns: string
   calls: Array<ReadonlyArray<string>>
-  /** Lane gates started with `gh workflow run`; each run's one job concludes with `conclusion`. */
+  /** Lane gates started with `gh workflow run`; each run's one job concludes with `conclusion`, or fails when its commit holds every `seeded` branch. */
   dispatches: Array<{ id: number; workflow: string; branch: string; sha: string; createdAt: string }>
 }
 const remotes = new Map<string, Remote>()
@@ -92,12 +92,15 @@ const gh = (args: ReadonlyArray<string>, stdin?: string) =>
       return { exitCode: 0, stdout: JSON.stringify(runs), stderr: "" }
     }
     if (args[0] === "run" && args[1] === "view") {
-      const done = remote.conclusion !== ""
+      const run = remote.dispatches.find((item) => item.id === Number(args[2]))
+      const seededRed = run !== undefined && remote.seeded.length > 0 && (await Promise.all(remote.seeded.map((branch) => contains(remote.origin, branch, run.sha)))).every(Boolean)
+      const conclusion = seededRed ? "FAILURE" : remote.conclusion
+      const done = conclusion !== ""
       const jobs = [
         {
           name: remote.job,
           status: done ? "completed" : "in_progress",
-          conclusion: done ? remote.conclusion.toLowerCase() : null,
+          conclusion: done ? conclusion.toLowerCase() : null,
           url: `https://github.com/${repo}/actions/runs/${args[2]}/job/1`,
         },
       ]
@@ -196,7 +199,7 @@ export function repository(key: string, size = 2, full?: object, scoped?: "scrip
       await git(root, "init", "--bare", remote)
       await git(root, "-c", "init.defaultBranch=main", "init", directory)
       await fs.mkdir(path.join(directory, ".orchestra"))
-      if (scoped) await fs.writeFile(script, `echo "$@" >> ${path.join(root, "runs.log").replaceAll("\\", "/")}\n[ -f fail.txt ] && [ ! -f fix.txt ] && exit 1\n[ -f x.txt ] && [ -f y.txt ] && exit 1\nexit 0\n`)
+      if (scoped) await fs.writeFile(script, `echo "$@" >> ${path.join(root, "runs.log").replaceAll("\\", "/")}\n[ -f fail.txt ] && [ ! -f fix.txt ] && exit 1\n[ -f x.txt ] && [ -f y.txt ] && exit 1\n[ -f packages/a/x.txt ] && [ -f packages/b/y.txt ] && exit 1\nexit 0\n`)
       await fs.writeFile(
         path.join(directory, ".orchestra", "ci.json"),
         JSON.stringify({ bundle: { size, waitMinutes: 600 }, merge: "merge", full, scoped: scoped ? { tests: `sh ${script} {package} {files}` } : undefined, lanes }),

@@ -5,7 +5,7 @@ import { Board } from "@orchestra/core/board/board"
 import { capacity, earlier, global, lanes } from "@orchestra/core/board/queue-lanes"
 import { BoardBundleTable, BoardIssueTable, BoardProjectTable } from "@orchestra/core/board/sql"
 import { Database } from "@orchestra/core/database/database"
-import { bundleStatuses, card, laneIt, origin, repository, row } from "./fixture/board-queue"
+import { bundleStatuses, card, laneIt, origin, passed, repository, row, stage } from "./fixture/board-queue"
 
 const LANES = { by: "turbo", global: ["package.json", "bun.lock", "turbo.json"], workflows: ["test.yml"] }
 
@@ -65,6 +65,81 @@ describe("BoardQueue lanes", () => {
       expect(dispatched().at(-1)?.at(-1)).toBe("packages=c")
       const main = yield* origin(repo, "main")
       expect(yield* Effect.promise(() => Bun.$`git --git-dir ${repo.remote.origin} ls-tree -r --name-only ${main}`.quiet().text())).toContain("bun.lock")
+    }),
+  )
+
+  laneIt.live("a safety run finds a cross-package break the affected graph missed, and only the lane touching it pauses", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const database = yield* Database.Service
+      const repo = yield* repository("QSN", 1, { label: "epic", checks: ["test"] }, "script", { ...LANES, fullEvery: 2 })
+      const bundles = () =>
+        database.db
+          .select({ packages: BoardBundleTable.packages, status: BoardBundleTable.status, failing: BoardBundleTable.failing, fix: BoardBundleTable.fix_issue_id })
+          .from(BoardBundleTable)
+          .innerJoin(BoardProjectTable, eq(BoardProjectTable.id, BoardBundleTable.project_id))
+          .where(eq(BoardProjectTable.key, "QSN"))
+          .orderBy(asc(BoardBundleTable.n))
+          .all()
+          .pipe(Effect.orDie)
+      const add = (number: number, file: string) =>
+        Effect.gen(function* () {
+          yield* card(repo, "QSN", number, file)
+          yield* passed(repo, number)
+          yield* board.queue({ project: "QSN", number, reason: "Verified." })
+        })
+      // Each card passes on its own lane; together they break b's tests, which lane a's affected set never reaches.
+      yield* add(1, "packages/a/x.txt")
+      yield* add(2, "packages/b/y.txt")
+      repo.remote.seeded = ["card-1", "card-2"]
+      repo.remote.log = "##[group]b:test\ntest/y.test.ts:\r\n(fail) y > z [1.00ms]\r\n##[endgroup]\n"
+      repo.remote.conclusion = "SUCCESS"
+
+      yield* board.queueTick()
+      expect((yield* bundles()).map((bundle) => bundle.packages)).toEqual([["a"], ["b"]])
+      // Both lanes land; two lane landings reach `fullEvery`, so a safety run starts on base with no package filter.
+      yield* board.queueTick()
+      expect((yield* bundles()).map((bundle) => [bundle.status, bundle.packages])).toEqual([["merged", ["a"]], ["merged", ["b"]], ["open", []]])
+      const safety = repo.remote.calls.filter((args) => args.slice(0, 2).join(" ") === "workflow run").at(-1)
+      expect(safety?.some((arg) => arg.startsWith("packages="))).toBe(false)
+
+      // The safety run goes red, F fails on base, and the red base gets a fix card instead of a revert.
+      yield* board.queueTick()
+      const red = (yield* bundles()).at(-1)
+      expect(red?.status).toBe("base-red")
+      expect(red?.failing).toEqual([{ package: "b", files: ["test/y.test.ts"] }])
+      const fix = red?.fix ? yield* database.db.select().from(BoardIssueTable).where(eq(BoardIssueTable.id, red.fix)).get().pipe(Effect.orDie) : undefined
+      expect(fix?.type).toBe("bug")
+      const main = yield* origin(repo, "main")
+      expect(yield* Effect.promise(() => Bun.$`git --git-dir ${repo.remote.origin} ls-tree -r --name-only ${main}`.quiet().text())).toContain("packages/b/y.txt")
+
+      // A card touching b waits behind the red; a disjoint card in c still cuts its lane.
+      yield* add(3, "packages/b/three.txt")
+      yield* add(4, "packages/c/four.txt")
+      repo.remote.conclusion = ""
+      yield* board.queueTick()
+      const after = yield* bundles()
+      expect(after.slice(3).map((bundle) => bundle.packages)).toEqual([["c"]])
+      expect(yield* stage(repo, 3)).toBe("queue")
+      // No second safety run: the red one reset the count of lane landings.
+      expect(after.filter((bundle) => bundle.packages?.length === 0)).toHaveLength(1)
+    }),
+  )
+
+  laneIt.live("with fullEvery 0 lane landings never schedule a safety run", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QSZ", 1, { label: "epic", checks: ["test"] }, undefined, LANES)
+      yield* card(repo, "QSZ", 1, "packages/a/one.ts")
+      yield* card(repo, "QSZ", 2, "packages/b/two.ts")
+      yield* board.queue({ project: "QSZ", number: 1, reason: "Verified." })
+      yield* board.queue({ project: "QSZ", number: 2, reason: "Verified." })
+      yield* board.queueTick()
+      repo.remote.conclusion = "SUCCESS"
+      yield* board.queueTick()
+      yield* board.queueTick()
+      yield* board.queueTick()
+      expect(yield* bundleStatuses(repo)).toEqual(["merged", "merged"])
     }),
   )
 })

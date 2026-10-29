@@ -73,9 +73,11 @@ export function makeSettle(
         .orderBy(asc(BoardBundleMemberTable.position))
         .all(),
     )
-    // A bundle with no members is a base probe: it never merges, it only says whether base is green.
-    if (members.length === 0)
+    // A bundle with no members is a base probe: it never merges, it only says whether base is green. A red safety run
+    // (section 7.3, packages set) is read like any base red, so only the lanes touching its failing packages pause.
+    if (members.length === 0 && (verdict === "green" || bundle.packages === null))
       return yield* close(row, repo, bundle, `probed ${contract.base} at ${bundle.base_sha.slice(0, 10)}`, verdict === "green" ? "probe-green" : "base-red")
+    if (members.length === 0) return yield* safety(row, repo, directory, contract, bundle, rollup.statusCheckRollup)
     if (fixed === false) {
       yield* eject(row, bundle, members.map((item) => item.issue), `Bundle ${row.key}-B${bundle.n} carried this fix alone and ${bundle.failing?.flatMap((group) => group.files).join(", ")} still fail; it is back in Review.`, "fix did not turn its tests green")
       return yield* close(row, repo, bundle, "is red; the fix did not turn its tests green", "base-red")
@@ -114,12 +116,7 @@ export function makeSettle(
         return yield* close(row, repo, bundle, "failed on infrastructure; the queue reruns it", "infra")
       }
       const sha10 = bundle.base_sha.slice(0, 10)
-      // F runs scoped only when every failing file is a bun test file under a package group; otherwise base is judged by its checks or a probe.
-      const runnable =
-        contract.scoped.tests !== null &&
-        found.groups.length > 0 &&
-        found.files.every((file) => found.groups.some((group) => group.files.includes(file.replaceAll("\\", "/"))))
-      const scoped = runnable && contract.scoped.tests !== null ? yield* scope(directory, contract.scoped.tests, bundle, found.groups) : undefined
+      const scoped = runnable(contract, found) && contract.scoped.tests !== null ? yield* scope(directory, contract.scoped.tests, bundle, found.groups) : undefined
       if (scoped === "flaky") return yield* flaky(row, bundle, members.map((item) => item.issue), found.groups.flatMap((group) => group.files))
       const based = scoped ? (scoped === "base" ? "red" : "green") : yield* baseState(row, repo, bundle.base_sha, contract)
       if (based === "unknown") {
@@ -132,7 +129,15 @@ export function makeSettle(
           tx.update(BoardQueueTable).set({ flush: true }).where(inArray(BoardQueueTable.issue_id, members.map((item) => item.issue.id))).run(),
         )
         yield* close(row, repo, bundle, `is red; the queue tests ${contract.base} alone first`, "probing")
-        return yield* probe(row, repo, directory, contract, bundle)
+        return yield* probe(
+          row,
+          repo,
+          directory,
+          contract,
+          bundle.base_sha,
+          `Bundle ${row.key}-B${bundle.n} went red and ${contract.base} at ${sha10} has no checks; this runs the full gate on ${contract.base} alone.`,
+          null,
+        )
       }
       if (based === "red") {
         // Section 6.8: F fails on base itself, so its culprit is bisected and a fix card opens; the bundle is not blamed.
@@ -140,7 +145,7 @@ export function makeSettle(
           const culprit = yield* bisect(row, directory, contract.scoped.tests, bundle, found.groups)
           const fix = yield* fixCard(row, contract.base, culprit, found.groups)
           yield* deps.quiet((tx) => tx.update(BoardBundleTable).set({ culprit: culprit ?? null, failing: found.groups, fix_issue_id: fix }).where(eq(BoardBundleTable.id, bundle.id)).run())
-          yield* Effect.logWarning(`integration: ${row.key} ${contract.base} is red at ${sha10}${culprit ? `, first failing at ${culprit.slice(0, 10)}` : ""}; only its fix card is cut until it is green`)
+          yield* Effect.logWarning(`integration: ${row.key} ${contract.base} is red at ${sha10}${culprit ? `, first failing at ${culprit.slice(0, 10)}` : ""}; ${pausing(contract, found.groups)}`)
         }
         yield* Effect.forEach(
           members,
@@ -350,6 +355,37 @@ export function makeSettle(
     if (row.github_repo) yield* close(row, row.github_repo, bundle, "dissolved")
   })
 
+  /**
+   * Section 7.3: a red safety run. Infrastructure closes it as `infra`; F that passes on base when rerun closes it green;
+   * F that fails on base is bisected and gets a fix card, and only the lanes touching F's packages pause. A red whose
+   * failures are not scoped tests stops the whole project, as phase 1 does.
+   */
+  const safety = Effect.fnUntraced(function* (
+    row: ProjectRow,
+    repo: string,
+    directory: string,
+    contract: BoardCi.Contract,
+    bundle: typeof BoardBundleTable.$inferSelect,
+    rollup: Parameters<typeof failures>[1],
+  ) {
+    const found = yield* failures(repo, rollup, contract)
+    const sha10 = bundle.base_sha.slice(0, 10)
+    if (found.infra) return yield* close(row, repo, bundle, `failed on infrastructure on ${contract.base} at ${sha10}`, "infra")
+    const template = contract.scoped.tests
+    const scoped = runnable(contract, found) && template !== null ? yield* scope(directory, template, bundle, found.groups) : undefined
+    if (scoped === "flaky" || scoped === "code")
+      return yield* close(row, repo, bundle, `found ${found.files.join(", ")} passing on ${contract.base} at ${sha10} when rerun`, "probe-green")
+    if (scoped === undefined || template === null) {
+      yield* Effect.logWarning(`integration: ${row.key} safety run found ${contract.base} red at ${sha10}, and its failures are not scoped tests; the queue waits for ${contract.base} to turn green`)
+      return yield* close(row, repo, bundle, `found ${contract.base} red at ${sha10}`, "base-red")
+    }
+    const culprit = yield* bisect(row, directory, template, bundle, found.groups)
+    const fix = yield* fixCard(row, contract.base, culprit, found.groups)
+    yield* deps.quiet((tx) => tx.update(BoardBundleTable).set({ culprit: culprit ?? null, failing: found.groups, fix_issue_id: fix }).where(eq(BoardBundleTable.id, bundle.id)).run())
+    yield* Effect.logWarning(`integration: ${row.key} safety run found ${contract.base} red at ${sha10}${culprit ? `, first failing at ${culprit.slice(0, 10)}` : ""}; ${pausing(contract, found.groups)}`)
+    return yield* close(row, repo, bundle, `found ${contract.base} red at ${sha10}`, "base-red")
+  })
+
   const close = Effect.fnUntraced(function* (
     row: ProjectRow,
     repo: string,
@@ -406,4 +442,22 @@ export function makeSettle(
   })
 
   return { settle, dissolve, close }
+}
+
+// F runs scoped only when every failing file is a bun test file under a package group; otherwise base is judged by its checks or a probe.
+function runnable(
+  contract: BoardCi.Contract,
+  found: { readonly files: ReadonlyArray<string>; readonly groups: ReadonlyArray<{ readonly files: ReadonlyArray<string> }> },
+) {
+  return (
+    contract.scoped.tests !== null &&
+    found.groups.length > 0 &&
+    found.files.every((file) => found.groups.some((group) => group.files.includes(file.replaceAll("\\", "/"))))
+  )
+}
+
+// Section 7.3: with lanes a base red pauses only the lanes whose packages overlap the failing ones.
+function pausing(contract: BoardCi.Contract, groups: ReadonlyArray<{ readonly package: string }>) {
+  if (!contract.lanes) return "only its fix card is cut until it is green"
+  return `lanes touching ${[...new Set(groups.map((group) => group.package))].join(", ")} pause until its fix card lands; disjoint lanes keep landing`
 }
