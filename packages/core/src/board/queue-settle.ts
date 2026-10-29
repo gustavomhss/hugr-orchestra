@@ -1,5 +1,5 @@
 import { and, asc, desc, eq, inArray, isNull, ne } from "drizzle-orm"
-import { Effect, Option } from "effect"
+import { Effect, Option, Schema } from "effect"
 import type { BoardCi } from "./ci"
 import {
   BoardAttemptTable,
@@ -15,6 +15,8 @@ import { AUTHOR, affected, decodeRollup, dispatched, dispatchRollup, insertNote,
 import type { Context } from "./queue-shared"
 import type { makeRecord } from "./queue-record"
 import type { makeRed } from "./queue-red"
+
+const decodeAttempt = Schema.decodeUnknownOption(Schema.fromJsonString(Schema.Struct({ attempt: Schema.Number, status: Schema.String })))
 
 /** Settling and closing a bundle: merge when green, give the members back when red. The red path and the record helpers come in from their modules. */
 export function makeSettle(
@@ -85,7 +87,20 @@ export function makeSettle(
     if (verdict === "red") {
       const found = yield* failures(repo, rollup.statusCheckRollup, contract)
       const cause = found.files.length > 0 ? ` Failing: ${found.files.join(", ")}.` : ""
-      const previous = found.infra
+      // An infrastructure red reruns only its failed jobs, in the same runs, so the green jobs stand and the bundle stays
+      // open. A run already on its second attempt failed on infrastructure twice. A red whose runs cannot be read or
+      // rerun falls back to rebuilding the bundle.
+      const attempts = found.infra
+        ? yield* Effect.forEach(found.runs, (run) =>
+            deps
+              .gh(["run", "view", run, "--repo", repo, "--json", "attempt,status"])
+              .pipe(Effect.map((read) => (read.exitCode === 0 ? Option.getOrUndefined(decodeAttempt(read.stdout)) : undefined))),
+          )
+        : []
+      const rerunnable = attempts.length > 0 && attempts.every((attempt) => attempt !== undefined)
+      // GitHub can still report the last attempt's jobs for a moment after a rerun starts.
+      if (rerunnable && attempts.some((attempt) => attempt?.status !== "completed")) return
+      const previous = found.infra && !rerunnable
         ? yield* deps.quiet((tx) =>
             tx
               .select({ status: BoardBundleTable.status })
@@ -95,7 +110,7 @@ export function makeSettle(
               .get(),
           )
         : undefined
-      if (found.infra && previous?.status === "infra") {
+      if ((rerunnable && attempts.some((attempt) => (attempt?.attempt ?? 1) > 1)) || (found.infra && previous?.status === "infra")) {
         yield* Effect.forEach(
           members,
           (item) => note(row, item.issue, `Bundle ${row.key}-B${bundle.n} failed on infrastructure twice; the ${row.key} queue is paused until Maestro retries it, and this card stays queued.`),
@@ -103,6 +118,15 @@ export function makeSettle(
         )
         yield* Effect.logWarning(`integration: ${row.key} queue paused, bundle ${row.key}-B${bundle.n} failed on infrastructure twice`)
         return yield* close(row, repo, bundle, "failed on infrastructure twice; the queue is paused", "paused")
+      }
+      const rerun = rerunnable ? yield* Effect.forEach(found.runs, (run) => deps.gh(["run", "rerun", run, "--failed", "--repo", repo])) : []
+      if (rerunnable && rerun.every((result) => result.exitCode === 0)) {
+        yield* Effect.forEach(
+          members,
+          (item) => note(row, item.issue, `Bundle ${row.key}-B${bundle.n} failed on infrastructure, not code; the queue reruns its failed jobs once and this card stays queued.`),
+          { discard: true },
+        )
+        return
       }
       if (found.infra) {
         yield* Effect.forEach(
@@ -118,7 +142,7 @@ export function makeSettle(
       const sha10 = bundle.base_sha.slice(0, 10)
       const scoped = runnable(contract, found) && contract.scoped.tests !== null ? yield* scope(directory, contract.scoped.tests, bundle, found.groups) : undefined
       if (scoped === "flaky") return yield* flaky(row, bundle, members.map((item) => item.issue), found.groups.flatMap((group) => group.files))
-      const based = scoped ? (scoped === "base" ? "red" : "green") : yield* baseState(row, repo, bundle.base_sha, contract)
+      const based = scoped ? (scoped === "base" ? "red" : "green") : yield* baseState(row, repo, directory, bundle.base_sha, contract)
       if (based === "unknown") {
         yield* Effect.forEach(
           members,

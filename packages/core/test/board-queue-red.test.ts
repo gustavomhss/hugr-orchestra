@@ -1,10 +1,13 @@
+import fs from "fs/promises"
+import path from "path"
 import { describe, expect } from "bun:test"
 import { asc, desc, eq } from "drizzle-orm"
 import { Effect } from "effect"
 import { Board } from "@orchestra/core/board/board"
 import { BoardAttemptTable, BoardBundleTable, BoardProjectTable } from "@orchestra/core/board/sql"
 import { Database } from "@orchestra/core/database/database"
-import { bundleStatuses, card, ejections, it, notes, queued, repository, row, stage } from "./fixture/board-queue"
+import { bundleStatuses, card, commit, ejections, it, notes, queued, repository, row, stage } from "./fixture/board-queue"
+import { git } from "./fixture/git"
 
 describe("BoardQueue", () => {
   it.live("a red bundle is halved until the one card that fails alone goes back to Review", () =>
@@ -111,7 +114,7 @@ describe("BoardQueue", () => {
     }),
   )
 
-  it.live("a probe that finds base green lets the queue halve the red bundle", () =>
+  it.live("a probe that finds base green lets the queue halve the red bundle, and a base on a tree that shipped green is not probed again", () =>
     Effect.gen(function* () {
       const board = yield* Board.Service
       const repo = yield* repository("QBG")
@@ -125,7 +128,37 @@ describe("BoardQueue", () => {
 
       yield* Effect.forEach(Array.from({ length: 12 }), () => board.queueTick(), { discard: true })
       expect([yield* stage(repo, 1), yield* stage(repo, 2)]).toEqual(["shipped", "review"])
-      expect(yield* bundleStatuses(repo)).toEqual(["probing", "probe-green", "merged", "probing", "probe-green", "red"])
+      // QBG-B3 landed as a fast-forward, so base carries the tree its gate passed on and QBG-B4's red is its own.
+      expect(yield* bundleStatuses(repo)).toEqual(["probing", "probe-green", "merged", "red"])
+      expect(yield* ejections(repo, 2)).toEqual(["red alone on the full gate"])
+    }),
+  )
+
+  it.live("a base whose tree no green run passed on is still probed", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QTD", 1)
+      yield* card(repo, "QTD", 1, "a.txt")
+      yield* card(repo, "QTD", 2, "b.txt")
+      yield* board.queue({ project: "QTD", number: 1, reason: "Verified." })
+      repo.remote.conclusion = "SUCCESS"
+      repo.remote.baseRuns = "[]"
+      yield* Effect.forEach(Array.from({ length: 4 }), () => board.queueTick(), { discard: true })
+      expect(yield* bundleStatuses(repo)).toEqual(["merged"])
+
+      // An outside push moves base to a tree no gate ran on.
+      yield* Effect.promise(async () => {
+        const outside = path.join(repo.root, "outside")
+        await git(repo.directory, "fetch", "--quiet", "origin", "main")
+        await git(repo.directory, "worktree", "add", "--quiet", "--detach", outside, "origin/main")
+        await fs.writeFile(path.join(outside, "outside.txt"), "outside\n")
+        await commit(outside, "outside")
+        await git(outside, "push", "--quiet", "origin", "HEAD:main")
+      })
+      repo.remote.seeded = ["card-2"]
+      yield* board.queue({ project: "QTD", number: 2, reason: "Verified." })
+      yield* Effect.forEach(Array.from({ length: 8 }), () => board.queueTick(), { discard: true })
+      expect(yield* bundleStatuses(repo)).toEqual(["merged", "probing", "probe-green", "red"])
       expect(yield* ejections(repo, 2)).toEqual(["red alone on the full gate"])
     }),
   )
@@ -148,7 +181,7 @@ describe("BoardQueue", () => {
     }),
   )
 
-  it.live("an infrastructure red reruns the bundle once and ships it when the rerun is green", () =>
+  it.live("an infrastructure red reruns only its failed jobs and ships the bundle when the rerun is green", () =>
     Effect.gen(function* () {
       const board = yield* Board.Service
       const repo = yield* repository("QIF")
@@ -161,7 +194,8 @@ describe("BoardQueue", () => {
 
       yield* Effect.forEach(Array.from({ length: 8 }), () => board.queueTick(), { discard: true })
       expect([yield* stage(repo, 1), yield* stage(repo, 2)]).toEqual(["shipped", "shipped"])
-      expect(yield* bundleStatuses(repo)).toEqual(["infra", "merged"])
+      expect(yield* bundleStatuses(repo)).toEqual(["merged"])
+      expect(repo.remote.calls.filter((call) => call[0] === "run" && call[1] === "rerun")).toEqual([["run", "rerun", "102", "--failed", "--repo", "acme/QIF"]])
     }),
   )
 
@@ -177,7 +211,8 @@ describe("BoardQueue", () => {
       repo.remote.log = "setup failed\n"
 
       yield* Effect.forEach(Array.from({ length: 8 }), () => board.queueTick(), { discard: true })
-      expect((yield* bundleStatuses(repo))[0]).toBe("infra")
+      // Infrastructure reruns its failed job, which fails the same way, so the queue pauses instead of blaming a card.
+      expect((yield* bundleStatuses(repo))[0]).toBe("paused")
     }),
   )
 

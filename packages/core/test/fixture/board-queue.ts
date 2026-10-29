@@ -32,8 +32,11 @@ type Remote = {
   bodies: Map<number, string>
   conclusion: string
   seeded: ReadonlyArray<string>
-  /** Branches whose full gate comes back CANCELLED (infrastructure, not code). */
+  /** Branches whose full gate comes back CANCELLED (infrastructure, not code) on its first `infraAttempts` attempts. */
   cancelled: ReadonlyArray<string>
+  infraAttempts: number
+  /** Each PR's run attempt; a PR's gate is one Actions run numbered like the PR, and `gh run rerun` adds an attempt. */
+  attempts: Map<number, number>
   /** The name of the one gating job, and the log it returns when it fails. */
   job: string
   log: string
@@ -69,7 +72,7 @@ const gh = (args: ReadonlyArray<string>, stdin?: string) =>
     if (args[0] === "pr" && args[1] === "view") {
       const headRefOid = await sha(remote.pulls.get(Number(args[2])) ?? "")
       const seededRed = remote.seeded.length > 0 && (await Promise.all(remote.seeded.map((branch) => contains(remote.origin, branch, headRefOid)))).every(Boolean)
-      const cancelled = remote.cancelled.includes(remote.pulls.get(Number(args[2])) ?? "")
+      const cancelled = remote.cancelled.includes(remote.pulls.get(Number(args[2])) ?? "") && (remote.attempts.get(Number(args[2])) ?? 1) <= remote.infraAttempts
       const conclusion = seededRed ? "FAILURE" : cancelled ? "CANCELLED" : remote.conclusion
       const done = conclusion !== ""
       const rollup = [
@@ -78,7 +81,7 @@ const gh = (args: ReadonlyArray<string>, stdin?: string) =>
           status: done ? "COMPLETED" : "IN_PROGRESS",
           conclusion: done ? conclusion : null,
           workflowName: "test",
-          detailsUrl: `https://github.com/${repo}/actions/runs/1/job/${args[2]}`,
+          detailsUrl: `https://github.com/${repo}/actions/runs/${args[2]}/job/${args[2]}`,
         },
       ]
       return { exitCode: 0, stdout: JSON.stringify({ headRefOid, statusCheckRollup: rollup }), stderr: "" }
@@ -94,6 +97,9 @@ const gh = (args: ReadonlyArray<string>, stdin?: string) =>
         .map((run) => ({ databaseId: run.id, workflowName: run.workflow.replace(/\.yml$/, ""), headSha: run.sha, createdAt: run.createdAt }))
       return { exitCode: 0, stdout: JSON.stringify(runs), stderr: "" }
     }
+    if (args[0] === "run" && args[1] === "view" && args.includes("attempt,status"))
+      return { exitCode: 0, stdout: JSON.stringify({ attempt: remote.attempts.get(Number(args[2])) ?? 1, status: "completed" }), stderr: "" }
+    if (args[0] === "run" && args[1] === "rerun") remote.attempts.set(Number(args[2]), (remote.attempts.get(Number(args[2])) ?? 1) + 1)
     if (args[0] === "run" && args[1] === "view") {
       const run = remote.dispatches.find((item) => item.id === Number(args[2]))
       const seededRed = run !== undefined && remote.seeded.length > 0 && (await Promise.all(remote.seeded.map((branch) => contains(remote.origin, branch, run.sha)))).every(Boolean)
@@ -215,7 +221,7 @@ export function repository(key: string, size = 2, full?: object, scoped?: "scrip
       await commit(directory, "base")
       await git(directory, "remote", "add", "origin", pathToFileURL(remote).href)
       await git(directory, "push", "--quiet", "origin", "main")
-      return { root, directory, key, remote: { origin: remote, pulls: new Map<number, string>(), bodies: new Map<number, string>(), conclusion: "", seeded: [] as ReadonlyArray<string>, cancelled: [] as ReadonlyArray<string>, job: "unit (linux)", log: "", baseRuns: GREEN_BASE, calls: [] as Remote["calls"], dispatches: [] as Remote["dispatches"], labels: new Map<number, ReadonlyArray<string>>() } }
+      return { root, directory, key, remote: { origin: remote, pulls: new Map<number, string>(), bodies: new Map<number, string>(), conclusion: "", seeded: [] as ReadonlyArray<string>, cancelled: [] as ReadonlyArray<string>, infraAttempts: 1, attempts: new Map<number, number>(), job: "unit (linux)", log: "", baseRuns: GREEN_BASE, calls: [] as Remote["calls"], dispatches: [] as Remote["dispatches"], labels: new Map<number, ReadonlyArray<string>>() } }
     })
     remotes.set(`acme/${key}`, made.remote)
     const database = yield* Database.Service

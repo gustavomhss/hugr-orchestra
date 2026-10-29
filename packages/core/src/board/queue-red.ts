@@ -1,7 +1,7 @@
 import fs from "fs/promises"
 import os from "os"
 import path from "path"
-import { and, desc, eq, inArray, isNull, ne, or, sql } from "drizzle-orm"
+import { and, desc, eq, inArray, isNull, ne, notExists, or, sql } from "drizzle-orm"
 import { Clock, Effect, Option } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { Board } from "@orchestra/schema/board"
@@ -51,14 +51,17 @@ export function makeRed(ctx: Context & Pick<ReturnType<typeof makeRecord>, "note
       files: [...new Set(read.flatMap((item) => item.files))],
       groups: read.flatMap((item) => item.groups),
       infra: read.length > 0 && read.every((item) => item.infra),
+      // The Actions runs the failed jobs belong to, which an infrastructure red reruns in place.
+      runs: [...new Set(failed.flatMap((check) => check.url.match(/\/actions\/runs\/(\d+)\//)?.[1] ?? []))],
     }
   })
 
   /**
-   * Whether base was green or red at `sha`: a base probe on that commit decides first, then the commit's own checks.
-   * A base reached by an outside merge often has no runs; that is unknown, never green.
+   * Whether base was green or red at `sha`: a base probe on that commit decides first, then a green whole-suite run on
+   * the same tree, then the commit's own checks. A base reached by an outside merge often has no runs; that is unknown,
+   * never green.
    */
-  const baseState = Effect.fnUntraced(function* (row: ProjectRow, repo: string, sha: string, contract: BoardCi.Contract) {
+  const baseState = Effect.fnUntraced(function* (row: ProjectRow, repo: string, directory: string, sha: string, contract: BoardCi.Contract) {
     const probed = yield* deps.quiet((tx) =>
       tx
         .select({ status: BoardBundleTable.status })
@@ -68,10 +71,49 @@ export function makeRed(ctx: Context & Pick<ReturnType<typeof makeRecord>, "note
         .get(),
     )
     if (probed) return probed.status === "probe-green" ? "green" : "red"
+    if (yield* greenTree(row, directory, sha)) return "green"
     const read = yield* deps.gh(["api", `repos/${repo}/commits/${sha}/check-runs`, "--jq", "[.check_runs[] | {name, status: (.status | ascii_upcase), conclusion: ((.conclusion // \"\") | ascii_upcase)}]"])
     const runs = read.exitCode === 0 ? Option.getOrUndefined(decodeRuns(read.stdout)) : undefined
     const verdict = runs && runs.length > 0 ? judge(runs, contract) : "pending"
     return verdict === "pending" ? "unknown" : verdict
+  })
+
+  /**
+   * Whether `sha`'s tree is one the whole suite already passed on: the head of a merged bundle that ran the whole suite,
+   * or a green base probe or safety run. A fast-forward lands the bundle head itself, so base then carries the tree its
+   * gate tested and needs no probe. A fix card's bundle was judged only on F, and an accepted flaky bundle shipped red, so
+   * neither counts. The newest twenty runs are enough: an older tree is rarely base again.
+   */
+  const greenTree = Effect.fnUntraced(function* (row: ProjectRow, directory: string, sha: string) {
+    const runs = yield* deps.quiet((tx) =>
+      tx
+        .select({ status: BoardBundleTable.status, base_sha: BoardBundleTable.base_sha, tree_sha: BoardBundleTable.tree_sha })
+        .from(BoardBundleTable)
+        .where(
+          and(
+            eq(BoardBundleTable.project_id, row.id),
+            or(
+              and(
+                eq(BoardBundleTable.status, "merged"),
+                isNull(BoardBundleTable.packages),
+                isNull(BoardBundleTable.fix_issue_id),
+                notExists(tx.select({ id: BoardFlakeTable.bundle_id }).from(BoardFlakeTable).where(eq(BoardFlakeTable.bundle_id, BoardBundleTable.id))),
+              ),
+              eq(BoardBundleTable.status, "probe-green"),
+            ),
+          ),
+        )
+        .orderBy(desc(BoardBundleTable.n))
+        .limit(20)
+        .all(),
+    )
+    if (runs.length === 0) return false
+    const probes = runs.filter((run) => run.status === "probe-green").map((run) => `${run.base_sha}^{tree}`)
+    const read = yield* git(directory, ["rev-parse", `${sha}^{tree}`, ...probes])
+    if (read.code !== 0) return false
+    const trees = read.out.split("\n")
+    const tree = trees[0]
+    return trees.slice(1).includes(tree) || runs.some((run) => run.status === "merged" && run.tree_sha === tree)
   })
 
   /** Runs F's groups with the scoped command in `cwd`; true when every group passes. */

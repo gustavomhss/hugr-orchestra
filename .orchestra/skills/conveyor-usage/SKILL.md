@@ -59,7 +59,7 @@ open the same database while the host's newer schema is on it.
 |---|---|---|
 | Base commit red, or a base probe red | `base-red`; cards stay queued; nothing is cut until base moves. A failing check is bisected on base and a `bug` fix card names the first failing commit | Get the fix card done; it rides alone |
 | Code red, failing bun tests in a turbo package | Scoped runs on base and head: base red, code (isolate, eject) or flaky | Fix the ejected card in Review and queue it again |
-| Only cancelled, timed-out or never-started jobs, or a control-line job with no failing file | Infra: one rebuild, then `paused` | `board_bundle retry` once the runner is back |
+| Only cancelled, timed-out or never-started jobs, or a control-line job with no failing file | Infra: the failed jobs rerun once in place, then `paused` | `board_bundle retry` once the runner is back |
 | Flaky (three head passes) | PR stays open, `board_flake` row | `board_bundle merge` or `retry` |
 | Isolation found nothing or rebuilt twice | Bundle dissolves; cards held | `board_bundle release` one card at a time |
 | A member's PR moved after assembly | That card goes back to Review; bundle rebuilt without it | Queue it again when verified |
