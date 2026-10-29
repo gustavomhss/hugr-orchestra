@@ -217,7 +217,8 @@ jobs:
           - { name: windows, host: windows-latest, part: rest, label: "other packages, legacy rollback",
               filters: "--filter=!@orchestra/core --filter=!@orchestra/httpapi-codegen" }
     runs-on: ${{ matrix.host }}
-    timeout-minutes: 35
+    # Windows core runs 22-31 min, so it gets more room than the other lanes.
+    timeout-minutes: ${{ matrix.name == 'windows' && matrix.part == 'core' && 50 || 35 }}
     defaults:
       run:
         shell: bash
@@ -325,7 +326,7 @@ jobs:
 
       - name: Run unit tests
         if: matrix.part != 'gates'
-        timeout-minutes: 30
+        timeout-minutes: ${{ matrix.name == 'windows' && matrix.part == 'core' && 45 || 30 }}
         run: |
           read -ra filters <<< "$FILTERS"
           # A shard that selects no test task must fail, not pass: a filter that stops matching would otherwise
