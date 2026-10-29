@@ -122,7 +122,7 @@ describe("BoardCi", () => {
       const tree = (yield* board.ciRun({ project: "CIG", issue: 1, run: false })).tree
       const issue = (yield* database.db.select().from(BoardIssueTable).all().pipe(Effect.orDie)).find((row) => row.title === "Lost run")
       const row = (id: string, url: string | null, startedAt: number) => ({
-        id: Board.CheckID.make(id),
+        id: id as typeof BoardCheckTable.$inferInsert["id"],
         issue_id: issue!.id,
         attempt: issue!.attempts,
         kind: "scoped" as const,
