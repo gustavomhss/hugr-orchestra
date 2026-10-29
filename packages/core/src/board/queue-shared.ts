@@ -1,0 +1,119 @@
+import { and, eq, inArray } from "drizzle-orm"
+import { Clock, Effect, Schema } from "effect"
+import { Board } from "@orchestra/schema/board"
+import type { AppProcess } from "../process"
+import type { BoardCi } from "./ci"
+import type { BoardGithub } from "./github"
+import type { BoardRecord } from "./record"
+import { BoardBundleMemberTable, BoardBundleTable, BoardIssueTable, BoardNoteTable, BoardQueueTable } from "./sql"
+import { changed, endOf, log } from "./shared"
+import type { gitRunner } from "./shared"
+import type { Changed, IssueRow, ProjectRow, Tx } from "./shared"
+
+export interface Deps {
+  readonly quiet: <A>(work: (tx: Tx) => Effect.Effect<A, unknown>) => Effect.Effect<A>
+  readonly proc: AppProcess.Interface
+  readonly env?: NodeJS.ProcessEnv
+  readonly gh: BoardGithub.Gh
+  readonly contract: (directory: string, project: ProjectRow) => Effect.Effect<BoardCi.Contract, { readonly message: string }>
+  readonly publish: (changed: Changed) => Effect.Effect<void>
+  /** Atlas's record renderer and trailer writer; `Board.layer` binds it, tests may leave it unbound. */
+  readonly record?: BoardRecord.Port
+}
+
+/** What every queue module shares: the injected dependencies and the git runner built from them. */
+export type Context = { readonly deps: Deps; readonly git: ReturnType<typeof gitRunner> }
+
+export const Rollup = Schema.Struct({
+  headRefOid: Schema.String,
+  statusCheckRollup: Schema.Array(
+    Schema.Struct({
+      name: Schema.optional(Schema.String),
+      context: Schema.optional(Schema.String),
+      status: Schema.optional(Schema.String),
+      conclusion: Schema.optional(Schema.NullOr(Schema.String)),
+      state: Schema.optional(Schema.String),
+      workflowName: Schema.optional(Schema.String),
+      detailsUrl: Schema.optional(Schema.String),
+    }),
+  ),
+})
+export const decodeRollup = Schema.decodeUnknownOption(Schema.fromJsonString(Rollup))
+export const decodeRuns = Schema.decodeUnknownOption(Schema.fromJsonString(Rollup.fields.statusCheckRollup))
+export const FAILED = new Set(["FAILURE", "TIMED_OUT", "CANCELLED", "STARTUP_FAILURE", "ACTION_REQUIRED", "ERROR"])
+export const PASSED = new Set(["SUCCESS", "SKIPPED", "NEUTRAL"])
+export const INFRA = new Set(["CANCELLED", "TIMED_OUT", "STARTUP_FAILURE"])
+export const AUTHOR = ["-c", "user.name=Orchestra", "-c", "user.email=orchestra@users.noreply.github.com"]
+
+/** `full.checks` names the checks that gate the bundle, matched by check or by the workflow that ran it; with none named, every reported check must pass. */
+export function judge(rollup: typeof Rollup.Type["statusCheckRollup"], contract: BoardCi.Contract) {
+  const gates = gating(rollup, contract)
+  if (gates.some((check) => check.done && FAILED.has(check.result))) return "red"
+  if (contract.full.checks.some((name) => !gates.some((check) => check.name === name || check.workflow === name))) return "pending"
+  if (gates.length === 0) return contract.source === "no-ci" ? "green" : "pending"
+  return gates.every((check) => check.done && PASSED.has(check.result)) ? "green" : "pending"
+}
+
+export function gating(rollup: typeof Rollup.Type["statusCheckRollup"], contract: BoardCi.Contract) {
+  const checks = rollup.map((item) => ({
+    name: item.name ?? item.context ?? "",
+    done: item.state ? item.state !== "PENDING" && item.state !== "EXPECTED" : item.status === "COMPLETED",
+    result: item.conclusion ?? item.state ?? "",
+    workflow: item.workflowName ?? "",
+    url: item.detailsUrl ?? "",
+  }))
+  return contract.full.checks.length > 0
+    ? checks.filter((check) => contract.full.checks.includes(check.name) || contract.full.checks.includes(check.workflow))
+    : checks
+}
+
+export const openBundle = Effect.fnUntraced(function* (tx: Tx, project: Board.ProjectID) {
+  return yield* tx
+    .select()
+    .from(BoardBundleTable)
+    .where(and(eq(BoardBundleTable.project_id, project), inArray(BoardBundleTable.status, ["open", "accepted"])))
+    .get()
+})
+
+export const isMember = Effect.fnUntraced(function* (tx: Tx, bundle: Board.BundleID, issue: Board.IssueID) {
+  const row = yield* tx
+    .select({ issue: BoardBundleMemberTable.issue_id })
+    .from(BoardBundleMemberTable)
+    .where(and(eq(BoardBundleMemberTable.bundle_id, bundle), eq(BoardBundleMemberTable.issue_id, issue)))
+    .get()
+  return row !== undefined
+})
+
+/** Moves a card to the end of `stage`, the way `move` does, and returns what changed for the activity row. */
+export const place = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, issue: IssueRow, stage: Board.Stage) {
+  const next = { stage, position: yield* endOf(tx, project.id, stage), stage_entered_at: yield* Clock.currentTimeMillis }
+  yield* tx
+    .update(BoardIssueTable)
+    .set({ ...next, ...(project.github_repo !== null ? { github_dirty: true } : {}) })
+    .where(eq(BoardIssueTable.id, issue.id))
+    .run()
+  return { before: { stage: issue.stage, position: issue.position, stage_entered_at: issue.stage_entered_at }, after: next }
+})
+
+/** Takes a card out of the queue and back to Review. */
+export const release = Effect.fnUntraced(function* (
+  tx: Tx,
+  project: ProjectRow,
+  issue: IssueRow,
+  actor: Board.Actor,
+  action: Board.Action,
+  reason: string,
+) {
+  yield* tx.delete(BoardQueueTable).where(eq(BoardQueueTable.issue_id, issue.id)).run()
+  const current = (yield* tx.select().from(BoardIssueTable).where(eq(BoardIssueTable.id, issue.id)).get()) ?? issue
+  const moving = yield* place(tx, project, current, "review")
+  const activity = yield* log(tx, { project: project.id, issue: issue.id, actor, action, reason, before: moving.before, after: moving.after })
+  return changed(project.id, activity, issue.id)
+})
+
+export const insertNote = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, issue: IssueRow, body: string) {
+  const id = Board.NoteID.create()
+  yield* tx.insert(BoardNoteTable).values({ id, issue_id: issue.id, author: "orchestra", body }).run()
+  const activity = yield* log(tx, { project: project.id, issue: issue.id, actor: "github", action: "note.add", after: { id, author: "orchestra", body } })
+  return changed(project.id, activity, issue.id)
+})

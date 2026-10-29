@@ -396,6 +396,12 @@
       "authorizedBy": "Gustavo, standing rule that generated outputs may raise their ceiling (2026-10-10)",
       "authorizedAt": "2026-10-28"
     },
+    "packages/core/src/board/board.ts": {
+      "maximumLines": 1621,
+      "reason": "The board service was 1438 LOC before the merge queue stack; the queue's push state, trail and record-log writes add to it. Exact ceiling at the stack's size; the queue itself lives in queue.ts and its split modules.",
+      "authorizedBy": "Maestro, godfile ruling for the merge queue phase 1 epic",
+      "authorizedAt": "2026-10-29"
+    },
     "packages/core/src/database/schema.gen.ts": {
       "maximumLines": 943,
       "reason": "Generated database schema output; the board spend, decision and settings tables (slice F1) and the merge queue tables regenerate it. Exact generated-output ceiling. Handwritten source limits unchanged.",

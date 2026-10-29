@@ -21,6 +21,7 @@
     "./atlas-setup": "./src/atlas-setup.ts",
     "./behavior": "./src/behavior.ts",
     "./board": "./src/board.ts",
+    "./board-queue": "./src/board-queue.ts",
     "./capability": "./src/capability.ts",
     "./catalog": "./src/catalog.ts",
     "./command": "./src/command.ts",
