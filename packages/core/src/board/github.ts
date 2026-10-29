@@ -16,6 +16,7 @@ import {
   BoardQuestionTable,
   BoardStepTable,
 } from "./sql"
+import { endOf } from "./shared"
 
 // The GitHub Issues mirror (docs/specs/projects-board/CONTRACT.md section 6). Transport is the signed-in `gh` CLI, so
 // there is no token here to store or log. Every call goes through an injected `Gh` runner, which tests replace with
@@ -107,7 +108,11 @@ const decodeIssue = Schema.decodeUnknownOption(Schema.fromJsonString(Issue))
 const decodeComments = Schema.decodeUnknownOption(Schema.fromJsonString(Schema.Array(Comment)))
 const decodeCreated = Schema.decodeUnknownOption(Schema.fromJsonString(Created))
 
-const Pull = Schema.Struct({ head: Schema.Struct({ sha: Schema.String }) })
+const Pull = Schema.Struct({
+  head: Schema.Struct({ sha: Schema.String }),
+  state: Schema.optional(Schema.String),
+  merged: Schema.optional(Schema.Boolean),
+})
 const Runs = Schema.Struct({
   workflow_runs: Schema.Array(
     Schema.Struct({ id: Schema.Int, name: Schema.NullOr(Schema.String), status: Schema.String, run_attempt: Schema.optional(Schema.Int) }),
@@ -140,6 +145,7 @@ export function make(deps: Deps) {
         if (!project) return { status: "missing" } as const
         if (!project.github_repo) return { status: "off" } as const
         const failed = yield* pull(project, project.github_repo).pipe(
+          Effect.andThen(follow(project, project.github_repo)),
           Effect.andThen(push(project, project.github_repo)),
           Effect.as(undefined),
           Effect.catch((failure: Failure) => Effect.succeed(failure)),
@@ -223,6 +229,67 @@ export function make(deps: Deps) {
         }),
       { discard: true },
     )
+  })
+
+  /**
+   * The PR is the fact a card follows on every sync: an open PR moves a Building card to Review, a merged one moves it
+   * from Building or Review to Shipped and clears its crash reason. Maestro still moves every other stage; a paused
+   * project or card, and an owner hold before merge, keep the card where it is.
+   */
+  const follow = Effect.fnUntraced(function* (project: ProjectRow, repo: string) {
+    if (project.status !== "active") return
+    const issues = yield* deps.quiet((tx) =>
+      tx
+        .select()
+        .from(BoardIssueTable)
+        .where(
+          and(
+            eq(BoardIssueTable.project_id, project.id),
+            sql`${BoardIssueTable.pr_number} is not null`,
+            sql`${BoardIssueTable.stage} in ('building', 'review')`,
+          ),
+        )
+        .all(),
+    )
+    yield* Effect.forEach(issues, (issue) => advance(project, repo, issue), { discard: true })
+  })
+
+  const advance = Effect.fnUntraced(function* (project: ProjectRow, repo: string, issue: IssueRow) {
+    // One unreadable PR (deleted, renamed repo, a blip) leaves its card alone; it must not stop the rest of the sync.
+    const read = yield* get(`repos/${repo}/pulls/${issue.pr_number}`, null).pipe(Effect.option)
+    const pull = Option.getOrUndefined(Option.flatMap(read, (result) => decodePull(result.body)))
+    const stage = pull?.merged ? ("shipped" as const) : pull?.state === "open" ? ("review" as const) : undefined
+    if (!stage || issue.paused) return
+    const from: ReadonlyArray<Board.Stage> = stage === "shipped" ? ["building", "review"] : ["building"]
+    if (!from.includes(issue.stage) || (stage === "shipped" && issue.hold_before_merge)) return
+    const changed = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const now = yield* Clock.currentTimeMillis
+        const next = {
+          stage,
+          position: yield* endOf(tx, project.id, stage),
+          stage_entered_at: now,
+          ...(stage === "shipped" ? { crash_reason: null } : {}),
+        }
+        yield* tx.update(BoardIssueTable).set({ ...next, github_dirty: true }).where(eq(BoardIssueTable.id, issue.id)).run()
+        const activity = yield* deps.log(tx, {
+          project: project.id,
+          issue: issue.id,
+          actor: "github",
+          action: "issue.move",
+          reason: stage === "shipped" ? `PR #${issue.pr_number} merged on GitHub.` : `PR #${issue.pr_number} is open on GitHub.`,
+          before: {
+            stage: issue.stage,
+            position: issue.position,
+            stage_entered_at: issue.stage_entered_at,
+            ...(stage === "shipped" ? { crash_reason: issue.crash_reason } : {}),
+          },
+          after: next,
+        })
+        return { project: project.id, issue: issue.id, activity }
+      }),
+    )
+    yield* deps.publish(changed)
   })
 
   const settle = Effect.fnUntraced(function* (project: ProjectRow, state: Board.GithubState, error: string | null) {
@@ -351,7 +418,16 @@ export function make(deps: Deps) {
       actor: "github",
       action: "issue.create",
       reason: `Opened on GitHub as #${item.number} by ${item.user?.login ?? "someone"}.`,
-      after: { number, title: row.title, body: row.body, type: row.type, stage },
+      after: {
+        number,
+        title: row.title,
+        body: row.body,
+        type: row.type,
+        stage,
+        position: row.position,
+        stage_entered_at: row.stage_entered_at,
+        github_number: row.github_number,
+      },
     })
     return { project: project.id, issue: id, activity } as Changed
   })
@@ -397,6 +473,10 @@ export function make(deps: Deps) {
         .get()
       if (!open) {
         const id = Board.QuestionID.create()
+        const options = [
+          { id: "keep", label: "Keep the board's stage", consequence: "The next push puts the GitHub issue back the way the board has it." },
+          { id: "follow", label: "Follow GitHub", consequence: "Move the card to match GitHub, then the two agree." },
+        ]
         yield* tx
           .insert(BoardQuestionTable)
           .values({
@@ -404,10 +484,7 @@ export function make(deps: Deps) {
             project_id: project.id,
             issue_id: issue.id,
             text: asked,
-            options: [
-              { id: "keep", label: "Keep the board's stage", consequence: "The next push puts the GitHub issue back the way the board has it." },
-              { id: "follow", label: "Follow GitHub", consequence: "Move the card to match GitHub, then the two agree." },
-            ],
+            options,
             recommended: "keep",
             cost_of_waiting: null,
             blocking: false,
@@ -420,7 +497,16 @@ export function make(deps: Deps) {
           actor: "github",
           action: "question.ask",
           reason: `GitHub #${item.number} was ${said}; the board does not apply that on its own.`,
-          after: { id, text: asked, blocking: false },
+          after: {
+            id,
+            epic_id: null,
+            text: asked,
+            options,
+            recommended: "keep",
+            cost_of_waiting: null,
+            blocking: false,
+            kind: null,
+          },
         })
       }
       // The next push restores the board's state unless the plan changes first.
@@ -444,7 +530,7 @@ export function make(deps: Deps) {
         const id = Board.NoteID.create()
         const author = `github:${item.user?.login ?? "unknown"}`
         yield* tx.insert(BoardNoteTable).values({ id, issue_id: issue.id, author, body: item.body, github_comment_id: item.id }).run()
-        const activity = yield* deps.log(tx, { project: project.id, issue: issue.id, actor: "github", action: "note.add", after: { id, author } })
+        const activity = yield* deps.log(tx, { project: project.id, issue: issue.id, actor: "github", action: "note.add", after: { id, author, body: item.body } })
         return { project: project.id, issue: issue.id, activity } as Changed
       }),
     )
@@ -600,12 +686,3 @@ export function unmirrored(text: string) {
 function redact(text: string) {
   return text.replace(/\b(gh[pousr]_[A-Za-z0-9_]{10,}|github_pat_[A-Za-z0-9_]{10,})/g, "[token]")
 }
-
-const endOf = Effect.fnUntraced(function* (tx: Tx, project: Board.ProjectID, stage: Board.Stage) {
-  const row = yield* tx
-    .select({ position: sql<number | null>`max(${BoardIssueTable.position})` })
-    .from(BoardIssueTable)
-    .where(and(eq(BoardIssueTable.project_id, project), eq(BoardIssueTable.stage, stage)))
-    .get()
-  return (row?.position ?? 0) + 1
-})

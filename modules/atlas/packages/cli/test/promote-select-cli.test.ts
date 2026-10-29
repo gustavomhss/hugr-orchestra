@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { appendFileSync, mkdirSync, mkdtempSync, rmSync } from "node:fs"
-import { join } from "node:path"
+import { dirname, join } from "node:path"
 import { tmpdir } from "node:os"
 import type { Hash } from "@atlas/contracts"
 import type { PromoteOut, PromoteSelect } from "@atlas/adapter-io"
@@ -59,7 +59,7 @@ describe("CLI promote select", () => {
   })
 
   it("a torn review log refuses the pass", async () => {
-    mkdirSync(join(tmp, ".atlas"), { recursive: true })
+    mkdirSync(dirname(reviewLogPath(tmp)), { recursive: true })
     appendFileSync(reviewLogPath(tmp), "{torn\n")
     const code = await main(["promote"], { promote })
     expect(code).toBe(2)

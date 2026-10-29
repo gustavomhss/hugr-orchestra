@@ -626,6 +626,20 @@ describe("MCP Dock controller with the Linux workspace", () => {
     expect(setup.controller.state.tabs.map((item) => item.tabID)).toEqual(["linux-1"])
     expect(setup.dock.calls.at(-1)).toEqual(["hide", tab("linux-1", 10)])
   })
+
+  test("closing the browser tabs around the workspace lands on the workspace, whose address bar never navigates", async () => {
+    const setup = await ready()
+    await openLinux(setup, workspace("linux-1", 10))
+    setup.controller.showBrowser()
+    const linux = setup.controller.state.tabs.find((item) => item.tabID === "linux-1")!
+    await setup.controller.closeTabs(linux, "others")
+    expect(setup.controller.state.active).toEqual(tab("linux-1", 10))
+    expect(setup.controller.state.mode).toBe("linux")
+    const calls = setup.dock.calls.length
+    await setup.controller.launch()
+    await setup.controller.duplicate(linux)
+    expect(setup.dock.calls.slice(calls).filter((call) => call[0] === "navigate" || call[0] === "open")).toEqual([])
+  })
 })
 
 function element() {
@@ -729,6 +743,9 @@ function fakeDock() {
     appDockCloseTab: async (tabID: string) => {
       calls.push(["close-tab", tabID])
       state.closing?.(tabID)
+    },
+    appDockCloseTabs: async (tabID: string, scope: string) => {
+      calls.push(["close-tabs", tabID, scope])
     },
     appDockLinuxOpen: (_bounds: unknown, profile: string) => {
       calls.push(["linux-open", profile])

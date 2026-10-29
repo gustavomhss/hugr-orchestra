@@ -20,7 +20,7 @@ export const ATLAS_MEMORY_COPY = {
   "orchestra.atlas.memory.unbound.corrections": "a later entry superseding an earlier one exists in the library only",
   "orchestra.atlas.memory.where": "Saved in this worktree, shared by the team, merged with the branch",
   "orchestra.atlas.memory.where.help":
-    "File: .atlas/memory.jsonl, append-only. Its lines show up in the PR diff. {{name}} can recall only its own tasks and PRs, by exact id.",
+    "Files: .atlas/members/{{seat}}/memory/, append-only. Its lines show up in the PR diff. {{name}} can recall only its own tasks and PRs, by exact id.",
   "orchestra.atlas.memory.tokensWord": "tokens",
   "orchestra.atlas.memory.tokens.one": "{{n}} token",
   "orchestra.atlas.memory.tokens.other": "{{n}} tokens",
@@ -164,7 +164,7 @@ export const ATLAS_MEMORY_COPY_BR: Record<keyof typeof ATLAS_MEMORY_COPY, string
   "orchestra.atlas.memory.unbound.corrections": "uma entrada posterior que substitui uma anterior existe somente na biblioteca",
   "orchestra.atlas.memory.where": "Salvo neste worktree, compartilhado com a equipe, unido ao branch",
   "orchestra.atlas.memory.where.help":
-    "Arquivo: .atlas/memory.jsonl, somente acréscimo. Suas linhas aparecem no diff do PR. {{name}} só consegue recuperar as próprias tarefas e PRs, pelo id exato.",
+    "Arquivos: .atlas/members/{{seat}}/memory/, somente acréscimo. Suas linhas aparecem no diff do PR. {{name}} só consegue recuperar as próprias tarefas e PRs, pelo id exato.",
   "orchestra.atlas.memory.tokensWord": "tokens",
   "orchestra.atlas.memory.tokens.one": "{{n}} token",
   "orchestra.atlas.memory.tokens.other": "{{n}} tokens",

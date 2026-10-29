@@ -6,6 +6,8 @@ import type {
   LocationPathsOutput,
   AgentsListInput,
   AgentsListOutput,
+  AgentsDetailInput,
+  AgentsDetailOutput,
   AgentsGetFileInput,
   AgentsGetFileOutput,
   AgentsUpdateFileInput,
@@ -356,6 +358,12 @@ import type {
   RelayDocumentsDefinitionOutput,
   RelayDocumentsCheckInput,
   RelayDocumentsCheckOutput,
+  RelayDocumentsPreviewInput,
+  RelayDocumentsPreviewOutput,
+  RelayDocumentsCommandsInput,
+  RelayDocumentsCommandsOutput,
+  RelayDocumentsTrialInput,
+  RelayDocumentsTrialOutput,
   RelayDocumentsNodeTypesInput,
   RelayDocumentsNodeTypesOutput,
   RelayDocumentsListScopesInput,
@@ -657,6 +665,18 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ),
+      detail: (input: AgentsDetailInput, requestOptions?: RequestOptions) =>
+        request<AgentsDetailOutput>(
+          {
+            method: "GET",
+            path: `/api/agent/${encodeURIComponent(input.agentID)}/detail`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
       getFile: (input: AgentsGetFileInput, requestOptions?: RequestOptions) =>
         request<AgentsGetFileOutput>(
           {
@@ -679,6 +699,7 @@ export function make(options: ClientOptions) {
               description: input["description"],
               mode: input["mode"],
               model: input["model"],
+              avatar: input["avatar"],
               steps: input["steps"],
               system: input["system"],
               permission: input["permission"],
@@ -2936,6 +2957,53 @@ export function make(options: ClientOptions) {
               baseRef: input["baseRef"],
               params: input["params"],
             },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 403, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      preview: (input?: RelayDocumentsPreviewInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsPreviewOutput>(
+          {
+            method: "POST",
+            path: `/api/relay/preview`,
+            query: { location: input?.["location"] },
+            body: {
+              name: input?.["name"],
+              description: input?.["description"],
+              nodes: input?.["nodes"],
+              connections: input?.["connections"],
+              nodeGroups: input?.["nodeGroups"],
+              tags: input?.["tags"],
+              meta: input?.["meta"],
+              isArchived: input?.["isArchived"],
+            },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      commands: (input?: RelayDocumentsCommandsInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsCommandsOutput>(
+          {
+            method: "GET",
+            path: `/api/relay/commands`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      trial: (input: RelayDocumentsTrialInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsTrialOutput>(
+          {
+            method: "POST",
+            path: `/api/relay/trial`,
+            query: { location: input["location"] },
+            body: { command: input["command"], params: input["params"] },
             successStatus: 200,
             declaredStatuses: [400, 404, 409, 503, 403, 401],
             empty: false,

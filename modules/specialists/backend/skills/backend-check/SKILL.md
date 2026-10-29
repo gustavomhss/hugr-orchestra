@@ -1,13 +1,14 @@
 ---
 name: backend-check
 description: "Procedure for assigned test implementation and for checks that need a specialized fixture: real databases and services, prescribed transport faults, HTTP boundary fixtures, schema-derived, property or stateful inputs, and streaming or concurrency cases. Load with backend-implement when the packet assigns tests or a named check needs such a fixture. Not for ordinary checks, and never for writing tests the packet does not assign."
+internal: true
 ---
 
 # Backend checks and assigned tests
 
 This skill adds fixture and test procedure to `backend-implement`, which you load first. It sits under your system prompt and never widens it. The packet decides scope, design, write paths and checks; where this skill and the packet disagree, follow the packet.
 
-Ordinary checks are part of `backend-implement`; do not load this skill to run them. When the packet assigns test implementation, read [assigned tests mode](../backend-implement/references/modes/tests.md) first.
+Ordinary checks are part of `backend-implement`; do not load this skill to run them. When the packet assigns test implementation, read assigned tests mode (`backend-implement-tests`) first.
 
 ## When this applies
 
@@ -26,15 +27,15 @@ Ordinary checks are part of `backend-implement`; do not load this skill to run t
 
 ## Select the reference
 
-- [Real services and databases](../backend-implement/references/checks/real-services.md)
-- [Prescribed transport faults](../backend-implement/references/checks/faults.md)
-- [HTTP boundary fixtures](../backend-implement/references/checks/http-fixtures.md)
-- [Generated inputs](../backend-implement/references/checks/generated-inputs.md): schema-derived requests, properties, stateful sequences and parser round trips.
-- Streaming and concurrency observations: the check rules in [cancellation](../backend-implement/references/lifetimes/cancellation.md), [streams](../backend-implement/references/lifetimes/streams.md), [job admission](../backend-implement/references/lifetimes/jobs.md) and [retries](../backend-implement/references/lifetimes/retries.md).
+- Real services and databases (`backend-check-real-services`)
+- Prescribed transport faults (`backend-check-faults`)
+- HTTP boundary fixtures (`backend-check-http-fixtures`)
+- Generated inputs (`backend-check-generated-inputs`): schema-derived requests, properties, stateful sequences and parser round trips.
+- Streaming and concurrency observations: the check rules in cancellation (`backend-concurrency-cancellation`), streams (`backend-concurrency-streams`), job admission (`backend-concurrency-jobs`) and retries (`backend-concurrency-retries`).
 
 Framework test harness APIs live in the references your stack selects.
 
-Stack references: [Go](../backend-implement/references/languages/go.md), [Python](../backend-implement/references/languages/python.md), [JavaScript/TypeScript](../backend-implement/references/languages/js-ts.md), [Ruby](../backend-implement/references/languages/ruby.md), [PHP](../backend-implement/references/languages/php.md). Read only the packet's language.
+Stack references: Go (`team-stack-go`), Python (`team-stack-python`), JavaScript/TypeScript (`team-stack-js-ts`), Ruby (`team-stack-ruby`), PHP (`team-stack-php`). Read only the packet's language.
 
 ## Common procedure
 

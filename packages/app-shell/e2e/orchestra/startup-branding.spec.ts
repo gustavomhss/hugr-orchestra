@@ -37,6 +37,9 @@ for (const scheme of ["light", "dark"] as const) {
               storeSet: async () => undefined,
               setNativeTranslations: async () => undefined,
               recordFatalRendererError: async () => undefined,
+              getCaffeinate: async () => false,
+              setCaffeinate: async () => undefined,
+              onCaffeinateChanged: () => () => undefined,
             },
           })
         },
@@ -61,6 +64,14 @@ for (const scheme of ["light", "dark"] as const) {
         await expect(page.getByRole("textbox")).toHaveValue(/branding startup failure/)
       }
       await expect(page.locator("html")).toHaveAttribute("data-color-scheme", scheme)
+      await expect(page.locator('[data-component="logo-splash"]')).toHaveCount(0)
+      await expect(page.locator("#root svg[viewBox='0 0 234 42']")).toHaveCount(0)
+      // Loading is a plain surface: the comet splash is the only opening mark, so no pulsing logo waits under it.
+      if (stage !== "error") {
+        await expect(page.locator("#root [data-app-loading]")).toBeVisible({ timeout: 60_000 })
+        await expect(page.getByRole("img", { name: "HuGR", exact: true })).toHaveCount(0)
+        return
+      }
       const mark = page.getByRole("img", { name: "HuGR", exact: true })
       await expect(mark).toBeVisible({ timeout: 60_000 })
       await expect(mark).toHaveAttribute(
@@ -72,8 +83,6 @@ for (const scheme of ["light", "dark"] as const) {
         .toBe(true)
       await expect(mark).toHaveCSS("width", "121px")
       await expect(mark).toHaveCSS("height", "32px")
-      await expect(page.locator('[data-component="logo-splash"]')).toHaveCount(0)
-      await expect(page.locator("#root svg[viewBox='0 0 234 42']")).toHaveCount(0)
     })
   }
 }

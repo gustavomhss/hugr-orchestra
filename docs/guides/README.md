@@ -2,6 +2,8 @@
 
 - [Getting started: your first five minutes](getting-started.md)
 - [First run: folder, trust, model](first-run.md)
+- [Maestro: your lead agent](maestro.md)
+- [Claude mode: Orchestra on Claude Code](claude-mode.md)
 - [Database backups and restore](database-backups.md)
 - [Settings: global sections, trusted projects and MCP fields](settings.md)
 - [Project trust (MCP, plugins, formatter, LSP)](mcp-project-trust.md)
@@ -18,3 +20,9 @@
 - [Live meetings: setup and use](live-meetings.md)
 - [Workflows: run, release and templates](workflows.md)
 - [Hooks: rules that watch what agents do](hooks.md)
+- [The agent screen: prompt, tools, toolkit, skills, memory](agent-screen.md)
+- [Agent avatars: pick or upload a picture](agent-avatars.md)
+- [Keep the computer awake](keep-awake.md)
+- [Checks and the merge queue](merge-queue.md)
+- [MCP Dock: every open interface is an MCP server](mcp-dock-servers.md)
+- [HuGR Composer: FastAPI building blocks for the backend seat](hugr-composer.md)

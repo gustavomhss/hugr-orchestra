@@ -165,6 +165,12 @@ type PlatformBase = {
   /** Webview zoom level (desktop only) */
   webviewZoom?: Accessor<number>
 
+  /** Whether the desktop app keeps the computer from sleeping (desktop only) */
+  caffeinate?: Accessor<boolean>
+
+  /** Keep the computer from sleeping while the app runs, or let it sleep again (desktop only) */
+  setCaffeinate?(enabled: boolean): Promise<void>
+
   /** Whether the native desktop window is fullscreen */
   windowFullscreen?: Accessor<boolean>
 

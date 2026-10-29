@@ -26,6 +26,11 @@ export interface Trailer {
   readonly Gates: string
   readonly Verdict: string
   readonly TranscriptSha: Hash
+  /**
+   * The attempt that produced the commit, `a<n>` (repo-layout design §3): with `WP` naming the card it finds
+   * `.atlas/cards/<WP>/attempts/a<n>.jsonl`. Optional, so a trailer written before attempts existed still reads.
+   */
+  readonly Attempt?: string
 }
 
 /**
@@ -96,6 +101,19 @@ export interface Metering {
   readonly gates: readonly string[]
   readonly verdict: string
   readonly transcriptSha: Hash
+}
+
+/**
+ * One attempt at a card (`.atlas/cards/<CARD>/attempts/a<n>.jsonl`, repo-layout design §3): the WP metering plus
+ * who ran it and on what. `session` is the V2 Session the attempt ran in, `engine` the execution host (for example
+ * `claude-code`). Money is integer micro-USD because the canonical form refuses floats; it is absent on a public
+ * repository, where rows drop spend (design §6).
+ */
+export interface AttemptMetering extends Metering {
+  readonly seat: string
+  readonly session: string
+  readonly engine: string
+  readonly costMicroUsd?: number
 }
 
 /**

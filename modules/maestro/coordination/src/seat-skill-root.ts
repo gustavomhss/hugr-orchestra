@@ -32,7 +32,7 @@ const embedded = packaged ? await import(
 if (packaged &&
   (!embedded || typeof embedded !== "object" || Array.isArray(embedded)))
   throw new SeatSkillContent.PackagingError("Invalid compiled seat skill module")
-if (embedded && Object.keys(embedded).some((id) => id !== "maestro" && !Seats.find(id)?.skills.length))
+if (embedded && Object.keys(embedded).some((id) => id !== "maestro" && (id === "team" ? Seats.shared().length === 0 : !Seats.find(id)?.skills.length)))
   throw new SeatSkillContent.PackagingError("Foreign embedded seat skill tree")
 
 /** The skill root of every seat that has skills, by seat id. */
@@ -52,6 +52,17 @@ export const roots: Readonly<Record<string, string>> = Object.freeze(
     ),
   ),
 )
+
+/** The one copy of the shared trees (`team-*` roots), or undefined when no seat declares one. */
+export const shared = await (async () => {
+  if (Seats.shared().length === 0) return undefined
+  const files = embedded?.team
+  if (embedded && !files) throw new SeatSkillContent.PackagingError("Missing embedded shared skill tree")
+  if (files) SeatSkillContent.validate("team", files, Seats.shared())
+  const root = files ? await extract("team", files, Global.Path.cache, InstallationVersion) : Seats.sharedSource()
+  if (!files) await SeatSkillContent.read("team", root, Seats.shared())
+  return root
+})()
 
 /** Maestro uses the same content-addressed extraction as seat skills, including standalone Bun/Node builds. */
 export const playbooks = await (async () => {

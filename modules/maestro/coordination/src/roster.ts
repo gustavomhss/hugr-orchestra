@@ -112,9 +112,11 @@ function seatProfile(seat: Seat): NativeProfile {
   if (seat.skills.length > 0 && !root) throw new Error(`Missing native seat skill root: ${seat.id}`)
   return Object.freeze({
     ...baseProfiles[seat.profile],
+    ...Object.fromEntries((seat.mcp ?? []).map((server) => [`${server}_*`, "allow" as const])),
     ...(seat.atlasMemory ? { atlas_context: "allow" as const, atlas_memory_recall: "allow" as const, atlas_memory_emit: "allow" as const } : {}),
     ...(seat.id === "archie" ? {
       atlas_context: "allow" as const,
+      archie_draft_workflow: "allow" as const,
       maestro_arsenal_catalog: "allow" as const,
       ...Object.fromEntries(["maestro_arsenal_describe", "maestro_arsenal_execute"].map((name) => [name, Object.freeze({
         "*": "deny" as const,
@@ -122,12 +124,19 @@ function seatProfile(seat: Seat): NativeProfile {
       })])),
     } : {}),
     ...(seat.skills.length > 0 ? {
-      skill: Object.freeze({ "*": "deny" as const, ...Object.fromEntries(seat.skills.map((name) => [name, "allow" as const])) }),
+      // A root opens its whole tree: every node below it is named `<root>-<path>`.
+      skill: Object.freeze({
+        "*": "deny" as const,
+        ...Object.fromEntries(seat.skills.flatMap((name) => [[name, "allow" as const], [`${name}-*`, "allow" as const]])),
+      }),
       external_directory: Object.freeze({
         ...(seat.profile === "review" ? baseProfiles.review.external_directory
           : seat.profile === "discovery" ? baseProfiles.discovery.external_directory
           : seat.profile === "direct" ? baseProfiles.direct.external_directory : { "*": "deny" as const }),
         [path.join(root, "*")]: "allow" as const,
+        ...(SeatSkillRoot.shared && seat.skills.some((skill) => skill.startsWith("team-"))
+          ? { [path.join(SeatSkillRoot.shared, "*")]: "allow" as const }
+          : {}),
       }),
     } : {}),
   })

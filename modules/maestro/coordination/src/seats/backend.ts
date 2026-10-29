@@ -30,10 +30,13 @@ export default define({
     "backend-concurrency",
     "backend-refactor",
     "backend-check",
+    "backend-codegen",
+    "team-stack",
   ],
   workResult: "backend-work-result-v1",
   writeRoots: true,
   strictResume: true,
   atlasMemory: true,
   toolkit: true,
+  mcp: ["hugr-composer"],
 })

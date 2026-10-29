@@ -208,7 +208,8 @@
     font-weight: 600;
   }
 
-  [data-slot="orchestra-theme-toggle"] {
+  [data-slot="orchestra-theme-toggle"],
+  [data-slot="orchestra-caffeinate-toggle"] {
     display: grid;
     flex: none;
     inline-size: 28px;
@@ -223,14 +224,30 @@
     app-region: no-drag;
   }
 
-  [data-slot="orchestra-theme-toggle"]:hover {
+  [data-slot="orchestra-theme-toggle"]:hover,
+  [data-slot="orchestra-caffeinate-toggle"]:hover {
     background: var(--orchestra-overlay-hover);
     color: var(--orchestra-body);
   }
 
-  [data-slot="orchestra-theme-toggle"]:focus-visible {
+  [data-slot="orchestra-theme-toggle"]:focus-visible,
+  [data-slot="orchestra-caffeinate-toggle"]:focus-visible {
     outline: 2px solid var(--orchestra-accent);
     outline-offset: -2px;
+  }
+
+  /* Awake, the cup turns warm red and its steam breathes. The pulse changes only opacity, never position, so it
+     stays on under Reduce Motion: it is the switch's state, not decoration. */
+  [data-slot="orchestra-caffeinate-toggle"][aria-checked="true"] {
+    color: var(--mx-bad);
+  }
+
+  [data-slot="orchestra-caffeinate-toggle"]:not([aria-checked="true"]) [data-steam] {
+    opacity: 0.45;
+  }
+
+  [data-slot="orchestra-caffeinate-toggle"][aria-checked="true"] [data-steam] {
+    animation: orchestra-caffeinate-steam 2.4s ease-in-out infinite;
   }
 }
 
@@ -344,5 +361,15 @@
   [data-orchestra-tabs] [data-titlebar-tab],
   [data-orchestra-tabs] [data-slot="tab-close"] [data-component="icon-button-v2"] {
     transition: none;
+  }
+}
+
+@keyframes orchestra-caffeinate-steam {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
   }
 }

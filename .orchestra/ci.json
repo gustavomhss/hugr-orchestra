@@ -1,0 +1,15 @@
+{
+  "base": "dev",
+  "scoped": {
+    "tests": "bun run test:ci {package} {files}",
+    "workflows": ["typecheck.yml"]
+  },
+  "full": {
+    "label": "epic",
+    "checks": ["typecheck", "test"],
+    "control": { "line": "omni positive control:", "jobs": ["unit ("] }
+  },
+  "bundle": { "size": 8, "max": 16, "waitMinutes": 45, "onBaseMoved": "merge-if-disjoint" },
+  "budget": { "jobs": 20 },
+  "merge": "merge"
+}

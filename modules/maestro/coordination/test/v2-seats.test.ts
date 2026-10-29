@@ -27,7 +27,7 @@ test("Maestro keeps its governance tools and playbooks but not a seat's tools", 
   expect(effect("maestro", "maestro_workflows")).toBe("allow")
   expect(effect("maestro", "maestro_record_result_decision")).toBe("allow")
   expect(effect("maestro", "maestro_arsenal_execute", "any")).toBe("allow")
-  expect(effect("maestro", "skill", "maestro-governed")).toBe("allow")
+  expect(effect("maestro", "skill", "maestro-run-governed")).toBe("allow")
   expect(effect("maestro", "maestro_record_review")).toBe("deny")
   expect(effect("maestro", "atlas_memory_recall")).toBe("deny")
   expect(effect("maestro", "bash", "ls")).toBe("allow")
@@ -49,9 +49,38 @@ test("each seat keeps exactly its own Maestro and Atlas Memory tools", () => {
   expect(effect("archie", "maestro_arsenal_catalog")).toBe("allow")
   expect(effect("archie", "maestro_arsenal_execute", "not-an-authoring-operation")).toBe("deny")
   expect(effect("backend", "maestro_arsenal_catalog")).toBe("deny")
+  expect(effect("archie", "archie_draft_workflow")).toBe("allow")
+  for (const id of ["maestro", "lucy", "backend"]) expect(effect(id, "archie_draft_workflow")).toBe("deny")
   for (const id of ["backend", "jimmy", "archie"]) expect(effect(id, "atlas_memory_emit")).toBe("allow")
   for (const id of ["patty", "lucy", "rosie"]) expect(effect(id, "atlas_memory_recall")).toBe("deny")
-  expect(effect("backend", "skill", "maestro-governed")).toBe("deny")
+  expect(effect("backend", "skill", "maestro-run-governed")).toBe("deny")
+})
+
+test("the backend seat keeps HuGR Composer's tools over a configured deny, and no other server's", () => {
+  const denied = [...configured, { action: "hugr-composer_*", resource: "*", effect: "deny" as const }]
+  const tool = "hugr-composer_fastapi_meta_compose"
+  expect(PermissionV2.evaluate(tool, "*", denied, rulesOf("backend")).effect).toBe("allow")
+  for (const id of ["maestro", "patty", "general"]) expect(PermissionV2.evaluate(tool, "*", denied, rulesOf(id)).effect).toBe("deny")
+  expect(effect("backend", "other-server_tool")).toBe("deny")
+})
+
+test("a seat loads any node below its own roots and no other seat's nodes", () => {
+  expect(effect("backend", "skill", "backend-implement")).toBe("allow")
+  expect(effect("backend", "skill", "backend-implement-stack-python-fastapi")).toBe("allow")
+  expect(effect("backend", "skill", "backend-implementation")).toBe("deny")
+  expect(effect("backend", "skill", "archie-plan-scope")).toBe("deny")
+  for (const id of ["archie", "maestro", "general"]) expect(effect(id, "skill", "backend-implement-stack-python")).toBe("deny")
+})
+
+test("a seat's entry skills stay with that seat", () => {
+  expect(effect("backend", "skill", "backend-api")).toBe("allow")
+  expect(effect("archie", "skill", "archie-plan")).toBe("allow")
+  expect(effect("archie", "skill", "backend-api")).toBe("deny")
+  expect(effect("backend", "skill", "archie-plan")).toBe("deny")
+  for (const id of ["maestro", "general", "custom"]) {
+    expect(effect(id, "skill", "backend-api")).toBe("deny")
+    expect(effect(id, "skill", "archie-plan")).toBe("deny")
+  }
 })
 
 // A seat's display label, as on the earlier runtime: the label variable over `agent.<id>.name` over the roster default; an invalid label

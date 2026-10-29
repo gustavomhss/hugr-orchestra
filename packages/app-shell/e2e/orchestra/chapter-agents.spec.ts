@@ -1,7 +1,19 @@
 import { expect, test } from "@playwright/test"
-import { card, dialog, directory, openAgents, otherDirectory, serverA, serverB, setup } from "./chapter-agents.fixture"
-
-const maestroOnly = "Only Maestro chats with you; other agents work through it."
+import {
+  card,
+  dialog,
+  directory,
+  openAgent,
+  openAgents,
+  otherDirectory,
+  saveBar,
+  saveChanges,
+  screen,
+  serverA,
+  serverB,
+  setup,
+  tab,
+} from "./chapter-agents.fixture"
 
 test.use({ viewport: { width: 1400, height: 900 }, serviceWorkers: "block" })
 test.setTimeout(120_000)
@@ -13,7 +25,9 @@ for (const scheme of ["dark", "light"] as const) {
     const roster = page.getByRole("list", { name: "Configured agents" })
     await expect(roster.getByRole("listitem")).toHaveCount(5)
     expect(
-      mock.requests.filter((request) => new URL(request.url).pathname === "/api/agent" && request.directory === directory),
+      mock.requests.filter(
+        (request) => new URL(request.url).pathname === "/api/agent" && request.directory === directory,
+      ),
     ).toHaveLength(1)
     await expect(roster).not.toContainText("secret")
     await expect(page.locator(".orchestra-agents").getByRole("heading", { level: 1 })).toHaveText(
@@ -21,26 +35,28 @@ for (const scheme of ["dark", "light"] as const) {
     )
     await expect(page.getByRole("button", { name: "Create agent", exact: true })).toBeEnabled()
     const plan = card(page, "plan")
-    expect.soft(await plan.locator(".agent-role").textContent()).toBe("primary")
-    // The card's first paragraph is the description; the Maestro-only note sits in its footer.
-    expect.soft(await plan.locator("p").first().textContent()).toBe("Plans repository work")
-    await expect(plan.locator(".mx-badge")).toHaveText(["Reasoner", "7 steps", "Available"])
-    await expect(plan.locator(".mx-badge bdi")).toHaveAttribute("title", "example/reasoner")
-    await expect(card(page, "build").locator(".mx-badge")).toHaveText(["Default model", "Unlimited steps", "Available"])
-    const offline = card(page, "review").locator(".mx-badge")
-    await expect(offline).toHaveText(["solo", "Unlimited steps", "Provider not connected"])
-    await expect(offline.last()).toHaveClass(/\bbad\b/)
-    await expect(offline.last()).toHaveAttribute("title", "offline is not connected in this project.")
+    // A lead agent is any agent that is not a subagent; the card says "Specialist" for the rest.
+    expect.soft(await plan.locator(".agent-role").textContent()).toBe("Lead agent")
+    expect.soft(await card(page, "research").locator(".agent-role").textContent()).toBe("Specialist")
+    expect.soft(await card(page, "review").locator(".agent-role").textContent()).toBe("Lead agent")
+    expect.soft(await plan.locator(".agent-desc").textContent()).toBe("Plans repository work")
+    await expect(plan.locator(".agent-model")).toHaveText("Reasoner")
+    await expect(plan.locator(".agent-model")).toHaveAttribute("title", "example/reasoner")
+    await expect(plan.getByRole("img", { name: "Available", exact: true })).toHaveClass(/\bgood\b/)
+    await expect(card(page, "build").locator(".agent-model")).toHaveText("Default model")
+    await expect(card(page, "build").getByRole("img", { name: "Available", exact: true })).toHaveClass(/\bgood\b/)
+    await expect(card(page, "review").locator(".agent-model")).toHaveText("solo")
+    const offline = card(page, "review").getByRole("img", { name: "Provider not connected", exact: true })
+    await expect(offline).toHaveClass(/\bbad\b/)
+    await expect(offline).toHaveAttribute("title", "offline is not connected in this project.")
     await page.screenshot({ path: test.info().outputPath(`${scheme}.png`), fullPage: true })
-    // Primary, subagent and all-mode agents alike work through Maestro.
+    // Only Maestro chats with you; every card opens its agent page.
     for (const name of ["plan", "research", "review", "build"]) {
-      await expect(card(page, name).locator(".mx-card-foot")).toContainText(maestroOnly)
       await expect(card(page, name).getByRole("button", { name: "Open Chat", exact: true })).toHaveCount(0)
-      await expect(card(page, name).getByRole("button", { name: "Configure", exact: true })).toBeEnabled()
+      await expect(card(page, name).getByRole("button", { name, exact: true })).toBeEnabled()
     }
     const maestro = card(page, "maestro")
     await expect(maestro.getByRole("button", { name: "Open Chat", exact: true })).toBeEnabled()
-    await expect(maestro).not.toContainText(maestroOnly)
   })
 }
 
@@ -70,7 +86,8 @@ test("Open Chat opens a blank draft with no agent choice for the same profile an
       .filter((request) => new URL(request.url).pathname === "/api/agent")
       .every(
         (request) =>
-          new URL(request.url).origin === serverA && new URL(request.url).searchParams.get("location[directory]") === directory,
+          new URL(request.url).origin === serverA &&
+          new URL(request.url).searchParams.get("location[directory]") === directory,
       ),
   ).toBe(true)
   await page.reload()
@@ -82,20 +99,16 @@ test("Open Chat opens a blank draft with no agent choice for the same profile an
 test("agent and agent file requests target the selected profile", async ({ page }) => {
   const mock = await setup(page)
   await openAgents(page)
-  await card(page, "plan").getByRole("button", { name: "Configure", exact: true }).click()
-  await expect(dialog(page).getByRole("heading", { name: "Configure plan" })).toBeVisible()
-  await expect(dialog(page).getByLabel("Description")).toHaveValue("Plans repository work")
-  await expect(card(page, "build").locator(".mx-badge")).toHaveText([
-    "Default model",
-    "Unlimited steps",
-    "Provider not connected",
-  ])
+  await expect(card(page, "build").getByRole("img", { name: "Provider not connected", exact: true })).toBeVisible()
+  await openAgent(page, "plan")
+  await expect(screen(page).getByLabel("Description")).toHaveValue("Plans repository work")
   const targets = mock.requests.filter((request) => new URL(request.url).pathname === "/api/agent")
   expect(targets.length).toBeGreaterThan(0)
   expect(
     targets.every(
       (request) =>
-        new URL(request.url).origin === serverA && new URL(request.url).searchParams.get("location[directory]") === directory,
+        new URL(request.url).origin === serverA &&
+        new URL(request.url).searchParams.get("location[directory]") === directory,
     ),
   ).toBe(true)
   const files = mock.requests.filter((request) => new URL(request.url).pathname === "/api/agent/plan/file")
@@ -174,7 +187,8 @@ test("switching profiles during an agent request isolates servers and directorie
     expect(
       requests.some(
         (request) =>
-          request.url.startsWith(serverA) && new URL(request.url).searchParams.get("location[directory]") === otherDirectory,
+          request.url.startsWith(serverA) &&
+          new URL(request.url).searchParams.get("location[directory]") === otherDirectory,
       ),
     ).toBe(true)
   } finally {
@@ -213,7 +227,9 @@ test("an agent request retains its response state while a later refresh changes 
     await page.goto("/", { waitUntil: "domcontentloaded" })
     await expect
       .poll(() =>
-        mock.requests.some((request) => new URL(request.url).pathname === "/api/agent" && request.directory === directory),
+        mock.requests.some(
+          (request) => new URL(request.url).pathname === "/api/agent" && request.directory === directory,
+        ),
       )
       .toBe(true)
     response.state = "ready"
@@ -234,13 +250,12 @@ test("an agent request retains its response state while a later refresh changes 
 test("agents retain configured model, steps and permission rules", async ({ page }) => {
   await setup(page)
   await openAgents(page)
-  const plan = card(page, "plan")
-  await expect(plan.locator(".mx-badge bdi")).toHaveAttribute("title", "example/reasoner")
-  await expect(plan).toContainText("7 steps")
-  await plan.getByRole("button", { name: "Configure", exact: true }).click()
-  await expect(dialog(page).getByLabel("Provider-turn allowance")).toHaveValue("7")
-  await expect(dialog(page).getByLabel("Edit", { exact: true }).locator("option:checked")).toHaveText("Inherit (deny)")
-  await expect(dialog(page).getByLabel("Read", { exact: true }).locator("option:checked")).toHaveText("Inherit (allow)")
+  await expect(card(page, "plan").locator(".agent-model")).toHaveAttribute("title", "example/reasoner")
+  await openAgent(page, "plan")
+  await expect(screen(page).getByLabel("Provider-turn allowance")).toHaveValue("7")
+  await tab(page, "Tools").click()
+  await expect(screen(page).getByLabel("Edit", { exact: true }).locator("option:checked")).toHaveText("Inherit (deny)")
+  await expect(screen(page).getByLabel("Read", { exact: true }).locator("option:checked")).toHaveText("Inherit (allow)")
 })
 
 test("create agent writes the project agent file and reloads the roster", async ({ page }) => {
@@ -293,29 +308,35 @@ test("create agent writes the project agent file and reloads the roster", async 
   ])
   expect(mock.disposed).toEqual([])
   await expect(card(page, "reviewer")).toContainText("Reviews the diff")
-  await expect(card(page, "reviewer").locator(".agent-role")).toHaveText("subagent")
+  await expect(card(page, "reviewer").locator(".agent-role")).toHaveText("Specialist")
 })
 
-test("configure without a file writes only what changed and shows resolved pattern rules as inherited", async ({
+test("saving an agent without a file writes only what changed and shows resolved pattern rules as inherited", async ({
   page,
 }) => {
   const mock = await setup(page)
   await openAgents(page)
-  await card(page, "plan").getByRole("button", { name: "Configure", exact: true }).click()
-  const form = dialog(page)
+  await openAgent(page, "plan")
+  const form = screen(page)
   await expect(form.getByLabel("Description")).toHaveValue("Plans repository work")
+  // Nothing changed yet, so there is nothing to save.
+  await expect(saveBar(page)).toHaveCount(0)
+  await tab(page, "Tools").click()
   // `plan` resolves `bash git *: ask` from elsewhere; with no file there is no pattern map to keep.
   const bash = form.getByLabel("Bash", { exact: true })
   await expect(bash).toHaveValue("inherit")
   await expect(bash.locator("option")).toHaveText(["Inherit (allow)", "Allow", "Ask", "Deny"])
   await expect(form.getByLabel("Edit", { exact: true }).locator("option:checked")).toHaveText("Inherit (deny)")
-  await form.getByRole("button", { name: "Save", exact: true }).click()
-  await expect(form).toHaveCount(0)
+  await bash.selectOption("ask")
+  await expect(saveBar(page)).toBeVisible()
+  await saveChanges(page)
+  await expect(saveBar(page)).toHaveCount(0)
+  await expect(page.getByRole("status").filter({ hasText: "Saved." })).toBeVisible()
   // Nothing resolved from built-ins is frozen into the new file.
-  expect(mock.writes.map((write) => write.body)).toEqual([{ permission: {}, revision: "" }])
+  expect(mock.writes.map((write) => write.body)).toEqual([{ permission: { bash: "ask" }, revision: "" }])
 })
 
-test("configure seeds from the project file and keeps pattern rules it does not edit", async ({ page }) => {
+test("an agent page seeds from the project file and keeps pattern rules it does not edit", async ({ page }) => {
   const mock = await setup(page, {
     files: {
       plan: {
@@ -330,19 +351,21 @@ test("configure seeds from the project file and keeps pattern rules it does not 
     },
   })
   await openAgents(page)
-  await card(page, "plan").getByRole("button", { name: "Configure", exact: true }).click()
-  const form = dialog(page)
+  await openAgent(page, "plan")
+  const form = screen(page)
   await expect(form.getByLabel("Description")).toHaveValue("From the file")
-  await expect(form.getByLabel("Name")).toHaveJSProperty("readOnly", true)
+  await tab(page, "System prompt").click()
   await expect(form.getByLabel("System instructions")).toHaveValue("File prompt")
+  await tab(page, "Tools").click()
   await expect(form.getByLabel("Edit", { exact: true })).toHaveValue("deny")
   await expect(form.getByLabel("Edit", { exact: true }).locator("option").first()).toHaveText("Inherit (allow)")
   await expect(form.getByLabel("Bash", { exact: true })).toHaveValue("custom")
 
   await form.getByLabel("Edit", { exact: true }).selectOption("inherit")
+  await tab(page, "Overview").click()
   await form.getByLabel("Model", { exact: true }).selectOption("")
-  await form.getByRole("button", { name: "Save", exact: true }).click()
-  await expect(form).toHaveCount(0)
+  await saveChanges(page)
+  await expect(saveBar(page)).toHaveCount(0)
   expect(mock.writes.map((write) => write.body)).toEqual([
     {
       mode: "primary",
@@ -356,9 +379,22 @@ test("configure seeds from the project file and keeps pattern rules it does not 
   expect(mock.disposed).toEqual([])
 })
 
-test("cancel and Escape discard the draft and return focus; remove keeps the definition and disables it", async ({
-  page,
-}) => {
+test("the skill tree tab lists a seat's roots and opens a root to the nodes below it", async ({ page }) => {
+  await setup(page)
+  await openAgents(page)
+  await openAgent(page, "research")
+  await tab(page, "Skill tree").click()
+  const tree = screen(page).locator(".agent-tree")
+  await expect(tree.locator(":scope > li")).toHaveCount(1)
+  const leaf = tree.getByText("research-survey-licenses", { exact: true })
+  await expect(leaf).toBeHidden()
+  await tree.getByText("research-survey", { exact: true }).click()
+  await expect(leaf).toBeVisible()
+  await expect(tree).toContainText("Check license terms")
+  await expect(tree).toContainText("Opens when: the dependency ships under a license")
+})
+
+test("Discard and Back drop the draft; remove keeps the definition and disables it", async ({ page }) => {
   const mock = await setup(page, {
     files: {
       plan: {
@@ -372,30 +408,30 @@ test("cancel and Escape discard the draft and return focus; remove keeps the def
     },
   })
   await openAgents(page)
-  const configure = card(page, "plan").getByRole("button", { name: "Configure", exact: true })
-  await configure.click()
-  await dialog(page).getByLabel("Description").fill("Changed")
-  await page.keyboard.press("Escape")
-  await expect(dialog(page)).toHaveCount(0)
-  await expect(configure).toBeFocused()
-  await configure.click()
-  await expect(dialog(page).getByLabel("Description")).toHaveValue("Plan file")
-  await dialog(page).getByLabel("Description").fill("Changed again")
-  await dialog(page).getByRole("button", { name: "Cancel", exact: true }).click()
-  await expect(dialog(page)).toHaveCount(0)
-  await expect(configure).toBeFocused()
+  await openAgent(page, "plan")
+  const description = screen(page).getByLabel("Description")
+  await description.fill("Changed")
+  await expect(saveBar(page)).toBeVisible()
+  await saveBar(page).getByRole("button", { name: "Discard", exact: true }).click()
+  await expect(description).toHaveValue("Plan file")
+  await expect(saveBar(page)).toHaveCount(0)
+
+  await description.fill("Changed again")
+  await screen(page).getByRole("button", { name: "Agents", exact: true }).click()
+  await expect(page).toHaveURL(/\/orchestra\/agents$/)
+  await expect(screen(page)).toHaveCount(0)
+  await openAgent(page, "plan")
+  await expect(screen(page).getByLabel("Description")).toHaveValue("Plan file")
   expect(mock.writes).toEqual([])
 
-  await configure.click()
-  await dialog(page).getByRole("button", { name: "Remove agent", exact: true }).click()
-  await expect(dialog(page).getByRole("heading", { name: "Remove plan?" })).toBeVisible()
-  await expect(dialog(page)).toContainText("Existing sessions keep their recorded model and conversation.")
-  await expect(dialog(page)).toContainText(
+  await expect(screen(page)).toContainText("Existing sessions keep their recorded model and conversation.")
+  await screen(page).getByRole("button", { name: "Remove agent", exact: true }).click()
+  await expect(screen(page)).toContainText(
     "Adds disable: true to .orchestra/agent/plan.md and keeps the rest of the definition. Restore plan from the notice that follows, or later by creating an agent with the same name.",
   )
   expect(mock.writes).toEqual([])
-  await dialog(page).getByRole("button", { name: "Confirm", exact: true }).click()
-  await expect(dialog(page)).toHaveCount(0)
+  await screen(page).getByRole("button", { name: "Remove plan", exact: true }).click()
+  await expect(page).toHaveURL(/\/orchestra\/agents$/)
   expect(mock.writes.map((write) => [write.body, write.directory])).toEqual([
     [
       {
@@ -440,8 +476,8 @@ test("Maestro cannot be removed or taken out of primary mode; its other fields s
     },
   })
   await openAgents(page)
-  await card(page, "maestro").getByRole("button", { name: "Configure", exact: true }).click()
-  const form = dialog(page)
+  await openAgent(page, "maestro")
+  const form = screen(page)
   await expect(form.getByLabel("Description")).toHaveValue("Hand edited")
   const mode = form.getByLabel("Mode", { exact: true })
   await expect(mode).toBeDisabled()
@@ -453,9 +489,10 @@ test("Maestro cannot be removed or taken out of primary mode; its other fields s
 
   await form.getByLabel("Description").fill("Conducts the team")
   await form.getByLabel("Model", { exact: true }).selectOption("example/builder")
+  await tab(page, "Tools").click()
   await form.getByLabel("Bash", { exact: true }).selectOption("ask")
-  await form.getByRole("button", { name: "Save", exact: true }).click()
-  await expect(form).toHaveCount(0)
+  await saveChanges(page)
+  await expect(saveBar(page)).toHaveCount(0)
   expect(mock.writes.map((write) => write.body)).toEqual([
     {
       mode: "primary",
@@ -467,12 +504,13 @@ test("Maestro cannot be removed or taken out of primary mode; its other fields s
   ])
 
   // Every other agent keeps both controls.
-  await card(page, "plan").getByRole("button", { name: "Configure", exact: true }).click()
-  await expect(dialog(page).getByLabel("Mode", { exact: true })).toBeEnabled()
-  await expect(dialog(page).getByRole("button", { name: "Remove agent", exact: true })).toBeVisible()
+  await form.getByRole("button", { name: "Agents", exact: true }).click()
+  await openAgent(page, "plan")
+  await expect(screen(page).getByLabel("Mode", { exact: true })).toBeEnabled()
+  await expect(screen(page).getByRole("button", { name: "Remove agent", exact: true })).toBeVisible()
 })
 
-test("Escape while the file loads closes the dialog and a late answer does not reopen it", async ({ page }) => {
+test("Back while the file loads leaves the page and a late answer does not bring it back", async ({ page }) => {
   const gate = { release: () => {} }
   const mock = await setup(page, {
     fileGate: new Promise<void>((resolve) => {
@@ -480,17 +518,17 @@ test("Escape while the file loads closes the dialog and a late answer does not r
     }),
   })
   await openAgents(page)
-  const configure = card(page, "plan").getByRole("button", { name: "Configure", exact: true })
-  await configure.click()
-  await expect(dialog(page)).toContainText("Loading configuration…")
-  await expect(dialog(page).getByRole("button", { name: "Save", exact: true })).toBeDisabled()
-  await page.keyboard.press("Escape")
-  await expect(dialog(page)).toHaveCount(0)
-  await expect(configure).toBeFocused()
+  await openAgent(page, "plan", false)
+  await expect(screen(page)).toContainText("Loading configuration…")
+  await expect(saveBar(page)).toHaveCount(0)
+  await screen(page).getByRole("button", { name: "Agents", exact: true }).click()
+  await expect(page).toHaveURL(/\/orchestra\/agents$/)
+  await expect(screen(page)).toHaveCount(0)
   gate.release()
   await expect.poll(() => mock.answered.length).toBe(1)
-  await expect(dialog(page)).toHaveCount(0)
-  await expect(configure).toBeFocused()
+  await expect(page).toHaveURL(/\/orchestra\/agents$/)
+  await expect(screen(page)).toHaveCount(0)
+  await expect(page.getByRole("list", { name: "Configured agents" })).toBeVisible()
   expect(mock.writes).toEqual([])
 })
 
@@ -505,31 +543,33 @@ test.fixme("Escape closes the dialog while a navigation tooltip still shows behi
     .getByRole("button", { name: "Agents", exact: true })
     .hover()
   await expect(page.getByRole("tooltip")).toHaveText("Work in progress, revisit before production")
-  const configure = card(page, "plan").getByRole("button", { name: "Configure", exact: true })
-  await configure.focus()
+  const opener = page.getByRole("button", { name: "Create agent", exact: true })
+  await opener.focus()
   await page.keyboard.press("Enter")
   await expect(dialog(page)).toBeVisible()
   await expect(page.getByRole("tooltip")).toHaveCount(1)
   await page.keyboard.press("Escape")
   await expect(dialog(page)).toHaveCount(0)
-  await expect(configure).toBeFocused()
+  await expect(opener).toBeFocused()
   expect(mock.writes).toEqual([])
 })
 
 test("load failures offer a retry; save conflicts and unsupported servers stay explicit", async ({ page }) => {
   const mock = await setup(page, { fileFailures: 1, writeStatus: 409 })
   await openAgents(page)
-  await card(page, "plan").getByRole("button", { name: "Configure", exact: true }).click()
-  const form = dialog(page)
+  await openAgent(page, "plan")
+  const form = screen(page)
   await expect(form.getByRole("alert")).toHaveText("The agent configuration could not be loaded.")
-  await expect(form.getByRole("button", { name: "Save", exact: true })).toBeDisabled()
+  // A failed load leaves the page read-only: nothing can be edited, so nothing can be saved.
+  await expect(form.getByLabel("Description")).toBeDisabled()
+  await expect(saveBar(page)).toHaveCount(0)
   await form.getByRole("button", { name: "Retry", exact: true }).click()
   await expect(form.getByRole("alert")).toBeHidden()
   await expect(form.getByRole("button", { name: "Retry", exact: true })).toHaveCount(0)
   await form.getByLabel("Description").fill("Mine")
-  await form.getByRole("button", { name: "Save", exact: true }).click()
+  await saveChanges(page)
   await expect(form.getByRole("alert")).toHaveText(
-    "The agent file changed on disk after it was opened. Close this dialog and open it again to edit the current version.",
+    "The agent file changed on disk after it was opened. Open the agent again to edit the current version.",
   )
   await expect(form.getByLabel("Description")).toHaveValue("Mine")
   expect(mock.writes).toHaveLength(1)
@@ -540,10 +580,10 @@ for (const fileApi of [false, "html"] as const) {
   test(`a server without the agent file API keeps the editor read-only (${fileApi || "404"})`, async ({ page }) => {
     const mock = await setup(page, { fileApi })
     await openAgents(page)
-    await card(page, "plan").getByRole("button", { name: "Configure", exact: true }).click()
-    const form = dialog(page)
+    await openAgent(page, "plan")
+    const form = screen(page)
     await expect(form.getByRole("alert")).toHaveText("This server cannot save agent configuration.")
-    await expect(form.getByRole("button", { name: "Save", exact: true })).toBeDisabled()
+    await expect(saveBar(page)).toHaveCount(0)
     await expect(form.getByRole("button", { name: "Retry", exact: true })).toHaveCount(0)
     await expect(form.getByLabel("Description")).toBeDisabled()
     await expect(form.getByRole("button", { name: "Remove agent", exact: true })).toHaveCount(0)

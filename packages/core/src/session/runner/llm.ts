@@ -32,7 +32,6 @@ import { TaskGovernance } from "../../tool/task-governance"
 import { Mcp } from "../../mcp"
 import { ToolOutputStore } from "../../tool-output-store"
 import { SessionExecution } from "../execution"
-import { Prompt } from "../prompt"
 import { SessionContextEpoch } from "../context-epoch"
 import { SessionCompaction } from "../compaction"
 import { SessionEvent } from "../event"
@@ -41,17 +40,20 @@ import { SessionInput } from "../input"
 import { SessionMessage } from "../message"
 import { SessionSchema } from "../schema"
 import { SessionStore } from "../store"
+import { SessionTodo } from "../todo"
 import { TodoTable } from "../sql"
 import { SessionSubagentModels } from "../subagent-models"
 import { INTERRUPTED_TURN, type RunError, Service } from "./index"
 import { SessionRunnerModel } from "./model"
 import { createLLMEventPublisher } from "./publish-llm-event"
+import { Prompt } from "../prompt"
 import { ExecutionHost } from "./execution-host"
 import { toLLMMessages } from "./to-llm-message"
 import { SessionTitle } from "./title"
 import { ReadToolFileSystem } from "../../tool/read-filesystem"
 import { SessionDirectCommands } from "./direct-commands"
 import { hostedCall } from "./hosted-call"
+import { STEP_TOOL_REFUSAL, narrowStepTools } from "./step-tools"
 import { TurnTransitionError, continueAfterCompaction, continueAfterOverflowCompaction } from "./turn-transition"
 import { DEFAULT_MAX_STEPS, MAX_STEPS_PROMPT } from "./max-steps"
 import { Snapshot } from "../../snapshot"
@@ -161,6 +163,8 @@ const layer = Layer.effect(
       return session
     })
 
+    const engineOf = ExecutionHost.engineOf(agents, store)
+
     const getContext = Effect.fn("SessionRunner.getContext")(function* (sessionID: SessionSchema.ID) {
       return yield* store.context(sessionID)
     })
@@ -225,7 +229,7 @@ const layer = Layer.effect(
       const system =
         initialized ?? (yield* SessionContextEpoch.prepare(db, events, loadSystemContext(session.id, agent), session.id))
       // An agent whose engine names an execution host runs this provider turn through it (AGENTS "V2 Session Core").
-      const engine = agent.info?.engine === "orchestra" ? undefined : agent.info?.engine
+      const engine = yield* engineOf(session)
       const host = engine ? hosts.get(engine) : undefined
       if (engine && !host)
         return yield* Effect.die(new Error(`No execution host is registered for engine ${engine} (agent ${agent.id})`))
@@ -239,11 +243,11 @@ const layer = Layer.effect(
       if (workflow?.view.state === "complete") return { needsContinuation: false, step: currentStep }
       const isLastStep = currentStep >= (agent.info?.steps ?? DEFAULT_MAX_STEPS)
       if (!isLastStep) yield* mcp.ready()
-      const toolMaterialization = isLastStep ? undefined : yield* tools.materialize(effectiveRules)
+      const stepTools = narrowStepTools(workflow?.view.tools, workflow?.view.tools?.mcp ? yield* mcp.tools() : {})
+      const toolMaterialization = isLastStep ? undefined : yield* tools.materialize([...effectiveRules, ...stepTools.hidden])
       const promptCacheKey = /^ses_[0-9a-f]{64}$/.test(session.id) ? session.id.slice(4) : session.id
-      const systemText = [agent.info?.system, system.baseline, workflow?.view.instructions].filter(
-        (part): part is string => part !== undefined && part.length > 0,
-      )
+      const contextText = [system.baseline, workflow?.view.instructions].filter((part): part is string => !!part)
+      const systemText = agent.info?.system ? [agent.info.system, ...contextText] : contextText
       // Only provider-model turns pass through the compaction transform; a hosted engine receives its history as is.
       const messages = model
         ? yield* compaction.transform({
@@ -256,11 +260,7 @@ const layer = Layer.effect(
       const request = model && LLM.request({
         model,
         http: {
-          headers: {
-            "x-session-affinity": session.id,
-            "X-Session-Id": session.id,
-            ...(session.parentID ? { "x-parent-session-id": session.parentID } : {}),
-          },
+          headers: { "x-session-affinity": session.id, "X-Session-Id": session.id, ...(session.parentID ? { "x-parent-session-id": session.parentID } : {}) },
         },
         providerOptions: { openai: { promptCacheKey } },
         system: systemText.map(SystemPart.make),
@@ -287,7 +287,7 @@ const layer = Layer.effect(
       let overflowFailure: ProviderErrorEvent | undefined
       yield* subagentModels.assert(session.id, modelRef)
       const settle = (call: ToolCall, assistantMessageID: SessionMessage.ID, materialization: ToolRegistry.Materialization) =>
-        CapabilityInvocation.withContext(
+        stepTools.refuses(call.name, call.input) ? Effect.succeed(STEP_TOOL_REFUSAL) : CapabilityInvocation.withContext(
           {
             issuer: "core",
             owner: {
@@ -328,6 +328,7 @@ const layer = Layer.effect(
       const scope = yield* Scope.Scope
       const authorize: ExecutionHost.Turn["authorize"] = (input) =>
         Effect.gen(function* () {
+          if (input.safety && stepTools.refuses(input.safety.tool, input.safety.args)) return yield* new PermissionV2.BlockedError({ rules: stepTools.bash })
           yield* permissions
             .authorize({
               sessionID: session.id,
@@ -415,15 +416,14 @@ const layer = Layer.effect(
         ),
         Stream.flatMap((items) => Stream.fromIterable(items)),
       )
-      const notify: ExecutionHost.Turn["notify"] = (input) =>
+      // An event the host's engine sends on its own, after the turn: a steer prompt that wakes the Session.
+      const notify: ExecutionHost.Turn["notify"] = (event) =>
         SessionInput.admit(db, events, {
-          id: SessionMessage.ID.make(input.id.startsWith("msg_") ? input.id : `msg_${input.id}`),
+          id: SessionMessage.ID.make(event.id.startsWith("msg_") ? event.id : `msg_${event.id}`),
           sessionID: session.id,
-          prompt: Prompt.make({ text: input.text }),
+          prompt: Prompt.make({ text: event.text }),
           delivery: "steer",
-        }).pipe(
-          Effect.andThen(execution ? execution.wake(session.id) : Effect.void),
-        )
+        }).pipe(Effect.andThen(execution ? execution.wake(session.id) : Effect.void))
       const source = request
         ? llm.stream(request)
         : host && agent.info
@@ -432,6 +432,7 @@ const layer = Layer.effect(
               agent: agent.info,
               model: modelRef,
               system: systemText,
+              context: contextText,
               history: context,
               tools: toolMaterialization?.definitions ?? [],
               execute,
@@ -441,6 +442,7 @@ const layer = Layer.effect(
               steers,
               consumed: (id) => Effect.sync(() => void liveSteers.delete(id)),
               notify,
+              todos: (list) => SessionTodo.write(db, events, { sessionID: session.id, todos: list }),
               state: ExecutionHost.state(db, session.id, host.stateKey),
             })
           : Stream.die("SessionRunner: no provider for this turn")

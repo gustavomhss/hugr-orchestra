@@ -1,6 +1,7 @@
 ---
 name: backend-api
 description: "API boundary obligations for an assigned backend change: an endpoint, handler, RPC method, resolver, event stream, upload or webhook route, binary codec or external client built against a supplied contract. Load with backend-implement when the packet changes a request, response or wire boundary. Not for choosing a transport, designing a public API or diagnosing a broken endpoint."
+internal: true
 ---
 
 # Backend API boundary
@@ -28,19 +29,19 @@ A missing item the change depends on is a `packet` blocker. You do not need prew
 
 Read only the reference whose facts the packet supplies:
 
-- [REST JSON operation](../backend-implement/references/protocols/rest.md)
-- [gRPC method](../backend-implement/references/protocols/grpc.md)
-- [GraphQL resolvers](../backend-implement/references/protocols/graphql.md)
-- [Server-sent events](../backend-implement/references/protocols/sse.md)
-- [WebSocket operations](../backend-implement/references/protocols/websocket.md)
-- [Upload ingress](../backend-implement/references/protocols/upload.md)
-- [Signed webhook ingress](../backend-implement/references/protocols/webhook.md)
-- [Supplied binary grammar or codec](../backend-implement/references/protocols/codec.md)
-- [Application authorization](../backend-implement/references/cards/app-auth.md), when the packet assigns implementing allow and deny rules. Preserving existing auth unchanged does not load it.
+- REST JSON operation (`backend-api-rest`)
+- gRPC method (`backend-api-grpc`)
+- GraphQL resolvers (`backend-api-graphql`)
+- Server-sent events (`backend-api-sse`)
+- WebSocket operations (`backend-api-websocket`)
+- Upload ingress (`backend-api-upload`)
+- Signed webhook ingress (`backend-api-webhook`)
+- Supplied binary grammar or codec (`backend-api-codec`)
+- Application authorization (`backend-api-app-auth`), when the packet assigns implementing allow and deny rules. Preserving existing auth unchanged does not load it.
 
 A mixed assignment, such as an ingress route carrying a binary payload, composes two references only when the packet supplies both sets of facts. Framework, library and version details live in the references your stack selects; a protocol reference never selects a framework. Stream body and producer lifetimes are in `backend-concurrency`.
 
-Stack references: [Go](../backend-implement/references/languages/go.md), [Python](../backend-implement/references/languages/python.md), [JavaScript/TypeScript](../backend-implement/references/languages/js-ts.md), [Ruby](../backend-implement/references/languages/ruby.md), [PHP](../backend-implement/references/languages/php.md). Read only the packet's language.
+Stack references: Go (`team-stack-go`), Python (`team-stack-python`), JavaScript/TypeScript (`team-stack-js-ts`), Ruby (`team-stack-ruby`), PHP (`team-stack-php`). Read only the packet's language.
 
 ## Common procedure
 

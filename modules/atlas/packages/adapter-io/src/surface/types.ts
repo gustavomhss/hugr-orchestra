@@ -155,9 +155,9 @@ export interface AtlasSnapshot {
   readonly children: Readonly<Record<string, readonly string[]>>
   /** D3b: the committed Own snapshot, coverage and published skills; null when `OWN-SNAPSHOT.json` is absent. */
   readonly own: AtlasOwnSnapshot | null
-  /** D3b: `.atlas/memory.jsonl` records by member, in log order; {} when the log is absent. */
+  /** D3b: memory records (`.atlas/members/<seat>/memory/`) by member, in fold order; {} when there are none. */
   readonly memory: Readonly<Record<string, readonly AtlasMemoryRecord[]>>
-  /** D3b: `.atlas/orientation.jsonl` events in log order; [] when the log is absent. */
+  /** D3b: `.atlas/project/orientation.jsonl` events in log order; [] when the log is absent. */
   readonly orientation: readonly AtlasOrientationEvent[]
   /** D3b: `TERRITORY-CATALOG.json` territories; [] when the file is absent or does not parse. */
   readonly territories: readonly AtlasTerritory[]

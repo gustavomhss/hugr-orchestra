@@ -69,7 +69,7 @@ All tables carry `Timestamps`. Ids are core ids with a board prefix. Enums are t
 | `number` | integer | unique with `project_id` |
 | `title`, `body` | text | body is Maestro's description, markdown |
 | `type` | `feature` `bug` `chore` | |
-| `stage` | `intake` `backlog` `ready` `building` `review` `shipped` `cut` | `intake` only for GitHub-born issues waiting for the owner |
+| `stage` | `intake` `backlog` `ready` `building` `review` `queue` `shipped` `cut` | `intake` only for GitHub-born issues waiting for the owner; only the host moves a card into or out of `queue` |
 | `position` | real | order inside the stage |
 | `estimate` | `s` `m` `l` null | |
 | `seat` | text null | agent id |
@@ -81,6 +81,7 @@ All tables carry `Timestamps`. Ids are core ids with a board prefix. Enums are t
 | `stage_entered_at` | integer | for aging and forecast |
 | `github_number`, `github_node_id` | null | mirror link |
 | `github_dirty` | integer bool | mirrored fields changed since the last push |
+| `record` | json null | the PR record's Maestro fields (merge-queue spec §4.5): `intent`, `decisions`, `not_covered`, `risk`, `follow_ups`; the host renders it into the PR body |
 
 Index `(project_id, stage, position)`.
 
@@ -112,8 +113,12 @@ as a whole list by `board_steps`, so the log keeps the full list in `before` and
 
 ### board_note
 
-`id`, `issue_id` (fk cascade), `author` (`owner` `maestro` or `github:<login>`), `body`, `github_comment_id` (null).
+`id`, `issue_id` (fk cascade), `author` (`owner` `maestro` `orchestra` `github:<login>` or a seat id), `kind` (null on a plain note), `body`, `github_comment_id` (null).
 Notes are private to the board: they never go out to GitHub and never show to guests.
+A note with a `kind` is a thread note: `brief`, `question`, `answer`, `return`, `review` or `rework`. The host writes them
+from `task` calls that pass `card`, from their returns (`question` when the child ended blocked), from review requests and
+verdicts, and from redispatches (`rework`, author `orchestra`). Authors of thread notes are `maestro`, `orchestra`, the
+seat that did the work, or `lucy` for a verdict. Thread notes are read-only: only `owner` notes can be edited or deleted.
 
 ### board_attachment
 
@@ -138,6 +143,23 @@ Exactly one of `path` and `credential_id` is set.
 Undoable actions: Maestro's `issue.update`, `issue.move`, `steps.set`, `epic.upsert`, `question.withdraw`, and every
 `github.overwrite`. Owner actions are reversed by the owner doing the opposite (resume, release hold), not by undo.
 
+Import from the record tree (`board/tree.ts`, `BoardTree.restore`): the record commit writes every activity row to
+`.atlas/project/board.jsonl` through `BoardTree.event`, and the import replays it into an empty board, ordered by
+`at` with the activity id breaking ties (ids are minted in order within a millisecond). Each action has exactly one
+applier; an action without one fails with `BoardTree.UnknownActionError`, never a silent skip.
+
+- Restored: `board_project`, `board_epic`, `board_issue`, `board_step`, `board_dependency`, `board_question`, `board_decision`,
+  `board_note` (plain notes) and `board_activity` (including `undone_by`).
+- Re-derived, left empty: `board_queue`, `board_bundle`, `board_bundle_member`, `board_attempt`, `board_check`, `board_ci_run`,
+  `board_flake` and the GitHub sync state. Git, GitHub and `.atlas/cards/*/attempts` already hold them, so logging them
+  would add weight without adding reconstruction. `github.overwrite`, `github.state` and `bundle.cut` replay as no-ops.
+- Not logged on purpose: attachments (`board_attachment`; `attachment.add`/`remove` replay as no-ops), so their bytes and secrets never
+  enter the log. Thread notes (non-null `kind`) live in `cards/<KEY>/` and are not imported into `board_note`.
+- `question.answer`: an `after.outcome` updates the decision's outcome; otherwise it answers the question and inserts
+  the decision `after.decision`, which supersedes the standing decision of that question.
+- Prose (descriptions, bodies, reasons, answers and the like) travels in the event's `text`. A public tree keeps only
+  `textHash`: prose comes back empty and the activity `reason` reads `[redacted <hash>]`.
+
 As built in slice E1:
 
 - `board_project.forecast_late_streak` (integer, default 0) counts consecutive evaluations whose P50 lands past
@@ -152,6 +174,27 @@ As built in slice E1:
   the first ship day to today, zero days included) resampled in a seeded 1000-trial Monte Carlo, so the same board on
   the same day gives the same dates. The scope history replays `after.stage` from `board_activity`.
 
+### board_check
+
+The pass or fail ledger of the merge queue (`docs/specs/maestro-lead/merge-queue.md` §5). `board_ci_run` stays the
+billing ledger.
+
+`id` (`bck_`), `issue_id` (fk cascade), `attempt`, `kind` (`scoped` `workflow` `full`), `command` (the scoped command
+or the workflow file), `tree_sha`, `commit_sha` (null), `outcome` (`pass` `fail` `pending` `error`), `url` (null),
+`failing` (json string[]: test files or check names), `started_at`, `ended_at` (null). Indexed on
+`(issue_id, tree_sha)`. Rows are keyed by tree; the card's `scoped-green` or `scoped-red` is derived on read and never
+stored.
+
+### board_queue, board_bundle, board_bundle_member
+
+The merge queue (merge-queue spec §6). `board_queue` has one row per card in `queue`: `issue_id` (pk), `project_id`,
+`head_sha` (the PR head the scoped checks passed on), `urgent`, `flush`, `queued_at`. `board_bundle` is one bundle PR:
+`id` (`bbu_`), `project_id`, `n` (unique per project, shown as `LCH-B3`), `branch`, `pr_number`, `base_sha`, `head_sha`,
+`tree_sha`, `status` (`open` `merged` `dissolved`), `merged_on` (the base tip it landed on when base moved, null
+otherwise). `board_bundle_member` links a bundle to its cards with the `head_sha` each was merged at and its `position`.
+A card's queue state (`waiting`, `running`, `conflict`, `held`) is derived on read. Activity actions: `queue.add`,
+`queue.remove`, `bundle.cut`, `bundle.merge`, `bundle.dissolve`.
+
 ## 4. Maestro tools
 
 Registered through `ApplicationTools` and granted only to the Maestro agent. Every write takes `reason` (non-empty) and
@@ -160,13 +203,27 @@ link one before Review").
 
 | Tool | Input | Does |
 |---|---|---|
-| `board_read` | `project` key, optional `issue` number, optional `since` activity id | Snapshot: project, epics, issues with steps, open questions, owner notes and answers since `since`, attachment names (secret labels only), holds, pauses, GitHub state. The only way Maestro reads the board. |
+| `board_read` | `project` key, optional `issue` number, optional `since` activity id; without `project`, the list of projects (key, name, goal, status, GitHub repo) | Snapshot: project, epics, issues with steps, open questions, owner notes and answers since `since`, attachment names (secret labels only), holds, pauses, GitHub state; with `issue`, the issue page and its `pushState` (`local`, `pushed`, or null with no open attempt). The only way Maestro reads the board. |
 | `board_project` | `key`, `name`, `goal`, `target_date`, `repo`, `github_repo`, `reason` | Create or update a project. |
 | `board_epic` | `project`, optional `number`, `title`, `goal`, `position`, `status`, `reason` | Create or update an epic. |
-| `board_issue` | `project`, optional `number`, `title`, `body`, `type`, `epic`, `estimate`, `seat`, `session`, `branch`, `pr`, `depends_on`, `reason` | Create (lands in Backlog) or update an issue, including linking branch, PR and session. |
+| `board_issue` | `project`, optional `number`, `title`, `body`, `type`, `epic`, `estimate`, `seat`, `session`, `branch`, `pr`, `depends_on`, `attempts`, `crash_reason`, `guardrail_rule`, `reason` | Create (lands in Backlog) or update an issue, including linking branch, PR and session. `depends_on` replaces the list. |
 | `board_move` | `project`, `number`, `stage`, optional `position`, `reason` | Move between stages. Enforces proof (rule 5), hold (6), pause (7). Moving out of `intake` is the owner's, not Maestro's. |
 | `board_steps` | `project`, `number`, `steps: [{ title, status, now? }]`, `reason` | Replace the step list. |
-| `board_question` | `project`, `issue?`, `epic?`, `action: ask` with `text`, `options`, `recommended`, `cost_of_waiting`, `blocking`; or `action: withdraw` with `id`; plus `reason` | Ask the owner or withdraw a question. |
+| `ci_run` | `project`, `issue`, optional `package`, `files`, `run` | Runs `.orchestra/ci.json`'s scoped checks on the card worktree's current tree, once per tree, and returns the tree, its checks and the scoped state. `run: false` only reports. |
+| `board_queue` | `project`, `number`, optional `urgent`, `flush`, `reason` | Puts a verified Review card in the merge queue. Refused without a PR, a complete record (Intent, Decisions, Not covered, Risk level), ready dependencies, or a scoped-green tree when the contract requires one. Returns the head, tree and scoped state it queued at. |
+| `board_dequeue` | `project`, `number`, `reason` | Takes a card out of the queue back to Review and dissolves the open bundle it was in. |
+| `board_bundle` | `project`, `bundle`, `verdict` (`merge` \| `retry` \| `release`), `card`, `reason` | Merges a flaky bundle as tested, retries a flaky or paused bundle's cards in a new bundle, or releases one held card of a dissolved bundle to ride a bundle alone. |
+| `board_question` | `project`, `issue?`, `epic?`, `action: ask` with `text`, `options`, `recommended`, `cost_of_waiting`, `blocking`; or `action: withdraw` with `id`; plus `reason` | Ask the owner or withdraw a question. The only write allowed while the project is paused. |
+| `board_settings` | `project`, optional `target_date` (epoch ms), `budget_usd`, `reason`; `null` clears a field | Set the target date and budget. At 100% of the budget no card moves to Building. |
+| `board_decision` | `project`, `id` (the decision or the answered question), `outcome`, `reason` | Record what came of an answered decision; until then it reads "applied, no result yet". |
+
+The host also moves cards on facts, never by Maestro's hand:
+
+- `task` with `card: "KEY-N"` links the seat and Session on the card and moves it from Backlog or Ready to Building
+  (`modules/maestro/coordination/src/v2/governance.ts` `claim`).
+- A linked open PR moves Building to Review; a merged PR moves Building or Review to Shipped and clears `crash_reason`
+  (`packages/core/src/board/github.ts` `follow`). Paused cards and holds stay put; a closed or reopened PR raises a
+  question instead of a move. The move is logged with actor `github`.
 
 Maestro's prompt says only what the tools cannot: keep the board current as work moves, ask through `board_question`
 instead of chat when the answer changes the plan, and read `board_read` with `since` at the start of each turn.
@@ -194,7 +251,7 @@ Owner writes (actor `owner`, `reason` optional):
 | `POST /api/board/:key/issue/:number/note` | `{ body }` |
 | `POST /api/board/:key/issue/:number/attachment` | JSON `{ kind, name, mime?, data?, value? }`: a file carries base64 `data`; a secret carries `value` and `name` is its label. The value goes straight to `CredentialTable` and is never echoed |
 | `POST /api/board/:key/activity/:id/undo` | Rule 4 |
-| `POST /api/board/:key/github/sync` | The retry: one pull then push now, returns `{ state, error }` (the new `github_state`/`github_error`). Refused when the project has no `github_repo` |
+| `POST /api/board/:key/github/sync` | The retry: one pull, PR follow and push now, returns `{ state, error }` (the new `github_state`/`github_error`). Refused when the project has no `github_repo` |
 | `POST /api/board/:key/pause` and `/resume` | Project level; `{ reason? }` |
 | `POST /api/board/:key/issue/:number/pause` and `/resume` | Issue level |
 | `POST /api/board/:key/issue/:number/hold` | `{ hold: boolean }` |
@@ -268,6 +325,7 @@ Failure is shown as fact: signed out, rate limited or erroring sets `github_stat
 | Service (reads, writes, rules 1-8, undo, events) | `packages/core/src/board/board.ts` |
 | Maestro tools | `packages/core/src/board/tools.ts` |
 | GitHub mirror | `packages/core/src/board/github.ts` |
+| CI contract, `ci_run`, check ledger | `packages/core/src/board/ci.ts` |
 | Protocol group | `packages/protocol/src/groups/board.ts`, added in `api.ts` |
 | Handler | `packages/server/src/handlers/board.ts` |
 | Chapter | `packages/app-shell/src/orchestra/chapters/board/`, nav entry `board`, behind the WIP mark until slice C |
@@ -292,4 +350,8 @@ As built in slice B2:
 - Issues and comments share one `since` cursor (`github_since`); each list keeps its own ETag. A 304 is an empty page.
 - A manual or polled sync is serialized per server. Failures are classified from `gh`'s exit code and stderr; token-like
   text is redacted from `github_error` and nothing is logged.
+- Each sync follows the linked PR of every Building or Review card on an active project, between the pull and the push:
+  an open PR moves Building to Review, a merged PR moves the card to Shipped and clears `crash_reason`. The move is a
+  `github` actor row with the PR's fact as its reason. A paused card stays, a held card never ships, and an unreadable PR
+  leaves its card alone without failing the sync.
 - The poll runs only in the server layer; tests inject the `gh` runner (`Board.layerWith({ gh, poll: false })`).

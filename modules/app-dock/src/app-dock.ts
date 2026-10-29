@@ -62,7 +62,7 @@ const routerFor = (port: Transport) => {
   return router
 }
 
-function request(port: Transport, op: string, args: Record<string, unknown>, signal: AbortSignal, timeoutMs: number): Promise<unknown> {
+export function request(port: Transport, op: string, args: Record<string, unknown>, signal: AbortSignal, timeoutMs: number): Promise<unknown> {
   const id = randomUUID()
   const router = routerFor(port)
   const native = op === "action" || (typeof args.ref === "string" && args.ref.startsWith("n:"))
@@ -148,8 +148,9 @@ const invoke = (context: ToolContext, port: Transport, op: string, args: Record<
 }
 
 // window: only an active top-level window (where native key combinations land). focused: only the control with focus.
+// occurrence picks one of several controls sharing the exact name and role, counting from 0 in tree order.
 type NativeQuery = { name?: string; role?: string; capability?: "action" | "observedAction" | "type" | "keyboardType"; maxText?: number;
-  window?: boolean; focused?: boolean }
+  window?: boolean; focused?: boolean; occurrence?: number }
 type NativeItem = Record<string, unknown> & { ref: string; name: string; roleName: string }
 // occurrence counts earlier matches with the same name and roleName on the same page, and index is the item's position
 // on that page, so a rescan can re-identify the control.
@@ -244,7 +245,15 @@ function missed(scan: NativeScan, query: NativeQuery) {
     ...(hints.length ? { hints } : {}), nearMisses: items.slice(0, 10).map(compactItem) })
 }
 
-const only = (scan: NativeScan, query: NativeQuery): NativeScan => ({ ...scan, found: scan.found.filter((match) => fits(match.item, query)) })
+const only = (scan: NativeScan, query: NativeQuery): NativeScan => {
+  if (query.occurrence === undefined) return { ...scan, found: scan.found.filter((match) => fits(match.item, query)) }
+  // Counted before the capability filter, the way the outline numbers its lines, so the ordinal names the same control.
+  const own = scan.found.filter((match) => exact(match.item, query.name) && fits(match.item, { role: query.role }))[query.occurrence]
+  return { ...scan, found: own && fits(own.item, query) ? [own] : [] }
+}
+
+const exact = (item: NativeItem, name?: string) => [item.name, AppDockOutline.keys(item.name).name]
+  .some((spelling) => spelling.trim().toLowerCase() === name?.trim().toLowerCase())
 
 function compactItem(item: NativeItem) {
   const capabilities = object(item.capabilities) ? item.capabilities : {}
@@ -280,11 +289,9 @@ const same = (match: NativeMatch, winner: NativeMatch) => match.page === winner.
 // Names are substring-matched, so "Open" also hits "Open Quick Access": a single match wins, else a unique exact name.
 // ui_look prints names with their shortcut split off ("Explorer" keys=Ctrl+Shift+E), so that spelling is exact too.
 function pick(scan: NativeScan, query: NativeQuery) {
-  const wanted = query.name?.trim().toLowerCase()
-  const exact = scan.found.filter((match) => [match.item.name, AppDockOutline.keys(match.item.name).name]
-    .some((name) => name.trim().toLowerCase() === wanted))
+  const named = scan.found.filter((match) => exact(match.item, query.name))
   if (scan.found.length === 1) return scan.found[0]
-  if (exact.length === 1) return exact[0]
+  if (named.length === 1) return named[0]
   return undefined
 }
 
@@ -308,6 +315,7 @@ export function createAppDockHooks(port: Transport, config: { timeoutMs?: number
   const target = tool.schema.object({
     name: tool.schema.string().min(1).max(256).describe("Case-insensitive substring of the control's accessible name; when several controls contain it, the one whose whole name equals it wins"),
     role: tool.schema.string().min(1).max(64).optional().describe("Role as ui_look or ui_find shows it, e.g. push button, entry, check box; any spelling of the same role matches"),
+    occurrence: tool.schema.number().int().min(0).max(1000).optional().describe("When several controls have exactly this name and role, which one, counting from 0 in tree order"),
   })
   const address = tool.schema.string().describe("https:// URL, bare domain, or search words")
 

@@ -110,6 +110,9 @@ Preserve source-derived macro/sub-state order and regenerate from YAML with the 
 | `spec-decompose` | `python3 bin/relay-profile.py profiles/spec-decompose.yaml --qualify-ids -o profiles/spec-decompose.sprint.json` | `python3 bin/relay-profile.py profiles/spec-decompose.yaml --qualify-ids -o profiles/spec-decompose.sprint.json --check` | `python3 bin/relay-spec.py lint profiles/spec-decompose.sprint.json --json` |
 | `research-v2` | `python3 bin/relay-profile.py profiles/research-v2.yaml --qualify-ids -o profiles/research-v2.sprint.json` | `python3 bin/relay-profile.py profiles/research-v2.yaml --qualify-ids -o profiles/research-v2.sprint.json --check` | `python3 bin/relay-spec.py lint profiles/research-v2.sprint.json --json` |
 | `design` | `python3 bin/relay-profile.py profiles/design.yaml --qualify-ids -o profiles/design.sprint.json` | `python3 bin/relay-profile.py profiles/design.yaml --qualify-ids -o profiles/design.sprint.json --check` | `python3 bin/relay-spec.py lint profiles/design.sprint.json --json` |
+| `bugfix` | `python3 bin/relay-profile.py profiles/bugfix.yaml --qualify-ids -o profiles/bugfix.sprint.json` | `python3 bin/relay-profile.py profiles/bugfix.yaml --qualify-ids -o profiles/bugfix.sprint.json --check` | `python3 bin/relay-spec.py lint profiles/bugfix.sprint.json --json` |
+| `safe-refactor` | `python3 bin/relay-profile.py profiles/safe-refactor.yaml --qualify-ids -o profiles/safe-refactor.sprint.json` | `python3 bin/relay-profile.py profiles/safe-refactor.yaml --qualify-ids -o profiles/safe-refactor.sprint.json --check` | `python3 bin/relay-spec.py lint profiles/safe-refactor.sprint.json --json` |
+| `feature-launch` | `python3 bin/relay-profile.py profiles/feature-launch.yaml --qualify-ids -o profiles/feature-launch.sprint.json` | `python3 bin/relay-profile.py profiles/feature-launch.yaml --qualify-ids -o profiles/feature-launch.sprint.json --check` | `python3 bin/relay-spec.py lint profiles/feature-launch.sprint.json --json` |
 
 Interpret lint exit 1 as an error and exit 0 as no error, not necessarily no warning. Inspect
 `chain-exceeds-default-cap`: lint compares WP count plus one against the documented cap of 8; it
@@ -128,6 +131,9 @@ Read actual commands in the chosen YAML and compiled JSON. Bind these command/pa
 | `spec-decompose` | `spec_tools`, `spec_dir` (`spec_tools` points to `tools/`) |
 | `research-v2` | `research_tools`, `research_dir`, `repo_root` |
 | `design` | `design_tools`, `design_dir` |
+| `bugfix` | `base_ref`, `src_path`, `test_path`, `test_cmd`, `notes_dir` |
+| `safe-refactor` | `base_ref`, `src_path`, `test_path`, `test_cmd`, `lint_cmd`, `notes_dir` |
+| `feature-launch` | `base_ref`, `src_path`, `test_path`, `docs_path`, `test_cmd`, `lint_cmd`, `notes_dir` |
 
 For environment binding, export controlled values into the gate process. For a planning run whose
 artifacts are already in `plan/` and whose subject is the repository root, use:

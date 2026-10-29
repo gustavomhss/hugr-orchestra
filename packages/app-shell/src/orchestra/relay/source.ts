@@ -91,7 +91,7 @@ export function createRelaySource(input: { server: ServerConnection.Any; directo
     return "loading" as const
   }
   const list = createMemo(() =>
-    (documents.data ?? [])
+    (documents.isSuccess ? documents.data : [])
       .filter((document) => documentKind(document) === input.kind && !document.isArchived)
       .toSorted((a, b) => (b.updated ?? 0) - (a.updated ?? 0)),
   )

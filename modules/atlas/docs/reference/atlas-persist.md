@@ -13,7 +13,7 @@ adapter. Nothing is ever deleted — superseded/decayed/closed entries are archi
 ## Data model
 
 ```
-Trailer   = { WP, Model, Gates, Verdict, TranscriptSha }   // RFC-822-ish Key: value block on the commit (CANONICAL — travels in the commit object)
+Trailer   = { WP, Model, Gates, Verdict, TranscriptSha, Attempt? }   // RFC-822-ish Key: value block on the commit (CANONICAL — travels in the commit object); Attempt is `a<n>`, written only when set
 Note      = JSON dossier under refs/notes/orchestra         // MUTABLE OVERLAY — does not fetch/push by default; rebase/squash orphans it (PERSIST-13)
 TranscriptRef = { sha, store:'lfs'|'partial-clone'|'cas' } // POINTER in git; body is a content-addressed large object, full+lossless, fetch-on-demand (PERSIST-10)
 Checkpoint = { seatBrief, llmOutputs[], toolIO[] }          // re-invoke substrate = redispatch + replay; DISTINCT from the raw transcript (PERSIST-10b)

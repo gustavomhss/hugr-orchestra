@@ -32,6 +32,8 @@ export const BoardProjectTable = sqliteTable("board_project", {
   next_epic_number: integer().notNull(),
   // Consecutive forecast evaluations with P50 past target_date; health turns at_risk at 2.
   forecast_late_streak: integer().notNull().default(0),
+  // Where the base branch stood at the last conflict sweep; a move from here is a base advance (section 8.4).
+  base_sha: text(),
   ...Timestamps,
 })
 
@@ -87,6 +89,8 @@ export const BoardIssueTable = sqliteTable(
     guardrail_rule: text(),
     // Mirrored fields changed since the last push to GitHub (slice B2 flushes these).
     github_dirty: integer({ mode: "boolean" }).notNull().default(false),
+    // The PR record's Maestro fields (merge-queue spec section 4.5); the host renders it into the PR body.
+    record: text({ mode: "json" }).$type<Board.PrRecord>(),
     ...Timestamps,
   },
   (table) => [
@@ -213,6 +217,64 @@ export const BoardCiRunTable = sqliteTable(
   (table) => [index("board_ci_run_issue_idx").on(table.issue_id)],
 )
 
+// The pass or fail ledger (merge-queue spec section 5.2): one row per check, keyed by the tree it ran on, so a result
+// stays valid on any commit with the same tree and drops after an edit.
+export const BoardCheckTable = sqliteTable(
+  "board_check",
+  {
+    id: text().$type<Board.CheckID>().primaryKey(),
+    issue_id: text()
+      .$type<Board.IssueID>()
+      .notNull()
+      .references(() => BoardIssueTable.id, { onDelete: "cascade" }),
+    attempt: integer().notNull(),
+    kind: text().$type<Board.CheckKind>().notNull(),
+    // The scoped command after substitution, or the workflow file: same tree and same command is the same check.
+    command: text().notNull(),
+    tree_sha: text().notNull(),
+    commit_sha: text(),
+    outcome: text().$type<Board.CheckOutcome>().notNull(),
+    url: text(),
+    failing: text({ mode: "json" }).$type<string[]>().notNull(),
+    started_at: integer().notNull(),
+    ended_at: integer(),
+    ...Timestamps,
+  },
+  (table) => [index("board_check_issue_tree_idx").on(table.issue_id, table.tree_sha)],
+)
+
+// One row per dispatch of a card (merge-queue spec section 4.2). The host writes it; `board_issue.attempts` is max(n).
+export const BoardAttemptTable = sqliteTable(
+  "board_attempt",
+  {
+    issue_id: text()
+      .$type<Board.IssueID>()
+      .notNull()
+      .references(() => BoardIssueTable.id, { onDelete: "cascade" }),
+    n: integer().notNull(),
+    seat: text(),
+    session_id: text(),
+    worktree: text(),
+    branch: text(),
+    pr_number: integer(),
+    // The Task's declared write set, matched against base advances (section 8.4).
+    write_paths: text({ mode: "json" }).$type<string[]>().notNull(),
+    // The last snapshot commit pushed to refs/orchestra/wip/<KEY>/a<n>, and its tree.
+    snapshot_sha: text(),
+    snapshot_tree: text(),
+    snapshot_at: integer(),
+    // Why the last snapshot was not pushed (a scanner hit, no scanner, a refused push); cleared by the next push.
+    snapshot_blocked: text(),
+    // The base commit the card last failed to merge with, and the conflicting files; cleared when it merges clean.
+    conflict_base: text(),
+    conflict_files: text({ mode: "json" }).$type<string[]>(),
+    cause: text(),
+    outcome: text().$type<Board.AttemptOutcome>(),
+    ...Timestamps,
+  },
+  (table) => [primaryKey({ columns: [table.issue_id, table.n] })],
+)
+
 export const BoardNoteTable = sqliteTable(
   "board_note",
   {
@@ -222,6 +284,7 @@ export const BoardNoteTable = sqliteTable(
       .notNull()
       .references(() => BoardIssueTable.id, { onDelete: "cascade" }),
     author: text().notNull(),
+    kind: text().$type<Board.NoteKind>(),
     body: text().notNull(),
     github_comment_id: integer(),
     ...Timestamps,
@@ -270,4 +333,92 @@ export const BoardActivityTable = sqliteTable(
     ...Timestamps,
   },
   (table) => [index("board_activity_project_idx").on(table.project_id, table.id)],
+)
+
+// One row per card in the queue stage (merge-queue spec section 6). `head_sha` is the PR head the scoped checks passed on.
+export const BoardQueueTable = sqliteTable(
+  "board_queue",
+  {
+    issue_id: text()
+      .$type<Board.IssueID>()
+      .primaryKey()
+      .references(() => BoardIssueTable.id, { onDelete: "cascade" }),
+    project_id: text()
+      .$type<Board.ProjectID>()
+      .notNull()
+      .references(() => BoardProjectTable.id, { onDelete: "cascade" }),
+    head_sha: text().notNull(),
+    urgent: integer({ mode: "boolean" }).notNull().default(false),
+    flush: integer({ mode: "boolean" }).notNull().default(false),
+    hold: text().$type<"held" | "alone">(),
+    queued_at: integer().notNull(),
+    ...Timestamps,
+  },
+  (table) => [index("board_queue_project_idx").on(table.project_id, table.queued_at)],
+)
+
+// A bundle PR: queued cards merged onto one base tip and tested together (section 6.2). `merged_on` is the base tip it
+// merged onto when that differs from `base_sha` (merge-if-disjoint).
+export const BoardBundleTable = sqliteTable(
+  "board_bundle",
+  {
+    id: text().$type<Board.BundleID>().primaryKey(),
+    project_id: text()
+      .$type<Board.ProjectID>()
+      .notNull()
+      .references(() => BoardProjectTable.id, { onDelete: "cascade" }),
+    n: integer().notNull(),
+    branch: text().notNull(),
+    pr_number: integer(),
+    base_sha: text().notNull(),
+    head_sha: text().notNull(),
+    tree_sha: text().notNull(),
+    rebuilds: integer().notNull().default(0),
+    status: text().$type<"open" | "merged" | "dissolved" | "red" | "base-red" | "probing" | "probe-green" | "infra" | "paused" | "flaky" | "accepted" | "isolated">().notNull(),
+    merged_on: text(),
+    culprit: text(),
+    failing: text({ mode: "json" }).$type<ReadonlyArray<{ readonly package: string; readonly files: ReadonlyArray<string> }>>(),
+    fix_issue_id: text().$type<Board.IssueID>(),
+    ...Timestamps,
+  },
+  (table) => [uniqueIndex("board_bundle_number_idx").on(table.project_id, table.n)],
+)
+
+export const BoardBundleMemberTable = sqliteTable(
+  "board_bundle_member",
+  {
+    bundle_id: text()
+      .$type<Board.BundleID>()
+      .notNull()
+      .references(() => BoardBundleTable.id, { onDelete: "cascade" }),
+    issue_id: text()
+      .$type<Board.IssueID>()
+      .notNull()
+      .references(() => BoardIssueTable.id, { onDelete: "cascade" }),
+    head_sha: text().notNull(),
+    position: integer().notNull(),
+    ...Timestamps,
+  },
+  (table) => [primaryKey({ columns: [table.bundle_id, table.issue_id] })],
+)
+
+// Section 6.4: a test that failed in a bundle and then passed three scoped reruns of its head. `count` grows each time
+// another bundle sees the same test go flaky; `bundle_id` is the latest one.
+export const BoardFlakeTable = sqliteTable(
+  "board_flake",
+  {
+    project_id: text()
+      .$type<Board.ProjectID>()
+      .notNull()
+      .references(() => BoardProjectTable.id, { onDelete: "cascade" }),
+    test: text().notNull(),
+    bundle_id: text()
+      .$type<Board.BundleID>()
+      .notNull()
+      .references(() => BoardBundleTable.id, { onDelete: "cascade" }),
+    first_seen: integer().notNull(),
+    count: integer().notNull(),
+    ...Timestamps,
+  },
+  (table) => [primaryKey({ columns: [table.project_id, table.test] })],
 )

@@ -6,7 +6,7 @@
 
 import type { Hash } from "@atlas/contracts"
 import { asHash } from "@atlas/kernel"
-import type { Metering } from "./types.js"
+import type { AttemptMetering, Metering } from "./types.js"
 
 /** The per-agent metering constructor (PERSIST-6): `meter(wp)` populates a full `Metering` record — no
  *  required field left `undefined`. `wp` is a higher-layer work-package, kept `unknown`. (atlas-persist:104) */
@@ -38,6 +38,19 @@ export function meter(wp: unknown): Metering {
     verdict: typeof w.verdict === "string" ? w.verdict : "",
     transcriptSha: typeof w.transcriptSha === "string" ? (w.transcriptSha as Hash) : asHash(""),
   }
+}
+
+/**
+ * The attempt record for one run of a card: `meter(wp)` plus the seat, Session and engine that ran it. `costUsd` is
+ * the engine's float total (`total_cost_usd`), stored as integer micro-USD; omit it to record no spend.
+ */
+export function meterAttempt(
+  wp: unknown,
+  run: { readonly seat: string; readonly session: string; readonly engine: string; readonly costUsd?: number },
+): AttemptMetering {
+  const base = { ...meter(wp), seat: run.seat, session: run.session, engine: run.engine }
+  if (run.costUsd === undefined || !Number.isFinite(run.costUsd)) return base
+  return { ...base, costMicroUsd: Math.round(run.costUsd * 1_000_000) }
 }
 
 // differential-vs-oracle (compile-time): the facet conforms to the co-located frozen MeteringApi.

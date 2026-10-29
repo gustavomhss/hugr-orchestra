@@ -783,7 +783,7 @@ html[data-color-scheme="light"] .wf-editor {
   border-radius: var(--orchestra-radius-sm);
   background: transparent;
   color: var(--mx-bad);
-  font: var(--orchestra-font-size-2xs) var(--mx-mono);
+  font: var(--orchestra-font-size-xs) var(--mx-sans);
   cursor: pointer;
 }
 .wf-issues:hover {
@@ -1599,6 +1599,10 @@ html[data-color-scheme="light"] .wf-editor {
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
+.wf-plan-picker-head .mx-btn:not(:hover, :focus-visible) {
+  border-color: transparent;
+  background: transparent;
+}
 .wf-pick {
   display: flex;
   inline-size: 100%;
@@ -1833,7 +1837,8 @@ html[data-color-scheme="light"] .wf-editor {
   padding: 0 8px;
 }
 .wf-mini-seg button[aria-pressed="true"],
-.wf-seg button[aria-pressed="true"] {
+.wf-seg button[aria-pressed="true"],
+.wf-seg button[aria-selected="true"] {
   background: var(--mx-enabled);
   color: var(--mx-strong);
 }
@@ -1923,7 +1928,7 @@ html[data-color-scheme="light"] .wf-editor {
   margin-block-end: 10px;
 }
 .wf-ctl {
-  padding: 11px 12px;
+  padding: 12px;
   border: 1px solid var(--mx-line);
   border-radius: var(--orchestra-radius-md);
   background: var(--mx-raised);
@@ -1933,7 +1938,7 @@ html[data-color-scheme="light"] .wf-editor {
   grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 10px;
-  margin-block-end: 9px;
+  margin-block-end: 10px;
 }
 .wf-ctl input,
 .wf-ctl textarea {
@@ -1945,6 +1950,10 @@ html[data-color-scheme="light"] .wf-editor {
   font: var(--orchestra-font-size-xs)/1.6 var(--mx-mono);
   outline: 0;
 }
+/* The AI criterion is plain words, not code. */
+.wf-ctl textarea {
+  font-family: var(--mx-sans);
+}
 .wf-ctl-top input {
   block-size: 28px;
   padding: 0 8px;
@@ -1952,10 +1961,10 @@ html[data-color-scheme="light"] .wf-editor {
 }
 .wf-ctl input.cmd {
   block-size: 32px;
-  padding: 0 9px;
+  padding: 0 10px;
 }
 .wf-ctl textarea {
-  padding: 7px 9px;
+  padding: 8px 10px;
   resize: vertical;
 }
 .wf-ctl input:focus,
@@ -1963,28 +1972,35 @@ html[data-color-scheme="light"] .wf-editor {
   border-color: var(--mx-blue);
 }
 .wf-ctl .gap {
-  margin-block-start: 7px;
+  margin-block-start: 8px;
 }
+/* Toggles on one line; the sentence that explains them wraps below instead of squeezing them. */
 .wf-ctl-foot {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 14px;
-  margin-block-start: 9px;
+  gap: 8px 14px;
+  margin-block-start: 10px;
   color: var(--mx-dim);
   font-size: var(--orchestra-font-size-xs);
+  line-height: 1.5;
 }
 .wf-ctl-foot label {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
+  white-space: nowrap;
+}
+.wf-ctl-foot > span {
+  flex-basis: 100%;
 }
 .wf-ctl .mx-error {
-  margin: 7px 0 0;
+  margin: 8px 0 0;
 }
 .wf-ctl input.prose {
   block-size: 28px;
-  margin-block-end: 7px;
-  padding: 0 9px;
+  margin-block-end: 8px;
+  padding: 0 10px;
   font: var(--orchestra-font-size-xs)/1.5 var(--mx-sans);
 }
 .wf-ctl-params {
@@ -2091,6 +2107,19 @@ html[data-color-scheme="light"] .wf-editor {
 }
 .wf-ndv .mx-field textarea.prose {
   font: var(--orchestra-font-size-sm)/1.6 var(--mx-sans);
+}
+/* A step's MCP servers, one switch each. */
+.wf-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.wf-tools label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--orchestra-font-size-sm);
+  color: var(--mx-strong);
 }
 /* Without run data the parameters stand alone, in a dialog sized for one column. */
 .wf-ndv.single {
@@ -2451,4 +2480,932 @@ html[data-color-scheme="light"] .wf-editor {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* ---------- List view: the workflow as an ordered plan, the hook as one rule ---------- */
+.wf-mode {
+  position: relative;
+  display: flex;
+  min-block-size: 0;
+  flex: 1;
+  flex-direction: column;
+}
+.wf-viewbar {
+  position: absolute;
+  z-index: 6;
+  inset-inline-end: 14px;
+  inset-block-start: 12px;
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--mx-line);
+  border-radius: var(--orchestra-radius-md);
+  background: var(--mx-modal);
+  box-shadow: var(--mx-pop-shadow);
+}
+/* In the Studio the switch sits over the inspector column, so it stays flat: a fill step, no lifted shadow. */
+.wf-mode:has(.wf-studio) > .wf-viewbar {
+  padding: 3px;
+  background: var(--mx-soft);
+  box-shadow: none;
+}
+/* The canvas rail shares the top corner with the view toggle, so it starts below it. */
+.wf-mode .wf-rail {
+  inset-block-start: 56px;
+}
+.wf-viewbar button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: var(--orchestra-radius-sm);
+  background: transparent;
+  color: var(--mx-dim);
+  font: 500 var(--orchestra-font-size-xs) var(--mx-sans);
+  cursor: pointer;
+}
+.wf-viewbar button[aria-pressed="true"] {
+  background: var(--mx-soft);
+  color: var(--mx-strong);
+}
+.wf-viewbar button:focus-visible {
+  outline: 2px solid var(--mx-blue);
+  outline-offset: -2px;
+}
+.wf-plan {
+  display: flex;
+  min-block-size: 0;
+  flex: 1;
+  flex-direction: column;
+}
+.wf-plan-banner {
+  padding: 12px 120px 0 14px;
+}
+.wf-plan-banner .wf-banner {
+  position: static;
+  max-inline-size: 100%;
+  box-shadow: none;
+}
+.wf-plan-list {
+  display: flex;
+  min-block-size: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 0;
+  inline-size: 100%;
+  max-inline-size: 760px;
+  margin-inline: auto;
+  padding: 56px 20px 32px;
+  overflow-y: auto;
+}
+.wf-step,
+.wf-rule-box,
+.wf-plan-picker {
+  border: 1px solid var(--mx-line);
+  border-radius: var(--orchestra-radius-md);
+  background: var(--mx-raised);
+}
+.wf-step-main {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.wf-step-text strong {
+  display: block;
+  color: var(--mx-strong);
+  font: 600 var(--orchestra-font-size-sm) var(--mx-emphasis);
+}
+.wf-step-text small {
+  display: block;
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-xs);
+}
+.wf-plan-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 28px 16px 8px;
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-sm);
+  text-align: center;
+}
+.wf-plan-empty strong {
+  color: var(--mx-strong);
+  font: 600 var(--orchestra-font-size-md) var(--mx-emphasis);
+}
+.wf-plan-empty .mx-btn {
+  margin-block-start: 8px;
+}
+/* The thread between cards: a short line with a "+" that inserts a step exactly there. */
+.wf-plan-gap {
+  position: relative;
+  display: flex;
+  block-size: 30px;
+  justify-content: center;
+  align-items: center;
+}
+.wf-plan-gap::before {
+  position: absolute;
+  inset-block: 0;
+  inline-size: 1px;
+  background: var(--cv-wire);
+  content: "";
+}
+.wf-plan-gap.last {
+  block-size: auto;
+  padding-block: 12px 4px;
+}
+.wf-plan-gap.last::before {
+  block-size: 12px;
+  inset-block-end: auto;
+}
+.wf-plan-plus {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px;
+  border: 1px solid var(--mx-line);
+  border-radius: 999px;
+  background: var(--mx-modal);
+  color: var(--mx-dim);
+  font: 500 var(--orchestra-font-size-xs) var(--mx-sans);
+  opacity: 0.55;
+  cursor: pointer;
+  transition: opacity var(--orchestra-duration-fast) var(--orchestra-ease-out);
+}
+.wf-plan-gap.last .wf-plan-plus {
+  padding: 6px 14px 6px 10px;
+  color: var(--mx-strong);
+  opacity: 1;
+}
+.wf-plan-gap:hover .wf-plan-plus,
+.wf-plan-plus:focus-visible {
+  color: var(--mx-strong);
+  opacity: 1;
+}
+.wf-plan-plus:focus-visible {
+  outline: 2px solid var(--mx-blue);
+  outline-offset: 1px;
+}
+.wf-plan-picker {
+  margin-block: 8px;
+  padding: 10px;
+  box-shadow: var(--mx-pop-shadow);
+}
+.wf-plan-picker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 4px 8px;
+  color: var(--mx-strong);
+  font: 600 var(--orchestra-font-size-sm) var(--mx-emphasis);
+}
+.wf-plan-kinds {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 4px;
+}
+/* The goal and settings sit apart from the steps: same card, quieter fill, no number. */
+.wf-step.wf-goal {
+  background: var(--mx-soft);
+}
+.wf-step.issue {
+  border-color: var(--wf-warm-line);
+}
+.wf-step.open {
+  box-shadow: var(--mx-pop-shadow);
+}
+.wf-step-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-inline-end: 8px;
+}
+.wf-step-main {
+  min-inline-size: 0;
+  flex: 1;
+  padding: 10px 8px 10px 14px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.wf-step-main:focus-visible {
+  border-radius: var(--orchestra-radius-md);
+  outline: 2px solid var(--mx-blue);
+  outline-offset: -2px;
+}
+.wf-step-n {
+  min-inline-size: 18px;
+  color: var(--mx-dim);
+  font: 500 var(--orchestra-font-size-xs) var(--mx-mono);
+  text-align: end;
+}
+.wf-step-text {
+  display: flex;
+  min-inline-size: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+.wf-step-text em {
+  overflow: hidden;
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-xs);
+  font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wf-step-text em.empty {
+  font-style: italic;
+}
+.wf-step-warn {
+  color: var(--mx-warm);
+}
+.wf-step-chev {
+  color: var(--mx-dim);
+  transform: rotate(90deg);
+  transition: transform var(--orchestra-duration-fast) var(--orchestra-ease-out);
+}
+.wf-step.open .wf-step-chev {
+  transform: rotate(-90deg);
+}
+.wf-step-tools {
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity var(--orchestra-duration-fast) var(--orchestra-ease-out);
+}
+.wf-step:hover .wf-step-tools,
+.wf-step.open .wf-step-tools,
+.wf-step-tools:focus-within {
+  opacity: 1;
+}
+/* Row tools are quiet icons: no fill or hairline until the pointer is on one. */
+.wf-step-tools .mx-btn:not(.danger, :hover, :focus-visible) {
+  border-color: transparent;
+  background: transparent;
+}
+.wf-step-tools .mx-btn:disabled {
+  opacity: 0.35;
+}
+.wf-step-body {
+  padding: 4px 16px 16px;
+  border-block-start: 1px solid var(--mx-line);
+}
+/* A phase reads as one block: its name, its instructions in a line, then its steps inside. */
+.wf-plan-phase {
+  margin-block: 4px;
+  padding: 0 10px 10px;
+  border: 1px solid var(--mx-line);
+  border-inline-start: 2px solid var(--mx-blue);
+  border-radius: var(--orchestra-radius-md);
+  background: var(--mx-soft);
+}
+.wf-plan-phase-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--mx-blue);
+  font: 600 var(--orchestra-font-size-xs) var(--mx-sans);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.wf-plan-phase-brief {
+  display: block;
+  inline-size: 100%;
+  margin-block-end: 10px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: none;
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-xs);
+  text-align: start;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.wf-plan-phase-brief.empty {
+  font-style: italic;
+}
+.wf-plan-phase-brief:hover {
+  color: var(--mx-strong);
+}
+.wf-plan-phase-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-block: 8px;
+  color: var(--mx-dim);
+}
+.wf-plan-phase-head > :is(.mx-field, b) {
+  flex: 1;
+}
+.wf-plan-phase-head .mx-btn small {
+  margin-inline-start: 4px;
+  color: var(--mx-dim);
+}
+.wf-plan-protocol {
+  margin-block-end: 10px;
+}
+.wf-plan-loose {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-block-start: 24px;
+}
+.wf-plan-loose header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-xs);
+}
+.wf-plan-loose header strong {
+  color: var(--mx-warm);
+  font-size: var(--orchestra-font-size-sm);
+}
+.wf-plan-foot {
+  display: flex;
+  justify-content: center;
+  padding: 8px 16px 12px;
+  border-block-start: 1px solid var(--mx-line);
+}
+/* The hook rule: When / If / Then, read top to bottom. */
+.wf-rule-part {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-block-end: 24px;
+}
+.wf-rule-label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  color: var(--mx-strong);
+  font: 600 var(--orchestra-font-size-md) var(--mx-emphasis);
+}
+.wf-rule-label small {
+  color: var(--mx-dim);
+  font: 400 var(--orchestra-font-size-xs) var(--mx-sans);
+}
+.wf-rule-box {
+  padding: 4px 16px 14px;
+}
+.wf-rule-case {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--mx-line);
+  border-radius: var(--orchestra-radius-md);
+  background: var(--mx-raised);
+}
+.wf-rule-cond {
+  display: grid;
+  grid-template-columns: minmax(110px, auto) auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+.wf-rule-cond :is(select, input) {
+  min-inline-size: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--mx-line);
+  border-radius: var(--orchestra-radius-sm);
+  background: var(--mx-soft);
+  color: var(--mx-strong);
+  font: var(--orchestra-font-size-sm) var(--mx-sans);
+}
+.wf-rule-cond input {
+  font-family: var(--mx-mono);
+}
+.wf-rule-cond :is(select, input):focus-visible {
+  outline: 2px solid var(--mx-blue);
+  outline-offset: -1px;
+}
+.wf-rule-cond.issue input {
+  border-color: var(--wf-warm-line);
+}
+.wf-rule-word,
+.wf-rule-and {
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-xs);
+}
+.wf-rule-and {
+  padding-inline-start: 4px;
+  text-transform: uppercase;
+}
+.wf-rule-issue {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 6px;
+  color: var(--mx-warm);
+  font-size: var(--orchestra-font-size-xs);
+}
+.wf-rule-or {
+  align-self: center;
+  padding: 2px 10px;
+  border: 1px solid var(--mx-line);
+  border-radius: 999px;
+  color: var(--mx-dim);
+  font: 600 var(--orchestra-font-size-2xs) var(--mx-sans);
+  text-transform: uppercase;
+}
+.wf-rule-more {
+  display: flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: var(--orchestra-radius-sm);
+  background: transparent;
+  color: var(--mx-blue);
+  font: 500 var(--orchestra-font-size-xs) var(--mx-sans);
+  cursor: pointer;
+}
+.wf-rule-more:hover,
+.wf-rule-more:focus-visible {
+  background: var(--mx-soft);
+  outline: 0;
+}
+.wf-rule-hint {
+  margin: 0;
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-sm);
+}
+.wf-rule .wf-step + .wf-step {
+  margin-block-start: 8px;
+}
+
+/* Less common check fields, folded under the check. */
+.wf-ctl-more summary {
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-xs);
+  cursor: pointer;
+}
+.wf-ctl-more[open] summary {
+  margin-block-end: 6px;
+}
+/* A context file: its path, and the native picker beside it. */
+.wf-file-row {
+  display: flex;
+  gap: 6px;
+}
+.wf-file-row input {
+  flex: 1;
+  min-inline-size: 0;
+}
+/* The context a step receives, edited in place: each piece is a note or a project file. */
+.wf-attach {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.wf-context {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--mx-line);
+  border-radius: var(--orchestra-radius-md);
+  background: var(--mx-soft);
+}
+.wf-context-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.wf-context .mx-field {
+  margin: 0;
+}
+/* Workflow Studio: outline, editor and inspector side by side. The editor column keeps its own scroll. */
+/* Columns follow the editor's own width, not the window's: the sidebar and a split view take from it. */
+.wf-studio {
+  container: wf-studio / inline-size;
+}
+.wf-studio-grid {
+  display: grid;
+  min-block-size: 0;
+  flex: 1;
+  grid-template-columns: clamp(184px, 20%, 232px) minmax(0, 1fr) clamp(272px, 28%, 320px);
+}
+/* The scrolling columns fade at both edges instead of cutting content flat. */
+.wf-studio-grid > .wf-plan-list,
+.wf-outline,
+.wf-inspector-body {
+  mask-image: linear-gradient(to bottom, transparent, #000 16px, #000 calc(100% - 24px), transparent);
+}
+.wf-studio-grid > .wf-plan-list {
+  padding-block-start: 32px;
+}
+@container wf-studio (max-width: 900px) {
+  .wf-studio-grid {
+    grid-template-columns: clamp(176px, 24%, 220px) minmax(0, 1fr);
+  }
+  .wf-studio-grid > .wf-plan-list {
+    padding-block-start: 56px;
+  }
+  .wf-inspector {
+    display: none;
+  }
+}
+@container wf-studio (max-width: 680px) {
+  .wf-studio-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .wf-outline {
+    display: none;
+  }
+}
+.wf-col-kicker {
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.wf-outline {
+  display: flex;
+  min-block-size: 0;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 10px;
+  border-inline-end: 1px solid var(--mx-line);
+  overflow-y: auto;
+}
+.wf-outline > .wf-col-kicker {
+  padding-inline: 8px;
+}
+.wf-outline ol {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wf-outline-phase {
+  margin-block-start: 8px;
+  padding: 2px 8px 2px 14px;
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wf-outline-row {
+  position: relative;
+  border-radius: var(--orchestra-radius-sm);
+}
+.wf-outline-row.rail {
+  margin-inline-start: 8px;
+  padding-inline-start: 6px;
+  border-inline-start: 2px solid var(--kind-warm);
+}
+.wf-outline-row.over::before {
+  position: absolute;
+  inset-inline: 4px;
+  inset-block-start: -1px;
+  block-size: 2px;
+  border-radius: 1px;
+  background: var(--mx-blue);
+  content: "";
+}
+.wf-outline-row.dragging {
+  opacity: 0.4;
+}
+.wf-outline-row > button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  inline-size: 100%;
+  min-block-size: 30px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: var(--orchestra-radius-sm);
+  background: transparent;
+  color: var(--mx-strong);
+  font: inherit;
+  font-size: var(--orchestra-font-size-sm);
+  text-align: start;
+  cursor: pointer;
+}
+.wf-outline-row > button:hover {
+  background: var(--mx-soft);
+}
+.wf-outline-row.open > button {
+  background: var(--mx-soft);
+  box-shadow: inset 2px 0 0 var(--mx-blue);
+}
+.wf-outline-row > button:focus-visible {
+  outline: 2px solid var(--mx-blue);
+  outline-offset: -2px;
+}
+.wf-outline-tile {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 20px;
+  block-size: 20px;
+}
+.wf-outline-tile svg {
+  inline-size: 16px;
+  block-size: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+.wf-outline-name {
+  flex: 1;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wf-outline-count {
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+.wf-outline-warn {
+  display: inline-flex;
+  color: var(--mx-warm);
+}
+.wf-outline-warn .wf-ic {
+  inline-size: 13px;
+  block-size: 13px;
+}
+.wf-outline-warn.error {
+  color: var(--mx-bad);
+}
+.wf-outline-hint {
+  margin: auto 0 0;
+  padding: 8px;
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-xs);
+  line-height: 1.5;
+}
+.wf-inspector {
+  display: flex;
+  min-block-size: 0;
+  flex-direction: column;
+  gap: 12px;
+  /* Clears the List/Canvas switch pinned to the editor's top right corner. */
+  padding: 56px 14px 0;
+  border-inline-start: 1px solid var(--mx-line);
+  overflow: hidden;
+}
+/* Segmented control, full width: group padding 3px, segments 26px tall. */
+.wf-inspector-tabs {
+  display: flex;
+  padding: 3px;
+}
+.wf-inspector-tabs button {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  block-size: 26px;
+  padding: 0 10px;
+  border-radius: var(--orchestra-radius-xs);
+  white-space: nowrap;
+}
+.wf-inspector-tabs .wf-outline-count {
+  margin-inline-start: 6px;
+}
+.wf-inspector-body .mx-hint {
+  margin: 0;
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-xs);
+  line-height: 1.5;
+}
+.wf-inspector > p {
+  margin: 0;
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-xs);
+  line-height: 1.5;
+}
+.wf-recv {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--mx-line);
+  border-radius: var(--orchestra-radius-md);
+  background: var(--mx-raised);
+}
+.wf-recv h4 {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  color: var(--mx-strong);
+  font-size: var(--orchestra-font-size-xs);
+  font-weight: 600;
+}
+.wf-recv h4 small {
+  font-weight: 400;
+}
+.wf-recv pre,
+.wf-recv code {
+  font-family: var(--mx-mono);
+  font-size: var(--orchestra-font-size-xs);
+}
+.wf-recv pre {
+  max-block-size: 220px;
+  margin: 0;
+  overflow: auto;
+  color: var(--mx-strong);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.wf-recv ul {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--orchestra-font-size-xs);
+}
+.wf-recv small {
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-xs);
+}
+.wf-ready,
+.wf-findings {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--orchestra-font-size-sm);
+}
+.wf-ready li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--mx-dim);
+}
+.wf-ready li.done {
+  color: var(--mx-strong);
+}
+.wf-ready li.done .wf-ic {
+  color: var(--mx-good);
+}
+.wf-ready li:not(.done) .wf-ic {
+  color: var(--mx-warm);
+}
+/* A finding is a status wash of its own color, like a status chip: no border, no accent stripe. */
+.wf-findings li {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: var(--orchestra-radius-md);
+  background: color-mix(in srgb, var(--mx-warm) 9%, transparent);
+  color: var(--mx-strong);
+}
+.wf-findings li.error {
+  background: color-mix(in srgb, var(--mx-bad) 9%, transparent);
+}
+.wf-findings li strong {
+  font-weight: 500;
+  line-height: 1.5;
+}
+.wf-findings li small {
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-xs);
+  line-height: 1.5;
+}
+.wf-findings li .mx-btn {
+  align-self: flex-start;
+  min-block-size: 26px;
+}
+.wf-findings li .mx-btn:not(:hover) {
+  background: transparent;
+}
+.wf-ctl-warn {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border-radius: var(--orchestra-radius-sm);
+  background: color-mix(in srgb, var(--mx-warm) 12%, transparent);
+  color: var(--mx-strong);
+  font-size: var(--orchestra-font-size-xs);
+  line-height: 1.5;
+}
+.wf-ctl-warn .wf-ic {
+  flex: none;
+  margin-block-start: 2px;
+  color: var(--mx-warm);
+}
+.wf-trial {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-block-start: 8px;
+}
+.wf-trial-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--orchestra-font-size-xs);
+}
+.wf-trial-note {
+  color: var(--mx-dim);
+}
+.wf-trial-verdict {
+  color: var(--mx-bad);
+  font-weight: 600;
+}
+.wf-trial-verdict.pass {
+  color: var(--mx-good);
+}
+.wf-trial-output summary {
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-xs);
+  cursor: pointer;
+}
+.wf-trial-output pre {
+  max-block-size: 200px;
+  margin: 6px 0 0;
+  padding: 8px 10px;
+  border-radius: var(--orchestra-radius-sm);
+  background: var(--mx-soft);
+  overflow: auto;
+  font: var(--orchestra-font-size-xs)/1.5 var(--mx-mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.wf-ctl-detected {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-block: 4px 10px;
+}
+.wf-ctl-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.wf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-block-size: 26px;
+  padding: 2px 10px 2px 8px;
+  border: 1px solid var(--mx-line);
+  border-radius: var(--orchestra-radius-full);
+  background: var(--mx-raised);
+  color: var(--mx-strong);
+  font: inherit;
+  font-size: var(--orchestra-font-size-xs);
+  cursor: pointer;
+}
+.wf-chip:hover {
+  border-color: var(--mx-blue);
+}
+.wf-chip:focus-visible {
+  outline: 2px solid var(--mx-blue);
+  outline-offset: 1px;
+}
+.wf-chip code {
+  font-family: var(--mx-mono);
+}
+.wf-chip small {
+  color: var(--mx-dim);
+}
+.wf-recv pre.empty {
+  color: var(--mx-dim);
+  font-style: italic;
+}
+.wf-inspector-body {
+  display: flex;
+  min-block-size: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  padding-block: 2px 24px;
+  overflow-y: auto;
+}
+.wf-findings li > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }

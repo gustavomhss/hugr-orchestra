@@ -16,6 +16,7 @@ describe("ConfigAgentFile", () => {
       description: 'Reviews: the "diff"',
       mode: "subagent" as const,
       model: "example/reasoner",
+      avatar: "lib:set1-04",
       steps: 7,
       system: "Read the diff.\nThen answer.",
       permission: { bash: { "git *": "allow" as const, "*": "ask" as const }, edit: "deny" as const },
@@ -27,10 +28,19 @@ describe("ConfigAgentFile", () => {
     expect(Option.getOrThrow(decoded)).toMatchObject({
       description: input.description,
       mode: "subagent",
+      avatar: "lib:set1-04",
       steps: 7,
       prompt: input.system,
       permission: input.permission,
     })
+  })
+
+  test("avatars accept a bundled picture or a raster data URL and refuse anything that can carry script", () => {
+    const decode = Schema.decodeUnknownOption(ConfigUpgradeAgent.Info)
+    expect(Option.isSome(decode({ avatar: "lib:maestro" }))).toBe(true)
+    expect(Option.isSome(decode({ avatar: "data:image/webp;base64,UklGRg==" }))).toBe(true)
+    for (const avatar of ["data:image/svg+xml;base64,PHN2Zz4=", "javascript:alert(1)", "https://example.com/a.png", "lib:../x"])
+      expect(Option.isNone(decode({ avatar }))).toBe(true)
   })
 
   test("instructions that start with front matter stay instructions", () => {

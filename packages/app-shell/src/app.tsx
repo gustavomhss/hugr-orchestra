@@ -5,7 +5,6 @@ import { DialogProvider } from "@orchestra/ui/context/dialog"
 import { FileComponentProvider } from "@orchestra/ui/context/file"
 import { File } from "@orchestra/session-ui/file"
 import { Font } from "@orchestra/ui/font"
-import { HugrSplash } from "@/orchestra/brand"
 import { ThemeProvider, syncThemeBackground } from "@orchestra/ui/theme/context"
 import { OrchestraPaletteProvider } from "@/orchestra/palette/context"
 import { MetaProvider } from "@solidjs/meta"
@@ -507,12 +506,7 @@ function ConnectionGate(props: ParentProps<{ disableHealthCheck?: boolean; start
         </Show>
       </Show>
       <Show when={loading()}>
-        <div
-          class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background-base"
-          data-tauri-drag-region
-        >
-          <HugrSplash />
-        </div>
+        <div class="fixed inset-0 z-[9999] bg-background-base" data-tauri-drag-region data-app-loading />
       </Show>
     </>
   )

@@ -1,21 +1,23 @@
 import { createEffect, createMemo, createSignal, on, onCleanup, onMount, Show } from "solid-js"
+import { createStore } from "solid-js/store"
 import { modalActive } from "@/utils/modal-active"
+import { Persist, persisted } from "@/utils/persist"
 import { showToast } from "@/utils/toast"
 import { type PanelEntry, AddPanel } from "./add-panel"
+import { canvasBanner } from "./canvas-banner"
 import { Canvas, type CanvasApi, sameEdge } from "./canvas"
 import type { NodeMenuItem } from "./canvas-menu"
 import type { NodeOverlay } from "./canvas-node"
 import { copySteps, duplicateSteps, pasteSteps, watchClipboard } from "./clipboard"
 import { RemoveNodesDialog } from "./dialogs"
 import { hookEntries, WORKFLOW_ENTRIES } from "./catalog"
-import { decisionTime, type RelayDecision, type RelayDocument, type RelayInstall, type RelayKind } from "./client"
+import { type RelayDecision, type RelayDocument, type RelayInstall, type RelayKind } from "./client"
 import type { RelayRun } from "./runs"
 import { HookDetails, hookOperations, triggerName } from "./details-hook"
 import type { HookQueryState } from "./hook-status"
 import { type Skills, WorkflowDetails } from "./details-workflow"
 import { SaveStatus, type SaveState } from "./editor-head"
 import type { EditorProps } from "./editor"
-import { runHandle, RUN_TONE } from "./format"
 import { type Direction, neighbour } from "./geometry"
 import {
   CONDITION,
@@ -37,8 +39,10 @@ import {
   updatePhase,
 } from "./graph"
 import { addAlternative, addNode, defaultAnchor, freePhaseName, groupBlock, groupSelection, ungroup } from "./insert"
-import { issueText, stateLabel } from "./parts"
+import { issueText } from "./parts"
+import { PlanView } from "./plan"
 import { layerBase, relayPath } from "./route"
+import { RuleView } from "./rule-view"
 import { Ic, useRelayCopy } from "./ui"
 
 const ARROWS = new Map<string, Direction>([
@@ -61,6 +65,8 @@ type Props = EditorProps & {
   run: RelayRun | undefined
   runs: RelayRun[]
   skills: Skills
+  // The MCP servers the project configures, for a step to choose from; undefined until loaded.
+  servers: string[] | undefined
   decision: RelayDecision | undefined
   decisionKnown?: boolean
   decisionStatus?: HookQueryState
@@ -87,9 +93,12 @@ export function CanvasTab(props: Props) {
   const [anchor, setAnchor] = createSignal<{ id: string; port: number }>()
   const [focusPhase, setFocusPhase] = createSignal<string>()
   const [confirming, setConfirming] = createSignal<{ ids: string[]; count: number }>()
+  // The list is where a document is written; the canvas shows the same graph drawn, for wiring a hook by hand. The
+  // editor reopens in the view last chosen.
+  const [view, setView] = persisted(Persist.global("relay.view"), createStore({ mode: "list" as "list" | "canvas" }))
   let api: CanvasApi | undefined
   const workflow = () => props.kind === "workflow"
-  const types = () => props.source.nodeTypes.data?.[props.kind]
+  const types = () => (props.source.nodeTypes.isSuccess ? props.source.nodeTypes.data[props.kind] : undefined)
   const issueNodes = createMemo(() => new Set(props.issues.flatMap((issue) => issueNode(issue) ?? [])))
   const base = () => layerBase(props.route)
   const step = (id: string) => props.run?.steps.find((item) => item.wp === id)
@@ -350,6 +359,7 @@ export function CanvasTab(props: Props) {
     })
   }
   props.keys((event) => {
+    if (view.mode === "list") return
     const target = event.target instanceof HTMLElement ? event.target : undefined
     if (target && target !== document.body && !target.closest(".wf-canvas")) return
     // A focused button (a node's tools, a "+" stub) keeps Enter and the arrows for itself.
@@ -376,7 +386,7 @@ export function CanvasTab(props: Props) {
   // Copy and paste act on steps only while focus is on the canvas itself, never in a field or behind a dialog.
   const canvasFocus = (event: Event) => {
     const target = event.target instanceof HTMLElement ? event.target : undefined
-    if (!workflow() || props.readOnly || props.route.node || modalActive()) return false
+    if (view.mode === "list" || !workflow() || props.readOnly || props.route.node || modalActive()) return false
     if (target?.closest("input,textarea,select,[contenteditable],.wf-drawer")) return false
     return target === document.body || !!target?.closest(".wf-canvas")
   }
@@ -405,112 +415,22 @@ export function CanvasTab(props: Props) {
   )
 
   const detail = () => nodeOf(props.flow, props.route.node)
-  const banner = () => {
-    if (props.test)
-      return (
-        <div class="wf-banner">
-          <Ic name="test" />
-          <span>{copy.t("orchestra.hooks.canvas.test", { label: props.test.label, result: props.test.result })}</span>
-          <small>{copy.t("orchestra.hooks.canvas.graphOnly")}</small>
-          <button type="button" class="mx-btn" onClick={props.onClearTest}>
-            {copy.t("orchestra.hooks.canvas.clear")}
-          </button>
-        </div>
-      )
-    if (workflow() && props.run) {
-      const run = props.run
-      const at = nodeOf(props.flow, run.position)?.name ?? run.position ?? ""
-      const viewing = !!props.route.view
-      const id = runHandle(run.runID)
-      const text = viewing
-        ? copy.t(
-            run.position && run.status !== "completed"
-              ? "orchestra.workflows.banner.viewingAt"
-              : "orchestra.workflows.banner.viewing",
-            { id, state: stateLabel(copy, run), step: at },
-          )
-        : run.status === "parked"
-          ? copy.t("orchestra.workflows.banner.waiting", { id, step: at })
-          : run.status === "running"
-            ? copy.t("orchestra.workflows.banner.running", { id, step: at })
-            : copy.t("orchestra.workflows.banner.last", {
-                id,
-                state: stateLabel(copy, run),
-                when: copy.when(run.startedAt),
-              })
-      return (
-        <div class="wf-banner" classList={{ warm: run.status === "parked" }}>
-          <span class={`wf-dot ${RUN_TONE[run.status]}`} />
-          <span>{text}</span>
-          <Show when={!viewing && run.version !== undefined && run.version !== props.document.versionCounter}>
-            <small>v{run.version}</small>
-          </Show>
-          <button
-            type="button"
-            class={run.status === "parked" && !viewing ? "mx-btn primary" : "mx-btn"}
-            onClick={() =>
-              viewing
-                ? props.close(relayPath.history("workflow", props.document.id, run.runID))
-                : props.go(relayPath.history("workflow", props.document.id, run.runID))
-            }
-          >
-            {copy.t(
-              viewing
-                ? "orchestra.workflows.banner.back"
-                : run.status === "parked"
-                  ? "orchestra.workflows.live.review"
-                  : "orchestra.workflows.banner.view",
-            )}
-          </button>
-        </div>
-      )
-    }
-    if (!workflow() && props.installed) {
-      const installed = props.installed
-      // The install pins a versionId; a later publish leaves it on the earlier one until it is updated.
-      const current = installed.version === props.document.activeVersionId
-      return (
-        <div class="wf-banner" classList={{ warm: !current }}>
-          <span class={`wf-dot ${current ? "good" : "warm"}`} />
-          <span>
-            {[
-              installed.unpublished
-                ? copy.t("orchestra.hooks.canvas.installedUnpublished", { profile: props.profile })
-                : current
-                  ? copy.t("orchestra.hooks.canvas.installed", {
-                      profile: props.profile,
-                      version: props.document.publishedCounter ?? "",
-                    })
-                  : copy.t("orchestra.hooks.canvas.installedEarlier", { profile: props.profile }),
-              props.decision
-                ? `${copy.t(`orchestra.hooks.outcome.${props.decision.outcome}`)} ${copy.when(decisionTime(props.decision))}`
-                : props.decisionKnown !== false ? copy.t("orchestra.hooks.canvas.notFired") : undefined,
-            ].filter(Boolean).join(" · ")}
-          </span>
-          <Show when={!current && props.document.activeVersionId}>
-            <button type="button" class="mx-btn primary" onClick={() => props.onUpdateInstall(installed.installID)}>
-              {copy.t("orchestra.hooks.canvas.update")}
-            </button>
-          </Show>
-          <button type="button" class="mx-btn" onClick={() => props.go(relayPath.history("hook", props.document.id))}>
-            {copy.t("orchestra.hooks.tab.activity")}
-          </button>
-        </div>
-      )
-    }
-  }
+  const banner = () => canvasBanner(props, copy)
   const save = () => (
-    <Show when={!props.route.view} fallback={<span class="wf-save">{copy.t("orchestra.workflows.history.readOnly")}</span>}>
-    <SaveStatus
-      save={props.save}
-      saved={copy.t("orchestra.workflows.details.autosave", { version: props.document.versionCounter })}
-      onRetry={props.onRetry}
-      onReload={props.onReload}
-    />
+    <Show
+      when={!props.route.view}
+      fallback={<span class="wf-save">{copy.t("orchestra.workflows.history.readOnly")}</span>}
+    >
+      <SaveStatus
+        save={props.save}
+        saved={copy.t("orchestra.workflows.details.autosave", { version: props.document.versionCounter })}
+        onRetry={props.onRetry}
+        onReload={props.onReload}
+      />
     </Show>
   )
 
-  return (
+  const canvas = () => (
     <Canvas
       readOnly={props.readOnly}
       flow={props.flow}
@@ -646,7 +566,11 @@ export function CanvasTab(props: Props) {
                 decision={props.decision}
                 decisionStatus={props.decisionStatus}
                 installed={props.installExists}
-                testResult={props.test ? copy.t("orchestra.hooks.canvas.test", { label: props.test.label, result: props.test.result }) : undefined}
+                testResult={
+                  props.test
+                    ? copy.t("orchestra.hooks.canvas.test", { label: props.test.label, result: props.test.result })
+                    : undefined
+                }
                 issues={props.issues
                   .filter((issue) => issueNode(issue) === node().id)
                   .map((issue) => issueText(copy, props.flow, issue))}
@@ -675,6 +599,8 @@ export function CanvasTab(props: Props) {
               readOnly={props.readOnly}
               issues={props.issues.map((issue) => issueText(copy, props.flow, issue))}
               skills={props.skills}
+              servers={props.servers}
+              directory={props.directory}
               focusPhase={focusPhase()}
               description={props.description}
               save={save()}
@@ -691,5 +617,73 @@ export function CanvasTab(props: Props) {
         )}
       </Show>
     </Canvas>
+  )
+
+  const editing = () => props.readOnly || props.save.state === "conflict"
+  const toggle = (
+    <div class="wf-viewbar" role="group" aria-label={copy.t("orchestra.workflows.view.label")}>
+      <button type="button" aria-pressed={view.mode === "list"} onClick={() => setView("mode", "list")}>
+        <Ic name="list" />
+        {copy.t("orchestra.workflows.view.list")}
+      </button>
+      <button type="button" aria-pressed={view.mode === "canvas"} onClick={() => setView("mode", "canvas")}>
+        <Ic name="workflows" />
+        {copy.t("orchestra.workflows.view.canvas")}
+      </button>
+    </div>
+  )
+
+  return (
+    <div class="wf-mode">
+      {toggle}
+      <Show when={view.mode === "list"} fallback={canvas()}>
+        <Show
+          when={workflow()}
+          fallback={
+            <RuleView
+              flow={props.flow}
+              outputs={props.outputs}
+              types={types()}
+              issues={props.issues}
+              readOnly={editing()}
+              open={props.route.node}
+              adding={!!props.route.add}
+              banner={banner()}
+              save={save()}
+              edit={props.edit}
+              onAdded={() => props.close(base())}
+              onCanvas={() => setView("mode", "canvas")}
+              onTest={props.onTest}
+            />
+          }
+        >
+          <PlanView
+            flow={props.flow}
+            frozen={props.frozen}
+            run={props.run}
+            readOnly={editing()}
+            issues={props.issues}
+            skills={props.skills}
+            servers={props.servers}
+            directory={props.directory}
+            types={types()}
+            description={props.description}
+            open={props.route.node}
+            adding={!!props.route.add}
+            banner={banner()}
+            save={save()}
+            edit={props.edit}
+            describe={props.describe}
+            onOpen={(id) =>
+              id
+                ? props.go(relayPath.node("workflow", props.document.id, id, props.route.view), true)
+                : props.close(base())
+            }
+            onAdded={() => props.close(base())}
+            onReview={(run) => props.go(relayPath.history("workflow", props.document.id, run.runID))}
+          />
+        </Show>
+      </Show>
+    </div>
   )
 }

@@ -8,12 +8,15 @@ import type { Database } from "../../database/database"
 import { makeLocationNode } from "../../effect/app-node"
 import type { ModelV2 } from "../../model"
 import type { PermissionV2 } from "../../permission"
+import { ProviderV2 } from "../../provider"
 import type { QuestionV2 } from "../../question"
 import type { ToolSafety } from "../../tool-safety"
 import type { ToolRegistry } from "../../tool/registry"
 import type { SessionMessage } from "../message"
 import type { SessionSchema } from "../schema"
+import type { SessionTodo } from "../todo"
 import { SessionTable } from "../sql"
+import type { SessionStore } from "../store"
 
 /**
  * What the runner hands an execution host for one provider turn. An agent whose `engine` names a registered host runs
@@ -26,6 +29,8 @@ export interface Turn {
   readonly model: ModelV2.Ref | undefined
   /** Agent system text, the Context Epoch baseline and workflow instructions, in that order. */
   readonly system: ReadonlyArray<string>
+  /** The Context Epoch baseline and workflow instructions alone: `system` without the agent's own text. */
+  readonly context: ReadonlyArray<string>
   /** Projected history the runner reloaded for this turn. */
   readonly history: ReadonlyArray<SessionMessage.Message>
   /** The agent's permission-filtered Orchestra tools, for the host to offer its engine. */
@@ -84,6 +89,11 @@ export interface Turn {
    * Unlike everything else on a Turn it outlives the turn: the host may call it after its stream has ended.
    */
   readonly notify: (input: { readonly id: string; readonly text: string }) => Effect.Effect<void>
+  /**
+   * Replaces the Session's todo list, as Orchestra's todowrite tool would: the todo panel shows it. For an engine that
+   * keeps its own checklist, called when the engine's own todo call succeeds.
+   */
+  readonly todos: (list: ReadonlyArray<SessionTodo.Info>) => Effect.Effect<void>
   /** The host's durable state, `session.metadata[host.stateKey]`. */
   readonly state: {
     readonly get: Effect.Effect<unknown>
@@ -133,6 +143,24 @@ export const of = (hosts: ReadonlyArray<Interface>) =>
   Service.of({ get: (engine) => hosts.find((host) => host.id === engine) })
 
 export const node = makeLocationNode({ service: Service, layer, deps: [] })
+
+/**
+ * A Session's engine: its agent's own, else the engine its parent Session ran on, so a seat a Claude-mode lead
+ * dispatches on a Claude model runs on Claude Code too. A child on another provider's model runs on Orchestra's
+ * own loop, as in normal mode. `orchestra` names no host.
+ */
+export function engineOf(agents: AgentV2.Interface, store: SessionStore.Interface) {
+  const of: (session: SessionSchema.Info) => Effect.Effect<string | undefined> = Effect.fn("ExecutionHost.engineOf")(
+    function* (session: SessionSchema.Info) {
+      const own = (yield* agents.select(session.agent)).info?.engine
+      if (own) return own === "orchestra" ? undefined : own
+      if (session.model && session.model.providerID !== ProviderV2.ID.anthropic) return undefined
+      const parent = session.parentID ? yield* store.get(session.parentID) : undefined
+      return parent ? yield* of(parent) : undefined
+    },
+  )
+  return of
+}
 
 /** Read-modify-write of one `session.metadata` key; other keys are kept. The Session's drain serializes writers. */
 export function state(db: Database.Interface["db"], sessionID: SessionSchema.ID, key: string): Turn["state"] {

@@ -52,13 +52,53 @@ export type AgentsListOutput = {
     readonly mode: "subagent" | "primary" | "all"
     readonly hidden: boolean
     readonly color?: string | "primary" | "secondary" | "accent" | "success" | "warning" | "error" | "info"
+    readonly avatar?: string
     readonly steps?: number
+    readonly skills?: ReadonlyArray<{
+      readonly name: string
+      readonly description?: string
+      readonly when?: string
+      readonly parent?: string
+    }>
+    readonly toolkit?: "backend" | "research"
     readonly permissions: ReadonlyArray<{
       readonly action: string
       readonly resource: string
       readonly effect: "allow" | "deny" | "ask"
     }>
   }>
+}
+
+export type AgentsDetailInput = {
+  readonly agentID: { readonly agentID: string }["agentID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type AgentsDetailOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly tools: ReadonlyArray<{ readonly name: string; readonly description: string }>
+    readonly skills: ReadonlyArray<{
+      readonly name: string
+      readonly description?: string | null
+      readonly location: string
+    }>
+    readonly engines: ReadonlyArray<{
+      readonly id: string
+      readonly version: string
+      readonly license: string
+      readonly upstream: string
+      readonly role: "generator" | "check" | "indexer" | "oracle"
+      readonly input: string
+      readonly status: "absent" | "fetching" | "ready" | "failed" | "unsupported"
+    }>
+  }
 }
 
 export type AgentsGetFileInput = {
@@ -82,6 +122,7 @@ export type AgentsGetFileOutput = {
     readonly description?: string
     readonly mode?: "subagent" | "primary" | "all"
     readonly model?: string
+    readonly avatar?: string
     readonly steps?: number
     readonly system?: string
     readonly permission?: {
@@ -100,6 +141,7 @@ export type AgentsUpdateFileInput = {
     readonly description?: string
     readonly mode?: "subagent" | "primary" | "all"
     readonly model?: string
+    readonly avatar?: string
     readonly steps?: number
     readonly system?: string
     readonly permission?: {
@@ -112,6 +154,7 @@ export type AgentsUpdateFileInput = {
     readonly description?: string
     readonly mode?: "subagent" | "primary" | "all"
     readonly model?: string
+    readonly avatar?: string
     readonly steps?: number
     readonly system?: string
     readonly permission?: {
@@ -124,6 +167,7 @@ export type AgentsUpdateFileInput = {
     readonly description?: string
     readonly mode?: "subagent" | "primary" | "all"
     readonly model?: string
+    readonly avatar?: string
     readonly steps?: number
     readonly system?: string
     readonly permission?: {
@@ -132,10 +176,24 @@ export type AgentsUpdateFileInput = {
     readonly disable?: boolean
     readonly revision?: string
   }["model"]
+  readonly avatar?: {
+    readonly description?: string
+    readonly mode?: "subagent" | "primary" | "all"
+    readonly model?: string
+    readonly avatar?: string
+    readonly steps?: number
+    readonly system?: string
+    readonly permission?: {
+      readonly [x: string]: ("allow" | "ask" | "deny") | { readonly [x: string]: "allow" | "ask" | "deny" }
+    }
+    readonly disable?: boolean
+    readonly revision?: string
+  }["avatar"]
   readonly steps?: {
     readonly description?: string
     readonly mode?: "subagent" | "primary" | "all"
     readonly model?: string
+    readonly avatar?: string
     readonly steps?: number
     readonly system?: string
     readonly permission?: {
@@ -148,6 +206,7 @@ export type AgentsUpdateFileInput = {
     readonly description?: string
     readonly mode?: "subagent" | "primary" | "all"
     readonly model?: string
+    readonly avatar?: string
     readonly steps?: number
     readonly system?: string
     readonly permission?: {
@@ -160,6 +219,7 @@ export type AgentsUpdateFileInput = {
     readonly description?: string
     readonly mode?: "subagent" | "primary" | "all"
     readonly model?: string
+    readonly avatar?: string
     readonly steps?: number
     readonly system?: string
     readonly permission?: {
@@ -172,6 +232,7 @@ export type AgentsUpdateFileInput = {
     readonly description?: string
     readonly mode?: "subagent" | "primary" | "all"
     readonly model?: string
+    readonly avatar?: string
     readonly steps?: number
     readonly system?: string
     readonly permission?: {
@@ -184,6 +245,7 @@ export type AgentsUpdateFileInput = {
     readonly description?: string
     readonly mode?: "subagent" | "primary" | "all"
     readonly model?: string
+    readonly avatar?: string
     readonly steps?: number
     readonly system?: string
     readonly permission?: {
@@ -208,6 +270,7 @@ export type AgentsUpdateFileOutput = {
     readonly description?: string
     readonly mode?: "subagent" | "primary" | "all"
     readonly model?: string
+    readonly avatar?: string
     readonly steps?: number
     readonly system?: string
     readonly permission?: {
@@ -3392,6 +3455,7 @@ export type SkillsListOutput = {
     readonly name: string
     readonly description?: string
     readonly slash?: boolean
+    readonly internal?: boolean
     readonly location: string
     readonly content: string
     readonly mtime?: number
@@ -3449,6 +3513,7 @@ export type SkillsSaveOutput = {
     readonly name: string
     readonly description?: string
     readonly slash?: boolean
+    readonly internal?: boolean
     readonly location: string
     readonly content: string
     readonly mtime?: number
@@ -5489,7 +5554,7 @@ export type ServerBoardGetOutput = {
     readonly title: string
     readonly body: string
     readonly type: "feature" | "bug" | "chore"
-    readonly stage: "intake" | "backlog" | "ready" | "building" | "review" | "shipped" | "cut"
+    readonly stage: "intake" | "backlog" | "ready" | "building" | "review" | "queue" | "shipped" | "cut"
     readonly position: number
     readonly estimate: ("s" | "m" | "l") | null
     readonly seat: string | null
@@ -5506,6 +5571,12 @@ export type ServerBoardGetOutput = {
       readonly now: string | null
     }>
     readonly dependsOn: ReadonlyArray<string>
+    readonly queue?: {
+      readonly status: "waiting" | "running" | "green" | "conflict" | "held"
+      readonly bundle: number | null
+      readonly urgent: boolean
+      readonly queuedAt: number
+    } | null
   }>
   readonly questions: ReadonlyArray<{
     readonly id: string
@@ -5561,6 +5632,12 @@ export type ServerBoardGetOutput = {
     readonly shipped: number
     readonly reason: string | null
   }>
+  readonly ledger?: {
+    readonly queueWait: number | null
+    readonly redRate: number | null
+    readonly reworkRate: number | null
+    readonly leadTime: number | null
+  }
 }
 
 export type ServerBoardIssueInput = {
@@ -5577,7 +5654,7 @@ export type ServerBoardIssueOutput = {
     readonly title: string
     readonly body: string
     readonly type: "feature" | "bug" | "chore"
-    readonly stage: "intake" | "backlog" | "ready" | "building" | "review" | "shipped" | "cut"
+    readonly stage: "intake" | "backlog" | "ready" | "building" | "review" | "queue" | "shipped" | "cut"
     readonly position: number
     readonly estimate: ("s" | "m" | "l") | null
     readonly seat: string | null
@@ -5594,6 +5671,12 @@ export type ServerBoardIssueOutput = {
       readonly now: string | null
     }>
     readonly dependsOn: ReadonlyArray<string>
+    readonly queue?: {
+      readonly status: "waiting" | "running" | "green" | "conflict" | "held"
+      readonly bundle: number | null
+      readonly urgent: boolean
+      readonly queuedAt: number
+    } | null
   }
   readonly questions: ReadonlyArray<{
     readonly id: string
@@ -5614,6 +5697,7 @@ export type ServerBoardIssueOutput = {
     readonly id: string
     readonly issue: number
     readonly author: string
+    readonly kind: "brief" | "question" | "answer" | "return" | "review" | "rework" | null
     readonly body: string
     readonly timeCreated: number
   }>
@@ -5653,6 +5737,11 @@ export type ServerBoardIssueOutput = {
       | "github.overwrite"
       | "github.state"
       | "undo"
+      | "queue.add"
+      | "queue.remove"
+      | "bundle.cut"
+      | "bundle.merge"
+      | "bundle.dissolve"
     readonly reason: string | null
     readonly before: { readonly [x: string]: JsonValue } | null
     readonly after: { readonly [x: string]: JsonValue } | null
@@ -5691,6 +5780,15 @@ export type ServerBoardIssueOutput = {
           readonly seat: string | null
         }>
       }
+  readonly record?: {
+    readonly intent?: string
+    readonly change?: string
+    readonly decisions?: string
+    readonly not_covered?: string
+    readonly risk?: { readonly level?: "low" | "medium" | "high"; readonly breaks?: string; readonly undo?: string }
+    readonly follow_ups?: ReadonlyArray<string>
+  } | null
+  readonly pushState?: "local" | "pushed" | null
 }
 
 export type ServerBoardActivityInput = {
@@ -5725,6 +5823,11 @@ export type ServerBoardActivityOutput = ReadonlyArray<{
     | "github.overwrite"
     | "github.state"
     | "undo"
+    | "queue.add"
+    | "queue.remove"
+    | "bundle.cut"
+    | "bundle.merge"
+    | "bundle.dissolve"
   readonly reason: string | null
   readonly before: { readonly [x: string]: unknown } | null
   readonly after: { readonly [x: string]: unknown } | null
@@ -6133,6 +6236,7 @@ export type RelayDocumentsListOutput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -6212,6 +6316,7 @@ export type RelayDocumentsListOutput = {
               readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
               readonly file?: string
               readonly text?: string
+              readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
             }>
           }
           readonly names?: { readonly [x: string]: string }
@@ -6296,6 +6401,7 @@ export type RelayDocumentsCreateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -6366,6 +6472,7 @@ export type RelayDocumentsCreateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -6436,6 +6543,7 @@ export type RelayDocumentsCreateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -6506,6 +6614,7 @@ export type RelayDocumentsCreateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -6576,6 +6685,7 @@ export type RelayDocumentsCreateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -6646,6 +6756,7 @@ export type RelayDocumentsCreateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -6716,6 +6827,7 @@ export type RelayDocumentsCreateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -6786,6 +6898,7 @@ export type RelayDocumentsCreateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -6874,6 +6987,7 @@ export type RelayDocumentsCreateOutput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -6953,6 +7067,7 @@ export type RelayDocumentsCreateOutput = {
               readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
               readonly file?: string
               readonly text?: string
+              readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
             }>
           }
           readonly names?: { readonly [x: string]: string }
@@ -7056,6 +7171,7 @@ export type RelayDocumentsGetOutput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -7135,6 +7251,7 @@ export type RelayDocumentsGetOutput = {
               readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
               readonly file?: string
               readonly text?: string
+              readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
             }>
           }
           readonly names?: { readonly [x: string]: string }
@@ -7220,6 +7337,7 @@ export type RelayDocumentsUpdateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -7293,6 +7411,7 @@ export type RelayDocumentsUpdateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -7366,6 +7485,7 @@ export type RelayDocumentsUpdateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -7439,6 +7559,7 @@ export type RelayDocumentsUpdateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -7512,6 +7633,7 @@ export type RelayDocumentsUpdateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -7585,6 +7707,7 @@ export type RelayDocumentsUpdateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -7658,6 +7781,7 @@ export type RelayDocumentsUpdateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -7731,6 +7855,7 @@ export type RelayDocumentsUpdateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -7804,6 +7929,7 @@ export type RelayDocumentsUpdateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -7877,6 +8003,7 @@ export type RelayDocumentsUpdateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -7950,6 +8077,7 @@ export type RelayDocumentsUpdateInput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -8041,6 +8169,7 @@ export type RelayDocumentsUpdateOutput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -8120,6 +8249,7 @@ export type RelayDocumentsUpdateOutput = {
               readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
               readonly file?: string
               readonly text?: string
+              readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
             }>
           }
           readonly names?: { readonly [x: string]: string }
@@ -8226,6 +8356,7 @@ export type RelayDocumentsVersionsOutput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -8320,6 +8451,7 @@ export type RelayDocumentsVersionOutput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -8379,6 +8511,7 @@ export type RelayDocumentsSprintOutput = {
         readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
         readonly file?: string
         readonly text?: string
+        readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
       }>
     }
     readonly skillBindings: ReadonlyArray<{
@@ -8531,6 +8664,7 @@ export type RelayDocumentsDefinitionOutput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
       }
@@ -8583,6 +8717,683 @@ export type RelayDocumentsCheckOutput = {
       }
     | { readonly outcome: "complete"; readonly i: number }
     | { readonly outcome: "error"; readonly error: "unknown-position"; readonly position: string }
+}
+
+export type RelayDocumentsPreviewInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly name?: {
+    readonly name?: string
+    readonly description?: string
+    readonly nodes?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+    }>
+    readonly connections?: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags?: ReadonlyArray<string | { readonly id: string }>
+    readonly meta?: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly knowledge?: ReadonlyArray<string>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly isArchived?: boolean
+  }["name"]
+  readonly description?: {
+    readonly name?: string
+    readonly description?: string
+    readonly nodes?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+    }>
+    readonly connections?: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags?: ReadonlyArray<string | { readonly id: string }>
+    readonly meta?: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly knowledge?: ReadonlyArray<string>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly isArchived?: boolean
+  }["description"]
+  readonly nodes?: {
+    readonly name?: string
+    readonly description?: string
+    readonly nodes?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+    }>
+    readonly connections?: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags?: ReadonlyArray<string | { readonly id: string }>
+    readonly meta?: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly knowledge?: ReadonlyArray<string>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly isArchived?: boolean
+  }["nodes"]
+  readonly connections?: {
+    readonly name?: string
+    readonly description?: string
+    readonly nodes?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+    }>
+    readonly connections?: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags?: ReadonlyArray<string | { readonly id: string }>
+    readonly meta?: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly knowledge?: ReadonlyArray<string>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly isArchived?: boolean
+  }["connections"]
+  readonly nodeGroups?: {
+    readonly name?: string
+    readonly description?: string
+    readonly nodes?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+    }>
+    readonly connections?: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags?: ReadonlyArray<string | { readonly id: string }>
+    readonly meta?: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly knowledge?: ReadonlyArray<string>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly isArchived?: boolean
+  }["nodeGroups"]
+  readonly tags?: {
+    readonly name?: string
+    readonly description?: string
+    readonly nodes?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+    }>
+    readonly connections?: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags?: ReadonlyArray<string | { readonly id: string }>
+    readonly meta?: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly knowledge?: ReadonlyArray<string>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly isArchived?: boolean
+  }["tags"]
+  readonly meta?: {
+    readonly name?: string
+    readonly description?: string
+    readonly nodes?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+    }>
+    readonly connections?: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags?: ReadonlyArray<string | { readonly id: string }>
+    readonly meta?: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly knowledge?: ReadonlyArray<string>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly isArchived?: boolean
+  }["meta"]
+  readonly isArchived?: {
+    readonly name?: string
+    readonly description?: string
+    readonly nodes?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+    }>
+    readonly connections?: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags?: ReadonlyArray<string | { readonly id: string }>
+    readonly meta?: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly knowledge?: ReadonlyArray<string>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly isArchived?: boolean
+  }["isArchived"]
+}
+
+export type RelayDocumentsPreviewOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly sprint: {
+      readonly brief?: string
+      readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
+      readonly retry_budget?: number
+      readonly macros?: ReadonlyArray<{ readonly id: string; readonly title?: string; readonly instructions?: string }>
+      readonly knowledge?: ReadonlyArray<string>
+      readonly work_packages: ReadonlyArray<{
+        readonly id: string
+        readonly title?: string
+        readonly macro?: string | null
+        readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+        readonly instructions?: string
+        readonly self_check?: ReadonlyArray<string>
+        readonly knowledge?: ReadonlyArray<string>
+        readonly checklist?: ReadonlyArray<{
+          readonly id: string
+          readonly assert?: string | null
+          readonly cmd?: string | null
+          readonly judge?: string | null
+          readonly blocking?: boolean
+          readonly diff?: boolean
+          readonly context?: string | ReadonlyArray<string>
+          readonly paths?: ReadonlyArray<string>
+          readonly origin?: string
+          readonly policy?: string
+          readonly host_check?: string
+        }> | null
+        readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+        readonly file?: string
+        readonly text?: string
+        readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
+      }>
+    } | null
+    readonly refusal: { readonly code: string; readonly message: string } | null
+    readonly skillBindings: ReadonlyArray<{
+      readonly wp: string
+      readonly skill: string
+      readonly sha256: string
+      readonly mode: "combine" | "replace"
+    }>
+    readonly findings: ReadonlyArray<{
+      readonly category: string
+      readonly severity: "error" | "warn"
+      readonly wp: string | null
+      readonly detail: string
+    }>
+    readonly judge: "stub" | "api"
+  }
+}
+
+export type RelayDocumentsCommandsInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type RelayDocumentsCommandsOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly commands: ReadonlyArray<{
+      readonly command: string
+      readonly source: string
+      readonly kind: "test" | "lint" | "typecheck" | "format" | "build"
+    }>
+    readonly pytest: ReadonlyArray<string>
+    readonly trusted: boolean
+  }
+}
+
+export type RelayDocumentsTrialInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly command: { readonly command: string; readonly params?: { readonly [x: string]: string } }["command"]
+  readonly params?: { readonly command: string; readonly params?: { readonly [x: string]: string } }["params"]
+}
+
+export type RelayDocumentsTrialOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly exitCode: number | "Infinity" | "-Infinity" | "NaN"
+    readonly output: string
+    readonly truncated: boolean
+    readonly durationMs: number | "Infinity" | "-Infinity" | "NaN"
+    readonly timedOut: boolean
+  }
 }
 
 export type RelayDocumentsNodeTypesInput = {
@@ -8798,6 +9609,7 @@ export type RelayPublishPublishOutput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -8877,6 +9689,7 @@ export type RelayPublishPublishOutput = {
               readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
               readonly file?: string
               readonly text?: string
+              readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
             }>
           }
           readonly names?: { readonly [x: string]: string }
@@ -8981,6 +9794,7 @@ export type RelayPublishUnpublishOutput = {
             readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
             readonly file?: string
             readonly text?: string
+            readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
           }>
         }
         readonly names?: { readonly [x: string]: string }
@@ -9060,6 +9874,7 @@ export type RelayPublishUnpublishOutput = {
               readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
               readonly file?: string
               readonly text?: string
+              readonly tools?: { readonly mcp?: ReadonlyArray<string>; readonly bash?: ReadonlyArray<string> }
             }>
           }
           readonly names?: { readonly [x: string]: string }

@@ -5,6 +5,8 @@ import type {
   OAuthClientInformation,
   OAuthClientInformationFull,
 } from "@modelcontextprotocol/sdk/shared/auth.js"
+import type { ConfigMCP } from "@orchestra/schema/config-mcp"
+import type { Mcp } from "@orchestra/schema/mcp"
 import { Effect } from "effect"
 import { McpAuth } from "./auth"
 
@@ -255,4 +257,30 @@ export function parseRedirectUri(redirectUri?: string): { port: number; path: st
   } catch {
     return { port: OAUTH_CALLBACK_PORT, path: OAUTH_CALLBACK_PATH }
   }
+}
+
+export function oauthConfig(server: ConfigMCP.Remote): McpOAuthConfig {
+  const oauth = server.oauth === false ? undefined : server.oauth
+  return {
+    clientId: oauth?.client_id,
+    clientSecret: oauth?.client_secret,
+    scope: oauth?.scope,
+    callbackPort: oauth?.callback_port,
+    redirectUri: oauth?.redirect_uri,
+  }
+}
+
+export function unauthorized(error: Error) {
+  return error.name === "UnauthorizedError" || /\b401\b|unauthorized/i.test(error.message)
+}
+
+// An OAuth failure needs a sign-in, unless the server cannot register a client and needs a configured client ID.
+export function authStatus(error: Error, oauth: boolean): Mcp.Status | undefined {
+  if (!unauthorized(error) && !(oauth && error.message.includes("OAuth"))) return undefined
+  if (/registration|client_id/.test(error.message))
+    return {
+      status: "needs_client_registration",
+      error: "The server does not support dynamic client registration. Set oauth.client_id in its MCP config.",
+    }
+  return { status: "needs_auth" }
 }

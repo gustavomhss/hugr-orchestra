@@ -15,6 +15,8 @@ import { ClaudeCodeSDK } from "../sdk"
 import { ClaudeCodeTranscript } from "../transcript"
 import { ClaudeCodeAccountV2 } from "./account"
 import { ClaudeCodeCatalog } from "./catalog"
+import { ClaudeCodeOutput } from "./output"
+import { ClaudeCodeRecord } from "./record"
 
 export const ID = "claude-code"
 /** The legacy `session.metadata` key (`host/session.ts`), so legacy Claude-hosted sessions resume on V2. */
@@ -23,22 +25,36 @@ export const STATE_KEY = "claudeCode"
 export const MCP_SERVER = "orchestra"
 const MCP_PREFIX = `mcp__${MCP_SERVER}__`
 
-/** Orchestra tools Claude Code has as built-ins, or that belong to Orchestra's own loop: never served. */
+/**
+ * Orchestra tools Claude Code has as built-ins, or that belong to Orchestra's own loop: never served. `process_*` read
+ * Orchestra's own bash background processes, which Claude Code's Bash never starts. `skill` is served: Claude Code's
+ * own Skill tool does not know Orchestra's playbooks and seat skills.
+ */
 const UNSERVED = new Set([
   "bash", "read", "write", "edit", "apply_patch", "grep", "glob", "webfetch", "websearch", "todowrite",
-  "question", "skill", "lsp", "invalid", "context_compact", "execute",
+  "question", "lsp", "invalid", "context_compact", "execute", "process_get", "process_wait", "process_cancel",
 ])
 
+const EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const
 /**
- * Claude Code's own subagent tool. Orchestra's `task` is served instead, so every delegation passes Task Governance;
- * a subagent Claude Code spawned itself would skip admission, reservation and settlement.
+ * Claude Code's own subagent tool. A seat is dispatched through Orchestra's `task`, as in normal mode: its work is a
+ * durable child Session the app shows the same way, and a seat on a Claude model runs on Claude Code there too.
  */
-const SUBAGENT_TOOLS = new Set(["Agent", "Task"])
-const SUBAGENT_DENIAL = "Delegate through `mcp__orchestra__task`: Orchestra governs every delegation in this session."
+const SUBAGENT_TOOLS = ["Agent", "Task"]
+const SUBAGENTS_REFUSED = "Dispatch a seat with `mcp__orchestra__task`: Orchestra runs it as its own Session."
 const QUESTION_DISMISSED = "The owner dismissed this question."
 /** A finished background task's process stays up this long waiting for the task to report; then it is let go. */
 const BACKGROUND_PATIENCE = Duration.minutes(30)
 const UNCHECKED = "Orchestra could not check this call, so it is refused."
+/** Claude Code defers MCP tools behind this one; it only loads their schemas, so every call to it is allowed. */
+const TOOL_SEARCH = "ToolSearch"
+/**
+ * Claude Code built-ins that reach past this query: other Claude sessions on the machine (`ListAgents`,
+ * `SendMessage`), the account's cloud routines (`RemoteTrigger`) and the owner's phone (`PushNotification`). An
+ * Orchestra session never sees or drives what lies outside it.
+ */
+const HOST_REACH = new Set(["ListAgents", "SendMessage", "RemoteTrigger", "PushNotification"])
+const OUTSIDE = "This Claude Code tool reaches outside the Orchestra session, so Orchestra refuses it."
 
 /** One gate decision, shared by the PreToolUse hook and `canUseTool` so both settle a call the same way. */
 type Decision =
@@ -93,6 +109,10 @@ export const make = Effect.gen(function* () {
           // billing) leaves the prompt to be sent again.
           const progress = { handed: false, answered: false, resulted: false }
           const served = turn.tools.filter((tool) => !UNSERVED.has(tool.name))
+          // The Context Epoch baseline and workflow instructions go in once per change, beside the prompt.
+          const contextText = turn.context.filter(Boolean).join("\n\n")
+          const contextHash = contextText ? createHash("sha256").update(contextText).digest("hex") : undefined
+          const context = { sent: false }
           // Claude Code's tool_use id for an Orchestra tool, learned at the gate; the MCP request does not carry it.
           const callIDs = new Map<string, string[]>()
           const learned = new Set<string>()
@@ -105,6 +125,10 @@ export const make = Effect.gen(function* () {
             // Never rejects: a defect, a throw or an abort in Orchestra's own check refuses the call (fail closed).
             const made = Promise.resolve()
               .then((): Decision | Promise<Decision> => {
+                if (SUBAGENT_TOOLS.includes(tool)) return { allow: false, reason: SUBAGENTS_REFUSED }
+                // An agent whose rules deny `*` still reaches the Orchestra tools it holds, which sit behind ToolSearch.
+                if (tool === TOOL_SEARCH) return { allow: true }
+                if (HOST_REACH.has(tool)) return { allow: false, reason: OUTSIDE }
                 if (tool.startsWith(MCP_PREFIX)) {
                   const name = tool.slice(MCP_PREFIX.length)
                   if (!learned.has(toolUseID)) callIDs.set(name, [...(callIDs.get(name) ?? []), toolUseID])
@@ -112,9 +136,13 @@ export const make = Effect.gen(function* () {
                   // The registry settles the Orchestra tool's own permissions when the runner executes it.
                   return { allow: true }
                 }
-                if (SUBAGENT_TOOLS.has(tool) && served.some((item) => item.name === "task")) return { allow: false, reason: SUBAGENT_DENIAL }
                 return Effect.runPromise(
-                  turn.authorize({ callID: toolUseID, tool, ...permission(tool, input, turn.session.location.directory), safety: safetyCall(tool, input) }).pipe(
+                  turn.authorize({
+                    callID: toolUseID,
+                    tool,
+                    ...permission(tool, input, turn.session.location.directory),
+                    safety: safetyCall(tool, input),
+                  }).pipe(
                     Effect.map((authorization): Decision => ({ allow: true, input: replacements(tool, authorization) })),
                     Effect.catch((error) => Effect.succeed<Decision>({ allow: false, reason: denial(error) })),
                   ),
@@ -162,14 +190,25 @@ export const make = Effect.gen(function* () {
               decision.allow ? { behavior: "allow" as const, updatedInput: { ...input, ...decision.input } } : { behavior: "deny" as const, message: decision.reason },
             )
           }
-          // What Orchestra keeps beyond Claude Code's own summary comes back right after a compaction; the summary
-          // itself is archived in the session. A failure here never fails the turn.
+          // Claude Code's documented channel for context beside a prompt. Sent when it changed since the Claude Code
+          // session last received it, once per turn.
+          const prompted: HookCallback = (input) => {
+            if (input.hook_event_name !== "UserPromptSubmit" || context.sent || !contextHash || contextHash === state.contextHash)
+              return Promise.resolve({})
+            context.sent = true
+            return Promise.resolve({ hookSpecificOutput: { hookEventName: "UserPromptSubmit" as const, additionalContext: contextText } })
+          }
+          // What Orchestra keeps beyond Claude Code's own summary comes back right after a compaction, with the context
+          // the summary may have dropped; the summary itself is archived in the session. A failure here never fails the turn.
           const recall: HookCallback = (input, _toolUseID, options) => {
             if (input.hook_event_name !== "SessionStart" || input.source !== "compact") return Promise.resolve({})
             return Effect.runPromise(turn.memory.recall, { signal: options.signal }).then(
-              (text) => (text ? { hookSpecificOutput: { hookEventName: "SessionStart" as const, additionalContext: text } } : {}),
-              () => ({}),
-            )
+              (text) => text,
+              () => undefined,
+            ).then((text) => {
+              const joined = [contextText, text].filter(Boolean).join("\n\n")
+              return joined ? { hookSpecificOutput: { hookEventName: "SessionStart" as const, additionalContext: joined } } : {}
+            })
           }
           const archive: HookCallback = (input, _toolUseID, options) => {
             if (input.hook_event_name !== "PostCompact") return Promise.resolve({})
@@ -190,18 +229,33 @@ export const make = Effect.gen(function* () {
               ...(ClaudeCodeTranscript.record(value) ? value : {}),
               sessionId,
               delivered: [...new Set([...delivered, ...pending.map((item) => item.id), ...consumed])],
+              ...(context.sent ? { contextHash } : {}),
             }))
+          // The reasoning picker's level, when it is one Claude Code accepts.
+          const effort = EFFORTS.find((level) => level === turn.model?.variant)
           const lifetime = ClaudeCodeSDK.processLifetime({
             cwd: turn.session.location.directory,
             ...(turn.model?.providerID === "anthropic" ? { model: turn.model.id } : {}),
+            ...(effort ? { effort } : {}),
             ...(typeof state.sessionId === "string" ? { resume: state.sessionId } : { sessionId: claudeSessionID(turn.session.id) }),
-            // Claude mode appends to Claude Code's own prompt and never replaces it (AGENTS: claude_code preset).
-            systemPrompt: { type: "preset", preset: "claude_code", append: turn.system.join("\n\n") },
+            // Claude mode appends to Claude Code's own prompt and never replaces it (AGENTS: claude_code preset):
+            // Maestro gets a short Orchestra note, any other seat that note and its own Orchestra prompt.
+            systemPrompt: {
+              type: "preset",
+              preset: "claude_code",
+              append: ClaudeHostOptions.append(
+                turn.agent.id,
+                served.map((tool) => tool.name),
+                turn.system.filter((text) => !turn.context.includes(text)),
+              ),
+            },
+            disallowedTools: SUBAGENT_TOOLS,
             settingSources: ["project"],
             permissionMode: "default",
             canUseTool,
             hooks: {
               PreToolUse: [{ hooks: [gate] }],
+              UserPromptSubmit: [{ hooks: [prompted] }],
               SessionStart: [{ matcher: "compact", hooks: [recall] }],
               PostCompact: [{ hooks: [archive] }],
             },
@@ -236,7 +290,11 @@ export const make = Effect.gen(function* () {
                   ? turn.state.update((value) => {
                       const record = ClaudeCodeTranscript.record(value) ? value : {}
                       const prior = Array.isArray(record.delivered) ? record.delivered : []
-                      return { ...record, delivered: [...new Set([...prior, ...pending.map((item) => item.id), ...consumed])] }
+                      return {
+                        ...record,
+                        delivered: [...new Set([...prior, ...pending.map((item) => item.id), ...consumed])],
+                        ...(context.sent ? { contextHash } : {}),
+                      }
                     })
                   : Effect.void,
               )
@@ -266,6 +324,10 @@ export const make = Effect.gen(function* () {
             Effect.forkScoped,
           )
           const names = new Map<string, string>()
+          const created = new Map<string, ClaudeCodeRecord.ChecklistItem>()
+          const todos = new Map<string, unknown>()
+          // Claude Code's task list outlives a turn, so the copy that fills the todo panel is kept in host state.
+          const checklist: ClaudeCodeRecord.Checklist = { items: ClaudeCodeRecord.items(state.checklist), changed: false }
           // Block ids by assistant message, for the retract a refusal fallback or a superseding reply asks for.
           const emitted = new Map<string, string[]>()
           // The iterator is pulled through a view without `return`: stopping at the result must not close the query.
@@ -275,7 +337,7 @@ export const make = Effect.gen(function* () {
             Stream.takeUntil((message) => message.type === "result"),
             Stream.mapEffect((message) =>
               Effect.gen(function* () {
-                if (message.type === "assistant" && message.parent_tool_use_id === null && !message.error)
+                if (message.type === "assistant" && !message.error)
                   progress.answered = true
                 if (message.type === "result") progress.resulted = true
                 if (message.type === "system" && message.subtype === "init")
@@ -294,7 +356,12 @@ export const make = Effect.gen(function* () {
                   yield* deliver(message.session_id)
                   live.keep = live.background > 0
                 }
-                return events(message, { names, failure, emitted, model: turn.model?.id })
+                const settled = yield* ClaudeCodeOutput.settle(events(message, { names, todos, checklist, created, failure, emitted, model: turn.model?.id }), message, { todos, write: turn.todos, directory: turn.session.location.directory })
+                if (checklist.changed) {
+                  checklist.changed = false
+                  yield* turn.state.update((value) => ({ ...(ClaudeCodeTranscript.record(value) ? value : {}), checklist: checklist.items }))
+                }
+                return settled
               }),
             ),
             Stream.flatMap((items) => Stream.fromIterable(items)),
@@ -333,6 +400,12 @@ export const contribution: Host.Contribution = {
 
 type Tracker = {
   readonly names: Map<string, string>
+  /** Each TodoWrite call's list, recorded as its result and the Session's todos so the widget and panel show it. */
+  readonly todos: Map<string, unknown>
+  /** Claude Code's task list (TaskCreate, TaskUpdate), recorded as the todo list Orchestra's todo tool keeps. */
+  readonly checklist: ClaudeCodeRecord.Checklist
+  /** The entry each TaskCreate call added, which takes its id from the call's result. */
+  readonly created: Map<string, ClaudeCodeRecord.ChecklistItem>
   readonly failure: { uuid?: string; message?: string }
   /** Block and call ids emitted for each main-thread assistant message, so a superseded message can be retracted. */
   readonly emitted: Map<string, string[]>
@@ -340,7 +413,7 @@ type Tracker = {
   readonly model: string | undefined
 }
 
-/** Maps one main-thread SDK frame to runner events; subagent frames stay inside their Agent call. */
+/** Maps one main-thread SDK frame to runner events. */
 function events(message: SDKMessage, tracker: Tracker): LLMEvent[] {
   const { names, failure, emitted } = tracker
   if (message.type === "assistant" && message.supersedes?.some((uuid) => uuid === failure.uuid)) failure.message = undefined
@@ -372,11 +445,15 @@ function events(message: SDKMessage, tracker: Tracker): LLMEvent[] {
         ids.push(id)
         return [LLMEvent.reasoningStart({ id }), LLMEvent.reasoningDelta({ id, text: block.thinking }), LLMEvent.reasoningEnd({ id })]
       }
-      // Orchestra tools are recorded by the runner through `turn.execute`, never by the host.
-      if (block.type !== "tool_use" || block.name.startsWith(MCP_PREFIX)) return []
-      names.set(block.id, block.name)
+      // Orchestra tools are recorded by the runner through `turn.execute`, never by the host. A call left off the record
+      // has no name in `names`, so its result is left off too.
+      if (block.type !== "tool_use" || block.name.startsWith(MCP_PREFIX) || ClaudeCodeRecord.UNRECORDED.has(block.name)) return []
+      const listed = ClaudeCodeRecord.TASK_LIST_TOOLS.has(block.name) ? ClaudeCodeRecord.checklist(block.id, block.name, block.input, tracker.checklist, tracker.created) : undefined
+      const call = listed ? { name: "todowrite", input: { todos: listed }, todos: listed } : ClaudeCodeRecord.shown(block.name, block.input)
+      names.set(block.id, call.name)
+      if (call.name === "todowrite") tracker.todos.set(block.id, call.todos)
       ids.push(block.id)
-      return [LLMEvent.toolCall({ id: block.id, name: block.name, input: block.input, providerExecuted: true })]
+      return [LLMEvent.toolCall({ id: block.id, name: call.name, input: call.input, providerExecuted: true })]
     })
     emitted.set(message.uuid, ids)
     return [...retract, ...blocks]
@@ -387,9 +464,14 @@ function events(message: SDKMessage, tracker: Tracker): LLMEvent[] {
       if (block.type !== "tool_result") return []
       const name = names.get(block.tool_use_id)
       if (!name) return []
-      const text = typeof block.content === "string"
-        ? block.content
-        : (block.content ?? []).flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n")
+      const added = tracker.created.get(block.tool_use_id)
+      if (added) ClaudeCodeRecord.assign(added, block.is_error === true, message.tool_use_result, tracker.checklist)
+      const listed = tracker.todos.get(block.tool_use_id)
+      const text = listed !== undefined && !block.is_error
+        ? JSON.stringify({ todos: listed })
+        : typeof block.content === "string"
+          ? block.content
+          : (block.content ?? []).flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n")
       return [LLMEvent.toolResult({
         id: block.tool_use_id,
         name,
@@ -553,12 +635,13 @@ export function permission(tool: string, input: Record<string, unknown>, directo
   return { action: rule.action, resources: [outside ? value : relative] }
 }
 
+// Every reason names a next step: a bare refusal left small models ending the turn without a word.
 function denial(error: { readonly _tag: string }) {
   if ("feedback" in error && typeof error.feedback === "string") return error.feedback
   // ToolSafety's refusal names its reason, so the model can act on it.
   if (error._tag === "ToolSafety.Denied" && "message" in error && typeof error.message === "string") return error.message
   if (error._tag === "PermissionV2.DeclinedError") return "The owner declined this call."
-  return "Orchestra's permission rules deny this call."
+  return "Orchestra's permission rules deny this call. Continue with the tools you are allowed to use, or say what you need."
 }
 
 /** Claude Code's session id for an Orchestra session: a name-based (v5) UUID, stable across restarts. */

@@ -4,7 +4,7 @@ import type { SessionStatus } from "@/v2-wire"
 
 import { showToast } from "@/utils/toast"
 import { getFilename } from "@orchestra/core/util/path"
-import { type Accessor, type ParentProps, batch, createMemo, getOwner, onCleanup, onMount, untrack } from "solid-js"
+import { type Accessor, type ParentProps, batch, createEffect, createMemo, getOwner, on, onCleanup, onMount, untrack } from "solid-js"
 import { createStore, produce, reconcile } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import type { InitError } from "../pages/error"
@@ -605,8 +605,27 @@ export function createServerSyncContextInner(
       queryClient.invalidateQueries({
         predicate: (query) => query.queryKey[0] === serverSDK.scope && query.queryKey[2] === "providers",
       })
+      // Open directories keep their agent list and config from their own bootstrap, and the agent list is read
+      // through ensureQueryData. Drop it and re-bootstrap them so a changed engine reaches model selection at once.
+      queryClient.removeQueries({
+        predicate: (query) => query.queryKey[0] === serverSDK.scope && query.queryKey[2] === "agents",
+      })
+      for (const directory of Object.keys(children.children)) {
+        if (children.active(directory)) queue.push(directory)
+      }
     },
   }))
+  // A config update pauses the queue, and its onSuccess runs while the mutation is still pending, so the directories it
+  // queues would wait for an unrelated push. Drain them once it settles, so a changed engine reaches them at once.
+  createEffect(
+    on(
+      () => globalStore.reload,
+      (reload) => {
+        if (reload === undefined) queue.resume()
+      },
+      { defer: true },
+    ),
+  )
 
   return {
     data: globalStore,

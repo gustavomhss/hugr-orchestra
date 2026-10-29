@@ -1,25 +1,32 @@
 export * as TaskTool from "./task"
 
 import { createHash } from "node:crypto"
+import path from "node:path"
 import { isDeepStrictEqual } from "node:util"
 import { ToolFailure } from "@orchestra/llm"
-import type { Permission } from "@orchestra/schema/permission"
 import { Context, DateTime, Effect, Fiber, Layer, Option, Schema } from "effect"
 import { AgentV2 } from "../agent"
 import { Catalog } from "../catalog"
 import { Config } from "../config"
+import { BoardThread } from "../board/thread"
 import { Database } from "../database/database"
+import { FSUtil } from "../fs-util"
 import { makeLocationNode, Node } from "../effect/app-node"
 import { LayerNode } from "../effect/layer-node"
 import { EventV2 } from "../event"
 import { Location } from "../location"
 import { ModelV2 } from "../model"
 import { PermissionV2 } from "../permission"
+import { Project } from "../project"
+import { ProviderV2 } from "../provider"
+import { ProjectCopy } from "../project/copy"
+import { AbsolutePath } from "../schema"
 import { SessionV2 } from "../session"
 import { SessionEvent } from "../session/event"
 import { SessionExecution } from "../session/execution"
 import { SessionInput } from "../session/input"
 import { SessionMessage } from "../session/message"
+import { ExecutionHost } from "../session/runner/execution-host"
 import { SessionRunnerModel } from "../session/runner/model"
 import { SessionSchema } from "../session/schema"
 import { SessionStore } from "../session/store"
@@ -30,6 +37,7 @@ import { TaskGovernance } from "./task-governance"
 import { ToolText } from "./text"
 import { Tool } from "./tool"
 import { Tools } from "./tools"
+import { inheritedPermissions, primaryTools } from "./task-permission"
 
 export const name = "task"
 const MAX_DEPTH = 8
@@ -41,6 +49,12 @@ export const Input = Schema.Struct({
   model: Schema.String.pipe(Schema.optional).annotate({ description: "Optional exact provider/model identity" }),
   // A Location's TaskGovernance may resolve a logical task id; core resumes only a Session ID it owns.
   task_id: Schema.String.pipe(Schema.optional).annotate({ description: "An existing child Session or task to resume" }),
+  directory: Schema.String.pipe(Schema.optional).annotate({
+    description: "Absolute root of a git worktree of this repository for the child to work in; default this Session's directory",
+  }),
+  worktree: Schema.Boolean.pipe(Schema.optional).annotate({
+    description: "Start the child in a new git worktree of this repository, named after description; the reply names its directory",
+  }),
 })
 
 export const Output = Schema.Struct({
@@ -52,6 +66,8 @@ export const Output = Schema.Struct({
   sessionId: SessionSchema.ID,
   parentSessionId: SessionSchema.ID,
   agentId: AgentV2.ID,
+  /** The child's worktree when it is not this Session's directory. */
+  directory: Schema.String.pipe(Schema.optional),
   /** Structured result a Location's TaskGovernance derived from the child's reply. */
   structured: Schema.Record(Schema.String, Schema.Unknown).pipe(Schema.optional),
 })
@@ -62,6 +78,7 @@ const layer = Layer.effectDiscard(
   Effect.gen(function* () {
     const tools = yield* Tools.Service
     const location = yield* Location.Service
+    const fs = yield* FSUtil.Service
     const agents = yield* AgentV2.Service
     const catalog = yield* Catalog.Service
     const database = yield* Database.Service
@@ -74,6 +91,9 @@ const layer = Layer.effectDiscard(
     const governance = yield* TaskGovernance.Service
     const config = yield* Config.Service
     const background = yield* TaskBackground.Service
+    const projects = yield* Project.Service
+    const copies = yield* ProjectCopy.Service
+    const engineOf = ExecutionHost.engineOf(agents, store)
     // Governance fields are recorded with the call, so the recorded input decodes with this same schema.
     const taskInput = Schema.Struct({ ...Input.fields, ...governance.input })
     const decodeCalled = Schema.decodeUnknownOption(taskInput)
@@ -83,7 +103,10 @@ const layer = Layer.effectDiscard(
         input: taskInput,
         output: Output,
         toModelOutput: ({ output }) => [
-          { type: "text", text: `task_id: ${output.sessionID}\n\n<task_result>\n${output.text}\n</task_result>` },
+          {
+            type: "text",
+            text: `task_id: ${output.sessionID}${output.directory ? `\ndirectory: ${output.directory}` : ""}\n\n<task_result>\n${output.text}\n</task_result>`,
+          },
         ],
         execute: (called, context) => Effect.gen(function* () {
           const input = yield* Schema.decodeUnknownEffect(Input)(called).pipe(
@@ -91,7 +114,9 @@ const layer = Layer.effectDiscard(
           )
           const parent = yield* requireParent(store, location, context, decodeCalled, called)
           const target = yield* requireTarget(agents, input.subagent_type)
-          const admission = yield* governance.admit({ parent, target, input: called, context })
+          const directory = input.worktree ? yield* createWorktree(copies, fs, store, location, input, taskChildID(context)) : input.directory
+          const placement = yield* requirePlacement(projects, fs, location, directory)
+          const admission = yield* governance.admit({ parent, target, input: called, context, location: placement })
           const childID =
             admission.childID ??
             (input.task_id && Schema.is(SessionSchema.ID)(input.task_id) ? input.task_id : undefined) ??
@@ -99,15 +124,17 @@ const layer = Layer.effectDiscard(
           const existing = yield* store.get(childID)
           if (input.task_id && !existing)
             return yield* new ToolFailure({ message: `Task child not found: ${input.task_id}` })
-          const model = yield* resolveModel(catalog, policy, context, target, input.model, existing)
+          // As the runner decides: a seat that names no engine runs a Claude model on its lead's execution host.
+          const hosted = target.engine ? target.engine !== "orchestra" : (yield* engineOf(parent)) !== undefined
+          const model = yield* resolveModel(catalog, policy, context, target, input.model, existing, hosted)
           const revalidateTarget = Effect.fnUntraced(function* (child: SessionSchema.Info | undefined) {
             const current = yield* requireTarget(agents, input.subagent_type)
-            const selected = yield* resolveModel(catalog, policy, context, current, input.model, child)
+            const selected = yield* resolveModel(catalog, policy, context, current, input.model, child, hosted)
             if (!sameModel(selected, model))
               return yield* new ToolFailure({ message: `Task target model changed after authorization: ${target.id}` })
           })
           if (existing) {
-            const failure = requireChild(existing, location, context, target.id, model)
+            const failure = requireChild(existing, placement, context, target.id, model)
             if (failure) return yield* failure
           }
           yield* policy.assertChild(context.sessionID, model)
@@ -127,9 +154,9 @@ const layer = Layer.effectDiscard(
             parentID: context.sessionID,
             agent: target.id,
             model,
-            location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }),
+            location: Location.Ref.make({ directory: placement.directory, workspaceID: placement.workspaceID }),
           })
-          const failure = requireChild(child, location, context, target.id, model)
+          const failure = requireChild(child, placement, context, target.id, model)
           if (failure) return yield* failure
           // A governance that binds rules starts from the inherited ones (see `TaskGovernance.Admission`).
           const permissions = (
@@ -142,6 +169,7 @@ const layer = Layer.effectDiscard(
               sessionID: child.id,
               permission: permissions.map((rule) => ({ permission: rule.action, pattern: rule.resource, action: rule.effect })),
             })
+          const moved = placement.directory === location.directory ? {} : { directory: placement.directory }
           return yield* Effect.gen(function* () {
             yield* policy.assert(child.id, model)
             yield* events.publish(SessionEvent.Tool.Progress, {
@@ -160,6 +188,17 @@ const layer = Layer.effectDiscard(
             const promptID = taskPromptID(context, child.id)
             // Exact retries retain the delivery admitted by an earlier Task version.
             const recordedInput = yield* SessionInput.find(database.db, promptID)
+            // Maestro's governance links a dispatched card to the child during admission; the thread note shares the
+            // prompt's id, so an exact retry writes it once.
+            const card = yield* BoardThread.bySession(database.db, child.id)
+            if (card)
+              yield* BoardThread.write(database.db, {
+                id: `bno_${promptID}`,
+                issue: card.id,
+                kind: (yield* BoardThread.last(database.db, card.id)) === "question" ? "answer" : "brief",
+                author: "maestro",
+                body: input.prompt,
+              }).pipe(Effect.orDie)
             const admitted = yield* sessions.prompt({
               id: promptID,
               sessionID: child.id,
@@ -182,6 +221,7 @@ const layer = Layer.effectDiscard(
               sessionId: child.id,
               parentSessionId: context.sessionID,
               agentId: target.id,
+              ...moved,
             })
             if (admission.background) {
               // Advisory: the admitted prompt is durable, so a lost wake leaves it for the next drain.
@@ -221,6 +261,8 @@ const layer = Layer.effectDiscard(
             if (reply.agent !== target.id)
               return yield* new ToolFailure({ message: `Task ${child.id} reply agent differs from the recorded child` })
             const settled = yield* governance.settle({ child, reply, admission, context })
+            if (card)
+              yield* BoardThread.write(database.db, { id: `bno_${promptID}_r`, issue: card.id, kind: settled.blocked ? "question" : "return", author: target.id, body: settled.text }).pipe(Effect.orDie)
             return {
               sessionID: child.id,
               agent: target.id,
@@ -230,6 +272,7 @@ const layer = Layer.effectDiscard(
               sessionId: child.id,
               parentSessionId: context.sessionID,
               agentId: target.id,
+              ...moved,
               ...(settled.structured === undefined ? {} : { structured: settled.structured }),
             }
           }).pipe(
@@ -270,6 +313,9 @@ export const node: LayerNode.Node<never, never, typeof Node.tags.values.location
     TaskGovernance.node,
     Config.node,
     TaskBackground.node,
+    Project.node,
+    FSUtil.node,
+    ProjectCopy.node,
   ],
 })
 
@@ -298,12 +344,24 @@ const resolveModel = Effect.fn("TaskTool.resolveModel")(function* (
   target: AgentV2.Info,
   explicit: string | undefined,
   child: SessionSchema.Info | undefined,
+  hosted: boolean,
 ) {
   if (explicit !== undefined && (explicit.indexOf("/") <= 0 || explicit.endsWith("/")))
     return yield* new ToolFailure({ message: `Invalid task model identity: ${explicit}` })
   const parsed = explicit === undefined ? undefined : ModelV2.parse(explicit)
   const named = parsed ? { providerID: parsed.providerID, id: parsed.modelID } : target.model
-  const available = (yield* catalog.model.available()).filter(SessionRunnerModel.supported)
+  const listed = yield* catalog.model.available()
+  // An execution host holds its own sign-in, so a hosted child's Anthropic models need no API connection.
+  const anthropic = hosted ? yield* catalog.provider.get(ProviderV2.ID.anthropic) : undefined
+  const signedIn = anthropic && !anthropic.disabled
+    ? (yield* catalog.model.all()).filter(
+        (model) =>
+          model.providerID === ProviderV2.ID.anthropic &&
+          model.enabled &&
+          !listed.some((item) => item.providerID === model.providerID && item.id === model.id),
+      )
+    : []
+  const available = [...listed, ...signedIn].filter(SessionRunnerModel.supported)
   const ceilings = yield* policy.forChild(context.sessionID)
   const candidate = child?.model ?? named
   if (child && !child.model)
@@ -350,7 +408,7 @@ const sameModel = (left: ModelV2.Ref | undefined, right: ModelV2.Ref | undefined
   left?.id === right?.id &&
   (left?.variant ?? "default") === (right?.variant ?? "default")
 
-const samePlacement = (session: SessionSchema.Info, location: Location.Interface) =>
+const samePlacement = (session: SessionSchema.Info, location: Location.Info) =>
   session.location.directory === location.directory && session.location.workspaceID === location.workspaceID
 
 const requireParent = Effect.fn("TaskTool.requireParent")(function* (
@@ -387,12 +445,72 @@ const requireParent = Effect.fn("TaskTool.requireParent")(function* (
   return parent
 })
 
+/**
+ * A new worktree goes under this root's `.worktrees`, so it stays inside the trusted folder and the parent may commit
+ * there; the copy is registered like one made in the app.
+ */
+const createWorktree = Effect.fn("TaskTool.createWorktree")(function* (
+  copies: ProjectCopy.Interface,
+  fs: FSUtil.Interface,
+  store: SessionStore.Interface,
+  location: Location.Interface,
+  input: typeof Input.Type,
+  childID: SessionSchema.ID,
+) {
+  if (input.directory !== undefined || input.task_id !== undefined)
+    return yield* new ToolFailure({ message: "Task worktree starts a new child only; resume a child with its directory" })
+  // An exact retry finds the child it already started and keeps that worktree.
+  const retried = yield* store.get(childID)
+  if (retried) return retried.location.directory
+  if (location.vcs?.type !== "git") return yield* new ToolFailure({ message: "Task worktree needs a git repository" })
+  const parent = path.join(location.project.directory, ".worktrees")
+  // An ignore-everything file keeps the copies out of this checkout's own status, whatever the project ignores.
+  yield* fs.writeWithDirs(path.join(parent, ".gitignore"), "*\n").pipe(Effect.orDie)
+  const copy = yield* copies
+    .create({
+      strategy: ProjectCopy.StrategyID.make("git_worktree"),
+      directory: AbsolutePath.make(parent),
+      name: ProjectCopy.nameFromReply(input.description),
+      projectID: location.project.id,
+      sourceDirectory: AbsolutePath.make(location.project.directory),
+    })
+    .pipe(Effect.mapError((error) => new ToolFailure({ message: `Task worktree not created: ${error._tag}` })))
+  return copy.directory
+})
+
+/**
+ * Where the child works: this Location, or another worktree of the same git repository named by its root. The worktree
+ * keeps this Location's workspace, and a resumed child must have been created there.
+ */
+const requirePlacement = Effect.fn("TaskTool.requirePlacement")(function* (
+  projects: Project.Interface,
+  fs: FSUtil.Interface,
+  location: Location.Interface,
+  directory: string | undefined,
+) {
+  if (directory === undefined || directory === location.directory) return location
+  if (!path.isAbsolute(directory)) return yield* new ToolFailure({ message: `Task directory is not absolute: ${directory}` })
+  // git reports real paths, so a worktree reached through a symlink (macOS /tmp) compares by its real path.
+  const absolute = AbsolutePath.make(
+    yield* fs.realPath(directory).pipe(Effect.catch(() => Effect.succeed(directory))),
+  )
+  const resolved = yield* projects.resolve(absolute)
+  if (location.vcs?.type !== "git" || resolved.vcs?.store !== location.vcs.store)
+    return yield* new ToolFailure({ message: `Task directory is not a worktree of this repository: ${directory}` })
+  if (resolved.directory !== absolute)
+    return yield* new ToolFailure({ message: `Task directory is not a worktree root: ${directory}` })
+  return {
+    directory: absolute,
+    workspaceID: location.workspaceID,
+    project: { id: location.project.id, directory: resolved.directory },
+    vcs: resolved.vcs,
+  } satisfies Location.Interface
+})
+
 const requireTarget = Effect.fn("TaskTool.requireTarget")(function* (agents: AgentV2.Interface, id: string) {
   const target = yield* agents.get(AgentV2.ID.make(id))
   if (!target || target.hidden || target.mode === "primary" || target.id === AgentV2.defaultID)
     return yield* new ToolFailure({ message: `Task target is not a visible subagent: ${id}` })
-  if (target.engine === "claude-code")
-    return yield* new ToolFailure({ message: `Task target requires an unsupported engine: ${target.id}` })
   return target
 })
 
@@ -411,40 +529,20 @@ const requireDepth = Effect.fn("TaskTool.requireDepth")(function* (
 
 function requireChild(
   child: SessionSchema.Info,
-  location: Location.Interface,
+  location: Location.Info,
   context: Tool.Context,
   agent: AgentV2.ID,
   model: ModelV2.Ref,
 ) {
   if (child.parentID !== context.sessionID || child.agent !== agent || !samePlacement(child, location))
-    return new ToolFailure({ message: `Task child parent, agent, or placement mismatch: ${child.id}` })
+    return new ToolFailure({
+      message: `Task child parent, agent, or placement mismatch: ${child.id} runs in ${child.location.directory}; resume it with that directory`,
+    })
   if (!sameModel(child.model, model))
     return new ToolFailure({ message: `Task cannot change the recorded child model: ${child.id}` })
 }
 
-/**
- * The rules every Task child inherits, as the earlier runtime derived them: the parent Session's deny and `external_directory` rules, so a
- * child is never more permissive than its parent on a denied pattern, then a deny of each `experimental.primary_tools`
- * tool, which only primary agents may use.
- */
-export function inheritedPermissions(parent: Permission.Ruleset, primary: ReadonlyArray<string>): Permission.Ruleset {
-  const inherited = parent.filter((rule) => rule.action === "external_directory" || rule.effect === "deny")
-  return [
-    ...inherited,
-    ...primary
-      .map((action) => ({ action, resource: "*", effect: "deny" as const }))
-      .filter((deny) => !inherited.some((rule) => rule.action === deny.action && rule.resource === deny.resource && rule.effect === deny.effect)),
-  ]
-}
-
-/** The configured `experimental.primary_tools`, from the highest-priority document that sets it. */
-export function primaryTools(entries: ReadonlyArray<Config.Entry>) {
-  return (
-    entries
-      .filter((entry): entry is Config.Document => entry.type === "document")
-      .findLast((entry) => entry.info.experimental?.primary_tools !== undefined)?.info.experimental?.primary_tools ?? []
-  )
-}
+export { inheritedPermissions, primaryTools }
 
 /** The child a Task call creates when neither `task_id` nor its governance names one; stable across exact retries. */
 export function taskChildID(context: Tool.Context) {

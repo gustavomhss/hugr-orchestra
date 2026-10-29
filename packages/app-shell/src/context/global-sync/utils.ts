@@ -16,13 +16,14 @@ export function normalizeAgentList(input: AgentListData | Agent[]): Agent[] {
   if (input.every((agent) => !("request" in agent))) return input as Agent[]
   return (input as AgentListData).map((agent) => ({
     id: agent.id,
-    name: agent.id,
+    name: agent.name ?? agent.id,
     description: agent.description,
     mode: agent.mode,
     hidden: agent.hidden,
     temperature: numeric(settings(agent).temperature),
     topP: numeric(settings(agent).topP),
     color: agent.color,
+    avatar: agent.avatar,
     permission: agent.permissions.map((rule) => ({
       permission: rule.action,
       pattern: rule.resource,
@@ -36,6 +37,7 @@ export function normalizeAgentList(input: AgentListData | Agent[]): Agent[] {
       ? { engine: agent.engine }
       : {}),
     steps: agent.steps,
+    skills: agent.skills,
   }))
 }
 

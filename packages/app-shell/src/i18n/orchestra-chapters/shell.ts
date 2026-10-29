@@ -4,6 +4,8 @@ export const SHELL_COPY = {
   "orchestra.shell.goHome": "Go home",
   "orchestra.shell.gettingStarted": "Getting started guide",
   "orchestra.shell.help": "Help",
+  "orchestra.shell.caffeinate.on": "Keep this computer awake",
+  "orchestra.shell.caffeinate.off": "Let this computer sleep",
   "orchestra.shell.server.invalid": "Enter a valid server URL.",
   "orchestra.shell.server.failed": "Could not connect. Check the server URL and credentials.",
   "orchestra.shell.server.lost": "Lost connection to the server. Retrying…",
@@ -36,7 +38,7 @@ export const SHELL_COPY = {
   "orchestra.shell.crumb.plugins": "Plugins",
   "orchestra.shell.crumb.providers": "Providers",
   "orchestra.shell.crumb.shortcuts": "Shortcuts",
-  "orchestra.shell.nav.advanced": "Advanced",
+  "orchestra.shell.nav.advanced": "More",
   "orchestra.shell.chat.serverDown.title": "The local server is not responding",
   "orchestra.shell.chat.serverDown.description": "Wait for the local server to start, then try Chat again.",
   "orchestra.shell.wip.chip": "WIP",
@@ -58,6 +60,8 @@ export const SHELL_COPY = {
 }
 
 export const SHELL_COPY_BR: Record<keyof typeof SHELL_COPY, string> = {
+  "orchestra.shell.caffeinate.on": "Manter este computador acordado",
+  "orchestra.shell.caffeinate.off": "Deixar este computador dormir",
   "orchestra.shell.navigation": "Navegação",
   "orchestra.shell.goHome": "Ir para o início",
   "orchestra.shell.gettingStarted": "Guia de primeiros passos",
@@ -94,7 +98,7 @@ export const SHELL_COPY_BR: Record<keyof typeof SHELL_COPY, string> = {
   "orchestra.shell.crumb.plugins": "Plugins",
   "orchestra.shell.crumb.providers": "Provedores",
   "orchestra.shell.crumb.shortcuts": "Atalhos",
-  "orchestra.shell.nav.advanced": "Avançado",
+  "orchestra.shell.nav.advanced": "Mais",
   "orchestra.shell.chat.serverDown.title": "O servidor local não está respondendo",
   "orchestra.shell.chat.serverDown.description": "Aguarde o servidor local iniciar e tente o Chat de novo.",
   "orchestra.shell.wip.chip": "WIP",

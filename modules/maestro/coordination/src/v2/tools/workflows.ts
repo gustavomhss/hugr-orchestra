@@ -25,7 +25,7 @@ export function tools(input: {
   return {
     [name]: Tool.make({
       description:
-        "List the published Relay workflows Maestro can run in this project: id, name, description and published version. With `workflow`, resolve one by id or exact name; a match that cannot run is listed under `unavailable` with the reason to tell the owner. Read-only. Maestro only. Running one is governed work, with its id as `workflow.documentID` in `maestro_record_plan_revision`. The host arms its Task with the approved plan's own checks: before dispatching it, arm `relay-arm` with only `sessionID` and a `label` naming that Task, without `chain`.",
+        "List the published Relay workflows Maestro can run in this project: id, name, description, published version and the `parameters` its steps and checks name as `${name}`, which the plan revision must bind. With `workflow`, resolve one by id or exact name; a match that cannot run is listed under `unavailable` with the reason to tell the owner. Read-only. Maestro only. Running one is governed work, with its id as `workflow.documentID` in `maestro_record_plan_revision`. The host arms its Task with the approved plan's own checks: before dispatching it, arm `relay-arm` with only `sessionID` and a `label` naming that Task, without `chain`.",
       input: Schema.Struct({
         workflow: Schema.optional(Schema.String).annotate({
           description: "A workflow id, or its exact name, to resolve. Omit it to list every workflow Maestro can run.",
@@ -45,6 +45,15 @@ export function tools(input: {
                 name: entry.name,
                 description: entry.description,
                 publishedVersionID: entry.publishedVersionID,
+                // Every `${name}` the steps and checks name; a placeholder left unbound reaches the agent and the
+                // shell literally.
+                parameters: [
+                  ...new Set(
+                    [...JSON.stringify(entry.sprint ?? {}).matchAll(/\$\{([a-zA-Z_][a-zA-Z0-9_]*)\}/g)].map(
+                      (match) => match[1]!,
+                    ),
+                  ),
+                ].toSorted(),
               },
               // Admitted is not enough: a workflow Task also holds without the global acceptance checks.
               reason:

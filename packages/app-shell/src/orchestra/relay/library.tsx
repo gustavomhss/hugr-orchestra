@@ -9,7 +9,7 @@ import { CreateWorkflowDialog } from "./create"
 import { createAction, DeleteDialog, failure } from "./dialogs"
 import { ImportWorkflowDialog } from "./import-dialog"
 import { badgeTone, newestFirst, RUN_TONE, runHandle, span } from "./format"
-import { type Flow, flowFromDocument, nodeOf, steps } from "./graph"
+import { type Flow, flowFromDocument, listedSteps, nodeOf } from "./graph"
 import {
   phaseNames,
   RetainedDrafts,
@@ -303,7 +303,7 @@ export function WorkflowLibrary(props: Props) {
                             {(names().length ? names().join(" → ") : copy.t("orchestra.workflows.row.noPhases")) +
                               " · " +
                               copy.count(
-                                flow() ? steps(flow()!).length : 0,
+                                flow() ? listedSteps(flow()!).length : 0,
                                 "orchestra.workflows.count.step.one",
                                 "orchestra.workflows.count.step.other",
                               )}

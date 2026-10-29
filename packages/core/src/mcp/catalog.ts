@@ -1,7 +1,8 @@
 export * as McpCatalog from "./catalog"
 
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js"
-import { ListToolsResultSchema, ToolSchema } from "@modelcontextprotocol/sdk/types.js"
+import { ListToolsResultSchema, ToolSchema, type CallToolResult } from "@modelcontextprotocol/sdk/types.js"
+import type { ToolContent } from "@orchestra/llm"
 import { Effect } from "effect"
 
 const DEFAULT_TIMEOUT = 30_000
@@ -126,3 +127,25 @@ function isOutputSchemaValidationError(error: Error) {
   )
 }
 
+export function described(item: { description?: string; mimeType?: string }) {
+  return {
+    ...(item.description === undefined ? {} : { description: item.description }),
+    ...(item.mimeType === undefined ? {} : { mimeType: item.mimeType }),
+  }
+}
+
+/** The text parts of a tool result, for an error message. */
+export function resultText(result: CallToolResult) {
+  return result.content.flatMap((item) => (item.type === "text" && item.text.trim() ? [item.text] : [])).join("\n\n")
+}
+
+export function resultContent(result: CallToolResult): ToolContent[] {
+  if (result.content.length === 0 && result.structuredContent !== undefined)
+    return [{ type: "text", text: JSON.stringify(result.structuredContent) }]
+  return result.content.map((item): ToolContent => {
+    if (item.type === "text") return { type: "text", text: item.text }
+    if (item.type === "image" || item.type === "audio")
+      return { type: "file", uri: `data:${item.mimeType};base64,${item.data}`, mime: item.mimeType }
+    return { type: "text", text: JSON.stringify(item) }
+  })
+}

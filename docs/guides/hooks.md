@@ -4,7 +4,7 @@ A hook is a rule that watches one thing an agent does and answers. It can block 
 
 ## Where they live
 
-Open **Hooks** in the sidebar's Advanced group. The page has two tabs:
+Open **Hooks** in the sidebar's More group. The page has two tabs:
 
 - **Hooks**: your library, with one row per hook.
 - **Activity**: one row per action a hook took in this project, with filters by hook and result. Shell command and prompt text is not stored, so those rows say so.
@@ -27,10 +27,20 @@ Installed hooks are checked from top to bottom, and the first one that blocks a 
 
 1. Open **Hooks** and choose **New hook**.
 2. Pick **Protect generated files**. It refuses edits, overwrites and shell commands under `src/generated/**` and tells the agent how to regenerate.
-3. Change the path in the **Path matches** condition to a folder you want to protect. Edit the message the agent will read.
+3. Under **If**, change the path to a folder you want to protect. Under **Then**, open **Block** and edit the message the agent will read.
 4. Choose **Test**. The dialog runs sample calls so you can see what the hook would answer.
 5. Choose **Publish and install**.
 6. Ask an agent to edit a file in that folder. The attempt is refused, and **Activity** shows a row for it.
+
+## Reading a hook
+
+The editor shows a hook as one rule in **List**, top to bottom:
+
+- **When**: the event the hook watches, such as Before edit file or Before shell command. Block and Ask need a Before event.
+- **If**: the conditions. With none, the hook answers every time. Lines in one case must all match (**And**). **Or another case** adds a second case that is tried when the first does not match.
+- **Then**: the actions, in order. Block and Require repair end the rule, so they always come last.
+
+**Canvas** draws the same rule as nodes and wires. A hook drawn on the canvas with other branches does not read as one rule; the list then says so and sends you to the canvas.
 
 ## Templates
 

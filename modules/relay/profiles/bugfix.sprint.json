@@ -1,0 +1,106 @@
+{
+  "brief": "bugfix v1.0.0 \u2014 Fix a bug with proof. A failing test reproduces it, the smallest root-cause fix turns it green, and a short note explains what was wrong.",
+  "gen": 0,
+  "retry_budget": 3,
+  "macros": [
+    {
+      "id": "fix",
+      "title": "Fix with proof",
+      "instructions": "You are fixing one reported bug. Work in three moves and never skip ahead: first prove the bug exists with a test\nthat fails, then change the code until that test passes, then write down what was wrong. A fix without a failing\ntest first is a guess. Keep the change as small as the root cause allows; do not refactor or tidy unrelated code."
+    }
+  ],
+  "work_packages": [
+    {
+      "id": "fix.reproduce",
+      "macro": "fix",
+      "kind": "execute",
+      "title": "Reproduce the bug",
+      "instructions": "Write a regression test under ${test_path} that reproduces the reported bug through the code's public\nbehaviour. Run ${test_cmd} and confirm the new test fails for the reason the bug describes, not because of a\ntypo or a missing import. Do not touch ${src_path} in this step.",
+      "checklist": [
+        {
+          "id": "regression-test-added",
+          "assert": "a test file under the test paths was added or changed",
+          "cmd": "git diff --name-only ${base_ref} -- ${test_path} | grep -q . || git ls-files --others --exclude-standard -- ${test_path} | grep -q .",
+          "origin": "pe-profile:bugfix@1.0.0"
+        },
+        {
+          "id": "suite-is-red",
+          "assert": "the test suite fails, so the new test reproduces the bug",
+          "cmd": "! ${test_cmd}",
+          "origin": "pe-profile:bugfix@1.0.0"
+        },
+        {
+          "id": "test-targets-the-bug",
+          "judge": "Does this change add a test that exercises the reported bug through public behaviour and asserts the correct result? FAIL if the test would also fail for an unrelated reason (a typo, a missing import, a wrong fixture), if it asserts the buggy behaviour, or if the change also edits source code.",
+          "diff": true,
+          "blocking": true,
+          "origin": "pe-profile:bugfix@1.0.0"
+        }
+      ]
+    },
+    {
+      "id": "fix.repair",
+      "macro": "fix",
+      "kind": "execute",
+      "title": "Fix the root cause",
+      "instructions": "Find why the code misbehaves and change ${src_path} so the regression test passes. Fix the cause, not the\nsymptom: no special case for the test's input, no swallowed error, no weakened or skipped test. Run ${test_cmd}\nuntil the whole suite is green.",
+      "checklist": [
+        {
+          "id": "source-changed",
+          "assert": "the source paths were changed",
+          "cmd": "git diff --name-only ${base_ref} -- ${src_path} | grep -q . || git ls-files --others --exclude-standard -- ${src_path} | grep -q .",
+          "origin": "pe-profile:bugfix@1.0.0"
+        },
+        {
+          "id": "suite-is-green",
+          "assert": "the whole test suite passes",
+          "cmd": "${test_cmd}",
+          "origin": "pe-profile:bugfix@1.0.0"
+        },
+        {
+          "id": "no-test-deleted",
+          "assert": "no test file was deleted to get to green",
+          "cmd": "! git diff --diff-filter=D --name-only ${base_ref} -- ${test_path} | grep -q .",
+          "origin": "pe-profile:bugfix@1.0.0"
+        },
+        {
+          "id": "fixes-the-root-cause",
+          "judge": "Does this change fix the cause of the bug rather than its symptom? FAIL if it special-cases the test's input, swallows or hides an error, weakens, skips or deletes a test, or changes behaviour the bug report did not ask to change.",
+          "diff": true,
+          "blocking": true,
+          "origin": "pe-profile:bugfix@1.0.0"
+        }
+      ]
+    },
+    {
+      "id": "fix.explain",
+      "macro": "fix",
+      "kind": "execute",
+      "title": "Explain the fix",
+      "instructions": "Write ${notes_dir}/bugfix.md for the reviewer with three short sections: \"## Cause\" (what was wrong and why it\nhappened), \"## Fix\" (what changed and why it is the smallest correct change) and \"## Proof\" (which test\nreproduces it and what it asserts).",
+      "checklist": [
+        {
+          "id": "note-has-its-sections",
+          "assert": "the note has Cause, Fix and Proof sections",
+          "cmd": "for section in Cause Fix Proof; do grep -q \"^## $section\" ${notes_dir}/bugfix.md || exit 1; done",
+          "origin": "pe-profile:bugfix@1.0.0"
+        },
+        {
+          "id": "note-is-substantive",
+          "assert": "the note carries at least 60 words",
+          "cmd": "test \"$(wc -w < ${notes_dir}/bugfix.md)\" -ge 60",
+          "origin": "pe-profile:bugfix@1.0.0"
+        },
+        {
+          "id": "note-matches-the-fix",
+          "context": [
+            "${notes_dir}/bugfix.md"
+          ],
+          "judge": "Does this note name the actual cause of the bug, the change that fixed it and the test that proves it, in terms a reviewer can check against the code? FAIL if it is generic, if it claims something the code does not show, or if the proof does not name a test.",
+          "blocking": true,
+          "origin": "pe-profile:bugfix@1.0.0"
+        }
+      ]
+    }
+  ]
+}

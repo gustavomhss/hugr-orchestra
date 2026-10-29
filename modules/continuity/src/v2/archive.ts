@@ -4,10 +4,13 @@ import { createHash, randomUUID } from "node:crypto"
 import fs from "node:fs/promises"
 import path from "node:path"
 import { Effect, Option, Schema } from "effect"
+import { exportContext, readContextChunk, scrubText } from "@orchestra/atlas-boundary/context"
 import { KeyedMutex } from "@orchestra/core/effect/keyed-mutex"
 import { Global } from "@orchestra/core/global"
 
 // On-disk layout: <data>/continuity/<sha256(sessionID)>/{index.json,memory.json,<sha256(markdown)>.md}.
+// The host exports it into the repository's `.atlas/members/<seat>/context/` in the bundle's record commit (`exportTo`);
+// a lookup that misses locally falls back to that committed copy, so a re-spawned Session reads its predecessor's chunks.
 
 export const PAYLOAD_LIMIT = 32 * 1024
 // An absolute end assertion: JavaScript's `$` also accepts a final newline.
@@ -70,9 +73,9 @@ export function split(text: string) {
   return result
 }
 
-/** The archive chunks of one source message's rendered text, one per payload piece. */
+/** The archive chunks of one source message's rendered text, one per payload piece, scrubbed before they are hashed. */
 export function chunks(sessionID: string, source: string, role: "user" | "assistant", text: string): Chunk[] {
-  const pieces = split(text)
+  const pieces = split(scrubText(text))
   return pieces.map((payload, index) => {
     const markdown = render(sessionID, source, role, index + 1, pieces.length, payload)
     return {
@@ -117,11 +120,38 @@ export const list = Effect.fn("ContinuityArchive.list")(function* (sessionID: st
   return yield* index(sessionID)
 })
 
-/** One verified chunk; undefined for an unknown or malformed ID. */
-export const read = Effect.fn("ContinuityArchive.read")(function* (sessionID: string, id: string) {
+/**
+ * One verified chunk; undefined for an unknown or malformed ID. With `bundle`, a chunk the local archive lacks is read
+ * from any of the seat's committed archives in that repository.
+ */
+export const read = Effect.fn("ContinuityArchive.read")(function* (
+  sessionID: string,
+  id: string,
+  bundle?: { readonly root: string; readonly seat: string },
+) {
   if (!HASH.test(id)) return undefined
   const ref = (yield* index(sessionID)).find((item) => item.id === id)
-  return ref ? yield* load(sessionID, ref) : undefined
+  if (ref) return yield* load(sessionID, ref)
+  const committed = bundle && readContextChunk(bundle.root, bundle.seat, id)
+  return committed ? ({ ...committed.reference, markdown: committed.markdown } satisfies Chunk) : undefined
+})
+
+/**
+ * Export the Session's archive and masks into the repository's committed tree; the chunks go to `blobs/` only with
+ * `commit` (a private repository). Called by the host in the bundle's record commit, never by a seat.
+ */
+export const exportTo = Effect.fn("ContinuityArchive.exportTo")(function* (
+  root: string,
+  seat: string,
+  sessionID: string,
+  opts: { readonly commit: boolean; readonly at: string },
+) {
+  const references = yield* Effect.forEach(yield* index(sessionID), (ref) => load(sessionID, ref))
+  const masks = yield* readMasks(sessionID)
+  return yield* Effect.try({
+    try: () => exportContext(root, seat, sessionID, { references, masks }, opts),
+    catch: () => new ArchiveError({ reason: "archive-export-failed" }),
+  })
 })
 
 /** Masked tool calls and the reference holding their full output. */

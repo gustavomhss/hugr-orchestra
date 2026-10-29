@@ -45,6 +45,8 @@ const questions: QuestionV2.AskInput[] = []
 let script: (turn: ExecutionHost.Turn) => Effect.Effect<ReadonlyArray<LLMEvent>> = () => Effect.succeed([])
 let provider: ((session: Parameters<SessionRunnerModel.Interface["resolve"]>[0]) => ReturnType<SessionRunnerModel.Interface["resolve"]>) | undefined
 let providerEvents: LLMEvent[] = []
+// Replaces the scripted events when a test must call a port between events of the same stream.
+let streamOf: ((turn: ExecutionHost.Turn) => Stream.Stream<LLMEvent>) | undefined
 
 const client = Layer.succeed(
   LLMClient.Service,
@@ -58,7 +60,8 @@ const client = Layer.succeed(
 const host: ExecutionHost.Interface = {
   id: "claude-code",
   stateKey: "claudeCode",
-  stream: (turn) => Stream.unwrap(script(turn).pipe(Effect.map((events) => Stream.fromIterable(events)))),
+  stream: (turn) =>
+    streamOf ? streamOf(turn) : Stream.unwrap(script(turn).pipe(Effect.map((events) => Stream.fromIterable(events)))),
 }
 
 // The Location's ToolSafety under the profile of the moment, reading the dispatch's domains as the Maestro Location does.
@@ -130,6 +133,7 @@ const hosted = Effect.gen(function* () {
   profile.current = undefined
   dispatch.domains = undefined
   provider = undefined
+  streamOf = undefined
   asked.length = 0
   questions.length = 0
   const agents = yield* AgentV2.Service
@@ -311,6 +315,29 @@ describe("SessionRunner execution host ports", () => {
       expect(turns.at(-1)).toEqual(["go", "Background task t1 completed: slept"])
       const users = (yield* sessions.messages({ sessionID })).flatMap((message) => (message.type === "user" ? [message.text] : []))
       expect(users.filter((text) => text.startsWith("Background task"))).toHaveLength(1)
+    }),
+  )
+
+  it.effect("todos replaces the Session's todo list, as Orchestra's todowrite tool would", () =>
+    Effect.gen(function* () {
+      const sessions = yield* hosted
+      script = (turn) =>
+        Effect.gen(function* () {
+          yield* turn.todos([{ content: "old", status: "pending", priority: "medium" }])
+          yield* turn.todos([
+            { content: "Plan", status: "completed", priority: "medium" },
+            { content: "Build", status: "in_progress", priority: "medium" },
+          ])
+          return answer()
+        })
+      yield* send(sessions, "go")
+
+      const { db } = yield* Database.Service
+      const rows = yield* db.select().from(TodoTable).all().pipe(Effect.orDie)
+      expect(rows.filter((row) => row.session_id === sessionID).toSorted((a, b) => a.position - b.position).map((row) => [row.content, row.status, row.position])).toEqual([
+        ["Plan", "completed", 0],
+        ["Build", "in_progress", 1],
+      ])
     }),
   )
 

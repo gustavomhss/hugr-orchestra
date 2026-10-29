@@ -15,6 +15,7 @@
     "test": "bun test --timeout 30000"
   },
   "dependencies": {
+    "@orchestra/atlas-boundary": "workspace:*",
     "@orchestra/core": "workspace:*",
     "@orchestra/llm": "workspace:*",
     "@orchestra/schema": "workspace:*",

@@ -138,6 +138,21 @@ describe("Linux launcher controller (injected API)", () => {
     state.dispose()
   })
 
+  test("a quiet rescan picks up an app installed inside the workspace without showing loading", async () => {
+    const terminal = { id: "org.example.Terminal.desktop", name: "Terminal" }
+    const listed = Promise.withResolvers<LinuxState>()
+    const response = { list: Promise.resolve<LinuxState>({ phase: "ready", apps: [app] }) }
+    const state = setup({ appDockLinuxList: () => response.list })
+    await state.menu.refresh()
+    response.list = listed.promise
+    const quiet = state.menu.refresh(true)
+    expect(state.menu.store.loading).toBe(false)
+    listed.resolve({ phase: "ready", apps: [app, terminal] })
+    await quiet
+    expect(state.menu.store.apps).toEqual([app, terminal])
+    state.dispose()
+  })
+
   test("install uses the main-owned picker, refreshes apps, and handles cancellation", async () => {
     const picks: LinuxInstallResult[] = [{ status: "cancelled" }, { status: "installed", apps: [app] }]
     const lists: string[] = []

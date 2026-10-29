@@ -7,6 +7,7 @@ import {
   CONDITION,
   conditionFields,
   connect,
+  contextOf,
   documentFields,
   emptiedPhases,
   type Flow,
@@ -14,8 +15,10 @@ import {
   insertNode,
   issues,
   layoutWorkflow,
+  listedSteps,
   phaseChoices,
   readChecklist,
+  readTools,
   RECORDED,
   removeNodes,
   setPhase,
@@ -359,6 +362,15 @@ describe("issues", () => {
       }).controls,
     ).toHaveLength(1)
   })
+
+  test("a step's tools read each family on its own", () => {
+    const step = (tools: unknown) => ({ id: "x", name: "x", type: "relay.execute", x: 0, y: 0, parameters: { tools } })
+    expect(readTools(step('{"mcp":["github"],"bash":[]}'))).toEqual({ mcp: ["github"], bash: [] })
+    expect(readTools(step({ mcp: "github", bash: ["git *"] }))).toEqual({ mcp: undefined, bash: ["git *"] })
+    expect(readTools(step("{oops"))).toEqual({})
+    expect(readTools(step("[]"))).toEqual({})
+    expect(readTools(step(undefined))).toEqual({})
+  })
 })
 
 describe("step configuration", () => {
@@ -395,6 +407,15 @@ describe("step configuration", () => {
     expect(issues(retype(flow, "b", "relay.inject", { file: "docs/brief.md" }))).toEqual([])
   })
 
+  test("context belongs to the step after it: only trailing context is listed, and flagged", () => {
+    const attached = retype(linear(), "b", "relay.inject", { text: "Read the spec." })
+    expect(contextOf(attached, "c").map((item) => item.id)).toEqual(["b"])
+    expect(listedSteps(attached).map((item) => item.id)).toEqual(["a", "c", "d"])
+    const trailing = retype(linear(), "d", "relay.inject", { text: "Read the spec." })
+    expect(listedSteps(trailing).map((item) => item.id)).toEqual(["a", "b", "c", "d"])
+    expect(issues(trailing)).toEqual([{ code: "context-alone", node: "d" }])
+  })
+
   test("a step naming a skill the catalog lacks is flagged once the catalog has loaded", () => {
     const flow = retype(linear(), "b", "relay.execute", { skill: "gone" })
     expect(issues(flow)).toEqual([])
@@ -420,6 +441,8 @@ describe("step configuration", () => {
     expect(checkID(flow, "a")).toBe("a_check_2")
     expect(checkID(flow, "b")).toBe("b_check_2")
     expect(checkID(flow, "d")).toBe("d_check_1")
+    // A preset names its check after what it does.
+    expect(checkID(flow, "a", "tests")).toBe("a_tests_1")
   })
 
   test("a phase split by a step outside it is flagged on that step", () => {

@@ -3,24 +3,17 @@ export * as PlaybookContent from "./playbook-content"
 import { SeatSkillContent } from "./seat-skill-content"
 
 // This is the required source inventory, independent of whatever a build happened to find on disk.
-export const names = [
-  "frame-request",
-  "maestro-arsenal-operators",
-  "maestro-composer",
-  "maestro-contract",
-  "maestro-decompose",
-  "maestro-governed",
-  "maestro-loop",
-  "maestro-pack",
-  "maestro-repo-maintenance",
-  "maestro-verify",
-] as const
+export const names = ["frame-request", "maestro-orchestra", "maestro-plan", "maestro-repo", "maestro-run"] as const
 
 export const files = [
   ...names.map((name) => `${name}/SKILL.md`),
-  "maestro-decompose/suite-review.md",
-  "maestro-repo-maintenance/reviewer-brief.md",
-  "maestro-verify/review-checks.md",
+  "maestro-repo/arsenal-operators/SKILL.md",
+  "maestro-repo/maintenance/SKILL.md",
+  "maestro-repo/maintenance/reviewer-brief/SKILL.md",
+  "maestro-run/governed/SKILL.md",
+  "maestro-run/loop/SKILL.md",
+  "maestro-run/verify/SKILL.md",
+  "maestro-run/verify/review-checks/SKILL.md",
 ].toSorted()
 
 export function validate(tree: Record<string, string>) {

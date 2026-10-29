@@ -12,7 +12,7 @@ import { describe, it, expect, afterEach } from "vitest"
 import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { ATLAS_IGNORE_PATTERN, ATLAS_POLICY_NEGATION, ensureAtlasIgnored } from "../src/gitignore.js"
+import { ATLAS_IGNORE_PATTERN, ATLAS_POLICY_NEGATION, ATLAS_TREE_NEGATIONS, ensureAtlasIgnored } from "../src/gitignore.js"
 
 let dir: string | undefined
 afterEach(() => {
@@ -44,6 +44,7 @@ describe("ensureAtlasIgnored — total, idempotent, and honest about what it did
     expect(ensureAtlasIgnored(p).outcome).toBe("installed")
     expect(lines(p)).toContain(ATLAS_IGNORE_PATTERN)
     expect(lines(p)).toContain(ATLAS_POLICY_NEGATION)
+    ATLAS_TREE_NEGATIONS.forEach((line) => expect(lines(p)).toContain(line))
   })
 
   it("APPENDS to an existing file — a user's own rules are never rewritten", () => {
@@ -68,8 +69,14 @@ describe("ensureAtlasIgnored — total, idempotent, and honest about what it did
     expect(lines(p)).toContain(ATLAS_POLICY_NEGATION)
   })
 
-  it("IDEMPOTENT: a complete rule is left byte-identical and reported as already present", () => {
+  it("PARTIAL: a rule from before the committed tree gains the tree negations, after the pattern", () => {
     const p = fresh(`${ATLAS_IGNORE_PATTERN}\n${ATLAS_POLICY_NEGATION}\n`)
+    expect(ensureAtlasIgnored(p).outcome).toBe("partial-repaired")
+    expect(lines(p)).toEqual([ATLAS_IGNORE_PATTERN, ATLAS_POLICY_NEGATION, ...ATLAS_TREE_NEGATIONS, ""])
+  })
+
+  it("IDEMPOTENT: a complete rule is left byte-identical and reported as already present", () => {
+    const p = fresh(`${[ATLAS_IGNORE_PATTERN, ATLAS_POLICY_NEGATION, ...ATLAS_TREE_NEGATIONS].join("\n")}\n`)
     const before = readFileSync(join(p, ".gitignore"), "utf8")
     expect(ensureAtlasIgnored(p).outcome).toBe("already-present")
     expect(readFileSync(join(p, ".gitignore"), "utf8")).toBe(before)

@@ -6,7 +6,7 @@ The Claude Code engine adapter: SDK process lifetime, executable lookup, transcr
 
 The Claude Code engine adapter: SDK process lifetime, executable lookup, transcripts and host options. Owner: The Claude Code engine owner.
 
-Holds `src/sdk.ts` (the single spawn seam, `processLifetime`, which keeps the `claude_code` preset), `src/executable.ts`, `src/transcript.ts` and `src/host/{admission,join,options}.ts`. The executable lookup reads the SDK pin from this manifest.
+Holds `src/sdk.ts` (the single spawn seam, `processLifetime`, which keeps the `claude_code` preset), `src/executable.ts`, `src/transcript.ts` and `src/host/options.ts`. The executable lookup reads the SDK pin from this manifest. `src/v2/host.ts` is the V2 `ExecutionHost`: Orchestra runs on Claude Code as a meta-harness (short preset append, context through the `UserPromptSubmit` hook, seats dispatched through Orchestra's `task` as child Sessions, as in normal mode). See `docs/specs/claude-mode/meta-harness.md` and `.orchestra/skills/claude-mode-maintenance`.
 
 ## Public entry points and consumers
 

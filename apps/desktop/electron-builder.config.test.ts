@@ -82,7 +82,7 @@ for (const channel of channels) {
     // The desktop main process points the server at Resources/playbooks (src/main/server.ts).
     const playbooks = path.join(WorkspacePaths.make(import.meta.dir).module("maestro"), "playbooks")
     expect(config.extraResources).toContainEqual({ from: playbooks, to: "playbooks" })
-    expect(await Bun.file(path.join(playbooks, "maestro-governed/SKILL.md")).exists()).toBe(true)
+    expect(await Bun.file(path.join(playbooks, "maestro-run/governed/SKILL.md")).exists()).toBe(true)
   })
 }
 

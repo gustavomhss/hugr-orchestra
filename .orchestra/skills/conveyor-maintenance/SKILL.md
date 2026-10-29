@@ -1,0 +1,76 @@
+---
+name: conveyor-maintenance
+description: How to change the merge queue (conveyor) safely — the CI contract, ci_run and the board_check ledger — with the traps and the gates to run
+---
+
+# Conveyor maintenance
+
+Read `conveyor-ownership` first. Spec: `docs/specs/maestro-lead/merge-queue.md`, §5 for CI facts, §8 for attempts,
+snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bundles and the PR record.
+
+## Where a change goes
+
+- New contract field: the `File` schema and `Contract` type in `board/ci.ts`, the default in `contract` and `defaults`,
+  and `docs/guides/merge-queue.md`.
+- New check kind or outcome: `CheckKind` or `CheckOutcome` in `packages/schema/src/board.ts`, then `state` in `ci.ts`.
+- Attempt fields: `BoardAttemptTable` in `board/sql.ts`; who opens and ends attempts is `dispatch` and `follow` in
+  `board/snapshot.ts`.
+- Card thread notes: `board/thread.ts` owns them. Ids are deterministic (`bno_<promptID>`, `bno_review_*`,
+  `bno_verdict_*`, `bno_rework_*`) so exact retries write once. Blocked comes from `TaskGovernance.settle`'s `blocked`,
+  never from text.
+- Record commit: `recordBundle` in `board/queue.ts` writes spec §4.7 through `@orchestra/atlas-boundary/record-log`.
+  Redaction comes from `gh api repos/<slug>` (`.private`; any failure counts as public); free text goes in a board
+  event's `text`, never in `before`/`after`. Writers skip lines already present so a rebuilt bundle does not duplicate
+  them.
+- Which cards a base advance checks: `WATCHED` and the candidate query in `board/conflicts.ts`.
+- Enqueue preconditions: `enqueue` in `board/queue.ts`; they are checked again inside the write transaction.
+- Per-project `busy` set in `BoardQueue.make` keeps a project from settling twice when ticks overlap. `accepted` is the
+  only non-`open` bundle status that `openBundle` returns (a flaky bundle Maestro merged with `board_bundle`).
+- Cut rules and bundle order: `cut` in `board/queue.ts`. Landing and base moves: `settle` and `skew`. `settle` checks
+  for an already-landed head (an ancestor of base) before it pushes; restore from a snapshot lives in `push` (`restored`).
+- PR record fields: `PrRecord` in `packages/schema/src/board.ts` (what Maestro writes), the completeness check
+  `incomplete`, and `recordOf` in `board/queue.ts` (host facts). Rendering is Atlas's: core calls the
+  `BoardRecord.Port` in `board/record.ts`, bound through `Board.layerWith({ record })`. Its types mirror Atlas's
+  `PrRecord`/`BundleRecord`/`Trailer`; change both sides together. Never add a renderer in core.
+- New column: `BoardCheckTable` in `board/sql.ts` (snake_case), then `bun run migration --name <name>` in
+  `packages/core`.
+- Exposing checks over HTTP or in `board_read`: protocol group and handler, then `bun run generate` in
+  `packages/client`.
+
+## Traps
+
+- `scoped.tests` is split on whitespace and run without a shell. `{files}` expands to one argument per file.
+- A workflow dispatch returns no run id. `settle` matches the newest `workflow_dispatch` run on the dispatched commit
+  created after the dispatch; two dispatches of one workflow on one commit can swap.
+- Workflow rows carry the pushed branch's tree, so they count toward the state only when the worktree matches what
+  was pushed.
+- `ci_run` waits for `scoped.tests`; with `test:ci` that is minutes.
+- gitleaks comes from `BackendToolkit.ensure`; tests pass a fake through `Board.layerWith({ scanner })`. The scan exits
+  0 clean, 1 on a finding, anything else could not run.
+- An attempt with no stored worktree is located by `git worktree list` on the card's branch, then saved.
+- `snapshots.remote` is read through `ci.contract`; with no `ci.json` that costs a `gh api` call per card per sweep.
+- The conflict sweep reads `base` through `ci.contract` too: one `gh api` call per project per minute without
+  `ci.json`.
+- `git merge-tree --write-tree` exits 0 clean and 1 on a conflict, listing the files after the tree line; above 1 the
+  card gets no note for that advance.
+- Every `gh` call goes through the injected `Gh` (`Board.layerWith({ gh })`); tests fake GitHub there and run real git
+  against a bare origin.
+- A bundle branch is `bundle-<KEY>-<n>`, pushed with force; the base branch only with `--force-with-lease`.
+- `turbo` runs through `bun x turbo --dry=json` with a 120 s timeout; any failure means retest, never land.
+- The tick runs every 60 s in the board poll; it settles the open bundle before it cuts a new one.
+- `size()` reads the last 50 settled attempts (`merged` or `ejected`) for the bundle size; `infra` reruns once and `paused` (a second infra red) stops `cut`. Eject writes outcome `ejected` and opens the next attempt via `BoardSnapshot.dispatch`.
+- `failures()` reads job logs through `detailsUrl` with `gh api repos/<o>/<r>/actions/jobs/<id>/logs`, strips timestamps, and uses `BoardCi.failing`; `full.control` (`line` plus job-name prefixes) is the control-line infra rule and applies only to the jobs it names; `gating` matches `workflowName`.
+- `cut` reads the last closed bundle: after a `red` it cuts half its members (the cap); after `base-red` it waits until the base tip moves. A memberless bundle is a base probe: it closes `probe-green` or `base-red` and never merges; `cut` looks past a `probe-green` to the `probing` bundle before it.
+- Section 6.8: a base-red bundle sets `culprit`, `failing` and `fix_issue_id` (migration `20261029070552_board_base_fix`). `cut` reads them from the last closed bundle and cuts only its fix card while base stays put; a fix bundle that stays red closes `base-red` with the same fields, so the wait holds. `fixCard` reuses an unshipped fix card.
+- `scope()` adds its scratch worktrees one at a time (concurrent `git worktree add` races on the lock), runs F in parallel and returns base, code or flaky; `BoardCi.packaged` maps failing bun files to their turbo group; `flaky()` writes the `board_flake` row (migration `20261028230000_board_flake`) and keeps the bundle open.
+- `isolate` runs its scoped checkouts one at a time because of the worktree lock. Bundle `rebuilds` counts consecutive `isolated` reds. A queue row's `hold` (`held`, `alone`) is cleared when the card is cut.
+- `board/tree.ts` owns export (`BoardTree.event`, called by the record commit) and import (`BoardTree.restore`). One applier per `Board.Action` in `APPLIERS`; a new action needs a new applier (the `Record<Board.Action, ...>` type forces it) and a structure field in its activity `after`. Unknown actions fail with `BoardTree.UnknownActionError`.
+- Write-set matching drops `:L` line ranges and matches patterns with `Bun.Glob`, like the arsenal's `conflictVerdict`.
+
+## Gates
+
+- Tests on Actions only: `bun run test:ci core test/board-ci.test.ts test/board-snapshot.test.ts test/board-conflicts.test.ts test/board-queue.test.ts` (add `test/board.test.ts` and
+  `test/board-tools.test.ts` when board code moves).
+- Typecheck: `gh workflow run typecheck.yml --ref <branch>`. Never on the Mac.
+- `bun run check:guards --base origin/dev` before calling a change done.
+- `BoardLedger.of` computes `Board.Ledger` from activity, check and attempt rows; it is optional on `Board.Snapshot`; per-lane numbers are phase 2.

@@ -1,0 +1,14 @@
+id = "merge-outside-conveyor"
+group = "hygiene"
+severity = "gate"
+on = "added-lines"
+paths = ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.mjs", "**/*.cjs", "**/*.sh", ".github/**"]
+exclude = ["packages/core/src/board/queue.ts", "**/*.test.ts", "**/test/**", "**/docs/**", "docs/**"]
+# Merge-queue spec section 13: only the conveyor (board/queue.ts) merges a PR into a base branch. Permission patterns
+# such as "gh pr merge *" are strings ending in a glob and are not merges.
+skip_comments = ["//", "#"]
+match = '''(?:\bgh\s+pr\s+merge\b(?!\s*\*)|["']pr["'],\s*["']merge["']|/pulls/[^\s"'`]*/merge\b|\bpulls\.merge\()'''
+message = "Code that merges a pull request outside the merge queue. Put the card in the queue with board_queue; only packages/core/src/board/queue.ts merges."
+summary = "Merging a pull request skips the queue's full gate on the bundle. Only the conveyor merges; everything else queues the card."
+positive = ['run: gh pr merge 12 --merge', 'yield* deps.gh(["pr", "merge", String(n)])', 'await octokit.request("PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge")', 'await octokit.rest.pulls.merge({ owner, repo, pull_number })']
+negative = ['["git push *", "gh pr create *", "gh pr merge *", "gh release *"]', 'yield* deps.gh(["pr", "view", String(n)])', '// gh pr merge is the conveyor job', 'git merge --no-ff card-1']

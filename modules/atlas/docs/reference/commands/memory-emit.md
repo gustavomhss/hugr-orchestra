@@ -1,7 +1,7 @@
 # `atlas memory-emit`
 
 The governed **MEMORY** write door (CAMPAIGN-11, WP-11.W8) — the ONE path a `MemoryEntry` reaches the durable
-per-seat memory log (`.atlas/memory.jsonl`). You hand it an entry as a JSON file; it derives the entry's
+per-seat memory logs (`.atlas/members/<seat>/memory/`). You hand it an entry as a JSON file; it derives the entry's
 `kind` from its shape, runs it through the SEVEN fail-closed MEM gates (kind derivation, template, partition
 
 - owner, logbook discipline, cap, pre-write secret scan, persist), and either appends it or tells you which
@@ -74,7 +74,7 @@ a knowledge `GroundedFact`) — `owner`/`kind` are its two structural fields, an
 
 | code | meaning                                                                                                |
 | ---- | ------------------------------------------------------------------------------------------------------ |
-| `0`  | the entry was admitted and appended to `.atlas/memory.jsonl`; `data.owner`/`data.kind` name the record |
+| `0`  | the entry was admitted and appended under `.atlas/members/<owner>/memory/`; `data.owner`/`data.kind` name the record |
 | `1`  | usage error — missing entry file, unreadable file, malformed JSON                                      |
 | `2`  | a MEM gate refused the write. Nothing was persisted                                                    |
 
@@ -98,7 +98,7 @@ Each refusal names the gate that fired, as a machine-readable discriminant (`rea
 - **`scanner-unavailable`** — MEM-9: no named scanner is configured, OR the configured one could not run to
   completion. See the worked example above.
 - **`store-partial`** / **`store-unavailable`** — a `logbook` or `project` write is judged against the owner's
-  durable set (the one-per-PR check, the cap), so it is refused rather than judged when `.atlas/memory.jsonl`
+  durable set (the one-per-PR check, the cap), so it is refused rather than judged when a memory log under `.atlas/`
   has a rejected line (`partial`) or cannot be read at all (`unavailable`). `task`/`pr` writes consult no
   durable state and are not affected.
 

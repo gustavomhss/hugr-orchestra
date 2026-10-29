@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import type { Agent } from "@/v2-wire"
 
 import {
+  agentAvatar,
   agentDraft,
   agentFileInput,
   agentFileTarget,
@@ -10,6 +11,7 @@ import {
   draftError,
   inheritedAction,
   isMaestro,
+  mcpPermission,
   PERMISSION_TOOLS,
   removeInput,
   restoreInput,
@@ -132,6 +134,21 @@ describe("Agent editor", () => {
     ])
   })
 
+  test("gives each configured MCP server one rule over all its tools, named as core names them", () => {
+    expect(mcpPermission("hugr-composer")).toBe("hugr-composer_*")
+    expect(mcpPermission("my server.v2")).toBe("my_server_v2_*")
+    const withServer = { ...file, permission: { "hugr-composer_*": "deny" as const } }
+    const draft = agentDraft(plan, withServer, ["hugr-composer", "docs"])
+    expect(Object.keys(draft.permission)).toEqual([...PERMISSION_TOOLS, "hugr-composer_*", "docs_*"])
+    expect(draft.permission["hugr-composer_*"]).toBe("deny")
+    draft.permission["hugr-composer_*"] = "allow"
+    draft.permission["docs_*"] = "deny"
+    expect(agentFileInput(draft, withServer, plan).permission).toEqual({ "hugr-composer_*": "allow", "docs_*": "deny" })
+    draft.permission["hugr-composer_*"] = "inherit"
+    expect(agentFileInput(draft, withServer, plan).permission).toEqual({ "docs_*": "deny" })
+    expect(agentFileInput(agentDraft(plan, withServer), withServer, plan).permission).toEqual({ "hugr-composer_*": "deny" })
+  })
+
   test("never freezes a resolved value the file does not set; the file's own values stay editable", () => {
     const untouched = agentDraft(plan, undefined)
     expect(agentFileInput(untouched, { path: file.path, exists: false, revision: "" }, plan)).toEqual({
@@ -240,6 +257,18 @@ describe("Agent editor", () => {
     expect(agentFileInput(agentDraft(plan, explicit), explicit, plan).model).toBe("openrouter/team/reasoner")
     draft.model = ""
     expect(agentFileInput(draft, explicit, plan).model).toBeUndefined()
+  })
+
+  test("an avatar is written only when chosen, and a seat without one shows its own portrait", () => {
+    expect(agentFileInput(agentDraft(plan, file), file, plan).avatar).toBeUndefined()
+    const picked = { ...agentDraft(plan, file), avatar: "lib:set2-07" }
+    expect(agentFileInput(picked, file, plan).avatar).toBe("lib:set2-07")
+    const chosen = { ...file, avatar: "lib:set2-07" }
+    expect(agentDraft(plan, chosen).avatar).toBe("lib:set2-07")
+    expect(removeInput(chosen).avatar).toBe("lib:set2-07")
+    expect(agentFileInput({ ...agentDraft(plan, chosen), avatar: "" }, chosen, plan).avatar).toBeUndefined()
+    expect(agentAvatar({ ...plan, id: "backend" })).toBe("lib:seat-backend")
+    expect(agentAvatar({ ...plan, id: "backend", avatar: "lib:nova" })).toBe("lib:nova")
   })
 
   test("Maestro identity and primary mode are fixed even if a draft is tampered with", () => {

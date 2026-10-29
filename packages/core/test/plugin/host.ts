@@ -263,6 +263,7 @@ function agentInfo(value: AgentV2.Info) {
     model: value.model && { ...value.model },
     request: { headers: { ...value.request.headers }, body: { ...value.request.body } },
     permissions: value.permissions.map((permission) => ({ ...permission })),
+    skills: value.skills?.map((skill) => ({ ...skill })),
   }
 }
 

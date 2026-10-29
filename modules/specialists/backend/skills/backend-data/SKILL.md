@@ -1,6 +1,7 @@
 ---
 name: backend-data
 description: "Data obligations for an assigned backend change: a query or write with its result mapping, writes bound to a supplied transaction, a persistence mapping, or one assigned schema or data migration phase. Load with backend-implement when the packet changes how data is read, written or transitioned. Not for choosing persistence design, isolation, a migration plan or rollout."
+internal: true
 ---
 
 # Backend data
@@ -24,15 +25,15 @@ Missing business meaning blocks that part of the work. Missing prewritten SQL do
 
 ## Select the reference
 
-- [Query and result mapping](../backend-implement/references/data/query.md): assigned read or write semantics on the existing schema.
-- [Atomic writes](../backend-implement/references/data/transaction.md): writes or invariants that must share one supplied transaction.
-- [Assigned migration phase](../backend-implement/references/data/migration-phase.md): a persisted schema or data transition. Read it with [migration mode](../backend-implement/references/modes/migration.md).
-- A cursor, batch or streamed result that holds database resources: [streams and batches](../backend-implement/references/lifetimes/streams.md).
-- A write that must admit a job in the same transaction: [job admission](../backend-implement/references/lifetimes/jobs.md).
+- Query and result mapping (`backend-data-query`): assigned read or write semantics on the existing schema.
+- Atomic writes (`backend-data-transaction`): writes or invariants that must share one supplied transaction.
+- Assigned migration phase (`backend-data-migration-phase`): a persisted schema or data transition. Read it with migration mode (`backend-implement-migration`).
+- A cursor, batch or streamed result that holds database resources: streams and batches (`backend-concurrency-streams`).
+- A write that must admit a job in the same transaction: job admission (`backend-concurrency-jobs`).
 
 Exact driver, ORM and runner APIs live in the references your stack selects. Load none because the library merely appears in the repository.
 
-Stack references: [Go](../backend-implement/references/languages/go.md), [Python](../backend-implement/references/languages/python.md), [JavaScript/TypeScript](../backend-implement/references/languages/js-ts.md), [Ruby](../backend-implement/references/languages/ruby.md), [PHP](../backend-implement/references/languages/php.md). Read only the packet's language.
+Stack references: Go (`team-stack-go`), Python (`team-stack-python`), JavaScript/TypeScript (`team-stack-js-ts`), Ruby (`team-stack-ruby`), PHP (`team-stack-php`). Read only the packet's language.
 
 ## Common procedure
 

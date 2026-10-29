@@ -1,13 +1,20 @@
+import { mkdtempSync } from "node:fs"
+import { tmpdir } from "node:os"
+import path from "node:path"
 import { beforeEach, describe, expect, test } from "bun:test"
 import { DateTime, Effect, Layer } from "effect"
+import { exportContext } from "@orchestra/atlas-boundary/context"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Config } from "@orchestra/core/config"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { Location } from "@orchestra/core/location"
 import { ModelV2 } from "@orchestra/core/model"
 import { PermissionV2 } from "@orchestra/core/permission"
+import { Project } from "@orchestra/core/project"
 import { ProviderV2 } from "@orchestra/core/provider"
+import { AbsolutePath } from "@orchestra/core/schema"
 import { SessionMessage, SessionV2 } from "@orchestra/core/session"
 import { ToolOutputStore } from "@orchestra/core/tool-output-store"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
@@ -19,6 +26,8 @@ import { config, permission, run, seed, store } from "./fixture"
 const sessionID = SessionV2.ID.make("ses_tools")
 const assertions: PermissionV2.AssertInput[] = []
 let entries = config({})
+// The Location has no VCS, so the committed `.atlas/` tree is read from its directory.
+const repo = AbsolutePath.make(mkdtempSync(path.join(tmpdir(), "continuity-bundle-")))
 
 const it = run(
   AppNodeBuilder.build(
@@ -33,6 +42,7 @@ const it = run(
       [PermissionV2.node, permission(assertions)],
       [Config.node, Layer.succeed(Config.Service, Config.Service.of({ entries: () => Effect.succeed(entries) }))],
       [ToolOutputStore.node, ToolOutputStore.nodeWithoutConfig],
+      [Location.node, Layer.succeed(Location.Service, { directory: repo, project: { id: Project.ID.global, directory: repo } })],
     ],
   ),
 )
@@ -159,6 +169,28 @@ describe("ContinuityTools", () => {
         expect(yield* recall({ archive_query: "deadlock", role: "user" })).toMatchObject({ status: "not_found", total: 0 })
       }),
     ))
+
+  test("reads a reference the local archive lacks from the agent's committed archive", () =>
+    it(
+      Effect.gen(function* () {
+        const [chunk] = ContinuityArchive.chunks("ses_predecessor", "msg_assistant", "assistant", "committed handover notes")
+        exportContext(repo, "build", "ses_predecessor", { references: [chunk], masks: [] }, {
+          commit: true,
+          at: "2026-10-28T10:00:00.000Z",
+        })
+        const found = yield* recall({ reference: chunk.id })
+        expect(found).toMatchObject({ status: "found", source: { reference: chunk.id }, bytes: chunk.bytes })
+        expect(found.content).toContain("committed handover notes")
+        expect(yield* recall({ reference: "f".repeat(64) })).toMatchObject({ status: "unavailable", reason: "missing" })
+      }),
+    ))
+
+  test("scrubs credential shapes before a chunk is hashed", () => {
+    const secret = "AKIA" + "IOSFODNN7EXAMPLE"
+    const [chunk] = ContinuityArchive.chunks(sessionID, "msg_assistant", "assistant", `key ${secret}`)
+    expect(chunk.markdown).not.toContain(secret)
+    expect(chunk.id).toBe(ContinuityArchive.hash(chunk.markdown))
+  })
 
   test("refuses ambiguous input", () =>
     it(

@@ -560,9 +560,18 @@ describe("seeding", () => {
         .sort(),
     ).toEqual([...AuthoringStore.PROFILES.keys()].sort())
     expect([...AuthoringStore.PROFILES].filter((entry) => entry[1]).map((entry) => entry[0])).toEqual([
+      "bugfix",
+      "feature-launch",
+      "safe-refactor",
       "tdd_feature",
       "wp-execute",
     ])
+  })
+
+  test("the embedded sprints are the shipped profile files", async () => {
+    expect([...AuthoringStore.SHIPPED.keys()]).toEqual([...AuthoringStore.PROFILES.keys()])
+    for (const [name, sprint] of AuthoringStore.SHIPPED)
+      expect(sprint).toEqual(await Bun.file(path.join(AuthoringStore.PROFILES_DIRECTORY, name + ".sprint.json")).json())
   })
 
   test("seeds each profile once, as Python projects it, marked with its profile", async () => {
@@ -574,7 +583,17 @@ describe("seeding", () => {
         const seeded = yield* store.documents()
         // Newest first: file-name order, reversed.
         expect(seeded.map((document) => [document.id, document.name, document.meta.relay?.profile])).toEqual(
-          ["wp-execute", "tdd_feature", "spec-decompose", "research-v2", "planning", "design"].map((name) => [
+          [
+            "wp-execute",
+            "tdd_feature",
+            "spec-decompose",
+            "safe-refactor",
+            "research-v2",
+            "planning",
+            "feature-launch",
+            "design",
+            "bugfix",
+          ].map((name) => [
             `relay-${name}`,
             `Relay · ${name}`,
             name,
@@ -600,7 +619,7 @@ describe("seeding", () => {
     )
   })
 
-  test("only tdd_feature and wp-execute run; the other profiles refuse with profile-tools-missing", async () => {
+  test("profiles with their tools run; the other profiles refuse with profile-tools-missing", async () => {
     const dir = fresh()
     await run(
       Effect.gen(function* () {
@@ -619,7 +638,17 @@ describe("seeding", () => {
           message: `The ${profile} profile checks its work with Relay tools that are not available yet. It can be edited, but it cannot run.`,
         })
         expect(outcomes).toEqual(
-          ["wp-execute", "tdd_feature", "spec-decompose", "research-v2", "planning", "design"].map((profile) => {
+          [
+            "wp-execute",
+            "tdd_feature",
+            "spec-decompose",
+            "safe-refactor",
+            "research-v2",
+            "planning",
+            "feature-launch",
+            "design",
+            "bugfix",
+          ].map((profile) => {
             const expected = AuthoringStore.PROFILES.get(profile) ? null : tools(profile)
             return [profile, expected, expected]
           }),

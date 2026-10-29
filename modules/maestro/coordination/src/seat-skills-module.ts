@@ -17,10 +17,16 @@ export async function seatSkillsModule() {
         return [`  ${JSON.stringify(seat.id)}: {`, ...entries, "  },"]
       }),
   )
+  // The shared trees (`team-*` roots) are embedded once, whichever seats declare them.
+  const team = Seats.shared().length > 0 ? await SeatSkillContent.read("team", Seats.sharedSource(), Seats.shared()) : {}
+  const shared = Object.keys(team).length > 0
+    ? ['  "team": {', ...Object.keys(team).toSorted().map((file) => `    [${JSON.stringify(file)}]: ${JSON.stringify(team[file])},`), "  },"]
+    : []
   const playbooks = await PlaybookContent.read(fileURLToPath(new URL("../playbooks", import.meta.url)))
   return [
     "export default {",
     ...trees.flat(),
+    ...shared,
     '  "maestro": {',
     ...Object.keys(playbooks)
       .toSorted()

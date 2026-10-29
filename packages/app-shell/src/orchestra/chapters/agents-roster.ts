@@ -39,7 +39,11 @@ export const PERMISSION_TOOLS = [
   "external_directory",
   "doom_loop",
 ] as const
-export type PermissionTool = (typeof PERMISSION_TOOLS)[number]
+
+/** The rule that covers every tool of a configured MCP server, named as core names them: `<server>_<tool>`, sanitized. */
+export function mcpPermission(server: string) {
+  return `${server.replace(/[^a-zA-Z0-9_-]/g, "_")}_*`
+}
 export type PermissionChoice = "inherit" | "custom" | AgentFileAction
 export type AgentMode = NonNullable<AgentFileInput["mode"]>
 export const AGENT_MODES: AgentMode[] = ["primary", "subagent", "all"]
@@ -49,9 +53,11 @@ export type AgentDraft = {
   mode: AgentMode
   description: string
   model: string
+  avatar: string
   steps: string
   system: string
-  permission: Record<PermissionTool, PermissionChoice>
+  /** The built-in tools, then one entry per configured MCP server (`mcpPermission`). */
+  permission: Record<string, PermissionChoice>
 }
 
 const NAME = /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/
@@ -67,6 +73,14 @@ export function agentRoster(agents: readonly Agent[]) {
       // The user talks only to Maestro; every other agent works through it.
       chat: agentKey(agent) === "maestro",
     }))
+}
+
+/**
+ * The picture an agent shows: its own choice, else the bundled portrait named after its id (`seat-<id>`), which
+ * exists only for native seats. Ids are unique, so a custom agent never takes a seat's portrait.
+ */
+export function agentAvatar(agent: Agent) {
+  return agent.avatar || `lib:seat-${agentKey(agent)}`
 }
 
 export function errorStatus(error: unknown) {
@@ -102,25 +116,30 @@ export function agentFileTarget(draft: AgentDraft, agent: Agent | undefined) {
  * Seeds the editor from the project file first, then from the agent the server resolved. Maestro is always primary,
  * whatever a hand-edited file says, so saving writes it back as primary.
  */
-export function agentDraft(agent: Agent | undefined, file: AgentFileInfo | undefined): AgentDraft {
+export function agentDraft(
+  agent: Agent | undefined,
+  file: AgentFileInfo | undefined,
+  servers: readonly string[] = [],
+): AgentDraft {
   const steps = file?.steps ?? agent?.steps
   return {
     name: isMaestro(agent) ? "maestro" : (agent?.name ?? ""),
     mode: isMaestro(agent) ? "primary" : (file?.mode ?? agent?.mode ?? "subagent"),
     description: file?.description ?? agent?.description ?? "",
     model: file?.model ?? "",
+    avatar: file?.avatar ?? agent?.avatar ?? "",
     steps: steps === undefined ? "" : String(steps),
     system: file?.system ?? agent?.prompt ?? "",
     permission: Object.fromEntries(
-      PERMISSION_TOOLS.map((tool) => [tool, choiceOf(file?.permission?.[tool])]),
-    ) as AgentDraft["permission"],
+      [...PERMISSION_TOOLS, ...servers.map(mcpPermission)].map((tool) => [tool, choiceOf(file?.permission?.[tool])]),
+    ),
   }
 }
 
 /**
  * Builds the file payload. A value the file does not set and the user left at the resolved value stays out,
  * so saving never freezes a built-in default into the file. Rules keep the file's order (later entries win):
- * a changed tool is replaced in place, a new one goes last, and pattern maps or unlisted tools stay.
+ * a changed tool is replaced in place, a new one goes last, and pattern maps or tools the draft does not list stay.
  */
 export function agentFileInput(
   draft: AgentDraft,
@@ -128,7 +147,7 @@ export function agentFileInput(
   agent: Agent | undefined,
 ): AgentFileInput {
   const resolved = agent ? agentDraft(agent, undefined) : undefined
-  const keep = (key: "mode" | "description" | "steps" | "system", value: string) =>
+  const keep = (key: "mode" | "description" | "avatar" | "steps" | "system", value: string) =>
     value !== "" && (file?.[key] !== undefined || !resolved || resolved[key].trim() !== value)
   const description = draft.description.trim()
   const steps = draft.steps.trim()
@@ -136,21 +155,21 @@ export function agentFileInput(
   const current = file?.permission ?? {}
   const permission = Object.fromEntries([
     ...Object.entries(current).flatMap(([tool, value]): [string, AgentFilePermission][] => {
-      if (!isPermissionTool(tool)) return [[tool, value]]
       const choice = draft.permission[tool]
+      if (choice === undefined) return [[tool, value]]
       if (choice === "inherit") return []
       return [[tool, choice === "custom" ? value : choice]]
     }),
-    ...PERMISSION_TOOLS.flatMap((tool): [string, AgentFilePermission][] => {
-      const choice = draft.permission[tool]
-      return Object.hasOwn(current, tool) || choice === "inherit" || choice === "custom" ? [] : [[tool, choice]]
-    }),
+    ...Object.entries(draft.permission).flatMap(([tool, choice]): [string, AgentFilePermission][] =>
+      Object.hasOwn(current, tool) || choice === "inherit" || choice === "custom" ? [] : [[tool, choice]],
+    ),
   ])
   return {
     ...(isMaestro(agent) ? { mode: "primary" } : keep("mode", draft.mode) ? { mode: draft.mode } : {}),
     ...(keep("description", description) ? { description } : {}),
     // The empty choice removes the file override. Any chosen model is explicit, even if it matches inheritance.
     ...(draft.model ? { model: draft.model } : {}),
+    ...(keep("avatar", draft.avatar) ? { avatar: draft.avatar } : {}),
     ...(keep("steps", steps) ? { steps: Number(steps) } : {}),
     ...(keep("system", system) ? { system } : {}),
     permission,
@@ -164,6 +183,7 @@ export function removeInput(file: AgentFileInfo | undefined): AgentFileInput {
     description: file?.description,
     mode: file?.mode,
     model: file?.model,
+    avatar: file?.avatar,
     steps: file?.steps,
     system: file?.system,
     permission: file?.permission,
@@ -204,10 +224,6 @@ function choiceOf(value: AgentFilePermission | undefined): PermissionChoice {
   if (value === undefined) return "inherit"
   if (typeof value === "string") return value
   return "custom"
-}
-
-function isPermissionTool(tool: string): tool is PermissionTool {
-  return PERMISSION_TOOLS.some((item) => item === tool)
 }
 
 function wildcard(pattern: string, value: string) {

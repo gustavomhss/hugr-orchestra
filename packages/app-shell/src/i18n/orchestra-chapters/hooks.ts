@@ -117,10 +117,10 @@ export const HOOKS_COPY = {
 
   "orchestra.hooks.create.title": "New hook",
   "orchestra.hooks.create.description":
-    "Pick a template. You choose the event in the trigger's details and add conditions and actions on the canvas.",
+    "Pick a starting point. Then read it as one rule: when an event happens, if it matches, do something.",
   "orchestra.hooks.create.defaultName": "New hook",
   "orchestra.hooks.create.blank": "Blank hook",
-  "orchestra.hooks.create.blankBody": "A trigger and nothing else.",
+  "orchestra.hooks.create.blankBody": "An event and nothing else. You add what it checks and does.",
   "orchestra.hooks.preset.protect-generated": "Protect generated files",
   "orchestra.hooks.preset.protect-generated.body":
     "Refuse edits, overwrites and shell commands under a generated path and say how to regenerate.",
@@ -297,6 +297,24 @@ export const HOOKS_COPY = {
   "orchestra.hooks.outcome.reminded": "Reminded",
   "orchestra.hooks.outcome.recorded": "Recorded",
   "orchestra.hooks.outcome.allowed": "Allowed",
+  "orchestra.hooks.rule.when": "When",
+  "orchestra.hooks.rule.pickEvent": "Pick the event that starts this hook",
+  "orchestra.hooks.rule.if": "If",
+  "orchestra.hooks.rule.ifAny": "any case matches; every line of a case must match",
+  "orchestra.hooks.rule.always": "always, with no condition",
+  "orchestra.hooks.rule.matches": "matches",
+  "orchestra.hooks.rule.and": "and",
+  "orchestra.hooks.rule.or": "or",
+  "orchestra.hooks.rule.addAnd": "And",
+  "orchestra.hooks.rule.addCase": "Or another case",
+  "orchestra.hooks.rule.addCondition": "Add a condition",
+  "orchestra.hooks.rule.then": "Then",
+  "orchestra.hooks.rule.noActions": "Nothing happens yet. Add what the hook does.",
+  "orchestra.hooks.rule.addAction": "Add action",
+  "orchestra.hooks.rule.pickAction": "What should the hook do?",
+  "orchestra.hooks.rule.noFitTitle": "This hook has its own wiring",
+  "orchestra.hooks.rule.noFitBody": "Its branches do not read as one rule. Edit it on the canvas.",
+  "orchestra.hooks.rule.openCanvas": "Open canvas",
 }
 
 export const HOOKS_COPY_BR: Record<keyof typeof HOOKS_COPY, string> = {
@@ -355,11 +373,11 @@ export const HOOKS_COPY_BR: Record<keyof typeof HOOKS_COPY, string> = {
   "orchestra.hooks.publish.description":
     "Publicar torna esta versão disponível para instalação. Uma cópia instalada continua aplicando a versão atual até ser atualizada.",
   "orchestra.hooks.publish.updateInstall": "Atualizar a cópia instalada para esta versão",
-  "orchestra.hooks.publish.updateInstallHint":
-    "Sem isto, as sessões continuam aplicando a versão instalada agora.",
+  "orchestra.hooks.publish.updateInstallHint": "Sem isto, as sessões continuam aplicando a versão instalada agora.",
   "orchestra.hooks.delete.description": "As versões dele são removidas e ele é desinstalado deste projeto.",
   "orchestra.hooks.empty.title": "Nenhum hook neste projeto ainda",
-  "orchestra.hooks.empty.body": "Um hook escuta um evento de agente e bloqueia, pergunta, permite ou roda uma verificação.",
+  "orchestra.hooks.empty.body":
+    "Um hook escuta um evento de agente e bloqueia, pergunta, permite ou roda uma verificação.",
   "orchestra.hooks.templates.meta": "Modelos abrem como rascunhos",
 
   "orchestra.hooks.menu.uninstall": "Desinstalar",
@@ -378,7 +396,8 @@ export const HOOKS_COPY_BR: Record<keyof typeof HOOKS_COPY, string> = {
   "orchestra.hooks.order.down": "Mover {{name}} para baixo",
   "orchestra.hooks.order.done": "Concluído",
 
-  "orchestra.hooks.repair.title": "O arquivo de hooks está danificado — as ferramentas dos agentes neste projeto estão bloqueadas",
+  "orchestra.hooks.repair.title":
+    "O arquivo de hooks está danificado — as ferramentas dos agentes neste projeto estão bloqueadas",
   "orchestra.hooks.repair.body":
     "O Orchestra não consegue ler os hooks instalados, então recusa toda chamada de ferramenta e todo prompt aqui até isto ser corrigido.",
   "orchestra.hooks.repair.action": "Fazer backup e redefinir os hooks instalados",
@@ -400,7 +419,8 @@ export const HOOKS_COPY_BR: Record<keyof typeof HOOKS_COPY, string> = {
   "orchestra.hooks.activity.emptyInstalled": "Este hook registra aqui cada evento que trata.",
   "orchestra.hooks.activity.emptyOff": "Instale o hook publicado para registrar os eventos que ele trata.",
   "orchestra.hooks.activity.loading": "Lendo a atividade…",
-  "orchestra.hooks.activity.unreadable": "Não foi possível ler a atividade de {{names}}. Os outros hooks são mostrados.",
+  "orchestra.hooks.activity.unreadable":
+    "Não foi possível ler a atividade de {{names}}. Os outros hooks são mostrados.",
   "orchestra.hooks.activity.note": "Cada linha é uma ação que um hook executou em {{profile}}.",
   "orchestra.hooks.activity.open": "Abrir hook",
   "orchestra.hooks.activity.openSession": "Abrir sessão",
@@ -417,10 +437,10 @@ export const HOOKS_COPY_BR: Record<keyof typeof HOOKS_COPY, string> = {
 
   "orchestra.hooks.create.title": "Novo hook",
   "orchestra.hooks.create.description":
-    "Escolha um modelo. Você escolhe o evento nos detalhes do gatilho e adiciona condições e ações no canvas.",
+    "Escolha um ponto de partida. Depois leia como uma regra: quando um evento acontece, se combinar, faça algo.",
   "orchestra.hooks.create.defaultName": "Novo hook",
   "orchestra.hooks.create.blank": "Hook em branco",
-  "orchestra.hooks.create.blankBody": "Um gatilho e nada mais.",
+  "orchestra.hooks.create.blankBody": "Um evento e nada mais. Você adiciona o que ele confere e faz.",
   "orchestra.hooks.preset.protect-generated": "Proteger arquivos gerados",
   "orchestra.hooks.preset.protect-generated.body":
     "Recusa edições, sobrescritas e comandos de shell em um caminho gerado e explica como regenerar.",
@@ -483,7 +503,8 @@ export const HOOKS_COPY_BR: Record<keyof typeof HOOKS_COPY, string> = {
   "orchestra.hooks.typeDesc.block": "Recusa a operação e diz ao agente o motivo. Só eventos Antes.",
   "orchestra.hooks.typeDesc.approve": "Pausa até uma pessoa aprovar. Só eventos Antes.",
   "orchestra.hooks.typeDesc.allow": "Deixa a operação continuar. Opcionalmente anota o motivo.",
-  "orchestra.hooks.typeDesc.remind": "Adiciona uma nota curta que o agente lê junto com o resultado da chamada, ou com o prompt.",
+  "orchestra.hooks.typeDesc.remind":
+    "Adiciona uma nota curta que o agente lê junto com o resultado da chamada, ou com o prompt.",
   "orchestra.hooks.typeDesc.verify": "Roda uma verificação de comando. Continua em Passou ou Falhou.",
   "orchestra.hooks.typeDesc.repair": "Manda o agente de volta com o que corrigir.",
   "orchestra.hooks.typeDesc.record": "Escreve o evento só na Atividade. O agente não vê nada.",
@@ -518,7 +539,8 @@ export const HOOKS_COPY_BR: Record<keyof typeof HOOKS_COPY, string> = {
   "orchestra.hooks.canvas.graphOnly": "Só o grafo; nada foi executado",
   "orchestra.hooks.canvas.clear": "Limpar",
 
-  "orchestra.hooks.details.notFired": "Este hook ainda não disparou. Use Testar para experimentá-lo em um evento de exemplo.",
+  "orchestra.hooks.details.notFired":
+    "Este hook ainda não disparou. Use Testar para experimentá-lo em um evento de exemplo.",
   "orchestra.hooks.details.lastFire": "Último disparo",
   "orchestra.hooks.details.event": "Evento",
   "orchestra.hooks.details.tool": "Ferramenta",
@@ -597,4 +619,22 @@ export const HOOKS_COPY_BR: Record<keyof typeof HOOKS_COPY, string> = {
   "orchestra.hooks.outcome.reminded": "Lembrete enviado",
   "orchestra.hooks.outcome.recorded": "Registrado",
   "orchestra.hooks.outcome.allowed": "Permitido",
+  "orchestra.hooks.rule.when": "Quando",
+  "orchestra.hooks.rule.pickEvent": "Escolha o evento que dispara este hook",
+  "orchestra.hooks.rule.if": "Se",
+  "orchestra.hooks.rule.ifAny": "algum caso bater; toda linha de um caso precisa bater",
+  "orchestra.hooks.rule.always": "sempre, sem condição",
+  "orchestra.hooks.rule.matches": "corresponde a",
+  "orchestra.hooks.rule.and": "e",
+  "orchestra.hooks.rule.or": "ou",
+  "orchestra.hooks.rule.addAnd": "E",
+  "orchestra.hooks.rule.addCase": "Ou outro caso",
+  "orchestra.hooks.rule.addCondition": "Adicionar condição",
+  "orchestra.hooks.rule.then": "Então",
+  "orchestra.hooks.rule.noActions": "Nada acontece ainda. Adicione o que o hook faz.",
+  "orchestra.hooks.rule.addAction": "Adicionar ação",
+  "orchestra.hooks.rule.pickAction": "O que o hook deve fazer?",
+  "orchestra.hooks.rule.noFitTitle": "Este hook tem uma ligação própria",
+  "orchestra.hooks.rule.noFitBody": "Os ramos não formam uma regra só. Edite no canvas.",
+  "orchestra.hooks.rule.openCanvas": "Abrir canvas",
 }

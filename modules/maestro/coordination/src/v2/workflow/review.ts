@@ -64,8 +64,9 @@ export const result = Effect.fn("WorkflowReviewV2.result")(function* (
     if (names.exitCode || names.truncated) return { status: "unavailable" as const }
     const changedPaths = names.text().split("\0").filter(Boolean)
     if (!changedPaths.length) return { status: "unchanged" as const, tree }
+    // Seats append their own Atlas Memory and Knowledge under `.atlas/members/`, inside any approved scope.
     const outside = changedPaths.filter(
-      (file) => !input.writePaths.some((root) => FSUtil.contains(path.resolve(cwd, root), path.resolve(cwd, file))),
+      (file) => ![...input.writePaths, ".atlas/members"].some((root) => FSUtil.contains(path.resolve(cwd, root), path.resolve(cwd, file))),
     )
     if (outside.length) return { status: "outside" as const, outside }
     const diff = yield* git.run(

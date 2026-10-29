@@ -84,6 +84,7 @@ export function parse(text: string): Fields | undefined {
     ...(typeof data.description === "string" ? { description: data.description } : {}),
     ...(typeof data.mode === "string" && MODES.has(data.mode) ? { mode: data.mode as Fields["mode"] } : {}),
     ...(typeof data.model === "string" ? { model: data.model } : {}),
+    ...(typeof data.avatar === "string" ? { avatar: data.avatar } : {}),
     ...(typeof steps === "number" && Number.isInteger(steps) && steps > 0 ? { steps } : {}),
     ...(system ? { system } : {}),
     ...(permission.length ? { permission: Object.fromEntries(permission) } : {}),
@@ -102,6 +103,7 @@ export function render(existing: string | undefined, input: AgentFile.Input) {
       description: input.description,
       mode: input.mode,
       model: input.model,
+      avatar: input.avatar,
       steps: input.steps,
       maxSteps: undefined,
       // `tools` is folded into `permission` on read, so it goes once the merged rules are written.

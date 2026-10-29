@@ -221,7 +221,7 @@ export const ATLAS_GENESIS_COPY = {
   "orchestra.atlas.genesis.iv.tech.kinds.text": "owner · tier · contested · intent (genesis/src/types.ts OpenQ)",
   "orchestra.atlas.genesis.iv.tech.today": "Today",
   "orchestra.atlas.genesis.iv.tech.today.text":
-    "atlas interview serves the batch; atlas answer records each answer in .atlas/review.jsonl",
+    "atlas interview serves the batch; atlas answer records each answer in .atlas/project/review.jsonl",
   "orchestra.atlas.genesis.iv.tech.here": "Here",
   "orchestra.atlas.genesis.iv.tech.here.text":
     "the engine's batch, read with the snapshot; a tier answer of T1 or T0 also opens a proposal that a person ratifies",
@@ -451,7 +451,7 @@ export const ATLAS_GENESIS_COPY_BR: Record<keyof typeof ATLAS_GENESIS_COPY, stri
   "orchestra.atlas.genesis.iv.tech.kinds.text": "owner · tier · contested · intent (genesis/src/types.ts OpenQ)",
   "orchestra.atlas.genesis.iv.tech.today": "Hoje",
   "orchestra.atlas.genesis.iv.tech.today.text":
-    "atlas interview entrega o lote; atlas answer registra cada resposta em .atlas/review.jsonl",
+    "atlas interview entrega o lote; atlas answer registra cada resposta em .atlas/project/review.jsonl",
   "orchestra.atlas.genesis.iv.tech.here": "Aqui",
   "orchestra.atlas.genesis.iv.tech.here.text":
     "o lote do motor, lido com o snapshot; uma resposta de nível T1 ou T0 também abre uma proposta que uma pessoa ratifica",

@@ -2,10 +2,11 @@ export * as Board from "./board"
 
 import fs from "fs/promises"
 import path from "path"
-import { and, asc, desc, eq, gt, inArray, ne, sql } from "drizzle-orm"
+import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, ne, sql } from "drizzle-orm"
 import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors"
 import { Clock, Context, Effect, Layer, Schedule } from "effect"
 import { SqlError } from "effect/unstable/sql/SqlError"
+import { recordPort } from "@orchestra/atlas-boundary/record"
 import { Board } from "@orchestra/schema/board"
 import { Integration } from "@orchestra/schema/integration"
 import { Credential } from "../credential"
@@ -15,6 +16,7 @@ import { makeGlobalNode } from "../effect/app-node"
 import { EventV2 } from "../event"
 import { Global } from "../global"
 import { Guardrail } from "../guardrail"
+import { BackendToolkit } from "../backend-toolkit"
 import { AppProcess } from "../process"
 import { ProjectSchema } from "../project/schema"
 import { ProjectTable } from "../project/sql"
@@ -23,15 +25,20 @@ import { AbsolutePath } from "../schema"
 import {
   BoardActivityTable,
   BoardAttachmentTable,
+  BoardAttemptTable,
+  BoardBundleMemberTable,
+  BoardBundleTable,
   BoardDependencyTable,
   BoardEpicTable,
   BoardIssueTable,
   BoardNoteTable,
   BoardProjectTable,
+  BoardQueueTable,
   BoardQuestionTable,
   BoardStepTable,
 } from "./sql"
 import { BoardForecast } from "./forecast"
+import { BoardLedger } from "./ledger"
 import { BoardDecision } from "./decision"
 import { BoardMoney } from "./money"
 import { BoardProof } from "./proof"
@@ -43,7 +50,9 @@ import {
   archived,
   changed,
   diff,
+  endOf,
   forecastOf,
+  gitRunner,
   loadEpic,
   loadIssue,
   loadProject,
@@ -54,7 +63,12 @@ import {
 import type { ActivityRow, Changed, Fields, IssueRow, ProjectRow, QuestionRow, Tx } from "./shared"
 
 export { BudgetPausedError, NotFoundError, RefusedError }
+import { BoardCi } from "./ci"
+import { BoardConflicts } from "./conflicts"
 import { BoardGithub } from "./github"
+import { BoardQueue } from "./queue"
+import type { BoardRecord } from "./record"
+import { BoardSnapshot } from "./snapshot"
 
 // The board service enforces the contract's rules (docs/specs/projects-board/CONTRACT.md section 1). Every write runs
 // in one immediate transaction that also appends its activity row, then publishes `board.changed` after commit.
@@ -111,6 +125,22 @@ export interface Interface {
   readonly decline: (key: string, number: number) => Effect.Effect<Board.OwnerResult, Error>
   /** Pulls from GitHub, pushes dirty cards and reports the sync state; the manual retry and the 60 second poll. */
   readonly sync: (key: string) => Effect.Effect<Board.GithubSync, Error>
+  /** Runs the card's scoped checks on its current tree, once per tree, and reports the derived scoped state. */
+  readonly ciRun: (input: Board.CiRunInput) => Effect.Effect<Board.CiRunResult, Error>
+  /** Pushes the card's worktree as a snapshot of its open attempt, unless its tree is already the last snapshot's. */
+  readonly snapshotPush: (key: string, number: number) => Effect.Effect<BoardSnapshot.Result, Error>
+  /** Whether the card's work is on the remote; null with no open attempt or no worktree. */
+  readonly pushState: (key: string, number: number) => Effect.Effect<Board.PushState, Error>
+  /** Compares each project's base with where it stood last time and notes the cards a base advance touched. */
+  readonly conflictSweep: () => Effect.Effect<ReadonlyArray<BoardConflicts.Notice>>
+  /** Queues a verified Review card: complete record, scoped-green PR head, nothing it depends on still open. */
+  readonly queue: (input: Board.QueueInput) => Effect.Effect<Board.QueueResult, Error>
+  /** Takes a queued card back to Review, dissolving the open bundle it is in. */
+  readonly dequeue: (input: Board.DequeueInput) => Effect.Effect<Board.DequeueResult, Error>
+  /** Maestro's verdict on a flaky or paused bundle: merge it as tested, or retry its cards in a new bundle. */
+  readonly bundle: (input: Board.BundleInput) => Effect.Effect<Board.BundleResult, Error>
+  /** Settles each project's open bundle or cuts a new one; the poll runs it every minute. */
+  readonly queueTick: () => Effect.Effect<void>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/Board") {}
@@ -123,8 +153,18 @@ const UNDOABLE = ["issue.update", "issue.move", "steps.set", "epic.upsert", "que
 const ISSUE_COLUMNS = ["title", "body", "type", "epic_id", "estimate", "seat", "session_id", "branch", "pr_number", "stage", "position", "stage_entered_at", "attempts", "crash_reason", "guardrail_rule"]
 const EPIC_COLUMNS = ["title", "goal", "position", "status"]
 
-/** `gh` replaces the GitHub runner (tests inject recorded responses); `poll` starts the 60 second sync of every mirrored project. */
-export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly gh?: BoardGithub.Gh; readonly poll?: boolean }) =>
+/**
+ * `gh` replaces the GitHub runner (tests inject recorded responses); `scanner` replaces the toolkit's gitleaks with a command (executable and leading arguments); `poll`
+ * starts the 60 second sync of every mirrored project and the 10 minute snapshot of every Building card. `record` binds
+ * Atlas's PR record renderer for the merge queue.
+ */
+export const layerWith = (options: {
+  readonly env?: NodeJS.ProcessEnv
+  readonly gh?: BoardGithub.Gh
+  readonly record?: BoardRecord.Port
+  readonly scanner?: ReadonlyArray<string>
+  readonly poll?: boolean
+}) =>
   Layer.effect(
     Service,
     Effect.gen(function* () {
@@ -159,6 +199,24 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
           .orderBy(asc(BoardStepTable.position))
           .all()
         const dependencies = yield* refs(tx, "depends", ids)
+        const queued = yield* tx.select().from(BoardQueueTable).where(inArray(BoardQueueTable.issue_id, ids)).all()
+        const cut = queued.length
+          ? yield* tx
+              .select({ issue: BoardBundleMemberTable.issue_id, n: BoardBundleTable.n })
+              .from(BoardBundleMemberTable)
+              .innerJoin(BoardBundleTable, eq(BoardBundleTable.id, BoardBundleMemberTable.bundle_id))
+              .where(and(inArray(BoardBundleMemberTable.issue_id, ids), inArray(BoardBundleTable.status, ["open", "accepted"])))
+              .all()
+          : []
+        const conflicted = queued.length
+          ? yield* tx
+              .select({ issue: BoardAttemptTable.issue_id })
+              .from(BoardAttemptTable)
+              .where(
+                and(inArray(BoardAttemptTable.issue_id, ids), isNull(BoardAttemptTable.outcome), isNotNull(BoardAttemptTable.conflict_base)),
+              )
+              .all()
+          : []
         return rows.map(
           (row): Board.Issue => ({
             id: row.id,
@@ -183,6 +241,12 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
               .filter((step) => step.issue_id === row.id)
               .map((step) => ({ title: step.title, status: step.status, now: step.now })),
             dependsOn: dependencies.filter((item) => item.issue === row.id).map((item) => item.ref),
+            queue: queueState(
+              row,
+              queued.find((item) => item.issue_id === row.id),
+              cut.find((item) => item.issue === row.id)?.n,
+              conflicted.some((item) => item.issue === row.id),
+            ),
           }),
         )
       })
@@ -281,6 +345,7 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
           forecast: forecast.project,
           epicForecasts: forecast.epics,
           scope: BoardForecast.scope(history),
+          ledger: yield* BoardLedger.of(tx, project),
         } satisfies Board.Snapshot
       })
 
@@ -325,6 +390,7 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
               directory: yield* worktree(tx, project),
               page: {
                 issue,
+                record: row.record,
                 questions: questions.map((item) => toQuestion(item, known)),
                 notes: notes.map((item) => toNote(item, number)),
                 attachments: attachments.map((item) => toAttachment(item, number)),
@@ -337,7 +403,11 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
             }
           }),
         )
-        return { ...loaded.page, trail: yield* trail(loaded.row, loaded.directory, false) } satisfies Board.IssuePage
+        return {
+          ...loaded.page,
+          trail: yield* trail(loaded.row, loaded.directory, false),
+          pushState: yield* snapshots.state(loaded.row.id).pipe(Effect.orElseSucceed(() => null)),
+        } satisfies Board.IssuePage
       })
 
       // The plain-language summary of a guardrail rule from the checkout's own engine; null when it cannot be read.
@@ -438,15 +508,6 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
           .all()).map((step): Board.Step => ({ title: step.title, status: step.status, now: step.now }))
       })
 
-      const endOf = Effect.fnUntraced(function* (tx: Tx, project: Board.ProjectID, stage: Board.Stage) {
-        const row = yield* tx
-          .select({ position: sql<number | null>`max(${BoardIssueTable.position})` })
-          .from(BoardIssueTable)
-          .where(and(eq(BoardIssueTable.project_id, project), eq(BoardIssueTable.stage, stage)))
-          .get()
-        return (row?.position ?? 0) + 1
-      })
-
       const issueResult = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, id: Board.IssueID, activity: Board.ActivityID) {
         const row = yield* tx.select().from(BoardIssueTable).where(eq(BoardIssueTable.id, id)).get()
         const issue = row ? (yield* issueRecords(tx, project, [row]))[0] : undefined
@@ -504,6 +565,50 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
         log,
         gh: options.gh ?? BoardGithub.runner(proc, options.env),
       })
+      const ci = BoardCi.make({
+        quiet: (work) => quiet(work).pipe(Effect.orDie),
+        proc,
+        gh: options.gh ?? BoardGithub.runner(proc, options.env),
+        env: options.env,
+      })
+      const snapshots = BoardSnapshot.make({
+        quiet: (work) => quiet(work).pipe(Effect.orDie),
+        proc,
+        scanner: options.scanner
+          ? Effect.succeed(options.scanner)
+          : BackendToolkit.ensure("gitleaks").pipe(
+              Effect.map((ready) => [ready.executable]),
+              Effect.orElseSucceed(() => undefined),
+              Effect.provideService(AppProcess.Service, proc),
+            ),
+        remote: (directory, project) => ci.contract(directory, project).pipe(Effect.map((contract) => contract.snapshots.remote)),
+        env: options.env,
+      })
+
+      const conflicts = BoardConflicts.make({
+        quiet: (work) => quiet(work).pipe(Effect.orDie),
+        git: gitRunner(proc, options.env),
+        base: (directory, project) => ci.contract(directory, project).pipe(Effect.map((contract) => contract.base)),
+        publish: (changed) => events.publish(Board.Event.Changed, changed),
+      })
+
+      const queue = BoardQueue.make({
+        quiet: (work) => quiet(work).pipe(Effect.orDie),
+        proc,
+        env: options.env,
+        gh: options.gh ?? BoardGithub.runner(proc, options.env),
+        contract: ci.contract,
+        publish: (changed) => events.publish(Board.Event.Changed, changed),
+        record: options.record,
+      })
+
+      if (options.poll)
+        yield* conflicts.sweep().pipe(Effect.ignore, Effect.repeat(Schedule.spaced("60 seconds")), Effect.forkScoped)
+
+      if (options.poll) yield* queue.tick().pipe(Effect.ignore, Effect.repeat(Schedule.spaced("60 seconds")), Effect.forkScoped)
+
+      if (options.poll)
+        yield* snapshots.sweep().pipe(Effect.ignore, Effect.repeat(Schedule.spaced("10 minutes")), Effect.forkScoped)
 
       if (options.poll)
         yield* reading((tx) =>
@@ -824,6 +929,7 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
                   attempts: input.attempts ?? 0,
                   crash_reason: input.crash_reason ?? null,
                   guardrail_rule: input.guardrail_rule ?? null,
+                  record: input.record ?? null,
                   stage_entered_at: now,
                   github_dirty: project.github_repo !== null,
                 }
@@ -835,6 +941,7 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
                   .run()
                 const created = yield* tx.select().from(BoardIssueTable).where(eq(BoardIssueTable.id, id)).get()
                 if (created && input.depends_on) yield* setDependencies(tx, project, created, input.depends_on)
+                if (created?.session_id) yield* BoardSnapshot.dispatch(tx, created, {})
                 const activity = yield* log(tx, {
                   project: project.id,
                   issue: id,
@@ -842,7 +949,24 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
                   action: "issue.create",
                   reason: input.reason,
                   after: {
-                    ...pick(row, ["number", "title", "body", "type", "epic_id", "stage", "estimate", "seat", "session_id", "branch", "pr_number"]),
+                    ...pick(row, [
+                      "number",
+                      "title",
+                      "body",
+                      "type",
+                      "epic_id",
+                      "stage",
+                      "position",
+                      "estimate",
+                      "seat",
+                      "session_id",
+                      "branch",
+                      "pr_number",
+                      "stage_entered_at",
+                      "crash_reason",
+                      "guardrail_rule",
+                      "record",
+                    ]),
                     ...(input.depends_on ? { depends_on: input.depends_on } : {}),
                   },
                 })
@@ -854,7 +978,19 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
                 return yield* new RefusedError({
                   message: `${project.key}-${issue.number} is in Review, which needs its PR; move it out of Review before unlinking the PR.`,
                 })
-              const change = diff(issue, fields)
+              if (issue.stage === "queue" && ((input.pr !== undefined && input.pr !== issue.pr_number) || input.branch !== undefined))
+                return yield* new RefusedError({
+                  message: `${project.key}-${issue.number} is queued at its PR head; take it out with board_dequeue before changing its PR or branch.`,
+                })
+              // The record merges field by field so Maestro can fill it in over several calls; risk merges one level down.
+              const record = input.record
+                ? {
+                    ...issue.record,
+                    ...input.record,
+                    ...(input.record.risk ? { risk: { ...issue.record?.risk, ...input.record.risk } } : {}),
+                  }
+                : undefined
+              const change = diff(issue, { ...fields, record })
               const before = input.depends_on ? (yield* refs(tx, "depends", [issue.id])).map((item) => item.ref) : undefined
               // Compare as full refs so "12" and "LCH-12" are the same dependency.
               const wanted = input.depends_on
@@ -874,6 +1010,7 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
                   .set({ ...change?.after, ...(dirty ? { github_dirty: true } : {}) })
                   .where(eq(BoardIssueTable.id, issue.id))
                   .run()
+              yield* BoardSnapshot.follow(tx, issue, change?.after ?? {})
               const activity = yield* log(tx, {
                 project: project.id,
                 issue: issue.id,
@@ -892,6 +1029,8 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
         move: Effect.fn("Board.move")(function* (input) {
           if (input.stage === "intake")
             return yield* new RefusedError({ message: "Intake holds only GitHub-born issues; Maestro cannot move an issue into it." })
+          if (input.stage === "queue")
+            return yield* new RefusedError({ message: "Only the host moves a card into Queue; verify it and call board_queue." })
           const ref = `${input.project}-${input.number}`
           // A Shipped move with a PR needs a live, uncached proof that the PR is merged, read before the write lock.
           const checked = yield* reading((tx) =>
@@ -912,6 +1051,8 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
               yield* requireActive(project, issue)
               if (issue.stage === "intake")
                 return yield* new RefusedError({ message: `${ref} is in Intake; the owner accepts or declines it first.` })
+              if (issue.stage === "queue")
+                return yield* new RefusedError({ message: `${ref} is queued; take it out with board_dequeue first.` })
               if (input.stage === "review" && !issue.pr_number)
                 return yield* new RefusedError({ message: `${ref} has no PR; link one with board_issue before Review.` })
               if (input.stage === "shipped" && issue.hold_before_merge)
@@ -1049,7 +1190,16 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
                 actor: "maestro",
                 action: "question.ask",
                 reason: input.reason,
-                after: { id, text: input.text, blocking: input.blocking ?? false },
+                after: {
+                  id,
+                  epic_id: epic,
+                  text: input.text,
+                  options: input.options,
+                  recommended: input.recommended,
+                  cost_of_waiting: input.cost_of_waiting ?? null,
+                  blocking: input.blocking ?? false,
+                  kind: null,
+                },
               })
               return { result: { activity }, changed: changed(project.id, activity, issue) }
             }),
@@ -1078,14 +1228,20 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
                 .set({ status: "answered", answer_option: input.option, answer_text: input.text ?? null, answered_at: now })
                 .where(eq(BoardQuestionTable.id, question.id))
                 .run()
-              yield* BoardDecision.record(tx, project, question, input, now)
+              const decision = yield* BoardDecision.record(tx, project, question, input, now)
               const activity = yield* log(tx, {
                 project: project.id,
                 issue: question.issue_id,
                 actor: "owner",
                 action: "question.answer",
                 before: { id: question.id, status: "open" },
-                after: { id: question.id, status: "answered", answer_option: input.option, answer_text: input.text ?? null },
+                after: {
+                  id: question.id,
+                  status: "answered",
+                  answer_option: input.option,
+                  answer_text: input.text ?? null,
+                  decision,
+                },
               })
               return { result: { activity }, changed: changed(project.id, activity, question.issue_id) }
             }),
@@ -1112,7 +1268,13 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
               const issue = yield* loadIssue(tx, project, number)
               const id = Board.NoteID.create()
               yield* tx.insert(BoardNoteTable).values({ id, issue_id: issue.id, author: "owner", body: input.body }).run()
-              const activity = yield* log(tx, { project: project.id, issue: issue.id, actor: "owner", action: "note.add", after: { id } })
+              const activity = yield* log(tx, {
+                project: project.id,
+                issue: issue.id,
+                actor: "owner",
+                action: "note.add",
+                after: { id, author: "owner", body: input.body },
+              })
               return { result: { activity }, changed: changed(project.id, activity, issue.id) }
             }),
           )
@@ -1337,6 +1499,40 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
           return yield* intake(key, number, "intake.decline", "cut")
         }),
 
+        ciRun: Effect.fn("Board.ciRun")(function* (input) {
+          return yield* ci.run(input)
+        }),
+
+        snapshotPush: Effect.fn("Board.snapshotPush")(function* (key, number) {
+          const issue = yield* reading((tx) => loadProject(tx, key).pipe(Effect.flatMap((project) => loadIssue(tx, project, number))))
+          return yield* snapshots.push(issue.id)
+        }),
+
+        pushState: Effect.fn("Board.pushState")(function* (key, number) {
+          const issue = yield* reading((tx) => loadProject(tx, key).pipe(Effect.flatMap((project) => loadIssue(tx, project, number))))
+          return yield* snapshots.state(issue.id)
+        }),
+
+        conflictSweep: Effect.fn("Board.conflictSweep")(function* () {
+          return yield* conflicts.sweep()
+        }),
+
+        queue: Effect.fn("Board.queue")(function* (input) {
+          return yield* queue.enqueue(input).pipe(dieOnStorage)
+        }),
+
+        dequeue: Effect.fn("Board.dequeue")(function* (input) {
+          return yield* queue.dequeue(input).pipe(dieOnStorage)
+        }),
+
+        bundle: Effect.fn("Board.bundle")(function* (input) {
+          return yield* queue.decide(input).pipe(dieOnStorage)
+        }),
+
+        queueTick: Effect.fn("Board.queueTick")(function* () {
+          return yield* queue.tick()
+        }),
+
         sync: Effect.fn("Board.sync")(function* (key) {
           const done = yield* github.sync(key)
           if (done.status === "missing") return yield* new NotFoundError({ message: `There is no board project ${key}.` })
@@ -1465,7 +1661,7 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
     }),
   )
 
-export const layer = layerWith({ poll: true })
+export const layer = layerWith({ poll: true, record: recordPort })
 
 export const node = makeGlobalNode({
   service: Service,
@@ -1498,4 +1694,16 @@ function reaches(
   if (seen.has(from)) return false
   seen.add(from)
   return edges.filter((edge) => edge.issue_id === from).some((edge) => reaches(edges, edge.depends_on_id, to, seen))
+}
+
+/** The card's place in the merge queue, derived from the queue, bundle and attempt rows; null outside the queue. */
+function queueState(
+  row: IssueRow,
+  queued: typeof BoardQueueTable.$inferSelect | undefined,
+  bundle: number | undefined,
+  conflict: boolean,
+): Board.QueueState | null {
+  if (!queued) return null
+  const status = row.hold_before_merge ? "held" : conflict ? "conflict" : bundle ? "running" : "waiting"
+  return { status, bundle: bundle ?? null, urgent: queued.urgent, queuedAt: queued.queued_at }
 }

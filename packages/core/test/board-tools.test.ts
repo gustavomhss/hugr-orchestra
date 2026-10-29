@@ -26,16 +26,19 @@ const call = (registry: ToolRegistry.Interface, who: typeof toolIdentity, name: 
   executeTool(registry, { sessionID, ...who, call: { type: "tool-call", id: `call-${name}`, name, input } })
 
 describe("BoardTools", () => {
-  it.live("registers the nine board tools and runs them for Maestro", () =>
+  it.live("registers the twelve board tools and runs them for Maestro", () =>
     Effect.gen(function* () {
       const registry = yield* ToolRegistry.Service
       expect((yield* toolDefinitions(registry)).map((tool) => tool.name).filter((name) => name.startsWith("board_")).toSorted()).toEqual([
+        "board_bundle",
         "board_decision",
+        "board_dequeue",
         "board_epic",
         "board_issue",
         "board_move",
         "board_project",
         "board_question",
+        "board_queue",
         "board_read",
         "board_settings",
         "board_steps",
@@ -51,6 +54,22 @@ describe("BoardTools", () => {
         yield* call(registry, maestro, "board_move", { project: "BTL", number: 1, stage: "review", reason: "Done." }),
       ).toEqual({ type: "error", value: "BTL-1 has no PR; link one with board_issue before Review." })
       expect(JSON.stringify(yield* call(registry, maestro, "board_read", { project: "BTL" }))).toContain("BTL-1")
+    }),
+  )
+
+  it.live("board_read without a project lists the projects and their keys", () =>
+    Effect.gen(function* () {
+      const registry = yield* ToolRegistry.Service
+      const board = yield* Board.Service
+      yield* board.project({ key: "BTP", name: "Listed", goal: "Find me.", reason: "Start." })
+      const listed = yield* call(registry, maestro, "board_read", {})
+      expect(listed.type).not.toBe("error")
+      expect(JSON.stringify(listed)).toContain('"key":"BTP"')
+      expect(JSON.stringify(listed)).toContain("Find me.")
+      expect(yield* call(registry, toolIdentity, "board_read", {})).toEqual({
+        type: "error",
+        value: "The board tools belong to Maestro; ask Maestro to change the board.",
+      })
     }),
   )
 

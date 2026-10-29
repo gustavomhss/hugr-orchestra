@@ -1,12 +1,24 @@
 import { createMemo, For, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import type { Agent } from "@/v2-wire"
+import type { AgentFileInfo } from "@/v2-types"
 import { useLanguage } from "@/context/language"
 import { agentKey } from "@/context/agent-identity"
-import { agentRoster } from "./agents-roster"
+import {
+  agentAvatar,
+  agentRoster,
+  inheritedAction,
+  mcpPermission,
+  PERMISSION_TOOLS,
+  type PermissionChoice,
+} from "./agents-roster"
+import { avatarUrl } from "../avatars"
 import { MxBadge } from "./kit"
 
 const PAGE_SIZE = 24
+
+/** What an agent can use and remembers; a count is undefined until its source answers. */
+export type AgentStats = { tools?: number; skills?: number; memories?: number }
 
 export function AgentsRoster(props: {
   agents: readonly Agent[]
@@ -14,7 +26,9 @@ export function AgentsRoster(props: {
   scope: string
   /** The catalog's display name for an agent's model, when this profile's catalog has loaded it. */
   modelName?: (agent: Agent) => string | undefined
-  onConfigure: (agent: Agent) => void
+  stats: (agent: Agent) => AgentStats
+  working?: (agent: Agent) => boolean
+  onOpen: (agent: Agent) => void
   onChat: () => void
   opening?: boolean
   chatReady?: boolean
@@ -34,11 +48,6 @@ export function AgentsRoster(props: {
   const pages = () => Math.max(1, Math.ceil(roster().length / PAGE_SIZE))
   const page = () => Math.min(state.page, pages() - 1)
   const visible = createMemo(() => roster().slice(page() * PAGE_SIZE, (page() + 1) * PAGE_SIZE))
-  const steps = (agent: Agent) => {
-    if (agent.steps === undefined) return language.t("orchestra.agents.stepsUnlimited")
-    if (agent.steps === 1) return language.t("orchestra.agents.stepsOne")
-    return language.t("orchestra.agents.stepsCount", { count: agent.steps })
-  }
   return (
     <div class="agents-roster">
       <div class="mx-toolbar">
@@ -65,68 +74,89 @@ export function AgentsRoster(props: {
       <Show when={roster().length} fallback={<p class="mx-empty">{language.t("orchestra.agents.noMatches")}</p>}>
         <ul class="mx-grid agents-grid" aria-label={language.t("orchestra.agents.roster")}>
           <For each={visible()}>
-            {(item, index) => (
-              <li
-                class="agent mx-card"
-                aria-labelledby={`agent-${agentKey(item.agent)}`}
-                aria-setsize={roster().length}
-                aria-posinset={page() * PAGE_SIZE + index() + 1}
-              >
-                <div class="agent-top mx-card-top">
-                  <span class="mx-mark">
-                    <svg class="agents-ic" viewBox="0 0 16 16" aria-hidden="true">
-                      <path d="m8 1 2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z" />
-                    </svg>
-                  </span>
-                  <b id={`agent-${agentKey(item.agent)}`}>
-                    <bdi>{item.agent.name}</bdi>
-                  </b>
-                  <span class="agent-role">{language.t(`orchestra.agents.mode.${item.agent.mode}`)}</span>
-                </div>
-                <p>{item.agent.description ?? language.t("orchestra.agents.noDescription")}</p>
-                <div class="mx-meta">
-                  <MxBadge>
-                    <bdi
+            {(item, index) => {
+              const id = `agent-${agentKey(item.agent)}`
+              const status = () => props.availability(item.agent)
+              const stats = () => props.stats(item.agent)
+              return (
+                <li
+                  class="agent mx-card"
+                  aria-labelledby={id}
+                  aria-setsize={roster().length}
+                  aria-posinset={page() * PAGE_SIZE + index() + 1}
+                >
+                  <div class="agent-top">
+                    <AgentPortrait agent={item.agent} class="agent-avatar" working={props.working?.(item.agent)} />
+                    <div class="agent-title">
+                      {/* The name is the card's one link: its hit area stretches over the whole card. */}
+                      <button type="button" class="agent-open" id={id} onClick={() => props.onOpen(item.agent)}>
+                        <bdi>{item.agent.name}</bdi>
+                      </button>
+                      <span class="agent-role">
+                        {language.t(
+                          item.agent.mode === "subagent"
+                            ? "orchestra.agents.kind.subagent"
+                            : "orchestra.agents.kind.primary",
+                        )}
+                      </span>
+                    </div>
+                    <Show when={status()}>
+                      {(status) => (
+                        <span
+                          class={status().ok ? "agent-status good" : "agent-status bad"}
+                          title={status().title ?? language.t("orchestra.agents.available")}
+                          role="img"
+                          aria-label={
+                            status().modelIssue
+                              ? status().title
+                              : language.t(
+                                  status().ok ? "orchestra.agents.available" : "orchestra.agents.providerMissing",
+                                )
+                          }
+                        />
+                      )}
+                    </Show>
+                  </div>
+                  <p class="agent-desc" title={item.agent.description}>
+                    {item.agent.description ?? language.t("orchestra.agents.noDescription")}
+                  </p>
+                  <dl class="agent-stats">
+                    <For each={["tools", "skills", "memories"] as const}>
+                      {(kind) => (
+                        <div>
+                          <dt>{language.t(`orchestra.agents.stat.${kind}`)}</dt>
+                          <dd>{stats()[kind] ?? "–"}</dd>
+                        </div>
+                      )}
+                    </For>
+                  </dl>
+                  <div class="agent-foot">
+                    <span
+                      class="agent-model"
                       title={
                         item.agent.model ? `${item.agent.model.providerID}/${item.agent.model.modelID}` : undefined
                       }
                     >
-                      {props.modelName?.(item.agent) ??
-                        item.agent.model?.modelID ??
-                        language.t("orchestra.agents.defaultModel")}
-                    </bdi>
-                  </MxBadge>
-                  <MxBadge>{steps(item.agent)}</MxBadge>
-                  <Show when={props.availability(item.agent)}>
-                    {(status) => (
-                      <span class={status().ok ? "mx-badge good" : "mx-badge bad"} title={status().title}>
-                        {status().modelIssue
-                          ? status().title
-                          : language.t(status().ok ? "orchestra.agents.available" : "orchestra.agents.providerMissing")}
-                      </span>
-                    )}
-                  </Show>
-                </div>
-                <footer class="mx-card-foot">
-                  <button type="button" class="mx-btn" onClick={() => props.onConfigure(item.agent)}>
-                    {language.t("orchestra.agents.configure")}
-                  </button>
-                  <Show
-                    when={item.chat}
-                    fallback={<p class="mx-note agents-note">{language.t("orchestra.agents.maestroOnly")}</p>}
-                  >
-                    <button
-                      type="button"
-                      class="mx-btn"
-                      disabled={props.opening || props.chatReady === false}
-                      onClick={props.onChat}
-                    >
-                      {language.t("orchestra.agents.openChat")}
-                    </button>
-                  </Show>
-                </footer>
-              </li>
-            )}
+                      <bdi>
+                        {props.modelName?.(item.agent) ??
+                          item.agent.model?.modelID ??
+                          language.t("orchestra.agents.defaultModel")}
+                      </bdi>
+                    </span>
+                    <Show when={item.chat}>
+                      <button
+                        type="button"
+                        class="mx-btn agent-chat"
+                        disabled={props.opening || props.chatReady === false}
+                        onClick={props.onChat}
+                      >
+                        {language.t("orchestra.agents.openChat")}
+                      </button>
+                    </Show>
+                  </div>
+                </li>
+              )
+            }}
           </For>
         </ul>
       </Show>
@@ -150,6 +180,84 @@ export function AgentsRoster(props: {
           </button>
         </nav>
       </Show>
+    </div>
+  )
+}
+
+/** The agent's picture, or the star mark in the same slot when it has none. */
+export function AgentPortrait(props: { agent: Agent; avatar?: string; class: string; working?: boolean }) {
+  return (
+    <Show
+      when={avatarUrl(props.avatar ?? agentAvatar(props.agent))}
+      fallback={
+        <span class={`mx-mark ${props.class}`}>
+          <svg class="agents-ic" viewBox="0 0 16 16" aria-hidden="true">
+            <path d="m8 1 2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z" />
+          </svg>
+        </span>
+      }
+    >
+      {(url) => <img class={props.class} src={url()} alt="" data-working={props.working || undefined} />}
+    </Show>
+  )
+}
+
+/** One permission select per built-in tool, then one per configured MCP server covering all its tools. */
+export function AgentToolPermissions(props: {
+  rules: Agent["permission"]
+  file: AgentFileInfo["permission"]
+  draft: Record<string, PermissionChoice>
+  servers: readonly string[]
+  onChange: (tool: string, choice: PermissionChoice) => void
+}) {
+  const language = useLanguage()
+  const rows = () => [
+    ...PERMISSION_TOOLS.map((tool) => ({ tool, label: language.t(`orchestra.agents.tool.${tool}`) })),
+    ...props.servers.map((server) => ({
+      tool: mcpPermission(server),
+      label: language.t("orchestra.agents.tool.mcp", { server }),
+    })),
+  ]
+  const inheritLabel = (tool: string) => {
+    const action = inheritedAction(props.rules, tool, props.file?.[tool])
+    if (!action) return language.t("orchestra.agents.choice.inherit")
+    return language.t("orchestra.agents.choice.inheritValue", { action })
+  }
+  return (
+    <div class="mx-table">
+      <For each={rows()}>
+        {(row) => (
+          <div class="mx-row">
+            <div class="mx-grow">
+              <strong id={`agents-tool-${row.tool}`}>
+                <bdi>{row.label}</bdi>
+              </strong>
+            </div>
+            <select
+              name={`perm-${row.tool}`}
+              class="mx-search"
+              aria-labelledby={`agents-tool-${row.tool}`}
+              onChange={(event) => props.onChange(row.tool, event.currentTarget.value as PermissionChoice)}
+            >
+              <option value="inherit" selected={props.draft[row.tool] === "inherit"}>
+                {inheritLabel(row.tool)}
+              </option>
+              <Show when={typeof props.file?.[row.tool] === "object"}>
+                <option value="custom" selected={props.draft[row.tool] === "custom"}>
+                  {language.t("orchestra.agents.choice.custom")}
+                </option>
+              </Show>
+              <For each={["allow", "ask", "deny"] as const}>
+                {(action) => (
+                  <option value={action} selected={props.draft[row.tool] === action}>
+                    {language.t(`orchestra.agents.action.${action}`)}
+                  </option>
+                )}
+              </For>
+            </select>
+          </div>
+        )}
+      </For>
     </div>
   )
 }

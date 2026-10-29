@@ -1,7 +1,9 @@
-import { and, asc, eq, inArray, ne } from "drizzle-orm"
+import { and, asc, eq, inArray, ne, sql } from "drizzle-orm"
 import { Clock, Effect, Schema } from "effect"
+import { ChildProcess } from "effect/unstable/process"
 import { Board } from "@orchestra/schema/board"
 import type { Database } from "../database/database"
+import type { AppProcess } from "../process"
 import { ProjectTable } from "../project/sql"
 import {
   BoardActivityTable,
@@ -40,7 +42,37 @@ export type QuestionRow = typeof BoardQuestionTable.$inferSelect
 export type DecisionRow = typeof BoardDecisionTable.$inferSelect
 export type Fields = Record<string, unknown>
 export type Changed = { readonly project: string; readonly issue?: string; readonly activity: string }
+export type Git = ReturnType<typeof gitRunner>
 
+/** Runs git in `cwd` and never fails: a git that could not start reads as exit 1 with its message on `err`. */
+export function gitRunner(proc: AppProcess.Interface, base?: NodeJS.ProcessEnv) {
+  return (cwd: string, args: ReadonlyArray<string>, env?: Record<string, string>) =>
+    proc
+      .run(
+        ChildProcess.make("git", ["--no-optional-locks", "-C", cwd, "-c", "core.fsmonitor=false", ...args], {
+          cwd,
+          env: { ...base, ...env },
+          extendEnv: true,
+          stdin: "ignore",
+        }),
+        { maxOutputBytes: 4 * 1024 * 1024, maxErrorBytes: 16 * 1024, timeout: "120 seconds" },
+      )
+      .pipe(
+        Effect.map((result) => ({ code: result.exitCode, out: result.stdout.toString("utf8").trim(), err: result.stderr.toString("utf8").trim() })),
+        Effect.catch((error) => Effect.succeed({ code: 1, out: "", err: error.message })),
+      )
+}
+
+
+/** The position after the last card in `stage`. */
+export const endOf = Effect.fnUntraced(function* (tx: Tx, project: Board.ProjectID, stage: Board.Stage) {
+  const row = yield* tx
+    .select({ position: sql<number | null>`max(${BoardIssueTable.position})` })
+    .from(BoardIssueTable)
+    .where(and(eq(BoardIssueTable.project_id, project), eq(BoardIssueTable.stage, stage)))
+    .get()
+  return (row?.position ?? 0) + 1
+})
 
 export function archived(project: ProjectRow) {
   return new RefusedError({ message: `${project.key} is archived; the owner unarchives it before anything changes.` })

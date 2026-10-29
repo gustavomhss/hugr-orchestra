@@ -1,0 +1,439 @@
+{
+  "brief": "feature-launch v1.0.0 \u2014 Take a feature from a one-line request to a reviewed, documented change ready to merge. Six phases trace every acceptance criterion from the spec through the plan and the tests to the final review.",
+  "gen": 0,
+  "retry_budget": 3,
+  "macros": [
+    {
+      "id": "discover",
+      "title": "Discover",
+      "instructions": "You are delivering one feature end to end. Every later phase builds on what you write here, so ground it in the\nreal code: name files, functions and existing patterns, never categories. Write all notes under ${notes_dir}."
+    },
+    {
+      "id": "specify",
+      "title": "Specify",
+      "instructions": "The spec is the contract for everything after it. Write it so a stranger could build and test the feature from it\nalone, then attack it as a skeptical reviewer would, and fix what the attack finds before moving on."
+    },
+    {
+      "id": "plan",
+      "title": "Plan",
+      "instructions": "Turn the spec into an ordered list of small slices. Each slice is one reviewable change that leaves the code\nworking. Every acceptance criterion must belong to a slice."
+    },
+    {
+      "id": "build",
+      "title": "Build",
+      "instructions": "Build the plan test first. The tests are written from the spec, not from the code, and they name the criterion\nthey prove. Never change a test to make code pass; change the code."
+    },
+    {
+      "id": "polish",
+      "title": "Polish",
+      "instructions": "The feature works. Now make it easy to read and easy to use. Behaviour does not change in this phase: the suite\nstays green after every edit."
+    },
+    {
+      "id": "ship",
+      "title": "Ship",
+      "instructions": "Before you hand the change over, check it as the reviewer will. Every acceptance criterion needs evidence, and the\npull request description must let someone review the change without asking you anything."
+    }
+  ],
+  "work_packages": [
+    {
+      "id": "discover.brief",
+      "macro": "discover",
+      "kind": "inject",
+      "title": "The feature request",
+      "instructions": "What to build, in the requester's words",
+      "file": "",
+      "text": "Feature: let users export a project as a zip archive from the project menu, with a progress bar and a way to\ncancel. Exports over 500 MB warn first.\n",
+      "checklist": []
+    },
+    {
+      "id": "discover.explore",
+      "macro": "discover",
+      "kind": "execute",
+      "title": "Explore the code",
+      "instructions": "Read the code the feature touches and write ${notes_dir}/01-context.md: the entry points, the files and\nfunctions involved, the patterns the code already uses for similar features, the tests that cover the area,\nand the constraints you found (performance, compatibility, security, data). Name at least three real paths.",
+      "checklist": [
+        {
+          "id": "context-is-substantive",
+          "assert": "the context note carries at least 150 words",
+          "cmd": "test \"$(wc -w < ${notes_dir}/01-context.md)\" -ge 150",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        },
+        {
+          "id": "context-names-real-files",
+          "assert": "the context note names at least three paths that exist in the repository",
+          "cmd": "test \"$(grep -oE '[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)+' ${notes_dir}/01-context.md | sort -u | while read -r p; do test -e \"$p\" && echo \"$p\"; done | wc -l)\" -ge 3",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        },
+        {
+          "id": "context-is-grounded",
+          "context": [
+            "${notes_dir}/01-context.md"
+          ],
+          "judge": "Does this note describe the actual code the feature touches \u2014 its entry points, the functions involved, the existing patterns and the tests that cover it? FAIL if it is generic enough to fit any codebase or names things that are not in the repository.",
+          "blocking": true,
+          "origin": "pe-profile:feature-launch@1.0.0"
+        }
+      ]
+    },
+    {
+      "id": "specify.spec",
+      "macro": "specify",
+      "kind": "execute",
+      "title": "Write the spec",
+      "instructions": "Write ${notes_dir}/02-spec.md with \"## Goal\" (the user problem in two or three sentences), \"## Acceptance\ncriteria\" (at least three, one per line as `AC1: ...`, each observable and testable), \"## Out of scope\",\n\"## Risks\" (what could break, including edge cases and failure modes) and \"## Open questions\".",
+      "checklist": [
+        {
+          "id": "spec-is-substantive",
+          "assert": "the spec carries at least 150 words",
+          "cmd": "test \"$(wc -w < ${notes_dir}/02-spec.md)\" -ge 150",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        },
+        {
+          "id": "criteria-are-testable",
+          "context": [
+            "${notes_dir}/01-context.md",
+            "${notes_dir}/02-spec.md"
+          ],
+          "judge": "Is every acceptance criterion in this spec observable and testable, and do the criteria together cover the goal? FAIL if a criterion is vague (\"works well\", \"is fast\"), describes implementation instead of behaviour, or if part of the goal has no criterion.",
+          "blocking": true,
+          "origin": "pe-profile:feature-launch@1.0.0"
+        }
+      ]
+    },
+    {
+      "id": "specify.challenge",
+      "macro": "specify",
+      "kind": "review",
+      "title": "Challenge the spec",
+      "instructions": "Read the spec cold, as a reviewer who wants it to fail. Write ${notes_dir}/02-spec-review.md listing every\nambiguity, missing edge case, untestable criterion and hidden assumption you find, each with the fix you\npropose. Then update the spec so each finding is resolved or moved to Open questions with a reason.",
+      "checklist": [
+        {
+          "id": "review-is-substantive",
+          "assert": "the spec review carries at least 100 words",
+          "cmd": "test \"$(wc -w < ${notes_dir}/02-spec-review.md)\" -ge 100",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        },
+        {
+          "id": "findings-are-resolved",
+          "context": [
+            "${notes_dir}/02-spec.md",
+            "${notes_dir}/02-spec-review.md"
+          ],
+          "judge": "Does this review raise at least two concrete findings about the spec, and does the spec now resolve each one or record it under Open questions with a reason? FAIL if the review only praises the spec, if its findings are generic, or if a finding is neither resolved nor recorded.",
+          "blocking": true,
+          "origin": "pe-profile:feature-launch@1.0.0"
+        }
+      ]
+    },
+    {
+      "id": "specify.checklist",
+      "macro": "specify",
+      "kind": "gate",
+      "title": "Spec gate",
+      "instructions": "The spec is complete and its criteria are numbered",
+      "checklist": [
+        {
+          "id": "spec_has_sections",
+          "assert": "spec_has_sections",
+          "cmd": "for section in Goal \"Acceptance criteria\" \"Out of scope\" Risks \"Open questions\"; do grep -q \"^## $section\" ${notes_dir}/02-spec.md || { echo \"missing $section\"; exit 1; }; done",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        },
+        {
+          "id": "criteria_numbered",
+          "assert": "criteria_numbered",
+          "cmd": "test \"$(grep -cE '^AC[0-9]+:' ${notes_dir}/02-spec.md)\" -ge 3",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        }
+      ]
+    },
+    {
+      "id": "plan.slices",
+      "macro": "plan",
+      "kind": "execute",
+      "title": "Slice the work",
+      "instructions": "Write ${notes_dir}/03-plan.md: an ordered list of slices, each with a title, the files it touches, the\nacceptance criteria it delivers (by id) and how it will be tested. Put risky or foundational slices first. End\nwith \"## Rollback\" describing how to undo the change if it misbehaves after merge.",
+      "checklist": [
+        {
+          "id": "plan-has-rollback",
+          "assert": "the plan ends with a Rollback section",
+          "cmd": "grep -q '^## Rollback' ${notes_dir}/03-plan.md",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        },
+        {
+          "id": "every-criterion-planned",
+          "assert": "every acceptance criterion from the spec is delivered by a slice",
+          "cmd": "ids=$(grep -oE '^AC[0-9]+' ${notes_dir}/02-spec.md) || exit 1; for id in $ids; do grep -qw \"$id\" ${notes_dir}/03-plan.md || { echo \"$id is in no slice\"; exit 1; }; done",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        },
+        {
+          "id": "slices-are-reviewable",
+          "context": [
+            "${notes_dir}/02-spec.md",
+            "${notes_dir}/03-plan.md"
+          ],
+          "judge": "Is each slice small enough to review on its own, does it name real files, and does the order put risky or foundational work first? FAIL if a slice bundles unrelated changes, leaves the code broken, or names no files.",
+          "blocking": true,
+          "origin": "pe-profile:feature-launch@1.0.0"
+        }
+      ]
+    },
+    {
+      "id": "build.red",
+      "macro": "build",
+      "kind": "execute",
+      "title": "Write failing tests",
+      "instructions": "Write tests under ${test_path} for every acceptance criterion, naming its id (for example `AC2` in the test name\nor a comment). Run ${test_cmd} and confirm the new tests fail because the feature is missing. Do not change\n${src_path} yet.",
+      "checklist": [
+        {
+          "id": "tests-added",
+          "assert": "tests were added or changed",
+          "cmd": "git diff --name-only ${base_ref} -- ${test_path} | grep -q . || git ls-files --others --exclude-standard -- ${test_path} | grep -q .",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        },
+        {
+          "id": "suite-is-red",
+          "assert": "the suite fails because the feature is missing",
+          "cmd": "! ${test_cmd}",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        },
+        {
+          "id": "every-criterion-has-a-test",
+          "assert": "every acceptance criterion id appears in the tests",
+          "cmd": "ids=$(grep -oE '^AC[0-9]+' ${notes_dir}/02-spec.md) || exit 1; for id in $ids; do grep -rqw \"$id\" ${test_path} || { echo \"$id has no test\"; exit 1; }; done",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        }
+      ]
+    },
+    {
+      "id": "build.green",
+      "macro": "build",
+      "kind": "execute",
+      "title": "Make them pass",
+      "instructions": "Implement the plan's slices in ${src_path}, in order, until ${test_cmd} is green. Follow the patterns recorded in\n${notes_dir}/01-context.md rather than inventing new ones.",
+      "checklist": [
+        {
+          "id": "source-changed",
+          "assert": "the source paths were changed",
+          "cmd": "git diff --name-only ${base_ref} -- ${src_path} | grep -q . || git ls-files --others --exclude-standard -- ${src_path} | grep -q .",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        },
+        {
+          "id": "suite-is-green",
+          "assert": "the suite passes",
+          "cmd": "${test_cmd}",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        },
+        {
+          "id": "no-test-deleted",
+          "assert": "no test file was deleted to get to green",
+          "cmd": "! git diff --diff-filter=D --name-only ${base_ref} -- ${test_path} | grep -q .",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        },
+        {
+          "id": "implements-the-plan",
+          "context": [
+            "${notes_dir}/03-plan.md"
+          ],
+          "judge": "Does this change implement the plan's slices using the patterns the code already has? FAIL if it special-cases test inputs, weakens or skips a test, or adds behaviour the spec does not ask for.",
+          "diff": true,
+          "blocking": true,
+          "origin": "pe-profile:feature-launch@1.0.0"
+        }
+      ]
+    },
+    {
+      "id": "build.edges",
+      "macro": "build",
+      "kind": "execute",
+      "title": "Harden the edges",
+      "instructions": "Go through the Risks section of the spec and add a test under ${test_path} for each edge case and failure mode\nit names: empty and oversized input, invalid state, concurrent use, errors from dependencies. Fix the code\nwhere a new test fails.",
+      "checklist": [
+        {
+          "id": "suite-green-with-edges",
+          "assert": "the suite passes with the edge-case tests",
+          "cmd": "${test_cmd}",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        },
+        {
+          "id": "risks-are-tested",
+          "context": [
+            "${notes_dir}/02-spec.md"
+          ],
+          "judge": "Does this change add tests for the edge cases and failure modes the spec's Risks section names, and fix the code where they failed? FAIL if a named risk has no test, or if the tests only repeat the happy path.",
+          "diff": true,
+          "blocking": true,
+          "origin": "pe-profile:feature-launch@1.0.0"
+        }
+      ]
+    },
+    {
+      "id": "build.checklist",
+      "macro": "build",
+      "kind": "gate",
+      "title": "Build gate",
+      "instructions": "Everything passes and every criterion has a test",
+      "checklist": [
+        {
+          "id": "suite_green",
+          "assert": "suite_green",
+          "cmd": "${test_cmd}",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        },
+        {
+          "id": "lint_clean",
+          "assert": "lint_clean",
+          "cmd": "${lint_cmd}",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        },
+        {
+          "id": "criteria_tested",
+          "assert": "criteria_tested",
+          "cmd": "ids=$(grep -oE '^AC[0-9]+' ${notes_dir}/02-spec.md) || exit 1; for id in $ids; do grep -rqw \"$id\" ${test_path} || { echo \"$id has no test\"; exit 1; }; done",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        }
+      ]
+    },
+    {
+      "id": "polish.simplify",
+      "macro": "polish",
+      "kind": "execute",
+      "title": "Simplify",
+      "instructions": "Reread your change in ${src_path} and simplify it: remove duplication and dead code, name things for what they\nmean, and keep functions small. Keep ${test_cmd} green and ${lint_cmd} clean.",
+      "checklist": [
+        {
+          "id": "suite-green-after-simplify",
+          "assert": "the suite still passes",
+          "cmd": "${test_cmd}",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        },
+        {
+          "id": "lint-clean-after-simplify",
+          "assert": "the linter passes",
+          "cmd": "${lint_cmd}",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        },
+        {
+          "id": "behaviour-unchanged",
+          "judge": "Does this change only simplify the code \u2014 removing duplication and dead code, improving names, splitting long functions \u2014 without changing behaviour? FAIL if it changes a test's expectations, a public signature or an output, or adds a feature.",
+          "diff": true,
+          "blocking": true,
+          "origin": "pe-profile:feature-launch@1.0.0"
+        }
+      ]
+    },
+    {
+      "id": "polish.document",
+      "macro": "polish",
+      "kind": "execute",
+      "title": "Document",
+      "instructions": "Update the user-facing documentation under ${docs_path} so a user can discover and use the feature: what it\ndoes, how to turn it on or call it, and its limits. Match the tone and structure of the existing docs.",
+      "checklist": [
+        {
+          "id": "docs-changed",
+          "assert": "the documentation paths were changed",
+          "cmd": "git diff --name-only ${base_ref} -- ${docs_path} | grep -q . || git ls-files --others --exclude-standard -- ${docs_path} | grep -q .",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        },
+        {
+          "id": "docs-teach-the-feature",
+          "context": [
+            "${notes_dir}/02-spec.md"
+          ],
+          "judge": "Would a user who reads only this documentation change know what the feature does, how to use it and what its limits are? FAIL if it describes the implementation instead of the use, contradicts the spec, or leaves a user-visible behaviour undocumented.",
+          "diff": true,
+          "blocking": true,
+          "origin": "pe-profile:feature-launch@1.0.0"
+        }
+      ]
+    },
+    {
+      "id": "ship.review",
+      "macro": "ship",
+      "kind": "review",
+      "title": "Final review",
+      "instructions": "Read the spec, the plan, the tests and the code cold. Write ${notes_dir}/06-review.md with one line per\nacceptance criterion (its id, met or not, and the test that proves it), then any defect, risk or follow-up you\nfound, each with its severity.",
+      "checklist": [
+        {
+          "id": "every-criterion-reviewed",
+          "assert": "the review names every acceptance criterion id",
+          "cmd": "ids=$(grep -oE '^AC[0-9]+' ${notes_dir}/02-spec.md) || exit 1; for id in $ids; do grep -qw \"$id\" ${notes_dir}/06-review.md || { echo \"$id is not reviewed\"; exit 1; }; done",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        },
+        {
+          "id": "final-review-is-substantive",
+          "assert": "the review carries at least 120 words",
+          "cmd": "test \"$(wc -w < ${notes_dir}/06-review.md)\" -ge 120",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        },
+        {
+          "id": "review-shows-evidence",
+          "context": [
+            "${notes_dir}/02-spec.md",
+            "${notes_dir}/06-review.md"
+          ],
+          "judge": "Does this review back every acceptance criterion with a named test, and report defects or risks specifically enough to act on? FAIL if a criterion is marked met without evidence, if a finding is generic, or if it claims something the code does not show.",
+          "blocking": true,
+          "origin": "pe-profile:feature-launch@1.0.0"
+        }
+      ]
+    },
+    {
+      "id": "ship.handoff",
+      "macro": "ship",
+      "kind": "execute",
+      "title": "Write the pull request",
+      "instructions": "Write ${notes_dir}/07-pull-request.md. Its first line is a conventional commit title such as\n`feat(scope): summary`. Then \"## Summary\" (what and why), \"## Testing\" (what was run and what it proves) and\n\"## Risk and rollback\" (from the plan).",
+      "checklist": [
+        {
+          "id": "conventional-title",
+          "assert": "the description starts with a conventional commit title",
+          "cmd": "head -n 1 ${notes_dir}/07-pull-request.md | grep -qE '^(feat|fix|docs|chore|refactor|test|perf)(\\([a-z0-9-]+\\))?!?: .+'",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        },
+        {
+          "id": "description-has-its-sections",
+          "assert": "the description has Summary, Testing and Risk and rollback sections",
+          "cmd": "for section in Summary Testing \"Risk and rollback\"; do grep -q \"^## $section\" ${notes_dir}/07-pull-request.md || { echo \"missing $section\"; exit 1; }; done",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        },
+        {
+          "id": "description-is-reviewable",
+          "context": [
+            "${notes_dir}/02-spec.md",
+            "${notes_dir}/07-pull-request.md"
+          ],
+          "judge": "Could a reviewer understand what this change does, why, how it was tested and how to roll it back from this description alone? FAIL if it is vague, if it omits the testing that was run, or if it contradicts the spec.",
+          "blocking": true,
+          "origin": "pe-profile:feature-launch@1.0.0"
+        }
+      ]
+    },
+    {
+      "id": "ship.checklist",
+      "macro": "ship",
+      "kind": "gate",
+      "title": "Ship gate",
+      "instructions": "The change is green, documented and ready to review",
+      "checklist": [
+        {
+          "id": "suite_green_to_ship",
+          "assert": "suite_green_to_ship",
+          "cmd": "${test_cmd}",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        },
+        {
+          "id": "lint_clean_to_ship",
+          "assert": "lint_clean_to_ship",
+          "cmd": "${lint_cmd}",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        },
+        {
+          "id": "docs_changed",
+          "assert": "docs_changed",
+          "cmd": "git diff --name-only ${base_ref} -- ${docs_path} | grep -q . || git ls-files --others --exclude-standard -- ${docs_path} | grep -q .",
+          "origin": "pe-profile:feature-launch@1.0.0"
+        }
+      ]
+    }
+  ]
+}

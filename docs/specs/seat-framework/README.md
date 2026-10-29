@@ -11,6 +11,7 @@ Each native specialist has one definition in `packages/orchestra/src/maestro/sea
 - `writeRoots`, `strictResume`: host-bound dispatch `writePaths` (read-only when absent) and retained logical-task resume enforcement.
 - `workResult?`: result schema id for a closed worker-claim card. The fenced tag is `returnCard`; task metadata carries parsed claims separately from host termination, task identity and enforced roots. The upstream `archie` seat uses `upstream-work-result-v1` for proposal artifacts and host-observed authorship; other installed work-result seats retain the execution card shape. This is evidence, not acceptance, approval or materialized artifact identity.
 - `atlasMemory`, `toolkit`: supported capability boundaries below.
+- `mcp?`: names of configured MCP servers (`mcp.servers.<name>`). The seat's profile allows each server's `<name>_*` tools over its floor; which other agents see those tools is ordinary config permissions. The backend seat declares `hugr-composer`.
 
 ## Supported boundaries
 

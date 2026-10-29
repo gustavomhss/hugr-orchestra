@@ -18,7 +18,6 @@ import { SessionV2 } from "@orchestra/core/session"
 import { SessionExecution } from "@orchestra/core/session/execution"
 import { SessionExecutionLocal } from "@orchestra/core/session/execution/local"
 import { SessionInput } from "@orchestra/core/session/input"
-import { SessionMessage } from "@orchestra/core/session/message"
 import { Snapshot } from "@orchestra/core/snapshot"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { Cause, Context, Effect, Exit, Layer, RcMap, Stream } from "effect"
@@ -138,7 +137,7 @@ it.live("cold create → durable admit → resume acquires native Task with the 
 
 for (const source of ["native", "legacy", "markdown"] as const) {
   for (const engine of ["claude-code", "orchestra"] as const) {
-    it.live(`${source} config → Agent service → Task ${engine === "claude-code" ? "rejects Claude Code" : "runs Orchestra control"}`, () => Effect.gen(function* () {
+    it.live(`${source} config → Agent service → Task ${engine === "claude-code" ? "opens a Claude Code child" : "runs Orchestra control"}`, () => Effect.gen(function* () {
       const tmp = yield* fixture(source, engine)
       const requests: LLMRequest[] = []
       yield* Effect.gen(function* () {
@@ -160,11 +159,9 @@ for (const source of ["native", "legacy", "markdown"] as const) {
           expect(turns(requests)).toHaveLength(3)
           return
         }
-        const messages = yield* sessions.messages({ sessionID: parent.id, order: "asc" })
-        const call = messages.flatMap((message) => message.type === "assistant" ? message.content : [])
-          .find((part): part is SessionMessage.AssistantTool => part.type === "tool" && part.name === "task")
-        expect(call?.state).toMatchObject({ status: "error", error: { message: "Task target requires an unsupported engine: worker" } })
-        expect(children).toHaveLength(0)
+        // A Claude Code seat is an ordinary task child; its turns go to the claude-code host, never to the provider.
+        expect(children).toHaveLength(1)
+        expect(children[0]).toMatchObject({ agent: "worker" })
         expect(turns(requests)).toHaveLength(2)
       }).pipe(Effect.provide(application(tmp.path, requests)))
     }), 30_000)

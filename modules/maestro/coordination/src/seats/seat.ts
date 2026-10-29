@@ -24,7 +24,7 @@ export type Seat = {
   readonly description: string
   /** Environment variable that overrides the display label over config `agent.<id>.name`. */
   readonly labelEnv?: string
-  /** Entry skills, one directory each under `skillSource(id)`; granted to this seat only, with a read-only root. */
+  /** Root skills, one directory each under `skillSource(id)`, or under `sharedSource()` for a `team-*` root; each grants its whole tree. */
   readonly skills: readonly string[]
   /** Work-result schema id: the Task tool parses the seat's return card into `metadata.workResult`. */
   readonly workResult?: string
@@ -36,6 +36,8 @@ export type Seat = {
   readonly atlasMemory: boolean
   /** The shell fetches the backend toolkit's pinned engines for this seat's commands. */
   readonly toolkit: boolean
+  /** Configured MCP servers (`mcp.servers.<name>`) whose tools the seat may call over its floor. */
+  readonly mcp?: readonly string[]
   /** The research engine's seat: its tools come from @orchestra/core/research/seat-tools, and Claude mode dispatches it per tier. */
   readonly research?: boolean
   /**
@@ -69,7 +71,7 @@ export function define<const T extends Seat>(seat: T) {
     throw new Error(`Execution seats with entry skills require write roots: ${seat.id}`)
   if (seat.workResult !== undefined && (!seat.workResult.trim() || !/^[a-z]+(?:-[a-z]+)*$/.test(seat.returnCard)))
     throw new Error(`Work result requires a fenced return-card tag: ${seat.id}`)
-  if (seat.skills.some((skill) => !skill.startsWith(`${seat.id}-`) || !/^[a-z]+(?:-[a-z]+)*$/.test(skill)) ||
+  if (seat.skills.some((skill) => !(skill.startsWith(`${seat.id}-`) || skill.startsWith("team-")) || !/^[a-z]+(?:-[a-z]+)*$/.test(skill)) ||
     new Set(seat.skills).size !== seat.skills.length)
     throw new Error(`Entry skills must be unique and seat-scoped: ${seat.id}`)
   if (seat.labelEnv !== undefined && !/^[A-Z][A-Z0-9_]*$/.test(seat.labelEnv))
@@ -92,4 +94,9 @@ export function skillSource(id: string) {
   if (id === "backend" || id === "archie")
     return path.resolve(import.meta.dirname, "../../../../../modules/specialists", id, "skills")
   return path.resolve(import.meta.dirname, "../../../../../packages", `${id}-specialist`, "skills")
+}
+
+// The shared skill trees (`team-*` roots), authored once for every seat that declares one of them.
+export function sharedSource() {
+  return path.resolve(import.meta.dirname, "../../../../../modules/specialists/team/skills")
 }

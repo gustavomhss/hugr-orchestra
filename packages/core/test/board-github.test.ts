@@ -38,6 +38,7 @@ const github = (() => {
     comments: [] as Remark[],
     labels: [] as string[],
     milestones: [] as { number: number; title: string }[],
+    pulls: {} as Record<number, { state: "open" | "closed"; merged: boolean }>,
     calls: [] as Call[],
     version: 0,
     stamp: 0,
@@ -70,6 +71,12 @@ const github = (() => {
         if (match) {
           state.notModified++
           return ok("HTTP/2.0 304 Not Modified\r\n\r\n")
+        }
+        const pull = /\/pulls\/(\d+)$/.exec(endpoint)
+        if (pull) {
+          const found = state.pulls[Number(pull[1])]
+          if (!found) return { exitCode: 1, stdout: "", stderr: "gh: Not Found (HTTP 404)" }
+          return ok(head + json({ head: { sha: `sha${pull[1]}` }, ...found }))
         }
         const single = /\/issues\/(\d+)$/.exec(endpoint)
         if (single) return ok(head + json(wire(state.issues.find((item) => item.number === Number(single[1])))))
@@ -146,6 +153,7 @@ const github = (() => {
         comments: [],
         labels: [],
         milestones: [],
+        pulls: {},
         calls: [],
         version: 0,
         notModified: 0,
@@ -333,6 +341,48 @@ describe("Board GitHub mirror", () => {
       yield* board.sync("AUT")
       expect((yield* board.snapshot("AUT")).issues[0]).toMatchObject({ title: "Add dark mode", stage: "backlog" })
       expect(github.state.issues[0]?.labels).toEqual(["stage:backlog", "type:feature"])
+    }),
+  )
+
+  it.live("a card follows its PR: open moves Building to Review, merged moves it to Shipped; a hold or a pause keeps it", () =>
+    Effect.gen(function* () {
+      github.reset()
+      const board = yield* Board.Service
+      yield* board.project({ key: "PRS", name: "Pulls", github_repo: "acme/widgets", reason: "Start." })
+      yield* board.issue({ project: "PRS", title: "Code", seat: "backend", reason: "Plan." })
+      yield* board.issue({ project: "PRS", title: "Held", seat: "backend", reason: "Plan." })
+      yield* board.issue({ project: "PRS", title: "Gone", seat: "backend", reason: "Plan." })
+      yield* Effect.forEach([1, 2, 3], (number) => board.move({ project: "PRS", number, stage: "building", reason: "Dispatched." }))
+      yield* board.issue({ project: "PRS", number: 1, pr: 11, crash_reason: "Stalled twice.", reason: "PR is up." })
+      yield* board.issue({ project: "PRS", number: 2, pr: 12, reason: "PR is up." })
+      yield* board.issue({ project: "PRS", number: 3, pr: 13, reason: "PR is up." })
+      yield* board.hold("PRS", 2, { hold: true })
+      github.state.pulls = { 11: { state: "open", merged: false }, 12: { state: "closed", merged: true } }
+
+      expect((yield* board.sync("PRS")).state).toBe("ok")
+      const stages = () => board.snapshot("PRS").pipe(Effect.map((snapshot) => snapshot.issues.toSorted((a, b) => a.number - b.number).map((issue) => issue.stage)))
+      // PR 13 does not exist on GitHub: its card stays and the sync still succeeds.
+      expect(yield* stages()).toEqual(["review", "building", "building"])
+      expect((yield* activity("PRS")).filter((row) => row.actor === "github" && row.action === "issue.move")).toEqual([
+        expect.objectContaining({ reason: "PR #11 is open on GitHub." }),
+      ])
+
+      github.state.pulls[11] = { state: "closed", merged: true }
+      yield* board.sync("PRS")
+      expect(yield* stages()).toEqual(["shipped", "building", "building"])
+      expect((yield* board.proof("PRS", 1)).crashReason).toBeNull()
+      expect(github.state.issues.find((issue) => issue.body.includes("orchestra-board:PRS-1 "))).toMatchObject({
+        state: "closed",
+        state_reason: "completed",
+      })
+
+      yield* board.hold("PRS", 2, { hold: false })
+      yield* board.pause("PRS", { reason: "Owner pause." })
+      yield* board.sync("PRS")
+      expect(yield* stages()).toEqual(["shipped", "building", "building"])
+      yield* board.resume("PRS")
+      yield* board.sync("PRS")
+      expect(yield* stages()).toEqual(["shipped", "shipped", "building"])
     }),
   )
 

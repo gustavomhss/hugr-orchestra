@@ -12,7 +12,7 @@ This page describes the **CLI** command `atlas proposals`. It is CLI-only (not a
 atlas proposals
 ```
 
-No positional, no flag. It reads the review log `.atlas/review.jsonl` and writes nothing.
+No positional, no flag. It reads the review log `.atlas/project/review.jsonl` and writes nothing.
 
 ## Exit codes
 
