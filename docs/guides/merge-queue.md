@@ -109,6 +109,13 @@ A card in the Queue column shows whether it is waiting, running in a bundle, hel
 out by a conflict. To take a card out, ask Maestro: it uses `board_dequeue`, which also dissolves the bundle the card
 was in. Merge PRs of a board project only through the queue; a guard flags code that merges a PR outside it.
 
+## Card thread
+
+Every message about a card lands on its thread as a note the host writes: the brief Maestro dispatched, the question a
+worker asked, the answer, the return, review requests and verdicts, and a rework note when the card is redispatched.
+Thread notes are read-only; you can add your own notes, but only Maestro and the host write the thread. Notes stay on
+the board and never go to GitHub.
+
 ## Numbers
 
 The board snapshot carries four numbers for the project's queue: queue wait (from a card joining the queue to its bundle merging), red rate (ejected share of the last 50 settled attempts), rework rate (attempts per shipped card) and lead time (from the first passing scoped check to the merge). Each is null until there is data for it.

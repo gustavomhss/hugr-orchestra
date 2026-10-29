@@ -113,8 +113,12 @@ as a whole list by `board_steps`, so the log keeps the full list in `before` and
 
 ### board_note
 
-`id`, `issue_id` (fk cascade), `author` (`owner` `maestro` or `github:<login>`), `body`, `github_comment_id` (null).
+`id`, `issue_id` (fk cascade), `author` (`owner` `maestro` `orchestra` `github:<login>` or a seat id), `kind` (null on a plain note), `body`, `github_comment_id` (null).
 Notes are private to the board: they never go out to GitHub and never show to guests.
+A note with a `kind` is a thread note: `brief`, `question`, `answer`, `return`, `review` or `rework`. The host writes them
+from `task` calls that pass `card`, from their returns (`question` when the child ended blocked), from review requests and
+verdicts, and from redispatches (`rework`, author `orchestra`). Authors of thread notes are `maestro`, `orchestra`, the
+seat that did the work, or `lucy` for a verdict. Thread notes are read-only: only `owner` notes can be edited or deleted.
 
 ### board_attachment
 

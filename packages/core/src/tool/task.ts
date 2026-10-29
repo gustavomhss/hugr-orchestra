@@ -3,10 +3,13 @@ export * as TaskTool from "./task"
 import { createHash } from "node:crypto"
 import { isDeepStrictEqual } from "node:util"
 import { ToolFailure } from "@orchestra/llm"
+import { eq } from "drizzle-orm"
 import { Context, DateTime, Effect, Fiber, Layer, Option, Schema } from "effect"
 import { AgentV2 } from "../agent"
 import { Catalog } from "../catalog"
 import { Config } from "../config"
+import { BoardIssueTable } from "../board/sql"
+import { BoardThread } from "../board/thread"
 import { Database } from "../database/database"
 import { makeLocationNode, Node } from "../effect/app-node"
 import { LayerNode } from "../effect/layer-node"
@@ -41,6 +44,7 @@ export const Input = Schema.Struct({
   model: Schema.String.pipe(Schema.optional).annotate({ description: "Optional exact provider/model identity" }),
   // A Location's TaskGovernance may resolve a logical task id; core resumes only a Session ID it owns.
   task_id: Schema.String.pipe(Schema.optional).annotate({ description: "An existing child Session or task to resume" }),
+  card: Schema.String.pipe(Schema.optional).annotate({ description: "The board card this task works, as KEY-n. The card must exist; its thread records the brief and the return" }),
 })
 
 export const Output = Schema.Struct({
@@ -91,6 +95,9 @@ const layer = Layer.effectDiscard(
           )
           const parent = yield* requireParent(store, location, context, decodeCalled, called)
           const target = yield* requireTarget(agents, input.subagent_type)
+          const named = input.card ? yield* BoardThread.card(database.db, input.card) : undefined
+          if (input.card && !named)
+            return yield* new ToolFailure({ message: `Card ${input.card} is not on the board; create it with board_issue first` })
           const admission = yield* governance.admit({ parent, target, input: called, context })
           const childID =
             admission.childID ??
@@ -160,6 +167,14 @@ const layer = Layer.effectDiscard(
             const promptID = taskPromptID(context, child.id)
             // Exact retries retain the delivery admitted by an earlier Task version.
             const recordedInput = yield* SessionInput.find(database.db, promptID)
+            // The thread note shares the prompt's id, so an exact retry writes it once.
+            const card = named ?? (yield* BoardThread.bySession(database.db, child.id))
+            if (card)
+              yield* database.db.transaction((tx) => Effect.gen(function* () {
+                if (named) yield* tx.update(BoardIssueTable).set({ session_id: child.id, seat: target.id }).where(eq(BoardIssueTable.id, card.id)).run()
+                const kind = (yield* BoardThread.last(tx, card.id)) === "question" ? "answer" : "brief"
+                yield* BoardThread.write(tx, { id: `bno_${promptID}`, issue: card.id, kind, author: "maestro", body: input.prompt })
+              })).pipe(Effect.orDie)
             const admitted = yield* sessions.prompt({
               id: promptID,
               sessionID: child.id,
@@ -221,6 +236,8 @@ const layer = Layer.effectDiscard(
             if (reply.agent !== target.id)
               return yield* new ToolFailure({ message: `Task ${child.id} reply agent differs from the recorded child` })
             const settled = yield* governance.settle({ child, reply, admission, context })
+            if (card)
+              yield* BoardThread.write(database.db, { id: `bno_${promptID}_r`, issue: card.id, kind: settled.blocked ? "question" : "return", author: target.id, body: settled.text })
             return {
               sessionID: child.id,
               agent: target.id,

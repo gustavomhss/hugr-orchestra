@@ -20,6 +20,7 @@ import { ProjectV2 } from "@orchestra/core/project"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { ReferenceGuidance } from "@orchestra/core/reference/guidance"
 import { AbsolutePath } from "@orchestra/core/schema"
+import { BoardIssueTable, BoardNoteTable, BoardProjectTable } from "@orchestra/core/board/sql"
 import { SessionV2 } from "@orchestra/core/session"
 import { SessionEvent } from "@orchestra/core/session/event"
 import { SessionExecution } from "@orchestra/core/session/execution"
@@ -35,7 +36,8 @@ import { SystemContext } from "@orchestra/core/system-context"
 import { TaskTool } from "@orchestra/core/tool/task"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { Context, DateTime, Deferred, Effect, Fiber, Layer, LayerMap, Schema, Stream } from "effect"
-import { eq } from "drizzle-orm"
+import { asc, eq } from "drizzle-orm"
+import { Board } from "@orchestra/schema/board"
 import { testEffect } from "./lib/effect"
 import { settleTool } from "./lib/tool"
 
@@ -230,6 +232,32 @@ describe("TaskTool canonical delegation", () => {
     const database = yield* Database.Service
     expect(yield* database.db.select().from(SessionInputTable).where(eq(SessionInputTable.session_id, first.sessionID)).all().pipe(Effect.orDie)).toHaveLength(1)
     expect((yield* f.sessions.messages({ sessionID: first.sessionID, order: "asc" })).filter((message) => message.type === "user")).toHaveLength(1)
+  }))
+
+  it.effect("a task with card admits its brief and records its return on the card thread; an unknown card fails", () => Effect.gen(function* () {
+    const f = yield* setup
+    const database = yield* Database.Service
+    const projectID = Board.ProjectID.create()
+    const issueID = Board.IssueID.create()
+    yield* database.db.insert(BoardProjectTable).values({
+      id: projectID, key: "TT", name: "Thread", goal: "Threads.", status: "active", github_state: "off", next_issue_number: 2, next_epic_number: 1,
+    }).run().pipe(Effect.orDie)
+    yield* database.db.insert(BoardIssueTable).values({
+      id: issueID, project_id: projectID, number: 1, title: "Card", body: "", type: "feature", stage: "building", position: 1, stage_entered_at: 0,
+    }).run().pipe(Effect.orDie)
+    const call = yield* record(f.parent.id, "carded", { card: "TT-1" })
+    const sessionID = result(yield* settleTool(f.registry, call)).sessionID
+    const issue = yield* database.db.select().from(BoardIssueTable).where(eq(BoardIssueTable.id, issueID)).get().pipe(Effect.orDie)
+    expect(issue?.session_id).toBe(sessionID)
+    const notes = yield* database.db
+      .select({ kind: BoardNoteTable.kind, author: BoardNoteTable.author })
+      .from(BoardNoteTable)
+      .where(eq(BoardNoteTable.issue_id, issueID))
+      .orderBy(asc(BoardNoteTable.time_created), asc(BoardNoteTable.id))
+      .all()
+      .pipe(Effect.orDie)
+    expect(notes).toEqual([{ kind: "brief", author: "maestro" }, { kind: "return", author: worker }])
+    expect((yield* settleTool(f.registry, yield* record(f.parent.id, "missing", { card: "TT-9" }))).result.type).toBe("error")
   }))
 
   it.effect("a child inherits its parent's deny and external_directory rules, never its allows", () => Effect.gen(function* () {

@@ -45,6 +45,9 @@ export const NoteID = Schema.String.pipe(
 )
 export type NoteID = typeof NoteID.Type
 
+export const NoteKind = Schema.Literals(["brief", "question", "answer", "return", "review", "rework"])
+export type NoteKind = typeof NoteKind.Type
+
 export const AttachmentID = Schema.String.pipe(
   Schema.brand("Board.AttachmentID"),
   statics((schema) => ({ create: () => schema.make("bat_" + ascending()) })),
@@ -286,8 +289,10 @@ export interface Note extends Schema.Schema.Type<typeof Note> {}
 export const Note = Schema.Struct({
   id: NoteID,
   issue: PositiveInt,
-  /** `owner`, `maestro` or `github:<login>`. */
+  /** `owner`, `maestro`, `orchestra`, `github:<login>`, or a seat id on a thread note. */
   author: Schema.String,
+  /** Null on a plain note; set on a host-written thread note, which is read-only. */
+  kind: Schema.NullOr(NoteKind),
   body: Schema.String,
   timeCreated: Schema.Finite,
 }).annotate({ identifier: "Board.Note" })

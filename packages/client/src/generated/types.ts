@@ -5697,6 +5697,7 @@ export type ServerBoardIssueOutput = {
     readonly id: string
     readonly issue: number
     readonly author: string
+    readonly kind: "brief" | "question" | "answer" | "return" | "review" | "rework" | null
     readonly body: string
     readonly timeCreated: number
   }>

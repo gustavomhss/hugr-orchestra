@@ -7,7 +7,7 @@ import { pathToFileURL } from "url"
 import { eq } from "drizzle-orm"
 import { Effect } from "effect"
 import { Board } from "@orchestra/core/board/board"
-import { BoardAttemptTable } from "@orchestra/core/board/sql"
+import { BoardAttemptTable, BoardNoteTable } from "@orchestra/core/board/sql"
 import { Credential } from "@orchestra/core/credential"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
@@ -92,6 +92,13 @@ describe("BoardSnapshot", () => {
         { n: 1, session: "ses_snapshot_a", cause: null, outcome: "failed" },
         { n: 2, session: "ses_snapshot_b", cause: "failed:Out of memory.", outcome: null },
       ])
+      const notes = yield* database.db
+        .select({ kind: BoardNoteTable.kind, author: BoardNoteTable.author })
+        .from(BoardNoteTable)
+        .where(eq(BoardNoteTable.issue_id, redispatched.issue.id))
+        .all()
+        .pipe(Effect.orDie)
+      expect(notes).toContainEqual({ kind: "rework", author: "orchestra" })
 
       yield* write(card.worktree, "work.txt", "again\n")
       expect(yield* board.snapshotPush("SNR", 1)).toMatchObject({ status: "pushed", ref: "refs/orchestra/wip/SNR-1/a2" })

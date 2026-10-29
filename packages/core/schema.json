@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "bfc12ceb-ee64-4f9c-bec1-16dd411ed01f",
+  "id": "9b4f02b9-9b1c-4aad-a238-de365a302bdd",
   "prevIds": [
-    "7fdc8a05-2738-4c51-8296-e2adfe88ee04"
+    "bfc12ceb-ee64-4f9c-bec1-16dd411ed01f"
   ],
   "ddl": [
     {
@@ -2769,6 +2769,16 @@
       "default": null,
       "generated": null,
       "name": "author",
+      "entityType": "columns",
+      "table": "board_note"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "kind",
       "entityType": "columns",
       "table": "board_note"
     },

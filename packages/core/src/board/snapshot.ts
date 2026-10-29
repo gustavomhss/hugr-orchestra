@@ -12,6 +12,7 @@ import type { AppProcess } from "../process"
 import { BoardAttemptTable, BoardIssueTable, BoardProjectTable } from "./sql"
 import { gitRunner, worktree } from "./shared"
 import type { Fields, IssueRow, ProjectRow, Tx } from "./shared"
+import { BoardThread } from "./thread"
 
 // Push early (docs/specs/maestro-lead/merge-queue.md section 8.1): the host writes a card's worktree to a snapshot
 // commit through a temporary index and pushes it to refs/orchestra/wip/<KEY>/a<n>. The worktree, its index and its
@@ -273,6 +274,8 @@ export const dispatch = Effect.fnUntraced(function* (
     })
     .run()
   yield* tx.update(BoardIssueTable).set({ attempts: n }).where(eq(BoardIssueTable.id, issue.id)).run()
+  if (n > 1)
+    yield* BoardThread.write(tx, { id: `bno_rework_${issue.id}_${n}`, issue: issue.id, kind: "rework", author: "orchestra", body: cause ?? "redispatched" })
   return n
 })
 

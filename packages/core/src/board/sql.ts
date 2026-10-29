@@ -284,6 +284,7 @@ export const BoardNoteTable = sqliteTable(
       .notNull()
       .references(() => BoardIssueTable.id, { onDelete: "cascade" }),
     author: text().notNull(),
+    kind: text().$type<Board.NoteKind>(),
     body: text().notNull(),
     github_comment_id: integer(),
     ...Timestamps,

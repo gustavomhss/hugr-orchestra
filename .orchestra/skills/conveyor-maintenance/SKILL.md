@@ -15,6 +15,9 @@ snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bund
 - New check kind or outcome: `CheckKind` or `CheckOutcome` in `packages/schema/src/board.ts`, then `state` in `ci.ts`.
 - Attempt fields: `BoardAttemptTable` in `board/sql.ts`; who opens and ends attempts is `dispatch` and `follow` in
   `board/snapshot.ts`.
+- Card thread notes: `board/thread.ts` owns them. Ids are deterministic (`bno_<promptID>`, `bno_review_*`,
+  `bno_verdict_*`, `bno_rework_*`) so exact retries write once. Blocked comes from `TaskGovernance.settle`'s `blocked`,
+  never from text.
 - Which cards a base advance checks: `WATCHED` and the candidate query in `board/conflicts.ts`.
 - Enqueue preconditions: `enqueue` in `board/queue.ts`; they are checked again inside the write transaction.
 - Per-project `busy` set in `BoardQueue.make` keeps a project from settling twice when ticks overlap. `accepted` is the
