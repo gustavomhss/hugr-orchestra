@@ -35,8 +35,8 @@ describe("BoardQueue lanes", () => {
           .orderBy(asc(BoardBundleTable.n))
           .all()
           .pipe(Effect.orDie)
-      const created = () => repo.remote.calls.filter((args) => args[0] === "pr" && args[1] === "create")
-      const dispatched = () => repo.remote.calls.filter((args) => args[0] === "workflow" && args[1] === "run")
+      const created = () => repo.remote.calls.filter((args) => args.slice(0, 2).join(" ") === "pr create")
+      const dispatched = () => repo.remote.calls.filter((args) => args.slice(0, 2).join(" ") === "workflow run")
 
       yield* board.queueTick()
       // Two lanes in flight, each gated by a dispatch with only its packages and no full-suite label.
