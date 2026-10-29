@@ -1,6 +1,6 @@
 ---
 name: conveyor-ownership
-description: Who owns each piece of the merge queue (the conveyor), where its code lives, the invariants that must not regress and the decisions already taken
+description: Who owns each piece of the merge queue (the conveyor), where its code lives, the invariants that must not regress and the decisions already taken. Use before answering a question about the queue, bundles, CI facts, snapshots or the Atlas record, or before changing any of them.
 ---
 
 # Conveyor ownership
@@ -8,7 +8,7 @@ description: Who owns each piece of the merge queue (the conveyor), where its co
 The conveyor takes a verified card to `dev`: attempts and pushed work in progress, CI facts per card, then the queue
 and green bundles. Design:
 `docs/specs/maestro-lead/merge-queue.md`; spike evidence: `docs/specs/maestro-lead/merge-queue-spike.md`. How to change
-it: skill `conveyor-maintenance`. User guide: `docs/guides/merge-queue.md`.
+it: skill `conveyor-maintenance`. How it runs: `conveyor-usage`. User guide: `docs/guides/merge-queue.md`.
 
 ## Ownership
 
@@ -22,7 +22,14 @@ it: skill `conveyor-maintenance`. User guide: `docs/guides/merge-queue.md`.
 | Attempts on dispatch, snapshot push, push state, 10 min sweep | `packages/core/src/board/snapshot.ts`, wired in `board.ts` | conveyor |
 | Base-advance sweep, conflict notes, `conflict_base`/`conflict_files`, `board_project.base_sha` | `packages/core/src/board/conflicts.ts`, wired in `board.ts` | conveyor |
 | Queue stage, `board_queue`/`board_bundle`/`board_bundle_member`, `PrRecord` (`board_issue.record`) | `packages/core/src/board/sql.ts`, `packages/schema/src/board.ts` | conveyor |
-| Enqueue, dequeue, bundle cut, settle, merge-if-disjoint, record facts and the record port, 60 s tick | `packages/core/src/board/queue.ts`, `record.ts`, wired in `board.ts` | conveyor |
+| Enqueue, dequeue, bundle cut, 60 s tick | `packages/core/src/board/queue.ts`, wired in `board.ts` | conveyor |
+| Settle, land, skew (merge-if-disjoint), dissolve | `packages/core/src/board/queue-settle.ts` | conveyor |
+| Red path: failing files, base state and probe, scoped judge, isolate, bisect, fix card, flaky | `packages/core/src/board/queue-red.ts` | conveyor |
+| PR head, notes, record facts, record commit | `packages/core/src/board/queue-record.ts`; port `record.ts` | conveyor |
+| Shared rollup judging, placement, release | `packages/core/src/board/queue-shared.ts` | conveyor |
+| Card thread notes | `packages/core/src/board/thread.ts` | conveyor |
+| Board log export and import (`BoardTree.event`, `BoardTree.restore`) | `packages/core/src/board/tree.ts` | conveyor |
+| Queue numbers (`BoardLedger.of`) | `packages/core/src/board/ledger.ts` | conveyor |
 | `board_queue`, `board_dequeue`, `board_bundle` tools | `packages/core/src/board/tools.ts` | conveyor; Maestro only |
 | `merge-outside-conveyor` guard | `script/guards/rules/merge-outside-conveyor.toml` | conveyor |
 | Billing ledger `board_ci_run` | `packages/core/src/board/github.ts`, `money.ts` | board; unchanged by the conveyor |
@@ -81,3 +88,6 @@ it: skill `conveyor-maintenance`. User guide: `docs/guides/merge-queue.md`.
 - `board_read` does not show checks or the push state yet; it shows the queue state through `issue.queue`.
 - The GitHub sync does not ship merged cards on its own; the queue ships them when it lands their bundle.
 - `BoardLedger.of` computes `Board.Ledger` from activity, check and attempt rows; it is optional on `Board.Snapshot`; per-lane numbers are phase 2.
+- 2026-10-29: phase 2 (lanes, safety net, plan shape) starts without waiting for a real phase 1 epic.
+- `BoardTree.restore` is a library call with no tool or CLI yet; it rebuilds structure only, never the queue, bundles,
+  checks or GitHub sync.

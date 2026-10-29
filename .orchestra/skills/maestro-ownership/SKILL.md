@@ -22,6 +22,7 @@ day to day: `maestro-usage`. User guide: `docs/guides/maestro.md`.
 | Maestro's dispatch governance | `modules/maestro/coordination/src/v2/governance.ts`, `v2/governance/input.ts` (extra `task` fields incl. `card`), `v2/governance/workflow*.ts` |
 | Governed-work tools (`maestro_*`) | `modules/maestro/coordination/src/v2/tools/*`, registered in `v2/tools.ts` |
 | Board tools and store | `packages/core/src/board/{tools,board,github,money,forecast,proof}.ts`, schema `packages/schema/src/board.ts`, spec `docs/specs/projects-board/` |
+| Merge queue (CI facts, attempts, snapshots, queue, bundles, record, board import) | `packages/core/src/board/{ci,snapshot,conflicts,queue*,record,thread,tree,ledger}.ts`; skills `conveyor-ownership`, `conveyor-usage`, `conveyor-maintenance` |
 | Board drift context | `modules/maestro/coordination/src/v2/board-drift-source.ts` |
 | Playbooks (shipped) | `modules/maestro/coordination/playbooks/*`, inventory `src/playbook-content.ts`, source `v2/skill-sources.ts` |
 | Arsenal | `modules/maestro/arsenal/src/registry.ts`, tools `packages/core/src/tool/maestro-arsenal.ts`, `archie`'s allowlist `tool/upstream-arsenal.ts` |
@@ -73,7 +74,10 @@ day to day: `maestro-usage`. User guide: `docs/guides/maestro.md`.
 ## Built versus designed
 
 - Built: card claim on dispatch (`card`), PR-follow to Review and Shipped (`github.ts` `follow`), board drift context, `board_read`
-  project list, task in another worktree, the `maestro-orchestra` map playbook.
+  project list, task in another worktree, the `maestro-orchestra` map playbook, and merge queue phase 1 (#1146): the Queue
+  stage, `ci_run`, `board_queue`, `board_dequeue`, `board_bundle`, green bundles, the red path, the card thread and the
+  Atlas record. See `conveyor-ownership`.
+- In progress: merge queue phase 2 (lanes from the turbo affected set, the full-suite safety net, `area` and `order` in
+  the plan shape), spec §7 of `docs/specs/maestro-lead/merge-queue.md`.
 - Designed only (`docs/specs/maestro-lead/`): the `maestro-lead` playbook tree (not in `PlaybookContent.names`), `board_note`,
-  wake on an owner's answer, stall count, digest, roster and brief shape in the `task` text, moving the authoring arsenal to `archie`,
-  the merge queue conveyor.
+  wake on an owner's answer, stall count, digest, roster and brief shape in the `task` text, moving the authoring arsenal to `archie`.
