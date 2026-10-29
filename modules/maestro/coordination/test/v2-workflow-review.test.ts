@@ -116,6 +116,8 @@ test("the workers' result is the working tree as a Git tree, bounded by HEAD and
 
       expect((yield* WorkflowReviewV2.result(cli, { ...input, maxOutputBytes: 16 })).status).toBe("too-large")
 
+      yield* write(directory, ".atlas/members/backend/memory/notes.jsonl", "{}\n")
+      expect((yield* WorkflowReviewV2.result(cli, input)).status).toBe("ready")
       yield* write(directory, "docs/outside.md", "outside\n")
       expect(yield* WorkflowReviewV2.result(cli, input)).toEqual({ status: "outside", outside: ["docs/outside.md"] })
       expect((yield* WorkflowReviewV2.result(cli, { ...input, writePaths: ["src", "docs"] })).status).toBe("ready")
@@ -187,6 +189,8 @@ test("an echoed code-stage artifact verifies only against the recomputed result 
       expect(yield* reason({ ...echoed, headSHA: base })).toBe("artifact-context-mismatch")
       expect(yield* reason({ ...echoed, changedPaths: ["src/b.ts"] })).toBe("artifact-path-mismatch")
       expect(yield* reason({ ...echoed, sha256: "0".repeat(64) })).toBe("artifact-bytes-mismatch")
+      yield* write(directory, ".atlas/members/backend/memory/notes.jsonl", "{}\n")
+      expect((yield* WorkflowReviewV2.result(cli, input)).status).toBe("ready")
       yield* write(directory, "docs/outside.md", "outside\n")
       expect(yield* reason(echoed)).toBe("code-review-result-outside")
     }),
