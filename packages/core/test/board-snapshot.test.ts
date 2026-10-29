@@ -152,6 +152,8 @@ function repository(name: string) {
       const remote = path.join(root, "origin.git")
       await git(root, "init", "--bare", remote)
       await git(root, "-c", "init.defaultBranch=main", "init", directory)
+      // The Windows runner's git turns LF into CRLF on checkout, which the restored file would then carry.
+      await git(directory, "config", "core.autocrlf", "false")
       await fs.writeFile(path.join(directory, "README.md"), "base\n")
       await git(directory, "add", ".")
       await git(directory, "-c", "user.email=test@example.com", "-c", "user.name=Test", "commit", "-m", "base")

@@ -119,12 +119,14 @@ export function make(deps: Deps) {
     if (attempt.worktree) return attempt.worktree
     if (!directory || !issue.branch) return null
     const listed = yield* git(directory, ["worktree", "list", "--porcelain"])
-    const found = listed.out
+    // git lists Windows paths with forward slashes; resolve keeps the recorded path in the platform's form.
+    const listedPath = listed.out
       .split("\n\n")
       .map((block) => block.split("\n"))
       .find((lines) => lines.includes(`branch refs/heads/${issue.branch}`))
       ?.find((line) => line.startsWith("worktree "))
       ?.slice("worktree ".length)
+    const found = listedPath && path.resolve(listedPath)
     if (found) yield* update(attempt, { worktree: found })
     return found ?? null
   })
