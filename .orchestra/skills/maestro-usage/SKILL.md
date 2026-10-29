@@ -36,13 +36,16 @@ owner opens from the task row. Depth is capped at 8.
 
 ## Board flow
 
-Stages: intake, backlog, ready, building, review, shipped, cut. The board is Maestro-only.
+Stages: intake, backlog, ready, building, review, queue, shipped, cut. The board is Maestro-only.
 
 | Move | Who |
 |---|---|
 | Intake to anything | owner only |
 | Backlog or Ready to Building | host, on `task` with `card` |
 | Building to Review | host, when a linked PR is open (needs the project's `github_repo`) |
+| Review to Queue | Maestro with `board_queue`, only through it (`board_move` refuses `queue`) |
+| Queue to Review | Maestro with `board_dequeue`, or the host when a card is ejected or its PR moves after assembly |
+| Queue to Shipped | host, when the card's green bundle lands |
 | Building or Review to Shipped | host, when the linked PR merges; clears `crash_reason` |
 | to Ready, to Cut, Shipped without a PR | Maestro with `board_move` and a reason |
 | archive | owner only |
@@ -55,6 +58,18 @@ waiting_on_owner, else on_track. The forecast needs 5 shipped cards.
 Other writes: `board_project`, `board_epic`, `board_issue` (seat, session, branch, pr, depends_on, attempts,
 crash_reason, guardrail_rule), `board_steps` (one active step, `now` is the live line), `board_settings`,
 `board_decision` (what came of an answered decision).
+
+## Merge queue
+
+1. `ci_run` runs the card's scoped checks from `.orchestra/ci.json` (read from the base branch) on its worktree tree.
+2. Maestro writes the PR record with `board_issue` (intent, decisions, not covered, risk level), then `board_queue`
+   (`urgent`, `flush`). It refuses without a PR, a complete record, ready dependencies, a clean merge with base and a
+   `scoped-green` head.
+3. The host cuts bundles, runs the full gate (`epic` here) and lands green ones; Maestro never merges.
+4. Maestro decides only held bundles with `board_bundle`: `merge` (flaky, as tested), `retry` (flaky or paused),
+   `release` (one held card of a dissolved bundle rides alone).
+
+Details: `conveyor-usage`. User guide: `docs/guides/merge-queue.md`.
 
 ## Playbooks
 

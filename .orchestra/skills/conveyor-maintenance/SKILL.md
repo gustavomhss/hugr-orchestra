@@ -1,11 +1,11 @@
 ---
 name: conveyor-maintenance
-description: How to change the merge queue (conveyor) safely — the CI contract, ci_run and the board_check ledger — with the traps and the gates to run
+description: How to change the merge queue (conveyor) safely — the CI contract, ci_run and checks, attempts and snapshots, the queue, bundles, red path, card thread, record commit and board import — with the traps and the gates to run. Use before editing packages/core/src/board/{ci,snapshot,conflicts,queue*,record,thread,tree,ledger}.ts.
 ---
 
 # Conveyor maintenance
 
-Read `conveyor-ownership` first. Spec: `docs/specs/maestro-lead/merge-queue.md`, §5 for CI facts, §8 for attempts,
+Read `conveyor-ownership` first; runtime behavior is `conveyor-usage`. Spec: `docs/specs/maestro-lead/merge-queue.md`, §5 for CI facts, §8 for attempts,
 snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bundles and the PR record.
 
 ## Where a change goes
@@ -18,7 +18,7 @@ snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bund
 - Card thread notes: `board/thread.ts` owns them. Ids are deterministic (`bno_<promptID>`, `bno_review_*`,
   `bno_verdict_*`, `bno_rework_*`) so exact retries write once. Blocked comes from `TaskGovernance.settle`'s `blocked`,
   never from text.
-- Record commit: `recordBundle` in `board/queue.ts` writes spec §4.7 through `@orchestra/atlas-boundary/record-log`.
+- Record commit: `recordBundle` in `board/queue-record.ts` writes spec §4.7 through `@orchestra/atlas-boundary/record-log`.
   Redaction comes from `gh api repos/<slug>` (`.private`; any failure counts as public); free text goes in a board
   event's `text`, never in `before`/`after`. Writers skip lines already present so a rebuilt bundle does not duplicate
   them.
@@ -26,10 +26,10 @@ snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bund
 - Enqueue preconditions: `enqueue` in `board/queue.ts`; they are checked again inside the write transaction.
 - Per-project `busy` set in `BoardQueue.make` keeps a project from settling twice when ticks overlap. `accepted` is the
   only non-`open` bundle status that `openBundle` returns (a flaky bundle Maestro merged with `board_bundle`).
-- Cut rules and bundle order: `cut` in `board/queue.ts`. Landing and base moves: `settle` and `skew`. `settle` checks
+- Cut rules and bundle order: `cut` in `board/queue.ts`. Landing and base moves: `settle` and `skew` in `board/queue-settle.ts`; the red path in `board/queue-red.ts`. `settle` checks
   for an already-landed head (an ancestor of base) before it pushes; restore from a snapshot lives in `push` (`restored`).
 - PR record fields: `PrRecord` in `packages/schema/src/board.ts` (what Maestro writes), the completeness check
-  `incomplete`, and `recordOf` in `board/queue.ts` (host facts). Rendering is Atlas's: core calls the
+  `incomplete`, and `recordOf` in `board/queue-record.ts` (host facts). Rendering is Atlas's: core calls the
   `BoardRecord.Port` in `board/record.ts`, bound through `Board.layerWith({ record })`. Its types mirror Atlas's
   `PrRecord`/`BundleRecord`/`Trailer`; change both sides together. Never add a renderer in core.
 - New column: `BoardCheckTable` in `board/sql.ts` (snake_case), then `bun run migration --name <name>` in
@@ -67,12 +67,12 @@ snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bund
 - `scope()` adds its scratch worktrees one at a time (concurrent `git worktree add` races on the lock), runs F in parallel and returns base, code or flaky; `BoardCi.packaged` maps failing bun files to their turbo group; `flaky()` writes the `board_flake` row (migration `20261028230000_board_flake`) and keeps the bundle open.
 - `isolate` runs its scoped checkouts one at a time because of the worktree lock. Bundle `rebuilds` counts consecutive `isolated` reds. A queue row's `hold` (`held`, `alone`) is cleared when the card is cut.
 - `board/tree.ts` owns export (`BoardTree.event`, called by the record commit) and import (`BoardTree.restore`). One applier per `Board.Action` in `APPLIERS`; a new action needs a new applier (the `Record<Board.Action, ...>` type forces it) and a structure field in its activity `after`. Unknown actions fail with `BoardTree.UnknownActionError`.
+- Keep every queue module under 750 lines (`script/godfile.ts`): the epic fails above it. A new concern gets its own `queue-*.ts` built from the shared `Context`, like `makeRed` and `makeSettle`.
 - Write-set matching drops `:L` line ranges and matches patterns with `Bun.Glob`, like the arsenal's `conflictVerdict`.
 
 ## Gates
 
-- Tests on Actions only: `bun run test:ci core test/board-ci.test.ts test/board-snapshot.test.ts test/board-conflicts.test.ts test/board-queue.test.ts` (add `test/board.test.ts` and
+- Tests on Actions only: `bun run test:ci core test/board-ci.test.ts test/board-snapshot.test.ts test/board-conflicts.test.ts test/board-queue.test.ts test/board-queue-red.test.ts test/board-queue-scoped.test.ts test/board-tree.test.ts` (add `test/board.test.ts` and
   `test/board-tools.test.ts` when board code moves).
 - Typecheck: `gh workflow run typecheck.yml --ref <branch>`. Never on the Mac.
 - `bun run check:guards --base origin/dev` before calling a change done.
-- `BoardLedger.of` computes `Board.Ledger` from activity, check and attempt rows; it is optional on `Board.Snapshot`; per-lane numbers are phase 2.
