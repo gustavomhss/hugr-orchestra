@@ -39,7 +39,8 @@ const it = testEffect(
   ]),
 )
 
-describe("BoardSnapshot", () => {
+// The fake scanner is a shell script, which Windows cannot spawn as a program.
+describe.skipIf(process.platform === "win32")("BoardSnapshot", () => {
   it.live("pushes the worktree to the attempt's wip ref without touching its index or HEAD", () =>
     Effect.gen(function* () {
       const board = yield* Board.Service

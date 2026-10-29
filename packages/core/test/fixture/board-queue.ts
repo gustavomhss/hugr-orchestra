@@ -123,11 +123,12 @@ export function repository(key: string, size = 2, full?: object, scoped?: "scrip
       const root = await fs.realpath(await fs.mkdtemp(path.join(tmpdir(), `orchestra-board-queue-${key}-`)))
       const directory = path.join(root, "repo")
       const remote = path.join(root, "origin.git")
-      const script = path.join(root, "scoped.sh")
+      // Forward slashes: on Windows `sh` reads backslashes in these paths as escapes.
+      const script = path.join(root, "scoped.sh").replaceAll("\\", "/")
       await git(root, "init", "--bare", remote)
       await git(root, "-c", "init.defaultBranch=main", "init", directory)
       await fs.mkdir(path.join(directory, ".orchestra"))
-      if (scoped) await fs.writeFile(script, `echo "$@" >> ${path.join(root, "runs.log")}\n[ -f fail.txt ] && [ ! -f fix.txt ] && exit 1\n[ -f x.txt ] && [ -f y.txt ] && exit 1\nexit 0\n`)
+      if (scoped) await fs.writeFile(script, `echo "$@" >> ${path.join(root, "runs.log").replaceAll("\\", "/")}\n[ -f fail.txt ] && [ ! -f fix.txt ] && exit 1\n[ -f x.txt ] && [ -f y.txt ] && exit 1\nexit 0\n`)
       await fs.writeFile(
         path.join(directory, ".orchestra", "ci.json"),
         JSON.stringify({ bundle: { size, waitMinutes: 600 }, merge: "merge", full, scoped: scoped ? { tests: `sh ${script} {package} {files}` } : undefined }),
