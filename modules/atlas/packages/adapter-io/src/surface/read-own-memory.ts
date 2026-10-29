@@ -5,8 +5,8 @@
 //                  `parseStaticOwnCoverage` (both `@atlas/retrieval`, the parsers Orchestra's own read relies on),
 //                  and the first 4 KB of every published `SKILL.md`. Read from the repository root, where
 //                  Orchestra's Atlas source reads them.
-//   memory       — `.atlas/memory.jsonl` through the durable memory store (`../memory-store.ts`), grouped by member.
-//   orientation  — `.atlas/orientation.jsonl` through the durable orientation store (`../orientation-store.ts`).
+//   memory       — `.atlas/members/*/memory/` through the durable memory store (`../memory-store.ts`), grouped by member.
+//   orientation  — `.atlas/project/orientation.jsonl` through the durable orientation store (`../orientation-store.ts`).
 //   territories  — `TERRITORY-CATALOG.json` through `parseTerritoryCatalog` (`@atlas/index`).
 //
 // TOTAL: an absent or malformed file reads as null / {} / [] as each field documents, never a throw. Nothing here
@@ -47,7 +47,7 @@ export function readOwn(repoPath: string): AtlasOwnSnapshot | null {
   }
 }
 
-/** `.atlas/memory.jsonl` records grouped by member, each group in log order. */
+/** Memory records grouped by member, each group in fold order. */
 export function readMemory(repoPath: string): Readonly<Record<string, readonly AtlasMemoryRecord[]>> {
   const records = [...createDurableMemory(repoPath).read().log.values()].flatMap((event) => {
     const record = memoryRecord(event.payload)
@@ -59,7 +59,7 @@ export function readMemory(repoPath: string): Readonly<Record<string, readonly A
   )
 }
 
-/** `.atlas/orientation.jsonl` events in log order. */
+/** `.atlas/project/orientation.jsonl` events in log order. */
 export function readOrientation(repoPath: string): readonly AtlasOrientationEvent[] {
   return [...createDurableOrientation(repoPath).read().log.values()].map((event) => {
     const payload = isRecord(event.payload) ? event.payload : {}

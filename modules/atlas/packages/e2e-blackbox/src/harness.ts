@@ -158,7 +158,7 @@ export function makeFixtureRepo(spec: FixtureSpec): FixtureRepo {
   // COMMITTED projection carries rows no door ever saw, so it is not knowledge. That refusal is the product
   // behaving as designed; what was wrong was the fixture, which committed its store and then expected to
   // read it back. `index.scip` stays tracked deliberately — it is a build input, not the governed store.
-  writeFileSync(join(repoPath, ".gitignore"), ".atlas/*\n!.atlas/policy.json\n!.atlas/index.scip\n")
+  writeFileSync(join(repoPath, ".gitignore"), ".atlas/*\n!.atlas/policy.json\n!.atlas/index.scip\n!.atlas/project/\n!.atlas/members/\n!.atlas/blobs/\n!.atlas/cards/\n")
   git(repoPath, "init", "-q")
   git(repoPath, "config", "user.email", "e2e@atlas.local")
   git(repoPath, "config", "user.name", "atlas-e2e")

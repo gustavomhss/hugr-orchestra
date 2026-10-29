@@ -48,6 +48,9 @@ for (const scheme of ["dark", "light"] as const) {
     const templates = view.locator(".wf-tpl-grid .wf-tpl h3")
     await expect(templates).toHaveText([
       "Start from scratch",
+      "Fix a bug with proof",
+      "Launch a feature end to end",
+      "Refactor safely",
       "Build one work package",
       "Plan from a frozen spec",
       "Research a question",
@@ -80,6 +83,9 @@ test("shipped profiles are templates only, so a project with none of its own sho
   await expect(view.locator(".wf-empty strong")).toHaveText("No workflows in this project yet")
   await expect(view.locator(".wf-tpl-grid .wf-tpl h3")).toHaveText([
     "Start from scratch",
+    "Fix a bug with proof",
+    "Launch a feature end to end",
+    "Refactor safely",
     "Test-driven feature",
     "Build one work package",
     "Design a product from an idea",

@@ -6,7 +6,7 @@
 // why a door wired early to clear that gate is the stub the gate exists to refuse.
 //
 // ── WHY THIS IS A SECOND LOG AND NOT A SECOND PARTITION OF THE FIRST ─────────────────────────────────────
-// `memory.jsonl` holds `MemoryRecord`s — owner-scoped, per-seat, injected only to their owner. Orientation
+// The memory logs hold `MemoryRecord`s — owner-scoped, per-seat, injected only to their owner. Orientation
 // is the opposite kind of thing: MEM-6 says it is DERIVED and SHARED, byte-identical across every member,
 // and never a written memory, precisely so it cannot rot. Its events are milestone/state labels about the
 // RUN, owned by nobody. Putting them in the per-seat log would give them an owner they do not have and put
@@ -25,16 +25,16 @@
 // and `goal` reads as empty until one exists. Inventing a file convention for it would be authoring the
 // artifact rather than reading it, which is the inversion this campaign has already refused once.
 
-import { join } from "node:path"
 import type { Hash } from "@atlas/contracts"
-import type { EventLog } from "@atlas/kernel"
+import type { Event, EventLog } from "@atlas/kernel"
 import { orient, orientEvent } from "@atlas/memory"
 import { id as objectId } from "@atlas/kernel"
 import type { Orientation, OrientChannel } from "@atlas/memory"
-import { createDurableLog } from "./durable-log.js"
+import { createDurableLog, readDurableLogs } from "./durable-log.js"
+import { legacyLogPath, projectLogPath } from "./layout.js"
 
-/** The tracked log's path under a repo root. */
-export const orientationLogPath = (repoPath: string): string => join(repoPath, ".atlas", "orientation.jsonl")
+/** The tracked log's path under a repo root. The legacy `.atlas/orientation.jsonl` is still read, first. */
+export const orientationLogPath = (repoPath: string): string => projectLogPath(repoPath, "orientation")
 
 /** What a read found — the folded event log and the lines it refused. */
 export interface OrientationRead {
@@ -62,16 +62,18 @@ export function createDurableOrientation(repoPath: string): DurableOrientation {
   // line this store writes. The predicate is therefore the payload one — and `durable-log.ts`'s `LineKeyed`
   // doc states exactly what that narrower check does and does not catch, rather than letting the difference
   // pass as if the two logs were equally defended.
-  const log = createDurableLog(orientationLogPath(repoPath), (ev) => objectId(ev.payload) === ev.id)
+  const keyed = (ev: Event) => objectId(ev.payload) === ev.id
+  const log = createDurableLog(orientationLogPath(repoPath), keyed)
+  const read = (): OrientationRead => readDurableLogs([legacyLogPath(repoPath, "orientation"), log.path], keyed)
 
   return {
     path: log.path,
-    read: (): OrientationRead => log.read(),
+    read,
     append(channel: OrientChannel, label: string, supersedes: readonly Hash[] = []): void {
       log.append(orientEvent(channel, label, supersedes))
     },
     orientation(define?: unknown): Orientation {
-      return orient(define, log.read().log)
+      return orient(define, read().log)
     },
   }
 }

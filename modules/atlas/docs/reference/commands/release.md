@@ -1,7 +1,7 @@
 # `atlas release`
 
 Let a row that [`atlas hold`](./hold.md) kept out of promotion back in: the next [`promote`](./promote.md) pass presents
-it again. It appends one `release` record to the review log `.atlas/review.jsonl`; the hold record stays in the log.
+it again. It appends one `release` record to the review log `.atlas/project/review.jsonl`; the hold record stays in the log.
 
 This page describes the **CLI** command `atlas release`. It is CLI-only (not an MCP tool).
 

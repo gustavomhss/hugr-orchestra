@@ -108,7 +108,11 @@ const decodeIssue = Schema.decodeUnknownOption(Schema.fromJsonString(Issue))
 const decodeComments = Schema.decodeUnknownOption(Schema.fromJsonString(Schema.Array(Comment)))
 const decodeCreated = Schema.decodeUnknownOption(Schema.fromJsonString(Created))
 
-const Pull = Schema.Struct({ head: Schema.Struct({ sha: Schema.String }) })
+const Pull = Schema.Struct({
+  head: Schema.Struct({ sha: Schema.String }),
+  state: Schema.optional(Schema.String),
+  merged: Schema.optional(Schema.Boolean),
+})
 const Runs = Schema.Struct({
   workflow_runs: Schema.Array(
     Schema.Struct({ id: Schema.Int, name: Schema.NullOr(Schema.String), status: Schema.String, run_attempt: Schema.optional(Schema.Int) }),
@@ -141,6 +145,7 @@ export function make(deps: Deps) {
         if (!project) return { status: "missing" } as const
         if (!project.github_repo) return { status: "off" } as const
         const failed = yield* pull(project, project.github_repo).pipe(
+          Effect.andThen(follow(project, project.github_repo)),
           Effect.andThen(push(project, project.github_repo)),
           Effect.as(undefined),
           Effect.catch((failure: Failure) => Effect.succeed(failure)),
@@ -224,6 +229,67 @@ export function make(deps: Deps) {
         }),
       { discard: true },
     )
+  })
+
+  /**
+   * The PR is the fact a card follows on every sync: an open PR moves a Building card to Review, a merged one moves it
+   * from Building or Review to Shipped and clears its crash reason. Maestro still moves every other stage; a paused
+   * project or card, and an owner hold before merge, keep the card where it is.
+   */
+  const follow = Effect.fnUntraced(function* (project: ProjectRow, repo: string) {
+    if (project.status !== "active") return
+    const issues = yield* deps.quiet((tx) =>
+      tx
+        .select()
+        .from(BoardIssueTable)
+        .where(
+          and(
+            eq(BoardIssueTable.project_id, project.id),
+            sql`${BoardIssueTable.pr_number} is not null`,
+            sql`${BoardIssueTable.stage} in ('building', 'review')`,
+          ),
+        )
+        .all(),
+    )
+    yield* Effect.forEach(issues, (issue) => advance(project, repo, issue), { discard: true })
+  })
+
+  const advance = Effect.fnUntraced(function* (project: ProjectRow, repo: string, issue: IssueRow) {
+    // One unreadable PR (deleted, renamed repo, a blip) leaves its card alone; it must not stop the rest of the sync.
+    const read = yield* get(`repos/${repo}/pulls/${issue.pr_number}`, null).pipe(Effect.option)
+    const pull = Option.getOrUndefined(Option.flatMap(read, (result) => decodePull(result.body)))
+    const stage = pull?.merged ? ("shipped" as const) : pull?.state === "open" ? ("review" as const) : undefined
+    if (!stage || issue.paused) return
+    const from: ReadonlyArray<Board.Stage> = stage === "shipped" ? ["building", "review"] : ["building"]
+    if (!from.includes(issue.stage) || (stage === "shipped" && issue.hold_before_merge)) return
+    const changed = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const now = yield* Clock.currentTimeMillis
+        const next = {
+          stage,
+          position: yield* endOf(tx, project.id, stage),
+          stage_entered_at: now,
+          ...(stage === "shipped" ? { crash_reason: null } : {}),
+        }
+        yield* tx.update(BoardIssueTable).set({ ...next, github_dirty: true }).where(eq(BoardIssueTable.id, issue.id)).run()
+        const activity = yield* deps.log(tx, {
+          project: project.id,
+          issue: issue.id,
+          actor: "github",
+          action: "issue.move",
+          reason: stage === "shipped" ? `PR #${issue.pr_number} merged on GitHub.` : `PR #${issue.pr_number} is open on GitHub.`,
+          before: {
+            stage: issue.stage,
+            position: issue.position,
+            stage_entered_at: issue.stage_entered_at,
+            ...(stage === "shipped" ? { crash_reason: issue.crash_reason } : {}),
+          },
+          after: next,
+        })
+        return { project: project.id, issue: issue.id, activity }
+      }),
+    )
+    yield* deps.publish(changed)
   })
 
   const settle = Effect.fnUntraced(function* (project: ProjectRow, state: Board.GithubState, error: string | null) {

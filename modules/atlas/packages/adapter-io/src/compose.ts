@@ -51,11 +51,11 @@ import { createNegationLeg } from "./negation-source.js"
 import { createTransitionLeg, createTransitionProducer } from "./transition-source.js"
 import { buildTestVacuityFeed, buildTestVacuityLegs } from "./compose-test-vacuity.js"
 import { createVerifyFactLeg } from "./verify-fact-source.js"
-import { reverifyStore, makeScopeHasDocs, driftPairsOf, danglingOf } from "./reverify-store.js"
-import type { DocExists } from "./reverify-store.js"
+import { reverifyStore, makeScopeHasDocs, driftPairsOf, danglingOf, type DocExists } from "./reverify-store.js"
 import { createDiskStore, rehydrateProjection } from "./store.js"
-import { gitStoreProvenance } from "./store-provenance.js"
-import type { SidecarTrust } from "./store-provenance.js"
+import { withKnowledgeLog } from "./knowledge-log.js"
+import { replayKnowledge } from "./knowledge-replay.js"
+import { gitStoreProvenance, type SidecarTrust } from "./store-provenance.js"
 import { buildReadAccess, trackedProvableAdvisory } from "./read-access.js"
 import { assembleHandler, bindFreshnessOracle, edgeModelVersion } from "./wire.js"
 import type { WireConfig, WireSeams } from "./wire.js"
@@ -226,28 +226,21 @@ export function composeRuntime(repoPath: string): ComposedRuntime {
   //     `store.put`s the WHOLE `GroundedFact` (invariant 6), so `store.get(contentHash)` reads it back.
   const revIndex = createRevIndex(repoPath)
   // N11: the doctor/reconcile store stamps the same freshness watermark (HEAD at persist) as the handler's.
-  // PROVENANCE (the root the doors hang from): git is owned HERE, so the tripwire that asks whether the
-  // durable store is TRACKED — i.e. arrived by commit rather than through a door — is built here and
-  // injected, exactly as the N11 watermark is. One `git ls-files`, memoized for the life of the runtime.
-  //
-  // TRAVEL-BY-REPROOF (owner-authorized 2026-08-18): the question is now THREE-WAY, not two
-  // (`store-provenance.ts` `StoreProvenance`) — `trusted` below stays the BOOLEAN write-gate every existing
-  // caller (`store` itself, for writes) rides, byte-identical to before (`true` iff `provenance()` is
-  // `'trusted'`); the RICHER answer — what a READ may see for `tracked-staging` vs `tracked-provable` — is
-  // `readAccess`, built below once `verifyFactLeg` (its oracle) exists.
+  // PROVENANCE (the root the doors hang from): git is owned HERE, so the tripwire that asks whether the durable
+  // store is TRACKED (arrived by commit, not through a door) is built here and injected, like the N11 watermark.
+  // One `git ls-files`, memoized. TRAVEL-BY-REPROOF (owner-authorized 2026-08-18): the answer is THREE-WAY
+  // (`StoreProvenance`); `trusted` stays the BOOLEAN write-gate every caller rides, and what a READ may see for
+  // `tracked-staging` vs `tracked-provable` is `readAccess`, built below once `verifyFactLeg` (its oracle) exists.
   const provenance = gitStoreProvenance(repoPath)
   const trusted: SidecarTrust = () => provenance() === "trusted"
-  const store = createDiskStore(join(repoPath, CAS_REL), () => headSha(repoPath), trusted)
+  const disk = createDiskStore(join(repoPath, CAS_REL), () => headSha(repoPath), trusted)
+  const store = withKnowledgeLog(disk, { repoPath, seat: actor })
   // THE `draft` + `draftSupersede` COMPOSITION PLANNERS (WP-10.A2-a/b / ADR-0004, AUTHOR-6/7/9/10/13) — over
   // the SAME `groundingComputer` `anchors` rides (AUTHOR-1: one grounding seam), so a drafted fact's
   // `subtreeHash` is exactly the value the emit truth-gate will re-derive against, PLUS the `IncumbentPort`
   // (`@atlas/tools` `draft.ts`) built here over the SAME `store` the durable emit door and the `check`
   // dry-run leg (below) ride — never a second store, never a second occupancy notion.
   const draftLeg = createDraft(groundingComputer, buildDraftIncumbentPort(store))
-  // `driftPairs` carries each fact ALONGSIDE its own `CurrentNode` (`reverify` needs `node.primaryAnchor` for
-  // the anchor-binding check, #199); `driftFacts` is the same pairing's `.fact` projection — ONE store read.
-  const driftPairs = driftPairsOf(store)
-  const driftFacts = driftPairs.map((p) => p.fact)
   // THE SOUND-GENESIS PROVEN-FAMILY ORACLE, built ONCE and shared by BOTH `verifyFact` (the CLI's
   // `atlas verify-fact`) and `reverify` (`atlas verify-store`) below — the ONE production oracle, never a
   // duplicate that could drift from it.
@@ -264,6 +257,14 @@ export function composeRuntime(repoPath: string): ComposedRuntime {
   // needs only `rawTree` + `axes` (in hand), NEVER `readAccess.store`. Early build lets the `tracked-provable`
   // serve re-prove proven test-vacuities (#249); reused below so producer + BOTH replay sites scan ONE `testUnitsOf` (#186/N10).
   const tvFeed = buildTestVacuityFeed(rawTree, axes)
+  // A clone REPLAYS the logged commits of `store` here (`knowledge-replay.ts`): trusted store only, before drift.
+  if (provenance() === "trusted")
+    replayKnowledge(repoPath, disk, policy, (node, fact) =>
+      reverifyStore([{ node, fact }], verifyFactLeg, docExists, scopeHasDocs, tvFeed.replay).reProven === 1)
+  // `driftPairs` carries each fact ALONGSIDE its own `CurrentNode` (`reverify` needs `node.primaryAnchor` for
+  // the anchor-binding check, #199); `driftFacts` is the same pairing's `.fact` projection — ONE store read.
+  const driftPairs = driftPairsOf(store)
+  const driftFacts = driftPairs.map((p) => p.fact)
   // THE READ-SIDE ANSWER (TRAVEL-BY-REPROOF, `read-access.ts`): what every read leg below is allowed to see.
   // `trusted` ⇒ `store` verbatim, no new cost. `tracked-staging` ⇒ a refusal, unchanged in kind. `tracked-
   // provable` ⇒ a raw re-read filtered to the facts that replay `re-proven` against `verifyFactLeg` — the
@@ -358,8 +359,8 @@ export function composeRuntime(repoPath: string): ComposedRuntime {
     resolveBySubtreeAt: revIndex.resolveBySubtreeAt,
   }
 
-  // WP-11.W8 / CAMPAIGN-11 — the durable MEMORY doors, over their OWN separate log (`.atlas/memory.jsonl`,
-  // `.atlas/orientation.jsonl` — NOT the knowledge CAS `store` above). D1: the owner is `actor`, the SAME
+  // WP-11.W8 / CAMPAIGN-11 — the durable MEMORY doors, over their OWN separate logs (`.atlas/members/*/memory/`,
+  // `.atlas/project/orientation.jsonl` — NOT the knowledge CAS `store` above). D1: the owner is `actor`, the SAME
   // env/git-resolved identity every other governed write door rides (KNOW-11) — this composition root
   // resolves it once and threads it here; no door downstream reads it from a fact/payload or accepts one
   // as a caller-supplied argument (that would reopen the confused-deputy hole D1/D3 closed).
@@ -389,6 +390,7 @@ export function composeRuntime(repoPath: string): ComposedRuntime {
     // actually read and write. Threading it only onto the store built above would guard doctor/reconcile
     // and leave both user-facing doors open.
     trusted,
+    store, // the logged store, so `atlas emit`/`atlas link` outcomes reach the knowledge log too
     // TRAVEL-BY-REPROOF — the read-side answer, THREADED so `wire.ts`'s query/node legs read the SAME
     // (possibly filtered) store `own`/`relations`/`negations`/`doctorSource` below read, never a second
     // independent decision. `readRefusal` ABSENT ⇒ `wire.ts` falls back to `trusted`-gated behaviour
@@ -578,7 +580,7 @@ export function composeRuntime(repoPath: string): ComposedRuntime {
       reverifyStore(driftPairs, verifyFactLeg, docExists, scopeHasDocs, tvLegs.replay, danglingOf(store)),
     // WP-11.W8 — the four CAMPAIGN-11 memory READ doors (`READ_SURFACE`, ADR-0005). Each rides the SAME
     // `memoryReadDoor`/`awarenessStore`/`orientationStore` built above — never a second store, never a
-    // second scan of `.atlas/memory.jsonl`. Bound onto `atlas-query` in `cli/src/map.ts`'s `COMMAND_LEG`
+    // second scan of the memory logs. Bound onto `atlas-query` in `cli/src/map.ts`'s `COMMAND_LEG`
     // (the SAME "second projection of a READ oracle" convention `doctor`/`node`/`anchors` already use —
     // `layer-guard.mjs`'s `boundReadDoor` kind (b)), not `Tool`s of their own: the write half
     // (`atlas-memory-emit`) is the `GOVERNANCE_SURFACE` member; these open no write path.

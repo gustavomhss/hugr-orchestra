@@ -22,7 +22,7 @@ import { ProjectMemory } from "./memory-project"
 import { MemoryTask } from "./memory-task"
 
 // Memory, per member (specs/atlas-ui/mock/views-memory.js): project memory (scoped rules carried into every turn,
-// proposed then indexed) and the memory log (one entry per task or PR), from .atlas/memory.jsonl.
+// proposed then indexed) and the memory log (one entry per task or PR), from .atlas/members/*/memory/.
 const MEMBERS: readonly AtlasMemberId[] = ["backend", "jimmy", "archie", "maestro"]
 const ROLES = {
   backend: "orchestra.atlas.memory.role.backend",
@@ -140,7 +140,7 @@ function BoundMember(props: MemoryMemberProps) {
       <p class="at-subline at-memwhere">
         <Icon name="folder" />
         {language.t("orchestra.atlas.memory.where")}
-        <Help text={language.t("orchestra.atlas.memory.where.help", { name: name() })} />
+        <Help text={language.t("orchestra.atlas.memory.where.help", { name: name(), seat: props.member })} />
       </p>
       <div class="at-kpis three">
         <Kpi

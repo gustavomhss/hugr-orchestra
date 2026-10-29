@@ -1,7 +1,7 @@
 # `atlas memory-orientation`
 
 The **DERIVED, SHARED, byte-identical Orientation slab** (CAMPAIGN-11, MEM-6) — milestone/state labels about
-the RUN, owned by nobody, folded from the tracked orientation log (`.atlas/orientation.jsonl`). It is never a
+the RUN, owned by nobody, folded from the tracked orientation log (`.atlas/project/orientation.jsonl`). It is never a
 WRITTEN memory (no `atlas memory-orientation-emit` door exists), so it cannot rot the way a stale, hand-kept
 status file does.
 

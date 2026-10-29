@@ -65,8 +65,8 @@ A registered git merge driver (`.gitattributes: <atlas-log> merge=orchestra-atla
 and re-folds; because the fold is convergent (KERNEL-11), the merged Atlas is byte-identical no matter which
 side is "ours". When both branches wrote a fact for the same slot (`nodeKey`), the fold-merge resolves them
 deterministically (KERNEL-10): concurrent **advisory** writes converge by **claim-set union** — both seats'
-claims land on one node; concurrent **predicate** writes take last-writer-wins under a total
-`(seq, contentHash)` order, the superseded node retained with lineage (nothing dies). This is exactly the
+claims land on one node; concurrent **predicate** writes take one deterministic winner,
+chosen by `contentHash` alone (`kernel/src/fold.ts`; `seq` is a local hint, never a merge key), the superseded node retained with lineage (nothing dies). This is exactly the
 concurrent-writer case — two WPs mining a shared dependency both proposing facts for the same territory — and
 it converges instead of forking. A **rebase** or cherry-pick is safe for the same reason: identity is
 content-hash, so re-parenting commits cannot change the set and cannot change the fold (`reference/atlas-persist.md`

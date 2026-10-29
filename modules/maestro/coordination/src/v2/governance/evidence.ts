@@ -14,9 +14,10 @@ import { GovernanceRecordsV2 } from "./records"
 // Worktree evidence and context currency. The identity hash is computed exactly as the earlier runtime records it, so a legacy context stays current on V2
 // only while HEAD, the diff, the untracked files and (for a grounded context) the Atlas source are unchanged.
 
-// The append-only Atlas Memory logs (the union-merged files in .gitattributes).
-const MEMORY_LOGS = [".atlas/memory.jsonl", ".atlas/orientation.jsonl"]
-const MEMORY = MEMORY_LOGS.map((file) => `:(exclude)${file}`)
+// The append-only Atlas Memory logs (union-merged in .gitattributes): the legacy single files and the per-seat memory tree.
+const MEMORY_LOGS = [".atlas/memory.jsonl", ".atlas/orientation.jsonl", ".atlas/project/orientation.jsonl"]
+const MEMORY_TREE = /^\.atlas\/members\/[^/]+\/memory\//
+const MEMORY = [...MEMORY_LOGS.map((file) => `:(exclude)${file}`), ":(exclude,glob).atlas/members/*/memory/**"]
 
 export type Services = {
   readonly db: Database.Interface["db"]
@@ -47,7 +48,7 @@ export const current = Effect.fn("GovernanceEvidenceV2.current")(function* (git:
     headSHA: head.text().trim(),
     changedPaths: (yield* git.status(worktree))
       .map((item) => item.file)
-      .filter((file) => !MEMORY_LOGS.includes(file))
+      .filter((file) => !MEMORY_LOGS.includes(file) && !MEMORY_TREE.test(file))
       .sort(),
     diffSHA256: createHash("sha256").update(diff.stdout).digest("hex"),
     untrackedFiles,

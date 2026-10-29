@@ -2,6 +2,7 @@
 
 - [Getting started: your first five minutes](getting-started.md)
 - [First run: folder, trust, model](first-run.md)
+- [Maestro: your lead agent](maestro.md)
 - [Claude mode: Orchestra on Claude Code](claude-mode.md)
 - [Database backups and restore](database-backups.md)
 - [Settings: global sections, trusted projects and MCP fields](settings.md)
@@ -24,3 +25,4 @@
 - [Keep the computer awake](keep-awake.md)
 - [Checks and the merge queue](merge-queue.md)
 - [MCP Dock: every open interface is an MCP server](mcp-dock-servers.md)
+- [HuGR Composer: FastAPI building blocks for the backend seat](hugr-composer.md)

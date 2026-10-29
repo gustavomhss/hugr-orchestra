@@ -592,3 +592,25 @@ test("scoped callers reach their own world whatever tab the user has selected", 
   f.viewer.tabs = []
   expect(await f.tool("ui_read", {}, linux)).toContain("stop and report that the owner must open Apps > Linux workspace")
 })
+
+test("workspace: apps and launch reach the Linux runtime, and a failed launch says why", async () => {
+  const f = fixture()
+  const launched: string[] = []
+  Object.assign(f.viewer, {
+    linuxApps: async () => [{ id: "xterm.desktop", name: "XTerm" }],
+    linuxLaunch: async (_senderID: number, appID: string) => {
+      if (appID !== "xterm.desktop") throw new Error("failed")
+      launched.push(appID)
+      return "focused" as const
+    },
+  })
+  const call = (op: string, args: Record<string, unknown>) => new Promise<unknown>((resolve) =>
+    f.rpc.handleDockRPC({ type: "dock.rpc", id: crypto.randomUUID(), op, args }, (data) => {
+      if ((data as { type: string }).type === "dock.rpc.result") resolve(data)
+    }))
+  expect(await call("apps", {})).toMatchObject({ ok: true, value: [{ id: "xterm.desktop", name: "XTerm" }] })
+  expect(await call("launch", { appID: "xterm.desktop" })).toMatchObject({ ok: true, value: { launched: "xterm.desktop", window: "focused" } })
+  expect(await call("launch", { appID: "gedit.desktop" })).toMatchObject({ ok: false, error: { code: "launch-failed" } })
+  expect(await call("launch", { appID: "../evil.desktop" })).toMatchObject({ ok: false })
+  expect(launched).toEqual(["xterm.desktop"])
+})

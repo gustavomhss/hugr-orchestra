@@ -13,10 +13,12 @@
 // had already failed gate 1. Every assertion here therefore checks the FIRED refusal, never merely `ok:false`.
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest"
-import { mkdtempSync, rmSync, existsSync, readFileSync } from "node:fs"
+import { mkdtempSync, rmSync, readFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { createDurableMemory, memoryLogPath } from "../src/memory-store.js"
+import { createDurableMemory } from "../src/memory-store.js"
+import { jsonlFiles } from "../src/durable-log.js"
+import { atlasDir } from "../src/layout.js"
 import { createMemoryEmit } from "../src/memory-emit.js"
 import type { MemoryEntry, NamedScanner } from "@atlas/memory"
 
@@ -26,12 +28,11 @@ const door = () => createMemoryEmit({ store: createDurableMemory(repo), actor: "
 const as = (o: unknown): MemoryEntry => o as MemoryEntry
 
 const lines = (): string[] =>
-  existsSync(memoryLogPath(repo))
-    ? readFileSync(memoryLogPath(repo), "utf8")
-        .trim()
-        .split("\n")
-        .filter((l) => l.length > 0)
-    : []
+  jsonlFiles(atlasDir(repo)).paths.flatMap((path) =>
+    readFileSync(path, "utf8")
+      .split("\n")
+      .filter((l) => l.length > 0),
+  )
 
 beforeEach(() => {
   repo = mkdtempSync(join(tmpdir(), "atlas-memreach-"))

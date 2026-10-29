@@ -4,7 +4,7 @@
 // then fold; writing is a single `O_APPEND` write. Nothing is ever rewritten, moved, or truncated.
 //
 // EXTRACTED FROM `memory-store.ts` WHEN THE SECOND CALLER ARRIVED, not before. CAMPAIGN-11 W2 built this
-// shape for `.atlas/memory.jsonl`; W3 needs the same durability for the Orientation event log, whose
+// shape for the memory log; W3 needs the same durability for the Orientation event log, whose
 // payload is a derived-channel label rather than a memory record. Copying the module would have duplicated
 // the torn-line defence and the travel argument into two places that must stay identical, which is how two
 // files drift into disagreeing about what a corrupt line means.
@@ -44,8 +44,8 @@
 // real `git merge`. A `.gitattributes` pattern binds only below the directory that holds it: a consumer
 // storing its Memory anywhere else must carry the same two lines there (Orchestra's root file does).
 
-import { appendFileSync, mkdirSync, readFileSync } from "node:fs"
-import { dirname } from "node:path"
+import { appendFileSync, mkdirSync, readdirSync, readFileSync } from "node:fs"
+import { dirname, join } from "node:path"
 import { combine, createLog, isContentKeyed } from "@atlas/kernel"
 import type { Event, EventLog } from "@atlas/kernel"
 
@@ -164,4 +164,38 @@ export function createDurableLog(path: string, keyed: LineKeyed = isContentKeyed
   }
 
   return { path, read, append }
+}
+
+/**
+ * Fold several logs of one kind into one read, in the order given: the first file that holds an id wins,
+ * rejected lines add up, and one unreadable file makes the whole read unreadable. Callers pass a sorted
+ * order, because rule frecency reads position in the folded log.
+ */
+export function readDurableLogs(paths: readonly string[], keyed: LineKeyed = isContentKeyed): LogRead {
+  const reads = paths.map((path) => createDurableLog(path, keyed).read())
+  const base = {
+    log: reads.reduce<EventLog>((log, read) => combine(log, read.log), new Map()),
+    rejected: reads.reduce((n, read) => n + read.rejected, 0),
+  }
+  return reads.some((read) => read.unreadable === true) ? { ...base, unreadable: true } : base
+}
+
+/**
+ * Every `.jsonl` file under `dir`, sorted by its `/`-separated relative name so every OS folds the same
+ * order. An absent directory is no files; a directory that cannot be
+ * listed is `unreadable`, for the same reason an unreadable file is not an empty log.
+ */
+export function jsonlFiles(dir: string): { readonly paths: readonly string[]; readonly unreadable?: true } {
+  try {
+    return {
+      paths: readdirSync(dir, { recursive: true, encoding: "utf8" })
+        .filter((name) => name.endsWith(".jsonl"))
+        .map((name) => name.replaceAll("\\", "/"))
+        .sort()
+        .map((name) => join(dir, name)),
+    }
+  } catch (e) {
+    if ((e as { code?: unknown } | null)?.code === "ENOENT") return { paths: [] }
+    return { paths: [], unreadable: true }
+  }
 }

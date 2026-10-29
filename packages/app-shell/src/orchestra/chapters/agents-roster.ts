@@ -39,7 +39,11 @@ export const PERMISSION_TOOLS = [
   "external_directory",
   "doom_loop",
 ] as const
-export type PermissionTool = (typeof PERMISSION_TOOLS)[number]
+
+/** The rule that covers every tool of a configured MCP server, named as core names them: `<server>_<tool>`, sanitized. */
+export function mcpPermission(server: string) {
+  return `${server.replace(/[^a-zA-Z0-9_-]/g, "_")}_*`
+}
 export type PermissionChoice = "inherit" | "custom" | AgentFileAction
 export type AgentMode = NonNullable<AgentFileInput["mode"]>
 export const AGENT_MODES: AgentMode[] = ["primary", "subagent", "all"]
@@ -52,7 +56,8 @@ export type AgentDraft = {
   avatar: string
   steps: string
   system: string
-  permission: Record<PermissionTool, PermissionChoice>
+  /** The built-in tools, then one entry per configured MCP server (`mcpPermission`). */
+  permission: Record<string, PermissionChoice>
 }
 
 const NAME = /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/
@@ -111,7 +116,11 @@ export function agentFileTarget(draft: AgentDraft, agent: Agent | undefined) {
  * Seeds the editor from the project file first, then from the agent the server resolved. Maestro is always primary,
  * whatever a hand-edited file says, so saving writes it back as primary.
  */
-export function agentDraft(agent: Agent | undefined, file: AgentFileInfo | undefined): AgentDraft {
+export function agentDraft(
+  agent: Agent | undefined,
+  file: AgentFileInfo | undefined,
+  servers: readonly string[] = [],
+): AgentDraft {
   const steps = file?.steps ?? agent?.steps
   return {
     name: isMaestro(agent) ? "maestro" : (agent?.name ?? ""),
@@ -122,15 +131,15 @@ export function agentDraft(agent: Agent | undefined, file: AgentFileInfo | undef
     steps: steps === undefined ? "" : String(steps),
     system: file?.system ?? agent?.prompt ?? "",
     permission: Object.fromEntries(
-      PERMISSION_TOOLS.map((tool) => [tool, choiceOf(file?.permission?.[tool])]),
-    ) as AgentDraft["permission"],
+      [...PERMISSION_TOOLS, ...servers.map(mcpPermission)].map((tool) => [tool, choiceOf(file?.permission?.[tool])]),
+    ),
   }
 }
 
 /**
  * Builds the file payload. A value the file does not set and the user left at the resolved value stays out,
  * so saving never freezes a built-in default into the file. Rules keep the file's order (later entries win):
- * a changed tool is replaced in place, a new one goes last, and pattern maps or unlisted tools stay.
+ * a changed tool is replaced in place, a new one goes last, and pattern maps or tools the draft does not list stay.
  */
 export function agentFileInput(
   draft: AgentDraft,
@@ -146,15 +155,14 @@ export function agentFileInput(
   const current = file?.permission ?? {}
   const permission = Object.fromEntries([
     ...Object.entries(current).flatMap(([tool, value]): [string, AgentFilePermission][] => {
-      if (!isPermissionTool(tool)) return [[tool, value]]
       const choice = draft.permission[tool]
+      if (choice === undefined) return [[tool, value]]
       if (choice === "inherit") return []
       return [[tool, choice === "custom" ? value : choice]]
     }),
-    ...PERMISSION_TOOLS.flatMap((tool): [string, AgentFilePermission][] => {
-      const choice = draft.permission[tool]
-      return Object.hasOwn(current, tool) || choice === "inherit" || choice === "custom" ? [] : [[tool, choice]]
-    }),
+    ...Object.entries(draft.permission).flatMap(([tool, choice]): [string, AgentFilePermission][] =>
+      Object.hasOwn(current, tool) || choice === "inherit" || choice === "custom" ? [] : [[tool, choice]],
+    ),
   ])
   return {
     ...(isMaestro(agent) ? { mode: "primary" } : keep("mode", draft.mode) ? { mode: draft.mode } : {}),
@@ -216,10 +224,6 @@ function choiceOf(value: AgentFilePermission | undefined): PermissionChoice {
   if (value === undefined) return "inherit"
   if (typeof value === "string") return value
   return "custom"
-}
-
-function isPermissionTool(tool: string): tool is PermissionTool {
-  return PERMISSION_TOOLS.some((item) => item === tool)
 }
 
 function wildcard(pattern: string, value: string) {

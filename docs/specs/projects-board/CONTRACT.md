@@ -182,16 +182,26 @@ link one before Review").
 
 | Tool | Input | Does |
 |---|---|---|
-| `board_read` | `project` key, optional `issue` number, optional `since` activity id | Snapshot: project, epics, issues with steps, open questions, owner notes and answers since `since`, attachment names (secret labels only), holds, pauses, GitHub state. The only way Maestro reads the board. |
+| `board_read` | `project` key, optional `issue` number, optional `since` activity id; without `project`, the list of projects (key, name, goal, status, GitHub repo) | Snapshot: project, epics, issues with steps, open questions, owner notes and answers since `since`, attachment names (secret labels only), holds, pauses, GitHub state. The only way Maestro reads the board. |
 | `board_project` | `key`, `name`, `goal`, `target_date`, `repo`, `github_repo`, `reason` | Create or update a project. |
 | `board_epic` | `project`, optional `number`, `title`, `goal`, `position`, `status`, `reason` | Create or update an epic. |
-| `board_issue` | `project`, optional `number`, `title`, `body`, `type`, `epic`, `estimate`, `seat`, `session`, `branch`, `pr`, `depends_on`, `reason` | Create (lands in Backlog) or update an issue, including linking branch, PR and session. |
+| `board_issue` | `project`, optional `number`, `title`, `body`, `type`, `epic`, `estimate`, `seat`, `session`, `branch`, `pr`, `depends_on`, `attempts`, `crash_reason`, `guardrail_rule`, `reason` | Create (lands in Backlog) or update an issue, including linking branch, PR and session. `depends_on` replaces the list. |
 | `board_move` | `project`, `number`, `stage`, optional `position`, `reason` | Move between stages. Enforces proof (rule 5), hold (6), pause (7). Moving out of `intake` is the owner's, not Maestro's. |
 | `board_steps` | `project`, `number`, `steps: [{ title, status, now? }]`, `reason` | Replace the step list. |
 | `ci_run` | `project`, `issue`, optional `package`, `files`, `run` | Runs `.orchestra/ci.json`'s scoped checks on the card worktree's current tree, once per tree, and returns the tree, its checks and the scoped state. `run: false` only reports. |
 | `board_queue` | `project`, `number`, optional `urgent`, `flush`, `reason` | Puts a verified Review card in the merge queue. Refused without a PR, a complete record (Intent, Decisions, Not covered, Risk level), ready dependencies, or a scoped-green tree when the contract requires one. Returns the head, tree and scoped state it queued at. |
 | `board_dequeue` | `project`, `number`, `reason` | Takes a card out of the queue back to Review and dissolves the open bundle it was in. |
-| `board_question` | `project`, `issue?`, `epic?`, `action: ask` with `text`, `options`, `recommended`, `cost_of_waiting`, `blocking`; or `action: withdraw` with `id`; plus `reason` | Ask the owner or withdraw a question. |
+| `board_question` | `project`, `issue?`, `epic?`, `action: ask` with `text`, `options`, `recommended`, `cost_of_waiting`, `blocking`; or `action: withdraw` with `id`; plus `reason` | Ask the owner or withdraw a question. The only write allowed while the project is paused. |
+| `board_settings` | `project`, optional `target_date` (epoch ms), `budget_usd`, `reason`; `null` clears a field | Set the target date and budget. At 100% of the budget no card moves to Building. |
+| `board_decision` | `project`, `id` (the decision or the answered question), `outcome`, `reason` | Record what came of an answered decision; until then it reads "applied, no result yet". |
+
+The host also moves cards on facts, never by Maestro's hand:
+
+- `task` with `card: "KEY-N"` links the seat and Session on the card and moves it from Backlog or Ready to Building
+  (`modules/maestro/coordination/src/v2/governance.ts` `claim`).
+- A linked open PR moves Building to Review; a merged PR moves Building or Review to Shipped and clears `crash_reason`
+  (`packages/core/src/board/github.ts` `follow`). Paused cards and holds stay put; a closed or reopened PR raises a
+  question instead of a move. The move is logged with actor `github`.
 
 Maestro's prompt says only what the tools cannot: keep the board current as work moves, ask through `board_question`
 instead of chat when the answer changes the plan, and read `board_read` with `since` at the start of each turn.
@@ -219,7 +229,7 @@ Owner writes (actor `owner`, `reason` optional):
 | `POST /api/board/:key/issue/:number/note` | `{ body }` |
 | `POST /api/board/:key/issue/:number/attachment` | JSON `{ kind, name, mime?, data?, value? }`: a file carries base64 `data`; a secret carries `value` and `name` is its label. The value goes straight to `CredentialTable` and is never echoed |
 | `POST /api/board/:key/activity/:id/undo` | Rule 4 |
-| `POST /api/board/:key/github/sync` | The retry: one pull then push now, returns `{ state, error }` (the new `github_state`/`github_error`). Refused when the project has no `github_repo` |
+| `POST /api/board/:key/github/sync` | The retry: one pull, PR follow and push now, returns `{ state, error }` (the new `github_state`/`github_error`). Refused when the project has no `github_repo` |
 | `POST /api/board/:key/pause` and `/resume` | Project level; `{ reason? }` |
 | `POST /api/board/:key/issue/:number/pause` and `/resume` | Issue level |
 | `POST /api/board/:key/issue/:number/hold` | `{ hold: boolean }` |
@@ -318,4 +328,8 @@ As built in slice B2:
 - Issues and comments share one `since` cursor (`github_since`); each list keeps its own ETag. A 304 is an empty page.
 - A manual or polled sync is serialized per server. Failures are classified from `gh`'s exit code and stderr; token-like
   text is redacted from `github_error` and nothing is logged.
+- Each sync follows the linked PR of every Building or Review card on an active project, between the pull and the push:
+  an open PR moves Building to Review, a merged PR moves the card to Shipped and clears `crash_reason`. The move is a
+  `github` actor row with the PR's fact as its reason. A paused card stays, a held card never ships, and an unreadable PR
+  leaves its card alone without failing the sync.
 - The poll runs only in the server layer; tests inject the `gh` runner (`Board.layerWith({ gh, poll: false })`).

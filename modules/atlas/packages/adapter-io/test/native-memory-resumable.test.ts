@@ -6,7 +6,8 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { createNativeMemory } from "../src/native-memory.js"
 import type { AtlasBinding } from "../src/native-memory.js"
-import { createDurableMemory, memoryLogPath } from "../src/memory-store.js"
+import { createDurableMemory } from "../src/memory-store.js"
+import { legacyLogPath } from "../src/layout.js"
 import type { MemoryRecord, TaskMemoryEntry, PrMemoryEntry } from "@atlas/memory"
 
 let root: string
@@ -93,14 +94,14 @@ describe("listResumable", () => {
   it("is partial when the log is torn, still listing what verified", () => {
     const mem = createNativeMemory(binding())
     mem.write(taskEntry("T1", "x"))
-    appendFileSync(memoryLogPath(root), '{"id":"torn","payload":\n')
+    appendFileSync(legacyLogPath(root, "memory"), '{"id":"torn","payload":\n')
     const list = mem.listResumable()
     expect(list.store).toBe("partial")
     expect(list.records).toHaveLength(1)
   })
 
   it("is unavailable with an empty list when the log cannot be read", () => {
-    mkdirSync(memoryLogPath(root), { recursive: true })
+    mkdirSync(legacyLogPath(root, "memory"), { recursive: true })
     const mem = createNativeMemory(binding())
     const list = mem.listResumable()
     expect(list).toEqual({ records: [], store: "unavailable" })

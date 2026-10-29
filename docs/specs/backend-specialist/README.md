@@ -4,6 +4,8 @@ Status: architecture proposal, not an implemented plugin or a readiness certific
 Recorded: 2026-10-03. Orchestra source baseline: `76015a9dcd5b0c77164a3f1bee49b0060a4d37f0` (`fork/dev`).
 The unmerged Maestro Arsenal reference inspected was `88c31603359ad4ee6cdc8aff285075749fd88812`.
 
+Update 2026-10-28: the V1 `hugr-composer` plugin bridge these documents cite (`packages/orchestra/src/plugin/hugr-composer/*`) was deleted with V1. HuGR Composer now runs as a configured MCP server, `mcp.servers.hugr-composer`, and the backend seat's permission profile allows its `hugr-composer_*` tools. See the [HuGR Composer guide](../../guides/hugr-composer.md).
+
 Read the [research synthesis](research/README.md) for competitor strengths, weaknesses, community evidence and adoption decisions. The research reports are supporting material, not an always-loaded agent corpus.
 
 The [backend implementation toolbox](backend-toolbox.md) is the corrected-scope shortlist: contract/SQL/code generation, precise transformations, native boundary libraries, assigned tests and narrowly applicable verified-code techniques. It records concrete outputs and integration costs rather than adding agent infrastructure.

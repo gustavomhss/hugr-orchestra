@@ -515,7 +515,7 @@ export interface NativeMemory {
 }
 export declare function createNativeMemory(input: AtlasBinding): NativeMemory;
 /**
- * R1 (D18) — a seat's `project` rule becomes a PROPOSAL in the shared review log (`.atlas/review.jsonl`, D14), never
+ * R1 (D18) — a seat's `project` rule becomes a PROPOSAL in the shared review log (`.atlas/project/review.jsonl`, D14), never
  * a rule: a person indexes it (the host then `write`s it as the member) or discards it. It is judged as `write`
  * judges it up to the cap: the `project` template with Atlas's own frecency, the binding owner, and the NAMED
  * scanner — the review log travels in git, so an unscanned rule must never reach it. The MEM-3 cap is judged at

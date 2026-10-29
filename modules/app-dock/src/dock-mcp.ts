@@ -17,19 +17,24 @@ import { makeGlobalNode } from "@orchestra/core/effect/app-node"
 import { McpProvided } from "@orchestra/core/mcp/provided"
 import { Effect, Layer, Option, Schema } from "effect"
 import { createAppDockHooks, request } from "./app-dock"
+import { AppDockHints } from "./app-dock-hints"
 import { AppDockOutline } from "./app-dock-outline"
 import type { Transport } from "./transport"
 
 type Tab = { tabID: string; generation?: number; url?: string; title?: string; scopeKind?: string }
 // One line of the outline. `key` identifies the same control across snapshots (the browser's stable ref, or the Linux
 // node's path by role, name and occurrence), so a diff can tell what appeared, went away or changed.
+// occurrence: which of several Linux controls with this exact name and role, in tree order, so a ref reaches its own.
+// field: which editable Linux control with this role and name, in read order, so a text read finds its value.
 type Entry = { key: string; ref: number; line: string; label: string; depth: number; role: string; name: string;
-  parent?: number; target?: number }
+  parent?: number; target?: number; occurrence?: number; field?: string; value?: string }
+type TextItem = AppDockOutline.Item & { text?: string; textTruncated?: boolean; depth?: number }
 type Snapshot = { header: string; entries: Entry[]; text?: string; complete: boolean }
 
 const LOOK_LIMIT = 40_000
 const TEXT_LIMIT = 20_000
 const SETTLE_MS = 300
+const ACT_MS = 20_000
 
 export const node = (port: Transport) => makeGlobalNode({ service: McpProvided.Service, layer: layer(port), deps: [] })
 
@@ -76,7 +81,7 @@ function serve(port: Transport, name: string, tab: Tab) {
   const server = new Server({ name, version: "1.0.0" }, { capabilities: { tools: {}, resources: {} } })
   // The last snapshot this server showed; refs in find/act answers point into it.
   const state: { last?: Snapshot } = {}
-  const snap = async () => (state.last = await app.snapshot())
+  const snap = async (fields = false) => (state.last = await app.snapshot(fields))
   const where = linux(tab) ? "the Linux workspace" : `the browser tab ${tab.title ? `"${tab.title}"` : ""} (${tab.url ?? ""})`
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: tools(where, linux(tab)) }))
@@ -89,7 +94,7 @@ function serve(port: Transport, name: string, tab: Tab) {
   }))
   server.setRequestHandler(CallToolRequestSchema, async (call) => {
     const args = (call.params.arguments ?? {}) as Record<string, unknown>
-    const text = await run(call.params.name, args).catch((error: unknown) => `Error: ${error instanceof Error ? error.message : String(error)}`)
+    const text = await run(call.params.name, args).catch(failure)
     return { content: [{ type: "text", text }], isError: text.startsWith("Error:") }
   })
   void server.connect(side)
@@ -97,24 +102,41 @@ function serve(port: Transport, name: string, tab: Tab) {
 
   async function run(tool: string, args: Record<string, unknown>) {
     if (tool === "look") {
-      const snapshot = await snap()
       const scope = typeof args.scope === "number" ? args.scope : undefined
+      // A scoped look also reads the text inside the fields it shows (an editor's content); the whole outline stays one
+      // structural read.
+      const snapshot = await snap(linux(tab) && scope !== undefined)
       const text = snapshot.text ?? ""
       return look(snapshot, scope) + (args.text === true && text
         ? `\n\n--- page text ---\n${text.slice(0, TEXT_LIMIT)}${text.length > TEXT_LIMIT ? `\n… text cut at ${TEXT_LIMIT} characters: find searches all of it` : ""}`
         : "")
     }
-    if (tool === "find") return find(await snap(), String(args.query ?? ""), typeof args.role === "string" ? args.role : undefined)
+    if (tool === "find") return find(await snap(Boolean(args.query)), String(args.query ?? ""), typeof args.role === "string" ? args.role : undefined)
     if (tool === "wait") return wait(args)
     if (tool === "act") return act(args)
     if (tool === "navigate" && !linux(tab)) return change(() => app.navigate!(args))
+    if (tool === "apps" && linux(tab)) return apps(port)
+    if (tool === "launch" && linux(tab)) {
+      // An empty workspace has nothing to read yet; the launched app's window is then all that appeared.
+      const before = state.last ?? await snap().catch((): Snapshot => ({ header: "Linux workspace", entries: [], complete: true }))
+      const result = await change(async () => {
+        const value = await request(port, "launch", { appID: String(args.id ?? "") }, AbortSignal.timeout(30_000), 30_000) as
+          { window?: string }
+        return value.window === "focused" ? `${args.id} was already open; brought its window forward` : `opened ${args.id}`
+      }, before)
+      // A window without an accessibility tree (xterm, for example) leaves the outline empty; "no visible change" would
+      // send the model to wait for something that never comes.
+      if (state.last?.entries.length) return result
+      return `${result.split("\n")[0]}\nnothing in the workspace is readable yet. If look stays empty, this app exposes no accessibility tree and these tools cannot drive it: launch another app from apps`
+    }
     throw new Error(`Unknown tool ${tool}`)
   }
 
   async function act(args: Record<string, unknown>) {
     const before = state.last ?? await snap()
-    const entry = pick(before, args)
-    return change(() => app.act(entry, args), before)
+    // Without ref, name or role the action goes to whatever has focus (keys, or typing into an unnamed editor).
+    const entry = args.ref === undefined && args.name === undefined && args.role === undefined ? undefined : pick(before, args)
+    return change(() => app.act(entry, args, before), before)
   }
 
   // Runs the action, waits for the interface to settle and answers with what changed, so the model rarely needs to
@@ -132,7 +154,8 @@ function serve(port: Transport, name: string, tab: Tab) {
     const rounds = linux(tab) ? 2 : 4
     const step = async (previous: Snapshot, left: number): Promise<Snapshot> => {
       await Bun.sleep(SETTLE_MS)
-      const next = await app.snapshot()
+      // A window that just opened may not expose its tree yet; keep the last good read and try again.
+      const next = await app.snapshot().catch(() => previous)
       if (left <= 1 || (next !== previous && same(next, previous) && !same(next, before))) return next
       return step(next, left - 1)
     }
@@ -159,9 +182,28 @@ function serve(port: Transport, name: string, tab: Tab) {
   }
 }
 
+// A native failure carries a code; the hint for it says what to do next, so the model does not retry blind. Here
+// "not-ready" means the workspace has no app window with an accessibility tree, which these servers can fix.
+function failure(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error)
+  const code = typeof error === "object" && error !== null && typeof (error as { code?: unknown }).code === "string"
+    ? (error as { code: string }).code : undefined
+  const hint = code === "not-ready"
+    ? "No app window is open in the Linux workspace yet. Open one with launch (ids from apps), then look again; if it stays empty, the app exposes no accessibility tree"
+    : code === undefined ? undefined : AppDockHints.hintFor(code)
+  return `Error: ${message}${hint ? `. ${hint}` : ""}`
+}
+
+async function apps(port: Transport) {
+  const list = await request(port, "apps", {}, AbortSignal.timeout(10_000), 10_000) as { id: string; name: string }[]
+  if (list.length === 0) return "No apps are installed in the Linux workspace."
+  return list.map((app) => `${app.name} — id ${app.id}`).join("\n")
+}
+
 type App = {
-  snapshot: () => Promise<Snapshot>
-  act: (entry: Entry, args: Record<string, unknown>) => Promise<string>
+  // fields: also read the text inside the Linux workspace's editable controls (an editor's content), for find.
+  snapshot: (fields?: boolean) => Promise<Snapshot>
+  act: (entry: Entry | undefined, args: Record<string, unknown>, snapshot: Snapshot) => Promise<string>
   navigate?: (args: Record<string, unknown>) => Promise<string>
 }
 
@@ -178,8 +220,9 @@ function browserApp(port: Transport, tab: Tab): App {
     },
     act: async (entry, args) => {
       const verb = String(args.do ?? "click")
-      if (verb === "click") return ok(await rpc("click", { ref: entry.ref }))
-      if (verb === "type") return ok(await rpc("type", { ref: entry.ref, text: String(args.text ?? "") }))
+      if (!entry && (verb === "click" || verb === "type")) return `Error: ${verb} needs the ref (or name and role) of the control`
+      if (verb === "click") return ok(await rpc("click", { ref: entry!.ref }))
+      if (verb === "type") return ok(await rpc("type", { ref: entry!.ref, text: String(args.text ?? "") }))
       if (verb === "scroll") return ok(await rpc("scroll", { direction: args.direction ?? "down" }))
       if (verb === "keys") {
         const key = String(args.keys ?? "")
@@ -217,10 +260,13 @@ function browserEntries(items: BrowserItem[]) {
 // the target {name, role} the ui_* verbs locate afresh.
 function linuxApp(port: Transport): App {
   const hooks = createAppDockHooks(port).tool!
-  const context = { sessionID: "dock-mcp", messageID: "dock-mcp", agent: "", agentID: "", directory: "", worktree: "",
-    abort: new AbortController().signal, metadata: () => {}, ask: () => Promise.resolve() } as unknown as ToolContext
   const invoke = async (tool: string, args: Record<string, unknown>) => {
-    const result = await hooks[tool]!.execute(args as never, context)
+    const context = { sessionID: "dock-mcp", messageID: "dock-mcp", agent: "", agentID: "", directory: "", worktree: "",
+      abort: AbortSignal.timeout(ACT_MS), metadata: () => {}, ask: () => Promise.resolve() } as unknown as ToolContext
+    // A frozen app or a wedged display must answer, not leave the model waiting on a call that never returns.
+    const result = await Promise.race([hooks[tool]!.execute(args as never, context), Bun.sleep(ACT_MS).then(() => undefined)])
+    if (result === undefined)
+      return `Error: the workspace gave no answer in ${ACT_MS / 1000}s; the app may be frozen or its window gone. look shows the current state.`
     const text = typeof result === "string" ? result : result.output
     // ui_* answer a failure as JSON carrying code and outcome (see toolError in app-dock.ts).
     const parsed = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(text))
@@ -228,18 +274,49 @@ function linuxApp(port: Transport): App {
     return failed ? `Error: ${text}` : text.slice(0, 600)
   }
   return {
-    snapshot: () => serial(async () => linuxEntries(await readAll(port))),
-    act: async (entry, args) => {
-      if (!entry.name) return "Error: that control has no name to locate it by; pick a named control or use keys"
-      const target = { name: entry.name, role: entry.role }
+    snapshot: (fields) => serial(async () => {
+      const snapshot = linuxEntries(await readAll(port))
+      return fields ? withFields(snapshot, await readAll(port, TEXT_LIMIT)) : snapshot
+    }),
+    act: async (entry, args, snapshot) => {
       const verb = String(args.do ?? "click")
-      if (verb === "click") return invoke("ui_act", { target, ...(typeof args.action === "string" ? { action: args.action } : {}) })
+      // An unnamed control (an editor's text view) cannot be located by name; typing and keys reach it through focus.
+      if (!entry?.name) {
+        if (entry && !/\bfocused\b/.test(entry.label))
+          return `Error: that control has no name to locate it by and does not have focus; move focus into it (click a named neighbour, or keys Tab), then act with do ${verb === "click" ? "keys" : verb} and no ref`
+        if (verb === "type") return invoke("ui_type", { text: String(args.text ?? "") })
+        if (verb === "keys") return invoke("ui_keys", { keys: String(args.keys ?? "") })
+        if (verb === "scroll") return invoke("ui_keys", { keys: args.direction === "up" ? "Page_Up" : "Page_Down" })
+        if (verb === "click") return entry ? "Error: that control has no name to click it by; it already has focus, so type or send keys to it" : "Error: click needs the ref (or name and role) of the control"
+        return `Error: unknown do "${verb}"; use click, type, keys or scroll`
+      }
+      const target = { name: entry.name, role: entry.role, ...(entry.occurrence === undefined ? {} : { occurrence: entry.occurrence }) }
+      if (verb === "click") {
+        const click = () => invoke("ui_act", { target, ...(typeof args.action === "string" ? { action: args.action } : {}) })
+        const result = await click()
+        if (!result.includes('"menu-closed"')) return result
+        // A menu item reads in the tree while its menu is closed; open the menus that hold it, outermost first.
+        const menus = ancestors(snapshot, entry).filter((parent) => parent.role === "menu" && parent.name)
+        if (menus.length === 0) return result
+        for (const menu of menus) {
+          const opened = await invoke("ui_act", { target: { name: menu.name, role: menu.role,
+            ...(menu.occurrence === undefined ? {} : { occurrence: menu.occurrence }) } })
+          if (opened.startsWith("Error:")) return opened
+        }
+        return click()
+      }
       if (verb === "type") return invoke("ui_type", { target, text: String(args.text ?? "") })
       if (verb === "keys") return invoke("ui_keys", { target, keys: String(args.keys ?? "") })
       if (verb === "scroll") return invoke("ui_keys", { target, keys: args.direction === "up" ? "Page_Up" : "Page_Down" })
       return `Error: unknown do "${verb}"; use click, type, keys or scroll`
     },
   }
+}
+
+// Outermost first.
+function ancestors(snapshot: Snapshot, entry: Entry): Entry[] {
+  const parent = snapshot.entries.find((candidate) => candidate.ref === entry.parent)
+  return parent ? [...ancestors(snapshot, parent), parent] : []
 }
 
 // Reads of the workspace share one AT-SPI cursor; two at once would expire each other's cursor.
@@ -250,11 +327,11 @@ function serial<T>(work: () => Promise<T>) {
   return next
 }
 
-async function readAll(port: Transport, restarts = 0): Promise<{ items: AppDockOutline.Item[]; complete: boolean }> {
-  const page = (cursor?: string) => request(port, "read", { world: "linux", budget: 500, maxText: 0, ...(cursor ? { cursor } : {}) },
-    AbortSignal.timeout(15_000), 15_000) as Promise<{ items?: AppDockOutline.Item[]; hasMore?: boolean; cursor?: string;
+async function readAll(port: Transport, maxText = 0, restarts = 0): Promise<{ items: TextItem[]; complete: boolean }> {
+  const page = (cursor?: string) => request(port, "read", { world: "linux", budget: 500, maxText, ...(cursor ? { cursor } : {}) },
+    AbortSignal.timeout(15_000), 15_000) as Promise<{ items?: TextItem[]; hasMore?: boolean; cursor?: string;
       coverage?: { complete?: boolean } }>
-  const collect = async (items: AppDockOutline.Item[], cursor: string | undefined, pages: number): Promise<{ items: AppDockOutline.Item[]; complete: boolean }> => {
+  const collect = async (items: TextItem[], cursor: string | undefined, pages: number): Promise<{ items: TextItem[]; complete: boolean }> => {
     const value = await page(cursor)
     const all = [...items, ...(value.items ?? [])]
     if (!value.hasMore || !value.cursor || pages >= 48) return { items: all, complete: value.coverage?.complete !== false && !value.hasMore }
@@ -262,18 +339,22 @@ async function readAll(port: Transport, restarts = 0): Promise<{ items: AppDockO
   }
   return collect([], undefined, 1).catch((error: unknown) => {
     if (restarts < 2 && typeof error === "object" && error !== null && (error as { code?: string }).code === "cursor-stale")
-      return readAll(port, restarts + 1)
+      return readAll(port, maxText, restarts + 1)
     throw error
   })
 }
 
-function linuxEntries(read: { items: AppDockOutline.Item[]; complete: boolean }): Snapshot {
+function linuxEntries(read: { items: TextItem[]; complete: boolean }): Snapshot {
   const roots = AppDockOutline.tree(read.items)
   const shown = new Set(AppDockOutline.visible(roots))
   const entries: Entry[] = []
   // A node's key is its path of role, name and which same-shaped sibling it is, so a row inserted above it does not
   // make the whole list look changed.
   const seen = new Map<string, number>()
+  const fields = editable(read.items)
+  // Counted over the whole read, hidden controls included, the way ui_* count a target's occurrence.
+  const twins = Map.groupBy(read.items.flatMap((item) => [...new Set([item.name, AppDockOutline.keys(item.name).name])]
+    .map((name) => ({ item, key: `${AppDockOutline.role(item)}|${name.trim().toLowerCase()}` }))), (twin) => twin.key)
   // Unnamed, inert wrappers carry no meaning for a reader; their children move up a level. An editable node (an
   // editor's text view has no name and no actions) is a target, not a wrapper.
   const visit = (node: AppDockOutline.Node, depth: number, path: string, parent?: number) => {
@@ -287,11 +368,40 @@ function linuxEntries(read: { items: AppDockOutline.Item[]; complete: boolean })
     const key = `${shape}#${occurrence}`
     const ref = entries.length + 1
     const label = AppDockOutline.line(node)
-    entries.push({ key, ref, label, line: `${label} [${ref}]`, depth, role: node.role, name: node.name, parent })
+    const same = twins.get(`${node.role}|${node.name.trim().toLowerCase()}`) ?? []
+    entries.push({ key, ref, label, line: `${label} [${ref}]`, depth, role: node.role, name: node.name, parent,
+      ...(same.length > 1 ? { occurrence: same.findIndex((twin) => twin.item === node.item) } : {}),
+      ...(fields.has(node.item) ? { field: fields.get(node.item) } : {}) })
     node.children.forEach((child) => visit(child, depth + 1, key, ref))
   }
   roots.forEach((root) => visit(root, 0, ""))
   return { header: "Linux workspace", entries, complete: read.complete }
+}
+
+// Editable controls other than password fields (role 40, whose text is never read), numbered per role and name in
+// read order: the structural read and the text read walk the tree in the same order.
+function editable(items: TextItem[]) {
+  const counts = new Map<string, number>()
+  return new Map(items.filter((item) => item.role !== 40 && item.states?.includes(7)).map((item) => {
+    const shape = `${item.roleName}|${item.name}`
+    const index = counts.get(shape) ?? 0
+    counts.set(shape, index + 1)
+    return [item, `${shape}#${index}` as string] as const
+  }))
+}
+
+// A text the helper cut at a page's text allowance goes on in the next page's first item, repeated without its parent
+// (a top-level item deeper than a window root); it joins the item it continues.
+function withFields(snapshot: Snapshot, read: { items: TextItem[] }): Snapshot {
+  const items = read.items.reduce<TextItem[]>((all, item) => {
+    const last = all.at(-1)
+    if (last && !item.parentRef && (item.depth ?? 0) > 0 && last.textTruncated && last.roleName === item.roleName && last.name === item.name)
+      return [...all.slice(0, -1), { ...last, text: (last.text ?? "") + (item.text ?? ""), textTruncated: item.textTruncated }]
+    return [...all, item]
+  }, [])
+  const values = new Map([...editable(items)].flatMap(([item, field]) => (item.text ? [[field, item.text] as const] : [])))
+  return { ...snapshot, entries: snapshot.entries.map((entry) =>
+    entry.field !== undefined && values.has(entry.field) ? { ...entry, value: values.get(entry.field) } : entry) }
 }
 
 function look(snapshot: Snapshot, scope?: number): string {
@@ -304,8 +414,11 @@ function look(snapshot: Snapshot, scope?: number): string {
   const lines = snapshot.entries.slice(start, end < 0 ? undefined : end).map((entry) => `${"  ".repeat(entry.depth - base)}${entry.line}`)
   const body = lines.reduce((text, line) => (text.length + line.length < LOOK_LIMIT ? `${text}${line}\n` : text), "")
   const cut = body.split("\n").length - 1 < lines.length
+  const values = snapshot.entries.slice(start, end < 0 ? undefined : end).flatMap((entry) => entry.value ? [`--- text in [${entry.ref}] ---\n${entry.value}`] : [])
+  const text = values.join("\n")
   return [snapshot.header, body.trimEnd(),
     cut && `… outline cut at ${LOOK_LIMIT} characters: look with scope=<ref> of a region to see the rest`,
+    text && `\n${text.slice(0, TEXT_LIMIT)}${text.length > TEXT_LIMIT ? `\n… text cut at ${TEXT_LIMIT} characters: find searches all of it` : ""}`,
     !snapshot.complete && "(the interface reported a partial tree; some of it may be missing)"].filter(Boolean).join("\n")
 }
 
@@ -316,10 +429,19 @@ function find(snapshot: Snapshot, query: string, role?: string) {
     const parent = entry.parent === undefined ? undefined : byRef.get(entry.parent)
     return parent && left > 0 ? [...crumbs(parent, left - 1), parent.label] : []
   }
-  const matches = snapshot.entries.filter((entry) => (!wanted || entry.label.toLowerCase().includes(wanted))
+  const inside = (entry: Entry) => entry.value?.toLowerCase().indexOf(wanted) ?? -1
+  const matches = snapshot.entries.filter((entry) => (!wanted || entry.label.toLowerCase().includes(wanted) || inside(entry) >= 0)
     && (!role || entry.role.toLowerCase().includes(role.toLowerCase())))
   if (matches.length === 0) return `Nothing matches${query ? ` "${query}"` : ""}${role ? ` with role ${role}` : ""}.`
-  return [...matches.slice(0, 30).map((entry) => [...crumbs(entry), entry.line].join(" › ")),
+  // A match inside a field's text shows the words around it, on one line.
+  const excerpt = (entry: Entry) => {
+    const at = inside(entry)
+    if (!wanted || at < 0 || !entry.value) return ""
+    const start = Math.max(0, at - 30)
+    const end = Math.min(entry.value.length, at + wanted.length + 30)
+    return ` contains "${start > 0 ? "…" : ""}${entry.value.slice(start, end).replace(/\s+/g, " ")}${end < entry.value.length ? "…" : ""}"`
+  }
+  return [...matches.slice(0, 30).map((entry) => [...crumbs(entry), entry.line + excerpt(entry)].join(" › ")),
     matches.length > 30 && `… ${matches.length - 30} more; narrow the query or add a role`].filter(Boolean).join("\n")
 }
 
@@ -369,12 +491,14 @@ function tools(where: string, workspace: boolean) {
   return [
     { name: "look", description: `See ${where} without a screenshot: every visible control as an indented outline, one line per control — role, "name", states and its [ref]. Indentation is the hierarchy (window > region > control). Start here; after acting, act's own answer says what changed.`,
       inputSchema: { type: "object", properties: {
-        scope: { ...ref, description: "Show only the subtree under one line: its [n] from your latest look or find (refs change when the page does)" },
+        scope: { ...ref, description: workspace
+          ? "Show only the subtree under one line, with the text inside its fields (an editor's content): its [n] from your latest look or find (refs change when the page does)"
+          : "Show only the subtree under one line: its [n] from your latest look or find (refs change when the page does)" },
         ...(workspace ? {} : { text: { type: "boolean", description: "Also return the page's visible text" } }) } } },
     { name: "find", description: `Search ${where} by text and/or role. Each match shows where it sits (its last regions › the control) and its [ref].`,
-      inputSchema: { type: "object", properties: { query: { type: "string", description: "Case-insensitive text in the role, name or value" },
+      inputSchema: { type: "object", properties: { query: { type: "string", description: workspace ? "Case-insensitive text in the role, name, or the text inside a field such as an editor's content" : "Case-insensitive text in the role, name or value" },
         role: { type: "string", description: "Role such as button, link, textbox, push button, entry, menu item" } } } },
-    { name: "act", description: `Act on ${where} by ref (or by name and role) and get back what changed: focus, lines that appeared, went away or changed. do: click (default), type (replace a field's text), keys (e.g. Enter, Escape${workspace ? ", ctrl+s" : ""}), scroll.`,
+    { name: "act", description: `Act on ${where} by ref (or by name and role) and get back what changed: focus, lines that appeared, went away or changed. do: click (default), type (replace a field's text), keys (e.g. Enter, Escape${workspace ? ", ctrl+s" : ""}), scroll.${workspace ? " With no ref, type and keys go to the control that has focus, such as an editor's unnamed text view; type then adds the text at the cursor." : ""}`,
       inputSchema: { type: "object", properties: { ref, name: { type: "string" }, role: { type: "string" },
         do: { type: "string", enum: ["click", "type", "keys", "scroll"] }, text: { type: "string", description: "Text for do=type" },
         keys: { type: "string", description: workspace ? "Key combination for do=keys, e.g. Return, Escape, ctrl+comma" : "One key for do=keys, e.g. Enter, Tab, Escape, ArrowDown" },
@@ -382,7 +506,12 @@ function tools(where: string, workspace: boolean) {
         ...(workspace ? { action: { type: "string", description: "Action name when the control has several, e.g. press, activate" } } : {}) } } },
     { name: "wait", description: `Wait until text appears in ${where} (or goes away, with gone=true), up to timeoutMs (default 5000, at most 15000).`,
       inputSchema: { type: "object", properties: { text: { type: "string" }, gone: { type: "boolean" }, timeoutMs: { type: "integer" } }, required: ["text"] } },
-    ...(workspace ? [] : [{ name: "navigate", description: `Open an address in ${where}, or go back, forward or reload; answers with what changed.`,
+    ...(workspace ? [
+      { name: "apps", description: "List the apps installed in the Linux workspace, each with the id launch takes.",
+        inputSchema: { type: "object", properties: {} } },
+      { name: "launch", description: "Open an app in the Linux workspace (or bring its window forward if it is already open) and get back what changed. Take the id from apps.",
+        inputSchema: { type: "object", properties: { id: { type: "string", description: "An id from apps, e.g. org.gnome.TextEditor.desktop" } }, required: ["id"] } },
+    ] : [{ name: "navigate", description: `Open an address in ${where}, or go back, forward or reload; answers with what changed.`,
       inputSchema: { type: "object", properties: { address: { type: "string", description: "https:// URL, bare domain or search words" },
         command: { type: "string", enum: ["back", "forward", "reload"] } } } }]),
   ]
