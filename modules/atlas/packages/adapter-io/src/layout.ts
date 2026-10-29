@@ -3,7 +3,7 @@
 // The one place that turns a repo root and a record into a path. Every store asks here, so the tree in
 // `docs/design/repo-layout.md` §2 (branch `atlas-repo-layout`) is written down once:
 //
-//   .atlas/project/{orientation,review}.jsonl            shared, owned by nobody
+//   .atlas/project/{orientation,review,board}.jsonl      shared, owned by nobody
 //   .atlas/members/<seat>/memory/project.jsonl           one seat's project rules
 //   .atlas/members/<seat>/memory/task/<taskId>.jsonl     one task's memory
 //   .atlas/members/<seat>/memory/pr/<prId>.jsonl         one PR's memory
@@ -25,7 +25,7 @@ import { join } from "node:path"
 import type { MemoryRecord } from "@atlas/memory"
 
 export type LegacyLog = "memory" | "orientation" | "review"
-export type ProjectLog = "orientation" | "review"
+export type ProjectLog = "orientation" | "review" | "board"
 
 export const atlasDir = (repoPath: string): string => join(repoPath, ".atlas")
 
