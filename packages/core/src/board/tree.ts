@@ -1,6 +1,7 @@
 export * as BoardTree from "./tree"
 
 import { and, eq, isNull, max } from "drizzle-orm"
+import type { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors"
 import { Effect, Schema } from "effect"
 import { Board } from "@orchestra/schema/board"
 import { readBoard, type BoardEvent, type BoardEventInput } from "@orchestra/atlas-boundary/record-log"
@@ -134,7 +135,7 @@ const ISSUE_COLUMNS = [
 const nothing = (_: Context) => Effect.void
 
 // One applier per action. An action missing here fails the import by name; none is skipped.
-const APPLIERS: Record<Board.Action, (ctx: Context) => Effect.Effect<void, ReplayError>> = {
+const APPLIERS: Record<Board.Action, (ctx: Context) => Effect.Effect<void, ReplayError | EffectDrizzleQueryError>> = {
   "project.upsert": Effect.fnUntraced(function* (ctx) {
     if (ctx.project) return yield* updateProject(ctx)
     yield* ctx.tx
