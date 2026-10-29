@@ -212,6 +212,24 @@ describe("BoardQueue", () => {
     }),
   )
 
+  it.live("a base red with no failing scoped test set takes the infra path: rebuild once, then pause", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QBR")
+      yield* card(repo, "QBR", 1, "a.txt")
+      yield* card(repo, "QBR", 2, "b.txt")
+      yield* board.queue({ project: "QBR", number: 1, reason: "Verified." })
+      yield* board.queue({ project: "QBR", number: 2, reason: "Verified." })
+      // The gate goes red with a log that names no failing test, and base is red too.
+      repo.remote.conclusion = "FAILURE"
+      repo.remote.baseRuns = JSON.stringify([{ name: "test", status: "COMPLETED", conclusion: "FAILURE" }])
+
+      yield* Effect.forEach(Array.from({ length: 8 }), () => board.queueTick(), { discard: true })
+      expect([yield* stage(repo, 1), yield* stage(repo, 2)]).toEqual(["queue", "queue"])
+      expect(yield* bundleStatuses(repo)).toEqual(["infra", "paused"])
+    }),
+  )
+
   // The stand-in `bun` is a shell script.
   itTurbo.live.skipIf(process.platform === "win32")("a card that left its planned area raises one drift note and still queues", () =>
     Effect.gen(function* () {
