@@ -15,6 +15,7 @@ import { makeGlobalNode } from "../effect/app-node"
 import { EventV2 } from "../event"
 import { Global } from "../global"
 import { Guardrail } from "../guardrail"
+import { BackendToolkit } from "../backend-toolkit"
 import { AppProcess } from "../process"
 import { ProjectSchema } from "../project/schema"
 import { ProjectTable } from "../project/sql"
@@ -56,6 +57,7 @@ import type { ActivityRow, Changed, Fields, IssueRow, ProjectRow, QuestionRow, T
 export { BudgetPausedError, NotFoundError, RefusedError }
 import { BoardCi } from "./ci"
 import { BoardGithub } from "./github"
+import { BoardSnapshot } from "./snapshot"
 
 // The board service enforces the contract's rules (docs/specs/projects-board/CONTRACT.md section 1). Every write runs
 // in one immediate transaction that also appends its activity row, then publishes `board.changed` after commit.
@@ -114,6 +116,10 @@ export interface Interface {
   readonly sync: (key: string) => Effect.Effect<Board.GithubSync, Error>
   /** Runs the card's scoped checks on its current tree, once per tree, and reports the derived scoped state. */
   readonly ciRun: (input: Board.CiRunInput) => Effect.Effect<Board.CiRunResult, Error>
+  /** Pushes the card's worktree as a snapshot of its open attempt, unless its tree is already the last snapshot's. */
+  readonly snapshotPush: (key: string, number: number) => Effect.Effect<BoardSnapshot.Result, Error>
+  /** Whether the card's work is on the remote; null with no open attempt or no worktree. */
+  readonly pushState: (key: string, number: number) => Effect.Effect<Board.PushState, Error>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/Board") {}
@@ -126,8 +132,16 @@ const UNDOABLE = ["issue.update", "issue.move", "steps.set", "epic.upsert", "que
 const ISSUE_COLUMNS = ["title", "body", "type", "epic_id", "estimate", "seat", "session_id", "branch", "pr_number", "stage", "position", "stage_entered_at", "attempts", "crash_reason", "guardrail_rule"]
 const EPIC_COLUMNS = ["title", "goal", "position", "status"]
 
-/** `gh` replaces the GitHub runner (tests inject recorded responses); `poll` starts the 60 second sync of every mirrored project. */
-export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly gh?: BoardGithub.Gh; readonly poll?: boolean }) =>
+/**
+ * `gh` replaces the GitHub runner (tests inject recorded responses); `scanner` replaces the toolkit's gitleaks; `poll`
+ * starts the 60 second sync of every mirrored project and the 10 minute snapshot of every Building card.
+ */
+export const layerWith = (options: {
+  readonly env?: NodeJS.ProcessEnv
+  readonly gh?: BoardGithub.Gh
+  readonly scanner?: string
+  readonly poll?: boolean
+}) =>
   Layer.effect(
     Service,
     Effect.gen(function* () {
@@ -513,6 +527,22 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
         gh: options.gh ?? BoardGithub.runner(proc, options.env),
         env: options.env,
       })
+      const snapshots = BoardSnapshot.make({
+        quiet: (work) => quiet(work).pipe(Effect.orDie),
+        proc,
+        scanner: options.scanner
+          ? Effect.succeed(options.scanner)
+          : BackendToolkit.ensure("gitleaks").pipe(
+              Effect.map((ready) => ready.executable),
+              Effect.orElseSucceed(() => undefined),
+              Effect.provideService(AppProcess.Service, proc),
+            ),
+        remote: (directory, project) => ci.contract(directory, project).pipe(Effect.map((contract) => contract.snapshots.remote)),
+        env: options.env,
+      })
+
+      if (options.poll)
+        yield* snapshots.sweep().pipe(Effect.ignore, Effect.repeat(Schedule.spaced("10 minutes")), Effect.forkScoped)
 
       if (options.poll)
         yield* reading((tx) =>
@@ -844,6 +874,7 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
                   .run()
                 const created = yield* tx.select().from(BoardIssueTable).where(eq(BoardIssueTable.id, id)).get()
                 if (created && input.depends_on) yield* setDependencies(tx, project, created, input.depends_on)
+                if (created?.session_id) yield* BoardSnapshot.dispatch(tx, created, {})
                 const activity = yield* log(tx, {
                   project: project.id,
                   issue: id,
@@ -883,6 +914,7 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
                   .set({ ...change?.after, ...(dirty ? { github_dirty: true } : {}) })
                   .where(eq(BoardIssueTable.id, issue.id))
                   .run()
+              yield* BoardSnapshot.follow(tx, issue, change?.after ?? {})
               const activity = yield* log(tx, {
                 project: project.id,
                 issue: issue.id,
@@ -1348,6 +1380,16 @@ export const layerWith = (options: { readonly env?: NodeJS.ProcessEnv; readonly 
 
         ciRun: Effect.fn("Board.ciRun")(function* (input) {
           return yield* ci.run(input)
+        }),
+
+        snapshotPush: Effect.fn("Board.snapshotPush")(function* (key, number) {
+          const issue = yield* reading((tx) => loadProject(tx, key).pipe(Effect.flatMap((project) => loadIssue(tx, project, number))))
+          return yield* snapshots.push(issue.id)
+        }),
+
+        pushState: Effect.fn("Board.pushState")(function* (key, number) {
+          const issue = yield* reading((tx) => loadProject(tx, key).pipe(Effect.flatMap((project) => loadIssue(tx, project, number))))
+          return yield* snapshots.state(issue.id)
         }),
 
         sync: Effect.fn("Board.sync")(function* (key) {

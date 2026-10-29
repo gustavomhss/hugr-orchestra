@@ -725,6 +725,13 @@ export type CheckOutcome = typeof CheckOutcome.Type
 export const ScopedState = Schema.NullOr(Schema.Literals(["scoped-green", "scoped-red"]))
 export type ScopedState = typeof ScopedState.Type
 
+/** How an attempt ended; null while it is open. Only a merge or a cut ends a card's last attempt. */
+export const AttemptOutcome = Schema.Literals(["merged", "ejected", "failed", "superseded", "cut"])
+export type AttemptOutcome = typeof AttemptOutcome.Type
+/** Whether the card's work is on the remote: `local` until the worktree's tree equals the last pushed snapshot. */
+export const PushState = Schema.NullOr(Schema.Literals(["local", "pushed"]))
+export type PushState = typeof PushState.Type
+
 /** One pass or fail fact, keyed by the tree it ran on. `board_ci_run` keeps the billing next to it. */
 export const Check = Schema.Struct({
   id: CheckID,
