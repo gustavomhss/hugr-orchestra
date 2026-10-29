@@ -78,19 +78,24 @@ const decodeDry = Schema.decodeUnknownOption(Schema.fromJsonString(Dry))
 
 /**
  * Section 7.1's affected set from `turbo`: the packages a commit range touches and every package that depends on them.
- * Turbo reads the workspace graph from its working tree, so it runs in a detached checkout of `to`: the project's own
- * checkout may sit on any branch, and its stale package list once sent a lane gate a package base no longer has.
+ * Turbo reads the workspace graph from its working tree, so it runs in a detached checkout of `to` merged onto `from`,
+ * the tree that lands: the project's own checkout may sit on any branch, and its stale package list once sent a lane
+ * gate a package base no longer has. A range that does not merge cleanly has no affected set.
  */
 export const affected = Effect.fnUntraced(function* (deps: Deps, directory: string, from: string, to: string) {
   if (deps.affected) return yield* deps.affected(directory, from, to)
   const bun = which("bun", deps.env ?? process.env)
   if (!bun) return undefined
   const git = gitRunner(deps.proc, deps.env)
+  const merged = yield* git(directory, ["merge-tree", "--write-tree", from, to])
+  if (merged.code !== 0) return undefined
+  const landed = (yield* git(directory, [...AUTHOR, "commit-tree", merged.out.split("\n")[0] ?? "", "-p", from, "-p", to, "-m", "chore(queue): affected"])).out
+  if (!landed) return undefined
   const checkout = yield* Effect.promise(() => fs.mkdtemp(path.join(os.tmpdir(), "orchestra-affected-")))
-  const added = yield* git(directory, ["worktree", "add", "--quiet", "--detach", checkout, to])
+  const added = yield* git(directory, ["worktree", "add", "--quiet", "--detach", checkout, landed])
   const result = added.code !== 0 ? undefined : yield* deps.proc
     .run(
-      ChildProcess.make(bun, ["x", "turbo", "run", "typecheck", `--filter=...[${from}...${to}]`, "--dry=json"], {
+      ChildProcess.make(bun, ["x", "turbo", "run", "typecheck", `--filter=...[${from}...${landed}]`, "--dry=json"], {
         cwd: checkout,
         env: { ...deps.env, TURBO_TELEMETRY_DISABLED: "1" },
         extendEnv: true,

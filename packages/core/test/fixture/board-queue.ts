@@ -147,7 +147,8 @@ const build = (env?: NodeJS.ProcessEnv) =>
 export const it = build()
 
 // A `bun` on PATH that answers turbo's dry run with whatever `affected.json` holds, so a test picks the affected set without a workspace.
-// It writes the commit it ran on to `turbo-head.txt`, so a test sees which checkout turbo read the workspace graph from.
+// It writes the parents of the commit it ran on and that commit's files to `turbo-head.txt`, so a test sees which tree
+// turbo read the workspace graph from.
 const turbo = syncDir()
 export const AFFECTED = path.join(turbo, "affected.json")
 export const TURBO_HEAD = path.join(turbo, "turbo-head.txt")
@@ -155,7 +156,7 @@ export const itTurbo = build({ ...process.env, PATH: `${turbo}${path.delimiter}$
 
 function syncDir() {
   const dir = mkdtempSync(path.join(tmpdir(), "orchestra-board-turbo-"))
-  writeFileSync(path.join(dir, "bun"), `#!/bin/sh\ngit rev-parse HEAD > "$(dirname "$0")/turbo-head.txt"\ncat "$(dirname "$0")/affected.json"\n`, { mode: 0o755 })
+  writeFileSync(path.join(dir, "bun"), `#!/bin/sh\ngit rev-parse HEAD^1 HEAD^2 > "$(dirname "$0")/turbo-head.txt"\ngit ls-files >> "$(dirname "$0")/turbo-head.txt"\ncat "$(dirname "$0")/affected.json"\n`, { mode: 0o755 })
   return dir
 }
 

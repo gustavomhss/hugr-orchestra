@@ -242,19 +242,30 @@ describe("BoardQueue", () => {
   )
 
   // The stand-in `bun` is a shell script.
-  itTurbo.live.skipIf(process.platform === "win32")("turbo reads the workspace graph from the card's head, not the project checkout", () =>
+  itTurbo.live.skipIf(process.platform === "win32")("turbo reads the workspace graph from the tree that lands, not the project checkout", () =>
     Effect.gen(function* () {
       const board = yield* Board.Service
       const repo = yield* repository("QTH", 3)
       yield* card(repo, "QTH", 1, "a.txt")
+      // Base moves on after the card branched, and the project checkout sits on an old branch with a package base never had.
+      yield* Effect.promise(async () => {
+        await fs.writeFile(path.join(repo.directory, "base.txt"), "base\n")
+        await commit(repo.directory, "base moves")
+        await git(repo.directory, "push", "--quiet", "origin", "main")
+        await git(repo.directory, "checkout", "--quiet", "-b", "stale")
+        await fs.writeFile(path.join(repo.directory, "stale.txt"), "stale\n")
+        await commit(repo.directory, "stale")
+      })
       yield* board.issue({ project: "QTH", number: 1, area: ["@acme/one"], reason: "Plan." })
       writeFileSync(AFFECTED, JSON.stringify({ packages: ["@acme/one"] }))
       yield* board.queue({ project: "QTH", number: 1, reason: "Verified." })
 
-      // The project checkout stays on main, whose package list may be stale; the card's own head is what lands.
-      const ran = readFileSync(TURBO_HEAD, "utf8").trim()
-      expect(ran).toBe(yield* origin(repo, "card-1"))
-      expect(ran).not.toBe((yield* Effect.promise(() => git(repo.directory, "rev-parse", "HEAD"))).trim())
+      // Turbo ran on the card merged onto base: both parents, base's new file and the card's file, none of the stale branch.
+      const ran = readFileSync(TURBO_HEAD, "utf8").trim().split("\n")
+      expect(ran.slice(0, 2)).toEqual([yield* origin(repo, "main"), yield* origin(repo, "card-1")])
+      expect(ran).toContain("base.txt")
+      expect(ran).toContain("a.txt")
+      expect(ran).not.toContain("stale.txt")
       const worktrees = yield* Effect.promise(() => git(repo.directory, "worktree", "list", "--porcelain"))
       expect(worktrees).not.toContain("orchestra-affected-")
     }),

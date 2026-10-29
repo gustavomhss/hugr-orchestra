@@ -142,7 +142,7 @@ that depends on them). Cards whose packages overlap share a lane; cards that sha
 each lane is cut into its own bundle. A lane bundle is not labelled with `full.label`: Maestro dispatches each workflow
 in `workflows` on the bundle branch with a `packages` input that lists the lane's packages, so only those packages are
 typechecked and tested. Your workflows need a `packages` `workflow_dispatch` input and should filter on it.
-Maestro asks turbo at the card's own commit, so the branch your project folder has checked out does not matter.
+Maestro asks turbo about the card merged onto the base branch, so the branch your project folder has checked out does not matter.
 
 - A card never jumps the queue. It is cut only when no bundle in flight touches its packages and no earlier card that
   shares a package with it is still waiting.

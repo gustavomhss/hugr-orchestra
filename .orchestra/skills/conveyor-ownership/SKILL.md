@@ -103,8 +103,8 @@ it: skill `conveyor-maintenance`. How it runs: `conveyor-usage`. User guide: `do
 - The pool is the project: one open bundle per board project, unless the contract has `lanes`; then one open bundle
   per lane, at most `floor(budget.jobs / lanes.jobs)` in flight.
 - Lanes are recomputed from turbo's affected sets at every cut and never stored; only a bundle's `packages` is.
-  A card whose affected set cannot be read counts as global. Turbo always reads the graph of the commit it is asked
-  about, in its own scratch checkout, never the project checkout, which may sit on any branch.
+  A card whose affected set cannot be read counts as global. Turbo always reads the graph of the tree that lands (the
+  commit merged onto base) in its own scratch checkout, never the project checkout, which may sit on any branch.
 - A bundle PR carries its members' guard approval labels (decision 2026-10-29): the queue copies them at the cut, and
   the guard keeps reading only the PR it runs on. An approval stays per card; the bundle never gains one no member had.
 - A lane bundle is gated by `gh workflow run` with `-f packages=...` instead of `full.label`, and settles from the
