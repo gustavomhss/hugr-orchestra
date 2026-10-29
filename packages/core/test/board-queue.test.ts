@@ -269,7 +269,7 @@ describe("BoardQueue", () => {
       expect(ran).toContain("base.txt")
       expect(ran).toContain("a.txt")
       expect(ran).not.toContain("stale.txt")
-      const worktrees = yield* Effect.promise(() => git(repo.directory, "worktree", "list", "--porcelain"))
+      const worktrees = yield* Effect.promise(() => Bun.$`git -C ${repo.directory} worktree list --porcelain`.text())
       expect(worktrees).not.toContain("orchestra-affected-")
     }),
   )
