@@ -5571,6 +5571,8 @@ export type ServerBoardGetOutput = {
       readonly now: string | null
     }>
     readonly dependsOn: ReadonlyArray<string>
+    readonly area?: ReadonlyArray<string> | null
+    readonly order?: number | null
     readonly queue?: {
       readonly status: "waiting" | "running" | "green" | "conflict" | "held"
       readonly bundle: number | null
@@ -5671,6 +5673,8 @@ export type ServerBoardIssueOutput = {
       readonly now: string | null
     }>
     readonly dependsOn: ReadonlyArray<string>
+    readonly area?: ReadonlyArray<string> | null
+    readonly order?: number | null
     readonly queue?: {
       readonly status: "waiting" | "running" | "green" | "conflict" | "held"
       readonly bundle: number | null
