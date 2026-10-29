@@ -134,13 +134,6 @@ export declare function readCard(repoPath: string, card: string): CardRead;
 export declare function readAttempt(repoPath: string, card: string, n: number): AttemptRead;
 /** The attempt numbers recorded for `card`, ascending. */
 export declare function attemptNumbers(repoPath: string, card: string): readonly number[];
-export type Visibility = "public" | "private";
-/** The one HTTP call, injectable so a test can answer it. Defaults to the global `fetch`. */
-export type GetJson = (url: string, headers: Record<string, string>) => Promise<{
-	readonly status: number;
-	json(): Promise<unknown>;
-}>;
-export declare function repoVisibility(repoPath: string, get?: GetJson): Promise<Visibility>;
 /**
  * One board write as the host offers it: the `board_activity` row. `before` and `after` hold structure only (ids,
  * columns, order, titles); any free text (a reason, a note body, a question) goes in `text`, so a public repository

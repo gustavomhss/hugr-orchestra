@@ -5,7 +5,8 @@
 // milestone per member. This module is the writer set for it, and the `@orchestra/atlas-boundary/record-log` entry the
 // host imports; the card and attempt writers live in `card-log.ts` and are re-exported here.
 //
-// A public repository travels redacted (design §6): the caller decides `redact` from `repoVisibility`, and every writer
+// A public repository travels redacted (design §6): the host decides `redact` (`repoVisibility` shells out to git, so it
+// stays out of this entry and the host asks through its own process spawner), and every writer
 // here keeps ids, links, timings and hashes but drops free text when it is set. The milestone writer builds its label
 // from ids, so it has no free text to drop.
 
@@ -21,8 +22,6 @@ import { createDurableOrientation } from "./orientation-store.js"
 
 export { appendAttempt, appendCardEvent, attemptNumbers, readAttempt, readCard } from "./card-log.js"
 export type { AttemptEntry, AttemptRead, CardEvent, CardEventInput, CardRead, ThreadKind } from "./card-log.js"
-export { repoVisibility } from "./repo-visibility.js"
-export type { GetJson, Visibility } from "./repo-visibility.js"
 
 /**
  * One board write as the host offers it: the `board_activity` row. `before` and `after` hold structure only (ids,
