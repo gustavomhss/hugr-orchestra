@@ -580,7 +580,7 @@ describe("BoardQueue", () => {
         await git(worktree, "push", "--quiet", "origin", "card-3")
       })
       repo.remote.pulls.set(3, "card-3")
-      yield* board.issue({ project: "QBF", number: 3, branch: "card-3", pr: 3, reason: "Fix." })
+      yield* board.issue({ project: "QBF", number: 3, branch: "card-3", pr: 3, record: RECORD, reason: "Fix." })
       yield* database.db.update(BoardIssueTable).set({ stage: "review" }).where(eq(BoardIssueTable.id, fix.issue.id)).run().pipe(Effect.orDie)
       yield* passed(repo, 3)
       yield* board.queue({ project: "QBF", number: 3, reason: "Verified." })
