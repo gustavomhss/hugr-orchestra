@@ -13,6 +13,12 @@ Design: `docs/specs/maestro-lead/merge-queue.md`.
 1. Dispatch with `task` and `card` opens attempt 1. Every 10 minutes the host pushes the worktree to
    `refs/orchestra/wip/<KEY>-<n>/a<attempt>` after a gitleaks scan; a hit keeps the card `local`.
 2. Maestro runs `ci_run` on the card. Results are keyed by tree: a commit that keeps the files keeps the green.
+   When `scoped.tests` takes `{package}`, Maestro passes the package from the Done when. A card that changes no
+   workspace package, such as a docs-only card, omits it: turbo's affected set (without the root `//`) is empty and
+   no file matches `lanes.global`, so `ci_run` records a passing scoped check with the command
+   `none: no workspace package affected` and a note, and runs no tests. That row is the scoped green, visible in the
+   checks; required workflows such as `typecheck.yml` still gate. Without `package`, a card that changes packages is
+   refused with their names, and so is one turbo cannot read.
 3. The card's PR opens and the host moves it to Review. A base advance that touches its files writes a conflict note;
    the seat merges base on its next dispatch.
 4. Maestro writes the PR record with `board_issue` (Intent, Decisions, Not covered, Risk level) and calls

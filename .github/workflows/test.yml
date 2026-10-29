@@ -212,7 +212,14 @@ jobs:
           - { name: linux, host: ubuntu-24.04, part: packages-libs, label: "other packages, godfile", repo_gates: true,
               filters: "--filter=!@orchestra/core --filter=!@orchestra/app --filter=!@orchestra/cli --filter=!@orchestra/server --filter=!@orchestra/sdk-next --filter=!@orchestra/client --filter=!@orchestra/tui --filter=!@orchestra/session-ui" }
           - { name: linux, host: ubuntu-24.04, part: gates, label: "httpapi, relay" }
-          - { name: windows, host: windows-latest, part: core, label: "core", filters: "--filter=@orchestra/core" }
+          - { name: windows, host: windows-latest, part: core-1, label: "core 1/8", shard: "1/8", filters: "--filter=@orchestra/core" }
+          - { name: windows, host: windows-latest, part: core-2, label: "core 2/8", shard: "2/8", filters: "--filter=@orchestra/core" }
+          - { name: windows, host: windows-latest, part: core-3, label: "core 3/8", shard: "3/8", filters: "--filter=@orchestra/core" }
+          - { name: windows, host: windows-latest, part: core-4, label: "core 4/8", shard: "4/8", filters: "--filter=@orchestra/core" }
+          - { name: windows, host: windows-latest, part: core-5, label: "core 5/8", shard: "5/8", filters: "--filter=@orchestra/core" }
+          - { name: windows, host: windows-latest, part: core-6, label: "core 6/8", shard: "6/8", filters: "--filter=@orchestra/core" }
+          - { name: windows, host: windows-latest, part: core-7, label: "core 7/8", shard: "7/8", filters: "--filter=@orchestra/core" }
+          - { name: windows, host: windows-latest, part: core-8, label: "core 8/8", shard: "8/8", filters: "--filter=@orchestra/core" }
           # httpapi-codegen is a build-time generator whose tests pin POSIX paths, so it runs on Linux only.
           - { name: windows, host: windows-latest, part: rest, label: "other packages, legacy rollback",
               filters: "--filter=!@orchestra/core --filter=!@orchestra/httpapi-codegen" }
@@ -344,6 +351,15 @@ jobs:
             echo "shard $PART tests lane packages: ${lane[*]}"
             filters=("${lane[@]/#/--filter=}")
           fi
+          # Windows core runs 22-31 min as one job, so it splits into eight: shard i/n takes every n-th test file from i.
+          if [ -n "$SHARD" ]; then
+            if [ -n "$PACKAGES" ] && ! tr ', ' '\n\n' <<< "$PACKAGES" | grep -qx '@orchestra/core'; then echo "shard $PART has no package of this lane"; exit 0; fi
+            mapfile -t files < <(cd packages/core && find test -name '*.test.ts' | sort | awk -v i="${SHARD%/*}" -v n="${SHARD#*/}" '(NR - i) % n == 0')
+            [ -n "${files[0]:-}" ] || { echo "::error::shard $PART selects no test file"; exit 1; }
+            echo "shard $PART runs ${#files[@]} files"
+            # Through turbo, so each shard keeps its own cache entry: the file list is part of the task hash.
+            GITHUB_ACTIONS=false exec bun turbo test --filter=@orchestra/core -- "${files[@]}"
+          fi
           # Cold embedded startup on Windows and contract generation on Linux exceeded unchanged deadlines
           # when sharing the runner with another runtime suite. Keep every package and per-test budget.
           concurrency=1
@@ -354,6 +370,7 @@ jobs:
         env:
           FILTERS: ${{ matrix.filters }}
           PART: ${{ matrix.part }}
+          SHARD: ${{ matrix.shard }}
           PACKAGES: ${{ inputs.packages }}
           ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
 

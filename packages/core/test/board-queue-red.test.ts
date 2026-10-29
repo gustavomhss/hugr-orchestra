@@ -84,6 +84,8 @@ describe("BoardQueue", () => {
 
       repo.remote.conclusion = "FAILURE"
       repo.remote.baseRuns = JSON.stringify([{ name: "test", status: "COMPLETED", conclusion: "FAILURE" }])
+      // A failing test the gate can name: without one, a red base reads as infrastructure (see the infra-path test).
+      repo.remote.log = "##[group]@orchestra/core:test\ntest/a.test.ts:\n(fail) a > b [1.00ms]\n##[endgroup]\n"
       yield* board.queueTick()
       expect([yield* stage(repo, 1), yield* stage(repo, 2)]).toEqual(["queue", "queue"])
       expect(yield* bundleStatuses(repo)).toEqual(["base-red"])

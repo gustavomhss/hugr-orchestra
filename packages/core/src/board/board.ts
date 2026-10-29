@@ -570,10 +570,10 @@ export const layerWith = (options: {
         gh: options.gh ?? BoardGithub.runner(proc, options.env),
       })
       const ci = BoardCi.make({
+        ...options,
         quiet: (work) => quiet(work).pipe(Effect.orDie),
         proc,
         gh: options.gh ?? BoardGithub.runner(proc, options.env),
-        env: options.env,
       })
       const snapshots = BoardSnapshot.make({
         quiet: (work) => quiet(work).pipe(Effect.orDie),

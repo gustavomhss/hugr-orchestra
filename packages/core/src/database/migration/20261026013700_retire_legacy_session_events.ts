@@ -21,6 +21,11 @@ export default {
   id: "20261026013700_retire_legacy_session_events",
   up(tx) {
     return Effect.gen(function* () {
+      // A database that lost its `event` table holds no legacy rows to retire.
+      const table = yield* tx.all<{ name: string }>(
+        `SELECT \`name\` FROM \`sqlite_master\` WHERE \`type\` = 'table' AND \`name\` = 'event'`,
+      )
+      if (table.length === 0) return
       const list = types.map((type) => `'${type}'`).join(", ")
       const found = yield* tx.all<{ id: string }>(`SELECT \`id\` FROM \`event\` WHERE \`type\` IN (${list}) LIMIT 1`)
       if (found.length === 0) return

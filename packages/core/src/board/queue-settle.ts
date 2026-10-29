@@ -87,6 +87,15 @@ export function makeSettle(
     if (verdict === "red") {
       const found = yield* failures(repo, rollup.statusCheckRollup, contract)
       const cause = found.files.length > 0 ? ` Failing: ${found.files.join(", ")}.` : ""
+      const paused = Effect.gen(function* () {
+        yield* Effect.forEach(
+          members,
+          (item) => note(row, item.issue, `Bundle ${row.key}-B${bundle.n} failed on infrastructure twice; the ${row.key} queue is paused until Maestro retries it, and this card stays queued.`),
+          { discard: true },
+        )
+        yield* Effect.logWarning(`integration: ${row.key} queue paused, bundle ${row.key}-B${bundle.n} failed on infrastructure twice`)
+        return yield* close(row, repo, bundle, "failed on infrastructure twice; the queue is paused", "paused")
+      })
       // An infrastructure red reruns only its failed jobs, in the same runs, so the green jobs stand and the bundle stays
       // open. A run already on its second attempt failed on infrastructure twice. A red whose runs cannot be read or
       // rerun falls back to rebuilding the bundle.
@@ -100,25 +109,7 @@ export function makeSettle(
       const rerunnable = attempts.length > 0 && attempts.every((attempt) => attempt !== undefined)
       // GitHub can still report the last attempt's jobs for a moment after a rerun starts.
       if (rerunnable && attempts.some((attempt) => attempt?.status !== "completed")) return
-      const previous = found.infra && !rerunnable
-        ? yield* deps.quiet((tx) =>
-            tx
-              .select({ status: BoardBundleTable.status })
-              .from(BoardBundleTable)
-              .where(and(eq(BoardBundleTable.project_id, row.id), ne(BoardBundleTable.status, "open"), ne(BoardBundleTable.id, bundle.id)))
-              .orderBy(desc(BoardBundleTable.n))
-              .get(),
-          )
-        : undefined
-      if ((rerunnable && attempts.some((attempt) => (attempt?.attempt ?? 1) > 1)) || (found.infra && previous?.status === "infra")) {
-        yield* Effect.forEach(
-          members,
-          (item) => note(row, item.issue, `Bundle ${row.key}-B${bundle.n} failed on infrastructure twice; the ${row.key} queue is paused until Maestro retries it, and this card stays queued.`),
-          { discard: true },
-        )
-        yield* Effect.logWarning(`integration: ${row.key} queue paused, bundle ${row.key}-B${bundle.n} failed on infrastructure twice`)
-        return yield* close(row, repo, bundle, "failed on infrastructure twice; the queue is paused", "paused")
-      }
+      if (rerunnable && attempts.some((attempt) => (attempt?.attempt ?? 1) > 1)) return yield* paused
       const rerun = rerunnable ? yield* Effect.forEach(found.runs, (run) => deps.gh(["run", "rerun", run, "--failed", "--repo", repo])) : []
       if (rerunnable && rerun.every((result) => result.exitCode === 0)) {
         yield* Effect.forEach(
@@ -128,7 +119,18 @@ export function makeSettle(
         )
         return
       }
-      if (found.infra) {
+      // A red the gate cannot pin on a failing test, on a base that is red too, has nothing to wait for: base-red would
+      // hold the queue until base turns green on its own. Read it as infrastructure instead: rebuild once, then pause.
+      const infra = Effect.gen(function* () {
+        const previous = yield* deps.quiet((tx) =>
+          tx
+            .select({ status: BoardBundleTable.status })
+            .from(BoardBundleTable)
+            .where(and(eq(BoardBundleTable.project_id, row.id), ne(BoardBundleTable.status, "open"), ne(BoardBundleTable.id, bundle.id)))
+            .orderBy(desc(BoardBundleTable.n))
+            .get(),
+        )
+        if (previous?.status === "infra") return yield* paused
         yield* Effect.forEach(
           members,
           (item) => note(row, item.issue, `Bundle ${row.key}-B${bundle.n} failed on infrastructure, not code; the queue reruns it once and this card stays queued.`),
@@ -138,7 +140,8 @@ export function makeSettle(
           tx.update(BoardQueueTable).set({ flush: true }).where(inArray(BoardQueueTable.issue_id, members.map((item) => item.issue.id))).run(),
         )
         return yield* close(row, repo, bundle, "failed on infrastructure; the queue reruns it", "infra")
-      }
+      })
+      if (found.infra) return yield* infra
       const sha10 = bundle.base_sha.slice(0, 10)
       const scoped = runnable(contract, found) && contract.scoped.tests !== null ? yield* scope(directory, contract.scoped.tests, bundle, found.groups) : undefined
       if (scoped === "flaky") return yield* flaky(row, bundle, members.map((item) => item.issue), found.groups.flatMap((group) => group.files))
@@ -163,6 +166,7 @@ export function makeSettle(
           null,
         )
       }
+      if (based === "red" && found.groups.length === 0) return yield* infra
       if (based === "red") {
         // Section 6.8: F fails on base itself, so its culprit is bisected and a fix card opens; the bundle is not blamed.
         if (scoped === "base" && contract.scoped.tests !== null) {
