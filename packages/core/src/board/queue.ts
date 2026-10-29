@@ -16,7 +16,6 @@ import {
   attemptNumbers,
   readBoard,
   readCard,
-  repoVisibility,
 } from "@orchestra/atlas-boundary/record-log"
 import { Board } from "@orchestra/schema/board"
 import type { AppProcess } from "../process"
@@ -1296,7 +1295,8 @@ export function make(deps: Deps) {
   const recordBundle = Effect.fnUntraced(function* (row: ProjectRow, scratch: string, issues: ReadonlyArray<IssueRow>, label: string) {
     const now = yield* Clock.currentTimeMillis
     // An unknown visibility is treated as public, so free text never reaches a tree that might be.
-    const redact = (yield* Effect.tryPromise(() => repoVisibility(scratch)).pipe(Effect.orElseSucceed(() => "public"))) === "public"
+    const visibility = yield* deps.gh(["api", `repos/${row.github_repo}`, "--jq", ".private"])
+    const redact = visibility.exitCode !== 0 || visibility.stdout.trim() !== "true"
     const ids = issues.map((issue) => issue.id)
     const found = yield* deps.quiet((tx) =>
       Effect.gen(function* () {
