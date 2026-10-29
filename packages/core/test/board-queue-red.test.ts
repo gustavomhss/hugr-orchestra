@@ -94,7 +94,7 @@ describe("BoardQueue", () => {
     }),
   )
 
-  it.live("a red bundle on a base with no checks probes base, and a red probe ejects no member", () =>
+  it.live("a red bundle on a base with no checks probes base, and a red probe ejects no member and pauses for Maestro", () =>
     Effect.gen(function* () {
       const board = yield* Board.Service
       const repo = yield* repository("QBU")
@@ -108,9 +108,11 @@ describe("BoardQueue", () => {
 
       yield* Effect.forEach(Array.from({ length: 4 }), () => board.queueTick(), { discard: true })
       expect([yield* stage(repo, 1), yield* stage(repo, 2)]).toEqual(["queue", "queue"])
-      expect(yield* bundleStatuses(repo)).toEqual(["probing", "base-red"])
+      // The probe names no failing test to fix, so a `base-red` would wait forever on a base only the queue moves.
+      expect(yield* bundleStatuses(repo)).toEqual(["probing", "paused"])
       expect(yield* ejections(repo, 1)).toEqual([])
       expect(yield* ejections(repo, 2)).toEqual([])
+      expect(yield* board.bundle({ project: "QBU", bundle: 2, verdict: "retry", reason: "Base checked." })).toEqual({ status: "infra" })
     }),
   )
 
@@ -213,6 +215,24 @@ describe("BoardQueue", () => {
       yield* Effect.forEach(Array.from({ length: 8 }), () => board.queueTick(), { discard: true })
       // Infrastructure reruns its failed job, which fails the same way, so the queue pauses instead of blaming a card.
       expect((yield* bundleStatuses(repo))[0]).toBe("paused")
+    }),
+  )
+
+  it.live("a test step that hit its timeout is infrastructure, though GitHub reports it as a failure", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QTO")
+      yield* card(repo, "QTO", 1, "a.txt")
+      yield* card(repo, "QTO", 2, "b.txt")
+      yield* board.queue({ project: "QTO", number: 1, reason: "Verified." })
+      yield* board.queue({ project: "QTO", number: 2, reason: "Verified." })
+      repo.remote.conclusion = "FAILURE"
+      repo.remote.log = "##[error]The action 'Run unit tests' has timed out after 30 minutes.\n"
+
+      yield* Effect.forEach(Array.from({ length: 8 }), () => board.queueTick(), { discard: true })
+      expect(repo.remote.calls.filter((call) => call[0] === "run" && call[1] === "rerun")).toEqual([["run", "rerun", "102", "--failed", "--repo", "acme/QTO"]])
+      expect((yield* bundleStatuses(repo))[0]).toBe("paused")
+      expect(yield* ejections(repo, 1)).toEqual([])
     }),
   )
 

@@ -75,10 +75,10 @@ export function makeSettle(
         .orderBy(asc(BoardBundleMemberTable.position))
         .all(),
     )
-    // A bundle with no members is a base probe: it never merges, it only says whether base is green. A red safety run
-    // (section 7.3, packages set) is read like any base red, so only the lanes touching its failing packages pause.
-    if (members.length === 0 && (verdict === "green" || bundle.packages === null))
-      return yield* close(row, repo, bundle, `probed ${contract.base} at ${bundle.base_sha.slice(0, 10)}`, verdict === "green" ? "probe-green" : "base-red")
+    // A bundle with no members is a base probe: it never merges, it only says whether base is green. A red probe or safety
+    // run (section 7.3, packages set) is read like any base red, so only the lanes touching its failing packages pause.
+    if (members.length === 0 && verdict === "green")
+      return yield* close(row, repo, bundle, `probed ${contract.base} at ${bundle.base_sha.slice(0, 10)}`, "probe-green")
     if (members.length === 0) return yield* safety(row, repo, directory, contract, bundle, rollup.statusCheckRollup)
     if (fixed === false) {
       yield* eject(row, bundle, members.map((item) => item.issue), `Bundle ${row.key}-B${bundle.n} carried this fix alone and ${bundle.failing?.flatMap((group) => group.files).join(", ")} still fail; it is back in Review.`, "fix did not turn its tests green")
@@ -380,9 +380,9 @@ export function makeSettle(
   })
 
   /**
-   * Section 7.3: a red safety run. Infrastructure closes it as `infra`; F that passes on base when rerun closes it green;
-   * F that fails on base is bisected and gets a fix card, and only the lanes touching F's packages pause. A red whose
-   * failures are not scoped tests stops the whole project, as phase 1 does.
+   * Section 7.3: a red base probe or safety run. Infrastructure closes it as `infra`; F that passes on base when rerun
+   * closes it green; F that fails on base is bisected and gets a fix card, and only the lanes touching F's packages pause.
+   * A red whose failures are not scoped tests pauses the whole project until Maestro retries it.
    */
   const safety = Effect.fnUntraced(function* (
     row: ProjectRow,
@@ -399,9 +399,11 @@ export function makeSettle(
     const scoped = runnable(contract, found) && template !== null ? yield* scope(directory, template, bundle, found.groups) : undefined
     if (scoped === "flaky" || scoped === "code")
       return yield* close(row, repo, bundle, `found ${found.files.join(", ")} passing on ${contract.base} at ${sha10} when rerun`, "probe-green")
+    // A red with no scoped failing tests has no fix card to cut, and a `base-red` without one waits for a base that only
+    // the queue moves, so it pauses for Maestro instead.
     if (scoped === undefined || template === null) {
-      yield* Effect.logWarning(`integration: ${row.key} safety run found ${contract.base} red at ${sha10}, and its failures are not scoped tests; the queue waits for ${contract.base} to turn green`)
-      return yield* close(row, repo, bundle, `found ${contract.base} red at ${sha10}`, "base-red")
+      yield* Effect.logWarning(`integration: ${row.key} probe found ${contract.base} red at ${sha10}, and its failures are not scoped tests; the queue is paused until Maestro retries it`)
+      return yield* close(row, repo, bundle, `found ${contract.base} red at ${sha10}; the queue is paused`, "paused")
     }
     const culprit = yield* bisect(row, directory, template, bundle, found.groups)
     const fix = yield* fixCard(row, contract.base, culprit, found.groups)

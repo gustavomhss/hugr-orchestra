@@ -30,8 +30,10 @@ export function makeRed(ctx: Context & Pick<ReturnType<typeof makeRecord>, "note
   /**
    * Section 6.3: the failing set F from the failed jobs' logs and the failing bun files of each turbo package group, and
    * whether the red is infrastructure. A job counts as
-   * infrastructure when it was cancelled, timed out or never started, or when its log has no failing file and lacks the
-   * contract's control line, which only the jobs it names print; a job whose log cannot be read counts as code.
+   * infrastructure when it was cancelled, timed out or never started, when its log names no failing file and shows a step
+   * that timed out or was cancelled (GitHub reports a step's `timeout-minutes` as a plain failure), or when its log has no
+   * failing file and lacks the contract's control line, which only the jobs it names print; a job whose log cannot be
+   * read counts as code.
    */
   const failures = Effect.fnUntraced(function* (repo: string, rollup: typeof Rollup.Type["statusCheckRollup"], contract: BoardCi.Contract) {
     const failed = gating(rollup, contract).filter((check) => check.done && FAILED.has(check.result))
@@ -44,7 +46,8 @@ export function makeRed(ctx: Context & Pick<ReturnType<typeof makeRecord>, "note
         const files = text ? BoardCi.failing(text) : []
         const control = contract.full.control
         const silent = control !== null && control.jobs.some((prefix) => check.name.startsWith(prefix)) && !text.includes(control.line)
-        return { files, groups: text ? BoardCi.packaged(text) : [], infra: silent && text !== "" && files.length === 0 }
+        const stopped = /##\[error\](The action '.*' has timed out after \d+ minutes|The operation was canceled)/.test(text)
+        return { files, groups: text ? BoardCi.packaged(text) : [], infra: (silent || stopped) && text !== "" && files.length === 0 }
       }),
     )
     return {
