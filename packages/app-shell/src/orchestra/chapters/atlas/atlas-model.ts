@@ -493,7 +493,7 @@ export function createAtlasModel(snapshot: AtlasSnapshot) {
     return [...map.values()].sort((a, b) => b.facts.length - a.facts.length)
   }
 
-  // .atlas/memory.jsonl by member (D3b). A rule's age counts the records written after it in the WHOLE log, every
+  // .atlas/members/*/memory/ by member (D3b). A rule's age counts the records written after it in the WHOLE log, every
   // member included, which is what the header's decay counts. The logbook belongs to the orchestrator actor `orch`.
   const records = Object.values(R.memory).flat()
   const ageOf = (seq: number) => records.filter((r) => r.seq > seq).length

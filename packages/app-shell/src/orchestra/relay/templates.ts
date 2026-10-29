@@ -17,6 +17,15 @@ export const templates = (documents: RelayDocument[]) =>
 const PROFILE_COPY: Record<string, { name: CopyKey; body: CopyKey }> = {
   tdd_feature: { name: "orchestra.workflows.template.tddFeature", body: "orchestra.workflows.template.tddFeature.body" },
   "wp-execute": { name: "orchestra.workflows.template.wpExecute", body: "orchestra.workflows.template.wpExecute.body" },
+  bugfix: { name: "orchestra.workflows.template.bugfix", body: "orchestra.workflows.template.bugfix.body" },
+  "safe-refactor": {
+    name: "orchestra.workflows.template.safeRefactor",
+    body: "orchestra.workflows.template.safeRefactor.body",
+  },
+  "feature-launch": {
+    name: "orchestra.workflows.template.featureLaunch",
+    body: "orchestra.workflows.template.featureLaunch.body",
+  },
   design: { name: "orchestra.workflows.template.design", body: "orchestra.workflows.template.design.body" },
   planning: { name: "orchestra.workflows.template.planning", body: "orchestra.workflows.template.planning.body" },
   "research-v2": { name: "orchestra.workflows.template.research", body: "orchestra.workflows.template.research.body" },

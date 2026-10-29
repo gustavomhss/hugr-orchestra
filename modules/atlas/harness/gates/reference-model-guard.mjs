@@ -18,7 +18,7 @@
 // forces the classification to be DECLARED rather than discovered by the next reviewer.
 //
 // ── DECLARED COUNTS (gate-checked; a drift here FAILS this gate) ────────────────────────────────────────
-//   declared-modules: 38 · dead-value-exports: 131 · type-reachable: 4
+//   declared-modules: 38 · dead-value-exports: 130 · type-reachable: 4
 //   These three are read back from THIS file and asserted against the measured tree at the foot of the run
 //   (see "THE HEADER STATES COUNTS, AND THIS CHECKS THEM"). No count is QUOTED anywhere else in this
 //   header — a quoted integer that nothing checks is exactly what rotted here (task #143); this one cannot.
@@ -137,6 +137,11 @@ const BUILTIN_LEDGER = {
 
   // ── @atlas/adapter-io — the outer ring, where a reader is most likely to assume "shipped". ────────────
   "packages/adapter-io/src/poke-file.ts": { values: 3, shipped: null, banner: true }, // the third transport; nothing constructs it (task #36)
+  // The committed card tree's writers (repo-layout design §3, §8 step 5): the public-or-private answer that decides
+  // redaction. Its caller is the merge-queue host, which is not built yet. `card-log.ts` and `transcript-blobs.ts`
+  // are GONE from this ledger: `atlas respawn` (`respawn-brief.ts`) reads attempts and checks committed transcripts,
+  // so both moved dead -> live. The PR record moved into `persist/src/host-adapter.ts`, shipped as boundary `./record`.
+  "packages/adapter-io/src/repo-visibility.ts": { values: 2, shipped: null, banner: false },
   // F3 / A1 — the BOUND Memory composition (`createNativeMemory`, `storeStateOf`). Declared, not pre-wired, and  // for a different reason than the rest of this cluster: its consumer is a harness OUTSIDE this subtree
   // (Orchestra's backend specialist, through the installed boundary package, F3 work package A3), and the one in-tree
   // composition root (`compose.ts`) is precisely the route F3 clause 4 forbids it — `composeRuntime` resolves
@@ -213,7 +218,9 @@ const BUILTIN_LEDGER = {
   "packages/persist/src/attach.ts": { values: 2, shipped: null, banner: false },
   "packages/persist/src/diff.ts": { values: 4, shipped: null, banner: false },
   "packages/persist/src/merge.ts": { values: 8, shipped: null, banner: false },
-  "packages/persist/src/metering.ts": { values: 1, shipped: null, banner: false },
+  // 1 -> 2: `meterAttempt` joined `meter`. It adds the seat, session, engine and integer `costMicroUsd` an attempt
+  // file records (repo-layout design §3); its caller is the unbuilt merge-queue host.
+  "packages/persist/src/metering.ts": { values: 2, shipped: null, banner: false },
   "packages/persist/src/placement.ts": { values: 6, shipped: null, banner: false },
   "packages/persist/src/provenance.ts": { values: 2, shipped: null, banner: false },
   "packages/persist/src/reconstruct.ts": { values: 12, shipped: null, banner: false },
@@ -221,7 +228,8 @@ const BUILTIN_LEDGER = {
   //   source.ts is GONE from this ledger (EPIC-1-b / WP-1.1-b.PERSIST: `cli/src/okf-cli.ts` now value-imports
   //   exportStore/importStore for `atlas export` / `atlas import`, so it moved dead → live — this gate's
   //   STALE direction, exactly as own.ts/seed.ts did before it).
-  "packages/persist/src/transcript-store.ts": { values: 4, shipped: null, banner: false },
+  //   transcript-store.ts is GONE from this ledger: `adapter-io/src/transcript-blobs.ts` value-imports
+  //   `createTranscriptStore` to scrub and hash a committed transcript, so it moved dead → live.
 
   // ── @atlas/genesis — PARTLY wired: `packages/cli/src/mine.ts` value-imports makeRunController / ───────
   //    createScan / createMine / runExtract / admit / makeSeed. `seed.ts` is GONE from this ledger (its 5

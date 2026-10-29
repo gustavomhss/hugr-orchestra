@@ -11,11 +11,11 @@ export const skill = SKILL
 export const todowrite = TODOWRITE
 export const websearch = (year: number) => WEBSEARCH.replace("{{year}}", String(year))
 export const task = `Delegate a complete task to a visible agent using its stable ID in subagent_type.
-The child runs in this Location through the canonical Session runner and returns its real assistant reply.
+The child runs in this Location, or in directory when given, through the canonical Session runner and returns its real assistant reply.
 Optional model is an exact provider/model identity; nested model IDs and virtual providers are preserved.
 Delegation requires the calling turn owner's task permission and every ancestor's hard model ceiling.
 Use task_id to continue an existing child of this Session or explicitly recover unfinished work.
-Pass card (KEY-n) when the task works a board card: the card must exist, and its thread records the brief and the return.
+Use worktree to start the child in a new git worktree of this repository; the result names its directory. Pass that directory, with task_id, on every resume, or to start another child in the same worktree.
 Calls without task_id are idempotent for the same recorded assistant and tool call. Maestro cannot be a target.`
 
 export const teamMessage = `Send a short message to a teammate on the Orchestra team: \`maestro\` from live, \`live\` from Maestro.

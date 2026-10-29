@@ -20,8 +20,8 @@ called.
 
 | Tool | What it does |
 |---|---|
-| `look` | The whole interface as an indented outline. Each line shows role, "name", states and a `[ref]`, and the indentation is the hierarchy. `scope=<ref>` shows only one region. On a page, `text=true` adds the visible text. |
-| `find` | Search by text and/or role. Each match shows where it sits (`form "Sign in" › button "Continue" [3]`). |
+| `look` | The whole interface as an indented outline. Each line shows role, "name", states and a `[ref]`, and the indentation is the hierarchy. `scope=<ref>` shows only one region; in the Linux workspace it also shows the text inside that region's fields, such as an editor's content (never a password field's). On a page, `text=true` adds the visible text. |
+| `find` | Search by text and/or role. Each match shows where it sits (`form "Sign in" › button "Continue" [3]`). In the Linux workspace the query also matches the text inside fields, and the match quotes the words around it. |
 | `act` | Click, type, press keys or scroll, by `ref` or by `name` and `role`. The answer lists what changed: focus, plus the lines that appeared, went away or changed. |
 | `wait` | Wait until text appears, or goes away with `gone=true`, for up to 15 seconds. |
 | `navigate` | Browser tabs only. Open an address, or go back, forward or reload. |

@@ -26,6 +26,16 @@ dist/
 # proposals; specs/atlas-ui/build/DECISIONS.md D14). Same append-only, content-keyed one-record-per-line form as the
 # two logs above, so a union merge can only add whole lines; a hold or a decision must survive a merge.
 !.atlas/review.jsonl
+# The tree that replaces the three single files above (`packages/adapter-io/src/layout.ts`): shared logs under
+# `project/`, each seat's memory and knowledge logs under `members/<seat>/`. Same append-only content-keyed form.
+# The legacy single files stay admitted until `atlas migrate-layout` has moved their lines.
+!.atlas/project/
+!.atlas/members/
+# The CAS bytes each knowledge row names (`.atlas/blobs/<h[0:2]>/<h>`), so a fresh clone can replay the rows. They
+# are copies of door outputs, never a store: `cas/` and the projection stay local, and replay re-checks every hash.
+!.atlas/blobs/
+# Each card's host-written log and attempt metering (`.atlas/cards/<CARD>/`), committed with the card's work.
+!.atlas/cards/
 # …and the admin-owned policy, as before: the ratified config the doors READ, reviewable in the same place
 # as the code.
 !.atlas/policy.json

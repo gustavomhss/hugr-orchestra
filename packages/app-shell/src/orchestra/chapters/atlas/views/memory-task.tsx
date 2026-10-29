@@ -9,7 +9,7 @@ import { num, seatName } from "../kit/format"
 import { openAtlasSheet } from "../sheets/state"
 import { MEMORY_STATUS, taskLog, taskStatus } from "./memory-data"
 
-// One task's memory (specs/atlas-ui/mock/views-memory.js:118-157): its checkpoints in .atlas/memory.jsonl. Session
+// One task's memory (specs/atlas-ui/mock/views-memory.js:118-157): its checkpoints in .atlas/members/*/memory/. Session
 // transcripts are not served (D12), so the mock's Calls, Time, Files changed, Transcript button and transcript page
 // are not ported; memory/<seat>/task/<id>/transcript shows this page.
 export function MemoryTask(props: { model: AtlasModel; member: AtlasMemberId; unit: string }) {

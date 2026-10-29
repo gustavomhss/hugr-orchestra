@@ -13,7 +13,8 @@ import { mkdtempSync, rmSync, writeFileSync, readFileSync, appendFileSync, mkdir
 import { execFile } from "node:child_process"
 import { tmpdir } from "node:os"
 import { join, dirname } from "node:path"
-import { createDurableMemory, memoryLogPath } from "../src/memory-store.js"
+import { createDurableMemory } from "../src/memory-store.js"
+import { legacyLogPath, memberMemoryPath } from "../src/layout.js"
 import { lineMerge } from "@atlas/kernel"
 import type { MemoryRecord } from "@atlas/memory"
 
@@ -24,6 +25,8 @@ const rule = (owner: string, r: string): MemoryRecord => ({
   kind: "project",
   entry: { rule: r, scope: "s", frecency: 1 },
 })
+// Every `project` rule of one seat lands in one file.
+const rulesLog = (root: string, owner: string) => memberMemoryPath(root, rule(owner, ""))
 
 beforeEach(() => {
   repo = mkdtempSync(join(tmpdir(), "atlas-memstore-"))
@@ -66,14 +69,31 @@ describe("A2 — the store round-trips through the durable form", () => {
     ]
     const m = createDurableMemory(repo)
     for (const r of records) m.append(r)
-    expect(createDurableMemory(repo).read().store).toEqual(records)
+    // Each seat has its own files, folded in sorted path order, so order holds within a file, not across seats.
+    const store = createDurableMemory(repo).read().store
+    expect(store).toHaveLength(records.length)
+    expect(store).toEqual(expect.arrayContaining(records))
+  })
+
+  it("puts each record in its seat's file for its kind and subject", () => {
+    const task: MemoryRecord = {
+      owner: "backend",
+      kind: "task",
+      entry: { taskId: "a/../b", attempted: [], failedWith: [], stoppedAt: "x", lesson: "l" },
+    }
+    const m = createDurableMemory(repo)
+    m.append(rule("backend", "r"))
+    m.append(task)
+    expect(rulesLog(repo, "backend")).toBe(join(repo, ".atlas", "members", "backend", "memory", "project.jsonl"))
+    expect(memberMemoryPath(repo, task)).toBe(join(repo, ".atlas", "members", "backend", "memory", "task", "a%2F%2E%2E%2Fb.jsonl"))
+    expect(readFileSync(memberMemoryPath(repo, task), "utf8").trim().split("\n")).toHaveLength(1)
   })
 
   it("is IDEMPOTENT by content id — the same record appended twice folds to one", () => {
     const m = createDurableMemory(repo)
     m.append(rule("lucy", "r1"))
     m.append(rule("lucy", "r1"))
-    expect(readFileSync(memoryLogPath(repo), "utf8").trim().split("\n")).toHaveLength(2) // two LINES…
+    expect(readFileSync(rulesLog(repo, "lucy"), "utf8").trim().split("\n")).toHaveLength(2) // two LINES…
     expect(createDurableMemory(repo).read().store).toHaveLength(1) // …one RECORD
   })
 })
@@ -86,11 +106,12 @@ describe("A3 — the log travels: a git line-merge cannot lose or splice a recor
       const base = rule("lucy", "shared")
       for (const r of [a, b]) createDurableMemory(r).append(base)
       createDurableMemory(a).append(rule("lucy", "only-a"))
-      createDurableMemory(b).append(rule("billy", "only-b"))
+      createDurableMemory(b).append(rule("lucy", "only-b"))
 
-      // Exactly what a plain git text merge yields (driver bypassed): whole lines, unioned.
-      const merged = lineMerge(readFileSync(memoryLogPath(a), "utf8"), readFileSync(memoryLogPath(b), "utf8"))
-      const out = join(repo, ".atlas", "memory.jsonl")
+      // Exactly what a plain git text merge yields (driver bypassed): whole lines, unioned. Written to the legacy
+      // single file, which a read still folds first.
+      const merged = lineMerge(readFileSync(rulesLog(a, "lucy"), "utf8"), readFileSync(rulesLog(b, "lucy"), "utf8"))
+      const out = legacyLogPath(repo, "memory")
       mkdirSync(dirname(out), { recursive: true })
       writeFileSync(out, `${merged.map((e) => JSON.stringify(e)).join("\n")}\n`)
 
@@ -142,7 +163,7 @@ describe("A4 — concurrent writers do not lose each other (REAL subprocesses)",
 describe("a torn or hand-edited line is COUNTED, never silently served", () => {
   it("counts a line that does not parse", () => {
     createDurableMemory(repo).append(rule("lucy", "good"))
-    appendFileSync(memoryLogPath(repo), '{"id":"truncated…\n')
+    appendFileSync(rulesLog(repo, "lucy"), '{"id":"truncated…\n')
     const read = createDurableMemory(repo).read()
     expect(read.store).toHaveLength(1)
     expect(read.rejected).toBe(1)
@@ -151,10 +172,10 @@ describe("a torn or hand-edited line is COUNTED, never silently served", () => {
   it("counts a line whose stored id is NOT its content hash (edited in place)", () => {
     const m = createDurableMemory(repo)
     m.append(rule("lucy", "good"))
-    const [line] = readFileSync(memoryLogPath(repo), "utf8").trim().split("\n")
+    const [line] = readFileSync(rulesLog(repo, "lucy"), "utf8").trim().split("\n")
     const tampered = JSON.parse(line as string) as { payload: { entry: { rule: string } } }
     tampered.payload.entry.rule = "silently-rewritten"
-    appendFileSync(memoryLogPath(repo), `${JSON.stringify(tampered)}\n`)
+    appendFileSync(rulesLog(repo, "lucy"), `${JSON.stringify(tampered)}\n`)
 
     const read = createDurableMemory(repo).read()
     // teeth (breaks-on "an edited record is folded in as if the door had written it").
@@ -163,7 +184,7 @@ describe("a torn or hand-edited line is COUNTED, never silently served", () => {
   })
 
   it("an unreadable log is NOT reported as an empty store", () => {
-    mkdirSync(memoryLogPath(repo), { recursive: true }) // a directory where the file should be
+    mkdirSync(legacyLogPath(repo, "memory"), { recursive: true }) // a directory where the file should be
     const read = createDurableMemory(repo).read()
     expect(read.store).toEqual([])
     expect(read.rejected).toBe(1) // the distinction the knowledge sidecar lost

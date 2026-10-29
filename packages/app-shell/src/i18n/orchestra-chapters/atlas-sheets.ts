@@ -258,7 +258,7 @@ export const ATLAS_SHEETS_COPY = {
   "orchestra.atlas.sheets.delegate.tech.runs.value": "one model call per question, through Orchestra's provider layer",
   "orchestra.atlas.sheets.delegate.tech.writes": "Writes",
   "orchestra.atlas.sheets.delegate.tech.writes.value":
-    "one answer marked drafted per question in .atlas/review.jsonl; the question stays open until you accept it",
+    "one answer marked drafted per question in .atlas/project/review.jsonl; the question stays open until you accept it",
   "orchestra.atlas.sheets.delegate.confirm": "Draft answers",
   "orchestra.atlas.sheets.delegate.running": "Drafting…",
   "orchestra.atlas.sheets.delegate.done.one": "{{n}} draft is in. Accept each one you agree with.",
@@ -525,7 +525,7 @@ export const ATLAS_SHEETS_COPY_BR: Record<keyof typeof ATLAS_SHEETS_COPY, string
   "orchestra.atlas.sheets.delegate.tech.runs.value": "uma chamada ao modelo por pergunta, pela camada de provedores do Orchestra",
   "orchestra.atlas.sheets.delegate.tech.writes": "Grava",
   "orchestra.atlas.sheets.delegate.tech.writes.value":
-    "uma resposta marcada como rascunhada por pergunta em .atlas/review.jsonl; a pergunta continua aberta até você aceitar",
+    "uma resposta marcada como rascunhada por pergunta em .atlas/project/review.jsonl; a pergunta continua aberta até você aceitar",
   "orchestra.atlas.sheets.delegate.confirm": "Rascunhar respostas",
   "orchestra.atlas.sheets.delegate.running": "Rascunhando…",
   "orchestra.atlas.sheets.delegate.done.one": "{{n}} rascunho pronto. Aceite cada um com o qual você concordar.",

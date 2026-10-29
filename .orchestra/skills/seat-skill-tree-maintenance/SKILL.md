@@ -7,6 +7,8 @@ description: The rules a seat's skill tree must follow (node shape, names, depth
 
 Design: `docs/specs/seat-framework/skill-tree.md`. User view: `docs/guides/skills.md`, `docs/guides/agent-screen.md`.
 
+Maestro itself (prompt, roster, dispatch, board, playbooks): `maestro-ownership`, `maestro-usage`, `maestro-maintenance`.
+
 ## Where they live
 
 - A seat's tree is the folder `Seats.skillSource(id)` returns (`modules/maestro/coordination/src/seats/seat.ts`):

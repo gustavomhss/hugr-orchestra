@@ -6,6 +6,7 @@ import type { PromptInput } from "@orchestra/schema/prompt-input"
 import { Context, Effect, Layer, type Schema } from "effect"
 import type { AgentV2 } from "../agent"
 import { makeLocationNode } from "../effect/app-node"
+import type { Location } from "../location"
 import type { SessionMessage } from "../session/message"
 import type { SessionSchema } from "../session/schema"
 import type { Tool } from "./tool"
@@ -44,6 +45,8 @@ export interface Interface {
     readonly target: AgentV2.Info
     readonly input: { readonly [key: string]: unknown }
     readonly context: Tool.Context
+    /** Where the child will work, already checked by Task; absent means this Location. */
+    readonly location?: Location.Interface
   }) => Effect.Effect<Admission, ToolFailure>
   /** Runs before every provider turn of a Session, before any pending input is promoted; a failure stops the turn. */
   readonly beforeTurn: (session: SessionSchema.Info) => Effect.Effect<void, ToolFailure>

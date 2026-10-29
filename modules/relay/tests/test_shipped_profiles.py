@@ -28,13 +28,14 @@ SHIPPED = sorted(PROFILES.glob("*.yaml")) if PROFILES.is_dir() else []
 # authoring fact (this profile reuses a sub-state id across macros), not a default to guess at.
 OPTS = {"tdd_feature": ["--qualify-ids"], "wp-execute": ["--qualify-ids"],
         "spec-decompose": ["--qualify-ids"], "research-v2": ["--qualify-ids"],
-        "design": ["--qualify-ids"]}
+        "design": ["--qualify-ids"], "bugfix": ["--qualify-ids"],
+        "safe-refactor": ["--qualify-ids"], "feature-launch": ["--qualify-ids"]}
 
 # Profiles whose commands are parameterized templates: `${param}` is rendered by
 # `relay-spec.py instantiate` when the profile is bound to a project, so the shipped sprint is not
 # directly runnable and is not supposed to be.
 TEMPLATED = {"tdd_feature", "planning", "wp-execute", "spec-decompose", "research-v2",
-             "design"}
+             "design", "bugfix", "safe-refactor", "feature-launch"}
 
 
 @pytest.mark.parametrize("profile", SHIPPED, ids=lambda p: p.stem)
@@ -141,7 +142,9 @@ def test_a_diff_control_sees_files_git_does_not_track_yet(tmp_path):
                 env = dict(base_env, **params)
                 r = subprocess.run(["bash", "-c", cmd], cwd=work, env=env,
                                    capture_output=True, text=True)
-                assert r.returncode == 0, (
+                # A `test -z` control asserts that nothing changed, so seeing the change means failing.
+                absence = cmd.startswith("test -z")
+                assert (r.returncode != 0) == absence, (
                     f"{profile.stem}:{wp['id']}:{c['id']} does not see an untracked change\n{cmd}")
                 checked += 1
     assert checked >= 4, f"expected the diff-based controls to be exercised, saw {checked}"

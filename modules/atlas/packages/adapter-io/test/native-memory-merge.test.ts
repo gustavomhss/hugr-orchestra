@@ -4,7 +4,7 @@
 // conflict and without losing or corrupting a record. This drives REAL `git merge` in a throwaway
 // repository whose `.gitattributes` is copied from the Atlas root (`foundation/atlas/.gitattributes` while
 // vendored) — so deleting the `merge=union` lines there turns this suite red, which is the point: the
-// attribute is the mechanism, not this test. Orchestra's ROOT `.gitattributes` carries the same two lines for
+// attribute is the mechanism, not this test. Orchestra's ROOT `.gitattributes` carries the same line for
 // its own `.atlas/`; this suite does not read that file (Atlas's tests stay inside the Atlas root).
 //
 // The control case runs the same scenario with no `.gitattributes` and asserts the merge CONFLICTS. Without
@@ -17,7 +17,7 @@ import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { createNativeMemory } from "../src/native-memory.js"
-import { createDurableMemory, memoryLogPath } from "../src/memory-store.js"
+import { createDurableMemory } from "../src/memory-store.js"
 import type { Awareness, MemoryEntry, Orientation } from "@atlas/memory"
 
 const REPO_ATTRIBUTES = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", ".gitattributes")
@@ -64,8 +64,11 @@ function rulesHeader() {
   }).header(AW, OR)
 }
 
+// The seat's rules are one file (`members/backend/memory/project.jsonl`) both branches append to; each task is its own file.
+const RULES = ".atlas/members/backend/memory/project.jsonl"
+
 function commitMemory(message: string): void {
-  git("add", "-f", ".atlas/memory.jsonl")
+  git("add", "-f", ".atlas")
   git("commit", "-q", "-m", message)
 }
 
@@ -103,10 +106,8 @@ afterEach(() => rmSync(repo, { recursive: true, force: true }))
 // (vitest.config.ts); under host load this suite measured several seconds per case, so it carries its own
 // budget, the same reasoning `vitest.workspace.ts` gives the subprocess-bound black-box project.
 describe("F3-D5 — parallel branches merge their Memory by union", { timeout: 60_000 }, () => {
-  it("the repository binds both Atlas logs to merge=union", () => {
-    const text = readFileSync(REPO_ATTRIBUTES, "utf8")
-    expect(text).toMatch(/^\.atlas\/memory\.jsonl merge=union$/m)
-    expect(text).toMatch(/^\.atlas\/orientation\.jsonl merge=union$/m)
+  it("the repository binds every Atlas log to merge=union", () => {
+    expect(readFileSync(REPO_ATTRIBUTES, "utf8")).toMatch(/^\.atlas\/\*\*\/\*\.jsonl merge=union$/m)
   })
 
   it("merging feature into main: zero conflicts, zero rejected lines, fold = union by content id", () => {
@@ -118,7 +119,7 @@ describe("F3-D5 — parallel branches merge their Memory by union", { timeout: 6
     })
     expect(merge.status, merge.stdout + merge.stderr).toBe(0)
     expect(git("diff", "--name-only", "--diff-filter=U")).toBe("")
-    expect(readFileSync(memoryLogPath(repo), "utf8")).not.toMatch(/^(<<<<<<<|=======|>>>>>>>)/m)
+    expect(readFileSync(join(repo, RULES), "utf8")).not.toMatch(/^(<<<<<<<|=======|>>>>>>>)/m)
 
     const read = createDurableMemory(repo).read()
     expect(read.rejected).toBe(0)
@@ -148,6 +149,6 @@ describe("F3-D5 — parallel branches merge their Memory by union", { timeout: 6
       encoding: "utf8",
     })
     expect(merge.status).not.toBe(0)
-    expect(git("diff", "--name-only", "--diff-filter=U").trim()).toBe(".atlas/memory.jsonl")
+    expect(git("diff", "--name-only", "--diff-filter=U").trim()).toBe(RULES)
   })
 })

@@ -1,3 +1,5 @@
+import { WORKFLOW_TEMPLATES_COPY, WORKFLOW_TEMPLATES_COPY_BR } from "./workflow-templates"
+
 // Copy owned by the Workflows screen (and the parts Hooks shares with it). Add new keys here instead of
 // i18n/orchestra.ts so screens merge without conflicts.
 export const WORKFLOWS_COPY = {
@@ -94,31 +96,7 @@ export const WORKFLOWS_COPY = {
     "A workflow is a plan Maestro follows step by step. An agent does each step, and checks you define decide when it may move on. Start from scratch.",
   "orchestra.workflows.templates.title": "Start from a template",
   "orchestra.workflows.templates.meta": "Ready-made workflows you can copy and edit",
-  "orchestra.workflows.template.blank": "Start from scratch",
-  "orchestra.workflows.template.blankBody": "An empty plan. Add your own steps and checks.",
-  "orchestra.workflows.template.tddFeature": "Test-driven feature",
-  "orchestra.workflows.template.tddFeature.body":
-    "Builds a feature test first: a failing test, then the code that passes it, then a tidy-up. Each step must pass its checks before the next one starts.",
-  "orchestra.workflows.template.wpExecute": "Build one work package",
-  "orchestra.workflows.template.wpExecute.body":
-    "Builds one work package test first, then tidies it, and marks it done only when its checks pass.",
-  "orchestra.workflows.template.design": "Design a product from an idea",
-  "orchestra.workflows.template.design.body":
-    "Turns a raw idea into a ratified product design, one gated step at a time.",
-  "orchestra.workflows.template.planning": "Plan from a frozen spec",
-  "orchestra.workflows.template.planning.body":
-    "Turns an approved spec into a buildable plan: frame the problem, split it into work packages, order them, then hand them out.",
-  "orchestra.workflows.template.research": "Research a question",
-  "orchestra.workflows.template.research.body":
-    "Weighs competing explanations and sources, and records how sure each conclusion is, so someone else could repeat the search.",
-  "orchestra.workflows.template.specDecompose": "Break a spec into work packages",
-  "orchestra.workflows.template.specDecompose.body":
-    "Turns a frozen intent into work packages through five gated phases.",
-  "orchestra.workflows.template.copy": "A copy of this workflow, as a new draft.",
-  "orchestra.workflows.template.empty": "No steps yet",
-  "orchestra.workflows.template.toolsMissing": "Needs tools not available yet",
-  "orchestra.workflows.template.toolsMissingTitle":
-    "This project checks its work with Relay tools that are not available yet. It can be read and edited, but it cannot run.",
+  ...WORKFLOW_TEMPLATES_COPY,
   "orchestra.workflows.badge.published": "Published",
   "orchestra.workflows.badge.publishedPlain": "Published",
   "orchestra.workflows.badge.publishedAhead": "Published · unpublished changes",
@@ -768,31 +746,7 @@ export const WORKFLOWS_COPY_BR: Record<keyof typeof WORKFLOWS_COPY, string> = {
     "Um workflow é um plano que o Maestro segue passo a passo. Um agente faz cada etapa, e as verificações que você define decidem quando ele pode avançar. Comece do zero.",
   "orchestra.workflows.templates.title": "Começar por um modelo",
   "orchestra.workflows.templates.meta": "Workflows prontos que você pode copiar e editar",
-  "orchestra.workflows.template.blank": "Começar do zero",
-  "orchestra.workflows.template.blankBody": "Um plano vazio. Adicione suas próprias etapas e verificações.",
-  "orchestra.workflows.template.tddFeature": "Funcionalidade guiada por testes",
-  "orchestra.workflows.template.tddFeature.body":
-    "Constrói uma funcionalidade começando pelo teste: um teste que falha, depois o código que o faz passar, depois uma arrumação. Cada etapa precisa passar nas suas verificações antes da próxima.",
-  "orchestra.workflows.template.wpExecute": "Construir um pacote de trabalho",
-  "orchestra.workflows.template.wpExecute.body":
-    "Constrói um pacote de trabalho primeiro com testes, depois o simplifica, e só o marca como pronto quando as verificações passam.",
-  "orchestra.workflows.template.design": "Desenhar um produto a partir de uma ideia",
-  "orchestra.workflows.template.design.body":
-    "Transforma uma ideia bruta em um desenho de produto validado, uma etapa com verificações por vez.",
-  "orchestra.workflows.template.planning": "Planejar a partir de uma especificação congelada",
-  "orchestra.workflows.template.planning.body":
-    "Transforma uma especificação aprovada em um plano executável: define o problema, divide em pacotes de trabalho, ordena e distribui.",
-  "orchestra.workflows.template.research": "Pesquisar uma pergunta",
-  "orchestra.workflows.template.research.body":
-    "Pesa explicações e fontes concorrentes e registra o grau de certeza de cada conclusão, para que outra pessoa possa repetir a busca.",
-  "orchestra.workflows.template.specDecompose": "Dividir uma especificação em pacotes de trabalho",
-  "orchestra.workflows.template.specDecompose.body":
-    "Transforma uma intenção congelada em pacotes de trabalho, por meio de cinco fases com verificações.",
-  "orchestra.workflows.template.copy": "Uma cópia deste workflow, como novo rascunho.",
-  "orchestra.workflows.template.empty": "Nenhum passo ainda",
-  "orchestra.workflows.template.toolsMissing": "Precisa de ferramentas que ainda não estão disponíveis",
-  "orchestra.workflows.template.toolsMissingTitle":
-    "Este projeto verifica o trabalho com ferramentas do Relay que ainda não estão disponíveis. Dá para ler e editar, mas não pode ser executado.",
+  ...WORKFLOW_TEMPLATES_COPY_BR,
   "orchestra.workflows.badge.published": "Publicado",
   "orchestra.workflows.badge.publishedPlain": "Publicado",
   "orchestra.workflows.badge.publishedAhead": "Publicado · alterações não publicadas",

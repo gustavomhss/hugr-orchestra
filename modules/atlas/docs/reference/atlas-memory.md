@@ -112,6 +112,34 @@ LogbookEntry = {
 Fixed sections only; prose _within_ a section, never a free-form dump. Per-section soft cap + hard
 per-entry cap. Append-only: a later entry **supersedes by link**, never by rewriting.
 
+### Where the logs live (`packages/adapter-io/src/layout.ts`)
+
+```
+.atlas/
+  project/orientation.jsonl          shared Orientation events
+  project/review.jsonl               shared review log (holds, proposals, decisions, answers)
+  members/<seat>/memory/project.jsonl            the seat's project rules
+  members/<seat>/memory/logbook.jsonl            logbook entries
+  members/<seat>/memory/task/<taskId>.jsonl      one file per task
+  members/<seat>/memory/pr/<prId>.jsonl          one file per PR
+  members/<seat>/knowledge/<nodeKey[0:2]>.jsonl  knowledge rows the seat applied
+  blobs/<h[0:2]>/<h>                             the CAS bytes each knowledge row names
+```
+
+A file name is a shard hint, never identity: the fold is content-keyed over every file, and the legacy
+single files (`.atlas/memory.jsonl`, `orientation.jsonl`, `review.jsonl`) are still read first.
+`atlas migrate-layout` moves their lines into the tree byte for byte, so every event keeps its id. Every
+`.atlas/**/*.jsonl` merges by union (root `.gitattributes`); splitting by seat and task makes two
+branches rarely touch the same file at all.
+
+The CAS (`cas/`) and the projection stay local. What travels for Knowledge is each door's outcome: one line per
+row a settled commit produced or changed, under the seat that wrote it, plus a copy of the row's CAS object under
+`blobs/`. The fold keeps the latest line per node key by `(at, contentHash)`. At boot a trusted store replays the
+lines it does not have yet (`packages/adapter-io/src/knowledge-replay.ts`). A line is a claim, not authority:
+replay applies a row only when its fact is `seal:'proven'`, its seat is in the row's scope under
+`.atlas/policy.json`, and it re-proves against the current checkout. Every other row is staged as a candidate
+for ratify. A row whose blob is absent, or whose bytes hash to something else, is counted as missing.
+
 ## Invariants
 
 Emitted in clean ascending order. (Renumbered from the source spec's scrambled `M-8/M-9/M-10` tail.)

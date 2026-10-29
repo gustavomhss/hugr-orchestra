@@ -51,7 +51,7 @@ describe("sprint", () => {
 
   test("decodes every shipped profile", async () => {
     const files = [...new Bun.Glob("*.sprint.json").scanSync(path.join(root, "profiles"))].sort()
-    expect(files.length).toBe(6)
+    expect(files.length).toBe(9)
     const sprints = await Promise.all(files.map((file) => Bun.file(path.join(root, "profiles", file)).json()))
     sprints.forEach((value) =>
       expect(Schema.decodeUnknownSync(RelaySprint.Sprint)(value).work_packages.length).toBeGreaterThan(0),

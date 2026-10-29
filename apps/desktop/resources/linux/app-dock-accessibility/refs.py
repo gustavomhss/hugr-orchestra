@@ -45,7 +45,8 @@ def fingerprint(context, handle, within=None):
         owner, path, "facts", fetch, keep=lambda facts: facts[5] is None and not facts[1] & {27, 28, 31})
     live, interfaces = set(live), list(interfaces)
     if within is not None and (parent[0] or owner, parent[1]) != (within["owner"], within["path"]):
-        raise BusError("wrong-scope", "Indexed child parent differs from its request-owned traversal anchor")
+        # Never admitted: the caller skips this child (traversal) or expires the cursor (continuation).
+        raise BusError("ancestry-changed", "Indexed child parent differs from its request-owned traversal anchor")
     reasons = instability(role, live, len(name) <= LIMITS["field"], error)
     return {"owner": owner, "path": path, "role": role, "name": name[:LIMITS["field"]],
             "nameDigest": sha256(name.encode()).hexdigest() if LIMITS["field"] < len(name) <= LIMITS["text"] else None,

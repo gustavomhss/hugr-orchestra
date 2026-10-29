@@ -36,6 +36,8 @@ export type Seat = {
   readonly atlasMemory: boolean
   /** The shell fetches the backend toolkit's pinned engines for this seat's commands. */
   readonly toolkit: boolean
+  /** Configured MCP servers (`mcp.servers.<name>`) whose tools the seat may call over its floor. */
+  readonly mcp?: readonly string[]
   /** The research engine's seat: its tools come from @orchestra/core/research/seat-tools, and Claude mode dispatches it per tier. */
   readonly research?: boolean
   /**

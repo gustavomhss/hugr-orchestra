@@ -16,14 +16,11 @@ import {
   draftError,
   errorKind,
   errorStatus,
-  inheritedAction,
   isMaestro,
-  PERMISSION_TOOLS,
   removeInput,
   type ModelGroup,
-  type PermissionChoice,
 } from "./agents-roster"
-import { AgentPortrait } from "./agents-view"
+import { AgentPortrait, AgentToolPermissions } from "./agents-view"
 
 const TABS = ["overview", "prompt", "tools", "toolkit", "skills", "memory"] as const
 type Tab = (typeof TABS)[number]
@@ -86,6 +83,8 @@ export function AgentScreen(props: {
   modelName?: string
   detail?: AgentDetail
   detailFailed?: boolean
+  /** Configured MCP servers in this project; each gets one permission row. */
+  mcpServers: readonly string[]
   memory: AgentMemoryState
   memoryHref: string
   load: (id: string) => Promise<AgentFileInfo>
@@ -136,8 +135,8 @@ export function AgentScreen(props: {
       // Agent files are keyed by the stable id; the display name is configurable.
       .load(agentKey(props.agent))
       .then((file) => {
-        setDraft(agentDraft(props.agent, file))
-        setState({ phase: "edit", file, baseline: JSON.stringify(agentDraft(props.agent, file)) })
+        setDraft(agentDraft(props.agent, file, props.mcpServers))
+        setState({ phase: "edit", file, baseline: JSON.stringify(agentDraft(props.agent, file, props.mcpServers)) })
       })
       .catch((error: unknown) =>
         setState({ phase: "edit", loadError: agentUnavailable(error) ? "unsupported" : "failed" }),
@@ -190,11 +189,6 @@ export function AgentScreen(props: {
     setState("error", "")
   }
 
-  const inheritLabel = (tool: (typeof PERMISSION_TOOLS)[number]) => {
-    const action = inheritedAction(props.agent.permission, tool, state.file?.permission?.[tool])
-    if (!action) return language.t("orchestra.agents.choice.inherit")
-    return language.t("orchestra.agents.choice.inheritValue", { action })
-  }
   const upload = (file: File | undefined) => {
     if (!file) return
     avatarFromFile(file).then((avatar) => {
@@ -631,41 +625,13 @@ export function AgentScreen(props: {
                 <section class="agent-group">
                   <h2 class="mx-section">{language.t("orchestra.agents.toolPermissions")}</h2>
                   <p class="mx-note">{language.t("orchestra.agents.toolPermissionsNote")}</p>
-                  <div class="mx-table">
-                    <For each={PERMISSION_TOOLS}>
-                      {(tool) => (
-                        <div class="mx-row">
-                          <div class="mx-grow">
-                            <strong id={`agents-tool-${tool}`}>{language.t(`orchestra.agents.tool.${tool}`)}</strong>
-                          </div>
-                          <select
-                            name={`perm-${tool}`}
-                            class="mx-search"
-                            aria-labelledby={`agents-tool-${tool}`}
-                            onChange={(event) =>
-                              setDraft("permission", tool, event.currentTarget.value as PermissionChoice)
-                            }
-                          >
-                            <option value="inherit" selected={draft.permission[tool] === "inherit"}>
-                              {inheritLabel(tool)}
-                            </option>
-                            <Show when={typeof state.file?.permission?.[tool] === "object"}>
-                              <option value="custom" selected={draft.permission[tool] === "custom"}>
-                                {language.t("orchestra.agents.choice.custom")}
-                              </option>
-                            </Show>
-                            <For each={["allow", "ask", "deny"] as const}>
-                              {(action) => (
-                                <option value={action} selected={draft.permission[tool] === action}>
-                                  {language.t(`orchestra.agents.action.${action}`)}
-                                </option>
-                              )}
-                            </For>
-                          </select>
-                        </div>
-                      )}
-                    </For>
-                  </div>
+                  <AgentToolPermissions
+                    rules={props.agent.permission}
+                    file={state.file?.permission}
+                    draft={draft.permission}
+                    servers={props.mcpServers}
+                    onChange={(tool, choice) => setDraft("permission", tool, choice)}
+                  />
                 </section>
               </Match>
 

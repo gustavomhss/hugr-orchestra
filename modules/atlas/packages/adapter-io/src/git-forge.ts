@@ -52,7 +52,7 @@ export function createForge(repoPath: string): Forge {
         throw new Error(`git-forge writeCommit: target ${sha} is not HEAD (${head}) — cannot amend a non-tip commit`)
       }
       const body = git("show", "-s", "--format=%B", sha).replace(/\n+$/, "")
-      git("commit", "--amend", "--no-verify", "-m", `${body}\n\n${SENTINEL}\n${trailer}`)
+      git("commit", "--amend", "--allow-empty", "--no-verify", "-m", `${body}\n\n${SENTINEL}\n${trailer}`)
       const atlasSha = git("rev-parse", "HEAD").trim()
       // The mutable overlay homes to `refs/notes/orchestra` (NOT `refs/notes/commits`) keyed on the
       // atlas-bearing SHA. `-F -` writes the payload verbatim; a rewrite later orphans it via git-native.

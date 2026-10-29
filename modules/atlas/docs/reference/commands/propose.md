@@ -1,7 +1,7 @@
 # `atlas propose`
 
 Propose a current fact for a stricter tier — `T1` (a rule) or `T0` (a core fact) — with a reason. A proposal changes
-nothing in the store: it is one record appended to the review log `.atlas/review.jsonl`, and it waits until a person
+nothing in the store: it is one record appended to the review log `.atlas/project/review.jsonl`, and it waits until a person
 decides it with [`atlas decide`](./decide.md). [`atlas proposals`](./proposals.md) lists the open ones.
 
 This page describes the **CLI** command `atlas propose`. It is CLI-only (not an MCP tool).

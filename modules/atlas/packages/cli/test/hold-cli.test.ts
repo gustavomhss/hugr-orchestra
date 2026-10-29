@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from "vitest"
 import { mkdtempSync, rmSync, mkdirSync, appendFileSync } from "node:fs"
 import { tmpdir } from "node:os"
-import { join } from "node:path"
+import { dirname, join } from "node:path"
 import { readReview, foldReview, reviewLogPath } from "@atlas/adapter-io"
 import { runHold, runRelease, type HoldPorts } from "../src/hold-cli.js"
 import { REVIEW_COMMANDS } from "../src/review-cli.js"
@@ -84,7 +84,7 @@ describe("hold-cli", () => {
 
   it("8. torn log refuses", () => {
     tmp = mkdtempSync(join(tmpdir(), "atlas-hold-"))
-    mkdirSync(join(tmp, ".atlas"), { recursive: true })
+    mkdirSync(dirname(reviewLogPath(tmp)), { recursive: true })
     appendFileSync(reviewLogPath(tmp), "{torn\n")
     const r = runHold(ports(), ["nk-a"], { by: "alice" })
     expect(r.exitCode).toBe(2)

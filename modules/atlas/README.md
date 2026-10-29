@@ -30,8 +30,8 @@ a hashed structural index (BLAKE3-merkle CAS) resolved by scope, dependency blas
 - **Nothing dies** — git-native versioning; every fact/memory is re-spawnable from versioned state.
 - **Knowledge ≠ Memory** — Knowledge is shared, project-level, edited/superseded (never blind-append);
   Memory is per-seat, scoped, decays by non-use. Distinct kinds within one substrate. **Read this one as
-  partly running:** the Memory kind now has a durable, travelling store (`.atlas/memory.jsonl`, append-only
-  and content-keyed) and a governed write projection, but **no CLI command or MCP tool exposes it yet** —
+  partly running:** the Memory kind now has a durable, travelling store (`.atlas/members/<seat>/memory/`,
+  append-only and content-keyed) and a governed write projection, but **no CLI command or MCP tool exposes it yet** —
   CAMPAIGN-11 is mid-flight. Until a door ships, no _user_ can exercise this bullet. It sat here with no
   caveat at all while the package was called by nothing, which made a dead library read as a promise the
   product keeps; the caveat shrinks as the campaign lands and does not disappear early.
@@ -150,6 +150,8 @@ below, so the drift that produced this correction cannot recur silently.
 | `atlas territory <name> <glob...> --owner <seat> --tier <tier>`        | ops       | declares or replaces one territory in TERRITORY-CATALOG.json; needs ATLAS_RATIFY_TOKEN (billy for T0)      | [reference](./docs/reference/commands/territory.md)          |
 | `atlas own-export <unit...> --out <file>`                              | ops       | writes a reviewed Own snapshot built from the live store for the named units; names every non-FRESH fact   | [reference](./docs/reference/commands/own-export.md)         |
 | `atlas repair --worklist <file>`                                       | ops       | re-exports the worklist's stale Own units, materializes them, commits a branch and opens a PR              | [reference](./docs/reference/commands/repair.md)             |
+| `atlas migrate-layout`                                                 | ops       | moves the single-file `.atlas/` logs into the per-seat and project tree                                    | [reference](./docs/reference/commands/migrate-layout.md)     |
+| `atlas respawn <CARD> a<n>`                                            | ops       | prints the brief that re-spawns an attempt from the committed `.atlas/` record                             | [reference](./docs/reference/commands/respawn.md)            |
 
 <!-- command-table:end -->
 
@@ -184,7 +186,7 @@ packages/
   genesis         the one-time $0-LLM seeder · budgeted LLM proposal · mechanical admission
   ── RING (campaign 9 — the productization surface; the core stays pure and does no I/O itself)
   adapter-io      the composition root: filesystem · SCIP · git · LLM · durable store, wired into ONE handler
-  cli             the `atlas` CLI — 42 commands through a total argv parser (never throws); see the table above
+  cli             the `atlas` CLI — 43 commands through a total argv parser (never throws); see the table above
   mcp-server      a stdio MCP server over that same handler, mapping every Verdict (incl. refusals) to MCP
   ── SUITES
   e2e             story-driven in-process suite over the wired runtime
@@ -214,14 +216,14 @@ the numbers on this page most likely to rot.
   so an identical input yields a byte-identical `Verdict` on the CLI and over MCP (TOOLS-3).
 - **Does NOT hold: surface parity.**
   <!-- transport-parity:begin -->
-  The CLI exposes **42** commands; MCP advertises **18** tools (6 governance + 10 read + 2 parallel-path).
+  The CLI exposes **44** commands; MCP advertises **18** tools (6 governance + 10 read + 2 parallel-path).
   The first two groups are `GOVERNANCE_SURFACE ∪ READ_SURFACE` (ADR-0006), both arrays in
   `packages/tools/src/handler.ts`. The third is `atlas-relations` (#99a) and `atlas-negations` (#99b),
   advertised through a documented path that deliberately leaves both surface constants untouched — so
   "MCP advertises the union" was never the whole truth, and this bullet asserted it for two campaigns.
-  **The remaining 24 commands are CLI-only and unreachable over MCP**: `mine`, `promote`, `own`,
+  **The remaining 26 commands are CLI-only and unreachable over MCP**: `mine`, `promote`, `own`,
   `transitions`, `transition`, `test-vacuities`, `test-vacuity`, `verify-fact`,
-  `verify-store`, `derive-relations`, `budget`, `territories`, `export`, `import`, `hold`, `release`, `propose`, `proposals`, `decide`, `interview`, `answer`, `territory`, `own-export`, `repair`.
+  `verify-store`, `derive-relations`, `budget`, `territories`, `export`, `import`, `hold`, `release`, `propose`, `proposals`, `decide`, `interview`, `answer`, `territory`, `own-export`, `repair`, `migrate-layout`, `respawn`.
   <!-- transport-parity:end -->
   The writers among them publish through `atlas-emit` (ADR-0008 — an ordinary use of the existing door, not
   new surface), so no tool token exists for them.

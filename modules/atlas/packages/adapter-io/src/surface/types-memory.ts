@@ -1,8 +1,8 @@
 // @atlas/adapter-io — src/surface/types-memory.ts  (the Atlas UI surface: committed Own, Memory and territories)
 //
 // The shapes of the four snapshot keys lead decision D3b adds to extract.py's object: `own` (the committed Own
-// snapshot as Orchestra reads it), `memory` and `orientation` (the durable `.atlas/memory.jsonl` and
-// `.atlas/orientation.jsonl` logs) and `territories` (`TERRITORY-CATALOG.json`). Plain JSON, and this file imports
+// snapshot as Orchestra reads it), `memory` and `orientation` (the durable `.atlas/members/*/memory/` and
+// `.atlas/project/orientation.jsonl` logs) and `territories` (`TERRITORY-CATALOG.json`). Plain JSON, and this file imports
 // nothing, for the reason ./types.ts gives.
 
 /** One published Own skill file under `.orchestra/skills/own/`. */
@@ -39,7 +39,7 @@ export interface AtlasOwnSnapshot {
   readonly skills: readonly AtlasOwnSkill[]
 }
 
-/** One `.atlas/memory.jsonl` record. */
+/** One memory record (`.atlas/members/<seat>/memory/`). */
 export interface AtlasMemoryRecord {
   /** The log event id, the record's content key. */
   readonly eventId: string
@@ -59,7 +59,7 @@ export interface AtlasMemoryRecord {
   readonly entry: unknown
 }
 
-/** One `.atlas/orientation.jsonl` event. */
+/** One `.atlas/project/orientation.jsonl` event. */
 export interface AtlasOrientationEvent {
   readonly eventId: string
   readonly seq: number

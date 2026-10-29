@@ -310,7 +310,8 @@ const nativeLayer = Layer.unwrap(Effect.gen(function* () {
   return layer.pipe(Layer.provide(Layer.succeed(NativeBinding, { location, events })))
 }))
 
-function whollyDisabled(actions: string | ReadonlyArray<string>, rules: PermissionV2.Ruleset) {
+/** True when the ruleset denies every one of `actions` on every resource, so a tool asking only for them is hidden. */
+export function whollyDisabled(actions: string | ReadonlyArray<string>, rules: PermissionV2.Ruleset) {
   return (typeof actions === "string" ? [actions] : actions).every((action) => {
     const rule = rules.findLast((rule) => Wildcard.match(action, rule.action))
     return rule?.resource === "*" && rule.effect === "deny"

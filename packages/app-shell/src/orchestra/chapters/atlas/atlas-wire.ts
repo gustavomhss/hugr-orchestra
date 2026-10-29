@@ -41,7 +41,7 @@ export function taskOf(r: AtlasMemoryWire): AtlasMemoryTask {
     stoppedAt: text(entry.stoppedAt),
     lesson: r.text,
     ref: r.refs[0] ?? "",
-    source: ".atlas/memory.jsonl",
+    source: `.atlas/members/${r.member}/memory/task/`,
   }
 }
 

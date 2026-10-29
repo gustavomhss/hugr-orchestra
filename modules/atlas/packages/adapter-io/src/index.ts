@@ -138,9 +138,37 @@ export {
 // (`compose.ts`). Exported so a downstream test (or a future composition root) can build the SAME doors
 // without reaching into adapter-io internals — the same discipline `createDiskStore`/`createGovernedEmit`
 // already follow.
-export { createDurableMemory, memoryLogPath } from "./memory-store.js"
+export { createDurableMemory } from "./memory-store.js"
+export {
+  atlasDir,
+  attemptPath,
+  blobPath,
+  cardLogPath,
+  cardsDir,
+  contextLogPath,
+  knowledgeShardPath,
+  legacyLogPath,
+  memberMemoryPath,
+  membersDir,
+  projectLogPath,
+  segment,
+} from "./layout.js"
+export type { LegacyLog, ProjectLog } from "./layout.js"
+export { migrateLayout } from "./migrate-layout.js"
+// Repo-layout design §3 — the host-written card and attempt logs, the committed transcripts, and the public/private
+// answer that decides what they redact.
+export { appendAttempt, appendCardEvent, attemptNumbers, readAttempt, readCard } from "./card-log.js"
+export type { AttemptEntry, AttemptRead, CardEvent, CardEventInput, CardRead, ThreadKind } from "./card-log.js"
+export { createRepoTranscriptStore } from "./transcript-blobs.js"
+export { exportContext, readContext, readContextChunk, scrubText } from "./context-log.js"
+export type { ContextArchive, ContextEvent, ContextRead, ContextReference } from "./context-log.js"
+export { githubSlug, repoVisibility } from "./repo-visibility.js"
+export { respawnBrief } from "./respawn-brief.js"
+export type { RespawnBrief } from "./respawn-brief.js"
+export type { GetJson, Visibility } from "./repo-visibility.js"
+export type { LayoutMigration } from "./migrate-layout.js"
 export type { DurableMemory, MemoryRead } from "./memory-store.js"
-// D14 — the shared review log (`.atlas/review.jsonl`): holds, ratification proposals and decisions, interview answers
+// D14 — the shared review log (`.atlas/project/review.jsonl`): holds, ratification proposals and decisions, interview answers
 // and memory proposals, one appended content-keyed record each. Contract: specs/atlas-ui/build/tasks/B-L-API.md §1.
 export {
   appendReview,
@@ -346,6 +374,6 @@ export { buildOwnExport } from "./own-export.js"
 export type { OwnExport } from "./own-export.js"
 
 // D37 — the durable-store ignore rule `atlas init` and the surface's `install` both write (moved from @atlas/cli).
-export { ATLAS_IGNORE_BLOCK, ATLAS_IGNORE_PATTERN, ATLAS_POLICY_NEGATION, ensureAtlasIgnored } from "./gitignore.js"
+export { ATLAS_IGNORE_BLOCK, ATLAS_IGNORE_PATTERN, ATLAS_POLICY_NEGATION, ATLAS_TREE_NEGATIONS, ensureAtlasIgnored } from "./gitignore.js"
 export type { IgnoreOutcome, IgnoreResult } from "./gitignore.js"
 export { PROPOSE_TEMPLATE } from "./propose-template.js" // D39 — the advisory template as text, for the bundled mine
