@@ -91,6 +91,10 @@ export const BoardIssueTable = sqliteTable(
     github_dirty: integer({ mode: "boolean" }).notNull().default(false),
     // The PR record's Maestro fields (merge-queue spec section 4.5); the host renders it into the PR body.
     record: text({ mode: "json" }).$type<Board.PrRecord>(),
+    // Plan shape (merge-queue spec section 4.4): the packages the card means to touch, in turbo's terms, and its landing
+    // order among cards that share an area.
+    area: text({ mode: "json" }).$type<ReadonlyArray<string>>(),
+    order: integer(),
     ...Timestamps,
   },
   (table) => [
@@ -379,6 +383,8 @@ export const BoardBundleTable = sqliteTable(
     culprit: text(),
     failing: text({ mode: "json" }).$type<ReadonlyArray<{ readonly package: string; readonly files: ReadonlyArray<string> }>>(),
     fix_issue_id: text().$type<Board.IssueID>(),
+    // The lane's affected packages (section 7); null runs the whole suite.
+    packages: text({ mode: "json" }).$type<ReadonlyArray<string>>(),
     ...Timestamps,
   },
   (table) => [uniqueIndex("board_bundle_number_idx").on(table.project_id, table.n)],
