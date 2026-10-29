@@ -68,7 +68,8 @@ open the same database while the host's newer schema is on it.
 
 - `board_read` shows each queued card's state: waiting, running, held by a hold before merge, or held out by a conflict.
 - A flaky, paused or dissolved bundle holds the project's queue until Maestro decides with `board_bundle`.
-- `base-red` waits for a base move: look for the fix card, not at the bundle.
+- `base-red` waits for a base move: look for the fix card, not at the bundle. A `base-red` with no fix card never moves on its own; a red probe with nothing to fix now closes `paused` instead (#1181).
+- A card refused with "conflicts with base…" after it merged base keeps that flag until base moves again; the conflict check reruns only on a base move.
 - `board_dequeue` takes a card out and dissolves its bundle; the other members stay queued.
 
 ## Not in the queue (yet)

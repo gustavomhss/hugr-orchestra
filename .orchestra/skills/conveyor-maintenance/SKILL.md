@@ -102,6 +102,8 @@ snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bund
 - `board/tree.ts` owns export (`BoardTree.event`, called by the record commit) and import (`BoardTree.restore`). One applier per `Board.Action` in `APPLIERS`; a new action needs a new applier (the `Record<Board.Action, ...>` type forces it) and a structure field in its activity `after`. Unknown actions fail with `BoardTree.UnknownActionError`.
 - Keep every queue module under 750 lines (`script/godfile.ts`): the epic fails above it. A new concern gets its own `queue-*.ts` built from the shared `Context`, like `makeRed` and `makeSettle`.
 - Write-set matching drops `:L` line ranges and matches patterns with `Bun.Glob`, like the arsenal's `conflictVerdict`.
+- `conflicts.ts` sets and clears `board_attempt.conflict_base` only when base advances. A card that merges base after the flag is set keeps being refused by `board_queue` ("conflicts with base…") until base moves again. Live unblock: confirm with `git merge-tree --write-tree <base> <head>` that it merges clean, then set `conflict_base` and `conflict_files` to null on that attempt.
+- A `base-red` bundle with no `fix_issue_id` makes `cut()` return forever (`if (fixing && !fix) return`), and no `board_bundle` verdict releases a `base-red`. Before #1181 a red base probe closed this way (ORCH-B8: a step timeout read as code). #1181 fixes it: a red probe with nothing to fix closes `paused`. Live unblock on an older build: set that bundle's status to `infra`.
 
 ## Gates
 
