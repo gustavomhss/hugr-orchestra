@@ -32,7 +32,10 @@ import type { IssueRow, ProjectRow } from "./shared"
 import { AUTHOR, insertNote, release } from "./queue-shared"
 import type { Context } from "./queue-shared"
 
-const Pull = Schema.Struct({ head: Schema.Struct({ sha: Schema.String, ref: Schema.String }) })
+const Pull = Schema.Struct({
+  head: Schema.Struct({ sha: Schema.String, ref: Schema.String }),
+  labels: Schema.optional(Schema.Array(Schema.Struct({ name: Schema.String }))),
+})
 const decodePull = Schema.decodeUnknownOption(Schema.fromJsonString(Pull))
 
 /** The PR reads and the notes and records written about a card: head, note, moved, describe, recordBundle, recordOf. */
@@ -49,7 +52,11 @@ export function makeRecord(ctx: Context) {
     const fetched = (yield* git(directory, ["rev-parse", "--verify", "--quiet", `${pull.head.sha}^{commit}`])).out
     if (fetched !== pull.head.sha)
       return yield* new RefusedError({ message: `PR #${pr}'s head ${pull.head.sha.slice(0, 10)} is not on origin/${pull.head.ref}.` })
-    return { sha: pull.head.sha, tree: (yield* git(directory, ["rev-parse", `${pull.head.sha}^{tree}`])).out }
+    return {
+      sha: pull.head.sha,
+      tree: (yield* git(directory, ["rev-parse", `${pull.head.sha}^{tree}`])).out,
+      labels: (pull.labels ?? []).map((label) => label.name),
+    }
   })
 
   /** A queued card whose PR head moved since it queued goes back to Review: its new head is not verified. */

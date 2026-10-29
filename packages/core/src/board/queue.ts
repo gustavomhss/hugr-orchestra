@@ -582,7 +582,7 @@ export function make(deps: Deps) {
     if (added.code !== 0) return
     const ejections: Array<{ readonly card: string; readonly cause: string }> = []
     const members = yield* Effect.gen(function* () {
-      const taken: Array<{ readonly issue: IssueRow; readonly head: string }> = []
+      const taken: Array<{ readonly issue: IssueRow; readonly head: string; readonly labels: ReadonlyArray<string> }> = []
       for (const card of fix ? [fix] : alone ? [alone] : queued.cards) {
         if (taken.length >= cap) break
         if (card.queue.hold === "held") continue
@@ -606,7 +606,7 @@ export function make(deps: Deps) {
         ].join("\n")
         const merged = yield* git(scratch, [...AUTHOR, "merge", "--no-ff", "--quiet", "-m", message, card.queue.head_sha])
         if (merged.code === 0) {
-          taken.push({ issue: card.issue, head: card.queue.head_sha })
+          taken.push({ issue: card.issue, head: card.queue.head_sha, labels: current.labels })
           continue
         }
         const files = (yield* git(scratch, ["diff", "--name-only", "--diff-filter=U"])).out.split("\n").filter(Boolean)
@@ -647,6 +647,10 @@ export function make(deps: Deps) {
         "--body-file",
         "-",
         ...(contract.full.label && !lanePackages ? ["--label", contract.full.label] : []),
+        // A guard approval a member carries covers its change in the bundle too; the bundle PR is what the guard reads.
+        ...[...new Set(members.flatMap((member) => member.labels))]
+          .filter((label) => label === "guardrail-approved" || label.startsWith("guardrail-approved:"))
+          .flatMap((label) => ["--label", label]),
       ],
       body,
     )
