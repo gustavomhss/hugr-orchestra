@@ -35,6 +35,10 @@
     "./record": {
       "types": "./src/generated/record.d.ts",
       "default": "./src/generated/record.js"
+    },
+    "./record-log": {
+      "types": "./src/generated/record-log.d.ts",
+      "default": "./src/generated/record-log.js"
     }
   },
   "scripts": {

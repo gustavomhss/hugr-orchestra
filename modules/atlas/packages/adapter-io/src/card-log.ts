@@ -62,8 +62,14 @@ export interface AttemptRead {
 }
 
 export function appendCardEvent(repoPath: string, card: string, input: CardEventInput, opts: { readonly redact: boolean }): void {
+  // The kernel hash drops every `status` key (KERNEL-8), so a status move is stored under `state`: kept as `status`,
+  // an edited status would still match its line's id.
   const event =
-    input.kind === "message" || input.kind === "decision" ? redactText(input, opts.redact) : input
+    input.kind === "status"
+      ? { kind: input.kind, state: input.status, by: input.by, at: input.at }
+      : input.kind === "message" || input.kind === "decision"
+        ? redactText(input, opts.redact)
+        : input
   append(cardLogPath(repoPath, card), card, { card, event })
 }
 
@@ -84,9 +90,9 @@ export function readCard(repoPath: string, card: string): CardRead {
   const read = createDurableLog(cardLogPath(repoPath, card)).read()
   const lines = [...read.log.values()].flatMap((ev) => {
     const payload = ev.payload as { card?: unknown; event?: unknown } | null
-    return payload !== null && typeof payload === "object" && payload.card === card && isCardEvent(payload.event)
-      ? [{ event: payload.event, hash: ev.contentHash }]
-      : []
+    if (payload === null || typeof payload !== "object" || payload.card !== card) return []
+    const event = cardEvent(payload.event)
+    return event === undefined ? [] : [{ event, hash: ev.contentHash }]
   })
   return {
     events: lines.sort((a, b) => order(a.event.at, a.hash, b.event.at, b.hash)).map((line) => line.event),
@@ -153,15 +159,17 @@ const order = (atA: string, hashA: string, atB: string, hashB: string): number =
 
 const isText = (v: unknown): v is string => typeof v === "string" && v.length > 0
 
-function isCardEvent(v: unknown): v is CardEvent {
-  if (v === null || typeof v !== "object") return false
+function cardEvent(v: unknown): CardEvent | undefined {
+  if (v === null || typeof v !== "object") return undefined
   const o = v as Record<string, unknown>
-  if (!isText(o.at)) return false
-  if (o.kind === "status") return isText(o.status) && typeof o.by === "string"
-  if (o.kind === "link") return isText(o.rel) && isText(o.target)
-  if (o.kind === "message") return typeof o.thread === "string" && typeof o.from === "string" && isText(o.textHash)
-  if (o.kind === "decision") return typeof o.by === "string" && isText(o.textHash)
-  return false
+  if (!isText(o.at)) return undefined
+  if (o.kind === "status")
+    return isText(o.state) && typeof o.by === "string" ? { kind: "status", status: o.state, by: o.by, at: o.at } : undefined
+  if (o.kind === "link") return isText(o.rel) && isText(o.target) ? (o as CardEvent) : undefined
+  if (o.kind === "message")
+    return typeof o.thread === "string" && typeof o.from === "string" && isText(o.textHash) ? (o as CardEvent) : undefined
+  if (o.kind === "decision") return typeof o.by === "string" && isText(o.textHash) ? (o as CardEvent) : undefined
+  return undefined
 }
 
 function isAttempt(v: unknown): v is AttemptEntry {
