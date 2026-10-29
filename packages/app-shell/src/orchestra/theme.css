@@ -504,7 +504,7 @@ html[data-color-scheme="light"] .orchestra-mark [data-slot="orchestra-brand-logo
     font-weight: 400;
   }
 
-  html[data-color-scheme="light"]
+  html[data-color-scheme]
     body[data-new-layout]
     :is([data-slot="orchestra-theme-toggle"], [data-slot="orchestra-caffeinate-toggle"]):not(:hover) {
     background: var(--orchestra-overlay-pressed);

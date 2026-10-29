@@ -115,6 +115,11 @@ html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-new-layout] 
   color: var(--orchestra-brand-descriptor);
 }
 @media (min-width: 768px) {
+  html[data-orchestra-palette="gruvbox"][data-color-scheme]
+      body[data-new-layout]
+      :is([data-slot="orchestra-theme-toggle"], [data-slot="orchestra-caffeinate-toggle"]):not(:hover) {
+    background: var(--orchestra-overlay-pressed);
+  }
   html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-new-layout] .orchestra-shell {
     border: 1px solid var(--orchestra-shell-border);
     background: var(--orchestra-shell-background);

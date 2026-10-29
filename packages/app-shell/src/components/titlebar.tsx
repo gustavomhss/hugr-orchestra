@@ -527,7 +527,7 @@ export function Titlebar(props: {
             title={language.t(theme.mode() === "dark" ? "theme.scheme.light" : "theme.scheme.dark")}
             onClick={() => theme.setColorScheme(theme.mode() === "dark" ? "light" : "dark")}
           >
-            {/* The icon names the current scheme; the label and the click name the one it switches to. */}
+            {/* Icon, label and click all name the scheme it switches to, also while the scheme follows the system. The moon is Lucide's (ISC) on this 16-unit grid. */}
             <svg
               aria-hidden="true"
               viewBox="0 0 16 16"
@@ -540,15 +540,10 @@ export function Titlebar(props: {
               stroke-linejoin="round"
             >
               <Show
-                when={theme.colorScheme() !== "system"}
-                fallback={<path d="M2.5 3h11v7.5h-11zM6 13.5h4M8 10.5v3" />}
+                when={theme.mode() === "dark"}
+                fallback={<path d="M8 2a4 4 0 0 0 6 6 6 6 0 1 1-6-6z" />}
               >
-                <Show
-                  when={theme.mode() === "dark"}
-                  fallback={<path d="M8 10.8a2.8 2.8 0 1 0 0-5.6 2.8 2.8 0 0 0 0 5.6zM8 1.5v1.4M8 13.1v1.4M1.5 8h1.4M13.1 8h1.4M3.4 3.4l1 1M11.6 11.6l1 1M3.4 12.6l1-1M11.6 4.4l1-1" />}
-                >
-                  <path d="M13.2 9.6A5.6 5.6 0 0 1 6.4 2.8a5.6 5.6 0 1 0 6.8 6.8z" />
-                </Show>
+                <path d="M8 10.8a2.8 2.8 0 1 0 0-5.6 2.8 2.8 0 0 0 0 5.6zM8 1.5v1.4M8 13.1v1.4M1.5 8h1.4M13.1 8h1.4M3.4 3.4l1 1M11.6 11.6l1 1M3.4 12.6l1-1M11.6 4.4l1-1" />
               </Show>
             </svg>
           </button>

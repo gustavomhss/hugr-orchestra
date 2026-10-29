@@ -118,7 +118,7 @@ html[data-orchestra-palette="github"][data-color-scheme] body[data-new-layout] [
   color: var(--orchestra-brand-descriptor);
 }
 @media (min-width: 768px) {
-  html[data-orchestra-palette="github"][data-color-scheme="light"]
+  html[data-orchestra-palette="github"][data-color-scheme]
       body[data-new-layout]
       :is([data-slot="orchestra-theme-toggle"], [data-slot="orchestra-caffeinate-toggle"]):not(:hover) {
     background: var(--orchestra-overlay-pressed);
