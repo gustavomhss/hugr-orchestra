@@ -397,10 +397,10 @@
       "authorizedAt": "2026-10-28"
     },
     "packages/core/src/database/schema.gen.ts": {
-      "maximumLines": 850,
-      "reason": "Generated database schema output; the board spend, decision and settings tables (slice F1) regenerate it. Exact generated-output ceiling. Handwritten source limits unchanged.",
+      "maximumLines": 943,
+      "reason": "Generated database schema output; the board spend, decision and settings tables (slice F1) and the merge queue tables regenerate it. Exact generated-output ceiling. Handwritten source limits unchanged.",
       "authorizedBy": "Gustavo, standing rule that generated outputs may raise their ceiling (2026-10-10)",
-      "authorizedAt": "2026-10-26"
+      "authorizedAt": "2026-10-29"
     }
   }
 }
