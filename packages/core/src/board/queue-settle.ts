@@ -1,7 +1,5 @@
 import { and, asc, desc, eq, inArray, isNull, ne } from "drizzle-orm"
-import { Effect, Option, Schema } from "effect"
-import { ChildProcess } from "effect/unstable/process"
-import { which } from "../util/which"
+import { Effect, Option } from "effect"
 import type { BoardCi } from "./ci"
 import {
   BoardAttemptTable,
@@ -13,13 +11,10 @@ import {
 import { BoardSnapshot } from "./snapshot"
 import { changed, log } from "./shared"
 import type { IssueRow, ProjectRow } from "./shared"
-import { AUTHOR, decodeRollup, insertNote, judge, place, release } from "./queue-shared"
+import { AUTHOR, affected, decodeRollup, insertNote, judge, place, release } from "./queue-shared"
 import type { Context } from "./queue-shared"
 import type { makeRecord } from "./queue-record"
 import type { makeRed } from "./queue-red"
-
-const Dry = Schema.Struct({ packages: Schema.Array(Schema.String) })
-const decodeDry = Schema.decodeUnknownOption(Schema.fromJsonString(Dry))
 
 /** Settling and closing a bundle: merge when green, give the members back when red. The red path and the record helpers come in from their modules. */
 export function makeSettle(
@@ -305,8 +300,8 @@ export function makeSettle(
     if (theirs.some((file) => ours.includes(file))) return undefined
     const graph = (yield* git(directory, ["cat-file", "-e", `${tip}:turbo.json`])).code === 0
     if (graph) {
-      const left = yield* affected(directory, bundle.base_sha, tip)
-      const right = yield* affected(directory, bundle.base_sha, bundle.head_sha)
+      const left = yield* affected(deps, directory, bundle.base_sha, tip)
+      const right = yield* affected(deps, directory, bundle.base_sha, bundle.head_sha)
       if (!left || !right || left.some((name) => right.includes(name))) return undefined
     }
     const commit = yield* git(directory, [
@@ -322,25 +317,6 @@ export function makeSettle(
     ])
     if (commit.code !== 0 || !commit.out) return undefined
     return { target: commit.out, on: tip }
-  })
-
-  /** Section 7.1's affected set from `turbo`: the packages a commit range touches and every package that depends on them. */
-  const affected = Effect.fnUntraced(function* (directory: string, from: string, to: string) {
-    const bun = which("bun", deps.env ?? process.env)
-    if (!bun) return undefined
-    const result = yield* deps.proc
-      .run(
-        ChildProcess.make(bun, ["x", "turbo", "run", "typecheck", `--filter=...[${from}...${to}]`, "--dry=json"], {
-          cwd: directory,
-          env: { ...deps.env, TURBO_TELEMETRY_DISABLED: "1" },
-          extendEnv: true,
-          stdin: "ignore",
-        }),
-        { maxOutputBytes: 8 * 1024 * 1024, maxErrorBytes: 16 * 1024, timeout: "120 seconds" },
-      )
-      .pipe(Effect.orElseSucceed(() => undefined))
-    if (!result || result.exitCode !== 0) return undefined
-    return Option.getOrUndefined(decodeDry(result.stdout.toString("utf8")))?.packages
   })
 
   /** Closes the bundle PR and branch; its members stay queued and the next tick cuts again. */

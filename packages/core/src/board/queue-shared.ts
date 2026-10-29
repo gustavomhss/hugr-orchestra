@@ -1,7 +1,9 @@
 import { and, eq, inArray } from "drizzle-orm"
-import { Clock, Effect, Schema } from "effect"
+import { Clock, Effect, Option, Schema } from "effect"
+import { ChildProcess } from "effect/unstable/process"
 import { Board } from "@orchestra/schema/board"
 import type { AppProcess } from "../process"
+import { which } from "../util/which"
 import type { BoardCi } from "./ci"
 import type { BoardGithub } from "./github"
 import type { BoardRecord } from "./record"
@@ -66,6 +68,28 @@ export function gating(rollup: typeof Rollup.Type["statusCheckRollup"], contract
     ? checks.filter((check) => contract.full.checks.includes(check.name) || contract.full.checks.includes(check.workflow))
     : checks
 }
+
+const Dry = Schema.Struct({ packages: Schema.Array(Schema.String) })
+const decodeDry = Schema.decodeUnknownOption(Schema.fromJsonString(Dry))
+
+/** Section 7.1's affected set from `turbo`: the packages a commit range touches and every package that depends on them. */
+export const affected = Effect.fnUntraced(function* (deps: Deps, directory: string, from: string, to: string) {
+  const bun = which("bun", deps.env ?? process.env)
+  if (!bun) return undefined
+  const result = yield* deps.proc
+    .run(
+      ChildProcess.make(bun, ["x", "turbo", "run", "typecheck", `--filter=...[${from}...${to}]`, "--dry=json"], {
+        cwd: directory,
+        env: { ...deps.env, TURBO_TELEMETRY_DISABLED: "1" },
+        extendEnv: true,
+        stdin: "ignore",
+      }),
+      { maxOutputBytes: 8 * 1024 * 1024, maxErrorBytes: 16 * 1024, timeout: "120 seconds" },
+    )
+    .pipe(Effect.orElseSucceed(() => undefined))
+  if (!result || result.exitCode !== 0) return undefined
+  return Option.getOrUndefined(decodeDry(result.stdout.toString("utf8")))?.packages
+})
 
 export const openBundle = Effect.fnUntraced(function* (tx: Tx, project: Board.ProjectID) {
   return yield* tx
