@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { readFileSync, writeFileSync } from "fs"
+import { readFileSync, rmSync, writeFileSync } from "fs"
 import fs from "fs/promises"
 import path from "path"
 import { and, eq } from "drizzle-orm"
@@ -252,12 +252,15 @@ describe("BoardQueue", () => {
         await fs.writeFile(path.join(repo.directory, "base.txt"), "base\n")
         await commit(repo.directory, "base moves")
         await git(repo.directory, "push", "--quiet", "origin", "main")
+        // A clone knows its remote's default branch; the contract reads base from it, not from the checkout.
+        await git(repo.directory, "remote", "set-head", "origin", "main")
         await git(repo.directory, "checkout", "--quiet", "-b", "stale")
         await fs.writeFile(path.join(repo.directory, "stale.txt"), "stale\n")
         await commit(repo.directory, "stale")
       })
       yield* board.issue({ project: "QTH", number: 1, area: ["@acme/one"], reason: "Plan." })
       writeFileSync(AFFECTED, JSON.stringify({ packages: ["@acme/one"] }))
+      rmSync(TURBO_HEAD, { force: true })
       yield* board.queue({ project: "QTH", number: 1, reason: "Verified." })
 
       // Turbo ran on a merge commit holding base's new file and the card's file, and none of the stale branch.
