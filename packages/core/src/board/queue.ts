@@ -22,6 +22,7 @@ import { changed, gitRunner, loadIssue, loadProject, log, RefusedError, worktree
 import type { IssueRow, ProjectRow } from "./shared"
 import { AUTHOR, isMember, openBundle, place, release } from "./queue-shared"
 import type { Deps } from "./queue-shared"
+import { drift } from "./queue-drift"
 import { makeRecord } from "./queue-record"
 import { makeRed } from "./queue-red"
 import { makeSettle } from "./queue-settle"
@@ -158,6 +159,7 @@ export function make(deps: Deps) {
     )
     if (done._tag === "Failure") return yield* done.failure
     yield* deps.publish(done.success)
+    yield* drift(deps, project, issue, directory, contract.base, pr.sha)
     yield* describe(project, issue.id, contract.base)
     return { head: pr.sha, tree: pr.tree, state }
   })

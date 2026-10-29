@@ -217,6 +217,10 @@ export const Issue = Schema.Struct({
   steps: Schema.Array(Step),
   /** Refs of the issues this one waits on, possibly in other projects. */
   dependsOn: Schema.Array(Schema.String),
+  /** Workspace packages the plan expects the card to affect; null when the plan did not say. */
+  area: Schema.NullOr(Schema.Array(Schema.String)).pipe(optional),
+  /** The plan's landing order among cards that share an area; null when the plan did not say. */
+  order: Schema.NullOr(Schema.Int).pipe(optional),
   /** Present while the card is in the queue stage. */
   queue: Schema.NullOr(QueueState).pipe(optional),
 }).annotate({ identifier: "Board.Issue" })
@@ -611,6 +615,10 @@ export const IssueInput = Schema.Struct({
   crash_reason: Schema.NullOr(Schema.String).pipe(optional),
   /** Id of the guardrail rule that blocked the card; null clears it. */
   guardrail_rule: Schema.NullOr(Schema.String).pipe(optional),
+  /** Workspace packages the card is expected to affect, as turbo names them; null clears. */
+  area: Schema.NullOr(Schema.Array(Schema.String)).pipe(optional),
+  /** The plan's landing order among cards that share an area; null clears. */
+  order: Schema.NullOr(Schema.Int).pipe(optional),
   /** The PR record's Maestro fields, merged into the stored record field by field. */
   record: PrRecord.pipe(optional),
   reason: Reason,

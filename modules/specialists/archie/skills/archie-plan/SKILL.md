@@ -13,7 +13,7 @@ Read the bounded assignment, supplied baseline/scope and evidence before authori
 | Need | Read | Output |
 | --- | --- | --- |
 | Define value, behavior, architecture or revise a spec/plan | [Product, design and specification](product-design-spec/SKILL.md) | Complete versioned proposal with field sources and acceptance |
-| Cover a substantial demand or split responsibilities | [Decomposition and coverage](decomposition/SKILL.md) | Acceptance map, cohesive read/write slices, dependencies/conflicts and `partitionPlan` when useful |
+| Cover a substantial demand or split responsibilities | [Decomposition and coverage](decomposition/SKILL.md) | Acceptance map, cohesive read/write slices, dependencies/conflicts, per-card `area` and `order`, and `partitionPlan` when useful |
 | A producer/consumer seam would force coordinated changes | [Load-bearing contracts](load-bearing-contracts/SKILL.md) | Minimal exact interface sketch, behavior/errors, source identity and seam evidence |
 | Prepare bounded executor context or reduce context pressure | [Brief authoring](briefs/SKILL.md) | Proposed briefs with anchors, criteria deltas, host-supplied checks and compact returns |
 | Coordinated work needs progressive validated checkpoints | [archie-work-package](../archie-work-package/SKILL.md) | One complete native linear WP proposal; host owns reveal and execution |
