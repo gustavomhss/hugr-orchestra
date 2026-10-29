@@ -67,6 +67,13 @@ snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bund
   against a bare origin.
 - A bundle branch is `bundle-<KEY>-<n>`, pushed with force; the base branch only with `--force-with-lease`.
 - `turbo` runs through `bun x turbo --dry=json` with a 120 s timeout; any failure means retest, never land.
+  `affected` runs it in a detached scratch worktree of `to` merged onto `from` (`merge-tree` plus `commit-tree`, so
+  the graph is the tree that lands), never in the project directory: turbo reads the workspace
+  graph from its working tree, and a project checkout on an old branch once fed a lane a package base no longer had
+  (`No package found with name ...`), so the lane gate failed on a host bug.
+- `cut` reads each member's labels with its head (`QueueRecord.head`) and opens the bundle PR with every
+  `guardrail-approved` and `guardrail-approved:<rule>` label its members carry, and no other label. The guard reads the
+  bundle PR, so an approval Maestro gave a card must travel with its change.
 - The tick runs every 60 s in the board poll; it settles the open bundle before it cuts a new one. With lanes it
   settles every open bundle, then cuts lanes in the same tick.
 - workflow_dispatch runs never show in a PR's status rollup: a lane bundle's checks come from `gh run list` and

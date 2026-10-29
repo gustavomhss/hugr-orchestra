@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { writeFileSync } from "fs"
+import { readFileSync, rmSync, writeFileSync } from "fs"
 import fs from "fs/promises"
 import path from "path"
 import { and, eq } from "drizzle-orm"
@@ -11,7 +11,7 @@ import { BoardBundleTable, BoardCheckTable, BoardProjectTable } from "@orchestra
 import { Database } from "@orchestra/core/database/database"
 import { CheckID } from "@orchestra/schema/board"
 import { git } from "./fixture/git"
-import { AFFECTED, RECORD, bundleStatuses, card, commit, it, itTurbo, notes, origin, queued, repository, row, stage } from "./fixture/board-queue"
+import { AFFECTED, RECORD, TURBO_HEAD, bundleStatuses, card, commit, it, itTurbo, notes, origin, queued, repository, row, stage } from "./fixture/board-queue"
 
 describe("BoardQueue", () => {
   it.live("three verified cards bundle together, run the full gate once and ship when it is green", () =>
@@ -238,6 +238,57 @@ describe("BoardQueue", () => {
       expect(drifted[0]).not.toContain("@acme/one,")
       expect(yield* notes(repo, 2)).toEqual([])
       expect(yield* notes(repo, 3)).toEqual([])
+    }),
+  )
+
+  // The stand-in `bun` is a shell script.
+  itTurbo.live.skipIf(process.platform === "win32")("turbo reads the workspace graph from the tree that lands, not the project checkout", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QTH", 3)
+      yield* card(repo, "QTH", 1, "a.txt")
+      // Base moves on after the card branched, and the project checkout sits on an old branch with a package base never had.
+      yield* Effect.promise(async () => {
+        await fs.writeFile(path.join(repo.directory, "base.txt"), "base\n")
+        await commit(repo.directory, "base moves")
+        await git(repo.directory, "push", "--quiet", "origin", "main")
+        // A clone knows its remote's default branch; the contract reads base from it, not from the checkout.
+        await git(repo.directory, "remote", "set-head", "origin", "main")
+        await git(repo.directory, "checkout", "--quiet", "-b", "stale")
+        await fs.writeFile(path.join(repo.directory, "stale.txt"), "stale\n")
+        await commit(repo.directory, "stale")
+      })
+      yield* board.issue({ project: "QTH", number: 1, area: ["@acme/one"], reason: "Plan." })
+      writeFileSync(AFFECTED, JSON.stringify({ packages: ["@acme/one"] }))
+      rmSync(TURBO_HEAD, { force: true })
+      yield* board.queue({ project: "QTH", number: 1, reason: "Verified." })
+
+      // Turbo ran on a merge commit holding base's new file and the card's file, and none of the stale branch.
+      const ran = readFileSync(TURBO_HEAD, "utf8").trim().split("\n")
+      expect(ran.slice(0, 2).every((sha) => /^[0-9a-f]{40}$/.test(sha))).toBe(true)
+      expect(ran).toContain("base.txt")
+      expect(ran).toContain("a.txt")
+      expect(ran).not.toContain("stale.txt")
+      const worktrees = yield* Effect.promise(() => Bun.$`git -C ${repo.directory} worktree list --porcelain`.text())
+      expect(worktrees).not.toContain("orchestra-affected-")
+    }),
+  )
+
+  it.live("a bundle PR carries its members' guard approval labels and no other label", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QGL", 2)
+      yield* card(repo, "QGL", 1, "a.txt")
+      yield* card(repo, "QGL", 2, "b.txt")
+      repo.remote.labels.set(1, ["guardrail-approved:migration-edited", "bug"])
+      repo.remote.labels.set(2, ["guardrail-approved", "guardrail-approved:migration-edited", "guardrail-approvedx"])
+      yield* board.queue({ project: "QGL", number: 1, reason: "Verified." })
+      yield* board.queue({ project: "QGL", number: 2, reason: "Verified." })
+      yield* board.queueTick()
+
+      const created = repo.remote.calls.find((args) => args[0] === "pr" && args[1] === "create")
+      const labels = (created ?? []).flatMap((arg, index, all) => (all[index - 1] === "--label" ? [arg] : []))
+      expect(labels.toSorted()).toEqual(["guardrail-approved", "guardrail-approved:migration-edited"])
     }),
   )
 
