@@ -732,7 +732,7 @@ export function make(deps: Deps) {
       let hi = commits.length - 1
       while (lo < hi) {
         const mid = Math.floor((lo + hi) / 2)
-        yield* git(scratch, ["checkout", "--quiet", "--detach", commits[mid] ?? ""])
+        if ((yield* git(scratch, ["checkout", "--quiet", "--detach", commits[mid] ?? ""])).code !== 0) return undefined
         const passes = yield* runGroups(scratch, template, bundle.branch, groups)
         if (passes) lo = mid + 1
         if (!passes) hi = mid
