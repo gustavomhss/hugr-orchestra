@@ -154,7 +154,7 @@ const ISSUE_COLUMNS = ["title", "body", "type", "epic_id", "estimate", "seat", "
 const EPIC_COLUMNS = ["title", "goal", "position", "status"]
 
 /**
- * `gh` replaces the GitHub runner (tests inject recorded responses); `scanner` replaces the toolkit's gitleaks; `poll`
+ * `gh` replaces the GitHub runner (tests inject recorded responses); `scanner` replaces the toolkit's gitleaks with a command (executable and leading arguments); `poll`
  * starts the 60 second sync of every mirrored project and the 10 minute snapshot of every Building card. `record` binds
  * Atlas's PR record renderer for the merge queue.
  */
@@ -162,7 +162,7 @@ export const layerWith = (options: {
   readonly env?: NodeJS.ProcessEnv
   readonly gh?: BoardGithub.Gh
   readonly record?: BoardRecord.Port
-  readonly scanner?: string
+  readonly scanner?: ReadonlyArray<string>
   readonly poll?: boolean
 }) =>
   Layer.effect(
@@ -577,7 +577,7 @@ export const layerWith = (options: {
         scanner: options.scanner
           ? Effect.succeed(options.scanner)
           : BackendToolkit.ensure("gitleaks").pipe(
-              Effect.map((ready) => ready.executable),
+              Effect.map((ready) => [ready.executable]),
               Effect.orElseSucceed(() => undefined),
               Effect.provideService(AppProcess.Service, proc),
             ),

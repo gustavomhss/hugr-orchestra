@@ -23,8 +23,10 @@ import { git } from "./fixture/git"
 import { testEffect } from "./lib/effect"
 
 // The fake scanner gets gitleaks' arguments with the worktree last, and reports a secret while a `leak` file exists.
-const scanner = path.join(mkdtempSync(path.join(tmpdir(), "orchestra-board-snapshot-scanner-")), "gitleaks")
-writeFileSync(scanner, '#!/bin/sh\nfor last; do :; done\n[ -f "$last/leak" ] && exit 1\nexit 0\n', { mode: 0o755 })
+// It runs under bun so it spawns the same way on every platform.
+const fake = path.join(mkdtempSync(path.join(tmpdir(), "orchestra-board-snapshot-scanner-")), "gitleaks.ts")
+writeFileSync(fake, 'import { existsSync } from "fs"\nimport path from "path"\nprocess.exit(existsSync(path.join(process.argv.at(-1)!, "leak")) ? 1 : 0)\n')
+const scanner = [process.execPath, fake]
 
 const it = testEffect(
   AppNodeBuilder.build(LayerNode.group([Board.node, Database.node, EventV2.node, Credential.node]), [
@@ -39,8 +41,7 @@ const it = testEffect(
   ]),
 )
 
-// The fake scanner is a shell script, which Windows cannot spawn as a program.
-describe.skipIf(process.platform === "win32")("BoardSnapshot", () => {
+describe("BoardSnapshot", () => {
   it.live("pushes the worktree to the attempt's wip ref without touching its index or HEAD", () =>
     Effect.gen(function* () {
       const board = yield* Board.Service

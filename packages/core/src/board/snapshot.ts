@@ -21,8 +21,8 @@ import { BoardThread } from "./thread"
 export interface Deps {
   readonly quiet: <A>(work: (tx: Tx) => Effect.Effect<A, unknown>) => Effect.Effect<A>
   readonly proc: AppProcess.Interface
-  /** The gitleaks executable, or undefined when none can be had; then no snapshot is pushed. */
-  readonly scanner: Effect.Effect<string | undefined>
+  /** The gitleaks command (executable and leading arguments), or undefined when none can be had; then no snapshot is pushed. */
+  readonly scanner: Effect.Effect<ReadonlyArray<string> | undefined>
   /** The project's snapshot remote from its CI contract; a failure blocks the push rather than guess a remote. */
   readonly remote: (directory: string, project: ProjectRow) => Effect.Effect<string, { readonly message: string }>
   readonly env?: NodeJS.ProcessEnv
@@ -75,7 +75,7 @@ export function make(deps: Deps) {
     if (!scanner) return "no secret scanner (gitleaks) is available"
     const result = yield* deps.proc
       .run(
-        ChildProcess.make(scanner, ["git", "--no-banner", "--redact", "--exit-code", "1", "--log-opts", range, cwd], {
+        ChildProcess.make(scanner[0], [...scanner.slice(1), "git", "--no-banner", "--redact", "--exit-code", "1", "--log-opts", range, cwd], {
           cwd,
           env: deps.env,
           extendEnv: true,
