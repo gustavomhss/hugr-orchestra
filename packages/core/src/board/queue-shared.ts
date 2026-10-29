@@ -75,7 +75,7 @@ const Dry = Schema.Struct({ packages: Schema.Array(Schema.String) })
 const decodeDry = Schema.decodeUnknownOption(Schema.fromJsonString(Dry))
 
 /** Section 7.1's affected set from `turbo`: the packages a commit range touches and every package that depends on them. */
-export const affected = Effect.fnUntraced(function* (deps: Deps, directory: string, from: string, to: string) {
+export const affected = Effect.fnUntraced(function* (deps: Pick<Deps, "affected" | "proc" | "env">, directory: string, from: string, to: string) {
   if (deps.affected) return yield* deps.affected(directory, from, to)
   const bun = which("bun", deps.env ?? process.env)
   if (!bun) return undefined

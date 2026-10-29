@@ -79,7 +79,8 @@ git worktree list --porcelain
 
 Resolve parameters in actual assigned worktree; inspect untracked paths separately.
 When dispatching a board card, pass `card: "KEY-n"` on `task` (and on `maestro_request_review`); the host records the thread.
-For a board card, run its scoped checks with `ci_run` (package and files from the Done when): it follows the
+For a board card, run its scoped checks with `ci_run` (package and files from the Done when; a card that changes
+no workspace package omits them and records an explicit `none` check): it follows the
 project's `.orchestra/ci.json`, keys results by tree and reruns nothing already settled on that tree. Otherwise
 run tests on Actions with `bun run test:ci <package> <resolved-suite>` from the repository root and
 `bun typecheck` from the package directory. Use `maestro-repo-maintenance` when an authorized Git/PR/release procedure is needed.

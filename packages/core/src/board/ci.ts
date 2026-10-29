@@ -10,6 +10,9 @@ import { Board } from "@orchestra/schema/board"
 import type { AppProcess } from "../process"
 import { which } from "../util/which"
 import type { BoardGithub } from "./github"
+import { global } from "./queue-lanes"
+import { affected, AUTHOR } from "./queue-shared"
+import type { BoardQueue } from "./queue"
 import { BoardCheckTable } from "./sql"
 import { loadIssue, loadProject, NotFoundError, RefusedError, worktree } from "./shared"
 import type { IssueRow, ProjectRow, Tx } from "./shared"
@@ -22,7 +25,12 @@ export interface Deps {
   readonly proc: AppProcess.Interface
   readonly gh: BoardGithub.Gh
   readonly env?: NodeJS.ProcessEnv
+  /** Replaces `turbo`'s affected set, as in the queue; tests bind it so they need no installed workspace. */
+  readonly affected?: BoardQueue.Deps["affected"]
 }
+
+/** The scoped check a card that touches no workspace package records instead of running the tests. */
+export const UNTOUCHED = "none: no workspace package affected"
 
 export type Contract = {
   readonly base: string
@@ -258,6 +266,19 @@ export function make(deps: Deps) {
     return row
   })
 
+  // The workspace packages a card's tree changes against base, by turbo's affected set: the root `//` alone is no
+  // package, and a file the lanes call global counts as one. Undefined when turbo cannot tell.
+  const packages = Effect.fnUntraced(function* (cwd: string, tree: string, terms: Contract) {
+    const base = yield* git(cwd, ["merge-base", "HEAD", `origin/${terms.base}`])
+    const from = base.code === 0 ? base.out : (yield* git(cwd, ["merge-base", "HEAD", terms.base])).out
+    // turbo compares commits, so the tree, which may hold uncommitted edits, gets a commit of its own that no ref keeps.
+    const to = (yield* git(cwd, [...AUTHOR, "commit-tree", tree, "-p", "HEAD", "-m", "ci_run tree"])).out
+    if (!from || !to) return undefined
+    const files = (yield* git(cwd, ["diff", "--name-only", from, to])).out.split("\n").filter(Boolean)
+    if (terms.lanes && global(files, terms.lanes.global)) return ["the whole repository"]
+    return (yield* affected(deps, cwd, from, to))?.filter((name) => name !== "//")
+  })
+
   /** Dispatches each workflow once per pushed tree, and settles pending dispatches from `gh run list`. */
   const workflows = Effect.fnUntraced(function* (input: {
     readonly project: ProjectRow
@@ -362,7 +383,36 @@ export function make(deps: Deps) {
               ? "No .orchestra/ci.json and no required checks: the scoped gate is land's verification only."
               : "The contract has no scoped.tests command.",
         )
-      if (terms.scoped.tests !== null) {
+      // A contract that tests per package and a card that changes none, such as a docs-only card: nothing is there to
+      // test, so the ledger records an explicit `none` check instead of refusing or running the whole suite.
+      const bare = terms.scoped.tests?.includes("{package}") === true && !input.package
+      if (bare) {
+        const touched = yield* packages(cwd, tree, terms)
+        if (touched === undefined)
+          return yield* new RefusedError({ message: `The contract's scoped.tests needs \`package\` for ${ref}, and turbo could not tell which packages it changes.` })
+        if (touched.length > 0)
+          return yield* new RefusedError({ message: `The contract's scoped.tests needs \`package\` for ${ref}: it changes ${touched.join(", ")}.` })
+        notes.push(`${ref} changes no workspace package, so there is nothing to test: the scoped tests record \`${UNTOUCHED}\`.`)
+        const done = (yield* rows(found.issue.id)).some((row) => row.kind === "scoped" && row.tree_sha === tree && row.command === UNTOUCHED)
+        if (dispatch && !done) {
+          const now = yield* Clock.currentTimeMillis
+          yield* insert({
+            id: Board.CheckID.create(),
+            issue_id: found.issue.id,
+            attempt: found.issue.attempts,
+            kind: "scoped",
+            command: UNTOUCHED,
+            tree_sha: tree,
+            commit_sha: null,
+            outcome: "pass",
+            url: null,
+            failing: [],
+            started_at: now,
+            ended_at: now,
+          })
+        }
+      }
+      if (terms.scoped.tests !== null && !bare) {
         const argv = yield* command(terms.scoped.tests, input, ref)
         const done = (yield* rows(found.issue.id)).some(
           (row) => row.kind === "scoped" && row.tree_sha === tree && row.command === argv.join(" ") && row.outcome !== "error",

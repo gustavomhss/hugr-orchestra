@@ -574,6 +574,7 @@ export const layerWith = (options: {
         proc,
         gh: options.gh ?? BoardGithub.runner(proc, options.env),
         env: options.env,
+        affected: options.affected,
       })
       const snapshots = BoardSnapshot.make({
         quiet: (work) => quiet(work).pipe(Effect.orDie),
