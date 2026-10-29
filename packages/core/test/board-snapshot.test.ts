@@ -59,6 +59,7 @@ describe("BoardSnapshot", () => {
       expect(yield* run(card.worktree, "rev-parse", "HEAD")).toBe(card.head)
       expect(yield* run(card.worktree, "status", "--porcelain")).toBe("?? work.txt")
       expect(yield* board.pushState("SNP", 1)).toBe("pushed")
+      expect((yield* board.issuePage("SNP", 1)).pushState).toBe("pushed")
       expect(yield* board.snapshotPush("SNP", 1)).toEqual({ status: "unchanged", ref: first.ref, sha: first.sha })
 
       // The next snapshot builds on the last one, so the ref only moves forward.
