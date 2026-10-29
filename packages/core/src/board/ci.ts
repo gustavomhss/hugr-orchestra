@@ -199,7 +199,9 @@ export function make(deps: Deps) {
       (temporary) =>
         Effect.gen(function* () {
           const env = { GIT_INDEX_FILE: path.join(temporary, "index") }
-          yield* Effect.promise(() => fs.copyFile(index.out, env.GIT_INDEX_FILE).catch(() => undefined))
+          // The copy keeps the index's mtime: git trusts an entry's stat only when it is older than the index file, so a
+          // fresh mtime would hide an edit of the same size made in the same second as the last index write.
+          yield* Effect.promise(() => fs.cp(index.out, env.GIT_INDEX_FILE, { preserveTimestamps: true }).catch(() => undefined))
           const added = yield* git(directory, ["add", "-A"], env)
           const tree = yield* git(directory, ["write-tree"], env)
           if (added.code !== 0 || tree.code !== 0)
