@@ -5,7 +5,7 @@ description: Use when changing Atlas code in `modules/atlas` — the committed `
 
 # Atlas maintenance
 
-Design: `modules/atlas/docs/design/repo-layout.md` on branch `origin/atlas-repo-layout` (not yet in `dev`; read it with `git show origin/atlas-repo-layout:modules/atlas/docs/design/repo-layout.md`, and drop this pointer once it lands at `modules/atlas/docs/design/repo-layout.md`): the tree is §2, merging §4, trust and replay §5, what never goes in git §6. Reference: `modules/atlas/docs/reference/atlas-memory.md`, "Where the logs live". Owners, invariants, rulings and declared limits: skill `atlas-ownership`. Commands: skill `atlas-usage`.
+Design: `modules/atlas/docs/design/repo-layout.md`: the tree is §2, merging §4, trust and replay §5, what never goes in git §6. Reference: `modules/atlas/docs/reference/atlas-memory.md`, "Where the logs live". Owners, invariants, rulings and declared limits: skill `atlas-ownership`. Commands: skill `atlas-usage`.
 
 ## The tree
 
