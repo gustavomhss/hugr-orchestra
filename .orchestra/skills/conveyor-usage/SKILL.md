@@ -40,6 +40,19 @@ This repository lands through its own queue. Its host is the owner's desktop app
 queue before a release does, and Maestro there runs on `claude-code`. Nothing lands while that app is closed. A hand
 merge (`maestro-maintenance`, Landing) is then the fallback, not the rule.
 
+Start the host from `apps/desktop` of a clean worktree on `dev`. The `orchestra-dev-isolated` skill covers omni
+artifacts, but leave out its `ORCHESTRA_TEST_ONBOARDING`: the host must run on the real database, so the board survives
+restarts and shows in the app.
+
+1. `OMNI_ARTIFACTS=<dir> bun ./scripts/predev.ts` builds the server binary. Rerun it after every `dev` update you
+   want the host to carry.
+2. `./node_modules/.bin/electron-vite build`
+3. `./node_modules/.bin/electron-vite preview --skipBuild -- --remote-debugging-port=9333`, in the background.
+
+Stop the host by quitting that app, or by stopping its background task. Never stop it with `pkill`, which also hits
+other sessions' apps. A queue that stops mid-bundle resumes from its rows on the next start. The release app must not
+open the same database while the host's newer schema is on it.
+
 ## When a bundle goes red
 
 | Cause the host finds | What happens | Maestro's part |
