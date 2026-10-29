@@ -6,7 +6,7 @@ import path from "path"
 import { and, asc, desc, eq, inArray, isNull, ne } from "drizzle-orm"
 import { Clock, Effect } from "effect"
 import { Board } from "@orchestra/schema/board"
-import type { BoardCi } from "./ci"
+import { BoardCi } from "./ci"
 import { BoardLedger } from "./ledger"
 import {
   BoardAttemptTable,
