@@ -222,7 +222,6 @@ describe("BoardQueue", () => {
       yield* card(repo, "QDR", 3, "c.txt")
       yield* board.issue({ project: "QDR", number: 1, area: ["@acme/one"], reason: "Plan." })
       yield* board.issue({ project: "QDR", number: 2, area: ["@acme/one", "@acme/two"], reason: "Plan." })
-      yield* board.issue({ project: "QDR", number: 3, reason: "Plan." })
       expect((yield* row(repo, 1)).issue.area).toEqual(["@acme/one"])
 
       // The real set is one package plus its dependent: the dependent is outside card 1's area only.
