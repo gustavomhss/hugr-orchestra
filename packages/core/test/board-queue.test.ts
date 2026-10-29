@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { writeFileSync } from "fs"
 import fs from "fs/promises"
 import path from "path"
 import { and, eq } from "drizzle-orm"
@@ -10,7 +11,7 @@ import { BoardBundleTable, BoardCheckTable, BoardProjectTable } from "@orchestra
 import { Database } from "@orchestra/core/database/database"
 import { CheckID } from "@orchestra/schema/board"
 import { git } from "./fixture/git"
-import { RECORD, bundleStatuses, card, commit, it, origin, queued, repository, row, stage } from "./fixture/board-queue"
+import { AFFECTED, RECORD, bundleStatuses, card, commit, it, itTurbo, notes, origin, queued, repository, row, stage } from "./fixture/board-queue"
 
 describe("BoardQueue", () => {
   it.live("three verified cards bundle together, run the full gate once and ship when it is green", () =>
@@ -208,6 +209,35 @@ describe("BoardQueue", () => {
       expect(yield* board.bundle({ project: "QIP", bundle: 2, verdict: "retry", reason: "Runner back." })).toEqual({ status: "infra" })
       yield* board.queueTick()
       expect(repo.remote.pulls.size).toBe(pulls + 1)
+    }),
+  )
+
+  // The stand-in `bun` is a shell script.
+  itTurbo.live.skipIf(process.platform === "win32")("a card that left its planned area raises one drift note and still queues", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QDR", 3)
+      yield* card(repo, "QDR", 1, "a.txt")
+      yield* card(repo, "QDR", 2, "b.txt")
+      yield* card(repo, "QDR", 3, "c.txt")
+      yield* board.issue({ project: "QDR", number: 1, area: ["@acme/one"], reason: "Plan." })
+      yield* board.issue({ project: "QDR", number: 2, area: ["@acme/one", "@acme/two"], reason: "Plan." })
+      expect((yield* row(repo, 1)).issue.area).toEqual(["@acme/one"])
+
+      // The real set is one package plus its dependent: the dependent is outside card 1's area only.
+      writeFileSync(AFFECTED, JSON.stringify({ packages: ["@acme/one", "@acme/two"] }))
+      yield* board.queue({ project: "QDR", number: 1, reason: "Verified." })
+      yield* board.queue({ project: "QDR", number: 2, reason: "Verified." })
+      yield* board.queue({ project: "QDR", number: 3, reason: "Verified." })
+
+      expect([yield* stage(repo, 1), yield* stage(repo, 2), yield* stage(repo, 3)]).toEqual(["queue", "queue", "queue"])
+      const drifted = (yield* notes(repo, 1)).filter((body) => body.includes("left its planned area"))
+      expect(drifted).toHaveLength(1)
+      expect(drifted[0]).toContain("@acme/two")
+      expect(drifted[0]).toContain("archie")
+      expect(drifted[0]).not.toContain("@acme/one,")
+      expect(yield* notes(repo, 2)).toEqual([])
+      expect(yield* notes(repo, 3)).toEqual([])
     }),
   )
 

@@ -1,7 +1,7 @@
 import fs from "fs/promises"
 import os from "os"
 import path from "path"
-import { and, desc, eq, inArray, ne, sql } from "drizzle-orm"
+import { and, desc, eq, inArray, isNull, ne, or, sql } from "drizzle-orm"
 import { Clock, Effect, Option } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { Board } from "@orchestra/schema/board"
@@ -17,7 +17,7 @@ import {
 } from "./sql"
 import { changed, endOf, log } from "./shared"
 import type { IssueRow, ProjectRow } from "./shared"
-import { AUTHOR, decodeRuns, FAILED, gating, INFRA, judge } from "./queue-shared"
+import { AUTHOR, decodeRuns, dispatched, FAILED, gating, INFRA, judge, nextBundle } from "./queue-shared"
 import type { Context, Rollup } from "./queue-shared"
 import type { makeRecord } from "./queue-record"
 
@@ -214,8 +214,9 @@ export function makeRed(ctx: Context & Pick<ReturnType<typeof makeRecord>, "note
   })
 
   /**
-   * Section 6.8: the first-parent commit between the last merged bundle and the red base where F starts failing. Undefined
-   * when there is no merged bundle to start from or a checkout fails.
+   * Section 6.8: the first-parent commit between the last green whole-suite run and the red base where F starts failing:
+   * a merged bundle that ran the whole suite, or a green base probe or safety run. A lane bundle ran only its packages,
+   * so it is never the good point. Undefined when there is no such run to start from or a checkout fails.
    */
   const bisect = Effect.fnUntraced(function* (
     row: ProjectRow,
@@ -224,17 +225,23 @@ export function makeRed(ctx: Context & Pick<ReturnType<typeof makeRecord>, "note
     bundle: typeof BoardBundleTable.$inferSelect,
     groups: ReadonlyArray<{ readonly package: string; readonly files: ReadonlyArray<string> }>,
   ) {
-    const good = yield* deps.quiet((tx) =>
+    const found = yield* deps.quiet((tx) =>
       tx
-        .select({ head_sha: BoardBundleTable.head_sha })
+        .select({ status: BoardBundleTable.status, base_sha: BoardBundleTable.base_sha, head_sha: BoardBundleTable.head_sha })
         .from(BoardBundleTable)
-        .where(and(eq(BoardBundleTable.project_id, row.id), eq(BoardBundleTable.status, "merged")))
+        .where(
+          and(
+            eq(BoardBundleTable.project_id, row.id),
+            or(and(eq(BoardBundleTable.status, "merged"), isNull(BoardBundleTable.packages)), eq(BoardBundleTable.status, "probe-green")),
+          ),
+        )
         .orderBy(desc(BoardBundleTable.n))
         .get(),
     )
-    if (!good) return undefined
-    if ((yield* git(directory, ["merge-base", "--is-ancestor", good.head_sha, bundle.base_sha])).code !== 0) return undefined
-    const commits = (yield* git(directory, ["rev-list", "--first-parent", "--reverse", `${good.head_sha}..${bundle.base_sha}`])).out.split("\n").filter(Boolean)
+    if (!found) return undefined
+    const good = found.status === "merged" ? found.head_sha : found.base_sha
+    if ((yield* git(directory, ["merge-base", "--is-ancestor", good, bundle.base_sha])).code !== 0) return undefined
+    const commits = (yield* git(directory, ["rev-list", "--first-parent", "--reverse", `${good}..${bundle.base_sha}`])).out.split("\n").filter(Boolean)
     if (commits.length === 0) return undefined
     const scratch = yield* Effect.promise(() => fs.mkdtemp(path.join(os.tmpdir(), `orchestra-bisect-${bundle.n}-`)))
     const added = yield* git(directory, ["worktree", "add", "--quiet", "--detach", scratch, bundle.base_sha])
@@ -338,14 +345,27 @@ export function makeRed(ctx: Context & Pick<ReturnType<typeof makeRecord>, "note
     return created.id
   })
 
-  /** Runs the full gate on base itself: an empty commit on the red bundle's base, opened as a bundle with no members. */
-  const probe = Effect.fnUntraced(function* (row: ProjectRow, repo: string, directory: string, contract: BoardCi.Contract, red: typeof BoardBundleTable.$inferSelect) {
-    const head = (yield* git(directory, [...AUTHOR, "commit-tree", `${red.base_sha}^{tree}`, "-p", red.base_sha, "-m", "chore(queue): base probe"])).out
+  /**
+   * Runs the whole suite on base itself: an empty commit on `sha`, opened as a bundle with no members. A phase 1 probe
+   * (packages null) gates on the full label; a safety run (section 7.3, packages []) dispatches the lane workflows with
+   * no package filter, which run every package, and overlaps no lane while it runs.
+   */
+  const probe = Effect.fnUntraced(function* (
+    row: ProjectRow,
+    repo: string,
+    directory: string,
+    contract: BoardCi.Contract,
+    sha: string,
+    body: string,
+    packages: ReadonlyArray<string> | null,
+  ) {
+    const head = (yield* git(directory, [...AUTHOR, "commit-tree", `${sha}^{tree}`, "-p", sha, "-m", "chore(queue): base probe"])).out
     if (!head) return
-    const n = red.n + 1
+    const n = yield* deps.quiet((tx) => nextBundle(tx, row.id))
     const branch = `bundle-${row.key}-${n}`
     const pushed = yield* git(directory, ["push", "--quiet", "--force", "origin", `${head}:refs/heads/${branch}`])
     if (pushed.code !== 0) return
+    const dispatch = dispatched({ packages }, contract)
     const opened = yield* deps.gh(
       [
         "pr",
@@ -360,19 +380,22 @@ export function makeRed(ctx: Context & Pick<ReturnType<typeof makeRecord>, "note
         `chore(queue): base probe ${row.key}-B${n}`,
         "--body-file",
         "-",
-        ...(contract.full.label ? ["--label", contract.full.label] : []),
+        ...(contract.full.label && !dispatch ? ["--label", contract.full.label] : []),
       ],
-      `Bundle ${row.key}-B${red.n} went red and ${contract.base} at ${red.base_sha.slice(0, 10)} has no checks; this runs the full gate on ${contract.base} alone.`,
+      body,
     )
     const number = Number(opened.stdout.match(/\/pull\/(\d+)/)?.[1] ?? 0) || null
+    if (dispatch)
+      yield* Effect.forEach(contract.lanes?.workflows ?? [], (workflow) => deps.gh(["workflow", "run", workflow, "--repo", repo, "--ref", branch]), {
+        discard: true,
+      })
     yield* deps.quiet((tx) =>
       tx
         .insert(BoardBundleTable)
-        .values({ id: Board.BundleID.create(), project_id: row.id, n, branch, pr_number: number, base_sha: red.base_sha, head_sha: head, tree_sha: "", status: "open" })
+        .values({ id: Board.BundleID.create(), project_id: row.id, n, branch, pr_number: number, base_sha: sha, head_sha: head, tree_sha: "", status: "open", packages })
         .run(),
     )
   })
-
 
   /** Section 6.4: a flaky bundle keeps its PR open and its members queued until Maestro merges or retries it. */
   const flaky = Effect.fnUntraced(function* (row: ProjectRow, bundle: typeof BoardBundleTable.$inferSelect, issues: ReadonlyArray<IssueRow>, tests: ReadonlyArray<string>) {

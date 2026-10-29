@@ -253,6 +253,7 @@ export default {
           \`culprit\` text,
           \`failing\` text,
           \`fix_issue_id\` text,
+          \`packages\` text,
           \`time_created\` integer NOT NULL,
           \`time_updated\` integer NOT NULL,
           CONSTRAINT \`fk_board_bundle_project_id_board_project_id_fk\` FOREIGN KEY (\`project_id\`) REFERENCES \`board_project\`(\`id\`) ON DELETE CASCADE
@@ -383,6 +384,8 @@ export default {
           \`guardrail_rule\` text,
           \`github_dirty\` integer DEFAULT false NOT NULL,
           \`record\` text,
+          \`area\` text,
+          \`order\` integer,
           \`time_created\` integer NOT NULL,
           \`time_updated\` integer NOT NULL,
           CONSTRAINT \`fk_board_issue_project_id_board_project_id_fk\` FOREIGN KEY (\`project_id\`) REFERENCES \`board_project\`(\`id\`) ON DELETE CASCADE,

@@ -126,6 +126,8 @@ const ISSUE_COLUMNS = [
   "attempts",
   "crash_reason",
   "guardrail_rule",
+  "area",
+  "order",
   "record",
   "hold_before_merge",
   "paused",

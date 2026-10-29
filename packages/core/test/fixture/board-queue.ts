@@ -1,3 +1,4 @@
+import { mkdtempSync, writeFileSync } from "fs"
 import fs from "fs/promises"
 import { tmpdir } from "os"
 import path from "path"
@@ -38,6 +39,8 @@ type Remote = {
   log: string
   baseRuns: string
   calls: Array<ReadonlyArray<string>>
+  /** Lane gates started with `gh workflow run`; each run's one job concludes with `conclusion`, or fails when its commit holds every `seeded` branch. */
+  dispatches: Array<{ id: number; workflow: string; branch: string; sha: string; createdAt: string }>
 }
 const remotes = new Map<string, Remote>()
 
@@ -77,6 +80,32 @@ const gh = (args: ReadonlyArray<string>, stdin?: string) =>
       ]
       return { exitCode: 0, stdout: JSON.stringify({ headRefOid, statusCheckRollup: rollup }), stderr: "" }
     }
+    if (args[0] === "workflow" && args[1] === "run") {
+      const branch = args[args.indexOf("--ref") + 1] ?? ""
+      remote.dispatches.push({ id: remote.dispatches.length + 1, workflow: args[2] ?? "", branch, sha: await sha(branch), createdAt: new Date().toISOString() })
+      return { exitCode: 0, stdout: "", stderr: "" }
+    }
+    if (args[0] === "run" && args[1] === "list") {
+      const runs = remote.dispatches
+        .filter((run) => run.branch === args[args.indexOf("--branch") + 1])
+        .map((run) => ({ databaseId: run.id, workflowName: run.workflow.replace(/\.yml$/, ""), headSha: run.sha, createdAt: run.createdAt }))
+      return { exitCode: 0, stdout: JSON.stringify(runs), stderr: "" }
+    }
+    if (args[0] === "run" && args[1] === "view") {
+      const run = remote.dispatches.find((item) => item.id === Number(args[2]))
+      const seededRed = run !== undefined && remote.seeded.length > 0 && (await Promise.all(remote.seeded.map((branch) => contains(remote.origin, branch, run.sha)))).every(Boolean)
+      const conclusion = seededRed ? "FAILURE" : remote.conclusion
+      const done = conclusion !== ""
+      const jobs = [
+        {
+          name: remote.job,
+          status: done ? "completed" : "in_progress",
+          conclusion: done ? conclusion.toLowerCase() : null,
+          url: `https://github.com/${repo}/actions/runs/${args[2]}/job/1`,
+        },
+      ]
+      return { exitCode: 0, stdout: JSON.stringify({ jobs }), stderr: "" }
+    }
     if (args[0] === "pr" && args[1] === "edit") remote.bodies.set(Number(args[2]), stdin ?? "")
     if (args[0] === "api" && /\/actions\/jobs\/\d+\/logs$/.test(args[1] ?? "")) return { exitCode: 0, stdout: remote.log, stderr: "" }
     if (args[0] === "api") return { exitCode: 1, stdout: "", stderr: "not found" }
@@ -98,13 +127,54 @@ const RENDER: BoardRecord.Port = {
   trailer: (trailer) => `WP: ${trailer.WP}\nAttempt: ${trailer.Attempt}`,
 }
 
-export const it = testEffect(
+const build = (env?: NodeJS.ProcessEnv) =>
+  testEffect(
+    AppNodeBuilder.build(LayerNode.group([Board.node, Database.node, EventV2.node, Credential.node]), [
+      [
+        Board.node,
+        makeGlobalNode({
+          service: Board.Service,
+          layer: Board.layerWith({ gh, record: RENDER, env }),
+          deps: [Database.node, EventV2.node, Credential.node, AppProcess.node, Global.node],
+        }),
+      ],
+    ]),
+  )
+
+export const it = build()
+
+// A `bun` on PATH that answers turbo's dry run with whatever `affected.json` holds, so a test picks the affected set without a workspace.
+const turbo = syncDir()
+export const AFFECTED = path.join(turbo, "affected.json")
+export const itTurbo = build({ ...process.env, PATH: `${turbo}${path.delimiter}${process.env.PATH ?? ""}` })
+
+function syncDir() {
+  const dir = mkdtempSync(path.join(tmpdir(), "orchestra-board-turbo-"))
+  writeFileSync(path.join(dir, "bun"), `#!/bin/sh\ncat "$(dirname "$0")/affected.json"\n`, { mode: 0o755 })
+  return dir
+}
+
+// The queue with lanes: `affected` stands in for turbo, mapping every changed `packages/<name>/` path to `<name>`.
+export const laneIt = testEffect(
   AppNodeBuilder.build(LayerNode.group([Board.node, Database.node, EventV2.node, Credential.node]), [
     [
       Board.node,
       makeGlobalNode({
         service: Board.Service,
-        layer: Board.layerWith({ gh, record: RENDER }),
+        layer: Board.layerWith({
+          gh,
+          record: RENDER,
+          affected: (directory, from, to) =>
+            Effect.promise(async () =>
+              [
+                ...new Set(
+                  (await Bun.$`git -C ${directory} diff --name-only ${from}...${to}`.quiet().text())
+                    .split("\n")
+                    .flatMap((file) => file.match(/^packages\/([^/]+)\//)?.slice(1) ?? []),
+                ),
+              ].toSorted(),
+            ),
+        }),
         deps: [Database.node, EventV2.node, Credential.node, AppProcess.node, Global.node],
       }),
     ],
@@ -117,7 +187,8 @@ export const RECORD = { intent: "Say hello.", decisions: "None worth noting.", n
 type Repo = { readonly root: string; readonly directory: string; readonly key: string; readonly remote: Remote }
 
 // A repository on main with a contract that bundles two cards, pushed to a bare origin GitHub knows as acme/<key>.
-export function repository(key: string, size = 2, full?: object, scoped?: "script") {
+// With `lanes`, base also carries a `turbo.json` (the workspace graph lanes need) and union-merged `.atlas` logs.
+export function repository(key: string, size = 2, full?: object, scoped?: "script", lanes?: object) {
   return Effect.gen(function* () {
     const made = yield* Effect.promise(async () => {
       const root = await fs.realpath(await fs.mkdtemp(path.join(tmpdir(), `orchestra-board-queue-${key}-`)))
@@ -128,15 +199,17 @@ export function repository(key: string, size = 2, full?: object, scoped?: "scrip
       await git(root, "init", "--bare", remote)
       await git(root, "-c", "init.defaultBranch=main", "init", directory)
       await fs.mkdir(path.join(directory, ".orchestra"))
-      if (scoped) await fs.writeFile(script, `echo "$@" >> ${path.join(root, "runs.log").replaceAll("\\", "/")}\n[ -f fail.txt ] && [ ! -f fix.txt ] && exit 1\n[ -f x.txt ] && [ -f y.txt ] && exit 1\nexit 0\n`)
+      if (scoped) await fs.writeFile(script, `echo "$@" >> ${path.join(root, "runs.log").replaceAll("\\", "/")}\n[ -f fail.txt ] && [ ! -f fix.txt ] && exit 1\n[ -f x.txt ] && [ -f y.txt ] && exit 1\n[ -f packages/a/x.txt ] && [ -f packages/b/y.txt ] && exit 1\nexit 0\n`)
       await fs.writeFile(
         path.join(directory, ".orchestra", "ci.json"),
-        JSON.stringify({ bundle: { size, waitMinutes: 600 }, merge: "merge", full, scoped: scoped ? { tests: `sh ${script} {package} {files}` } : undefined }),
+        JSON.stringify({ bundle: { size, waitMinutes: 600 }, merge: "merge", full, scoped: scoped ? { tests: `sh ${script} {package} {files}` } : undefined, lanes }),
       )
+      if (lanes) await fs.writeFile(path.join(directory, "turbo.json"), "{}\n")
+      if (lanes) await fs.writeFile(path.join(directory, ".gitattributes"), ".atlas/**/*.jsonl merge=union\n")
       await commit(directory, "base")
       await git(directory, "remote", "add", "origin", pathToFileURL(remote).href)
       await git(directory, "push", "--quiet", "origin", "main")
-      return { root, directory, key, remote: { origin: remote, pulls: new Map<number, string>(), bodies: new Map<number, string>(), conclusion: "", seeded: [] as ReadonlyArray<string>, cancelled: [] as ReadonlyArray<string>, job: "unit (linux)", log: "", baseRuns: GREEN_BASE, calls: [] } }
+      return { root, directory, key, remote: { origin: remote, pulls: new Map<number, string>(), bodies: new Map<number, string>(), conclusion: "", seeded: [] as ReadonlyArray<string>, cancelled: [] as ReadonlyArray<string>, job: "unit (linux)", log: "", baseRuns: GREEN_BASE, calls: [] as Remote["calls"], dispatches: [] as Remote["dispatches"] } }
     })
     remotes.set(`acme/${key}`, made.remote)
     const database = yield* Database.Service
@@ -158,6 +231,7 @@ export function card(repo: Repo, key: string, number: number, file: string, reco
     yield* Effect.promise(async () => {
       const worktree = path.join(repo.root, branch)
       await git(repo.directory, "worktree", "add", "-b", branch, worktree)
+      await fs.mkdir(path.dirname(path.join(worktree, file)), { recursive: true })
       await fs.writeFile(path.join(worktree, file), `${file}\n`)
       await commit(worktree, branch)
       await git(worktree, "push", "--quiet", "origin", branch)

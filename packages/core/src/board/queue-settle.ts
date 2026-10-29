@@ -1,7 +1,5 @@
 import { and, asc, desc, eq, inArray, isNull, ne } from "drizzle-orm"
-import { Effect, Option, Schema } from "effect"
-import { ChildProcess } from "effect/unstable/process"
-import { which } from "../util/which"
+import { Effect, Option } from "effect"
 import type { BoardCi } from "./ci"
 import {
   BoardAttemptTable,
@@ -13,13 +11,10 @@ import {
 import { BoardSnapshot } from "./snapshot"
 import { changed, log } from "./shared"
 import type { IssueRow, ProjectRow } from "./shared"
-import { AUTHOR, decodeRollup, insertNote, judge, place, release } from "./queue-shared"
+import { AUTHOR, affected, decodeRollup, dispatched, dispatchRollup, insertNote, judge, place, release } from "./queue-shared"
 import type { Context } from "./queue-shared"
 import type { makeRecord } from "./queue-record"
 import type { makeRed } from "./queue-red"
-
-const Dry = Schema.Struct({ packages: Schema.Array(Schema.String) })
-const decodeDry = Schema.decodeUnknownOption(Schema.fromJsonString(Dry))
 
 /** Settling and closing a bundle: merge when green, give the members back when red. The red path and the record helpers come in from their modules. */
 export function makeSettle(
@@ -53,9 +48,12 @@ export function makeSettle(
   ) {
     if (!bundle.pr_number) return yield* dissolve(row, bundle, "The bundle PR was not opened.")
     const viewed = yield* deps.gh(["pr", "view", String(bundle.pr_number), "--repo", repo, "--json", "statusCheckRollup,headRefOid"])
-    const rollup = viewed.exitCode === 0 ? Option.getOrUndefined(decodeRollup(viewed.stdout)) : undefined
-    if (!rollup) return
-    if (rollup.headRefOid !== bundle.head_sha) return yield* dissolve(row, bundle, "Someone pushed to the bundle branch.")
+    const viewedRollup = viewed.exitCode === 0 ? Option.getOrUndefined(decodeRollup(viewed.stdout)) : undefined
+    if (!viewedRollup) return
+    if (viewedRollup.headRefOid !== bundle.head_sha) return yield* dissolve(row, bundle, "Someone pushed to the bundle branch.")
+    const rollup = dispatched(bundle, contract)
+      ? { ...viewedRollup, statusCheckRollup: yield* dispatchRollup(deps, repo, bundle.branch, bundle.head_sha) }
+      : viewedRollup
     const judged = judge(rollup.statusCheckRollup, contract)
     if (judged === "pending") return
     // Section 6.8: the fix card rides alone and is judged only on F, so a gate red elsewhere on base does not block it.
@@ -75,9 +73,11 @@ export function makeSettle(
         .orderBy(asc(BoardBundleMemberTable.position))
         .all(),
     )
-    // A bundle with no members is a base probe: it never merges, it only says whether base is green.
-    if (members.length === 0)
+    // A bundle with no members is a base probe: it never merges, it only says whether base is green. A red safety run
+    // (section 7.3, packages set) is read like any base red, so only the lanes touching its failing packages pause.
+    if (members.length === 0 && (verdict === "green" || bundle.packages === null))
       return yield* close(row, repo, bundle, `probed ${contract.base} at ${bundle.base_sha.slice(0, 10)}`, verdict === "green" ? "probe-green" : "base-red")
+    if (members.length === 0) return yield* safety(row, repo, directory, contract, bundle, rollup.statusCheckRollup)
     if (fixed === false) {
       yield* eject(row, bundle, members.map((item) => item.issue), `Bundle ${row.key}-B${bundle.n} carried this fix alone and ${bundle.failing?.flatMap((group) => group.files).join(", ")} still fail; it is back in Review.`, "fix did not turn its tests green")
       return yield* close(row, repo, bundle, "is red; the fix did not turn its tests green", "base-red")
@@ -116,12 +116,7 @@ export function makeSettle(
         return yield* close(row, repo, bundle, "failed on infrastructure; the queue reruns it", "infra")
       }
       const sha10 = bundle.base_sha.slice(0, 10)
-      // F runs scoped only when every failing file is a bun test file under a package group; otherwise base is judged by its checks or a probe.
-      const runnable =
-        contract.scoped.tests !== null &&
-        found.groups.length > 0 &&
-        found.files.every((file) => found.groups.some((group) => group.files.includes(file.replaceAll("\\", "/"))))
-      const scoped = runnable && contract.scoped.tests !== null ? yield* scope(directory, contract.scoped.tests, bundle, found.groups) : undefined
+      const scoped = runnable(contract, found) && contract.scoped.tests !== null ? yield* scope(directory, contract.scoped.tests, bundle, found.groups) : undefined
       if (scoped === "flaky") return yield* flaky(row, bundle, members.map((item) => item.issue), found.groups.flatMap((group) => group.files))
       const based = scoped ? (scoped === "base" ? "red" : "green") : yield* baseState(row, repo, bundle.base_sha, contract)
       if (based === "unknown") {
@@ -134,7 +129,15 @@ export function makeSettle(
           tx.update(BoardQueueTable).set({ flush: true }).where(inArray(BoardQueueTable.issue_id, members.map((item) => item.issue.id))).run(),
         )
         yield* close(row, repo, bundle, `is red; the queue tests ${contract.base} alone first`, "probing")
-        return yield* probe(row, repo, directory, contract, bundle)
+        return yield* probe(
+          row,
+          repo,
+          directory,
+          contract,
+          bundle.base_sha,
+          `Bundle ${row.key}-B${bundle.n} went red and ${contract.base} at ${sha10} has no checks; this runs the full gate on ${contract.base} alone.`,
+          null,
+        )
       }
       if (based === "red") {
         // Section 6.8: F fails on base itself, so its culprit is bisected and a fix card opens; the bundle is not blamed.
@@ -142,7 +145,7 @@ export function makeSettle(
           const culprit = yield* bisect(row, directory, contract.scoped.tests, bundle, found.groups)
           const fix = yield* fixCard(row, contract.base, culprit, found.groups)
           yield* deps.quiet((tx) => tx.update(BoardBundleTable).set({ culprit: culprit ?? null, failing: found.groups, fix_issue_id: fix }).where(eq(BoardBundleTable.id, bundle.id)).run())
-          yield* Effect.logWarning(`integration: ${row.key} ${contract.base} is red at ${sha10}${culprit ? `, first failing at ${culprit.slice(0, 10)}` : ""}; only its fix card is cut until it is green`)
+          yield* Effect.logWarning(`integration: ${row.key} ${contract.base} is red at ${sha10}${culprit ? `, first failing at ${culprit.slice(0, 10)}` : ""}; ${pausing(contract, found.groups)}`)
         }
         yield* Effect.forEach(
           members,
@@ -288,7 +291,9 @@ export function makeSettle(
 
   /**
    * Section 6.5 `merge-if-disjoint`: the merge commit of the tested head onto the new tip, when the two merge clean and
-   * what moved base does not overlap what the bundle changed. Undefined means retest.
+   * what moved base does not overlap what the bundle changed. Undefined means retest. A lane bundle always takes this
+   * path (section 7.3): lanes in flight are disjoint by construction, so retesting every lane behind the first to land
+   * would serialize them again.
    */
   const skew = Effect.fnUntraced(function* (
     directory: string,
@@ -297,16 +302,22 @@ export function makeSettle(
     tip: string,
     row: ProjectRow,
   ) {
-    if (contract.bundle.onBaseMoved !== "merge-if-disjoint") return undefined
+    if (contract.bundle.onBaseMoved !== "merge-if-disjoint" && bundle.packages === null) return undefined
     const merged = yield* git(directory, ["merge-tree", "--write-tree", tip, bundle.head_sha])
     if (merged.code !== 0) return undefined
-    const theirs = (yield* git(directory, ["diff", "--name-only", `${bundle.base_sha}..${tip}`])).out.split("\n").filter(Boolean)
-    const ours = (yield* git(directory, ["diff", "--name-only", `${bundle.base_sha}..${bundle.head_sha}`])).out.split("\n").filter(Boolean)
+    // Every bundle's record commit appends to the union-merged logs under `.atlas/`, so two lanes always share those
+    // paths; a clean merge-tree already proves they combine, and they hold no code.
+    const paths = (range: string) =>
+      git(directory, ["diff", "--name-only", range]).pipe(
+        Effect.map((diffed) => diffed.out.split("\n").filter((file) => file && !file.startsWith(".atlas/"))),
+      )
+    const theirs = yield* paths(`${bundle.base_sha}..${tip}`)
+    const ours = yield* paths(`${bundle.base_sha}..${bundle.head_sha}`)
     if (theirs.some((file) => ours.includes(file))) return undefined
     const graph = (yield* git(directory, ["cat-file", "-e", `${tip}:turbo.json`])).code === 0
     if (graph) {
-      const left = yield* affected(directory, bundle.base_sha, tip)
-      const right = yield* affected(directory, bundle.base_sha, bundle.head_sha)
+      const left = yield* affected(deps, directory, bundle.base_sha, tip)
+      const right = yield* affected(deps, directory, bundle.base_sha, bundle.head_sha)
       if (!left || !right || left.some((name) => right.includes(name))) return undefined
     }
     const commit = yield* git(directory, [
@@ -322,25 +333,6 @@ export function makeSettle(
     ])
     if (commit.code !== 0 || !commit.out) return undefined
     return { target: commit.out, on: tip }
-  })
-
-  /** Section 7.1's affected set from `turbo`: the packages a commit range touches and every package that depends on them. */
-  const affected = Effect.fnUntraced(function* (directory: string, from: string, to: string) {
-    const bun = which("bun", deps.env ?? process.env)
-    if (!bun) return undefined
-    const result = yield* deps.proc
-      .run(
-        ChildProcess.make(bun, ["x", "turbo", "run", "typecheck", `--filter=...[${from}...${to}]`, "--dry=json"], {
-          cwd: directory,
-          env: { ...deps.env, TURBO_TELEMETRY_DISABLED: "1" },
-          extendEnv: true,
-          stdin: "ignore",
-        }),
-        { maxOutputBytes: 8 * 1024 * 1024, maxErrorBytes: 16 * 1024, timeout: "120 seconds" },
-      )
-      .pipe(Effect.orElseSucceed(() => undefined))
-    if (!result || result.exitCode !== 0) return undefined
-    return Option.getOrUndefined(decodeDry(result.stdout.toString("utf8")))?.packages
   })
 
   /** Closes the bundle PR and branch; its members stay queued and the next tick cuts again. */
@@ -361,6 +353,37 @@ export function makeSettle(
     )
     yield* Effect.forEach(published, deps.publish, { discard: true })
     if (row.github_repo) yield* close(row, row.github_repo, bundle, "dissolved")
+  })
+
+  /**
+   * Section 7.3: a red safety run. Infrastructure closes it as `infra`; F that passes on base when rerun closes it green;
+   * F that fails on base is bisected and gets a fix card, and only the lanes touching F's packages pause. A red whose
+   * failures are not scoped tests stops the whole project, as phase 1 does.
+   */
+  const safety = Effect.fnUntraced(function* (
+    row: ProjectRow,
+    repo: string,
+    directory: string,
+    contract: BoardCi.Contract,
+    bundle: typeof BoardBundleTable.$inferSelect,
+    rollup: Parameters<typeof failures>[1],
+  ) {
+    const found = yield* failures(repo, rollup, contract)
+    const sha10 = bundle.base_sha.slice(0, 10)
+    if (found.infra) return yield* close(row, repo, bundle, `failed on infrastructure on ${contract.base} at ${sha10}`, "infra")
+    const template = contract.scoped.tests
+    const scoped = runnable(contract, found) && template !== null ? yield* scope(directory, template, bundle, found.groups) : undefined
+    if (scoped === "flaky" || scoped === "code")
+      return yield* close(row, repo, bundle, `found ${found.files.join(", ")} passing on ${contract.base} at ${sha10} when rerun`, "probe-green")
+    if (scoped === undefined || template === null) {
+      yield* Effect.logWarning(`integration: ${row.key} safety run found ${contract.base} red at ${sha10}, and its failures are not scoped tests; the queue waits for ${contract.base} to turn green`)
+      return yield* close(row, repo, bundle, `found ${contract.base} red at ${sha10}`, "base-red")
+    }
+    const culprit = yield* bisect(row, directory, template, bundle, found.groups)
+    const fix = yield* fixCard(row, contract.base, culprit, found.groups)
+    yield* deps.quiet((tx) => tx.update(BoardBundleTable).set({ culprit: culprit ?? null, failing: found.groups, fix_issue_id: fix }).where(eq(BoardBundleTable.id, bundle.id)).run())
+    yield* Effect.logWarning(`integration: ${row.key} safety run found ${contract.base} red at ${sha10}${culprit ? `, first failing at ${culprit.slice(0, 10)}` : ""}; ${pausing(contract, found.groups)}`)
+    return yield* close(row, repo, bundle, `found ${contract.base} red at ${sha10}`, "base-red")
   })
 
   const close = Effect.fnUntraced(function* (
@@ -419,4 +442,22 @@ export function makeSettle(
   })
 
   return { settle, dissolve, close }
+}
+
+// F runs scoped only when every failing file is a bun test file under a package group; otherwise base is judged by its checks or a probe.
+function runnable(
+  contract: BoardCi.Contract,
+  found: { readonly files: ReadonlyArray<string>; readonly groups: ReadonlyArray<{ readonly files: ReadonlyArray<string> }> },
+) {
+  return (
+    contract.scoped.tests !== null &&
+    found.groups.length > 0 &&
+    found.files.every((file) => found.groups.some((group) => group.files.includes(file.replaceAll("\\", "/"))))
+  )
+}
+
+// Section 7.3: with lanes a base red pauses only the lanes whose packages overlap the failing ones.
+function pausing(contract: BoardCi.Contract, groups: ReadonlyArray<{ readonly package: string }>) {
+  if (!contract.lanes) return "only its fix card is cut until it is green"
+  return `lanes touching ${[...new Set(groups.map((group) => group.package))].join(", ")} pause until its fix card lands; disjoint lanes keep landing`
 }

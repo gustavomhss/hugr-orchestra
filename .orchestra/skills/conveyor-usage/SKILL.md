@@ -17,9 +17,16 @@ Design: `docs/specs/maestro-lead/merge-queue.md`.
    the seat merges base on its next dispatch.
 4. Maestro writes the PR record with `board_issue` (Intent, Decisions, Not covered, Risk level) and calls
    `board_queue`. `urgent` goes to the front, `flush` cuts now.
-5. Every 60 s the host settles the open bundle, then cuts a new one: at `bundle.size`, on `flush`, after
-   `bundle.waitMinutes`, or when an epic's last card is queued. One open bundle per project.
-6. The bundle PR `chore(queue): bundle KEY-B<n>` carries `full.label`, so the full gate runs once for all members.
+   At enqueue the host compares the card's affected packages with its planned `area` and writes one drift note when
+   they differ; the card still queues.
+5. Every 60 s the host settles the open bundles, then cuts: at `bundle.size`, on `flush`, after
+   `bundle.waitMinutes`, or when an epic's last card is queued. Without `lanes` there is one open bundle per project;
+   with `lanes` each lane (cards whose affected packages overlap) gets its own bundle, up to
+   ⌊`budget.jobs` / `lanes.jobs`⌋ in flight, and a card touching a `lanes.global` path rides alone.
+6. A whole-suite bundle PR `chore(queue): bundle KEY-B<n>` carries `full.label`, so the full gate runs once for all
+   members; an epic's last bundle always runs the whole suite. A lane bundle instead dispatches `lanes.workflows` with
+   a `packages` input and lands with `merge-if-disjoint`. With `lanes.fullEvery` above 0, a safety run of the whole
+   suite follows every K lane landings; its red is a base red that pauses only the lanes it touches.
 7. Green: the host checks that no member's PR head moved, pushes to base with `--force-with-lease`, writes the
    `chore(queue): record` commit and moves the members to Shipped.
 
@@ -51,4 +58,4 @@ wait); `merge-if-disjoint` when `dev` moves.
 
 - This repository still lands by hand; dogfooding the queue on Orchestra itself has not started.
 - `BoardTree.restore` (rebuild the board from `.atlas/project/board.jsonl`) has no tool or CLI.
-- Lanes and per-lane numbers are phase 2 (spec §7).
+- Per-lane numbers (spec §7) are not built; bundles keep one sequence per project.

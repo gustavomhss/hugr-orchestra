@@ -25,6 +25,7 @@ any other change.
 - `merge` must be `merge`. Squash and rebase are refused, because they would stop GitHub from marking each PR merged.
 - `snapshots.remote` is the remote that receives work in progress (below). It defaults to `origin`.
 - Every other field is optional. `onBaseMoved` defaults to `retest`.
+- `lanes` turns on parallel bundles (see [Lanes](#lanes)). Leave it out to keep one bundle at a time.
 
 With no file, Maestro uses the PR's own required checks when your base branch has them, and only its own verification
 otherwise.
@@ -51,6 +52,18 @@ the push and the card stays `local`. If a seat dies, its work can be restored fr
 ```bash
 git fetch origin refs/orchestra/wip/KEY-1/a1 && git restore --source FETCH_HEAD --worktree -- .
 ```
+
+## Plan shape and drift
+
+`archie`'s plan gives each card three optional fields: `area` (the workspace packages the card should affect, named as
+`turbo` names them), `depends_on` (cards whose code it needs) and `order` (its landing order among cards that share an
+area). Maestro reviews the plan before adopting it: cards meant to run at the same time that overlap in `area`, with no
+`depends_on` or `order` between them, go back to `archie`. An overlap that is declared is a sequence the queue follows.
+
+When a card is queued, the host compares its real affected set with its `area`. If the card affects packages outside
+it, the host adds one note to the card and one `integration` line, and Maestro sends the card to `archie` as a plan
+revision. The card still queues: drift never holds a landing. With no `area`, or with no `turbo` in the project, there
+is nothing to compare and no line. Set both fields with `board_issue`; null clears them.
 
 ## After a crash
 
@@ -95,7 +108,7 @@ every remaining card of an epic is queued. Urgent cards go first.
   cancelled, timed-out or never-started jobs is infrastructure: the bundle is rebuilt once with the same members, and a
   second such red pauses the queue (`paused`) until Maestro retries it. A code red whose failing tests ran scoped is searched with scoped runs, not halved through full gates: each card is tried alone on base, then by halving. Culprits go back to Review and the rest ride a rebuilt bundle. After two rebuilds, or when halving finds nothing, the bundle dissolves and its cards are held until Maestro releases one at a time with `board_bundle release`, which rides alone. After 50 settled cards the bundle size follows
   the red rate. The failed jobs' logs name the failing files (bun `(fail)` files, vitest `FAIL` files and TypeScript error paths) in the
-  cards' notes. When every failing file is a bun test file under a turbo package group and the contract has `scoped.tests`, the host runs those tests scoped on base and on the bundle head in parallel: two base failures make it a base red, a head failure is code (split or eject), and three head passes make the bundle flaky. A flaky bundle keeps its PR open and its cards stay queued; the test is recorded in `board_flake`, and the queue waits for Maestro to merge or retry it. Other reds still check base by its checks or a probe. When F fails on base, the queue bisects F along base's first-parent history, from the last merged bundle to the red base, and opens a `bug` fix card that names the first failing commit. The bundle is not blamed and its cards stay queued. Until base moves, only that fix card is cut, alone, and it merges as soon as F passes, even if other checks are red. The queue never reverts. `full.control` names a line and the jobs (name prefixes) that always print it: such a job that failed with no
+  cards' notes. When every failing file is a bun test file under a turbo package group and the contract has `scoped.tests`, the host runs those tests scoped on base and on the bundle head in parallel: two base failures make it a base red, a head failure is code (split or eject), and three head passes make the bundle flaky. A flaky bundle keeps its PR open and its cards stay queued; the test is recorded in `board_flake`, and the queue waits for Maestro to merge or retry it. Other reds still check base by its checks or a probe. When F fails on base, the queue bisects F along base's first-parent history, from the last green whole-suite run (a merged bundle that ran the whole suite, or a green base probe or safety run) to the red base, and opens a `bug` fix card that names the first failing commit. The bundle is not blamed and its cards stay queued. Until base moves, only that fix card is cut, alone, and it merges as soon as F passes, even if other checks are red. The queue never reverts. `full.control` names a line and the jobs (name prefixes) that always print it: such a job that failed with no
   failing file and without the line never ran its tests and counts as infrastructure; any other job's failure is code unless
   it was cancelled, timed out or never started. A `full.checks` name matches a check or the workflow that ran it.
 - **A member pushed after assembly.** That card goes back to Review and the bundle is rebuilt without it.
@@ -108,6 +121,46 @@ not hold the others.
 A card in the Queue column shows whether it is waiting, running in a bundle, held by your hold before merge, or held
 out by a conflict. To take a card out, ask Maestro: it uses `board_dequeue`, which also dissolves the bundle the card
 was in. Merge PRs of a board project only through the queue; a guard flags code that merges a PR outside it.
+
+## Lanes
+
+A project with a `turbo.json` on its base branch can land unrelated work side by side. Add a `lanes` block:
+
+```json
+"lanes": {
+  "by": "turbo",
+  "global": ["package.json", "bun.lock", "turbo.json", ".github/workflows/**"],
+  "jobs": 10,
+  "workflows": ["typecheck.yml", "test.yml"]
+}
+```
+
+At every cut Maestro asks turbo which packages each queued card affects (the packages it changes and every package
+that depends on them). Cards whose packages overlap share a lane; cards that share nothing get separate lanes, and
+each lane is cut into its own bundle. A lane bundle is not labelled with `full.label`: Maestro dispatches each workflow
+in `workflows` on the bundle branch with a `packages` input that lists the lane's packages, so only those packages are
+typechecked and tested. Your workflows need a `packages` `workflow_dispatch` input and should filter on it.
+
+- A card never jumps the queue. It is cut only when no bundle in flight touches its packages and no earlier card that
+  shares a package with it is still waiting.
+- A card that changes a `global` path overlaps everything. It waits for the bundles in flight to land, then goes alone
+  (or with other global cards) on the whole suite, with `full.label`. Every card queued behind it waits for it.
+- A lane bundle lands with `merge-if-disjoint`, whatever `onBaseMoved` says: the other lanes moved base, but they
+  touch none of its packages.
+- `jobs` is how many CI jobs one lane's gate uses. With `budget.jobs` it caps the lanes in flight at
+  `budget.jobs / jobs`.
+- The bundle that closes an epic (every open card of the epic is queued) always runs the whole suite, with
+  `full.label`, whatever packages its cards touch.
+- `fullEvery` is the safety net for what the affected graph misses. With `fullEvery: K` above 0, after every K lane
+  bundles land Maestro runs the whole suite on base: an empty commit on the base tip, opened as a bundle with no cards,
+  gated by your `workflows` dispatched with no `packages` input. It never merges and touches no lane while it runs.
+  `0`, the default, turns it off. The count comes from the bundle history, so it survives a restart.
+- A red safety run is a base red, never a revert. When its failing tests (F) are bun tests in package groups and the
+  contract has `scoped.tests`, the queue reruns F on base, bisects it from the last green whole-suite run, and opens a
+  `bug` fix card that rides alone. Only lanes that touch F's packages pause until that fix card ships; disjoint lanes
+  keep cutting and landing. A lane bundle whose F fails on base is handled the same way.
+- A paused or flaky bundle holds every lane of the project until Maestro decides. A red base whose failures are not
+  scoped tests falls back to one bundle at a time until base moves.
 
 ## Card thread
 

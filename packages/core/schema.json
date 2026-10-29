@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "9b4f02b9-9b1c-4aad-a238-de365a302bdd",
+  "id": "8bcf5b5a-d3a9-4d90-a4be-de479f9fe4d7",
   "prevIds": [
-    "bfc12ceb-ee64-4f9c-bec1-16dd411ed01f"
+    "9b4f02b9-9b1c-4aad-a238-de365a302bdd"
   ],
   "ddl": [
     {
@@ -1843,6 +1843,16 @@
       "table": "board_bundle"
     },
     {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "packages",
+      "entityType": "columns",
+      "table": "board_bundle"
+    },
+    {
       "type": "integer",
       "notNull": true,
       "autoincrement": false,
@@ -2719,6 +2729,26 @@
       "default": null,
       "generated": null,
       "name": "record",
+      "entityType": "columns",
+      "table": "board_issue"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "area",
+      "entityType": "columns",
+      "table": "board_issue"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "order",
       "entityType": "columns",
       "table": "board_issue"
     },
