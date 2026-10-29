@@ -359,7 +359,7 @@ export function make(deps: Deps) {
         const lastMembers = last
           ? yield* tx.select().from(BoardBundleMemberTable).where(eq(BoardBundleMemberTable.bundle_id, last.id)).all()
           : []
-        return { cards, waits, attempts, open, settled: yield* BoardLedger.settled(tx, row.id), last: last && { status: last.status, base_sha: last.base_sha, members: lastMembers.length, rebuilds: last.rebuilds } }
+        return { cards, waits, attempts, open, settled: yield* BoardLedger.settled(tx, row.id), last: last && { status: last.status, base_sha: last.base_sha, members: lastMembers.length, rebuilds: last.rebuilds, fix: last.fix_issue_id, failing: last.failing } }
       }),
     )
     if (queued.cards.length === 0) return
@@ -370,6 +370,7 @@ export function make(deps: Deps) {
     const cap = alone ? 1 : split && queued.last ? Math.max(1, Math.floor(queued.last.members / 2)) : full
     const due =
       alone !== undefined ||
+      queued.last?.status === "base-red" ||
       split ||
       queued.cards.length >= full ||
       queued.cards.some((card) => card.queue.flush) ||
@@ -382,14 +383,17 @@ export function make(deps: Deps) {
     yield* git(directory, ["fetch", "--quiet", "--no-tags", "origin", base])
     const tip = (yield* git(directory, ["rev-parse", "--verify", "--quiet", `refs/remotes/origin/${base}`])).out
     if (!tip) return
-    if (queued.last?.status === "base-red" && tip === queued.last.base_sha) return
+    // Section 6.8 phase 1: while base stays red, only its fix card is cut, alone.
+    const fixing = queued.last?.status === "base-red" && tip === queued.last.base_sha
+    const fix = fixing ? queued.cards.find((card) => card.issue.id === queued.last?.fix) : undefined
+    if (fixing && !fix) return
     const scratch = yield* Effect.promise(() => fs.mkdtemp(path.join(os.tmpdir(), `orchestra-bundle-${row.key}-`)))
     const added = yield* git(directory, ["worktree", "add", "--quiet", "--detach", scratch, tip])
     if (added.code !== 0) return
     const ejections: Array<{ readonly card: string; readonly cause: string }> = []
     const members = yield* Effect.gen(function* () {
       const taken: Array<{ readonly issue: IssueRow; readonly head: string }> = []
-      for (const card of alone ? [alone] : queued.cards) {
+      for (const card of fix ? [fix] : alone ? [alone] : queued.cards) {
         if (taken.length >= cap) break
         if (card.queue.hold === "held") continue
         if (card.issue.hold_before_merge || card.issue.paused) continue
@@ -468,7 +472,20 @@ export function make(deps: Deps) {
         const id = Board.BundleID.create()
         yield* tx
           .insert(BoardBundleTable)
-          .values({ id, project_id: row.id, n, branch, pr_number: number, base_sha: tip, head_sha: bundleHead, tree_sha: tree, status: "open", rebuilds: queued.last?.status === "isolated" ? queued.last.rebuilds + 1 : 0 })
+          .values({
+            id,
+            project_id: row.id,
+            n,
+            branch,
+            pr_number: number,
+            base_sha: tip,
+            head_sha: bundleHead,
+            tree_sha: tree,
+            status: "open",
+            rebuilds: queued.last?.status === "isolated" ? queued.last.rebuilds + 1 : 0,
+            failing: fix ? queued.last?.failing ?? null : null,
+            fix_issue_id: fix ? fix.issue.id : null,
+          })
           .run()
         yield* tx
           .insert(BoardBundleMemberTable)
@@ -624,7 +641,8 @@ export function make(deps: Deps) {
   /**
    * Section 6.3 steps 3-6: the culprits of a code red whose failing tests F ran scoped. Each candidate runs alone on base
    * with its in-bundle dependencies; when none fails alone, a binary search over the member prefixes finds the member
-   * whose addition turns red. Undefined when a checkout fails; an empty list means no culprit.
+   * whose addition turns red, with the members merged before it in `after`. Undefined when a checkout fails; an empty
+   * `culprits` means no culprit.
    */
   const isolate = Effect.fnUntraced(function* (
     directory: string,
@@ -660,7 +678,7 @@ export function make(deps: Deps) {
     )
     if (singles.includes(undefined)) return undefined
     const culprits = candidates.filter((_, index) => singles[index] === false)
-    if (culprits.length > 0) return culprits.map((item) => item.issue)
+    if (culprits.length > 0) return { culprits: culprits.map((item) => item.issue), after: [] }
     let lo = 1
     let hi = members.length
     while (lo < hi) {
@@ -674,9 +692,124 @@ export function make(deps: Deps) {
     if (lo === members.length) {
       const whole = yield* tryOn(directory, template, bundle, groups, members.map((item) => item.member.head_sha))
       if (whole === undefined) return undefined
-      if (whole) return []
+      if (whole) return { culprits: [], after: [] }
     }
-    return members.slice(lo - 1, lo).map((item) => item.issue)
+    return { culprits: members.slice(lo - 1, lo).map((item) => item.issue), after: members.slice(0, lo - 1).map((item) => item.issue) }
+  })
+
+  /**
+   * Section 6.8: the first-parent commit between the last merged bundle and the red base where F starts failing. Undefined
+   * when there is no merged bundle to start from or a checkout fails.
+   */
+  const bisect = Effect.fnUntraced(function* (
+    row: ProjectRow,
+    directory: string,
+    template: string,
+    bundle: typeof BoardBundleTable.$inferSelect,
+    groups: ReadonlyArray<{ readonly package: string; readonly files: ReadonlyArray<string> }>,
+  ) {
+    const good = yield* deps.quiet((tx) =>
+      tx
+        .select({ head_sha: BoardBundleTable.head_sha })
+        .from(BoardBundleTable)
+        .where(and(eq(BoardBundleTable.project_id, row.id), eq(BoardBundleTable.status, "merged")))
+        .orderBy(desc(BoardBundleTable.n))
+        .get(),
+    )
+    if (!good) return undefined
+    if ((yield* git(directory, ["merge-base", "--is-ancestor", good.head_sha, bundle.base_sha])).code !== 0) return undefined
+    const commits = (yield* git(directory, ["rev-list", "--first-parent", "--reverse", `${good.head_sha}..${bundle.base_sha}`])).out.split("\n").filter(Boolean)
+    if (commits.length === 0) return undefined
+    const scratch = yield* Effect.promise(() => fs.mkdtemp(path.join(os.tmpdir(), `orchestra-bisect-${bundle.n}-`)))
+    const added = yield* git(directory, ["worktree", "add", "--quiet", "--detach", scratch, bundle.base_sha])
+    if (added.code !== 0) {
+      yield* Effect.promise(() => fs.rm(scratch, { recursive: true, force: true }))
+      return undefined
+    }
+    return yield* Effect.gen(function* () {
+      // The last commit is known to fail, so the search only narrows within the list.
+      let lo = 0
+      let hi = commits.length - 1
+      while (lo < hi) {
+        const mid = Math.floor((lo + hi) / 2)
+        yield* git(scratch, ["checkout", "--quiet", "--detach", commits[mid] ?? ""])
+        const passes = yield* runGroups(scratch, template, bundle.branch, groups)
+        if (passes) lo = mid + 1
+        if (!passes) hi = mid
+      }
+      return commits[lo]
+    }).pipe(Effect.ensuring(git(directory, ["worktree", "remove", "--force", scratch])))
+  })
+
+  /** Section 6.8: the open fix card for a red base, reused while an earlier one has not shipped. */
+  const fixCard = Effect.fnUntraced(function* (
+    row: ProjectRow,
+    base: string,
+    culprit: string | undefined,
+    groups: ReadonlyArray<{ readonly package: string; readonly files: ReadonlyArray<string> }>,
+  ) {
+    const open = yield* deps.quiet((tx) =>
+      tx
+        .select({ id: BoardIssueTable.id })
+        .from(BoardBundleTable)
+        .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardBundleTable.fix_issue_id))
+        .where(and(eq(BoardBundleTable.project_id, row.id), ne(BoardIssueTable.stage, "shipped"), ne(BoardIssueTable.stage, "cut")))
+        .orderBy(desc(BoardBundleTable.n))
+        .get(),
+    )
+    if (open) return open.id
+    const files = groups.flatMap((group) => group.files).join(", ")
+    const title = `Fix ${base}: ${files} fail${culprit ? ` since ${culprit.slice(0, 10)}` : ""}`
+    const body = `${base} fails ${files}.${culprit ? ` Bisect found ${culprit} as the first failing commit.` : " The queue has no green point to bisect from."} The queue cuts only this card until ${base} is green; it rides alone and merges when these tests pass.`
+    const created = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        // `row` may be stale: the next issue number comes from a fresh read.
+        const project = yield* tx.select().from(BoardProjectTable).where(eq(BoardProjectTable.id, row.id)).get()
+        if (!project) return yield* Effect.die(`${row.key} has no project row to file its fix card in.`)
+        const id = Board.IssueID.create()
+        yield* tx
+          .insert(BoardIssueTable)
+          .values({
+            id,
+            project_id: row.id,
+            number: project.next_issue_number,
+            title,
+            body,
+            type: "bug",
+            epic_id: null,
+            stage: "backlog",
+            position: yield* endOf(tx, row.id, "backlog"),
+            estimate: null,
+            seat: null,
+            session_id: null,
+            branch: null,
+            pr_number: null,
+            attempts: 0,
+            crash_reason: null,
+            guardrail_rule: null,
+            record: null,
+            stage_entered_at: yield* Clock.currentTimeMillis,
+            github_dirty: project.github_repo !== null,
+          })
+          .run()
+        yield* tx
+          .update(BoardProjectTable)
+          .set({ next_issue_number: project.next_issue_number + 1 })
+          .where(eq(BoardProjectTable.id, row.id))
+          .run()
+        const activity = yield* log(tx, {
+          project: row.id,
+          issue: id,
+          actor: "github",
+          action: "issue.create",
+          reason: "base is red",
+          after: { number: project.next_issue_number, title, type: "bug", stage: "backlog" },
+        })
+        return { id, changed: changed(row.id, activity, id) }
+      }),
+    )
+    yield* deps.publish(created.changed)
+    return created.id
   })
 
   /** Runs the full gate on base itself: an empty commit on the red bundle's base, opened as a bundle with no members. */
@@ -729,8 +862,14 @@ export function make(deps: Deps) {
     if (rollup.headRefOid !== bundle.head_sha) return yield* dissolve(row, bundle, "Someone pushed to the bundle branch.")
     const judged = judge(rollup.statusCheckRollup, contract)
     if (judged === "pending") return
+    // Section 6.8: the fix card rides alone and is judged only on F, so a gate red elsewhere on base does not block it.
+    const fixed =
+      judged === "red" && bundle.failing && bundle.fix_issue_id && contract.scoped.tests !== null
+        ? yield* tryOn(directory, contract.scoped.tests, bundle, bundle.failing, [bundle.head_sha])
+        : undefined
+    if (judged === "red" && bundle.failing && bundle.fix_issue_id && contract.scoped.tests !== null && fixed === undefined) return
     // Section 6.4: Maestro accepted this flaky bundle, so its red gate ships as tested.
-    const verdict = bundle.status === "accepted" ? "green" : judged
+    const verdict = bundle.status === "accepted" || fixed === true ? "green" : judged
     const members = yield* deps.quiet((tx) =>
       tx
         .select({ member: BoardBundleMemberTable, issue: BoardIssueTable })
@@ -743,6 +882,10 @@ export function make(deps: Deps) {
     // A bundle with no members is a base probe: it never merges, it only says whether base is green.
     if (members.length === 0)
       return yield* close(row, repo, bundle, `probed ${contract.base} at ${bundle.base_sha.slice(0, 10)}`, verdict === "green" ? "probe-green" : "base-red")
+    if (fixed === false) {
+      yield* eject(row, bundle, members.map((item) => item.issue), `Bundle ${row.key}-B${bundle.n} carried this fix alone and ${bundle.failing?.flatMap((group) => group.files).join(", ")} still fail; it is back in Review.`, "fix did not turn its tests green")
+      return yield* close(row, repo, bundle, "is red; the fix did not turn its tests green", "base-red")
+    }
     if (verdict === "red") {
       const found = yield* failures(repo, rollup.statusCheckRollup, contract)
       const cause = found.files.length > 0 ? ` Failing: ${found.files.join(", ")}.` : ""
@@ -798,6 +941,13 @@ export function make(deps: Deps) {
         return yield* probe(row, repo, directory, contract, bundle)
       }
       if (based === "red") {
+        // Section 6.8: F fails on base itself, so its culprit is bisected and a fix card opens; the bundle is not blamed.
+        if (scoped === "base" && contract.scoped.tests !== null) {
+          const culprit = yield* bisect(row, directory, contract.scoped.tests, bundle, found.groups)
+          const fix = yield* fixCard(row, contract.base, culprit, found.groups)
+          yield* deps.quiet((tx) => tx.update(BoardBundleTable).set({ culprit: culprit ?? null, failing: found.groups, fix_issue_id: fix }).where(eq(BoardBundleTable.id, bundle.id)).run())
+          yield* Effect.logWarning(`integration: ${row.key} ${contract.base} is red at ${sha10}${culprit ? `, first failing at ${culprit.slice(0, 10)}` : ""}; only its fix card is cut until it is green`)
+        }
         yield* Effect.forEach(
           members,
           (item) =>
@@ -809,11 +959,23 @@ export function make(deps: Deps) {
       // Section 6.3 steps 3-6: a code red that ran scoped is searched with scoped runs, not halved through full gates.
       if (scoped === "code" && members.length > 1 && contract.scoped.tests !== null) {
         if (bundle.rebuilds >= 2) return yield* hold(row, repo, bundle, members, "went red after two rebuilds")
-        const culprits = yield* isolate(directory, contract.scoped.tests, bundle, found.groups, members)
-        if (culprits?.length === 0) return yield* hold(row, repo, bundle, members, "went red and halving found no culprit")
-        if (culprits) {
+        const isolated = yield* isolate(directory, contract.scoped.tests, bundle, found.groups, members)
+        if (isolated?.culprits.length === 0) return yield* hold(row, repo, bundle, members, "went red and halving found no culprit")
+        if (isolated) {
+          const culprits = isolated.culprits
           const fileList = found.groups.flatMap((group) => group.files).join(", ")
-          yield* eject(row, bundle, culprits, `Bundle ${row.key}-B${bundle.n} went red, and this card fails ${fileList} on ${contract.base} alone; it is back in Review.`, "failed its scoped tests alone")
+          // A culprit found by halving fails only once merged after earlier members, never alone.
+          const where =
+            isolated.after.length > 0
+              ? `once merged after ${isolated.after.map((issue) => `${row.key}-${issue.number}`).join(", ")}`
+              : `on ${contract.base} alone`
+          yield* eject(
+            row,
+            bundle,
+            culprits,
+            `Bundle ${row.key}-B${bundle.n} went red, and this card fails ${fileList} ${where}; it is back in Review.`,
+            isolated.after.length > 0 ? "failed its scoped tests after earlier members" : "failed its scoped tests alone",
+          )
           const keys = culprits.map((issue) => `${row.key}-${issue.number}`).join(", ")
           const rest = members.filter((item) => !culprits.some((culprit) => culprit.id === item.issue.id))
           yield* deps.quiet((tx) =>

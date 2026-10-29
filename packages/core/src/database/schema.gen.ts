@@ -250,6 +250,9 @@ export default {
           \`rebuilds\` integer DEFAULT 0 NOT NULL,
           \`status\` text NOT NULL,
           \`merged_on\` text,
+          \`culprit\` text,
+          \`failing\` text,
+          \`fix_issue_id\` text,
           \`time_created\` integer NOT NULL,
           \`time_updated\` integer NOT NULL,
           CONSTRAINT \`fk_board_bundle_project_id_board_project_id_fk\` FOREIGN KEY (\`project_id\`) REFERENCES \`board_project\`(\`id\`) ON DELETE CASCADE

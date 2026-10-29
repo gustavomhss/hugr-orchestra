@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "7fdc8a05-2738-4c51-8296-e2adfe88ee04",
+  "id": "bfc12ceb-ee64-4f9c-bec1-16dd411ed01f",
   "prevIds": [
-    "47f1280a-e496-48d9-bed0-041cb5d1736f"
+    "7fdc8a05-2738-4c51-8296-e2adfe88ee04"
   ],
   "ddl": [
     {
@@ -1809,6 +1809,36 @@
       "default": null,
       "generated": null,
       "name": "merged_on",
+      "entityType": "columns",
+      "table": "board_bundle"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "culprit",
+      "entityType": "columns",
+      "table": "board_bundle"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "failing",
+      "entityType": "columns",
+      "table": "board_bundle"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "fix_issue_id",
       "entityType": "columns",
       "table": "board_bundle"
     },

@@ -527,6 +527,69 @@ describe("BoardQueue", () => {
     }),
   )
 
+  it.live("a red base is bisected to its culprit, gets a fix card, and only the fix rides until it merges", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QBF", 1, undefined, "script")
+      yield* card(repo, "QBF", 1, "a.txt")
+      yield* passed(repo, 1)
+      yield* board.queue({ project: "QBF", number: 1, reason: "Verified." })
+      repo.remote.conclusion = "SUCCESS"
+      repo.remote.seeded = []
+      yield* Effect.forEach(Array.from({ length: 6 }), () => board.queueTick(), { discard: true })
+      expect(yield* stage(repo, 1)).toBe("shipped")
+
+      const broken = yield* Effect.promise(async () => {
+        await git(repo.directory, "pull", "--quiet", "--ff-only", "origin", "main")
+        await fs.writeFile(path.join(repo.directory, "noise.txt"), "noise\n")
+        await commit(repo.directory, "noise")
+        await fs.writeFile(path.join(repo.directory, "fail.txt"), "x\n")
+        await commit(repo.directory, "break")
+        await git(repo.directory, "push", "--quiet", "origin", "main")
+        return (await Bun.$`git -C ${repo.directory} rev-parse HEAD`.quiet().text()).trim()
+      })
+      yield* card(repo, "QBF", 2, "b.txt")
+      yield* passed(repo, 2)
+      yield* board.queue({ project: "QBF", number: 2, reason: "Verified." })
+      repo.remote.seeded = ["card-2"]
+      repo.remote.log = GROUPED
+      yield* Effect.forEach(Array.from({ length: 12 }), () => board.queueTick(), { discard: true })
+
+      expect((yield* bundleStatuses(repo)).at(-1)).toBe("base-red")
+      expect(yield* stage(repo, 2)).toBe("queue")
+      expect(yield* stage(repo, 3)).toBe("backlog")
+      const fix = yield* row(repo, 3)
+      expect(fix.issue.type).toBe("bug")
+      expect(fix.issue.body).toContain(broken)
+      const database = yield* Database.Service
+      const latest = yield* database.db
+        .select({ culprit: BoardBundleTable.culprit })
+        .from(BoardBundleTable)
+        .innerJoin(BoardProjectTable, eq(BoardProjectTable.id, BoardBundleTable.project_id))
+        .where(eq(BoardProjectTable.key, "QBF"))
+        .orderBy(desc(BoardBundleTable.n))
+        .get()
+        .pipe(Effect.orDie)
+      expect(latest?.culprit).toBe(broken)
+
+      yield* Effect.promise(async () => {
+        const worktree = path.join(repo.root, "card-3")
+        await git(repo.directory, "worktree", "add", "-b", "card-3", worktree)
+        await fs.writeFile(path.join(worktree, "fix.txt"), "fix\n")
+        await commit(worktree, "card-3")
+        await git(worktree, "push", "--quiet", "origin", "card-3")
+      })
+      repo.remote.pulls.set(3, "card-3")
+      yield* board.issue({ project: "QBF", number: 3, branch: "card-3", pr: 3, reason: "Fix." })
+      yield* database.db.update(BoardIssueTable).set({ stage: "review" }).where(eq(BoardIssueTable.id, fix.issue.id)).run().pipe(Effect.orDie)
+      yield* passed(repo, 3)
+      yield* board.queue({ project: "QBF", number: 3, reason: "Verified." })
+      repo.remote.seeded = ["card-3"]
+      yield* Effect.forEach(Array.from({ length: 8 }), () => board.queueTick(), { discard: true })
+      expect(yield* stage(repo, 3)).toBe("shipped")
+    }),
+  )
+
   it.live("a red whose tests pass three scoped reruns of the head is flaky, kept open and recorded", () =>
     Effect.gen(function* () {
       const board = yield* Board.Service
@@ -599,6 +662,7 @@ describe("BoardQueue", () => {
 
       yield* Effect.forEach(Array.from({ length: 12 }), () => board.queueTick(), { discard: true })
       expect(yield* stage(repo, 2)).toBe("review")
+      expect((yield* notes(repo, 2)).some((body) => body.includes("once merged after QIH-1"))).toBe(true)
       expect(yield* stage(repo, 1)).not.toBe("review")
     }),
   )
@@ -748,7 +812,7 @@ function repository(key: string, size = 2, full?: object, scoped?: "script") {
       await git(root, "init", "--bare", remote)
       await git(root, "-c", "init.defaultBranch=main", "init", directory)
       await fs.mkdir(path.join(directory, ".orchestra"))
-      if (scoped) await fs.writeFile(script, `echo "$@" >> ${path.join(root, "runs.log")}\n[ -f fail.txt ] && exit 1\n[ -f x.txt ] && [ -f y.txt ] && exit 1\nexit 0\n`)
+      if (scoped) await fs.writeFile(script, `echo "$@" >> ${path.join(root, "runs.log")}\n[ -f fail.txt ] && [ ! -f fix.txt ] && exit 1\n[ -f x.txt ] && [ -f y.txt ] && exit 1\nexit 0\n`)
       await fs.writeFile(
         path.join(directory, ".orchestra", "ci.json"),
         JSON.stringify({ bundle: { size, waitMinutes: 600 }, merge: "merge", full, scoped: scoped ? { tests: `sh ${script} {package} {files}` } : undefined }),
