@@ -113,14 +113,14 @@ describe("BoardQueue lanes", () => {
       const main = yield* origin(repo, "main")
       expect(yield* Effect.promise(() => Bun.$`git --git-dir ${repo.remote.origin} ls-tree -r --name-only ${main}`.quiet().text())).toContain("packages/b/y.txt")
 
-      // A card touching b waits behind the red; a disjoint card in c still cuts its lane.
-      yield* add(3, "packages/b/three.txt")
-      yield* add(4, "packages/c/four.txt")
+      // The fix card took number 3. A card touching b waits behind the red; a disjoint card in c still cuts its lane.
+      yield* add(4, "packages/b/four.txt")
+      yield* add(5, "packages/c/five.txt")
       repo.remote.conclusion = ""
       yield* board.queueTick()
       const after = yield* bundles()
       expect(after.slice(3).map((bundle) => bundle.packages)).toEqual([["c"]])
-      expect(yield* stage(repo, 3)).toBe("queue")
+      expect(yield* stage(repo, 4)).toBe("queue")
       // No second safety run: the red one reset the count of lane landings.
       expect(after.filter((bundle) => bundle.packages?.length === 0)).toHaveLength(1)
     }),
