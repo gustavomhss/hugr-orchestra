@@ -4,7 +4,7 @@ import fs from "fs/promises"
 import os from "os"
 import path from "path"
 import { and, eq } from "drizzle-orm"
-import { Clock, Effect, Option, Schema } from "effect"
+import { Clock, Effect, Option, Schema, Scope, Semaphore } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { Board } from "@orchestra/schema/board"
 import type { AppProcess } from "../process"
@@ -22,6 +22,10 @@ export interface Deps {
   readonly proc: AppProcess.Interface
   readonly gh: BoardGithub.Gh
   readonly env?: NodeJS.ProcessEnv
+  /** Scoped test runs outlive the `ci_run` call that starts them and stop with the board. */
+  readonly scope: Scope.Scope
+  /** Scoped test runs at once, 3 by default: each test:ci upload makes about 350 GitHub API calls, and 5 at once got HTTP 403. */
+  readonly concurrency?: number
 }
 
 export type Contract = {
@@ -106,10 +110,20 @@ const Runs = Schema.Array(
   Schema.Struct({ headSha: Schema.String, status: Schema.String, conclusion: Schema.String, url: Schema.String, createdAt: Schema.String }),
 )
 const decodeRuns = Schema.decodeUnknownOption(Schema.fromJsonString(Runs))
+const View = Schema.Struct({
+  status: Schema.String,
+  conclusion: Schema.String,
+  jobs: Schema.Array(Schema.Struct({ name: Schema.String, conclusion: Schema.String })),
+})
+const decodeView = Schema.decodeUnknownOption(Schema.fromJsonString(View))
 
 const RUN_URL = /https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/actions\/runs\/\d+/g
 
 export function make(deps: Deps) {
+  const slots = Semaphore.makeUnsafe(deps.concurrency ?? 3)
+  // The scoped runs this process started and has not finished, with the run URL once the command printed it.
+  const live = new Map<Board.CheckID, { url: string | null }>()
+
   const git = (cwd: string, args: ReadonlyArray<string>, env?: Record<string, string>) =>
     deps.proc
       .run(
@@ -221,24 +235,19 @@ export function make(deps: Deps) {
   const insert = (row: typeof BoardCheckTable.$inferInsert) =>
     deps.quiet((tx) => tx.insert(BoardCheckTable).values(row).run())
 
-  const runTests = Effect.fnUntraced(function* (input: {
+  // Only a row still pending is settled: the background run and a later ci_run may both reach it.
+  const finish = (id: Board.CheckID, fields: Pick<typeof BoardCheckTable.$inferInsert, "outcome" | "url" | "failing" | "ended_at">) =>
+    deps.quiet((tx) =>
+      tx.update(BoardCheckTable).set(fields).where(and(eq(BoardCheckTable.id, id), eq(BoardCheckTable.outcome, "pending"))).run(),
+    )
+
+  /** Records a pending scoped row at once and runs the command in the background, at most `concurrency` at a time. */
+  const start = Effect.fnUntraced(function* (input: {
     readonly issue: IssueRow
     readonly cwd: string
     readonly argv: ReadonlyArray<string>
     readonly tree: string
   }) {
-    const startedAt = yield* Clock.currentTimeMillis
-    const executable = which(input.argv[0] ?? "", deps.env ?? process.env) ?? input.argv[0] ?? ""
-    const result = yield* deps.proc
-      .run(ChildProcess.make(executable, input.argv.slice(1), { cwd: input.cwd, env: deps.env, extendEnv: true, stdin: "ignore" }), {
-        combineOutput: true,
-        maxOutputBytes: 16 * 1024 * 1024,
-        timeout: "90 minutes",
-      })
-      .pipe(Effect.result)
-    const output = result._tag === "Success" ? (result.success.output?.toString("utf8") ?? "") : ""
-    const outcome: Board.CheckOutcome =
-      result._tag === "Failure" ? "error" : result.success.exitCode === 0 ? "pass" : "fail"
     const commit = yield* git(input.cwd, ["rev-parse", "HEAD"])
     const row = {
       id: Board.CheckID.create(),
@@ -248,14 +257,97 @@ export function make(deps: Deps) {
       command: input.argv.join(" "),
       tree_sha: input.tree,
       commit_sha: commit.code === 0 ? commit.out : null,
-      outcome,
-      url: output.match(RUN_URL)?.at(-1) ?? null,
-      failing: result._tag === "Failure" ? [result.failure.message] : outcome === "fail" ? failing(output) : [],
-      started_at: startedAt,
-      ended_at: yield* Clock.currentTimeMillis,
+      outcome: "pending" as const,
+      url: null,
+      failing: [],
+      started_at: yield* Clock.currentTimeMillis,
+      ended_at: null,
     }
     yield* insert(row)
-    return row
+    const entry = { url: null as string | null }
+    live.set(row.id, entry)
+    yield* slots
+      .withPermits(1)(runTests(row.id, input.cwd, input.argv, entry))
+      .pipe(
+        // A run stopped with the board keeps the URL it printed, so the next host settles it from GitHub.
+        Effect.ensuring(
+          Effect.suspend(() => {
+            live.delete(row.id)
+            if (!entry.url) return Effect.void
+            return deps.quiet((tx) =>
+              tx.update(BoardCheckTable).set({ url: entry.url }).where(and(eq(BoardCheckTable.id, row.id), eq(BoardCheckTable.outcome, "pending"))).run(),
+            )
+          }),
+        ),
+        Effect.forkIn(deps.scope),
+      )
+  })
+
+  const runTests = Effect.fnUntraced(function* (id: Board.CheckID, cwd: string, argv: ReadonlyArray<string>, entry: { url: string | null }) {
+    const executable = which(argv[0] ?? "", deps.env ?? process.env) ?? argv[0] ?? ""
+    // test:ci prints its run URL right after the upload, minutes before it ends. Kept, it lets a later ci_run settle the
+    // row from GitHub when this process stops first.
+    let tail = ""
+    const result = yield* deps.proc
+      .run(ChildProcess.make(executable, argv.slice(1), { cwd, env: deps.env, extendEnv: true, stdin: "ignore" }), {
+        combineOutput: true,
+        maxOutputBytes: 16 * 1024 * 1024,
+        timeout: "90 minutes",
+        inspect: (chunk) => {
+          if (entry.url) return
+          tail = (tail + Buffer.from(chunk).toString("utf8")).slice(-4096)
+          entry.url = tail.match(RUN_URL)?.[0] ?? null
+        },
+      })
+      .pipe(Effect.result)
+    const output = result._tag === "Success" ? (result.success.output?.toString("utf8") ?? "") : ""
+    const outcome: Board.CheckOutcome =
+      result._tag === "Failure" ? "error" : result.success.exitCode === 0 ? "pass" : "fail"
+    yield* finish(id, {
+      outcome,
+      url: output.match(RUN_URL)?.at(-1) ?? entry.url,
+      failing: result._tag === "Failure" ? [result.failure.message] : outcome === "fail" ? failing(output) : [],
+      ended_at: yield* Clock.currentTimeMillis,
+    })
+  })
+
+  /**
+   * Settles an issue's pending scoped rows. A run this process still holds only records the run URL it printed; a run
+   * it lost (the host stopped) is read from GitHub by that URL, or, with none, never started and becomes an error that
+   * the next ci_run dispatches again. A run read from GitHub is judged by its conclusion alone: the omni positive
+   * control that test:ci checks in its report is not read back.
+   */
+  const settleScoped = Effect.fnUntraced(function* (issue: Board.IssueID) {
+    const pending = (yield* rows(issue)).filter((row) => row.kind === "scoped" && row.outcome === "pending")
+    yield* Effect.forEach(pending, (row) =>
+      Effect.gen(function* () {
+        const entry = live.get(row.id)
+        if (entry) {
+          if (entry.url && row.url !== entry.url)
+            yield* deps.quiet((tx) => tx.update(BoardCheckTable).set({ url: entry.url }).where(eq(BoardCheckTable.id, row.id)).run())
+          return
+        }
+        const run = row.url?.match(/github\.com\/([\w.-]+\/[\w.-]+)\/actions\/runs\/(\d+)$/)
+        if (!run?.[1] || !run[2])
+          return yield* finish(row.id, {
+            outcome: "error",
+            url: row.url,
+            failing: ["The host stopped before the run started; ci_run dispatches it again."],
+            ended_at: yield* Clock.currentTimeMillis,
+          })
+        const viewed = yield* deps.gh(["run", "view", run[2], "-R", run[1], "--json", "status,conclusion,jobs"])
+        const view = viewed.exitCode === 0 ? Option.getOrUndefined(decodeView(viewed.stdout)) : undefined
+        if (view?.status !== "completed") return
+        const outcome = conclude(view.conclusion)
+        const failed = view.jobs.filter((job) => job.conclusion === "failure" || job.conclusion === "timed_out").map((job) => job.name)
+        yield* finish(row.id, {
+          outcome,
+          url: row.url,
+          failing: outcome === "pass" ? [] : failed.length > 0 ? failed : [row.command],
+          ended_at: yield* Clock.currentTimeMillis,
+        })
+      }),
+    )
   })
 
   /** Dispatches each workflow once per pushed tree, and settles pending dispatches from `gh run list`. */
@@ -324,15 +416,8 @@ export function make(deps: Deps) {
       if (row.url !== run.url) yield* deps.quiet((tx) => tx.update(BoardCheckTable).set({ url: run.url }).where(eq(BoardCheckTable.id, row.id)).run())
       return
     }
-    const outcome: Board.CheckOutcome =
-      run.conclusion === "success" ? "pass" : run.conclusion === "failure" || run.conclusion === "timed_out" ? "fail" : "error"
-    yield* deps.quiet((tx) =>
-      tx
-        .update(BoardCheckTable)
-        .set({ outcome, url: run.url, failing: outcome === "pass" ? [] : [row.command], ended_at: Date.now() })
-        .where(and(eq(BoardCheckTable.id, row.id), eq(BoardCheckTable.outcome, "pending")))
-        .run(),
-    )
+    const outcome = conclude(run.conclusion)
+    yield* finish(row.id, { outcome, url: run.url, failing: outcome === "pass" ? [] : [row.command], ended_at: Date.now() })
   })
 
   return {
@@ -364,14 +449,20 @@ export function make(deps: Deps) {
         )
       if (terms.scoped.tests !== null) {
         const argv = yield* command(terms.scoped.tests, input, ref)
+        yield* settleScoped(found.issue.id)
         const done = (yield* rows(found.issue.id)).some(
           (row) => row.kind === "scoped" && row.tree_sha === tree && row.command === argv.join(" ") && row.outcome !== "error",
         )
-        if (dispatch && !done) yield* runTests({ issue: found.issue, cwd, argv, tree })
+        if (dispatch && !done) yield* start({ issue: found.issue, cwd, argv, tree })
       }
       yield* workflows({ project: found.project, issue: found.issue, files: terms.scoped.workflows, dispatch, notes })
 
       const checks = (yield* rows(found.issue.id)).filter((row) => row.tree_sha === tree).sort((a, b) => a.started_at - b.started_at)
+      const running = checks.find((row) => row.kind === "scoped" && row.outcome === "pending")
+      if (running)
+        notes.push(
+          `The scoped tests run in the background${running.url ? ` (${running.url})` : ""}, at most ${deps.concurrency ?? 3} at once across cards; call ci_run again to settle them.`,
+        )
       return {
         tree,
         state: state(checks, terms),
@@ -383,6 +474,13 @@ export function make(deps: Deps) {
 }
 
 export type Interface = ReturnType<typeof make>
+
+function conclude(conclusion: string): Board.CheckOutcome {
+  if (conclusion === "success") return "pass"
+  if (conclusion === "failure" || conclusion === "timed_out") return "fail"
+  return "error"
+}
+
 export type Error = NotFoundError | RefusedError
 
 /**

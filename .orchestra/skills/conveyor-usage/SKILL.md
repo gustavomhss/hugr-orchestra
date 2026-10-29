@@ -12,7 +12,9 @@ Design: `docs/specs/maestro-lead/merge-queue.md`.
 
 1. Dispatch with `task` and `card` opens attempt 1. Every 10 minutes the host pushes the worktree to
    `refs/orchestra/wip/<KEY>-<n>/a<attempt>` after a gitleaks scan; a hit keeps the card `local`.
-2. Maestro runs `ci_run` on the card. Results are keyed by tree: a commit that keeps the files keeps the green.
+2. Maestro runs `ci_run` on the card. The scoped tests start in the background with a `pending` check (at most 3 at
+   once across cards); a later `ci_run`, or `run: false`, settles them. Start every ready card first, then read them.
+   Results are keyed by tree: a commit that keeps the files keeps the green.
 3. The card's PR opens and the host moves it to Review. A base advance that touches its files writes a conflict note;
    the seat merges base on its next dispatch.
 4. Maestro writes the PR record with `board_issue` (Intent, Decisions, Not covered, Risk level) and calls

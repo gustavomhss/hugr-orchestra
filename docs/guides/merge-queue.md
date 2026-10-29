@@ -37,6 +37,9 @@ required check passed on its current files, and `scoped-red` when the latest run
 same files keeps the green; any edit drops it, and Maestro runs the checks again. Running the checks twice on the same
 files starts nothing new.
 
+The scoped tests run in the background: a check stays `pending` until Maestro asks again, so several cards are tested
+at once. At most 3 run at a time, because each `test:ci` upload makes hundreds of GitHub API calls.
+
 ## Work in progress is pushed early
 
 Every time Maestro sends a card to a seat it opens an attempt: the first dispatch is attempt 1, and each new Session on

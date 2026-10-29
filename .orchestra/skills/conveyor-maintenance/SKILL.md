@@ -52,7 +52,11 @@ snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bund
   created after the dispatch; two dispatches of one workflow on one commit can swap.
 - Workflow rows carry the pushed branch's tree, so they count toward the state only when the worktree matches what
   was pushed.
-- `ci_run` waits for `scoped.tests`; with `test:ci` that is minutes.
+- `ci_run` does not wait for `scoped.tests`: it inserts a `pending` row and forks the command into the board's scope
+  behind a semaphore (`Deps.concurrency`, 3; 5 `test:ci` uploads at once hit HTTP 403). `live` holds the rows this
+  process runs; a pending row not in it was lost by a stopped host and settles from `gh run view` by its URL, which
+  `inspect` caught from the output. That path reads the run's conclusion only, not the omni control verdict. `finish`
+  writes only rows still `pending`, since the background run and a later `ci_run` can both reach one.
 - gitleaks comes from `BackendToolkit.ensure`; tests pass a fake through `Board.layerWith({ scanner })`. The scanner is
   a command (executable plus leading arguments), so a test fake is a `.ts` file run as `[process.execPath, fake]`, which
   spawns on Windows too. The scan exits 0 clean, 1 on a finding, anything else could not run.

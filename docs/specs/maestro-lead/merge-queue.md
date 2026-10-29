@@ -437,11 +437,19 @@ PR". That keeps the `AGENTS.md` rule of one full run per epic, as long as a bund
 
 `ci_run` is a new Maestro tool, and the only way Maestro triggers CI. It takes a card and the scoped arguments, then:
 
-1. Runs `scoped.tests` in the card's worktree. For this repository, `test:ci` uploads exactly the working tree.
+1. Starts `scoped.tests` in the card's worktree and returns at once. For this repository, `test:ci` uploads exactly
+   the working tree.
 2. Dispatches `scoped.workflows` on the card's pushed branch, when it has one.
 3. Writes a `board_check` row: `issue_id`, `attempt`, `kind` (`scoped`, `workflow` or `full`), `tree_sha` (from a
    temporary index, so the worktree is untouched), `commit_sha`, `outcome`, `url`, `failing` (test files or check
    names), `started_at`, `ended_at`.
+
+Both kinds start `pending` and settle later. The scoped command runs in the background on the host, at most 3 at once
+across cards: each `test:ci` upload makes about 350 GitHub API calls, and 5 at once got HTTP 403. Maestro starts every
+ready card, then calls `ci_run` again (`run: false` only settles) to read each result. The background run records the
+run URL that `test:ci` prints, so when the host stops first the next `ci_run` settles the row from that run's
+conclusion on GitHub. Read that way, the omni positive control verdict is not checked. A row with no URL never
+started; it becomes `error`, and the next `ci_run` starts it again.
 
 Because checks are keyed by tree, a green on the snapshot stays valid on the PR head when the commit Maestro makes
 in `land` has the same tree. Any edit after the check changes the tree, and the card drops back from

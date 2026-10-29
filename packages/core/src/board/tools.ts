@@ -121,7 +121,7 @@ export const node = makeGlobalNode({
           }),
           ci_run: Tool.make({
             description:
-              "Run a card's scoped checks from .orchestra/ci.json on its worktree's current tree and report scoped-green, scoped-red or null. A tree that already has a result is not run again, so a commit that keeps the tree keeps its green. run: false only reports.",
+              "Start a card's scoped checks from .orchestra/ci.json on its worktree's current tree and report scoped-green, scoped-red or null. The scoped tests run in the background and return a pending check; at most 3 run at once across cards, so start every ready card, then call ci_run again (run: false only settles and reports) to read each result. A tree that already has a result or a pending run is not run again, so a commit that keeps the tree keeps its green.",
             input: CiRunInput,
             output: CiRunResult,
             execute: (input, context) => guard(context, board.ciRun(input)),

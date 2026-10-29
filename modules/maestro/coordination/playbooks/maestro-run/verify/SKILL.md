@@ -70,7 +70,9 @@ git ls-files --others --exclude-standard
 
 Resolve baseline/paths before execution. Inspect untracked file contents separately; Git diffs omit them.
 For a board card, run its scoped checks with `ci_run` (package and files from the Done when): it follows the
-project's `.orchestra/ci.json`, keys results by tree and reruns nothing already settled on that tree. Otherwise
+project's `.orchestra/ci.json`, keys results by tree and reruns nothing already settled on that tree. The scoped
+tests run in the background and come back `pending`: start every ready card, then call `ci_run` again (`run: false`
+only settles) to read each result. Otherwise
 run tests on Actions with `bun run test:ci <package> <resolved-suite>` from the repository root and
 `bun typecheck` from the package directory.
 For CI claims, inspect `gh pr checks <pr>` at exact PR head; local green is not CI green.

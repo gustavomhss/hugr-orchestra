@@ -4,7 +4,7 @@ import fs from "fs/promises"
 import path from "path"
 import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, ne, sql } from "drizzle-orm"
 import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors"
-import { Clock, Context, Effect, Layer, Schedule } from "effect"
+import { Clock, Context, Effect, Layer, Schedule, Scope } from "effect"
 import { SqlError } from "effect/unstable/sql/SqlError"
 import { recordPort } from "@orchestra/atlas-boundary/record"
 import { Board } from "@orchestra/schema/board"
@@ -574,6 +574,7 @@ export const layerWith = (options: {
         proc,
         gh: options.gh ?? BoardGithub.runner(proc, options.env),
         env: options.env,
+        scope: yield* Scope.Scope,
       })
       const snapshots = BoardSnapshot.make({
         quiet: (work) => quiet(work).pipe(Effect.orDie),
@@ -607,8 +608,7 @@ export const layerWith = (options: {
         affected: options.affected,
       })
 
-      if (options.poll)
-        yield* conflicts.sweep().pipe(Effect.ignore, Effect.repeat(Schedule.spaced("60 seconds")), Effect.forkScoped)
+      if (options.poll) yield* conflicts.sweep().pipe(Effect.ignore, Effect.repeat(Schedule.spaced("60 seconds")), Effect.forkScoped)
 
       if (options.poll) yield* queue.tick().pipe(Effect.ignore, Effect.repeat(Schedule.spaced("60 seconds")), Effect.forkScoped)
 
