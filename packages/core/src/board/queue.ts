@@ -45,7 +45,7 @@ export interface Deps {
   readonly gh: BoardGithub.Gh
   readonly contract: (directory: string, project: ProjectRow) => Effect.Effect<BoardCi.Contract, { readonly message: string }>
   readonly publish: (changed: Changed) => Effect.Effect<void>
-  /** Atlas's record renderer and trailer writer; unbound until its adapter lands. */
+  /** Atlas's record renderer and trailer writer; `Board.layer` binds it, tests may leave it unbound. */
   readonly record?: BoardRecord.Port
 }
 

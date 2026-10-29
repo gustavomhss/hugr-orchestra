@@ -6,6 +6,7 @@ import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, ne, sql } from "dri
 import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors"
 import { Clock, Context, Effect, Layer, Schedule } from "effect"
 import { SqlError } from "effect/unstable/sql/SqlError"
+import { recordPort } from "@orchestra/atlas-boundary/record"
 import { Board } from "@orchestra/schema/board"
 import { Integration } from "@orchestra/schema/integration"
 import { Credential } from "../credential"
@@ -1618,7 +1619,7 @@ export const layerWith = (options: {
     }),
   )
 
-export const layer = layerWith({ poll: true })
+export const layer = layerWith({ poll: true, record: recordPort })
 
 export const node = makeGlobalNode({
   service: Service,
