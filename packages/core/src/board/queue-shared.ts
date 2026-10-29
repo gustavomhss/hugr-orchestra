@@ -82,7 +82,7 @@ const decodeDry = Schema.decodeUnknownOption(Schema.fromJsonString(Dry))
  * the tree that lands: the project's own checkout may sit on any branch, and its stale package list once sent a lane
  * gate a package base no longer has. A range that does not merge cleanly has no affected set.
  */
-export const affected = Effect.fnUntraced(function* (deps: Deps, directory: string, from: string, to: string) {
+export const affected = Effect.fnUntraced(function* (deps: Pick<Deps, "affected" | "proc" | "env">, directory: string, from: string, to: string) {
   if (deps.affected) return yield* deps.affected(directory, from, to)
   const bun = which("bun", deps.env ?? process.env)
   if (!bun) return undefined

@@ -53,6 +53,10 @@ snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bund
 - Workflow rows carry the pushed branch's tree, so they count toward the state only when the worktree matches what
   was pushed.
 - `ci_run` waits for `scoped.tests`; with `test:ci` that is minutes.
+- A `ci_run` without `package` against a `{package}` template computes the card's packages: it commits the snapshot
+  tree with `commit-tree` (no ref keeps it) because turbo compares commits, diffs it against the merge-base with base,
+  and asks `affected` (bound through `Board.layerWith({ affected })` in tests). Only an empty set records
+  `BoardCi.UNTOUCHED`; never let it pass silently for a card that changes code.
 - gitleaks comes from `BackendToolkit.ensure`; tests pass a fake through `Board.layerWith({ scanner })`. The scanner is
   a command (executable plus leading arguments), so a test fake is a `.ts` file run as `[process.execPath, fake]`, which
   spawns on Windows too. The scan exits 0 clean, 1 on a finding, anything else could not run.
