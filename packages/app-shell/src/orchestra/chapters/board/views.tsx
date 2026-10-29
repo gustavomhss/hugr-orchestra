@@ -29,9 +29,8 @@ import {
 } from "./plan"
 import "./views.css"
 
-// The board's other views (CONTRACT.md §7, slice E2): the projects overview, the list, the epic page and the timeline.
-// They read the same snapshot as the board; the owner still only answers, opens and archives. Spend, agents and the
-// briefing prose are not in the E1 data, so they are not drawn.
+// The board's other views (CONTRACT.md §7, slice E2): overview, list, epic page and timeline, off the board snapshot.
+// The owner only answers, opens and archives. Spend, agents and briefing prose are not in the E1 data, so not drawn.
 type Language = ReturnType<typeof useLanguage>
 type Epic = Snapshot["epics"][number]
 
@@ -40,6 +39,7 @@ const stageKey = {
   ready: "orchestra.board.stage.ready",
   building: "orchestra.board.stage.building",
   review: "orchestra.board.stage.review",
+  queue: "orchestra.board.stage.queue",
   shipped: "orchestra.board.stage.shipped",
   intake: "orchestra.board.stage.intake",
   cut: "orchestra.board.stage.cut",

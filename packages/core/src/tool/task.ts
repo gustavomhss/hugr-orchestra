@@ -8,6 +8,7 @@ import { Context, DateTime, Effect, Fiber, Layer, Option, Schema } from "effect"
 import { AgentV2 } from "../agent"
 import { Catalog } from "../catalog"
 import { Config } from "../config"
+import { BoardThread } from "../board/thread"
 import { Database } from "../database/database"
 import { FSUtil } from "../fs-util"
 import { makeLocationNode, Node } from "../effect/app-node"
@@ -187,6 +188,17 @@ const layer = Layer.effectDiscard(
             const promptID = taskPromptID(context, child.id)
             // Exact retries retain the delivery admitted by an earlier Task version.
             const recordedInput = yield* SessionInput.find(database.db, promptID)
+            // Maestro's governance links a dispatched card to the child during admission; the thread note shares the
+            // prompt's id, so an exact retry writes it once.
+            const card = yield* BoardThread.bySession(database.db, child.id)
+            if (card)
+              yield* BoardThread.write(database.db, {
+                id: `bno_${promptID}`,
+                issue: card.id,
+                kind: (yield* BoardThread.last(database.db, card.id)) === "question" ? "answer" : "brief",
+                author: "maestro",
+                body: input.prompt,
+              }).pipe(Effect.orDie)
             const admitted = yield* sessions.prompt({
               id: promptID,
               sessionID: child.id,
@@ -249,6 +261,8 @@ const layer = Layer.effectDiscard(
             if (reply.agent !== target.id)
               return yield* new ToolFailure({ message: `Task ${child.id} reply agent differs from the recorded child` })
             const settled = yield* governance.settle({ child, reply, admission, context })
+            if (card)
+              yield* BoardThread.write(database.db, { id: `bno_${promptID}_r`, issue: card.id, kind: settled.blocked ? "question" : "return", author: target.id, body: settled.text }).pipe(Effect.orDie)
             return {
               sessionID: child.id,
               agent: target.id,

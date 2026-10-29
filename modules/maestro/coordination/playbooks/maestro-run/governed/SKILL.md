@@ -66,7 +66,8 @@ Check these before admission. Any failure is a HOLD to report, never a reason to
     `authorizationID`. Any newer user message makes the approval stale.
 13. In the same turn, `task` with `subagent_type`, `prompt` and `model` byte-identical to the approved intent, plus
     `authorizationID` (and, for a workflow, the approved `workflow` and `writePaths`). One authorization allows one
-    dispatch; every resume or retry of it passes this same input unchanged.
+    dispatch; every resume or retry of it passes this same input unchanged. Seats' Atlas writes under
+    `.atlas/members/` always count as inside `writePaths`; they only append.
 14. Workers leave their result uncommitted. When the last work package settles, the gate that grades `cold-review`
     holds with `WORKFLOW_CODE_REVIEW_REQUIRED` before grading, so no retry is spent, and the Task returns to you. Call
     `maestro_request_review` with the same `validationRecordID`, card, `reviewMethodVersion` and `stage: "code"`; it

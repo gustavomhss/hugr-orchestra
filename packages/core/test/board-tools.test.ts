@@ -26,16 +26,19 @@ const call = (registry: ToolRegistry.Interface, who: typeof toolIdentity, name: 
   executeTool(registry, { sessionID, ...who, call: { type: "tool-call", id: `call-${name}`, name, input } })
 
 describe("BoardTools", () => {
-  it.live("registers the nine board tools and runs them for Maestro", () =>
+  it.live("registers the twelve board tools and runs them for Maestro", () =>
     Effect.gen(function* () {
       const registry = yield* ToolRegistry.Service
       expect((yield* toolDefinitions(registry)).map((tool) => tool.name).filter((name) => name.startsWith("board_")).toSorted()).toEqual([
+        "board_bundle",
         "board_decision",
+        "board_dequeue",
         "board_epic",
         "board_issue",
         "board_move",
         "board_project",
         "board_question",
+        "board_queue",
         "board_read",
         "board_settings",
         "board_steps",

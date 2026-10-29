@@ -27,7 +27,12 @@ export interface Deps {
 export type Contract = {
   readonly base: string
   readonly scoped: { readonly tests: string | null; readonly workflows: ReadonlyArray<string> }
-  readonly full: { readonly label: string | null; readonly checks: ReadonlyArray<string> }
+  readonly full: {
+    readonly label: string | null
+    readonly checks: ReadonlyArray<string>
+    /** A line the named jobs (name prefixes) always print; such a job that failed with no failing file and without it never ran its tests. */
+    readonly control: { readonly line: string; readonly jobs: ReadonlyArray<string> } | null
+  }
   readonly bundle: {
     readonly size: number
     readonly max: number
@@ -48,7 +53,13 @@ const File = Schema.Struct({
   scoped: Schema.optional(
     Schema.Struct({ tests: Schema.optional(Schema.NullOr(Schema.String)), workflows: Schema.optional(Schema.Array(Schema.String)) }),
   ),
-  full: Schema.optional(Schema.Struct({ label: Schema.optional(Schema.NullOr(Schema.String)), checks: Schema.optional(Schema.Array(Schema.String)) })),
+  full: Schema.optional(
+    Schema.Struct({
+      label: Schema.optional(Schema.NullOr(Schema.String)),
+      checks: Schema.optional(Schema.Array(Schema.String)),
+      control: Schema.optional(Schema.NullOr(Schema.Struct({ line: Schema.String, jobs: Schema.Array(Schema.String) }))),
+    }),
+  ),
   bundle: Schema.optional(
     Schema.Struct({
       size: Schema.optional(Positive),
@@ -107,7 +118,7 @@ export function make(deps: Deps) {
     return {
       base: file.base ?? base,
       scoped: { tests: file.scoped?.tests ?? null, workflows: file.scoped?.workflows ?? [] },
-      full: { label: file.full?.label ?? null, checks: file.full?.checks ?? [] },
+      full: { label: file.full?.label ?? null, checks: file.full?.checks ?? [], control: file.full?.control ?? null },
       bundle: {
         size: file.bundle?.size ?? 4,
         max: file.bundle?.max ?? 16,
@@ -129,7 +140,7 @@ export function make(deps: Deps) {
     return {
       base,
       scoped: { tests: null, workflows: [] },
-      full: { label: null, checks: [] },
+      full: { label: null, checks: [], control: null },
       bundle: { size: required ? 4 : 1, max: 16, waitMinutes: 45, onBaseMoved: "retest" },
       budget: { jobs: null },
       snapshots: { remote: "origin" },
@@ -357,7 +368,7 @@ export function state(
 }
 
 // Split on whitespace with no shell: `{files}` becomes one argument per file and `{package}` is filled in place.
-function command(template: string, input: Board.CiRunInput, ref: string) {
+export function command(template: string, input: { readonly package?: string; readonly files?: ReadonlyArray<string> }, ref: string) {
   if (template.includes("{package}") && !input.package)
     return Effect.fail(new RefusedError({ message: `The contract's scoped.tests needs \`package\` for ${ref}.` }))
   return Effect.succeed(
@@ -368,9 +379,11 @@ function command(template: string, input: Board.CiRunInput, ref: string) {
   )
 }
 
-// Bun prints each test file as a header line and `(fail)` under it; test:ci prints a failed job as `=== name: failure ===`.
-function failing(output: string) {
-  const files = output
+// Bun prints each test file as a header line and `(fail)` under it; vitest prints `FAIL |project| <file> > <test>`; tsc and
+// tsgo print each type error with its file path; test:ci prints a failed job as `=== name: failure ===`. Colors are stripped.
+export function failing(colored: string) {
+  const output = colored.replace(/\x1b\[[0-9;]*m/g, "")
+  const bun = output
     .split("\n")
     .reduce(
       (acc, line) => {
@@ -381,8 +394,27 @@ function failing(output: string) {
       },
       { file: undefined as string | undefined, found: new Set<string>() },
     ).found
-  if (files.size > 0) return [...files]
+  const types = output.split("\n").flatMap((line) => line.trim().match(/^(\S+\.[cm]?tsx?)(?:\(\d+,\d+\)|:\d+:\d+)(?::| -) error TS\d+/)?.[1] ?? [])
+  const vitest = output.split("\n").flatMap((line) => line.trim().match(/^FAIL\s+(?:\|[^|]+\|\s+)?(\S+\.[cm]?[jt]sx?)\b/)?.[1] ?? [])
+  const files = [...new Set([...bun, ...vitest, ...types])]
+  if (files.length > 0) return files
   return [...output.matchAll(/^=== (.+): failure ===$/gm)].map((match) => match[1] ?? "").filter(Boolean)
+}
+
+// A turbo run prints each package's output between `##[group]<package>:test` and `##[endgroup]`; the bun test files
+// that failed inside a group belong to that package. Windows paths come back with forward slashes.
+export function packaged(colored: string) {
+  return colored
+    .replace(/\x1b\[[0-9;]*m/g, "")
+    .split(/^##\[group\]/m)
+    .slice(1)
+    .flatMap((section) => {
+      const name = section.match(/^(\S+):test\r?$/m)?.[1]
+      const files = failing(section.split(/^##\[endgroup\]/m)[0] ?? "")
+        .filter((file) => /\.test\.[cm]?[jt]sx?$/.test(file))
+        .map((file) => file.replaceAll("\\", "/"))
+      return name && files.length > 0 ? [{ package: name, files }] : []
+    })
 }
 
 function toCheck(row: typeof BoardCheckTable.$inferSelect): Board.Check {

@@ -32,8 +32,9 @@ export type Notice = {
   readonly cleared: boolean
 }
 
-// Review cards are the ones about to queue; WP4 adds the queue stage.
-const WATCHED: ReadonlyArray<Board.Stage> = ["review"]
+// Review cards are about to queue and queued cards are about to be bundled: a conflict holds a queued card out of the
+// next bundle until its worktree merges base.
+const WATCHED: ReadonlyArray<Board.Stage> = ["review", "queue"]
 
 export function make(deps: Deps) {
   const project = Effect.fnUntraced(function* (row: ProjectRow) {
@@ -112,7 +113,7 @@ export function make(deps: Deps) {
         : `${at} touched ${notice.touched.join(", ")}; merges clean.`
     const id = Board.NoteID.create()
     yield* tx.insert(BoardNoteTable).values({ id, issue_id: notice.issue, author: "orchestra", body }).run()
-    const activity = yield* log(tx, { project: row.id, issue: notice.issue, actor: "github", action: "note.add", after: { id } })
+    const activity = yield* log(tx, { project: row.id, issue: notice.issue, actor: "github", action: "note.add", after: { id, author: "orchestra", body } })
     return changed(row.id, activity, notice.issue)
   })
 

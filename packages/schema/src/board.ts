@@ -5,6 +5,8 @@ import { define, inventory } from "./event"
 import { ascending } from "./identifier"
 import { PullRequest } from "./pull-request"
 import { NonNegativeInt, optional, PositiveInt, statics } from "./schema"
+import { Ledger, PrRecord, PushState, QueueState } from "./board-queue"
+export * from "./board-queue"
 
 // The Projects board: Maestro plans projects, epics, issues and steps; the owner answers, comments, attaches,
 // undoes, pauses and holds. "Project" elsewhere is the git repo, so board types are always Board.*.
@@ -45,6 +47,9 @@ export const NoteID = Schema.String.pipe(
 )
 export type NoteID = typeof NoteID.Type
 
+export const NoteKind = Schema.Literals(["brief", "question", "answer", "return", "review", "rework"])
+export type NoteKind = typeof NoteKind.Type
+
 export const AttachmentID = Schema.String.pipe(
   Schema.brand("Board.AttachmentID"),
   statics((schema) => ({ create: () => schema.make("bat_" + ascending()) })),
@@ -82,8 +87,8 @@ export type EpicStatus = typeof EpicStatus.Type
 export const IssueType = Schema.Literals(["feature", "bug", "chore"]).annotate({ identifier: "Board.IssueType" })
 export type IssueType = typeof IssueType.Type
 
-// `intake` holds only GitHub-born issues waiting for the owner.
-export const Stage = Schema.Literals(["intake", "backlog", "ready", "building", "review", "shipped", "cut"]).annotate({
+// `intake` holds only GitHub-born issues waiting for the owner. Only the host moves a card into or out of `queue`.
+export const Stage = Schema.Literals(["intake", "backlog", "ready", "building", "review", "queue", "shipped", "cut"]).annotate({
   identifier: "Board.Stage",
 })
 export type Stage = typeof Stage.Type
@@ -132,6 +137,11 @@ export const Action = Schema.Literals([
   "github.overwrite",
   "github.state",
   "undo",
+  "queue.add",
+  "queue.remove",
+  "bundle.cut",
+  "bundle.merge",
+  "bundle.dissolve",
 ]).annotate({ identifier: "Board.Action" })
 export type Action = typeof Action.Type
 
@@ -207,6 +217,8 @@ export const Issue = Schema.Struct({
   steps: Schema.Array(Step),
   /** Refs of the issues this one waits on, possibly in other projects. */
   dependsOn: Schema.Array(Schema.String),
+  /** Present while the card is in the queue stage. */
+  queue: Schema.NullOr(QueueState).pipe(optional),
 }).annotate({ identifier: "Board.Issue" })
 
 export interface Option extends Schema.Schema.Type<typeof Option> {}
@@ -237,8 +249,10 @@ export interface Note extends Schema.Schema.Type<typeof Note> {}
 export const Note = Schema.Struct({
   id: NoteID,
   issue: PositiveInt,
-  /** `owner`, `maestro` or `github:<login>`. */
+  /** `owner`, `maestro`, `orchestra`, `github:<login>`, or a seat id on a thread note. */
   author: Schema.String,
+  /** Null on a plain note; set on a host-written thread note, which is read-only. */
+  kind: Schema.NullOr(NoteKind),
   body: Schema.String,
   timeCreated: Schema.Finite,
 }).annotate({ identifier: "Board.Note" })
@@ -338,6 +352,7 @@ export const Snapshot = Schema.Struct({
   forecast: ProjectForecast,
   epicForecasts: Schema.Array(EpicForecast),
   scope: Schema.Array(ScopePoint),
+  ledger: Ledger.pipe(optional),
 }).annotate({ identifier: "Board.Snapshot" })
 
 // The git trail is read live and never stored. Signed out says so instead of showing stale data.
@@ -494,6 +509,9 @@ export const IssuePage = Schema.Struct({
   activity: Schema.Array(Activity),
   dependencies: Schema.Struct({ dependsOn: Schema.Array(Schema.String), blocks: Schema.Array(Schema.String) }),
   trail: Trail,
+  record: Schema.NullOr(PrRecord).pipe(optional),
+  /** Null when the card has no open attempt or its worktree cannot be read. */
+  pushState: PushState.pipe(optional),
 }).annotate({ identifier: "Board.IssuePage" })
 
 // What `board_read` gives Maestro: the snapshot, what the owner did since `since`, attachment names and,
@@ -593,6 +611,8 @@ export const IssueInput = Schema.Struct({
   crash_reason: Schema.NullOr(Schema.String).pipe(optional),
   /** Id of the guardrail rule that blocked the card; null clears it. */
   guardrail_rule: Schema.NullOr(Schema.String).pipe(optional),
+  /** The PR record's Maestro fields, merged into the stored record field by field. */
+  record: PrRecord.pipe(optional),
   reason: Reason,
 }).annotate({ identifier: "Board.IssueInput" })
 export type IssueInput = typeof IssueInput.Type
@@ -605,6 +625,24 @@ export const MoveInput = Schema.Struct({
   reason: Reason,
 }).annotate({ identifier: "Board.MoveInput" })
 export type MoveInput = typeof MoveInput.Type
+
+export const QueueInput = Schema.Struct({
+  project: Key,
+  number: PositiveInt,
+  /** Goes to the front of the next bundle. */
+  urgent: Schema.Boolean.pipe(optional),
+  /** Cuts a bundle now instead of waiting for the size or the wait time. */
+  flush: Schema.Boolean.pipe(optional),
+  reason: Reason,
+}).annotate({ identifier: "Board.QueueInput" })
+export type QueueInput = typeof QueueInput.Type
+
+export const DequeueInput = Schema.Struct({
+  project: Key,
+  number: PositiveInt,
+  reason: Reason,
+}).annotate({ identifier: "Board.DequeueInput" })
+export type DequeueInput = typeof DequeueInput.Type
 
 export const StepsInput = Schema.Struct({
   project: Key,
@@ -711,43 +749,6 @@ export const GithubSync = Schema.Struct({ state: GithubState, error: Schema.Null
 })
 export type GithubSync = typeof GithubSync.Type
 
-export const CheckID = Schema.String.pipe(
-  Schema.brand("Board.CheckID"),
-  statics((schema) => ({ create: () => schema.make("bck_" + ascending()) })),
-)
-export type CheckID = typeof CheckID.Type
-
-export const CheckKind = Schema.Literals(["scoped", "workflow", "full"])
-export type CheckKind = typeof CheckKind.Type
-export const CheckOutcome = Schema.Literals(["pass", "fail", "pending", "error"])
-export type CheckOutcome = typeof CheckOutcome.Type
-/** Derived from `board_check` on the card's current tree, never stored. Null: nothing required has a result there yet. */
-export const ScopedState = Schema.NullOr(Schema.Literals(["scoped-green", "scoped-red"]))
-export type ScopedState = typeof ScopedState.Type
-
-/** How an attempt ended; null while it is open. Only a merge or a cut ends a card's last attempt. */
-export const AttemptOutcome = Schema.Literals(["merged", "ejected", "failed", "superseded", "cut"])
-export type AttemptOutcome = typeof AttemptOutcome.Type
-/** Whether the card's work is on the remote: `local` until the worktree's tree equals the last pushed snapshot. */
-export const PushState = Schema.NullOr(Schema.Literals(["local", "pushed"]))
-export type PushState = typeof PushState.Type
-
-/** One pass or fail fact, keyed by the tree it ran on. `board_ci_run` keeps the billing next to it. */
-export const Check = Schema.Struct({
-  id: CheckID,
-  attempt: NonNegativeInt,
-  kind: CheckKind,
-  command: Schema.String,
-  treeSha: Schema.String,
-  commitSha: Schema.NullOr(Schema.String),
-  outcome: CheckOutcome,
-  url: Schema.NullOr(Schema.String),
-  failing: Schema.Array(Schema.String),
-  startedAt: Schema.Finite,
-  endedAt: Schema.NullOr(Schema.Finite),
-}).annotate({ identifier: "Board.Check" })
-export type Check = typeof Check.Type
-
 export const CiRunInput = Schema.Struct({
   project: Key,
   issue: PositiveInt,
@@ -760,14 +761,17 @@ export const CiRunInput = Schema.Struct({
 }).annotate({ identifier: "Board.CiRunInput" })
 export type CiRunInput = typeof CiRunInput.Type
 
-export const CiRunResult = Schema.Struct({
-  tree: Schema.String,
-  state: ScopedState,
-  checks: Schema.Array(Check),
-  /** What the contract left out or could not do, in plain words. */
-  notes: Schema.Array(Schema.String),
-}).annotate({ identifier: "Board.CiRunResult" })
-export type CiRunResult = typeof CiRunResult.Type
+export const BundleInput = Schema.Struct({
+  project: Key,
+  /** The bundle number, as in `KEY-B<n>`. */
+  bundle: PositiveInt,
+  /** `merge` ships a flaky bundle as tested; `retry` cuts a flaky or paused bundle's cards into a new bundle; `release` lets one held card of a dissolved bundle ride a bundle alone. */
+  verdict: Schema.Literals(["merge", "retry", "release"]),
+  /** The held card to release, by number; only for `release`. */
+  card: Schema.optional(PositiveInt),
+  reason: Reason,
+}).annotate({ identifier: "Board.BundleInput" })
+export type BundleInput = typeof BundleInput.Type
 
 // Carries no board content: the app refetches what it shows.
 const Changed = define({

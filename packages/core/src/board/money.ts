@@ -120,6 +120,11 @@ export const evaluate = Effect.fnUntraced(function* (tx: Tx, id: string) {
   if (asked) return undefined
   const question = Board.QuestionID.create()
   const text = `${project.key} is forecast to spend about $${budget.forecastUsd.toFixed(2)} by its finish, ${Math.round(budget.forecastPercent)}% of its $${project.budget_usd.toFixed(2)} budget. What should happen?`
+  const options = [
+    { id: "raise", label: "Raise the budget", consequence: "Work continues; set the new amount in the project settings." },
+    { id: "cut", label: "Cut scope to fit", consequence: "Maestro proposes which cards to cut; the budget stays." },
+    { id: "continue", label: "Keep going as is", consequence: "Work continues until 100%, then new work stops." },
+  ]
   yield* tx
     .insert(BoardQuestionTable)
     .values({
@@ -128,11 +133,7 @@ export const evaluate = Effect.fnUntraced(function* (tx: Tx, id: string) {
       issue_id: null,
       epic_id: null,
       text,
-      options: [
-        { id: "raise", label: "Raise the budget", consequence: "Work continues; set the new amount in the project settings." },
-        { id: "cut", label: "Cut scope to fit", consequence: "Maestro proposes which cards to cut; the budget stays." },
-        { id: "continue", label: "Keep going as is", consequence: "Work continues until 100%, then new work stops." },
-      ],
+      options,
       recommended: "cut",
       cost_of_waiting: "At 100% of the budget the board stops starting new work.",
       kind,
@@ -145,7 +146,16 @@ export const evaluate = Effect.fnUntraced(function* (tx: Tx, id: string) {
     actor: "maestro",
     action: "question.ask",
     reason: "The forecast finish crossed 90% of the budget.",
-    after: { id: question, text, blocking: false },
+    after: {
+      id: question,
+      epic_id: null,
+      text,
+      options,
+      recommended: "cut",
+      cost_of_waiting: "At 100% of the budget the board stops starting new work.",
+      kind,
+      blocking: false,
+    },
   })
 })
 

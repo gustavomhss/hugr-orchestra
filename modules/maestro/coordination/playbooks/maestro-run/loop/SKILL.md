@@ -78,11 +78,27 @@ git worktree list --porcelain
 ```
 
 Resolve parameters in actual assigned worktree; inspect untracked paths separately.
+When dispatching a board card, pass `card: "KEY-n"` on `task` (and on `maestro_request_review`); the host records the thread.
 For a board card, run its scoped checks with `ci_run` (package and files from the Done when): it follows the
 project's `.orchestra/ci.json`, keys results by tree and reruns nothing already settled on that tree. Otherwise
 run tests on Actions with `bun run test:ci <package> <resolved-suite>` from the repository root and
 `bun typecheck` from the package directory. Use `maestro-repo-maintenance` when an authorized Git/PR/release procedure is needed.
 Commands here inspect/verify; they do not implicitly authorize commit, push, PR, merge, or release.
+
+Publish a board card in this order: verify (scoped checks green on the PR head), write the record with
+`board_issue`, then `board_queue`. Never merge a board card's PR yourself; the host bundles queued cards, runs the
+full gate once and merges on green. `board_queue` refuses a card without a PR, a complete record or a green tree.
+The record is structure only; the repository may be public, so no spend, transcripts or secrets:
+
+```json
+{"intent": "Let a queued card leave the queue without a stage move.",
+ "decisions": "Dequeue dissolves the open bundle instead of rebuilding it in place.",
+ "not_covered": "Visual queue column; the Interface session owns it.",
+ "risk": {"level": "medium", "breaks": "A stale bundle could hold queued cards.", "undo": "Revert the PR; no migration."},
+ "follow_ups": ["LCH-61"]}
+```
+
+To pull a card back, `board_dequeue`; `board_move` never moves into or out of `queue`. An <integration> line saying a bundle is flaky or the queue is paused waits on you: board_bundle merge ships a flaky bundle as tested; board_bundle retry cuts a flaky or paused bundle's cards into a new bundle. A dissolved bundle's cards are held: release one at a time with `board_bundle release` and its card number, `board_dequeue` a suspect, or send F to jimmy. Merge a flake only when the failing test is unrelated to the bundle's cards. When base goes red, the queue opens a fix card; route it like any bug, and the queue lets it through alone.
 
 ## Success / fail
 

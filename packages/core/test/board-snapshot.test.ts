@@ -7,7 +7,7 @@ import { pathToFileURL } from "url"
 import { eq } from "drizzle-orm"
 import { Effect } from "effect"
 import { Board } from "@orchestra/core/board/board"
-import { BoardAttemptTable } from "@orchestra/core/board/sql"
+import { BoardAttemptTable, BoardNoteTable } from "@orchestra/core/board/sql"
 import { Credential } from "@orchestra/core/credential"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
@@ -23,8 +23,10 @@ import { git } from "./fixture/git"
 import { testEffect } from "./lib/effect"
 
 // The fake scanner gets gitleaks' arguments with the worktree last, and reports a secret while a `leak` file exists.
-const scanner = path.join(mkdtempSync(path.join(tmpdir(), "orchestra-board-snapshot-scanner-")), "gitleaks")
-writeFileSync(scanner, '#!/bin/sh\nfor last; do :; done\n[ -f "$last/leak" ] && exit 1\nexit 0\n', { mode: 0o755 })
+// It runs under bun so it spawns the same way on every platform.
+const fake = path.join(mkdtempSync(path.join(tmpdir(), "orchestra-board-snapshot-scanner-")), "gitleaks.ts")
+writeFileSync(fake, 'import { existsSync } from "fs"\nimport path from "path"\nprocess.exit(existsSync(path.join(process.argv.at(-1)!, "leak")) ? 1 : 0)\n')
+const scanner = [process.execPath, fake]
 
 const it = testEffect(
   AppNodeBuilder.build(LayerNode.group([Board.node, Database.node, EventV2.node, Credential.node]), [
@@ -59,6 +61,7 @@ describe("BoardSnapshot", () => {
       expect(yield* run(card.worktree, "rev-parse", "HEAD")).toBe(card.head)
       expect(yield* run(card.worktree, "status", "--porcelain")).toBe("?? work.txt")
       expect(yield* board.pushState("SNP", 1)).toBe("pushed")
+      expect((yield* board.issuePage("SNP", 1)).pushState).toBe("pushed")
       expect(yield* board.snapshotPush("SNP", 1)).toEqual({ status: "unchanged", ref: first.ref, sha: first.sha })
 
       // The next snapshot builds on the last one, so the ref only moves forward.
@@ -92,6 +95,13 @@ describe("BoardSnapshot", () => {
         { n: 1, session: "ses_snapshot_a", cause: null, outcome: "failed" },
         { n: 2, session: "ses_snapshot_b", cause: "failed:Out of memory.", outcome: null },
       ])
+      const notes = yield* database.db
+        .select({ kind: BoardNoteTable.kind, author: BoardNoteTable.author })
+        .from(BoardNoteTable)
+        .where(eq(BoardNoteTable.issue_id, redispatched.issue.id))
+        .all()
+        .pipe(Effect.orDie)
+      expect(notes).toContainEqual({ kind: "rework", author: "orchestra" })
 
       yield* write(card.worktree, "work.txt", "again\n")
       expect(yield* board.snapshotPush("SNR", 1)).toMatchObject({ status: "pushed", ref: "refs/orchestra/wip/SNR-1/a2" })
@@ -111,6 +121,26 @@ describe("BoardSnapshot", () => {
       expect(yield* board.pushState("SNL", 1)).toBe("local")
     }),
   )
+
+  it.live("a gone worktree with a snapshot is restored at its path", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const card = yield* repository("SNG")
+      yield* board.project({ key: "SNG", name: "Gone", repo: card.directory, reason: "Start." })
+      yield* board.issue({ project: "SNG", title: "Code", branch: "card-1", session: "ses_snapshot_gone", reason: "Plan." })
+
+      yield* write(card.worktree, "work.txt", "kept\n")
+      yield* Effect.promise(() => fs.rm(path.join(card.worktree, "README.md")))
+      expect(yield* board.snapshotPush("SNG", 1)).toMatchObject({ status: "pushed", ref: "refs/orchestra/wip/SNG-1/a1" })
+      yield* Effect.promise(() => fs.rm(card.worktree, { recursive: true, force: true }))
+
+      expect(yield* board.snapshotPush("SNG", 1)).toMatchObject({ status: "restored", ref: "refs/orchestra/wip/SNG-1/a1", worktree: card.worktree })
+      expect(yield* Effect.promise(() => fs.readFile(path.join(card.worktree, "work.txt"), "utf8"))).toBe("kept\n")
+      expect(yield* run(card.worktree, "symbolic-ref", "HEAD")).toBe("refs/heads/card-1")
+      expect(yield* run(card.worktree, "rev-parse", "HEAD")).toBe(card.head)
+      expect((yield* run(card.worktree, "status", "--porcelain")).split("\n").map((line) => line.trim()).toSorted()).toEqual(["?? work.txt", "D README.md"])
+    }),
+  )
 })
 
 // A repository on main pushed to a bare origin, and a card worktree on branch card-1.
@@ -122,6 +152,8 @@ function repository(name: string) {
       const remote = path.join(root, "origin.git")
       await git(root, "init", "--bare", remote)
       await git(root, "-c", "init.defaultBranch=main", "init", directory)
+      // The Windows runner's git turns LF into CRLF on checkout, which the restored file would then carry.
+      await git(directory, "config", "core.autocrlf", "false")
       await fs.writeFile(path.join(directory, "README.md"), "base\n")
       await git(directory, "add", ".")
       await git(directory, "-c", "user.email=test@example.com", "-c", "user.name=Test", "commit", "-m", "base")

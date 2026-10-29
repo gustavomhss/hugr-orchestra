@@ -5,6 +5,7 @@ export const stageKey = {
   ready: "orchestra.board.stage.ready",
   building: "orchestra.board.stage.building",
   review: "orchestra.board.stage.review",
+  queue: "orchestra.board.stage.queue",
   shipped: "orchestra.board.stage.shipped",
   cut: "orchestra.board.stage.cut",
 } as const
@@ -42,6 +43,11 @@ export const actionKey = {
   "github.overwrite": "orchestra.board.action.githubOverwrite",
   "github.state": "orchestra.board.action.githubState",
   undo: "orchestra.board.action.undo",
+  "queue.add": "orchestra.board.action.queueAdd",
+  "queue.remove": "orchestra.board.action.queueRemove",
+  "bundle.cut": "orchestra.board.action.bundleCut",
+  "bundle.merge": "orchestra.board.action.bundleMerge",
+  "bundle.dissolve": "orchestra.board.action.bundleDissolve",
 } as const
 export const shippedKey = {
   today: "orchestra.board.shipped.today",

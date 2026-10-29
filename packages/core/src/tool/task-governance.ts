@@ -56,7 +56,15 @@ export interface Interface {
     readonly reply: SessionMessage.Assistant
     readonly admission: Admission
     readonly context: Tool.Context
-  }) => Effect.Effect<{ readonly text: string; readonly structured?: { readonly [key: string]: unknown } }, ToolFailure>
+  }) => Effect.Effect<
+    {
+      readonly text: string
+      readonly structured?: { readonly [key: string]: unknown }
+      /** The child ended blocked on a question; read from its result, never from its text. */
+      readonly blocked?: boolean
+    },
+    ToolFailure
+  >
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/TaskGovernance") {}

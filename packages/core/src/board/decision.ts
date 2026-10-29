@@ -24,10 +24,11 @@ export const list = Effect.fnUntraced(function* (tx: Tx, key: string) {
 
 /** The decision row an answer leaves behind. */
 export const record = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, question: QuestionRow, input: Board.AnswerInput, now: number) {
+  const id = Board.DecisionID.create()
   yield* tx
     .insert(BoardDecisionTable)
     .values({
-      id: Board.DecisionID.create(),
+      id,
       project_id: project.id,
       issue_id: question.issue_id,
       epic_id: question.epic_id,
@@ -41,6 +42,7 @@ export const record = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, 
       answered_at: now,
     })
     .run()
+  return id
 })
 
 export const change = Effect.fnUntraced(function* (tx: Tx, key: string, id: string, input: Board.DecisionChangeInput) {

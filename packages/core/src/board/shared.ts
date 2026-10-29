@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, ne } from "drizzle-orm"
+import { and, asc, eq, inArray, ne, sql } from "drizzle-orm"
 import { Clock, Effect, Schema } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { Board } from "@orchestra/schema/board"
@@ -63,6 +63,16 @@ export function gitRunner(proc: AppProcess.Interface, base?: NodeJS.ProcessEnv) 
       )
 }
 
+
+/** The position after the last card in `stage`. */
+export const endOf = Effect.fnUntraced(function* (tx: Tx, project: Board.ProjectID, stage: Board.Stage) {
+  const row = yield* tx
+    .select({ position: sql<number | null>`max(${BoardIssueTable.position})` })
+    .from(BoardIssueTable)
+    .where(and(eq(BoardIssueTable.project_id, project), eq(BoardIssueTable.stage, stage)))
+    .get()
+  return (row?.position ?? 0) + 1
+})
 
 export function archived(project: ProjectRow) {
   return new RefusedError({ message: `${project.key} is archived; the owner unarchives it before anything changes.` })

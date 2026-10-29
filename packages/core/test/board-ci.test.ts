@@ -1,9 +1,10 @@
-import { describe, expect } from "bun:test"
+import { describe, expect, test } from "bun:test"
 import fs from "fs/promises"
 import { tmpdir } from "os"
 import path from "path"
 import { Effect, Exit } from "effect"
 import { Board } from "@orchestra/core/board/board"
+import { BoardCi } from "@orchestra/core/board/ci"
 import { Credential } from "@orchestra/core/credential"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
@@ -129,3 +130,7 @@ async function commit(directory: string, file: string) {
   await git(directory, "add", file)
   await git(directory, "-c", "user.email=test@example.com", "-c", "user.name=Test", "commit", "-m", "change")
 }
+
+test("failing reads the file of a TypeScript error", () => {
+  expect(BoardCi.failing("src/x.ts:4:2 - error TS2345: y")).toEqual(["src/x.ts"])
+})

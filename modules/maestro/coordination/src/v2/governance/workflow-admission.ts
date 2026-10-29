@@ -218,7 +218,8 @@ const scope = Effect.fn("WorkflowAdmissionV2.scope")(function* (
       "The changed files since the approved context could not be read, so the approved scope cannot be checked.",
     )
   const outside = [...new Set([...diff.text().split("\0"), ...untracked.text().split("\0")].filter(Boolean))].filter(
-    (file) => !writePaths.some((root) => FSUtil.contains(path.resolve(worktree, root), path.resolve(worktree, file))),
+    // Seats append their own Atlas Memory and Knowledge under `.atlas/members/`, inside any approved scope.
+    (file) => ![...writePaths, ".atlas/members"].some((root) => FSUtil.contains(path.resolve(worktree, root), path.resolve(worktree, file))),
   )
   if (outside.length > 0)
     return yield* hold(

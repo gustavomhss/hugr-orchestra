@@ -2,13 +2,19 @@ export * as BoardTools from "./tools"
 
 import { Effect, Layer } from "effect"
 import {
+  BundleInput,
+  BundleResult,
   CiRunInput,
   CiRunResult,
   DecisionOutcomeInput,
+  DequeueInput,
+  DequeueResult,
   EpicInput,
   IssueInput,
   MoveInput,
   ProjectInput,
+  QueueInput,
+  QueueResult,
   QuestionInput,
   ReadToolInput,
   ReadToolOutput,
@@ -119,6 +125,27 @@ export const node = makeGlobalNode({
             input: CiRunInput,
             output: CiRunResult,
             execute: (input, context) => guard(context, board.ciRun(input)),
+          }),
+          board_queue: Tool.make({
+            description:
+              "Queue a verified Review card for merge. Needs its PR record (intent, decisions, not covered, risk level) written with board_issue, its PR head scoped-green, and every card it depends on shipped or queued. The host bundles queued cards, runs the full gate on the bundle and merges it; Maestro never merges.",
+            input: QueueInput,
+            output: QueueResult,
+            execute: (input, context) => guard(context, board.queue(input)),
+          }),
+          board_dequeue: Tool.make({
+            description:
+              "Take a queued card back to Review with a reason. An open bundle it is in is dissolved; the other members stay queued.",
+            input: DequeueInput,
+            output: DequeueResult,
+            execute: (input, context) => guard(context, board.dequeue(input)),
+          }),
+          board_bundle: Tool.make({
+            description:
+              "Decide a held bundle, by its number (KEY-B<n>). merge ships a flaky bundle as tested: its failing tests passed three scoped reruns. retry closes a flaky bundle, or releases a paused one, so the queue cuts its cards into a new bundle. Give the reason.",
+            input: BundleInput,
+            output: BundleResult,
+            execute: (input, context) => guard(context, board.bundle(input)),
           }),
         })
         .pipe(Effect.orDie)

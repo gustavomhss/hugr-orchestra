@@ -225,6 +225,40 @@ export default {
         );
       `)
       yield* tx.run(`
+        CREATE TABLE \`board_bundle_member\` (
+          \`bundle_id\` text NOT NULL,
+          \`issue_id\` text NOT NULL,
+          \`head_sha\` text NOT NULL,
+          \`position\` integer NOT NULL,
+          \`time_created\` integer NOT NULL,
+          \`time_updated\` integer NOT NULL,
+          CONSTRAINT \`board_bundle_member_pk\` PRIMARY KEY(\`bundle_id\`, \`issue_id\`),
+          CONSTRAINT \`fk_board_bundle_member_bundle_id_board_bundle_id_fk\` FOREIGN KEY (\`bundle_id\`) REFERENCES \`board_bundle\`(\`id\`) ON DELETE CASCADE,
+          CONSTRAINT \`fk_board_bundle_member_issue_id_board_issue_id_fk\` FOREIGN KEY (\`issue_id\`) REFERENCES \`board_issue\`(\`id\`) ON DELETE CASCADE
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`board_bundle\` (
+          \`id\` text PRIMARY KEY,
+          \`project_id\` text NOT NULL,
+          \`n\` integer NOT NULL,
+          \`branch\` text NOT NULL,
+          \`pr_number\` integer,
+          \`base_sha\` text NOT NULL,
+          \`head_sha\` text NOT NULL,
+          \`tree_sha\` text NOT NULL,
+          \`rebuilds\` integer DEFAULT 0 NOT NULL,
+          \`status\` text NOT NULL,
+          \`merged_on\` text,
+          \`culprit\` text,
+          \`failing\` text,
+          \`fix_issue_id\` text,
+          \`time_created\` integer NOT NULL,
+          \`time_updated\` integer NOT NULL,
+          CONSTRAINT \`fk_board_bundle_project_id_board_project_id_fk\` FOREIGN KEY (\`project_id\`) REFERENCES \`board_project\`(\`id\`) ON DELETE CASCADE
+        );
+      `)
+      yield* tx.run(`
         CREATE TABLE \`board_check\` (
           \`id\` text PRIMARY KEY,
           \`issue_id\` text NOT NULL,
@@ -310,6 +344,20 @@ export default {
         );
       `)
       yield* tx.run(`
+        CREATE TABLE \`board_flake\` (
+          \`project_id\` text NOT NULL,
+          \`test\` text NOT NULL,
+          \`bundle_id\` text NOT NULL,
+          \`first_seen\` integer NOT NULL,
+          \`count\` integer NOT NULL,
+          \`time_created\` integer NOT NULL,
+          \`time_updated\` integer NOT NULL,
+          CONSTRAINT \`board_flake_pk\` PRIMARY KEY(\`project_id\`, \`test\`),
+          CONSTRAINT \`fk_board_flake_project_id_board_project_id_fk\` FOREIGN KEY (\`project_id\`) REFERENCES \`board_project\`(\`id\`) ON DELETE CASCADE,
+          CONSTRAINT \`fk_board_flake_bundle_id_board_bundle_id_fk\` FOREIGN KEY (\`bundle_id\`) REFERENCES \`board_bundle\`(\`id\`) ON DELETE CASCADE
+        );
+      `)
+      yield* tx.run(`
         CREATE TABLE \`board_issue\` (
           \`id\` text PRIMARY KEY,
           \`project_id\` text NOT NULL,
@@ -334,6 +382,7 @@ export default {
           \`crash_reason\` text,
           \`guardrail_rule\` text,
           \`github_dirty\` integer DEFAULT false NOT NULL,
+          \`record\` text,
           \`time_created\` integer NOT NULL,
           \`time_updated\` integer NOT NULL,
           CONSTRAINT \`fk_board_issue_project_id_board_project_id_fk\` FOREIGN KEY (\`project_id\`) REFERENCES \`board_project\`(\`id\`) ON DELETE CASCADE,
@@ -345,6 +394,7 @@ export default {
           \`id\` text PRIMARY KEY,
           \`issue_id\` text NOT NULL,
           \`author\` text NOT NULL,
+          \`kind\` text,
           \`body\` text NOT NULL,
           \`github_comment_id\` integer,
           \`time_created\` integer NOT NULL,
@@ -402,6 +452,21 @@ export default {
           CONSTRAINT \`fk_board_question_project_id_board_project_id_fk\` FOREIGN KEY (\`project_id\`) REFERENCES \`board_project\`(\`id\`) ON DELETE CASCADE,
           CONSTRAINT \`fk_board_question_issue_id_board_issue_id_fk\` FOREIGN KEY (\`issue_id\`) REFERENCES \`board_issue\`(\`id\`) ON DELETE CASCADE,
           CONSTRAINT \`fk_board_question_epic_id_board_epic_id_fk\` FOREIGN KEY (\`epic_id\`) REFERENCES \`board_epic\`(\`id\`) ON DELETE CASCADE
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`board_queue\` (
+          \`issue_id\` text PRIMARY KEY,
+          \`project_id\` text NOT NULL,
+          \`head_sha\` text NOT NULL,
+          \`urgent\` integer DEFAULT false NOT NULL,
+          \`flush\` integer DEFAULT false NOT NULL,
+          \`hold\` text,
+          \`queued_at\` integer NOT NULL,
+          \`time_created\` integer NOT NULL,
+          \`time_updated\` integer NOT NULL,
+          CONSTRAINT \`fk_board_queue_issue_id_board_issue_id_fk\` FOREIGN KEY (\`issue_id\`) REFERENCES \`board_issue\`(\`id\`) ON DELETE CASCADE,
+          CONSTRAINT \`fk_board_queue_project_id_board_project_id_fk\` FOREIGN KEY (\`project_id\`) REFERENCES \`board_project\`(\`id\`) ON DELETE CASCADE
         );
       `)
       yield* tx.run(`
@@ -803,6 +868,7 @@ export default {
       )
       yield* tx.run(`CREATE INDEX \`board_activity_project_idx\` ON \`board_activity\` (\`project_id\`,\`id\`);`)
       yield* tx.run(`CREATE INDEX \`board_attachment_issue_idx\` ON \`board_attachment\` (\`issue_id\`);`)
+      yield* tx.run(`CREATE UNIQUE INDEX \`board_bundle_number_idx\` ON \`board_bundle\` (\`project_id\`,\`n\`);`)
       yield* tx.run(`CREATE INDEX \`board_check_issue_tree_idx\` ON \`board_check\` (\`issue_id\`,\`tree_sha\`);`)
       yield* tx.run(`CREATE INDEX \`board_ci_run_issue_idx\` ON \`board_ci_run\` (\`issue_id\`);`)
       yield* tx.run(
@@ -815,6 +881,7 @@ export default {
       )
       yield* tx.run(`CREATE INDEX \`board_note_issue_idx\` ON \`board_note\` (\`issue_id\`);`)
       yield* tx.run(`CREATE INDEX \`board_question_project_idx\` ON \`board_question\` (\`project_id\`,\`status\`);`)
+      yield* tx.run(`CREATE INDEX \`board_queue_project_idx\` ON \`board_queue\` (\`project_id\`,\`queued_at\`);`)
       yield* tx.run(`CREATE INDEX \`board_step_issue_idx\` ON \`board_step\` (\`issue_id\`,\`position\`);`)
       yield* tx.run(
         `CREATE UNIQUE INDEX \`capability_child_parent_ordinal\` ON \`capability_child\` (\`session_id\`,\`assistant_message_id\`,\`parent_call_id\`,\`ordinal\`);`,

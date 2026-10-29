@@ -12,6 +12,7 @@ import type { AppProcess } from "../process"
 import { BoardAttemptTable, BoardIssueTable, BoardProjectTable } from "./sql"
 import { gitRunner, worktree } from "./shared"
 import type { Fields, IssueRow, ProjectRow, Tx } from "./shared"
+import { BoardThread } from "./thread"
 
 // Push early (docs/specs/maestro-lead/merge-queue.md section 8.1): the host writes a card's worktree to a snapshot
 // commit through a temporary index and pushes it to refs/orchestra/wip/<KEY>/a<n>. The worktree, its index and its
@@ -20,8 +21,8 @@ import type { Fields, IssueRow, ProjectRow, Tx } from "./shared"
 export interface Deps {
   readonly quiet: <A>(work: (tx: Tx) => Effect.Effect<A, unknown>) => Effect.Effect<A>
   readonly proc: AppProcess.Interface
-  /** The gitleaks executable, or undefined when none can be had; then no snapshot is pushed. */
-  readonly scanner: Effect.Effect<string | undefined>
+  /** The gitleaks command (executable and leading arguments), or undefined when none can be had; then no snapshot is pushed. */
+  readonly scanner: Effect.Effect<ReadonlyArray<string> | undefined>
   /** The project's snapshot remote from its CI contract; a failure blocks the push rather than guess a remote. */
   readonly remote: (directory: string, project: ProjectRow) => Effect.Effect<string, { readonly message: string }>
   readonly env?: NodeJS.ProcessEnv
@@ -29,11 +30,15 @@ export interface Deps {
 
 export type Attempt = typeof BoardAttemptTable.$inferSelect
 
-/** What one snapshot did. `blocked` says why nothing was pushed; `missing` means the worktree is gone. */
+/**
+ * What one snapshot did. `blocked` says why nothing was pushed. `missing` means the worktree is gone with no snapshot
+ * to restore it from; `restored` means a gone worktree was re-created at its snapshot commit (spec 8.5).
+ */
 export type Result =
   | { readonly status: "pushed" | "unchanged"; readonly ref: string; readonly sha: string }
   | { readonly status: "blocked"; readonly ref: string; readonly reason: string }
   | { readonly status: "missing"; readonly ref: string; readonly worktree: string | null }
+  | { readonly status: "restored"; readonly ref: string; readonly worktree: string; readonly sha: string }
   | { readonly status: "none" }
 
 const IDENTITY = {
@@ -70,7 +75,7 @@ export function make(deps: Deps) {
     if (!scanner) return "no secret scanner (gitleaks) is available"
     const result = yield* deps.proc
       .run(
-        ChildProcess.make(scanner, ["git", "--no-banner", "--redact", "--exit-code", "1", "--log-opts", range, cwd], {
+        ChildProcess.make(scanner[0], [...scanner.slice(1), "git", "--no-banner", "--redact", "--exit-code", "1", "--log-opts", range, cwd], {
           cwd,
           env: deps.env,
           extendEnv: true,
@@ -114,14 +119,35 @@ export function make(deps: Deps) {
     if (attempt.worktree) return attempt.worktree
     if (!directory || !issue.branch) return null
     const listed = yield* git(directory, ["worktree", "list", "--porcelain"])
-    const found = listed.out
+    // git lists Windows paths with forward slashes; resolve keeps the recorded path in the platform's form.
+    const listedPath = listed.out
       .split("\n\n")
       .map((block) => block.split("\n"))
       .find((lines) => lines.includes(`branch refs/heads/${issue.branch}`))
       ?.find((line) => line.startsWith("worktree "))
       ?.slice("worktree ".length)
+    const found = listedPath && path.resolve(listedPath)
     if (found) yield* update(attempt, { worktree: found })
     return found ?? null
+  })
+
+  /**
+   * Re-creates a gone worktree on the card's branch, then writes the snapshot's tree over its files only, so HEAD and
+   * index are the branch's again and the work in progress shows as uncommitted, as before the loss (section 8.1).
+   * The branch is checked out detached when another worktree holds it.
+   */
+  const restore = Effect.fnUntraced(function* (directory: string, project: ProjectRow, branch: string, cwd: string, sha: string, ref: string) {
+    const remote = yield* deps.remote(directory, project).pipe(Effect.orElseSucceed(() => undefined))
+    if (!remote) return false
+    yield* git(directory, ["worktree", "prune"])
+    const fetched = yield* git(directory, ["fetch", "--quiet", "--no-tags", remote, ref])
+    if (fetched.code !== 0) return false
+    const added =
+      (yield* git(directory, ["worktree", "add", cwd, branch])).code === 0 ||
+      (yield* git(directory, ["worktree", "add", "--detach", cwd, branch])).code === 0
+    if (!added) return false
+    // No-overlay restore also deletes the files the snapshot lacks.
+    return (yield* git(cwd, ["restore", `--source=${sha}`, "--worktree", "--", "."])).code === 0
   })
 
   const push = Effect.fnUntraced(function* (issue: Board.IssueID) {
@@ -130,7 +156,14 @@ export function make(deps: Deps) {
     if (!found || !attempt) return { status: "none" } satisfies Result
     const ref = `refs/orchestra/wip/${found.project.key}-${found.issue.number}/a${attempt.n}`
     const cwd = yield* locate(found.directory, found.issue, attempt)
-    if (!cwd || !existsSync(cwd)) return { status: "missing", ref, worktree: cwd } satisfies Result
+    if (!cwd || !existsSync(cwd)) {
+      const sha = attempt.snapshot_sha
+      const branch = found.issue.branch
+      if (cwd && sha && branch && found.directory && (yield* restore(found.directory, found.project, branch, cwd, sha, ref)))
+        return { status: "restored", ref, worktree: cwd, sha } satisfies Result
+      yield* Effect.logWarning(`drift: ${found.project.key}-${found.issue.number} worktree ${cwd ?? "(none)"} is gone and has no snapshot to restore`)
+      return { status: "missing", ref, worktree: cwd } satisfies Result
+    }
     const current = yield* tree(cwd)
     if (!current) return { status: "blocked", ref, reason: `could not read the tree of ${cwd}` } satisfies Result
     if (current === attempt.snapshot_tree && attempt.snapshot_sha)
@@ -243,6 +276,8 @@ export const dispatch = Effect.fnUntraced(function* (
     })
     .run()
   yield* tx.update(BoardIssueTable).set({ attempts: n }).where(eq(BoardIssueTable.id, issue.id)).run()
+  if (n > 1)
+    yield* BoardThread.write(tx, { id: `bno_rework_${issue.id}_${n}`, issue: issue.id, kind: "rework", author: "orchestra", body: cause ?? "redispatched" })
   return n
 })
 

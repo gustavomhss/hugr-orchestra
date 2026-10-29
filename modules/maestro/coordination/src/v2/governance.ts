@@ -338,10 +338,11 @@ export const make = Effect.gen(function* () {
             parentID: input.child.parentID,
           }),
         })
-        if (schema !== "discovery-work-result-v1") return { ...settled, structured: { [WorkResultV2.KEY]: workResult } }
+        const blocked = workResult.terminal.reason === "blocked"
+        if (schema !== "discovery-work-result-v1") return { ...settled, blocked, structured: { [WorkResultV2.KEY]: workResult } }
         // The research seat's result comes from the dispatch's closed inquiry card, never from the worker's text.
         const discovery = yield* DiscoveryResultV2.assemble({ records, database }, workResult, input.child)
-        return { ...settled, text: DiscoveryResultV2.report(settled.text, discovery), structured: { [WorkResultV2.KEY]: discovery } }
+        return { ...settled, blocked, text: DiscoveryResultV2.report(settled.text, discovery), structured: { [WorkResultV2.KEY]: discovery } }
       }),
   })
 

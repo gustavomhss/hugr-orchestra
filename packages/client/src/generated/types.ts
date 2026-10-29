@@ -5554,7 +5554,7 @@ export type ServerBoardGetOutput = {
     readonly title: string
     readonly body: string
     readonly type: "feature" | "bug" | "chore"
-    readonly stage: "intake" | "backlog" | "ready" | "building" | "review" | "shipped" | "cut"
+    readonly stage: "intake" | "backlog" | "ready" | "building" | "review" | "queue" | "shipped" | "cut"
     readonly position: number
     readonly estimate: ("s" | "m" | "l") | null
     readonly seat: string | null
@@ -5571,6 +5571,12 @@ export type ServerBoardGetOutput = {
       readonly now: string | null
     }>
     readonly dependsOn: ReadonlyArray<string>
+    readonly queue?: {
+      readonly status: "waiting" | "running" | "green" | "conflict" | "held"
+      readonly bundle: number | null
+      readonly urgent: boolean
+      readonly queuedAt: number
+    } | null
   }>
   readonly questions: ReadonlyArray<{
     readonly id: string
@@ -5626,6 +5632,12 @@ export type ServerBoardGetOutput = {
     readonly shipped: number
     readonly reason: string | null
   }>
+  readonly ledger?: {
+    readonly queueWait: number | null
+    readonly redRate: number | null
+    readonly reworkRate: number | null
+    readonly leadTime: number | null
+  }
 }
 
 export type ServerBoardIssueInput = {
@@ -5642,7 +5654,7 @@ export type ServerBoardIssueOutput = {
     readonly title: string
     readonly body: string
     readonly type: "feature" | "bug" | "chore"
-    readonly stage: "intake" | "backlog" | "ready" | "building" | "review" | "shipped" | "cut"
+    readonly stage: "intake" | "backlog" | "ready" | "building" | "review" | "queue" | "shipped" | "cut"
     readonly position: number
     readonly estimate: ("s" | "m" | "l") | null
     readonly seat: string | null
@@ -5659,6 +5671,12 @@ export type ServerBoardIssueOutput = {
       readonly now: string | null
     }>
     readonly dependsOn: ReadonlyArray<string>
+    readonly queue?: {
+      readonly status: "waiting" | "running" | "green" | "conflict" | "held"
+      readonly bundle: number | null
+      readonly urgent: boolean
+      readonly queuedAt: number
+    } | null
   }
   readonly questions: ReadonlyArray<{
     readonly id: string
@@ -5679,6 +5697,7 @@ export type ServerBoardIssueOutput = {
     readonly id: string
     readonly issue: number
     readonly author: string
+    readonly kind: "brief" | "question" | "answer" | "return" | "review" | "rework" | null
     readonly body: string
     readonly timeCreated: number
   }>
@@ -5718,6 +5737,11 @@ export type ServerBoardIssueOutput = {
       | "github.overwrite"
       | "github.state"
       | "undo"
+      | "queue.add"
+      | "queue.remove"
+      | "bundle.cut"
+      | "bundle.merge"
+      | "bundle.dissolve"
     readonly reason: string | null
     readonly before: { readonly [x: string]: JsonValue } | null
     readonly after: { readonly [x: string]: JsonValue } | null
@@ -5756,6 +5780,15 @@ export type ServerBoardIssueOutput = {
           readonly seat: string | null
         }>
       }
+  readonly record?: {
+    readonly intent?: string
+    readonly change?: string
+    readonly decisions?: string
+    readonly not_covered?: string
+    readonly risk?: { readonly level?: "low" | "medium" | "high"; readonly breaks?: string; readonly undo?: string }
+    readonly follow_ups?: ReadonlyArray<string>
+  } | null
+  readonly pushState?: "local" | "pushed" | null
 }
 
 export type ServerBoardActivityInput = {
@@ -5790,6 +5823,11 @@ export type ServerBoardActivityOutput = ReadonlyArray<{
     | "github.overwrite"
     | "github.state"
     | "undo"
+    | "queue.add"
+    | "queue.remove"
+    | "bundle.cut"
+    | "bundle.merge"
+    | "bundle.dissolve"
   readonly reason: string | null
   readonly before: { readonly [x: string]: unknown } | null
   readonly after: { readonly [x: string]: unknown } | null
