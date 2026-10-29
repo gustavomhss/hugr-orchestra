@@ -68,4 +68,21 @@ describe("DatabaseMigration retire legacy Session events", () => {
       }),
     )
   })
+
+  test("skips a database without an event table", async () => {
+    await run(
+      Effect.gen(function* () {
+        const db = yield* makeDb
+        yield* DatabaseMigration.apply(db)
+        yield* db.run(sql`DROP TABLE event`)
+        yield* db.run(sql`DELETE FROM migration WHERE id = ${retireLegacySessionEventsMigration.id}`)
+        yield* DatabaseMigration.applyOnly(db, [retireLegacySessionEventsMigration])
+
+        expect(yield* db.all(sql`SELECT id FROM migration WHERE id = ${retireLegacySessionEventsMigration.id}`)).toEqual([
+          { id: retireLegacySessionEventsMigration.id },
+        ])
+        expect(yield* db.all(sql`SELECT name FROM data_migration WHERE name = 'event_snapshot_compaction'`)).toEqual([])
+      }),
+    )
+  })
 })
