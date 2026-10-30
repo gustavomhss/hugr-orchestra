@@ -85,7 +85,23 @@ open the same database while the host's newer schema is on it.
 - Pushes to the base branch run no CI, so after a red bundle the base has no checks and the host probes it alone
   with the whole gate (about half an hour) before it cuts again.
 - Each `test:ci` run uploads the working tree through the GitHub API (hundreds of files). Many runs in a row hit the
-  hourly rate limit; the script waits and retries, so a run that stalls on "rate limit" is slow, not broken.
+  hourly rate limit; the script waits and retries, so a run that stalls on "rate limit" is slow, not broken. A run
+  that stops on "network is unreachable" never reached Actions: run it again.
+- A card that never turns scoped-green although its runs pass: `ci_run` tests the worktree's tree, untracked files
+  included. A stray file in the card's worktree (a screenshot, a log) makes that tree differ from the PR head, so the
+  green never matches and typecheck is never dispatched. `git status` in the worktree; move the file out, then
+  `ci_run` again.
+- `board_queue` refuses a PR record whose follow-ups are not cards on the board. Create each follow-up as a card
+  first, or leave it out of the record.
+- A docs-only card still needs a `package` for `ci_run`, or the contract's `scoped.tests` refuses it. Name the package
+  whose docs or skills it touches.
+- A known flake on a base probe (a test that also fails on an unchanged base, such as a 30 s Windows timeout) closes
+  the probe `base-red` and holds the queue until base moves. `board_bundle` decides only `flaky` and `paused`
+  bundles, so no tool releases it: land the flake's fix card (it rides alone), or ask the owner before setting that
+  bundle's row to `probe-green` by hand. Known flakes: `BoardCi > a scoped green is keyed by tree` (linux core) and
+  `RipgrepBinary > bounds an attempt that never answers` (Windows).
+- To land several ready cards fast, queue them all and `flush` the last one: they ride one bundle and one full gate.
+  A card that may go red (new tests, Windows-sensitive code) rides better alone, so its red does not eject the rest.
 
 ## Not in the queue (yet)
 
