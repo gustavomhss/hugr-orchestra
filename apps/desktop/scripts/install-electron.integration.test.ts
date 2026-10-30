@@ -29,7 +29,7 @@ test("fresh Electron bootstrap installs actual declared dependency with no exist
     .then(async () => {
       const file = (await readFile(join(root, "path.txt"), "utf8")).trim()
       expect((await lstat(join(root, "dist", file))).isFile()).toBe(true)
-      expect((await readFile(join(root, "dist/version"), "utf8")).trim()).toBe("42.11.9")
+      expect((await readFile(join(root, "dist/version"), "utf8")).trim()).toBe("42.11.16")
       await installElectron(root)
     })
     .finally(() => rm(root, { recursive: true, force: true }))

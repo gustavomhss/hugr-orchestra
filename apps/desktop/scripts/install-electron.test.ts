@@ -6,7 +6,7 @@ import { electronInstallScript } from "./install-electron"
 test("Electron bootstrap resolves installer from declared installed dependency", async () => {
   const directory = dirname(createRequire(import.meta.url).resolve("electron/package.json"))
   expect(await electronInstallScript(directory)).toBe(join(directory, "install.js"))
-  expect(await Bun.file(join(directory, "package.json")).json()).toMatchObject({ name: "electron", version: "42.11.9" })
+  expect(await Bun.file(join(directory, "package.json")).json()).toMatchObject({ name: "electron", version: "42.11.16" })
 })
 
 test("Electron bootstrap fails closed when dependency installer is absent", async () => {
