@@ -22,15 +22,6 @@ import { SessionMentions } from "./mentions"
 
 const SHELL_OUTPUT_BYTES = 1024 * 1024
 
-/** The headers every provider call of a Session carries, so the provider keeps its calls on one affinity. */
-export const affinity = (session: SessionSchema.Info) => ({
-  headers: {
-    "x-session-affinity": session.id,
-    "X-Session-Id": session.id,
-    ...(session.parentID ? { "x-parent-session-id": session.parentID } : {}),
-  },
-})
-
 // Declining a user prompt halts the loop instead of becoming model-facing tool output.
 export const isUserDeclined = (cause: Cause.Cause<unknown>) =>
   cause.reasons.some(

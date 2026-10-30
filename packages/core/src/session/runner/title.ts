@@ -44,7 +44,7 @@ export const make = (dependencies: Dependencies) =>
       .stream(
         LLM.request({
           model,
-          http: { headers: { "x-session-affinity": session.id, "X-Session-Id": session.id } },
+          http: { headers: SessionRunnerModel.sessionHeaders(model, session.id) },
           system: [SystemPart.make(agent.system)],
           messages: [Message.user("Generate a title for this conversation:\n"), ...toLLMMessages(users, model)],
           generation: { maxTokens: TITLE_OUTPUT_TOKENS },
