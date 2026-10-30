@@ -336,7 +336,17 @@ export function createFileSourceReader(repoPath: string): SourceReader {
  *  one comment and no stray `-->`, so dropping the `?` survived the entire suite until a fixture with two
  *  comments and an arrow in the prose between them was added. */
 function stripComments(text: string): string {
-  return text.replace(/<!--[\s\S]*?-->\n?/g, "").trimStart()
+  // indexOf scans instead of a lazy regex: an unclosed `<!--` would otherwise rescan the rest of the file per opener.
+  let kept = ""
+  let at = 0
+  for (;;) {
+    const open = text.indexOf("<!--", at)
+    const close = open < 0 ? -1 : text.indexOf("-->", open + 4)
+    if (close < 0) break
+    kept += text.slice(at, open)
+    at = text[close + 3] === "\n" ? close + 4 : close + 3
+  }
+  return (kept + text.slice(at)).trimStart()
 }
 
 /** A template that never interpolates the code would send a well-formed ask with nothing to ground against,

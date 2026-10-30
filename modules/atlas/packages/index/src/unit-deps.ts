@@ -40,8 +40,15 @@ export interface UnitDepsApi {
  *  WRONG name (verified over the live 29,677-def index) — so they cost RECALL, never soundness. Widening the
  *  extractor is the recall follow-up; it is deliberately conservative here. */
 export function symbolTerminalName(symbol: string): string {
-  const m = symbol.match(/([A-Za-z0-9_$]+)\s*(?:#|\(\)\.|\.|\/)?$/)
-  return m ? m[1]! : ""
+  // Strip the optional descriptor suffix, then take the trailing identifier run, by scanning from the end rather than
+  // with an unanchored-start regex (quadratic on long non-matching symbols). `().` and `.` both end in a dot, so try each.
+  for (const base of [symbol, ...["().", "#", ".", "/"].filter((s) => symbol.endsWith(s)).map((s) => symbol.slice(0, -s.length))]) {
+    const trimmed = base.trimEnd()
+    let start = trimmed.length
+    while (start > 0 && /[A-Za-z0-9_$]/.test(trimmed[start - 1]!)) start--
+    if (start < trimmed.length) return trimmed.slice(start)
+  }
+  return ""
 }
 
 /**

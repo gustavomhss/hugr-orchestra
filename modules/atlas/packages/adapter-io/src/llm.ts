@@ -46,8 +46,14 @@ export const ABSTAIN_SENTINEL = "NO-FACT"
  *  (see `ABSTAIN_SENTINEL`). Interior words survive the end-strip, so only a bare (optionally wrapped) token
  *  abstains — never an answer that merely mentions it. */
 export function isAbstainToken(answer: string): boolean {
-  const stripped = answer.trim().replace(/^[\s`'"*.[\](){}]+|[\s`'"*.[\](){}]+$/g, "")
-  return stripped.toUpperCase() === ABSTAIN_SENTINEL
+  const trimmed = answer.trim()
+  const wrapper = /[\s`'"*.[\](){}]/
+  // Index scans instead of an end-anchored regex: `[...]+$` retries from every wrapper run in the answer (quadratic).
+  let start = 0
+  let end = trimmed.length
+  while (start < end && wrapper.test(trimmed[start]!)) start++
+  while (end > start && wrapper.test(trimmed[end - 1]!)) end--
+  return trimmed.slice(start, end).toUpperCase() === ABSTAIN_SENTINEL
 }
 
 /** The bounded spend envelope for the one call — a hard cost cap + a wall-clock timeout (ADAPT-LLM-1). */
@@ -503,10 +509,20 @@ function admitFactBlock(text: string): CompletionResult {
 
 /** Every fenced ```atlas-fact block body in the raw stdout (the reason-freely envelope, ADR-0020). */
 function factBlocks(text: string): string[] {
-  const fence = /```atlas-fact[^\n]*\n([\s\S]*?)\n```/g
+  // indexOf scans instead of a lazy regex: an unclosed opener would otherwise rescan the rest of the text per opener.
+  // Once one opener has no header newline or no closing fence, no later opener can have one either.
   const bodies: string[] = []
-  for (const m of text.matchAll(fence)) bodies.push(m[1]!)
-  return bodies
+  let at = 0
+  for (;;) {
+    const open = text.indexOf("```atlas-fact", at)
+    if (open < 0) return bodies
+    const header = text.indexOf("\n", open)
+    if (header < 0) return bodies
+    const close = text.indexOf("\n```", header + 1)
+    if (close < 0) return bodies
+    bodies.push(text.slice(header + 1, close))
+    at = close + 4
+  }
 }
 
 const MAX_FACT_BLOCK_BYTES = 8 * 1024
