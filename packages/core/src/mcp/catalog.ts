@@ -134,8 +134,8 @@ export function described(item: { description?: string; mimeType?: string }) {
   }
 }
 
-// SDK 1.32 types `callTool`'s result as its own literal, wider than the exported `CallToolResult`.
-type CallToolResult = Awaited<ReturnType<Client["callTool"]>>
+// SDK 1.32 types `callTool`'s result as its own literal, a union with the legacy `toolResult` shape.
+type CallToolResult = Extract<Awaited<ReturnType<Client["callTool"]>>, { content: unknown }>
 
 /** The text parts of a tool result, for an error message. */
 export function resultText(result: Pick<CallToolResult, "content">) {
