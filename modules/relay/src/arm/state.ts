@@ -46,7 +46,7 @@ export const positionIndex = (sprint: RelaySprint.Sprint, position: string): Opt
  * A literal CR stays identity data.
  */
 export const resolve = (sprint: RelaySprint.Sprint, position: string): Option.Option<number> =>
-  Option.orElse(positionIndex(sprint, position), () => positionIndex(sprint, position.replace(/\n+$/, "")))
+  Option.orElse(positionIndex(sprint, position), () => positionIndex(sprint, trimTrailingLF(position)))
 
 // The canonical position: `<macro>.<id>`, unless the ID already starts with that exact prefix.
 export const canonicalPosition = (wp: RelaySprint.WorkPackage): string =>
@@ -193,4 +193,11 @@ function identity(arm: string, sprint: RelaySprint.Sprint, index: number) {
 function describe(error: unknown) {
   if (error instanceof Error) return (error as NodeJS.ErrnoException).code ?? error.message
   return String(error)
+}
+
+// Index scan instead of `/\n+$/`, which is quadratic on a position full of non-terminal LFs.
+const trimTrailingLF = (text: string) => {
+  let end = text.length
+  while (end > 0 && text[end - 1] === "\n") end--
+  return text.slice(0, end)
 }

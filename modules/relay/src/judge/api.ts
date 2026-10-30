@@ -43,7 +43,11 @@ export const judge = (config: JudgeConfig.Config, input: JudgeConfig.Input): Eff
 }
 
 function once(config: JudgeConfig.Config, prompt: string, cuts: ReadonlyArray<string>) {
-  const base = (config.baseURL ?? "").replace(/\/+$/, "")
+  const configured = config.baseURL ?? ""
+  // Index scan instead of `/\/+$/`, which is quadratic on a URL full of non-terminal slashes.
+  let end = configured.length
+  while (end > 0 && configured[end - 1] === "/") end--
+  const base = configured.slice(0, end)
   const key = config.apiKey === undefined ? "" : Redacted.value(config.apiKey)
   const failed = (reason: string, cut: ReadonlyArray<string>) => sample(config.model, cut, "fail", reason, "error")
   // A custom endpoint may not authenticate at all (a loopback gateway), but sending nothing to api.anthropic.com is a
