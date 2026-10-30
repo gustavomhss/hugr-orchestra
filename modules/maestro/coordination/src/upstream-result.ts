@@ -40,9 +40,18 @@ export function parse(text: string): Card | undefined {
       return
     }
     if (fence[1][0] === "`" && fence[2].includes("`")) return
-    state.fence = { delimiter: fence[1], start: index, card: fence[1] === "```" && fence[2].replace(/^[ \t]+|[ \t]+$/g, "") === TAG }
+    state.fence = { delimiter: fence[1], start: index, card: fence[1] === "```" && trimBlanks(fence[2]) === TAG }
   })
   if (state.fence?.card || blocks.length !== 1) return
   if (lines.slice(blocks[0].end + 1).some((line) => !/^[ \t]*$/.test(line))) return
   return Option.getOrUndefined(decode(blocks[0].text, { onExcessProperty: "error" }))
+}
+
+// Spaces and tabs only (not `String.trim`'s wider set), by index scan: an end-anchored `[ \t]+$` regex is quadratic.
+function trimBlanks(text: string) {
+  let start = 0
+  let end = text.length
+  while (start < end && (text[start] === " " || text[start] === "\t")) start++
+  while (end > start && (text[end - 1] === " " || text[end - 1] === "\t")) end--
+  return text.slice(start, end)
 }
