@@ -1,7 +1,7 @@
 import { afterEach, expect, test } from "bun:test"
 import { execFile } from "node:child_process"
 import { randomUUID } from "node:crypto"
-import { mkdtemp, writeFile } from "node:fs/promises"
+import { mkdtemp, realpath, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { promisify } from "node:util"
@@ -200,12 +200,13 @@ test.skipIf(!on)(
 )
 
 // The desktop-owned `orchestra serve` supervisor (owned-serve.ts) over a real omni spawn.
-// A stand-in for `orchestra serve`: Basic auth on /api/health, prints its password, /crash exits, SIGTERM is logged.
+// A stand-in for `orchestra serve`: Basic auth on /api/health, prints its password and cwd, /crash exits, SIGTERM is logged.
 const fakeServe = `
 const port = Number(process.argv[process.argv.indexOf("--port") + 1])
 const password = process.env.ORCHESTRA_SERVER_PASSWORD
 const expected = "Basic " + Buffer.from("orchestra:" + password).toString("base64")
 console.log("listening with password " + password)
+console.log("cwd " + process.cwd())
 process.on("SIGTERM", () => {
   console.log("sigterm")
   process.exit(0)
@@ -221,7 +222,7 @@ Bun.serve({
 })
 `
 
-test.skipIf(!on)("owned serve: readiness, redaction, crash restart, SIGTERM stop", async () => {
+test.skipIf(!on)("owned serve: readiness, redaction, cwd, crash restart, SIGTERM stop", async () => {
   expectSpawn(import.meta.path)
   const dir = await mkdtemp(join(tmpdir(), "owned-serve-"))
   await writeFile(join(dir, "serve.ts"), fakeServe)
@@ -232,6 +233,7 @@ test.skipIf(!on)("owned serve: readiness, redaction, crash restart, SIGTERM stop
     logger: { log: record, error: record },
     command: [process.execPath, join(dir, "serve.ts")],
     env: { PATH: process.env.PATH ?? "" },
+    cwd: dir,
     write: (_stream, message) => void lines.push(message),
   })
   const auth = { authorization: `Basic ${Buffer.from(`orchestra:${owned.password}`).toString("base64")}` }
@@ -242,6 +244,7 @@ test.skipIf(!on)("owned serve: readiness, redaction, crash restart, SIGTERM stop
   await until(() => lines.some((line) => line.includes("listening with password")))
   expect(lines.join("\n")).not.toContain(owned.password)
   expect(lines).toContain("listening with password [redacted]")
+  expect(lines).toContain(`cwd ${await realpath(dir)}`)
 
   await fetch(`${owned.url}/crash`).catch(() => undefined)
   await until(() => events.some((event) => event.message === "owned serve restarting"))
@@ -264,6 +267,7 @@ test.skipIf(!on)("owned serve: a server that dies at start fails health with its
     logger: { log: () => {}, error: () => {} },
     command: [process.execPath, join(dir, "serve.ts")],
     env: { PATH: process.env.PATH ?? "" },
+    cwd: dir,
     write: () => {},
   })
   const failure = await owned.health.wait.then(

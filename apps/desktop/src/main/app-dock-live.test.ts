@@ -82,6 +82,7 @@ async function child() {
       logger,
       command: [binary],
       env: { ...env, ...dock.env },
+      cwd: userDataPath,
       write: (_stream, message) => console.error(`SERVE: ${message}`),
     }),
   )

@@ -443,6 +443,11 @@ const main = Effect.gen(function* () {
           void LinuxWorkspaceRPC.close().catch(() => writeLog("utility", "linux access cleanup failed", {}, "warn")),
       }),
     )
+    // The app's global reads (providers, models) name no directory, so the server boots a Location for its cwd. In the
+    // home directory that Location watched the whole home and cost about three more seconds of startup; an empty
+    // directory of the app's own boots fast and watches nothing.
+    const cwd = join(app.getPath("userData"), "global")
+    mkdirSync(cwd, { recursive: true })
     const owned = yield* Effect.promise(() =>
       Promise.all([resolveCliBinary(logger), sidecarLaunchEnv(app.getPath("userData"))]).then(
         ([binary, env]) =>
@@ -450,6 +455,7 @@ const main = Effect.gen(function* () {
             logger,
             command: [binary],
             env: { ...env, ...dock.env },
+            cwd,
             write: (stream, message) =>
               writeLog("server", stream, { message }, stream === "stderr" ? "warn" : "info"),
             onSpawn: (pid) => OmniSmoke.utilityStarted(pid),
