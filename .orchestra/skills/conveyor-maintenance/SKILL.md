@@ -55,6 +55,10 @@ snapshots and targeted rebase notices (§8.4), §6 and §4.5 for the queue, bund
 - `state()` keys the latest row by `kind:command`, and any failing latest row makes the card scoped-red. A failing run
   of one command is never superseded by a passing run of another, so a card stays red until that same command passes.
 - `ci_run` waits for `scoped.tests`; with `test:ci` that is minutes.
+- The scoped key is the worktree's tree with untracked files, not the PR head's tree. A stray untracked file keeps
+  a card from ever matching its head, so it is never scoped-green and typecheck never dispatches.
+- `decide` (`board_bundle`) accepts only `flaky` and `paused` bundles. A `base-red` probe that failed on a flake has
+  no way out but a base move or a hand write to its row; a release action for it is not built.
 - A `ci_run` without `package` against a `{package}` template computes the card's packages: it commits the snapshot
   tree with `commit-tree` (no ref keeps it) because turbo compares commits, diffs it against the merge-base with base,
   and asks `affected` (bound through `Board.layerWith({ affected })` in tests). Only an empty set records
