@@ -34,7 +34,7 @@ export const ProjectCopyHandler = HttpApiBuilder.group(Api, "server.projectCopy"
         .stream(
           LLM.request({
             model,
-            http: { headers: { "x-session-affinity": sessionID, "X-Session-Id": sessionID } },
+            http: { headers: SessionRunnerModel.sessionHeaders(model, sessionID) },
             system: [SystemPart.make(ProjectCopy.NAME_SYSTEM)],
             prompt: ProjectCopy.namePrompt(text),
           }),

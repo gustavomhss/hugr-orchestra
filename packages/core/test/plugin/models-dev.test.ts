@@ -103,7 +103,7 @@ describe("ModelsDevPlugin", () => {
             ProviderV2.ID.make("poe"),
             ProviderV2.ID.opencode,
           ])
-          expect(yield* catalog.model.all()).toHaveLength(4)
+          expect(yield* catalog.model.all()).toHaveLength(3)
           expect(
             yield* catalog.model.get(
               ProviderV2.ID.make("deepinfra"),
@@ -118,9 +118,8 @@ describe("ModelsDevPlugin", () => {
           const unknown = yield* catalog.model.get(ProviderV2.ID.make("poe"), ModelV2.ID.make("cerebras/qwen3-32b-cs"))
           expect(unknown?.cost).toEqual([])
           expect(unknown?.request.body.apiKey).toBeUndefined()
-          const free = yield* catalog.model.get(ProviderV2.ID.opencode, ModelV2.ID.make("ling-3.0-flash-fin-free"))
-          expect(free?.cost).toEqual([{ input: 0, output: 0, cache: { read: 0, write: 0 } }])
-          expect(free?.request.body.apiKey).toBeUndefined()
+          // Zen's free models refuse third-party clients, so the catalog leaves them out.
+          expect(yield* catalog.model.get(ProviderV2.ID.opencode, ModelV2.ID.make("ling-3.0-flash-fin-free"))).toBeUndefined()
         }).pipe(Effect.provide(AppNodeBuilder.build(ModelsDev.node))),
       (previous) =>
         Effect.sync(() => {
@@ -169,10 +168,9 @@ describe("ModelsDevPlugin", () => {
       yield* ModelsDevPlugin.effect(
         host({ catalog: catalogHost(catalog), integration: integrationHost(integrations) }),
       ).pipe(Effect.provideService(ModelsDev.Service, models))
-      expect((yield* catalog.model.get(ProviderV2.ID.opencode, ModelV2.ID.make("unknown")))?.cost).toEqual([])
-      expect(
-        (yield* catalog.model.get(ProviderV2.ID.opencode, ModelV2.ID.make("unknown")))?.request.body.apiKey,
-      ).toBeUndefined()
+      expect(yield* catalog.model.get(ProviderV2.ID.opencode, ModelV2.ID.make("unknown"))).toBeUndefined()
+      expect(yield* catalog.model.get(ProviderV2.ID.opencode, ModelV2.ID.make("free"))).toBeUndefined()
+      expect((yield* catalog.model.get(ProviderV2.ID.opencode, ModelV2.ID.make("paid")))?.request.body.apiKey).toBeUndefined()
       expect(yield* catalog.model.available()).toEqual([])
       expect(yield* catalog.model.default()).toBeUndefined()
     }),

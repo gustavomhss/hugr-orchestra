@@ -128,6 +128,15 @@ export class Service extends Context.Service<Service, Interface>()("@orchestra/v
 /** Test or embedding seam for supplying a model resolver directly. */
 export const layerWith = (resolve: Interface["resolve"]) => Layer.succeed(Service, Service.of({ resolve }))
 
+/** The headers every provider call of a Session carries, so the provider keeps the Session's calls on one affinity. */
+export const sessionHeaders = (model: Model, sessionID: string, parentID?: string) => ({
+  "x-session-affinity": sessionID,
+  "X-Session-Id": sessionID,
+  ...(parentID ? { "x-parent-session-id": parentID } : {}),
+  // OpenCode Go refuses a call without its own session header (400 MissingSessionID); Zen takes the same header.
+  ...(model.provider === "opencode" || model.provider === "opencode-go" ? { "x-opencode-session": sessionID } : {}),
+})
+
 const apiKey = (model: ModelV2.Info, credential?: Credential.Value) => {
   if (credential?.type === "key") return Auth.value(credential.key)
   if (credential?.type === "oauth") return Auth.value(credential.access)

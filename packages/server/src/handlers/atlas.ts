@@ -56,7 +56,7 @@ export const AtlasHandler = HttpApiBuilder.group(Api, "server.atlas", (handlers)
             .stream(
               LLM.request({
                 model: resolved,
-                http: { headers: { "x-session-affinity": sessionID, "X-Session-Id": sessionID } },
+                http: { headers: SessionRunnerModel.sessionHeaders(resolved, sessionID) },
                 system: [SystemPart.make(system)],
                 prompt,
               }),

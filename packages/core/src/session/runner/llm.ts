@@ -260,7 +260,7 @@ const layer = Layer.effect(
       const request = model && LLM.request({
         model,
         http: {
-          headers: { "x-session-affinity": session.id, "X-Session-Id": session.id, ...(session.parentID ? { "x-parent-session-id": session.parentID } : {}) },
+          headers: SessionRunnerModel.sessionHeaders(model, session.id, session.parentID),
         },
         providerOptions: { openai: { promptCacheKey } },
         system: systemText.map(SystemPart.make),
@@ -686,7 +686,7 @@ const layer = Layer.effect(
         sessionID: session.id,
         entries: history.map((message, seq) => ({ seq, message })),
         model,
-        request: LLM.request({ model, http: SessionDirectCommands.affinity(session) }),
+        request: LLM.request({ model, http: { headers: SessionRunnerModel.sessionHeaders(model, session.id, session.parentID) } }),
       })
     })
 
@@ -701,7 +701,7 @@ const layer = Layer.effect(
       const chunks: string[] = []
       yield* llm
         .stream(
-          LLM.request({ model, http: SessionDirectCommands.affinity(session), messages: toLLMMessages(history, model), prompt: input.prompt }),
+          LLM.request({ model, http: { headers: SessionRunnerModel.sessionHeaders(model, session.id, session.parentID) }, messages: toLLMMessages(history, model), prompt: input.prompt }),
         )
         .pipe(
           Stream.runForEach((event) => {

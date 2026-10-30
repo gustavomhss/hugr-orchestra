@@ -255,8 +255,8 @@ const layer = Layer.effect(
                 { signal, timeout, resetTimeoutOnProgress: true, onprogress: () => {} },
               ),
             )
-            if (result.isError)
-              return yield* Effect.fail(new Error(McpCatalog.resultText(result) || "MCP tool returned an error"))
+            if ("toolResult" in result) return yield* Effect.fail(new Error("MCP tool returned no content"))
+            if (result.isError) return yield* Effect.fail(new Error(McpCatalog.resultText(result) || "MCP tool returned an error"))
             return { structured: result.structuredContent ?? {}, content: McpCatalog.resultContent(result) }
           }).pipe(Effect.mapError((error) => new ToolFailure({ message: error.message }))),
       })

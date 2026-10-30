@@ -153,6 +153,19 @@ describe("SessionRunnerModel", () => {
     }),
   )
 
+  it.effect("adds the Zen session header only for Zen and Go models", () =>
+    Effect.gen(function* () {
+      const headers = (providerID: string) =>
+        SessionRunnerModel.fromCatalogModel(
+          ModelV2.Info.make({ ...model({ type: "aisdk", package: "@ai-sdk/openai-compatible", url: "https://gateway.test/v1" }), providerID: ProviderV2.ID.make(providerID) }),
+        ).pipe(Effect.map((resolved) => SessionRunnerModel.sessionHeaders(resolved, "ses_1", "ses_0")))
+      const affinity = { "x-session-affinity": "ses_1", "X-Session-Id": "ses_1", "x-parent-session-id": "ses_0" }
+      expect(yield* headers("opencode")).toEqual({ ...affinity, "x-opencode-session": "ses_1" })
+      expect(yield* headers("opencode-go")).toEqual({ ...affinity, "x-opencode-session": "ses_1" })
+      expect(yield* headers("openrouter")).toEqual(affinity)
+    }),
+  )
+
   it.effect("maps catalog OpenAI AI SDK models into native Responses routes", () =>
     Effect.gen(function* () {
       const resolved = yield* SessionRunnerModel.fromCatalogModel(
