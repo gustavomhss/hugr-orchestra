@@ -137,11 +137,12 @@ export function same(left: Reference, right: Reference): boolean {
 }
 
 function normalizeInput(input: string) {
-  return input
-    .trim()
-    .replace(/^git\+/, "")
-    .replace(/#.*$/, "")
-    .replace(/\/+$/, "")
+  const trimmed = input.trim().replace(/^git\+/, "")
+  const hash = trimmed.indexOf("#")
+  const base = hash < 0 ? trimmed : trimmed.slice(0, hash)
+  // A `/\/+$/` regex backtracks quadratically on long slash runs.
+  const end = base.split("").findLastIndex((char) => char !== "/")
+  return base.slice(0, end + 1)
 }
 
 function trimGitSuffix(input: string) {

@@ -197,5 +197,16 @@ const LOCATE = "New-PSDrive -Name orchestra -PSProvider FileSystem -Root ([Envir
 /** One argument as the MSVC runtime (and Rust's std) parses it back. */
 export function quote(arg: string) {
   if (arg !== "" && !/[ \t\n\v"]/.test(arg)) return arg
-  return `"${arg.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\+)$/, "$1$1")}"`
+  // One pass: backslashes double only before a quote or the closing quote. Chained regexes backtrack quadratically.
+  let slashes = 0
+  const body = [...arg].map((char) => {
+    if (char === "\\") {
+      slashes++
+      return ""
+    }
+    const run = "\\".repeat(slashes)
+    slashes = 0
+    return char === '"' ? `${run}${run}\\"` : run + char
+  })
+  return `"${body.join("")}${"\\".repeat(slashes * 2)}"`
 }

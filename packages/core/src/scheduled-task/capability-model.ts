@@ -42,7 +42,7 @@ type Clock = { zone: DateTime.TimeZone; cron: Cron; times: number[] }
 /** Five Vixie fields separated by ASCII spaces or tabs, with `*`, lists, ranges and steps; names, macros and
  * seconds are rejected, as is a rule that can never fire. */
 export function parseCron(expression: string): Cron | undefined {
-  const fields = expression.replace(/^[ \t]+|[ \t]+$/g, "").split(/[ \t]+/)
+  const fields = expression.split(/[ \t]+/).filter((field) => field !== "")
   if (fields.length !== 5) return undefined
   const sets = fields.map((field, index) => parseField(field, LOW[index], HIGH[index]))
   if (!sets.every((set): set is number[] => set !== undefined)) return undefined

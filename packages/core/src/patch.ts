@@ -239,4 +239,5 @@ const normalize = (value: string) =>
 const splitBom = (text: string) =>
   text.startsWith("\uFEFF") ? { bom: true, text: text.slice(1) } : { bom: false, text }
 const stripHeredoc = (input: string) =>
-  input.match(/^(?:cat\s+)?<<['"]?(\w+)['"]?\s*\n([\s\S]*?)\n\1\s*$/)?.[2] ?? input
+  // Trimming first keeps the closing delimiter match linear; `\s*` before `$` backtracks quadratically.
+  input.trimEnd().match(/^(?:cat\s+)?<<['"]?(\w+)['"]?[^\S\n]*\n([\s\S]*?)\n\1$/)?.[2] ?? input

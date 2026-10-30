@@ -27,6 +27,12 @@ describe("Patch", () => {
     ])
   })
 
+  test("strips a heredoc wrapper in linear time", () => {
+    const patch = "*** Begin Patch\n*** Add File: add.txt\n+added\n*** End Patch"
+    expect(Patch.parse(`cat <<EOF\n${patch}\nEOF  \n`)).toEqual([{ type: "add", path: "add.txt", contents: "added" }])
+    expect(() => Patch.parse("<<EOF\n" + "\nEOF ".repeat(20_000) + "x")).toThrow()
+  })
+
   test("derives fuzzy line updates while preserving BOM", () => {
     const update = Patch.derive("update.txt", [{ oldLines: ["  old   "], newLines: ["new"] }], "\uFEFFold\n")
     expect(update).toEqual({ content: "new\n", bom: true })

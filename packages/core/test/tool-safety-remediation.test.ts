@@ -32,6 +32,13 @@ describe("tool safety HOLD remediation", () => {
     ])
   })
 
+  test("catastrophic find deletes are held, and flag runs cannot stall the matcher", () => {
+    for (const command of ["find / -delete", "find -L / -delete", "find -mtime -1 ~ -delete", "find -name x -type f / -exec rm {} +"])
+      expect(ToolSafetyCommands.reason(command)).toBe("known-catastrophic-find-delete")
+    expect(ToolSafetyCommands.reason("find . -name x -delete")).toBeUndefined()
+    expect(ToolSafetyCommands.reason(`find ${"-a ".repeat(5_000)}x -delete`)).toBeUndefined()
+  })
+
   it.live("git staging refusals name the construct they refused and the accepted commit shape", () =>
     Effect.gen(function* () {
       const tmp = yield* fixture

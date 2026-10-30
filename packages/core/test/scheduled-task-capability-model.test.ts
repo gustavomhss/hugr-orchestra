@@ -34,6 +34,7 @@ describe("ScheduledTaskCapabilityModel.parseCron", () => {
     expect([starred?.weekdays, starred?.dayRestricted]).toEqual([new Set([0]), false])
     expect(ScheduledTaskCapabilityModel.parseCron("*/59 */23 * * \t0-7/7")?.minutes.size).toBe(2)
     expect(ScheduledTaskCapabilityModel.parseCron("0 0 30 2 1")?.dayRestricted).toBe(true)
+    expect(ScheduledTaskCapabilityModel.parseCron("0 0 * *" + " ".repeat(100_000) + "x")).toBeUndefined()
   })
 
   // Empty, wrong arity, out of range, reversed range, zero step, `a/n`, empty item, macro, names, and
