@@ -100,7 +100,7 @@ describe("S23 — the refusal is ATTRIBUTED, on every door it can reach", () => 
     // commits it, then boots the real `atlas-mcp` stdio server and composes the whole runtime inside the
     // request. It took 18s on a quiet box and 30.5s with three other seats building concurrently — i.e. the
     // default budget is one contended CPU away from a red that says nothing about the product. The wall-clock
-    // here is process startup, exactly as `vitest.workspace.ts` says of this whole project.
+    // here is process startup, exactly as `vitest.config.ts` says of this whole project.
   }, 60000)
 
   it("CLI: the WRITE doors over a committed store exit 2 — the code every other write refusal uses", () => {

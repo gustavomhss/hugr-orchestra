@@ -104,7 +104,7 @@ afterEach(() => rmSync(repo, { recursive: true, force: true }))
 
 // Every case spawns 10-15 real `git` processes. The 10s global cap is sized for pure unit suites
 // (vitest.config.ts); under host load this suite measured several seconds per case, so it carries its own
-// budget, the same reasoning `vitest.workspace.ts` gives the subprocess-bound black-box project.
+// budget, the same reasoning `vitest.config.ts` gives the subprocess-bound black-box project.
 describe("F3-D5 — parallel branches merge their Memory by union", { timeout: 60_000 }, () => {
   it("the repository binds every Atlas log to merge=union", () => {
     expect(readFileSync(REPO_ATTRIBUTES, "utf8")).toMatch(/^\.atlas\/\*\*\/\*\.jsonl merge=union$/m)
