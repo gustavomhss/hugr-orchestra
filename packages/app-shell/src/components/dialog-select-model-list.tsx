@@ -16,8 +16,9 @@ import { ModelTooltip } from "./model-tooltip"
 type ModelState = ReturnType<typeof useLocal>["model"]
 type ModelItem = ReturnType<ModelState["list"]>[number]
 
+// Zen lists its free models without a cost; OpenRouter marks them with a zero price (the `:free` ids).
 export const isFree = (provider: string, cost: { input: number } | undefined) =>
-  provider === "opencode" && (!cost || cost.input === 0)
+  provider === "opencode" ? !cost || cost.input === 0 : provider === "openrouter" && cost?.input === 0
 
 export const modelKey = (model: ModelItem) => `${model.provider.id}:${model.id}`
 
