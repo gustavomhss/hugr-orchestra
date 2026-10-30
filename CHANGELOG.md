@@ -6,6 +6,22 @@ All notable changes to HuGR Orchestra are recorded here. The format follows [Kee
 
 Changes since the last release go here.
 
+## 0.3.1 (2026-10-30)
+
+Command line and desktop releases, unsigned like 0.3.0: on macOS open the app with "Open Anyway", on Windows choose "Run anyway".
+
+- Merge queue: Maestro verifies a card's work with `ci_run`, queues it with `board_queue`, and the host lands green bundles, isolates a red card or a red base, and recovers after a crash.
+- Project Board: plan area and order on cards, push state per card, drift notes, and a rebuild of the board from its committed record.
+- The app: first-run folder, trust and model steps on Home; a sidebar of five primary items with an Advanced group; failure states that say what to do next; Checks (formerly Actions); a permission dock that shows what is asked and offers Stop; run workflows from Maestro chat; a list editor for workflows and hooks beside the canvas; per-server MCP permissions; agent avatars; and each seat's skill tree on the agent screen.
+- Claude mode runs on the V2 session core again, with the todo panel, edit diffs and subagent child Sessions.
+- MCP Dock: each docked interface is its own MCP server, and Linux reads, finds and acts more reliably in GTK dialogs and editors.
+- Relay ships three example workflows.
+- OpenCode Go requests carry the session header Go requires, so Go models answer again. OpenCode Zen's free models are no longer offered: they refuse every third-party client. Paid Zen models are unchanged.
+- OpenRouter's free models are tagged Free in the model picker.
+- Security: dependency updates for open advisories, including the MCP SDK, and fixes for the CodeQL findings in regular expressions.
+
+## 0.3.0 (2026-10-27)
+
 - Upgrade the command line and the desktop app to 0.3.0 together. Desktop 0.3.0 migrates the shared database and drops the `session_v1_prompt_admission` table, so a command line older than 0.3.0 (for example 0.2.1) can no longer use that database. Release both in the same window; do not run an older CLI beside the new desktop app.
 - The command line npm wrapper and every desktop installer now include the repository `LICENSE` and `NOTICE`.
 - The command line release publishes to npm before it creates the GitHub release, so a failed npm publish can be rerun.
@@ -14,6 +30,8 @@ Changes since the last release go here.
 
 Releases are versioned 0.x. The command line (`@humanguardrail/cli`) is tagged `v<version>` and the desktop app `desktop-v<version>` on [GitHub Releases](https://github.com/gustavomhss/hugr-orchestra/releases); each release's notes say whether it is signed.
 
+- 0.3.1 (2026-10-30): command line and desktop releases, unsigned.
+- 0.3.0 (2026-10-27): command line and desktop releases, unsigned.
 - 0.2.2 (2026-10-21): desktop release.
 - 0.2.1 (2026-10-20): command line and desktop releases.
 - 0.2.0 (2026-10-20): command line and desktop releases.
@@ -51,7 +69,7 @@ The list below describes the product as it stands, not a per-release diff.
 - Draft prompts are admitted before the route changes, and rejected commands no longer stay stuck.
 - Workflow approval, scope and upstream holds now say why they hold.
 - Tool schemas advertise only regex patterns the engine can run safely.
-- Anonymous free models appear in the provider list without a credential, and integration-keyed providers connect.
+- Integration-keyed providers connect.
 - Upstream artifact paths a card claims are checked against what the Task actually wrote.
 - The CLI waits on a deadline for the service daemon to become ready.
 - Deep links and startup paths recover correctly in the desktop app.
