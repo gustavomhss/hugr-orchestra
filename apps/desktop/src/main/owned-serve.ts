@@ -13,7 +13,9 @@ type Logger = {
 }
 
 const HOSTNAME = "127.0.0.1"
-const READY_TIMEOUT = 20_000
+// A server that exits fails the wait at once; this cap only ends a child that stays alive without ever answering. It is
+// long because macOS scans a new unsigned executable on its first run, and that scan alone has taken about 30s.
+const READY_TIMEOUT = 120_000
 const STOP_TIMEOUT = 6_000
 // When the desktop dies, omni stops the server tree with this much grace: the server needs it to stop the shells and
 // MCP servers it started, through its own supervisor, before the forced step ends that supervisor too.

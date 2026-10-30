@@ -444,7 +444,7 @@ test("prebuilt source/output overlap is rejected before signing or replacing pro
   expect(signed).toEqual([])
 }, STAGING_TIMEOUT)
 
-test("installed cache checks bytes, repairs tampering, rejects tampered source", async () => {
+test("installed cache checks bytes, repairs tampering, rejects tampered source when it must install", async () => {
   const input = await fixture()
   await stageCliArtifacts(input)
   const cache = join(input.root, "cache")
@@ -455,8 +455,11 @@ test("installed cache checks bytes, repairs tampering, rejects tampered source",
   expect(repaired.version).toBe(input.version)
   const bundled = await verifyCliArtifact(input.directory, input.targets[0]!)
   await writeFile(bundled.path, "foreign source")
+  // A valid installed copy runs without hashing the bundle again; the bundle is checked when it has to be copied.
+  expect(await installCliArtifact(input.directory, input.targets[0]!, cache, { signature: fixtureSignature })).toEqual(repaired)
+  await writeFile(first.path, "foreign cache")
   await expect(installCliArtifact(input.directory, input.targets[0]!, cache, { signature: fixtureSignature })).rejects.toThrow("digest")
-  expect(await readFile(first.path, "utf8")).toBe(`owned ${input.targets[0]}`)
+  expect(await readFile(first.path, "utf8")).toBe("foreign cache")
 }, STAGING_TIMEOUT)
 
 test("every CLI target carries its tree-sitter through staging, handoff, packaging and install, or stops by name", async () => {
