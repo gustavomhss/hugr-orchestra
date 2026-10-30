@@ -208,7 +208,8 @@ export const validateMedia = Effect.fn("ProviderShared.validateMedia")(function*
 export const validateToolFile = (route: string, part: ToolFileContent, supportedMimes: ReadonlySet<string>) =>
   validateMedia(route, { type: "media", mediaType: part.mime, data: part.uri, filename: part.name }, supportedMimes)
 
-export const trimBaseUrl = (value: string) => value.replace(/\/+$/, "")
+// Not `/\/+$/`: that backtracks quadratically on long slash runs.
+export const trimBaseUrl = (value: string) => value.slice(0, value.split("").findLastIndex((char) => char !== "/") + 1)
 
 export const toolResultText = (part: ToolResultPart) => {
   if (part.result.type === "text") return String(part.result.value)
