@@ -12,11 +12,12 @@ test("fresh Electron bootstrap installs actual declared dependency with no exist
   const dependency = createRequire(join(source, "package.json"))
   const root = await mkdtemp(join(tmpdir(), "orchestra-electron-bootstrap-"))
   await mkdir(join(root, "node_modules/@electron"), { recursive: true })
+  await mkdir(join(root, "node_modules/@electron-internal"), { recursive: true })
   await Promise.all(
     ["install.js", "package.json", "checksums.json"].map((file) => copyFile(join(source, file), join(root, file))),
   )
   await Promise.all(
-    ["@electron/get", "extract-zip"].map(async (name) => {
+    ["@electron/get", "@electron-internal/extract-zip"].map(async (name) => {
       await symlink(
         dirname(dependency.resolve(`${name}/package.json`)),
         join(root, "node_modules", name),

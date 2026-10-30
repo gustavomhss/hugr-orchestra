@@ -94,7 +94,7 @@ export const protectedStrings: Protected[] = [
   { pattern: /OPENCODE_API_KEY\b/g, reason: "Zen's own API key variable, as published by models.dev" },
   { pattern: /\bx-opencode-session\b/g, reason: "the session header Zen and Go require on every call" },
   {
-    pattern: /opencode(?:#credential|-test)\b/g,
+    pattern: /opencode(?:#credential|-test)\b|\bheaders\("opencode"\)/g,
     paths: /^packages\/core\/test\/session-runner-model\.test\.ts$/,
     reason: "Zen provider-family fixture proving the configured User-Agent is never overridden",
   },
