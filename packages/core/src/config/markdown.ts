@@ -2,10 +2,12 @@ export * as ConfigMarkdown from "./markdown"
 
 import matter from "gray-matter"
 export function parse(content: string) {
+  // The options object bypasses gray-matter's cache: it keeps even a failed parse, so the next parse of the same text
+  // would return empty data instead of reaching the fallback.
   try {
-    return matter(content)
+    return matter(content, {})
   } catch {
-    return matter(sanitize(content))
+    return matter(sanitize(content), {})
   }
 }
 
