@@ -509,20 +509,16 @@ function admitFactBlock(text: string): CompletionResult {
 
 /** Every fenced ```atlas-fact block body in the raw stdout (the reason-freely envelope, ADR-0020). */
 function factBlocks(text: string): string[] {
-  // indexOf scans instead of a lazy regex: an unclosed opener would otherwise rescan the rest of the text per opener.
-  // Once one opener has no header newline or no closing fence, no later opener can have one either.
+  // indexOf scans, not a lazy regex: an unclosed opener would rescan the rest of the text once per opener.
   const bodies: string[] = []
-  let at = 0
-  for (;;) {
-    const open = text.indexOf("```atlas-fact", at)
-    if (open < 0) return bodies
+  for (let open = text.indexOf("```atlas-fact"); open >= 0; ) {
     const header = text.indexOf("\n", open)
-    if (header < 0) return bodies
-    const close = text.indexOf("\n```", header + 1)
-    if (close < 0) return bodies
+    const close = header < 0 ? -1 : text.indexOf("\n```", header + 1)
+    if (close < 0) break
     bodies.push(text.slice(header + 1, close))
-    at = close + 4
+    open = text.indexOf("```atlas-fact", close + 4)
   }
+  return bodies
 }
 
 const MAX_FACT_BLOCK_BYTES = 8 * 1024
