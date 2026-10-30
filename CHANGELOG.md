@@ -6,6 +6,12 @@ All notable changes to HuGR Orchestra are recorded here. The format follows [Kee
 
 Changes since the last release go here.
 
+## 0.3.2 (2026-10-30)
+
+Desktop release, unsigned like 0.3.1. The command line stays at 0.3.1.
+
+- The first launch after an install no longer fails with "Owned serve not healthy within 20000ms": the app waits while macOS checks the new server binary, and stops waiting at once if the server exits.
+- Every launch is faster: the local server no longer starts in your home folder, where it watched every file, and the app no longer hashes the bundled command line twice.
 ## 0.3.1 (2026-10-30)
 
 Command line and desktop releases, unsigned like 0.3.0: on macOS open the app with "Open Anyway", on Windows choose "Run anyway".
@@ -30,6 +36,7 @@ Command line and desktop releases, unsigned like 0.3.0: on macOS open the app wi
 
 Releases are versioned 0.x. The command line (`@humanguardrail/cli`) is tagged `v<version>` and the desktop app `desktop-v<version>` on [GitHub Releases](https://github.com/gustavomhss/hugr-orchestra/releases); each release's notes say whether it is signed.
 
+- 0.3.2 (2026-10-30): desktop release, unsigned.
 - 0.3.1 (2026-10-30): command line and desktop releases, unsigned.
 - 0.3.0 (2026-10-27): command line and desktop releases, unsigned.
 - 0.2.2 (2026-10-21): desktop release.
