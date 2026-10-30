@@ -2,7 +2,7 @@
 
 `pkgs.callPackage ./nix/bun.nix {}` returns Bun **1.3.14**, with `bin/bun`,
 `bin/bunx`, `.src`, `.sources` and `.compileTarget`.
-`pkgs.callPackage ./nix/electron.nix {}` returns Electron **42.3.3**, with
+`pkgs.callPackage ./nix/electron.nix {}` returns Electron **42.11.16**, with
 `bin/electron`, `.src` and `.dist`. Both use normal `callPackage` arguments.
 The consuming derivations receive these packages explicitly from `flake.nix`:
 dependency installation and modern CLI use this Bun; Desktop uses this Bun and
@@ -25,7 +25,7 @@ The locked Nixpkgs revision is `9dd5558b06dbdacbf635a3dd36dce1b1a7ee3a89`:
   package set. Linux library wrapping/patching and Darwin app installation stay
   upstream. `.dist` is `$out/libexec/electron` on Linux and `$out/Applications`
   on Darwin. The pinned [version table](https://github.com/NixOS/nixpkgs/blob/9dd5558b06dbdacbf635a3dd36dce1b1a7ee3a89/pkgs/development/tools/electron/binary/info.json)
-  stops at 41.2.0; the generic accepts our measured 42.3.3 release hashes.
+  stops at 41.2.0; the generic accepts our pinned 42.11.16 release hashes.
 - The generic's lazy `.headers` is removed: binary packaging does not need it,
   and its `fetchzip` needs an unpacked recursive hash. A native-addon rebuild
   must provision independently measured headers; there is no guessed hash.
@@ -190,7 +190,7 @@ NIX
 done
 ```
 
-The rendered Bun/Electron `version` must be 1.3.14/42.3.3 and the selected source
+The rendered Bun/Electron `version` must be 1.3.14/42.11.16 and the selected source
 URL/hash must match that system's manifest. Darwin Electron `buildCommand` must
 end with `runPhase installCheckPhase`; Linux has no `buildCommand`. Darwin Bun
 `postFixup` must contain inherited ICU repair/signing, and its `postPhases` must

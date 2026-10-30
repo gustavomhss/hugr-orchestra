@@ -12,7 +12,7 @@
     ],
     "positiveControl": "All three hash implementations returned ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad for bytes abc before archive measurements.",
     "secondControl": "Each measured digest matched its exact filename entry in the separately downloaded upstream SHASUMS256.txt. GitHub release asset digest and size also matched.",
-    "archiveControl": "Each ZIP contained the expected native executable; each Electron ZIP version file reported 42.3.3.",
+    "archiveControl": "Each Bun ZIP contained the expected native executable; each Electron 42.3.3 ZIP version file reported 42.3.3. The Electron 42.11.16 re-pin (2026-10-29) takes its digests from the upstream SHASUMS256.txt, matched against the GitHub release asset digests and sizes; the Nix fixed-output fetch in the nix-toolchain workflow checks the bytes.",
     "storage": "Archives downloaded outside the repository; no binaries are committed.",
     "nixValidation": "Not executed: local Nix is unavailable. Evaluation, native builds, install checks and a negative fixed-output hash probe remain required."
   },
@@ -68,49 +68,49 @@
     }
   },
   "electron": {
-    "version": "42.3.3",
-    "publishedChecksumUrl": "https://github.com/electron/electron/releases/download/v42.3.3/SHASUMS256.txt",
+    "version": "42.11.16",
+    "publishedChecksumUrl": "https://github.com/electron/electron/releases/download/v42.11.16/SHASUMS256.txt",
     "headers": "Not required for binary distribution packaging and not exposed. Native-addon rebuilding needs a separately measured, Nix-verified headers input; no placeholder hash is supplied.",
     "sources": {
       "x86_64-linux": {
         "system": "x86_64-linux",
         "target": "linux-x64",
-        "archive": "electron-v42.3.3-linux-x64.zip",
-        "url": "https://github.com/electron/electron/releases/download/v42.3.3/electron-v42.3.3-linux-x64.zip",
-        "size": 123491613,
-        "hash": "sha256-vMIhN3WGByFtdk3EU+L+pFTICHk8PWqC3fhqNvne+iw=",
-        "sha256": "bcc22137758607216d764dc453e2fea454c808793c3d6a82ddf86a36f9defa2c",
-        "publishedSha256": "bcc22137758607216d764dc453e2fea454c808793c3d6a82ddf86a36f9defa2c"
+        "archive": "electron-v42.11.16-linux-x64.zip",
+        "url": "https://github.com/electron/electron/releases/download/v42.11.16/electron-v42.11.16-linux-x64.zip",
+        "size": 124919987,
+        "hash": "sha256-4n6ex40S7cg8gXoUVLcGUwwADu3SF/Za7SpdllfsG+A=",
+        "sha256": "e27e9ec78d12edc83c817a1454b706530c000eedd217f65aed2a5d9657ec1be0",
+        "publishedSha256": "e27e9ec78d12edc83c817a1454b706530c000eedd217f65aed2a5d9657ec1be0"
       },
       "aarch64-linux": {
         "system": "aarch64-linux",
         "target": "linux-arm64",
-        "archive": "electron-v42.3.3-linux-arm64.zip",
-        "url": "https://github.com/electron/electron/releases/download/v42.3.3/electron-v42.3.3-linux-arm64.zip",
-        "size": 121917158,
-        "hash": "sha256-xetOrFgjapPJwHuz01Nvi8lorvd49hc0gLTzGmPBlOI=",
-        "sha256": "c5eb4eac58236a93c9c07bb3d3536f8bc968aef778f6173480b4f31a63c194e2",
-        "publishedSha256": "c5eb4eac58236a93c9c07bb3d3536f8bc968aef778f6173480b4f31a63c194e2"
+        "archive": "electron-v42.11.16-linux-arm64.zip",
+        "url": "https://github.com/electron/electron/releases/download/v42.11.16/electron-v42.11.16-linux-arm64.zip",
+        "size": 126170287,
+        "hash": "sha256-1WDqgxgGw7ubENbf6cDzWbGwyiUElWDuVu19CYs6zy0=",
+        "sha256": "d560ea831806c3bb9b10d6dfe9c0f359b1b0ca25049560ee56ed7d098b3acf2d",
+        "publishedSha256": "d560ea831806c3bb9b10d6dfe9c0f359b1b0ca25049560ee56ed7d098b3acf2d"
       },
       "x86_64-darwin": {
         "system": "x86_64-darwin",
         "target": "darwin-x64",
-        "archive": "electron-v42.3.3-darwin-x64.zip",
-        "url": "https://github.com/electron/electron/releases/download/v42.3.3/electron-v42.3.3-darwin-x64.zip",
-        "size": 122142889,
-        "hash": "sha256-6vHhsvKs42nNxczZVqq/pRAI6cNEQpuqDju1KBBJQc8=",
-        "sha256": "eaf1e1b2f2ace369cdc5ccd956aabfa51008e9c344429baa0e3bb528104941cf",
-        "publishedSha256": "eaf1e1b2f2ace369cdc5ccd956aabfa51008e9c344429baa0e3bb528104941cf"
+        "archive": "electron-v42.11.16-darwin-x64.zip",
+        "url": "https://github.com/electron/electron/releases/download/v42.11.16/electron-v42.11.16-darwin-x64.zip",
+        "size": 125592723,
+        "hash": "sha256-sm3MK4lkd8Ql/tBGoe7nPi17HKHdKOpU2NTtpydGVtk=",
+        "sha256": "b26dcc2b896477c425fed046a1eee73e2d7b1ca1dd28ea54d8d4eda7274656d9",
+        "publishedSha256": "b26dcc2b896477c425fed046a1eee73e2d7b1ca1dd28ea54d8d4eda7274656d9"
       },
       "aarch64-darwin": {
         "system": "aarch64-darwin",
         "target": "darwin-arm64",
-        "archive": "electron-v42.3.3-darwin-arm64.zip",
-        "url": "https://github.com/electron/electron/releases/download/v42.3.3/electron-v42.3.3-darwin-arm64.zip",
-        "size": 120080583,
-        "hash": "sha256-E4RNm1DHLR+K61MVOYEZeYvbW9P6ni2J9DBv1QHEjI0=",
-        "sha256": "13844d9b50c72d1f8aeb5315398119798bdb5bd3fa9e2d89f4306fd501c48c8d",
-        "publishedSha256": "13844d9b50c72d1f8aeb5315398119798bdb5bd3fa9e2d89f4306fd501c48c8d"
+        "archive": "electron-v42.11.16-darwin-arm64.zip",
+        "url": "https://github.com/electron/electron/releases/download/v42.11.16/electron-v42.11.16-darwin-arm64.zip",
+        "size": 121376853,
+        "hash": "sha256-z7mKmBFV3lZz3A+nfxJJf8ErN4c7aLcI80eUK8hUIzk=",
+        "sha256": "cfb98a981155de5673dc0fa77f12497fc12b37873b68b708f347942bc8542339",
+        "publishedSha256": "cfb98a981155de5673dc0fa77f12497fc12b37873b68b708f347942bc8542339"
       }
     }
   },
