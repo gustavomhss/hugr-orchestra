@@ -4,7 +4,9 @@ When the desktop app cannot start, it now says why instead of showing an empty w
 
 ## The local server does not come up
 
-Orchestra starts its own local server when it opens. If that server exits or does not answer within 20 seconds, the start screen shows the reason, followed by the last lines the server printed (for example a database or permission error). Before, you only saw that the server could not be reached.
+Orchestra starts its own local server when it opens. If that server exits, the start screen shows the reason at once, followed by the last lines the server printed (for example a database or permission error). A server that is still running but has not answered yet gets up to two minutes before the app gives up on it. Before, you only saw that the server could not be reached.
+
+The first launch after you install or update an unsigned build is slower: macOS scans the new server program before its first run, which can take about half a minute. Later launches skip that scan.
 
 If you have a healthy remote server configured, the app connects to it instead and keeps the failure in its diagnostics.
 
