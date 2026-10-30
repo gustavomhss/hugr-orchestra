@@ -47,17 +47,25 @@ queue before a release does, and Maestro there runs on `claude-code`. Nothing la
 merge (`maestro-maintenance`, Landing) is then the fallback, not the rule.
 
 Start the host from `apps/desktop` of a clean worktree on `dev`. The `orchestra-dev-isolated` skill covers omni
-artifacts, but leave out its `ORCHESTRA_TEST_ONBOARDING`: the host must run on the real database, so the board survives
-restarts and shows in the app.
+artifacts, but leave out its `ORCHESTRA_TEST_ONBOARDING`: its in-memory database loses the board on every restart.
+Give the host its own durable database instead. A dev build otherwise opens the installed app's `orchestra.db`, and
+the host's newer schema then breaks the owner's app.
 
 1. `OMNI_ARTIFACTS=<dir> bun ./scripts/predev.ts` builds the server binary. Rerun it after every `dev` update you
    want the host to carry.
 2. `./node_modules/.bin/electron-vite build`
-3. `./node_modules/.bin/electron-vite preview --skipBuild -- --remote-debugging-port=9333`, in the background.
+3. In the background:
+   `ORCHESTRA_DB=$HOME/.local/share/orchestra-queue-host/orchestra.db ./node_modules/.bin/electron-vite preview --skipBuild -- --remote-debugging-port=9333`.
+   Create the directory first. The path must be absolute, or it lands next to the owner's database.
+4. Check it before you queue anything: `lsof -c orchestra | grep '\.db'` lists the host's server holding only the
+   `orchestra-queue-host` file. A row on `~/.local/share/orchestra/orchestra.db` from the host's pid means the variable
+   was lost: stop the host.
+
+The host's board lives only in that database: the owner's app does not show it, and a board kept in the owner's
+database does not move over (`BoardTree.restore` has no tool yet). Create the project and its cards on the host.
 
 Stop the host by quitting that app, or by stopping its background task. Never stop it with `pkill`, which also hits
-other sessions' apps. A queue that stops mid-bundle resumes from its rows on the next start. The release app must not
-open the same database while the host's newer schema is on it.
+other sessions' apps. A queue that stops mid-bundle resumes from its rows on the next start.
 
 ## When a bundle goes red
 

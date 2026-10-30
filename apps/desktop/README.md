@@ -65,6 +65,10 @@ belong to the desktop profile. `ORCHESTRA_DB` configures the Orchestra Core
 database used by the app/server process; it does not redirect or isolate the
 entire Electron profile, its settings, or other desktop state.
 
+A dev build has its own `userData`, but without `ORCHESTRA_DB` it opens the same Core database as the installed app
+(`orchestra.db` under the XDG data directory). To keep a long-running dev build off it, set `ORCHESTRA_DB` to an
+absolute path in a directory of its own.
+
 ## Security hardening
 
 - **Renderer origin.** A packaged build ignores `ELECTRON_RENDERER_URL`; only an unpackaged app loads the dev server
