@@ -1,12 +1,12 @@
 import { expect, type Page } from "@playwright/test"
 import { mockOrchestraServer } from "../utils/mock-server"
 
-// Opens the sidebar's More group unless it is already open. The choice then lasts for the rest of the tab, and a
+// Opens the sidebar's Extensions group unless it is already open. The choice then lasts for the rest of the tab, and a
 // route inside the group opens it on its own; call this before clicking any page that lives in the group.
 export async function expandAdvanced(page: Page) {
   const toggle = page
     .locator('[data-component="orchestra-sidebar"]')
-    .getByRole("button", { name: "More", exact: true })
+    .getByRole("button", { name: "Extensions", exact: true })
   if ((await toggle.getAttribute("aria-expanded")) !== "true") await toggle.click()
   await expect(toggle).toHaveAttribute("aria-expanded", "true")
 }

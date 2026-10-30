@@ -1,61 +1,21 @@
-/* Projects board (slice C). Tokens only. Materials: lanes are channels sunk into the chapter glass, cards are glass
-   tiles raised out of them (tint, grain, light-catching rim, layered drop); the peek is the only float; nothing
-   glassy sits on the peek. The "Needs you" card is the one saturated element on the board. */
+/* Projects board (slice C). Tokens only, and the same materials as every other chapter: content sits on the
+   chapter's base, so cards and tiles are the kit's flat raised fill (.mx-card) with a hairline, never a glass of their
+   own; the peek is the only float. Colour is kept for meaning only: the stage ring, the bar and the "Needs you" card. */
 .board-root {
   position: relative;
   container-type: inline-size;
 }
 
-/* Stage hues come from the kit's roles, so both schemes and every palette carry them. */
+/* Stage hues come from the kit's roles, so both schemes and every palette carry them. Blue is work in motion, green
+   is done; the stages before work are neutral steps. */
 .board-root {
-  --board-card-tint: linear-gradient(180deg, rgba(44, 58, 74, 0.62), rgba(22, 31, 42, 0.72));
-  --board-card-rim: linear-gradient(
-    180deg,
-    rgba(226, 238, 250, 0.34) 0%,
-    rgba(226, 238, 250, 0.1) 30%,
-    rgba(226, 238, 250, 0.04) 72%,
-    rgba(226, 238, 250, 0.1) 100%
-  );
-  --board-card-shadow:
-    inset 0 1px 0 rgba(214, 231, 247, 0.1), inset 0 -1px 0 rgba(0, 0, 0, 0.3), 0 1px 1px rgba(0, 0, 0, 0.35),
-    0 4px 10px -2px rgba(0, 0, 0, 0.3), 0 16px 32px -12px rgba(0, 0, 0, 0.5);
-  --board-card-lift:
-    inset 0 1px 0 rgba(214, 231, 247, 0.12), inset 0 -1px 0 rgba(0, 0, 0, 0.3), 0 1px 1px rgba(0, 0, 0, 0.35),
-    0 8px 18px -4px rgba(0, 0, 0, 0.38), 0 24px 44px -14px rgba(0, 0, 0, 0.56);
-  --board-card-filter: blur(20px) saturate(1.6);
-  --board-glass: var(--orchestra-grain), var(--orchestra-glass-sheen), var(--board-card-tint);
-  --board-lane: linear-gradient(180deg, rgba(6, 10, 15, 0.3), rgba(6, 10, 15, 0.18));
-  --board-lane-shadow:
-    inset 0 1px 3px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(0, 0, 0, 0.12), 0 1px 0 rgba(214, 231, 247, 0.05);
   --board-stage-backlog: var(--orchestra-faint);
   --board-stage-ready: var(--mx-dim);
   --board-stage-building: var(--mx-blue);
-  --board-stage-review: color-mix(in srgb, var(--mx-blue) 45%, var(--mx-good));
+  --board-stage-review: var(--mx-blue);
   --board-stage-shipped: var(--mx-good);
 }
 
-html[data-color-scheme="light"] .board-root {
-  --board-card-tint: linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(246, 249, 252, 0.7));
-  --board-card-rim: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 1) 0%,
-    rgba(255, 255, 255, 0.55) 30%,
-    rgba(255, 255, 255, 0.25) 72%,
-    rgba(255, 255, 255, 0.45) 100%
-  );
-  --board-card-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -1px 0 rgba(30, 45, 60, 0.08), 0 1px 1px rgba(30, 45, 60, 0.1),
-    0 4px 10px -2px rgba(30, 45, 60, 0.1), 0 16px 32px -12px rgba(30, 45, 60, 0.22);
-  --board-card-lift:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 0 rgba(30, 45, 60, 0.08), 0 1px 1px rgba(30, 45, 60, 0.1),
-    0 8px 18px -4px rgba(30, 45, 60, 0.14), 0 24px 44px -14px rgba(30, 45, 60, 0.28);
-  --board-lane: linear-gradient(180deg, rgba(40, 60, 85, 0.1), rgba(40, 60, 85, 0.06));
-  --board-lane-shadow:
-    inset 0 1px 3px rgba(30, 45, 60, 0.14), inset 0 0 0 1px rgba(30, 45, 60, 0.06), 0 1px 0 rgba(255, 255, 255, 0.5);
-}
-
-/* The glass tile: one material for cards, project tiles, the briefing and the Ask. The rim is a 1px ring masked out
-   of a gradient over the flat border, so the edge brightens where light would hit it (as on the chrome glass). */
 .board-brief,
 .board-ask,
 .board-table,
@@ -68,37 +28,9 @@ html[data-color-scheme="light"] .board-root {
 .board-replay,
 .board-detail[data-full="true"] > .board-detail-main {
   position: relative;
-  border: 1px solid var(--orchestra-glass-border);
-  background: var(--board-glass);
-  box-shadow: var(--board-card-shadow);
-  -webkit-backdrop-filter: var(--board-card-filter);
-  backdrop-filter: var(--board-card-filter);
-}
-
-.board-brief::after,
-.board-ask::after,
-.board-table::after,
-.board-timeline-chart::after,
-.board-card::after,
-.board-project::after,
-.board-row::after,
-.board-rail::after,
-.board-intake-card::after,
-.board-replay::after,
-.board-detail[data-full="true"] > .board-detail-main::after {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  z-index: 2;
-  padding: 1px;
-  border-radius: inherit;
-  background: var(--board-card-rim);
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
+  border: 1px solid var(--mx-line);
+  background: var(--mx-raised);
+  box-shadow: var(--mx-highlight), var(--mx-card-shadow);
 }
 
 .board-root [data-stage="backlog"] {
@@ -113,7 +45,8 @@ html[data-color-scheme="light"] .board-root {
   --stage: var(--board-stage-building);
 }
 
-.board-root [data-stage="review"] {
+.board-root [data-stage="review"],
+.board-root [data-stage="queue"] {
   --stage: var(--board-stage-review);
 }
 
@@ -229,14 +162,8 @@ html[data-color-scheme="light"] .board-root {
   block-size: 20px;
   flex: none;
   border-radius: var(--orchestra-radius-full);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--mx-blue) 34%, transparent),
-    color-mix(in srgb, var(--mx-blue) 16%, transparent)
-  );
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--mx-blue) 42%, transparent),
-    inset 0 1px 0 color-mix(in srgb, var(--mx-strong) 22%, transparent);
+  background: var(--mx-soft);
+  box-shadow: inset 0 0 0 1px var(--mx-line);
   color: var(--mx-strong);
   font-size: var(--orchestra-font-size-2xs);
   font-weight: 600;
@@ -266,8 +193,13 @@ html[data-color-scheme="light"] .board-root {
 /* Briefing */
 .board-top {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+/* The ask column exists only while there is a question; without one the briefing spans the board. */
+.board-top:has(> .board-ask) {
   grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
-  gap: 14px;
 }
 
 .board-brief,
@@ -374,8 +306,7 @@ html[data-color-scheme="light"] .board-root {
 /* The one warm element on the board: a faint wash and a warm rim, same glass underneath. */
 .board-ask {
   border-color: color-mix(in srgb, var(--orchestra-warm) 40%, transparent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--orchestra-warm) 9%, transparent), transparent 70px),
-    var(--board-glass);
+  background: color-mix(in srgb, var(--orchestra-warm) 6%, var(--mx-raised));
 }
 
 .board-ask-kicker {
@@ -462,16 +393,12 @@ html[data-color-scheme="light"] .board-root {
   min-inline-size: 0;
   min-block-size: 440px;
   padding: 6px 6px 8px;
-  border: 1px solid transparent;
-  border-radius: var(--orchestra-radius-xl);
-  /* The stage marker: the lane's top edge takes the stage hue and follows its radius, and a faint wash of the same
-     hue fades down behind the header. */
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--stage) 13%, transparent), transparent 76px),
-    var(--board-lane);
-  box-shadow:
-    inset 0 2px 0 color-mix(in srgb, var(--stage) 72%, transparent),
-    var(--board-lane-shadow);
+  border: 1px solid var(--mx-line);
+  border-radius: var(--orchestra-radius-lg);
+  /* A layer of its own between the page and the cards: half the card material, lifted by the card shadow, so the
+     lane reads as a surface rather than an outline on the background. */
+  background: color-mix(in srgb, var(--mx-raised) 55%, transparent);
+  box-shadow: var(--mx-highlight), var(--mx-card-shadow);
 }
 
 .board-col-head {
@@ -479,7 +406,8 @@ html[data-color-scheme="light"] .board-root {
   align-items: center;
   gap: 8px;
   min-block-size: 36px;
-  padding: 4px 8px 2px;
+  padding: 4px 8px 6px;
+  border-block-end: 1px solid var(--mx-line);
   color: var(--mx-strong);
   font-size: var(--orchestra-font-size-sm);
 }
@@ -565,7 +493,7 @@ html[data-color-scheme="light"] .board-root {
   inline-size: 100%;
   position: relative;
   padding: 13px 14px 12px;
-  border-radius: var(--orchestra-radius-lg);
+  border-radius: var(--orchestra-radius-md);
   color: var(--orchestra-body);
   font: inherit;
   font-size: var(--orchestra-font-size-sm);
@@ -580,7 +508,7 @@ html[data-color-scheme="light"] .board-root {
 .board-project {
   gap: 10px;
   padding: 16px 18px 14px;
-  border-radius: var(--orchestra-radius-xl);
+  border-radius: var(--orchestra-radius-lg);
 }
 
 .board-project .board-bar {
@@ -593,7 +521,7 @@ html[data-color-scheme="light"] .board-root {
 .board-project:hover,
 .board-open {
   border-color: var(--mx-rim);
-  box-shadow: var(--board-card-lift);
+  box-shadow: var(--mx-highlight), var(--mx-pop-shadow);
 }
 
 .board-card:focus-visible,
@@ -709,8 +637,7 @@ html[data-color-scheme="light"] .board-root {
 
 .board-held {
   border-color: color-mix(in srgb, var(--orchestra-warm) 42%, transparent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--orchestra-warm) 9%, transparent), transparent 48px),
-    var(--board-glass);
+  background: color-mix(in srgb, var(--orchestra-warm) 6%, var(--mx-raised));
 }
 
 .board-held:hover {
@@ -738,7 +665,7 @@ html[data-color-scheme="light"] .board-root {
 .board-row:hover,
 .board-row.board-open {
   border-color: var(--mx-rim);
-  box-shadow: var(--board-card-lift);
+  box-shadow: var(--mx-highlight), var(--mx-pop-shadow);
 }
 
 .board-row .board-ring {
@@ -849,7 +776,7 @@ html[data-color-scheme="light"] .board-root {
 /* On the full page the issue reads as one sheet beside its rail; in the peek it already sits on float glass. */
 .board-detail[data-full="true"] > .board-detail-main {
   padding: 24px 26px;
-  border-radius: var(--orchestra-radius-xl);
+  border-radius: var(--orchestra-radius-lg);
 }
 
 .board-detail-main {
@@ -1146,7 +1073,7 @@ html[data-color-scheme="light"] .board-root {
   display: grid;
   gap: 12px;
   padding: 18px;
-  border-radius: var(--orchestra-radius-xl);
+  border-radius: var(--orchestra-radius-lg);
 }
 
 .board-props {
@@ -1434,7 +1361,7 @@ textarea.board-input {
   align-content: start;
   gap: 8px;
   padding: 13px 14px 12px;
-  border-radius: var(--orchestra-radius-lg);
+  border-radius: var(--orchestra-radius-md);
   color: var(--orchestra-body);
 }
 
@@ -1479,8 +1406,8 @@ textarea.board-input {
 .board-inbox-item[data-open="false"] {
   gap: 8px;
   padding-block: 14px;
-  border-color: var(--orchestra-glass-border);
-  background: var(--board-glass);
+  border-color: var(--mx-line);
+  background: var(--mx-raised);
   cursor: pointer;
 }
 

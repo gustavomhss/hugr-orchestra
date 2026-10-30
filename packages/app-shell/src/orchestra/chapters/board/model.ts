@@ -26,11 +26,12 @@ export type Proof = ServerBoardProofOutput
 export const columns = ["backlog", "ready", "building", "review", "shipped"] as const
 const day = 24 * 60 * 60 * 1000
 
-// Groups issues into the five columns in Maestro's order. Shipped reads newest first.
+// Groups issues into the five columns in Maestro's order. Shipped reads newest first. A queued card is a verified
+// Review card waiting to merge, so it stays in Review rather than vanishing from the board.
 export function group(issues: readonly Issue[]) {
   const sorted = [...issues].sort((a, b) => a.position - b.position || a.number - b.number)
   const lanes = Object.fromEntries(
-    columns.map((stage) => [stage, sorted.filter((issue) => issue.stage === stage)]),
+    columns.map((stage) => [stage, sorted.filter((issue) => lane(issue.stage) === stage)]),
   ) as Record<Column, Issue[]>
   lanes.shipped.sort((a, b) => b.stageEnteredAt - a.stageEnteredAt)
   return {
@@ -43,7 +44,7 @@ export function group(issues: readonly Issue[]) {
 // Share of the live issues in each stage, for the briefing bar. Intake and Cut are not part of the plan yet or anymore.
 export function progress(issues: readonly Issue[]) {
   const live = issues.filter((issue) => issue.stage !== "intake" && issue.stage !== "cut")
-  const count = (stage: Column) => live.filter((issue) => issue.stage === stage).length
+  const count = (stage: Column) => live.filter((issue) => lane(issue.stage) === stage).length
   const shipped = count("shipped")
   return {
     total: live.length,
@@ -51,6 +52,10 @@ export function progress(issues: readonly Issue[]) {
     percent: live.length ? Math.round((shipped / live.length) * 100) : 0,
     stages: (["shipped", "review", "building", "ready", "backlog"] as const).map((stage) => ({ stage, count: count(stage) })),
   }
+}
+
+function lane(stage: Issue["stage"]) {
+  return stage === "queue" ? "review" : stage
 }
 
 // Where an issue stands on Maestro's plan. Skipped steps count as settled.

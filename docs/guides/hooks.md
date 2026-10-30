@@ -4,7 +4,7 @@ A hook is a rule that watches one thing an agent does and answers. It can block 
 
 ## Where they live
 
-Open **Hooks** in the sidebar's More group. The page has two tabs:
+Open **Hooks** in the sidebar's Extensions group. The page has two tabs:
 
 - **Hooks**: your library, with one row per hook.
 - **Activity**: one row per action a hook took in this project, with filters by hook and result. Shell command and prompt text is not stored, so those rows say so.

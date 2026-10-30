@@ -160,6 +160,18 @@ html[data-orchestra-palette="github"][data-color-scheme] body[data-new-layout] [
   }
 }
 /* orchestra/shell.css */
+[data-orchestra-palette="github"] body[data-new-layout] [data-component="button-v2"][data-variant="contrast"] {
+  background-image: none;
+  background-color: var(--v2-background-bg-contrast);
+  text-shadow: none;
+  box-shadow: none;
+}
+[data-orchestra-palette="github"] body[data-new-layout] [data-component="button-v2"][data-variant="contrast"]:is(:hover, [data-state="hover"]):not(:disabled) {
+  background-image: linear-gradient(var(--v2-overlay-simple-overlay-contrast-hover), var(--v2-overlay-simple-overlay-contrast-hover));
+}
+[data-orchestra-palette="github"] body[data-new-layout] [data-component="button-v2"][data-variant="contrast"]:is(:active, [data-state="pressed"]):not(:disabled) {
+  background-image: linear-gradient(var(--v2-overlay-simple-overlay-contrast-pressed), var(--v2-overlay-simple-overlay-contrast-pressed));
+}
 [data-orchestra-palette="github"] body[data-new-layout] [data-slot="dialog-close-button"]:active {
   background: var(--orchestra-overlay-pressed);
 }
@@ -1251,7 +1263,7 @@ html[data-orchestra-palette="github"][data-color-scheme] body[data-new-layout] [
 /* orchestra/chapters/kit.css */
 html[data-orchestra-palette="github"][data-color-scheme] body[data-new-layout],
 html[data-orchestra-palette="github"][data-color-scheme] body[data-mx-kit] {
-  --mx-primary: linear-gradient(180deg, #85b8ff, #60a2ff);
+  --mx-primary: #72acff;
   --mx-primary-text: #ffffff;
 }
 html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-new-layout],
@@ -1265,12 +1277,10 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-mx-ki
   --mx-blue: #004da7;
   --mx-good: #005e15;
   --mx-bad: #a30f00;
-  --mx-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.7);
   --mx-shadow: 0 30px 100px rgba(60, 67, 75, 0.2);
   --mx-pop-shadow: 0 14px 35px rgba(60, 67, 75, 0.16);
   --mx-backdrop: rgba(55, 61, 69, 0.3);
   --mx-rim: rgba(111, 119, 128, 0.24);
-  --mx-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0) 56px);
   --mx-card-shadow: 0 1px 2px rgba(60, 67, 75, 0.06), 0 8px 22px -10px rgba(60, 67, 75, 0.16);
   --mx-enabled: rgba(141, 195, 255, 0.16);
 }
@@ -1294,7 +1304,7 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-mx-ki
 }
 [data-orchestra-palette="github"] .mx-card {
   border: 1px solid var(--mx-line);
-  background: var(--mx-sheen), var(--mx-raised);
+  background: var(--mx-raised);
   box-shadow: var(--mx-highlight), var(--mx-card-shadow);
 }
 [data-orchestra-palette="github"] .mx-card:hover,
@@ -1443,7 +1453,6 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-mx-ki
 }
 [data-orchestra-palette="github"] .mx-dialog-head {
   border-block-end: 1px solid var(--mx-line);
-  background: var(--mx-sheen);
 }
 [data-orchestra-palette="github"] .mx-dialog-head p {
   color: var(--mx-dim);

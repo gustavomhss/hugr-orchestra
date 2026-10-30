@@ -273,7 +273,7 @@
   --board-table-columns: 104px minmax(0, 1fr) 40px 150px 44px 64px 56px;
   display: grid;
   padding: 4px 0;
-  border-radius: var(--orchestra-radius-xl);
+  border-radius: var(--orchestra-radius-lg);
   /* Clip row hovers to the rounded tile but keep the 1px rim drawn over the border. */
   overflow: clip;
   overflow-clip-margin: 1px;
@@ -754,7 +754,7 @@
   position: relative;
   display: grid;
   padding: 4px 0 10px;
-  border-radius: var(--orchestra-radius-xl);
+  border-radius: var(--orchestra-radius-lg);
   overflow: clip;
   overflow-clip-margin: 1px;
 }

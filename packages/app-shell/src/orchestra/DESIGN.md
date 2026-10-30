@@ -89,7 +89,7 @@ A `backdrop-filter` repaints whenever anything inside its box paints. The sideba
 | `--mx-raised` | `rgba(19,28,38,.55)` / light `rgba(255,255,255,.63)` | chapter cards |
 | `--mx-soft` | `rgba(170,196,220,.055)` | quiet chips and wells |
 | `--mx-rim` | `rgba(166,189,211,.24)` / light `rgba(65,86,107,.24)` | card rim on hover or focus-within |
-| `--mx-sheen` | white `.03` / light `.4` fading out over 56px | top light on cards and dialog heads |
+| `--mx-highlight` | `0 0 transparent` | no top glint anywhere (quiet glass); kept so shadow lists keep one shape |
 
 Hairlines: `--orchestra-border-muted` `.14`, `--orchestra-border` `.2`, `--orchestra-border-strong` `.34`
 (all on `rgb(163,184,203)`); chapter kit `--mx-line` `rgba(166,189,211,.14)`.
@@ -118,7 +118,7 @@ these. The legacy `--v2-*`, `--text-*`, `--surface-*` and `--border-*` names are
 - Tints: `color-mix(in srgb, var(--role) N%, transparent)`, never a new literal.
 - To fix contrast, change lightness and keep hue.
 - Do not write light-mode overrides that restate a token's light value.
-- Primary action: `--mx-primary` (`#3f7ebc` → `#326ba5`) with `--mx-primary-text` white. It is the only saturated
+- Primary action: `--mx-primary` (flat `#3873b0`) with `--mx-primary-text` white. It is the only saturated
   fill on a screen.
 
 ### 4.3 Palettes
@@ -220,8 +220,8 @@ Measured at 1920×1200 in the dev app. Spacing values sit on a 2px grid; most ga
 - **Lean summary.** Four equal tiles (`repeat(4, minmax(0, 1fr))`, gap 24px, top aligned), each value 3xl in
   `--mx-strong` with -0.04em tracking; no divider between tiles. Its empty state is `.mx-empty` stripped of its
   well (no border, fill or shadow) because it already sits in a card.
-- **Cards.** No footer divider. Empty states never sit in a hero-number slot. `.mx-card` layers `--mx-sheen` over
-  `--mx-raised`, with the highlight rim and `--mx-card-shadow` (a 1px contact shadow plus a soft 22px drop). Hover
+- **Cards.** No footer divider. Empty states never sit in a hero-number slot. `.mx-card` is a flat
+  `--mx-raised` fill with `--mx-card-shadow` (a 1px contact shadow plus a soft 22px drop). Hover
   or focus inside firms the border to `--mx-rim` and swaps the drop for `--mx-pop-shadow`; cards never move.
 - **Status chips.** `.mx-badge.good` and `.bad` carry a 5px dot and a 9% wash of their own color, no border.
   Neutral badges keep the `--mx-line` hairline.
@@ -241,8 +241,8 @@ Measured at 1920×1200 in the dev app. Spacing values sit on a 2px grid; most ga
 - **Sidebar overflow.** The chapter list scrolls under a fade mask (8px top, 32px bottom) with matching block
   padding, so no entry is clipped flat against the chrome. Composer chips (28px) name a mode in one word; the full
   sentence lives in the picker.
-- **Dialogs.** Float glass over the scrim, radius xl, title 2xl. The head carries `--mx-sheen`, the foot a
-  `--mx-soft` wash, and the frame the highlight rim over `--mx-shadow`. The head's close icon is a 28px rounded
+- **Dialogs.** Float glass over the scrim, radius xl, title 2xl. The head is flat, the foot a
+  `--mx-soft` wash, and the frame sits on `--mx-shadow` with no glint. The head's close icon is a 28px rounded
   square (radius sm, `--mx-dim`, `--mx-soft` on hover), so its focus ring is not a tight box around the glyph.
 - **Row actions.** In a dense list (Flight Engineer meeting detail) a row's text actions fade in on hover or
   focus-within through opacity. They stay in the DOM and keyboard reachable, and stay visible on devices without

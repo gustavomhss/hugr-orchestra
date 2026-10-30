@@ -49,13 +49,13 @@ for (const scenario of cases) {
         await page.keyboard.press("Enter")
         await expect(sidebar).toHaveCSS("width", "56px")
         await expect(sidebar.getByRole("button", { name: "Expand sidebar", exact: true })).toBeFocused()
-        for (const name of [scenario.home, "Chat", "Projects", "Agents", "Actions", "More"]) {
+        for (const name of [scenario.home, "Chat", "Project Board", "Agents", "Actions", "Extensions"]) {
           await page.keyboard.press("Tab")
           await expect(sidebar.getByRole("button", { name, exact: true })).toBeFocused()
         }
-        // Enter opens the More group; the next Tab stops walk its rows.
+        // Enter opens the Extensions group; the next Tab stops walk its rows.
         await page.keyboard.press("Enter")
-        await expect(sidebar.getByRole("button", { name: "More", exact: true })).toHaveAttribute(
+        await expect(sidebar.getByRole("button", { name: "Extensions", exact: true })).toHaveAttribute(
           "aria-expanded",
           "true",
         )

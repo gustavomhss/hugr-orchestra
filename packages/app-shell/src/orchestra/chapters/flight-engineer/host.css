@@ -30,7 +30,7 @@
   padding: 18px 20px;
   border: 1px solid var(--mx-line);
   border-radius: var(--orchestra-radius-lg);
-  background: linear-gradient(180deg, var(--mx-sheen), transparent 56px), var(--mx-raised);
+  background: var(--mx-raised);
   box-shadow: var(--mx-highlight), var(--mx-card-shadow);
   color: var(--mx-dim);
   font-family: var(--mx-sans);
@@ -189,7 +189,7 @@
   padding: 16px 18px;
   border: 1px solid var(--mx-line);
   border-radius: var(--orchestra-radius-lg);
-  background: linear-gradient(180deg, var(--mx-sheen), transparent 56px), var(--mx-raised);
+  background: var(--mx-raised);
 }
 .fe-perms li > .fe-glyph {
   box-sizing: content-box;

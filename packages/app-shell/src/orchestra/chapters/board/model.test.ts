@@ -92,6 +92,13 @@ describe("group", () => {
     expect(grouped.cut).toBe(1)
   })
 
+  test("a queued card stays in Review and counts there", () => {
+    const issues = [issue(1, "review"), issue(2, "queue"), issue(3, "shipped")]
+    expect(group(issues).lanes.review.map((item) => item.number)).toEqual([1, 2])
+    expect(progress(issues).stages.find((item) => item.stage === "review")?.count).toBe(2)
+    expect(progress(issues).total).toBe(3)
+  })
+
   test("an empty board has five empty columns", () => {
     expect(Object.values(group([]).lanes).map((items) => items.length)).toEqual([0, 0, 0, 0, 0])
   })

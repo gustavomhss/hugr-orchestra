@@ -70,7 +70,7 @@ const icons = {
   dock: '<path d="M2.6 3.4h10.8v7.4H2.6zM2.6 5.8h10.8M5 12.6h6"/>',
   search: '<circle cx="7.1" cy="7.1" r="4.2"/><path d="m10.3 10.3 2.6 2.6"/>',
   workspaces: '<path d="M2.6 4.2h4.2l1.3 1.6h5.3v6.4H2.6z"/>',
-  // The More group: three dots on the compact rail, and a chevron that points the way the group will move.
+  // The Extensions group: three dots on the compact rail, and a chevron that points the way the group will move.
   advanced: '<circle cx="3.2" cy="8" r="1.3"/><circle cx="8" cy="8" r="1.3"/><circle cx="12.8" cy="8" r="1.3"/>',
   chevronDown: '<path d="m4 6 4 4 4-4"/>',
   chevronUp: '<path d="m4 10 4-4 4 4"/>',
