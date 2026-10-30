@@ -27,6 +27,8 @@ describe("quote", () => {
     expect(ToolSafetyAppContainer.quote("a b")).toBe('"a b"')
     expect(ToolSafetyAppContainer.quote('say "hi"')).toBe('"say \\"hi\\""')
     expect(ToolSafetyAppContainer.quote("C:\\dir with space\\")).toBe('"C:\\dir with space\\\\"')
+    expect(ToolSafetyAppContainer.quote('a b\\\\"c')).toBe('"a b\\\\\\\\\\"c"')
+    expect(ToolSafetyAppContainer.quote("a b" + "\\".repeat(200_000) + "x")).toBe('"a b' + "\\".repeat(200_000) + 'x"')
   }))
 })
 

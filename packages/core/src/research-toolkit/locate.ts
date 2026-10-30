@@ -116,7 +116,7 @@ export const run = Effect.fn("Locate.run")(function* (input: CodeIndex.LocateInp
 export function extract(question: string) {
   const quoted = [...question.matchAll(/"([^"]+)"|'([^']+)'|`([^`]+)`/g)].map((match) => match[1] ?? match[2] ?? match[3])
   const rest = question.replace(/"[^"]+"|'[^']+'|`[^`]+`/g, " ")
-  const identifiers = rest.match(/[\w$@.-]*[/.][\w$@./-]*\w|\b[a-z]+[A-Z][\w$]*|\b[A-Z][a-z0-9]+[A-Z][\w$]*|\b\w+_\w+\b|\b[a-z0-9]+(?:-[a-z0-9]+)+\b/g) ?? []
+  const identifiers = rest.match(/[\w$@.-]{0,200}[/.][\w$@./-]{0,200}\w|\b[a-z]+[A-Z][\w$]*|\b[A-Z][a-z0-9]+[A-Z][\w$]*|\b\w+_\w+\b|\b[a-z0-9]+(?:-[a-z0-9]+)+\b/g) ?? []
   const words = (rest.match(/\p{L}{4,}/gu) ?? []).filter((word) => !STOPWORDS.has(word.toLowerCase()))
   const seen = new Set<string>()
   return [...quoted, ...identifiers, ...words].map((term) => term.trim().replace(/[.,;:!?]+$/, "")).filter((term) => {

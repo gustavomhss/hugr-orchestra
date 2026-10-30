@@ -56,7 +56,7 @@ export function reason(command: string) {
   if (/\brm\b/.test(command) && (short.includes("r") || /--recursive\b|--dir\b/.test(command)) &&
     (short.includes("f") || /--force\b/.test(command)) && danger.test(command)) return "known-catastrophic-delete"
   if (/\bfind\b/.test(command) && /-delete\b|-exec\s+rm\b/.test(command) &&
-    /\bfind\s+(?:-[a-zA-Z]+\s+\S*\s*)*(?:\/|~|\$HOME)(?:\s|\/|$)|\bfind\s+(?:\/etc|\/usr|\/bin|\/sbin|\/lib|\/boot|\/System|\/var|\/opt|\/private|\/dev|\/Users|\/home)\b/.test(command))
+    /\bfind\s+(?:-[a-zA-Z]+\s+(?:(?!-[a-zA-Z]+\s)\S+\s+)?)*(?:\/|~|\$HOME)(?:\s|\/|$)|\bfind\s+(?:\/etc|\/usr|\/bin|\/sbin|\/lib|\/boot|\/System|\/var|\/opt|\/private|\/dev|\/Users|\/home)\b/.test(command))
     return "known-catastrophic-find-delete"
   if (/\bgit\s+clean\b/.test(command)) {
     const tail = command.split("clean", 2)[1]

@@ -67,6 +67,9 @@ describe("#196a createUnitDeps — the candidate-grounded recall source", () => 
     expect(symbolTerminalName(HASH)).toBe("Hash") //     type `#`
     expect(symbolTerminalName(CHARGE)).toBe("charge") // method `().`
     expect(symbolTerminalName("scip x 0 `f.ts`/Y.")).toBe("Y") // term `.`
+    expect(symbolTerminalName("Y #")).toBe("Y") // whitespace before the suffix
+    expect(symbolTerminalName("a b)")).toBe("") // no identifier at the end
+    expect(symbolTerminalName(`${"a ".repeat(50_000)}!`)).toBe("") // long non-matching input stays fast
   })
 })
 

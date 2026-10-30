@@ -1,13 +1,18 @@
+// Not `/[/\\]+$/`: that backtracks quadratically on long separator runs.
+function trimSeparators(path: string) {
+  return path.slice(0, path.split("").findLastIndex((char) => char !== "/" && char !== "\\") + 1)
+}
+
 export function getFilename(path: string | undefined) {
   if (!path) return ""
-  const trimmed = path.replace(/[/\\]+$/, "")
+  const trimmed = trimSeparators(path)
   const parts = trimmed.split(/[/\\]/)
   return parts[parts.length - 1] ?? ""
 }
 
 export function getDirectory(path: string | undefined) {
   if (!path) return ""
-  const trimmed = path.replace(/[/\\]+$/, "")
+  const trimmed = trimSeparators(path)
   const parts = trimmed.split(/[/\\]/)
   return parts.slice(0, parts.length - 1).join("/") + "/"
 }

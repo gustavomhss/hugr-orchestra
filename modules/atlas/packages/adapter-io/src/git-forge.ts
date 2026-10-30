@@ -94,7 +94,7 @@ export function createForge(repoPath: string): Forge {
       // A real `git clone --bare` copies commit objects (the trailer travels in the message), but NOT
       // `refs/notes/*` (perimeter-conditional overlay, PERSIST-13c) nor the host-side PR surface/refspecs.
       const dst = mkdtempSync(join(tmpdir(), "atlas-forge-bare-"))
-      runGit(repoPath, ["clone", "--quiet", "--bare", repoPath, dst])
+      runGit(repoPath, ["clone", "--quiet", "--bare", "--", repoPath, dst])
       return createForge(dst)
     },
     calls() {

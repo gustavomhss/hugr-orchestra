@@ -185,8 +185,25 @@ export const isLocalSymbol = (symbol: string): boolean => symbol.startsWith("loc
  * canonicalise onto a real-but-WRONG `src` symbol that still passes `defs.has` — the one shape the verify
  * cannot catch. Holds for `tsc --declaration` per-file output (this repo); revisit for bundled declarations.
  */
-export const canonicalizeSymbol = (symbol: string): string =>
-  symbol.replace(/ dist\/(?:src\/)?((?:[^`]*\/)?`[^`]+)\.d\.ts`/, " src/$1.ts`")
+export const canonicalizeSymbol = (symbol: string): string => {
+  for (let at = symbol.indexOf(" dist/"); at >= 0; at = symbol.indexOf(" dist/", at + 1)) {
+    const body = symbol.slice(at + 6)
+    for (const rest of body.startsWith("src/") ? [body.slice(4), body] : [body]) {
+      const descriptor = distDescriptor(rest)
+      if (descriptor) return `${symbol.slice(0, at)} src/${rest.slice(0, descriptor.stem)}.ts\`${rest.slice(descriptor.end)}`
+    }
+  }
+  return symbol
+}
+
+/** Match `(<dir>/)?`<name>.d.ts`` at the start of `rest` by scanning for the first two backticks, not by regex. */
+function distDescriptor(rest: string) {
+  const open = rest.indexOf("`")
+  if (open < 0 || (open > 0 && rest[open - 1] !== "/")) return
+  const close = rest.indexOf("`", open + 1)
+  if (close < open + 7 || !rest.startsWith(".d.ts", close - 5)) return
+  return { stem: close - 5, end: close + 1 }
+}
 
 /**
  * Derive the depends-on edge ledger from the SCIP occurrences alone. A `reference` whose symbol has an

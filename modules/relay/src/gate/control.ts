@@ -129,11 +129,13 @@ export const text = (value: unknown): string | undefined => {
 }
 
 /** The `fails` string the gate prints: `; <id>` per failing control, with trailing LF lost to `$(…)`. */
-export const fails = (failing: ReadonlyArray<string>) =>
-  failing
-    .map((id) => `; ${id}`)
-    .join("")
-    .replace(/\n+$/, "")
+export const fails = (failing: ReadonlyArray<string>) => {
+  const joined = failing.map((id) => `; ${id}`).join("")
+  // Index scan instead of `/\n+$/`, which is quadratic on ids full of non-terminal LFs.
+  let end = joined.length
+  while (end > 0 && joined[end - 1] === "\n") end--
+  return joined.slice(0, end)
+}
 
 export interface Envelope {
   // Absent on CLI lines; the arm always sets it.
