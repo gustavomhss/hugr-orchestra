@@ -76,6 +76,15 @@ open the same database while the host's newer schema is on it.
 - A flaky, paused or dissolved bundle holds the project's queue until Maestro decides with `board_bundle`.
 - `base-red` waits for a base move: look for the fix card, not at the bundle.
 - `board_dequeue` takes a card out and dissolves its bundle; the other members stay queued.
+- A card refused as scoped-red after a green `ci_run`: the scoped state keeps the latest row per command, so an
+  earlier failing run with a different command (other files, other package) still counts. Rerun that same command
+  until it passes; a green run of another command does not replace it.
+- Any push to a queued card's PR, including the fix for its own red, sends it back to Review ("head moved"). Run
+  `ci_run` and the typecheck on the new head, then `board_queue` it again.
+- Pushes to the base branch run no CI, so after a red bundle the base has no checks and the host probes it alone
+  with the whole gate (about half an hour) before it cuts again.
+- Each `test:ci` run uploads the working tree through the GitHub API (hundreds of files). Many runs in a row hit the
+  hourly rate limit; the script waits and retries, so a run that stalls on "rate limit" is slow, not broken.
 
 ## Not in the queue (yet)
 
