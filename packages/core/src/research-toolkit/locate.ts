@@ -119,7 +119,7 @@ export function extract(question: string) {
   const identifiers = rest.match(/[\w$@.-]{0,200}[/.][\w$@./-]{0,200}\w|\b[a-z]+[A-Z][\w$]*|\b[A-Z][a-z0-9]+[A-Z][\w$]*|\b\w+_\w+\b|\b[a-z0-9]+(?:-[a-z0-9]+)+\b/g) ?? []
   const words = (rest.match(/\p{L}{4,}/gu) ?? []).filter((word) => !STOPWORDS.has(word.toLowerCase()))
   const seen = new Set<string>()
-  return [...quoted, ...identifiers, ...words].map((term) => term.trim().replace(/[.,;:!?]+$/, "")).filter((term) => {
+  return [...quoted, ...identifiers, ...words].map((term) => term.trim().replace(/(?<![.,;:!?])[.,;:!?]+$/, "")).filter((term) => {
     const key = term.toLowerCase()
     if (!term || seen.has(key)) return false
     seen.add(key)

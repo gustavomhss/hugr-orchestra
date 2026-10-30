@@ -308,8 +308,10 @@ export function renderBundleRecord(bundle: BundleRecord): string {
 
 /** The cards and attempts a rendered body names; none when it has no refs comment or the comment is malformed. */
 export function readPrRecordRefs(body: string): readonly { readonly card: string; readonly attempts: readonly number[] }[] {
-  const match = /<!-- atlas-record:refs (.*?) -->/.exec(body)
-  const refs = parseJsonOrUndefined(match?.[1] ?? "")
+  // indexOf scans, not a lazy regex: the body comes from the forge, and an unclosed opener would rescan it per opener.
+  const open = body.indexOf("<!-- atlas-record:refs ")
+  const close = open < 0 ? -1 : body.indexOf(" -->", open)
+  const refs = parseJsonOrUndefined(close < 0 ? "" : body.slice(open + "<!-- atlas-record:refs ".length, close))
   if (!Array.isArray(refs)) return []
   return refs.filter(
     (ref): ref is { card: string; attempts: number[] } =>
