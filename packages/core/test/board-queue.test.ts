@@ -194,19 +194,20 @@ describe("BoardQueue", () => {
       yield* board.queue({ project: "QIP", number: 1, reason: "Verified." })
       yield* board.queue({ project: "QIP", number: 2, reason: "Verified." })
       repo.remote.conclusion = "SUCCESS"
-      repo.remote.cancelled = ["bundle-QIP-1", "bundle-QIP-2"]
+      repo.remote.cancelled = ["bundle-QIP-1"]
+      repo.remote.infraAttempts = 2
 
       yield* Effect.forEach(Array.from({ length: 8 }), () => board.queueTick(), { discard: true })
       expect([yield* stage(repo, 1), yield* stage(repo, 2)]).toEqual(["queue", "queue"])
-      expect(yield* bundleStatuses(repo)).toEqual(["infra", "paused"])
+      expect(yield* bundleStatuses(repo)).toEqual(["paused"])
 
       const pulls = repo.remote.pulls.size
       yield* board.queueTick()
       expect(repo.remote.pulls.size).toBe(pulls)
-      expect(yield* bundleStatuses(repo)).toEqual(["infra", "paused"])
+      expect(yield* bundleStatuses(repo)).toEqual(["paused"])
 
       repo.remote.cancelled = []
-      expect(yield* board.bundle({ project: "QIP", bundle: 2, verdict: "retry", reason: "Runner back." })).toEqual({ status: "infra" })
+      expect(yield* board.bundle({ project: "QIP", bundle: 1, verdict: "retry", reason: "Runner back." })).toEqual({ status: "infra" })
       yield* board.queueTick()
       expect(repo.remote.pulls.size).toBe(pulls + 1)
     }),

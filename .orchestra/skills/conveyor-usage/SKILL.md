@@ -65,7 +65,7 @@ open the same database while the host's newer schema is on it.
 |---|---|---|
 | Base commit red, or a base probe red | `base-red`; cards stay queued; nothing is cut until base moves. A failing check is bisected on base and a `bug` fix card names the first failing commit | Get the fix card done; it rides alone |
 | Code red, failing bun tests in a turbo package | Scoped runs on base and head: base red, code (isolate, eject) or flaky | Fix the ejected card in Review and queue it again |
-| Only cancelled, timed-out or never-started jobs, or a control-line job with no failing file | Infra: one rebuild, then `paused` | `board_bundle retry` once the runner is back |
+| Only cancelled, timed-out or never-started jobs, or a control-line job with no failing file | Infra: the failed jobs rerun once in place, then `paused` | `board_bundle retry` once the runner is back |
 | Flaky (three head passes) | PR stays open, `board_flake` row | `board_bundle merge` or `retry` |
 | Isolation found nothing or rebuilt twice | Bundle dissolves; cards held | `board_bundle release` one card at a time |
 | A member's PR moved after assembly | That card goes back to Review; bundle rebuilt without it | Queue it again when verified |
@@ -74,7 +74,8 @@ open the same database while the host's newer schema is on it.
 
 - `board_read` shows each queued card's state: waiting, running, held by a hold before merge, or held out by a conflict.
 - A flaky, paused or dissolved bundle holds the project's queue until Maestro decides with `board_bundle`.
-- `base-red` waits for a base move: look for the fix card, not at the bundle.
+- `base-red` waits for a base move: look for the fix card, not at the bundle. A `base-red` with no fix card never moves on its own; a red probe with nothing to fix now closes `paused` instead (#1181).
+- A card refused with "conflicts with base…" after it merged base keeps that flag until base moves again; the conflict check reruns only on a base move.
 - `board_dequeue` takes a card out and dissolves its bundle; the other members stay queued.
 - A card refused as scoped-red after a green `ci_run`: the scoped state keeps the latest row per command, so an
   earlier failing run with a different command (other files, other package) still counts. Rerun that same command

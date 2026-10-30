@@ -1,5 +1,5 @@
 import { and, asc, desc, eq, inArray, isNull, ne } from "drizzle-orm"
-import { Effect, Option } from "effect"
+import { Effect, Option, Schema } from "effect"
 import type { BoardCi } from "./ci"
 import {
   BoardAttemptTable,
@@ -15,6 +15,8 @@ import { AUTHOR, affected, decodeRollup, dispatched, dispatchRollup, insertNote,
 import type { Context } from "./queue-shared"
 import type { makeRecord } from "./queue-record"
 import type { makeRed } from "./queue-red"
+
+const decodeAttempt = Schema.decodeUnknownOption(Schema.fromJsonString(Schema.Struct({ attempt: Schema.Number, status: Schema.String })))
 
 /** Settling and closing a bundle: merge when green, give the members back when red. The red path and the record helpers come in from their modules. */
 export function makeSettle(
@@ -73,10 +75,10 @@ export function makeSettle(
         .orderBy(asc(BoardBundleMemberTable.position))
         .all(),
     )
-    // A bundle with no members is a base probe: it never merges, it only says whether base is green. A red safety run
-    // (section 7.3, packages set) is read like any base red, so only the lanes touching its failing packages pause.
-    if (members.length === 0 && (verdict === "green" || bundle.packages === null))
-      return yield* close(row, repo, bundle, `probed ${contract.base} at ${bundle.base_sha.slice(0, 10)}`, verdict === "green" ? "probe-green" : "base-red")
+    // A bundle with no members is a base probe: it never merges, it only says whether base is green. A red probe or safety
+    // run (section 7.3, packages set) is read like any base red, so only the lanes touching its failing packages pause.
+    if (members.length === 0 && verdict === "green")
+      return yield* close(row, repo, bundle, `probed ${contract.base} at ${bundle.base_sha.slice(0, 10)}`, "probe-green")
     if (members.length === 0) return yield* safety(row, repo, directory, contract, bundle, rollup.statusCheckRollup)
     if (fixed === false) {
       yield* eject(row, bundle, members.map((item) => item.issue), `Bundle ${row.key}-B${bundle.n} carried this fix alone and ${bundle.failing?.flatMap((group) => group.files).join(", ")} still fail; it is back in Review.`, "fix did not turn its tests green")
@@ -85,6 +87,38 @@ export function makeSettle(
     if (verdict === "red") {
       const found = yield* failures(repo, rollup.statusCheckRollup, contract)
       const cause = found.files.length > 0 ? ` Failing: ${found.files.join(", ")}.` : ""
+      const paused = Effect.gen(function* () {
+        yield* Effect.forEach(
+          members,
+          (item) => note(row, item.issue, `Bundle ${row.key}-B${bundle.n} failed on infrastructure twice; the ${row.key} queue is paused until Maestro retries it, and this card stays queued.`),
+          { discard: true },
+        )
+        yield* Effect.logWarning(`integration: ${row.key} queue paused, bundle ${row.key}-B${bundle.n} failed on infrastructure twice`)
+        return yield* close(row, repo, bundle, "failed on infrastructure twice; the queue is paused", "paused")
+      })
+      // An infrastructure red reruns only its failed jobs, in the same runs, so the green jobs stand and the bundle stays
+      // open. A run already on its second attempt failed on infrastructure twice. A red whose runs cannot be read or
+      // rerun falls back to rebuilding the bundle.
+      const attempts = found.infra
+        ? yield* Effect.forEach(found.runs, (run) =>
+            deps
+              .gh(["run", "view", run, "--repo", repo, "--json", "attempt,status"])
+              .pipe(Effect.map((read) => (read.exitCode === 0 ? Option.getOrUndefined(decodeAttempt(read.stdout)) : undefined))),
+          )
+        : []
+      const rerunnable = attempts.length > 0 && attempts.every((attempt) => attempt !== undefined)
+      // GitHub can still report the last attempt's jobs for a moment after a rerun starts.
+      if (rerunnable && attempts.some((attempt) => attempt?.status !== "completed")) return
+      if (rerunnable && attempts.some((attempt) => (attempt?.attempt ?? 1) > 1)) return yield* paused
+      const rerun = rerunnable ? yield* Effect.forEach(found.runs, (run) => deps.gh(["run", "rerun", run, "--failed", "--repo", repo])) : []
+      if (rerunnable && rerun.every((result) => result.exitCode === 0)) {
+        yield* Effect.forEach(
+          members,
+          (item) => note(row, item.issue, `Bundle ${row.key}-B${bundle.n} failed on infrastructure, not code; the queue reruns its failed jobs once and this card stays queued.`),
+          { discard: true },
+        )
+        return
+      }
       // A red the gate cannot pin on a failing test, on a base that is red too, has nothing to wait for: base-red would
       // hold the queue until base turns green on its own. Read it as infrastructure instead: rebuild once, then pause.
       const infra = Effect.gen(function* () {
@@ -96,15 +130,7 @@ export function makeSettle(
             .orderBy(desc(BoardBundleTable.n))
             .get(),
         )
-        if (previous?.status === "infra") {
-          yield* Effect.forEach(
-            members,
-            (item) => note(row, item.issue, `Bundle ${row.key}-B${bundle.n} failed on infrastructure twice; the ${row.key} queue is paused until Maestro retries it, and this card stays queued.`),
-            { discard: true },
-          )
-          yield* Effect.logWarning(`integration: ${row.key} queue paused, bundle ${row.key}-B${bundle.n} failed on infrastructure twice`)
-          return yield* close(row, repo, bundle, "failed on infrastructure twice; the queue is paused", "paused")
-        }
+        if (previous?.status === "infra") return yield* paused
         yield* Effect.forEach(
           members,
           (item) => note(row, item.issue, `Bundle ${row.key}-B${bundle.n} failed on infrastructure, not code; the queue reruns it once and this card stays queued.`),
@@ -119,7 +145,7 @@ export function makeSettle(
       const sha10 = bundle.base_sha.slice(0, 10)
       const scoped = runnable(contract, found) && contract.scoped.tests !== null ? yield* scope(directory, contract.scoped.tests, bundle, found.groups) : undefined
       if (scoped === "flaky") return yield* flaky(row, bundle, members.map((item) => item.issue), found.groups.flatMap((group) => group.files))
-      const based = scoped ? (scoped === "base" ? "red" : "green") : yield* baseState(row, repo, bundle.base_sha, contract)
+      const based = scoped ? (scoped === "base" ? "red" : "green") : yield* baseState(row, repo, directory, bundle.base_sha, contract)
       if (based === "unknown") {
         yield* Effect.forEach(
           members,
@@ -358,9 +384,9 @@ export function makeSettle(
   })
 
   /**
-   * Section 7.3: a red safety run. Infrastructure closes it as `infra`; F that passes on base when rerun closes it green;
-   * F that fails on base is bisected and gets a fix card, and only the lanes touching F's packages pause. A red whose
-   * failures are not scoped tests stops the whole project, as phase 1 does.
+   * Section 7.3: a red base probe or safety run. Infrastructure closes it as `infra`; F that passes on base when rerun
+   * closes it green; F that fails on base is bisected and gets a fix card, and only the lanes touching F's packages pause.
+   * A red whose failures are not scoped tests pauses the whole project until Maestro retries it.
    */
   const safety = Effect.fnUntraced(function* (
     row: ProjectRow,
@@ -377,9 +403,11 @@ export function makeSettle(
     const scoped = runnable(contract, found) && template !== null ? yield* scope(directory, template, bundle, found.groups) : undefined
     if (scoped === "flaky" || scoped === "code")
       return yield* close(row, repo, bundle, `found ${found.files.join(", ")} passing on ${contract.base} at ${sha10} when rerun`, "probe-green")
+    // A red with no scoped failing tests has no fix card to cut, and a `base-red` without one waits for a base that only
+    // the queue moves, so it pauses for Maestro instead.
     if (scoped === undefined || template === null) {
-      yield* Effect.logWarning(`integration: ${row.key} safety run found ${contract.base} red at ${sha10}, and its failures are not scoped tests; the queue waits for ${contract.base} to turn green`)
-      return yield* close(row, repo, bundle, `found ${contract.base} red at ${sha10}`, "base-red")
+      yield* Effect.logWarning(`integration: ${row.key} probe found ${contract.base} red at ${sha10}, and its failures are not scoped tests; the queue is paused until Maestro retries it`)
+      return yield* close(row, repo, bundle, `found ${contract.base} red at ${sha10}; the queue is paused`, "paused")
     }
     const culprit = yield* bisect(row, directory, template, bundle, found.groups)
     const fix = yield* fixCard(row, contract.base, culprit, found.groups)
