@@ -92,6 +92,7 @@ export const protectedStrings: Protected[] = [
     reason: "Zen/Go provider id and the i18n keys derived from it",
   },
   { pattern: /OPENCODE_API_KEY\b/g, reason: "Zen's own API key variable, as published by models.dev" },
+  { pattern: /\bx-opencode-session\b/g, reason: "the session header Zen and Go require on every call" },
   {
     pattern: /opencode(?:#credential|-test)\b/g,
     paths: /^packages\/core\/test\/session-runner-model\.test\.ts$/,

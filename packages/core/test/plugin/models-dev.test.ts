@@ -118,7 +118,7 @@ describe("ModelsDevPlugin", () => {
           const unknown = yield* catalog.model.get(ProviderV2.ID.make("poe"), ModelV2.ID.make("cerebras/qwen3-32b-cs"))
           expect(unknown?.cost).toEqual([])
           expect(unknown?.request.body.apiKey).toBeUndefined()
-          // Zen's free models only answer OpenCode's own client, so the catalog leaves them out.
+          // Zen's free models refuse third-party clients, so the catalog leaves them out.
           expect(yield* catalog.model.get(ProviderV2.ID.opencode, ModelV2.ID.make("ling-3.0-flash-fin-free"))).toBeUndefined()
         }).pipe(Effect.provide(AppNodeBuilder.build(ModelsDev.node))),
       (previous) =>

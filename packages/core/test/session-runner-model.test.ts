@@ -153,7 +153,7 @@ describe("SessionRunnerModel", () => {
     }),
   )
 
-  it.effect("adds the OpenCode session header only for Zen and Go models", () =>
+  it.effect("adds the Zen session header only for Zen and Go models", () =>
     Effect.gen(function* () {
       const headers = (providerID: string) =>
         SessionRunnerModel.fromCatalogModel(
