@@ -1,7 +1,8 @@
 export * as McpCatalog from "./catalog"
 
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js"
-import { ListToolsResultSchema, ToolSchema, type CallToolResult } from "@modelcontextprotocol/sdk/types.js"
+import type { SchemaOutput } from "@modelcontextprotocol/sdk/server/zod-compat.js"
+import { CallToolResultSchema, ListToolsResultSchema, ToolSchema } from "@modelcontextprotocol/sdk/types.js"
 import type { ToolContent } from "@orchestra/llm"
 import { Effect } from "effect"
 
@@ -133,6 +134,9 @@ export function described(item: { description?: string; mimeType?: string }) {
     ...(item.mimeType === undefined ? {} : { mimeType: item.mimeType }),
   }
 }
+
+// `callTool` returns the schema output, which SDK 1.32 no longer types the same as the exported `CallToolResult`.
+type CallToolResult = SchemaOutput<typeof CallToolResultSchema>
 
 /** The text parts of a tool result, for an error message. */
 export function resultText(result: Pick<CallToolResult, "content">) {
