@@ -31,6 +31,8 @@ export async function startOwnedServe(options: {
   /** The CLI executable, then any arguments before `serve`. */
   command: [string, ...string[]]
   env: Record<string, string | undefined>
+  /** The server's working directory, which is the Location of every request that names no directory. */
+  cwd: string
   write: (stream: "stdout" | "stderr", message: string) => void
   /** Lifecycle witnesses for the packaged omni smoke: the server child's pid, then its exit and how it stopped. */
   onSpawn?: (pid: number | undefined) => void
@@ -56,7 +58,7 @@ export async function startOwnedServe(options: {
   const launch = () => {
     const startedAt = Date.now()
     const args = [...options.command.slice(1), "serve", "--hostname", HOSTNAME, "--port", String(port)]
-    const child = DesktopOmni.spawn(options.command[0], args, { env, stdin: "closed", graceMs: TREE_GRACE })
+    const child = DesktopOmni.spawn(options.command[0], args, { env, cwd: options.cwd, stdin: "closed", graceMs: TREE_GRACE })
     state.child = child
     // Created at launch so a stop that lands between "exit" and "close" still waits for the drain.
     state.closed = new Promise<void>((resolve) => child.once("close", () => resolve()))

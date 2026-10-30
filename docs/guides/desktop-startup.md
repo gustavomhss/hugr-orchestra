@@ -10,6 +10,10 @@ The first launch after you install or update an unsigned build is slower: macOS 
 
 If you have a healthy remote server configured, the app connects to it instead and keeps the failure in its diagnostics.
 
+## The server's own folder
+
+The local server runs in a folder of its own, `global` inside the app's data folder, which stays empty. Requests that name no project, such as the provider and model lists Home shows first, use that folder. The server used to run in your home folder, so every start booted a workspace for your whole home: it watched every file under it and took about three seconds longer. Projects and sessions are unaffected; they always name their own folder.
+
 ## The app itself fails before a window opens
 
 If the app fails very early (for example an unreadable settings file), it shows a dialog titled "HuGR Orchestra could not start" with a short message and the log folder, then exits. The log folder is `logs` inside the app's data folder; each run has its own timestamped folder, and `main.log` has the full error.
