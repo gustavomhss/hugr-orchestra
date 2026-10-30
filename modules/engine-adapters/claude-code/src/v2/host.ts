@@ -35,6 +35,12 @@ const UNSERVED = new Set([
   "question", "lsp", "invalid", "context_compact", "execute", "process_get", "process_wait", "process_cancel",
 ])
 
+const GOVERNED_PLAYBOOK = "maestro-run-governed"
+const GOVERNED_DENIAL = `Load the ${GOVERNED_PLAYBOOK} playbook with \`mcp__${MCP_SERVER}__skill\` before governed Maestro tools.`
+// Session ids whose governed playbook has loaded: a governed tool is refused until its session has one.
+const governedLoaded = new Set<string>()
+const isGoverned = (name: string) => name.startsWith("maestro_") && !name.startsWith("maestro_arsenal_") && name !== "maestro_workflows"
+
 const EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const
 /**
  * Claude Code's own subagent tool. A seat is dispatched through Orchestra's `task`, as in normal mode: its work is a
@@ -131,6 +137,7 @@ export const make = Effect.gen(function* () {
                 if (HOST_REACH.has(tool)) return { allow: false, reason: OUTSIDE }
                 if (tool.startsWith(MCP_PREFIX)) {
                   const name = tool.slice(MCP_PREFIX.length)
+                  if (isGoverned(name) && !governedLoaded.has(turn.session.id)) return { allow: false, reason: GOVERNED_DENIAL }
                   if (!learned.has(toolUseID)) callIDs.set(name, [...(callIDs.get(name) ?? []), toolUseID])
                   learned.add(toolUseID)
                   // The registry settles the Orchestra tool's own permissions when the runner executes it.
@@ -260,7 +267,7 @@ export const make = Effect.gen(function* () {
               PostCompact: [{ hooks: [archive] }],
             },
             ...(served.length
-              ? { mcpServers: { [MCP_SERVER]: server(served, (name) => callIDs.get(name)?.shift() ?? `orchestra_${randomUUID()}`, turn.execute) } }
+              ? { mcpServers: { [MCP_SERVER]: server(served, (name) => callIDs.get(name)?.shift() ?? `orchestra_${randomUUID()}`, turn.execute, () => governedLoaded.add(turn.session.id)) } }
               : {}),
             env: ClaudeHostOptions.environment(env),
             abortController: abort,
@@ -536,7 +543,7 @@ function follow(iterator: AsyncIterator<SDKMessage>, live: { background: number 
 }
 
 /** The `orchestra` MCP server: lists the served tools and settles each call through the runner. */
-function server(tools: ReadonlyArray<ToolDefinition>, callID: (name: string) => string, execute: ExecutionHost.Turn["execute"]) {
+function server(tools: ReadonlyArray<ToolDefinition>, callID: (name: string) => string, execute: ExecutionHost.Turn["execute"], governedLoad: () => void) {
   const mcp = createSdkMcpServer({ name: MCP_SERVER, tools: [] })
   mcp.instance.server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: tools.map((tool) => ({ name: tool.name, description: tool.description, inputSchema: { ...tool.inputSchema, type: "object" as const } })),
@@ -549,6 +556,7 @@ function server(tools: ReadonlyArray<ToolDefinition>, callID: (name: string) => 
       execute({ id: callID(tool.name), name: tool.name, input: request.params.arguments ?? {} }),
       { signal: extra.signal },
     )
+    if (tool.name === "skill" && request.params.arguments?.name === GOVERNED_PLAYBOOK && settlement.result.type !== "error") governedLoad()
     return {
       content: [{ type: "text" as const, text: modelText(settlement.result) }],
       ...(settlement.result.type === "error" ? { isError: true } : {}),

@@ -248,6 +248,39 @@ test("Orchestra tools are served over the in-process MCP server and settle throu
   expect(events.map((event) => event.type)).toEqual(["step-start", "step-finish"])
 })
 
+test("governed Maestro tools are refused until maestro-run-governed loads through the skill tool, and the refusal leaves no call behind", async () => {
+  const executed: unknown[] = []
+  let denied: unknown
+  let allowed: unknown
+  during = async (options) => {
+    const signal = new AbortController().signal
+    denied = await options.canUseTool?.("mcp__orchestra__maestro_plan", { goal: "x" }, { signal, toolUseID: "tu-denied", requestId: "r1" })
+    const server = options.mcpServers?.orchestra as McpSdkServerConfigWithInstance
+    const [client, transport] = InMemoryTransport.createLinkedPair()
+    await server.instance.connect(transport)
+    const mcp = new Client({ name: "test", version: "0" })
+    await mcp.connect(client)
+    await options.canUseTool?.("mcp__orchestra__skill", { name: "maestro-run-governed" }, { signal, toolUseID: "tu-skill", requestId: "r2" })
+    await mcp.callTool({ name: "skill", arguments: { name: "maestro-run-governed" } })
+    allowed = await options.canUseTool?.("mcp__orchestra__maestro_plan", { goal: "x" }, { signal, toolUseID: "tu-plan", requestId: "r3" })
+    await mcp.callTool({ name: "maestro_plan", arguments: { goal: "x" } })
+    await mcp.close()
+  }
+  script = [done]
+  const tool = (name: string) => new ToolDefinition({ name, description: name, inputSchema: { type: "object", properties: {} } })
+  await collect(turnOf({
+    tools: [tool("skill"), tool("maestro_plan")],
+    execute: (call) => Effect.sync(() => executed.push(call)).pipe(Effect.as({ result: { type: "text" as const, value: "ok" } })),
+  }))
+
+  expect(denied).toMatchObject({ behavior: "deny", message: expect.stringContaining("maestro-run-governed") })
+  expect(allowed).toEqual({ behavior: "allow", updatedInput: { goal: "x" } })
+  expect(executed).toEqual([
+    { id: "tu-skill", name: "skill", input: { name: "maestro-run-governed" } },
+    { id: "tu-plan", name: "maestro_plan", input: { goal: "x" } },
+  ])
+})
+
 test("a cancelled Claude call interrupts the running Orchestra tool", async () => {
   let started!: () => void
   const running = new Promise<void>((resolve) => (started = resolve))
