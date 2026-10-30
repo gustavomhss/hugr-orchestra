@@ -520,7 +520,7 @@
     "@effect/sql-sqlite-bun": "catalog:",
     "@ff-labs/fff-bun": "0.9.4",
     "@lydell/node-pty": "catalog:",
-    "@modelcontextprotocol/sdk": "1.29.0",
+    "@modelcontextprotocol/sdk": "1.32.0",
     "@npmcli/arborist": "9.4.0",
     "@npmcli/config": "10.8.1",
     "@openrouter/ai-sdk-provider": "2.9.0",
@@ -579,7 +579,7 @@
     "web-tree-sitter": "0.25.10",
     "which": "6.0.1",
     "xdg-basedir": "5.1.0",
-    "yaml": "2.8.2",
+    "yaml": "2.8.3",
     "zod": "catalog:"
   },
   "overrides": {
