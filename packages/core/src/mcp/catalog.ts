@@ -135,11 +135,11 @@ export function described(item: { description?: string; mimeType?: string }) {
 }
 
 /** The text parts of a tool result, for an error message. */
-export function resultText(result: CallToolResult) {
+export function resultText(result: Pick<CallToolResult, "content">) {
   return result.content.flatMap((item) => (item.type === "text" && item.text.trim() ? [item.text] : [])).join("\n\n")
 }
 
-export function resultContent(result: CallToolResult): ToolContent[] {
+export function resultContent(result: Pick<CallToolResult, "content" | "structuredContent">): ToolContent[] {
   if (result.content.length === 0 && result.structuredContent !== undefined)
     return [{ type: "text", text: JSON.stringify(result.structuredContent) }]
   return result.content.map((item): ToolContent => {
