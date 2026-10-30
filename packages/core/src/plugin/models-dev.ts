@@ -166,6 +166,8 @@ export const ModelsDevPlugin = define({
           })
 
           for (const model of Object.values(item.models)) {
+            // Zen's free models refuse every client but OpenCode's own (429 FreeUsageLimitError), so they are not offered.
+            if (item.id === "opencode" && !model.cost?.input) continue
             const baseCost = cost(model.cost)
             catalog.model.update(providerID, model.id, (draft) => applyModel(draft, model, { cost: baseCost }))
             for (const [mode, options] of Object.entries(model.experimental?.modes ?? {})) {
