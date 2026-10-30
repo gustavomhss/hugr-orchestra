@@ -88,7 +88,10 @@ const real = () => (realRun ??= run(REPO))
 const VERIFIED_FILE = "how-to/move-a-repo-in.md"
 const VERIFIED_ROW = "     tokenEstimate: 0"
 
-describe("doc-transcript-guard — the real corpus", () => {
+// Each case runs the built CLI over the whole docs corpus (15-35s on CI), beyond the 10s unit cap.
+const CORPUS_RUN = { timeout: 90_000 }
+
+describe("doc-transcript-guard — the real corpus", CORPUS_RUN, () => {
   it("passes on the repository as it stands, and reports a classification that covers every block", () => {
     const { code, out } = real()
     expect(code, out).toBe(0)
@@ -119,7 +122,7 @@ describe("doc-transcript-guard — the real corpus", () => {
   })
 })
 
-describe("doc-transcript-guard — the gate can be falsified", () => {
+describe("doc-transcript-guard — the gate can be falsified", CORPUS_RUN, () => {
   it("FAILS on a ONE-CHARACTER divergence, naming file, line, command and BOTH sides", () => {
     const root = scratchRoot()
     edit(root, VERIFIED_FILE, (s) => s.replace("     stale: false", "     stale: falsE"))
@@ -200,7 +203,7 @@ describe("doc-transcript-guard — the gate can be falsified", () => {
 // silently stopped being checked. Proven by promoting every declaration to VERIFIED — one at a time, by
 // deleting it from a COPY of the gate — and requiring the gate to go red. If it stays green, that block
 // belonged in VERIFIED all along.
-describe("doc-transcript-guard — every declaration is EARNED", () => {
+describe("doc-transcript-guard — every declaration is EARNED", CORPUS_RUN, () => {
   it("no FROZEN/UNVERIFIABLE block reproduces byte-exactly against the real fixture", () => {
     const src = readFileSync(GATE, "utf8")
     // Every quoted block key in the gate: the FROZEN map's `'key':` and the UNVERIFIABLE groups'
@@ -245,7 +248,7 @@ describe("doc-transcript-guard — every declaration is EARNED", () => {
   }, 180_000)
 })
 
-describe("doc-transcript-guard — an insertion cannot silently re-attach a declaration", () => {
+describe("doc-transcript-guard — an insertion cannot silently re-attach a declaration", CORPUS_RUN, () => {
   // The defect the invocation-scoped key replaced. Under a FILE-WIDE ordinal, inserting one worked example
   // partway down a page shifted every later block by one, so each exemption below quietly moved to its
   // neighbour and NOTHING failed — the key still existed and still named a block. These are the teeth.

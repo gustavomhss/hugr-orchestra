@@ -21,7 +21,7 @@
 // come from different ones, which is the only part that can be got wrong; a test that constructed the log
 // records in memory would calibrate nothing but the arithmetic. Wall-clock here is therefore dominated by
 // process startup and by the fake model's own sleep, so the cases carry an explicit timeout for the same
-// reason `vitest.workspace.ts` gives the black-box project one — the 10s global cap guards PURE unit tests.
+// reason `vitest.config.ts` gives the black-box project one — the 10s global cap guards PURE unit tests.
 //
 // ZERO REAL MODEL CALLS. `fake-model.mjs` is the model throughout.
 

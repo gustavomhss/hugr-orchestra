@@ -36,7 +36,7 @@
     "@types/node": "^26.1.1",
     "fast-check": "^3.23.2",
     "typescript": "^5.6.0",
-    "vitest": "^2.1.0"
+    "vitest": "^4.1.12"
   },
   "dependencies": {
     "@noble/hashes": "^1.8.0"
