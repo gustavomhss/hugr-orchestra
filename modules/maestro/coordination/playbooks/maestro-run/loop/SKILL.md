@@ -2,7 +2,7 @@
 name: maestro-run-loop
 description: Drive ready work, verify returns, recover interruptions, and integrate approved deltas. Use after slices and briefs exist, for dependent execution, failed handoffs, or selective recovery; small work follows a direct inspect/edit/verify loop.
 internal: true
-when: Slices and briefs exist: dependent execution, failed handoffs or selective recovery.
+when: "Slices and briefs exist: dependent execution, failed handoffs or selective recovery."
 not-when: Small work that follows a direct inspect, edit and verify loop.
 ---
 
