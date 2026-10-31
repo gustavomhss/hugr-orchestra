@@ -1,0 +1,62 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css"><script src="wires.js"></script>
+<style>
+  .grid { display: grid; grid-template-columns: 1fr 1.15fr; gap: 56px; align-items: start; }
+  .tree { font-family: var(--mono); font-size: 13px; line-height: 1.75; color: var(--body); margin-top: 10px; }
+  .tree .d { color: var(--accent); }
+  .tree .c { color: var(--muted); font-family: "Inter Variable", Inter, sans-serif; font-size: 12.5px; }
+  .tree .hl { background: color-mix(in srgb, var(--primary) 18%, transparent); border-radius: 4px; padding: 0 4px; margin-left: -4px; }
+  .commit { font-family: var(--mono); font-size: 13px; color: var(--text); }
+  .fields { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+  .f { border: 1px solid var(--line); background: var(--well); border-radius: 8px; padding: 8px 10px; }
+  .f b { display: block; font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 500; }
+  .f span { font-size: 12px; color: var(--muted); }
+  .stack { display: grid; gap: 20px; }
+</style></head>
+<body><div class="canvas">
+  <div class="head">
+    <div class="eyebrow">Atlas ledger</div>
+    <h1>What each task cost, in your repository's own history.</h1>
+    <div class="sub">When the merge queue lands a bundle it commits a record to <code>.atlas/</code>: who worked on each card, with which engine and model, how many tokens, tool calls and minutes, and the verdict. It lives in git, so it travels with the code and can be read with plain tools.</div>
+  </div>
+
+  <div class="grid">
+    <div class="stack">
+      <div class="card" id="commit"><h3>The record commit</h3><p class="commit" style="margin-top:8px">chore(queue): record &lt;label&gt;</p><p>Merge commits on the base branch carry <code>WP:</code> and <code>Attempt:</code> trailers that point back here.</p></div>
+      <div class="card" id="tree"><h3>Layout</h3>
+        <div class="tree">
+          <div class="d">.atlas/</div>
+          <div>&nbsp;&nbsp;<span class="d">project/</span> <span class="c">orientation, review, board (.jsonl)</span></div>
+          <div>&nbsp;&nbsp;<span class="d">members/&lt;seat&gt;/</span> <span class="c">each seat's own memory</span></div>
+          <div>&nbsp;&nbsp;<span class="d">cards/&lt;CARD&gt;/</span></div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;card.jsonl <span class="c">the card's history</span></div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="hl" id="attempt">attempts/a&lt;n&gt;.jsonl</span> <span class="c">one file per attempt</span></div>
+          <div>&nbsp;&nbsp;<span class="d">blobs/</span> <span class="c">large bodies, by hash</span></div>
+        </div>
+        <div class="meta">Every line is content-hashed.</div>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="card key" id="meter"><h3>One attempt, metered</h3><p>Who did the work, with what, at what cost, and how it ended.</p>
+        <div class="fields">
+          <div class="f"><b>seat</b><span>role id</span></div>
+          <div class="f"><b>session</b><span>its session</span></div>
+          <div class="f"><b>engine · model</b><span>what ran it</span></div>
+          <div class="f"><b>tokensIn / Out</b><span>and cache</span></div>
+          <div class="f"><b>toolUses</b><span>tool calls</span></div>
+          <div class="f"><b>wallTime</b><span>minutes spent</span></div>
+          <div class="f"><b>reworks</b><span>times sent back</span></div>
+          <div class="f"><b>gates · verdict</b><span>checks and result</span></div>
+          <div class="f"><b>costMicroUsd</b><span>model spend</span></div>
+        </div>
+        <div class="meta"><code>transcriptSha</code> ties the attempt to its full transcript.</div>
+      </div>
+      <div class="card"><h3>Public repositories</h3><p>The line keeps its hash; spend is dropped before it is written. Model cost never goes to GitHub. The board's Money panel shows it from the local database instead.</p></div>
+      <div class="card"><h3>Budgets</h3><p>A seat with no meter shows <em>not metered</em>, never zero. Warn at 80% of the budget, ask at 90%, pause at 100%; an attempt over three times the median is flagged.</p></div>
+    </div>
+  </div>
+</div>
+<script>
+wire([["attempt","r","meter","l",{}]])
+</script>
+</body></html>

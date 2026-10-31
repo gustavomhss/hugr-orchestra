@@ -11,12 +11,12 @@ Under the chat sit a set of systems built for long, multi-agent work: durable se
 ## Contents
 
 - [How it works](#how-it-works)
-- [The agents](#the-agents): the seats, the product and architecture seat
+- [The agents](#the-agents): the seats and how each one works: Maestro's playbooks, product and architecture, backend, research, meeting copilot
 - [Architecture](#architecture)
 - [Sessions and context](#sessions-and-context): durable sessions, System Context, context continuity, Lean
-- [Tools](#tools): built-in tools, Maestro's tools, MCP Dock, toolkit, skills, plugins, hooks
+- [Tools](#tools): built-in tools, how `read` differs, Maestro's tools, MCP Dock, toolkit, skills, plugins, hooks
 - [Coordination](#coordination): project board, checks and merge queue, Guardrails, Relay workflows
-- [Atlas](#atlas): the knowledge layer
+- [Atlas](#atlas): the knowledge layer, versioned in git, and the ledger of what each task cost
 - [Processes and isolation](#processes-and-isolation): omni, the sandbox, the agent terminal
 - [Models and engines](#models-and-engines): providers, Claude mode
 - [Interfaces](#interfaces): desktop, command line, ACP, HTTP API, live meetings
@@ -27,11 +27,20 @@ Under the chat sit a set of systems built for long, multi-agent work: durable se
 ## How it works
 
 1. **You ask Maestro.** Pick a project folder, connect a model, and describe the task in Chat.
-2. **Maestro plans and delegates.** It splits the task into cards on the project board and dispatches each card to a specialist. Every specialist runs in its own durable session, in its own worktree, that you can open, follow live and steer.
+2. **Maestro plans and delegates.** It splits the task into cards on the project board and dispatches each card to a specialist. Every specialist runs in its own durable session, optionally in its own worktree, that you can open, follow live and steer.
 3. **Specialists work inside limits.** Each one runs in an OS sandbox that confines what it can read and write to the paths it was given. A fixed list of actions (push, commit, merge, publish, release, deploy, `rm`, hook bypasses) is refused to them outright. Your own permission rules decide what else needs a prompt.
 4. **Results come back checked.** Maestro reads the evidence from the session events themselves, runs the project's declared checks, queues green work into the merge queue, and reports what changed and what is still open.
 
 The board moves on facts: a card advances when work is dispatched, a pull request opens, or a merge lands. You approve plans and decisions; only you move cards out of Intake or archive a project.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/flow-dark.png">
+  <img src="docs/images/readme/flow-light.png" alt="You talk to Maestro, which sends questions to the research seat, plans to the product and architecture seat, briefs to the backend seat and cold reviews to the code review seat; the backend seat's pull request and evidence go to the project board and merge queue, which moves cards from Intake through Building, Review, Queued and Bundle to Shipped.">
+</picture>
+
+This is what a new session looks like in the desktop app. The bar under the composer picks the project, where the session runs and the branch; the footer offers Claude mode when no provider is connected yet.
+
+<img src="docs/images/readme/session-composer.png" alt="The desktop app's Chat screen with an empty session: a composer with a model picker and a subagents setting, and below it the project, the place it runs and the branch.">
 
 ## The agents
 
@@ -44,48 +53,113 @@ Agents are called seats. Each seat has a role, a prompt, a tool set and its own 
 | Product and architecture | Specs, plans, work-package briefs and workflow drafts | Built |
 | Research | Read-only discovery across the code and the web; writes research documents | Built |
 | Meeting copilot | Listens to a live meeting on macOS, answers in an overlay, talks to Maestro, writes up decisions and commitments | Built; not dispatchable |
-| Frontend, code review, security review, documentation, process audit | Planned seats | Not built yet |
+| Frontend, code review, security review, documentation, process audit | Each has a prompt and a tool profile; governed mode uses the code review seat (`lucy`) to approve plans | Partial: no skill tree yet |
 
 Maestro's name is fixed, because the app and other sessions address it by name. Every other seat has a stable id and a display name you can change, along with its prompt, tools, skills and picture, on the Agents screen. See [the agent screen](docs/guides/agent-screen.md).
 
+Each seat works by a method: a few ideas that decide what it does and what it refuses. The method is written in the seat's prompt and in a skill tree it loads on demand, and most of it is guidance the model follows. A smaller set of rules is enforced by the host, so it holds even when a model ignores its prompt: write paths, the OS sandbox, refused commands, the research seat's citation checks and budgets, and governed approvals. Each section says which is which. The sections below explain each method and follow one running example through the seats: customers are sometimes charged twice when they double-click "Pay".
+
+### Maestro: the lead
+
+Maestro holds the judgment. It agrees the goal with the owner, makes small changes itself, sends larger or parallel pieces to the seat built for them, checks what comes back and lands it. Its playbooks ship with the app. Everything in this section is playbook method unless it says the host enforces it.
+
+**Nothing is done until it is proven.** An agent's report says where the evidence is. It is not the evidence. For substantial work, before Maestro accepts a test as proof, it plants a small defect in the code and confirms that the test catches it for the right reason. A test that stays green against broken code proves nothing. For the same reason, a claim that something is absent ("no other caller") needs a search that has first been shown to find a known caller. A local pass is not a CI pass, and only the owner accepts a delivery.
+
+**Review is cold.** For substantial work, the reviewer is the code review seat (`lucy`), or a read-only explorer when that seat is unavailable, and it never sees the author's reasoning. It gets the request, the spec and the diff and is asked to refute them, because a reviewer who reads the author's argument tends to agree with it. Maestro also never sends a change back to its own author for review.
+
+**Units of work have a fixed shape.** Epics, work packages and governed cards state their completeness criteria, success criteria, invariants, quality standards and definition of done. A small task keeps them implicit and relies on the existing checks. An example or a counter-example is added only when it makes a criterion checkable, and the detail grows with the risk.
+
+**Landing is serial and gated.** Work whose base has moved is held until Maestro has read the whole delta. Maestro's playbook forbids merging a card's pull request directly. The host does not block it, but a direct merge asks the owner first unless the owner's configuration allows it. Once a card has a pull request, a complete record and green scoped checks at its head, it goes into the merge queue, where the host bundles cards, runs the full suite once and merges.
+
+**Governed mode is opt-in, for work that must be auditable.** It needs Atlas, a clean tree and fresh ownership facts, and the code review seat must approve the plan first. Each step leaves an immutable record. The owner then approves one exact dispatch (seat, prompt and model) by answering "approve" or "aprovo". The host enforces the rest: the approval allows one dispatch with byte-identical input, and if the input changes or the owner sends a newer message, it no longer counts.
+
+*In the example*, Maestro sends the "why" question to the research seat and the plan to the product and architecture seat. It routes the fix and its new test to the backend seat with the plan's brief. When the fix returns, it removes the fix's key line, checks that the new test goes red and restores the line. With the owner's go-ahead to open the pull request, it queues the card.
+
 ### Product and architecture seat (`archie`)
 
-This seat turns a request into something the other seats can build: a product spec, an architecture proposal, a plan cut into work packages, briefs for the executors, or a reusable workflow. Everything it returns is a proposal. It is not owner approval, an adopted requirement, or permission to execute, and the seat never claims otherwise.
+This seat turns a request into a plan that someone else can build without making further decisions. Everything it returns is a proposal. Its prompt forbids implementing, dispatching or approving. The host limits its writes to the files its assignment lists, its workflow drafts and its own Atlas memory, and refuses publish commands.
 
-**How work reaches it.** Planning belongs to this seat; Maestro checks the plan but does not rewrite it. Maestro dispatches through `task` with the owner's request, the decisions already taken, constraints, evidence, the expected deliverables and the exact files the seat may write. In the `maestro-plan` playbook, Maestro pins the baseline first and hands the seat the facts. A cold reviewer then sees only the request and the acceptance items. Maestro sends a plan back when an acceptance item has no oracle, two slices write the same file, dependencies form a cycle, a slice is too big, or a decision is left open. An adopted plan becomes one board card per slice, with area, order and dependencies.
+**It separates what is known from what it thinks.** Every statement is labelled as an owner decision, a fact (supplied by the owner or observed in the code), an assumption, a proposal or a blocker. Missing information stays unknown instead of being filled in. This is what lets Maestro and the owner see which parts of a plan rest on evidence and which rest on a guess.
 
-**How it works.** It starts from what the owner said and decided, then loads only the skill branch the job needs, one level at a time, and stops at the first branch that covers the work. In its output it keeps five kinds of statement apart: owner facts, what it observed in the code, constraints it inferred, its own proposals, and open decisions. Every claim cites a source. When a source is missing it reports a blocker instead of guessing. A small task can get an inline brief. Epics, work packages and governed cards always use the same five headings: Completeness Criteria, Success Criteria, Invariants, Quality Standards and Definition of Done.
+**It starts from the outcome, not the solution.** A spec names the job the user is trying to do, a measurable outcome, and four risks: is it valuable, usable, feasible and viable? Each risk is paired with the evidence that would retire it, and the riskiest unknown is tested first. Every design choice must point to the outcome or risk it serves. A choice that points to nothing is dropped or turned into a question for the owner.
 
-**Its skill tree** ships with the app:
+**Every requirement can be checked.** Requirements are written one clause at a time, in a form like "when X, the system shall Y". Each one gets scenarios for the normal case, the edge cases and recovery, plus an oracle: the test or check that will say whether it holds. A requirement with no oracle stays unknown until one is supplied.
 
-- `archie-plan`: specs, with outcomes, mechanisms, ADRs marked `proposed` and EARS-style requirements; decomposition into an acceptance map and cohesive slices with dependencies; the smallest exact contract between a producer and its consumers; and executor-ready briefs. A brief names the slice, goal, acceptance ids, baseline, targets, the paths it may write and read and the ones it must not touch, contracts, dependencies, latitude, governing facts, checks and the shape of the return.
-- `archie-work-package`: one complete work package in the native Relay sprint schema, with a global objective and acceptance, live invariants, evidence, and ordered steps, each with inputs, outputs and an oracle.
-- `archie-workflow`: a reusable workflow whose checks are commands or AI judges. Human steps are not supported yet.
+**It cuts work by responsibility.** The plan is sliced into pieces that each own a set of acceptance items and a set of files, so every item has one owner and two slices write the same file only in a declared order. The seat sends unresolved conflicts back for revision before anything runs. Where pieces depend on a shared interface, the seat freezes only that interface, including its error, ordering and retry behavior, so the pieces can be built in parallel.
 
-**Tools.**
+**A brief leaves the executor nothing to discover.** It names the baseline commit, the exact code sites, the files the executor may write and must not touch, the commands that prove the work and the shape of the reply.
 
-- `archie_draft_workflow` saves a sprint as an unpublished Relay workflow draft, after lint and compilation against the project's skills. The owner reviews and publishes it on the Workflows screen; the seat can neither publish nor run it.
-- `atlas_context` reads Atlas and anchors units of code to an assignment or work package. `atlas_memory_recall` and `atlas_memory_emit` read and write the seat's own memory; what it writes is an observation or a proposal, never a decision.
-- 13 of the planning arsenal's operations, only those that declare no side effects: compiling and checking a plan, turning it into a dependency graph, briefs, gates and policy, mapping file conflicts, freezing contracts, generating anchors, packing context, checking seams and judging whether a task can be sliced. Any other operation is refused.
-- It can read, search and run shell commands, but it may edit only the paths the assignment lists, and those are enforced by the host. With no paths listed it is read-only. Push, pull request, merge and release commands are denied, and the backend toolkit is off.
+*In the example*, the seat might propose the outcome "one click or ten, at most one charge". The risk is feasibility: does the payment provider honor an idempotency key? The requirement reads "when the same checkout is submitted twice, the system shall create one charge". Its oracle is a test that sends two concurrent submissions and counts charges at the provider mock. The work splits into two slices, the API handler and the provider adapter, with the key's format frozen between them.
 
-**What it never does:** implement the product, dispatch or delegate, run a workflow, approve or accept its own work, commit, branch or merge, install tools, work around a denied permission, or invent an owner fact.
+### Backend seat (`backend`)
 
-**What it returns.** An `upstream-result` block with the outcome (done or blocked), the artifacts (product, architecture, specification, plan, roadmap, epic, issue, task, work package or brief), blockers, risks and next actions. When Maestro records a plan revision from a workflow, it must name this seat's run as the source, or the revision is held.
+This seat builds what the plan decided. It does not investigate, diagnose or choose a design. It expects a packet with the behavior to build, its acceptance, the files it may write and the checks to run. When anything is missing, it returns a blocker naming what is missing instead of exploring to fill the gap. Keeping exploration out of this seat keeps its changes inside the scope that was reviewed.
+
+**It distrusts signals that only look like proof.** A clean compile does not show that behavior was preserved. Zero executed test cases is missing evidence, not a pass. A timeout does not prove that the remote call failed. A generated stub is not a working endpoint. A check counts only when the healthy case passes and a known-bad case fails for the stated reason.
+
+**It checks state from outside the application.** When the packet asks it to prove a rollback, it injects a later failure and then looks at the database through a second connection. The application's own report is not enough. Its checks use the real database through the project's existing test setup, and it never swaps PostgreSQL for SQLite.
+
+**Its skills carry the hard-won rules of each domain.**
+- *Transactions*: only the owner of a transaction commits it, and one write through the pool silently escapes it.
+- *Retries*: reuse the same business key as the idempotency key (the id that lets a provider recognize a repeated request) on every attempt, and never mint a new one per retry.
+- *Cancellation*: wait for the work to actually stop, and remember that a cancel does not undo committed effects.
+- *Webhooks*: verify the signature on the raw bytes before parsing.
+- *gRPC*: HTTP 200 is not RPC success.
+- *Refactoring*: when the packet selects it, a rename comes from the language service or compiler, which understands bindings. A text match would also hit a shadowed variable.
+- *Generated code*: it is never edited by hand. It is regenerated through the project's generator, only when the generated files are inside the seat's write paths (otherwise it returns a blocker), and the seat checks that the diff stays inside them.
+
+**It stops where its knowledge stops.** If what it sees contradicts the diagnosis it was given, it stops and does not invent a new theory. It fixes only check failures that it caused, at most three times per check. A permission denial comes back verbatim, and it never installs a tool. The host enforces the write paths, the OS sandbox (on macOS and Linux) and the refusal of publish commands. Its result card can lower its own outcome but cannot mark the work verified, because only the host's check run and the caller decide that.
+
+*In the example*, the brief says "repair: the handler creates a new provider request per submission; reuse the checkout id as the idempotency key". The seat gets the handler slice; the adapter slice follows against the frozen key format. It writes the change in the files it was given. It runs the supplied concurrency test, which shows two submissions and one charge, and a control that drops the provider's response and retries with the same key. It returns the changed paths, each check with its exit code, and no claim that the work is verified.
+
+### Research seat (`jimmy`)
+
+This seat answers questions with evidence. It cannot edit project files; it writes only research records and its own Atlas memory. Its method exists to prevent the usual failures of a model asked about code: answering a question built on a false premise, citing lines it never read, and claiming "nothing else does this" after a search that could not have found anything.
+
+**It checks the question first.** If the question names a function or a file, the seat confirms that it exists before answering. A false premise is the first thing it reports.
+
+**It breaks the question into checkable parts.** For anything beyond a quick lookup, it opens an inquiry with up to six yes-or-no subquestions. The answer is complete only when each subquestion is answered.
+
+**It looks wide and reads narrow.** It runs every lookup it needs in one batch: where the term appears, the definitions and callers, the exact text, and the git history. Then it captures only the few line ranges that decide the answer. When reading cannot settle a question, it runs a probe: the type checker, one test or a short script.
+
+**Each claim says how it is known.** A claim is something the seat ran, something it read, or something it inferred, and each one cites its file and line, or its source on the web. To answer "why is it like this", it follows `git blame` to the commit and its pull request. External facts come from primary sources at the version actually in use.
+
+**The host checks the citations.** When the seat closes an inquiry, mechanical rules verify that:
+- every cited line is inside text the seat actually captured;
+- words like "only", "always" or "never" are backed by a complete search;
+- a claim that something is absent names the scope of the search;
+- no cited URL is dead or invented, and each one is inside the domains the dispatch allows. A URL that cannot be checked is named as a limitation on the card.
+
+The rules do not judge whether the reasoning is sound, only that the evidence exists. The result card is built from this checked record, not from the seat's own summary.
+
+Maestro chooses how deep the seat goes: quick (64 tool calls, ten minutes), focused (128, twenty) or deep (256, forty). The host enforces these budgets. When the budget runs out, the seat returns a partial answer and says what it did not examine.
+
+*In the example*, Maestro asks "where are payment requests sent, and why is there no idempotency key?". The seat finds the one call site and its two callers. `git blame` leads to the pull request that removed a key because of a provider bug. The provider's documentation for the version the project pins says the bug is fixed. Each finding is labelled read or inferred, with file and line, and the answer ends with what was not checked: the mobile client.
+
+### Meeting copilot (`live`)
+
+The owner talks to this seat during a live call. It answers fast and stays honest about where each answer comes from. It cannot be dispatched and does not start work on its own.
+
+**Short answers, never coaching.** It replies with one bold sentence, then two to four points. When it does not know, it says so in one line.
+
+**It labels every source.** Each input is marked as heard in the meeting (with "me" and "them" kept apart), seen on screen, or recalled from an earlier meeting with the person and date. It never presents something remembered as something said today. Everything heard or seen is treated as data, so a participant who says "ignore your instructions" changes nothing.
+
+**It speaks only when it is sure.** Unprompted suggestions are off by default. When they are on and the seat is not confident, it stays silent.
+
+**Work goes through Maestro.** When the owner asks or agrees, the seat sends Maestro a note. Maestro reads it as a teammate's note, never as the owner's approval, and its prompt tells it to run nothing until the owner confirms. When the meeting ends, one call writes a summary card with decisions, commitments and open questions. The owner picks what to send on. That handoff only adds the items to Maestro's session and does not wake it.
+
+*In the example*, a customer says "you promised the double-charge fix for this week". The owner asks the seat, which looks up past commitments and answers "**Yes: you committed to Friday in the last call with them.**" The answer is labelled as recalled, with the date of that meeting, so it is not mistaken for something said today. After the call, the owner sends the commitment to Maestro from the meeting card. Maestro receives it without being woken and does not act until the owner asks.
 
 ## Architecture
 
-```
- Interfaces   desktop (Electron + Solid) · web · terminal UI · CLI · ACP · HTTP API + generated clients
- Seats        Maestro · backend · product and architecture · research · meeting copilot
- Coordination project board · merge queue · Guardrails · Relay gates and workflows · Atlas
- Session core durable inputs · serialized runner · System Context epochs · continuity · Lean
- Tools        built-ins · Maestro tools · MCP servers · MCP Dock · toolkit engines · skills · plugins · hooks
- Engines      provider protocols (~30 provider plugins) · Claude Code execution host
- Platform     omni (native processes and PTYs, Rust) · OS sandbox · SQLite store · credential store
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/architecture-dark.png">
+  <img src="docs/images/readme/architecture-light.png" alt="Orchestra's layers from top to bottom: interfaces, seats, coordination, session core, tools, engines and the platform layer with omni, the OS sandbox, the SQLite store and the credential store.">
+</picture>
 
-Runtime dependencies point one way: Schema, then Core and Protocol, then Server. Client code depends only on Schema and Protocol. Everything that starts a process goes through omni.
+The layers are not only a picture. `script/module-architecture.json` assigns every package and module to one of 14 layers, and a guard fails a change that imports against that direction. Runtime dependencies point one way: Schema, then Core and Protocol, then Server. The root of `@orchestra/client` carries no Effect, core or server code, so an editor or script can use the generated client without pulling in the runtime.
+
+Process starts follow the same rule. Orchestra code starts a child process only through one module, which hands it to omni (see [Processes and isolation](#processes-and-isolation)). The few sites that still spawn on their own are listed in an allowlist that only shrinks, and a check fails on any new one.
 
 ## Sessions and context
 
@@ -108,6 +182,11 @@ The rendered baseline is stored as a Context Epoch and reused byte for byte on e
 ### Context continuity
 
 Long sessions are where agents usually degrade: the window fills, old tool output crowds out the task, and a summary loses the detail that mattered. Orchestra has two layers here. The core session has plain compaction. The continuity module, on by default, wraps it: it uses the same summary prompt and checkpoint, but changes when the summary happens, what happens to old tool output, and what the agent can still reach afterwards.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/continuity-dark.png">
+  <img src="docs/images/readme/continuity-light.png" alt="Context continuity on a bar showing how full the window is: at 40% a summary is written in the background while the session keeps working; at 70% large old tool results are replaced by short placeholders; every item keeps a short alias such as u12, a40 or t87 so the model can fetch it back word for word.">
+</picture>
 
 **Plain compaction** (`continuity.enabled: false`). When the estimated request no longer fits (the window less the larger of the output reserve and a 20,000-token buffer), the turn stops and the model writes a summary of at most 4,096 tokens, with no tools, under fixed headings: Objective, Important Details, Work State, Next Move, Relevant Files. A repeat compaction builds on the previous summary. The model then sees one checkpoint message with the summary and the last ~8,000 tokens of conversation, where each tool result is cut to 2,000 characters. Everything older is gone. If the summary dropped a detail, nothing brings it back.
 
@@ -159,11 +238,16 @@ Shell commands, file reads, web fetches and searches often return far more text 
 
 - **Lossless filters first.** Twenty output profiles (cargo, go, npm, pytest, vitest and others) remove known noise, while errors, failures, warnings, stack traces and diffs are always kept.
 - **A summary for large output.** Output above 4 KiB that is still large after filtering is summarized, keeping every failure block whole.
-- **Nothing is lost.** The original output is stored (64 MiB store, kept for seven days). The model sees an id and can call `lean_recall <id>` with a line range to read the original byte for byte.
+- **Nothing is lost.** The original output is stored (64 MiB store, kept for seven days). The model sees a 32-character id and can call `lean_recall` with that id and an optional line range (`120-240`, `120-` or `120`) to read the original byte for byte.
 - **Fail-open.** Lean acts only on output from known native tools, and a Lean error never fails the tool call: the model then gets the plain output.
 - **Measured.** Each projection records bytes before and after and estimated tokens saved. When a measurement is missing it is shown as unavailable, never as zero.
 
-The Lean screen in each project shows savings per tool and per command, a history, filters, and switches for each profile and for Lean as a whole. Lean is on by default (`tool_output.lean.enabled`). Independently of Lean, every tool result is bounded to 2,000 lines or 50 KiB; the rest goes to a tool output store the model can page through.
+For example, a `vitest` run that prints 3,000 passing lines and one failure reaches the model as the failure block, the summary counts and an id. If the model later needs line 1,200 of the original, it asks for `1200-1260` and gets those lines exactly as printed.
+
+The Context savings screen in each project shows savings per tool and per command, a history, filters, and switches for each profile and for Lean as a whole. Lean is on by default (`tool_output.lean.enabled`). Independently of Lean, every tool result is bounded to 2,000 lines or 50 KiB; the rest goes to a tool output store the model can page through.
+
+<img src="docs/images/readme/context-savings.png" alt="The Context savings screen: totals of bytes and estimated tokens saved, savings per tool and per command, and switches for each output profile.">
+
 
 ## Tools
 
@@ -183,6 +267,20 @@ The Lean screen in each project shows savings per tool and per command, a histor
 | `context_recall`, `context_compact`, `lean_recall` | Context continuity and Lean recall |
 
 Every tool result goes through safety inspection and the size bound before the model sees it.
+
+### How `read` differs
+
+Most agent harnesses return a file with a line number on every line and cut it at a fixed count. Orchestra's `read` is built so that a small file costs as little as possible and a large one can be walked without guessing.
+
+- **Small files come back whole.** A file up to 50 KB is returned in one piece, without line numbers, so the model spends no tokens on a number column it does not need.
+- **Large files are paged.** Above that, `read` takes a 1-based `offset` and a `limit` and returns at most 2,000 lines or 50 KB per call. Each result says whether it was cut (`truncated`) and where the next page starts (`next`), so the model never has to work out the next offset itself.
+- **Long lines are cut, not dropped.** A line over 2,000 characters ends with `... (line truncated to 2000 chars)`, so one minified line cannot fill the page.
+- **Directories list one level**, directories first, with the same paging.
+- **Images are read as images.** JPEG, PNG, GIF and WebP files up to 20 MB are detected by their first bytes, not by their extension, and sent to the model as attachments. An image larger than 2000 pixels on a side or 5 MB encoded is resized with Lanczos3 first.
+- **Binary files are refused.** Executables and PDFs fail with "Cannot read binary file", and text that is not valid UTF-8 fails with "File is not valid UTF-8", instead of returning bytes the model would misread.
+- **Paths are checked.** A relative path resolves from the working directory. A path outside it asks for external-directory permission first.
+
+For example, a seat facing a 4 MB log from a test run does not read it from the top. It runs `grep` for the failure, then one `read` whose `offset` is the line number grep reported, and gets a page that starts at the error.
 
 ### Maestro's tools
 
@@ -212,6 +310,8 @@ The Agents screen shows the version of each engine.
 
 Skills are loaded from the project (`.orchestra/skills`, `.claude/skills`, `.agents/skills`), your global folder, configured paths, remote indexes and built-in modules. A seat's own skill tree loads level by level, from an index that names the next level, so the seat only reads the depth it needs. A seat's skills are hidden from other agents. Seat skills are embedded in compiled builds.
 
+<img src="docs/images/readme/skills.jpg" alt="The Skills screen: the skills available in the project, grouped by where they were loaded from, with a description for each.">
+
 ### Plugins, MCP servers and hooks
 
 - **Plugins** add tools and lifecycle hooks, written with Promise or Effect APIs, and can extend the terminal UI. Packages have size and entry limits.
@@ -233,13 +333,20 @@ One board per project, with epics, issues, steps, questions and decisions.
 
 The project declares its checks in `.orchestra/ci.json`: scoped checks per change, a full suite, lanes, a budget and bundle sizes. The file is read from the base branch, so a change cannot loosen its own checks.
 
+The idea is to pay for the full suite once per bundle instead of once per change. Each card first proves itself with the checks its change touches. Only green cards enter the queue, and the host, not an agent, admits them: a card is refused unless it is in Review with a complete pull request record, is scoped-green, has a linked repository, does not conflict with its base, has its dependencies met, is not paused, and has no follow-ups that are not yet cards on the board.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/pipeline-dark.png">
+  <img src="docs/images/readme/pipeline-light.png" alt="The landing pipeline: a card with a pull request passes scoped checks at its head commit, is admitted to the queue by the host, joins a bundle of four by default, the full suite runs once on the bundle, the bundle is merged locally and fast-forwarded, and a record commit writes each attempt's cost, time and verdict to .atlas in git. A red bundle is halved and bisected, only the card red on its own goes back to Review, an infrastructure failure is rerun once, and a red base opens a bug card.">
+</picture>
+
 - **Runs once per tree.** A check result is tied to the tree SHA, so identical content is never tested twice.
 - **Bundles.** Green cards are queued and merged together as one pull request (4 cards by default, configurable up to 16, or whatever is ready after 45 minutes). After 50 cards the bundle size adapts to the observed red rate.
 - **Red handling.** A red bundle is halved and bisected. A card that is red on its own goes back to Review. An infrastructure failure is rerun once. A flaky test is recorded as a flake. A red base opens a bug card and is never reverted automatically. A bundle that needs more than two rebuilds is dissolved.
 - **No lost work.** Every 10 minutes, work in progress (including untracked files) is pushed to a private ref after a gitleaks secret scan. After a crash, worktrees are restored and no bundle is pushed twice.
 - **Base tracking.** The base branch is fetched every minute and each queued card is trial-merged against it.
 
-When a bundle merges, the record commit updates the board record. Free text is redacted when the repository is public.
+When a bundle merges, the record commit updates the board record and the cost ledger (see [What each task cost](#what-each-task-cost)). Free text is redacted when the repository is public.
 
 ### Guardrails
 
@@ -250,7 +357,7 @@ Guardrails is a rule engine that runs on every change: 78 rules today, 53 that b
 - Every rule ships with samples that must match and samples that must not.
 - An exception is either an inline `guardrail-ignore` with a written reason, which is itself reported, or a `guardrail-approved` label that clears one rule on one pull request.
 
-The rules and their runs are visible in the app under CI/CD.
+The rules and their runs are visible in the app under Actions.
 
 ### Relay: gates and workflows
 
@@ -297,11 +404,36 @@ Atlas has no server and no database of its own to back up. What it knows is a se
 - **Public repositories keep hashes only.** In a public repository, card messages, decisions and continuity chunks keep only their hashes in the logs, not their text. Visibility is read from the GitHub remote, never configured, and any doubt counts as public.
 - **Old layouts move forward.** `atlas migrate-layout` converts a repository from the earlier single-file layout.
 
+### What each task cost
+
+Every attempt at a card is metered, and the record lands in git next to the code it produced. When the merge queue lands a bundle, it commits `chore(queue): record <label>`, and the merge commits on the base branch carry `WP:` and `Attempt:` trailers that point back to the record. So `git log` alone can answer "who built this, with which model, and what did it cost?", months later, from any clone.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/atlas-ledger-dark.png">
+  <img src="docs/images/readme/atlas-ledger-light.png" alt="The Atlas ledger: the record commit chore(queue): record label, the .atlas layout with cards/CARD/card.jsonl and one attempts/a-n.jsonl file per attempt, and the fields of one metered attempt: seat, session, engine and model, tokens in and out with cache, tool calls, wall time, reworks, gates and verdict, cost in micro-dollars and the transcript hash.">
+</picture>
+
+Each card has a folder, `.atlas/cards/<CARD>/`, with the card's history in `card.jsonl` and one file per attempt in `attempts/a<n>.jsonl`. An attempt records:
+
+- the seat (by role id) and its session;
+- the engine and model that ran it;
+- tokens in and out, and cache reads and writes;
+- tool calls, wall time and how many times the work was sent back;
+- the gates it passed or failed and its verdict;
+- the model spend in micro-dollars (`costMicroUsd`);
+- a hash of its full transcript, so the attempt can be tied to exactly what was said.
+
+*In the example*, the double-charge card might show two attempts: the first sent back once by the cold review for a missing control, the second green. The record says which seat and model each used, how long each ran and what it cost, so the price of the rework is visible instead of folded into a monthly bill.
+
+The numbers are honest about their gaps. A seat whose engine reports no usage shows "not metered", never zero. Budgets warn at 80%, ask at 90% and pause the work at 100%, and a card that costs three times the median of the other cards in its epic or more is flagged, once the epic has at least two other cards to compare with. In a public repository the spend is dropped before the line is written, so model cost never reaches GitHub; the project board's Money panel shows it from the local database instead.
+
 ## Processes and isolation
 
 ### Omni: the native process layer
 
-Agents start a lot of processes: test runners, dev servers, language servers, package managers, shells. When an agent or the app dies, the usual result is orphan processes holding ports and memory. Omni is a Rust layer (a native addon plus a supervisor binary) that starts every child process in Orchestra and owns its whole process tree.
+Agents start a lot of processes: test runners, dev servers, language servers, package managers, shells. When an agent or the app dies, the usual result is orphan processes holding ports and memory. Omni is a Rust layer (a native addon plus a supervisor binary) that starts child processes for Orchestra and owns each one's whole process tree.
+
+Omni is on by default in builds that include it for their platform. `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER` has three states: unset or `1` uses omni and hands options it does not support yet to the older spawner, `strict` uses omni with no hand-off, and `0` rolls back to the older spawner. An empty value also selects the older spawner. An invalid value falls back to it with a warning, and so does a build without omni for its platform when the flag is set. The guarantees below hold only when omni is in use.
 
 - **Whole-tree stop.** Stop, timeout and cancel end the root and all of its descendants. On Unix the root's session is ended with SIGTERM, then SIGKILL after a grace period. On Windows the tree is held in a Job object that refuses breakaway.
 - **Survives the host.** If the app or server dies, the supervisor stops every tree it owns within the grace period. Process id reuse is handled by pinning the root.
@@ -327,17 +459,44 @@ With the opt-in agent terminal (`ORCHESTRA_AGENT_TERMINAL`, macOS and Linux), ea
 
 ## Models and engines
 
-- **Providers.** About 30 built-in provider plugins over six wire protocols: Anthropic Messages, Bedrock Converse, Gemini, OpenAI Chat, OpenAI Responses and OpenAI-compatible endpoints. The model catalog comes from models.dev, with an offline snapshot built in. You pick a reasoning level per model.
-- **Claude mode.** With your Claude subscription, an agent's turns run through Claude Code as an execution host. Orchestra keeps Claude Code's own system prompt and adds a short appendix; project context reaches the model through a prompt hook and is resent only when it changes. Orchestra's tools are served to Claude Code as an in-process MCP server, every tool call passes Orchestra's permission gate, and Claude Code's own agent, messaging and remote tools are blocked so that seats are real Orchestra sessions with their own history. See [Claude mode](docs/guides/claude-mode.md).
+### Providers
+
+About 30 built-in provider plugins. The model layer implements six wire protocols: Anthropic Messages, Bedrock Converse, Gemini, OpenAI Chat, OpenAI Responses and OpenAI-compatible chat. The session core routes three of them today (Anthropic Messages, OpenAI Responses and OpenAI-compatible chat); the others are implemented in the model layer but not yet routed by the session core. The model catalog comes from models.dev, with an offline snapshot built in. You pick a reasoning level per model.
+
+### Claude mode
+
+Claude mode runs an agent's turns inside Claude Code, on your Claude subscription. Turn it on in Settings › Providers › Claude mode. Claude Code signs in with your own account (`claude auth login --claudeai`); Orchestra stores no Claude credential.
+
+<img src="docs/images/readme/settings-providers-claude-mode.png" alt="Settings, Providers, Claude mode: the switch that runs agents through Claude Code and the sign-in status of the local Claude Code.">
+
+The hard part is keeping Orchestra's rules while Claude Code does the work. Orchestra does it by treating Claude Code as an execution host for one provider turn, not as a second orchestrator.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/claude-mode-dark.png">
+  <img src="docs/images/readme/claude-mode-light.png" alt="Claude mode: Orchestra's session runner calls the execution host once per provider turn; the host starts Claude Code's query with the claude_code system prompt preset plus an appendix; Claude Code's own tools pass a PreToolUse gate of permission, ToolSafety and sandbox that fails closed, while Orchestra's tools served as mcp__orchestra__ settle through the runner; Agent, Task, SendMessage, ListAgents, RemoteTrigger and PushNotification are refused.">
+</picture>
+
+- **One turn, one call.** The session runner still admits your prompt, loads history and persists every event. One provider turn is one call into the host, and Claude Code's internal tool calls are stored as events like any other. Claude Code owns compaction inside its own session.
+- **Claude Code stays Claude Code.** `query()` always keeps Claude Code's own system prompt and Orchestra adds only an appendix. Project context goes in with each prompt and is resent only when its hash changes.
+- **Orchestra's tools, Orchestra's gate.** Seats, the board, memory, skills and the other Orchestra tools are served to Claude Code as an MCP server (`mcp__orchestra__*`). Claude Code's own tools pass a PreToolUse gate that runs Orchestra's permission rules, ToolSafety and the sandbox, and fails closed. `mcp__orchestra__*` calls pass the same hook only to check governed loading; their permissions are settled by the session runner like any Orchestra tool call.
+- **Seats stay real sessions.** Claude Code's Agent and Task tools are refused, so a seat is dispatched with `mcp__orchestra__task` and becomes an Orchestra session with its own history. SendMessage, ListAgents, RemoteTrigger and PushNotification are refused too. A child seat runs on Claude Code only when its model is a Claude model; otherwise it runs on Orchestra's own loop.
+- **Billing is passed through, not worked around.** A billing refusal is shown word for word and never retried. Cost comes from Claude Code's own total. Each turn starts one Claude Code process.
+
+See the [Claude mode guide](docs/guides/claude-mode.md).
 
 ## Interfaces
 
-- **Desktop app.** The main interface: Chat with Maestro, sessions with live task rows, the project board, workflows, hooks, CI/CD (checks, queue, Guardrails), Lean, Atlas activity, agents, providers, integrations (Slack, Discord), MCP servers, plugins, a `.env` editor, scheduled tasks, and the MCP Dock. The app starts its own local server on 127.0.0.1 with a random password and restarts it with backoff if it dies.
-- **Command line.** `orchestra` runs the same agents in a terminal UI, as a one-shot `orchestra run`, or as a server (`orchestra serve`, with Basic Auth). It also manages sessions, models, providers, MCP servers, plugins, the toolkit and the database, and exports or imports transcripts.
+- **Desktop app.** The main interface: Chat with Maestro, sessions with live task rows, the project board, workflows, hooks, Actions (checks, queue, Guardrails), Context savings, Atlas, agents, providers, integrations, MCP servers, plugins, a `.env` editor, scheduled tasks, and the MCP Dock. The app starts its own local server on 127.0.0.1 with a random password and restarts it with backoff if it dies.
+- **Command line.** `orchestra` runs the same agents in a terminal UI, as a one-shot `orchestra run`, or as a server (`orchestra serve`, with Basic Auth; `orchestra web` adds the web UI). `orchestra attach` connects a terminal UI to a running server. It also manages sessions, agents, models, providers, MCP servers, plugins, the toolkit, the background service and the database; exports or imports transcripts; checks out a pull request into a session (`orchestra pr`); shows token and cost statistics (`orchestra stats`); and upgrades or uninstalls itself.
 - **ACP.** `orchestra acp` speaks the Agent Client Protocol on stdio for editors, with session replay, MCP, permissions and modes.
 - **HTTP API.** The server exposes about 50 handler groups. Promise and Effect clients are generated from the API definition, and a check fails when they drift.
 - **Live meetings (macOS).** The meeting copilot listens to a call, answers in an overlay with hotkeys, can ask Maestro, and leaves a summary card with decisions and commitments. Needs a Deepgram key and Screen Recording permission.
 - **Scheduling.** One-off or recurring tasks for Maestro.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/home-dashboard.png">
+  <img src="docs/images/readme/home-dashboard-light.jpg" alt="The desktop app's Home screen for a project: the sidebar with Home, Chat, Project Board, Agents and Actions, and the project's overview.">
+</picture>
 
 ## Security model
 
@@ -352,7 +511,8 @@ With the opt-in agent terminal (`ORCHESTRA_AGENT_TERMINAL`, macOS and Linux), ea
 
 - Five planned seats are not built: frontend, code review, security review, documentation and process audit.
 - Builds are unsigned, so the system asks before the first launch, and unsigned macOS builds do not update in place.
-- Omni is pre-release; its guarantees hold only where the conformance scenario is green in CI.
+- Omni is pre-release; its guarantees hold only where the conformance scenario is green in CI, and only in builds that include omni for their platform.
+- The session core routes three of the six wire protocols (Anthropic Messages, OpenAI Responses and OpenAI-compatible chat).
 - The agent terminal and shell integration are opt-in and not available on Windows.
 - Seat confinement as described applies on macOS and Linux.
 - Workflow steps that wait for human approval cannot run yet; four of the templates are read-only.
@@ -413,15 +573,16 @@ For npm installs, run `orchestra upgrade`. The desktop app checks for new versio
 
 ## Guides
 
-User guides are in [`docs/guides`](docs/guides/README.md). Start with:
+User guides are in [`docs/guides`](docs/guides/README.md).
 
-- [Maestro: your lead agent](docs/guides/maestro.md)
-- [Workflows](docs/guides/workflows.md) and [Hooks](docs/guides/hooks.md)
-- [Checks and the merge queue](docs/guides/merge-queue.md)
-- [Permissions and saved rules](docs/guides/permissions.md) and [Project trust](docs/guides/mcp-project-trust.md)
-- [MCP Dock](docs/guides/mcp-dock-servers.md)
-- [Live meetings](docs/guides/live-meetings.md)
-- [Desktop startup errors](docs/guides/desktop-startup.md)
+| Topic | Guides |
+| --- | --- |
+| Start | [Getting started](docs/guides/getting-started.md), [First run](docs/guides/first-run.md), [Settings](docs/guides/settings.md), [Environment](docs/guides/environment.md) |
+| Agents | [Maestro](docs/guides/maestro.md), [The agent screen](docs/guides/agent-screen.md), [Agent pictures](docs/guides/agent-avatars.md), [Session requests](docs/guides/session-requests.md), [Live meetings](docs/guides/live-meetings.md) |
+| Models | [Claude mode](docs/guides/claude-mode.md), [Credentials](docs/guides/credentials.md), [Composer](docs/guides/hugr-composer.md) |
+| Work | [Workflows](docs/guides/workflows.md), [Hooks](docs/guides/hooks.md), [Skills](docs/guides/skills.md), [Instructions and the terminal UI](docs/guides/instructions-and-tui.md), [Checks and the merge queue](docs/guides/merge-queue.md), [Keep awake](docs/guides/keep-awake.md) |
+| Tools and trust | [Permissions and saved rules](docs/guides/permissions.md), [Project trust](docs/guides/mcp-project-trust.md), [MCP Dock](docs/guides/mcp-dock-servers.md) |
+| When something fails | [Desktop startup](docs/guides/desktop-startup.md), [App error messages](docs/guides/app-error-messages.md), [Config errors](docs/guides/config-errors.md), [MCP and CLI failures](docs/guides/mcp-and-cli-failures.md), [Database backups](docs/guides/database-backups.md) |
 
 ## Build from source
 

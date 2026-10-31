@@ -1,0 +1,47 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css"><script src="wires.js"></script>
+<style>
+  .lane { display: grid; grid-template-columns: repeat(4, 1fr); gap: 34px; }
+  .lane + .lane { margin-top: 60px; }
+  .step { font-size: 11px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .red { margin-top: 60px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  .red .card { border-color: color-mix(in srgb, var(--danger) 35%, var(--line)); }
+  .red h3 { font-size: 14.5px; }
+  .redhead { margin-top: 44px; color: var(--danger); font-size: 12px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; }
+</style></head>
+<body><div class="canvas">
+  <div class="head">
+    <div class="eyebrow">Landing</div>
+    <h1>The full suite runs once per bundle, not once per change.</h1>
+    <div class="sub">Each card proves itself with scoped checks first. The merge queue then bundles green cards, runs the full suite once on the bundle and lands it with a plain merge. The host moves cards; no agent can push a card into the queue.</div>
+  </div>
+
+  <div class="lane">
+    <div class="card" id="pr"><div class="step">1 · Review</div><h3>Card with a pull request</h3><p>The seat's branch and its evidence: what changed, decisions, what is not covered, risk.</p></div>
+    <div class="card" id="scoped"><div class="step">2 · Scoped checks</div><h3>Green at the head commit</h3><p>Only the tests the change touches, run on CI. A new commit resets it.</p></div>
+    <div class="card" id="queue"><div class="step">3 · Queue</div><h3>Admitted by the host</h3><p class="lock" style="margin-top:6px"></p><p>Refused without a PR, with open follow-ups, or while the queue is paused.</p></div>
+    <div class="card" id="bundle"><div class="step">4 · Bundle</div><h3>4 cards by default</h3><p>Up to 16, or whatever is waiting after 45 minutes.</p></div>
+  </div>
+  <div class="lane">
+    <div class="card" id="record"><div class="step">7 · Record</div><h3><code>chore(queue): record &lt;label&gt;</code></h3><p>Each attempt's cost, time and verdict go to <code>.atlas/</code> in git.</p></div>
+    <div class="card" id="merge"><div class="step">6 · Land</div><h3>Local merge, fast-forward</h3><p>Merge commits carry <code>WP:</code> and <code>Attempt:</code> trailers. Cards move to Shipped.</p></div>
+    <div class="card key" id="full" style="grid-column: span 2"><div class="step">5 · Full suite, once</div><h3>The whole bundle on one CI run</h3><p>Every package, every OS lane. Green lands all cards together.</p><div class="row"><span class="pill ok"><span class="dot"></span>green: land</span><span class="pill bad"><span class="dot"></span>red: split</span></div></div>
+  </div>
+
+  <div class="redhead">When the bundle is red</div>
+  <div class="red">
+    <div class="card" id="r1"><h3>Halve and bisect</h3><p>Run each half until the red card is found.</p></div>
+    <div class="card"><h3>Red card goes back</h3><p>Only the card that is red on its own returns to Review. The rest land.</p></div>
+    <div class="card"><h3>Infrastructure failure</h3><p>A runner or network failure is rerun once, not blamed on a card.</p></div>
+    <div class="card"><h3>Red base</h3><p>If the base branch itself is red, the queue opens a bug card for it.</p></div>
+  </div>
+</div>
+<script>
+wire([
+  ["pr","r","scoped","l"],["scoped","r","queue","l"],["queue","r","bundle","l"],
+  ["bundle","b","full","t"],
+  ["full","l","merge","r",{cls:"ok"}],["merge","l","record","r",{cls:"ok"}],
+  ["full","b","r1","t",{cls:"bad dash",bend:0.4}],
+])
+</script>
+</body></html>

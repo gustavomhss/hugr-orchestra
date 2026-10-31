@@ -1,0 +1,122 @@
+/* Shared look for the README diagrams. Colors follow packages/app-shell/src/orchestra/DESIGN.md (role tokens). */
+:root {
+  --bg-a: #0c1118;
+  --bg-b: #121b26;
+  --card: #141d28;
+  --card-2: #18222e;
+  --well: rgba(170, 196, 220, 0.055);
+  --line: rgba(166, 189, 211, 0.14);
+  --rim: rgba(166, 189, 211, 0.24);
+  --text: #eef1f5;
+  --body: #c7d0d9;
+  --muted: #93a2b2;
+  --faint: #7e90a2;
+  --accent: #9dc3e9;
+  --primary: #3873b0;
+  --success: #a6c8b7;
+  --warm: #cfbd95;
+  --danger: #e7b3b0;
+  --wire: rgba(157, 195, 233, 0.55);
+  --shadow: 0 1px 0 rgba(0, 0, 0, 0.35), 0 18px 40px -18px rgba(0, 0, 0, 0.7);
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+}
+:root.light {
+  --bg-a: #eef2f6;
+  --bg-b: #f8fafc;
+  --card: #ffffff;
+  --card-2: #f6f8fb;
+  --well: rgba(28, 46, 65, 0.04);
+  --line: rgba(65, 86, 107, 0.16);
+  --rim: rgba(65, 86, 107, 0.28);
+  --text: #1a1f26;
+  --body: #353d48;
+  --muted: #5f6874;
+  --faint: #6b7480;
+  --accent: #0c3e6c;
+  --primary: #3873b0;
+  --success: #164431;
+  --warm: #4d390f;
+  --danger: #5c302f;
+  --wire: rgba(12, 62, 108, 0.42);
+  --shadow: 0 1px 0 rgba(28, 46, 65, 0.06), 0 18px 36px -20px rgba(28, 46, 65, 0.28);
+}
+* { box-sizing: border-box; margin: 0; }
+html, body { background: var(--bg-a); }
+body {
+  font-family: "Inter Variable", Inter, -apple-system, system-ui, sans-serif;
+  font-feature-settings: "cv11", "ss01";
+  color: var(--body);
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+.canvas {
+  position: relative;
+  width: 1200px;
+  padding: 44px 48px 48px;
+  background:
+    radial-gradient(900px 420px at 12% -10%, color-mix(in srgb, var(--primary) 16%, transparent), transparent 70%),
+    radial-gradient(700px 380px at 105% 110%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 70%),
+    linear-gradient(180deg, var(--bg-b), var(--bg-a));
+  overflow: hidden;
+}
+.eyebrow {
+  font-size: 11.5px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+}
+h1 { color: var(--text); font-size: 26px; font-weight: 650; letter-spacing: -0.02em; margin: 6px 0 4px; }
+.sub { color: var(--muted); font-size: 15px; max-width: 860px; }
+.head { margin-bottom: 30px; }
+.card {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+}
+.card h3 { color: var(--text); font-size: 16px; font-weight: 620; letter-spacing: -0.01em; }
+.card p { font-size: 13.5px; color: var(--body); margin-top: 4px; }
+.card .meta { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+.card.key { border-color: color-mix(in srgb, var(--primary) 60%, var(--line)); }
+.card.key::before {
+  content: ""; position: absolute; inset: 0; border-radius: 11px; pointer-events: none;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--primary) 14%, transparent), transparent 60%);
+}
+.id {
+  font-family: var(--mono); font-size: 12px; color: var(--accent);
+  background: var(--well); border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px;
+}
+code, .mono { font-family: var(--mono); font-size: 12.5px; white-space: nowrap; }
+.pill {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 550;
+  padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); background: var(--well); color: var(--body);
+}
+.pill.ok { color: var(--success); border-color: color-mix(in srgb, var(--success) 40%, var(--line)); }
+.pill.warn { color: var(--warm); border-color: color-mix(in srgb, var(--warm) 40%, var(--line)); }
+.pill.bad { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 40%, var(--line)); }
+.pill.acc { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.dot { width: 7px; height: 7px; border-radius: 999px; background: currentColor; display: inline-block; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+ul.ticks { list-style: none; padding: 0; margin-top: 8px; display: grid; gap: 5px; }
+ul.ticks li { font-size: 13px; padding-left: 16px; position: relative; }
+ul.ticks li::before {
+  content: ""; position: absolute; left: 2px; top: 7px; width: 6px; height: 6px; border-radius: 2px;
+  background: color-mix(in srgb, var(--accent) 70%, transparent);
+}
+.lock::after {
+  content: "host-enforced"; font-size: 10.5px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--warm); display: block; margin-top: 3px; white-space: nowrap;
+}
+svg.wires { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+svg.wires path { fill: none; stroke: var(--wire); stroke-width: 1.6; }
+svg.wires path.dash { stroke-dasharray: 5 5; }
+svg.wires path.bad { stroke: color-mix(in srgb, var(--danger) 70%, transparent); }
+svg.wires path.ok { stroke: color-mix(in srgb, var(--success) 75%, transparent); }
+.wire-label {
+  position: absolute; transform: translate(-50%, -50%); font-size: 11.5px; font-weight: 550; color: var(--muted);
+  background: var(--bg-a); padding: 1px 7px; border-radius: 6px; border: 1px solid var(--line); white-space: nowrap;
+}
+.foot { margin-top: 26px; font-size: 12.5px; color: var(--faint); display: flex; gap: 22px; flex-wrap: wrap; }
+.foot span { display: inline-flex; align-items: center; gap: 8px; }
+.swatch { width: 22px; height: 0; border-top: 1.6px solid var(--wire); display: inline-block; }
+.swatch.dash { border-top-style: dashed; }
