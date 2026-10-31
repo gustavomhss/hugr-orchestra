@@ -438,11 +438,12 @@ export function driveMinePass(repoPath: string, deps?: Partial<MineDeps>): MineP
     onSeedsDropped: (n) => void (seedsDropped += n),
   }
   // POOL ONLY WHEN THE PROPOSER CAME FROM OPERATOR CONFIG (task #158) — a fact about the seam, not a policy:
-  // a worker rebuilds its proposer via `resolveProposer(repoPath, env)`, pure in those two args, whereas an
-  // INJECTED proposer is a closure and cannot cross a thread. Third conjunct: the pool is a COMPILED
-  // artifact (a worker loads a file), so outside `dist/` there is nothing to start.
+  // a worker rebuilds its proposer via `resolveProposer(repoPath, env, slot)`, pure in those three args, whereas
+  // an INJECTED proposer is a closure and cannot cross a thread. Third conjunct: the pool is a COMPILED
+  // artifact (a worker loads a file), so outside `dist/` there is nothing to start. The slot is the SAME
+  // `deps?.slot` `withDefaults` resolved the in-thread proposer with, so each arm's workers mine that arm.
   const usePool = resolved.modelWired && deps?.proposer === undefined && proposerPoolAvailable()
-  const pool = usePool ? createProposerPool(repoPath, d.env ?? process.env) : undefined
+  const pool = usePool ? createProposerPool(repoPath, d.env ?? process.env, deps?.slot) : undefined
   try {
     const ports = buildControllerDeps(repoPath, d, (r) => void (refusal = r), watch, pool, resolved.modelIdentity)
     const report = makeRunController(ports).genesis(repoPath, d.rev, d.budget, d.scope)
