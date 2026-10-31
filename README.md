@@ -11,7 +11,7 @@ Under the chat sit a set of systems built for long, multi-agent work: durable se
 ## Contents
 
 - [How it works](#how-it-works)
-- [The agents](#the-agents)
+- [The agents](#the-agents): the seats, the product and architecture seat
 - [Architecture](#architecture)
 - [Sessions and context](#sessions-and-context): durable sessions, System Context, context continuity, Lean
 - [Tools](#tools): built-in tools, Maestro's tools, MCP Dock, toolkit, skills, plugins, hooks
@@ -47,6 +47,31 @@ Agents are called seats. Each seat has a role, a prompt, a tool set and its own 
 | Frontend, code review, security review, documentation, process audit | Planned seats | Not built yet |
 
 Maestro's name is fixed, because the app and other sessions address it by name. Every other seat has a stable id and a display name you can change, along with its prompt, tools, skills and picture, on the Agents screen. See [the agent screen](docs/guides/agent-screen.md).
+
+### Product and architecture seat (`archie`)
+
+This seat turns a request into something the other seats can build: a product spec, an architecture proposal, a plan cut into work packages, briefs for the executors, or a reusable workflow. Everything it returns is a proposal. It is not owner approval, an adopted requirement, or permission to execute, and the seat never claims otherwise.
+
+**How work reaches it.** Planning belongs to this seat; Maestro checks the plan but does not rewrite it. Maestro dispatches through `task` with the owner's request, the decisions already taken, constraints, evidence, the expected deliverables and the exact files the seat may write. In the `maestro-plan` playbook, Maestro pins the baseline first and hands the seat the facts. A cold reviewer then sees only the request and the acceptance items. Maestro sends a plan back when an acceptance item has no oracle, two slices write the same file, dependencies form a cycle, a slice is too big, or a decision is left open. An adopted plan becomes one board card per slice, with area, order and dependencies.
+
+**How it works.** It starts from what the owner said and decided, then loads only the skill branch the job needs, one level at a time, and stops at the first branch that covers the work. In its output it keeps five kinds of statement apart: owner facts, what it observed in the code, constraints it inferred, its own proposals, and open decisions. Every claim cites a source. When a source is missing it reports a blocker instead of guessing. A small task can get an inline brief. Epics, work packages and governed cards always use the same five headings: Completeness Criteria, Success Criteria, Invariants, Quality Standards and Definition of Done.
+
+**Its skill tree** ships with the app:
+
+- `archie-plan`: specs, with outcomes, mechanisms, ADRs marked `proposed` and EARS-style requirements; decomposition into an acceptance map and cohesive slices with dependencies; the smallest exact contract between a producer and its consumers; and executor-ready briefs. A brief names the slice, goal, acceptance ids, baseline, targets, the paths it may write and read and the ones it must not touch, contracts, dependencies, latitude, governing facts, checks and the shape of the return.
+- `archie-work-package`: one complete work package in the native Relay sprint schema, with a global objective and acceptance, live invariants, evidence, and ordered steps, each with inputs, outputs and an oracle.
+- `archie-workflow`: a reusable workflow whose checks are commands or AI judges. Human steps are not supported yet.
+
+**Tools.**
+
+- `archie_draft_workflow` saves a sprint as an unpublished Relay workflow draft, after lint and compilation against the project's skills. The owner reviews and publishes it on the Workflows screen; the seat can neither publish nor run it.
+- `atlas_context` reads Atlas and anchors units of code to an assignment or work package. `atlas_memory_recall` and `atlas_memory_emit` read and write the seat's own memory; what it writes is an observation or a proposal, never a decision.
+- 13 of the planning arsenal's operations, only those that declare no side effects: compiling and checking a plan, turning it into a dependency graph, briefs, gates and policy, mapping file conflicts, freezing contracts, generating anchors, packing context, checking seams and judging whether a task can be sliced. Any other operation is refused.
+- It can read, search and run shell commands, but it may edit only the paths the assignment lists, and those are enforced by the host. With no paths listed it is read-only. Push, pull request, merge and release commands are denied, and the backend toolkit is off.
+
+**What it never does:** implement the product, dispatch or delegate, run a workflow, approve or accept its own work, commit, branch or merge, install tools, work around a denied permission, or invent an owner fact.
+
+**What it returns.** An `upstream-result` block with the outcome (done or blocked), the artifacts (product, architecture, specification, plan, roadmap, epic, issue, task, work package or brief), blockers, risks and next actions. When Maestro records a plan revision from a workflow, it must name this seat's run as the source, or the revision is held.
 
 ## Architecture
 
