@@ -15,7 +15,7 @@ Download the installer for your system from the `desktop-v<version>` release on 
 | System  | File                                                                        |
 | ------- | --------------------------------------------------------------------------- |
 | macOS   | `orchestra-desktop-mac-arm64.dmg` (Apple silicon), `orchestra-desktop-mac-x64.dmg` (Intel) |
-| Windows | `orchestra-desktop-win-x64.exe`                                             |
+| Windows | `orchestra-desktop-win-x64.exe` (Intel/AMD), `orchestra-desktop-win-arm64.exe` (Windows on ARM) |
 | Linux   | `orchestra-desktop-linux-x86_64.AppImage`, plus `.deb` and `.rpm` packages of the same build |
 
 The `.deb` and `.rpm` follow each package format's own architecture name (`amd64` and `x86_64`), so their file names differ slightly from the AppImage.
