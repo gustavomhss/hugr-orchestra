@@ -30,6 +30,12 @@ Background: `modules/engine-adapters/claude-code/README.md`, `docs/specs/claude-
 - The flag lives in process memory. A restart resets it, and the model reloads the playbook.
 - Renaming the playbook means changing the gate, `maestro.txt` and the playbook's name together. No test links the three: the gate test in `v2-host.test.ts` pins the literal name, and nothing checks `maestro.txt`, so update all three by hand.
 
+## Account status probe
+
+- `ClaudeCodeAccountV2.read` starts a Claude Code process (a `query()` with no prompt, then `accountInfo()`), and the catalog reads it on every provider listing while Maestro runs on `claude-code`. An uncached read shows up as a short-lived `claude` child every few minutes.
+- A signed-in status is cached for 10 minutes (`SIGNED_IN_TTL`); a signed-out one for 30 seconds, so a terminal `claude auth login` is seen soon. A sign-in finished through the service clears both (`refresh`).
+- Do not add a new caller that reads the status in a loop. The cache test in `v2-account.test.ts` pins both lifetimes with `TestClock`.
+
 ## Invariants that must not regress
 
 - Only the `claude_code` preset is used. `query()` never carries a custom `systemPrompt`.

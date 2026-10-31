@@ -4,11 +4,14 @@ import type { AccountInfo, SDKUserMessage } from "@anthropic-ai/claude-agent-sdk
 import { ClaudeCodeAccount } from "@orchestra/core/claude-code-account"
 import { makeGlobalNode } from "@orchestra/core/effect/app-node"
 import { AppProcess } from "@orchestra/core/process"
-import { Effect, Exit, Layer, Scope } from "effect"
+import { Clock, Duration, Effect, Exit, Layer, Scope } from "effect"
 import { ClaudeCodeExecutable } from "../executable"
 import { ClaudeHostOptions } from "../host/options"
 import { ClaudeCodeSDK } from "../sdk"
 import { ClaudeCodeLogin } from "./login"
+
+/** How long a signed-in status is trusted before another Claude Code process is started to read it. */
+const SIGNED_IN_TTL = Duration.minutes(10)
 
 /**
  * Claude Code's own sign-in, behind the server's account routes. The status is read from the binary's documented
@@ -20,9 +23,20 @@ export const make = Effect.gen(function* () {
   const env = yield* ClaudeCodeSDK.Environment
   const processes = yield* AppProcess.Service
   const layerScope = yield* Scope.Scope
-  // Only the Claude mode settings evaluate this lazy check. A finished sign-in invalidates it so the next read sees
-  // the new login at once.
-  const [cached, refresh] = yield* Effect.cachedInvalidateWithTTL(read(sdk, env), "30 seconds")
+  // Each read starts a Claude Code process, and the catalog reads the status on every provider listing. A signed-in
+  // status is kept for `SIGNED_IN_TTL`; a signed-out one is read again every 30 seconds, so a `claude auth login` run in
+  // a terminal shows up soon. A finished sign-in forgets both.
+  const known: { account?: ClaudeCodeAccount.Account; at: number } = { at: 0 }
+  const probe = Effect.gen(function* () {
+    const now = yield* Clock.currentTimeMillis
+    if (known.account && now - known.at < Duration.toMillis(SIGNED_IN_TTL)) return known.account
+    const account = yield* read(sdk, env)
+    known.account = account.signedIn ? account : undefined
+    known.at = yield* Clock.currentTimeMillis
+    return account
+  })
+  const [cached, invalidate] = yield* Effect.cachedInvalidateWithTTL(probe, "30 seconds")
+  const refresh = Effect.sync(() => void (known.account = undefined)).pipe(Effect.andThen(invalidate))
   // One `claude auth login` per process: a new sign-in replaces an unfinished one.
   const login: { current?: ClaudeCodeLogin.Login } = {}
   yield* Effect.addFinalizer(() => Effect.suspend(() => login.current?.stop ?? Effect.void))
