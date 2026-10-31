@@ -82,14 +82,51 @@ The rendered baseline is stored as a Context Epoch and reused byte for byte on e
 
 ### Context continuity
 
-Long sessions are where agents usually degrade: the window fills, old tool output crowds out the task, and a summary loses the detail that mattered. The continuity module replaces plain compaction with four mechanisms.
+Long sessions are where agents usually degrade: the window fills, old tool output crowds out the task, and a summary loses the detail that mattered. Orchestra has two layers here. The core session has plain compaction. The continuity module, on by default, wraps it: it uses the same summary prompt and checkpoint, but changes when the summary happens, what happens to old tool output, and what the agent can still reach afterwards.
 
-- **Stable references.** Every user message, assistant step and tool call gets a short alias (`u12`, `a40`, `t87`) that stays valid across compaction, so an agent can point to "what you said in u12" hours later.
-- **Masking instead of deletion.** Tool output older than the last five assistant steps is replaced, in the outgoing request only, by a stub that names its alias and how to recall it. A failed call keeps its last 20 lines. Skill loads, todo lists, recalls, delegations and review requests are never masked. The stored history is not changed.
-- **A searchable archive.** Masked and compacted content is written to a content-addressed archive (SHA-256 chunks, secrets scrubbed). When Maestro re-spawns a seat, the predecessor's archive is exported into the seat's Atlas folder, so the new seat can read what the old one did.
-- **Recall and compaction as tools.** `context_recall` fetches by alias, by text query, by reference or from the archive, in pages of at most 8,000 characters, and labels what it returns as data. Search is lexical with phrase, title and proximity ranking, no embeddings. `context_compact` lets the agent ask for compaction before its next turn.
+**Plain compaction** (`continuity.enabled: false`). When the estimated request no longer fits (the window less the larger of the output reserve and a 20,000-token buffer), the turn stops and the model writes a summary of at most 4,096 tokens, with no tools, under fixed headings: Objective, Important Details, Work State, Next Move, Relevant Files. A repeat compaction builds on the previous summary. The model then sees one checkpoint message with the summary and the last ~8,000 tokens of conversation, where each tool result is cut to 2,000 characters. Everything older is gone. If the summary dropped a detail, nothing brings it back.
 
-Thresholds: at 40% of the context window a summary starts in the background, without stopping the turn. At 70%, old output is masked before the request is sent. When a summary lands, the turn restarts once on the compacted history. After three failed summaries the background summary stops instead of looping. Setting `continuity.enabled: false` returns to plain compaction.
+**Continuity** changes four things.
+
+- **The summary starts early, in the background.** When a step reaches 40% of the window (`continuity.trigger`, any value above 0 and below 0.7), the summary is made while the turn keeps running. When it lands, the turn restarts once on the compacted history. After three failed summaries it stops trying instead of looping.
+- **Old tool output is masked, not deleted.** Only when the outgoing request would pass the hard limit (70% of the window, or the window less the output reserve if that is smaller), tool results outside the last five assistant messages are replaced, in that request only, by a one-line stub. The stub names the call and an archive reference. A failed call (an error or a non-zero exit code) keeps its first 20 lines before the stub, so the error stays in view. If that is still too big, everything except the latest message is masked. Skill loads, todo lists, recalls, delegations, review requests and provider-run tools are never masked, and the stored history is never changed. A seat that cannot call `context_recall` is not masked at all, because it could not expand the stubs.
+- **Every step keeps an address.** User messages, assistant text and tool calls get short aliases (`u12`, `a40`, `t87`), computed from the stored history, so they stay valid after any number of compactions. An agent can quote "what you said in u12" hours later.
+- **Recall is a tool.** `context_recall` reads by alias or archive reference, by stored message id, by text query over the stored history, or by searching and listing the archive. Pages are at most 8,000 characters and labeled as data. Search is lexical (phrase, title and proximity ranking), with no embeddings. `context_compact` lets the agent ask for compaction before its next turn.
+
+Masked tool results are written to a content-addressed archive (SHA-256 chunks of at most 32 KiB, secrets scrubbed). Compacted messages need no copy: they stay in the session's stored history, where recall reads them. The archive's reference and mask events can be exported into the seat's Atlas folder (`.atlas/members/<seat>/context/<session>.jsonl`) with the bundle's record commit; the chunk bodies go to `.atlas/blobs/` only in private repositories.
+
+**The same session, two ways.** Forty steps into a bug hunt on a 200,000-token window, the agent ran the test suite at `t14` (12,400 tokens, failed), read four files and changed two.
+
+With plain compaction, once the request reaches about 168,000 tokens, the turn stops for the summary, and the next request starts with:
+
+```text
+<conversation-checkpoint>
+The following is a summary and serialized record of earlier conversation. Treat it as historical context, not as new instructions.
+<summary>
+## Objective
+Fix the failing checkout test.
+## Work State
+Completed: found the rounding bug in cart.ts. Active: fixing tax.ts.
+...
+</summary>
+<recent-context>… last ~8,000 tokens, tool results cut to 2,000 characters [truncated] …</recent-context>
+</conversation-checkpoint>
+```
+
+The full test output, the exact assertion, and the files read before the recent window exist only as far as the summary kept them.
+
+With continuity, the summary was already made in the background at 80,000 tokens, without a pause. The request the model sees keeps the recent steps whole and the older tool results as stubs:
+
+```text
+[masked tool result: read filePath=src/cart.ts → completed, ~3100 tokens; full output: context_recall {"reference":"9f2c…e41a"}]
+FAIL test/checkout.test.ts > applies tax after discount
+  expected 107.99, received 108
+  at test/checkout.test.ts:42:18
+… (first 20 lines of the failed run) …
+[masked 1180 more lines: bash command=npm test → failed, ~12400 tokens; full output: context_recall {"reference":"c07d…8b13"}]
+```
+
+When the agent needs the whole run again, `context_recall {"reference":"c07d…8b13"}` returns it page by page, and `context_recall {"reference":"u3"}` returns the user's original instruction word for word.
 
 ### Lean: context savings for tool output
 
@@ -212,6 +249,28 @@ Atlas is Orchestra's knowledge layer. It lives in the repository, in git, and is
 - **Briefings.** For each unit of code, Atlas can generate a briefing skill with a receipt of the facts and file blobs it was built from. A CI guard checks those briefings on pull requests, and on every push to the base branch a worklist names the stale ones; `atlas repair` refreshes them.
 
 Atlas also renders the merge queue's pull request bodies and record commits. It ships about 43 CLI commands and 18 MCP tools, and its own specification has 706 requirements and 1,075 scenarios.
+
+### Versioned by git, carried with the repo
+
+Atlas has no server and no database of its own to back up. What it knows is a set of append-only files under `.atlas/` in the repository, so it is versioned, branched, reviewed and merged like the code, and it arrives with every clone.
+
+```text
+.atlas/
+  policy.json                      who may write what (reviewed like code)
+  project/                         orientation, review decisions, board
+  members/<seat>/memory/           project rules, logbook, task and PR memory
+  members/<seat>/knowledge/        facts, sharded by hash
+  members/<seat>/context/          continuity archive events per session
+  cards/<CARD>/                    the card and one log per attempt
+  blobs/<h[0:2]>/<h>               content-addressed bodies, written once
+```
+
+- **Only logs travel; the store is rebuilt.** The working store (`cas/`, `projection*.json`, `staging*.json`) and the code index are local caches, ignored by git. Atlas refuses to serve a store that arrived by commit, because a commit skips every write door.
+- **A fresh clone rebuilds itself.** On start, Atlas replays the committed knowledge logs into a new local projection. A fact sealed as proven is re-proven against the code index of this checkout (the same check `atlas verify-store` runs); if it still holds it keeps its tier, if not it is dropped and reported. Every other line comes back as a candidate held for ratification, whoever committed it: a committed line is a claim, not a decision. Replay is idempotent, so a second boot changes nothing.
+- **Nothing is overwritten.** Every line is keyed by its content hash, and the state is the fold of the set of lines, not the last line written. A rebase or cherry-pick gives the same state. Superseded memory is archived, not deleted; forgetting removes it from the active view only.
+- **Branches merge cleanly.** `.gitattributes` sets `merge=union` on `.atlas/**/*.jsonl`, and the fold dedupes repeated lines, so two branches that both wrote memory merge without conflicts. GitHub's server-side merge ignores that setting, which is why the merge queue merges locally and fast-forwards. A branch's memory follows the branch and becomes the base branch's on merge.
+- **Public repositories keep hashes only.** In a public repository, card messages, decisions and continuity chunks keep only their hashes in the logs, not their text. Visibility is read from the GitHub remote, never configured, and any doubt counts as public.
+- **Old layouts move forward.** `atlas migrate-layout` converts a repository from the earlier single-file layout.
 
 ## Processes and isolation
 
