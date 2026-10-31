@@ -1,0 +1,44 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css"><script src="wires.js"></script>
+<style>
+  .top { display: grid; grid-template-columns: 1fr 1fr 1.25fr; gap: 56px; align-items: stretch; }
+  .tools { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 70px; }
+  .gate { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+  .gate .pill { font-size: 11.5px; }
+  .arrow { color: var(--muted); font-size: 12px; }
+  .bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+  code { color: var(--accent); }
+</style></head>
+<body><div class="canvas">
+  <div class="head">
+    <div class="eyebrow">Claude mode</div>
+    <h1>Maestro's turn runs inside Claude Code; Orchestra keeps the rules.</h1>
+    <div class="sub">Turn it on in Settings › Providers › Claude mode. Claude Code signs in with your own account (<code>claude auth login --claudeai</code>); Orchestra stores no credential.</div>
+  </div>
+
+  <div class="top">
+    <div class="card" id="runner"><h3>Session runner</h3><p>Admits your prompt, loads context and history, persists every event.</p><div class="meta">One provider turn = one <code>host.stream</code> call.</div></div>
+    <div class="card" id="host"><h3>Execution host</h3><p>Starts Claude Code with a stable session id, sends Orchestra's context on each prompt and only when its hash changes.</p></div>
+    <div class="card key" id="cc"><h3>Claude Code <code>query()</code></h3><p>Keeps the <code>claude_code</code> system prompt preset; Orchestra adds only an appendix. Claude Code owns compaction.</p><div class="row"><span class="pill">todo panel</span><span class="pill">questions</span><span class="pill">steering</span><span class="pill">background tasks</span></div></div>
+  </div>
+
+  <div class="tools">
+    <div class="card" id="builtin"><h3>Claude Code's own tools</h3><p>Read, Edit, Bash and the rest do the file and shell work.</p>
+      <div class="gate"><span class="pill">permission</span><span class="arrow">›</span><span class="pill">ToolSafety</span><span class="arrow">›</span><span class="pill">sandbox</span></div>
+      <div class="meta lock">PreToolUse gate, fails closed</div></div>
+    <div class="card" id="orch"><h3>Orchestra tools</h3><p>Served as an MCP server: <code>mcp__orchestra__*</code>. Seats, board, memory, skills, capabilities.</p><div class="meta">Results settle through the runner like any tool.</div></div>
+    <div class="card" id="refused"><h3>Refused</h3><p><code>Agent</code> and <code>Task</code> (dispatch a seat with <code>mcp__orchestra__task</code>), <code>SendMessage</code>, <code>ListAgents</code>, <code>RemoteTrigger</code>, <code>PushNotification</code>.</p><div class="meta lock">blocked</div></div>
+  </div>
+
+  <div class="bottom">
+    <div class="card"><h3>Seats it dispatches</h3><p>A child runs on Claude Code when its model is a Claude model, otherwise on Orchestra's own loop.</p></div>
+    <div class="card"><h3>Billing and limits</h3><p>A billing refusal is shown word for word and never retried. Cost comes from Claude Code's own total. One Claude Code process per turn.</p></div>
+  </div>
+</div>
+<script>
+wire([
+  ["runner","r","host","l",{label:"turn"}],["host","r","cc","l",{label:"stream"}],
+  ["cc","b","builtin","t",{at:0.55}],["cc","b","orch","t",{at:0.55}],["cc","b","refused","t",{cls:"bad dash"}],
+])
+</script>
+</body></html>

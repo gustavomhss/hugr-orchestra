@@ -1,0 +1,46 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css"><script src="wires.js"></script>
+<style>
+  .stackwrap { display: grid; grid-template-columns: 1fr 230px; gap: 28px; }
+  .layers { display: grid; gap: 6px; }
+  .band { display: grid; grid-template-columns: 150px 1fr; align-items: center; gap: 14px; padding: 9px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); }
+  .band .name { font-size: 13px; font-weight: 620; color: var(--text); }
+  .band .pk { display: flex; gap: 6px; flex-wrap: wrap; }
+  .band.core { border-color: color-mix(in srgb, var(--primary) 60%, var(--line)); background: color-mix(in srgb, var(--primary) 12%, var(--card)); }
+  .band.edge { background: var(--card-2); }
+  .side { display: grid; gap: 14px; align-content: start; }
+  .dir { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; text-align: center; padding: 14px; border: 1px dashed var(--rim); border-radius: 12px; }
+  .dir svg { width: 20px; height: 120px; }
+</style></head>
+<body><div class="canvas">
+  <div class="head">
+    <div class="eyebrow">Architecture</div>
+    <h1>Fourteen layers. Each may depend only on the layers below it.</h1>
+    <div class="sub">The layer map lives in <code>script/module-architecture.json</code> and a guard checks every import against it. Clients never reach into the core or the server: they speak the shared protocol.</div>
+  </div>
+  <div class="stackwrap">
+    <div class="layers">
+      <div class="band edge"><span class="name">app</span><span class="pk"><span class="id">cli</span><span class="id">desktop</span><span class="id">web</span><span class="id">storybook</span><span class="id">omni/campaign</span></span></div>
+      <div class="band"><span class="name">terminal UI</span><span class="pk"><span class="id">tui</span></span></div>
+      <div class="band"><span class="name">UI</span><span class="pk"><span class="id">app</span><span class="id">session-ui</span><span class="id">ui</span></span></div>
+      <div class="band"><span class="name">composition</span><span class="pk"><span class="id">server</span><span class="id">sdk-next</span></span></div>
+      <div class="band"><span class="name">product</span><span class="pk"><span class="id">maestro</span><span class="id">engine-claude-code</span><span class="id">app-dock</span><span class="id">continuity</span><span class="id">janitor</span></span></div>
+      <div class="band core"><span class="name">platform</span><span class="pk"><span class="id">core</span><span class="pill" style="font-size:11.5px">sessions, tools, permissions, providers, storage</span></span></div>
+      <div class="band"><span class="name">module</span><span class="pk"><span class="id">relay</span><span class="id">maestro-arsenal</span><span class="id">capability-assets</span><span class="id">atlas-boundary</span></span></div>
+      <div class="band"><span class="name">tooling</span><span class="pk"><span class="id">script</span><span class="id">http-recorder</span><span class="id">httpapi-codegen</span></span></div>
+      <div class="band"><span class="name">library</span><span class="pk"><span class="id">llm</span><span class="id">codemode</span><span class="id">effect-drizzle-sqlite</span></span></div>
+      <div class="band"><span class="name">extension API</span><span class="pk"><span class="id">plugin</span></span></div>
+      <div class="band"><span class="name">client</span><span class="pk"><span class="id">client</span></span></div>
+      <div class="band"><span class="name">contract</span><span class="pk"><span class="id">protocol</span><span class="pill" style="font-size:11.5px">the HTTP API both sides share</span></span></div>
+      <div class="band"><span class="name">native</span><span class="pk"><span class="id">omni</span><span class="pill" style="font-size:11.5px">Rust core for processes and terminals</span></span></div>
+      <div class="band edge"><span class="name">foundation</span><span class="pk"><span class="id">schema</span></span></div>
+    </div>
+    <div class="side">
+      <div class="dir"><svg viewBox="0 0 20 120"><path d="M10 4 V112 M4 104 L10 113 L16 104" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>imports point down only</div>
+      <div class="card"><h3>Client boundary</h3><p>The <code>@orchestra/client</code> root carries no Effect, schema, core or server code, so a web page can load it.</p></div>
+      <div class="card"><h3>One way to spawn</h3><p>Every child process goes through omni. Exceptions are listed in one allowlist file.</p></div>
+    </div>
+  </div>
+</div>
+<script>wire([])</script>
+</body></html>
