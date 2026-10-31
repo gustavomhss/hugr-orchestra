@@ -52,7 +52,7 @@ Each seat works by a method: a few ideas that decide what it does and what it re
 
 ### Maestro: the lead
 
-Maestro holds the judgment and hands out the work. It plans with the owner, sends each piece to the seat built for it, checks what comes back and lands it. It does not write the product itself. Its playbooks ship with the app.
+Maestro holds the judgment and hands out the work. It agrees the goal with the owner, sends each piece to the seat built for it, checks what comes back and lands it. It does not write the product itself. Its playbooks ship with the app.
 
 **Nothing is done until it is proven.** An agent's report says where the evidence is. It is not the evidence. Before Maestro accepts a test as proof, it plants a small defect in the code and confirms that the test catches it for the right reason. A test that stays green against broken code proves nothing. For the same reason, a claim that something is absent ("no other caller") needs a search that has first been shown to find a known caller. A local pass is not a CI pass, and only the owner accepts a delivery.
 
@@ -76,7 +76,7 @@ This seat turns a request into a plan that someone else can build without making
 
 **Every requirement can be checked.** Requirements are written one clause at a time, in a form like "when X, the system shall Y". Each one gets scenarios for the normal case, the edge cases and recovery, plus an oracle: the test or check that will say whether it holds. A requirement with no oracle is not finished.
 
-**It cuts work by responsibility.** The plan is sliced into pieces that each own a set of acceptance items and a set of files, so two agents never edit the same file and every item has one owner. Where pieces depend on a shared interface, the seat freezes only that interface, including its error, ordering and retry behavior, so the pieces can be built in parallel.
+**It cuts work by responsibility.** The plan is sliced into pieces that each own a set of acceptance items and a set of files, so no two slices write the same file and every item has one owner. Maestro sends back a plan that breaks this. Where pieces depend on a shared interface, the seat freezes only that interface, including its error, ordering and retry behavior, so the pieces can be built in parallel.
 
 **A brief leaves the executor nothing to discover.** It names the baseline commit, the exact code sites, the files the executor may write and must not touch, the commands that prove the work and the shape of the reply.
 
@@ -88,11 +88,11 @@ This seat builds what the plan decided. It does not investigate, diagnose or cho
 
 **It distrusts signals that only look like proof.** A clean compile does not show that behavior was preserved. Zero executed test cases is missing evidence, not a pass. A timeout does not prove that the remote call failed. A generated stub is not a working endpoint. A check counts only when the healthy case passes and a known-bad case fails for the stated reason.
 
-**It checks state from outside the application.** To prove that a rollback happened, it injects a later failure and then looks at the database through a second connection. The application's own report is not enough. Tests run against the real engine in a container; it never swaps PostgreSQL for SQLite.
+**It checks state from outside the application.** To prove that a rollback happened, it injects a later failure and then looks at the database through a second connection. The application's own report is not enough. Its checks use the real database through the project's existing test setup, and it never swaps PostgreSQL for SQLite.
 
 **Its skills carry the hard-won rules of each domain.**
 - *Transactions*: only the owner of a transaction commits it, and one write through the pool silently escapes it.
-- *Retries*: reuse the same business key as the idempotency key on every attempt, and never mint a new one per retry.
+- *Retries*: reuse the same business key as the idempotency key (the id that lets a provider recognize a repeated request) on every attempt, and never mint a new one per retry.
 - *Cancellation*: wait for the work to actually stop, and remember that a cancel does not undo committed effects.
 - *Webhooks*: verify the signature on the raw bytes before parsing.
 - *gRPC*: HTTP 200 is not RPC success.
@@ -113,7 +113,7 @@ This seat answers questions with evidence and cannot edit anything. Its method e
 
 **It looks wide and reads narrow.** It runs every lookup it needs in one batch: where the term appears, the definitions and callers, the exact text, and the git history. Then it captures only the few line ranges that decide the answer. When reading cannot settle a question, it runs a probe: the type checker, one test or a short script.
 
-**Each claim says how it is known.** A claim is something the seat ran, something it read, or something it inferred, and each one cites the file and line. To answer "why is it like this", it follows blame to the commit and its pull request. External facts come from primary sources at the version actually in use.
+**Each claim says how it is known.** A claim is something the seat ran, something it read, or something it inferred, and each one cites its file and line, or its source on the web. To answer "why is it like this", it follows `git blame` to the commit and its pull request. External facts come from primary sources at the version actually in use.
 
 **The host checks the citations.** When the seat closes an inquiry, mechanical rules verify that:
 - every cited line is inside text the seat actually captured;
@@ -125,7 +125,7 @@ The rules do not judge whether the reasoning is sound, only that the evidence ex
 
 Maestro chooses how deep the seat goes. A quick answer has a budget of 64 tool calls and ten minutes. A deep one has 256 tool calls and forty minutes, and also traces dependencies across a subsystem. When the budget runs out, the seat returns a partial answer and says what it did not examine.
 
-*In the example*, Maestro asks "where are payment requests sent, and why is there no idempotency key?". The seat finds the one call site and its two callers. Blame leads to the pull request that removed a key because of a provider bug. The provider's current documentation says the bug is fixed in the version the project pins. Each finding is labelled read or inferred, with file and line, and the answer ends with what was not checked: the mobile client.
+*In the example*, Maestro asks "where are payment requests sent, and why is there no idempotency key?". The seat finds the one call site and its two callers. `git blame` leads to the pull request that removed a key because of a provider bug. The provider's current documentation says the bug is fixed in the version the project pins. Each finding is labelled read or inferred, with file and line, and the answer ends with what was not checked: the mobile client.
 
 ### Meeting copilot (`live`)
 
@@ -137,9 +137,9 @@ The owner talks to this seat during a live call. It answers fast and stays hones
 
 **It speaks only when it is sure.** Unprompted suggestions are off by default. When they are on and the seat is not confident, it stays silent.
 
-**Work goes through Maestro.** The seat can propose work to Maestro with a note, but the owner approves the work on Maestro's side. When the meeting ends, one call writes a summary card with decisions, commitments and open questions. The owner picks what to send on.
+**Work goes through Maestro.** The seat can propose work to Maestro with a note, but Maestro acts only when the owner asks. When the meeting ends, one call writes a summary card with decisions, commitments and open questions. The owner picks what to send on.
 
-*In the example*, a customer says "you promised the double-charge fix for this week". The owner asks the seat, which looks up past commitments and answers "**Yes: you committed to Friday in the last call with them.**" The answer is labelled as recalled, with the date of that meeting, so it is not mistaken for something said today. After the call, the owner sends the commitment to Maestro as a card to track.
+*In the example*, a customer says "you promised the double-charge fix for this week". The owner asks the seat, which looks up past commitments and answers "**Yes: you committed to Friday in the last call with them.**" The answer is labelled as recalled, with the date of that meeting, so it is not mistaken for something said today. After the call, the owner sends the commitment to Maestro from the meeting card. Maestro does not act on it until the owner asks.
 
 ## Architecture
 
