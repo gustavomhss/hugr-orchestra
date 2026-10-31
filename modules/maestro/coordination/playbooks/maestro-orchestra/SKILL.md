@@ -58,6 +58,23 @@ The `<team>` list in your context is the roster: each dispatchable seat by id, t
 | A desktop app, a terminal or files in the isolated Linux workspace | `linux`, in the desktop app |
 | A meeting | `live`; you only exchange notes with it |
 
+## On Claude Code
+
+In Claude mode Orchestra's tools are `mcp__orchestra__<name>`, and Claude Code's own tools do the work of these:
+
+| Orchestra | On Claude Code |
+|---|---|
+| `question` | AskUserQuestion |
+| `todowrite` | TaskCreate and TaskUpdate |
+| `bash`, `read`, `glob`, `grep`, `edit`, `write` | Bash, Read, Glob, Grep, Edit, Write |
+| `apply_patch` | Edit |
+| `webfetch`, `websearch` | WebFetch, WebSearch |
+| `context_compact` | none: Claude Code compacts its own context |
+| `process_get`, `process_wait`, `process_cancel` | none: use `process_control` |
+
+Orchestra refuses Claude Code's `Agent` and `Task` (dispatch with `task`), and `ListAgents`, `SendMessage`,
+`RemoteTrigger` and `PushNotification`, which reach outside the session.
+
 ## Counter-examples
 
 - "Orchestra cannot post to Slack." Check for `channel_send` and a bound channel first.

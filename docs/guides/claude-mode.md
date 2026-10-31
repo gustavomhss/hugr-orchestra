@@ -99,6 +99,11 @@ These follow from Claude Code running the model. None of them changes what you s
 
 ## Known limits
 
+- Your own Claude Code settings in `~/.claude` (user settings, hooks and plugins) do not apply in Claude mode. Only
+  the project's Claude Code settings load.
+- Lean shortens only the results of Orchestra's own tools, not what Claude Code's built-in tools return.
+- Claude Code runs its shell commands itself, so they do not use Orchestra's process runner or its agent terminal.
+- Claude Code compacts the conversation itself. Orchestra's open todos come back right after a compaction.
 - Claude Code's tool calls show with Orchestra's usual widgets (shell, read, edit, todos, task, ...).
 - If Anthropic bills a turn as extra usage or refuses it, the app shows the provider's message. You can enable extra
   usage, use an API key, or pick another provider.

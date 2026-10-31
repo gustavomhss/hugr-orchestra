@@ -140,6 +140,54 @@ describe("InstructionContext", () => {
     ),
   )
 
+  it.live("a hosted turn leaves out the project AGENTS.md files Claude Code loads itself, unless a CLAUDE.md stops it", () =>
+    Effect.acquireRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ).pipe(
+      Effect.flatMap((tmp) =>
+        Effect.gen(function* () {
+          const global = path.join(tmp.path, "global")
+          const project = path.join(tmp.path, "project")
+          const directory = path.join(project, "packages", "core")
+          const globalFile = path.join(global, "AGENTS.md")
+          const projectFile = path.join(project, "AGENTS.md")
+          yield* Effect.promise(async () => {
+            await fs.mkdir(global, { recursive: true })
+            await fs.mkdir(directory, { recursive: true })
+            await fs.writeFile(globalFile, "global")
+            await fs.writeFile(projectFile, "project")
+          })
+          const load = (hosted: boolean) =>
+            SystemContextRegistry.Service.pipe(
+              Effect.flatMap((service) => service.load({ sessionID: "ses_hosted", agent: "maestro", hosted })),
+              Effect.provide(
+                instructionLayer({
+                  config: global,
+                  locationServiceLayer: Layer.succeed(
+                    Location.Service,
+                    Location.Service.of(
+                      location({ directory: AbsolutePath.make(directory) }, { projectDirectory: AbsolutePath.make(project) }),
+                    ),
+                  ),
+                }),
+              ),
+              Effect.flatMap(SystemContext.initialize),
+              Effect.map((generation) => generation.baseline),
+            )
+          const both = [`Instructions from: ${globalFile}\nglobal`, `Instructions from: ${projectFile}\nproject`].join("\n\n")
+
+          expect(yield* load(false)).toBe(both)
+          // The global Orchestra AGENTS.md is not Claude Code's, so it stays.
+          expect(yield* load(true)).toBe(`Instructions from: ${globalFile}\nglobal`)
+          // With a CLAUDE.md, Claude Code loads that instead of AGENTS.md, so Orchestra keeps delivering it.
+          yield* Effect.promise(() => fs.writeFile(path.join(project, "CLAUDE.md"), "claude"))
+          expect(yield* load(true)).toBe(both)
+        }),
+      ),
+    ),
+  )
+
   it.effect("preserves admitted instructions while observation is unavailable", () =>
     Effect.gen(function* () {
       const failingFS = Layer.effect(

@@ -106,7 +106,6 @@ const layer = Layer.effect(
     const appProcess = yield* AppProcess.Service
     const skills = yield* SkillV2.Service
     const questions = yield* QuestionV2.Service
-    const safety = yield* ToolSafety.Service
     // The process-global execution, for the wake a host's own event asks for; absent where nothing drains Sessions.
     const execution = Option.getOrUndefined(yield* Effect.serviceOption(SessionExecution.Service))
     const workflowHosts = yield* RelayWorkflowSession.Service
@@ -137,10 +136,10 @@ const layer = Layer.effect(
     const awaitToolFibers = (fibers: FiberSet.FiberSet<void, ToolOutputStore.Error>) =>
       Effect.raceFirst(FiberSet.join(fibers), FiberSet.awaitEmpty(fibers))
 
-    const loadSystemContext = (sessionID: SessionSchema.ID, agent: AgentV2.Selection) =>
+    const loadSystemContext = (sessionID: SessionSchema.ID, agent: AgentV2.Selection, hosted: boolean) =>
       Effect.all(
         [
-          systemContext.load({ sessionID, agent: agent.id }),
+          systemContext.load({ sessionID, agent: agent.id, hosted }),
           skillGuidance.load(agent, sessionID),
           referenceGuidance.load(),
           meetingContext.load(sessionID),
@@ -165,7 +164,9 @@ const layer = Layer.effect(
         ...(agent.info?.permissions.map((rule) => ({ ...rule })) ?? []),
         ...(yield* store.permissions(session.id)),
       ]
-      const initialized = yield* SessionContextEpoch.initialize(db, loadSystemContext(session.id, agent), session.id)
+      // An agent whose engine names an execution host runs this provider turn through it (AGENTS "V2 Session Core").
+      const engine = yield* engineOf(session)
+      const initialized = yield* SessionContextEpoch.initialize(db, loadSystemContext(session.id, agent, engine !== undefined), session.id)
       const toolFibers = yield* FiberSet.make<void, ToolOutputStore.Error>()
       let needsContinuation = false
       let currentStep = step
@@ -186,9 +187,7 @@ const layer = Layer.effect(
         }
       }
       const system =
-        initialized ?? (yield* SessionContextEpoch.prepare(db, events, loadSystemContext(session.id, agent), session.id))
-      // An agent whose engine names an execution host runs this provider turn through it (AGENTS "V2 Session Core").
-      const engine = yield* engineOf(session)
+        initialized ?? (yield* SessionContextEpoch.prepare(db, events, loadSystemContext(session.id, agent, engine !== undefined), session.id))
       const host = engine ? hosts.get(engine) : undefined
       if (engine && !host)
         return yield* Effect.die(new Error(`No execution host is registered for engine ${engine} (agent ${agent.id})`))
@@ -335,7 +334,9 @@ const layer = Layer.effect(
             .pipe(Effect.catchTag("Session.NotFoundError", (error) => Effect.die(error)))
           if (!input.safety) return {}
           const call = input.safety
-          return yield* safety.run(
+          // The engine runs the call after this returns, so the installed hooks' after step is left to the host.
+          const hooks: { after?: (succeeded: boolean) => Effect.Effect<ReadonlyArray<string>, ToolSafety.Denied> } = {}
+          const authorization = yield* tools.hosted(
             {
               tool: call.tool,
               args: call.args,
@@ -347,8 +348,8 @@ const layer = Layer.effect(
               projectDirectory: location.project.directory === "/" ? location.directory : location.project.directory,
             },
             hostedCall(call, location.directory, scope, fs),
-            () => Effect.void,
-          )
+          ).pipe(Effect.provideService(ToolSafety.HostedHooks, hooks))
+          return hooks.after ? { ...authorization, after: hooks.after } : authorization
         })
       // The Session's open todos, rendered for an engine that lost its context to its own compaction.
       const memory: ExecutionHost.Turn["memory"] = {

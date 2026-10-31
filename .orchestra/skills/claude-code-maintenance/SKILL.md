@@ -18,7 +18,7 @@ Background: `modules/engine-adapters/claude-code/README.md`, `docs/specs/claude-
 
 ## Tool serving
 
-- `UNSERVED` in `host.ts` lists the Orchestra tools Claude Code has as built-ins or that belong to Orchestra's own loop. A name there is never served over MCP. Adding a tool to `UNSERVED` removes it from Claude mode; check it is not an Orchestra tool the seat needs first.
+- `UNSERVED` in `src/host/options.ts` lists the Orchestra tools Claude Code has as built-ins or that belong to Orchestra's own loop. A name there is never served over MCP. Adding a tool to `UNSERVED` removes it from Claude mode; check it is not an Orchestra tool the seat needs first, and give it a `BUILT_IN` or `ABSENT` entry and a row in the `maestro-orchestra` playbook's "On Claude Code" table when Orchestra's texts name it (`orchestra-map.test.ts` checks the playbook).
 - `skill` is served as `mcp__orchestra__skill`. Claude Code's built-in `Skill` tool does not know Orchestra's playbooks, so the append says so.
 - Subagent tools (`Agent`, `Task`) are refused whenever Orchestra's `task` is served.
 
@@ -54,7 +54,9 @@ Background: `modules/engine-adapters/claude-code/README.md`, `docs/specs/claude-
 - Only the `claude_code` preset is used. `query()` never carries a custom `systemPrompt`.
 - Every tool call passes the gate first, and a failure to decide refuses the call (fail closed).
 - `ENV_FLAGS` and the `CLAUDE_CODE_ENTRYPOINT` removal stay in `environment()`. Credentials are never added or removed.
-- The owner's own Claude Code settings stay in charge: `settingSources` is `["project"]`, and `permissionMode` is `default`.
+- `settingSources` is `["project"]` (`ClaudeHostOptions.SETTING_SOURCES`): only the project's Claude Code settings load; the owner's `~/.claude` user settings, hooks and plugins do not. `permissionMode` is `default`.
+- The Maestro note's runtime section is built from the gate's own lists (`SUBAGENT_TOOLS`, `HOST_REACH`, `BUILT_IN`, `ABSENT`, `UNSERVED` in `src/host/options.ts`). Change a list there, never a copy in `host.ts`.
+- Installed hooks' after step runs from the `PostToolUse` and `PostToolUseFailure` hooks through `Authorization.after`, and fails open.
 - Mid-session System Context changes reach Claude Code: `system` history messages not yet in `delivered` join the `UserPromptSubmit` hook text after the baseline. Record their ids only when the hook sent them, never when the prompt was merely handed. The compaction recall carries the baseline plus every update.
 - Maestro may call only Claude Code tools mapped in `PERMISSIONS` plus the bookkeeping set `MAESTRO_BOOKKEEPING` (todos, task list, plan mode, shell output); any other built-in is refused in `decide()` before `turn.authorize`. Maestro's conductor limits (`modules/maestro/coordination/src/v2/conductor.ts`) run inside `turn.authorize`, which wraps authorization only, so in Claude mode a call counts once it is authorized and the write budget is measured on the worktree, not on the tool's input.
 - Maestro's routing comes from the `<team>` System Context block (`modules/maestro/coordination/src/v2/team-source.ts`), which reaches Claude Code through the same path. The Maestro note in `host/options.ts` points at that list; never name seats or display names in the note.

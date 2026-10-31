@@ -18,6 +18,11 @@ export interface Interface {
 export interface TurnInfo {
   readonly sessionID: string
   readonly agent: string
+  /**
+   * The turn runs on an execution host's engine (Claude Code), which gives its model the environment, the date and,
+   * where the project has no CLAUDE.md, the project's AGENTS.md files itself: those sources leave them out.
+   */
+  readonly hosted?: boolean
 }
 
 /**

@@ -281,6 +281,7 @@
         "gray-matter": "4.0.3",
       },
       "devDependencies": {
+        "@orchestra/engine-claude-code": "workspace:*",
         "@tsconfig/bun": "catalog:",
         "@types/bun": "catalog:",
         "@typescript/native-preview": "catalog:",

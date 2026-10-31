@@ -50,7 +50,8 @@ export interface Turn {
    * Orchestra's decision on a call the engine runs itself: V2 permission first (an ask waits for the owner's reply, a
    * deny or decline fails), then, when `safety` names the call as Orchestra's tool would see it, the Location's
    * ToolSafety under the Session's profile: write roots, never-touch paths, protected writes, the dispatch charge and,
-   * for a shell command, the sandbox the profile requires. Any refusal fails the effect and the host must deny the call.
+   * for a shell command, the sandbox the profile requires, and the installed hooks' before step. Any refusal fails the
+   * effect and the host must deny the call.
    */
   readonly authorize: (input: {
     readonly callID: string
@@ -114,6 +115,12 @@ export interface Authorization {
   readonly input?: Readonly<Record<string, unknown>>
   /** The web domains the Session's dispatch binds its searches to; absent: unrestricted. The host applies them. */
   readonly domains?: ReadonlyArray<string>
+  /**
+   * The installed hooks' after step, present when a hook is enabled: the host calls it once the engine's call ended,
+   * with whether it succeeded, and hands the notes to the model. A failure is a hook's refusal of a call that already
+   * ran. Absent: no hook runs after the call.
+   */
+  readonly after?: (succeeded: boolean) => Effect.Effect<ReadonlyArray<string>, ToolSafety.Denied>
 }
 
 /** A steer promoted into the Session while the turn ran. */
