@@ -27,7 +27,7 @@ Under the chat sit a set of systems built for long, multi-agent work: durable se
 ## How it works
 
 1. **You ask Maestro.** Pick a project folder, connect a model, and describe the task in Chat.
-2. **Maestro plans and delegates.** It splits the task into cards on the project board and dispatches each card to a specialist. Every specialist runs in its own durable session, in its own worktree, that you can open, follow live and steer.
+2. **Maestro plans and delegates.** It splits the task into cards on the project board and dispatches each card to a specialist. Every specialist runs in its own durable session, optionally in its own worktree, that you can open, follow live and steer.
 3. **Specialists work inside limits.** Each one runs in an OS sandbox that confines what it can read and write to the paths it was given. A fixed list of actions (push, commit, merge, publish, release, deploy, `rm`, hook bypasses) is refused to them outright. Your own permission rules decide what else needs a prompt.
 4. **Results come back checked.** Maestro reads the evidence from the session events themselves, runs the project's declared checks, queues green work into the merge queue, and reports what changed and what is still open.
 
@@ -44,39 +44,39 @@ Agents are called seats. Each seat has a role, a prompt, a tool set and its own 
 | Product and architecture | Specs, plans, work-package briefs and workflow drafts | Built |
 | Research | Read-only discovery across the code and the web; writes research documents | Built |
 | Meeting copilot | Listens to a live meeting on macOS, answers in an overlay, talks to Maestro, writes up decisions and commitments | Built; not dispatchable |
-| Frontend, code review, security review, documentation, process audit | Planned seats | Not built yet |
+| Frontend, code review, security review, documentation, process audit | Each has a prompt and a tool profile; governed mode uses the code review seat (`lucy`) to approve plans | Partial: no skill tree yet |
 
 Maestro's name is fixed, because the app and other sessions address it by name. Every other seat has a stable id and a display name you can change, along with its prompt, tools, skills and picture, on the Agents screen. See [the agent screen](docs/guides/agent-screen.md).
 
-Each seat works by a method: a few ideas that decide what it does and what it refuses. The method is written in the seat's prompt and in a skill tree it loads on demand. The host enforces the rules that matter most, so they hold even when a model ignores its prompt. The sections below explain each method and follow one running example through the seats: customers are sometimes charged twice when they double-click "Pay".
+Each seat works by a method: a few ideas that decide what it does and what it refuses. The method is written in the seat's prompt and in a skill tree it loads on demand, and most of it is guidance the model follows. A smaller set of rules is enforced by the host, so it holds even when a model ignores its prompt: write paths, the OS sandbox, refused commands, the research seat's citation checks and budgets, and governed approvals. Each section says which is which. The sections below explain each method and follow one running example through the seats: customers are sometimes charged twice when they double-click "Pay".
 
 ### Maestro: the lead
 
-Maestro holds the judgment and hands out the work. It agrees the goal with the owner, sends each piece to the seat built for it, checks what comes back and lands it. It does not write the product itself. Its playbooks ship with the app.
+Maestro holds the judgment. It agrees the goal with the owner, makes small changes itself, sends larger or parallel pieces to the seat built for them, checks what comes back and lands it. Its playbooks ship with the app. Everything in this section is playbook method unless it says the host enforces it.
 
-**Nothing is done until it is proven.** An agent's report says where the evidence is. It is not the evidence. Before Maestro accepts a test as proof, it plants a small defect in the code and confirms that the test catches it for the right reason. A test that stays green against broken code proves nothing. For the same reason, a claim that something is absent ("no other caller") needs a search that has first been shown to find a known caller. A local pass is not a CI pass, and only the owner accepts a delivery.
+**Nothing is done until it is proven.** An agent's report says where the evidence is. It is not the evidence. For substantial work, before Maestro accepts a test as proof, it plants a small defect in the code and confirms that the test catches it for the right reason. A test that stays green against broken code proves nothing. For the same reason, a claim that something is absent ("no other caller") needs a search that has first been shown to find a known caller. A local pass is not a CI pass, and only the owner accepts a delivery.
 
-**Review is cold.** The reviewer never sees the author's reasoning. It gets the request and the result and is asked to refute them, because a reviewer who reads the author's argument tends to agree with it. Maestro also never sends a change back to its own author for review.
+**Review is cold.** For substantial work, the reviewer is the code review seat (`lucy`), or a read-only explorer when that seat is unavailable, and it never sees the author's reasoning. It gets the request, the spec and the diff and is asked to refute them, because a reviewer who reads the author's argument tends to agree with it. Maestro also never sends a change back to its own author for review.
 
-**Units of work have a fixed shape.** Every card states its completeness criteria, success criteria, invariants, quality standards and definition of done. An example or a counter-example is added only when it makes a criterion checkable. Small fixes get short cards and risky changes get long ones.
+**Units of work have a fixed shape.** Epics, work packages and governed cards state their completeness criteria, success criteria, invariants, quality standards and definition of done. A small task keeps them implicit and relies on the existing checks. An example or a counter-example is added only when it makes a criterion checkable, and the detail grows with the risk.
 
-**Landing is serial and gated.** Work whose base has moved is held until Maestro has read the whole delta. Maestro never merges a card's pull request itself. Cards go into a merge queue, where the host bundles them, runs the full gate once and merges.
+**Landing is serial and gated.** Work whose base has moved is held until Maestro has read the whole delta. Maestro's playbook forbids merging a card's pull request directly. The host does not block it, but a direct merge asks the owner first unless the owner's configuration allows it. Once a card has a pull request, a complete record and green scoped checks at its head, it goes into the merge queue, where the host bundles cards, runs the full suite once and merges.
 
-**Governed mode is opt-in, for work that must be auditable.** Each step leaves an immutable record. The owner approves an exact plan, and the approval allows one dispatch with byte-identical input. If the input changes, or the owner sends a newer message, the approval no longer counts.
+**Governed mode is opt-in, for work that must be auditable.** It needs Atlas, a clean tree and fresh ownership facts, and the code review seat must approve the plan first. Each step leaves an immutable record. The owner then approves one exact dispatch (seat, prompt and model) by answering "approve" or "aprovo". The host enforces the rest: the approval allows one dispatch with byte-identical input, and if the input changes or the owner sends a newer message, it no longer counts.
 
-*In the example*, Maestro sends the "why" question to the research seat and the plan to the product and architecture seat. It routes the fix to the backend seat with the plan's brief. When the fix returns, it removes the fix's key line, checks that the new test goes red, restores the line and only then queues the card.
+*In the example*, Maestro sends the "why" question to the research seat and the plan to the product and architecture seat. It routes the fix and its new test to the backend seat with the plan's brief. When the fix returns, it removes the fix's key line, checks that the new test goes red and restores the line. With the owner's go-ahead to open the pull request, it queues the card.
 
 ### Product and architecture seat (`archie`)
 
-This seat turns a request into a plan that someone else can build without making further decisions. Everything it returns is a proposal. It never implements, dispatches or approves, and it can write only the files its assignment lists.
+This seat turns a request into a plan that someone else can build without making further decisions. Everything it returns is a proposal. Its prompt forbids implementing, dispatching or approving. The host limits its writes to the files its assignment lists, its workflow drafts and its own Atlas memory, and refuses publish commands.
 
-**It separates what is known from what it thinks.** Every statement is labelled as an owner decision, a fact observed in the code, an assumption, a proposal or a blocker. Missing information stays unknown instead of being filled in. This is what lets Maestro and the owner see which parts of a plan rest on evidence and which rest on a guess.
+**It separates what is known from what it thinks.** Every statement is labelled as an owner decision, a fact (supplied by the owner or observed in the code), an assumption, a proposal or a blocker. Missing information stays unknown instead of being filled in. This is what lets Maestro and the owner see which parts of a plan rest on evidence and which rest on a guess.
 
 **It starts from the outcome, not the solution.** A spec names the job the user is trying to do, a measurable outcome, and four risks: is it valuable, usable, feasible and viable? Each risk is paired with the evidence that would retire it, and the riskiest unknown is tested first. Every design choice must point to the outcome or risk it serves. A choice that points to nothing is dropped or turned into a question for the owner.
 
-**Every requirement can be checked.** Requirements are written one clause at a time, in a form like "when X, the system shall Y". Each one gets scenarios for the normal case, the edge cases and recovery, plus an oracle: the test or check that will say whether it holds. A requirement with no oracle is not finished.
+**Every requirement can be checked.** Requirements are written one clause at a time, in a form like "when X, the system shall Y". Each one gets scenarios for the normal case, the edge cases and recovery, plus an oracle: the test or check that will say whether it holds. A requirement with no oracle stays unknown until one is supplied.
 
-**It cuts work by responsibility.** The plan is sliced into pieces that each own a set of acceptance items and a set of files, so no two slices write the same file and every item has one owner. Maestro sends back a plan that breaks this. Where pieces depend on a shared interface, the seat freezes only that interface, including its error, ordering and retry behavior, so the pieces can be built in parallel.
+**It cuts work by responsibility.** The plan is sliced into pieces that each own a set of acceptance items and a set of files, so every item has one owner and two slices write the same file only in a declared order. The seat sends unresolved conflicts back for revision before anything runs. Where pieces depend on a shared interface, the seat freezes only that interface, including its error, ordering and retry behavior, so the pieces can be built in parallel.
 
 **A brief leaves the executor nothing to discover.** It names the baseline commit, the exact code sites, the files the executor may write and must not touch, the commands that prove the work and the shape of the reply.
 
@@ -88,7 +88,7 @@ This seat builds what the plan decided. It does not investigate, diagnose or cho
 
 **It distrusts signals that only look like proof.** A clean compile does not show that behavior was preserved. Zero executed test cases is missing evidence, not a pass. A timeout does not prove that the remote call failed. A generated stub is not a working endpoint. A check counts only when the healthy case passes and a known-bad case fails for the stated reason.
 
-**It checks state from outside the application.** To prove that a rollback happened, it injects a later failure and then looks at the database through a second connection. The application's own report is not enough. Its checks use the real database through the project's existing test setup, and it never swaps PostgreSQL for SQLite.
+**It checks state from outside the application.** When the packet asks it to prove a rollback, it injects a later failure and then looks at the database through a second connection. The application's own report is not enough. Its checks use the real database through the project's existing test setup, and it never swaps PostgreSQL for SQLite.
 
 **Its skills carry the hard-won rules of each domain.**
 - *Transactions*: only the owner of a transaction commits it, and one write through the pool silently escapes it.
@@ -96,16 +96,16 @@ This seat builds what the plan decided. It does not investigate, diagnose or cho
 - *Cancellation*: wait for the work to actually stop, and remember that a cancel does not undo committed effects.
 - *Webhooks*: verify the signature on the raw bytes before parsing.
 - *gRPC*: HTTP 200 is not RPC success.
-- *Refactoring*: a rename goes through the language server, which understands bindings. A text match would also hit a shadowed variable.
-- *Generated code*: it is never edited by hand. It is regenerated with the pinned engine, and the seat checks that the diff stays inside the generated files.
+- *Refactoring*: when the packet selects it, a rename comes from the language service or compiler, which understands bindings. A text match would also hit a shadowed variable.
+- *Generated code*: it is never edited by hand. It is regenerated through the project's generator, only when the generated files are inside the seat's write paths (otherwise it returns a blocker), and the seat checks that the diff stays inside them.
 
-**It stops where its knowledge stops.** If what it sees contradicts the diagnosis it was given, it stops and does not invent a new theory. It fixes only check failures that it caused, at most three times per check. A permission denial comes back verbatim, and it never installs a tool. The host enforces the write paths, the OS sandbox and the denial of publish commands. Its result card can lower its own outcome but cannot mark the work verified, because only the host's check run and the caller decide that.
+**It stops where its knowledge stops.** If what it sees contradicts the diagnosis it was given, it stops and does not invent a new theory. It fixes only check failures that it caused, at most three times per check. A permission denial comes back verbatim, and it never installs a tool. The host enforces the write paths, the OS sandbox (on macOS and Linux) and the refusal of publish commands. Its result card can lower its own outcome but cannot mark the work verified, because only the host's check run and the caller decide that.
 
-*In the example*, the brief says "repair: the handler creates a new provider request per submission; reuse the checkout id as the idempotency key". The seat writes the change in the two files it was given. It runs the supplied concurrency test, which shows two submissions and one charge, and a control that drops the provider's response and retries with the same key. It returns the changed paths, each check with its exit code, and no claim that the work is verified.
+*In the example*, the brief says "repair: the handler creates a new provider request per submission; reuse the checkout id as the idempotency key". The seat gets the handler slice; the adapter slice follows against the frozen key format. It writes the change in the files it was given. It runs the supplied concurrency test, which shows two submissions and one charge, and a control that drops the provider's response and retries with the same key. It returns the changed paths, each check with its exit code, and no claim that the work is verified.
 
 ### Research seat (`jimmy`)
 
-This seat answers questions with evidence and cannot edit anything. Its method exists to prevent the usual failures of a model asked about code: answering a question built on a false premise, citing lines it never read, and claiming "nothing else does this" after a search that could not have found anything.
+This seat answers questions with evidence. It cannot edit project files; it writes only research records and its own Atlas memory. Its method exists to prevent the usual failures of a model asked about code: answering a question built on a false premise, citing lines it never read, and claiming "nothing else does this" after a search that could not have found anything.
 
 **It checks the question first.** If the question names a function or a file, the seat confirms that it exists before answering. A false premise is the first thing it reports.
 
@@ -119,17 +119,17 @@ This seat answers questions with evidence and cannot edit anything. Its method e
 - every cited line is inside text the seat actually captured;
 - words like "only", "always" or "never" are backed by a complete search;
 - a claim that something is absent names the scope of the search;
-- every cited URL is alive.
+- no cited URL is dead or invented, and each one is inside the domains the dispatch allows. A URL that cannot be checked is named as a limitation on the card.
 
 The rules do not judge whether the reasoning is sound, only that the evidence exists. The result card is built from this checked record, not from the seat's own summary.
 
-Maestro chooses how deep the seat goes. A quick answer has a budget of 64 tool calls and ten minutes. A deep one has 256 tool calls and forty minutes, and also traces dependencies across a subsystem. When the budget runs out, the seat returns a partial answer and says what it did not examine.
+Maestro chooses how deep the seat goes: quick (64 tool calls, ten minutes), focused (128, twenty) or deep (256, forty). The host enforces these budgets. When the budget runs out, the seat returns a partial answer and says what it did not examine.
 
-*In the example*, Maestro asks "where are payment requests sent, and why is there no idempotency key?". The seat finds the one call site and its two callers. `git blame` leads to the pull request that removed a key because of a provider bug. The provider's current documentation says the bug is fixed in the version the project pins. Each finding is labelled read or inferred, with file and line, and the answer ends with what was not checked: the mobile client.
+*In the example*, Maestro asks "where are payment requests sent, and why is there no idempotency key?". The seat finds the one call site and its two callers. `git blame` leads to the pull request that removed a key because of a provider bug. The provider's documentation for the version the project pins says the bug is fixed. Each finding is labelled read or inferred, with file and line, and the answer ends with what was not checked: the mobile client.
 
 ### Meeting copilot (`live`)
 
-The owner talks to this seat during a live call. It answers fast and stays honest about where each answer comes from. It cannot be dispatched and never starts work itself.
+The owner talks to this seat during a live call. It answers fast and stays honest about where each answer comes from. It cannot be dispatched and does not start work on its own.
 
 **Short answers, never coaching.** It replies with one bold sentence, then two to four points. When it does not know, it says so in one line.
 
@@ -137,9 +137,9 @@ The owner talks to this seat during a live call. It answers fast and stays hones
 
 **It speaks only when it is sure.** Unprompted suggestions are off by default. When they are on and the seat is not confident, it stays silent.
 
-**Work goes through Maestro.** The seat can propose work to Maestro with a note, but Maestro acts only when the owner asks. When the meeting ends, one call writes a summary card with decisions, commitments and open questions. The owner picks what to send on.
+**Work goes through Maestro.** When the owner asks or agrees, the seat sends Maestro a note. Maestro reads it as a teammate's note, never as the owner's approval, and its prompt tells it to run nothing until the owner confirms. When the meeting ends, one call writes a summary card with decisions, commitments and open questions. The owner picks what to send on. That handoff only adds the items to Maestro's session and does not wake it.
 
-*In the example*, a customer says "you promised the double-charge fix for this week". The owner asks the seat, which looks up past commitments and answers "**Yes: you committed to Friday in the last call with them.**" The answer is labelled as recalled, with the date of that meeting, so it is not mistaken for something said today. After the call, the owner sends the commitment to Maestro from the meeting card. Maestro does not act on it until the owner asks.
+*In the example*, a customer says "you promised the double-charge fix for this week". The owner asks the seat, which looks up past commitments and answers "**Yes: you committed to Friday in the last call with them.**" The answer is labelled as recalled, with the date of that meeting, so it is not mistaken for something said today. After the call, the owner sends the commitment to Maestro from the meeting card. Maestro receives it without being woken and does not act until the owner asks.
 
 ## Architecture
 
