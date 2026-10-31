@@ -1,26 +1,92 @@
 # HuGR Orchestra
 
-HuGR Orchestra is a desktop app for software work. You talk to Maestro, the lead agent. Maestro scopes the work, delegates it to a team of specialist agents, and brings the plan and the results back to you for approval.
+HuGR Orchestra is a desktop app and command line for software work done by a team of AI agents. You talk to one lead agent, Maestro. Maestro turns your request into a plan, hands each piece to a specialist agent, tracks the work on a project board, checks the results, and brings decisions back to you. You stay the one who approves.
 
-The app combines an Electron host (`apps/desktop`), a shared Solid UI (`packages/app-shell`), and local server/session services. `apps/web` owns the browser bootstrap and web distribution. The V2 CLI, Core, Protocol, and Server packages have separate responsibilities.
+Orchestra runs on your machine, in your repository, with the model provider you choose: your Claude subscription through Claude Code, or any provider you connect with an API key.
+
+**Status:** early release. Desktop 0.3.2 and command line 0.3.1, for macOS, Windows and Linux. Builds are not code signed yet. Some agents and features below are marked as not built yet; this README says so where it applies.
+
+## How it works
+
+1. **You ask Maestro.** Pick a project folder, connect a model, and describe the task in Chat.
+2. **Maestro plans and delegates.** It splits the task into cards on the Project Board and sends each card to a specialist agent. Every agent runs in its own durable session that you can open and follow live, or steer while it runs.
+3. **Agents work inside limits.** Specialists edit only the paths they were given. Publishing actions (pushing, opening or merging pull requests, releases) and reading `.env` files are denied to them. Your own permission rules decide what else needs a prompt.
+4. **Results come back checked.** Maestro runs the project's checks, queues green work for merging, and reports what changed and what is still open.
+
+The board moves on facts: a card advances when work is dispatched, a pull request opens, or a merge lands. Only you move cards out of Intake or archive a project.
+
+## The agents
+
+| Role | What it does | State |
+| --- | --- | --- |
+| Maestro (lead) | Plans, routes work, integrates results, owns the board | Built |
+| Backend | Writes code in the repository, runs shell commands with a pinned toolkit, uses project memory | Built |
+| Product and architecture | Specs, plans, work-package briefs and workflow drafts | Built |
+| Research | Read-only discovery across the code and the web; writes research documents | Built |
+| Meeting copilot | Listens to a live meeting on macOS, answers in an overlay, writes up decisions and commitments | Built |
+| Frontend, code review, security review, documentation, process audit | Planned seats | Not built yet |
+
+You can rename any agent, and edit its prompt, tools, skills and picture on the Agents screen. See [the agent screen](docs/guides/agent-screen.md).
+
+## What you can do today
+
+**Work with Maestro**
+- Chat with Maestro in a project; watch delegated work as task rows and open any of them.
+- Steer a running session or queue the next prompt; pick a reasoning level per model.
+- Archive and restore sessions; sessions keep their history across branches and app restarts.
+
+**Plan and track**
+- Project Board: one board per project, written by Maestro, rebuilt from a committed record.
+- Workflows: build step-by-step procedures (steps, checks, context, a skill per step) in a list or canvas editor, publish them, and let Maestro run them. Built-in templates cover fixing a bug with proof, safe refactoring, test-driven features, launching a feature end to end, and building one work package.
+- Schedule one-off or recurring tasks for Maestro.
+
+**Ship code**
+- Checks and merge queue: the project declares its checks in `.orchestra/ci.json`; Maestro runs them, queues green work, and the app merges it as one pull request. Work in progress is pushed every 10 minutes after a secret scan, so a crash does not lose it.
+- Hooks: rules that block, ask, remind or record when agents act, with an activity log.
+
+**Control and trust**
+- Permission prompts with Deny, Allow once, Always allow in this project, and Stop; saved rules can be reviewed and removed.
+- Project trust: a folder's MCP servers, plugins, formatters and language servers start only after you trust that folder.
+- Credentials for providers, integrations and MCP sign-ins are encrypted (AES-256-GCM) with a key held in the system credential store.
+- The database is backed up before each migration; the three newest copies are kept.
+
+**Tools for agents**
+- MCP Dock: each open interface becomes an MCP server agents can use. Browser tabs and an isolated Linux desktop are read through the accessibility tree, without screenshots. The Linux desktop needs Docker.
+- Skills: a catalog of skills from the project, your global folder and built-in modules; agents load them level by level.
+- Atlas: a knowledge layer stored in git, checked for drift against the code it describes.
+- Integrations (Slack, Discord), MCP servers, plugins, a `.env` editor and context savings for long shell output.
+
+**Live meetings (macOS)**
+- A meeting copilot with an overlay, hotkeys and a summary card after the call. Needs a Deepgram key and Screen Recording permission.
+
+**Command line**
+- `orchestra` runs the same agents in a terminal UI, as a one-shot `orchestra run`, or as a server (`orchestra serve`, with Basic Auth). It also manages sessions, models, providers, MCP servers, plugins and the database, and exports or imports transcripts.
+
+## Not there yet
+
+- Five of the planned agents are not built (see the table above).
+- Workflow steps that wait for human approval cannot run yet; four of the templates are read-only.
+- Hooks apply to the whole project only and cannot be imported.
+- The meeting overlay's hiding from screen sharing has been checked with Google Meet in Chrome only.
+- Builds are unsigned, so the system asks before the first launch.
 
 ## Install
 
-Releases are on the [GitHub Releases](https://github.com/gustavomhss/hugr-orchestra/releases) page: command line releases are tagged `v<version>` and desktop releases `desktop-v<version>`. Current releases are 0.x. Builds may not be code signed yet; the notes of each release say whether it is signed.
+Releases are on the [GitHub Releases](https://github.com/gustavomhss/hugr-orchestra/releases) page: desktop releases are tagged `desktop-v<version>` and command line releases `v<version>`. Each release note says whether the build is signed.
 
 ### Desktop app
 
-Download the installer for your system from the `desktop-v<version>` release on the [GitHub Releases](https://github.com/gustavomhss/hugr-orchestra/releases) page. Files are named `orchestra-desktop-<os>-<arch>.<ext>`:
+Download the installer for your system from the latest `desktop-v<version>` release. Files are named `orchestra-desktop-<os>-<arch>.<ext>`:
 
-| System  | File                                                                        |
-| ------- | --------------------------------------------------------------------------- |
-| macOS   | `orchestra-desktop-mac-arm64.dmg` (Apple silicon), `orchestra-desktop-mac-x64.dmg` (Intel) |
-| Windows | `orchestra-desktop-win-x64.exe`                                             |
-| Linux   | `orchestra-desktop-linux-x86_64.AppImage`, plus `.deb` and `.rpm` packages of the same build |
+| System | File |
+| --- | --- |
+| macOS | `orchestra-desktop-mac-arm64.dmg` (Apple silicon), `orchestra-desktop-mac-x64.dmg` (Intel) |
+| Windows | `orchestra-desktop-win-x64.exe` |
+| Linux | `orchestra-desktop-linux-x86_64.AppImage`, plus `.deb` and `.rpm` packages of the same build |
 
-The `.deb` and `.rpm` follow each package format's own architecture name (`amd64` and `x86_64`), so their file names differ slightly from the AppImage.
+The `.deb` and `.rpm` use each format's own architecture name (`amd64` and `x86_64`). Each release attaches `SHA256SUMS`.
 
-An unsigned build makes the system ask before the first launch (Gatekeeper on macOS, SmartScreen on Windows). On macOS, open System Settings > Privacy & Security and choose Open Anyway. On Windows, choose More info > Run anyway on the SmartScreen prompt. Linux installers carry no signature check.
+An unsigned build makes the system ask before the first launch. On macOS, open System Settings > Privacy & Security and choose Open Anyway. On Windows, choose More info > Run anyway on the SmartScreen prompt. Linux installers carry no signature check. The first launch on macOS can take up to a minute while the system checks the new app.
 
 ### Command line
 
@@ -28,7 +94,7 @@ An unsigned build makes the system ask before the first launch (Gatekeeper on ma
 npm install -g @humanguardrail/cli
 ```
 
-Each release also attaches per-platform `.tar.gz` archives, `SHA256SUMS` and `install.sh`. Download an archive and its digest from `SHA256SUMS`, then run:
+Each release also attaches per-platform `.tar.gz` archives, `SHA256SUMS` and `install.sh` for macOS and Linux (x64 and arm64, glibc and musl). Download an archive and take its digest from `SHA256SUMS`, then run:
 
 ```sh
 sh install.sh \
@@ -39,23 +105,33 @@ sh install.sh \
   --sha256 <digest>
 ```
 
-`install.sh` supports macOS and Linux on x64 and arm64, with glibc and musl Linux variants and baseline x64 builds. Windows is not covered by `install.sh`. It does not edit shell configuration. See the [distribution guide](apps/cli/distribution/README.md) for the valid `--target` names, updates and rollback.
-
-npm and `install.sh` installs never show a Gatekeeper or SmartScreen prompt, signed or not. A binary downloaded from the release page in a browser can.
+`install.sh` does not edit shell configuration. See the [distribution guide](apps/cli/distribution/README.md) for target names, updates and rollback.
 
 ### First run
 
-Orchestra needs a model to work with. Connect a provider with your API key in the provider dialog, or sign in to Claude Code first to use Claude mode.
+1. Pick a project folder. Choosing it also trusts it, so trust only folders you wrote or reviewed.
+2. Connect a model in Providers: sign in to Claude Code to use your Claude subscription ([Claude mode](docs/guides/claude-mode.md)), or add a provider's API key.
+3. Press "Start a session" on Home and type a task.
+
+The [getting started guide](docs/guides/getting-started.md) walks through the first five minutes.
 
 ### Upgrading
 
-For npm installs, run `orchestra upgrade`. The desktop app checks for new versions itself. The Windows and AppImage builds install them in place, and so do signed macOS builds. Unsigned macOS builds and the `.deb` and `.rpm` packages link to the new release instead: download its installer and install it over the old one.
+For npm installs, run `orchestra upgrade`. The desktop app checks for new versions itself. Windows and AppImage builds update in place, as do signed macOS builds. Unsigned macOS builds and the `.deb` and `.rpm` packages link to the new release: download its installer and install it over the old one.
 
-## Support
+## Guides
 
-Report bugs and ask questions in [GitHub Issues](https://github.com/gustavomhss/hugr-orchestra/issues).
+User guides are in [`docs/guides`](docs/guides/README.md). Start with:
 
-## Run from source
+- [Maestro: your lead agent](docs/guides/maestro.md)
+- [Workflows](docs/guides/workflows.md) and [Hooks](docs/guides/hooks.md)
+- [Checks and the merge queue](docs/guides/merge-queue.md)
+- [Permissions and saved rules](docs/guides/permissions.md) and [Project trust](docs/guides/mcp-project-trust.md)
+- [MCP Dock](docs/guides/mcp-dock-servers.md)
+- [Live meetings](docs/guides/live-meetings.md)
+- [Desktop startup errors](docs/guides/desktop-startup.md)
+
+## Build from source
 
 You need Bun 1.3.14, the version pinned in `package.json`.
 
@@ -63,61 +139,41 @@ You need Bun 1.3.14, the version pinned in `package.json`.
 bun install
 ```
 
-### Desktop app
-
 ```bash
 bun run dev:desktop
 ```
 
-This runs Desktop's `predev` step (`apps/desktop/scripts/predev.ts`), which installs Electron, copies the dev channel icons, stages Claude Code resources, stages Omni (borrowing a local or installed Omni build when `OMNI_ARTIFACTS` is unset), and builds/stages CLI resources before starting `electron-vite dev`. See the [Desktop guide](apps/desktop/README.md) for package-local commands and packaging inputs.
+- `bun dev` runs the terminal UI and server in the current directory.
+- `bun run dev:web` runs the web UI.
+- `./apps/cli/script/build.ts --single` builds a standalone `orchestra` binary for your platform.
+- Type check from a package directory with `bun typecheck`. Tests run on GitHub Actions through `bun run test:ci <package> [test files...]`; [AGENTS.md](AGENTS.md) has the rules.
 
-A dev run uses configured user data. `ORCHESTRA_DB` selects the Core database; it does not isolate the entire Electron profile, settings, or draft store.
+See the [desktop guide](apps/desktop/README.md) and [CLI guide](apps/cli/README.md) for package commands, and [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
 
-### Other entry points
+### Where things live
 
-- `bun dev` runs the terminal UI and server from `apps/cli/src/index.ts` in the current directory. To run it against another directory, `cd <directory>` first, then run it.
-- `bun run dev:web` runs the web UI from `apps/web`.
-- From `apps/cli`, `bun run dev` runs the V2 preview CLI; see its [guide](apps/cli/README.md) for daemon/API commands and compiled resources.
-- `./apps/cli/script/build.ts --single` compiles a standalone binary for your platform into `apps/cli/dist/cli-<platform>/bin/orchestra`.
+| Path | What it holds |
+| --- | --- |
+| [`apps/desktop`](apps/desktop/README.md) | Electron app, IPC, platform adapters and packaging |
+| [`apps/cli`](apps/cli/README.md) | The `orchestra` executable, commands and daemon |
+| [`apps/web`](apps/web/README.md) | Browser bootstrap and web distribution |
+| [`packages/app-shell`](packages/app-shell/README.md) | Shared Solid UI used by desktop and web |
+| [`packages/tui`](packages/tui/README.md) | Terminal UI |
+| [`packages/core`](packages/core/README.md) | Sessions, configuration, providers, tools and plugin hosting |
+| [`packages/schema`](packages/schema/README.md), [`protocol`](packages/protocol/README.md), [`server`](packages/server/README.md), [`client`](packages/client/README.md) | Data contracts, the public HTTP API, its server, and generated clients |
+| [`packages/sdk-next`](packages/sdk-next/README.md), [`plugin`](packages/plugin/README.md) | Embedded host and plugin authoring contracts |
+| `modules/maestro` | Maestro: agent roster, coordination, tools and playbooks |
+| [`modules/specialists`](modules/specialists/backend/README.md) | Specialist agents' skills |
+| [`modules/relay`](modules/relay/README.md) | Workflow and gate runtime |
+| [`modules/atlas`](modules/atlas/README.md) | Atlas knowledge layer |
+| `modules/app-dock` | MCP Dock and the Linux workspace |
+| [`native/omni`](native/omni/README.md) | Native process and terminal layer (Rust) |
+| `docs/guides`, `docs/specs` | User guides and design specs |
 
-### Checks
+Runtime dependencies point from Schema to Core and Protocol, then to Server. Client code depends on Schema and Protocol only.
 
-- Type check from a package directory: `bun typecheck`.
-- `bun run test:ci <package> [test files...]` is the hosted test entrypoint. A local `bun test` is guarded; follow [AGENTS.md](AGENTS.md) for execution rules.
-- `bun run check:godfile` flags source files that grow past the line limit.
-- For the restructuring campaign, each small PR uses only checks for its changed area and reuses recorded passing results. CI runs once on the final composed bundle after all deliveries; intermediate PRs do not request heavy suites or repeated CI.
+## Support, security, license
 
-## Where things live
-
-| Path                                                                                                                     | What it holds                                                                                                           |
-| ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| [`apps/desktop`](apps/desktop/README.md)                                                                                 | Electron main/preload/renderer, IPC, profile persistence, platform adapters, and packaging                              |
-| [`packages/app-shell`](packages/app-shell/README.md)                                                                     | Shared Solid UI and public `@orchestra/app` exports consumed by Web and Desktop                                         |
-| [`apps/web`](apps/web/README.md)                                                                                         | Browser bootstrap, development server and web distribution                                                              |
-| [`apps/cli`](apps/cli/README.md)                                                                                         | Live V2 preview executable, command handlers, daemon, and compiled CLI artifacts                                        |
-| [`packages/tui`](packages/tui/README.md)                                                                                 | Terminal UI (SolidJS/opentui) shared by the legacy and V2 CLIs; English-only for now                                    |
-| [`packages/core`](packages/core/README.md)                                                                               | Reusable domain/platform services, Session execution/storage, configuration, providers, and plugin hosting              |
-| [`packages/schema`](packages/schema/README.md)                                                                           | Portable contracts, canonical schema identity, and wire/storage datatypes                                               |
-| [`packages/protocol`](packages/protocol/README.md)                                                                       | Public HTTP contract, route schemas, errors, and middleware requirements                                                |
-| [`packages/server`](packages/server/README.md)                                                                           | HTTP handler/middleware implementation over Core and Protocol                                                           |
-| [`packages/client`](packages/client/README.md)                                                                           | Generated Promise/Effect network clients; runtime depends on Schema/Protocol, not Core/Server                           |
-| [`packages/sdk-next`](packages/sdk-next/README.md)                                                                       | Scoped embedded host composing Client, Core, and Server                                                                 |
-| [`packages/plugin`](packages/plugin/README.md)                                                                           | Public legacy/TUI/V2 plugin authoring contracts; hosts own loading and authority                                        |
-| [`modules/relay`](modules/relay/README.md)                                                                               | Relay workflow/gate runtime, profiles, fixtures, and retained Python oracle                                             |
-| [`modules/capability-assets`](modules/capability-assets/README.md)                                                       | Data-only capability catalog, pinned source provenance, and license notices                                             |
-| [`modules/maestro/arsenal`](modules/maestro/arsenal/README.md)                                                           | Maestro tool registry, MCP adapter, governance contracts, and host-authorized operations                                |
-| [`modules/specialists/backend`](modules/specialists/backend/README.md), [`archie`](modules/specialists/archie/README.md) | Authored native-seat skills and complete UTF-8 companions; source and embedded lookup share the existing seat framework |
-| [`assets/brand`](assets/brand/README.md)                                                                                 | Preserved PNG/SVG identity source assets; separate from app public logos and Desktop channel icons                      |
-| [`tooling/httpapi-codegen`](tooling/httpapi-codegen/README.md)                                                           | Existing HttpApi compiler and Client generators, with unchanged package identity and generated bytes                    |
-| [`tooling/http-recorder`](tooling/http-recorder/README.md)                                                               | Existing HTTP/WebSocket test recorder, replay cassettes and source/package adapters                                     |
-| [`native/omni`](native/omni/README.md)                                                                                   | Native process infrastructure, addon/supervisor, conformance, and artifact producers                                    |
-| [`script`](script/README.md)                                                                                             | Repository tooling and immutable manifest/asset/pin inventory                                                           |
-| [`modules/atlas`](modules/atlas/README.md)                                                                               | Atlas npm workspace, corpus/Own and source domain; `boundary/` retains the host bundles                                 |
-| `docs/specs/hugr-maestro`                                                                                                     | Maestro's contracts, roadmap and work packages                                                                          |
-| `docs/specs/backend-specialist`                                                                                               | The backend specialist's architecture and tool contracts                                                                |
-| `docs/specs/orchestra-visual`                                                                                                 | The visual design handoff documents; its evidence is retained outside Git (`docs/archives`)                             |
-| `docs/specs/v2`                                                                                                               | V2 designs: API, sessions, configuration, providers, tools and the plugin lifecycle                                     |
-| `CONTEXT.md`                                                                                                             | Vocabulary of the session runtime                                                                                       |
-| `AGENTS.md`                                                                                                              | Rules for agents that work in this repository                                                                           |
-
-Runtime direction is Schema → Core/Protocol → Server. Client runtime uses Schema/Protocol only; `sdk-next` is the permitted embedded composition. The table describes current paths; remaining planned `apps/`, `modules/`, `native/`, and `tooling/` moves remain separate deliveries.
+- Bugs and questions: [GitHub Issues](https://github.com/gustavomhss/hugr-orchestra/issues).
+- Security reports: see [SECURITY.md](SECURITY.md).
+- License: MIT. See [LICENSE](LICENSE) and [NOTICE](NOTICE). Some modules carry their own license files.
