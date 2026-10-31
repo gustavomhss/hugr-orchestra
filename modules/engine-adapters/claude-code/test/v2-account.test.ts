@@ -7,7 +7,8 @@ import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { ClaudeCodeAccount } from "@orchestra/core/claude-code-account"
 import { AppProcess } from "@orchestra/core/process"
-import { Effect, Layer, Scope } from "effect"
+import { Duration, Effect, Layer, Scope } from "effect"
+import { TestClock } from "effect/testing"
 import { ClaudeCodeSDK } from "../src/sdk"
 import { ClaudeCodeAccountV2 } from "../src/v2/account"
 import { ClaudeCodeLogin } from "../src/v2/login"
@@ -170,4 +171,50 @@ test.skipIf(process.platform === "win32")("a CLI failure surfaces as a LoginErro
     (account) => account.startLogin.pipe(Effect.flip),
   )
   expect(error.message).toBe("Login failed: managed settings forbid this login")
+})
+
+// Each status read starts a Claude Code process, and every provider listing asks for the status.
+test.skipIf(process.platform === "win32")("a signed-in status is read once per ten minutes, a signed-out one every 30 seconds", async () => {
+  await using fake = await cli()
+  const probe = { starts: 0, info: { subscriptionType: "max", email: "owner@example.com", apiProvider: "firstParty" } as Record<string, unknown> }
+  const counting = Layer.succeed(
+    ClaudeCodeSDK.Service,
+    ClaudeCodeSDK.Service.of({
+      query: (() => {
+        probe.starts++
+        return { accountInfo: async () => probe.info, close: () => {} }
+      }) as unknown as typeof query,
+    }),
+  )
+  const starts = await Effect.runPromise(
+    Effect.scoped(Effect.gen(function* () {
+      const account = yield* ClaudeCodeAccountV2.make.pipe(
+        Effect.provide(counting),
+        Effect.provide(Layer.succeedContext(yield* processes)),
+        Effect.provideService(ClaudeCodeSDK.Environment, { ORCHESTRA_CLAUDE_CODE_EXECUTABLE: fake.file }),
+      )
+      const seen: number[] = []
+      const read = Effect.gen(function* () {
+        yield* account.account
+        seen.push(probe.starts)
+      })
+      yield* read
+      yield* TestClock.adjust(Duration.seconds(31))
+      yield* read
+      yield* TestClock.adjust(Duration.minutes(5))
+      yield* read
+      yield* TestClock.adjust(Duration.minutes(6))
+      yield* read
+      probe.info = { tokenSource: "none", apiKeySource: "none" }
+      yield* TestClock.adjust(Duration.minutes(11))
+      yield* read
+      yield* TestClock.adjust(Duration.seconds(10))
+      yield* read
+      yield* TestClock.adjust(Duration.seconds(21))
+      yield* read
+      return seen
+    })).pipe(Effect.provide(TestClock.layer())),
+  )
+  // Signed in: one start, none after 31 seconds or 5 minutes, one more past ten. Signed out: read again after 30 seconds only.
+  expect(starts).toEqual([1, 1, 1, 2, 3, 3, 4])
 })
