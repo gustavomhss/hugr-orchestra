@@ -48,242 +48,98 @@ Agents are called seats. Each seat has a role, a prompt, a tool set and its own 
 
 Maestro's name is fixed, because the app and other sessions address it by name. Every other seat has a stable id and a display name you can change, along with its prompt, tools, skills and picture, on the Agents screen. See [the agent screen](docs/guides/agent-screen.md).
 
-Each seat's method lives in two places: its prompt and the skill tree it loads on demand, one branch at a time. The sections below describe the techniques each seat is taught and say which rules the host enforces and which rest on the prompt alone.
+Each seat works by a method: a few ideas that decide what it does and what it refuses. The method is written in the seat's prompt and in a skill tree it loads on demand. The host enforces the rules that matter most, so they hold even when a model ignores its prompt. The sections below explain each method and follow one running example through the seats: customers are sometimes charged twice when they double-click "Pay".
 
-### Maestro: playbooks
+### Maestro: the lead
 
-Maestro does not write the product itself. It routes work, checks what comes back and lands it. Its method is a set of playbooks that ship with the app (`modules/maestro/coordination/playbooks`).
+Maestro holds the judgment and hands out the work. It plans with the owner, sends each piece to the seat built for it, checks what comes back and lands it. It does not write the product itself. Its playbooks ship with the app.
 
-**Routing** (`maestro-orchestra`). Plans, decomposition and briefs go to the product and architecture seat. Facts, comparisons and sourced research go to the research seat. Code, tests and fixes go to the specialist seat for that area, or to `general`. Cold review goes to the review seat, or to `explore` when the review seat cannot be dispatched. Work on the Linux desktop goes to `linux`. The meeting copilot is reached only by note exchange. Before Maestro says that Orchestra cannot do something, it checks its tools: for example, it looks for `channel_send` before saying it cannot post to a channel.
+**Nothing is done until it is proven.** An agent's report says where the evidence is. It is not the evidence. Before Maestro accepts a test as proof, it plants a small defect in the code and confirms that the test catches it for the right reason. A test that stays green against broken code proves nothing. For the same reason, a claim that something is absent ("no other caller") needs a search that has first been shown to find a known caller. A local pass is not a CI pass, and only the owner accepts a delivery.
 
-**Units of work.** Every card has five headings: Completeness, Success, Invariants, Quality and Definition of Done. A journey, an example or a counter-example is added only when it makes a criterion checkable, and the depth of a card follows the size and risk of the work.
+**Review is cold.** The reviewer never sees the author's reasoning. It gets the request and the result and is asked to refute them, because a reviewer who reads the author's argument tends to agree with it. Maestro also never sends a change back to its own author for review.
 
-**Planning** (`maestro-plan`).
-- Maestro pins the baseline (`git rev-parse HEAD`, `git status --short`) and runs the preservation checks before planning starts.
-- A cold reviewer is asked to refute the plan's coverage. It sees only the verbatim request and the acceptance items, never the author's reasoning, and returns `covers`, `gaps_found` or `unknown`, with lists of missing, vague and overreaching items.
-- Maestro sends the plan back to the seat when:
-  - an item has no owner or oracle;
-  - two slices write the same file;
-  - dependencies form a cycle;
-  - a slice is too large;
-  - a design fork is open;
-  - concurrent cards overlap in area with no declared order.
-- An adopted plan becomes one board card per slice, with `area`, `order` and `depends_on`.
+**Units of work have a fixed shape.** Every card states its completeness criteria, success criteria, invariants, quality standards and definition of done. An example or a counter-example is added only when it makes a criterion checkable. Small fixes get short cards and risky changes get long ones.
 
-**Execution** (`maestro-run/loop`).
-- Small work is inspect, edit, verify.
-- Larger work runs on a rolling schedule. Providers of a hard dependency are integrated before their consumers are dispatched. A consumer bound only by a contract may start early against the frozen contract. Conflicting write sites stay reserved until integration.
-- A worker's return is not yet sealed. Sealing takes green verification and the lead's review, and "merged" takes an integration receipt.
-- A branch that left its baseline is held. Maestro reads the full delta and keeps only changes it understands and the slice owns. Integration is serial, lowest blast radius first.
-- Rollback never uses `reset --hard` or `clean -fd`.
+**Landing is serial and gated.** Work whose base has moved is held until Maestro has read the whole delta. Maestro never merges a card's pull request itself. Cards go into a merge queue, where the host bundles them, runs the full gate once and merges.
 
-**Verification** (`maestro-run/verify`).
-- An author's report points to evidence; it is not the evidence. Nothing lands on a self-report.
-- Mutation probe: Maestro plants a representative defect, confirms that the specific test fails for the intended reason, removes only its own mutation and reruns.
-- A claim that something is absent, or a count, needs a positive control first.
-- The independent reviewer gets the diff and the frozen spec, not the author's transcript. Each configuration is checked separately, so one green cell cannot hide a red one.
-- CI claims are read with `gh pr checks` at the exact head.
-- The verdict is one of approve, fix-first, reject, escalate or hold.
+**Governed mode is opt-in, for work that must be auditable.** Each step leaves an immutable record. The owner approves an exact plan, and the approval allows one dispatch with byte-identical input. If the input changes, or the owner sends a newer message, the approval no longer counts.
 
-**Merge queue.** A card is verified with a scoped `ci_run`, then recorded with `board_issue` and queued with `board_queue`. Maestro never merges a card's pull request itself. The host bundles cards, runs the full gate once and merges.
-- When a bundle is flaky, `board_bundle merge` is allowed only if the failing test is unrelated to the bundle's cards.
-- When a bundle dissolves, its cards are held and released one at a time.
-- A red base opens a fix card.
-
-**Governed runs** (`maestro-run/governed`, opt-in). Each step writes an immutable record:
-1. admission and catalog scope;
-2. plan revision and context;
-3. the work card;
-4. validation and a plan-stage cold review;
-5. the approval presentation and the owner's exact approval;
-6. authorization;
-7. a `task` with byte-identical input;
-8. code-stage review and verification.
-
-The tree must be clean and the diff bounded. Ids are copied, never composed. A newer message from the owner makes the approval stale. One authorization allows one dispatch, and a changed input fails with `WORKFLOW_APPROVAL_BINDING_MISMATCH`.
-
-**Intake** (`frame-request`). A governed request is classified as orientation or work. Maestro asks at most one question, and only when the possible answers would lead to incompatible outcomes.
-
-**Repository rules** (`maestro-repo`).
-- Maestro never uses `--no-verify`, force-pushes, rewrites published history or moves published tags.
-- Commit, push and release authority is never implicit.
-- A proposal from the planning arsenal is not an authorization.
+*In the example*, Maestro sends the "why" question to the research seat and the plan to the product and architecture seat. It routes the fix to the backend seat with the plan's brief. When the fix returns, it removes the fix's key line, checks that the new test goes red, restores the line and only then queues the card.
 
 ### Product and architecture seat (`archie`)
 
-This seat turns a request into something the other seats can build. Everything it returns is a proposal, never owner approval or permission to execute. It writes only the paths the assignment lists, and the host enforces those paths. Push, pull request, merge and release commands are denied.
+This seat turns a request into a plan that someone else can build without making further decisions. Everything it returns is a proposal. It never implements, dispatches or approves, and it can write only the files its assignment lists.
 
-**Claims and revisions** (`archie-plan`).
-- Every substantive statement is labelled fact, observed source, proposal, assumption, owner decision or blocker. A missing fact stays `UNKNOWN`. A source observed in the code does not prove that anything was executed.
-- Each revision is a complete proposal, not a delta, with author, version, baseline and the reason it changed. Older revisions are kept.
-- Project knowledge comes from `atlas_context`. Stale ownership data gives `HOLD`.
+**It separates what is known from what it thinks.** Every statement is labelled as an owner decision, a fact observed in the code, an assumption, a proposal or a blocker. Missing information stays unknown instead of being filled in. This is what lets Maestro and the owner see which parts of a plan rest on evidence and which rest on a guess.
 
-**Product spec** (`product-design-spec`).
-- It starts from the outcome: a job map (define, locate, prepare, confirm, execute, monitor, modify, conclude), a measurable outcome and a working-backwards press release and FAQ.
-- Four risks are named: value, usability, feasibility and viability. Each is tied to the evidence that would retire it, and the riskiest feasibility spike goes first.
-- The mechanism is laid out in a coupling matrix. Each design choice cites the outcome, job step or risk it serves; a choice with none is dropped or turned into a question.
-- Decisions are recorded as ADRs with status `proposed`. An accepted ADR is never edited; a successor links to the one it replaces.
-- Requirements are derived from the source one clause at a time, keeping the verbatim quote. They use EARS where it fits: one `shall`, an explicit trigger and an outcome. Contradictions are returned to the owner, not reconciled silently.
-- Each requirement has happy-path, edge and recovery scenarios in Given/When/Then and an oracle, so it can be traced from the request to the requirement, its acceptance, its slice and its evidence.
-- Verification is proportional to the stakes: examples, exhaustive cases, property-based tests or reference models, and a formal model only when the risk justifies it.
-- The roadmap is vertical epics in Now, Next and Later, ordered by prerequisites, with no invented dates.
+**It starts from the outcome, not the solution.** A spec names the job the user is trying to do, a measurable outcome, and four risks: is it valuable, usable, feasible and viable? Each risk is paired with the evidence that would retire it, and the riskiest unknown is tested first. Every design choice must point to the outcome or risk it serves. A choice that points to nothing is dropped or turned into a question for the owner.
 
-**Decomposition** (`decomposition`).
-- An acceptance map records, for each item, its source, oracle, baseline status and exactly one closure owner. An item with no runnable oracle is `UNKNOWN`. A semantic item that cannot be tested is `judged` and has a named judge.
-- Preserving behavior that already passes is tracked apart from red-to-green proof.
-- Slices are cut by cohesive responsibility and acceptance ownership, not by line ranges. Each slice lists its exact writes, reads, exclusions and latitude.
-- Shared registries are taken out of worker ownership.
-- Four kinds of edge are tracked: hard dependency, contract dependency, write-to-read dependency and write conflict. Disjoint writes do not prove there is no semantic conflict.
-- Cards carry `area` (the affected packages), `depends_on` and `order` for the merge queue. A card that drifts out of its area needs a plan revision.
+**Every requirement can be checked.** Requirements are written one clause at a time, in a form like "when X, the system shall Y". Each one gets scenarios for the normal case, the edge cases and recovery, plus an oracle: the test or check that will say whether it holds. A requirement with no oracle is not finished.
 
-**Contracts** (`load-bearing-contracts`). The seat freezes only a seam that is load-bearing now, meaning a change there would force a consumer to change. It keeps the declaration it observed (path, symbol, revision, digest) apart from the sketch it proposes, and it specifies behavior beyond syntax: errors, null and default semantics, ordering and idempotence. A matching hash catches declared drift, not behavioral incompatibility.
+**It cuts work by responsibility.** The plan is sliced into pieces that each own a set of acceptance items and a set of files, so two agents never edit the same file and every item has one owner. Where pieces depend on a shared interface, the seat freezes only that interface, including its error, ordering and retry behavior, so the pieces can be built in parallel.
 
-**Briefs** (`briefs`). A brief must be ready for the executor. It pins the baseline and supplies the exact target sites and verbatim anchors, so the executor never rediscovers scope or decides architecture. Its fields are:
-- goal and acceptance ids;
-- the paths it may write and read, and the scope it must not touch;
-- latitude and governing facts, tiered so that binding facts come first and advisory facts are labelled and placed last;
-- checks that can be pasted into that checkout, with command, cwd, expected result and baseline;
-- a context budget;
-- the shape of the return.
+**A brief leaves the executor nothing to discover.** It names the baseline commit, the exact code sites, the files the executor may write and must not touch, the commands that prove the work and the shape of the reply.
 
-A check runner that cannot be resolved is a blocker, never an invented command.
-
-**Work packages and workflows.**
-- `archie-work-package` writes one linear package in the Relay sprint schema. Each control is graded by exactly one of `cmd`, `judge` or `host_check`; a `self_check` is not evidence.
-- `archie-workflow` cuts a reusable workflow into two to five phases and at most seven steps, each one a move that a check can grade. Every step needs a deterministic `cmd` check, and checks that cannot fail (`true`, `exit 0`, `echo`) are refused. A `cmd` check that the artifact exists and has its shape is paired with a blocking `judge` that asks a concrete question and lists its failure cases. Instructions must work cold. The draft is saved with `archie_draft_workflow`, and only the owner publishes it.
-
-**What it returns.** An `upstream-result` block with the outcome, artifacts, blockers, risks and next actions. A plan revision that does not name this seat's run as its source is held.
+*In the example*, the seat might propose the outcome "one click or ten, at most one charge". The risk is feasibility: does the payment provider honor an idempotency key? The requirement reads "when the same checkout is submitted twice, the system shall create one charge". Its oracle is a test that sends two concurrent submissions and counts charges at the provider mock. The work splits into two slices, the API handler and the provider adapter, with the key's format frozen between them.
 
 ### Backend seat (`backend`)
 
-This seat implements a decision someone else already made. It never investigates, diagnoses or decides architecture.
+This seat builds what the plan decided. It does not investigate, diagnose or choose a design. It expects a packet with the behavior to build, its acceptance, the files it may write and the checks to run. When anything is missing, it returns a blocker naming what is missing instead of exploring to fill the gap. Keeping exploration out of this seat keeps its changes inside the scope that was reviewed.
 
-**The packet comes first.** The work must arrive with:
-- the target behavior and its acceptance;
-- the paths it may write;
-- the checks to run;
-- for a repair, the diagnosis and the fix direction.
+**It distrusts signals that only look like proof.** A clean compile does not show that behavior was preserved. Zero executed test cases is missing evidence, not a pass. A timeout does not prove that the remote call failed. A generated stub is not a working endpoint. A check counts only when the healthy case passes and a known-bad case fails for the stated reason.
 
-Each missing item becomes a `packet` blocker, and the seat does not fill gaps by exploring. It reads only the named targets. An edit needed outside them is also a blocker.
+**It checks state from outside the application.** To prove that a rollback happened, it injects a later failure and then looks at the database through a second connection. The application's own report is not enough. Tests run against the real engine in a container; it never swaps PostgreSQL for SQLite.
 
-**Modes** (`backend-implement`). The seat picks a mode from the packet's facts, not its wording:
-- **Feature.** Wire the supplied contract to the real boundary. A generated stub is not the feature.
-- **Repair.** Fix at the seam the diagnosis names and rerun the same detecting case. If what the seat observes contradicts the diagnosis, it stops and offers no new hypothesis.
-- **Refactor.** Move between the supplied seams without tightening validation. A clean compile is not proof that behavior was preserved.
-- **Migration.** Implement only the supplied phase, with old and new fixtures.
-- **Optimization.** Measure with the same workload as the baseline, and never report an estimated speedup.
-- **Tests.** Write cases against the real implementation with a healthy control and a detecting control. Never weaken a test.
+**Its skills carry the hard-won rules of each domain.**
+- *Transactions*: only the owner of a transaction commits it, and one write through the pool silently escapes it.
+- *Retries*: reuse the same business key as the idempotency key on every attempt, and never mint a new one per retry.
+- *Cancellation*: wait for the work to actually stop, and remember that a cancel does not undo committed effects.
+- *Webhooks*: verify the signature on the raw bytes before parsing.
+- *gRPC*: HTTP 200 is not RPC success.
+- *Refactoring*: a rename goes through the language server, which understands bindings. A text match would also hit a shadowed variable.
+- *Generated code*: it is never edited by hand. It is regenerated with the pinned engine, and the seat checks that the diff stays inside the generated files.
 
-**Data** (`backend-data`).
-- Bind every operation to the native handle: the same pool is not the same transaction.
-- Only the owner of a transaction commits it. One write through the pool escapes the transaction and still compiles.
-- The isolation level is a blocker for the owner, not the seat's choice.
-- A migration phase authors only its assigned step. Expand, backfill and contract planning is not the seat's job. `CREATE INDEX CONCURRENTLY` cannot run inside a transaction.
-- Checks inject a later failure and look from a second connection, to tell an escaped write from a rollback, and replay a populated predecessor schema.
+**It stops where its knowledge stops.** If what it sees contradicts the diagnosis it was given, it stops and does not invent a new theory. It fixes only check failures that it caused, at most three times per check. A permission denial comes back verbatim, and it never installs a tool. The host enforces the write paths, the OS sandbox and the denial of publish commands. Its result card can lower its own outcome but cannot mark the work verified, because only the host's check run and the caller decide that.
 
-**Concurrency** (`backend-concurrency`).
-- Name the owner of every task.
-- Clean up on every exit path.
-- After a cancel, wait for the work to actually stop. A cancel does not roll back committed effects.
-- Enqueue jobs inside the caller's transaction.
-- Reuse the stable business key as the idempotency key on every retry. A timeout does not prove the effect failed.
-- Close cursors before the transaction ends.
-
-Each rule has a check that drops an acknowledgment or a response and asserts one effect.
-
-**Checks** (`backend-check`). The seat reuses the supplied fixtures and observes state through a second connection. The healthy case must pass and the known-violating case must fail for its named reason.
-- Real services run in their existing containers. Readiness means a wait strategy plus an authenticated query. It never substitutes another engine, such as SQLite for PostgreSQL.
-- Faults go through a TCP fault proxy, and the seat removes only the faults it installed.
-- HTTP mocks keep the request journal on, so an unmatched request cannot pass. A recording is never redone to make a test pass.
-- Generated inputs cover property-based tests, stateful sequences, round trips and fuzzing. "Generators produce inputs, not oracles." Zero executed cases counts as missing evidence, never as a pass.
-
-**Refactoring** (`backend-refactor`).
-- A change decided by code shape uses a syntax match checked span by span. A rename uses the language service's binding-aware rename.
-- The seat snapshots first and previews without writing. It applies bounded edits and reruns until nothing more is proposed.
-- An out-of-scope sentinel file must stay byte-identical.
-
-**Generated code** (`backend-codegen`).
-- Engines come from the pinned toolkit (`$BACKEND_TOOLKIT_BIN/<id>`), and the project's pin is checked first. A version mismatch is reported and nothing is regenerated.
-- Generated files are never edited by hand, and the diff must stay inside them.
-- Examples of what each engine is used for:
-  - `ogen` regenerates only its `oas_*_gen.go` files;
-  - `buf` runs lint and `breaking` against `HEAD`, and deleted field numbers are reserved;
-  - `sqlc` runs `generate --no-remote`, then `diff`;
-  - `squawk` lints migrations;
-  - `kubeconform -strict` validates against local schemas only.
-
-**APIs** (`backend-api`). The schema, SDL or `.proto` file is the source of truth, and validation and authorization happen before any effect. Each protocol has its own traps:
-- HTTP 200 is not gRPC success.
-- GraphQL loaders are per request.
-- SSE and WebSocket streams separate a frame from a message and EOF from completion.
-- Webhook signatures are verified on the unchanged bytes before parsing.
-- Uploads enforce limits on the bytes actually received.
-- A valid JWT is not authorization.
-
-**Language stacks** (`team-stack`). The skill pins a version set for Go, JavaScript and TypeScript, Python, PHP and Ruby, with each language's rules for contexts, cancellation, input parsing and transactions. The project's lock file wins.
-
-**Checks and blockers.** The seat runs exactly the packet's checks plus the mandatory project checks. It fixes only failures it caused, with at most three attempts per check, and records any other failure without diagnosing it. Permission denials and safety holds come back verbatim as blockers. A missing tool is a blocker; the seat never installs anything.
-
-**Enforced by the host.**
-- Write roots, checked both lexically and physically.
-- On macOS and Linux, an OS sandbox with no unconfined fallback, scratch temp space and confined reads. On Windows, only the write roots apply.
-- Publish commands are denied, and `.env` files are not readable.
-- The seat has a closed skill allowlist.
-- The result card is decoded strictly and can only lower the outcome. Acceptance is stamped `pending` and verification `not-host-verified`, because only the host's check run and the caller decide.
+*In the example*, the brief says "repair: the handler creates a new provider request per submission; reuse the checkout id as the idempotency key". The seat writes the change in the two files it was given. It runs the supplied concurrency test, which shows two submissions and one charge, and a control that drops the provider's response and retries with the same key. It returns the changed paths, each check with its exit code, and no claim that the work is verified.
 
 ### Research seat (`jimmy`)
 
-This seat answers questions about the code and the web with cited evidence. It cannot edit anything.
+This seat answers questions with evidence and cannot edit anything. Its method exists to prevent the usual failures of a model asked about code: answering a question built on a false premise, citing lines it never read, and claiming "nothing else does this" after a search that could not have found anything.
 
-**Method.**
-1. Unless the tier is quick, it opens an inquiry with the question and at most six true-or-false subquestions.
-2. It checks the premise first. If the question names a symbol or file that does not exist, it says so with the evidence.
-3. It searches in batches: one `code_locate` with every term, then `code_query` for definitions, callers and references, `code_search` for exact text, and git history. Independent lookups go in one turn.
-4. It captures only the few ranges that decide the answer.
-5. It probes with the type checker, one test or a short script only when the code alone cannot decide.
-6. It labels each claim as an observation, an extraction from a document or an inference.
+**It checks the question first.** If the question names a function or a file, the seat confirms that it exists before answering. A false premise is the first thing it reports.
 
-To answer "why is it like this", it follows blame to the commit and its pull request. External facts come from primary sources at the version in use.
+**It breaks the question into checkable parts.** For anything beyond a quick lookup, it opens an inquiry with up to six yes-or-no subquestions. The answer is complete only when each subquestion is answered.
 
-**Skills.** `jimmy-calibration` requires a positive control before any claim that something is absent, and it catches searches that return empty instead of failing. It also checks how far a gate actually reaches and requires counts to have an enumerated scope. `jimmy-web-research` requires a primary source with a pinned version and date, and requires that a transferred finding be labelled as an inference.
+**It looks wide and reads narrow.** It runs every lookup it needs in one batch: where the term appears, the definitions and callers, the exact text, and the git history. Then it captures only the few line ranges that decide the answer. When reading cannot settle a question, it runs a probe: the type checker, one test or a short script.
 
-**Effort tiers.** Maestro chooses the tier. When a budget runs out, the seat returns a partial answer instead of escalating.
+**Each claim says how it is known.** A claim is something the seat ran, something it read, or something it inferred, and each one cites the file and line. To answer "why is it like this", it follows blame to the commit and its pull request. External facts come from primary sources at the version actually in use.
 
-| Tier | Provider calls | Tool calls | Deadline | Probe time |
-| --- | --- | --- | --- | --- |
-| quick (default) | 24 | 64 | 600 s | 120 s |
-| focused (adds alternatives and contrary evidence) | 48 | 128 | 1200 s | 600 s |
-| deep (adds dependencies across a subsystem) | 96 | 256 | 2400 s | 1800 s |
+**The host checks the citations.** When the seat closes an inquiry, mechanical rules verify that:
+- every cited line is inside text the seat actually captured;
+- words like "only", "always" or "never" are backed by a complete search;
+- a claim that something is absent names the scope of the search;
+- every cited URL is alive.
 
-**The close check.** Closing an inquiry runs mechanical rules (R1 to R11). The rules prove that each citation exists and covers what it says; they do not judge whether the conclusion follows. The rules include:
-- each claim's source was admitted, and tool output or memory cannot be its only evidence;
-- cited lines fall inside the captured range;
-- words like "only", "always", "never" or "all" need a complete search;
-- a claim that something is absent needs a complete search with its scope stated;
-- every subquestion has an answer;
-- every path and line in the answer sits inside held evidence;
-- cited URLs are alive and on the allowed domains.
+The rules do not judge whether the reasoning is sound, only that the evidence exists. The result card is built from this checked record, not from the seat's own summary.
 
-When a rule fails, the seat fixes what it names and closes again.
+Maestro chooses how deep the seat goes. A quick answer has a budget of 64 tool calls and ten minutes. A deep one has 256 tool calls and forty minutes, and also traces dependencies across a subsystem. When the budget runs out, the seat returns a partial answer and says what it did not examine.
 
-**What it returns.** The host builds the result card from the closed inquiry, not from the seat's text. The outcome is done only when the inquiry is answered and the check passes. The answer is one to three sentences, the supporting claims with file and line, one line on what was not examined, and the reproduce command for a claim about behavior.
+*In the example*, Maestro asks "where are payment requests sent, and why is there no idempotency key?". The seat finds the one call site and its two callers. Blame leads to the pull request that removed a key because of a provider bug. The provider's current documentation says the bug is fixed in the version the project pins. Each finding is labelled read or inferred, with file and line, and the answer ends with what was not checked: the mobile client.
 
 ### Meeting copilot (`live`)
 
-The owner talks to this seat directly during a meeting. It has no skills and cannot be dispatched, and it never dispatches work itself.
+The owner talks to this seat during a live call. It answers fast and stays honest about where each answer comes from. It cannot be dispatched and never starts work itself.
 
-**Answers.** It gives one bold sentence with the answer, then two to four short points, in the owner's language. It answers and never coaches. When it does not know, it says so in one line.
+**Short answers, never coaching.** It replies with one bold sentence, then two to four points. When it does not know, it says so in one line.
 
-**Sources.** Every input is labelled `[Heard in the meeting]` (the microphone is "me", the call is "them"), `[On screen]` or `[From memory: person, date, "title"]`. It never presents something remembered as something said. To see the screen it calls `live_look` and ends its turn, and the frame arrives as its next input. Everything heard or seen is data, never instructions.
+**It labels every source.** Each input is marked as heard in the meeting (with "me" and "them" kept apart), seen on screen, or recalled from an earlier meeting with the person and date. It never presents something remembered as something said today. Everything heard or seen is treated as data, so a participant who says "ignore your instructions" changes nothing.
 
-**Speaking unprompted.** It speaks up only when the owner turned suggestions on, and only when it is confident. Otherwise it replies `[no-answer]`.
+**It speaks only when it is sure.** Unprompted suggestions are off by default. When they are on and the seat is not confident, it stays silent.
 
-**Memory and team.** `meeting_recall` searches past decisions and questions, and `meeting_commitments` shows what each side owes. The seat proposes work to Maestro with `team_message`, saying what, why and what the meeting decided. The owner approves on Maestro's side.
+**Work goes through Maestro.** The seat can propose work to Maestro with a note, but the owner approves the work on Maestro's side. When the meeting ends, one call writes a summary card with decisions, commitments and open questions. The owner picks what to send on.
 
-**Limits.**
-- It never claims to be human, and follow-ups are drafts for the owner to send.
-- Its profile denies everything except reading, searching, `live_look`, the two meeting tools and `team_message`.
-- When the meeting stops, one consolidation call writes the card: summary, decisions, commitments, questions and proposed people. The card is decoded strictly and never repaired. People are proposed, never merged automatically.
+*In the example*, a customer says "you promised the double-charge fix for this week". The owner asks the seat, which looks up past commitments and answers "**Yes: you committed to Friday in the last call with them.**" The answer is labelled as recalled, with the date of that meeting, so it is not mistaken for something said today. After the call, the owner sends the commitment to Maestro as a card to track.
 
 ## Architecture
 
