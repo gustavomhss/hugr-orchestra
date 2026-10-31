@@ -76,6 +76,7 @@ export interface Grep {
 
 export interface Picker {
   destroy(): void
+  scanFiles(): Result<void>
   isScanning(): boolean
   waitForScan(timeoutMs?: number): Promise<Result<boolean>>
   refreshGitStatus(): Result<number>

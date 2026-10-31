@@ -27,6 +27,10 @@ export class Service extends Context.Service<Service, Interface>()("@orchestra/v
 
 const searchError = (error: { readonly message: string }) => new SearchError({ message: error.message })
 
+// fff runs without its watcher: a search rescans when the index is older than this, and waits at most that long.
+const FFF_RESCAN_AFTER_MS = 2_000
+const FFF_SCAN_WAIT_MS = 3_000
+
 export const ripgrepLayer = Layer.effect(
   Service,
   Effect.gen(function* () {
@@ -172,6 +176,7 @@ export const fffLayer = Layer.effect(
           aiMode: true,
           disableMmapCache: true,
           disableContentIndexing: true,
+          disableWatch: true,
         }),
       catch: (cause) => cause,
     }).pipe(
@@ -186,90 +191,112 @@ export const fffLayer = Layer.effect(
       })
     }
     yield* Effect.addFinalizer(() => Effect.sync(() => result.value.destroy()).pipe(Effect.ignore))
+    const finder = result.value
+    // fff's watcher stays off: it re-reads git status on every file event, and a tree that holds worktrees or build
+    // output keeps it busy without pause. A search after a quiet period rescans first instead, so files written since
+    // the last scan are still found. Concurrent searches share one scan, and a slow scan delays a search by at most
+    // FFF_SCAN_WAIT_MS.
+    const state = { scannedAt: Date.now(), scan: finder.waitForScan(FFF_SCAN_WAIT_MS) }
+    const fresh = Effect.promise(() => {
+      if (Date.now() - state.scannedAt >= FFF_RESCAN_AFTER_MS && !finder.isScanning()) {
+        state.scannedAt = Date.now()
+        state.scan = finder.scanFiles().ok ? finder.waitForScan(FFF_SCAN_WAIT_MS) : state.scan
+      }
+      return state.scan
+    })
     return Service.of({
       glob: (input) =>
-        Effect.sync(() => {
-          const prefix = input.path?.replaceAll("\\", "/").replace(/\/$/, "")
-          const found = result.value.glob(prefix ? `${prefix}/${input.pattern}` : input.pattern, {
-            pageIndex: 0,
-            pageSize: input.limit,
-          })
-          if (!found.ok) throw found.error
-          return found.value.items.map((item) =>
-            FileSystem.Entry.make({
-              path: RelativePath.make(item.relativePath.replaceAll("\\", "/")),
-              type: "file",
-            }),
-          )
-        }),
-      grep: (input) =>
-        Effect.sync(() => {
-          const prefix = input.path?.replaceAll("\\", "/").replace(/\/$/, "")
-          const found = result.value.grep(
-            [prefix ? `${prefix}/**` : undefined, input.include, input.pattern]
-              .filter((value) => value !== undefined)
-              .join(" "),
-            { mode: "regex", pageSize: input.limit, timeBudgetMs: 1_500 },
-          )
-          if (!found.ok) throw found.error
-          return found.value.items.map((match) => {
-            const bytes = Buffer.from(match.lineContent)
-            return FileSystem.Match.make({
-              entry: FileSystem.Entry.make({
-                path: RelativePath.make(match.relativePath.replaceAll("\\", "/")),
+        Effect.andThen(
+          fresh,
+          Effect.sync(() => {
+            const prefix = input.path?.replaceAll("\\", "/").replace(/\/$/, "")
+            const found = result.value.glob(prefix ? `${prefix}/${input.pattern}` : input.pattern, {
+              pageIndex: 0,
+              pageSize: input.limit,
+            })
+            if (!found.ok) throw found.error
+            return found.value.items.map((item) =>
+              FileSystem.Entry.make({
+                path: RelativePath.make(item.relativePath.replaceAll("\\", "/")),
                 type: "file",
               }),
-              line: match.lineNumber,
-              offset: match.byteOffset,
-              text: match.lineContent.length > 2_000 ? match.lineContent.slice(0, 2_000) + "..." : match.lineContent,
-              submatches: match.matchRanges.map(([start, end]) => ({
-                text: bytes.subarray(start, end).toString("utf8"),
-                start,
-                end,
-              })),
-            })
-          })
-        }),
-      find: (input) =>
-        Effect.sync(() => {
-          const options = { pageIndex: 0, pageSize: input.limit ?? 50 }
-          const items = (() => {
-            if (input.type === "file") {
-              const found = result.value.fileSearch(input.query.trim(), options)
-              if (!found.ok) throw found.error
-              return found.value.items.map((item, index) => ({
-                path: item.relativePath,
-                type: "file" as const,
-                score: found.value.scores[index]?.total ?? 0,
-              }))
-            }
-            if (input.type === "directory") {
-              const found = result.value.directorySearch(input.query.trim(), options)
-              if (!found.ok) throw found.error
-              return found.value.items.map((item, index) => ({
-                path: item.relativePath,
-                type: "directory" as const,
-                score: found.value.scores[index]?.total ?? 0,
-              }))
-            }
-            const found = result.value.mixedSearch(input.query.trim(), options)
+            )
+          }),
+        ),
+      grep: (input) =>
+        Effect.andThen(
+          fresh,
+          Effect.sync(() => {
+            const prefix = input.path?.replaceAll("\\", "/").replace(/\/$/, "")
+            const found = result.value.grep(
+              [prefix ? `${prefix}/**` : undefined, input.include, input.pattern]
+                .filter((value) => value !== undefined)
+                .join(" "),
+              { mode: "regex", pageSize: input.limit, timeBudgetMs: 1_500 },
+            )
             if (!found.ok) throw found.error
-            return found.value.items.map((item, index) => ({
-              path: item.item.relativePath,
-              type: item.type,
-              score: found.value.scores[index]?.total ?? 0,
-            }))
-          })()
-          return items
-            .sort((a, b) => b.score - a.score || a.path.length - b.path.length)
-            .map((item) => {
-              const relative = item.path.replaceAll("\\", "/").replace(/\/$/, "")
-              return FileSystem.Entry.make({
-                path: RelativePath.make(relative + (item.type === "directory" ? path.sep : "")),
-                type: item.type,
+            return found.value.items.map((match) => {
+              const bytes = Buffer.from(match.lineContent)
+              return FileSystem.Match.make({
+                entry: FileSystem.Entry.make({
+                  path: RelativePath.make(match.relativePath.replaceAll("\\", "/")),
+                  type: "file",
+                }),
+                line: match.lineNumber,
+                offset: match.byteOffset,
+                text: match.lineContent.length > 2_000 ? match.lineContent.slice(0, 2_000) + "..." : match.lineContent,
+                submatches: match.matchRanges.map(([start, end]) => ({
+                  text: bytes.subarray(start, end).toString("utf8"),
+                  start,
+                  end,
+                })),
               })
             })
-        }),
+          }),
+        ),
+      find: (input) =>
+        Effect.andThen(
+          fresh,
+          Effect.sync(() => {
+            const options = { pageIndex: 0, pageSize: input.limit ?? 50 }
+            const items = (() => {
+              if (input.type === "file") {
+                const found = result.value.fileSearch(input.query.trim(), options)
+                if (!found.ok) throw found.error
+                return found.value.items.map((item, index) => ({
+                  path: item.relativePath,
+                  type: "file" as const,
+                  score: found.value.scores[index]?.total ?? 0,
+                }))
+              }
+              if (input.type === "directory") {
+                const found = result.value.directorySearch(input.query.trim(), options)
+                if (!found.ok) throw found.error
+                return found.value.items.map((item, index) => ({
+                  path: item.relativePath,
+                  type: "directory" as const,
+                  score: found.value.scores[index]?.total ?? 0,
+                }))
+              }
+              const found = result.value.mixedSearch(input.query.trim(), options)
+              if (!found.ok) throw found.error
+              return found.value.items.map((item, index) => ({
+                path: item.item.relativePath,
+                type: item.type,
+                score: found.value.scores[index]?.total ?? 0,
+              }))
+            })()
+            return items
+              .sort((a, b) => b.score - a.score || a.path.length - b.path.length)
+              .map((item) => {
+                const relative = item.path.replaceAll("\\", "/").replace(/\/$/, "")
+                return FileSystem.Entry.make({
+                  path: RelativePath.make(relative + (item.type === "directory" ? path.sep : "")),
+                  type: item.type,
+                })
+              })
+          }),
+        ),
     })
   }),
 )
