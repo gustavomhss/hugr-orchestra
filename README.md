@@ -56,7 +56,7 @@ Maestro's name is fixed, because the app and other sessions address it by name. 
  Coordination project board · merge queue · Guardrails · Relay gates and workflows · Atlas
  Session core durable inputs · serialized runner · System Context epochs · continuity · Lean
  Tools        built-ins · Maestro tools · MCP servers · MCP Dock · toolkit engines · skills · plugins · hooks
- Engines      provider protocols (~35 provider plugins) · Claude Code execution host
+ Engines      provider protocols (~30 provider plugins) · Claude Code execution host
  Platform     omni (native processes and PTYs, Rust) · OS sandbox · SQLite store · credential store
 ```
 
@@ -95,7 +95,7 @@ Thresholds: at 40% of the context window a summary starts in the background, wit
 
 Shell commands, file reads, web fetches and searches often return far more text than the model needs: a test run prints thousands of passing lines around one failure. Lean shrinks that output before it enters the context, without losing it.
 
-- **Lossless filters first.** Twenty output profiles (cargo, go, npm, pytest, vitest and others) remove known noise, while 25 families of lines are always kept: errors, failures, warnings, stack traces, diffs and similar.
+- **Lossless filters first.** Twenty output profiles (cargo, go, npm, pytest, vitest and others) remove known noise, while errors, failures, warnings, stack traces and diffs are always kept.
 - **A summary for large output.** Output above 4 KiB that is still large after filtering is summarized, keeping every failure block whole.
 - **Nothing is lost.** The original output is stored (64 MiB store, kept for seven days). The model sees an id and can call `lean_recall <id>` with a line range to read the original byte for byte.
 - **Fail-open.** Lean acts only on output from known native tools, and a Lean error never fails the tool call: the model then gets the plain output.
@@ -135,7 +135,7 @@ Maestro carries tools no specialist has.
 
 The MCP Dock turns each interface open in the app into an MCP server that agents can use. Each browser tab becomes a server of its own (`dock-<site>`), and an isolated Linux desktop becomes `dock-linux`.
 
-The tools are `look`, `find`, `act`, `wait` and `navigate`. They read the accessibility tree, not screenshots, so no vision model is needed and no image enters the context. `act` returns only what changed after the action, and every result is capped at 40,000 characters. Each server also exposes its page outline as an MCP resource. The Linux desktop runs in a container and needs Docker.
+The tools are `look`, `find`, `act`, `wait` and `navigate`. They read the accessibility tree, not screenshots, so no vision model is needed and no image enters the context. `act` returns only what changed after the action, the outline from `look` is capped at 40,000 characters, and page text at 20,000. Each server also exposes its page outline as an MCP resource. The Linux desktop runs in a container and needs Docker.
 
 ### Toolkit
 
@@ -163,7 +163,7 @@ Skills are loaded from the project (`.orchestra/skills`, `.claude/skills`, `.age
 One board per project, with epics, issues, steps, questions and decisions.
 
 - Only Maestro writes to it, and every write carries a reason and an activity row. Undo is a new inverse row, so history is never rewritten.
-- Facts move cards: dispatching moves a card to Building, an opened pull request to Review, a merge to Shipped. A pull request closed without a merge raises a question instead of moving the card.
+- Facts move cards: dispatching moves a card to Building, an opened pull request to Review, a merge to Shipped. A pull request closed without a merge does not move the card; the card is flagged as out of date instead.
 - Delivery forecasts come from a seeded Monte Carlo simulation over the board's real throughput (1,000 trials).
 - The board is rebuilt from a record committed to the repository (`.atlas/project/board.jsonl`), so it travels with the code.
 
@@ -172,7 +172,7 @@ One board per project, with epics, issues, steps, questions and decisions.
 The project declares its checks in `.orchestra/ci.json`: scoped checks per change, a full suite, lanes, a budget and bundle sizes. The file is read from the base branch, so a change cannot loosen its own checks.
 
 - **Runs once per tree.** A check result is tied to the tree SHA, so identical content is never tested twice.
-- **Bundles.** Green cards are queued and merged together as one pull request (8 cards by default, up to 16, or after 45 minutes). After 50 cards the bundle size adapts to the observed red rate.
+- **Bundles.** Green cards are queued and merged together as one pull request (4 cards by default, configurable up to 16, or whatever is ready after 45 minutes). After 50 cards the bundle size adapts to the observed red rate.
 - **Red handling.** A red bundle is halved and bisected. A card that is red on its own goes back to Review. An infrastructure failure is rerun once. A flaky test is recorded as a flake. A red base opens a bug card and is never reverted automatically. A bundle that needs more than two rebuilds is dissolved.
 - **No lost work.** Every 10 minutes, work in progress (including untracked files) is pushed to a private ref after a gitleaks secret scan. After a crash, worktrees are restored and no bundle is pushed twice.
 - **Base tracking.** The base branch is fetched every minute and each queued card is trial-merged against it.
@@ -194,9 +194,9 @@ The rules and their runs are visible in the app under CI/CD.
 
 Relay runs deterministic checklists at the point where an agent says it is done. Before a seat's stop is accepted, Relay runs the gate's commands and records the result.
 
-- **Tamper-evident ledger.** Each gate result is appended to a hash-chained ledger (SHA-256, or HMAC with a key you provide). `relay verify` checks the chain. The claim is checked progression and attributable evidence, not that an agent cannot lie.
+- **Tamper-evident ledger.** Each gate result is appended to a hash-chained ledger (SHA-256, or HMAC-SHA256 when `RELAY_LEDGER_KEY` is set). `relay verify` checks the chain. The claim is checked progression and attributable evidence, not that an agent cannot lie.
 - **Escalation.** A gate that keeps failing parks the run as awaiting a human. A release needs a written reason and resumes the same gate. Maestro can release from the chat.
-- **Profiles.** Eighteen YAML profiles compile into sprints of gates.
+- **Profiles.** Nine YAML profiles compile into sprints of gates.
 
 **Workflows** are the user-facing side. In a list or canvas editor you build step-by-step procedures: steps, checks (commands or AI judges), context and a skill per step. Only published versions run, and "Test now" runs a check for up to 60 seconds. Built-in templates cover fixing a bug with proof, safe refactoring, test-driven features, launching a feature end to end, and building one work package. Maestro runs published workflows when a task fits.
 
@@ -205,13 +205,13 @@ Relay runs deterministic checklists at the point where an agent says it is done.
 Atlas is Orchestra's knowledge layer. It lives in the repository, in git, and is checked against the code it describes. It does not use embeddings or a vector store.
 
 - **Structural index.** A BLAKE3 Merkle index over the code gives every unit (file, module, package) a content hash. Retrieval is by scope, by dependency blast radius and by trigger, so an agent gets the facts for the code it is about to touch.
-- **Facts pinned to code.** A fact is a short claim in one of six families (advisory, predicate, relation, negation, transition, test vacuity), pinned to the hash of the subtree it describes. Facts are tiered by how strongly they bind; the top tier needs human ratification.
+- **Facts pinned to code.** A fact is a short templated claim (advisory, predicate, relation, negation, transition and test-vacuity forms), pinned to the hash of the subtree it describes. Facts are tiered by how strongly they bind; the top tier needs human ratification.
 - **Drift.** When the code changes, each fact becomes FRESH, DRIFTED, STALE or BROKEN. Mechanical drift is re-grounded automatically. When a fact's meaning flips, `atlas reconcile` exits with a failure and blocks the merge until someone decides.
-- **Controlled writes.** Facts enter only through two doors: one with four gates (shape, truth, authorization, ratification) and one that links facts to code.
+- **Controlled writes.** Facts enter only through two doors: one that checks shape, truth, authorization and ratification and one that links facts to code.
 - **Memory.** Project rules (a short, decaying set injected into each turn), task memory, pull request memory and Maestro's logbook, stored append-only per seat. Seats read it through `atlas_context` and `atlas_memory_recall` and write through `atlas_memory_emit`.
 - **Briefings.** For each unit of code, Atlas can generate a briefing skill with a receipt of the facts and file blobs it was built from. A CI guard checks those briefings on pull requests, and on every push to the base branch a worklist names the stale ones; `atlas repair` refreshes them.
 
-Atlas also renders the merge queue's pull request bodies and record commits. It ships about 43 CLI commands and 18 MCP tools, and its own specification has 706 requirements and 1,075 golden tests.
+Atlas also renders the merge queue's pull request bodies and record commits. It ships about 43 CLI commands and 18 MCP tools, and its own specification has 706 requirements and 1,075 scenarios.
 
 ## Processes and isolation
 
@@ -222,7 +222,7 @@ Agents start a lot of processes: test runners, dev servers, language servers, pa
 - **Whole-tree stop.** Stop, timeout and cancel end the root and all of its descendants. On Unix the root's session is ended with SIGTERM, then SIGKILL after a grace period. On Windows the tree is held in a Job object that refuses breakaway.
 - **Survives the host.** If the app or server dies, the supervisor stops every tree it owns within the grace period. Process id reuse is handled by pinning the root.
 - **No shell, same rules everywhere.** Commands are started without a shell, and npm shims and Windows `PATHEXT` resolve the same way on every system.
-- **Pipes that never block.** Output pipes are always drained, with a 16 MiB buffer per stream; output beyond that is counted as lost, not silently dropped.
+- **Pipes that never block.** Output pipes are always drained. Each stream keeps up to 16 MiB while a reader is attached (1 MiB otherwise); output beyond that is dropped and counted, never lost silently.
 - **PTYs.** Interactive terminals use openpty on Unix and ConPTY on Windows.
 - **Platforms.** Windows x64 and arm64, macOS arm64 and x64, Linux x64 and arm64 (glibc and musl).
 
@@ -230,7 +230,7 @@ Only one module in the codebase may import omni, and a parser-based check fails 
 
 ### Sandbox and seat confinement
 
-Commands from agents can run inside an OS sandbox: Seatbelt on macOS, bubblewrap on Linux, and AppContainer on Windows (through omni). The sandbox fails closed: if it cannot be applied, the command does not run.
+Commands from agents can run inside an OS sandbox: Seatbelt on macOS, bubblewrap on Linux (through sandbox-runtime; the system must provide `bubblewrap` and `socat`), and AppContainer on Windows (through omni). The sandbox fails closed: if it cannot be applied, the command does not run.
 
 - Each command gets a fresh temporary folder and an environment scrubbed of tokens, secrets, passwords, API keys, the SSH agent socket and strings shaped like live keys.
 - Loopback network access is granted per port, up to 32 grants.
@@ -243,7 +243,7 @@ With the opt-in agent terminal (`ORCHESTRA_AGENT_TERMINAL`, macOS and Linux), ea
 
 ## Models and engines
 
-- **Providers.** About 35 provider plugins over six wire protocols: Anthropic Messages, Bedrock Converse, Gemini, OpenAI Chat, OpenAI Responses and OpenAI-compatible endpoints. The model catalog comes from models.dev, with an offline snapshot built in. You pick a reasoning level per model.
+- **Providers.** About 30 built-in provider plugins over six wire protocols: Anthropic Messages, Bedrock Converse, Gemini, OpenAI Chat, OpenAI Responses and OpenAI-compatible endpoints. The model catalog comes from models.dev, with an offline snapshot built in. You pick a reasoning level per model.
 - **Claude mode.** With your Claude subscription, an agent's turns run through Claude Code as an execution host. Orchestra keeps Claude Code's own system prompt and adds a short appendix; project context reaches the model through a prompt hook and is resent only when it changes. Orchestra's tools are served to Claude Code as an in-process MCP server, every tool call passes Orchestra's permission gate, and Claude Code's own agent, messaging and remote tools are blocked so that seats are real Orchestra sessions with their own history. See [Claude mode](docs/guides/claude-mode.md).
 
 ## Interfaces
@@ -251,7 +251,7 @@ With the opt-in agent terminal (`ORCHESTRA_AGENT_TERMINAL`, macOS and Linux), ea
 - **Desktop app.** The main interface: Chat with Maestro, sessions with live task rows, the project board, workflows, hooks, CI/CD (checks, queue, Guardrails), Lean, Atlas activity, agents, providers, integrations (Slack, Discord), MCP servers, plugins, a `.env` editor, scheduled tasks, and the MCP Dock. The app starts its own local server on 127.0.0.1 with a random password and restarts it with backoff if it dies.
 - **Command line.** `orchestra` runs the same agents in a terminal UI, as a one-shot `orchestra run`, or as a server (`orchestra serve`, with Basic Auth). It also manages sessions, models, providers, MCP servers, plugins, the toolkit and the database, and exports or imports transcripts.
 - **ACP.** `orchestra acp` speaks the Agent Client Protocol on stdio for editors, with session replay, MCP, permissions and modes.
-- **HTTP API.** The server exposes about 45 handler groups. Promise and Effect clients are generated from the API definition, and a check fails when they drift.
+- **HTTP API.** The server exposes about 50 handler groups. Promise and Effect clients are generated from the API definition, and a check fails when they drift.
 - **Live meetings (macOS).** The meeting copilot listens to a call, answers in an overlay with hotkeys, can ask Maestro, and leaves a summary card with decisions and commitments. Needs a Deepgram key and Screen Recording permission.
 - **Scheduling.** One-off or recurring tasks for Maestro.
 
