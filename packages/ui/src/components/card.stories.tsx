@@ -1,11 +1,8 @@
 // @ts-nocheck
-import { Card, CardActions, CardDescription, CardTitle } from "./card"
-import { Button } from "./button"
+import { Card, CardDescription } from "./card"
 
 const docs = `### Overview
 Surface container for grouping related content and actions.
-
-Pair with \`Button\` or \`Tag\` for quick actions.
 
 ### API
 - Optional: \`variant\` (normal, error, warning, success, info).
@@ -49,13 +46,7 @@ export default {
   render: (props: { variant?: "normal" | "error" | "warning" | "success" | "info" }) => {
     return (
       <Card variant={props.variant}>
-        <CardTitle variant={props.variant}>Card title</CardTitle>
         <CardDescription>Small supporting text.</CardDescription>
-        <CardActions>
-          <Button size="small" variant="secondary">
-            Action
-          </Button>
-        </CardActions>
       </Card>
     )
   },

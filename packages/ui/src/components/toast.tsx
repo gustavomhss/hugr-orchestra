@@ -156,30 +156,3 @@ export function showToast(options: ToastOptions | string) {
     </Toast>
   ))
 }
-
-export interface ToastPromiseOptions<T, U = unknown> {
-  loading?: JSX.Element
-  success?: (data: T) => JSX.Element
-  error?: (error: U) => JSX.Element
-}
-
-export function showPromiseToast<T, U = unknown>(
-  promise: Promise<T> | (() => Promise<T>),
-  options: ToastPromiseOptions<T, U>,
-) {
-  return toaster.promise(promise, (props) => (
-    <Toast
-      toastId={props.toastId}
-      data-variant={props.state === "pending" ? "loading" : props.state === "fulfilled" ? "success" : "error"}
-    >
-      <Toast.Content>
-        <Toast.Description>
-          {props.state === "pending" && options.loading}
-          {props.state === "fulfilled" && options.success?.(props.data!)}
-          {props.state === "rejected" && options.error?.(props.error)}
-        </Toast.Description>
-      </Toast.Content>
-      <Toast.CloseButton />
-    </Toast>
-  ))
-}
