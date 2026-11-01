@@ -427,8 +427,10 @@ test("no selected profile shows no KPIs and reads nothing", async ({ page }) => 
   await expect(page.locator('[data-component="orchestra-kpis-empty"]')).toContainText(
     "Choose a project to see what its agents shipped.",
   )
-  // Nothing is read for an empty selection: the page is idle once its startup requests settled.
-  await page.waitForLoadState("networkidle")
+  // Nothing is read for an empty selection. The page holds its event stream open, so it is never network-idle; a
+  // request made now reaches the route handler after any read the page already started, so once it answers, a read
+  // that was going to record itself has.
+  await page.evaluate((origin) => fetch(`${origin}/api/health`, { mode: "no-cors" }).then(() => undefined), serverA)
   await expect(home(page)).toHaveCount(0)
   expect(requests).toHaveLength(0)
   expect(gitRequests).toHaveLength(0)
