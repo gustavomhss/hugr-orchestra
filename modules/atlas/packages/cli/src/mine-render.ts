@@ -230,6 +230,9 @@ export function passBodyLines(pass: MinePass, ceiling?: number): readonly string
     ...(pass.refusal !== undefined ? [`staging: REFUSED (${pass.refusal}) — ${REFUSAL_TEXT[pass.refusal]}`] : []),
     ...opt(why),
     ...(r.resumeToken ? [`partial: resume at rank ${r.resumeToken.lastCompletedRank}`] : []),
+    ...(r.resumeToken === undefined && ceilingCutAt(r) !== undefined
+      ? [`partial: resume at rank ${ceilingCutAt(r)} — the budget ceiling was reached before the frontier was`]
+      : []),
     // LAST, and always. The per-site ledger is the only thing that lets a reader establish what the run
     // covered; it goes below the prose so the three lines `mine.md` pins verbatim keep their position, and
     // it is unconditional so that "no ledger" can only ever mean "this run has none", never "we skipped it".

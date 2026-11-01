@@ -43,6 +43,7 @@ import type {
   SkeletonSource,
   Skeleton,
   Ratified,
+  RunFailure,
   SeedDeps,
 } from "@atlas/genesis"
 import { existsSync, readFileSync } from "node:fs"
@@ -426,6 +427,11 @@ export function buildControllerDeps(
  * user as `exit 1, llmCalls 0, "resume at rank -1"` and nothing else: no command name, no stderr. Re-throwing
  * puts it on the SAME governed-refusal path as `ModelConfigError` (cli.ts:110-116) — exit 2, message
  * verbatim — while a genuinely partial run (a budget, a contended commit) keeps its report and exit 1.
+ *
+ * [GENESIS-HARDENING A3] A run the controller ENDED ON A CAUGHT ERROR (`report.failure` — a throwing `plan` or
+ * `upsert`) is re-thrown as `GenesisRunError` for the same reason: its report is the empty degrade, which
+ * otherwise reads exactly like a clean zero-findings run. The one exception is a refused staging commit,
+ * which `refusal` already names and the fold renders as the exit-1 partial it has always been.
  */
 export function driveMinePass(repoPath: string, deps?: Partial<MineDeps>): MinePass {
   const resolved = withDefaults(repoPath, deps)
@@ -448,6 +454,7 @@ export function driveMinePass(repoPath: string, deps?: Partial<MineDeps>): MineP
     const ports = buildControllerDeps(repoPath, d, (r) => void (refusal = r), watch, pool, resolved.modelIdentity)
     const report = makeRunController(ports).genesis(repoPath, d.rev, d.budget, d.scope)
     if (fault !== undefined) throw fault // a misconfigured model is not a mining outcome
+    if (report.failure !== undefined && refusal === undefined) throw new GenesisRunError(report.failure)
     // GEN-9 — seed the Awareness sources AFTER the genesis run, from the run's OWN ratified/definite set.
     // On a candidate-only mine pass that set is structurally `[]`, so `constitution` renders UN-SEEDED
     // (never fabricated) while `taste` (CONVENTIONS.md@sha) and the unratified `mission` stub are seeded.
@@ -470,6 +477,15 @@ export function driveMinePass(repoPath: string, deps?: Partial<MineDeps>): MineP
   }
 }
 
+/** The error a genesis run ended on, re-raised from `report.failure` (see `driveMinePass`). The original
+ *  error's name leads the message, so the refusal says what actually broke. */
+export class GenesisRunError extends Error {
+  constructor(readonly failure: RunFailure) {
+    super(`atlas mine: the genesis run failed — ${failure.name}: ${failure.message}`)
+    this.name = "GenesisRunError"
+  }
+}
+
 /** The `GenesisReport` alone (the write-set carrier) — the shape every existing caller and oracle uses. */
 export function driveMine(repoPath: string, deps?: Partial<MineDeps>): GenesisReport {
   return driveMinePass(repoPath, deps).report
@@ -477,8 +493,9 @@ export function driveMine(repoPath: string, deps?: Partial<MineDeps>): GenesisRe
 /** Run the one-time genesis bootstrap over a repo, projecting the outcome to a `CliVerdict` (CLI-4). A pass
  *  that seeds nothing renders WHY, read off its own report — `foldVerdict`/`mineWhyEmpty` (mine-render.ts).
  *
- *  It THROWS exactly one class of error: a `ModelCommandError` the pass captured (see `driveMinePass`). A
- *  misconfigured model is not a mining outcome, and `cli.ts` renders it as the governed refusal it is. */
+ *  It THROWS two classes of error: a `ModelCommandError` the pass captured and a `GenesisRunError` for a run
+ *  that ended on a caught error (see `driveMinePass`). Neither is a mining outcome, and `cli-dispatch.ts`
+ *  renders both as governed refusals. */
 export async function runMine(repoPath: string, deps?: Partial<MineDeps>): Promise<CliVerdict> {
   const pass = driveMinePass(repoPath, deps)
   return foldVerdict(pass, deps?.budget?.ceiling)
