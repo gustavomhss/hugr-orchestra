@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { createAtlasModel } from "../atlas-model"
 import { atlasFixture } from "../atlas-model.fixture"
-import { anotherFact, blastOf, followFact, howStep, reasoningText, servedIn } from "./how-data"
+import { anotherFact, blastOf, followFact, howStep, reasoningFailed, reasoningText, servedIn } from "./how-data"
 
 describe("atlas follow one fact", () => {
   test("follows the named fact, else the first live fact", () => {
@@ -26,5 +26,18 @@ describe("atlas follow one fact", () => {
     expect(reasoningText({ state: "ok", id: "r1", text: "because" })).toBe("because")
     expect(reasoningText({ state: "missing", id: "r1" })).toBeUndefined()
     expect(reasoningText(undefined)).toBeUndefined()
+  })
+
+  test("tells a failed reasoning read from a fact with none", () => {
+    const base = { asked: true, loading: false, error: undefined, value: undefined, controllerError: undefined }
+    expect(reasoningFailed(base)).toBe(false)
+    expect(reasoningFailed({ ...base, value: { state: "missing", id: "r1" } })).toBe(false)
+    expect(reasoningFailed({ ...base, controllerError: "offline" })).toBe(true)
+    expect(reasoningFailed({ ...base, error: new Error("boom") })).toBe(true)
+    expect(reasoningFailed({ ...base, controllerError: "offline", loading: true })).toBe(false)
+    expect(reasoningFailed({ ...base, controllerError: "offline", asked: false })).toBe(false)
+    expect(
+      reasoningFailed({ ...base, value: { state: "ok", id: "r1", text: "because" }, controllerError: "offline" }),
+    ).toBe(false)
   })
 })

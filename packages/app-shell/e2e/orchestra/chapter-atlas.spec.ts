@@ -237,6 +237,18 @@ test("a server without the atlas routes says so", async ({ page }) => {
   expect(requests.map((url) => new URL(url).pathname).toSorted()).toEqual(["/api/atlas/review", "/api/atlas/snapshot"])
 })
 
+test("a failed reasoning read says so and offers a retry", async ({ page }) => {
+  const requests: string[] = []
+  await setup(page, { atlas: true, requests, failReasoning: true })
+  await openAtlas(page)
+  await page.locator(".atlas-context").getByRole("link", { name: "Follow one fact" }).click()
+  const card = page.locator(".at-how-card")
+  await expect(card).toContainText("“Writes are atomic.”")
+  await expect(card).toContainText("The stored reasoning could not be read.")
+  await expect(card).not.toContainText("No stored reasoning.")
+  await expect(card.getByRole("button", { name: "Try again" })).toBeVisible()
+})
+
 async function openAtlas(page: Page) {
   await page.goto("/", { waitUntil: "domcontentloaded" })
   await expandAdvanced(page)
@@ -244,7 +256,7 @@ async function openAtlas(page: Page) {
   await expect(page).toHaveURL(/\/orchestra\/atlas$/)
 }
 
-async function setup(page: Page, input: { atlas: boolean; requests: string[] }) {
+async function setup(page: Page, input: { atlas: boolean; requests: string[]; failReasoning?: boolean }) {
   await page.setViewportSize({ width: 1440, height: 960 })
   await page.addInitScript(
     ({ server, directory }) => {
@@ -281,7 +293,15 @@ async function setup(page: Page, input: { atlas: boolean; requests: string[] }) 
       input.requests.push(url.toString())
       // A server that predates the routes answers with an undeclared 404.
       if (!input.atlas) return json(route, { error: "Not Found" }, 404)
-      return atlas(route, location, path.split("/")[3] ?? "", path.split("/")[4] ?? "")
+      const call = path.split("/")[3] ?? ""
+      // The failing run gives the followed fact stored reasoning, then refuses to read it.
+      if (input.failReasoning && call === "snapshot")
+        return json(route, {
+          location,
+          data: { ...snapshot, facts: snapshot.facts.map((x) => (x.key === "k1" ? { ...x, why: "r1" } : x)) },
+        })
+      if (input.failReasoning && call === "reasoning") return json(route, { error: "boom" }, 500)
+      return atlas(route, location, call, path.split("/")[4] ?? "")
     }
     if (path.startsWith("/api/atlas/")) return json(route, {}, 404)
     if (path === "/global/event" || path === "/event" || path === "/api/event")

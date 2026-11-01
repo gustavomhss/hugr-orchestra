@@ -33,5 +33,21 @@ export function servedIn(model: AtlasModel, fact: AtlasFact) {
 
 export const blastOf = (model: AtlasModel, fact: AtlasFact) => model.R.dependents[fact.file]?.length ?? 0
 
+// Whether the stored reasoning could not be read, as opposed to the fact having none. The controller keeps a
+// failed read as `undefined` and reports it in its own `error`, so an answer that never came while that error
+// stands is a failed read; a rejected resource is one too. Nothing is a failure before the entry is asked for
+// or while the request is in flight.
+export const reasoningFailed = (input: {
+  asked: boolean
+  loading: boolean
+  error: unknown
+  value: AtlasOutput<"reasoning"> | undefined
+  controllerError: string | undefined
+}) => {
+  if (!input.asked || input.loading) return false
+  if (input.error !== undefined) return true
+  return input.value === undefined && !!input.controllerError
+}
+
 export const reasoningText = (value: AtlasOutput<"reasoning"> | undefined) =>
   value?.state === "ok" ? value.text : undefined
