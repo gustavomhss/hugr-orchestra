@@ -50,7 +50,7 @@ export const AtlasHandler = HttpApiBuilder.group(Api, "server.atlas", (handlers)
           yield* SessionRunnerModel.credential(catalog, integrations, selected),
         )
         return (prompt: string) => {
-          // Gateways such as OpenCode Go refuse a request without a session to route it by; each call is its own.
+          // Some gateways refuse a request without a session to route it by; each call is its own.
           const sessionID = SessionID.descending()
           return client
             .stream(
