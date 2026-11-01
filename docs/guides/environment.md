@@ -5,6 +5,8 @@ Switches that change what Orchestra does on the network or what it writes to dis
 | Variable | Effect |
 | --- | --- |
 | `ORCHESTRA_DISABLE_AUTOUPDATE` | The desktop app never checks for updates: no polling, no update menu entry. |
+| `ORCHESTRA_DISABLE_AUTOCOMPACT` | Orchestra never compacts a session on its own before a turn, whatever `compaction.auto` says. Compacting on request and recovering from a context overflow still work. |
+| `ORCHESTRA_DISABLE_AUTOCOMPACT` | Orchestra never compacts a session on its own before a turn, whatever `compaction.auto` says. Compacting on request and recovering from a context overflow still work. |
 | `ORCHESTRA_DISABLE_MODELS_FETCH` | The model catalog is not fetched from the network; the bundled snapshot or `ORCHESTRA_MODELS_PATH` is used. |
 | `ORCHESTRA_SERVER_PASSWORD` | Basic-auth password for `serve` and `web`. Read once at startup and then removed from the process environment, so MCP servers, language servers and terminals the server starts never see it. |
 | `ORCHESTRA_LOG_LEVEL` | `DEBUG`, `INFO` (default), `WARN` or `ERROR`. |

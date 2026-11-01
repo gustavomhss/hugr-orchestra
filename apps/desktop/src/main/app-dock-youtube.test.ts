@@ -65,7 +65,6 @@ async function child() {
     XDG_STATE_HOME: userDataPath,
     ORCHESTRA_EXPERIMENTAL_ICON_DISCOVERY: "true",
     ORCHESTRA_EXPERIMENTAL_FILEWATCHER: "true",
-    ORCHESTRA_PERMISSION: "allow",
   })
   const doc = createAppDock({ developmentMode: () => false })
   registerAppDockBridge(doc)

@@ -215,3 +215,36 @@ it.effect("historical prompts without sidecars keep the exact old serialized con
     ])
   }),
 )
+
+it.effect("ORCHESTRA_DISABLE_AUTOCOMPACT stops the automatic pass but not the manual or overflow ones", () =>
+  Effect.gen(function* () {
+    const fixture = yield* seed
+    yield* Effect.forEach([earlier, recent], (prompt, index) =>
+      fixture.events.publish(SessionEvent.Prompted, {
+        sessionID,
+        messageID: SessionMessage.ID.make(`msg_disabled_${index}`),
+        timestamp: DateTime.makeUnsafe(index),
+        prompt,
+        delivery: "steer",
+      }),
+    )
+    const input = {
+      sessionID,
+      entries: yield* SessionHistory.entriesForRunner(fixture.db, sessionID, 0),
+      model,
+      request: fixture.request,
+    }
+    const previous = process.env.ORCHESTRA_DISABLE_AUTOCOMPACT
+    process.env.ORCHESTRA_DISABLE_AUTOCOMPACT = "1"
+    yield* Effect.addFinalizer(() =>
+      Effect.sync(() => {
+        if (previous === undefined) delete process.env.ORCHESTRA_DISABLE_AUTOCOMPACT
+        else process.env.ORCHESTRA_DISABLE_AUTOCOMPACT = previous
+      }),
+    )
+    expect(yield* fixture.compaction(200).compactIfNeeded(input)).toBe(false)
+    expect(fixture.requests).toHaveLength(0)
+    expect(yield* fixture.compaction(200).compactAfterOverflow(input)).toBe(true)
+    expect(fixture.requests).toHaveLength(1)
+  }),
+)

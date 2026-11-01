@@ -52,7 +52,6 @@ beforeAll(async () => {
     ORCHESTRA_TEST_HOME: home,
     ORCHESTRA_VERSION: version,
     ORCHESTRA_CHANNEL: "dev",
-    ORCHESTRA_PURE: "1",
     ORCHESTRA_DISABLE_MODELS_FETCH: "1",
     MODELS_DEV_API_JSON: path.join(home, "models.json"),
   }
