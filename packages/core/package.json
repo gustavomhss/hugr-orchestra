@@ -432,7 +432,6 @@
     "./util/binary": "./src/util/binary.ts",
     "./util/effect-flock": "./src/util/effect-flock.ts",
     "./util/encode": "./src/util/encode.ts",
-    "./util/error": "./src/util/error.ts",
     "./util/flock": "./src/util/flock.ts",
     "./util/glob": "./src/util/glob.ts",
     "./util/hash": "./src/util/hash.ts",

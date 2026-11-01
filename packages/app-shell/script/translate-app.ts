@@ -88,7 +88,7 @@ export function parseTranslationArgs(args: string[]) {
     args,
     options: {
       concurrency: { type: "string", short: "c", default: "4" },
-      model: { type: "string", default: "opencode/gpt-5.5" },
+      model: { type: "string", default: "openai/gpt-5.5" },
       variant: { type: "string", default: "xhigh" },
       "dry-run": { type: "boolean", default: false },
       check: { type: "boolean", default: false },
@@ -254,7 +254,7 @@ Synchronizes product app translations with the English app, UI, and desktop dict
 
 Options:
   -c, --concurrency <count>  Maximum parallel Orchestra runs for 'all' (default: 4)
-      --model <provider/id>  Orchestra model (default: opencode/gpt-5.5)
+      --model <provider/id>  Orchestra model (default: openai/gpt-5.5)
       --variant <name>       Model variant (default: xhigh)
       --dry-run              Report drift without running Orchestra
       --check                Exit nonzero when translation drift exists

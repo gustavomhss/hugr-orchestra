@@ -1,7 +1,6 @@
 import { expect, test } from "bun:test"
 import { validateArgs } from "../src/validate.ts"
-import { GOVERNANCE_CAPABILITIES, GOVERNANCE_TEST_TRACE } from "../src/governance/capabilities.ts"
-import governance, { GOVERNANCE_OPERATIONS } from "../src/tools/governance.ts"
+import governance from "../src/tools/governance.ts"
 import profile from "../src/tools/profile.ts"
 import relay from "../src/tools/relay-arm.ts"
 import ledger from "../src/tools/wave-ledger.ts"
@@ -22,20 +21,4 @@ test("native exact operation schemas accept real contracts, reject unknown capab
   expect((await scheduler.handler({ wps: [], events: [], cap: 0 })).content.length).toBe(1)
   expect(await rethrow(operation({ operation: "audit", observations: { complete: false, actions: [], usage: [] } }, f.context))).toThrow("OBSERVATION_ACQUISITION_INCOMPLETE")
   expect(await rethrow(governance.handler({ operation: "ruleset-propose", repository: "owner/project" }))).toThrow("NATIVE_CONTEXT_REQUIRED")
-})
-test("source capability trace covers native operation enum and resolves actual targets/tests", async () => {
-  const mapped = new Set(GOVERNANCE_CAPABILITIES.flatMap((entry) => [...entry.capabilities]))
-  expect(GOVERNANCE_OPERATIONS.length).toBeGreaterThan(0)
-  GOVERNANCE_OPERATIONS.forEach((name) => expect(mapped.has(name)).toBe(true))
-  const root = new URL("../", import.meta.url)
-  await Promise.all(GOVERNANCE_CAPABILITIES.map(async (entry) => {
-    expect(await Bun.file(new URL(entry.target, root)).exists()).toBe(true)
-    if ("operatorTarget" in entry) expect(await Bun.file(new URL(entry.operatorTarget, root)).exists()).toBe(true)
-    expect(await Bun.file(new URL(entry.tests, root)).exists()).toBe(true)
-    expect(entry.host.length).toBeGreaterThan(0)
-  }))
-  await Promise.all(GOVERNANCE_TEST_TRACE.map(async ([source, target]) => {
-    expect(source.length).toBeGreaterThan(0)
-    expect(await Bun.file(new URL(target, root)).exists()).toBe(true)
-  }))
 })

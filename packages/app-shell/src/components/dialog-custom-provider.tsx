@@ -1,6 +1,5 @@
 import { Button } from "@orchestra/ui/button"
 import { useDialog } from "@orchestra/ui/context/dialog"
-import { Dialog } from "@orchestra/ui/dialog"
 import { IconButton } from "@orchestra/ui/icon-button"
 import { ProviderIcon } from "@orchestra/ui/provider-icon"
 import { useMutation } from "@tanstack/solid-query"
@@ -12,32 +11,6 @@ import { useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import { useLanguage } from "@/context/language"
 import { type FormState, headerRow, modelRow, validateCustomProvider } from "./dialog-custom-provider-form"
-
-type Props = {
-  onBack: () => void
-}
-
-export function DialogCustomProvider(props: Props) {
-  const language = useLanguage()
-
-  return (
-    <Dialog
-      class="h-full"
-      title={
-        <IconButton
-          tabIndex={-1}
-          icon="arrow-left"
-          variant="ghost"
-          onClick={props.onBack}
-          aria-label={language.t("common.goBack")}
-        />
-      }
-      transition
-    >
-      <CustomProviderForm />
-    </Dialog>
-  )
-}
 
 export function CustomProviderForm(props: { autofocus?: boolean } = {}) {
   const dialog = useDialog()
