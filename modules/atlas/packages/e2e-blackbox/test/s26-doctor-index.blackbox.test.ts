@@ -89,7 +89,8 @@ describe("S26 — atlas doctor index: Atlas plans the SCIP index, the operator r
     expect(r.stdout).toMatch(/lang: ts — 2 tracked file\(s\) — indexer scip-typescript, pinned \d+\.\d+\.\d+/)
     expect(r.stdout).toMatch(/lang: py — 1 tracked file\(s\) — indexer scip-python, pinned \d+\.\d+\.\d+/)
     expect(r.stdout).toContain(`run:    scip-typescript index --output ${SCIP_REL}`)
-    expect(r.stdout).toContain(`run:    scip-python index --output ${SCIP_REL}`)
+    // [A6] Python writes its OWN dump under `.atlas/index.d/` (merged by the readers), named for the project.
+    expect(r.stdout).toMatch(/run: {4}scip-python index --project-name \S+ --output \.atlas\/index\.d\/py\.scip/)
     // …and how to check WHAT IS INSTALLED, which is the other half of a pin.
     expect(r.stdout).toContain("verify: scip-typescript --version")
 

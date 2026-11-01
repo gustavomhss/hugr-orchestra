@@ -306,7 +306,16 @@ export interface AdvisoryNode {
    *  provenance only — never a `nodeKey`/route/authz leg. ADDITIVE + absent-tolerant, same discipline as
    *  `witness`; a `proven` fact carries `witness`, a `justified` fact carries `derivation`. */
   readonly derivation?: string
+  /** [GENESIS-HARDENING A8, owner decision D1] Set when the fact was admitted ONLY because a sound oracle
+   *  ABSTAINED (ADR-0017's abstain ⇒ justified fallback for the dependency/count/definition arms). Such a
+   *  fact is staged and counted but QUARANTINED: `atlas promote` refuses it, so it never reaches the
+   *  projection (and therefore never `own-export`). Carried on the fact bytes, so it survives staging; NOT a
+   *  `nodeKey` leg, and ABSENT on every other fact, whose bytes and hash are unchanged. */
+  readonly quarantine?: Quarantine
 }
+
+/** Why a fact is quarantined. One reason today: a proof that abstained. */
+export type Quarantine = "abstained-proof"
 
 /**
  * The checkable family: adds a `check` + mechanical `HOLDS/BROKEN/NA`. Transcribed EXACTLY from

@@ -145,6 +145,17 @@ export function mineWhyEmpty(o: MineOutcome): string | null {
  *  bytes could be shown to a model at it (INDEX-13 cross-language/FFI targets, and any indexed document
  *  outside the tracked tree). It is dropped from the frontier — and SAID, because a frontier that shrinks
  *  in silence is indistinguishable from a repository with less in it. */
+/** [GENESIS-HARDENING A8] How many of this pass's candidates are QUARANTINED — admitted only because a sound
+ *  proof abstained (`quarantine` on the fact). They are counted in `seeded` like any candidate; this line
+ *  says how many of those `atlas promote` will refuse. Absent when there are none, so a run without any keeps
+ *  its exact bytes. */
+function quarantineLine(r: GenesisReport): string | null {
+  const n = r.seeded.filter((f) => f.kind === "advisory" && f.quarantine !== undefined).length
+  return n > 0
+    ? `quarantine: ${n} candidate fact(s) admitted only because a sound proof abstained — staged, never promoted (atlas promote refuses them)`
+    : null
+}
+
 export function frontierDropLine(dropped: number): string | null {
   return dropped > 0
     ? `frontier: ${dropped} dep-graph node(s) dropped — no path on the spatial axis, so no source could be shown to a model (INDEX-13)`
@@ -222,14 +233,19 @@ export function coverageLines(r: GenesisReport): readonly string[] {
 export function passBodyLines(pass: MinePass, ceiling?: number): readonly string[] {
   const r = pass.report
   const why = mineWhyEmpty(mineOutcome(r, pass.modelWired, ceiling))
+  const cut = ceilingCutAt(r)
   return [
     ...opt(frontierDropLine(pass.seedsDropped)),
     ...opt(promptProvenanceLine(pass.promptDigest)),
     // NAMED, above the generic partial line: a refused staging commit wrote NOTHING, and "did not run to
     // completion" alone leaves the operator guessing between a dead model and a lost race.
     ...(pass.refusal !== undefined ? [`staging: REFUSED (${pass.refusal}) — ${REFUSAL_TEXT[pass.refusal]}`] : []),
+    ...opt(quarantineLine(r)),
     ...opt(why),
     ...(r.resumeToken ? [`partial: resume at rank ${r.resumeToken.lastCompletedRank}`] : []),
+    ...(r.resumeToken === undefined && cut !== undefined
+      ? [`partial: resume at rank ${cut} — the budget ceiling was reached with sites left unvisited`]
+      : []),
     // LAST, and always. The per-site ledger is the only thing that lets a reader establish what the run
     // covered; it goes below the prose so the three lines `mine.md` pins verbatim keep their position, and
     // it is unconditional so that "no ledger" can only ever mean "this run has none", never "we skipped it".
@@ -248,8 +264,27 @@ export function foldVerdict(pass: MinePass, ceiling?: number): CliVerdict {
     `cost: llmCalls ${r.llmCalls} · budgetSpent ${r.budgetSpent}`,
     ...passBodyLines(pass, ceiling),
   ]
-  const failed = r.resumeToken !== undefined || pass.refusal !== undefined
-  return { exitCode: failed ? 1 : 0, stdout: `${lines.join("\n")}\n` }
+  return { exitCode: passIncomplete(pass) ? 1 : 0, stdout: `${lines.join("\n")}\n` }
+}
+
+/** Did this pass stop short of its frontier? Interrupted (a `resumeToken`), refused at staging, or cut by the
+ *  budget ceiling — each is exit 1 with its report kept. Shared with the multi-arm fold (`foldArms`). */
+export function passIncomplete(pass: MinePass): boolean {
+  return pass.report.resumeToken !== undefined || pass.refusal !== undefined || ceilingCutAt(pass.report) !== undefined
+}
+
+/**
+ * [GENESIS-HARDENING A3] The rank a CEILING-CUT pass stopped after, or `undefined` when the ceiling cut nothing.
+ *
+ * The controller treats a ceiling as a deliberate scope, not an interruption (GEN-2: the cold tail is left to
+ * born-from-work), so such a run carries no `resumeToken` — and it exited 0, while the operator's budget had in
+ * fact run out with sites still `unvisited · cause: ceiling`. Read off the run's OWN ledger: the last rank it
+ * completed, or -1 when it completed none (a ceiling of 0).
+ */
+export function ceilingCutAt(r: GenesisReport): number | undefined {
+  const sites = r.coverage?.sites ?? []
+  if (!sites.some((s) => s.outcome === "unvisited" && s.cause === "ceiling")) return undefined
+  return Math.max(-1, ...sites.filter((s) => s.outcome !== "unvisited").map((s) => s.rank))
 }
 
 /** One optional line as a spreadable list — `null` contributes nothing. */

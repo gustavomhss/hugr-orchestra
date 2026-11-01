@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "snapshot": "genesis-own-v1",
-  "sourceRevision": "b037608d5beff50298a09c9dac53e15e5eeceb49",
+  "sourceRevision": "b96d93295fe2077303b45899a63a816ffb108350",
   "units": [
     {
       "unit": {
@@ -12,7 +12,7 @@
       "sourceBlobs": {
         "packages/genesis/src/extract.ts": "c75db0d612150c48e9d1b032347f6803adbc09f6",
         "packages/genesis/src/index.ts": "4e211ceb3d264314fd59b57d2130abedd3b61f11",
-        "packages/genesis/src/types.ts": "7a5534c10aa5153bb8b5ea3e73fc8993f04f9d73"
+        "packages/genesis/src/types.ts": "12e3e7f74581ffcf60153f8a7b90d04ed82461bd"
       },
       "pack": {
         "unit": "Genesis owns deterministic bootstrap and governed fact seeding.",

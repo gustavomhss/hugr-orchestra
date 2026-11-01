@@ -176,7 +176,9 @@ async function main() {
     fail(`sourceRevision is not a Git commit ancestor of HEAD: ${snapshot.sourceRevision}`)
   }
 
-  const source = atlasRevisionSource(snapshot.sourceRevision, git)
+  // ATLAS_SOURCE_ROOT=. materializes a snapshot of the HOST repository (run from its root, anchors root-relative);
+  // unset, the source is Atlas's own placement, as before.
+  const source = atlasRevisionSource(snapshot.sourceRevision, git, { root: process.env.ATLAS_SOURCE_ROOT === "." })
   const anchorIssues = []
   for (const entry of snapshot.units) {
     for (const [path, blob] of Object.entries(entry.sourceBlobs)) {

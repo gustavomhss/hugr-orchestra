@@ -46,13 +46,19 @@ function line(stdout: string, label: string): string {
 
 let writes: string[]
 beforeEach(() => {
+  // [A2] `dispatchMine` now refuses an unindexed target before `runMineArms` when a selected arm reads the
+  // index; the cwd here has none, so isolate the advisory arm to reach the mocked run and its catch.
+  vi.stubEnv("ATLAS_MINE_SLOT", "advisory")
   writes = []
   vi.spyOn(process.stdout, "write").mockImplementation((chunk: unknown) => {
     writes.push(String(chunk))
     return true
   })
 })
-afterEach(() => vi.restoreAllMocks())
+afterEach(() => {
+  vi.restoreAllMocks()
+  vi.unstubAllEnvs()
+})
 
 const out = (): string => writes.join("")
 

@@ -305,7 +305,7 @@ function admitAbstainedAsJustified(p: PredicateProposal, deps: AdmitDeps): Admis
     grounding: p.grounding,
     tier: p.tier,
   }
-  return { outcome: "admitted", fact: buildAdvisory(advisory, scoreObviousness(deps.doors, p.claimNorm)) }
+  return { outcome: "admitted", fact: { ...buildAdvisory(advisory, scoreObviousness(deps.doors, p.claimNorm)), quarantine: "abstained-proof" } } // genesis-hardening A8: staged and counted, refused by `atlas promote`
 }
 
 /**

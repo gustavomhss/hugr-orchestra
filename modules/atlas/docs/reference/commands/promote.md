@@ -157,8 +157,9 @@ which no mined candidate is; that is a re-classification, it has no door (ADR-00
 > **The shipped binary still says otherwise, and it is recorded here rather than papered over.**
 > `atlas promote`'s guidance line — visible in every `promote` transcript on this page — still ends
 > _"(a T2 fact is bounded OUT of the `atlas query` pack, TOOLS-6)"_. That was true before ADR-0013 and is not
-> true now. It is a string in the shipped binary, so it is a code fix and not a documentation one, and it is
-> not made here. Believe the transcript above it, not the sentence.
+> true now. It is a string in the shipped binary (`packages/cli/src/promote.ts`, the `ok`-path guidance), so it
+> is a code fix and not a documentation one, and the transcripts on this page quote the binary as it prints
+> today. Believe the `query` transcript above it, not the sentence.
 >
 > The `node` read at the top of this section is still the right way to read a promoted fact **whole** — it
 > is the door that returns the fact's own identity, tier and claim — which is why the section keeps it.
@@ -232,6 +233,16 @@ promote: 0 of 1 staged candidate(s) promoted; 1 refused
 Mining has no actor, so a mined node is owned by **nobody** until an admin grants `atlas:mined` — granting
 it _appoints a curator_. An unset `ATLAS_ACTOR` produces the same refusal for the same reason: the empty
 actor is in no scope.
+
+**A quarantined candidate — `quarantined`.** `mine` admits a `dependency`, `count` or `definition` claim whose
+sound oracle could not prove it (it abstained; it did not refute it) as an unsealed advisory, and marks it
+`quarantine: abstained-proof`. Promotion refuses such a row before the emit door is consulted, so no policy,
+actor or ratifier can promote it; the row stays staged, and since it never reaches the projection it never
+appears in [`own-export`](./own-export.md) either:
+
+```
+  refused 802f2bcde25d0ab2211a10d639bdde37ffbbe2c3b8251c7ea3b85f7fc5522f6a: quarantined: admitted only because a sound proof abstained (could not prove the claim, did not refute it) — a quarantined candidate stays staged and is never promoted
+```
 
 **A staged row whose bytes are gone from the CAS.** `mine` writes the bytes before it publishes the row, so
 this means the CAS was pruned or corrupted underneath. It is that **row's** refusal — not a skip, which
@@ -315,4 +326,5 @@ found, so a partial pass is legible as one instead of rounding to a success.
 - [`mine`](./mine.md) — writes the candidates this command reads.
 - [`emit`](./emit.md) — the governed write door promotion publishes through; every gate is described there.
 - [`node`](./node.md) — the read-back for a promoted fact.
-- [`query`](./query.md) — the bounded read that will **not** show a `T2` promoted fact.
+- [`query`](./query.md) — the bounded read: a `T2` promoted fact appears on its **advisory** band, never as a
+  governing `inv` row (ADR-0013).

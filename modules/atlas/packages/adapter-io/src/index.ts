@@ -6,12 +6,12 @@
 // One-way DAG leaf: nothing in the core imports this.
 
 export { walkFileTree } from "./fs.js"
-export { readScip, readScipOrEmpty, planIndexers, HONEST_HOLE, SCIP_INDEX_REL } from "./scip.js"
+export { readScip, readScipOrEmpty, planIndexers, HONEST_HOLE, SCIP_INDEX_REL, scipIndexPresent } from "./scip.js"
 export type { LangId, IndexerPlan } from "./scip.js"
 // The `atlas doctor index` diagnosis (the PRODUCTION caller of `planIndexers`, which had none). Atlas plans
 // the per-language SCIP index and prints the command; the OPERATOR runs it. Nothing here spawns a process.
 export { reportIndexPlan } from "./indexer-report.js"
-export type { IndexPlanReport, PlannedLang, ScipState } from "./indexer-report.js"
+export type { DumpReport, IndexPlanReport, PlannedLang, ScipState } from "./indexer-report.js"
 export { foldAstUnits, foldAstUnitsWithPriors, initAst, astWarmed } from "./ast.js"
 export { createDiskStore, rehydrateProjection } from "./store.js"
 export type { CasPath, DiskStore } from "./store.js"
@@ -22,6 +22,10 @@ export { CAS_REL, readCas, writeCasObjects, okfBundlePath, targetHasStore, sameC
 // cannot write a `decide` callback without naming these. The commit PROTOCOL itself stays module-internal.
 export type { CommitDecision, CommitRefusal, CommitResult } from "./sidecar.js"
 export { createHistorySource } from "./git-history.js"
+// Which tracked files may be a mining site (genesis-hardening A5): the history source applies it to the mined
+// frontier; the `mine` driver hands the same rules to the structural fallback.
+export { createSiteFilter } from "./site-filter.js"
+export type { SiteFilter } from "./site-filter.js"
 export { createDriftSource } from "./git-drift.js"
 // The merge-gate refusal `driftAt` raises when the base it was handed names no commit. Exported so a consumer
 // can recognise it as a VALUE (`instanceof` / `.name`) rather than by matching the reason prose — an empty

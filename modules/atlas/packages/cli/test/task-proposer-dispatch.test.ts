@@ -9,6 +9,7 @@ vi.mock("../src/mine.js", () => ({ runMine, runMineArms }))
 vi.mock("../src/mine-proposer.js", () => ({
   loadTaskProposer: () => taskProposer,
   resolveMineSlot,
+  resolveMineSlots: vi.fn(),
   TASK_PROPOSER_IDENTITY: "task-proposals:operator-supplied",
 }))
 
@@ -23,7 +24,7 @@ describe("Task proposer mine dispatch", () => {
   })
 
   it("runs one advisory pass and reports Task provenance without sound arms", async () => {
-    expect(await dispatchMine()).toBe(0)
+    expect(await dispatchMine([])).toBe(0)
     expect(runMine).toHaveBeenCalledOnce()
     expect(runMineArms).not.toHaveBeenCalled()
     expect(resolveMineSlot).toHaveBeenCalledWith({})

@@ -32,7 +32,7 @@ export const ARITY: Record<Command, number> = {
   emit: 1, // emit <node>
   reconcile: 1, // reconcile <mergeBase>
   doctor: 1, // doctor <scope>
-  mine: 1, // mine <repo>
+  mine: 0, // mine [repo] — the repo to mine; omitted ⇒ `process.cwd()` (dispatchMine, cli-dispatch.ts)
   node: 1, // node <addr>
   link: 2, // link <a> <b> — the two nodeKeys to equate (WP-SAMEAS)
   // `promote` takes NO positional. The repo it promotes in is `process.cwd()` — the same root the entrypoint

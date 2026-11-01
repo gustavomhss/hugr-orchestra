@@ -64,10 +64,14 @@ afterAll(() => rmSync(tempRepo, { recursive: true, force: true }))
 afterEach(() => {
   historySpy.mockClear()
   vi.restoreAllMocks()
+  vi.unstubAllEnvs()
 })
 
 describe("#243 — `atlas mine` wires the real history source on the production path", () => {
   it('main(["mine"]) constructs createHistorySource over the repo it ran in (rev "HEAD")', async () => {
+    // [A2] this repo has no `.atlas/index.scip`, which the default sound arms now require up front; the
+    // advisory arm still runs through `runMineArms`, the seam under test.
+    vi.stubEnv("ATLAS_MINE_SLOT", "advisory")
     prevCwd = process.cwd()
     process.chdir(tempRepo)
     try {
