@@ -29,3 +29,13 @@ Covers the permission and question docks above the composer. User-facing descrip
 
 - Core tests: `packages/core/test/permission.test.ts` and `packages/core/test/question.test.ts` (`cancelSession` and interruption cases).
 - Manual: start a run that asks for permission, press Stop, and confirm the dock closes and the session goes idle.
+
+## Maintenance: per-turn cost in the session core
+
+There is no `session-core-maintenance` skill yet; these notes are for whoever changes `packages/core/src/session`.
+
+- `SessionProjector` `getCurrentShell` selects the newest `shell` row whose `data.callID` matches, with `limit 1`, and decodes only that row. Do not go back to reading and decoding every shell of the Session: a Shell end must cost the same on a long Session. The in-memory adapter (`SessionMessageUpdater.memory`) still scans a list; it serves tests only.
+- `SessionCompaction` never drops a failed summary silently. A provider error event, an `LLM.Error` or an empty summary returns `false` (the turn continues with the request as built) and logs one warning naming the Session, the reason and the failure. Look for `Session compaction produced no summary` in the log when a Session stays over budget.
+- Known gap: a failed summary still leaves `session.next.compaction.started` without a matching ended event, because no failed event exists. Adding one touches the event schema and every client reducer.
+- The auto-compaction check estimates tokens from `JSON.stringify` of the whole request on each provider turn. The runner rebuilds the request messages from reloaded history every turn, so a cache keyed on message identity would never hit; an incremental estimate needs the runner to keep the converted messages between turns.
+- Tests: `test/session-projector.test.ts` (shell lookup) and `test/session-compaction-failure.test.ts` (failure logging).
