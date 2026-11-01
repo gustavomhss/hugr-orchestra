@@ -32,7 +32,7 @@ descendants.
 | Workload | Tasks |
 |---|---|
 | QA-A real suites | `cargo test` of [semver](https://github.com/dtolnay/semver) 1.0.26 (`3e64fdb`) and `npm test` of [commander](https://github.com/tj/commander.js) 14.0.1 (`bd4ae26`: jest and its workers, then tsd and tsc), each to the end (expected to pass; `--quick` runs this part through omni only, it takes most of the time) and cut by a timeout midway |
-| QA-B dev server | Vite 6.4.3 through `npm run dev` (npm → sh → node → esbuild): wait for `ready`, fetch `/@vite/client`, stop |
+| QA-B dev server | Vite 6.4.5 through `npm run dev` (npm → sh → node → esbuild): wait for `ready`, fetch `/@vite/client`, stop |
 | QA-C terminal | bash, zsh, PowerShell, pwsh, the Node and Python REPLs, whichever the OS has (`workloads/shells.json`): a command, Ctrl-C on a 30 s command, `exit`. omni only: the stdlib has no terminal |
 | QA-D misbehaving | a root that exits leaving a descendant holding the output; a tree that ignores SIGTERM / CTRL_BREAK; 32 MiB through `run()`; 100 000 lines read as they come; `git commit` opening an editor that waits for input; a prompt answered through stdin; a short-lived leftover beside a longer task in one batch |
 | QA-E agent loop | 200 commands (git, `git grep`, cargo build and test, node, npm ls and install; `workloads/agent.json`), 10 at a time, every 4th cancelled at a fixed pseudo-random moment within 500 ms |

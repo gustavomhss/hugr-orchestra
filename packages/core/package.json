@@ -12,9 +12,6 @@
     "test": "bun test --timeout 30000 --only-failures",
     "typecheck": "tsgo --noEmit"
   },
-  "bin": {
-    "orchestra": "./bin/orchestra"
-  },
   "exports": {
     "./account": "./src/account.ts",
     "./account/sql": "./src/account/sql.ts",
