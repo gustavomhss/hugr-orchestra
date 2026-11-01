@@ -1,0 +1,359 @@
+name: atlas-genesis
+
+# Run Atlas genesis over this repository on a runner (genesis-hardening S6), in two dispatched modes:
+#   mine    — index the repository (TypeScript, Python modules/relay, Rust native/omni) into .atlas/index.d/,
+#             then `atlas mine` one arm at a time, capped at `budget` sites per arm. Stages candidates only.
+#             Without the CLAUDE_CODE_OAUTH_TOKEN secret no model is wired: every visited site abstains and the
+#             run spends nothing, which still measures the frontier and the cost of the history probe.
+#   promote — restore a mine run's staging, hold and promote the nodeKeys an owner approved, and export Own.
+# workflow_dispatch only: a dispatch-only workflow can be run once it exists on the default branch (dev).
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "mine (stage candidates) or promote (publish approved candidates from a mine run)"
+        type: choice
+        options: [mine, promote]
+        default: mine
+      budget:
+        description: "mine: sites per arm (ATLAS_MINE_BUDGET)"
+        type: string
+        default: "10"
+      arms:
+        description: "mine: comma-separated arms, run one after another"
+        type: string
+        default: "advisory,dependency,count"
+      run_id:
+        description: "promote: the mine run whose artifacts to promote from"
+        type: string
+        default: ""
+      approved_nodekeys:
+        description: "promote: space- or comma-separated staged nodeKeys to promote"
+        type: string
+        default: ""
+      hold_nodekeys:
+        description: "promote: space- or comma-separated staged nodeKeys to hold (never promoted)"
+        type: string
+        default: ""
+      own_units:
+        description: "promote: space-separated units for `atlas own-export` (empty skips the export)"
+        type: string
+        default: ""
+      actor:
+        description: "promote: the curator granted atlas:mined and named as the actor"
+        type: string
+        default: "seat:orchestrator"
+
+concurrency:
+  group: atlas-genesis
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  mine:
+    name: atlas genesis mine
+    if: inputs.mode == 'mine'
+    runs-on: ubuntu-24.04
+    # Generous on purpose: the history probe runs `git blame` over every mined file, and this run is what
+    # measures how long that takes on this repository.
+    timeout-minutes: 180
+    permissions:
+      contents: read
+    env:
+      BUDGET: ${{ inputs.budget }}
+      ARMS: ${{ inputs.arms }}
+      HAS_MODEL: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+      # Pinned Claude Code release for the proposer; bump deliberately.
+      CLAUDE_CODE_VERSION: "2.1.316"
+    steps:
+      - name: Validate inputs
+        run: |
+          [[ "$BUDGET" =~ ^[1-9][0-9]*$ ]] || { echo "::error::budget must be a positive integer, got '$BUDGET'"; exit 1; }
+          IFS=',' read -ra arms <<< "$ARMS"
+          for arm in "${arms[@]}"; do
+            arm="${arm// /}"
+            case "$arm" in
+              advisory | dependency | count | definition) ;;
+              *) echo "::error::unknown arm '$arm' (advisory, dependency, count, definition)"; exit 1 ;;
+            esac
+          done
+          echo "OUT=$RUNNER_TEMP/atlas-genesis" >> "$GITHUB_ENV"
+          echo "ATLAS_BIN=$GITHUB_WORKSPACE/modules/atlas/packages/cli/dist/src/bin.js" >> "$GITHUB_ENV"
+
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          # The history probe reads a shallow clone as thin history and mines structurally.
+          fetch-depth: 0
+
+      # Node 24 plus the root workspace install, so scip-typescript resolves workspace imports.
+      - name: Setup Bun and install the workspace
+        uses: ./.github/actions/setup-bun
+
+      - name: Build the Atlas CLI
+        working-directory: modules/atlas
+        run: |
+          npm ci
+          npx tsc -b
+          test -f packages/cli/dist/src/bin.js
+
+      - name: Index TypeScript
+        env:
+          NODE_OPTIONS: --max-old-space-size=12288
+        run: |
+          mkdir -p .atlas/index.d "$OUT"
+          list=$(bash script/atlas-genesis/ts-projects.sh)
+          mapfile -t projects <<< "$list"
+          echo "scip-typescript: ${#projects[@]} project(s): ${projects[*]}"
+          npx --yes @sourcegraph/scip-typescript@0.4.0 index --cwd . --output .atlas/index.d/ts.scip "${projects[@]}" ||
+            { echo "::error::indexer failed: scip-typescript (TypeScript)"; exit 1; }
+
+      - name: Setup Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+
+      # Run inside modules/relay/lib so the dump's paths start at orchestra_relay/; roots.json rebases them.
+      - name: Index Python (modules/relay)
+        run: |
+          python -m venv "$RUNNER_TEMP/relay-venv"
+          source "$RUNNER_TEMP/relay-venv/bin/activate"
+          pip install ./modules/relay/lib/orchestra_relay
+          cd modules/relay/lib
+          npx --yes @sourcegraph/scip-python@0.6.6 index --project-name orchestra_relay \
+            --output "$GITHUB_WORKSPACE/.atlas/index.d/py.scip" ||
+            { echo "::error::indexer failed: scip-python (modules/relay)"; exit 1; }
+
+      # rust-analyzer comes from rustup for the toolchain native/omni pins (rust-toolchain.toml), so its
+      # version moves only with that pin. Its dump's paths are relative to the Cargo workspace.
+      - name: Index Rust (native/omni)
+        working-directory: native/omni
+        run: |
+          rustup show active-toolchain
+          rustup component add rust-analyzer
+          rust-analyzer --version
+          rust-analyzer scip . --output "$GITHUB_WORKSPACE/.atlas/index.d/rust.scip" ||
+            { echo "::error::indexer failed: rust-analyzer (native/omni)"; exit 1; }
+
+      - name: Write index roots
+        run: |
+          printf '{ "py.scip": "modules/relay/lib", "rust.scip": "native/omni" }\n' > .atlas/index.d/roots.json
+          ls -l .atlas/index.d
+
+      - name: Atlas doctor index
+        run: node "$ATLAS_BIN" doctor index | tee "$OUT/doctor-index.txt"
+
+      - name: Configure the proposer model
+        if: env.HAS_MODEL == 'true'
+        run: |
+          npm install -g "@anthropic-ai/claude-code@$CLAUDE_CODE_VERSION"
+          claude --version
+          mkdir -p "$RUNNER_TEMP/atlas"
+          # Text only: every built-in tool disallowed and no MCP server, so a proposal cannot read or run anything.
+          node -e '
+            const tools = ["Bash","Edit","MultiEdit","Write","Read","Glob","Grep","LS","WebFetch","WebSearch","NotebookEdit","NotebookRead","Task","TodoWrite"]
+            const cfg = { roles: { propose: { cmd: "claude", args: ["-p", "--model", "sonnet", "--strict-mcp-config", "--disallowedTools", tools.join(",")] } }, timeoutMs: 120000 }
+            require("node:fs").writeFileSync(process.argv[1], JSON.stringify(cfg, null, 2) + "\n")
+          ' "$RUNNER_TEMP/atlas/model.json"
+          echo "ATLAS_MODEL_CONFIG=$RUNNER_TEMP/atlas/model.json" >> "$GITHUB_ENV"
+
+      - name: Mine each arm
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          [ "$HAS_MODEL" = true ] || echo "::notice::no CLAUDE_CODE_OAUTH_TOKEN secret: no model is wired, every site abstains (zero spend)"
+          IFS=',' read -ra arms <<< "$ARMS"
+          failed=0
+          for arm in "${arms[@]}"; do
+            arm="${arm// /}"
+            echo "::group::arm $arm (budget $BUDGET)"
+            set +e
+            ATLAS_MINE_SLOT="$arm" ATLAS_MINE_BUDGET="$BUDGET" node "$ATLAS_BIN" mine . >"$OUT/arm-$arm.txt" 2>"$OUT/arm-$arm.err"
+            code=$?
+            set -e
+            echo "$code" >"$OUT/arm-$arm.code"
+            cat "$OUT/arm-$arm.txt"
+            cat "$OUT/arm-$arm.err" >&2
+            echo "::endgroup::"
+            # 0 complete, 1 partial (the budget was reached: allowed); anything else is a failed run.
+            case "$code" in
+              0 | 1) ;;
+              *) echo "::error::arm $arm exited $code: $(head -n 1 "$OUT/arm-$arm.err")"; failed=1 ;;
+            esac
+          done
+          exit "$failed"
+
+      - name: Job summary
+        if: always()
+        run: |
+          mkdir -p "$OUT"
+          node script/atlas-genesis/summary.mjs "$OUT" >>"$GITHUB_STEP_SUMMARY"
+
+      - name: Collect artifacts
+        if: always()
+        run: |
+          mkdir -p "$OUT/upload/atlas" "$OUT/index"
+          cp "$OUT"/*.txt "$OUT"/*.code "$OUT"/*.err "$OUT"/*.tsv "$OUT/upload/" 2>/dev/null || true
+          cp .atlas/staging*.json "$OUT/upload/atlas/" 2>/dev/null || true
+          [ -d .atlas/cas ] && cp -R .atlas/cas "$OUT/upload/atlas/cas"
+          [ -f .atlas/index.d/roots.json ] && cp .atlas/index.d/roots.json "$OUT/upload/atlas/"
+          cp .atlas/index.d/*.scip "$OUT/index/" 2>/dev/null || true
+          du -sh "$OUT/upload" "$OUT/index"
+
+      - name: Secret scan
+        id: scan
+        if: always()
+        env:
+          ATLAS_SCAN_SECRETS: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: node script/atlas-genesis/secret-scan.mjs "$OUT/upload" "$OUT/index"
+
+      - name: Upload run artifact
+        if: always() && steps.scan.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: atlas-genesis-mine
+          path: ${{ runner.temp }}/atlas-genesis/upload
+          if-no-files-found: error
+          retention-days: 30
+
+      # The dumps promote mode restores to re-derive grounding at the same commit. Large, so kept shorter.
+      - name: Upload index dumps
+        if: always() && steps.scan.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: atlas-genesis-index
+          path: ${{ runner.temp }}/atlas-genesis/index
+          if-no-files-found: warn
+          retention-days: 14
+
+  promote:
+    name: atlas genesis promote
+    if: inputs.mode == 'promote'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read # download another run's artifacts
+    env:
+      RUN_ID: ${{ inputs.run_id }}
+      APPROVED: ${{ inputs.approved_nodekeys }}
+      HOLD: ${{ inputs.hold_nodekeys }}
+      OWN_UNITS: ${{ inputs.own_units }}
+      ACTOR: ${{ inputs.actor }}
+    steps:
+      - name: Validate inputs and resolve the mine run's commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [[ "$RUN_ID" =~ ^[0-9]+$ ]] || { echo "::error::run_id must be a mine run's numeric id"; exit 1; }
+          [ -n "$ACTOR" ] || { echo "::error::actor is required"; exit 1; }
+          [ -n "${APPROVED//[ ,]/}" ] || { echo "::error::approved_nodekeys is empty: name the candidates to promote"; exit 1; }
+          sha=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID" --jq .head_sha)
+          [ -n "$sha" ] || { echo "::error::run $RUN_ID not found"; exit 1; }
+          {
+            echo "MINE_SHA=$sha"
+            echo "OUT=$RUNNER_TEMP/atlas-genesis"
+            echo "ATLAS_BIN=$GITHUB_WORKSPACE/modules/atlas/packages/cli/dist/src/bin.js"
+          } >> "$GITHUB_ENV"
+
+      # The SAME commit the candidates were mined at: the emit door re-derives each fact's grounding from it.
+      - name: Checkout the mined commit
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ env.MINE_SHA }}
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: modules/atlas/package-lock.json
+
+      - name: Build the Atlas CLI
+        working-directory: modules/atlas
+        run: |
+          npm ci
+          npx tsc -b
+
+      - name: Download the mine run
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: atlas-genesis-mine
+          path: ${{ runner.temp }}/mine
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Download the mine run's index
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: atlas-genesis-index
+          path: .atlas/index.d
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Restore staging and write the policy
+        run: |
+          mkdir -p .atlas/index.d "$OUT"
+          cp "$RUNNER_TEMP"/mine/atlas/staging*.json .atlas/
+          cp -R "$RUNNER_TEMP/mine/atlas/cas" .atlas/cas
+          cp "$RUNNER_TEMP/mine/atlas/roots.json" .atlas/index.d/roots.json
+          node -e '
+            const policy = { t0Heuristic: { keywords: [] }, authz: { scopes: { "atlas:mined": [process.argv[2]] } } }
+            require("node:fs").writeFileSync(".atlas/policy.json", JSON.stringify(policy, null, 2) + "\n")
+          ' "$ACTOR"
+
+      - name: Hold
+        if: inputs.hold_nodekeys != ''
+        run: |
+          for key in ${HOLD//,/ }; do
+            node "$ATLAS_BIN" hold "$key" --by "$ACTOR" | tee -a "$OUT/hold.txt"
+          done
+
+      - name: Promote
+        env:
+          ATLAS_RATIFY_TOKEN: ${{ secrets.ATLAS_RATIFY_TOKEN }}
+        run: |
+          set +e
+          # shellcheck disable=SC2086 # the approved list is split into one nodeKey argument each
+          ATLAS_ACTOR="$ACTOR" node "$ATLAS_BIN" promote ${APPROVED//,/ } | tee "$OUT/promote.txt"
+          code=${PIPESTATUS[0]}
+          set -e
+          echo "promote exited $code" >> "$GITHUB_STEP_SUMMARY"
+          { echo '```'; cat "$OUT/promote.txt"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          # 2 is a governed refusal of at least one row (quarantined, unratified, ...): reported, not a crash.
+          case "$code" in
+            0) ;;
+            2) echo "::warning::promote refused at least one candidate; see the per-row reasons" ;;
+            *) echo "::error::promote exited $code"; exit 1 ;;
+          esac
+
+      - name: Own export
+        if: inputs.own_units != ''
+        run: |
+          # shellcheck disable=SC2086 # one unit argument each
+          node "$ATLAS_BIN" own-export $OWN_UNITS --out "$OUT/own-export.json" | tee "$OUT/own-export.txt"
+
+      - name: Secret scan
+        id: scan
+        if: always()
+        # Not ATLAS_RATIFY_TOKEN: it may equal the actor's name, which the promote output prints by design.
+        env:
+          ATLAS_SCAN_SECRETS: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          mkdir -p "$OUT"
+          node script/atlas-genesis/secret-scan.mjs "$OUT"
+
+      - name: Upload promote output
+        if: always() && steps.scan.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: atlas-genesis-promote
+          path: ${{ runner.temp }}/atlas-genesis
+          if-no-files-found: warn
+          retention-days: 30
